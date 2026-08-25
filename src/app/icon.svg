@@ -1,0 +1,7 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- BUSINESS ARENA : le podium — compétition + performance, lisible à 16 px -->
+  <rect width="64" height="64" rx="14" fill="#0f172a"/>
+  <rect x="9" y="28" width="13" height="26" rx="2.5" fill="#f59e0b"/>
+  <rect x="25.5" y="14" width="13" height="40" rx="2.5" fill="#fbbf24"/>
+  <rect x="42" y="36" width="13" height="18" rx="2.5" fill="#d97706"/>
+</svg>
