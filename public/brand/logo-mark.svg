@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Business Arena">
+  <path d="M 69.72 12.92 A 42 42 0 1 1 30.28 12.92" fill="none" stroke="#d97706" stroke-width="7" stroke-linecap="round"/>
+  <rect x="22.00" y="43.00" width="16" height="30" rx="3" fill="#f59e0b"/>
+  <rect x="42.00" y="27.00" width="16" height="46" rx="3" fill="#fbbf24"/>
+  <rect x="62.00" y="51.00" width="16" height="22" rx="3" fill="#d97706"/>
+</svg>

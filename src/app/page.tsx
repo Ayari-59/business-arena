@@ -98,9 +98,8 @@ export default async function Home() {
 
       {/* ---------- Nav ---------- */}
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-        <p className="text-sm font-bold tracking-[0.2em] text-slate-100">
-          BUSINESS <span className="text-amber-400">ARENA</span>
-        </p>
+        {/* eslint-disable-next-line @next/next/no-img-element -- logo vectoriel statique */}
+        <img src="/brand/logo.svg" alt="Business Arena" className="h-9 w-auto" />
         <div className="flex items-center gap-5 text-sm text-slate-400">
           <Link href="/concepts" className="hidden hover:text-slate-200 sm:block">
             Concepts

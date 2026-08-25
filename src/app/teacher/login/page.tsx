@@ -11,9 +11,10 @@ export default async function TeacherLoginPage() {
   const demoSeeded = await isDemoSeeded();
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
-      <div className="text-center">
-        <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Business Arena</p>
-        <h1 className="mt-2 text-3xl font-bold">Espace enseignant</h1>
+      <div className="flex flex-col items-center text-center">
+        {/* eslint-disable-next-line @next/next/no-img-element -- logo vectoriel statique */}
+        <img src="/brand/logo.svg" alt="Business Arena" className="h-8 w-auto" />
+        <h1 className="mt-4 text-3xl font-bold">Espace enseignant</h1>
         <p className="mt-2 max-w-md text-sm text-slate-400">
           Créez des parties pour vos classes, suivez les décisions de chaque équipe et
           pilotez la clôture des tours.
