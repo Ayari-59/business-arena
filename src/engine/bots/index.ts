@@ -59,6 +59,10 @@ function adaptivePlan(ctx: BotContext, aggressiveness: number): number {
 export function botDecisions(profile: BotProfile, ctx: BotContext): RoundDecisions {
   const ref = mainRefPrice(ctx.scenario);
   const maintenance = ctx.scenario.production.maintenanceReference;
+  // budgets exprimés relativement aux échelles du scénario : les bots
+  // s'adaptent ainsi à la périodicité du tour (ADR-01) et à tout scénario
+  const mkt = ctx.scenario.marketing.scale;
+  const qual = ctx.scenario.production.qualityScale;
   switch (profile) {
     case "passive":
       return {
@@ -72,7 +76,7 @@ export function botDecisions(profile: BotProfile, ctx: BotContext): RoundDecisio
       return {
         price: ref * 0.88,
         productionPlan: adaptivePlan(ctx, 1.15),
-        marketingBudget: 9000,
+        marketingBudget: 0.75 * mkt,
         qualityBudget: 0,
         maintenanceBudget: maintenance,
       };
@@ -80,24 +84,24 @@ export function botDecisions(profile: BotProfile, ctx: BotContext): RoundDecisio
       return {
         price: ref * 1.3,
         productionPlan: adaptivePlan(ctx, 1.0),
-        marketingBudget: 6000,
-        qualityBudget: 9000,
+        marketingBudget: 0.5 * mkt,
+        qualityBudget: 1.5 * qual,
         maintenanceBudget: maintenance,
       };
     case "balanced":
       return {
         price: ref * 1.0, // 59 € : juste sous le seuil psychologique des 60 €
         productionPlan: adaptivePlan(ctx, 1.05),
-        marketingBudget: 6000,
-        qualityBudget: 3000,
+        marketingBudget: 0.5 * mkt,
+        qualityBudget: 0.5 * qual,
         maintenanceBudget: maintenance,
       };
     case "growth":
       return {
         price: ref * 0.95,
         productionPlan: adaptivePlan(ctx, 1.25),
-        marketingBudget: 14000,
-        qualityBudget: 3000,
+        marketingBudget: (7 / 6) * mkt,
+        qualityBudget: 0.5 * qual,
         maintenanceBudget: maintenance,
       };
   }

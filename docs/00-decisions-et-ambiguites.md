@@ -17,7 +17,9 @@ période simulée ni le temps réel accordé.
 trimestre). Le temps réel accordé pour décider est un paramètre de la partie (`games.round_duration`),
 de « illimité » (mode apprentissage) à « 20 minutes » (concours). Le moteur économique ne connaît
 que des périodes abstraites numérotées ; la sémantique calendaire (T1 2026…) est de l'habillage
-défini dans le scénario.
+défini dans le scénario. *Implémenté à l'étape 6 : le joueur choisit mois / trimestre / année à
+la création de la partie ; `applyPeriodicity` (src/config/scenarios/periodicity.ts) redimensionne
+l'instantané de scénario (flux × k, croissances composées, délais et taux annuels inchangés).*
 
 ### ADR-02 — Joueur solo ou équipe ?
 **Ambiguïté** : le texte alterne « un joueur ou une équipe ».

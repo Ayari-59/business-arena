@@ -44,10 +44,12 @@ function Field({
 export function DecisionForm({
   gameId,
   roundIndex,
+  periodName,
   defaults,
 }: {
   gameId: string;
   roundIndex: number;
+  periodName: string;
   defaults: RoundDecisions;
 }) {
   const action = playRoundAction.bind(null, gameId);
@@ -78,7 +80,7 @@ export function DecisionForm({
         disabled={pending}
         className="w-full rounded-lg bg-amber-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 disabled:cursor-wait disabled:opacity-60"
       >
-        {pending ? "Simulation du trimestre en cours…" : `Valider mes décisions et simuler le tour ${roundIndex}`}
+        {pending ? "Simulation en cours…" : `Valider mes décisions et simuler — ${periodName}`}
       </button>
       <p className="text-center text-xs text-slate-500">
         Mode apprentissage : les résultats sont calculés immédiatement, à vous d&apos;analyser.

@@ -17,16 +17,45 @@ export default function Home() {
       <div className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-900 p-6">
         <h2 className="text-lg font-semibold text-slate-100">Scénario NOVA</h2>
         <p className="mt-2 text-sm leading-relaxed text-slate-400">
-          Reprenez NOVA, jeune fabricant d&apos;enceintes portables : 6 trimestres pour
+          Reprenez NOVA, jeune fabricant d&apos;enceintes portables : 6 tours pour
           apprendre prix, capacité, seuil de rentabilité et trésorerie, face à deux
           concurrents — SoundBox et Auris.
         </p>
         <ul className="mt-3 space-y-1 text-xs text-slate-500">
           <li>· Niveau Découverte — aucune connaissance préalable requise</li>
           <li>· Vos décisions : prix, production, marketing, qualité, financement</li>
-          <li>· Attention au trimestre 4 : la croissance a un coût caché…</li>
+          <li>· Attention au tour 4 : la croissance a un coût caché…</li>
         </ul>
-        <form action={startGameAction} className="mt-5">
+        <form action={startGameAction} className="mt-5 space-y-4">
+          <fieldset>
+            <legend className="text-xs font-medium uppercase tracking-wide text-slate-400">
+              Périodicité — chaque tour représente…
+            </legend>
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              {(
+                [
+                  ["month", "Un mois", "délais de paiement redoutables"],
+                  ["quarter", "Un trimestre", "le rythme classique"],
+                  ["year", "Une année", "vision long terme"],
+                ] as const
+              ).map(([value, label, hint]) => (
+                <label
+                  key={value}
+                  className="cursor-pointer rounded-lg border border-white/10 bg-slate-950 p-3 text-center transition has-[:checked]:border-amber-400 has-[:checked]:bg-amber-400/10"
+                >
+                  <input
+                    type="radio"
+                    name="periodicity"
+                    value={value}
+                    defaultChecked={value === "quarter"}
+                    className="sr-only"
+                  />
+                  <span className="block text-sm font-medium text-slate-100">{label}</span>
+                  <span className="mt-1 block text-[11px] leading-tight text-slate-500">{hint}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
           <button
             type="submit"
             className="w-full rounded-lg bg-amber-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-300"

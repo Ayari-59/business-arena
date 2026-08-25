@@ -4,6 +4,7 @@ import { getGuestUserId } from "@/lib/guest";
 import { formatEuro, formatPercent, formatUnits } from "@/lib/format";
 import { getGameView } from "@/services/game.service";
 import { novaScenario } from "@/config/scenarios/nova";
+import { periodLabel } from "@/config/scenarios/periodicity";
 import { KpiCard } from "@/components/kpi-card";
 import { RevenueChart, TreasuryChart } from "@/components/charts";
 import { DecisionForm } from "@/components/decision-form";
@@ -13,17 +14,20 @@ export const dynamic = "force-dynamic";
 
 const EVENT_LABELS: Record<string, string> = {
   raw_material_spike: "Hausse du prix des matières premières (+20 %)",
-  machine_breakdown: "Panne machine : disponibilité réduite ce trimestre",
+  machine_breakdown: "Panne machine : disponibilité réduite ce tour",
   viral_campaign: "Buzz sur le marché : la demande globale progresse",
 };
 
-const DEFAULT_DECISIONS: RoundDecisions = {
-  price: 59,
-  productionPlan: 4800,
-  marketingBudget: 6000,
-  qualityBudget: 2000,
-  maintenanceBudget: 4000,
-  finance: { newLoan: 0, loanRepayment: 0 },
+const defaultDecisions = (roundDays: number): RoundDecisions => {
+  const k = roundDays / 90; // les scénarios sont écrits en base trimestrielle
+  return {
+    price: 59,
+    productionPlan: Math.round(4800 * k),
+    marketingBudget: Math.round(6000 * k),
+    qualityBudget: Math.round(2000 * k),
+    maintenanceBudget: Math.round(4000 * k),
+    finance: { newLoan: 0, loanRepayment: 0 },
+  };
 };
 
 const segmentName = (code: string) =>
@@ -48,7 +52,9 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
           <h1 className="text-2xl font-bold text-slate-50">{view.playerTeamName}</h1>
         </div>
         <p className="rounded-full border border-white/10 px-4 py-1 text-sm text-slate-300">
-          {finished ? "Partie terminée" : `Trimestre ${view.currentRound} / ${view.roundsCount}`}
+          {finished
+            ? "Partie terminée"
+            : `${periodLabel(view.roundDays, view.currentRound)} / ${view.roundsCount}`}
         </p>
       </header>
 
@@ -87,7 +93,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
           <section className="grid gap-4 lg:grid-cols-2">
             <div className="rounded-xl border border-white/10 bg-slate-900 p-4">
               <h2 className="mb-3 text-sm font-semibold text-slate-200">
-                Marché du trimestre écoulé
+                Marché du tour écoulé
               </h2>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -153,12 +159,15 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
         </>
       ) : (
         <section className="rounded-xl border border-white/10 bg-slate-900 p-6 text-slate-300">
-          <h2 className="text-lg font-semibold text-slate-100">Trimestre 1 — prise en main</h2>
+          <h2 className="text-lg font-semibold text-slate-100">
+            {periodLabel(view.roundDays, 1)} — prise en main
+          </h2>
           <p className="mt-2 text-sm leading-relaxed">
             Vous reprenez <strong>NOVA</strong>, jeune fabricant de l&apos;enceinte portable NOVA One.
-            Atelier de 7 000 unités/trimestre, 4 opérateurs, 96 000 € de charges de structure,
-            un coût variable d&apos;environ 38 €/unité. Deux concurrents vous attendent :
-            SoundBox (agressif sur les prix) et Auris (positionnement premium).
+            Atelier d&apos;environ {formatUnits(7000 * (view.roundDays / 90))} unités par tour,
+            4 opérateurs, {formatEuro(96000 * (view.roundDays / 90))} de charges de structure
+            par tour, un coût variable d&apos;environ 38 €/unité. Deux concurrents vous
+            attendent : SoundBox (agressif sur les prix) et Auris (positionnement premium).
             Fixez votre prix, votre production et vos budgets — puis observez.
           </p>
         </section>
@@ -184,12 +193,13 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
       ) : (
         <section className="rounded-xl border border-white/10 bg-slate-900 p-6">
           <h2 className="mb-4 text-sm font-semibold text-slate-200">
-            Vos décisions du trimestre {view.currentRound}
+            Vos décisions — {periodLabel(view.roundDays, view.currentRound).toLowerCase()}
           </h2>
           <DecisionForm
             gameId={view.gameId}
             roundIndex={view.currentRound}
-            defaults={view.lastDecisions ?? DEFAULT_DECISIONS}
+            periodName={periodLabel(view.roundDays, view.currentRound).toLowerCase()}
+            defaults={view.lastDecisions ?? defaultDecisions(view.roundDays)}
           />
         </section>
       )}

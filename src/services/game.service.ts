@@ -15,6 +15,11 @@ import {
   teams,
 } from "@/db/schema";
 import { novaBots, novaCompany, novaScenario } from "@/config/scenarios/nova";
+import {
+  applyPeriodicity,
+  applyPeriodicityToCompany,
+  type Periodicity,
+} from "@/config/scenarios/periodicity";
 import { parseScenarioConfig } from "@/config/scenarios/schema";
 import { botDecisions, type BotProfile } from "@/engine/bots";
 import { ENGINE_VERSION, simulateRound } from "@/engine/simulation";
@@ -81,23 +86,27 @@ async function getOrCreateNovaScenarioId(): Promise<string> {
 }
 
 /** Crée une partie solo NOVA : joueur humain contre SoundBox et Auris. */
-export async function createSoloGame(userId: string): Promise<string> {
+export async function createSoloGame(
+  userId: string,
+  periodicity: Periodicity = "quarter",
+): Promise<string> {
   const [organizationId, scenarioId] = await Promise.all([
     getOrCreatePublicOrgId(),
     getOrCreateNovaScenarioId(),
   ]);
   const seed = randomInt(1, 2 ** 31);
+  const scenarioSnapshot = applyPeriodicity(novaScenario, periodicity); // ADR-01 + ADR-10
 
   const [game] = await db
     .insert(games)
     .values({
       organizationId,
       scenarioId,
-      scenarioSnapshot: novaScenario, // ADR-10 : instantané figé
+      scenarioSnapshot, // instantané figé (ADR-10), redimensionné par périodicité
       engineVersion: ENGINE_VERSION,
       seed,
       mode: "learning",
-      difficultyProfile: { level: 1 },
+      difficultyProfile: { level: 1, periodicity },
       status: "running",
       currentRound: 1,
       createdBy: userId,
@@ -123,7 +132,7 @@ export async function createSoloGame(userId: string): Promise<string> {
   await db.insert(players).values({ teamId: humanTeam.id, userId, role: "captain" });
 
   await db.insert(rounds).values(
-    Array.from({ length: novaScenario.roundsCount }, (_, i) => ({
+    Array.from({ length: scenarioSnapshot.roundsCount }, (_, i) => ({
       gameId: game.id,
       index: i + 1,
       status: i === 0 ? ("open" as const) : ("pending" as const),
@@ -134,11 +143,14 @@ export async function createSoloGame(userId: string): Promise<string> {
     teamRows.map((t) => ({
       teamId: t.id,
       roundIndex: 0,
-      state: novaCompany(
-        t.id,
-        t.name,
-        t.controller === "human" ? "human" : "bot",
-        (t.botProfile ?? undefined) as BotProfile | undefined,
+      state: applyPeriodicityToCompany(
+        novaCompany(
+          t.id,
+          t.name,
+          t.controller === "human" ? "human" : "bot",
+          (t.botProfile ?? undefined) as BotProfile | undefined,
+        ),
+        periodicity,
       ),
     })),
   );
@@ -386,6 +398,7 @@ export interface GameView {
   status: string;
   currentRound: number;
   roundsCount: number;
+  roundDays: number;
   playerTeamId: string;
   playerTeamName: string;
   lastResult: CompanyRoundResult | null;
@@ -492,6 +505,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     status: game.status,
     currentRound: game.currentRound,
     roundsCount: (game.scenarioSnapshot as { roundsCount: number }).roundsCount,
+    roundDays: (game.scenarioSnapshot as { roundDays: number }).roundDays,
     playerTeamId: humanTeam.id,
     playerTeamName: humanTeam.name,
     lastResult,
