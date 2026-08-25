@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { getTeacherGameView } from "@/services/game.service";
+import { getTeacherPedagogyView } from "@/services/pedagogy.service";
 import { formatEuro } from "@/lib/format";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { closeRoundAction } from "../../actions";
@@ -17,6 +18,7 @@ export default async function TeacherGamePage({
   const { gameId } = await params;
   const view = await getTeacherGameView(gameId, session.userId);
   if (!view) notFound();
+  const pedagogy = await getTeacherPedagogyView(gameId, session.userId);
 
   const finished = view.status === "finished";
   const humanTeams = view.teams.filter((t) => t.controller === "human");
@@ -107,6 +109,78 @@ export default async function TeacherGamePage({
           </form>
         ) : null}
       </section>
+
+      {pedagogy ? (
+        <section className="rounded-xl border border-white/10 bg-slate-900 p-4">
+          <h2 className="mb-3 text-sm font-semibold text-slate-200">Vue pédagogique</h2>
+          <div className="grid gap-4 lg:grid-cols-3">
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Maîtrise des concepts (du plus fragile au plus solide)
+              </h3>
+              {pedagogy.conceptMastery.length === 0 ? (
+                <p className="mt-2 text-xs text-slate-500">
+                  Disponible dès qu&apos;un tour avec situations aura été débriefé.
+                </p>
+              ) : (
+                <ul className="mt-2 space-y-1.5">
+                  {pedagogy.conceptMastery.slice(0, 8).map((c) => (
+                    <li key={c.code} className="text-sm">
+                      <div className="flex items-center justify-between text-slate-300">
+                        <span>{c.name}</span>
+                        <span className="tabular-nums text-slate-400">{Math.round(c.average)}</span>
+                      </div>
+                      <div className="mt-0.5 h-1.5 rounded-full bg-slate-950">
+                        <div
+                          className={`h-1.5 rounded-full ${c.average < 40 ? "bg-red-400" : c.average < 70 ? "bg-amber-400" : "bg-emerald-400"}`}
+                          style={{ width: `${Math.max(3, Math.min(100, c.average))}%` }}
+                        />
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Indices consommés
+              </h3>
+              <ul className="mt-2 space-y-1 text-sm text-slate-300">
+                {pedagogy.hintsUsedByTeam.map((t) => (
+                  <li key={t.teamName} className="flex justify-between">
+                    <span>{t.teamName}</span>
+                    <span className="tabular-nums text-slate-400">{t.count}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Choix de modèles d&apos;analyse
+              </h3>
+              <ul className="mt-2 space-y-1 text-sm">
+                {pedagogy.modelChoiceStats.map((s) => (
+                  <li key={s.relevance} className="flex justify-between text-slate-300">
+                    <span>
+                      {s.relevance === "optimal"
+                        ? "Pertinents"
+                        : s.relevance === "acceptable"
+                          ? "Acceptables"
+                          : s.relevance === "misleading"
+                            ? "Trompeurs (contresens)"
+                            : "Hors sujet"}
+                    </span>
+                    <span className="tabular-nums text-slate-400">{s.count}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-2 text-xs text-slate-500">
+                Un choix « trompeur » fréquent signale un concept mal compris — à reprendre en classe.
+              </p>
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       <section className="rounded-xl border border-white/10 bg-slate-900 p-4">
         <h2 className="mb-3 text-sm font-semibold text-slate-200">Classement</h2>

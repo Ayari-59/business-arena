@@ -22,6 +22,11 @@ import {
   type Periodicity,
 } from "@/config/scenarios/periodicity";
 import { parseScenarioConfig } from "@/config/scenarios/schema";
+import {
+  debriefRound,
+  openSituationsForRound,
+  seedPedagogyReferentials,
+} from "@/services/pedagogy.service";
 import { botDecisions, type BotProfile } from "@/engine/bots";
 import { ENGINE_VERSION, simulateRound } from "@/engine/simulation";
 import type {
@@ -107,6 +112,7 @@ interface CreateGameArgs {
 /** Cœur commun de création : partie + équipes + tours + états initiaux. */
 async function createGameCore(args: CreateGameArgs): Promise<{ gameId: string }> {
   const scenarioId = await getOrCreateNovaScenarioId();
+  await seedPedagogyReferentials(); // référentiels concepts/modèles/situations (idempotent)
   const seed = randomInt(1, 2 ** 31);
   const scenarioSnapshot = applyPeriodicity(novaScenario, args.periodicity); // ADR-01 + ADR-10
   const botCount = Math.min(Math.max(args.botCount, 0), novaBots.length);
@@ -174,6 +180,8 @@ async function createGameCore(args: CreateGameArgs): Promise<{ gameId: string }>
       ),
     })),
   );
+
+  await openSituationsForRound(game.id, 1); // situations scriptées du tour 1 (doc 03)
 
   return { gameId: game.id };
 }
@@ -544,6 +552,13 @@ async function resolveGameRound(
       .where(eq(games.id, gameId));
 
     await updateRankings(gameId, teamRows.map((t) => t.id));
+
+    // Moteur pédagogique (doc 03) : débriefer les situations du tour résolu,
+    // puis instancier celles du tour suivant (scriptées + détectées)
+    await debriefRound(gameId, roundIndex);
+    if (!finished) {
+      await openSituationsForRound(gameId, roundIndex + 1, output.results);
+    }
     return { roundIndex, finished };
   } catch (error) {
     // libère le verrou pour permettre une nouvelle tentative

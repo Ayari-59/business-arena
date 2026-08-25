@@ -77,9 +77,16 @@ définir dans le projet Vercel les variables `DATABASE_URL`, `DIRECT_URL`, `AUTH
 1. ✅ **Étape 1 — ce dossier** : architecture validée avant développement.
 2. ✅ Étape 2 — modèle de données : schéma Drizzle (43 tables, `src/db/schema/`) +
    migration initiale (`drizzle/`), conformes à `docs/05`.
-3. Étape 3 — moteur économique minimal + tests (`docs/02`, `docs/09`).
-4. Étape 4 — scénario NOVA (`docs/07`).
-5. Étape 5 — simulation de 6 tours.
-6. Étapes 6→13 — interfaces, moteur pédagogique, indices, scoring, profil, IA, compétition.
+3. ✅ Étape 3 — moteur économique déterministe + tests (`docs/02`, `docs/09`).
+4. ✅ Étape 4 — scénario NOVA calibré, invariants automatisés (`docs/07`).
+5. ✅ Étape 5 — simulation de 6 tours (périodicité mois/trimestre/année au choix).
+6. ✅ Étape 6 — interface joueur (arène, KPI, graphiques, décisions).
+7. ✅ Étape 7 — interface enseignant (parties de classe 1-8 équipes + bots,
+   codes d'invitation, clôture des tours, vue pédagogique).
+8. ✅ Étape 8 — moteur pédagogique (situations scriptées et détectées,
+   diagnostic, choix du modèle d'analyse, débriefing, progression).
+9. ✅ Étape 9 — système d'indices à 5 niveaux (séquentiels, coûtés, tracés).
+10. Étapes 10→13 — scoring BPI complet, profil joueur affiché, IA coach,
+    moteur de compétition.
 
 **Aucune modification du moteur économique ne sera acceptée sans tests** (§32).

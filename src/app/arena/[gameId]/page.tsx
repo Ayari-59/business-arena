@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { getGuestUserId } from "@/lib/guest";
 import { formatEuro, formatPercent, formatUnits } from "@/lib/format";
 import { getGameView } from "@/services/game.service";
+import { getTeamSituations } from "@/services/pedagogy.service";
+import { SituationCard, SituationDebrief } from "@/components/situation-panel";
 import { novaScenario } from "@/config/scenarios/nova";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { KpiCard } from "@/components/kpi-card";
@@ -39,6 +41,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
   if (!userId) notFound();
   const view = await getGameView(gameId, userId);
   if (!view) notFound();
+  const situations = await getTeamSituations(gameId, userId);
 
   const r = view.lastResult;
   const finished = view.status === "finished";
@@ -156,6 +159,17 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
               </p>
             </div>
           </section>
+
+          {situations.debriefed.length > 0 ? (
+            <section className="space-y-4">
+              <h2 className="text-sm font-semibold text-slate-200">
+                Analyse du tour écoulé — ce qu&apos;il fallait voir
+              </h2>
+              {situations.debriefed.map((s) => (
+                <SituationDebrief key={s.instanceId} situation={s} />
+              ))}
+            </section>
+          ) : null}
         </>
       ) : (
         <section className="rounded-xl border border-white/10 bg-slate-900 p-6 text-slate-300">
@@ -172,6 +186,14 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
           </p>
         </section>
       )}
+
+      {!finished && situations.current.length > 0 ? (
+        <section className="space-y-4">
+          {situations.current.map((s) => (
+            <SituationCard key={s.instanceId} gameId={view.gameId} situation={s} />
+          ))}
+        </section>
+      ) : null}
 
       {finished ? (
         <section className="rounded-xl border border-amber-400/30 bg-slate-900 p-6 text-center">

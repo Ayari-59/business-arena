@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getGuestUserId } from "@/lib/guest";
 import { roundDecisionsSchema } from "@/services/decision-schema";
 import { getGameKind, resolveCurrentRound, submitTeamDecisions } from "@/services/game.service";
+import { chooseModel, submitDiagnosis, unlockHint } from "@/services/pedagogy.service";
 
 export interface PlayRoundState {
   error: string | null;
@@ -43,6 +44,69 @@ export async function playRoundAction(
     }
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Erreur lors de la simulation." };
+  }
+  revalidatePath(`/arena/${gameId}`);
+  return { error: null };
+}
+
+export interface PedagogyState {
+  error: string | null;
+}
+
+/** Débloque le prochain indice d'une situation (séquentiel, tracé — doc 03 §4). */
+export async function unlockHintAction(
+  gameId: string,
+  instanceId: string,
+  _prev: PedagogyState,
+  _formData: FormData,
+): Promise<PedagogyState> {
+  const userId = await getGuestUserId();
+  if (!userId) return { error: "Session expirée." };
+  try {
+    await unlockHint({ instanceId, userId });
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Erreur." };
+  }
+  revalidatePath(`/arena/${gameId}`);
+  return { error: null };
+}
+
+/** Enregistre le diagnostic du joueur (options + analyse libre). */
+export async function submitDiagnosisAction(
+  gameId: string,
+  instanceId: string,
+  _prev: PedagogyState,
+  formData: FormData,
+): Promise<PedagogyState> {
+  const userId = await getGuestUserId();
+  if (!userId) return { error: "Session expirée." };
+  const selected = formData.getAll("options").map(String);
+  const freeText = String(formData.get("freeText") ?? "");
+  try {
+    await submitDiagnosis({ instanceId, userId, selectedOptionIds: selected, freeText });
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Erreur." };
+  }
+  revalidatePath(`/arena/${gameId}`);
+  return { error: null };
+}
+
+/** Enregistre le choix de modèle d'analyse et sa justification (§7). */
+export async function chooseModelAction(
+  gameId: string,
+  instanceId: string,
+  _prev: PedagogyState,
+  formData: FormData,
+): Promise<PedagogyState> {
+  const userId = await getGuestUserId();
+  if (!userId) return { error: "Session expirée." };
+  const modelCode = String(formData.get("modelCode") ?? "");
+  const justification = String(formData.get("justification") ?? "");
+  if (!modelCode) return { error: "Choisissez un modèle d'analyse." };
+  try {
+    await chooseModel({ instanceId, userId, modelCode, justification });
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Erreur." };
   }
   revalidatePath(`/arena/${gameId}`);
   return { error: null };
