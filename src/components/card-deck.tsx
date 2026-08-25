@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { drawCardAction, type DrawCardState } from "@/app/teacher/actions";
 import { EVENT_CARDS, TEACHER_DRAWABLE_CODES, TEAM_CARD_CODES } from "@/config/events/cards";
 import { EventCard } from "@/components/event-card";
+import { BrandMark } from "@/components/brand-mark";
 
 const initial: DrawCardState = { error: null, drawnCode: null };
 
@@ -116,8 +117,10 @@ export function CardDeck({
               }`}
               title={isTeamDraw ? "Tirer une carte équipe au hasard" : "Tirer une carte marché au hasard"}
             >
-              <span className="absolute inset-0 flex flex-col items-center justify-center gap-1">
-                <span className="text-xl">🂠</span>
+              <span className="absolute inset-0 flex flex-col items-center justify-center gap-1.5">
+                <BrandMark
+                  className={`h-7 w-7 ${isTeamDraw ? "text-sky-400/80" : "text-amber-400/80"}`}
+                />
                 <span
                   className={`text-[9px] font-bold uppercase tracking-widest ${
                     isTeamDraw ? "text-sky-400/80" : "text-amber-400/70"

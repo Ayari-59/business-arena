@@ -1,4 +1,5 @@
 import { CARD_CATEGORIES, cardByCode } from "@/config/events/cards";
+import { BrandMark } from "@/components/brand-mark";
 
 /**
  * Carte événement : l'habillage théâtral du moteur d'événements (§19).
@@ -36,7 +37,7 @@ export function EventCard({
         {/* dos de la carte */}
         <div className="card-face card-back rounded-xl border border-amber-400/30 bg-gradient-to-br from-slate-900 to-slate-950">
           <div className="flex h-full flex-col items-center justify-center gap-2">
-            <span className="text-2xl">🂠</span>
+            <BrandMark className="h-9 w-9 text-amber-400/80" />
             <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-amber-400/70">
               Business Arena
             </span>

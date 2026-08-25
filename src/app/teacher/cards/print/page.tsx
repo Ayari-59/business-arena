@@ -1,6 +1,7 @@
 "use client";
 
 import { CARD_CATEGORIES, EVENT_CARDS, type EventCardDef } from "@/config/events/cards";
+import { BrandMark } from "@/components/brand-mark";
 
 /**
  * Deck physique imprimable (A4) : chaque carte est une paire dos + face à
@@ -21,10 +22,12 @@ function PrintCard({ card, deck }: { card: EventCardDef; deck: "market" | "team"
   const backColor = deck === "market" ? "#b45309" : "#1d4ed8";
   return (
     <div className="print-pair">
-      {/* dos */}
+      {/* dos : la marque en blanc sur la couleur du paquet */}
       <div className="print-half print-back" style={{ background: backColor }}>
-        <span className="print-back-emoji">{deck === "market" ? "🌍" : "🎯"}</span>
-        <span className="print-back-brand">BUSINESS ARENA</span>
+        <BrandMark className="print-back-mark" />
+        <span className="print-back-brand">
+          BUSINESS <strong>ARENA</strong>
+        </span>
         <span className="print-back-deck">
           {deck === "market" ? "Carte marché · toute la classe" : "Carte équipe · tirage ciblé"}
         </span>
@@ -173,8 +176,9 @@ const printStyles = `
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
   }
-  .print-back-emoji { font-size: 34px; }
-  .print-back-brand { font-size: 11px; font-weight: 700; letter-spacing: 0.25em; }
+  .print-back-mark { width: 22mm; height: 22mm; color: #fff; }
+  .print-back-brand { font-size: 11px; font-weight: 300; letter-spacing: 0.25em; margin-top: 2mm; }
+  .print-back-brand strong { font-weight: 800; }
   .print-back-deck { font-size: 9px; opacity: 0.85; }
   .print-front {
     display: flex;
