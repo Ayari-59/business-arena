@@ -97,4 +97,14 @@ définir dans le projet Vercel les variables `DATABASE_URL`, `DIRECT_URL`, `AUTH
     en mode compétition (décisions verrouillées, indices limités — §25),
     qualification au BPI, finale, podium.
 
+## Comptes de démonstration
+
+Depuis `/admin` (admin général), le bouton **« Générer le monde démo »** crée un
+établissement complet : `direction@demo.business-arena.fr` (admin d'établissement) et
+`prof@demo.business-arena.fr` (enseignant), mot de passe `Demo2026!`, avec une partie de
+classe jouée sur 3 tours (le tour 4 — la crise de trésorerie — est le prochain), des vues
+pédagogiques alimentées et un concours prêt à lancer. Les identifiants s'affichent sur
+`/teacher/login`. En local : `npm run seed:demo`. L'admin général n'a pas de compte démo
+(rôle sensible : réservé aux e-mails d'`ADMIN_EMAILS`).
+
 **Aucune modification du moteur économique ne sera acceptée sans tests** (§32).

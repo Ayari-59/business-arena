@@ -2,10 +2,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { getPlatformOverview, getStaffContext } from "@/services/admin.service";
+import { DEMO_ACCOUNTS, isDemoSeeded } from "@/services/demo.service";
 import {
   createEstablishmentAction,
   deactivateAdminInviteAction,
   newAdminInviteAction,
+  seedDemoAction,
   updatePlatformConfigAction,
 } from "./actions";
 
@@ -17,6 +19,7 @@ export default async function AdminPage() {
   const context = await getStaffContext(session.userId);
   if (!context?.isPlatformAdmin) redirect("/teacher");
   const overview = await getPlatformOverview(session.userId);
+  const demoSeeded = await isDemoSeeded();
 
   return (
     <main className="mx-auto max-w-5xl space-y-8 p-6">
@@ -89,6 +92,38 @@ export default async function AdminPage() {
             Enregistrer les réglages
           </button>
         </form>
+      </section>
+
+      {/* Monde démo */}
+      <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
+        <h2 className="text-sm font-semibold text-slate-200">Monde de démonstration</h2>
+        <p className="mt-1 text-xs text-slate-500">
+          Un établissement complet pour présenter le produit : direction, enseignant, une
+          partie de classe déjà jouée sur 3 tours (le tour 4 — la crise de trésorerie — est
+          le prochain), vues pédagogiques alimentées, et un concours prêt à lancer.
+        </p>
+        {demoSeeded ? (
+          <div className="mt-3 rounded-lg bg-slate-950 p-4 text-sm text-slate-300">
+            <p className="text-emerald-400">✓ Monde démo en place</p>
+            <ul className="mt-2 space-y-1 font-mono text-xs">
+              <li>
+                Admin établissement : {DEMO_ACCOUNTS.orgAdmin.email} / {DEMO_ACCOUNTS.password}
+              </li>
+              <li>
+                Enseignant : {DEMO_ACCOUNTS.teacher.email} / {DEMO_ACCOUNTS.password}
+              </li>
+            </ul>
+            <p className="mt-2 text-xs text-slate-500">
+              Ces identifiants sont aussi affichés sur la page de connexion enseignant.
+            </p>
+          </div>
+        ) : (
+          <form action={seedDemoAction} className="mt-3">
+            <button className="rounded-lg bg-amber-400 px-5 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300">
+              Générer le monde démo
+            </button>
+          </form>
+        )}
       </section>
 
       {/* Nouvel établissement */}

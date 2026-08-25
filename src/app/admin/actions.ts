@@ -10,6 +10,7 @@ import {
   requirePlatformAdmin,
   updatePlatformConfig,
 } from "@/services/admin.service";
+import { seedDemoWorld } from "@/services/demo.service";
 
 async function requireAdminSession(): Promise<string> {
   const session = await getSession();
@@ -49,4 +50,11 @@ export async function deactivateAdminInviteAction(
   await requireAdminSession();
   await deactivateInvite({ inviteId, organizationId });
   revalidatePath("/admin");
+}
+
+export async function seedDemoAction(): Promise<void> {
+  await requireAdminSession();
+  await seedDemoWorld();
+  revalidatePath("/admin");
+  revalidatePath("/teacher/login");
 }
