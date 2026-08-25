@@ -5,6 +5,7 @@ import { getTeacherPedagogyView } from "@/services/pedagogy.service";
 import { formatEuro } from "@/lib/format";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { closeRoundAction } from "../../actions";
+import { CardDeck } from "@/components/card-deck";
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +44,10 @@ export default async function TeacherGamePage({
             : `${periodLabel(view.roundDays, view.currentRound)} / ${view.roundsCount}`}
         </p>
       </header>
+
+      {!finished && view.mode === "learning" ? (
+        <CardDeck gameId={view.gameId} pendingCodes={view.pendingEventCodes} />
+      ) : null}
 
       <section className="rounded-xl border border-white/10 bg-slate-900 p-4">
         <h2 className="mb-3 text-sm font-semibold text-slate-200">

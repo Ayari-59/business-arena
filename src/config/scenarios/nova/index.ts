@@ -100,6 +100,9 @@ const rawNova = {
   },
   // structure totale ≈ 96 000 €/tour : 91 000 décaissés + 5 000 d'amortissements
   fixedCostsPerRound: 91000,
+  // Le deck d'événements (§19) : chaque entrée est une CARTE (habillage dans
+  // src/config/events/cards.ts). Probabilités faibles : 1 à 2 cartes par
+  // partie en moyenne, en plus des cartes scriptées.
   events: [
     {
       code: "raw_material_spike",
@@ -111,7 +114,7 @@ const rawNova = {
     {
       code: "machine_breakdown",
       scope: "company",
-      probability: 0.06,
+      probability: 0.05,
       minRound: 3,
       duration: 1,
       modifiers: [{ target: "availability", op: "mul", value: 0.85 }],
@@ -119,10 +122,79 @@ const rawNova = {
     {
       code: "viral_campaign",
       scope: "market",
-      probability: 0.05,
+      probability: 0.04,
       minRound: 2,
       duration: 1,
       modifiers: [{ target: "demand", op: "mul", value: 1.08 }],
+    },
+    {
+      code: "competitor_bankruptcy",
+      scope: "market",
+      probability: 0.03,
+      minRound: 3,
+      duration: 2,
+      modifiers: [{ target: "demand", op: "mul", value: 1.12 }],
+    },
+    {
+      code: "economic_downturn",
+      scope: "market",
+      probability: 0.03,
+      minRound: 2,
+      duration: 2,
+      modifiers: [{ target: "demand", op: "mul", value: 0.9 }],
+    },
+    {
+      code: "student_fair",
+      scope: "market",
+      probability: 0.04,
+      duration: 1,
+      modifiers: [{ target: "demand:etudiants", op: "mul", value: 1.25 }],
+    },
+    {
+      code: "premium_trend",
+      scope: "market",
+      probability: 0.04,
+      duration: 1,
+      modifiers: [{ target: "demand:passionnes", op: "mul", value: 1.3 }],
+    },
+    {
+      code: "rate_hike",
+      scope: "market",
+      probability: 0.03,
+      minRound: 3,
+      duration: 2,
+      modifiers: [{ target: "interest_rate", op: "mul", value: 1.5 }],
+    },
+    {
+      code: "rate_cut",
+      scope: "market",
+      probability: 0.03,
+      minRound: 3,
+      duration: 2,
+      modifiers: [{ target: "interest_rate", op: "mul", value: 0.6 }],
+    },
+    {
+      code: "supplier_discount",
+      scope: "market",
+      probability: 0.03,
+      duration: 1,
+      modifiers: [{ target: "material_cost", op: "mul", value: 0.9 }],
+    },
+    {
+      code: "supplier_dispute",
+      scope: "company",
+      probability: 0.03,
+      minRound: 2,
+      duration: 1,
+      modifiers: [{ target: "material_cost", op: "mul", value: 1.15 }],
+    },
+    {
+      code: "cold_wave",
+      scope: "market",
+      probability: 0.03,
+      minRound: 2,
+      duration: 1,
+      modifiers: [{ target: "availability", op: "mul", value: 0.9 }],
     },
   ],
   scriptedEvents: [{ round: 5, eventCode: "raw_material_spike" }],

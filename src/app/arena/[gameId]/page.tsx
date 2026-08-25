@@ -8,18 +8,13 @@ import { SituationCard, SituationDebrief } from "@/components/situation-panel";
 import { novaScenario } from "@/config/scenarios/nova";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { KpiCard } from "@/components/kpi-card";
+import { EventCard } from "@/components/event-card";
 import { BpiPanel } from "@/components/bpi-panel";
 import { RevenueChart, TreasuryChart } from "@/components/charts";
 import { DecisionForm } from "@/components/decision-form";
 import type { RoundDecisions } from "@/engine/types";
 
 export const dynamic = "force-dynamic";
-
-const EVENT_LABELS: Record<string, string> = {
-  raw_material_spike: "Hausse du prix des matières premières (+20 %)",
-  machine_breakdown: "Panne machine : disponibilité réduite ce tour",
-  viral_campaign: "Buzz sur le marché : la demande globale progresse",
-};
 
 const defaultDecisions = (roundDays: number): RoundDecisions => {
   const k = roundDays / 90; // les scénarios sont écrits en base trimestrielle
@@ -134,13 +129,16 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                 </table>
               </div>
               {view.lastEvents.length > 0 ? (
-                <ul className="mt-3 space-y-1">
-                  {view.lastEvents.map((code) => (
-                    <li key={code} className="rounded-lg border border-amber-400/20 bg-amber-950/30 px-3 py-2 text-xs text-amber-200">
-                      ⚡ {EVENT_LABELS[code] ?? code}
-                    </li>
-                  ))}
-                </ul>
+                <div className="mt-4">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-400">
+                    Cartes tirées ce tour
+                  </p>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {view.lastEvents.map((code, i) => (
+                      <EventCard key={code} code={code} delayMs={i * 450} />
+                    ))}
+                  </div>
+                </div>
               ) : null}
             </div>
 
@@ -206,6 +204,22 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
           </p>
         </section>
       )}
+
+      {!finished && view.announcedEventCards.length > 0 ? (
+        <section className="rounded-xl border border-amber-400/30 bg-slate-900 p-4">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-400">
+            ⚡ Votre enseignant a tiré une carte — elle s&apos;appliquera à ce tour
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {view.announcedEventCards.map((code, i) => (
+              <EventCard key={code} code={code} delayMs={i * 450} announced />
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-slate-500">
+            Adaptez vos décisions en conséquence : c&apos;est tout l&apos;intérêt d&apos;être prévenu.
+          </p>
+        </section>
+      ) : null}
 
       {!finished && situations.current.length > 0 ? (
         <section className="space-y-4">

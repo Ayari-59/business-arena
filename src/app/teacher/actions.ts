@@ -5,7 +5,11 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { clearSession, getSession, setSession } from "@/lib/session";
 import { loginTeacher, registerTeacher, getTeacherOrgId } from "@/services/auth.service";
-import { closeCurrentRound, createClassGame } from "@/services/game.service";
+import {
+  closeCurrentRound,
+  createClassGame,
+  drawEventCardForNextRound,
+} from "@/services/game.service";
 import {
   createCompetition,
   finishCompetition,
@@ -154,4 +158,31 @@ export async function finishCompetitionAction(
   _formData: FormData,
 ): Promise<CompetitionActionState> {
   return runCompetitionAction(competitionId, finishCompetition);
+}
+
+export interface DrawCardState {
+  error: string | null;
+  drawnCode: string | null;
+}
+
+/** Tirage d'une carte événement (animation de classe, mode apprentissage). */
+export async function drawCardAction(
+  gameId: string,
+  _prev: DrawCardState,
+  formData: FormData,
+): Promise<DrawCardState> {
+  const session = await getSession();
+  if (!session) return { error: "Session expirée.", drawnCode: null };
+  const eventCode = String(formData.get("eventCode") ?? "").trim() || undefined;
+  try {
+    const { eventCode: drawn } = await drawEventCardForNextRound({
+      gameId,
+      teacherId: session.userId,
+      eventCode,
+    });
+    revalidatePath(`/teacher/games/${gameId}`);
+    return { error: null, drawnCode: drawn };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Erreur.", drawnCode: null };
+  }
 }
