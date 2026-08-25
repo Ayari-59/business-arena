@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { startGameAction } from "./actions";
+import { getPlatformConfig } from "@/services/admin.service";
+
+export const dynamic = "force-dynamic";
 
 /**
  * Landing page (§34) : moderne, immersive, compréhensible par un étudiant de
@@ -77,7 +80,8 @@ function MiniKpi({ label, value, tone }: { label: string; value: string; tone?: 
   );
 }
 
-export default function Home() {
+export default async function Home() {
+  const config = await getPlatformConfig();
   return (
     <main className="relative overflow-hidden">
       {/* halo décoratif */}
@@ -85,6 +89,12 @@ export default function Home() {
         aria-hidden
         className="pointer-events-none absolute -top-40 left-1/2 h-[500px] w-[900px] -translate-x-1/2 rounded-full bg-amber-400/10 blur-3xl"
       />
+
+      {config.announcement ? (
+        <div className="border-b border-amber-400/20 bg-amber-950/30 px-6 py-2 text-center text-sm text-amber-200">
+          📣 {config.announcement}
+        </div>
+      ) : null}
 
       {/* ---------- Nav ---------- */}
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
@@ -297,6 +307,16 @@ export default function Home() {
             </div>
           </div>
 
+          {!config.allowPublicPlay ? (
+            <div className="rounded-2xl border border-white/10 bg-slate-900 p-6 text-sm text-slate-400">
+              Les parties publiques sont momentanément désactivées. Élèves : utilisez le code
+              donné par votre enseignant sur{" "}
+              <Link href="/join" className="text-amber-300 underline-offset-4 hover:underline">
+                /join
+              </Link>
+              .
+            </div>
+          ) : (
           <form
             action={startGameAction}
             className="rounded-2xl border border-white/10 bg-slate-900 p-6"
@@ -356,6 +376,7 @@ export default function Home() {
               Lancer la partie
             </button>
           </form>
+          )}
         </div>
       </section>
 

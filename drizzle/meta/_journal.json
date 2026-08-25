@@ -22,6 +22,13 @@
       "when": 1787652771166,
       "tag": "0002_friendly_thaddeus_ross",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1787659785853,
+      "tag": "0003_useful_triton",
+      "breakpoints": true
     }
   ]
 }

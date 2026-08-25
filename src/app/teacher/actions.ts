@@ -21,7 +21,8 @@ const registerSchema = z.object({
   email: z.string().email("E-mail invalide"),
   password: z.string().min(8, "Mot de passe : 8 caractères minimum"),
   displayName: z.string().min(1, "Votre nom est requis"),
-  schoolName: z.string().min(1, "Le nom de l'établissement est requis"),
+  schoolName: z.string().catch(""),
+  inviteCode: z.string().catch(""),
 });
 
 export async function registerAction(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -29,7 +30,8 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
     email: formData.get("email"),
     password: formData.get("password"),
     displayName: formData.get("displayName"),
-    schoolName: formData.get("schoolName"),
+    schoolName: formData.get("schoolName") ?? "",
+    inviteCode: formData.get("inviteCode") ?? "",
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide" };
   const result = await registerTeacher(parsed.data);

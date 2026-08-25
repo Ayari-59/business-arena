@@ -81,7 +81,17 @@ export function TeacherAuthForms() {
       ) : (
         <form action={registerFormAction} className="space-y-4">
           <Input label="Votre nom" name="displayName" required autoComplete="name" />
-          <Input label="Établissement" name="schoolName" required placeholder="Lycée / IUT / École…" />
+          <Input
+            label="Code d'invitation (si votre établissement vous en a donné un)"
+            name="inviteCode"
+            autoComplete="off"
+            placeholder="EX : K7M2PR9T"
+          />
+          <Input
+            label="Sinon : nom de votre établissement (il sera créé)"
+            name="schoolName"
+            placeholder="Lycée / IUT / École…"
+          />
           <Input label="E-mail" name="email" type="email" required autoComplete="email" />
           <Input
             label="Mot de passe (8 caractères min.)"

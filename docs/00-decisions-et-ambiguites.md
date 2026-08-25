@@ -117,6 +117,17 @@ le profil de difficulté (ex. niveau 1 : CA, résultat, trésorerie, stock ; niv
 ratios). Le moteur calcule toujours tout ; c'est la **couche de présentation pédagogique** qui
 filtre. Aucune logique de calcul dans l'UI.
 
+### ADR-16 — Hiérarchie d'administration et déploiement multi-établissements
+**Décision** (implémentée avec l'espace admin) : quatre niveaux — admin général
+(`users.is_platform_admin`, amorcé par la variable d'environnement `ADMIN_EMAILS`), admin
+d'établissement (`organization_members.role = org_admin`), enseignant (`teacher`), joueur.
+Le déploiement vers un nouvel établissement passe par des **codes d'invitation**
+(`org_invites`, portant un rôle) : l'admin général crée l'établissement et un code admin ;
+l'admin d'établissement s'inscrit avec ce code puis génère des codes enseignants — aucun mot
+de passe provisoire ne circule. Les réglages globaux du jeu (`platform_settings`, ligne
+unique jsonb) couvrent : parties publiques on/off, inscriptions enseignants libres on/off,
+annonce sur la landing.
+
 ---
 
 ## B. Risques identifiés

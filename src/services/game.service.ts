@@ -29,6 +29,7 @@ import {
   openSituationsForRound,
   seedPedagogyReferentials,
 } from "@/services/pedagogy.service";
+import { getPlatformConfig } from "@/services/admin.service";
 import { botDecisions, type BotProfile } from "@/engine/bots";
 import {
   BPI_DIMENSIONS,
@@ -219,6 +220,10 @@ export async function createSoloGame(
   periodicity: Periodicity = "quarter",
   companiesCount = 3,
 ): Promise<string> {
+  const config = await getPlatformConfig();
+  if (!config.allowPublicPlay) {
+    throw new Error("Les parties publiques sont désactivées par l'administrateur.");
+  }
   const organizationId = await getOrCreatePublicOrgId();
   const botCount = Math.min(Math.max(companiesCount, 2), novaBots.length + 1) - 1;
   const { gameId } = await createGameCore({

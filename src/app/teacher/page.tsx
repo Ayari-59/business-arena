@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { getTeacherGames } from "@/services/game.service";
 import { getOrganizerCompetitions } from "@/services/competition.service";
+import { getStaffContext } from "@/services/admin.service";
 import { createClassGameAction, createCompetitionAction, logoutAction } from "./actions";
 import { periodLabel } from "@/config/scenarios/periodicity";
 
@@ -13,6 +14,8 @@ export default async function TeacherDashboard() {
   if (!session) redirect("/teacher/login");
   const games = await getTeacherGames(session.userId);
   const competitions = await getOrganizerCompetitions(session.userId);
+  const staff = await getStaffContext(session.userId);
+  const isOrgAdmin = staff?.organizations.some((o) => o.role === "org_admin") ?? false;
 
   return (
     <main className="mx-auto max-w-4xl space-y-8 p-6">
@@ -21,11 +24,23 @@ export default async function TeacherDashboard() {
           <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Espace enseignant</p>
           <h1 className="text-2xl font-bold">Mes parties</h1>
         </div>
-        <form action={logoutAction}>
-          <button className="text-xs text-slate-500 underline hover:text-slate-300">
-            Se déconnecter
-          </button>
-        </form>
+        <div className="flex items-center gap-4">
+          {isOrgAdmin ? (
+            <Link href="/org" className="text-xs text-amber-300 underline-offset-4 hover:underline">
+              Mon établissement
+            </Link>
+          ) : null}
+          {staff?.isPlatformAdmin ? (
+            <Link href="/admin" className="text-xs text-amber-300 underline-offset-4 hover:underline">
+              Administration
+            </Link>
+          ) : null}
+          <form action={logoutAction}>
+            <button className="text-xs text-slate-500 underline hover:text-slate-300">
+              Se déconnecter
+            </button>
+          </form>
+        </div>
       </header>
 
       <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">

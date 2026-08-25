@@ -6,6 +6,7 @@ import * as schema from "../src/db/schema";
 // Garde-fou : le schéma Drizzle doit rester la traduction littérale de docs/05.
 const EXPECTED_TABLES = [
   "users", "organizations", "organization_members", "classes", "class_members",
+  "org_invites", "platform_settings",
   "scenarios", "concepts", "decision_models", "decision_model_concepts",
   "situations", "situation_models", "situation_concepts", "hints",
   "event_definitions", "decision_options",

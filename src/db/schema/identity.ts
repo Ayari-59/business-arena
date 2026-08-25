@@ -1,6 +1,8 @@
 import {
   boolean,
   index,
+  integer,
+  jsonb,
   pgEnum,
   pgTable,
   primaryKey,
@@ -63,6 +65,34 @@ export const classes = pgTable(
   },
   (t) => [index("classes_organization_idx").on(t.organizationId)],
 );
+
+/**
+ * Codes d'invitation d'un établissement (espace admin) : un code enrôle un
+ * nouvel inscrit dans l'organisation avec le rôle porté par le code
+ * (org_admin pour le premier administrateur, teacher pour les enseignants).
+ */
+export const orgInvites = pgTable(
+  "org_invites",
+  {
+    id: id(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    role: orgRole("role").notNull(),
+    code: text("code").notNull().unique(),
+    active: boolean("active").notNull().default(true),
+    createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+    ...timestamps,
+  },
+  (t) => [index("org_invites_org_idx").on(t.organizationId)],
+);
+
+/** Réglages globaux de la plateforme (ligne unique, jsonb versionnable). */
+export const platformSettings = pgTable("platform_settings", {
+  id: integer("id").primaryKey(), // toujours 1
+  settings: jsonb("settings").notNull(),
+  ...timestamps,
+});
 
 export const classMembers = pgTable(
   "class_members",

@@ -1,13 +1,23 @@
 import { randomUUID } from "node:crypto";
 import bcrypt from "bcryptjs";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { organizationMembers, organizations, users } from "@/db/schema";
+import {
+  getPlatformConfig,
+  promoteIfBootstrapAdmin,
+  resolveInvite,
+} from "@/services/admin.service";
 
 /**
- * Authentification enseignant v0.1 (ADR-08) : email + mot de passe (bcrypt).
- * Chaque enseignant inscrit crée son organisation (établissement) et en
- * devient org_admin. Magic link et SSO : évolutions.
+ * Authentification du personnel (ADR-08) : e-mail + mot de passe (bcrypt).
+ * Trois chemins d'inscription :
+ * - avec un code d'invitation d'établissement → rejoint cet établissement
+ *   avec le rôle du code (org_admin ou teacher) — c'est le canal de
+ *   déploiement multi-établissements ;
+ * - sans code (auto-service, si autorisé par l'admin plateforme) → crée son
+ *   propre établissement et en devient org_admin ;
+ * - les e-mails listés dans ADMIN_EMAILS deviennent admin général.
  */
 
 export async function registerTeacher(args: {
@@ -15,11 +25,26 @@ export async function registerTeacher(args: {
   password: string;
   displayName: string;
   schoolName: string;
+  inviteCode?: string;
 }): Promise<{ userId: string } | { error: string }> {
   const email = args.email.trim().toLowerCase();
   const existing = await db.select({ id: users.id }).from(users).where(eq(users.email, email));
   if (existing[0]) return { error: "Un compte existe déjà avec cet e-mail." };
   if (args.password.length < 8) return { error: "Mot de passe : 8 caractères minimum." };
+
+  const invite = args.inviteCode?.trim() ? await resolveInvite(args.inviteCode) : null;
+  if (args.inviteCode?.trim() && !invite) {
+    return { error: "Code d'invitation inconnu ou désactivé." };
+  }
+  if (!invite) {
+    const config = await getPlatformConfig();
+    if (!config.allowSelfServiceTeachers) {
+      return {
+        error:
+          "Les inscriptions libres sont fermées : demandez un code d'invitation à votre établissement.",
+      };
+    }
+  }
 
   const passwordHash = await bcrypt.hash(args.password, 10);
   const inserted = await db
@@ -28,19 +53,29 @@ export async function registerTeacher(args: {
     .returning({ id: users.id });
   const userId = inserted[0]!.id;
 
-  const org = await db
-    .insert(organizations)
-    .values({
-      name: args.schoolName.trim() || "Mon établissement",
-      slug: `org-${randomUUID().slice(0, 8)}`,
-      kind: "school",
-    })
-    .returning({ id: organizations.id });
-  await db.insert(organizationMembers).values({
-    userId,
-    organizationId: org[0]!.id,
-    role: "org_admin",
-  });
+  if (invite) {
+    await db.insert(organizationMembers).values({
+      userId,
+      organizationId: invite.organizationId,
+      role: invite.role,
+    });
+  } else {
+    const org = await db
+      .insert(organizations)
+      .values({
+        name: args.schoolName.trim() || "Mon établissement",
+        slug: `org-${randomUUID().slice(0, 8)}`,
+        kind: "school",
+      })
+      .returning({ id: organizations.id });
+    await db.insert(organizationMembers).values({
+      userId,
+      organizationId: org[0]!.id,
+      role: "org_admin",
+    });
+  }
+
+  await promoteIfBootstrapAdmin(userId, email);
   return { userId };
 }
 
@@ -53,18 +88,17 @@ export async function loginTeacher(args: {
   if (!row?.passwordHash) return { error: "Identifiants incorrects." };
   const ok = await bcrypt.compare(args.password, row.passwordHash);
   if (!ok) return { error: "Identifiants incorrects." };
+  await promoteIfBootstrapAdmin(row.id, email);
   return { userId: row.id };
 }
 
-/** Organisation « école » de l'enseignant (la première dont il est membre). */
+/** Établissement de rattachement d'un membre du personnel (org_admin OU teacher). */
 export async function getTeacherOrgId(userId: string): Promise<string | null> {
-  const row = (
-    await db
-      .select({ organizationId: organizationMembers.organizationId })
-      .from(organizationMembers)
-      .where(
-        and(eq(organizationMembers.userId, userId), eq(organizationMembers.role, "org_admin")),
-      )
-  )[0];
-  return row?.organizationId ?? null;
+  const rows = await db
+    .select({ organizationId: organizationMembers.organizationId, role: organizationMembers.role })
+    .from(organizationMembers)
+    .where(eq(organizationMembers.userId, userId));
+  const staff = rows.filter((r) => r.role === "org_admin" || r.role === "teacher");
+  // priorité au rattachement org_admin (son propre établissement)
+  return (staff.find((r) => r.role === "org_admin") ?? staff[0])?.organizationId ?? null;
 }
