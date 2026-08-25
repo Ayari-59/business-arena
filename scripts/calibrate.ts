@@ -18,7 +18,7 @@ const fmt = (n: number) => Math.round(n).toLocaleString("fr-FR").padStart(10);
 for (const strategy of strategies) {
   const companies = [
     novaCompany("player", "NOVA", "bot", strategy),
-    ...novaBots.map((b) => novaCompany(b.id, b.name, "bot", b.profile)),
+    ...novaBots.slice(0, 2).map((b) => novaCompany(b.id, b.name, "bot", b.profile)),
   ];
   const lastSold: Record<string, number | undefined> = {};
   const run = runGame({

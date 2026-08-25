@@ -54,7 +54,7 @@ describe("périodicité : parties complètes jouables au mois et à l'année", (
       const scenario = applyPeriodicity(novaScenario, p);
       const companies = [
         applyPeriodicityToCompany(novaCompany("player", "NOVA", "bot", "balanced"), p),
-        ...novaBots.map((b) =>
+        ...novaBots.slice(0, 2).map((b) =>
           applyPeriodicityToCompany(novaCompany(b.id, b.name, "bot", b.profile), p),
         ),
       ];

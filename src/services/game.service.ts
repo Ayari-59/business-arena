@@ -85,11 +85,16 @@ async function getOrCreateNovaScenarioId(): Promise<string> {
   return inserted[0].id;
 }
 
-/** Crée une partie solo NOVA : joueur humain contre SoundBox et Auris. */
+/**
+ * Crée une partie solo NOVA : le joueur humain contre N−1 bots du pool.
+ * companiesCount ∈ [min, max] du scénario (§27 : nombre d'équipes configurable).
+ */
 export async function createSoloGame(
   userId: string,
   periodicity: Periodicity = "quarter",
+  companiesCount = 3,
 ): Promise<string> {
+  const botsNeeded = Math.min(Math.max(companiesCount, 2), novaBots.length + 1) - 1;
   const [organizationId, scenarioId] = await Promise.all([
     getOrCreatePublicOrgId(),
     getOrCreateNovaScenarioId(),
@@ -118,7 +123,7 @@ export async function createSoloGame(
     .insert(teams)
     .values([
       { gameId: game.id, name: "NOVA (vous)", controller: "human" as const },
-      ...novaBots.map((b) => ({
+      ...novaBots.slice(0, botsNeeded).map((b) => ({
         gameId: game.id,
         name: b.name,
         controller: "bot" as const,

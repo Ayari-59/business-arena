@@ -56,6 +56,26 @@ export default function Home() {
               ))}
             </div>
           </fieldset>
+          <label className="block">
+            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+              Entreprises sur le marché (vous + concurrents pilotés par l&apos;ordinateur)
+            </span>
+            <select
+              name="companiesCount"
+              defaultValue={3}
+              className="mt-2 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+            >
+              <option value={2}>2 — duel face à SoundBox</option>
+              <option value={3}>3 — le marché classique (recommandé)</option>
+              <option value={4}>4 — marché disputé</option>
+              <option value={6}>6 — forte concurrence</option>
+              <option value={8}>8 — guerre de tous contre tous</option>
+            </select>
+            <span className="mt-1 block text-[11px] text-slate-500">
+              Plus il y a d&apos;entreprises, plus la demande se partage : chaque point de part
+              de marché se gagne.
+            </span>
+          </label>
           <button
             type="submit"
             className="w-full rounded-lg bg-amber-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-300"

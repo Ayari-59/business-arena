@@ -14,7 +14,7 @@ const NOVA_SEED = 20260101;
 function playStrategy(strategy: BotProfile, seed = NOVA_SEED): GameRunResult {
   const companies = [
     novaCompany("player", "NOVA", "bot", strategy),
-    ...novaBots.map((b) => novaCompany(b.id, b.name, "bot", b.profile)),
+    ...novaBots.slice(0, 2).map((b) => novaCompany(b.id, b.name, "bot", b.profile)),
   ];
   return runGame({
     scenario: novaScenario,

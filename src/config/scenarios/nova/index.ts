@@ -164,8 +164,17 @@ export function novaCompany(
   };
 }
 
-/** Concurrents bots de NOVA (doc 07 §1). */
+/**
+ * Concurrents bots de NOVA (doc 07 §1), par ordre d'entrée sur le marché.
+ * Une partie à N entreprises prend les N−1 premiers (ou complète les équipes
+ * humaines). SoundBox et Auris restent les deux concurrents « canoniques ».
+ */
 export const novaBots: { id: string; name: string; profile: BotProfile }[] = [
   { id: "soundbox", name: "SoundBox", profile: "price_aggressive" },
   { id: "auris", name: "Auris", profile: "premium" },
+  { id: "vertex", name: "Vertex Audio", profile: "balanced" },
+  { id: "kubo", name: "Kubo", profile: "growth" },
+  { id: "practico", name: "Practico", profile: "passive" },
+  { id: "onda", name: "Onda Sound", profile: "price_aggressive" },
+  { id: "lumen", name: "Lumen Acoustics", profile: "premium" },
 ];
