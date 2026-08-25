@@ -1,107 +1,422 @@
+import Link from "next/link";
 import { startGameAction } from "./actions";
+
+/**
+ * Landing page (§34) : moderne, immersive, compréhensible par un étudiant de
+ * BTS. La complexité vient du jeu, pas de la page. Statique + formulaire de
+ * lancement (server action) — aucune logique métier ici.
+ */
+
+const LOOP = [
+  "Situation",
+  "Problème",
+  "Diagnostic",
+  "Modèle",
+  "Décision",
+  "Simulation",
+  "Résultat",
+  "Apprentissage",
+];
+
+const FEATURES = [
+  {
+    icon: "⚙️",
+    title: "Un vrai moteur économique",
+    text: "Demande par segments, élasticité-prix, prix psychologiques, capacité de production, stocks, FRNG, BFR, trésorerie : chaque chiffre est calculé par un moteur déterministe et testé — jamais inventé.",
+  },
+  {
+    icon: "🎯",
+    title: "Le bon modèle, pas juste le bon chiffre",
+    text: "Face à chaque situation, choisissez parmi 18 modèles d'analyse (seuil de rentabilité, coûts pertinents, FRNG/BFR, VAN…). Une décision juste avec un raisonnement faux rapporte moins qu'une décision argumentée.",
+  },
+  {
+    icon: "💡",
+    title: "Des indices, pas des solutions",
+    text: "Bloqué ? Cinq niveaux d'aide progressifs : une observation, une question, un concept, un modèle, une méthode. Chaque indice coûte des points — l'autonomie est récompensée.",
+  },
+  {
+    icon: "📉",
+    title: "Le piège du tour 4",
+    text: "Votre chiffre d'affaires explose, votre résultat progresse… et votre banquier s'inquiète. Vivez la crise de trésorerie de croissance avant de la subir en entreprise.",
+  },
+  {
+    icon: "🏫",
+    title: "Pensé pour la classe",
+    text: "Créez une partie en 30 secondes : vos équipes rejoignent par code, valident leurs décisions, vous clôturez les tours. Et la vue pédagogique vous dit qui maîtrise le BFR — et qui bluffe.",
+  },
+  {
+    icon: "🏆",
+    title: "Business Arena Championship",
+    text: "Groupes tirés au sort, décisions verrouillées, indices limités, qualification au score composite, finale et podium. Le concours de gestion, prêt à l'emploi.",
+  },
+];
+
+const AUDIENCES = [
+  "BTS",
+  "Bachelor",
+  "BUT GEA",
+  "Licence",
+  "DCG · DSCG",
+  "Écoles de commerce",
+  "Formation professionnelle",
+  "Managers",
+];
+
+function MiniKpi({ label, value, tone }: { label: string; value: string; tone?: "good" | "bad" }) {
+  return (
+    <div className="rounded-lg border border-white/10 bg-slate-950/80 px-3 py-2">
+      <p className="text-[10px] uppercase tracking-wide text-slate-500">{label}</p>
+      <p
+        className={`text-sm font-semibold ${
+          tone === "good" ? "text-emerald-400" : tone === "bad" ? "text-red-400" : "text-slate-100"
+        }`}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-8 p-8">
-      <div className="flex flex-col items-center gap-4 text-center">
-        <p className="text-sm uppercase tracking-[0.3em] text-amber-400">
-          Simulation · Apprentissage · Décision · Compétition
-        </p>
-        <h1 className="text-5xl font-bold tracking-tight">BUSINESS ARENA</h1>
-        <p className="max-w-xl text-slate-400">
-          Pilotez une entreprise virtuelle, identifiez les problèmes, choisissez le bon
-          modèle d&apos;analyse et progressez du niveau Découverte au niveau Executive.
-        </p>
-      </div>
+    <main className="relative overflow-hidden">
+      {/* halo décoratif */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-40 left-1/2 h-[500px] w-[900px] -translate-x-1/2 rounded-full bg-amber-400/10 blur-3xl"
+      />
 
-      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-900 p-6">
-        <h2 className="text-lg font-semibold text-slate-100">Scénario NOVA</h2>
-        <p className="mt-2 text-sm leading-relaxed text-slate-400">
-          Reprenez NOVA, jeune fabricant d&apos;enceintes portables : 6 tours pour
-          apprendre prix, capacité, seuil de rentabilité et trésorerie, face à deux
-          concurrents — SoundBox et Auris.
+      {/* ---------- Nav ---------- */}
+      <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+        <p className="text-sm font-bold tracking-[0.2em] text-slate-100">
+          BUSINESS <span className="text-amber-400">ARENA</span>
         </p>
-        <ul className="mt-3 space-y-1 text-xs text-slate-500">
-          <li>· Niveau Découverte — aucune connaissance préalable requise</li>
-          <li>· Vos décisions : prix, production, marketing, qualité, financement</li>
-          <li>· Attention au tour 4 : la croissance a un coût caché…</li>
-        </ul>
-        <form action={startGameAction} className="mt-5 space-y-4">
-          <fieldset>
-            <legend className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Périodicité — chaque tour représente…
-            </legend>
-            <div className="mt-2 grid grid-cols-3 gap-2">
-              {(
-                [
-                  ["month", "Un mois", "délais de paiement redoutables"],
-                  ["quarter", "Un trimestre", "le rythme classique"],
-                  ["year", "Une année", "vision long terme"],
-                ] as const
-              ).map(([value, label, hint]) => (
-                <label
-                  key={value}
-                  className="cursor-pointer rounded-lg border border-white/10 bg-slate-950 p-3 text-center transition has-[:checked]:border-amber-400 has-[:checked]:bg-amber-400/10"
-                >
-                  <input
-                    type="radio"
-                    name="periodicity"
-                    value={value}
-                    defaultChecked={value === "quarter"}
-                    className="sr-only"
-                  />
-                  <span className="block text-sm font-medium text-slate-100">{label}</span>
-                  <span className="mt-1 block text-[11px] leading-tight text-slate-500">{hint}</span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
-          <label className="block">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Entreprises sur le marché (vous + concurrents pilotés par l&apos;ordinateur)
-            </span>
-            <select
-              name="companiesCount"
-              defaultValue={3}
-              className="mt-2 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
-            >
-              <option value={2}>2 — duel face à SoundBox</option>
-              <option value={3}>3 — le marché classique (recommandé)</option>
-              <option value={4}>4 — marché disputé</option>
-              <option value={6}>6 — forte concurrence</option>
-              <option value={8}>8 — guerre de tous contre tous</option>
-            </select>
-            <span className="mt-1 block text-[11px] text-slate-500">
-              Plus il y a d&apos;entreprises, plus la demande se partage : chaque point de part
-              de marché se gagne.
-            </span>
-          </label>
-          <button
-            type="submit"
-            className="w-full rounded-lg bg-amber-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-300"
+        <div className="flex items-center gap-5 text-sm text-slate-400">
+          <Link href="/concepts" className="hidden hover:text-slate-200 sm:block">
+            Concepts
+          </Link>
+          <Link href="/teacher/login" className="hidden hover:text-slate-200 sm:block">
+            Enseignants
+          </Link>
+          <Link href="/compete" className="hidden hover:text-slate-200 sm:block">
+            Concours
+          </Link>
+          <a
+            href="#jouer"
+            className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-300"
           >
-            Lancer une partie
-          </button>
-        </form>
-      </div>
+            Jouer
+          </a>
+        </div>
+      </nav>
 
-      <div className="flex gap-6 text-sm">
-        <a href="/join" className="text-amber-300 underline-offset-4 hover:underline">
-          J&apos;ai un code de partie (élève)
-        </a>
-        <a href="/compete" className="text-amber-300 underline-offset-4 hover:underline">
-          Rejoindre un concours
-        </a>
-        <a href="/teacher/login" className="text-slate-400 underline-offset-4 hover:underline">
-          Espace enseignant
-        </a>
-        <a href="/profile" className="text-slate-400 underline-offset-4 hover:underline">
-          Mon profil
-        </a>
-      </div>
-      <p className="text-xs text-slate-600">
-        Aucun compte requis pour la démo — vos parties restent liées à ce navigateur.
-      </p>
+      {/* ---------- Hero ---------- */}
+      <section className="mx-auto grid max-w-6xl items-center gap-10 px-6 py-14 lg:grid-cols-2 lg:py-20">
+        <div>
+          <p className="text-xs uppercase tracking-[0.3em] text-amber-400">
+            Simulation · Apprentissage · Décision · Compétition
+          </p>
+          <h1 className="mt-4 text-4xl font-bold leading-tight tracking-tight text-slate-50 sm:text-5xl">
+            Dirigez une entreprise.
+            <br />
+            <span className="text-amber-400">Apprenez à décider.</span>
+          </h1>
+          <p className="mt-5 max-w-xl text-lg leading-relaxed text-slate-400">
+            Prenez les commandes de NOVA, jeune fabricant d&apos;enceintes portables. Fixez vos
+            prix, produisez, investissez, affrontez la concurrence — et découvrez, situation
+            après situation, les modèles de gestion qui font les bonnes décisions.
+          </p>
+          <div className="mt-7 flex flex-wrap gap-3">
+            <a
+              href="#jouer"
+              className="rounded-lg bg-amber-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-300"
+            >
+              Lancer une partie gratuite
+            </a>
+            <Link
+              href="/teacher/login"
+              className="rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-amber-400/50"
+            >
+              Je suis enseignant
+            </Link>
+          </div>
+          <p className="mt-3 text-xs text-slate-600">
+            Sans compte, sans installation — vos parties restent liées à ce navigateur.
+          </p>
+        </div>
+
+        {/* aperçu du cockpit (illustration statique du jeu) */}
+        <div className="relative">
+          <div className="rounded-2xl border border-white/10 bg-slate-900/90 p-4 shadow-2xl shadow-amber-400/5">
+            <div className="flex items-center justify-between border-b border-white/5 pb-3">
+              <p className="text-xs font-semibold text-slate-300">NOVA — Trimestre 4 / 6</p>
+              <span className="rounded-full border border-red-400/40 bg-red-950/40 px-2 py-0.5 text-[10px] text-red-300">
+                ⚠ trésorerie sous tension
+              </span>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <MiniKpi label="Chiffre d'affaires" value="346 920 €" tone="good" />
+              <MiniKpi label="Résultat net" value="+10 110 €" tone="good" />
+              <MiniKpi label="Trésorerie nette" value="−758 €" tone="bad" />
+              <MiniKpi label="BFR" value="84 805 €" />
+            </div>
+            <div className="mt-3 rounded-lg border border-amber-400/20 bg-amber-950/20 p-3">
+              <p className="text-[10px] uppercase tracking-[0.25em] text-amber-400">
+                Situation du tour
+              </p>
+              <p className="mt-1 text-sm font-medium text-slate-200">
+                Votre entreprise gagne de l&apos;argent mais n&apos;en a plus en caisse.
+                Identifiez les causes possibles.
+              </p>
+              <div className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
+                <span className="rounded-full bg-slate-950 px-2.5 py-1 text-slate-400">
+                  1 · Diagnostic
+                </span>
+                <span className="rounded-full bg-slate-950 px-2.5 py-1 text-slate-400">
+                  2 · Choix du modèle
+                </span>
+                <span className="rounded-full border border-amber-400/40 px-2.5 py-1 text-amber-300">
+                  💡 Indice 1 (−5 %)
+                </span>
+              </div>
+            </div>
+            <div className="mt-3 flex items-center justify-between rounded-lg bg-slate-950 px-3 py-2 text-xs text-slate-400">
+              <span>Classement BPI</span>
+              <span>
+                <span className="text-amber-300">#2 NOVA 58,3</span>
+                <span className="ml-2 text-slate-600">#1 Auris 61,8</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ---------- Bande chiffres ---------- */}
+      <section className="border-y border-white/5 bg-slate-900/50">
+        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-6 px-6 py-8 text-center sm:grid-cols-4">
+          {[
+            ["6 tours", "mois, trimestres ou années"],
+            ["20 concepts", "du CA au FRNG/BFR"],
+            ["18 modèles", "d'aide à la décision"],
+            ["7 dimensions", "de performance (BPI)"],
+          ].map(([big, small]) => (
+            <div key={big}>
+              <p className="text-2xl font-bold text-amber-400">{big}</p>
+              <p className="mt-1 text-xs text-slate-500">{small}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ---------- La boucle ---------- */}
+      <section className="mx-auto max-w-6xl px-6 py-16">
+        <h2 className="text-center text-2xl font-bold text-slate-50">
+          Pas d&apos;exercices. Des situations.
+        </h2>
+        <p className="mx-auto mt-3 max-w-2xl text-center text-sm leading-relaxed text-slate-400">
+          Business Arena ne vous demande jamais « calculez le BFR ». Vous vivez une situation
+          d&apos;entreprise, vous cherchez, vous choisissez un modèle d&apos;analyse, vous
+          décidez — et la simulation vous répond. Le concept s&apos;apprend parce qu&apos;il a
+          servi.
+        </p>
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
+          {LOOP.map((step, i) => (
+            <span key={step} className="flex items-center gap-2">
+              <span
+                className={`rounded-full px-4 py-1.5 text-sm ${
+                  i === 3 || i === 7
+                    ? "bg-amber-400/15 text-amber-300 ring-1 ring-amber-400/40"
+                    : "bg-slate-900 text-slate-300 ring-1 ring-white/10"
+                }`}
+              >
+                {step}
+              </span>
+              {i < LOOP.length - 1 ? <span className="text-slate-600">→</span> : null}
+            </span>
+          ))}
+        </div>
+      </section>
+
+      {/* ---------- Piliers ---------- */}
+      <section className="mx-auto max-w-6xl px-6 pb-16">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {FEATURES.map((f) => (
+            <article
+              key={f.title}
+              className="rounded-2xl border border-white/10 bg-slate-900 p-5 transition hover:border-amber-400/30"
+            >
+              <p className="text-2xl">{f.icon}</p>
+              <h3 className="mt-2 text-base font-semibold text-slate-100">{f.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-slate-400">{f.text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      {/* ---------- Publics ---------- */}
+      <section className="border-y border-white/5 bg-slate-900/50 px-6 py-10">
+        <div className="mx-auto max-w-6xl text-center">
+          <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+            Du premier bilan au comité de direction
+          </p>
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
+            {AUDIENCES.map((a) => (
+              <span
+                key={a}
+                className="rounded-full border border-white/10 px-4 py-1.5 text-sm text-slate-300"
+              >
+                {a}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ---------- Jouer ---------- */}
+      <section id="jouer" className="mx-auto max-w-6xl scroll-mt-8 px-6 py-16">
+        <div className="grid items-start gap-8 lg:grid-cols-[1fr_420px]">
+          <div>
+            <h2 className="text-2xl font-bold text-slate-50">Lancez votre première partie</h2>
+            <p className="mt-3 max-w-lg text-sm leading-relaxed text-slate-400">
+              Six tours pour reprendre NOVA face à SoundBox (le casseur de prix) et Auris (le
+              premium). Prix, production, marketing, qualité, financement : chaque décision
+              compte, et le tour 4 réserve une leçon que peu voient venir.
+            </p>
+            <ul className="mt-5 space-y-2 text-sm text-slate-300">
+              <li>· Niveau Découverte — aucune connaissance préalable requise</li>
+              <li>· Débriefing corrigé à chaque tour, fiches concepts intégrées</li>
+              <li>· Votre profil de compétences progresse à chaque situation traitée</li>
+            </ul>
+            <div className="mt-5 flex gap-5 text-sm">
+              <Link href="/join" className="text-amber-300 underline-offset-4 hover:underline">
+                J&apos;ai un code de partie (élève)
+              </Link>
+              <Link href="/profile" className="text-slate-400 underline-offset-4 hover:underline">
+                Mon profil
+              </Link>
+            </div>
+          </div>
+
+          <form
+            action={startGameAction}
+            className="rounded-2xl border border-white/10 bg-slate-900 p-6"
+          >
+            <h3 className="text-sm font-semibold text-slate-200">Configurer la partie</h3>
+            <fieldset className="mt-4">
+              <legend className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                Périodicité — chaque tour représente…
+              </legend>
+              <div className="mt-2 grid grid-cols-3 gap-2">
+                {(
+                  [
+                    ["month", "Un mois", "délais redoutables"],
+                    ["quarter", "Un trimestre", "le rythme classique"],
+                    ["year", "Une année", "vision long terme"],
+                  ] as const
+                ).map(([value, label, hint]) => (
+                  <label
+                    key={value}
+                    className="cursor-pointer rounded-lg border border-white/10 bg-slate-950 p-3 text-center transition has-[:checked]:border-amber-400 has-[:checked]:bg-amber-400/10"
+                  >
+                    <input
+                      type="radio"
+                      name="periodicity"
+                      value={value}
+                      defaultChecked={value === "quarter"}
+                      className="sr-only"
+                    />
+                    <span className="block text-sm font-medium text-slate-100">{label}</span>
+                    <span className="mt-1 block text-[11px] leading-tight text-slate-500">
+                      {hint}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+            <label className="mt-4 block">
+              <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                Entreprises sur le marché
+              </span>
+              <select
+                name="companiesCount"
+                defaultValue={3}
+                className="mt-2 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+              >
+                <option value={2}>2 — duel face à SoundBox</option>
+                <option value={3}>3 — le marché classique (recommandé)</option>
+                <option value={4}>4 — marché disputé</option>
+                <option value={6}>6 — forte concurrence</option>
+                <option value={8}>8 — guerre de tous contre tous</option>
+              </select>
+            </label>
+            <button
+              type="submit"
+              className="mt-5 w-full rounded-lg bg-amber-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-300"
+            >
+              Lancer la partie
+            </button>
+          </form>
+        </div>
+      </section>
+
+      {/* ---------- Enseignants & concours ---------- */}
+      <section className="mx-auto max-w-6xl px-6 pb-16">
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900 to-slate-900/50 p-6">
+            <p className="text-2xl">🏫</p>
+            <h3 className="mt-2 text-lg font-semibold text-slate-100">Pour vos classes</h3>
+            <p className="mt-2 text-sm leading-relaxed text-slate-400">
+              Créez une partie multi-équipes, partagez un code, pilotez les tours. La vue
+              pédagogique vous montre la maîtrise de chaque concept, les indices consommés et
+              les modèles mal choisis — de quoi préparer la séance suivante.
+            </p>
+            <Link
+              href="/teacher/login"
+              className="mt-4 inline-block rounded-lg border border-amber-400/40 px-5 py-2 text-sm font-semibold text-amber-300 transition hover:bg-amber-400/10"
+            >
+              Ouvrir l&apos;espace enseignant →
+            </Link>
+          </div>
+          <div className="rounded-2xl border border-amber-400/20 bg-gradient-to-br from-slate-900 to-amber-950/20 p-6">
+            <p className="text-2xl">🏆</p>
+            <h3 className="mt-2 text-lg font-semibold text-slate-100">
+              Business Arena Championship
+            </h3>
+            <p className="mt-2 text-sm leading-relaxed text-slate-400">
+              Organisez un concours : inscriptions par code, groupes tirés au sort, décisions
+              verrouillées, qualification au BPI, finale et podium. Entre classes, entre
+              établissements — à vous de voir grand.
+            </p>
+            <Link
+              href="/compete"
+              className="mt-4 inline-block rounded-lg border border-amber-400/40 px-5 py-2 text-sm font-semibold text-amber-300 transition hover:bg-amber-400/10"
+            >
+              Rejoindre un concours →
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ---------- Footer ---------- */}
+      <footer className="border-t border-white/5">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-8 text-xs text-slate-600">
+          <p>
+            BUSINESS <span className="text-amber-400/70">ARENA</span> — simulation
+            d&apos;entreprise, apprentissage de la décision.
+          </p>
+          <div className="flex gap-4">
+            <Link href="/concepts" className="hover:text-slate-400">
+              Fiches concepts
+            </Link>
+            <Link href="/teacher/login" className="hover:text-slate-400">
+              Enseignants
+            </Link>
+            <Link href="/compete" className="hover:text-slate-400">
+              Concours
+            </Link>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }
