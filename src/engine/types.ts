@@ -73,6 +73,12 @@ export interface EngineScenarioConfig {
   };
   /** Coûts fixes opérationnels par tour (hors amortissements). */
   fixedCostsPerRound: number;
+  /**
+   * Assurance catastrophe (optionnelle) : contre une prime par tour, les
+   * effets des événements couverts sont neutralisés pour les assurés.
+   * L'arbitrage pédagogique : un coût certain contre un risque incertain.
+   */
+  insurance?: { premiumPerRound: number; coveredEventCodes: string[] };
   events: EventDefinitionConfig[];
   scriptedEvents: { round: number; eventCode: string; companyIndex?: number }[];
   /** Références du scoring BPI (doc 08 §1.1) — bornes min/cible par tour. */
@@ -149,7 +155,8 @@ export type ModifierTarget =
   | "demand" // multiplie la demande de tous les segments
   | `demand:${string}` // multiplie la demande d'un segment
   | "availability" // multiplie la disponibilité machine
-  | "interest_rate"; // multiplie les taux d'intérêt du tour
+  | "interest_rate" // multiplie les taux d'intérêt du tour
+  | "order"; // commande ferme : unités vendues d'office (add), réglées comptant, dans la limite du stock
 
 export interface EventModifier {
   target: ModifierTarget;
@@ -200,6 +207,8 @@ export interface RoundDecisions {
   marketingBudget: number;
   qualityBudget: number;
   maintenanceBudget: number;
+  /** Souscrire l'assurance catastrophe du tour (si le scénario en propose une). */
+  insurance?: boolean;
   finance?: { newLoan?: number; loanRepayment?: number };
   forecast?: { expectedRevenue?: number; expectedNetIncome?: number; expectedCash?: number };
 }
@@ -270,6 +279,10 @@ export interface CompanyRoundResult {
     safetyMargin: number;
     safetyIndex: number;
   };
+  /** Commandes fermes (événement « order ») : demandées vs livrées (contrainte stock). */
+  extraOrders?: { requested: number; delivered: number };
+  /** Assurance du tour : prime payée et événements couverts neutralisés. */
+  insurance?: { premium: number; neutralizedEvents: string[] };
   kpis: Record<string, number>;
 }
 

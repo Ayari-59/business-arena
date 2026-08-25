@@ -17,6 +17,8 @@ export interface EffectiveModifiers {
   demandMultiplier: Record<string, number>; // par segment, clé "*" = tous
   availabilityMultiplier: number;
   interestMultiplier: number;
+  /** Commandes fermes du tour (unités, additives) — vendues d'office, réglées comptant. */
+  extraOrderUnits: number;
 }
 
 export function drawEvents(
@@ -75,6 +77,7 @@ export function effectiveModifiers(
     demandMultiplier: {},
     availabilityMultiplier: 1,
     interestMultiplier: 1,
+    extraOrderUnits: 0,
   };
   for (const event of events) {
     if (event.scope === "company" && event.companyId !== companyId) continue;
@@ -88,6 +91,7 @@ function apply(out: EffectiveModifiers, m: EventModifier): Record<string, number
   if (m.target === "material_cost") out.materialCostMultiplier = combine(out.materialCostMultiplier);
   else if (m.target === "availability") out.availabilityMultiplier = combine(out.availabilityMultiplier);
   else if (m.target === "interest_rate") out.interestMultiplier = combine(out.interestMultiplier);
+  else if (m.target === "order") out.extraOrderUnits += m.value; // toujours additif (unités)
   else if (m.target === "demand") {
     out.demandMultiplier["*"] = combine(out.demandMultiplier["*"] ?? 1);
   } else if (m.target.startsWith("demand:")) {

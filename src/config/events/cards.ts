@@ -186,6 +186,36 @@ export const EVENT_CARDS: EventCardDef[] = [
     emoji: "🧾",
     scope: "team",
   },
+  {
+    code: "export_market",
+    title: "Ouverture du marché export",
+    flavor: "Un distributeur européen référence les enceintes françaises : la demande s'élargit.",
+    effectLabel: "Demande globale +15 % pendant 2 tours",
+    conceptHint: "Un nouveau marché se sert avec de la capacité : qui peut produire plus, vendra plus.",
+    category: "market",
+    emoji: "✈️",
+    scope: "market",
+  },
+  {
+    code: "natural_disaster",
+    title: "Catastrophe naturelle",
+    flavor: "Une tempête inonde la zone industrielle : ateliers à l'arrêt, fournisseurs sinistrés.",
+    effectLabel: "Disponibilité −28 % et matières +12 % ce tour — sauf pour les assurés",
+    conceptHint: "L'assurance échange un coût certain (la prime) contre un risque incertain : c'est un arbitrage d'espérance.",
+    category: "macro",
+    emoji: "🌪️",
+    scope: "market",
+  },
+  {
+    code: "big_order",
+    title: "Commande exceptionnelle",
+    flavor: "Une chaîne d'hôtels veut équiper toutes ses chambres — et signe aujourd'hui.",
+    effectLabel: "+600 unités (échelle trimestre) vendues d'office ce tour, réglées comptant — dans la limite du stock",
+    conceptHint: "Une opportunité ne se saisit qu'avec du stock ou de la capacité disponible : l'anticipation paie.",
+    category: "market",
+    emoji: "📋",
+    scope: "team",
+  },
 ];
 
 export const cardByCode = new Map(EVENT_CARDS.map((c) => [c.code, c]));

@@ -12,6 +12,7 @@ export const roundDecisionsSchema = z.object({
   marketingBudget: z.coerce.number().min(0).max(200000),
   qualityBudget: z.coerce.number().min(0).max(200000),
   maintenanceBudget: z.coerce.number().min(0).max(100000),
+  insurance: z.boolean().optional(),
   finance: z
     .object({
       newLoan: z.coerce.number().min(0).max(500000).optional(),

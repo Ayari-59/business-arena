@@ -61,6 +61,8 @@ beforeAll(async () => {
     botCount: 1,
   });
   gameId = game.gameId;
+  // graine pinée : aucun événement probabiliste au tour 1 (assertions exactes)
+  await db.update(games).set({ seed: 7 }).where(eq(games.id, gameId));
   const student = await db
     .insert(users)
     .values({ email: "eleve-cartes@test.fr", displayName: "Élève" })

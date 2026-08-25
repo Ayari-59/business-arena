@@ -73,6 +73,21 @@ export function applyPeriodicity(
       depreciationPerRound: scenario.finance.depreciationPerRound * k,
     },
     fixedCostsPerRound: scenario.fixedCostsPerRound * k,
+    ...(scenario.insurance
+      ? {
+          insurance: {
+            ...scenario.insurance,
+            premiumPerRound: scenario.insurance.premiumPerRound * k,
+          },
+        }
+      : {}),
+    // Les modificateurs « order » sont des flux (unités par tour) : × k.
+    events: scenario.events.map((e) => ({
+      ...e,
+      modifiers: e.modifiers.map((m) =>
+        m.target === "order" ? { ...m, value: m.value * k } : m,
+      ),
+    })),
     scoring: {
       ...scenario.scoring,
       benchmarks: {

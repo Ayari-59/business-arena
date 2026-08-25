@@ -48,6 +48,7 @@ export function DecisionForm({
   defaults,
   kind,
   alreadySubmitted,
+  insuranceOffer,
 }: {
   gameId: string;
   roundIndex: number;
@@ -55,6 +56,8 @@ export function DecisionForm({
   defaults: RoundDecisions;
   kind: "solo" | "class";
   alreadySubmitted: boolean;
+  /** Offre d'assurance du scénario (prime déjà à l'échelle de la périodicité). */
+  insuranceOffer?: { premium: number; coveredLabels: string[] } | null;
 }) {
   const action = playRoundAction.bind(null, gameId);
   const [state, formAction, pending] = useActionState(action, initialState);
@@ -74,6 +77,26 @@ export function DecisionForm({
           hint="À 5 %/an — utile si la trésorerie se tend." />
         <Field name="loanRepayment" label="Remboursement d'emprunt" defaultValue={defaults.finance?.loanRepayment ?? 0} suffix="€" />
       </div>
+      {insuranceOffer ? (
+        <label className="flex items-start gap-3 rounded-lg border border-white/10 bg-slate-950 px-3 py-3">
+          <input
+            type="checkbox"
+            name="insurance"
+            defaultChecked={defaults.insurance ?? false}
+            className="mt-0.5 h-4 w-4 accent-amber-400"
+          />
+          <span>
+            <span className="text-sm font-medium text-slate-200">
+              🛡️ Assurance catastrophe —{" "}
+              {insuranceOffer.premium.toLocaleString("fr-FR")} € ce tour
+            </span>
+            <span className="mt-0.5 block text-xs text-slate-500">
+              Couvre : {insuranceOffer.coveredLabels.join(", ")}. Un coût certain contre un
+              risque incertain — à vous d&apos;arbitrer.
+            </span>
+          </span>
+        </label>
+      ) : null}
       {state.error ? (
         <p className="rounded-lg border border-red-400/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
           {state.error}

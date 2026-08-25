@@ -9,6 +9,7 @@ import { novaScenario } from "@/config/scenarios/nova";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { KpiCard } from "@/components/kpi-card";
 import { EventCard } from "@/components/event-card";
+import { cardByCode } from "@/config/events/cards";
 import { BpiPanel } from "@/components/bpi-panel";
 import { RevenueChart, TreasuryChart } from "@/components/charts";
 import { DecisionForm } from "@/components/decision-form";
@@ -139,6 +140,25 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                     ))}
                   </div>
                 </div>
+              ) : null}
+              {r.extraOrders ? (
+                <p className="mt-3 rounded-lg border border-emerald-400/30 bg-emerald-950/30 px-3 py-2 text-xs text-emerald-300">
+                  📋 Commande exceptionnelle : {formatUnits(r.extraOrders.delivered)} u livrées
+                  sur {formatUnits(r.extraOrders.requested)} commandées
+                  {r.extraOrders.delivered < r.extraOrders.requested
+                    ? " — stock insuffisant, le reste est perdu. L'anticipation a un prix."
+                    : ", réglées comptant."}
+                </p>
+              ) : null}
+              {r.insurance ? (
+                <p className="mt-3 rounded-lg border border-sky-400/30 bg-sky-950/30 px-3 py-2 text-xs text-sky-300">
+                  🛡️ Assurance souscrite ({formatEuro(r.insurance.premium)}).{" "}
+                  {r.insurance.neutralizedEvents.length > 0
+                    ? `Sinistre couvert ce tour : ${r.insurance.neutralizedEvents
+                        .map((c) => cardByCode.get(c)?.title ?? c)
+                        .join(", ")} — effets neutralisés pour votre entreprise.`
+                    : "Aucun sinistre couvert ce tour — la prime était le prix de la sérénité."}
+                </p>
               ) : null}
             </div>
 
@@ -277,6 +297,16 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
             defaults={view.pendingDecisions ?? view.lastDecisions ?? defaultDecisions(view.roundDays)}
             kind={view.kind}
             alreadySubmitted={view.pendingDecisions !== null}
+            insuranceOffer={
+              view.insuranceOffer
+                ? {
+                    premium: view.insuranceOffer.premium,
+                    coveredLabels: view.insuranceOffer.coveredEventCodes.map(
+                      (c) => cardByCode.get(c)?.title ?? c,
+                    ),
+                  }
+                : null
+            }
           />
         </section>
       )}

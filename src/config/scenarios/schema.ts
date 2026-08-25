@@ -34,6 +34,7 @@ const modifierSchema = z.object({
     z.literal("demand"),
     z.literal("availability"),
     z.literal("interest_rate"),
+    z.literal("order"),
     z.templateLiteral(["demand:", z.string()]),
   ]),
   op: z.enum(["mul", "add"]),
@@ -83,6 +84,14 @@ export const engineScenarioConfigSchema = z.object({
     depreciationPerRound: z.number().nonnegative(),
   }),
   fixedCostsPerRound: z.number().nonnegative(),
+  // Assurance : la demande est un paramètre de marché, un événement de
+  // demande ne peut donc pas être couvert (neutralisation par entreprise).
+  insurance: z
+    .object({
+      premiumPerRound: z.number().nonnegative(),
+      coveredEventCodes: z.array(z.string().min(1)).min(1),
+    })
+    .optional(),
   events: z.array(eventSchema),
   scriptedEvents: z.array(
     z.object({
@@ -117,6 +126,20 @@ export const engineScenarioConfigSchema = z.object({
   }),
 }) satisfies z.ZodType<EngineScenarioConfig>;
 
+const scenarioWithChecks = engineScenarioConfigSchema.superRefine((s, ctx) => {
+  for (const code of s.insurance?.coveredEventCodes ?? []) {
+    const event = s.events.find((e) => e.code === code);
+    if (!event) {
+      ctx.addIssue({ code: "custom", message: `assurance : événement couvert inconnu « ${code} »` });
+    } else if (event.modifiers.some((m) => m.target === "demand" || m.target.startsWith("demand:"))) {
+      ctx.addIssue({
+        code: "custom",
+        message: `assurance : « ${code} » modifie la demande (paramètre de marché, non couvrable)`,
+      });
+    }
+  }
+});
+
 export function parseScenarioConfig(raw: unknown): EngineScenarioConfig {
-  return engineScenarioConfigSchema.parse(raw);
+  return scenarioWithChecks.parse(raw);
 }

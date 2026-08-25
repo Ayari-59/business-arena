@@ -76,7 +76,17 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     unitCost: number;
     stock: { quantity: number; unitCost: number };
     materialMultiplier: number;
+    mods: ReturnType<typeof effectiveModifiers>;
+    insured: boolean;
+    neutralizedEvents: string[];
   }
+
+  // Assurance catastrophe (doc 02 §7.2) : pour les assurés, les événements
+  // couverts sont exclus des modificateurs EFFECTIFS de l'entreprise.
+  // Limite assumée : la demande étant un paramètre de marché (calculée une
+  // fois pour tous), un événement de demande ne peut pas être couvert.
+  const insuranceOffer = scenario.insurance;
+  const covered = new Set(insuranceOffer?.coveredEventCodes ?? []);
 
   const working: Working[] = input.companies.map((state) => {
     const raw = input.decisions[state.id];
@@ -87,10 +97,21 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       marketingBudget: Math.max(0, raw.marketingBudget),
       qualityBudget: Math.max(0, raw.qualityBudget),
       maintenanceBudget: Math.max(0, raw.maintenanceBudget),
+      insurance: raw.insurance,
       finance: raw.finance,
       forecast: raw.forecast,
     };
-    const mods = effectiveModifiers(active, state.id);
+    const insured = Boolean(decisions.insurance && insuranceOffer);
+    const neutralizedEvents = insured
+      ? active
+          .filter(
+            (e) =>
+              covered.has(e.code) && (e.scope === "market" || e.companyId === state.id),
+          )
+          .map((e) => e.code)
+      : [];
+    const companyEvents = insured ? active.filter((e) => !covered.has(e.code)) : active;
+    const mods = effectiveModifiers(companyEvents, state.id);
     const production = computeProduction({
       planned: decisions.productionPlan,
       machineCapacity: state.machineCapacity,
@@ -123,6 +144,9 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       unitCost,
       stock,
       materialMultiplier,
+      mods,
+      insured,
+      neutralizedEvents,
     };
   });
 
@@ -183,16 +207,21 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
 
   working.forEach((w, i) => {
     const perSegment: Record<string, SegmentSalesDetail> = {};
-    let soldUnits = 0;
+    let segmentUnits = 0;
     let weightedCredit = 0;
     for (const segment of scenario.market.segments) {
       const detail = salesBySegment.get(segment.code)?.[i];
       if (!detail) continue;
       perSegment[segment.code] = detail;
-      soldUnits += detail.sold;
+      segmentUnits += detail.sold;
       weightedCredit +=
         detail.sold * Math.min(1, segment.paymentDelayDays / scenario.roundDays);
     }
+    // Commandes fermes (événement « order ») : vendues d'office en plus du
+    // marché, réglées comptant, dans la limite du stock restant.
+    const orderRequested = w.mods.extraOrderUnits;
+    const orderDelivered = Math.min(orderRequested, Math.max(0, w.stock.quantity - segmentUnits));
+    const soldUnits = segmentUnits + orderDelivered;
     const revenue = soldUnits * w.decisions.price;
     const receivableRatio = soldUnits > 0 ? weightedCredit / soldUnits : 0;
 
@@ -201,6 +230,9 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const purchases =
       w.produced * scenario.product.materialCostPerUnit * w.materialMultiplier;
     const otherVariableCash = w.produced * scenario.product.otherVariableCostPerUnit;
+
+    // Prime d'assurance : charge de structure du tour (coût certain).
+    const insurancePremium = w.insured ? (insuranceOffer?.premiumPerRound ?? 0) : 0;
 
     const finance = computeFinance({
       opening: w.state.finance,
@@ -215,11 +247,11 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       marketingCost: w.decisions.marketingBudget,
       qualityCost: w.decisions.qualityBudget,
       maintenanceCost: w.decisions.maintenanceBudget,
-      fixedCosts: scenario.fixedCostsPerRound,
+      fixedCosts: scenario.fixedCostsPerRound + insurancePremium,
       depreciation: scenario.finance.depreciationPerRound,
       loanAnnualRate: scenario.finance.loanAnnualRate,
       overdraftAnnualRate: scenario.finance.overdraftAnnualRate,
-      interestMultiplier: effectiveModifiers(active, w.state.id).interestMultiplier,
+      interestMultiplier: w.mods.interestMultiplier,
       taxRate: scenario.finance.taxRate,
       newLoan: w.decisions.finance?.newLoan ?? 0,
       loanRepayment: w.decisions.finance?.loanRepayment ?? 0,
@@ -236,9 +268,11 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       finance.closing,
       scenario.finance.taxRate,
     );
-    // Seuil : charges de structure du tour = fixes + amortissements + budgets discrétionnaires.
+    // Seuil : charges de structure du tour = fixes + assurance + amortissements
+    // + budgets discrétionnaires (la prime déplace le seuil : c'est le point).
     const structureCosts =
       scenario.fixedCostsPerRound +
+      insurancePremium +
       finance.incomeStatement.depreciation +
       w.decisions.marketingBudget +
       w.decisions.qualityBudget +
@@ -250,7 +284,9 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       revenue,
     });
 
-    const totalShare = totalPotential > 0 ? soldUnits / totalPotential : 0;
+    // Part de marché : ventes sur le marché adressable uniquement (les
+    // commandes fermes s'ajoutent au CA sans gonfler la part de marché).
+    const totalShare = totalPotential > 0 ? segmentUnits / totalPotential : 0;
     totalSold += soldUnits;
 
     results[w.state.id] = {
@@ -270,6 +306,12 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         producedQuality: w.producedQuality,
       },
       breakeven,
+      ...(orderRequested > 0
+        ? { extraOrders: { requested: orderRequested, delivered: orderDelivered } }
+        : {}),
+      ...(w.insured
+        ? { insurance: { premium: insurancePremium, neutralizedEvents: w.neutralizedEvents } }
+        : {}),
       kpis: {
         revenue,
         net_income: finance.incomeStatement.netIncome,

@@ -583,6 +583,8 @@ async function resolveGameRound(
               production: r.production,
               breakeven: r.breakeven,
               events: roundEventCodesFor(t.id),
+              extraOrders: r.extraOrders ?? null,
+              insurance: r.insurance ?? null,
             },
             revenue: toMoney(r.incomeStatement.revenue),
             netIncome: toMoney(r.incomeStatement.netIncome),
@@ -942,6 +944,8 @@ export interface GameView {
   /** Moyennes 0-100 des 7 dimensions BPI de l'équipe du joueur (doc 08). */
   playerDimensions: Partial<Record<BpiDimension, number>> | null;
   lastDecisions: RoundDecisions | null;
+  /** Offre d'assurance du scénario (prime déjà à l'échelle de la périodicité). */
+  insuranceOffer: { premium: number; coveredEventCodes: string[] } | null;
 }
 
 export async function getGameView(gameId: string, userId: string): Promise<GameView | null> {
@@ -985,6 +989,8 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         production: CompanyRoundResult["production"];
         breakeven: CompanyRoundResult["breakeven"];
         events: string[];
+        extraOrders?: CompanyRoundResult["extraOrders"] | null;
+        insurance?: CompanyRoundResult["insurance"] | null;
       };
       lastResult = {
         companyId: playerTeam.id,
@@ -1003,6 +1009,8 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         },
         production: trace.production,
         breakeven: trace.breakeven,
+        extraOrders: trace.extraOrders ?? undefined,
+        insurance: trace.insurance ?? undefined,
         kpis: {},
       };
       lastEvents = trace.events ?? [];
@@ -1077,6 +1085,16 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     ranking,
     playerDimensions,
     lastDecisions,
+    insuranceOffer: (() => {
+      const offer = (
+        game.scenarioSnapshot as {
+          insurance?: { premiumPerRound: number; coveredEventCodes: string[] };
+        }
+      ).insurance;
+      return offer
+        ? { premium: offer.premiumPerRound, coveredEventCodes: offer.coveredEventCodes }
+        : null;
+    })(),
   };
 }
 

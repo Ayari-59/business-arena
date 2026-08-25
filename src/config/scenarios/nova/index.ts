@@ -226,7 +226,41 @@ const rawNova = {
       duration: 2,
       modifiers: [{ target: "interest_rate", op: "mul", value: 1.4 }],
     },
+    // Cartes ajoutées (toutes probability 0, tirage enseignant uniquement ;
+    // APPENDRE en fin de liste : le PRNG consomme un tirage par événement,
+    // insérer au milieu décalerait les tirages seedés existants)
+    {
+      code: "export_market",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand", op: "mul", value: 1.15 }],
+    },
+    {
+      code: "natural_disaster",
+      scope: "market",
+      probability: 0,
+      duration: 1,
+      modifiers: [
+        { target: "availability", op: "mul", value: 0.72 },
+        { target: "material_cost", op: "mul", value: 1.12 },
+      ],
+    },
+    {
+      code: "big_order",
+      scope: "company",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "order", op: "add", value: 600 }],
+    },
   ],
+  // Assurance catastrophe (§ nouvelles décisions) : 2 500 €/trimestre pour
+  // neutraliser la catastrophe naturelle et la vague de froid — un coût
+  // certain contre un risque incertain, l'arbitrage se lit au seuil.
+  insurance: {
+    premiumPerRound: 2500,
+    coveredEventCodes: ["natural_disaster", "cold_wave"],
+  },
   scriptedEvents: [{ round: 5, eventCode: "raw_material_spike" }],
   // Scoring BPI (doc 08 §1) : pondérations imposées, bornes calibrées sur les
   // trajectoires de référence (snapshot doré) — min → 0 point, cible → 100.

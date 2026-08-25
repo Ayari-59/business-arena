@@ -304,6 +304,35 @@ Plafond global : 4 cartes en jeu par tour. Un **deck physique imprimable**
 l'enseignant saisit ensuite la carte tirée dans le deck numérique pour qu'elle
 s'applique à la clôture du tour. En mode compétition, seul le tirage seedé fait foi.
 
+### 7.2 Commandes fermes et assurance catastrophe
+
+Deux mécaniques s'appuient sur le moteur d'événements :
+
+- **Commande ferme** (cible `order`, additive, en unités) : l'entreprise visée vend
+  d'office N unités **en plus** de ses ventes de marché, réglées **comptant**, dans la
+  limite du stock restant après les ventes de marché. La commande s'ajoute au CA sans
+  gonfler la part de marché (calculée sur le marché adressable seul). Sans stock, rien
+  n'est livré : l'opportunité ne se saisit qu'avec de l'anticipation. Les valeurs
+  `order` sont des flux : `applyPeriodicity` les redimensionne (× k).
+
+- **Assurance catastrophe** (`scenario.insurance`, optionnelle) : une décision par tour
+  (`decisions.insurance`). L'assuré paie une **prime** (charge de structure : EBITDA,
+  trésorerie et seuil de rentabilité l'absorbent) et les événements couverts
+  (`coveredEventCodes`) sont **exclus de ses modificateurs effectifs** — le sinistre
+  frappe les autres, pas lui. Limite assumée : la demande étant un paramètre de marché
+  calculé une fois pour tous, un événement de demande n'est pas couvrable (validé par
+  le schéma). Les bots ne s'assurent jamais (calibration inchangée). La prime est un
+  flux : × k par périodicité. Résultat : `result.insurance = { premium,
+  neutralizedEvents }` et `result.extraOrders = { requested, delivered }` tracent
+  l'un et l'autre pour le débriefing.
+
+Sur NOVA : `natural_disaster` (marché, disponibilité ×0,72 et matières ×1,12, couvert),
+`cold_wave` (couvert), `export_market` (demande ×1,15 sur 2 tours), `big_order`
+(commande ferme de 600 unités/trimestre, carte équipe) ; prime 2 500 €/trimestre.
+Tous à `probability: 0` sauf `cold_wave` (déjà existant) — et **appondus en fin de
+liste** : le PRNG consomme un tirage par événement, insérer au milieu décalerait les
+tirages seedés existants.
+
 ---
 
 ## 8. Ce que le moteur ne fait pas

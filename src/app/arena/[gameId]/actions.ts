@@ -25,6 +25,7 @@ export async function playRoundAction(
     marketingBudget: formData.get("marketingBudget"),
     qualityBudget: formData.get("qualityBudget"),
     maintenanceBudget: formData.get("maintenanceBudget"),
+    insurance: formData.get("insurance") === "on",
     finance: {
       newLoan: formData.get("newLoan") || 0,
       loanRepayment: formData.get("loanRepayment") || 0,
