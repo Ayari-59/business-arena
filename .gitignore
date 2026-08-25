@@ -1,0 +1,13 @@
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# secrets — jamais commités
+.env
+.env.*
+!.env.example
+
+.vercel
+.DS_Store

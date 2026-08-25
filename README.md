@@ -56,10 +56,27 @@ Chaque brique de l'architecture sert un maillon de cette boucle :
 - **ANALYSE / APPRENTISSAGE** → débriefing, indices, profil de compétences, scoring (`docs/03`, `docs/08`)
 - **COMPÉTITION** → moteur de compétition (`docs/04`)
 
+## Démarrage
+
+```bash
+npm install
+cp .env.example .env    # renseigner DATABASE_URL (pooler) et DIRECT_URL (direct) Neon
+npm run db:migrate      # applique les migrations drizzle/ sur la base
+npm run dev             # http://localhost:3030
+```
+
+Vérifications : `npm run typecheck` · `npm test` · `npm run build`.
+
+**Déploiement Vercel** : preset **Next.js**, racine du dépôt. Le script `vercel-build`
+(`drizzle-kit migrate && next build`) applique automatiquement les migrations au build —
+définir dans le projet Vercel les variables `DATABASE_URL`, `DIRECT_URL`, `AUTH_SECRET`,
+`CRON_SECRET`. (Cible long terme : migrations en CI, doc 01 §5.)
+
 ## Prochaines étapes (méthode §35)
 
 1. ✅ **Étape 1 — ce dossier** : architecture validée avant développement.
-2. Étape 2 — modèle de données : schéma Drizzle + migrations Neon (`docs/05` fait foi).
+2. ✅ Étape 2 — modèle de données : schéma Drizzle (43 tables, `src/db/schema/`) +
+   migration initiale (`drizzle/`), conformes à `docs/05`.
 3. Étape 3 — moteur économique minimal + tests (`docs/02`, `docs/09`).
 4. Étape 4 — scénario NOVA (`docs/07`).
 5. Étape 5 — simulation de 6 tours.
