@@ -198,6 +198,24 @@ export const financialAccounts = pgTable(
   (t) => [primaryKey({ columns: [t.teamId, t.roundIndex, t.account] })],
 );
 
+/**
+ * Instantané de l'état moteur (CompanyState) d'une équipe à l'issue d'un tour.
+ * round_index 0 = état initial. C'est l'état opérationnel consommé par
+ * simulateRound ; les tables normalisées ci-dessus restent le modèle requêtable.
+ */
+export const companyStates = pgTable(
+  "company_states",
+  {
+    teamId: uuid("team_id")
+      .notNull()
+      .references(() => teams.id, { onDelete: "cascade" }),
+    roundIndex: integer("round_index").notNull(),
+    state: jsonb("state").notNull(),
+    ...timestamps,
+  },
+  (t) => [primaryKey({ columns: [t.teamId, t.roundIndex] })],
+);
+
 /** Journal des flux du tour — base du budget de trésorerie affiché. */
 export const transactions = pgTable(
   "transactions",

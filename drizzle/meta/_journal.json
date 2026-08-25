@@ -8,6 +8,13 @@
       "when": 1787647411335,
       "tag": "0000_lethal_post",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1787649290540,
+      "tag": "0001_lucky_pete_wisdom",
+      "breakpoints": true
     }
   ]
 }

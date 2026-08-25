@@ -12,6 +12,7 @@ const EXPECTED_TABLES = [
   "games", "teams", "players", "rounds", "decisions",
   "markets", "market_segments", "products", "production_units", "employees",
   "suppliers", "customers", "inventory", "financial_accounts", "transactions",
+  "company_states",
   "round_results", "kpis", "event_occurrences",
   "situation_instances", "model_choices", "hint_usages",
   "learning_progress", "player_skills",
