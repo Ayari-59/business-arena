@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { TeacherAuthForms } from "@/components/teacher-auth-forms";
@@ -21,6 +22,9 @@ export default async function TeacherLoginPage() {
         </p>
       </div>
       <TeacherAuthForms />
+      <Link href="/guide#enseignants" className="text-xs text-slate-500 underline-offset-4 hover:text-slate-300 hover:underline">
+        Première fois ? Consultez le guide de prise en main
+      </Link>
       {demoSeeded ? (
         <div className="w-full max-w-md rounded-2xl border border-emerald-400/20 bg-emerald-950/20 p-4 text-sm">
           <p className="text-xs font-semibold uppercase tracking-wide text-emerald-400">

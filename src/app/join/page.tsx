@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { JoinForm } from "@/components/join-form";
 
 export default function JoinPage() {
@@ -12,6 +13,9 @@ export default function JoinPage() {
         </p>
       </div>
       <JoinForm />
+      <Link href="/guide" className="text-xs text-slate-500 underline-offset-4 hover:text-slate-300 hover:underline">
+        Première fois ? Consultez le guide de prise en main
+      </Link>
     </main>
   );
 }

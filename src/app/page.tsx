@@ -101,6 +101,9 @@ export default async function Home() {
         {/* eslint-disable-next-line @next/next/no-img-element -- logo vectoriel statique */}
         <img src="/brand/logo.svg" alt="Business Arena" className="h-9 w-auto" />
         <div className="flex items-center gap-5 text-sm text-slate-400">
+          <Link href="/guide" className="hidden hover:text-slate-200 sm:block">
+            Guide
+          </Link>
           <Link href="/concepts" className="hidden hover:text-slate-200 sm:block">
             Concepts
           </Link>
@@ -296,9 +299,12 @@ export default async function Home() {
               <li>· Débriefing corrigé à chaque tour, fiches concepts intégrées</li>
               <li>· Votre profil de compétences progresse à chaque situation traitée</li>
             </ul>
-            <div className="mt-5 flex gap-5 text-sm">
+            <div className="mt-5 flex flex-wrap gap-5 text-sm">
               <Link href="/join" className="text-amber-300 underline-offset-4 hover:underline">
                 J&apos;ai un code de partie (élève)
+              </Link>
+              <Link href="/guide" className="text-slate-400 underline-offset-4 hover:underline">
+                Guide de prise en main
               </Link>
               <Link href="/profile" className="text-slate-400 underline-offset-4 hover:underline">
                 Mon profil
