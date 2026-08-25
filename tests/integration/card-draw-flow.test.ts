@@ -3,8 +3,9 @@ import { eq } from "drizzle-orm";
 
 /**
  * Tirage manuel de cartes (animation de classe) sur Postgres embarqué :
- * l'enseignant tire → la carte est annoncée aux équipes → appliquée à la
- * clôture → effet réel sur le moteur → purge. Interdit en mode compétition.
+ * cartes marché (toute la classe) et cartes équipe (ciblées) — annoncées,
+ * appliquées à la clôture (l'effet ciblé ne touche QUE l'équipe visée),
+ * puis purgées. Interdit en mode compétition.
  */
 
 vi.mock("@/db", async () => {
@@ -13,7 +14,7 @@ vi.mock("@/db", async () => {
 });
 
 import { db } from "@/db";
-import { games, users } from "@/db/schema";
+import { games, roundResults, rounds, users } from "@/db/schema";
 import { registerTeacher, getTeacherOrgId } from "@/services/auth.service";
 import {
   closeCurrentRound,
@@ -39,6 +40,8 @@ let teacherId: string;
 let orgId: string;
 let gameId: string;
 let studentId: string;
+let studentTeamId: string;
+let botTeamId: string;
 
 beforeAll(async () => {
   const result = await registerTeacher({
@@ -64,45 +67,117 @@ beforeAll(async () => {
     .returning({ id: users.id });
   studentId = student[0]!.id;
   await joinGameByCode({ code: game.joinCode, userId: studentId, pseudo: "Élève" });
+  const view = await getTeacherGameView(gameId, teacherId);
+  studentTeamId = view!.teams.find((t) => t.controller === "human")!.teamId;
+  botTeamId = view!.teams.find((t) => t.controller === "bot")!.teamId;
 });
 
 describe("tirage manuel de cartes (mode apprentissage)", () => {
-  it("l'enseignant joue une carte choisie : annoncée aux équipes", async () => {
+  it("carte marché : jouée par l'enseignant, annoncée à toute la classe", async () => {
     await expect(
       drawEventCardForNextRound({ gameId, teacherId: studentId }),
     ).rejects.toThrow(); // seul l'enseignant tire
-    const { eventCode } = await drawEventCardForNextRound({
+    const { eventCode, teamId } = await drawEventCardForNextRound({
       gameId,
       teacherId,
       eventCode: "supplier_discount",
     });
     expect(eventCode).toBe("supplier_discount");
+    expect(teamId).toBeNull();
 
     const teacherView = await getTeacherGameView(gameId, teacherId);
-    expect(teacherView!.pendingEventCodes).toEqual(["supplier_discount"]);
+    expect(teacherView!.pendingEvents).toEqual([
+      { code: "supplier_discount", teamId: null, teamName: null },
+    ]);
     const playerView = await getGameView(gameId, studentId);
-    expect(playerView!.announcedEventCards).toEqual(["supplier_discount"]);
+    expect(playerView!.announcedEventCards).toEqual([
+      { code: "supplier_discount", teamId: null, teamName: null, isMyTeam: false },
+    ]);
   });
 
-  it("plafond de 2 cartes, pas de doublon", async () => {
-    await drawEventCardForNextRound({ gameId, teacherId }); // pioche au hasard
+  it("carte équipe : ciblée sur une équipe humaine, signalée à son destinataire", async () => {
+    // pas de carte équipe sur un bot
+    await expect(
+      drawEventCardForNextRound({ gameId, teacherId, teamId: botTeamId }),
+    ).rejects.toThrow(/introuvable/);
+    // une carte marché ne peut pas venir du deck équipe et inversement
+    await expect(
+      drawEventCardForNextRound({ gameId, teacherId, eventCode: "team_overtime" }),
+    ).rejects.toThrow(/tirable/);
+
+    const { eventCode, teamId } = await drawEventCardForNextRound({
+      gameId,
+      teacherId,
+      eventCode: "local_supplier_deal",
+      teamId: studentTeamId,
+    });
+    expect(eventCode).toBe("local_supplier_deal");
+    expect(teamId).toBe(studentTeamId);
+
+    const teacherView = await getTeacherGameView(gameId, teacherId);
+    expect(teacherView!.pendingEvents).toHaveLength(2);
+    expect(teacherView!.pendingEvents[1]).toMatchObject({
+      code: "local_supplier_deal",
+      teamId: studentTeamId,
+    });
+    expect(teacherView!.pendingEvents[1]!.teamName).toBeTruthy();
+
+    const playerView = await getGameView(gameId, studentId);
+    const targeted = playerView!.announcedEventCards.find((c) => c.code === "local_supplier_deal");
+    expect(targeted).toMatchObject({ teamId: studentTeamId, isMyTeam: true });
+  });
+
+  it("plafonds : 1 carte équipe par équipe, 2 cartes marché, pas de doublon", async () => {
+    // l'équipe a déjà sa carte
+    await expect(
+      drawEventCardForNextRound({ gameId, teacherId, teamId: studentTeamId }),
+    ).rejects.toThrow(/déjà une carte/);
+    // pas deux fois la même carte marché
     await expect(
       drawEventCardForNextRound({ gameId, teacherId, eventCode: "supplier_discount" }),
-    ).rejects.toThrow(); // 2 cartes déjà en jeu
+    ).rejects.toThrow(/tirable/);
+    // seconde carte marché OK…
+    await drawEventCardForNextRound({ gameId, teacherId, eventCode: "viral_campaign" });
+    // …mais pas une troisième
+    await expect(
+      drawEventCardForNextRound({ gameId, teacherId, eventCode: "rate_cut" }),
+    ).rejects.toThrow(/toute la classe/i);
   });
 
-  it("à la clôture : la carte est appliquée au moteur, affichée, puis purgée", async () => {
+  it("à la clôture : l'effet ciblé ne touche QUE l'équipe visée, puis purge", async () => {
     await submitTeamDecisions({ gameId, userId: studentId, payload: DECISIONS });
     await closeCurrentRound({ gameId, teacherId });
 
     const view = await getGameView(gameId, studentId);
+    // visibilité côté équipe ciblée : les 2 cartes marché + SA carte équipe
     expect(view!.lastEvents).toContain("supplier_discount");
+    expect(view!.lastEvents).toContain("viral_campaign");
+    expect(view!.lastEvents).toContain("local_supplier_deal");
     expect(view!.announcedEventCards).toEqual([]); // purgées
 
-    // effet réel : matières −10 % → coût variable de production = 4800 × (22×0,9 + 16)
+    // effet cumulé pour l'équipe ciblée : matières ×0,9 (marché) ×0,92 (équipe)
     const produced = view!.lastResult!.production.produced;
     expect(view!.lastResult!.incomeStatement.variableProductionCost).toBeCloseTo(
-      produced * (22 * 0.9 + 16),
+      produced * (22 * 0.9 * 0.92 + 16),
+      4,
+    );
+
+    // le bot, lui, n'a que l'effet marché (×0,9) et ne voit pas la carte équipe
+    const round1 = (await db.select().from(rounds).where(eq(rounds.gameId, gameId))).find(
+      (r) => r.index === 1,
+    )!;
+    const botRow = (
+      await db.select().from(roundResults).where(eq(roundResults.roundId, round1.id))
+    ).find((r) => r.teamId === botTeamId)!;
+    const botTrace = botRow.engineTrace as {
+      production: { produced: number };
+      events: string[];
+    };
+    expect(botTrace.events).toContain("supplier_discount");
+    expect(botTrace.events).not.toContain("local_supplier_deal");
+    const botIncome = botRow.incomeStatement as { variableProductionCost: number };
+    expect(botIncome.variableProductionCost).toBeCloseTo(
+      botTrace.production.produced * (22 * 0.9 + 16),
       4,
     );
   });

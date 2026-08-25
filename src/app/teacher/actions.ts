@@ -174,11 +174,13 @@ export async function drawCardAction(
   const session = await getSession();
   if (!session) return { error: "Session expirée.", drawnCode: null };
   const eventCode = String(formData.get("eventCode") ?? "").trim() || undefined;
+  const teamId = String(formData.get("teamId") ?? "").trim() || undefined;
   try {
     const { eventCode: drawn } = await drawEventCardForNextRound({
       gameId,
       teacherId: session.userId,
       eventCode,
+      teamId,
     });
     revalidatePath(`/teacher/games/${gameId}`);
     return { error: null, drawnCode: drawn };

@@ -1,93 +1,158 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { drawCardAction, type DrawCardState } from "@/app/teacher/actions";
-import { EVENT_CARDS, TEACHER_DRAWABLE_CODES } from "@/config/events/cards";
+import { EVENT_CARDS, TEACHER_DRAWABLE_CODES, TEAM_CARD_CODES } from "@/config/events/cards";
 import { EventCard } from "@/components/event-card";
 
 const initial: DrawCardState = { error: null, drawnCode: null };
 
+const MAX_PENDING = 4;
+const MAX_MARKET = 2;
+
 /**
- * Le deck de l'enseignant (mode apprentissage) : tirer une carte au hasard ou
- * jouer une carte choisie. La carte est annoncée aux équipes et appliquée à
- * la clôture du tour.
+ * Le deck de l'enseignant (mode apprentissage) : deux pioches distinctes —
+ * les cartes marché (toute la classe) et les cartes équipe (ciblées). La
+ * carte est annoncée aux équipes et appliquée à la clôture du tour.
  */
 export function CardDeck({
   gameId,
-  pendingCodes,
+  pendingEvents,
+  teams,
 }: {
   gameId: string;
-  pendingCodes: string[];
+  pendingEvents: { code: string; teamId: string | null; teamName: string | null }[];
+  teams: { teamId: string; name: string }[];
 }) {
   const [state, formAction, pending] = useActionState(drawCardAction.bind(null, gameId), initial);
+  const [target, setTarget] = useState<string>("");
+
+  const marketPending = pendingEvents.filter((c) => c.teamId === null);
+  const teamsWithCard = new Set(pendingEvents.map((c) => c.teamId).filter(Boolean));
+  const marketFull = marketPending.length >= MAX_MARKET;
+  const allFull = pendingEvents.length >= MAX_PENDING;
+
+  const isTeamDraw = target !== "";
+  const pool = isTeamDraw ? TEAM_CARD_CODES : TEACHER_DRAWABLE_CODES;
   const drawable = EVENT_CARDS.filter(
-    (c) => TEACHER_DRAWABLE_CODES.includes(c.code) && !pendingCodes.includes(c.code),
+    (c) => pool.includes(c.code) && !pendingEvents.some((p) => p.code === c.code),
   );
 
   return (
     <section className="rounded-xl border border-amber-400/20 bg-slate-900 p-4">
-      <h2 className="text-sm font-semibold text-slate-200">🃏 Deck d&apos;événements</h2>
+      <div className="flex items-start justify-between gap-3">
+        <h2 className="text-sm font-semibold text-slate-200">🃏 Deck d&apos;événements</h2>
+        <a
+          href="/teacher/cards/print"
+          target="_blank"
+          className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-slate-300 hover:border-amber-400/40 hover:text-amber-300"
+        >
+          🖨️ Imprimer le deck physique
+        </a>
+      </div>
       <p className="mt-1 text-xs text-slate-500">
-        Tirez une carte pour pimenter le tour en cours : elle est annoncée aux équipes et
-        s&apos;appliquera à la clôture. (Mode apprentissage uniquement — en compétition, seul
-        le tirage aléatoire du moteur fait foi.)
+        Cartes <strong className="text-slate-300">marché</strong> pour toute la classe, cartes{" "}
+        <strong className="text-slate-300">équipe</strong> pour cibler une seule entreprise.
+        Annoncées aux équipes, appliquées à la clôture du tour. Vous pouvez aussi faire tirer les
+        cartes physiques en classe puis saisir la carte tirée ici. (Mode apprentissage uniquement —
+        en compétition, seul le tirage aléatoire du moteur fait foi.)
       </p>
 
-      {pendingCodes.length > 0 ? (
+      {pendingEvents.length > 0 ? (
         <div className="mt-3">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-400">
             Cartes en jeu ce tour
           </p>
           <div className="grid gap-3 sm:grid-cols-2 lg:max-w-xl">
-            {pendingCodes.map((code, i) => (
-              <EventCard key={code} code={code} delayMs={i * 450} announced />
+            {pendingEvents.map((card, i) => (
+              <EventCard
+                key={`${card.code}-${card.teamId ?? "market"}`}
+                code={card.code}
+                delayMs={i * 450}
+                announced
+                targetLabel={card.teamName ? `→ ${card.teamName}` : "Toute la classe"}
+              />
             ))}
           </div>
         </div>
       ) : null}
 
-      {pendingCodes.length < 2 ? (
-        <form action={formAction} className="mt-4 flex flex-wrap items-center gap-3">
-          {/* pioche face cachée */}
-          <button
-            type="submit"
-            name="eventCode"
-            value=""
-            disabled={pending}
-            className="group relative h-24 w-16 rounded-lg border border-amber-400/40 bg-gradient-to-br from-slate-800 to-slate-950 shadow-lg transition hover:-translate-y-1 disabled:opacity-60"
-            title="Tirer une carte au hasard"
-          >
-            <span className="absolute inset-0 flex flex-col items-center justify-center gap-1">
-              <span className="text-xl">🂠</span>
-              <span className="text-[9px] font-bold uppercase tracking-widest text-amber-400/70">
-                Piocher
-              </span>
-            </span>
-          </button>
-          <span className="text-xs text-slate-500">ou</span>
-          <select
-            name="eventCode"
-            defaultValue=""
-            className="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
-          >
-            <option value="">— carte au hasard —</option>
-            {drawable.map((c) => (
-              <option key={c.code} value={c.code}>
-                {c.emoji} {c.title}
+      {!allFull ? (
+        <form action={formAction} className="mt-4 space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <label htmlFor="card-target" className="text-xs font-semibold text-slate-400">
+              Destinataire
+            </label>
+            <select
+              id="card-target"
+              name="teamId"
+              value={target}
+              onChange={(e) => setTarget(e.target.value)}
+              className="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+            >
+              <option value="" disabled={marketFull}>
+                🌍 Toute la classe (carte marché){marketFull ? " — max atteint" : ""}
               </option>
-            ))}
-          </select>
-          <button
-            type="submit"
-            disabled={pending}
-            className="rounded-lg border border-amber-400/40 px-4 py-2 text-sm font-semibold text-amber-300 hover:bg-amber-400/10 disabled:opacity-60"
-          >
-            {pending ? "Tirage…" : "Jouer la carte"}
-          </button>
+              {teams.map((t) => (
+                <option key={t.teamId} value={t.teamId} disabled={teamsWithCard.has(t.teamId)}>
+                  🎯 {t.name} (carte équipe)
+                  {teamsWithCard.has(t.teamId) ? " — carte déjà en jeu" : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            {/* pioche face cachée */}
+            <button
+              type="submit"
+              name="eventCode"
+              value=""
+              disabled={pending || (target === "" && marketFull)}
+              className={`group relative h-24 w-16 rounded-lg border shadow-lg transition hover:-translate-y-1 disabled:opacity-60 ${
+                isTeamDraw
+                  ? "border-sky-400/40 bg-gradient-to-br from-slate-800 to-sky-950"
+                  : "border-amber-400/40 bg-gradient-to-br from-slate-800 to-slate-950"
+              }`}
+              title={isTeamDraw ? "Tirer une carte équipe au hasard" : "Tirer une carte marché au hasard"}
+            >
+              <span className="absolute inset-0 flex flex-col items-center justify-center gap-1">
+                <span className="text-xl">🂠</span>
+                <span
+                  className={`text-[9px] font-bold uppercase tracking-widest ${
+                    isTeamDraw ? "text-sky-400/80" : "text-amber-400/70"
+                  }`}
+                >
+                  {isTeamDraw ? "Équipe" : "Marché"}
+                </span>
+              </span>
+            </button>
+            <span className="text-xs text-slate-500">ou</span>
+            <select
+              name="eventCode"
+              defaultValue=""
+              key={isTeamDraw ? "team" : "market"}
+              className="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+            >
+              <option value="">— carte au hasard —</option>
+              {drawable.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.emoji} {c.title}
+                </option>
+              ))}
+            </select>
+            <button
+              type="submit"
+              disabled={pending || (target === "" && marketFull)}
+              className="rounded-lg border border-amber-400/40 px-4 py-2 text-sm font-semibold text-amber-300 hover:bg-amber-400/10 disabled:opacity-60"
+            >
+              {pending ? "Tirage…" : "Jouer la carte"}
+            </button>
+          </div>
         </form>
       ) : (
         <p className="mt-3 text-xs text-slate-500">
-          Deux cartes maximum par tour — clôturez le tour pour continuer.
+          Quatre cartes maximum par tour — clôturez le tour pour continuer.
         </p>
       )}
       {state.error ? (

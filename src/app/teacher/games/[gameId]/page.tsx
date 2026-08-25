@@ -46,7 +46,13 @@ export default async function TeacherGamePage({
       </header>
 
       {!finished && view.mode === "learning" ? (
-        <CardDeck gameId={view.gameId} pendingCodes={view.pendingEventCodes} />
+        <CardDeck
+          gameId={view.gameId}
+          pendingEvents={view.pendingEvents}
+          teams={view.teams
+            .filter((t) => t.controller === "human")
+            .map((t) => ({ teamId: t.teamId, name: t.name }))}
+        />
       ) : null}
 
       <section className="rounded-xl border border-white/10 bg-slate-900 p-4">

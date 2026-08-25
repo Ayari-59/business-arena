@@ -196,6 +196,36 @@ const rawNova = {
       duration: 1,
       modifiers: [{ target: "availability", op: "mul", value: 0.9 }],
     },
+    // Cartes « équipe » : jamais tirées par le PRNG (probability 0), jouées
+    // uniquement par l'enseignant contre une équipe (tirage physique en classe)
+    {
+      code: "team_overtime",
+      scope: "company",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "availability", op: "mul", value: 1.08 }],
+    },
+    {
+      code: "local_supplier_deal",
+      scope: "company",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "material_cost", op: "mul", value: 0.92 }],
+    },
+    {
+      code: "banker_goodwill",
+      scope: "company",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "interest_rate", op: "mul", value: 0.7 }],
+    },
+    {
+      code: "bank_penalties",
+      scope: "company",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "interest_rate", op: "mul", value: 1.4 }],
+    },
   ],
   scriptedEvents: [{ round: 5, eventCode: "raw_material_spike" }],
   // Scoring BPI (doc 08 §1) : pondérations imposées, bornes calibrées sur les

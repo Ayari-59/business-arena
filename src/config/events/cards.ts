@@ -14,6 +14,8 @@ export interface EventCardDef {
   conceptHint: string; // ce que la carte teste (mini-leçon)
   category: CardCategory;
   emoji: string;
+  /** "market" : toute la classe · "team" : une équipe ciblée. */
+  scope: "market" | "team";
 }
 
 export const CARD_CATEGORIES: Record<CardCategory, { label: string; className: string }> = {
@@ -32,6 +34,7 @@ export const EVENT_CARDS: EventCardDef[] = [
     conceptHint: "Votre marge sur coût variable se comprime : où passe votre seuil de rentabilité ?",
     category: "macro",
     emoji: "📈",
+    scope: "market",
   },
   {
     code: "machine_breakdown",
@@ -41,6 +44,7 @@ export const EVENT_CARDS: EventCardDef[] = [
     conceptHint: "La maintenance était-elle à la hauteur ? La capacité est une ressource fragile.",
     category: "internal",
     emoji: "🔧",
+    scope: "team",
   },
   {
     code: "viral_campaign",
@@ -50,6 +54,7 @@ export const EVENT_CARDS: EventCardDef[] = [
     conceptHint: "Un pic de demande ne profite qu'à ceux qui ont du stock : anticipation !",
     category: "market",
     emoji: "🚀",
+    scope: "market",
   },
   {
     code: "competitor_bankruptcy",
@@ -59,6 +64,7 @@ export const EVENT_CARDS: EventCardDef[] = [
     conceptHint: "Une part de marché se prend au moment où elle se libère — pas après.",
     category: "competition",
     emoji: "🏳️",
+    scope: "market",
   },
   {
     code: "economic_downturn",
@@ -68,6 +74,7 @@ export const EVENT_CARDS: EventCardDef[] = [
     conceptHint: "Votre marge de sécurité absorbe-t-elle une baisse de 10 % des ventes ?",
     category: "macro",
     emoji: "🌧️",
+    scope: "market",
   },
   {
     code: "student_fair",
@@ -77,6 +84,7 @@ export const EVENT_CARDS: EventCardDef[] = [
     conceptHint: "Un segment élastique au prix : la bonne offre au bon moment.",
     category: "market",
     emoji: "🎓",
+    scope: "market",
   },
   {
     code: "premium_trend",
@@ -86,6 +94,7 @@ export const EVENT_CARDS: EventCardDef[] = [
     conceptHint: "Le premium se gagne par la qualité perçue, pas par le prix seul.",
     category: "market",
     emoji: "💎",
+    scope: "market",
   },
   {
     code: "rate_hike",
@@ -95,6 +104,7 @@ export const EVENT_CARDS: EventCardDef[] = [
     conceptHint: "L'effet de levier joue dans les deux sens : dette chère, rentabilité fragile.",
     category: "macro",
     emoji: "🏦",
+    scope: "market",
   },
   {
     code: "rate_cut",
@@ -104,6 +114,7 @@ export const EVENT_CARDS: EventCardDef[] = [
     conceptHint: "Le bon moment pour financer par emprunt… si le projet crée de la valeur.",
     category: "macro",
     emoji: "🕊️",
+    scope: "market",
   },
   {
     code: "supplier_discount",
@@ -113,6 +124,7 @@ export const EVENT_CARDS: EventCardDef[] = [
     conceptHint: "Marge sur coût variable élargie : produire plus, ou marger plus ?",
     category: "market",
     emoji: "📦",
+    scope: "market",
   },
   {
     code: "supplier_dispute",
@@ -122,6 +134,7 @@ export const EVENT_CARDS: EventCardDef[] = [
     conceptHint: "Dépendre d'un seul fournisseur est un risque qui se paie.",
     category: "internal",
     emoji: "⚖️",
+    scope: "team",
   },
   {
     code: "cold_wave",
@@ -131,13 +144,56 @@ export const EVENT_CARDS: EventCardDef[] = [
     conceptHint: "Quand tout le monde produit moins, qui a du stock vend.",
     category: "macro",
     emoji: "❄️",
+    scope: "market",
+  },
+  {
+    code: "team_overtime",
+    title: "Mobilisation générale",
+    flavor: "Toute l'équipe se serre les coudes : l'atelier tourne comme jamais.",
+    effectLabel: "Disponibilité machine +8 % ce tour (équipe ciblée)",
+    conceptHint: "La capacité n'est pas qu'une machine : c'est aussi un collectif.",
+    category: "internal",
+    emoji: "💪",
+    scope: "team",
+  },
+  {
+    code: "local_supplier_deal",
+    title: "Fournisseur local conciliant",
+    flavor: "Votre fournisseur historique vous consent un geste commercial.",
+    effectLabel: "Coût des matières −8 % ce tour (équipe ciblée)",
+    conceptHint: "La relation fournisseur est un actif : elle élargit la marge sur coût variable.",
+    category: "internal",
+    emoji: "🤝",
+    scope: "team",
+  },
+  {
+    code: "banker_goodwill",
+    title: "Banquier compréhensif",
+    flavor: "Votre chargé d'affaires révise vos conditions : il croit en votre plan.",
+    effectLabel: "Charges d'intérêts ×0,7 pendant 2 tours (équipe ciblée)",
+    conceptHint: "La confiance bancaire se construit — elle se lit dans vos comptes.",
+    category: "internal",
+    emoji: "🏛️",
+    scope: "team",
+  },
+  {
+    code: "bank_penalties",
+    title: "Agios et pénalités",
+    flavor: "Des incidents de paiement à répétition : la banque facture, et cher.",
+    effectLabel: "Charges d'intérêts ×1,4 pendant 2 tours (équipe ciblée)",
+    conceptHint: "Une trésorerie mal pilotée coûte deux fois : le découvert, puis la sanction.",
+    category: "internal",
+    emoji: "🧾",
+    scope: "team",
   },
 ];
 
 export const cardByCode = new Map(EVENT_CARDS.map((c) => [c.code, c]));
 
-/** Cartes tirables manuellement par l'enseignant (portée marché uniquement :
- * une carte « une entreprise au hasard » serait inéquitable en tirage manuel). */
-export const TEACHER_DRAWABLE_CODES = EVENT_CARDS.filter(
-  (c) => c.code !== "machine_breakdown" && c.code !== "supplier_dispute",
-).map((c) => c.code);
+/** Cartes « équipe » : ciblent une seule entreprise (tirage par équipe). */
+export const TEAM_CARD_CODES = EVENT_CARDS.filter((c) => c.scope === "team").map((c) => c.code);
+
+/** Cartes « marché » tirables pour toute la classe. */
+export const TEACHER_DRAWABLE_CODES = EVENT_CARDS.filter((c) => c.scope === "market").map(
+  (c) => c.code,
+);

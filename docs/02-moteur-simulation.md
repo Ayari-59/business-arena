@@ -284,6 +284,26 @@ panne machine, grève, perte d'un client grand compte, nouveau concurrent entran
 des taux, changement réglementaire (norme qualité), opportunité d'export, campagne
 marketing virale.
 
+### 7.1 Cartes événements (habillage de classe)
+
+Les **cartes** (`src/config/events/cards.ts`) sont l'habillage théâtral des événements —
+le moteur ne les connaît pas. Deux decks :
+
+- **Cartes marché** (`scope: "market"`) : toute la classe. L'enseignant peut en tirer
+  jusqu'à 2 par tour (mode apprentissage uniquement).
+- **Cartes équipe** (`scope: "team"`) : une seule entreprise ciblée. Une carte par équipe
+  et par tour ; l'injection se fait avec `scope: "company"` + `companyId` de l'équipe,
+  les autres équipes ne subissent (et ne voient) pas l'effet. Les événements
+  correspondants du scénario ont `probability: 0` : jamais tirés par le PRNG, donc
+  la calibration et le mode compétition ne sont pas affectés. Cibles limitées à
+  `material_cost` / `availability` / `interest_rate` (la demande est un modificateur
+  de marché, non déclinable par entreprise).
+
+Plafond global : 4 cartes en jeu par tour. Un **deck physique imprimable**
+(`/teacher/cards/print`, A4, dos + face à plier) permet le tirage réel en classe ;
+l'enseignant saisit ensuite la carte tirée dans le deck numérique pour qu'elle
+s'applique à la clôture du tour. En mode compétition, seul le tirage seedé fait foi.
+
 ---
 
 ## 8. Ce que le moteur ne fait pas

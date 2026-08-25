@@ -211,8 +211,21 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
             ⚡ Votre enseignant a tiré une carte — elle s&apos;appliquera à ce tour
           </p>
           <div className="grid gap-3 sm:grid-cols-2">
-            {view.announcedEventCards.map((code, i) => (
-              <EventCard key={code} code={code} delayMs={i * 450} announced />
+            {view.announcedEventCards.map((card, i) => (
+              <EventCard
+                key={`${card.code}-${card.teamId ?? "market"}`}
+                code={card.code}
+                delayMs={i * 450}
+                announced
+                targetLabel={
+                  card.teamId
+                    ? card.isMyTeam
+                      ? "🎯 Votre équipe"
+                      : `→ ${card.teamName ?? "Une autre équipe"}`
+                    : "Toute la classe"
+                }
+                highlight={card.isMyTeam}
+              />
             ))}
           </div>
           <p className="mt-2 text-xs text-slate-500">

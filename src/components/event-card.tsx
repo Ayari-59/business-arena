@@ -9,10 +9,16 @@ export function EventCard({
   code,
   delayMs = 0,
   announced = false,
+  targetLabel,
+  highlight = false,
 }: {
   code: string;
   delayMs?: number;
   announced?: boolean;
+  /** Destinataire affiché sur la carte : « Toute la classe » ou « → Équipe X ». */
+  targetLabel?: string;
+  /** Vrai quand la carte cible l'équipe du joueur qui la regarde. */
+  highlight?: boolean;
 }) {
   const card = cardByCode.get(code);
   if (!card) {
@@ -38,7 +44,9 @@ export function EventCard({
         </div>
         {/* face de la carte */}
         <div
-          className={`card-face card-front rounded-xl border bg-slate-900 ${category.className.split(" ")[0]}`}
+          className={`card-face card-front rounded-xl border bg-slate-900 ${category.className.split(" ")[0]} ${
+            highlight ? "ring-2 ring-sky-400/70" : ""
+          }`}
         >
           <div className="flex h-full flex-col p-4">
             <div className="flex items-start justify-between">
@@ -49,6 +57,17 @@ export function EventCard({
                 {announced ? "annoncée" : category.label}
               </span>
             </div>
+            {targetLabel ? (
+              <span
+                className={`mt-1.5 inline-flex w-fit rounded-full border px-2 py-0.5 text-[10px] font-semibold ${
+                  highlight
+                    ? "border-sky-400/60 bg-sky-400/10 text-sky-300"
+                    : "border-white/10 bg-white/5 text-slate-400"
+                }`}
+              >
+                {targetLabel}
+              </span>
+            ) : null}
             <h4 className="mt-2 text-sm font-bold text-slate-100">{card.title}</h4>
             <p className="mt-1 text-xs italic leading-relaxed text-slate-400">{card.flavor}</p>
             <p className="mt-auto pt-2 text-xs font-semibold text-slate-200">

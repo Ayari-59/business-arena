@@ -30,7 +30,7 @@ import {
   seedPedagogyReferentials,
 } from "@/services/pedagogy.service";
 import { getPlatformConfig } from "@/services/admin.service";
-import { TEACHER_DRAWABLE_CODES } from "@/config/events/cards";
+import { TEACHER_DRAWABLE_CODES, TEAM_CARD_CODES } from "@/config/events/cards";
 import { botDecisions, type BotProfile } from "@/engine/bots";
 import {
   BPI_DIMENSIONS,
@@ -115,6 +115,22 @@ export async function getOrCreateNovaScenarioIdPublic(): Promise<string> {
 }
 
 export type GameKind = "solo" | "class";
+
+/** Carte jouée par l'enseignant, en attente d'application à la clôture. */
+export interface PendingEventCard {
+  code: string;
+  /** null = toute la classe (portée marché) ; sinon l'équipe ciblée. */
+  teamId: string | null;
+}
+
+function readPendingEvents(profile: unknown): PendingEventCard[] {
+  const p = profile as { pendingEvents?: PendingEventCard[]; pendingEventCodes?: string[] };
+  if (Array.isArray(p.pendingEvents)) return p.pendingEvents;
+  // rétro-compatibilité : ancien format (codes marché uniquement)
+  if (Array.isArray(p.pendingEventCodes))
+    return p.pendingEventCodes.map((code) => ({ code, teamId: null }));
+  return [];
+}
 
 interface CreateGameArgs {
   organizationId: string;
@@ -501,19 +517,24 @@ async function resolveGameRound(
       }
     }
 
-    const profile = game.difficultyProfile as {
-      activeEvents?: EventInstance[];
-      pendingEventCodes?: string[];
-    };
+    const profile = game.difficultyProfile as { activeEvents?: EventInstance[] };
     const activeEvents = Array.isArray(profile.activeEvents) ? profile.activeEvents : [];
-    // Cartes tirées manuellement par l'enseignant : appliquées ce tour
-    const pendingCodes = Array.isArray(profile.pendingEventCodes)
-      ? profile.pendingEventCodes
-      : [];
-    const injected: EventInstance[] = pendingCodes.flatMap((code) => {
-      const def = scenario.events.find((e) => e.code === code);
-      if (!def || activeEvents.some((e) => e.code === code)) return [];
-      return [{ code: def.code, scope: "market" as const, roundsLeft: def.duration, modifiers: def.modifiers }];
+    // Cartes jouées par l'enseignant : marché (toute la classe) ou ciblées
+    const pendingCards = readPendingEvents(game.difficultyProfile);
+    const injected: EventInstance[] = pendingCards.flatMap((card) => {
+      const def = scenario.events.find((e) => e.code === card.code);
+      if (!def) return [];
+      if (activeEvents.some((e) => e.code === card.code && e.companyId === (card.teamId ?? undefined)))
+        return [];
+      return [
+        {
+          code: def.code,
+          scope: card.teamId ? ("company" as const) : ("market" as const),
+          companyId: card.teamId ?? undefined,
+          roundsLeft: def.duration,
+          modifiers: def.modifiers,
+        },
+      ];
     });
     const output = simulateRound({
       scenario,
@@ -523,10 +544,11 @@ async function resolveGameRound(
       activeEvents: [...activeEvents, ...injected],
       seed: game.seed,
     });
-    const roundEventCodes = [
-      ...injected.map((e) => e.code),
-      ...output.newEvents.map((e) => e.code),
-    ];
+    /** Événements visibles par une équipe : portée marché + ceux qui la ciblent. */
+    const roundEventCodesFor = (teamId: string): string[] =>
+      [...injected, ...output.newEvents]
+        .filter((e) => e.scope === "market" || e.companyId === teamId)
+        .map((e) => e.code);
 
     // Persistance (idempotente)
     await db
@@ -560,7 +582,7 @@ async function resolveGameRound(
             engineTrace: {
               production: r.production,
               breakeven: r.breakeven,
-              events: roundEventCodes,
+              events: roundEventCodesFor(t.id),
             },
             revenue: toMoney(r.incomeStatement.revenue),
             netIncome: toMoney(r.incomeStatement.netIncome),
@@ -612,7 +634,8 @@ async function resolveGameRound(
         difficultyProfile: {
           ...(game.difficultyProfile as object),
           activeEvents: output.events,
-          pendingEventCodes: [],
+          pendingEvents: [],
+          pendingEventCodes: undefined,
         },
       })
       .where(eq(games.id, gameId));
@@ -670,7 +693,9 @@ export async function drawEventCardForNextRound(args: {
   gameId: string;
   teacherId: string;
   eventCode?: string;
-}): Promise<{ eventCode: string }> {
+  /** Carte « équipe » : l'équipe ciblée (tirage physique par équipe en classe). */
+  teamId?: string;
+}): Promise<{ eventCode: string; teamId: string | null }> {
   const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
   if (!game) throw new Error("Partie introuvable");
   if (game.createdBy !== args.teacherId)
@@ -679,22 +704,44 @@ export async function drawEventCardForNextRound(args: {
   if (game.mode !== "learning")
     throw new Error("Mode compétition : seul le tirage aléatoire seedé fait foi (équité)");
 
+  const targetTeamId = args.teamId ?? null;
+  if (targetTeamId) {
+    const team = (
+      await db
+        .select()
+        .from(teams)
+        .where(and(eq(teams.id, targetTeamId), eq(teams.gameId, args.gameId)))
+    )[0];
+    if (!team || team.controller !== "human")
+      throw new Error("Équipe ciblée introuvable dans cette partie");
+  }
+
   const scenario = parseScenarioConfig(game.scenarioSnapshot);
   const scenarioCodes = new Set(scenario.events.map((e) => e.code));
-  const drawable = TEACHER_DRAWABLE_CODES.filter((code) => scenarioCodes.has(code));
-  if (drawable.length === 0) throw new Error("Aucune carte tirable dans ce scénario");
+  // deck marché (toute la classe) ou deck équipe (carte ciblée)
+  const pool = (targetTeamId ? TEAM_CARD_CODES : TEACHER_DRAWABLE_CODES).filter((code) =>
+    scenarioCodes.has(code),
+  );
+  if (pool.length === 0) throw new Error("Aucune carte tirable dans ce scénario");
 
-  const profile = game.difficultyProfile as { pendingEventCodes?: string[] };
-  const pending = Array.isArray(profile.pendingEventCodes) ? profile.pendingEventCodes : [];
-  if (pending.length >= 2) throw new Error("Deux cartes sont déjà en jeu pour ce tour");
+  const pending = readPendingEvents(game.difficultyProfile);
+  if (pending.length >= 4) throw new Error("Quatre cartes sont déjà en jeu pour ce tour");
+  if (targetTeamId && pending.filter((p) => p.teamId === targetTeamId).length >= 1)
+    throw new Error("Cette équipe a déjà une carte en jeu ce tour");
+  if (!targetTeamId && pending.filter((p) => p.teamId === null).length >= 2)
+    throw new Error("Deux cartes « toute la classe » sont déjà en jeu pour ce tour");
 
   const activeEvents = (game.difficultyProfile as { activeEvents?: EventInstance[] })
     ?.activeEvents;
   const activeCodes = new Set(
     (Array.isArray(activeEvents) ? activeEvents : []).map((e) => e.code),
   );
-  const candidates = drawable.filter((c) => !pending.includes(c) && !activeCodes.has(c));
-  if (candidates.length === 0) throw new Error("Toutes les cartes tirables sont déjà en jeu");
+  const candidates = pool.filter(
+    (c) =>
+      !activeCodes.has(c) &&
+      !pending.some((p) => p.code === c && p.teamId === targetTeamId),
+  );
+  if (candidates.length === 0) throw new Error("Toutes les cartes de ce deck sont déjà en jeu");
 
   let eventCode: string;
   if (args.eventCode) {
@@ -710,11 +757,12 @@ export async function drawEventCardForNextRound(args: {
     .set({
       difficultyProfile: {
         ...(game.difficultyProfile as object),
-        pendingEventCodes: [...pending, eventCode],
+        pendingEvents: [...pending, { code: eventCode, teamId: targetTeamId }],
+        pendingEventCodes: undefined,
       },
     })
     .where(eq(games.id, args.gameId));
-  return { eventCode };
+  return { eventCode, teamId: targetTeamId };
 }
 
 /** Mode classe : l'enseignant (créateur de la partie) clôt le tour courant. */
@@ -874,7 +922,13 @@ export interface GameView {
   /** Décisions déjà validées par l'équipe pour le tour courant (mode classe). */
   pendingDecisions: RoundDecisions | null;
   /** Cartes événement annoncées par l'enseignant pour le tour courant. */
-  announcedEventCards: string[];
+  announcedEventCards: {
+    code: string;
+    /** null = carte marché (toute la classe) ; sinon l'équipe ciblée. */
+    teamId: string | null;
+    teamName: string | null;
+    isMyTeam: boolean;
+  }[];
   lastResult: CompanyRoundResult | null;
   lastEvents: string[];
   history: { round: number; revenue: number; netIncome: number; netTreasury: number }[];
@@ -997,7 +1051,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     ((playerRankingRow?.detail as { dimensions?: Partial<Record<BpiDimension, number>> })
       ?.dimensions as Partial<Record<BpiDimension, number>> | undefined) ?? null;
 
-  const profile = game.difficultyProfile as { kind?: GameKind; pendingEventCodes?: string[] };
+  const profile = game.difficultyProfile as { kind?: GameKind };
   return {
     gameId,
     kind: profile.kind ?? "solo",
@@ -1008,9 +1062,15 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     playerTeamId: playerTeam.id,
     playerTeamName: playerTeam.name,
     pendingDecisions,
-    announcedEventCards: Array.isArray(profile.pendingEventCodes)
-      ? profile.pendingEventCodes
-      : [],
+    announcedEventCards: readPendingEvents(game.difficultyProfile).map((card) => {
+      const target = card.teamId ? teamRows.find((t) => t.id === card.teamId) : undefined;
+      return {
+        code: card.code,
+        teamId: card.teamId,
+        teamName: target?.name ?? null,
+        isMyTeam: card.teamId === playerTeam.id,
+      };
+    }),
     lastResult,
     lastEvents,
     history,
@@ -1067,7 +1127,8 @@ export interface TeacherGameView {
   joinCode: string | null;
   status: string;
   mode: "learning" | "competition" | "contest";
-  pendingEventCodes: string[];
+  /** Cartes annoncées pour le prochain tour (teamId null = toute la classe). */
+  pendingEvents: { code: string; teamId: string | null; teamName: string | null }[];
   currentRound: number;
   roundsCount: number;
   roundDays: number;
@@ -1113,15 +1174,18 @@ export async function getTeacherGameView(
 
   const rankingRows = await db.select().from(gameRankings).where(eq(gameRankings.gameId, gameId));
 
-  const teacherProfile = game.difficultyProfile as { pendingEventCodes?: string[] };
   return {
     gameId,
     joinCode: game.joinCode,
     status: game.status,
     mode: game.mode,
-    pendingEventCodes: Array.isArray(teacherProfile.pendingEventCodes)
-      ? teacherProfile.pendingEventCodes
-      : [],
+    pendingEvents: readPendingEvents(game.difficultyProfile).map((card) => ({
+      code: card.code,
+      teamId: card.teamId,
+      teamName: card.teamId
+        ? (teamRows.find((t) => t.id === card.teamId)?.name ?? null)
+        : null,
+    })),
     currentRound: game.currentRound,
     roundsCount: (game.scenarioSnapshot as { roundsCount: number }).roundsCount,
     roundDays: (game.scenarioSnapshot as { roundDays: number }).roundDays,
