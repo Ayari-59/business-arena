@@ -91,6 +91,10 @@ définir dans le projet Vercel les variables `DATABASE_URL`, `DIRECT_URL`, `AUTH
     départage financier ; classement et décomposition affichés partout.
 11. ✅ Étape 11 — profil joueur `/profile` : compétences par axe, maîtrise des
     concepts, historique des parties avec rang et BPI.
-12. Étapes 12-13 — IA coach (API LLM), moteur de compétition.
+12. Étape 12 — IA coach (API LLM) : à venir (frontière réservée, doc 01 §7).
+13. ✅ Étape 13 — moteur de concours « Business Arena Championship » :
+    inscriptions par code, groupes tirés au sort (seedé, auditable), parties
+    en mode compétition (décisions verrouillées, indices limités — §25),
+    qualification au BPI, finale, podium.
 
 **Aucune modification du moteur économique ne sera acceptée sans tests** (§32).

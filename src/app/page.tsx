@@ -89,6 +89,9 @@ export default function Home() {
         <a href="/join" className="text-amber-300 underline-offset-4 hover:underline">
           J&apos;ai un code de partie (élève)
         </a>
+        <a href="/compete" className="text-amber-300 underline-offset-4 hover:underline">
+          Rejoindre un concours
+        </a>
         <a href="/teacher/login" className="text-slate-400 underline-offset-4 hover:underline">
           Espace enseignant
         </a>

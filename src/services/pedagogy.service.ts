@@ -244,6 +244,14 @@ export async function unlockHint(args: {
   const levels = await unlockedLevels(args.instanceId);
   const next = nextUnlockableLevel(levels);
   if (next === null) throw new Error("Tous les indices sont déjà débloqués");
+  // §25 : indices limités au niveau 3 en mode compétition (pas de modèle soufflé)
+  const roundRow = (await db.select().from(rounds).where(eq(rounds.id, instance.roundId)))[0];
+  if (roundRow) {
+    const game = (await db.select().from(games).where(eq(games.id, roundRow.gameId)))[0];
+    if (game?.mode === "competition" && next > 3) {
+      throw new Error("Mode compétition : indices limités aux niveaux 1 à 3");
+    }
+  }
   const hintRow = (
     await db
       .select()

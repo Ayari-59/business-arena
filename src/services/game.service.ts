@@ -107,6 +107,11 @@ async function getOrCreateNovaScenarioId(): Promise<string> {
   return inserted[0].id;
 }
 
+/** Id du scénario NOVA publié (créé au besoin) — utilisé par le moteur de concours. */
+export async function getOrCreateNovaScenarioIdPublic(): Promise<string> {
+  return getOrCreateNovaScenarioId();
+}
+
 export type GameKind = "solo" | "class";
 
 interface CreateGameArgs {
@@ -117,10 +122,18 @@ interface CreateGameArgs {
   humanTeams: { name: string }[];
   botCount: number;
   joinCode?: string;
+  /** §25 : "competition" verrouille les décisions validées et limite les indices. */
+  mode?: "learning" | "competition";
+  competitionStageId?: string;
+}
+
+export interface CreatedGame {
+  gameId: string;
+  teams: { id: string; name: string; controller: "human" | "bot" }[];
 }
 
 /** Cœur commun de création : partie + équipes + tours + états initiaux. */
-async function createGameCore(args: CreateGameArgs): Promise<{ gameId: string }> {
+export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame> {
   const scenarioId = await getOrCreateNovaScenarioId();
   await seedPedagogyReferentials(); // référentiels concepts/modèles/situations (idempotent)
   const seed = randomInt(1, 2 ** 31);
@@ -135,7 +148,8 @@ async function createGameCore(args: CreateGameArgs): Promise<{ gameId: string }>
       scenarioSnapshot,
       engineVersion: ENGINE_VERSION,
       seed,
-      mode: "learning",
+      mode: args.mode ?? "learning",
+      competitionStageId: args.competitionStageId,
       difficultyProfile: { level: 1, periodicity: args.periodicity, kind: args.kind },
       status: "running",
       currentRound: 1,
@@ -193,7 +207,10 @@ async function createGameCore(args: CreateGameArgs): Promise<{ gameId: string }>
 
   await openSituationsForRound(game.id, 1); // situations scriptées du tour 1 (doc 03)
 
-  return { gameId: game.id };
+  return {
+    gameId: game.id,
+    teams: teamRows.map((t) => ({ id: t.id, name: t.name, controller: t.controller })),
+  };
 }
 
 /** Partie solo : le joueur contre N−1 bots du pool (§27 : nombre configurable). */
@@ -342,6 +359,19 @@ export async function submitTeamDecisions(args: {
       .where(and(eq(rounds.gameId, args.gameId), eq(rounds.index, game.currentRound)))
   )[0];
   if (!roundRow || roundRow.status !== "open") throw new Error("Ce tour n'est pas ouvert");
+
+  // §25 (mode compétition) : décisions verrouillées après validation
+  if (game.mode === "competition") {
+    const existing = (
+      await db
+        .select()
+        .from(decisions)
+        .where(and(eq(decisions.roundId, roundRow.id), eq(decisions.teamId, team.id)))
+    )[0];
+    if (existing && existing.status !== "draft") {
+      throw new Error("Mode compétition : vos décisions sont verrouillées après validation");
+    }
+  }
 
   await db
     .insert(decisions)

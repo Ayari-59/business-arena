@@ -6,6 +6,12 @@ import { z } from "zod";
 import { clearSession, getSession, setSession } from "@/lib/session";
 import { loginTeacher, registerTeacher, getTeacherOrgId } from "@/services/auth.service";
 import { closeCurrentRound, createClassGame } from "@/services/game.service";
+import {
+  createCompetition,
+  finishCompetition,
+  startFinal,
+  startQualification,
+} from "@/services/competition.service";
 
 export interface FormState {
   error: string | null;
@@ -77,4 +83,73 @@ export async function closeRoundAction(gameId: string): Promise<void> {
   if (!session) redirect("/teacher/login");
   await closeCurrentRound({ gameId, teacherId: session.userId });
   revalidatePath(`/teacher/games/${gameId}`);
+}
+
+const createCompetitionSchema = z.object({
+  name: z.string().min(1).max(80).catch("Business Arena Championship"),
+  periodicity: z.enum(["month", "quarter", "year"]).catch("quarter"),
+  groupSize: z.coerce.number().int().min(2).max(6).catch(3),
+  advancePerGroup: z.coerce.number().int().min(1).max(4).catch(1),
+});
+
+export async function createCompetitionAction(formData: FormData): Promise<void> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  const organizationId = await getTeacherOrgId(session.userId);
+  if (!organizationId) redirect("/teacher/login");
+  const parsed = createCompetitionSchema.parse({
+    name: formData.get("name"),
+    periodicity: formData.get("periodicity"),
+    groupSize: formData.get("groupSize"),
+    advancePerGroup: formData.get("advancePerGroup"),
+  });
+  const { competitionId } = await createCompetition({
+    organizerId: session.userId,
+    organizationId,
+    ...parsed,
+  });
+  redirect(`/teacher/competitions/${competitionId}`);
+}
+
+export interface CompetitionActionState {
+  error: string | null;
+}
+
+async function runCompetitionAction(
+  competitionId: string,
+  fn: (args: { competitionId: string; organizerId: string }) => Promise<unknown>,
+): Promise<CompetitionActionState> {
+  const session = await getSession();
+  if (!session) return { error: "Session expirée : reconnectez-vous." };
+  try {
+    await fn({ competitionId, organizerId: session.userId });
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Erreur." };
+  }
+  revalidatePath(`/teacher/competitions/${competitionId}`);
+  return { error: null };
+}
+
+export async function startQualificationAction(
+  competitionId: string,
+  _prev: CompetitionActionState,
+  _formData: FormData,
+): Promise<CompetitionActionState> {
+  return runCompetitionAction(competitionId, startQualification);
+}
+
+export async function startFinalAction(
+  competitionId: string,
+  _prev: CompetitionActionState,
+  _formData: FormData,
+): Promise<CompetitionActionState> {
+  return runCompetitionAction(competitionId, startFinal);
+}
+
+export async function finishCompetitionAction(
+  competitionId: string,
+  _prev: CompetitionActionState,
+  _formData: FormData,
+): Promise<CompetitionActionState> {
+  return runCompetitionAction(competitionId, finishCompetition);
 }
