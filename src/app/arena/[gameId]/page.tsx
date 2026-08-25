@@ -195,11 +195,19 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
           <h2 className="mb-4 text-sm font-semibold text-slate-200">
             Vos décisions — {periodLabel(view.roundDays, view.currentRound).toLowerCase()}
           </h2>
+          {view.kind === "class" && view.pendingDecisions ? (
+            <p className="mb-4 rounded-lg border border-emerald-400/30 bg-emerald-950/30 px-3 py-2 text-sm text-emerald-300">
+              ✓ Décisions validées — en attente de la clôture du tour par l&apos;enseignant.
+              Vous pouvez encore les modifier ci-dessous. Actualisez la page après la clôture.
+            </p>
+          ) : null}
           <DecisionForm
             gameId={view.gameId}
             roundIndex={view.currentRound}
             periodName={periodLabel(view.roundDays, view.currentRound).toLowerCase()}
-            defaults={view.lastDecisions ?? defaultDecisions(view.roundDays)}
+            defaults={view.pendingDecisions ?? view.lastDecisions ?? defaultDecisions(view.roundDays)}
+            kind={view.kind}
+            alreadySubmitted={view.pendingDecisions !== null}
           />
         </section>
       )}

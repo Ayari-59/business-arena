@@ -1,5 +1,5 @@
 import { randomInt } from "node:crypto";
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import {
   companyStates,
@@ -13,6 +13,7 @@ import {
   rounds,
   scenarios,
   teams,
+  users,
 } from "@/db/schema";
 import { novaBots, novaCompany, novaScenario } from "@/config/scenarios/nova";
 import {
@@ -26,6 +27,7 @@ import { ENGINE_VERSION, simulateRound } from "@/engine/simulation";
 import type {
   CompanyRoundResult,
   CompanyState,
+  EngineScenarioConfig,
   EventInstance,
   RoundDecisions,
 } from "@/engine/types";
@@ -35,6 +37,11 @@ import type {
  * Le driver HTTP Neon n'offre pas de transactions : la résolution d'un tour
  * est idempotente via un verrou optimiste sur rounds.status (open → resolving),
  * et re-tentable — chaque écriture est un upsert ou une insertion idempotente.
+ *
+ * Deux genres de partie (difficultyProfile.kind) :
+ * - "solo"  : un joueur, résolution immédiate à la validation (ADR-04, solo) ;
+ * - "class" : N équipes humaines + bots, chaque équipe valide ses décisions,
+ *   l'enseignant (créateur) clôt le tour ; décisions manquantes reconduites.
  */
 
 const PUBLIC_ORG_SLUG = "public";
@@ -72,7 +79,7 @@ async function getOrCreateNovaScenarioId(): Promise<string> {
       version: novaScenario.version,
       title: "NOVA — Prenez les commandes",
       summary:
-        "Reprenez NOVA, jeune fabricant d'enceintes portables : 6 trimestres pour apprendre prix, capacité, seuil de rentabilité et trésorerie.",
+        "Reprenez NOVA, jeune fabricant d'enceintes portables : 6 tours pour apprendre prix, capacité, seuil de rentabilité et trésorerie.",
       minCompanies: 1,
       maxCompanies: 8,
       roundsCount: novaScenario.roundsCount,
@@ -85,36 +92,39 @@ async function getOrCreateNovaScenarioId(): Promise<string> {
   return inserted[0].id;
 }
 
-/**
- * Crée une partie solo NOVA : le joueur humain contre N−1 bots du pool.
- * companiesCount ∈ [min, max] du scénario (§27 : nombre d'équipes configurable).
- */
-export async function createSoloGame(
-  userId: string,
-  periodicity: Periodicity = "quarter",
-  companiesCount = 3,
-): Promise<string> {
-  const botsNeeded = Math.min(Math.max(companiesCount, 2), novaBots.length + 1) - 1;
-  const [organizationId, scenarioId] = await Promise.all([
-    getOrCreatePublicOrgId(),
-    getOrCreateNovaScenarioId(),
-  ]);
+export type GameKind = "solo" | "class";
+
+interface CreateGameArgs {
+  organizationId: string;
+  createdBy: string;
+  periodicity: Periodicity;
+  kind: GameKind;
+  humanTeams: { name: string }[];
+  botCount: number;
+  joinCode?: string;
+}
+
+/** Cœur commun de création : partie + équipes + tours + états initiaux. */
+async function createGameCore(args: CreateGameArgs): Promise<{ gameId: string }> {
+  const scenarioId = await getOrCreateNovaScenarioId();
   const seed = randomInt(1, 2 ** 31);
-  const scenarioSnapshot = applyPeriodicity(novaScenario, periodicity); // ADR-01 + ADR-10
+  const scenarioSnapshot = applyPeriodicity(novaScenario, args.periodicity); // ADR-01 + ADR-10
+  const botCount = Math.min(Math.max(args.botCount, 0), novaBots.length);
 
   const [game] = await db
     .insert(games)
     .values({
-      organizationId,
+      organizationId: args.organizationId,
       scenarioId,
-      scenarioSnapshot, // instantané figé (ADR-10), redimensionné par périodicité
+      scenarioSnapshot,
       engineVersion: ENGINE_VERSION,
       seed,
       mode: "learning",
-      difficultyProfile: { level: 1, periodicity },
+      difficultyProfile: { level: 1, periodicity: args.periodicity, kind: args.kind },
       status: "running",
       currentRound: 1,
-      createdBy: userId,
+      joinCode: args.joinCode,
+      createdBy: args.createdBy,
     })
     .returning({ id: games.id });
   if (!game) throw new Error("Création de partie impossible");
@@ -122,19 +132,24 @@ export async function createSoloGame(
   const teamRows = await db
     .insert(teams)
     .values([
-      { gameId: game.id, name: "NOVA (vous)", controller: "human" as const },
-      ...novaBots.slice(0, botsNeeded).map((b) => ({
+      ...args.humanTeams.map((t) => ({
+        gameId: game.id,
+        name: t.name,
+        controller: "human" as const,
+      })),
+      ...novaBots.slice(0, botCount).map((b) => ({
         gameId: game.id,
         name: b.name,
         controller: "bot" as const,
         botProfile: b.profile,
       })),
     ])
-    .returning({ id: teams.id, name: teams.name, controller: teams.controller, botProfile: teams.botProfile });
-
-  const humanTeam = teamRows.find((t) => t.controller === "human");
-  if (!humanTeam) throw new Error("Équipe joueur manquante");
-  await db.insert(players).values({ teamId: humanTeam.id, userId, role: "captain" });
+    .returning({
+      id: teams.id,
+      name: teams.name,
+      controller: teams.controller,
+      botProfile: teams.botProfile,
+    });
 
   await db.insert(rounds).values(
     Array.from({ length: scenarioSnapshot.roundsCount }, (_, i) => ({
@@ -155,48 +170,202 @@ export async function createSoloGame(
           t.controller === "human" ? "human" : "bot",
           (t.botProfile ?? undefined) as BotProfile | undefined,
         ),
-        periodicity,
+        args.periodicity,
       ),
     })),
   );
 
-  return game.id;
+  return { gameId: game.id };
+}
+
+/** Partie solo : le joueur contre N−1 bots du pool (§27 : nombre configurable). */
+export async function createSoloGame(
+  userId: string,
+  periodicity: Periodicity = "quarter",
+  companiesCount = 3,
+): Promise<string> {
+  const organizationId = await getOrCreatePublicOrgId();
+  const botCount = Math.min(Math.max(companiesCount, 2), novaBots.length + 1) - 1;
+  const { gameId } = await createGameCore({
+    organizationId,
+    createdBy: userId,
+    periodicity,
+    kind: "solo",
+    humanTeams: [{ name: "NOVA (vous)" }],
+    botCount,
+  });
+  const humanTeam = (
+    await db
+      .select({ id: teams.id })
+      .from(teams)
+      .where(and(eq(teams.gameId, gameId), eq(teams.controller, "human")))
+  )[0]!;
+  await db.insert(players).values({ teamId: humanTeam.id, userId, role: "captain" });
+  return gameId;
+}
+
+const JOIN_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+function makeJoinCode(): string {
+  return Array.from(
+    { length: 6 },
+    () => JOIN_CODE_ALPHABET[randomInt(JOIN_CODE_ALPHABET.length)],
+  ).join("");
+}
+
+/** Partie de classe (§27) : N équipes humaines + bots, code d'invitation. */
+export async function createClassGame(args: {
+  teacherId: string;
+  organizationId: string;
+  periodicity: Periodicity;
+  humanTeamsCount: number;
+  botCount: number;
+}): Promise<{ gameId: string; joinCode: string }> {
+  const humanTeamsCount = Math.min(Math.max(args.humanTeamsCount, 1), 8);
+  const botCount = Math.min(Math.max(args.botCount, 0), 8 - humanTeamsCount);
+  const joinCode = makeJoinCode();
+  const { gameId } = await createGameCore({
+    organizationId: args.organizationId,
+    createdBy: args.teacherId,
+    periodicity: args.periodicity,
+    kind: "class",
+    humanTeams: Array.from({ length: humanTeamsCount }, (_, i) => ({ name: `Équipe ${i + 1}` })),
+    botCount,
+    joinCode,
+  });
+  return { gameId, joinCode };
+}
+
+/** Rejoindre une partie de classe par code : affectation à l'équipe la moins remplie. */
+export async function joinGameByCode(args: {
+  code: string;
+  userId: string;
+  pseudo?: string;
+}): Promise<{ gameId: string } | { error: string }> {
+  const game = (
+    await db.select().from(games).where(eq(games.joinCode, args.code.trim().toUpperCase()))
+  )[0];
+  if (!game) return { error: "Code de partie inconnu." };
+  if (game.status === "finished" || game.status === "archived")
+    return { error: "Cette partie est terminée." };
+
+  const teamRows = await db
+    .select()
+    .from(teams)
+    .where(and(eq(teams.gameId, game.id), eq(teams.controller, "human")));
+  if (teamRows.length === 0) return { error: "Aucune équipe à rejoindre." };
+
+  const memberships = await db
+    .select()
+    .from(players)
+    .where(inArray(players.teamId, teamRows.map((t) => t.id)));
+  if (memberships.some((m) => m.userId === args.userId)) return { gameId: game.id };
+
+  const counts = new Map(teamRows.map((t) => [t.id, 0]));
+  for (const m of memberships) counts.set(m.teamId, (counts.get(m.teamId) ?? 0) + 1);
+  const target = [...counts.entries()].sort((a, b) => a[1] - b[1])[0]![0];
+
+  await db.insert(players).values({ teamId: target, userId: args.userId, role: "member" });
+  if (args.pseudo?.trim()) {
+    await db.update(users).set({ displayName: args.pseudo.trim() }).where(eq(users.id, args.userId));
+  }
+  return { gameId: game.id };
 }
 
 const toMoney = (v: number) => (Math.round(v * 100) / 100).toString();
 
-function sumSold(result: CompanyRoundResult): number {
-  return Object.values(result.market.bySegment).reduce((s, d) => s + d.sold, 0);
+function sumSold(bySegment: CompanyRoundResult["market"]["bySegment"]): number {
+  return Object.values(bySegment).reduce((s, d) => s + d.sold, 0);
 }
 
-/**
- * Résout le tour courant d'une partie solo avec les décisions du joueur.
- * Verrou optimiste : seul l'appel qui bascule le tour open → resolving résout.
- */
-export async function resolveCurrentRound(args: {
+/** Décisions de repli (échelle du scénario) quand une équipe n'a rien soumis au tour 1. */
+function fallbackDecisions(scenario: EngineScenarioConfig): RoundDecisions {
+  const k = scenario.roundDays / 90;
+  return {
+    price: 59,
+    productionPlan: 4800 * k,
+    marketingBudget: 6000 * k,
+    qualityBudget: 2000 * k,
+    maintenanceBudget: scenario.production.maintenanceReference,
+    finance: { newLoan: 0, loanRepayment: 0 },
+  };
+}
+
+/** Équipe (humaine) d'un utilisateur dans une partie, ou null. */
+async function findUserTeam(gameId: string, userId: string) {
+  const teamRows = await db.select().from(teams).where(eq(teams.gameId, gameId));
+  const humanIds = teamRows.filter((t) => t.controller === "human").map((t) => t.id);
+  if (humanIds.length === 0) return null;
+  const membership = (
+    await db
+      .select()
+      .from(players)
+      .where(and(inArray(players.teamId, humanIds), eq(players.userId, userId)))
+  )[0];
+  if (!membership) return null;
+  return teamRows.find((t) => t.id === membership.teamId) ?? null;
+}
+
+/** Soumet (valide) les décisions de l'équipe de l'utilisateur pour le tour courant. */
+export async function submitTeamDecisions(args: {
   gameId: string;
   userId: string;
-  playerDecisions: RoundDecisions;
-}): Promise<{ roundIndex: number; finished: boolean }> {
+  payload: RoundDecisions;
+}): Promise<{ roundIndex: number }> {
   const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
   if (!game) throw new Error("Partie introuvable");
   if (game.status !== "running") throw new Error("Cette partie est terminée");
-  const roundIndex = game.currentRound;
-
-  const teamRows = await db.select().from(teams).where(eq(teams.gameId, args.gameId));
-  const humanTeam = teamRows.find((t) => t.controller === "human");
-  if (!humanTeam) throw new Error("Équipe joueur manquante");
-  const membership = await db
-    .select()
-    .from(players)
-    .where(and(eq(players.teamId, humanTeam.id), eq(players.userId, args.userId)));
-  if (!membership[0]) throw new Error("Vous n'êtes pas membre de cette partie");
+  const team = await findUserTeam(args.gameId, args.userId);
+  if (!team) throw new Error("Vous n'êtes pas membre de cette partie");
 
   const roundRow = (
     await db
       .select()
       .from(rounds)
-      .where(and(eq(rounds.gameId, args.gameId), eq(rounds.index, roundIndex)))
+      .where(and(eq(rounds.gameId, args.gameId), eq(rounds.index, game.currentRound)))
+  )[0];
+  if (!roundRow || roundRow.status !== "open") throw new Error("Ce tour n'est pas ouvert");
+
+  await db
+    .insert(decisions)
+    .values({
+      roundId: roundRow.id,
+      teamId: team.id,
+      payload: args.payload,
+      status: "validated",
+      validatedAt: new Date(),
+      validatedBy: args.userId,
+    })
+    .onConflictDoUpdate({
+      target: [decisions.roundId, decisions.teamId],
+      set: {
+        payload: args.payload,
+        status: "validated",
+        validatedAt: new Date(),
+        validatedBy: args.userId,
+      },
+    });
+  return { roundIndex: game.currentRound };
+}
+
+/**
+ * Résolution du tour courant (cœur commun solo / classe).
+ * Décisions par équipe humaine : soumises → sinon reconduites du tour
+ * précédent (carried_over, ADR-04) → sinon repli. Bots : stratégies pures.
+ */
+async function resolveGameRound(
+  gameId: string,
+): Promise<{ roundIndex: number; finished: boolean }> {
+  const game = (await db.select().from(games).where(eq(games.id, gameId)))[0];
+  if (!game) throw new Error("Partie introuvable");
+  if (game.status !== "running") throw new Error("Cette partie est terminée");
+  const roundIndex = game.currentRound;
+
+  const teamRows = await db.select().from(teams).where(eq(teams.gameId, gameId));
+  const roundRow = (
+    await db
+      .select()
+      .from(rounds)
+      .where(and(eq(rounds.gameId, gameId), eq(rounds.index, roundIndex)))
   )[0];
   if (!roundRow) throw new Error("Tour introuvable");
 
@@ -223,14 +392,16 @@ export async function resolveCurrentRound(args: {
     const states = stateRows.map((r) => r.state as CompanyState);
     if (states.length !== teamRows.length) throw new Error("États d'entreprises incomplets");
 
-    // Ventes du tour précédent (adaptation des bots)
+    // Décisions soumises pour ce tour + ventes et décisions du tour précédent
+    const submitted = await db.select().from(decisions).where(eq(decisions.roundId, roundRow.id));
     const lastSold: Record<string, number> = {};
+    const previousPayloads: Record<string, RoundDecisions> = {};
     if (roundIndex > 1) {
       const prevRound = (
         await db
           .select()
           .from(rounds)
-          .where(and(eq(rounds.gameId, args.gameId), eq(rounds.index, roundIndex - 1)))
+          .where(and(eq(rounds.gameId, gameId), eq(rounds.index, roundIndex - 1)))
       )[0];
       if (prevRound) {
         const prevResults = await db
@@ -238,30 +409,46 @@ export async function resolveCurrentRound(args: {
           .from(roundResults)
           .where(eq(roundResults.roundId, prevRound.id));
         for (const r of prevResults) {
-          lastSold[r.teamId] = sumSold({
-            market: { bySegment: (r.marketDetail ?? {}) as CompanyRoundResult["market"]["bySegment"] },
-          } as CompanyRoundResult);
+          lastSold[r.teamId] = sumSold(
+            (r.marketDetail ?? {}) as CompanyRoundResult["market"]["bySegment"],
+          );
         }
+        const prevDecisions = await db
+          .select()
+          .from(decisions)
+          .where(eq(decisions.roundId, prevRound.id));
+        for (const d of prevDecisions) previousPayloads[d.teamId] = d.payload as RoundDecisions;
       }
     }
 
     const allDecisions: Record<string, RoundDecisions> = {};
+    const carriedOver = new Set<string>();
     for (const team of teamRows) {
       const state = states.find((s) => s.id === team.id);
       if (!state) throw new Error(`État manquant pour ${team.name}`);
-      allDecisions[team.id] =
-        team.controller === "human"
-          ? args.playerDecisions
-          : botDecisions((team.botProfile ?? "balanced") as BotProfile, {
-              scenario,
-              state,
-              roundIndex,
-              lastSoldUnits: lastSold[team.id],
-            });
+      if (team.controller === "bot") {
+        allDecisions[team.id] = botDecisions((team.botProfile ?? "balanced") as BotProfile, {
+          scenario,
+          state,
+          roundIndex,
+          lastSoldUnits: lastSold[team.id],
+        });
+        continue;
+      }
+      const own = submitted.find((d) => d.teamId === team.id);
+      if (own) {
+        allDecisions[team.id] = own.payload as RoundDecisions;
+      } else if (previousPayloads[team.id]) {
+        allDecisions[team.id] = previousPayloads[team.id]!;
+        carriedOver.add(team.id);
+      } else {
+        allDecisions[team.id] = fallbackDecisions(scenario);
+        carriedOver.add(team.id);
+      }
     }
 
     const activeEvents = (game.difficultyProfile as { activeEvents?: EventInstance[] })
-      ?.activeEvents; // événements actifs stockés côté partie (voir plus bas)
+      ?.activeEvents;
     const output = simulateRound({
       scenario,
       roundIndex,
@@ -271,7 +458,7 @@ export async function resolveCurrentRound(args: {
       seed: game.seed,
     });
 
-    // Persistance (idempotente : upserts sur clés naturelles)
+    // Persistance (idempotente)
     await db
       .insert(decisions)
       .values(
@@ -279,12 +466,14 @@ export async function resolveCurrentRound(args: {
           roundId: roundRow.id,
           teamId: t.id,
           payload: allDecisions[t.id]!,
-          status: "locked" as const,
+          status: carriedOver.has(t.id) ? ("carried_over" as const) : ("locked" as const),
           validatedAt: new Date(),
-          validatedBy: t.controller === "human" ? args.userId : null,
         })),
       )
-      .onConflictDoNothing();
+      .onConflictDoUpdate({
+        target: [decisions.roundId, decisions.teamId],
+        set: { status: "locked" },
+      });
 
     await db
       .insert(roundResults)
@@ -331,9 +520,7 @@ export async function resolveCurrentRound(args: {
 
     await db
       .insert(companyStates)
-      .values(
-        output.companies.map((state) => ({ teamId: state.id, roundIndex, state })),
-      )
+      .values(output.companies.map((state) => ({ teamId: state.id, roundIndex, state })))
       .onConflictDoNothing();
 
     const finished = roundIndex >= scenario.roundsCount;
@@ -345,7 +532,7 @@ export async function resolveCurrentRound(args: {
       await db
         .update(rounds)
         .set({ status: "open" })
-        .where(and(eq(rounds.gameId, args.gameId), eq(rounds.index, roundIndex + 1)));
+        .where(and(eq(rounds.gameId, gameId), eq(rounds.index, roundIndex + 1)));
     }
     await db
       .update(games)
@@ -354,9 +541,9 @@ export async function resolveCurrentRound(args: {
         status: finished ? "finished" : "running",
         difficultyProfile: { ...(game.difficultyProfile as object), activeEvents: output.events },
       })
-      .where(eq(games.id, args.gameId));
+      .where(eq(games.id, gameId));
 
-    await updateRankings(args.gameId, teamRows.map((t) => t.id));
+    await updateRankings(gameId, teamRows.map((t) => t.id));
     return { roundIndex, finished };
   } catch (error) {
     // libère le verrou pour permettre une nouvelle tentative
@@ -366,6 +553,39 @@ export async function resolveCurrentRound(args: {
       .where(and(eq(rounds.id, roundRow.id), eq(rounds.status, "resolving")));
     throw error;
   }
+}
+
+/** Genre d'une partie (solo / classe). */
+export async function getGameKind(gameId: string): Promise<GameKind> {
+  const game = (await db.select().from(games).where(eq(games.id, gameId)))[0];
+  if (!game) throw new Error("Partie introuvable");
+  return ((game.difficultyProfile as { kind?: GameKind }).kind ?? "solo") as GameKind;
+}
+
+/** Mode solo : valider ses décisions ET résoudre immédiatement (ADR-04). */
+export async function resolveCurrentRound(args: {
+  gameId: string;
+  userId: string;
+  playerDecisions: RoundDecisions;
+}): Promise<{ roundIndex: number; finished: boolean }> {
+  await submitTeamDecisions({
+    gameId: args.gameId,
+    userId: args.userId,
+    payload: args.playerDecisions,
+  });
+  return resolveGameRound(args.gameId);
+}
+
+/** Mode classe : l'enseignant (créateur de la partie) clôt le tour courant. */
+export async function closeCurrentRound(args: {
+  gameId: string;
+  teacherId: string;
+}): Promise<{ roundIndex: number; finished: boolean }> {
+  const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
+  if (!game) throw new Error("Partie introuvable");
+  if (game.createdBy !== args.teacherId)
+    throw new Error("Seul l'enseignant qui a créé la partie peut clore un tour");
+  return resolveGameRound(args.gameId);
 }
 
 /** Classement provisoire : résultat net cumulé (le BPI arrive à l'étape 10). */
@@ -383,10 +603,19 @@ async function updateRankings(gameId: string, teamIds: string[]): Promise<void> 
   const sorted = [...cumulative.entries()].sort((a, b) => b[1] - a[1]);
   const spread = Math.max(1, (sorted[0]?.[1] ?? 0) - (sorted.at(-1)?.[1] ?? 0));
   for (const [rank, [teamId, total]] of sorted.entries()) {
-    const bpi = Math.max(0, Math.min(100, 50 + (50 * (total - (sorted.at(-1)?.[1] ?? 0))) / spread));
+    const bpi = Math.max(
+      0,
+      Math.min(100, 50 + (50 * (total - (sorted.at(-1)?.[1] ?? 0))) / spread),
+    );
     await db
       .insert(gameRankings)
-      .values({ gameId, teamId, bpi: bpi.toFixed(2), rank: rank + 1, detail: { cumulativeNetIncome: total } })
+      .values({
+        gameId,
+        teamId,
+        bpi: bpi.toFixed(2),
+        rank: rank + 1,
+        detail: { cumulativeNetIncome: total },
+      })
       .onConflictDoUpdate({
         target: [gameRankings.gameId, gameRankings.teamId],
         set: { bpi: bpi.toFixed(2), rank: rank + 1, detail: { cumulativeNetIncome: total } },
@@ -395,17 +624,20 @@ async function updateRankings(gameId: string, teamIds: string[]): Promise<void> 
 }
 
 // ---------------------------------------------------------------------------
-// Lecture : vue de partie pour le tableau de bord joueur
+// Lecture : vue joueur
 // ---------------------------------------------------------------------------
 
 export interface GameView {
   gameId: string;
+  kind: GameKind;
   status: string;
   currentRound: number;
   roundsCount: number;
   roundDays: number;
   playerTeamId: string;
   playerTeamName: string;
+  /** Décisions déjà validées par l'équipe pour le tour courant (mode classe). */
+  pendingDecisions: RoundDecisions | null;
   lastResult: CompanyRoundResult | null;
   lastEvents: string[];
   history: { round: number; revenue: number; netIncome: number; netTreasury: number }[];
@@ -416,14 +648,9 @@ export interface GameView {
 export async function getGameView(gameId: string, userId: string): Promise<GameView | null> {
   const game = (await db.select().from(games).where(eq(games.id, gameId)))[0];
   if (!game) return null;
+  const playerTeam = await findUserTeam(gameId, userId);
+  if (!playerTeam) return null;
   const teamRows = await db.select().from(teams).where(eq(teams.gameId, gameId));
-  const humanTeam = teamRows.find((t) => t.controller === "human");
-  if (!humanTeam) return null;
-  const membership = await db
-    .select()
-    .from(players)
-    .where(and(eq(players.teamId, humanTeam.id), eq(players.userId, userId)));
-  if (!membership[0]) return null;
 
   const gameRounds = await db
     .select()
@@ -439,7 +666,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     .where(inArray(roundResults.roundId, gameRounds.map((r) => r.id)));
 
   const history = gameResults
-    .filter((r) => r.teamId === humanTeam.id)
+    .filter((r) => r.teamId === playerTeam.id)
     .map((r) => ({
       round: roundIndexById.get(r.roundId)!,
       revenue: Number(r.revenue),
@@ -453,7 +680,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
   let lastEvents: string[] = [];
   let lastDecisions: RoundDecisions | null = null;
   if (lastRound) {
-    const row = gameResults.find((r) => r.roundId === lastRound.id && r.teamId === humanTeam.id);
+    const row = gameResults.find((r) => r.roundId === lastRound.id && r.teamId === playerTeam.id);
     if (row) {
       const trace = row.engineTrace as {
         production: CompanyRoundResult["production"];
@@ -461,7 +688,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         events: string[];
       };
       lastResult = {
-        companyId: humanTeam.id,
+        companyId: playerTeam.id,
         incomeStatement: row.incomeStatement as CompanyRoundResult["incomeStatement"],
         balanceSheet: row.balanceSheet as CompanyRoundResult["balanceSheet"],
         cashFlow: row.cashFlow as CompanyRoundResult["cashFlow"],
@@ -485,9 +712,24 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       await db
         .select()
         .from(decisions)
-        .where(and(eq(decisions.roundId, lastRound.id), eq(decisions.teamId, humanTeam.id)))
+        .where(and(eq(decisions.roundId, lastRound.id), eq(decisions.teamId, playerTeam.id)))
     )[0];
     if (decisionRow) lastDecisions = decisionRow.payload as RoundDecisions;
+  }
+
+  // Décisions déjà soumises pour le tour courant (mode classe : en attente de clôture)
+  let pendingDecisions: RoundDecisions | null = null;
+  const currentRoundRow = gameRounds.find((r) => r.index === game.currentRound);
+  if (currentRoundRow && currentRoundRow.status === "open") {
+    const row = (
+      await db
+        .select()
+        .from(decisions)
+        .where(
+          and(eq(decisions.roundId, currentRoundRow.id), eq(decisions.teamId, playerTeam.id)),
+        )
+    )[0];
+    if (row && row.status === "validated") pendingDecisions = row.payload as RoundDecisions;
   }
 
   const rankingRows = await db.select().from(gameRankings).where(eq(gameRankings.gameId, gameId));
@@ -496,7 +738,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       const team = teamRows.find((t) => t.id === r.teamId);
       return {
         name: team?.name ?? "?",
-        isPlayer: r.teamId === humanTeam.id,
+        isPlayer: r.teamId === playerTeam.id,
         cumulativeNetIncome: Number(
           (r.detail as { cumulativeNetIncome?: number })?.cumulativeNetIncome ?? 0,
         ),
@@ -505,18 +747,145 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     })
     .sort((a, b) => a.rank - b.rank);
 
+  const profile = game.difficultyProfile as { kind?: GameKind };
   return {
     gameId,
+    kind: profile.kind ?? "solo",
     status: game.status,
     currentRound: game.currentRound,
     roundsCount: (game.scenarioSnapshot as { roundsCount: number }).roundsCount,
     roundDays: (game.scenarioSnapshot as { roundDays: number }).roundDays,
-    playerTeamId: humanTeam.id,
-    playerTeamName: humanTeam.name,
+    playerTeamId: playerTeam.id,
+    playerTeamName: playerTeam.name,
+    pendingDecisions,
     lastResult,
     lastEvents,
     history,
     ranking,
     lastDecisions,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Lecture : vues enseignant (§27)
+// ---------------------------------------------------------------------------
+
+export interface TeacherGameSummary {
+  gameId: string;
+  joinCode: string | null;
+  status: string;
+  currentRound: number;
+  roundsCount: number;
+  roundDays: number;
+  teamsCount: number;
+  createdAt: Date;
+}
+
+export async function getTeacherGames(teacherId: string): Promise<TeacherGameSummary[]> {
+  const rows = await db
+    .select()
+    .from(games)
+    .where(eq(games.createdBy, teacherId))
+    .orderBy(desc(games.createdAt));
+  const out: TeacherGameSummary[] = [];
+  for (const g of rows) {
+    if ((g.difficultyProfile as { kind?: string }).kind !== "class") continue;
+    const teamRows = await db
+      .select({ id: teams.id })
+      .from(teams)
+      .where(and(eq(teams.gameId, g.id), eq(teams.controller, "human")));
+    out.push({
+      gameId: g.id,
+      joinCode: g.joinCode,
+      status: g.status,
+      currentRound: g.currentRound,
+      roundsCount: (g.scenarioSnapshot as { roundsCount: number }).roundsCount,
+      roundDays: (g.scenarioSnapshot as { roundDays: number }).roundDays,
+      teamsCount: teamRows.length,
+      createdAt: g.createdAt,
+    });
+  }
+  return out;
+}
+
+export interface TeacherGameView {
+  gameId: string;
+  joinCode: string | null;
+  status: string;
+  currentRound: number;
+  roundsCount: number;
+  roundDays: number;
+  teams: {
+    teamId: string;
+    name: string;
+    controller: "human" | "bot";
+    playerNames: string[];
+    hasSubmitted: boolean;
+    lastNetIncome: number | null;
+    lastNetTreasury: number | null;
+  }[];
+  ranking: { name: string; cumulativeNetIncome: number; rank: number }[];
+}
+
+export async function getTeacherGameView(
+  gameId: string,
+  teacherId: string,
+): Promise<TeacherGameView | null> {
+  const game = (await db.select().from(games).where(eq(games.id, gameId)))[0];
+  if (!game || game.createdBy !== teacherId) return null;
+
+  const teamRows = await db.select().from(teams).where(eq(teams.gameId, gameId));
+  const gameRounds = await db.select().from(rounds).where(eq(rounds.gameId, gameId));
+  const currentRoundRow = gameRounds.find((r) => r.index === game.currentRound);
+
+  const memberships = await db
+    .select({ teamId: players.teamId, name: users.displayName })
+    .from(players)
+    .innerJoin(users, eq(users.id, players.userId))
+    .where(inArray(players.teamId, teamRows.map((t) => t.id)));
+
+  const submitted = currentRoundRow
+    ? await db.select().from(decisions).where(eq(decisions.roundId, currentRoundRow.id))
+    : [];
+
+  const lastResolved = gameRounds
+    .filter((r) => r.status === "resolved")
+    .sort((a, b) => b.index - a.index)[0];
+  const lastResults = lastResolved
+    ? await db.select().from(roundResults).where(eq(roundResults.roundId, lastResolved.id))
+    : [];
+
+  const rankingRows = await db.select().from(gameRankings).where(eq(gameRankings.gameId, gameId));
+
+  return {
+    gameId,
+    joinCode: game.joinCode,
+    status: game.status,
+    currentRound: game.currentRound,
+    roundsCount: (game.scenarioSnapshot as { roundsCount: number }).roundsCount,
+    roundDays: (game.scenarioSnapshot as { roundDays: number }).roundDays,
+    teams: teamRows.map((t) => {
+      const last = lastResults.find((r) => r.teamId === t.id);
+      return {
+        teamId: t.id,
+        name: t.name,
+        controller: t.controller,
+        playerNames: memberships.filter((m) => m.teamId === t.id).map((m) => m.name),
+        hasSubmitted:
+          t.controller === "bot" ||
+          submitted.some((d) => d.teamId === t.id && d.status === "validated"),
+        lastNetIncome: last ? Number(last.netIncome) : null,
+        lastNetTreasury: last ? Number(last.netTreasury) : null,
+      };
+    }),
+    ranking: rankingRows
+      .map((r) => ({
+        name: teamRows.find((t) => t.id === r.teamId)?.name ?? "?",
+        cumulativeNetIncome: Number(
+          (r.detail as { cumulativeNetIncome?: number })?.cumulativeNetIncome ?? 0,
+        ),
+        rank: r.rank,
+      }))
+      .sort((a, b) => a.rank - b.rank),
   };
 }

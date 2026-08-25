@@ -46,11 +46,15 @@ export function DecisionForm({
   roundIndex,
   periodName,
   defaults,
+  kind,
+  alreadySubmitted,
 }: {
   gameId: string;
   roundIndex: number;
   periodName: string;
   defaults: RoundDecisions;
+  kind: "solo" | "class";
+  alreadySubmitted: boolean;
 }) {
   const action = playRoundAction.bind(null, gameId);
   const [state, formAction, pending] = useActionState(action, initialState);
@@ -80,10 +84,18 @@ export function DecisionForm({
         disabled={pending}
         className="w-full rounded-lg bg-amber-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 disabled:cursor-wait disabled:opacity-60"
       >
-        {pending ? "Simulation en cours…" : `Valider mes décisions et simuler — ${periodName}`}
+        {pending
+          ? "Envoi en cours…"
+          : kind === "solo"
+            ? `Valider mes décisions et simuler — ${periodName}`
+            : alreadySubmitted
+              ? "Mettre à jour mes décisions validées"
+              : `Valider les décisions de l'équipe — ${periodName}`}
       </button>
       <p className="text-center text-xs text-slate-500">
-        Mode apprentissage : les résultats sont calculés immédiatement, à vous d&apos;analyser.
+        {kind === "solo"
+          ? "Mode apprentissage : les résultats sont calculés immédiatement, à vous d'analyser."
+          : "Vos décisions restent modifiables jusqu'à la clôture du tour par l'enseignant."}
       </p>
     </form>
   );

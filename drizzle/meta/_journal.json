@@ -15,6 +15,13 @@
       "when": 1787649290540,
       "tag": "0001_lucky_pete_wisdom",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1787652771166,
+      "tag": "0002_friendly_thaddeus_ross",
+      "breakpoints": true
     }
   ]
 }

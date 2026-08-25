@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getGuestUserId } from "@/lib/guest";
 import { roundDecisionsSchema } from "@/services/decision-schema";
-import { resolveCurrentRound } from "@/services/game.service";
+import { getGameKind, resolveCurrentRound, submitTeamDecisions } from "@/services/game.service";
 
 export interface PlayRoundState {
   error: string | null;
@@ -34,7 +34,13 @@ export async function playRoundAction(
   }
 
   try {
-    await resolveCurrentRound({ gameId, userId, playerDecisions: parsed.data });
+    const kind = await getGameKind(gameId);
+    if (kind === "solo") {
+      await resolveCurrentRound({ gameId, userId, playerDecisions: parsed.data });
+    } else {
+      // partie de classe : on valide, l'enseignant clôt le tour (ADR-04)
+      await submitTeamDecisions({ gameId, userId, payload: parsed.data });
+    }
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Erreur lors de la simulation." };
   }

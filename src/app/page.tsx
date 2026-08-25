@@ -85,6 +85,14 @@ export default function Home() {
         </form>
       </div>
 
+      <div className="flex gap-6 text-sm">
+        <a href="/join" className="text-amber-300 underline-offset-4 hover:underline">
+          J&apos;ai un code de partie (élève)
+        </a>
+        <a href="/teacher/login" className="text-slate-400 underline-offset-4 hover:underline">
+          Espace enseignant
+        </a>
+      </div>
       <p className="text-xs text-slate-600">
         Aucun compte requis pour la démo — vos parties restent liées à ce navigateur.
       </p>

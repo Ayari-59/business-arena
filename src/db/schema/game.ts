@@ -64,6 +64,7 @@ export const games = pgTable(
     status: gameStatus("status").notNull().default("draft"),
     currentRound: integer("current_round").notNull().default(0),
     roundDuration: interval("round_duration"), // null = pas de pression temporelle
+    joinCode: text("join_code").unique(), // code d'invitation des joueurs (parties de classe)
     createdBy: uuid("created_by")
       .notNull()
       .references(() => users.id, { onDelete: "restrict" }),
