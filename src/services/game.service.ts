@@ -12,6 +12,8 @@ import {
   roundResults,
   rounds,
   scenarios,
+  scores,
+  situationInstances,
   teams,
   users,
 } from "@/db/schema";
@@ -28,6 +30,14 @@ import {
   seedPedagogyReferentials,
 } from "@/services/pedagogy.service";
 import { botDecisions, type BotProfile } from "@/engine/bots";
+import {
+  BPI_DIMENSIONS,
+  computeRoundScores,
+  gameBpi,
+  scoringWeights,
+  type BpiDimension,
+  type PedagogyInputs,
+} from "@/scoring/bpi";
 import { ENGINE_VERSION, simulateRound } from "@/engine/simulation";
 import type {
   CompanyRoundResult,
@@ -551,11 +561,14 @@ async function resolveGameRound(
       })
       .where(eq(games.id, gameId));
 
+    // Moteur pédagogique d'abord (doc 03) : le débriefing calcule les scores
+    // de situations dont dépend la dimension « maîtrise des modèles » du BPI
+    await debriefRound(gameId, roundIndex);
+
+    // Scoring BPI du tour (doc 08) puis classement de partie
+    await persistRoundScores({ gameId, roundId: roundRow.id, scenario, teamRows, output, allDecisions });
     await updateRankings(gameId, teamRows.map((t) => t.id));
 
-    // Moteur pédagogique (doc 03) : débriefer les situations du tour résolu,
-    // puis instancier celles du tour suivant (scriptées + détectées)
-    await debriefRound(gameId, roundIndex);
     if (!finished) {
       await openSituationsForRound(gameId, roundIndex + 1, output.results);
     }
@@ -603,37 +616,131 @@ export async function closeCurrentRound(args: {
   return resolveGameRound(args.gameId);
 }
 
-/** Classement provisoire : résultat net cumulé (le BPI arrive à l'étape 10). */
-async function updateRankings(gameId: string, teamIds: string[]): Promise<void> {
-  const gameRounds = await db.select().from(rounds).where(eq(rounds.gameId, gameId));
-  const results = await db
+/** Scores BPI du tour (doc 08 §1) : 7 dimensions par équipe, persistées. */
+async function persistRoundScores(args: {
+  gameId: string;
+  roundId: string;
+  scenario: EngineScenarioConfig;
+  teamRows: { id: string; controller: "human" | "bot" }[];
+  output: ReturnType<typeof simulateRound>;
+  allDecisions: Record<string, RoundDecisions>;
+}): Promise<void> {
+  // Entrées pédagogiques : scores des situations débriefées de CE tour
+  const instances = await db
     .select()
-    .from(roundResults)
-    .where(inArray(roundResults.roundId, gameRounds.map((r) => r.id)));
-  const cumulative = new Map<string, number>(teamIds.map((id) => [id, 0]));
-  for (const r of results) {
-    if (!cumulative.has(r.teamId)) continue;
-    cumulative.set(r.teamId, (cumulative.get(r.teamId) ?? 0) + Number(r.netIncome));
+    .from(situationInstances)
+    .where(eq(situationInstances.roundId, args.roundId));
+  const pedagogyByTeam = new Map<string, PedagogyInputs>();
+  for (const instance of instances) {
+    const diag = instance.diagnosis as { score?: number; finalScore?: number } | null;
+    const entry = pedagogyByTeam.get(instance.teamId) ?? { situationScores: [], diagnosisScores: [] };
+    if (typeof diag?.finalScore === "number") entry.situationScores.push(diag.finalScore);
+    if (typeof diag?.score === "number") entry.diagnosisScores.push(diag.score);
+    pedagogyByTeam.set(instance.teamId, entry);
   }
-  const sorted = [...cumulative.entries()].sort((a, b) => b[1] - a[1]);
-  const spread = Math.max(1, (sorted[0]?.[1] ?? 0) - (sorted.at(-1)?.[1] ?? 0));
-  for (const [rank, [teamId, total]] of sorted.entries()) {
-    const bpi = Math.max(
-      0,
-      Math.min(100, 50 + (50 * (total - (sorted.at(-1)?.[1] ?? 0))) / spread),
-    );
+
+  const roundScores = computeRoundScores(
+    args.scenario,
+    args.teamRows.map((t) => ({
+      companyId: t.id,
+      decisions: args.allDecisions[t.id]!,
+      result: args.output.results[t.id]!,
+      pedagogy: pedagogyByTeam.get(t.id) ?? { situationScores: [], diagnosisScores: [] },
+    })),
+  );
+
+  await db
+    .insert(scores)
+    .values(
+      roundScores.flatMap((s) =>
+        BPI_DIMENSIONS.map((dimension) => ({
+          roundId: args.roundId,
+          teamId: s.companyId,
+          dimension,
+          raw: s.raw[dimension].toFixed(4),
+          normalized: s.normalized[dimension].toFixed(2),
+        })),
+      ),
+    )
+    .onConflictDoNothing();
+}
+
+/** Classement au BPI (doc 08 §1.4) : tours à poids croissants, départage financier. */
+async function updateRankings(gameId: string, teamIds: string[]): Promise<void> {
+  const game = (await db.select().from(games).where(eq(games.id, gameId)))[0];
+  if (!game) return;
+  const scenario = parseScenarioConfig(game.scenarioSnapshot);
+  const weights = scoringWeights(scenario.scoring);
+
+  const gameRounds = (await db.select().from(rounds).where(eq(rounds.gameId, gameId))).sort(
+    (a, b) => a.index - b.index,
+  );
+  const roundIds = gameRounds.map((r) => r.id);
+  const scoreRows = roundIds.length
+    ? await db.select().from(scores).where(inArray(scores.roundId, roundIds))
+    : [];
+  const resultRows = roundIds.length
+    ? await db.select().from(roundResults).where(inArray(roundResults.roundId, roundIds))
+    : [];
+
+  const entries = teamIds.map((teamId) => {
+    // BPI par tour = Σ poids × dimension normalisée
+    const roundBpis: number[] = [];
+    const dimensionSums = new Map<BpiDimension, { sum: number; n: number }>();
+    for (const round of gameRounds) {
+      const rows = scoreRows.filter((s) => s.roundId === round.id && s.teamId === teamId);
+      if (rows.length === 0) continue;
+      let bpi = 0;
+      for (const row of rows) {
+        const dimension = row.dimension as BpiDimension;
+        const value = Number(row.normalized);
+        bpi += (weights[dimension] ?? 0) * value;
+        const agg = dimensionSums.get(dimension) ?? { sum: 0, n: 0 };
+        agg.sum += value;
+        agg.n += 1;
+        dimensionSums.set(dimension, agg);
+      }
+      roundBpis.push(bpi);
+    }
+    const teamResults = resultRows.filter((r) => r.teamId === teamId);
+    const cumulativeNetIncome = teamResults.reduce((sum, r) => sum + Number(r.netIncome), 0);
+    const lastTreasury = teamResults.length
+      ? Number(
+          teamResults.sort(
+            (a, b) => roundIds.indexOf(a.roundId) - roundIds.indexOf(b.roundId),
+          ).at(-1)!.netTreasury,
+        )
+      : 0;
+    const financialAvg = dimensionSums.get("financial");
+    return {
+      teamId,
+      bpi: gameBpi(roundBpis),
+      roundBpis,
+      cumulativeNetIncome,
+      lastTreasury,
+      financialAvg: financialAvg ? financialAvg.sum / financialAvg.n : 0,
+      dimensions: Object.fromEntries(
+        [...dimensionSums.entries()].map(([d, { sum, n }]) => [d, sum / n]),
+      ),
+    };
+  });
+
+  // départage (doc 04) : BPI, puis dimension financière, puis trésorerie finale
+  entries.sort(
+    (a, b) => b.bpi - a.bpi || b.financialAvg - a.financialAvg || b.lastTreasury - a.lastTreasury,
+  );
+  for (const [rank, entry] of entries.entries()) {
+    const detail = {
+      cumulativeNetIncome: entry.cumulativeNetIncome,
+      roundBpis: entry.roundBpis.map((v) => Math.round(v * 100) / 100),
+      dimensions: entry.dimensions,
+    };
     await db
       .insert(gameRankings)
-      .values({
-        gameId,
-        teamId,
-        bpi: bpi.toFixed(2),
-        rank: rank + 1,
-        detail: { cumulativeNetIncome: total },
-      })
+      .values({ gameId, teamId: entry.teamId, bpi: entry.bpi.toFixed(2), rank: rank + 1, detail })
       .onConflictDoUpdate({
         target: [gameRankings.gameId, gameRankings.teamId],
-        set: { bpi: bpi.toFixed(2), rank: rank + 1, detail: { cumulativeNetIncome: total } },
+        set: { bpi: entry.bpi.toFixed(2), rank: rank + 1, detail },
       });
   }
 }
@@ -656,7 +763,15 @@ export interface GameView {
   lastResult: CompanyRoundResult | null;
   lastEvents: string[];
   history: { round: number; revenue: number; netIncome: number; netTreasury: number }[];
-  ranking: { name: string; isPlayer: boolean; cumulativeNetIncome: number; rank: number }[];
+  ranking: {
+    name: string;
+    isPlayer: boolean;
+    cumulativeNetIncome: number;
+    rank: number;
+    bpi: number;
+  }[];
+  /** Moyennes 0-100 des 7 dimensions BPI de l'équipe du joueur (doc 08). */
+  playerDimensions: Partial<Record<BpiDimension, number>> | null;
   lastDecisions: RoundDecisions | null;
 }
 
@@ -758,9 +873,14 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
           (r.detail as { cumulativeNetIncome?: number })?.cumulativeNetIncome ?? 0,
         ),
         rank: r.rank,
+        bpi: Number(r.bpi),
       };
     })
     .sort((a, b) => a.rank - b.rank);
+  const playerRankingRow = rankingRows.find((r) => r.teamId === playerTeam.id);
+  const playerDimensions =
+    ((playerRankingRow?.detail as { dimensions?: Partial<Record<BpiDimension, number>> })
+      ?.dimensions as Partial<Record<BpiDimension, number>> | undefined) ?? null;
 
   const profile = game.difficultyProfile as { kind?: GameKind };
   return {
@@ -777,6 +897,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     lastEvents,
     history,
     ranking,
+    playerDimensions,
     lastDecisions,
   };
 }
@@ -839,7 +960,7 @@ export interface TeacherGameView {
     lastNetIncome: number | null;
     lastNetTreasury: number | null;
   }[];
-  ranking: { name: string; cumulativeNetIncome: number; rank: number }[];
+  ranking: { name: string; cumulativeNetIncome: number; rank: number; bpi: number }[];
 }
 
 export async function getTeacherGameView(
@@ -900,6 +1021,7 @@ export async function getTeacherGameView(
           (r.detail as { cumulativeNetIncome?: number })?.cumulativeNetIncome ?? 0,
         ),
         rank: r.rank,
+        bpi: Number(r.bpi),
       }))
       .sort((a, b) => a.rank - b.rank),
   };

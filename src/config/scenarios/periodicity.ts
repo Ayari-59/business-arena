@@ -73,8 +73,23 @@ export function applyPeriodicity(
       depreciationPerRound: scenario.finance.depreciationPerRound * k,
     },
     fixedCostsPerRound: scenario.fixedCostsPerRound * k,
+    scoring: {
+      ...scenario.scoring,
+      benchmarks: {
+        ...scenario.scoring.benchmarks,
+        operatingIncome: scaleBounds(scenario.scoring.benchmarks.operatingIncome, k),
+        revenue: scaleBounds(scenario.scoring.benchmarks.revenue, k),
+        netTreasury: scaleBounds(scenario.scoring.benchmarks.netTreasury, k),
+        // ROE, part de marché et utilisation sont des ratios : inchangés
+      },
+    },
   };
 }
+
+const scaleBounds = (b: { min: number; target: number }, k: number) => ({
+  min: b.min * k,
+  target: b.target * k,
+});
 
 /**
  * Redimensionne l'état initial d'une entreprise (capacités par tour).

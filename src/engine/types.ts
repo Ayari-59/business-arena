@@ -75,6 +75,30 @@ export interface EngineScenarioConfig {
   fixedCostsPerRound: number;
   events: EventDefinitionConfig[];
   scriptedEvents: { round: number; eventCode: string; companyIndex?: number }[];
+  /** Références du scoring BPI (doc 08 §1.1) — bornes min/cible par tour. */
+  scoring: ScoringConfig;
+}
+
+export interface ScoringConfig {
+  /** Pondérations des 7 dimensions (Σ = 1, doc 08 §1). */
+  weights: {
+    economic: number;
+    financial: number;
+    commercial: number;
+    operational: number;
+    profitability: number;
+    strategy: number;
+    decisionMastery: number;
+  };
+  /** Bornes de normalisation : min → 0, target → 100 (flux redimensionnés par périodicité). */
+  benchmarks: {
+    operatingIncome: { min: number; target: number };
+    revenue: { min: number; target: number };
+    netTreasury: { min: number; target: number };
+    returnOnEquity: { min: number; target: number };
+    marketShareTarget: number;
+    utilizationTarget: number;
+  };
 }
 
 export interface SegmentConfig {

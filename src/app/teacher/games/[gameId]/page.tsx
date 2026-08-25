@@ -197,7 +197,12 @@ export default async function TeacherGamePage({
                   <span className="mr-2 text-slate-500">#{row.rank}</span>
                   {row.name}
                 </span>
-                <span className="tabular-nums">{formatEuro(row.cumulativeNetIncome)} cumulés</span>
+                <span className="tabular-nums">
+                  <span className="font-semibold text-slate-100">BPI {row.bpi.toFixed(1)}</span>
+                  <span className="ml-2 text-xs text-slate-500">
+                    {formatEuro(row.cumulativeNetIncome)} cumulés
+                  </span>
+                </span>
               </li>
             ))}
           </ol>

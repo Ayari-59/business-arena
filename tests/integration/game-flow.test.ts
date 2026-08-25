@@ -21,10 +21,12 @@ import {
   kpis,
   roundResults,
   rounds,
+  scores,
   teams,
   users,
 } from "@/db/schema";
 import { createSoloGame, getGameView, resolveCurrentRound } from "@/services/game.service";
+import { getPlayerProfile } from "@/services/profile.service";
 import type { RoundDecisions } from "@/engine/types";
 
 const PLAYER_DECISIONS: RoundDecisions = {
@@ -91,6 +93,32 @@ describe("parcours complet d'une partie solo", () => {
     const ranking = await db.select().from(gameRankings).where(eq(gameRankings.gameId, gameId));
     expect(ranking).toHaveLength(4);
     expect([...ranking.map((r) => r.rank)].sort()).toEqual([1, 2, 3, 4]);
+
+    // scoring BPI (doc 08) : 7 dimensions × 4 équipes × 6 tours, BPI ∈ [0,100]
+    const gameRoundIds = allRounds.map((r) => r.id);
+    const scoreRows = (await db.select().from(scores)).filter((s) =>
+      gameRoundIds.includes(s.roundId),
+    );
+    expect(scoreRows).toHaveLength(6 * 4 * 7);
+    for (const row of scoreRows) {
+      expect(Number(row.normalized)).toBeGreaterThanOrEqual(0);
+      expect(Number(row.normalized)).toBeLessThanOrEqual(100);
+    }
+    for (const r of ranking) {
+      expect(Number(r.bpi)).toBeGreaterThanOrEqual(0);
+      expect(Number(r.bpi)).toBeLessThanOrEqual(100);
+      const detail = r.detail as { roundBpis: number[]; dimensions: Record<string, number> };
+      expect(detail.roundBpis).toHaveLength(6);
+      expect(Object.keys(detail.dimensions)).toHaveLength(7);
+    }
+
+    // profil joueur (étape 11) : la partie apparaît avec rang et BPI
+    const profile = await getPlayerProfile(userId);
+    expect(profile).not.toBeNull();
+    const entry = profile!.games.find((g) => g.gameId === gameId);
+    expect(entry?.status).toBe("finished");
+    expect(entry?.rank).not.toBeNull();
+    expect(entry?.bpi).not.toBeNull();
   });
 
   it("expose une vue de jeu complète et refuse les intrus", async () => {

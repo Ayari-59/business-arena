@@ -86,7 +86,11 @@ définir dans le projet Vercel les variables `DATABASE_URL`, `DIRECT_URL`, `AUTH
 8. ✅ Étape 8 — moteur pédagogique (situations scriptées et détectées,
    diagnostic, choix du modèle d'analyse, débriefing, progression).
 9. ✅ Étape 9 — système d'indices à 5 niveaux (séquentiels, coûtés, tracés).
-10. Étapes 10→13 — scoring BPI complet, profil joueur affiché, IA coach,
-    moteur de compétition.
+10. ✅ Étape 10 — scoring BPI : 7 dimensions pondérées (30/20/15/10/10/10/5),
+    normalisation bornes + rang parmi les pairs, tours à poids croissants,
+    départage financier ; classement et décomposition affichés partout.
+11. ✅ Étape 11 — profil joueur `/profile` : compétences par axe, maîtrise des
+    concepts, historique des parties avec rang et BPI.
+12. Étapes 12-13 — IA coach (API LLM), moteur de compétition.
 
 **Aucune modification du moteur économique ne sera acceptée sans tests** (§32).

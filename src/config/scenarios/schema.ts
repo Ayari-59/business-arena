@@ -91,6 +91,30 @@ export const engineScenarioConfigSchema = z.object({
       companyIndex: z.number().int().nonnegative().optional(),
     }),
   ),
+  scoring: z.object({
+    weights: z
+      .object({
+        economic: z.number().min(0).max(1),
+        financial: z.number().min(0).max(1),
+        commercial: z.number().min(0).max(1),
+        operational: z.number().min(0).max(1),
+        profitability: z.number().min(0).max(1),
+        strategy: z.number().min(0).max(1),
+        decisionMastery: z.number().min(0).max(1),
+      })
+      .refine(
+        (w) => Math.abs(Object.values(w).reduce((a, b) => a + b, 0) - 1) < 1e-6,
+        "les pondérations du BPI doivent sommer à 1",
+      ),
+    benchmarks: z.object({
+      operatingIncome: z.object({ min: z.number(), target: z.number() }),
+      revenue: z.object({ min: z.number(), target: z.number() }),
+      netTreasury: z.object({ min: z.number(), target: z.number() }),
+      returnOnEquity: z.object({ min: z.number(), target: z.number() }),
+      marketShareTarget: z.number().gt(0).lte(1),
+      utilizationTarget: z.number().gt(0).lte(1),
+    }),
+  }),
 }) satisfies z.ZodType<EngineScenarioConfig>;
 
 export function parseScenarioConfig(raw: unknown): EngineScenarioConfig {

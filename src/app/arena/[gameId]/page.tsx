@@ -8,6 +8,7 @@ import { SituationCard, SituationDebrief } from "@/components/situation-panel";
 import { novaScenario } from "@/config/scenarios/nova";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { KpiCard } from "@/components/kpi-card";
+import { BpiPanel } from "@/components/bpi-panel";
 import { RevenueChart, TreasuryChart } from "@/components/charts";
 import { DecisionForm } from "@/components/decision-form";
 import type { RoundDecisions } from "@/engine/types";
@@ -54,11 +55,19 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
           <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Business Arena · NOVA</p>
           <h1 className="text-2xl font-bold text-slate-50">{view.playerTeamName}</h1>
         </div>
-        <p className="rounded-full border border-white/10 px-4 py-1 text-sm text-slate-300">
-          {finished
-            ? "Partie terminée"
-            : `${periodLabel(view.roundDays, view.currentRound)} / ${view.roundsCount}`}
-        </p>
+        <div className="flex items-center gap-3">
+          <Link href="/profile" className="text-xs text-slate-500 underline-offset-4 hover:text-slate-300 hover:underline">
+            Mon profil
+          </Link>
+          <Link href="/concepts" className="text-xs text-slate-500 underline-offset-4 hover:text-slate-300 hover:underline">
+            Fiches concepts
+          </Link>
+          <p className="rounded-full border border-white/10 px-4 py-1 text-sm text-slate-300">
+            {finished
+              ? "Partie terminée"
+              : `${periodLabel(view.roundDays, view.currentRound)} / ${view.roundsCount}`}
+          </p>
+        </div>
       </header>
 
       {r ? (
@@ -135,28 +144,39 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
               ) : null}
             </div>
 
-            <div className="rounded-xl border border-white/10 bg-slate-900 p-4">
-              <h2 className="mb-3 text-sm font-semibold text-slate-200">Classement</h2>
-              <ol className="space-y-2">
-                {view.ranking.map((row) => (
-                  <li
-                    key={row.name}
-                    className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm ${
-                      row.isPlayer ? "bg-amber-400/10 text-amber-200" : "bg-slate-950 text-slate-300"
-                    }`}
-                  >
-                    <span>
-                      <span className="mr-2 text-slate-500">#{row.rank}</span>
-                      {row.name}
-                    </span>
-                    <span className="tabular-nums">{formatEuro(row.cumulativeNetIncome)} cumulés</span>
-                  </li>
-                ))}
-              </ol>
-              <p className="mt-3 text-xs text-slate-500">
-                Classement provisoire au résultat net cumulé — le Business Performance Index
-                (performance économique, financière, commerciale…) arrive bientôt.
-              </p>
+            <div className="space-y-4">
+              <div className="rounded-xl border border-white/10 bg-slate-900 p-4">
+                <h2 className="mb-3 text-sm font-semibold text-slate-200">
+                  Classement — Business Performance Index
+                </h2>
+                <ol className="space-y-2">
+                  {view.ranking.map((row) => (
+                    <li
+                      key={row.name}
+                      className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm ${
+                        row.isPlayer ? "bg-amber-400/10 text-amber-200" : "bg-slate-950 text-slate-300"
+                      }`}
+                    >
+                      <span>
+                        <span className="mr-2 text-slate-500">#{row.rank}</span>
+                        {row.name}
+                      </span>
+                      <span className="tabular-nums">
+                        <span className="font-semibold">{row.bpi.toFixed(1)}</span>
+                        <span className="ml-2 text-xs text-slate-500">
+                          {formatEuro(row.cumulativeNetIncome)} cumulés
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+                <p className="mt-3 text-xs text-slate-500">
+                  Le BPI (0-100) pondère 7 dimensions : économique 30 %, financière 20 %,
+                  commerciale 15 %, opérationnelle 10 %, rentabilité 10 %, stratégie 10 %,
+                  maîtrise des modèles 5 %. Les derniers tours pèsent plus lourd.
+                </p>
+              </div>
+              {view.playerDimensions ? <BpiPanel dimensions={view.playerDimensions} /> : null}
             </div>
           </section>
 

@@ -92,6 +92,9 @@ export default function Home() {
         <a href="/teacher/login" className="text-slate-400 underline-offset-4 hover:underline">
           Espace enseignant
         </a>
+        <a href="/profile" className="text-slate-400 underline-offset-4 hover:underline">
+          Mon profil
+        </a>
       </div>
       <p className="text-xs text-slate-600">
         Aucun compte requis pour la démo — vos parties restent liées à ce navigateur.

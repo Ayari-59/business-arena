@@ -63,6 +63,25 @@ const scenario = (): EngineScenarioConfig => ({
     },
   ],
   scriptedEvents: [{ round: 2, eventCode: "raw_material_spike" }],
+  scoring: {
+    weights: {
+      economic: 0.3,
+      financial: 0.2,
+      commercial: 0.15,
+      operational: 0.1,
+      profitability: 0.1,
+      strategy: 0.1,
+      decisionMastery: 0.05,
+    },
+    benchmarks: {
+      operatingIncome: { min: -50000, target: 45000 },
+      revenue: { min: 150000, target: 400000 },
+      netTreasury: { min: -60000, target: 80000 },
+      returnOnEquity: { min: -0.1, target: 0.06 },
+      marketShareTarget: 0.32,
+      utilizationTarget: 0.85,
+    },
+  },
 });
 
 const company = (id: string): CompanyState => ({
