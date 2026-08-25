@@ -207,6 +207,16 @@ export const EVENT_CARDS: EventCardDef[] = [
     scope: "market",
   },
   {
+    code: "cyberattack",
+    title: "Cyberattaque",
+    flavor: "Un rançongiciel paralyse la gestion de production : l'atelier tourne au ralenti.",
+    effectLabel: "Disponibilité machine −12 % ce tour (équipe ciblée)",
+    conceptHint: "La continuité d'activité est un actif invisible — jusqu'au jour où elle manque.",
+    category: "internal",
+    emoji: "💻",
+    scope: "team",
+  },
+  {
     code: "big_order",
     title: "Commande exceptionnelle",
     flavor: "Une chaîne d'hôtels veut équiper toutes ses chambres — et signe aujourd'hui.",

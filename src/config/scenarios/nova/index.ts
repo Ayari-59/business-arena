@@ -253,6 +253,13 @@ const rawNova = {
       duration: 1,
       modifiers: [{ target: "order", op: "add", value: 600 }],
     },
+    {
+      code: "cyberattack",
+      scope: "company",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "availability", op: "mul", value: 0.88 }],
+    },
   ],
   // Assurance catastrophe (§ nouvelles décisions) : 2 500 €/trimestre pour
   // neutraliser la catastrophe naturelle et la vague de froid — un coût
