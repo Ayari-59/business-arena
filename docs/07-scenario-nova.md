@@ -16,29 +16,32 @@ prix) et **Auris** (premium suiveur).
 
 - **Produit** : NOVA One — coût variable unitaire initial ≈ 38 € (matières 22 €, MOD 11 €,
   énergie/divers 5 €), prix de lancement conseillé 59 €, qualité perçue initiale 1,0.
+  *(Valeurs ci-dessous calibrées en v0.1 — voir §5 ; le fichier
+  `src/config/scenarios/nova/index.ts` fait foi.)*
 - **Segments** :
-  | | Étudiants (sensibles au prix) | Passionnés (sensibles à la qualité) |
-  |---|---|---|
-  | Taille (demande de base/tour) | 9 000 | 4 000 |
-  | Croissance/tour | +6 % | +3 % |
-  | Élasticité-prix | −2,2 | −0,7 |
-  | Prix de référence | 55 € | 75 € |
-  | Seuils psychologiques | 50 € (×0,90), 60 € (×0,93) | 100 € (×0,90) |
-  | Prix plancher d'acceptabilité | 35 € | 55 € |
-  | Sensibilité marketing / qualité | forte / faible | moyenne / forte |
-  | Délai de paiement | comptant | comptant |
-  | Fidélité | faible | forte |
+  | | Étudiants (prix) | Passionnés (qualité) | CampusTech (compte-clé) |
+  |---|---|---|---|
+  | Taille (demande de base/tour) | 14 000 | 6 000 | 12 000 |
+  | Actif aux tours | 1–6 | 1–6 | 3–6 (0,25 au T3, pic ×1,4 au T4) |
+  | Croissance/tour | +6 % | +3 % | +4 % |
+  | Élasticité-prix | −2,2 | −0,7 | −1,2 |
+  | Prix de référence | 59 € | 79 € | 55 € |
+  | Seuils psychologiques | 50 € (×0,90), 60 € (×0,93) | 100 € (×0,90) | — |
+  | Prix plancher d'acceptabilité | 35 € | 55 € | 40 € |
+  | Sensibilité marketing / qualité | forte / faible | moyenne / forte | faible / moyenne |
+  | Délai de paiement | comptant | comptant | **80 jours** |
+  | Fidélité | faible | forte | très forte |
 - **Saisonnalité** : [0,9 · 0,95 · 1,0 · 1,35 · 0,9 · 1,0] (pic T4 = fêtes, situé au tour 4).
-- **Capacité** : atelier 5 500 u/tour à 100 % de disponibilité ; 4 opérateurs de production
-  (plafond main-d'œuvre ≈ 6 000 u) ; sous-traitance possible dès le tour 3 (max 2 000 u,
-  +9 €/u, qualité −10 %).
-- **Coûts fixes** : 96 000 €/tour (loyer, salaires structure, amortissements) →
-  seuil de rentabilité initial ≈ 96 000 / (59 − 38) ≈ **4 571 u/tour** : atteignable mais
-  pas donné — c'est voulu.
-- **Finance initiale** : capital 150 000 €, emprunt 80 000 € (5 %/an), trésorerie 45 000 €,
-  découvert autorisé 30 000 € (taux 12 %/an). Fournisseur matières : délai de livraison
-  1 tour à partir du tour 3 (grosses commandes), **paiement à 30 j** ; un compte-clé
-  « chaîne de magasins CampusTech » apparaît au tour 3 et paie à **60 j**.
+- **Capacité** : atelier 7 000 u/tour à 100 % de disponibilité ; 4 opérateurs de production
+  (plafond main-d'œuvre ≈ 7 200 u). Le seuil de rentabilité (~4 600 u) représente ainsi
+  ≈ 65 % de la capacité — atteignable mais exigeant. Sous-traitance : post-v0.1.
+- **Coûts fixes** : 96 000 €/tour de structure — 91 000 € décaissés (loyer, salaires
+  structure) + 5 000 € d'amortissements → seuil de rentabilité initial
+  ≈ 96 000 / (59 − 38) ≈ **4 571 u/tour** : atteignable mais pas donné — c'est voulu.
+- **Finance initiale** : capital 150 000 €, emprunt 80 000 € (5 %/an), trésorerie 25 000 €,
+  immobilisations nettes 205 000 €, découvert autorisé 30 000 € (taux 12 %/an).
+  Fournisseur matières payé à **22 j** ; le compte-clé CampusTech apparaît au tour 3 et
+  paie à **80 j** — c'est lui qui transforme le pic de CA du T4 en crise de trésorerie.
 
 Décisions débloquées (profil DÉCOUVERTE puis GESTION) : prix, plan de production,
 budget marketing, approvisionnements ; à partir du tour 3 : budget qualité, sous-traitance,
@@ -95,5 +98,17 @@ premium, équilibré, passif) et vérifie des **invariants de conception** :
 4. Une stratégie équilibrée raisonnable termine avec un BPI de 55–75 (marge de progression).
 5. Écart de BPI entre la meilleure et la pire stratégie ≥ 20 points (les décisions comptent).
 
-Ces invariants sont des **tests automatisés** (doc 09 §5) : impossible de dérégler NOVA
-sans casser la CI.
+Ces invariants sont des **tests automatisés** (`tests/scenarios/nova.test.ts`, graine de
+référence 20260101) : impossible de dérégler NOVA sans casser la CI. En v0.1, les
+invariants 4 et 5 utilisent des proxys financiers (résultat cumulé) en attendant le BPI
+(étape 10) ; l'invariant 2 est vérifié sur les stratégies `balanced` et `growth`.
+
+## 5. Journal de calibration
+
+**v0.1 (étape 4)** — premières valeurs ajustées par `npm run calibrate` pour satisfaire
+les invariants : capacité portée à 7 000 u (le seuil à 83 % de la capacité rendait le jeu
+ingagnable à 3 concurrents), prix de référence étudiants aligné sur le prix conseillé
+(59 €), CampusTech élargi (12 000, payé à 80 j, commande concentrée sur le pic T4) pour
+produire la crise de trésorerie §16, trésorerie initiale resserrée à 25 000 € et
+fournisseurs à 22 j pour que le matelas de départ n'absorbe pas la crise. Trajectoires de
+référence figées dans le snapshot doré (`tests/scenarios/__snapshots__`).

@@ -10,7 +10,8 @@ export function computePotentialDemand(
   seasonality: number[],
   demandMultiplier: number,
 ): number {
-  const season = seasonality[roundIndex - 1] ?? 1;
+  const applicable = segment.seasonality ?? seasonality;
+  const season = applicable[roundIndex - 1] ?? 1;
   const growth = Math.pow(1 + segment.growth, roundIndex - 1);
   return segment.size * growth * season * demandMultiplier;
 }

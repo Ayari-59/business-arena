@@ -99,6 +99,12 @@ export interface SegmentConfig {
   priceEffectBounds: { min: number; max: number };
   /** Délai de paiement clients en jours (0 = comptant). */
   paymentDelayDays: number;
+  /**
+   * Saisonnalité propre au segment (doc 02 §3.1 : Seasonality(s, t)) ;
+   * à défaut, la saisonnalité globale du marché s'applique. Un coefficient 0
+   * fait apparaître/disparaître le segment (ex. compte-clé à partir du tour 3).
+   */
+  seasonality?: number[];
   /** Intensité concurrentielle γ du segment (défaut : market.competitionIntensity). */
   competitionIntensity?: number;
 }
