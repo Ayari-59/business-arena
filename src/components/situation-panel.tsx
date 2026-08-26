@@ -89,7 +89,7 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
         {situation.quizQuestions.length > 0 ? (
           <section className="rounded-lg bg-slate-950 p-4">
             <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-              2 · Mobiliser les connaissances
+              2 · Connaissances et modèle d&apos;analyse
             </h4>
             {quizDone ? (
               <p className="mt-2 text-sm text-emerald-300">
@@ -208,9 +208,9 @@ export function SituationDebrief({ situation }: { situation: SituationView }) {
         {situation.quizQuestions.length > 0 ? (
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-              Connaissances mobilisées
+              Connaissances et modèle d&apos;analyse
               {debrief.quizScore !== null
-                ? ` — ${Math.round(debrief.quizScore * situation.quizQuestions.length)} / ${situation.quizQuestions.length}`
+                ? ` — ${Math.round(debrief.quizScore * 100)} %`
                 : " — QCM non traité"}
             </p>
             <ul className="mt-1 space-y-2">
@@ -218,17 +218,31 @@ export function SituationDebrief({ situation }: { situation: SituationView }) {
                 const correction = debrief.quizCorrection.find((c) => c.id === question.id);
                 if (!correction) return null;
                 const answered = answers[question.id];
-                const good = answered === correction.correctOptionId;
+                const credit = answered ? (correction.credits[answered] ?? 0) : 0;
                 const correctLabel = question.options.find(
                   (o) => o.id === correction.correctOptionId,
                 )?.label;
                 return (
                   <li key={question.id} className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2">
                     <p className="text-slate-300">{question.prompt}</p>
-                    <p className={`mt-1 ${good ? "text-emerald-300" : "text-red-400"}`}>
-                      {good ? "✓ Bonne réponse" : answered ? "✗ Mauvaise réponse" : "· Sans réponse"}
-                      {!good && correctLabel ? (
-                        <span className="text-emerald-300"> — il fallait : {correctLabel}</span>
+                    <p
+                      className={`mt-1 ${
+                        credit >= 1
+                          ? "text-emerald-300"
+                          : credit > 0
+                            ? "text-amber-300"
+                            : "text-red-400"
+                      }`}
+                    >
+                      {credit >= 1
+                        ? "✓ Bonne réponse"
+                        : credit > 0
+                          ? `≈ Réponse partielle (${Math.round(credit * 100)} %)`
+                          : answered
+                            ? "✗ Mauvaise réponse"
+                            : "· Sans réponse"}
+                      {credit < 1 && correctLabel ? (
+                        <span className="text-emerald-300"> — le plus juste : {correctLabel}</span>
                       ) : null}
                     </p>
                     <p className="mt-1 text-xs text-slate-500">{correction.explain}</p>
@@ -237,11 +251,6 @@ export function SituationDebrief({ situation }: { situation: SituationView }) {
               })}
             </ul>
           </div>
-        ) : null}
-        {debrief.optimalModels.length > 0 ? (
-          <p className="text-xs text-slate-500">
-            Le bon outil ici : {debrief.optimalModels.map((m) => m.name).join(", ")}.
-          </p>
         ) : null}
         {debrief.concepts.length > 0 ? (
           <div>

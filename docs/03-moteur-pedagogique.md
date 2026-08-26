@@ -43,8 +43,9 @@ situation = {
                                        // jamais "calculez le BFR" (§3)
   diagnosticOptions[],                 // causes candidates proposées au joueur (QCM raisonné,
                                        // avec des leurres plausibles), + champ libre
-  quiz[2..3],                          // QCM de mobilisation des connaissances (voir §3.1)
-  relevantModels[],                    // matrice modèle → pertinence, révélée au débriefing
+  quiz[3],                             // QCM : 2 questions de connaissances + le choix du
+                                       // modèle d'analyse, même forme (voir §3.1)
+  relevantModels[],                    // matrice modèle → pertinence (note la question modèle)
   concepts[],                          // concepts mobilisés (→ progression)
   hints[5],                            // les 5 niveaux d'indices (voir §4)
   difficulty, weight                   // pondération dans le score de diagnostic
@@ -55,12 +56,14 @@ situation = {
 
 1. **Observation** : la situation s'affiche avec les données débloquées à son niveau.
 2. **Diagnostic** : le joueur qualifie le problème (options + justification libre).
-3. **QCM de connaissances** : 2 à 3 questions à réponse unique mobilisent les notions que
-   la situation met en jeu (définitions, formules, mécanismes). Une seule tentative ; la
+3. **QCM** : 3 questions sous la même forme que le diagnostic (options radio, jamais de
+   liste déroulante) — 2 questions de connaissances (définitions, formules, mécanismes)
+   puis « quel modèle d'analyse mobilisez-vous en priorité ? », dont les options sont
+   tirées de la matrice de pertinence de la situation. Une seule tentative ; la
    correction, expliquée question par question, n'est révélée qu'au débriefing.
 4. **Décision** : il saisit ses décisions du tour, avec une justification courte.
-5. **Après simulation** : débriefing (voir §5) — correction du diagnostic et du QCM, et
-   révélation du « bon outil » d'analyse pour cette situation (matrice de pertinence).
+5. **Après simulation** : débriefing (voir §5) — correction du diagnostic et du QCM,
+   avec le modèle le plus pertinent expliqué.
 
 ---
 
@@ -108,17 +111,17 @@ associés, **données nécessaires** (liste de clés de données du jeu — sert
 l'atelier d'analyse), formule éventuelle, niveau de difficulté, erreurs fréquentes,
 indices spécifiques, exemples.
 
-### 3.1 QCM de connaissances et matrice de pertinence
+### 3.1 QCM : connaissances + choix du modèle, notés en crédit
 
-Le joueur ne désigne plus lui-même le modèle à mobiliser : chaque situation porte un
-**QCM de 2 à 3 questions** (`quiz` dans la définition, réponses stockées dans
-`situation_instances.quiz`) qui vérifie les connaissances qu'elle met en jeu. Score =
-part de bonnes réponses (une seule bonne réponse par question, sans réponse = faux) ;
-il pèse 50 % du score de la situation, à égalité avec le diagnostic, avant le malus
-d'indices. La correction expliquée est révélée au débriefing.
+Chaque situation porte un **QCM de 3 questions** (`quiz` dans la définition, réponses
+stockées dans `situation_instances.quiz`) : 2 questions de connaissances (une seule
+bonne réponse, crédit 1 ou 0) et la question du **choix du modèle d'analyse**, générée
+depuis la matrice de pertinence (jusqu'à 4 options, triées alphabétiquement pour ne pas
+trahir la réponse) et notée en **crédit partiel** selon la matrice. Score du QCM =
+moyenne des crédits ; il pèse 50 % du score de la situation, à égalité avec le
+diagnostic, avant le malus d'indices. La correction expliquée est révélée au débriefing.
 
-La matrice de pertinence des modèles reste une donnée de la situation
-(`situation_models`) — elle sert désormais au débriefing (« le bon outil ici ») :
+Matrice de pertinence (`situation_models`), qui note la question du modèle :
 
 | relevance | Sens | Exemple (commande exceptionnelle sous le prix habituel) |
 |---|---|---|

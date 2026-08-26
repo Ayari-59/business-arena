@@ -8,6 +8,8 @@
  * modèle » (§7) : un modèle `misleading` mène au contresens classique.
  */
 
+import { modelByCode } from "../../pedagogy/models";
+
 export type ModelRelevance = "optimal" | "acceptable" | "misleading" | "irrelevant";
 export type DetectCode =
   | "profitable_illiquid"
@@ -21,11 +23,16 @@ export interface SituationHintDef {
   costRatio: number;
 }
 
-/** QCM de mobilisation des connaissances : une seule bonne réponse, corrigée au débriefing. */
+/**
+ * QCM : même forme que le diagnostic (options radio, pas de liste déroulante).
+ * `credit` optionnel par option pour la notation partielle (ex. question du
+ * modèle d'analyse : pertinent 1, acceptable 0,6, trompeur 0,2, hors sujet 0) ;
+ * sans crédit, la bonne réponse vaut 1 et les autres 0. Corrigé au débriefing.
+ */
 export interface QuizQuestionDef {
   id: string;
   prompt: string;
-  options: { id: string; label: string }[];
+  options: { id: string; label: string; credit?: number }[];
   correctOptionId: string;
   explain: string;
 }
@@ -36,9 +43,13 @@ export interface SituationDef {
   narrative: string;
   problem: string; // question ouverte
   diagnosticOptions: { id: string; label: string; correct: boolean }[];
-  /** 2 à 3 questions de connaissances mobilisées par la situation. */
+  /**
+   * 2 questions de connaissances, complétées automatiquement par la question
+   * « quel modèle d'analyse mobilisez-vous ? » (générée depuis modelRelevance,
+   * voir le bloc en fin de fichier) — 3 questions QCM par situation.
+   */
   quiz: QuizQuestionDef[];
-  modelRelevance: Record<string, ModelRelevance>; // par code de modèle ; sert au débriefing (« le bon outil ici »)
+  modelRelevance: Record<string, ModelRelevance>; // par code de modèle ; note la question du modèle (§7)
   conceptCodes: string[];
   hints: SituationHintDef[];
   trigger: { round: number } | { detect: DetectCode };
@@ -65,19 +76,6 @@ export const NOVA_SITUATIONS: SituationDef[] = [
       { id: "lowest_price", label: "Avoir le prix le plus bas du marché", correct: false },
     ],
     quiz: [
-      {
-        id: "fixed_charge",
-        prompt: "Une charge de structure (charge « fixe »), c'est une charge…",
-        options: [
-          { id: "a", label: "Qui tombe chaque période, que l'on vende ou non (loyer, salaires permanents)" },
-          { id: "b", label: "Proportionnelle aux quantités produites et vendues" },
-          { id: "c", label: "Que l'on peut suspendre dès que les ventes baissent" },
-          { id: "d", label: "Exceptionnelle, qui n'apparaît qu'une seule fois" },
-        ],
-        correctOptionId: "a",
-        explain:
-          "Les charges de structure sont indépendantes du volume : c'est précisément pour cela qu'il faut vendre assez pour les couvrir.",
-      },
       {
         id: "unit_margin",
         prompt: "La marge sur coût variable unitaire, c'est…",
@@ -162,19 +160,6 @@ export const NOVA_SITUATIONS: SituationDef[] = [
         correctOptionId: "a",
         explain:
           "59,90 € et 60,10 € ne racontent pas la même histoire au client : franchir le seuil coûte bien plus que 20 centimes de demande.",
-      },
-      {
-        id: "segment_sensitivity",
-        prompt: "Un segment PEU sensible au prix (comme vos passionnés) a une élasticité…",
-        options: [
-          { id: "a", label: "Faible en valeur absolue, proche de 0" },
-          { id: "b", label: "Très fortement négative" },
-          { id: "c", label: "Toujours positive" },
-          { id: "d", label: "Identique à celle des autres segments" },
-        ],
-        correctOptionId: "a",
-        explain:
-          "Chaque segment a sa propre élasticité : c'est ce qui interdit de raisonner sur un client « moyen » et un prix unique pour tous.",
       },
     ],
     modelRelevance: {
@@ -269,19 +254,6 @@ export const NOVA_SITUATIONS: SituationDef[] = [
     ],
     quiz: [
       {
-        id: "bfr_rises",
-        prompt: "Le besoin en fonds de roulement (BFR) augmente quand…",
-        options: [
-          { id: "a", label: "Stocks et créances clients gonflent plus vite que les dettes fournisseurs" },
-          { id: "b", label: "Le résultat net baisse" },
-          { id: "c", label: "On rembourse une échéance d'emprunt" },
-          { id: "d", label: "Les charges de structure augmentent" },
-        ],
-        correctOptionId: "a",
-        explain:
-          "BFR = stocks + créances clients − dettes fournisseurs : c'est l'argent que le cycle d'exploitation immobilise en attendant les encaissements.",
-      },
-      {
         id: "tn_formula",
         prompt: "La trésorerie nette est égale à…",
         options: [
@@ -365,19 +337,6 @@ export const NOVA_SITUATIONS: SituationDef[] = [
         correctOptionId: "a",
         explain:
           "Profitabilité (résultat ÷ CA) et rentabilité (résultat ÷ capitaux) ne racontent pas la même histoire : 20 000 € gagnés avec 200 000 € investis battent 30 000 € avec 500 000 €.",
-      },
-      {
-        id: "material_cost_up",
-        prompt: "Une hausse du coût des matières, toutes choses égales par ailleurs…",
-        options: [
-          { id: "a", label: "Comprime la marge sur coût variable et relève le seuil de rentabilité" },
-          { id: "b", label: "N'affecte que la trésorerie, pas le résultat" },
-          { id: "c", label: "Abaisse le seuil de rentabilité" },
-          { id: "d", label: "Est sans effet si le volume vendu ne change pas" },
-        ],
-        correctOptionId: "a",
-        explain:
-          "La marge unitaire est au dénominateur du seuil : quand elle se comprime, il faut vendre PLUS d'unités pour couvrir les mêmes charges de structure.",
       },
     ],
     modelRelevance: {
@@ -650,19 +609,6 @@ export const NOVA_SITUATIONS: SituationDef[] = [
         explain:
           "VAN > 0 : le projet rapporte plus que ce qu'il coûte, taux de financement compris. Le TRI, lui, doit être SUPÉRIEUR au taux pour dire oui.",
       },
-      {
-        id: "depreciation_in_npv",
-        prompt: "Dans les flux d'un calcul de VAN, l'amortissement…",
-        options: [
-          { id: "a", label: "Ne compte pas : ce n'est pas un décaissement" },
-          { id: "b", label: "Se soustrait chaque année comme une sortie de caisse" },
-          { id: "c", label: "S'ajoute au capital investi" },
-          { id: "d", label: "Remplace le coût d'achat de la machine" },
-        ],
-        correctOptionId: "a",
-        explain:
-          "La VAN raisonne en flux de TRÉSORERIE : la machine est décaissée une fois, à l'achat ; l'amortissement n'est qu'une écriture comptable (il ne joue que par l'impôt qu'il économise).",
-      },
     ],
     modelRelevance: {
       npv: "optimal",
@@ -683,5 +629,72 @@ export const NOVA_SITUATIONS: SituationDef[] = [
     weight: 1,
   },
 ];
+
+// ---------------------------------------------------------------------------
+// Question « quel modèle d'analyse mobilisez-vous ? » — même forme QCM que le
+// reste (pas de liste déroulante) : jusqu'à 4 options tirées de la matrice de
+// pertinence de la situation, notées en crédit partiel (§7). Ajoutée en
+// dernière question du QCM de chaque situation.
+// ---------------------------------------------------------------------------
+
+const RELEVANCE_CREDITS: Record<ModelRelevance, number> = {
+  optimal: 1,
+  acceptable: 0.6,
+  misleading: 0.2,
+  irrelevant: 0,
+};
+
+/** Pourquoi le modèle pertinent est le bon outil — correction du débriefing. */
+const MODEL_EXPLAIN: Record<string, string> = {
+  nova_t1_takeover:
+    "Le seuil de rentabilité donne un objectif chiffré au premier trimestre : le volume de ventes qui couvre exactement les charges de structure.",
+  nova_t2_price_war:
+    "L'analyse de l'élasticité (avec les seuils psychologiques) mesure la sensibilité de CHAQUE segment au prix — la clé quand ils réagissent différemment.",
+  nova_t3_capacity:
+    "L'analyse de capacité identifie la contrainte qui plafonne la production et, croisée avec la saisonnalité, dit quoi produire dès maintenant.",
+  nova_t4_paradox:
+    "L'analyse FRNG / BFR (ou le budget de trésorerie) décompose la trésorerie et montre où l'argent est parti — le seuil de rentabilité, lui, ne parle que du résultat.",
+  nova_t5_returns:
+    "L'analyse de rentabilité rapporte le résultat aux capitaux engagés : c'est elle qui départage deux performances de tailles différentes.",
+  nova_t6_final:
+    "La matrice multicritère structure l'arbitrage : critères explicites, pondérations assumées, options comparées sur la même grille.",
+  detect_profitable_illiquid:
+    "L'analyse FRNG / BFR est l'outil de ce diagnostic : TN = FRNG − BFR, et l'un des deux termes a bougé.",
+  detect_stockout:
+    "L'analyse de capacité, croisée avec la saisonnalité, dimensionne un plan de production qui anticipe la demande au lieu de la subir.",
+  detect_below_breakeven:
+    "Le seuil de rentabilité (et l'analyse coût-volume-profit) dit combien il faut vendre, et quel levier — prix, volume, coûts — est le plus efficace.",
+  detect_capacity_saturated:
+    "La VAN compare le coût d'aujourd'hui aux flux futurs actualisés — le seuil de rentabilité, trompeur ici, ignore le temps.",
+};
+
+function modelQuestion(
+  relevance: Record<string, ModelRelevance>,
+  explain: string,
+): QuizQuestionDef {
+  const byPriority: ModelRelevance[] = ["optimal", "misleading", "acceptable", "irrelevant"];
+  const codes = byPriority
+    .flatMap((r) => Object.keys(relevance).filter((code) => relevance[code] === r))
+    .slice(0, 4);
+  const options = codes
+    .map((code) => ({
+      id: code,
+      label: modelByCode.get(code)?.name ?? code,
+      credit: RELEVANCE_CREDITS[relevance[code]!],
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label, "fr")); // jamais la bonne réponse en tête
+  const optimal = codes.find((code) => relevance[code] === "optimal")!;
+  return {
+    id: "model_choice",
+    prompt: "Quel modèle d'analyse mobilisez-vous en priorité ici ?",
+    options,
+    correctOptionId: optimal,
+    explain,
+  };
+}
+
+for (const s of NOVA_SITUATIONS) {
+  s.quiz.push(modelQuestion(s.modelRelevance, MODEL_EXPLAIN[s.code]!));
+}
 
 export const situationByCode = new Map(NOVA_SITUATIONS.map((s) => [s.code, s]));

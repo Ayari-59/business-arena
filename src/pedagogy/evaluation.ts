@@ -2,22 +2,32 @@ import type { QuizQuestionDef } from "../config/scenarios/nova/situations";
 
 /**
  * Évaluation pédagogique (doc 03 §3.1, doc 08 §1.3).
- * Diagnostic (F1) + QCM de mobilisation des connaissances : le joueur n'a
- * plus à désigner le modèle d'analyse — il prouve qu'il maîtrise les
- * connaissances que la situation mobilise.
+ * Diagnostic (F1) + QCM sous la même forme : 2 questions de connaissances et
+ * la question du modèle d'analyse (notée en crédit partiel via la matrice de
+ * pertinence — un modèle « trompeur » rapporte presque rien, §7).
  */
 
+/** Crédit d'une réponse : crédit explicite de l'option, sinon 1 si correcte, 0 sinon. */
+export function answerCredit(
+  question: QuizQuestionDef,
+  answered: string | undefined,
+): number {
+  const option = question.options.find((o) => o.id === answered);
+  if (!option) return 0;
+  return option.credit ?? (option.id === question.correctOptionId ? 1 : 0);
+}
+
 /**
- * Score du QCM : part de bonnes réponses (une seule bonne réponse par
- * question ; question sans réponse = fausse).
+ * Score du QCM : moyenne des crédits par question (question sans réponse ou
+ * hors options = 0).
  */
 export function evaluateQuiz(
   answers: Record<string, string | undefined>,
   questions: QuizQuestionDef[],
 ): number {
   if (questions.length === 0) return 0;
-  const correct = questions.filter((q) => answers[q.id] === q.correctOptionId).length;
-  return correct / questions.length;
+  const total = questions.reduce((sum, q) => sum + answerCredit(q, answers[q.id]), 0);
+  return total / questions.length;
 }
 
 /**

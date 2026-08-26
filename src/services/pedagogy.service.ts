@@ -18,7 +18,7 @@ import {
   teams,
 } from "@/db/schema";
 import { CONCEPTS, conceptByCode } from "@/config/pedagogy/concepts";
-import { DECISION_MODELS, modelByCode } from "@/config/pedagogy/models";
+import { DECISION_MODELS } from "@/config/pedagogy/models";
 import {
   NOVA_SITUATIONS,
   situationByCode,
@@ -477,7 +477,7 @@ export interface SituationView {
   status: string;
   weight: number;
   diagnosticOptions: { id: string; label: string }[];
-  /** QCM de connaissances : questions sans la bonne réponse (révélée au débriefing). */
+  /** QCM (connaissances + modèle d'analyse) : sans bonne réponse ni crédits (révélés au débriefing). */
   quizQuestions: { id: string; prompt: string; options: { id: string; label: string }[] }[];
   /** Réponses déjà validées par l'équipe (null tant que le QCM n'est pas soumis). */
   quizAnswers: Record<string, string> | null;
@@ -487,11 +487,14 @@ export interface SituationView {
   /** Rempli uniquement après débriefing. */
   debrief: {
     correctOptionIds: string[];
-    /** Correction du QCM, question par question, avec explication. */
-    quizCorrection: { id: string; correctOptionId: string; explain: string }[];
+    /** Correction du QCM, question par question : crédit par option + explication. */
+    quizCorrection: {
+      id: string;
+      correctOptionId: string;
+      explain: string;
+      credits: Record<string, number>;
+    }[];
     quizScore: number | null;
-    /** Les outils d'analyse pertinents ici (« le bon outil au bon moment »). */
-    optimalModels: { code: string; name: string }[];
     concepts: { code: string; name: string }[];
     finalScore: number;
   } | null;
@@ -515,7 +518,11 @@ function toView(
     status: instance.status,
     weight: def.weight,
     diagnosticOptions: def.diagnosticOptions.map(({ id, label }) => ({ id, label })),
-    quizQuestions: def.quiz.map((q) => ({ id: q.id, prompt: q.prompt, options: q.options })),
+    quizQuestions: def.quiz.map((q) => ({
+      id: q.id,
+      prompt: q.prompt,
+      options: q.options.map(({ id, label }) => ({ id, label })), // sans les crédits
+    })),
     quizAnswers: quizStored?.answers ?? null,
     unlockedHints: def.hints
       .filter((h) => levels.includes(h.level))
@@ -534,11 +541,14 @@ function toView(
             id: q.id,
             correctOptionId: q.correctOptionId,
             explain: q.explain,
+            credits: Object.fromEntries(
+              q.options.map((o) => [
+                o.id,
+                o.credit ?? (o.id === q.correctOptionId ? 1 : 0),
+              ]),
+            ),
           })),
           quizScore: quizStored?.score ?? null,
-          optimalModels: Object.entries(def.modelRelevance)
-            .filter(([, r]) => r === "optimal")
-            .map(([code]) => ({ code, name: modelByCode.get(code)?.name ?? code })),
           concepts: def.conceptCodes
             .map((code) => conceptByCode.get(code))
             .filter((c): c is NonNullable<typeof c> => Boolean(c))

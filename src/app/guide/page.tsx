@@ -142,12 +142,12 @@ export default function GuidePage() {
               Pas d&apos;énoncé d&apos;exercice : un problème d&apos;entreprise (« la trésorerie se
               tend », « un concurrent casse les prix »). À vous de comprendre ce qui se joue.
             </Step>
-            <Step n={2} title="Diagnostiquez, puis répondez au QCM de connaissances">
-              Cochez les causes plausibles, puis 2 à 3 questions mobilisent les notions que la
-              situation met en jeu (seuil de rentabilité, BFR, élasticité-prix…).{" "}
-              <strong className="text-slate-200">La correction expliquée arrive au
-              débriefing</strong> — avec, en prime, l&apos;outil d&apos;analyse qui était le bon
-              pour cette situation.
+            <Step n={2} title="Diagnostiquez, puis répondez au QCM">
+              Cochez les causes plausibles, puis 3 questions sous la même forme : deux
+              mobilisent les notions en jeu (seuil de rentabilité, BFR, élasticité-prix…),
+              la troisième vous demande <strong className="text-slate-200">quel modèle
+              d&apos;analyse mobiliser</strong> — un modèle trompeur rapporte presque rien,
+              c&apos;est la compétence que le jeu mesure. Correction expliquée au débriefing.
             </Step>
             <Step n={3} title="Besoin d'aide ? Débloquez des indices">
               Cinq niveaux, dans l&apos;ordre, du simple recadrage jusqu&apos;à la méthode

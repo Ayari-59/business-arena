@@ -27,10 +27,10 @@ describe("système d'indices (doc 03 §4)", () => {
 
 });
 
-describe("QCM de mobilisation des connaissances", () => {
+describe("QCM : connaissances + choix du modèle (§7)", () => {
   const quiz = situationByCode.get("nova_t4_paradox")!.quiz;
 
-  it("score = part de bonnes réponses ; sans réponse = faux", () => {
+  it("score = moyenne des crédits ; sans réponse = 0", () => {
     const perfect = Object.fromEntries(quiz.map((q) => [q.id, q.correctOptionId]));
     expect(evaluateQuiz(perfect, quiz)).toBe(1);
     expect(evaluateQuiz({}, quiz)).toBe(0);
@@ -43,6 +43,12 @@ describe("QCM de mobilisation des connaissances", () => {
   it("une réponse hors options compte comme fausse", () => {
     const wrong = Object.fromEntries(quiz.map((q) => [q.id, "zzz"]));
     expect(evaluateQuiz(wrong, quiz)).toBe(0);
+  });
+
+  it("le modèle trompeur rapporte un crédit partiel (0,2), pas zéro ni tout", () => {
+    const answers = Object.fromEntries(quiz.map((q) => [q.id, q.correctOptionId]));
+    answers["model_choice"] = "breakeven_analysis"; // misleading dans le paradoxe de trésorerie
+    expect(evaluateQuiz(answers, quiz)).toBeCloseTo((quiz.length - 1 + 0.2) / quiz.length, 9);
   });
 });
 
@@ -134,10 +140,9 @@ describe("cohérence des référentiels", () => {
       expect(Object.values(s.modelRelevance)).toContain("optimal");
     }
   });
-  it("chaque situation porte 2 à 3 questions QCM bien formées", () => {
+  it("chaque situation porte 3 questions QCM bien formées : 2 connaissances + le modèle", () => {
     for (const s of NOVA_SITUATIONS) {
-      expect(s.quiz.length, s.code).toBeGreaterThanOrEqual(2);
-      expect(s.quiz.length, s.code).toBeLessThanOrEqual(3);
+      expect(s.quiz.length, s.code).toBe(3);
       const questionIds = new Set(s.quiz.map((q) => q.id));
       expect(questionIds.size, s.code).toBe(s.quiz.length); // ids uniques
       for (const q of s.quiz) {
@@ -148,6 +153,21 @@ describe("cohérence des référentiels", () => {
         ).toBe(true); // la bonne réponse existe parmi les options
         expect(new Set(q.options.map((o) => o.id)).size).toBe(q.options.length);
         expect(q.explain.length, `${s.code}/${q.id}`).toBeGreaterThan(20); // correction expliquée
+      }
+    }
+  });
+  it("la question du modèle est en QCM (pas de liste), notée par la matrice de pertinence", () => {
+    const credits = { optimal: 1, acceptable: 0.6, misleading: 0.2, irrelevant: 0 } as const;
+    for (const s of NOVA_SITUATIONS) {
+      const q = s.quiz[s.quiz.length - 1]!;
+      expect(q.id, s.code).toBe("model_choice");
+      expect(q.options.length, s.code).toBeLessThanOrEqual(4); // un QCM, pas le référentiel entier
+      expect(s.modelRelevance[q.correctOptionId], s.code).toBe("optimal");
+      for (const o of q.options) {
+        expect(o.credit, `${s.code}/${o.id}`).toBe(
+          credits[s.modelRelevance[o.id] ?? "irrelevant"],
+        );
+        expect(modelByCode.get(o.id)?.name, `${s.code}/${o.id}`).toBe(o.label);
       }
     }
   });
