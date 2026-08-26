@@ -161,6 +161,47 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                     : ", réglées comptant."}
                 </p>
               ) : null}
+              {r.debt && (r.debt.mandatoryRepayment > 0.5 || r.debt.newLoan > 0.5 || r.debt.earlyRepayment > 0.5) ? (
+                <p className="mt-3 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-xs text-slate-300">
+                  🏦 Dette : échéance de {formatEuro(r.debt.mandatoryRepayment)} prélevée
+                  {r.debt.earlyRepayment > 0.5
+                    ? ` + ${formatEuro(r.debt.earlyRepayment)} d'anticipé`
+                    : ""}
+                  {r.debt.newLoan > 0.5 ? ` · nouvel emprunt ${formatEuro(r.debt.newLoan)}` : ""}
+                  {" — restant dû : "}
+                  {formatEuro(r.debt.outstanding)}
+                  {r.debt.nextMandatory > 0.5
+                    ? ` (prochaine échéance ${formatEuro(r.debt.nextMandatory)})`
+                    : ""}
+                </p>
+              ) : null}
+              {r.treasury ? (
+                <p
+                  className={`mt-3 rounded-lg border px-3 py-2 text-xs ${
+                    r.treasury.crisis
+                      ? "border-red-400/40 bg-red-950/40 text-red-300"
+                      : r.treasury.forcedFactored > 0
+                        ? "border-orange-400/40 bg-orange-950/30 text-orange-300"
+                        : "border-teal-400/30 bg-teal-950/30 text-teal-300"
+                  }`}
+                >
+                  💶 Trésorerie :
+                  {r.treasury.discounted > 0.5
+                    ? ` escompte ${formatEuro(r.treasury.discounted)} ·`
+                    : ""}
+                  {r.treasury.factored > 0.5
+                    ? ` affacturage ${formatEuro(r.treasury.factored)} ·`
+                    : ""}
+                  {r.treasury.forcedFactored > 0.5
+                    ? ` ⚠️ affacturage FORCÉ par la banque ${formatEuro(r.treasury.forcedFactored)} (découvert au-delà du plafond) ·`
+                    : ""}
+                  {" coût financier "}
+                  {formatEuro(r.treasury.financingCost)}
+                  {r.treasury.crisis
+                    ? " — 🚨 CRISE DE TRÉSORERIE : plafond dépassé et plus de créances à céder."
+                    : ""}
+                </p>
+              ) : null}
               {r.investment ? (
                 <p className="mt-3 rounded-lg border border-amber-400/30 bg-amber-950/20 px-3 py-2 text-xs text-amber-200">
                   🏗️ Investissement : +{formatUnits(r.investment.capacityUnits)} u de capacité
@@ -365,6 +406,8 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
             }
             enabled={view.enabledDecisions}
             investmentOffer={view.investmentOffer}
+            debtSchedule={view.debtSchedule}
+            treasuryOffer={view.treasuryOffer}
           />
         </section>
       )}

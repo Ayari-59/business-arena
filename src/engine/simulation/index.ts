@@ -106,6 +106,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       maintenanceBudget: Math.max(0, raw.maintenanceBudget),
       insurance: raw.insurance,
       hr: raw.hr,
+      treasury: raw.treasury,
       finance: raw.finance,
       forecast: raw.forecast,
     };
@@ -308,6 +309,20 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const insurancePremium = w.insured ? (insuranceOffer?.premiumPerRound ?? 0) : 0;
     const hrCost = w.hr.cost;
 
+    // Échéanciers d'emprunts (doc 02 §6.5) : les échéances sont OBLIGATOIRES,
+    // le remboursement décidé est un anticipé facultatif. Sans échéancier au
+    // scénario : remboursement libre (comportement historique).
+    const scheduled = scenario.finance.loanDurationRounds !== undefined;
+    const loans = w.state.loans ?? [];
+    const mandatoryRepayment = scheduled
+      ? loans.reduce((s, l) => s + Math.min(l.perRound, l.remaining), 0)
+      : 0;
+    const requestedRepayment = Math.max(0, w.decisions.finance?.loanRepayment ?? 0);
+    const earlyRepayment = scheduled
+      ? Math.min(requestedRepayment, Math.max(0, w.state.finance.financialDebt - mandatoryRepayment))
+      : Math.min(requestedRepayment, w.state.finance.financialDebt);
+    const newLoan = Math.max(0, w.decisions.finance?.newLoan ?? 0);
+
     const finance = computeFinance({
       opening: w.state.finance,
       roundDays: scenario.roundDays,
@@ -333,15 +348,51 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       interestMultiplier: w.mods.interestMultiplier,
       taxRate: scenario.finance.taxRate,
       vatRate: scenario.finance.vatRate ?? 0,
-      newLoan: w.decisions.finance?.newLoan ?? 0,
-      loanRepayment: w.decisions.finance?.loanRepayment ?? 0,
+      newLoan,
+      loanRepayment: mandatoryRepayment + earlyRepayment,
       capitalIncrease: Math.max(0, w.decisions.finance?.capitalIncrease ?? 0),
       investmentOutlay: w.investOutlay,
+      ...(scenario.treasury
+        ? {
+            treasury: {
+              discountRequest: Math.max(0, w.decisions.treasury?.discount ?? 0),
+              factoringRequest: Math.max(0, w.decisions.treasury?.factoring ?? 0),
+              discountAnnualRate: scenario.treasury.discountAnnualRate,
+              discountMaxShare: scenario.treasury.discountMaxShare,
+              factoringFeeRate: scenario.treasury.factoringFeeRate,
+              forcedFactoringFeeRate: scenario.treasury.forcedFactoringFeeRate,
+              overdraftLimit: scenario.finance.overdraftLimit,
+            },
+          }
+        : {}),
     });
 
     const gap = balanceGap(finance.closing);
     if (Math.abs(gap) > 0.01) {
       throw new Error(`Bilan déséquilibré (${gap.toFixed(4)} €) pour ${w.state.id}`);
+    }
+
+    // Échéanciers du tour suivant : échéances prélevées, anticipé imputé
+    // séquentiellement, nouvel emprunt à la durée standard (1re échéance à t+1).
+    let nextLoans = w.state.loans;
+    let nextMandatory = 0;
+    if (scheduled) {
+      let earlyLeft = earlyRepayment;
+      nextLoans = loans
+        .map((l) => {
+          const afterMandatory = l.remaining - Math.min(l.perRound, l.remaining);
+          const applied = Math.min(earlyLeft, afterMandatory);
+          earlyLeft -= applied;
+          return { remaining: afterMandatory - applied, perRound: l.perRound };
+        })
+        .filter((l) => l.remaining > 0.005);
+      if (newLoan > 0) {
+        nextLoans = [
+          ...nextLoans,
+          { remaining: newLoan, perRound: newLoan / scenario.finance.loanDurationRounds! },
+        ];
+      }
+      nextMandatory = nextLoans.reduce((s, l) => s + Math.min(l.perRound, l.remaining), 0);
     }
 
     const functionalBalance = computeFunctionalBalance(finance.closing);
@@ -401,6 +452,24 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         : {}),
       ...(w.investUnits > 0
         ? { investment: { capacityUnits: w.investUnits, outlay: w.investOutlay } }
+        : {}),
+      ...(scheduled
+        ? {
+            debt: {
+              mandatoryRepayment,
+              earlyRepayment,
+              newLoan,
+              outstanding: finance.closing.financialDebt,
+              nextMandatory,
+            },
+          }
+        : {}),
+      ...(scenario.treasury &&
+      (finance.treasury.discounted > 0 ||
+        finance.treasury.factored > 0 ||
+        finance.treasury.forcedFactored > 0 ||
+        finance.treasury.crisis)
+        ? { treasury: finance.treasury }
         : {}),
       ...(scenario.qualityCosts
         ? {
@@ -466,6 +535,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       pendingDepreciationPerRound: scenario.investment
         ? w.investOutlay / scenario.investment.depreciationRounds
         : 0,
+      ...(scheduled ? { loans: nextLoans } : {}),
       perceivedQuality: updatePerceivedQuality(
         w.state.perceivedQuality,
         w.producedQuality,

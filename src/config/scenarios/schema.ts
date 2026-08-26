@@ -85,7 +85,16 @@ export const engineScenarioConfigSchema = z.object({
     vatRate: z.number().min(0).max(0.5).optional(),
     supplierPaymentDelayDays: z.number().int().nonnegative(),
     depreciationPerRound: z.number().nonnegative(),
+    loanDurationRounds: z.number().positive().optional(),
   }),
+  treasury: z
+    .object({
+      discountAnnualRate: z.number().min(0).max(0.3),
+      discountMaxShare: z.number().min(0).max(1),
+      factoringFeeRate: z.number().min(0).max(0.2),
+      forcedFactoringFeeRate: z.number().min(0).max(0.3),
+    })
+    .optional(),
   fixedCostsPerRound: z.number().nonnegative(),
   // Assurance : la demande est un paramètre de marché, un événement de
   // demande ne peut donc pas être couvert (neutralisation par entreprise).

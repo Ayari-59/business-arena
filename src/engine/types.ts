@@ -77,6 +77,30 @@ export interface EngineScenarioConfig {
     supplierPaymentDelayDays: number;
     /** Amortissement des immobilisations par tour (linéaire, en €). */
     depreciationPerRound: number;
+    /**
+     * Durée contractuelle des emprunts en tours (amortissement constant).
+     * Présente : chaque emprunt porte un échéancier OBLIGATOIRE (le
+     * remboursement décidé devient un remboursement anticipé facultatif).
+     * Absente : remboursement libre (comportement historique).
+     */
+    loanDurationRounds?: number;
+  };
+  /**
+   * Outils de gestion de trésorerie (optionnel) : mobilisation du poste
+   * clients. L'escompte avance des créances au taux d'escompte (plafonné à
+   * une part du poste), l'affacturage les cède contre commission (illimité).
+   * Au-delà du plafond de découvert : affacturage FORCÉ au taux punitif —
+   * si vous ne gérez pas votre trésorerie, la banque la gère pour vous.
+   */
+  treasury?: {
+    /** Taux d'escompte annuel (agios au prorata du tour). */
+    discountAnnualRate: number;
+    /** Part maximale des créances escomptables (0..1). */
+    discountMaxShare: number;
+    /** Commission d'affacturage (part du montant cédé). */
+    factoringFeeRate: number;
+    /** Commission de l'affacturage forcé (punitif). */
+    forcedFactoringFeeRate: number;
   };
   /** Coûts fixes opérationnels par tour (hors amortissements). */
   fixedCostsPerRound: number;
@@ -271,6 +295,11 @@ export interface CompanyState {
   pendingDepreciationPerRound?: number;
   /** Amortissements supplémentaires (investissements en service). */
   extraDepreciationPerRound?: number;
+  /**
+   * Échéanciers d'emprunts (amortissement constant) : Σ remaining =
+   * financialDebt du bilan. Absent = dette à remboursement libre (historique).
+   */
+  loans?: { remaining: number; perRound: number }[];
 }
 
 export interface RoundDecisions {
@@ -294,7 +323,14 @@ export interface RoundDecisions {
    * tour suivant. Action ponctuelle : jamais reconduite.
    */
   investment?: { machineCapacityUnits?: number };
+  /**
+   * Financement. Avec échéancier (finance.loanDurationRounds) : les échéances
+   * sont prélevées automatiquement et loanRepayment est un remboursement
+   * ANTICIPÉ facultatif ; newLoan contracte un emprunt à la durée standard.
+   */
   finance?: { newLoan?: number; loanRepayment?: number; capitalIncrease?: number };
+  /** Trésorerie : montants de créances à mobiliser ce tour (actions ponctuelles). */
+  treasury?: { discount?: number; factoring?: number };
   forecast?: { expectedRevenue?: number; expectedNetIncome?: number; expectedCash?: number };
 }
 
@@ -386,6 +422,24 @@ export interface CompanyRoundResult {
   };
   /** Assurance du tour : prime payée et événements couverts neutralisés. */
   insurance?: { premium: number; neutralizedEvents: string[] };
+  /** Dette du tour : échéance obligatoire, anticipé, prochaine échéance. */
+  debt?: {
+    mandatoryRepayment: number;
+    earlyRepayment: number;
+    newLoan: number;
+    outstanding: number;
+    nextMandatory: number;
+  };
+  /** Trésorerie du tour : mobilisations de créances et coûts financiers. */
+  treasury?: {
+    discounted: number;
+    factored: number;
+    /** Affacturage imposé par la banque (découvert au-delà du plafond). */
+    forcedFactored: number;
+    financingCost: number;
+    /** Découvert toujours au-delà du plafond malgré tout : crise caractérisée. */
+    crisis: boolean;
+  };
   /** RH du tour : effectif, mouvements et coût (doc 02 §4.1). */
   hr?: {
     headcount: number;

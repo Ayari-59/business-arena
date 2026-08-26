@@ -51,6 +51,8 @@ export function DecisionForm({
   insuranceOffer,
   enabled,
   investmentOffer,
+  debtSchedule,
+  treasuryOffer,
 }: {
   gameId: string;
   roundIndex: number;
@@ -71,6 +73,15 @@ export function DecisionForm({
   };
   /** Investissement du scénario (coût par unité de capacité, plafond). */
   investmentOffer?: { costPerCapacityUnit: number; maxPerRound: number } | null;
+  /** Échéance d'emprunt obligatoire du tour (prélevée automatiquement). */
+  debtSchedule?: { nextMandatory: number; outstanding: number } | null;
+  /** Outils de trésorerie du scénario (escompte / affacturage). */
+  treasuryOffer?: {
+    discountAnnualRate: number;
+    discountMaxShare: number;
+    factoringFeeRate: number;
+    overdraftLimit: number;
+  } | null;
 }) {
   const action = playRoundAction.bind(null, gameId);
   const [state, formAction, pending] = useActionState(action, initialState);
@@ -105,8 +116,14 @@ export function DecisionForm({
         {on.finance ? (
           <>
             <Field name="newLoan" label="Nouvel emprunt" defaultValue={0} suffix="€"
-              hint="À 5 %/an — utile si la trésorerie se tend." />
-            <Field name="loanRepayment" label="Remboursement d'emprunt" defaultValue={defaults.finance?.loanRepayment ?? 0} suffix="€" />
+              hint="À 5 %/an, amortissement constant sur la durée contractuelle — emprunter engage." />
+            <Field
+              name="loanRepayment"
+              label={debtSchedule ? "Remboursement anticipé" : "Remboursement d'emprunt"}
+              defaultValue={0}
+              suffix="€"
+              hint={debtSchedule ? "Facultatif, en plus de l'échéance obligatoire." : undefined}
+            />
             <Field name="capitalIncrease" label="Augmentation de capital" defaultValue={0} suffix="€"
               hint="Apport des associés : trésorerie et capitaux propres — sans intérêts, mais dilutif." />
           </>
@@ -121,6 +138,44 @@ export function DecisionForm({
           />
         ) : null}
       </div>
+      {on.finance && debtSchedule && debtSchedule.outstanding > 0.5 ? (
+        <p className="rounded-lg border border-amber-400/20 bg-amber-950/20 px-3 py-2 text-xs text-amber-200">
+          🏦 Échéance d&apos;emprunt du tour :{" "}
+          <strong>{Math.round(debtSchedule.nextMandatory).toLocaleString("fr-FR")} €</strong>{" "}
+          de capital, prélevée automatiquement (+ intérêts) — dette restante{" "}
+          {Math.round(debtSchedule.outstanding).toLocaleString("fr-FR")} €. Les échéances
+          tombent, que la caisse soit pleine ou vide.
+        </p>
+      ) : null}
+      {on.finance && treasuryOffer ? (
+        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
+          <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+            💶 Trésorerie — mobiliser le poste clients
+          </legend>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field
+              name="discount"
+              label={`Escompte (${(treasuryOffer.discountAnnualRate * 100).toLocaleString("fr-FR")} %/an)`}
+              defaultValue={0}
+              suffix="€"
+              hint={`Avance sur créances, plafonnée à ${Math.round(treasuryOffer.discountMaxShare * 100)} % du poste clients — le moins cher.`}
+            />
+            <Field
+              name="factoring"
+              label={`Affacturage (${(treasuryOffer.factoringFeeRate * 100).toLocaleString("fr-FR")} % du montant)`}
+              defaultValue={0}
+              suffix="€"
+              hint="Cession de créances, sans plafond — plus cher, immédiat."
+            />
+          </div>
+          <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+            Découvert autorisé jusqu&apos;à{" "}
+            {Math.round(treasuryOffer.overdraftLimit).toLocaleString("fr-FR")} €. Au-delà, la
+            banque cède vos créances d&apos;office, au tarif fort — si vous ne gérez pas votre
+            trésorerie, quelqu&apos;un la gérera pour vous.
+          </p>
+        </fieldset>
+      ) : null}
       {on.hr ? (
         <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">

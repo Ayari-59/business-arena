@@ -251,6 +251,32 @@ export const CONCEPTS: ConceptDef[] = [
       "Comparez le TRI au taux d'emprunt : TRI > taux ⇒ le financement par dette crée de la valeur. Méfiez-vous d'un délai de récupération plus long que la visibilité de votre marché.",
     formula: "TRI : i tel que Σ Ft / (1 + i)^t = I₀",
   },
+  {
+    code: "loan_schedule",
+    name: "Tableau d'amortissement",
+    domain: "finance",
+    axis: "finance",
+    definition:
+      "Un emprunt se rembourse selon un échéancier contractuel : chaque période, une part du capital (l'amortissement) plus les intérêts sur le capital restant dû.",
+    intuition:
+      "Les échéances tombent que la caisse soit pleine ou vide : emprunter, c'est engager sa trésorerie FUTURE. La question n'est pas « puis-je emprunter ? » mais « mes flux futurs paieront-ils les échéances ? ».",
+    method:
+      "Rapprochez votre capacité d'autofinancement des annuités : CAF < échéances = danger, quel que soit le résultat affiché.",
+    formula: "Amortissement constant : échéance t = capital/durée + restant dû × taux",
+  },
+  {
+    code: "receivables_financing",
+    name: "Escompte et affacturage",
+    domain: "finance",
+    axis: "decision",
+    definition:
+      "Mobiliser le poste clients transforme des créances en trésorerie immédiate : l'escompte avance les effets contre agios, l'affacturage cède les créances contre commission.",
+    intuition:
+      "Vos clients vous doivent de l'argent : cette richesse dort dans le BFR. La banque ou le factor peuvent l'avancer — moins cher que le découvert, mais jamais gratuit. Un besoin PONCTUEL se couvre en mobilisant des créances ; un besoin STRUCTUREL exige de la ressource stable.",
+    method:
+      "Comparez les coûts : agios d'escompte (taux × durée restante) vs commission d'affacturage vs agios de découvert — et gardez l'emprunt ou le capital pour les besoins durables.",
+    formula: "Coût d'escompte = montant × taux × durée/360 ; coût d'affacturage = montant × commission",
+  },
 ];
 
 export const conceptByCode = new Map(CONCEPTS.map((c) => [c.code, c]));

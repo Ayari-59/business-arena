@@ -130,10 +130,10 @@ describe("progression (doc 03 §6)", () => {
 });
 
 describe("cohérence des référentiels", () => {
-  it("22 concepts (20 MVP + VAN/TRI), 18 modèles, codes uniques", () => {
-    expect(CONCEPTS).toHaveLength(22);
+  it("24 concepts (20 MVP + investissement + trésorerie), 18 modèles, codes uniques", () => {
+    expect(CONCEPTS).toHaveLength(24);
     expect(DECISION_MODELS).toHaveLength(18);
-    expect(conceptByCode.size).toBe(22);
+    expect(conceptByCode.size).toBe(24);
     expect(modelByCode.size).toBe(18);
   });
   it("chaque situation référence des concepts et modèles existants, avec 5 indices", () => {

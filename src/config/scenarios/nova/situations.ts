@@ -152,7 +152,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
       return_analysis: "irrelevant",
       cvp_analysis: "irrelevant",
     },
-    conceptCodes: ["frng", "bfr", "net_treasury"],
+    conceptCodes: ["frng", "bfr", "net_treasury", "receivables_financing", "loan_schedule"],
     hints: hints([
       "Examinez ce qui a le plus évolué à votre bilan depuis le tour dernier.",
       "Quel élément du cycle d'exploitation (stocks, créances clients, dettes fournisseurs) a explosé ?",

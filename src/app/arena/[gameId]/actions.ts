@@ -42,6 +42,12 @@ export async function playRoundAction(
       loanRepayment: formData.get("loanRepayment") || 0,
       capitalIncrease: formData.get("capitalIncrease") || 0,
     },
+    treasury: formData.has("discount")
+      ? {
+          discount: formData.get("discount") || 0,
+          factoring: formData.get("factoring") || 0,
+        }
+      : undefined,
   });
   if (!parsed.success) {
     return { error: "Décisions invalides : vérifiez les montants saisis." };

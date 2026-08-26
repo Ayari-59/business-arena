@@ -96,6 +96,8 @@ const rawNova = {
     overdraftLimit: 30000,
     taxRate: 0.25,
     supplierPaymentDelayDays: 22,
+    // les emprunts se contractent sur 16 trimestres, amortissement constant
+    loanDurationRounds: 16,
     depreciationPerRound: 5000,
   },
   // structure totale ≈ 96 000 €/tour : 91 000 décaissés + 5 000 d'amortissements
@@ -296,6 +298,15 @@ const rawNova = {
   // RH (niveaux Arbitrage+) : 4 opérateurs inclus dans les 91 000 € de
   // structure. À effectif complet, l'atelier machine (7 000 u) est le goulot :
   // l'embauche compense les départs et prépare l'investissement capacitaire.
+  // Trésorerie : escompte (6 %/an, 60 % du poste clients max) contre
+  // affacturage (2,5 % du montant, illimité) — deux coûts, deux logiques.
+  // Au-delà du plafond de découvert : affacturage forcé à 5 % (punitif).
+  treasury: {
+    discountAnnualRate: 0.06,
+    discountMaxShare: 0.6,
+    factoringFeeRate: 0.025,
+    forcedFactoringFeeRate: 0.05,
+  },
   // Investissement capacitaire : 20 €/unité de capacité trimestrielle,
   // amorti sur 16 trimestres, mise en service au tour suivant.
   investment: {
@@ -365,6 +376,8 @@ export function novaCompany(
     hoursPerEmployee: 540, // capacité MOD = 4 × 540 / 0,3 = 7 200 u/tour
     productivity: 1,
     finishedGoods: { quantity: 0, unitCost: 0 },
+    // dette reprise : 80 000 € amortis sur 20 trimestres → 4 000 €/tour
+    loans: [{ remaining: 80000, perRound: 4000 }],
     finance: {
       fixedAssetsNet: 205000,
       inventoryValue: 0,

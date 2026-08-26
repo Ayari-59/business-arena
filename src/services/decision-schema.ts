@@ -33,6 +33,12 @@ export const roundDecisionsSchema = z.object({
       capitalIncrease: z.coerce.number().min(0).max(500000).optional(),
     })
     .optional(),
+  treasury: z
+    .object({
+      discount: z.coerce.number().min(0).max(1000000).optional(),
+      factoring: z.coerce.number().min(0).max(1000000).optional(),
+    })
+    .optional(),
   forecast: z
     .object({
       expectedRevenue: z.coerce.number().optional(),

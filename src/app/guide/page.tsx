@@ -156,10 +156,14 @@ export default function GuidePage() {
             </Step>
             <Step n={4} title="Prenez vos décisions">
               Prix, production, marketing, qualité, maintenance — puis, selon le niveau :
-              financement (emprunt, augmentation de capital), assurance catastrophe,
-              ressources humaines (embaucher, former, rémunérer) et investissement en
-              capacité (en service au tour suivant). En mode classe, vos décisions restent
-              modifiables jusqu&apos;à la clôture du tour par l&apos;enseignant.
+              financement (emprunt, augmentation de capital), trésorerie (escompte,
+              affacturage), assurance catastrophe, ressources humaines (embaucher, former,
+              rémunérer) et investissement en capacité (en service au tour suivant).
+              Attention : les échéances d&apos;emprunt sont <strong className="text-slate-200">
+              prélevées automatiquement</strong>, que la caisse soit pleine ou vide — et
+              au-delà du découvert autorisé, la banque cède vos créances d&apos;office. En mode
+              classe, vos décisions restent modifiables jusqu&apos;à la clôture du tour par
+              l&apos;enseignant.
             </Step>
             <Step n={5} title="Lisez vos résultats comme un dirigeant">
               Chiffre d&apos;affaires, résultat net, part de marché — mais surtout la ligne de

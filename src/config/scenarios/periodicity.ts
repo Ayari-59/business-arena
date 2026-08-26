@@ -71,6 +71,10 @@ export function applyPeriodicity(
     finance: {
       ...scenario.finance,
       depreciationPerRound: scenario.finance.depreciationPerRound * k,
+      // même emprunt, même durée réelle : la durée en tours varie en 1/k
+      ...(scenario.finance.loanDurationRounds !== undefined
+        ? { loanDurationRounds: scenario.finance.loanDurationRounds / k }
+        : {}),
     },
     fixedCostsPerRound: scenario.fixedCostsPerRound * k,
     ...(scenario.insurance
@@ -137,7 +141,11 @@ const scaleBounds = (b: { min: number; target: number }, k: number) => ({
  * Le bilan initial (stock de valeur, pas flux) reste inchangé.
  */
 export function applyPeriodicityToCompany<
-  T extends { machineCapacity: number; hoursPerEmployee: number },
+  T extends {
+    machineCapacity: number;
+    hoursPerEmployee: number;
+    loans?: { remaining: number; perRound: number }[];
+  },
 >(company: T, periodicity: Periodicity): T {
   const k = PERIODICITY_DAYS[periodicity] / 90;
   if (k === 1) return company;
@@ -145,5 +153,9 @@ export function applyPeriodicityToCompany<
     ...company,
     machineCapacity: company.machineCapacity * k,
     hoursPerEmployee: company.hoursPerEmployee * k,
+    // même dette, même durée réelle : l'échéance PAR TOUR varie en k
+    ...(company.loans
+      ? { loans: company.loans.map((l) => ({ ...l, perRound: l.perRound * k })) }
+      : {}),
   };
 }

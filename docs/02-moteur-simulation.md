@@ -266,11 +266,28 @@ TN   = FRNG − BFR      // invariant : TN = disponibilités − concours bancai
 Budget de trésorerie du tour : encaissements (ventes du tour et créances antérieures,
 emprunts, apports) − décaissements (achats, salaires, fixes, investissements, échéances,
 impôt). Si la trésorerie devient négative : **découvert automatique** au taux du scénario
-(agios au tour suivant) ; au-delà du plafond de découvert ⇒ situation de **crise de
-trésorerie** (événement bloquant : cession forcée, augmentation de capital imposée, ou
-défaite selon la difficulté). C'est ainsi que le jeu crée naturellement la situation
-« rentable mais en difficulté de trésorerie » (§16) : la croissance gonfle le BFR plus
-vite que le FRNG.
+(agios au tour suivant). Le découvert est **plafonné** (`finance.overdraftLimit`) et le
+joueur dispose d'**outils de mobilisation du poste clients** (`scenario.treasury`,
+décisions `treasury.discount` / `treasury.factoring`) pour l'éviter :
+
+1. **Escompte** — avance sur créances, plafonnée à `discountMaxShare` du poste clients
+   TTC du tour ; agios = montant × `discountAnnualRate` × jours du tour / 360, en
+   charges financières. Le moins cher.
+2. **Affacturage** — cession de créances sans plafond, commission `factoringFeeRate`
+   sur le montant cédé. Plus cher, immédiat.
+3. **Affacturage forcé** — si malgré tout le solde passe sous −plafond, la banque cède
+   d'office les créances restantes au taux punitif `forcedFactoringFeeRate`, juste ce
+   qu'il faut pour revenir dans les clous (calcul en deux passes, déterministe : la
+   commission étant déductible, la seconde passe ne peut que remonter le solde). Le
+   brut encaissé passe par les lignes `escompte_creances` / `affacturage` /
+   `affacturage_force` du tableau de flux ; tous les coûts de mobilisation vont en
+   charges financières.
+
+S'il ne reste **plus de créances à céder** et que le solde reste sous −plafond ⇒
+**crise de trésorerie caractérisée** (`treasury.crisis`), signalée en rouge dans
+l'arène. C'est ainsi que le jeu crée naturellement la situation « rentable mais en
+difficulté de trésorerie » (§16) : la croissance gonfle le BFR plus vite que le FRNG —
+et la leçon « si vous ne gérez pas votre trésorerie, quelqu'un la gérera pour vous ».
 
 **TVA** (`finance.vatRate`, 0 ou absente = désactivée — activable à la création de
 partie) : le compte de résultat reste **HT** (la TVA n'est jamais un produit ni une
@@ -304,6 +321,20 @@ machine physique vaut le même prix — coût par unité de capacité en 1/k, du
 tours en 1/k, plafond en k. Financement : `finance.newLoan` (emprunt),
 `finance.capitalIncrease` (apport en capitaux propres, sans intérêts) — actions
 ponctuelles jamais reconduites, comme l'investissement.
+
+**Échéanciers d'emprunt obligatoires** (`finance.loanDurationRounds`) : rembourser un
+emprunt n'est **pas une décision, c'est une contrainte**. Chaque emprunt vivant est
+porté dans `CompanyState.loans` (`{ remaining, perRound }`, amortissement constant) ;
+l'échéance en capital du tour est **prélevée automatiquement**, que la caisse soit
+pleine ou vide — les intérêts courent sur le capital restant dû. Un nouvel emprunt
+s'étale sur la durée contractuelle, première échéance au tour suivant. La décision
+`finance.loanRepayment` devient un **remboursement anticipé**, facultatif, en plus de
+l'échéance. Périodicité : la durée en tours est divisée par k, l'échéance par tour
+multipliée par k (le capital restant dû est un stock, inchangé). Sans
+`loanDurationRounds` au scénario, comportement historique : remboursement libre.
+Résultat du tour : `debt = { mandatoryRepayment, earlyRepayment, newLoan, outstanding,
+nextMandatory }`, affiché dans l'arène et annoncé au joueur avant décision (bandeau
+« l'échéance tombe »).
 
 ### 6.5bis Cadre initial (§18)
 

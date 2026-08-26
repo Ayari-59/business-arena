@@ -551,9 +551,8 @@ async function resolveGameRound(
           ...prev,
           hr: prev.hr ? { salaryIndex: prev.hr.salaryIndex } : undefined,
           investment: undefined,
-          finance: prev.finance
-            ? { loanRepayment: prev.finance.loanRepayment }
-            : undefined,
+          treasury: undefined,
+          finance: undefined, // échéances automatiques ; emprunt/anticipé/capital : ponctuels
         };
         carriedOver.add(team.id);
       } else {
@@ -633,6 +632,8 @@ async function resolveGameRound(
               hr: r.hr ?? null,
               investment: r.investment ?? null,
               qualityCosts: r.qualityCosts ?? null,
+              debt: r.debt ?? null,
+              treasury: r.treasury ?? null,
             },
             revenue: toMoney(r.incomeStatement.revenue),
             netIncome: toMoney(r.incomeStatement.netIncome),
@@ -1009,6 +1010,15 @@ export interface GameView {
   seasonNotes: { name: string; coef: number }[];
   /** Investissement proposé par le scénario (échelle de la périodicité). */
   investmentOffer: { costPerCapacityUnit: number; maxPerRound: number } | null;
+  /** Échéance d'emprunt obligatoire du prochain tour et dette restante. */
+  debtSchedule: { nextMandatory: number; outstanding: number } | null;
+  /** Outils de trésorerie du scénario (taux affichés dans le formulaire). */
+  treasuryOffer: {
+    discountAnnualRate: number;
+    discountMaxShare: number;
+    factoringFeeRate: number;
+    overdraftLimit: number;
+  } | null;
 }
 
 export async function getGameView(gameId: string, userId: string): Promise<GameView | null> {
@@ -1057,6 +1067,8 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         hr?: CompanyRoundResult["hr"] | null;
         investment?: CompanyRoundResult["investment"] | null;
         qualityCosts?: CompanyRoundResult["qualityCosts"] | null;
+        debt?: CompanyRoundResult["debt"] | null;
+        treasury?: CompanyRoundResult["treasury"] | null;
       };
       lastResult = {
         companyId: playerTeam.id,
@@ -1080,6 +1092,8 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         hr: trace.hr ?? undefined,
         investment: trace.investment ?? undefined,
         qualityCosts: trace.qualityCosts ?? undefined,
+        debt: trace.debt ?? undefined,
+        treasury: trace.treasury ?? undefined,
         kpis: {},
       };
       lastEvents = trace.events ?? [];
@@ -1107,6 +1121,19 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     )[0];
     if (row && row.status === "validated") pendingDecisions = row.payload as RoundDecisions;
   }
+
+  // dernier état persisté de l'équipe (échéanciers d'emprunts pour l'affichage)
+  const stateRow = (
+    await db
+      .select()
+      .from(companyStates)
+      .where(eq(companyStates.teamId, playerTeam.id))
+      .orderBy(desc(companyStates.roundIndex))
+      .limit(1)
+  )[0];
+  const currentState = stateRow?.state as
+    | { loans?: { remaining: number; perRound: number }[] }
+    | undefined;
 
   const rankingRows = await db.select().from(gameRankings).where(eq(gameRankings.gameId, gameId));
   const ranking = rankingRows
@@ -1173,6 +1200,26 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       const offer = (game.scenarioSnapshot as EngineScenarioConfig).investment;
       return offer
         ? { costPerCapacityUnit: offer.costPerCapacityUnit, maxPerRound: offer.maxPerRound }
+        : null;
+    })(),
+    debtSchedule: (() => {
+      const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+      if (snapshot.finance.loanDurationRounds === undefined) return null;
+      // état courant de l'équipe : dernier état persisté (ou état initial)
+      const loans = (currentState?.loans ?? []) as { remaining: number; perRound: number }[];
+      const outstanding = loans.reduce((s, l) => s + l.remaining, 0);
+      const nextMandatory = loans.reduce((s, l) => s + Math.min(l.perRound, l.remaining), 0);
+      return { nextMandatory, outstanding };
+    })(),
+    treasuryOffer: (() => {
+      const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+      return snapshot.treasury
+        ? {
+            discountAnnualRate: snapshot.treasury.discountAnnualRate,
+            discountMaxShare: snapshot.treasury.discountMaxShare,
+            factoringFeeRate: snapshot.treasury.factoringFeeRate,
+            overdraftLimit: snapshot.finance.overdraftLimit,
+          }
         : null;
     })(),
     seasonNotes: (() => {
