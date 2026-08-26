@@ -450,7 +450,13 @@ export default async function Home() {
             BUSINESS <span className="text-amber-400/70">ARENA</span> — simulation
             d&apos;entreprise, apprentissage de la décision.
           </p>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
+            <Link href="/parcours" className="hover:text-slate-400">
+              Parcours
+            </Link>
+            <Link href="/guide" className="hover:text-slate-400">
+              Guide
+            </Link>
             <Link href="/concepts" className="hover:text-slate-400">
               Fiches concepts
             </Link>
@@ -459,6 +465,9 @@ export default async function Home() {
             </Link>
             <Link href="/compete" className="hover:text-slate-400">
               Concours
+            </Link>
+            <Link href="/mentions-legales" className="hover:text-slate-400">
+              Mentions légales & RGPD
             </Link>
           </div>
         </div>
