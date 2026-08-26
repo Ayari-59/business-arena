@@ -97,35 +97,6 @@ export default async function Home() {
         </div>
       ) : null}
 
-      {/* ---------- Nav ---------- */}
-      <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-        {/* eslint-disable-next-line @next/next/no-img-element -- logo vectoriel statique */}
-        <img src="/brand/logo.svg" alt="Business Arena" className="h-9 w-auto" />
-        <div className="flex items-center gap-5 text-sm text-slate-400">
-          <Link href="/parcours" className="hidden hover:text-slate-200 sm:block">
-            Parcours
-          </Link>
-          <Link href="/guide" className="hidden hover:text-slate-200 sm:block">
-            Guide
-          </Link>
-          <Link href="/concepts" className="hidden hover:text-slate-200 sm:block">
-            Concepts
-          </Link>
-          <Link href="/teacher/login" className="hidden hover:text-slate-200 sm:block">
-            Enseignants
-          </Link>
-          <Link href="/compete" className="hidden hover:text-slate-200 sm:block">
-            Concours
-          </Link>
-          <a
-            href="#jouer"
-            className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-300"
-          >
-            Jouer
-          </a>
-        </div>
-      </nav>
-
       {/* ---------- Hero ---------- */}
       <section className="mx-auto grid max-w-6xl items-center gap-10 px-6 py-14 lg:grid-cols-2 lg:py-20">
         <div>

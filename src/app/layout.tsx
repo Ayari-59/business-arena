@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { SiteHeader } from "@/components/site-header";
 
 export const metadata: Metadata = {
   title: "BUSINESS ARENA",
@@ -33,6 +34,7 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body className="min-h-screen bg-slate-950 text-slate-100 antialiased">
+        <SiteHeader />
         {children}
         <script
           dangerouslySetInnerHTML={{
