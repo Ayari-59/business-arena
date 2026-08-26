@@ -35,6 +35,8 @@ const modifierSchema = z.object({
     z.literal("availability"),
     z.literal("interest_rate"),
     z.literal("order"),
+    z.literal("order_price"),
+    z.literal("order_subcontract"),
     z.templateLiteral(["demand:", z.string()]),
   ]),
   op: z.enum(["mul", "add"]),
@@ -91,6 +93,20 @@ export const engineScenarioConfigSchema = z.object({
     .object({
       premiumPerRound: z.number().nonnegative(),
       coveredEventCodes: z.array(z.string().min(1)).min(1),
+    })
+    .optional(),
+  investment: z
+    .object({
+      costPerCapacityUnit: z.number().positive(),
+      depreciationRounds: z.number().positive(),
+      maxPerRound: z.number().positive(),
+    })
+    .optional(),
+  subcontracting: z.object({ unitCost: z.number().positive() }).optional(),
+  qualityCosts: z
+    .object({
+      baseDefectRate: z.number().min(0).max(0.2),
+      externalReturnSensitivity: z.number().min(0).max(2),
     })
     .optional(),
   hr: z

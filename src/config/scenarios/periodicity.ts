@@ -92,13 +92,28 @@ export function applyPeriodicity(
           },
         }
       : {}),
-    // Les modificateurs « order » sont des flux (unités par tour) : × k.
+    // Les modificateurs en unités (« order », « order_subcontract ») sont des
+    // flux : × k. Les prix imposés (« order_price ») ne changent pas.
     events: scenario.events.map((e) => ({
       ...e,
       modifiers: e.modifiers.map((m) =>
-        m.target === "order" ? { ...m, value: m.value * k } : m,
+        m.target === "order" || m.target === "order_subcontract"
+          ? { ...m, value: m.value * k }
+          : m,
       ),
     })),
+    // Investissement : une même machine physique vaut le même prix quelle que
+    // soit la périodicité — le coût par unité de capacité PAR TOUR varie en
+    // 1/k, la durée d'amortissement en tours en 1/k, le plafond d'achat en k.
+    ...(scenario.investment
+      ? {
+          investment: {
+            costPerCapacityUnit: scenario.investment.costPerCapacityUnit / k,
+            depreciationRounds: scenario.investment.depreciationRounds / k,
+            maxPerRound: scenario.investment.maxPerRound * k,
+          },
+        }
+      : {}),
     scoring: {
       ...scenario.scoring,
       benchmarks: {

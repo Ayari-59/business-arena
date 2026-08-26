@@ -50,6 +50,7 @@ export function DecisionForm({
   alreadySubmitted,
   insuranceOffer,
   enabled,
+  investmentOffer,
 }: {
   gameId: string;
   roundIndex: number;
@@ -66,7 +67,10 @@ export function DecisionForm({
     finance: boolean;
     insurance: boolean;
     hr: boolean;
+    investment: boolean;
   };
+  /** Investissement du scénario (coût par unité de capacité, plafond). */
+  investmentOffer?: { costPerCapacityUnit: number; maxPerRound: number } | null;
 }) {
   const action = playRoundAction.bind(null, gameId);
   const [state, formAction, pending] = useActionState(action, initialState);
@@ -76,6 +80,7 @@ export function DecisionForm({
     finance: true,
     insurance: true,
     hr: false,
+    investment: false,
   };
 
   return (
@@ -99,10 +104,21 @@ export function DecisionForm({
         )}
         {on.finance ? (
           <>
-            <Field name="newLoan" label="Nouvel emprunt" defaultValue={defaults.finance?.newLoan ?? 0} suffix="€"
+            <Field name="newLoan" label="Nouvel emprunt" defaultValue={0} suffix="€"
               hint="À 5 %/an — utile si la trésorerie se tend." />
             <Field name="loanRepayment" label="Remboursement d'emprunt" defaultValue={defaults.finance?.loanRepayment ?? 0} suffix="€" />
+            <Field name="capitalIncrease" label="Augmentation de capital" defaultValue={0} suffix="€"
+              hint="Apport des associés : trésorerie et capitaux propres — sans intérêts, mais dilutif." />
           </>
+        ) : null}
+        {on.investment && investmentOffer ? (
+          <Field
+            name="machineCapacityUnits"
+            label={`Investissement capacité (${investmentOffer.costPerCapacityUnit.toLocaleString("fr-FR")} €/u)`}
+            defaultValue={0}
+            suffix="u/tour"
+            hint={`En service au tour suivant, amorti linéairement. Max ${Math.round(investmentOffer.maxPerRound).toLocaleString("fr-FR")} u par tour.`}
+          />
         ) : null}
       </div>
       {on.hr ? (

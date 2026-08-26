@@ -260,6 +260,31 @@ const rawNova = {
       duration: 1,
       modifiers: [{ target: "availability", op: "mul", value: 0.88 }],
     },
+    {
+      // Commande à prix serré : tient dans la capacité, mais la marge se
+      // calcule (55 € vs coût variable ~38 €) — coûts pertinents.
+      code: "tight_order",
+      scope: "company",
+      probability: 0,
+      duration: 1,
+      modifiers: [
+        { target: "order", op: "add", value: 500 },
+        { target: "order_price", op: "add", value: 55 },
+      ],
+    },
+    {
+      // Commande XXL : dépasse la capacité — sous-traiter (52 €/u) ou avoir
+      // investi avant. L'arbitrage investissement/sous-traitance en une carte.
+      code: "xxl_order",
+      scope: "company",
+      probability: 0,
+      duration: 1,
+      modifiers: [
+        { target: "order", op: "add", value: 2500 },
+        { target: "order_price", op: "add", value: 61 },
+        { target: "order_subcontract", op: "add", value: 2500 },
+      ],
+    },
   ],
   // Assurance catastrophe (§ nouvelles décisions) : 2 500 €/trimestre pour
   // neutraliser la catastrophe naturelle et la vague de froid — un coût
@@ -271,6 +296,16 @@ const rawNova = {
   // RH (niveaux Arbitrage+) : 4 opérateurs inclus dans les 91 000 € de
   // structure. À effectif complet, l'atelier machine (7 000 u) est le goulot :
   // l'embauche compense les départs et prépare l'investissement capacitaire.
+  // Investissement capacitaire : 20 €/unité de capacité trimestrielle,
+  // amorti sur 16 trimestres, mise en service au tour suivant.
+  investment: {
+    costPerCapacityUnit: 20,
+    depreciationRounds: 16,
+    maxPerRound: 2000,
+  },
+  // Sous-traitance : unités finies à 52 € (coût variable interne ≈ 38 €) —
+  // la marge d'une commande sous-traitée se calcule, elle ne se devine pas.
+  subcontracting: { unitCost: 52 },
   hr: {
     salaryPerEmployeePerRound: 8000,
     includedHeadcount: 4,

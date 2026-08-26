@@ -82,6 +82,10 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     neutralizedEvents: string[];
     hr: ReturnType<typeof computeHr>;
     hrRelevant: boolean;
+    defectUnits: number;
+    scrapValue: number;
+    investUnits: number;
+    investOutlay: number;
   }
 
   // Assurance catastrophe (doc 02 §7.2) : pour les assurés, les événements
@@ -128,7 +132,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const mods = effectiveModifiers(companyEvents, state.id);
     const production = computeProduction({
       planned: decisions.productionPlan,
-      machineCapacity: state.machineCapacity,
+      // la capacité achetée au tour précédent entre en service CE tour
+      machineCapacity: state.machineCapacity + (state.pendingCapacity ?? 0),
       availability: state.availability * mods.availabilityMultiplier,
       headcount: state.headcount,
       hoursPerEmployee: state.hoursPerEmployee,
@@ -146,7 +151,24 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       scenario.product.materialCostPerUnit * materialMultiplier,
       scenario.product.otherVariableCostPerUnit,
     );
-    const stock = addToStock(state.finishedGoods, production.produced, unitCost);
+    // Non-qualité interne (doc 02 §4.2) : rebuts fonction de la qualité
+    // produite — payés (matières, MOD) mais invendables : seul le net entre
+    // en stock, la perte est valorisée au coût variable.
+    const defectRate = scenario.qualityCosts
+      ? Math.min(0.5, Math.max(0, scenario.qualityCosts.baseDefectRate * (2 - producedQuality)))
+      : 0;
+    const defectUnits = production.produced * defectRate;
+    const netProduced = production.produced - defectUnits;
+    const scrapValue = defectUnits * unitCost;
+    const stock = addToStock(state.finishedGoods, netProduced, unitCost);
+    // Investissement capacitaire : décaissé maintenant, en service à t+1.
+    const investUnits = scenario.investment
+      ? Math.min(
+          Math.max(0, raw.investment?.machineCapacityUnits ?? 0),
+          scenario.investment.maxPerRound,
+        )
+      : 0;
+    const investOutlay = investUnits * (scenario.investment?.costPerCapacityUnit ?? 0);
     return {
       state,
       decisions,
@@ -163,6 +185,10 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       neutralizedEvents,
       hr,
       hrRelevant,
+      defectUnits,
+      scrapValue,
+      investUnits,
+      investOutlay,
     };
   });
 
@@ -234,18 +260,49 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         detail.sold * Math.min(1, segment.paymentDelayDays / scenario.roundDays);
     }
     // Commandes fermes (événement « order ») : vendues d'office en plus du
-    // marché, réglées comptant, dans la limite du stock restant.
+    // marché, réglées comptant, au prix imposé le cas échéant. Livrées du
+    // stock restant ; au-delà, sous-traitées si l'offre le permet et que le
+    // scénario a un sous-traitant (coût unitaire majoré — coûts pertinents !).
     const orderRequested = w.mods.extraOrderUnits;
     const orderDelivered = Math.min(orderRequested, Math.max(0, w.stock.quantity - segmentUnits));
-    const soldUnits = segmentUnits + orderDelivered;
-    const revenue = soldUnits * w.decisions.price;
-    const receivableRatio = soldUnits > 0 ? weightedCredit / soldUnits : 0;
+    const orderShortfall = orderRequested - orderDelivered;
+    const subcontracted = scenario.subcontracting
+      ? Math.min(orderShortfall, w.mods.orderSubcontractMax)
+      : 0;
+    const subcontractCost = subcontracted * (scenario.subcontracting?.unitCost ?? 0);
+    const orderUnitPrice = w.mods.orderUnitPrice ?? w.decisions.price;
 
-    const { stock: stockAfterSales, cost: cogs } = removeFromStock(w.stock, soldUnits);
+    // Non-qualité externe : retours clients fonction de la qualité perçue,
+    // remboursés au prix de vente (unités détruites — la marge part entière).
+    const returnedUnits = scenario.qualityCosts
+      ? segmentUnits *
+        Math.min(
+          0.3,
+          scenario.qualityCosts.externalReturnSensitivity *
+            Math.max(0, 1 - w.state.perceivedQuality),
+        )
+      : 0;
+    const refund = returnedUnits * w.decisions.price;
+
+    const soldUnits = segmentUnits + orderDelivered;
+    const revenue =
+      segmentUnits * w.decisions.price +
+      (orderDelivered + subcontracted) * orderUnitPrice -
+      refund;
+    const receivableRatio =
+      soldUnits + subcontracted > 0 ? weightedCredit / (soldUnits + subcontracted) : 0;
+
+    const { stock: stockAfterSales, cost: cogsFromStock } = removeFromStock(w.stock, soldUnits);
+    // Coût des ventes : sorties de stock + unités sous-traitées (achetées
+    // finies et revendues) + rebuts internes (produits, payés, invendables).
+    const cogs = cogsFromStock + subcontractCost + w.scrapValue;
     const inventoryChange = stockValue(stockAfterSales) - stockValue(w.state.finishedGoods);
     const purchases =
       w.produced * scenario.product.materialCostPerUnit * w.materialMultiplier;
-    const otherVariableCash = w.produced * scenario.product.otherVariableCostPerUnit;
+    // La sous-traitance est décaissée avec les autres charges variables
+    // (cohérence : achats + variables décaissés = coût des ventes + Δ stock).
+    const otherVariableCash =
+      w.produced * scenario.product.otherVariableCostPerUnit + subcontractCost;
 
     // Prime d'assurance et RH : charges de structure du tour.
     const insurancePremium = w.insured ? (insuranceOffer?.premiumPerRound ?? 0) : 0;
@@ -265,7 +322,12 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       qualityCost: w.decisions.qualityBudget,
       maintenanceCost: w.decisions.maintenanceBudget,
       fixedCosts: scenario.fixedCostsPerRound + insurancePremium + hrCost,
-      depreciation: scenario.finance.depreciationPerRound,
+      // amortissements : base du scénario + investissements en service
+      // (y compris celui mis en service ce tour)
+      depreciation:
+        scenario.finance.depreciationPerRound +
+        (w.state.extraDepreciationPerRound ?? 0) +
+        (w.state.pendingDepreciationPerRound ?? 0),
       loanAnnualRate: scenario.finance.loanAnnualRate,
       overdraftAnnualRate: scenario.finance.overdraftAnnualRate,
       interestMultiplier: w.mods.interestMultiplier,
@@ -273,6 +335,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       vatRate: scenario.finance.vatRate ?? 0,
       newLoan: w.decisions.finance?.newLoan ?? 0,
       loanRepayment: w.decisions.finance?.loanRepayment ?? 0,
+      capitalIncrease: Math.max(0, w.decisions.finance?.capitalIncrease ?? 0),
+      investmentOutlay: w.investOutlay,
     });
 
     const gap = balanceGap(finance.closing);
@@ -326,7 +390,28 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       },
       breakeven,
       ...(orderRequested > 0
-        ? { extraOrders: { requested: orderRequested, delivered: orderDelivered } }
+        ? {
+            extraOrders: {
+              requested: orderRequested,
+              delivered: orderDelivered,
+              subcontracted,
+              unitPrice: orderUnitPrice,
+            },
+          }
+        : {}),
+      ...(w.investUnits > 0
+        ? { investment: { capacityUnits: w.investUnits, outlay: w.investOutlay } }
+        : {}),
+      ...(scenario.qualityCosts
+        ? {
+            qualityCosts: {
+              prevention: w.decisions.qualityBudget,
+              internalFailure: w.scrapValue,
+              externalFailure: refund,
+              defectUnits: w.defectUnits,
+              returnedUnits,
+            },
+          }
         : {}),
       ...(w.insured
         ? { insurance: { premium: insurancePremium, neutralizedEvents: w.neutralizedEvents } }
@@ -372,6 +457,15 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       ...w.state,
       headcount: w.hr.nextHeadcount,
       productivity: w.hr.nextProductivity,
+      // Investissement : la capacité achetée au tour précédent entre en
+      // service, celle de ce tour attend son installation (t+1).
+      machineCapacity: w.state.machineCapacity + (w.state.pendingCapacity ?? 0),
+      pendingCapacity: w.investUnits,
+      extraDepreciationPerRound:
+        (w.state.extraDepreciationPerRound ?? 0) + (w.state.pendingDepreciationPerRound ?? 0),
+      pendingDepreciationPerRound: scenario.investment
+        ? w.investOutlay / scenario.investment.depreciationRounds
+        : 0,
       perceivedQuality: updatePerceivedQuality(
         w.state.perceivedQuality,
         w.producedQuality,

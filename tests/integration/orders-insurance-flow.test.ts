@@ -106,7 +106,7 @@ describe("commande exceptionnelle + assurance catastrophe (bout en bout)", () =>
     );
 
     // la commande ferme : livrée en entier, réglée comptant, ajoutée au CA
-    expect(r.extraOrders).toEqual({ requested: 600, delivered: 600 });
+    expect(r.extraOrders).toEqual({ requested: 600, delivered: 600, subcontracted: 0, unitPrice: DECISIONS.price });
     const segmentUnits = Object.values(r.market.bySegment).reduce((s, d) => s + d.sold, 0);
     expect(r.incomeStatement.revenue).toBeCloseTo(
       (segmentUnits + 600) * DECISIONS.price,

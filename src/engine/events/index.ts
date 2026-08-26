@@ -19,6 +19,10 @@ export interface EffectiveModifiers {
   interestMultiplier: number;
   /** Commandes fermes du tour (unités, additives) — vendues d'office, réglées comptant. */
   extraOrderUnits: number;
+  /** Prix unitaire imposé des commandes fermes (undefined = prix propre). */
+  orderUnitPrice: number | undefined;
+  /** Unités de commande sous-traitables au-delà du stock (additives). */
+  orderSubcontractMax: number;
 }
 
 export function drawEvents(
@@ -78,6 +82,8 @@ export function effectiveModifiers(
     availabilityMultiplier: 1,
     interestMultiplier: 1,
     extraOrderUnits: 0,
+    orderUnitPrice: undefined,
+    orderSubcontractMax: 0,
   };
   for (const event of events) {
     if (event.scope === "company" && event.companyId !== companyId) continue;
@@ -92,6 +98,8 @@ function apply(out: EffectiveModifiers, m: EventModifier): Record<string, number
   else if (m.target === "availability") out.availabilityMultiplier = combine(out.availabilityMultiplier);
   else if (m.target === "interest_rate") out.interestMultiplier = combine(out.interestMultiplier);
   else if (m.target === "order") out.extraOrderUnits += m.value; // toujours additif (unités)
+  else if (m.target === "order_price") out.orderUnitPrice = m.value; // prix imposé (absolu)
+  else if (m.target === "order_subcontract") out.orderSubcontractMax += m.value;
   else if (m.target === "demand") {
     out.demandMultiplier["*"] = combine(out.demandMultiplier["*"] ?? 1);
   } else if (m.target.startsWith("demand:")) {

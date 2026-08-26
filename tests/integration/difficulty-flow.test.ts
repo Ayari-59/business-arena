@@ -106,7 +106,8 @@ describe("niveaux de difficulté et paramètres économiques", () => {
       maintenance: true,
       finance: true,
       insurance: true,
-      hr: true, // Stratégie : la RH est ouverte dès Arbitrage
+      hr: true, // Stratégie : RH et investissement ouverts dès Arbitrage
+      investment: true,
     });
   });
 
@@ -161,6 +162,7 @@ describe("niveaux de difficulté et paramètres économiques", () => {
       finance: false,
       insurance: false,
       hr: false,
+      investment: false,
     });
     // Découverte : TVA non modulée → désactivée, calibration du scénario intacte
     const game = (await db.select().from(games).where(eq(games.id, easy.gameId)))[0]!;

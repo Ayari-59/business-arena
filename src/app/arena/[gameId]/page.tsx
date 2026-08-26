@@ -149,11 +149,35 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
               ) : null}
               {r.extraOrders ? (
                 <p className="mt-3 rounded-lg border border-emerald-400/30 bg-emerald-950/30 px-3 py-2 text-xs text-emerald-300">
-                  📋 Commande exceptionnelle : {formatUnits(r.extraOrders.delivered)} u livrées
+                  📋 Commande ferme à {formatEuro(r.extraOrders.unitPrice)}/u :{" "}
+                  {formatUnits(r.extraOrders.delivered)} u livrées du stock
+                  {r.extraOrders.subcontracted > 0
+                    ? ` + ${formatUnits(r.extraOrders.subcontracted)} u sous-traitées`
+                    : ""}{" "}
                   sur {formatUnits(r.extraOrders.requested)} commandées
-                  {r.extraOrders.delivered < r.extraOrders.requested
-                    ? " — stock insuffisant, le reste est perdu. L'anticipation a un prix."
+                  {r.extraOrders.delivered + r.extraOrders.subcontracted <
+                  r.extraOrders.requested
+                    ? " — le reste est perdu. L'anticipation a un prix."
                     : ", réglées comptant."}
+                </p>
+              ) : null}
+              {r.investment ? (
+                <p className="mt-3 rounded-lg border border-amber-400/30 bg-amber-950/20 px-3 py-2 text-xs text-amber-200">
+                  🏗️ Investissement : +{formatUnits(r.investment.capacityUnits)} u de capacité
+                  machine ({formatEuro(r.investment.outlay)}) — en service au prochain tour,
+                  amortissement en hausse.
+                </p>
+              ) : null}
+              {r.qualityCosts &&
+              (r.qualityCosts.internalFailure > 0.5 || r.qualityCosts.externalFailure > 0.5) ? (
+                <p className="mt-3 rounded-lg border border-red-400/30 bg-red-950/30 px-3 py-2 text-xs text-red-300">
+                  🧪 Coûts de la non-qualité : {formatUnits(r.qualityCosts.defectUnits)} u de
+                  rebuts ({formatEuro(r.qualityCosts.internalFailure)})
+                  {r.qualityCosts.returnedUnits > 0.5
+                    ? ` · ${formatUnits(r.qualityCosts.returnedUnits)} u retournées (${formatEuro(r.qualityCosts.externalFailure)})`
+                    : ""}{" "}
+                  — face à {formatEuro(r.qualityCosts.prevention)} de prévention. Le bon niveau
+                  de qualité est un calcul, pas une vertu.
                 </p>
               ) : null}
               {r.hr ? (
@@ -242,6 +266,21 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
         </section>
       )}
 
+      {!finished && view.seasonNotes.length > 0 ? (
+        <section className="rounded-xl border border-sky-400/20 bg-slate-900 px-4 py-3 text-sm text-sky-200">
+          🌤️ Saison du tour :{" "}
+          {view.seasonNotes
+            .map(
+              (n) =>
+                `${n.name} ×${n.coef.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} (${
+                  n.coef > 1 ? "haute saison" : "basse saison"
+                })`,
+            )
+            .join(" · ")}
+          {" — "}dimensionnez production et stocks en conséquence.
+        </section>
+      ) : null}
+
       {!finished && view.announcedEventCards.length > 0 ? (
         <section className="rounded-xl border border-amber-400/30 bg-slate-900 p-4">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-400">
@@ -325,6 +364,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                 : null
             }
             enabled={view.enabledDecisions}
+            investmentOffer={view.investmentOffer}
           />
         </section>
       )}

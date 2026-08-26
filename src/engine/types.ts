@@ -81,6 +81,35 @@ export interface EngineScenarioConfig {
   /** Coûts fixes opérationnels par tour (hors amortissements). */
   fixedCostsPerRound: number;
   /**
+   * Investissement capacitaire (optionnel — doc 02 §6.5) : acheter de la
+   * capacité machine. Décaissement et immobilisation immédiats, mise en
+   * service au tour SUIVANT, amortissement linéaire dès la mise en service.
+   */
+  investment?: {
+    /** Prix d'une unité de capacité machine par tour (base trimestrielle). */
+    costPerCapacityUnit: number;
+    /** Durée d'amortissement en tours (base trimestrielle). */
+    depreciationRounds: number;
+    /** Achat maximal par tour (unités de capacité). */
+    maxPerRound: number;
+  };
+  /**
+   * Sous-traitance (optionnel) : unités achetées finies pour servir les
+   * commandes fermes au-delà du stock (cible « order_subcontract »).
+   */
+  subcontracting?: { unitCost: number };
+  /**
+   * Coûts de la non-qualité (optionnel — activable à la création) :
+   * rebuts internes fonction de la qualité produite, retours clients
+   * fonction de la qualité perçue. La prévention, c'est le budget qualité.
+   */
+  qualityCosts?: {
+    /** Taux de rebuts à qualité produite 1 (multiplié par 2 − qualité, borné). */
+    baseDefectRate: number;
+    /** Retours clients : ventes × sens × max(0, 1 − qualité perçue). */
+    externalReturnSensitivity: number;
+  };
+  /**
    * Assurance catastrophe (optionnelle) : contre une prime par tour, les
    * effets des événements couverts sont neutralisés pour les assurés.
    * L'arbitrage pédagogique : un coût certain contre un risque incertain.
@@ -189,7 +218,9 @@ export type ModifierTarget =
   | `demand:${string}` // multiplie la demande d'un segment
   | "availability" // multiplie la disponibilité machine
   | "interest_rate" // multiplie les taux d'intérêt du tour
-  | "order"; // commande ferme : unités vendues d'office (add), réglées comptant, dans la limite du stock
+  | "order" // commande ferme : unités vendues d'office (add), réglées comptant, dans la limite du stock
+  | "order_price" // prix unitaire IMPOSÉ des unités de commande ferme du tour (valeur absolue)
+  | "order_subcontract"; // unités de la commande sous-traitables (add) — au coût scenario.subcontracting
 
 export interface EventModifier {
   target: ModifierTarget;
@@ -234,6 +265,12 @@ export interface CompanyState {
   finance: BalanceSheet;
   /** Parts de marché du tour précédent, par segment (fidélité). */
   lastMarketShare: Record<SegmentCode, number>;
+  /** Capacité machine achetée au tour précédent, mise en service ce tour. */
+  pendingCapacity?: number;
+  /** Amortissement de l'investissement en attente de mise en service. */
+  pendingDepreciationPerRound?: number;
+  /** Amortissements supplémentaires (investissements en service). */
+  extraDepreciationPerRound?: number;
 }
 
 export interface RoundDecisions {
@@ -251,7 +288,13 @@ export interface RoundDecisions {
    * hire/fire/trainingBudget : actions ponctuelles (jamais reconduites).
    */
   hr?: { hire?: number; fire?: number; trainingBudget?: number; salaryIndex?: number };
-  finance?: { newLoan?: number; loanRepayment?: number };
+  /**
+   * Investissement capacitaire (si le scénario le propose) : unités de
+   * capacité machine achetées ce tour — décaissées maintenant, en service au
+   * tour suivant. Action ponctuelle : jamais reconduite.
+   */
+  investment?: { machineCapacityUnits?: number };
+  finance?: { newLoan?: number; loanRepayment?: number; capitalIncrease?: number };
   forecast?: { expectedRevenue?: number; expectedNetIncome?: number; expectedCash?: number };
 }
 
@@ -321,8 +364,26 @@ export interface CompanyRoundResult {
     safetyMargin: number;
     safetyIndex: number;
   };
-  /** Commandes fermes (événement « order ») : demandées vs livrées (contrainte stock). */
-  extraOrders?: { requested: number; delivered: number };
+  /**
+   * Commandes fermes (événement « order ») : demandées, livrées du stock,
+   * sous-traitées ; prix unitaire imposé le cas échéant (sinon prix propre).
+   */
+  extraOrders?: {
+    requested: number;
+    delivered: number;
+    subcontracted: number;
+    unitPrice: number;
+  };
+  /** Investissement du tour : capacité achetée (en service à t+1) et montant. */
+  investment?: { capacityUnits: number; outlay: number };
+  /** Coûts de la qualité (prévention) et de la non-qualité (défaillances). */
+  qualityCosts?: {
+    prevention: number;
+    internalFailure: number; // rebuts valorisés au coût variable
+    externalFailure: number; // retours clients remboursés
+    defectUnits: number;
+    returnedUnits: number;
+  };
   /** Assurance du tour : prime payée et événements couverts neutralisés. */
   insurance?: { premium: number; neutralizedEvents: string[] };
   /** RH du tour : effectif, mouvements et coût (doc 02 §4.1). */

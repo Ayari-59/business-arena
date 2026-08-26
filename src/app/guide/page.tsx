@@ -155,9 +155,10 @@ export default function GuidePage() {
               fait partie du jeu.
             </Step>
             <Step n={4} title="Prenez vos décisions">
-              Prix, production, marketing, qualité, maintenance, emprunt/remboursement — et
-              l&apos;assurance catastrophe si le scénario la propose (un coût certain contre un
-              risque incertain, à vous d&apos;arbitrer). En mode classe, vos décisions restent
+              Prix, production, marketing, qualité, maintenance — puis, selon le niveau :
+              financement (emprunt, augmentation de capital), assurance catastrophe,
+              ressources humaines (embaucher, former, rémunérer) et investissement en
+              capacité (en service au tour suivant). En mode classe, vos décisions restent
               modifiables jusqu&apos;à la clôture du tour par l&apos;enseignant.
             </Step>
             <Step n={5} title="Lisez vos résultats comme un dirigeant">

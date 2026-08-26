@@ -42,6 +42,8 @@ const baseInput = {
   vatRate: 0.2,
   newLoan: 0,
   loanRepayment: 0,
+  capitalIncrease: 0,
+  investmentOutlay: 0,
 };
 
 describe("TVA : comptes HT, flux TTC, dette de TVA", () => {

@@ -190,6 +190,23 @@ compense les départs, ouvre le dégraissage risqué, et prépare l'investisseme
 capacitaire. Périodicité : salaires et échelle de formation ×k ; coûts d'embauche
 et de licenciement ponctuels, non redimensionnés.
 
+### 4.2 Coûts de la qualité et de la non-qualité (activables à la création)
+
+Si `scenario.qualityCosts` est défini (paramètre « taux de rebuts » du panneau
+économique) :
+
+- **prévention** : le budget qualité existant — plus il est haut, plus la qualité
+  produite monte, moins les défaillances coûtent ;
+- **défaillances internes** : rebuts = production × taux(2 − qualité produite),
+  borné. Produits et payés (matières, MOD) mais invendables : seul le net entre en
+  stock, la perte est ajoutée au coût des ventes ;
+- **défaillances externes** : retours clients = ventes × sens × max(0, 1 − qualité
+  perçue), remboursés au prix de vente, unités détruites.
+
+Le bilan reste équilibré (achats + variables décaissés = coût des ventes + Δ stock,
+rebuts compris). La leçon : le bon niveau de qualité est un calcul COQ/CNQ, pas une
+vertu.
+
 ## 5. Coûts (§14)
 
 Typologie native du moteur — chaque ligne de coût du scénario est étiquetée :
@@ -276,7 +293,19 @@ Rotation des actifs      = CA / Actif ; Endettement = D / CP ; Autonomie = CP / 
 Liquidité générale       = Actif circulant / Passif circulant
 ```
 
-### 6.5 Investissement (§18)
+### 6.5 Investissement et financement (§18)
+
+**Implémenté** : la décision `investment.machineCapacityUnits` achète de la capacité
+machine au prix du scénario (`investment.costPerCapacityUnit`) — décaissement et
+immobilisation immédiats, **mise en service au tour suivant**, amortissement linéaire
+sur `depreciationRounds` dès la mise en service (suivi par entreprise :
+`extraDepreciationPerRound`). Plafond d'achat par tour. Périodicité : une même
+machine physique vaut le même prix — coût par unité de capacité en 1/k, durée en
+tours en 1/k, plafond en k. Financement : `finance.newLoan` (emprunt),
+`finance.capitalIncrease` (apport en capitaux propres, sans intérêts) — actions
+ponctuelles jamais reconduites, comme l'investissement.
+
+### 6.5bis Cadre initial (§18)
 
 Projets d'investissement définis par le scénario : coût initial, échéancier, valeur
 résiduelle, effets (capacité, qualité, coûts). `investment/` fournit les fonctions
@@ -358,6 +387,15 @@ Deux mécaniques s'appuient sur le moteur d'événements :
   flux : × k par périodicité. Résultat : `result.insurance = { premium,
   neutralizedEvents }` et `result.extraOrders = { requested, delivered }` tracent
   l'un et l'autre pour le débriefing.
+
+**Commandes à prix imposé et sous-traitance** : une commande peut porter un prix
+unitaire imposé (cible `order_price`) et un droit à sous-traiter (`order_subcontract`,
+unités) si le scénario définit `subcontracting.unitCost`. Le stock sert d'abord, la
+sous-traitance comble (achetée finie, décaissée et comptée au coût des ventes) — la
+marge d'une commande sous-traitée se CALCULE : c'est l'arbitrage make or buy, et la
+carte XXL (2 500 u à 61 €, sous-traitance à 52 €) le rend physique. Deux cartes :
+`tight_order` (tient dans la capacité, 55 €/u imposés — coûts pertinents) et
+`xxl_order` (dépasse la capacité — sous-traiter ou avoir investi).
 
 Sur NOVA : `natural_disaster` (marché, disponibilité ×0,72 et matières ×1,12, couvert),
 `cold_wave` (couvert), `export_market` (demande ×1,15 sur 2 tours), `big_order`

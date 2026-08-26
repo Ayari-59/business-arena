@@ -26,6 +26,8 @@ export interface DifficultyPreset {
     insurance: boolean;
     /** RH (embauches, formation, salaires) — doc 08 : dès ARBITRAGE. */
     hr: boolean;
+    /** Investissement capacitaire — doc 08 : dès ARBITRAGE. */
+    investment: boolean;
   };
   /** Multiplicateur des probabilités d'événements aléatoires (les 0 restent 0). */
   eventProbabilityMultiplier: number;
@@ -38,7 +40,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     name: "Découverte",
     tagline: "Prix, production, marketing — l'essentiel, avec tous les indices.",
     hintMaxLevel: 5,
-    decisions: { quality: false, maintenance: false, finance: false, insurance: false, hr: false },
+    decisions: { quality: false, maintenance: false, finance: false, insurance: false, hr: false, investment: false },
     eventProbabilityMultiplier: 0.5,
   },
   {
@@ -47,7 +49,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     name: "Gestion",
     tagline: "Qualité et maintenance entrent en jeu.",
     hintMaxLevel: 5,
-    decisions: { quality: true, maintenance: true, finance: false, insurance: false, hr: false },
+    decisions: { quality: true, maintenance: true, finance: false, insurance: false, hr: false, investment: false },
     eventProbabilityMultiplier: 0.75,
   },
   {
@@ -56,7 +58,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     name: "Pilotage",
     tagline: "Financement et assurance — la trésorerie se pilote. Indices limités.",
     hintMaxLevel: 3,
-    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: false },
+    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: false, investment: false },
     eventProbabilityMultiplier: 1,
   },
   {
@@ -65,7 +67,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     name: "Arbitrage",
     tagline: "Les aléas frappent plus souvent : anticipez.",
     hintMaxLevel: 3,
-    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: true },
+    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: true, investment: true },
     eventProbabilityMultiplier: 1.25,
   },
   {
@@ -74,7 +76,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     name: "Stratégie",
     tagline: "Deux indices, pas un de plus — et un marché nerveux.",
     hintMaxLevel: 2,
-    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: true },
+    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: true, investment: true },
     eventProbabilityMultiplier: 1.5,
   },
   {
@@ -83,7 +85,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     name: "Executive",
     tagline: "Aucun indice, événements doublés : conditions réelles.",
     hintMaxLevel: 0,
-    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: true },
+    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: true, investment: true },
     eventProbabilityMultiplier: 2,
   },
 ];
@@ -97,7 +99,7 @@ export const LEGACY_PRESET: DifficultyPreset = {
   name: "Pilotage",
   tagline: "",
   hintMaxLevel: 5,
-  decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: false },
+  decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: false, investment: false },
   eventProbabilityMultiplier: 1,
 };
 
@@ -131,6 +133,8 @@ export const economicOverridesSchema = z.object({
   materialCostPerUnit: z.number().min(0).max(500).optional(),
   /** Autres coûts variables unitaires (main-d'œuvre chargée, énergie…). */
   otherVariableCostPerUnit: z.number().min(0).max(500).optional(),
+  /** Taux de rebuts de base (active les coûts de la non-qualité, 0-15 %). */
+  baseDefectRate: z.number().min(0).max(0.15).optional(),
 });
 
 export type EconomicOverrides = z.infer<typeof economicOverridesSchema>;
@@ -175,6 +179,16 @@ export function applyEconomicOverrides(
         overrides.supplierPaymentDelayDays ?? scenario.finance.supplierPaymentDelayDays,
     },
     fixedCostsPerRound: overrides.fixedCostsPerRound ?? scenario.fixedCostsPerRound,
+    // Non-qualité : l'activer à la création crée le bloc qualityCosts
+    // (sensibilité aux retours externes : donnée ci-dessous, pas du dur).
+    ...(overrides.baseDefectRate !== undefined && overrides.baseDefectRate > 0
+      ? {
+          qualityCosts: {
+            baseDefectRate: overrides.baseDefectRate,
+            externalReturnSensitivity: 0.5,
+          },
+        }
+      : {}),
   };
 }
 

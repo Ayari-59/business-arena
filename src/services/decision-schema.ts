@@ -21,10 +21,16 @@ export const roundDecisionsSchema = z.object({
       salaryIndex: z.coerce.number().min(0.8).max(1.3).optional(),
     })
     .optional(),
+  investment: z
+    .object({
+      machineCapacityUnits: z.coerce.number().min(0).max(50000).optional(),
+    })
+    .optional(),
   finance: z
     .object({
       newLoan: z.coerce.number().min(0).max(500000).optional(),
       loanRepayment: z.coerce.number().min(0).max(500000).optional(),
+      capitalIncrease: z.coerce.number().min(0).max(500000).optional(),
     })
     .optional(),
   forecast: z

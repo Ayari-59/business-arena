@@ -42,6 +42,8 @@ const roundInput = {
   vatRate: 0,
   newLoan: 0,
   loanRepayment: 0,
+  capitalIncrease: 0,
+  investmentOutlay: 0,
 };
 
 describe("compte de résultat et bilan (doc 02 §6)", () => {

@@ -34,9 +34,13 @@ export async function playRoundAction(
           salaryIndex: Number(formData.get("salaryPercent") || 100) / 100,
         }
       : undefined,
+    investment: formData.has("machineCapacityUnits")
+      ? { machineCapacityUnits: formData.get("machineCapacityUnits") || 0 }
+      : undefined,
     finance: {
       newLoan: formData.get("newLoan") || 0,
       loanRepayment: formData.get("loanRepayment") || 0,
+      capitalIncrease: formData.get("capitalIncrease") || 0,
     },
   });
   if (!parsed.success) {

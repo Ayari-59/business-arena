@@ -544,11 +544,16 @@ async function resolveGameRound(
         allDecisions[team.id] = own.payload as RoundDecisions;
       } else if (previousPayloads[team.id]) {
         const prev = previousPayloads[team.id]!;
-        // reconduction : l'indice de salaire est récurrent, les embauches,
-        // licenciements et budgets de formation sont des actions ponctuelles
+        // reconduction : l'indice de salaire et le remboursement d'emprunt
+        // sont récurrents ; embauches, formation, investissement, nouvel
+        // emprunt et apport en capital sont des actions PONCTUELLES.
         allDecisions[team.id] = {
           ...prev,
           hr: prev.hr ? { salaryIndex: prev.hr.salaryIndex } : undefined,
+          investment: undefined,
+          finance: prev.finance
+            ? { loanRepayment: prev.finance.loanRepayment }
+            : undefined,
         };
         carriedOver.add(team.id);
       } else {
@@ -626,6 +631,8 @@ async function resolveGameRound(
               extraOrders: r.extraOrders ?? null,
               insurance: r.insurance ?? null,
               hr: r.hr ?? null,
+              investment: r.investment ?? null,
+              qualityCosts: r.qualityCosts ?? null,
             },
             revenue: toMoney(r.incomeStatement.revenue),
             netIncome: toMoney(r.incomeStatement.netIncome),
@@ -996,7 +1003,12 @@ export interface GameView {
     finance: boolean;
     insurance: boolean;
     hr: boolean;
+    investment: boolean;
   };
+  /** Saison du tour courant : coefficients ≠ 1 (marché global et segments). */
+  seasonNotes: { name: string; coef: number }[];
+  /** Investissement proposé par le scénario (échelle de la périodicité). */
+  investmentOffer: { costPerCapacityUnit: number; maxPerRound: number } | null;
 }
 
 export async function getGameView(gameId: string, userId: string): Promise<GameView | null> {
@@ -1043,6 +1055,8 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         extraOrders?: CompanyRoundResult["extraOrders"] | null;
         insurance?: CompanyRoundResult["insurance"] | null;
         hr?: CompanyRoundResult["hr"] | null;
+        investment?: CompanyRoundResult["investment"] | null;
+        qualityCosts?: CompanyRoundResult["qualityCosts"] | null;
       };
       lastResult = {
         companyId: playerTeam.id,
@@ -1064,6 +1078,8 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         extraOrders: trace.extraOrders ?? undefined,
         insurance: trace.insurance ?? undefined,
         hr: trace.hr ?? undefined,
+        investment: trace.investment ?? undefined,
+        qualityCosts: trace.qualityCosts ?? undefined,
         kpis: {},
       };
       lastEvents = trace.events ?? [];
@@ -1153,6 +1169,26 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       return { level: preset.level, name: preset.name, hintMaxLevel: preset.hintMaxLevel };
     })(),
     enabledDecisions: presetFromProfile(game.difficultyProfile).decisions,
+    investmentOffer: (() => {
+      const offer = (game.scenarioSnapshot as EngineScenarioConfig).investment;
+      return offer
+        ? { costPerCapacityUnit: offer.costPerCapacityUnit, maxPerRound: offer.maxPerRound }
+        : null;
+    })(),
+    seasonNotes: (() => {
+      const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+      const idx = game.currentRound - 1;
+      const notes: { name: string; coef: number }[] = [];
+      const global = snapshot.market.seasonality[idx];
+      if (global !== undefined && Math.abs(global - 1) > 0.01)
+        notes.push({ name: "Marché", coef: global });
+      for (const seg of snapshot.market.segments) {
+        const coef = seg.seasonality?.[idx];
+        if (coef !== undefined && Math.abs(coef - 1) > 0.01)
+          notes.push({ name: seg.name, coef });
+      }
+      return notes;
+    })(),
   };
 }
 

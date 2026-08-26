@@ -34,6 +34,10 @@ export interface FinanceInput {
   vatRate: number;
   newLoan: number;
   loanRepayment: number;
+  /** Apport en capital du tour (trésorerie et capitaux propres). */
+  capitalIncrease: number;
+  /** Investissement du tour : décaissé et immobilisé immédiatement. */
+  investmentOutlay: number;
 }
 
 export interface FinanceOutput {
@@ -108,7 +112,9 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
     { label: "interets", amount: -interest },
     { label: "impot", amount: -tax },
     { label: "tva_decaissee", amount: -openingVat },
+    { label: "investissement", amount: -input.investmentOutlay },
     { label: "nouvel_emprunt", amount: input.newLoan },
+    { label: "augmentation_capital", amount: input.capitalIncrease },
     { label: "remboursement_emprunt", amount: -loanRepayment },
   ].filter((i) => i.amount !== 0);
 
@@ -118,11 +124,11 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
 
   // --- Bilan de clôture ---------------------------------------------------
   const closing: BalanceSheet = {
-    fixedAssetsNet: o.fixedAssetsNet - depreciation,
+    fixedAssetsNet: o.fixedAssetsNet - depreciation + input.investmentOutlay,
     inventoryValue: o.inventoryValue + input.inventoryChange,
     receivables: receivablesEnd,
     cash: Math.max(0, closingNet),
-    equity: o.equity + netIncome,
+    equity: o.equity + netIncome + input.capitalIncrease,
     financialDebt: o.financialDebt + input.newLoan - loanRepayment,
     payables: payablesEnd,
     overdraft: Math.max(0, -closingNet),

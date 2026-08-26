@@ -170,7 +170,7 @@ describe("commande ferme (modificateur « order »)", () => {
     const a = out.results["a"]!;
     const b = out.results["b"]!;
     // mêmes décisions ⇒ mêmes ventes de marché ; l'écart de CA = la commande
-    expect(a.extraOrders).toEqual({ requested: 500, delivered: 500 });
+    expect(a.extraOrders).toEqual({ requested: 500, delivered: 500, subcontracted: 0, unitPrice: 59 });
     expect(b.extraOrders).toBeUndefined();
     expect(a.incomeStatement.revenue - b.incomeStatement.revenue).toBeCloseTo(500 * 59, 6);
     expect(a.market.totalShare).toBeCloseTo(b.market.totalShare, 10);
