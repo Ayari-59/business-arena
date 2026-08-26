@@ -30,6 +30,8 @@ export interface FinanceInput {
   overdraftAnnualRate: number;
   interestMultiplier: number; // événements (hausse des taux)
   taxRate: number;
+  /** Taux de TVA (0 = désactivée) — voir EngineScenarioConfig.finance.vatRate. */
+  vatRate: number;
   newLoan: number;
   loanRepayment: number;
 }
@@ -82,11 +84,17 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
     netIncome,
   };
 
-  // --- Créances, dettes fournisseurs, flux de trésorerie ------------------
-  const receivablesEnd = input.revenue * input.receivableRatio;
-  const collections = input.revenue + o.receivables - receivablesEnd;
-  const payablesEnd = input.purchases * input.payableRatio;
-  const supplierPayments = input.purchases + o.payables - payablesEnd;
+  // --- Créances, dettes fournisseurs, TVA, flux de trésorerie -------------
+  // TVA : le compte de résultat reste HT ; créances et dettes deviennent TTC,
+  // la TVA nette du tour (collectée − déductible sur achats) est décaissée au
+  // tour SUIVANT — c'est une dette d'exploitation, elle pèse sur le BFR.
+  const vat = input.vatRate;
+  const openingVat = o.vatLiability ?? 0;
+  const receivablesEnd = input.revenue * (1 + vat) * input.receivableRatio;
+  const collections = input.revenue * (1 + vat) + o.receivables - receivablesEnd;
+  const payablesEnd = input.purchases * (1 + vat) * input.payableRatio;
+  const supplierPayments = input.purchases * (1 + vat) + o.payables - payablesEnd;
+  const vatDue = vat * (input.revenue - input.purchases); // négatif = crédit de TVA
   const loanRepayment = Math.min(input.loanRepayment, o.financialDebt);
 
   const items: CashFlowItem[] = [
@@ -99,6 +107,7 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
     { label: "maintenance", amount: -input.maintenanceCost },
     { label: "interets", amount: -interest },
     { label: "impot", amount: -tax },
+    { label: "tva_decaissee", amount: -openingVat },
     { label: "nouvel_emprunt", amount: input.newLoan },
     { label: "remboursement_emprunt", amount: -loanRepayment },
   ].filter((i) => i.amount !== 0);
@@ -117,6 +126,7 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
     financialDebt: o.financialDebt + input.newLoan - loanRepayment,
     payables: payablesEnd,
     overdraft: Math.max(0, -closingNet),
+    vatLiability: vatDue,
   };
 
   return {
@@ -129,6 +139,7 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
 /** Total actif = total passif (contrôle d'équilibre, testé au centime). */
 export function balanceGap(b: BalanceSheet): number {
   const assets = b.fixedAssetsNet + b.inventoryValue + b.receivables + b.cash;
-  const liabilities = b.equity + b.financialDebt + b.payables + b.overdraft;
+  const liabilities =
+    b.equity + b.financialDebt + b.payables + b.overdraft + (b.vatLiability ?? 0);
   return assets - liabilities;
 }

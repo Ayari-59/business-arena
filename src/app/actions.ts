@@ -7,11 +7,13 @@ import { createSoloGame } from "@/services/game.service";
 
 const periodicitySchema = z.enum(["month", "quarter", "year"]).catch("quarter");
 const companiesSchema = z.coerce.number().int().min(2).max(8).catch(3);
+const levelSchema = z.coerce.number().int().min(1).max(6).catch(3);
 
 export async function startGameAction(formData: FormData): Promise<void> {
   const periodicity = periodicitySchema.parse(formData.get("periodicity"));
   const companiesCount = companiesSchema.parse(formData.get("companiesCount"));
+  const level = levelSchema.parse(formData.get("level"));
   const userId = await getOrCreateGuestUserId();
-  const gameId = await createSoloGame(userId, periodicity, companiesCount);
+  const gameId = await createSoloGame(userId, periodicity, companiesCount, level);
   redirect(`/arena/${gameId}`);
 }

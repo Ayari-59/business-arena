@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { startGameAction } from "./actions";
 import { getPlatformConfig } from "@/services/admin.service";
+import { DIFFICULTY_PRESETS } from "@/config/difficulty";
 
 export const dynamic = "force-dynamic";
 
@@ -372,6 +373,22 @@ export default async function Home() {
                 <option value={4}>4 — marché disputé</option>
                 <option value={6}>6 — forte concurrence</option>
                 <option value={8}>8 — guerre de tous contre tous</option>
+              </select>
+            </label>
+            <label className="mt-4 block">
+              <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                Niveau de difficulté
+              </span>
+              <select
+                name="level"
+                defaultValue={3}
+                className="mt-2 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+              >
+                {DIFFICULTY_PRESETS.map((p) => (
+                  <option key={p.level} value={p.level}>
+                    {p.level} · {p.name} — {p.tagline}
+                  </option>
+                ))}
               </select>
             </label>
             <button

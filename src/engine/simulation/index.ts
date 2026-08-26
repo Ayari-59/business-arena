@@ -253,6 +253,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       overdraftAnnualRate: scenario.finance.overdraftAnnualRate,
       interestMultiplier: w.mods.interestMultiplier,
       taxRate: scenario.finance.taxRate,
+      vatRate: scenario.finance.vatRate ?? 0,
       newLoan: w.decisions.finance?.newLoan ?? 0,
       loanRepayment: w.decisions.finance?.loanRepayment ?? 0,
     });

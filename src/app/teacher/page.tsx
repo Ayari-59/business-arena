@@ -6,6 +6,7 @@ import { getOrganizerCompetitions } from "@/services/competition.service";
 import { getStaffContext } from "@/services/admin.service";
 import { createClassGameAction, createCompetitionAction, logoutAction } from "./actions";
 import { periodLabel } from "@/config/scenarios/periodicity";
+import { DIFFICULTY_PRESETS } from "@/config/difficulty";
 
 export const dynamic = "force-dynamic";
 
@@ -88,6 +89,63 @@ export default async function TeacherDashboard() {
               <option value="year">Une année par tour</option>
             </select>
           </label>
+          <label className="block sm:col-span-3">
+            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+              Niveau de difficulté
+            </span>
+            <select
+              name="level"
+              defaultValue={3}
+              className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm"
+            >
+              {DIFFICULTY_PRESETS.map((p) => (
+                <option key={p.level} value={p.level}>
+                  {p.level} · {p.name} — {p.tagline}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <details className="rounded-lg border border-white/10 bg-slate-950 p-4 sm:col-span-3">
+            <summary className="cursor-pointer text-xs font-medium uppercase tracking-wide text-slate-400">
+              ⚙️ Paramètres économiques (avancé) — laissez vide pour les valeurs du scénario
+            </summary>
+            <div className="mt-3 grid gap-3 sm:grid-cols-4">
+              {(
+                [
+                  ["taxRate", "Impôt sur les bénéfices", "%", "25"],
+                  ["vatRate", "TVA (0 = désactivée)", "%", "0"],
+                  ["loanAnnualRate", "Taux d'emprunt annuel", "%", "5"],
+                  ["overdraftAnnualRate", "Taux de découvert annuel", "%", "9"],
+                  ["supplierPaymentDelayDays", "Délai fournisseurs", "jours", "22"],
+                  ["fixedCostsPerRound", "Charges de structure / trim.", "€", "91 000"],
+                  ["materialCostPerUnit", "Coût matières unitaire", "€/u", "22"],
+                  ["otherVariableCostPerUnit", "MOD chargée + énergie", "€/u", "16"],
+                ] as const
+              ).map(([name, label, suffix, placeholder]) => (
+                <label key={name} className="block">
+                  <span className="text-[11px] text-slate-500">{label}</span>
+                  <span className="mt-1 flex items-center gap-1.5 rounded-lg border border-white/10 bg-slate-900 px-2.5 py-1.5 focus-within:border-amber-400/60">
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      name={name}
+                      placeholder={placeholder}
+                      className="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-600"
+                    />
+                    <span className="text-[11px] text-slate-500">{suffix}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+            <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+              Montants en base trimestrielle (redimensionnés selon la périodicité choisie).
+              Activer la TVA rend créances et dettes TTC et crée une dette « TVA à décaisser »
+              payée le tour suivant — son poids se lit dans le BFR. Une valeur hors bornes est
+              ignorée.
+            </p>
+          </details>
+
           <button
             type="submit"
             className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300 sm:col-span-3"
@@ -97,7 +155,8 @@ export default async function TeacherDashboard() {
         </form>
         <p className="mt-2 text-xs text-slate-500">
           Le nombre total d&apos;entreprises (équipes + bots) est plafonné à 8. Les élèves
-          rejoignent avec le code, répartis automatiquement dans les équipes.
+          rejoignent avec le code, répartis automatiquement dans les équipes. Le niveau règle
+          les décisions ouvertes, le plafond d&apos;indices et la fréquence des événements.
         </p>
       </section>
 

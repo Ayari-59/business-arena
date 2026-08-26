@@ -62,7 +62,21 @@ const createGameSchema = z.object({
   periodicity: z.enum(["month", "quarter", "year"]).catch("quarter"),
   humanTeamsCount: z.coerce.number().int().min(1).max(8).catch(4),
   botCount: z.coerce.number().int().min(0).max(7).catch(1),
+  level: z.coerce.number().int().min(1).max(6).catch(3),
 });
+
+/** Champ numérique optionnel : vide = valeur du scénario (jamais de dur). */
+const optionalNumber = (raw: FormDataEntryValue | null): number | undefined => {
+  const s = String(raw ?? "").trim().replace(",", ".");
+  if (s === "") return undefined;
+  const n = Number(s);
+  return Number.isFinite(n) ? n : undefined;
+};
+/** Taux saisi en pourcentage (ex. 20 → 0,2). */
+const optionalRate = (raw: FormDataEntryValue | null): number | undefined => {
+  const n = optionalNumber(raw);
+  return n === undefined ? undefined : n / 100;
+};
 
 export async function createClassGameAction(formData: FormData): Promise<void> {
   const session = await getSession();
@@ -71,7 +85,18 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
     periodicity: formData.get("periodicity"),
     humanTeamsCount: formData.get("humanTeamsCount"),
     botCount: formData.get("botCount"),
+    level: formData.get("level"),
   });
+  const economicOverrides = {
+    taxRate: optionalRate(formData.get("taxRate")),
+    vatRate: optionalRate(formData.get("vatRate")),
+    loanAnnualRate: optionalRate(formData.get("loanAnnualRate")),
+    overdraftAnnualRate: optionalRate(formData.get("overdraftAnnualRate")),
+    supplierPaymentDelayDays: optionalNumber(formData.get("supplierPaymentDelayDays")),
+    fixedCostsPerRound: optionalNumber(formData.get("fixedCostsPerRound")),
+    materialCostPerUnit: optionalNumber(formData.get("materialCostPerUnit")),
+    otherVariableCostPerUnit: optionalNumber(formData.get("otherVariableCostPerUnit")),
+  };
   const organizationId = await getTeacherOrgId(session.userId);
   if (!organizationId) redirect("/teacher/login");
   const { gameId } = await createClassGame({
@@ -80,6 +105,8 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
     periodicity: parsed.periodicity,
     humanTeamsCount: parsed.humanTeamsCount,
     botCount: parsed.botCount,
+    level: parsed.level,
+    economicOverrides,
   });
   redirect(`/teacher/games/${gameId}`);
 }

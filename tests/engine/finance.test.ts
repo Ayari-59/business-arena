@@ -39,6 +39,7 @@ const roundInput = {
   overdraftAnnualRate: 0.12,
   interestMultiplier: 1,
   taxRate: 0.25,
+  vatRate: 0,
   newLoan: 0,
   loanRepayment: 0,
 };

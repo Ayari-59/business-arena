@@ -58,6 +58,12 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
           <Link href="/concepts" className="text-xs text-slate-500 underline-offset-4 hover:text-slate-300 hover:underline">
             Fiches concepts
           </Link>
+          <p
+            className="rounded-full border border-amber-400/30 px-3 py-1 text-xs text-amber-300"
+            title="Niveau de difficulté de la partie"
+          >
+            Niveau {view.difficulty.level} · {view.difficulty.name}
+          </p>
           <p className="rounded-full border border-white/10 px-4 py-1 text-sm text-slate-300">
             {finished
               ? "Partie terminée"
@@ -307,6 +313,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                   }
                 : null
             }
+            enabled={view.enabledDecisions}
           />
         </section>
       )}

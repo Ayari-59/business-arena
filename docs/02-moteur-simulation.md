@@ -232,6 +232,16 @@ défaite selon la difficulté). C'est ainsi que le jeu crée naturellement la si
 « rentable mais en difficulté de trésorerie » (§16) : la croissance gonfle le BFR plus
 vite que le FRNG.
 
+**TVA** (`finance.vatRate`, 0 ou absente = désactivée — activable à la création de
+partie) : le compte de résultat reste **HT** (la TVA n'est jamais un produit ni une
+charge) ; créances clients et dettes fournisseurs deviennent **TTC**, et la TVA nette du
+tour (collectée sur le CA − déductible sur les achats de matières, simplification
+assumée) est portée au passif en **« TVA à décaisser »**, payée le tour suivant — une
+dette d'exploitation qui entre dans le BFR (un crédit de TVA, en négatif, l'augmente).
+La leçon : la TVA ne change pas le résultat mais transite par la trésorerie. Invariants
+testés : compte de résultat identique avec/sans TVA, bilan équilibré au centime,
+TN = FRNG − BFR conservé.
+
 ### 6.4 Ratios et rentabilités (§17)
 
 ```

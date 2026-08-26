@@ -88,3 +88,18 @@ Règles d'architecture :
   (ADR-15) et par `decision_options.unlocked_from_difficulty`.
 - La progression du joueur (profil, niveaux réussis) conditionne l'accès recommandé aux
   niveaux supérieurs (non bloquant en mode apprentissage, bloquant en concours).
+
+### État d'implémentation
+
+Les six préréglages vivent en **données** dans `src/config/difficulty.ts` (jamais en
+dur) et sont choisis au **sélecteur de niveau** à la création de partie (solo et
+classe). Câblé à ce jour : décisions exposées par niveau (qualité/maintenance dès
+GESTION, financement/assurance dès PILOTAGE), plafond d'indices (5/5/3/3/2/0),
+intensité des événements aléatoires (×0,5 → ×2, les probabilités 0 restant 0 — le
+snapshot est modifié à la création, le moteur reste ignorant de la difficulté). Les
+parties créées avant le sélecteur conservent leur comportement historique
+(`LEGACY_PRESET`). Restent à câbler : `infoQuality` (bruit des études), KPI masqués
+par niveau, pression temporelle. S'y ajoutent les **paramètres économiques modulables**
+à la création (`economicOverridesSchema` : IS, TVA, taux d'emprunt/découvert, délai
+fournisseurs, charges de structure, coûts unitaires — bornés, base trimestrielle,
+appliqués au snapshot avant périodicité).

@@ -14,6 +14,7 @@ export interface FunctionalBalance {
 
 export function computeFunctionalBalance(b: BalanceSheet): FunctionalBalance {
   const frng = b.equity + b.financialDebt - b.fixedAssetsNet;
-  const bfr = b.inventoryValue + b.receivables - b.payables;
+  // La TVA à décaisser est une dette d'exploitation (un crédit de TVA, une créance).
+  const bfr = b.inventoryValue + b.receivables - b.payables - (b.vatLiability ?? 0);
   return { frng, bfr, netTreasury: frng - bfr };
 }

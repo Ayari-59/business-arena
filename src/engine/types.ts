@@ -66,6 +66,13 @@ export interface EngineScenarioConfig {
     overdraftLimit: number;
     /** Taux d'IS appliqué au bénéfice du tour. */
     taxRate: number;
+    /**
+     * Taux de TVA (0 ou absent = désactivée). Résultat inchangé (comptes HT) ;
+     * la TVA transite par créances/dettes TTC et par la dette « TVA à
+     * décaisser » payée le tour suivant — son poids se lit dans le BFR.
+     * Simplification assumée : déductible sur les achats de matières.
+     */
+    vatRate?: number;
     /** Délai fournisseur en jours (paiement des matières). */
     supplierPaymentDelayDays: number;
     /** Amortissement des immobilisations par tour (linéaire, en €). */
@@ -171,12 +178,14 @@ export interface EventModifier {
 export interface BalanceSheet {
   fixedAssetsNet: number;
   inventoryValue: number;
-  receivables: number;
+  receivables: number; // TTC quand la TVA est active
   cash: number; // ≥ 0
   equity: number;
   financialDebt: number;
-  payables: number;
+  payables: number; // TTC quand la TVA est active
   overdraft: number; // ≥ 0
+  /** TVA nette du tour, à décaisser au tour suivant (négatif = crédit de TVA). */
+  vatLiability?: number;
 }
 
 export interface CompanyState {

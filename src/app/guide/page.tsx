@@ -177,9 +177,15 @@ export default function GuidePage() {
               inscrivez-vous avec votre e-mail — directement, ou avec le code d&apos;invitation
               fourni par votre établissement s&apos;il est déployé sur la plateforme.
             </Step>
-            <Step n={2} title="Créez une partie de classe">
-              Choisissez la périodicité, le nombre d&apos;équipes (1 à 8) et le nombre de
-              concurrents automatiques. La plateforme génère un{" "}
+            <Step n={2} title="Créez une partie de classe — et réglez-la finement">
+              Choisissez la périodicité, le nombre d&apos;équipes (1 à 8), les concurrents
+              automatiques et le <strong className="text-slate-200">niveau de difficulté</strong> :
+              de Découverte (prix, production, marketing, tous les indices) à Executive (toutes
+              les décisions, aucun indice, événements doublés). Le panneau{" "}
+              <strong className="text-slate-200">Paramètres économiques</strong> permet en plus
+              de moduler l&apos;impôt, la TVA, les taux d&apos;emprunt et de découvert, le délai
+              fournisseurs, les charges de structure et les coûts unitaires — pour coller à
+              votre progression. La plateforme génère un{" "}
               <strong className="text-slate-200">code d&apos;invitation à 6 caractères</strong> :
               affichez-le, vos élèves rejoignent sur /join.
             </Step>
@@ -329,6 +335,10 @@ export default function GuidePage() {
               [
                 "Puis-je changer la durée d'un tour ?",
                 "Oui, à la création de chaque partie : un tour = un mois, un trimestre ou une année. Toute l'économie du scénario est redimensionnée en conséquence.",
+              ],
+              [
+                "Que règlent les niveaux de difficulté ?",
+                "Six niveaux, de Découverte à Executive : les décisions ouvertes (la finance et l'assurance arrivent au niveau Pilotage), le plafond d'indices (de 5 à zéro) et la fréquence des événements aléatoires. Et le panneau avancé permet de moduler impôt, TVA, taux, délais et coûts — rien n'est figé.",
               ],
               [
                 "Combien ça coûte ?",

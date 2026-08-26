@@ -80,6 +80,7 @@ export const engineScenarioConfigSchema = z.object({
     overdraftAnnualRate: z.number().min(0).max(1),
     overdraftLimit: z.number().nonnegative(),
     taxRate: z.number().min(0).max(1),
+    vatRate: z.number().min(0).max(0.5).optional(),
     supplierPaymentDelayDays: z.number().int().nonnegative(),
     depreciationPerRound: z.number().nonnegative(),
   }),

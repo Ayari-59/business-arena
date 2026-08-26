@@ -19,6 +19,14 @@ import {
 } from "@/db/schema";
 import { novaBots, novaCompany, novaScenario } from "@/config/scenarios/nova";
 import {
+  applyEconomicOverrides,
+  applyEventIntensity,
+  presetByLevel,
+  presetFromProfile,
+  sanitizeEconomicOverrides,
+  type EconomicOverrides,
+} from "@/config/difficulty";
+import {
   applyPeriodicity,
   applyPeriodicityToCompany,
   type Periodicity,
@@ -143,6 +151,10 @@ interface CreateGameArgs {
   /** §25 : "competition" verrouille les décisions validées et limite les indices. */
   mode?: "learning" | "competition";
   competitionStageId?: string;
+  /** Niveau de difficulté 1-6 (doc 08 §2) — absent = comportement historique. */
+  level?: number;
+  /** Paramètres économiques modulés à la création (base trimestrielle). */
+  economicOverrides?: EconomicOverrides;
 }
 
 export interface CreatedGame {
@@ -155,7 +167,17 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
   const scenarioId = await getOrCreateNovaScenarioId();
   await seedPedagogyReferentials(); // référentiels concepts/modèles/situations (idempotent)
   const seed = randomInt(1, 2 ** 31);
-  const scenarioSnapshot = applyPeriodicity(novaScenario, args.periodicity); // ADR-01 + ADR-10
+  // Pipeline du snapshot (ADR-01 + ADR-10) : paramètres économiques modulés
+  // (base trimestrielle) → périodicité → intensité d'événements du niveau.
+  const preset = args.level
+    ? presetByLevel.get(args.level as 1 | 2 | 3 | 4 | 5 | 6)
+    : undefined;
+  const sanitized = sanitizeEconomicOverrides(args.economicOverrides);
+  const overrides = Object.keys(sanitized).length > 0 ? sanitized : undefined;
+  const scenarioSnapshot = applyEventIntensity(
+    applyPeriodicity(applyEconomicOverrides(novaScenario, overrides), args.periodicity),
+    preset?.eventProbabilityMultiplier ?? 1,
+  );
   const botCount = Math.min(Math.max(args.botCount, 0), novaBots.length);
 
   const [game] = await db
@@ -168,7 +190,13 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
       seed,
       mode: args.mode ?? "learning",
       competitionStageId: args.competitionStageId,
-      difficultyProfile: { level: 1, periodicity: args.periodicity, kind: args.kind },
+      difficultyProfile: {
+        level: preset?.level ?? 1,
+        periodicity: args.periodicity,
+        kind: args.kind,
+        ...(preset ? { difficulty: { level: preset.level, name: preset.name } } : {}),
+        ...(overrides ? { economicOverrides: overrides } : {}),
+      },
       status: "running",
       currentRound: 1,
       joinCode: args.joinCode,
@@ -236,6 +264,7 @@ export async function createSoloGame(
   userId: string,
   periodicity: Periodicity = "quarter",
   companiesCount = 3,
+  level?: number,
 ): Promise<string> {
   const config = await getPlatformConfig();
   if (!config.allowPublicPlay) {
@@ -250,6 +279,7 @@ export async function createSoloGame(
     kind: "solo",
     humanTeams: [{ name: "NOVA (vous)" }],
     botCount,
+    level,
   });
   const humanTeam = (
     await db
@@ -276,6 +306,8 @@ export async function createClassGame(args: {
   periodicity: Periodicity;
   humanTeamsCount: number;
   botCount: number;
+  level?: number;
+  economicOverrides?: EconomicOverrides;
 }): Promise<{ gameId: string; joinCode: string }> {
   const humanTeamsCount = Math.min(Math.max(args.humanTeamsCount, 1), 8);
   const botCount = Math.min(Math.max(args.botCount, 0), 8 - humanTeamsCount);
@@ -288,6 +320,8 @@ export async function createClassGame(args: {
     humanTeams: Array.from({ length: humanTeamsCount }, (_, i) => ({ name: `Équipe ${i + 1}` })),
     botCount,
     joinCode,
+    level: args.level,
+    economicOverrides: args.economicOverrides,
   });
   return { gameId, joinCode };
 }
@@ -946,6 +980,10 @@ export interface GameView {
   lastDecisions: RoundDecisions | null;
   /** Offre d'assurance du scénario (prime déjà à l'échelle de la périodicité). */
   insuranceOffer: { premium: number; coveredEventCodes: string[] } | null;
+  /** Niveau de difficulté (préréglage en données, doc 08 §2). */
+  difficulty: { level: number; name: string; hintMaxLevel: number };
+  /** Décisions exposées à ce niveau (prix/production/marketing : toujours). */
+  enabledDecisions: { quality: boolean; maintenance: boolean; finance: boolean; insurance: boolean };
 }
 
 export async function getGameView(gameId: string, userId: string): Promise<GameView | null> {
@@ -1095,6 +1133,11 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         ? { premium: offer.premiumPerRound, coveredEventCodes: offer.coveredEventCodes }
         : null;
     })(),
+    difficulty: (() => {
+      const preset = presetFromProfile(game.difficultyProfile);
+      return { level: preset.level, name: preset.name, hintMaxLevel: preset.hintMaxLevel };
+    })(),
+    enabledDecisions: presetFromProfile(game.difficultyProfile).decisions,
   };
 }
 

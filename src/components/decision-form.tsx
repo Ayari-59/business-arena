@@ -49,6 +49,7 @@ export function DecisionForm({
   kind,
   alreadySubmitted,
   insuranceOffer,
+  enabled,
 }: {
   gameId: string;
   roundIndex: number;
@@ -58,9 +59,12 @@ export function DecisionForm({
   alreadySubmitted: boolean;
   /** Offre d'assurance du scénario (prime déjà à l'échelle de la périodicité). */
   insuranceOffer?: { premium: number; coveredLabels: string[] } | null;
+  /** Décisions exposées au niveau de difficulté de la partie (doc 08 §2). */
+  enabled?: { quality: boolean; maintenance: boolean; finance: boolean; insurance: boolean };
 }) {
   const action = playRoundAction.bind(null, gameId);
   const [state, formAction, pending] = useActionState(action, initialState);
+  const on = enabled ?? { quality: true, maintenance: true, finance: true, insurance: true };
 
   return (
     <form action={formAction} className="space-y-4">
@@ -70,14 +74,26 @@ export function DecisionForm({
         <Field name="productionPlan" label="Plan de production" defaultValue={Math.round(defaults.productionPlan)} suffix="unités"
           hint="La production réelle sera bornée par vos capacités." />
         <Field name="marketingBudget" label="Budget marketing" defaultValue={defaults.marketingBudget} suffix="€" />
-        <Field name="qualityBudget" label="Budget qualité" defaultValue={defaults.qualityBudget} suffix="€" />
-        <Field name="maintenanceBudget" label="Budget maintenance" defaultValue={defaults.maintenanceBudget} suffix="€"
-          hint="Une maintenance insuffisante dégrade la disponibilité machine." />
-        <Field name="newLoan" label="Nouvel emprunt" defaultValue={defaults.finance?.newLoan ?? 0} suffix="€"
-          hint="À 5 %/an — utile si la trésorerie se tend." />
-        <Field name="loanRepayment" label="Remboursement d'emprunt" defaultValue={defaults.finance?.loanRepayment ?? 0} suffix="€" />
+        {on.quality ? (
+          <Field name="qualityBudget" label="Budget qualité" defaultValue={defaults.qualityBudget} suffix="€" />
+        ) : (
+          <input type="hidden" name="qualityBudget" value={defaults.qualityBudget} />
+        )}
+        {on.maintenance ? (
+          <Field name="maintenanceBudget" label="Budget maintenance" defaultValue={defaults.maintenanceBudget} suffix="€"
+            hint="Une maintenance insuffisante dégrade la disponibilité machine." />
+        ) : (
+          <input type="hidden" name="maintenanceBudget" value={defaults.maintenanceBudget} />
+        )}
+        {on.finance ? (
+          <>
+            <Field name="newLoan" label="Nouvel emprunt" defaultValue={defaults.finance?.newLoan ?? 0} suffix="€"
+              hint="À 5 %/an — utile si la trésorerie se tend." />
+            <Field name="loanRepayment" label="Remboursement d'emprunt" defaultValue={defaults.finance?.loanRepayment ?? 0} suffix="€" />
+          </>
+        ) : null}
       </div>
-      {insuranceOffer ? (
+      {on.insurance && insuranceOffer ? (
         <label className="flex items-start gap-3 rounded-lg border border-white/10 bg-slate-950 px-3 py-3">
           <input
             type="checkbox"

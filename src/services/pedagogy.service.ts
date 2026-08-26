@@ -25,6 +25,7 @@ import {
   type ModelRelevance,
   type SituationDef,
 } from "@/config/scenarios/nova/situations";
+import { presetFromProfile } from "@/config/difficulty";
 import { hintScoreMultiplier, modelWasHinted, nextUnlockableLevel } from "@/pedagogy/hints";
 import { evaluateDiagnosis, evaluateModelChoice } from "@/pedagogy/evaluation";
 import { detectSituations } from "@/pedagogy/detection";
@@ -244,12 +245,23 @@ export async function unlockHint(args: {
   const levels = await unlockedLevels(args.instanceId);
   const next = nextUnlockableLevel(levels);
   if (next === null) throw new Error("Tous les indices sont déjà débloqués");
-  // §25 : indices limités au niveau 3 en mode compétition (pas de modèle soufflé)
+  // Plafonds : niveau de difficulté de la partie (préréglage en données,
+  // doc 08 §2), et §25 : jamais plus que le niveau 3 en mode compétition.
   const roundRow = (await db.select().from(rounds).where(eq(rounds.id, instance.roundId)))[0];
   if (roundRow) {
     const game = (await db.select().from(games).where(eq(games.id, roundRow.gameId)))[0];
-    if (game?.mode === "competition" && next > 3) {
-      throw new Error("Mode compétition : indices limités aux niveaux 1 à 3");
+    if (game) {
+      const preset = presetFromProfile(game.difficultyProfile);
+      const cap = game.mode === "competition" ? Math.min(preset.hintMaxLevel, 3) : preset.hintMaxLevel;
+      if (next > cap) {
+        throw new Error(
+          cap === 0
+            ? `Niveau ${preset.name} : aucun indice — conditions réelles`
+            : game.mode === "competition" && cap === 3
+              ? "Mode compétition : indices limités aux niveaux 1 à 3"
+              : `Niveau ${preset.name} : indices limités aux niveaux 1 à ${cap}`,
+        );
+      }
     }
   }
   const hintRow = (
