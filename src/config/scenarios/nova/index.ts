@@ -328,11 +328,13 @@ const rawNova = {
     financeCost: 800, // ratios complets, structure des coûts, comparaison sectorielle
     projectCost: 1200, // VAN/TRI de l'investissement, arbitrage de la commande du tour
   },
-  // Commandes exceptionnelles ENTRE CHAQUE TOUR (rotation déterministe, la
-  // même offre pour toutes les équipes — coût variable interne 38 €/u) :
-  // les tours impairs proposent l'export à forte marge payé à 90 jours (le
-  // CA dort en créances, le BFR gonfle), les tours pairs le comptant à
-  // marge mince (du cash tout de suite, une rentabilité maigre).
+  // Commandes exceptionnelles ENTRE CHAQUE TOUR : l'offre du tour est TIRÉE
+  // dans ce pool à la graine de la partie (orderOfferForRound) — la même pour
+  // toutes les équipes, mais deux parties ne voient pas la même séquence.
+  // L'alternance des archétypes est garantie par le tirage : tours impairs =
+  // règlement à crédit (export à forte marge, le CA dort en créances, le BFR
+  // gonfle), tours pairs = comptant à marge mince (du cash tout de suite).
+  // Coût variable interne : 38 €/u.
   orderOffers: [
     {
       code: "offer_export_nordics",
@@ -386,6 +388,42 @@ const rawNova = {
         "Un déstockeur reprend 1 000 unités à 44 € pièce, enlèvement et paiement comptant sous 48 h. Presque pas de marge — mais la caisse respire.",
       units: 1000,
       price: 44,
+      paymentDelayDays: 0,
+    },
+    {
+      code: "offer_duty_free",
+      title: "Boutiques duty-free",
+      narrative:
+        "Un opérateur de boutiques d'aéroport référence NOVA pour la saison : 500 unités à 76 €. Règlement à 60 jours, conditions du contrat cadre.",
+      units: 500,
+      price: 76,
+      paymentDelayDays: 60,
+    },
+    {
+      code: "offer_campus_uk",
+      title: "Réseau de campus britanniques",
+      narrative:
+        "Un distributeur équipe les boutiques de campus outre-Manche : 800 unités à 71 €. Paiement à 90 jours — et en plus, il faudra suivre la livraison.",
+      units: 800,
+      price: 71,
+      paymentDelayDays: 90,
+    },
+    {
+      code: "offer_coffrets_noel",
+      title: "Coffrets cadeaux e-commerce",
+      narrative:
+        "Un e-commerçant monte des coffrets cadeaux : 700 unités à 46 €, payées comptant à l'expédition. Le prix est tiré, le virement est immédiat.",
+      units: 700,
+      price: 46,
+      paymentDelayDays: 0,
+    },
+    {
+      code: "offer_comite_entreprise",
+      title: "Comité d'entreprise",
+      narrative:
+        "Le CSE d'un grand groupe commande 400 unités à 52 € pour ses salariés, réglées comptant. Volume modeste, marge correcte, zéro attente.",
+      units: 400,
+      price: 52,
       paymentDelayDays: 0,
     },
   ],

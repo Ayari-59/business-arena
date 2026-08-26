@@ -107,6 +107,7 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
     botCount: parsed.botCount,
     level: parsed.level,
     economicOverrides,
+    variableWorld: formData.get("variableWorld") === "on",
   });
   redirect(`/teacher/games/${gameId}`);
 }

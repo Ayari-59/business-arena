@@ -201,6 +201,9 @@ export default function GuidePage() {
               de Découverte (prix, production, marketing, tous les indices) à Executive (toutes
               les décisions, aucun indice, événements doublés). Le panneau{" "}
               <strong className="text-slate-200">Paramètres économiques</strong> permet en plus
+              d&apos;activer le <strong className="text-slate-200">monde variable</strong>
+              (chaque partie diffère : croissance, saisonnalité, événements et commandes
+              exceptionnelles changent — décochez pour le NOVA classique), et
               de moduler l&apos;impôt, la TVA, les taux d&apos;emprunt et de découvert, le délai
               fournisseurs, les charges de structure et les coûts unitaires — pour coller à
               votre progression. La plateforme génère un{" "}

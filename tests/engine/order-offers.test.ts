@@ -147,13 +147,36 @@ const input = (over: Partial<SimulationInput> = {}): SimulationInput => ({
   ...over,
 });
 
-describe("rotation du pool : une offre entre chaque tour", () => {
-  it("cycle déterministe, la même pour toutes les équipes", () => {
+describe("tirage du pool : une offre entre chaque tour", () => {
+  it("sans graine : rotation historique ; sans pool : rien", () => {
     const s = scenario();
     expect(orderOfferForRound(s, 1)!.code).toBe("export_90j");
     expect(orderOfferForRound(s, 2)!.code).toBe("cash_now");
     expect(orderOfferForRound(s, 3)!.code).toBe("export_90j"); // retour du pool
     expect(orderOfferForRound(scenario({ orderOffers: undefined }), 1)).toBeNull();
+  });
+
+  it("avec graine : alternance crédit/comptant garantie, tirage variable dans l'archétype", () => {
+    const bigPool: OrderOfferDef[] = [
+      ...OFFERS,
+      { ...OFFERS[0]!, code: "export_b" },
+      { ...OFFERS[0]!, code: "export_c" },
+      { ...OFFERS[1]!, code: "cash_b" },
+      { ...OFFERS[1]!, code: "cash_c" },
+    ];
+    const s = scenario({ orderOffers: bigPool });
+    for (let round = 1; round <= 6; round++) {
+      const offer = orderOfferForRound(s, round, 12345)!;
+      // impair = à crédit (export), pair = comptant — quel que soit le tirage
+      expect(offer.paymentDelayDays > 0).toBe(round % 2 === 1);
+      // déterminisme : même graine, même offre
+      expect(orderOfferForRound(s, round, 12345)!.code).toBe(offer.code);
+    }
+    // deux graines finissent par diverger sur 6 tours (3 choix par archétype)
+    const seq = (seed: number) =>
+      Array.from({ length: 6 }, (_, i) => orderOfferForRound(s, i + 1, seed)!.code).join(",");
+    const sequences = new Set([seq(1), seq(2), seq(3), seq(4), seq(5)]);
+    expect(sequences.size).toBeGreaterThan(1);
   });
 
   it("l'offre du tour apparaît dans les résultats, même déclinée", () => {

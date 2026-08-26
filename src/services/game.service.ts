@@ -31,6 +31,7 @@ import {
   applyPeriodicityToCompany,
   type Periodicity,
 } from "@/config/scenarios/periodicity";
+import { applyScenarioVariability } from "@/config/scenarios/variability";
 import { parseScenarioConfig } from "@/config/scenarios/schema";
 import {
   debriefRound,
@@ -157,6 +158,8 @@ interface CreateGameArgs {
   level?: number;
   /** Paramètres économiques modulés à la création (base trimestrielle). */
   economicOverrides?: EconomicOverrides;
+  /** Monde variable (doc 02 §9bis) : variante du scénario dérivée de la graine. */
+  variableWorld?: boolean;
 }
 
 export interface CreatedGame {
@@ -176,8 +179,13 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
     : undefined;
   const sanitized = sanitizeEconomicOverrides(args.economicOverrides);
   const overrides = Object.keys(sanitized).length > 0 ? sanitized : undefined;
+  // Monde variable : la variante seedée s'applique AVANT les réglages
+  // explicites de l'enseignant (qui gardent donc le dernier mot).
+  const baseScenario = args.variableWorld
+    ? applyScenarioVariability(novaScenario, seed)
+    : novaScenario;
   const scenarioSnapshot = applyEventIntensity(
-    applyPeriodicity(applyEconomicOverrides(novaScenario, overrides), args.periodicity),
+    applyPeriodicity(applyEconomicOverrides(baseScenario, overrides), args.periodicity),
     preset?.eventProbabilityMultiplier ?? 1,
   );
   const botCount = Math.min(Math.max(args.botCount, 0), novaBots.length);
@@ -198,6 +206,7 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
         kind: args.kind,
         ...(preset ? { difficulty: { level: preset.level, name: preset.name } } : {}),
         ...(overrides ? { economicOverrides: overrides } : {}),
+        ...(args.variableWorld ? { variableWorld: true } : {}),
       },
       status: "running",
       currentRound: 1,
@@ -267,6 +276,7 @@ export async function createSoloGame(
   periodicity: Periodicity = "quarter",
   companiesCount = 3,
   level?: number,
+  variableWorld = false,
 ): Promise<string> {
   const config = await getPlatformConfig();
   if (!config.allowPublicPlay) {
@@ -282,6 +292,7 @@ export async function createSoloGame(
     humanTeams: [{ name: "NOVA (vous)" }],
     botCount,
     level,
+    variableWorld,
   });
   const humanTeam = (
     await db
@@ -310,6 +321,7 @@ export async function createClassGame(args: {
   botCount: number;
   level?: number;
   economicOverrides?: EconomicOverrides;
+  variableWorld?: boolean;
 }): Promise<{ gameId: string; joinCode: string }> {
   const humanTeamsCount = Math.min(Math.max(args.humanTeamsCount, 1), 8);
   const botCount = Math.min(Math.max(args.botCount, 0), 8 - humanTeamsCount);
@@ -324,6 +336,7 @@ export async function createClassGame(args: {
     joinCode,
     level: args.level,
     economicOverrides: args.economicOverrides,
+    variableWorld: args.variableWorld,
   });
   return { gameId, joinCode };
 }
@@ -1387,7 +1400,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
           paybackRounds: paybackPeriod(flows),
         };
       }
-      const offer = orderOfferForRound(snapshot, game.currentRound);
+      const offer = orderOfferForRound(snapshot, game.currentRound, game.seed);
       reports.project = {
         investment,
         currentOffer: offer
@@ -1496,7 +1509,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     studyReports,
     orderOffer: (() => {
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
-      const offer = orderOfferForRound(snapshot, game.currentRound);
+      const offer = orderOfferForRound(snapshot, game.currentRound, game.seed);
       if (!offer) return null;
       return {
         code: offer.code,

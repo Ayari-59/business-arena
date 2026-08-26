@@ -14,6 +14,7 @@ export async function startGameAction(formData: FormData): Promise<void> {
   const companiesCount = companiesSchema.parse(formData.get("companiesCount"));
   const level = levelSchema.parse(formData.get("level"));
   const userId = await getOrCreateGuestUserId();
-  const gameId = await createSoloGame(userId, periodicity, companiesCount, level);
+  // monde variable par défaut : deux parties solo ne se ressemblent pas
+  const gameId = await createSoloGame(userId, periodicity, companiesCount, level, true);
   redirect(`/arena/${gameId}`);
 }

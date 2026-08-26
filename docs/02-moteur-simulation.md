@@ -409,9 +409,13 @@ s'applique à la clôture du tour. En mode compétition, seul le tirage seedé f
 Deux mécaniques s'appuient sur le moteur d'événements :
 
 **Commandes exceptionnelles entre chaque tour** (`scenario.orderOffers`) : distinctes
-des commandes fermes d'événement, elles sont proposées À CHAQUE TOUR par rotation
-déterministe dans un pool (aucun aléa consommé — tirages seedés inchangés ; la même
-offre pour toutes les équipes, comparabilité de classe). Deux archétypes alternent :
+des commandes fermes d'événement, elles sont proposées À CHAQUE TOUR. L'offre du tour
+est TIRÉE dans le pool à la graine de la partie (`orderOfferForRound(scenario, round,
+seed)`, PRNG dédié — les tirages seedés d'événements sont inchangés) : la même offre
+pour toutes les équipes d'une partie (comparabilité de classe), mais deux parties ne
+voient pas la même séquence. L'alternance des archétypes est GARANTIE par le tirage
+(tours impairs : règlement à crédit ; tours pairs : comptant) ; sans graine, rotation
+historique. Deux archétypes alternent donc :
 l'**export à forte marge payé à long délai** (le CA part en créances au délai de
 l'offre : le BFR gonfle du CA moins le stock cédé) et le **comptant à marge mince**
 (cash immédiat, rentabilité maigre). Décision `decisions.acceptOrder` (ponctuelle,
@@ -484,6 +488,26 @@ depuis les résultats persistés du dernier tour résolu :
   capacitaire (flux = ventes manquées × marge unitaire), et l'arbitrage chiffré de la
   commande exceptionnelle du tour courant (marge totale vs coût de portage du BFR au
   taux du découvert).
+
+## 7.4 Monde variable : le scénario n'est pas figé (§9bis)
+
+À la création d'une partie, `applyScenarioVariability(scenario, seed)` peut dériver une
+**variante du scénario depuis la graine de la partie** — activée par défaut en solo et
+par une case « Monde variable » côté enseignant (décochable pour garder le NOVA
+classique, identique aux supports imprimés). Même graine ⇒ même monde : le déterminisme,
+le rejeu et l'équité entre équipes d'une même partie sont intacts ; seule la partie
+suivante change. Pipeline : variabilité → réglages économiques de l'enseignant (qui
+gardent le dernier mot) → périodicité → intensité d'événements du niveau.
+
+Bornes calibrées et testées : taille des segments ±5 %, croissance ±20 % (relatif),
+amplitude de la saisonnalité globale ±15 % (la forme du pic T4 et les saisonnalités par
+segment — l'arrivée de CampusTech — ne bougent pas), échelle marketing ±10 %, attraction
+extérieure ±10 %, délai fournisseurs ±15 %, charges de structure ±2 %, prime d'assurance
+et prix des études ±10 %, probabilités d'événements ×0,8..1,3 (une probabilité 0 RESTE
+0 : cartes enseignant intactes). Les **intangibles pédagogiques** ne varient jamais :
+tout chiffre cité par un texte du jeu (prix de référence 59 €, coût variable 38 €,
+sous-traitant 52 €, investissement 20 €/u, taux 5 %, plafonds) est hors périmètre.
+La variante est revalidée par le schéma zod avant de devenir l'instantané de la partie.
 
 ## 8. Ce que le moteur ne fait pas
 

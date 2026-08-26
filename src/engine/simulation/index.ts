@@ -34,17 +34,29 @@ import {
 export const ENGINE_VERSION = "0.1.0";
 
 /**
- * Commande exceptionnelle proposée pour un tour : rotation déterministe dans
- * le pool du scénario (aucun aléa consommé — les tirages seedés d'événements
- * restent rigoureusement inchangés), la même offre pour toutes les équipes.
+ * Commande exceptionnelle proposée pour un tour. L'ALTERNANCE des archétypes
+ * est garantie (tours impairs : règlement à crédit — l'export qui gonfle le
+ * BFR ; tours pairs : comptant à marge mince), mais l'offre est TIRÉE dans le
+ * pool de l'archétype à la graine de la partie : deux parties ne proposent
+ * pas la même séquence, deux équipes de la même partie voient la même offre.
+ * Le tirage utilise un PRNG dédié (dérivé de la graine) : les tirages seedés
+ * d'événements restent rigoureusement inchangés. Sans graine : rotation
+ * historique.
  */
 export function orderOfferForRound(
   scenario: EngineScenarioConfig,
   roundIndex: number,
+  seed?: number,
 ): OrderOfferDef | null {
   const pool = scenario.orderOffers;
   if (!pool || pool.length === 0) return null;
-  return pool[(roundIndex - 1) % pool.length] ?? null;
+  if (seed === undefined) return pool[(roundIndex - 1) % pool.length] ?? null;
+  const credit = pool.filter((o) => o.paymentDelayDays > 0);
+  const cash = pool.filter((o) => o.paymentDelayDays === 0);
+  const wanted = roundIndex % 2 === 1 ? credit : cash;
+  const archetype = wanted.length > 0 ? wanted : pool;
+  const rng = createRng(deriveRoundSeed((seed ^ 0x0ffe12ab) >>> 0, roundIndex));
+  return archetype[Math.floor(rng.next() * archetype.length)] ?? null;
 }
 
 /**
@@ -265,8 +277,9 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
   const nextCompanies: CompanyState[] = [];
   let totalSold = 0;
   const totalPotential = Object.values(potentialBySegment).reduce((a, b) => a + b, 0);
-  // Commande exceptionnelle du tour (doc 02 §5.1) : la même pour tous.
-  const roundOffer = orderOfferForRound(scenario, roundIndex);
+  // Commande exceptionnelle du tour (doc 02 §5.1) : la même pour tous,
+  // tirée à la graine de la partie (alternance crédit / comptant garantie).
+  const roundOffer = orderOfferForRound(scenario, roundIndex, input.seed);
 
   working.forEach((w, i) => {
     const perSegment: Record<string, SegmentSalesDetail> = {};

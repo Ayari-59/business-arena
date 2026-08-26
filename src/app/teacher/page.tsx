@@ -106,6 +106,26 @@ export default async function TeacherDashboard() {
             </select>
           </label>
 
+          <label className="flex items-start gap-3 rounded-lg border border-white/10 bg-slate-950 px-3 py-3 sm:col-span-3">
+            <input
+              type="checkbox"
+              name="variableWorld"
+              defaultChecked
+              className="mt-0.5 h-4 w-4 accent-amber-400"
+            />
+            <span>
+              <span className="text-sm font-medium text-slate-200">
+                🌍 Monde variable — chaque partie diffère
+              </span>
+              <span className="mt-0.5 block text-xs text-slate-500">
+                Croissance des segments, saisonnalité, événements et commandes exceptionnelles
+                varient d&apos;une partie à l&apos;autre (déterministe par partie : toutes vos
+                équipes jouent le même monde). Décochez pour le scénario NOVA classique,
+                identique à vos supports imprimés.
+              </span>
+            </span>
+          </label>
+
           <details className="rounded-lg border border-white/10 bg-slate-950 p-4 sm:col-span-3">
             <summary className="cursor-pointer text-xs font-medium uppercase tracking-wide text-slate-400">
               ⚙️ Paramètres économiques (avancé) — laissez vide pour les valeurs du scénario
