@@ -19,7 +19,14 @@ export interface DifficultyPreset {
   /** Plafond d'indices débloquables (0 = aucun indice). */
   hintMaxLevel: 0 | 1 | 2 | 3 | 4 | 5;
   /** Décisions exposées au joueur (prix, production, marketing : toujours actives). */
-  decisions: { quality: boolean; maintenance: boolean; finance: boolean; insurance: boolean };
+  decisions: {
+    quality: boolean;
+    maintenance: boolean;
+    finance: boolean;
+    insurance: boolean;
+    /** RH (embauches, formation, salaires) — doc 08 : dès ARBITRAGE. */
+    hr: boolean;
+  };
   /** Multiplicateur des probabilités d'événements aléatoires (les 0 restent 0). */
   eventProbabilityMultiplier: number;
 }
@@ -31,7 +38,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     name: "Découverte",
     tagline: "Prix, production, marketing — l'essentiel, avec tous les indices.",
     hintMaxLevel: 5,
-    decisions: { quality: false, maintenance: false, finance: false, insurance: false },
+    decisions: { quality: false, maintenance: false, finance: false, insurance: false, hr: false },
     eventProbabilityMultiplier: 0.5,
   },
   {
@@ -40,7 +47,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     name: "Gestion",
     tagline: "Qualité et maintenance entrent en jeu.",
     hintMaxLevel: 5,
-    decisions: { quality: true, maintenance: true, finance: false, insurance: false },
+    decisions: { quality: true, maintenance: true, finance: false, insurance: false, hr: false },
     eventProbabilityMultiplier: 0.75,
   },
   {
@@ -49,7 +56,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     name: "Pilotage",
     tagline: "Financement et assurance — la trésorerie se pilote. Indices limités.",
     hintMaxLevel: 3,
-    decisions: { quality: true, maintenance: true, finance: true, insurance: true },
+    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: false },
     eventProbabilityMultiplier: 1,
   },
   {
@@ -58,7 +65,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     name: "Arbitrage",
     tagline: "Les aléas frappent plus souvent : anticipez.",
     hintMaxLevel: 3,
-    decisions: { quality: true, maintenance: true, finance: true, insurance: true },
+    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: true },
     eventProbabilityMultiplier: 1.25,
   },
   {
@@ -67,7 +74,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     name: "Stratégie",
     tagline: "Deux indices, pas un de plus — et un marché nerveux.",
     hintMaxLevel: 2,
-    decisions: { quality: true, maintenance: true, finance: true, insurance: true },
+    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: true },
     eventProbabilityMultiplier: 1.5,
   },
   {
@@ -76,7 +83,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     name: "Executive",
     tagline: "Aucun indice, événements doublés : conditions réelles.",
     hintMaxLevel: 0,
-    decisions: { quality: true, maintenance: true, finance: true, insurance: true },
+    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: true },
     eventProbabilityMultiplier: 2,
   },
 ];
@@ -90,7 +97,7 @@ export const LEGACY_PRESET: DifficultyPreset = {
   name: "Pilotage",
   tagline: "",
   hintMaxLevel: 5,
-  decisions: { quality: true, maintenance: true, finance: true, insurance: true },
+  decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: false },
   eventProbabilityMultiplier: 1,
 };
 

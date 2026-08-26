@@ -26,6 +26,14 @@ export async function playRoundAction(
     qualityBudget: formData.get("qualityBudget"),
     maintenanceBudget: formData.get("maintenanceBudget"),
     insurance: formData.get("insurance") === "on",
+    hr: formData.has("salaryPercent")
+      ? {
+          hire: formData.get("hire") || 0,
+          fire: formData.get("fire") || 0,
+          trainingBudget: formData.get("trainingBudget") || 0,
+          salaryIndex: Number(formData.get("salaryPercent") || 100) / 100,
+        }
+      : undefined,
     finance: {
       newLoan: formData.get("newLoan") || 0,
       loanRepayment: formData.get("loanRepayment") || 0,

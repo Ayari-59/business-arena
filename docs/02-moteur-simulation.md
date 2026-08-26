@@ -167,6 +167,29 @@ UtilizationRate   = Production interne / MachineCapacity
   délai fournisseur du scénario ; le paiement suit le délai de règlement fournisseur
   (→ BFR, §6).
 
+### 4.1 Ressources humaines (niveaux Arbitrage+)
+
+Décisions `hr` (si `scenario.hr` est défini) : embauches, licenciements, budget de
+formation, indice de salaire. Règles :
+
+- **effet à t+1** pour les mouvements d'effectif (le recrutement prend du temps),
+  **coûts à t** (recrutement, indemnités) — l'asymétrie est la leçon ;
+- seul l'**écart** de masse salariale est facturé : les salaires de
+  `includedHeadcount` employés à l'indice 1 sont déjà dans `fixedCostsPerRound`
+  (réduire l'effectif ou l'indice économise des charges de structure) ;
+- **morale** : la productivité du tour est multipliée par 1 + sens × (indice − 1),
+  bornée — sous-payer bride la capacité main-d'œuvre dès ce tour ;
+- **attrition** : sous le seuil (`attritionThreshold`), une démission par tour,
+  jamais en dessous d'un salarié ;
+- **formation** : productivité(t+1) += sens × ln(1 + budget/échelle), plafonnée.
+
+Les bots n'utilisent jamais la RH et une entreprise qui n'y touche pas est
+rigoureusement neutre (testé) : calibration et snapshot doré inchangés. Sur NOVA,
+l'atelier machine (7 000 u/trimestre) reste le goulot à effectif complet — la RH
+compense les départs, ouvre le dégraissage risqué, et prépare l'investissement
+capacitaire. Périodicité : salaires et échelle de formation ×k ; coûts d'embauche
+et de licenciement ponctuels, non redimensionnés.
+
 ## 5. Coûts (§14)
 
 Typologie native du moteur — chaque ligne de coût du scénario est étiquetée :

@@ -16,6 +16,7 @@ import {
   updatePerceivedQuality,
 } from "../production";
 import { addToStock, removeFromStock, stockValue } from "../inventory/cump";
+import { computeHr } from "../hr";
 import { unitVariableCost } from "../costs";
 import { computeBreakeven } from "../costs/breakeven";
 import { balanceGap, computeFinance } from "../finance/statements";
@@ -79,6 +80,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     mods: ReturnType<typeof effectiveModifiers>;
     insured: boolean;
     neutralizedEvents: string[];
+    hr: ReturnType<typeof computeHr>;
+    hrRelevant: boolean;
   }
 
   // Assurance catastrophe (doc 02 §7.2) : pour les assurés, les événements
@@ -98,9 +101,20 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       qualityBudget: Math.max(0, raw.qualityBudget),
       maintenanceBudget: Math.max(0, raw.maintenanceBudget),
       insurance: raw.insurance,
+      hr: raw.hr,
       finance: raw.finance,
       forecast: raw.forecast,
     };
+    // RH (doc 02 §4.1) : morale du tour, coûts, mouvements d'effectif à t+1.
+    const hr = computeHr({
+      config: scenario.hr,
+      decisions: raw.hr,
+      headcount: state.headcount,
+      productivity: state.productivity,
+    });
+    const hrRelevant =
+      scenario.hr !== undefined &&
+      (raw.hr !== undefined || state.headcount !== scenario.hr.includedHeadcount);
     const insured = Boolean(decisions.insurance && insuranceOffer);
     const neutralizedEvents = insured
       ? active
@@ -118,7 +132,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       availability: state.availability * mods.availabilityMultiplier,
       headcount: state.headcount,
       hoursPerEmployee: state.hoursPerEmployee,
-      productivity: state.productivity,
+      productivity: state.productivity * hr.morale,
       hoursPerUnit: scenario.product.hoursPerUnit,
     });
     const producedQuality = computeProducedQuality({
@@ -147,6 +161,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       mods,
       insured,
       neutralizedEvents,
+      hr,
+      hrRelevant,
     };
   });
 
@@ -231,8 +247,9 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       w.produced * scenario.product.materialCostPerUnit * w.materialMultiplier;
     const otherVariableCash = w.produced * scenario.product.otherVariableCostPerUnit;
 
-    // Prime d'assurance : charge de structure du tour (coût certain).
+    // Prime d'assurance et RH : charges de structure du tour.
     const insurancePremium = w.insured ? (insuranceOffer?.premiumPerRound ?? 0) : 0;
+    const hrCost = w.hr.cost;
 
     const finance = computeFinance({
       opening: w.state.finance,
@@ -247,7 +264,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       marketingCost: w.decisions.marketingBudget,
       qualityCost: w.decisions.qualityBudget,
       maintenanceCost: w.decisions.maintenanceBudget,
-      fixedCosts: scenario.fixedCostsPerRound + insurancePremium,
+      fixedCosts: scenario.fixedCostsPerRound + insurancePremium + hrCost,
       depreciation: scenario.finance.depreciationPerRound,
       loanAnnualRate: scenario.finance.loanAnnualRate,
       overdraftAnnualRate: scenario.finance.overdraftAnnualRate,
@@ -274,6 +291,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const structureCosts =
       scenario.fixedCostsPerRound +
       insurancePremium +
+      hrCost +
       finance.incomeStatement.depreciation +
       w.decisions.marketingBudget +
       w.decisions.qualityBudget +
@@ -313,6 +331,20 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       ...(w.insured
         ? { insurance: { premium: insurancePremium, neutralizedEvents: w.neutralizedEvents } }
         : {}),
+      ...(w.hrRelevant
+        ? {
+            hr: {
+              headcount: w.state.headcount,
+              hired: w.hr.hired,
+              fired: w.hr.fired,
+              departed: w.hr.departed,
+              trainingBudget: w.hr.trainingBudget,
+              salaryIndex: w.hr.salaryIndex,
+              cost: hrCost,
+              nextHeadcount: w.hr.nextHeadcount,
+            },
+          }
+        : {}),
       kpis: {
         revenue,
         net_income: finance.incomeStatement.netIncome,
@@ -338,6 +370,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     }
     nextCompanies.push({
       ...w.state,
+      headcount: w.hr.nextHeadcount,
+      productivity: w.hr.nextProductivity,
       perceivedQuality: updatePerceivedQuality(
         w.state.perceivedQuality,
         w.producedQuality,

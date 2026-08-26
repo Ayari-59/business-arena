@@ -543,7 +543,13 @@ async function resolveGameRound(
       if (own) {
         allDecisions[team.id] = own.payload as RoundDecisions;
       } else if (previousPayloads[team.id]) {
-        allDecisions[team.id] = previousPayloads[team.id]!;
+        const prev = previousPayloads[team.id]!;
+        // reconduction : l'indice de salaire est récurrent, les embauches,
+        // licenciements et budgets de formation sont des actions ponctuelles
+        allDecisions[team.id] = {
+          ...prev,
+          hr: prev.hr ? { salaryIndex: prev.hr.salaryIndex } : undefined,
+        };
         carriedOver.add(team.id);
       } else {
         allDecisions[team.id] = fallbackDecisions(scenario);
@@ -619,6 +625,7 @@ async function resolveGameRound(
               events: roundEventCodesFor(t.id),
               extraOrders: r.extraOrders ?? null,
               insurance: r.insurance ?? null,
+              hr: r.hr ?? null,
             },
             revenue: toMoney(r.incomeStatement.revenue),
             netIncome: toMoney(r.incomeStatement.netIncome),
@@ -983,7 +990,13 @@ export interface GameView {
   /** Niveau de difficulté (préréglage en données, doc 08 §2). */
   difficulty: { level: number; name: string; hintMaxLevel: number };
   /** Décisions exposées à ce niveau (prix/production/marketing : toujours). */
-  enabledDecisions: { quality: boolean; maintenance: boolean; finance: boolean; insurance: boolean };
+  enabledDecisions: {
+    quality: boolean;
+    maintenance: boolean;
+    finance: boolean;
+    insurance: boolean;
+    hr: boolean;
+  };
 }
 
 export async function getGameView(gameId: string, userId: string): Promise<GameView | null> {
@@ -1029,6 +1042,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         events: string[];
         extraOrders?: CompanyRoundResult["extraOrders"] | null;
         insurance?: CompanyRoundResult["insurance"] | null;
+        hr?: CompanyRoundResult["hr"] | null;
       };
       lastResult = {
         companyId: playerTeam.id,
@@ -1049,6 +1063,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         breakeven: trace.breakeven,
         extraOrders: trace.extraOrders ?? undefined,
         insurance: trace.insurance ?? undefined,
+        hr: trace.hr ?? undefined,
         kpis: {},
       };
       lastEvents = trace.events ?? [];

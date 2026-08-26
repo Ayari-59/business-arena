@@ -102,6 +102,9 @@ export default async function Home() {
         {/* eslint-disable-next-line @next/next/no-img-element -- logo vectoriel statique */}
         <img src="/brand/logo.svg" alt="Business Arena" className="h-9 w-auto" />
         <div className="flex items-center gap-5 text-sm text-slate-400">
+          <Link href="/parcours" className="hidden hover:text-slate-200 sm:block">
+            Parcours
+          </Link>
           <Link href="/guide" className="hidden hover:text-slate-200 sm:block">
             Guide
           </Link>

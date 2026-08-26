@@ -93,6 +93,21 @@ export const engineScenarioConfigSchema = z.object({
       coveredEventCodes: z.array(z.string().min(1)).min(1),
     })
     .optional(),
+  hr: z
+    .object({
+      salaryPerEmployeePerRound: z.number().positive(),
+      includedHeadcount: z.number().int().positive(),
+      hiringCost: z.number().nonnegative(),
+      firingCost: z.number().nonnegative(),
+      trainingScale: z.number().positive(),
+      trainingSensitivity: z.number().min(0).max(0.5),
+      maxProductivity: z.number().min(1).max(2),
+      moraleSensitivity: z.number().min(0).max(2),
+      attritionThreshold: z.number().min(0.8).max(1),
+      maxHiresPerRound: z.number().int().positive(),
+      maxHeadcount: z.number().int().positive(),
+    })
+    .optional(),
   events: z.array(eventSchema),
   scriptedEvents: z.array(
     z.object({

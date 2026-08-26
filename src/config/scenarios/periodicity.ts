@@ -81,6 +81,17 @@ export function applyPeriodicity(
           },
         }
       : {}),
+    // RH : salaires et échelle de formation sont des flux (× k) ; les coûts
+    // d'embauche/licenciement sont des ponctuels réels — non redimensionnés.
+    ...(scenario.hr
+      ? {
+          hr: {
+            ...scenario.hr,
+            salaryPerEmployeePerRound: scenario.hr.salaryPerEmployeePerRound * k,
+            trainingScale: scenario.hr.trainingScale * k,
+          },
+        }
+      : {}),
     // Les modificateurs « order » sont des flux (unités par tour) : × k.
     events: scenario.events.map((e) => ({
       ...e,

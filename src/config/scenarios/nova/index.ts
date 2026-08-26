@@ -268,6 +268,22 @@ const rawNova = {
     premiumPerRound: 2500,
     coveredEventCodes: ["natural_disaster", "cold_wave"],
   },
+  // RH (niveaux Arbitrage+) : 4 opérateurs inclus dans les 91 000 € de
+  // structure. À effectif complet, l'atelier machine (7 000 u) est le goulot :
+  // l'embauche compense les départs et prépare l'investissement capacitaire.
+  hr: {
+    salaryPerEmployeePerRound: 8000,
+    includedHeadcount: 4,
+    hiringCost: 3000,
+    firingCost: 6000,
+    trainingScale: 3000,
+    trainingSensitivity: 0.05,
+    maxProductivity: 1.25,
+    moraleSensitivity: 0.5,
+    attritionThreshold: 0.95,
+    maxHiresPerRound: 3,
+    maxHeadcount: 10,
+  },
   scriptedEvents: [{ round: 5, eventCode: "raw_material_spike" }],
   // Scoring BPI (doc 08 §1) : pondérations imposées, bornes calibrées sur les
   // trajectoires de référence (snapshot doré) — min → 0 point, cible → 100.

@@ -156,6 +156,17 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                     : ", réglées comptant."}
                 </p>
               ) : null}
+              {r.hr ? (
+                <p className="mt-3 rounded-lg border border-violet-400/30 bg-violet-950/30 px-3 py-2 text-xs text-violet-300">
+                  👥 RH — effectif {r.hr.headcount}
+                  {r.hr.hired > 0 ? ` · +${r.hr.hired} embauche${r.hr.hired > 1 ? "s" : ""} (arrivée au prochain tour)` : ""}
+                  {r.hr.fired > 0 ? ` · ${r.hr.fired} licenciement${r.hr.fired > 1 ? "s" : ""}` : ""}
+                  {r.hr.departed > 0 ? " · 1 démission (salaires sous le marché !)" : ""}
+                  {r.hr.trainingBudget > 0 ? ` · formation ${formatEuro(r.hr.trainingBudget)}` : ""}
+                  {" · coût RH du tour : "}
+                  {formatEuro(r.hr.cost)}
+                </p>
+              ) : null}
               {r.insurance ? (
                 <p className="mt-3 rounded-lg border border-sky-400/30 bg-sky-950/30 px-3 py-2 text-xs text-sky-300">
                   🛡️ Assurance souscrite ({formatEuro(r.insurance.premium)}).{" "}

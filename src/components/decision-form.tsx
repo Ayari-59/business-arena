@@ -60,11 +60,23 @@ export function DecisionForm({
   /** Offre d'assurance du scénario (prime déjà à l'échelle de la périodicité). */
   insuranceOffer?: { premium: number; coveredLabels: string[] } | null;
   /** Décisions exposées au niveau de difficulté de la partie (doc 08 §2). */
-  enabled?: { quality: boolean; maintenance: boolean; finance: boolean; insurance: boolean };
+  enabled?: {
+    quality: boolean;
+    maintenance: boolean;
+    finance: boolean;
+    insurance: boolean;
+    hr: boolean;
+  };
 }) {
   const action = playRoundAction.bind(null, gameId);
   const [state, formAction, pending] = useActionState(action, initialState);
-  const on = enabled ?? { quality: true, maintenance: true, finance: true, insurance: true };
+  const on = enabled ?? {
+    quality: true,
+    maintenance: true,
+    finance: true,
+    insurance: true,
+    hr: false,
+  };
 
   return (
     <form action={formAction} className="space-y-4">
@@ -93,6 +105,23 @@ export function DecisionForm({
           </>
         ) : null}
       </div>
+      {on.hr ? (
+        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
+          <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+            👥 Ressources humaines
+          </legend>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <Field name="hire" label="Embauches" defaultValue={0} suffix="pers."
+              hint="Arrivée au tour suivant — coût de recrutement immédiat." />
+            <Field name="fire" label="Licenciements" defaultValue={0} suffix="pers."
+              hint="Départ au tour suivant — indemnité immédiate." />
+            <Field name="trainingBudget" label="Budget formation" defaultValue={0} suffix="€"
+              hint="Élève la productivité dès le tour suivant." />
+            <Field name="salaryPercent" label="Salaires (marché = 100)" defaultValue={Math.round((defaults.hr?.salaryIndex ?? 1) * 100)} suffix="%"
+              hint="Sous-payer démotive — et fait partir les salariés." />
+          </div>
+        </fieldset>
+      ) : null}
       {on.insurance && insuranceOffer ? (
         <label className="flex items-start gap-3 rounded-lg border border-white/10 bg-slate-950 px-3 py-3">
           <input

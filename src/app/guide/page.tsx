@@ -62,6 +62,9 @@ export default function GuidePage() {
           <img src="/brand/logo.svg" alt="Business Arena" className="h-8 w-auto" />
         </Link>
         <div className="flex items-center gap-5 text-sm text-slate-400">
+          <Link href="/parcours" className="hover:text-slate-200">
+            Parcours
+          </Link>
           <Link href="/join" className="hover:text-slate-200">
             J&apos;ai un code
           </Link>

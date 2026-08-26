@@ -86,6 +86,32 @@ export interface EngineScenarioConfig {
    * L'arbitrage pédagogique : un coût certain contre un risque incertain.
    */
   insurance?: { premiumPerRound: number; coveredEventCodes: string[] };
+  /**
+   * Ressources humaines (optionnel — doc 02 §4.1) : embauches, licenciements,
+   * formation et politique salariale. Les salaires de `includedHeadcount`
+   * employés sont déjà dans fixedCostsPerRound ; seul l'écart (effectif
+   * supplémentaire, indice de salaire ≠ 1) est facturé en plus.
+   */
+  hr?: {
+    /** Salaire chargé d'un employé par tour (base trimestrielle). */
+    salaryPerEmployeePerRound: number;
+    /** Effectif dont les salaires sont déjà compris dans fixedCostsPerRound. */
+    includedHeadcount: number;
+    /** Coût de recrutement par embauche (ponctuel, non redimensionné). */
+    hiringCost: number;
+    /** Coût de licenciement par départ décidé (ponctuel). */
+    firingCost: number;
+    /** Formation : productivité(t+1) += sens × ln(1 + budget/scale). */
+    trainingScale: number;
+    trainingSensitivity: number;
+    maxProductivity: number;
+    /** Morale du tour : productivité × (1 + sens × (indiceSalaire − 1)), borné. */
+    moraleSensitivity: number;
+    /** Sous ce niveau d'indice de salaire, un salarié démissionne chaque tour. */
+    attritionThreshold: number;
+    maxHiresPerRound: number;
+    maxHeadcount: number;
+  };
   events: EventDefinitionConfig[];
   scriptedEvents: { round: number; eventCode: string; companyIndex?: number }[];
   /** Références du scoring BPI (doc 08 §1.1) — bornes min/cible par tour. */
@@ -218,6 +244,13 @@ export interface RoundDecisions {
   maintenanceBudget: number;
   /** Souscrire l'assurance catastrophe du tour (si le scénario en propose une). */
   insurance?: boolean;
+  /**
+   * Décisions RH (si le scénario le propose). hire/fire prennent effet au
+   * tour SUIVANT (le recrutement prend du temps), les coûts tombent ce tour.
+   * salaryIndex : 1 = salaire de marché (récurrent, reconduit) ;
+   * hire/fire/trainingBudget : actions ponctuelles (jamais reconduites).
+   */
+  hr?: { hire?: number; fire?: number; trainingBudget?: number; salaryIndex?: number };
   finance?: { newLoan?: number; loanRepayment?: number };
   forecast?: { expectedRevenue?: number; expectedNetIncome?: number; expectedCash?: number };
 }
@@ -292,6 +325,19 @@ export interface CompanyRoundResult {
   extraOrders?: { requested: number; delivered: number };
   /** Assurance du tour : prime payée et événements couverts neutralisés. */
   insurance?: { premium: number; neutralizedEvents: string[] };
+  /** RH du tour : effectif, mouvements et coût (doc 02 §4.1). */
+  hr?: {
+    headcount: number;
+    hired: number;
+    fired: number;
+    /** Démission (indice de salaire sous le seuil d'attrition). */
+    departed: number;
+    trainingBudget: number;
+    salaryIndex: number;
+    /** Charge de structure RH du tour (négatif = économie de masse salariale). */
+    cost: number;
+    nextHeadcount: number;
+  };
   kpis: Record<string, number>;
 }
 
