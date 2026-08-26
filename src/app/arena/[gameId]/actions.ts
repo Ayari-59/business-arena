@@ -26,6 +26,7 @@ export async function playRoundAction(
     qualityBudget: formData.get("qualityBudget"),
     maintenanceBudget: formData.get("maintenanceBudget"),
     insurance: formData.get("insurance") === "on",
+    acceptOrder: formData.get("acceptOrder") === "on",
     hr: formData.has("salaryPercent")
       ? {
           hire: formData.get("hire") || 0,

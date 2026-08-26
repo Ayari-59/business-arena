@@ -140,6 +140,16 @@ export interface EngineScenarioConfig {
    */
   insurance?: { premiumPerRound: number; coveredEventCodes: string[] };
   /**
+   * Commandes exceptionnelles (optionnel — doc 02 §5.1) : une offre est
+   * proposée ENTRE CHAQUE TOUR (rotation déterministe dans le pool — la même
+   * pour toutes les équipes, aucun aléa consommé), à prendre ou à laisser.
+   * Deux archétypes alternent : export à forte marge payé à long délai (le
+   * CA dort en créances, le BFR gonfle) ou vente comptant à marge mince
+   * (cash immédiat, rentabilité maigre). L'arbitrage rentabilité /
+   * trésorerie, posé à chaque tour. Volumes en base trimestrielle.
+   */
+  orderOffers?: OrderOfferDef[];
+  /**
    * Ressources humaines (optionnel — doc 02 §4.1) : embauches, licenciements,
    * formation et politique salariale. Les salaires de `includedHeadcount`
    * employés sont déjà dans fixedCostsPerRound ; seul l'écart (effectif
@@ -169,6 +179,19 @@ export interface EngineScenarioConfig {
   scriptedEvents: { round: number; eventCode: string; companyIndex?: number }[];
   /** Références du scoring BPI (doc 08 §1.1) — bornes min/cible par tour. */
   scoring: ScoringConfig;
+}
+
+/** Une commande exceptionnelle du pool (voir EngineScenarioConfig.orderOffers). */
+export interface OrderOfferDef {
+  code: string;
+  title: string;
+  narrative: string;
+  /** Volume ferme proposé (unités, base trimestrielle). */
+  units: number;
+  /** Prix unitaire imposé (€ HT). */
+  price: number;
+  /** Délai de règlement en jours (0 = comptant). */
+  paymentDelayDays: number;
 }
 
 export interface ScoringConfig {
@@ -311,6 +334,11 @@ export interface RoundDecisions {
   /** Souscrire l'assurance catastrophe du tour (si le scénario en propose une). */
   insurance?: boolean;
   /**
+   * Accepter la commande exceptionnelle proposée pour ce tour (si le scénario
+   * a un pool `orderOffers`). Action ponctuelle : jamais reconduite.
+   */
+  acceptOrder?: boolean;
+  /**
    * Décisions RH (si le scénario le propose). hire/fire prennent effet au
    * tour SUIVANT (le recrutement prend du temps), les coûts tombent ce tour.
    * salaryIndex : 1 = salaire de marché (récurrent, reconduit) ;
@@ -409,6 +437,20 @@ export interface CompanyRoundResult {
     delivered: number;
     subcontracted: number;
     unitPrice: number;
+  };
+  /**
+   * Commande exceptionnelle du tour (pool `orderOffers`) : acceptée ou non,
+   * livrée du stock restant ; `onCredit` = part du CA partie en créances.
+   */
+  orderOffer?: {
+    code: string;
+    title: string;
+    accepted: boolean;
+    delivered: number;
+    unitPrice: number;
+    revenue: number;
+    paymentDelayDays: number;
+    onCredit: number;
   };
   /** Investissement du tour : capacité achetée (en service à t+1) et montant. */
   investment?: { capacityUnits: number; outlay: number };

@@ -317,6 +317,67 @@ const rawNova = {
   // Sous-traitance : unités finies à 52 € (coût variable interne ≈ 38 €) —
   // la marge d'une commande sous-traitée se calcule, elle ne se devine pas.
   subcontracting: { unitCost: 52 },
+  // Commandes exceptionnelles ENTRE CHAQUE TOUR (rotation déterministe, la
+  // même offre pour toutes les équipes — coût variable interne 38 €/u) :
+  // les tours impairs proposent l'export à forte marge payé à 90 jours (le
+  // CA dort en créances, le BFR gonfle), les tours pairs le comptant à
+  // marge mince (du cash tout de suite, une rentabilité maigre).
+  orderOffers: [
+    {
+      code: "offer_export_nordics",
+      title: "Distributeur scandinave",
+      narrative:
+        "Un distributeur hi-fi d'Oslo veut référencer NOVA : 700 enceintes à 74 € pièce. Conditions du contrat : règlement à 90 jours, comme tout l'export.",
+      units: 700,
+      price: 74,
+      paymentDelayDays: 90,
+    },
+    {
+      code: "offer_flash_marketplace",
+      title: "Vente flash marketplace",
+      narrative:
+        "Une grande marketplace vous propose une opération flash : 600 unités à 45 € pièce, virement immédiat à l'expédition. Le prix est serré — le cash, lui, est là.",
+      units: 600,
+      price: 45,
+      paymentDelayDays: 0,
+    },
+    {
+      code: "offer_export_dach",
+      title: "Chaîne hi-fi allemande",
+      narrative:
+        "Une chaîne de magasins allemande commande 900 unités à 70 € pour ses corners audio. Paiement à 90 jours fin de mois — l'usage outre-Rhin.",
+      units: 900,
+      price: 70,
+      paymentDelayDays: 90,
+    },
+    {
+      code: "offer_lycees",
+      title: "Appel d'offres lycées",
+      narrative:
+        "Un groupement de lycées équipe ses salles : 800 unités à 47 €, mandat administratif payé comptant à la livraison. Marge mince, encaissement immédiat.",
+      units: 800,
+      price: 47,
+      paymentDelayDays: 0,
+    },
+    {
+      code: "offer_export_japan",
+      title: "Importateur japonais",
+      narrative:
+        "Un importateur de Tokyo teste le marché avec 600 unités à 78 € — votre meilleur prix jamais proposé. Lettre de crédit réglée à 90 jours.",
+      units: 600,
+      price: 78,
+      paymentDelayDays: 90,
+    },
+    {
+      code: "offer_destockeur",
+      title: "Déstockeur européen",
+      narrative:
+        "Un déstockeur reprend 1 000 unités à 44 € pièce, enlèvement et paiement comptant sous 48 h. Presque pas de marge — mais la caisse respire.",
+      units: 1000,
+      price: 44,
+      paymentDelayDays: 0,
+    },
+  ],
   hr: {
     salaryPerEmployeePerRound: 8000,
     includedHeadcount: 4,

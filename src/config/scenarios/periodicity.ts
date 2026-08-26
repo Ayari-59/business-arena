@@ -96,6 +96,16 @@ export function applyPeriodicity(
           },
         }
       : {}),
+    // Commandes exceptionnelles : volumes en flux (× k) ; prix unitaires et
+    // délais de règlement (jours réels) inchangés.
+    ...(scenario.orderOffers
+      ? {
+          orderOffers: scenario.orderOffers.map((o) => ({
+            ...o,
+            units: o.units * k,
+          })),
+        }
+      : {}),
     // Les modificateurs en unités (« order », « order_subcontract ») sont des
     // flux : × k. Les prix imposés (« order_price ») ne changent pas.
     events: scenario.events.map((e) => ({

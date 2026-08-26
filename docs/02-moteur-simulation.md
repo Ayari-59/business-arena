@@ -401,6 +401,21 @@ s'applique à la clôture du tour. En mode compétition, seul le tirage seedé f
 
 Deux mécaniques s'appuient sur le moteur d'événements :
 
+**Commandes exceptionnelles entre chaque tour** (`scenario.orderOffers`) : distinctes
+des commandes fermes d'événement, elles sont proposées À CHAQUE TOUR par rotation
+déterministe dans un pool (aucun aléa consommé — tirages seedés inchangés ; la même
+offre pour toutes les équipes, comparabilité de classe). Deux archétypes alternent :
+l'**export à forte marge payé à long délai** (le CA part en créances au délai de
+l'offre : le BFR gonfle du CA moins le stock cédé) et le **comptant à marge mince**
+(cash immédiat, rentabilité maigre). Décision `decisions.acceptOrder` (ponctuelle,
+jamais reconduite), livraison sur le stock restant après le marché et les commandes
+fermes, sans sous-traitance ni effet sur la part de marché. Le délai de règlement
+entre dans le calcul en euros de la part du CA à crédit (`creditRevenue`). Résultat :
+`result.orderOffer = { accepted, delivered, revenue, onCredit, … }`. Volumes en flux
+(× k) ; prix et délais inchangés par la périodicité. L'arbitrage rentabilité /
+trésorerie est ainsi posé à chaque tour — c'est le but.
+
+
 - **Commande ferme** (cible `order`, additive, en unités) : l'entreprise visée vend
   d'office N unités **en plus** de ses ventes de marché, réglées **comptant**, dans la
   limite du stock restant après les ventes de marché. La commande s'ajoute au CA sans

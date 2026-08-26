@@ -48,7 +48,7 @@ import {
   type BpiDimension,
   type PedagogyInputs,
 } from "@/scoring/bpi";
-import { ENGINE_VERSION, simulateRound } from "@/engine/simulation";
+import { ENGINE_VERSION, orderOfferForRound, simulateRound } from "@/engine/simulation";
 import type {
   CompanyRoundResult,
   CompanyState,
@@ -553,6 +553,7 @@ async function resolveGameRound(
           investment: undefined,
           treasury: undefined,
           finance: undefined, // échéances automatiques ; emprunt/anticipé/capital : ponctuels
+          acceptOrder: undefined, // chaque commande exceptionnelle se décide
         };
         carriedOver.add(team.id);
       } else {
@@ -628,6 +629,7 @@ async function resolveGameRound(
               breakeven: r.breakeven,
               events: roundEventCodesFor(t.id),
               extraOrders: r.extraOrders ?? null,
+              orderOffer: r.orderOffer ?? null,
               insurance: r.insurance ?? null,
               hr: r.hr ?? null,
               investment: r.investment ?? null,
@@ -1019,6 +1021,20 @@ export interface GameView {
     factoringFeeRate: number;
     overdraftLimit: number;
   } | null;
+  /**
+   * Commande exceptionnelle proposée pour le tour courant (rotation du pool,
+   * doc 02 §5.1) — avec le coût variable unitaire pour poser l'arbitrage.
+   */
+  orderOffer: {
+    code: string;
+    title: string;
+    narrative: string;
+    units: number;
+    price: number;
+    paymentDelayDays: number;
+    unitVariableCost: number;
+    refPrice: number;
+  } | null;
 }
 
 export async function getGameView(gameId: string, userId: string): Promise<GameView | null> {
@@ -1063,6 +1079,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         breakeven: CompanyRoundResult["breakeven"];
         events: string[];
         extraOrders?: CompanyRoundResult["extraOrders"] | null;
+        orderOffer?: CompanyRoundResult["orderOffer"] | null;
         insurance?: CompanyRoundResult["insurance"] | null;
         hr?: CompanyRoundResult["hr"] | null;
         investment?: CompanyRoundResult["investment"] | null;
@@ -1088,6 +1105,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         production: trace.production,
         breakeven: trace.breakeven,
         extraOrders: trace.extraOrders ?? undefined,
+        orderOffer: trace.orderOffer ?? undefined,
         insurance: trace.insurance ?? undefined,
         hr: trace.hr ?? undefined,
         investment: trace.investment ?? undefined,
@@ -1221,6 +1239,22 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
             overdraftLimit: snapshot.finance.overdraftLimit,
           }
         : null;
+    })(),
+    orderOffer: (() => {
+      const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+      const offer = orderOfferForRound(snapshot, game.currentRound);
+      if (!offer) return null;
+      return {
+        code: offer.code,
+        title: offer.title,
+        narrative: offer.narrative,
+        units: offer.units,
+        price: offer.price,
+        paymentDelayDays: offer.paymentDelayDays,
+        unitVariableCost:
+          snapshot.product.materialCostPerUnit + snapshot.product.otherVariableCostPerUnit,
+        refPrice: snapshot.market.segments[0]?.refPrice ?? offer.price,
+      };
     })(),
     seasonNotes: (() => {
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;

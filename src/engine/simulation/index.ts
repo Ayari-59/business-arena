@@ -1,6 +1,8 @@
 import type {
   CompanyRoundResult,
   CompanyState,
+  EngineScenarioConfig,
+  OrderOfferDef,
   SegmentSalesDetail,
   SimulationInput,
   SimulationOutput,
@@ -30,6 +32,20 @@ import {
 } from "../events";
 
 export const ENGINE_VERSION = "0.1.0";
+
+/**
+ * Commande exceptionnelle proposée pour un tour : rotation déterministe dans
+ * le pool du scénario (aucun aléa consommé — les tirages seedés d'événements
+ * restent rigoureusement inchangés), la même offre pour toutes les équipes.
+ */
+export function orderOfferForRound(
+  scenario: EngineScenarioConfig,
+  roundIndex: number,
+): OrderOfferDef | null {
+  const pool = scenario.orderOffers;
+  if (!pool || pool.length === 0) return null;
+  return pool[(roundIndex - 1) % pool.length] ?? null;
+}
 
 /**
  * Résolution d'un tour (doc 02 §2). Fonction PURE et DÉTERMINISTE :
@@ -105,6 +121,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       qualityBudget: Math.max(0, raw.qualityBudget),
       maintenanceBudget: Math.max(0, raw.maintenanceBudget),
       insurance: raw.insurance,
+      acceptOrder: raw.acceptOrder,
       hr: raw.hr,
       treasury: raw.treasury,
       finance: raw.finance,
@@ -247,6 +264,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
   const nextCompanies: CompanyState[] = [];
   let totalSold = 0;
   const totalPotential = Object.values(potentialBySegment).reduce((a, b) => a + b, 0);
+  // Commande exceptionnelle du tour (doc 02 §5.1) : la même pour tous.
+  const roundOffer = orderOfferForRound(scenario, roundIndex);
 
   working.forEach((w, i) => {
     const perSegment: Record<string, SegmentSalesDetail> = {};
@@ -273,6 +292,23 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const subcontractCost = subcontracted * (scenario.subcontracting?.unitCost ?? 0);
     const orderUnitPrice = w.mods.orderUnitPrice ?? w.decisions.price;
 
+    // Commande exceptionnelle acceptée : livrée du stock restant après le
+    // marché et les commandes fermes (pas de sous-traitance — à prendre avec
+    // ses moyens). Son délai de règlement décide de la part du CA qui part
+    // en créances : rentabilité contre BFR, l'arbitrage est là.
+    const offerAccepted = Boolean(roundOffer && w.decisions.acceptOrder);
+    const offerDelivered =
+      offerAccepted && roundOffer
+        ? Math.min(
+            roundOffer.units,
+            Math.max(0, w.stock.quantity - segmentUnits - orderDelivered),
+          )
+        : 0;
+    const offerRevenue = offerDelivered * (roundOffer?.price ?? 0);
+    const offerCreditShare = roundOffer
+      ? Math.min(1, roundOffer.paymentDelayDays / scenario.roundDays)
+      : 0;
+
     // Non-qualité externe : retours clients fonction de la qualité perçue,
     // remboursés au prix de vente (unités détruites — la marge part entière).
     const returnedUnits = scenario.qualityCosts
@@ -285,13 +321,17 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       : 0;
     const refund = returnedUnits * w.decisions.price;
 
-    const soldUnits = segmentUnits + orderDelivered;
+    const soldUnits = segmentUnits + orderDelivered + offerDelivered;
     const revenue =
       segmentUnits * w.decisions.price +
-      (orderDelivered + subcontracted) * orderUnitPrice -
+      (orderDelivered + subcontracted) * orderUnitPrice +
+      offerRevenue -
       refund;
-    const receivableRatio =
-      soldUnits + subcontracted > 0 ? weightedCredit / (soldUnits + subcontracted) : 0;
+    // Part du CA à crédit, en euros : segments à leurs délais, commandes
+    // fermes d'événement comptant, commande exceptionnelle à SON délai.
+    const creditRevenue =
+      weightedCredit * w.decisions.price + offerRevenue * offerCreditShare;
+    const receivableRatio = revenue > 0 ? Math.min(1, creditRevenue / revenue) : 0;
 
     const { stock: stockAfterSales, cost: cogsFromStock } = removeFromStock(w.stock, soldUnits);
     // Coût des ventes : sorties de stock + unités sous-traitées (achetées
@@ -447,6 +487,20 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
               delivered: orderDelivered,
               subcontracted,
               unitPrice: orderUnitPrice,
+            },
+          }
+        : {}),
+      ...(roundOffer
+        ? {
+            orderOffer: {
+              code: roundOffer.code,
+              title: roundOffer.title,
+              accepted: offerAccepted,
+              delivered: offerDelivered,
+              unitPrice: roundOffer.price,
+              revenue: offerRevenue,
+              paymentDelayDays: roundOffer.paymentDelayDays,
+              onCredit: offerRevenue * offerCreditShare,
             },
           }
         : {}),

@@ -160,11 +160,14 @@ export default function GuidePage() {
               financement (emprunt, augmentation de capital), trésorerie (escompte,
               affacturage), assurance catastrophe, ressources humaines (embaucher, former,
               rémunérer) et investissement en capacité (en service au tour suivant).
-              Attention : les échéances d&apos;emprunt sont <strong className="text-slate-200">
-              prélevées automatiquement</strong>, que la caisse soit pleine ou vide — et
-              au-delà du découvert autorisé, la banque cède vos créances d&apos;office. En mode
-              classe, vos décisions restent modifiables jusqu&apos;à la clôture du tour par
-              l&apos;enseignant.
+              Entre chaque tour, une <strong className="text-slate-200">commande
+              exceptionnelle</strong> vous est proposée — export à forte marge payé à 90 jours
+              (le BFR gonfle) ou vente comptant à marge mince (du cash tout de suite) : à
+              prendre ou à laisser. Attention : les échéances d&apos;emprunt sont{" "}
+              <strong className="text-slate-200">prélevées automatiquement</strong>, que la
+              caisse soit pleine ou vide — et au-delà du découvert autorisé, la banque cède
+              vos créances d&apos;office. En mode classe, vos décisions restent modifiables
+              jusqu&apos;à la clôture du tour par l&apos;enseignant.
             </Step>
             <Step n={5} title="Lisez vos résultats comme un dirigeant">
               Chiffre d&apos;affaires, résultat net, part de marché — mais surtout la ligne de

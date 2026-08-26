@@ -53,6 +53,7 @@ export function DecisionForm({
   investmentOffer,
   debtSchedule,
   treasuryOffer,
+  orderOffer,
 }: {
   gameId: string;
   roundIndex: number;
@@ -81,6 +82,15 @@ export function DecisionForm({
     discountMaxShare: number;
     factoringFeeRate: number;
     overdraftLimit: number;
+  } | null;
+  /** Commande exceptionnelle proposée pour CE tour (rotation du pool). */
+  orderOffer?: {
+    title: string;
+    narrative: string;
+    units: number;
+    price: number;
+    paymentDelayDays: number;
+    unitVariableCost: number;
   } | null;
 }) {
   const action = playRoundAction.bind(null, gameId);
@@ -138,6 +148,44 @@ export function DecisionForm({
           />
         ) : null}
       </div>
+      {orderOffer ? (
+        <fieldset className="rounded-lg border border-sky-400/25 bg-sky-950/20 p-4">
+          <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-sky-300">
+            📦 Commande exceptionnelle — {orderOffer.title}
+          </legend>
+          <p className="text-sm leading-relaxed text-slate-300">{orderOffer.narrative}</p>
+          <p className="mt-2 text-xs text-slate-400">
+            <strong className="text-slate-200">
+              {Math.round(orderOffer.units).toLocaleString("fr-FR")} unités
+            </strong>{" "}
+            à{" "}
+            <strong className="text-slate-200">
+              {orderOffer.price.toLocaleString("fr-FR")} €/u
+            </strong>{" "}
+            (coût variable ≈ {orderOffer.unitVariableCost.toLocaleString("fr-FR")} €/u) —{" "}
+            {orderOffer.paymentDelayDays > 0
+              ? `règlement à ${orderOffer.paymentDelayDays} jours`
+              : "règlement comptant"}
+            . Servie sur votre stock restant après le marché.
+          </p>
+          <p className="mt-1 text-xs text-slate-500">
+            {orderOffer.paymentDelayDays > 0
+              ? "Belle marge… mais ce chiffre d'affaires dormira en créances : votre BFR gonflera d'autant. Qui finance l'attente ?"
+              : "Du cash dès la livraison… mais une marge mince : comparez le prix à votre coût variable avant de signer."}
+          </p>
+          <label className="mt-3 flex items-start gap-3">
+            <input
+              type="checkbox"
+              name="acceptOrder"
+              defaultChecked={defaults.acceptOrder ?? false}
+              className="mt-0.5 h-4 w-4 accent-sky-400"
+            />
+            <span className="text-sm font-medium text-slate-200">
+              Accepter la commande — à prendre ou à laisser, elle ne repassera pas.
+            </span>
+          </label>
+        </fieldset>
+      ) : null}
       {on.finance && debtSchedule && debtSchedule.outstanding > 0.5 ? (
         <p className="rounded-lg border border-amber-400/20 bg-amber-950/20 px-3 py-2 text-xs text-amber-200">
           🏦 Échéance d&apos;emprunt du tour :{" "}

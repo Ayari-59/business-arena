@@ -111,6 +111,20 @@ export const engineScenarioConfigSchema = z.object({
       maxPerRound: z.number().positive(),
     })
     .optional(),
+  // Commandes exceptionnelles entre les tours : rotation déterministe.
+  orderOffers: z
+    .array(
+      z.object({
+        code: z.string().min(1),
+        title: z.string().min(1),
+        narrative: z.string().min(1),
+        units: z.number().positive(),
+        price: z.number().positive(),
+        paymentDelayDays: z.number().min(0).max(180),
+      }),
+    )
+    .min(1)
+    .optional(),
   subcontracting: z.object({ unitCost: z.number().positive() }).optional(),
   qualityCosts: z
     .object({

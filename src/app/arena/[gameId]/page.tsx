@@ -161,6 +161,26 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                     : ", réglées comptant."}
                 </p>
               ) : null}
+              {r.orderOffer ? (
+                r.orderOffer.accepted ? (
+                  <p className="mt-3 rounded-lg border border-sky-400/30 bg-sky-950/30 px-3 py-2 text-xs text-sky-300">
+                    📦 {r.orderOffer.title} acceptée :{" "}
+                    {formatUnits(r.orderOffer.delivered)} u livrées à{" "}
+                    {formatEuro(r.orderOffer.unitPrice)}/u, soit{" "}
+                    {formatEuro(r.orderOffer.revenue)} de CA
+                    {r.orderOffer.onCredit > 0.5
+                      ? ` — dont ${formatEuro(r.orderOffer.onCredit)} en créances à ${r.orderOffer.paymentDelayDays} jours : votre BFR porte cette attente.`
+                      : " — réglé comptant : la caisse encaisse, la marge est mince."}
+                    {r.orderOffer.delivered < 0.5
+                      ? " Stock insuffisant : rien n'a pu être livré."
+                      : ""}
+                  </p>
+                ) : (
+                  <p className="mt-3 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-xs text-slate-400">
+                    📦 {r.orderOffer.title} : commande déclinée — un choix aussi.
+                  </p>
+                )
+              ) : null}
               {r.debt && (r.debt.mandatoryRepayment > 0.5 || r.debt.newLoan > 0.5 || r.debt.earlyRepayment > 0.5) ? (
                 <p className="mt-3 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-xs text-slate-300">
                   🏦 Dette : échéance de {formatEuro(r.debt.mandatoryRepayment)} prélevée
@@ -408,6 +428,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
             investmentOffer={view.investmentOffer}
             debtSchedule={view.debtSchedule}
             treasuryOffer={view.treasuryOffer}
+            orderOffer={view.orderOffer}
           />
         </section>
       )}
