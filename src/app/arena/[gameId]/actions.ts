@@ -27,6 +27,15 @@ export async function playRoundAction(
     maintenanceBudget: formData.get("maintenanceBudget"),
     insurance: formData.get("insurance") === "on",
     acceptOrder: formData.get("acceptOrder") === "on",
+    studies: (() => {
+      const picked = {
+        market: formData.get("studyMarket") === "on",
+        price: formData.get("studyPrice") === "on",
+        finance: formData.get("studyFinance") === "on",
+        project: formData.get("studyProject") === "on",
+      };
+      return Object.values(picked).some(Boolean) ? picked : undefined;
+    })(),
     hr: formData.has("salaryPercent")
       ? {
           hire: formData.get("hire") || 0,

@@ -96,6 +96,17 @@ export function applyPeriodicity(
           },
         }
       : {}),
+    // Études : des prestations par tour — flux (× k).
+    ...(scenario.studies
+      ? {
+          studies: {
+            marketCost: scenario.studies.marketCost * k,
+            priceCost: scenario.studies.priceCost * k,
+            financeCost: scenario.studies.financeCost * k,
+            projectCost: scenario.studies.projectCost * k,
+          },
+        }
+      : {}),
     // Commandes exceptionnelles : volumes en flux (× k) ; prix unitaires et
     // délais de règlement (jours réels) inchangés.
     ...(scenario.orderOffers

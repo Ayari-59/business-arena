@@ -111,6 +111,15 @@ export const engineScenarioConfigSchema = z.object({
       maxPerRound: z.number().positive(),
     })
     .optional(),
+  // Études achetables : l'information a un prix (charge de structure).
+  studies: z
+    .object({
+      marketCost: z.number().positive(),
+      priceCost: z.number().positive(),
+      financeCost: z.number().positive(),
+      projectCost: z.number().positive(),
+    })
+    .optional(),
   // Commandes exceptionnelles entre les tours : rotation déterministe.
   orderOffers: z
     .array(

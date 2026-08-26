@@ -160,7 +160,10 @@ export default function GuidePage() {
               financement (emprunt, augmentation de capital), trésorerie (escompte,
               affacturage), assurance catastrophe, ressources humaines (embaucher, former,
               rémunérer) et investissement en capacité (en service au tour suivant).
-              Entre chaque tour, une <strong className="text-slate-200">commande
+              Besoin de données ? <strong className="text-slate-200">Achetez de
+              l&apos;information</strong> : étude de marché, analyse de prix, étude
+              financière, analyse de projet — livrées avec les résultats, facturées en
+              charges. Entre chaque tour, une <strong className="text-slate-200">commande
               exceptionnelle</strong> vous est proposée — export à forte marge payé à 90 jours
               (le BFR gonfle) ou vente comptant à marge mince (du cash tout de suite) : à
               prendre ou à laisser. Attention : les échéances d&apos;emprunt sont{" "}

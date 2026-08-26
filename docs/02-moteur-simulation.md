@@ -452,6 +452,32 @@ tirages seedés existants.
 
 ---
 
+## 7.3 Études achetables : l'information a un prix (§8bis)
+
+Le joueur peut acheter des rapports pour décider avec des **données riches et
+variées** (`scenario.studies`, décisions `decisions.studies.{market,price,finance,project}`,
+actions ponctuelles jamais reconduites). Côté moteur, chaque étude cochée est une
+**charge de structure** du tour (résultat, seuil de rentabilité et trésorerie la
+portent : décider sans données coûte souvent plus cher, mais l'information n'est pas
+gratuite) — résultat `result.studies = { purchased, cost }` ; coûts en flux (× k).
+Les RAPPORTS sont construits côté services à la lecture (`getGameView.studyReports`),
+depuis les résultats persistés du dernier tour résolu :
+
+- **Étude de marché** : demande totale par segment, votre part / vendues / manquées,
+  et pour chaque concurrent : prix moyen constaté (≈ CA / volumes), part de marché,
+  CA, résultat net.
+- **Analyse de prix** : élasticité estimée par segment, prix de référence, plancher
+  de crédibilité, seuils psychologiques — les paramètres se découvrent en jouant, ou
+  s'achètent.
+- **Étude financière** : ratios complets (profitabilité, rentabilités, endettement,
+  rotation), structure des coûts (CVU, marge unitaire, seuil, marge de sécurité) et
+  comparaison sectorielle (moyennes des concurrents). Le bilan et le compte de
+  résultat propres restent gratuits : ce sont VOS comptes.
+- **Analyse de projet** : VAN, TRI et délai de récupération de l'investissement
+  capacitaire (flux = ventes manquées × marge unitaire), et l'arbitrage chiffré de la
+  commande exceptionnelle du tour courant (marge totale vs coût de portage du BFR au
+  taux du découvert).
+
 ## 8. Ce que le moteur ne fait pas
 
 - Il ne connaît ni les indices, ni les scores, ni les niveaux de déblocage d'information :

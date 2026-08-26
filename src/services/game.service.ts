@@ -49,6 +49,8 @@ import {
   type PedagogyInputs,
 } from "@/scoring/bpi";
 import { ENGINE_VERSION, orderOfferForRound, simulateRound } from "@/engine/simulation";
+import { computeRatios } from "@/engine/finance/ratios";
+import { irr, npv, paybackPeriod } from "@/engine/investment";
 import type {
   CompanyRoundResult,
   CompanyState,
@@ -554,6 +556,7 @@ async function resolveGameRound(
           treasury: undefined,
           finance: undefined, // échéances automatiques ; emprunt/anticipé/capital : ponctuels
           acceptOrder: undefined, // chaque commande exceptionnelle se décide
+          studies: undefined, // l'information s'achète tour par tour
         };
         carriedOver.add(team.id);
       } else {
@@ -630,6 +633,7 @@ async function resolveGameRound(
               events: roundEventCodesFor(t.id),
               extraOrders: r.extraOrders ?? null,
               orderOffer: r.orderOffer ?? null,
+              studies: r.studies ?? null,
               insurance: r.insurance ?? null,
               hr: r.hr ?? null,
               investment: r.investment ?? null,
@@ -1035,6 +1039,85 @@ export interface GameView {
     unitVariableCost: number;
     refPrice: number;
   } | null;
+  /** Catalogue d'études du scénario (prix à l'échelle de la périodicité). */
+  studiesOffer: {
+    marketCost: number;
+    priceCost: number;
+    financeCost: number;
+    projectCost: number;
+  } | null;
+  /** Rapports des études achetées au dernier tour résolu (doc 02 §8bis). */
+  studyReports: StudyReports | null;
+}
+
+/** Rapports d'études : des données riches et variées pour décider. */
+export interface StudyReports {
+  round: number;
+  cost: number;
+  market?: {
+    segments: {
+      name: string;
+      potential: number;
+      yourShare: number;
+      yourSold: number;
+      yourLost: number;
+    }[];
+    competitors: {
+      name: string;
+      isPlayer: boolean;
+      avgPrice: number | null;
+      marketShare: number;
+      revenue: number;
+      netIncome: number;
+    }[];
+  };
+  price?: {
+    yourPrice: number;
+    segments: {
+      name: string;
+      refPrice: number;
+      elasticity: number;
+      minAcceptablePrice: number;
+      thresholds: number[];
+    }[];
+  };
+  finance?: {
+    ratios: {
+      profitability: number;
+      returnOnCapitalEmployed: number;
+      returnOnEquity: number;
+      debtToEquity: number;
+      assetTurnover: number;
+    };
+    costs: {
+      unitVariableCost: number;
+      unitMargin: number;
+      breakEvenUnits: number;
+      safetyMargin: number;
+    };
+    sector: { teams: number; avgRevenue: number; avgNetIncome: number; avgNetTreasury: number };
+  };
+  project?: {
+    investment: {
+      capacityUnits: number;
+      outlay: number;
+      lostUnits: number;
+      unitMargin: number;
+      ratePerRound: number;
+      rounds: number;
+      npv: number;
+      irr: number | null;
+      paybackRounds: number | null;
+    } | null;
+    currentOffer: {
+      title: string;
+      units: number;
+      price: number;
+      margin: number;
+      carryCost: number;
+      paymentDelayDays: number;
+    } | null;
+  };
 }
 
 export async function getGameView(gameId: string, userId: string): Promise<GameView | null> {
@@ -1080,6 +1163,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         events: string[];
         extraOrders?: CompanyRoundResult["extraOrders"] | null;
         orderOffer?: CompanyRoundResult["orderOffer"] | null;
+        studies?: CompanyRoundResult["studies"] | null;
         insurance?: CompanyRoundResult["insurance"] | null;
         hr?: CompanyRoundResult["hr"] | null;
         investment?: CompanyRoundResult["investment"] | null;
@@ -1106,6 +1190,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         breakeven: trace.breakeven,
         extraOrders: trace.extraOrders ?? undefined,
         orderOffer: trace.orderOffer ?? undefined,
+        studies: trace.studies ?? undefined,
         insurance: trace.insurance ?? undefined,
         hr: trace.hr ?? undefined,
         investment: trace.investment ?? undefined,
@@ -1172,6 +1257,150 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
   const playerDimensions =
     ((playerRankingRow?.detail as { dimensions?: Partial<Record<BpiDimension, number>> })
       ?.dimensions as Partial<Record<BpiDimension, number>> | undefined) ?? null;
+
+  // Rapports des études achetées au dernier tour résolu (doc 02 §8bis) :
+  // construits à la lecture depuis les résultats persistés — la facture est
+  // déjà dans les comptes, ici on livre l'information payée.
+  const studyReports: StudyReports | null = await (async () => {
+    const purchased = lastResult?.studies?.purchased ?? [];
+    if (!lastRound || !lastResult || purchased.length === 0) return null;
+    const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+    const cvu =
+      snapshot.product.materialCostPerUnit + snapshot.product.otherVariableCostPerUnit;
+    const lastRows = gameResults.filter((r) => r.roundId === lastRound.id);
+    const reports: StudyReports = {
+      round: lastRound.index,
+      cost: lastResult.studies?.cost ?? 0,
+    };
+
+    if (purchased.includes("market")) {
+      const own = lastResult.market.bySegment;
+      reports.market = {
+        segments: snapshot.market.segments.map((seg) => {
+          const d = own[seg.code];
+          return {
+            name: seg.name,
+            potential: d?.potential ?? 0,
+            yourShare: d?.share ?? 0,
+            yourSold: d?.sold ?? 0,
+            yourLost: d?.lost ?? 0,
+          };
+        }),
+        competitors: lastRows
+          .map((row) => {
+            const detail = row.marketDetail as Record<
+              string,
+              { sold?: number }
+            > | null;
+            const units = detail
+              ? Object.values(detail).reduce((sum, d) => sum + (d.sold ?? 0), 0)
+              : 0;
+            return {
+              name: teamRows.find((t) => t.id === row.teamId)?.name ?? "?",
+              isPlayer: row.teamId === playerTeam.id,
+              avgPrice: units > 1 ? Number(row.revenue) / units : null,
+              marketShare: Number(row.marketShare),
+              revenue: Number(row.revenue),
+              netIncome: Number(row.netIncome),
+            };
+          })
+          .sort((a, b) => b.marketShare - a.marketShare),
+      };
+    }
+
+    if (purchased.includes("price")) {
+      reports.price = {
+        yourPrice: lastDecisions?.price ?? 0,
+        segments: snapshot.market.segments.map((seg) => ({
+          name: seg.name,
+          refPrice: seg.refPrice,
+          elasticity: Math.round(seg.priceElasticity * 10) / 10,
+          minAcceptablePrice: seg.minAcceptablePrice,
+          thresholds: (seg.psychThresholds ?? []).map((t) => t.threshold),
+        })),
+      };
+    }
+
+    if (purchased.includes("finance")) {
+      const ratios = computeRatios(
+        lastResult.incomeStatement,
+        lastResult.balanceSheet,
+        snapshot.finance.taxRate,
+      );
+      const others = lastRows.filter((r) => r.teamId !== playerTeam.id);
+      const avg = (pick: (r: (typeof lastRows)[number]) => number) =>
+        others.length > 0 ? others.reduce((sum, r) => sum + pick(r), 0) / others.length : 0;
+      reports.finance = {
+        ratios: {
+          profitability: ratios.profitability,
+          returnOnCapitalEmployed: ratios.returnOnCapitalEmployed,
+          returnOnEquity: ratios.returnOnEquity,
+          debtToEquity: ratios.debtToEquity,
+          assetTurnover: ratios.assetTurnover,
+        },
+        costs: {
+          unitVariableCost: cvu,
+          unitMargin: (lastDecisions?.price ?? 0) - cvu,
+          breakEvenUnits: lastResult.breakeven.breakEvenUnits,
+          safetyMargin: lastResult.breakeven.safetyMargin,
+        },
+        sector: {
+          teams: others.length,
+          avgRevenue: avg((r) => Number(r.revenue)),
+          avgNetIncome: avg((r) => Number(r.netIncome)),
+          avgNetTreasury: avg((r) => Number(r.netTreasury)),
+        },
+      };
+    }
+
+    if (purchased.includes("project")) {
+      const inv = snapshot.investment;
+      const lostUnits = Object.values(lastResult.market.bySegment).reduce(
+        (sum, d) => sum + d.lost,
+        0,
+      );
+      const unitMargin = (lastDecisions?.price ?? snapshot.market.segments[0]?.refPrice ?? 0) - cvu;
+      let investment: NonNullable<StudyReports["project"]>["investment"] = null;
+      if (inv) {
+        const outlay = inv.maxPerRound * inv.costPerCapacityUnit;
+        const ratePerRound = (snapshot.finance.loanAnnualRate * snapshot.roundDays) / 360;
+        const rounds = Math.round(inv.depreciationRounds);
+        const extraSold = Math.min(lostUnits, inv.maxPerRound);
+        const flowPerRound = extraSold * unitMargin;
+        const flows = [-outlay, ...Array.from({ length: rounds }, () => flowPerRound)];
+        investment = {
+          capacityUnits: inv.maxPerRound,
+          outlay,
+          lostUnits,
+          unitMargin,
+          ratePerRound,
+          rounds,
+          npv: npv(flows, ratePerRound),
+          irr: irr(flows),
+          paybackRounds: paybackPeriod(flows),
+        };
+      }
+      const offer = orderOfferForRound(snapshot, game.currentRound);
+      reports.project = {
+        investment,
+        currentOffer: offer
+          ? {
+              title: offer.title,
+              units: offer.units,
+              price: offer.price,
+              margin: offer.units * (offer.price - cvu),
+              carryCost:
+                offer.units *
+                offer.price *
+                (offer.paymentDelayDays / 360) *
+                snapshot.finance.overdraftAnnualRate,
+              paymentDelayDays: offer.paymentDelayDays,
+            }
+          : null,
+      };
+    }
+    return reports;
+  })();
 
   const profile = game.difficultyProfile as { kind?: GameKind };
   return {
@@ -1240,6 +1469,11 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
           }
         : null;
     })(),
+    studiesOffer: (() => {
+      const catalog = (game.scenarioSnapshot as EngineScenarioConfig).studies;
+      return catalog ? { ...catalog } : null;
+    })(),
+    studyReports,
     orderOffer: (() => {
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
       const offer = orderOfferForRound(snapshot, game.currentRound);

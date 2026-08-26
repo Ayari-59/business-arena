@@ -317,6 +317,14 @@ const rawNova = {
   // Sous-traitance : unités finies à 52 € (coût variable interne ≈ 38 €) —
   // la marge d'une commande sous-traitée se calcule, elle ne se devine pas.
   subcontracting: { unitCost: 52 },
+  // Études achetables : des données riches pour décider — mais l'information
+  // a un prix, et il se lit au seuil de rentabilité comme les autres charges.
+  studies: {
+    marketCost: 1500, // demande par segment, parts et prix des concurrents
+    priceCost: 1000, // élasticités estimées, seuils psychologiques, positionnement
+    financeCost: 800, // ratios complets, structure des coûts, comparaison sectorielle
+    projectCost: 1200, // VAN/TRI de l'investissement, arbitrage de la commande du tour
+  },
   // Commandes exceptionnelles ENTRE CHAQUE TOUR (rotation déterministe, la
   // même offre pour toutes les équipes — coût variable interne 38 €/u) :
   // les tours impairs proposent l'export à forte marge payé à 90 jours (le

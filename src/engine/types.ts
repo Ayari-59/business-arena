@@ -150,6 +150,21 @@ export interface EngineScenarioConfig {
    */
   orderOffers?: OrderOfferDef[];
   /**
+   * Études achetables (optionnel — doc 02 §8bis) : l'information a un prix.
+   * Chaque étude cochée ce tour est facturée en charge de structure et son
+   * RAPPORT est délivré avec les résultats du tour (étude de marché : demande
+   * et concurrents ; analyse de prix : élasticités et seuils psychologiques ;
+   * étude financière : ratios, coûts et comparaison sectorielle ; analyse de
+   * projet : VAN/TRI de l'investissement et arbitrage de la commande
+   * exceptionnelle). Coûts en base trimestrielle (flux, × k).
+   */
+  studies?: {
+    marketCost: number;
+    priceCost: number;
+    financeCost: number;
+    projectCost: number;
+  };
+  /**
    * Ressources humaines (optionnel — doc 02 §4.1) : embauches, licenciements,
    * formation et politique salariale. Les salaires de `includedHeadcount`
    * employés sont déjà dans fixedCostsPerRound ; seul l'écart (effectif
@@ -339,6 +354,12 @@ export interface RoundDecisions {
    */
   acceptOrder?: boolean;
   /**
+   * Études achetées ce tour (si le scénario a un catalogue `studies`) :
+   * facturées en charges de structure, rapports délivrés avec les résultats.
+   * Actions ponctuelles : jamais reconduites.
+   */
+  studies?: { market?: boolean; price?: boolean; finance?: boolean; project?: boolean };
+  /**
    * Décisions RH (si le scénario le propose). hire/fire prennent effet au
    * tour SUIVANT (le recrutement prend du temps), les coûts tombent ce tour.
    * salaryIndex : 1 = salaire de marché (récurrent, reconduit) ;
@@ -464,6 +485,8 @@ export interface CompanyRoundResult {
   };
   /** Assurance du tour : prime payée et événements couverts neutralisés. */
   insurance?: { premium: number; neutralizedEvents: string[] };
+  /** Études achetées ce tour : lesquelles, et la facture (charge de structure). */
+  studies?: { purchased: ("market" | "price" | "finance" | "project")[]; cost: number };
   /** Dette du tour : échéance obligatoire, anticipé, prochaine échéance. */
   debt?: {
     mandatoryRepayment: number;

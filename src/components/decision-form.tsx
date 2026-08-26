@@ -54,6 +54,7 @@ export function DecisionForm({
   debtSchedule,
   treasuryOffer,
   orderOffer,
+  studiesOffer,
 }: {
   gameId: string;
   roundIndex: number;
@@ -91,6 +92,13 @@ export function DecisionForm({
     price: number;
     paymentDelayDays: number;
     unitVariableCost: number;
+  } | null;
+  /** Catalogue d'études du scénario : l'information a un prix. */
+  studiesOffer?: {
+    marketCost: number;
+    priceCost: number;
+    financeCost: number;
+    projectCost: number;
   } | null;
 }) {
   const action = playRoundAction.bind(null, gameId);
@@ -221,6 +229,65 @@ export function DecisionForm({
             {Math.round(treasuryOffer.overdraftLimit).toLocaleString("fr-FR")} €. Au-delà, la
             banque cède vos créances d&apos;office, au tarif fort — si vous ne gérez pas votre
             trésorerie, quelqu&apos;un la gérera pour vous.
+          </p>
+        </fieldset>
+      ) : null}
+      {studiesOffer ? (
+        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
+          <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+            📊 Acheter de l&apos;information — livrée avec les résultats du tour
+          </legend>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {(
+              [
+                {
+                  name: "studyMarket",
+                  label: "Étude de marché",
+                  cost: studiesOffer.marketCost,
+                  hint: "Demande par segment, parts de marché, prix moyens et résultats des concurrents.",
+                },
+                {
+                  name: "studyPrice",
+                  label: "Analyse de prix",
+                  cost: studiesOffer.priceCost,
+                  hint: "Élasticités estimées par segment, seuils psychologiques, prix de référence.",
+                },
+                {
+                  name: "studyFinance",
+                  label: "Étude financière",
+                  cost: studiesOffer.financeCost,
+                  hint: "Ratios complets, structure des coûts, seuil, comparaison sectorielle.",
+                },
+                {
+                  name: "studyProject",
+                  label: "Analyse de projet",
+                  cost: studiesOffer.projectCost,
+                  hint: "VAN, TRI et délai de récupération de l'investissement ; arbitrage de la commande du tour.",
+                },
+              ] as const
+            ).map((study) => (
+              <label
+                key={study.name}
+                className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-3 py-2.5"
+              >
+                <input
+                  type="checkbox"
+                  name={study.name}
+                  defaultChecked={false}
+                  className="mt-0.5 h-4 w-4 accent-amber-400"
+                />
+                <span>
+                  <span className="text-sm font-medium text-slate-200">
+                    {study.label} — {study.cost.toLocaleString("fr-FR")} €
+                  </span>
+                  <span className="mt-0.5 block text-xs text-slate-500">{study.hint}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+          <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+            L&apos;information a un prix — facturé en charges de structure, il se lit au seuil
+            de rentabilité. Décider sans données coûte souvent plus cher.
           </p>
         </fieldset>
       ) : null}

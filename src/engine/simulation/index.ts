@@ -122,6 +122,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       maintenanceBudget: Math.max(0, raw.maintenanceBudget),
       insurance: raw.insurance,
       acceptOrder: raw.acceptOrder,
+      studies: raw.studies,
       hr: raw.hr,
       treasury: raw.treasury,
       finance: raw.finance,
@@ -349,6 +350,18 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const insurancePremium = w.insured ? (insuranceOffer?.premiumPerRound ?? 0) : 0;
     const hrCost = w.hr.cost;
 
+    // Études achetées (doc 02 §8bis) : l'information se paie — la facture est
+    // une charge de structure, le rapport est délivré avec les résultats.
+    const studiesPurchased = scenario.studies
+      ? (["market", "price", "finance", "project"] as const).filter(
+          (k) => w.decisions.studies?.[k],
+        )
+      : [];
+    const studiesCost = studiesPurchased.reduce(
+      (sum, k) => sum + scenario.studies![`${k}Cost`],
+      0,
+    );
+
     // Échéanciers d'emprunts (doc 02 §6.5) : les échéances sont OBLIGATOIRES,
     // le remboursement décidé est un anticipé facultatif. Sans échéancier au
     // scénario : remboursement libre (comportement historique).
@@ -376,7 +389,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       marketingCost: w.decisions.marketingBudget,
       qualityCost: w.decisions.qualityBudget,
       maintenanceCost: w.decisions.maintenanceBudget,
-      fixedCosts: scenario.fixedCostsPerRound + insurancePremium + hrCost,
+      fixedCosts: scenario.fixedCostsPerRound + insurancePremium + hrCost + studiesCost,
       // amortissements : base du scénario + investissements en service
       // (y compris celui mis en service ce tour)
       depreciation:
@@ -447,6 +460,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       scenario.fixedCostsPerRound +
       insurancePremium +
       hrCost +
+      studiesCost +
       finance.incomeStatement.depreciation +
       w.decisions.marketingBudget +
       w.decisions.qualityBudget +
@@ -489,6 +503,9 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
               unitPrice: orderUnitPrice,
             },
           }
+        : {}),
+      ...(studiesPurchased.length > 0
+        ? { studies: { purchased: [...studiesPurchased], cost: studiesCost } }
         : {}),
       ...(roundOffer
         ? {

@@ -13,6 +13,7 @@ import { cardByCode } from "@/config/events/cards";
 import { BpiPanel } from "@/components/bpi-panel";
 import { RevenueChart, TreasuryChart } from "@/components/charts";
 import { DecisionForm } from "@/components/decision-form";
+import { StudyReportsPanel } from "@/components/study-reports";
 import type { RoundDecisions } from "@/engine/types";
 
 export const dynamic = "force-dynamic";
@@ -181,6 +182,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                   </p>
                 )
               ) : null}
+              {view.studyReports ? <StudyReportsPanel reports={view.studyReports} /> : null}
               {r.debt && (r.debt.mandatoryRepayment > 0.5 || r.debt.newLoan > 0.5 || r.debt.earlyRepayment > 0.5) ? (
                 <p className="mt-3 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-xs text-slate-300">
                   🏦 Dette : échéance de {formatEuro(r.debt.mandatoryRepayment)} prélevée
@@ -429,6 +431,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
             debtSchedule={view.debtSchedule}
             treasuryOffer={view.treasuryOffer}
             orderOffer={view.orderOffer}
+            studiesOffer={view.studiesOffer}
           />
         </section>
       )}
