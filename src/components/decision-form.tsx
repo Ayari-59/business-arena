@@ -55,6 +55,7 @@ export function DecisionForm({
   treasuryOffer,
   orderOffer,
   studiesOffer,
+  capitalAllowance,
 }: {
   gameId: string;
   roundIndex: number;
@@ -100,6 +101,8 @@ export function DecisionForm({
     financeCost: number;
     projectCost: number;
   } | null;
+  /** Enveloppe d'augmentation de capital restante (null = illimitée). */
+  capitalAllowance?: { total: number; remaining: number } | null;
 }) {
   const action = playRoundAction.bind(null, gameId);
   const [state, formAction, pending] = useActionState(action, initialState);
@@ -143,7 +146,11 @@ export function DecisionForm({
               hint={debtSchedule ? "Facultatif, en plus de l'échéance obligatoire." : undefined}
             />
             <Field name="capitalIncrease" label="Augmentation de capital" defaultValue={0} suffix="€"
-              hint="Apport des associés : trésorerie et capitaux propres — sans intérêts, mais dilutif." />
+              hint={
+                capitalAllowance
+                  ? `Apport des associés — enveloppe restante : ${Math.round(capitalAllowance.remaining).toLocaleString("fr-FR")} € sur ${Math.round(capitalAllowance.total).toLocaleString("fr-FR")} € pour toute la partie. Les associés ne suivent pas indéfiniment.`
+                  : "Apport des associés : trésorerie et capitaux propres — sans intérêts, mais dilutif."
+              } />
           </>
         ) : null}
         {on.investment && investmentOffer ? (

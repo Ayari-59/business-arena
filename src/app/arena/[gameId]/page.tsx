@@ -14,6 +14,7 @@ import { BpiPanel } from "@/components/bpi-panel";
 import { RevenueChart, TreasuryChart } from "@/components/charts";
 import { DecisionForm } from "@/components/decision-form";
 import { StudyReportsPanel } from "@/components/study-reports";
+import { FinancialStatements } from "@/components/financial-statements";
 import type { RoundDecisions } from "@/engine/types";
 
 export const dynamic = "force-dynamic";
@@ -182,7 +183,21 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                   </p>
                 )
               ) : null}
+              <FinancialStatements
+                result={r}
+                price={view.lastDecisions?.price ?? null}
+                materialCostPerUnit={view.costFacts.materialCostPerUnit}
+                otherVariableCostPerUnit={view.costFacts.otherVariableCostPerUnit}
+              />
               {view.studyReports ? <StudyReportsPanel reports={view.studyReports} /> : null}
+              {r.capital && r.capital.applied < r.capital.requested - 0.5 ? (
+                <p className="mt-3 rounded-lg border border-amber-400/30 bg-amber-950/30 px-3 py-2 text-xs text-amber-200">
+                  🤝 Apport plafonné : {formatEuro(r.capital.applied)} retenus sur{" "}
+                  {formatEuro(r.capital.requested)} demandés — l&apos;enveloppe des associés
+                  est {r.capital.remainingAfter < 0.5 ? "épuisée" : `réduite à ${formatEuro(r.capital.remainingAfter)}`}.
+                  Le capital n&apos;est pas un robinet.
+                </p>
+              ) : null}
               {r.debt && (r.debt.mandatoryRepayment > 0.5 || r.debt.newLoan > 0.5 || r.debt.earlyRepayment > 0.5) ? (
                 <p className="mt-3 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-xs text-slate-300">
                   🏦 Dette : échéance de {formatEuro(r.debt.mandatoryRepayment)} prélevée
@@ -432,6 +447,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
             treasuryOffer={view.treasuryOffer}
             orderOffer={view.orderOffer}
             studiesOffer={view.studiesOffer}
+            capitalAllowance={view.capitalAllowance}
           />
         </section>
       )}

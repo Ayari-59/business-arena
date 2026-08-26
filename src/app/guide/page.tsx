@@ -175,6 +175,9 @@ export default function GuidePage() {
             <Step n={5} title="Lisez vos résultats comme un dirigeant">
               Chiffre d&apos;affaires, résultat net, part de marché — mais surtout la ligne de
               vie : <strong className="text-slate-200">Trésorerie nette = FRNG − BFR</strong>.
+              Vos comptes complets sont dépliables sous les indicateurs : compte de
+              résultat, bilan, analyse des coûts et budget de trésorerie — gratuits, ce
+              sont les vôtres.
               Le débriefing corrigé vous montre ce qu&apos;il fallait voir, et vos fiches
               concepts se déverrouillent au fil des situations vécues.
             </Step>

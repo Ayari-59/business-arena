@@ -84,6 +84,13 @@ export interface EngineScenarioConfig {
      * Absente : remboursement libre (comportement historique).
      */
     loanDurationRounds?: number;
+    /**
+     * Enveloppe TOTALE d'augmentation de capital sur la partie (stock, en €,
+     * inchangée par la périodicité). Les associés ne suivent pas
+     * indéfiniment : sans plafond, l'apport illimité fausserait le jeu de
+     * trésorerie. Absente = illimité (comportement historique).
+     */
+    maxCapitalIncreaseTotal?: number;
   };
   /**
    * Outils de gestion de trésorerie (optionnel) : mobilisation du poste
@@ -338,6 +345,8 @@ export interface CompanyState {
    * financialDebt du bilan. Absent = dette à remboursement libre (historique).
    */
   loans?: { remaining: number; perRound: number }[];
+  /** Capital déjà apporté depuis le début de la partie (enveloppe des associés). */
+  capitalRaised?: number;
 }
 
 export interface RoundDecisions {
@@ -487,6 +496,8 @@ export interface CompanyRoundResult {
   insurance?: { premium: number; neutralizedEvents: string[] };
   /** Études achetées ce tour : lesquelles, et la facture (charge de structure). */
   studies?: { purchased: ("market" | "price" | "finance" | "project")[]; cost: number };
+  /** Apport en capital du tour, borné par l'enveloppe des associés. */
+  capital?: { requested: number; applied: number; remainingAfter: number };
   /** Dette du tour : échéance obligatoire, anticipé, prochaine échéance. */
   debt?: {
     mandatoryRepayment: number;

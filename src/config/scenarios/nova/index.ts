@@ -98,6 +98,9 @@ const rawNova = {
     supplierPaymentDelayDays: 22,
     // les emprunts se contractent sur 16 trimestres, amortissement constant
     loanDurationRounds: 16,
+    // les associés suivent jusqu'à 100 000 € sur la partie — pas au-delà :
+    // l'apport illimité fausserait le jeu de trésorerie
+    maxCapitalIncreaseTotal: 100000,
     depreciationPerRound: 5000,
   },
   // structure totale ≈ 96 000 €/tour : 91 000 décaissés + 5 000 d'amortissements

@@ -322,6 +322,13 @@ tours en 1/k, plafond en k. Financement : `finance.newLoan` (emprunt),
 `finance.capitalIncrease` (apport en capitaux propres, sans intérêts) — actions
 ponctuelles jamais reconduites, comme l'investissement.
 
+**Plafond d'augmentation de capital** (`finance.maxCapitalIncreaseTotal`) : les
+associés suivent jusqu'à une enveloppe TOTALE sur la partie (stock en €, inchangée par
+la périodicité, suivie par `CompanyState.capitalRaised`) — sans plafond, l'apport
+illimité fausserait le jeu de trésorerie. Un apport au-delà est écrêté (résultat
+`capital = { requested, applied, remainingAfter }`, affiché en jeu) ; absent = illimité
+(comportement historique). NOVA : 100 000 €.
+
 **Échéanciers d'emprunt obligatoires** (`finance.loanDurationRounds`) : rembourser un
 emprunt n'est **pas une décision, c'est une contrainte**. Chaque emprunt vivant est
 porté dans `CompanyState.loans` (`{ remaining, perRound }`, amortissement constant) ;

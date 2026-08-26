@@ -86,6 +86,7 @@ export const engineScenarioConfigSchema = z.object({
     supplierPaymentDelayDays: z.number().int().nonnegative(),
     depreciationPerRound: z.number().nonnegative(),
     loanDurationRounds: z.number().positive().optional(),
+    maxCapitalIncreaseTotal: z.number().positive().optional(),
   }),
   treasury: z
     .object({

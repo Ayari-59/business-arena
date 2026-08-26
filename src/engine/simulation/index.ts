@@ -376,6 +376,17 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       : Math.min(requestedRepayment, w.state.finance.financialDebt);
     const newLoan = Math.max(0, w.decisions.finance?.newLoan ?? 0);
 
+    // Augmentation de capital : bornée par l'enveloppe TOTALE des associés
+    // (scenario.finance.maxCapitalIncreaseTotal) — un apport illimité
+    // fausserait le jeu de trésorerie. Sans plafond : comportement historique.
+    const requestedCapital = Math.max(0, w.decisions.finance?.capitalIncrease ?? 0);
+    const capitalCap = scenario.finance.maxCapitalIncreaseTotal;
+    const raisedBefore = w.state.capitalRaised ?? 0;
+    const capitalIncrease =
+      capitalCap !== undefined
+        ? Math.min(requestedCapital, Math.max(0, capitalCap - raisedBefore))
+        : requestedCapital;
+
     const finance = computeFinance({
       opening: w.state.finance,
       roundDays: scenario.roundDays,
@@ -403,7 +414,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       vatRate: scenario.finance.vatRate ?? 0,
       newLoan,
       loanRepayment: mandatoryRepayment + earlyRepayment,
-      capitalIncrease: Math.max(0, w.decisions.finance?.capitalIncrease ?? 0),
+      capitalIncrease,
       investmentOutlay: w.investOutlay,
       ...(scenario.treasury
         ? {
@@ -507,6 +518,15 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       ...(studiesPurchased.length > 0
         ? { studies: { purchased: [...studiesPurchased], cost: studiesCost } }
         : {}),
+      ...(capitalCap !== undefined && requestedCapital > 0
+        ? {
+            capital: {
+              requested: requestedCapital,
+              applied: capitalIncrease,
+              remainingAfter: Math.max(0, capitalCap - raisedBefore - capitalIncrease),
+            },
+          }
+        : {}),
       ...(roundOffer
         ? {
             orderOffer: {
@@ -607,6 +627,9 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         ? w.investOutlay / scenario.investment.depreciationRounds
         : 0,
       ...(scheduled ? { loans: nextLoans } : {}),
+      ...(capitalIncrease > 0 || w.state.capitalRaised !== undefined
+        ? { capitalRaised: raisedBefore + capitalIncrease }
+        : {}),
       perceivedQuality: updatePerceivedQuality(
         w.state.perceivedQuality,
         w.producedQuality,

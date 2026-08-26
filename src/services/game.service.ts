@@ -634,6 +634,7 @@ async function resolveGameRound(
               extraOrders: r.extraOrders ?? null,
               orderOffer: r.orderOffer ?? null,
               studies: r.studies ?? null,
+              capital: r.capital ?? null,
               insurance: r.insurance ?? null,
               hr: r.hr ?? null,
               investment: r.investment ?? null,
@@ -1039,6 +1040,10 @@ export interface GameView {
     unitVariableCost: number;
     refPrice: number;
   } | null;
+  /** Coûts unitaires du scénario (après surcharges éco) — analyse des coûts. */
+  costFacts: { materialCostPerUnit: number; otherVariableCostPerUnit: number };
+  /** Enveloppe d'augmentation de capital des associés (null = illimitée). */
+  capitalAllowance: { total: number; remaining: number } | null;
   /** Catalogue d'études du scénario (prix à l'échelle de la périodicité). */
   studiesOffer: {
     marketCost: number;
@@ -1164,6 +1169,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         extraOrders?: CompanyRoundResult["extraOrders"] | null;
         orderOffer?: CompanyRoundResult["orderOffer"] | null;
         studies?: CompanyRoundResult["studies"] | null;
+        capital?: CompanyRoundResult["capital"] | null;
         insurance?: CompanyRoundResult["insurance"] | null;
         hr?: CompanyRoundResult["hr"] | null;
         investment?: CompanyRoundResult["investment"] | null;
@@ -1191,6 +1197,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         extraOrders: trace.extraOrders ?? undefined,
         orderOffer: trace.orderOffer ?? undefined,
         studies: trace.studies ?? undefined,
+        capital: trace.capital ?? undefined,
         insurance: trace.insurance ?? undefined,
         hr: trace.hr ?? undefined,
         investment: trace.investment ?? undefined,
@@ -1468,6 +1475,19 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
             overdraftLimit: snapshot.finance.overdraftLimit,
           }
         : null;
+    })(),
+    capitalAllowance: (() => {
+      const cap = (game.scenarioSnapshot as EngineScenarioConfig).finance.maxCapitalIncreaseTotal;
+      if (cap === undefined) return null;
+      const raised = (currentState as { capitalRaised?: number } | undefined)?.capitalRaised ?? 0;
+      return { total: cap, remaining: Math.max(0, cap - raised) };
+    })(),
+    costFacts: (() => {
+      const product = (game.scenarioSnapshot as EngineScenarioConfig).product;
+      return {
+        materialCostPerUnit: product.materialCostPerUnit,
+        otherVariableCostPerUnit: product.otherVariableCostPerUnit,
+      };
     })(),
     studiesOffer: (() => {
       const catalog = (game.scenarioSnapshot as EngineScenarioConfig).studies;
