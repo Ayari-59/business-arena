@@ -565,6 +565,7 @@ async function resolveGameRound(
         allDecisions[team.id] = {
           ...prev,
           hr: prev.hr ? { salaryIndex: prev.hr.salaryIndex } : undefined,
+          supplierChoice: prev.supplierChoice,
           investment: undefined,
           treasury: undefined,
           finance: undefined, // échéances automatiques ; emprunt/anticipé/capital : ponctuels
@@ -1015,6 +1016,34 @@ export interface GameView {
   lastDecisions: RoundDecisions | null;
   /** Offre d'assurance du scénario (prime déjà à l'échelle de la périodicité). */
   insuranceOffer: { premium: number; coveredEventCodes: string[] } | null;
+  /** Formules d'assurance (si le scénario en propose plusieurs). */
+  insuranceFormulas: {
+    code: string;
+    name: string;
+    premium: number;
+    coveredLabels: string[];
+  }[] | null;
+  /** Fournisseurs disponibles (si le scénario en propose). */
+  suppliersOffer: {
+    code: string;
+    name: string;
+    narrative: string;
+    costMultiplier: number;
+    qualityBonus: number;
+    paymentDelayDays: number;
+    supplyRiskProbability: number;
+    materialCostPerUnit: number;
+  }[] | null;
+  /** Capacité de production : machine, main-d'œuvre et goulot. */
+  capacityFacts: {
+    machineCapacity: number;
+    laborCapacity: number;
+    bottleneck: "machine" | "labor" | "balanced";
+    headcount: number;
+    hoursPerEmployee: number;
+    productivity: number;
+    hoursPerUnit: number;
+  } | null;
   /** Niveau de difficulté (préréglage en données, doc 08 §2). */
   difficulty: { level: number; name: string; hintMaxLevel: number };
   /** Décisions exposées à ce niveau (prix/production/marketing : toujours). */
@@ -1184,6 +1213,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         studies?: CompanyRoundResult["studies"] | null;
         capital?: CompanyRoundResult["capital"] | null;
         insurance?: CompanyRoundResult["insurance"] | null;
+        supplier?: CompanyRoundResult["supplier"] | null;
         hr?: CompanyRoundResult["hr"] | null;
         investment?: CompanyRoundResult["investment"] | null;
         qualityCosts?: CompanyRoundResult["qualityCosts"] | null;
@@ -1212,6 +1242,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         studies: trace.studies ?? undefined,
         capital: trace.capital ?? undefined,
         insurance: trace.insurance ?? undefined,
+        supplier: trace.supplier ?? undefined,
         hr: trace.hr ?? undefined,
         investment: trace.investment ?? undefined,
         qualityCosts: trace.qualityCosts ?? undefined,
@@ -1457,6 +1488,55 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       return offer
         ? { premium: offer.premiumPerRound, coveredEventCodes: offer.coveredEventCodes }
         : null;
+    })(),
+    insuranceFormulas: (() => {
+      const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+      const formulas = snapshot.insurance?.formulas;
+      if (!formulas || formulas.length === 0) return null;
+      const eventLabels = (codes: string[]) =>
+        codes.map((c) => {
+          const ev = snapshot.events.find((e) => e.code === c);
+          return ev ? c.replace(/_/g, " ") : c;
+        });
+      return formulas.map((f) => ({
+        code: f.code,
+        name: f.name,
+        premium: f.premiumPerRound,
+        coveredLabels: eventLabels(f.coveredEventCodes),
+      }));
+    })(),
+    suppliersOffer: (() => {
+      const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+      if (!snapshot.suppliers || snapshot.suppliers.length === 0) return null;
+      return snapshot.suppliers.map((s) => ({
+        code: s.code,
+        name: s.name,
+        narrative: s.narrative,
+        costMultiplier: s.costMultiplier,
+        qualityBonus: s.qualityBonus,
+        paymentDelayDays: s.paymentDelayDays,
+        supplyRiskProbability: s.supplyRiskProbability,
+        materialCostPerUnit: Math.round(snapshot.product.materialCostPerUnit * s.costMultiplier * 100) / 100,
+      }));
+    })(),
+    capacityFacts: (() => {
+      const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+      const state = stateRow?.state as CompanyState | undefined;
+      if (!state) return null;
+      const mc = state.machineCapacity + (state.pendingCapacity ?? 0);
+      const lc = (state.headcount * state.hoursPerEmployee * state.productivity) /
+        snapshot.product.hoursPerUnit;
+      const bottleneck: "machine" | "labor" | "balanced" =
+        mc < lc * 0.95 ? "machine" : lc < mc * 0.95 ? "labor" : "balanced";
+      return {
+        machineCapacity: Math.round(mc),
+        laborCapacity: Math.round(lc),
+        bottleneck,
+        headcount: state.headcount,
+        hoursPerEmployee: state.hoursPerEmployee,
+        productivity: state.productivity,
+        hoursPerUnit: snapshot.product.hoursPerUnit,
+      };
     })(),
     difficulty: (() => {
       const preset = presetFromProfile(game.difficultyProfile);

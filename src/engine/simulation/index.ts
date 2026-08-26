@@ -114,14 +114,18 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     scrapValue: number;
     investUnits: number;
     investOutlay: number;
+    chosenFormula: import("../types").InsuranceFormulaDef | null;
+    supplier: import("../types").SupplierDef | null;
+    supplyDisruption: boolean;
+    supplierQualityBonus: number;
   }
 
-  // Assurance catastrophe (doc 02 §7.2) : pour les assurés, les événements
-  // couverts sont exclus des modificateurs EFFECTIFS de l'entreprise.
-  // Limite assumée : la demande étant un paramètre de marché (calculée une
-  // fois pour tous), un événement de demande ne peut pas être couvert.
+  // Assurance (doc 02 §7.2) : pour les assurés, les événements couverts
+  // sont exclus des modificateurs EFFECTIFS de l'entreprise.
   const insuranceOffer = scenario.insurance;
-  const covered = new Set(insuranceOffer?.coveredEventCodes ?? []);
+  // résout les formules disponibles (rétro-compatible : ancien format = formule unique "default")
+  const insuranceFormulas = insuranceOffer?.formulas ??
+    (insuranceOffer ? [{ code: "default", name: "Assurance catastrophe", premiumPerRound: insuranceOffer.premiumPerRound, coveredEventCodes: insuranceOffer.coveredEventCodes }] : []);
 
   const working: Working[] = input.companies.map((state) => {
     const raw = input.decisions[state.id];
@@ -134,6 +138,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       maintenanceBudget: Math.max(0, raw.maintenanceBudget),
       insurance: raw.insurance,
       acceptOrder: raw.acceptOrder,
+      supplierChoice: raw.supplierChoice,
       studies: raw.studies,
       hr: raw.hr,
       treasury: raw.treasury,
@@ -150,7 +155,17 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const hrRelevant =
       scenario.hr !== undefined &&
       (raw.hr !== undefined || state.headcount !== scenario.hr.includedHeadcount);
-    const insured = Boolean(decisions.insurance && insuranceOffer);
+    // Assurance : résoudre la formule choisie
+    const chosenFormula = (() => {
+      if (!decisions.insurance || !insuranceOffer) return null;
+      if (typeof decisions.insurance === "string") {
+        return insuranceFormulas.find((f) => f.code === decisions.insurance) ?? null;
+      }
+      // booléen true → première formule (rétro-compatibilité)
+      return insuranceFormulas[0] ?? null;
+    })();
+    const insured = chosenFormula !== null;
+    const covered = new Set(chosenFormula?.coveredEventCodes ?? []);
     const neutralizedEvents = insured
       ? active
           .filter(
@@ -161,11 +176,21 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       : [];
     const companyEvents = insured ? active.filter((e) => !covered.has(e.code)) : active;
     const mods = effectiveModifiers(companyEvents, state.id);
+    // Fournisseur choisi (doc 02 §5bis) : coût, qualité, risque de rupture
+    const suppliers = scenario.suppliers;
+    const supplier = suppliers
+      ? (suppliers.find((s) => s.code === decisions.supplierChoice) ?? suppliers[0]!)
+      : null;
+    const supplierCostMul = supplier?.costMultiplier ?? 1;
+    const supplierQualityBonus = supplier?.qualityBonus ?? 0;
+    const supplyDisruption = supplier && supplier.supplyRiskProbability > 0
+      ? rng.next() < supplier.supplyRiskProbability
+      : false;
+    const supplyAvailabilityHit = supplyDisruption ? (supplier?.supplyRiskAvailabilityHit ?? 1) : 1;
     const production = computeProduction({
       planned: decisions.productionPlan,
-      // la capacité achetée au tour précédent entre en service CE tour
       machineCapacity: state.machineCapacity + (state.pendingCapacity ?? 0),
-      availability: state.availability * mods.availabilityMultiplier,
+      availability: state.availability * mods.availabilityMultiplier * supplyAvailabilityHit,
       headcount: state.headcount,
       hoursPerEmployee: state.hoursPerEmployee,
       productivity: state.productivity * hr.morale,
@@ -177,7 +202,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       qualityScale: scenario.production.qualityScale,
       utilizationRate: production.utilizationRate,
     });
-    const materialMultiplier = mods.materialCostMultiplier;
+    const materialMultiplier = mods.materialCostMultiplier * supplierCostMul;
     const unitCost = unitVariableCost(
       scenario.product.materialCostPerUnit * materialMultiplier,
       scenario.product.otherVariableCostPerUnit,
@@ -220,6 +245,10 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       scrapValue,
       investUnits,
       investOutlay,
+      chosenFormula,
+      supplier,
+      supplyDisruption,
+      supplierQualityBonus,
     };
   });
 
@@ -360,7 +389,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       w.produced * scenario.product.otherVariableCostPerUnit + subcontractCost;
 
     // Prime d'assurance et RH : charges de structure du tour.
-    const insurancePremium = w.insured ? (insuranceOffer?.premiumPerRound ?? 0) : 0;
+    const insurancePremium = w.insured ? (w.chosenFormula?.premiumPerRound ?? 0) : 0;
     const hrCost = w.hr.cost;
 
     // Études achetées (doc 02 §8bis) : l'information se paie — la facture est
@@ -406,7 +435,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       revenue,
       receivableRatio,
       purchases,
-      payableRatio: Math.min(1, scenario.finance.supplierPaymentDelayDays / scenario.roundDays),
+      payableRatio: Math.min(1, (w.supplier?.paymentDelayDays ?? scenario.finance.supplierPaymentDelayDays) / scenario.roundDays),
       otherVariableCash,
       inventoryChange,
       cogs,
@@ -587,7 +616,26 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
           }
         : {}),
       ...(w.insured
-        ? { insurance: { premium: insurancePremium, neutralizedEvents: w.neutralizedEvents } }
+        ? {
+            insurance: {
+              premium: insurancePremium,
+              ...(w.chosenFormula && w.chosenFormula.code !== "default"
+                ? { formulaCode: w.chosenFormula.code }
+                : {}),
+              neutralizedEvents: w.neutralizedEvents,
+            },
+          }
+        : {}),
+      ...(w.supplier
+        ? {
+            supplier: {
+              code: w.supplier.code,
+              name: w.supplier.name,
+              costMultiplier: w.supplier.costMultiplier,
+              qualityBonus: w.supplier.qualityBonus,
+              supplyDisruption: w.supplyDisruption,
+            },
+          }
         : {}),
       ...(w.hrRelevant
         ? {
@@ -647,7 +695,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         w.state.perceivedQuality,
         w.producedQuality,
         scenario.production.qualityInertia,
-      ),
+      ) + w.supplierQualityBonus,
       availability: updateAvailability({
         current: w.state.availability,
         maintenanceBudget: w.decisions.maintenanceBudget,

@@ -99,7 +99,7 @@ describe("commande exceptionnelle + assurance catastrophe (bout en bout)", () =>
     const r = view!.lastResult!;
 
     // l'assuré : sinistre neutralisé, prime payée, matières au tarif normal
-    expect(r.insurance).toEqual({ premium: 2500, neutralizedEvents: ["natural_disaster"] });
+    expect(r.insurance).toEqual({ premium: 1500, formulaCode: "basic", neutralizedEvents: ["natural_disaster"] });
     expect(r.incomeStatement.variableProductionCost).toBeCloseTo(
       r.production.produced * (22 + 16),
       4,
@@ -144,7 +144,7 @@ describe("commande exceptionnelle + assurance catastrophe (bout en bout)", () =>
     await submitTeamDecisions({ gameId, userId: studentId, payload: DECISIONS });
     await closeCurrentRound({ gameId, teacherId });
     const view = await getGameView(gameId, studentId);
-    expect(view!.lastResult!.insurance).toEqual({ premium: 2500, neutralizedEvents: [] });
+    expect(view!.lastResult!.insurance).toEqual({ premium: 1500, formulaCode: "basic", neutralizedEvents: [] });
     expect(view!.lastResult!.extraOrders).toBeUndefined();
   });
 });

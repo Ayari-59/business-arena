@@ -291,12 +291,85 @@ const rawNova = {
       ],
     },
   ],
-  // Assurance catastrophe (§ nouvelles décisions) : 2 500 €/trimestre pour
-  // neutraliser la catastrophe naturelle et la vague de froid — un coût
-  // certain contre un risque incertain, l'arbitrage se lit au seuil.
+  // Fournisseurs (doc 02 §5bis) : 3 fournisseurs avec des profils distincts.
+  // Le standard est le référent (coût = 22 €, délai = 22 j, pas de risque).
+  // Le low-cost baisse de 15 % mais expose à des ruptures et dégrade la qualité.
+  // Le premium augmente de 10 % mais apporte un bonus qualité et paie plus vite.
+  suppliers: [
+    {
+      code: "standard",
+      name: "Fournisseur standard",
+      narrative:
+        "Votre fournisseur historique : des composants fiables à prix de marché, livrés sous 22 jours.",
+      costMultiplier: 1,
+      qualityBonus: 0,
+      paymentDelayDays: 22,
+      supplyRiskProbability: 0,
+      supplyRiskAvailabilityHit: 1,
+    },
+    {
+      code: "lowcost",
+      name: "AsiaComponents",
+      narrative:
+        "Composants importés, 15 % moins chers — mais des lots irréguliers et un risque de rupture qui peut bloquer votre chaîne.",
+      costMultiplier: 0.85,
+      qualityBonus: -0.03,
+      paymentDelayDays: 45,
+      supplyRiskProbability: 0.15,
+      supplyRiskAvailabilityHit: 0.75,
+    },
+    {
+      code: "premium",
+      name: "EuroParts Premium",
+      narrative:
+        "Composants européens certifiés, qualité supérieure et livraison express — la fiabilité a un prix.",
+      costMultiplier: 1.1,
+      qualityBonus: 0.05,
+      paymentDelayDays: 15,
+      supplyRiskProbability: 0,
+      supplyRiskAvailabilityHit: 1,
+    },
+  ],
+  // Assurance (§ nouvelles décisions) : 3 formules à couverture croissante.
+  // L'arbitrage est gradué : basique couvre le minimum, étendue ajoute les
+  // pannes et le fournisseur, tous risques couvre aussi la conjoncture.
   insurance: {
     premiumPerRound: 2500,
     coveredEventCodes: ["natural_disaster", "cold_wave"],
+    formulas: [
+      {
+        code: "basic",
+        name: "Basique",
+        premiumPerRound: 1500,
+        coveredEventCodes: ["natural_disaster", "cold_wave"],
+      },
+      {
+        code: "extended",
+        name: "Étendue",
+        premiumPerRound: 3500,
+        coveredEventCodes: [
+          "natural_disaster",
+          "cold_wave",
+          "machine_breakdown",
+          "supplier_dispute",
+          "cyberattack",
+        ],
+      },
+      {
+        code: "allrisk",
+        name: "Tous risques",
+        premiumPerRound: 5500,
+        coveredEventCodes: [
+          "natural_disaster",
+          "cold_wave",
+          "machine_breakdown",
+          "supplier_dispute",
+          "cyberattack",
+          "rate_hike",
+          "raw_material_spike",
+        ],
+      },
+    ],
   },
   // RH (niveaux Arbitrage+) : 4 opérateurs inclus dans les 91 000 € de
   // structure. À effectif complet, l'atelier machine (7 000 u) est le goulot :

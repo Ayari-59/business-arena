@@ -97,12 +97,36 @@ export const engineScenarioConfigSchema = z.object({
     })
     .optional(),
   fixedCostsPerRound: z.number().nonnegative(),
-  // Assurance : la demande est un paramètre de marché, un événement de
-  // demande ne peut donc pas être couvert (neutralisation par entreprise).
+  suppliers: z
+    .array(
+      z.object({
+        code: z.string().min(1),
+        name: z.string().min(1),
+        narrative: z.string().min(1),
+        costMultiplier: z.number().min(0.5).max(2),
+        qualityBonus: z.number().min(-0.1).max(0.15),
+        paymentDelayDays: z.number().int().nonnegative(),
+        supplyRiskProbability: z.number().min(0).max(0.3),
+        supplyRiskAvailabilityHit: z.number().min(0.5).max(1),
+      }),
+    )
+    .min(2)
+    .optional(),
   insurance: z
     .object({
       premiumPerRound: z.number().nonnegative(),
       coveredEventCodes: z.array(z.string().min(1)).min(1),
+      formulas: z
+        .array(
+          z.object({
+            code: z.string().min(1),
+            name: z.string().min(1),
+            premiumPerRound: z.number().nonnegative(),
+            coveredEventCodes: z.array(z.string().min(1)).min(1),
+          }),
+        )
+        .min(1)
+        .optional(),
     })
     .optional(),
   investment: z
@@ -192,16 +216,22 @@ export const engineScenarioConfigSchema = z.object({
 }) satisfies z.ZodType<EngineScenarioConfig>;
 
 const scenarioWithChecks = engineScenarioConfigSchema.superRefine((s, ctx) => {
-  for (const code of s.insurance?.coveredEventCodes ?? []) {
-    const event = s.events.find((e) => e.code === code);
-    if (!event) {
-      ctx.addIssue({ code: "custom", message: `assurance : événement couvert inconnu « ${code} »` });
-    } else if (event.modifiers.some((m) => m.target === "demand" || m.target.startsWith("demand:"))) {
-      ctx.addIssue({
-        code: "custom",
-        message: `assurance : « ${code} » modifie la demande (paramètre de marché, non couvrable)`,
-      });
+  const checkCoverage = (label: string, codes: string[]) => {
+    for (const code of codes) {
+      const event = s.events.find((e) => e.code === code);
+      if (!event) {
+        ctx.addIssue({ code: "custom", message: `${label} : événement couvert inconnu « ${code} »` });
+      } else if (event.modifiers.some((m) => m.target === "demand" || m.target.startsWith("demand:"))) {
+        ctx.addIssue({
+          code: "custom",
+          message: `${label} : « ${code} » modifie la demande (paramètre de marché, non couvrable)`,
+        });
+      }
     }
+  };
+  checkCoverage("assurance", s.insurance?.coveredEventCodes ?? []);
+  for (const f of s.insurance?.formulas ?? []) {
+    checkCoverage(`assurance (${f.code})`, f.coveredEventCodes);
   }
 });
 

@@ -49,6 +49,10 @@ export function applyScenarioVariability(
   const studiesFactor = between(0.9, 1.1);
   const eventFactor = between(0.8, 1.3);
 
+  // Fournisseurs : perturbation du coût ±5 % et du risque ±20 % (relatif)
+  const supplierCostFactor = between(0.95, 1.05);
+  const supplierRiskFactor = between(0.8, 1.2);
+
   return {
     ...scenario,
     market: {
@@ -63,11 +67,28 @@ export function applyScenarioVariability(
       supplierPaymentDelayDays: supplierDelay,
     },
     fixedCostsPerRound: fixedCosts,
+    ...(scenario.suppliers
+      ? {
+          suppliers: scenario.suppliers.map((s) => ({
+            ...s,
+            costMultiplier: s.costMultiplier * supplierCostFactor,
+            supplyRiskProbability: Math.min(0.3, s.supplyRiskProbability * supplierRiskFactor),
+          })),
+        }
+      : {}),
     ...(scenario.insurance
       ? {
           insurance: {
             ...scenario.insurance,
             premiumPerRound: Math.round(scenario.insurance.premiumPerRound * insuranceFactor),
+            ...(scenario.insurance.formulas
+              ? {
+                  formulas: scenario.insurance.formulas.map((f) => ({
+                    ...f,
+                    premiumPerRound: Math.round(f.premiumPerRound * insuranceFactor),
+                  })),
+                }
+              : {}),
           },
         }
       : {}),

@@ -82,6 +82,14 @@ export function applyPeriodicity(
           insurance: {
             ...scenario.insurance,
             premiumPerRound: scenario.insurance.premiumPerRound * k,
+            ...(scenario.insurance.formulas
+              ? {
+                  formulas: scenario.insurance.formulas.map((f) => ({
+                    ...f,
+                    premiumPerRound: f.premiumPerRound * k,
+                  })),
+                }
+              : {}),
           },
         }
       : {}),

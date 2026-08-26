@@ -13,6 +13,7 @@
 export type CompanyId = string;
 export type SegmentCode = string;
 export type ProductCode = string;
+export type SupplierCode = string;
 
 // ---------------------------------------------------------------------------
 // Configuration de scénario (sous-ensemble consommé par le moteur v0.1)
@@ -141,11 +142,26 @@ export interface EngineScenarioConfig {
     externalReturnSensitivity: number;
   };
   /**
-   * Assurance catastrophe (optionnelle) : contre une prime par tour, les
-   * effets des événements couverts sont neutralisés pour les assurés.
-   * L'arbitrage pédagogique : un coût certain contre un risque incertain.
+   * Fournisseurs de matières premières (optionnel — doc 02 §5bis) : le joueur
+   * choisit son fournisseur chaque tour. Le premier de la liste est le
+   * fournisseur par défaut (reconduction). Absent = un seul fournisseur
+   * implicite (comportement historique, prix = materialCostPerUnit).
    */
-  insurance?: { premiumPerRound: number; coveredEventCodes: string[] };
+  suppliers?: SupplierDef[];
+  /**
+   * Assurance (optionnelle) : une ou plusieurs formules à primes croissantes,
+   * chaque formule couvrant un panier d'événements. Le joueur choisit UNE
+   * formule (ou aucune) — c'est un arbitrage prime / couverture.
+   * Rétro-compatible : si `coveredEventCodes` est défini (ancien format),
+   * il est interprété comme une formule unique.
+   */
+  insurance?: {
+    /** Ancien format (rétro-compatibilité) : formule unique. */
+    premiumPerRound: number;
+    coveredEventCodes: string[];
+    /** Nouveau format : plusieurs formules. */
+    formulas?: InsuranceFormulaDef[];
+  };
   /**
    * Commandes exceptionnelles (optionnel — doc 02 §5.1) : une offre est
    * proposée ENTRE CHAQUE TOUR (rotation déterministe dans le pool — la même
@@ -201,6 +217,41 @@ export interface EngineScenarioConfig {
   scriptedEvents: { round: number; eventCode: string; companyIndex?: number }[];
   /** Références du scoring BPI (doc 08 §1.1) — bornes min/cible par tour. */
   scoring: ScoringConfig;
+}
+
+/**
+ * Formule d'assurance (doc 02 §7.2bis) : panier d'événements couverts
+ * contre une prime par tour. Plusieurs formules à primes croissantes
+ * permettent un arbitrage gradué du risque.
+ */
+export interface InsuranceFormulaDef {
+  code: string;
+  name: string;
+  premiumPerRound: number;
+  coveredEventCodes: string[];
+}
+
+/**
+ * Fournisseur de matières premières (doc 02 §5bis) : un arbitrage
+ * coût/qualité/délai. Le fournisseur standard est le référent ; les autres
+ * s'en écartent par un multiplicateur de prix, un bonus de qualité perçue et
+ * un risque de rupture d'approvisionnement (probabilité d'un malus de
+ * disponibilité le tour où l'on commande).
+ */
+export interface SupplierDef {
+  code: SupplierCode;
+  name: string;
+  narrative: string;
+  /** Multiplicateur du coût matières (1 = standard, 0.85 = −15 %). */
+  costMultiplier: number;
+  /** Bonus de qualité perçue par tour (0 = neutre, +0.05 = prime qualité). */
+  qualityBonus: number;
+  /** Délai de paiement fournisseur en jours (écrase le délai global). */
+  paymentDelayDays: number;
+  /** Probabilité de rupture d'approvisionnement par tour (0..0.3). */
+  supplyRiskProbability: number;
+  /** Malus de disponibilité si la rupture se matérialise (ex. 0.8 = −20 %). */
+  supplyRiskAvailabilityHit: number;
 }
 
 /** Une commande exceptionnelle du pool (voir EngineScenarioConfig.orderOffers). */
@@ -355,8 +406,16 @@ export interface RoundDecisions {
   marketingBudget: number;
   qualityBudget: number;
   maintenanceBudget: number;
-  /** Souscrire l'assurance catastrophe du tour (si le scénario en propose une). */
-  insurance?: boolean;
+  /**
+   * Assurance : `true` = formule unique (rétro-compatible) ; `string` =
+   * code de la formule choisie ; `false`/absent = non assuré.
+   */
+  insurance?: boolean | string;
+  /**
+   * Code du fournisseur choisi ce tour (si le scénario a des `suppliers`).
+   * Récurrent : le choix est reconduit d'un tour à l'autre.
+   */
+  supplierChoice?: string;
   /**
    * Accepter la commande exceptionnelle proposée pour ce tour (si le scénario
    * a un pool `orderOffers`). Action ponctuelle : jamais reconduite.
@@ -492,8 +551,16 @@ export interface CompanyRoundResult {
     defectUnits: number;
     returnedUnits: number;
   };
-  /** Assurance du tour : prime payée et événements couverts neutralisés. */
-  insurance?: { premium: number; neutralizedEvents: string[] };
+  /** Assurance du tour : prime payée, formule choisie et événements neutralisés. */
+  insurance?: { premium: number; formulaCode?: string; neutralizedEvents: string[] };
+  /** Fournisseur choisi ce tour : code, surcoût/économie, risque de rupture. */
+  supplier?: {
+    code: string;
+    name: string;
+    costMultiplier: number;
+    qualityBonus: number;
+    supplyDisruption: boolean;
+  };
   /** Études achetées ce tour : lesquelles, et la facture (charge de structure). */
   studies?: { purchased: ("market" | "price" | "finance" | "project")[]; cost: number };
   /** Apport en capital du tour, borné par l'enveloppe des associés. */

@@ -25,7 +25,13 @@ export async function playRoundAction(
     marketingBudget: formData.get("marketingBudget"),
     qualityBudget: formData.get("qualityBudget"),
     maintenanceBudget: formData.get("maintenanceBudget"),
-    insurance: formData.get("insurance") === "on",
+    insurance: (() => {
+      const raw = formData.get("insurance");
+      if (raw === "on" || raw === "true") return true;
+      if (typeof raw === "string" && raw.length > 0) return raw;
+      return false;
+    })(),
+    supplierChoice: formData.get("supplierChoice") || undefined,
     acceptOrder: formData.get("acceptOrder") === "on",
     studies: (() => {
       const picked = {

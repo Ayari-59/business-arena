@@ -448,6 +448,9 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
             orderOffer={view.orderOffer}
             studiesOffer={view.studiesOffer}
             capitalAllowance={view.capitalAllowance}
+            insuranceFormulas={view.insuranceFormulas}
+            suppliersOffer={view.suppliersOffer}
+            capacityFacts={view.capacityFacts}
           />
         </section>
       )}
