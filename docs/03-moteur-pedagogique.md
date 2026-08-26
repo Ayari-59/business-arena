@@ -43,7 +43,8 @@ situation = {
                                        // jamais "calculez le BFR" (§3)
   diagnosticOptions[],                 // causes candidates proposées au joueur (QCM raisonné,
                                        // avec des leurres plausibles), + champ libre
-  relevantModels[],                    // matrice modèle → pertinence (voir §3)
+  quiz[2..3],                          // QCM de mobilisation des connaissances (voir §3.1)
+  relevantModels[],                    // matrice modèle → pertinence, révélée au débriefing
   concepts[],                          // concepts mobilisés (→ progression)
   hints[5],                            // les 5 niveaux d'indices (voir §4)
   difficulty, weight                   // pondération dans le score de diagnostic
@@ -54,12 +55,12 @@ situation = {
 
 1. **Observation** : la situation s'affiche avec les données débloquées à son niveau.
 2. **Diagnostic** : le joueur qualifie le problème (options + justification libre).
-3. **Choix du modèle** : il choisit le ou les modèles d'analyse à mobiliser (liste ouverte
-   sur tout le référentiel, pas seulement les « bons » — sinon la réponse est donnée).
-4. **Atelier d'analyse** : l'UI ouvre l'outil du modèle choisi (ex. calculateur FRNG/BFR
-   pré-rempli des données disponibles) — le joueur manipule, le moteur pédagogique observe.
-5. **Décision** : il saisit ses décisions du tour, avec une justification courte.
-6. **Après simulation** : débriefing (voir §5).
+3. **QCM de connaissances** : 2 à 3 questions à réponse unique mobilisent les notions que
+   la situation met en jeu (définitions, formules, mécanismes). Une seule tentative ; la
+   correction, expliquée question par question, n'est révélée qu'au débriefing.
+4. **Décision** : il saisit ses décisions du tour, avec une justification courte.
+5. **Après simulation** : débriefing (voir §5) — correction du diagnostic et du QCM, et
+   révélation du « bon outil » d'analyse pour cette situation (matrice de pertinence).
 
 ---
 
@@ -107,9 +108,17 @@ associés, **données nécessaires** (liste de clés de données du jeu — sert
 l'atelier d'analyse), formule éventuelle, niveau de difficulté, erreurs fréquentes,
 indices spécifiques, exemples.
 
-### 3.1 Évaluer la compétence « choisir le bon modèle » (§7)
+### 3.1 QCM de connaissances et matrice de pertinence
 
-Matrice de pertinence portée par chaque situation (`situation_models`) :
+Le joueur ne désigne plus lui-même le modèle à mobiliser : chaque situation porte un
+**QCM de 2 à 3 questions** (`quiz` dans la définition, réponses stockées dans
+`situation_instances.quiz`) qui vérifie les connaissances qu'elle met en jeu. Score =
+part de bonnes réponses (une seule bonne réponse par question, sans réponse = faux) ;
+il pèse 50 % du score de la situation, à égalité avec le diagnostic, avant le malus
+d'indices. La correction expliquée est révélée au débriefing.
+
+La matrice de pertinence des modèles reste une donnée de la situation
+(`situation_models`) — elle sert désormais au débriefing (« le bon outil ici ») :
 
 | relevance | Sens | Exemple (commande exceptionnelle sous le prix habituel) |
 |---|---|---|
@@ -118,11 +127,11 @@ Matrice de pertinence portée par chaque situation (`situation_models`) :
 | `misleading` (0.2) | Conduit au contresens classique | **Coût complet** (fait refuser une commande contributive) |
 | `irrelevant` (0.0) | Hors sujet | Budget de trésorerie |
 
-Score de la phase modèle (détail doc 08) : pertinence du modèle choisi × qualité de la
-justification (auto-évaluée par mots-clés au MVP, par LLM à l'étape 12) × cohérence entre
-l'analyse produite dans l'atelier et la décision prise. **Une décision juste obtenue avec
-un modèle `misleading` rapporte moins qu'une décision raisonnée** (§7) : la composante
-« maîtrise des modèles » du BPI est indépendante du résultat économique.
+Historique : les instances antérieures au QCM conservent leur choix de modèle historisé
+(`model_choices`) et son score, utilisé en repli au débriefing — aucune partie en cours
+n'est re-notée. **Une décision juste sans les connaissances qui la fondent rapporte
+moins qu'une décision raisonnée** (§7) : la composante « maîtrise » du BPI reste
+indépendante du résultat économique.
 
 ---
 
@@ -152,8 +161,8 @@ Règles :
 4. Les textes d'indices sont des données de la situation (ou par défaut du modèle de
    décision associé), avec interpolation de valeurs **déjà visibles** du joueur — un indice
    ne révèle jamais une donnée masquée par le niveau de difficulté.
-5. Le niveau 4 (modèle) marque la situation : si le joueur choisit ensuite ce modèle, la
-   composante « choix du modèle » est plafonnée (le choix a été soufflé).
+5. Le niveau 4 nomme le modèle d'analyse pertinent : il guide vers la méthode sans donner
+   les réponses du QCM — le malus d'indices s'applique de toute façon au score global.
 
 ## 5. Débriefing post-tour (§23) et mode apprentissage (§24)
 
@@ -163,7 +172,8 @@ Règles :
 3. comparaison anonymisée aux concurrents ; 4. décomposition des écarts (volume / prix /
 coût — analyse des écarts standard) ; 5. causes candidates issues de la trace (« la demande
 du segment étudiant a chuté après votre passage au-dessus de 20 € ») ; 6. concepts mobilisés
-avec lien vers les fiches ; 7. modèle pertinent (révélé après coup, avec la matrice) ;
+avec lien vers les fiches ; 7. correction expliquée du QCM et modèle pertinent (révélés
+après coup) ;
 8. feedback qualitatif ; 9. recommandation d'attention pour le tour suivant (jamais la
 décision elle-même).
 
@@ -176,12 +186,12 @@ Mode compétition : voir doc 04.
 
 - **Maîtrise par concept** (`learning_progress`) : score 0–100 par (joueur, concept), mis à
   jour par événements pondérés : situation réussie sans indice (+fort), avec indices
-  (+faible), diagnostic erroné (−), modèle `misleading` choisi (−), fiche consultée (trace).
+  (+faible), diagnostic erroné (−), QCM raté (−), fiche consultée (trace).
   Décroissance lente dans le temps (révision espacée, paramétrable).
 - **Profil de compétences** (`player_skills`) : agrégation des concepts par axe —
   Finance, Marketing, Production, Analyse, Stratégie, Décision, Risque — sur 100.
-  L'axe « Décision » agrège la compétence de choix de modèle ; « Analyse » la qualité des
-  diagnostics ; « Risque » le comportement face à l'incertitude (couverture, sensibilité).
+  L'axe « Décision » agrège la maîtrise mobilisée en situation ; « Analyse » la qualité
+  des diagnostics ; « Risque » le comportement face à l'incertitude (couverture, sensibilité).
 - Le profil alimente la **vue enseignant** (§27) : « ma classe maîtrise-t-elle le BFR ? » =
-  distribution de `learning_progress` sur le concept BFR ; « quels modèles sont mal
-  utilisés ? » = taux de choix `misleading`/`irrelevant` par modèle.
+  distribution de `learning_progress` sur le concept BFR ; « quelles notions sont mal
+  ancrées ? » = taux de bonnes réponses aux QCM + concepts les plus faibles.

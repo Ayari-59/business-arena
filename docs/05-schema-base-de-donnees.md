@@ -100,8 +100,8 @@ résolution de chaque tour (transaction unique).
 
 | Table | Colonnes principales |
 |---|---|
-| `situation_instances` | id, round_id FK, team_id FK, situation_id FK, origin enum(`scripted`,`detected`), status enum(`open`,`diagnosed`,`answered`,`debriefed`), diagnosis jsonb (options cochées + texte libre), opened_at, answered_at — **unique (round_id, team_id, situation_id)** |
-| `model_choices` | id, situation_instance_id FK, decision_model_id FK, justification text, relevance enum (copié de la matrice au moment du choix — historisation), model_score numeric, hinted bool (le modèle avait été soufflé par un indice niveau 4) |
+| `situation_instances` | id, round_id FK, team_id FK, situation_id FK, origin enum(`scripted`,`detected`), status enum(`open`,`diagnosed`,`answered`,`debriefed`), diagnosis jsonb (options cochées + texte libre), quiz jsonb (réponses au QCM de connaissances + score), opened_at, answered_at — **unique (round_id, team_id, situation_id)** |
+| `model_choices` | HÉRITAGE (instances antérieures au QCM, lues en repli au débriefing) : id, situation_instance_id FK, decision_model_id FK, justification text, relevance enum, model_score numeric, hinted bool — plus alimentée |
 | `hint_usages` | id, situation_instance_id FK, hint_id FK, level int, user_id FK, used_at — **unique (situation_instance_id, level)** (séquentialité garantie par le service + check level croissant) |
 | `learning_progress` | user_id FK, concept_id FK, mastery numeric 0..100, evidence_count int, last_event_at — PK (user_id, concept_id) |
 | `player_skills` | user_id FK, axis enum(`finance`,`marketing`,`production`,`analysis`,`strategy`,`decision`,`risk`), value numeric 0..100 — PK (user_id, axis) |

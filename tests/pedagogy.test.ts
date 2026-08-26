@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { hintScoreMultiplier, modelWasHinted, nextUnlockableLevel } from "../src/pedagogy/hints";
-import {
-  evaluateDiagnosis,
-  evaluateModelChoice,
-  justificationQuality,
-} from "../src/pedagogy/evaluation";
+import { hintScoreMultiplier, nextUnlockableLevel } from "../src/pedagogy/hints";
+import { evaluateDiagnosis, evaluateQuiz } from "../src/pedagogy/evaluation";
 import { detectSituations } from "../src/pedagogy/detection";
 import { updateMastery } from "../src/pedagogy/progress";
 import { NOVA_SITUATIONS, situationByCode } from "../src/config/scenarios/nova/situations";
@@ -29,32 +25,24 @@ describe("système d'indices (doc 03 §4)", () => {
     expect(hintScoreMultiplier([1, 2, 3, 4, 5], hintDefs)).toBeCloseTo(0.2, 9); // plancher
   });
 
-  it("l'indice niveau 4 marque le modèle comme soufflé (§7)", () => {
-    expect(modelWasHinted([1, 2, 3])).toBe(false);
-    expect(modelWasHinted([1, 2, 3, 4])).toBe(true);
-  });
 });
 
-describe("évaluation du choix de modèle (§7)", () => {
-  it("un modèle misleading avec bonne justification vaut moins qu'un optimal sans", () => {
-    const misleading = evaluateModelChoice({
-      relevance: "misleading",
-      justification: "x".repeat(100),
-      hinted: false,
-    });
-    const optimalBare = evaluateModelChoice({ relevance: "optimal", justification: "", hinted: false });
-    expect(misleading).toBeLessThan(optimalBare);
+describe("QCM de mobilisation des connaissances", () => {
+  const quiz = situationByCode.get("nova_t4_paradox")!.quiz;
+
+  it("score = part de bonnes réponses ; sans réponse = faux", () => {
+    const perfect = Object.fromEntries(quiz.map((q) => [q.id, q.correctOptionId]));
+    expect(evaluateQuiz(perfect, quiz)).toBe(1);
+    expect(evaluateQuiz({}, quiz)).toBe(0);
+    const [first, ...rest] = quiz;
+    const partial = { [first!.id]: first!.correctOptionId };
+    expect(evaluateQuiz(partial, quiz)).toBeCloseTo(1 / quiz.length, 9);
+    void rest;
   });
-  it("le plafond s'applique si le modèle a été soufflé", () => {
-    const hinted = evaluateModelChoice({ relevance: "optimal", justification: "x".repeat(100), hinted: true });
-    const free = evaluateModelChoice({ relevance: "optimal", justification: "x".repeat(100), hinted: false });
-    expect(hinted).toBeCloseTo(0.6, 9);
-    expect(free).toBe(1);
-  });
-  it("qualité de justification par paliers", () => {
-    expect(justificationQuality("")).toBe(0.2);
-    expect(justificationQuality("analyse rapide")).toBe(0.4);
-    expect(justificationQuality("le BFR a augmenté car CampusTech paie à 80 jours")).toBe(0.7);
+
+  it("une réponse hors options compte comme fausse", () => {
+    const wrong = Object.fromEntries(quiz.map((q) => [q.id, "zzz"]));
+    expect(evaluateQuiz(wrong, quiz)).toBe(0);
   });
 });
 
@@ -144,6 +132,23 @@ describe("cohérence des référentiels", () => {
       expect(s.diagnosticOptions.some((o) => o.correct)).toBe(true);
       expect(s.diagnosticOptions.some((o) => !o.correct)).toBe(true); // toujours des leurres
       expect(Object.values(s.modelRelevance)).toContain("optimal");
+    }
+  });
+  it("chaque situation porte 2 à 3 questions QCM bien formées", () => {
+    for (const s of NOVA_SITUATIONS) {
+      expect(s.quiz.length, s.code).toBeGreaterThanOrEqual(2);
+      expect(s.quiz.length, s.code).toBeLessThanOrEqual(3);
+      const questionIds = new Set(s.quiz.map((q) => q.id));
+      expect(questionIds.size, s.code).toBe(s.quiz.length); // ids uniques
+      for (const q of s.quiz) {
+        expect(q.options.length, `${s.code}/${q.id}`).toBeGreaterThanOrEqual(3);
+        expect(
+          q.options.some((o) => o.id === q.correctOptionId),
+          `${s.code}/${q.id}`,
+        ).toBe(true); // la bonne réponse existe parmi les options
+        expect(new Set(q.options.map((o) => o.id)).size).toBe(q.options.length);
+        expect(q.explain.length, `${s.code}/${q.id}`).toBeGreaterThan(20); // correction expliquée
+      }
     }
   });
   it("6 situations scriptées (une par tour) + 4 détectées", () => {

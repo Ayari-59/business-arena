@@ -135,18 +135,19 @@ export default function GuidePage() {
         <Section
           id="eleves"
           title="🎮 Côté élèves — jouer un tour"
-          intro="Chaque tour suit la même boucle : une situation vous arrive, vous la diagnostiquez, vous choisissez un modèle d'analyse, vous décidez — puis la simulation rend son verdict."
+          intro="Chaque tour suit la même boucle : une situation vous arrive, vous la diagnostiquez, vous mobilisez vos connaissances, vous décidez — puis la simulation rend son verdict."
         >
           <ol className="space-y-5">
             <Step n={1} title="Lisez la situation du tour">
               Pas d&apos;énoncé d&apos;exercice : un problème d&apos;entreprise (« la trésorerie se
               tend », « un concurrent casse les prix »). À vous de comprendre ce qui se joue.
             </Step>
-            <Step n={2} title="Diagnostiquez, puis choisissez votre modèle d'analyse">
-              Sélectionnez les causes plausibles et l&apos;outil adapté (seuil de rentabilité,
-              BFR, élasticité-prix…). <strong className="text-slate-200">Choisir le bon modèle
-              rapporte plus de points</strong> qu&apos;une bonne décision prise avec le mauvais
-              outil : c&apos;est la compétence que le jeu mesure.
+            <Step n={2} title="Diagnostiquez, puis répondez au QCM de connaissances">
+              Cochez les causes plausibles, puis 2 à 3 questions mobilisent les notions que la
+              situation met en jeu (seuil de rentabilité, BFR, élasticité-prix…).{" "}
+              <strong className="text-slate-200">La correction expliquée arrive au
+              débriefing</strong> — avec, en prime, l&apos;outil d&apos;analyse qui était le bon
+              pour cette situation.
             </Step>
             <Step n={3} title="Besoin d'aide ? Débloquez des indices">
               Cinq niveaux, dans l&apos;ordre, du simple recadrage jusqu&apos;à la méthode
@@ -210,7 +211,7 @@ export default function GuidePage() {
             <Step n={5} title="Clôturez le tour">
               Un clic : la simulation calcule tous les résultats, le débriefing pédagogique se
               génère, le classement BPI se met à jour, le tour suivant s&apos;ouvre. Votre vue
-              pédagogique agrège diagnostics, choix de modèles, indices consommés et maîtrise
+              pédagogique agrège diagnostics, résultats des QCM, indices consommés et maîtrise
               des concepts par équipe.
             </Step>
             <Step n={6} title="Finissez l'année en championnat">
@@ -280,7 +281,7 @@ export default function GuidePage() {
                   ["Opérationnelle", "10 %", "utilisation des capacités, ruptures"],
                   ["Rentabilité", "10 %", "rentabilité des capitaux (ROE)"],
                   ["Stratégie", "10 %", "cohérence et anticipation des décisions"],
-                  ["Maîtrise des modèles", "5 %", "bons diagnostics, bons outils, sobriété en indices"],
+                  ["Maîtrise des modèles", "5 %", "bons diagnostics, QCM réussis, sobriété en indices"],
                 ].map(([d, w, m]) => (
                   <tr key={d} className="border-t border-white/5">
                     <td className="py-2 pr-3">{d}</td>

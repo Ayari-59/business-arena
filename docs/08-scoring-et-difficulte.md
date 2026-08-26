@@ -18,7 +18,7 @@ imposées (paramétrables par scénario via `ScoringConfig`, Σ = 1) :
 | Performance opérationnelle | 10 % | taux d'utilisation, ruptures évitées, productivité, qualité |
 | Rentabilité | 10 % | Re, Rf, profitabilité (distinctes — §17) |
 | Qualité stratégique | 10 % | cohérence inter-tours des décisions (voir §1.3), positionnement tenu, réaction aux événements |
-| Maîtrise des modèles de décision | 5 % | scores des `model_choices` + qualité des diagnostics |
+| Maîtrise des modèles de décision | 5 % | scores des QCM de connaissances + qualité des diagnostics |
 
 ### 1.1 Normalisation
 

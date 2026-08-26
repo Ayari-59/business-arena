@@ -9,9 +9,9 @@ import {
   submitTeamDecisions,
 } from "@/services/game.service";
 import {
-  chooseModel,
   getTeamSituations,
   submitDiagnosis,
+  submitQuiz,
   unlockHint,
 } from "@/services/pedagogy.service";
 import { createCompetition, joinCompetition } from "@/services/competition.service";
@@ -148,8 +148,8 @@ export async function seedDemoWorld(): Promise<DemoWorld> {
   }
 
   for (let round = 1; round <= 3; round++) {
-    // Léa (équipe 1) travaille les situations : diagnostics justes, modèle
-    // pertinent, un indice — les vues pédagogiques ont de la matière
+    // Léa (équipe 1) travaille les situations : diagnostics justes, QCM
+    // sans faute, un indice — les vues pédagogiques ont de la matière
     const lea = studentIds[0]!;
     const { current } = await getTeamSituations(gameId, lea);
     for (const situation of current) {
@@ -162,15 +162,11 @@ export async function seedDemoWorld(): Promise<DemoWorld> {
         selectedOptionIds: def.diagnosticOptions.filter((o) => o.correct).map((o) => o.id),
         freeText: "Analyse de l'équipe : nous relions les chiffres du tableau de bord au concept en jeu.",
       }).catch(() => {});
-      const optimal = Object.entries(def.modelRelevance).find(([, r]) => r === "optimal")?.[0];
-      if (optimal) {
-        await chooseModel({
-          instanceId: situation.instanceId,
-          userId: lea,
-          modelCode: optimal,
-          justification: "Ce modèle répond directement au problème posé par la situation.",
-        }).catch(() => {});
-      }
+      await submitQuiz({
+        instanceId: situation.instanceId,
+        userId: lea,
+        answers: Object.fromEntries(def.quiz.map((q) => [q.id, q.correctOptionId])),
+      }).catch(() => {});
     }
 
     // Décisions des trois équipes (styles contrastés), puis clôture

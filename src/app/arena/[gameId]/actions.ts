@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getGuestUserId } from "@/lib/guest";
 import { roundDecisionsSchema } from "@/services/decision-schema";
 import { getGameKind, resolveCurrentRound, submitTeamDecisions } from "@/services/game.service";
-import { chooseModel, submitDiagnosis, unlockHint } from "@/services/pedagogy.service";
+import { submitDiagnosis, submitQuiz, unlockHint } from "@/services/pedagogy.service";
 
 export interface PlayRoundState {
   error: string | null;
@@ -110,8 +110,8 @@ export async function submitDiagnosisAction(
   return { error: null };
 }
 
-/** Enregistre le choix de modèle d'analyse et sa justification (§7). */
-export async function chooseModelAction(
+/** Enregistre les réponses au QCM de mobilisation des connaissances. */
+export async function submitQuizAction(
   gameId: string,
   instanceId: string,
   _prev: PedagogyState,
@@ -119,11 +119,16 @@ export async function chooseModelAction(
 ): Promise<PedagogyState> {
   const userId = await getGuestUserId();
   if (!userId) return { error: "Session expirée." };
-  const modelCode = String(formData.get("modelCode") ?? "");
-  const justification = String(formData.get("justification") ?? "");
-  if (!modelCode) return { error: "Choisissez un modèle d'analyse." };
+  const answers: Record<string, string> = {};
+  for (const [key, value] of formData.entries()) {
+    if (key.startsWith("quiz_") && typeof value === "string" && value) {
+      answers[key.slice("quiz_".length)] = value;
+    }
+  }
+  if (Object.keys(answers).length === 0)
+    return { error: "Répondez aux questions avant de valider." };
   try {
-    await chooseModel({ instanceId, userId, modelCode, justification });
+    await submitQuiz({ instanceId, userId, answers });
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Erreur." };
   }

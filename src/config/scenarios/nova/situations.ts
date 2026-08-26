@@ -21,13 +21,24 @@ export interface SituationHintDef {
   costRatio: number;
 }
 
+/** QCM de mobilisation des connaissances : une seule bonne réponse, corrigée au débriefing. */
+export interface QuizQuestionDef {
+  id: string;
+  prompt: string;
+  options: { id: string; label: string }[];
+  correctOptionId: string;
+  explain: string;
+}
+
 export interface SituationDef {
   code: string;
   title: string;
   narrative: string;
   problem: string; // question ouverte
   diagnosticOptions: { id: string; label: string; correct: boolean }[];
-  modelRelevance: Record<string, ModelRelevance>; // par code de modèle ; absent = irrelevant
+  /** 2 à 3 questions de connaissances mobilisées par la situation. */
+  quiz: QuizQuestionDef[];
+  modelRelevance: Record<string, ModelRelevance>; // par code de modèle ; sert au débriefing (« le bon outil ici »)
   conceptCodes: string[];
   hints: SituationHintDef[];
   trigger: { round: number } | { detect: DetectCode };
@@ -52,6 +63,47 @@ export const NOVA_SITUATIONS: SituationDef[] = [
       { id: "unit_margin", label: "Que chaque unité vendue rapporte plus que son coût variable", correct: true },
       { id: "max_volume", label: "Produire au maximum de la capacité, quoi qu'il arrive", correct: false },
       { id: "lowest_price", label: "Avoir le prix le plus bas du marché", correct: false },
+    ],
+    quiz: [
+      {
+        id: "fixed_charge",
+        prompt: "Une charge de structure (charge « fixe »), c'est une charge…",
+        options: [
+          { id: "a", label: "Qui tombe chaque période, que l'on vende ou non (loyer, salaires permanents)" },
+          { id: "b", label: "Proportionnelle aux quantités produites et vendues" },
+          { id: "c", label: "Que l'on peut suspendre dès que les ventes baissent" },
+          { id: "d", label: "Exceptionnelle, qui n'apparaît qu'une seule fois" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Les charges de structure sont indépendantes du volume : c'est précisément pour cela qu'il faut vendre assez pour les couvrir.",
+      },
+      {
+        id: "unit_margin",
+        prompt: "La marge sur coût variable unitaire, c'est…",
+        options: [
+          { id: "a", label: "Prix de vente − coût variable unitaire" },
+          { id: "b", label: "Prix de vente − charges de structure" },
+          { id: "c", label: "Chiffre d'affaires − résultat net" },
+          { id: "d", label: "Prix de vente × quantités vendues" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Chaque unité vendue laisse (prix − coût variable) pour éponger les charges de structure, puis dégager du résultat.",
+      },
+      {
+        id: "breakeven_formula",
+        prompt: "Le seuil de rentabilité en volume se calcule…",
+        options: [
+          { id: "a", label: "Charges de structure ÷ marge sur coût variable unitaire" },
+          { id: "b", label: "Chiffre d'affaires ÷ prix de vente" },
+          { id: "c", label: "Charges de structure × marge unitaire" },
+          { id: "d", label: "Capacité machine × taux d'utilisation" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Le seuil est le volume à partir duquel la marge dégagée couvre exactement les charges de structure : au-delà, chaque unité crée du résultat.",
+      },
     ],
     modelRelevance: {
       breakeven_analysis: "optimal",
@@ -82,6 +134,48 @@ export const NOVA_SITUATIONS: SituationDef[] = [
       { id: "psych_threshold", label: "Certains niveaux de prix (50 €, 60 €) agissent comme des seuils psychologiques", correct: true },
       { id: "quality_drop", label: "Notre qualité s'est effondrée d'un tour à l'autre", correct: false },
       { id: "market_shrink", label: "Le marché total est en train de disparaître", correct: false },
+    ],
+    quiz: [
+      {
+        id: "elasticity_calc",
+        prompt:
+          "Avec une élasticité-prix de −2, une baisse de prix de 5 % fait varier la demande d'environ…",
+        options: [
+          { id: "a", label: "+10 %" },
+          { id: "b", label: "+2 %" },
+          { id: "c", label: "+5 %" },
+          { id: "d", label: "−10 %" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "e = %ΔQ ÷ %ΔP : la variation de demande vaut l'élasticité × la variation de prix, soit −2 × (−5 %) = +10 %.",
+      },
+      {
+        id: "psych_threshold",
+        prompt: "Un seuil psychologique de prix, c'est…",
+        options: [
+          { id: "a", label: "Un niveau (50 €, 60 €…) au passage duquel la demande décroche brutalement" },
+          { id: "b", label: "Le prix en dessous duquel la vente est interdite" },
+          { id: "c", label: "Le coût de revient de l'unité" },
+          { id: "d", label: "Le prix moyen pratiqué par les concurrents" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "59,90 € et 60,10 € ne racontent pas la même histoire au client : franchir le seuil coûte bien plus que 20 centimes de demande.",
+      },
+      {
+        id: "segment_sensitivity",
+        prompt: "Un segment PEU sensible au prix (comme vos passionnés) a une élasticité…",
+        options: [
+          { id: "a", label: "Faible en valeur absolue, proche de 0" },
+          { id: "b", label: "Très fortement négative" },
+          { id: "c", label: "Toujours positive" },
+          { id: "d", label: "Identique à celle des autres segments" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Chaque segment a sa propre élasticité : c'est ce qui interdit de raisonner sur un client « moyen » et un prix unique pour tous.",
+      },
     ],
     modelRelevance: {
       elasticity_analysis: "optimal",
@@ -114,6 +208,34 @@ export const NOVA_SITUATIONS: SituationDef[] = [
       { id: "price_too_low", label: "Le prix est trop bas, il suffit de l'augmenter fortement", correct: false },
       { id: "hire_sales", label: "Le problème vient du manque de commerciaux", correct: false },
     ],
+    quiz: [
+      {
+        id: "real_constraint",
+        prompt: "La production réellement possible sur un tour est limitée par…",
+        options: [
+          { id: "a", label: "La contrainte la plus serrée : capacité machine × disponibilité, ou heures de main-d'œuvre" },
+          { id: "b", label: "Le plan de production décidé, quoi qu'il arrive" },
+          { id: "c", label: "La demande du marché" },
+          { id: "d", label: "Le budget marketing engagé" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "On produit au minimum du plan ET des capacités : c'est toujours la contrainte la plus serrée qui décide — la repérer est le premier réflexe.",
+      },
+      {
+        id: "anticipation_stock",
+        prompt: "Un stock d'anticipation sert à…",
+        options: [
+          { id: "a", label: "Produire avant le pic saisonnier pour servir une demande qui dépassera la capacité d'un tour" },
+          { id: "b", label: "Faire baisser le besoin en fonds de roulement" },
+          { id: "c", label: "Réduire le coût variable unitaire" },
+          { id: "d", label: "Se protéger d'une hausse des taux d'intérêt" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Quand le pic dépasse la capacité d'un tour, la seule issue est de produire à l'avance : le stock immobilise du cash, mais il sauve les ventes.",
+      },
+    ],
     modelRelevance: {
       capacity_analysis: "optimal",
       productivity_analysis: "acceptable",
@@ -144,6 +266,47 @@ export const NOVA_SITUATIONS: SituationDef[] = [
       { id: "bfr_growth", label: "La croissance gonfle le besoin en fonds de roulement plus vite que les ressources", correct: true },
       { id: "fake_profit", label: "Le résultat comptable est faux, il faut le recalculer", correct: false },
       { id: "too_much_marketing", label: "Le budget marketing a vidé la caisse à lui seul", correct: false },
+    ],
+    quiz: [
+      {
+        id: "bfr_rises",
+        prompt: "Le besoin en fonds de roulement (BFR) augmente quand…",
+        options: [
+          { id: "a", label: "Stocks et créances clients gonflent plus vite que les dettes fournisseurs" },
+          { id: "b", label: "Le résultat net baisse" },
+          { id: "c", label: "On rembourse une échéance d'emprunt" },
+          { id: "d", label: "Les charges de structure augmentent" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "BFR = stocks + créances clients − dettes fournisseurs : c'est l'argent que le cycle d'exploitation immobilise en attendant les encaissements.",
+      },
+      {
+        id: "tn_formula",
+        prompt: "La trésorerie nette est égale à…",
+        options: [
+          { id: "a", label: "FRNG − BFR" },
+          { id: "b", label: "FRNG + BFR" },
+          { id: "c", label: "Chiffre d'affaires − charges décaissées" },
+          { id: "d", label: "Résultat net + amortissements" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "TN = FRNG − BFR : quand la croissance gonfle le BFR plus vite que le FRNG, la caisse se vide — même en gagnant de l'argent.",
+      },
+      {
+        id: "mobilize_receivables",
+        prompt: "L'escompte et l'affacturage permettent de…",
+        options: [
+          { id: "a", label: "Transformer des créances clients en cash immédiat, contre un coût financier" },
+          { id: "b", label: "Réduire les charges de structure" },
+          { id: "c", label: "Augmenter le résultat net" },
+          { id: "d", label: "Reporter le paiement des fournisseurs" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Mobiliser le poste clients avance l'encaissement : la créance devient du cash aujourd'hui, moyennant agios (escompte) ou commission (affacturage).",
+      },
     ],
     modelRelevance: {
       frng_bfr_analysis: "optimal",
@@ -176,6 +339,47 @@ export const NOVA_SITUATIONS: SituationDef[] = [
       { id: "big_profit_wins", label: "Le plus gros résultat en euros est toujours la meilleure performance", correct: false },
       { id: "cut_all_costs", label: "Il faut couper tous les budgets pour restaurer le résultat", correct: false },
     ],
+    quiz: [
+      {
+        id: "return_economic",
+        prompt: "La rentabilité économique rapporte…",
+        options: [
+          { id: "a", label: "Le résultat d'exploitation net d'IS aux capitaux engagés (capitaux propres + dettes)" },
+          { id: "b", label: "Le résultat net au chiffre d'affaires" },
+          { id: "c", label: "Le chiffre d'affaires au total du bilan" },
+          { id: "d", label: "La marge unitaire au prix de vente" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "La rentabilité économique juge la performance de l'outil de production, indépendamment de la manière dont il est financé.",
+      },
+      {
+        id: "profitability_def",
+        prompt: "La profitabilité, elle, rapporte…",
+        options: [
+          { id: "a", label: "Le résultat au chiffre d'affaires" },
+          { id: "b", label: "Le résultat aux capitaux engagés" },
+          { id: "c", label: "Le chiffre d'affaires aux capitaux propres" },
+          { id: "d", label: "Les dividendes au résultat" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Profitabilité (résultat ÷ CA) et rentabilité (résultat ÷ capitaux) ne racontent pas la même histoire : 20 000 € gagnés avec 200 000 € investis battent 30 000 € avec 500 000 €.",
+      },
+      {
+        id: "material_cost_up",
+        prompt: "Une hausse du coût des matières, toutes choses égales par ailleurs…",
+        options: [
+          { id: "a", label: "Comprime la marge sur coût variable et relève le seuil de rentabilité" },
+          { id: "b", label: "N'affecte que la trésorerie, pas le résultat" },
+          { id: "c", label: "Abaisse le seuil de rentabilité" },
+          { id: "d", label: "Est sans effet si le volume vendu ne change pas" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "La marge unitaire est au dénominateur du seuil : quand elle se comprime, il faut vendre PLUS d'unités pour couvrir les mêmes charges de structure.",
+      },
+    ],
     modelRelevance: {
       return_analysis: "optimal",
       breakeven_analysis: "acceptable",
@@ -207,6 +411,34 @@ export const NOVA_SITUATIONS: SituationDef[] = [
       { id: "copy_leader", label: "Copier la stratégie du leader du classement suffit", correct: false },
       { id: "last_round_max", label: "Au dernier tour, seul le résultat immédiat compte, peu importe le bilan", correct: false },
     ],
+    quiz: [
+      {
+        id: "matrix_def",
+        prompt: "Arbitrer avec une matrice multicritère, c'est…",
+        options: [
+          { id: "a", label: "Noter chaque option sur des critères explicites et pondérés, puis comparer les totaux" },
+          { id: "b", label: "Copier l'option choisie par le leader du classement" },
+          { id: "c", label: "Ne retenir qu'un seul critère : le résultat immédiat" },
+          { id: "d", label: "Faire voter l'équipe à main levée" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Expliciter critères et pondérations rend l'arbitrage défendable : on peut être en désaccord sur les poids, plus sur la démarche.",
+      },
+      {
+        id: "safety_margin",
+        prompt: "La marge de sécurité mesure…",
+        options: [
+          { id: "a", label: "L'écart entre le chiffre d'affaires et le seuil de rentabilité" },
+          { id: "b", label: "Le stock restant en fin de tour" },
+          { id: "c", label: "L'écart de prix avec le concurrent le moins cher" },
+          { id: "d", label: "Le découvert autorisé encore disponible" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Plus le CA est loin au-dessus du seuil, mieux l'entreprise encaisse les chocs — un critère de solidité pour l'arbitrage final.",
+      },
+    ],
     modelRelevance: {
       multicriteria_matrix: "optimal",
       scenarios_method: "acceptable",
@@ -237,6 +469,34 @@ export const NOVA_SITUATIONS: SituationDef[] = [
       { id: "bfr_up", label: "Stocks et créances ont absorbé le cash (BFR en hausse)", correct: true },
       { id: "accounting_error", label: "C'est forcément une erreur de calcul", correct: false },
     ],
+    quiz: [
+      {
+        id: "profit_vs_cash",
+        prompt: "Le résultat peut être positif quand la caisse est vide parce que…",
+        options: [
+          { id: "a", label: "Le résultat enregistre des ventes non encore encaissées et des charges non encore décaissées" },
+          { id: "b", label: "Le résultat comptable est une estimation forcément fausse" },
+          { id: "c", label: "La banque prélève le résultat en fin de période" },
+          { id: "d", label: "Les amortissements vident la caisse chaque tour" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Le résultat suit les flux COMPTABLES, la trésorerie les flux ENCAISSÉS : entre les deux vivent créances, stocks et dettes fournisseurs.",
+      },
+      {
+        id: "bfr_cash_link",
+        prompt: "À FRNG constant, une hausse du BFR…",
+        options: [
+          { id: "a", label: "Fait baisser la trésorerie nette d'autant" },
+          { id: "b", label: "Fait monter la trésorerie nette" },
+          { id: "c", label: "Ne change rien à la trésorerie" },
+          { id: "d", label: "Augmente mécaniquement le résultat" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "TN = FRNG − BFR : chaque euro immobilisé en plus dans le cycle d'exploitation est un euro de moins en caisse.",
+      },
+    ],
     modelRelevance: { frng_bfr_analysis: "optimal", cash_budget: "acceptable", breakeven_analysis: "misleading" },
     conceptCodes: ["net_treasury", "bfr", "frng"],
     hints: hints([
@@ -260,6 +520,34 @@ export const NOVA_SITUATIONS: SituationDef[] = [
       { id: "plan_ahead", label: "Le plan de production doit anticiper la demande, pas la suivre", correct: true },
       { id: "good_sign", label: "Une rupture prouve que tout va bien puisque tout est vendu", correct: false },
     ],
+    quiz: [
+      {
+        id: "stockout_cost",
+        prompt: "Le premier coût d'une rupture de stock, c'est…",
+        options: [
+          { id: "a", label: "La marge sur coût variable des ventes manquées — et des clients déçus" },
+          { id: "b", label: "Le coût de production des unités déjà vendues" },
+          { id: "c", label: "Une pénalité automatiquement versée aux fournisseurs" },
+          { id: "d", label: "Aucun : tout vendre est la preuve d'un succès" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Chaque unité non servie emportait sa marge sur coût variable — et un client déçu se souvient, ce qui pèse sur la demande future.",
+      },
+      {
+        id: "avoid_stockout",
+        prompt: "Pour éviter la rupture au prochain pic de demande…",
+        options: [
+          { id: "a", label: "Produire à l'avance pour constituer un stock, dans la limite des capacités" },
+          { id: "b", label: "Attendre le pic et produire à ce moment-là" },
+          { id: "c", label: "Baisser le prix pour vendre encore plus vite" },
+          { id: "d", label: "Réduire le budget marketing" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Le plan de production doit ANTICIPER la demande, pas la suivre : le pic dépasse la capacité d'un tour, le stock se construit avant.",
+      },
+    ],
     modelRelevance: { capacity_analysis: "optimal", cvp_analysis: "acceptable", elasticity_analysis: "misleading" },
     conceptCodes: ["stock", "capacity", "seasonality"],
     hints: hints([
@@ -281,6 +569,34 @@ export const NOVA_SITUATIONS: SituationDef[] = [
       { id: "under_threshold", label: "Le volume vendu est resté sous le seuil de rentabilité", correct: true },
       { id: "check_margin", label: "Il faut vérifier la marge sur coût variable et le poids des fixes", correct: true },
       { id: "always_lower_price", label: "Baisser le prix augmente toujours le résultat", correct: false },
+    ],
+    quiz: [
+      {
+        id: "under_threshold_meaning",
+        prompt: "Être sous le seuil de rentabilité signifie que…",
+        options: [
+          { id: "a", label: "La marge sur coût variable dégagée ne couvre pas les charges de structure" },
+          { id: "b", label: "Le prix est inférieur au coût variable unitaire" },
+          { id: "c", label: "La trésorerie est négative" },
+          { id: "d", label: "La capacité de production est saturée" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Sous le seuil, chaque période détruit du résultat : les unités vendues rapportent, mais pas assez pour payer la structure.",
+      },
+      {
+        id: "lower_threshold",
+        prompt: "Pour abaisser le seuil de rentabilité, on peut…",
+        options: [
+          { id: "a", label: "Réduire les charges de structure ou augmenter la marge unitaire (prix, coûts variables)" },
+          { id: "b", label: "Produire davantage d'unités" },
+          { id: "c", label: "Allonger les délais de paiement accordés aux clients" },
+          { id: "d", label: "Emprunter davantage" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "SR = charges de structure ÷ marge unitaire : seuls les deux termes de la fraction déplacent le seuil — le volume, lui, dit où vous êtes PAR RAPPORT au seuil.",
+      },
     ],
     modelRelevance: { breakeven_analysis: "optimal", cvp_analysis: "optimal", frng_bfr_analysis: "irrelevant" },
     conceptCodes: ["breakeven", "contribution_margin", "fixed_costs", "safety_margin"],
@@ -306,6 +622,47 @@ export const NOVA_SITUATIONS: SituationDef[] = [
       { id: "lost_margin", label: "Les ventes manquées sont un manque à gagner mesurable : unités perdues × marge sur coût variable", correct: true },
       { id: "count_depreciation", label: "Compter l'amortissement comme un décaissement dans les flux du projet", correct: false },
       { id: "full_book", label: "Investir dès que le carnet est plein — le calcul se fera après", correct: false },
+    ],
+    quiz: [
+      {
+        id: "discounting_def",
+        prompt: "Actualiser un flux futur, c'est…",
+        options: [
+          { id: "a", label: "Le convertir en euros d'aujourd'hui en le divisant par (1 + taux)ⁿ" },
+          { id: "b", label: "Le corriger de l'inflation passée" },
+          { id: "c", label: "L'augmenter des intérêts à recevoir" },
+          { id: "d", label: "Le remplacer par sa valeur comptable" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Un euro dans un an vaut moins qu'un euro aujourd'hui : l'actualisation ramène tous les flux à la même date pour pouvoir les comparer.",
+      },
+      {
+        id: "npv_rule",
+        prompt: "Selon le critère de la VAN, on investit quand…",
+        options: [
+          { id: "a", label: "La VAN est positive : les flux futurs actualisés dépassent le capital investi" },
+          { id: "b", label: "Le TRI est inférieur au taux d'emprunt" },
+          { id: "c", label: "Le carnet de commandes est plein" },
+          { id: "d", label: "L'amortissement de l'ancienne machine est terminé" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "VAN > 0 : le projet rapporte plus que ce qu'il coûte, taux de financement compris. Le TRI, lui, doit être SUPÉRIEUR au taux pour dire oui.",
+      },
+      {
+        id: "depreciation_in_npv",
+        prompt: "Dans les flux d'un calcul de VAN, l'amortissement…",
+        options: [
+          { id: "a", label: "Ne compte pas : ce n'est pas un décaissement" },
+          { id: "b", label: "Se soustrait chaque année comme une sortie de caisse" },
+          { id: "c", label: "S'ajoute au capital investi" },
+          { id: "d", label: "Remplace le coût d'achat de la machine" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "La VAN raisonne en flux de TRÉSORERIE : la machine est décaissée une fois, à l'achat ; l'amortissement n'est qu'une écriture comptable (il ne joue que par l'impôt qu'il économise).",
+      },
     ],
     modelRelevance: {
       npv: "optimal",

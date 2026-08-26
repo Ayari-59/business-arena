@@ -51,6 +51,7 @@ export const situationInstances = pgTable(
     origin: situationOrigin("origin").notNull(),
     status: situationStatus("status").notNull().default("open"),
     diagnosis: jsonb("diagnosis"), // options cochées + texte libre
+    quiz: jsonb("quiz"), // réponses au QCM de connaissances + score
     openedAt: timestamp("opened_at", { withTimezone: true }),
     answeredAt: timestamp("answered_at", { withTimezone: true }),
     ...timestamps,

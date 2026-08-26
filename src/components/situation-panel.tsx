@@ -1,22 +1,15 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState } from "react";
 import {
-  chooseModelAction,
   submitDiagnosisAction,
+  submitQuizAction,
   unlockHintAction,
   type PedagogyState,
 } from "@/app/arena/[gameId]/actions";
 import type { SituationView } from "@/services/pedagogy.service";
 
 const initial: PedagogyState = { error: null };
-
-const RELEVANCE_LABELS: Record<string, { label: string; className: string }> = {
-  optimal: { label: "modèle pertinent", className: "text-emerald-400" },
-  acceptable: { label: "modèle acceptable", className: "text-amber-300" },
-  misleading: { label: "modèle trompeur — contresens classique", className: "text-red-400" },
-  irrelevant: { label: "modèle hors sujet", className: "text-slate-500" },
-};
 
 function ErrorBox({ error }: { error: string | null }) {
   if (!error) return null;
@@ -27,7 +20,7 @@ function ErrorBox({ error }: { error: string | null }) {
   );
 }
 
-/** Une situation active : diagnostic → choix du modèle → indices à la demande. */
+/** Une situation active : diagnostic → QCM de connaissances → indices à la demande. */
 export function SituationCard({ gameId, situation }: { gameId: string; situation: SituationView }) {
   const [hintState, hintAction, hintPending] = useActionState(
     unlockHintAction.bind(null, gameId, situation.instanceId),
@@ -37,14 +30,13 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
     submitDiagnosisAction.bind(null, gameId, situation.instanceId),
     initial,
   );
-  const [modelState, modelAction, modelPending] = useActionState(
-    chooseModelAction.bind(null, gameId, situation.instanceId),
+  const [quizState, quizAction, quizPending] = useActionState(
+    submitQuizAction.bind(null, gameId, situation.instanceId),
     initial,
   );
-  const [selectedModel, setSelectedModel] = useState(situation.modelChoice?.code ?? "");
 
   const diagnosisDone = situation.diagnosis !== null;
-  const modelDone = situation.modelChoice !== null;
+  const quizDone = situation.quizAnswers !== null;
 
   return (
     <article className="rounded-xl border border-amber-400/20 bg-slate-900 p-5">
@@ -93,52 +85,54 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
           )}
         </section>
 
-        {/* 2. Choix du modèle */}
-        <section className="rounded-lg bg-slate-950 p-4">
-          <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-            2 · Quel modèle d&apos;analyse mobilisez-vous ?
-          </h4>
-          {modelDone ? (
-            <p className="mt-2 text-sm text-emerald-300">
-              ✓ Modèle choisi : <strong>{situation.modelChoice!.name}</strong> — pertinence révélée
-              au débriefing.
-            </p>
-          ) : (
-            <form action={modelAction} className="mt-2 space-y-2">
-              <select
-                name="modelCode"
-                value={selectedModel}
-                onChange={(e) => setSelectedModel(e.target.value)}
-                required
-                className="w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
-              >
-                <option value="">— Choisir dans le référentiel (18 modèles) —</option>
-                {situation.models.map((m) => (
-                  <option key={m.code} value={m.code}>{m.name}</option>
+        {/* 2. QCM de connaissances */}
+        {situation.quizQuestions.length > 0 ? (
+          <section className="rounded-lg bg-slate-950 p-4">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              2 · Mobiliser les connaissances
+            </h4>
+            {quizDone ? (
+              <p className="mt-2 text-sm text-emerald-300">
+                ✓ QCM validé — la correction sera révélée au débriefing du tour.
+              </p>
+            ) : (
+              <form action={quizAction} className="mt-2 space-y-4">
+                {situation.quizQuestions.map((question, index) => (
+                  <fieldset key={question.id}>
+                    <legend className="text-sm font-medium text-slate-200">
+                      {index + 1}. {question.prompt}
+                    </legend>
+                    <div className="mt-1.5 space-y-1.5">
+                      {question.options.map((option) => (
+                        <label
+                          key={option.id}
+                          className="flex items-start gap-2 text-sm text-slate-300"
+                        >
+                          <input
+                            type="radio"
+                            name={`quiz_${question.id}`}
+                            value={option.id}
+                            required
+                            className="mt-1 accent-amber-400"
+                          />
+                          <span>{option.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
                 ))}
-              </select>
-              {selectedModel ? (
-                <p className="text-xs text-slate-500">
-                  {situation.models.find((m) => m.code === selectedModel)?.description}
-                </p>
-              ) : null}
-              <textarea
-                name="justification"
-                rows={2}
-                placeholder="Pourquoi ce modèle ? Une justification argumentée améliore votre score."
-                className="w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
-              />
-              <ErrorBox error={modelState.error} />
-              <button
-                type="submit"
-                disabled={modelPending}
-                className="rounded-lg bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-100 hover:bg-slate-700 disabled:opacity-60"
-              >
-                {modelPending ? "Envoi…" : "Valider mon choix de modèle"}
-              </button>
-            </form>
-          )}
-        </section>
+                <ErrorBox error={quizState.error} />
+                <button
+                  type="submit"
+                  disabled={quizPending}
+                  className="rounded-lg bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-100 hover:bg-slate-700 disabled:opacity-60"
+                >
+                  {quizPending ? "Envoi…" : "Valider mes réponses"}
+                </button>
+              </form>
+            )}
+          </section>
+        ) : null}
 
         {/* 3. Indices */}
         <section className="rounded-lg bg-slate-950 p-4">
@@ -177,11 +171,12 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
   );
 }
 
-/** Débriefing d'une situation du tour résolu : correction + modèle pertinent + concepts. */
+/** Débriefing d'une situation du tour résolu : correction du diagnostic et du QCM + concepts. */
 export function SituationDebrief({ situation }: { situation: SituationView }) {
   const debrief = situation.debrief;
   if (!debrief) return null;
   const selected = new Set(situation.diagnosis?.selected ?? []);
+  const answers = situation.quizAnswers ?? {};
   return (
     <article className="rounded-xl border border-white/10 bg-slate-900 p-5">
       <header className="mb-3 flex items-start justify-between gap-3">
@@ -210,23 +205,44 @@ export function SituationDebrief({ situation }: { situation: SituationView }) {
             })}
           </ul>
         </div>
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-            Votre modèle : {situation.modelChoice ? situation.modelChoice.name : "aucun choisi"}
-          </p>
-          {situation.modelChoice ? (
-            <p className={`mt-1 ${RELEVANCE_LABELS[situation.modelChoice.relevance]?.className ?? ""}`}>
-              → {RELEVANCE_LABELS[situation.modelChoice.relevance]?.label}
+        {situation.quizQuestions.length > 0 ? (
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Connaissances mobilisées
+              {debrief.quizScore !== null
+                ? ` — ${Math.round(debrief.quizScore * situation.quizQuestions.length)} / ${situation.quizQuestions.length}`
+                : " — QCM non traité"}
             </p>
-          ) : null}
-          <p className="mt-1 text-xs text-slate-500">
-            Modèles pertinents ici :{" "}
-            {Object.entries(debrief.modelRelevance)
-              .filter(([, r]) => r === "optimal")
-              .map(([code]) => situation.models.find((m) => m.code === code)?.name ?? code)
-              .join(", ")}
+            <ul className="mt-1 space-y-2">
+              {situation.quizQuestions.map((question) => {
+                const correction = debrief.quizCorrection.find((c) => c.id === question.id);
+                if (!correction) return null;
+                const answered = answers[question.id];
+                const good = answered === correction.correctOptionId;
+                const correctLabel = question.options.find(
+                  (o) => o.id === correction.correctOptionId,
+                )?.label;
+                return (
+                  <li key={question.id} className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2">
+                    <p className="text-slate-300">{question.prompt}</p>
+                    <p className={`mt-1 ${good ? "text-emerald-300" : "text-red-400"}`}>
+                      {good ? "✓ Bonne réponse" : answered ? "✗ Mauvaise réponse" : "· Sans réponse"}
+                      {!good && correctLabel ? (
+                        <span className="text-emerald-300"> — il fallait : {correctLabel}</span>
+                      ) : null}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">{correction.explain}</p>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ) : null}
+        {debrief.optimalModels.length > 0 ? (
+          <p className="text-xs text-slate-500">
+            Le bon outil ici : {debrief.optimalModels.map((m) => m.name).join(", ")}.
           </p>
-        </div>
+        ) : null}
         {debrief.concepts.length > 0 ? (
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">

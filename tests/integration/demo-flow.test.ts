@@ -63,13 +63,14 @@ describe("monde démo", () => {
     const resolvedRounds = await db.select().from(rounds).where(eq(rounds.gameId, game.gameId));
     expect(resolvedRounds.filter((r) => r.status === "resolved")).toHaveLength(3);
 
-    // matière pédagogique : situations débriefées + maîtrise + choix optimaux
+    // matière pédagogique : situations débriefées + maîtrise + QCM sans faute
     const instances = await db.select().from(situationInstances);
     expect(instances.filter((i) => i.status === "debriefed").length).toBeGreaterThanOrEqual(3);
     const pedagogy = await getTeacherPedagogyView(game.gameId, profId);
     expect(pedagogy!.conceptMastery.length).toBeGreaterThan(0);
     expect(pedagogy!.hintsUsedByTeam.some((t) => t.count > 0)).toBe(true);
-    expect(pedagogy!.modelChoiceStats.find((s) => s.relevance === "optimal")!.count).toBeGreaterThan(0);
+    expect(pedagogy!.quizStats.submitted).toBeGreaterThan(0);
+    expect(pedagogy!.quizStats.averageScore).toBe(1); // Léa répond juste partout
 
     // concours en inscriptions avec 4 équipes
     const entries = await db.select().from(competitionEntries);

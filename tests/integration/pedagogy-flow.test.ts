@@ -4,7 +4,7 @@ import { and, eq } from "drizzle-orm";
 /**
  * Parcours pédagogique complet (étapes 8-9, doc 03) sur Postgres embarqué :
  * référentiels seedés → situations instanciées → indices séquentiels →
- * diagnostic → choix de modèle → débriefing → progression et vue enseignant.
+ * diagnostic → QCM de connaissances → débriefing → progression et vue enseignant.
  */
 
 vi.mock("@/db", async () => {
@@ -25,12 +25,13 @@ import {
 } from "@/db/schema";
 import { createSoloGame, resolveCurrentRound } from "@/services/game.service";
 import {
-  chooseModel,
   getTeamSituations,
   getTeacherPedagogyView,
   submitDiagnosis,
+  submitQuiz,
   unlockHint,
 } from "@/services/pedagogy.service";
+import { situationByCode } from "@/config/scenarios/nova/situations";
 import type { RoundDecisions } from "@/engine/types";
 
 const DECISIONS: RoundDecisions = {
@@ -71,7 +72,7 @@ describe("référentiels et instanciation", () => {
   });
 });
 
-describe("indices, diagnostic, choix de modèle", () => {
+describe("indices, diagnostic, QCM de connaissances", () => {
   it("les indices se débloquent séquentiellement et sont tracés", async () => {
     const { current } = await getTeamSituations(gameId, userId);
     const instanceId = current[0]!.instanceId;
@@ -93,9 +94,12 @@ describe("indices, diagnostic, choix de modèle", () => {
     await expect(unlockHint({ instanceId, userId: stranger[0]!.id })).rejects.toThrow();
   });
 
-  it("diagnostic scoré en F1 et choix de modèle avec pertinence historisée", async () => {
+  it("diagnostic scoré en F1 et QCM de connaissances scoré par question", async () => {
     const { current } = await getTeamSituations(gameId, userId);
-    const instanceId = current[0]!.instanceId;
+    const view = current[0]!;
+    const instanceId = view.instanceId;
+    expect(view.quizQuestions.length).toBeGreaterThanOrEqual(2); // le QCM est servi
+    expect(view.quizAnswers).toBeNull();
 
     const diag = await submitDiagnosis({
       instanceId,
@@ -105,18 +109,20 @@ describe("indices, diagnostic, choix de modèle", () => {
     });
     expect(diag.score).toBe(1); // les deux bonnes options, aucune fausse
 
-    const choice = await chooseModel({
-      instanceId,
-      userId,
-      modelCode: "breakeven_analysis",
-      justification: "Le seuil de rentabilité donne l'objectif de volume qui couvre les fixes.",
-    });
-    expect(choice.relevance).toBe("optimal");
-    expect(choice.score).toBeGreaterThan(0.7);
+    // 2 bonnes réponses sur 3 : la première question est ratée exprès
+    const def = situationByCode.get("nova_t1_takeover")!;
+    const answers = Object.fromEntries(def.quiz.map((q) => [q.id, q.correctOptionId]));
+    const firstId = def.quiz[0]!.id;
+    answers[firstId] = def.quiz[0]!.options.find((o) => o.id !== def.quiz[0]!.correctOptionId)!.id;
+    const quiz = await submitQuiz({ instanceId, userId, answers });
+    expect(quiz.score).toBeCloseTo(2 / 3, 9);
 
     const after = (await getTeamSituations(gameId, userId)).current[0]!;
     expect(after.status).toBe("answered");
-    expect(after.modelChoice?.code).toBe("breakeven_analysis");
+    expect(after.quizAnswers).toEqual(answers);
+
+    // le QCM ne se rejoue pas
+    await expect(submitQuiz({ instanceId, userId, answers })).rejects.toThrow();
   });
 });
 
@@ -130,9 +136,12 @@ describe("débriefing et progression", () => {
     expect(d.code).toBe("nova_t1_takeover");
     expect(d.debrief).not.toBeNull();
     expect(d.debrief!.correctOptionIds.sort()).toEqual(["cover_fixed", "unit_margin"]);
-    // score final : (0,5×1 + 0,5×~0,8+) × malus 2 indices (0,85)
-    expect(d.debrief!.finalScore).toBeGreaterThan(0.5);
-    expect(d.debrief!.finalScore).toBeLessThanOrEqual(0.85);
+    // la correction du QCM est révélée, avec explications
+    expect(d.debrief!.quizScore).toBeCloseTo(2 / 3, 9);
+    expect(d.debrief!.quizCorrection.length).toBe(d.quizQuestions.length);
+    expect(d.debrief!.quizCorrection.every((c) => c.explain.length > 0)).toBe(true);
+    // score final : (0,5×1 + 0,5×2/3) × malus 2 indices (0,85)
+    expect(d.debrief!.finalScore).toBeCloseTo((0.5 + 0.5 * (2 / 3)) * 0.85, 6);
 
     // la situation scriptée du tour 2 est ouverte
     expect(current.some((s) => s.code === "nova_t2_price_war")).toBe(true);
@@ -181,13 +190,13 @@ describe("débriefing et progression", () => {
 });
 
 describe("vue pédagogique enseignant (§27)", () => {
-  it("agrège maîtrises, indices et qualité des choix de modèles", async () => {
+  it("agrège maîtrises, indices et résultats des QCM", async () => {
     // le créateur de la partie solo est aussi son « enseignant »
     const view = await getTeacherPedagogyView(gameId, userId);
     expect(view).not.toBeNull();
     expect(view!.conceptMastery.length).toBeGreaterThan(0);
     expect(view!.hintsUsedByTeam[0]!.count).toBe(2);
-    const optimal = view!.modelChoiceStats.find((s) => s.relevance === "optimal");
-    expect(optimal!.count).toBe(1);
+    expect(view!.quizStats.submitted).toBe(1);
+    expect(view!.quizStats.averageScore).toBeCloseTo(2 / 3, 9);
   });
 });

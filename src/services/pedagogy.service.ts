@@ -18,16 +18,15 @@ import {
   teams,
 } from "@/db/schema";
 import { CONCEPTS, conceptByCode } from "@/config/pedagogy/concepts";
-import { DECISION_MODELS } from "@/config/pedagogy/models";
+import { DECISION_MODELS, modelByCode } from "@/config/pedagogy/models";
 import {
   NOVA_SITUATIONS,
   situationByCode,
-  type ModelRelevance,
   type SituationDef,
 } from "@/config/scenarios/nova/situations";
 import { presetFromProfile } from "@/config/difficulty";
-import { hintScoreMultiplier, modelWasHinted, nextUnlockableLevel } from "@/pedagogy/hints";
-import { evaluateDiagnosis, evaluateModelChoice } from "@/pedagogy/evaluation";
+import { hintScoreMultiplier, nextUnlockableLevel } from "@/pedagogy/hints";
+import { evaluateDiagnosis, evaluateQuiz } from "@/pedagogy/evaluation";
 import { detectSituations } from "@/pedagogy/detection";
 import { AXES, aggregateAxis, updateMastery } from "@/pedagogy/progress";
 import type { CompanyRoundResult } from "@/engine/types";
@@ -204,7 +203,7 @@ export async function openSituationsForRound(
 }
 
 // ---------------------------------------------------------------------------
-// Interactions joueur : indices, diagnostic, choix de modèle
+// Interactions joueur : indices, diagnostic, QCM de connaissances
 // ---------------------------------------------------------------------------
 
 async function loadInstanceForUser(instanceId: string, userId: string) {
@@ -304,35 +303,34 @@ export async function submitDiagnosis(args: {
   return { score };
 }
 
-/** Enregistre le choix de modèle d'analyse (§7) avec sa pertinence historisée. */
-export async function chooseModel(args: {
+/**
+ * Enregistre les réponses au QCM de mobilisation des connaissances (2-3
+ * questions par situation). Le score est calculé immédiatement mais la
+ * correction n'est révélée qu'au débriefing du tour.
+ */
+export async function submitQuiz(args: {
   instanceId: string;
   userId: string;
-  modelCode: string;
-  justification?: string;
-}): Promise<{ relevance: ModelRelevance; score: number }> {
+  answers: Record<string, string>;
+}): Promise<{ score: number }> {
   const { instance, def } = await loadInstanceForUser(args.instanceId, args.userId);
   if (instance.status === "debriefed") throw new Error("Cette situation est déjà débriefée");
-  const modelRow = (
-    await db.select().from(decisionModels).where(eq(decisionModels.code, args.modelCode))
-  )[0];
-  if (!modelRow) throw new Error("Modèle inconnu");
-  const relevance: ModelRelevance = def.modelRelevance[args.modelCode] ?? "irrelevant";
-  const hinted = modelWasHinted(await unlockedLevels(args.instanceId));
-  const score = evaluateModelChoice({ relevance, justification: args.justification, hinted });
-  await db.insert(modelChoices).values({
-    situationInstanceId: args.instanceId,
-    decisionModelId: modelRow.id,
-    justification: args.justification,
-    relevance,
-    modelScore: score.toFixed(4),
-    hinted,
-  });
+  if (instance.quiz) throw new Error("Le QCM de cette situation est déjà validé");
+  const validIds = new Set(def.quiz.map((q) => q.id));
+  const answers: Record<string, string> = {};
+  for (const [questionId, optionId] of Object.entries(args.answers)) {
+    if (validIds.has(questionId)) answers[questionId] = optionId;
+  }
+  const score = evaluateQuiz(answers, def.quiz);
   await db
     .update(situationInstances)
-    .set({ status: "answered", answeredAt: new Date() })
+    .set({
+      quiz: { answers, score },
+      status: "answered",
+      answeredAt: new Date(),
+    })
     .where(eq(situationInstances.id, args.instanceId));
-  return { relevance, score };
+  return { score };
 }
 
 // ---------------------------------------------------------------------------
@@ -366,14 +364,19 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
     const levels = await unlockedLevels(instance.id);
     const diagScore =
       ((instance.diagnosis as { score?: number } | null)?.score as number | undefined) ?? 0;
-    const choice = (
-      await db
-        .select()
-        .from(modelChoices)
-        .where(eq(modelChoices.situationInstanceId, instance.id))
-    )[0];
-    const modelScore = choice ? Number(choice.modelScore ?? 0) : 0;
-    const raw = 0.5 * diagScore + 0.5 * modelScore;
+    const quizStored = instance.quiz as { score?: number } | null;
+    let knowledgeScore = quizStored?.score ?? null;
+    if (knowledgeScore === null) {
+      // instances antérieures au QCM : repli sur le choix de modèle historisé
+      const choice = (
+        await db
+          .select()
+          .from(modelChoices)
+          .where(eq(modelChoices.situationInstanceId, instance.id))
+      )[0];
+      knowledgeScore = choice ? Number(choice.modelScore ?? 0) : 0;
+    }
+    const raw = 0.5 * diagScore + 0.5 * knowledgeScore;
     const score = raw * hintScoreMultiplier(levels, def.hints);
 
     await db
@@ -474,15 +477,21 @@ export interface SituationView {
   status: string;
   weight: number;
   diagnosticOptions: { id: string; label: string }[];
-  models: { code: string; name: string; description: string }[];
+  /** QCM de connaissances : questions sans la bonne réponse (révélée au débriefing). */
+  quizQuestions: { id: string; prompt: string; options: { id: string; label: string }[] }[];
+  /** Réponses déjà validées par l'équipe (null tant que le QCM n'est pas soumis). */
+  quizAnswers: Record<string, string> | null;
   unlockedHints: { level: number; text: string; costRatio: number }[];
   nextHint: { level: number; costRatio: number } | null;
   diagnosis: { selected: string[]; freeText: string; score?: number; finalScore?: number } | null;
-  modelChoice: { code: string; name: string; relevance: ModelRelevance; justification: string | null } | null;
   /** Rempli uniquement après débriefing. */
   debrief: {
     correctOptionIds: string[];
-    modelRelevance: Record<string, ModelRelevance>;
+    /** Correction du QCM, question par question, avec explication. */
+    quizCorrection: { id: string; correctOptionId: string; explain: string }[];
+    quizScore: number | null;
+    /** Les outils d'analyse pertinents ici (« le bon outil au bon moment »). */
+    optimalModels: { code: string; name: string }[];
     concepts: { code: string; name: string }[];
     finalScore: number;
   } | null;
@@ -492,10 +501,10 @@ function toView(
   instance: typeof situationInstances.$inferSelect,
   def: SituationDef,
   levels: number[],
-  choice: { code: string; name: string; relevance: ModelRelevance; justification: string | null } | null,
 ): SituationView {
   const debriefed = instance.status === "debriefed";
   const diagnosis = instance.diagnosis as SituationView["diagnosis"];
+  const quizStored = instance.quiz as { answers?: Record<string, string>; score?: number } | null;
   return {
     instanceId: instance.id,
     code: def.code,
@@ -506,7 +515,8 @@ function toView(
     status: instance.status,
     weight: def.weight,
     diagnosticOptions: def.diagnosticOptions.map(({ id, label }) => ({ id, label })),
-    models: DECISION_MODELS.map((m) => ({ code: m.code, name: m.name, description: m.description })),
+    quizQuestions: def.quiz.map((q) => ({ id: q.id, prompt: q.prompt, options: q.options })),
+    quizAnswers: quizStored?.answers ?? null,
     unlockedHints: def.hints
       .filter((h) => levels.includes(h.level))
       .map((h) => ({ level: h.level, text: h.text, costRatio: h.costRatio })),
@@ -517,11 +527,18 @@ function toView(
       return hint ? { level: hint.level, costRatio: hint.costRatio } : null;
     })(),
     diagnosis,
-    modelChoice: choice,
     debrief: debriefed
       ? {
           correctOptionIds: def.diagnosticOptions.filter((o) => o.correct).map((o) => o.id),
-          modelRelevance: def.modelRelevance,
+          quizCorrection: def.quiz.map((q) => ({
+            id: q.id,
+            correctOptionId: q.correctOptionId,
+            explain: q.explain,
+          })),
+          quizScore: quizStored?.score ?? null,
+          optimalModels: Object.entries(def.modelRelevance)
+            .filter(([, r]) => r === "optimal")
+            .map(([code]) => ({ code, name: modelByCode.get(code)?.name ?? code })),
           concepts: def.conceptCodes
             .map((code) => conceptByCode.get(code))
             .filter((c): c is NonNullable<typeof c> => Boolean(c))
@@ -563,8 +580,6 @@ export async function getTeamSituations(
 
   const situationRows = await db.select().from(situations);
   const codeById = new Map(situationRows.map((r) => [r.id, r.code]));
-  const modelRows = await db.select().from(decisionModels);
-  const modelById = new Map(modelRows.map((r) => [r.id, r]));
 
   const currentRound = gameRounds.find((r) => r.index === game.currentRound);
   const lastDebriefedRound = gameRounds
@@ -575,26 +590,7 @@ export async function getTeamSituations(
     const def = situationByCode.get(codeById.get(instance.situationId) ?? "");
     if (!def) return null;
     const levels = await unlockedLevels(instance.id);
-    const choiceRow = (
-      await db
-        .select()
-        .from(modelChoices)
-        .where(eq(modelChoices.situationInstanceId, instance.id))
-    )[0];
-    const model = choiceRow ? modelById.get(choiceRow.decisionModelId) : undefined;
-    return toView(
-      instance,
-      def,
-      levels,
-      choiceRow && model
-        ? {
-            code: model.code,
-            name: model.name,
-            relevance: choiceRow.relevance as ModelRelevance,
-            justification: choiceRow.justification,
-          }
-        : null,
-    );
+    return toView(instance, def, levels);
   };
 
   const current: SituationView[] = [];
@@ -614,7 +610,8 @@ export async function getTeamSituations(
 export interface TeacherPedagogyView {
   conceptMastery: { code: string; name: string; average: number; students: number }[];
   hintsUsedByTeam: { teamName: string; count: number }[];
-  modelChoiceStats: { relevance: ModelRelevance; count: number }[];
+  /** QCM de connaissances : combien soumis, taux de bonnes réponses moyen. */
+  quizStats: { submitted: number; averageScore: number };
 }
 
 /** Vue pédagogique enseignant (§27) : « ma classe maîtrise-t-elle le BFR ? » */
@@ -674,25 +671,21 @@ export async function getTeacherPedagogyView(
     hintsByTeam.set(teamId, (hintsByTeam.get(teamId) ?? 0) + 1);
   }
 
-  const choices = instanceIds.length
-    ? await db
-        .select()
-        .from(modelChoices)
-        .where(inArray(modelChoices.situationInstanceId, instanceIds))
-    : [];
-  const byRelevance = new Map<ModelRelevance, number>();
-  for (const c of choices) {
-    const r = c.relevance as ModelRelevance;
-    byRelevance.set(r, (byRelevance.get(r) ?? 0) + 1);
-  }
+  const quizScores = instances
+    .map((i) => (i.quiz as { score?: number } | null)?.score)
+    .filter((s): s is number => typeof s === "number");
 
   return {
     conceptMastery,
     hintsUsedByTeam: teamRows
       .filter((t) => t.controller === "human")
       .map((t) => ({ teamName: t.name, count: hintsByTeam.get(t.id) ?? 0 })),
-    modelChoiceStats: (["optimal", "acceptable", "misleading", "irrelevant"] as const).map(
-      (relevance) => ({ relevance, count: byRelevance.get(relevance) ?? 0 }),
-    ),
+    quizStats: {
+      submitted: quizScores.length,
+      averageScore:
+        quizScores.length === 0
+          ? 0
+          : quizScores.reduce((a, b) => a + b, 0) / quizScores.length,
+    },
   };
 }

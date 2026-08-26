@@ -167,26 +167,25 @@ export default async function TeacherGamePage({
             </div>
             <div>
               <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                Choix de modèles d&apos;analyse
+                QCM de connaissances
               </h3>
-              <ul className="mt-2 space-y-1 text-sm">
-                {pedagogy.modelChoiceStats.map((s) => (
-                  <li key={s.relevance} className="flex justify-between text-slate-300">
-                    <span>
-                      {s.relevance === "optimal"
-                        ? "Pertinents"
-                        : s.relevance === "acceptable"
-                          ? "Acceptables"
-                          : s.relevance === "misleading"
-                            ? "Trompeurs (contresens)"
-                            : "Hors sujet"}
-                    </span>
-                    <span className="tabular-nums text-slate-400">{s.count}</span>
-                  </li>
-                ))}
+              <ul className="mt-2 space-y-1 text-sm text-slate-300">
+                <li className="flex justify-between">
+                  <span>QCM validés</span>
+                  <span className="tabular-nums text-slate-400">{pedagogy.quizStats.submitted}</span>
+                </li>
+                <li className="flex justify-between">
+                  <span>Taux de bonnes réponses</span>
+                  <span className="tabular-nums text-slate-400">
+                    {pedagogy.quizStats.submitted > 0
+                      ? `${Math.round(pedagogy.quizStats.averageScore * 100)} %`
+                      : "—"}
+                  </span>
+                </li>
               </ul>
               <p className="mt-2 text-xs text-slate-500">
-                Un choix « trompeur » fréquent signale un concept mal compris — à reprendre en classe.
+                Un taux faible signale des connaissances mal ancrées — le tableau des concepts
+                ci-contre dit lesquelles reprendre en classe.
               </p>
             </div>
           </div>

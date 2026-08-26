@@ -26,8 +26,3 @@ export function hintScoreMultiplier(
     .reduce((sum, h) => sum + h.costRatio, 0);
   return Math.max(0.2, 1 - totalCost);
 }
-
-/** L'indice de niveau 4 (modèle) a-t-il été utilisé ? (plafonne le score modèle, §7) */
-export function modelWasHinted(unlockedLevels: number[]): boolean {
-  return unlockedLevels.includes(4) || unlockedLevels.includes(5);
-}
