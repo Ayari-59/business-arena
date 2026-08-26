@@ -9,7 +9,11 @@
  */
 
 export type ModelRelevance = "optimal" | "acceptable" | "misleading" | "irrelevant";
-export type DetectCode = "profitable_illiquid" | "stockout" | "below_breakeven";
+export type DetectCode =
+  | "profitable_illiquid"
+  | "stockout"
+  | "below_breakeven"
+  | "capacity_saturated";
 
 export interface SituationHintDef {
   level: 1 | 2 | 3 | 4 | 5;
@@ -289,6 +293,37 @@ export const NOVA_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { detect: "below_breakeven" },
     weight: 0.8,
+  },
+  {
+    code: "detect_capacity_saturated",
+    title: "L'atelier au taquet",
+    narrative:
+      "Vos machines ont tourné à plein régime — et pourtant des clients sont repartis les mains vides. Votre équipementier propose 2 000 unités de capacité trimestrielle supplémentaire pour 40 000 €, amortis sur 16 trimestres. Un sous-traitant, lui, facture 52 € l'unité finie. Chaque enceinte vendue 59 € dégage environ 21 € de marge sur coût variable.",
+    problem:
+      "Investir, sous-traiter, ou laisser filer la demande : sur quel CALCUL fondez-vous la réponse — et pas sur l'intuition ?",
+    diagnosticOptions: [
+      { id: "npv_compare", label: "Comparer le coût d'aujourd'hui aux flux futurs ACTUALISÉS qu'il génère", correct: true },
+      { id: "lost_margin", label: "Les ventes manquées sont un manque à gagner mesurable : unités perdues × marge sur coût variable", correct: true },
+      { id: "count_depreciation", label: "Compter l'amortissement comme un décaissement dans les flux du projet", correct: false },
+      { id: "full_book", label: "Investir dès que le carnet est plein — le calcul se fera après", correct: false },
+    ],
+    modelRelevance: {
+      npv: "optimal",
+      irr: "acceptable",
+      relevant_costs: "acceptable",
+      marginal_analysis: "acceptable",
+      breakeven_analysis: "misleading",
+    },
+    conceptCodes: ["discounting", "irr_payback", "capacity", "contribution_margin"],
+    hints: hints([
+      "Regardez vos ventes manquées : chaque unité non servie emportait sa marge sur coût variable.",
+      "L'investissement coûte aujourd'hui ; ses gains tombent sur plusieurs tours. Comment comparer des euros d'aujourd'hui et des euros de demain ?",
+      "Un euro dans un an vaut moins qu'un euro aujourd'hui : c'est l'actualisation — votre taux d'emprunt donne le taux de référence.",
+      "La VAN actualise les flux futurs et les compare au capital investi ; le TRI est le taux qui l'annule ; les coûts pertinents comparent investir et sous-traiter.",
+      "VAN ≈ −40 000 + Σ (unités supplémentaires vendues × 21 €) / (1 + 1,25 %)^t sur 16 trimestres. VAN > 0 ⇒ investissez ; sinon comparez à la sous-traitance : 59 − 52 = 7 € de marge par unité sous-traitée, sans immobiliser un euro.",
+    ]),
+    trigger: { detect: "capacity_saturated" },
+    weight: 1,
   },
 ];
 

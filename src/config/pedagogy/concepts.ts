@@ -1,5 +1,6 @@
 /**
- * Référentiel des 20 concepts du MVP (doc 03 §2) — données, pas code.
+ * Référentiel des concepts (doc 03 §2) — données, pas code. Les 20 concepts
+ * du MVP + les concepts d'investissement (VAN/TRI, atelier « capacité »).
  * Chaque concept a 3 profondeurs d'explication (intuition / méthode / formel)
  * et un axe de compétence pour le profil joueur (§28).
  */
@@ -223,6 +224,32 @@ export const CONCEPTS: ConceptDef[] = [
     definition: "La profitabilité rapporte le résultat au CA ; la rentabilité le rapporte aux capitaux engagés.",
     intuition: "Gagner 20 000 € est « bien » ? Cela dépend : avec 100 000 € investis c'est excellent, avec 2 millions c'est médiocre. Le montant seul ne dit rien.",
     method: "Profitabilité = résultat/CA ; rentabilité économique = résultat d'exploitation net d'IS / capitaux engagés ; rentabilité financière = résultat net / capitaux propres.",
+  },
+  {
+    code: "discounting",
+    name: "Actualisation et VAN",
+    domain: "profitability",
+    axis: "finance",
+    definition:
+      "L'actualisation ramène des flux futurs à leur valeur d'aujourd'hui ; la VAN (valeur actuelle nette) compare ces flux actualisés au capital investi.",
+    intuition:
+      "Un euro dans deux ans vaut moins qu'un euro aujourd'hui : le temps a un prix — celui de l'argent immobilisé. Investir, c'est échanger des euros certains maintenant contre des euros espérés plus tard.",
+    method:
+      "Estimez les flux supplémentaires par tour (unités × marge sur coût variable), actualisez-les au taux de référence (votre taux d'emprunt), retranchez l'investissement : VAN > 0 ⇒ le projet crée de la valeur.",
+    formula: "VAN = −I₀ + Σ Ft / (1 + i)^t",
+  },
+  {
+    code: "irr_payback",
+    name: "TRI et délai de récupération",
+    domain: "profitability",
+    axis: "decision",
+    definition:
+      "Le TRI est le taux d'actualisation qui annule la VAN ; le délai de récupération est le temps nécessaire pour que les flux cumulés remboursent l'investissement.",
+    intuition:
+      "Le TRI répond à « ce projet rapporte du combien % ? » — comparable à votre coût de financement. Le délai de récupération répond à « au bout de combien de temps ai-je récupéré ma mise ? ».",
+    method:
+      "Comparez le TRI au taux d'emprunt : TRI > taux ⇒ le financement par dette crée de la valeur. Méfiez-vous d'un délai de récupération plus long que la visibilité de votre marché.",
+    formula: "TRI : i tel que Σ Ft / (1 + i)^t = I₀",
   },
 ];
 

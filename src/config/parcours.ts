@@ -207,7 +207,7 @@ export const PARCOURS: readonly Parcours[] = [
         referentiel: "P5 · Analyse et prévision de l'activité",
         notions: "coûts partiels, seuil de rentabilité, marge sur coût variable, prévisions",
         enJeu:
-          "Le seuil recalculé chaque tour avec VOS charges de structure ; les situations « choisir le bon modèle » (CVP, coûts pertinents, analyse marginale) notées sur la pertinence du choix.",
+          "Le seuil recalculé chaque tour avec VOS charges de structure ; les situations « choisir le bon modèle » (CVP, coûts pertinents, analyse marginale) notées sur la pertinence du choix — et l'atelier VAN/TRI qui se déclenche quand l'atelier sature : investir, sous-traiter ou renoncer, par le calcul.",
         fit: "coeur",
       },
       {

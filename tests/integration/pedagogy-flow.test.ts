@@ -54,10 +54,10 @@ beforeAll(async () => {
 });
 
 describe("référentiels et instanciation", () => {
-  it("les référentiels sont seedés (20 concepts, 18 modèles, 9 situations)", async () => {
-    expect(await db.select().from(concepts)).toHaveLength(20);
+  it("les référentiels sont seedés (22 concepts, 18 modèles, 10 situations)", async () => {
+    expect(await db.select().from(concepts)).toHaveLength(22);
     expect(await db.select().from(decisionModels)).toHaveLength(18);
-    expect(await db.select().from(situations)).toHaveLength(9);
+    expect(await db.select().from(situations)).toHaveLength(10);
   });
 
   it("la situation scriptée du tour 1 est ouverte pour l'équipe du joueur", async () => {

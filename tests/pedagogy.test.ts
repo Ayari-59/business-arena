@@ -78,6 +78,7 @@ describe("détection de situations (doc 03 §1.1)", () => {
     incomeStatement: { netIncome: 10000 },
     functionalBalance: { netTreasury: -5000 },
     market: { bySegment: { s: { sold: 1000, lost: 50 } } },
+    production: { utilizationRate: 0.8 },
   } as unknown as CompanyRoundResult;
 
   it("rentable mais illiquide", () => {
@@ -91,6 +92,24 @@ describe("détection de situations (doc 03 §1.1)", () => {
     expect(detectSituations(stockout)).toContain("stockout");
     expect(detectSituations(base)).not.toContain("stockout");
   });
+  it("atelier saturé : machine à plein ET demande perdue ⇒ la question d'investir", () => {
+    const saturated = {
+      ...base,
+      production: { utilizationRate: 0.99 },
+      market: { bySegment: { s: { sold: 1000, lost: 80 } } },
+    } as unknown as CompanyRoundResult;
+    expect(detectSituations(saturated)).toContain("capacity_saturated");
+    // machine à plein mais demande servie : pas de situation
+    const served = {
+      ...base,
+      production: { utilizationRate: 0.99 },
+      market: { bySegment: { s: { sold: 1000, lost: 10 } } },
+    } as unknown as CompanyRoundResult;
+    expect(detectSituations(served)).not.toContain("capacity_saturated");
+    // demande perdue mais machine sous-utilisée (mauvais plan) : rupture, pas investissement
+    expect(detectSituations(base)).not.toContain("capacity_saturated");
+  });
+
   it("sous le seuil", () => {
     const losing = {
       ...base,
@@ -111,10 +130,10 @@ describe("progression (doc 03 §6)", () => {
 });
 
 describe("cohérence des référentiels", () => {
-  it("20 concepts, 18 modèles, codes uniques", () => {
-    expect(CONCEPTS).toHaveLength(20);
+  it("22 concepts (20 MVP + VAN/TRI), 18 modèles, codes uniques", () => {
+    expect(CONCEPTS).toHaveLength(22);
     expect(DECISION_MODELS).toHaveLength(18);
-    expect(conceptByCode.size).toBe(20);
+    expect(conceptByCode.size).toBe(22);
     expect(modelByCode.size).toBe(18);
   });
   it("chaque situation référence des concepts et modèles existants, avec 5 indices", () => {
@@ -127,10 +146,10 @@ describe("cohérence des référentiels", () => {
       expect(Object.values(s.modelRelevance)).toContain("optimal");
     }
   });
-  it("6 situations scriptées (une par tour) + 3 détectées", () => {
+  it("6 situations scriptées (une par tour) + 4 détectées", () => {
     const scripted = NOVA_SITUATIONS.filter((s) => "round" in s.trigger);
     const detected = NOVA_SITUATIONS.filter((s) => "detect" in s.trigger);
     expect(scripted.map((s) => (s.trigger as { round: number }).round).sort()).toEqual([1, 2, 3, 4, 5, 6]);
-    expect(detected).toHaveLength(3);
+    expect(detected).toHaveLength(4);
   });
 });

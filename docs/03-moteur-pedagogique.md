@@ -66,7 +66,12 @@ situation = {
 ## 2. Référentiel des concepts — les 20 du MVP (point 10)
 
 Le référentiel complet (§5 du cahier des charges, ~90 notions) est chargé en base dès le
-MVP (table `concepts`, seed) : c'est de la donnée, pas du code. Les **20 concepts activés
+MVP (table `concepts`, seed) : c'est de la donnée, pas du code — étendu depuis avec les
+concepts d'investissement (actualisation/VAN, TRI/délai de récupération) portés par
+l'atelier « L'atelier au taquet », une situation DÉTECTÉE (`capacity_saturated`) qui
+s'ouvre quand la machine tourne à ≥ 97 % ET que plus de 5 % de la demande est perdue —
+la question « investir, sous-traiter ou renoncer ? » arrive au moment où elle est
+réelle, jamais sur commande. Les **20 concepts activés
 dans NOVA** (fiches rédigées, situations et indices reliés, suivis dans la progression) :
 
 | # | Concept | Domaine | # | Concept | Domaine |

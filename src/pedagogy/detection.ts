@@ -18,5 +18,10 @@ export function detectSituations(result: CompanyRoundResult): DetectCode[] {
   const lost = segments.reduce((s, d) => s + d.lost, 0);
   if (sold > 0 && lost > 0.1 * sold) detected.push("stockout");
 
+  // Atelier saturé : la machine tourne à plein ET de la demande est perdue —
+  // le moment exact où la question d'investir (ou de sous-traiter) se pose.
+  if (result.production.utilizationRate >= 0.97 && sold > 0 && lost > 0.05 * sold)
+    detected.push("capacity_saturated");
+
   return detected;
 }
