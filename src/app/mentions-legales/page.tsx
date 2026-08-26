@@ -9,9 +9,9 @@ export const metadata: Metadata = {
 
 /** Mentions légales & RGPD : page statique, sans base de données. */
 const EDITEUR = {
-  nom: "MA Formation & Conseils",
-  statut: "organisme de formation et de conseil",
-  contact: "mohamed.ayari@lasallelille.com",
+  nom: "Mohamed AYARI",
+  statut: "enseignant",
+  contact: "mohamed.ayari@ac-lille.fr",
 };
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
