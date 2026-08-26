@@ -7,15 +7,11 @@ export const metadata: Metadata = {
     "Éditeur, hébergement, cookies et protection des données : les élèves jouent sans compte, sans e-mail, sans traceur.",
 };
 
-/**
- * Mentions légales & RGPD : page statique, sans base de données.
- * ⚠️ À COMPLÉTER par l'éditeur avant communication officielle : les champs
- * du bloc EDITEUR ci-dessous (identité, statut, contact).
- */
+/** Mentions légales & RGPD : page statique, sans base de données. */
 const EDITEUR = {
-  nom: "[À compléter : nom de l'éditeur]",
-  statut: "[À compléter : statut — ex. particulier / auto-entrepreneur / association]",
-  contact: "[À compléter : e-mail de contact]",
+  nom: "MA Formation & Conseils",
+  statut: "organisme de formation et de conseil",
+  contact: "mohamed.ayari@lasallelille.com",
 };
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
