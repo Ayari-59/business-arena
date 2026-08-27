@@ -1097,6 +1097,13 @@ export interface GameView {
    */
   intro: {
     title: string;
+    /**
+     * Nom de l'ENTREPRISE reprise, qui n'est pas celui de l'équipe : en solo
+     * l'équipe porte le marqueur « (vous) » du classement, et en classe elle
+     * s'appelle « Équipe 3 ». Ni l'un ni l'autre ne se dit dans la phrase
+     * d'accueil, qui présente la maison, pas le pseudo.
+     */
+    company: string;
     tagline: string;
     summary: string;
     capacity: number;
@@ -1625,6 +1632,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       const state = stateRow?.state as CompanyState | undefined;
       return {
         title: definition.title,
+        company: definition.playerTeamName,
         tagline: definition.tagline,
         summary: definition.summary,
         capacity: Math.round(state?.machineCapacity ?? 0),

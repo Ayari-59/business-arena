@@ -118,7 +118,7 @@ export const NOVA_DEFINITION: ScenarioDefinition = {
   sector: "industrie",
   tagline: "Fabricant d'enceintes portables.",
   summary:
-    "Un atelier, quatre opérateurs, deux concurrents déjà installés. Capacité de production, seuil de rentabilité, stock qui immobilise la trésorerie et un prix à tenir face à la casse.",
+    "Ce que vous vendez, il a d'abord fallu le produire. Capacité de l'atelier, seuil de rentabilité, stock qui immobilise la trésorerie et guerre des prix sur le segment étudiant.",
   playerTeamName: "NOVA",
   vocabulary: {
     unit: "enceinte",

@@ -382,7 +382,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
             {periodLabel(view.roundDays, 1)} · prise en main
           </h2>
           <p className="mt-2 text-sm leading-relaxed">
-            Vous reprenez <strong>{view.playerTeamName}</strong>, {appositive(view.intro.tagline)}.{" "}
+            Vous reprenez <strong>{view.intro.company}</strong>, {appositive(view.intro.tagline)}.{" "}
             {view.intro.summary}
           </p>
           <ul className="mt-3 space-y-1 text-sm text-slate-400">
