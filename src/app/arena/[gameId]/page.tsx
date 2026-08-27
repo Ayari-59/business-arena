@@ -377,37 +377,153 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
           ) : null}
         </>
       ) : (
-        <section className="rounded-xl border border-white/10 bg-slate-900 p-6 text-slate-300">
-          <h2 className="text-lg font-semibold text-slate-100">
-            {periodLabel(view.roundDays, 1)} · prise en main
-          </h2>
-          <p className="mt-2 text-sm leading-relaxed">
-            Vous reprenez <strong>{view.intro.company}</strong>, {appositive(view.intro.tagline)}.{" "}
-            {view.intro.briefing}
-          </p>
-          <ul className="mt-3 space-y-1 text-sm text-slate-400">
-            <li>
-              <span className="text-slate-500">{view.vocabulary.capacityLabel} : </span>
-              {formatUnits(view.intro.capacity)} {view.vocabulary.perRoundLabel}
-            </li>
-            <li>
-              <span className="text-slate-500">Charges de structure : </span>
-              {formatEuro(view.intro.fixedCostsPerRound)} par tour
-            </li>
-            <li>
-              <span className="text-slate-500">Coût variable : </span>
-              {formatEuro(view.intro.variableCostPerUnit)} par {view.vocabulary.unit}
-            </li>
-            {view.intro.competitors.length > 0 ? (
-              <li>
-                <span className="text-slate-500">Face à vous : </span>
-                {view.intro.competitors.join(", ")}
-              </li>
-            ) : null}
-          </ul>
-          <p className="mt-3 text-sm leading-relaxed">
-            Fixez votre {view.vocabulary.priceLabel.toLowerCase()}, votre volume et vos
-            budgets, puis observez.
+        <section className="space-y-4 rounded-xl border border-white/10 bg-slate-900 p-6 text-slate-300">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-100">
+              {periodLabel(view.roundDays, 1)} · prise en main
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed">
+              Vous reprenez <strong>{view.intro.company}</strong>,{" "}
+              {appositive(view.intro.tagline)}. {view.intro.briefing}
+            </p>
+          </div>
+
+          <div className="rounded-lg border border-white/5 bg-slate-950 p-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Ce que vous trouvez en arrivant
+            </h3>
+            <p className="mt-2 text-sm leading-relaxed">{view.intro.context}</p>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="rounded-lg border border-white/5 bg-slate-950 p-4">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Votre entreprise
+              </h3>
+              <ul className="mt-2 space-y-1 text-sm text-slate-400">
+                <li>
+                  <span className="text-slate-500">{view.vocabulary.capacityLabel} : </span>
+                  <span className="text-slate-200">
+                    {formatUnits(view.intro.capacity)} {view.vocabulary.perRoundLabel}
+                  </span>
+                </li>
+                {/*
+                  Le plafond physique n'est pas toujours celui qui vous arrête :
+                  un cabinet a des bureaux pour bien plus de consultants qu'il
+                  n'en emploie. Annoncer les locaux sans dire que l'effectif
+                  plafonne bien plus bas induirait l'élève en erreur dès le
+                  premier volume qu'il saisit.
+                */}
+                {view.capacityFacts && view.capacityFacts.bottleneck === "labor" ? (
+                  <li>
+                    <span className="text-slate-500">{view.vocabulary.laborLabel} : </span>
+                    <span className="text-amber-300">
+                      {formatUnits(view.capacityFacts.laborCapacity)}{" "}
+                      {view.vocabulary.perRoundLabel}
+                    </span>
+                    , la vraie limite
+                  </li>
+                ) : null}
+                <li>
+                  <span className="text-slate-500">Charges de structure : </span>
+                  <span className="text-slate-200">
+                    {formatEuro(view.intro.fixedCostsPerRound)} par tour
+                  </span>
+                  , que vous vendiez ou non
+                </li>
+                <li>
+                  <span className="text-slate-500">Coût variable : </span>
+                  <span className="text-slate-200">
+                    {formatEuro(view.intro.variableCostPerUnit)}
+                  </span>{" "}
+                  par {view.vocabulary.unit} vendu
+                </li>
+                <li>
+                  <span className="text-slate-500">Trésorerie d&apos;ouverture : </span>
+                  <span className="text-slate-200">{formatEuro(view.intro.cash)}</span>
+                </li>
+                {view.intro.competitors.length > 0 ? (
+                  <li>
+                    <span className="text-slate-500">Face à vous : </span>
+                    <span className="text-slate-200">{view.intro.competitors.join(", ")}</span>
+                  </li>
+                ) : null}
+              </ul>
+            </div>
+
+            <div className="rounded-lg border border-white/5 bg-slate-950 p-4">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Le marché en face de vous
+              </h3>
+              <div className="mt-2 overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-[11px] uppercase tracking-wide text-slate-500">
+                      <th className="pb-1 pr-3 font-medium">Clientèle</th>
+                      <th className="pb-1 pr-3 text-right font-medium">Taille</th>
+                      <th className="pb-1 pr-3 text-right font-medium">Prix usuel</th>
+                      <th className="pb-1 font-medium">Règlement</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-slate-300">
+                    {view.intro.segments.map((seg) => (
+                      <tr key={seg.name} className="border-t border-white/5">
+                        <td className="py-1.5 pr-3">{seg.name}</td>
+                        <td className="py-1.5 pr-3 text-right tabular-nums">
+                          {formatUnits(seg.size)}
+                        </td>
+                        <td className="py-1.5 pr-3 text-right tabular-nums">
+                          {formatEuro(seg.refPrice)}
+                        </td>
+                        <td className="py-1.5 text-slate-400">
+                          {seg.paymentDelayDays > 0 ? `à ${seg.paymentDelayDays} j` : "comptant"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="mt-2 text-[11px] leading-relaxed text-slate-600">
+                Le prix usuel est celui auquel cette clientèle a l&apos;habitude d&apos;acheter,
+                pas une consigne. Vous fixez UN prix pour tout le monde.
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-amber-400/25 bg-amber-950/10 p-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-amber-400">
+              Votre premier arbitrage
+            </h3>
+            <p className="mt-2 text-sm font-medium text-slate-100">
+              {view.intro.dilemma.question}
+            </p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              {view.intro.dilemma.routes.map((route) => (
+                <div
+                  key={route.label}
+                  className="rounded-lg border border-white/10 bg-slate-950 p-3"
+                >
+                  <p className="text-sm font-medium text-slate-200">{route.label}</p>
+                  <p className="mt-1.5 text-xs leading-relaxed text-emerald-300/90">
+                    <span className="font-semibold">Ce que cela rapporte. </span>
+                    {route.gain}
+                  </p>
+                  <p className="mt-1.5 text-xs leading-relaxed text-red-300/80">
+                    <span className="font-semibold">Ce que cela coûte. </span>
+                    {route.risque}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-3 text-xs leading-relaxed text-slate-400">
+              Aucune des deux n&apos;est la bonne réponse : les deux se défendent, et c&apos;est
+              vous qui tranchez. Le marché vous dira au tour suivant ce que votre choix valait.
+            </p>
+          </div>
+
+          <p className="text-sm leading-relaxed">
+            Fixez votre {view.vocabulary.priceLabel.toLowerCase()}, votre volume et vos budgets,
+            puis observez.
           </p>
         </section>
       )}

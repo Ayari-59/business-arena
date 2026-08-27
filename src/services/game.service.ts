@@ -1106,9 +1106,27 @@ export interface GameView {
     company: string;
     tagline: string;
     briefing: string;
+    context: string;
+    dilemma: {
+      question: string;
+      routes: { label: string; gain: string; risque: string }[];
+    };
     capacity: number;
     fixedCostsPerRound: number;
     variableCostPerUnit: number;
+    /** Trésorerie d'ouverture : de quoi tenir combien de temps ? */
+    cash: number;
+    /**
+     * Le marché tel qu'il est JOUÉ, segment par segment. Les tailles, les prix
+     * de référence et les délais de règlement viennent du snapshot : ce sont
+     * ceux de la partie, périodicité et réglages de l'enseignant compris.
+     */
+    segments: {
+      name: string;
+      size: number;
+      refPrice: number;
+      paymentDelayDays: number;
+    }[];
     competitors: string[];
   };
   /** Niveau de difficulté (préréglage en données, doc 08 §2). */
@@ -1635,10 +1653,19 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         company: definition.playerTeamName,
         tagline: definition.tagline,
         briefing: definition.briefing,
+        context: definition.context,
+        dilemma: definition.dilemma,
         capacity: Math.round(state?.machineCapacity ?? 0),
         fixedCostsPerRound: snapshot.fixedCostsPerRound,
         variableCostPerUnit:
           snapshot.product.materialCostPerUnit + snapshot.product.otherVariableCostPerUnit,
+        cash: Math.round(state?.finance.cash ?? 0),
+        segments: snapshot.market.segments.map((seg) => ({
+          name: seg.name,
+          size: Math.round(seg.size),
+          refPrice: seg.refPrice,
+          paymentDelayDays: seg.paymentDelayDays,
+        })),
         competitors: teamRows
           .filter((t) => t.id !== playerTeam.id)
           .map((t) => t.name),

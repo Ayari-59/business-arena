@@ -98,6 +98,21 @@ export interface ScenarioDefinition {
    * de notions : à ce moment-là l'élève ne connaît pas encore les mots.
    */
   briefing: string;
+  /**
+   * Ce que l'élève trouve en arrivant : d'où vient l'entreprise, dans quel
+   * état, face à quoi. Sans chiffre : les montants viennent du SNAPSHOT joué,
+   * que la périodicité et les réglages de l'enseignant peuvent changer.
+   */
+  context: string;
+  /**
+   * Le premier arbitrage, pose en toutes lettres avec ses deux issues. Une
+   * decision se prend contre quelque chose : chaque route dit ce qu'elle
+   * rapporte ET ce qu'elle coûte. Sans chiffre, pour la même raison.
+   */
+  dilemma: {
+    question: string;
+    routes: { label: string; gain: string; risque: string }[];
+  };
   /** Nom de l'entreprise que dirige le joueur (partie solo). */
   playerTeamName: string;
   vocabulary: ScenarioVocabulary;
@@ -124,6 +139,23 @@ export const NOVA_DEFINITION: ScenarioDefinition = {
   tagline: "Fabricant d'enceintes portables.",
   briefing:
     "Tout ce que vous vendez sort de votre atelier, dont la capacité est limitée. Produire plus que vous ne vendez immobilise votre argent en stock ; produire moins laisse repartir des clients. Tout se joue sur le prix et sur le volume que vous lancez.",
+  context:
+    "L'ancien dirigeant est parti à la retraite le mois dernier. Il vous laisse un atelier en état, une équipe qui connaît le produit, et un carnet de commandes vide : rien n'est signé pour le trimestre qui s'ouvre. La concurrence, elle, est installée depuis des années, l'une sur les prix bas, l'autre sur le haut de gamme.",
+  dilemma: {
+    question: "Deux clientèles, deux niveaux de prix, un seul atelier. Laquelle visez-vous ce trimestre ?",
+    routes: [
+      {
+        label: "Viser le volume, au prix des étudiants",
+        gain: "C'est la clientèle la plus nombreuse. L'atelier tourne à plein régime, et chaque enceinte de plus ne coûte que ses matières.",
+        risque: "La marge par enceinte est mince, et ce sont les clients les plus prompts à partir chez le moins cher.",
+      },
+      {
+        label: "Viser la valeur, au prix des passionnés",
+        gain: "Une marge nettement plus large sur chaque enceinte, auprès de clients qui reviennent d'un trimestre à l'autre.",
+        risque: "Cette clientèle est bien plus petite. L'atelier tournera au ralenti, et les charges de structure tomberont quand même.",
+      },
+    ],
+  },
   playerTeamName: "NOVA",
   vocabulary: {
     unit: "enceinte",
@@ -156,6 +188,23 @@ export const BOUTIQUE_DEFINITION: ScenarioDefinition = {
   tagline: "Concept store de prêt-à-porter en centre-ville.",
   briefing:
     "Vous ne fabriquez rien, vous achetez pour revendre. Votre marge se joue entièrement entre le prix auquel vous achetez et celui auquel vous vendez. Ce que vous commandez dort en réserve, et vous l'avez payé bien avant qu'une cliente l'emporte.",
+  context:
+    "La boutique tourne depuis des années et la clientèle du quartier la connaît. Votre prédécesseur commandait toujours la même chose aux mêmes fournisseurs, et la réserve déborde encore de pièces de la saison passée. Vous, vous devez commander la saison qui vient sans savoir ce qui se vendra.",
+  dilemma: {
+    question: "Vous achetez aujourd'hui ce que vous vendrez dans plusieurs semaines. Combien commandez-vous ?",
+    routes: [
+      {
+        label: "Commander large",
+        gain: "La réserve suit la demande, aucune cliente ne repart les mains vides, et le pic de fin d'année se passe sans rupture.",
+        risque: "Chaque pièce invendue reste payée et dort en réserve. Votre argent est immobilisé dans des cartons.",
+      },
+      {
+        label: "Commander serré",
+        gain: "Peu d'argent immobilisé, une réserve saine, et de la trésorerie disponible pour le reste.",
+        risque: "Une pièce qui manque est une vente perdue, et une cliente qui a trouvé ailleurs revient rarement.",
+      },
+    ],
+  },
   playerTeamName: "MAILLE & CO",
   vocabulary: {
     unit: "article",
@@ -188,6 +237,23 @@ export const HOTEL_DEFINITION: ScenarioDefinition = {
   tagline: "Hôtel 3 étoiles de 60 chambres en ville moyenne.",
   briefing:
     "Une chambre vide ce soir est perdue : elle ne se vendra pas deux fois demain. Vos charges tombent que l'hôtel soit plein ou non. Vous jouez donc sur deux tableaux à la fois, le nombre de chambres occupées et le prix que vous arrivez à tenir.",
+  context:
+    "L'hôtel vient d'un exploitant qui affichait le même tarif toute l'année, sans jamais regarder si les chambres se remplissaient. Les plateformes de réservation apportent des clients, mais prennent leur commission au passage. La saison qui s'ouvre ne remplira pas l'hôtel toute seule.",
+  dilemma: {
+    question: "Une chambre vide ce soir ne rapportera jamais rien. Jusqu'où baissez-vous pour la remplir ?",
+    routes: [
+      {
+        label: "Baisser le tarif pour remplir",
+        gain: "Des chambres occupées plutôt que vides. Une nuit vendue à petit prix rapporte toujours plus qu'une nuit invendue.",
+        risque: "Vos habitués voient le tarif baisser et attendront la prochaine promotion. Un prix moyen, cela descend vite et cela remonte lentement.",
+      },
+      {
+        label: "Tenir le tarif affiché",
+        gain: "Chaque nuit vendue rapporte pleinement, et l'hôtel garde le positionnement qui fait venir sa clientèle.",
+        risque: "Des chambres restent vides alors que les charges tombent, que l'hôtel soit plein ou non.",
+      },
+    ],
+  },
   playerTeamName: "L'ESCALE",
   vocabulary: {
     unit: "nuitée",
@@ -220,6 +286,23 @@ export const BISTROT_DEFINITION: ScenarioDefinition = {
   tagline: "Bistrot de 70 couverts, midi et soir.",
   briefing:
     "Un couvert non servi est perdu, et ce que la cuisine a préparé sans le vendre part à la poubelle. Deux limites vous arrêtent en même temps : le nombre de places en salle et les heures de votre brigade. Prévoir trop coûte, prévoir trop peu aussi.",
+  context:
+    "Le bistrot est connu du quartier : la salle se remplit le midi en semaine, et le soir le week-end. Chaque semaine, la cuisine commande des denrées qui ne se gardent pas. Ce qui est préparé et non servi est perdu le soir même.",
+  dilemma: {
+    question: "La cuisine prépare avant de savoir combien de clients viendront. Vous tablez sur quelle affluence ?",
+    routes: [
+      {
+        label: "Préparer large",
+        gain: "Aucun client renvoyé, aucun plat retiré de la carte en plein service, une salle qui tourne jusqu'au bout.",
+        risque: "Ce qui n'est pas servi part à la poubelle, et vous l'avez déjà payé.",
+      },
+      {
+        label: "Préparer juste",
+        gain: "Presque aucune perte, et un coût des denrées qui reste sous contrôle.",
+        risque: "Un soir d'affluence, vous refusez du monde, et la salle aurait pu être pleine.",
+      },
+    ],
+  },
   playerTeamName: "LA TABLE D'AUGUSTIN",
   vocabulary: {
     unit: "couvert",
@@ -252,6 +335,23 @@ export const CONSEIL_DEFINITION: ScenarioDefinition = {
   tagline: "Cabinet de conseil et bureau d'études, 12 consultants.",
   briefing:
     "Ce que vous facturez, c'est du temps de travail. Une journée non vendue ne se rattrape jamais, et les salaires tombent que le carnet soit plein ou vide. Vos clients règlent à 45 jours : l'argent gagné met des semaines à arriver en caisse.",
+  context:
+    "Le cabinet a bonne réputation, mais son fondateur est parti en emportant la moitié des missions. Vos consultants sont salariés : ils sont payés que le carnet soit plein ou vide. Les clients, eux, règlent leurs factures des semaines après la fin de la mission.",
+  dilemma: {
+    question: "Vos consultants sont payés qu'ils facturent ou non. À quel tarif vendez-vous leurs journées ?",
+    routes: [
+      {
+        label: "Baisser le tarif pour remplir le planning",
+        gain: "Des consultants en mission plutôt qu'au bureau, un carnet rempli, et de la trésorerie qui rentre.",
+        risque: "Un tarif bradé se renégocie difficilement l'année suivante, et la marge par journée finit par ne plus couvrir les salaires.",
+      },
+      {
+        label: "Tenir le tarif",
+        gain: "Chaque journée vendue couvre largement le salaire de celui qui la réalise.",
+        risque: "Des journées restent invendues, et les salaires tombent quand même.",
+      },
+    ],
+  },
   playerTeamName: "ATLAS CONSEIL",
   vocabulary: {
     unit: "jour-conseil",
@@ -285,6 +385,23 @@ export const ECOMMERCE_DEFINITION: ScenarioDefinition = {
   tagline: "Pure player de décoration et petit mobilier.",
   briefing:
     "Ouvrir votre boutique ne coûte presque rien, c'est un site. Mais personne n'y arrive tout seul : chaque visiteur se paie en publicité. La question n'est donc pas de savoir si vous gagnez de l'argent sur une commande, mais si vous en gagnez assez pour rembourser ce que ce client vous a coûté.",
+  context:
+    "Le site fonctionne, les fournisseurs sont en place, l'entrepôt prépare les commandes. Mais l'ancien propriétaire avait coupé la publicité pour économiser, et le trafic s'est effondré avec elle. Sur internet, personne ne passe devant votre vitrine par hasard.",
+  dilemma: {
+    question: "Sur internet, chaque visiteur se paie. Combien investissez-vous pour aller chercher des clients ?",
+    routes: [
+      {
+        label: "Ouvrir grand le budget d'acquisition",
+        gain: "Le trafic monte, les commandes suivent, et la boutique existe enfin face aux gros vendeurs.",
+        risque: "La publicité se paie tout de suite. Si ce que rapporte une commande ne couvre pas ce que ce client a coûté, vous vendez à perte sans le voir.",
+      },
+      {
+        label: "Rester prudent sur la publicité",
+        gain: "Aucune dépense hasardeuse, et chaque commande encaissée rapporte pleinement.",
+        risque: "Sans trafic, il n'y a pas de commandes du tout : l'entrepôt et les charges tournent à vide.",
+      },
+    ],
+  },
   playerTeamName: "PIXEL & CO",
   vocabulary: {
     unit: "commande",
@@ -317,6 +434,23 @@ export const FITNESS_DEFINITION: ScenarioDefinition = {
   tagline: "Salle de sport de 1 200 m² en périphérie.",
   briefing:
     "Vos adhérents paient un abonnement chaque trimestre. Vous ne les gagnez donc pas une fois, vous les gardez ou vous les perdez. Chaque départ n'enlève pas seulement un abonnement à ce trimestre, il l'enlève à tous les suivants.",
+  context:
+    "La salle est bien équipée et le quartier est en croissance. Mais votre prédécesseur la remplissait en janvier sans se soucier de la suite, et beaucoup d'adhérents ne renouvelaient pas. Les charges, elles, tombent tous les mois de l'année.",
+  dilemma: {
+    question: "Aller chercher de nouveaux adhérents, ou garder ceux que vous avez ?",
+    routes: [
+      {
+        label: "Recruter",
+        gain: "Des inscriptions immédiates, de la trésorerie qui rentre tout de suite, une salle qui se remplit vite.",
+        risque: "Un adhérent qui s'en va au bout d'un trimestre a coûté plus cher à recruter qu'il n'a rapporté. Et il faudra recommencer au trimestre suivant.",
+      },
+      {
+        label: "Fidéliser",
+        gain: "Un adhérent gardé rapporte à chaque trimestre sans rien coûter de plus. C'est l'effort le plus rentable de ce métier.",
+        risque: "L'encadrement et l'entretien se paient maintenant, alors que le bénéfice ne se verra que dans plusieurs trimestres.",
+      },
+    ],
+  },
   playerTeamName: "VOLT FITNESS",
   vocabulary: {
     unit: "adhérent",

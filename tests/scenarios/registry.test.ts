@@ -49,6 +49,43 @@ describe("registre des scénarios", () => {
     }
   });
 
+  it("le contexte et l'arbitrage du tour 1 ne citent jamais un chiffre", () => {
+    // Les montants, les tailles de marché et le nombre de concurrents sont des
+    // paramètres de la PARTIE : la périodicité les redimensionne et
+    // l'enseignant peut les changer à la création. Un chiffre écrit dans la
+    // prose deviendrait faux sans prévenir. Il n'y en a qu'un seul endroit
+    // juste : le panneau, qui les lit dans le snapshot joué.
+    for (const d of SCENARIOS) {
+      const proses = [
+        d.context,
+        d.dilemma.question,
+        ...d.dilemma.routes.flatMap((r) => [r.label, r.gain, r.risque]),
+      ];
+      for (const prose of proses) {
+        expect(prose, `${d.code} : « ${prose.slice(0, 50)}… »`).not.toMatch(/\d/);
+      }
+    }
+  });
+
+  it("chaque arbitrage du tour 1 oppose deux routes, chacune avec son prix à payer", () => {
+    for (const d of SCENARIOS) {
+      expect(d.context.length, d.code).toBeGreaterThan(120);
+      expect(d.dilemma.question.trim().endsWith("?"), d.code).toBe(true);
+      // Deux routes : une « décision » à une seule issue n'en est pas une.
+      expect(d.dilemma.routes.length, d.code).toBe(2);
+      for (const route of d.dilemma.routes) {
+        expect(route.label.length, d.code).toBeGreaterThan(5);
+        // Un choix sans contrepartie chiffrable n'apprend rien : les deux
+        // faces sont obligatoires.
+        expect(route.gain.length, `${d.code} / ${route.label}`).toBeGreaterThan(60);
+        expect(route.risque.length, `${d.code} / ${route.label}`).toBeGreaterThan(60);
+      }
+      // Les deux routes doivent être distinctes, pas une reformulation.
+      const [a, b] = d.dilemma.routes;
+      expect(a!.label, d.code).not.toBe(b!.label);
+    }
+  });
+
   it("chaque scénario s'annonce : titre, signature, vocabulaire", () => {
     for (const d of SCENARIOS) {
       expect(d.title.length, d.code).toBeGreaterThan(5);
