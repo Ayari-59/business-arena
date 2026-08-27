@@ -382,6 +382,9 @@ const rawNova = {
     discountMaxShare: 0.6,
     factoringFeeRate: 0.025,
     forcedFactoringFeeRate: 0.05,
+    // 2 %/an : de quoi valoriser le surplus, jamais de quoi financer
+    // un découvert à 9 %. L'arbitrage doit rester perdant à l'envers.
+    placementAnnualRate: 0.02,
   },
   // Investissement capacitaire : 20 €/unité de capacité trimestrielle,
   // amorti sur 16 trimestres, mise en service au tour suivant.

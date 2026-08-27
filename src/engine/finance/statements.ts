@@ -52,6 +52,13 @@ export interface FinanceInput {
     factoringFeeRate: number;
     forcedFactoringFeeRate: number;
     overdraftLimit: number;
+    /**
+     * Placement de trésorerie (optionnel). Le montant demandé quitte la caisse
+     * ce tour et revient au suivant ; celui du tour précédent (opening
+     * .shortTermInvestment) revient maintenant, avec ses intérêts.
+     */
+    placementRequest?: number;
+    placementAnnualRate?: number;
   };
 }
 
@@ -65,6 +72,9 @@ export interface FinanceOutput {
     forcedFactored: number;
     financingCost: number;
     crisis: boolean;
+    placed: number;
+    matured: number;
+    placementIncome: number;
   };
 }
 
@@ -88,6 +98,18 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
     : 0;
   const factoringCost = t ? factored * t.factoringFeeRate : 0;
 
+  // Placement de trésorerie. Celui du tour précédent arrive à terme
+  // maintenant : le principal revient en caisse et les intérêts sont un
+  // PRODUIT financier. Le nouveau placement, lui, quitte la caisse et n'y
+  // reviendra qu'au tour suivant : il ne peut donc pas payer les charges de
+  // ce tour-ci. C'est là tout l'arbitrage, et c'est pour cela qu'on peut se
+  // retrouver à payer un découvert tout en détenant un placement.
+  const matured = o.shortTermInvestment ?? 0;
+  const placementIncome = matured * (t?.placementAnnualRate ?? 0) * periodFraction;
+  const placed = t?.placementAnnualRate
+    ? Math.max(0, Math.min(t.placementRequest ?? 0, o.cash + matured))
+    : 0;
+
   /** Construit les états pour un montant d'affacturage forcé donné. */
   const build = (forcedFactored: number) => {
     const forcedCost = t ? forcedFactored * t.forcedFactoringFeeRate : 0;
@@ -110,7 +132,7 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
         periodFraction *
         input.interestMultiplier +
       financingCost;
-    const pretaxIncome = operatingIncome - interest;
+    const pretaxIncome = operatingIncome - interest + placementIncome;
     const tax = input.taxRate * Math.max(0, pretaxIncome);
     const netIncome = pretaxIncome - tax;
 
@@ -128,6 +150,7 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
       depreciation,
       operatingIncome,
       interest,
+      financialIncome: placementIncome,
       pretaxIncome,
       tax,
       netIncome,
@@ -165,6 +188,9 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
       { label: "nouvel_emprunt", amount: input.newLoan },
       { label: "augmentation_capital", amount: input.capitalIncrease },
       { label: "remboursement_emprunt", amount: -loanRepayment },
+      { label: "placement_arrive_a_terme", amount: matured },
+      { label: "produits_financiers", amount: placementIncome },
+      { label: "placement_souscrit", amount: -placed },
     ].filter((i) => i.amount !== 0);
 
     const netFlow = items.reduce((s, i) => s + i.amount, 0);
@@ -177,6 +203,7 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
       inventoryValue: o.inventoryValue + input.inventoryChange,
       receivables: receivablesEnd,
       cash: Math.max(0, closingNet),
+      shortTermInvestment: placed,
       equity: o.equity + netIncome + input.capitalIncrease,
       financialDebt: o.financialDebt + input.newLoan - loanRepayment,
       payables: payablesEnd,
@@ -216,13 +243,21 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
       forcedFactored,
       financingCost: discountCost + factoringCost + pass.forcedCost,
       crisis,
+      placed,
+      matured,
+      placementIncome,
     },
   };
 }
 
 /** Total actif = total passif (contrôle d'équilibre, testé au centime). */
 export function balanceGap(b: BalanceSheet): number {
-  const assets = b.fixedAssetsNet + b.inventoryValue + b.receivables + b.cash;
+  const assets =
+    b.fixedAssetsNet +
+    b.inventoryValue +
+    b.receivables +
+    b.cash +
+    (b.shortTermInvestment ?? 0);
   const liabilities =
     b.equity + b.financialDebt + b.payables + b.overdraft + (b.vatLiability ?? 0);
   return assets - liabilities;

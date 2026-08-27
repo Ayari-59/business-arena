@@ -127,6 +127,9 @@ const rawConseil = {
     discountMaxShare: 0.7,
     factoringFeeRate: 0.025,
     forcedFactoringFeeRate: 0.06,
+    // 2 %/an : de quoi valoriser le surplus, jamais de quoi financer
+    // un découvert à 9 %. L'arbitrage doit rester perdant à l'envers.
+    placementAnnualRate: 0.02,
   },
   // structure ≈ 204 000 €/tour : 198 000 décaissés (151 200 € de salaires
   // chargés pour 12 consultants + 46 800 € de loyer, administratif et

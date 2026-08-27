@@ -62,6 +62,9 @@ export async function playRoundAction(
       ? {
           discount: formData.get("discount") || 0,
           factoring: formData.get("factoring") || 0,
+          // Le placement n'est servi qu'aux niveaux qui l'ouvrent : son champ
+          // peut donc être absent du formulaire.
+          placement: formData.get("placement") || 0,
         }
       : undefined,
   });

@@ -109,6 +109,13 @@ export interface EngineScenarioConfig {
     factoringFeeRate: number;
     /** Commission de l'affacturage forcé (punitif). */
     forcedFactoringFeeRate: number;
+    /**
+     * Taux annuel du placement de trésorerie (optionnel). La contrepartie du
+     * découvert : l'argent qui dort ne rapporte rien, mais l'argent placé
+     * n'est plus disponible pour payer. Le taux est TOUJOURS bien inférieur à
+     * celui du découvert, sans quoi l'arbitrage n'existerait pas.
+     */
+    placementAnnualRate?: number;
   };
   /** Coûts fixes opérationnels par tour (hors amortissements). */
   fixedCostsPerRound: number;
@@ -365,6 +372,12 @@ export interface BalanceSheet {
   inventoryValue: number;
   receivables: number; // TTC quand la TVA est active
   cash: number; // ≥ 0
+  /**
+   * Valeurs mobilières de placement : trésorerie placée au tour précédent,
+   * qui revient en caisse à l'ouverture du tour suivant. Actif de trésorerie
+   * (donc dans la TN), mais indisponible pour payer pendant le tour.
+   */
+  shortTermInvestment?: number;
   equity: number;
   financialDebt: number;
   payables: number; // TTC quand la TVA est active
@@ -455,7 +468,16 @@ export interface RoundDecisions {
    */
   finance?: { newLoan?: number; loanRepayment?: number; capitalIncrease?: number };
   /** Trésorerie : montants de créances à mobiliser ce tour (actions ponctuelles). */
-  treasury?: { discount?: number; factoring?: number };
+  treasury?: {
+    discount?: number;
+    factoring?: number;
+    /**
+     * Trésorerie placée ce tour (si le scénario porte un placementAnnualRate).
+     * Elle quitte la caisse maintenant et revient au tour suivant avec ses
+     * intérêts. Action ponctuelle : jamais reconduite.
+     */
+    placement?: number;
+  };
   forecast?: { expectedRevenue?: number; expectedNetIncome?: number; expectedCash?: number };
 }
 
@@ -477,6 +499,8 @@ export interface IncomeStatement {
   depreciation: number;
   operatingIncome: number;
   interest: number;
+  /** Produits financiers du tour (intérêts du placement arrivé à terme). */
+  financialIncome?: number;
   pretaxIncome: number;
   tax: number;
   netIncome: number;
@@ -590,6 +614,12 @@ export interface CompanyRoundResult {
     financingCost: number;
     /** Découvert toujours au-delà du plafond malgré tout : crise caractérisée. */
     crisis: boolean;
+    /** Placement souscrit ce tour (indisponible jusqu'au tour suivant). */
+    placed: number;
+    /** Placement du tour précédent revenu en caisse à l'ouverture. */
+    matured: number;
+    /** Intérêts encaissés sur le placement arrivé à terme. */
+    placementIncome: number;
   };
   /** RH du tour : effectif, mouvements et coût (doc 02 §4.1). */
   hr?: {

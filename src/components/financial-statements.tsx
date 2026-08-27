@@ -25,6 +25,9 @@ const CASH_LABELS: Record<string, string> = {
   qualite: "Budget qualité",
   maintenance: "Budget maintenance",
   interets: "Charges financières",
+  placement_arrive_a_terme: "Placement arrivé à terme",
+  produits_financiers: "Produits financiers (placement)",
+  placement_souscrit: "Placement souscrit",
   impot: "Impôt sur les sociétés",
   tva_decaissee: "TVA décaissée",
   investissement: "Investissement",
@@ -108,7 +111,9 @@ export function FinancialStatements({
     + (result.orderOffer?.delivered ?? 0);
   const structure =
     cr.fixedCosts + cr.marketingCost + cr.qualityCost + cr.maintenanceCost + cr.depreciation;
-  const totalAssets = b.fixedAssetsNet + b.inventoryValue + b.receivables + b.cash;
+  const placement = b.shortTermInvestment ?? 0;
+  const totalAssets =
+    b.fixedAssetsNet + b.inventoryValue + b.receivables + b.cash + placement;
   const vat = b.vatLiability ?? 0;
 
   return (
@@ -132,6 +137,13 @@ export function FinancialStatements({
         <Row label="− Dotations aux amortissements" value={euro(-cr.depreciation)} indent />
         <Row label="= Résultat d'exploitation" value={euro(cr.operatingIncome)} strong />
         <Row label="− Charges financières (intérêts, agios, mobilisations)" value={euro(-cr.interest)} indent />
+        {(cr.financialIncome ?? 0) > 0.5 ? (
+          <Row
+            label="+ Produits financiers (placement)"
+            value={euro(cr.financialIncome ?? 0)}
+            indent
+          />
+        ) : null}
         <Row label="− Impôt sur les sociétés" value={euro(-cr.tax)} indent />
         <Row
           label="= RÉSULTAT NET"
@@ -150,6 +162,9 @@ export function FinancialStatements({
             <Row label="Immobilisations nettes" value={euro(b.fixedAssetsNet)} />
             <Row label="Stocks de produits finis" value={euro(b.inventoryValue)} />
             <Row label="Créances clients" value={euro(b.receivables)} />
+            {placement > 0.5 ? (
+              <Row label="Valeurs mobilières de placement" value={euro(placement)} />
+            ) : null}
             <Row label="Disponibilités" value={euro(b.cash)} />
             <Row label="TOTAL ACTIF" value={euro(totalAssets)} strong />
           </div>
@@ -174,6 +189,9 @@ export function FinancialStatements({
           </div>
         </div>
         <p className="mt-2 text-[11px] text-slate-500">
+          {placement > 0.5 && b.overdraft > 0.5
+            ? "Vous détenez un placement ET un découvert : vous payez le second bien plus cher que le premier ne rapporte. "
+            : ""}
           Le bilan équilibre au centime, par construction. FRNG{" "}
           {euro(result.functionalBalance.frng)} − BFR {euro(result.functionalBalance.bfr)} ={" "}
           trésorerie nette {euro(result.functionalBalance.netTreasury)}.

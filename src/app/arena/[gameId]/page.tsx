@@ -15,6 +15,7 @@ import { DecisionForm } from "@/components/decision-form";
 import { StudyReportsPanel } from "@/components/study-reports";
 import { FinancialStatements } from "@/components/financial-statements";
 import { DilemmaCard, ParametersPanels } from "@/components/decision-context";
+import { SalesHistory } from "@/components/sales-history";
 import type { RoundDecisions } from "@/engine/types";
 import type { KpiFormat } from "@/config/scenarios/sector-kpis";
 
@@ -283,6 +284,12 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                     : ""}
                   {" coût financier "}
                   {formatEuro(r.treasury.financingCost)}
+                  {r.treasury.matured > 0.5
+                    ? ` · placement arrivé à terme ${formatEuro(r.treasury.matured)} (+${formatEuro(r.treasury.placementIncome)} d'intérêts)`
+                    : ""}
+                  {r.treasury.placed > 0.5
+                    ? ` · ${formatEuro(r.treasury.placed)} placés jusqu'au tour suivant`
+                    : ""}
                   {r.treasury.crisis
                     ? ". 🚨 CRISE DE TRÉSORERIE : plafond dépassé et plus de créances à céder."
                     : ""}
@@ -436,6 +443,10 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
             routes={view.roundBriefing.routes}
           />
         </section>
+      ) : null}
+
+      {view.salesHistory.rounds.length > 0 ? (
+        <SalesHistory history={view.salesHistory} vocabulary={view.vocabulary} />
       ) : null}
 
       {!finished && view.seasonNotes.length > 0 ? (

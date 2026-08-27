@@ -121,6 +121,9 @@ const rawEcommerce = {
     discountMaxShare: 0.5,
     factoringFeeRate: 0.03,
     forcedFactoringFeeRate: 0.07,
+    // 2 %/an : de quoi valoriser le surplus, jamais de quoi financer
+    // un découvert à 9 %. L'arbitrage doit rester perdant à l'envers.
+    placementAnnualRate: 0.02,
   },
   // structure ≈ 53 000 €/tour : 48 000 décaissés (équipe, entrepôt, plateforme,
   // abonnements logiciels) + 5 000 d'amortissements — HORS acquisition

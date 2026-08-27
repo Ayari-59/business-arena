@@ -475,6 +475,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
               factoringFeeRate: scenario.treasury.factoringFeeRate,
               forcedFactoringFeeRate: scenario.treasury.forcedFactoringFeeRate,
               overdraftLimit: scenario.finance.overdraftLimit,
+              placementRequest: Math.max(0, w.decisions.treasury?.placement ?? 0),
+              placementAnnualRate: scenario.treasury.placementAnnualRate,
             },
           }
         : {}),
@@ -608,6 +610,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       (finance.treasury.discounted > 0 ||
         finance.treasury.factored > 0 ||
         finance.treasury.forcedFactored > 0 ||
+        finance.treasury.placed > 0 ||
+        finance.treasury.matured > 0 ||
         finance.treasury.crisis)
         ? { treasury: finance.treasury }
         : {}),

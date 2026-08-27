@@ -123,6 +123,9 @@ const rawBistrot = {
     discountMaxShare: 0.5,
     factoringFeeRate: 0.03,
     forcedFactoringFeeRate: 0.07,
+    // 2 %/an : de quoi valoriser le surplus, jamais de quoi financer
+    // un découvert à 9 %. L'arbitrage doit rester perdant à l'envers.
+    placementAnnualRate: 0.02,
   },
   // structure ≈ 96 000 €/tour : 90 000 décaissés (brigade, loyer, énergie,
   // assurances, redevances) + 6 000 d'amortissements de la cuisine

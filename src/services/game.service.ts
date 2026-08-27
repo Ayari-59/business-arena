@@ -1044,6 +1044,23 @@ export interface GameView {
   }[];
   lastResult: CompanyRoundResult | null;
   /**
+   * Historique des ventes, tour par tour et clientèle par clientèle. Ce sont
+   * VOS données : elles sont gratuites, comme les comptes. Deux colonnes par
+   * segment, la demande du marché et vos ventes, parce qu'une prévision se
+   * construit sur les deux : la taille du marché donne la saison, votre part
+   * dit ce que votre prix en a capté.
+   */
+  salesHistory: {
+    segments: string[];
+    rounds: {
+      round: number;
+      price: number | null;
+      bySegment: { potential: number; sold: number }[];
+      sold: number;
+      lost: number;
+    }[];
+  };
+  /**
    * Le contexte des tours 2 et suivants, calculé sur le tour écoulé : le
    * constat et l'arbitrage qui en découle. Null au tour 1, dont le contexte
    * est écrit d'avance dans le scénario (`intro`).
@@ -1163,6 +1180,7 @@ export interface GameView {
     insurance: boolean;
     hr: boolean;
     investment: boolean;
+    placement: boolean;
   };
   /** Saison du tour courant : coefficients ≠ 1 (marché global et segments). */
   seasonNotes: { name: string; coef: number }[];
@@ -1176,6 +1194,10 @@ export interface GameView {
     discountMaxShare: number;
     factoringFeeRate: number;
     overdraftLimit: number;
+    /** Taux du placement, absent si le scénario n'en propose pas. */
+    placementAnnualRate: number | null;
+    /** Trésorerie placée au tour précédent, revenue en caisse à l'ouverture. */
+    maturedPlacement: number;
   } | null;
   /**
    * Commande exceptionnelle proposée pour le tour courant (rotation du pool,
@@ -1305,6 +1327,25 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       netTreasury: Number(r.netTreasury),
     }))
     .sort((a, b) => a.round - b.round);
+
+  // Historique des ventes : les décisions de TOUS les tours joués, pour
+  // remettre le prix pratiqué en face des volumes qu'il a produits. Sans le
+  // prix, la série des ventes ne s'explique pas.
+  const playerDecisionRows = await db
+    .select()
+    .from(decisions)
+    .where(
+      and(
+        inArray(decisions.roundId, gameRounds.map((r) => r.id)),
+        eq(decisions.teamId, playerTeam.id),
+      ),
+    );
+  const priceByRound = new Map(
+    playerDecisionRows.map((d) => [
+      roundIndexById.get(d.roundId)!,
+      (d.payload as RoundDecisions).price ?? null,
+    ]),
+  );
 
   const lastRound = resolved.at(-1);
   let lastResult: CompanyRoundResult | null = null;
@@ -1583,6 +1624,34 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       };
     }),
     lastResult,
+    salesHistory: (() => {
+      const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+      const codes = snapshot.market.segments.map((seg) => seg.code);
+      return {
+        segments: snapshot.market.segments.map((seg) => seg.name),
+        rounds: gameResults
+          .filter((r) => r.teamId === playerTeam.id)
+          .map((r) => {
+            const detail = r.marketDetail as Record<
+              string,
+              { potential: number; sold: number; lost: number } | undefined
+            >;
+            const bySegment = codes.map((code) => ({
+              potential: Math.round(detail[code]?.potential ?? 0),
+              sold: Math.round(detail[code]?.sold ?? 0),
+            }));
+            const rows = codes.map((code) => detail[code]);
+            return {
+              round: roundIndexById.get(r.roundId)!,
+              price: priceByRound.get(roundIndexById.get(r.roundId)!) ?? null,
+              bySegment,
+              sold: Math.round(rows.reduce((sum, d) => sum + (d?.sold ?? 0), 0)),
+              lost: Math.round(rows.reduce((sum, d) => sum + (d?.lost ?? 0), 0)),
+            };
+          })
+          .sort((a, b) => a.round - b.round),
+      };
+    })(),
     roundBriefing: (() => {
       if (!lastResult) return null;
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
@@ -1758,6 +1827,10 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       return snapshot.treasury
         ? {
             discountAnnualRate: snapshot.treasury.discountAnnualRate,
+            placementAnnualRate: snapshot.treasury.placementAnnualRate ?? null,
+            maturedPlacement: Math.round(
+              (stateRow?.state as CompanyState | undefined)?.finance.shortTermInvestment ?? 0,
+            ),
             discountMaxShare: snapshot.treasury.discountMaxShare,
             factoringFeeRate: snapshot.treasury.factoringFeeRate,
             overdraftLimit: snapshot.finance.overdraftLimit,

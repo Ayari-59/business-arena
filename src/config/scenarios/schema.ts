@@ -94,6 +94,9 @@ export const engineScenarioConfigSchema = z.object({
       discountMaxShare: z.number().min(0).max(1),
       factoringFeeRate: z.number().min(0).max(0.2),
       forcedFactoringFeeRate: z.number().min(0).max(0.3),
+      // Le placement rapporte peu, par construction : c'est ce qui rend
+      // l'arbitrage réel face à un découvert bien plus cher.
+      placementAnnualRate: z.number().min(0).max(0.1).optional(),
     })
     .optional(),
   fixedCostsPerRound: z.number().nonnegative(),

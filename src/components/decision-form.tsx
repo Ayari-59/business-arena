@@ -78,6 +78,7 @@ export function DecisionForm({
     insurance: boolean;
     hr: boolean;
     investment: boolean;
+    placement: boolean;
   };
   /** Investissement du scénario (coût par unité de capacité, plafond). */
   investmentOffer?: { costPerCapacityUnit: number; maxPerRound: number } | null;
@@ -89,6 +90,8 @@ export function DecisionForm({
     discountMaxShare: number;
     factoringFeeRate: number;
     overdraftLimit: number;
+    placementAnnualRate: number | null;
+    maturedPlacement: number;
   } | null;
   /** Commande exceptionnelle proposée pour CE tour (rotation du pool). */
   orderOffer?: {
@@ -146,6 +149,7 @@ export function DecisionForm({
     insurance: true,
     hr: false,
     investment: false,
+    placement: false,
   };
 
   // Vocabulaire du secteur : c'est lui qui parle à l'élève, pas le moteur.
@@ -269,6 +273,27 @@ export function DecisionForm({
               hint="Cession de créances, sans plafond : plus cher, immédiat."
             />
           </div>
+          {on.placement && treasuryOffer.placementAnnualRate !== null ? (
+            <div className="mt-4 border-t border-white/5 pt-4">
+              <Field
+                name="placement"
+                label={`Placer le surplus (${(treasuryOffer.placementAnnualRate * 100).toLocaleString("fr-FR")} %/an)`}
+                defaultValue={0}
+                suffix="€"
+                hint="Bloqué jusqu'au tour suivant : cet argent ne paiera rien ce tour-ci."
+              />
+              <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+                {treasuryOffer.maturedPlacement > 0.5
+                  ? `${Math.round(treasuryOffer.maturedPlacement).toLocaleString("fr-FR")} € placés au tour précédent sont revenus en caisse, intérêts compris. `
+                  : ""}
+                L&apos;argent qui dort ne rapporte rien, mais l&apos;argent placé ne paie pas les
+                factures. Placez trop et vous financerez un découvert à{" "}
+                {(treasuryOffer.discountAnnualRate * 100).toLocaleString("fr-FR")} % avec un
+                placement à{" "}
+                {(treasuryOffer.placementAnnualRate * 100).toLocaleString("fr-FR")} %.
+              </p>
+            </div>
+          ) : null}
           <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
             Découvert autorisé jusqu&apos;à{" "}
             {Math.round(treasuryOffer.overdraftLimit).toLocaleString("fr-FR")} €. Au-delà, la

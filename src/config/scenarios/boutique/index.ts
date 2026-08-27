@@ -118,6 +118,9 @@ const rawBoutique = {
     discountMaxShare: 0.6,
     factoringFeeRate: 0.025,
     forcedFactoringFeeRate: 0.06,
+    // 2 %/an : de quoi valoriser le surplus, jamais de quoi financer
+    // un découvert à 9 %. L'arbitrage doit rester perdant à l'envers.
+    placementAnnualRate: 0.02,
   },
   // structure ≈ 88 500 €/tour : 84 000 décaissés (loyer, salaires, énergie,
   // assurances, honoraires) + 4 500 d'amortissements de l'agencement

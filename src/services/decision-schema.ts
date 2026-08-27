@@ -47,6 +47,7 @@ export const roundDecisionsSchema = z.object({
     .object({
       discount: z.coerce.number().min(0).max(1000000).optional(),
       factoring: z.coerce.number().min(0).max(1000000).optional(),
+      placement: z.coerce.number().min(0).max(1000000).optional(),
     })
     .optional(),
   forecast: z

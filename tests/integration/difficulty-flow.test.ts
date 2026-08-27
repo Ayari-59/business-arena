@@ -108,6 +108,7 @@ describe("niveaux de difficulté et paramètres économiques", () => {
       insurance: true,
       hr: true, // Stratégie : RH et investissement ouverts dès Arbitrage
       investment: true,
+      placement: true, // et le placement du surplus, propre aux niveaux hauts
     });
   });
 
@@ -163,6 +164,7 @@ describe("niveaux de difficulté et paramètres économiques", () => {
       insurance: false,
       hr: false,
       investment: false,
+      placement: false,
     });
     // Découverte : TVA non modulée → désactivée, calibration du scénario intacte
     const game = (await db.select().from(games).where(eq(games.id, easy.gameId)))[0]!;
