@@ -97,12 +97,22 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
   const economicOverrides = {
     taxRate: optionalRate(formData.get("taxRate")),
     vatRate: optionalRate(formData.get("vatRate")),
-    loanAnnualRate: optionalRate(formData.get("loanAnnualRate")),
-    overdraftAnnualRate: optionalRate(formData.get("overdraftAnnualRate")),
+    // Cycle d'exploitation : le cœur du besoin en fonds de roulement
+    customerPaymentDelayDays: optionalNumber(formData.get("customerPaymentDelayDays")),
     supplierPaymentDelayDays: optionalNumber(formData.get("supplierPaymentDelayDays")),
+    // Financement
+    loanAnnualRate: optionalRate(formData.get("loanAnnualRate")),
+    loanDurationRounds: optionalNumber(formData.get("loanDurationRounds")),
+    overdraftAnnualRate: optionalRate(formData.get("overdraftAnnualRate")),
+    overdraftLimit: optionalNumber(formData.get("overdraftLimit")),
+    discountMaxShare: optionalRate(formData.get("discountMaxShare")),
+    factoringFeeRate: optionalRate(formData.get("factoringFeeRate")),
+    // Coûts et structure
     fixedCostsPerRound: optionalNumber(formData.get("fixedCostsPerRound")),
     materialCostPerUnit: optionalNumber(formData.get("materialCostPerUnit")),
     otherVariableCostPerUnit: optionalNumber(formData.get("otherVariableCostPerUnit")),
+    depreciationPerRound: optionalNumber(formData.get("depreciationPerRound")),
+    baseDefectRate: optionalRate(formData.get("baseDefectRate")),
   };
   const organizationId = await getTeacherOrgId(session.userId);
   if (!organizationId) redirect("/teacher/login");

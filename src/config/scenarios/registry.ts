@@ -366,6 +366,41 @@ export const ALL_SITUATIONS: SituationDef[] = SCENARIOS.flatMap((s) => s.situati
 
 export const situationByCode = new Map(ALL_SITUATIONS.map((s) => [s.code, s]));
 
+/**
+ * Valeurs économiques d'un scénario, mises en forme pour l'affichage en
+ * filigrane du panneau enseignant. `null` = levier que ce scénario n'ouvre
+ * pas (pas de bloc trésorerie, pas d'échéancier d'emprunt).
+ */
+export function economicDefaults(d: ScenarioDefinition): Record<string, string | null> {
+  const s = d.scenario;
+  const pct = (v: number | undefined) =>
+    v === undefined ? null : (v * 100).toLocaleString("fr-FR", { maximumFractionDigits: 2 });
+  const num = (v: number | undefined) =>
+    v === undefined ? null : v.toLocaleString("fr-FR", { maximumFractionDigits: 2 });
+  // Délai client représentatif : le plus long des segments qui font crédit.
+  // Ceux payés comptant ne sont pas concernés par le réglage.
+  const creditDelays = s.market.segments
+    .map((seg) => seg.paymentDelayDays)
+    .filter((v) => v > 0);
+  return {
+    taxRate: pct(s.finance.taxRate),
+    vatRate: pct(s.finance.vatRate ?? 0),
+    customerPaymentDelayDays: num(creditDelays.length ? Math.max(...creditDelays) : 0),
+    supplierPaymentDelayDays: num(s.finance.supplierPaymentDelayDays),
+    loanAnnualRate: pct(s.finance.loanAnnualRate),
+    loanDurationRounds: num(s.finance.loanDurationRounds),
+    overdraftAnnualRate: pct(s.finance.overdraftAnnualRate),
+    overdraftLimit: num(s.finance.overdraftLimit),
+    discountMaxShare: pct(s.treasury?.discountMaxShare),
+    factoringFeeRate: pct(s.treasury?.factoringFeeRate),
+    fixedCostsPerRound: num(s.fixedCostsPerRound),
+    materialCostPerUnit: num(s.product.materialCostPerUnit),
+    otherVariableCostPerUnit: num(s.product.otherVariableCostPerUnit),
+    depreciationPerRound: num(s.finance.depreciationPerRound),
+    baseDefectRate: pct(s.qualityCosts?.baseDefectRate ?? 0),
+  };
+}
+
 /** Le scénario auquel appartient une situation — pour retrouver son vocabulaire. */
 export const scenarioCodeBySituationCode = new Map(
   SCENARIOS.flatMap((d) => d.situations.map((s) => [s.code, d.code] as const)),

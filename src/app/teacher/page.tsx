@@ -7,7 +7,13 @@ import { getStaffContext } from "@/services/admin.service";
 import { createClassGameAction, createCompetitionAction, logoutAction } from "./actions";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
-import { DEFAULT_SCENARIO_CODE, SCENARIOS, SECTOR_LABELS } from "@/config/scenarios/registry";
+import {
+  DEFAULT_SCENARIO_CODE,
+  SCENARIOS,
+  SECTOR_LABELS,
+  economicDefaults,
+} from "@/config/scenarios/registry";
+import { EconomicParams } from "@/components/economic-params";
 
 export const dynamic = "force-dynamic";
 
@@ -48,165 +54,15 @@ export default async function TeacherDashboard() {
       <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
         <h2 className="text-sm font-semibold text-slate-200">Créer une partie</h2>
         <form action={createClassGameAction} className="mt-4 grid gap-4 sm:grid-cols-3">
-          <label className="block sm:col-span-3">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Secteur d&apos;activité
-            </span>
-            <select
-              name="scenarioCode"
-              defaultValue={DEFAULT_SCENARIO_CODE}
-              className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm"
-            >
-              {SCENARIOS.map((s) => (
-                <option key={s.code} value={s.code}>
-                  {SECTOR_LABELS[s.sector]} · {s.title} — {s.tagline}
-                </option>
-              ))}
-            </select>
-            <span className="mt-1 block text-xs text-slate-500">
-              Chaque secteur enseigne ce que les autres ne peuvent pas : le stock et le
-              coefficient multiplicateur dans le commerce, le taux d&apos;occupation en
-              hôtellerie, le ratio matières en restauration, le poste clients dans les services.
-            </span>
-          </label>
-          <label className="block">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Équipes (élèves)
-            </span>
-            <select
-              name="humanTeamsCount"
-              defaultValue={4}
-              className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm"
-            >
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
-                <option key={n} value={n}>{n} équipe{n > 1 ? "s" : ""}</option>
-              ))}
-            </select>
-          </label>
-          <label className="block">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Concurrents bots
-            </span>
-            <select
-              name="botCount"
-              defaultValue={1}
-              className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm"
-            >
-              {[0, 1, 2, 3, 4].map((n) => (
-                <option key={n} value={n}>{n} bot{n > 1 ? "s" : ""}</option>
-              ))}
-            </select>
-          </label>
-          <label className="block">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Périodicité
-            </span>
-            <select
-              name="periodicity"
-              defaultValue="quarter"
-              className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm"
-            >
-              <option value="month">Un mois par tour</option>
-              <option value="quarter">Un trimestre par tour</option>
-              <option value="year">Une année par tour</option>
-            </select>
-          </label>
-          <label className="block sm:col-span-3">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Niveau de difficulté
-            </span>
-            <select
-              name="level"
-              defaultValue={3}
-              className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm"
-            >
-              {DIFFICULTY_PRESETS.map((p) => (
-                <option key={p.level} value={p.level}>
-                  {p.level} · {p.name} — {p.tagline}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="flex items-start gap-3 rounded-lg border border-white/10 bg-slate-950 px-3 py-3 sm:col-span-3">
-            <input
-              type="checkbox"
-              name="variableWorld"
-              defaultChecked
-              className="mt-0.5 h-4 w-4 accent-amber-400"
-            />
-            <span>
-              <span className="text-sm font-medium text-slate-200">
-                🌍 Monde variable — chaque partie diffère
-              </span>
-              <span className="mt-0.5 block text-xs text-slate-500">
-                Croissance des segments, saisonnalité, événements et commandes exceptionnelles
-                varient d&apos;une partie à l&apos;autre (déterministe par partie : toutes vos
-                équipes jouent le même monde). Décochez pour le scénario classique,
-                identique à vos supports imprimés.
-              </span>
-            </span>
-          </label>
-
-          <label className="flex items-start gap-3 rounded-lg border border-white/10 bg-slate-950 px-3 py-3 sm:col-span-3">
-            <input
-              type="checkbox"
-              name="quizEnabled"
-              defaultChecked
-              className="mt-0.5 h-4 w-4 accent-amber-400"
-            />
-            <span>
-              <span className="text-sm font-medium text-slate-200">
-                📝 QCM de connaissances dans les situations
-              </span>
-              <span className="mt-0.5 block text-xs text-slate-500">
-                Chaque situation pose deux questions de connaissances et une question sur le
-                modèle d&apos;analyse à mobiliser. Décochez pour ne garder que le diagnostic :
-                les élèves raisonnent sur la situation sans être interrogés sur les définitions
-                et les formules. Le réglage se modifie ensuite à tout moment depuis la partie.
-              </span>
-            </span>
-          </label>
-
-          <details className="rounded-lg border border-white/10 bg-slate-950 p-4 sm:col-span-3">
-            <summary className="cursor-pointer text-xs font-medium uppercase tracking-wide text-slate-400">
-              ⚙️ Paramètres économiques (avancé) — laissez vide pour les valeurs du scénario
-            </summary>
-            <div className="mt-3 grid gap-3 sm:grid-cols-4">
-              {(
-                [
-                  ["taxRate", "Impôt sur les bénéfices", "%", "25"],
-                  ["vatRate", "TVA (0 = désactivée)", "%", "0"],
-                  ["loanAnnualRate", "Taux d'emprunt annuel", "%", "5"],
-                  ["overdraftAnnualRate", "Taux de découvert annuel", "%", "9"],
-                  ["supplierPaymentDelayDays", "Délai fournisseurs", "jours", "22"],
-                  ["fixedCostsPerRound", "Charges de structure / trim.", "€", "91 000"],
-                  ["materialCostPerUnit", "Coût matières unitaire", "€/u", "22"],
-                  ["otherVariableCostPerUnit", "MOD chargée + énergie", "€/u", "16"],
-                ] as const
-              ).map(([name, label, suffix, placeholder]) => (
-                <label key={name} className="block">
-                  <span className="text-[11px] text-slate-500">{label}</span>
-                  <span className="mt-1 flex items-center gap-1.5 rounded-lg border border-white/10 bg-slate-900 px-2.5 py-1.5 focus-within:border-amber-400/60">
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      name={name}
-                      placeholder={placeholder}
-                      className="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-600"
-                    />
-                    <span className="text-[11px] text-slate-500">{suffix}</span>
-                  </span>
-                </label>
-              ))}
-            </div>
-            <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
-              Montants en base trimestrielle (redimensionnés selon la périodicité choisie).
-              Activer la TVA rend créances et dettes TTC et crée une dette « TVA à décaisser »
-              payée le tour suivant — son poids se lit dans le BFR. Une valeur hors bornes est
-              ignorée.
-            </p>
-          </details>
+          <EconomicParams
+            scenarios={SCENARIOS.map((d) => ({
+              code: d.code,
+              label: `${SECTOR_LABELS[d.sector]} · ${d.title}`,
+              unit: d.vocabulary.unit,
+              defaults: economicDefaults(d),
+            }))}
+            defaultCode={DEFAULT_SCENARIO_CODE}
+          />
 
           <button
             type="submit"

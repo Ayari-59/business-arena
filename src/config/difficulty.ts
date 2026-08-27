@@ -136,6 +136,21 @@ export const economicOverridesSchema = z.object({
   overdraftAnnualRate: z.number().min(0).max(0.4).optional(),
   /** Délai de paiement fournisseurs (jours). */
   supplierPaymentDelayDays: z.number().int().min(0).max(120).optional(),
+  /**
+   * Délai de règlement des clients À CRÉDIT (jours). Voir
+   * `applyEconomicOverrides` : les segments payés comptant le restent.
+   */
+  customerPaymentDelayDays: z.number().int().min(0).max(180).optional(),
+  /** Plafond de découvert autorisé (€). Au-delà, l'affacturage forcé s'enclenche. */
+  overdraftLimit: z.number().min(0).max(5_000_000).optional(),
+  /** Durée d'amortissement d'un nouvel emprunt, en tours. */
+  loanDurationRounds: z.number().int().min(1).max(60).optional(),
+  /** Dotations aux amortissements par trimestre (€). */
+  depreciationPerRound: z.number().min(0).max(500_000).optional(),
+  /** Part maximale du poste clients mobilisable à l'escompte (0-1). */
+  discountMaxShare: z.number().min(0).max(1).optional(),
+  /** Commission d'affacturage (part du montant cédé, 0-0,2). */
+  factoringFeeRate: z.number().min(0).max(0.2).optional(),
   /** Charges de structure par trimestre (salaires, loyers, charges sociales…). */
   fixedCostsPerRound: z.number().min(0).max(5_000_000).optional(),
   /** Coût matières par unité produite. */
@@ -164,14 +179,38 @@ export function sanitizeEconomicOverrides(raw: EconomicOverrides | undefined): E
   return out as EconomicOverrides;
 }
 
-/** Applique les paramètres économiques au scénario de BASE (avant périodicité). */
+/**
+ * Applique les paramètres économiques au scénario de BASE (avant périodicité).
+ *
+ * Deux choses que ce réglage ne touche VOLONTAIREMENT pas :
+ * - les délais des OFFRES de commande exceptionnelle, dont l'alternance
+ *   crédit / comptant est le cœur de l'exercice ;
+ * - les délais propres à chaque FOURNISSEUR, qui opposent justement un
+ *   déstockeur payé comptant à un grossiste à 45 jours.
+ * Les uniformiser reviendrait à supprimer l'arbitrage qu'ils enseignent.
+ */
 export function applyEconomicOverrides(
   scenario: EngineScenarioConfig,
   overrides: EconomicOverrides | undefined,
 ): EngineScenarioConfig {
   if (!overrides || Object.values(overrides).every((v) => v === undefined)) return scenario;
+  const treasury = scenario.treasury;
   return {
     ...scenario,
+    market: {
+      ...scenario.market,
+      // Délai client : appliqué aux seuls segments qui font DÉJÀ crédit. Un
+      // particulier qui paie en caisse continue de payer en caisse — sans quoi
+      // le réglage effacerait la distinction que le scénario met en scène.
+      segments:
+        overrides.customerPaymentDelayDays === undefined
+          ? scenario.market.segments
+          : scenario.market.segments.map((s) =>
+              s.paymentDelayDays > 0
+                ? { ...s, paymentDelayDays: overrides.customerPaymentDelayDays! }
+                : s,
+            ),
+    },
     product: {
       ...scenario.product,
       materialCostPerUnit: overrides.materialCostPerUnit ?? scenario.product.materialCostPerUnit,
@@ -184,9 +223,25 @@ export function applyEconomicOverrides(
       vatRate: overrides.vatRate ?? scenario.finance.vatRate,
       loanAnnualRate: overrides.loanAnnualRate ?? scenario.finance.loanAnnualRate,
       overdraftAnnualRate: overrides.overdraftAnnualRate ?? scenario.finance.overdraftAnnualRate,
+      overdraftLimit: overrides.overdraftLimit ?? scenario.finance.overdraftLimit,
       supplierPaymentDelayDays:
         overrides.supplierPaymentDelayDays ?? scenario.finance.supplierPaymentDelayDays,
+      loanDurationRounds: overrides.loanDurationRounds ?? scenario.finance.loanDurationRounds,
+      depreciationPerRound:
+        overrides.depreciationPerRound ?? scenario.finance.depreciationPerRound,
     },
+    // Mobilisation du poste clients : réglable seulement là où le scénario
+    // l'ouvre déjà. La créer de toutes pièces ajouterait des décisions que
+    // l'énoncé du scénario ne présente pas.
+    ...(treasury
+      ? {
+          treasury: {
+            ...treasury,
+            discountMaxShare: overrides.discountMaxShare ?? treasury.discountMaxShare,
+            factoringFeeRate: overrides.factoringFeeRate ?? treasury.factoringFeeRate,
+          },
+        }
+      : {}),
     fixedCostsPerRound: overrides.fixedCostsPerRound ?? scenario.fixedCostsPerRound,
     // Non-qualité : l'activer à la création crée le bloc qualityCosts
     // (sensibilité aux retours externes : donnée ci-dessous, pas du dur).
