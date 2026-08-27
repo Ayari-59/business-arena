@@ -21,10 +21,37 @@ describe("registre des scénarios", () => {
     expect(scenarioByCode(null).code).toBe("nova");
   });
 
-  it("chaque scénario s'annonce : titre, pitch, vocabulaire", () => {
+  it("le texte d'accueil parle à un élève qui ne connaît pas encore les mots", () => {
+    // Ce texte est la PREMIÈRE chose que lit l'élève, avant toute situation.
+    // Il doit poser le métier en phrases complètes, pas énumérer les notions
+    // du programme : à ce moment-là, ces mots-là ne veulent encore rien dire.
+    const PAS_ENCORE_APPRIS = [
+      "BFR",
+      "FRNG",
+      "seuil de rentabilité",
+      "coefficient multiplicateur",
+      "yield management",
+      "taux d'occupation",
+      "ratio matières",
+      "attrition",
+      "coût d'acquisition",
+      "valeur vie client",
+      "panier moyen",
+    ];
+    for (const d of SCENARIOS) {
+      expect(d.briefing.length, d.code).toBeGreaterThan(120);
+      expect(d.briefing.trim().endsWith("."), d.code).toBe(true);
+      // au moins deux phrases : une seule ne pose pas un métier
+      expect(d.briefing.split(". ").length, d.code).toBeGreaterThanOrEqual(2);
+      for (const mot of PAS_ENCORE_APPRIS) {
+        expect(d.briefing.toLowerCase(), `${d.code} / ${mot}`).not.toContain(mot.toLowerCase());
+      }
+    }
+  });
+
+  it("chaque scénario s'annonce : titre, signature, vocabulaire", () => {
     for (const d of SCENARIOS) {
       expect(d.title.length, d.code).toBeGreaterThan(5);
-      expect(d.summary.length, d.code).toBeGreaterThan(30);
       expect(d.tagline.length, d.code).toBeGreaterThan(10);
       expect(d.playerTeamName.length, d.code).toBeGreaterThan(1);
       // on ne vend pas des « unités » dans un hôtel

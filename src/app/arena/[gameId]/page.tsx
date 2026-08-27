@@ -383,7 +383,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
           </h2>
           <p className="mt-2 text-sm leading-relaxed">
             Vous reprenez <strong>{view.intro.company}</strong>, {appositive(view.intro.tagline)}.{" "}
-            {view.intro.summary}
+            {view.intro.briefing}
           </p>
           <ul className="mt-3 space-y-1 text-sm text-slate-400">
             <li>

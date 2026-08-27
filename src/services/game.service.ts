@@ -116,7 +116,7 @@ async function getOrCreateScenarioId(def: ScenarioDefinition): Promise<string> {
       code: def.scenario.code,
       version: def.scenario.version,
       title: def.title,
-      summary: def.summary,
+      summary: def.tagline,
       minCompanies: 1,
       maxCompanies: 8,
       roundsCount: def.scenario.roundsCount,
@@ -1105,7 +1105,7 @@ export interface GameView {
      */
     company: string;
     tagline: string;
-    summary: string;
+    briefing: string;
     capacity: number;
     fixedCostsPerRound: number;
     variableCostPerUnit: number;
@@ -1634,7 +1634,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         title: definition.title,
         company: definition.playerTeamName,
         tagline: definition.tagline,
-        summary: definition.summary,
+        briefing: definition.briefing,
         capacity: Math.round(state?.machineCapacity ?? 0),
         fixedCostsPerRound: snapshot.fixedCostsPerRound,
         variableCostPerUnit:

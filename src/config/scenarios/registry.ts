@@ -91,8 +91,13 @@ export interface ScenarioDefinition {
   sector: Sector;
   /** Une phrase : ce que l'élève dirige. */
   tagline: string;
-  /** Le pitch affiché à l'enseignant au moment de choisir. */
-  summary: string;
+  /**
+   * Texte d'accueil du TOUR 1, lu par l'élève dans l'arène. Deux ou trois
+   * phrases complètes : ce que l'entreprise fait, la contrainte qui décide de
+   * tout dans ce métier, et ce qui se joue au premier tour. Ni slogan ni liste
+   * de notions : à ce moment-là l'élève ne connaît pas encore les mots.
+   */
+  briefing: string;
   /** Nom de l'entreprise que dirige le joueur (partie solo). */
   playerTeamName: string;
   vocabulary: ScenarioVocabulary;
@@ -117,8 +122,8 @@ export const NOVA_DEFINITION: ScenarioDefinition = {
   title: "NOVA · Prenez les commandes",
   sector: "industrie",
   tagline: "Fabricant d'enceintes portables.",
-  summary:
-    "Ce que vous vendez, il a d'abord fallu le produire. Capacité de l'atelier, seuil de rentabilité, stock qui immobilise la trésorerie et guerre des prix sur le segment étudiant.",
+  briefing:
+    "Tout ce que vous vendez sort de votre atelier, dont la capacité est limitée. Produire plus que vous ne vendez immobilise votre argent en stock ; produire moins laisse repartir des clients. Tout se joue sur le prix et sur le volume que vous lancez.",
   playerTeamName: "NOVA",
   vocabulary: {
     unit: "enceinte",
@@ -149,8 +154,8 @@ export const BOUTIQUE_DEFINITION: ScenarioDefinition = {
   title: "MAILLE & CO · Tenez la boutique",
   sector: "commerce",
   tagline: "Concept store de prêt-à-porter en centre-ville.",
-  summary:
-    "Vous n'avez rien à fabriquer : vous achetez pour revendre. Coefficient multiplicateur, choix des circuits d'achat, stock qui dort en réserve et pic de Noël à ne pas manquer.",
+  briefing:
+    "Vous ne fabriquez rien, vous achetez pour revendre. Votre marge se joue entièrement entre le prix auquel vous achetez et celui auquel vous vendez. Ce que vous commandez dort en réserve, et vous l'avez payé bien avant qu'une cliente l'emporte.",
   playerTeamName: "MAILLE & CO",
   vocabulary: {
     unit: "article",
@@ -181,8 +186,8 @@ export const HOTEL_DEFINITION: ScenarioDefinition = {
   title: "L'ESCALE · Remplissez l'hôtel",
   sector: "hotellerie",
   tagline: "Hôtel 3 étoiles de 60 chambres en ville moyenne.",
-  summary:
-    "La chambre vide de ce soir ne se rattrape jamais. Yield management, taux d'occupation d'équilibre, commissions des plateformes et saison qui fait tout basculer.",
+  briefing:
+    "Une chambre vide ce soir est perdue : elle ne se vendra pas deux fois demain. Vos charges tombent que l'hôtel soit plein ou non. Vous jouez donc sur deux tableaux à la fois, le nombre de chambres occupées et le prix que vous arrivez à tenir.",
   playerTeamName: "L'ESCALE",
   vocabulary: {
     unit: "nuitée",
@@ -213,8 +218,8 @@ export const BISTROT_DEFINITION: ScenarioDefinition = {
   title: "LA TABLE D'AUGUSTIN · Tenez le service",
   sector: "restauration",
   tagline: "Bistrot de 70 couverts, midi et soir.",
-  summary:
-    "Le couvert non servi est perdu, et la denrée préparée non vendue part à la poubelle. Ratio matières, double contrainte salle et brigade, banquets de fin d'année.",
+  briefing:
+    "Un couvert non servi est perdu, et ce que la cuisine a préparé sans le vendre part à la poubelle. Deux limites vous arrêtent en même temps : le nombre de places en salle et les heures de votre brigade. Prévoir trop coûte, prévoir trop peu aussi.",
   playerTeamName: "LA TABLE D'AUGUSTIN",
   vocabulary: {
     unit: "couvert",
@@ -245,8 +250,8 @@ export const CONSEIL_DEFINITION: ScenarioDefinition = {
   title: "ATLAS CONSEIL · Vendez le temps de vos équipes",
   sector: "services",
   tagline: "Cabinet de conseil et bureau d'études, 12 consultants.",
-  summary:
-    "La journée non vendue est perdue et la capacité ne s'achète pas : elle se recrute. Taux d'occupation, poste clients qui étrangle la trésorerie, salaires qui tombent même carnet vide.",
+  briefing:
+    "Ce que vous facturez, c'est du temps de travail. Une journée non vendue ne se rattrape jamais, et les salaires tombent que le carnet soit plein ou vide. Vos clients règlent à 45 jours : l'argent gagné met des semaines à arriver en caisse.",
   playerTeamName: "ATLAS CONSEIL",
   vocabulary: {
     unit: "jour-conseil",
@@ -278,8 +283,8 @@ export const ECOMMERCE_DEFINITION: ScenarioDefinition = {
   title: "PIXEL & CO · Achetez votre trafic",
   sector: "ecommerce",
   tagline: "Pure player de décoration et petit mobilier.",
-  summary:
-    "La vitrine ne coûte rien, mais le trafic s'achète. Coût d'acquisition, panier moyen, logistique et retours qui rongent la marge, et un Black Friday qui fait le tiers de l'année.",
+  briefing:
+    "Ouvrir votre boutique ne coûte presque rien, c'est un site. Mais personne n'y arrive tout seul : chaque visiteur se paie en publicité. La question n'est donc pas de savoir si vous gagnez de l'argent sur une commande, mais si vous en gagnez assez pour rembourser ce que ce client vous a coûté.",
   playerTeamName: "PIXEL & CO",
   vocabulary: {
     unit: "commande",
@@ -310,8 +315,8 @@ export const FITNESS_DEFINITION: ScenarioDefinition = {
   title: "VOLT FITNESS · Gardez vos adhérents",
   sector: "abonnement",
   tagline: "Salle de sport de 1 200 m² en périphérie.",
-  summary:
-    "Le client ne s'achète pas une fois, il se garde. Taux d'attrition, valeur vie client, revenus récurrents, et une saison qui remplit la salle en janvier pour la vider en juillet.",
+  briefing:
+    "Vos adhérents paient un abonnement chaque trimestre. Vous ne les gagnez donc pas une fois, vous les gardez ou vous les perdez. Chaque départ n'enlève pas seulement un abonnement à ce trimestre, il l'enlève à tous les suivants.",
   playerTeamName: "VOLT FITNESS",
   vocabulary: {
     unit: "adhérent",
