@@ -1,6 +1,14 @@
 import type { BotProfile } from "../../engine/bots";
 import type { CompanyState, EngineScenarioConfig } from "../../engine/types";
 import type { SituationDef } from "./situation-kit";
+import {
+  COMMERCE_KPIS,
+  HOTELLERIE_KPIS,
+  INDUSTRIE_KPIS,
+  RESTAURATION_KPIS,
+  SERVICES_KPIS,
+  type SectorKpiDef,
+} from "./sector-kpis";
 import { novaBots, novaCompany, novaScenario } from "./nova";
 import { NOVA_SITUATIONS } from "./nova/situations";
 import { boutiqueBots, boutiqueCompany, boutiqueScenario } from "./boutique";
@@ -82,6 +90,11 @@ export interface ScenarioDefinition {
   ) => CompanyState;
   bots: { id: string; name: string; profile: BotProfile }[];
   situations: SituationDef[];
+  /**
+   * Les indicateurs du métier. Le compte de résultat est le même partout,
+   * mais on ne pilote pas un hôtel avec les chiffres d'un atelier.
+   */
+  kpis: SectorKpiDef[];
 }
 
 export const NOVA_DEFINITION: ScenarioDefinition = {
@@ -113,6 +126,7 @@ export const NOVA_DEFINITION: ScenarioDefinition = {
   company: novaCompany,
   bots: novaBots,
   situations: NOVA_SITUATIONS,
+  kpis: INDUSTRIE_KPIS,
 };
 
 export const BOUTIQUE_DEFINITION: ScenarioDefinition = {
@@ -144,6 +158,7 @@ export const BOUTIQUE_DEFINITION: ScenarioDefinition = {
   company: boutiqueCompany,
   bots: boutiqueBots,
   situations: BOUTIQUE_SITUATIONS,
+  kpis: COMMERCE_KPIS,
 };
 
 export const HOTEL_DEFINITION: ScenarioDefinition = {
@@ -175,6 +190,7 @@ export const HOTEL_DEFINITION: ScenarioDefinition = {
   company: hotelCompany,
   bots: hotelBots,
   situations: HOTEL_SITUATIONS,
+  kpis: HOTELLERIE_KPIS,
 };
 
 export const BISTROT_DEFINITION: ScenarioDefinition = {
@@ -206,6 +222,7 @@ export const BISTROT_DEFINITION: ScenarioDefinition = {
   company: bistrotCompany,
   bots: bistrotBots,
   situations: BISTROT_SITUATIONS,
+  kpis: RESTAURATION_KPIS,
 };
 
 export const CONSEIL_DEFINITION: ScenarioDefinition = {
@@ -237,6 +254,7 @@ export const CONSEIL_DEFINITION: ScenarioDefinition = {
   company: conseilCompany,
   bots: conseilBots,
   situations: CONSEIL_SITUATIONS,
+  kpis: SERVICES_KPIS,
 };
 
 /** Tous les scénarios jouables, dans l'ordre d'affichage du sélecteur. */

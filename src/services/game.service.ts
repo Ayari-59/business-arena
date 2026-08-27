@@ -23,6 +23,7 @@ import {
   type ScenarioDefinition,
   type ScenarioVocabulary,
 } from "@/config/scenarios/registry";
+import { computeSectorKpis, type KpiFormat } from "@/config/scenarios/sector-kpis";
 import {
   applyEconomicOverrides,
   applyEventIntensity,
@@ -1077,6 +1078,17 @@ export interface GameView {
    */
   segmentNames: Record<string, string>;
   /**
+   * Indicateurs du métier joué (RevPAR en hôtellerie, ratio matières en
+   * restauration…), déjà calculés : l'arène ne fait que les mettre en forme.
+   */
+  sectorKpis: {
+    key: string;
+    label: string;
+    hint: string;
+    format: KpiFormat;
+    value: number;
+  }[];
+  /**
    * Présentation du tour 1, calculée sur le SNAPSHOT joué : chiffres réels de
    * la partie (capacité, structure, coût variable) et vrais concurrents, au
    * lieu d'un texte écrit pour un seul scénario.
@@ -1574,6 +1586,37 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         s.name,
       ]),
     ),
+    sectorKpis: (() => {
+      if (!lastResult) return [];
+      const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+      const segmentUnits = Object.values(lastResult.market.bySegment).reduce(
+        (sum, s) => sum + s.sold,
+        0,
+      );
+      // Le chiffre d'affaires inclut les commandes fermes et l'offre du tour :
+      // les indicateurs par unité doivent compter les mêmes ventes, sans quoi
+      // un PMC ou un ticket moyen serait faussé les tours de grosse commande.
+      const totalUnits =
+        segmentUnits +
+        (lastResult.extraOrders?.delivered ?? 0) +
+        (lastResult.orderOffer?.delivered ?? 0);
+      // Segments du tour précédent : seule donnée nécessaire à l'attrition.
+      const previousRound = resolved.at(-2);
+      const previousRow = previousRound
+        ? gameResults.find(
+            (r) => r.roundId === previousRound.id && r.teamId === playerTeam.id,
+          )
+        : undefined;
+      return computeSectorKpis(scenarioByCode(snapshot.code).kpis, {
+        result: lastResult,
+        previousSegments:
+          (previousRow?.marketDetail as CompanyRoundResult["market"]["bySegment"]) ?? null,
+        segmentUnits,
+        totalUnits,
+        roundDays: snapshot.roundDays,
+        scenario: snapshot,
+      });
+    })(),
     intro: (() => {
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
       const definition = scenarioByCode(snapshot.code);

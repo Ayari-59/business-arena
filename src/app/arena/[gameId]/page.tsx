@@ -15,8 +15,23 @@ import { DecisionForm } from "@/components/decision-form";
 import { StudyReportsPanel } from "@/components/study-reports";
 import { FinancialStatements } from "@/components/financial-statements";
 import type { RoundDecisions } from "@/engine/types";
+import type { KpiFormat } from "@/config/scenarios/sector-kpis";
 
 export const dynamic = "force-dynamic";
+
+/** Mise en forme d'un indicateur métier selon son unité. */
+function formatKpi(value: number, format: KpiFormat): string {
+  switch (format) {
+    case "euro":
+      return formatEuro(value);
+    case "percent":
+      return formatPercent(value);
+    case "days":
+      return `${Math.round(value)} j`;
+    case "units":
+      return formatUnits(value);
+  }
+}
 
 const defaultDecisions = (roundDays: number): RoundDecisions => {
   const k = roundDays / 90; // les scénarios sont écrits en base trimestrielle
@@ -94,6 +109,31 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
               hint={`Utilisation : ${formatPercent(r.production.utilizationRate)}`}
             />
           </section>
+
+          {view.sectorKpis.length > 0 ? (
+            <section
+              aria-label="Indicateurs du métier"
+              className="rounded-xl border border-sky-400/20 bg-slate-900 p-4"
+            >
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-sky-300">
+                📐 Indicateurs du métier
+              </h2>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {view.sectorKpis.map((k) => (
+                  <div
+                    key={k.key}
+                    className="rounded-lg border border-white/10 bg-slate-950 px-3 py-2.5"
+                  >
+                    <p className="text-[11px] uppercase tracking-wide text-slate-500">{k.label}</p>
+                    <p className="mt-0.5 text-lg font-semibold tabular-nums text-slate-100">
+                      {formatKpi(k.value, k.format)}
+                    </p>
+                    <p className="mt-1 text-[11px] leading-snug text-slate-500">{k.hint}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
 
           <section className="grid gap-4 lg:grid-cols-2">
             <div className="rounded-xl border border-white/10 bg-slate-900 p-4">
