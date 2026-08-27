@@ -42,10 +42,24 @@ export interface ScenarioVocabulary {
   productionPlanLabel: string;
   /** Le prix (« Prix de vente », « Prix moyen par nuitée », « Ticket moyen »). */
   priceLabel: string;
-  /** La capacité (« Capacité machine », « Chambres », « Places assises »). */
-  capacityLabel: string;
   /** Ce que devient l'invendu (« Stock », « Capacité perdue »). */
   leftoverLabel: string;
+
+  // --- Panneau de capacité : un hôtel n'a pas de « machines » ---------------
+  /** Titre du panneau (« Capacité de production », « Capacité d'accueil »). */
+  capacityPanelTitle: string;
+  /** Le plafond PHYSIQUE (« Capacité machine », « Chambres ouvertes »). */
+  capacityLabel: string;
+  /** Le même en un mot, pour la ligne « Goulot » (« Machine », « Chambres »). */
+  capacityBottleneckLabel: string;
+  /** Le conseil donné quand le plafond physique est la contrainte active. */
+  capacityBottleneckHint: string;
+  /** Le plafond HUMAIN (« Capacité main-d'œuvre », « Capacité brigade »). */
+  laborLabel: string;
+  /** Le conseil donné quand la main-d'œuvre est la contrainte active. */
+  laborBottleneckHint: string;
+  /** Ce que la capacité compte par tour (« enceintes/tour », « nuitées/tour »). */
+  perRoundLabel: string;
 }
 
 export interface ScenarioDefinition {
@@ -84,8 +98,16 @@ export const NOVA_DEFINITION: ScenarioDefinition = {
     productionLabel: "Production",
     productionPlanLabel: "Plan de production",
     priceLabel: "Prix de vente",
-    capacityLabel: "Capacité machine",
     leftoverLabel: "Stock",
+    capacityPanelTitle: "Capacité de production",
+    capacityLabel: "Capacité machine",
+    capacityBottleneckLabel: "Machine",
+    capacityBottleneckHint:
+      "Vos machines limitent la production — l'investissement capacitaire prend effet au tour suivant.",
+    laborLabel: "Capacité main-d'œuvre",
+    laborBottleneckHint:
+      "Votre main-d'œuvre limite la production — envisagez d'embaucher ou de former vos salariés pour augmenter la productivité.",
+    perRoundLabel: "enceintes/tour",
   },
   scenario: novaScenario,
   company: novaCompany,
@@ -107,8 +129,16 @@ export const BOUTIQUE_DEFINITION: ScenarioDefinition = {
     productionLabel: "Approvisionnement",
     productionPlanLabel: "Articles à mettre en rayon",
     priceLabel: "Prix de vente moyen",
-    capacityLabel: "Capacité de traitement",
     leftoverLabel: "Stock en réserve",
+    capacityPanelTitle: "Capacité de traitement",
+    capacityLabel: "Réserve et linéaire",
+    capacityBottleneckLabel: "Réserve",
+    capacityBottleneckHint:
+      "Votre réserve et votre linéaire limitent ce que la boutique peut écouler — agrandir prend effet au tour suivant.",
+    laborLabel: "Capacité de l'équipe",
+    laborBottleneckHint:
+      "Votre équipe de vente limite le flux en boutique — envisagez d'embaucher ou de former vos vendeuses.",
+    perRoundLabel: "articles/tour",
   },
   scenario: boutiqueScenario,
   company: boutiqueCompany,
@@ -130,8 +160,16 @@ export const HOTEL_DEFINITION: ScenarioDefinition = {
     productionLabel: "Ouverture",
     productionPlanLabel: "Nuitées mises en vente",
     priceLabel: "Prix moyen par nuitée",
-    capacityLabel: "Nuitées disponibles",
     leftoverLabel: "Nuitées perdues",
+    capacityPanelTitle: "Capacité d'accueil",
+    capacityLabel: "Chambres ouvertes",
+    capacityBottleneckLabel: "Chambres",
+    capacityBottleneckHint:
+      "Vos chambres limitent le remplissage — rénover et rouvrir des chambres prend effet au tour suivant.",
+    laborLabel: "Capacité des équipes",
+    laborBottleneckHint:
+      "Vos équipes d'étage et de réception limitent le nombre de chambres exploitables — envisagez d'embaucher ou de former.",
+    perRoundLabel: "nuitées/tour",
   },
   scenario: hotelScenario,
   company: hotelCompany,
@@ -153,8 +191,16 @@ export const BISTROT_DEFINITION: ScenarioDefinition = {
     productionLabel: "Service",
     productionPlanLabel: "Couverts à préparer",
     priceLabel: "Ticket moyen",
-    capacityLabel: "Couverts réalisables",
     leftoverLabel: "Denrées perdues",
+    capacityPanelTitle: "Capacité de service",
+    capacityLabel: "Places en salle",
+    capacityBottleneckLabel: "Salle",
+    capacityBottleneckHint:
+      "Votre salle limite le nombre de couverts — couvrir la terrasse prend effet au tour suivant.",
+    laborLabel: "Capacité brigade",
+    laborBottleneckHint:
+      "Votre brigade limite le service : des places libres ne servent à rien sans personnel pour les tenir. Embauchez ou formez.",
+    perRoundLabel: "couverts/tour",
   },
   scenario: bistrotScenario,
   company: bistrotCompany,
@@ -176,8 +222,16 @@ export const CONSEIL_DEFINITION: ScenarioDefinition = {
     productionLabel: "Staffing",
     productionPlanLabel: "Jours à staffer",
     priceLabel: "Taux journalier moyen",
-    capacityLabel: "Jours-consultants disponibles",
     leftoverLabel: "Jours non facturés",
+    capacityPanelTitle: "Capacité de staffing",
+    capacityLabel: "Capacité des locaux",
+    capacityBottleneckLabel: "Locaux",
+    capacityBottleneckHint:
+      "Vos locaux limitent la taille du cabinet — cas rare : la contrainte habituelle est l'effectif.",
+    laborLabel: "Jours-consultants disponibles",
+    laborBottleneckHint:
+      "Vos consultants SONT la capacité du cabinet : elle ne s'achète pas, elle se recrute. Embaucher produit son effet au tour suivant.",
+    perRoundLabel: "jours/tour",
   },
   scenario: conseilScenario,
   company: conseilCompany,

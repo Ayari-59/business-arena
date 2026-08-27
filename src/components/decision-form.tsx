@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { playRoundAction, type PlayRoundState } from "@/app/arena/[gameId]/actions";
 import type { RoundDecisions } from "@/engine/types";
+import type { ScenarioVocabulary } from "@/config/scenarios/registry";
 
 const initialState: PlayRoundState = { error: null };
 
@@ -59,6 +60,7 @@ export function DecisionForm({
   insuranceFormulas,
   suppliersOffer,
   capacityFacts,
+  vocabulary,
 }: {
   gameId: string;
   roundIndex: number;
@@ -124,6 +126,8 @@ export function DecisionForm({
     supplyRiskProbability: number;
     materialCostPerUnit: number;
   }[] | null;
+  /** Vocabulaire du secteur joué (registre des scénarios). */
+  vocabulary: ScenarioVocabulary;
   /** Capacité de production : goulots et levier RH. */
   capacityFacts?: {
     machineCapacity: number;
@@ -144,13 +148,18 @@ export function DecisionForm({
     investment: false,
   };
 
+  // Vocabulaire du secteur : c'est lui qui parle à l'élève, pas le moteur.
+  const v = vocabulary;
+
   return (
     <form action={formAction} className="space-y-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Field name="price" label="Prix de vente" defaultValue={defaults.price} step={0.1} suffix="€/u"
+        <Field name="price" label={v.priceLabel} defaultValue={defaults.price} step={0.1}
+          suffix={`€/${v.unit}`}
           hint="Attention aux seuils psychologiques…" />
-        <Field name="productionPlan" label="Plan de production" defaultValue={Math.round(defaults.productionPlan)} suffix="unités"
-          hint="La production réelle sera bornée par vos capacités." />
+        <Field name="productionPlan" label={v.productionPlanLabel}
+          defaultValue={Math.round(defaults.productionPlan)} suffix={v.units}
+          hint="Le volume réel sera borné par vos capacités." />
         <Field name="marketingBudget" label="Budget marketing" defaultValue={defaults.marketingBudget} suffix="€" />
         {on.quality ? (
           <Field name="qualityBudget" label="Budget qualité" defaultValue={defaults.qualityBudget} suffix="€" />
@@ -187,7 +196,7 @@ export function DecisionForm({
             name="machineCapacityUnits"
             label={`Investissement capacité (${investmentOffer.costPerCapacityUnit.toLocaleString("fr-FR")} €/u)`}
             defaultValue={0}
-            suffix="u/tour"
+            suffix={v.perRoundLabel}
             hint={`En service au tour suivant, amorti linéairement. Max ${Math.round(investmentOffer.maxPerRound).toLocaleString("fr-FR")} u par tour.`}
           />
         ) : null}
@@ -200,7 +209,7 @@ export function DecisionForm({
           <p className="text-sm leading-relaxed text-slate-300">{orderOffer.narrative}</p>
           <p className="mt-2 text-xs text-slate-400">
             <strong className="text-slate-200">
-              {Math.round(orderOffer.units).toLocaleString("fr-FR")} unités
+              {Math.round(orderOffer.units).toLocaleString("fr-FR")} {v.units}
             </strong>{" "}
             à{" "}
             <strong className="text-slate-200">
@@ -465,16 +474,16 @@ export function DecisionForm({
       {capacityFacts ? (
         <div className="rounded-lg border border-white/10 bg-slate-950 px-4 py-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-            ⚙️ Capacité de production
+            ⚙️ {v.capacityPanelTitle}
           </p>
           <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-            <span className="text-slate-400">Capacité machine</span>
+            <span className="text-slate-400">{v.capacityLabel}</span>
             <span className="text-right text-slate-200">
-              {Math.round(capacityFacts.machineCapacity).toLocaleString("fr-FR")} u/tour
+              {Math.round(capacityFacts.machineCapacity).toLocaleString("fr-FR")} {v.perRoundLabel}
             </span>
-            <span className="text-slate-400">Capacité main-d&apos;œuvre</span>
+            <span className="text-slate-400">{v.laborLabel}</span>
             <span className="text-right text-slate-200">
-              {Math.round(capacityFacts.laborCapacity).toLocaleString("fr-FR")} u/tour
+              {Math.round(capacityFacts.laborCapacity).toLocaleString("fr-FR")} {v.perRoundLabel}
               <span className="ml-1 text-xs text-slate-500">
                 ({capacityFacts.headcount} pers. × prod. {Math.round(capacityFacts.productivity * 100)} %)
               </span>
@@ -488,22 +497,16 @@ export function DecisionForm({
                   : "text-emerald-400"
             }`}>
               {capacityFacts.bottleneck === "labor"
-                ? "Main-d'œuvre"
+                ? v.laborLabel
                 : capacityFacts.bottleneck === "machine"
-                  ? "Machine"
+                  ? v.capacityBottleneckLabel
                   : "Équilibré"}
             </span>
           </div>
           {capacityFacts.bottleneck === "labor" ? (
-            <p className="mt-2 text-[11px] text-amber-300/80">
-              Votre main-d&apos;œuvre limite la production — envisagez d&apos;embaucher ou de
-              former vos salariés pour augmenter la productivité.
-            </p>
+            <p className="mt-2 text-[11px] text-amber-300/80">{v.laborBottleneckHint}</p>
           ) : capacityFacts.bottleneck === "machine" ? (
-            <p className="mt-2 text-[11px] text-sky-300/80">
-              Vos machines limitent la production — l&apos;investissement capacitaire
-              prend effet au tour suivant.
-            </p>
+            <p className="mt-2 text-[11px] text-sky-300/80">{v.capacityBottleneckHint}</p>
           ) : null}
         </div>
       ) : null}

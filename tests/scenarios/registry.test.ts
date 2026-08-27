@@ -194,6 +194,37 @@ describe("registre des scénarios", () => {
     }
   });
 
+  it("le vocabulaire de chaque secteur est complet et lui est propre", () => {
+    // C'est ce vocabulaire qui parle à l'élève : un hôtel n'a pas de
+    // « machines », un cabinet ne vend pas des « unités ».
+    const seen = new Map<string, string>();
+    for (const d of SCENARIOS) {
+      const v = d.vocabulary;
+      for (const [key, value] of Object.entries(v)) {
+        expect(value.length, `${d.code}/${key} vide`).toBeGreaterThan(1);
+      }
+      // Les mots du panneau de capacité doivent être des phrases utiles
+      expect(v.capacityBottleneckHint.length, d.code).toBeGreaterThan(40);
+      expect(v.laborBottleneckHint.length, d.code).toBeGreaterThan(40);
+      // et le suffixe par tour doit nommer l'unité du secteur
+      expect(v.perRoundLabel, d.code).toContain("/tour");
+      // aucun secteur ne réutilise le mot d'un autre pour son goulot physique
+      const prior = seen.get(v.capacityBottleneckLabel);
+      expect(
+        prior,
+        `« ${v.capacityBottleneckLabel} » partagé entre ${prior} et ${d.code}`,
+      ).toBeUndefined();
+      seen.set(v.capacityBottleneckLabel, d.code);
+    }
+  });
+
+  it("aucun secteur ne parle d'« unités » génériques", () => {
+    for (const d of SCENARIOS) {
+      expect(d.vocabulary.unit, d.code).not.toBe("unité");
+      expect(d.vocabulary.units, d.code).not.toBe("unités");
+    }
+  });
+
   it("la saisonnalité couvre tous les tours de la partie", () => {
     for (const d of SCENARIOS) {
       const s = d.scenario;

@@ -21,6 +21,7 @@ import {
   DEFAULT_SCENARIO_CODE,
   scenarioByCode,
   type ScenarioDefinition,
+  type ScenarioVocabulary,
 } from "@/config/scenarios/registry";
 import {
   applyEconomicOverrides,
@@ -1064,6 +1065,31 @@ export interface GameView {
     productivity: number;
     hoursPerUnit: number;
   } | null;
+  /**
+   * Vocabulaire du secteur joué : on ne vend pas des « unités » dans un hôtel
+   * et on n'y a pas de « machines ». Il vient du registre via le code du
+   * snapshot, donc une partie garde le vocabulaire de son scénario.
+   */
+  vocabulary: ScenarioVocabulary;
+  /**
+   * Noms des segments du snapshot joué, par code. Sans cela le tableau du
+   * marché retomberait sur les codes bruts dès qu'on quitte NOVA.
+   */
+  segmentNames: Record<string, string>;
+  /**
+   * Présentation du tour 1, calculée sur le SNAPSHOT joué : chiffres réels de
+   * la partie (capacité, structure, coût variable) et vrais concurrents, au
+   * lieu d'un texte écrit pour un seul scénario.
+   */
+  intro: {
+    title: string;
+    tagline: string;
+    summary: string;
+    capacity: number;
+    fixedCostsPerRound: number;
+    variableCostPerUnit: number;
+    competitors: string[];
+  };
   /** Niveau de difficulté (préréglage en données, doc 08 §2). */
   difficulty: { level: number; name: string; hintMaxLevel: number };
   /** Décisions exposées à ce niveau (prix/production/marketing : toujours). */
@@ -1538,6 +1564,32 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         supplyRiskProbability: s.supplyRiskProbability,
         materialCostPerUnit: Math.round(snapshot.product.materialCostPerUnit * s.costMultiplier * 100) / 100,
       }));
+    })(),
+    vocabulary: scenarioByCode(
+      (game.scenarioSnapshot as { code?: string } | null)?.code,
+    ).vocabulary,
+    segmentNames: Object.fromEntries(
+      (game.scenarioSnapshot as EngineScenarioConfig).market.segments.map((s) => [
+        s.code,
+        s.name,
+      ]),
+    ),
+    intro: (() => {
+      const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+      const definition = scenarioByCode(snapshot.code);
+      const state = stateRow?.state as CompanyState | undefined;
+      return {
+        title: definition.title,
+        tagline: definition.tagline,
+        summary: definition.summary,
+        capacity: Math.round(state?.machineCapacity ?? 0),
+        fixedCostsPerRound: snapshot.fixedCostsPerRound,
+        variableCostPerUnit:
+          snapshot.product.materialCostPerUnit + snapshot.product.otherVariableCostPerUnit,
+        competitors: teamRows
+          .filter((t) => t.id !== playerTeam.id)
+          .map((t) => t.name),
+      };
     })(),
     capacityFacts: (() => {
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;

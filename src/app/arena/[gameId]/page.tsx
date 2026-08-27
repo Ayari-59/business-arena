@@ -5,7 +5,6 @@ import { formatEuro, formatPercent, formatUnits } from "@/lib/format";
 import { getGameView } from "@/services/game.service";
 import { getTeamSituations } from "@/services/pedagogy.service";
 import { SituationCard, SituationDebrief } from "@/components/situation-panel";
-import { novaScenario } from "@/config/scenarios/nova";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { KpiCard } from "@/components/kpi-card";
 import { EventCard } from "@/components/event-card";
@@ -31,9 +30,6 @@ const defaultDecisions = (roundDays: number): RoundDecisions => {
   };
 };
 
-const segmentName = (code: string) =>
-  novaScenario.market.segments.find((s) => s.code === code)?.name ?? code;
-
 export default async function ArenaPage({ params }: { params: Promise<{ gameId: string }> }) {
   const { gameId } = await params;
   const userId = await getGuestUserId();
@@ -50,7 +46,9 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
     <main className="mx-auto max-w-5xl space-y-8 p-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Business Arena · NOVA</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-amber-400">
+            Business Arena · {view.intro.title}
+          </p>
           <h1 className="text-2xl font-bold text-slate-50">{view.playerTeamName}</h1>
         </div>
         <div className="flex items-center gap-3">
@@ -82,7 +80,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
               label="Résultat net"
               value={formatEuro(r.incomeStatement.netIncome)}
               tone={r.incomeStatement.netIncome >= 0 ? "good" : "critical"}
-              hint={`Seuil de rentabilité : ${Number.isFinite(r.breakeven.breakEvenUnits) ? `${formatUnits(r.breakeven.breakEvenUnits)} u` : "inatteignable"}`}
+              hint={`Seuil de rentabilité : ${Number.isFinite(r.breakeven.breakEvenUnits) ? `${formatUnits(r.breakeven.breakEvenUnits)} ${view.vocabulary.units}` : "inatteignable"}`}
             />
             <KpiCard
               label="Trésorerie nette"
@@ -91,8 +89,8 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
               hint={`FRNG ${formatEuro(r.functionalBalance.frng)} − BFR ${formatEuro(r.functionalBalance.bfr)}`}
             />
             <KpiCard
-              label="Production"
-              value={`${formatUnits(r.production.produced)} u`}
+              label={view.vocabulary.productionLabel}
+              value={`${formatUnits(r.production.produced)} ${view.vocabulary.units}`}
               hint={`Utilisation : ${formatPercent(r.production.utilizationRate)}`}
             />
           </section>
@@ -126,7 +124,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                       .filter(([, d]) => d.potential > 0)
                       .map(([code, d]) => (
                         <tr key={code} className="border-t border-white/5">
-                          <td className="py-2 pr-3">{segmentName(code)}</td>
+                          <td className="py-2 pr-3">{view.segmentNames[code] ?? code}</td>
                           <td className="py-2 pr-3 text-right tabular-nums">{formatUnits(d.demandForCompany)}</td>
                           <td className="py-2 pr-3 text-right tabular-nums">{formatUnits(d.sold)}</td>
                           <td className={`py-2 text-right tabular-nums ${d.lost > 1 ? "text-red-400" : ""}`}>
@@ -151,8 +149,8 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
               ) : null}
               {r.extraOrders ? (
                 <p className="mt-3 rounded-lg border border-emerald-400/30 bg-emerald-950/30 px-3 py-2 text-xs text-emerald-300">
-                  📋 Commande ferme à {formatEuro(r.extraOrders.unitPrice)}/u :{" "}
-                  {formatUnits(r.extraOrders.delivered)} u livrées du stock
+                  📋 Commande ferme à {formatEuro(r.extraOrders.unitPrice)}/{view.vocabulary.unit} :{" "}
+                  {formatUnits(r.extraOrders.delivered)} {view.vocabulary.units} livrés
                   {r.extraOrders.subcontracted > 0
                     ? ` + ${formatUnits(r.extraOrders.subcontracted)} u sous-traitées`
                     : ""}{" "}
@@ -174,7 +172,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                       ? ` — dont ${formatEuro(r.orderOffer.onCredit)} en créances à ${r.orderOffer.paymentDelayDays} jours : votre BFR porte cette attente.`
                       : " — réglé comptant : la caisse encaisse, la marge est mince."}
                     {r.orderOffer.delivered < 0.5
-                      ? " Stock insuffisant : rien n'a pu être livré."
+                      ? ` ${view.vocabulary.leftoverLabel} insuffisant : rien n'a pu être livré.`
                       : ""}
                   </p>
                 ) : (
@@ -242,7 +240,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
               {r.investment ? (
                 <p className="mt-3 rounded-lg border border-amber-400/30 bg-amber-950/20 px-3 py-2 text-xs text-amber-200">
                   🏗️ Investissement : +{formatUnits(r.investment.capacityUnits)} u de capacité
-                  machine ({formatEuro(r.investment.outlay)}) — en service au prochain tour,
+                  de capacité ({formatEuro(r.investment.outlay)}) — en service au prochain tour,
                   amortissement en hausse.
                 </p>
               ) : null}
@@ -334,12 +332,32 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
             {periodLabel(view.roundDays, 1)} — prise en main
           </h2>
           <p className="mt-2 text-sm leading-relaxed">
-            Vous reprenez <strong>NOVA</strong>, jeune fabricant de l&apos;enceinte portable NOVA One.
-            Atelier d&apos;environ {formatUnits(7000 * (view.roundDays / 90))} unités par tour,
-            4 opérateurs, {formatEuro(96000 * (view.roundDays / 90))} de charges de structure
-            par tour, un coût variable d&apos;environ 38 €/unité. Deux concurrents vous
-            attendent : SoundBox (agressif sur les prix) et Auris (positionnement premium).
-            Fixez votre prix, votre production et vos budgets — puis observez.
+            Vous reprenez <strong>{view.playerTeamName}</strong> — {view.intro.tagline}{" "}
+            {view.intro.summary}
+          </p>
+          <ul className="mt-3 space-y-1 text-sm text-slate-400">
+            <li>
+              <span className="text-slate-500">{view.vocabulary.capacityLabel} : </span>
+              {formatUnits(view.intro.capacity)} {view.vocabulary.perRoundLabel}
+            </li>
+            <li>
+              <span className="text-slate-500">Charges de structure : </span>
+              {formatEuro(view.intro.fixedCostsPerRound)} par tour
+            </li>
+            <li>
+              <span className="text-slate-500">Coût variable : </span>
+              {formatEuro(view.intro.variableCostPerUnit)} par {view.vocabulary.unit}
+            </li>
+            {view.intro.competitors.length > 0 ? (
+              <li>
+                <span className="text-slate-500">Face à vous : </span>
+                {view.intro.competitors.join(", ")}
+              </li>
+            ) : null}
+          </ul>
+          <p className="mt-3 text-sm leading-relaxed">
+            Fixez votre {view.vocabulary.priceLabel.toLowerCase()}, votre volume et vos budgets
+            — puis observez.
           </p>
         </section>
       )}
@@ -355,7 +373,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                 })`,
             )
             .join(" · ")}
-          {" — "}dimensionnez production et stocks en conséquence.
+          {" — "}dimensionnez votre volume en conséquence.
         </section>
       ) : null}
 
@@ -400,7 +418,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
         <section className="rounded-xl border border-amber-400/30 bg-slate-900 p-6 text-center">
           <h2 className="text-xl font-bold text-amber-300">
             {view.ranking.find((row) => row.isPlayer)?.rank === 1
-              ? "🏆 Victoire ! NOVA domine le marché."
+              ? `🏆 Victoire ! ${view.playerTeamName} domine le marché.`
               : "Partie terminée — analysez votre trajectoire ci-dessus."}
           </h2>
           <p className="mt-2 text-sm text-slate-400">
@@ -427,6 +445,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
           <DecisionForm
             gameId={view.gameId}
             roundIndex={view.currentRound}
+            vocabulary={view.vocabulary}
             periodName={periodLabel(view.roundDays, view.currentRound).toLowerCase()}
             defaults={view.pendingDecisions ?? view.lastDecisions ?? defaultDecisions(view.roundDays)}
             kind={view.kind}
