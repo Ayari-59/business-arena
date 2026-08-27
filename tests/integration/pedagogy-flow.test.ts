@@ -16,6 +16,7 @@ import { db } from "@/db";
 import {
   concepts,
   decisionModels,
+  games,
   learningProgress,
   playerSkills,
   rounds,
@@ -23,7 +24,7 @@ import {
   situations,
   users,
 } from "@/db/schema";
-import { createSoloGame, resolveCurrentRound } from "@/services/game.service";
+import { createSoloGame, resolveCurrentRound, setQuizMode } from "@/services/game.service";
 import {
   getTeamSituations,
   getTeacherPedagogyView,
@@ -54,6 +55,11 @@ beforeAll(async () => {
     .returning({ id: users.id });
   userId = inserted[0]!.id;
   gameId = await createSoloGame(userId, "quarter", 3);
+  // Ce fichier teste la notation des QUESTIONS DE CONNAISSANCES, que les
+  // parties solo ne servent plus. On remet donc le réglage complet, sans quoi
+  // il ne testerait plus que la question du modèle.
+  const game = (await db.select().from(games).where(eq(games.id, gameId)))[0]!;
+  await setQuizMode({ gameId, teacherId: game.createdBy, mode: "full" });
 });
 
 describe("référentiels et instanciation", () => {

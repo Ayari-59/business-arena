@@ -62,18 +62,23 @@ async function firstSituation() {
 }
 
 describe("réglage des questions par l'enseignant", () => {
-  it("une partie sans réglage explicite sert tout : c'est le comportement d'avant", async () => {
-    const situation = await firstSituation();
-    expect(situation.quizQuestions.length).toBeGreaterThanOrEqual(3);
-    expect(situation.quizQuestions.some((q) => q.id === MODEL_QUESTION_ID)).toBe(true);
-  });
-
-  it("« modèle seul » ne garde QUE la question du modèle d'analyse", async () => {
-    await setQuizMode({ gameId, teacherId: await teacherId(), mode: "model" });
+  it("une partie publique jouée seul ne pose que la question du modèle", async () => {
+    // On n'interroge pas sur des définitions quelqu'un qui découvre la
+    // plateforme sans professeur. Reste la compétence propre du jeu, qui se
+    // répond en jouant et non en révisant.
     const situation = await firstSituation();
     expect(situation.quizQuestions.map((q) => q.id)).toEqual([MODEL_QUESTION_ID]);
     // le diagnostic reste servi dans tous les cas : c'est le cœur de la situation
     expect(situation.diagnosticOptions.length).toBeGreaterThan(0);
+  });
+
+  it("« connaissances et modèle » ajoute les questions écrites de la situation", async () => {
+    await setQuizMode({ gameId, teacherId: await teacherId(), mode: "full" });
+    const situation = await firstSituation();
+    expect(situation.quizQuestions.length).toBeGreaterThanOrEqual(3);
+    expect(situation.quizQuestions.some((q) => q.id === MODEL_QUESTION_ID)).toBe(true);
+    // et on revient au réglage de la partie solo pour la suite du scénario
+    await setQuizMode({ gameId, teacherId: await teacherId(), mode: "model" });
   });
 
   it("« modèle seul » : une réponse à une question de connaissances est ignorée", async () => {
