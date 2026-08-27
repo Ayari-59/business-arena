@@ -478,7 +478,19 @@ export interface RoundDecisions {
      */
     placement?: number;
   };
-  forecast?: { expectedRevenue?: number; expectedNetIncome?: number; expectedCash?: number };
+  /**
+   * Prévisions du joueur pour CE tour, saisies avec les décisions. Le moteur
+   * n'en fait rien : elles ne changent aucun calcul. Elles sont là pour être
+   * confrontées au réalisé au tour suivant, ce qui est l'exercice.
+   */
+  forecast?: {
+    /** Ventes attendues, dans l'unité du métier. */
+    expectedUnits?: number;
+    expectedRevenue?: number;
+    expectedNetIncome?: number;
+    /** Trésorerie nette attendue en fin de tour (le budget de trésorerie). */
+    expectedCash?: number;
+  };
 }
 
 // ---------------------------------------------------------------------------

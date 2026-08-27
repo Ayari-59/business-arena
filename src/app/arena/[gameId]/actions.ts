@@ -58,6 +58,21 @@ export async function playRoundAction(
       loanRepayment: formData.get("loanRepayment") || 0,
       capitalIncrease: formData.get("capitalIncrease") || 0,
     },
+    // Prévisions : facultatives, et sans effet sur le calcul du tour. Deux
+    // champs vides ne doivent pas devenir deux zéros prévus.
+    forecast: (() => {
+      const num = (name: string) => {
+        const raw = String(formData.get(name) ?? "").trim().replace(",", ".");
+        if (raw === "") return undefined;
+        const n = Number(raw);
+        return Number.isFinite(n) ? n : undefined;
+      };
+      const expectedUnits = num("expectedUnits");
+      const expectedCash = num("expectedCash");
+      return expectedUnits === undefined && expectedCash === undefined
+        ? undefined
+        : { expectedUnits, expectedCash };
+    })(),
     treasury: formData.has("discount")
       ? {
           discount: formData.get("discount") || 0,

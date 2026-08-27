@@ -233,6 +233,70 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                   </p>
                 )
               ) : null}
+              {view.forecastReview ? (
+                <div className="mt-3 rounded-lg border border-sky-400/25 bg-sky-950/20 p-4">
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-sky-300">
+                    🔭 Votre prévision face au réalisé
+                  </h3>
+                  <div className="mt-2 overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-left text-[11px] uppercase tracking-wide text-slate-500">
+                          <th className="pb-1 pr-3 font-medium" />
+                          <th className="pb-1 pr-3 text-right font-medium">Prévu</th>
+                          <th className="pb-1 pr-3 text-right font-medium">Réalisé</th>
+                          <th className="pb-1 pr-3 text-right font-medium">Écart</th>
+                          <th className="pb-1 text-right font-medium">Écart relatif</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-slate-300">
+                        {view.forecastReview.lines.map((line) => {
+                          const show = (value: number) =>
+                            line.format === "euro" ? formatEuro(value) : formatUnits(value);
+                          const gap = line.actual - line.forecast;
+                          // Un écart se lit d'abord en valeur absolue : se
+                          // tromper de 10 % dans un sens ou dans l'autre, c'est
+                          // s'être trompé autant.
+                          const severe = line.relative !== null && Math.abs(line.relative) > 0.1;
+                          return (
+                            <tr key={line.label} className="border-t border-white/5">
+                              <td className="py-1.5 pr-3">{line.label}</td>
+                              <td className="py-1.5 pr-3 text-right tabular-nums text-slate-400">
+                                {show(line.forecast)}
+                              </td>
+                              <td className="py-1.5 pr-3 text-right tabular-nums text-slate-100">
+                                {show(line.actual)}
+                              </td>
+                              <td
+                                className={`py-1.5 pr-3 text-right tabular-nums ${
+                                  severe ? "text-amber-300" : "text-emerald-300"
+                                }`}
+                              >
+                                {gap >= 0 ? "+" : ""}
+                                {show(gap)}
+                              </td>
+                              <td
+                                className={`py-1.5 text-right tabular-nums ${
+                                  severe ? "text-amber-300" : "text-emerald-300"
+                                }`}
+                              >
+                                {line.relative === null
+                                  ? "—"
+                                  : `${line.relative >= 0 ? "+" : ""}${formatPercent(line.relative)}`}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+                    L&apos;écart vaut mieux que la prévision : il dit ce que vous n&apos;aviez pas
+                    vu. Un écart qui se répète dans le même sens n&apos;est pas de la malchance,
+                    c&apos;est un biais dans votre modèle.
+                  </p>
+                </div>
+              ) : null}
               <FinancialStatements
                 result={r}
                 price={view.lastDecisions?.price ?? null}

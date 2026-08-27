@@ -52,6 +52,7 @@ export const roundDecisionsSchema = z.object({
     .optional(),
   forecast: z
     .object({
+      expectedUnits: z.coerce.number().min(0).max(10_000_000).optional(),
       expectedRevenue: z.coerce.number().optional(),
       expectedNetIncome: z.coerce.number().optional(),
       expectedCash: z.coerce.number().optional(),

@@ -42,6 +42,38 @@ function Field({
   );
 }
 
+/** Champ FACULTATIF : vide veut dire « pas de prévision », jamais zéro. */
+function OptionalField({
+  name,
+  label,
+  placeholder,
+  suffix,
+  hint,
+}: {
+  name: string;
+  label: string;
+  placeholder: string;
+  suffix: string;
+  hint?: string;
+}) {
+  return (
+    <label className="block">
+      <span className="text-xs font-medium uppercase tracking-wide text-slate-400">{label}</span>
+      <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 focus-within:border-amber-400/60">
+        <input
+          type="text"
+          inputMode="decimal"
+          name={name}
+          placeholder={placeholder}
+          className="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-600"
+        />
+        <span className="text-xs text-slate-500">{suffix}</span>
+      </span>
+      {hint ? <span className="mt-1 block text-xs text-slate-500">{hint}</span> : null}
+    </label>
+  );
+}
+
 export function DecisionForm({
   gameId,
   roundIndex,
@@ -302,6 +334,32 @@ export function DecisionForm({
           </p>
         </fieldset>
       ) : null}
+      <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
+        <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+          🔭 Votre prévision · facultative, sans effet sur le tour
+        </legend>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <OptionalField
+            name="expectedUnits"
+            label={`${v.units.charAt(0).toUpperCase()}${v.units.slice(1)} que vous pensez vendre`}
+            placeholder="ex. 4 200"
+            suffix={v.units}
+            hint="Appuyez-vous sur l'historique de vos ventes, plus bas dans la page."
+          />
+          <OptionalField
+            name="expectedCash"
+            label="Trésorerie nette en fin de tour"
+            placeholder="ex. 18 000"
+            suffix="€"
+            hint="Ce que vous pensez avoir en caisse une fois tout payé."
+          />
+        </div>
+        <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+          Annoncer avant de savoir, puis mesurer l&apos;écart : c&apos;est le seul moyen de
+          savoir si vous avez compris ce marché ou si vous avez eu de la chance. L&apos;écart
+          vous sera montré avec les résultats du tour.
+        </p>
+      </fieldset>
       {studiesOffer ? (
         <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">

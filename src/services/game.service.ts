@@ -1044,6 +1044,21 @@ export interface GameView {
   }[];
   lastResult: CompanyRoundResult | null;
   /**
+   * La prévision du tour écoulé face au réalisé. Null si le joueur n'a rien
+   * annoncé : on ne reproche pas une prévision qui n'a pas été faite.
+   */
+  forecastReview: {
+    round: number;
+    lines: {
+      label: string;
+      forecast: number;
+      actual: number;
+      /** Écart relatif, null quand la prévision est nulle (division impossible). */
+      relative: number | null;
+      format: "units" | "euro";
+    }[];
+  } | null;
+  /**
    * Historique des ventes, tour par tour et clientèle par clientèle. Ce sont
    * VOS données : elles sont gratuites, comme les comptes. Deux colonnes par
    * segment, la demande du marché et vos ventes, parce qu'une prévision se
@@ -1055,6 +1070,8 @@ export interface GameView {
     rounds: {
       round: number;
       price: number | null;
+      /** Ce que le joueur avait annoncé pour ce tour, s'il l'a fait. */
+      forecastUnits: number | null;
       bySegment: { potential: number; sold: number }[];
       sold: number;
       lost: number;
@@ -1346,6 +1363,12 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       (d.payload as RoundDecisions).price ?? null,
     ]),
   );
+  const forecastByRound = new Map(
+    playerDecisionRows.map((d) => [
+      roundIndexById.get(d.roundId)!,
+      (d.payload as RoundDecisions).forecast ?? null,
+    ]),
+  );
 
   const lastRound = resolved.at(-1);
   let lastResult: CompanyRoundResult | null = null;
@@ -1624,6 +1647,48 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       };
     }),
     lastResult,
+    forecastReview: (() => {
+      if (!lastRound || !lastResult) return null;
+      const round = roundIndexById.get(lastRound.id)!;
+      const forecast = forecastByRound.get(round);
+      if (!forecast) return null;
+      const sold = Object.values(lastResult.market.bySegment).reduce(
+        (sum, d) => sum + d.sold,
+        0,
+      );
+      const lines: {
+        label: string;
+        forecast: number;
+        actual: number;
+        relative: number | null;
+        format: "units" | "euro";
+      }[] = [];
+      const push = (
+        label: string,
+        expected: number | undefined,
+        actual: number,
+        format: "units" | "euro",
+      ) => {
+        if (expected === undefined) return;
+        lines.push({
+          label,
+          forecast: expected,
+          actual,
+          // Une prévision nulle rend l'écart relatif indéfini : mieux vaut ne
+          // rien afficher qu'un pourcentage infini.
+          relative: Math.abs(expected) > 0.5 ? (actual - expected) / Math.abs(expected) : null,
+          format,
+        });
+      };
+      push("Ventes", forecast.expectedUnits, sold, "units");
+      push(
+        "Trésorerie nette",
+        forecast.expectedCash,
+        lastResult.functionalBalance.netTreasury,
+        "euro",
+      );
+      return lines.length > 0 ? { round, lines } : null;
+    })(),
     salesHistory: (() => {
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
       const codes = snapshot.market.segments.map((seg) => seg.code);
@@ -1641,9 +1706,11 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
               sold: Math.round(detail[code]?.sold ?? 0),
             }));
             const rows = codes.map((code) => detail[code]);
+            const index = roundIndexById.get(r.roundId)!;
             return {
-              round: roundIndexById.get(r.roundId)!,
-              price: priceByRound.get(roundIndexById.get(r.roundId)!) ?? null,
+              round: index,
+              price: priceByRound.get(index) ?? null,
+              forecastUnits: forecastByRound.get(index)?.expectedUnits ?? null,
               bySegment,
               sold: Math.round(rows.reduce((sum, d) => sum + (d?.sold ?? 0), 0)),
               lost: Math.round(rows.reduce((sum, d) => sum + (d?.lost ?? 0), 0)),

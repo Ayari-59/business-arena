@@ -43,6 +43,7 @@ export function SalesHistory({
                   {name}
                 </th>
               ))}
+              <th className="pb-1 pr-3 text-right font-medium">Prévu</th>
               <th className="pb-1 pr-3 text-right font-medium">Total vendu</th>
               <th className="pb-1 text-right font-medium">Manquées</th>
             </tr>
@@ -55,6 +56,7 @@ export function SalesHistory({
                   <th className="pb-1 pr-3 text-right font-normal">vos ventes</th>
                 </Fragment>
               ))}
+              <th className="pb-1 pr-3" />
               <th className="pb-1 pr-3" />
               <th className="pb-1" />
             </tr>
@@ -76,6 +78,9 @@ export function SalesHistory({
                     </td>
                   </Fragment>
                 ))}
+                <td className="py-1.5 pr-3 text-right tabular-nums text-sky-300/80">
+                  {row.forecastUnits === null ? "—" : formatUnits(row.forecastUnits)}
+                </td>
                 <td className="py-1.5 pr-3 text-right font-medium tabular-nums text-slate-100">
                   {formatUnits(row.sold)}
                 </td>
@@ -89,6 +94,7 @@ export function SalesHistory({
       </div>
 
       <p className="mt-3 text-xs leading-relaxed text-slate-500">
+        La colonne « prévu » est ce que vous aviez annoncé avant de jouer le tour.
         De quoi construire une prévision plutôt que de deviner : moyenne des tours passés,
         tendance d&apos;un tour à l&apos;autre, coefficient de saison en rapportant chaque tour
         à la moyenne. La colonne « demande » porte la saison du marché, la vôtre porte l&apos;effet
