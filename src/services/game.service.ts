@@ -60,6 +60,7 @@ import {
 import { ENGINE_VERSION, orderOfferForRound, simulateRound } from "@/engine/simulation";
 import { computeRatios } from "@/engine/finance/ratios";
 import { irr, npv, paybackPeriod } from "@/engine/investment";
+import { roundBriefing, type RoundBriefing } from "@/pedagogy/round-briefing";
 import type {
   CompanyRoundResult,
   CompanyState,
@@ -1037,6 +1038,12 @@ export interface GameView {
     isMyTeam: boolean;
   }[];
   lastResult: CompanyRoundResult | null;
+  /**
+   * Le contexte des tours 2 et suivants, calculé sur le tour écoulé : le
+   * constat et l'arbitrage qui en découle. Null au tour 1, dont le contexte
+   * est écrit d'avance dans le scénario (`intro`).
+   */
+  roundBriefing: RoundBriefing | null;
   lastEvents: string[];
   history: { round: number; revenue: number; netIncome: number; netTreasury: number }[];
   ranking: {
@@ -1136,6 +1143,8 @@ export interface GameView {
       size: number;
       refPrice: number;
       paymentDelayDays: number;
+      /** Votre part sur ce segment au tour écoulé. Null au tour 1. */
+      yourShare: number | null;
     }[];
     competitors: string[];
   };
@@ -1569,6 +1578,24 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       };
     }),
     lastResult,
+    roundBriefing: (() => {
+      if (!lastResult) return null;
+      const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+      const definition = scenarioByCode(snapshot.code);
+      const preset = presetFromProfile(game.difficultyProfile);
+      return roundBriefing({
+        result: lastResult,
+        vocabulary: definition.vocabulary,
+        enabled: {
+          finance: preset.decisions.finance,
+          investment: preset.decisions.investment,
+          hr: preset.decisions.hr,
+        },
+        hasTreasuryTools: Boolean(snapshot.treasury),
+        hasInvestmentOffer: Boolean(snapshot.investment),
+        perishable: Boolean(snapshot.perishable),
+      });
+    })(),
     lastEvents,
     history,
     ranking,
@@ -1675,6 +1702,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
           size: Math.round(seg.size),
           refPrice: seg.refPrice,
           paymentDelayDays: seg.paymentDelayDays,
+          yourShare: lastResult?.market.bySegment[seg.code]?.share ?? null,
         })),
         competitors: teamRows
           .filter((t) => t.id !== playerTeam.id)
