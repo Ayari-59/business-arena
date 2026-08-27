@@ -244,6 +244,79 @@ export const SERVICES_KPIS: SectorKpiDef[] = [
   },
 ];
 
+// ---------------------------------------------------------------------------
+// E-COMMERCE — le trafic s'achète : tout se juge après le coût d'acquisition
+// ---------------------------------------------------------------------------
+
+export const ECOMMERCE_KPIS: SectorKpiDef[] = [
+  {
+    key: "panier_moyen",
+    label: "Panier moyen",
+    hint: "Chiffre d'affaires par commande expédiée. Le levier le plus rentable du métier : il ne coûte rien en acquisition.",
+    format: "euro",
+    compute: (ctx) => ratio(ctx.result.incomeStatement.revenue, ctx.totalUnits),
+  },
+  {
+    key: "cac",
+    label: "CAC — coût d'acquisition",
+    hint: "Budget d'acquisition rapporté aux commandes de nouveaux clients. S'il dépasse la marge par commande, chaque vente appauvrit.",
+    format: "euro",
+    compute: (ctx) => {
+      const acquisition = ctx.result.market.bySegment["acquisition"];
+      if (!acquisition) return null;
+      return ratio(ctx.result.incomeStatement.marketingCost, acquisition.sold);
+    },
+  },
+  {
+    key: "marge_apres_acquisition",
+    label: "Marge après acquisition",
+    hint: "Ce que laisse une commande une fois payés la marchandise, la logistique ET la publicité qui l'a déclenchée.",
+    format: "euro",
+    compute: (ctx) => {
+      const { revenue, cogs, marketingCost } = ctx.result.incomeStatement;
+      return ratio(revenue - cogs - marketingCost, ctx.totalUnits);
+    },
+  },
+];
+
+// ---------------------------------------------------------------------------
+// ABONNEMENT — le client ne s'achète pas une fois, il se garde
+// ---------------------------------------------------------------------------
+
+export const ABONNEMENT_KPIS: SectorKpiDef[] = [
+  {
+    key: "attrition",
+    label: "Taux d'attrition",
+    hint: "Part de vos adhérents réguliers perdue depuis le tour précédent. Dans un modèle par abonnement, c'est LE chiffre qui décide du résultat.",
+    format: "percent",
+    compute: attritionOn(["reguliers"]),
+  },
+  {
+    key: "revenu_par_adherent",
+    label: "Revenu par adhérent",
+    hint: "Chiffre d'affaires rapporté aux adhérents du trimestre. Récurrent : il retombe tel quel au tour suivant si personne ne part.",
+    format: "euro",
+    compute: (ctx) => ratio(ctx.result.incomeStatement.revenue, ctx.totalUnits),
+  },
+  {
+    key: "ltv",
+    label: "Valeur vie client",
+    hint: "Marge totale qu'un adhérent rapportera avant de partir = marge par adhérent ÷ taux d'attrition. Diviser l'attrition par deux double cette valeur.",
+    format: "euro",
+    compute: (ctx) => {
+      const churn = attritionOn(["reguliers"])(ctx);
+      // Sans départs mesurés, la valeur vie serait infinie : on ne l'affiche
+      // pas plutôt que d'annoncer un nombre qui ne veut rien dire.
+      if (churn === null || churn <= 0.001) return null;
+      const margin = ratio(
+        ctx.result.incomeStatement.revenue - ctx.result.incomeStatement.cogs,
+        ctx.totalUnits,
+      );
+      return margin === null ? null : margin / churn;
+    },
+  },
+];
+
 /** Calcule les indicateurs d'un secteur, en écartant les non-disponibles. */
 export function computeSectorKpis(
   defs: SectorKpiDef[],

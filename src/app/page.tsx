@@ -132,6 +132,14 @@ export default async function Home() {
           <p className="mt-3 text-xs text-slate-600">
             Sans compte, sans installation — vos parties restent liées à ce navigateur.
           </p>
+          <p className="mt-4 rounded-lg border border-sky-400/25 bg-sky-950/20 px-4 py-3 text-xs leading-relaxed text-sky-200/90">
+            <strong className="font-semibold text-sky-300">Version bêta.</strong> La plateforme
+            est pleinement utilisable en classe : le moteur économique est testé et les parties
+            se déroulent de bout en bout. Les scénarios, les contenus pédagogiques et l&apos;
+            interface continuent d&apos;évoluer, et certains réglages seront affinés au fil des
+            retours. Si quelque chose vous surprend ou vous manque, écrivez-nous — c&apos;est
+            exactement ce dont nous avons besoin.
+          </p>
         </div>
 
         {/* aperçu du cockpit (illustration statique du jeu) */}

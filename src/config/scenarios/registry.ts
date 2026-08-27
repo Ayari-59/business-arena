@@ -2,7 +2,9 @@ import type { BotProfile } from "../../engine/bots";
 import type { CompanyState, EngineScenarioConfig } from "../../engine/types";
 import type { SituationDef } from "./situation-kit";
 import {
+  ABONNEMENT_KPIS,
   COMMERCE_KPIS,
+  ECOMMERCE_KPIS,
   HOTELLERIE_KPIS,
   INDUSTRIE_KPIS,
   RESTAURATION_KPIS,
@@ -19,6 +21,10 @@ import { bistrotBots, bistrotCompany, bistrotScenario } from "./bistrot";
 import { BISTROT_SITUATIONS } from "./bistrot/situations";
 import { conseilBots, conseilCompany, conseilScenario } from "./conseil";
 import { CONSEIL_SITUATIONS } from "./conseil/situations";
+import { ecommerceBots, ecommerceCompany, ecommerceScenario } from "./ecommerce";
+import { ECOMMERCE_SITUATIONS } from "./ecommerce/situations";
+import { fitnessBots, fitnessCompany, fitnessScenario } from "./fitness";
+import { FITNESS_SITUATIONS } from "./fitness/situations";
 
 /**
  * Registre des scénarios (doc 01 §4) : un scénario n'est pas du code, c'est
@@ -30,14 +36,23 @@ import { CONSEIL_SITUATIONS } from "./conseil/situations";
  * un hôtel, on vend des nuitées. `vocabulary` porte ces mots jusqu'à l'arène.
  */
 
-export type Sector = "industrie" | "commerce" | "hotellerie" | "restauration" | "services";
+export type Sector =
+  | "industrie"
+  | "commerce"
+  | "ecommerce"
+  | "hotellerie"
+  | "restauration"
+  | "services"
+  | "abonnement";
 
 export const SECTOR_LABELS: Record<Sector, string> = {
   industrie: "Industrie",
   commerce: "Commerce",
+  ecommerce: "E-commerce",
   hotellerie: "Hôtellerie",
   restauration: "Restauration",
   services: "Services",
+  abonnement: "Abonnement",
 };
 
 export interface ScenarioVocabulary {
@@ -257,6 +272,71 @@ export const CONSEIL_DEFINITION: ScenarioDefinition = {
   kpis: SERVICES_KPIS,
 };
 
+
+export const ECOMMERCE_DEFINITION: ScenarioDefinition = {
+  code: ecommerceScenario.code,
+  title: "PIXEL & CO — Achetez votre trafic",
+  sector: "ecommerce",
+  tagline: "Pure player de décoration et petit mobilier.",
+  summary:
+    "La vitrine ne coûte rien, mais le trafic s'achète. Coût d'acquisition, panier moyen, logistique et retours qui rongent la marge, et un Black Friday qui fait le tiers de l'année.",
+  playerTeamName: "PIXEL & CO",
+  vocabulary: {
+    unit: "commande",
+    units: "commandes",
+    productionLabel: "Préparation",
+    productionPlanLabel: "Commandes à préparer",
+    priceLabel: "Panier moyen visé",
+    leftoverLabel: "Stock en entrepôt",
+    capacityPanelTitle: "Capacité logistique",
+    capacityLabel: "Préparation de commandes",
+    capacityBottleneckLabel: "Entrepôt",
+    capacityBottleneckHint:
+      "Votre entrepôt limite les expéditions — mécaniser la préparation prend effet au tour suivant.",
+    laborLabel: "Capacité de l'équipe",
+    laborBottleneckHint:
+      "Votre équipe logistique limite les expéditions : une commande non préparée est une commande annulée. Embauchez ou formez.",
+    perRoundLabel: "commandes/tour",
+  },
+  scenario: ecommerceScenario,
+  company: ecommerceCompany,
+  bots: ecommerceBots,
+  situations: ECOMMERCE_SITUATIONS,
+  kpis: ECOMMERCE_KPIS,
+};
+
+export const FITNESS_DEFINITION: ScenarioDefinition = {
+  code: fitnessScenario.code,
+  title: "VOLT FITNESS — Gardez vos adhérents",
+  sector: "abonnement",
+  tagline: "Salle de sport de 1 200 m² en périphérie.",
+  summary:
+    "Le client ne s'achète pas une fois, il se garde. Taux d'attrition, valeur vie client, revenus récurrents — et une saison qui remplit la salle en janvier pour la vider en juillet.",
+  playerTeamName: "VOLT FITNESS",
+  vocabulary: {
+    unit: "adhérent",
+    units: "adhérents",
+    productionLabel: "Adhésions",
+    productionPlanLabel: "Adhérents à accueillir",
+    priceLabel: "Abonnement trimestriel",
+    leftoverLabel: "Places non vendues",
+    capacityPanelTitle: "Capacité d'accueil",
+    capacityLabel: "Places sur le plateau",
+    capacityBottleneckLabel: "Plateau",
+    capacityBottleneckHint:
+      "Votre surface limite le nombre d'adhérents — ouvrir un plateau supplémentaire prend effet au tour suivant.",
+    laborLabel: "Capacité d'encadrement",
+    laborBottleneckHint:
+      "Vos coachs limitent l'accueil : sur-vendre des abonnements sans encadrement dégrade l'expérience, donc la rétention. Embauchez avant de vendre.",
+    perRoundLabel: "adhérents/tour",
+  },
+  scenario: fitnessScenario,
+  company: fitnessCompany,
+  bots: fitnessBots,
+  situations: FITNESS_SITUATIONS,
+  kpis: ABONNEMENT_KPIS,
+};
+
 /** Tous les scénarios jouables, dans l'ordre d'affichage du sélecteur. */
 export const SCENARIOS: ScenarioDefinition[] = [
   NOVA_DEFINITION,
@@ -264,6 +344,8 @@ export const SCENARIOS: ScenarioDefinition[] = [
   HOTEL_DEFINITION,
   BISTROT_DEFINITION,
   CONSEIL_DEFINITION,
+  ECOMMERCE_DEFINITION,
+  FITNESS_DEFINITION,
 ];
 
 export const DEFAULT_SCENARIO_CODE = NOVA_DEFINITION.code;
