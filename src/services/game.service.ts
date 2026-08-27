@@ -1682,6 +1682,27 @@ export async function getTeacherGames(teacherId: string): Promise<TeacherGameSum
   return out;
 }
 
+/**
+ * Active ou désactive les QCM de connaissances d'une partie en cours. Le
+ * réglage vit dans le profil de difficulté (jsonb) : aucune migration, et les
+ * situations DÉJÀ débriefées gardent le score obtenu sous l'ancien réglage.
+ */
+export async function setQuizEnabled(args: {
+  gameId: string;
+  teacherId: string;
+  enabled: boolean;
+}): Promise<void> {
+  const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
+  if (!game || game.createdBy !== args.teacherId) {
+    throw new Error("Partie introuvable");
+  }
+  const profile = (game.difficultyProfile as Record<string, unknown> | null) ?? {};
+  await db
+    .update(games)
+    .set({ difficultyProfile: { ...profile, quizEnabled: args.enabled } })
+    .where(eq(games.id, args.gameId));
+}
+
 export interface TeacherGameView {
   gameId: string;
   joinCode: string | null;

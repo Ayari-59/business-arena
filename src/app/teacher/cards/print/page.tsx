@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { CARD_CATEGORIES, cardsForEventCodes, type EventCardDef } from "@/config/events/cards";
 import { scenarioByCode } from "@/config/scenarios/registry";
@@ -51,7 +52,7 @@ function PrintCard({ card, deck }: { card: EventCardDef; deck: "market" | "team"
   );
 }
 
-export default function PrintCardsPage() {
+function PrintCards() {
   // Un deck par secteur : imprimer les 77 cartes de la plateforme n'aurait
   // aucun sens en classe. Le secteur se choisit dans l'URL (?scenario=hotel),
   // le lien du tableau de bord enseignant le renseigne déjà.
@@ -229,3 +230,15 @@ const printStyles = `
     .print-break { break-before: page; }
   }
 `;
+
+/**
+ * `useSearchParams` suspend pendant le prérendu : la frontière Suspense est
+ * obligatoire, sans quoi le build échoue sur cette route.
+ */
+export default function PrintCardsPage() {
+  return (
+    <Suspense fallback={null}>
+      <PrintCards />
+    </Suspense>
+  );
+}

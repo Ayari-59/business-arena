@@ -9,6 +9,7 @@ import {
   closeCurrentRound,
   createClassGame,
   drawEventCardForNextRound,
+  setQuizEnabled,
 } from "@/services/game.service";
 import {
   createCompetition,
@@ -16,6 +17,7 @@ import {
   startFinal,
   startQualification,
 } from "@/services/competition.service";
+import { DEFAULT_SCENARIO_CODE, SCENARIOS } from "@/config/scenarios/registry";
 
 export interface FormState {
   error: string | null;
@@ -58,11 +60,15 @@ export async function logoutAction(): Promise<void> {
   redirect("/teacher/login");
 }
 
+const SCENARIO_CODES = SCENARIOS.map((s) => s.code) as [string, ...string[]];
+
 const createGameSchema = z.object({
   periodicity: z.enum(["month", "quarter", "year"]).catch("quarter"),
   humanTeamsCount: z.coerce.number().int().min(1).max(8).catch(4),
   botCount: z.coerce.number().int().min(0).max(7).catch(1),
   level: z.coerce.number().int().min(1).max(6).catch(3),
+  // Secteur joué : un code inconnu retombe sur le scénario par défaut.
+  scenarioCode: z.enum(SCENARIO_CODES).catch(DEFAULT_SCENARIO_CODE),
 });
 
 /** Champ numérique optionnel : vide = valeur du scénario (jamais de dur). */
@@ -86,6 +92,7 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
     humanTeamsCount: formData.get("humanTeamsCount"),
     botCount: formData.get("botCount"),
     level: formData.get("level"),
+    scenarioCode: formData.get("scenarioCode"),
   });
   const economicOverrides = {
     taxRate: optionalRate(formData.get("taxRate")),
@@ -108,8 +115,23 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
     level: parsed.level,
     economicOverrides,
     variableWorld: formData.get("variableWorld") === "on",
+    scenarioCode: parsed.scenarioCode,
+    // La case est cochée par défaut : son absence signifie « décoché ».
+    quizEnabled: formData.get("quizEnabled") === "on",
   });
   redirect(`/teacher/games/${gameId}`);
+}
+
+/** Active ou désactive les QCM de connaissances d'une partie en cours. */
+export async function toggleQuizAction(gameId: string, formData: FormData): Promise<void> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  await setQuizEnabled({
+    gameId,
+    teacherId: session.userId,
+    enabled: formData.get("enabled") === "true",
+  });
+  revalidatePath(`/teacher/games/${gameId}`);
 }
 
 export async function closeRoundAction(gameId: string): Promise<void> {

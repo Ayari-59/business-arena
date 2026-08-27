@@ -4,7 +4,7 @@ import { getTeacherGameView } from "@/services/game.service";
 import { getTeacherPedagogyView } from "@/services/pedagogy.service";
 import { formatEuro } from "@/lib/format";
 import { periodLabel } from "@/config/scenarios/periodicity";
-import { closeRoundAction } from "../../actions";
+import { closeRoundAction, toggleQuizAction } from "../../actions";
 import { CardDeck } from "@/components/card-deck";
 
 export const dynamic = "force-dynamic";
@@ -37,6 +37,7 @@ export default async function TeacherGamePage({
           <p className="mt-1 text-sm text-slate-400">
             Les élèves rejoignent sur <span className="font-mono">/join</span> avec ce code.
           </p>
+          <p className="mt-1 text-xs text-slate-500">{view.scenarioTitle}</p>
         </div>
         <p className="rounded-full border border-white/10 px-4 py-1 text-sm text-slate-300">
           {finished
@@ -55,6 +56,39 @@ export default async function TeacherGamePage({
           scenarioEventCodes={view.scenarioEventCodes}
           scenarioCode={view.scenarioCode}
         />
+      ) : null}
+
+      {!finished ? (
+        <section className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-slate-900 p-4">
+          <div>
+            <h2 className="text-sm font-semibold text-slate-200">
+              📝 QCM de connaissances
+              <span
+                className={`ml-2 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                  view.quizEnabled
+                    ? "border-emerald-400/40 text-emerald-300"
+                    : "border-slate-600 text-slate-400"
+                }`}
+              >
+                {view.quizEnabled ? "Activés" : "Désactivés"}
+              </span>
+            </h2>
+            <p className="mt-1 max-w-2xl text-xs text-slate-500">
+              {view.quizEnabled
+                ? "Chaque situation pose deux questions de connaissances et une question sur le modèle d'analyse. Le score d'une situation se partage moitié diagnostic, moitié QCM."
+                : "Les élèves ne répondent qu'au diagnostic de la situation, qui compte alors pour la totalité du score. Les situations déjà débriefées gardent le score obtenu."}
+            </p>
+          </div>
+          <form action={toggleQuizAction.bind(null, view.gameId)}>
+            <input type="hidden" name="enabled" value={view.quizEnabled ? "false" : "true"} />
+            <button
+              type="submit"
+              className="rounded-lg border border-amber-400/40 px-4 py-2 text-sm font-semibold text-amber-300 transition hover:bg-amber-400/10"
+            >
+              {view.quizEnabled ? "Désactiver les QCM" : "Activer les QCM"}
+            </button>
+          </form>
+        </section>
       ) : null}
 
       <section className="rounded-xl border border-white/10 bg-slate-900 p-4">

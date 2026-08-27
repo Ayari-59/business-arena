@@ -7,6 +7,7 @@ import { getStaffContext } from "@/services/admin.service";
 import { createClassGameAction, createCompetitionAction, logoutAction } from "./actions";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
+import { DEFAULT_SCENARIO_CODE, SCENARIOS, SECTOR_LABELS } from "@/config/scenarios/registry";
 
 export const dynamic = "force-dynamic";
 
@@ -45,8 +46,29 @@ export default async function TeacherDashboard() {
       </header>
 
       <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
-        <h2 className="text-sm font-semibold text-slate-200">Créer une partie NOVA</h2>
+        <h2 className="text-sm font-semibold text-slate-200">Créer une partie</h2>
         <form action={createClassGameAction} className="mt-4 grid gap-4 sm:grid-cols-3">
+          <label className="block sm:col-span-3">
+            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+              Secteur d&apos;activité
+            </span>
+            <select
+              name="scenarioCode"
+              defaultValue={DEFAULT_SCENARIO_CODE}
+              className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm"
+            >
+              {SCENARIOS.map((s) => (
+                <option key={s.code} value={s.code}>
+                  {SECTOR_LABELS[s.sector]} · {s.title} — {s.tagline}
+                </option>
+              ))}
+            </select>
+            <span className="mt-1 block text-xs text-slate-500">
+              Chaque secteur enseigne ce que les autres ne peuvent pas : le stock et le
+              coefficient multiplicateur dans le commerce, le taux d&apos;occupation en
+              hôtellerie, le ratio matières en restauration, le poste clients dans les services.
+            </span>
+          </label>
           <label className="block">
             <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
               Équipes (élèves)
@@ -120,8 +142,28 @@ export default async function TeacherDashboard() {
               <span className="mt-0.5 block text-xs text-slate-500">
                 Croissance des segments, saisonnalité, événements et commandes exceptionnelles
                 varient d&apos;une partie à l&apos;autre (déterministe par partie : toutes vos
-                équipes jouent le même monde). Décochez pour le scénario NOVA classique,
+                équipes jouent le même monde). Décochez pour le scénario classique,
                 identique à vos supports imprimés.
+              </span>
+            </span>
+          </label>
+
+          <label className="flex items-start gap-3 rounded-lg border border-white/10 bg-slate-950 px-3 py-3 sm:col-span-3">
+            <input
+              type="checkbox"
+              name="quizEnabled"
+              defaultChecked
+              className="mt-0.5 h-4 w-4 accent-amber-400"
+            />
+            <span>
+              <span className="text-sm font-medium text-slate-200">
+                📝 QCM de connaissances dans les situations
+              </span>
+              <span className="mt-0.5 block text-xs text-slate-500">
+                Chaque situation pose deux questions de connaissances et une question sur le
+                modèle d&apos;analyse à mobiliser. Décochez pour ne garder que le diagnostic :
+                les élèves raisonnent sur la situation sans être interrogés sur les définitions
+                et les formules. Le réglage se modifie ensuite à tout moment depuis la partie.
               </span>
             </span>
           </label>

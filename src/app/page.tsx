@@ -2,6 +2,7 @@ import Link from "next/link";
 import { startGameAction } from "./actions";
 import { getPlatformConfig } from "@/services/admin.service";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
+import { DEFAULT_SCENARIO_CODE, SCENARIOS, SECTOR_LABELS } from "@/config/scenarios/registry";
 
 export const dynamic = "force-dynamic";
 
@@ -109,9 +110,10 @@ export default async function Home() {
             <span className="text-amber-400">Apprenez à décider.</span>
           </h1>
           <p className="mt-5 max-w-xl text-lg leading-relaxed text-slate-400">
-            Prenez les commandes de NOVA, jeune fabricant d&apos;enceintes portables. Fixez vos
-            prix, produisez, investissez, affrontez la concurrence — et découvrez, situation
-            après situation, les modèles de gestion qui font les bonnes décisions.
+            Un atelier, une boutique, un hôtel, un restaurant ou un cabinet de conseil : cinq
+            secteurs, cinq économies réelles. Fixez vos prix, approvisionnez, recrutez,
+            affrontez la concurrence — et découvrez, situation après situation, les modèles de
+            gestion qui font les bonnes décisions.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <a
@@ -302,6 +304,22 @@ export default async function Home() {
             className="rounded-2xl border border-white/10 bg-slate-900 p-6"
           >
             <h3 className="text-sm font-semibold text-slate-200">Configurer la partie</h3>
+            <label className="mt-4 block">
+              <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                Secteur d&apos;activité
+              </span>
+              <select
+                name="scenarioCode"
+                defaultValue={DEFAULT_SCENARIO_CODE}
+                className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+              >
+                {SCENARIOS.map((s) => (
+                  <option key={s.code} value={s.code}>
+                    {SECTOR_LABELS[s.sector]} — {s.tagline}
+                  </option>
+                ))}
+              </select>
+            </label>
             <fieldset className="mt-4">
               <legend className="text-xs font-medium uppercase tracking-wide text-slate-400">
                 Périodicité — chaque tour représente…
