@@ -4,32 +4,52 @@
  * Les invariants sont automatisés dans tests/scenarios/ ; ce script sert à
  * RÉGLER les valeurs quand un invariant casse.
  *
- * Usage : npx tsx scripts/calibrate.ts [seed]
+ * Usage : npx tsx scripts/calibrate.ts [codeScénario] [graine]
+ *   npx tsx scripts/calibrate.ts              → nova, graine par défaut
+ *   npx tsx scripts/calibrate.ts hotel        → hôtel, graine par défaut
+ *   npx tsx scripts/calibrate.ts bistrot 42   → bistrot, graine 42
  */
 import { botDecisions, type BotProfile } from "../src/engine/bots";
 import { runGame, soldUnits } from "../src/engine/simulation/runGame";
-import { novaBots, novaCompany, novaScenario } from "../src/config/scenarios/nova";
+import { DEFAULT_SCENARIO_CODE, SCENARIOS, scenarioByCode } from "../src/config/scenarios/registry";
+import type { CompanyRoundResult, CompanyState } from "../src/engine/types";
 
-const seed = Number(process.argv[2] ?? 20260101);
+const codeArg = process.argv[2];
+if (codeArg && !SCENARIOS.some((s) => s.code === codeArg)) {
+  console.error(
+    `Scénario inconnu « ${codeArg} ». Disponibles : ${SCENARIOS.map((s) => s.code).join(", ")}`,
+  );
+  process.exit(1);
+}
+const definition = scenarioByCode(codeArg ?? DEFAULT_SCENARIO_CODE);
+const seed = Number(process.argv[3] ?? 20260101);
 const strategies: BotProfile[] = ["passive", "price_aggressive", "premium", "balanced", "growth"];
 
 const fmt = (n: number) => Math.round(n).toLocaleString("fr-FR").padStart(10);
 
+const s = definition.scenario;
+const unitVariable = s.product.materialCostPerUnit + s.product.otherVariableCostPerUnit;
+console.log(`\n████ ${definition.title} (${definition.code}) ████`);
+console.log(
+  `coût variable unitaire ${unitVariable.toFixed(2)} € · structure ${s.fixedCostsPerRound.toLocaleString("fr-FR")} €/tour` +
+    (s.perishable ? " · activité PÉRISSABLE" : ""),
+);
+
 for (const strategy of strategies) {
-  const companies = [
-    novaCompany("player", "NOVA", "bot", strategy),
-    ...novaBots.slice(0, 2).map((b) => novaCompany(b.id, b.name, "bot", b.profile)),
+  const companies: CompanyState[] = [
+    definition.company("player", definition.playerTeamName, "bot", strategy),
+    ...definition.bots.slice(0, 2).map((b) => definition.company(b.id, b.name, "bot", b.profile)),
   ];
   const lastSold: Record<string, number | undefined> = {};
   const run = runGame({
-    scenario: novaScenario,
+    scenario: definition.scenario,
     initialCompanies: companies,
     providers: Object.fromEntries(
       companies.map((c) => [
         c.id,
-        (ctx: { state: typeof c; roundIndex: number; lastResult?: import("../src/engine/types").CompanyRoundResult }) =>
+        (ctx: { state: CompanyState; roundIndex: number; lastResult?: CompanyRoundResult }) =>
           botDecisions(c.botProfile as BotProfile, {
-            scenario: novaScenario,
+            scenario: definition.scenario,
             state: ctx.state,
             roundIndex: ctx.roundIndex,
             lastSoldUnits: ctx.lastResult ? soldUnits(ctx.lastResult) : lastSold[c.id],

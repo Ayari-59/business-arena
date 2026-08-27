@@ -52,6 +52,8 @@ export default async function TeacherGamePage({
           teams={view.teams
             .filter((t) => t.controller === "human")
             .map((t) => ({ teamId: t.teamId, name: t.name }))}
+          scenarioEventCodes={view.scenarioEventCodes}
+          scenarioCode={view.scenarioCode}
         />
       ) : null}
 

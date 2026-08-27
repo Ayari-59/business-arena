@@ -4,6 +4,11 @@
  * la carte porte le récit, la catégorie et le concept qu'elle met en jeu.
  */
 
+import { BOUTIQUE_CARDS } from "./decks/boutique";
+import { HOTEL_CARDS } from "./decks/hotel";
+import { BISTROT_CARDS } from "./decks/bistrot";
+import { CONSEIL_CARDS } from "./decks/conseil";
+
 export type CardCategory = "market" | "competition" | "internal" | "macro";
 
 export interface EventCardDef {
@@ -25,7 +30,8 @@ export const CARD_CATEGORIES: Record<CardCategory, { label: string; className: s
   macro: { label: "Macro-économie", className: "border-emerald-400/40 text-emerald-300" },
 };
 
-export const EVENT_CARDS: EventCardDef[] = [
+/** Deck du scénario NOVA (industrie). */
+const NOVA_CARDS: EventCardDef[] = [
   {
     code: "raw_material_spike",
     title: "Flambée des matières premières",
@@ -248,6 +254,19 @@ export const EVENT_CARDS: EventCardDef[] = [
   },
 ];
 
+/**
+ * Deck complet, tous secteurs confondus. Chaque scénario ne pioche que dans
+ * SES cartes : le filtre se fait sur les codes d'événements du scénario joué
+ * (voir `cardsForEventCodes`), jamais sur cette liste globale.
+ */
+export const EVENT_CARDS: EventCardDef[] = [
+  ...NOVA_CARDS,
+  ...BOUTIQUE_CARDS,
+  ...HOTEL_CARDS,
+  ...BISTROT_CARDS,
+  ...CONSEIL_CARDS,
+];
+
 export const cardByCode = new Map(EVENT_CARDS.map((c) => [c.code, c]));
 
 /** Cartes « équipe » : ciblent une seule entreprise (tirage par équipe). */
@@ -257,3 +276,13 @@ export const TEAM_CARD_CODES = EVENT_CARDS.filter((c) => c.scope === "team").map
 export const TEACHER_DRAWABLE_CODES = EVENT_CARDS.filter((c) => c.scope === "market").map(
   (c) => c.code,
 );
+
+/**
+ * Les cartes d'un scénario donné, dans l'ordre du deck. On passe les codes
+ * d'événements du scénario (ou de son snapshot) plutôt que son code : une
+ * partie déjà lancée joue son snapshot, pas la version courante du scénario.
+ */
+export function cardsForEventCodes(eventCodes: readonly string[]): EventCardDef[] {
+  const wanted = new Set(eventCodes);
+  return EVENT_CARDS.filter((c) => wanted.has(c.code));
+}

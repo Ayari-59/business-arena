@@ -3,6 +3,10 @@ import type { CompanyState, EngineScenarioConfig } from "../../engine/types";
 import type { SituationDef } from "./nova/situations";
 import { novaBots, novaCompany, novaScenario } from "./nova";
 import { NOVA_SITUATIONS } from "./nova/situations";
+import { boutiqueBots, boutiqueCompany, boutiqueScenario } from "./boutique";
+import { hotelBots, hotelCompany, hotelScenario } from "./hotel";
+import { bistrotBots, bistrotCompany, bistrotScenario } from "./bistrot";
+import { conseilBots, conseilCompany, conseilScenario } from "./conseil";
 
 /**
  * Registre des scénarios (doc 01 §4) : un scénario n'est pas du code, c'est
@@ -85,8 +89,106 @@ export const NOVA_DEFINITION: ScenarioDefinition = {
   situations: NOVA_SITUATIONS,
 };
 
+export const BOUTIQUE_DEFINITION: ScenarioDefinition = {
+  code: boutiqueScenario.code,
+  title: "MAILLE & CO — Tenez la boutique",
+  sector: "commerce",
+  tagline: "Concept store de prêt-à-porter en centre-ville.",
+  summary:
+    "Vous n'avez rien à fabriquer : vous achetez pour revendre. Coefficient multiplicateur, choix des circuits d'achat, stock qui dort en réserve et pic de Noël à ne pas manquer.",
+  playerTeamName: "MAILLE & CO",
+  vocabulary: {
+    unit: "article",
+    units: "articles",
+    productionLabel: "Approvisionnement",
+    productionPlanLabel: "Articles à mettre en rayon",
+    priceLabel: "Prix de vente moyen",
+    capacityLabel: "Capacité de traitement",
+    leftoverLabel: "Stock en réserve",
+  },
+  scenario: boutiqueScenario,
+  company: boutiqueCompany,
+  bots: boutiqueBots,
+  situations: [],
+};
+
+export const HOTEL_DEFINITION: ScenarioDefinition = {
+  code: hotelScenario.code,
+  title: "L'ESCALE — Remplissez l'hôtel",
+  sector: "hotellerie",
+  tagline: "Hôtel 3 étoiles de 60 chambres en ville moyenne.",
+  summary:
+    "La chambre vide de ce soir ne se rattrape jamais. Yield management, taux d'occupation d'équilibre, commissions des plateformes et saison qui fait tout basculer.",
+  playerTeamName: "L'ESCALE",
+  vocabulary: {
+    unit: "nuitée",
+    units: "nuitées",
+    productionLabel: "Ouverture",
+    productionPlanLabel: "Nuitées mises en vente",
+    priceLabel: "Prix moyen par nuitée",
+    capacityLabel: "Nuitées disponibles",
+    leftoverLabel: "Nuitées perdues",
+  },
+  scenario: hotelScenario,
+  company: hotelCompany,
+  bots: hotelBots,
+  situations: [],
+};
+
+export const BISTROT_DEFINITION: ScenarioDefinition = {
+  code: bistrotScenario.code,
+  title: "LA TABLE D'AUGUSTIN — Tenez le service",
+  sector: "restauration",
+  tagline: "Bistrot de 70 couverts, midi et soir.",
+  summary:
+    "Le couvert non servi est perdu, et la denrée préparée non vendue part à la poubelle. Ratio matières, double contrainte salle et brigade, banquets de fin d'année.",
+  playerTeamName: "LA TABLE D'AUGUSTIN",
+  vocabulary: {
+    unit: "couvert",
+    units: "couverts",
+    productionLabel: "Service",
+    productionPlanLabel: "Couverts à préparer",
+    priceLabel: "Ticket moyen",
+    capacityLabel: "Couverts réalisables",
+    leftoverLabel: "Denrées perdues",
+  },
+  scenario: bistrotScenario,
+  company: bistrotCompany,
+  bots: bistrotBots,
+  situations: [],
+};
+
+export const CONSEIL_DEFINITION: ScenarioDefinition = {
+  code: conseilScenario.code,
+  title: "ATLAS CONSEIL — Vendez le temps de vos équipes",
+  sector: "services",
+  tagline: "Cabinet de conseil et bureau d'études, 12 consultants.",
+  summary:
+    "La journée non vendue est perdue et la capacité ne s'achète pas : elle se recrute. Taux d'occupation, poste clients qui étrangle la trésorerie, salaires qui tombent même carnet vide.",
+  playerTeamName: "ATLAS CONSEIL",
+  vocabulary: {
+    unit: "jour-conseil",
+    units: "jours-conseil",
+    productionLabel: "Staffing",
+    productionPlanLabel: "Jours à staffer",
+    priceLabel: "Taux journalier moyen",
+    capacityLabel: "Jours-consultants disponibles",
+    leftoverLabel: "Jours non facturés",
+  },
+  scenario: conseilScenario,
+  company: conseilCompany,
+  bots: conseilBots,
+  situations: [],
+};
+
 /** Tous les scénarios jouables, dans l'ordre d'affichage du sélecteur. */
-export const SCENARIOS: ScenarioDefinition[] = [NOVA_DEFINITION];
+export const SCENARIOS: ScenarioDefinition[] = [
+  NOVA_DEFINITION,
+  BOUTIQUE_DEFINITION,
+  HOTEL_DEFINITION,
+  BISTROT_DEFINITION,
+  CONSEIL_DEFINITION,
+];
 
 export const DEFAULT_SCENARIO_CODE = NOVA_DEFINITION.code;
 

@@ -1,6 +1,8 @@
 "use client";
 
-import { CARD_CATEGORIES, EVENT_CARDS, type EventCardDef } from "@/config/events/cards";
+import { useSearchParams } from "next/navigation";
+import { CARD_CATEGORIES, cardsForEventCodes, type EventCardDef } from "@/config/events/cards";
+import { scenarioByCode } from "@/config/scenarios/registry";
 import { BrandMark } from "@/components/brand-mark";
 
 /**
@@ -50,8 +52,14 @@ function PrintCard({ card, deck }: { card: EventCardDef; deck: "market" | "team"
 }
 
 export default function PrintCardsPage() {
-  const marketCards = EVENT_CARDS.filter((c) => c.scope === "market");
-  const teamCards = EVENT_CARDS.filter((c) => c.scope === "team");
+  // Un deck par secteur : imprimer les 77 cartes de la plateforme n'aurait
+  // aucun sens en classe. Le secteur se choisit dans l'URL (?scenario=hotel),
+  // le lien du tableau de bord enseignant le renseigne déjà.
+  const params = useSearchParams();
+  const definition = scenarioByCode(params.get("scenario"));
+  const deck = cardsForEventCodes(definition.scenario.events.map((e) => e.code));
+  const marketCards = deck.filter((c) => c.scope === "market");
+  const teamCards = deck.filter((c) => c.scope === "team");
 
   return (
     <main className="print-page">
@@ -59,7 +67,9 @@ export default function PrintCardsPage() {
 
       <header className="print-header no-print">
         <div>
-          <p className="print-kicker">Business Arena · Animation de classe</p>
+          <p className="print-kicker">
+            Business Arena · Animation de classe · {definition.title}
+          </p>
           <h1>🃏 Deck physique à imprimer</h1>
           <p className="print-help">
             Imprimez en A4 (couleur de préférence), découpez chaque carte sur les{" "}

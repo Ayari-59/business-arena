@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { drawCardAction, type DrawCardState } from "@/app/teacher/actions";
-import { EVENT_CARDS, TEACHER_DRAWABLE_CODES, TEAM_CARD_CODES } from "@/config/events/cards";
+import { cardsForEventCodes } from "@/config/events/cards";
 import { EventCard } from "@/components/event-card";
 import { BrandMark } from "@/components/brand-mark";
 
@@ -20,10 +20,16 @@ export function CardDeck({
   gameId,
   pendingEvents,
   teams,
+  scenarioEventCodes,
+  scenarioCode,
 }: {
   gameId: string;
   pendingEvents: { code: string; teamId: string | null; teamName: string | null }[];
   teams: { teamId: string; name: string }[];
+  /** Codes d'événements du snapshot joué : le deck est celui du secteur. */
+  scenarioEventCodes: string[];
+  /** Secteur joué — pour imprimer le bon deck physique. */
+  scenarioCode: string;
 }) {
   const [state, formAction, pending] = useActionState(drawCardAction.bind(null, gameId), initial);
   const [target, setTarget] = useState<string>("");
@@ -34,9 +40,11 @@ export function CardDeck({
   const allFull = pendingEvents.length >= MAX_PENDING;
 
   const isTeamDraw = target !== "";
-  const pool = isTeamDraw ? TEAM_CARD_CODES : TEACHER_DRAWABLE_CODES;
-  const drawable = EVENT_CARDS.filter(
-    (c) => pool.includes(c.code) && !pendingEvents.some((p) => p.code === c.code),
+  const deck = cardsForEventCodes(scenarioEventCodes);
+  const drawable = deck.filter(
+    (c) =>
+      c.scope === (isTeamDraw ? "team" : "market") &&
+      !pendingEvents.some((p) => p.code === c.code),
   );
 
   return (
@@ -44,7 +52,7 @@ export function CardDeck({
       <div className="flex items-start justify-between gap-3">
         <h2 className="text-sm font-semibold text-slate-200">🃏 Deck d&apos;événements</h2>
         <a
-          href="/teacher/cards/print"
+          href={`/teacher/cards/print?scenario=${encodeURIComponent(scenarioCode)}`}
           target="_blank"
           className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-slate-300 hover:border-amber-400/40 hover:text-amber-300"
         >

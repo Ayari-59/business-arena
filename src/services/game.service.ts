@@ -27,6 +27,7 @@ import {
   applyEventIntensity,
   presetByLevel,
   presetFromProfile,
+  quizEnabledFromProfile,
   sanitizeEconomicOverrides,
   type EconomicOverrides,
 } from "@/config/difficulty";
@@ -1691,6 +1692,12 @@ export interface TeacherGameView {
   currentRound: number;
   roundsCount: number;
   roundDays: number;
+  /** Secteur joué : titre du scénario et codes d'événements de SON deck. */
+  scenarioCode: string;
+  scenarioTitle: string;
+  scenarioEventCodes: string[];
+  /** QCM de connaissances actifs pour cette partie. */
+  quizEnabled: boolean;
   teams: {
     teamId: string;
     name: string;
@@ -1732,6 +1739,9 @@ export async function getTeacherGameView(
     : [];
 
   const rankingRows = await db.select().from(gameRankings).where(eq(gameRankings.gameId, gameId));
+  const snapshotDefinition = scenarioByCode(
+    (game.scenarioSnapshot as { code?: string } | null)?.code,
+  );
 
   return {
     gameId,
@@ -1748,6 +1758,14 @@ export async function getTeacherGameView(
     currentRound: game.currentRound,
     roundsCount: (game.scenarioSnapshot as { roundsCount: number }).roundsCount,
     roundDays: (game.scenarioSnapshot as { roundDays: number }).roundDays,
+    scenarioCode: snapshotDefinition.code,
+    scenarioTitle: snapshotDefinition.title,
+    // Le deck vient du SNAPSHOT, pas de la version courante du scénario :
+    // une partie lancée joue les règles avec lesquelles elle a commencé.
+    scenarioEventCodes: (
+      (game.scenarioSnapshot as { events?: { code: string }[] }).events ?? []
+    ).map((e) => e.code),
+    quizEnabled: quizEnabledFromProfile(game.difficultyProfile),
     teams: teamRows.map((t) => {
       const last = lastResults.find((r) => r.teamId === t.id);
       return {

@@ -109,6 +109,15 @@ export function presetFromProfile(profile: unknown): DifficultyPreset {
   return (d?.level && presetByLevel.get(d.level as DifficultyPreset["level"])) || LEGACY_PRESET;
 }
 
+/**
+ * QCM de connaissances actifs pour cette partie. L'absence du drapeau vaut
+ * ACTIVÉ : les parties créées avant le réglage gardent leur comportement, et
+ * seule une désactivation explicite de l'enseignant les retire.
+ */
+export function quizEnabledFromProfile(profile: unknown): boolean {
+  return (profile as { quizEnabled?: boolean } | null)?.quizEnabled !== false;
+}
+
 // ---------------------------------------------------------------------------
 // Paramètres économiques modulables à la création (jamais codés en dur) :
 // chaque champ absent conserve la valeur du scénario. Bornes = garde-fous.
