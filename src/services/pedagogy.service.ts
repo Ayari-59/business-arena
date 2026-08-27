@@ -19,11 +19,12 @@ import {
 } from "@/db/schema";
 import { CONCEPTS, conceptByCode } from "@/config/pedagogy/concepts";
 import { DECISION_MODELS } from "@/config/pedagogy/models";
+import type { SituationDef } from "@/config/scenarios/nova/situations";
 import {
-  NOVA_SITUATIONS,
+  ALL_SITUATIONS,
+  scenarioByCode,
   situationByCode,
-  type SituationDef,
-} from "@/config/scenarios/nova/situations";
+} from "@/config/scenarios/registry";
 import { presetFromProfile } from "@/config/difficulty";
 import { hintScoreMultiplier, nextUnlockableLevel } from "@/pedagogy/hints";
 import { evaluateDiagnosis, evaluateQuiz } from "@/pedagogy/evaluation";
@@ -85,7 +86,7 @@ export async function seedPedagogyReferentials(): Promise<void> {
   await db
     .insert(situations)
     .values(
-      NOVA_SITUATIONS.map((s) => ({
+      ALL_SITUATIONS.map((s) => ({
         code: s.code,
         titleKey: s.title,
         narrativeKey: s.narrative,
@@ -106,7 +107,7 @@ export async function seedPedagogyReferentials(): Promise<void> {
   const modelIdByCode = new Map(modelRows.map((r) => [r.code, r.id]));
   const conceptIdByCode = new Map(conceptRows.map((r) => [r.code, r.id]));
 
-  const hintValues = NOVA_SITUATIONS.flatMap((s) =>
+  const hintValues = ALL_SITUATIONS.flatMap((s) =>
     s.hints.map((h) => ({
       situationId: situationIdByCode.get(s.code)!,
       level: h.level,
@@ -116,7 +117,7 @@ export async function seedPedagogyReferentials(): Promise<void> {
   );
   if (hintValues.length > 0) await db.insert(hints).values(hintValues).onConflictDoNothing();
 
-  const relevanceValues = NOVA_SITUATIONS.flatMap((s) =>
+  const relevanceValues = ALL_SITUATIONS.flatMap((s) =>
     Object.entries(s.modelRelevance)
       .filter(([code]) => modelIdByCode.has(code))
       .map(([code, relevance]) => ({
@@ -128,7 +129,7 @@ export async function seedPedagogyReferentials(): Promise<void> {
   if (relevanceValues.length > 0)
     await db.insert(situationModels).values(relevanceValues).onConflictDoNothing();
 
-  const conceptValues = NOVA_SITUATIONS.flatMap((s) =>
+  const conceptValues = ALL_SITUATIONS.flatMap((s) =>
     s.conceptCodes
       .filter((code) => conceptIdByCode.has(code))
       .map((code) => ({
@@ -165,8 +166,15 @@ export async function openSituationsForRound(
   const situationRows = await db.select().from(situations);
   const situationIdByCode = new Map(situationRows.map((r) => [r.code, r.id]));
 
+  // Les situations appartiennent au scénario JOUÉ : une partie d'hôtellerie
+  // n'ouvre jamais une situation d'atelier. Le snapshot porte le code du
+  // scénario de la partie (un code inconnu retombe sur NOVA).
+  const gameRow = (await db.select().from(games).where(eq(games.id, gameId)))[0];
+  const snapshotCode = (gameRow?.scenarioSnapshot as { code?: string } | null)?.code;
+  const definition = scenarioByCode(snapshotCode);
+
   const values: (typeof situationInstances.$inferInsert)[] = [];
-  const scripted = NOVA_SITUATIONS.filter(
+  const scripted = definition.situations.filter(
     (s) => "round" in s.trigger && s.trigger.round === roundIndex,
   );
   for (const team of humanTeams) {
@@ -184,8 +192,12 @@ export async function openSituationsForRound(
     }
     const result = previousResults?.[team.id];
     if (result) {
-      for (const detectCode of detectSituations(result)) {
-        const situationId = situationIdByCode.get(`detect_${detectCode}`);
+      const detected = new Set(detectSituations(result));
+      // Résolution par le déclencheur porté par la situation, pas par une
+      // convention de nommage : chaque scénario nomme ses situations librement.
+      for (const s of definition.situations) {
+        if (!("detect" in s.trigger) || !detected.has(s.trigger.detect)) continue;
+        const situationId = situationIdByCode.get(s.code);
         if (situationId)
           values.push({
             roundId: roundRow.id,

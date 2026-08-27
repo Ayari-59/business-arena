@@ -97,6 +97,8 @@ export const engineScenarioConfigSchema = z.object({
     })
     .optional(),
   fixedCostsPerRound: z.number().nonnegative(),
+  // Activité de service : la capacité non vendue est perdue, jamais stockée.
+  perishable: z.boolean().optional(),
   suppliers: z
     .array(
       z.object({

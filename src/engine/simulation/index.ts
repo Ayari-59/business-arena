@@ -377,10 +377,17 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const receivableRatio = revenue > 0 ? Math.min(1, creditRevenue / revenue) : 0;
 
     const { stock: stockAfterSales, cost: cogsFromStock } = removeFromStock(w.stock, soldUnits);
+    // Activité périssable : ce qui n'est pas vendu dans le tour est perdu —
+    // la nuit d'hôtel vide, le couvert non servi, l'heure de conseil non
+    // facturée ne se reportent pas. Le gâchis est une charge du tour, au même
+    // titre qu'un rebut, et le stock final est nul.
+    const spoiled = scenario.perishable ? stockValue(stockAfterSales) : 0;
+    const finalStock = scenario.perishable ? { quantity: 0, unitCost: 0 } : stockAfterSales;
     // Coût des ventes : sorties de stock + unités sous-traitées (achetées
-    // finies et revendues) + rebuts internes (produits, payés, invendables).
-    const cogs = cogsFromStock + subcontractCost + w.scrapValue;
-    const inventoryChange = stockValue(stockAfterSales) - stockValue(w.state.finishedGoods);
+    // finies et revendues) + rebuts internes (produits, payés, invendables)
+    // + capacité périmée.
+    const cogs = cogsFromStock + subcontractCost + w.scrapValue + spoiled;
+    const inventoryChange = stockValue(finalStock) - stockValue(w.state.finishedGoods);
     const purchases =
       w.produced * scenario.product.materialCostPerUnit * w.materialMultiplier;
     // La sous-traitance est décaissée avec les autres charges variables
@@ -702,7 +709,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         maintenanceReference: scenario.production.maintenanceReference,
         availabilityDecay: scenario.production.availabilityDecay,
       }),
-      finishedGoods: stockAfterSales,
+      finishedGoods: finalStock,
       finance: finance.closing,
       lastMarketShare,
     });

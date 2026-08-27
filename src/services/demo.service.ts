@@ -16,7 +16,7 @@ import {
 } from "@/services/pedagogy.service";
 import { createCompetition, joinCompetition } from "@/services/competition.service";
 import { createInvite } from "@/services/admin.service";
-import { situationByCode } from "@/config/scenarios/nova/situations";
+import { situationByCode } from "@/config/scenarios/registry";
 import type { RoundDecisions } from "@/engine/types";
 
 /**

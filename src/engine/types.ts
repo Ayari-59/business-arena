@@ -113,6 +113,14 @@ export interface EngineScenarioConfig {
   /** Coûts fixes opérationnels par tour (hors amortissements). */
   fixedCostsPerRound: number;
   /**
+   * Activité PÉRISSABLE (optionnel) : la capacité non vendue est perdue, elle
+   * ne se stocke pas — une nuit d'hôtel, un couvert servi, une heure de conseil
+   * ne se reportent pas au tour suivant. Les unités produites et invendues
+   * passent en coût des ventes (gâchis), le stock final est nul. Sans ce
+   * drapeau, comportement industriel historique (stock reporté au CUMP).
+   */
+  perishable?: boolean;
+  /**
    * Investissement capacitaire (optionnel — doc 02 §6.5) : acheter de la
    * capacité machine. Décaissement et immobilisation immédiats, mise en
    * service au tour SUIVANT, amortissement linéaire dès la mise en service.

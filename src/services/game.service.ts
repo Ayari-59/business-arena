@@ -17,7 +17,11 @@ import {
   teams,
   users,
 } from "@/db/schema";
-import { novaBots, novaCompany, novaScenario } from "@/config/scenarios/nova";
+import {
+  DEFAULT_SCENARIO_CODE,
+  scenarioByCode,
+  type ScenarioDefinition,
+} from "@/config/scenarios/registry";
 import {
   applyEconomicOverrides,
   applyEventIntensity,
@@ -94,35 +98,36 @@ async function getOrCreatePublicOrgId(): Promise<string> {
   return retry[0].id;
 }
 
-async function getOrCreateNovaScenarioId(): Promise<string> {
+async function getOrCreateScenarioId(def: ScenarioDefinition): Promise<string> {
   const found = await db
     .select({ id: scenarios.id })
     .from(scenarios)
-    .where(and(eq(scenarios.code, novaScenario.code), eq(scenarios.version, novaScenario.version)));
+    .where(
+      and(eq(scenarios.code, def.scenario.code), eq(scenarios.version, def.scenario.version)),
+    );
   if (found[0]) return found[0].id;
   const inserted = await db
     .insert(scenarios)
     .values({
-      code: novaScenario.code,
-      version: novaScenario.version,
-      title: "NOVA — Prenez les commandes",
-      summary:
-        "Reprenez NOVA, jeune fabricant d'enceintes portables : 6 tours pour apprendre prix, capacité, seuil de rentabilité et trésorerie.",
+      code: def.scenario.code,
+      version: def.scenario.version,
+      title: def.title,
+      summary: def.summary,
       minCompanies: 1,
       maxCompanies: 8,
-      roundsCount: novaScenario.roundsCount,
+      roundsCount: def.scenario.roundsCount,
       baseDifficulty: 1,
-      config: novaScenario,
+      config: def.scenario,
       status: "published",
     })
     .returning({ id: scenarios.id });
-  if (!inserted[0]) throw new Error("Création du scénario NOVA impossible");
+  if (!inserted[0]) throw new Error(`Création du scénario ${def.scenario.code} impossible`);
   return inserted[0].id;
 }
 
 /** Id du scénario NOVA publié (créé au besoin) — utilisé par le moteur de concours. */
 export async function getOrCreateNovaScenarioIdPublic(): Promise<string> {
-  return getOrCreateNovaScenarioId();
+  return getOrCreateScenarioId(scenarioByCode(DEFAULT_SCENARIO_CODE));
 }
 
 export type GameKind = "solo" | "class";
@@ -160,6 +165,10 @@ interface CreateGameArgs {
   economicOverrides?: EconomicOverrides;
   /** Monde variable (doc 02 §9bis) : variante du scénario dérivée de la graine. */
   variableWorld?: boolean;
+  /** Secteur joué (registre des scénarios) — absent = NOVA. */
+  scenarioCode?: string;
+  /** QCM de connaissances dans les situations — absent = activés. */
+  quizEnabled?: boolean;
 }
 
 export interface CreatedGame {
@@ -169,7 +178,8 @@ export interface CreatedGame {
 
 /** Cœur commun de création : partie + équipes + tours + états initiaux. */
 export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame> {
-  const scenarioId = await getOrCreateNovaScenarioId();
+  const definition = scenarioByCode(args.scenarioCode);
+  const scenarioId = await getOrCreateScenarioId(definition);
   await seedPedagogyReferentials(); // référentiels concepts/modèles/situations (idempotent)
   const seed = randomInt(1, 2 ** 31);
   // Pipeline du snapshot (ADR-01 + ADR-10) : paramètres économiques modulés
@@ -182,13 +192,13 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
   // Monde variable : la variante seedée s'applique AVANT les réglages
   // explicites de l'enseignant (qui gardent donc le dernier mot).
   const baseScenario = args.variableWorld
-    ? applyScenarioVariability(novaScenario, seed)
-    : novaScenario;
+    ? applyScenarioVariability(definition.scenario, seed)
+    : definition.scenario;
   const scenarioSnapshot = applyEventIntensity(
     applyPeriodicity(applyEconomicOverrides(baseScenario, overrides), args.periodicity),
     preset?.eventProbabilityMultiplier ?? 1,
   );
-  const botCount = Math.min(Math.max(args.botCount, 0), novaBots.length);
+  const botCount = Math.min(Math.max(args.botCount, 0), definition.bots.length);
 
   const [game] = await db
     .insert(games)
@@ -207,6 +217,8 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
         ...(preset ? { difficulty: { level: preset.level, name: preset.name } } : {}),
         ...(overrides ? { economicOverrides: overrides } : {}),
         ...(args.variableWorld ? { variableWorld: true } : {}),
+        // QCM : absent = activés (comportement historique) ; false = désactivés.
+        ...(args.quizEnabled === false ? { quizEnabled: false } : {}),
       },
       status: "running",
       currentRound: 1,
@@ -224,7 +236,7 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
         name: t.name,
         controller: "human" as const,
       })),
-      ...novaBots.slice(0, botCount).map((b) => ({
+      ...definition.bots.slice(0, botCount).map((b) => ({
         gameId: game.id,
         name: b.name,
         controller: "bot" as const,
@@ -251,7 +263,7 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
       teamId: t.id,
       roundIndex: 0,
       state: applyPeriodicityToCompany(
-        novaCompany(
+        definition.company(
           t.id,
           t.name,
           t.controller === "human" ? "human" : "bot",
@@ -277,22 +289,25 @@ export async function createSoloGame(
   companiesCount = 3,
   level?: number,
   variableWorld = false,
+  scenarioCode?: string,
 ): Promise<string> {
   const config = await getPlatformConfig();
   if (!config.allowPublicPlay) {
     throw new Error("Les parties publiques sont désactivées par l'administrateur.");
   }
+  const definition = scenarioByCode(scenarioCode);
   const organizationId = await getOrCreatePublicOrgId();
-  const botCount = Math.min(Math.max(companiesCount, 2), novaBots.length + 1) - 1;
+  const botCount = Math.min(Math.max(companiesCount, 2), definition.bots.length + 1) - 1;
   const { gameId } = await createGameCore({
     organizationId,
     createdBy: userId,
     periodicity,
     kind: "solo",
-    humanTeams: [{ name: "NOVA (vous)" }],
+    humanTeams: [{ name: `${definition.playerTeamName} (vous)` }],
     botCount,
     level,
     variableWorld,
+    scenarioCode,
   });
   const humanTeam = (
     await db
@@ -322,6 +337,8 @@ export async function createClassGame(args: {
   level?: number;
   economicOverrides?: EconomicOverrides;
   variableWorld?: boolean;
+  scenarioCode?: string;
+  quizEnabled?: boolean;
 }): Promise<{ gameId: string; joinCode: string }> {
   const humanTeamsCount = Math.min(Math.max(args.humanTeamsCount, 1), 8);
   const botCount = Math.min(Math.max(args.botCount, 0), 8 - humanTeamsCount);
@@ -337,6 +354,8 @@ export async function createClassGame(args: {
     level: args.level,
     economicOverrides: args.economicOverrides,
     variableWorld: args.variableWorld,
+    scenarioCode: args.scenarioCode,
+    quizEnabled: args.quizEnabled,
   });
   return { gameId, joinCode };
 }
