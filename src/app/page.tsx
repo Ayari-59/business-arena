@@ -360,7 +360,7 @@ export default async function Home() {
                 defaultValue={3}
                 className="mt-2 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
               >
-                <option value={2}>2 — duel face à SoundBox</option>
+                <option value={2}>2 — duel face à un seul concurrent</option>
                 <option value={3}>3 — le marché classique (recommandé)</option>
                 <option value={4}>4 — marché disputé</option>
                 <option value={6}>6 — forte concurrence</option>
