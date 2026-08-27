@@ -9,7 +9,7 @@ import {
   closeCurrentRound,
   createClassGame,
   drawEventCardForNextRound,
-  setQuizEnabled,
+  setQuizMode,
 } from "@/services/game.service";
 import {
   createCompetition,
@@ -18,6 +18,7 @@ import {
   startQualification,
 } from "@/services/competition.service";
 import { DEFAULT_SCENARIO_CODE, SCENARIOS } from "@/config/scenarios/registry";
+import { DEFAULT_QUIZ_MODE } from "@/config/difficulty";
 
 export interface FormState {
   error: string | null;
@@ -69,6 +70,8 @@ const createGameSchema = z.object({
   level: z.coerce.number().int().min(1).max(6).catch(3),
   // Secteur joué : un code inconnu retombe sur le scénario par défaut.
   scenarioCode: z.enum(SCENARIO_CODES).catch(DEFAULT_SCENARIO_CODE),
+  // Questions posées dans les situations (voir QUIZ_MODES).
+  quizMode: z.enum(["full", "model", "off"]).catch(DEFAULT_QUIZ_MODE),
 });
 
 /** Champ numérique optionnel : vide = valeur du scénario (jamais de dur). */
@@ -93,6 +96,7 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
     botCount: formData.get("botCount"),
     level: formData.get("level"),
     scenarioCode: formData.get("scenarioCode"),
+    quizMode: formData.get("quizMode"),
   });
   const economicOverrides = {
     taxRate: optionalRate(formData.get("taxRate")),
@@ -126,21 +130,20 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
     economicOverrides,
     variableWorld: formData.get("variableWorld") === "on",
     scenarioCode: parsed.scenarioCode,
-    // La case est cochée par défaut : son absence signifie « décoché ».
-    quizEnabled: formData.get("quizEnabled") === "on",
+    quizMode: parsed.quizMode,
   });
   redirect(`/teacher/games/${gameId}`);
 }
 
-/** Active ou désactive les QCM de connaissances d'une partie en cours. */
-export async function toggleQuizAction(gameId: string, formData: FormData): Promise<void> {
+/** Règle les questions posées dans les situations d'une partie en cours. */
+export async function setQuizModeAction(gameId: string, formData: FormData): Promise<void> {
   const session = await getSession();
   if (!session) redirect("/teacher/login");
-  await setQuizEnabled({
-    gameId,
-    teacherId: session.userId,
-    enabled: formData.get("enabled") === "true",
-  });
+  const mode = z
+    .enum(["full", "model", "off"])
+    .catch(DEFAULT_QUIZ_MODE)
+    .parse(formData.get("mode"));
+  await setQuizMode({ gameId, teacherId: session.userId, mode });
   revalidatePath(`/teacher/games/${gameId}`);
 }
 

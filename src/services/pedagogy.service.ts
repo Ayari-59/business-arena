@@ -21,11 +21,15 @@ import { CONCEPTS, conceptByCode } from "@/config/pedagogy/concepts";
 import { DECISION_MODELS } from "@/config/pedagogy/models";
 import type { SituationDef } from "@/config/scenarios/nova/situations";
 import {
+  MODEL_QUESTION_ID,
+  type QuizQuestionDef,
+} from "@/config/scenarios/situation-kit";
+import {
   ALL_SITUATIONS,
   scenarioByCode,
   situationByCode,
 } from "@/config/scenarios/registry";
-import { presetFromProfile, quizEnabledFromProfile } from "@/config/difficulty";
+import { presetFromProfile, quizModeFromProfile, type QuizMode } from "@/config/difficulty";
 import { hintScoreMultiplier, nextUnlockableLevel } from "@/pedagogy/hints";
 import { evaluateDiagnosis, evaluateQuiz } from "@/pedagogy/evaluation";
 import { detectSituations } from "@/pedagogy/detection";
@@ -334,15 +338,16 @@ export async function submitQuiz(args: {
   if (instance.quiz) throw new Error("Le QCM de cette situation est déjà validé");
   // L'enseignant a retiré les QCM de cette partie : le formulaire n'est plus
   // servi, et une soumission forgée ne doit pas non plus être acceptée.
-  if (!quizEnabledFromProfile(game?.difficultyProfile)) {
+  const asked = askedQuestions(def, quizModeFromProfile(game?.difficultyProfile));
+  if (asked.length === 0) {
     throw new Error("Les QCM sont désactivés pour cette partie");
   }
-  const validIds = new Set(def.quiz.map((q) => q.id));
+  const validIds = new Set(asked.map((q) => q.id));
   const answers: Record<string, string> = {};
   for (const [questionId, optionId] of Object.entries(args.answers)) {
     if (validIds.has(questionId)) answers[questionId] = optionId;
   }
-  const score = evaluateQuiz(answers, def.quiz);
+  const score = evaluateQuiz(answers, asked);
   await db
     .update(situationInstances)
     .set({
@@ -377,7 +382,7 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
   const conceptRows = await db.select().from(concepts);
   const conceptIdByCode = new Map(conceptRows.map((r) => [r.code, r.id]));
   const gameRow = (await db.select().from(games).where(eq(games.id, gameId)))[0];
-  const quizEnabled = quizEnabledFromProfile(gameRow?.difficultyProfile);
+  const quizMode = quizModeFromProfile(gameRow?.difficultyProfile);
 
   for (const instance of instances) {
     if (instance.status === "debriefed") continue;
@@ -387,11 +392,11 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
     const levels = await unlockedLevels(instance.id);
     const diagScore =
       ((instance.diagnosis as { score?: number } | null)?.score as number | undefined) ?? 0;
-    // QCM désactivé par l'enseignant : le score repose ENTIÈREMENT sur le
-    // diagnostic. Ne pas neutraliser la moitié « connaissances » reviendrait
-    // à plafonner toutes les situations à 50 % pour une question jamais posée.
+    // Aucune question posée : le score repose ENTIÈREMENT sur le diagnostic.
+    // Ne pas neutraliser la moitié « questions » reviendrait à plafonner
+    // toutes les situations à 50 % pour une question jamais posée.
     let raw: number;
-    if (!quizEnabled) {
+    if (askedQuestions(def, quizMode).length === 0) {
       raw = diagScore;
     } else {
       const quizStored = instance.quiz as { score?: number } | null;
@@ -498,6 +503,28 @@ async function recomputeSkills(userId: string): Promise<void> {
 // Lectures : vue joueur et vue pédagogique enseignant (§27)
 // ---------------------------------------------------------------------------
 
+/**
+ * Questions réellement posées pour cette partie. Le mode « model » ne garde
+ * que la question du modèle d'analyse : les questions de connaissances
+ * redemandent hors contexte ce que le diagnostic teste déjà en situation.
+ */
+function askedQuestions(def: SituationDef, mode: QuizMode): QuizQuestionDef[] {
+  if (mode === "off") return [];
+  if (mode === "model") return def.quiz.filter((q) => q.id === MODEL_QUESTION_ID);
+  return def.quiz;
+}
+
+/** Modèle attendu d'une situation, pour le débriefing quand la question n'est pas posée. */
+function modelInsight(
+  def: SituationDef,
+): { prompt: string; answer: string; explain: string } | null {
+  const question = def.quiz.find((q) => q.id === MODEL_QUESTION_ID);
+  if (!question) return null;
+  const answer = question.options.find((o) => o.id === question.correctOptionId)?.label;
+  if (!answer) return null;
+  return { prompt: question.prompt, answer, explain: question.explain };
+}
+
 export interface SituationView {
   instanceId: string;
   code: string;
@@ -526,6 +553,8 @@ export interface SituationView {
       credits: Record<string, number>;
     }[];
     quizScore: number | null;
+    /** Modèle attendu, servi seulement quand la question n'a PAS été posée. */
+    modelInsight: { prompt: string; answer: string; explain: string } | null;
     concepts: { code: string; name: string }[];
     finalScore: number;
   } | null;
@@ -535,8 +564,10 @@ function toView(
   instance: typeof situationInstances.$inferSelect,
   def: SituationDef,
   levels: number[],
-  quizEnabled = true,
+  quizMode: QuizMode = "full",
 ): SituationView {
+  const asked = askedQuestions(def, quizMode);
+  const modelAsked = asked.some((q) => q.id === MODEL_QUESTION_ID);
   const debriefed = instance.status === "debriefed";
   const diagnosis = instance.diagnosis as SituationView["diagnosis"];
   const quizStored = instance.quiz as { answers?: Record<string, string>; score?: number } | null;
@@ -550,15 +581,13 @@ function toView(
     status: instance.status,
     weight: def.weight,
     diagnosticOptions: def.diagnosticOptions.map(({ id, label }) => ({ id, label })),
-    // QCM désactivé par l'enseignant : aucune question n'est servie, et le
-    // score de la situation reposera entièrement sur le diagnostic.
-    quizQuestions: quizEnabled
-      ? def.quiz.map((q) => ({
-          id: q.id,
-          prompt: q.prompt,
-          options: q.options.map(({ id, label }) => ({ id, label })), // sans les crédits
-        }))
-      : [],
+    // Seules les questions réellement posées sont servies : en mode « model »
+    // la question du modèle uniquement, en mode « off » aucune.
+    quizQuestions: asked.map((q) => ({
+      id: q.id,
+      prompt: q.prompt,
+      options: q.options.map(({ id, label }) => ({ id, label })), // sans les crédits
+    })),
     quizAnswers: quizStored?.answers ?? null,
     unlockedHints: def.hints
       .filter((h) => levels.includes(h.level))
@@ -573,7 +602,7 @@ function toView(
     debrief: debriefed
       ? {
           correctOptionIds: def.diagnosticOptions.filter((o) => o.correct).map((o) => o.id),
-          quizCorrection: def.quiz.map((q) => ({
+          quizCorrection: asked.map((q) => ({
             id: q.id,
             correctOptionId: q.correctOptionId,
             explain: q.explain,
@@ -585,6 +614,10 @@ function toView(
             ),
           })),
           quizScore: quizStored?.score ?? null,
+          // Question du modèle non posée : le débriefing donne quand même le
+          // modèle attendu et son explication. Sans cela, retirer les
+          // questions retirerait aussi la leçon centrale de la situation.
+          modelInsight: modelAsked ? null : modelInsight(def),
           concepts: def.conceptCodes
             .map((code) => conceptByCode.get(code))
             .filter((c): c is NonNullable<typeof c> => Boolean(c))
@@ -626,7 +659,7 @@ export async function getTeamSituations(
 
   const situationRows = await db.select().from(situations);
   const codeById = new Map(situationRows.map((r) => [r.id, r.code]));
-  const quizEnabled = quizEnabledFromProfile(game.difficultyProfile);
+  const quizMode = quizModeFromProfile(game.difficultyProfile);
 
   const currentRound = gameRounds.find((r) => r.index === game.currentRound);
   const lastDebriefedRound = gameRounds
@@ -637,7 +670,7 @@ export async function getTeamSituations(
     const def = situationByCode.get(codeById.get(instance.situationId) ?? "");
     if (!def) return null;
     const levels = await unlockedLevels(instance.id);
-    return toView(instance, def, levels, quizEnabled);
+    return toView(instance, def, levels, quizMode);
   };
 
   const current: SituationView[] = [];

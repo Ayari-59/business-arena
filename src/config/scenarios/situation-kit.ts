@@ -74,6 +74,9 @@ const RELEVANCE_CREDITS: Record<ModelRelevance, number> = {
  * reste (pas de liste déroulante) : jusqu'à 4 options tirées de la matrice de
  * pertinence de la situation, notées en crédit partiel (§7).
  */
+/** Identifiant stable de la question du modèle, seule question conservée en mode « model ». */
+export const MODEL_QUESTION_ID = "model_choice";
+
 function modelQuestion(
   relevance: Record<string, ModelRelevance>,
   explain: string,
@@ -91,7 +94,7 @@ function modelQuestion(
     .sort((a, b) => a.label.localeCompare(b.label, "fr")); // jamais la bonne réponse en tête
   const optimal = codes.find((code) => relevance[code] === "optimal")!;
   return {
-    id: "model_choice",
+    id: MODEL_QUESTION_ID,
     prompt: "Quel modèle d'analyse mobilisez-vous en priorité ici ?",
     options,
     correctOptionId: optimal,

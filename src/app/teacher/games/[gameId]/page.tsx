@@ -4,7 +4,8 @@ import { getTeacherGameView } from "@/services/game.service";
 import { getTeacherPedagogyView } from "@/services/pedagogy.service";
 import { formatEuro } from "@/lib/format";
 import { periodLabel } from "@/config/scenarios/periodicity";
-import { closeRoundAction, toggleQuizAction } from "../../actions";
+import { closeRoundAction, setQuizModeAction } from "../../actions";
+import { QUIZ_MODES } from "@/config/difficulty";
 import { CardDeck } from "@/components/card-deck";
 
 export const dynamic = "force-dynamic";
@@ -59,35 +60,44 @@ export default async function TeacherGamePage({
       ) : null}
 
       {!finished ? (
-        <section className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-slate-900 p-4">
-          <div>
-            <h2 className="text-sm font-semibold text-slate-200">
-              📝 QCM de connaissances
-              <span
-                className={`ml-2 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
-                  view.quizEnabled
-                    ? "border-emerald-400/40 text-emerald-300"
-                    : "border-slate-600 text-slate-400"
-                }`}
-              >
-                {view.quizEnabled ? "Activés" : "Désactivés"}
-              </span>
-            </h2>
-            <p className="mt-1 max-w-2xl text-xs text-slate-500">
-              {view.quizEnabled
-                ? "Chaque situation pose deux questions de connaissances et une question sur le modèle d'analyse. Le score d'une situation se partage moitié diagnostic, moitié QCM."
-                : "Les élèves ne répondent qu'au diagnostic de la situation, qui compte alors pour la totalité du score. Les situations déjà débriefées gardent le score obtenu."}
-            </p>
+        <section className="rounded-xl border border-white/10 bg-slate-900 p-4">
+          <h2 className="text-sm font-semibold text-slate-200">
+            📝 Questions posées dans les situations
+          </h2>
+          <p className="mt-1 max-w-3xl text-xs text-slate-500">
+            Le diagnostic est toujours posé : c&apos;est le cœur de la situation. Ce réglage ne
+            porte que sur les questions qui le suivent. Les situations déjà débriefées gardent
+            le score obtenu sous l&apos;ancien réglage.
+          </p>
+          <div className="mt-3 grid gap-2 sm:grid-cols-3">
+            {QUIZ_MODES.map((m) => {
+              const active = m.code === view.quizMode;
+              return (
+                <form key={m.code} action={setQuizModeAction.bind(null, view.gameId)}>
+                  <input type="hidden" name="mode" value={m.code} />
+                  <button
+                    type="submit"
+                    disabled={active}
+                    className={`h-full w-full rounded-lg border px-3 py-3 text-left transition ${
+                      active
+                        ? "cursor-default border-amber-400/60 bg-amber-400/10"
+                        : "border-white/10 bg-slate-950 hover:border-amber-400/40"
+                    }`}
+                  >
+                    <span
+                      className={`text-sm font-medium ${
+                        active ? "text-amber-300" : "text-slate-200"
+                      }`}
+                    >
+                      {active ? "✓ " : ""}
+                      {m.name}
+                    </span>
+                    <span className="mt-1 block text-xs text-slate-500">{m.help}</span>
+                  </button>
+                </form>
+              );
+            })}
           </div>
-          <form action={toggleQuizAction.bind(null, view.gameId)}>
-            <input type="hidden" name="enabled" value={view.quizEnabled ? "false" : "true"} />
-            <button
-              type="submit"
-              className="rounded-lg border border-amber-400/40 px-4 py-2 text-sm font-semibold text-amber-300 transition hover:bg-amber-400/10"
-            >
-              {view.quizEnabled ? "Désactiver les QCM" : "Activer les QCM"}
-            </button>
-          </form>
         </section>
       ) : null}
 
@@ -203,11 +213,11 @@ export default async function TeacherGamePage({
             </div>
             <div>
               <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                QCM de connaissances
+                {view.quizMode === "model" ? "Choix du modèle d'analyse" : "Questions des situations"}
               </h3>
               <ul className="mt-2 space-y-1 text-sm text-slate-300">
                 <li className="flex justify-between">
-                  <span>QCM validés</span>
+                  <span>Réponses validées</span>
                   <span className="tabular-nums text-slate-400">{pedagogy.quizStats.submitted}</span>
                 </li>
                 <li className="flex justify-between">
@@ -220,8 +230,11 @@ export default async function TeacherGamePage({
                 </li>
               </ul>
               <p className="mt-2 text-xs text-slate-500">
-                Un taux faible signale des connaissances mal ancrées : le tableau des concepts
-                ci-contre dit lesquelles reprendre en classe.
+                {view.quizMode === "off"
+                  ? "Aucune question n'est posée dans cette partie : ces chiffres portent sur les tours joués sous un autre réglage."
+                  : view.quizMode === "model"
+                    ? "Un taux faible signale des élèves qui décident sans savoir sur quel outil d'analyse s'appuyer."
+                    : "Un taux faible signale des connaissances mal ancrées : le tableau des concepts ci-contre dit lesquelles reprendre en classe."}
               </p>
             </div>
           </div>

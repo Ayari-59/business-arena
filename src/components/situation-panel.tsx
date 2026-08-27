@@ -11,6 +11,15 @@ import type { SituationView } from "@/services/pedagogy.service";
 
 const initial: PedagogyState = { error: null };
 
+/**
+ * L'enseignant peut ne garder que la question du modèle : annoncer alors des
+ * « connaissances » serait faux. Le titre suit ce qui est réellement posé.
+ */
+function quizHeading(questions: { id: string }[]): string {
+  const onlyModel = questions.every((q) => q.id === "model_choice");
+  return onlyModel ? "Modèle d'analyse" : "Connaissances et modèle d'analyse";
+}
+
 function ErrorBox({ error }: { error: string | null }) {
   if (!error) return null;
   return (
@@ -85,15 +94,15 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
           )}
         </section>
 
-        {/* 2. QCM de connaissances */}
+        {/* 2. Questions : connaissances et/ou modèle d'analyse */}
         {situation.quizQuestions.length > 0 ? (
           <section className="rounded-lg bg-slate-950 p-4">
             <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-              2 · Connaissances et modèle d&apos;analyse
+              2 · {quizHeading(situation.quizQuestions)}
             </h4>
             {quizDone ? (
               <p className="mt-2 text-sm text-emerald-300">
-                ✓ QCM validé, la correction sera révélée au débriefing du tour.
+                ✓ Réponse validée, la correction sera révélée au débriefing du tour.
               </p>
             ) : (
               <form action={quizAction} className="mt-2 space-y-4">
@@ -208,10 +217,10 @@ export function SituationDebrief({ situation }: { situation: SituationView }) {
         {situation.quizQuestions.length > 0 ? (
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-              Connaissances et modèle d&apos;analyse
+              {quizHeading(situation.quizQuestions)}
               {debrief.quizScore !== null
                 ? ` · ${Math.round(debrief.quizScore * 100)} %`
-                : " · QCM non traité"}
+                : " · non traité"}
             </p>
             <ul className="mt-1 space-y-2">
               {situation.quizQuestions.map((question) => {
@@ -250,6 +259,18 @@ export function SituationDebrief({ situation }: { situation: SituationView }) {
                 );
               })}
             </ul>
+          </div>
+        ) : null}
+        {debrief.modelInsight ? (
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Le bon outil ici
+            </p>
+            <div className="mt-1 rounded-lg border border-white/5 bg-slate-950 px-3 py-2">
+              <p className="text-slate-300">{debrief.modelInsight.prompt}</p>
+              <p className="mt-1 text-emerald-300">{debrief.modelInsight.answer}</p>
+              <p className="mt-1 text-xs text-slate-500">{debrief.modelInsight.explain}</p>
+            </div>
           </div>
         ) : null}
         {debrief.concepts.length > 0 ? (

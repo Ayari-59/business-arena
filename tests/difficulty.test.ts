@@ -5,7 +5,9 @@ import {
   DIFFICULTY_PRESETS,
   LEGACY_PRESET,
   presetFromProfile,
+  quizModeFromProfile,
   sanitizeEconomicOverrides,
+  QUIZ_MODES,
 } from "../src/config/difficulty";
 import { novaScenario } from "../src/config/scenarios/nova";
 import { scenarioByCode } from "../src/config/scenarios/registry";
@@ -200,5 +202,30 @@ describe("intensité d'événements par niveau", () => {
     }
     // multiplicateur 1 : objet inchangé (aucune copie inutile)
     expect(applyEventIntensity(novaScenario, 1)).toBe(novaScenario);
+  });
+});
+
+describe("réglage des questions posées dans les situations", () => {
+  it("lit un réglage explicite, quelle que soit la position", () => {
+    for (const mode of QUIZ_MODES) {
+      expect(quizModeFromProfile({ quizMode: mode.code })).toBe(mode.code);
+    }
+  });
+
+  it("les parties d'avant le réglage gardent leur comportement", () => {
+    // Le drapeau booléen historique : absent ou true = tout servi, false = rien.
+    expect(quizModeFromProfile(null)).toBe("full");
+    expect(quizModeFromProfile({})).toBe("full");
+    expect(quizModeFromProfile({ quizEnabled: true })).toBe("full");
+    expect(quizModeFromProfile({ quizEnabled: false })).toBe("off");
+  });
+
+  it("le réglage explicite l'emporte sur l'ancien drapeau", () => {
+    expect(quizModeFromProfile({ quizEnabled: false, quizMode: "model" })).toBe("model");
+    expect(quizModeFromProfile({ quizEnabled: true, quizMode: "off" })).toBe("off");
+  });
+
+  it("une valeur inconnue retombe sur le comportement historique", () => {
+    expect(quizModeFromProfile({ quizMode: "n'importe quoi" })).toBe("full");
   });
 });

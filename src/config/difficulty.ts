@@ -110,12 +110,50 @@ export function presetFromProfile(profile: unknown): DifficultyPreset {
 }
 
 /**
- * QCM de connaissances actifs pour cette partie. L'absence du drapeau vaut
- * ACTIVÉ : les parties créées avant le réglage gardent leur comportement, et
- * seule une désactivation explicite de l'enseignant les retire.
+ * Questions posées dans les situations. Le réglage distingue deux choses que
+ * le QCM confondait :
+ *
+ * - les questions de CONNAISSANCES (définitions, formules) redemandent ce que
+ *   le diagnostic teste déjà, mais hors contexte ;
+ * - la question du MODÈLE d'analyse est la compétence propre de la
+ *   plateforme, la seule qui mesure le choix de l'outil de raisonnement.
+ *
+ * D'où trois positions, et non un interrupteur : « model » est le défaut, il
+ * garde l'essentiel sans l'habillage scolaire.
  */
-export function quizEnabledFromProfile(profile: unknown): boolean {
-  return (profile as { quizEnabled?: boolean } | null)?.quizEnabled !== false;
+export type QuizMode = "full" | "model" | "off";
+
+export const DEFAULT_QUIZ_MODE: QuizMode = "model";
+
+export const QUIZ_MODES: readonly { code: QuizMode; name: string; help: string }[] = [
+  {
+    code: "full",
+    name: "Connaissances et modèle",
+    help: "Deux questions de connaissances par situation, plus la question du modèle d'analyse. Le score se partage moitié diagnostic, moitié QCM.",
+  },
+  {
+    code: "model",
+    name: "Modèle d'analyse seul",
+    help: "Une seule question : quel modèle mobiliser ici. C'est la compétence que la plateforme mesure, sans interroger les définitions.",
+  },
+  {
+    code: "off",
+    name: "Aucune question",
+    help: "Le diagnostic fait toute la note. Le débriefing continue d'indiquer le modèle attendu et son explication, en lecture seule.",
+  },
+];
+
+/**
+ * Réglage d'une partie. Deux replis, dans cet ordre :
+ * `quizMode` explicite, puis l'ancien drapeau booléen des parties créées avant
+ * ce réglage (absent = tout servi, comme à l'époque).
+ */
+export function quizModeFromProfile(profile: unknown): QuizMode {
+  const p = profile as { quizMode?: unknown; quizEnabled?: boolean } | null;
+  if (p?.quizMode === "full" || p?.quizMode === "model" || p?.quizMode === "off") {
+    return p.quizMode;
+  }
+  return p?.quizEnabled === false ? "off" : "full";
 }
 
 // ---------------------------------------------------------------------------

@@ -29,7 +29,8 @@ import {
   applyEventIntensity,
   presetByLevel,
   presetFromProfile,
-  quizEnabledFromProfile,
+  quizModeFromProfile,
+  type QuizMode,
   sanitizeEconomicOverrides,
   type EconomicOverrides,
 } from "@/config/difficulty";
@@ -170,8 +171,8 @@ interface CreateGameArgs {
   variableWorld?: boolean;
   /** Secteur joué (registre des scénarios) — absent = NOVA. */
   scenarioCode?: string;
-  /** QCM de connaissances dans les situations — absent = activés. */
-  quizEnabled?: boolean;
+  /** Questions posées dans les situations : tout, le modèle seul, ou rien. */
+  quizMode?: QuizMode;
 }
 
 export interface CreatedGame {
@@ -220,8 +221,9 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
         ...(preset ? { difficulty: { level: preset.level, name: preset.name } } : {}),
         ...(overrides ? { economicOverrides: overrides } : {}),
         ...(args.variableWorld ? { variableWorld: true } : {}),
-        // QCM : absent = activés (comportement historique) ; false = désactivés.
-        ...(args.quizEnabled === false ? { quizEnabled: false } : {}),
+        // Questions des situations. L'absence du champ vaut « full » pour les
+        // parties d'avant le réglage : leur comportement ne change pas.
+        ...(args.quizMode ? { quizMode: args.quizMode } : {}),
       },
       status: "running",
       currentRound: 1,
@@ -341,7 +343,7 @@ export async function createClassGame(args: {
   economicOverrides?: EconomicOverrides;
   variableWorld?: boolean;
   scenarioCode?: string;
-  quizEnabled?: boolean;
+  quizMode?: QuizMode;
 }): Promise<{ gameId: string; joinCode: string }> {
   const humanTeamsCount = Math.min(Math.max(args.humanTeamsCount, 1), 8);
   const botCount = Math.min(Math.max(args.botCount, 0), 8 - humanTeamsCount);
@@ -358,7 +360,7 @@ export async function createClassGame(args: {
     economicOverrides: args.economicOverrides,
     variableWorld: args.variableWorld,
     scenarioCode: args.scenarioCode,
-    quizEnabled: args.quizEnabled,
+    quizMode: args.quizMode,
   });
   return { gameId, joinCode };
 }
@@ -1778,14 +1780,14 @@ export async function getTeacherGames(teacherId: string): Promise<TeacherGameSum
 }
 
 /**
- * Active ou désactive les QCM de connaissances d'une partie en cours. Le
+ * Règle les questions posées dans les situations d'une partie en cours. Le
  * réglage vit dans le profil de difficulté (jsonb) : aucune migration, et les
  * situations DÉJÀ débriefées gardent le score obtenu sous l'ancien réglage.
  */
-export async function setQuizEnabled(args: {
+export async function setQuizMode(args: {
   gameId: string;
   teacherId: string;
-  enabled: boolean;
+  mode: QuizMode;
 }): Promise<void> {
   const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
   if (!game || game.createdBy !== args.teacherId) {
@@ -1794,7 +1796,7 @@ export async function setQuizEnabled(args: {
   const profile = (game.difficultyProfile as Record<string, unknown> | null) ?? {};
   await db
     .update(games)
-    .set({ difficultyProfile: { ...profile, quizEnabled: args.enabled } })
+    .set({ difficultyProfile: { ...profile, quizMode: args.mode } })
     .where(eq(games.id, args.gameId));
 }
 
@@ -1812,8 +1814,8 @@ export interface TeacherGameView {
   scenarioCode: string;
   scenarioTitle: string;
   scenarioEventCodes: string[];
-  /** QCM de connaissances actifs pour cette partie. */
-  quizEnabled: boolean;
+  /** Questions posées dans les situations de cette partie. */
+  quizMode: QuizMode;
   teams: {
     teamId: string;
     name: string;
@@ -1881,7 +1883,7 @@ export async function getTeacherGameView(
     scenarioEventCodes: (
       (game.scenarioSnapshot as { events?: { code: string }[] }).events ?? []
     ).map((e) => e.code),
-    quizEnabled: quizEnabledFromProfile(game.difficultyProfile),
+    quizMode: quizModeFromProfile(game.difficultyProfile),
     teams: teamRows.map((t) => {
       const last = lastResults.find((r) => r.teamId === t.id);
       return {

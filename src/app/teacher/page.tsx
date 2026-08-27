@@ -6,7 +6,7 @@ import { getOrganizerCompetitions } from "@/services/competition.service";
 import { getStaffContext } from "@/services/admin.service";
 import { createClassGameAction, createCompetitionAction, logoutAction } from "./actions";
 import { periodLabel } from "@/config/scenarios/periodicity";
-import { DIFFICULTY_PRESETS } from "@/config/difficulty";
+import { DEFAULT_QUIZ_MODE, DIFFICULTY_PRESETS, QUIZ_MODES } from "@/config/difficulty";
 import {
   DEFAULT_SCENARIO_CODE,
   SCENARIOS,
@@ -63,6 +63,112 @@ export default async function TeacherDashboard() {
             }))}
             defaultCode={DEFAULT_SCENARIO_CODE}
           />
+
+          <label className="block">
+            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+              Équipes (élèves)
+            </span>
+            <select
+              name="humanTeamsCount"
+              defaultValue={4}
+              className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm"
+            >
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+                <option key={n} value={n}>{n} équipe{n > 1 ? "s" : ""}</option>
+              ))}
+            </select>
+          </label>
+          <label className="block">
+            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+              Concurrents bots
+            </span>
+            <select
+              name="botCount"
+              defaultValue={1}
+              className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm"
+            >
+              {[0, 1, 2, 3, 4].map((n) => (
+                <option key={n} value={n}>{n} bot{n > 1 ? "s" : ""}</option>
+              ))}
+            </select>
+          </label>
+          <label className="block">
+            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+              Périodicité
+            </span>
+            <select
+              name="periodicity"
+              defaultValue="quarter"
+              className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm"
+            >
+              <option value="month">Un mois par tour</option>
+              <option value="quarter">Un trimestre par tour</option>
+              <option value="year">Une année par tour</option>
+            </select>
+          </label>
+          <label className="block sm:col-span-3">
+            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+              Niveau de difficulté
+            </span>
+            <select
+              name="level"
+              defaultValue={3}
+              className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm"
+            >
+              {DIFFICULTY_PRESETS.map((p) => (
+                <option key={p.level} value={p.level}>
+                  {p.level} · {p.name} : {p.tagline}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="flex items-start gap-3 rounded-lg border border-white/10 bg-slate-950 px-3 py-3 sm:col-span-3">
+            <input
+              type="checkbox"
+              name="variableWorld"
+              defaultChecked
+              className="mt-0.5 h-4 w-4 accent-amber-400"
+            />
+            <span>
+              <span className="text-sm font-medium text-slate-200">
+                🌍 Monde variable · chaque partie diffère
+              </span>
+              <span className="mt-0.5 block text-xs text-slate-500">
+                Croissance des segments, saisonnalité, événements et commandes exceptionnelles
+                varient d&apos;une partie à l&apos;autre (déterministe par partie : toutes vos
+                équipes jouent le même monde). Décochez pour le scénario classique, identique
+                à vos supports imprimés.
+              </span>
+            </span>
+          </label>
+
+          <fieldset className="rounded-lg border border-white/10 bg-slate-950 px-3 py-3 sm:col-span-3">
+            <legend className="px-1 text-xs font-medium uppercase tracking-wide text-slate-400">
+              📝 Questions posées dans les situations
+            </legend>
+            <div className="mt-1 space-y-2">
+              {QUIZ_MODES.map((m) => (
+                <label key={m.code} className="flex items-start gap-3">
+                  <input
+                    type="radio"
+                    name="quizMode"
+                    value={m.code}
+                    defaultChecked={m.code === DEFAULT_QUIZ_MODE}
+                    className="mt-0.5 h-4 w-4 accent-amber-400"
+                  />
+                  <span>
+                    <span className="text-sm font-medium text-slate-200">{m.name}</span>
+                    <span className="mt-0.5 block text-xs text-slate-500">{m.help}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+            <p className="mt-2 text-[11px] leading-relaxed text-slate-600">
+              Le réglage se modifie ensuite à tout moment depuis la partie. Les situations déjà
+              débriefées gardent le score obtenu sous l&apos;ancien réglage.
+            </p>
+          </fieldset>
 
           <button
             type="submit"
