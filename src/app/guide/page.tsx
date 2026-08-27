@@ -115,10 +115,11 @@ export default function GuidePage() {
               <p className="text-sm font-semibold text-amber-300">Je veux essayer, tout de suite</p>
               <p className="mt-2 text-sm leading-relaxed text-slate-400">
                 Depuis l&apos;<Link href="/" className="text-amber-300 underline-offset-4 hover:underline">accueil</Link>,
-                choisissez la périodicité (mois, trimestre ou année) et le nombre de concurrents,
-                puis <strong className="text-slate-200">Lancer la partie</strong>. Aucun compte
-                requis : vous dirigez NOVA immédiatement, en six tours, face à des concurrents
-                pilotés par l&apos;ordinateur.
+                choisissez votre secteur (atelier, boutique, hôtel, restaurant ou cabinet de
+                conseil), la périodicité et le nombre de concurrents, puis{" "}
+                <strong className="text-slate-200">Lancer la partie</strong>. Aucun compte
+                requis : vous dirigez l&apos;entreprise immédiatement, en six tours, face à des
+                concurrents pilotés par l&apos;ordinateur.
               </p>
             </div>
             <div className="rounded-xl border border-white/10 bg-slate-950 p-5">
@@ -203,7 +204,8 @@ export default function GuidePage() {
               <strong className="text-slate-200">Paramètres économiques</strong> permet en plus
               d&apos;activer le <strong className="text-slate-200">monde variable</strong>
               (chaque partie diffère : croissance, saisonnalité, événements et commandes
-              exceptionnelles changent — décochez pour le NOVA classique), et
+              exceptionnelles changent — décochez pour le scénario classique, identique à vos
+              supports imprimés), et
               de moduler l&apos;impôt, la TVA, les taux d&apos;emprunt et de découvert, le délai
               fournisseurs, les charges de structure et les coûts unitaires — pour coller à
               votre progression. La plateforme génère un{" "}

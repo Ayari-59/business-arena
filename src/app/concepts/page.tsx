@@ -20,7 +20,8 @@ export default function ConceptsPage() {
         <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Business Arena</p>
         <h1 className="mt-1 text-2xl font-bold">Fiches concepts</h1>
         <p className="mt-2 text-sm text-slate-400">
-          Les 20 notions de gestion du parcours NOVA — trois niveaux de lecture :
+          Les notions de gestion communes aux cinq secteurs — industrie, commerce,
+          hôtellerie, restauration et services. Trois niveaux de lecture :
           l&apos;intuition, la méthode, la formule.
         </p>
         <Link href="/" className="mt-2 inline-block text-xs text-slate-500 underline-offset-4 hover:underline">

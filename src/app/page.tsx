@@ -267,9 +267,10 @@ export default async function Home() {
           <div>
             <h2 className="text-2xl font-bold text-slate-50">Lancez votre première partie</h2>
             <p className="mt-3 max-w-lg text-sm leading-relaxed text-slate-400">
-              Six tours pour reprendre NOVA face à SoundBox (le casseur de prix) et Auris (le
-              premium). Prix, production, marketing, qualité, financement : chaque décision
-              compte, et le tour 4 réserve une leçon que peu voient venir.
+              Choisissez votre secteur — atelier, boutique, hôtel, restaurant ou cabinet de
+              conseil — et menez six tours face à des concurrents qui ne vous feront aucun
+              cadeau. Prix, volumes, marketing, qualité, financement : chaque décision compte,
+              et la crise de trésorerie réserve une leçon que peu voient venir.
             </p>
             <ul className="mt-5 space-y-2 text-sm text-slate-300">
               <li>· Niveau Découverte — aucune connaissance préalable requise</li>
