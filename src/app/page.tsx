@@ -27,7 +27,7 @@ const FEATURES = [
   {
     icon: "⚙️",
     title: "Un vrai moteur économique",
-    text: "Demande par segments, élasticité-prix, prix psychologiques, capacité de production, stocks, FRNG, BFR, trésorerie : chaque chiffre est calculé par un moteur déterministe et testé — jamais inventé.",
+    text: "Demande par segments, élasticité-prix, prix psychologiques, capacité de production, stocks, FRNG, BFR, trésorerie : chaque chiffre est calculé par un moteur déterministe et testé. Aucun n'est inventé.",
   },
   {
     icon: "🎯",
@@ -37,7 +37,7 @@ const FEATURES = [
   {
     icon: "💡",
     title: "Des indices, pas des solutions",
-    text: "Bloqué ? Cinq niveaux d'aide progressifs : une observation, une question, un concept, un modèle, une méthode. Chaque indice coûte des points — l'autonomie est récompensée.",
+    text: "Bloqué ? Cinq niveaux d'aide progressifs : une observation, une question, un concept, un modèle, une méthode. Chaque indice coûte des points, car l'autonomie est récompensée.",
   },
   {
     icon: "📉",
@@ -47,7 +47,7 @@ const FEATURES = [
   {
     icon: "🏫",
     title: "Pensé pour la classe",
-    text: "Créez une partie en 30 secondes : vos équipes rejoignent par code, valident leurs décisions, vous clôturez les tours. Et la vue pédagogique vous dit qui maîtrise le BFR — et qui bluffe.",
+    text: "Créez une partie en 30 secondes : vos équipes rejoignent par code, valident leurs décisions, vous clôturez les tours. Et la vue pédagogique vous dit qui maîtrise le BFR et qui bluffe.",
   },
   {
     icon: "🏆",
@@ -110,10 +110,10 @@ export default async function Home() {
             <span className="text-amber-400">Apprenez à décider.</span>
           </h1>
           <p className="mt-5 max-w-xl text-lg leading-relaxed text-slate-400">
-            Un atelier, une boutique, un hôtel, un restaurant ou un cabinet de conseil : cinq
-            secteurs, cinq économies réelles. Fixez vos prix, approvisionnez, recrutez,
-            affrontez la concurrence — et découvrez, situation après situation, les modèles de
-            gestion qui font les bonnes décisions.
+            Un atelier, une boutique, un hôtel, un restaurant, un cabinet de conseil, une
+            boutique en ligne ou une salle de sport : sept secteurs, sept économies réelles.
+            Fixez vos prix, approvisionnez, recrutez, affrontez la concurrence. Situation après
+            situation, découvrez les modèles de gestion qui font les bonnes décisions.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <a
@@ -130,14 +130,14 @@ export default async function Home() {
             </Link>
           </div>
           <p className="mt-3 text-xs text-slate-600">
-            Sans compte, sans installation — vos parties restent liées à ce navigateur.
+            Sans compte, sans installation. Vos parties restent liées à ce navigateur.
           </p>
           <p className="mt-4 rounded-lg border border-sky-400/25 bg-sky-950/20 px-4 py-3 text-xs leading-relaxed text-sky-200/90">
             <strong className="font-semibold text-sky-300">Version bêta.</strong> La plateforme
             est pleinement utilisable en classe : le moteur économique est testé et les parties
-            se déroulent de bout en bout. Les scénarios, les contenus pédagogiques et l&apos;
-            interface continuent d&apos;évoluer, et certains réglages seront affinés au fil des
-            retours. Si quelque chose vous surprend ou vous manque, écrivez-nous — c&apos;est
+            se déroulent de bout en bout. Les scénarios, les contenus pédagogiques et
+            l&apos;interface continuent d&apos;évoluer, et certains réglages seront affinés au
+            fil des retours. Si quelque chose vous surprend ou vous manque, écrivez-nous. C&apos;est
             exactement ce dont nous avons besoin.
           </p>
         </div>
@@ -146,7 +146,7 @@ export default async function Home() {
         <div className="relative">
           <div className="rounded-2xl border border-white/10 bg-slate-900/90 p-4 shadow-2xl shadow-amber-400/5">
             <div className="flex items-center justify-between border-b border-white/5 pb-3">
-              <p className="text-xs font-semibold text-slate-300">NOVA — Trimestre 4 / 6</p>
+              <p className="text-xs font-semibold text-slate-300">NOVA · Trimestre 4 / 6</p>
               <span className="rounded-full border border-red-400/40 bg-red-950/40 px-2 py-0.5 text-[10px] text-red-300">
                 ⚠ trésorerie sous tension
               </span>
@@ -193,7 +193,7 @@ export default async function Home() {
         <div className="mx-auto grid max-w-6xl grid-cols-2 gap-6 px-6 py-8 text-center sm:grid-cols-4">
           {[
             ["6 tours", "mois, trimestres ou années"],
-            ["20 concepts", "du CA au FRNG/BFR"],
+            ["24 concepts", "du CA au FRNG/BFR"],
             ["18 modèles", "d'aide à la décision"],
             ["7 dimensions", "de performance (BPI)"],
           ].map(([big, small]) => (
@@ -213,7 +213,7 @@ export default async function Home() {
         <p className="mx-auto mt-3 max-w-2xl text-center text-sm leading-relaxed text-slate-400">
           Business Arena ne vous demande jamais « calculez le BFR ». Vous vivez une situation
           d&apos;entreprise, vous cherchez, vous choisissez un modèle d&apos;analyse, vous
-          décidez — et la simulation vous répond. Le concept s&apos;apprend parce qu&apos;il a
+          décidez, et la simulation vous répond. Le concept s&apos;apprend parce qu&apos;il a
           servi.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
@@ -275,13 +275,14 @@ export default async function Home() {
           <div>
             <h2 className="text-2xl font-bold text-slate-50">Lancez votre première partie</h2>
             <p className="mt-3 max-w-lg text-sm leading-relaxed text-slate-400">
-              Choisissez votre secteur — atelier, boutique, hôtel, restaurant ou cabinet de
-              conseil — et menez six tours face à des concurrents qui ne vous feront aucun
-              cadeau. Prix, volumes, marketing, qualité, financement : chaque décision compte,
-              et la crise de trésorerie réserve une leçon que peu voient venir.
+              Choisissez votre secteur parmi l&apos;atelier, la boutique, l&apos;hôtel, le
+              restaurant, le cabinet de conseil, la boutique en ligne et la salle de sport, puis
+              menez six tours face à des concurrents qui ne vous feront aucun cadeau. Prix,
+              volumes, marketing, qualité, financement : chaque décision compte, et la crise de
+              trésorerie réserve une leçon que peu voient venir.
             </p>
             <ul className="mt-5 space-y-2 text-sm text-slate-300">
-              <li>· Niveau Découverte — aucune connaissance préalable requise</li>
+              <li>· Niveau Découverte : aucune connaissance préalable requise</li>
               <li>· Débriefing corrigé à chaque tour, fiches concepts intégrées</li>
               <li>· Votre profil de compétences progresse à chaque situation traitée</li>
             </ul>
@@ -324,14 +325,14 @@ export default async function Home() {
               >
                 {SCENARIOS.map((s) => (
                   <option key={s.code} value={s.code}>
-                    {SECTOR_LABELS[s.sector]} — {s.tagline}
+                    {SECTOR_LABELS[s.sector]} · {s.tagline}
                   </option>
                 ))}
               </select>
             </label>
             <fieldset className="mt-4">
               <legend className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                Périodicité — chaque tour représente…
+                Périodicité : chaque tour représente…
               </legend>
               <div className="mt-2 grid grid-cols-3 gap-2">
                 {(
@@ -369,11 +370,11 @@ export default async function Home() {
                 defaultValue={3}
                 className="mt-2 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
               >
-                <option value={2}>2 — duel face à un seul concurrent</option>
-                <option value={3}>3 — le marché classique (recommandé)</option>
-                <option value={4}>4 — marché disputé</option>
-                <option value={6}>6 — forte concurrence</option>
-                <option value={8}>8 — guerre de tous contre tous</option>
+                <option value={2}>2 · duel face à un seul concurrent</option>
+                <option value={3}>3 · le marché classique (recommandé)</option>
+                <option value={4}>4 · marché disputé</option>
+                <option value={6}>6 · forte concurrence</option>
+                <option value={8}>8 · guerre de tous contre tous</option>
               </select>
             </label>
             <label className="mt-4 block">
@@ -387,7 +388,7 @@ export default async function Home() {
               >
                 {DIFFICULTY_PRESETS.map((p) => (
                   <option key={p.level} value={p.level}>
-                    {p.level} · {p.name} — {p.tagline}
+                    {p.level} · {p.name} : {p.tagline}
                   </option>
                 ))}
               </select>
@@ -412,7 +413,7 @@ export default async function Home() {
             <p className="mt-2 text-sm leading-relaxed text-slate-400">
               Créez une partie multi-équipes, partagez un code, pilotez les tours. La vue
               pédagogique vous montre la maîtrise de chaque concept, les indices consommés et
-              les modèles mal choisis — de quoi préparer la séance suivante.
+              les modèles mal choisis. De quoi préparer la séance suivante.
             </p>
             <Link
               href="/teacher/login"
@@ -429,7 +430,7 @@ export default async function Home() {
             <p className="mt-2 text-sm leading-relaxed text-slate-400">
               Organisez un concours : inscriptions par code, groupes tirés au sort, décisions
               verrouillées, qualification au BPI, finale et podium. Entre classes, entre
-              établissements — à vous de voir grand.
+              établissements, à vous de voir grand.
             </p>
             <Link
               href="/compete"
@@ -445,7 +446,7 @@ export default async function Home() {
       <footer className="border-t border-white/5">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-8 text-xs text-slate-600">
           <p>
-            BUSINESS <span className="text-amber-400/70">ARENA</span> — simulation
+            BUSINESS <span className="text-amber-400/70">ARENA</span> · simulation
             d&apos;entreprise, apprentissage de la décision.
           </p>
           <div className="flex flex-wrap gap-4">

@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Mentions légales & données personnelles — BUSINESS ARENA",
+  title: "Mentions légales & données personnelles · BUSINESS ARENA",
   description:
     "Éditeur, hébergement, cookies et protection des données : les élèves jouent sans compte, sans e-mail, sans traceur.",
 };
@@ -49,7 +49,7 @@ export default function MentionsLegalesPage() {
         <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-400">
           Business Arena est conçu pour la classe : la protection des données n&apos;y est pas
           une case à cocher, c&apos;est un choix d&apos;architecture. Cette page dit exactement
-          ce que la plateforme collecte — et surtout ce qu&apos;elle ne collecte pas.
+          ce que la plateforme collecte, et surtout ce qu&apos;elle ne collecte pas.
         </p>
       </header>
 
@@ -60,13 +60,13 @@ export default function MentionsLegalesPage() {
               <strong className="text-slate-200">Aucun compte élève.</strong> Les élèves
               rejoignent une partie avec un code et un pseudo librement choisi (qui peut être
               un prénom d&apos;emprunt). Ni e-mail, ni nom de famille, ni date de naissance ne
-              sont demandés — la plateforme ne peut pas identifier un mineur.
+              sont demandés : la plateforme ne peut pas identifier un mineur.
             </li>
             <li>
               <strong className="text-slate-200">Aucun traceur.</strong> Pas de cookies
               publicitaires, pas de mesure d&apos;audience tierce, pas de réseaux sociaux
               embarqués. Deux cookies techniques signés, strictement nécessaires au
-              fonctionnement — exemptés de consentement au sens des lignes directrices de la
+              fonctionnement, exemptés de consentement au sens des lignes directrices de la
               CNIL.
             </li>
             <li>
@@ -95,7 +95,7 @@ export default function MentionsLegalesPage() {
         <Section title="🖥️ Hébergement">
           <p>
             L&apos;application est hébergée par <strong className="text-slate-200">Vercel
-            Inc.</strong> (440 N Barranca Ave #4133, Covina, CA 91723, États-Unis —
+            Inc.</strong> (440 N Barranca Ave #4133, Covina, CA 91723, États-Unis,
             vercel.com), qui la sert via son réseau mondial.
           </p>
           <p>
@@ -131,7 +131,7 @@ export default function MentionsLegalesPage() {
                 <tr className="border-t border-white/5">
                   <td className="py-2 pr-3 font-medium text-slate-200">Enseignants / personnels</td>
                   <td className="py-2 pr-3">
-                    E-mail, nom affiché, mot de passe (haché — jamais stocké en clair),
+                    E-mail, nom affiché, mot de passe (haché, jamais stocké en clair),
                     établissement de rattachement
                   </td>
                   <td className="py-2 pr-3">
@@ -143,7 +143,7 @@ export default function MentionsLegalesPage() {
                 <tr className="border-t border-white/5">
                   <td className="py-2 pr-3 font-medium text-slate-200">Données de jeu</td>
                   <td className="py-2 pr-3">
-                    Décisions, résultats simulés, scores pédagogiques — données fictives
+                    Décisions, résultats simulés, scores pédagogiques, données fictives
                     d&apos;entreprises virtuelles
                   </td>
                   <td className="py-2 pr-3">Le jeu, le débriefing et la progression pédagogique</td>
@@ -169,18 +169,18 @@ export default function MentionsLegalesPage() {
           <p>Le site dépose uniquement deux cookies techniques, signés cryptographiquement :</p>
           <ul className="list-disc space-y-1 pl-5">
             <li>
-              <code className="text-amber-300">ba_session</code> — session des enseignants et
+              <code className="text-amber-300">ba_session</code> : session des enseignants et
               personnels connectés (30 jours) ;
             </li>
             <li>
-              <code className="text-amber-300">ba_guest</code> — identifiant technique des
+              <code className="text-amber-300">ba_guest</code> : identifiant technique des
               joueurs invités, pour retrouver leurs parties (12 mois).
             </li>
           </ul>
           <p>
             Strictement nécessaires au service, ils sont exemptés de recueil de consentement
             (article 82 de la loi Informatique et Libertés, lignes directrices CNIL). Aucun
-            cookie publicitaire, analytique ou tiers n&apos;est utilisé — c&apos;est pourquoi
+            cookie publicitaire, analytique ou tiers n&apos;est utilisé, c&apos;est pourquoi
             vous ne voyez pas de bandeau cookies.
           </p>
         </Section>

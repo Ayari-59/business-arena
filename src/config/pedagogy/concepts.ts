@@ -54,7 +54,7 @@ export const CONCEPTS: ConceptDef[] = [
     definition: "Sensibilité de la demande à une variation de prix.",
     intuition: "Baisser le prix de 10 % peut faire gagner 25 % de clients (segment élastique)… ou presque rien (segment rigide). Tous les clients ne réagissent pas pareil.",
     method: "Testez de petites variations de prix et observez la variation des ventes segment par segment.",
-    formula: "e = (ΔQ/Q) / (ΔP/P) — e < −1 : demande élastique",
+    formula: "e = (ΔQ/Q) / (ΔP/P), avec e < −1 : demande élastique",
   },
   {
     code: "psych_price",
@@ -188,7 +188,7 @@ export const CONCEPTS: ConceptDef[] = [
   },
   {
     code: "frng",
-    name: "FRNG — fonds de roulement",
+    name: "FRNG (fonds de roulement)",
     domain: "finance",
     axis: "finance",
     definition: "Excédent des ressources stables sur les emplois stables, disponible pour financer le cycle d'exploitation.",
@@ -198,7 +198,7 @@ export const CONCEPTS: ConceptDef[] = [
   },
   {
     code: "bfr",
-    name: "BFR — besoin en fonds de roulement",
+    name: "BFR (besoin en fonds de roulement)",
     domain: "finance",
     axis: "finance",
     definition: "Argent immobilisé par le cycle d'exploitation : stocks + créances clients − dettes fournisseurs.",
@@ -211,7 +211,7 @@ export const CONCEPTS: ConceptDef[] = [
     name: "Trésorerie nette",
     domain: "finance",
     axis: "finance",
-    definition: "Ce qui reste du FRNG une fois le BFR financé — le solde disponible en banque.",
+    definition: "Ce qui reste du FRNG une fois le BFR financé : le solde disponible en banque.",
     intuition: "On peut être bénéficiaire et à découvert : le résultat est une opinion, la trésorerie est un fait. C'est elle qui fait vivre ou mourir l'entreprise.",
     method: "TN = FRNG − BFR. Si TN < 0 : augmenter le FRNG (capital, emprunt long) ou réduire le BFR (délais, stocks).",
     formula: "Trésorerie nette = FRNG − BFR = disponibilités − concours bancaires",
@@ -233,7 +233,7 @@ export const CONCEPTS: ConceptDef[] = [
     definition:
       "L'actualisation ramène des flux futurs à leur valeur d'aujourd'hui ; la VAN (valeur actuelle nette) compare ces flux actualisés au capital investi.",
     intuition:
-      "Un euro dans deux ans vaut moins qu'un euro aujourd'hui : le temps a un prix — celui de l'argent immobilisé. Investir, c'est échanger des euros certains maintenant contre des euros espérés plus tard.",
+      "Un euro dans deux ans vaut moins qu'un euro aujourd'hui : le temps a un prix, celui de l'argent immobilisé. Investir, c'est échanger des euros certains maintenant contre des euros espérés plus tard.",
     method:
       "Estimez les flux supplémentaires par tour (unités × marge sur coût variable), actualisez-les au taux de référence (votre taux d'emprunt), retranchez l'investissement : VAN > 0 ⇒ le projet crée de la valeur.",
     formula: "VAN = −I₀ + Σ Ft / (1 + i)^t",
@@ -246,7 +246,7 @@ export const CONCEPTS: ConceptDef[] = [
     definition:
       "Le TRI est le taux d'actualisation qui annule la VAN ; le délai de récupération est le temps nécessaire pour que les flux cumulés remboursent l'investissement.",
     intuition:
-      "Le TRI répond à « ce projet rapporte du combien % ? » — comparable à votre coût de financement. Le délai de récupération répond à « au bout de combien de temps ai-je récupéré ma mise ? ».",
+      "Le TRI répond à « ce projet rapporte du combien % ? », à comparer à votre coût de financement. Le délai de récupération répond à « au bout de combien de temps ai-je récupéré ma mise ? ».",
     method:
       "Comparez le TRI au taux d'emprunt : TRI > taux ⇒ le financement par dette crée de la valeur. Méfiez-vous d'un délai de récupération plus long que la visibilité de votre marché.",
     formula: "TRI : i tel que Σ Ft / (1 + i)^t = I₀",
@@ -272,9 +272,9 @@ export const CONCEPTS: ConceptDef[] = [
     definition:
       "Mobiliser le poste clients transforme des créances en trésorerie immédiate : l'escompte avance les effets contre agios, l'affacturage cède les créances contre commission.",
     intuition:
-      "Vos clients vous doivent de l'argent : cette richesse dort dans le BFR. La banque ou le factor peuvent l'avancer — moins cher que le découvert, mais jamais gratuit. Un besoin PONCTUEL se couvre en mobilisant des créances ; un besoin STRUCTUREL exige de la ressource stable.",
+      "Vos clients vous doivent de l'argent : cette richesse dort dans le BFR. La banque ou le factor peuvent l'avancer, moins cher que le découvert mais jamais gratuit. Un besoin PONCTUEL se couvre en mobilisant des créances ; un besoin STRUCTUREL exige de la ressource stable.",
     method:
-      "Comparez les coûts : agios d'escompte (taux × durée restante) vs commission d'affacturage vs agios de découvert — et gardez l'emprunt ou le capital pour les besoins durables.",
+      "Comparez les coûts : agios d'escompte (taux × durée restante) vs commission d'affacturage vs agios de découvert, et gardez l'emprunt ou le capital pour les besoins durables.",
     formula: "Coût d'escompte = montant × taux × durée/360 ; coût d'affacturage = montant × commission",
   },
 ];

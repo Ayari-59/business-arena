@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { PARCOURS } from "@/config/parcours";
 
 export const metadata: Metadata = {
-  title: "Parcours par diplôme — BUSINESS ARENA",
+  title: "Parcours par diplôme · BUSINESS ARENA",
   description:
     "STMG, BTS MCO, NDRC, CG : la correspondance entre votre référentiel et ce que vos étudiants vivent dans l'arène, avec les réglages de partie conseillés.",
 };
@@ -48,8 +48,8 @@ export default function ParcoursPage() {
         <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-400">
           Business Arena a été construit par un enseignant pour faire le pont entre les notions du
           programme et la pratique. Chaque parcours ci-dessous donne les réglages de partie
-          conseillés et la correspondance bloc par bloc — honnête, y compris sur ce que le jeu ne
-          couvre pas.
+          conseillés et une correspondance bloc par bloc honnête, y compris sur ce que le jeu
+          ne couvre pas.
         </p>
         <div className="mt-6 flex flex-wrap gap-2">
           {PARCOURS.map((p) => (
@@ -82,8 +82,8 @@ export default function ParcoursPage() {
                 Réglages conseillés à la création
               </p>
               <p className="mt-2 text-sm text-slate-300">
-                Niveau {p.recommended.level} · {p.recommended.levelName} —{" "}
-                {p.recommended.periodicityLabel} — TVA{" "}
+                Niveau {p.recommended.level} · {p.recommended.levelName} ·{" "}
+                {p.recommended.periodicityLabel} · TVA{" "}
                 {p.recommended.vat ? "activée (20 %)" : "désactivée"}
               </p>
               <p className="mt-1 text-xs leading-relaxed text-slate-500">{p.recommended.notes}</p>

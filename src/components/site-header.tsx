@@ -7,7 +7,7 @@ export function SiteHeader() {
       <div className="flex items-center gap-2.5">
         <Link href="/">
           {/* eslint-disable-next-line @next/next/no-img-element -- logo vectoriel statique */}
-          <img src="/brand/logo.svg" alt="Business Arena — Accueil" className="h-8 w-auto" />
+          <img src="/brand/logo.svg" alt="Business Arena, retour à l'accueil" className="h-8 w-auto" />
         </Link>
         {/* La plateforme évolue vite : le dire évite de faire passer un
             réglage en cours pour un défaut, et invite aux retours. */}

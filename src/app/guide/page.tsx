@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Guide de prise en main — BUSINESS ARENA",
+  title: "Guide de prise en main · BUSINESS ARENA",
   description:
     "Démarrer en 2 minutes : lancer une partie, rejoindre une classe, animer un tour, tirer les cartes événements et lire ses résultats.",
 };
@@ -87,7 +87,7 @@ export default function GuidePage() {
         </h1>
         <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-400">
           Business Arena ne vous demande jamais « calculez le BFR » : vous vivez des situations,
-          vous décidez, la simulation répond — et les concepts arrivent au moment où vous en avez
+          vous décidez, la simulation répond, et les concepts arrivent au moment où vous en avez
           besoin. Ce guide couvre les trois façons d&apos;entrer dans l&apos;arène : en solo, en
           classe, en établissement.
         </p>
@@ -115,8 +115,9 @@ export default function GuidePage() {
               <p className="text-sm font-semibold text-amber-300">Je veux essayer, tout de suite</p>
               <p className="mt-2 text-sm leading-relaxed text-slate-400">
                 Depuis l&apos;<Link href="/" className="text-amber-300 underline-offset-4 hover:underline">accueil</Link>,
-                choisissez votre secteur (atelier, boutique, hôtel, restaurant ou cabinet de
-                conseil), la périodicité et le nombre de concurrents, puis{" "}
+                choisissez votre secteur (atelier, boutique, hôtel, restaurant, cabinet de
+                conseil, boutique en ligne ou salle de sport), la périodicité et le nombre de
+                concurrents, puis{" "}
                 <strong className="text-slate-200">Lancer la partie</strong>. Aucun compte
                 requis : vous dirigez l&apos;entreprise immédiatement, en six tours, face à des
                 concurrents pilotés par l&apos;ordinateur.
@@ -135,8 +136,8 @@ export default function GuidePage() {
 
         <Section
           id="eleves"
-          title="🎮 Côté élèves — jouer un tour"
-          intro="Chaque tour suit la même boucle : une situation vous arrive, vous la diagnostiquez, vous mobilisez vos connaissances, vous décidez — puis la simulation rend son verdict."
+          title="🎮 Côté élèves : jouer un tour"
+          intro="Chaque tour suit la même boucle : une situation vous arrive, vous la diagnostiquez, vous mobilisez vos connaissances, vous décidez, puis la simulation rend son verdict."
         >
           <ol className="space-y-5">
             <Step n={1} title="Lisez la situation du tour">
@@ -147,38 +148,38 @@ export default function GuidePage() {
               Cochez les causes plausibles, puis 3 questions sous la même forme : deux
               mobilisent les notions en jeu (seuil de rentabilité, BFR, élasticité-prix…),
               la troisième vous demande <strong className="text-slate-200">quel modèle
-              d&apos;analyse mobiliser</strong> — un modèle trompeur rapporte presque rien,
+              d&apos;analyse mobiliser</strong>. Un modèle trompeur rapporte presque rien,
               c&apos;est la compétence que le jeu mesure. Correction expliquée au débriefing.
             </Step>
             <Step n={3} title="Besoin d'aide ? Débloquez des indices">
               Cinq niveaux, dans l&apos;ordre, du simple recadrage jusqu&apos;à la méthode
               détaillée. Chaque indice coûte une part du score pédagogique de la situation
-              (jamais vos résultats économiques) — apprendre à demander juste ce qu&apos;il faut
+              (jamais vos résultats économiques). Apprendre à demander juste ce qu&apos;il faut
               fait partie du jeu.
             </Step>
             <Step n={4} title="Prenez vos décisions">
-              Prix, production, marketing, qualité, maintenance — puis, selon le niveau :
+              Prix, production, marketing, qualité, maintenance. Puis, selon le niveau :
               financement (emprunt, augmentation de capital), trésorerie (escompte,
               affacturage), assurance catastrophe, ressources humaines (embaucher, former,
               rémunérer) et investissement en capacité (en service au tour suivant).
               Besoin de données ? <strong className="text-slate-200">Achetez de
               l&apos;information</strong> : étude de marché, analyse de prix, étude
-              financière, analyse de projet — livrées avec les résultats, facturées en
+              financière, analyse de projet, livrées avec les résultats et facturées en
               charges. Entre chaque tour, une <strong className="text-slate-200">commande
-              exceptionnelle</strong> vous est proposée — export à forte marge payé à 90 jours
-              (le BFR gonfle) ou vente comptant à marge mince (du cash tout de suite) : à
+              exceptionnelle</strong> vous est proposée : export à forte marge payé à 90 jours
+              (le BFR gonfle) ou vente comptant à marge mince (du cash tout de suite), à
               prendre ou à laisser. Attention : les échéances d&apos;emprunt sont{" "}
               <strong className="text-slate-200">prélevées automatiquement</strong>, que la
-              caisse soit pleine ou vide — et au-delà du découvert autorisé, la banque cède
-              vos créances d&apos;office. En mode classe, vos décisions restent modifiables
+              caisse soit pleine ou vide. Au-delà du découvert autorisé, la banque cède vos
+              créances d&apos;office. En mode classe, vos décisions restent modifiables
               jusqu&apos;à la clôture du tour par l&apos;enseignant.
             </Step>
             <Step n={5} title="Lisez vos résultats comme un dirigeant">
-              Chiffre d&apos;affaires, résultat net, part de marché — mais surtout la ligne de
+              Chiffre d&apos;affaires, résultat net, part de marché, mais surtout la ligne de
               vie : <strong className="text-slate-200">Trésorerie nette = FRNG − BFR</strong>.
               Vos comptes complets sont dépliables sous les indicateurs : compte de
-              résultat, bilan, analyse des coûts et budget de trésorerie — gratuits, ce
-              sont les vôtres.
+              résultat, bilan, analyse des coûts et budget de trésorerie. Ils sont gratuits,
+              ce sont les vôtres.
               Le débriefing corrigé vous montre ce qu&apos;il fallait voir, et vos fiches
               concepts se déverrouillent au fil des situations vécues.
             </Step>
@@ -187,16 +188,16 @@ export default function GuidePage() {
 
         <Section
           id="enseignants"
-          title="🧑‍🏫 Côté enseignants — animer une classe"
+          title="🧑‍🏫 Côté enseignants : animer une classe"
           intro="De la création de la partie à la clôture des tours, tout se pilote depuis votre espace."
         >
           <ol className="space-y-5">
             <Step n={1} title="Créez votre compte">
               Sur <Link href="/teacher/login" className="text-amber-300 underline-offset-4 hover:underline">l&apos;espace enseignant</Link>,
-              inscrivez-vous avec votre e-mail — directement, ou avec le code d&apos;invitation
+              inscrivez-vous avec votre e-mail, directement ou avec le code d&apos;invitation
               fourni par votre établissement s&apos;il est déployé sur la plateforme.
             </Step>
-            <Step n={2} title="Créez une partie de classe — et réglez-la finement">
+            <Step n={2} title="Créez une partie de classe et réglez-la finement">
               Choisissez la périodicité, le nombre d&apos;équipes (1 à 8), les concurrents
               automatiques et le <strong className="text-slate-200">niveau de difficulté</strong> :
               de Découverte (prix, production, marketing, tous les indices) à Executive (toutes
@@ -204,11 +205,10 @@ export default function GuidePage() {
               <strong className="text-slate-200">Paramètres économiques</strong> permet en plus
               d&apos;activer le <strong className="text-slate-200">monde variable</strong>
               (chaque partie diffère : croissance, saisonnalité, événements et commandes
-              exceptionnelles changent — décochez pour le scénario classique, identique à vos
-              supports imprimés), et
-              de moduler l&apos;impôt, la TVA, les taux d&apos;emprunt et de découvert, le délai
-              fournisseurs, les charges de structure et les coûts unitaires — pour coller à
-              votre progression. La plateforme génère un{" "}
+              exceptionnelles changent. Décochez pour le scénario classique, identique à vos
+              supports imprimés), et de moduler l&apos;impôt, la TVA, les taux d&apos;emprunt et
+              de découvert, les délais clients et fournisseurs, le plafond de découvert, les
+              charges de structure et les coûts unitaires, afin de coller à votre progression. La plateforme génère un{" "}
               <strong className="text-slate-200">code d&apos;invitation à 6 caractères</strong> :
               affichez-le, vos élèves rejoignent sur /join.
             </Step>
@@ -218,7 +218,7 @@ export default function GuidePage() {
               sont reconduites.
             </Step>
             <Step n={4} title="Pimentez avec une carte événement (mode apprentissage)">
-              Tirez une carte au hasard ou jouez-en une choisie — pour toute la classe ou contre
+              Tirez une carte au hasard ou jouez-en une choisie, pour toute la classe ou contre
               une seule équipe. La carte est annoncée à tous et s&apos;applique à la clôture.
               Voir la section suivante pour le deck physique.
             </Step>
@@ -230,7 +230,7 @@ export default function GuidePage() {
             </Step>
             <Step n={6} title="Finissez l'année en championnat">
               Créez un concours : inscriptions par code, groupes tirés au sort (tirage seedé,
-              auditable), parties en mode compétition — décisions verrouillées après validation,
+              auditable), parties en mode compétition : décisions verrouillées après validation,
               indices limités au niveau 3, aucun tirage manuel de cartes. Qualification au BPI,
               finale, podium.
             </Step>
@@ -268,7 +268,7 @@ export default function GuidePage() {
             </Link>{" "}
             (A4, dos et face à plier, sans recto-verso) : faites tirer la carte à la main, puis
             saisissez-la dans le deck numérique pour qu&apos;elle s&apos;applique à la
-            simulation. Certaines cartes se couvrent par l&apos;assurance — vos élèves
+            simulation. Certaines cartes se couvrent par l&apos;assurance. Vos élèves
             découvriront l&apos;arbitrage tout seuls.
           </p>
         </Section>
@@ -307,7 +307,7 @@ export default function GuidePage() {
             </table>
           </div>
           <p className="mt-4 text-sm leading-relaxed text-slate-400">
-            Les derniers tours pèsent plus lourd — un mauvais départ se rattrape. La décomposition
+            Les derniers tours pèsent plus lourd : un mauvais départ se rattrape. La décomposition
             complète est visible par chaque équipe : le score explique, il ne sanctionne pas.
           </p>
         </Section>
@@ -326,7 +326,7 @@ export default function GuidePage() {
             <Step n={2} title="Un monde de démonstration en un clic">
               Depuis l&apos;administration générale, générez le monde démo : un établissement
               complet, deux comptes (direction + enseignant), une partie jouée sur 3 tours et un
-              concours prêt à lancer — idéal pour une présentation en conseil pédagogique. Les
+              concours prêt à lancer, idéal pour une présentation en conseil pédagogique. Les
               identifiants s&apos;affichent sur la page de connexion enseignant.
             </Step>
             <Step n={3} title="Des réglages de plateforme">
@@ -345,11 +345,11 @@ export default function GuidePage() {
               ],
               [
                 "Une équipe n'a pas validé ses décisions avant la clôture ?",
-                "Ses dernières décisions connues sont reconduites automatiquement — la partie n'est jamais bloquée, et l'équipe le voit dans son débriefing.",
+                "Ses dernières décisions connues sont reconduites automatiquement : la partie n'est jamais bloquée, et l'équipe le voit dans son débriefing.",
               ],
               [
                 "Les indices pénalisent-ils les résultats de l'entreprise ?",
-                "Jamais. Ils ne coûtent que des points pédagogiques sur la situation concernée — l'économie de la simulation reste rigoureusement équitable.",
+                "Jamais. Ils ne coûtent que des points pédagogiques sur la situation concernée. L'économie de la simulation reste rigoureusement équitable.",
               ],
               [
                 "Le tirage de cartes est-il équitable en concours ?",
@@ -361,7 +361,7 @@ export default function GuidePage() {
               ],
               [
                 "Que règlent les niveaux de difficulté ?",
-                "Six niveaux, de Découverte à Executive : les décisions ouvertes (la finance et l'assurance arrivent au niveau Pilotage), le plafond d'indices (de 5 à zéro) et la fréquence des événements aléatoires. Et le panneau avancé permet de moduler impôt, TVA, taux, délais et coûts — rien n'est figé.",
+                "Six niveaux, de Découverte à Executive : les décisions ouvertes (la finance et l'assurance arrivent au niveau Pilotage), le plafond d'indices (de 5 à zéro) et la fréquence des événements aléatoires. Et le panneau avancé permet de moduler impôt, TVA, taux, délais et coûts : rien n'est figé.",
               ],
               [
                 "Combien ça coûte ?",
@@ -380,7 +380,7 @@ export default function GuidePage() {
           <h2 className="text-xl font-bold text-slate-50">Prêt à entrer dans l&apos;arène ?</h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-slate-400">
             Lancez une partie solo pour vous faire la main, ou créez votre première partie de
-            classe — six tours suffisent pour que le BFR devienne inoubliable.
+            classe. Six tours suffisent pour que le BFR devienne inoubliable.
           </p>
           <div className="mt-5 flex flex-wrap justify-center gap-3">
             <Link
