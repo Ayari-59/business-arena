@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { InstallButton } from "@/components/install-button";
 
 export function SiteHeader() {
   return (
@@ -23,6 +24,7 @@ export function SiteHeader() {
         <Link href="/compete" className="hidden hover:text-slate-200 sm:block">
           Concours
         </Link>
+        <InstallButton />
       </div>
     </nav>
   );
