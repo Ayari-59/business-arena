@@ -149,7 +149,7 @@ const rawBoutique = {
       code: "createur",
       name: "Créateurs en direct",
       narrative:
-        "Des pièces exclusives payées 22 % plus cher, réglées à 30 jours. Elles font la réputation de la boutique — et la fidélité des clientes.",
+        "Des pièces exclusives payées 22 % plus cher, réglées à 30 jours. Elles font la réputation de la boutique et la fidélité des clientes.",
       costMultiplier: 1.22,
       qualityBonus: 0.09,
       paymentDelayDays: 30,
@@ -200,7 +200,7 @@ const rawBoutique = {
   orderOffers: [
     {
       code: "boutique_offer_ce_noel",
-      title: "Comité d'entreprise — dotation de Noël",
+      title: "Comité d'entreprise · dotation de Noël",
       narrative:
         "Le CSE d'une clinique privée veut 600 pièces à 41 € pour ses dotations de fin d'année. Mandat administratif : règlement à 60 jours.",
       units: 600,
@@ -218,7 +218,7 @@ const rawBoutique = {
     },
     {
       code: "boutique_offer_hotel_uniformes",
-      title: "Groupe hôtelier — tenues d'accueil",
+      title: "Groupe hôtelier · tenues d'accueil",
       narrative:
         "Un groupe hôtelier habille ses réceptions : 800 pièces à 44 €, payées à 60 jours après validation du service achats.",
       units: 800,
@@ -227,7 +227,7 @@ const rawBoutique = {
     },
     {
       code: "boutique_offer_marketplace",
-      title: "Marketplace — opération flash",
+      title: "Marketplace · opération flash",
       narrative:
         "Une marketplace vous ouvre un créneau flash : 700 pièces à 31 €, virement sous 48 h. Marge mince, trésorerie immédiate.",
       units: 700,
@@ -238,16 +238,16 @@ const rawBoutique = {
       code: "boutique_offer_boutique_hotel",
       title: "Corner en boutique d'hôtel",
       narrative:
-        "Un palace vous propose un corner saisonnier : 450 pièces à 58 €, votre meilleur prix — mais réglées à 90 jours, comme tous ses fournisseurs.",
+        "Un palace vous propose un corner saisonnier : 450 pièces à 58 €, votre meilleur prix, mais réglées à 90 jours comme tous ses fournisseurs.",
       units: 450,
       price: 58,
       paymentDelayDays: 90,
     },
     {
       code: "boutique_offer_destockage",
-      title: "Déstockeur — reprise de collection",
+      title: "Déstockeur · reprise de collection",
       narrative:
-        "Un déstockeur reprend 900 pièces à 26 € l'unité, enlèvement et paiement comptant. Vous ne gagnez presque rien — mais la réserve se vide.",
+        "Un déstockeur reprend 900 pièces à 26 € l'unité, enlèvement et paiement comptant. Vous ne gagnez presque rien, mais la réserve se vide.",
       units: 900,
       price: 26,
       paymentDelayDays: 0,

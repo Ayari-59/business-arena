@@ -77,7 +77,7 @@ function PrintCards() {
             <strong>traits pleins</strong>, puis pliez sur le <strong>trait pointillé</strong> :
             le dos et la face se retrouvent dos à dos, sans impression recto-verso. Faites tirer
             une carte <strong>marché</strong> à la classe entre deux tours, ou une carte{" "}
-            <strong>équipe</strong> à chaque équipe lors d&apos;un événement spécial — puis
+            <strong>équipe</strong> à chaque équipe lors d&apos;un événement spécial, puis
             saisissez la carte tirée dans le deck numérique de la partie pour qu&apos;elle
             s&apos;applique à la simulation.
           </p>
@@ -89,7 +89,7 @@ function PrintCards() {
 
       <section>
         <h2 className="print-deck-title">
-          🌍 Deck marché — {marketCards.length} cartes (toute la classe)
+          🌍 Deck marché · {marketCards.length} cartes (toute la classe)
         </h2>
         <div className="print-grid">
           {marketCards.map((card) => (
@@ -100,7 +100,7 @@ function PrintCards() {
 
       <section className="print-break">
         <h2 className="print-deck-title">
-          🎯 Deck équipe — {teamCards.length} cartes (tirage par équipe)
+          🎯 Deck équipe · {teamCards.length} cartes (tirage par équipe)
         </h2>
         <p className="print-help no-print">
           Astuce : imprimez cette page en plusieurs exemplaires pour constituer une pioche par

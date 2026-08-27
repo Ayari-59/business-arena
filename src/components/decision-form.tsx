@@ -175,7 +175,7 @@ export function DecisionForm({
         {on.finance ? (
           <>
             <Field name="newLoan" label="Nouvel emprunt" defaultValue={0} suffix="€"
-              hint="À 5 %/an, amortissement constant sur la durée contractuelle — emprunter engage." />
+              hint="À 5 %/an, amortissement constant sur la durée contractuelle : emprunter engage." />
             <Field
               name="loanRepayment"
               label={debtSchedule ? "Remboursement anticipé" : "Remboursement d'emprunt"}
@@ -186,8 +186,8 @@ export function DecisionForm({
             <Field name="capitalIncrease" label="Augmentation de capital" defaultValue={0} suffix="€"
               hint={
                 capitalAllowance
-                  ? `Apport des associés — enveloppe restante : ${Math.round(capitalAllowance.remaining).toLocaleString("fr-FR")} € sur ${Math.round(capitalAllowance.total).toLocaleString("fr-FR")} € pour toute la partie. Les associés ne suivent pas indéfiniment.`
-                  : "Apport des associés : trésorerie et capitaux propres — sans intérêts, mais dilutif."
+                  ? `Apport des associés · enveloppe restante : ${Math.round(capitalAllowance.remaining).toLocaleString("fr-FR")} € sur ${Math.round(capitalAllowance.total).toLocaleString("fr-FR")} € pour toute la partie. Les associés ne suivent pas indéfiniment.`
+                  : "Apport des associés : trésorerie et capitaux propres, sans intérêts mais dilutif."
               } />
           </>
         ) : null}
@@ -204,7 +204,7 @@ export function DecisionForm({
       {orderOffer ? (
         <fieldset className="rounded-lg border border-sky-400/25 bg-sky-950/20 p-4">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-sky-300">
-            📦 Commande exceptionnelle — {orderOffer.title}
+            📦 Commande exceptionnelle · {orderOffer.title}
           </legend>
           <p className="text-sm leading-relaxed text-slate-300">{orderOffer.narrative}</p>
           <p className="mt-2 text-xs text-slate-400">
@@ -215,7 +215,7 @@ export function DecisionForm({
             <strong className="text-slate-200">
               {orderOffer.price.toLocaleString("fr-FR")} €/u
             </strong>{" "}
-            (coût variable ≈ {orderOffer.unitVariableCost.toLocaleString("fr-FR")} €/u) —{" "}
+            (coût variable ≈ {orderOffer.unitVariableCost.toLocaleString("fr-FR")} €/u),{" "}
             {orderOffer.paymentDelayDays > 0
               ? `règlement à ${orderOffer.paymentDelayDays} jours`
               : "règlement comptant"}
@@ -234,7 +234,7 @@ export function DecisionForm({
               className="mt-0.5 h-4 w-4 accent-sky-400"
             />
             <span className="text-sm font-medium text-slate-200">
-              Accepter la commande — à prendre ou à laisser, elle ne repassera pas.
+              Accepter la commande, à prendre ou à laisser : elle ne repassera pas.
             </span>
           </label>
         </fieldset>
@@ -243,7 +243,7 @@ export function DecisionForm({
         <p className="rounded-lg border border-amber-400/20 bg-amber-950/20 px-3 py-2 text-xs text-amber-200">
           🏦 Échéance d&apos;emprunt du tour :{" "}
           <strong>{Math.round(debtSchedule.nextMandatory).toLocaleString("fr-FR")} €</strong>{" "}
-          de capital, prélevée automatiquement (+ intérêts) — dette restante{" "}
+          de capital, prélevée automatiquement (+ intérêts). Dette restante{" "}
           {Math.round(debtSchedule.outstanding).toLocaleString("fr-FR")} €. Les échéances
           tombent, que la caisse soit pleine ou vide.
         </p>
@@ -251,7 +251,7 @@ export function DecisionForm({
       {on.finance && treasuryOffer ? (
         <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
-            💶 Trésorerie — mobiliser le poste clients
+            💶 Trésorerie · mobiliser le poste clients
           </legend>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field
@@ -259,20 +259,20 @@ export function DecisionForm({
               label={`Escompte (${(treasuryOffer.discountAnnualRate * 100).toLocaleString("fr-FR")} %/an)`}
               defaultValue={0}
               suffix="€"
-              hint={`Avance sur créances, plafonnée à ${Math.round(treasuryOffer.discountMaxShare * 100)} % du poste clients — le moins cher.`}
+              hint={`Avance sur créances, plafonnée à ${Math.round(treasuryOffer.discountMaxShare * 100)} % du poste clients, le moins cher.`}
             />
             <Field
               name="factoring"
               label={`Affacturage (${(treasuryOffer.factoringFeeRate * 100).toLocaleString("fr-FR")} % du montant)`}
               defaultValue={0}
               suffix="€"
-              hint="Cession de créances, sans plafond — plus cher, immédiat."
+              hint="Cession de créances, sans plafond : plus cher, immédiat."
             />
           </div>
           <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
             Découvert autorisé jusqu&apos;à{" "}
             {Math.round(treasuryOffer.overdraftLimit).toLocaleString("fr-FR")} €. Au-delà, la
-            banque cède vos créances d&apos;office, au tarif fort — si vous ne gérez pas votre
+            banque cède vos créances d&apos;office, au tarif fort. Si vous ne gérez pas votre
             trésorerie, quelqu&apos;un la gérera pour vous.
           </p>
         </fieldset>
@@ -280,7 +280,7 @@ export function DecisionForm({
       {studiesOffer ? (
         <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
-            📊 Acheter de l&apos;information — livrée avec les résultats du tour
+            📊 Acheter de l&apos;information · livrée avec les résultats du tour
           </legend>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {(
@@ -323,7 +323,7 @@ export function DecisionForm({
                 />
                 <span>
                   <span className="text-sm font-medium text-slate-200">
-                    {study.label} — {study.cost.toLocaleString("fr-FR")} €
+                    {study.label} · {study.cost.toLocaleString("fr-FR")} €
                   </span>
                   <span className="mt-0.5 block text-xs text-slate-500">{study.hint}</span>
                 </span>
@@ -331,7 +331,7 @@ export function DecisionForm({
             ))}
           </div>
           <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
-            L&apos;information a un prix — facturé en charges de structure, il se lit au seuil
+            L&apos;information a un prix, facturé en charges de structure : il se lit au seuil
             de rentabilité. Décider sans données coûte souvent plus cher.
           </p>
         </fieldset>
@@ -343,20 +343,20 @@ export function DecisionForm({
           </legend>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <Field name="hire" label="Embauches" defaultValue={0} suffix="pers."
-              hint="Arrivée au tour suivant — coût de recrutement immédiat." />
+              hint="Arrivée au tour suivant, coût de recrutement immédiat." />
             <Field name="fire" label="Licenciements" defaultValue={0} suffix="pers."
-              hint="Départ au tour suivant — indemnité immédiate." />
+              hint="Départ au tour suivant, indemnité immédiate." />
             <Field name="trainingBudget" label="Budget formation" defaultValue={0} suffix="€"
               hint="Élève la productivité dès le tour suivant." />
             <Field name="salaryPercent" label="Salaires (marché = 100)" defaultValue={Math.round((defaults.hr?.salaryIndex ?? 1) * 100)} suffix="%"
-              hint="Sous-payer démotive — et fait partir les salariés." />
+              hint="Sous-payer démotive et fait partir les salariés." />
           </div>
         </fieldset>
       ) : null}
       {on.insurance && insuranceFormulas && insuranceFormulas.length > 0 ? (
         <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
-            🛡️ Assurance — choisissez votre couverture
+            🛡️ Assurance · choisissez votre couverture
           </legend>
           <div className="space-y-2">
             <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-3 py-2.5">
@@ -367,7 +367,7 @@ export function DecisionForm({
                 defaultChecked={!defaults.insurance}
                 className="mt-0.5 h-4 w-4 accent-amber-400"
               />
-              <span className="text-sm text-slate-400">Pas d&apos;assurance — pas de prime, tous les risques à votre charge.</span>
+              <span className="text-sm text-slate-400">Pas d&apos;assurance : pas de prime, tous les risques à votre charge.</span>
             </label>
             {insuranceFormulas.map((f) => (
               <label
@@ -383,7 +383,7 @@ export function DecisionForm({
                 />
                 <span>
                   <span className="text-sm font-medium text-slate-200">
-                    {f.name} — {f.premium.toLocaleString("fr-FR")} €
+                    {f.name} · {f.premium.toLocaleString("fr-FR")} €
                   </span>
                   <span className="mt-0.5 block text-xs text-slate-500">
                     Couvre : {f.coveredLabels.join(", ")}.
@@ -393,7 +393,7 @@ export function DecisionForm({
             ))}
           </div>
           <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
-            Un coût certain contre un risque incertain — plus la couverture est large, plus
+            Un coût certain contre un risque incertain : plus la couverture est large, plus
             la prime pèse sur votre seuil de rentabilité.
           </p>
         </fieldset>
@@ -407,12 +407,12 @@ export function DecisionForm({
           />
           <span>
             <span className="text-sm font-medium text-slate-200">
-              🛡️ Assurance catastrophe —{" "}
+              🛡️ Assurance catastrophe ·{" "}
               {insuranceOffer.premium.toLocaleString("fr-FR")} € ce tour
             </span>
             <span className="mt-0.5 block text-xs text-slate-500">
               Couvre : {insuranceOffer.coveredLabels.join(", ")}. Un coût certain contre un
-              risque incertain — à vous d&apos;arbitrer.
+              risque incertain, à vous d&apos;arbitrer.
             </span>
           </span>
         </label>
@@ -437,7 +437,7 @@ export function DecisionForm({
                 />
                 <span>
                   <span className="text-sm font-medium text-slate-200">
-                    {s.name} — matières à {s.materialCostPerUnit.toLocaleString("fr-FR")} €/u
+                    {s.name} · matières à {s.materialCostPerUnit.toLocaleString("fr-FR")} €/u
                     {s.costMultiplier !== 1
                       ? ` (${s.costMultiplier < 1 ? "" : "+"}${Math.round((s.costMultiplier - 1) * 100)} %)`
                       : ""}
@@ -523,10 +523,10 @@ export function DecisionForm({
         {pending
           ? "Envoi en cours…"
           : kind === "solo"
-            ? `Valider mes décisions et simuler — ${periodName}`
+            ? `Valider mes décisions et simuler · ${periodName}`
             : alreadySubmitted
               ? "Mettre à jour mes décisions validées"
-              : `Valider les décisions de l'équipe — ${periodName}`}
+              : `Valider les décisions de l'équipe · ${periodName}`}
       </button>
       <p className="text-center text-xs text-slate-500">
         {kind === "solo"

@@ -311,7 +311,7 @@ const rawNova = {
       code: "lowcost",
       name: "AsiaComponents",
       narrative:
-        "Composants importés, 15 % moins chers — mais des lots irréguliers et un risque de rupture qui peut bloquer votre chaîne.",
+        "Composants importés, 15 % moins chers, mais des lots irréguliers et un risque de rupture qui peut bloquer votre chaîne.",
       costMultiplier: 0.85,
       qualityBonus: -0.03,
       paymentDelayDays: 45,
@@ -322,7 +322,7 @@ const rawNova = {
       code: "premium",
       name: "EuroParts Premium",
       narrative:
-        "Composants européens certifiés, qualité supérieure et livraison express — la fiabilité a un prix.",
+        "Composants européens certifiés, qualité supérieure et livraison express : la fiabilité a un prix.",
       costMultiplier: 1.1,
       qualityBonus: 0.05,
       paymentDelayDays: 15,
@@ -422,7 +422,7 @@ const rawNova = {
       code: "offer_flash_marketplace",
       title: "Vente flash marketplace",
       narrative:
-        "Une grande marketplace vous propose une opération flash : 600 unités à 45 € pièce, virement immédiat à l'expédition. Le prix est serré — le cash, lui, est là.",
+        "Une grande marketplace vous propose une opération flash : 600 unités à 45 € pièce, virement immédiat à l'expédition. Le prix est serré, mais le cash est là.",
       units: 600,
       price: 45,
       paymentDelayDays: 0,
@@ -431,7 +431,7 @@ const rawNova = {
       code: "offer_export_dach",
       title: "Chaîne hi-fi allemande",
       narrative:
-        "Une chaîne de magasins allemande commande 900 unités à 70 € pour ses corners audio. Paiement à 90 jours fin de mois — l'usage outre-Rhin.",
+        "Une chaîne de magasins allemande commande 900 unités à 70 € pour ses corners audio. Paiement à 90 jours fin de mois, l'usage outre-Rhin.",
       units: 900,
       price: 70,
       paymentDelayDays: 90,
@@ -449,7 +449,7 @@ const rawNova = {
       code: "offer_export_japan",
       title: "Importateur japonais",
       narrative:
-        "Un importateur de Tokyo teste le marché avec 600 unités à 78 € — votre meilleur prix jamais proposé. Lettre de crédit réglée à 90 jours.",
+        "Un importateur de Tokyo teste le marché avec 600 unités à 78 €, votre meilleur prix jamais proposé. Lettre de crédit réglée à 90 jours.",
       units: 600,
       price: 78,
       paymentDelayDays: 90,
@@ -458,7 +458,7 @@ const rawNova = {
       code: "offer_destockeur",
       title: "Déstockeur européen",
       narrative:
-        "Un déstockeur reprend 1 000 unités à 44 € pièce, enlèvement et paiement comptant sous 48 h. Presque pas de marge — mais la caisse respire.",
+        "Un déstockeur reprend 1 000 unités à 44 € pièce, enlèvement et paiement comptant sous 48 h. Presque pas de marge, mais la caisse respire.",
       units: 1000,
       price: 44,
       paymentDelayDays: 0,
@@ -476,7 +476,7 @@ const rawNova = {
       code: "offer_campus_uk",
       title: "Réseau de campus britanniques",
       narrative:
-        "Un distributeur équipe les boutiques de campus outre-Manche : 800 unités à 71 €. Paiement à 90 jours — et en plus, il faudra suivre la livraison.",
+        "Un distributeur équipe les boutiques de campus outre-Manche : 800 unités à 71 €. Paiement à 90 jours, et en plus il faudra suivre la livraison.",
       units: 800,
       price: 71,
       paymentDelayDays: 90,

@@ -152,7 +152,7 @@ const rawEcommerce = {
       code: "createurs_fr",
       name: "Créateurs français en dropshipping",
       narrative:
-        "26 % plus cher, expédié directement par l'atelier, réglé à 15 jours. Zéro stock à porter — et un discours qui fait revenir les clients.",
+        "26 % plus cher, expédié directement par l'atelier, réglé à 15 jours. Zéro stock à porter, et un discours qui fait revenir les clients.",
       costMultiplier: 1.26,
       qualityBonus: 0.12,
       paymentDelayDays: 15,
@@ -219,7 +219,7 @@ const rawEcommerce = {
       code: "ecom_offer_hotelier",
       title: "Équipement d'un groupe hôtelier",
       narrative:
-        "Un groupe rééquipe 40 chambres : 800 références à 74 €, payées à 90 jours après réception. Votre plus belle marge de l'année — dans trois mois.",
+        "Un groupe rééquipe 40 chambres : 800 références à 74 €, payées à 90 jours après réception. Votre plus belle marge de l'année, dans trois mois.",
       units: 800,
       price: 74,
       paymentDelayDays: 90,
@@ -228,7 +228,7 @@ const rawEcommerce = {
       code: "ecom_offer_destockage",
       title: "Déstockage de fin de collection",
       narrative:
-        "Un soldeur reprend 1 400 pièces à 33 €, enlèvement et paiement comptant. Vous ne gagnez presque rien — l'entrepôt respire.",
+        "Un soldeur reprend 1 400 pièces à 33 €, enlèvement et paiement comptant. Vous ne gagnez presque rien, mais l'entrepôt respire.",
       units: 1400,
       price: 33,
       paymentDelayDays: 0,

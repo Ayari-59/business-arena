@@ -93,7 +93,7 @@ export default async function TeacherGamePage({
 
       <section className="rounded-xl border border-white/10 bg-slate-900 p-4">
         <h2 className="mb-3 text-sm font-semibold text-slate-200">
-          Équipes — état des décisions du tour {view.currentRound}
+          Équipes · état des décisions du tour {view.currentRound}
         </h2>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -220,7 +220,7 @@ export default async function TeacherGamePage({
                 </li>
               </ul>
               <p className="mt-2 text-xs text-slate-500">
-                Un taux faible signale des connaissances mal ancrées — le tableau des concepts
+                Un taux faible signale des connaissances mal ancrées : le tableau des concepts
                 ci-contre dit lesquelles reprendre en classe.
               </p>
             </div>

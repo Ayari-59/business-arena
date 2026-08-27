@@ -145,7 +145,7 @@ const rawHotel = {
       code: "externalise",
       name: "Tout externalisé (prestataire discount)",
       narrative:
-        "Un prestataire reprend blanchisserie et petits-déjeuners pour 15 % de moins, payable à 60 jours. Mais la qualité suit sa cadence, pas la vôtre — et les clients le notent.",
+        "Un prestataire reprend blanchisserie et petits-déjeuners pour 15 % de moins, payable à 60 jours. Mais la qualité suit sa cadence, pas la vôtre, et les clients le notent.",
       costMultiplier: 0.85,
       qualityBonus: -0.07,
       paymentDelayDays: 60,
@@ -217,7 +217,7 @@ const rawHotel = {
     },
     {
       code: "hotel_offer_tour_operateur",
-      title: "Tour-opérateur — allotement",
+      title: "Tour-opérateur · allotement",
       narrative:
         "Un tour-opérateur bloque 1 200 nuitées à 61 € l'unité, payées à la réservation. Le prix est bas, l'encaissement immédiat et le taux d'occupation garanti.",
       units: 1200,
@@ -255,7 +255,7 @@ const rawHotel = {
       code: "hotel_offer_plateforme_flash",
       title: "Vente flash sur plateforme",
       narrative:
-        "Une plateforme vous ouvre une vente flash : 800 nuitées à 58 €, encaissement sous 48 h. Vous remplissez — au prix de votre image tarifaire.",
+        "Une plateforme vous ouvre une vente flash : 800 nuitées à 58 €, encaissement sous 48 h. Vous remplissez, au prix de votre image tarifaire.",
       units: 800,
       price: 58,
       paymentDelayDays: 0,

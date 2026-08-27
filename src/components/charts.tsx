@@ -64,10 +64,10 @@ export function RevenueChart({
         {history.map((h) => (
           <g key={h.round}>
             <circle cx={x(h.round)} cy={y(h.revenue)} r="3.5" fill="#3987e5">
-              <title>{`T${h.round} — CA : ${formatEuro(h.revenue)}`}</title>
+              <title>{`T${h.round} · CA : ${formatEuro(h.revenue)}`}</title>
             </circle>
             <circle cx={x(h.round)} cy={y(h.netIncome)} r="3.5" fill="#d95926">
-              <title>{`T${h.round} — Résultat : ${formatEuro(h.netIncome)}`}</title>
+              <title>{`T${h.round} · Résultat : ${formatEuro(h.netIncome)}`}</title>
             </circle>
           </g>
         ))}
@@ -121,7 +121,7 @@ export function TreasuryChart({
                 rx="3"
                 fill={negative ? "#e66767" : "#3987e5"}
               >
-                <title>{`T${h.round} — Trésorerie nette : ${formatEuro(h.netTreasury)}`}</title>
+                <title>{`T${h.round} · Trésorerie nette : ${formatEuro(h.netTreasury)}`}</title>
               </rect>
               <text x={cx} y={H - 6} textAnchor="middle" fontSize="10" fill="#898781">
                 T{h.round}

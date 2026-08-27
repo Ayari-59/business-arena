@@ -80,7 +80,7 @@ export default async function TeacherDashboard() {
 
       <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
         <h2 className="text-sm font-semibold text-slate-200">
-          Organiser un concours — Business Arena Championship
+          Organiser un concours · Business Arena Championship
         </h2>
         <form action={createCompetitionAction} className="mt-4 grid gap-4 sm:grid-cols-2">
           <label className="block sm:col-span-2">

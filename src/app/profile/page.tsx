@@ -41,7 +41,7 @@ export default async function ProfilePage() {
     <main className="mx-auto max-w-3xl space-y-8 p-6">
       <header>
         <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Business Arena</p>
-        <h1 className="mt-1 text-2xl font-bold">Profil — {profile.displayName}</h1>
+        <h1 className="mt-1 text-2xl font-bold">Profil · {profile.displayName}</h1>
         <p className="mt-1 text-sm text-slate-400">
           Vos compétences évoluent à chaque situation traitée : diagnostics justes, modèles
           bien choisis et autonomie (peu d&apos;indices) font progresser la maîtrise.
@@ -55,7 +55,7 @@ export default async function ProfilePage() {
         <h2 className="mb-3 text-sm font-semibold text-slate-200">Compétences par axe (§28)</h2>
         {profile.skills.length === 0 ? (
           <p className="text-sm text-slate-500">
-            Encore aucune mesure — traitez les situations proposées pendant vos parties.
+            Encore aucune mesure : traitez les situations proposées pendant vos parties.
           </p>
         ) : (
           <ul className="space-y-2">

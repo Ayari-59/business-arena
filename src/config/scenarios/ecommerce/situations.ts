@@ -99,7 +99,7 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
       },
       {
         id: "quality_drives_return",
-        label: "Ce qui fait revenir — délai, qualité, service — se décide au tour précédent, pas au tour même",
+        label: "Ce qui fait revenir (délai, qualité, service) se décide au tour précédent, pas au tour même",
         correct: true,
       },
       {
@@ -164,7 +164,7 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
     code: "ecom_t4_pic",
     title: "Black Friday et fêtes",
     narrative:
-      "Le quatrième trimestre pèse plus d'une fois et demie un trimestre ordinaire. Vos concurrents ont réservé leurs espaces publicitaires depuis septembre, et votre entrepôt prépare 7 000 commandes par trimestre — pas une de plus.",
+      "Le quatrième trimestre pèse plus d'une fois et demie un trimestre ordinaire. Vos concurrents ont réservé leurs espaces publicitaires depuis septembre, et votre entrepôt prépare 7 000 commandes par trimestre, pas une de plus.",
     problem:
       "Comment préparer un pic qui exige à la fois du stock, de la capacité d'expédition et du budget d'acquisition ?",
     diagnosticOptions: [
@@ -202,7 +202,7 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Une chaîne vaut son maillon le plus faible. Les 2 000 commandes de stock excédentaire ne seront pas expédiées — mais elles auront été payées.",
+          "Une chaîne vaut son maillon le plus faible. Les 2 000 commandes de stock excédentaire ne seront pas expédiées, mais elles auront été payées.",
       },
       {
         id: "decaissement",
@@ -292,7 +292,7 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Le client acquis par la publicité arbitre sur le prix affiché — c'est souvent ce qui l'a fait venir. Le client fidèle achète pour d'autres raisons.",
+          "Le client acquis par la publicité arbitre sur le prix affiché : c'est souvent ce qui l'a fait venir. Le client fidèle achète pour d'autres raisons.",
       },
     ],
     modelRelevance: {
@@ -316,7 +316,7 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
     code: "ecom_detect_below_breakeven",
     title: "Le trimestre est déficitaire",
     narrative:
-      "Le chiffre d'affaires a progressé, les commandes aussi — et le résultat d'exploitation est négatif. Le tableau de bord publicitaire, lui, affiche de bons chiffres.",
+      "Le chiffre d'affaires a progressé, les commandes aussi, et le résultat d'exploitation est négatif. Le tableau de bord publicitaire, lui, affiche de bons chiffres.",
     problem:
       "Vendre plus et perdre de l'argent : comment est-ce possible, et par quel levier redresser ?",
     diagnosticOptions: [
@@ -456,7 +456,7 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
       "Regardez ce qui a bougé au bilan : le stock, les créances, les dettes fournisseurs.",
       "TN = FRNG − BFR. Si le résultat monte mais que le stock monte plus vite, la trésorerie baisse.",
       "Un pure player en croissance achète toujours plus de stock qu'il n'en vend : c'est structurel, pas accidentel.",
-      "Leviers immédiats : réduire le stock dormant, mobiliser les créances marketplace (à un coût), ou négocier le délai fournisseur — le seul qui soit gratuit.",
+      "Leviers immédiats : réduire le stock dormant, mobiliser les créances marketplace (à un coût), ou négocier le délai fournisseur, le seul qui soit gratuit.",
     ]),
     trigger: { detect: "profitable_illiquid" },
     weight: 1,
@@ -468,13 +468,13 @@ const MODEL_EXPLAIN: Record<string, string> = {
   ecom_t1_acquisition:
     "Le seuil de rentabilité pose la question du métier dans les bons termes : combien de commandes faut-il, une fois la publicité payée ?",
   ecom_t2_fidelisation:
-    "L'analyse des coûts pertinents compare ce que chaque euro CHANGE selon l'endroit où on le met — acquérir ou fidéliser — au lieu de comparer des chiffres d'affaires.",
+    "L'analyse des coûts pertinents compare ce que chaque euro CHANGE selon l'endroit où on le met, acquérir ou fidéliser, au lieu de comparer des chiffres d'affaires.",
   ecom_t4_pic:
     "L'analyse de capacité met en évidence la contrainte la plus serrée : acheter du stock au-delà de ce que l'entrepôt sait expédier immobilise de la trésorerie pour rien.",
   ecom_t5_frais_port:
     "L'élasticité-prix dit ce que coûte en volume chaque euro répercuté, segment par segment : c'est le seul outil qui arbitre entre marge et quantités.",
   ecom_detect_below_breakeven:
-    "Le seuil de rentabilité chiffre l'écart — à condition de traiter la publicité pour ce qu'elle est ici : une charge qui varie avec le volume visé.",
+    "Le seuil de rentabilité chiffre l'écart, à condition de traiter la publicité pour ce qu'elle est ici : une charge qui varie avec le volume visé.",
   ecom_detect_profitable_illiquid:
     "L'analyse FRNG / BFR explique seule qu'une entreprise rentable manque de trésorerie : c'est le stock qui a bougé, pas le résultat.",
 };

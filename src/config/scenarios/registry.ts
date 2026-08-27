@@ -114,11 +114,11 @@ export interface ScenarioDefinition {
 
 export const NOVA_DEFINITION: ScenarioDefinition = {
   code: novaScenario.code,
-  title: "NOVA — Prenez les commandes",
+  title: "NOVA · Prenez les commandes",
   sector: "industrie",
   tagline: "Fabricant d'enceintes portables.",
   summary:
-    "Reprenez NOVA, jeune fabricant d'enceintes portables : 6 tours pour apprendre prix, capacité, seuil de rentabilité et trésorerie.",
+    "Un atelier, quatre opérateurs, deux concurrents déjà installés. Capacité de production, seuil de rentabilité, stock qui immobilise la trésorerie et un prix à tenir face à la casse.",
   playerTeamName: "NOVA",
   vocabulary: {
     unit: "enceinte",
@@ -131,10 +131,10 @@ export const NOVA_DEFINITION: ScenarioDefinition = {
     capacityLabel: "Capacité machine",
     capacityBottleneckLabel: "Machine",
     capacityBottleneckHint:
-      "Vos machines limitent la production — l'investissement capacitaire prend effet au tour suivant.",
+      "Vos machines limitent la production : l'investissement capacitaire prend effet au tour suivant.",
     laborLabel: "Capacité main-d'œuvre",
     laborBottleneckHint:
-      "Votre main-d'œuvre limite la production — envisagez d'embaucher ou de former vos salariés pour augmenter la productivité.",
+      "Votre main-d'œuvre limite la production : envisagez d'embaucher ou de former vos salariés pour augmenter la productivité.",
     perRoundLabel: "enceintes/tour",
   },
   scenario: novaScenario,
@@ -146,7 +146,7 @@ export const NOVA_DEFINITION: ScenarioDefinition = {
 
 export const BOUTIQUE_DEFINITION: ScenarioDefinition = {
   code: boutiqueScenario.code,
-  title: "MAILLE & CO — Tenez la boutique",
+  title: "MAILLE & CO · Tenez la boutique",
   sector: "commerce",
   tagline: "Concept store de prêt-à-porter en centre-ville.",
   summary:
@@ -163,10 +163,10 @@ export const BOUTIQUE_DEFINITION: ScenarioDefinition = {
     capacityLabel: "Réserve et linéaire",
     capacityBottleneckLabel: "Réserve",
     capacityBottleneckHint:
-      "Votre réserve et votre linéaire limitent ce que la boutique peut écouler — agrandir prend effet au tour suivant.",
+      "Votre réserve et votre linéaire limitent ce que la boutique peut écouler : agrandir prend effet au tour suivant.",
     laborLabel: "Capacité de l'équipe",
     laborBottleneckHint:
-      "Votre équipe de vente limite le flux en boutique — envisagez d'embaucher ou de former vos vendeuses.",
+      "Votre équipe de vente limite le flux en boutique : envisagez d'embaucher ou de former vos vendeuses.",
     perRoundLabel: "articles/tour",
   },
   scenario: boutiqueScenario,
@@ -178,7 +178,7 @@ export const BOUTIQUE_DEFINITION: ScenarioDefinition = {
 
 export const HOTEL_DEFINITION: ScenarioDefinition = {
   code: hotelScenario.code,
-  title: "L'ESCALE — Remplissez l'hôtel",
+  title: "L'ESCALE · Remplissez l'hôtel",
   sector: "hotellerie",
   tagline: "Hôtel 3 étoiles de 60 chambres en ville moyenne.",
   summary:
@@ -195,10 +195,10 @@ export const HOTEL_DEFINITION: ScenarioDefinition = {
     capacityLabel: "Chambres ouvertes",
     capacityBottleneckLabel: "Chambres",
     capacityBottleneckHint:
-      "Vos chambres limitent le remplissage — rénover et rouvrir des chambres prend effet au tour suivant.",
+      "Vos chambres limitent le remplissage : rénover et rouvrir des chambres prend effet au tour suivant.",
     laborLabel: "Capacité des équipes",
     laborBottleneckHint:
-      "Vos équipes d'étage et de réception limitent le nombre de chambres exploitables — envisagez d'embaucher ou de former.",
+      "Vos équipes d'étage et de réception limitent le nombre de chambres exploitables : envisagez d'embaucher ou de former.",
     perRoundLabel: "nuitées/tour",
   },
   scenario: hotelScenario,
@@ -210,7 +210,7 @@ export const HOTEL_DEFINITION: ScenarioDefinition = {
 
 export const BISTROT_DEFINITION: ScenarioDefinition = {
   code: bistrotScenario.code,
-  title: "LA TABLE D'AUGUSTIN — Tenez le service",
+  title: "LA TABLE D'AUGUSTIN · Tenez le service",
   sector: "restauration",
   tagline: "Bistrot de 70 couverts, midi et soir.",
   summary:
@@ -227,7 +227,7 @@ export const BISTROT_DEFINITION: ScenarioDefinition = {
     capacityLabel: "Places en salle",
     capacityBottleneckLabel: "Salle",
     capacityBottleneckHint:
-      "Votre salle limite le nombre de couverts — couvrir la terrasse prend effet au tour suivant.",
+      "Votre salle limite le nombre de couverts : couvrir la terrasse prend effet au tour suivant.",
     laborLabel: "Capacité brigade",
     laborBottleneckHint:
       "Votre brigade limite le service : des places libres ne servent à rien sans personnel pour les tenir. Embauchez ou formez.",
@@ -242,7 +242,7 @@ export const BISTROT_DEFINITION: ScenarioDefinition = {
 
 export const CONSEIL_DEFINITION: ScenarioDefinition = {
   code: conseilScenario.code,
-  title: "ATLAS CONSEIL — Vendez le temps de vos équipes",
+  title: "ATLAS CONSEIL · Vendez le temps de vos équipes",
   sector: "services",
   tagline: "Cabinet de conseil et bureau d'études, 12 consultants.",
   summary:
@@ -259,7 +259,7 @@ export const CONSEIL_DEFINITION: ScenarioDefinition = {
     capacityLabel: "Capacité des locaux",
     capacityBottleneckLabel: "Locaux",
     capacityBottleneckHint:
-      "Vos locaux limitent la taille du cabinet — cas rare : la contrainte habituelle est l'effectif.",
+      "Vos locaux limitent la taille du cabinet, cas rare : la contrainte habituelle est l'effectif.",
     laborLabel: "Jours-consultants disponibles",
     laborBottleneckHint:
       "Vos consultants SONT la capacité du cabinet : elle ne s'achète pas, elle se recrute. Embaucher produit son effet au tour suivant.",
@@ -275,7 +275,7 @@ export const CONSEIL_DEFINITION: ScenarioDefinition = {
 
 export const ECOMMERCE_DEFINITION: ScenarioDefinition = {
   code: ecommerceScenario.code,
-  title: "PIXEL & CO — Achetez votre trafic",
+  title: "PIXEL & CO · Achetez votre trafic",
   sector: "ecommerce",
   tagline: "Pure player de décoration et petit mobilier.",
   summary:
@@ -292,7 +292,7 @@ export const ECOMMERCE_DEFINITION: ScenarioDefinition = {
     capacityLabel: "Préparation de commandes",
     capacityBottleneckLabel: "Entrepôt",
     capacityBottleneckHint:
-      "Votre entrepôt limite les expéditions — mécaniser la préparation prend effet au tour suivant.",
+      "Votre entrepôt limite les expéditions : mécaniser la préparation prend effet au tour suivant.",
     laborLabel: "Capacité de l'équipe",
     laborBottleneckHint:
       "Votre équipe logistique limite les expéditions : une commande non préparée est une commande annulée. Embauchez ou formez.",
@@ -307,11 +307,11 @@ export const ECOMMERCE_DEFINITION: ScenarioDefinition = {
 
 export const FITNESS_DEFINITION: ScenarioDefinition = {
   code: fitnessScenario.code,
-  title: "VOLT FITNESS — Gardez vos adhérents",
+  title: "VOLT FITNESS · Gardez vos adhérents",
   sector: "abonnement",
   tagline: "Salle de sport de 1 200 m² en périphérie.",
   summary:
-    "Le client ne s'achète pas une fois, il se garde. Taux d'attrition, valeur vie client, revenus récurrents — et une saison qui remplit la salle en janvier pour la vider en juillet.",
+    "Le client ne s'achète pas une fois, il se garde. Taux d'attrition, valeur vie client, revenus récurrents, et une saison qui remplit la salle en janvier pour la vider en juillet.",
   playerTeamName: "VOLT FITNESS",
   vocabulary: {
     unit: "adhérent",
@@ -324,7 +324,7 @@ export const FITNESS_DEFINITION: ScenarioDefinition = {
     capacityLabel: "Places sur le plateau",
     capacityBottleneckLabel: "Plateau",
     capacityBottleneckHint:
-      "Votre surface limite le nombre d'adhérents — ouvrir un plateau supplémentaire prend effet au tour suivant.",
+      "Votre surface limite le nombre d'adhérents : ouvrir un plateau supplémentaire prend effet au tour suivant.",
     laborLabel: "Capacité d'encadrement",
     laborBottleneckHint:
       "Vos coachs limitent l'accueil : sur-vendre des abonnements sans encadrement dégrade l'expérience, donc la rétention. Embauchez avant de vendre.",

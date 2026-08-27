@@ -271,7 +271,7 @@ export async function unlockHint(args: {
       if (next > cap) {
         throw new Error(
           cap === 0
-            ? `Niveau ${preset.name} : aucun indice — conditions réelles`
+            ? `Niveau ${preset.name} : aucun indice, conditions réelles`
             : game.mode === "competition" && cap === 3
               ? "Mode compétition : indices limités aux niveaux 1 à 3"
               : `Niveau ${preset.name} : indices limités aux niveaux 1 à ${cap}`,

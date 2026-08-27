@@ -33,7 +33,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
     code: "nova_t1_takeover",
     title: "Prise en main",
     narrative:
-      "Vous venez de reprendre NOVA. L'ancien dirigeant vous laisse un atelier, quatre opérateurs, un produit apprécié — et un marché où SoundBox casse les prix pendant qu'Auris vise le haut de gamme.",
+      "Vous venez de reprendre NOVA. L'ancien dirigeant vous laisse un atelier, quatre opérateurs, un produit apprécié, et un marché où SoundBox casse les prix pendant qu'Auris vise le haut de gamme.",
     problem:
       "Avant de fixer votre prix et votre production : de quoi votre entreprise a-t-elle besoin chaque période pour ne pas perdre d'argent ?",
     diagnosticOptions: [
@@ -91,7 +91,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
     code: "nova_t2_price_war",
     title: "Le prix fait la demande",
     narrative:
-      "Vos ventes du premier tour sont tombées. Sur le segment étudiant, SoundBox affiche un prix agressif et rafle des parts de marché — pendant que les passionnés, eux, n'ont presque pas bougé.",
+      "Vos ventes du premier tour sont tombées. Sur le segment étudiant, SoundBox affiche un prix agressif et rafle des parts de marché, pendant que les passionnés, eux, n'ont presque pas bougé.",
     problem:
       "Pourquoi vos segments réagissent-ils si différemment, et comment fixer votre prix pour le prochain tour ?",
     diagnosticOptions: [
@@ -141,7 +141,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
       "Comparez la baisse de vos ventes segment par segment : elle n'est pas uniforme.",
       "De combien vos ventes étudiantes ont-elles chuté, pour quel écart de prix avec SoundBox ?",
       "La sensibilité de la demande au prix porte un nom : elle se mesure, segment par segment.",
-      "Une analyse d'élasticité — complétée par les seuils de prix psychologiques — éclairerait votre choix.",
+      "Une analyse d'élasticité, complétée par les seuils de prix psychologiques, éclairerait votre choix.",
       "Testez un prix juste sous un seuil (59,90 plutôt que 60) et estimez e = %ΔQ / %ΔP par segment pour choisir.",
     ]),
     trigger: { round: 2 },
@@ -172,7 +172,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "On produit au minimum du plan ET des capacités : c'est toujours la contrainte la plus serrée qui décide — la repérer est le premier réflexe.",
+          "On produit au minimum du plan ET des capacités : c'est toujours la contrainte la plus serrée qui décide, et la repérer est le premier réflexe.",
       },
       {
         id: "anticipation_stock",
@@ -231,7 +231,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "TN = FRNG − BFR : quand la croissance gonfle le BFR plus vite que le FRNG, la caisse se vide — même en gagnant de l'argent.",
+          "TN = FRNG − BFR : quand la croissance gonfle le BFR plus vite que le FRNG, la caisse se vide, même en gagnant de l'argent.",
       },
       {
         id: "mobilize_receivables",
@@ -269,7 +269,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
     code: "nova_t5_returns",
     title: "Gagner de l'argent… ou être rentable ?",
     narrative:
-      "Le contrecoup saisonnier tasse les ventes et les matières premières ont renchéri de 20 %. En comité, on compare : Auris affiche un résultat plus faible que d'autres — mais avec deux fois moins de capitaux engagés.",
+      "Le contrecoup saisonnier tasse les ventes et les matières premières ont renchéri de 20 %. En comité, on compare : Auris affiche un résultat plus faible que d'autres, mais avec deux fois moins de capitaux engagés.",
     problem:
       "Entre « gagner beaucoup » et « bien utiliser l'argent investi », comment jugez-vous vraiment une performance ?",
     diagnosticOptions: [
@@ -362,7 +362,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Plus le CA est loin au-dessus du seuil, mieux l'entreprise encaisse les chocs — un critère de solidité pour l'arbitrage final.",
+          "Plus le CA est loin au-dessus du seuil, mieux l'entreprise encaisse les chocs : c'est un critère de solidité pour l'arbitrage final.",
       },
     ],
     modelRelevance: {
@@ -388,7 +388,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
     code: "detect_profitable_illiquid",
     title: "Bénéficiaire… mais à découvert",
     narrative:
-      "Vos comptes du tour écoulé affichent un résultat positif — et pourtant votre trésorerie nette est passée dans le rouge.",
+      "Vos comptes du tour écoulé affichent un résultat positif, et pourtant votre trésorerie nette est passée dans le rouge.",
     problem: "Comment expliquer qu'une entreprise qui gagne de l'argent se retrouve à découvert ?",
     diagnosticOptions: [
       { id: "cash_vs_profit", label: "Le résultat est comptable ; la trésorerie dépend des encaissements réels", correct: true },
@@ -451,14 +451,14 @@ export const NOVA_SITUATIONS: SituationDef[] = [
         id: "stockout_cost",
         prompt: "Le premier coût d'une rupture de stock, c'est…",
         options: [
-          { id: "a", label: "La marge sur coût variable des ventes manquées — et des clients déçus" },
+          { id: "a", label: "La marge sur coût variable des ventes manquées, et des clients déçus" },
           { id: "b", label: "Le coût de production des unités déjà vendues" },
           { id: "c", label: "Une pénalité automatiquement versée aux fournisseurs" },
           { id: "d", label: "Aucun : tout vendre est la preuve d'un succès" },
         ],
         correctOptionId: "a",
         explain:
-          "Chaque unité non servie emportait sa marge sur coût variable — et un client déçu se souvient, ce qui pèse sur la demande future.",
+          "Chaque unité non servie emportait sa marge sur coût variable, et un client déçu se souvient, ce qui pèse sur la demande future.",
       },
       {
         id: "avoid_stockout",
@@ -521,7 +521,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "SR = charges de structure ÷ marge unitaire : seuls les deux termes de la fraction déplacent le seuil — le volume, lui, dit où vous êtes PAR RAPPORT au seuil.",
+          "SR = charges de structure ÷ marge unitaire : seuls les deux termes de la fraction déplacent le seuil ; le volume, lui, dit où vous êtes PAR RAPPORT au seuil.",
       },
     ],
     modelRelevance: { breakeven_analysis: "optimal", cvp_analysis: "optimal", frng_bfr_analysis: "irrelevant" },
@@ -540,14 +540,14 @@ export const NOVA_SITUATIONS: SituationDef[] = [
     code: "detect_capacity_saturated",
     title: "L'atelier au taquet",
     narrative:
-      "Vos machines ont tourné à plein régime — et pourtant des clients sont repartis les mains vides. Votre équipementier propose 2 000 unités de capacité trimestrielle supplémentaire pour 40 000 €, amortis sur 16 trimestres. Un sous-traitant, lui, facture 52 € l'unité finie. Chaque enceinte vendue 59 € dégage environ 21 € de marge sur coût variable.",
+      "Vos machines ont tourné à plein régime, et pourtant des clients sont repartis les mains vides. Votre équipementier propose 2 000 unités de capacité trimestrielle supplémentaire pour 40 000 €, amortis sur 16 trimestres. Un sous-traitant, lui, facture 52 € l'unité finie. Chaque enceinte vendue 59 € dégage environ 21 € de marge sur coût variable.",
     problem:
-      "Investir, sous-traiter, ou laisser filer la demande : sur quel CALCUL fondez-vous la réponse — et pas sur l'intuition ?",
+      "Investir, sous-traiter, ou laisser filer la demande : sur quel CALCUL fondez-vous la réponse, plutôt que sur l'intuition ?",
     diagnosticOptions: [
       { id: "npv_compare", label: "Comparer le coût d'aujourd'hui aux flux futurs ACTUALISÉS qu'il génère", correct: true },
       { id: "lost_margin", label: "Les ventes manquées sont un manque à gagner mesurable : unités perdues × marge sur coût variable", correct: true },
       { id: "count_depreciation", label: "Compter l'amortissement comme un décaissement dans les flux du projet", correct: false },
-      { id: "full_book", label: "Investir dès que le carnet est plein — le calcul se fera après", correct: false },
+      { id: "full_book", label: "Investir dès que le carnet est plein, le calcul se fera après", correct: false },
     ],
     quiz: [
       {
@@ -588,7 +588,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
     hints: hints([
       "Regardez vos ventes manquées : chaque unité non servie emportait sa marge sur coût variable.",
       "L'investissement coûte aujourd'hui ; ses gains tombent sur plusieurs tours. Comment comparer des euros d'aujourd'hui et des euros de demain ?",
-      "Un euro dans un an vaut moins qu'un euro aujourd'hui : c'est l'actualisation — votre taux d'emprunt donne le taux de référence.",
+      "Un euro dans un an vaut moins qu'un euro aujourd'hui : c'est l'actualisation, et votre taux d'emprunt donne le taux de référence.",
       "La VAN actualise les flux futurs et les compare au capital investi ; le TRI est le taux qui l'annule ; les coûts pertinents comparent investir et sous-traiter.",
       "VAN ≈ −40 000 + Σ (unités supplémentaires vendues × 21 €) / (1 + 1,25 %)^t sur 16 trimestres. VAN > 0 ⇒ investissez ; sinon comparez à la sous-traitance : 59 − 52 = 7 € de marge par unité sous-traitée, sans immobiliser un euro.",
     ]),
@@ -608,11 +608,11 @@ const MODEL_EXPLAIN: Record<string, string> = {
   nova_t1_takeover:
     "Le seuil de rentabilité donne un objectif chiffré au premier trimestre : le volume de ventes qui couvre exactement les charges de structure.",
   nova_t2_price_war:
-    "L'analyse de l'élasticité (avec les seuils psychologiques) mesure la sensibilité de CHAQUE segment au prix — la clé quand ils réagissent différemment.",
+    "L'analyse de l'élasticité (avec les seuils psychologiques) mesure la sensibilité de CHAQUE segment au prix, la clé quand ils réagissent différemment.",
   nova_t3_capacity:
     "L'analyse de capacité identifie la contrainte qui plafonne la production et, croisée avec la saisonnalité, dit quoi produire dès maintenant.",
   nova_t4_paradox:
-    "L'analyse FRNG / BFR (ou le budget de trésorerie) décompose la trésorerie et montre où l'argent est parti — le seuil de rentabilité, lui, ne parle que du résultat.",
+    "L'analyse FRNG / BFR (ou le budget de trésorerie) décompose la trésorerie et montre où l'argent est parti ; le seuil de rentabilité, lui, ne parle que du résultat.",
   nova_t5_returns:
     "L'analyse de rentabilité rapporte le résultat aux capitaux engagés : c'est elle qui départage deux performances de tailles différentes.",
   nova_t6_final:
@@ -622,9 +622,9 @@ const MODEL_EXPLAIN: Record<string, string> = {
   detect_stockout:
     "L'analyse de capacité, croisée avec la saisonnalité, dimensionne un plan de production qui anticipe la demande au lieu de la subir.",
   detect_below_breakeven:
-    "Le seuil de rentabilité (et l'analyse coût-volume-profit) dit combien il faut vendre, et quel levier — prix, volume, coûts — est le plus efficace.",
+    "Le seuil de rentabilité (et l'analyse coût-volume-profit) dit combien il faut vendre, et quel levier (prix, volume, coûts) est le plus efficace.",
   detect_capacity_saturated:
-    "La VAN compare le coût d'aujourd'hui aux flux futurs actualisés — le seuil de rentabilité, trompeur ici, ignore le temps.",
+    "La VAN compare le coût d'aujourd'hui aux flux futurs actualisés ; le seuil de rentabilité, trompeur ici, ignore le temps.",
 };
 
 attachModelQuestions(NOVA_SITUATIONS, MODEL_EXPLAIN);

@@ -143,7 +143,7 @@ const rawBistrot = {
       code: "cash_carry",
       name: "Cash & carry (vous chargez le camion)",
       narrative:
-        "14 % de moins sur les denrées, mais payées comptant en caisse et chargées par vos soins. Le ratio matières s'améliore — les avis clients, un peu moins.",
+        "14 % de moins sur les denrées, mais payées comptant en caisse et chargées par vos soins. Le ratio matières s'améliore, les avis clients un peu moins.",
       costMultiplier: 0.86,
       qualityBonus: -0.06,
       paymentDelayDays: 0,
@@ -154,7 +154,7 @@ const rawBistrot = {
       code: "circuit_court",
       name: "Producteurs en circuit court",
       narrative:
-        "Maraîcher, éleveur et fromager du coin : 20 % plus cher, réglés à 15 jours. C'est ce que vous écrivez sur l'ardoise — et ce que les clients racontent.",
+        "Maraîcher, éleveur et fromager du coin : 20 % plus cher, réglés à 15 jours. C'est ce que vous écrivez sur l'ardoise, et ce que les clients racontent.",
       costMultiplier: 1.2,
       qualityBonus: 0.1,
       paymentDelayDays: 15,
@@ -208,14 +208,14 @@ const rawBistrot = {
       code: "bistrot_offer_mariage",
       title: "Mariage de septembre",
       narrative:
-        "Une famille privatise la salle pour 260 couverts à 46 €. Acompte à la réservation, solde à 30 jours — et une seule chance de réussir le service.",
+        "Une famille privatise la salle pour 260 couverts à 46 €. Acompte à la réservation, solde à 30 jours, et une seule chance de réussir le service.",
       units: 260,
       price: 46,
       paymentDelayDays: 30,
     },
     {
       code: "bistrot_offer_cantine_entreprise",
-      title: "Cantine d'entreprise — contrat trimestriel",
+      title: "Cantine d'entreprise · contrat trimestriel",
       narrative:
         "Une PME voisine envoie ses salariés déjeuner tous les midis : 900 couverts à 21 €, facturés au siège à 45 jours. Volume garanti, marge serrée.",
       units: 900,
@@ -224,7 +224,7 @@ const rawBistrot = {
     },
     {
       code: "bistrot_offer_traiteur",
-      title: "Prestation traiteur — inauguration",
+      title: "Prestation traiteur · inauguration",
       narrative:
         "Une collectivité inaugure sa médiathèque : 500 buffets à 24 €, mandat administratif à 60 jours. Vous produisez en cuisine, vous livrez sur place.",
       units: 500,
@@ -253,7 +253,7 @@ const rawBistrot = {
       code: "bistrot_offer_livraison",
       title: "Opération plateforme de livraison",
       narrative:
-        "Une plateforme vous met en avant deux semaines : 800 couverts à 23 €, virement hebdomadaire. La commission est déjà déduite — le volume, lui, est là.",
+        "Une plateforme vous met en avant deux semaines : 800 couverts à 23 €, virement hebdomadaire. La commission est déjà déduite, mais le volume est là.",
       units: 800,
       price: 23,
       paymentDelayDays: 0,

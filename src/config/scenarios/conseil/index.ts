@@ -137,7 +137,7 @@ const rawConseil = {
       code: "integre",
       name: "Tout en interne",
       narrative:
-        "Les missions sont réalisées par vos seuls consultants. Coût maîtrisé, méthode homogène — mais aucune souplesse quand le carnet déborde.",
+        "Les missions sont réalisées par vos seuls consultants. Coût maîtrisé, méthode homogène, mais aucune souplesse quand le carnet déborde.",
       costMultiplier: 1,
       qualityBonus: 0,
       paymentDelayDays: 30,
@@ -148,7 +148,7 @@ const rawConseil = {
       code: "freelances",
       name: "Réseau de freelances",
       narrative:
-        "Des indépendants absorbent les pics pour 12 % de moins, payés à 45 jours. Ils connaissent moins vos méthodes — et le client le sent parfois.",
+        "Des indépendants absorbent les pics pour 12 % de moins, payés à 45 jours. Ils connaissent moins vos méthodes, et le client le sent parfois.",
       costMultiplier: 0.88,
       qualityBonus: -0.05,
       paymentDelayDays: 45,
@@ -206,7 +206,7 @@ const rawConseil = {
   orderOffers: [
     {
       code: "conseil_offer_transformation",
-      title: "Programme de transformation — groupe industriel",
+      title: "Programme de transformation · groupe industriel",
       narrative:
         "Un groupe vous confie 130 jours à 720 € pour piloter sa transformation. Direction achats oblige : règlement à 90 jours après service fait.",
       units: 130,
@@ -215,7 +215,7 @@ const rawConseil = {
     },
     {
       code: "conseil_offer_appel_offres",
-      title: "Appel d'offres — schéma directeur d'agglomération",
+      title: "Appel d'offres · schéma directeur d'agglomération",
       narrative:
         "La collectivité retient votre proposition : 110 jours à 545 €. Mandatement administratif à 60 jours, pénalités de retard si le livrable glisse.",
       units: 110,
@@ -226,7 +226,7 @@ const rawConseil = {
       code: "conseil_offer_due_diligence",
       title: "Due diligence pour un fonds d'investissement",
       narrative:
-        "Six semaines sous pression : 80 jours à 890 €, votre meilleur tarif. Le fonds paie comptant à la remise du rapport — mais n'accepte aucun retard.",
+        "Six semaines sous pression : 80 jours à 890 €, votre meilleur tarif. Le fonds paie comptant à la remise du rapport, mais n'accepte aucun retard.",
       units: 80,
       price: 890,
       paymentDelayDays: 0,
@@ -242,7 +242,7 @@ const rawConseil = {
     },
     {
       code: "conseil_offer_assistance",
-      title: "Assistance à maîtrise d'ouvrage — 6 mois",
+      title: "Assistance à maîtrise d'ouvrage · 6 mois",
       narrative:
         "Un établissement de santé cherche un AMO à demeure : 190 jours à 495 €, facturation mensuelle à 60 jours. Vos consultants seront mobilisés longtemps.",
       units: 190,

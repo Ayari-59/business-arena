@@ -19,6 +19,16 @@ import type { KpiFormat } from "@/config/scenarios/sector-kpis";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * La signature du scénario (« Hôtel 3 étoiles de 60 chambres. ») est écrite pour
+ * être lue seule, dans le sélecteur de secteur. Reprise en apposition après le
+ * nom de l'entreprise, elle a besoin d'une minuscule et d'aucun point final.
+ */
+function appositive(tagline: string): string {
+  const trimmed = tagline.trim().replace(/\.$/, "");
+  return trimmed.charAt(0).toLowerCase() + trimmed.slice(1);
+}
+
 /** Mise en forme d'un indicateur métier selon son unité. */
 function formatKpi(value: number, format: KpiFormat): string {
   switch (format) {
@@ -197,7 +207,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                   sur {formatUnits(r.extraOrders.requested)} commandées
                   {r.extraOrders.delivered + r.extraOrders.subcontracted <
                   r.extraOrders.requested
-                    ? " — le reste est perdu. L'anticipation a un prix."
+                    ? ", le reste est perdu. L'anticipation a un prix."
                     : ", réglées comptant."}
                 </p>
               ) : null}
@@ -209,15 +219,15 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                     {formatEuro(r.orderOffer.unitPrice)}/u, soit{" "}
                     {formatEuro(r.orderOffer.revenue)} de CA
                     {r.orderOffer.onCredit > 0.5
-                      ? ` — dont ${formatEuro(r.orderOffer.onCredit)} en créances à ${r.orderOffer.paymentDelayDays} jours : votre BFR porte cette attente.`
-                      : " — réglé comptant : la caisse encaisse, la marge est mince."}
+                      ? `, dont ${formatEuro(r.orderOffer.onCredit)} en créances à ${r.orderOffer.paymentDelayDays} jours : votre BFR porte cette attente.`
+                      : ", réglé comptant : la caisse encaisse, la marge est mince."}
                     {r.orderOffer.delivered < 0.5
                       ? ` ${view.vocabulary.leftoverLabel} insuffisant : rien n'a pu être livré.`
                       : ""}
                   </p>
                 ) : (
                   <p className="mt-3 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-xs text-slate-400">
-                    📦 {r.orderOffer.title} : commande déclinée — un choix aussi.
+                    📦 {r.orderOffer.title} : commande déclinée. Un choix aussi.
                   </p>
                 )
               ) : null}
@@ -231,7 +241,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
               {r.capital && r.capital.applied < r.capital.requested - 0.5 ? (
                 <p className="mt-3 rounded-lg border border-amber-400/30 bg-amber-950/30 px-3 py-2 text-xs text-amber-200">
                   🤝 Apport plafonné : {formatEuro(r.capital.applied)} retenus sur{" "}
-                  {formatEuro(r.capital.requested)} demandés — l&apos;enveloppe des associés
+                  {formatEuro(r.capital.requested)} demandés. L&apos;enveloppe des associés
                   est {r.capital.remainingAfter < 0.5 ? "épuisée" : `réduite à ${formatEuro(r.capital.remainingAfter)}`}.
                   Le capital n&apos;est pas un robinet.
                 </p>
@@ -243,7 +253,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                     ? ` + ${formatEuro(r.debt.earlyRepayment)} d'anticipé`
                     : ""}
                   {r.debt.newLoan > 0.5 ? ` · nouvel emprunt ${formatEuro(r.debt.newLoan)}` : ""}
-                  {" — restant dû : "}
+                  {" · restant dû : "}
                   {formatEuro(r.debt.outstanding)}
                   {r.debt.nextMandatory > 0.5
                     ? ` (prochaine échéance ${formatEuro(r.debt.nextMandatory)})`
@@ -273,15 +283,15 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                   {" coût financier "}
                   {formatEuro(r.treasury.financingCost)}
                   {r.treasury.crisis
-                    ? " — 🚨 CRISE DE TRÉSORERIE : plafond dépassé et plus de créances à céder."
+                    ? ". 🚨 CRISE DE TRÉSORERIE : plafond dépassé et plus de créances à céder."
                     : ""}
                 </p>
               ) : null}
               {r.investment ? (
                 <p className="mt-3 rounded-lg border border-amber-400/30 bg-amber-950/20 px-3 py-2 text-xs text-amber-200">
-                  🏗️ Investissement : +{formatUnits(r.investment.capacityUnits)} u de capacité
-                  de capacité ({formatEuro(r.investment.outlay)}) — en service au prochain tour,
-                  amortissement en hausse.
+                  🏗️ Investissement : +{formatUnits(r.investment.capacityUnits)} u de
+                  capacité ({formatEuro(r.investment.outlay)}), en service au prochain tour,
+                  avec un amortissement en hausse.
                 </p>
               ) : null}
               {r.qualityCosts &&
@@ -292,13 +302,13 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                   {r.qualityCosts.returnedUnits > 0.5
                     ? ` · ${formatUnits(r.qualityCosts.returnedUnits)} u retournées (${formatEuro(r.qualityCosts.externalFailure)})`
                     : ""}{" "}
-                  — face à {formatEuro(r.qualityCosts.prevention)} de prévention. Le bon niveau
+                  , face à {formatEuro(r.qualityCosts.prevention)} de prévention. Le bon niveau
                   de qualité est un calcul, pas une vertu.
                 </p>
               ) : null}
               {r.hr ? (
                 <p className="mt-3 rounded-lg border border-violet-400/30 bg-violet-950/30 px-3 py-2 text-xs text-violet-300">
-                  👥 RH — effectif {r.hr.headcount}
+                  👥 RH · effectif {r.hr.headcount}
                   {r.hr.hired > 0 ? ` · +${r.hr.hired} embauche${r.hr.hired > 1 ? "s" : ""} (arrivée au prochain tour)` : ""}
                   {r.hr.fired > 0 ? ` · ${r.hr.fired} licenciement${r.hr.fired > 1 ? "s" : ""}` : ""}
                   {r.hr.departed > 0 ? " · 1 démission (salaires sous le marché !)" : ""}
@@ -313,8 +323,8 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                   {r.insurance.neutralizedEvents.length > 0
                     ? `Sinistre couvert ce tour : ${r.insurance.neutralizedEvents
                         .map((c) => cardByCode.get(c)?.title ?? c)
-                        .join(", ")} — effets neutralisés pour votre entreprise.`
-                    : "Aucun sinistre couvert ce tour — la prime était le prix de la sérénité."}
+                        .join(", ")}. Effets neutralisés pour votre entreprise.`
+                    : "Aucun sinistre couvert ce tour : la prime était le prix de la sérénité."}
                 </p>
               ) : null}
             </div>
@@ -322,7 +332,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
             <div className="space-y-4">
               <div className="rounded-xl border border-white/10 bg-slate-900 p-4">
                 <h2 className="mb-3 text-sm font-semibold text-slate-200">
-                  Classement — Business Performance Index
+                  Classement · Business Performance Index
                 </h2>
                 <ol className="space-y-2">
                   {view.ranking.map((row) => (
@@ -358,7 +368,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
           {situations.debriefed.length > 0 ? (
             <section className="space-y-4">
               <h2 className="text-sm font-semibold text-slate-200">
-                Analyse du tour écoulé — ce qu&apos;il fallait voir
+                Analyse du tour écoulé : ce qu&apos;il fallait voir
               </h2>
               {situations.debriefed.map((s) => (
                 <SituationDebrief key={s.instanceId} situation={s} />
@@ -369,10 +379,10 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
       ) : (
         <section className="rounded-xl border border-white/10 bg-slate-900 p-6 text-slate-300">
           <h2 className="text-lg font-semibold text-slate-100">
-            {periodLabel(view.roundDays, 1)} — prise en main
+            {periodLabel(view.roundDays, 1)} · prise en main
           </h2>
           <p className="mt-2 text-sm leading-relaxed">
-            Vous reprenez <strong>{view.playerTeamName}</strong> — {view.intro.tagline}{" "}
+            Vous reprenez <strong>{view.playerTeamName}</strong>, {appositive(view.intro.tagline)}.{" "}
             {view.intro.summary}
           </p>
           <ul className="mt-3 space-y-1 text-sm text-slate-400">
@@ -396,8 +406,8 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
             ) : null}
           </ul>
           <p className="mt-3 text-sm leading-relaxed">
-            Fixez votre {view.vocabulary.priceLabel.toLowerCase()}, votre volume et vos budgets
-            — puis observez.
+            Fixez votre {view.vocabulary.priceLabel.toLowerCase()}, votre volume et vos
+            budgets, puis observez.
           </p>
         </section>
       )}
@@ -413,14 +423,14 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                 })`,
             )
             .join(" · ")}
-          {" — "}dimensionnez votre volume en conséquence.
+          {". "}Dimensionnez votre volume en conséquence.
         </section>
       ) : null}
 
       {!finished && view.announcedEventCards.length > 0 ? (
         <section className="rounded-xl border border-amber-400/30 bg-slate-900 p-4">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-400">
-            ⚡ Votre enseignant a tiré une carte — elle s&apos;appliquera à ce tour
+            ⚡ Votre enseignant a tiré une carte : elle s&apos;appliquera à ce tour
           </p>
           <div className="grid gap-3 sm:grid-cols-2">
             {view.announcedEventCards.map((card, i) => (
@@ -459,7 +469,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
           <h2 className="text-xl font-bold text-amber-300">
             {view.ranking.find((row) => row.isPlayer)?.rank === 1
               ? `🏆 Victoire ! ${view.playerTeamName} domine le marché.`
-              : "Partie terminée — analysez votre trajectoire ci-dessus."}
+              : "Partie terminée. Analysez votre trajectoire ci-dessus."}
           </h2>
           <p className="mt-2 text-sm text-slate-400">
             Résultat cumulé : {formatEuro(view.ranking.find((row) => row.isPlayer)?.cumulativeNetIncome ?? 0)}
@@ -474,11 +484,11 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
       ) : (
         <section className="rounded-xl border border-white/10 bg-slate-900 p-6">
           <h2 className="mb-4 text-sm font-semibold text-slate-200">
-            Vos décisions — {periodLabel(view.roundDays, view.currentRound).toLowerCase()}
+            Vos décisions · {periodLabel(view.roundDays, view.currentRound).toLowerCase()}
           </h2>
           {view.kind === "class" && view.pendingDecisions ? (
             <p className="mb-4 rounded-lg border border-emerald-400/30 bg-emerald-950/30 px-3 py-2 text-sm text-emerald-300">
-              ✓ Décisions validées — en attente de la clôture du tour par l&apos;enseignant.
+              ✓ Décisions validées, en attente de la clôture du tour par l&apos;enseignant.
               Vous pouvez encore les modifier ci-dessous. Actualisez la page après la clôture.
             </p>
           ) : null}

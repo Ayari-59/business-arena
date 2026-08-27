@@ -69,7 +69,7 @@ export const HOTEL_CARDS: EventCardDef[] = [
       "Trois semaines de soleil hors saison. Les réservations de dernière minute explosent sur toute la côte.",
     effectLabel: "Demande touristique +28 % ce tour",
     conceptHint:
-      "La demande de dernière minute se capte au prix fort — encore faut-il ne pas avoir tout bradé un mois plus tôt.",
+      "La demande de dernière minute se capte au prix fort, encore faut-il ne pas avoir tout bradé un mois plus tôt.",
     category: "market",
     emoji: "☀️",
     scope: "market",
@@ -152,7 +152,7 @@ export const HOTEL_CARDS: EventCardDef[] = [
     flavor:
       "Un car de 40 personnes cherche un toit à 21 h après une panne sur l'autoroute. Le guide a votre numéro.",
     effectLabel:
-      "+400 nuitées (échelle trimestre) vendues d'office ce tour, réglées comptant — dans la limite des chambres libres",
+      "+400 nuitées (échelle trimestre) vendues d'office ce tour, réglées comptant, dans la limite des chambres libres",
     conceptHint:
       "L'aubaine ne profite qu'à ceux qui ont gardé des chambres disponibles : tout brader tôt a un coût caché.",
     category: "market",

@@ -11,7 +11,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
     code: "fitness_t1_recurrent",
     title: "Mille six cents adhérents et un crédit",
     narrative:
-      "Vous reprenez VOLT FITNESS : 1 200 m², huit salariés, un parc de machines financé à crédit et 1 600 adhérents qui paient 105 € par trimestre. Le chiffre d'affaires du prochain trimestre est déjà connu — à ceux qui partiront près.",
+      "Vous reprenez VOLT FITNESS : 1 200 m², huit salariés, un parc de machines financé à crédit et 1 600 adhérents qui paient 105 € par trimestre. Le chiffre d'affaires du prochain trimestre est déjà connu, à ceux qui partiront près.",
     problem:
       "Qu'est-ce qu'un revenu récurrent change à la façon de piloter l'entreprise ?",
     diagnosticOptions: [
@@ -87,7 +87,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
     code: "fitness_t2_attrition",
     title: "Ceux qui ne reviennent pas",
     narrative:
-      "Le tableau des renouvellements est sorti. Sur les 400 inscrits de janvier, 62 renouvellent. Chez les pratiquants réguliers, en revanche, neuf sur dix restent — et certains sont là depuis six ans.",
+      "Le tableau des renouvellements est sorti. Sur les 400 inscrits de janvier, 62 renouvellent. Chez les pratiquants réguliers, en revanche, neuf sur dix restent, et certains sont là depuis six ans.",
     problem:
       "Combien vaut un adhérent conservé, comparé à un adhérent qu'il faut aller chercher ?",
     diagnosticOptions: [
@@ -118,8 +118,8 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
         prompt:
           "Un adhérent rapporte 90 € de marge par trimestre et le taux d'attrition trimestriel est de 15 %. Quelle est sa valeur vie ?",
         options: [
-          { id: "a", label: "600 € — il reste en moyenne un peu plus de six trimestres" },
-          { id: "b", label: "90 € — un seul trimestre" },
+          { id: "a", label: "600 €, il reste en moyenne un peu plus de six trimestres" },
+          { id: "b", label: "90 €, un seul trimestre" },
           { id: "c", label: "13,50 €" },
           { id: "d", label: "1 350 €" },
         ],
@@ -303,7 +303,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
     conceptCodes: ["capacity", "productivity", "discounting", "demand_market_share"],
     hints: hints([
       "Regardez votre taux de remplissage, puis vos deux plafonds : la surface et l'encadrement.",
-      "Un abonnement vendu à un adhérent qui ne peut pas s'entraîner reste encaissé — ce trimestre-ci seulement.",
+      "Un abonnement vendu à un adhérent qui ne peut pas s'entraîner reste encaissé, ce trimestre-ci seulement.",
       "La saturation ne coûte rien immédiatement : elle se paie au trimestre suivant, en résiliations.",
       "Et elle ne frappe pas que les nouveaux : toute la base subit la dégradation, donc toute la base voit sa valeur vie baisser.",
       "Trois voies : investir dans un plateau supplémentaire, recruter des coachs, ou étaler la fréquentation par le tarif (créneaux creux moins chers).",
@@ -315,7 +315,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
     code: "fitness_detect_below_breakeven",
     title: "Sous le seuil",
     narrative:
-      "Le trimestre s'achève en perte. La salle a ouvert tous les jours, les coachs étaient présents, le matériel fonctionnait — mais les adhérents n'étaient pas assez nombreux.",
+      "Le trimestre s'achève en perte. La salle a ouvert tous les jours, les coachs étaient présents, le matériel fonctionnait, mais les adhérents n'étaient pas assez nombreux.",
     problem:
       "Recruter de nouveaux adhérents, retenir les anciens, ou réduire la structure : lequel agit le plus vite, et lequel le plus fort ?",
     diagnosticOptions: [
@@ -380,7 +380,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
     hints: hints([
       "Reprenez le compte de résultat : de combien manquez-vous exactement ?",
       "Divisez cet écart par 90 € : vous obtenez le nombre d'adhérents manquants.",
-      "Trois leviers comme partout — la marge par adhérent, le nombre d'adhérents, la structure. Mais ici, un quatrième les traverse tous : l'attrition.",
+      "Trois leviers comme partout : la marge par adhérent, le nombre d'adhérents, la structure. Mais ici, un quatrième les traverse tous : l'attrition.",
       "Retenir un adhérent existant ne coûte rien en acquisition et agit sur toute la base. Recruter coûte, et ne remplace qu'un départ.",
       "Attention au faux ami : couper l'encadrement ou l'entretien améliore ce trimestre-ci et dégrade la rétention de tous les suivants.",
     ]),
@@ -398,7 +398,7 @@ const MODEL_EXPLAIN: Record<string, string> = {
   fitness_t3_ete:
     "Le seuil de rentabilité et la marge de sécurité chiffrent ce que la saison peut emporter avant que l'exercice ne bascule.",
   fitness_t5_saturation:
-    "L'analyse de capacité met en évidence la double contrainte — surface et encadrement — et le coût caché de la sur-vente : l'attrition qu'elle provoque.",
+    "L'analyse de capacité met en évidence la double contrainte, surface et encadrement, ainsi que le coût caché de la sur-vente : l'attrition qu'elle provoque.",
   fitness_detect_below_breakeven:
     "Le seuil de rentabilité convertit l'écart en nombre d'adhérents et rend la décision concrète, levier par levier.",
 };

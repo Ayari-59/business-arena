@@ -78,7 +78,7 @@ export const CONSEIL_CARDS: EventCardDef[] = [
     code: "conseil_credit_resserre",
     title: "Le crédit se resserre",
     flavor:
-      "Sans actif à nantir, un cabinet inspire peu les banques. Le découvert est revu à la hausse — de prix.",
+      "Sans actif à nantir, un cabinet inspire peu les banques. Le découvert est revu à la hausse, celle du prix.",
     effectLabel: "Taux d'intérêt ×1,5 pendant 2 tours",
     conceptHint:
       "Un métier sans immobilisations finance son BFR par le découvert : le poste clients devient le vrai sujet.",
@@ -129,7 +129,7 @@ export const CONSEIL_CARDS: EventCardDef[] = [
       "Votre méthodologie est distinguée par la fédération du conseil. La presse spécialisée relaie.",
     effectLabel: "Capacité commerciale +7 % pendant 2 tours (un cabinet ciblé)",
     conceptHint:
-      "L'investissement méthodologique n'apparaît nulle part au bilan — il se lit dans le taux d'occupation.",
+      "L'investissement méthodologique n'apparaît nulle part au bilan : il se lit dans le taux d'occupation.",
     category: "market",
     emoji: "🏆",
     scope: "team",
@@ -152,7 +152,7 @@ export const CONSEIL_CARDS: EventCardDef[] = [
     flavor:
       "Une ETI se retrouve sans directeur financier à trois semaines de la clôture. Elle appelle ce matin.",
     effectLabel:
-      "+70 jours-conseil (échelle trimestre) vendus d'office ce tour, réglés comptant — dans la limite des jours disponibles",
+      "+70 jours-conseil (échelle trimestre) vendus d'office ce tour, réglés comptant, dans la limite des jours disponibles",
     conceptHint:
       "Un cabinet à 100 % d'occupation ne peut pas dire oui : garder de la marge de manœuvre a une valeur.",
     category: "market",

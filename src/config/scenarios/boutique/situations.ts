@@ -50,7 +50,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Le coefficient multiplicateur est le rapport prix de vente / prix d'achat : 45 ÷ 18 = 2,5. C'est le langage du commerce — mais il ne dit rien des frais variables ni des charges de structure.",
+          "Le coefficient multiplicateur est le rapport prix de vente / prix d'achat : 45 ÷ 18 = 2,5. C'est le langage du commerce, mais il ne dit rien des frais variables ni des charges de structure.",
       },
       {
         id: "marge_vs_coeff",
@@ -90,7 +90,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
     narrative:
       "Trois commerciaux se succèdent dans votre arrière-boutique. Le grossiste propose son catalogue habituel à 45 jours. Le déstockeur casse les prix de 18 %, mais veut un chèque à l'enlèvement et ne garantit aucun réassort. Les créateurs demandent 22 % de plus, réglés à 30 jours, et vous laissent l'exclusivité sur la ville.",
     problem:
-      "Sur quels critères tranchez-vous — et pourquoi le seul prix d'achat ne suffit-il pas à décider ?",
+      "Sur quels critères tranchez-vous, et pourquoi le seul prix d'achat ne suffit-il pas à décider ?",
     diagnosticOptions: [
       {
         id: "multi_criteria",
@@ -166,7 +166,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
     narrative:
       "Le quatrième trimestre pèse près d'une fois et demie un trimestre ordinaire, et les comités d'entreprise passent leurs commandes de fin d'année. Votre grossiste veut vos volumes maintenant : les délais de livraison sont de six semaines, et il ne reprendra rien.",
     problem:
-      "Combien commander pour Noël — et que risquez-vous en vous trompant dans un sens ou dans l'autre ?",
+      "Combien commander pour Noël, et que risquez-vous en vous trompant dans un sens ou dans l'autre ?",
     diagnosticOptions: [
       {
         id: "both_risks",
@@ -216,7 +216,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Acheter n'est pas une charge : c'est un actif qui entre au bilan. La charge n'apparaît qu'à la vente, dans le coût des ventes. Entre les deux, votre argent dort en réserve — c'est la définition du besoin en fonds de roulement.",
+          "Acheter n'est pas une charge : c'est un actif qui entre au bilan. La charge n'apparaît qu'à la vente, dans le coût des ventes. Entre les deux, votre argent dort en réserve : c'est la définition du besoin en fonds de roulement.",
       },
     ],
     modelRelevance: {
@@ -380,7 +380,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
     hints: hints([
       "Reprenez le compte de résultat du tour : de combien manquez-vous exactement pour équilibrer ?",
       "Divisez cet écart par votre marge sur coût variable unitaire : vous obtenez le nombre d'articles manquants.",
-      "Le seuil s'écrit : charges de structure ÷ marge unitaire. Trois leviers, donc — le numérateur, le dénominateur, ou les quantités vendues.",
+      "Le seuil s'écrit : charges de structure ÷ marge unitaire. Trois leviers, donc : le numérateur, le dénominateur, ou les quantités vendues.",
       "Attention au levier prix : il agit sur la marge unitaire ET sur les volumes, en sens contraire. C'est l'élasticité qui arbitre.",
       "Avec 84 000 € de charges décaissées et 23,50 € de marge, le seuil est à ~3 575 articles. Comparez à vos ventes réelles : l'écart en articles vous dit quel levier est atteignable ce trimestre.",
     ]),
@@ -442,7 +442,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Le FRNG est la ressource stable disponible après financement des immobilisations ; le BFR est ce que le cycle d'exploitation immobilise. La trésorerie n'est que la différence — jamais une décision directe.",
+          "Le FRNG est la ressource stable disponible après financement des immobilisations ; le BFR est ce que le cycle d'exploitation immobilise. La trésorerie n'est que la différence, jamais une décision directe.",
       },
     ],
     modelRelevance: {
@@ -457,7 +457,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
       "Regardez ce qui a bougé au bilan entre l'ouverture et la clôture : le stock, les créances, les dettes fournisseurs.",
       "Le résultat est une opinion, la trésorerie est un fait. Entre les deux, il y a le besoin en fonds de roulement.",
       "TN = FRNG − BFR. Si le résultat monte mais que le BFR monte plus vite, la trésorerie baisse. Le réassort de Noël et les comités d'entreprise à 45 jours travaillent dans le même sens.",
-      "Deux leviers immédiats : mobiliser le poste clients (escompte ou affacturage, à un coût) ou réduire le stock. Le troisième — allonger le crédit fournisseur — se négocie, il ne se décrète pas.",
+      "Deux leviers immédiats : mobiliser le poste clients (escompte ou affacturage, à un coût) ou réduire le stock. Le troisième, allonger le crédit fournisseur, se négocie : il ne se décrète pas.",
     ]),
     trigger: { detect: "profitable_illiquid" },
     weight: 1,
@@ -477,7 +477,7 @@ const MODEL_EXPLAIN: Record<string, string> = {
   boutique_detect_below_breakeven:
     "Le seuil de rentabilité chiffre l'écart en articles et désigne les trois leviers : marge unitaire, volumes, charges de structure.",
   boutique_detect_profitable_illiquid:
-    "L'analyse FRNG / BFR est l'outil de ce diagnostic : TN = FRNG − BFR, et c'est le BFR qui a bougé — pas le résultat.",
+    "L'analyse FRNG / BFR est l'outil de ce diagnostic : TN = FRNG − BFR, et c'est le BFR qui a bougé, pas le résultat.",
 };
 
 attachModelQuestions(BOUTIQUE_SITUATIONS, MODEL_EXPLAIN);

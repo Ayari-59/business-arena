@@ -69,7 +69,7 @@ export const BISTROT_CARDS: EventCardDef[] = [
       "Le grossiste annonce +24 % sur la moitié de votre carte. Réimprimer les menus ne suffira pas.",
     effectLabel: "Coût matières +24 % pendant 2 tours",
     conceptHint:
-      "Le ratio matières dérape : augmenter le ticket, réduire les portions ou changer la carte — il faut choisir.",
+      "Le ratio matières dérape : augmenter le ticket, réduire les portions ou changer la carte : il faut choisir.",
     category: "macro",
     emoji: "🥩",
     scope: "market",
@@ -152,7 +152,7 @@ export const BISTROT_CARDS: EventCardDef[] = [
     flavor:
       "Un traiteur vient de faire faillite à trois jours d'un repas de 220 personnes. La famille vous appelle en catastrophe.",
     effectLabel:
-      "+220 couverts (échelle trimestre) servis d'office ce tour, réglés comptant — dans la limite de ce que vous pouvez produire",
+      "+220 couverts (échelle trimestre) servis d'office ce tour, réglés comptant, dans la limite de ce que vous pouvez produire",
     conceptHint:
       "Dire oui suppose des denrées, une brigade et de la place : trois contraintes, une seule opportunité.",
     category: "market",

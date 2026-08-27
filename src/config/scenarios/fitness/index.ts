@@ -148,7 +148,7 @@ const rawFitness = {
       code: "parc_occasion",
       name: "Matériel reconditionné",
       narrative:
-        "18 % de moins, payé comptant à l'enlèvement. Les machines tombent en panne plus souvent — et une machine à l'arrêt se remarque tout de suite.",
+        "18 % de moins, payé comptant à l'enlèvement. Les machines tombent en panne plus souvent, et une machine à l'arrêt se remarque tout de suite.",
       costMultiplier: 0.82,
       qualityBonus: -0.08,
       paymentDelayDays: 0,
@@ -253,7 +253,7 @@ const rawFitness = {
       code: "fitness_offer_coaching",
       title: "Offre coaching premium",
       narrative:
-        "Vous lancez une formule avec suivi individuel : 180 abonnements à 195 €, payés comptant. Votre meilleure marge — mais elle mobilise vos coachs.",
+        "Vous lancez une formule avec suivi individuel : 180 abonnements à 195 €, payés comptant. Votre meilleure marge, mais elle mobilise vos coachs.",
       units: 180,
       price: 195,
       paymentDelayDays: 0,

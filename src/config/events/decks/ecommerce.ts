@@ -42,7 +42,7 @@ export const ECOMMERCE_CARDS: EventCardDef[] = [
     code: "ecom_influenceur",
     title: "Un créateur vous met en avant",
     flavor:
-      "Une vidéo de déballage dépasse les deux millions de vues. Le site tient — de justesse.",
+      "Une vidéo de déballage dépasse les deux millions de vues. Le site tient, de justesse.",
     effectLabel: "Demande globale +26 % ce tour",
     conceptHint:
       "Un pic gratuit ne profite qu'à ceux qui ont le stock ET la capacité de préparer : l'aubaine se prépare.",
@@ -54,7 +54,7 @@ export const ECOMMERCE_CARDS: EventCardDef[] = [
     code: "ecom_marketplace_commission",
     title: "La marketplace relève sa commission",
     flavor:
-      "18 % au lieu de 12 %, effectif au prochain cycle. Vous pouvez toujours partir — et perdre le volume avec.",
+      "18 % au lieu de 12 %, effectif au prochain cycle. Vous pouvez toujours partir, et perdre le volume avec.",
     effectLabel: "Demande marketplace −18 % pendant 2 tours",
     conceptHint:
       "Un canal qui apporte du volume mais dicte ses conditions : dépendre d'un seul intermédiaire a un prix.",
@@ -126,7 +126,7 @@ export const ECOMMERCE_CARDS: EventCardDef[] = [
     code: "ecom_presse",
     title: "Sélection dans un magazine déco",
     flavor:
-      "Trois de vos produits en double page, avec l'adresse du site. Le trafic organique s'envole — et il est gratuit.",
+      "Trois de vos produits en double page, avec l'adresse du site. Le trafic organique s'envole, et il est gratuit.",
     effectLabel: "Capacité commerciale +7 % pendant 2 tours (une enseigne ciblée)",
     conceptHint:
       "Un client qui vient sans publicité coûte zéro euro d'acquisition : c'est là que se trouve la vraie marge.",
@@ -152,7 +152,7 @@ export const ECOMMERCE_CARDS: EventCardDef[] = [
     flavor:
       "Un aménageur de bureaux équipe trois plateaux et passe une commande unique de 700 références.",
     effectLabel:
-      "+700 commandes (échelle trimestre) vendues d'office ce tour, réglées comptant — dans la limite du stock",
+      "+700 commandes (échelle trimestre) vendues d'office ce tour, réglées comptant, dans la limite du stock",
     conceptHint:
       "Une commande B2B ne coûte rien en acquisition : la marge y est mécaniquement supérieure.",
     category: "market",

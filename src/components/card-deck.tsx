@@ -63,7 +63,7 @@ export function CardDeck({
         Cartes <strong className="text-slate-300">marché</strong> pour toute la classe, cartes{" "}
         <strong className="text-slate-300">équipe</strong> pour cibler une seule entreprise.
         Annoncées aux équipes, appliquées à la clôture du tour. Vous pouvez aussi faire tirer les
-        cartes physiques en classe puis saisir la carte tirée ici. (Mode apprentissage uniquement —
+        cartes physiques en classe puis saisir la carte tirée ici. (Mode apprentissage uniquement,
         en compétition, seul le tirage aléatoire du moteur fait foi.)
       </p>
 
@@ -100,12 +100,12 @@ export function CardDeck({
               className="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
             >
               <option value="" disabled={marketFull}>
-                🌍 Toute la classe (carte marché){marketFull ? " — max atteint" : ""}
+                🌍 Toute la classe (carte marché){marketFull ? " · max atteint" : ""}
               </option>
               {teams.map((t) => (
                 <option key={t.teamId} value={t.teamId} disabled={teamsWithCard.has(t.teamId)}>
                   🎯 {t.name} (carte équipe)
-                  {teamsWithCard.has(t.teamId) ? " — carte déjà en jeu" : ""}
+                  {teamsWithCard.has(t.teamId) ? " · carte déjà en jeu" : ""}
                 </option>
               ))}
             </select>
@@ -145,7 +145,7 @@ export function CardDeck({
               key={isTeamDraw ? "team" : "market"}
               className="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
             >
-              <option value="">— carte au hasard —</option>
+              <option value="">Carte au hasard</option>
               {drawable.map((c) => (
                 <option key={c.code} value={c.code}>
                   {c.emoji} {c.title}
@@ -163,7 +163,7 @@ export function CardDeck({
         </form>
       ) : (
         <p className="mt-3 text-xs text-slate-500">
-          Quatre cartes maximum par tour — clôturez le tour pour continuer.
+          Quatre cartes maximum par tour : clôturez le tour pour continuer.
         </p>
       )}
       {state.error ? (

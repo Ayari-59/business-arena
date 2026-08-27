@@ -129,7 +129,7 @@ export const HOTELLERIE_KPIS: SectorKpiDef[] = [
   },
   {
     key: "pmc",
-    label: "PMC — prix moyen chambre",
+    label: "PMC (prix moyen chambre)",
     hint: "Chiffre d'affaires rapporté aux nuitées VENDUES. Ce que paie réellement un client, remises comprises.",
     format: "euro",
     compute: (ctx) => ratio(ctx.result.incomeStatement.revenue, ctx.totalUnits),
@@ -234,7 +234,7 @@ export const SERVICES_KPIS: SectorKpiDef[] = [
   },
   {
     key: "dso",
-    label: "DSO — délai de règlement",
+    label: "DSO (délai de règlement)",
     hint: "Nombre de jours de chiffre d'affaires immobilisés en créances clients. C'est tout le BFR d'un cabinet.",
     format: "days",
     compute: (ctx) => {
@@ -258,7 +258,7 @@ export const ECOMMERCE_KPIS: SectorKpiDef[] = [
   },
   {
     key: "cac",
-    label: "CAC — coût d'acquisition",
+    label: "CAC (coût d'acquisition)",
     hint: "Budget d'acquisition rapporté aux commandes de nouveaux clients. S'il dépasse la marge par commande, chaque vente appauvrit.",
     format: "euro",
     compute: (ctx) => {

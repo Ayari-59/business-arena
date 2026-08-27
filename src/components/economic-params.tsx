@@ -108,7 +108,7 @@ export function EconomicParams({
 
       <details className="rounded-lg border border-white/10 bg-slate-950 p-4 sm:col-span-3">
         <summary className="cursor-pointer text-xs font-medium uppercase tracking-wide text-slate-400">
-          ⚙️ Paramètres économiques (avancé) — laissez vide pour les valeurs du scénario
+          ⚙️ Paramètres économiques (avancé) · laissez vide pour les valeurs du scénario
         </summary>
 
         <p className="mt-3 text-[11px] leading-relaxed text-slate-500">

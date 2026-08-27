@@ -140,7 +140,7 @@ export const BOUTIQUE_CARDS: EventCardDef[] = [
     flavor:
       "Le CSE d'une usine voisine veut habiller ses 500 salariés pour l'arbre de Noël. Il signe aujourd'hui.",
     effectLabel:
-      "+500 articles (échelle trimestre) vendus d'office ce tour, réglés comptant — dans la limite du stock",
+      "+500 articles (échelle trimestre) vendus d'office ce tour, réglés comptant, dans la limite du stock",
     conceptHint:
       "L'opportunité ne se saisit qu'avec de la marchandise en réserve : le stock a un coût, et parfois une valeur.",
     category: "market",
@@ -154,7 +154,7 @@ export const BOUTIQUE_CARDS: EventCardDef[] = [
       "Terrasses, pavés neufs, jardinières : la municipalité a enfin livré. Le flux du samedi a doublé.",
     effectLabel: "Demande globale +16 % pendant 2 tours",
     conceptHint:
-      "L'emplacement est le premier actif d'un commerce — et le seul qu'on ne trouve pas au bilan.",
+      "L'emplacement est le premier actif d'un commerce, et le seul qu'on ne trouve pas au bilan.",
     category: "market",
     emoji: "🌳",
     scope: "market",

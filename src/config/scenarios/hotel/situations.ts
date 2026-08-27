@@ -77,7 +77,7 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
     hints: hints([
       "Comptez ce que l'hôtel peut vendre au maximum sur un trimestre : 60 chambres × 90 nuits.",
       "Une chambre vide ce soir ne se vendra pas deux fois demain. La capacité est offerte chaque jour et expire chaque nuit.",
-      "Vos charges de structure — salaires, énergie, taxes, assurances — ne dépendent pas du nombre de clients.",
+      "Vos charges de structure (salaires, énergie, taxes, assurances) ne dépendent pas du nombre de clients.",
       "Marge par nuitée = 95 − 21 = 74 €. Charges de structure décaissées = 158 000 € par trimestre.",
       "Seuil = 158 000 ÷ 74 ≈ 2 140 nuitées, soit 40 % d'occupation. Au-delà, chaque nuitée apporte 74 € presque intégralement en résultat : c'est le levier d'exploitation de l'hôtellerie.",
     ]),
@@ -88,7 +88,7 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
     code: "hotel_t2_yield",
     title: "Brader ou tenir son prix ?",
     narrative:
-      "Jeudi soir, 18 h. Dix-sept chambres sont encore libres pour la nuit. Une plateforme vous propose de les écouler à 58 € — bien en dessous de votre tarif affiché de 95 €, et sous les yeux de vos clients habituels.",
+      "Jeudi soir, 18 h. Dix-sept chambres sont encore libres pour la nuit. Une plateforme vous propose de les écouler à 58 €, bien en dessous de votre tarif affiché de 95 €, et sous les yeux de vos clients habituels.",
     problem:
       "Accepter 58 € pour une chambre qui vaut 95 € : décision absurde ou bonne gestion ?",
     diagnosticOptions: [
@@ -126,7 +126,7 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Les charges de structure et l'amortissement sont engagés quoi qu'il arrive : ils ne sont pas pertinents pour cette décision-ci. Seul compte ce que la décision change réellement — 21 € de coût, 37 € de marge gagnée plutôt que zéro.",
+          "Les charges de structure et l'amortissement sont engagés quoi qu'il arrive : ils ne sont pas pertinents pour cette décision-ci. Seul compte ce que la décision change réellement : 21 € de coût, 37 € de marge gagnée plutôt que zéro.",
       },
       {
         id: "risque_image",
@@ -140,7 +140,7 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Une élasticité faible signifie que cette clientèle ne fuit pas pour quelques euros — mais elle observe. Brader une nuit sauve un trimestre ; brader chaque semaine détruit le prix moyen de tous les suivants.",
+          "Une élasticité faible signifie que cette clientèle ne fuit pas pour quelques euros, mais elle observe. Brader une nuit sauve un trimestre ; brader chaque semaine détruit le prix moyen de tous les suivants.",
       },
     ],
     modelRelevance: {
@@ -242,7 +242,7 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
     narrative:
       "Dix chambres du deuxième étage sont hors service depuis des années : salles de bains hors normes, moquettes fatiguées. Les rouvrir coûterait 90 000 €, amortis sur dix ans. Elles ajouteraient 900 nuitées vendables par trimestre.",
     problem:
-      "Cet investissement vaut-il d'être fait — et sur quoi le jugez-vous ?",
+      "Cet investissement vaut-il d'être fait, et sur quoi le jugez-vous ?",
     diagnosticOptions: [
       {
         id: "future_flows",
@@ -277,7 +277,7 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "La VAN actualise : 74 € encaissés dans trois ans valent moins que 74 € aujourd'hui. C'est le seul modèle qui prenne le temps au sérieux — le seuil de rentabilité, lui, l'ignore complètement.",
+          "La VAN actualise : 74 € encaissés dans trois ans valent moins que 74 € aujourd'hui. C'est le seul modèle qui prenne le temps au sérieux ; le seuil de rentabilité, lui, l'ignore complètement.",
       },
       {
         id: "flux_pertinent",
@@ -315,7 +315,7 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
     code: "hotel_detect_below_breakeven",
     title: "Sous le taux d'occupation d'équilibre",
     narrative:
-      "Le trimestre s'achève en perte d'exploitation. L'hôtel a tourné, le personnel était là, les chambres étaient propres — mais trop d'entre elles sont restées vides trop souvent.",
+      "Le trimestre s'achève en perte d'exploitation. L'hôtel a tourné, le personnel était là, les chambres étaient propres, mais trop d'entre elles sont restées vides trop souvent.",
     problem:
       "Vous êtes sous votre taux d'occupation d'équilibre. Baisser les prix pour remplir, ou les tenir pour préserver la marge ?",
     diagnosticOptions: [
@@ -388,11 +388,11 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
   },
   {
     code: "hotel_detect_capacity_saturated",
-    title: "Complet — et des clients refusés",
+    title: "Complet, et des clients refusés",
     narrative:
       "L'hôtel a affiché complet plusieurs nuits, et la réception a dû refuser du monde. C'est une excellente nouvelle. C'est aussi le signe que vous laissez de l'argent sur la table.",
     problem:
-      "Quand la demande dépasse durablement la capacité, quels leviers avez-vous — et lequel coûte le moins cher ?",
+      "Quand la demande dépasse durablement la capacité, quels leviers avez-vous, et lequel coûte le moins cher ?",
     diagnosticOptions: [
       {
         id: "raise_price",
@@ -454,7 +454,7 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
     conceptCodes: ["capacity", "demand_market_share", "price_elasticity", "discounting"],
     hints: hints([
       "Regardez votre taux d'utilisation : à quel niveau êtes-vous, et sur combien de tours ?",
-      "Refuser un client, c'est perdre 74 € de marge — mais c'est aussi le signe que votre prix est trop bas.",
+      "Refuser un client, c'est perdre 74 € de marge, mais c'est aussi le signe que votre prix est trop bas.",
       "Quand la capacité est saturée, le prix devient le seul levier gratuit : il ne coûte rien à mettre en œuvre.",
       "Avant d'investir, distinguez saturation SAISONNIÈRE (un pic d'été) et saturation DURABLE (tous les tours). La première se gère par le prix.",
       "Si la saturation est durable, comparez le coût de la capacité (100 € par nuitée trimestrielle) aux marges futures actualisées : c'est une VAN, pas un seuil de rentabilité.",
@@ -469,7 +469,7 @@ const MODEL_EXPLAIN: Record<string, string> = {
   hotel_t1_reprise:
     "Le seuil de rentabilité traduit la question du secteur en une phrase : quel taux d'occupation faut-il atteindre pour ne plus perdre d'argent ?",
   hotel_t2_yield:
-    "L'analyse des coûts pertinents isole ce que la décision change vraiment — 21 € de coût variable — et écarte les charges déjà engagées, qui ne devraient jamais entrer dans cet arbitrage.",
+    "L'analyse des coûts pertinents isole ce que la décision change vraiment, les 21 € de coût variable, et écarte les charges déjà engagées, qui ne devraient jamais entrer dans cet arbitrage.",
   hotel_t3_saison:
     "L'analyse de capacité, croisée avec la saisonnalité par segment, dimensionne effectifs et tarifs avant le pic plutôt qu'après.",
   hotel_t5_renovation:

@@ -114,7 +114,7 @@ export function FinancialStatements({
   return (
     <section className="mt-4 space-y-2" aria-label="Vos comptes du tour">
       <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-        🧾 Vos comptes du tour — lisez-les comme un dirigeant
+        🧾 Vos comptes du tour · lisez-les comme un dirigeant
       </p>
 
       <Panel title="Compte de résultat" defaultOpen>
@@ -174,7 +174,7 @@ export function FinancialStatements({
           </div>
         </div>
         <p className="mt-2 text-[11px] text-slate-500">
-          Le bilan équilibre au centime — par construction. FRNG{" "}
+          Le bilan équilibre au centime, par construction. FRNG{" "}
           {euro(result.functionalBalance.frng)} − BFR {euro(result.functionalBalance.bfr)} ={" "}
           trésorerie nette {euro(result.functionalBalance.netTreasury)}.
         </p>
@@ -238,7 +238,7 @@ export function FinancialStatements({
         </div>
         <p className="mt-2 text-[11px] text-slate-500">
           Les charges de structure tombent quoi qu&apos;il arrive : chaque unité vendue au-dessus
-          du coût variable les éponge — le seuil dit combien il en faut.
+          du coût variable les éponge : le seuil dit combien il en faut.
         </p>
       </Panel>
 

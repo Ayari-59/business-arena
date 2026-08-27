@@ -33,7 +33,7 @@ export const FITNESS_CARDS: EventCardDef[] = [
       "Six tapis et quatre vélos hors service en même temps. Le prestataire annonce trois semaines de délai.",
     effectLabel: "Capacité d'accueil −20 % ce tour (une salle tirée au sort)",
     conceptHint:
-      "Une machine à l'arrêt se voit tout de suite — et se retrouve dans les avis, puis dans les résiliations.",
+      "Une machine à l'arrêt se voit tout de suite, et se retrouve dans les avis, puis dans les résiliations.",
     category: "internal",
     emoji: "🔧",
     scope: "team",
@@ -114,7 +114,7 @@ export const FITNESS_CARDS: EventCardDef[] = [
     code: "fitness_degat_des_eaux",
     title: "Dégât des eaux aux vestiaires",
     flavor:
-      "Une canalisation cède un dimanche. Vestiaires et douches condamnés — et sans douches, personne ne vient.",
+      "Une canalisation cède un dimanche. Vestiaires et douches condamnés, et sans douches personne ne vient.",
     effectLabel: "Capacité −34 % ce tour (une salle ciblée)",
     conceptHint:
       "La perte d'exploitation dépasse largement le coût des travaux : c'est elle qu'il faut assurer.",
@@ -129,7 +129,7 @@ export const FITNESS_CARDS: EventCardDef[] = [
       "Une page entière sur votre programme seniors, avec photos et témoignages. Le téléphone sonne toute la semaine.",
     effectLabel: "Capacité commerciale +8 % pendant 2 tours (une salle ciblée)",
     conceptHint:
-      "Ces adhérents-là arrivent sans budget d'acquisition — et ce sont souvent les plus fidèles.",
+      "Ces adhérents-là arrivent sans budget d'acquisition, et ce sont souvent les plus fidèles.",
     category: "market",
     emoji: "📰",
     scope: "team",
@@ -152,7 +152,7 @@ export const FITNESS_CARDS: EventCardDef[] = [
     flavor:
       "Une PME de 200 salariés cherche une salle partenaire pour janvier. Elle signe cette semaine.",
     effectLabel:
-      "+200 adhérents (échelle trimestre) inscrits d'office ce tour, réglés comptant — dans la limite de vos places",
+      "+200 adhérents (échelle trimestre) inscrits d'office ce tour, réglés comptant, dans la limite de vos places",
     conceptHint:
       "Encore faut-il pouvoir les accueillir : sur-vendre sans encadrement fait fuir les adhérents en place.",
     category: "market",

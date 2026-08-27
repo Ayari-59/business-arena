@@ -99,7 +99,7 @@ export default async function AdminPage() {
         <h2 className="text-sm font-semibold text-slate-200">Monde de démonstration</h2>
         <p className="mt-1 text-xs text-slate-500">
           Un établissement complet pour présenter le produit : direction, enseignant, une
-          partie de classe déjà jouée sur 3 tours (le tour 4 — la crise de trésorerie — est
+          partie de classe déjà jouée sur 3 tours (le tour 4, celui de la crise de trésorerie, est
           le prochain), vues pédagogiques alimentées, et un concours prêt à lancer.
         </p>
         {demoSeeded ? (

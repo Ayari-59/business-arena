@@ -87,7 +87,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
     code: "bistrot_t2_fournisseur",
     title: "Le cash & carry ou le maraîcher",
     narrative:
-      "Votre grossiste passe trois fois par semaine, facture à 21 jours, qualité régulière. Le cash & carry vous ferait gagner 14 % sur les denrées, payées comptant, à condition d'aller charger vous-même. Le maraîcher du coin coûte 20 % de plus, réglé à 15 jours — mais c'est lui que vous écririez sur l'ardoise.",
+      "Votre grossiste passe trois fois par semaine, facture à 21 jours, qualité régulière. Le cash & carry vous ferait gagner 14 % sur les denrées, payées comptant, à condition d'aller charger vous-même. Le maraîcher du coin coûte 20 % de plus, réglé à 15 jours, mais c'est lui que vous écririez sur l'ardoise.",
     problem:
       "Le ratio matières s'améliore avec le cash & carry. Est-ce une raison suffisante pour y aller ?",
     diagnosticOptions: [
@@ -125,7 +125,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "La marge par couvert passe de 20 € à 21,40 €. Seuil = 90 000 ÷ 21,40 ≈ 4 206 couverts. Le gain est réel — reste à savoir ce qu'il coûte en fréquentation.",
+          "La marge par couvert passe de 20 € à 21,40 €. Seuil = 90 000 ÷ 21,40 ≈ 4 206 couverts. Le gain est réel, reste à savoir ce qu'il coûte en fréquentation.",
       },
       {
         id: "avis_inertie",
@@ -151,7 +151,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
     conceptCodes: ["variable_costs", "margin_rates", "bfr", "segmentation"],
     hints: hints([
       "Mettez les trois offres en colonnes : prix des denrées, qualité perçue, délai de règlement, temps de votre brigade.",
-      "Le gain de 14 % est immédiat et chiffrable. Le coût — la qualité perçue — est différé et indirect.",
+      "Le gain de 14 % est immédiat et chiffrable. Le coût, celui de la qualité perçue, est différé et indirect.",
       "Comparer des critères qui ne se mesurent pas dans la même unité, c'est le travail d'une matrice multicritère.",
       "Chiffrez le gain : 1,40 € par couvert, soit ~8 400 € par trimestre à 6 000 couverts. Comparez à ce que coûte une baisse de fréquentation du soir.",
       "N'oubliez pas la trésorerie : passer de 21 jours à comptant supprime une dette fournisseurs, donc augmente le BFR du montant de vos achats trimestriels.",
@@ -201,7 +201,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "La marge tombe de 20 € à 17,60 €. Seuil = 90 000 ÷ 17,60 ≈ 5 114 couverts. Soit 600 couverts de plus à servir — en plein creux d'août, c'est hors d'atteinte.",
+          "La marge tombe de 20 € à 17,60 €. Seuil = 90 000 ÷ 17,60 ≈ 5 114 couverts. Soit 600 couverts de plus à servir : en plein creux d'août, c'est hors d'atteinte.",
       },
       {
         id: "elasticite_midi",
@@ -215,7 +215,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "On répercute là où la demande résiste le mieux. La formule du midi est un marché de prix — deux euros de plus et le client va en face ; le soir, on vient pour l'expérience.",
+          "On répercute là où la demande résiste le mieux. La formule du midi est un marché de prix : deux euros de plus et le client va en face ; le soir, on vient pour l'expérience.",
       },
     ],
     modelRelevance: {
@@ -241,7 +241,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
     narrative:
       "Décembre arrive : les repas d'entreprise et les banquets de fin d'année concentrent l'essentiel de leur budget annuel sur ce trimestre. Ils règlent à 30 jours, réservent des semaines à l'avance, et remplissent la salle un soir entier.",
     problem:
-      "Combien de couverts préparer pour absorber le pic — et que risquez-vous en préparant trop ?",
+      "Combien de couverts préparer pour absorber le pic, et que risquez-vous en préparant trop ?",
     diagnosticOptions: [
       {
         id: "double_waste",
@@ -353,7 +353,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "2 % de 33 € = 0,66 €. Sur 6 000 couverts, cela fait près de 4 000 € par trimestre — sans toucher au prix ni à la fréquentation. C'est pourquoi le ratio matières se surveille chaque semaine.",
+          "2 % de 33 € = 0,66 €. Sur 6 000 couverts, cela fait près de 4 000 € par trimestre, sans toucher au prix ni à la fréquentation. C'est pourquoi le ratio matières se surveille chaque semaine.",
       },
       {
         id: "charges_rigides",
@@ -367,7 +367,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "L'asymétrie est brutale : on paie l'indemnité tout de suite, on récupère la marge plus tard — et on perd de la capacité de service au passage, donc du chiffre d'affaires.",
+          "L'asymétrie est brutale : on paie l'indemnité tout de suite, on récupère la marge plus tard, et on perd de la capacité de service au passage, donc du chiffre d'affaires.",
       },
     ],
     modelRelevance: {
@@ -382,7 +382,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
       "Divisez cet écart par votre marge par couvert : vous obtenez le nombre de couverts manquants.",
       "Trois leviers, comme partout : la marge unitaire, les volumes, les charges de structure. Mais leurs délais d'action diffèrent radicalement.",
       "Dans ce métier, le ratio matières est le levier le plus rapide : il ne demande ni nouveau client ni hausse de prix visible.",
-      "Seuil = 90 000 ÷ marge par couvert. Comparez à vos couverts réels : si l'écart dépasse 1 000 couverts, aucun levier unique ne suffira — il faudra les combiner.",
+      "Seuil = 90 000 ÷ marge par couvert. Comparez à vos couverts réels : si l'écart dépasse 1 000 couverts, aucun levier unique ne suffira : il faudra les combiner.",
     ]),
     trigger: { detect: "below_breakeven" },
     weight: 1,
@@ -394,11 +394,11 @@ const MODEL_EXPLAIN: Record<string, string> = {
   bistrot_t1_reprise:
     "Le seuil de rentabilité traduit le ratio matières en une question opérationnelle : combien de couverts par jour faut-il servir pour ne plus perdre d'argent ?",
   bistrot_t2_fournisseur:
-    "Trois circuits, des critères qui ne se mesurent pas dans la même unité — prix, qualité perçue, délai, temps de brigade : c'est le cas d'école de la matrice multicritère.",
+    "Trois circuits, des critères qui ne se mesurent pas dans la même unité (prix, qualité perçue, délai, temps de brigade) : c'est le cas d'école de la matrice multicritère.",
   bistrot_t3_matieres:
     "L'élasticité-prix dit ce que coûte en fréquentation chaque euro répercuté, service par service : c'est le seul outil qui arbitre entre ticket moyen et volume.",
   bistrot_t4_banquets:
-    "L'analyse de capacité met en évidence la double contrainte du métier — places assises et heures de brigade — et dimensionne la préparation sans gâchis.",
+    "L'analyse de capacité met en évidence la double contrainte du métier, places assises et heures de brigade, puis dimensionne la préparation sans gâchis.",
   bistrot_detect_below_breakeven:
     "Le seuil de rentabilité chiffre l'écart en couverts et hiérarchise les leviers selon leur délai d'action.",
 };

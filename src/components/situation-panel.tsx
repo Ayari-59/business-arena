@@ -57,7 +57,7 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
           </h4>
           {diagnosisDone ? (
             <p className="mt-2 text-sm text-emerald-300">
-              ✓ Diagnostic enregistré — il sera corrigé au débriefing du tour.
+              ✓ Diagnostic enregistré, il sera corrigé au débriefing du tour.
             </p>
           ) : (
             <form action={diagAction} className="mt-2 space-y-2">
@@ -93,7 +93,7 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
             </h4>
             {quizDone ? (
               <p className="mt-2 text-sm text-emerald-300">
-                ✓ QCM validé — la correction sera révélée au débriefing du tour.
+                ✓ QCM validé, la correction sera révélée au débriefing du tour.
               </p>
             ) : (
               <form action={quizAction} className="mt-2 space-y-4">
@@ -210,8 +210,8 @@ export function SituationDebrief({ situation }: { situation: SituationView }) {
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
               Connaissances et modèle d&apos;analyse
               {debrief.quizScore !== null
-                ? ` — ${Math.round(debrief.quizScore * 100)} %`
-                : " — QCM non traité"}
+                ? ` · ${Math.round(debrief.quizScore * 100)} %`
+                : " · QCM non traité"}
             </p>
             <ul className="mt-1 space-y-2">
               {situation.quizQuestions.map((question) => {
@@ -242,7 +242,7 @@ export function SituationDebrief({ situation }: { situation: SituationView }) {
                             ? "✗ Mauvaise réponse"
                             : "· Sans réponse"}
                       {credit < 1 && correctLabel ? (
-                        <span className="text-emerald-300"> — le plus juste : {correctLabel}</span>
+                        <span className="text-emerald-300"> · le plus juste : {correctLabel}</span>
                       ) : null}
                     </p>
                     <p className="mt-1 text-xs text-slate-500">{correction.explain}</p>

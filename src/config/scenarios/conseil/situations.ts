@@ -14,7 +14,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
     narrative:
       "Vous prenez la direction d'ATLAS CONSEIL : douze consultants, un carnet de commandes correct, 180 000 € de factures en attente de règlement et presque rien à l'actif immobilisé. Le trimestre offre 720 jours-consultants à vendre.",
     problem:
-      "Dans un cabinet, qu'est-ce qui détermine le résultat — et pourquoi le chiffre d'affaires ne suffit-il pas à le dire ?",
+      "Dans un cabinet, qu'est-ce qui détermine le résultat, et pourquoi le chiffre d'affaires ne suffit-il pas à le dire ?",
     diagnosticOptions: [
       {
         id: "utilization",
@@ -139,7 +139,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Mobiliser le poste clients transforme une créance en cash — à un prix. C'est souvent le seul levier d'un cabinet, qui n'a ni stock à réduire ni actif à céder.",
+          "Mobiliser le poste clients transforme une créance en cash, à un prix. C'est souvent le seul levier d'un cabinet, qui n'a ni stock à réduire ni actif à céder.",
       },
     ],
     modelRelevance: {
@@ -237,7 +237,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
   },
   {
     code: "conseil_t4_recrutement",
-    title: "Le marché s'ouvre — êtes-vous prêts ?",
+    title: "Le marché s'ouvre : êtes-vous prêts ?",
     narrative:
       "Un décret impose un audit à toutes les entreprises de plus de 250 salariés. Le marché s'ouvre pour tout le monde en même temps. Recruter un consultant coûte 8 000 €, et il ne produira qu'au trimestre suivant.",
     problem:
@@ -277,7 +277,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "C'est la différence structurelle avec l'industrie ou l'hôtellerie : aucun investissement capacitaire n'est possible. La seule voie est humaine — recruter, ou former pour gagner en productivité.",
+          "C'est la différence structurelle avec l'industrie ou l'hôtellerie : aucun investissement capacitaire n'est possible. La seule voie est humaine : recruter, ou former pour gagner en productivité.",
       },
       {
         id: "cout_recrutement",
@@ -306,7 +306,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
       "La demande supplémentaire ne vaut que si vous avez les jours-consultants pour la servir.",
       "Ici, aucun investissement capacitaire n'est possible : le seul levier est le recrutement, ou la formation qui améliore la productivité.",
       "Le coût de recrutement est immédiat (8 000 € par consultant), l'effet sur la capacité arrive au tour SUIVANT.",
-      "Chiffrez : un consultant apporte 60 jours par trimestre. À 65 % d'occupation et 470 € de marge, cela fait ~18 300 € par trimestre — contre 12 600 € de salaire. La marge est réelle, mais mince si l'occupation ne suit pas.",
+      "Chiffrez : un consultant apporte 60 jours par trimestre. À 65 % d'occupation et 470 € de marge, cela fait ~18 300 € par trimestre, contre 12 600 € de salaire. La marge est réelle, mais mince si l'occupation ne suit pas.",
     ]),
     trigger: { round: 4 },
     weight: 1.5,
@@ -315,7 +315,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
     code: "conseil_detect_below_breakeven",
     title: "Le banc coûte plus cher que les missions ne rapportent",
     narrative:
-      "Résultat d'exploitation négatif. Les missions livrées étaient bonnes, les clients satisfaits — mais trop de jours-consultants sont restés invendus.",
+      "Résultat d'exploitation négatif. Les missions livrées étaient bonnes, les clients satisfaits, mais trop de jours-consultants sont restés invendus.",
     problem:
       "Vous êtes sous votre taux d'occupation d'équilibre. Quels leviers, et dans quel ordre ?",
     diagnosticOptions: [
@@ -353,7 +353,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "380 ÷ 720 ≈ 53 %. Il manque environ 41 jours pour atteindre les 421 du seuil — soit moins d'une mission longue. L'écart chiffré rend la décision concrète.",
+          "380 ÷ 720 ≈ 53 %. Il manque environ 41 jours pour atteindre les 421 du seuil, soit moins d'une mission longue. L'écart chiffré rend la décision concrète.",
       },
       {
         id: "prospection_retard",
@@ -441,7 +441,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Un cabinet n'a pas de stock : ce levier classique lui est fermé. Il ne lui reste que le poste clients — d'où l'importance des acomptes et de la facturation à l'avancement, qui ne coûtent rien, contrairement à l'affacturage.",
+          "Un cabinet n'a pas de stock : ce levier classique lui est fermé. Il ne lui reste que le poste clients, d'où l'importance des acomptes et de la facturation à l'avancement, qui ne coûtent rien, contrairement à l'affacturage.",
       },
     ],
     modelRelevance: {
@@ -470,7 +470,7 @@ const MODEL_EXPLAIN: Record<string, string> = {
   conseil_t2_creances:
     "L'analyse FRNG / BFR est le seul outil qui explique qu'un cabinet rentable manque de trésorerie : sans stock, tout le BFR est dans le poste clients.",
   conseil_t3_banc:
-    "L'analyse des coûts pertinents isole ce que la décision change vraiment — 90 € de frais de mission — et écarte le salaire, engagé de toute façon.",
+    "L'analyse des coûts pertinents isole ce que la décision change vraiment, les 90 € de frais de mission, et écarte le salaire, engagé de toute façon.",
   conseil_t4_recrutement:
     "L'analyse de capacité confronte la demande attendue aux jours-consultants disponibles, et intègre le décalage propre au recrutement.",
   conseil_detect_below_breakeven:

@@ -59,7 +59,7 @@ export function StudyReportsPanel({ reports }: { reports: StudyReports }) {
   return (
     <section className="mt-4">
       <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-indigo-300">
-        📊 Vos études du tour {reports.round} — {euro(reports.cost)} d&apos;honoraires
+        📊 Vos études du tour {reports.round} · {euro(reports.cost)} d&apos;honoraires
       </p>
       <div className="grid gap-3 lg:grid-cols-2">
         {reports.market ? (
@@ -106,7 +106,7 @@ export function StudyReportsPanel({ reports }: { reports: StudyReports }) {
             />
             <p className="text-slate-500">
               Élasticité : une baisse de prix de 1 % fait varier la demande du segment de ce
-              pourcentage. Sous le plancher, la méfiance s&apos;installe — trop beau pour être vrai.
+              pourcentage. Sous le plancher, la méfiance s&apos;installe : trop beau pour être vrai.
             </p>
           </Report>
         ) : null}
@@ -132,7 +132,7 @@ export function StudyReportsPanel({ reports }: { reports: StudyReports }) {
               ]}
             />
             <p className="text-slate-500">
-              Secteur ({reports.finance.sector.teams} concurrents) — CA moyen{" "}
+              Secteur ({reports.finance.sector.teams} concurrents) · CA moyen{" "}
               {euro(reports.finance.sector.avgRevenue)}, résultat net moyen{" "}
               {euro(reports.finance.sector.avgNetIncome)}, trésorerie nette moyenne{" "}
               {euro(reports.finance.sector.avgNetTreasury)}.
@@ -191,7 +191,7 @@ export function StudyReportsPanel({ reports }: { reports: StudyReports }) {
                 {reports.project.currentOffer.paymentDelayDays > 0 ? (
                   <>
                     {" "}
-                    — mais {reports.project.currentOffer.paymentDelayDays} jours d&apos;attente :
+                    , mais {reports.project.currentOffer.paymentDelayDays} jours d&apos;attente :
                     coût de portage estimé{" "}
                     {euro(reports.project.currentOffer.carryCost)} au taux du découvert. La
                     marge nette de portage reste{" "}
@@ -201,7 +201,7 @@ export function StudyReportsPanel({ reports }: { reports: StudyReports }) {
                     , SI votre banque suit.
                   </>
                 ) : (
-                  <> — réglée comptant : aucun portage, mais c&apos;est toute la marge.</>
+                  <>, réglée comptant : aucun portage, mais c&apos;est toute la marge.</>
                 )}
               </p>
             ) : null}

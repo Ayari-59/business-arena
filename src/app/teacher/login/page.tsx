@@ -32,9 +32,9 @@ export default async function TeacherLoginPage() {
           </p>
           <ul className="mt-2 space-y-1 font-mono text-xs text-slate-300">
             <li>
-              Admin établissement — {DEMO_ACCOUNTS.orgAdmin.email}
+              Admin établissement · {DEMO_ACCOUNTS.orgAdmin.email}
             </li>
-            <li>Enseignant — {DEMO_ACCOUNTS.teacher.email}</li>
+            <li>Enseignant · {DEMO_ACCOUNTS.teacher.email}</li>
             <li className="text-slate-400">
               Mot de passe : {DEMO_ACCOUNTS.password}
             </li>
