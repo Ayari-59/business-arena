@@ -180,6 +180,17 @@ export interface CreatedGame {
   teams: { id: string; name: string; controller: "human" | "bot" }[];
 }
 
+/**
+ * Nom d'équipe affiché. Les parties solo créées avant ce nettoyage portent le
+ * suffixe « (vous) » dans le nom stocké : il servait à repérer le joueur, ce
+ * que le surlignage de sa ligne fait déjà. On le retire à l'affichage plutôt
+ * que par une migration, pour que les parties en cours en soient debarrassées
+ * elles aussi.
+ */
+export function teamDisplayName(name: string): string {
+  return name.replace(/\s*\(vous\)\s*$/, "");
+}
+
 /** Cœur commun de création : partie + équipes + tours + états initiaux. */
 export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame> {
   const definition = scenarioByCode(args.scenarioCode);
@@ -308,7 +319,7 @@ export async function createSoloGame(
     createdBy: userId,
     periodicity,
     kind: "solo",
-    humanTeams: [{ name: `${definition.playerTeamName} (vous)` }],
+    humanTeams: [{ name: definition.playerTeamName }],
     botCount,
     level,
     variableWorld,
@@ -1098,10 +1109,9 @@ export interface GameView {
   intro: {
     title: string;
     /**
-     * Nom de l'ENTREPRISE reprise, qui n'est pas celui de l'équipe : en solo
-     * l'équipe porte le marqueur « (vous) » du classement, et en classe elle
-     * s'appelle « Équipe 3 ». Ni l'un ni l'autre ne se dit dans la phrase
-     * d'accueil, qui présente la maison, pas le pseudo.
+     * Nom de l'ENTREPRISE reprise, qui n'est pas toujours celui de l'équipe :
+     * en classe, l'équipe s'appelle « Équipe 3 ». La phrase d'accueil présente
+     * la maison, pas l'équipe.
      */
     company: string;
     tagline: string;
@@ -1379,7 +1389,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     .map((r) => {
       const team = teamRows.find((t) => t.id === r.teamId);
       return {
-        name: team?.name ?? "?",
+        name: teamDisplayName(team?.name ?? "?"),
         isPlayer: r.teamId === playerTeam.id,
         cumulativeNetIncome: Number(
           (r.detail as { cumulativeNetIncome?: number })?.cumulativeNetIncome ?? 0,
@@ -1432,7 +1442,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
               ? Object.values(detail).reduce((sum, d) => sum + (d.sold ?? 0), 0)
               : 0;
             return {
-              name: teamRows.find((t) => t.id === row.teamId)?.name ?? "?",
+              name: teamDisplayName(teamRows.find((t) => t.id === row.teamId)?.name ?? "?"),
               isPlayer: row.teamId === playerTeam.id,
               avgPrice: units > 1 ? Number(row.revenue) / units : null,
               marketShare: Number(row.marketShare),
@@ -1547,7 +1557,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     roundsCount: (game.scenarioSnapshot as { roundsCount: number }).roundsCount,
     roundDays: (game.scenarioSnapshot as { roundDays: number }).roundDays,
     playerTeamId: playerTeam.id,
-    playerTeamName: playerTeam.name,
+    playerTeamName: teamDisplayName(playerTeam.name),
     pendingDecisions,
     announcedEventCards: readPendingEvents(game.difficultyProfile).map((card) => {
       const target = card.teamId ? teamRows.find((t) => t.id === card.teamId) : undefined;
@@ -1668,7 +1678,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         })),
         competitors: teamRows
           .filter((t) => t.id !== playerTeam.id)
-          .map((t) => t.name),
+          .map((t) => teamDisplayName(t.name)),
       };
     })(),
     capacityFacts: (() => {
@@ -1923,7 +1933,7 @@ export async function getTeacherGameView(
       const last = lastResults.find((r) => r.teamId === t.id);
       return {
         teamId: t.id,
-        name: t.name,
+        name: teamDisplayName(t.name),
         controller: t.controller,
         playerNames: memberships.filter((m) => m.teamId === t.id).map((m) => m.name),
         hasSubmitted:
@@ -1935,7 +1945,7 @@ export async function getTeacherGameView(
     }),
     ranking: rankingRows
       .map((r) => ({
-        name: teamRows.find((t) => t.id === r.teamId)?.name ?? "?",
+        name: teamDisplayName(teamRows.find((t) => t.id === r.teamId)?.name ?? "?"),
         cumulativeNetIncome: Number(
           (r.detail as { cumulativeNetIncome?: number })?.cumulativeNetIncome ?? 0,
         ),

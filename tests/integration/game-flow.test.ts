@@ -133,6 +133,14 @@ describe("parcours complet d'une partie solo", () => {
     expect(view!.lastResult).not.toBeNull();
     expect(view!.ranking).toHaveLength(2);
 
+    // Aucun nom d'équipe ne porte de marqueur « (vous) » : le classement
+    // surligne déjà la ligne du joueur, et le nom est celui de l'entreprise.
+    expect(view!.playerTeamName).not.toMatch(/\(vous\)/);
+    for (const row of view!.ranking) expect(row.name).not.toMatch(/\(vous\)/);
+    for (const name of view!.intro.competitors) expect(name).not.toMatch(/\(vous\)/);
+    // et la ligne du joueur reste identifiable autrement
+    expect(view!.ranking.filter((r) => r.isPlayer)).toHaveLength(1);
+
     const stranger = await db
       .insert(users)
       .values({ email: "intrus@business-arena.local", displayName: "Intrus" })

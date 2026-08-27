@@ -23,9 +23,12 @@ function Report({ title, children }: { title: string; children: React.ReactNode 
 function Table({
   head,
   rows,
+  highlight,
 }: {
   head: string[];
   rows: (string | number)[][];
+  /** Index de la ligne du joueur, mise en avant plutôt que nommée « (vous) ». */
+  highlight?: number;
 }) {
   return (
     <div className="overflow-x-auto">
@@ -41,7 +44,12 @@ function Table({
         </thead>
         <tbody>
           {rows.map((cells, i) => (
-            <tr key={i} className="border-t border-white/5 text-slate-300">
+            <tr
+              key={i}
+              className={`border-t border-white/5 ${
+                i === highlight ? "font-semibold text-amber-200" : "text-slate-300"
+              }`}
+            >
               {cells.map((c, j) => (
                 <td key={j} className={`py-1 pr-3 ${j > 0 ? "tabular-nums" : ""}`}>
                   {c}
@@ -76,8 +84,9 @@ export function StudyReportsPanel({ reports }: { reports: StudyReports }) {
             />
             <Table
               head={["Concurrent", "Prix moyen constaté", "Part de marché", "CA", "Résultat net"]}
+              highlight={reports.market.competitors.findIndex((c) => c.isPlayer)}
               rows={reports.market.competitors.map((c) => [
-                c.isPlayer ? `${c.name} (vous)` : c.name,
+                c.name,
                 c.avgPrice !== null ? `≈ ${c.avgPrice.toFixed(2).replace(".", ",")} €` : "n.c.",
                 pct(c.marketShare),
                 euro(c.revenue),
