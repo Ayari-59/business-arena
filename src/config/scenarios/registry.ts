@@ -1,12 +1,16 @@
 import type { BotProfile } from "../../engine/bots";
 import type { CompanyState, EngineScenarioConfig } from "../../engine/types";
-import type { SituationDef } from "./nova/situations";
+import type { SituationDef } from "./situation-kit";
 import { novaBots, novaCompany, novaScenario } from "./nova";
 import { NOVA_SITUATIONS } from "./nova/situations";
 import { boutiqueBots, boutiqueCompany, boutiqueScenario } from "./boutique";
+import { BOUTIQUE_SITUATIONS } from "./boutique/situations";
 import { hotelBots, hotelCompany, hotelScenario } from "./hotel";
+import { HOTEL_SITUATIONS } from "./hotel/situations";
 import { bistrotBots, bistrotCompany, bistrotScenario } from "./bistrot";
+import { BISTROT_SITUATIONS } from "./bistrot/situations";
 import { conseilBots, conseilCompany, conseilScenario } from "./conseil";
+import { CONSEIL_SITUATIONS } from "./conseil/situations";
 
 /**
  * Registre des scénarios (doc 01 §4) : un scénario n'est pas du code, c'est
@@ -109,7 +113,7 @@ export const BOUTIQUE_DEFINITION: ScenarioDefinition = {
   scenario: boutiqueScenario,
   company: boutiqueCompany,
   bots: boutiqueBots,
-  situations: [],
+  situations: BOUTIQUE_SITUATIONS,
 };
 
 export const HOTEL_DEFINITION: ScenarioDefinition = {
@@ -132,7 +136,7 @@ export const HOTEL_DEFINITION: ScenarioDefinition = {
   scenario: hotelScenario,
   company: hotelCompany,
   bots: hotelBots,
-  situations: [],
+  situations: HOTEL_SITUATIONS,
 };
 
 export const BISTROT_DEFINITION: ScenarioDefinition = {
@@ -155,7 +159,7 @@ export const BISTROT_DEFINITION: ScenarioDefinition = {
   scenario: bistrotScenario,
   company: bistrotCompany,
   bots: bistrotBots,
-  situations: [],
+  situations: BISTROT_SITUATIONS,
 };
 
 export const CONSEIL_DEFINITION: ScenarioDefinition = {
@@ -178,7 +182,7 @@ export const CONSEIL_DEFINITION: ScenarioDefinition = {
   scenario: conseilScenario,
   company: conseilCompany,
   bots: conseilBots,
-  situations: [],
+  situations: CONSEIL_SITUATIONS,
 };
 
 /** Tous les scénarios jouables, dans l'ordre d'affichage du sélecteur. */

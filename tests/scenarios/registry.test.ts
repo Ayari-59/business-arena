@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { SCENARIOS, scenarioByCode, ALL_SITUATIONS } from "../../src/config/scenarios/registry";
 import { balanceGap } from "../../src/engine/finance/statements";
+import { CONCEPTS } from "../../src/config/pedagogy/concepts";
+import { DECISION_MODELS } from "../../src/config/pedagogy/models";
 
 /**
  * Garde-fous du registre : ce qu'un scénario doit respecter pour être
@@ -113,6 +115,82 @@ describe("registre des scénarios", () => {
     for (const d of SCENARIOS) {
       const codes = (d.scenario.orderOffers ?? []).map((o) => o.code);
       expect(new Set(codes).size, d.code).toBe(codes.length);
+    }
+  });
+
+  it("chaque scénario ouvre une situation dès le tour 1", () => {
+    for (const d of SCENARIOS) {
+      const first = d.situations.filter((s) => "round" in s.trigger && s.trigger.round === 1);
+      expect(first.length, `${d.code} : aucune situation au tour 1`).toBeGreaterThanOrEqual(1);
+    }
+  });
+
+  it("les situations scriptées tombent dans les tours joués", () => {
+    for (const d of SCENARIOS) {
+      for (const s of d.situations) {
+        if (!("round" in s.trigger)) continue;
+        expect(s.trigger.round, `${s.code} hors des tours joués`).toBeLessThanOrEqual(
+          d.scenario.roundsCount,
+        );
+        expect(s.trigger.round, s.code).toBeGreaterThanOrEqual(1);
+      }
+    }
+  });
+
+  it("chaque situation est complète : diagnostic, QCM, indices, concepts", () => {
+    for (const d of SCENARIOS) {
+      for (const s of d.situations) {
+        // un diagnostic a des bonnes ET des mauvaises réponses, sinon il ne discrimine rien
+        expect(s.diagnosticOptions.length, s.code).toBeGreaterThanOrEqual(3);
+        expect(s.diagnosticOptions.some((o) => o.correct), `${s.code} : aucune bonne réponse`).toBe(
+          true,
+        );
+        expect(
+          s.diagnosticOptions.some((o) => !o.correct),
+          `${s.code} : aucun distracteur`,
+        ).toBe(true);
+        // 5 niveaux d'indices, du plus vague au plus explicite
+        expect(s.hints.length, `${s.code} : indices incomplets`).toBe(5);
+        expect(s.hints.map((h) => h.level)).toEqual([1, 2, 3, 4, 5]);
+        // le QCM porte les questions de connaissances + la question du modèle
+        expect(s.quiz.length, `${s.code} : QCM trop court`).toBeGreaterThanOrEqual(3);
+        expect(s.quiz.some((q) => q.id === "model_choice"), `${s.code}`).toBe(true);
+        expect(s.conceptCodes.length, `${s.code} : aucun concept rattaché`).toBeGreaterThanOrEqual(
+          2,
+        );
+        expect(s.narrative.length, `${s.code} : récit trop court`).toBeGreaterThan(60);
+      }
+    }
+  });
+
+  it("chaque question de QCM a une bonne réponse existante et une correction", () => {
+    for (const d of SCENARIOS) {
+      for (const s of d.situations) {
+        for (const q of s.quiz) {
+          const ids = q.options.map((o) => o.id);
+          expect(new Set(ids).size, `${s.code}/${q.id} : options dupliquées`).toBe(ids.length);
+          expect(ids, `${s.code}/${q.id} : bonne réponse introuvable`).toContain(
+            q.correctOptionId,
+          );
+          expect(q.options.length, `${s.code}/${q.id}`).toBeGreaterThanOrEqual(2);
+          expect(q.explain.length, `${s.code}/${q.id} : correction manquante`).toBeGreaterThan(30);
+        }
+      }
+    }
+  });
+
+  it("les concepts et modèles cités existent au référentiel", () => {
+    const conceptCodes = new Set(CONCEPTS.map((c) => c.code));
+    const modelCodes = new Set(DECISION_MODELS.map((m) => m.code));
+    for (const d of SCENARIOS) {
+      for (const s of d.situations) {
+        for (const code of s.conceptCodes) {
+          expect(conceptCodes.has(code), `${s.code} : concept inconnu « ${code} »`).toBe(true);
+        }
+        for (const code of Object.keys(s.modelRelevance)) {
+          expect(modelCodes.has(code), `${s.code} : modèle inconnu « ${code} »`).toBe(true);
+        }
+      }
     }
   });
 

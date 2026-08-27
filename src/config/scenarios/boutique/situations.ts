@@ -1,0 +1,483 @@
+import { attachModelQuestions, hints, type SituationDef } from "../situation-kit";
+
+/**
+ * Situations pédagogiques de MAILLE & CO (commerce de détail).
+ *
+ * Le fil rouge du secteur : on ne fabrique rien, donc tout se joue entre le
+ * prix d'achat et le prix de vente — et le stock, qui est à la fois l'outil
+ * de travail et le piège de trésorerie.
+ */
+export const BOUTIQUE_SITUATIONS: SituationDef[] = [
+  {
+    code: "boutique_t1_reprise",
+    title: "La reprise de la boutique",
+    narrative:
+      "Vous reprenez MAILLE & CO : 90 m² en centre-ville, six salariées, 1 200 articles en réserve et un bail qui court. L'ancienne propriétaire vous laisse un carnet où elle notait ses prix d'achat, et rien d'autre.",
+    problem:
+      "Avant de fixer vos étiquettes : qu'est-ce qui détermine si un article vendu vous fait gagner ou perdre de l'argent ?",
+    diagnosticOptions: [
+      {
+        id: "cover_purchase",
+        label: "Chaque article doit se vendre plus cher que son coût d'achat et ses frais variables",
+        correct: true,
+      },
+      {
+        id: "cover_fixed",
+        label: "L'ensemble des marges dégagées doit couvrir le loyer et les salaires du trimestre",
+        correct: true,
+      },
+      {
+        id: "beat_competitors",
+        label: "Il faut afficher un prix inférieur à celui de l'enseigne d'en face",
+        correct: false,
+      },
+      {
+        id: "sell_stock",
+        label: "Il faut écouler tout le stock, quel qu'en soit le prix",
+        correct: false,
+      },
+    ],
+    quiz: [
+      {
+        id: "coefficient",
+        prompt:
+          "Un article acheté 18 € est vendu 45 €. Quel est le coefficient multiplicateur ?",
+        options: [
+          { id: "a", label: "2,5" },
+          { id: "b", label: "1,6" },
+          { id: "c", label: "27" },
+          { id: "d", label: "0,4" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Le coefficient multiplicateur est le rapport prix de vente / prix d'achat : 45 ÷ 18 = 2,5. C'est le langage du commerce — mais il ne dit rien des frais variables ni des charges de structure.",
+      },
+      {
+        id: "marge_vs_coeff",
+        prompt:
+          "Ce même article supporte 3,50 € de frais variables (sac, commission carte, logistique). Quelle marge sur coût variable dégage-t-il réellement ?",
+        options: [
+          { id: "a", label: "23,50 €" },
+          { id: "b", label: "27,00 €" },
+          { id: "c", label: "18,00 €" },
+          { id: "d", label: "45,00 €" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "45 − 18 − 3,50 = 23,50 €. Le coefficient multiplicateur oublie les frais variables : c'est la marge sur coût variable, pas la marge commerciale, qui couvre le loyer et les salaires.",
+      },
+    ],
+    modelRelevance: {
+      breakeven_analysis: "optimal",
+      cvp_analysis: "acceptable",
+      psych_pricing: "acceptable",
+      npv: "irrelevant",
+    },
+    conceptCodes: ["contribution_margin", "variable_costs", "fixed_costs", "breakeven"],
+    hints: hints([
+      "Regardez votre compte de résultat : deux blocs de charges s'y comportent très différemment quand vos ventes varient.",
+      "Le loyer et les salaires tombent que vous vendiez 10 ou 10 000 articles. Le coût d'achat, lui, suit les quantités.",
+      "Chaque article vendu laisse « prix − coût d'achat − frais variables » pour éponger les charges de structure.",
+      "Marge sur coût variable unitaire = 45 − 18 − 3,50 = 23,50 €. Vos charges de structure décaissées sont de 84 000 € par trimestre.",
+      "Seuil de rentabilité = 84 000 ÷ 23,50 ≈ 3 575 articles par trimestre. En dessous, la boutique perd de l'argent quoi que vous fassiez en vitrine.",
+    ]),
+    trigger: { round: 1 },
+    weight: 1,
+  },
+  {
+    code: "boutique_t2_circuit",
+    title: "Trois représentants, trois modèles",
+    narrative:
+      "Trois commerciaux se succèdent dans votre arrière-boutique. Le grossiste propose son catalogue habituel à 45 jours. Le déstockeur casse les prix de 18 %, mais veut un chèque à l'enlèvement et ne garantit aucun réassort. Les créateurs demandent 22 % de plus, réglés à 30 jours, et vous laissent l'exclusivité sur la ville.",
+    problem:
+      "Sur quels critères tranchez-vous — et pourquoi le seul prix d'achat ne suffit-il pas à décider ?",
+    diagnosticOptions: [
+      {
+        id: "multi_criteria",
+        label: "Prix d'achat, image de la boutique, délai de règlement et risque de rupture doivent être pesés ensemble",
+        correct: true,
+      },
+      {
+        id: "cash_impact",
+        label: "Payer comptant au lieu de 45 jours change le besoin de trésorerie, pas seulement le résultat",
+        correct: true,
+      },
+      {
+        id: "cheapest_wins",
+        label: "Le moins cher à l'achat est nécessairement le plus rentable",
+        correct: false,
+      },
+      {
+        id: "premium_always",
+        label: "Le créateur est toujours le bon choix : la qualité finit toujours par payer",
+        correct: false,
+      },
+    ],
+    quiz: [
+      {
+        id: "delai_bfr",
+        prompt:
+          "Passer d'un fournisseur à 45 jours à un fournisseur payé comptant, à volume d'achat identique, produit quel effet ?",
+        options: [
+          { id: "a", label: "Le besoin en fonds de roulement augmente : les dettes fournisseurs disparaissent" },
+          { id: "b", label: "Le besoin en fonds de roulement diminue" },
+          { id: "c", label: "Le résultat net baisse mécaniquement" },
+          { id: "d", label: "Aucun effet : seul le prix d'achat compte" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Les dettes fournisseurs sont une ressource gratuite qui vient EN DÉDUCTION du BFR. Les supprimer, c'est financer soi-même son stock : le résultat ne bouge pas, la trésorerie si.",
+      },
+      {
+        id: "qualite_perçue",
+        prompt:
+          "Le déstockeur permet 18 % d'économie sur le coût d'achat mais dégrade la qualité perçue. Quel segment de votre clientèle le supportera le moins ?",
+        options: [
+          { id: "a", label: "Les clientes fidèles, très sensibles à la qualité et peu au prix" },
+          { id: "b", label: "Les chalands de passage, très sensibles au prix" },
+          { id: "c", label: "Les comités d'entreprise, qui achètent au volume" },
+          { id: "d", label: "Tous les segments réagissent de la même façon" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "La segmentation sert exactement à cela : les fidèles arbitrent sur la qualité (élasticité-prix faible, sensibilité qualité forte), les chalands sur le prix. Une décision d'achat n'a pas le même effet sur les deux.",
+      },
+    ],
+    modelRelevance: {
+      multicriteria_matrix: "optimal",
+      relevant_costs: "acceptable",
+      frng_bfr_analysis: "acceptable",
+      breakeven_analysis: "misleading",
+    },
+    conceptCodes: ["segmentation", "variable_costs", "bfr", "margin_rates"],
+    hints: hints([
+      "Écrivez les trois offres côte à côte : qu'est-ce qui les distingue, au-delà du prix affiché sur le tarif ?",
+      "Quatre dimensions au moins : le prix d'achat, la qualité perçue par vos clientes, le délai de règlement et le risque de rupture.",
+      "Comparer des options sur des critères hétérogènes, c'est le travail d'une matrice multicritère : critères explicites, pondérations assumées.",
+      "Le délai fournisseur n'apparaît pas au compte de résultat mais pèse directement sur le BFR : dettes fournisseurs = ressource, stock = emploi.",
+      "Chiffrez : 18 % d'économie sur 18 € = 3,24 €/article. Face à cela, une qualité perçue en baisse coûte des ventes chez vos fidèles, et le paiement comptant ponctionne votre trésorerie du montant de vos achats.",
+    ]),
+    trigger: { round: 2 },
+    weight: 1,
+  },
+  {
+    code: "boutique_t4_noel",
+    title: "Le trimestre qui fait l'année",
+    narrative:
+      "Le quatrième trimestre pèse près d'une fois et demie un trimestre ordinaire, et les comités d'entreprise passent leurs commandes de fin d'année. Votre grossiste veut vos volumes maintenant : les délais de livraison sont de six semaines, et il ne reprendra rien.",
+    problem:
+      "Combien commander pour Noël — et que risquez-vous en vous trompant dans un sens ou dans l'autre ?",
+    diagnosticOptions: [
+      {
+        id: "both_risks",
+        label: "Trop peu : des ventes définitivement perdues. Trop : du stock payé qui dort jusqu'au printemps",
+        correct: true,
+      },
+      {
+        id: "anticipate",
+        label: "Il faut commander avant le pic, donc décaisser avant d'encaisser",
+        correct: true,
+      },
+      {
+        id: "max_always",
+        label: "Commander le maximum : un article invendu se revend toujours l'année suivante au même prix",
+        correct: false,
+      },
+      {
+        id: "wait_and_see",
+        label: "Attendre de voir les premières ventes de décembre pour se réapprovisionner",
+        correct: false,
+      },
+    ],
+    quiz: [
+      {
+        id: "cout_rupture",
+        prompt:
+          "Un rayon vide en pleine semaine de Noël vous coûte, sur chaque article que vous auriez pu vendre :",
+        options: [
+          { id: "a", label: "Sa marge sur coût variable, définitivement perdue" },
+          { id: "b", label: "Son prix d'achat" },
+          { id: "c", label: "Son prix de vente entier" },
+          { id: "d", label: "Rien : la vente se reporte en janvier" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Vous ne perdez pas le prix de vente (vous n'avez pas acheté la marchandise), mais la marge qu'elle aurait dégagée : 23,50 € qui ne couvriront jamais vos charges de structure. Et le cadeau de Noël ne s'achète pas en janvier.",
+      },
+      {
+        id: "stock_bfr",
+        prompt:
+          "Vous commandez 2 000 articles supplémentaires à 18 €. Quel est l'effet immédiat sur votre bilan, avant toute vente ?",
+        options: [
+          { id: "a", label: "+36 000 € de stock à l'actif, et une dette fournisseurs ou une sortie de trésorerie au passif" },
+          { id: "b", label: "−36 000 € de résultat net" },
+          { id: "c", label: "+36 000 € de chiffre d'affaires" },
+          { id: "d", label: "Aucun effet tant que les articles ne sont pas vendus" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Acheter n'est pas une charge : c'est un actif qui entre au bilan. La charge n'apparaît qu'à la vente, dans le coût des ventes. Entre les deux, votre argent dort en réserve — c'est la définition du besoin en fonds de roulement.",
+      },
+    ],
+    modelRelevance: {
+      capacity_analysis: "optimal",
+      scenarios_method: "acceptable",
+      cash_budget: "acceptable",
+      psych_pricing: "irrelevant",
+    },
+    conceptCodes: ["seasonality", "stock", "bfr", "capacity"],
+    hints: hints([
+      "Regardez la saisonnalité de votre scénario : quel coefficient s'applique au quatrième trimestre ?",
+      "Le pic vaut environ 1,45 fois un trimestre ordinaire, et les comités d'entreprise concentrent l'essentiel de leur budget sur ce tour.",
+      "Deux erreurs symétriques, mais pas de même coût : la rupture perd une marge à jamais, le surstock immobilise de la trésorerie et se soldera.",
+      "Votre capacité de traitement trimestrielle est de 7 500 articles : elle borne ce que la boutique peut absorber, quelles que soient vos commandes.",
+      "Estimez la demande du tour à partir de vos ventes du tour précédent × 1,45, comparez-la à votre capacité, et vérifiez que votre trésorerie supporte le décaissement anticipé.",
+    ]),
+    trigger: { round: 4 },
+    weight: 1.5,
+  },
+  {
+    code: "boutique_t5_coton",
+    title: "Le coton a flambé",
+    narrative:
+      "Votre grossiste annonce +18 % sur la prochaine collection : mauvaise récolte, fret en hausse. Vos étiquettes, elles, sont imprimées. Le trimestre de Noël vient de vider votre trésorerie dans le réassort.",
+    problem:
+      "Répercutez-vous la hausse sur vos prix de vente, ou l'absorbez-vous sur votre marge ?",
+    diagnosticOptions: [
+      {
+        id: "elasticity_first",
+        label: "Cela dépend de la sensibilité au prix de chaque segment : répercuter fait perdre des volumes",
+        correct: true,
+      },
+      {
+        id: "margin_math",
+        label: "Il faut chiffrer combien de volume on peut perdre avant que la hausse de prix ne rapporte plus rien",
+        correct: true,
+      },
+      {
+        id: "always_pass",
+        label: "On répercute toujours intégralement : le client comprendra",
+        correct: false,
+      },
+      {
+        id: "never_pass",
+        label: "On n'augmente jamais ses prix : la clientèle partirait chez le concurrent",
+        correct: false,
+      },
+    ],
+    quiz: [
+      {
+        id: "elasticite_calc",
+        prompt:
+          "Sur le segment des chalands (élasticité-prix −2,1), augmenter le prix de 5 % fait varier la demande d'environ :",
+        options: [
+          { id: "a", label: "−10,5 %" },
+          { id: "b", label: "−2,1 %" },
+          { id: "c", label: "+10,5 %" },
+          { id: "d", label: "−5 %" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "L'élasticité mesure la variation de la demande pour 1 % de variation du prix : −2,1 × 5 % ≈ −10,5 %. Sur ce segment, la hausse de prix coûte plus de volume qu'elle ne rapporte de marge unitaire.",
+      },
+      {
+        id: "seuil_deplace",
+        prompt:
+          "Vous absorbez la hausse sans toucher à vos prix. Votre coût d'achat passe de 18 € à 21,24 €. Que devient votre seuil de rentabilité, à charges de structure inchangées ?",
+        options: [
+          { id: "a", label: "Il monte : il faut vendre environ 4 150 articles au lieu de 3 575" },
+          { id: "b", label: "Il baisse : la marge unitaire compte moins" },
+          { id: "c", label: "Il ne bouge pas : les charges de structure sont identiques" },
+          { id: "d", label: "Il devient impossible à atteindre" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "La marge unitaire tombe de 23,50 € à 20,26 €. Seuil = 84 000 ÷ 20,26 ≈ 4 146 articles. Absorber une hausse d'achat, c'est déplacer son seuil vers le haut sans que le client s'en aperçoive.",
+      },
+    ],
+    modelRelevance: {
+      elasticity_analysis: "optimal",
+      cvp_analysis: "acceptable",
+      sensitivity_analysis: "acceptable",
+      capacity_analysis: "irrelevant",
+    },
+    conceptCodes: ["price_elasticity", "contribution_margin", "breakeven", "margin_rates"],
+    hints: hints([
+      "La hausse touche votre coût d'achat, pas vos charges de structure. Quelle grandeur du compte de résultat bouge en premier ?",
+      "Votre marge sur coût variable unitaire se comprime de 3,24 € par article. Multipliez par vos volumes trimestriels.",
+      "Répercuter, c'est arbitrer entre marge unitaire et volume : c'est exactement ce que mesure l'élasticité-prix.",
+      "Vos segments n'ont pas la même élasticité : −0,9 pour les fidèles, −2,1 pour les chalands. Une hausse uniforme ne les touche pas de la même façon.",
+      "Chiffrez les deux branches : absorber porte le seuil de 3 575 à ~4 150 articles ; répercuter 5 % coûte ~10 % de volume chez les chalands. Comparez les marges totales, pas les pourcentages.",
+    ]),
+    trigger: { round: 5 },
+    weight: 1.5,
+  },
+  {
+    code: "boutique_detect_below_breakeven",
+    title: "Le trimestre s'est terminé dans le rouge",
+    narrative:
+      "Les comptes du trimestre sont sortis : le résultat d'exploitation est négatif. La boutique a pourtant été ouverte tous les jours, les vendeuses ont fait leur travail, et la vitrine était soignée.",
+    problem:
+      "Vous n'avez pas atteint le seuil de rentabilité. Quels leviers avez-vous réellement, et lequel agit le plus vite ?",
+    diagnosticOptions: [
+      {
+        id: "three_levers",
+        label: "Trois leviers : la marge unitaire, les volumes, ou les charges de structure",
+        correct: true,
+      },
+      {
+        id: "quantify",
+        label: "Il faut chiffrer l'écart en articles avant de choisir un levier",
+        correct: true,
+      },
+      {
+        id: "cut_price",
+        label: "Baisser les prix est toujours la réponse : cela ramène du volume",
+        correct: false,
+      },
+      {
+        id: "wait",
+        label: "Le prochain trimestre compensera de lui-même",
+        correct: false,
+      },
+    ],
+    quiz: [
+      {
+        id: "seuil_formule",
+        prompt: "Le seuil de rentabilité en volume se calcule :",
+        options: [
+          { id: "a", label: "Charges de structure ÷ marge sur coût variable unitaire" },
+          { id: "b", label: "Charges de structure × marge unitaire" },
+          { id: "c", label: "Chiffre d'affaires ÷ coût d'achat" },
+          { id: "d", label: "Capacité de traitement × coefficient multiplicateur" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "C'est le volume à partir duquel la marge dégagée couvre exactement les charges de structure. Chaque article vendu au-delà crée du résultat.",
+      },
+      {
+        id: "levier_structure",
+        prompt:
+          "Réduire les charges de structure de 5 % ou augmenter la marge unitaire de 5 % : quel effet sur le seuil ?",
+        options: [
+          { id: "a", label: "Les deux abaissent le seuil dans des proportions comparables" },
+          { id: "b", label: "Seule la baisse des charges agit sur le seuil" },
+          { id: "c", label: "Seule la hausse de marge agit sur le seuil" },
+          { id: "d", label: "Aucun des deux : seul le volume compte" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Le seuil est un rapport : charges ÷ marge unitaire. Diviser le numérateur ou multiplier le dénominateur par le même facteur produit le même effet. Mais dans un commerce, le loyer se renégocie une fois par bail, le prix se change demain matin.",
+      },
+    ],
+    modelRelevance: {
+      breakeven_analysis: "optimal",
+      cvp_analysis: "acceptable",
+      elasticity_analysis: "acceptable",
+      npv: "irrelevant",
+    },
+    conceptCodes: ["breakeven", "contribution_margin", "fixed_costs", "safety_margin"],
+    hints: hints([
+      "Reprenez le compte de résultat du tour : de combien manquez-vous exactement pour équilibrer ?",
+      "Divisez cet écart par votre marge sur coût variable unitaire : vous obtenez le nombre d'articles manquants.",
+      "Le seuil s'écrit : charges de structure ÷ marge unitaire. Trois leviers, donc — le numérateur, le dénominateur, ou les quantités vendues.",
+      "Attention au levier prix : il agit sur la marge unitaire ET sur les volumes, en sens contraire. C'est l'élasticité qui arbitre.",
+      "Avec 84 000 € de charges décaissées et 23,50 € de marge, le seuil est à ~3 575 articles. Comparez à vos ventes réelles : l'écart en articles vous dit quel levier est atteignable ce trimestre.",
+    ]),
+    trigger: { detect: "below_breakeven" },
+    weight: 1,
+  },
+  {
+    code: "boutique_detect_profitable_illiquid",
+    title: "Rentable, et pourtant à découvert",
+    narrative:
+      "Votre expert-comptable est formel : le trimestre est bénéficiaire. Votre banquier l'est tout autant : vous êtes à découvert. La réserve est pleine, et les comités d'entreprise règlent à 45 jours.",
+    problem:
+      "Comment une boutique qui gagne de l'argent peut-elle manquer de trésorerie ?",
+    diagnosticOptions: [
+      {
+        id: "bfr_grew",
+        label: "Le stock et les créances clients ont absorbé la trésorerie plus vite que le résultat n'en a produit",
+        correct: true,
+      },
+      {
+        id: "timing",
+        label: "Le résultat se constate à la vente, l'encaissement arrive plus tard",
+        correct: true,
+      },
+      {
+        id: "accounting_error",
+        label: "C'est nécessairement une erreur comptable : un bénéfice, c'est de l'argent en caisse",
+        correct: false,
+      },
+      {
+        id: "sell_more",
+        label: "Il suffit de vendre davantage pour que la trésorerie revienne",
+        correct: false,
+      },
+    ],
+    quiz: [
+      {
+        id: "bfr_composition",
+        prompt: "Dans un commerce de détail, le besoin en fonds de roulement se compose surtout :",
+        options: [
+          { id: "a", label: "Du stock en réserve et des créances clients, diminués des dettes fournisseurs" },
+          { id: "b", label: "Du résultat net cumulé" },
+          { id: "c", label: "Des immobilisations et des emprunts" },
+          { id: "d", label: "Du chiffre d'affaires du trimestre" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "BFR = stocks + créances − dettes fournisseurs. Un commerçant qui achète comptant et vend à crédit finance intégralement son cycle : c'est le pire des deux mondes.",
+      },
+      {
+        id: "tn_formule",
+        prompt:
+          "La trésorerie nette se déduit du fonds de roulement net global et du besoin en fonds de roulement par :",
+        options: [
+          { id: "a", label: "TN = FRNG − BFR" },
+          { id: "b", label: "TN = FRNG + BFR" },
+          { id: "c", label: "TN = BFR − FRNG" },
+          { id: "d", label: "TN = résultat net − dividendes" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Le FRNG est la ressource stable disponible après financement des immobilisations ; le BFR est ce que le cycle d'exploitation immobilise. La trésorerie n'est que la différence — jamais une décision directe.",
+      },
+    ],
+    modelRelevance: {
+      frng_bfr_analysis: "optimal",
+      cash_budget: "acceptable",
+      return_analysis: "irrelevant",
+      breakeven_analysis: "misleading",
+    },
+    conceptCodes: ["bfr", "frng", "net_treasury", "stock", "receivables_financing"],
+    hints: hints([
+      "Comparez deux choses dans vos états : le résultat net du tour, et la variation de votre trésorerie.",
+      "Regardez ce qui a bougé au bilan entre l'ouverture et la clôture : le stock, les créances, les dettes fournisseurs.",
+      "Le résultat est une opinion, la trésorerie est un fait. Entre les deux, il y a le besoin en fonds de roulement.",
+      "TN = FRNG − BFR. Si le résultat monte mais que le BFR monte plus vite, la trésorerie baisse. Le réassort de Noël et les comités d'entreprise à 45 jours travaillent dans le même sens.",
+      "Deux leviers immédiats : mobiliser le poste clients (escompte ou affacturage, à un coût) ou réduire le stock. Le troisième — allonger le crédit fournisseur — se négocie, il ne se décrète pas.",
+    ]),
+    trigger: { detect: "profitable_illiquid" },
+    weight: 1,
+  },
+];
+
+/** Pourquoi le modèle pertinent est le bon outil — correction du débriefing. */
+const MODEL_EXPLAIN: Record<string, string> = {
+  boutique_t1_reprise:
+    "Le seuil de rentabilité répond exactement à la question posée : combien d'articles faut-il vendre pour ne plus perdre d'argent ?",
+  boutique_t2_circuit:
+    "Trois offres, quatre critères hétérogènes : c'est le cas d'école de la matrice multicritère. Le seuil de rentabilité, lui, ne sait pas comparer une image de marque à un délai de paiement.",
+  boutique_t4_noel:
+    "L'analyse de capacité, croisée avec la saisonnalité, dimensionne un approvisionnement qui anticipe le pic au lieu de le subir.",
+  boutique_t5_coton:
+    "L'élasticité-prix dit ce que coûte en volume chaque point de hausse répercuté : c'est le seul outil qui arbitre entre marge unitaire et quantités.",
+  boutique_detect_below_breakeven:
+    "Le seuil de rentabilité chiffre l'écart en articles et désigne les trois leviers : marge unitaire, volumes, charges de structure.",
+  boutique_detect_profitable_illiquid:
+    "L'analyse FRNG / BFR est l'outil de ce diagnostic : TN = FRNG − BFR, et c'est le BFR qui a bougé — pas le résultat.",
+};
+
+attachModelQuestions(BOUTIQUE_SITUATIONS, MODEL_EXPLAIN);

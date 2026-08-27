@@ -6,60 +6,27 @@
  * coûts croissants — doc 03 §4) mènent progressivement de l'observation à la
  * méthode. La matrice modelRelevance évalue la compétence « choisir le bon
  * modèle » (§7) : un modèle `misleading` mène au contresens classique.
+ *
+ * Les types et la mécanique (barème d'indices, question du modèle) vivent
+ * dans ../situation-kit.ts : ici, uniquement le contenu de NOVA.
  */
 
-import { modelByCode } from "../../pedagogy/models";
+import { attachModelQuestions, hints } from "../situation-kit";
+import type {
+  DetectCode,
+  ModelRelevance,
+  QuizQuestionDef,
+  SituationDef,
+  SituationHintDef,
+} from "../situation-kit";
 
-export type ModelRelevance = "optimal" | "acceptable" | "misleading" | "irrelevant";
-export type DetectCode =
-  | "profitable_illiquid"
-  | "stockout"
-  | "below_breakeven"
-  | "capacity_saturated";
-
-export interface SituationHintDef {
-  level: 1 | 2 | 3 | 4 | 5;
-  text: string;
-  costRatio: number;
-}
-
-/**
- * QCM : même forme que le diagnostic (options radio, pas de liste déroulante).
- * `credit` optionnel par option pour la notation partielle (ex. question du
- * modèle d'analyse : pertinent 1, acceptable 0,6, trompeur 0,2, hors sujet 0) ;
- * sans crédit, la bonne réponse vaut 1 et les autres 0. Corrigé au débriefing.
- */
-export interface QuizQuestionDef {
-  id: string;
-  prompt: string;
-  options: { id: string; label: string; credit?: number }[];
-  correctOptionId: string;
-  explain: string;
-}
-
-export interface SituationDef {
-  code: string;
-  title: string;
-  narrative: string;
-  problem: string; // question ouverte
-  diagnosticOptions: { id: string; label: string; correct: boolean }[];
-  /**
-   * 2 questions de connaissances, complétées automatiquement par la question
-   * « quel modèle d'analyse mobilisez-vous ? » (générée depuis modelRelevance,
-   * voir le bloc en fin de fichier) — 3 questions QCM par situation.
-   */
-  quiz: QuizQuestionDef[];
-  modelRelevance: Record<string, ModelRelevance>; // par code de modèle ; note la question du modèle (§7)
-  conceptCodes: string[];
-  hints: SituationHintDef[];
-  trigger: { round: number } | { detect: DetectCode };
-  weight: number;
-}
-
-/** Coûts standard des 5 niveaux (doc 03 §4) : cumulés = 45 % de score restant. */
-const HINT_COSTS = [0.05, 0.1, 0.2, 0.35, 0.55] as const;
-const hints = (texts: [string, string, string, string, string]): SituationHintDef[] =>
-  texts.map((text, i) => ({ level: (i + 1) as 1 | 2 | 3 | 4 | 5, text, costRatio: HINT_COSTS[i]! }));
+export type {
+  DetectCode,
+  ModelRelevance,
+  QuizQuestionDef,
+  SituationDef,
+  SituationHintDef,
+};
 
 export const NOVA_SITUATIONS: SituationDef[] = [
   {
@@ -637,14 +604,6 @@ export const NOVA_SITUATIONS: SituationDef[] = [
 // dernière question du QCM de chaque situation.
 // ---------------------------------------------------------------------------
 
-const RELEVANCE_CREDITS: Record<ModelRelevance, number> = {
-  optimal: 1,
-  acceptable: 0.6,
-  misleading: 0.2,
-  irrelevant: 0,
-};
-
-/** Pourquoi le modèle pertinent est le bon outil — correction du débriefing. */
 const MODEL_EXPLAIN: Record<string, string> = {
   nova_t1_takeover:
     "Le seuil de rentabilité donne un objectif chiffré au premier trimestre : le volume de ventes qui couvre exactement les charges de structure.",
@@ -668,33 +627,6 @@ const MODEL_EXPLAIN: Record<string, string> = {
     "La VAN compare le coût d'aujourd'hui aux flux futurs actualisés — le seuil de rentabilité, trompeur ici, ignore le temps.",
 };
 
-function modelQuestion(
-  relevance: Record<string, ModelRelevance>,
-  explain: string,
-): QuizQuestionDef {
-  const byPriority: ModelRelevance[] = ["optimal", "misleading", "acceptable", "irrelevant"];
-  const codes = byPriority
-    .flatMap((r) => Object.keys(relevance).filter((code) => relevance[code] === r))
-    .slice(0, 4);
-  const options = codes
-    .map((code) => ({
-      id: code,
-      label: modelByCode.get(code)?.name ?? code,
-      credit: RELEVANCE_CREDITS[relevance[code]!],
-    }))
-    .sort((a, b) => a.label.localeCompare(b.label, "fr")); // jamais la bonne réponse en tête
-  const optimal = codes.find((code) => relevance[code] === "optimal")!;
-  return {
-    id: "model_choice",
-    prompt: "Quel modèle d'analyse mobilisez-vous en priorité ici ?",
-    options,
-    correctOptionId: optimal,
-    explain,
-  };
-}
-
-for (const s of NOVA_SITUATIONS) {
-  s.quiz.push(modelQuestion(s.modelRelevance, MODEL_EXPLAIN[s.code]!));
-}
+attachModelQuestions(NOVA_SITUATIONS, MODEL_EXPLAIN);
 
 export const situationByCode = new Map(NOVA_SITUATIONS.map((s) => [s.code, s]));

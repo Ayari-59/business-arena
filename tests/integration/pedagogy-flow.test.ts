@@ -31,7 +31,9 @@ import {
   submitQuiz,
   unlockHint,
 } from "@/services/pedagogy.service";
-import { situationByCode } from "@/config/scenarios/nova/situations";
+import { ALL_SITUATIONS, situationByCode } from "@/config/scenarios/registry";
+import { CONCEPTS } from "@/config/pedagogy/concepts";
+import { DECISION_MODELS } from "@/config/pedagogy/models";
 import type { RoundDecisions } from "@/engine/types";
 
 const DECISIONS: RoundDecisions = {
@@ -55,10 +57,12 @@ beforeAll(async () => {
 });
 
 describe("référentiels et instanciation", () => {
-  it("les référentiels sont seedés (24 concepts, 18 modèles, 10 situations)", async () => {
-    expect(await db.select().from(concepts)).toHaveLength(24);
-    expect(await db.select().from(decisionModels)).toHaveLength(18);
-    expect(await db.select().from(situations)).toHaveLength(10);
+  it("les référentiels sont seedés au complet, tous secteurs confondus", async () => {
+    // Comptes pilotés par les référentiels : ajouter un concept ou un secteur
+    // ne doit pas faire tomber ce test pour un nombre magique périmé.
+    expect(await db.select().from(concepts)).toHaveLength(CONCEPTS.length);
+    expect(await db.select().from(decisionModels)).toHaveLength(DECISION_MODELS.length);
+    expect(await db.select().from(situations)).toHaveLength(ALL_SITUATIONS.length);
   });
 
   it("la situation scriptée du tour 1 est ouverte pour l'équipe du joueur", async () => {
