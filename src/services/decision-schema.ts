@@ -5,9 +5,18 @@ import type { RoundDecisions } from "@/engine/types";
  * Validation des décisions d'un tour (doc 01 §4 : zod à toutes les frontières).
  * Les bornes larges ci-dessous sont des garde-fous techniques ; les bornes
  * pédagogiques par scénario viendront de `decision_options` (doc 05 §3).
+ *
+ * Le plafond de prix a été écrit quand NOVA était le seul scénario, où une
+ * enceinte se vend 79 €. Il rendait ATLAS CONSEIL injouable : la journée de
+ * conseil s'y facture 780 € au tarif de référence, et tout tour au prix juste
+ * était refusé. Un garde-fou technique doit arrêter la faute de frappe, pas le
+ * métier : le seuil est monté au niveau du secteur le plus cher, avec de la
+ * marge, et un test vérifie qu'aucun scénario ne repasse au-dessus.
  */
+const PRIX_MAX = 10_000;
+
 export const roundDecisionsSchema = z.object({
-  price: z.coerce.number().min(1).max(500),
+  price: z.coerce.number().min(1).max(PRIX_MAX),
   productionPlan: z.coerce.number().min(0).max(50000),
   marketingBudget: z.coerce.number().min(0).max(200000),
   qualityBudget: z.coerce.number().min(0).max(200000),
