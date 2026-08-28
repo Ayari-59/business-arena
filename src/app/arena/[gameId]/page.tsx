@@ -16,7 +16,6 @@ import { StudyReportsPanel } from "@/components/study-reports";
 import { FinancialStatements } from "@/components/financial-statements";
 import { DilemmaCard, ParametersPanels } from "@/components/decision-context";
 import { SalesHistory } from "@/components/sales-history";
-import type { RoundDecisions } from "@/engine/types";
 import type { KpiFormat } from "@/config/scenarios/sector-kpis";
 
 export const dynamic = "force-dynamic";
@@ -44,18 +43,6 @@ function formatKpi(value: number, format: KpiFormat): string {
       return formatUnits(value);
   }
 }
-
-const defaultDecisions = (roundDays: number): RoundDecisions => {
-  const k = roundDays / 90; // les scénarios sont écrits en base trimestrielle
-  return {
-    price: 59,
-    productionPlan: Math.round(4800 * k),
-    marketingBudget: Math.round(6000 * k),
-    qualityBudget: Math.round(2000 * k),
-    maintenanceBudget: Math.round(4000 * k),
-    finance: { newLoan: 0, loanRepayment: 0 },
-  };
-};
 
 export default async function ArenaPage({ params }: { params: Promise<{ gameId: string }> }) {
   const { gameId } = await params;
@@ -598,7 +585,9 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
             roundIndex={view.currentRound}
             vocabulary={view.vocabulary}
             periodName={periodLabel(view.roundDays, view.currentRound).toLowerCase()}
-            defaults={view.pendingDecisions ?? view.lastDecisions ?? defaultDecisions(view.roundDays)}
+            // Le point de départ vient du secteur joué : le tarif de la journée
+            // de conseil n'est pas le prix d'une enceinte.
+            defaults={view.pendingDecisions ?? view.lastDecisions ?? view.startingDecisions}
             kind={view.kind}
             alreadySubmitted={view.pendingDecisions !== null}
             insuranceOffer={

@@ -48,7 +48,7 @@ import {
 } from "@/services/pedagogy.service";
 import { getPlatformConfig } from "@/services/admin.service";
 import { TEACHER_DRAWABLE_CODES, TEAM_CARD_CODES, cardByCode } from "@/config/events/cards";
-import { botDecisions, type BotProfile } from "@/engine/bots";
+import { botDecisions, neutralDecisions, type BotProfile } from "@/engine/bots";
 import {
   BPI_DIMENSIONS,
   computeRoundScores,
@@ -424,15 +424,22 @@ function sumSold(bySegment: CompanyRoundResult["market"]["bySegment"]): number {
   return Object.values(bySegment).reduce((s, d) => s + d.sold, 0);
 }
 
-/** Décisions de repli (échelle du scénario) quand une équipe n'a rien soumis au tour 1. */
-function fallbackDecisions(scenario: EngineScenarioConfig): RoundDecisions {
-  const k = scenario.roundDays / 90;
+/**
+ * Décisions de repli quand une équipe n'a rien soumis au tour 1.
+ *
+ * Elles viennent du SECTEUR joué, et non plus de NOVA. Le prix codé en dur
+ * était celui d'une enceinte portable, appliqué tel quel à la journée de
+ * conseil et à la nuitée d'hôtel ; le volume, celui d'un atelier de 7 000
+ * unités, appliqué à un cabinet qui n'en produit que 720. Une équipe en retard
+ * ne se voyait pas reconduire son tour, elle se voyait attribuer une faillite.
+ */
+function fallbackDecisions(
+  scenario: EngineScenarioConfig,
+  state: CompanyState,
+  roundIndex: number,
+): RoundDecisions {
   return {
-    price: 59,
-    productionPlan: 4800 * k,
-    marketingBudget: 6000 * k,
-    qualityBudget: 2000 * k,
-    maintenanceBudget: scenario.production.maintenanceReference,
+    ...neutralDecisions({ scenario, state, roundIndex }),
     finance: { newLoan: 0, loanRepayment: 0 },
   };
 }
@@ -615,7 +622,7 @@ async function resolveGameRound(
         };
         carriedOver.add(team.id);
       } else {
-        allDecisions[team.id] = fallbackDecisions(scenario);
+        allDecisions[team.id] = fallbackDecisions(scenario, state, roundIndex);
         carriedOver.add(team.id);
       }
     }
@@ -1095,6 +1102,13 @@ export interface GameView {
   /** Moyennes 0-100 des 7 dimensions BPI de l'équipe du joueur (doc 08). */
   playerDimensions: Partial<Record<BpiDimension, number>> | null;
   lastDecisions: RoundDecisions | null;
+  /**
+   * Le point de départ du secteur, servi au tour 1 quand il n'y a encore rien
+   * à reconduire. Calculé ici parce que c'est ici qu'on a le scénario joué ET
+   * l'état de l'entreprise : la page, elle, proposait les chiffres de NOVA à
+   * tout le monde.
+   */
+  startingDecisions: RoundDecisions;
   /** Offre d'assurance du scénario (prime déjà à l'échelle de la périodicité). */
   insuranceOffer: { premium: number; coveredEventCodes: string[] } | null;
   /** Formules d'assurance (si le scénario en propose plusieurs). */
@@ -1742,6 +1756,23 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     ranking,
     playerDimensions,
     lastDecisions,
+    startingDecisions: (() => {
+      const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+      const state = stateRow?.state as CompanyState | undefined;
+      // Sans état persisté il n'y a pas de capacité à viser : on s'en tient
+      // alors au prix de référence du secteur, jamais à celui d'un autre.
+      if (!state) {
+        const main = [...snapshot.market.segments].sort((a, b) => b.size - a.size)[0];
+        return {
+          price: main?.refPrice ?? 50,
+          productionPlan: 0,
+          marketingBudget: 0.5 * snapshot.marketing.scale,
+          qualityBudget: 0.5 * snapshot.production.qualityScale,
+          maintenanceBudget: snapshot.production.maintenanceReference,
+        };
+      }
+      return neutralDecisions({ scenario: snapshot, state, roundIndex: game.currentRound });
+    })(),
     insuranceOffer: (() => {
       const offer = (
         game.scenarioSnapshot as {

@@ -56,6 +56,25 @@ function adaptivePlan(ctx: BotContext, aggressiveness: number): number {
   return Math.max(0, Math.min(cap, target - stock * 0.5));
 }
 
+/**
+ * La gestion neutre du secteur joué.
+ *
+ * Deux usages, et un seul calcul : ce que le formulaire propose à l'élève au
+ * tour 1, et ce que joue une équipe qui n'a rien rendu. Les deux étaient figés
+ * sur NOVA, un fabricant d'enceintes à 59 €, quel que soit le métier. Une
+ * équipe absente d'un cabinet de conseil se voyait donc facturer la journée
+ * 59 € et planifier 4 800 jours pour une capacité de 720 : pas une
+ * reconduction, une faillite.
+ *
+ * Le profil « balanced » calculait déjà exactement cela, secteur par secteur,
+ * depuis le premier jour : le prix de référence du segment dominant et des
+ * budgets proportionnels aux échelles du scénario. Les concurrents pilotés
+ * s'adaptaient à chaque métier ; seul le joueur humain ne le faisait pas.
+ */
+export function neutralDecisions(ctx: BotContext): RoundDecisions {
+  return botDecisions("balanced", ctx);
+}
+
 export function botDecisions(profile: BotProfile, ctx: BotContext): RoundDecisions {
   const ref = mainRefPrice(ctx.scenario);
   const maintenance = ctx.scenario.production.maintenanceReference;
