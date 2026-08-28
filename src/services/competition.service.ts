@@ -13,6 +13,7 @@ import {
 } from "@/db/schema";
 import { composeGroups, podium, qualifiers, type GroupStanding } from "@/competition";
 import { createGameCore } from "@/services/game.service";
+import { DEFAULT_QUIZ_MODE } from "@/config/difficulty";
 import type { Periodicity } from "@/config/scenarios/periodicity";
 
 /**
@@ -157,6 +158,11 @@ async function createStageGame(args: {
     botCount: 0,
     mode: "competition",
     competitionStageId: args.stageId,
+    // Un championnat se joue au même régime qu'une partie de classe : la
+    // question du modèle d'analyse, sans les questions de connaissances. Sans
+    // ce réglage explicite, les parties de concours retombaient sur le
+    // comportement historique (tout servi) par simple omission.
+    quizMode: DEFAULT_QUIZ_MODE,
   });
   const playerValues = created.teams.flatMap((team) =>
     (args.membersByLabel.get(team.name) ?? []).map((userId, i) => ({

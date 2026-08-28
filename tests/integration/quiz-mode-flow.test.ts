@@ -20,11 +20,14 @@ vi.mock("@/db", async () => {
 import { db } from "@/db";
 import { games, rounds, situationInstances, teams, users } from "@/db/schema";
 import {
+  createClassGame,
   createSoloGame,
   getTeacherGameView,
   resolveCurrentRound,
   setQuizMode,
 } from "@/services/game.service";
+import { getTeacherOrgId } from "@/services/auth.service";
+import { DEFAULT_QUIZ_MODE, quizModeFromProfile } from "@/config/difficulty";
 import { getTeamSituations, submitDiagnosis, submitQuiz } from "@/services/pedagogy.service";
 import { situationByCode } from "@/config/scenarios/registry";
 import { MODEL_QUESTION_ID } from "@/config/scenarios/situation-kit";
@@ -122,6 +125,29 @@ describe("réglage des questions par l'enseignant", () => {
     expect((await getTeacherGameView(gameId, tid))!.quizMode).toBe("model");
     await setQuizMode({ gameId, teacherId: tid, mode: "full" });
     expect((await getTeacherGameView(gameId, tid))!.quizMode).toBe("full");
+  });
+
+  it("les trois chemins de création partent du même réglage", async () => {
+    // Le concours passait par un chemin qui ne transmettait pas le réglage et
+    // retombait donc sur « tout servi », par omission et non par choix. Les
+    // trois créations sont désormais alignées sur le même défaut.
+    const solo = await createSoloGame(userId, "quarter", 3);
+    const soloGame = (await db.select().from(games).where(eq(games.id, solo)))[0]!;
+    expect(quizModeFromProfile(soloGame.difficultyProfile)).toBe(DEFAULT_QUIZ_MODE);
+
+    const org = await getTeacherOrgId(userId);
+    const classe = await createClassGame({
+      teacherId: userId,
+      organizationId: org ?? soloGame.organizationId!,
+      periodicity: "quarter",
+      humanTeamsCount: 2,
+      botCount: 1,
+      quizMode: DEFAULT_QUIZ_MODE,
+    });
+    const classGame = (
+      await db.select().from(games).where(eq(games.id, classe.gameId))
+    )[0]!;
+    expect(quizModeFromProfile(classGame.difficultyProfile)).toBe(DEFAULT_QUIZ_MODE);
   });
 
   it("un enseignant ne peut pas régler la partie d'un autre", async () => {

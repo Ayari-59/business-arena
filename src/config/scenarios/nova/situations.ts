@@ -525,11 +525,20 @@ export const NOVA_SITUATIONS: SituationDef[] = [
       },
     ],
     modelRelevance: { breakeven_analysis: "optimal", cvp_analysis: "optimal", frng_bfr_analysis: "irrelevant" },
-    conceptCodes: ["breakeven", "contribution_margin", "fixed_costs", "safety_margin"],
+    conceptCodes: [
+      "breakeven",
+      "contribution_margin",
+      "fixed_costs",
+      "safety_margin",
+      // Le seuil dit COMBIEN vendre, le point mort dit QUAND on y arrive. Un
+      // écart de volume reste abstrait ; « le trimestre s'est terminé avant
+      // que vous n'atteigniez l'équilibre » ne l'est pas.
+      "dead_point",
+    ],
     hints: hints([
       "Comparez vos unités vendues à celles qu'il aurait fallu vendre pour équilibrer.",
       "Votre marge unitaire couvre-t-elle, multipliée par vos ventes, vos charges de structure ?",
-      "Le seuil de rentabilité donne l'objectif ; la marge sur coût variable, le levier.",
+      "Traduisez l'écart en jours : (seuil en valeur ÷ chiffre d'affaires) × la durée du tour donne la date à laquelle vous auriez atteint l'équilibre. Au-delà de la fin du tour, vous ne l'avez jamais atteint.",
       "Une analyse coût-volume-profit montrerait quel levier (prix, volume, coûts) est le plus efficace.",
       "SR = fixes / (prix − coût variable unitaire) : jouez chaque levier dans la formule et comparez.",
     ]),
