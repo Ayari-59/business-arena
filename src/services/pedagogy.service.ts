@@ -3,6 +3,7 @@ import { db } from "@/db";
 import {
   concepts,
   decisionModels,
+  gameRankings,
   games,
   hintUsages,
   hints,
@@ -16,6 +17,7 @@ import {
   situationModels,
   situations,
   teams,
+  users,
 } from "@/db/schema";
 import { CONCEPTS, conceptByCode } from "@/config/pedagogy/concepts";
 import { DECISION_MODELS } from "@/config/pedagogy/models";
@@ -1017,5 +1019,222 @@ export async function getTeacherUsageView(teacherId: string): Promise<TeacherUsa
     situations: situationStats,
     hintsByLevel,
     concepts: conceptStats,
+  };
+}
+
+
+/**
+ * Relevé de notes d'une partie : de quoi finir la séance.
+ *
+ * Le produit accompagnait l'enseignant jusqu'à l'avant-dernière étape. Il
+ * voyait la maîtrise de sa classe, les indices ouverts, le classement au score
+ * composite, et rien de tout cela n'est une note : il devait recopier des
+ * chiffres à la main depuis son écran. Le relevé décompose ce que le jeu a
+ * déjà enregistré, équipe par équipe et situation par situation.
+ *
+ * Deux notes séparées, jamais fondues en une :
+ *
+ * - la note PÉDAGOGIQUE, sur 20, tirée des situations rendues : diagnostic,
+ *   questions, moins le malus d'indices. C'est ce que l'équipe a compris ;
+ * - la performance de GESTION, le score composite et le résultat cumulé.
+ *   C'est ce que l'entreprise a fait, et une bonne analyse peut mener à un
+ *   mauvais trimestre.
+ *
+ * Les pondérer l'une par l'autre serait un choix pédagogique qui appartient à
+ * l'enseignant, pas au logiciel. Les deux sont donc servies côte à côte.
+ *
+ * Comme dans le carnet d'usage, une situation NON RENDUE n'entre pas dans la
+ * moyenne : elle est comptée à part. Un silence n'est pas un zéro tant que
+ * l'enseignant n'en a pas décidé ainsi, et il lui faut le voir pour décider.
+ */
+export interface TeamGrade {
+  teamId: string;
+  name: string;
+  students: string[];
+  /** Situations débriefées auxquelles l'équipe a effectivement répondu. */
+  answered: number;
+  /** Situations débriefées sans aucune réponse rendue. */
+  unanswered: number;
+  /** Moyenne des scores finaux des situations rendues, de 0 à 1. */
+  average: number | null;
+  /** La même, sur 20, arrondie au quart de point. Null si rien n'a été rendu. */
+  note: number | null;
+  /** Moyenne du seul diagnostic, avant questions et avant malus. */
+  diagnosisAverage: number | null;
+  /** Moyenne des questions posées, null si la partie n'en pose aucune. */
+  quizAverage: number | null;
+  hintsUsed: number;
+  /** Points perdus sur 20 à cause des indices, sur les situations rendues. */
+  hintPenalty: number;
+  rank: number | null;
+  bpi: number | null;
+  cumulativeNetIncome: number | null;
+  situations: {
+    code: string;
+    title: string;
+    round: number;
+    answered: boolean;
+    score: number | null;
+    hints: number;
+  }[];
+}
+
+export interface GradeSheet {
+  gameId: string;
+  /** Le code d'invitation : ce qui distingue deux classes du même secteur. */
+  joinCode: string | null;
+  scenarioTitle: string;
+  quizMode: QuizMode;
+  /** Tours déjà clôturés : le dénominateur des situations attendues. */
+  roundsResolved: number;
+  teams: TeamGrade[];
+}
+
+/** Arrondi au quart de point : une note de bulletin, pas un flottant. */
+const surVingt = (part: number) => Math.round(part * 20 * 4) / 4;
+
+export async function getGameGradeSheet(
+  gameId: string,
+  teacherId: string,
+): Promise<GradeSheet | null> {
+  const game = (await db.select().from(games).where(eq(games.id, gameId)))[0];
+  if (!game || game.createdBy !== teacherId) return null;
+
+  const teamRows = (await db.select().from(teams).where(eq(teams.gameId, gameId))).filter(
+    (t) => t.controller === "human",
+  );
+  const teamIds = teamRows.map((t) => t.id);
+  const roundRows = await db.select().from(rounds).where(eq(rounds.gameId, gameId));
+  const resolved = roundRows.filter((r) => r.status === "resolved");
+
+  const instances =
+    teamIds.length && roundRows.length
+      ? await db
+          .select()
+          .from(situationInstances)
+          .where(inArray(situationInstances.teamId, teamIds))
+      : [];
+  const usages = instances.length
+    ? await db
+        .select()
+        .from(hintUsages)
+        .where(inArray(hintUsages.situationInstanceId, instances.map((i) => i.id)))
+    : [];
+  const hintsByInstance = new Map<string, number>();
+  for (const u of usages) {
+    hintsByInstance.set(u.situationInstanceId, (hintsByInstance.get(u.situationInstanceId) ?? 0) + 1);
+  }
+
+  const situationRows = await db.select().from(situations);
+  const codeById = new Map(situationRows.map((r) => [r.id, r.code]));
+  const roundIndexById = new Map(roundRows.map((r) => [r.id, r.index]));
+  const quizMode = quizModeFromProfile(game.difficultyProfile);
+  const memberships = teamIds.length
+    ? await db
+        .select({ teamId: players.teamId, name: users.displayName })
+        .from(players)
+        .innerJoin(users, eq(users.id, players.userId))
+        .where(inArray(players.teamId, teamIds))
+    : [];
+  const rankingRows = await db.select().from(gameRankings).where(eq(gameRankings.gameId, gameId));
+
+  const teamGrades: TeamGrade[] = teamRows.map((team) => {
+    const ownes = instances
+      .filter((i) => i.teamId === team.id && i.status === "debriefed")
+      .sort(
+        (a, b) => (roundIndexById.get(a.roundId) ?? 0) - (roundIndexById.get(b.roundId) ?? 0),
+      );
+
+    const lignes = ownes.map((inst) => {
+      const code = codeById.get(inst.situationId) ?? "";
+      const def = situationByCode.get(code);
+      const diagnosis = inst.diagnosis as
+        | { finalScore?: number; score?: number; selected?: string[] }
+        | null;
+      // « selected » n'existe que si l'équipe a soumis : le débriefing, lui,
+      // n'ajoute que le score final.
+      const answered = diagnosis?.selected !== undefined;
+      // Une question posée et laissée sans réponse vaut zéro : c'est ce que
+      // fait le débriefing, et le relevé doit décomposer le MÊME calcul, sans
+      // quoi l'écart qu'il attribue aux indices contiendrait autre chose.
+      const questionsPosees = def ? askedQuestions(def, quizMode).length > 0 : false;
+      const quiz = questionsPosees
+        ? ((inst.quiz as { score?: number } | null)?.score ?? 0)
+        : null;
+      return {
+        code,
+        title: def?.title ?? code,
+        round: roundIndexById.get(inst.roundId) ?? 0,
+        answered,
+        score: answered && typeof diagnosis?.finalScore === "number" ? diagnosis.finalScore : null,
+        hints: hintsByInstance.get(inst.id) ?? 0,
+        rawDiagnosis: answered && typeof diagnosis?.score === "number" ? diagnosis.score : null,
+        quiz: answered ? quiz : null,
+      };
+    });
+
+    const rendues = lignes.filter((l) => l.answered && l.score !== null);
+    const moyenne = (values: number[]) =>
+      values.length === 0 ? null : values.reduce((a, b) => a + b, 0) / values.length;
+
+    const average = moyenne(rendues.map((l) => l.score!));
+    const diagnosisAverage = moyenne(
+      rendues.filter((l) => l.rawDiagnosis !== null).map((l) => l.rawDiagnosis!),
+    );
+    const quizAverage = moyenne(rendues.filter((l) => l.quiz !== null).map((l) => l.quiz!));
+
+    // Ce que les indices ont coûté : l'écart entre le score AVANT malus et le
+    // score final, exprimé en points de la note sur 20. C'est ce qui permet de
+    // distinguer une note basse due à une erreur d'analyse d'une note basse
+    // due à l'aide reçue. Le score avant malus se recompose exactement comme
+    // le fait le débriefing, faute de quoi l'écart contiendrait aussi les
+    // questions laissées sans réponse.
+    const sansMalus = moyenne(
+      rendues.map((l) => {
+        const diag = l.rawDiagnosis ?? 0;
+        return l.quiz !== null ? 0.5 * diag + 0.5 * l.quiz : diag;
+      }),
+    );
+    const hintPenalty =
+      average !== null && sansMalus !== null ? Math.max(0, surVingt(sansMalus - average)) : 0;
+
+    const classement = rankingRows.find((r) => r.teamId === team.id);
+    return {
+      teamId: team.id,
+      name: team.name.replace(/\s*\(vous\)\s*$/, ""),
+      students: memberships.filter((m) => m.teamId === team.id).map((m) => m.name),
+      answered: rendues.length,
+      unanswered: lignes.filter((l) => !l.answered).length,
+      average,
+      note: average === null ? null : surVingt(average),
+      diagnosisAverage,
+      quizAverage,
+      hintsUsed: lignes.reduce((n, l) => n + l.hints, 0),
+      hintPenalty,
+      rank: classement?.rank ?? null,
+      bpi: classement ? Number(classement.bpi) : null,
+      cumulativeNetIncome: classement
+        ? Number((classement.detail as { cumulativeNetIncome?: number })?.cumulativeNetIncome ?? 0)
+        : null,
+      situations: lignes.map(({ code, title, round, answered, score, hints }) => ({
+        code,
+        title,
+        round,
+        answered,
+        score,
+        hints,
+      })),
+    };
+  });
+
+  return {
+    gameId,
+    joinCode: game.joinCode ?? null,
+    scenarioTitle: scenarioByCode(
+      (game.scenarioSnapshot as { code?: string } | null)?.code,
+    ).title,
+    quizMode: quizModeFromProfile(game.difficultyProfile),
+    roundsResolved: resolved.length,
+    teams: teamGrades.sort((a, b) => a.name.localeCompare(b.name, "fr")),
   };
 }

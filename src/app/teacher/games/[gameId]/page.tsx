@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { getTeacherGameView } from "@/services/game.service";
-import { getTeacherPedagogyView } from "@/services/pedagogy.service";
+import { getGameGradeSheet, getTeacherPedagogyView } from "@/services/pedagogy.service";
 import { formatEuro } from "@/lib/format";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { closeRoundAction, setQuizModeAction } from "../../actions";
@@ -21,6 +21,7 @@ export default async function TeacherGamePage({
   const view = await getTeacherGameView(gameId, session.userId);
   if (!view) notFound();
   const pedagogy = await getTeacherPedagogyView(gameId, session.userId);
+  const releve = await getGameGradeSheet(gameId, session.userId);
 
   const finished = view.status === "finished";
   const humanTeams = view.teams.filter((t) => t.controller === "human");
@@ -250,6 +251,98 @@ export default async function TeacherGamePage({
               </p>
             </div>
           </div>
+        </section>
+      ) : null}
+
+      {releve && releve.teams.length > 0 ? (
+        <section className="rounded-xl border border-white/10 bg-slate-900 p-4">
+          <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-200">Relevé de notes</h2>
+              <p className="mt-1 max-w-2xl text-xs leading-relaxed text-slate-500">
+                Deux mesures séparées, et non fondues en une : la note tirée des situations
+                rendues dit ce que l&apos;équipe a compris, le score composite dit ce que
+                l&apos;entreprise a fait. Une bonne analyse peut mener à un mauvais
+                trimestre, et les pondérer serait votre choix, pas celui du logiciel. Une
+                situation non rendue est comptée à part, jamais moyennée à zéro.
+              </p>
+            </div>
+            <a
+              href={`/teacher/games/${view.gameId}/releve`}
+              className="shrink-0 rounded-lg border border-amber-400/40 px-4 py-2 text-xs font-semibold text-amber-300 hover:bg-amber-400/10"
+            >
+              ⬇ Tableur (une ligne par élève)
+            </a>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-[11px] uppercase tracking-wide text-slate-500">
+                  <th className="pb-2 pr-3 font-medium">Équipe</th>
+                  <th className="pb-2 pr-3 font-medium">Élèves</th>
+                  <th className="pb-2 pr-3 text-right font-medium">Rendues</th>
+                  <th className="pb-2 pr-3 text-right font-medium">Non rendues</th>
+                  <th className="pb-2 pr-3 text-right font-medium">Diagnostic</th>
+                  <th className="pb-2 pr-3 text-right font-medium">Indices</th>
+                  <th className="pb-2 pr-3 text-right font-medium">Note</th>
+                  <th className="pb-2 text-right font-medium">Gestion</th>
+                </tr>
+              </thead>
+              <tbody className="text-slate-300">
+                {releve.teams.map((equipe) => (
+                  <tr key={equipe.teamId} className="border-t border-white/5">
+                    <td className="py-2 pr-3">{equipe.name}</td>
+                    <td className="py-2 pr-3 text-xs text-slate-500">
+                      {equipe.students.length > 0 ? equipe.students.join(", ") : "aucun élève"}
+                    </td>
+                    <td className="py-2 pr-3 text-right tabular-nums text-slate-400">
+                      {equipe.answered}
+                    </td>
+                    <td
+                      className={`py-2 pr-3 text-right tabular-nums ${
+                        equipe.unanswered > 0 ? "text-slate-300" : "text-slate-600"
+                      }`}
+                    >
+                      {equipe.unanswered > 0 ? equipe.unanswered : "—"}
+                    </td>
+                    <td className="py-2 pr-3 text-right tabular-nums text-slate-400">
+                      {equipe.diagnosisAverage === null
+                        ? "—"
+                        : `${Math.round(equipe.diagnosisAverage * 100)} %`}
+                    </td>
+                    <td className="py-2 pr-3 text-right tabular-nums text-slate-400">
+                      {equipe.hintsUsed === 0
+                        ? "—"
+                        : `${equipe.hintsUsed} (−${equipe.hintPenalty.toString().replace(".", ",")} pt)`}
+                    </td>
+                    <td
+                      className={`py-2 pr-3 text-right font-semibold tabular-nums ${
+                        equipe.note === null
+                          ? "text-slate-600"
+                          : equipe.note < 8
+                            ? "text-red-300"
+                            : equipe.note < 13
+                              ? "text-amber-300"
+                              : "text-emerald-300"
+                      }`}
+                    >
+                      {equipe.note === null
+                        ? "—"
+                        : `${equipe.note.toString().replace(".", ",")} / 20`}
+                    </td>
+                    <td className="py-2 text-right tabular-nums text-slate-400">
+                      {equipe.bpi === null ? "—" : `${equipe.bpi.toFixed(1)} · ${equipe.rank}ᵉ`}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {releve.roundsResolved === 0 ? (
+            <p className="mt-3 text-xs text-slate-500">
+              Aucun tour clôturé : le relevé se remplit à la première clôture.
+            </p>
+          ) : null}
         </section>
       ) : null}
 

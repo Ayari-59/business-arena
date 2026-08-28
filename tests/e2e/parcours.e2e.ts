@@ -124,6 +124,36 @@ describe("parcours enseignant et élève", () => {
     expect(await texte(prof)).toContain("Trimestre 2");
   });
 
+  it("le relevé de notes est là, et son tableur se télécharge vraiment", async () => {
+    await aller(prof, urlPartie);
+    const vu = await texte(prof);
+    expect(vu).toContain("Relevé de notes");
+    // La note et la gestion restent deux colonnes distinctes. Sans tenir
+    // compte de la casse : les en-têtes sont mis en capitales par la feuille
+    // de style, et c'est le texte RENDU que lit le navigateur.
+    expect(vu).toMatch(/note/i);
+    expect(vu).toMatch(/gestion/i);
+
+    // On CLIQUE, comme l'enseignant : c'est le seul moyen de vérifier que la
+    // session voyage avec la requête et que le fichier arrive vraiment sur le
+    // disque. Un export qui répondrait bien à un appel direct mais mal à un
+    // clic ne servirait à personne.
+    const lien = prof.getByRole("link", { name: /Tableur/ });
+    expect(await lien.count()).toBe(1);
+    const [telechargement] = await Promise.all([
+      prof.waitForEvent("download", { timeout: 30_000 }),
+      lien.click(),
+    ]);
+    expect(telechargement.suggestedFilename()).toMatch(/\.csv$/);
+
+    const flux = await telechargement.createReadStream();
+    const morceaux: Buffer[] = [];
+    for await (const morceau of flux) morceaux.push(morceau as Buffer);
+    const contenu = Buffer.concat(morceaux).toString("utf8");
+    expect(contenu).toContain("Élève;Équipe");
+    expect(contenu).toContain("Élève E2E");
+  });
+
   it("le carnet d'usage compte ce qui vient de se passer", async () => {
     await aller(prof, "/teacher/usage");
     const vu = await texte(prof);
