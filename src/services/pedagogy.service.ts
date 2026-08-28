@@ -26,6 +26,7 @@ import {
 } from "@/config/scenarios/situation-kit";
 import {
   ALL_SITUATIONS,
+  SCENARIOS,
   scenarioByCode,
   situationByCode,
 } from "@/config/scenarios/registry";
@@ -771,5 +772,180 @@ export async function getTeacherPedagogyView(
           ? 0
           : quizScores.reduce((a, b) => a + b, 0) / quizScores.length,
     },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Carnet d'usage : ce que la vue par partie ne peut pas dire
+// ---------------------------------------------------------------------------
+
+/**
+ * Agrégation sur TOUTES les parties d'un enseignant.
+ *
+ * La vue par partie répond à « ma classe maîtrise-t-elle le BFR ? ». Elle ne
+ * peut pas répondre à « quelle situation bloque tout le monde, dans toutes mes
+ * classes ? », qui est la question qui fait évoluer un cours. Une situation
+ * ratée par une classe est un accident ; ratée par cinq, c'est l'énoncé qui
+ * est en cause.
+ *
+ * Tout est calculé sur des données déjà enregistrées : aucune collecte
+ * nouvelle, aucune donnée personnelle supplémentaire.
+ */
+export interface TeacherUsageView {
+  totals: {
+    games: number;
+    finishedGames: number;
+    teams: number;
+    situationsDebriefed: number;
+    hintsUnlocked: number;
+  };
+  /** Secteurs réellement joués, du plus au moins fréquent. */
+  sectors: { code: string; title: string; games: number }[];
+  /**
+   * Les situations classées par score moyen CROISSANT : celles qui résistent
+   * viennent en tête. Une situation jamais débriefée n'y figure pas, faute de
+   * quoi elle passerait pour parfaitement réussie.
+   */
+  situations: {
+    code: string;
+    title: string;
+    scenario: string;
+    debriefed: number;
+    averageScore: number;
+    averageHints: number;
+  }[];
+  /** Combien de fois chaque niveau d'indice a été ouvert, tous élèves confondus. */
+  hintsByLevel: { level: number; count: number }[];
+  /** Concepts les moins maîtrisés, tous élèves de l'enseignant confondus. */
+  concepts: { code: string; name: string; average: number; students: number }[];
+}
+
+export async function getTeacherUsageView(teacherId: string): Promise<TeacherUsageView> {
+  const empty: TeacherUsageView = {
+    totals: { games: 0, finishedGames: 0, teams: 0, situationsDebriefed: 0, hintsUnlocked: 0 },
+    sectors: [],
+    situations: [],
+    hintsByLevel: [],
+    concepts: [],
+  };
+
+  const gameRows = await db.select().from(games).where(eq(games.createdBy, teacherId));
+  if (gameRows.length === 0) return empty;
+  const gameIds = gameRows.map((g) => g.id);
+
+  const teamRows = await db.select().from(teams).where(inArray(teams.gameId, gameIds));
+  const roundRows = await db.select().from(rounds).where(inArray(rounds.gameId, gameIds));
+  const instances = roundRows.length
+    ? await db
+        .select()
+        .from(situationInstances)
+        .where(inArray(situationInstances.roundId, roundRows.map((r) => r.id)))
+    : [];
+  const usages = instances.length
+    ? await db
+        .select()
+        .from(hintUsages)
+        .where(inArray(hintUsages.situationInstanceId, instances.map((i) => i.id)))
+    : [];
+
+  // Secteurs : le code vient du SNAPSHOT, donc du scénario réellement joué.
+  const sectorCounts = new Map<string, number>();
+  for (const g of gameRows) {
+    const code = scenarioByCode((g.scenarioSnapshot as { code?: string } | null)?.code).code;
+    sectorCounts.set(code, (sectorCounts.get(code) ?? 0) + 1);
+  }
+  const sectors = [...sectorCounts.entries()]
+    .map(([code, count]) => ({ code, title: scenarioByCode(code).title, games: count }))
+    .sort((a, b) => b.games - a.games);
+
+  // Situations : score moyen et indices moyens, sur les seules instances
+  // DÉBRIEFÉES. Une situation ouverte et jamais traitée ne dit rien du tout.
+  const situationRows = await db.select().from(situations);
+  const codeById = new Map(situationRows.map((r) => [r.id, r.code]));
+  const scenarioOf = new Map<string, string>();
+  for (const d of SCENARIOS) for (const s of d.situations) scenarioOf.set(s.code, d.title);
+
+  const hintsByInstance = new Map<string, number>();
+  for (const u of usages) {
+    hintsByInstance.set(
+      u.situationInstanceId,
+      (hintsByInstance.get(u.situationInstanceId) ?? 0) + 1,
+    );
+  }
+
+  const perSituation = new Map<string, { scores: number[]; hints: number[] }>();
+  for (const inst of instances) {
+    if (inst.status !== "debriefed") continue;
+    const code = codeById.get(inst.situationId);
+    if (!code) continue;
+    const score = (inst.diagnosis as { finalScore?: number } | null)?.finalScore;
+    if (typeof score !== "number") continue;
+    const entry = perSituation.get(code) ?? { scores: [], hints: [] };
+    entry.scores.push(score);
+    entry.hints.push(hintsByInstance.get(inst.id) ?? 0);
+    perSituation.set(code, entry);
+  }
+
+  const mean = (values: number[]) =>
+    values.length === 0 ? 0 : values.reduce((a, b) => a + b, 0) / values.length;
+
+  const situationStats = [...perSituation.entries()]
+    .map(([code, { scores, hints: used }]) => ({
+      code,
+      title: situationByCode.get(code)?.title ?? code,
+      scenario: scenarioOf.get(code) ?? "",
+      debriefed: scores.length,
+      averageScore: mean(scores),
+      averageHints: mean(used),
+    }))
+    .sort((a, b) => a.averageScore - b.averageScore);
+
+  const levelCounts = new Map<number, number>();
+  for (const u of usages) levelCounts.set(u.level, (levelCounts.get(u.level) ?? 0) + 1);
+  const hintsByLevel = [1, 2, 3, 4, 5].map((level) => ({
+    level,
+    count: levelCounts.get(level) ?? 0,
+  }));
+
+  // Concepts : la maîtrise de TOUS les élèves passés par les parties de cet
+  // enseignant, quel que soit le scénario joué.
+  const teamIds = teamRows.map((t) => t.id);
+  const memberships = teamIds.length
+    ? await db.select().from(players).where(inArray(players.teamId, teamIds))
+    : [];
+  const userIds = [...new Set(memberships.map((m) => m.userId))];
+  const conceptRows = await db.select().from(concepts);
+  const progress = userIds.length
+    ? await db.select().from(learningProgress).where(inArray(learningProgress.userId, userIds))
+    : [];
+  const masteryByConcept = new Map<string, number[]>();
+  for (const p of progress) {
+    const list = masteryByConcept.get(p.conceptId) ?? [];
+    list.push(Number(p.mastery));
+    masteryByConcept.set(p.conceptId, list);
+  }
+  const conceptStats = conceptRows
+    .filter((c) => masteryByConcept.has(c.id))
+    .map((c) => {
+      const values = masteryByConcept.get(c.id)!;
+      return { code: c.code, name: c.name, average: mean(values), students: values.length };
+    })
+    .sort((a, b) => a.average - b.average);
+
+  return {
+    totals: {
+      games: gameRows.length,
+      finishedGames: gameRows.filter((g) => g.status === "finished").length,
+      // Les équipes pilotées par un bot ne sont pas des élèves : les compter
+      // gonflerait le carnet d'un facteur qui ne dépend que du nombre de
+      // concurrents choisi à la création.
+      teams: teamRows.filter((t) => t.controller === "human").length,
+      situationsDebriefed: instances.filter((i) => i.status === "debriefed").length,
+      hintsUnlocked: usages.length,
+    },
+    sectors,
+    situations: situationStats,
+    hintsByLevel,
+    concepts: conceptStats,
   };
 }

@@ -33,6 +33,12 @@ export default async function TeacherDashboard() {
           <h1 className="text-2xl font-bold">Mes parties</h1>
         </div>
         <div className="flex items-center gap-4">
+          <Link
+            href="/teacher/usage"
+            className="text-xs text-amber-300 underline-offset-4 hover:underline"
+          >
+            Carnet d&apos;usage
+          </Link>
           {isOrgAdmin ? (
             <Link href="/org" className="text-xs text-amber-300 underline-offset-4 hover:underline">
               Mon établissement
