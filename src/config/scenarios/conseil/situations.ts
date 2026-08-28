@@ -461,10 +461,162 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
     trigger: { detect: "profitable_illiquid" },
     weight: 1,
   },
+  {
+    code: "conseil_t5_mission_rabais",
+    title: "Trois cent quatre-vingts euros la journée",
+    narrative:
+      "Une collectivité propose une mission de 60 jours à 380 € la journée, très en dessous de votre tarif habituel. Vos consultants sont salariés et payés quoi qu'il arrive ; sans cette mission, une partie d'entre eux resterait au bureau. Chaque jour de mission coûte environ 90 € de frais de déplacement et de documentation.",
+    problem:
+      "Accepter une mission bien en dessous du tarif : sabordage, ou bon calcul ?",
+    diagnosticOptions: [
+      {
+        id: "salaire_engage",
+        label: "Les salaires tombent que la mission soit prise ou non : ils ne départagent pas les deux options",
+        correct: true,
+      },
+      {
+        id: "marge_reelle",
+        label: "Seuls les 90 € de frais de mission sont évités si l'on refuse : la journée laisse donc 290 €",
+        correct: true,
+      },
+      {
+        id: "sous_tarif_perte",
+        label: "Toute mission vendue sous le tarif habituel se fait à perte",
+        correct: false,
+      },
+      {
+        id: "toujours_accepter",
+        label: "Puisque la marge est positive, il faut accepter toutes les missions à bas prix",
+        correct: false,
+      },
+    ],
+    quiz: [
+      {
+        id: "conseil_cout_marginal",
+        prompt: "Le coût pertinent d'une journée de mission supplémentaire, pour un consultant déjà salarié, est…",
+        options: [
+          { id: "a", label: "Les seuls frais que la mission engendre : déplacement, documentation, sous-traitance éventuelle" },
+          { id: "b", label: "Le salaire journalier du consultant, quoi qu'il arrive" },
+          { id: "c", label: "Le tarif habituellement facturé au client" },
+          { id: "d", label: "La part des charges de structure rapportée à une journée" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Le salaire est engagé : il sort de la caisse que le consultant soit en mission ou au bureau. Seuls les frais évitables entrent dans l'arbitrage.",
+      },
+      {
+        id: "conseil_risque_tarif",
+        prompt: "Le vrai danger d'une mission acceptée bien en dessous du tarif est…",
+        options: [
+          { id: "a", label: "Qu'elle devienne la référence du client pour les missions suivantes, et occupe des consultants indisponibles pour mieux payé" },
+          { id: "b", label: "Qu'elle fasse baisser mécaniquement les salaires" },
+          { id: "c", label: "Qu'elle augmente les charges de structure du cabinet" },
+          { id: "d", label: "Qu'elle soit interdite par la réglementation des marchés publics" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Le calcul marginal dit oui quand le planning est vide. Il dit non dès qu'accepter empêche de servir un client mieux payé, ou installe durablement un tarif bas.",
+      },
+    ],
+    modelRelevance: {
+      marginal_analysis: "optimal",
+      breakeven_analysis: "misleading",
+      relevant_costs: "acceptable",
+      capacity_analysis: "acceptable",
+    },
+    conceptCodes: ["variable_costs", "contribution_margin", "capacity", "margin_rates"],
+    hints: hints([
+      "Demandez-vous ce qui change réellement dans vos comptes si vous refusez cette mission.",
+      "Les salaires de vos consultants sont-ils de ceux-là ? Ils tombent aussi quand le carnet est vide.",
+      "Retranchez des 380 € les seuls frais que la mission engendre : ce qui reste va couvrir la structure.",
+      "290 € de marge par jour valent mieux que zéro, TANT QUE le consultant n'avait rien d'autre à faire.",
+      "Le raisonnement marginal s'arrête net dès que la capacité est prise : accepter, c'est alors renoncer à une mission mieux payée.",
+    ]),
+    trigger: { round: 5 },
+    weight: 1,
+  },
+  {
+    code: "conseil_t6_resistance",
+    title: "Jusqu'où le cabinet peut-il encaisser",
+    narrative:
+      "Vous préparez le budget de l'année suivante. Un grand compte, qui pèse un quart de votre activité, laisse entendre qu'il pourrait internaliser. Vos charges de structure, elles, sont connues et ne bougeront pas : les salaires de douze consultants tombent chaque mois.",
+    problem:
+      "De combien votre activité peut-elle baisser avant que le cabinet ne perde de l'argent ?",
+    diagnosticOptions: [
+      {
+        id: "marge_securite",
+        label: "Il faut mesurer l'écart entre l'activité actuelle et le niveau d'équilibre",
+        correct: true,
+      },
+      {
+        id: "structure_rigide",
+        label: "Des charges presque entièrement fixes rendent le résultat très sensible à une baisse d'activité",
+        correct: true,
+      },
+      {
+        id: "attendre",
+        label: "Tant que le client n'est pas parti, il n'y a rien à calculer",
+        correct: false,
+      },
+      {
+        id: "baisser_tarif",
+        label: "Baisser le tarif de tous les clients protège de ce risque",
+        correct: false,
+      },
+    ],
+    quiz: [
+      {
+        id: "conseil_indice_securite",
+        prompt: "L'indice de sécurité d'une entreprise se lit comme…",
+        options: [
+          { id: "a", label: "La part du chiffre d'affaires qui peut disparaître avant d'atteindre le seuil de rentabilité" },
+          { id: "b", label: "Le pourcentage de clients fidèles d'une année sur l'autre" },
+          { id: "c", label: "Le rapport entre trésorerie et dettes à court terme" },
+          { id: "d", label: "La marge dégagée sur le client le plus important" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Il répond exactement à la question posée : combien puis-je perdre avant de basculer ? Un quart d'activité menacé face à un indice de 15 % est une alerte.",
+      },
+      {
+        id: "conseil_levier",
+        prompt: "Pourquoi une structure de coûts très fixe amplifie-t-elle les variations de résultat ?",
+        options: [
+          { id: "a", label: "Parce que les charges ne baissent pas quand l'activité baisse : toute la marge perdue se retranche du résultat" },
+          { id: "b", label: "Parce que les charges fixes augmentent quand l'activité diminue" },
+          { id: "c", label: "Parce que la marge unitaire dépend du volume vendu" },
+          { id: "d", label: "Parce que l'impôt est calculé sur le chiffre d'affaires" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "C'est le levier d'exploitation. Il joue dans les deux sens : très favorable quand l'activité monte, brutal quand elle descend.",
+      },
+    ],
+    modelRelevance: {
+      sensitivity_analysis: "optimal",
+      return_analysis: "misleading",
+      breakeven_analysis: "acceptable",
+      scenarios_method: "acceptable",
+    },
+    conceptCodes: ["safety_margin", "breakeven", "fixed_costs", "profitability_vs_return"],
+    hints: hints([
+      "Reprenez votre seuil de rentabilité en jours-consultants, puis comparez-le aux jours réellement vendus.",
+      "L'écart entre les deux est votre marge de sécurité. Rapportée à l'activité, elle donne un pourcentage.",
+      "Comparez ce pourcentage au quart d'activité que représente le client menacé.",
+      "Refaites le calcul en retirant ce client : le cabinet reste-t-il au-dessus du seuil ?",
+      "Faites varier un paramètre à la fois, l'activité puis le tarif, et regardez lequel fait basculer le résultat le plus vite. C'est une analyse de sensibilité.",
+    ]),
+    trigger: { round: 6 },
+    weight: 1,
+  },
 ];
 
 /** Pourquoi le modèle pertinent est le bon outil — correction du débriefing. */
 const MODEL_EXPLAIN: Record<string, string> = {
+  conseil_t5_mission_rabais:
+    "L'analyse marginale ne retient que ce que la décision change : les frais de mission. Le salaire, engagé de toute façon, n'a rien à y faire, et le seuil de rentabilité répondrait à une autre question.",
+  conseil_t6_resistance:
+    "L'analyse de sensibilité fait varier un paramètre à la fois pour voir lequel fait basculer le résultat. C'est ce qui transforme une inquiétude en chiffre.",
   conseil_t1_reprise:
     "Le seuil de rentabilité traduit la question du métier en taux d'occupation : combien de jours faut-il facturer pour couvrir des salaires qui tombent de toute façon ?",
   conseil_t2_creances:

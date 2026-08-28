@@ -462,10 +462,162 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
     trigger: { detect: "capacity_saturated" },
     weight: 1,
   },
+  {
+    code: "hotel_t4_plateformes",
+    title: "Dix-huit pour cent de commission",
+    narrative:
+      "Les plateformes de réservation prélèvent 18 % sur chaque nuitée qu'elles apportent. Elles représentent désormais un tiers de vos arrivées, et beaucoup de ces clients ne vous auraient jamais trouvé. Votre réception, elle, encaisse le tarif plein mais ne remplit pas l'hôtel à elle seule.",
+    problem:
+      "Faut-il réduire la part des plateformes, et sur quel calcul en décider ?",
+    diagnosticOptions: [
+      {
+        id: "marge_par_canal",
+        label: "Il faut comparer ce que rapporte réellement une nuitée selon le canal qui l'apporte",
+        correct: true,
+      },
+      {
+        id: "nuitee_perdue",
+        label: "Une nuitée à 82 € commission déduite rapporte plus qu'une chambre vide",
+        correct: true,
+      },
+      {
+        id: "commission_toujours_mauvaise",
+        label: "Une commission de 18 % est une perte sèche : il faut la supprimer",
+        correct: false,
+      },
+      {
+        id: "report_direct",
+        label: "Les clients des plateformes viendraient de toute façon en direct si elles disparaissaient",
+        correct: false,
+      },
+    ],
+    quiz: [
+      {
+        id: "hotel_marge_canal",
+        prompt: "Comparer deux canaux de distribution suppose de regarder…",
+        options: [
+          { id: "a", label: "La marge qui reste après les coûts propres à chaque canal, et le volume que chacun apporte" },
+          { id: "b", label: "Uniquement le tarif affiché, identique dans les deux cas" },
+          { id: "c", label: "Le nombre de chambres, qui ne dépend pas du canal" },
+          { id: "d", label: "Les charges de structure, réparties à parts égales" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Un canal cher qui remplit vaut souvent mieux qu'un canal gratuit qui ne remplit pas. Ce sont marge unitaire ET volume, jamais l'une sans l'autre.",
+      },
+      {
+        id: "hotel_taux_marge",
+        prompt: "Le taux de marge d'une nuitée vendue par une plateforme…",
+        options: [
+          { id: "a", label: "Est plus faible qu'en direct, mais reste très supérieur au coût variable d'une chambre" },
+          { id: "b", label: "Devient négatif dès que la commission dépasse 15 %" },
+          { id: "c", label: "Est identique, la commission étant une charge de structure" },
+          { id: "d", label: "Ne se calcule pas, faute de connaître le client" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Le coût variable d'une nuitée avoisine 21 €. À 82 € encaissés commission déduite, il reste largement de quoi payer la structure : refuser ce client coûterait bien plus que la commission.",
+      },
+    ],
+    modelRelevance: {
+      marginal_analysis: "optimal",
+      breakeven_analysis: "misleading",
+      relevant_costs: "acceptable",
+      elasticity_analysis: "acceptable",
+    },
+    conceptCodes: ["margin_rates", "contribution_margin", "segmentation", "demand_market_share"],
+    hints: hints([
+      "Calculez ce qui vous reste sur une nuitée à 100 € vendue par une plateforme, commission déduite.",
+      "Comparez ce montant, non pas au tarif direct, mais au coût variable d'une chambre occupée.",
+      "La bonne question n'est pas « la commission est-elle chère ? » mais « ces clients seraient-ils venus autrement ? ».",
+      "Un canal se juge sur la marge qu'il laisse ET sur le volume qu'il apporte. Un tarif plein sur une chambre vide vaut zéro.",
+      "Raisonnez à la marge : chaque nuitée supplémentaire ne coûte que son coût variable, puisque la structure est déjà payée.",
+    ]),
+    trigger: { round: 4 },
+    weight: 1,
+  },
+  {
+    code: "hotel_t6_ecarts",
+    title: "La saison prévue, la saison vécue",
+    narrative:
+      "La saison est finie. Vous aviez annoncé un taux d'occupation et un prix moyen ; l'hôtel a fait autre chose. Le chiffre d'affaires final est proche de la prévision, mais ce n'est pas pour les raisons que vous croyiez : vous avez vendu plus de nuitées que prévu, à un prix moyen plus bas.",
+    problem:
+      "Un chiffre d'affaires conforme à la prévision suffit-il à dire que la saison s'est passée comme prévu ?",
+    diagnosticOptions: [
+      {
+        id: "decomposer",
+        label: "Un écart global peut cacher deux écarts de sens contraire, sur le volume et sur le prix",
+        correct: true,
+      },
+      {
+        id: "prix_plus_bas",
+        label: "Vendre plus de nuitées moins cher n'a pas les mêmes conséquences que l'inverse : le personnel a travaillé davantage",
+        correct: true,
+      },
+      {
+        id: "ca_conforme",
+        label: "Un chiffre d'affaires conforme signifie que la prévision était juste",
+        correct: false,
+      },
+      {
+        id: "ecart_hasard",
+        label: "Un écart qui se répète d'une saison à l'autre relève du hasard",
+        correct: false,
+      },
+    ],
+    quiz: [
+      {
+        id: "hotel_ecart_decompose",
+        prompt: "Un écart de chiffre d'affaires se décompose utilement en…",
+        options: [
+          { id: "a", label: "Un écart sur les volumes et un écart sur les prix, qui peuvent se compenser" },
+          { id: "b", label: "Un écart d'exploitation et un écart financier" },
+          { id: "c", label: "Un écart favorable et un écart défavorable, jamais les deux" },
+          { id: "d", label: "Un écart comptable et un écart de trésorerie" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Deux écarts de sens contraire peuvent s'annuler au total. Les séparer est ce qui transforme un constat en explication.",
+      },
+      {
+        id: "hotel_biais_prevision",
+        prompt: "Un écart qui va toujours dans le même sens d'une période à l'autre indique…",
+        options: [
+          { id: "a", label: "Un biais dans la méthode de prévision, qu'il faut corriger" },
+          { id: "b", label: "Une erreur de saisie dans les résultats" },
+          { id: "c", label: "Un aléa de marché, par nature imprévisible" },
+          { id: "d", label: "Que la prévision n'a aucune utilité" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Le hasard se trompe dans les deux sens. Une erreur systématiquement optimiste vient de la méthode, et se corrige.",
+      },
+    ],
+    modelRelevance: {
+      variance_analysis: "optimal",
+      breakeven_analysis: "misleading",
+      elasticity_analysis: "acceptable",
+      capacity_analysis: "acceptable",
+    },
+    conceptCodes: ["seasonality", "demand_market_share", "price_elasticity", "safety_margin"],
+    hints: hints([
+      "Ouvrez l'historique de vos ventes : vos prévisions y figurent en face du réalisé, tour par tour.",
+      "Séparez l'écart en deux : combien de nuitées de plus ou de moins, et à quel prix moyen ?",
+      "Multipliez l'écart de volume par le prix prévu : voilà l'écart imputable au remplissage. Le reste vient du prix.",
+      "Regardez le SENS de vos écarts sur les six tours. Toujours au-dessus ? Toujours en dessous ?",
+      "Un écart constant dans le même sens n'est pas de la malchance : c'est votre méthode qui est biaisée, et elle se corrige.",
+    ]),
+    trigger: { round: 6 },
+    weight: 1,
+  },
 ];
 
 /** Pourquoi le modèle pertinent est le bon outil — correction du débriefing. */
 const MODEL_EXPLAIN: Record<string, string> = {
+  hotel_t4_plateformes:
+    "L'analyse marginale compare ce que chaque nuitée supplémentaire rapporte à ce qu'elle coûte vraiment. La structure étant déjà payée, une nuitée commissionnée reste très largement bénéficiaire.",
+  hotel_t6_ecarts:
+    "L'analyse des écarts sépare ce que le volume explique de ce que le prix explique. Un chiffre d'affaires conforme peut recouvrir deux erreurs qui se compensent.",
   hotel_t1_reprise:
     "Le seuil de rentabilité traduit la question du secteur en une phrase : quel taux d'occupation faut-il atteindre pour ne plus perdre d'argent ?",
   hotel_t2_yield:

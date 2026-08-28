@@ -387,10 +387,162 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
     trigger: { detect: "below_breakeven" },
     weight: 1,
   },
+  {
+    code: "fitness_t4_annuel",
+    title: "Douze mois encaissés d'avance",
+    narrative:
+      "Votre responsable commercial propose une formule annuelle : 340 € réglés en une fois, contre 105 € par trimestre aujourd'hui, soit 420 € sur l'année. Vous perdez 80 € par adhérent, mais vous encaissez tout au premier jour, et l'adhérent ne peut plus partir en cours d'année.",
+    problem:
+      "Que gagne réellement la salle à se faire payer d'avance, au-delà du chiffre d'affaires ?",
+    diagnosticOptions: [
+      {
+        id: "bfr_negatif",
+        label: "Encaisser avant de fournir la prestation finance l'exploitation : le besoin en fonds de roulement devient négatif",
+        correct: true,
+      },
+      {
+        id: "attrition_bloquee",
+        label: "L'adhérent engagé pour l'année ne se perd plus en cours de route",
+        correct: true,
+      },
+      {
+        id: "remise_perte",
+        label: "Une remise de 80 € est une perte sèche qu'aucun avantage ne compense",
+        correct: false,
+      },
+      {
+        id: "resultat_double",
+        label: "Encaisser douze mois d'avance multiplie le résultat de l'exercice par quatre",
+        correct: false,
+      },
+    ],
+    quiz: [
+      {
+        id: "fitness_bfr_negatif",
+        prompt: "Une activité encaissée d'avance présente un besoin en fonds de roulement négatif, ce qui signifie que…",
+        options: [
+          { id: "a", label: "Les clients financent le cycle d'exploitation : l'argent rentre avant que les charges ne sortent" },
+          { id: "b", label: "L'entreprise perd de l'argent sur son exploitation" },
+          { id: "c", label: "Le fonds de roulement est insuffisant" },
+          { id: "d", label: "Les fournisseurs sont payés comptant" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "C'est la position enviable de la salle de sport, comme du restaurant ou du commerce de détail : le client paie avant d'avoir consommé, et cette avance finance l'activité gratuitement.",
+      },
+      {
+        id: "fitness_produit_avance",
+        prompt: "Le chiffre d'affaires d'un abonnement annuel encaissé en janvier…",
+        options: [
+          { id: "a", label: "Se rattache aux périodes pendant lesquelles la prestation est fournie, même si la trésorerie arrive tout de suite" },
+          { id: "b", label: "Est intégralement acquis au résultat dès l'encaissement" },
+          { id: "c", label: "N'apparaît qu'à la fin de l'année d'abonnement" },
+          { id: "d", label: "Se comptabilise en dette financière" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Trésorerie et résultat ne suivent pas le même calendrier : l'argent est là, le produit ne l'est pas encore. Confondre les deux fait croire à une richesse qui n'existe pas.",
+      },
+    ],
+    modelRelevance: {
+      frng_bfr_analysis: "optimal",
+      breakeven_analysis: "misleading",
+      cash_budget: "acceptable",
+      npv: "acceptable",
+    },
+    conceptCodes: ["bfr", "frng", "net_treasury", "discounting"],
+    hints: hints([
+      "Comparez d'abord ce que rapporte un adhérent sur l'année dans les deux formules : 420 € contre 340 €.",
+      "Puis regardez QUAND cet argent arrive : quatre fois dans l'année, ou une seule fois en janvier ?",
+      "Un encaissement anticipé, c'est de l'argent disponible pour payer les charges avant même d'avoir fourni la prestation.",
+      "Cette avance des clients réduit votre besoin en fonds de roulement, parfois jusqu'à le rendre négatif : ce sont eux qui financent la salle.",
+      "Ajoutez enfin l'attrition évitée : un adhérent engagé douze mois ne part pas en mars. Comparez ce gain aux 80 € de remise.",
+    ]),
+    trigger: { round: 4 },
+    weight: 1,
+  },
+  {
+    code: "fitness_t6_seconde_salle",
+    title: "Une seconde salle, ou pas",
+    narrative:
+      "Un local se libère dans le quartier voisin : 220 000 € d'aménagement. Vous ne savez pas si la demande y est. Votre étude interne dit qu'il y a environ deux chances sur trois d'atteindre 1 400 adhérents, et une sur trois de plafonner à 600, auquel cas la salle perdrait de l'argent chaque trimestre.",
+    problem:
+      "Comment décider d'un investissement dont le résultat dépend d'un événement incertain ?",
+    diagnosticOptions: [
+      {
+        id: "ponderer",
+        label: "Il faut chiffrer chaque issue et la pondérer par sa probabilité",
+        correct: true,
+      },
+      {
+        id: "reduire_incertitude",
+        label: "Une étude de terrain ou une ouverture progressive réduirait l'incertitude avant d'engager les 220 000 €",
+        correct: true,
+      },
+      {
+        id: "meilleur_cas",
+        label: "Si le meilleur scénario est bon, l'investissement doit être fait",
+        correct: false,
+      },
+      {
+        id: "jamais_risque",
+        label: "Un investissement dont une issue est déficitaire ne doit jamais être engagé",
+        correct: false,
+      },
+    ],
+    quiz: [
+      {
+        id: "fitness_esperance",
+        prompt: "L'espérance de gain d'une décision incertaine s'obtient en…",
+        options: [
+          { id: "a", label: "Multipliant chaque issue par sa probabilité, puis en additionnant" },
+          { id: "b", label: "Retenant l'issue la plus probable" },
+          { id: "c", label: "Faisant la moyenne simple des issues" },
+          { id: "d", label: "Retenant systématiquement l'issue la plus défavorable" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Deux chances sur trois de gagner 90 000 € et une sur trois d'en perdre 60 000 donnent une espérance positive. Cela ne dit pas que vous gagnerez : cela dit que le pari est favorable.",
+      },
+      {
+        id: "fitness_valeur_information",
+        prompt: "Payer une étude avant de décider a de la valeur lorsque…",
+        options: [
+          { id: "a", label: "Son résultat est susceptible de changer la décision, et qu'elle coûte moins que ce que l'erreur coûterait" },
+          { id: "b", label: "Elle confirme l'intuition du dirigeant" },
+          { id: "c", label: "Elle est moins chère que l'investissement lui-même" },
+          { id: "d", label: "Elle supprime totalement l'incertitude" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Une information qui ne changerait rien à la décision ne vaut rien, si bon marché soit-elle. C'est l'écart entre décider informé et décider à l'aveugle qui se paie.",
+      },
+    ],
+    modelRelevance: {
+      decision_tree: "optimal",
+      breakeven_analysis: "misleading",
+      npv: "acceptable",
+      scenarios_method: "acceptable",
+    },
+    conceptCodes: ["discounting", "irr_payback", "capacity", "profitability_vs_return"],
+    hints: hints([
+      "Chiffrez d'abord les deux issues séparément : que rapporte la salle à 1 400 adhérents, que coûte-t-elle à 600 ?",
+      "Actualisez chacune sur la durée de l'investissement : les flux lointains valent moins que les proches.",
+      "Multipliez chaque résultat par sa probabilité, deux tiers et un tiers, puis additionnez.",
+      "Une espérance positive rend le pari favorable. Vérifiez ensuite que la mauvaise issue ne mettrait pas la première salle en danger.",
+      "Demandez-vous enfin ce qu'une étude préalable changerait à votre décision. Si la réponse est « rien », elle ne vaut pas son prix.",
+    ]),
+    trigger: { round: 6 },
+    weight: 1,
+  },
 ];
 
 /** Pourquoi le modèle pertinent est le bon outil — correction du débriefing. */
 const MODEL_EXPLAIN: Record<string, string> = {
+  fitness_t4_annuel:
+    "L'analyse FRNG / BFR montre ce que le compte de résultat cache : encaissé d'avance, l'abonnement fait financer l'exploitation par les adhérents eux-mêmes.",
+  fitness_t6_seconde_salle:
+    "L'arbre de décision chiffre chaque issue et la pondère par sa probabilité. Face à une demande incertaine, la VAN seule devrait choisir une hypothèse, donc parier sans le dire.",
   fitness_t1_recurrent:
     "Le seuil de rentabilité traduit le modèle récurrent en une question simple : combien d'adhérents faut-il pour couvrir une structure qui ne bouge jamais ?",
   fitness_t2_attrition:

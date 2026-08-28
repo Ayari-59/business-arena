@@ -387,10 +387,162 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
     trigger: { detect: "below_breakeven" },
     weight: 1,
   },
+  {
+    code: "bistrot_t5_terrasse",
+    title: "La terrasse sous verrière",
+    narrative:
+      "Le bailleur propose de couvrir et de chauffer la terrasse : 48 000 €, amortis sur douze trimestres. Elle ajouterait environ 1 800 couverts par trimestre, mais du printemps à l'automne seulement : en plein hiver, personne ne s'y installe. Chaque couvert laisse une vingtaine d'euros de marge.",
+    problem:
+      "Cet investissement rapporte-t-il plus qu'il ne coûte, et sur quoi le jugez-vous ?",
+    diagnosticOptions: [
+      {
+        id: "actualiser",
+        label: "Il faut comparer le décaissement d'aujourd'hui aux marges futures, ramenées à leur valeur d'aujourd'hui",
+        correct: true,
+      },
+      {
+        id: "saison",
+        label: "Les couverts supplémentaires ne tombent pas toute l'année : le calcul doit suivre la saison",
+        correct: true,
+      },
+      {
+        id: "seuil_suffit",
+        label: "Si le seuil de rentabilité est franchi cette année, l'investissement est bon",
+        correct: false,
+      },
+      {
+        id: "amortissement_flux",
+        label: "Ce sont les 4 000 € d'amortissement par trimestre qu'il faut comparer aux marges",
+        correct: false,
+      },
+    ],
+    quiz: [
+      {
+        id: "bistrot_actualisation",
+        prompt: "Actualiser un flux futur revient à…",
+        options: [
+          { id: "a", label: "Reconnaître qu'un euro encaissé dans trois ans vaut moins qu'un euro aujourd'hui" },
+          { id: "b", label: "Le corriger de l'inflation constatée sur la période" },
+          { id: "c", label: "En retirer l'impôt sur les sociétés" },
+          { id: "d", label: "Le convertir en marge sur coût variable" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Un euro disponible tout de suite peut être placé, ou éviter un emprunt. Attendre a donc un prix, et ce prix est le taux d'actualisation.",
+      },
+      {
+        id: "bistrot_amortissement_van",
+        prompt: "Dans le calcul de la valeur actuelle nette d'un investissement, l'amortissement comptable…",
+        options: [
+          { id: "a", label: "N'entre pas dans les flux : c'est une charge calculée, jamais décaissée" },
+          { id: "b", label: "S'ajoute au décaissement initial" },
+          { id: "c", label: "Remplace la marge dans les flux futurs" },
+          { id: "d", label: "Double le coût réel de l'investissement" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Les 48 000 € sortent une fois, à la signature. L'amortissement ne fait que les étaler dans le compte de résultat : le compter en plus reviendrait à payer la verrière deux fois.",
+      },
+    ],
+    modelRelevance: {
+      npv: "optimal",
+      breakeven_analysis: "misleading",
+      capacity_analysis: "acceptable",
+      irr: "acceptable",
+    },
+    conceptCodes: ["discounting", "irr_payback", "capacity", "seasonality"],
+    hints: hints([
+      "Combien de couverts la verrière ajoute-t-elle réellement sur une année entière, saison creuse comprise ?",
+      "Multipliez ces couverts par la marge unitaire : voilà le flux annuel que l'investissement rapporte.",
+      "Comparez ce flux au décaissement de 48 000 €, mais pas euro pour euro : les marges arrivent plus tard, et ce délai a un prix.",
+      "Actualisez chaque trimestre à votre taux d'emprunt, puis retranchez les 48 000 €. Si le total reste positif, l'investissement crée de la valeur.",
+      "VAN = Σ (flux du trimestre ÷ (1 + taux)^n) − investissement initial. L'amortissement n'entre nulle part : il ne se décaisse pas.",
+    ]),
+    trigger: { round: 5 },
+    weight: 1,
+  },
+  {
+    code: "bistrot_t6_valeur",
+    title: "Ce que vaut vraiment le bistrot",
+    narrative:
+      "Votre associé veut sortir du capital et demande ce que vaut sa part. Le bistrot a dégagé un résultat correct sur l'année, mais il a fallu 260 000 € de capitaux propres pour le faire tourner. Le restaurant d'en face gagne un peu moins que vous, avec deux fois moins de capitaux engagés.",
+    problem:
+      "Lequel des deux établissements est le mieux géré, et sur quel critère tranchez-vous ?",
+    diagnosticOptions: [
+      {
+        id: "rapporter",
+        label: "Un résultat ne se juge qu'en le rapportant aux capitaux qu'il a fallu engager",
+        correct: true,
+      },
+      {
+        id: "voisin_meilleur",
+        label: "Le voisin obtient presque autant avec moitié moins : sa rentabilité est supérieure",
+        correct: true,
+      },
+      {
+        id: "plus_gros_gagne",
+        label: "Le plus gros résultat désigne toujours la meilleure gestion",
+        correct: false,
+      },
+      {
+        id: "ca_decide",
+        label: "C'est le chiffre d'affaires qui départage deux établissements",
+        correct: false,
+      },
+    ],
+    quiz: [
+      {
+        id: "bistrot_profit_vs_rentab",
+        prompt: "Profitabilité et rentabilité se distinguent en ce que…",
+        options: [
+          { id: "a", label: "La profitabilité rapporte le résultat au chiffre d'affaires, la rentabilité aux capitaux engagés" },
+          { id: "b", label: "La profitabilité concerne le court terme, la rentabilité le long terme" },
+          { id: "c", label: "La profitabilité s'exprime en euros, la rentabilité en volume" },
+          { id: "d", label: "Ce sont deux mots pour la même chose" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Deux dénominateurs, deux questions. « Combien me reste-t-il sur 100 € vendus ? » n'est pas « combien rapportent les 260 000 € que j'ai immobilisés ? ».",
+      },
+      {
+        id: "bistrot_marge_securite",
+        prompt: "La marge de sécurité d'un établissement mesure…",
+        options: [
+          { id: "a", label: "De combien le chiffre d'affaires peut baisser avant de repasser sous le seuil de rentabilité" },
+          { id: "b", label: "La trésorerie disponible en cas de coup dur" },
+          { id: "c", label: "L'écart entre le prix de vente et le coût variable" },
+          { id: "d", label: "Le montant du découvert encore autorisé" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "C'est le matelas entre l'activité réelle et le point d'équilibre. Deux affaires au même résultat n'ont pas la même solidité si l'une travaille juste au-dessus du seuil.",
+      },
+    ],
+    modelRelevance: {
+      return_analysis: "optimal",
+      breakeven_analysis: "misleading",
+      cvp_analysis: "acceptable",
+      npv: "irrelevant",
+    },
+    conceptCodes: ["profitability_vs_return", "margin_rates", "safety_margin", "fixed_costs"],
+    hints: hints([
+      "Regardez d'abord vos capitaux propres au bilan : c'est l'argent immobilisé dans l'affaire.",
+      "Rapportez votre résultat net à ces capitaux propres, puis faites de même pour le voisin.",
+      "Un résultat plus élevé obtenu avec deux fois plus de capitaux n'est pas une meilleure performance : c'est un plus gros pari.",
+      "Ajoutez la marge de sécurité : à résultat égal, l'établissement le plus loin de son seuil encaissera mieux un mauvais trimestre.",
+      "Rentabilité financière = résultat net ÷ capitaux propres. C'est le seul chiffre qui réponde à la question de votre associé.",
+    ]),
+    trigger: { round: 6 },
+    weight: 1,
+  },
 ];
 
 /** Pourquoi le modèle pertinent est le bon outil — correction du débriefing. */
 const MODEL_EXPLAIN: Record<string, string> = {
+  bistrot_t5_terrasse:
+    "La VAN met face à face un décaissement d'aujourd'hui et des marges de demain, en tenant compte du temps qui les sépare. Le seuil de rentabilité, lui, raisonne sur un tour et ignore les onze suivants.",
+  bistrot_t6_valeur:
+    "L'analyse de rentabilité rapporte le résultat aux capitaux engagés. C'est ce rapport, et non le résultat seul, qui répond à la question de votre associé.",
   bistrot_t1_reprise:
     "Le seuil de rentabilité traduit le ratio matières en une question opérationnelle : combien de couverts par jour faut-il servir pour ne plus perdre d'argent ?",
   bistrot_t2_fournisseur:

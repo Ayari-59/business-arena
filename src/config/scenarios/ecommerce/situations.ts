@@ -461,10 +461,162 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
     trigger: { detect: "profitable_illiquid" },
     weight: 1,
   },
+  {
+    code: "ecommerce_t3_retours",
+    title: "Une commande sur huit revient",
+    narrative:
+      "Le service client remonte un chiffre que personne ne regardait : 12 % des commandes sont retournées. Chaque retour, ce sont des frais de port dans les deux sens, un article à contrôler et à remettre en rayon, parfois invendable. La marge affichée sur une commande, elle, n'en tient aucun compte.",
+    problem:
+      "Que devient votre marge quand une commande sur huit revient, et où faut-il agir ?",
+    diagnosticOptions: [
+      {
+        id: "marge_reelle",
+        label: "La marge qui compte est celle des commandes CONSERVÉES, une fois les retours payés",
+        correct: true,
+      },
+      {
+        id: "cout_variable",
+        label: "Le coût d'un retour se comporte comme un coût variable : il grandit avec le volume vendu",
+        correct: true,
+      },
+      {
+        id: "retours_marginaux",
+        label: "À 12 %, les retours restent négligeables sur le résultat",
+        correct: false,
+      },
+      {
+        id: "interdire",
+        label: "Refuser les retours est la solution la plus rentable",
+        correct: false,
+      },
+    ],
+    quiz: [
+      {
+        id: "ecom_marge_apres_retours",
+        prompt: "Un taux de retour de 12 % agit sur le compte de résultat comme…",
+        options: [
+          { id: "a", label: "Une hausse du coût variable unitaire, qui abaisse la marge et relève le seuil de rentabilité" },
+          { id: "b", label: "Une charge de structure supplémentaire, indépendante du volume" },
+          { id: "c", label: "Une baisse du prix de vente affiché" },
+          { id: "d", label: "Un simple décalage de trésorerie, sans effet sur le résultat" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Plus vous vendez, plus vous encaissez de retours. C'est bien la marge sur chaque commande qui se réduit, donc le nombre de commandes nécessaires à l'équilibre qui augmente.",
+      },
+      {
+        id: "ecom_prevention",
+        prompt: "Dépenser pour réduire les retours (photos, tailles, description) se juge en comparant…",
+        options: [
+          { id: "a", label: "Le coût de la prévention au coût des retours qu'elle évite" },
+          { id: "b", label: "Le coût de la prévention au chiffre d'affaires total" },
+          { id: "c", label: "Le taux de retour au taux de marge" },
+          { id: "d", label: "Le nombre de retours au nombre de visiteurs" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "C'est l'arbitrage classique de la qualité : prévenir coûte tout de suite et de façon certaine, subir coûte plus tard et de façon variable. Le bon niveau est un calcul.",
+      },
+    ],
+    modelRelevance: {
+      cvp_analysis: "optimal",
+      elasticity_analysis: "misleading",
+      breakeven_analysis: "acceptable",
+      relevant_costs: "acceptable",
+    },
+    conceptCodes: ["variable_costs", "contribution_margin", "margin_rates", "breakeven"],
+    hints: hints([
+      "Sur 100 commandes expédiées, combien restent réellement vendues ?",
+      "Chaque retour coûte deux ports et une manipulation : ajoutez cette somme au coût de chaque commande conservée.",
+      "Recalculez votre marge unitaire avec ce coût en plus. De combien a-t-elle fondu ?",
+      "Une marge plus faible relève le seuil : combien de commandes faut-il désormais pour couvrir la structure ?",
+      "Comparez enfin le coût d'une prévention (meilleures photos, guide des tailles) au coût des retours qu'elle éviterait.",
+    ]),
+    trigger: { round: 3 },
+    weight: 1,
+  },
+  {
+    code: "ecommerce_t6_scenarios",
+    title: "Et si le trafic doublait de prix",
+    narrative:
+      "Les enchères publicitaires montent : vos concurrents payent de plus en plus cher le même clic. Votre coût d'acquisition a déjà progressé cette année. Pour le budget de l'an prochain, personne ne peut vous dire s'il augmentera de 10 % ou de 60 %.",
+    problem:
+      "Comment décider d'un budget quand le paramètre central est inconnu ?",
+    diagnosticOptions: [
+      {
+        id: "plusieurs_hypotheses",
+        label: "Il faut bâtir plusieurs hypothèses chiffrées plutôt que de parier sur une seule",
+        correct: true,
+      },
+      {
+        id: "point_bascule",
+        label: "Ce qui compte est de trouver le niveau de coût d'acquisition à partir duquel l'activité devient déficitaire",
+        correct: true,
+      },
+      {
+        id: "moyenne",
+        label: "Retenir la moyenne des prévisions donne la meilleure décision",
+        correct: false,
+      },
+      {
+        id: "attendre_de_voir",
+        label: "Mieux vaut attendre de connaître le vrai chiffre avant de décider",
+        correct: false,
+      },
+    ],
+    quiz: [
+      {
+        id: "ecom_methode_scenarios",
+        prompt: "La méthode des scénarios consiste à…",
+        options: [
+          { id: "a", label: "Chiffrer une hypothèse basse, une moyenne et une haute, puis regarder si la décision change selon l'hypothèse" },
+          { id: "b", label: "Choisir l'hypothèse la plus probable et s'y tenir" },
+          { id: "c", label: "Faire la moyenne des résultats possibles" },
+          { id: "d", label: "Reporter la décision jusqu'à disparition de l'incertitude" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Une décision qui reste bonne dans les trois scénarios est robuste. Une décision qui n'est bonne que dans le meilleur des cas est un pari, et il faut le savoir avant de le prendre.",
+      },
+      {
+        id: "ecom_cac_limite",
+        prompt: "Le coût d'acquisition maximal supportable pour une commande est atteint quand…",
+        options: [
+          { id: "a", label: "Il égale la marge que cette commande dégage une fois tous ses autres coûts payés" },
+          { id: "b", label: "Il égale le prix de vente affiché" },
+          { id: "c", label: "Il dépasse le budget publicitaire du trimestre" },
+          { id: "d", label: "Il représente plus de 10 % du chiffre d'affaires" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Au-delà, chaque nouveau client coûte plus cher qu'il ne rapporte, et vendre davantage aggrave la perte. C'est un plafond, pas un objectif.",
+      },
+    ],
+    modelRelevance: {
+      scenarios_method: "optimal",
+      breakeven_analysis: "misleading",
+      sensitivity_analysis: "acceptable",
+      cvp_analysis: "acceptable",
+    },
+    conceptCodes: ["demand_market_share", "contribution_margin", "safety_margin", "profitability_vs_return"],
+    hints: hints([
+      "Reprenez ce qu'une commande vous laisse une fois le produit, la logistique et les retours payés.",
+      "Ce montant est le coût d'acquisition maximal que vous pouvez supporter. Où en êtes-vous aujourd'hui ?",
+      "Chiffrez trois hypothèses de hausse : faible, moyenne, forte. Que devient le résultat dans chacune ?",
+      "Repérez celle qui vous fait basculer sous le seuil : c'est elle qui doit gouverner le budget, pas la moyenne.",
+      "Une décision robuste tient dans les trois scénarios. Si elle ne tient que dans le meilleur, c'est un pari, et il faut le nommer comme tel.",
+    ]),
+    trigger: { round: 6 },
+    weight: 1,
+  },
 ];
 
 /** Pourquoi le modèle pertinent est le bon outil — correction du débriefing. */
 const MODEL_EXPLAIN: Record<string, string> = {
+  ecommerce_t3_retours:
+    "L'analyse coût-volume-profit intègre le coût des retours au coût variable, recalcule la marge par commande et le nombre de commandes nécessaires à l'équilibre.",
+  ecommerce_t6_scenarios:
+    "La méthode des scénarios chiffre plusieurs hypothèses et cherche celle qui fait basculer la décision. Face à un paramètre inconnu, c'est plus honnête qu'une prévision unique.",
   ecom_t1_acquisition:
     "Le seuil de rentabilité pose la question du métier dans les bons termes : combien de commandes faut-il, une fois la publicité payée ?",
   ecom_t2_fidelisation:

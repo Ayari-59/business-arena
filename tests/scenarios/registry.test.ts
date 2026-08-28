@@ -182,6 +182,38 @@ describe("registre des scénarios", () => {
     }
   });
 
+  it("chaque tour joué porte une situation scriptée, dans tous les secteurs", () => {
+    // L'écart trouvé au bilan : NOVA portait six situations pour six tours, les
+    // six autres secteurs quatre. Il restait donc deux tours sans rien, sauf à
+    // ce qu'une situation DÉTECTÉE se déclenche, ce qui suppose que la partie
+    // tourne mal. Un élève en hôtellerie recevait moins qu'un élève à
+    // l'atelier, sans que rien ne le laisse deviner.
+    for (const d of SCENARIOS) {
+      const tours = d.situations
+        .map((s) => ("round" in s.trigger ? s.trigger.round : null))
+        .filter((r): r is number => r !== null)
+        .sort((a, b) => a - b);
+      const attendus = Array.from({ length: d.scenario.roundsCount }, (_, i) => i + 1);
+      expect(tours, `${d.code} : un tour joué sans situation scriptée`).toEqual(attendus);
+    }
+  });
+
+  it("chaque secteur mobilise au moins cinq modèles d'analyse différents", () => {
+    // Un secteur qui ne ferait travailler que le seuil de rentabilité
+    // n'enseignerait qu'un outil, quel que soit le nombre de ses situations.
+    for (const d of SCENARIOS) {
+      const optimaux = new Set(
+        d.situations.flatMap((s) =>
+          Object.entries(s.modelRelevance)
+            .filter(([, r]) => r === "optimal")
+            .map(([code]) => code),
+        ),
+      );
+      expect(optimaux.size, `${d.code} ne mobilise que ${[...optimaux].join(", ")}`)
+        .toBeGreaterThanOrEqual(5);
+    }
+  });
+
   it("chaque scénario ouvre une situation dès le tour 1", () => {
     for (const d of SCENARIOS) {
       const first = d.situations.filter((s) => "round" in s.trigger && s.trigger.round === 1);

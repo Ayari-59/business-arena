@@ -462,10 +462,162 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
     trigger: { detect: "profitable_illiquid" },
     weight: 1,
   },
+  {
+    code: "boutique_t3_soldes",
+    title: "Solder, ou garder pour l'an prochain",
+    narrative:
+      "Il reste 400 pièces de la collection de printemps, achetées 18 € l'unité et affichées 45 €. Elles ne partiront plus au tarif plein. Un client déstockeur en offre 22 € l'unité, tout de suite. Les garder jusqu'au printemps prochain coûte de la place en réserve, et la mode aura tourné.",
+    problem:
+      "Vendre à 22 € une pièce payée 18 €, est-ce une bonne affaire ou une perte ?",
+    diagnosticOptions: [
+      {
+        id: "engage",
+        label: "Les 18 € sont déjà payés : ils ne changent plus rien à la décision d'aujourd'hui",
+        correct: true,
+      },
+      {
+        id: "comparer_alternatives",
+        label: "La vraie comparaison est entre 22 € maintenant et ce que la pièce rapportera plus tard, si elle part",
+        correct: true,
+      },
+      {
+        id: "sous_prix_achat",
+        label: "Vendre au-dessus du prix d'achat garantit que l'opération est rentable",
+        correct: false,
+      },
+      {
+        id: "jamais_perte",
+        label: "Il ne faut jamais vendre en dessous du prix affiché : cela dévalorise la boutique",
+        correct: false,
+      },
+    ],
+    quiz: [
+      {
+        id: "boutique_cout_engage",
+        prompt: "Un coût déjà engagé et irrécupérable doit, dans une décision…",
+        options: [
+          { id: "a", label: "Être ignoré : seuls comptent les encaissements et décaissements que la décision change encore" },
+          { id: "b", label: "Être récupéré en priorité par le prix de vente" },
+          { id: "c", label: "Être réparti sur les autres articles de la collection" },
+          { id: "d", label: "Être ajouté au coût variable de la vente" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Les 18 € sont sortis de la caisse il y a des mois, quelle que soit votre décision d'aujourd'hui. Vouloir les « récupérer » conduit à refuser 22 € et à finir avec zéro.",
+      },
+      {
+        id: "boutique_stock_dormant",
+        prompt: "Garder ces 400 pièces une saison de plus…",
+        options: [
+          { id: "a", label: "Immobilise de l'argent dans le stock et occupe une réserve qui pourrait porter la collection suivante" },
+          { id: "b", label: "N'a aucun coût tant que les pièces ne sont pas vendues" },
+          { id: "c", label: "Améliore le résultat, puisque le stock figure à l'actif du bilan" },
+          { id: "d", label: "Réduit le besoin en fonds de roulement" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Un stock qui dort est de l'argent qui ne travaille pas. Il gonfle le besoin en fonds de roulement et prend la place de ce qui se vendrait.",
+      },
+    ],
+    modelRelevance: {
+      relevant_costs: "optimal",
+      breakeven_analysis: "misleading",
+      marginal_analysis: "acceptable",
+      frng_bfr_analysis: "acceptable",
+    },
+    conceptCodes: ["variable_costs", "contribution_margin", "stock", "bfr"],
+    hints: hints([
+      "Posez-vous une seule question : que change ma décision d'aujourd'hui, en euros qui entrent ou qui sortent ?",
+      "Le prix d'achat de 18 € a été payé il y a des mois. Refuser 22 € ne vous les rendra pas.",
+      "Les deux options réelles sont : 22 € tout de suite, ou une vente incertaine dans un an, place occupée entre-temps.",
+      "Un coût déjà engagé ne doit jamais entrer dans un arbitrage : il est le même quelle que soit l'option retenue.",
+      "Comparez les seuls flux que la décision modifie. Ici, 22 € encaissés contre une réserve libérée et un risque d'invendu en moins.",
+    ]),
+    trigger: { round: 3 },
+    weight: 1,
+  },
+  {
+    code: "boutique_t6_capitaux",
+    title: "L'argent dort dans la réserve",
+    narrative:
+      "Votre banquier reçoit les comptes de l'année. La boutique dégage un résultat honorable, mais il constate que le stock et les créances immobilisent une somme considérable, et que cet argent ne rapporte rien tant qu'il n'est pas vendu ni encaissé. Il vous demande le budget de trésorerie du prochain exercice.",
+    problem:
+      "Comment prévoir les mois où la caisse sera tendue, avant d'y être ?",
+    diagnosticOptions: [
+      {
+        id: "decalage",
+        label: "Les encaissements et les décaissements ne tombent pas au même moment : c'est ce décalage qu'il faut projeter",
+        correct: true,
+      },
+      {
+        id: "saison",
+        label: "Les achats de la collection de Noël se paient avant que Noël ne rapporte quoi que ce soit",
+        correct: true,
+      },
+      {
+        id: "resultat_suffit",
+        label: "Un résultat prévisionnel positif garantit une trésorerie positive",
+        correct: false,
+      },
+      {
+        id: "decouvert_regle",
+        label: "Le découvert autorisé dispense de faire un budget de trésorerie",
+        correct: false,
+      },
+    ],
+    quiz: [
+      {
+        id: "boutique_budget_treso",
+        prompt: "Un budget de trésorerie se distingue d'un compte de résultat prévisionnel parce qu'il…",
+        options: [
+          { id: "a", label: "Enregistre les mouvements à la date où l'argent entre ou sort, pas à celle de la vente ou de l'achat" },
+          { id: "b", label: "Ne retient que les charges décaissées et ignore les produits" },
+          { id: "c", label: "Se limite aux opérations exceptionnelles" },
+          { id: "d", label: "Remplace le bilan prévisionnel" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Une vente à crédit compte dans le résultat le jour de la vente, et dans la trésorerie le jour du règlement. C'est tout l'écart entre les deux documents.",
+      },
+      {
+        id: "boutique_rotation",
+        prompt: "Pour un commerce, accélérer la rotation du stock revient à…",
+        options: [
+          { id: "a", label: "Immobiliser moins d'argent pour un même chiffre d'affaires" },
+          { id: "b", label: "Augmenter la marge dégagée sur chaque article" },
+          { id: "c", label: "Réduire les charges de structure" },
+          { id: "d", label: "Allonger le crédit obtenu des fournisseurs" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Le même euro de stock sert plusieurs fois dans l'année au lieu d'une. La marge unitaire ne bouge pas, mais les capitaux nécessaires pour la dégager, si.",
+      },
+    ],
+    modelRelevance: {
+      cash_budget: "optimal",
+      breakeven_analysis: "misleading",
+      frng_bfr_analysis: "acceptable",
+      return_analysis: "acceptable",
+    },
+    conceptCodes: ["net_treasury", "bfr", "stock", "seasonality"],
+    hints: hints([
+      "Reprenez vos tours passés : à quel moment la caisse a-t-elle été la plus basse, et pourquoi ?",
+      "Les commandes de la saison forte se paient au fournisseur avant que les clientes n'aient acheté quoi que ce soit.",
+      "Placez sur une ligne les encaissements attendus, sur une autre les décaissements, à la date où l'argent bouge réellement.",
+      "Le solde cumulé de ces deux lignes, mois après mois, est le budget de trésorerie. Son point le plus bas est votre besoin de financement.",
+      "Un résultat prévisionnel positif ne dit rien du mois où vous manquerez de caisse : seul le budget de trésorerie le montre.",
+    ]),
+    trigger: { round: 6 },
+    weight: 1,
+  },
 ];
 
 /** Pourquoi le modèle pertinent est le bon outil — correction du débriefing. */
 const MODEL_EXPLAIN: Record<string, string> = {
+  boutique_t3_soldes:
+    "L'analyse des coûts pertinents écarte les 18 € déjà payés, qui sont les mêmes quelle que soit la décision, et ne garde que ce que le choix d'aujourd'hui change encore.",
+  boutique_t6_capitaux:
+    "Le budget de trésorerie place chaque flux à la date où l'argent bouge, et non à celle de la vente. C'est le seul document qui montre le mois où la caisse manquera.",
   boutique_t1_reprise:
     "Le seuil de rentabilité répond exactement à la question posée : combien d'articles faut-il vendre pour ne plus perdre d'argent ?",
   boutique_t2_circuit:
