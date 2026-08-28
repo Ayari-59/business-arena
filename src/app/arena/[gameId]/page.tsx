@@ -601,6 +601,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                 : null
             }
             enabled={view.enabledDecisions}
+            distributableReserves={view.distributableReserves}
             investmentOffer={view.investmentOffer}
             debtSchedule={view.debtSchedule}
             treasuryOffer={view.treasuryOffer}

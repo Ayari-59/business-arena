@@ -109,7 +109,35 @@ describe("niveaux de difficulté et paramètres économiques", () => {
       hr: true, // Stratégie : RH et investissement ouverts dès Arbitrage
       investment: true,
       placement: true, // et le placement du surplus, propre aux niveaux hauts
+      dividend: false, // l'affectation du résultat n'appartient qu'au niveau 6
     });
+  });
+
+  it("le niveau 6 ouvre l'affectation du résultat, et lui seul", async () => {
+    // Les cinq premiers niveaux ouvrent chacun des décisions nouvelles ; le
+    // sixième se contentait de retirer les deux indices restants. Retirer une
+    // aide n'est pas ouvrir un cran : il lui fallait un arbitrage à lui.
+    const orgId = (await getTeacherOrgId(teacherId))!;
+    const executive = await createClassGame({
+      teacherId,
+      organizationId: orgId,
+      periodicity: "quarter",
+      humanTeamsCount: 1,
+      botCount: 1,
+      level: 6,
+    });
+    const eleve = await db
+      .insert(users)
+      .values({ email: "executive@test.fr", displayName: "Élève 6" })
+      .returning({ id: users.id });
+    await joinGameByCode({ code: executive.joinCode, userId: eleve[0]!.id, pseudo: "Élève 6" });
+
+    const vue = (await getGameView(executive.gameId, eleve[0]!.id))!;
+    expect(vue.difficulty.name).toBe("Executive");
+    expect(vue.enabledDecisions.dividend).toBe(true);
+    // au premier tour il n'y a rien à distribuer : les réserves se
+    // constituent des bénéfices des tours passés
+    expect(vue.distributableReserves).toBe(0);
   });
 
   it("les indices sont plafonnés au niveau 2 (Stratégie)", async () => {
@@ -180,6 +208,7 @@ describe("niveaux de difficulté et paramètres économiques", () => {
       hr: false,
       investment: false,
       placement: false,
+      dividend: false,
     });
     // Découverte : TVA non modulée → désactivée, calibration du scénario intacte
     const game = (await db.select().from(games).where(eq(games.id, easy.gameId)))[0]!;

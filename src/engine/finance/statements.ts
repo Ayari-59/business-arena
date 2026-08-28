@@ -36,6 +36,12 @@ export interface FinanceInput {
   loanRepayment: number;
   /** Apport en capital du tour (trésorerie et capitaux propres). */
   capitalIncrease: number;
+  /**
+   * Dividende versé ce tour : il sort de la caisse ET des capitaux propres.
+   * L'identité du bilan tient d'elle-même, les deux baissant du même montant.
+   * Le plafonnement aux réserves distribuables est fait par l'appelant.
+   */
+  dividend?: number;
   /** Investissement du tour : décaissé et immobilisé immédiatement. */
   investmentOutlay: number;
   /**
@@ -187,6 +193,7 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
       { label: "investissement", amount: -input.investmentOutlay },
       { label: "nouvel_emprunt", amount: input.newLoan },
       { label: "augmentation_capital", amount: input.capitalIncrease },
+      { label: "dividendes_verses", amount: -(input.dividend ?? 0) },
       { label: "remboursement_emprunt", amount: -loanRepayment },
       { label: "placement_arrive_a_terme", amount: matured },
       { label: "produits_financiers", amount: placementIncome },
@@ -204,7 +211,7 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
       receivables: receivablesEnd,
       cash: Math.max(0, closingNet),
       shortTermInvestment: placed,
-      equity: o.equity + netIncome + input.capitalIncrease,
+      equity: o.equity + netIncome + input.capitalIncrease - (input.dividend ?? 0),
       financialDebt: o.financialDebt + input.newLoan - loanRepayment,
       payables: payablesEnd,
       overdraft: Math.max(0, -closingNet),

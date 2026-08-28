@@ -165,6 +165,38 @@ describe("parcours enseignant et élève", () => {
     expect(vu).toContain("Situations débriefées");
   });
 
+  it("le niveau 6 ouvre l'affectation du résultat, et le dit à l'élève", async () => {
+    // Le sixième niveau se contentait de retirer les indices. Il porte
+    // maintenant une décision à lui, et ce qui compte est qu'elle ARRIVE
+    // jusqu'à l'écran : un champ ouvert côté service mais absent du formulaire
+    // n'existe pas.
+    await aller(prof, "/teacher");
+    await prof.selectOption('select[name="scenarioCode"]', "nova");
+    await prof.selectOption('select[name="humanTeamsCount"]', "1");
+    await prof.selectOption('select[name="botCount"]', "1");
+    await prof.selectOption('select[name="level"]', "6");
+    await prof.getByRole("button", { name: /Créer la partie/ }).click();
+    await prof.waitForURL(/\/teacher\/games\//, { timeout: 30_000 });
+    expect(await texte(prof)).toContain("Niveau 6");
+    const code = (await prof.locator("h1 span.font-mono").innerText()).trim();
+
+    const executive = await (await navigateur.newContext()).newPage();
+    await aller(executive, "/join");
+    await executive.fill('input[name="code"]', code);
+    await executive.fill('input[name="pseudo"]', "Élève Executive");
+    await executive.getByRole("button", { name: "Rejoindre la partie" }).click();
+    await executive.waitForSelector('input[name="dividend"]', { timeout: 30_000 });
+
+    const vu = await texte(executive);
+    // sans tenir compte de la casse : les libellés de champ sont mis en
+    // capitales par la feuille de style
+    expect(vu).toMatch(/dividende versé aux associés/i);
+    // au premier tour il n'y a rien à distribuer, et la page l'explique
+    expect(vu).toContain("Rien à distribuer");
+    // et aucun indice à ce niveau
+    expect(vu).not.toMatch(/Débloquer l'indice/);
+  });
+
   it("aucune page du parcours ne porte de tiret en milieu de phrase", async () => {
     // Contrainte de style tenue depuis le début, et qu'aucun test ne gardait.
     // Le tiret SEUL dans une case de tableau reste permis : il vaut « rien à

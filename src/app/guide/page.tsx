@@ -200,8 +200,8 @@ export default function GuidePage() {
             <Step n={2} title="Créez une partie de classe et réglez-la finement">
               Choisissez la périodicité, le nombre d&apos;équipes (1 à 8), les concurrents
               automatiques et le <strong className="text-slate-200">niveau de difficulté</strong> :
-              de Découverte (prix, production, marketing, tous les indices) à Executive (toutes
-              les décisions, aucun indice, événements doublés). Le panneau{" "}
+              de Découverte (prix, production, marketing, tous les indices) à Executive
+              (affectation du résultat, aucun indice, événements doublés). Le panneau{" "}
               <strong className="text-slate-200">Paramètres économiques</strong> permet en plus
               d&apos;activer le <strong className="text-slate-200">monde variable</strong>
               (chaque partie diffère : croissance, saisonnalité, événements et commandes
@@ -361,7 +361,7 @@ export default function GuidePage() {
               ],
               [
                 "Que règlent les niveaux de difficulté ?",
-                "Six niveaux, de Découverte à Executive : les décisions ouvertes (la finance et l'assurance arrivent au niveau Pilotage), le plafond d'indices (de 5 à zéro) et la fréquence des événements aléatoires. Et le panneau avancé permet de moduler impôt, TVA, taux, délais et coûts : rien n'est figé.",
+                "Six niveaux, de Découverte à Executive : les décisions ouvertes (la finance et l'assurance arrivent au niveau Pilotage, le placement du surplus au niveau Stratégie, l'affectation du résultat au niveau Executive), le plafond d'indices (de 5 à zéro) et la fréquence des événements aléatoires. Et le panneau avancé permet de moduler impôt, TVA, taux, délais et coûts : rien n'est figé.",
               ],
               [
                 "Combien ça coûte ?",

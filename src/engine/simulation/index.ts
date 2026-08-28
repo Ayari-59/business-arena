@@ -436,6 +436,18 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         ? Math.min(requestedCapital, Math.max(0, capitalCap - raisedBefore))
         : requestedCapital;
 
+    // Dividende : borné par les RÉSERVES, les bénéfices des tours passés non
+    // encore distribués. Le résultat du tour en cours n'en fait pas partie, il
+    // n'est pas connu quand la décision se prend. La caisse, elle, n'est pas
+    // un plafond : une entreprise rentable peut ne pas avoir de quoi payer, et
+    // c'est précisément la leçon du niveau. Le découvert et ses garde-fous
+    // s'appliquent alors comme pour toute autre sortie.
+    const reservesBefore = w.state.reserves ?? 0;
+    const dividend = Math.min(
+      Math.max(0, w.decisions.finance?.dividend ?? 0),
+      Math.max(0, reservesBefore),
+    );
+
     const finance = computeFinance({
       opening: w.state.finance,
       roundDays: scenario.roundDays,
@@ -464,6 +476,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       newLoan,
       loanRepayment: mandatoryRepayment + earlyRepayment,
       capitalIncrease,
+      dividend,
       investmentOutlay: w.investOutlay,
       ...(scenario.treasury
         ? {
@@ -702,6 +715,11 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       ...(capitalIncrease > 0 || w.state.capitalRaised !== undefined
         ? { capitalRaised: raisedBefore + capitalIncrease }
         : {}),
+      // Les réserves suivent le résultat et les distributions. Elles sont
+      // tenues pour TOUTES les parties, même celles où le dividende n'est pas
+      // ouvert : une partie qui passerait au niveau 6 en cours de route
+      // trouverait sinon des réserves vides malgré ses bénéfices.
+      reserves: reservesBefore + finance.incomeStatement.netIncome - dividend,
       perceivedQuality: updatePerceivedQuality(
         w.state.perceivedQuality,
         w.producedQuality,

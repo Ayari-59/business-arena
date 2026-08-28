@@ -84,6 +84,7 @@ export function DecisionForm({
   alreadySubmitted,
   insuranceOffer,
   enabled,
+  distributableReserves,
   investmentOffer,
   debtSchedule,
   treasuryOffer,
@@ -112,7 +113,10 @@ export function DecisionForm({
     hr: boolean;
     investment: boolean;
     placement: boolean;
+    dividend: boolean;
   };
+  /** Bénéfices des tours passés non distribués : le plafond du dividende. */
+  distributableReserves?: number;
   /** Investissement du scénario (coût par unité de capacité, plafond). */
   investmentOffer?: { costPerCapacityUnit: number; maxPerRound: number } | null;
   /** Échéance d'emprunt obligatoire du tour (prélevée automatiquement). */
@@ -175,6 +179,7 @@ export function DecisionForm({
 }) {
   const action = playRoundAction.bind(null, gameId);
   const [state, formAction, pending] = useActionState(action, initialState);
+  const reserves = Math.max(0, distributableReserves ?? 0);
   const on = enabled ?? {
     quality: true,
     maintenance: true,
@@ -183,6 +188,7 @@ export function DecisionForm({
     hr: false,
     investment: false,
     placement: false,
+    dividend: false,
   };
 
   // Vocabulaire du secteur : c'est lui qui parle à l'élève, pas le moteur.
@@ -226,6 +232,19 @@ export function DecisionForm({
                   ? `Apport des associés · enveloppe restante : ${Math.round(capitalAllowance.remaining).toLocaleString("fr-FR")} € sur ${Math.round(capitalAllowance.total).toLocaleString("fr-FR")} € pour toute la partie. Les associés ne suivent pas indéfiniment.`
                   : "Apport des associés : trésorerie et capitaux propres, sans intérêts mais dilutif."
               } />
+            {on.dividend ? (
+              <Field
+                name="dividend"
+                label="Dividende versé aux associés"
+                defaultValue={0}
+                suffix="€"
+                hint={
+                  reserves > 0
+                    ? `Réserves distribuables : ${formatEuro(reserves)}, les bénéfices des tours passés. Ce qui sort ne finance plus rien, et le versement se fait en trésorerie, pas en résultat : on peut être rentable sans pouvoir payer.`
+                    : "Rien à distribuer : les réserves se constituent des bénéfices des tours passés, et une perte doit d'abord être rattrapée."
+                }
+              />
+            ) : null}
           </>
         ) : null}
         {on.investment && investmentOffer ? (

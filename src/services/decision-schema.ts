@@ -50,6 +50,7 @@ export const roundDecisionsSchema = z.object({
       newLoan: z.coerce.number().min(0).max(500000).optional(),
       loanRepayment: z.coerce.number().min(0).max(500000).optional(),
       capitalIncrease: z.coerce.number().min(0).max(500000).optional(),
+      dividend: z.coerce.number().min(0).max(1000000).optional(),
     })
     .optional(),
   treasury: z

@@ -57,6 +57,8 @@ export async function playRoundAction(
       newLoan: formData.get("newLoan") || 0,
       loanRepayment: formData.get("loanRepayment") || 0,
       capitalIncrease: formData.get("capitalIncrease") || 0,
+      // Le dividende n'est ouvert qu'au niveau 6 : son champ peut être absent.
+      dividend: formData.get("dividend") || 0,
     },
     // Prévisions : facultatives, et sans effet sur le calcul du tour. Deux
     // champs vides ne doivent pas devenir deux zéros prévus.

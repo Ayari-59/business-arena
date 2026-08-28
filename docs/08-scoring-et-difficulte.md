@@ -70,7 +70,7 @@ DÉCOUVERTE à GESTION en cours de partie).
 
 | Paramètre | 1 DÉCOUVERTE | 2 GESTION | 3 PILOTAGE | 4 ARBITRAGE | 5 STRATÉGIE | 6 EXECUTIVE |
 |---|---|---|---|---|---|---|
-| Décisions actives | prix, production, marketing | + appro, qualité | + délais, financement, budget | + investissement, RH | + multi-produits, export | tout |
+| Décisions actives | prix, production, marketing | + qualité, maintenance | + trésorerie, assurance | + RH, investissement | + placement du surplus | + affectation du résultat |
 | KPI visibles | CA, résultat, trésorerie, stock | + marges, part de marché, seuil | + FRNG, BFR, ratios | + écarts budgétaires | + signaux faibles seulement | brut, non commenté |
 | Qualité de l'info (`infoQuality`) | 1,0 (études fiables) | 0,9 | 0,8 | 0,6 (bruit) | 0,4 (incomplet) | 0,25 + délais |
 | Indices (`hintMaxLevel`) | 5 | 5 | 3 | 3 | 2 (quota) | 0 |
@@ -79,6 +79,17 @@ DÉCOUVERTE à GESTION en cours de partie).
 | Délai des conséquences | immédiat | court | inertie qualité/fidélité | + effets retard finance | longs | longs + irréversibles |
 | Interdépendance & contraintes | faibles | moyennes | réelles | fortes | fortes | maximales |
 | Pression temporelle | aucune | aucune | optionnelle | échéances | échéances courtes | strictes |
+
+La ligne « Décisions actives » décrit ce qui est RÉELLEMENT ouvert par
+`src/config/difficulty.ts`, préréglage par préréglage. Chaque niveau ouvre un cran de
+plus : le sixième n'a longtemps fait que retirer les deux indices restants, ce qui n'est
+pas ouvrir un cran, et porte désormais l'affectation du résultat. Distribuer ou garder est
+le seul arbitrage du jeu qui mette l'élève face aux ASSOCIÉS et non au marché, et il ne
+porte que sur les réserves : les bénéfices des tours passés, jamais le résultat du tour en
+cours, qui n'est pas connu quand la décision se prend. La caisse n'est pas un plafond, de
+sorte qu'une entreprise rentable peut découvrir qu'elle n'a pas de quoi payer.
+
+Les autres lignes du tableau restent des intentions de conception, non encore implémentées.
 
 Règles d'architecture :
 

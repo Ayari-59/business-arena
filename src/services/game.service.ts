@@ -1212,7 +1212,14 @@ export interface GameView {
     hr: boolean;
     investment: boolean;
     placement: boolean;
+    dividend: boolean;
   };
+  /**
+   * Réserves distribuables : les bénéfices des tours passés non encore versés
+   * aux associés. C'est le plafond du dividende, et l'élève doit le connaître
+   * avant de décider, sans quoi il propose un chiffre au hasard.
+   */
+  distributableReserves: number;
   /** Saison du tour courant : coefficients ≠ 1 (marché global et segments). */
   seasonNotes: { name: string; coef: number }[];
   /** Investissement proposé par le scénario (échelle de la périodicité). */
@@ -1924,6 +1931,10 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       return { level: preset.level, name: preset.name, hintMaxLevel: preset.hintMaxLevel };
     })(),
     enabledDecisions: presetFromProfile(game.difficultyProfile).decisions,
+    distributableReserves: Math.max(
+      0,
+      (stateRow?.state as CompanyState | undefined)?.reserves ?? 0,
+    ),
     investmentOffer: (() => {
       const offer = (game.scenarioSnapshot as EngineScenarioConfig).investment;
       return offer

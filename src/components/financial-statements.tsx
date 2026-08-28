@@ -33,6 +33,7 @@ const CASH_LABELS: Record<string, string> = {
   investissement: "Investissement",
   nouvel_emprunt: "Nouvel emprunt",
   augmentation_capital: "Augmentation de capital",
+  dividendes_verses: "Dividendes versés aux associés",
   remboursement_emprunt: "Remboursement d'emprunt",
 };
 

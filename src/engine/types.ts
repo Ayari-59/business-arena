@@ -419,6 +419,13 @@ export interface CompanyState {
   loans?: { remaining: number; perRound: number }[];
   /** Capital déjà apporté depuis le début de la partie (enveloppe des associés). */
   capitalRaised?: number;
+  /**
+   * Bénéfices accumulés et non distribués : ce qui peut l'être. Part de zéro,
+   * augmente du résultat de chaque tour, diminue des dividendes versés. Peut
+   * devenir négatif quand les pertes s'accumulent, et rien n'est alors
+   * distribuable tant qu'elles ne sont pas rattrapées.
+   */
+  reserves?: number;
 }
 
 export interface RoundDecisions {
@@ -466,7 +473,18 @@ export interface RoundDecisions {
    * sont prélevées automatiquement et loanRepayment est un remboursement
    * ANTICIPÉ facultatif ; newLoan contracte un emprunt à la durée standard.
    */
-  finance?: { newLoan?: number; loanRepayment?: number; capitalIncrease?: number };
+  finance?: {
+    newLoan?: number;
+    loanRepayment?: number;
+    capitalIncrease?: number;
+    /**
+     * Dividende versé aux associés ce tour, pris sur les RÉSERVES, c'est à
+     * dire les bénéfices des tours passés mis de côté. On ne distribue jamais
+     * le résultat du tour en cours : il n'est pas encore connu au moment où la
+     * décision se prend, comme une assemblée statue sur l'exercice écoulé.
+     */
+    dividend?: number;
+  };
   /** Trésorerie : montants de créances à mobiliser ce tour (actions ponctuelles). */
   treasury?: {
     discount?: number;
