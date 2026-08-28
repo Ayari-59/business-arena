@@ -171,6 +171,10 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
                   : `Débloquer l'indice ${situation.nextHint.level} (−${Math.round(situation.nextHint.costRatio * 100)} % du score de la situation)`}
               </button>
             </form>
+          ) : situation.hintLimit ? (
+            <p className="mt-2 text-xs text-slate-500">
+              {situation.hintLimit}. À vous de trancher avec ce que vous avez.
+            </p>
           ) : situation.unlockedHints.length === 5 ? (
             <p className="mt-2 text-xs text-slate-500">Tous les indices sont débloqués.</p>
           ) : null}

@@ -17,7 +17,12 @@ import { EconomicParams } from "@/components/economic-params";
 
 export const dynamic = "force-dynamic";
 
-export default async function TeacherDashboard() {
+export default async function TeacherDashboard({
+  searchParams,
+}: {
+  searchParams: Promise<{ echec?: string }>;
+}) {
+  const { echec } = await searchParams;
   const session = await getSession();
   if (!session) redirect("/teacher/login");
   const games = await getTeacherGames(session.userId);
@@ -56,6 +61,15 @@ export default async function TeacherDashboard() {
           </form>
         </div>
       </header>
+
+      {echec ? (
+        <p
+          role="alert"
+          className="rounded-xl border border-red-400/30 bg-red-950/30 px-4 py-3 text-sm text-red-200"
+        >
+          La partie n&apos;a pas été créée. {echec}
+        </p>
+      ) : null}
 
       <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
         <h2 className="text-sm font-semibold text-slate-200">Créer une partie</h2>

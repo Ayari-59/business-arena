@@ -72,7 +72,8 @@ export default async function UsagePage() {
         <p className="mt-1 max-w-2xl text-xs leading-relaxed text-slate-500">
           Classées par score moyen croissant : les plus difficiles en tête. Le score comprend le
           malus d&apos;indices, ce qui explique qu&apos;une situation très aidée descende. Une
-          situation jamais débriefée n&apos;apparaît pas.
+          situation jamais débriefée n&apos;apparaît pas, et une équipe restée sans joueur
+          n&apos;entre pas dans la moyenne : un absent n&apos;est pas un échec.
         </p>
         {usage.situations.length === 0 ? (
           <div className="mt-4">
@@ -90,7 +91,7 @@ export default async function UsagePage() {
                   <th className="pb-2 pr-3 font-medium">Secteur</th>
                   <th className="pb-2 pr-3 text-right font-medium">Vécue</th>
                   <th className="pb-2 pr-3 text-right font-medium">Score moyen</th>
-                  <th className="pb-2 text-right font-medium">Indices / élève</th>
+                  <th className="pb-2 text-right font-medium">Indices / équipe</th>
                 </tr>
               </thead>
               <tbody className="text-slate-300">
@@ -128,7 +129,7 @@ export default async function UsagePage() {
           <h2 className="text-sm font-semibold text-slate-200">Jusqu&apos;où vont les indices</h2>
           <p className="mt-1 text-xs leading-relaxed text-slate-500">
             Les cinq niveaux vont de l&apos;observation à la méthode détaillée. Beaucoup de
-            niveaux 4 et 5 signale une marche trop haute, pas des élèves paresseux.
+            niveaux 4 et 5 signalent une marche trop haute, pas des élèves paresseux.
           </p>
           {usage.totals.hintsUnlocked === 0 ? (
             <div className="mt-4">

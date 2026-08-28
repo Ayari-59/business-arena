@@ -264,7 +264,10 @@ describe("périodicité et validation", () => {
   it("applyPeriodicity redimensionne la prime et les commandes (flux × k)", () => {
     const monthly = applyPeriodicity(scenario(), "month");
     const k = 30 / 90;
-    expect(monthly.insurance!.premiumPerRound).toBeCloseTo(2500 * k, 6);
+    // Une prime est un tarif affiché : elle suit le flux, arrondie à l'euro.
+    // Sans cet arrondi, l'élève lisait « 833,333 € » sur son écran de décision.
+    expect(monthly.insurance!.premiumPerRound).toBe(Math.round(2500 * k));
+    expect(Number.isInteger(monthly.insurance!.premiumPerRound)).toBe(true);
     const order = monthly.events
       .find((e) => e.code === "big_order")!
       .modifiers.find((m) => m.target === "order")!;

@@ -19,7 +19,16 @@ vi.mock("@/db", async () => {
 
 import { db } from "@/db";
 import { games, users } from "@/db/schema";
-import { createSoloGame, resolveCurrentRound, setQuizMode } from "@/services/game.service";
+import { getTeacherOrgId, registerTeacher } from "@/services/auth.service";
+import {
+  closeCurrentRound,
+  createClassGame,
+  createSoloGame,
+  joinGameByCode,
+  resolveCurrentRound,
+  setQuizMode,
+  submitTeamDecisions,
+} from "@/services/game.service";
 import {
   getTeamSituations,
   getTeacherUsageView,
@@ -175,5 +184,61 @@ describe("carnet d'usage de l'enseignant", () => {
     const usage = await getTeacherUsageView(teacherId);
     expect(usage.totals.games).toBe(2);
     expect(usage.totals.finishedGames).toBe(2);
+  });
+});
+
+describe("une équipe restée sans joueur ne compte pas comme un échec", () => {
+  it("la moyenne ne retient que les équipes réellement composées", async () => {
+    // Le cas de classe ordinaire : deux équipes annoncées, une seule remplie.
+    // L'équipe vide reçoit la même situation, la clôture la débriefe avec un
+    // score de zéro, et la moyenne tombe de moitié. Une situation réussie
+    // passait ainsi sous la barre à cause d'élèves absents.
+    const inscription = await registerTeacher({
+      email: "classe@lycee.test",
+      password: "motdepasse!",
+      displayName: "Mme Vide",
+      schoolName: "Lycée du Test",
+    });
+    if ("error" in inscription) throw new Error(inscription.error);
+    const prof = inscription.userId;
+    const orgId = (await getTeacherOrgId(prof))!;
+
+    const { gameId, joinCode } = await createClassGame({
+      teacherId: prof,
+      organizationId: orgId,
+      periodicity: "quarter",
+      humanTeamsCount: 2,
+      botCount: 1,
+    });
+
+    const eleve = await db
+      .insert(users)
+      .values({ email: "seul@test.local", displayName: "Seul" })
+      .returning({ id: users.id });
+    const eleveId = eleve[0]!.id;
+    const rejoint = await joinGameByCode({ code: joinCode, userId: eleveId, pseudo: "Seul" });
+    if ("error" in rejoint) throw new Error(rejoint.error);
+
+    const { current } = await getTeamSituations(gameId, eleveId);
+    const def = situationByCode.get(current[0]!.code)!;
+    await submitDiagnosis({
+      instanceId: current[0]!.instanceId,
+      userId: eleveId,
+      selectedOptionIds: def.diagnosticOptions.filter((o) => o.correct).map((o) => o.id),
+    });
+    await submitTeamDecisions({ gameId, userId: eleveId, payload: DECISIONS });
+    await closeCurrentRound({ gameId, teacherId: prof });
+
+    // Le score que l'élève voit sur son propre débriefing est la référence :
+    // le carnet doit afficher celui-là, et non sa moitié.
+    const vue = (await getTeamSituations(gameId, eleveId)).debriefed[0]!;
+    const scoreEleve = vue.debrief!.finalScore;
+    expect(scoreEleve).toBeGreaterThan(0);
+
+    const usage = await getTeacherUsageView(prof);
+    const ligne = usage.situations.find((s) => s.code === def.code)!;
+    expect(ligne.debriefed).toBe(1);
+    expect(ligne.averageScore).toBeCloseTo(scoreEleve, 9);
+    expect(usage.totals.situationsDebriefed).toBe(1);
   });
 });

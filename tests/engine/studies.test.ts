@@ -167,7 +167,11 @@ describe("études achetables : l'information a un prix", () => {
 
   it("périodicité : des prestations par tour, en flux (× k)", () => {
     const monthly = applyPeriodicity(scenario(), "month");
-    expect(monthly.studies!.marketCost).toBeCloseTo(500, 6);
-    expect(monthly.studies!.projectCost).toBeCloseTo(400, 6);
+    expect(monthly.studies!.marketCost).toBe(500);
+    expect(monthly.studies!.projectCost).toBe(400);
+    // Un tarif se lit en euros entiers, quelle que soit la périodicité : le
+    // tiers de 1 000 € donnait « 333,333 € » à l'écran, à côté de tarifs ronds.
+    const tiers = applyPeriodicity(scenario(), "month").studies!.priceCost;
+    expect(Number.isInteger(tiers), `priceCost = ${tiers}`).toBe(true);
   });
 });

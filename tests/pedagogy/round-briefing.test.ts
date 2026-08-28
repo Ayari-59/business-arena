@@ -21,6 +21,7 @@ const plain = (s: string) => s.replace(/[\u202f\u00a0]/g, " ");
 const VOCABULARY = {
   unit: "enceinte",
   units: "enceintes",
+  unitsGender: "f" as const,
   productionPlanLabel: "Plan de production",
   priceLabel: "Prix de vente",
   leftoverLabel: "Stock",
@@ -187,10 +188,23 @@ describe("contexte des tours suivants", () => {
     const stockable = roundBriefing(input({ result: result(surproduction), perishable: false }));
     const perissable = roundBriefing(input({ result: result(surproduction), perishable: true }));
     expect(stockable.code).toBe("stock_piling");
-    expect(stockable.headline).toContain("restés sur les bras");
-    expect(perissable.headline).toContain("perdus");
+    expect(stockable.headline).toContain("sur les bras");
     // un bistrot ne « videra » pas son stock : la question posée n'est pas la même
     expect(perissable.question).not.toBe(stockable.question);
+
+    // Le participe s'accorde avec l'unité du secteur. La phrase était écrite
+    // une fois pour sept métiers : juste pour des couverts, fausse pour des
+    // enceintes. Le vocabulaire du scénario porte donc le genre.
+    expect(perissable.headline).toContain("elles sont perdues");
+    const masculin = roundBriefing(
+      input({
+        result: result(surproduction),
+        perishable: true,
+        vocabulary: { ...VOCABULARY, unit: "couvert", units: "couverts", unitsGender: "m" },
+      }),
+    );
+    expect(masculin.headline).toContain("ils sont perdus");
+    expect(masculin.headline).not.toContain("perdues");
   });
 
   it("la perte d'exploitation parle quand rien de plus pressant ne s'est produit", () => {
@@ -249,6 +263,7 @@ describe("contexte des tours suivants", () => {
         vocabulary: {
           unit: "nuitée",
           units: "nuitées",
+          unitsGender: "f" as const,
           productionPlanLabel: "Chambres à ouvrir",
           priceLabel: "Prix moyen par nuitée",
           leftoverLabel: "Capacité perdue",

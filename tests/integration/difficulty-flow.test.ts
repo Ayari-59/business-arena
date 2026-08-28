@@ -120,6 +120,21 @@ describe("niveaux de difficulté et paramètres économiques", () => {
     await expect(unlockHint({ instanceId, userId: studentId })).rejects.toThrow(/Stratégie/);
   });
 
+  it("le plafond se lit AVANT le clic, il n'est pas seulement opposé après", async () => {
+    // Le refus était juste, mais il n'arrivait qu'au clic : l'élève voyait
+    // « Débloquer l'indice 3 (−20 %) », cliquait, et lisait le refus. Il
+    // pouvait croire qu'il venait de payer le malus. La vue doit donc annoncer
+    // le plafond, et ne plus proposer d'indice au-delà.
+    const vue = (await getTeamSituations(gameId, studentId)).current[0]!;
+    expect(vue.unlockedHints.map((h) => h.level)).toEqual([1, 2]);
+    expect(vue.nextHint).toBeNull();
+    expect(vue.hintLimit).toMatch(/Stratégie/);
+    // et la phrase affichée est celle-là même qu'oppose le serveur
+    await expect(unlockHint({ instanceId: vue.instanceId, userId: studentId })).rejects.toThrow(
+      vue.hintLimit!,
+    );
+  });
+
   it("la TVA traverse la simulation : dette de TVA au bilan, résultat HT", async () => {
     await submitTeamDecisions({ gameId, userId: studentId, payload: DECISIONS });
     await closeCurrentRound({ gameId, teacherId });

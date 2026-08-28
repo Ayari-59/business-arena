@@ -259,6 +259,27 @@ async function unlockedLevels(instanceId: string): Promise<number[]> {
   return rows.map((r) => r.level);
 }
 
+/**
+ * Plafond d'indices de la partie, et la phrase qui l'explique.
+ *
+ * Une seule definition pour les deux usages : le refus au moment du clic, et
+ * l'affichage qui doit l'annoncer AVANT. Les avoir separes est ce qui a produit
+ * un bouton propose puis refuse.
+ */
+function hintCapOf(game: typeof games.$inferSelect): { cap: number; reason: string } {
+  const preset = presetFromProfile(game.difficultyProfile);
+  const cap = game.mode === "competition" ? Math.min(preset.hintMaxLevel, 3) : preset.hintMaxLevel;
+  return {
+    cap,
+    reason:
+      cap === 0
+        ? `Niveau ${preset.name} : aucun indice, conditions réelles`
+        : game.mode === "competition" && cap === 3
+          ? "Mode compétition : indices limités aux niveaux 1 à 3"
+          : `Niveau ${preset.name} : indices limités aux niveaux 1 à ${cap}`,
+  };
+}
+
 /** Débloque le prochain indice (séquentiel, irréversible, tracé — doc 03 §4). */
 export async function unlockHint(args: {
   instanceId: string;
@@ -275,17 +296,8 @@ export async function unlockHint(args: {
   if (roundRow) {
     const game = (await db.select().from(games).where(eq(games.id, roundRow.gameId)))[0];
     if (game) {
-      const preset = presetFromProfile(game.difficultyProfile);
-      const cap = game.mode === "competition" ? Math.min(preset.hintMaxLevel, 3) : preset.hintMaxLevel;
-      if (next > cap) {
-        throw new Error(
-          cap === 0
-            ? `Niveau ${preset.name} : aucun indice, conditions réelles`
-            : game.mode === "competition" && cap === 3
-              ? "Mode compétition : indices limités aux niveaux 1 à 3"
-              : `Niveau ${preset.name} : indices limités aux niveaux 1 à ${cap}`,
-        );
-      }
+      const { cap, reason } = hintCapOf(game);
+      if (next > cap) throw new Error(reason);
     }
   }
   const hintRow = (
@@ -546,6 +558,12 @@ export interface SituationView {
   quizAnswers: Record<string, string> | null;
   unlockedHints: { level: number; text: string; costRatio: number }[];
   nextHint: { level: number; costRatio: number } | null;
+  /**
+   * Renseigné quand la situation a encore des indices mais que le niveau de la
+   * partie les interdit. L'élève doit lire la raison AVANT de cliquer, pas
+   * après : un bouton actif qui refuse laisse croire que le malus est déjà pris.
+   */
+  hintLimit: string | null;
   diagnosis: { selected: string[]; freeText: string; score?: number; finalScore?: number } | null;
   /** Rempli uniquement après débriefing. */
   debrief: {
@@ -570,6 +588,7 @@ function toView(
   def: SituationDef,
   levels: number[],
   quizMode: QuizMode = "full",
+  hintCap: { cap: number; reason: string } = { cap: 5, reason: "" },
 ): SituationView {
   const asked = askedQuestions(def, quizMode);
   const modelAsked = asked.some((q) => q.id === MODEL_QUESTION_ID);
@@ -599,9 +618,14 @@ function toView(
       .map((h) => ({ level: h.level, text: h.text, costRatio: h.costRatio })),
     nextHint: (() => {
       const next = nextUnlockableLevel(levels);
-      if (next === null || debriefed) return null;
+      if (next === null || debriefed || next > hintCap.cap) return null;
       const hint = def.hints.find((h) => h.level === next);
       return hint ? { level: hint.level, costRatio: hint.costRatio } : null;
+    })(),
+    hintLimit: (() => {
+      const next = nextUnlockableLevel(levels);
+      if (next === null || debriefed || next <= hintCap.cap) return null;
+      return def.hints.some((h) => h.level === next) ? hintCap.reason : null;
     })(),
     diagnosis,
     debrief: debriefed
@@ -665,6 +689,7 @@ export async function getTeamSituations(
   const situationRows = await db.select().from(situations);
   const codeById = new Map(situationRows.map((r) => [r.id, r.code]));
   const quizMode = quizModeFromProfile(game.difficultyProfile);
+  const hintCap = hintCapOf(game);
 
   const currentRound = gameRounds.find((r) => r.index === game.currentRound);
   const lastDebriefedRound = gameRounds
@@ -675,7 +700,7 @@ export async function getTeamSituations(
     const def = situationByCode.get(codeById.get(instance.situationId) ?? "");
     if (!def) return null;
     const levels = await unlockedLevels(instance.id);
-    return toView(instance, def, levels, quizMode);
+    return toView(instance, def, levels, quizMode, hintCap);
   };
 
   const current: SituationView[] = [];
@@ -810,8 +835,10 @@ export interface TeacherUsageView {
     code: string;
     title: string;
     scenario: string;
+    /** Nombre d'équipes composées qui l'ont réellement débriefée. */
     debriefed: number;
     averageScore: number;
+    /** Indices ouverts par équipe, et non par élève : l'indice est collectif. */
     averageHints: number;
   }[];
   /** Combien de fois chaque niveau d'indice a été ouvert, tous élèves confondus. */
@@ -858,6 +885,17 @@ export async function getTeacherUsageView(teacherId: string): Promise<TeacherUsa
     .map(([code, count]) => ({ code, title: scenarioByCode(code).title, games: count }))
     .sort((a, b) => b.games - a.games);
 
+  // Une équipe sans joueur n'a jamais rien rendu, et son instance est pourtant
+  // débriefée avec un score de zéro comme les autres. La moyenner reviendrait à
+  // compter un absent comme un échec : en classe, un code distribué en avance ou
+  // deux élèves manquants suffisent alors à faire passer une situation réussie
+  // sous la barre. Les équipes réellement composées font seules la moyenne.
+  const teamIds = teamRows.map((t) => t.id);
+  const memberships = teamIds.length
+    ? await db.select().from(players).where(inArray(players.teamId, teamIds))
+    : [];
+  const playedTeamIds = new Set(memberships.map((m) => m.teamId));
+
   // Situations : score moyen et indices moyens, sur les seules instances
   // DÉBRIEFÉES. Une situation ouverte et jamais traitée ne dit rien du tout.
   const situationRows = await db.select().from(situations);
@@ -876,6 +914,7 @@ export async function getTeacherUsageView(teacherId: string): Promise<TeacherUsa
   const perSituation = new Map<string, { scores: number[]; hints: number[] }>();
   for (const inst of instances) {
     if (inst.status !== "debriefed") continue;
+    if (!playedTeamIds.has(inst.teamId)) continue;
     const code = codeById.get(inst.situationId);
     if (!code) continue;
     const score = (inst.diagnosis as { finalScore?: number } | null)?.finalScore;
@@ -909,10 +948,6 @@ export async function getTeacherUsageView(teacherId: string): Promise<TeacherUsa
 
   // Concepts : la maîtrise de TOUS les élèves passés par les parties de cet
   // enseignant, quel que soit le scénario joué.
-  const teamIds = teamRows.map((t) => t.id);
-  const memberships = teamIds.length
-    ? await db.select().from(players).where(inArray(players.teamId, teamIds))
-    : [];
   const userIds = [...new Set(memberships.map((m) => m.userId))];
   const conceptRows = await db.select().from(concepts);
   const progress = userIds.length
@@ -940,7 +975,9 @@ export async function getTeacherUsageView(teacherId: string): Promise<TeacherUsa
       // gonflerait le carnet d'un facteur qui ne dépend que du nombre de
       // concurrents choisi à la création.
       teams: teamRows.filter((t) => t.controller === "human").length,
-      situationsDebriefed: instances.filter((i) => i.status === "debriefed").length,
+      situationsDebriefed: instances.filter(
+        (i) => i.status === "debriefed" && playedTeamIds.has(i.teamId),
+      ).length,
       hintsUnlocked: usages.length,
     },
     sectors,

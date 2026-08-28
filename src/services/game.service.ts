@@ -47,7 +47,7 @@ import {
   seedPedagogyReferentials,
 } from "@/services/pedagogy.service";
 import { getPlatformConfig } from "@/services/admin.service";
-import { TEACHER_DRAWABLE_CODES, TEAM_CARD_CODES } from "@/config/events/cards";
+import { TEACHER_DRAWABLE_CODES, TEAM_CARD_CODES, cardByCode } from "@/config/events/cards";
 import { botDecisions, type BotProfile } from "@/engine/bots";
 import {
   BPI_DIMENSIONS,
@@ -1756,11 +1756,12 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
       const formulas = snapshot.insurance?.formulas;
       if (!formulas || formulas.length === 0) return null;
+      // Le libellé français du deck de cartes, et non la clé technique : c'est
+      // le seul endroit de l'écran de décision où l'élève lisait « natural
+      // disaster, cold wave ». Les mêmes événements lui seront montrés sous
+      // leur nom de carte quand ils tomberont.
       const eventLabels = (codes: string[]) =>
-        codes.map((c) => {
-          const ev = snapshot.events.find((e) => e.code === c);
-          return ev ? c.replace(/_/g, " ") : c;
-        });
+        codes.map((c) => cardByCode.get(c)?.title ?? c.replace(/_/g, " "));
       return formulas.map((f) => ({
         code: f.code,
         name: f.name,
@@ -2034,6 +2035,13 @@ export interface TeacherGameView {
   scenarioEventCodes: string[];
   /** Questions posées dans les situations de cette partie. */
   quizMode: QuizMode;
+  /**
+   * Réglages figés à la création, que l'enseignant ne peut plus consulter
+   * ailleurs : le niveau n'était lisible que côté élève, et la case du monde
+   * variable nulle part.
+   */
+  difficulty: { level: number; name: string; hintMaxLevel: number };
+  variableWorld: boolean;
   teams: {
     teamId: string;
     name: string;
@@ -2102,6 +2110,12 @@ export async function getTeacherGameView(
       (game.scenarioSnapshot as { events?: { code: string }[] }).events ?? []
     ).map((e) => e.code),
     quizMode: quizModeFromProfile(game.difficultyProfile),
+    difficulty: (() => {
+      const preset = presetFromProfile(game.difficultyProfile);
+      return { level: preset.level, name: preset.name, hintMaxLevel: preset.hintMaxLevel };
+    })(),
+    variableWorld:
+      (game.difficultyProfile as { variableWorld?: boolean } | null)?.variableWorld === true,
     teams: teamRows.map((t) => {
       const last = lastResults.find((r) => r.teamId === t.id);
       return {

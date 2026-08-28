@@ -40,11 +40,23 @@ export default async function TeacherGamePage({
           </p>
           <p className="mt-1 text-xs text-slate-500">{view.scenarioTitle}</p>
         </div>
-        <p className="rounded-full border border-white/10 px-4 py-1 text-sm text-slate-300">
-          {finished
-            ? "Partie terminée"
-            : `${periodLabel(view.roundDays, view.currentRound)} / ${view.roundsCount}`}
-        </p>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <p className="rounded-full border border-white/10 px-4 py-1 text-sm text-slate-300">
+            {finished
+              ? "Partie terminée"
+              : `${periodLabel(view.roundDays, view.currentRound)} / ${view.roundsCount}`}
+          </p>
+          {/* Le niveau et le monde variable se choisissent à la création puis
+              disparaissaient : le niveau n'était plus lisible que côté élève, et
+              la case du monde variable nulle part. Une partie doit pouvoir dire
+              sous quelles règles elle tourne. */}
+          <p className="rounded-full border border-white/10 px-4 py-1 text-sm text-slate-300">
+            Niveau {view.difficulty.level} · {view.difficulty.name}
+          </p>
+          <p className="rounded-full border border-white/10 px-4 py-1 text-sm text-slate-300">
+            {view.variableWorld ? "Monde variable" : "Monde figé"}
+          </p>
+        </div>
       </header>
 
       {!finished && view.mode === "learning" ? (

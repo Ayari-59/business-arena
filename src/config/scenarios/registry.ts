@@ -59,6 +59,13 @@ export interface ScenarioVocabulary {
   /** Ce que l'entreprise vend, au singulier et au pluriel (« nuitée »/« nuitées »). */
   unit: string;
   units: string;
+  /**
+   * Le genre de ce nom. Sans lui, toute phrase qui accorde un participe avec
+   * l'unité est juste dans quatre secteurs et fausse dans les trois autres :
+   * « 205 enceintes sont restés ». Le genre est une donnée du secteur, pas une
+   * chose que la phrase peut deviner.
+   */
+  unitsGender: "m" | "f";
   /** Le verbe de l'activité : « Production », « Approvisionnement », « Service »… */
   productionLabel: string;
   /** Ce que le joueur décide en volume (« Plan de production », « Couverts à servir »). */
@@ -160,6 +167,7 @@ export const NOVA_DEFINITION: ScenarioDefinition = {
   vocabulary: {
     unit: "enceinte",
     units: "enceintes",
+    unitsGender: "f",
     productionLabel: "Production",
     productionPlanLabel: "Plan de production",
     priceLabel: "Prix de vente",
@@ -209,6 +217,7 @@ export const BOUTIQUE_DEFINITION: ScenarioDefinition = {
   vocabulary: {
     unit: "article",
     units: "articles",
+    unitsGender: "m",
     productionLabel: "Approvisionnement",
     productionPlanLabel: "Articles à mettre en rayon",
     priceLabel: "Prix de vente moyen",
@@ -258,6 +267,7 @@ export const HOTEL_DEFINITION: ScenarioDefinition = {
   vocabulary: {
     unit: "nuitée",
     units: "nuitées",
+    unitsGender: "f",
     productionLabel: "Ouverture",
     productionPlanLabel: "Nuitées mises en vente",
     priceLabel: "Prix moyen par nuitée",
@@ -307,6 +317,7 @@ export const BISTROT_DEFINITION: ScenarioDefinition = {
   vocabulary: {
     unit: "couvert",
     units: "couverts",
+    unitsGender: "m",
     productionLabel: "Service",
     productionPlanLabel: "Couverts à préparer",
     priceLabel: "Ticket moyen",
@@ -356,6 +367,7 @@ export const CONSEIL_DEFINITION: ScenarioDefinition = {
   vocabulary: {
     unit: "jour-conseil",
     units: "jours-conseil",
+    unitsGender: "m",
     productionLabel: "Staffing",
     productionPlanLabel: "Jours à staffer",
     priceLabel: "Taux journalier moyen",
@@ -406,6 +418,7 @@ export const ECOMMERCE_DEFINITION: ScenarioDefinition = {
   vocabulary: {
     unit: "commande",
     units: "commandes",
+    unitsGender: "f",
     productionLabel: "Préparation",
     productionPlanLabel: "Commandes à préparer",
     priceLabel: "Panier moyen visé",
@@ -455,6 +468,7 @@ export const FITNESS_DEFINITION: ScenarioDefinition = {
   vocabulary: {
     unit: "adhérent",
     units: "adhérents",
+    unitsGender: "m",
     productionLabel: "Adhésions",
     productionPlanLabel: "Adhérents à accueillir",
     priceLabel: "Abonnement trimestriel",

@@ -48,6 +48,7 @@ export interface BriefingInput {
   vocabulary: {
     unit: string;
     units: string;
+    unitsGender: "m" | "f";
     productionPlanLabel: string;
     priceLabel: string;
     leftoverLabel: string;
@@ -67,6 +68,16 @@ export interface BriefingInput {
 const euro = formatEuro;
 const pct = formatPercent;
 const units = formatUnits;
+
+/**
+ * Accorde un participe ou un adjectif avec l'unité vendue du secteur.
+ *
+ * « 205 enceintes sont restés » : la phrase était juste pour les couverts et
+ * fausse pour les enceintes, parce qu'elle était écrite une fois pour sept
+ * secteurs. Le genre vient désormais du vocabulaire du scénario.
+ */
+const accord = (v: { unitsGender: "m" | "f" }, mot: string) =>
+  v.unitsGender === "f" ? `${mot}es` : `${mot}s`;
 
 /** Volumes vendus et refusés du tour, tous segments confondus. */
 function volumes(result: CompanyRoundResult): { sold: number; lost: number } {
@@ -98,7 +109,7 @@ export function roundBriefing(input: BriefingInput): RoundBriefing {
     }
     routes.push({
       label: "Réduire la voilure",
-      gain: `Moins de ${v.units} lancés, c'est moins d'argent immobilisé d'avance, et le ${v.leftoverLabel.toLowerCase()} déjà là qui s'écoule.`,
+      gain: `Moins de ${v.units} ${accord(v, "lancé")}, c'est moins d'argent immobilisé d'avance, et le ${v.leftoverLabel.toLowerCase()} déjà là qui s'écoule.`,
       risque:
         "Les charges de structure ne baissent pas, elles. Moins de volume, c'est moins de marge pour les couvrir, et le trou peut se creuser.",
     });
@@ -147,7 +158,7 @@ export function roundBriefing(input: BriefingInput): RoundBriefing {
     });
     return {
       code: "demand_refused",
-      headline: `Vous avez laissé partir ${units(lost)} ${v.units} faute de pouvoir les servir, sur ${units(sold + lost)} demandés.`,
+      headline: `Vous avez laissé partir ${units(lost)} ${v.units} faute de pouvoir les servir, sur ${units(sold + lost)} ${accord(v, "demandé")}.`,
       question: "La demande dépasse ce que vous savez servir. Qu'est-ce que vous faites ?",
       routes,
     };
@@ -159,8 +170,8 @@ export function roundBriefing(input: BriefingInput): RoundBriefing {
     return {
       code: "stock_piling",
       headline: perishable
-        ? `Vous avez prévu ${units(unsold)} ${v.units} de plus que vous n'en avez vendus. Dans ce métier, ils sont perdus.`
-        : `${units(unsold)} ${v.units} sont restés sur les bras, soit ${euro(result.balanceSheet.inventoryValue)} immobilisés en ${v.leftoverLabel.toLowerCase()}.`,
+        ? `Vous avez prévu ${units(unsold)} ${v.units} de plus que vous n'en avez ${accord(v, "vendu")}. Dans ce métier, ${v.unitsGender === "f" ? "elles" : "ils"} sont ${accord(v, "perdu")}.`
+        : `Il vous reste ${units(unsold)} ${v.units} sur les bras, soit ${euro(result.balanceSheet.inventoryValue)} immobilisés en ${v.leftoverLabel.toLowerCase()}.`,
       question: perishable
         ? `Vous préparez encore avant de savoir. Vous visez quelle affluence ?`
         : `Ce ${v.leftoverLabel.toLowerCase()}, vous le videz ou vous l'assumez ?`,

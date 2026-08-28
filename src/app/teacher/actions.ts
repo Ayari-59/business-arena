@@ -87,6 +87,18 @@ const optionalRate = (raw: FormDataEntryValue | null): number | undefined => {
   return n === undefined ? undefined : n / 100;
 };
 
+/**
+ * Renvoie l'enseignant sur ses parties avec la raison de l'échec.
+ *
+ * Une création qui échoue ne doit jamais ressembler à un clic non enregistré.
+ * C'était le cas : sans organisation rattachée, l'action repartait vers la page
+ * de connexion, qui renvoie aussitôt vers /teacher puisque la session est
+ * valide. L'enseignant revenait sur sa liste, sans partie et sans un mot.
+ */
+function echecCreation(raison: string): never {
+  redirect(`/teacher?echec=${encodeURIComponent(raison)}`);
+}
+
 export async function createClassGameAction(formData: FormData): Promise<void> {
   const session = await getSession();
   if (!session) redirect("/teacher/login");
@@ -119,19 +131,28 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
     baseDefectRate: optionalRate(formData.get("baseDefectRate")),
   };
   const organizationId = await getTeacherOrgId(session.userId);
-  if (!organizationId) redirect("/teacher/login");
-  const { gameId } = await createClassGame({
-    teacherId: session.userId,
-    organizationId,
-    periodicity: parsed.periodicity,
-    humanTeamsCount: parsed.humanTeamsCount,
-    botCount: parsed.botCount,
-    level: parsed.level,
-    economicOverrides,
-    variableWorld: formData.get("variableWorld") === "on",
-    scenarioCode: parsed.scenarioCode,
-    quizMode: parsed.quizMode,
-  });
+  if (!organizationId) {
+    echecCreation(
+      "Votre compte n'est rattaché à aucun établissement, la partie n'a pas pu être créée.",
+    );
+  }
+  let gameId: string;
+  try {
+    ({ gameId } = await createClassGame({
+      teacherId: session.userId,
+      organizationId,
+      periodicity: parsed.periodicity,
+      humanTeamsCount: parsed.humanTeamsCount,
+      botCount: parsed.botCount,
+      level: parsed.level,
+      economicOverrides,
+      variableWorld: formData.get("variableWorld") === "on",
+      scenarioCode: parsed.scenarioCode,
+      quizMode: parsed.quizMode,
+    }));
+  } catch (erreur) {
+    echecCreation(erreur instanceof Error ? erreur.message : "La partie n'a pas pu être créée.");
+  }
   redirect(`/teacher/games/${gameId}`);
 }
 

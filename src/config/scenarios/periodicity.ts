@@ -43,6 +43,16 @@ export function periodLabel(roundDays: number, index: number): string {
 
 const compound = (ratePerQuarter: number, k: number) => Math.pow(1 + ratePerQuarter, k) - 1;
 
+/**
+ * Un tarif affiché à l'élève, arrondi à l'euro.
+ *
+ * Les prestations proratisées tombaient juste tant qu'un tour valait un
+ * trimestre. Au mois, le tiers d'un tarif rond donne « 333,333 € », affiché tel
+ * quel à côté de tarifs entiers dans le même bloc. Personne ne facture des
+ * millièmes d'euro : l'arrondi appartient au tarif, pas à son affichage.
+ */
+const tarif = (montant: number) => Math.round(montant);
+
 export function applyPeriodicity(
   scenario: EngineScenarioConfig,
   periodicity: Periodicity,
@@ -81,12 +91,12 @@ export function applyPeriodicity(
       ? {
           insurance: {
             ...scenario.insurance,
-            premiumPerRound: scenario.insurance.premiumPerRound * k,
+            premiumPerRound: tarif(scenario.insurance.premiumPerRound * k),
             ...(scenario.insurance.formulas
               ? {
                   formulas: scenario.insurance.formulas.map((f) => ({
                     ...f,
-                    premiumPerRound: f.premiumPerRound * k,
+                    premiumPerRound: tarif(f.premiumPerRound * k),
                   })),
                 }
               : {}),
@@ -108,10 +118,10 @@ export function applyPeriodicity(
     ...(scenario.studies
       ? {
           studies: {
-            marketCost: scenario.studies.marketCost * k,
-            priceCost: scenario.studies.priceCost * k,
-            financeCost: scenario.studies.financeCost * k,
-            projectCost: scenario.studies.projectCost * k,
+            marketCost: tarif(scenario.studies.marketCost * k),
+            priceCost: tarif(scenario.studies.priceCost * k),
+            financeCost: tarif(scenario.studies.financeCost * k),
+            projectCost: tarif(scenario.studies.projectCost * k),
           },
         }
       : {}),

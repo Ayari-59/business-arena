@@ -319,8 +319,12 @@ describe("registre des scénarios", () => {
     for (const d of SCENARIOS) {
       const v = d.vocabulary;
       for (const [key, value] of Object.entries(v)) {
+        if (key === "unitsGender") continue; // une lettre, vérifiée juste après
         expect(value.length, `${d.code}/${key} vide`).toBeGreaterThan(1);
       }
+      // Le genre de l'unité vendue : sans lui, toute phrase qui accorde un
+      // participe avec elle est fausse dans les secteurs de l'autre genre.
+      expect(["m", "f"], `${d.code}/unitsGender`).toContain(v.unitsGender);
       // Les mots du panneau de capacité doivent être des phrases utiles
       expect(v.capacityBottleneckHint.length, d.code).toBeGreaterThan(40);
       expect(v.laborBottleneckHint.length, d.code).toBeGreaterThan(40);
