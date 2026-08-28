@@ -120,4 +120,39 @@ describe("le repli d'une équipe absente", () => {
       6,
     );
   });
+
+  it("le point de départ est soumettable tel quel par le formulaire", async () => {
+    // Relevé par le parcours en navigateur : un budget de 7 379,138 € proposé
+    // par défaut rendait le tour insoumettable. Les champs avancent par pas de
+    // 1, le prix par pas de 0,1, et le navigateur refuse en silence : l'élève
+    // clique sur « Valider » et rien ne se passe, sans un mot d'explication.
+    const { gameId, joinCode } = await createClassGame({
+      teacherId,
+      organizationId: orgId,
+      periodicity: "month", // la périodicité est ce qui produit les décimales
+      humanTeamsCount: 1,
+      botCount: 1,
+      scenarioCode: "conseil",
+      level: 5,
+    });
+    const eleve = await db
+      .insert(users)
+      .values({ email: "pas@test.local", displayName: "Pas" })
+      .returning({ id: users.id });
+    const r = await joinGameByCode({ code: joinCode, userId: eleve[0]!.id, pseudo: "Pas" });
+    if ("error" in r) throw new Error(r.error);
+
+    const d = (await getGameView(gameId, eleve[0]!.id))!.startingDecisions;
+    for (const [nom, valeur] of [
+      ["productionPlan", d.productionPlan],
+      ["marketingBudget", d.marketingBudget],
+      ["qualityBudget", d.qualityBudget],
+      ["maintenanceBudget", d.maintenanceBudget],
+    ] as const) {
+      expect(Number.isInteger(valeur), `${nom} vaut ${valeur}, le champ avance par pas de 1`)
+        .toBe(true);
+    }
+    // le prix accepte le dixième, pas au delà
+    expect(Math.round(d.price * 10) / 10, `prix ${d.price}`).toBe(d.price);
+  });
 });

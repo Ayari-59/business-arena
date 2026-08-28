@@ -1757,21 +1757,39 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     playerDimensions,
     lastDecisions,
     startingDecisions: (() => {
+      /**
+       * Le formulaire n'accepte pas n'importe quel nombre : ses champs
+       * avancent par pas de 1, le prix par pas de 0,1. Une valeur par défaut
+       * calculée, donc décimale, rend le tour ENTIÈREMENT insoumettable : le
+       * navigateur refuse la validation sans message visible, et l'élève clique
+       * sans que rien ne se passe. Un défaut proposé doit être soumettable tel
+       * quel.
+       */
+      const auPas = (d: RoundDecisions): RoundDecisions => ({
+        ...d,
+        price: Math.round(d.price * 10) / 10,
+        productionPlan: Math.round(d.productionPlan),
+        marketingBudget: Math.round(d.marketingBudget),
+        qualityBudget: Math.round(d.qualityBudget),
+        maintenanceBudget: Math.round(d.maintenanceBudget),
+      });
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
       const state = stateRow?.state as CompanyState | undefined;
       // Sans état persisté il n'y a pas de capacité à viser : on s'en tient
       // alors au prix de référence du secteur, jamais à celui d'un autre.
       if (!state) {
         const main = [...snapshot.market.segments].sort((a, b) => b.size - a.size)[0];
-        return {
+        return auPas({
           price: main?.refPrice ?? 50,
           productionPlan: 0,
           marketingBudget: 0.5 * snapshot.marketing.scale,
           qualityBudget: 0.5 * snapshot.production.qualityScale,
           maintenanceBudget: snapshot.production.maintenanceReference,
-        };
+        });
       }
-      return neutralDecisions({ scenario: snapshot, state, roundIndex: game.currentRound });
+      return auPas(
+        neutralDecisions({ scenario: snapshot, state, roundIndex: game.currentRound }),
+      );
     })(),
     insuranceOffer: (() => {
       const offer = (

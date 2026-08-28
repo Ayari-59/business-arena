@@ -1,0 +1,84 @@
+name: Vérification
+
+# Les 350 tests existaient déjà et ne gardaient rien : la commande de
+# construction de Vercel se limite à migrer la base puis compiler, si bien
+# qu'une poussée aux tests rouges se déployait aussi vite qu'une autre. Toute
+# la discipline reposait sur le fait de penser à lancer la suite avant de
+# pousser. C'était une habitude, pas un mécanisme.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  suite:
+    name: Types, tests et compilation
+    runs-on: ubuntu-latest
+    env:
+      # La compilation importe les services, donc le module de base : il lui
+      # faut une URL. Aucune requête n'est émise pendant la compilation.
+      DATABASE_URL: postgres://compilation@127.0.0.1:5432/aucune
+      AUTH_SECRET: secret-de-compilation-sans-valeur-000000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Types
+        run: npm run typecheck
+      - name: Tests
+        run: npm test
+      - name: Compilation de production
+        run: npm run build
+
+  parcours:
+    name: Parcours en navigateur
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: arena
+          POSTGRES_DB: arena_e2e
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://postgres:arena@127.0.0.1:5432/arena_e2e
+      DIRECT_URL: postgres://postgres:arena@127.0.0.1:5432/arena_e2e
+      AUTH_SECRET: secret-de-parcours-sans-valeur-00000000000
+      E2E_BASE_URL: http://127.0.0.1:3040
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Navigateur
+        run: npx playwright-core install --with-deps chromium
+      - name: Schéma
+        run: npx drizzle-kit migrate
+      - name: Compilation
+        run: npm run build
+      - name: Démarrage
+        run: |
+          npx next start -p 3040 &
+          for i in $(seq 1 60); do
+            if curl -sf -o /dev/null http://127.0.0.1:3040/; then exit 0; fi
+            sleep 1
+          done
+          echo "l'application n'a pas répondu en 60 secondes" >&2
+          exit 1
+      - name: Parcours
+        run: npm run test:e2e

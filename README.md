@@ -65,7 +65,33 @@ npm run db:migrate      # applique les migrations drizzle/ sur la base
 npm run dev             # http://localhost:3030
 ```
 
-Vérifications : `npm run typecheck` · `npm test` · `npm run build`.
+Vérifications : `npm run typecheck` · `npm test` · `npm run build`. Les trois tournent
+en intégration continue (`.github/workflows/ci.yml`) sur chaque poussée et chaque
+proposition de fusion : la suite garde désormais quelque chose.
+
+### Le parcours en navigateur
+
+`npm run test:e2e` conduit un vrai navigateur sur l'application entière : un enseignant
+crée son compte et une partie, un élève la rejoint par le code, joue son tour, et
+l'enseignant clôture. Il existe parce que les écarts trouvés en recette manuelle vivaient
+tous entre les pièces, jamais dedans, là où la suite ordinaire ne regarde pas.
+
+Il lui faut un Postgres et l'application démarrée, contrairement aux autres tests qui ne
+demandent rien. Le pilote de base suit l'URL : une adresse Neon prend le pilote HTTP de
+production, toute autre adresse Postgres prend le pilote standard, avec le même schéma et
+les mêmes migrations des deux côtés.
+
+```bash
+createdb arena_e2e
+export DATABASE_URL=postgres://postgres@127.0.0.1:5432/arena_e2e
+export DIRECT_URL=$DATABASE_URL AUTH_SECRET=de-quoi-signer-les-sessions
+npm run db:migrate && npm run build
+npm start &                 # ou : npx next start -p 3040
+E2E_BASE_URL=http://127.0.0.1:3030 npm run test:e2e
+```
+
+`CHROMIUM_PATH` permet de désigner un binaire déjà présent ; sans elle, Playwright utilise
+celui qu'il a installé (`npx playwright-core install chromium`).
 
 **Déploiement Vercel** : preset **Next.js**, racine du dépôt. Le script `vercel-build`
 (`drizzle-kit migrate && next build`) applique automatiquement les migrations au build —
