@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { playRoundAction, type PlayRoundState } from "@/app/arena/[gameId]/actions";
 import type { RoundDecisions } from "@/engine/types";
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
+import { formatEuro } from "@/lib/format";
 
 const initialState: PlayRoundState = { error: null };
 
@@ -406,7 +407,7 @@ export function DecisionForm({
                 />
                 <span>
                   <span className="text-sm font-medium text-slate-200">
-                    {study.label} · {study.cost.toLocaleString("fr-FR")} €
+                    {study.label} · {formatEuro(study.cost)}
                   </span>
                   <span className="mt-0.5 block text-xs text-slate-500">{study.hint}</span>
                 </span>
@@ -466,7 +467,7 @@ export function DecisionForm({
                 />
                 <span>
                   <span className="text-sm font-medium text-slate-200">
-                    {f.name} · {f.premium.toLocaleString("fr-FR")} €
+                    {f.name} · {formatEuro(f.premium)}
                   </span>
                   <span className="mt-0.5 block text-xs text-slate-500">
                     Couvre : {f.coveredLabels.join(", ")}.
@@ -490,8 +491,7 @@ export function DecisionForm({
           />
           <span>
             <span className="text-sm font-medium text-slate-200">
-              🛡️ Assurance catastrophe ·{" "}
-              {insuranceOffer.premium.toLocaleString("fr-FR")} € ce tour
+              🛡️ Assurance catastrophe · {formatEuro(insuranceOffer.premium)} ce tour
             </span>
             <span className="mt-0.5 block text-xs text-slate-500">
               Couvre : {insuranceOffer.coveredLabels.join(", ")}. Un coût certain contre un

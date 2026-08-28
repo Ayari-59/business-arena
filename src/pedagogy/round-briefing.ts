@@ -109,7 +109,12 @@ export function roundBriefing(input: BriefingInput): RoundBriefing {
     }
     routes.push({
       label: "Réduire la voilure",
-      gain: `Moins de ${v.units} ${accord(v, "lancé")}, c'est moins d'argent immobilisé d'avance, et le ${v.leftoverLabel.toLowerCase()} déjà là qui s'écoule.`,
+      // Le métier qui ne stocke pas n'a rien qui « s'écoule » : la seconde
+      // moitié de la phrase ne vaut que pour les secteurs à stock. Elle disait
+      // sinon « le nuitées perdues déjà là qui s'écoule ».
+      gain: perishable
+        ? `Moins de ${v.units} ${accord(v, "lancé")}, c'est moins d'argent sorti d'avance pour une demande qui n'est pas venue.`
+        : `Moins de ${v.units} ${accord(v, "lancé")}, c'est moins d'argent immobilisé d'avance, et ce que vous avez déjà en réserve qui s'écoule.`,
       risque:
         "Les charges de structure ne baissent pas, elles. Moins de volume, c'est moins de marge pour les couvrir, et le trou peut se creuser.",
     });
@@ -171,7 +176,11 @@ export function roundBriefing(input: BriefingInput): RoundBriefing {
       code: "stock_piling",
       headline: perishable
         ? `Vous avez prévu ${units(unsold)} ${v.units} de plus que vous n'en avez ${accord(v, "vendu")}. Dans ce métier, ${v.unitsGender === "f" ? "elles" : "ils"} sont ${accord(v, "perdu")}.`
-        : `Il vous reste ${units(unsold)} ${v.units} sur les bras, soit ${euro(result.balanceSheet.inventoryValue)} immobilisés en ${v.leftoverLabel.toLowerCase()}.`,
+        : // Pas de complément de lieu ici : le libellé du secteur est un nom, pas
+          // un endroit. « immobilisés en stock en réserve » pour la boutique,
+          // « en jours non facturés » ailleurs. La question qui suit le reprend
+          // là où il se lit bien.
+          `Il vous reste ${units(unsold)} ${v.units} sur les bras, soit ${euro(result.balanceSheet.inventoryValue)} immobilisés.`,
       question: perishable
         ? `Vous préparez encore avant de savoir. Vous visez quelle affluence ?`
         : `Ce ${v.leftoverLabel.toLowerCase()}, vous le videz ou vous l'assumez ?`,

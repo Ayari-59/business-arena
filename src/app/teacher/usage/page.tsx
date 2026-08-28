@@ -71,9 +71,12 @@ export default async function UsagePage() {
         </h2>
         <p className="mt-1 max-w-2xl text-xs leading-relaxed text-slate-500">
           Classées par score moyen croissant : les plus difficiles en tête. Le score comprend le
-          malus d&apos;indices, ce qui explique qu&apos;une situation très aidée descende. Une
-          situation jamais débriefée n&apos;apparaît pas, et une équipe restée sans joueur
-          n&apos;entre pas dans la moyenne : un absent n&apos;est pas un échec.
+          malus d&apos;indices, ce qui explique qu&apos;une situation très aidée descende. Le
+          compte est en équipes, celui des notions plus bas en élèves. Deux silences ne
+          comptent pas comme des échecs : une équipe restée sans joueur, qui n&apos;apparaît
+          nulle part, et une équipe qui n&apos;a rien rendu, comptée à part plutôt que
+          moyennée à zéro. Une situation que personne n&apos;a traitée ferme donc la marche,
+          sans score.
         </p>
         {usage.situations.length === 0 ? (
           <div className="mt-4">
@@ -89,7 +92,8 @@ export default async function UsagePage() {
                 <tr className="text-left text-[11px] uppercase tracking-wide text-slate-500">
                   <th className="pb-2 pr-3 font-medium">Situation</th>
                   <th className="pb-2 pr-3 font-medium">Secteur</th>
-                  <th className="pb-2 pr-3 text-right font-medium">Vécue</th>
+                  <th className="pb-2 pr-3 text-right font-medium">Équipes</th>
+                  <th className="pb-2 pr-3 text-right font-medium">Sans réponse</th>
                   <th className="pb-2 pr-3 text-right font-medium">Score moyen</th>
                   <th className="pb-2 text-right font-medium">Indices / équipe</th>
                 </tr>
@@ -103,18 +107,27 @@ export default async function UsagePage() {
                       {s.debriefed}
                     </td>
                     <td
-                      className={`py-2 pr-3 text-right font-medium tabular-nums ${
-                        s.averageScore < 0.4
-                          ? "text-red-300"
-                          : s.averageScore < 0.65
-                            ? "text-amber-300"
-                            : "text-emerald-300"
+                      className={`py-2 pr-3 text-right tabular-nums ${
+                        s.unanswered > 0 ? "text-slate-300" : "text-slate-600"
                       }`}
                     >
-                      {pct(s.averageScore)}
+                      {s.unanswered > 0 ? s.unanswered : "—"}
+                    </td>
+                    <td
+                      className={`py-2 pr-3 text-right font-medium tabular-nums ${
+                        s.averageScore === null
+                          ? "text-slate-600"
+                          : s.averageScore < 0.4
+                            ? "text-red-300"
+                            : s.averageScore < 0.65
+                              ? "text-amber-300"
+                              : "text-emerald-300"
+                      }`}
+                    >
+                      {s.averageScore === null ? "—" : pct(s.averageScore)}
                     </td>
                     <td className="py-2 text-right tabular-nums text-slate-400">
-                      {one(s.averageHints)}
+                      {s.debriefed === 0 ? "—" : one(s.averageHints)}
                     </td>
                   </tr>
                 ))}

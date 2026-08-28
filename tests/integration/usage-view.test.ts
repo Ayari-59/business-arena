@@ -117,14 +117,15 @@ describe("carnet d'usage de l'enseignant", () => {
 
   it("classe les situations par score moyen croissant, la plus dure en tête", async () => {
     const usage = await getTeacherUsageView(teacherId);
-    const scores = usage.situations.map((s) => s.averageScore);
+    const scores = usage.situations.map((s) => s.averageScore!);
     expect([...scores].sort((a, b) => a - b)).toEqual(scores);
 
     const nova = usage.situations.find((s) => s.code === "nova_t1_takeover")!;
     expect(nova.debriefed).toBe(1);
+    expect(nova.unanswered).toBe(0);
     expect(nova.averageHints).toBe(3);
     expect(nova.scenario).not.toBe("");
-    expect(nova.averageScore).toBeLessThan(usage.situations[1]!.averageScore);
+    expect(nova.averageScore!).toBeLessThan(usage.situations[1]!.averageScore!);
   });
 
   it("détaille les indices niveau par niveau, toujours sur cinq lignes", async () => {
@@ -240,5 +241,161 @@ describe("une équipe restée sans joueur ne compte pas comme un échec", () => 
     expect(ligne.debriefed).toBe(1);
     expect(ligne.averageScore).toBeCloseTo(scoreEleve, 9);
     expect(usage.totals.situationsDebriefed).toBe(1);
+  });
+});
+
+describe("une équipe muette n'est pas une situation ratée", () => {
+  it("le silence est compté à part, jamais moyenné comme un zéro", async () => {
+    // Deux équipes composées : l'une répond, l'autre joue son tour sans rien
+    // rendre. Le débriefing inscrit un zéro pour la seconde. Le confondre avec
+    // un score ferait passer une situation traitée correctement pour un énoncé
+    // infaisable : à l'écran, six lignes à 0 % pour des situations que
+    // personne n'avait tentées.
+    const inscription = await registerTeacher({
+      email: "muette@lycee.test",
+      password: "motdepasse!",
+      displayName: "M. Silence",
+      schoolName: "Lycée du Silence",
+    });
+    if ("error" in inscription) throw new Error(inscription.error);
+    const prof = inscription.userId;
+    const orgId = (await getTeacherOrgId(prof))!;
+
+    const { gameId, joinCode } = await createClassGame({
+      teacherId: prof,
+      organizationId: orgId,
+      periodicity: "quarter",
+      humanTeamsCount: 2,
+      botCount: 1,
+    });
+
+    const inserted = await db
+      .insert(users)
+      .values([
+        { email: "parle@test.local", displayName: "Parle" },
+        { email: "muet@test.local", displayName: "Muet" },
+      ])
+      .returning({ id: users.id });
+    const [parle, muet] = [inserted[0]!.id, inserted[1]!.id];
+    for (const [userId, pseudo] of [
+      [parle, "Parle"],
+      [muet, "Muet"],
+    ] as const) {
+      const r = await joinGameByCode({ code: joinCode, userId, pseudo });
+      if ("error" in r) throw new Error(r.error);
+    }
+
+    // l'une répond, l'autre se contente de jouer son tour
+    const { current } = await getTeamSituations(gameId, parle);
+    const def = situationByCode.get(current[0]!.code)!;
+    await submitDiagnosis({
+      instanceId: current[0]!.instanceId,
+      userId: parle,
+      selectedOptionIds: def.diagnosticOptions.filter((o) => o.correct).map((o) => o.id),
+    });
+    await submitTeamDecisions({ gameId, userId: parle, payload: DECISIONS });
+    await submitTeamDecisions({ gameId, userId: muet, payload: DECISIONS });
+    await closeCurrentRound({ gameId, teacherId: prof });
+
+    const ligne = (await getTeacherUsageView(prof)).situations.find((s) => s.code === def.code)!;
+    expect(ligne.debriefed).toBe(1);
+    expect(ligne.unanswered).toBe(1);
+    // et surtout : le score est celui de l'équipe qui a répondu, pas sa moitié
+    const vue = (await getTeamSituations(gameId, parle)).debriefed[0]!;
+    expect(ligne.averageScore).toBeCloseTo(vue.debrief!.finalScore, 9);
+  });
+
+  it("une situation que personne ne traite n'a pas de score et ferme la marche", async () => {
+    const inscription = await registerTeacher({
+      email: "personne@lycee.test",
+      password: "motdepasse!",
+      displayName: "Mme Personne",
+      schoolName: "Lycée Personne",
+    });
+    if ("error" in inscription) throw new Error(inscription.error);
+    const prof = inscription.userId;
+    const orgId = (await getTeacherOrgId(prof))!;
+    const { gameId, joinCode } = await createClassGame({
+      teacherId: prof,
+      organizationId: orgId,
+      periodicity: "quarter",
+      humanTeamsCount: 1,
+      botCount: 1,
+    });
+    const eleve = await db
+      .insert(users)
+      .values({ email: "passif@test.local", displayName: "Passif" })
+      .returning({ id: users.id });
+    const r = await joinGameByCode({ code: joinCode, userId: eleve[0]!.id, pseudo: "Passif" });
+    if ("error" in r) throw new Error(r.error);
+
+    await submitTeamDecisions({ gameId, userId: eleve[0]!.id, payload: DECISIONS });
+    await closeCurrentRound({ gameId, teacherId: prof });
+
+    const usage = await getTeacherUsageView(prof);
+    const ligne = usage.situations[0]!;
+    expect(ligne.debriefed).toBe(0);
+    expect(ligne.unanswered).toBe(1);
+    // null, et non zéro : rien n'a été tenté, il n'y a rien à noter
+    expect(ligne.averageScore).toBeNull();
+    // et elle ne s'affiche pas comme la situation la plus dure du carnet
+    expect(usage.situations.filter((s) => s.averageScore !== null)).toHaveLength(0);
+  });
+});
+
+describe("le compteur d'élèves des notions", () => {
+  it("compte les élèves distincts, deux équipes valant deux élèves", async () => {
+    // Relevé en recette : la ligne de situation passait à 2 équipes pendant que
+    // le bloc des notions restait à « 1 élève ». Deux compteurs côte à côte qui
+    // ne bougent pas ensemble se lisent comme une incohérence. Ils ne comptent
+    // pas la même chose (des équipes d'un côté, des élèves de l'autre), et ce
+    // test fixe ce que compte le second : des personnes distinctes.
+    const inscription = await registerTeacher({
+      email: "deux@lycee.test",
+      password: "motdepasse!",
+      displayName: "Mme Deux",
+      schoolName: "Lycée Deux",
+    });
+    if ("error" in inscription) throw new Error(inscription.error);
+    const prof = inscription.userId;
+    const orgId = (await getTeacherOrgId(prof))!;
+    const { gameId, joinCode } = await createClassGame({
+      teacherId: prof,
+      organizationId: orgId,
+      periodicity: "quarter",
+      humanTeamsCount: 2,
+      botCount: 1,
+    });
+
+    const inserted = await db
+      .insert(users)
+      .values([
+        { email: "eleve-a@test.local", displayName: "A" },
+        { email: "eleve-b@test.local", displayName: "B" },
+      ])
+      .returning({ id: users.id });
+    const deux = [inserted[0]!.id, inserted[1]!.id];
+    for (const userId of deux) {
+      const r = await joinGameByCode({ code: joinCode, userId, pseudo: "Eleve" });
+      if ("error" in r) throw new Error(r.error);
+    }
+
+    for (const userId of deux) {
+      const { current } = await getTeamSituations(gameId, userId);
+      const def = situationByCode.get(current[0]!.code)!;
+      await submitDiagnosis({
+        instanceId: current[0]!.instanceId,
+        userId,
+        selectedOptionIds: def.diagnosticOptions.filter((o) => o.correct).map((o) => o.id),
+      });
+      await submitTeamDecisions({ gameId, userId, payload: DECISIONS });
+    }
+    await closeCurrentRound({ gameId, teacherId: prof });
+
+    const usage = await getTeacherUsageView(prof);
+    expect(usage.situations[0]!.debriefed).toBe(2);
+    expect(usage.concepts.length).toBeGreaterThan(0);
+    // deux élèves distincts, donc deux : le compteur suit bien les personnes
+    for (const c of usage.concepts) expect(c.students, c.name).toBe(2);
   });
 });

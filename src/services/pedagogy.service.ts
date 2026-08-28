@@ -835,9 +835,12 @@ export interface TeacherUsageView {
     code: string;
     title: string;
     scenario: string;
-    /** Nombre d'équipes composées qui l'ont réellement débriefée. */
+    /** Équipes composées qui ont répondu, et dont le score fait la moyenne. */
     debriefed: number;
-    averageScore: number;
+    /** Équipes composées qui n'ont rien rendu : un abandon, pas un score. */
+    unanswered: number;
+    /** Null quand personne n'a répondu : il n'y a alors rien à moyenner. */
+    averageScore: number | null;
     /** Indices ouverts par équipe, et non par élève : l'indice est collectif. */
     averageHints: number;
   }[];
@@ -911,17 +914,39 @@ export async function getTeacherUsageView(teacherId: string): Promise<TeacherUsa
     );
   }
 
-  const perSituation = new Map<string, { scores: number[]; hints: number[] }>();
+  /**
+   * Deux signaux, et non un seul.
+   *
+   * Une équipe qui compose son diagnostic et se trompe donne un SCORE. Une
+   * équipe qui n'a rien rendu donne autre chose : un abandon. Le débriefing
+   * inscrit pourtant un zéro dans les deux cas, et la moyenne les confondait.
+   * Six situations ressortaient alors à 0 %, ce qui se lit « énoncé
+   * infaisable » alors que personne n'avait essayé.
+   *
+   * On les sépare donc : la moyenne ne porte que sur les équipes qui ont
+   * répondu, et le silence est compté à part. Une situation que tout le monde
+   * laisse tomber reste visible, elle ne se déguise plus en échec.
+   */
+  const perSituation = new Map<
+    string,
+    { scores: number[]; hints: number[]; muettes: number }
+  >();
   for (const inst of instances) {
     if (inst.status !== "debriefed") continue;
     if (!playedTeamIds.has(inst.teamId)) continue;
     const code = codeById.get(inst.situationId);
     if (!code) continue;
-    const score = (inst.diagnosis as { finalScore?: number } | null)?.finalScore;
-    if (typeof score !== "number") continue;
-    const entry = perSituation.get(code) ?? { scores: [], hints: [] };
-    entry.scores.push(score);
-    entry.hints.push(hintsByInstance.get(inst.id) ?? 0);
+    const diagnosis = inst.diagnosis as { finalScore?: number; selected?: string[] } | null;
+    if (typeof diagnosis?.finalScore !== "number") continue;
+    const entry = perSituation.get(code) ?? { scores: [], hints: [], muettes: 0 };
+    // « selected » n'existe que si l'équipe a soumis un diagnostic : le
+    // débriefing, lui, n'ajoute que le score final.
+    if (diagnosis.selected === undefined) {
+      entry.muettes += 1;
+    } else {
+      entry.scores.push(diagnosis.finalScore);
+      entry.hints.push(hintsByInstance.get(inst.id) ?? 0);
+    }
     perSituation.set(code, entry);
   }
 
@@ -929,15 +954,23 @@ export async function getTeacherUsageView(teacherId: string): Promise<TeacherUsa
     values.length === 0 ? 0 : values.reduce((a, b) => a + b, 0) / values.length;
 
   const situationStats = [...perSituation.entries()]
-    .map(([code, { scores, hints: used }]) => ({
+    .map(([code, { scores, hints: used, muettes }]) => ({
       code,
       title: situationByCode.get(code)?.title ?? code,
       scenario: scenarioOf.get(code) ?? "",
       debriefed: scores.length,
-      averageScore: mean(scores),
+      unanswered: muettes,
+      averageScore: scores.length === 0 ? null : mean(scores),
       averageHints: mean(used),
     }))
-    .sort((a, b) => a.averageScore - b.averageScore);
+    // Les situations notées d'abord, de la plus dure à la plus facile. Celles
+    // que personne n'a traitées ferment la marche : elles n'ont pas de score,
+    // et leur place est de dire ce qui n'a pas été fait.
+    .sort((a, b) => {
+      if (a.averageScore === null) return b.averageScore === null ? 0 : 1;
+      if (b.averageScore === null) return -1;
+      return a.averageScore - b.averageScore;
+    });
 
   const levelCounts = new Map<number, number>();
   for (const u of usages) levelCounts.set(u.level, (levelCounts.get(u.level) ?? 0) + 1);

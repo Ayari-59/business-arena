@@ -325,6 +325,12 @@ describe("registre des scénarios", () => {
       // Le genre de l'unité vendue : sans lui, toute phrase qui accorde un
       // participe avec elle est fausse dans les secteurs de l'autre genre.
       expect(["m", "f"], `${d.code}/unitsGender`).toContain(v.unitsGender);
+      // Le libellé de l'invendu est un NOM, pas un endroit : les phrases le
+      // reprennent tel quel (« Ce stock en réserve, vous le videz ? »). Le
+      // faire suivre d'une préposition donnait « immobilisés en stock en
+      // réserve ». Il doit donc rester une tête de groupe nominal, sans
+      // préposition qui le prolonge.
+      expect(v.leftoverLabel, `${d.code}/leftoverLabel`).not.toMatch(/^(en|au|dans|sur) /i);
       // Les mots du panneau de capacité doivent être des phrases utiles
       expect(v.capacityBottleneckHint.length, d.code).toBeGreaterThan(40);
       expect(v.laborBottleneckHint.length, d.code).toBeGreaterThan(40);
