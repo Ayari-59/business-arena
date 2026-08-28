@@ -610,10 +610,86 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
     trigger: { round: 6 },
     weight: 1,
   },
+  {
+    code: "boutique_detect_idle_cash",
+    title: "La caisse pleine d'après-soldes",
+    narrative:
+      "Les soldes ont vidé la réserve et rempli le compte : vous détenez plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an. Il facture par ailleurs votre découvert 9 %. La collection d'automne, elle, se commande dans quelques semaines et se paie avant d'être vendue.",
+    problem:
+      "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant ?",
+    diagnosticOptions: [
+      {
+        id: "cout_opportunite",
+        label: "Une trésorerie qui dort ne coûte rien, mais ne rapporte rien non plus : c'est un manque à gagner",
+        correct: true,
+      },
+      {
+        id: "garder_de_quoi_payer",
+        label: "Le montant bloqué ne pourra régler aucune facture du trimestre : il faut d'abord chiffrer ce qui va sortir",
+        correct: true,
+      },
+      {
+        id: "tout_placer",
+        label: "Puisque le placement rapporte, autant y mettre la totalité du solde",
+        correct: false,
+      },
+      {
+        id: "ameliore_exploitation",
+        label: "Placer améliore le résultat d'exploitation de l'entreprise",
+        correct: false,
+      },
+    ],
+    quiz: [
+      {
+        id: "boutique_detect_idle_cash_placement_exces",
+        prompt: "Placer la totalité de sa trésorerie expose l'entreprise à…",
+        options: [
+          { id: "a", label: "Ouvrir un découvert à 9 % tout en détenant un placement à 2 %" },
+          { id: "b", label: "Perdre le capital placé si le trimestre est mauvais" },
+          { id: "c", label: "Un redressement fiscal sur les produits financiers" },
+          { id: "d", label: "Une baisse mécanique de son chiffre d'affaires" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Le placement est bloqué : il ne paie rien pendant le tour. Si les décaissements dépassent ce qui reste en caisse, la banque ouvre un découvert, et vous payez d'un côté quatre fois ce que vous gagnez de l'autre.",
+      },
+      {
+        id: "boutique_saison_achats",
+        prompt: "Dans un commerce saisonnier, un solde de trésorerie élevé après les soldes signifie surtout que…",
+        options: [
+          { id: "a", label: "Le stock s'est transformé en argent, et cet argent va repartir en stock à la commande suivante" },
+          { id: "b", label: "L'entreprise a dégagé un résultat exceptionnel sur le trimestre" },
+          { id: "c", label: "Les charges de structure ont diminué" },
+          { id: "d", label: "Le besoin en fonds de roulement a définitivement disparu" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Le cycle d'un commerce fait alterner l'argent et la marchandise. Un compte plein entre deux collections n'est pas une richesse durable : c'est le creux de la vague avant le prochain achat.",
+      },
+    ],
+    modelRelevance: {
+      cash_budget: "optimal",
+      breakeven_analysis: "misleading",
+      frng_bfr_analysis: "acceptable",
+      npv: "acceptable",
+    },
+    conceptCodes: ["net_treasury", "frng", "bfr", "profitability_vs_return"],
+    hints: hints([
+      "Comparez votre solde aux charges de structure d'un seul trimestre : de combien de trimestres d'avance disposez-vous ?",
+      "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro.",
+      "Attention : le placement est bloqué jusqu'au tour suivant. Il ne réglera rien de ce qui tombera d'ici là.",
+      "Projetez surtout la commande de la collection suivante : elle se paie au fournisseur avant qu'une seule pièce ne soit vendue.",
+      "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte quatre fois ce que le placement rapporte : l'erreur n'est pas symétrique.",
+    ]),
+    trigger: { detect: "idle_cash" },
+    weight: 0.8,
+  },
 ];
 
 /** Pourquoi le modèle pertinent est le bon outil — correction du débriefing. */
 const MODEL_EXPLAIN: Record<string, string> = {
+  boutique_detect_idle_cash:
+    "Le budget de trésorerie projette les décaissements du tour à venir, la commande de collection comprise. Seul lui dit quelle part du solde peut être bloquée sans risquer le découvert.",
   boutique_t3_soldes:
     "L'analyse des coûts pertinents écarte les 18 € déjà payés, qui sont les mêmes quelle que soit la décision, et ne garde que ce que le choix d'aujourd'hui change encore.",
   boutique_t6_capitaux:

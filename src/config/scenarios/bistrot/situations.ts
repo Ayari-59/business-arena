@@ -535,10 +535,86 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
     trigger: { round: 6 },
     weight: 1,
   },
+  {
+    code: "bistrot_detect_idle_cash",
+    title: "La caisse fait le plein",
+    narrative:
+      "Les clients paient au comptant et la caisse le montre : vous détenez plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an, et facture votre découvert 9 %. Vos fournisseurs, eux, seront réglés à vingt et un jours comme d'habitude.",
+    problem:
+      "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant ?",
+    diagnosticOptions: [
+      {
+        id: "cout_opportunite",
+        label: "Une trésorerie qui dort ne coûte rien, mais ne rapporte rien non plus : c'est un manque à gagner",
+        correct: true,
+      },
+      {
+        id: "garder_de_quoi_payer",
+        label: "Le montant bloqué ne pourra régler aucune facture du trimestre : il faut d'abord chiffrer ce qui va sortir",
+        correct: true,
+      },
+      {
+        id: "tout_placer",
+        label: "Puisque le placement rapporte, autant y mettre la totalité du solde",
+        correct: false,
+      },
+      {
+        id: "ameliore_exploitation",
+        label: "Placer améliore le résultat d'exploitation de l'entreprise",
+        correct: false,
+      },
+    ],
+    quiz: [
+      {
+        id: "bistrot_detect_idle_cash_placement_exces",
+        prompt: "Placer la totalité de sa trésorerie expose l'entreprise à…",
+        options: [
+          { id: "a", label: "Ouvrir un découvert à 9 % tout en détenant un placement à 2 %" },
+          { id: "b", label: "Perdre le capital placé si le trimestre est mauvais" },
+          { id: "c", label: "Un redressement fiscal sur les produits financiers" },
+          { id: "d", label: "Une baisse mécanique de son chiffre d'affaires" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Le placement est bloqué : il ne paie rien pendant le tour. Si les décaissements dépassent ce qui reste en caisse, la banque ouvre un découvert, et vous payez d'un côté quatre fois ce que vous gagnez de l'autre.",
+      },
+      {
+        id: "bistrot_comptant_illusion",
+        prompt: "Encaisser au comptant tout en payant ses fournisseurs à vingt et un jours produit…",
+        options: [
+          { id: "a", label: "Un besoin en fonds de roulement négatif : la caisse est structurellement en avance sur les paiements" },
+          { id: "b", label: "Un résultat d'exploitation plus élevé qu'à crédit" },
+          { id: "c", label: "Une exonération de TVA sur les encaissements" },
+          { id: "d", label: "Une baisse du seuil de rentabilité" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "La restauration encaisse avant de payer : c'est une position enviable, mais l'avance appartient aux fournisseurs. Une caisse pleine n'est pas un bénéfice, c'est un décalage.",
+      },
+    ],
+    modelRelevance: {
+      cash_budget: "optimal",
+      breakeven_analysis: "misleading",
+      frng_bfr_analysis: "acceptable",
+      npv: "acceptable",
+    },
+    conceptCodes: ["net_treasury", "frng", "bfr", "profitability_vs_return"],
+    hints: hints([
+      "Comparez votre solde aux charges de structure d'un trimestre : de combien de trimestres d'avance disposez-vous ?",
+      "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro.",
+      "Attention : le placement est bloqué jusqu'au tour suivant. Il ne réglera rien de ce qui tombera d'ici là.",
+      "Projetez les décaissements du trimestre : denrées, salaires de la brigade, loyer. Une partie de ce que vous voyez en caisse appartient déjà à vos fournisseurs.",
+      "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte quatre fois ce que le placement rapporte : l'erreur n'est pas symétrique.",
+    ]),
+    trigger: { detect: "idle_cash" },
+    weight: 0.8,
+  },
 ];
 
 /** Pourquoi le modèle pertinent est le bon outil — correction du débriefing. */
 const MODEL_EXPLAIN: Record<string, string> = {
+  bistrot_detect_idle_cash:
+    "Le budget de trésorerie sépare ce que la caisse détient de ce qu'elle doit déjà. Dans un métier encaissé au comptant, c'est le seul document qui empêche de confondre avance et excédent.",
   bistrot_t5_terrasse:
     "La VAN met face à face un décaissement d'aujourd'hui et des marges de demain, en tenant compte du temps qui les sépare. Le seuil de rentabilité, lui, raisonne sur un tour et ignore les onze suivants.",
   bistrot_t6_valeur:

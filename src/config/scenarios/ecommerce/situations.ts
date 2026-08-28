@@ -609,10 +609,86 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
     trigger: { round: 6 },
     weight: 1,
   },
+  {
+    code: "ecom_detect_idle_cash",
+    title: "L'après-fêtes",
+    narrative:
+      "Le pic des fêtes a rempli le compte : plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an, et facture le découvert 9 %. Le trimestre qui s'ouvre est le plus creux de l'année, et les retours de décembre ne sont pas tous remboursés.",
+    problem:
+      "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant ?",
+    diagnosticOptions: [
+      {
+        id: "cout_opportunite",
+        label: "Une trésorerie qui dort ne coûte rien, mais ne rapporte rien non plus : c'est un manque à gagner",
+        correct: true,
+      },
+      {
+        id: "garder_de_quoi_payer",
+        label: "Le montant bloqué ne pourra régler aucune facture du trimestre : il faut d'abord chiffrer ce qui va sortir",
+        correct: true,
+      },
+      {
+        id: "tout_placer",
+        label: "Puisque le placement rapporte, autant y mettre la totalité du solde",
+        correct: false,
+      },
+      {
+        id: "ameliore_exploitation",
+        label: "Placer améliore le résultat d'exploitation de l'entreprise",
+        correct: false,
+      },
+    ],
+    quiz: [
+      {
+        id: "ecom_detect_idle_cash_placement_exces",
+        prompt: "Placer la totalité de sa trésorerie expose l'entreprise à…",
+        options: [
+          { id: "a", label: "Ouvrir un découvert à 9 % tout en détenant un placement à 2 %" },
+          { id: "b", label: "Perdre le capital placé si le trimestre est mauvais" },
+          { id: "c", label: "Un redressement fiscal sur les produits financiers" },
+          { id: "d", label: "Une baisse mécanique de son chiffre d'affaires" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Le placement est bloqué : il ne paie rien pendant le tour. Si les décaissements dépassent ce qui reste en caisse, la banque ouvre un découvert, et vous payez d'un côté quatre fois ce que vous gagnez de l'autre.",
+      },
+      {
+        id: "ecom_retours_a_venir",
+        prompt: "Après un pic de ventes, une part du solde encaissé est déjà engagée parce que…",
+        options: [
+          { id: "a", label: "Les retours du pic seront remboursés au trimestre suivant, et les fournisseurs réglés à échéance" },
+          { id: "b", label: "Les plateformes reprennent leur commission un an plus tard" },
+          { id: "c", label: "La publicité du pic se paie avec un trimestre de décalage" },
+          { id: "d", label: "L'impôt sur les sociétés est prélevé au moment de la vente" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Une commande encaissée n'est pas une commande acquise tant que le délai de rétractation court. Le solde de janvier porte encore les remboursements de décembre.",
+      },
+    ],
+    modelRelevance: {
+      cash_budget: "optimal",
+      breakeven_analysis: "misleading",
+      frng_bfr_analysis: "acceptable",
+      npv: "acceptable",
+    },
+    conceptCodes: ["net_treasury", "frng", "bfr", "profitability_vs_return"],
+    hints: hints([
+      "Comparez votre solde aux charges de structure d'un trimestre : de combien de trimestres d'avance disposez-vous vraiment ?",
+      "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro.",
+      "Attention : le placement est bloqué jusqu'au tour suivant. Il ne réglera rien de ce qui tombera d'ici là.",
+      "Projetez le trimestre creux : publicité pour maintenir le trafic, règlement des fournisseurs du pic, et remboursement des retours de décembre.",
+      "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte quatre fois ce que le placement rapporte : l'erreur n'est pas symétrique.",
+    ]),
+    trigger: { detect: "idle_cash" },
+    weight: 0.8,
+  },
 ];
 
 /** Pourquoi le modèle pertinent est le bon outil — correction du débriefing. */
 const MODEL_EXPLAIN: Record<string, string> = {
+  ecom_detect_idle_cash:
+    "Le budget de trésorerie place chaque flux à sa date réelle, remboursements de retours compris. Seul lui distingue ce que la caisse détient de ce qu'elle doit encore rendre.",
   ecommerce_t3_retours:
     "L'analyse coût-volume-profit intègre le coût des retours au coût variable, recalcule la marge par commande et le nombre de commandes nécessaires à l'équilibre.",
   ecommerce_t6_scenarios:

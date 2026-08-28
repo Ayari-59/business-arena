@@ -610,10 +610,86 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
     trigger: { round: 6 },
     weight: 1,
   },
+  {
+    code: "hotel_detect_idle_cash",
+    title: "Le compte plein de fin de saison",
+    narrative:
+      "La saison forte est passée et le compte affiche plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an ; il facture votre découvert 9 %. L'échéance du crédit immobilier, elle, tombera comme chaque trimestre, saison creuse comprise.",
+    problem:
+      "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant ?",
+    diagnosticOptions: [
+      {
+        id: "cout_opportunite",
+        label: "Une trésorerie qui dort ne coûte rien, mais ne rapporte rien non plus : c'est un manque à gagner",
+        correct: true,
+      },
+      {
+        id: "garder_de_quoi_payer",
+        label: "Le montant bloqué ne pourra régler aucune facture du trimestre : il faut d'abord chiffrer ce qui va sortir",
+        correct: true,
+      },
+      {
+        id: "tout_placer",
+        label: "Puisque le placement rapporte, autant y mettre la totalité du solde",
+        correct: false,
+      },
+      {
+        id: "ameliore_exploitation",
+        label: "Placer améliore le résultat d'exploitation de l'entreprise",
+        correct: false,
+      },
+    ],
+    quiz: [
+      {
+        id: "hotel_detect_idle_cash_placement_exces",
+        prompt: "Placer la totalité de sa trésorerie expose l'entreprise à…",
+        options: [
+          { id: "a", label: "Ouvrir un découvert à 9 % tout en détenant un placement à 2 %" },
+          { id: "b", label: "Perdre le capital placé si le trimestre est mauvais" },
+          { id: "c", label: "Un redressement fiscal sur les produits financiers" },
+          { id: "d", label: "Une baisse mécanique de son chiffre d'affaires" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Le placement est bloqué : il ne paie rien pendant le tour. Si les décaissements dépassent ce qui reste en caisse, la banque ouvre un découvert, et vous payez d'un côté quatre fois ce que vous gagnez de l'autre.",
+      },
+      {
+        id: "hotel_echeance_incompressible",
+        prompt: "Dans un hôtel, la trésorerie accumulée en haute saison doit d'abord couvrir…",
+        options: [
+          { id: "a", label: "Les charges et les échéances de la saison creuse, qui tombent alors que les chambres se vident" },
+          { id: "b", label: "Le remboursement anticipé du crédit immobilier" },
+          { id: "c", label: "Les commissions des plateformes de la saison écoulée, déjà réglées" },
+          { id: "d", label: "Une augmentation de capital" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "L'activité est saisonnière, les charges ne le sont pas. Le solde de septembre n'est pas un excédent : c'est ce qui doit faire passer l'hiver.",
+      },
+    ],
+    modelRelevance: {
+      cash_budget: "optimal",
+      breakeven_analysis: "misleading",
+      frng_bfr_analysis: "acceptable",
+      npv: "acceptable",
+    },
+    conceptCodes: ["net_treasury", "frng", "bfr", "profitability_vs_return"],
+    hints: hints([
+      "Comparez votre solde aux charges d'un seul trimestre : combien de trimestres pourriez-vous tenir sans vendre une nuitée ?",
+      "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro.",
+      "Attention : le placement est bloqué jusqu'au tour suivant. Il ne réglera rien de ce qui tombera d'ici là.",
+      "Projetez la saison creuse qui vient : salaires, énergie, entretien et échéance du crédit tombent alors que le remplissage s'effondre.",
+      "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte quatre fois ce que le placement rapporte : l'erreur n'est pas symétrique.",
+    ]),
+    trigger: { detect: "idle_cash" },
+    weight: 0.8,
+  },
 ];
 
 /** Pourquoi le modèle pertinent est le bon outil — correction du débriefing. */
 const MODEL_EXPLAIN: Record<string, string> = {
+  hotel_detect_idle_cash:
+    "Le budget de trésorerie projette la saison creuse à venir, échéance du crédit comprise. Seul lui distingue un vrai excédent de ce qui doit faire passer l'hiver.",
   hotel_t4_plateformes:
     "L'analyse marginale compare ce que chaque nuitée supplémentaire rapporte à ce qu'elle coûte vraiment. La structure étant déjà payée, une nuitée commissionnée reste très largement bénéficiaire.",
   hotel_t6_ecarts:

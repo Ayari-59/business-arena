@@ -198,6 +198,28 @@ describe("registre des scénarios", () => {
     }
   });
 
+  it("chaque secteur pose la question du placement quand la trésorerie dort", () => {
+    // Le déclencheur `idle_cash` est commun aux sept scénarios : sans situation
+    // en face, il se déclencherait dans le vide et le placement resterait un
+    // bouton que personne ne presse. Un nouveau secteur ne doit pas l'oublier.
+    for (const d of SCENARIOS) {
+      const idle = d.situations.filter(
+        (s) => "detect" in s.trigger && s.trigger.detect === "idle_cash",
+      );
+      expect(idle.length, `${d.code} n'a pas de situation « argent qui dort »`).toBe(1);
+      // et elle doit parler du métier, pas répéter le même texte partout
+      expect(idle[0]!.narrative.length, d.code).toBeGreaterThan(180);
+    }
+
+    // Les narrations sont bien distinctes d'un secteur à l'autre.
+    const narrations = SCENARIOS.map(
+      (d) =>
+        d.situations.find((s) => "detect" in s.trigger && s.trigger.detect === "idle_cash")!
+          .narrative,
+    );
+    expect(new Set(narrations).size).toBe(SCENARIOS.length);
+  });
+
   it("chaque secteur mobilise au moins cinq modèles d'analyse différents", () => {
     // Un secteur qui ne ferait travailler que le seuil de rentabilité
     // n'enseignerait qu'un outil, quel que soit le nombre de ses situations.

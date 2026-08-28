@@ -609,10 +609,86 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
     trigger: { round: 6 },
     weight: 1,
   },
+  {
+    code: "conseil_detect_idle_cash",
+    title: "Le compte se remplit, le carnet se vide",
+    narrative:
+      "Les grosses factures de fin de mission sont rentrées d'un coup : le compte affiche plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an, et facture le découvert 9 %. Le carnet de commandes, lui, est plus creux qu'il ne l'a été depuis longtemps.",
+    problem:
+      "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant ?",
+    diagnosticOptions: [
+      {
+        id: "cout_opportunite",
+        label: "Une trésorerie qui dort ne coûte rien, mais ne rapporte rien non plus : c'est un manque à gagner",
+        correct: true,
+      },
+      {
+        id: "garder_de_quoi_payer",
+        label: "Le montant bloqué ne pourra régler aucune facture du trimestre : il faut d'abord chiffrer ce qui va sortir",
+        correct: true,
+      },
+      {
+        id: "tout_placer",
+        label: "Puisque le placement rapporte, autant y mettre la totalité du solde",
+        correct: false,
+      },
+      {
+        id: "ameliore_exploitation",
+        label: "Placer améliore le résultat d'exploitation de l'entreprise",
+        correct: false,
+      },
+    ],
+    quiz: [
+      {
+        id: "conseil_detect_idle_cash_placement_exces",
+        prompt: "Placer la totalité de sa trésorerie expose l'entreprise à…",
+        options: [
+          { id: "a", label: "Ouvrir un découvert à 9 % tout en détenant un placement à 2 %" },
+          { id: "b", label: "Perdre le capital placé si le trimestre est mauvais" },
+          { id: "c", label: "Un redressement fiscal sur les produits financiers" },
+          { id: "d", label: "Une baisse mécanique de son chiffre d'affaires" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Le placement est bloqué : il ne paie rien pendant le tour. Si les décaissements dépassent ce qui reste en caisse, la banque ouvre un découvert, et vous payez d'un côté quatre fois ce que vous gagnez de l'autre.",
+      },
+      {
+        id: "conseil_carnet_vide",
+        prompt: "Dans un cabinet, une caisse pleine alors que le carnet se vide est un signal…",
+        options: [
+          { id: "a", label: "D'alerte : les salaires continueront de tomber alors que les encaissements vont s'arrêter" },
+          { id: "b", label: "Rassurant : la trésorerie prouve la bonne santé du cabinet" },
+          { id: "c", label: "Neutre : trésorerie et carnet de commandes sont sans rapport" },
+          { id: "d", label: "Favorable : c'est le moment d'augmenter les tarifs" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Le solde d'aujourd'hui vient des missions d'hier. Avec des charges presque entièrement fixes, c'est précisément le moment de bloquer le moins possible.",
+      },
+    ],
+    modelRelevance: {
+      cash_budget: "optimal",
+      breakeven_analysis: "misleading",
+      frng_bfr_analysis: "acceptable",
+      npv: "acceptable",
+    },
+    conceptCodes: ["net_treasury", "frng", "bfr", "profitability_vs_return"],
+    hints: hints([
+      "Comparez votre solde aux charges de structure d'un trimestre : combien de trimestres de salaires pourriez-vous payer sans facturer un seul jour ?",
+      "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro.",
+      "Attention : le placement est bloqué jusqu'au tour suivant. Il ne réglera rien de ce qui tombera d'ici là.",
+      "Projetez le trimestre à venir avec le carnet TEL QU'IL EST : les salaires de vos consultants tomberont, les encaissements peut-être pas.",
+      "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte quatre fois ce que le placement rapporte : l'erreur n'est pas symétrique.",
+    ]),
+    trigger: { detect: "idle_cash" },
+    weight: 0.8,
+  },
 ];
 
 /** Pourquoi le modèle pertinent est le bon outil — correction du débriefing. */
 const MODEL_EXPLAIN: Record<string, string> = {
+  conseil_detect_idle_cash:
+    "Le budget de trésorerie confronte les encaissements attendus au carnet réel et aux salaires certains. C'est le seul document qui empêche de prendre un solde de fin de mission pour un excédent durable.",
   conseil_t5_mission_rabais:
     "L'analyse marginale ne retient que ce que la décision change : les frais de mission. Le salaire, engagé de toute façon, n'a rien à y faire, et le seuil de rentabilité répondrait à une autre question.",
   conseil_t6_resistance:

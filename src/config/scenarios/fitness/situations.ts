@@ -535,10 +535,86 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
     trigger: { round: 6 },
     weight: 1,
   },
+  {
+    code: "fitness_detect_idle_cash",
+    title: "Janvier a rempli la caisse",
+    narrative:
+      "Les inscriptions de début d'année ont fait entrer beaucoup d'argent d'un coup : plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an, et facture le découvert 9 %. Cet argent doit pourtant faire vivre la salle jusqu'à décembre, y compris pendant l'été où plus personne ne s'inscrit.",
+    problem:
+      "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant ?",
+    diagnosticOptions: [
+      {
+        id: "cout_opportunite",
+        label: "Une trésorerie qui dort ne coûte rien, mais ne rapporte rien non plus : c'est un manque à gagner",
+        correct: true,
+      },
+      {
+        id: "garder_de_quoi_payer",
+        label: "Le montant bloqué ne pourra régler aucune facture du trimestre : il faut d'abord chiffrer ce qui va sortir",
+        correct: true,
+      },
+      {
+        id: "tout_placer",
+        label: "Puisque le placement rapporte, autant y mettre la totalité du solde",
+        correct: false,
+      },
+      {
+        id: "ameliore_exploitation",
+        label: "Placer améliore le résultat d'exploitation de l'entreprise",
+        correct: false,
+      },
+    ],
+    quiz: [
+      {
+        id: "fitness_detect_idle_cash_placement_exces",
+        prompt: "Placer la totalité de sa trésorerie expose l'entreprise à…",
+        options: [
+          { id: "a", label: "Ouvrir un découvert à 9 % tout en détenant un placement à 2 %" },
+          { id: "b", label: "Perdre le capital placé si le trimestre est mauvais" },
+          { id: "c", label: "Un redressement fiscal sur les produits financiers" },
+          { id: "d", label: "Une baisse mécanique de son chiffre d'affaires" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Le placement est bloqué : il ne paie rien pendant le tour. Si les décaissements dépassent ce qui reste en caisse, la banque ouvre un découvert, et vous payez d'un côté quatre fois ce que vous gagnez de l'autre.",
+      },
+      {
+        id: "fitness_encaisse_avance",
+        prompt: "Un encaissement perçu d'avance pour une prestation à fournir toute l'année…",
+        options: [
+          { id: "a", label: "Est de la trésorerie disponible, mais correspond à un service encore dû : il finance les charges des mois à venir" },
+          { id: "b", label: "Constitue un bénéfice acquis dès l'encaissement" },
+          { id: "c", label: "Peut être placé en totalité, la prestation ne coûtant rien" },
+          { id: "d", label: "Doit être remboursé au client en fin d'exercice" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "L'adhérent a payé pour douze mois d'ouverture, de chauffage et d'encadrement. Bloquer cette somme reviendrait à financer janvier avec l'argent de novembre, qui n'est pas encore gagné.",
+      },
+    ],
+    modelRelevance: {
+      cash_budget: "optimal",
+      breakeven_analysis: "misleading",
+      frng_bfr_analysis: "acceptable",
+      npv: "acceptable",
+    },
+    conceptCodes: ["net_treasury", "frng", "bfr", "profitability_vs_return"],
+    hints: hints([
+      "Comparez votre solde aux charges de structure d'un trimestre : combien de trimestres la salle pourrait-elle ouvrir sans une inscription de plus ?",
+      "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro.",
+      "Attention : le placement est bloqué jusqu'au tour suivant. Il ne réglera rien de ce qui tombera d'ici là.",
+      "Projetez l'année entière, et surtout le creux de l'été : les charges tombent tous les mois, les inscriptions non.",
+      "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte quatre fois ce que le placement rapporte : l'erreur n'est pas symétrique.",
+    ]),
+    trigger: { detect: "idle_cash" },
+    weight: 0.8,
+  },
 ];
 
 /** Pourquoi le modèle pertinent est le bon outil — correction du débriefing. */
 const MODEL_EXPLAIN: Record<string, string> = {
+  fitness_detect_idle_cash:
+    "Le budget de trésorerie étale sur l'année les charges que l'encaissement de janvier doit couvrir. Seul lui montre que ce solde n'est pas un excédent, mais une avance à faire durer.",
   fitness_t4_annuel:
     "L'analyse FRNG / BFR montre ce que le compte de résultat cache : encaissé d'avance, l'abonnement fait financer l'exploitation par les adhérents eux-mêmes.",
   fitness_t6_seconde_salle:
