@@ -112,6 +112,53 @@ describe("détection de situations (doc 03 §1.1)", () => {
     expect(detectSituations(losing)).toContain("below_breakeven");
     expect(detectSituations(losing)).not.toContain("profitable_illiquid");
   });
+
+  describe("trésorerie qui dort", () => {
+    // Le seul déclencheur qui ne signale pas une panne : l'entreprise va bien,
+    // et c'est justement pour cela que la question du placement se pose.
+    const riche = {
+      ...base,
+      incomeStatement: { netIncome: 10000, fixedCosts: 90000 },
+      functionalBalance: { netTreasury: 200000 },
+      balanceSheet: { cash: 200000, overdraft: 0 },
+    } as unknown as CompanyRoundResult;
+
+    it("se déclenche sur un solde qui dépasse une fois et demie les charges de structure", () => {
+      expect(detectSituations(riche, { placement: true })).toContain("idle_cash");
+    });
+
+    it("reste fermé aux niveaux qui n'ouvrent pas le placement", () => {
+      // Poser l'arbitrage à un joueur qui n'a pas le champ sous les yeux
+      // reviendrait à lui demander de trancher sans moyen d'agir.
+      expect(detectSituations(riche)).not.toContain("idle_cash");
+      expect(detectSituations(riche, { placement: false })).not.toContain("idle_cash");
+    });
+
+    it("ne se déclenche pas sur un solde ordinaire", () => {
+      const ordinaire = {
+        ...riche,
+        balanceSheet: { cash: 100000, overdraft: 0 },
+      } as unknown as CompanyRoundResult;
+      expect(detectSituations(ordinaire, { placement: true })).not.toContain("idle_cash");
+    });
+
+    it("ne se déclenche pas si l'entreprise est déjà à découvert", () => {
+      const decouvert = {
+        ...riche,
+        balanceSheet: { cash: 200000, overdraft: 4000 },
+      } as unknown as CompanyRoundResult;
+      expect(detectSituations(decouvert, { placement: true })).not.toContain("idle_cash");
+    });
+
+    it("ne se déclenche pas si le joueur a déjà placé", () => {
+      // La leçon a été retenue : inutile de la reposer à chaque tour.
+      const dejaPlace = {
+        ...riche,
+        balanceSheet: { cash: 200000, overdraft: 0, shortTermInvestment: 50000 },
+      } as unknown as CompanyRoundResult;
+      expect(detectSituations(dejaPlace, { placement: true })).not.toContain("idle_cash");
+    });
+  });
 });
 
 describe("progression (doc 03 §6)", () => {
@@ -171,10 +218,12 @@ describe("cohérence des référentiels", () => {
       }
     }
   });
-  it("6 situations scriptées (une par tour) + 4 détectées", () => {
+  it("6 situations scriptées (une par tour) + 5 détectées", () => {
     const scripted = NOVA_SITUATIONS.filter((s) => "round" in s.trigger);
     const detected = NOVA_SITUATIONS.filter((s) => "detect" in s.trigger);
     expect(scripted.map((s) => (s.trigger as { round: number }).round).sort()).toEqual([1, 2, 3, 4, 5, 6]);
-    expect(detected).toHaveLength(4);
+    // quatre pannes, plus la trésorerie qui dort : la seule qui s'ouvre alors
+    // que tout va bien
+    expect(detected).toHaveLength(5);
   });
 });

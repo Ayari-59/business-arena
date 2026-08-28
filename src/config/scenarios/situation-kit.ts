@@ -13,7 +13,14 @@ export type DetectCode =
   | "profitable_illiquid"
   | "stockout"
   | "below_breakeven"
-  | "capacity_saturated";
+  | "capacity_saturated"
+  /**
+   * Trésorerie qui dort. Le seul déclencheur qui ne signale pas un problème :
+   * l'entreprise va bien, et c'est justement pour cela que la question se
+   * pose. Il suppose que le niveau ouvre le placement, sans quoi la situation
+   * poserait un arbitrage que le joueur ne peut pas trancher.
+   */
+  | "idle_cash";
 
 export interface SituationHintDef {
   level: 1 | 2 | 3 | 4 | 5;

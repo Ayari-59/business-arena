@@ -604,6 +604,80 @@ export const NOVA_SITUATIONS: SituationDef[] = [
     trigger: { detect: "capacity_saturated" },
     weight: 1,
   },
+  {
+    code: "detect_idle_cash",
+    title: "L'argent qui dort",
+    narrative:
+      "Le trimestre s'est bien passé. Votre compte affiche plus d'un tour et demi de charges de structure, aucun découvert, et cet argent ne fait rien. Votre banquier propose de placer une partie du solde : il vous le bloque jusqu'au trimestre suivant et vous le rend avec 2 % l'an. Le même banquier facture votre découvert 9 %.",
+    problem:
+      "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant ?",
+    diagnosticOptions: [
+      {
+        id: "cout_opportunite",
+        label: "Une trésorerie qui dort ne coûte rien, mais ne rapporte rien non plus : c'est un manque à gagner",
+        correct: true,
+      },
+      {
+        id: "garder_de_quoi_payer",
+        label: "Le montant bloqué ne pourra payer aucune facture du trimestre : il faut d'abord chiffrer ce qui va sortir",
+        correct: true,
+      },
+      {
+        id: "tout_placer",
+        label: "Puisque le placement rapporte, autant y mettre la totalité du solde",
+        correct: false,
+      },
+      {
+        id: "ameliore_exploitation",
+        label: "Placer améliore le résultat d'exploitation de l'entreprise",
+        correct: false,
+      },
+    ],
+    quiz: [
+      {
+        id: "nova_placement_exces",
+        prompt: "Placer la totalité de sa trésorerie expose l'entreprise à…",
+        options: [
+          { id: "a", label: "Ouvrir un découvert à 9 % tout en détenant un placement à 2 %" },
+          { id: "b", label: "Perdre le capital placé si le trimestre est mauvais" },
+          { id: "c", label: "Un redressement fiscal sur les produits financiers" },
+          { id: "d", label: "Une baisse mécanique de son chiffre d'affaires" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Le placement est bloqué : il ne paie rien pendant le tour. Si les décaissements dépassent ce qui reste en caisse, la banque ouvre un découvert, et vous payez d'un côté quatre fois ce que vous gagnez de l'autre.",
+      },
+      {
+        id: "nova_produits_financiers",
+        prompt: "Les intérêts d'un placement apparaissent au compte de résultat…",
+        options: [
+          { id: "a", label: "En produits financiers, donc sous le résultat d'exploitation" },
+          { id: "b", label: "En chiffre d'affaires, comme toute recette" },
+          { id: "c", label: "En diminution des charges de structure" },
+          { id: "d", label: "Nulle part : ils ne touchent que la trésorerie" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Le résultat d'exploitation mesure le métier, pas la gestion de la trésorerie. Bien placer améliore le résultat NET sans rien changer à la performance de l'atelier, et c'est très bien ainsi : les deux se jugent séparément.",
+      },
+    ],
+    modelRelevance: {
+      cash_budget: "optimal",
+      breakeven_analysis: "misleading",
+      frng_bfr_analysis: "acceptable",
+      npv: "acceptable",
+    },
+    conceptCodes: ["net_treasury", "frng", "bfr", "profitability_vs_return"],
+    hints: hints([
+      "Comparez votre solde de trésorerie aux charges de structure d'un seul trimestre : de combien de tours d'avance disposez-vous ?",
+      "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro.",
+      "Attention : le placement est bloqué jusqu'au tour suivant. Il ne réglera ni les matières, ni les salaires, ni l'échéance d'emprunt de ce trimestre.",
+      "Projetez donc les décaissements du tour à venir avant de décider du montant : c'est un budget de trésorerie, même sommaire.",
+      "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte quatre fois ce que le placement rapporte : l'erreur n'est pas symétrique.",
+    ]),
+    trigger: { detect: "idle_cash" },
+    weight: 0.8,
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -614,6 +688,8 @@ export const NOVA_SITUATIONS: SituationDef[] = [
 // ---------------------------------------------------------------------------
 
 const MODEL_EXPLAIN: Record<string, string> = {
+  detect_idle_cash:
+    "Le budget de trésorerie projette les décaissements du tour à venir : il est le seul à dire quelle part du solde peut être bloquée sans risquer le découvert. Le seuil de rentabilité, lui, ne parle jamais de trésorerie.",
   nova_t1_takeover:
     "Le seuil de rentabilité donne un objectif chiffré au premier trimestre : le volume de ventes qui couvre exactement les charges de structure.",
   nova_t2_price_war:

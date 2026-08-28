@@ -196,7 +196,11 @@ export async function openSituationsForRound(
     }
     const result = previousResults?.[team.id];
     if (result) {
-      const detected = new Set(detectSituations(result));
+      const detected = new Set(
+        detectSituations(result, {
+          placement: presetFromProfile(gameRow?.difficultyProfile).decisions.placement,
+        }),
+      );
       // Résolution par le déclencheur porté par la situation, pas par une
       // convention de nommage : chaque scénario nomme ses situations librement.
       for (const s of definition.situations) {
