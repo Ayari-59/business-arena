@@ -35,6 +35,53 @@ export default async function OrgAdminPage() {
         </nav>
       </header>
 
+      {dashboard.licence.state !== "libre" && dashboard.licence.licence ? (
+        <section
+          className={`rounded-2xl border p-5 ${
+            dashboard.licence.blocking
+              ? "border-red-400/30 bg-red-950/20"
+              : dashboard.licence.state === "bientot_expiree"
+                ? "border-amber-400/30 bg-amber-950/20"
+                : "border-white/10 bg-slate-900"
+          }`}
+        >
+          <div className="flex flex-wrap items-baseline justify-between gap-3">
+            <h2 className="text-sm font-semibold text-slate-200">
+              Licence · {dashboard.licence.licence.label}
+            </h2>
+            <p className="text-xs text-slate-400">
+              du {dashboard.licence.licence.startsAt.toLocaleDateString("fr-FR")} au{" "}
+              {dashboard.licence.licence.endsAt.toLocaleDateString("fr-FR")}
+              {dashboard.licence.daysLeft !== null && dashboard.licence.daysLeft >= 0
+                ? ` · ${dashboard.licence.daysLeft} jour${dashboard.licence.daysLeft > 1 ? "s" : ""} restant${dashboard.licence.daysLeft > 1 ? "s" : ""}`
+                : ""}
+            </p>
+          </div>
+          <p className="mt-2 text-sm text-slate-300">
+            {dashboard.licence.teachers} enseignant
+            {dashboard.licence.teachers > 1 ? "s" : ""} rattaché
+            {dashboard.licence.teachers > 1 ? "s" : ""}
+            {dashboard.licence.licence.maxTeachers === null
+              ? ", sans plafond."
+              : ` sur les ${dashboard.licence.licence.maxTeachers} couverts.`}
+          </p>
+          {dashboard.licence.blocking ? (
+            <p className="mt-3 text-sm text-red-200">{dashboard.licence.blocking}</p>
+          ) : dashboard.licence.state === "bientot_expiree" ? (
+            <p className="mt-3 text-sm text-amber-200">
+              La licence arrive à échéance. Les classes en cours iront jusqu&apos;au bout dans
+              tous les cas ; c&apos;est l&apos;ouverture de nouvelles parties qui s&apos;arrête
+              à la date de fin.
+            </p>
+          ) : null}
+          {dashboard.licence.licence.reference ? (
+            <p className="mt-2 text-xs text-slate-500">
+              Référence : <span className="font-mono">{dashboard.licence.licence.reference}</span>
+            </p>
+          ) : null}
+        </section>
+      ) : null}
+
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {(
           [

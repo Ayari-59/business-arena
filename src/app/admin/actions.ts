@@ -11,6 +11,7 @@ import {
   updatePlatformConfig,
 } from "@/services/admin.service";
 import { seedDemoWorld } from "@/services/demo.service";
+import { deleteOrgLicence, setOrgLicence } from "@/services/licence.service";
 
 async function requireAdminSession(): Promise<string> {
   const session = await getSession();
@@ -57,4 +58,40 @@ export async function seedDemoAction(): Promise<void> {
   await seedDemoWorld();
   revalidatePath("/admin");
   revalidatePath("/teacher/login");
+}
+
+/**
+ * Enregistre les termes vendus à un établissement.
+ *
+ * Le montant est saisi en euros et rangé en centimes : un prix stocké en
+ * flottant finit toujours par afficher 89,99999. Il est purement documentaire,
+ * le produit n'encaisse rien.
+ */
+export async function setLicenceAction(
+  organizationId: string,
+  formData: FormData,
+): Promise<void> {
+  const adminId = await requireAdminSession();
+  const texte = (champ: string) => String(formData.get(champ) ?? "").trim();
+  const euros = Number(texte("amount").replace(",", "."));
+  const plafond = Number(texte("maxTeachers"));
+
+  await setOrgLicence({
+    adminId,
+    organizationId,
+    label: texte("label"),
+    startsAt: new Date(texte("startsAt")),
+    endsAt: new Date(texte("endsAt")),
+    // Champ laissé vide = pas de plafond : la période seule s'applique.
+    maxTeachers: texte("maxTeachers") === "" || !Number.isFinite(plafond) ? null : plafond,
+    reference: texte("reference") || null,
+    amountCents: Number.isFinite(euros) && texte("amount") !== "" ? Math.round(euros * 100) : null,
+  });
+  revalidatePath("/admin");
+}
+
+export async function deleteLicenceAction(licenceId: string): Promise<void> {
+  await requireAdminSession();
+  await deleteOrgLicence(licenceId);
+  revalidatePath("/admin");
 }

@@ -81,4 +81,6 @@ jobs:
           echo "l'application n'a pas répondu en 60 secondes" >&2
           exit 1
       - name: Parcours
+        # DATABASE_URL est déjà dans l'environnement du job : le parcours en a
+        # besoin pour poser une licence échue et vérifier le refus à l'écran.
         run: npm run test:e2e

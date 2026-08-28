@@ -123,6 +123,33 @@ définir dans le projet Vercel les variables `DATABASE_URL`, `DIRECT_URL`, `AUTH
     en mode compétition (décisions verrouillées, indices limités — §25),
     qualification au BPI, finale, podium.
 
+## Ce qui se vend : la licence d'établissement
+
+Un lycée n'achète pas un abonnement par carte bancaire. Il émet un bon de commande, reçoit
+une facture et paie par mandat administratif, parfois deux mois plus tard. Le produit
+enregistre donc les **termes convenus**, il ne les encaisse pas : le montant et la
+référence servent à retrouver la vente, pas à la conclure. Aucune intégration de paiement
+n'est prévue tant qu'elle ne débloque aucune vente.
+
+Une licence porte une période, un plafond d'enseignants facultatif, et de quoi la
+rattacher à un devis. L'administrateur général l'enregistre depuis `/admin`,
+établissement par établissement ; l'établissement voit son état dans `/org`.
+
+Trois règles, et chacune protège quelqu'un :
+
+- **l'absence de licence vaut accès libre.** Une frontière qui se refermerait d'elle-même
+  sur les établissements existants, sur une démonstration ou sur un essai serait une
+  régression déguisée en modèle économique. La limite n'existe que là où une vente l'a
+  définie ;
+- **une licence expirée n'interrompt jamais une classe en cours.** Elle ferme l'ouverture
+  de nouvelles parties et laisse terminer celles qui tournent : clore un tour, débriefer et
+  exporter les notes restent possibles. Un trimestre commencé se finit, sans quoi ce
+  seraient les élèves qui paieraient un retard de mandatement ;
+- **le plafond porte sur les enseignants**, l'unité que l'établissement reconnaît sur un
+  devis et qui ne bouge pas en cours d'année. Les élèves ne sont jamais comptés.
+
+Les parties publiques jouées en solo ne dépendent d'aucune licence.
+
 ## Comptes de démonstration
 
 Depuis `/admin` (admin général), le bouton **« Générer le monde démo »** crée un

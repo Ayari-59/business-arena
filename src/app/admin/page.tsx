@@ -3,15 +3,54 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { getPlatformOverview, getStaffContext } from "@/services/admin.service";
 import { DEMO_ACCOUNTS, isDemoSeeded } from "@/services/demo.service";
+import { formatEuro } from "@/lib/format";
 import {
   createEstablishmentAction,
   deactivateAdminInviteAction,
+  deleteLicenceAction,
   newAdminInviteAction,
   seedDemoAction,
+  setLicenceAction,
   updatePlatformConfigAction,
 } from "./actions";
 
 export const dynamic = "force-dynamic";
+
+/** Comment se lit un état de licence, en un mot et une couleur. */
+const ETAT_LICENCE: Record<string, { libelle: string; couleur: string }> = {
+  libre: { libelle: "accès libre", couleur: "text-slate-400" },
+  active: { libelle: "en cours", couleur: "text-emerald-300" },
+  bientot_expiree: { libelle: "à renouveler", couleur: "text-amber-300" },
+  expiree: { libelle: "expirée", couleur: "text-red-300" },
+  a_venir: { libelle: "à venir", couleur: "text-sky-300" },
+};
+
+function LicenceField({
+  name,
+  label,
+  type = "text",
+  placeholder,
+  required,
+}: {
+  name: string;
+  label: string;
+  type?: string;
+  placeholder?: string;
+  required?: boolean;
+}) {
+  return (
+    <label className="block">
+      <span className="text-[10px] uppercase tracking-wide text-slate-500">{label}</span>
+      <input
+        name={name}
+        type={type}
+        placeholder={placeholder}
+        required={required}
+        className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-2 py-1.5 text-xs text-slate-100 outline-none focus:border-amber-400/60"
+      />
+    </label>
+  );
+}
 
 export default async function AdminPage() {
   const session = await getSession();
@@ -205,6 +244,76 @@ export default async function AdminPage() {
                     </button>
                   </form>
                 </div>
+              ) : null}
+
+              {org.kind !== "public" ? (
+                <details className="mt-3 rounded-lg border border-white/10 bg-slate-900/60 p-3">
+                  <summary className="cursor-pointer text-xs text-slate-400">
+                    Licence ·{" "}
+                    <span className={ETAT_LICENCE[org.licence.state]?.couleur ?? "text-slate-400"}>
+                      {ETAT_LICENCE[org.licence.state]?.libelle ?? org.licence.state}
+                    </span>
+                    {org.licence.licence
+                      ? ` · ${org.licence.licence.label} · ${org.licence.teachers}${
+                          org.licence.licence.maxTeachers === null
+                            ? ""
+                            : ` / ${org.licence.licence.maxTeachers}`
+                        } enseignants`
+                      : " · aucune limite en vigueur"}
+                  </summary>
+
+                  {org.licence.blocking ? (
+                    <p className="mt-3 rounded-lg border border-red-400/30 bg-red-950/30 px-3 py-2 text-xs text-red-200">
+                      {org.licence.blocking}
+                    </p>
+                  ) : null}
+
+                  {org.licences.length > 0 ? (
+                    <ul className="mt-3 space-y-1 text-xs text-slate-400">
+                      {org.licences.map((l) => (
+                        <li key={l.id} className="flex flex-wrap items-center gap-2">
+                          <span className="text-slate-300">{l.label}</span>
+                          <span className="tabular-nums">
+                            du {l.startsAt.toLocaleDateString("fr-FR")} au{" "}
+                            {l.endsAt.toLocaleDateString("fr-FR")}
+                          </span>
+                          <span>
+                            {l.maxTeachers === null ? "sans plafond" : `${l.maxTeachers} enseignants`}
+                          </span>
+                          {l.reference ? <span className="font-mono">{l.reference}</span> : null}
+                          {l.amountCents !== null ? (
+                            <span className="tabular-nums">{formatEuro(l.amountCents / 100)}</span>
+                          ) : null}
+                          <form action={deleteLicenceAction.bind(null, l.id)}>
+                            <button className="text-slate-600 hover:text-red-400" title="Supprimer">
+                              ✕
+                            </button>
+                          </form>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+
+                  <form
+                    action={setLicenceAction.bind(null, org.organizationId)}
+                    className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3"
+                  >
+                    <LicenceField name="label" label="Intitulé" placeholder="Année scolaire 2026-2027" required />
+                    <LicenceField name="startsAt" label="Début" type="date" required />
+                    <LicenceField name="endsAt" label="Fin" type="date" required />
+                    <LicenceField name="maxTeachers" label="Enseignants" type="number" placeholder="vide = sans plafond" />
+                    <LicenceField name="reference" label="Devis / bon de commande" placeholder="BC-2026-114" />
+                    <LicenceField name="amount" label="Montant €" placeholder="900" />
+                    <button className="col-span-2 rounded-lg bg-amber-400 px-3 py-2 text-xs font-semibold text-slate-950 hover:bg-amber-300 sm:col-span-3">
+                      Enregistrer la licence
+                    </button>
+                  </form>
+                  <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+                    Sans licence, l&apos;établissement reste ouvert : la limite n&apos;existe que
+                    là où une vente l&apos;a définie. Une licence expirée ferme la création de
+                    nouvelles parties et laisse se terminer les classes en cours.
+                  </p>
+                </details>
               ) : null}
             </div>
           ))}

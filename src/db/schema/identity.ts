@@ -7,6 +7,7 @@ import {
   pgTable,
   primaryKey,
   text,
+  timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
 import { id, timestamps } from "./_shared";
@@ -85,6 +86,42 @@ export const orgInvites = pgTable(
     ...timestamps,
   },
   (t) => [index("org_invites_org_idx").on(t.organizationId)],
+);
+
+/**
+ * Licence d'un établissement : ce qui est vendu.
+ *
+ * Un lycée n'achète pas un abonnement par carte bancaire : il émet un bon de
+ * commande, reçoit une facture et paie par mandat administratif. La licence
+ * enregistre donc les termes convenus, elle ne les encaisse pas. Le prix et la
+ * référence sont documentaires : le logiciel note ce qui a été vendu, il ne
+ * décide pas du tarif.
+ *
+ * L'ABSENCE de licence vaut accès libre. C'est délibéré : la frontière ne doit
+ * pas se refermer sur les établissements existants ni sur une démonstration,
+ * et une limite ne se pose que lorsqu'une vente l'a définie.
+ */
+export const orgLicences = pgTable(
+  "org_licences",
+  {
+    id: id(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    /** Ce que l'établissement lit sur sa facture : « Année scolaire 2026-2027 ». */
+    label: text("label").notNull(),
+    startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
+    endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
+    /** Plafond d'enseignants. Null = sans plafond, la période seule s'applique. */
+    maxTeachers: integer("max_teachers"),
+    /** Numéro de devis ou de bon de commande, pour retrouver la vente. */
+    reference: text("reference"),
+    /** Montant facturé en centimes, purement documentaire. */
+    amountCents: integer("amount_cents"),
+    createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+    ...timestamps,
+  },
+  (t) => [index("org_licences_org_idx").on(t.organizationId)],
 );
 
 /** Réglages globaux de la plateforme (ligne unique, jsonb versionnable). */

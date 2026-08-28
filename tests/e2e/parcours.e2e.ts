@@ -197,6 +197,52 @@ describe("parcours enseignant et élève", () => {
     expect(vu).not.toMatch(/Débloquer l'indice/);
   });
 
+  it("une licence expirée ferme la création, et l'enseignant lit pourquoi", async () => {
+    // Le seul chemin qui compte pour ce modèle économique : le refus doit
+    // arriver A L'ECRAN. Le service peut avoir raison, l'action peut lever
+    // proprement, si la page reste muette l'enseignant conclut que le produit
+    // est cassé. On pose donc une licence échue directement en base, comme le
+    // ferait le temps qui passe, et on regarde la page.
+    const { Client } = await import("pg");
+    // Pas de repli silencieux : un test qui se contente de passer quand il n'a
+    // pas de base ne garde rien du tout.
+    expect(
+      process.env.DATABASE_URL,
+      "DATABASE_URL manquante : ce test écrit une licence échue en base",
+    ).toBeTruthy();
+    const base = new Client({ connectionString: process.env.DATABASE_URL });
+    await base.connect();
+    try {
+      const { rows } = await base.query(
+        `select m.organization_id as org from organization_members m
+           join users u on u.id = m.user_id
+          where u.email = $1 limit 1`,
+        [EMAIL],
+      );
+      expect(rows.length, "établissement de l'enseignant introuvable").toBe(1);
+      await base.query(
+        `insert into org_licences (organization_id, label, starts_at, ends_at)
+         values ($1, 'Licence échue', now() - interval '400 days', now() - interval '5 days')`,
+        [rows[0].org],
+      );
+
+      await aller(prof, "/teacher");
+      await prof.selectOption('select[name="scenarioCode"]', "nova");
+      await prof.getByRole("button", { name: /Créer la partie/ }).click();
+      // On attend le BANDEAU, pas l'URL : la page était déjà /teacher avant le
+      // clic, si bien qu'attendre cette adresse revenait à ne rien attendre du
+      // tout et à lire la page avant sa mise à jour.
+      await prof.waitForSelector("text=/La partie n'a pas été créée/", { timeout: 30_000 });
+
+      const vu = await texte(prof);
+      expect(vu).toContain("La partie n'a pas été créée");
+      expect(vu).toContain("Licence échue");
+      expect(vu).toContain("expiré");
+    } finally {
+      await base.end();
+    }
+  });
+
   it("aucune page du parcours ne porte de tiret en milieu de phrase", async () => {
     // Contrainte de style tenue depuis le début, et qu'aucun test ne gardait.
     // Le tiret SEUL dans une case de tableau reste permis : il vaut « rien à

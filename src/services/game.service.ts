@@ -47,6 +47,7 @@ import {
   seedPedagogyReferentials,
 } from "@/services/pedagogy.service";
 import { getPlatformConfig } from "@/services/admin.service";
+import { assertCanCreateGame } from "@/services/licence.service";
 import { TEACHER_DRAWABLE_CODES, TEAM_CARD_CODES, cardByCode } from "@/config/events/cards";
 import { botDecisions, neutralDecisions, type BotProfile } from "@/engine/bots";
 import {
@@ -362,6 +363,11 @@ export async function createClassGame(args: {
   scenarioCode?: string;
   quizMode?: QuizMode;
 }): Promise<{ gameId: string; joinCode: string }> {
+  // La licence se vérifie ici, à l'OUVERTURE d'une partie, et nulle part
+  // ailleurs : une classe commencée se termine, quoi qu'il advienne du
+  // mandatement. Clore un tour, débriefer et exporter les notes restent
+  // possibles même licence expirée.
+  await assertCanCreateGame(args.organizationId);
   const humanTeamsCount = Math.min(Math.max(args.humanTeamsCount, 1), 8);
   const botCount = Math.min(Math.max(args.botCount, 0), 8 - humanTeamsCount);
   const joinCode = makeJoinCode();

@@ -36,6 +36,13 @@
       "when": 1787756084047,
       "tag": "0004_greedy_maverick",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1787933004378,
+      "tag": "0005_cooing_wild_pack",
+      "breakpoints": true
     }
   ]
 }

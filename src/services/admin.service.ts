@@ -2,6 +2,12 @@ import { randomInt } from "node:crypto";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import {
+  getLicenceStatus,
+  listOrgLicences,
+  type LicenceStatus,
+  type OrgLicence,
+} from "@/services/licence.service";
+import {
   competitions,
   games,
   orgInvites,
@@ -188,6 +194,10 @@ export interface PlatformOverview {
     teachers: number;
     games: number;
     adminInvites: { id: string; code: string; active: boolean }[];
+    /** État de la licence vendue à cet établissement, s'il y en a une. */
+    licence: LicenceStatus;
+    /** Historique des licences : une vente ne s'efface pas. */
+    licences: OrgLicence[];
   }[];
   config: PlatformConfig;
 }
@@ -202,6 +212,9 @@ export async function getPlatformOverview(adminId: string): Promise<PlatformOver
     db.select().from(organizationMembers),
     db.select().from(orgInvites),
   ]);
+  const licenceStatuts = await Promise.all(orgRows.map((o) => getLicenceStatus(o.id)));
+  const licenceListes = await Promise.all(orgRows.map((o) => listOrgLicences(o.id)));
+
   return {
     stats: {
       organizations: orgRows.length,
@@ -210,7 +223,7 @@ export async function getPlatformOverview(adminId: string): Promise<PlatformOver
       competitions: competitionRows.length,
     },
     organizations: orgRows
-      .map((org) => {
+      .map((org, i) => {
         const members = memberRows.filter((m) => m.organizationId === org.id);
         return {
           organizationId: org.id,
@@ -220,8 +233,10 @@ export async function getPlatformOverview(adminId: string): Promise<PlatformOver
           teachers: members.filter((m) => m.role !== "student").length,
           games: gameRows.filter((g) => g.organizationId === org.id).length,
           adminInvites: inviteRows
-            .filter((i) => i.organizationId === org.id && i.role === "org_admin")
-            .map((i) => ({ id: i.id, code: i.code, active: i.active })),
+            .filter((inv) => inv.organizationId === org.id && inv.role === "org_admin")
+            .map((inv) => ({ id: inv.id, code: inv.code, active: inv.active })),
+          licence: licenceStatuts[i]!,
+          licences: licenceListes[i]!,
         };
       })
       .sort((a, b) => b.games - a.games),
@@ -261,6 +276,8 @@ export interface OrgDashboard {
   name: string;
   stats: { teachers: number; students: number; games: number; competitions: number };
   teacherInvites: { id: string; code: string; active: boolean }[];
+  /** Ce que l'établissement a acheté, et ce qu'il lui reste. */
+  licence: LicenceStatus;
   teachers: { userId: string; name: string; email: string; role: string; games: number }[];
   games: { gameId: string; joinCode: string | null; status: string; createdBy: string; createdAt: Date }[];
   competitions: { competitionId: string; name: string; status: string; createdAt: Date }[];
@@ -268,6 +285,7 @@ export interface OrgDashboard {
 
 export async function getOrgDashboard(userId: string): Promise<OrgDashboard> {
   const { organizationId, name } = await requireOrgAdmin(userId);
+  const licence = await getLicenceStatus(organizationId);
   const [memberRows, gameRows, competitionRows, inviteRows] = await Promise.all([
     db
       .select({
@@ -318,6 +336,7 @@ export async function getOrgDashboard(userId: string): Promise<OrgDashboard> {
       games: gameRows.length,
       competitions: competitionRows.length,
     },
+    licence,
     teacherInvites: inviteRows
       .filter((i) => i.role === "teacher")
       .map((i) => ({ id: i.id, code: i.code, active: i.active })),

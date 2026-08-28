@@ -8,6 +8,7 @@ import {
   promoteIfBootstrapAdmin,
   resolveInvite,
 } from "@/services/admin.service";
+import { assertCanAddTeacher } from "@/services/licence.service";
 
 /**
  * Authentification du personnel (ADR-08) : e-mail + mot de passe (bcrypt).
@@ -43,6 +44,17 @@ export async function registerTeacher(args: {
         error:
           "Les inscriptions libres sont fermées : demandez un code d'invitation à votre établissement.",
       };
+    }
+  }
+
+  // Le plafond de la licence se vérifie AVANT de créer le compte : refuser
+  // après aurait laissé un utilisateur orphelin, sans établissement, et
+  // l'e-mail définitivement pris.
+  if (invite) {
+    try {
+      await assertCanAddTeacher(invite.organizationId);
+    } catch (erreur) {
+      return { error: erreur instanceof Error ? erreur.message : "Licence insuffisante." };
     }
   }
 
