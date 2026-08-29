@@ -367,12 +367,21 @@ export function DecisionForm({
           </p>
         </fieldset>
       ) : null}
-      {on.finance && bankFile ? (
+      {/*
+        Gardé sur `on.finance` SEUL, jamais sur `bankFile`. Une partie ouverte
+        avant le dossier bancaire n'a pas de bloc `bank` dans son snapshot,
+        donc pas de `bankFile` : la conditionner dessus faisait disparaître les
+        deux champs en cours de partie, à des élèves qui les remplissaient
+        depuis le premier tour. Le texte change, les champs restent.
+      */}
+      {on.finance ? (
         <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
-            🏦 Votre plan de trésorerie · la pièce que lit la banque
+            {bankFile
+              ? "🏦 Votre plan de trésorerie · la pièce que lit la banque"
+              : "🔭 Votre prévision · facultative, sans effet sur le tour"}
           </legend>
-          {bankFile.refusedLoan !== null ? (
+          {bankFile && bankFile.refusedLoan !== null ? (
             <p className="mb-3 rounded-md border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-xs leading-relaxed text-rose-200">
               Au tour précédent, votre demande de{" "}
               {formatEuro(bankFile.refusedLoan)} n&apos;a pas été instruite : aucun plan de
@@ -392,35 +401,50 @@ export function DecisionForm({
               label="Trésorerie nette en fin de tour"
               placeholder="ex. 18 000"
               suffix="€"
-              hint="Ce que vous pensez avoir en caisse une fois tout payé. Sans cette ligne, pas d'emprunt."
+              hint={
+                bankFile
+                  ? "Ce que vous pensez avoir en caisse une fois tout payé. Sans cette ligne, pas d'emprunt."
+                  : "Ce que vous pensez avoir en caisse une fois tout payé."
+              }
             />
           </div>
-          <p className="mt-3 text-[11px] leading-relaxed text-slate-400">
-            Confiance de votre banque :{" "}
-            <strong className="text-slate-200">{Math.round(bankFile.trust * 100)} %</strong>. Elle
-            vous consent ce tour un découvert de{" "}
-            <strong className="text-slate-200">{formatEuro(bankFile.overdraftLimit)}</strong>
-            {bankFile.overdraftLimit < bankFile.fullOverdraftLimit - 0.5
-              ? ` au lieu de ${formatEuro(bankFile.fullOverdraftLimit)}`
-              : ""}
-            , à{" "}
-            <strong className="text-slate-200">
-              {(bankFile.overdraftAnnualRate * 100).toLocaleString("fr-FR", {
-                maximumFractionDigits: 1,
-              })}{" "}
-              %
-            </strong>{" "}
-            l&apos;an.
-            {bankFile.lastReliability !== null
-              ? ` Votre dernier plan s'est révélé juste à ${Math.round(bankFile.lastReliability * 100)} %.`
-              : ""}
-          </p>
-          <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
-            Ce plan n&apos;est pas un exercice : sans la ligne de trésorerie, la banque
-            n&apos;instruit aucune demande d&apos;emprunt. Et l&apos;écart entre ce que vous
-            annoncez et ce qui sera constaté fixera, au tour suivant, le plafond de votre
-            découvert et son taux. Annoncer large pour se couvrir se paie autant que se tromper.
-          </p>
+          {bankFile ? (
+            <>
+              <p className="mt-3 text-[11px] leading-relaxed text-slate-400">
+                Confiance de votre banque :{" "}
+              <strong className="text-slate-200">{Math.round(bankFile.trust * 100)} %</strong>. Elle
+              vous consent ce tour un découvert de{" "}
+              <strong className="text-slate-200">{formatEuro(bankFile.overdraftLimit)}</strong>
+              {bankFile.overdraftLimit < bankFile.fullOverdraftLimit - 0.5
+                ? ` au lieu de ${formatEuro(bankFile.fullOverdraftLimit)}`
+                : ""}
+              , à{" "}
+              <strong className="text-slate-200">
+                {(bankFile.overdraftAnnualRate * 100).toLocaleString("fr-FR", {
+                  maximumFractionDigits: 1,
+                })}{" "}
+                %
+              </strong>{" "}
+              l&apos;an.
+              {bankFile.lastReliability !== null
+                ? ` Votre dernier plan s'est révélé juste à ${Math.round(bankFile.lastReliability * 100)} %.`
+                : ""}
+            </p>
+            <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+              Ce plan n&apos;est pas un exercice : sans la ligne de trésorerie, la banque
+              n&apos;instruit aucune demande d&apos;emprunt. Et l&apos;écart entre ce que vous
+              annoncez et ce qui sera constaté fixera, au tour suivant, le plafond de votre
+              découvert et son taux. Annoncer large pour se couvrir se paie autant que se tromper.
+            </p>
+            </>
+          ) : (
+            <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+              Annoncer avant de savoir, puis mesurer l&apos;écart : c&apos;est le seul moyen de
+              savoir si vous avez compris ce marché ou si vous avez eu de la chance. L&apos;écart
+              vous sera montré avec les résultats du tour. Cette partie a été ouverte avant le
+              dossier bancaire : votre prévision n&apos;y change aucun calcul.
+            </p>
+          )}
         </fieldset>
       ) : null}
       {studiesOffer ? (
