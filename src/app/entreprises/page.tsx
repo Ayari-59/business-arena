@@ -9,16 +9,15 @@ import {
 } from "@/config/scenarios/presentation";
 
 export const metadata: Metadata = {
-  title: "Les sept entreprises · BUSINESS ARENA",
-  description:
-    "Un atelier, une boutique, un hôtel, un bistrot, un cabinet de conseil, une boutique en ligne, une salle de sport. Sept métiers, sept contraintes, sept façons de perdre de l'argent.",
+  title: `Les ${SCENARIOS.length} entreprises · BUSINESS ARENA`,
+  description: `Un atelier, un hôtel, un bistrot, un chantier, une flotte de camions. ${SCENARIOS.length} métiers, ${SCENARIOS.length} contraintes, ${SCENARIOS.length} façons de perdre de l'argent.`,
 };
 
 /**
  * LES ENTREPRISES.
  *
- * Le sélecteur de la page d'accueil réduisait sept économies à sept lignes
- * d'une liste déroulante. Or ce qui distingue ces entreprises n'est pas leur
+ * Le sélecteur de la page d'accueil réduisait autant d'économies à autant de
+ * lignes d'une liste déroulante. Or ce qui distingue ces entreprises n'est pas leur
  * décor : c'est la contrainte qui décide de tout dans chaque métier. Une
  * chambre vide ce soir est perdue pour toujours ; une enceinte invendue attend
  * en réserve, mais elle a coûté sa trésorerie. Cette page montre cet écart,
@@ -140,7 +139,7 @@ export default function EntreprisesPage() {
 
       <section className="mx-auto max-w-6xl px-6 py-14">
         <p className="text-xs uppercase tracking-[0.3em] text-amber-400">
-          Sept métiers · Sept contraintes
+          {SCENARIOS.length} métiers · {SCENARIOS.length} contraintes
         </p>
         <h1 className="mt-4 max-w-3xl text-4xl font-bold leading-tight tracking-tight text-slate-50 sm:text-5xl">
           Toutes les entreprises gagnent de l&apos;argent de la même façon.
@@ -174,7 +173,7 @@ export default function EntreprisesPage() {
         </div>
       </section>
 
-      {/* ---------- Le tableau qui met les sept métiers côte à côte ---------- */}
+      {/* ---------- Le tableau qui met tous les métiers côte à côte ---------- */}
       <section className="border-y border-white/5 bg-slate-900/40">
         <div className="mx-auto max-w-6xl px-6 py-14">
           <h2 className="text-2xl font-bold text-slate-50">Ce qui change d&apos;un métier à l&apos;autre</h2>
@@ -239,7 +238,7 @@ export default function EntreprisesPage() {
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Link
             href="/#jouer"
-            className="rounded-lg bg-amber-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-300"
+            className="rounded-lg bg-amber-500 px-6 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400"
           >
             Lancer une partie gratuite
           </Link>

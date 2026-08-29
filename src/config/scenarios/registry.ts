@@ -71,7 +71,7 @@ export interface ScenarioVocabulary {
   units: string;
   /**
    * Le genre de ce nom. Sans lui, toute phrase qui accorde un participe avec
-   * l'unité est juste dans quatre secteurs et fausse dans les trois autres :
+   * l'unité est juste dans les secteurs d'un genre et fausse dans ceux de l'autre :
    * « 205 enceintes sont restés ». Le genre est une donnée du secteur, pas une
    * chose que la phrase peut deviner.
    */

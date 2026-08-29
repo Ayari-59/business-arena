@@ -126,15 +126,15 @@ export default async function Home({
             <span className="text-amber-400">Apprenez à décider.</span>
           </h1>
           <p className="mt-5 max-w-xl text-lg leading-relaxed text-slate-400">
-            Un atelier, une boutique, un hôtel, un restaurant, un cabinet de conseil, une
-            boutique en ligne ou une salle de sport : sept secteurs, sept économies réelles.
-            Fixez vos prix, approvisionnez, recrutez, affrontez la concurrence. Situation après
-            situation, découvrez les modèles de gestion qui font les bonnes décisions.
+            Un atelier, un hôtel, un chantier, une flotte de camions :{" "}
+            {SCENARIOS.length} secteurs, {SCENARIOS.length} économies réelles. Fixez vos prix,
+            approvisionnez, recrutez, affrontez la concurrence. Situation après situation,
+            découvrez les modèles de gestion qui font les bonnes décisions.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <a
               href="#jouer"
-              className="rounded-lg bg-amber-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-300"
+              className="rounded-lg bg-amber-500 px-6 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400"
             >
               Lancer une partie gratuite
             </a>
@@ -142,7 +142,7 @@ export default async function Home({
               href="/entreprises"
               className="rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-amber-400/50"
             >
-              Voir les sept entreprises
+              Voir les {SCENARIOS.length} entreprises
             </Link>
             <Link
               href="/teacher/login"
@@ -227,10 +227,11 @@ export default async function Home({
         </div>
       </section>
 
-      {/* ---------- Les sept entreprises ---------- */}
+      {/* ---------- Les entreprises ---------- */}
       <section className="mx-auto max-w-6xl px-6 py-16">
         <h2 className="text-center text-2xl font-bold text-slate-50">
-          Sept entreprises, sept façons de perdre de l&apos;argent
+          {SCENARIOS.length} entreprises, {SCENARIOS.length} façons de perdre de
+          l&apos;argent
         </h2>
         <p className="mx-auto mt-3 max-w-2xl text-center text-sm leading-relaxed text-slate-400">
           Une chambre vide ce soir est perdue pour toujours. Une enceinte invendue attend en
@@ -281,7 +282,9 @@ export default async function Home({
             <span className="text-2xl" aria-hidden>
               →
             </span>
-            <span className="mt-2 text-sm font-semibold text-slate-200">Les sept fiches</span>
+            <span className="mt-2 text-sm font-semibold text-slate-200">
+              Toutes les fiches
+            </span>
             <span className="mt-1 text-xs leading-relaxed text-slate-500">
               Le premier arbitrage de chaque métier, ses indicateurs, et le tableau qui les met
               côte à côte.
@@ -356,30 +359,35 @@ export default async function Home({
 
       {/* ---------- Jouer ---------- */}
       <section id="jouer" className="mx-auto max-w-6xl scroll-mt-8 px-6 py-16">
-        <div className="grid items-start gap-8 lg:grid-cols-[1fr_420px]">
+        {/*
+          Colonnes centrées l'une sur l'autre : le texte est bien plus court que
+          le formulaire, et les aligner par le haut laissait un vide sous lui.
+          La colonne de droite passe à 460 px, faute de quoi le libellé du
+          niveau se faisait couper par le rendu natif du sélecteur.
+        */}
+        <div className="grid items-start gap-8 lg:grid-cols-[1fr_460px] lg:items-center">
           <div>
             <h2 className="text-2xl font-bold text-slate-50">Lancez votre première partie</h2>
             <p className="mt-3 max-w-lg text-sm leading-relaxed text-slate-400">
-              Choisissez votre secteur parmi l&apos;atelier, la boutique, l&apos;hôtel, le
-              restaurant, le cabinet de conseil, la boutique en ligne et la salle de sport, puis
-              menez six tours face à des concurrents qui ne vous feront aucun cadeau. Prix,
-              volumes, marketing, qualité, financement : chaque décision compte, et la crise de
-              trésorerie réserve une leçon que peu voient venir.
+              Choisissez l&apos;un des {SCENARIOS.length} métiers, puis menez six tours face à
+              des concurrents qui ne vous feront aucun cadeau. Prix, volumes, marketing,
+              qualité, financement : chaque décision compte, et la crise de trésorerie réserve
+              une leçon que peu voient venir.
             </p>
             <ul className="mt-5 space-y-2 text-sm text-slate-300">
               <li>· Niveau Découverte : aucune connaissance préalable requise</li>
               <li>· Débriefing corrigé à chaque tour, fiches concepts intégrées</li>
               <li>· Votre profil de compétences progresse à chaque situation traitée</li>
             </ul>
-            <div className="mt-5 flex flex-wrap gap-5 text-sm">
+            <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm">
               <Link href="/entreprises" className="text-amber-300 underline-offset-4 hover:underline">
-                Découvrir les sept entreprises
+                Découvrir les {SCENARIOS.length} entreprises
               </Link>
               <Link href="/join" className="text-amber-300 underline-offset-4 hover:underline">
-                J&apos;ai un code de partie (élève)
+                J&apos;ai un code (élève)
               </Link>
               <Link href="/guide" className="text-slate-400 underline-offset-4 hover:underline">
-                Guide de prise en main
+                Guide
               </Link>
               <Link href="/profile" className="text-slate-400 underline-offset-4 hover:underline">
                 Mon profil
@@ -399,9 +407,9 @@ export default async function Home({
           ) : (
           <form
             action={startGameAction}
-            className="rounded-2xl border border-white/10 bg-slate-900 p-6"
+            className="rounded-2xl border border-white/10 bg-slate-900/80 p-6 shadow-xl shadow-black/30 ring-1 ring-white/5"
           >
-            <h3 className="text-sm font-semibold text-slate-200">Configurer la partie</h3>
+            <h3 className="text-sm font-semibold text-slate-100">Configurer la partie</h3>
             <label className="mt-4 block">
               <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
                 Secteur d&apos;activité
@@ -432,7 +440,7 @@ export default async function Home({
                 ).map(([value, label, hint]) => (
                   <label
                     key={value}
-                    className="cursor-pointer rounded-lg border border-white/10 bg-slate-950 p-3 text-center transition has-[:checked]:border-amber-400 has-[:checked]:bg-amber-400/10"
+                    className="cursor-pointer rounded-lg border border-white/10 bg-slate-950 px-2 py-3 text-center transition hover:border-white/25 has-[:checked]:border-amber-400/70 has-[:checked]:bg-amber-400/10 has-[:checked]:ring-1 has-[:checked]:ring-amber-400/30"
                   >
                     <input
                       type="radio"
@@ -442,7 +450,12 @@ export default async function Home({
                       className="sr-only"
                     />
                     <span className="block text-sm font-medium text-slate-100">{label}</span>
-                    <span className="mt-1 block text-[11px] leading-tight text-slate-500">
+                    {/*
+                      Hauteur réservée à deux lignes : sans elle, le sous-titre le plus
+                      long passait à la ligne et décalait le titre de sa tuile par
+                      rapport aux deux autres.
+                    */}
+                    <span className="mt-1 flex min-h-[1.75rem] items-start justify-center text-[11px] leading-tight text-slate-500">
                       {hint}
                     </span>
                   </label>
@@ -476,14 +489,24 @@ export default async function Home({
               >
                 {DIFFICULTY_PRESETS.map((p) => (
                   <option key={p.level} value={p.level}>
-                    {p.level} · {p.name} : {p.tagline}
+                    {p.level} · {p.name}
                   </option>
                 ))}
               </select>
+              {/*
+                Le libellé complet se faisait couper par le rendu natif du sélecteur.
+                Les noms sont lus des préréglages : ils ne peuvent pas se désaccorder
+                de ce que la partie ouvrira vraiment.
+              */}
+              <span className="mt-1.5 block text-[11px] leading-relaxed text-slate-500">
+                De {DIFFICULTY_PRESETS[0]!.name} à{" "}
+                {DIFFICULTY_PRESETS[DIFFICULTY_PRESETS.length - 1]!.name}, chaque cran
+                ouvre de nouvelles décisions et retire des indices.
+              </span>
             </label>
             <button
               type="submit"
-              className="mt-5 w-full rounded-lg bg-amber-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-300"
+              className="mt-5 w-full rounded-lg bg-amber-500 px-4 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400"
             >
               Lancer la partie
             </button>
@@ -495,7 +518,7 @@ export default async function Home({
       {/* ---------- Enseignants & concours ---------- */}
       <section className="mx-auto max-w-6xl px-6 pb-16">
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900 to-slate-900/50 p-6">
+          <div className="rounded-2xl border border-sky-400/20 bg-gradient-to-br from-slate-900 to-sky-950/20 p-6">
             <p className="text-2xl">🏫</p>
             <h3 className="mt-2 text-lg font-semibold text-slate-100">Pour vos classes</h3>
             <p className="mt-2 text-sm leading-relaxed text-slate-400">
@@ -505,7 +528,7 @@ export default async function Home({
             </p>
             <Link
               href="/teacher/login"
-              className="mt-4 inline-block rounded-lg border border-amber-400/40 px-5 py-2 text-sm font-semibold text-amber-300 transition hover:bg-amber-400/10"
+              className="mt-4 inline-block rounded-lg border border-sky-400/40 px-5 py-2 text-sm font-semibold text-sky-300 transition hover:bg-sky-400/10"
             >
               Ouvrir l&apos;espace enseignant →
             </Link>

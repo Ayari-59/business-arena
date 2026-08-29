@@ -20,10 +20,8 @@ export default function ConceptsPage() {
         <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Business Arena</p>
         <h1 className="mt-1 text-2xl font-bold">Fiches concepts</h1>
         <p className="mt-2 text-sm text-slate-400">
-          Les notions de gestion communes aux sept secteurs : industrie, commerce,
-          hôtellerie, restauration, services, e-commerce et abonnement. Trois niveaux de
-          lecture :
-          l&apos;intuition, la méthode, la formule.
+          Les notions de gestion communes à tous les secteurs du jeu, de l&apos;atelier au
+          chantier. Trois niveaux de lecture : l&apos;intuition, la méthode, la formule.
         </p>
         <Link href="/" className="mt-2 inline-block text-xs text-slate-500 underline-offset-4 hover:underline">
           ← Retour à l&apos;accueil

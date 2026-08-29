@@ -535,7 +535,7 @@ export const ATELIER_CG1: AtelierDefinition = {
     {
       question: "Peut-on changer de secteur d'entreprise ?",
       reponse:
-        "Oui, les sept secteurs se jouent avec le même déroulé. NOVA est recommandé parce qu'il porte un stock, un coût de production et des délais de règlement, les trois matières de la première année. Un secteur sans stock, comme la restauration ou l'hôtellerie, rend la séance 4 plus difficile et la séance 2 plus subtile.",
+        "Oui, tous les secteurs se jouent avec le même déroulé. NOVA est recommandé parce qu'il porte un stock, un coût de production et des délais de règlement, les trois matières de la première année. Un secteur sans stock, comme la restauration ou l'hôtellerie, rend la séance 4 plus difficile et la séance 2 plus subtile.",
     },
   ],
   prolongements: [

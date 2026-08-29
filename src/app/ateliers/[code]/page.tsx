@@ -216,7 +216,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
             </p>
             <Link
               href="/teacher"
-              className="mt-4 inline-block rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 print:hidden"
+              className="mt-4 inline-block rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400 print:hidden"
             >
               Créer la partie dans mon espace enseignant
             </Link>
@@ -425,7 +425,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
             Tous les ateliers
           </Link>
           <Link href="/entreprises" className="text-slate-400 underline-offset-4 hover:underline">
-            Les sept entreprises
+            Les entreprises
           </Link>
           <Link href="/parcours" className="text-slate-400 underline-offset-4 hover:underline">
             Alignement sur les référentiels
