@@ -9,6 +9,8 @@ import {
   INDUSTRIE_KPIS,
   RESTAURATION_KPIS,
   SERVICES_KPIS,
+  BATIMENT_KPIS,
+  TRANSPORT_KPIS,
   type SectorKpiDef,
 } from "./sector-kpis";
 import { novaBots, novaCompany, novaScenario } from "./nova";
@@ -25,6 +27,10 @@ import { ecommerceBots, ecommerceCompany, ecommerceScenario } from "./ecommerce"
 import { ECOMMERCE_SITUATIONS } from "./ecommerce/situations";
 import { fitnessBots, fitnessCompany, fitnessScenario } from "./fitness";
 import { FITNESS_SITUATIONS } from "./fitness/situations";
+import { batimentBots, batimentCompany, batimentScenario } from "./batiment";
+import { BATIMENT_SITUATIONS } from "./batiment/situations";
+import { transportBots, transportCompany, transportScenario } from "./transport";
+import { TRANSPORT_SITUATIONS } from "./transport/situations";
 
 /**
  * Registre des scénarios (doc 01 §4) : un scénario n'est pas du code, c'est
@@ -43,7 +49,9 @@ export type Sector =
   | "hotellerie"
   | "restauration"
   | "services"
-  | "abonnement";
+  | "abonnement"
+  | "batiment"
+  | "transport";
 
 export const SECTOR_LABELS: Record<Sector, string> = {
   industrie: "Industrie",
@@ -53,6 +61,8 @@ export const SECTOR_LABELS: Record<Sector, string> = {
   restauration: "Restauration",
   services: "Services",
   abonnement: "Abonnement",
+  batiment: "Bâtiment",
+  transport: "Transport",
 };
 
 export interface ScenarioVocabulary {
@@ -491,6 +501,108 @@ export const FITNESS_DEFINITION: ScenarioDefinition = {
 };
 
 /** Tous les scénarios jouables, dans l'ordre d'affichage du sélecteur. */
+export const BATIMENT_DEFINITION: ScenarioDefinition = {
+  code: batimentScenario.code,
+  title: "MARTEL & FILS · Tenez les chantiers",
+  sector: "batiment",
+  tagline: "Entreprise de rénovation, quatorze compagnons.",
+  briefing:
+    "Vous achetez les matériaux, vous payez vos compagnons chaque mois, et vous facturez à la fin du chantier. Vos clients règlent ensuite quand leurs procédures le permettent. Entre la dépense et la recette, il se passe des mois, et c'est vous qui financez l'attente.",
+  context:
+    "Votre père vous laisse l'entreprise et une réputation qui ouvre les portes. Il vous laisse aussi un carnet de commandes qui se remplit au coup par coup, des chantiers commencés dont personne n'a encore vu la facture, et un compte en banque qui ne ressemble en rien au résultat du dernier exercice.",
+  dilemma: {
+    question:
+      "Les particuliers paient vite mais comparent tout ; les marchés publics offrent du volume et paient très tard. Où allez-vous chercher vos chantiers ce trimestre ?",
+    routes: [
+      {
+        label: "Les particuliers, qui règlent à la réception",
+        gain: "L'argent rentre vite, l'acompte finance les matériaux, et le bouche-à-oreille d'un quartier vaut toutes les publicités.",
+        risque: "Ils demandent trois devis, négocient chaque ligne, et un chantier gagné aujourd'hui ne dit rien de celui du trimestre prochain.",
+      },
+      {
+        label: "Les marchés publics, qui remplissent le planning",
+        gain: "Des surfaces importantes, des équipes occupées plusieurs mois d'affilée, et un donneur d'ordre qui ne fait jamais faillite.",
+        risque: "Le prix est tiré au plus bas, le mandatement arrive des mois après la réception, et une retenue de garantie dort encore un an de plus.",
+      },
+    ],
+  },
+  playerTeamName: "MARTEL & FILS",
+  vocabulary: {
+    unit: "mètre carré",
+    units: "mètres carrés",
+    unitsGender: "m",
+    productionLabel: "Chantiers",
+    productionPlanLabel: "Surface à traiter",
+    priceLabel: "Prix au mètre carré",
+    leftoverLabel: "Chantiers en cours",
+    capacityPanelTitle: "Capacité de chantier",
+    capacityLabel: "Capacité du matériel",
+    capacityBottleneckLabel: "Matériel",
+    capacityBottleneckHint:
+      "Vos échafaudages et vos fourgons limitent les chantiers menés de front : le matériel acheté ce trimestre n'entre en service qu'au suivant.",
+    laborLabel: "Capacité des compagnons",
+    laborBottleneckHint:
+      "Vos compagnons limitent la surface traitée : embaucher prend un trimestre, et la sous-traitance coûte une part de la marge.",
+    perRoundLabel: "m²/tour",
+  },
+  scenario: batimentScenario,
+  company: batimentCompany,
+  bots: batimentBots,
+  situations: BATIMENT_SITUATIONS,
+  kpis: BATIMENT_KPIS,
+};
+
+export const TRANSPORT_DEFINITION: ScenarioDefinition = {
+  code: transportScenario.code,
+  title: "ROUTE & CIE · Remplissez les camions",
+  sector: "transport",
+  tagline: "Transporteur routier régional, douze porteurs.",
+  briefing:
+    "Vos camions partent chaque matin, chargés ou non. Le gazole, les péages et le chauffeur se paient de la même façon dans les deux cas. Une place vide au départ est perdue pour toujours : tout le métier consiste à décider ce qu'on met dedans, et à quel prix, avant que la porte ne se ferme.",
+  context:
+    "L'entreprise familiale tourne depuis trente ans et ses clients industriels la connaissent. Mais la flotte vieillit, les chauffeurs se font rares, et le prix du carburant décide désormais du résultat sans que personne ici n'ait son mot à dire. Le fondateur partait du principe qu'un camion plein était un camion rentable.",
+  dilemma: {
+    question:
+      "Les industriels sous contrat paient bien mais exigent une ponctualité sans faille ; la bourse de fret remplit les retours au prix du jour. Sur quoi bâtissez-vous votre trimestre ?",
+    routes: [
+      {
+        label: "Les contrats industriels, réguliers et exigeants",
+        gain: "Un trafic prévisible, des tarifs qui tiennent, et des clients qui restent des années tant que les livraisons arrivent à l'heure.",
+        risque: "La moindre défaillance se paie en pénalités, et ils règlent avec les délais des grandes maisons, pendant que le gazole se paie presque comptant.",
+      },
+      {
+        label: "La bourse de fret, qui remplit les retours",
+        gain: "De quoi charger des camions qui rentreraient vides, encaissé sous quarante-huit heures, sans engagement d'aucune sorte.",
+        risque: "Le prix se refait chaque matin, la fidélité n'existe pas, et une entreprise qui vit de la bourse ne couvre plus ses charges de structure.",
+      },
+    ],
+  },
+  playerTeamName: "ROUTE & CIE",
+  vocabulary: {
+    unit: "palette",
+    units: "palettes",
+    unitsGender: "f",
+    productionLabel: "Transport",
+    productionPlanLabel: "Palettes à charger",
+    priceLabel: "Prix à la palette",
+    leftoverLabel: "Kilomètres à vide",
+    capacityPanelTitle: "Capacité de transport",
+    capacityLabel: "Capacité de la flotte",
+    capacityBottleneckLabel: "Flotte",
+    capacityBottleneckHint:
+      "Vos camions limitent le trafic : un porteur supplémentaire se commande un trimestre avant de rouler, et il coûte dès qu'il est immatriculé.",
+    laborLabel: "Capacité de conduite",
+    laborBottleneckHint:
+      "Vos chauffeurs limitent le trafic : ils manquent partout, et ils partent au premier employeur qui paie mieux.",
+    perRoundLabel: "palettes/tour",
+  },
+  scenario: transportScenario,
+  company: transportCompany,
+  bots: transportBots,
+  situations: TRANSPORT_SITUATIONS,
+  kpis: TRANSPORT_KPIS,
+};
+
 export const SCENARIOS: ScenarioDefinition[] = [
   NOVA_DEFINITION,
   BOUTIQUE_DEFINITION,
@@ -499,6 +611,8 @@ export const SCENARIOS: ScenarioDefinition[] = [
   CONSEIL_DEFINITION,
   ECOMMERCE_DEFINITION,
   FITNESS_DEFINITION,
+  BATIMENT_DEFINITION,
+  TRANSPORT_DEFINITION,
 ];
 
 export const DEFAULT_SCENARIO_CODE = NOVA_DEFINITION.code;

@@ -70,6 +70,20 @@ export const ACCENTS_SECTEUR: Record<Sector, AccentSecteur> = {
     puce: "border-cyan-400/30 bg-cyan-950/30 text-cyan-200",
     barre: "bg-cyan-400",
   },
+  batiment: {
+    bord: "hover:border-lime-400/50",
+    halo: "bg-lime-400/10",
+    texte: "text-lime-300",
+    puce: "border-lime-400/30 bg-lime-950/30 text-lime-200",
+    barre: "bg-lime-400",
+  },
+  transport: {
+    bord: "hover:border-indigo-400/50",
+    halo: "bg-indigo-400/10",
+    texte: "text-indigo-300",
+    puce: "border-indigo-400/30 bg-indigo-950/30 text-indigo-200",
+    barre: "bg-indigo-400",
+  },
 };
 
 export const EMBLEMES_SECTEUR: Record<Sector, string> = {
@@ -80,6 +94,8 @@ export const EMBLEMES_SECTEUR: Record<Sector, string> = {
   restauration: "🍽️",
   services: "📊",
   abonnement: "🏋️",
+  batiment: "🏗️",
+  transport: "🚚",
 };
 
 /**

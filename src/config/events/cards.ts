@@ -10,6 +10,8 @@ import { BISTROT_CARDS } from "./decks/bistrot";
 import { CONSEIL_CARDS } from "./decks/conseil";
 import { ECOMMERCE_CARDS } from "./decks/ecommerce";
 import { FITNESS_CARDS } from "./decks/fitness";
+import { BATIMENT_CARDS } from "./decks/batiment";
+import { TRANSPORT_CARDS } from "./decks/transport";
 
 export type CardCategory = "market" | "competition" | "internal" | "macro";
 
@@ -269,6 +271,8 @@ export const EVENT_CARDS: EventCardDef[] = [
   ...CONSEIL_CARDS,
   ...ECOMMERCE_CARDS,
   ...FITNESS_CARDS,
+  ...BATIMENT_CARDS,
+  ...TRANSPORT_CARDS,
 ];
 
 export const cardByCode = new Map(EVENT_CARDS.map((c) => [c.code, c]));

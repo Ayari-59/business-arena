@@ -37,6 +37,8 @@ const result = (over: {
   laborCapacity?: number;
   utilizationRate?: number;
   segments?: Record<string, SegmentSalesDetail>;
+  /** Le bilan fonctionnel : lu par les indicateurs qui mesurent le cycle. */
+  bfr?: number;
 } = {}): CompanyRoundResult =>
   ({
     companyId: "a",
@@ -48,6 +50,7 @@ const result = (over: {
       inventoryValue: over.inventoryValue ?? 0,
       receivables: over.receivables ?? 0,
     },
+    functionalBalance: { frng: 0, bfr: over.bfr ?? 60_000, netTreasury: 0 },
     market: { bySegment: over.segments ?? { main: segment() }, totalShare: 0.3 },
     production: {
       planned: 0,
@@ -226,6 +229,7 @@ describe("robustesse, tous secteurs", () => {
       result: result({
         revenue: 0,
         cogs: 0,
+        bfr: 0,
         machineCapacity: 0,
         laborCapacity: 0,
         segments: { main: segment({ potential: 0, demandForCompany: 0, sold: 0 }) },

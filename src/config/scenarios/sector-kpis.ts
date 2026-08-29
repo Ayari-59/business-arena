@@ -328,3 +328,84 @@ export function computeSectorKpis(
     return [{ key: def.key, label: def.label, hint: def.hint, format: def.format, value }];
   });
 }
+
+// ---------------------------------------------------------------------------
+// BÂTIMENT — on paie tout d'avance et on encaisse en dernier
+// ---------------------------------------------------------------------------
+
+export const BATIMENT_KPIS: SectorKpiDef[] = [
+  {
+    key: "prix_m2",
+    label: "Prix moyen au m²",
+    hint: "Chiffre d'affaires rapporté aux mètres carrés livrés, remises et chantiers bradés compris. Le vrai prix, pas celui du devis.",
+    format: "euro",
+    compute: (ctx) => ratio(ctx.result.incomeStatement.revenue, ctx.totalUnits),
+  },
+  {
+    key: "bfr_jours",
+    label: "BFR en jours de chiffre d'affaires",
+    hint: "Ce que le cycle immobilise, exprimé en jours d'activité. Au-delà de soixante jours, l'entreprise finance ses clients avec son découvert.",
+    format: "days",
+    compute: (ctx) => {
+      const r = ratio(ctx.result.functionalBalance.bfr, ctx.result.incomeStatement.revenue);
+      return r === null ? null : r * ctx.roundDays;
+    },
+  },
+  {
+    key: "part_encours",
+    label: "Part des en-cours",
+    hint: "Chantiers commencés et non facturés, rapportés au chiffre d'affaires du tour. Du travail déjà payé qui dort au bilan.",
+    format: "percent",
+    compute: (ctx) =>
+      ratio(ctx.result.balanceSheet.inventoryValue, ctx.result.incomeStatement.revenue),
+  },
+  {
+    key: "emploi_compagnons",
+    label: "Taux d'emploi des compagnons",
+    hint: "Mètres carrés livrés sur capacité de main-d'œuvre. Une équipe qui attend coûte exactement autant qu'une équipe qui produit.",
+    format: "percent",
+    compute: (ctx) => ratio(ctx.totalUnits, ctx.result.production.laborCapacity),
+  },
+];
+
+// ---------------------------------------------------------------------------
+// TRANSPORT — le camion part de toute façon : tout se joue au remplissage
+// ---------------------------------------------------------------------------
+
+export const TRANSPORT_KPIS: SectorKpiDef[] = [
+  {
+    key: "taux_remplissage",
+    label: "Taux de remplissage",
+    hint: "Palettes transportées sur capacité de la flotte. Chaque point perdu est un camion qui a roulé pour rien.",
+    format: "percent",
+    compute: (ctx) => ratio(ctx.totalUnits, offered(ctx)),
+  },
+  {
+    key: "prix_palette",
+    label: "Prix moyen à la palette",
+    hint: "Recette moyenne par palette livrée, lots de bourse compris. C'est lui qui bouge quand on remplit les retours à vide.",
+    format: "euro",
+    compute: (ctx) => ratio(ctx.result.incomeStatement.revenue, ctx.totalUnits),
+  },
+  {
+    key: "part_carburant",
+    label: "Poids du carburant",
+    hint: "Gazole et péages rapportés au chiffre d'affaires. La ligne que personne dans l'entreprise ne décide, et qui décide du résultat.",
+    format: "percent",
+    compute: (ctx) =>
+      ratio(
+        ctx.result.incomeStatement.cogs * materialShare(ctx),
+        ctx.result.incomeStatement.revenue,
+      ),
+  },
+  {
+    key: "dso_transport",
+    label: "Délai de règlement client",
+    hint: "Jours de chiffre d'affaires immobilisés en créances. Dans un métier à marge courte, dix jours gagnés valent souvent un point de prix.",
+    format: "days",
+    compute: (ctx) => {
+      const r = ratio(ctx.result.balanceSheet.receivables, ctx.result.incomeStatement.revenue);
+      return r === null ? null : r * ctx.roundDays;
+    },
+  },
+];
