@@ -73,6 +73,13 @@ export default async function TeacherDashboard({
 
       <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
         <h2 className="text-sm font-semibold text-slate-200">Créer une partie</h2>
+        <p className="mt-1 text-xs text-slate-500">
+          Vous ne savez pas quels réglages prendre ?{" "}
+          <Link href="/ateliers" className="text-amber-300 underline-offset-4 hover:underline">
+            Les ateliers professionnels
+          </Link>{" "}
+          donnent un déroulé de plusieurs séances avec les réglages qui vont avec.
+        </p>
         <form action={createClassGameAction} className="mt-4 grid gap-4 sm:grid-cols-3">
           <EconomicParams
             scenarios={SCENARIOS.map((d) => ({

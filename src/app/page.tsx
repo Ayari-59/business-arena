@@ -3,6 +3,12 @@ import { startGameAction } from "./actions";
 import { getPlatformConfig } from "@/services/admin.service";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
 import { DEFAULT_SCENARIO_CODE, SCENARIOS, SECTOR_LABELS } from "@/config/scenarios/registry";
+import {
+  ACCENTS_SECTEUR,
+  EMBLEMES_SECTEUR,
+  nomEntreprise,
+  promesseEntreprise,
+} from "@/config/scenarios/presentation";
 
 export const dynamic = "force-dynamic";
 
@@ -82,8 +88,18 @@ function MiniKpi({ label, value, tone }: { label: string; value: string; tone?: 
   );
 }
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ secteur?: string }>;
+}) {
   const config = await getPlatformConfig();
+  // La page des entreprises renvoie ici avec son métier en poche : le
+  // sélecteur doit s'ouvrir dessus, sinon le clic n'a servi à rien.
+  const { secteur } = await searchParams;
+  const scenarioChoisi = SCENARIOS.some((s) => s.code === secteur)
+    ? secteur!
+    : DEFAULT_SCENARIO_CODE;
   return (
     <main className="relative overflow-hidden">
       {/* halo décoratif */}
@@ -122,6 +138,12 @@ export default async function Home() {
             >
               Lancer une partie gratuite
             </a>
+            <Link
+              href="/entreprises"
+              className="rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-amber-400/50"
+            >
+              Voir les sept entreprises
+            </Link>
             <Link
               href="/teacher/login"
               className="rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-amber-400/50"
@@ -202,6 +224,69 @@ export default async function Home() {
               <p className="mt-1 text-xs text-slate-500">{small}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* ---------- Les sept entreprises ---------- */}
+      <section className="mx-auto max-w-6xl px-6 py-16">
+        <h2 className="text-center text-2xl font-bold text-slate-50">
+          Sept entreprises, sept façons de perdre de l&apos;argent
+        </h2>
+        <p className="mx-auto mt-3 max-w-2xl text-center text-sm leading-relaxed text-slate-400">
+          Une chambre vide ce soir est perdue pour toujours. Une enceinte invendue attend en
+          réserve, mais elle a déjà coûté sa trésorerie. Le compte de résultat est le même
+          partout ; ce qui change, c&apos;est la contrainte qui décide de tout.
+        </p>
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {SCENARIOS.map((d) => {
+            const a = ACCENTS_SECTEUR[d.sector];
+            return (
+              <Link
+                key={d.code}
+                href={`/entreprises#${d.code}`}
+                className={`group relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900 p-5 transition ${a.bord}`}
+              >
+                <span
+                  aria-hidden
+                  className={`pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full blur-3xl transition-opacity duration-500 ${a.halo} opacity-50 group-hover:opacity-100`}
+                />
+                <span className="relative flex items-center gap-3">
+                  <span className="text-2xl" aria-hidden>
+                    {EMBLEMES_SECTEUR[d.sector]}
+                  </span>
+                  <span
+                    className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${a.puce}`}
+                  >
+                    {SECTOR_LABELS[d.sector]}
+                  </span>
+                </span>
+                <h3 className="relative mt-3 text-lg font-bold text-slate-50">
+                  {nomEntreprise(d)}
+                </h3>
+                <p className={`relative text-xs font-medium ${a.texte}`}>
+                  {promesseEntreprise(d) ?? d.tagline}
+                </p>
+                <p className="relative mt-2 text-sm leading-relaxed text-slate-400">{d.tagline}</p>
+                <p className="relative mt-3 text-[11px] text-slate-600">
+                  Vous y vendez des {d.vocabulary.units} · {d.situations.length} situations à
+                  traiter
+                </p>
+              </Link>
+            );
+          })}
+          <Link
+            href="/entreprises"
+            className="group flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/15 bg-slate-900/40 p-5 text-center transition hover:border-amber-400/50"
+          >
+            <span className="text-2xl" aria-hidden>
+              →
+            </span>
+            <span className="mt-2 text-sm font-semibold text-slate-200">Les sept fiches</span>
+            <span className="mt-1 text-xs leading-relaxed text-slate-500">
+              Le premier arbitrage de chaque métier, ses indicateurs, et le tableau qui les met
+              côte à côte.
+            </span>
+          </Link>
         </div>
       </section>
 
@@ -287,6 +372,9 @@ export default async function Home() {
               <li>· Votre profil de compétences progresse à chaque situation traitée</li>
             </ul>
             <div className="mt-5 flex flex-wrap gap-5 text-sm">
+              <Link href="/entreprises" className="text-amber-300 underline-offset-4 hover:underline">
+                Découvrir les sept entreprises
+              </Link>
               <Link href="/join" className="text-amber-300 underline-offset-4 hover:underline">
                 J&apos;ai un code de partie (élève)
               </Link>
@@ -320,7 +408,7 @@ export default async function Home() {
               </span>
               <select
                 name="scenarioCode"
-                defaultValue={DEFAULT_SCENARIO_CODE}
+                defaultValue={scenarioChoisi}
                 className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
               >
                 {SCENARIOS.map((s) => (

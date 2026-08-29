@@ -19,6 +19,12 @@ export function SiteHeader() {
         </span>
       </div>
       <div className="flex items-center gap-5 text-sm text-slate-400">
+        <Link href="/entreprises" className="hidden hover:text-slate-200 sm:block">
+          Entreprises
+        </Link>
+        <Link href="/ateliers" className="hidden hover:text-slate-200 sm:block">
+          Ateliers
+        </Link>
         <Link href="/parcours" className="hidden hover:text-slate-200 sm:block">
           Parcours
         </Link>

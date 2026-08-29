@@ -25,6 +25,13 @@ import { balanceGap, computeFinance } from "../finance/statements";
 import { computeFunctionalBalance } from "../finance/functional";
 import { computeRatios } from "../finance/ratios";
 import {
+  conditionsBancaires,
+  confianceInitiale,
+  confianceSuivante,
+  fiabiliteDuPlan,
+  planDepose,
+} from "../finance/bank";
+import {
   demandMultiplierFor,
   drawEvents,
   effectiveModifiers,
@@ -423,7 +430,29 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const earlyRepayment = scheduled
       ? Math.min(requestedRepayment, Math.max(0, w.state.finance.financialDebt - mandatoryRepayment))
       : Math.min(requestedRepayment, w.state.finance.financialDebt);
-    const newLoan = Math.max(0, w.decisions.finance?.newLoan ?? 0);
+    // DOSSIER BANCAIRE (scénarios portant un finance.bank). Le plan de
+    // trésorerie déposé avec les décisions est la pièce que lit la banque :
+    // sans lui, la demande d'emprunt n'est pas instruite. Et la fiabilité des
+    // plans passés, résumée dans la confiance, fixe le plafond de découvert
+    // consenti ce tour et le taux auquel il est facturé.
+    const bank = scenario.finance.bank;
+    const confianceAvant = confianceInitiale(w.state);
+    const planFourni = planDepose(w.decisions.forecast);
+    const conditions = bank
+      ? conditionsBancaires(
+          confianceAvant,
+          {
+            overdraftLimit: scenario.finance.overdraftLimit,
+            overdraftAnnualRate: scenario.finance.overdraftAnnualRate,
+          },
+          bank,
+        )
+      : {
+          overdraftLimit: scenario.finance.overdraftLimit,
+          overdraftAnnualRate: scenario.finance.overdraftAnnualRate,
+        };
+    const loanRequested = Math.max(0, w.decisions.finance?.newLoan ?? 0);
+    const newLoan = bank && !planFourni ? 0 : loanRequested;
 
     // Augmentation de capital : bornée par l'enveloppe TOTALE des associés
     // (scenario.finance.maxCapitalIncreaseTotal) — un apport illimité
@@ -469,7 +498,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         (w.state.extraDepreciationPerRound ?? 0) +
         (w.state.pendingDepreciationPerRound ?? 0),
       loanAnnualRate: scenario.finance.loanAnnualRate,
-      overdraftAnnualRate: scenario.finance.overdraftAnnualRate,
+      overdraftAnnualRate: conditions.overdraftAnnualRate,
       interestMultiplier: w.mods.interestMultiplier,
       taxRate: scenario.finance.taxRate,
       vatRate: scenario.finance.vatRate ?? 0,
@@ -487,7 +516,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
               discountMaxShare: scenario.treasury.discountMaxShare,
               factoringFeeRate: scenario.treasury.factoringFeeRate,
               forcedFactoringFeeRate: scenario.treasury.forcedFactoringFeeRate,
-              overdraftLimit: scenario.finance.overdraftLimit,
+              overdraftLimit: conditions.overdraftLimit,
               placementRequest: Math.max(0, w.decisions.treasury?.placement ?? 0),
               placementAnnualRate: scenario.treasury.placementAnnualRate,
             },
@@ -524,6 +553,21 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     }
 
     const functionalBalance = computeFunctionalBalance(finance.closing);
+    // Le plan de CE tour n'est jugeable qu'une fois le tour joué : sa
+    // fiabilité fixe les conditions du tour SUIVANT, jamais celles du tour en
+    // cours, qui ont été consenties sur la foi des tours passés.
+    const fiabilite = bank
+      ? fiabiliteDuPlan({
+          expectedUnits: w.decisions.forecast?.expectedUnits,
+          expectedCash: w.decisions.forecast?.expectedCash,
+          soldUnits,
+          netTreasury: functionalBalance.netTreasury,
+          cashScale: scenario.fixedCostsPerRound,
+        })
+      : null;
+    const confianceApres = bank
+      ? confianceSuivante(confianceAvant, fiabilite, bank)
+      : confianceAvant;
     const ratios = computeRatios(
       finance.incomeStatement,
       finance.closing,
@@ -675,6 +719,20 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
             },
           }
         : {}),
+      ...(bank
+        ? {
+            bank: {
+              trustBefore: confianceAvant,
+              trustAfter: confianceApres,
+              reliability: fiabilite,
+              planFiled: planFourni,
+              loanRequested,
+              loanGranted: newLoan,
+              overdraftLimit: conditions.overdraftLimit,
+              overdraftAnnualRate: conditions.overdraftAnnualRate,
+            },
+          }
+        : {}),
       kpis: {
         revenue,
         net_income: finance.incomeStatement.netIncome,
@@ -720,6 +778,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       // ouvert : une partie qui passerait au niveau 6 en cours de route
       // trouverait sinon des réserves vides malgré ses bénéfices.
       reserves: reservesBefore + finance.incomeStatement.netIncome - dividend,
+      ...(bank ? { bankTrust: confianceApres } : {}),
       perceivedQuality: updatePerceivedQuality(
         w.state.perceivedQuality,
         w.producedQuality,

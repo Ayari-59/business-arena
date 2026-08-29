@@ -114,6 +114,11 @@ const rawConseil = {
     loanAnnualRate: 0.065,
     overdraftAnnualRate: 0.13,
     overdraftLimit: 70000,
+    // Le plan de trésorerie déposé avec les décisions est la pièce que lit
+    // la banque : sans lui, pas d'emprunt, et la fiabilité des plans passés
+    // fixe le plafond de découvert consenti et son taux. Un prévisionnel qui
+    // ne change rien n'apprend pas à en faire un.
+    bank: { memory: 0.6, maxOverdraftSpread: 0.05, minOverdraftShare: 0.4 },
     taxRate: 0.25,
     supplierPaymentDelayDays: 30,
     loanDurationRounds: 20,
@@ -211,7 +216,7 @@ const rawConseil = {
       code: "conseil_offer_transformation",
       title: "Programme de transformation · groupe industriel",
       narrative:
-        "Un groupe vous confie 130 jours à 720 € pour piloter sa transformation. Direction achats oblige : règlement à 90 jours après service fait.",
+        "Un groupe industriel vous confie le pilotage de sa transformation. Direction achats oblige : le règlement ne partira qu'après service fait, longtemps après.",
       units: 130,
       price: 720,
       paymentDelayDays: 90,
@@ -220,7 +225,7 @@ const rawConseil = {
       code: "conseil_offer_appel_offres",
       title: "Appel d'offres · schéma directeur d'agglomération",
       narrative:
-        "La collectivité retient votre proposition : 110 jours à 545 €. Mandatement administratif à 60 jours, pénalités de retard si le livrable glisse.",
+        "La collectivité retient votre proposition pour son schéma directeur. Mandatement administratif, et des pénalités de retard si le livrable glisse.",
       units: 110,
       price: 545,
       paymentDelayDays: 60,
@@ -229,7 +234,7 @@ const rawConseil = {
       code: "conseil_offer_due_diligence",
       title: "Due diligence pour un fonds d'investissement",
       narrative:
-        "Six semaines sous pression : 80 jours à 890 €, votre meilleur tarif. Le fonds paie comptant à la remise du rapport, mais n'accepte aucun retard.",
+        "Un fonds d'investissement vous met sous pression jusqu'à la remise du rapport : votre meilleur tarif, payé comptant, mais aucun retard toléré.",
       units: 80,
       price: 890,
       paymentDelayDays: 0,
@@ -238,16 +243,16 @@ const rawConseil = {
       code: "conseil_offer_formation",
       title: "Marché-cadre de formation",
       narrative:
-        "Un OPCO référence votre catalogue : 150 jours à 430 €, payés à 30 jours. Le tarif est bas, le volume régulier et la charge prévisible.",
+        "Un OPCO référence votre catalogue dans son marché-cadre. Le tarif est bas, le volume régulier et la charge prévisible.",
       units: 150,
       price: 430,
       paymentDelayDays: 30,
     },
     {
       code: "conseil_offer_assistance",
-      title: "Assistance à maîtrise d'ouvrage · 6 mois",
+      title: "Assistance à maîtrise d'ouvrage de longue durée",
       narrative:
-        "Un établissement de santé cherche un AMO à demeure : 190 jours à 495 €, facturation mensuelle à 60 jours. Vos consultants seront mobilisés longtemps.",
+        "Un établissement de santé cherche un assistant à maîtrise d'ouvrage à demeure, facturé au mois. Vos consultants seront mobilisés longtemps.",
       units: 190,
       price: 495,
       paymentDelayDays: 60,
@@ -256,7 +261,7 @@ const rawConseil = {
       code: "conseil_offer_audit_flash",
       title: "Audit flash pour une ETI",
       narrative:
-        "Trois semaines, une équipe de deux : 60 jours à 640 €, réglés comptant à la restitution. Court, net, encaissé.",
+        "Une ETI veut un regard extérieur en quelques semaines, avec une équipe de deux. Court, net, encaissé à la restitution.",
       units: 60,
       price: 640,
       paymentDelayDays: 0,

@@ -110,6 +110,11 @@ const rawEcommerce = {
     loanAnnualRate: 0.062,
     overdraftAnnualRate: 0.14,
     overdraftLimit: 35000,
+    // Le plan de trésorerie déposé avec les décisions est la pièce que lit
+    // la banque : sans lui, pas d'emprunt, et la fiabilité des plans passés
+    // fixe le plafond de découvert consenti et son taux. Un prévisionnel qui
+    // ne change rien n'apprend pas à en faire un.
+    bank: { memory: 0.6, maxOverdraftSpread: 0.05, minOverdraftShare: 0.4 },
     taxRate: 0.25,
     supplierPaymentDelayDays: 45,
     loanDurationRounds: 16,
@@ -204,7 +209,7 @@ const rawEcommerce = {
       code: "ecom_offer_coffrets_ce",
       title: "Coffrets pour un comité d'entreprise",
       narrative:
-        "Un grand groupe commande 900 coffrets à 58 € pour ses salariés. Facturation unique au siège, règlement à 60 jours.",
+        "Un grand groupe commande des coffrets pour ses salariés. Facturation unique au siège, et le règlement suivra les usages du grand compte.",
       units: 900,
       price: 58,
       paymentDelayDays: 60,
@@ -213,7 +218,7 @@ const rawEcommerce = {
       code: "ecom_offer_flash_marketplace",
       title: "Opération flash sur marketplace",
       narrative:
-        "Une marketplace vous met en tête de gondole 72 h : 1 200 commandes à 44 €, virement hebdomadaire. Le volume est là, la marge est mince.",
+        "Une marketplace vous met en tête de gondole quelques jours, avec un virement chaque semaine. Le volume est là, la marge est mince.",
       units: 1200,
       price: 44,
       paymentDelayDays: 0,
@@ -222,7 +227,7 @@ const rawEcommerce = {
       code: "ecom_offer_hotelier",
       title: "Équipement d'un groupe hôtelier",
       narrative:
-        "Un groupe rééquipe 40 chambres : 800 références à 74 €, payées à 90 jours après réception. Votre plus belle marge de l'année, dans trois mois.",
+        "Un groupe hôtelier rééquipe ses chambres et vous passe la commande : votre plus belle marge de l'année, encaissée bien après la réception des colis.",
       units: 800,
       price: 74,
       paymentDelayDays: 90,
@@ -231,7 +236,7 @@ const rawEcommerce = {
       code: "ecom_offer_destockage",
       title: "Déstockage de fin de collection",
       narrative:
-        "Un soldeur reprend 1 400 pièces à 33 €, enlèvement et paiement comptant. Vous ne gagnez presque rien, mais l'entrepôt respire.",
+        "Un soldeur reprend la fin de collection, enlèvement et paiement comptant. Vous ne gagnez presque rien, mais l'entrepôt respire.",
       units: 1400,
       price: 33,
       paymentDelayDays: 0,
@@ -240,7 +245,7 @@ const rawEcommerce = {
       code: "ecom_offer_abonnement_box",
       title: "Partenariat box par abonnement",
       narrative:
-        "Un éditeur de box mensuelles intègre vos produits : 1 000 unités à 51 €, réglées à 45 jours. Récurrent, prévisible, peu margé.",
+        "Un éditeur de box par abonnement intègre vos produits à ses envois. Récurrent, prévisible, peu margé.",
       units: 1000,
       price: 51,
       paymentDelayDays: 45,
@@ -249,7 +254,7 @@ const rawEcommerce = {
       code: "ecom_offer_influenceur",
       title: "Collection capsule avec une créatrice",
       narrative:
-        "Une créatrice suivie par 400 000 personnes signe une capsule : 600 commandes à 88 €, encaissées comptant. Prix fort, notoriété en prime.",
+        "Une créatrice très suivie signe une collection capsule avec vous, encaissée comptant. Prix fort, notoriété en prime.",
       units: 600,
       price: 88,
       paymentDelayDays: 0,

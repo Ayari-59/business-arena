@@ -88,6 +88,7 @@ export function DecisionForm({
   investmentOffer,
   debtSchedule,
   treasuryOffer,
+  bankFile,
   orderOffer,
   studiesOffer,
   capitalAllowance,
@@ -129,6 +130,18 @@ export function DecisionForm({
     overdraftLimit: number;
     placementAnnualRate: number | null;
     maturedPlacement: number;
+  } | null;
+  /**
+   * Dossier bancaire : ce que la banque consent pour ce tour, et ce qu'elle a
+   * retenu du dernier plan. `null` = le scénario n'en ouvre pas.
+   */
+  bankFile?: {
+    trust: number;
+    overdraftLimit: number;
+    fullOverdraftLimit: number;
+    overdraftAnnualRate: number;
+    refusedLoan: number | null;
+    lastReliability: number | null;
   } | null;
   /** Commande exceptionnelle proposée pour CE tour (rotation du pool). */
   orderOffer?: {
@@ -354,32 +367,86 @@ export function DecisionForm({
           </p>
         </fieldset>
       ) : null}
-      <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
-        <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
-          🔭 Votre prévision · facultative, sans effet sur le tour
-        </legend>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <OptionalField
-            name="expectedUnits"
-            label={`${v.units.charAt(0).toUpperCase()}${v.units.slice(1)} que vous pensez vendre`}
-            placeholder="ex. 4 200"
-            suffix={v.units}
-            hint="Appuyez-vous sur l'historique de vos ventes, plus bas dans la page."
-          />
-          <OptionalField
-            name="expectedCash"
-            label="Trésorerie nette en fin de tour"
-            placeholder="ex. 18 000"
-            suffix="€"
-            hint="Ce que vous pensez avoir en caisse une fois tout payé."
-          />
-        </div>
-        <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
-          Annoncer avant de savoir, puis mesurer l&apos;écart : c&apos;est le seul moyen de
-          savoir si vous avez compris ce marché ou si vous avez eu de la chance. L&apos;écart
-          vous sera montré avec les résultats du tour.
-        </p>
-      </fieldset>
+      {/*
+        Gardé sur `on.finance` SEUL, jamais sur `bankFile`. Une partie ouverte
+        avant le dossier bancaire n'a pas de bloc `bank` dans son snapshot,
+        donc pas de `bankFile` : la conditionner dessus faisait disparaître les
+        deux champs en cours de partie, à des élèves qui les remplissaient
+        depuis le premier tour. Le texte change, les champs restent.
+      */}
+      {on.finance ? (
+        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
+          <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+            {bankFile
+              ? "🏦 Votre plan de trésorerie · la pièce que lit la banque"
+              : "🔭 Votre prévision · facultative, sans effet sur le tour"}
+          </legend>
+          {bankFile && bankFile.refusedLoan !== null ? (
+            <p className="mb-3 rounded-md border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-xs leading-relaxed text-rose-200">
+              Au tour précédent, votre demande de{" "}
+              {formatEuro(bankFile.refusedLoan)} n&apos;a pas été instruite : aucun plan de
+              trésorerie ne l&apos;accompagnait. La banque ne prête pas contre une intention.
+            </p>
+          ) : null}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <OptionalField
+              name="expectedUnits"
+              label={`${v.units.charAt(0).toUpperCase()}${v.units.slice(1)} que vous pensez vendre`}
+              placeholder="ex. 4 200"
+              suffix={v.units}
+              hint="Appuyez-vous sur l'historique de vos ventes, plus bas dans la page."
+            />
+            <OptionalField
+              name="expectedCash"
+              label="Trésorerie nette en fin de tour"
+              placeholder="ex. 18 000"
+              suffix="€"
+              hint={
+                bankFile
+                  ? "Ce que vous pensez avoir en caisse une fois tout payé. Sans cette ligne, pas d'emprunt."
+                  : "Ce que vous pensez avoir en caisse une fois tout payé."
+              }
+            />
+          </div>
+          {bankFile ? (
+            <>
+              <p className="mt-3 text-[11px] leading-relaxed text-slate-400">
+                Confiance de votre banque :{" "}
+              <strong className="text-slate-200">{Math.round(bankFile.trust * 100)} %</strong>. Elle
+              vous consent ce tour un découvert de{" "}
+              <strong className="text-slate-200">{formatEuro(bankFile.overdraftLimit)}</strong>
+              {bankFile.overdraftLimit < bankFile.fullOverdraftLimit - 0.5
+                ? ` au lieu de ${formatEuro(bankFile.fullOverdraftLimit)}`
+                : ""}
+              , à{" "}
+              <strong className="text-slate-200">
+                {(bankFile.overdraftAnnualRate * 100).toLocaleString("fr-FR", {
+                  maximumFractionDigits: 1,
+                })}{" "}
+                %
+              </strong>{" "}
+              l&apos;an.
+              {bankFile.lastReliability !== null
+                ? ` Votre dernier plan s'est révélé juste à ${Math.round(bankFile.lastReliability * 100)} %.`
+                : ""}
+            </p>
+            <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+              Ce plan n&apos;est pas un exercice : sans la ligne de trésorerie, la banque
+              n&apos;instruit aucune demande d&apos;emprunt. Et l&apos;écart entre ce que vous
+              annoncez et ce qui sera constaté fixera, au tour suivant, le plafond de votre
+              découvert et son taux. Annoncer large pour se couvrir se paie autant que se tromper.
+            </p>
+            </>
+          ) : (
+            <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+              Annoncer avant de savoir, puis mesurer l&apos;écart : c&apos;est le seul moyen de
+              savoir si vous avez compris ce marché ou si vous avez eu de la chance. L&apos;écart
+              vous sera montré avec les résultats du tour. Cette partie a été ouverte avant le
+              dossier bancaire : votre prévision n&apos;y change aucun calcul.
+            </p>
+          )}
+        </fieldset>
+      ) : null}
       {studiesOffer ? (
         <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">

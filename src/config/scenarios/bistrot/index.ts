@@ -111,6 +111,11 @@ const rawBistrot = {
     loanAnnualRate: 0.058,
     overdraftAnnualRate: 0.14,
     overdraftLimit: 20000,
+    // Le plan de trésorerie déposé avec les décisions est la pièce que lit
+    // la banque : sans lui, pas d'emprunt, et la fiabilité des plans passés
+    // fixe le plafond de découvert consenti et son taux. Un prévisionnel qui
+    // ne change rien n'apprend pas à en faire un.
+    bank: { memory: 0.6, maxOverdraftSpread: 0.05, minOverdraftShare: 0.4 },
     taxRate: 0.25,
     // les fournisseurs de frais ne font pas crédit longtemps
     supplierPaymentDelayDays: 21,
@@ -209,18 +214,18 @@ const rawBistrot = {
   orderOffers: [
     {
       code: "bistrot_offer_mariage",
-      title: "Mariage de septembre",
+      title: "Saison des mariages",
       narrative:
-        "Une famille privatise la salle pour 260 couverts à 46 €. Acompte à la réservation, solde à 30 jours, et une seule chance de réussir le service.",
+        "Une agence de réception vous confie les mariages de la saison : salle privatisée, menu unique, acompte à la réservation et solde sur facture. Chaque service se joue en une fois, sans rattrapage possible.",
       units: 260,
       price: 46,
       paymentDelayDays: 30,
     },
     {
       code: "bistrot_offer_cantine_entreprise",
-      title: "Cantine d'entreprise · contrat trimestriel",
+      title: "Cantine d'entreprise · contrat de restauration",
       narrative:
-        "Une PME voisine envoie ses salariés déjeuner tous les midis : 900 couverts à 21 €, facturés au siège à 45 jours. Volume garanti, marge serrée.",
+        "Une PME voisine envoie ses salariés déjeuner tous les midis, sur une facture unique adressée au siège. Le volume est garanti, la marge tient dans un mouchoir.",
       units: 900,
       price: 21,
       paymentDelayDays: 45,
@@ -229,7 +234,7 @@ const rawBistrot = {
       code: "bistrot_offer_traiteur",
       title: "Prestation traiteur · inauguration",
       narrative:
-        "Une collectivité inaugure sa médiathèque : 500 buffets à 24 €, mandat administratif à 60 jours. Vous produisez en cuisine, vous livrez sur place.",
+        "Une collectivité inaugure sa médiathèque et vous confie les buffets. Vous produisez en cuisine, vous livrez sur place, et le mandat administratif prend son temps.",
       units: 500,
       price: 24,
       paymentDelayDays: 60,
@@ -238,16 +243,16 @@ const rawBistrot = {
       code: "bistrot_offer_tournage",
       title: "Cantine de tournage",
       narrative:
-        "Une production audiovisuelle nourrit son équipe trois semaines : 700 couverts à 28 €, réglés comptant chaque vendredi. Horaires impossibles, trésorerie parfaite.",
+        "Une production audiovisuelle nourrit son équipe pendant toute la durée du tournage, réglée comptant chaque vendredi. Horaires impossibles, trésorerie parfaite.",
       units: 700,
       price: 28,
       paymentDelayDays: 0,
     },
     {
       code: "bistrot_offer_seminaire",
-      title: "Séminaire d'un cabinet d'avocats",
+      title: "Journées d'étude d'un cabinet d'avocats",
       narrative:
-        "Deux journées d'étude, déjeuners et dîner de gala : 320 couverts à 52 €, votre plus beau ticket. Comptabilité du cabinet oblige : paiement à 60 jours.",
+        "Un cabinet installe chez vous ses journées d'étude : déjeuners de travail et dîners de gala, votre plus beau ticket. Comptabilité du cabinet oblige, la facture attendra son tour.",
       units: 320,
       price: 52,
       paymentDelayDays: 60,
@@ -256,7 +261,7 @@ const rawBistrot = {
       code: "bistrot_offer_livraison",
       title: "Opération plateforme de livraison",
       narrative:
-        "Une plateforme vous met en avant deux semaines : 800 couverts à 23 €, virement hebdomadaire. La commission est déjà déduite, mais le volume est là.",
+        "Une plateforme vous met en avant sur son application et vous vire la recette chaque semaine. La commission est déjà déduite, mais le volume est là.",
       units: 800,
       price: 23,
       paymentDelayDays: 0,

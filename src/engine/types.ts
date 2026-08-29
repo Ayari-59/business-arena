@@ -92,6 +92,31 @@ export interface EngineScenarioConfig {
      * trésorerie. Absente = illimité (comportement historique).
      */
     maxCapitalIncreaseTotal?: number;
+    /**
+     * DOSSIER BANCAIRE (optionnel). Présent : le plan de trésorerie déposé
+     * avec les décisions cesse d'être un exercice sans suite et devient la
+     * pièce que lit la banque.
+     *
+     *  1. pas de plan, pas d'emprunt : une demande non appuyée est refusée ;
+     *  2. l'écart entre le plan et le réalisé nourrit une CONFIANCE (0..1),
+     *     qui fixe au tour suivant le plafond de découvert consenti et le
+     *     taux auquel ce découvert est facturé.
+     *
+     * Le découvert est un concours révocable : la banque peut le réduire et
+     * le renchérir quand elle veut, ce qui n'est pas vrai d'un emprunt déjà
+     * accordé. C'est pourquoi la confiance agit là, et pas sur la dette en
+     * cours.
+     *
+     * Absent = comportement historique : le prévisionnel n'a aucun effet.
+     */
+    bank?: {
+      /** Part de la confiance passée conservée d'un tour à l'autre (0..1). */
+      memory: number;
+      /** Points de taux ajoutés au découvert à confiance nulle. */
+      maxOverdraftSpread: number;
+      /** Part du plafond de découvert consentie à confiance nulle (0..1). */
+      minOverdraftShare: number;
+    };
   };
   /**
    * Outils de gestion de trésorerie (optionnel) : mobilisation du poste
@@ -426,6 +451,12 @@ export interface CompanyState {
    * distribuable tant qu'elles ne sont pas rattrapées.
    */
   reserves?: number;
+  /**
+   * Confiance de la banque (0..1), construite sur la fiabilité des plans de
+   * trésorerie déposés aux tours passés. Absente = confiance pleine : une
+   * entreprise qui n'a encore rien promis n'a rien à se faire pardonner.
+   */
+  bankTrust?: number;
 }
 
 export interface RoundDecisions {
@@ -497,9 +528,11 @@ export interface RoundDecisions {
     placement?: number;
   };
   /**
-   * Prévisions du joueur pour CE tour, saisies avec les décisions. Le moteur
-   * n'en fait rien : elles ne changent aucun calcul. Elles sont là pour être
-   * confrontées au réalisé au tour suivant, ce qui est l'exercice.
+   * Plan de trésorerie du joueur pour CE tour, déposé avec les décisions.
+   * Quand le scénario ouvre un `finance.bank`, c'est la pièce du dossier
+   * bancaire : sans elle la banque ne prête pas, et l'écart entre ce qui est
+   * annoncé ici et ce qui sera constaté fixe les conditions du tour suivant.
+   * Sans `finance.bank`, il reste un exercice d'écart sans conséquence.
    */
   forecast?: {
     /** Ventes attendues, dans l'unité du métier. */
@@ -663,6 +696,27 @@ export interface CompanyRoundResult {
     /** Charge de structure RH du tour (négatif = économie de masse salariale). */
     cost: number;
     nextHeadcount: number;
+  };
+  /**
+   * Dossier bancaire du tour (scénarios portant un `finance.bank`) : ce que
+   * la banque a consenti, et ce qu'elle retient du plan déposé.
+   */
+  bank?: {
+    /** Confiance à l'ouverture, celle qui a fixé les conditions de CE tour. */
+    trustBefore: number;
+    /** Confiance après lecture de l'écart entre le plan et le réalisé. */
+    trustAfter: number;
+    /** Fiabilité du plan de ce tour (0..1) ; null : aucun plan déposé. */
+    reliability: number | null;
+    /** Un plan de trésorerie accompagnait-il les décisions du tour ? */
+    planFiled: boolean;
+    /** Emprunt demandé, et emprunt accordé (0 si refusé faute de plan). */
+    loanRequested: number;
+    loanGranted: number;
+    /** Plafond de découvert consenti ce tour, confiance appliquée. */
+    overdraftLimit: number;
+    /** Taux de découvert facturé ce tour, majoration comprise. */
+    overdraftAnnualRate: number;
   };
   kpis: Record<string, number>;
 }

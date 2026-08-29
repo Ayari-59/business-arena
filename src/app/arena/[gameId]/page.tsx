@@ -223,7 +223,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
               {view.forecastReview ? (
                 <div className="mt-3 rounded-lg border border-sky-400/25 bg-sky-950/20 p-4">
                   <h3 className="text-xs font-semibold uppercase tracking-wide text-sky-300">
-                    🔭 Votre prévision face au réalisé
+                    🏦 Votre plan face au réalisé
                   </h3>
                   <div className="mt-2 overflow-x-auto">
                     <table className="w-full text-sm">
@@ -277,12 +277,33 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                       </tbody>
                     </table>
                   </div>
+                  {r.bank && r.bank.reliability !== null ? (
+                    <p className="mt-2 text-[11px] leading-relaxed text-slate-400">
+                      Votre banque a lu cet écart. Plan jugé juste à{" "}
+                      <strong className="text-slate-200">
+                        {Math.round(r.bank.reliability * 100)} %
+                      </strong>{" "}
+                      : sa confiance passe de {Math.round(r.bank.trustBefore * 100)} % à{" "}
+                      <strong className="text-slate-200">
+                        {Math.round(r.bank.trustAfter * 100)} %
+                      </strong>
+                      , ce qui fixe le découvert qu&apos;elle vous consentira au tour suivant, et
+                      son taux.
+                    </p>
+                  ) : null}
                   <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
                     L&apos;écart vaut mieux que la prévision : il dit ce que vous n&apos;aviez pas
                     vu. Un écart qui se répète dans le même sens n&apos;est pas de la malchance,
                     c&apos;est un biais dans votre modèle.
                   </p>
                 </div>
+              ) : null}
+              {r.bank && r.bank.loanRequested > 0 && r.bank.loanGranted === 0 ? (
+                <p className="mt-3 rounded-lg border border-rose-400/30 bg-rose-950/30 px-3 py-2 text-xs text-rose-200">
+                  🏦 Emprunt refusé : {formatEuro(r.bank.loanRequested)} demandés sans plan de
+                  trésorerie à l&apos;appui. Une banque ne finance pas un besoin qu&apos;on ne
+                  lui a pas chiffré. L&apos;argent n&apos;est jamais entré en caisse.
+                </p>
               ) : null}
               <FinancialStatements
                 result={r}
@@ -605,6 +626,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
             investmentOffer={view.investmentOffer}
             debtSchedule={view.debtSchedule}
             treasuryOffer={view.treasuryOffer}
+            bankFile={view.bankFile}
             orderOffer={view.orderOffer}
             studiesOffer={view.studiesOffer}
             capitalAllowance={view.capitalAllowance}

@@ -243,13 +243,86 @@ describe("parcours enseignant et élève", () => {
     }
   });
 
+  it("la vitrine présente les sept entreprises, et son bouton choisit le métier", async () => {
+    // Une page vitrine se vérifie dans un navigateur ou pas du tout : elle
+    // n'est faite que de rendu et de liens. Et son bouton doit VRAIMENT
+    // amener sur le formulaire avec le bon secteur : c'est la jointure, donc
+    // l'endroit où ça casse.
+    // L'accueil porte les mêmes sept entreprises en vignettes, et chaque
+    // vignette mène à sa fiche. C'est la jointure entre les deux pages.
+    await aller(prof, "/");
+    const accueil = await texte(prof);
+    for (const nom of ["NOVA", "MAILLE & CO", "L'ESCALE", "VOLT FITNESS"]) {
+      expect(accueil, `${nom} absente des vignettes de l'accueil`).toContain(nom);
+    }
+    await prof.locator('a[href="/entreprises#bistrot"]').first().click();
+    await prof.waitForURL(/\/entreprises#bistrot$/, { timeout: 30_000 });
+
+    await aller(prof, "/entreprises");
+    const vitrine = await texte(prof);
+    for (const nom of [
+      "NOVA",
+      "MAILLE & CO",
+      "L'ESCALE",
+      "LA TABLE D'AUGUSTIN",
+      "ATLAS CONSEIL",
+      "PIXEL & CO",
+      "VOLT FITNESS",
+    ]) {
+      expect(vitrine, `${nom} absente de la vitrine`).toContain(nom);
+    }
+    // le tableau comparatif oppose bien le périssable au stockable
+    expect(vitrine).toContain("rien ne se stocke");
+    expect(vitrine).toContain("déjà payé");
+
+    await prof.getByRole("link", { name: "Diriger LA TABLE D'AUGUSTIN" }).click();
+    await prof.waitForURL(/secteur=bistrot/, { timeout: 30_000 });
+    expect(await prof.locator('select[name="scenarioCode"]').inputValue()).toBe("bistrot");
+  });
+
+  it("l'atelier professionnel s'affiche en entier et tient ses comptes", async () => {
+    // Une fiche d'atelier est un contrat de temps. Les totaux affichés sont
+    // calculés à partir du déroulé : ce test vérifie qu'ils arrivent bien
+    // jusqu'à la page, et que les six séances y sont toutes.
+    await aller(prof, "/ateliers");
+    expect(await texte(prof)).toContain("BTS Comptabilité et Gestion");
+
+    await prof.getByRole("link", { name: "Voir le déroulé →" }).first().click();
+    await prof.waitForURL(/\/ateliers\/cg1$/, { timeout: 30_000 });
+    // Comparaison insensible à la casse : plusieurs intitulés sont mis en
+    // CAPITALES par le CSS, si bien que le texte visible ne correspond pas à
+    // celui du code. Le piège avait déjà coûté un faux échec sur « Note ».
+    const fiche = (await texte(prof)).toLowerCase();
+    for (const attendu of [
+      "séance 1",
+      "24 heures",
+      "6 séances de 4 h",
+      "trace pour le passeport professionnel",
+      "livrables attendus",
+      "questions d'enseignants",
+    ]) {
+      expect(fiche, `« ${attendu} » absent de la fiche`).toContain(attendu);
+    }
+    // les six séances, pas cinq
+    expect((fiche.match(/livrable de la séance/g) ?? []).length).toBe(6);
+  });
+
   it("aucune page du parcours ne porte de tiret en milieu de phrase", async () => {
     // Contrainte de style tenue depuis le début, et qu'aucun test ne gardait.
     // Le tiret SEUL dans une case de tableau reste permis : il vaut « rien à
     // afficher », ce n'est pas une incise. On ne cherche donc que le tiret
     // encadré de mots, c'est à dire celui qui coupe une phrase.
     const inciseur = /[\wÀ-ÿ][ ]*[—–][ ]*[\wÀ-ÿ]/;
-    for (const chemin of ["/", "/guide", "/parcours", "/concepts", "/teacher/usage"]) {
+    for (const chemin of [
+      "/",
+      "/entreprises",
+      "/ateliers",
+      "/ateliers/cg1",
+      "/guide",
+      "/parcours",
+      "/concepts",
+      "/teacher/usage",
+    ]) {
       await aller(prof, chemin);
       const vu = await texte(prof);
       const faute = vu.match(new RegExp(`.{0,40}${inciseur.source}.{0,40}`));
