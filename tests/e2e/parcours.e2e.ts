@@ -270,6 +270,33 @@ describe("parcours enseignant et élève", () => {
     expect(await prof.locator('select[name="scenarioCode"]').inputValue()).toBe("bistrot");
   });
 
+  it("l'atelier professionnel s'affiche en entier et tient ses comptes", async () => {
+    // Une fiche d'atelier est un contrat de temps. Les totaux affichés sont
+    // calculés à partir du déroulé : ce test vérifie qu'ils arrivent bien
+    // jusqu'à la page, et que les six séances y sont toutes.
+    await aller(prof, "/ateliers");
+    expect(await texte(prof)).toContain("BTS Comptabilité et Gestion");
+
+    await prof.getByRole("link", { name: "Voir le déroulé →" }).first().click();
+    await prof.waitForURL(/\/ateliers\/cg1$/, { timeout: 30_000 });
+    // Comparaison insensible à la casse : plusieurs intitulés sont mis en
+    // CAPITALES par le CSS, si bien que le texte visible ne correspond pas à
+    // celui du code. Le piège avait déjà coûté un faux échec sur « Note ».
+    const fiche = (await texte(prof)).toLowerCase();
+    for (const attendu of [
+      "séance 1",
+      "24 heures",
+      "6 séances de 4 h",
+      "trace pour le passeport professionnel",
+      "livrables attendus",
+      "questions d'enseignants",
+    ]) {
+      expect(fiche, `« ${attendu} » absent de la fiche`).toContain(attendu);
+    }
+    // les six séances, pas cinq
+    expect((fiche.match(/livrable de la séance/g) ?? []).length).toBe(6);
+  });
+
   it("aucune page du parcours ne porte de tiret en milieu de phrase", async () => {
     // Contrainte de style tenue depuis le début, et qu'aucun test ne gardait.
     // Le tiret SEUL dans une case de tableau reste permis : il vaut « rien à
@@ -279,6 +306,8 @@ describe("parcours enseignant et élève", () => {
     for (const chemin of [
       "/",
       "/entreprises",
+      "/ateliers",
+      "/ateliers/cg1",
       "/guide",
       "/parcours",
       "/concepts",

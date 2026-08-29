@@ -22,6 +22,9 @@ export function SiteHeader() {
         <Link href="/entreprises" className="hidden hover:text-slate-200 sm:block">
           Entreprises
         </Link>
+        <Link href="/ateliers" className="hidden hover:text-slate-200 sm:block">
+          Ateliers
+        </Link>
         <Link href="/parcours" className="hidden hover:text-slate-200 sm:block">
           Parcours
         </Link>
