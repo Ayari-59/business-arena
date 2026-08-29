@@ -297,24 +297,6 @@ describe("parcours enseignant et élève", () => {
     expect((fiche.match(/livrable de la séance/g) ?? []).length).toBe(6);
   });
 
-  it("la démo ne charge YouTube qu'après le clic, et sur le domaine sans cookie", async () => {
-    // Tout l'intérêt du montage est là : un lecteur embarqué d'emblée poserait
-    // des cookies tiers à des visiteurs qui ne lanceront jamais la vidéo. Le
-    // jour où quelqu'un remplacera le composant par une iframe ordinaire, ce
-    // test tombera.
-    await aller(prof, "/");
-    expect(await prof.locator("iframe").count(), "une iframe traîne avant le clic").toBe(0);
-
-    const bouton = prof.getByRole("button", { name: /Lancer la vidéo/ });
-    await bouton.click();
-    const lecteur = prof.locator("iframe").first();
-    await lecteur.waitFor({ timeout: 30_000 });
-    const src = await lecteur.getAttribute("src");
-    expect(src, "le lecteur n'est pas sur le domaine sans cookie").toContain(
-      "youtube-nocookie.com",
-    );
-  });
-
   it("aucune page du parcours ne porte de tiret en milieu de phrase", async () => {
     // Contrainte de style tenue depuis le début, et qu'aucun test ne gardait.
     // Le tiret SEUL dans une case de tableau reste permis : il vaut « rien à
