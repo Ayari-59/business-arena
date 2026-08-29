@@ -243,13 +243,47 @@ describe("parcours enseignant et élève", () => {
     }
   });
 
+  it("la vitrine présente les sept entreprises, et son bouton choisit le métier", async () => {
+    // Une page vitrine se vérifie dans un navigateur ou pas du tout : elle
+    // n'est faite que de rendu et de liens. Et son bouton doit VRAIMENT
+    // amener sur le formulaire avec le bon secteur : c'est la jointure, donc
+    // l'endroit où ça casse.
+    await aller(prof, "/entreprises");
+    const vitrine = await texte(prof);
+    for (const nom of [
+      "NOVA",
+      "MAILLE & CO",
+      "L'ESCALE",
+      "LA TABLE D'AUGUSTIN",
+      "ATLAS CONSEIL",
+      "PIXEL & CO",
+      "VOLT FITNESS",
+    ]) {
+      expect(vitrine, `${nom} absente de la vitrine`).toContain(nom);
+    }
+    // le tableau comparatif oppose bien le périssable au stockable
+    expect(vitrine).toContain("rien ne se stocke");
+    expect(vitrine).toContain("déjà payé");
+
+    await prof.getByRole("link", { name: "Diriger LA TABLE D'AUGUSTIN" }).click();
+    await prof.waitForURL(/secteur=bistrot/, { timeout: 30_000 });
+    expect(await prof.locator('select[name="scenarioCode"]').inputValue()).toBe("bistrot");
+  });
+
   it("aucune page du parcours ne porte de tiret en milieu de phrase", async () => {
     // Contrainte de style tenue depuis le début, et qu'aucun test ne gardait.
     // Le tiret SEUL dans une case de tableau reste permis : il vaut « rien à
     // afficher », ce n'est pas une incise. On ne cherche donc que le tiret
     // encadré de mots, c'est à dire celui qui coupe une phrase.
     const inciseur = /[\wÀ-ÿ][ ]*[—–][ ]*[\wÀ-ÿ]/;
-    for (const chemin of ["/", "/guide", "/parcours", "/concepts", "/teacher/usage"]) {
+    for (const chemin of [
+      "/",
+      "/entreprises",
+      "/guide",
+      "/parcours",
+      "/concepts",
+      "/teacher/usage",
+    ]) {
       await aller(prof, chemin);
       const vu = await texte(prof);
       const faute = vu.match(new RegExp(`.{0,40}${inciseur.source}.{0,40}`));

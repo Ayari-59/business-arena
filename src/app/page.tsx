@@ -82,8 +82,18 @@ function MiniKpi({ label, value, tone }: { label: string; value: string; tone?: 
   );
 }
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ secteur?: string }>;
+}) {
   const config = await getPlatformConfig();
+  // La page des entreprises renvoie ici avec son métier en poche : le
+  // sélecteur doit s'ouvrir dessus, sinon le clic n'a servi à rien.
+  const { secteur } = await searchParams;
+  const scenarioChoisi = SCENARIOS.some((s) => s.code === secteur)
+    ? secteur!
+    : DEFAULT_SCENARIO_CODE;
   return (
     <main className="relative overflow-hidden">
       {/* halo décoratif */}
@@ -122,6 +132,12 @@ export default async function Home() {
             >
               Lancer une partie gratuite
             </a>
+            <Link
+              href="/entreprises"
+              className="rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-amber-400/50"
+            >
+              Voir les sept entreprises
+            </Link>
             <Link
               href="/teacher/login"
               className="rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-amber-400/50"
@@ -287,6 +303,9 @@ export default async function Home() {
               <li>· Votre profil de compétences progresse à chaque situation traitée</li>
             </ul>
             <div className="mt-5 flex flex-wrap gap-5 text-sm">
+              <Link href="/entreprises" className="text-amber-300 underline-offset-4 hover:underline">
+                Découvrir les sept entreprises
+              </Link>
               <Link href="/join" className="text-amber-300 underline-offset-4 hover:underline">
                 J&apos;ai un code de partie (élève)
               </Link>
@@ -320,7 +339,7 @@ export default async function Home() {
               </span>
               <select
                 name="scenarioCode"
-                defaultValue={DEFAULT_SCENARIO_CODE}
+                defaultValue={scenarioChoisi}
                 className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
               >
                 {SCENARIOS.map((s) => (
