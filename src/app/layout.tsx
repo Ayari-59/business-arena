@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
+import { CLE_THEME, THEMES, THEME_PAR_DEFAUT } from "@/config/themes";
 
 export const metadata: Metadata = {
   title: "BUSINESS ARENA",
@@ -31,9 +32,20 @@ export const viewport: Viewport = {
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  // Le thème est relu et posé avant le premier affichage. Placé ici, en tête du
+  // corps, ce script s'exécute pendant l'analyse du document, donc avant que
+  // quoi que ce soit soit peint : sans lui, une page choisie en clair
+  // s'ouvrirait en sombre le temps d'un battement. Les codes viennent du
+  // registre, pour qu'un thème ajouté n'ait pas à être répété ici.
+  const codes = JSON.stringify(THEMES.map((t) => t.code));
+  const amorce =
+    `try{var c=localStorage.getItem(${JSON.stringify(CLE_THEME)});` +
+    `if(${codes}.indexOf(c)>-1)document.documentElement.dataset.theme=c}catch(e){}`;
+
   return (
-    <html lang="fr">
+    <html lang="fr" data-theme={THEME_PAR_DEFAUT}>
       <body className="min-h-screen bg-slate-950 text-slate-100 antialiased">
+        <script dangerouslySetInnerHTML={{ __html: amorce }} />
         <SiteHeader />
         {children}
         <script

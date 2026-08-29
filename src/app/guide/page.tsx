@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { SiteLogo } from "@/components/site-logo";
 
 export const metadata: Metadata = {
   title: "Guide de prise en main · BUSINESS ARENA",
@@ -58,8 +59,7 @@ export default function GuidePage() {
     <main className="min-h-screen bg-slate-950 text-slate-100">
       <nav className="mx-auto flex max-w-4xl items-center justify-between px-6 py-5">
         <Link href="/">
-          {/* eslint-disable-next-line @next/next/no-img-element -- logo vectoriel statique */}
-          <img src="/brand/logo.svg" alt="Business Arena" className="h-8 w-auto" />
+          <SiteLogo />
         </Link>
         <div className="flex items-center gap-5 text-sm text-slate-400">
           <Link href="/parcours" className="hover:text-slate-200">

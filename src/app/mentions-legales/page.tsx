@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { SiteLogo } from "@/components/site-logo";
 
 export const metadata: Metadata = {
   title: "Mentions légales & données personnelles · BUSINESS ARENA",
@@ -28,8 +29,7 @@ export default function MentionsLegalesPage() {
     <main className="min-h-screen bg-slate-950 text-slate-100">
       <nav className="mx-auto flex max-w-3xl items-center justify-between px-6 py-5">
         <Link href="/">
-          {/* eslint-disable-next-line @next/next/no-img-element -- logo vectoriel statique */}
-          <img src="/brand/logo.svg" alt="Business Arena" className="h-8 w-auto" />
+          <SiteLogo />
         </Link>
         <Link
           href="/"

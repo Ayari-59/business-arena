@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { TeacherAuthForms } from "@/components/teacher-auth-forms";
 import { DEMO_ACCOUNTS, isDemoSeeded } from "@/services/demo.service";
+import { SiteLogo } from "@/components/site-logo";
 
 export const dynamic = "force-dynamic";
 
@@ -13,8 +14,7 @@ export default async function TeacherLoginPage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
       <div className="flex flex-col items-center text-center">
-        {/* eslint-disable-next-line @next/next/no-img-element -- logo vectoriel statique */}
-        <img src="/brand/logo.svg" alt="Business Arena" className="h-8 w-auto" />
+        <SiteLogo />
         <h1 className="mt-4 text-3xl font-bold">Espace enseignant</h1>
         <p className="mt-2 max-w-md text-sm text-slate-400">
           Créez des parties pour vos classes, suivez les décisions de chaque équipe et
