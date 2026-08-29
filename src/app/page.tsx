@@ -3,6 +3,7 @@ import { startGameAction } from "./actions";
 import { getPlatformConfig } from "@/services/admin.service";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
 import { DEFAULT_SCENARIO_CODE, SCENARIOS, SECTOR_LABELS } from "@/config/scenarios/registry";
+import { DemoVideo } from "@/components/demo-video";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,12 @@ export const dynamic = "force-dynamic";
  * BTS. La complexité vient du jeu, pas de la page. Statique + formulaire de
  * lancement (server action) — aucune logique métier ici.
  */
+
+/**
+ * La démonstration, hébergée sur YouTube. L'identifiant vit ici et nulle part
+ * ailleurs : le composant ne fait que le recevoir.
+ */
+const DEMO_VIDEO_ID = "A_fumw68c0E";
 
 const LOOP = [
   "Situation",
@@ -218,6 +225,20 @@ export default async function Home({
               <p className="mt-1 text-xs text-slate-500">{small}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* ---------- La démo ---------- */}
+      <section className="mx-auto max-w-5xl px-6 py-16">
+        <h2 className="text-center text-2xl font-bold text-slate-50">
+          Voir une partie avant d&apos;en lancer une
+        </h2>
+        <p className="mx-auto mt-3 max-w-2xl text-center text-sm leading-relaxed text-slate-400">
+          Le cockpit, les décisions d&apos;un tour, les résultats qui tombent et la situation à
+          traiter. C&apos;est ce que vos élèves auront sous les yeux.
+        </p>
+        <div className="mx-auto mt-8 max-w-3xl">
+          <DemoVideo videoId={DEMO_VIDEO_ID} title="BUSINESS ARENA, démonstration" />
         </div>
       </section>
 
