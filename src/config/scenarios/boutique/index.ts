@@ -106,6 +106,11 @@ const rawBoutique = {
     loanAnnualRate: 0.052,
     overdraftAnnualRate: 0.13,
     overdraftLimit: 25000,
+    // Le plan de trésorerie déposé avec les décisions est la pièce que lit
+    // la banque : sans lui, pas d'emprunt, et la fiabilité des plans passés
+    // fixe le plafond de découvert consenti et son taux. Un prévisionnel qui
+    // ne change rien n'apprend pas à en faire un.
+    bank: { memory: 0.6, maxOverdraftSpread: 0.05, minOverdraftShare: 0.4 },
     taxRate: 0.25,
     // le commerce paie ses fournisseurs à 45 jours (usage de la profession)
     supplierPaymentDelayDays: 45,

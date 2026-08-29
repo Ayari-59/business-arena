@@ -60,6 +60,7 @@ import {
 } from "@/scoring/bpi";
 import { ENGINE_VERSION, orderOfferForRound, simulateRound } from "@/engine/simulation";
 import { computeRatios } from "@/engine/finance/ratios";
+import { conditionsBancaires, confianceInitiale } from "@/engine/finance/bank";
 import { irr, npv, paybackPeriod } from "@/engine/investment";
 import { roundBriefing, type RoundBriefing } from "@/pedagogy/round-briefing";
 import type {
@@ -704,11 +705,15 @@ async function resolveGameRound(
               studies: r.studies ?? null,
               capital: r.capital ?? null,
               insurance: r.insurance ?? null,
+              // Le fournisseur était LU à la relecture et jamais ÉCRIT : le
+              // choix disparaissait du panneau de résultats dès la clôture.
+              supplier: r.supplier ?? null,
               hr: r.hr ?? null,
               investment: r.investment ?? null,
               qualityCosts: r.qualityCosts ?? null,
               debt: r.debt ?? null,
               treasury: r.treasury ?? null,
+              bank: r.bank ?? null,
             },
             revenue: toMoney(r.incomeStatement.revenue),
             netIncome: toMoney(r.incomeStatement.netIncome),
@@ -1232,6 +1237,25 @@ export interface GameView {
   investmentOffer: { costPerCapacityUnit: number; maxPerRound: number } | null;
   /** Échéance d'emprunt obligatoire du prochain tour et dette restante. */
   debtSchedule: { nextMandatory: number; outstanding: number } | null;
+  /**
+   * DOSSIER BANCAIRE : ce que la banque consent pour le tour à jouer, au vu
+   * des plans de trésorerie déposés jusqu'ici, et son verdict sur le dernier.
+   * `null` quand le scénario n'ouvre pas de dossier bancaire.
+   */
+  bankFile: {
+    /** Confiance actuelle, de 0 à 1. */
+    trust: number;
+    /** Plafond de découvert consenti pour le tour à jouer. */
+    overdraftLimit: number;
+    /** Plafond nominal du scénario, celui d'une confiance pleine. */
+    fullOverdraftLimit: number;
+    /** Taux de découvert applicable au tour à jouer. */
+    overdraftAnnualRate: number;
+    /** Emprunt demandé et refusé au tour précédent faute de plan. */
+    refusedLoan: number | null;
+    /** Fiabilité du dernier plan déposé (0..1) ; null si aucun. */
+    lastReliability: number | null;
+  } | null;
   /** Outils de trésorerie du scénario (taux affichés dans le formulaire). */
   treasuryOffer: {
     discountAnnualRate: number;
@@ -1419,6 +1443,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         qualityCosts?: CompanyRoundResult["qualityCosts"] | null;
         debt?: CompanyRoundResult["debt"] | null;
         treasury?: CompanyRoundResult["treasury"] | null;
+        bank?: CompanyRoundResult["bank"] | null;
       };
       lastResult = {
         companyId: playerTeam.id,
@@ -1448,6 +1473,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         qualityCosts: trace.qualityCosts ?? undefined,
         debt: trace.debt ?? undefined,
         treasury: trace.treasury ?? undefined,
+        bank: trace.bank ?? undefined,
         kpis: {},
       };
       lastEvents = trace.events ?? [];
@@ -1486,7 +1512,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       .limit(1)
   )[0];
   const currentState = stateRow?.state as
-    | { loans?: { remaining: number; perRound: number }[] }
+    | { loans?: { remaining: number; perRound: number }[]; bankTrust?: number }
     | undefined;
 
   const rankingRows = await db.select().from(gameRankings).where(eq(gameRankings.gameId, gameId));
@@ -1679,10 +1705,13 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       const round = roundIndexById.get(lastRound.id)!;
       const forecast = forecastByRound.get(round);
       if (!forecast) return null;
-      const sold = Object.values(lastResult.market.bySegment).reduce(
-        (sum, d) => sum + d.sold,
-        0,
-      );
+      // Tout ce qui a été vendu, commande exceptionnelle comprise : c'est ce
+      // que le moteur compare au plan, et l'élève savait en décidant s'il
+      // acceptait la commande.
+      const sold =
+        Object.values(lastResult.market.bySegment).reduce((sum, d) => sum + d.sold, 0) +
+        (lastResult.extraOrders?.delivered ?? 0) +
+        (lastResult.orderOffer?.delivered ?? 0);
       const lines: {
         label: string;
         forecast: number;
@@ -1956,6 +1985,32 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       const nextMandatory = loans.reduce((s, l) => s + Math.min(l.perRound, l.remaining), 0);
       return { nextMandatory, outstanding };
     })(),
+    bankFile: (() => {
+      const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+      const bank = snapshot.finance.bank;
+      if (!bank) return null;
+      const trust = confianceInitiale((currentState ?? {}) as CompanyState);
+      const conditions = conditionsBancaires(
+        trust,
+        {
+          overdraftLimit: snapshot.finance.overdraftLimit,
+          overdraftAnnualRate: snapshot.finance.overdraftAnnualRate,
+        },
+        bank,
+      );
+      const dernier = lastResult?.bank ?? null;
+      return {
+        trust,
+        overdraftLimit: conditions.overdraftLimit,
+        fullOverdraftLimit: snapshot.finance.overdraftLimit,
+        overdraftAnnualRate: conditions.overdraftAnnualRate,
+        refusedLoan:
+          dernier && dernier.loanRequested > 0 && dernier.loanGranted === 0
+            ? dernier.loanRequested
+            : null,
+        lastReliability: dernier?.reliability ?? null,
+      };
+    })(),
     treasuryOffer: (() => {
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
       return snapshot.treasury
@@ -1967,7 +2022,21 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
             ),
             discountMaxShare: snapshot.treasury.discountMaxShare,
             factoringFeeRate: snapshot.treasury.factoringFeeRate,
-            overdraftLimit: snapshot.finance.overdraftLimit,
+            // Le plafond ANNONCÉ doit être celui qui sera appliqué : quand la
+            // banque a resserré la ligne, l'afficher au nominal ferait
+            // dépasser un élève qui a fait le calcul juste.
+            overdraftLimit: (() => {
+              const bank = snapshot.finance.bank;
+              if (!bank) return snapshot.finance.overdraftLimit;
+              return conditionsBancaires(
+                confianceInitiale((currentState ?? {}) as CompanyState),
+                {
+                  overdraftLimit: snapshot.finance.overdraftLimit,
+                  overdraftAnnualRate: snapshot.finance.overdraftAnnualRate,
+                },
+                bank,
+              ).overdraftLimit;
+            })(),
           }
         : null;
     })(),

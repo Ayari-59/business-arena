@@ -111,6 +111,11 @@ const rawBistrot = {
     loanAnnualRate: 0.058,
     overdraftAnnualRate: 0.14,
     overdraftLimit: 20000,
+    // Le plan de trésorerie déposé avec les décisions est la pièce que lit
+    // la banque : sans lui, pas d'emprunt, et la fiabilité des plans passés
+    // fixe le plafond de découvert consenti et son taux. Un prévisionnel qui
+    // ne change rien n'apprend pas à en faire un.
+    bank: { memory: 0.6, maxOverdraftSpread: 0.05, minOverdraftShare: 0.4 },
     taxRate: 0.25,
     // les fournisseurs de frais ne font pas crédit longtemps
     supplierPaymentDelayDays: 21,

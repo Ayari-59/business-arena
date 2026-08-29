@@ -116,6 +116,11 @@ const rawFitness = {
     loanAnnualRate: 0.055,
     overdraftAnnualRate: 0.13,
     overdraftLimit: 40000,
+    // Le plan de trésorerie déposé avec les décisions est la pièce que lit
+    // la banque : sans lui, pas d'emprunt, et la fiabilité des plans passés
+    // fixe le plafond de découvert consenti et son taux. Un prévisionnel qui
+    // ne change rien n'apprend pas à en faire un.
+    bank: { memory: 0.6, maxOverdraftSpread: 0.05, minOverdraftShare: 0.4 },
     taxRate: 0.25,
     supplierPaymentDelayDays: 30,
     loanDurationRounds: 28,
