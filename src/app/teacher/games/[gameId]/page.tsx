@@ -7,6 +7,7 @@ import { periodLabel } from "@/config/scenarios/periodicity";
 import { closeRoundAction, setQuizModeAction } from "../../actions";
 import { QUIZ_MODES } from "@/config/difficulty";
 import { CardDeck } from "@/components/card-deck";
+import { SubmitButton } from "@/components/submit-button";
 
 export const dynamic = "force-dynamic";
 
@@ -88,8 +89,7 @@ export default async function TeacherGamePage({
               return (
                 <form key={m.code} action={setQuizModeAction.bind(null, view.gameId)}>
                   <input type="hidden" name="mode" value={m.code} />
-                  <button
-                    type="submit"
+                  <SubmitButton
                     disabled={active}
                     className={`h-full w-full rounded-lg border px-3 py-3 text-left transition ${
                       active
@@ -106,7 +106,7 @@ export default async function TeacherGamePage({
                       {m.name}
                     </span>
                     <span className="mt-1 block text-xs text-slate-500">{m.help}</span>
-                  </button>
+                  </SubmitButton>
                 </form>
               );
             })}
@@ -169,13 +169,13 @@ export default async function TeacherGamePage({
         </div>
         {!finished ? (
           <form action={closeAction} className="mt-4">
-            <button
-              type="submit"
+            <SubmitButton
+              pendingLabel="Simulation du tour en cours…"
               className="w-full rounded-lg bg-amber-400 px-4 py-3 text-sm font-semibold text-slate-950 hover:bg-amber-300"
             >
               Clore le tour {view.currentRound} et simuler
               {allSubmitted ? "" : " (les équipes sans décisions reconduisent le tour précédent)"}
-            </button>
+            </SubmitButton>
           </form>
         ) : null}
       </section>

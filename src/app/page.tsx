@@ -9,6 +9,7 @@ import {
   nomEntreprise,
   promesseEntreprise,
 } from "@/config/scenarios/presentation";
+import { SubmitButton } from "@/components/submit-button";
 
 export const dynamic = "force-dynamic";
 
@@ -504,12 +505,12 @@ export default async function Home({
                 ouvre de nouvelles décisions et retire des indices.
               </span>
             </label>
-            <button
-              type="submit"
+            <SubmitButton
+              pendingLabel="Création de la partie…"
               className="mt-5 w-full rounded-lg bg-amber-500 px-4 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400"
             >
               Lancer la partie
-            </button>
+            </SubmitButton>
           </form>
           )}
         </div>

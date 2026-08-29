@@ -14,6 +14,7 @@ import {
   economicDefaults,
 } from "@/config/scenarios/registry";
 import { EconomicParams } from "@/components/economic-params";
+import { SubmitButton } from "@/components/submit-button";
 
 export const dynamic = "force-dynamic";
 
@@ -197,12 +198,12 @@ export default async function TeacherDashboard({
             </p>
           </fieldset>
 
-          <button
-            type="submit"
+          <SubmitButton
+            pendingLabel="Création de la partie et des équipes…"
             className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300 sm:col-span-3"
           >
             Créer la partie et obtenir le code d&apos;invitation
-          </button>
+          </SubmitButton>
         </form>
         <p className="mt-2 text-xs text-slate-500">
           Le nombre total d&apos;entreprises (équipes + bots) est plafonné à 8. Les élèves
@@ -258,12 +259,12 @@ export default async function TeacherDashboard({
               <option value="year">Une année par tour</option>
             </select>
           </label>
-          <button
-            type="submit"
+          <SubmitButton
+            pendingLabel="Ouverture du concours…"
             className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300 sm:col-span-2"
           >
             Créer le concours et ouvrir les inscriptions
-          </button>
+          </SubmitButton>
         </form>
         <p className="mt-2 text-xs text-slate-500">
           Les équipes s&apos;inscrivent avec le code sur /compete. Mode compétition :

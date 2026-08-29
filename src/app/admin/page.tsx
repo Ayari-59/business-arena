@@ -13,6 +13,7 @@ import {
   setLicenceAction,
   updatePlatformConfigAction,
 } from "./actions";
+import { SubmitButton } from "@/components/submit-button";
 
 export const dynamic = "force-dynamic";
 
@@ -124,12 +125,12 @@ export default async function AdminPage() {
               className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
             />
           </label>
-          <button
-            type="submit"
+          <SubmitButton
+            pendingLabel="Enregistrement…"
             className="rounded-lg bg-amber-400 px-5 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300"
           >
             Enregistrer les réglages
-          </button>
+          </SubmitButton>
         </form>
       </section>
 
@@ -181,12 +182,12 @@ export default async function AdminPage() {
             placeholder="Lycée Jean-Monnet, IUT GEA Lille…"
             className="min-w-64 flex-1 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
           />
-          <button
-            type="submit"
+          <SubmitButton
+            pendingLabel="Création…"
             className="rounded-lg bg-amber-400 px-5 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300"
           >
             Créer + code admin
-          </button>
+          </SubmitButton>
         </form>
       </section>
 
