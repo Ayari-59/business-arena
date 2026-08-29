@@ -213,7 +213,7 @@ const rawHotel = {
       code: "hotel_offer_congres",
       title: "Congrès régional de cardiologie",
       narrative:
-        "Le palais des congrès vous propose 900 nuitées à 84 € pour son congrès d'automne. Facturation centralisée : règlement à 60 jours.",
+        "Le palais des congrès vous adresse les participants de son congrès d'automne. Facturation centralisée, règlement à l'échéance du contrat.",
       units: 900,
       price: 84,
       paymentDelayDays: 60,
@@ -222,7 +222,7 @@ const rawHotel = {
       code: "hotel_offer_tour_operateur",
       title: "Tour-opérateur · allotement",
       narrative:
-        "Un tour-opérateur bloque 1 200 nuitées à 61 € l'unité, payées à la réservation. Le prix est bas, l'encaissement immédiat et le taux d'occupation garanti.",
+        "Un tour-opérateur bloque un allotement et le paie dès la réservation. Le prix est bas, l'encaissement immédiat et l'occupation garantie.",
       units: 1200,
       price: 61,
       paymentDelayDays: 0,
@@ -231,7 +231,7 @@ const rawHotel = {
       code: "hotel_offer_chantier",
       title: "Compagnons du chantier de la ligne TGV",
       narrative:
-        "Une entreprise de travaux publics loge ses équipes : 1 400 nuitées à 68 €, réglées à 45 jours par le siège. Longue durée, peu de ménage, zéro petit-déjeuner soigné.",
+        "Une entreprise de travaux publics loge ses compagnons pendant le chantier de la ligne nouvelle, sur facture au siège. Longue durée, peu de ménage, aucun petit-déjeuner soigné.",
       units: 1400,
       price: 68,
       paymentDelayDays: 45,
@@ -240,7 +240,7 @@ const rawHotel = {
       code: "hotel_offer_seminaire",
       title: "Séminaire d'entreprise clé en main",
       narrative:
-        "Un groupe industriel privatise deux étages : 700 nuitées à 112 €, votre meilleur tarif de l'année. Direction financière oblige : paiement à 90 jours.",
+        "Un groupe industriel privatise deux étages pour son séminaire : votre meilleur tarif de l'année, que la direction financière fera patienter.",
       units: 700,
       price: 112,
       paymentDelayDays: 90,
@@ -249,7 +249,7 @@ const rawHotel = {
       code: "hotel_offer_compagnie_aerienne",
       title: "Équipages d'une compagnie aérienne",
       narrative:
-        "Une compagnie cherche à loger ses équipages en escale : 1 000 nuitées à 72 €, contrat annuel réglé à 60 jours. Arrivées tardives, départs à l'aube.",
+        "Une compagnie cherche à loger ses équipages en escale, sous contrat cadre. Arrivées tardives, départs à l'aube, facture centralisée.",
       units: 1000,
       price: 72,
       paymentDelayDays: 60,
@@ -258,7 +258,7 @@ const rawHotel = {
       code: "hotel_offer_plateforme_flash",
       title: "Vente flash sur plateforme",
       narrative:
-        "Une plateforme vous ouvre une vente flash : 800 nuitées à 58 €, encaissement sous 48 h. Vous remplissez, au prix de votre image tarifaire.",
+        "Une plateforme vous ouvre une vente flash, encaissée presque aussitôt. Vous remplissez, au prix de votre image tarifaire.",
       units: 800,
       price: 58,
       paymentDelayDays: 0,

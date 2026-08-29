@@ -416,7 +416,7 @@ const rawNova = {
       code: "offer_export_nordics",
       title: "Distributeur scandinave",
       narrative:
-        "Un distributeur hi-fi d'Oslo veut référencer NOVA : 700 enceintes à 74 € pièce. Conditions du contrat : règlement à 90 jours, comme tout l'export.",
+        "Un distributeur hi-fi d'Oslo veut référencer NOVA dans ses magasins. Conditions de l'export : vous serez payés bien après l'expédition.",
       units: 700,
       price: 74,
       paymentDelayDays: 90,
@@ -425,7 +425,7 @@ const rawNova = {
       code: "offer_flash_marketplace",
       title: "Vente flash marketplace",
       narrative:
-        "Une grande marketplace vous propose une opération flash : 600 unités à 45 € pièce, virement immédiat à l'expédition. Le prix est serré, mais le cash est là.",
+        "Une grande marketplace vous propose une opération flash, virement à l'expédition. Le prix est serré, mais le cash est là.",
       units: 600,
       price: 45,
       paymentDelayDays: 0,
@@ -434,7 +434,7 @@ const rawNova = {
       code: "offer_export_dach",
       title: "Chaîne hi-fi allemande",
       narrative:
-        "Une chaîne de magasins allemande commande 900 unités à 70 € pour ses corners audio. Paiement à 90 jours fin de mois, l'usage outre-Rhin.",
+        "Une chaîne de magasins allemande équipe ses corners audio. Paiement fin de mois, l'usage outre-Rhin.",
       units: 900,
       price: 70,
       paymentDelayDays: 90,
@@ -443,7 +443,7 @@ const rawNova = {
       code: "offer_lycees",
       title: "Appel d'offres lycées",
       narrative:
-        "Un groupement de lycées équipe ses salles : 800 unités à 47 €, mandat administratif payé comptant à la livraison. Marge mince, encaissement immédiat.",
+        "Un groupement de lycées équipe ses salles, sur mandat administratif payé à la livraison. Marge mince, encaissement immédiat.",
       units: 800,
       price: 47,
       paymentDelayDays: 0,
@@ -452,7 +452,7 @@ const rawNova = {
       code: "offer_export_japan",
       title: "Importateur japonais",
       narrative:
-        "Un importateur de Tokyo teste le marché avec 600 unités à 78 €, votre meilleur prix jamais proposé. Lettre de crédit réglée à 90 jours.",
+        "Un importateur de Tokyo teste le marché à votre meilleur prix jamais proposé, sous lettre de crédit. Le règlement viendra, mais il se fera attendre.",
       units: 600,
       price: 78,
       paymentDelayDays: 90,
@@ -461,7 +461,7 @@ const rawNova = {
       code: "offer_destockeur",
       title: "Déstockeur européen",
       narrative:
-        "Un déstockeur reprend 1 000 unités à 44 € pièce, enlèvement et paiement comptant sous 48 h. Presque pas de marge, mais la caisse respire.",
+        "Un déstockeur européen reprend un lot entier, enlèvement et paiement comptant. Presque pas de marge, mais la caisse respire.",
       units: 1000,
       price: 44,
       paymentDelayDays: 0,
@@ -470,7 +470,7 @@ const rawNova = {
       code: "offer_duty_free",
       title: "Boutiques duty-free",
       narrative:
-        "Un opérateur de boutiques d'aéroport référence NOVA pour la saison : 500 unités à 76 €. Règlement à 60 jours, conditions du contrat cadre.",
+        "Un opérateur de boutiques d'aéroport référence NOVA pour la saison, aux conditions de son contrat cadre. Belle vitrine, règlement patient.",
       units: 500,
       price: 76,
       paymentDelayDays: 60,
@@ -479,7 +479,7 @@ const rawNova = {
       code: "offer_campus_uk",
       title: "Réseau de campus britanniques",
       narrative:
-        "Un distributeur équipe les boutiques de campus outre-Manche : 800 unités à 71 €. Paiement à 90 jours, et en plus il faudra suivre la livraison.",
+        "Un distributeur équipe les boutiques de campus outre-Manche. Le paiement est lointain, et il faudra suivre la livraison de près.",
       units: 800,
       price: 71,
       paymentDelayDays: 90,
@@ -488,7 +488,7 @@ const rawNova = {
       code: "offer_coffrets_noel",
       title: "Coffrets cadeaux e-commerce",
       narrative:
-        "Un e-commerçant monte des coffrets cadeaux : 700 unités à 46 €, payées comptant à l'expédition. Le prix est tiré, le virement est immédiat.",
+        "Un e-commerçant monte des coffrets cadeaux autour de vos enceintes, payés comptant à l'expédition. Le prix est tiré, le virement est immédiat.",
       units: 700,
       price: 46,
       paymentDelayDays: 0,
@@ -497,7 +497,7 @@ const rawNova = {
       code: "offer_comite_entreprise",
       title: "Comité d'entreprise",
       narrative:
-        "Le CSE d'un grand groupe commande 400 unités à 52 € pour ses salariés, réglées comptant. Volume modeste, marge correcte, zéro attente.",
+        "Le CSE d'un grand groupe commande pour ses salariés et règle comptant. Volume modeste, marge correcte, zéro attente.",
       units: 400,
       price: 52,
       paymentDelayDays: 0,

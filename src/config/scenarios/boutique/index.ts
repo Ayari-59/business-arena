@@ -205,7 +205,7 @@ const rawBoutique = {
       code: "boutique_offer_ce_noel",
       title: "Comité d'entreprise · dotation de Noël",
       narrative:
-        "Le CSE d'une clinique privée veut 600 pièces à 41 € pour ses dotations de fin d'année. Mandat administratif : règlement à 60 jours.",
+        "Le CSE d'une clinique privée veut habiller ses dotations de fin d'année. Belle commande, mais mandat administratif : vous serez payés au rythme de la comptabilité publique.",
       units: 600,
       price: 41,
       paymentDelayDays: 60,
@@ -214,7 +214,7 @@ const rawBoutique = {
       code: "boutique_offer_vide_dressing",
       title: "Vide-dressing du centre-ville",
       narrative:
-        "L'association des commerçants organise un week-end vide-dressing : 500 pièces à 29 €, encaissement immédiat. Le prix est cassé, la caisse se remplit.",
+        "L'association des commerçants organise un week-end vide-dressing, encaissement immédiat en caisse. Le prix est cassé, la caisse se remplit, la marge s'efface.",
       units: 500,
       price: 29,
       paymentDelayDays: 0,
@@ -223,7 +223,7 @@ const rawBoutique = {
       code: "boutique_offer_hotel_uniformes",
       title: "Groupe hôtelier · tenues d'accueil",
       narrative:
-        "Un groupe hôtelier habille ses réceptions : 800 pièces à 44 €, payées à 60 jours après validation du service achats.",
+        "Un groupe hôtelier habille les tenues d'accueil de ses réceptions. Le service achats valide vite, puis paie quand ses procédures le permettent.",
       units: 800,
       price: 44,
       paymentDelayDays: 60,
@@ -232,7 +232,7 @@ const rawBoutique = {
       code: "boutique_offer_marketplace",
       title: "Marketplace · opération flash",
       narrative:
-        "Une marketplace vous ouvre un créneau flash : 700 pièces à 31 €, virement sous 48 h. Marge mince, trésorerie immédiate.",
+        "Une marketplace vous ouvre un créneau flash sur sa page d'accueil. Marge mince, virement quasi immédiat.",
       units: 700,
       price: 31,
       paymentDelayDays: 0,
@@ -241,7 +241,7 @@ const rawBoutique = {
       code: "boutique_offer_boutique_hotel",
       title: "Corner en boutique d'hôtel",
       narrative:
-        "Un palace vous propose un corner saisonnier : 450 pièces à 58 €, votre meilleur prix, mais réglées à 90 jours comme tous ses fournisseurs.",
+        "Un palace vous propose un corner saisonnier dans son hall : votre meilleur prix de l'année, mais réglé comme il règle tous ses fournisseurs.",
       units: 450,
       price: 58,
       paymentDelayDays: 90,
@@ -250,7 +250,7 @@ const rawBoutique = {
       code: "boutique_offer_destockage",
       title: "Déstockeur · reprise de collection",
       narrative:
-        "Un déstockeur reprend 900 pièces à 26 € l'unité, enlèvement et paiement comptant. Vous ne gagnez presque rien, mais la réserve se vide.",
+        "Un déstockeur reprend la fin de collection, enlèvement et paiement comptant. Vous ne gagnez presque rien, mais la réserve se vide.",
       units: 900,
       price: 26,
       paymentDelayDays: 0,

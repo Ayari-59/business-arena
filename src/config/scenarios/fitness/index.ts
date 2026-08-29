@@ -211,7 +211,7 @@ const rawFitness = {
       code: "fitness_offer_comite",
       title: "Accord-cadre avec un comité d'entreprise",
       narrative:
-        "Le CSE d'un hôpital ouvre l'accès à ses 2 000 agents : 350 abonnements à 82 €, facturés au CSE à 60 jours.",
+        "Le CSE d'un hôpital ouvre à ses agents l'accès à votre salle. Belle entrée en matière, facturée au comité et payée à son rythme.",
       units: 350,
       price: 82,
       paymentDelayDays: 60,
@@ -220,7 +220,7 @@ const rawFitness = {
       code: "fitness_offer_mutuelle",
       title: "Partenariat mutuelle santé",
       narrative:
-        "Une mutuelle rembourse l'activité physique à ses adhérents : 500 abonnements à 74 €, réglés à 45 jours. Volume garanti, tarif négocié.",
+        "Une mutuelle rembourse l'activité physique à ses adhérents et vous adresse les inscrits. Volume garanti, tarif négocié, règlement différé.",
       units: 500,
       price: 74,
       paymentDelayDays: 45,
@@ -229,7 +229,7 @@ const rawFitness = {
       code: "fitness_offer_club_sportif",
       title: "Préparation physique d'un club",
       narrative:
-        "Un club de handball loue vos créneaux du matin : 260 abonnements à 128 €, payés comptant au trimestre. Créneaux creux, tarif plein.",
+        "Un club de handball réserve vos créneaux du matin pour sa préparation physique, payés comptant à la signature. Créneaux creux, tarif plein.",
       units: 260,
       price: 128,
       paymentDelayDays: 0,
@@ -238,7 +238,7 @@ const rawFitness = {
       code: "fitness_offer_etudiants",
       title: "Campagne campus universitaire",
       narrative:
-        "Le BDE négocie un tarif étudiant : 600 abonnements à 58 €, encaissés à l'inscription. Beaucoup de monde, peu de marge, et des vestiaires pleins.",
+        "Le bureau des élèves négocie un tarif campus, encaissé à l'inscription. Beaucoup de monde, peu de marge, et des vestiaires pleins.",
       units: 600,
       price: 58,
       paymentDelayDays: 0,
@@ -247,7 +247,7 @@ const rawFitness = {
       code: "fitness_offer_seniors",
       title: "Programme seniors avec la mairie",
       narrative:
-        "La ville finance un programme d'activité adaptée : 320 abonnements à 96 €, mandat administratif à 60 jours. Créneaux d'après-midi, public fidèle.",
+        "La ville finance un programme d'activité adaptée et vous en confie l'animation. Créneaux d'après-midi, public fidèle, mandat administratif.",
       units: 320,
       price: 96,
       paymentDelayDays: 60,
@@ -256,7 +256,7 @@ const rawFitness = {
       code: "fitness_offer_coaching",
       title: "Offre coaching premium",
       narrative:
-        "Vous lancez une formule avec suivi individuel : 180 abonnements à 195 €, payés comptant. Votre meilleure marge, mais elle mobilise vos coachs.",
+        "Vous lancez une formule avec suivi individuel, payée comptant à la souscription. Votre meilleure marge, mais elle mobilise vos coachs.",
       units: 180,
       price: 195,
       paymentDelayDays: 0,

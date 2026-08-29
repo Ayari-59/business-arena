@@ -182,6 +182,43 @@ describe("registre des scénarios", () => {
     }
   });
 
+  it("le récit d'une offre de commande ne cite jamais un chiffre", () => {
+    // Même règle que le contexte du tour 1, et pour la même raison :
+    // `applyPeriodicity` multiplie `units` par la durée du tour. Un volume
+    // écrit dans la prose reste figé pendant que le chiffre affiché juste en
+    // dessous, lui, est redimensionné. Dans une partie au mois, le récit
+    // annonçait « 260 couverts » quand le panneau en proposait 87. Le prix et
+    // le délai de règlement sont sur cette même ligne : les répéter, c'est
+    // deux endroits à tenir d'accord au lieu d'un.
+    for (const d of SCENARIOS) {
+      for (const o of d.scenario.orderOffers ?? []) {
+        expect(o.narrative, `${d.code}/${o.code}`).not.toMatch(/\d/);
+        expect(o.title, `${d.code}/${o.code}`).not.toMatch(/\d/);
+        expect(o.narrative.length, `${d.code}/${o.code} : récit trop court`).toBeGreaterThan(80);
+      }
+    }
+  });
+
+  it("aucune offre ne dépasse ce que l'entreprise peut produire en un tour", () => {
+    // Une commande plus grosse que la capacité d'un tour entier ne pourrait
+    // jamais être honorée, même en cessant de servir le marché : ce serait un
+    // piège, pas un arbitrage. C'est la question posée sur le mariage du
+    // bistrot, qui privatisait la salle pour plusieurs services d'affilée.
+    for (const d of SCENARIOS) {
+      const c = d.company("player", d.playerTeamName, "human");
+      const capacite = Math.min(
+        c.machineCapacity,
+        (c.headcount * c.hoursPerEmployee) / d.scenario.product.hoursPerUnit,
+      );
+      for (const o of d.scenario.orderOffers ?? []) {
+        expect(
+          o.units,
+          `${d.code}/${o.code} : ${o.units} pour ${Math.round(capacite)} de capacité`,
+        ).toBeLessThanOrEqual(capacite);
+      }
+    }
+  });
+
   it("chaque tour joué porte une situation scriptée, dans tous les secteurs", () => {
     // L'écart trouvé au bilan : NOVA portait six situations pour six tours, les
     // six autres secteurs quatre. Il restait donc deux tours sans rien, sauf à
