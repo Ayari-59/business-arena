@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SCENARIOS, SECTOR_LABELS, type ScenarioDefinition } from "@/config/scenarios/registry";
 import {
-  SCENARIOS,
-  SECTOR_LABELS,
-  type ScenarioDefinition,
-  type Sector,
-} from "@/config/scenarios/registry";
+  ACCENTS_SECTEUR as ACCENTS,
+  EMBLEMES_SECTEUR as EMOJIS,
+  nomEntreprise as nomSeul,
+  promesseEntreprise as promesse,
+} from "@/config/scenarios/presentation";
 
 export const metadata: Metadata = {
   title: "Les sept entreprises · BUSINESS ARENA",
@@ -26,86 +27,6 @@ export const metadata: Metadata = {
  * Tout y est LU du registre : titres, contraintes, arbitrages, indicateurs.
  * Rien n'est recopié, donc rien ne peut mentir quand un scénario change.
  */
-
-/**
- * Une couleur par métier. Les classes sont écrites en toutes lettres : Tailwind
- * lit les sources, une classe composée à l'exécution ne serait jamais générée.
- */
-const ACCENTS: Record<
-  Sector,
-  { bord: string; halo: string; texte: string; puce: string; barre: string }
-> = {
-  industrie: {
-    bord: "hover:border-amber-400/50",
-    halo: "bg-amber-400/10",
-    texte: "text-amber-300",
-    puce: "border-amber-400/30 bg-amber-950/30 text-amber-200",
-    barre: "bg-amber-400",
-  },
-  commerce: {
-    bord: "hover:border-rose-400/50",
-    halo: "bg-rose-400/10",
-    texte: "text-rose-300",
-    puce: "border-rose-400/30 bg-rose-950/30 text-rose-200",
-    barre: "bg-rose-400",
-  },
-  ecommerce: {
-    bord: "hover:border-violet-400/50",
-    halo: "bg-violet-400/10",
-    texte: "text-violet-300",
-    puce: "border-violet-400/30 bg-violet-950/30 text-violet-200",
-    barre: "bg-violet-400",
-  },
-  hotellerie: {
-    bord: "hover:border-sky-400/50",
-    halo: "bg-sky-400/10",
-    texte: "text-sky-300",
-    puce: "border-sky-400/30 bg-sky-950/30 text-sky-200",
-    barre: "bg-sky-400",
-  },
-  restauration: {
-    bord: "hover:border-orange-400/50",
-    halo: "bg-orange-400/10",
-    texte: "text-orange-300",
-    puce: "border-orange-400/30 bg-orange-950/30 text-orange-200",
-    barre: "bg-orange-400",
-  },
-  services: {
-    bord: "hover:border-emerald-400/50",
-    halo: "bg-emerald-400/10",
-    texte: "text-emerald-300",
-    puce: "border-emerald-400/30 bg-emerald-950/30 text-emerald-200",
-    barre: "bg-emerald-400",
-  },
-  abonnement: {
-    bord: "hover:border-cyan-400/50",
-    halo: "bg-cyan-400/10",
-    texte: "text-cyan-300",
-    puce: "border-cyan-400/30 bg-cyan-950/30 text-cyan-200",
-    barre: "bg-cyan-400",
-  },
-};
-
-const EMOJIS: Record<Sector, string> = {
-  industrie: "🔊",
-  commerce: "👗",
-  ecommerce: "📦",
-  hotellerie: "🛎️",
-  restauration: "🍽️",
-  services: "📊",
-  abonnement: "🏋️",
-};
-
-/** Le nom de l'entreprise, sans la promesse qui suit le point médian. */
-function nomSeul(d: ScenarioDefinition): string {
-  return d.title.split("·")[0]!.trim();
-}
-
-/** La promesse, quand le titre en porte une. */
-function promesse(d: ScenarioDefinition): string | null {
-  const [, suite] = d.title.split("·");
-  return suite ? suite.trim() : null;
-}
 
 function Fiche({ d }: { d: ScenarioDefinition }) {
   const a = ACCENTS[d.sector];
