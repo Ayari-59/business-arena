@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { SCENARIOS } from "../../src/config/scenarios/registry";
 import {
   ACCENTS_SECTEUR,
+  classesVignetteFinale,
   EMBLEMES_SECTEUR,
   nomEntreprise,
   promesseEntreprise,
@@ -63,5 +64,52 @@ describe("identité visuelle des secteurs", () => {
       expect(p, `${d.code} : titre sans promesse après le point médian`).not.toBeNull();
       expect(p!.length, `${d.code}`).toBeGreaterThan(5);
     }
+  });
+});
+
+/**
+ * La dernière vignette de la grille des entreprises.
+ *
+ * Elle renvoie vers la vitrine, elle ne porte pas d'entreprise, et elle ne
+ * doit donc jamais commencer une rangée toute seule : à neuf entreprises sur
+ * trois colonnes, une vignette d'une seule case tombait en dixième position,
+ * cadrée à gauche sous trois rangées pleines. Ce test tient la règle pour
+ * n'importe quel nombre d'entreprises, y compris ceux que le registre n'a pas
+ * encore.
+ */
+describe("la vignette qui ferme la grille", () => {
+  const largeur = (classes: string, prefixe: string) => {
+    const trouvee = classes.split(" ").find((c) => c.startsWith(prefixe + ":col-span-"));
+    expect(trouvee, `aucune largeur ${prefixe} dans « ${classes} »`).toBeDefined();
+    return Number(trouvee!.slice((prefixe + ":col-span-").length));
+  };
+
+  it("complète la dernière rangée au lieu d'en ouvrir une", () => {
+    for (let n = 1; n <= 24; n += 1) {
+      const classes = classesVignetteFinale(n);
+      const surSm = largeur(classes, "sm");
+      const surLg = largeur(classes, "lg");
+      expect(surSm, `${n} entreprises : largeur nulle`).toBeGreaterThan(0);
+      expect(surLg, `${n} entreprises : largeur nulle`).toBeGreaterThan(0);
+      expect(surSm, `${n} entreprises : plus large que la grille`).toBeLessThanOrEqual(2);
+      expect(surLg, `${n} entreprises : plus large que la grille`).toBeLessThanOrEqual(3);
+      expect((n + surSm) % 2, `${n} entreprises : la rangée de deux reste ouverte`).toBe(0);
+      expect((n + surLg) % 3, `${n} entreprises : la rangée de trois reste ouverte`).toBe(0);
+    }
+  });
+
+  it("l'accueil prend sa largeur du registre, pas d'une valeur écrite à la main", () => {
+    // Une largeur figée dans la page redeviendrait fausse à la dixième
+    // entreprise, et personne ne s'en apercevrait avant de voir la grille.
+    const source = readFileSync("src/app/page.tsx", "utf-8");
+    expect(source).toContain("classesVignetteFinale(");
+    // La page contient plusieurs liens vers la vitrine : on vise celui de la
+    // vignette, repéré par son libellé, et on remonte à sa balise ouvrante.
+    const libelle = source.indexOf("Toutes les fiches");
+    expect(libelle, "la vignette a changé de libellé").toBeGreaterThan(0);
+    const entete = source.slice(source.lastIndexOf("<Link", libelle), libelle);
+    expect(entete, "une largeur de colonnes est écrite en dur sur la vignette").not.toMatch(
+      /(sm|lg):col-span-\d/,
+    );
   });
 });

@@ -5,6 +5,7 @@ import { DIFFICULTY_PRESETS } from "@/config/difficulty";
 import { DEFAULT_SCENARIO_CODE, SCENARIOS, SECTOR_LABELS } from "@/config/scenarios/registry";
 import {
   ACCENTS_SECTEUR,
+  classesVignetteFinale,
   EMBLEMES_SECTEUR,
   nomEntreprise,
   promesseEntreprise,
@@ -278,15 +279,17 @@ export default async function Home({
           })}
           <Link
             href="/entreprises"
-            className="group flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/15 bg-slate-900/40 p-5 text-center transition hover:border-amber-400/50"
+            className={`group flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/15 bg-slate-900/40 p-5 text-center transition hover:border-amber-400/50 ${classesVignetteFinale(
+              SCENARIOS.length,
+            )}`}
           >
-            <span className="text-2xl" aria-hidden>
-              →
-            </span>
-            <span className="mt-2 text-sm font-semibold text-slate-200">
+            <span className="flex items-center gap-2 text-sm font-semibold text-slate-200">
               Toutes les fiches
+              <span aria-hidden className="transition-transform group-hover:translate-x-1">
+                →
+              </span>
             </span>
-            <span className="mt-1 text-xs leading-relaxed text-slate-500">
+            <span className="mt-1.5 max-w-xl text-xs leading-relaxed text-slate-500">
               Le premier arbitrage de chaque métier, ses indicateurs, et le tableau qui les met
               côte à côte.
             </span>

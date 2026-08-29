@@ -111,3 +111,25 @@ export function promesseEntreprise(d: ScenarioDefinition): string | null {
   const [, suite] = d.title.split("·");
   return suite ? suite.trim() : null;
 }
+
+/**
+ * La vignette « toutes les fiches » ferme la grille des entreprises. Elle doit
+ * FERMER une rangée, pas en ouvrir une : posée après un nombre d'entreprises
+ * multiple du nombre de colonnes, elle resterait seule au début d'une rangée
+ * vide, décalée à gauche sous trois rangées pleines.
+ *
+ * Elle occupe donc exactement les cases qui restent : une seule quand il en
+ * reste une, la rangée entière quand la précédente est pleine. Le calcul suit
+ * le nombre d'entreprises du registre, de sorte qu'une dixième entreprise ne
+ * réintroduise pas le décalage.
+ *
+ * Les classes sont écrites en toutes lettres : Tailwind lit les sources, une
+ * classe assemblée à l'exécution n'existe pas.
+ */
+export function classesVignetteFinale(nombreDEntreprises: number): string {
+  const surDeuxColonnes = ["sm:col-span-2", "sm:col-span-1"][nombreDEntreprises % 2]!;
+  const surTroisColonnes = ["lg:col-span-3", "lg:col-span-2", "lg:col-span-1"][
+    nombreDEntreprises % 3
+  ]!;
+  return [surDeuxColonnes, surTroisColonnes].join(" ");
+}
