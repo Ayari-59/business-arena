@@ -467,22 +467,6 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
     ],
     quiz: [
       {
-        id: "ressource_rare",
-        prompt: "Quand la capacité est saturée, sur quoi la comparaison doit-elle porter ?",
-        options: [
-          {
-            id: "a",
-            label: "Sur la marge dégagée par unité de ressource rare, ici le camion mobilisé",
-          },
-          { id: "b", label: "Sur le prix facturé à la palette" },
-          { id: "c", label: "Sur le chiffre d'affaires total du contrat" },
-          { id: "d", label: "Sur la durée d'engagement" },
-        ],
-        correctOptionId: "a",
-        explain:
-          "À capacité libre, toute marge positive enrichit. À capacité saturée, accepter une affaire, c'est en refuser une autre : la bonne unité de comparaison devient la ressource qui manque.",
-      },
-      {
         id: "marge_par_porteur",
         prompt: "Que rapporte un porteur sous ce contrat, comparé à ce qu'il rapporte aujourd'hui ?",
         options: [

@@ -349,6 +349,49 @@ describe("registre des scénarios", () => {
     }
   });
 
+  it("une situation reste jouable : elle ne devient pas un devoir", () => {
+    // LE JEU PRIME. Une situation s'intercale dans un tour de vingt minutes,
+    // entre des décisions à prendre : ce n'est pas un exercice à faire, c'est
+    // une question qui traverse une partie.
+    //
+    // Cette règle a été écrite après avoir mesuré ma propre dérive. Parti
+    // adapter un secteur aux attendus d'un référentiel, j'avais ajouté une
+    // question à trois situations : elles étaient devenues les trois plus
+    // lourdes du produit, les seules à quatre questions, la moitié plus
+    // longues que la médiane. Rien ne l'avait signalé, chacune étant
+    // défendable prise à part.
+    //
+    // Le référentiel sert à VÉRIFIER ce que le jeu enseigne, pas à dresser une
+    // liste à cocher. Une notion de plus qui alourdit la partie coûte plus
+    // qu'elle ne rapporte.
+    const PLAFOND_MOTS = 340;
+    const mots = (t: string) => t.trim().split(/\s+/).length;
+    const lourdes: string[] = [];
+    for (const d of SCENARIOS) {
+      for (const s of d.situations) {
+        // Trois questions : deux de connaissances et celle du modèle, qui est
+        // générée. C'est le format de tout le produit depuis l'origine.
+        expect(
+          s.quiz.length,
+          `${d.code}/${s.code} : ${s.quiz.length} questions, le format en tient trois`,
+        ).toBeLessThanOrEqual(3);
+        const charge =
+          mots(s.narrative) +
+          mots(s.problem) +
+          s.diagnosticOptions.reduce((t, o) => t + mots(o.label), 0) +
+          s.quiz.reduce(
+            (t, q) => t + mots(q.prompt) + q.options.reduce((u, o) => u + mots(o.label), 0),
+            0,
+          );
+        if (charge > PLAFOND_MOTS) lourdes.push(`${d.code}/${s.code} : ${charge} mots`);
+      }
+    }
+    expect(
+      lourdes,
+      `situations trop longues à lire en pleine partie :\n${lourdes.join("\n")}`,
+    ).toEqual([]);
+  });
+
   it("une situation qui enseigne une notion la déclare", () => {
     // Les situations nomment des notions sans les rattacher : la fiche de
     // MAILLE & CO faisait calculer un coefficient multiplicateur depuis

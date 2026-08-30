@@ -41,6 +41,25 @@ Ce que la suite ne voit pas se vérifie dans un vrai navigateur, sur le build de
 production servi localement, base de données comprise. Les défauts trouvés en recette
 vivaient tous ENTRE des pièces justes, jamais dedans.
 
+## Le jeu prime
+
+C'est un jeu avant d'être un cours. Une situation s'intercale dans un tour de vingt
+minutes, entre des décisions à prendre : elle pose une question qui traverse la
+partie, elle ne donne pas un exercice à faire.
+
+Les référentiels servent donc à VÉRIFIER ce que le jeu enseigne, jamais à dresser une
+liste à cocher. Toutes les notions d'un programme n'ont pas à être couvertes, et une
+notion de plus qui alourdit la partie coûte plus qu'elle ne rapporte.
+
+La dérive ne se voit pas de l'intérieur : chaque ajout se défend pris à part. Elle
+s'est produite une fois, en adaptant un secteur aux attendus d'un référentiel, et
+trois situations sont devenues les plus lourdes du produit sans que rien ne le
+signale. Elle se mesure donc plutôt qu'elle ne se sent, et une garde tient le format.
+
+Le vocabulaire d'un référentiel reste souple pour la même raison : blocs, processus,
+activités, unités d'enseignement, une autre filière viendra avec le sien. Ce qui ne
+se négocie pas est de ne pas inventer ce qu'un texte ne porte pas.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know

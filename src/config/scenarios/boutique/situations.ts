@@ -197,20 +197,6 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
     ],
     quiz: [
       {
-        id: "cout_rupture",
-        prompt:
-          "Un rayon vide en pleine semaine de Noël vous coûte, sur chaque article que vous auriez pu vendre :",
-        options: [
-          { id: "a", label: "Sa marge sur coût variable, définitivement perdue" },
-          { id: "b", label: "Son prix d'achat" },
-          { id: "c", label: "Son prix de vente entier" },
-          { id: "d", label: "Rien : la vente se reporte en janvier" },
-        ],
-        correctOptionId: "a",
-        explain:
-          "Vous ne perdez pas le prix de vente (vous n'avez pas acheté la marchandise), mais la marge qu'elle aurait dégagée : 23,50 € qui ne couvriront jamais vos charges de structure. Et le cadeau de Noël ne s'achète pas en janvier.",
-      },
-      {
         id: "transformation_noel",
         prompt:
           "À Noël votre trafic passe de 4 000 à 5 800 visiteurs, mais votre taux de transformation tombe de 30 à 25 % faute de réassort. À panier moyen inchangé de 62 €, que coûte cette baisse ?",
@@ -548,19 +534,6 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
         correctOptionId: "a",
         explain:
           "La démarque est ce qui sort du stock sans passer en caisse au prix prévu : 23 €, soit 45 − 22, sur chacune des 400 pièces, donc 9 200 € rapportés aux 18 000 € qu'elles valaient en rayon, soit 9 200 ÷ 18 000 ≈ 51 %. Elle est CONNUE parce qu'on la décide, à la différence du vol et de la casse, qui se découvrent à l'inventaire.",
-      },
-      {
-        id: "boutique_stock_dormant",
-        prompt: "Garder ces 400 pièces une saison de plus…",
-        options: [
-          { id: "a", label: "Immobilise de l'argent dans le stock et occupe une réserve qui pourrait porter la collection suivante" },
-          { id: "b", label: "N'a aucun coût tant que les pièces ne sont pas vendues" },
-          { id: "c", label: "Améliore le résultat, puisque le stock figure à l'actif du bilan" },
-          { id: "d", label: "Réduit le besoin en fonds de roulement" },
-        ],
-        correctOptionId: "a",
-        explain:
-          "Un stock qui dort est de l'argent qui ne travaille pas. Il gonfle le besoin en fonds de roulement et prend la place de ce qui se vendrait.",
       },
     ],
     modelRelevance: {
