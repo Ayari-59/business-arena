@@ -156,6 +156,35 @@ describe("ateliers professionnels", () => {
     }
   });
 
+  it("aucun atelier ne ferme avant le pic de son secteur", () => {
+    // Le défaut que cette garde attrape a été trouvé par un enseignant, pas par
+    // la suite : l'animation de découverte jouait trois trimestres sur NOVA, un
+    // secteur dont le marché vaut 18 000 unités au premier tour et 49 680 au
+    // quatrième, parce qu'un compte-clé qui pèse plus du tiers de la demande
+    // n'entre en scène qu'au troisième. La partie se jouait donc entièrement
+    // dans le creux et s'arrêtait le trimestre AVANT ce pour quoi le scénario
+    // est écrit.
+    //
+    // Rien ne le signalait : le nombre de tours était cohérent avec le nombre
+    // de séances, le secteur existait, la partie se créait. Le déroulé était
+    // juste et le monde qu'il faisait jouer, amputé.
+    for (const a of ATELIERS) {
+      const scenario = scenarioByCode(a.reglages.scenarioCode).scenario;
+      const demandeParTour = Array.from({ length: scenario.roundsCount }, (_, r) =>
+        scenario.market.segments.reduce(
+          (t, seg) => t + seg.size * (seg.seasonality?.[r] ?? 1),
+          0,
+        ) * (scenario.market.seasonality?.[r] ?? 1),
+      );
+      const pic = demandeParTour.indexOf(Math.max(...demandeParTour)) + 1;
+      const ampleur = Math.max(...demandeParTour) / Math.min(...demandeParTour);
+      expect(
+        a.reglages.tours,
+        `${a.code} : ${a.reglages.tours} tours sur « ${a.reglages.scenarioCode} », dont le marché culmine au tour ${pic} en valant ${ampleur.toFixed(1)} fois son creux`,
+      ).toBeGreaterThanOrEqual(pic);
+    }
+  });
+
   it("les réglages annoncés existent vraiment dans le produit", () => {
     // Le pire défaut possible : un atelier qui décrit une partie qu'on ne peut
     // pas créer. L'enseignant le découvrirait devant sa classe.
@@ -242,12 +271,20 @@ describe("ateliers professionnels", () => {
   it("le format annoncé dit le vrai nombre d'heures", () => {
     // « 6 séances de 4 h » se confronte au minutage réel : la promesse de la
     // carte doit tomber juste, sinon elle ment sur la vitrine.
+    //
+    // La demi-heure est lue elle aussi. Le registre ne savait écrire que des
+    // heures entières, ce qui convient aux créneaux de deux ou trois heures
+    // d'une section de technicien et à rien d'autre : un lycée travaille par
+    // séances d'une heure trente, et l'animation de découverte s'est cognée à
+    // cette limite le jour où il a fallu lui donner quatre séances sans
+    // allonger son volume.
     for (const a of ATELIERS) {
       const heures = dureeTotaleHeures(a);
-      const m = /(\d+)\s*séances?\s*de\s*(\d+)\s*h/i.exec(a.format);
+      const m = /(\d+)\s*séances?\s*de\s*(\d+)\s*h(?:\s*(\d+))?/i.exec(a.format);
       expect(m, `${a.code} : format « ${a.format} » illisible`).not.toBeNull();
       expect(Number(m![1]), `${a.code} : nombre de séances annoncé`).toBe(a.seances.length);
-      expect(Number(m![1]) * Number(m![2]), `${a.code} : volume annoncé ≠ minutage`).toBe(heures);
+      const parSeance = Number(m![2]) + (m![3] === undefined ? 0 : Number(m![3]) / 60);
+      expect(Number(m![1]) * parSeance, `${a.code} : volume annoncé ≠ minutage`).toBe(heures);
     }
   });
 

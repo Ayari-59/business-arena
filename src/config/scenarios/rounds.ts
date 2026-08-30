@@ -31,3 +31,27 @@ export function applyRoundsCount(
   if (tours === scenario.roundsCount) return scenario;
   return { ...scenario, roundsCount: tours };
 }
+
+/**
+ * Le tour où la demande du secteur culmine.
+ *
+ * Un scénario n'est pas plat : sa dramaturgie tient dans un tour précis, celui
+ * où le compte-clé passe sa commande, où les fêtes remplissent la boutique, où
+ * la saison pleine remplit l'hôtel. Raccourcir une partie en deçà de ce tour ne
+ * la raccourcit pas, elle la vide : la classe joue le creux et rentre chez elle
+ * avant que le secteur n'ait rien montré.
+ *
+ * Le défaut a été trouvé par un enseignant sur l'animation de découverte, qui
+ * jouait trois trimestres d'un secteur dont le marché double au quatrième. Il
+ * était réplicable ailleurs : la règle qui raccourcit les parties de premier
+ * semestre le recréait pour trois diplômes à la fois.
+ */
+export function tourDuPic(scenario: EngineScenarioConfig): number {
+  const demandeParTour = Array.from({ length: scenario.roundsCount }, (_, r) =>
+    scenario.market.segments.reduce((total, segment) => {
+      const saison = segment.seasonality?.[r] ?? 1;
+      return total + segment.size * saison;
+    }, 0) * (scenario.market.seasonality?.[r] ?? 1),
+  );
+  return demandeParTour.indexOf(Math.max(...demandeParTour)) + 1;
+}

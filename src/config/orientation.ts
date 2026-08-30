@@ -1,6 +1,7 @@
 import { ATELIERS } from "./ateliers";
 import { DIFFICULTY_PRESETS } from "./difficulty";
 import { SCENARIOS, scenarioByCode } from "./scenarios/registry";
+import { tourDuPic } from "./scenarios/rounds";
 import type { Periodicity } from "./scenarios/periodicity";
 
 /**
@@ -173,12 +174,24 @@ export function recommander(demande: Demande): Recommandation {
   // 3. La durée : celle de l'atelier, raccourcie au premier semestre, et
   //    jamais plus longue que ce que le secteur porte.
   const scenario = scenarioByCode(scenarioCode);
+  // Le pic du secteur ne se franchit pas : une partie qui s'arrête avant lui
+  // fait jouer le creux et referme le scénario sur ce qu'il a de moins
+  // intéressant. La règle du premier semestre le recréait pour trois diplômes,
+  // en retirant le tour où le marché double.
+  const pic = tourDuPic(scenario.scenario);
   let tours = atelier?.reglages.tours ?? 4;
   if (demande.semestre === "s1" && tours > 3) {
-    tours -= 1;
-    pourquoi.push(
-      `Une partie de ${tours} tours tient dans un premier semestre sans déborder sur les révisions, et laisse la place à un second essai au semestre suivant.`,
-    );
+    const raccourcie = Math.max(pic, tours - 1);
+    if (raccourcie !== tours) {
+      tours = raccourcie;
+      pourquoi.push(
+        `Une partie de ${tours} tours tient dans un premier semestre sans déborder sur les révisions, et laisse la place à un second essai au semestre suivant.`,
+      );
+    } else {
+      pourquoi.push(
+        `La partie garde ses ${tours} tours même au premier semestre : le marché de ce secteur culmine au dernier, et s'arrêter avant reviendrait à n'en jouer que le creux.`,
+      );
+    }
   }
   tours = Math.min(scenario.scenario.roundsCount, Math.max(1, tours));
 

@@ -93,6 +93,33 @@ describe("orientation", () => {
     }
   });
 
+  it("aucune recommandation ne s'arrête avant le pic du secteur", () => {
+    // La règle du premier semestre raccourcissait d'un tour sans regarder ce
+    // qu'elle retirait. Sur trois diplômes elle retirait le tour où le marché
+    // double, celui où le compte-clé passe sa commande : la classe aurait joué
+    // le creux du secteur et refermé la partie juste avant qu'il ne se passe
+    // quelque chose.
+    //
+    // Le pic est recalculé ici depuis la donnée du marché, et non lu d'une
+    // fonction du produit : une garde qui appellerait le même code que la
+    // recommandation ne verrait rien si ce code se trompait.
+    for (const demande of COMBINAISONS) {
+      const r = recommander(demande);
+      const scenario = scenarioByCode(r.scenarioCode).scenario;
+      const parTour = Array.from({ length: scenario.roundsCount }, (_, i) =>
+        scenario.market.segments.reduce(
+          (t, seg) => t + seg.size * (seg.seasonality?.[i] ?? 1),
+          0,
+        ) * (scenario.market.seasonality?.[i] ?? 1),
+      );
+      const pic = parTour.indexOf(Math.max(...parTour)) + 1;
+      expect(
+        r.tours,
+        `${demande.diplome}/${demande.semestre}/${demande.objectif} : ${r.tours} tours sur « ${r.scenarioCode} », dont le marché culmine au tour ${pic}`,
+      ).toBeGreaterThanOrEqual(pic);
+    }
+  });
+
   it("le plancher d'un objectif n'est jamais franchi", () => {
     // Défaut trouvé en essayant de casser la garde précédente, qui était trop
     // étroite : la règle du premier semestre abaissait le niveau d'un cran SANS
