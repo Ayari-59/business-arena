@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Browser, Page } from "playwright-core";
 import { aller, ouvrirNavigateur, texte, unique } from "./helpers/browser";
+import { ATELIERS, dureeTotaleHeures } from "../../src/config/ateliers";
 
 /**
  * Le parcours complet, dans un vrai navigateur, sur une vraie base.
@@ -308,18 +309,22 @@ describe("parcours enseignant et élève", () => {
     // CAPITALES par le CSS, si bien que le texte visible ne correspond pas à
     // celui du code. Le piège avait déjà coûté un faux échec sur « Note ».
     const fiche = (await texte(prof)).toLowerCase();
+    // Le volume et le format viennent du registre : les écrire ici les figerait,
+    // et c'est exactement ce qui a rendu ce test rouge le jour où les séances
+    // sont passées de quatre heures à trois.
+    const cg1 = ATELIERS.find((a) => a.code === "cg1")!;
     for (const attendu of [
       "séance 1",
-      "24 heures",
-      "6 séances de 4 h",
+      `${dureeTotaleHeures(cg1)} heures`,
+      cg1.format.toLowerCase(),
       "trace pour le passeport professionnel",
       "livrables attendus",
       "questions d'enseignants",
     ]) {
       expect(fiche, `« ${attendu} » absent de la fiche`).toContain(attendu);
     }
-    // les six séances, pas cinq
-    expect((fiche.match(/livrable de la séance/g) ?? []).length).toBe(6);
+    // toutes les séances de l'atelier, pas une de moins
+    expect((fiche.match(/livrable de la séance/g) ?? []).length).toBe(cg1.seances.length);
   });
 
   it("aucune page du parcours ne porte de tiret en milieu de phrase", async () => {

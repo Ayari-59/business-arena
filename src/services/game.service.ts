@@ -39,6 +39,7 @@ import {
   applyPeriodicityToCompany,
   type Periodicity,
 } from "@/config/scenarios/periodicity";
+import { applyMarketScale } from "@/config/scenarios/market-scale";
 import { applyScenarioVariability } from "@/config/scenarios/variability";
 import { parseScenarioConfig } from "@/config/scenarios/schema";
 import {
@@ -212,11 +213,19 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
   const baseScenario = args.variableWorld
     ? applyScenarioVariability(definition.scenario, seed)
     : definition.scenario;
+  const botCount = Math.min(Math.max(args.botCount, 0), definition.bots.length);
+  // Toutes les entreprises se partagent le même marché : sans redimensionnement,
+  // une classe nombreuse partage un gâteau calibré pour trois concurrents et
+  // aucune équipe n'atteint son seuil. Voir market-scale.ts.
+  const concurrents = args.humanTeams.length + botCount;
+
   const scenarioSnapshot = applyEventIntensity(
-    applyPeriodicity(applyEconomicOverrides(baseScenario, overrides), args.periodicity),
+    applyPeriodicity(
+      applyMarketScale(applyEconomicOverrides(baseScenario, overrides), concurrents),
+      args.periodicity,
+    ),
     preset?.eventProbabilityMultiplier ?? 1,
   );
-  const botCount = Math.min(Math.max(args.botCount, 0), definition.bots.length);
 
   const [game] = await db
     .insert(games)
