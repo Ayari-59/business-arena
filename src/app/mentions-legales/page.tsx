@@ -188,7 +188,7 @@ export default function MentionsLegalesPage() {
         <Section title="⚖️ Propriété intellectuelle & responsabilité">
           <p>
             La marque Business Arena, le logo, les contenus pédagogiques (situations, fiches
-            concepts, cartes événements) et le moteur de simulation sont la propriété de
+            notions, cartes événements) et le moteur de simulation sont la propriété de
             l&apos;éditeur. Les licences des composants open source utilisés sont respectées
             (notamment la police Big Shoulders, SIL Open Font License).
           </p>

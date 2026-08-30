@@ -184,7 +184,7 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
   );
 }
 
-/** Débriefing d'une situation du tour résolu : correction du diagnostic et du QCM + concepts. */
+/** Débriefing d'une situation du tour résolu : correction du diagnostic et du QCM + notions. */
 export function SituationDebrief({ situation }: { situation: SituationView }) {
   const debrief = situation.debrief;
   if (!debrief) return null;
@@ -280,13 +280,13 @@ export function SituationDebrief({ situation }: { situation: SituationView }) {
         {debrief.concepts.length > 0 ? (
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-              Concepts mobilisés
+              Notions mobilisées
             </p>
             <p className="mt-1 flex flex-wrap gap-2">
               {debrief.concepts.map((c) => (
                 <a
                   key={c.code}
-                  href={`/concepts#${c.code}`}
+                  href={`/notions#${c.code}`}
                   className="rounded-full border border-white/10 px-3 py-1 text-xs text-amber-200 hover:border-amber-400/40"
                 >
                   {c.name}

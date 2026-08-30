@@ -32,8 +32,8 @@ export function SiteHeader() {
         <Link href="/guide" className="hidden hover:text-slate-200 sm:block">
           Guide
         </Link>
-        <Link href="/concepts" className="hidden hover:text-slate-200 sm:block">
-          Concepts
+        <Link href="/notions" className="hidden hover:text-slate-200 sm:block">
+          Notions
         </Link>
         <Link href="/teacher/login" className="hidden hover:text-slate-200 sm:block">
           Enseignants

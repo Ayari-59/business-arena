@@ -186,7 +186,7 @@ export default async function TeacherGamePage({
           <div className="grid gap-4 lg:grid-cols-3">
             <div>
               <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                Maîtrise des concepts (du plus fragile au plus solide)
+                Maîtrise des notions (de la plus fragile à la plus solide)
               </h3>
               {pedagogy.conceptMastery.length === 0 ? (
                 <p className="mt-2 text-xs text-slate-500">
@@ -247,7 +247,7 @@ export default async function TeacherGamePage({
                   ? "Aucune question n'est posée dans cette partie : ces chiffres portent sur les tours joués sous un autre réglage."
                   : view.quizMode === "model"
                     ? "Un taux faible signale des élèves qui décident sans savoir sur quel outil d'analyse s'appuyer."
-                    : "Un taux faible signale des connaissances mal ancrées : le tableau des concepts ci-contre dit lesquelles reprendre en classe."}
+                    : "Un taux faible signale des connaissances mal ancrées : le tableau des notions ci-contre dit lesquelles reprendre en classe."}
               </p>
             </div>
           </div>

@@ -87,7 +87,7 @@ export default function GuidePage() {
         </h1>
         <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-400">
           Business Arena ne vous demande jamais « calculez le BFR » : vous vivez des situations,
-          vous décidez, la simulation répond, et les concepts arrivent au moment où vous en avez
+          vous décidez, la simulation répond, et les notions arrivent au moment où vous en avez
           besoin. Ce guide couvre les trois façons d&apos;entrer dans l&apos;arène : en solo, en
           classe, en établissement.
         </p>
@@ -181,7 +181,7 @@ export default function GuidePage() {
               résultat, bilan, analyse des coûts et budget de trésorerie. Ils sont gratuits,
               ce sont les vôtres.
               Le débriefing corrigé vous montre ce qu&apos;il fallait voir, et vos fiches
-              concepts se déverrouillent au fil des situations vécues.
+              notions se déverrouillent au fil des situations vécues.
             </Step>
           </ol>
         </Section>
@@ -226,7 +226,7 @@ export default function GuidePage() {
               Un clic : la simulation calcule tous les résultats, le débriefing pédagogique se
               génère, le classement BPI se met à jour, le tour suivant s&apos;ouvre. Votre vue
               pédagogique agrège diagnostics, résultats des QCM, indices consommés et maîtrise
-              des concepts par équipe.
+              des notions par équipe.
             </Step>
             <Step n={6} title="Finissez l'année en championnat">
               Créez un concours : inscriptions par code, groupes tirés au sort (tirage seedé,

@@ -71,8 +71,8 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
           <Link href="/profile" className="text-xs text-slate-500 underline-offset-4 hover:text-slate-300 hover:underline">
             Mon profil
           </Link>
-          <Link href="/concepts" className="text-xs text-slate-500 underline-offset-4 hover:text-slate-300 hover:underline">
-            Fiches concepts
+          <Link href="/notions" className="text-xs text-slate-500 underline-offset-4 hover:text-slate-300 hover:underline">
+            Fiches notions
           </Link>
           <p
             className="rounded-full border border-amber-400/30 px-3 py-1 text-xs text-amber-300"

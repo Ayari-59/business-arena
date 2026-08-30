@@ -75,15 +75,15 @@ export default async function ProfilePage() {
       </section>
 
       <section className="rounded-xl border border-white/10 bg-slate-900 p-5">
-        <h2 className="mb-3 text-sm font-semibold text-slate-200">Maîtrise des concepts</h2>
+        <h2 className="mb-3 text-sm font-semibold text-slate-200">Maîtrise des notions</h2>
         {profile.concepts.length === 0 ? (
-          <p className="text-sm text-slate-500">Les concepts rencontrés en jeu apparaîtront ici.</p>
+          <p className="text-sm text-slate-500">Les notions rencontrées en jeu apparaîtront ici.</p>
         ) : (
           <ul className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
             {profile.concepts.map((c) => (
               <li key={c.code} className="text-sm">
                 <div className="flex items-center justify-between text-slate-300">
-                  <Link href={`/concepts#${c.code}`} className="hover:text-amber-200">
+                  <Link href={`/notions#${c.code}`} className="hover:text-amber-200">
                     {c.name}
                   </Link>
                   <span className="tabular-nums text-slate-400">{Math.round(c.mastery)}</span>

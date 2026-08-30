@@ -3,6 +3,8 @@ import { startGameAction } from "./actions";
 import { getPlatformConfig } from "@/services/admin.service";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
 import { etendueDesDecisions, leviersDuNiveau } from "@/config/decisions";
+import { CONCEPTS } from "@/config/pedagogy/concepts";
+import { DECISION_MODELS } from "@/config/pedagogy/models";
 import { DEFAULT_SCENARIO_CODE, SCENARIOS, SECTOR_LABELS } from "@/config/scenarios/registry";
 import {
   ACCENTS_SECTEUR,
@@ -46,7 +48,7 @@ const FEATURES = [
   {
     icon: "💡",
     title: "Des indices, pas des solutions",
-    text: "Bloqué ? Cinq niveaux d'aide progressifs : une observation, une question, un concept, un modèle, une méthode. Chaque indice coûte des points, car l'autonomie est récompensée.",
+    text: "Bloqué ? Cinq niveaux d'aide progressifs : une observation, une question, une notion, un modèle, une méthode. Chaque indice coûte des points, car l'autonomie est récompensée.",
   },
   {
     icon: "📉",
@@ -224,8 +226,8 @@ export default async function Home({
               `${decisions.minimum} à ${decisions.maximum} décisions`,
               "par tour, selon le niveau",
             ],
-            ["24 concepts", "du CA au FRNG/BFR"],
-            ["18 modèles", "d'aide à la décision"],
+            [`${CONCEPTS.length} fiches notions`, "du CA au FRNG/BFR"],
+            [`${DECISION_MODELS.length} modèles`, "d'aide à la décision"],
             ["7 dimensions", "de performance (BPI)"],
           ].map(([big, small]) => (
             <div key={big}>
@@ -312,7 +314,7 @@ export default async function Home({
         <p className="mx-auto mt-3 max-w-2xl text-center text-sm leading-relaxed text-slate-400">
           Business Arena ne vous demande jamais « calculez le BFR ». Vous vivez une situation
           d&apos;entreprise, vous cherchez, vous choisissez un modèle d&apos;analyse, vous
-          décidez, et la simulation vous répond. Le concept s&apos;apprend parce qu&apos;il a
+          décidez, et la simulation vous répond. La notion s&apos;apprend parce qu&apos;elle a
           servi.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
@@ -388,7 +390,7 @@ export default async function Home({
             </p>
             <ul className="mt-5 space-y-2 text-sm text-slate-300">
               <li>· Niveau Découverte : aucune connaissance préalable requise</li>
-              <li>· Débriefing corrigé à chaque tour, fiches concepts intégrées</li>
+              <li>· Débriefing corrigé à chaque tour, fiches notions intégrées</li>
               <li>· Votre profil de compétences progresse à chaque situation traitée</li>
             </ul>
             <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm">
@@ -535,7 +537,7 @@ export default async function Home({
             <h3 className="mt-2 text-lg font-semibold text-slate-100">Pour vos classes</h3>
             <p className="mt-2 text-sm leading-relaxed text-slate-400">
               Créez une partie multi-équipes, partagez un code, pilotez les tours. La vue
-              pédagogique vous montre la maîtrise de chaque concept, les indices consommés et
+              pédagogique vous montre la maîtrise de chaque notion, les indices consommés et
               les modèles mal choisis. De quoi préparer la séance suivante.
             </p>
             <Link
@@ -579,8 +581,8 @@ export default async function Home({
             <Link href="/guide" className="hover:text-slate-400">
               Guide
             </Link>
-            <Link href="/concepts" className="hover:text-slate-400">
-              Fiches concepts
+            <Link href="/notions" className="hover:text-slate-400">
+              Fiches notions
             </Link>
             <Link href="/teacher/login" className="hover:text-slate-400">
               Enseignants
