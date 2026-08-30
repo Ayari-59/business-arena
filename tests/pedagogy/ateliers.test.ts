@@ -77,20 +77,29 @@ describe("ateliers professionnels", () => {
     }
   });
 
-  it("un niveau qui n'ouvre pas le financement ne peut pas porter une séance de trésorerie", () => {
-    // La séance du plan de trésorerie suppose que la banque existe, donc que le
-    // niveau ouvre les décisions de financement. Annoncer l'une sans l'autre
-    // enverrait l'enseignant chercher un panneau absent.
+  it("une séance ne peut pas porter sur des décisions que le niveau ne donne pas", () => {
+    // Une séance de plan de trésorerie suppose que la banque existe, une séance
+    // de recrutement que le personnel soit ouvert, une séance d'investissement
+    // que l'investissement le soit. Annoncer l'une sans l'autre enverrait
+    // l'enseignant chercher devant sa classe un panneau qui n'existe pas.
+    const EXIGENCES = [
+      { mots: /trésorerie|emprunt|financement|banque/i, levier: "finance" as const },
+      { mots: /recrut|embauch|personnel|effectif/i, levier: "hr" as const },
+      { mots: /investir|investissement/i, levier: "investment" as const },
+      { mots: /placement|excédents? de trésorerie/i, levier: "placement" as const },
+    ];
     for (const a of ATELIERS) {
       const preset = DIFFICULTY_PRESETS.find((p) => p.level === a.reglages.niveau)!;
-      const parleFinancement = a.seances.some((s) =>
-        /trésorerie|emprunt|financement|banque/i.test(`${s.titre} ${s.objectif}`),
-      );
-      if (!parleFinancement) continue;
-      expect(
-        preset.decisions.finance,
-        `${a.code} : séance de financement au niveau ${preset.level}, qui ne l'ouvre pas`,
-      ).toBe(true);
+      for (const s of a.seances) {
+        const dit = `${s.titre} ${s.objectif}`;
+        for (const { mots, levier } of EXIGENCES) {
+          if (!mots.test(dit)) continue;
+          expect(
+            preset.decisions[levier],
+            `${a.code}/séance ${s.numero} : porte sur « ${levier} » au niveau ${preset.level}, qui ne l'ouvre pas`,
+          ).toBe(true);
+        }
+      }
     }
   });
 

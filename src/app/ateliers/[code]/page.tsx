@@ -77,7 +77,11 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
 
   const scenario = scenarioByCode(atelier.reglages.scenarioCode);
   const niveau = DIFFICULTY_PRESETS.find((p) => p.level === atelier.reglages.niveau);
-  const processus = [...new Set(atelier.seances.flatMap((s) => s.processus))].sort();
+  // Tri naturel : un tri de chaînes place « UE11 » avant « UE6 », et le ferait
+  // aussi pour un dixième processus face au deuxième.
+  const processus = [...new Set(atelier.seances.flatMap((s) => s.processus))].sort((a, b) =>
+    a.localeCompare(b, "fr", { numeric: true }),
+  );
 
   return (
     <div className="mx-auto grid max-w-6xl gap-10 px-6 py-12 lg:grid-cols-[1fr_220px] print:block print:max-w-none print:px-0 print:py-0 print:text-black">
