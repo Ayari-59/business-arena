@@ -40,6 +40,43 @@ import type { AtelierDefinition } from "./types";
  * La même trame sert en première et en terminale. Ce qui change n'est pas le
  * déroulé mais la question posée au débriefing, et chaque séance dit laquelle.
  */
+/**
+ * LES THÈMES DU PROGRAMME, EN LISTE FERMÉE.
+ *
+ * Ils étaient écrits à la main, séance par séance, et deux étaient faux : un
+ * thème « Évaluation et performance » qui n'existe dans aucun des trois
+ * programmes, cité deux fois, et un intitulé de management tronqué. C'est
+ * l'erreur qui se voit du premier coup d'œil, et par le seul lecteur qui
+ * connaît son programme par cœur.
+ *
+ * Écrits ici une fois, ils ne peuvent plus diverger d'une séance à l'autre ni
+ * être inventés : le compilateur refuse un thème qui n'est pas dans la liste.
+ *
+ * Provenance : le Bulletin officiel n'est pas joignable depuis cet
+ * environnement, dont la politique réseau bloque education.gouv.fr, eduscol et
+ * les sites académiques. Ces intitulés viennent de recherches concordantes,
+ * pas du texte lui-même. Les quatre thèmes de sciences de gestion et numérique
+ * et les trois de management sont recoupés par deux sources ; côté terminale,
+ * seul « Les organisations et les acteurs » l'est, les deux autres restent à
+ * confirmer sur le texte.
+ */
+const PREMIERE_SGN = "Première, sciences de gestion et numérique";
+const PREMIERE_MANAGEMENT = "Première, management";
+const TERMINALE = "Terminale, tronc commun";
+
+export const THEMES_STMG = {
+  individuActeur: `De l'individu à l'acteur · ${PREMIERE_SGN}`,
+  numeriqueCollectif: `Numérique et intelligence collective · ${PREMIERE_SGN}`,
+  creationValeur: `Création de valeur et performance · ${PREMIERE_SGN}`,
+  tempsRisque: `Temps et risque · ${PREMIERE_SGN}`,
+  rencontreManagement: `À la rencontre du management des organisations · ${PREMIERE_MANAGEMENT}`,
+  managementStrategique: `Le management stratégique, du diagnostic à la fixation des objectifs · ${PREMIERE_MANAGEMENT}`,
+  choixStrategiques: `Les choix stratégiques des organisations · ${PREMIERE_MANAGEMENT}`,
+  activiteProduction: `Les organisations et l'activité de production de biens et de services · ${TERMINALE}`,
+  organisationsActeurs: `Les organisations et les acteurs · ${TERMINALE}`,
+  organisationsSociete: `Les organisations et la société · ${TERMINALE}`,
+} as const;
+
 export const ATELIER_STMG: AtelierDefinition = {
   code: "stmg",
   titre: "Découvrir la gestion d'une entreprise en quatre séances",
@@ -80,11 +117,7 @@ export const ATELIER_STMG: AtelierDefinition = {
       titre: "Décider sans savoir",
       dureeMinutes: 90,
       tourJoue: 1,
-      processus: [
-        "Création de valeur et performance · Première, sciences de gestion et numérique",
-        "À la rencontre du management des organisations · Première, management",
-        "Les organisations et l'activité de production de biens et de services · Terminale, tronc commun",
-      ],
+      processus: [THEMES_STMG.creationValeur, THEMES_STMG.rencontreManagement, THEMES_STMG.activiteProduction],
       objectif:
         "Prendre une première décision de gestion sans cours préalable, puis découvrir ce qu'elle a produit, pour installer le besoin des notions plutôt que de les annoncer.",
       competences: [
@@ -148,11 +181,7 @@ export const ATELIER_STMG: AtelierDefinition = {
       titre: "Ce que la décision a coûté",
       dureeMinutes: 90,
       tourJoue: 2,
-      processus: [
-        "Évaluation et performance · Première, sciences de gestion et numérique",
-        "Temps et risque · Première, sciences de gestion et numérique",
-        "Les organisations et les acteurs · Terminale, tronc commun",
-      ],
+      processus: [THEMES_STMG.creationValeur, THEMES_STMG.tempsRisque, THEMES_STMG.organisationsActeurs],
       objectif:
         "Relier chaque euro du résultat à une décision prise au tour précédent, et corriger une décision en sachant dire ce qu'on en attend.",
       competences: [
@@ -222,11 +251,7 @@ export const ATELIER_STMG: AtelierDefinition = {
       titre: "Un gros client s'annonce",
       dureeMinutes: 90,
       tourJoue: 3,
-      processus: [
-        "Temps et risque · Première, sciences de gestion et numérique",
-        "Le management stratégique · Première, management",
-        "Les organisations et les acteurs · Terminale, tronc commun",
-      ],
+      processus: [THEMES_STMG.tempsRisque, THEMES_STMG.managementStrategique, THEMES_STMG.organisationsActeurs],
       objectif:
         "Décider aujourd'hui pour un trimestre qui n'est pas encore là, en pesant ce que coûte de produire d'avance contre ce que coûte de ne pas pouvoir livrer.",
       competences: [
@@ -296,11 +321,7 @@ export const ATELIER_STMG: AtelierDefinition = {
       titre: "Le pic, et ce qu'on en retient",
       dureeMinutes: 90,
       tourJoue: 4,
-      processus: [
-        "Création de valeur et performance · Première, sciences de gestion et numérique",
-        "Évaluation et performance · Première, sciences de gestion et numérique",
-        "Les organisations et la société · Terminale, tronc commun",
-      ],
+      processus: [THEMES_STMG.creationValeur, THEMES_STMG.choixStrategiques, THEMES_STMG.organisationsSociete],
       objectif:
         "Jouer le trimestre qui décide de l'exercice, puis rendre compte devant la classe de ce que l'équipe a décidé, de ce que cela a donné et de ce qu'elle ferait autrement.",
       competences: [

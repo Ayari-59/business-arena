@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { ATELIERS, dureeTotaleHeures } from "../../src/config/ateliers";
+import { THEMES_STMG } from "../../src/config/ateliers/stmg";
 import { SCENARIOS, scenarioByCode } from "../../src/config/scenarios/registry";
 import { DIFFICULTY_PRESETS } from "../../src/config/difficulty";
 
@@ -154,6 +155,31 @@ describe("ateliers professionnels", () => {
         ).toBeLessThanOrEqual(scenario.scenario.roundsCount);
       }
     }
+  });
+
+  it("l'animation de lycée ne cite que des thèmes qui existent au programme", () => {
+    // Deux thèmes étaient inventés : un « Évaluation et performance » qui
+    // n'appartient à aucun des trois programmes, cité par deux séances, et un
+    // intitulé de management tronqué. C'est l'erreur que repère du premier
+    // coup d'œil le seul lecteur qui connaît son programme par cœur.
+    //
+    // Les intitulés vivent maintenant dans une liste fermée, que le
+    // compilateur fait respecter. Cette garde ferme la porte restante : une
+    // séance qui écrirait de nouveau un thème à la main serait rouge.
+    const officiels = new Set<string>(Object.values(THEMES_STMG));
+    const stmg = ATELIERS.find((a) => a.code === "stmg")!;
+    const inventes = [...new Set(stmg.seances.flatMap((s) => s.processus))].filter(
+      (t) => !officiels.has(t),
+    );
+    expect(inventes, `thèmes hors programme : ${inventes.join(" · ")}`).toEqual([]);
+    // Et la liste elle même reste utile : chaque thème déclaré sert au moins
+    // une fois, sans quoi elle se remplirait de thèmes que rien ne travaille.
+    const cites = new Set(stmg.seances.flatMap((s) => s.processus));
+    const dormants = [...officiels].filter((t) => !cites.has(t));
+    expect(
+      dormants.length,
+      `${dormants.length} thèmes déclarés que l'animation ne travaille jamais : ${dormants.join(" · ")}`,
+    ).toBeLessThanOrEqual(2);
   });
 
   it("aucun atelier ne ferme avant le pic de son secteur", () => {
