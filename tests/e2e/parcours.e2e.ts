@@ -124,6 +124,21 @@ describe("parcours enseignant et élève", () => {
     expect(await texte(prof)).toContain("Trimestre 2");
   });
 
+  it("l'analyse des coûts nomme ce que le métier achète", async () => {
+    // Le moteur ne connaît qu'un coût d'achat par unité vendue, et l'interface
+    // l'appelait « matières premières » dans les neuf secteurs. Un cabinet de
+    // conseil n'achète pas de matières : il paie des frais de mission.
+    await aller(eleve, new URL(eleve.url()).pathname);
+    await eleve.evaluate(() => {
+      // les comptes sont dépliables : leur contenu ne compte pas dans le texte
+      // visible tant qu'ils sont fermés.
+      document.querySelectorAll("details").forEach((d) => d.setAttribute("open", ""));
+    });
+    const vu = (await texte(eleve)).toLowerCase();
+    expect(vu).toContain("frais de mission");
+    expect(vu, "l'étiquette figée est revenue").not.toContain("matières premières");
+  });
+
   it("le relevé de notes est là, et son tableur se télécharge vraiment", async () => {
     await aller(prof, urlPartie);
     const vu = await texte(prof);

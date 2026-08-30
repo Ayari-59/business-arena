@@ -589,7 +589,7 @@ export function DecisionForm({
       {suppliersOffer && suppliersOffer.length > 0 ? (
         <fieldset className="rounded-lg border border-emerald-400/25 bg-emerald-950/20 p-4">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-emerald-300">
-            🏭 Fournisseur de matières premières
+            🏭 {v.supplierPanelLabel}
           </legend>
           <div className="space-y-2">
             {suppliersOffer.map((s) => (
@@ -606,7 +606,8 @@ export function DecisionForm({
                 />
                 <span>
                   <span className="text-sm font-medium text-slate-200">
-                    {s.name} · matières à {s.materialCostPerUnit.toLocaleString("fr-FR")} €/u
+                    {s.name} · {v.materialLabel.toLowerCase()} à{" "}
+                    {s.materialCostPerUnit.toLocaleString("fr-FR")} €/u
                     {s.costMultiplier !== 1
                       ? ` (${s.costMultiplier < 1 ? "" : "+"}${Math.round((s.costMultiplier - 1) * 100)} %)`
                       : ""}

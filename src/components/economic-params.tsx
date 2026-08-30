@@ -63,7 +63,7 @@ const GROUPS: { title: string; note?: string; fields: Field[] }[] = [
     title: "Coûts et structure",
     fields: [
       { name: "fixedCostsPerRound", label: "Charges de structure / tour", suffix: "€" },
-      { name: "materialCostPerUnit", label: "Coût matières unitaire", suffix: "unit" },
+      { name: "materialCostPerUnit", label: "Coût d'achat unitaire", suffix: "unit" },
       { name: "otherVariableCostPerUnit", label: "Autres coûts variables", suffix: "unit" },
       { name: "depreciationPerRound", label: "Amortissements / tour", suffix: "€" },
       { name: "baseDefectRate", label: "Taux de rebuts (non-qualité)", suffix: "%" },

@@ -1,4 +1,5 @@
 import type { CompanyRoundResult } from "@/engine/types";
+import type { ScenarioVocabulary } from "@/config/scenarios/registry";
 
 /**
  * Les comptes du tour, en clair et GRATUITS (doc 02 §7.3 : ce sont VOS
@@ -96,12 +97,16 @@ export function FinancialStatements({
   price,
   materialCostPerUnit,
   otherVariableCostPerUnit,
+  vocabulary,
 }: {
   result: CompanyRoundResult;
   /** Prix de vente du tour (analyse des coûts) — null si inconnu. */
   price: number | null;
   materialCostPerUnit: number;
   otherVariableCostPerUnit: number;
+  /** Le métier nomme lui-même ce qu'il achète : on ne vend pas des matières
+   *  premières dans une salle de sport. */
+  vocabulary: ScenarioVocabulary;
 }) {
   const cr = result.incomeStatement;
   const b = result.balanceSheet;
@@ -205,8 +210,8 @@ export function FinancialStatements({
             <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
               À l&apos;unité
             </p>
-            <Row label="Matières premières" value={euro(materialCostPerUnit)} indent />
-            <Row label="MOD, énergie, divers" value={euro(otherVariableCostPerUnit)} indent />
+            <Row label={vocabulary.materialLabel} value={euro(materialCostPerUnit)} indent />
+            <Row label={vocabulary.otherVariableLabel} value={euro(otherVariableCostPerUnit)} indent />
             <Row label="= Coût variable unitaire" value={euro(cvu)} strong />
             {price !== null ? (
               <>

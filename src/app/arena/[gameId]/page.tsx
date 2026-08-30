@@ -310,6 +310,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                 price={view.lastDecisions?.price ?? null}
                 materialCostPerUnit={view.costFacts.materialCostPerUnit}
                 otherVariableCostPerUnit={view.costFacts.otherVariableCostPerUnit}
+                vocabulary={view.vocabulary}
               />
               {view.studyReports ? <StudyReportsPanel reports={view.studyReports} /> : null}
               {r.capital && r.capital.applied < r.capital.requested - 0.5 ? (

@@ -100,6 +100,20 @@ export interface ScenarioVocabulary {
   laborBottleneckHint: string;
   /** Ce que la capacité compte par tour (« enceintes/tour », « nuitées/tour »). */
   perRoundLabel: string;
+
+  // --- Analyse des coûts : une salle de sport n'achète pas de matières ------
+  /**
+   * Ce que recouvre le coût d'achat unitaire (« Denrées », « Matériaux »,
+   * « Consommables adhérent »). Le moteur ne connaît qu'un coût d'achat par
+   * unité vendue ; ce que l'on achète change à chaque métier, et l'appeler
+   * partout « matières premières » demandait à un gérant de salle de sport de
+   * deviner qu'il s'agissait de ses badges et de ses serviettes.
+   */
+  materialLabel: string;
+  /** L'autre moitié du coût variable (« Énergie de cuisson, commissions »). */
+  otherVariableLabel: string;
+  /** Le titre du panneau de choix du fournisseur (« Fournisseur de denrées »). */
+  supplierPanelLabel: string;
 }
 
 export interface ScenarioDefinition {
@@ -191,6 +205,9 @@ export const NOVA_DEFINITION: ScenarioDefinition = {
     laborBottleneckHint:
       "Votre main-d'œuvre limite la production : envisagez d'embaucher ou de former vos salariés pour augmenter la productivité.",
     perRoundLabel: "enceintes/tour",
+    materialLabel: "Matières et composants",
+    otherVariableLabel: "Main-d'œuvre directe, énergie",
+    supplierPanelLabel: "Fournisseur de composants",
   },
   scenario: novaScenario,
   company: novaCompany,
@@ -241,6 +258,9 @@ export const BOUTIQUE_DEFINITION: ScenarioDefinition = {
     laborBottleneckHint:
       "Votre équipe de vente limite le flux en boutique : envisagez d'embaucher ou de former vos vendeuses.",
     perRoundLabel: "articles/tour",
+    materialLabel: "Achats de marchandises",
+    otherVariableLabel: "Sacs, commissions, logistique",
+    supplierPanelLabel: "Fournisseur de la collection",
   },
   scenario: boutiqueScenario,
   company: boutiqueCompany,
@@ -291,6 +311,9 @@ export const HOTEL_DEFINITION: ScenarioDefinition = {
     laborBottleneckHint:
       "Vos équipes d'étage et de réception limitent le nombre de chambres exploitables : envisagez d'embaucher ou de former.",
     perRoundLabel: "nuitées/tour",
+    materialLabel: "Petit-déjeuner et linge",
+    otherVariableLabel: "Commissions, énergie, ménage",
+    supplierPanelLabel: "Prestataires du séjour",
   },
   scenario: hotelScenario,
   company: hotelCompany,
@@ -341,6 +364,9 @@ export const BISTROT_DEFINITION: ScenarioDefinition = {
     laborBottleneckHint:
       "Votre brigade limite le service : des places libres ne servent à rien sans personnel pour les tenir. Embauchez ou formez.",
     perRoundLabel: "couverts/tour",
+    materialLabel: "Denrées",
+    otherVariableLabel: "Énergie de cuisson, commissions",
+    supplierPanelLabel: "Fournisseur de denrées",
   },
   scenario: bistrotScenario,
   company: bistrotCompany,
@@ -391,6 +417,9 @@ export const CONSEIL_DEFINITION: ScenarioDefinition = {
     laborBottleneckHint:
       "Vos consultants SONT la capacité du cabinet : elle ne s'achète pas, elle se recrute. Embaucher produit son effet au tour suivant.",
     perRoundLabel: "jours/tour",
+    materialLabel: "Frais de mission",
+    otherVariableLabel: "Sous-traitance d'appoint",
+    supplierPanelLabel: "Renfort sur les missions",
   },
   scenario: conseilScenario,
   company: conseilCompany,
@@ -442,6 +471,9 @@ export const ECOMMERCE_DEFINITION: ScenarioDefinition = {
     laborBottleneckHint:
       "Votre équipe logistique limite les expéditions : une commande non préparée est une commande annulée. Embauchez ou formez.",
     perRoundLabel: "commandes/tour",
+    materialLabel: "Achats de marchandises",
+    otherVariableLabel: "Préparation, transport, retours",
+    supplierPanelLabel: "Fournisseur du catalogue",
   },
   scenario: ecommerceScenario,
   company: ecommerceCompany,
@@ -492,6 +524,9 @@ export const FITNESS_DEFINITION: ScenarioDefinition = {
     laborBottleneckHint:
       "Vos coachs limitent l'accueil : sur-vendre des abonnements sans encadrement dégrade l'expérience, donc la rétention. Embauchez avant de vendre.",
     perRoundLabel: "adhérents/tour",
+    materialLabel: "Consommables adhérent",
+    otherVariableLabel: "Énergie, maintenance, frais bancaires",
+    supplierPanelLabel: "Parc de machines et consommables",
   },
   scenario: fitnessScenario,
   company: fitnessCompany,
@@ -544,6 +579,9 @@ export const BATIMENT_DEFINITION: ScenarioDefinition = {
     laborBottleneckHint:
       "Vos compagnons limitent la surface traitée : embaucher prend un trimestre, et la sous-traitance coûte une part de la marge.",
     perRoundLabel: "m²/tour",
+    materialLabel: "Matériaux",
+    otherVariableLabel: "Location de matériel, évacuation",
+    supplierPanelLabel: "Fournisseur de matériaux",
   },
   scenario: batimentScenario,
   company: batimentCompany,
@@ -595,6 +633,9 @@ export const TRANSPORT_DEFINITION: ScenarioDefinition = {
     laborBottleneckHint:
       "Vos chauffeurs limitent le trafic : ils manquent partout, et ils partent au premier employeur qui paie mieux.",
     perRoundLabel: "palettes/tour",
+    materialLabel: "Gazole et péages",
+    otherVariableLabel: "Entretien, pneumatiques, primes",
+    supplierPanelLabel: "Fourniture de carburant",
   },
   scenario: transportScenario,
   company: transportCompany,
