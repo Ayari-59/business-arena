@@ -349,6 +349,55 @@ describe("registre des scénarios", () => {
     }
   });
 
+  it("une situation qui enseigne une notion la déclare", () => {
+    // Les situations nomment des notions sans les rattacher : la fiche de
+    // MAILLE & CO faisait calculer un coefficient multiplicateur depuis
+    // toujours, sans jamais le déclarer. La notion n'entrait donc pas au
+    // profil de l'élève, la fiche du référentiel ne renvoyait pas vers elle,
+    // et l'enseignant qui cherchait « où travaille-t-on le coefficient ? » ne
+    // trouvait rien.
+    //
+    // On ne retient que des termes qui ne s'emploient jamais en passant. Le
+    // « seuil de rentabilité » est cité partout comme repère sans être le
+    // sujet, et l'exiger produirait du bruit plutôt qu'une règle.
+    const SIGNES: [string, RegExp][] = [
+      ["markup_coefficient", /coefficient multiplicateur/i],
+      ["markdown", /démarque/i],
+      ["stock_rotation", /rotation des stocks|rotation du stock|durée de stockage/i],
+      ["average_basket", /panier moyen|indice de vente/i],
+      ["conversion_rate", /taux de transformation/i],
+      ["assortment", /assortiment/i],
+      ["sales_per_sqm", /mètre de linéaire|rendement du linéaire/i],
+    ];
+    const manquantes: string[] = [];
+    for (const d of SCENARIOS) {
+      for (const s of d.situations) {
+        // La question « quel modèle d'analyse ? » est GÉNÉRÉE et liste les
+        // intitulés des modèles, dont « Analyse du seuil de rentabilité » et
+        // « Prix psychologique ». La lire ici ferait croire que chaque
+        // situation enseigne tout ce que ses modèles nomment : une première
+        // version de cette garde signalait ainsi vingt-cinq faux cas.
+        const prose = [
+          s.narrative,
+          s.problem,
+          ...s.diagnosticOptions.map((o) => o.label),
+          ...s.quiz
+            .filter((q) => q.id !== "model_choice")
+            .flatMap((q) => [q.prompt, q.explain, ...q.options.map((o) => o.label)]),
+          ...s.hints.map((h) => h.text),
+        ].join(" ");
+        for (const [code, motif] of SIGNES) {
+          if (motif.test(prose) && !s.conceptCodes.includes(code)) {
+            manquantes.push(`${d.code}/${s.code} : enseigne « ${code} » sans le déclarer`);
+          }
+        }
+      }
+    }
+    expect(manquantes, `notions enseignées sans être rattachées :\n${manquantes.join("\n")}`).toEqual(
+      [],
+    );
+  });
+
   it("le vocabulaire de chaque secteur est complet et lui est propre", () => {
     // C'est ce vocabulaire qui parle à l'élève : un hôtel n'a pas de
     // « machines », un cabinet ne vend pas des « unités ».

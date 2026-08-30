@@ -73,7 +73,7 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
       relevant_costs: "acceptable",
       npv: "irrelevant",
     },
-    conceptCodes: ["contribution_margin", "variable_costs", "fixed_costs", "breakeven"],
+    conceptCodes: ["average_basket", "contribution_margin", "variable_costs", "fixed_costs", "breakeven"],
     hints: hints([
       "Décomposez ce que devient un billet de 68 € encaissé : où va-t-il, poste par poste ?",
       "Trois postes le mangent : la marchandise, la logistique, et la publicité qui a amené le client.",
@@ -149,7 +149,7 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
       marginal_analysis: "acceptable",
       breakeven_analysis: "misleading",
     },
-    conceptCodes: ["segmentation", "contribution_margin", "demand_market_share", "margin_rates"],
+    conceptCodes: ["average_basket", "segmentation", "contribution_margin", "demand_market_share", "margin_rates"],
     hints: hints([
       "Comparez les deux segments ligne à ligne : panier moyen, coût variable, coût d'acquisition.",
       "Le trafic payant se repaie à chaque commande. Le client fidèle, lui, ne se paie qu'une fois.",
@@ -301,7 +301,7 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
       sensitivity_analysis: "acceptable",
       capacity_analysis: "irrelevant",
     },
-    conceptCodes: ["price_elasticity", "contribution_margin", "breakeven", "margin_rates"],
+    conceptCodes: ["average_basket", "price_elasticity", "contribution_margin", "breakeven", "margin_rates"],
     hints: hints([
       "La hausse touche une charge variable, pas la structure. Quelle grandeur bouge en premier ?",
       "Votre marge par commande se comprime de 3 €. Multipliez par vos volumes trimestriels.",
@@ -376,7 +376,7 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
       cvp_analysis: "acceptable",
       npv: "irrelevant",
     },
-    conceptCodes: ["breakeven", "contribution_margin", "fixed_costs", "safety_margin"],
+    conceptCodes: ["average_basket", "breakeven", "contribution_margin", "fixed_costs", "safety_margin"],
     hints: hints([
       "Regardez le compte de résultat : quel poste a le plus augmenté en même temps que le chiffre d'affaires ?",
       "Calculez ce que rapporte une commande APRÈS la publicité qui l'a déclenchée, pas avant.",

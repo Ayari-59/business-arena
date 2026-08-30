@@ -73,7 +73,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
       psych_pricing: "acceptable",
       npv: "irrelevant",
     },
-    conceptCodes: ["contribution_margin", "variable_costs", "fixed_costs", "breakeven"],
+    conceptCodes: ["markup_coefficient", "contribution_margin", "variable_costs", "fixed_costs", "breakeven"],
     hints: hints([
       "Regardez votre compte de résultat : deux blocs de charges s'y comportent très différemment quand vos ventes varient.",
       "Le loyer et les salaires tombent que vous vendiez 10 ou 10 000 articles. Le coût d'achat, lui, suit les quantités.",
@@ -376,7 +376,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
       elasticity_analysis: "acceptable",
       npv: "irrelevant",
     },
-    conceptCodes: ["breakeven", "contribution_margin", "fixed_costs", "safety_margin"],
+    conceptCodes: ["breakeven", "markup_coefficient", "contribution_margin", "fixed_costs", "safety_margin"],
     hints: hints([
       "Reprenez le compte de résultat du tour : de combien manquez-vous exactement pour équilibrer ?",
       "Divisez cet écart par votre marge sur coût variable unitaire : vous obtenez le nombre d'articles manquants.",
@@ -466,7 +466,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
     code: "boutique_t3_soldes",
     title: "Solder, ou garder pour l'an prochain",
     narrative:
-      "Il reste 400 pièces de la collection de printemps, achetées 18 € l'unité et affichées 45 €. Elles ne partiront plus au tarif plein. Un client déstockeur en offre 22 € l'unité, tout de suite. Les garder jusqu'au printemps prochain coûte de la place en réserve, et la mode aura tourné.",
+      "Il reste 400 pièces de la collection de printemps, achetées 18 € l'unité et affichées 45 €. Elles ne partiront plus au tarif plein. Un client déstockeur en offre 22 € l'unité, tout de suite. Accepter, c'est décider une démarque ; refuser, c'est occuper une réserve jusqu'au printemps prochain, quand la mode aura tourné.",
     problem:
       "Vendre à 22 € une pièce payée 18 €, est-ce une bonne affaire ou une perte ?",
     diagnosticOptions: [
@@ -478,6 +478,12 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
       {
         id: "comparer_alternatives",
         label: "La vraie comparaison est entre 22 € maintenant et ce que la pièce rapportera plus tard, si elle part",
+        correct: true,
+      },
+      {
+        id: "rotation",
+        label:
+          "Le mètre de linéaire qu'elles occupent porterait la collection suivante, qui tournerait deux fois d'ici le printemps",
         correct: true,
       },
       {
@@ -506,6 +512,24 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
           "Les 18 € sont sortis de la caisse il y a des mois, quelle que soit votre décision d'aujourd'hui. Vouloir les « récupérer » conduit à refuser 22 € et à finir avec zéro.",
       },
       {
+        id: "boutique_demarque",
+        prompt:
+          "Solder ces 400 pièces à 22 € au lieu des 45 € affichés : que représente cette démarque ?",
+        options: [
+          {
+            id: "a",
+            label:
+              "9 200 €, soit 23 € par pièce sur les 400, une démarque connue parce qu'elle est décidée",
+          },
+          { id: "b", label: "7 200 €, le prix d'achat des pièces concernées" },
+          { id: "c", label: "Aucune : la vente se fait au-dessus du prix d'achat" },
+          { id: "d", label: "18 000 €, le chiffre d'affaires que ces pièces auraient dû faire" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "La démarque est ce qui sort du stock sans passer en caisse au prix prévu : 23 €, soit 45 − 22, sur chacune des 400 pièces, donc 9 200 € rapportés aux 18 000 € qu'elles valaient en rayon, soit 9 200 ÷ 18 000 ≈ 51 %. Elle est CONNUE parce qu'on la décide, à la différence du vol et de la casse, qui se découvrent à l'inventaire.",
+      },
+      {
         id: "boutique_stock_dormant",
         prompt: "Garder ces 400 pièces une saison de plus…",
         options: [
@@ -525,13 +549,13 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
       marginal_analysis: "acceptable",
       frng_bfr_analysis: "acceptable",
     },
-    conceptCodes: ["variable_costs", "contribution_margin", "stock", "bfr"],
+    conceptCodes: ["markdown", "stock_rotation", "sales_per_sqm", "variable_costs", "contribution_margin", "stock", "bfr"],
     hints: hints([
       "Posez-vous une seule question : que change ma décision d'aujourd'hui, en euros qui entrent ou qui sortent ?",
       "Le prix d'achat de 18 € a été payé il y a des mois. Refuser 22 € ne vous les rendra pas.",
       "Les deux options réelles sont : 22 € tout de suite, ou une vente incertaine dans un an, place occupée entre-temps.",
       "Un coût déjà engagé ne doit jamais entrer dans un arbitrage : il est le même quelle que soit l'option retenue.",
-      "Comparez les seuls flux que la décision modifie. Ici, 22 € encaissés contre une réserve libérée et un risque d'invendu en moins.",
+      "Comparez les seuls flux que la décision modifie : 22 € encaissés contre une réserve libérée. Et regardez la rotation, qui est l'argument du commerçant : une pièce qui dort une saison entière est un emplacement qui n'a rien vendu, alors que la collection suivante y tournerait.",
     ]),
     trigger: { round: 3 },
     weight: 1,
@@ -599,7 +623,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
       frng_bfr_analysis: "acceptable",
       return_analysis: "acceptable",
     },
-    conceptCodes: ["net_treasury", "bfr", "stock", "seasonality"],
+    conceptCodes: ["stock_rotation", "net_treasury", "bfr", "stock", "seasonality"],
     hints: hints([
       "Reprenez vos tours passés : à quel moment la caisse a-t-elle été la plus basse, et pourquoi ?",
       "Les commandes de la saison forte se paient au fournisseur avant que les clientes n'aient acheté quoi que ce soit.",

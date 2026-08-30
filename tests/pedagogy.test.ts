@@ -171,11 +171,25 @@ describe("progression (doc 03 §6)", () => {
 });
 
 describe("cohérence des référentiels", () => {
-  it("24 concepts (20 MVP + investissement + trésorerie), 18 modèles, codes uniques", () => {
-    expect(CONCEPTS).toHaveLength(24);
-    expect(DECISION_MODELS).toHaveLength(18);
-    expect(conceptByCode.size).toBe(24);
-    expect(modelByCode.size).toBe(18);
+  it("les référentiels n'ont ni doublon ni trou", () => {
+    // Ce test gelait le compte : « 24 concepts, 18 modèles ». Un nombre gelé
+    // n'est pas un invariant, c'est un instantané : il devient rouge le jour
+    // où le référentiel s'enrichit, c'est à dire le jour où l'on fait
+    // exactement ce qu'il faut faire. Les notions du management commercial
+    // l'ont fait tomber, et il ne protégeait rien d'autre que l'immobilité.
+    //
+    // Ce qui compte vraiment est ailleurs : aucun code en double, aucune fiche
+    // sans son contenu, et un index qui voit tout le registre.
+    expect(conceptByCode.size, "des codes de notion en double").toBe(CONCEPTS.length);
+    expect(modelByCode.size, "des codes de modèle en double").toBe(DECISION_MODELS.length);
+    expect(CONCEPTS.length, "registre des notions vide").toBeGreaterThan(20);
+    expect(DECISION_MODELS.length, "registre des modèles vide").toBeGreaterThan(10);
+    for (const c of CONCEPTS) {
+      expect(c.name.length, `${c.code} : sans intitulé`).toBeGreaterThan(3);
+      expect(c.definition.length, `${c.code} : sans définition`).toBeGreaterThan(30);
+      expect(c.intuition.length, `${c.code} : sans intuition`).toBeGreaterThan(40);
+      expect(c.method.length, `${c.code} : sans méthode`).toBeGreaterThan(40);
+    }
   });
   it("chaque situation référence des concepts et modèles existants, avec 5 indices", () => {
     for (const s of NOVA_SITUATIONS) {

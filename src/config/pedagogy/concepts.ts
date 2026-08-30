@@ -277,6 +277,112 @@ export const CONCEPTS: ConceptDef[] = [
       "Comparez les coûts : agios d'escompte (taux × durée restante) vs commission d'affacturage vs agios de découvert, et gardez l'emprunt ou le capital pour les besoins durables.",
     formula: "Coût d'escompte = montant × taux × durée/360 ; coût d'affacturage = montant × commission",
   },
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   * GESTION COMMERCIALE.
+   *
+   * Le registre était écrit dans la langue de la comptabilité et de la finance :
+   * seuil, marge, besoin en fonds de roulement, escompte. Un enseignant de
+   * management commercial opérationnel n'y trouvait aucune des notions par
+   * lesquelles son référentiel découpe le métier, et son point de vente se
+   * commentait donc avec le vocabulaire d'un service comptable.
+   *
+   * Celles-ci ne remplacent pas les précédentes, elles les précèdent : on
+   * n'explique pas la marge d'une boutique à quelqu'un qui ne sait pas encore
+   * ce qu'un coefficient multiplicateur, une démarque et une rotation font à
+   * cette marge.
+   * ──────────────────────────────────────────────────────────────────────── */
+  {
+    code: "markup_coefficient",
+    name: "Coefficient multiplicateur",
+    domain: "margins",
+    axis: "analysis",
+    definition:
+      "Le nombre par lequel on multiplie un prix d'achat hors taxes pour obtenir le prix de vente affiché en rayon.",
+    intuition:
+      "C'est le taux de marque vu à l'envers, et c'est celui que le commerce emploie vraiment : personne en boutique ne dit « je prends soixante pour cent de marque », on dit « je multiplie par deux et demi ». Il porte aussi la taxe, ce qui explique qu'un coefficient annoncé par un fournisseur et celui qu'on applique en rayon ne soient jamais le même nombre.",
+    method:
+      "Partez du prix que la clientèle accepte de payer, divisez par le prix d'achat : vous obtenez le coefficient qu'il vous faut aller chercher chez votre fournisseur. C'est le sens de lecture du commerce, l'autre étant celui du comptable.",
+    formula: "Coefficient = prix de vente TTC / prix d'achat HT",
+  },
+  {
+    code: "markdown",
+    name: "Démarque connue et inconnue",
+    domain: "commercial",
+    axis: "analysis",
+    definition:
+      "Tout ce qui sort du stock sans passer en caisse au prix prévu : soldes, remises et casse pour la démarque connue, vol et erreurs pour la démarque inconnue.",
+    intuition:
+      "Un article démarqué a déjà coûté son prix d'achat. Ce qu'on perd n'est donc pas le prix affiché, c'est la marge qu'il devait rapporter, et il faut vendre plusieurs articles au prix plein pour la rattraper.",
+    method:
+      "Rapportez la démarque au chiffre d'affaires, et séparez toujours la connue de l'inconnue : la première est une décision commerciale qui se pilote, la seconde est une fuite qui se cherche en réserve avant de s'imputer à la clientèle.",
+    formula: "Taux de démarque = démarque / chiffre d'affaires",
+  },
+  {
+    code: "stock_rotation",
+    name: "Rotation des stocks",
+    domain: "commercial",
+    axis: "analysis",
+    definition:
+      "Le nombre de fois qu'un stock se renouvelle dans la période, et sa réciproque, le nombre de jours qu'un article passe en réserve avant d'être vendu.",
+    intuition:
+      "Deux boutiques peuvent afficher exactement la même marge par article. Celle qui écoule son stock deux fois plus vite gagne deux fois plus d'argent avec le même argent immobilisé : la rotation est ce qui transforme une marge en rentabilité.",
+    method:
+      "Divisez le coût d'achat des marchandises vendues par le stock moyen de la période. Divisez ensuite la durée de la période par cette rotation pour obtenir la durée de stockage, qui est le nombre qui parle à une équipe de vente.",
+    formula:
+      "Rotation = coût d'achat des marchandises vendues / stock moyen ; durée de stockage = durée de la période / rotation",
+  },
+  {
+    code: "average_basket",
+    name: "Panier moyen et indice de vente",
+    domain: "commercial",
+    axis: "marketing",
+    definition:
+      "Ce que dépense un client qui achète, et le nombre d'articles qu'il emporte.",
+    intuition:
+      "Faire entrer davantage de monde coûte cher en communication et en vitrine. Faire emporter un article de plus à quelqu'un qui est déjà devant la caisse ne coûte presque rien, et c'est le levier que l'on oublie en premier.",
+    method:
+      "Divisez le chiffre d'affaires par le nombre de tickets, puis le nombre d'articles vendus par ce même nombre de tickets. Le premier rapport dit combien on dépense, le second dit pourquoi : un panier qui monte sans que l'indice bouge signale une hausse de prix, pas une vente additionnelle.",
+    formula:
+      "Panier moyen = chiffre d'affaires / nombre de tickets ; indice de vente = articles vendus / nombre de tickets",
+  },
+  {
+    code: "conversion_rate",
+    name: "Taux de transformation",
+    domain: "commercial",
+    axis: "marketing",
+    definition: "La part des visiteurs entrés dans le point de vente qui en repartent avec un achat.",
+    intuition:
+      "La vitrine et la communication font entrer ; l'accueil, l'assortiment et la disponibilité font acheter. Un trafic qui monte pendant que le taux baisse est le signe qu'on a promis en vitrine ce qu'on ne tient pas en rayon.",
+    method:
+      "Comptez les entrées et les tickets sur la même période. Suivez la variation du taux plutôt que sa valeur absolue, qui ne se compare qu'à des points de vente de même format.",
+    formula: "Taux de transformation = nombre de tickets / nombre de visiteurs",
+  },
+  {
+    code: "assortment",
+    name: "Assortiment : largeur et profondeur",
+    domain: "commercial",
+    axis: "marketing",
+    definition:
+      "Le nombre de familles de produits présentées en rayon, et le nombre de références proposées dans chacune.",
+    intuition:
+      "Large et peu profond, on répond à tout le monde sans satisfaire personne. Étroit et profond, on devient la référence d'une clientèle et on renonce assumément aux autres. Il n'y a pas de bon assortiment dans l'absolu, seulement un assortiment cohérent avec une clientèle nommée.",
+    method:
+      "Avant d'ajouter une famille, regardez ce que rapporte au mètre de linéaire celle qui lui cédera la place : une référence de plus n'ajoute du chiffre d'affaires que si elle en prend moins qu'elle n'en apporte.",
+  },
+  {
+    code: "sales_per_sqm",
+    name: "Rendement de la surface de vente",
+    domain: "commercial",
+    axis: "analysis",
+    definition:
+      "Ce que rapporte un mètre carré de vente, ou un mètre de linéaire, sur la période.",
+    intuition:
+      "La surface est la ressource rare d'un point de vente : elle est louée à l'année, elle ne s'agrandit pas, et chaque rayon doit payer la place qu'il occupe. C'est l'équivalent, pour une boutique, de ce que le taux d'occupation est pour un hôtel.",
+    method:
+      "Rapportez d'abord le chiffre d'affaires à la surface, puis la marge à la même surface, et comparez les rayons entre eux. C'est la seconde comparaison qui décide : un rayon qui fait du volume à faible marge peut occuper la meilleure place pour rien.",
+    formula: "Rendement = chiffre d'affaires de la période / surface de vente en mètres carrés",
+  },
 ];
 
 export const conceptByCode = new Map(CONCEPTS.map((c) => [c.code, c]));
