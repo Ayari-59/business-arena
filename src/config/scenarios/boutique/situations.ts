@@ -179,6 +179,12 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
         correct: true,
       },
       {
+        id: "transformer_le_trafic",
+        label:
+          "Le pic fait entrer plus de monde : ce que la boutique en transforme et ce que chaque client emporte décident autant que le volume commandé",
+        correct: true,
+      },
+      {
         id: "max_always",
         label: "Commander le maximum : un article invendu se revend toujours l'année suivante au même prix",
         correct: false,
@@ -205,6 +211,20 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
           "Vous ne perdez pas le prix de vente (vous n'avez pas acheté la marchandise), mais la marge qu'elle aurait dégagée : 23,50 € qui ne couvriront jamais vos charges de structure. Et le cadeau de Noël ne s'achète pas en janvier.",
       },
       {
+        id: "transformation_noel",
+        prompt:
+          "À Noël votre trafic passe de 4 000 à 5 800 visiteurs, mais votre taux de transformation tombe de 30 à 25 % faute de réassort. À panier moyen inchangé de 62 €, que coûte cette baisse ?",
+        options: [
+          { id: "a", label: "17 980 € : 290 clients entrés et repartis les mains vides" },
+          { id: "b", label: "Rien, puisque le nombre de clients servis augmente quand même" },
+          { id: "c", label: "62 €, le panier moyen d'un client perdu" },
+          { id: "d", label: "Impossible à chiffrer : un client qui n'achète pas ne se compte pas" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Cinq points de transformation perdus sur 5 800 visiteurs font 290 clients, et 290 paniers moyens à 62 € font 17 980 €. Le trafic d'un pic est déjà payé par la vitrine et la communication : ce qui décide de ce qu'il rapporte est ce que le point de vente en transforme, et ce que chaque client emporte. C'est le second levier du pic, et celui qu'on oublie en ne regardant que la commande.",
+      },
+      {
         id: "stock_bfr",
         prompt:
           "Vous commandez 2 000 articles supplémentaires à 18 €. Quel est l'effet immédiat sur votre bilan, avant toute vente ?",
@@ -225,11 +245,11 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
       cash_budget: "acceptable",
       psych_pricing: "irrelevant",
     },
-    conceptCodes: ["seasonality", "stock", "bfr", "capacity"],
+    conceptCodes: ["conversion_rate", "average_basket", "seasonality", "stock", "bfr", "capacity"],
     hints: hints([
       "Regardez la saisonnalité de votre scénario : quel coefficient s'applique au quatrième trimestre ?",
       "Le pic vaut environ 1,45 fois un trimestre ordinaire, et les comités d'entreprise concentrent l'essentiel de leur budget sur ce tour.",
-      "Deux erreurs symétriques, mais pas de même coût : la rupture perd une marge à jamais, le surstock immobilise de la trésorerie et se soldera.",
+      "Deux erreurs symétriques, mais pas de même coût : la rupture perd une marge à jamais, le surstock immobilise de la trésorerie et se soldera. Et le volume commandé n'est que la moitié du sujet : le trafic du pic ne rapporte que ce que vous en transformez, et que ce que chaque client emporte.",
       "Votre capacité de traitement trimestrielle est de 7 500 articles : elle borne ce que la boutique peut absorber, quelles que soient vos commandes.",
       "Estimez la demande du tour à partir de vos ventes du tour précédent × 1,45, comparez-la à votre capacité, et vérifiez que votre trésorerie supporte le décaissement anticipé.",
     ]),
