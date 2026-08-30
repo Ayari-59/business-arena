@@ -288,6 +288,85 @@ describe("ateliers professionnels", () => {
     }
   });
 
+  it("chaque fiche dit ce qu'elle est et quel document sa trace nourrit", () => {
+    // Même défaut que le mot du référentiel, un cran plus haut : la page
+    // annonçait « Atelier professionnel » et « passeport professionnel » pour
+    // toutes les fiches. Le passeport professionnel est une pièce du BTS
+    // Comptabilité et Gestion ; le promettre à un lycée, c'est promettre un
+    // objet qui n'existe pas chez lui, et « atelier professionnel » ne désigne
+    // pas la même chose en seconde cycle général et technologique.
+    for (const a of ATELIERS) {
+      expect(a.nature.length, `${a.code} : nature absente`).toBeGreaterThan(8);
+      expect(a.nature[0], `${a.code} : la nature ne commence pas par une majuscule`).toBe(
+        a.nature[0]!.toUpperCase(),
+      );
+      expect(a.traceLabel.length, `${a.code} : document de la trace absent`).toBeGreaterThan(8);
+      // L'effectif d'équipe s'écrit après « équipes de » : il ne porte donc ni
+      // majuscule ni nombre en chiffres.
+      expect(
+        a.reglages.effectifParEquipe,
+        `${a.code} : effectif d'équipe manquant ou en chiffres`,
+      ).toMatch(/^[a-zà-ÿ][^0-9]*élèves?$/);
+      // La page écrit « son {traceLabel} » et « le {traceLabel} » : un nom
+      // féminin y ferait deux fautes d'accord.
+      expect(
+        a.traceLabel[0],
+        `${a.code} : le document de la trace commence par une majuscule, il s'écrit après un article`,
+      ).toBe(a.traceLabel[0]!.toLowerCase());
+    }
+  });
+
+  it("les pages d'atelier n'écrivent ni la nature ni le document de la trace en dur", () => {
+    // Sans cette garde, une page peut retomber sur « atelier professionnel »
+    // pour toutes les fiches sans qu'aucune donnée ne change : le défaut
+    // d'origine, découvert le jour où une animation de découverte pour le
+    // lycée est entrée au registre.
+    for (const chemin of ["src/app/ateliers/page.tsx", "src/app/ateliers/[code]/page.tsx"]) {
+      const source = readFileSync(chemin, "utf-8")
+        .replace(/\{\/\*[\s\S]*?\*\/\}/g, "")
+        .replace(/\/\*[\s\S]*?\*\//g, "")
+        .replace(/^\s*\/\/.*$/gm, "");
+      expect(source, `${chemin} écrit « atelier professionnel » en dur`).not.toMatch(
+        /Atelier professionnel/i,
+      );
+      expect(source, `${chemin} écrit « passeport professionnel » en dur`).not.toMatch(
+        /passeport professionnel/i,
+      );
+    }
+    const fiche = readFileSync("src/app/ateliers/[code]/page.tsx", "utf-8");
+    expect(fiche, "la fiche n'ouvre pas la nature de l'atelier").toContain("atelier.nature");
+    expect(fiche, "la fiche n'ouvre pas le document de la trace").toContain("atelier.traceLabel");
+  });
+
+  it("le résumé des thèmes ne répète pas deux fois le même", () => {
+    // La ligne « À retenir » ne montre que le premier segment de chaque
+    // intitulé. Deux séances qui mobilisent le même thème l'écrivaient deux
+    // fois, et une fiche dont les intitulés commencent tous par le niveau
+    // affichait « Première, Première, Première ».
+    const fiche = readFileSync("src/app/ateliers/[code]/page.tsx", "utf-8");
+    expect(fiche, "le résumé des thèmes ne dédoublonne pas ce qu'il affiche").toMatch(
+      /new Set\(processus\.map/,
+    );
+    // Le vrai risque n'est pas la répétition, c'est la CONFUSION : deux thèmes
+    // différents qui se réduisent au même mot deviennent indiscernables dans
+    // le résumé, et l'enseignant y lit un seul thème là où sa classe en
+    // travaille deux.
+    for (const a of ATELIERS) {
+      const parCourt = new Map<string, Set<string>>();
+      for (const complet of new Set(a.seances.flatMap((s) => s.processus))) {
+        const court = complet.split("·")[0]!.trim();
+        expect(court.length, `${a.code} : intitulé vide avant le point médian`).toBeGreaterThan(1);
+        if (!parCourt.has(court)) parCourt.set(court, new Set());
+        parCourt.get(court)!.add(complet);
+      }
+      const confondus = [...parCourt].filter(([, complets]) => complets.size > 1);
+      expect(
+        confondus.map(([court, complets]) => `${court} (${complets.size} thèmes)`),
+        `${a.code} : le résumé réduit plusieurs thèmes au même mot`,
+      ).toEqual([]);
+    }
+  });
+
   it("les pages d'atelier n'écrivent aucun mot de référentiel en dur", () => {
     // Sans cette garde, une page peut retomber sur « processus » pour tous les
     // diplômes sans qu'aucune donnée ne change : le défaut d'origine.

@@ -17,6 +17,8 @@ export const ATELIER_CG1: AtelierDefinition = {
   titre: "Piloter une entreprise pendant six trimestres",
   diplome: "BTS Comptabilité et Gestion",
   annee: "Première année",
+  nature: "Atelier professionnel",
+  traceLabel: "passeport professionnel",
   referentielLabel: "Processus",
   referentielAccord: "mobilisés",
   pitch:
@@ -40,6 +42,7 @@ export const ATELIER_CG1: AtelierDefinition = {
     mondeVariable: false,
     quizMode: "Questions de connaissances activées",
     tours: 6,
+    effectifParEquipe: "trois élèves",
     notes:
       "NOVA porte un stock, un coût de production et des délais de règlement : les trois matières de la première année. Le monde variable est décoché pour que toutes vos classes jouent la même économie et que vos corrigés restent valables d'une année sur l'autre. Deux concurrents pilotés par la machine suffisent à ce que le marché résiste.",
   },

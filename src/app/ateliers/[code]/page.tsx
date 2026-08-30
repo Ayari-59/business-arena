@@ -92,14 +92,14 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
       <main className="min-w-0">
         <p className="text-xs uppercase tracking-[0.3em] text-slate-500 print:hidden">
           <Link href="/ateliers" className="hover:text-slate-300">
-            Ateliers professionnels
+            Ateliers et animations
           </Link>{" "}
           / {atelier.diplome}
         </p>
 
         <header className="mt-4 border-b border-white/10 pb-6 print:border-black/20">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-400 print:text-black">
-            Atelier professionnel · {atelier.diplome} · {atelier.annee}
+            {atelier.nature} · {atelier.diplome} · {atelier.annee}
           </p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-50 print:text-black">
             {atelier.titre}
@@ -128,7 +128,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
             <li>
               · {atelier.referentielLabel} {atelier.referentielAccord} :{" "}
               <strong className="text-slate-100 print:text-black">
-                {processus.map((p) => p.split("·")[0]!.trim()).join(", ")}
+                {[...new Set(processus.map((p) => p.split("·")[0]!.trim()))].join(", ")}
               </strong>
               .
             </li>
@@ -137,13 +137,13 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
               <strong className="text-slate-100 print:text-black">
                 {atelier.seances.length} livrables
               </strong>{" "}
-              et verse {atelier.seances.length} traces à son passeport professionnel.
+              et verse {atelier.seances.length} traces à son {atelier.traceLabel}.
             </li>
             <li>
               · Entreprise :{" "}
               <strong className="text-slate-100 print:text-black">{scenario.playerTeamName}</strong>{" "}
-              ({SECTOR_LABELS[scenario.sector].toLowerCase()}), {atelier.reglages.equipes} équipes de
-              trois élèves.
+              ({SECTOR_LABELS[scenario.sector].toLowerCase()}), {atelier.reglages.equipes} équipes de{" "}
+              {atelier.reglages.effectifParEquipe}.
             </li>
             <li>
               · Exigence : <strong className="text-slate-100 print:text-black">{atelier.difficulteLabel}</strong>,
@@ -175,7 +175,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
                     ],
                     ["Nombre de séances", `${atelier.seances.length}`],
                     ["Volume horaire", `${dureeTotaleHeures(atelier)} heures`],
-                    ["Effectif conseillé", `${atelier.reglages.equipes} équipes de trois élèves`],
+                    ["Effectif conseillé", `${atelier.reglages.equipes} équipes de ${atelier.reglages.effectifParEquipe}`],
                     ["Concurrents machine", `${atelier.reglages.bots}`],
                     ["Exigence", atelier.difficulteLabel],
                   ] as const
@@ -358,7 +358,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
                     </div>
                     <div className="rounded-lg border border-sky-400/20 bg-sky-950/10 p-3 print:border-black/15 print:bg-transparent">
                       <h4 className="text-[10px] uppercase tracking-[0.2em] text-sky-300/80 print:text-black">
-                        Trace pour le passeport professionnel
+                        Trace pour le {atelier.traceLabel}
                       </h4>
                       <p className="mt-1.5 text-sm italic leading-relaxed text-slate-300 print:text-black">
                         « {s.tracePasseport} »

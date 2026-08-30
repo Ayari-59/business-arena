@@ -4,9 +4,9 @@ import { ATELIERS, dureeTotaleHeures } from "@/config/ateliers";
 import { scenarioByCode } from "@/config/scenarios/registry";
 
 export const metadata: Metadata = {
-  title: "Ateliers professionnels · BUSINESS ARENA",
+  title: "Ateliers et animations · BUSINESS ARENA",
   description:
-    "Des déroulés de plusieurs séances, adossés à une partie réelle, avec les livrables attendus, les traces pour le passeport professionnel et les critères d'évaluation.",
+    "Des déroulés de plusieurs séances, adossés à une partie réelle, avec les livrables attendus, la trace écrite de chaque séance et les critères d'évaluation.",
 };
 
 /**
@@ -40,16 +40,17 @@ export default function AteliersPage() {
           <Link href="/" className="hover:text-slate-300">
             Accueil
           </Link>{" "}
-          / Ateliers professionnels
+          / Ateliers et animations
         </p>
         <h1 className="mt-4 text-4xl font-bold leading-tight tracking-tight text-slate-50 sm:text-5xl">
-          Des ateliers prêts à animer
+          Des déroulés prêts à animer
         </h1>
         <p className="mt-5 text-lg italic leading-relaxed text-slate-400">
           Des déroulés de plusieurs séances, écrits pour des enseignants qui veulent adosser un
-          jeu d&apos;entreprise à un atelier professionnel. Chaque atelier donne le déroulé
-          minuté séance par séance, les réglages de la partie, ce que les équipes rendent, la
-          trace à verser au passeport professionnel et les critères d&apos;évaluation.
+          jeu d&apos;entreprise à une progression. Chaque fiche donne le déroulé minuté séance
+          par séance, les réglages de la partie, ce que les équipes rendent, la trace écrite que
+          chaque séance laisse et les critères d&apos;évaluation. Chacune dit à quel niveau elle
+          s&apos;adresse, du lycée à l&apos;expertise comptable.
         </p>
 
         <h2 className="mt-12 text-xl font-bold text-slate-100">À qui ils s&apos;adressent</h2>
@@ -110,7 +111,7 @@ export default function AteliersPage() {
               className="rounded-2xl border border-white/10 bg-slate-900 p-5 transition hover:border-amber-400/40"
             >
               <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-400">
-                Atelier professionnel · {a.diplome}
+                {a.nature} · {a.diplome}
               </p>
               <h3 className="mt-2 text-lg font-bold text-slate-50">{a.titre}</h3>
               <p className="mt-2 text-sm italic leading-relaxed text-slate-400">{a.resume}</p>

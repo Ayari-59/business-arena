@@ -54,6 +54,21 @@ export interface AtelierDefinition {
   diplome: string;
   annee: string;
   /**
+   * Ce que cette offre EST, dans les mots du niveau visé. Un BTS conduit un
+   * atelier professionnel ; un lycée conduit une animation de découverte. La
+   * page l'écrivait en dur, et annonçait donc « atelier professionnel » à des
+   * enseignants de seconde cycle général et technologique, pour qui l'expression
+   * désigne autre chose.
+   */
+  nature: string;
+  /**
+   * Le document que la trace de chaque séance vient nourrir. Le passeport
+   * professionnel est une pièce du BTS Comptabilité et Gestion ; le promettre à
+   * un lycée serait promettre un objet qui n'existe pas chez lui. Un nom
+   * masculin singulier : la page écrit « son {traceLabel} ».
+   */
+  traceLabel: string;
+  /**
    * Le mot par lequel le référentiel du diplôme découpe le métier. Le BTS CG
    * a des processus, le BTS MCO des blocs de compétences, le BTS GPME des
    * activités, le DCG des unités d'enseignement. Écrire « processus » sur la
@@ -97,6 +112,14 @@ export interface AtelierDefinition {
      * jouerait, sans classement final ni relevé complet.
      */
     tours: number;
+    /**
+     * La taille d'équipe conseillée, en toutes lettres. La fiche l'écrivait en
+     * dur, « équipes de trois élèves », pour tous les diplômes : une animation
+     * de lycée qui conseille des équipes de trois ou quatre se contredisait
+     * alors elle même, la fiche disant une chose et sa foire aux questions une
+     * autre.
+     */
+    effectifParEquipe: string;
     notes: string;
   };
   seances: AtelierSeance[];

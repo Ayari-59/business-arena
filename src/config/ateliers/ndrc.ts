@@ -19,6 +19,8 @@ export const ATELIER_NDRC: AtelierDefinition = {
   titre: "Rentabiliser une clientèle sur cinq trimestres",
   diplome: "BTS Négociation et digitalisation de la relation client",
   annee: "Première année",
+  nature: "Atelier professionnel",
+  traceLabel: "passeport professionnel",
   referentielLabel: "Blocs de compétences",
   referentielAccord: "mobilisés",
   pitch:
@@ -42,6 +44,7 @@ export const ATELIER_NDRC: AtelierDefinition = {
     mondeVariable: false,
     quizMode: "Questions de connaissances activées",
     tours: 5,
+    effectifParEquipe: "trois élèves",
     notes:
       "PIXEL & CO oppose trois clientèles qui ne se pilotent pas de la même façon : le trafic payant, qu'il faut acheter à chaque fois, la base installée, qui revient si on la soigne, et les marketplaces, qui apportent du volume contre une commission. Le niveau retenu laisse les décisions commerciales ouvertes et ferme les décisions de structure : un atelier de première année n'a pas à faire arbitrer un emprunt. Le monde variable est décoché pour que les écarts entre équipes viennent de leurs choix.",
   },

@@ -303,7 +303,12 @@ describe("parcours enseignant et élève", () => {
     await aller(prof, "/ateliers");
     expect(await texte(prof)).toContain("BTS Comptabilité et Gestion");
 
-    await prof.getByRole("link", { name: "Voir le déroulé →" }).first().click();
+    // On désigne la fiche par son adresse et non par le premier lien de la
+    // page : ce test tenait pour acquis que l'atelier de comptabilité ouvrait
+    // la liste, et il est devenu rouge le jour où une animation de découverte
+    // est passée devant lui. L'ordre du registre est une décision de
+    // présentation, pas un contrat de test.
+    await prof.locator('a[href="/ateliers/cg1"]').first().click();
     await prof.waitForURL(/\/ateliers\/cg1$/, { timeout: 30_000 });
     // Comparaison insensible à la casse : plusieurs intitulés sont mis en
     // CAPITALES par le CSS, si bien que le texte visible ne correspond pas à
