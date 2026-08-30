@@ -16,7 +16,7 @@
  *
  * Usage : npx tsx scripts/generer-theme-clair.ts
  * Le fichier produit est versionné : la compilation n'a pas besoin du script.
- * Le test tests/theme/theme-clair.test.ts vérifie qu'il est à jour.
+ * Le test tests/theme/themes.test.ts vérifie qu'il est à jour.
  */
 import { readFileSync, writeFileSync } from "node:fs";
 

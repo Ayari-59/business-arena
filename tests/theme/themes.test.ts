@@ -63,11 +63,13 @@ describe("les thèmes", () => {
     expect(CLE_THEME.length).toBeGreaterThan(3);
   });
 
-  it("le sélecteur propose la liste du registre, sans la recopier", () => {
-    expect(SELECTEUR).toContain("THEMES.map");
+  it("le sélecteur se règle sur le registre, sans recopier les noms", () => {
+    // Le bouton annonce le thème d'arrivée : il doit le tenir du registre, sinon
+    // retirer un thème laisserait un bouton qui mène vers un thème disparu.
+    expect(SELECTEUR, "le sélecteur n'ouvre pas le registre").toContain("THEMES");
     for (const theme of THEMES) {
-      expect(SELECTEUR, `${theme.nom} est écrit en dur dans le sélecteur`).not.toContain(
-        `>${theme.nom}<`,
+      expect(SELECTEUR, `« ${theme.nom} » est écrit en dur dans le sélecteur`).not.toContain(
+        theme.nom,
       );
     }
   });

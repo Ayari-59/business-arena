@@ -4,57 +4,15 @@
 /* ---------------------------------------------------------------------------
  * Les thèmes.
  *
- * Chacun redéfinit deux échelles de Tailwind : « slate », qui fait tous les
- * fonds et tous les textes, et « amber », qui fait les boutons d'action. Les
- * utilitaires de Tailwind lisent ces variables, donc aucune page n'a besoin de
- * connaître le thème courant. Le nom « amber » désigne ici l'accent, quelle
- * que soit sa couleur : le renommer demanderait de réécrire chaque classe de
- * chaque page.
+ * Le site en propose deux, un sombre et un clair. Le sombre n'a pas de bloc :
+ * c'est l'échelle d'origine de Tailwind, donc l'absence de thème et le thème
+ * par défaut donnent exactement la même page, et il n'y a pas deux écritures
+ * de la même chose qui puissent diverger. Le clair, lui, est engendré, parce
+ * qu'il renverse l'échelle entière (voir theme-clair.css).
  *
- * « Ardoise » n'a pas de bloc : c'est l'échelle d'origine de Tailwind, donc
- * l'absence de thème et le thème par défaut donnent exactement la même page.
- * Le thème « clair », lui, est engendré (voir theme-clair.css).
- * La liste des thèmes est dans src/config/themes.ts.
+ * Les utilitaires de Tailwind lisent des variables, donc aucune page n'a
+ * besoin de connaître le thème courant. La liste est dans src/config/themes.ts.
  * ------------------------------------------------------------------------- */
-[data-theme="nuit"] {
-  --color-slate-50: #eaf2fa;
-  --color-slate-100: #d8e6f2;
-  --color-slate-200: #bed3e6;
-  --color-slate-300: #9cb4cd;
-  --color-slate-400: #7d95b0;
-  --color-slate-500: #5f7692;
-  --color-slate-600: #46596f;
-  --color-slate-700: #2f3f52;
-  --color-slate-800: #1c2939;
-  --color-slate-900: #0d1726;
-  --color-slate-950: #050e1c;
-  --color-amber-200: #a5f3fc;
-  --color-amber-300: #67e8f9;
-  --color-amber-400: #22d3ee;
-  --color-amber-500: #06b6d4;
-  --color-amber-600: #0891b2;
-  --color-amber-700: #0e7490;
-}
-
-[data-theme="prune"] {
-  --color-slate-50: #f8f2fb;
-  --color-slate-100: #eee1f4;
-  --color-slate-200: #dcc9e7;
-  --color-slate-300: #c0a7d0;
-  --color-slate-400: #a288b4;
-  --color-slate-500: #856b98;
-  --color-slate-600: #67517a;
-  --color-slate-700: #4b3a5c;
-  --color-slate-800: #33253f;
-  --color-slate-900: #1f1129;
-  --color-slate-950: #150a1c;
-  --color-amber-200: #ffedd5;
-  --color-amber-300: #fed7aa;
-  --color-amber-400: #fdba74;
-  --color-amber-500: #fb923c;
-  --color-amber-600: #ea580c;
-  --color-amber-700: #c2410c;
-}
 
 /* ---------------------------------------------------------------------------
  * Retouches du thème clair.
