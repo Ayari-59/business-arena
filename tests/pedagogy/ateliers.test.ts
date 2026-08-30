@@ -178,23 +178,44 @@ describe("ateliers professionnels", () => {
     // La comparaison se fait donc sur le fond : sans accents, sans casse, sans
     // le préfixe qui numérote, et une entrée citée est reconnue dès qu'elle se
     // retrouve dans une entrée officielle, ou l'inverse.
-    const noyau = (entree: string) =>
+    //
+    // Le préfixe retiré doit VRAIMENT numéroter : un mot court suivi d'un
+    // chiffre, « P1 », « UE6 », « Bloc 2 », « Thème 1 ». La première version
+    // retirait n'importe quel début de dix-huit caractères suivi d'un point
+    // médian, et elle a dévoré un thème du programme entier : « Temps et
+    // risque · Première, sciences de gestion et numérique » perdait son titre
+    // et ne gardait que le nom du programme, si bien que la garde déclarait
+    // inventé un thème parfaitement officiel. Un intitulé court n'est pas un
+    // numéro.
+    //
+    // La comparaison se fait SEGMENT PAR SEGMENT, de part et d'autre du point
+    // médian. Un intitulé n'est pas toujours précédé de son numéro : les
+    // thèmes du lycée portent au contraire le nom de leur programme EN SUFFIXE,
+    // « Le management stratégique · Première, management ». Comparer l'entrée
+    // entière refusait alors tout raccourci, puisque le suffixe restait collé
+    // au titre abrégé. Or un intitulé raccourci pour tenir dans une fiche
+    // n'est pas une faute, c'est même la souplesse que cette garde doit
+    // laisser.
+    const segments = (entree: string) =>
       entree
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
         .toLowerCase()
-        .replace(/^[^·:]{0,18}[·:]\s*/, "")
-        .replace(/[^a-z0-9]+/g, " ")
-        .trim();
+        .split("·")
+        .map((m) => m.replace(/[^a-z0-9]+/g, " ").trim())
+        // Ce qui ne fait que numéroter ne compare rien : « p1 », « ue6 »,
+        // « bloc 2 », « theme 1 ». Un segment trop court non plus, sans quoi
+        // un mot commun suffirait à valider n'importe quel intitulé.
+        .filter((m) => m.length >= 10 && !/^[a-z]{0,7} ?\d+$/.test(m));
 
     for (const [code, referentiel] of Object.entries(REFERENTIELS)) {
       const atelier = ATELIERS.find((a) => a.code === code);
       expect(atelier, `${code} : référentiel déclaré sans atelier`).toBeDefined();
       expect(referentiel.source.length, `${code} : provenance non écrite`).toBeGreaterThan(40);
-      const officiels = referentiel.entrees.map(noyau);
+      const officiels = referentiel.entrees.flatMap(segments);
       const inventees = [...new Set(atelier!.seances.flatMap((s) => s.processus))].filter((p) => {
-        const cite = noyau(p);
-        return !officiels.some((o) => o.includes(cite) || cite.includes(o));
+        const cites = segments(p);
+        return !cites.some((c) => officiels.some((o) => o.includes(c) || c.includes(o)));
       });
       expect(
         inventees,

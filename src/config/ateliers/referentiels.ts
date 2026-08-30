@@ -101,6 +101,27 @@ export const REFERENTIELS: Record<string, Referentiel> = {
       "UE13 · Communication professionnelle",
     ],
   },
+  stmg: {
+    label: "Thèmes du programme",
+    accord: "mobilisés",
+    source:
+      "Les trois programmes du cycle terminal STMG, lus sur leurs annexes : sciences de gestion et numérique de première (annexe 3), management de première (annexe 2), management, sciences de gestion et numérique de terminale, enseignement commun (annexe 2).",
+    entrees: [
+      // Première, sciences de gestion et numérique.
+      "Thème 1 · De l'individu à l'acteur",
+      "Thème 2 · Numérique et intelligence collective",
+      "Thème 3 · Création de valeur et performance",
+      "Thème 4 · Temps et risque",
+      // Première, management.
+      "Thème 1 · À la rencontre du management des organisations",
+      "Thème 2 · Le management stratégique, du diagnostic à la fixation des objectifs",
+      "Thème 3 · Les choix stratégiques des organisations",
+      // Terminale, enseignement commun.
+      "Thème 1 · Les organisations et l'activité de production de biens et de services",
+      "Thème 2 · Les organisations et les acteurs",
+      "Thème 3 · Les organisations et la société",
+    ],
+  },
   gpme: {
     label: "Blocs de compétences",
     accord: "mobilisés",
@@ -118,10 +139,10 @@ export const REFERENTIELS: Record<string, Referentiel> = {
 /**
  * Les diplômes dont la liste n'a pas encore été confrontée à son texte.
  *
- * Ils sont nommés plutôt que passés sous silence : la garde les laisse
- * tranquilles, et ce commentaire dit où en est chacun.
- *
- * `stmg` — porte ses thèmes dans son propre fichier, où deux programmes sur
- * trois ont été lus sur le texte.
+ * Elle est vide : les six diplômes publiés ont été lus sur leurs textes. Ce
+ * n'est pas un état définitif et la liste n'est pas là pour décorer. Une
+ * filière ajoutée demain y entrera le temps qu'on ouvre son arrêté, et c'est
+ * précisément à cela qu'elle sert : un diplôme dont le texte n'a pas été lu
+ * doit se voir, plutôt que de se confondre avec ceux qui l'ont été.
  */
-export const REFERENTIELS_NON_VERIFIES = ["stmg"] as const;
+export const REFERENTIELS_NON_VERIFIES = [] as const;
