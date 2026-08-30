@@ -397,6 +397,78 @@ export const CONCEPTS: ConceptDef[] = [
       "Rapportez d'abord le chiffre d'affaires à la surface, puis la marge à la même surface, et comparez les rayons entre eux. C'est la seconde comparaison qui décide : un rayon qui fait du volume à faible marge peut occuper la meilleure place pour rien.",
     formula: "Rendement = chiffre d'affaires de la période / surface de vente en mètres carrés",
   },
+
+  /* ────────────────────────────────────────────────────────────────────────
+   * QUATRE NOTIONS QUE L'ÉLÈVE LIT DANS SES PROPRES COMPTES.
+   *
+   * Le registre s'est construit par le haut : on partait des référentiels, on
+   * regardait ce qu'ils nomment, on ajoutait. C'est le mauvais sens. La
+   * question qui compte n'est pas « qu'est-ce que l'arrêté nomme », c'est
+   * « qu'est-ce que l'élève lit sans pouvoir le comprendre ».
+   *
+   * Or à chaque clôture il ouvre son compte de résultat, et y lit « excédent
+   * brut d'exploitation », « dotations aux amortissements », « coût complet
+   * unitaire », « commissions des canaux partenaires ». Aucune de ces quatre
+   * lignes n'avait de fiche. La deuxième en avait même une TROMPEUSE : le
+   * registre porte « tableau d'amortissement », qui parle du remboursement
+   * d'un emprunt et non de l'usure d'un bien. L'élève qui cherchait tombait
+   * sur la mauvaise.
+   *
+   * Deux d'entre elles figurent aussi dans le référentiel du BTS MCO, deux
+   * n'y sont pas. C'est bien l'écran qui a décidé, pas le texte.
+   * ──────────────────────────────────────────────────────────────────────── */
+  {
+    code: "ebitda_margin",
+    name: "Excédent brut d'exploitation",
+    domain: "profitability",
+    axis: "analysis",
+    definition:
+      "Ce que l'exploitation dégage avant les amortissements, les intérêts et l'impôt : le premier chiffre qui dise si l'activité elle même gagne de l'argent.",
+    intuition:
+      "C'est le résultat débarrassé de trois choses qui ne viennent pas du métier : la façon dont l'entreprise a financé ses murs, la façon dont elle les amortit, et ce que le fisc lui prend. Deux boutiques identiques, dont l'une a emprunté et l'autre non, ont le même excédent brut et des résultats nets différents. C'est pour cela qu'on le regarde en premier quand on compare deux affaires.",
+    method:
+      "Partez de la marge sur coût variable, retranchez les charges de structure et les budgets engagés dans le tour. Ce qui reste est l'excédent brut. Retranchez ensuite les dotations aux amortissements et vous obtenez le résultat d'exploitation, le solde suivant : l'écart entre les deux est exactement ce que l'usure des biens a coûté.",
+    formula: "EBE = marge sur coût variable − charges de structure − budgets du tour",
+  },
+  {
+    code: "depreciation",
+    name: "Dotation aux amortissements",
+    domain: "costs",
+    axis: "finance",
+    definition:
+      "La part du prix d'une immobilisation que l'exercice supporte, parce qu'il s'en est servi.",
+    intuition:
+      "Un agencement payé une fois sert plusieurs années. Le mettre entier dans les charges de l'année de l'achat écraserait ce résultat là et flatterait les suivants, alors que le magasin a travaillé pareil. On en étale donc le coût sur la durée d'usage. C'est une charge qui ne se décaisse pas : elle pèse sur le résultat sans rien sortir de la caisse, ce qui explique qu'une entreprise puisse afficher une perte sans manquer d'argent.",
+    method:
+      "Divisez la valeur d'entrée du bien par le nombre d'exercices pendant lesquels il servira. Ce que le bilan appelle valeur nette est ce qui n'a pas encore été amorti. À ne pas confondre avec le tableau d'amortissement d'un emprunt : celui là parle du remboursement d'une dette, celui ci de l'usure d'un bien. Le mot est le même, la chose n'a aucun rapport.",
+    formula: "Dotation de l'exercice = valeur d'entrée / durée d'usage en exercices",
+  },
+  {
+    code: "full_unit_cost",
+    name: "Coût de revient complet",
+    domain: "costs",
+    axis: "analysis",
+    definition:
+      "Ce qu'une unité vendue a réellement coûté, une fois les charges de structure réparties sur le volume.",
+    intuition:
+      "Le coût variable dit ce que coûte la prochaine unité, le coût de revient ce que coûte une unité en moyenne. Les deux sont justes et ne répondent pas à la même question : le premier décide d'accepter une commande de plus, le second dit si le prix affiché tient sur l'année. Les confondre fait refuser des commandes rentables, ou vendre à perte en croyant gagner.",
+    method:
+      "Ajoutez au coût variable d'une unité la part de structure qu'elle porte, c'est à dire les charges de structure du tour divisées par les unités vendues. Ce coût baisse donc quand le volume monte, sans qu'aucune charge n'ait bougé : c'est l'effet du partage et non une économie. Un coût de revient calculé sur un tour creux fait donc peur pour rien.",
+    formula: "Coût de revient unitaire = coût variable unitaire + charges de structure / unités vendues",
+  },
+  {
+    code: "distribution_commission",
+    name: "Commission de distribution",
+    domain: "margins",
+    axis: "analysis",
+    definition:
+      "La part du prix de vente que prélève le tiers qui a apporté le client.",
+    intuition:
+      "Une place de marché, un apporteur d'affaires, une centrale : le client paie le prix affiché, l'entreprise n'en encaisse qu'une partie. La commission ne se voit ni sur l'étiquette ni sur la facture du client, uniquement dans les comptes. C'est ce qui la rend facile à oublier quand on compare un canal à un autre, et c'est une charge, jamais une remise : une remise se négocie avec le client et se voit, une commission se négocie avec le partenaire et ne se voit pas.",
+    method:
+      "Appliquez le taux au chiffre d'affaires du canal, jamais à la marge. Retranchez le montant obtenu de la marge d'une vente en direct : l'écart est ce que le canal coûte par commande. Comparez ensuite les canaux par la marge qu'ils apportent et non par le nombre de commandes, car un canal commissionné pèse toujours moins dans la marge que dans les ventes.",
+    formula: "Commission = taux × prix de vente ; marge après commission = prix − coût variable − commission",
+  },
 ];
 
 export const conceptByCode = new Map(CONCEPTS.map((c) => [c.code, c]));

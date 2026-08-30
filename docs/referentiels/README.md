@@ -90,10 +90,53 @@ vente, taux de transformation. L'arrêté les couvre par des formules plus
 larges : « les principaux outils de fixation du prix », « les indicateurs de
 gestion des stocks », « la mesure des performances du marchandisage ».
 
-Nommées par le texte et **manquantes** au registre : les soldes intermédiaires
+Nommées par le texte et alors manquantes au registre : les soldes intermédiaires
 de gestion, les amortissements et provisions, les méthodes de valorisation des
 stocks, le coût de passation et de possession des stocks, la gamme, le
 positionnement, la gestion des risques d'une unité commerciale.
+
+### Ce qui a été décidé pour ces sept, et pourquoi
+
+La question posée était « lesquelles ajouter ». C'était la mauvaise. Le
+registre s'était construit par le haut, en partant des textes ; la question qui
+compte est **ce que l'élève lit sans pouvoir le comprendre**. On a donc croisé
+les libellés du compte de résultat et du bilan avec le registre.
+
+**Deux des sept ont été ajoutées, parce que l'écran les affiche** : l'excédent
+brut d'exploitation, et la dotation aux amortissements. Cette dernière avait
+même une fiche TROMPEUSE, le registre portant « tableau d'amortissement », qui
+parle du remboursement d'un emprunt et non de l'usure d'un bien.
+
+**Deux ont été refusées, parce que le jeu ne les porte pas.** La *gamme*
+suppose plusieurs produits au catalogue ; chaque secteur n'en a qu'un. Le *coût
+de passation et de possession* suppose un arbitrage entre fréquence de commande
+et coût de stockage, que le moteur ne modélise nulle part. Écrire ces deux
+fiches aurait fait des pages sur des mécanismes absents : c'est exactement la
+liste à cocher que la règle du jeu qui prime interdit.
+
+**Trois ont été jugées déjà couvertes.** Le *positionnement* est ce que font
+ensemble la segmentation et le prix psychologique, qui ont chacun leur fiche.
+La *valorisation des stocks* est faite par le moteur au coût moyen pondéré et
+l'élève n'en décide pas ; la fiche « stocks et rupture » couvre ce qu'il
+décide. La *gestion des risques* n'affiche aucun chiffre à l'écran, la prime
+d'assurance étant fondue dans les charges de structure ; à revoir le jour où un
+atelier la fera calculer sur des chiffres du jeu.
+
+**Et le croisement a trouvé deux manques que l'arrêté ne nomme pas** : le coût
+de revient complet, affiché en toutes lettres sous « coût complet unitaire », et
+la commission de distribution, ligne ajoutée le matin même et déjà orpheline.
+C'est bien l'écran qui a décidé, pas le texte.
+
+Une garde tient désormais ce lien, `tests/pedagogy/comptes-lisibles.test.ts` :
+toute ligne des comptes est soit rattachée à une fiche, soit déclarée comme
+n'en étant pas une. Ajouter une ligne sans trancher est rouge.
+
+Une remarque enfin sur la charge, parce que la règle du jeu qui prime avait
+servi à retirer du contenu quelques jours plus tôt. Elle visait les
+**situations**, qui se lisent en pleine partie et allongent un tour. Une fiche
+de notion ne s'impose à personne : elle se consulte quand un chiffre n'est pas
+compris. Ajouter une fiche n'alourdit pas la partie, ajouter une question si.
+Les deux décisions ne relèvent pas de la même règle.
 
 ## Une note sur la souplesse
 
