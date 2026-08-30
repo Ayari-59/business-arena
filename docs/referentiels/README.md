@@ -16,13 +16,18 @@ vérification suivante n'ait pas à tout refaire.
 | Programme de management, sciences de gestion et numérique de terminale STMG, annexe 2 | les thèmes de l'enseignement commun | **trois** thèmes : les organisations et l'activité de production de biens et de services, les organisations et les acteurs, les organisations et la société. Conformes à ce que le produit affichait |
 | Arrêté du 8 juillet 2024 modifiant l'arrêté du 15 octobre 2018, BTS management commercial opérationnel | les quatre blocs de compétences et les savoirs associés | les quatre intitulés du produit sont exacts, celui du bloc 4 compris |
 
+| Référentiel du BTS Négociation et digitalisation de la relation client | les trois blocs de compétences | conformes : relation client et négociation-vente, relation client à distance et digitalisation, relation client et animation de réseaux |
+| Référentiel du BTS Gestion de la PME | le mot du référentiel et les quatre intitulés | **deux erreurs**. Le texte parle de **blocs de compétences**, le produit disait « activités », mot qui y désigne le découpage fin à l'intérieur d'un bloc. Et deux intitulés sur quatre étaient tronqués, amputés du « de la PME » qui les termine |
+| Référentiel du BTS Support à l'action managériale | rien pour l'instant | aucun atelier ne vise ce diplôme. Ses blocs, pour mémoire : optimisation des processus administratifs, gestion de projet, collaboration à la gestion des ressources humaines, et une culture économique, juridique et managériale |
+
 ## Ce qui reste à vérifier
 
 - **Le programme de management de première STMG** : son annexe n'a pas été
   déposée. Les trois thèmes cités par le produit viennent de recherches
   concordantes, pas du texte.
-- Les référentiels des BTS **CG**, **NDRC**, **GPME** et du **DCG** : aucun
-  n'a été confronté à son atelier.
+- Les référentiels du BTS **CG** et du **DCG** : aucun n'a été confronté à son
+  atelier. Le produit leur prête des « processus » et des « unités
+  d'enseignement », ce qui reste à confirmer.
 
 ## Notions : ce que l'arrêté du BTS MCO nomme, et ce qu'il ne nomme pas
 
@@ -40,3 +45,12 @@ Nommées par le texte et **manquantes** au registre : les soldes intermédiaires
 de gestion, les amortissements et provisions, les méthodes de valorisation des
 stocks, le coût de passation et de possession des stocks, la gamme, le
 positionnement, la gestion des risques d'une unité commerciale.
+
+## Une note sur la souplesse
+
+Le registre `src/config/ateliers/referentiels.ts` est une référence, pas un
+carcan. Le mot qui découpe un métier reste un choix d'affichage, et un intitulé
+raccourci pour tenir dans une fiche n'est pas une faute : la garde compare le
+fond, sans accents, sans casse et sans le préfixe qui numérote. Une filière
+absente du registre n'est pas bloquée, elle n'est simplement pas confrontée à
+un texte.

@@ -2,6 +2,10 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { ATELIERS, dureeTotaleHeures } from "../../src/config/ateliers";
 import { THEMES_STMG } from "../../src/config/ateliers/stmg";
+import {
+  REFERENTIELS,
+  REFERENTIELS_NON_VERIFIES,
+} from "../../src/config/ateliers/referentiels";
 import { SCENARIOS, scenarioByCode } from "../../src/config/scenarios/registry";
 import { DIFFICULTY_PRESETS } from "../../src/config/difficulty";
 
@@ -154,6 +158,53 @@ describe("ateliers professionnels", () => {
           `${a.code}/séance ${s.numero} : tour ${s.tourJoue} hors de la partie`,
         ).toBeLessThanOrEqual(scenario.scenario.roundsCount);
       }
+    }
+  });
+
+  it("aucun atelier n'invente une entrée que son référentiel ne porte pas", () => {
+    // Trois erreurs vivaient dans ces intitulés, et aucune ne se voyait sans
+    // ouvrir l'arrêté. La pire portait sur un diplôme entier : le BTS Gestion
+    // de la PME a des blocs de compétences, et le produit lui prêtait des
+    // « activités », mot qui désigne dans son texte le découpage fin à
+    // l'intérieur d'un bloc.
+    //
+    // Cette garde a d'abord exigé la formulation exacte du texte. C'était trop
+    // serré : le mot qui découpe un métier est un choix d'affichage, une autre
+    // filière viendra avec le sien, et un intitulé raccourci pour tenir dans
+    // une fiche n'est pas une faute. Elle ne retient donc que ce qui a
+    // réellement fait défaut : une entrée QUE LE TEXTE NE PORTE PAS, comme ce
+    // thème de programme entièrement inventé.
+    //
+    // La comparaison se fait donc sur le fond : sans accents, sans casse, sans
+    // le préfixe qui numérote, et une entrée citée est reconnue dès qu'elle se
+    // retrouve dans une entrée officielle, ou l'inverse.
+    const noyau = (entree: string) =>
+      entree
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/^[^·:]{0,18}[·:]\s*/, "")
+        .replace(/[^a-z0-9]+/g, " ")
+        .trim();
+
+    for (const [code, referentiel] of Object.entries(REFERENTIELS)) {
+      const atelier = ATELIERS.find((a) => a.code === code);
+      expect(atelier, `${code} : référentiel déclaré sans atelier`).toBeDefined();
+      expect(referentiel.source.length, `${code} : provenance non écrite`).toBeGreaterThan(40);
+      const officiels = referentiel.entrees.map(noyau);
+      const inventees = [...new Set(atelier!.seances.flatMap((s) => s.processus))].filter((p) => {
+        const cite = noyau(p);
+        return !officiels.some((o) => o.includes(cite) || cite.includes(o));
+      });
+      expect(
+        inventees,
+        `${code} : entrées introuvables dans le texte du référentiel :\n${inventees.join("\n")}`,
+      ).toEqual([]);
+    }
+    // Les diplômes dont le texte n'a pas été lu sont nommés plutôt que passés
+    // sous silence, et un même code ne peut pas être des deux côtés.
+    for (const code of REFERENTIELS_NON_VERIFIES) {
+      expect(REFERENTIELS[code], `${code} : à la fois vérifié et déclaré non vérifié`).toBeUndefined();
     }
   });
 

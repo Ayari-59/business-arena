@@ -20,8 +20,8 @@ export const ATELIER_GPME: AtelierDefinition = {
   annee: "Deuxième année",
   nature: "Atelier professionnel",
   traceLabel: "passeport professionnel",
-  referentielLabel: "Activités",
-  referentielAccord: "mobilisées",
+  referentielLabel: "Blocs de compétences",
+  referentielAccord: "mobilisés",
   pitch:
     "Six séances de trois heures. Chaque équipe seconde la direction du même cabinet, relance ses clients, assure ses risques, recrute ou renonce, défend ses prix, et rend à chaque séance un document que le dirigeant pourrait signer.",
   resume:
@@ -54,8 +54,8 @@ export const ATELIER_GPME: AtelierDefinition = {
       dureeMinutes: 180,
       tourJoue: 1,
       processus: [
-        "A4 · Soutenir le fonctionnement et le développement de la PME",
-        "A1 · Gérer la relation avec les clients et les fournisseurs",
+        "Bloc 4 · Soutenir le fonctionnement et le développement de la PME",
+        "Bloc 1 · Gérer la relation avec les clients et les fournisseurs de la PME",
       ],
       objectif:
         "Établir le diagnostic d'entrée d'une PME de services : ce qu'elle vend, ce qui la limite, et où dort son argent.",
@@ -127,8 +127,8 @@ export const ATELIER_GPME: AtelierDefinition = {
       dureeMinutes: 180,
       tourJoue: 2,
       processus: [
-        "A1 · Gérer la relation avec les clients et les fournisseurs",
-        "A2 · Participer à la gestion des risques de la PME",
+        "Bloc 1 · Gérer la relation avec les clients et les fournisseurs de la PME",
+        "Bloc 2 · Participer à la gestion des risques de la PME",
       ],
       objectif:
         "Comprendre pourquoi un cabinet rentable peut manquer d'argent, et agir sur le délai de règlement plutôt que sur le carnet de commandes.",
@@ -200,8 +200,8 @@ export const ATELIER_GPME: AtelierDefinition = {
       dureeMinutes: 180,
       tourJoue: 3,
       processus: [
-        "A2 · Participer à la gestion des risques de la PME",
-        "A4 · Soutenir le fonctionnement et le développement de la PME",
+        "Bloc 2 · Participer à la gestion des risques de la PME",
+        "Bloc 4 · Soutenir le fonctionnement et le développement de la PME",
       ],
       objectif:
         "Recenser les risques qui pèsent sur une PME de douze personnes, mesurer ce qu'ils coûteraient, et décider lesquels transférer et lesquels garder.",
@@ -273,8 +273,8 @@ export const ATELIER_GPME: AtelierDefinition = {
       dureeMinutes: 180,
       tourJoue: 4,
       processus: [
-        "A3 · Gérer le personnel et contribuer à la gestion des ressources humaines",
-        "A4 · Soutenir le fonctionnement et le développement de la PME",
+        "Bloc 3 · Gérer le personnel et contribuer à la gestion des ressources humaines de la PME",
+        "Bloc 4 · Soutenir le fonctionnement et le développement de la PME",
       ],
       objectif:
         "Décider d'une embauche dans une structure où un salaire de plus se voit immédiatement sur la trésorerie, et où le carnet n'est jamais garanti.",
@@ -346,8 +346,8 @@ export const ATELIER_GPME: AtelierDefinition = {
       dureeMinutes: 180,
       tourJoue: 5,
       processus: [
-        "A1 · Gérer la relation avec les clients et les fournisseurs",
-        "A4 · Soutenir le fonctionnement et le développement de la PME",
+        "Bloc 1 · Gérer la relation avec les clients et les fournisseurs de la PME",
+        "Bloc 4 · Soutenir le fonctionnement et le développement de la PME",
       ],
       objectif:
         "Répondre à une demande de remise importante en sachant ce qu'elle retire à la marge et ce que son refus coûterait.",
@@ -419,8 +419,8 @@ export const ATELIER_GPME: AtelierDefinition = {
       dureeMinutes: 180,
       tourJoue: null,
       processus: [
-        "A4 · Soutenir le fonctionnement et le développement de la PME",
-        "A2 · Participer à la gestion des risques de la PME",
+        "Bloc 4 · Soutenir le fonctionnement et le développement de la PME",
+        "Bloc 2 · Participer à la gestion des risques de la PME",
       ],
       objectif:
         "Construire le rapport d'activité des cinq trimestres et le présenter oralement à un dirigeant qui décidera de l'année suivante.",
