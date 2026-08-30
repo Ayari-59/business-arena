@@ -26,6 +26,9 @@ export function SiteHeader() {
         <Link href="/ateliers" className="hidden hover:text-slate-200 sm:block">
           Ateliers
         </Link>
+        <Link href="/orientation" className="hidden hover:text-slate-200 sm:block">
+          Choisir
+        </Link>
         <Link href="/parcours" className="hidden hover:text-slate-200 sm:block">
           Parcours
         </Link>

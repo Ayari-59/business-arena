@@ -92,12 +92,19 @@ export interface PlatformConfig {
   allowSelfServiceTeachers: boolean;
   /** Message d'annonce affiché sur la landing (vide = aucun). */
   announcement: string;
+  /**
+   * Adresse à laquelle le formulaire d'orientation écrit. Vide, la page rend
+   * quand même sa recommandation : c'est l'envoi du message qui manque, et la
+   * page le dit plutôt que d'ouvrir un courrier sans destinataire.
+   */
+  contactEmail: string;
 }
 
 const DEFAULT_CONFIG: PlatformConfig = {
   allowPublicPlay: true,
   allowSelfServiceTeachers: true,
   announcement: "",
+  contactEmail: "",
 };
 
 export async function getPlatformConfig(): Promise<PlatformConfig> {

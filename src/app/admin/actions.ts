@@ -33,9 +33,11 @@ export async function updatePlatformConfigAction(formData: FormData): Promise<vo
     allowPublicPlay: formData.get("allowPublicPlay") === "on",
     allowSelfServiceTeachers: formData.get("allowSelfServiceTeachers") === "on",
     announcement: String(formData.get("announcement") ?? "").trim(),
+    contactEmail: String(formData.get("contactEmail") ?? "").trim(),
   });
   revalidatePath("/admin");
   revalidatePath("/");
+  revalidatePath("/orientation");
 }
 
 export async function newAdminInviteAction(organizationId: string): Promise<void> {

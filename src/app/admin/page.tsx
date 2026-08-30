@@ -125,6 +125,24 @@ export default async function AdminPage() {
               className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
             />
           </label>
+          <label className="block">
+            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+              Adresse de contact (formulaire d&apos;orientation)
+            </span>
+            <input
+              name="contactEmail"
+              type="email"
+              defaultValue={overview.config.contactEmail}
+              maxLength={120}
+              placeholder="Ex : contact@votre-domaine.fr"
+              className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+            />
+            <span className="mt-1 block text-xs text-slate-500">
+              Tant qu&apos;elle est vide, la page d&apos;orientation rend sa recommandation mais
+              n&apos;ouvre aucun courrier : mieux vaut pas de bouton qu&apos;un bouton qui
+              n&apos;écrit à personne.
+            </span>
+          </label>
           <SubmitButton
             pendingLabel="Enregistrement…"
             className="rounded-lg bg-amber-400 px-5 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300"
