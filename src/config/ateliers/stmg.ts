@@ -52,13 +52,17 @@ import type { AtelierDefinition } from "./types";
  * Écrits ici une fois, ils ne peuvent plus diverger d'une séance à l'autre ni
  * être inventés : le compilateur refuse un thème qui n'est pas dans la liste.
  *
- * Provenance : le Bulletin officiel n'est pas joignable depuis cet
- * environnement, dont la politique réseau bloque education.gouv.fr, eduscol et
- * les sites académiques. Ces intitulés viennent de recherches concordantes,
- * pas du texte lui-même. Les quatre thèmes de sciences de gestion et numérique
- * et les trois de management sont recoupés par deux sources ; côté terminale,
- * seul « Les organisations et les acteurs » l'est, les deux autres restent à
- * confirmer sur le texte.
+ * Provenance, vérifiée sur les textes eux mêmes.
+ *
+ * Les quatre thèmes de sciences de gestion et numérique viennent de l'annexe 3
+ * du programme de première, et les trois thèmes de l'enseignement commun de
+ * l'annexe 2 du programme de terminale : lus dans les arrêtés déposés au
+ * dossier, et non déduits. C'est ainsi qu'a été confirmé qu'« Évaluation et
+ * performance » n'existe dans aucun des deux.
+ *
+ * Les trois thèmes de management de première restent la seule partie non
+ * vérifiée sur le texte : leur annexe n'a pas été déposée, et ils viennent de
+ * recherches concordantes. À confirmer quand elle le sera.
  */
 const PREMIERE_SGN = "Première, sciences de gestion et numérique";
 const PREMIERE_MANAGEMENT = "Première, management";

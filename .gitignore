@@ -11,3 +11,10 @@ next-env.d.ts
 
 .vercel
 .DS_Store
+
+# Référentiels officiels déposés pour consultation.
+# Le dépôt est public : on n'y republie pas les PDF du ministère. Seules les
+# listes qu'on en extrait sont versionnées, avec leur provenance.
+docs/referentiels/*
+!docs/referentiels/.gitkeep
+!docs/referentiels/README.md

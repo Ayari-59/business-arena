@@ -291,6 +291,20 @@ export const CONCEPTS: ConceptDef[] = [
    * n'explique pas la marge d'une boutique à quelqu'un qui ne sait pas encore
    * ce qu'un coefficient multiplicateur, une démarque et une rotation font à
    * cette marge.
+   *
+   * DEUX ORIGINES, QU'IL FAUT DISTINGUER. Confrontées à l'arrêté du BTS
+   * management commercial opérationnel, trois de ces notions y sont nommées :
+   * la rotation des stocks, dont le texte retient précisément l'effet sur la
+   * rentabilité, l'assortiment, et le marchandisage dont le rendement de la
+   * surface mesure la performance.
+   *
+   * Les quatre autres ne le sont pas. Le coefficient multiplicateur, la
+   * démarque, le panier moyen et le taux de transformation sont du vocabulaire
+   * de métier, que l'arrêté couvre par des formules plus larges : « les
+   * principaux outils de fixation du prix », « les indicateurs de gestion des
+   * stocks », « la mesure des performances du marchandisage ». Ils se
+   * travaillent partout en section, ils ne sont pas dans le texte : les
+   * présenter comme des notions du référentiel serait faux.
    * ──────────────────────────────────────────────────────────────────────── */
   {
     code: "markup_coefficient",
