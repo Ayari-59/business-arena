@@ -107,9 +107,10 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
           <p className="mt-3 text-base italic leading-relaxed text-slate-300 print:text-black">
             {atelier.pitch}
           </p>
-          {/* Les deux dossiers de l'atelier. Celui de l'élève est public et se
-              distribue ; les corrigés sont derrière la session, parce que les
-              mettre ici reviendrait à distribuer le corrigé avec le sujet. */}
+          {/* Les documents de l'atelier. Ceux de l'élève sont publics et se
+              distribuent ; les corrigés et la grille de correction sont
+              derrière la session, parce que les mettre ici reviendrait à
+              distribuer le corrigé avec le sujet. */}
           <div className="mt-4 flex flex-wrap gap-3 print:hidden">
             <PrintButton label="Imprimer cette fiche" />
             <Link
@@ -119,11 +120,23 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
               Dossier élève
             </Link>
             <Link
+              href={`/ateliers/${atelier.code}/formulaires`}
+              className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-white/30"
+            >
+              Formulaires des livrables
+            </Link>
+            <Link
               href={`/teacher/ateliers/${atelier.code}/dossier`}
               className="rounded-lg border border-amber-400/40 px-4 py-2 text-sm font-medium text-amber-300 transition hover:border-amber-400 hover:bg-amber-400/10"
             >
               Corrigés des situations
             </Link>
+            <a
+              href={`/teacher/ateliers/${atelier.code}/grille`}
+              className="rounded-lg border border-amber-400/40 px-4 py-2 text-sm font-medium text-amber-300 transition hover:border-amber-400 hover:bg-amber-400/10"
+            >
+              Grille de correction
+            </a>
           </div>
         </header>
 

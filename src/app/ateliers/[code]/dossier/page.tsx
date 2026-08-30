@@ -70,10 +70,17 @@ export default async function DossierElevePage({
         <p className="mt-3 text-base italic leading-relaxed text-slate-300 print:text-black">
           {dossier.entete.pitch}
         </p>
-        {/* Deux formes du même dossier : la feuille qu'on imprime et remplit au
-            stylo, et le tableur qui calcule à mesure qu'on le remplit. */}
+        {/* Le dossier DIT ce qu'on rend ; les deux autres outils le font
+            écrire. La feuille qu'on remplit au stylo pendant la séance, et le
+            tableur qui calcule à mesure qu'on le remplit. */}
         <div className="mt-4 flex flex-wrap gap-3 print:hidden">
           <PrintButton label="Imprimer ce dossier" />
+          <Link
+            href={`/ateliers/${atelier.code}/formulaires`}
+            className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-white/30"
+          >
+            Formulaires à remplir
+          </Link>
           <a
             href={`/ateliers/${atelier.code}/tableau-de-bord`}
             className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-white/30"
@@ -153,6 +160,15 @@ export default async function DossierElevePage({
               </p>
               <p className="mt-1 text-sm leading-relaxed text-slate-300 print:text-black">
                 {s.livrable}
+              </p>
+
+              <p className="mt-1 text-xs text-slate-500 print:hidden">
+                <a
+                  href={`/ateliers/${atelier.code}/formulaires`}
+                  className="text-amber-300 underline-offset-4 hover:underline"
+                >
+                  La feuille à remplir pour ce livrable
+                </a>
               </p>
 
               <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400 print:text-black">

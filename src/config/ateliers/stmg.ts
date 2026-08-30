@@ -241,7 +241,7 @@ export const ATELIER_STMG: AtelierDefinition = {
         },
       ],
       livrable:
-        "La fiche de seuil de l'équipe, une page : les charges rangées en deux colonnes, la marge sur une unité vendue, le nombre d'unités à vendre pour ne rien perdre, et l'effet attendu de la décision du trimestre, chiffré avant clôture.",
+        "La fiche de seuil de l'équipe, une page : les charges rangées en deux colonnes, la marge sur une unité vendue, le nombre d'unités à vendre pour ne rien perdre, et l'effet chiffré que l'équipe attend de sa décision du trimestre avant la clôture.",
       tracePasseport:
         "J'ai distingué les charges variables des charges fixes d'une entreprise et j'ai calculé le nombre de ventes nécessaire pour couvrir ses charges.",
       evaluation: [
