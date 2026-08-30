@@ -40,6 +40,7 @@ export const ATELIER_MCO: AtelierDefinition = {
     tva: true,
     mondeVariable: false,
     quizMode: "Questions de connaissances activées",
+    tours: 4,
     notes:
       "MAILLE & CO porte un stock, trois circuits d'achat qui opposent le prix, l'image et le délai de règlement, et une saisonnalité de fin d'année qui décide de l'exercice. Le niveau retenu ouvre le financement sans ouvrir le recrutement ni l'investissement : la gestion opérationnelle d'un point de vente se joue sur l'offre, le prix et le stock, pas sur la structure. Le monde variable est décoché pour que toutes vos classes affrontent le même Noël.",
   },

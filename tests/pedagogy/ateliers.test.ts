@@ -31,6 +31,45 @@ describe("ateliers professionnels", () => {
     }
   });
 
+  it("la partie dure exactement le nombre de tours que l'atelier joue", () => {
+    // Le nombre de tours d'une partie venait du secteur et de lui seul, et une
+    // fiche l'annonçait en comptant ses séances. Trois nombres différents
+    // cohabitaient donc sur la fiche du DCG : cinq séances, quatre tours joués,
+    // six tours de partie. L'enseignant créait une partie qui ne se terminerait
+    // jamais, sans classement final ni relevé complet.
+    for (const a of ATELIERS) {
+      const joues = a.seances.filter((s) => s.tourJoue !== null);
+      expect(
+        a.reglages.tours,
+        `${a.code} : ${a.reglages.tours} tours annoncés pour ${joues.length} séances qui en jouent un`,
+      ).toBe(joues.length);
+      // Le dernier tour joué doit être le dernier de la partie, sans trou.
+      expect(
+        joues.map((s) => s.tourJoue),
+        `${a.code} : les tours joués ne couvrent pas la partie`,
+      ).toEqual(Array.from({ length: joues.length }, (_, i) => i + 1));
+      const scenario = scenarioByCode(a.reglages.scenarioCode);
+      expect(
+        a.reglages.tours,
+        `${a.code} : plus de tours que le secteur n'en porte`,
+      ).toBeLessThanOrEqual(scenario.scenario.roundsCount);
+    }
+  });
+
+  it("la fiche ne déduit pas le nombre de tours du nombre de séances", () => {
+    // La confusion d'origine, en une ligne de page : « une partie de {séances}
+    // tours ». Elle était fausse sur quatre fiches sur cinq.
+    const page = readFileSync("src/app/ateliers/[code]/page.tsx", "utf-8")
+      .replace(/\{\/\*[\s\S]*?\*\/\}/g, "")
+      .replace(/^\s*\/\/.*$/gm, "");
+    expect(page, "la fiche compte les séances pour annoncer des tours").not.toMatch(
+      /partie de \{atelier\.seances\.length\} tours/,
+    );
+    expect(page, "la fiche n'annonce pas les tours du registre").toContain(
+      "atelier.reglages.tours",
+    );
+  });
+
   it("aucune séance ne dépasse trois heures", () => {
     // Une séance de quatre heures ne rentre pas dans un emploi du temps ordinaire :
     // l'enseignant qui n'a que trois heures devant lui doit couper lui-même, et il

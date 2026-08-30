@@ -90,6 +90,13 @@ export interface AtelierDefinition {
     tva: boolean;
     mondeVariable: boolean;
     quizMode: string;
+    /**
+     * Tours à demander à la création. Une partie dure par défaut tous les tours
+     * du secteur, et un atelier dont la dernière séance rend compte en joue
+     * moins : la partie restait alors ouverte sur des tours que personne ne
+     * jouerait, sans classement final ni relevé complet.
+     */
+    tours: number;
     notes: string;
   };
   seances: AtelierSeance[];

@@ -79,6 +79,10 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
   const niveau = DIFFICULTY_PRESETS.find((p) => p.level === atelier.reglages.niveau);
   // Tri naturel : un tri de chaînes place « UE11 » avant « UE6 », et le ferait
   // aussi pour un dixième processus face au deuxième.
+  // Le nombre de tours ne se déduit pas du nombre de séances : la dernière rend
+  // compte sans rien jouer. Les confondre a fait annoncer cinq trimestres sur la
+  // fiche du DCG là où l'atelier en joue quatre et la partie en durait six.
+  const seancesQuiJouent = atelier.seances.filter((s) => s.tourJoue !== null).length;
   const processus = [...new Set(atelier.seances.flatMap((s) => s.processus))].sort((a, b) =>
     a.localeCompare(b, "fr", { numeric: true }),
   );
@@ -116,8 +120,10 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
           <ul className="mt-2 space-y-1.5 text-sm leading-relaxed text-slate-300 print:text-black">
             <li>
               · <strong className="text-slate-100 print:text-black">{atelier.format}</strong>, soit{" "}
-              {dureeTotaleHeures(atelier)} heures, une partie de {atelier.seances.length} tours,
-              un tour par séance.
+              {dureeTotaleHeures(atelier)} heures, et une partie de {atelier.reglages.tours} tours.{" "}
+              {seancesQuiJouent === atelier.seances.length
+                ? "Chaque séance joue un tour."
+                : `${seancesQuiJouent} séances jouent un tour, la dernière rend compte.`}
             </li>
             <li>
               · {atelier.referentielLabel} {atelier.referentielAccord} :{" "}

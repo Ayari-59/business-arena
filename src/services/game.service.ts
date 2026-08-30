@@ -40,6 +40,7 @@ import {
   type Periodicity,
 } from "@/config/scenarios/periodicity";
 import { applyMarketScale } from "@/config/scenarios/market-scale";
+import { applyRoundsCount } from "@/config/scenarios/rounds";
 import { applyScenarioVariability } from "@/config/scenarios/variability";
 import { parseScenarioConfig } from "@/config/scenarios/schema";
 import {
@@ -173,6 +174,12 @@ interface CreateGameArgs {
   economicOverrides?: EconomicOverrides;
   /** Monde variable (doc 02 §9bis) : variante du scénario dérivée de la graine. */
   variableWorld?: boolean;
+  /**
+   * Nombre de tours joués. Absent = tous ceux du scénario. Une partie se
+   * raccourcit, jamais ne s'allonge : au delà, les équipes joueraient des tours
+   * sans situation ni événement écrits pour eux.
+   */
+  roundsCount?: number;
   /** Secteur joué (registre des scénarios) — absent = NOVA. */
   scenarioCode?: string;
   /** Questions posées dans les situations : tout, le modèle seul, ou rien. */
@@ -221,7 +228,10 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
 
   const scenarioSnapshot = applyEventIntensity(
     applyPeriodicity(
-      applyMarketScale(applyEconomicOverrides(baseScenario, overrides), concurrents),
+      applyRoundsCount(
+        applyMarketScale(applyEconomicOverrides(baseScenario, overrides), concurrents),
+        args.roundsCount,
+      ),
       args.periodicity,
     ),
     preset?.eventProbabilityMultiplier ?? 1,
@@ -372,6 +382,8 @@ export async function createClassGame(args: {
   variableWorld?: boolean;
   scenarioCode?: string;
   quizMode?: QuizMode;
+  /** Tours joués. Absent = tous ceux du scénario ; jamais plus. */
+  roundsCount?: number;
 }): Promise<{ gameId: string; joinCode: string }> {
   // La licence se vérifie ici, à l'OUVERTURE d'une partie, et nulle part
   // ailleurs : une classe commencée se termine, quoi qu'il advienne du
@@ -394,6 +406,7 @@ export async function createClassGame(args: {
     variableWorld: args.variableWorld,
     scenarioCode: args.scenarioCode,
     quizMode: args.quizMode,
+    roundsCount: args.roundsCount,
   });
   return { gameId, joinCode };
 }

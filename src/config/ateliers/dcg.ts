@@ -42,6 +42,7 @@ export const ATELIER_DCG: AtelierDefinition = {
     tva: true,
     mondeVariable: true,
     quizMode: "Modèle d'analyse seul",
+    tours: 4,
     notes:
       "NOVA porte un cycle d'exploitation complet, des stocks, des délais de règlement des deux côtés et une capacité de production qui s'investit. Le niveau retenu ouvre le financement, l'investissement et le placement des excédents, c'est-à-dire la matière de la finance d'entreprise. Le monde variable est ici ACTIVÉ, à la différence des ateliers de BTS : à ce niveau, la distinction entre une bonne décision et un bon résultat fait partie de ce qui s'évalue. Les questions de connaissances sont désactivées et seul le choix du modèle d'analyse est demandé.",
   },

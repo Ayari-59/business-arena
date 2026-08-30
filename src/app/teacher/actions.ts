@@ -68,6 +68,9 @@ const createGameSchema = z.object({
   humanTeamsCount: z.coerce.number().int().min(1).max(8).catch(4),
   botCount: z.coerce.number().int().min(0).max(7).catch(1),
   level: z.coerce.number().int().min(1).max(6).catch(3),
+  // Tours joués : vide ou hors bornes = tous ceux du scénario. Le service
+  // rabote de toute façon à ce que le secteur porte.
+  roundsCount: z.coerce.number().int().min(1).max(24).optional().catch(undefined),
   // Secteur joué : un code inconnu retombe sur le scénario par défaut.
   scenarioCode: z.enum(SCENARIO_CODES).catch(DEFAULT_SCENARIO_CODE),
   // Questions posées dans les situations (voir QUIZ_MODES).
@@ -107,6 +110,7 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
     humanTeamsCount: formData.get("humanTeamsCount"),
     botCount: formData.get("botCount"),
     level: formData.get("level"),
+    roundsCount: formData.get("roundsCount") || undefined,
     scenarioCode: formData.get("scenarioCode"),
     quizMode: formData.get("quizMode"),
   });
@@ -149,6 +153,7 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
       variableWorld: formData.get("variableWorld") === "on",
       scenarioCode: parsed.scenarioCode,
       quizMode: parsed.quizMode,
+      roundsCount: parsed.roundsCount,
     }));
   } catch (erreur) {
     echecCreation(erreur instanceof Error ? erreur.message : "La partie n'a pas pu être créée.");

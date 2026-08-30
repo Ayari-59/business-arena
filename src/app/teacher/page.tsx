@@ -134,6 +134,28 @@ export default async function TeacherDashboard({
               <option value="year">Une année par tour</option>
             </select>
           </label>
+          <label className="block">
+            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+              Tours joués
+            </span>
+            <select
+              name="roundsCount"
+              defaultValue=""
+              className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm"
+            >
+              <option value="">Toute la partie</option>
+              {[3, 4, 5].map((n) => (
+                <option key={n} value={n}>
+                  {n} tours
+                </option>
+              ))}
+            </select>
+            <span className="mt-1 block text-xs text-slate-500">
+              Une partie se raccourcit pour tenir dans un nombre de séances donné. Elle ne
+              s&apos;allonge pas : les situations et les événements d&apos;un secteur sont écrits
+              pour un nombre de tours, au delà les équipes joueraient sans matière.
+            </span>
+          </label>
           <label className="block sm:col-span-3">
             <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
               Niveau de difficulté

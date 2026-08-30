@@ -40,6 +40,7 @@ export const ATELIER_GPME: AtelierDefinition = {
     tva: true,
     mondeVariable: false,
     quizMode: "Questions de connaissances activées",
+    tours: 5,
     notes:
       "ATLAS CONSEIL vend du temps, qui ne se stocke pas : une journée non vendue est perdue. Sa capacité ne s'achète pas, elle se recrute, avec le délai et le coût que cela suppose. Son bilan est presque entièrement fait de créances clients, ce qui rend le poste clients concret plutôt que théorique. Le niveau retenu ouvre le personnel, le financement et l'assurance, c'est-à-dire les trois leviers que le référentiel demande de savoir manier. Le monde variable est décoché pour que les écarts entre équipes viennent de leurs décisions.",
   },
