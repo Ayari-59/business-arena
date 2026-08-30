@@ -209,67 +209,6 @@ export function DecisionForm({
 
   return (
     <form action={formAction} className="space-y-4">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Field name="price" label={v.priceLabel} defaultValue={defaults.price} step={0.1}
-          suffix={`€/${v.unit}`}
-          hint="Attention aux seuils psychologiques…" />
-        <Field name="productionPlan" label={v.productionPlanLabel}
-          defaultValue={Math.round(defaults.productionPlan)} suffix={v.units}
-          hint="Le volume réel sera borné par vos capacités." />
-        <Field name="marketingBudget" label="Budget marketing" defaultValue={defaults.marketingBudget} suffix="€" />
-        {on.quality ? (
-          <Field name="qualityBudget" label="Budget qualité" defaultValue={defaults.qualityBudget} suffix="€" />
-        ) : (
-          <input type="hidden" name="qualityBudget" value={defaults.qualityBudget} />
-        )}
-        {on.maintenance ? (
-          <Field name="maintenanceBudget" label="Budget maintenance" defaultValue={defaults.maintenanceBudget} suffix="€"
-            hint="Une maintenance insuffisante dégrade la disponibilité machine." />
-        ) : (
-          <input type="hidden" name="maintenanceBudget" value={defaults.maintenanceBudget} />
-        )}
-        {on.finance ? (
-          <>
-            <Field name="newLoan" label="Nouvel emprunt" defaultValue={0} suffix="€"
-              hint="À 5 %/an, amortissement constant sur la durée contractuelle : emprunter engage." />
-            <Field
-              name="loanRepayment"
-              label={debtSchedule ? "Remboursement anticipé" : "Remboursement d'emprunt"}
-              defaultValue={0}
-              suffix="€"
-              hint={debtSchedule ? "Facultatif, en plus de l'échéance obligatoire." : undefined}
-            />
-            <Field name="capitalIncrease" label="Augmentation de capital" defaultValue={0} suffix="€"
-              hint={
-                capitalAllowance
-                  ? `Apport des associés · enveloppe restante : ${Math.round(capitalAllowance.remaining).toLocaleString("fr-FR")} € sur ${Math.round(capitalAllowance.total).toLocaleString("fr-FR")} € pour toute la partie. Les associés ne suivent pas indéfiniment.`
-                  : "Apport des associés : trésorerie et capitaux propres, sans intérêts mais dilutif."
-              } />
-            {on.dividend ? (
-              <Field
-                name="dividend"
-                label="Dividende versé aux associés"
-                defaultValue={0}
-                suffix="€"
-                hint={
-                  reserves > 0
-                    ? `Réserves distribuables : ${formatEuro(reserves)}, les bénéfices des tours passés. Ce qui sort ne finance plus rien, et le versement se fait en trésorerie, pas en résultat : on peut être rentable sans pouvoir payer.`
-                    : "Rien à distribuer : les réserves se constituent des bénéfices des tours passés, et une perte doit d'abord être rattrapée."
-                }
-              />
-            ) : null}
-          </>
-        ) : null}
-        {on.investment && investmentOffer ? (
-          <Field
-            name="machineCapacityUnits"
-            label={`Investissement capacité (${investmentOffer.costPerCapacityUnit.toLocaleString("fr-FR")} €/u)`}
-            defaultValue={0}
-            suffix={v.perRoundLabel}
-            hint={`En service au tour suivant, amorti linéairement. Max ${Math.round(investmentOffer.maxPerRound).toLocaleString("fr-FR")} u par tour.`}
-          />
-        ) : null}
-      </div>
       {orderOffer ? (
         <fieldset className="rounded-lg border border-sky-400/25 bg-sky-950/20 p-4">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-sky-300">
@@ -308,6 +247,149 @@ export function DecisionForm({
           </label>
         </fieldset>
       ) : null}
+      <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
+        <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+          🎯 Vos ventes · le prix et le volume du tour
+        </legend>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field name="price" label={v.priceLabel} defaultValue={defaults.price} step={0.1}
+            suffix={`€/${v.unit}`}
+            hint="Attention aux seuils psychologiques…" />
+          <Field name="productionPlan" label={v.productionPlanLabel}
+            defaultValue={Math.round(defaults.productionPlan)} suffix={v.units}
+            hint="Le volume réel sera borné par vos capacités." />
+        </div>
+      </fieldset>
+      {capacityFacts ? (
+        <div className="rounded-lg border border-white/10 bg-slate-950 px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            ⚙️ {v.capacityPanelTitle}
+          </p>
+          <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+            <span className="text-slate-400">{v.capacityLabel}</span>
+            <span className="text-right text-slate-200">
+              {Math.round(capacityFacts.machineCapacity).toLocaleString("fr-FR")} {v.perRoundLabel}
+            </span>
+            <span className="text-slate-400">{v.laborLabel}</span>
+            <span className="text-right text-slate-200">
+              {Math.round(capacityFacts.laborCapacity).toLocaleString("fr-FR")} {v.perRoundLabel}
+              <span className="ml-1 text-xs text-slate-500">
+                ({capacityFacts.headcount} pers. × prod. {Math.round(capacityFacts.productivity * 100)} %)
+              </span>
+            </span>
+            <span className="text-slate-400">Goulot</span>
+            <span className={`text-right font-medium ${
+              capacityFacts.bottleneck === "labor"
+                ? "text-amber-400"
+                : capacityFacts.bottleneck === "machine"
+                  ? "text-sky-400"
+                  : "text-emerald-400"
+            }`}>
+              {capacityFacts.bottleneck === "labor"
+                ? v.laborLabel
+                : capacityFacts.bottleneck === "machine"
+                  ? v.capacityBottleneckLabel
+                  : "Équilibré"}
+            </span>
+          </div>
+          {capacityFacts.bottleneck === "labor" ? (
+            <p className="mt-2 text-[11px] text-amber-300/80">{v.laborBottleneckHint}</p>
+          ) : capacityFacts.bottleneck === "machine" ? (
+            <p className="mt-2 text-[11px] text-sky-300/80">{v.capacityBottleneckHint}</p>
+          ) : null}
+        </div>
+      ) : null}
+      {suppliersOffer && suppliersOffer.length > 0 ? (
+        <fieldset className="rounded-lg border border-emerald-400/25 bg-emerald-950/20 p-4">
+          <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-emerald-300">
+            🏭 {v.supplierPanelLabel}
+          </legend>
+          <div className="space-y-2">
+            {suppliersOffer.map((s) => (
+              <label
+                key={s.code}
+                className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-3 py-2.5"
+              >
+                <input
+                  type="radio"
+                  name="supplierChoice"
+                  value={s.code}
+                  defaultChecked={(defaults.supplierChoice ?? suppliersOffer[0]?.code) === s.code}
+                  className="mt-0.5 h-4 w-4 accent-emerald-400"
+                />
+                <span>
+                  <span className="text-sm font-medium text-slate-200">
+                    {s.name} · {v.materialLabel.toLowerCase()} à{" "}
+                    {s.materialCostPerUnit.toLocaleString("fr-FR")} €/u
+                    {s.costMultiplier !== 1
+                      ? ` (${s.costMultiplier < 1 ? "" : "+"}${Math.round((s.costMultiplier - 1) * 100)} %)`
+                      : ""}
+                  </span>
+                  <span className="mt-0.5 block text-xs text-slate-400">{s.narrative}</span>
+                  <span className="mt-1 flex flex-wrap gap-3 text-[11px]">
+                    {s.qualityBonus !== 0 ? (
+                      <span className={s.qualityBonus > 0 ? "text-emerald-400" : "text-amber-400"}>
+                        Qualité {s.qualityBonus > 0 ? "+" : ""}{Math.round(s.qualityBonus * 100)} %
+                      </span>
+                    ) : null}
+                    <span className="text-slate-500">
+                      Délai fournisseur : {s.paymentDelayDays} j
+                    </span>
+                    {s.supplyRiskProbability > 0 ? (
+                      <span className="text-red-400">
+                        Risque de rupture : {Math.round(s.supplyRiskProbability * 100)} %/tour
+                      </span>
+                    ) : (
+                      <span className="text-emerald-400/60">Approvisionnement fiable</span>
+                    )}
+                  </span>
+                </span>
+              </label>
+            ))}
+          </div>
+          <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+            Le choix du fournisseur impacte votre coût variable, la qualité perçue de vos
+            produits, le délai de paiement fournisseur (BFR) et le risque de rupture de
+            chaîne. L&apos;assurance étendue couvre le litige fournisseur.
+          </p>
+        </fieldset>
+      ) : null}
+      <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
+        <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+          📣 Vos budgets du tour
+        </legend>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field name="marketingBudget" label="Budget marketing" defaultValue={defaults.marketingBudget} suffix="€" />
+          {on.quality ? (
+            <Field name="qualityBudget" label="Budget qualité" defaultValue={defaults.qualityBudget} suffix="€" />
+          ) : (
+            <input type="hidden" name="qualityBudget" value={defaults.qualityBudget} />
+          )}
+          {on.maintenance ? (
+            <Field name="maintenanceBudget" label="Budget maintenance" defaultValue={defaults.maintenanceBudget} suffix="€"
+              hint="Une maintenance insuffisante dégrade la disponibilité machine." />
+          ) : (
+            <input type="hidden" name="maintenanceBudget" value={defaults.maintenanceBudget} />
+          )}
+        </div>
+      </fieldset>
+      {on.hr ? (
+        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
+          <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+            👥 Ressources humaines
+          </legend>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <Field name="hire" label="Embauches" defaultValue={0} suffix="pers."
+              hint="Arrivée au tour suivant, coût de recrutement immédiat." />
+            <Field name="fire" label="Licenciements" defaultValue={0} suffix="pers."
+              hint="Départ au tour suivant, indemnité immédiate." />
+            <Field name="trainingBudget" label="Budget formation" defaultValue={0} suffix="€"
+              hint="Élève la productivité dès le tour suivant." />
+            <Field name="salaryPercent" label="Salaires (marché = 100)" defaultValue={Math.round((defaults.hr?.salaryIndex ?? 1) * 100)} suffix="%"
+              hint="Sous-payer démotive et fait partir les salariés." />
+          </div>
+        </fieldset>
+      ) : null}
       {on.finance && debtSchedule && debtSchedule.outstanding > 0.5 ? (
         <p className="rounded-lg border border-amber-400/20 bg-amber-950/20 px-3 py-2 text-xs text-amber-200">
           🏦 Échéance d&apos;emprunt du tour :{" "}
@@ -317,6 +399,54 @@ export function DecisionForm({
           tombent, que la caisse soit pleine ou vide.
         </p>
       ) : null}
+      <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
+        <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+          💶 Financer · emprunt, capital, investissement
+        </legend>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {on.finance ? (
+            <>
+              <Field name="newLoan" label="Nouvel emprunt" defaultValue={0} suffix="€"
+                hint="À 5 %/an, amortissement constant sur la durée contractuelle : emprunter engage." />
+              <Field
+                name="loanRepayment"
+                label={debtSchedule ? "Remboursement anticipé" : "Remboursement d'emprunt"}
+                defaultValue={0}
+                suffix="€"
+                hint={debtSchedule ? "Facultatif, en plus de l'échéance obligatoire." : undefined}
+              />
+              <Field name="capitalIncrease" label="Augmentation de capital" defaultValue={0} suffix="€"
+                hint={
+                  capitalAllowance
+                    ? `Apport des associés · enveloppe restante : ${Math.round(capitalAllowance.remaining).toLocaleString("fr-FR")} € sur ${Math.round(capitalAllowance.total).toLocaleString("fr-FR")} € pour toute la partie. Les associés ne suivent pas indéfiniment.`
+                    : "Apport des associés : trésorerie et capitaux propres, sans intérêts mais dilutif."
+                } />
+            {on.investment && investmentOffer ? (
+              <Field
+                name="machineCapacityUnits"
+                label={`Investissement capacité (${investmentOffer.costPerCapacityUnit.toLocaleString("fr-FR")} €/u)`}
+                defaultValue={0}
+                suffix={v.perRoundLabel}
+                hint={`En service au tour suivant, amorti linéairement. Max ${Math.round(investmentOffer.maxPerRound).toLocaleString("fr-FR")} u par tour.`}
+              />
+            ) : null}
+              {on.dividend ? (
+                <Field
+                  name="dividend"
+                  label="Dividende versé aux associés"
+                  defaultValue={0}
+                  suffix="€"
+                  hint={
+                    reserves > 0
+                      ? `Réserves distribuables : ${formatEuro(reserves)}, les bénéfices des tours passés. Ce qui sort ne finance plus rien, et le versement se fait en trésorerie, pas en résultat : on peut être rentable sans pouvoir payer.`
+                      : "Rien à distribuer : les réserves se constituent des bénéfices des tours passés, et une perte doit d'abord être rattrapée."
+                  }
+                />
+              ) : null}
+            </>
+          ) : null}
+        </div>
+      </fieldset>
       {on.finance && treasuryOffer ? (
         <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
@@ -364,6 +494,128 @@ export function DecisionForm({
             {Math.round(treasuryOffer.overdraftLimit).toLocaleString("fr-FR")} €. Au-delà, la
             banque cède vos créances d&apos;office, au tarif fort. Si vous ne gérez pas votre
             trésorerie, quelqu&apos;un la gérera pour vous.
+          </p>
+        </fieldset>
+      ) : null}
+      {on.insurance && insuranceFormulas && insuranceFormulas.length > 0 ? (
+        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
+          <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+            🛡️ Assurance · choisissez votre couverture
+          </legend>
+          <div className="space-y-2">
+            <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-3 py-2.5">
+              <input
+                type="radio"
+                name="insurance"
+                value=""
+                defaultChecked={!defaults.insurance}
+                className="mt-0.5 h-4 w-4 accent-amber-400"
+              />
+              <span className="text-sm text-slate-400">Pas d&apos;assurance : pas de prime, tous les risques à votre charge.</span>
+            </label>
+            {insuranceFormulas.map((f) => (
+              <label
+                key={f.code}
+                className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-3 py-2.5"
+              >
+                <input
+                  type="radio"
+                  name="insurance"
+                  value={f.code}
+                  defaultChecked={defaults.insurance === f.code || (defaults.insurance === true && f.code === insuranceFormulas[0]?.code)}
+                  className="mt-0.5 h-4 w-4 accent-amber-400"
+                />
+                <span>
+                  <span className="text-sm font-medium text-slate-200">
+                    {f.name} · {formatEuro(f.premium)}
+                  </span>
+                  <span className="mt-0.5 block text-xs text-slate-500">
+                    Couvre : {f.coveredLabels.join(", ")}.
+                  </span>
+                </span>
+              </label>
+            ))}
+          </div>
+          <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+            Un coût certain contre un risque incertain : plus la couverture est large, plus
+            la prime pèse sur votre seuil de rentabilité.
+          </p>
+        </fieldset>
+      ) : on.insurance && insuranceOffer ? (
+        <label className="flex items-start gap-3 rounded-lg border border-white/10 bg-slate-950 px-3 py-3">
+          <input
+            type="checkbox"
+            name="insurance"
+            defaultChecked={defaults.insurance === true}
+            className="mt-0.5 h-4 w-4 accent-amber-400"
+          />
+          <span>
+            <span className="text-sm font-medium text-slate-200">
+              🛡️ Assurance catastrophe · {formatEuro(insuranceOffer.premium)} ce tour
+            </span>
+            <span className="mt-0.5 block text-xs text-slate-500">
+              Couvre : {insuranceOffer.coveredLabels.join(", ")}. Un coût certain contre un
+              risque incertain, à vous d&apos;arbitrer.
+            </span>
+          </span>
+        </label>
+      ) : null}
+      {studiesOffer ? (
+        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
+          <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+            📊 Acheter de l&apos;information · livrée avec les résultats du tour
+          </legend>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {(
+              [
+                {
+                  name: "studyMarket",
+                  label: "Étude de marché",
+                  cost: studiesOffer.marketCost,
+                  hint: "Demande par segment, parts de marché, prix moyens et résultats des concurrents.",
+                },
+                {
+                  name: "studyPrice",
+                  label: "Analyse de prix",
+                  cost: studiesOffer.priceCost,
+                  hint: "Élasticités estimées par segment, seuils psychologiques, prix de référence.",
+                },
+                {
+                  name: "studyFinance",
+                  label: "Étude financière",
+                  cost: studiesOffer.financeCost,
+                  hint: "Ratios complets, structure des coûts, seuil, comparaison sectorielle.",
+                },
+                {
+                  name: "studyProject",
+                  label: "Analyse de projet",
+                  cost: studiesOffer.projectCost,
+                  hint: "VAN, TRI et délai de récupération de l'investissement ; arbitrage de la commande du tour.",
+                },
+              ] as const
+            ).map((study) => (
+              <label
+                key={study.name}
+                className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-3 py-2.5"
+              >
+                <input
+                  type="checkbox"
+                  name={study.name}
+                  defaultChecked={false}
+                  className="mt-0.5 h-4 w-4 accent-amber-400"
+                />
+                <span>
+                  <span className="text-sm font-medium text-slate-200">
+                    {study.label} · {formatEuro(study.cost)}
+                  </span>
+                  <span className="mt-0.5 block text-xs text-slate-500">{study.hint}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+          <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+            L&apos;information a un prix, facturé en charges de structure : il se lit au seuil
+            de rentabilité. Décider sans données coûte souvent plus cher.
           </p>
         </fieldset>
       ) : null}
@@ -446,239 +698,6 @@ export function DecisionForm({
             </p>
           )}
         </fieldset>
-      ) : null}
-      {studiesOffer ? (
-        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
-          <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
-            📊 Acheter de l&apos;information · livrée avec les résultats du tour
-          </legend>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {(
-              [
-                {
-                  name: "studyMarket",
-                  label: "Étude de marché",
-                  cost: studiesOffer.marketCost,
-                  hint: "Demande par segment, parts de marché, prix moyens et résultats des concurrents.",
-                },
-                {
-                  name: "studyPrice",
-                  label: "Analyse de prix",
-                  cost: studiesOffer.priceCost,
-                  hint: "Élasticités estimées par segment, seuils psychologiques, prix de référence.",
-                },
-                {
-                  name: "studyFinance",
-                  label: "Étude financière",
-                  cost: studiesOffer.financeCost,
-                  hint: "Ratios complets, structure des coûts, seuil, comparaison sectorielle.",
-                },
-                {
-                  name: "studyProject",
-                  label: "Analyse de projet",
-                  cost: studiesOffer.projectCost,
-                  hint: "VAN, TRI et délai de récupération de l'investissement ; arbitrage de la commande du tour.",
-                },
-              ] as const
-            ).map((study) => (
-              <label
-                key={study.name}
-                className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-3 py-2.5"
-              >
-                <input
-                  type="checkbox"
-                  name={study.name}
-                  defaultChecked={false}
-                  className="mt-0.5 h-4 w-4 accent-amber-400"
-                />
-                <span>
-                  <span className="text-sm font-medium text-slate-200">
-                    {study.label} · {formatEuro(study.cost)}
-                  </span>
-                  <span className="mt-0.5 block text-xs text-slate-500">{study.hint}</span>
-                </span>
-              </label>
-            ))}
-          </div>
-          <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
-            L&apos;information a un prix, facturé en charges de structure : il se lit au seuil
-            de rentabilité. Décider sans données coûte souvent plus cher.
-          </p>
-        </fieldset>
-      ) : null}
-      {on.hr ? (
-        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
-          <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
-            👥 Ressources humaines
-          </legend>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <Field name="hire" label="Embauches" defaultValue={0} suffix="pers."
-              hint="Arrivée au tour suivant, coût de recrutement immédiat." />
-            <Field name="fire" label="Licenciements" defaultValue={0} suffix="pers."
-              hint="Départ au tour suivant, indemnité immédiate." />
-            <Field name="trainingBudget" label="Budget formation" defaultValue={0} suffix="€"
-              hint="Élève la productivité dès le tour suivant." />
-            <Field name="salaryPercent" label="Salaires (marché = 100)" defaultValue={Math.round((defaults.hr?.salaryIndex ?? 1) * 100)} suffix="%"
-              hint="Sous-payer démotive et fait partir les salariés." />
-          </div>
-        </fieldset>
-      ) : null}
-      {on.insurance && insuranceFormulas && insuranceFormulas.length > 0 ? (
-        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
-          <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
-            🛡️ Assurance · choisissez votre couverture
-          </legend>
-          <div className="space-y-2">
-            <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-3 py-2.5">
-              <input
-                type="radio"
-                name="insurance"
-                value=""
-                defaultChecked={!defaults.insurance}
-                className="mt-0.5 h-4 w-4 accent-amber-400"
-              />
-              <span className="text-sm text-slate-400">Pas d&apos;assurance : pas de prime, tous les risques à votre charge.</span>
-            </label>
-            {insuranceFormulas.map((f) => (
-              <label
-                key={f.code}
-                className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-3 py-2.5"
-              >
-                <input
-                  type="radio"
-                  name="insurance"
-                  value={f.code}
-                  defaultChecked={defaults.insurance === f.code || (defaults.insurance === true && f.code === insuranceFormulas[0]?.code)}
-                  className="mt-0.5 h-4 w-4 accent-amber-400"
-                />
-                <span>
-                  <span className="text-sm font-medium text-slate-200">
-                    {f.name} · {formatEuro(f.premium)}
-                  </span>
-                  <span className="mt-0.5 block text-xs text-slate-500">
-                    Couvre : {f.coveredLabels.join(", ")}.
-                  </span>
-                </span>
-              </label>
-            ))}
-          </div>
-          <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
-            Un coût certain contre un risque incertain : plus la couverture est large, plus
-            la prime pèse sur votre seuil de rentabilité.
-          </p>
-        </fieldset>
-      ) : on.insurance && insuranceOffer ? (
-        <label className="flex items-start gap-3 rounded-lg border border-white/10 bg-slate-950 px-3 py-3">
-          <input
-            type="checkbox"
-            name="insurance"
-            defaultChecked={defaults.insurance === true}
-            className="mt-0.5 h-4 w-4 accent-amber-400"
-          />
-          <span>
-            <span className="text-sm font-medium text-slate-200">
-              🛡️ Assurance catastrophe · {formatEuro(insuranceOffer.premium)} ce tour
-            </span>
-            <span className="mt-0.5 block text-xs text-slate-500">
-              Couvre : {insuranceOffer.coveredLabels.join(", ")}. Un coût certain contre un
-              risque incertain, à vous d&apos;arbitrer.
-            </span>
-          </span>
-        </label>
-      ) : null}
-      {suppliersOffer && suppliersOffer.length > 0 ? (
-        <fieldset className="rounded-lg border border-emerald-400/25 bg-emerald-950/20 p-4">
-          <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-emerald-300">
-            🏭 {v.supplierPanelLabel}
-          </legend>
-          <div className="space-y-2">
-            {suppliersOffer.map((s) => (
-              <label
-                key={s.code}
-                className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-3 py-2.5"
-              >
-                <input
-                  type="radio"
-                  name="supplierChoice"
-                  value={s.code}
-                  defaultChecked={(defaults.supplierChoice ?? suppliersOffer[0]?.code) === s.code}
-                  className="mt-0.5 h-4 w-4 accent-emerald-400"
-                />
-                <span>
-                  <span className="text-sm font-medium text-slate-200">
-                    {s.name} · {v.materialLabel.toLowerCase()} à{" "}
-                    {s.materialCostPerUnit.toLocaleString("fr-FR")} €/u
-                    {s.costMultiplier !== 1
-                      ? ` (${s.costMultiplier < 1 ? "" : "+"}${Math.round((s.costMultiplier - 1) * 100)} %)`
-                      : ""}
-                  </span>
-                  <span className="mt-0.5 block text-xs text-slate-400">{s.narrative}</span>
-                  <span className="mt-1 flex flex-wrap gap-3 text-[11px]">
-                    {s.qualityBonus !== 0 ? (
-                      <span className={s.qualityBonus > 0 ? "text-emerald-400" : "text-amber-400"}>
-                        Qualité {s.qualityBonus > 0 ? "+" : ""}{Math.round(s.qualityBonus * 100)} %
-                      </span>
-                    ) : null}
-                    <span className="text-slate-500">
-                      Délai fournisseur : {s.paymentDelayDays} j
-                    </span>
-                    {s.supplyRiskProbability > 0 ? (
-                      <span className="text-red-400">
-                        Risque de rupture : {Math.round(s.supplyRiskProbability * 100)} %/tour
-                      </span>
-                    ) : (
-                      <span className="text-emerald-400/60">Approvisionnement fiable</span>
-                    )}
-                  </span>
-                </span>
-              </label>
-            ))}
-          </div>
-          <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
-            Le choix du fournisseur impacte votre coût variable, la qualité perçue de vos
-            produits, le délai de paiement fournisseur (BFR) et le risque de rupture de
-            chaîne. L&apos;assurance étendue couvre le litige fournisseur.
-          </p>
-        </fieldset>
-      ) : null}
-      {capacityFacts ? (
-        <div className="rounded-lg border border-white/10 bg-slate-950 px-4 py-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-            ⚙️ {v.capacityPanelTitle}
-          </p>
-          <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-            <span className="text-slate-400">{v.capacityLabel}</span>
-            <span className="text-right text-slate-200">
-              {Math.round(capacityFacts.machineCapacity).toLocaleString("fr-FR")} {v.perRoundLabel}
-            </span>
-            <span className="text-slate-400">{v.laborLabel}</span>
-            <span className="text-right text-slate-200">
-              {Math.round(capacityFacts.laborCapacity).toLocaleString("fr-FR")} {v.perRoundLabel}
-              <span className="ml-1 text-xs text-slate-500">
-                ({capacityFacts.headcount} pers. × prod. {Math.round(capacityFacts.productivity * 100)} %)
-              </span>
-            </span>
-            <span className="text-slate-400">Goulot</span>
-            <span className={`text-right font-medium ${
-              capacityFacts.bottleneck === "labor"
-                ? "text-amber-400"
-                : capacityFacts.bottleneck === "machine"
-                  ? "text-sky-400"
-                  : "text-emerald-400"
-            }`}>
-              {capacityFacts.bottleneck === "labor"
-                ? v.laborLabel
-                : capacityFacts.bottleneck === "machine"
-                  ? v.capacityBottleneckLabel
-                  : "Équilibré"}
-            </span>
-          </div>
-          {capacityFacts.bottleneck === "labor" ? (
-            <p className="mt-2 text-[11px] text-amber-300/80">{v.laborBottleneckHint}</p>
-          ) : capacityFacts.bottleneck === "machine" ? (
-            <p className="mt-2 text-[11px] text-sky-300/80">{v.capacityBottleneckHint}</p>
-          ) : null}
-        </div>
       ) : null}
       {state.error ? (
         <p className="rounded-lg border border-red-400/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">

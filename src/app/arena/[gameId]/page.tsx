@@ -17,6 +17,7 @@ import { FinancialStatements } from "@/components/financial-statements";
 import { DilemmaCard, ParametersPanels } from "@/components/decision-context";
 import { SalesHistory } from "@/components/sales-history";
 import type { KpiFormat } from "@/config/scenarios/sector-kpis";
+import { surtitreDePartie } from "@/config/scenarios/presentation";
 
 export const dynamic = "force-dynamic";
 
@@ -61,7 +62,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-amber-400">
-            Business Arena · {view.intro.title}
+            {surtitreDePartie(view.intro.title, view.playerTeamName)}
           </p>
           <h1 className="text-2xl font-bold text-slate-50">{view.playerTeamName}</h1>
         </div>

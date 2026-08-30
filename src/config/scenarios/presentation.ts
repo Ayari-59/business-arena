@@ -103,13 +103,34 @@ export const EMBLEMES_SECTEUR: Record<Sector, string> = {
  * de l'entreprise, puis ce qu'on y fait. Les deux ne se lisent pas au même
  * endroit, d'où ces deux lectures.
  */
+export function couperTitre(titre: string): { nom: string; promesse: string | null } {
+  const [nom, ...suite] = titre.split("·");
+  return { nom: nom!.trim(), promesse: suite.length > 0 ? suite.join("·").trim() : null };
+}
+
 export function nomEntreprise(d: ScenarioDefinition): string {
-  return d.title.split("·")[0]!.trim();
+  return couperTitre(d.title).nom;
 }
 
 export function promesseEntreprise(d: ScenarioDefinition): string | null {
-  const [, suite] = d.title.split("·");
-  return suite ? suite.trim() : null;
+  return couperTitre(d.title).promesse;
+}
+
+/**
+ * Le surtitre de l'écran de jeu.
+ *
+ * Une partie lancée seul nomme l'équipe d'après l'entreprise : le surtitre
+ * « Business Arena · NOVA · Prenez les commandes » se lisait alors au dessus
+ * d'un titre « NOVA », et le nom apparaissait deux fois à trois centimètres
+ * d'intervalle. En classe, où l'équipe s'appelle « Équipe 3 », le nom de
+ * l'entreprise est au contraire une information. On ne le retire donc que
+ * lorsqu'il répète le titre.
+ */
+export function surtitreDePartie(titreScenario: string, nomEquipe: string): string {
+  const { nom, promesse } = couperTitre(titreScenario);
+  const repete = nom.localeCompare(nomEquipe.trim(), "fr", { sensitivity: "base" }) === 0;
+  const morceaux = repete ? [promesse] : [nom, promesse];
+  return ["Business Arena", ...morceaux.filter((m): m is string => Boolean(m))].join(" · ");
 }
 
 /**

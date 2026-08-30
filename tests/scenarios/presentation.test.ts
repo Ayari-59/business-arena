@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { SCENARIOS } from "../../src/config/scenarios/registry";
 import {
   ACCENTS_SECTEUR,
+  surtitreDePartie,
   classesVignetteFinale,
   EMBLEMES_SECTEUR,
   nomEntreprise,
@@ -111,5 +112,43 @@ describe("la vignette qui ferme la grille", () => {
     expect(entete, "une largeur de colonnes est écrite en dur sur la vignette").not.toMatch(
       /(sm|lg):col-span-\d/,
     );
+  });
+});
+
+/**
+ * Le surtitre de l'écran de jeu.
+ *
+ * Une partie lancée seul nomme l'équipe d'après l'entreprise, si bien que le
+ * nom s'affichait deux fois à trois centimètres d'intervalle : dans le surtitre
+ * et dans le titre juste dessous.
+ */
+describe("le surtitre de l'écran de jeu", () => {
+  it("ne répète pas le nom que le titre porte déjà", () => {
+    for (const d of SCENARIOS) {
+      const nom = nomEntreprise(d);
+      const surtitre = surtitreDePartie(d.title, nom);
+      expect(
+        surtitre.includes(nom),
+        `${d.code} : « ${surtitre} » répète « ${nom} » au dessus d'un titre qui le porte`,
+      ).toBe(false);
+      const promesse = promesseEntreprise(d);
+      expect(surtitre, `${d.code} : la promesse a disparu`).toContain(promesse!);
+    }
+  });
+
+  it("garde le nom de l'entreprise quand l'équipe s'appelle autrement", () => {
+    // En classe, l'équipe s'appelle « Équipe 3 » : le nom de l'entreprise est
+    // alors la seule chose qui dise ce qu'on dirige.
+    for (const d of SCENARIOS) {
+      const surtitre = surtitreDePartie(d.title, "Équipe 3");
+      expect(surtitre, `${d.code}`).toContain(nomEntreprise(d));
+      expect(surtitre, `${d.code}`).toContain(promesseEntreprise(d)!);
+    }
+  });
+
+  it("l'écran de jeu ne recompose pas le surtitre à la main", () => {
+    const page = readFileSync("src/app/arena/[gameId]/page.tsx", "utf-8");
+    expect(page, "le surtitre est assemblé dans la page").not.toContain("Business Arena · {view");
+    expect(page).toContain("surtitreDePartie(");
   });
 });

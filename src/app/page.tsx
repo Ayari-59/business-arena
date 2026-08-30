@@ -2,6 +2,7 @@ import Link from "next/link";
 import { startGameAction } from "./actions";
 import { getPlatformConfig } from "@/services/admin.service";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
+import { etendueDesDecisions, leviersDuNiveau } from "@/config/decisions";
 import { DEFAULT_SCENARIO_CODE, SCENARIOS, SECTOR_LABELS } from "@/config/scenarios/registry";
 import {
   ACCENTS_SECTEUR,
@@ -96,6 +97,9 @@ export default async function Home({
   searchParams: Promise<{ secteur?: string }>;
 }) {
   const config = await getPlatformConfig();
+  // Le nombre de décisions se compte sur le registre des leviers : l'écrire
+  // ici le figerait, et il change dès qu'un niveau ouvre une décision de plus.
+  const decisions = etendueDesDecisions();
   // La page des entreprises renvoie ici avec son métier en poche : le
   // sélecteur doit s'ouvrir dessus, sinon le clic n'a servi à rien.
   const { secteur } = await searchParams;
@@ -216,7 +220,10 @@ export default async function Home({
       <section className="border-y border-white/5 bg-slate-900/50">
         <div className="mx-auto grid max-w-6xl grid-cols-2 gap-6 px-6 py-8 text-center sm:grid-cols-4">
           {[
-            ["6 tours", "mois, trimestres ou années"],
+            [
+              `${decisions.minimum} à ${decisions.maximum} décisions`,
+              "par tour, selon le niveau",
+            ],
             ["24 concepts", "du CA au FRNG/BFR"],
             ["18 modèles", "d'aide à la décision"],
             ["7 dimensions", "de performance (BPI)"],
@@ -373,10 +380,11 @@ export default async function Home({
           <div>
             <h2 className="text-2xl font-bold text-slate-50">Lancez votre première partie</h2>
             <p className="mt-3 max-w-lg text-sm leading-relaxed text-slate-400">
-              Choisissez l&apos;un des {SCENARIOS.length} métiers, puis menez six tours face à
-              des concurrents qui ne vous feront aucun cadeau. Prix, volumes, marketing,
-              qualité, financement : chaque décision compte, et la crise de trésorerie réserve
-              une leçon que peu voient venir.
+              Choisissez l&apos;un des {SCENARIOS.length} métiers, puis menez votre entreprise
+              face à des concurrents qui ne vous feront aucun cadeau. De {decisions.minimum} à{" "}
+              {decisions.maximum} décisions par tour selon le niveau : prix, volumes, marketing,
+              qualité, financement. Chacune compte, et la crise de trésorerie réserve une leçon
+              que peu voient venir.
             </p>
             <ul className="mt-5 space-y-2 text-sm text-slate-300">
               <li>· Niveau Découverte : aucune connaissance préalable requise</li>
@@ -493,7 +501,7 @@ export default async function Home({
               >
                 {DIFFICULTY_PRESETS.map((p) => (
                   <option key={p.level} value={p.level}>
-                    {p.level} · {p.name}
+                    {p.level} · {p.name} · {leviersDuNiveau(p.level).length} décisions
                   </option>
                 ))}
               </select>
