@@ -65,6 +65,21 @@ export const REFERENTIELS: Record<string, Referentiel> = {
       "Bloc 3 · Relation client et animation de réseaux",
     ],
   },
+  cg1: {
+    label: "Processus",
+    accord: "mobilisés",
+    source:
+      "Arrêté du 3 novembre 2014 portant définition du BTS Comptabilité et gestion, annexe I b, référentiel de certification, modifié par les arrêtés du 9 juin 2016 et du 15 septembre 2016. Lu sur le texte.",
+    entrees: [
+      "P1 · Contrôle et traitement comptable des opérations commerciales",
+      "P2 · Contrôle et production de l'information financière",
+      "P3 · Gestion des obligations fiscales",
+      "P4 · Gestion des relations sociales",
+      "P5 · Analyse et prévision de l'activité",
+      "P6 · Analyse de la situation financière",
+      "P7 · Fiabilisation de l'information et système d'information comptable (SIC)",
+    ],
+  },
   gpme: {
     label: "Blocs de compétences",
     accord: "mobilisés",
@@ -85,12 +100,6 @@ export const REFERENTIELS: Record<string, Referentiel> = {
  * Ils sont nommés plutôt que passés sous silence : la garde les laisse
  * tranquilles, et ce commentaire dit où en est chacun.
  *
- * `cg1` — le mot est le bon : le BTS Comptabilité et Gestion découpe bien le
- * métier en PROCESSUS, confirmé par l'enseignant qui édite ces ateliers. Ses
- * cinq intitulés, eux, n'ont pas été relus sur l'arrêté. Rien ne les impose ici
- * pour autant : le mot d'un référentiel reste un choix d'affichage, et une
- * confirmation orale n'est pas une raison d'en faire une règle de compilation.
- *
  * `dcg` — le mot est le bon : le diplôme de comptabilité et de gestion découpe
  * en UNITÉS D'ENSEIGNEMENT, confirmé par l'enseignant qui édite ces ateliers.
  * Elles y jouent le rôle que les processus ou les matières tiennent en section
@@ -102,4 +111,4 @@ export const REFERENTIELS: Record<string, Referentiel> = {
  * `stmg` — porte ses thèmes dans son propre fichier, où deux programmes sur
  * trois ont été lus sur le texte.
  */
-export const REFERENTIELS_NON_VERIFIES = ["cg1", "dcg", "stmg"] as const;
+export const REFERENTIELS_NON_VERIFIES = ["dcg", "stmg"] as const;

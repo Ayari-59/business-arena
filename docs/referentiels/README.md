@@ -19,22 +19,22 @@ vérification suivante n'ait pas à tout refaire.
 | Référentiel du BTS Négociation et digitalisation de la relation client | les trois blocs de compétences | conformes : relation client et négociation-vente, relation client à distance et digitalisation, relation client et animation de réseaux |
 | Référentiel du BTS Gestion de la PME | le mot du référentiel et les quatre intitulés | **deux erreurs**. Le texte parle de **blocs de compétences**, le produit disait « activités », mot qui y désigne le découpage fin à l'intérieur d'un bloc. Et deux intitulés sur quatre étaient tronqués, amputés du « de la PME » qui les termine |
 | Référentiel du BTS Support à l'action managériale | rien pour l'instant | aucun atelier ne vise ce diplôme. Ses blocs, pour mémoire : optimisation des processus administratifs, gestion de projet, collaboration à la gestion des ressources humaines, et une culture économique, juridique et managériale |
+| Arrêté du 3 novembre 2014, BTS Comptabilité et gestion, annexe I b, modifié en juin puis septembre 2016 | le mot du référentiel, les sept processus, et les deux pièces que l'atelier promet | **aucune erreur**. Le texte découpe bien en **processus**, et les cinq intitulés cités par l'atelier sont exacts à la lettre près : P1 contrôle et traitement comptable des opérations commerciales, P3 gestion des obligations fiscales, P5 analyse et prévision de l'activité, P6 analyse de la situation financière, P7 fiabilisation de l'information et système d'information comptable. Le texte porte en plus P2 contrôle et production de l'information financière et P4 gestion des relations sociales, qu'aucune séance ne mobilise. Il confirme aussi les deux objets que l'atelier nomme : l'**atelier professionnel** est une modalité d'enseignement du diplôme (annexe III c) et le **passeport professionnel** en est une pièce (annexe III d) |
 
 ## Ce qui reste à vérifier
 
 - **Le programme de management de première STMG** : son annexe n'a pas été
   déposée. Les trois thèmes cités par le produit viennent de recherches
   concordantes, pas du texte.
-- **BTS CG** : le mot est confirmé, ce diplôme découpe bien le métier en
-  **processus**. Ses cinq intitulés, eux, n'ont pas été relus sur l'arrêté.
 - **DCG** : le mot est confirmé, ce diplôme découpe en **unités
   d'enseignement**, qui y jouent le rôle des processus ou des matières d'un
   BTS. Ses deux intitulés cités, finance d'entreprise et contrôle de gestion,
   n'ont pas été relus sur le texte.
 
-Les six diplômes ont donc leur mot juste : quatre l'ont été sur le texte, deux
-par l'enseignant qui édite ces ateliers. Ce qui reste ouvert n'est plus le
-vocabulaire, ce sont les intitulés du BTS CG et du DCG.
+Les six diplômes ont donc leur mot juste : cinq l'ont été sur le texte, un par
+l'enseignant qui édite ces ateliers. Ce qui reste ouvert n'est plus le
+vocabulaire, ce sont les deux intitulés du DCG et les trois thèmes du
+management de première STMG.
 
 ## Notions : ce que l'arrêté du BTS MCO nomme, et ce qu'il ne nomme pas
 
