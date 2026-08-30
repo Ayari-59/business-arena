@@ -91,7 +91,13 @@ export const REFERENTIELS: Record<string, Referentiel> = {
  * pour autant : le mot d'un référentiel reste un choix d'affichage, et une
  * confirmation orale n'est pas une raison d'en faire une règle de compilation.
  *
- * `dcg` — ni le mot ni les intitulés n'ont été vérifiés.
+ * `dcg` — le mot est le bon : le diplôme de comptabilité et de gestion découpe
+ * en UNITÉS D'ENSEIGNEMENT, confirmé par l'enseignant qui édite ces ateliers.
+ * Elles y jouent le rôle que les processus ou les matières tiennent en section
+ * de technicien supérieur, ce qui explique que le mot change d'un diplôme à
+ * l'autre sans que la chose change vraiment. Les deux intitulés cités,
+ * finance d'entreprise et contrôle de gestion, n'ont pas été relus sur le
+ * texte.
  *
  * `stmg` — porte ses thèmes dans son propre fichier, où deux programmes sur
  * trois ont été lus sur le texte.

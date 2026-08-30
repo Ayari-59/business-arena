@@ -27,8 +27,14 @@ vérification suivante n'ait pas à tout refaire.
   concordantes, pas du texte.
 - **BTS CG** : le mot est confirmé, ce diplôme découpe bien le métier en
   **processus**. Ses cinq intitulés, eux, n'ont pas été relus sur l'arrêté.
-- **DCG** : ni le mot ni les intitulés n'ont été vérifiés. Le produit lui prête
-  des « unités d'enseignement ».
+- **DCG** : le mot est confirmé, ce diplôme découpe en **unités
+  d'enseignement**, qui y jouent le rôle des processus ou des matières d'un
+  BTS. Ses deux intitulés cités, finance d'entreprise et contrôle de gestion,
+  n'ont pas été relus sur le texte.
+
+Les six diplômes ont donc leur mot juste : quatre l'ont été sur le texte, deux
+par l'enseignant qui édite ces ateliers. Ce qui reste ouvert n'est plus le
+vocabulaire, ce sont les intitulés du BTS CG et du DCG.
 
 ## Notions : ce que l'arrêté du BTS MCO nomme, et ce qu'il ne nomme pas
 
