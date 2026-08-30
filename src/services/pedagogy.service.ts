@@ -37,6 +37,7 @@ import { hintScoreMultiplier, nextUnlockableLevel } from "@/pedagogy/hints";
 import { evaluateDiagnosis, evaluateQuiz } from "@/pedagogy/evaluation";
 import { detectSituations } from "@/pedagogy/detection";
 import { AXES, aggregateAxis, updateMastery } from "@/pedagogy/progress";
+import { adaptiveHintMultiplier, playerStrength } from "@/pedagogy/adaptivity";
 import type { CompanyRoundResult } from "@/engine/types";
 
 /**
@@ -432,7 +433,10 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
       }
       raw = 0.5 * diagScore + 0.5 * knowledgeScore;
     }
-    const score = raw * hintScoreMultiplier(levels, def.hints);
+    // Score de base (avant pénalité d'indices) : commun à toute l'équipe.
+    // La pénalité, elle, est individuelle : un élève faible paie moins cher.
+    const baseMultiplier = hintScoreMultiplier(levels, def.hints);
+    const teamScore = raw * baseMultiplier;
 
     await db
       .update(situationInstances)
@@ -440,18 +444,25 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
         status: "debriefed",
         diagnosis: {
           ...((instance.diagnosis as object) ?? {}),
-          finalScore: score,
+          finalScore: teamScore,
           hintLevelsUsed: levels,
         },
       })
       .where(eq(situationInstances.id, instance.id));
 
-    // Progression des joueurs de l'équipe sur les concepts de la situation
     const members = await db
       .select()
       .from(players)
       .where(eq(players.teamId, instance.teamId));
     for (const member of members) {
+      const memberSkills = await db
+        .select({ value: playerSkills.value })
+        .from(playerSkills)
+        .where(eq(playerSkills.userId, member.userId));
+      const strength = playerStrength(memberSkills.map((s) => ({ value: Number(s.value) })));
+      const memberMultiplier = adaptiveHintMultiplier(levels, def.hints, strength);
+      const score = raw * memberMultiplier;
+
       for (const conceptCode of def.conceptCodes) {
         const conceptId = conceptIdByCode.get(conceptCode);
         if (!conceptId) continue;
@@ -1236,5 +1247,159 @@ export async function getGameGradeSheet(
     quizMode: quizModeFromProfile(game.difficultyProfile),
     roundsResolved: resolved.length,
     teams: teamGrades.sort((a, b) => a.name.localeCompare(b.name, "fr")),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Vue par élève : la progression individuelle que l'enseignant ne voit pas
+// ---------------------------------------------------------------------------
+
+export interface StudentProgress {
+  userId: string;
+  displayName: string;
+  teamName: string;
+  skills: { axis: string; value: number }[];
+  /** Force globale [0, 100] — moyenne des 7 axes. */
+  strength: number;
+  concepts: { code: string; name: string; mastery: number }[];
+  /** Score moyen sur les situations débriefées de cette partie. */
+  averageScore: number | null;
+  situationsAnswered: number;
+  situationsUnanswered: number;
+  hintsUsed: number;
+}
+
+export interface StudentProgressView {
+  gameId: string;
+  scenarioTitle: string;
+  classAverage: { strength: number; averageScore: number | null };
+  students: StudentProgress[];
+}
+
+export async function getStudentProgressView(
+  gameId: string,
+  teacherId: string,
+): Promise<StudentProgressView | null> {
+  const game = (await db.select().from(games).where(eq(games.id, gameId)))[0];
+  if (!game || game.createdBy !== teacherId) return null;
+
+  const teamRows = (await db.select().from(teams).where(eq(teams.gameId, gameId))).filter(
+    (t) => t.controller === "human",
+  );
+  const teamIds = teamRows.map((t) => t.id);
+  const teamNameById = new Map(teamRows.map((t) => [t.id, t.name]));
+
+  const memberships = teamIds.length
+    ? await db
+        .select({ userId: players.userId, teamId: players.teamId, name: users.displayName })
+        .from(players)
+        .innerJoin(users, eq(users.id, players.userId))
+        .where(inArray(players.teamId, teamIds))
+    : [];
+  if (memberships.length === 0)
+    return {
+      gameId,
+      scenarioTitle: scenarioByCode((game.scenarioSnapshot as { code?: string } | null)?.code).title,
+      classAverage: { strength: 0, averageScore: null },
+      students: [],
+    };
+
+  const userIds = [...new Set(memberships.map((m) => m.userId))];
+
+  const allSkills = await db
+    .select()
+    .from(playerSkills)
+    .where(inArray(playerSkills.userId, userIds));
+  const skillsByUser = new Map<string, { axis: string; value: number }[]>();
+  for (const s of allSkills) {
+    const list = skillsByUser.get(s.userId) ?? [];
+    list.push({ axis: s.axis, value: Number(s.value) });
+    skillsByUser.set(s.userId, list);
+  }
+
+  const conceptRows = await db.select().from(concepts);
+  const conceptNameById = new Map(conceptRows.map((r) => [r.id, { code: r.code, name: r.name }]));
+  const allProgress = await db
+    .select()
+    .from(learningProgress)
+    .where(inArray(learningProgress.userId, userIds));
+  const progressByUser = new Map<string, { code: string; name: string; mastery: number }[]>();
+  for (const p of allProgress) {
+    const concept = conceptNameById.get(p.conceptId);
+    if (!concept) continue;
+    const list = progressByUser.get(p.userId) ?? [];
+    list.push({ code: concept.code, name: concept.name, mastery: Number(p.mastery) });
+    progressByUser.set(p.userId, list);
+  }
+
+  const roundRows = await db.select().from(rounds).where(eq(rounds.gameId, gameId));
+  const instances = teamIds.length && roundRows.length
+    ? await db
+        .select()
+        .from(situationInstances)
+        .where(inArray(situationInstances.teamId, teamIds))
+    : [];
+  const usages = instances.length
+    ? await db
+        .select()
+        .from(hintUsages)
+        .where(inArray(hintUsages.situationInstanceId, instances.map((i) => i.id)))
+    : [];
+  const hintsByTeam = new Map<string, number>();
+  for (const u of usages) {
+    const teamId = instances.find((i) => i.id === u.situationInstanceId)?.teamId;
+    if (teamId) hintsByTeam.set(teamId, (hintsByTeam.get(teamId) ?? 0) + 1);
+  }
+
+  const scoresByTeam = new Map<string, { answered: number; unanswered: number; scores: number[] }>();
+  for (const inst of instances) {
+    const entry = scoresByTeam.get(inst.teamId) ?? { answered: 0, unanswered: 0, scores: [] };
+    if (inst.status === "debriefed") {
+      const diag = inst.diagnosis as { finalScore?: number; selected?: string[] } | null;
+      if (diag?.selected !== undefined) {
+        entry.answered++;
+        if (typeof diag.finalScore === "number") entry.scores.push(diag.finalScore);
+      } else {
+        entry.unanswered++;
+      }
+    }
+    scoresByTeam.set(inst.teamId, entry);
+  }
+
+  const students: StudentProgress[] = memberships.map((m) => {
+    const skills = skillsByUser.get(m.userId) ?? [];
+    const strength = playerStrength(skills);
+    const teamData = scoresByTeam.get(m.teamId);
+    const avg = teamData && teamData.scores.length > 0
+      ? teamData.scores.reduce((a, b) => a + b, 0) / teamData.scores.length
+      : null;
+    return {
+      userId: m.userId,
+      displayName: m.name,
+      teamName: (teamNameById.get(m.teamId) ?? "").replace(/\s*\(vous\)\s*$/, ""),
+      skills: skills.sort((a, b) => b.value - a.value),
+      strength: Math.round(strength * 10) / 10,
+      concepts: (progressByUser.get(m.userId) ?? []).sort((a, b) => a.mastery - b.mastery),
+      averageScore: avg,
+      situationsAnswered: teamData?.answered ?? 0,
+      situationsUnanswered: teamData?.unanswered ?? 0,
+      hintsUsed: hintsByTeam.get(m.teamId) ?? 0,
+    };
+  });
+
+  const strengths = students.map((s) => s.strength);
+  const avgStrength = strengths.length > 0
+    ? strengths.reduce((a, b) => a + b, 0) / strengths.length
+    : 0;
+  const allScores = students.filter((s) => s.averageScore !== null).map((s) => s.averageScore!);
+  const avgScore = allScores.length > 0
+    ? allScores.reduce((a, b) => a + b, 0) / allScores.length
+    : null;
+
+  return {
+    gameId,
+    scenarioTitle: scenarioByCode((game.scenarioSnapshot as { code?: string } | null)?.code).title,
+    classAverage: { strength: Math.round(avgStrength * 10) / 10, averageScore: avgScore },
+    students: students.sort((a, b) => a.strength - b.strength),
   };
 }

@@ -528,6 +528,7 @@ export async function submitTeamDecisions(args: {
   gameId: string;
   userId: string;
   payload: RoundDecisions;
+  justification?: string;
 }): Promise<{ roundIndex: number }> {
   const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
   if (!game) throw new Error("Partie introuvable");
@@ -556,12 +557,14 @@ export async function submitTeamDecisions(args: {
     }
   }
 
+  const justification = args.justification?.trim() || null;
   await db
     .insert(decisions)
     .values({
       roundId: roundRow.id,
       teamId: team.id,
       payload: args.payload,
+      justification,
       status: "validated",
       validatedAt: new Date(),
       validatedBy: args.userId,
@@ -570,6 +573,7 @@ export async function submitTeamDecisions(args: {
       target: [decisions.roundId, decisions.teamId],
       set: {
         payload: args.payload,
+        justification,
         status: "validated",
         validatedAt: new Date(),
         validatedBy: args.userId,
@@ -862,11 +866,13 @@ export async function resolveCurrentRound(args: {
   gameId: string;
   userId: string;
   playerDecisions: RoundDecisions;
+  justification?: string;
 }): Promise<{ roundIndex: number; finished: boolean }> {
   await submitTeamDecisions({
     gameId: args.gameId,
     userId: args.userId,
     payload: args.playerDecisions,
+    justification: args.justification,
   });
   return resolveGameRound(args.gameId);
 }

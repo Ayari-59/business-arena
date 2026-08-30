@@ -699,6 +699,20 @@ export function DecisionForm({
           )}
         </fieldset>
       ) : null}
+      <fieldset className="rounded-lg border border-slate-700/60 px-4 pb-4 pt-3">
+        <legend className="px-1 text-xs font-medium text-slate-400">
+          En quelques mots (facultatif)
+        </legend>
+        <textarea
+          name="justification"
+          rows={2}
+          placeholder="Pourquoi ces choix ce tour-ci ?"
+          className="w-full resize-y rounded border border-slate-700 bg-slate-800/50 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:border-amber-400/50 focus:outline-none"
+        />
+        <p className="mt-1 text-[11px] text-slate-500">
+          Notez ici la logique de vos décisions. L&apos;enseignant pourra la lire au débriefing.
+        </p>
+      </fieldset>
       {state.error ? (
         <p className="rounded-lg border border-red-400/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
           {state.error}
