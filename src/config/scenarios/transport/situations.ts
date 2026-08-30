@@ -11,7 +11,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
     code: "transport_t1_revient",
     title: "Ce que coûte vraiment une palette",
     narrative:
-      "Vous reprenez ROUTE & CIE : douze porteurs, dix-huit chauffeurs, un dépôt. La palette se facture 74 € en moyenne. Le gazole et les péages coûtent 31 €, l'entretien et les pneumatiques 12 €. Tout le reste, salaires des chauffeurs compris, tombe chaque trimestre à l'identique.",
+      "Vous reprenez ROUTE & CIE : sept porteurs, dix chauffeurs, un dépôt. La palette se facture 74 € en moyenne. Le gazole et les péages coûtent 18 €, l'entretien et les pneumatiques 7 €. Tout le reste, la conduite comprise, tombe chaque trimestre à l'identique.",
     problem:
       "Combien de palettes faut-il charger dans le trimestre pour couvrir la structure ?",
     diagnosticOptions: [
@@ -23,7 +23,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
       },
       {
         id: "marge_palette",
-        label: "Chaque palette laisse 31 € pour couvrir cette structure",
+        label: "Chaque palette laisse 49 € pour couvrir cette structure",
         correct: true,
       },
       {
@@ -42,28 +42,28 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
         id: "marge_unitaire",
         prompt: "Quelle est la marge sur coût variable d'une palette livrée ?",
         options: [
-          { id: "a", label: "31 €, soit 74 − 31 − 12" },
-          { id: "b", label: "43 €, soit 74 − 31" },
+          { id: "a", label: "49 €, soit 74 − 18 − 7" },
+          { id: "b", label: "56 €, soit 74 − 18" },
           { id: "c", label: "74 €, le prix facturé" },
-          { id: "d", label: "12 €, l'entretien" },
+          { id: "d", label: "7 €, l'entretien" },
         ],
         correctOptionId: "a",
         explain:
-          "Gazole, péages, entretien et pneumatiques suivent les kilomètres parcourus : ils sont variables. Les 31 € restants paient les chauffeurs, le dépôt et la flotte.",
+          "Gazole, péages, entretien et pneumatiques suivent les kilomètres parcourus : ils sont variables. Les 49 € restants paient les chauffeurs, le dépôt et la flotte, et la conduite à elle seule en prend la plus grosse part.",
       },
       {
         id: "seuil_palettes",
         prompt:
-          "Avec 268 000 € de charges de structure décaissées, à partir de combien de palettes le trimestre devient-il bénéficiaire ?",
+          "Avec 186 000 € de charges de structure décaissées, à partir de combien de palettes le trimestre devient-il bénéficiaire ?",
         options: [
-          { id: "a", label: "Environ 8 650, soit 54 % de la capacité de la flotte" },
-          { id: "b", label: "Environ 16 000, la flotte au complet" },
-          { id: "c", label: "Environ 3 600" },
-          { id: "d", label: "Environ 11 000, le rythme actuel" },
+          { id: "a", label: "Environ 3 800, soit 38 % de la capacité de la flotte" },
+          { id: "b", label: "Environ 10 000, la flotte au complet" },
+          { id: "c", label: "Environ 2 500" },
+          { id: "d", label: "Environ 7 400, le rythme actuel" },
         ],
         correctOptionId: "a",
         explain:
-          "268 000 ÷ 31 ≈ 8 645 palettes. Sous ce seuil, les camions roulent et l'entreprise perd de l'argent en roulant : c'est la situation la plus dangereuse du métier.",
+          "186 000 ÷ 49 ≈ 3 796 palettes. Ce seuil ne couvre que les charges décaissées : les amortissements de la flotte, les budgets d'entretien et de qualité et les intérêts s'y ajoutent, et portent le vrai point mort près de 4 900 palettes. Sous ce seuil, les camions roulent et l'entreprise perd de l'argent en roulant : c'est la situation la plus dangereuse du métier.",
       },
     ],
     modelRelevance: {
@@ -76,9 +76,9 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
     hints: hints([
       "Séparez ce qui dépend des kilomètres de ce qui tombe tous les mois.",
       "Un chauffeur est payé qu'il transporte vingt palettes ou trente.",
-      "Chaque palette laisse 74 − 31 − 12 = 31 € pour la structure.",
-      "Seuil = 268 000 ÷ 31 ≈ 8 650 palettes par trimestre.",
-      "Rapporté à 16 000 palettes de capacité, il faut donc remplir les camions à 54 % rien que pour équilibrer.",
+      "Chaque palette laisse 74 − 18 − 7 = 49 € pour la structure.",
+      "Seuil décaissé = 186 000 ÷ 49 ≈ 3 800 palettes par trimestre.",
+      "Rapporté à 10 000 palettes de capacité, il faut donc remplir les camions à 38 % rien que pour couvrir ce qui se décaisse, et près de la moitié pour couvrir aussi la flotte.",
     ]),
     trigger: { round: 1 },
     weight: 1,
@@ -173,7 +173,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
     code: "transport_t3_gazole",
     title: "Le gazole prend dix-huit pour cent",
     narrative:
-      "Le carburant a bondi de dix-huit pour cent en six semaines. Personne dans l'entreprise n'a rien décidé, et pourtant chaque palette coûte désormais 5,60 € de plus. Vos contrats industriels sont signés pour l'année, la bourse de fret, elle, s'ajuste en quelques jours.",
+      "Le carburant a bondi de dix-huit pour cent en six semaines. Personne dans l'entreprise n'a rien décidé, et pourtant chaque palette coûte désormais 3,24 € de plus. Vos contrats industriels sont signés pour l'année, la bourse de fret, elle, s'ajuste en quelques jours.",
     problem:
       "De combien le résultat du trimestre bouge-t-il, et que faire des contrats déjà signés ?",
     diagnosticOptions: [
@@ -186,7 +186,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
       {
         id: "marge_ecrasee",
         label:
-          "La marge unitaire tombe de 31 à 25,40 €, ce qui remonte mécaniquement le seuil de rentabilité",
+          "La marge unitaire tombe de 49 à 45,76 €, ce qui remonte mécaniquement le seuil de rentabilité",
         correct: true,
       },
       {
@@ -210,16 +210,16 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
       {
         id: "nouveau_seuil",
         prompt:
-          "Avec une marge unitaire tombée à 25,40 €, quel devient le seuil de rentabilité trimestriel ?",
+          "Avec une marge unitaire tombée à 45,76 €, quel devient le seuil de rentabilité décaissé du trimestre ?",
         options: [
-          { id: "a", label: "Environ 10 550 palettes, contre 8 650 auparavant" },
+          { id: "a", label: "Environ 4 050 palettes, contre 3 800 auparavant" },
           { id: "b", label: "Il ne change pas : le seuil dépend des charges fixes" },
-          { id: "c", label: "Environ 7 300 palettes" },
-          { id: "d", label: "Environ 16 000 palettes" },
+          { id: "c", label: "Environ 3 300 palettes" },
+          { id: "d", label: "Environ 10 000 palettes" },
         ],
         correctOptionId: "a",
         explain:
-          "268 000 ÷ 25,40 ≈ 10 551. Une hausse de dix-huit pour cent sur une seule ligne de coût déplace le seuil de près de deux mille palettes : c'est toute la fragilité d'un métier à marge courte.",
+          "186 000 ÷ 45,76 ≈ 4 065. Le seuil ne bouge que de deux cent cinquante palettes, et c'est le résultat qu'il faut regarder : 3,24 € multipliés par les sept mille palettes du trimestre, c'est près de la moitié du bénéfice trimestriel effacée par une ligne que personne n'a décidée.",
       },
       {
         id: "sensibilite",
@@ -248,9 +248,9 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
     conceptCodes: ["variable_costs", "contribution_margin", "breakeven", "safety_margin"],
     hints: hints([
       "Le surcoût porte sur chaque palette : multipliez-le par le volume du trimestre.",
-      "La marge unitaire passe de 31 à 25,40 €.",
+      "La marge unitaire passe de 49 à 45,76 €.",
       "Les charges de structure, elles, n'ont pas bougé.",
-      "Nouveau seuil = 268 000 ÷ 25,40 ≈ 10 550 palettes.",
+      "Nouveau seuil décaissé = 186 000 ÷ 45,76 ≈ 4 050 palettes.",
       "Reste la question commerciale : qui supporte ce risque à l'avenir, vous ou votre client ? C'est ce que règle une clause d'indexation.",
     ]),
     trigger: { round: 3 },
@@ -350,7 +350,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
     code: "transport_t5_flotte",
     title: "Renouveler la flotte ou la réparer",
     narrative:
-      "Quatre de vos porteurs ont passé les huit cents mille kilomètres. Leur entretien coûte 34 000 € par trimestre et grimpe, leurs pannes immobilisent des tournées. Les remplacer coûterait 420 000 €, financés sur six ans, pour un entretien retombant à 9 000 € et une consommation en baisse de neuf pour cent.",
+      "Trois de vos porteurs ont passé les huit cents mille kilomètres. Leur entretien coûte 21 000 € par trimestre et grimpe, leurs pannes immobilisent des tournées. Les remplacer coûterait 315 000 €, financés sur six ans, pour un entretien retombant à 5 500 € et une consommation en baisse de neuf pour cent.",
     problem:
       "Le renouvellement crée-t-il de la valeur, et sur quels flux le démontrer ?",
     diagnosticOptions: [
@@ -378,7 +378,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
       },
       {
         id: "trop_cher",
-        label: "420 000 € est un montant trop élevé : la décision se tranche sans calcul",
+        label: "315 000 € est un montant trop élevé : la décision se tranche sans calcul",
         correct: false,
       },
     ],
@@ -388,14 +388,14 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
         prompt:
           "Quelle économie d'entretien le renouvellement procure-t-il chaque trimestre ?",
         options: [
-          { id: "a", label: "25 000 €, soit 34 000 − 9 000, avant même l'effet sur le gazole" },
-          { id: "b", label: "34 000 €, la totalité de l'entretien actuel" },
-          { id: "c", label: "9 000 €, le nouvel entretien" },
+          { id: "a", label: "15 500 €, soit 21 000 − 5 500, avant même l'effet sur le gazole" },
+          { id: "b", label: "21 000 €, la totalité de l'entretien actuel" },
+          { id: "c", label: "5 500 €, le nouvel entretien" },
           { id: "d", label: "Aucune : l'entretien est une charge de structure" },
         ],
         correctOptionId: "a",
         explain:
-          "Seul l'écart compte. Ces 25 000 € trimestriels, plus l'économie de carburant et les tournées qui ne sont plus immobilisées, forment les flux d'entrée du projet.",
+          "Seul l'écart compte. Ces 15 500 € trimestriels, plus l'économie de carburant et les tournées qui ne sont plus immobilisées, forment les flux d'entrée du projet.",
       },
       {
         id: "van_vs_payback",
@@ -424,7 +424,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
     conceptCodes: ["discounting", "irr_payback", "profitability_vs_return", "capacity"],
     hints: hints([
       "Ne retenez que ce qui change entre garder et remplacer.",
-      "L'entretien passe de 34 000 à 9 000 € par trimestre.",
+      "L'entretien passe de 21 000 à 5 500 € par trimestre.",
       "Ajoutez l'économie de gazole et les tournées qui ne sont plus perdues en panne.",
       "L'amortissement n'est pas un flux : l'argent sort à l'achat, une seule fois.",
       "Actualisez ces flux au coût de votre financement, et comparez au décaissement initial diminué de la revente des anciens porteurs.",
@@ -676,7 +676,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
     conceptCodes: ["breakeven", "safety_margin", "contribution_margin", "dead_point"],
     hints: hints([
       "Commencez par mesurer l'écart, en euros puis en palettes.",
-      "Divisez le manque à gagner par la marge unitaire de 31 €.",
+      "Divisez le manque à gagner par la marge unitaire de 49 €.",
       "Vous obtenez le nombre de palettes qui vous ont manqué : un objectif, pas une inquiétude.",
       "Trois leviers agissent sur cet écart : le prix, le volume et le coût variable.",
       "Le prix se paie en clients perdus, le volume dépend du marché : commencez par le coût variable, le seul que vous maîtrisez entièrement.",

@@ -594,7 +594,7 @@ export const TRANSPORT_DEFINITION: ScenarioDefinition = {
   code: transportScenario.code,
   title: "ROUTE & CIE · Remplissez les camions",
   sector: "transport",
-  tagline: "Transporteur routier régional, douze porteurs.",
+  tagline: "Transporteur routier régional, sept porteurs.",
   briefing:
     "Vos camions partent chaque matin, chargés ou non. Le gazole, les péages et le chauffeur se paient de la même façon dans les deux cas. Une place vide au départ est perdue pour toujours : tout le métier consiste à décider ce qu'on met dedans, et à quel prix, avant que la porte ne se ferme.",
   context:

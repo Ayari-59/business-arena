@@ -126,15 +126,12 @@ describe("dimensionnement du marché", () => {
     // moins finisse la partie dans le vert. Sans redimensionnement, la meilleure
     // des huit finissait lourdement dans le rouge dans TOUS les secteurs.
     //
-    // Le transport est écarté et nommé plutôt que passé sous silence : il est
-    // mal calibré indépendamment de la taille de la classe, au point d'être
-    // perdant même joué seul, parce que sa marge unitaire ne couvre pas sa
-    // structure une fois la masse salariale comptée. Le redimensionnement du
-    // marché n'y peut rien, et le corriger demande de réécrire les chiffres de
-    // ses situations, qui enseignent aujourd'hui un seuil faux. À traiter à
-    // part, en connaissance de cause.
-    const MAL_CALIBRE = new Set(["transport"]);
-    for (const d of SCENARIOS.filter((s) => !MAL_CALIBRE.has(s.code))) {
+    // Le transport a longtemps été écarté ici, nommément : il était perdant même
+    // joué seul, parce qu'il chargeait chaque palette de 43 € de frais de route,
+    // soit le coût d'un camion complet, tout en payant la conduite en charges de
+    // structure. L'exception portait une assertion qui devait tomber le jour du
+    // recalibrage. Elle est tombée, et les neuf secteurs sont ici.
+    for (const d of SCENARIOS) {
       const concurrents = 8;
       const cumul = meilleurCumul(d, concurrents, applyMarketScale(d.scenario, concurrents));
       expect(
@@ -142,13 +139,6 @@ describe("dimensionnement du marché", () => {
         `${d.code} : à ${concurrents} concurrents, la meilleure entreprise finit à ${Math.round(cumul / 1000)} k€`,
       ).toBeGreaterThan(CUMUL_MINIMUM);
     }
-    // Et l'exception ne doit pas se périmer en silence : le jour où le transport
-    // est recalibré, cette ligne tombe et rappelle de le retirer de la liste.
-    const transport = SCENARIOS.find((s) => s.code === "transport")!;
-    expect(
-      meilleurCumul(transport, 8, applyMarketScale(transport.scenario, 8)),
-      "le transport est jouable : retirez-le de la liste des secteurs mal calibrés",
-    ).toBeLessThan(CUMUL_MINIMUM);
   });
 
   it("la création de partie dimensionne réellement le marché", () => {
