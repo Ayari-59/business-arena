@@ -151,12 +151,14 @@ export default function AteliersPage() {
             mains. Nous ne décrivons pas une séance que nous n&apos;aurions pas pu faire tourner.
           </p>
           <p>
-            Les processus cités sont nommés comme le référentiel du diplôme les nomme. Le
-            rapprochement entre une séance et un processus est en revanche une PROPOSITION, pas
-            une lecture officielle du référentiel : à vous de l&apos;ajuster à la progression de
-            votre établissement et aux compétences que votre équipe a décidé d&apos;évaluer. Si un
-            rapprochement vous paraît discutable, écrivez-nous, c&apos;est exactement le retour
-            dont nous avons besoin.
+            Chaque diplôme découpe le métier avec ses propres mots, processus pour le BTS CG,
+            blocs de compétences pour le BTS MCO, activités pour le BTS GPME, unités
+            d&apos;enseignement pour le DCG, et chaque fiche emploie ceux de son référentiel. Le
+            rapprochement entre une séance et l&apos;un d&apos;eux est en revanche une
+            PROPOSITION, pas une lecture officielle du référentiel : à vous de l&apos;ajuster à
+            la progression de votre établissement et aux compétences que votre équipe a décidé
+            d&apos;évaluer. Si un rapprochement vous paraît discutable, écrivez-nous, c&apos;est
+            exactement le retour dont nous avons besoin.
           </p>
           <p>
             La plateforme est en version bêta et ces ateliers évoluent avec elle. Ils sont

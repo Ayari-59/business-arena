@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { ATELIERS, dureeTotaleHeures } from "../../src/config/ateliers";
 import { SCENARIOS, scenarioByCode } from "../../src/config/scenarios/registry";
@@ -157,6 +158,40 @@ describe("ateliers professionnels", () => {
         expect(f.reponse.length, `${a.code}/${f.question}`).toBeGreaterThan(80);
       }
     }
+  });
+
+  it("chaque atelier emploie le mot par lequel son référentiel découpe le métier", () => {
+    // Le BTS CG a des processus, le BTS MCO des blocs de compétences, le BTS
+    // GPME des activités, le DCG des unités d'enseignement. Écrire « processus »
+    // sur la fiche d'un diplôme qui n'en a pas se voit du premier coup d'œil,
+    // et par le seul lecteur qui connaît son référentiel par cœur.
+    for (const a of ATELIERS) {
+      expect(a.referentielLabel.length, `${a.code} : mot du référentiel absent`).toBeGreaterThan(5);
+      expect(a.referentielLabel[0], `${a.code} : le mot ne commence pas par une majuscule`).toBe(
+        a.referentielLabel[0]!.toUpperCase(),
+      );
+      expect(["mobilisés", "mobilisées"], `${a.code} : accord inattendu`).toContain(
+        a.referentielAccord,
+      );
+    }
+  });
+
+  it("les pages d'atelier n'écrivent aucun mot de référentiel en dur", () => {
+    // Sans cette garde, une page peut retomber sur « processus » pour tous les
+    // diplômes sans qu'aucune donnée ne change : le défaut d'origine.
+    for (const chemin of ["src/app/ateliers/page.tsx", "src/app/ateliers/[code]/page.tsx"]) {
+      const source = readFileSync(chemin, "utf-8")
+        .replace(/\{\/\*[\s\S]*?\*\/\}/g, "")
+        .replace(/\/\*[\s\S]*?\*\//g, "")
+        .replace(/^\s*\/\/.*$/gm, "");
+      expect(source, `${chemin} écrit « Processus mobilisés » en dur`).not.toMatch(
+        /Processus mobilisés/i,
+      );
+    }
+    const fiche = readFileSync("src/app/ateliers/[code]/page.tsx", "utf-8");
+    expect(fiche, "la fiche n'ouvre pas le mot du référentiel").toContain(
+      "atelier.referentielLabel",
+    );
   });
 
   it("aucune prose d'atelier ne coupe une phrase par un tiret", () => {

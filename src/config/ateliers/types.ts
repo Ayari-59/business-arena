@@ -53,6 +53,20 @@ export interface AtelierDefinition {
   titre: string;
   diplome: string;
   annee: string;
+  /**
+   * Le mot par lequel le référentiel du diplôme découpe le métier. Le BTS CG
+   * a des processus, le BTS MCO des blocs de compétences, le BTS GPME des
+   * activités, le DCG des unités d'enseignement. Écrire « processus » sur la
+   * fiche d'un diplôme qui n'en a pas, c'est se tromper devant le seul lecteur
+   * qui connaît son référentiel par cœur.
+   */
+  referentielLabel: string;
+  /**
+   * L'accord du participe qui suit ce mot. « Blocs mobilisés » mais
+   * « activités mobilisées » : le genre est une donnée du diplôme, pas une
+   * chose que la phrase peut deviner.
+   */
+  referentielAccord: "mobilisés" | "mobilisées";
   /** Une phrase : ce que l'atelier fait faire aux élèves. */
   pitch: string;
   /** Résumé d'une ligne, pour la carte du tableau récapitulatif. */

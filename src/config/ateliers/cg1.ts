@@ -17,6 +17,8 @@ export const ATELIER_CG1: AtelierDefinition = {
   titre: "Piloter une entreprise pendant six trimestres",
   diplome: "BTS Comptabilité et Gestion",
   annee: "Première année",
+  referentielLabel: "Processus",
+  referentielAccord: "mobilisés",
   pitch:
     "Six séances de quatre heures. Chaque équipe dirige la même entreprise du premier au dernier tour, décide, subit ses décisions, et produit à chaque séance un document professionnel qui s'évalue.",
   resume:

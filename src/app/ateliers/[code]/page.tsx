@@ -116,7 +116,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
               un tour par séance.
             </li>
             <li>
-              · Processus mobilisés :{" "}
+              · {atelier.referentielLabel} {atelier.referentielAccord} :{" "}
               <strong className="text-slate-100 print:text-black">
                 {processus.map((p) => p.split("·")[0]!.trim()).join(", ")}
               </strong>
@@ -415,9 +415,10 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
         </Section>
 
         <p className="mt-10 text-xs leading-relaxed text-slate-600 print:text-black">
-          Les processus cités sont nommés comme le référentiel du diplôme les nomme. Le
-          rapprochement entre une séance et un processus est une proposition, à ajuster à la
-          progression de votre établissement et aux compétences que votre équipe évalue.
+          {atelier.referentielLabel} {atelier.referentielAccord} sont nommés comme le
+          référentiel du diplôme les nomme. Le rapprochement entre une séance et l&apos;un
+          d&apos;eux est une proposition, à ajuster à la progression de votre établissement et
+          aux compétences que votre équipe évalue.
         </p>
 
         <div className="mt-8 flex flex-wrap gap-4 text-sm print:hidden">
