@@ -140,22 +140,22 @@ export default async function Home({
             approvisionnez, recrutez, affrontez la concurrence. Situation après situation,
             découvrez les modèles de gestion qui font les bonnes décisions.
           </p>
-          <div className="mt-7 flex flex-wrap gap-3">
+          <div className="mt-7 flex flex-col gap-3 sm:flex-row">
             <a
               href="#jouer"
-              className="rounded-lg bg-amber-500 px-6 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400"
+              className="rounded-lg bg-amber-500 px-6 py-3 text-center text-sm font-semibold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400"
             >
               Lancer une partie gratuite
             </a>
             <Link
               href="/entreprises"
-              className="rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-amber-400/50"
+              className="rounded-lg border border-white/15 px-6 py-3 text-center text-sm font-semibold text-slate-200 transition hover:border-amber-400/50"
             >
               Voir les {SCENARIOS.length} entreprises
             </Link>
             <Link
               href="/teacher/login"
-              className="rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-amber-400/50"
+              className="rounded-lg border border-white/15 px-6 py-3 text-center text-sm font-semibold text-slate-200 transition hover:border-amber-400/50"
             >
               Je suis enseignant
             </Link>
