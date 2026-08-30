@@ -1143,12 +1143,19 @@ export interface GameView {
    */
   salesHistory: {
     segments: string[];
+    /**
+     * Les canaux qui prélèvent une commission, et son taux. Sans ce rappel,
+     * l'équipe voit la commission au compte de résultat sans savoir à quel
+     * canal l'imputer, et ne peut pas comparer une vente en direct à une vente
+     * par un tiers.
+     */
+    commissions: { segment: string; rate: number }[];
     rounds: {
       round: number;
       price: number | null;
       /** Ce que le joueur avait annoncé pour ce tour, s'il l'a fait. */
       forecastUnits: number | null;
-      bySegment: { potential: number; sold: number }[];
+      bySegment: { potential: number; sold: number; revenue: number }[];
       sold: number;
       lost: number;
     }[];
@@ -1811,22 +1818,32 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       const codes = snapshot.market.segments.map((seg) => seg.code);
       return {
         segments: snapshot.market.segments.map((seg) => seg.name),
+        commissions: snapshot.market.segments
+          .filter((seg) => (seg.commissionRate ?? 0) > 0)
+          .map((seg) => ({ segment: seg.name, rate: seg.commissionRate! })),
         rounds: gameResults
           .filter((r) => r.teamId === playerTeam.id)
           .map((r) => {
             const detail = r.marketDetail as Record<
               string,
-              { potential: number; sold: number; lost: number } | undefined
+              { potential: number; sold: number; lost: number; revenue?: number } | undefined
             >;
+            const rows = codes.map((code) => detail[code]);
+            const index = roundIndexById.get(r.roundId)!;
+            const prix = priceByRound.get(index) ?? null;
             const bySegment = codes.map((code) => ({
               potential: Math.round(detail[code]?.potential ?? 0),
               sold: Math.round(detail[code]?.sold ?? 0),
+              // Les parties jouées avant que le moteur ne relève le chiffre
+              // d'affaires par canal n'en portent pas : il se reconstitue
+              // exactement, l'entreprise pratiquant un seul prix.
+              revenue: Math.round(
+                detail[code]?.revenue ?? (detail[code]?.sold ?? 0) * (prix ?? 0),
+              ),
             }));
-            const rows = codes.map((code) => detail[code]);
-            const index = roundIndexById.get(r.roundId)!;
             return {
               round: index,
-              price: priceByRound.get(index) ?? null,
+              price: prix,
               forecastUnits: forecastByRound.get(index)?.expectedUnits ?? null,
               bySegment,
               sold: Math.round(rows.reduce((sum, d) => sum + (d?.sold ?? 0), 0)),

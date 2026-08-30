@@ -71,8 +71,8 @@ function result(over: Partial<CompanyRoundResult> = {}): CompanyRoundResult {
     },
     market: {
       bySegment: {
-        etudiants: { potential: 8_000, attraction: 1, share: 0.3, demandForCompany: 3_000, sold: 3_000, lost: 0 },
-        passionnes: { potential: 4_000, attraction: 1, share: 0.25, demandForCompany: 1_000, sold: 1_000, lost: 0 },
+        etudiants: { potential: 8_000, attraction: 1, share: 0.3, demandForCompany: 3_000, sold: 3_000, lost: 0, revenue: 0, commission: 0 },
+        passionnes: { potential: 4_000, attraction: 1, share: 0.25, demandForCompany: 1_000, sold: 1_000, lost: 0, revenue: 0, commission: 0 },
       },
       totalShare: 0.28,
     },
@@ -150,8 +150,8 @@ describe("contexte des tours suivants", () => {
         result: result({
           market: {
             bySegment: {
-              etudiants: { potential: 9_000, attraction: 1, share: 0.4, demandForCompany: 3_600, sold: 3_000, lost: 600 },
-              passionnes: { potential: 4_000, attraction: 1, share: 0.25, demandForCompany: 1_000, sold: 1_000, lost: 0 },
+              etudiants: { potential: 9_000, attraction: 1, share: 0.4, demandForCompany: 3_600, sold: 3_000, lost: 600, revenue: 0, commission: 0 },
+              passionnes: { potential: 4_000, attraction: 1, share: 0.25, demandForCompany: 1_000, sold: 1_000, lost: 0, revenue: 0, commission: 0 },
             },
             totalShare: 0.33,
           },
@@ -167,7 +167,7 @@ describe("contexte des tours suivants", () => {
     const saturee = {
       market: {
         bySegment: {
-          etudiants: { potential: 9_000, attraction: 1, share: 0.4, demandForCompany: 3_600, sold: 3_000, lost: 600 },
+          etudiants: { potential: 9_000, attraction: 1, share: 0.4, demandForCompany: 3_600, sold: 3_000, lost: 600, revenue: 0, commission: 0 },
         },
         totalShare: 0.33,
       },
@@ -231,7 +231,7 @@ describe("contexte des tours suivants", () => {
         result: result({
           market: {
             bySegment: {
-              a: { potential: 9_000, attraction: 1, share: 0.4, demandForCompany: 3_600, sold: 3_000, lost: 900 },
+              a: { potential: 9_000, attraction: 1, share: 0.4, demandForCompany: 3_600, sold: 3_000, lost: 900, revenue: 0, commission: 0 },
             },
             totalShare: 0.3,
           },
@@ -255,7 +255,7 @@ describe("contexte des tours suivants", () => {
         result: result({
           market: {
             bySegment: {
-              a: { potential: 9_000, attraction: 1, share: 0.4, demandForCompany: 3_600, sold: 3_000, lost: 900 },
+              a: { potential: 9_000, attraction: 1, share: 0.4, demandForCompany: 3_600, sold: 3_000, lost: 900, revenue: 0, commission: 0 },
             },
             totalShare: 0.3,
           },

@@ -72,7 +72,20 @@ const rawEcommerce = {
         size: 6720,
         growth: 0.06,
         priceElasticity: -2.6,
-        refPrice: 58,
+        // Le prix de référence était descendu à 58 € pour représenter la
+        // commission : la place de marché coûtait cher sous la forme d'une
+        // clientèle qui paie moins. C'était en faire une remise. Elle est
+        // maintenant ce qu'elle est, une charge prélevée sur la vente, et le
+        // prix de référence remonte au niveau d'une clientèle qui compare.
+        refPrice: 62,
+        // Douze pour cent du prix de vente restent chez la place de marché.
+        // Le taux a été choisi en mesurant : à 12 %, les quatre stratégies qui
+        // gagnaient gagnent encore, dans le même ordre, et celles qui poussent
+        // le volume paient visiblement plus cher que les autres, ce qui est
+        // exactement la leçon du canal. À 15 %, la stratégie de prix bas
+        // basculait dans le rouge : la commission cessait d'être un arbitrage
+        // pour devenir une punition.
+        commissionRate: 0.12,
         minAcceptablePrice: 28,
         psychThresholds: [],
         marketingSensitivity: 0.05,
@@ -91,7 +104,9 @@ const rawEcommerce = {
     code: "commande",
     // coût d'achat des marchandises expédiées
     materialCostPerUnit: 27,
-    // préparation, emballage, transport, retours et commission de paiement
+    // préparation, emballage, transport, retours et commission d'encaissement.
+    // La commission de la place de marché n'est PAS ici : elle se prélève sur
+    // le prix, pas sur la commande, et elle ne touche qu'un canal sur trois.
     otherVariableCostPerUnit: 11,
     hoursPerUnit: 0.25,
   },
@@ -385,9 +400,12 @@ const rawEcommerce = {
       modifiers: [{ target: "demand", op: "mul", value: 1.45 }],
     },
   ],
-  // Les frais de port explosent au tour 5 : la marge par commande se comprime
-  // juste après le pic, quand le stock a déjà été payé.
-  scriptedEvents: [{ round: 5, eventCode: "ecom_frais_port" }],
+  // Les frais de port explosent au dernier tour. Ils tombaient au tour 5, où
+  // le BTS NDRC place sa séance de négociation avec les places de marché :
+  // la classe préparait un argumentaire pendant que ses coûts sautaient pour
+  // une raison sans rapport, et la situation du tour parlait de transport
+  // quand la séance parlait de commission.
+  scriptedEvents: [{ round: 6, eventCode: "ecom_frais_port" }],
   scoring: {
     weights: {
       economic: 0.3,

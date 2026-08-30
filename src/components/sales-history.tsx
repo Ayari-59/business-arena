@@ -39,7 +39,7 @@ export function SalesHistory({
                 {vocabulary.priceLabel}
               </th>
               {history.segments.map((name) => (
-                <th key={name} className="pb-1 pr-3 text-right font-medium" colSpan={2}>
+                <th key={name} className="pb-1 pr-3 text-right font-medium" colSpan={3}>
                   {name}
                 </th>
               ))}
@@ -54,6 +54,7 @@ export function SalesHistory({
                 <Fragment key={name}>
                   <th className="pb-1 pr-3 text-right font-normal">demande</th>
                   <th className="pb-1 pr-3 text-right font-normal">vos ventes</th>
+                  <th className="pb-1 pr-3 text-right font-normal">chiffre d&apos;affaires</th>
                 </Fragment>
               ))}
               <th className="pb-1 pr-3" />
@@ -75,6 +76,11 @@ export function SalesHistory({
                     </td>
                     <td className="py-1.5 pr-3 text-right tabular-nums">
                       {formatUnits(seg.sold)}
+                    </td>
+                    {/* Une part en unités ne dit pas la dépendance à un canal
+                        quand les canaux ne rapportent pas la même chose. */}
+                    <td className="py-1.5 pr-3 text-right tabular-nums text-slate-400">
+                      {formatEuro(seg.revenue)}
                     </td>
                   </Fragment>
                 ))}
@@ -101,6 +107,21 @@ export function SalesHistory({
         de votre prix. Comparez ensuite votre prévision au réalisé : l&apos;écart est plus
         instructif que la prévision.
       </p>
+      {/* Le taux, à côté des chiffres qu'il ampute. La commission se lit au
+          compte de résultat en un seul montant : sans ce rappel, l'équipe ne
+          sait pas de quel canal il vient, et ne peut pas comparer une vente
+          par un tiers à une vente en direct. */}
+      {history.commissions.length > 0 ? (
+        <p className="mt-2 text-xs leading-relaxed text-slate-500">
+          {history.commissions.map((c) => (
+            <span key={c.segment} className="block">
+              {c.segment} : le canal prélève {Math.round(c.rate * 100)} % du prix de vente.
+              Le chiffre d&apos;affaires ci-dessus est celui que paie le client ; ce qui vous
+              reste est diminué d&apos;autant, et se lit au compte de résultat.
+            </span>
+          ))}
+        </p>
+      ) : null}
     </details>
   );
 }

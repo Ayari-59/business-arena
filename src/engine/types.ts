@@ -352,6 +352,20 @@ export interface SegmentConfig {
   /** Délai de paiement clients en jours (0 = comptant). */
   paymentDelayDays: number;
   /**
+   * Part du prix de vente prélevée par le tiers qui apporte ce segment
+   * (0,15 = quinze pour cent). Une place de marché, un apporteur d'affaires,
+   * une centrale : le client paie le prix affiché, l'entreprise n'en encaisse
+   * qu'une partie.
+   *
+   * C'est une CHARGE et non une remise. La distinction n'est pas
+   * comptable seulement : une remise se négocie sur le prix et se voit du
+   * client, une commission se négocie avec le partenaire et ne se voit que
+   * dans les comptes. Modéliser la commission par un prix de référence plus
+   * bas, comme le faisait PIXEL & CO, revenait à en faire une remise, donc à
+   * rendre incalculable la marge après commission.
+   */
+  commissionRate?: number;
+  /**
    * Saisonnalité propre au segment (doc 02 §3.1 : Seasonality(s, t)) ;
    * à défaut, la saisonnalité globale du marché s'applique. Un coefficient 0
    * fait apparaître/disparaître le segment (ex. compte-clé à partir du tour 3).
@@ -553,7 +567,14 @@ export interface IncomeStatement {
   productionStocked: number; // production stockée (± variation de stock valorisée)
   cogs: number; // coût variable des unités vendues (CUMP)
   variableProductionCost: number; // coût variable des unités produites
-  grossMargin: number; // marge sur coût variable des ventes
+  /**
+   * Commissions versées aux canaux partenaires. Une charge de la vente, au
+   * même titre que le coût des marchandises : elle se retranche AVANT la marge
+   * sur coût variable, sans quoi « la marge après commission » ne se lit nulle
+   * part. Absente des scénarios qui n'ont pas de canal partenaire.
+   */
+  commissionCost?: number;
+  grossMargin: number; // marge sur coût variable des ventes, commissions déduites
   marketingCost: number;
   qualityCost: number;
   maintenanceCost: number;
@@ -581,6 +602,14 @@ export interface SegmentSalesDetail {
   demandForCompany: number; // demande adressée à l'entreprise
   sold: number; // ventes réalisées (contrainte stock)
   lost: number; // ventes perdues (rupture)
+  /**
+   * Chiffre d'affaires du segment, au prix pratiqué. Une part de marché en
+   * unités ne dit pas la dépendance à un canal quand les canaux ne se vendent
+   * pas au même prix, et elle ne dit rien du tout de ce qu'il rapporte.
+   */
+  revenue: number;
+  /** Ce que le tiers a prélevé sur ce segment (0 hors canal partenaire). */
+  commission: number;
 }
 
 export interface CompanyRoundResult {

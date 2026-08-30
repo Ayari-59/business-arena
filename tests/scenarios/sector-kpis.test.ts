@@ -24,6 +24,8 @@ const segment = (over: Partial<SegmentSalesDetail> = {}): SegmentSalesDetail => 
   demandForCompany: 300,
   sold: 300,
   lost: 0,
+  revenue: 0,
+  commission: 0,
   ...over,
 });
 

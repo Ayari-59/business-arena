@@ -309,7 +309,7 @@ export const ATELIER_GPME: AtelierDefinition = {
           minutes: 35,
           titre: "Recruter ou sous-traiter",
           detail:
-            "L'équipe compare l'embauche et le renfort ponctuel : l'un engage durablement et coûte moins cher à la journée, l'autre coûte plus cher et se rend. Le bon choix dépend de ce que l'équipe croit du carnet à venir.",
+            "L'équipe compare l'embauche et le renfort ponctuel : l'un engage durablement et coûte moins cher à la journée, l'autre coûte plus cher et se rend. Le bon choix dépend de ce que l'équipe croit du carnet à venir. Le renfort ponctuel se chiffre sur le papier, au tarif que vous donnez : la simulation ne le propose pas en décision, c'est l'embauche qu'elle joue.",
         },
         {
           minutes: 35,
@@ -327,7 +327,7 @@ export const ATELIER_GPME: AtelierDefinition = {
           minutes: 30,
           titre: "Débriefing",
           detail:
-            "On oppose une équipe qui a recruté et une qui a sous-traité, en gardant ouverte la question de savoir laquelle aura eu raison au trimestre suivant.",
+            "On oppose une équipe qui a recruté et une qui s'en est tenue à son effectif, en gardant ouverte la question de savoir laquelle aura eu raison au trimestre suivant.",
         },
       ],
       livrable:

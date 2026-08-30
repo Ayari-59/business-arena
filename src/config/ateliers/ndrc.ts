@@ -362,7 +362,7 @@ export const ATELIER_NDRC: AtelierDefinition = {
         "marge après commission",
         "dépendance à un canal",
         "argumentaire de négociation",
-        "frais de livraison",
+        "chiffre d'affaires par canal",
       ],
       preparation:
         "Préparez la trame d'argumentaire en deux colonnes, ce que le partenaire apporte et ce que l'entreprise lui apporte, que les équipes rempliront. Prévoyez un temps de jeu de rôle en fin de séance, deux équipes face à face.",
@@ -377,7 +377,7 @@ export const ATELIER_NDRC: AtelierDefinition = {
           minutes: 35,
           titre: "Ce que laisse un partenaire",
           detail:
-            "L'équipe calcule ce qui lui reste d'une commande passée par un canal partenaire, une fois la commission prélevée, et le compare à une commande en direct.",
+            "L'équipe calcule ce qui lui reste d'une commande passée par un canal partenaire, une fois la commission prélevée, et le compare à une commande en direct. Le taux figure sous l'historique des ventes, le montant du trimestre au compte de résultat, et le chiffre d'affaires de chaque canal dans l'historique : les trois chiffres du calcul sont à l'écran.",
         },
         {
           minutes: 30,
@@ -401,7 +401,7 @@ export const ATELIER_NDRC: AtelierDefinition = {
           minutes: 30,
           titre: "Clôture et débriefing",
           detail:
-            "Vous clôturez le dernier trimestre joué. On regarde quelle part du chiffre d'affaires de chaque équipe dépend d'un tiers, et ce que cela signifie pour l'an prochain.",
+            "Vous clôturez le dernier trimestre joué. On regarde quelle part du chiffre d'affaires de chaque équipe dépend d'un tiers, et ce que cela signifie pour l'an prochain. La comparaison qui porte : un canal pèse toujours moins dans la marge que dans les commandes, et c'est cet écart que la négociation cherche à réduire.",
         },
       ],
       livrable:

@@ -21,6 +21,7 @@ const CASH_LABELS: Record<string, string> = {
   affacturage_force: "Affacturage forcé (banque)",
   paiements_fournisseurs: "Paiements fournisseurs",
   couts_variables_decaisses: "Coûts variables décaissés",
+  commissions_partenaires: "Commissions des canaux partenaires",
   couts_fixes: "Charges de structure décaissées",
   marketing: "Budget marketing",
   qualite: "Budget qualité",
@@ -134,6 +135,17 @@ export function FinancialStatements({
           <Row label="Production stockée (± Δ stock)" value={euro(cr.productionStocked)} indent />
         ) : null}
         <Row label="− Coût variable des ventes" value={euro(-cr.cogs)} indent />
+        {/* La commission d'un canal partenaire se retranche ici, avec les
+            autres charges de la vente : c'est la seule place d'où « la marge
+            après commission » se lit sans la recalculer. La ligne n'apparaît
+            que dans les secteurs qui vendent par un tiers. */}
+        {(cr.commissionCost ?? 0) > 0.5 ? (
+          <Row
+            label="− Commissions des canaux partenaires"
+            value={euro(-(cr.commissionCost ?? 0))}
+            indent
+          />
+        ) : null}
         <Row label="= Marge sur coût variable" value={euro(cr.grossMargin)} strong />
         <Row label="− Marketing" value={euro(-cr.marketingCost)} indent />
         <Row label="− Qualité" value={euro(-cr.qualityCost)} indent />

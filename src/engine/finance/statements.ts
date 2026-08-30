@@ -21,6 +21,12 @@ export interface FinanceInput {
   inventoryChange: number;
   /** Coût variable des unités vendues (CUMP). */
   cogs: number;
+  /**
+   * Commissions versées aux canaux partenaires sur les ventes du tour. Une
+   * charge de la vente : elle se retranche avant la marge sur coût variable,
+   * et se décaisse dans le tour, le tiers la prélevant sur ce qu'il reverse.
+   */
+  commissionCost?: number;
   marketingCost: number;
   qualityCost: number;
   maintenanceCost: number;
@@ -123,7 +129,8 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
 
     // --- Compte de résultat -----------------------------------------------
     const variableProductionCost = input.purchases + input.otherVariableCash;
-    const grossMargin = input.revenue - input.cogs;
+    const commissionCost = input.commissionCost ?? 0;
+    const grossMargin = input.revenue - input.cogs - commissionCost;
     const ebitda =
       grossMargin -
       input.marketingCost -
@@ -147,6 +154,7 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
       productionStocked: input.inventoryChange,
       cogs: input.cogs,
       variableProductionCost,
+      ...(commissionCost > 0 ? { commissionCost } : {}),
       grossMargin,
       marketingCost: input.marketingCost,
       qualityCost: input.qualityCost,
@@ -183,6 +191,11 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
       { label: "affacturage_force", amount: forcedFactored },
       { label: "paiements_fournisseurs", amount: -supplierPayments },
       { label: "couts_variables_decaisses", amount: -input.otherVariableCash },
+      // Ligne absente des secteurs sans canal partenaire : un flux à zéro dans
+      // le tableau de trésorerie ferait chercher ce qui n'existe pas.
+      ...(commissionCost > 0
+        ? [{ label: "commissions_partenaires", amount: -commissionCost }]
+        : []),
       { label: "couts_fixes", amount: -input.fixedCosts },
       { label: "marketing", amount: -input.marketingCost },
       { label: "qualite", amount: -input.qualityCost },

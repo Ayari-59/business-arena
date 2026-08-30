@@ -237,77 +237,77 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
     weight: 1.5,
   },
   {
-    code: "ecom_t5_frais_port",
-    title: "Les frais de port explosent",
+    code: "ecom_t5_commission",
+    title: "Ce que la place de marché prélève",
     narrative:
-      "Le transporteur réévalue toute sa grille : +20 % sur chaque colis. Vos concurrents affichent « livraison offerte » en gros sur leur page d'accueil.",
+      "La place de marché qui vous apporte un quart de vos commandes annonce que sa commission montera l'an prochain. Son responsable vous propose d'en reparler si vous vous engagez sur un volume.",
     problem:
-      "Répercutez-vous la hausse, ou offrez-vous les frais de port pour rester compétitif ?",
+      "Ce canal vaut-il encore ce qu'il coûte, et qu'avez-vous à mettre dans la balance ?",
     diagnosticOptions: [
       {
-        id: "not_free",
-        label: "« Livraison offerte » n'est jamais gratuit : quelqu'un paie, et c'est votre marge",
+        id: "charge_not_discount",
+        label: "La commission est une charge prélevée sur chaque vente : elle réduit la marge sans que le prix affiché bouge",
         correct: true,
       },
       {
-        id: "elasticity_decides",
-        label: "L'arbitrage dépend de la sensibilité au prix de chaque segment",
+        id: "dependency_is_risk",
+        label: "Un canal qui pèse un quart des commandes et dont vous ne fixez pas les règles est un risque autant qu'un débouché",
         correct: true,
       },
       {
-        id: "always_free",
-        label: "Il faut toujours offrir les frais de port : c'est devenu la norme",
+        id: "raise_price",
+        label: "Une commission plus haute se compense en montant le prix du même pourcentage",
         correct: false,
       },
       {
-        id: "always_pass",
-        label: "Il faut toujours répercuter intégralement : le client comprendra",
+        id: "volume_wins",
+        label: "Tant que le canal apporte du volume, le taux de sa commission importe peu",
         correct: false,
       },
     ],
     quiz: [
       {
-        id: "seuil_deplace",
+        id: "marge_apres_commission",
         prompt:
-          "Le coût variable passe de 38 € à 41 € par commande, prix inchangé à 68 €. Que devient le seuil de rentabilité (structure 48 000 €) ?",
+          "Une commande passée par la place de marché : 68 € payés par le client, 38 € de marchandise et de logistique, 12 % de commission. Que vous reste-t-il ?",
         options: [
-          { id: "a", label: "Il monte d'environ 1 600 à environ 1 780 commandes" },
-          { id: "b", label: "Il baisse à environ 1 400 commandes" },
-          { id: "c", label: "Il ne bouge pas : la structure est identique" },
-          { id: "d", label: "Il monte à environ 3 200 commandes" },
+          { id: "a", label: "21,84 €" },
+          { id: "b", label: "26,40 €" },
+          { id: "c", label: "30 €" },
+          { id: "d", label: "8,16 €" },
         ],
         correctOptionId: "a",
         explain:
-          "La marge tombe de 30 € à 27 €. Seuil = 48 000 ÷ 27 ≈ 1 778 commandes. Absorber une hausse, c'est déplacer son seuil sans que le client s'en aperçoive.",
+          "Il reste 21,84 €, soit 68 − 38 − 8,16. La commission se calcule sur le prix et non sur la marge : elle en emporte plus du quart, sans jamais apparaître sur le prix affiché.",
       },
       {
-        id: "segment_sensible",
+        id: "part_de_marge",
         prompt:
-          "Quel segment supportera le moins une hausse de prix : le trafic payant (élasticité −2,3) ou la base fidèle (−0,9) ?",
+          "Le trimestre se solde par 1 500 commandes en direct et 500 par la place de marché. Quelle part de votre marge vient du canal partenaire ?",
         options: [
-          { id: "a", label: "Le trafic payant : il compare les prix avant de cliquer" },
-          { id: "b", label: "La base fidèle : elle est plus exigeante" },
-          { id: "c", label: "Les deux réagissent identiquement" },
-          { id: "d", label: "Aucun : l'élasticité ne s'applique pas en ligne" },
+          { id: "a", label: "Environ 19,5 %, alors qu'il fait le quart des commandes" },
+          { id: "b", label: "25 %, comme sa part des commandes" },
+          { id: "c", label: "12 %, le taux de la commission" },
+          { id: "d", label: "Un tiers, le canal étant le plus dynamique" },
         ],
         correctOptionId: "a",
         explain:
-          "Le client acquis par la publicité arbitre sur le prix affiché : c'est souvent ce qui l'a fait venir. Le client fidèle achète pour d'autres raisons.",
+          "10 920 ÷ 55 920 ≈ 19,5 %. Le canal apporte une commande sur quatre et moins d'une marge sur cinq : le compter en commandes surestime ce qu'il rapporte, et fait négocier sur le mauvais chiffre.",
       },
     ],
     modelRelevance: {
-      elasticity_analysis: "optimal",
-      cvp_analysis: "acceptable",
-      sensitivity_analysis: "acceptable",
-      capacity_analysis: "irrelevant",
+      relevant_costs: "optimal",
+      elasticity_analysis: "acceptable",
+      marginal_analysis: "acceptable",
+      npv: "irrelevant",
     },
-    conceptCodes: ["average_basket", "price_elasticity", "contribution_margin", "breakeven", "margin_rates"],
+    conceptCodes: ["contribution_margin", "variable_costs", "margin_rates", "revenue", "segmentation"],
     hints: hints([
-      "La hausse touche une charge variable, pas la structure. Quelle grandeur bouge en premier ?",
-      "Votre marge par commande se comprime de 3 €. Multipliez par vos volumes trimestriels.",
-      "Offrir les frais de port revient exactement à absorber la hausse : le geste commercial est une baisse de marge déguisée.",
-      "Répercuter coûte du volume, et pas le même sur chaque segment : −2,3 chez le trafic payant, −0,9 chez les fidèles.",
-      "Une troisième voie existe : relever le panier moyen (franco de port à partir d'un montant) plutôt que le prix unitaire. La marge par commande monte sans que le prix affiché bouge.",
+      "Reprenez une commande passée par ce canal et suivez le billet de 68 € : qui prend quoi, et dans quel ordre ?",
+      "Trois prélèvements, pas deux : la marchandise, la logistique, et le tiers qui a apporté le client.",
+      "La commission porte sur le PRIX et non sur la marge. À 12 %, elle prend 8,16 € sur une commande de 68 €.",
+      "Comparez alors les deux marges, 30 € en direct contre 21,84 € par le canal, et pesez chacune par son volume plutôt que par son nombre de commandes.",
+      "Monter le prix pour absorber la commission coûte du volume, et pas le même partout : la clientèle qui compare part la première, celle qui revient reste. Ce que vous apportez au partenaire est un meilleur argument que ce que vous lui demandez.",
     ]),
     trigger: { round: 5 },
     weight: 1.5,
@@ -699,8 +699,8 @@ const MODEL_EXPLAIN: Record<string, string> = {
     "L'analyse des coûts pertinents compare ce que chaque euro CHANGE selon l'endroit où on le met, acquérir ou fidéliser, au lieu de comparer des chiffres d'affaires.",
   ecom_t4_pic:
     "L'analyse de capacité met en évidence la contrainte la plus serrée : acheter du stock au-delà de ce que l'entrepôt sait expédier immobilise de la trésorerie pour rien.",
-  ecom_t5_frais_port:
-    "L'élasticité-prix dit ce que coûte en volume chaque euro répercuté, segment par segment : c'est le seul outil qui arbitre entre marge et quantités.",
+  ecom_t5_commission:
+    "L'analyse des coûts pertinents ne retient que ce qui CHANGE avec le canal : la commission, et rien d'autre. Les charges de structure sont les mêmes que la commande vienne du site ou de la place de marché, et les compter des deux côtés brouille la comparaison.",
   ecom_detect_below_breakeven:
     "Le seuil de rentabilité chiffre l'écart, à condition de traiter la publicité pour ce qu'elle est ici : une charge qui varie avec le volume visé.",
   ecom_detect_profitable_illiquid:

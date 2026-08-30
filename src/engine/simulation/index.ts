@@ -288,6 +288,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         demandForCompany: potential * (shares[i] ?? 0),
         sold: 0,
         lost: 0,
+        revenue: 0,
+        commission: 0,
       })),
     );
   }
@@ -305,6 +307,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       if (!detail) return;
       detail.sold = detail.demandForCompany * serviceRate;
       detail.lost = detail.demandForCompany - detail.sold;
+      detail.revenue = detail.sold * w.decisions.price;
+      detail.commission = detail.revenue * (s.commissionRate ?? 0);
     });
   });
 
@@ -321,11 +325,13 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const perSegment: Record<string, SegmentSalesDetail> = {};
     let segmentUnits = 0;
     let weightedCredit = 0;
+    let commissionCost = 0;
     for (const segment of scenario.market.segments) {
       const detail = salesBySegment.get(segment.code)?.[i];
       if (!detail) continue;
       perSegment[segment.code] = detail;
       segmentUnits += detail.sold;
+      commissionCost += detail.commission;
       weightedCredit +=
         detail.sold * Math.min(1, segment.paymentDelayDays / scenario.roundDays);
     }
@@ -487,6 +493,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       otherVariableCash,
       inventoryChange,
       cogs,
+      commissionCost,
       marketingCost: w.decisions.marketingBudget,
       qualityCost: w.decisions.qualityBudget,
       maintenanceCost: w.decisions.maintenanceBudget,
