@@ -104,7 +104,8 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
       },
       {
         id: "cheapest_wins",
-        label: "Le moins cher à l'achat est nécessairement le plus rentable",
+        label:
+          "Le déstockeur donne le meilleur coefficient multiplicateur : c'est donc la meilleure affaire",
         correct: false,
       },
       {
@@ -149,13 +150,13 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
       frng_bfr_analysis: "acceptable",
       breakeven_analysis: "misleading",
     },
-    conceptCodes: ["segmentation", "variable_costs", "bfr", "margin_rates"],
+    conceptCodes: ["markup_coefficient", "stock_rotation", "segmentation", "variable_costs", "bfr", "margin_rates"],
     hints: hints([
       "Écrivez les trois offres côte à côte : qu'est-ce qui les distingue, au-delà du prix affiché sur le tarif ?",
       "Quatre dimensions au moins : le prix d'achat, la qualité perçue par vos clientes, le délai de règlement et le risque de rupture.",
-      "Comparer des options sur des critères hétérogènes, c'est le travail d'une matrice multicritère : critères explicites, pondérations assumées.",
+      "Calculez le coefficient que chacun vous laisse tenir, à prix de vente inchangé : 45 ÷ 14,76 ≈ 3,05 chez le déstockeur, 45 ÷ 18 = 2,5 chez le grossiste, 45 ÷ 21,96 ≈ 2,05 chez les créateurs. Le meilleur coefficient n'est pas encore la meilleure affaire.",
       "Le délai fournisseur n'apparaît pas au compte de résultat mais pèse directement sur le BFR : dettes fournisseurs = ressource, stock = emploi.",
-      "Chiffrez : 18 % d'économie sur 18 € = 3,24 €/article. Face à cela, une qualité perçue en baisse coûte des ventes chez vos fidèles, et le paiement comptant ponctionne votre trésorerie du montant de vos achats.",
+      "Ce que le coefficient ne dit pas : le déstockeur ne réassortit rien, donc ce qui part ne revient pas et la rotation des stocks s'arrête au premier succès. Le paiement comptant ponctionne votre trésorerie du montant des achats. Et la qualité perçue en baisse coûte des ventes chez les fidèles, qui sont justement celles qui ne regardent pas le prix.",
     ]),
     trigger: { round: 2 },
     weight: 1,
@@ -262,7 +263,8 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
       },
       {
         id: "always_pass",
-        label: "On répercute toujours intégralement : le client comprendra",
+        label:
+          "Il suffit de tenir son coefficient multiplicateur : le prix de vente suit le coût, la marge est préservée",
         correct: false,
       },
       {
@@ -307,12 +309,12 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
       sensitivity_analysis: "acceptable",
       capacity_analysis: "irrelevant",
     },
-    conceptCodes: ["price_elasticity", "contribution_margin", "breakeven", "margin_rates"],
+    conceptCodes: ["markup_coefficient", "psych_price", "price_elasticity", "contribution_margin", "breakeven", "margin_rates"],
     hints: hints([
       "La hausse touche votre coût d'achat, pas vos charges de structure. Quelle grandeur du compte de résultat bouge en premier ?",
       "Votre marge sur coût variable unitaire se comprime de 3,24 € par article. Multipliez par vos volumes trimestriels.",
-      "Répercuter, c'est arbitrer entre marge unitaire et volume : c'est exactement ce que mesure l'élasticité-prix.",
-      "Vos segments n'ont pas la même élasticité : −0,9 pour les fidèles, −2,1 pour les chalands. Une hausse uniforme ne les touche pas de la même façon.",
+      "Le réflexe du métier est de tenir son coefficient : 21,24 × 2,5 = 53,10 €. Regardez alors où ce prix vous mène sur chaque segment avant de l'afficher.",
+      "Vos segments n'ont pas la même élasticité : −0,9 pour les fidèles, −2,1 pour les chalands. Et les chalands portent un seuil psychologique à 50 € : tenir votre coefficient vous fait passer de 45 à 53,10 €, donc franchir ce seuil chez la clientèle qui y est déjà la plus sensible.",
       "Chiffrez les deux branches : absorber porte le seuil de 3 575 à ~4 150 articles ; répercuter 5 % coûte ~10 % de volume chez les chalands. Comparez les marges totales, pas les pourcentages.",
     ]),
     trigger: { round: 5 },
