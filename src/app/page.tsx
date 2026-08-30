@@ -13,6 +13,7 @@ import {
   nomEntreprise,
   promesseEntreprise,
 } from "@/config/scenarios/presentation";
+import { LIENS_LEGAUX, NAVIGATION } from "@/config/navigation";
 import { SubmitButton } from "@/components/submit-button";
 
 export const dynamic = "force-dynamic";
@@ -574,25 +575,15 @@ export default async function Home({
             BUSINESS <span className="text-amber-400/70">ARENA</span> · simulation
             d&apos;entreprise, apprentissage de la décision.
           </p>
+          {/* Le pied de page ne recopie plus le menu : il lit le même plan.
+              La liste écrite à la main avait déjà pris du retard, la page qui
+              aide à choisir sa simulation n'y figurait pas. */}
           <div className="flex flex-wrap gap-4">
-            <Link href="/parcours" className="hover:text-slate-400">
-              Parcours
-            </Link>
-            <Link href="/guide" className="hover:text-slate-400">
-              Guide
-            </Link>
-            <Link href="/notions" className="hover:text-slate-400">
-              Fiches notions
-            </Link>
-            <Link href="/teacher/login" className="hover:text-slate-400">
-              Enseignants
-            </Link>
-            <Link href="/compete" className="hover:text-slate-400">
-              Concours
-            </Link>
-            <Link href="/mentions-legales" className="hover:text-slate-400">
-              Mentions légales & RGPD
-            </Link>
+            {[...NAVIGATION.flatMap((g) => g.liens), ...LIENS_LEGAUX].map((lien) => (
+              <Link key={lien.href} href={lien.href} className="hover:text-slate-400">
+                {lien.libelle}
+              </Link>
+            ))}
           </div>
         </div>
       </footer>

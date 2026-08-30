@@ -28,16 +28,26 @@ beforeAll(async () => {
   page = await navigateur.newPage();
   for (const theme of THEMES) {
     const releve = new Map<string, number>();
-    for (const chemin of PAGES) {
-      await aller(page, chemin);
-      for (const m of await mesurerContraste(page, theme.code)) {
+    const relever = (prefixe: string, mesures: { texte: string; ratio: number }[]) => {
+      for (const m of mesures) {
         // Un même libellé peut apparaître deux fois sur une page ; on garde le
         // pire des deux, c'est celui qui décide.
-        const cle = `${chemin} · ${m.texte}`;
+        const cle = `${prefixe} · ${m.texte}`;
         const connu = releve.get(cle);
         releve.set(cle, connu === undefined ? m.ratio : Math.min(connu, m.ratio));
       }
+    };
+    for (const chemin of PAGES) {
+      await aller(page, chemin);
+      relever(chemin, await mesurerContraste(page, theme.code));
     }
+    // Le plan du site est replié tant qu'on ne l'ouvre pas : mesuré comme les
+    // autres pages, il ne serait jamais mesuré du tout, alors qu'il porte
+    // maintenant toute la navigation et ses phrases d'aide en petits corps.
+    await aller(page, "/");
+    await page.getByRole("button", { name: "Menu" }).click();
+    await page.locator("#plan-du-site a").first().waitFor({ state: "visible" });
+    relever("menu", await mesurerContraste(page, theme.code));
     parTheme.set(theme.code, releve);
   }
 }, 180_000);
