@@ -439,7 +439,7 @@ export const ATELIER_GPME: AtelierDefinition = {
           minutes: 10,
           titre: "Consignes et tirage",
           detail:
-            "Rappel de la grille et tirage de l'ordre. Huit minutes de présentation, quatre minutes de questions.",
+            "Rappel de la grille et tirage de l'ordre. Sept minutes de présentation, trois minutes de questions.",
         },
         {
           minutes: 55,
@@ -467,7 +467,7 @@ export const ATELIER_GPME: AtelierDefinition = {
         },
       ],
       livrable:
-        "Le rapport d'activité : le tableau de bord des cinq trimestres sur une page, quatre indicateurs justifiés, deux préconisations chiffrées pour l'année suivante, et la présentation orale de huit minutes.",
+        "Le rapport d'activité : le tableau de bord des cinq trimestres sur une page, quatre indicateurs justifiés, deux préconisations chiffrées pour l'année suivante, et la présentation orale de sept minutes.",
       tracePasseport:
         "J'ai rédigé le rapport d'activité d'une PME sur cinq trimestres et je l'ai présenté oralement avec des préconisations chiffrées.",
       evaluation: [

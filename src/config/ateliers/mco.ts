@@ -3,7 +3,7 @@ import type { AtelierDefinition } from "./types";
 /**
  * ATELIER PROFESSIONNEL · BTS MCO.
  *
- * Cinq séances de quatre heures sur MAILLE & CO, le concept store. Le choix du
+ * Cinq séances de trois heures sur MAILLE & CO, le concept store. Le choix du
  * secteur n'est pas neutre : en MCO, la gestion opérationnelle ne s'apprend pas
  * sur une usine. On n'y fabrique rien, on achète pour revendre, et tout se joue
  * sur le coefficient, l'assortiment, la saisonnalité et la rotation du stock.
@@ -21,12 +21,12 @@ export const ATELIER_MCO: AtelierDefinition = {
   referentielLabel: "Blocs de compétences",
   referentielAccord: "mobilisés",
   pitch:
-    "Cinq séances de quatre heures. Chaque équipe tient le même magasin d'un trimestre à l'autre, choisit son assortiment, fixe ses prix, prépare Noël, et rend à chaque séance un document que l'on retrouve en magasin.",
+    "Cinq séances de trois heures. Chaque équipe tient le même magasin d'un trimestre à l'autre, choisit son assortiment, fixe ses prix, prépare Noël, et rend à chaque séance un document que l'on retrouve en magasin.",
   resume:
     "Quatre trimestres dans un concept store, du diagnostic du linéaire au tableau de bord commercial, avec Noël comme épreuve.",
   difficulte: 2,
   difficulteLabel: "Initiation",
-  format: "5 séances de 4 h",
+  format: "5 séances de 3 h",
   pourquoi:
     "Le coefficient multiplicateur s'enseigne en une heure et s'oublie en une semaine, parce qu'un exercice donne le prix d'achat et demande le prix de vente. Ici l'équipe choisit son circuit d'approvisionnement, donc son prix d'achat, puis son prix de vente, et découvre au trimestre suivant ce que sa marge est devenue une fois la démarque passée et le stock invendu payé. La saisonnalité cesse d'être un chapitre : une équipe qui n'a pas anticipé le pic de fin d'année voit son rayon vide pendant que ses concurrentes vendent, et son taux de transformation le lui dit.",
   reglages: {
@@ -47,7 +47,7 @@ export const ATELIER_MCO: AtelierDefinition = {
     {
       numero: 1,
       titre: "Prendre le magasin en main",
-      dureeMinutes: 240,
+      dureeMinutes: 180,
       tourJoue: 1,
       processus: [
         "Bloc 3 · Assurer la gestion opérationnelle",
@@ -71,37 +71,37 @@ export const ATELIER_MCO: AtelierDefinition = {
         "Créez la partie avec les réglages ci-dessus et notez le code d'invitation. Constituez les équipes de trois : une responsable de l'offre, une des prix, une du suivi. Imprimez la fiche de calcul de marge vierge, une par équipe. Prévoyez que la première séance se passe sans aucune correction de votre part.",
       deroule: [
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Le cadre",
           detail:
             "Vous annoncez la règle : cinq séances, quatre trimestres, un seul magasin, et un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code.",
         },
         {
-          minutes: 45,
+          minutes: 35,
           titre: "État des lieux du magasin",
           detail:
             "Chaque équipe relève ce que le magasin possède en rayon, ce qu'il doit à ses fournisseurs, et ce que lui coûte un trimestre d'ouverture, que la caisse sonne ou non.",
         },
         {
-          minutes: 45,
+          minutes: 35,
           titre: "La marge, article par article",
           detail:
             "L'équipe calcule sa marge unitaire, son taux de marque, puis le nombre d'articles qu'il faut vendre pour ne rien perdre. Vous circulez sans corriger : une équipe qui confond taux de marge et taux de marque le découvrira au tour suivant, et ne l'oubliera plus.",
         },
         {
-          minutes: 45,
+          minutes: 35,
           titre: "Premier arbitrage et décisions",
           detail:
             "L'arène pose au premier trimestre un arbitrage à deux issues, chacune avec ce qu'elle rapporte et ce qu'elle coûte. L'équipe tranche, motive son choix en trois lignes, puis saisit son prix et son volume d'approvisionnement.",
         },
         {
-          minutes: 30,
+          minutes: 20,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez le trimestre. Chaque équipe reçoit son compte de résultat, son panier moyen, son taux de transformation et sa place au classement.",
         },
         {
-          minutes: 55,
+          minutes: 40,
           titre: "Débriefing",
           detail:
             "Deux équipes présentent leur calcul de seuil et le confrontent à leurs ventes réelles. Vous ne dites pas qui a raison : vous affichez les deux comptes de résultat côte à côte.",
@@ -120,7 +120,7 @@ export const ATELIER_MCO: AtelierDefinition = {
     {
       numero: 2,
       titre: "Choisir son circuit d'approvisionnement",
-      dureeMinutes: 240,
+      dureeMinutes: 180,
       tourJoue: 2,
       processus: [
         "Bloc 3 · Assurer la gestion opérationnelle",
@@ -144,37 +144,37 @@ export const ATELIER_MCO: AtelierDefinition = {
         "Relisez les trois circuits proposés dans le scénario et leurs conséquences, pour animer le débat sans le trancher. Préparez au tableau une grille à trois colonnes, un circuit par colonne, que les équipes rempliront en séance.",
       deroule: [
         {
-          minutes: 25,
+          minutes: 20,
           titre: "Retour sur le trimestre précédent",
           detail:
             "Chaque équipe relit son résultat et dit en une phrase ce qu'elle a compris. Vous notez au tableau les écarts entre le seuil calculé et les ventes réelles.",
         },
         {
-          minutes: 50,
+          minutes: 40,
           titre: "Les trois circuits",
           detail:
             "Les équipes remplissent la grille : ce que chaque circuit coûte, ce qu'il apporte à l'image, quand il faut le payer, et ce qu'il risque de manquer.",
         },
         {
-          minutes: 40,
+          minutes: 30,
           titre: "Débat contradictoire",
           detail:
             "Trois équipes défendent chacune un circuit devant la classe. Les autres posent les questions. Personne ne conclut : chaque équipe repart libre de son choix.",
         },
         {
-          minutes: 45,
+          minutes: 35,
           titre: "Décisions du trimestre",
           detail:
             "L'équipe arrête son circuit, son prix et son volume, et écrit en trois lignes ce qu'elle attend de ce choix. Cette prévision sera relue au tour suivant.",
         },
         {
-          minutes: 30,
+          minutes: 20,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez le trimestre. Les circuits choisis apparaissent dans les résultats de chaque équipe, avec leur effet sur la marge et sur la caisse.",
         },
         {
-          minutes: 50,
+          minutes: 35,
           titre: "Débriefing",
           detail:
             "On compare les équipes qui ont acheté le moins cher et celles qui ont acheté le mieux. La question qui reste ouverte : laquelle a fait le bon choix, et sur quel horizon.",
@@ -193,7 +193,7 @@ export const ATELIER_MCO: AtelierDefinition = {
     {
       numero: 3,
       titre: "Animer l'offre sans détruire la marge",
-      dureeMinutes: 240,
+      dureeMinutes: 180,
       tourJoue: 3,
       processus: [
         "Bloc 2 · Animer et dynamiser l'offre commerciale",
@@ -217,37 +217,37 @@ export const ATELIER_MCO: AtelierDefinition = {
         "Rouvrez la fiche concept sur la marge sur coût variable, que les équipes auront à mobiliser. Préparez un tableau vierge où chaque équipe inscrira, avant la clôture, le volume supplémentaire qu'elle estime nécessaire pour compenser sa remise.",
       deroule: [
         {
-          minutes: 25,
+          minutes: 20,
           titre: "Relecture des prévisions",
           detail:
             "Chaque équipe confronte ce qu'elle avait écrit au tour précédent à ce qui s'est produit. L'écart s'explique en une phrase, sans excuse.",
         },
         {
-          minutes: 45,
+          minutes: 35,
           titre: "Combien coûte une remise",
           detail:
             "Sur sa propre marge unitaire, chaque équipe calcule le volume supplémentaire qu'exigerait une remise de dix points, puis de vingt. Les chiffres surprennent toujours : c'est le moment de la séance.",
         },
         {
-          minutes: 40,
+          minutes: 30,
           titre: "Construire l'opération",
           detail:
             "L'équipe décide de son opération commerciale, de sa cible et de son budget de communication, et inscrit au tableau le volume qu'il lui faudra atteindre.",
         },
         {
-          minutes: 40,
+          minutes: 30,
           titre: "Décisions du trimestre",
           detail:
             "Saisie des décisions. Les équipes qui ont choisi de ne rien brader doivent le justifier aussi précisément que les autres.",
         },
         {
-          minutes: 30,
+          minutes: 20,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez. Le panier moyen et le taux de transformation de chaque équipe s'affichent à côté de son chiffre d'affaires.",
         },
         {
-          minutes: 60,
+          minutes: 45,
           titre: "Débriefing",
           detail:
             "On confronte les volumes annoncés au tableau et les volumes atteints. Une équipe qui a vendu beaucoup et gagné moins qu'au trimestre précédent fait la démonstration à votre place.",
@@ -266,7 +266,7 @@ export const ATELIER_MCO: AtelierDefinition = {
     {
       numero: 4,
       titre: "Réussir la fin d'année",
-      dureeMinutes: 240,
+      dureeMinutes: 180,
       tourJoue: 4,
       processus: [
         "Bloc 3 · Assurer la gestion opérationnelle",
@@ -290,37 +290,37 @@ export const ATELIER_MCO: AtelierDefinition = {
         "C'est la séance qui décide de l'exercice : prévoyez d'y consacrer la totalité du temps annoncé. Préparez la fiche de prévision saisonnière, où l'équipe écrira son volume attendu AVANT de connaître le résultat.",
       deroule: [
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Ce que dit la saison",
           detail:
             "Vous rappelez sans donner de chiffre que le trimestre qui s'ouvre n'est pas un trimestre ordinaire. Les équipes retrouvent seules l'ampleur du pic dans les informations du jeu.",
         },
         {
-          minutes: 50,
+          minutes: 40,
           titre: "Prévision de ventes",
           detail:
             "Chaque équipe construit sa prévision à partir de ses trois trimestres joués et du coefficient de saison, et l'inscrit sur sa fiche. Rien n'est saisi à ce stade.",
         },
         {
-          minutes: 40,
+          minutes: 30,
           titre: "Les deux risques",
           detail:
             "L'équipe chiffre les deux erreurs possibles : ce que lui coûte une cliente repartie les mains vides, ce que lui coûte un article encore en rayon en janvier. Puis elle choisit lequel des deux risques elle préfère prendre.",
         },
         {
-          minutes: 40,
+          minutes: 30,
           titre: "Décisions du trimestre",
           detail:
             "Saisie de l'approvisionnement, du prix et du budget de communication. La prévision écrite reste sur la table, visible.",
         },
         {
-          minutes: 30,
+          minutes: 20,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez le trimestre des fêtes. Les écarts entre équipes sont ici les plus larges de tout l'atelier.",
         },
         {
-          minutes: 60,
+          minutes: 45,
           titre: "Débriefing",
           detail:
             "Chaque équipe compare sa prévision et ses ventes, puis dit ce qui lui reste en stock. La question finale : celle qui a le plus vendu est-elle celle qui a le mieux gagné.",
@@ -339,7 +339,7 @@ export const ATELIER_MCO: AtelierDefinition = {
     {
       numero: 5,
       titre: "Rendre compte de sa gestion",
-      dureeMinutes: 240,
+      dureeMinutes: 180,
       tourJoue: null,
       processus: [
         "Bloc 3 · Assurer la gestion opérationnelle",
@@ -363,38 +363,38 @@ export const ATELIER_MCO: AtelierDefinition = {
         "Annoncez la soutenance à la séance précédente et donnez la grille d'évaluation aux équipes. Prévoyez un ordre de passage tiré au sort en début de séance, et un temps de parole tenu au chronomètre.",
       deroule: [
         {
-          minutes: 15,
+          minutes: 10,
           titre: "Consignes et tirage",
           detail:
-            "Rappel de la grille, tirage de l'ordre de passage. Chaque équipe dispose de dix minutes de présentation et de cinq minutes de questions.",
+            "Rappel de la grille, tirage de l'ordre de passage. Chaque équipe dispose de huit minutes de présentation et de quatre minutes de questions.",
         },
         {
-          minutes: 75,
+          minutes: 50,
           titre: "Construction du tableau de bord",
           detail:
             "Les équipes reprennent les quatre trimestres depuis leur espace et construisent leur tableau de bord. Contrainte forte : une seule page, quatre indicateurs au maximum, chacun justifié.",
         },
         {
-          minutes: 30,
+          minutes: 20,
           titre: "Préparation de l'oral",
           detail:
             "Répartition de la parole, préparation des réponses aux questions probables. Vous passez dans les équipes pour repérer les tableaux illisibles avant qu'ils ne soient projetés.",
         },
         {
-          minutes: 90,
+          minutes: 75,
           titre: "Soutenances",
           detail:
             "Passage des équipes. Le jury, ce sont vous et deux élèves d'une autre équipe, qui posent au moins une question chacun.",
         },
         {
-          minutes: 30,
+          minutes: 25,
           titre: "Bilan de l'atelier",
           detail:
             "Vous rendez le classement final, puis vous le mettez de côté : ce qui se note est le tableau de bord et la soutenance. Chaque élève écrit les trois phrases de son passeport professionnel.",
         },
       ],
       livrable:
-        "Le tableau de bord commercial des quatre trimestres, une page, quatre indicateurs justifiés, plus la présentation orale de dix minutes qui l'accompagne.",
+        "Le tableau de bord commercial des quatre trimestres, une page, quatre indicateurs justifiés, plus la présentation orale de huit minutes qui l'accompagne.",
       tracePasseport:
         "J'ai construit le tableau de bord commercial d'un point de vente sur quatre trimestres et je l'ai présenté oralement devant un jury.",
       evaluation: [

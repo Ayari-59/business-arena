@@ -3,7 +3,7 @@ import type { AtelierDefinition } from "./types";
 /**
  * ATELIER PROFESSIONNEL · BTS CG, première année.
  *
- * Six séances de quatre heures, une partie de six tours, un tour par séance.
+ * Six séances de trois heures, une partie de six tours, un tour par séance.
  * L'entreprise est la même du début à la fin : c'est ce qui distingue un
  * atelier d'une suite d'exercices. Les élèves ne calculent pas un seuil de
  * rentabilité, ils calculent LEUR seuil, celui de l'entreprise qu'ils ont mal
@@ -20,12 +20,12 @@ export const ATELIER_CG1: AtelierDefinition = {
   referentielLabel: "Processus",
   referentielAccord: "mobilisés",
   pitch:
-    "Six séances de quatre heures. Chaque équipe dirige la même entreprise du premier au dernier tour, décide, subit ses décisions, et produit à chaque séance un document professionnel qui s'évalue.",
+    "Six séances de trois heures. Chaque équipe dirige la même entreprise du premier au dernier tour, décide, subit ses décisions, et produit à chaque séance un document professionnel qui s'évalue.",
   resume:
     "Une partie de six trimestres étalée sur six séances, du diagnostic d'ouverture à la soutenance du rapport de gestion.",
   difficulte: 2,
   difficulteLabel: "Initiation",
-  format: "6 séances de 4 h",
+  format: "6 séances de 3 h",
   pourquoi:
     "En atelier professionnel, la difficulté n'est pas de faire calculer un seuil de rentabilité : c'est de faire comprendre à quoi il sert. Un dossier fournit les chiffres et demande la réponse. Ici les chiffres sont ceux que l'équipe a produits au tour précédent, personne ne connaît la réponse, et une décision prise sans le calcul se paie au tour suivant. Le compte de résultat, le bilan, la TVA à décaisser et le besoin en fonds de roulement ne sont plus des documents à recopier : ce sont les conséquences de ce que l'équipe a fait.",
   reglages: {
@@ -46,7 +46,7 @@ export const ATELIER_CG1: AtelierDefinition = {
     {
       numero: 1,
       titre: "Prendre l'entreprise en main",
-      dureeMinutes: 240,
+      dureeMinutes: 180,
       tourJoue: 1,
       processus: [
         "P1 · Contrôle et traitement comptable des opérations commerciales",
@@ -70,37 +70,37 @@ export const ATELIER_CG1: AtelierDefinition = {
         "Créez la partie avec les réglages ci-dessus et notez le code d'invitation. Constituez les équipes à l'avance : trois élèves par équipe, un rôle par élève (direction, production, finances), rôles tournants d'une séance à l'autre. Imprimez la fiche de diagnostic vierge.",
       deroule: [
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Le cadre",
           detail:
             "Vous annoncez la règle du jeu : six séances, six trimestres, une seule entreprise, et un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code.",
         },
         {
-          minutes: 40,
+          minutes: 30,
           titre: "Lecture individuelle",
           detail:
             "Chaque élève lit seul le bilan d'ouverture et le compte de résultat de son entreprise, et note trois constats. Aucune discussion à ce moment : un diagnostic collectif commence par des lectures séparées.",
         },
         {
-          minutes: 40,
+          minutes: 30,
           titre: "Diagnostic d'équipe",
           detail:
             "L'équipe confronte ses lectures et remplit la fiche de diagnostic. Vous circulez sans corriger : les erreurs de lecture se paieront au tour 1, et c'est ce qui les rendra mémorables.",
         },
         {
-          minutes: 60,
+          minutes: 45,
           titre: "Le premier arbitrage",
           detail:
             "L'arène pose au tour 1 un arbitrage à deux issues, chacune avec ce qu'elle rapporte et ce qu'elle coûte. L'équipe tranche, motive son choix en trois lignes, puis saisit ses décisions.",
         },
         {
-          minutes: 30,
+          minutes: 20,
           titre: "Clôture et résultats",
           detail:
             "Vous clôturez le tour depuis votre espace. Les états financiers du trimestre apparaissent pour chaque équipe, avec le classement.",
         },
         {
-          minutes: 50,
+          minutes: 40,
           titre: "Débriefing",
           detail:
             "Une équipe présente son diagnostic, une autre le sien. Vous ne dites pas qui a raison : vous montrez le compte de résultat de chacune. C'est lui qui tranche.",
@@ -120,7 +120,7 @@ export const ATELIER_CG1: AtelierDefinition = {
     {
       numero: 2,
       titre: "Le coût, le prix, le seuil",
-      dureeMinutes: 240,
+      dureeMinutes: 180,
       tourJoue: 2,
       processus: ["P5 · Analyse et prévision de l'activité"],
       objectif:
@@ -143,37 +143,37 @@ export const ATELIER_CG1: AtelierDefinition = {
         "Rien à créer : la partie continue. Préparez au tableau le compte de résultat du tour 1 d'une équipe volontaire, il servira d'exemple commun.",
       deroule: [
         {
-          minutes: 30,
+          minutes: 20,
           titre: "Reprise",
           detail:
             "Les résultats du tour 1 sont affichés. Vous demandez à chaque équipe combien elle a gagné, puis combien elle devait vendre pour ne rien perdre. Personne ne sait. C'est la séance.",
         },
         {
-          minutes: 50,
+          minutes: 40,
           titre: "Le tri des charges",
           detail:
             "Sur le compte de résultat du tour 1, chaque équipe classe ses charges : celles qui suivent le volume, celles qui tombent quoi qu'il arrive. Le marketing et la qualité posent la vraie question, et il faut la trancher.",
         },
         {
-          minutes: 40,
+          minutes: 30,
           titre: "Le calcul, à la main",
           detail:
             "Marge sur coût variable unitaire, taux de marge, seuil en volume, seuil en valeur, marge de sécurité. Sur papier, avec leurs chiffres, avant d'aller voir ce que le jeu affiche.",
         },
         {
-          minutes: 20,
+          minutes: 15,
           titre: "Confrontation",
           detail:
             "Le panneau du seuil de l'arène est recalculé chaque tour avec les charges de structure de l'équipe. Ils comparent. Les écarts viennent presque toujours du classement des charges, et cet écart est la leçon.",
         },
         {
-          minutes: 50,
+          minutes: 40,
           titre: "Décider le tour 2",
           detail:
             "Le prix se fixe maintenant avec le seuil sous les yeux. Chaque équipe écrit le volume qu'elle doit atteindre à son nouveau prix, puis saisit ses décisions.",
         },
         {
-          minutes: 50,
+          minutes: 35,
           titre: "Clôture et débriefing",
           detail:
             "Vous clôturez. On compare le volume visé et le volume vendu, et on cherche pourquoi ils diffèrent : le prix a fait fuir des clients, ou la capacité n'a pas suivi.",
@@ -193,7 +193,7 @@ export const ATELIER_CG1: AtelierDefinition = {
     {
       numero: 3,
       titre: "Le plan de trésorerie et la banque",
-      dureeMinutes: 240,
+      dureeMinutes: 180,
       tourJoue: 3,
       processus: [
         "P1 · Contrôle et traitement comptable des opérations commerciales",
@@ -218,37 +218,37 @@ export const ATELIER_CG1: AtelierDefinition = {
         "Distribuez le modèle de plan de trésorerie sur tableur, colonnes vides. Vérifiez que la partie tourne au niveau Arbitrage : c'est lui qui ouvre le financement, donc le panneau bancaire.",
       deroule: [
         {
-          minutes: 30,
+          minutes: 20,
           titre: "Résultat et caisse ne sont pas la même chose",
           detail:
             "Vous mettez côte à côte le résultat du tour 2 et la variation de trésorerie du même tour. Ils ne coïncident pas. Vous ne l'expliquez pas encore : vous le faites constater.",
         },
         {
-          minutes: 60,
+          minutes: 45,
           titre: "Le plan, sur tableur",
           detail:
             "Chaque équipe prévoit ses encaissements et ses décaissements du trimestre à venir, à partir de ses décisions et des délais du scénario. Le solde de fin de trimestre est la ligne qui compte.",
         },
         {
-          minutes: 30,
+          minutes: 25,
           titre: "Déposer le dossier",
           detail:
             "Le plan se dépose dans l'arène avec les décisions. Sans lui, la banque n'instruit aucune demande d'emprunt : les équipes qui l'oublient s'en apercevront au tour suivant, et c'est une leçon qu'aucun cours ne remplace.",
         },
         {
-          minutes: 40,
+          minutes: 30,
           titre: "Décider le tour 3",
           detail:
             "Emprunter, augmenter le capital, mobiliser des créances ou ne rien faire : l'équipe choisit, et le montant demandé doit correspondre au besoin que son plan démontre.",
         },
         {
-          minutes: 30,
+          minutes: 20,
           titre: "Clôture",
           detail:
             "Vous clôturez. Le verdict de la banque apparaît : plan jugé juste à tant pour cent, confiance en hausse ou en baisse, découvert consenti pour le trimestre suivant.",
         },
         {
-          minutes: 50,
+          minutes: 40,
           titre: "L'écart",
           detail:
             "Chaque équipe reprend son plan et écrit, ligne par ligne, d'où vient l'écart. Un écart qui se répète dans le même sens n'est pas de la malchance, c'est une erreur de méthode.",
@@ -268,7 +268,7 @@ export const ATELIER_CG1: AtelierDefinition = {
     {
       numero: 4,
       titre: "Gagner de l'argent et ne plus en avoir",
-      dureeMinutes: 240,
+      dureeMinutes: 180,
       tourJoue: 4,
       processus: ["P6 · Analyse de la situation financière"],
       objectif:
@@ -290,36 +290,36 @@ export const ATELIER_CG1: AtelierDefinition = {
         "C'est le tour où l'activité s'emballe. Rien à régler : le scénario s'en charge. Préparez la trame du bilan fonctionnel au tableau.",
       deroule: [
         {
-          minutes: 30,
+          minutes: 20,
           titre: "Le constat",
           detail:
             "Le chiffre d'affaires monte, le résultat suit, et la trésorerie descend. Vous laissez les équipes buter dessus une bonne dizaine de minutes avant d'ouvrir la séance.",
         },
         {
-          minutes: 60,
+          minutes: 45,
           titre: "Le bilan fonctionnel",
           detail:
             "Chaque équipe reclasse son propre bilan : emplois stables, ressources stables, actif et passif circulants, trésorerie. Puis calcule le fonds de roulement, le besoin et la trésorerie nette.",
         },
         {
-          minutes: 30,
+          minutes: 25,
           titre: "La relation",
           detail:
             "Trésorerie nette égale fonds de roulement moins besoin en fonds de roulement. Ils vérifient sur leurs propres chiffres, et l'égalité tombe juste, ce qui n'arrive jamais dans un exercice inventé.",
         },
         {
-          minutes: 40,
+          minutes: 30,
           titre: "Décider le tour 4",
           detail:
             "Comment desserrer l'étau : vendre moins cher pour vider le stock, mobiliser les créances, emprunter, ralentir. Chaque solution a son prix, et l'équipe doit dire lequel elle accepte de payer.",
         },
         {
-          minutes: 30,
+          minutes: 20,
           titre: "Clôture",
           detail: "Vous clôturez. Les équipes qui n'ont rien fait découvrent l'affacturage forcé.",
         },
         {
-          minutes: 50,
+          minutes: 40,
           titre: "Formalisation",
           detail:
             "Vous formalisez au tableau ce qu'ils viennent de vivre. La crise de trésorerie de croissance a un nom, et ils ne l'oublieront plus.",
@@ -339,7 +339,7 @@ export const ATELIER_CG1: AtelierDefinition = {
     {
       numero: 5,
       titre: "La TVA, les délais et le poste clients",
-      dureeMinutes: 240,
+      dureeMinutes: 180,
       tourJoue: 5,
       processus: [
         "P3 · Gestion des obligations fiscales",
@@ -364,37 +364,37 @@ export const ATELIER_CG1: AtelierDefinition = {
         "Vérifiez que la TVA est bien activée dans les paramètres économiques de la partie. Préparez deux créances chiffrées au tableau pour l'exercice de comparaison.",
       deroule: [
         {
-          minutes: 40,
+          minutes: 30,
           titre: "La TVA n'est pas une charge",
           detail:
             "Le résultat de l'arène est rigoureusement hors taxes, les flux sont toutes taxes comprises, et la TVA à décaisser est une dette payée le trimestre suivant. Les équipes retrouvent le montant dans leur bilan.",
         },
         {
-          minutes: 40,
+          minutes: 30,
           titre: "Son poids dans le besoin",
           detail:
             "Ils reprennent le besoin en fonds de roulement du tour 4 et isolent la part qui vient de la TVA. Une taxe qui ne coûte rien peut immobiliser beaucoup.",
         },
         {
-          minutes: 50,
+          minutes: 40,
           titre: "Escompte ou affacturage",
           detail:
             "Sur leurs propres créances, ils calculent le coût de chacun des deux, au prorata du trimestre, et concluent. Le moins cher n'est pas toujours le plus disponible, et c'est le sujet.",
         },
         {
-          minutes: 40,
+          minutes: 30,
           titre: "Décider le tour 5",
           detail:
             "L'équipe applique sa conclusion et saisit ses décisions, plan de trésorerie mis à jour.",
         },
         {
-          minutes: 30,
+          minutes: 20,
           titre: "Clôture",
           detail:
             "Vous clôturez. Le coût du financement apparaît dans le tableau de flux, à la ligne près.",
         },
         {
-          minutes: 40,
+          minutes: 30,
           titre: "Débriefing",
           detail:
             "On compare le coût annoncé par les équipes et celui qui figure au compte de résultat. Les écarts viennent presque toujours du prorata.",
@@ -414,7 +414,7 @@ export const ATELIER_CG1: AtelierDefinition = {
     {
       numero: 6,
       titre: "Rendre compte",
-      dureeMinutes: 240,
+      dureeMinutes: 180,
       tourJoue: 6,
       processus: [
         "P5 · Analyse et prévision de l'activité",
@@ -440,31 +440,31 @@ export const ATELIER_CG1: AtelierDefinition = {
         "Depuis la page de la partie, exportez le relevé au format tableur : il contient les six tours de chaque équipe. Distribuez la trame du rapport et la grille d'oral. Prévoyez un jury, même symbolique.",
       deroule: [
         {
-          minutes: 30,
+          minutes: 20,
           titre: "Le dernier tour",
           detail:
             "Les équipes jouent le tour 6 avec tout ce qu'elles savent. Vous clôturez, le classement final tombe.",
         },
         {
-          minutes: 30,
+          minutes: 20,
           titre: "Récupérer et contrôler",
           detail:
             "Chaque équipe reçoit le relevé exporté et vérifie sa cohérence : les six tours sont là, les totaux se recoupent, aucune ligne ne manque. Un tableau qu'on n'a pas contrôlé ne se commente pas.",
         },
         {
-          minutes: 70,
+          minutes: 50,
           titre: "Le rapport",
           detail:
-            "Quatre pages : l'entreprise et sa contrainte, l'évolution de l'activité, la situation financière, les décisions qui ont pesé, et ce qu'ils feraient autrement. Les graphiques viennent du relevé.",
+            "Quatre pages : l'entreprise et sa contrainte, l'évolution de l'activité, la situation financière, les décisions qui ont pesé, et ce qu'ils feraient autrement. Les graphiques viennent du relevé. La séance en pose la structure et les deux tiers du texte ; l'écriture se termine hors classe.",
         },
         {
-          minutes: 80,
+          minutes: 70,
           titre: "Soutenances",
           detail:
             "Dix minutes par équipe, sept de présentation et trois de questions. Une question obligatoire du jury : montrez-nous le trimestre où vous avez perdu le contrôle, et dites pourquoi.",
         },
         {
-          minutes: 30,
+          minutes: 20,
           titre: "Retour au groupe",
           detail:
             "Vous reprenez ce que le classement final ne dit pas : l'équipe la mieux classée n'est pas toujours celle qui a le mieux raisonné, et vous montrez pourquoi.",
@@ -485,13 +485,13 @@ export const ATELIER_CG1: AtelierDefinition = {
   formats: [
     {
       nom: "Atelier hebdomadaire",
-      quand: "Six semaines consécutives, quatre heures par semaine",
+      quand: "Six semaines consécutives, trois heures par semaine",
       comment:
         "Le tempo pour lequel l'atelier est écrit. Une séance, un trimestre, un livrable. L'attente d'une semaine entre deux tours joue en votre faveur : les équipes reviennent avec leurs calculs faits et leurs regrets aussi.",
     },
     {
       nom: "Semaine bloquée",
-      quand: "Cinq jours, six demi-journées de quatre heures",
+      quand: "Cinq jours, six demi-journées de trois heures",
       comment:
         "Les six séances tiennent dans la semaine, à raison d'une le matin et une l'après-midi les trois premiers jours, puis les livrables et la soutenance. Prévoyez une demi-journée de plus pour le rapport : quatre pages ne s'écrivent pas entre deux tours.",
     },

@@ -249,7 +249,14 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
         </Section>
 
         <Section id="deroule" titre="Déroulé séance par séance">
-          <ol className="mt-4 space-y-6 border-l border-white/10 pl-6 print:border-black/20">
+          <p className="mt-3 text-sm leading-relaxed text-slate-400 print:text-black">
+            Le minutage est une trame, pas une contrainte. Aucune séance ne dépasse trois heures,
+            de sorte qu&apos;elle entre dans un créneau ordinaire ; à vous de l&apos;étirer si
+            vous disposez de plus de temps, ou de la resserrer. Une seule règle si vous devez
+            couper : prenez sur la production plutôt que sur le débriefing, qui est ce qui
+            transforme une partie jouée en séance apprise.
+          </p>
+          <ol className="mt-5 space-y-6 border-l border-white/10 pl-6 print:border-black/20">
             {atelier.seances.map((s) => (
               <li key={s.numero} className="relative break-inside-avoid">
                 <span

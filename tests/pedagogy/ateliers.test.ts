@@ -31,6 +31,70 @@ describe("ateliers professionnels", () => {
     }
   });
 
+  it("aucune séance ne dépasse trois heures", () => {
+    // Une séance de quatre heures ne rentre pas dans un emploi du temps ordinaire :
+    // l'enseignant qui n'a que trois heures devant lui doit couper lui-même, et il
+    // coupe le débriefing, qui est justement ce qui fait l'atelier. La trame tient
+    // donc en trois heures, à charge pour qui dispose de plus de temps d'étirer.
+    for (const a of ATELIERS) {
+      for (const s of a.seances) {
+        expect(
+          s.dureeMinutes,
+          `${a.code}/séance ${s.numero} : ${s.dureeMinutes} minutes annoncées`,
+        ).toBeLessThanOrEqual(180);
+      }
+    }
+  });
+
+  it("le temps de parole annoncé tient dans la phase qui l'accueille", () => {
+    // Le piège du déroulé : « huit minutes de présentation et quatre minutes de
+    // questions » multiplié par le nombre d'équipes déborde la phase qui doit les
+    // contenir. Personne ne s'en aperçoit à la relecture, tout le monde s'en
+    // aperçoit à la troisième équipe qui passe. Trois ateliers publiés étaient
+    // dans ce cas.
+    //
+    // Les temps se lisent sur toute la séance et pas seulement sur la phase : ils
+    // sont presque toujours annoncés dans les consignes, une phase plus tôt. Une
+    // première version de cette garde ne lisait que la phase, et ne voyait donc
+    // qu'un cas sur trois.
+    const CHIFFRES: Record<string, number> = {
+      deux: 2, trois: 3, quatre: 4, cinq: 5, six: 6, sept: 7, huit: 8,
+      neuf: 9, dix: 10, onze: 11, douze: 12, quinze: 15, vingt: 20,
+    };
+    const valeur = (brut: string) =>
+      /^\d+$/.test(brut) ? Number(brut) : (CHIFFRES[brut.toLowerCase()] ?? 0);
+
+    for (const a of ATELIERS) {
+      for (const s of a.seances) {
+        // Une phrase à la fois : deux phrases qui répètent le même horaire ne
+        // doivent pas s'additionner.
+        const phrases = [s.preparation, ...s.deroule.map((p) => p.detail)].join(" ").split(/[.;]/);
+        let parEquipe = 0;
+        for (const phrase of phrases) {
+          let somme = 0;
+          for (const m of phrase.matchAll(/(\d+|[A-Za-zéèê]+)\s+minutes?\s+par\s+équipe/gi)) {
+            somme += valeur(m[1]!);
+          }
+          for (const m of phrase.matchAll(
+            /(\d+|[A-Za-zéèê]+)\s+minutes?\s+de\s+(présentation|questions|soutenance)/gi,
+          )) {
+            somme += valeur(m[1]!);
+          }
+          parEquipe = Math.max(parEquipe, somme);
+        }
+        if (parEquipe === 0) continue;
+        const phase = s.deroule.find(
+          (p) => /soutenances|présentations|passage/i.test(p.titre) && !/préparation|consignes/i.test(p.titre),
+        );
+        expect(phase, `${a.code}/séance ${s.numero} : temps de parole annoncé sans phase pour le tenir`).toBeDefined();
+        expect(
+          a.reglages.equipes * parEquipe,
+          `${a.code}/séance ${s.numero} : ${a.reglages.equipes} équipes × ${parEquipe} min ne tiennent pas dans « ${phase!.titre} » (${phase!.minutes} min)`,
+        ).toBeLessThanOrEqual(phase!.minutes);
+      }
+    }
+  });
+
   it("les séances se suivent sans trou et jouent les tours dans l'ordre", () => {
     for (const a of ATELIERS) {
       expect(a.seances.map((s) => s.numero), a.code).toEqual(a.seances.map((_, i) => i + 1));

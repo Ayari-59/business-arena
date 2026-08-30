@@ -440,7 +440,7 @@ export const ATELIER_NDRC: AtelierDefinition = {
           minutes: 10,
           titre: "Consignes et tirage",
           detail:
-            "Rappel de la grille, tirage de l'ordre de passage. Huit minutes de présentation, quatre minutes de questions par équipe.",
+            "Rappel de la grille, tirage de l'ordre de passage. Sept minutes de présentation, trois minutes de questions par équipe.",
         },
         {
           minutes: 55,
@@ -468,7 +468,7 @@ export const ATELIER_NDRC: AtelierDefinition = {
         },
       ],
       livrable:
-        "Le tableau de bord commercial des cinq trimestres, une page, quatre indicateurs justifiés, plus la présentation orale de huit minutes qui l'accompagne.",
+        "Le tableau de bord commercial des cinq trimestres, une page, quatre indicateurs justifiés, plus la présentation orale de sept minutes qui l'accompagne.",
       tracePasseport:
         "J'ai construit le tableau de bord commercial d'une entreprise de vente à distance sur cinq trimestres et je l'ai présenté devant un jury.",
       evaluation: [
