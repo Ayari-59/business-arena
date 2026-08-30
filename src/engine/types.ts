@@ -53,6 +53,10 @@ export interface EngineScenarioConfig {
     maintenanceReference: number;
     /** Perte de disponibilité par tour si maintenance nulle (linéaire jusqu'à réf.). */
     availabilityDecay: number;
+    /** Seuil d'utilisation au-delà duquel la qualité se dégrade. Absent = 0.95. */
+    overheatThreshold?: number;
+    /** Plancher de disponibilité machine. Absent = 0.3. */
+    availabilityFloor?: number;
   };
   marketing: {
     /** Effet marketing : 1 + sens(segment) × ln(1 + budget/scale). */
@@ -252,11 +256,17 @@ export interface EngineScenarioConfig {
     attritionThreshold: number;
     maxHiresPerRound: number;
     maxHeadcount: number;
+    /** Bornes de l'indice de salaire. Absent = [0.8, 1.3]. */
+    salaryIndexBounds?: [number, number];
+    /** Bornes de la morale. Absent = [0.85, 1.12]. */
+    moraleBounds?: [number, number];
   };
   events: EventDefinitionConfig[];
   scriptedEvents: { round: number; eventCode: string; companyIndex?: number }[];
   /** Références du scoring BPI (doc 08 §1.1) — bornes min/cible par tour. */
   scoring: ScoringConfig;
+  /** V2 : les bots utilisent les décisions financières, RH, investissement et trésorerie. Absent = false. */
+  enrichedBots?: boolean;
 }
 
 /**
@@ -326,6 +336,14 @@ export interface ScoringConfig {
     returnOnEquity: { min: number; target: number };
     marketShareTarget: number;
     utilizationTarget: number;
+  };
+  /** Seuils de cohérence stratégique (optionnels, défauts hardcodés historiques). */
+  coherenceThresholds?: {
+    premiumPriceRatio?: number;
+    minQualityEffortRatio?: number;
+    highMarketingLostRatio?: number;
+    lowMaintenanceRatio?: number;
+    highUtilizationFloor?: number;
   };
 }
 

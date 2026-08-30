@@ -75,53 +75,192 @@ export function neutralDecisions(ctx: BotContext): RoundDecisions {
   return botDecisions("balanced", ctx);
 }
 
+/** Décisions financières, RH, investissement et trésorerie par profil. */
+function enrichDecisions(
+  profile: BotProfile,
+  ctx: BotContext,
+  base: RoundDecisions,
+): RoundDecisions {
+  const s = ctx.scenario;
+
+  if (s.hr) {
+    const hrConfig = s.hr;
+    switch (profile) {
+      case "passive":
+        base.hr = { salaryIndex: 1 };
+        break;
+      case "price_aggressive":
+        base.hr = { salaryIndex: 0.9, trainingBudget: 0 };
+        break;
+      case "premium":
+        base.hr = {
+          salaryIndex: 1.15,
+          trainingBudget: hrConfig.trainingScale * 0.6,
+        };
+        break;
+      case "balanced":
+        base.hr = { salaryIndex: 1.0, trainingBudget: hrConfig.trainingScale * 0.3 };
+        break;
+      case "growth": {
+        const cap = capacity(ctx);
+        const laborHours = ctx.state.headcount * ctx.state.hoursPerEmployee * ctx.state.productivity;
+        const laborCapacity = s.product.hoursPerUnit > 0 ? laborHours / s.product.hoursPerUnit : Infinity;
+        const laborBottleneck = laborCapacity < cap * 0.9;
+        base.hr = {
+          salaryIndex: 1.05,
+          trainingBudget: hrConfig.trainingScale * 0.4,
+          hire: laborBottleneck ? Math.min(2, hrConfig.maxHiresPerRound) : 0,
+        };
+        break;
+      }
+    }
+  }
+
+  if (s.insurance) {
+    const ins = s.insurance;
+    const formulas = ins.formulas ??
+      [{ code: "default", name: "", premiumPerRound: ins.premiumPerRound, coveredEventCodes: ins.coveredEventCodes }];
+    const first = formulas[0];
+    const last = formulas[formulas.length - 1];
+    switch (profile) {
+      case "passive":
+        break;
+      case "price_aggressive":
+        if (first) base.insurance = first.code;
+        break;
+      case "premium":
+        if (last) base.insurance = last.code;
+        break;
+      case "balanced":
+        if (first) base.insurance = first.code;
+        break;
+      case "growth":
+        if (first) base.insurance = first.code;
+        break;
+    }
+  }
+
+  if (s.suppliers && s.suppliers.length > 0) {
+    const suppliers = s.suppliers;
+    switch (profile) {
+      case "passive":
+        break;
+      case "price_aggressive": {
+        const cheapest = [...suppliers].sort((a, b) => a.costMultiplier - b.costMultiplier)[0]!;
+        base.supplierChoice = cheapest.code;
+        break;
+      }
+      case "premium": {
+        const best = [...suppliers].sort((a, b) => b.qualityBonus - a.qualityBonus)[0]!;
+        base.supplierChoice = best.code;
+        break;
+      }
+      case "balanced":
+        break;
+      case "growth": {
+        const cheapest = [...suppliers].sort((a, b) => a.costMultiplier - b.costMultiplier)[0]!;
+        base.supplierChoice = cheapest.code;
+        break;
+      }
+    }
+  }
+
+  if (s.investment && profile === "growth" && ctx.roundIndex >= 2) {
+    const machCap = ctx.state.machineCapacity * ctx.state.availability;
+    const utilization = ctx.lastSoldUnits !== undefined
+      ? ctx.lastSoldUnits / Math.max(1, machCap)
+      : 0.65;
+    if (utilization > 0.85) {
+      base.investment = { machineCapacityUnits: Math.min(2, s.investment.maxPerRound) };
+    }
+  }
+
+  if (s.finance) {
+    const dur = s.finance.loanDurationRounds ?? 0;
+    switch (profile) {
+      case "passive":
+        break;
+      case "balanced":
+      case "premium":
+        if (ctx.state.finance.overdraft > 0 && dur > 0) {
+          base.finance = { newLoan: Math.min(ctx.state.finance.overdraft, 50000) };
+        }
+        break;
+      case "growth":
+        if (dur > 0 && ctx.roundIndex <= 3) {
+          base.finance = { newLoan: 30000 };
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
+  if (s.treasury?.placementAnnualRate && s.treasury.placementAnnualRate > 0) {
+    if (profile === "balanced" || profile === "premium") {
+      const cash = ctx.state.finance.cash;
+      if (cash > 50000) {
+        base.treasury = { placement: Math.floor((cash - 30000) * 0.5) };
+      }
+    }
+  }
+
+  return base;
+}
+
 export function botDecisions(profile: BotProfile, ctx: BotContext): RoundDecisions {
   const ref = mainRefPrice(ctx.scenario);
   const maintenance = ctx.scenario.production.maintenanceReference;
-  // budgets exprimés relativement aux échelles du scénario : les bots
-  // s'adaptent ainsi à la périodicité du tour (ADR-01) et à tout scénario
   const mkt = ctx.scenario.marketing.scale;
   const qual = ctx.scenario.production.qualityScale;
+  let base: RoundDecisions;
   switch (profile) {
     case "passive":
-      return {
+      base = {
         price: ref,
         productionPlan: capacity(ctx) * 0.6,
         marketingBudget: 0,
         qualityBudget: 0,
         maintenanceBudget: maintenance * 0.5,
       };
+      break;
     case "price_aggressive":
-      return {
+      base = {
         price: ref * 0.88,
         productionPlan: adaptivePlan(ctx, 1.15),
         marketingBudget: 0.75 * mkt,
         qualityBudget: 0,
         maintenanceBudget: maintenance,
       };
+      break;
     case "premium":
-      return {
+      base = {
         price: ref * 1.3,
         productionPlan: adaptivePlan(ctx, 1.0),
         marketingBudget: 0.5 * mkt,
         qualityBudget: 1.5 * qual,
         maintenanceBudget: maintenance,
       };
+      break;
     case "balanced":
-      return {
-        price: ref * 1.0, // 59 € : juste sous le seuil psychologique des 60 €
+      base = {
+        price: ref,
         productionPlan: adaptivePlan(ctx, 1.05),
         marketingBudget: 0.5 * mkt,
         qualityBudget: 0.5 * qual,
         maintenanceBudget: maintenance,
       };
+      break;
     case "growth":
-      return {
+      base = {
         price: ref * 0.95,
         productionPlan: adaptivePlan(ctx, 1.25),
         marketingBudget: (7 / 6) * mkt,
         qualityBudget: 0.5 * qual,
         maintenanceBudget: maintenance,
       };
+      break;
   }
+  if (ctx.scenario.enrichedBots) return enrichDecisions(profile, ctx, base);
+  return base;
 }
