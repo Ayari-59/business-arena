@@ -87,20 +87,20 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
     code: "transport_t2_retour_vide",
     title: "Le camion qui rentre à vide",
     narrative:
-      "Vos porteurs partent chargés vers la métropole et reviennent vides trois fois sur quatre. Le gazole du retour est brûlé, le chauffeur est payé, les péages sont réglés. La bourse de fret propose des lots à 52 € la palette pour ces retours, bien en dessous de votre prix moyen.",
+      "Vos porteurs partent chargés vers la métropole et reviennent vides trois fois sur quatre. Le chauffeur est payé et le camion s'amortit, que vous chargiez ou non. La bourse de fret propose des lots à 52 € la palette pour ces retours : sous votre prix moyen de 74 €, et même sous votre coût de revient complet, qui approche 54 €.",
     problem:
       "Faut-il charger ces lots mal payés, ou tenir son prix et rentrer à vide ?",
     diagnosticOptions: [
       {
         id: "cout_retour_engage",
         label:
-          "Le retour a lieu de toute façon : son gazole et son chauffeur sont déjà engagés",
+          "Le retour a lieu de toute façon : le chauffeur est payé et le camion s'amortit, chargé ou vide",
         correct: true,
       },
       {
         id: "marge_incrementale",
         label:
-          "Un lot à 52 € rapporte tout ce qui dépasse le coût de manutention supplémentaire",
+          "Un lot à 52 € laisse 27 €, soit 52 − 25, quand un retour à vide n'en laisse aucun",
         correct: true,
       },
       {
@@ -111,7 +111,8 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
       },
       {
         id: "jamais_sous_le_prix",
-        label: "Il ne faut jamais charger en dessous du prix moyen : c'est vendre à perte",
+        label:
+          "À 52 €, on vend sous le coût de revient complet de 54 € : chaque palette chargée creuse la perte",
         correct: false,
       },
       {
@@ -149,7 +150,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Vendre au coût marginal est juste sur la marge, faux sur la masse. Une entreprise qui facture tout son trafic au prix des retours à vide ne paie plus ses chauffeurs.",
+          "Vendre au coût marginal est juste sur la marge, faux sur la masse. À 52 € pour tout le trafic, les 27 € de marge multipliés par les sept mille quatre cents palettes du trimestre donnent 199 800 €, quand la structure et la flotte en réclament 212 000 : l'entreprise passerait juste en dessous, et ses chauffeurs avec elle.",
       },
     ],
     modelRelevance: {
@@ -160,11 +161,11 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
     },
     conceptCodes: ["capacity", "contribution_margin", "variable_costs", "margin_rates"],
     hints: hints([
-      "Demandez-vous ce que coûte le retour si vous ne chargez rien.",
-      "Le gazole, les péages et le chauffeur du retour sont engagés dans les deux cas.",
-      "Le seul coût supplémentaire d'un lot de retour est sa manutention.",
-      "Tout ce qui dépasse ce coût est de la marge qui n'existerait pas autrement.",
-      "Mais la règle ne vaut que pour le remplissage résiduel : si tout votre trafic passait à ce prix, la structure ne serait plus couverte.",
+      "Demandez-vous ce que rapporte le retour si vous ne chargez rien.",
+      "Le chauffeur et le camion sont payés dans les deux cas : ils ne dépendent pas de ce que vous chargez.",
+      "Le coût qui dépend vraiment du lot, c'est sa route : 25 € la palette.",
+      "Un lot à 52 € laisse donc 27 €, soit 52 − 25, que le camion vide ne laisse pas.",
+      "Et si vous comparez au coût de revient complet plutôt qu'à ce coût de route, vous refuserez une affaire qui rapporte.",
     ]),
     trigger: { round: 2 },
     weight: 1,
@@ -436,14 +437,14 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
     code: "transport_t6_contrat_refuse",
     title: "Le contrat qu'il faut savoir refuser",
     narrative:
-      "Un distributeur propose un contrat annuel de six mille palettes à 57 €, à condition d'immobiliser trois porteurs à son service exclusif. Vos autres clients paient en moyenne 78 €. La flotte est déjà remplie à quatre-vingts pour cent.",
+      "Un distributeur propose un contrat trimestriel de deux mille huit cents palettes à 57 €, à condition d'immobiliser deux porteurs à son service exclusif. Un porteur emmène mille quatre cents palettes par trimestre à pleine charge, et le contrat les remplirait donc entièrement. Vos autres clients paient en moyenne 78 €, et votre flotte tourne aujourd'hui à quatre-vingts pour cent.",
     problem:
       "Que coûte réellement ce contrat, une fois la flotte prise en compte ?",
     diagnosticOptions: [
       {
         id: "cout_opportunite",
         label:
-          "Trois porteurs immobilisés ne transportent plus le trafic à 78 € : c'est un coût d'opportunité",
+          "Deux porteurs immobilisés ne transportent plus le trafic à 78 € : c'est un coût d'opportunité",
         correct: true,
       },
       {
@@ -454,7 +455,8 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
       },
       {
         id: "volume_rassure",
-        label: "Un contrat annuel de six mille palettes sécurise l'activité : il faut le prendre",
+        label:
+          "Un camion rempli à cent pour cent vaut forcément mieux qu'un camion rempli aux quatre cinquièmes",
         correct: false,
       },
       {
@@ -481,13 +483,29 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
           "À capacité libre, toute marge positive enrichit. À capacité saturée, accepter une affaire, c'est en refuser une autre : la bonne unité de comparaison devient la ressource qui manque.",
       },
       {
+        id: "marge_par_porteur",
+        prompt: "Que rapporte un porteur sous ce contrat, comparé à ce qu'il rapporte aujourd'hui ?",
+        options: [
+          {
+            id: "a",
+            label: "44 800 € contre 59 360 €, soit 14 560 € de moins par porteur et par trimestre",
+          },
+          { id: "b", label: "Autant : ce que le prix perd, le remplissage le rattrape" },
+          { id: "c", label: "Davantage : le camion roule enfin plein" },
+          { id: "d", label: "Impossible à dire sans connaître la durée d'engagement" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Sous contrat, le porteur roule plein : mille quatre cents palettes à 32 € de marge, ce qui fait 44 800 €. Aujourd'hui il roule aux quatre cinquièmes : mille cent vingt palettes à 53 € de marge, ce qui fait 59 360 €. Le camion plein rapporte moins que le camion incomplet, parce que le prix a chuté davantage que le remplissage n'a monté.",
+      },
+      {
         id: "quand_accepter",
         prompt: "Dans quel cas ce contrat redeviendrait-il intéressant ?",
         options: [
           {
             id: "a",
             label:
-              "Si la flotte était sous-employée, ou s'il remplissait des retours aujourd'hui perdus",
+              "Si le remplissage tombait sous soixante pour cent, ou si le contrat prenait des retours aujourd'hui perdus",
           },
           { id: "b", label: "Si le distributeur payait comptant" },
           { id: "c", label: "Si le gazole baissait" },
@@ -495,7 +513,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "La même affaire est bonne ou mauvaise selon le taux de remplissage. C'est pourquoi la décision commerciale ne se prend jamais sans regarder d'abord la capacité.",
+          "Le contrat rapporte 44 800 € par porteur. Le trafic actuel rapporte 53 € par palette, donc il repasse devant dès que le porteur emmène 845 palettes, c'est-à-dire dès soixante pour cent de remplissage. La même affaire est bonne ou mauvaise selon ce seul chiffre, et c'est pourquoi la décision commerciale ne se prend jamais sans regarder d'abord la capacité.",
       },
     ],
     modelRelevance: {
@@ -506,11 +524,11 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
     },
     conceptCodes: ["capacity", "contribution_margin", "margin_rates", "variable_costs"],
     hints: hints([
-      "Demandez-vous ce que feraient ces trois porteurs sans ce contrat.",
+      "Demandez-vous ce que feraient ces deux porteurs sans ce contrat.",
       "Votre flotte est remplie à quatre-vingts pour cent : la capacité n'est pas libre.",
-      "Accepter, c'est refuser le trafic à 78 € que ces camions transportaient.",
-      "Comparez donc les marges par camion mobilisé, pas les prix à la palette.",
-      "Et notez que la réponse s'inverserait si la flotte tournait à moitié vide : la même affaire n'a pas la même valeur selon le remplissage.",
+      "Un porteur sous contrat emmène mille quatre cents palettes à 32 €, soit 57 − 25, de marge.",
+      "Sans le contrat, il en emmène mille cent vingt à 53 €, soit 78 − 25 : comparez les deux totaux, pas les deux prix.",
+      "Et notez que la réponse s'inverserait sous soixante pour cent de remplissage : la même affaire n'a pas la même valeur selon le camion qu'elle occupe.",
     ]),
     trigger: { round: 6 },
     weight: 1,

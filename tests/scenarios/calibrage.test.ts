@@ -204,6 +204,62 @@ describe("l'arithmétique écrite dans les situations", () => {
     expect(fautes, `divisions fausses :\n${fautes.join("\n")}`).toEqual([]);
   });
 
+  it("les arbitrages du transport comptent avec le coût de route du moteur", () => {
+    // Les situations du retour à vide et du contrat à refuser reposent
+    // entièrement sur une soustraction : le prix proposé moins le coût de route
+    // d'une palette. Si ce coût bouge dans le moteur et pas dans la prose, les
+    // deux situations continuent d'enseigner un arbitrage qui ne se vérifie
+    // plus en jouant, et c'est precisement le defaut qui a coûté le secteur.
+    const d = SCENARIOS.find((s) => s.code === "transport")!;
+    const route =
+      d.scenario.product.materialCostPerUnit + d.scenario.product.otherVariableCostPerUnit;
+    const prose = proseDe("transport").replace(/[\u00a0\u202f]/g, " ");
+    for (const prix of [52, 57, 78]) {
+      expect(
+        prose,
+        `l'arbitrage à ${prix} € ne retranche plus le coût de route de ${route} €`,
+      ).toContain(`soit ${prix} − ${route}`);
+    }
+    expect(prose, "le coût de route n'est plus nommé dans les indices").toContain(
+      `c'est sa route : ${route} € la palette`,
+    );
+  });
+
+  it("les produits posés dans le contrat à refuser tombent justes", () => {
+    // La situation compare deux camions : l'un plein à prix cassé, l'autre aux
+    // quatre cinquièmes au prix courant. Tout tient dans deux multiplications
+    // et une soustraction, qu'aucune garde d'arithmétique ne lisait puisqu'elles
+    // ne sont pas posées en chiffres dans la phrase.
+    const d = SCENARIOS.find((s) => s.code === "transport")!;
+    const route =
+      d.scenario.product.materialCostPerUnit + d.scenario.product.otherVariableCostPerUnit;
+    const parPorteur = 1400;
+    const remplissage = 0.8;
+    const sousContrat = parPorteur * (57 - route);
+    const aujourdHui = parPorteur * remplissage * (78 - route);
+    const prose = proseDe("transport").replace(/[\u00a0\u202f]/g, " ");
+    const euros = (n: number) => n.toLocaleString("fr-FR").replace(/[\u00a0\u202f]/g, " ");
+    for (const [quoi, valeur] of [
+      ["le porteur sous contrat", sousContrat],
+      ["le porteur au trafic courant", aujourdHui],
+      ["l'écart entre les deux", aujourdHui - sousContrat],
+    ] as const) {
+      expect(prose, `${quoi} ne vaut plus ${euros(valeur)} € dans la fiche`).toContain(
+        euros(valeur),
+      );
+    }
+    // Et le point de bascule annoncé : le trafic courant repasse devant dès que
+    // le porteur emmène assez de palettes pour battre le contrat.
+    const bascule = Math.round(sousContrat / (78 - route));
+    expect(prose, `le point de bascule n'est plus à ${bascule} palettes`).toContain(
+      `${euros(bascule)} palettes`,
+    );
+    expect(
+      Math.round((bascule / parPorteur) * 20) * 5,
+      "le taux de bascule annoncé dans la fiche n'est plus soixante pour cent",
+    ).toBe(60);
+  });
+
   it("le transport enseigne les coûts que le moteur lui applique", () => {
     // Le secteur qui a payé la leçon : ses situations chiffrent le coût d'une
     // palette, et ce chiffre DOIT être celui que le moteur facture.
