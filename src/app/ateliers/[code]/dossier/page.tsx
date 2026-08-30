@@ -70,8 +70,16 @@ export default async function DossierElevePage({
         <p className="mt-3 text-base italic leading-relaxed text-slate-300 print:text-black">
           {dossier.entete.pitch}
         </p>
-        <div className="mt-4 print:hidden">
+        {/* Deux formes du même dossier : la feuille qu'on imprime et remplit au
+            stylo, et le tableur qui calcule à mesure qu'on le remplit. */}
+        <div className="mt-4 flex flex-wrap gap-3 print:hidden">
           <PrintButton label="Imprimer ce dossier" />
+          <a
+            href={`/ateliers/${atelier.code}/tableau-de-bord`}
+            className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-white/30"
+          >
+            Tableau de bord en tableur
+          </a>
         </div>
       </header>
 
@@ -164,6 +172,87 @@ export default async function DossierElevePage({
               </p>
             </article>
           ))}
+        </div>
+      </section>
+
+      {/* Le tableau de bord de l'équipe, à remplir à la main tour après tour.
+          Les lignes viennent du produit : les décisions sont celles que le
+          niveau ouvre réellement, les indicateurs sont ceux du métier. */}
+      <section className="mt-10 break-before-page break-inside-avoid">
+        <h2 className="text-xl font-bold text-slate-100 print:text-black">
+          Votre tableau de bord
+        </h2>
+        <p className="mt-2 text-sm leading-relaxed text-slate-400 print:text-black">
+          À remplir tour après tour. Notez ce que vous décidez avant la clôture, ce que vous
+          obtenez après : c&apos;est la confrontation des deux qui se relit en fin d&apos;atelier,
+          pas la dernière ligne.
+        </p>
+        <p className="mt-2 text-sm leading-relaxed text-slate-400 print:hidden">
+          <a
+            href={`/ateliers/${atelier.code}/tableau-de-bord`}
+            className="text-amber-300 underline-offset-4 hover:underline"
+          >
+            La même chose en tableur
+          </a>{" "}
+          si vous préférez le remplir à l&apos;écran : le chiffre d&apos;affaires, l&apos;écart de
+          prévision et le résultat cumulé s&apos;y calculent seuls.
+        </p>
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full border-collapse text-xs">
+            <thead>
+              <tr>
+                <th className="border border-white/15 px-2 py-1.5 text-left font-semibold text-slate-300 print:border-black/40 print:text-black">
+                  Équipe :
+                </th>
+                {dossier.tableauDeBord.tours.map((t) => (
+                  <th
+                    key={t}
+                    className="w-24 border border-white/15 px-2 py-1.5 font-semibold text-slate-300 print:border-black/40 print:text-black"
+                  >
+                    Tour {t}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td
+                  colSpan={dossier.tableauDeBord.tours.length + 1}
+                  className="border border-white/15 bg-white/5 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-300 print:border-black/40 print:bg-transparent print:text-black"
+                >
+                  Ce que nous décidons
+                </td>
+              </tr>
+              {dossier.tableauDeBord.decisions.map((ligne) => (
+                <tr key={ligne}>
+                  <td className="border border-white/15 px-2 py-1.5 text-slate-300 print:border-black/40 print:text-black">
+                    {ligne}
+                  </td>
+                  {dossier.tableauDeBord.tours.map((t) => (
+                    <td key={t} className="h-7 border border-white/15 print:border-black/40" />
+                  ))}
+                </tr>
+              ))}
+              <tr>
+                <td
+                  colSpan={dossier.tableauDeBord.tours.length + 1}
+                  className="border border-white/15 bg-white/5 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-300 print:border-black/40 print:bg-transparent print:text-black"
+                >
+                  Ce que cela a donné
+                </td>
+              </tr>
+              {dossier.tableauDeBord.resultats.map((ligne) => (
+                <tr key={ligne}>
+                  <td className="border border-white/15 px-2 py-1.5 text-slate-300 print:border-black/40 print:text-black">
+                    {ligne}
+                  </td>
+                  {dossier.tableauDeBord.tours.map((t) => (
+                    <td key={t} className="h-7 border border-white/15 print:border-black/40" />
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </section>
 
