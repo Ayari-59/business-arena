@@ -12,6 +12,7 @@ import { cardByCode } from "@/config/events/cards";
 import { BpiPanel } from "@/components/bpi-panel";
 import { RevenueChart, TreasuryChart } from "@/components/charts";
 import { DecisionForm } from "@/components/decision-form";
+import { TeamNameForm } from "@/components/team-name-form";
 import { StudyReportsPanel } from "@/components/study-reports";
 import { FinancialStatements } from "@/components/financial-statements";
 import { DilemmaCard, ParametersPanels } from "@/components/decision-context";
@@ -86,6 +87,10 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
           </p>
         </div>
       </header>
+
+      {view.peutSeNommer ? (
+        <TeamNameForm gameId={gameId} nomActuel={view.playerTeamName} />
+      ) : null}
 
       {r ? (
         <>

@@ -3,7 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { getGuestUserId } from "@/lib/guest";
 import { roundDecisionsSchema } from "@/services/decision-schema";
-import { getGameKind, resolveCurrentRound, submitTeamDecisions } from "@/services/game.service";
+import {
+  getGameKind,
+  nommerEquipe,
+  resolveCurrentRound,
+  submitTeamDecisions,
+} from "@/services/game.service";
 import { submitDiagnosis, submitQuiz, unlockHint } from "@/services/pedagogy.service";
 
 export interface PlayRoundState {
@@ -167,6 +172,27 @@ export async function submitQuizAction(
     await submitQuiz({ instanceId, userId, answers });
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Erreur." };
+  }
+  revalidatePath(`/arena/${gameId}`);
+  return { error: null };
+}
+
+export interface NomEquipeState {
+  error: string | null;
+}
+
+/** L'équipe se donne un nom, au premier tour et une seule fois. */
+export async function nommerEquipeAction(
+  gameId: string,
+  _previous: NomEquipeState,
+  formData: FormData,
+): Promise<NomEquipeState> {
+  const userId = await getGuestUserId();
+  if (!userId) return { error: "Session expirée : rejoignez la partie à nouveau." };
+  try {
+    await nommerEquipe({ gameId, userId, nom: String(formData.get("nom") ?? "") });
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Le nom n'a pas pu être enregistré." };
   }
   revalidatePath(`/arena/${gameId}`);
   return { error: null };

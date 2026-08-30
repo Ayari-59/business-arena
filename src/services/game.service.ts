@@ -41,6 +41,7 @@ import {
 } from "@/config/scenarios/periodicity";
 import { applyMarketScale } from "@/config/scenarios/market-scale";
 import { applyRoundsCount } from "@/config/scenarios/rounds";
+import { porteUnNomParDefaut, validerNomEquipe } from "@/config/nom-equipe";
 import { applyScenarioVariability } from "@/config/scenarios/variability";
 import { parseScenarioConfig } from "@/config/scenarios/schema";
 import {
@@ -489,6 +490,40 @@ async function findUserTeam(gameId: string, userId: string) {
 }
 
 /** Soumet (valide) les décisions de l'équipe de l'utilisateur pour le tour courant. */
+/**
+ * L'équipe se donne un nom, tant que le premier tour n'est pas clos.
+ *
+ * Après, le nom se fige : un classement qui change d'intitulé en cours de
+ * partie devient illisible, pour la classe comme pour le relevé de notes.
+ */
+export async function nommerEquipe(args: {
+  gameId: string;
+  userId: string;
+  nom: string;
+}): Promise<{ nom: string }> {
+  const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
+  if (!game) throw new Error("Partie introuvable");
+  if (game.currentRound > 1) {
+    throw new Error("Le nom se fige après le premier tour : celui-ci est déjà clos.");
+  }
+  const team = await findUserTeam(args.gameId, args.userId);
+  if (!team) throw new Error("Vous n'êtes pas membre de cette partie");
+
+  const valide = validerNomEquipe(args.nom);
+  if ("erreur" in valide) throw new Error(valide.erreur);
+
+  const voisines = await db.select().from(teams).where(eq(teams.gameId, args.gameId));
+  const prise = voisines.some(
+    (t) =>
+      t.id !== team.id &&
+      t.name.localeCompare(valide.nom, "fr", { sensitivity: "base" }) === 0,
+  );
+  if (prise) throw new Error("Une autre équipe porte déjà ce nom.");
+
+  await db.update(teams).set({ name: valide.nom }).where(eq(teams.id, team.id));
+  return { nom: valide.nom };
+}
+
 export async function submitTeamDecisions(args: {
   gameId: string;
   userId: string;
@@ -1072,6 +1107,7 @@ export interface GameView {
   roundDays: number;
   playerTeamId: string;
   playerTeamName: string;
+  peutSeNommer: boolean;
   /** Décisions déjà validées par l'équipe pour le tour courant (mode classe). */
   pendingDecisions: RoundDecisions | null;
   /** Cartes événement annoncées par l'enseignant pour le tour courant. */
@@ -1711,6 +1747,9 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     roundDays: (game.scenarioSnapshot as { roundDays: number }).roundDays,
     playerTeamId: playerTeam.id,
     playerTeamName: teamDisplayName(playerTeam.name),
+    // L'équipe peut encore se nommer tant qu'elle porte son numéro et que le
+    // premier tour n'est pas clos.
+    peutSeNommer: porteUnNomParDefaut(playerTeam.name) && game.currentRound === 1,
     pendingDecisions,
     announcedEventCards: readPendingEvents(game.difficultyProfile).map((card) => {
       const target = card.teamId ? teamRows.find((t) => t.id === card.teamId) : undefined;
