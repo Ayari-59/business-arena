@@ -83,8 +83,17 @@ export const REFERENTIELS: Record<string, Referentiel> = {
  * Les diplômes dont la liste n'a pas encore été confrontée à son texte.
  *
  * Ils sont nommés plutôt que passés sous silence : la garde les laisse
- * tranquilles, et cette liste dit pourquoi. Le BTS Comptabilité et Gestion et
- * le DCG attendent que leurs référentiels soient déposés ; l'animation de lycée
- * porte ses thèmes dans son propre fichier, deux programmes sur trois vérifiés.
+ * tranquilles, et ce commentaire dit où en est chacun.
+ *
+ * `cg1` — le mot est le bon : le BTS Comptabilité et Gestion découpe bien le
+ * métier en PROCESSUS, confirmé par l'enseignant qui édite ces ateliers. Ses
+ * cinq intitulés, eux, n'ont pas été relus sur l'arrêté. Rien ne les impose ici
+ * pour autant : le mot d'un référentiel reste un choix d'affichage, et une
+ * confirmation orale n'est pas une raison d'en faire une règle de compilation.
+ *
+ * `dcg` — ni le mot ni les intitulés n'ont été vérifiés.
+ *
+ * `stmg` — porte ses thèmes dans son propre fichier, où deux programmes sur
+ * trois ont été lus sur le texte.
  */
 export const REFERENTIELS_NON_VERIFIES = ["cg1", "dcg", "stmg"] as const;

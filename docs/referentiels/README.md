@@ -25,9 +25,10 @@ vérification suivante n'ait pas à tout refaire.
 - **Le programme de management de première STMG** : son annexe n'a pas été
   déposée. Les trois thèmes cités par le produit viennent de recherches
   concordantes, pas du texte.
-- Les référentiels du BTS **CG** et du **DCG** : aucun n'a été confronté à son
-  atelier. Le produit leur prête des « processus » et des « unités
-  d'enseignement », ce qui reste à confirmer.
+- **BTS CG** : le mot est confirmé, ce diplôme découpe bien le métier en
+  **processus**. Ses cinq intitulés, eux, n'ont pas été relus sur l'arrêté.
+- **DCG** : ni le mot ni les intitulés n'ont été vérifiés. Le produit lui prête
+  des « unités d'enseignement ».
 
 ## Notions : ce que l'arrêté du BTS MCO nomme, et ce qu'il ne nomme pas
 
