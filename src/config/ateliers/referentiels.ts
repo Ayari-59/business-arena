@@ -80,6 +80,27 @@ export const REFERENTIELS: Record<string, Referentiel> = {
       "P7 · Fiabilisation de l'information et système d'information comptable (SIC)",
     ],
   },
+  dcg: {
+    label: "Unités d'enseignement",
+    accord: "mobilisées",
+    source:
+      "Annexe 1, programme des unités d'enseignement du diplôme de comptabilité et de gestion. Lu sur le texte. Il s'agit du programme réformé, celui qui porte la durabilité et l'intelligence artificielle dans plusieurs unités.",
+    entrees: [
+      "UE1 · Fondamentaux du droit",
+      "UE2 · Droit des affaires",
+      "UE3 · Droit social",
+      "UE4 · Droit fiscal",
+      "UE5 · Économie contemporaine",
+      "UE6 · Finance d'entreprise",
+      "UE7 · Management des organisations",
+      "UE8 · Système d'information de gestion",
+      "UE9 · Comptabilité",
+      "UE10 · Comptabilité approfondie",
+      "UE11 · Contrôle de gestion",
+      "UE12 · Anglais des affaires",
+      "UE13 · Communication professionnelle",
+    ],
+  },
   gpme: {
     label: "Blocs de compétences",
     accord: "mobilisés",
@@ -100,15 +121,7 @@ export const REFERENTIELS: Record<string, Referentiel> = {
  * Ils sont nommés plutôt que passés sous silence : la garde les laisse
  * tranquilles, et ce commentaire dit où en est chacun.
  *
- * `dcg` — le mot est le bon : le diplôme de comptabilité et de gestion découpe
- * en UNITÉS D'ENSEIGNEMENT, confirmé par l'enseignant qui édite ces ateliers.
- * Elles y jouent le rôle que les processus ou les matières tiennent en section
- * de technicien supérieur, ce qui explique que le mot change d'un diplôme à
- * l'autre sans que la chose change vraiment. Les deux intitulés cités,
- * finance d'entreprise et contrôle de gestion, n'ont pas été relus sur le
- * texte.
- *
  * `stmg` — porte ses thèmes dans son propre fichier, où deux programmes sur
  * trois ont été lus sur le texte.
  */
-export const REFERENTIELS_NON_VERIFIES = ["dcg", "stmg"] as const;
+export const REFERENTIELS_NON_VERIFIES = ["stmg"] as const;

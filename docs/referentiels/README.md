@@ -19,6 +19,7 @@ vérification suivante n'ait pas à tout refaire.
 | Référentiel du BTS Négociation et digitalisation de la relation client | les trois blocs de compétences | conformes : relation client et négociation-vente, relation client à distance et digitalisation, relation client et animation de réseaux |
 | Référentiel du BTS Gestion de la PME | le mot du référentiel et les quatre intitulés | **deux erreurs**. Le texte parle de **blocs de compétences**, le produit disait « activités », mot qui y désigne le découpage fin à l'intérieur d'un bloc. Et deux intitulés sur quatre étaient tronqués, amputés du « de la PME » qui les termine |
 | Référentiel du BTS Support à l'action managériale | rien pour l'instant | aucun atelier ne vise ce diplôme. Ses blocs, pour mémoire : optimisation des processus administratifs, gestion de projet, collaboration à la gestion des ressources humaines, et une culture économique, juridique et managériale |
+| Annexe 1, programme des unités d'enseignement du DCG (programme réformé) | le mot du référentiel, les deux unités citées, et la substance des cinq séances | **aucune erreur**. Le texte s'intitule « programme des **unités d'enseignement** », et les deux unités citées sont exactes : **UE 6 finance d'entreprise** et **UE 11 contrôle de gestion**. Les treize unités sont maintenant au registre. Les vingt-cinq notions promises par les séances se retrouvent toutes au programme, aux bons endroits : le levier opérationnel et l'effet de levier financier en UE 6 1.3, les écarts sur prix, volume et coûts en UE 11 3.3, les soldes intermédiaires et la capacité d'autofinancement en UE 6 1.2 |
 | Arrêté du 3 novembre 2014, BTS Comptabilité et gestion, annexe I b, modifié en juin puis septembre 2016 | le mot du référentiel, les sept processus, et les deux pièces que l'atelier promet | **aucune erreur**. Le texte découpe bien en **processus**, et les cinq intitulés cités par l'atelier sont exacts à la lettre près : P1 contrôle et traitement comptable des opérations commerciales, P3 gestion des obligations fiscales, P5 analyse et prévision de l'activité, P6 analyse de la situation financière, P7 fiabilisation de l'information et système d'information comptable. Le texte porte en plus P2 contrôle et production de l'information financière et P4 gestion des relations sociales, qu'aucune séance ne mobilise. Il confirme aussi les deux objets que l'atelier nomme : l'**atelier professionnel** est une modalité d'enseignement du diplôme (annexe III c) et le **passeport professionnel** en est une pièce (annexe III d) |
 
 ## Ce qui reste à vérifier
@@ -26,15 +27,27 @@ vérification suivante n'ait pas à tout refaire.
 - **Le programme de management de première STMG** : son annexe n'a pas été
   déposée. Les trois thèmes cités par le produit viennent de recherches
   concordantes, pas du texte.
-- **DCG** : le mot est confirmé, ce diplôme découpe en **unités
-  d'enseignement**, qui y jouent le rôle des processus ou des matières d'un
-  BTS. Ses deux intitulés cités, finance d'entreprise et contrôle de gestion,
-  n'ont pas été relus sur le texte.
+Les six diplômes ont donc leur mot juste, et cinq l'ont été sur le texte. Il ne
+reste qu'une lecture : les trois thèmes du programme de management de première
+STMG.
 
-Les six diplômes ont donc leur mot juste : cinq l'ont été sur le texte, un par
-l'enseignant qui édite ces ateliers. Ce qui reste ouvert n'est plus le
-vocabulaire, ce sont les deux intitulés du DCG et les trois thèmes du
-management de première STMG.
+## Deux points que le programme du DCG tranche, et ce qu'on en fait
+
+**Le mot « seuil de rentabilité ».** L'UE 11 écrit noir sur blanc : « On parlera
+plutôt de seuil de profitabilité que de seuil de rentabilité. » L'UE 6, dans le
+même programme, écrit « seuil de rentabilité et point mort d'exploitation ».
+Les deux unités du même diplôme ne disent donc pas la même chose. Le produit
+emploie « seuil de rentabilité » partout, ce que l'UE 6 appuie, et c'est aussi
+le mot des cinq autres diplômes. Rien n'est changé : le vocabulaire d'un
+référentiel reste un choix d'affichage, et en changer pour un seul diplôme
+casserait la continuité avec les cinq autres.
+
+**Le plan de trésorerie.** L'UE 6 précise que « la construction du plan de
+trésorerie n'est pas demandée, mais uniquement son interprétation ». La séance
+4 de l'atelier le fait CONSTRUIRE, et le dépose à la banque du jeu, qui le lit.
+C'est plus que ce que l'unité exige, et c'est délibéré : le plan est un
+mécanisme du secteur, sans lui la demande d'emprunt n'est pas instruite. Faire
+construire ce que l'épreuve demande de lire prépare mieux, pas moins bien.
 
 ## Notions : ce que l'arrêté du BTS MCO nomme, et ce qu'il ne nomme pas
 
