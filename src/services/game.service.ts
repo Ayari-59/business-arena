@@ -53,6 +53,7 @@ import { getPlatformConfig } from "@/services/admin.service";
 import { assertCanCreateGame } from "@/services/licence.service";
 import { TEACHER_DRAWABLE_CODES, TEAM_CARD_CODES, cardByCode } from "@/config/events/cards";
 import { botDecisions, neutralDecisions, type BotProfile } from "@/engine/bots";
+import { carryOverDecisions, fallbackDecisions } from "@/services/decision.service";
 import {
   BPI_DIMENSIONS,
   computeRoundScores,
@@ -463,17 +464,6 @@ function sumSold(bySegment: CompanyRoundResult["market"]["bySegment"]): number {
  * unités, appliqué à un cabinet qui n'en produit que 720. Une équipe en retard
  * ne se voyait pas reconduire son tour, elle se voyait attribuer une faillite.
  */
-function fallbackDecisions(
-  scenario: EngineScenarioConfig,
-  state: CompanyState,
-  roundIndex: number,
-): RoundDecisions {
-  return {
-    ...neutralDecisions({ scenario, state, roundIndex }),
-    finance: { newLoan: 0, loanRepayment: 0 },
-  };
-}
-
 /** Équipe (humaine) d'un utilisateur dans une partie, ou null. */
 async function findUserTeam(gameId: string, userId: string) {
   const teamRows = await db.select().from(teams).where(eq(teams.gameId, gameId));
@@ -674,20 +664,7 @@ async function resolveGameRound(
       if (own) {
         allDecisions[team.id] = own.payload as RoundDecisions;
       } else if (previousPayloads[team.id]) {
-        const prev = previousPayloads[team.id]!;
-        // reconduction : l'indice de salaire et le remboursement d'emprunt
-        // sont récurrents ; embauches, formation, investissement, nouvel
-        // emprunt et apport en capital sont des actions PONCTUELLES.
-        allDecisions[team.id] = {
-          ...prev,
-          hr: prev.hr ? { salaryIndex: prev.hr.salaryIndex } : undefined,
-          supplierChoice: prev.supplierChoice,
-          investment: undefined,
-          treasury: undefined,
-          finance: undefined, // échéances automatiques ; emprunt/anticipé/capital : ponctuels
-          acceptOrder: undefined, // chaque commande exceptionnelle se décide
-          studies: undefined, // l'information s'achète tour par tour
-        };
+        allDecisions[team.id] = carryOverDecisions(previousPayloads[team.id]!);
         carriedOver.add(team.id);
       } else {
         allDecisions[team.id] = fallbackDecisions(scenario, state, roundIndex);
