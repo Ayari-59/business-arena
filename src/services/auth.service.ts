@@ -29,8 +29,6 @@ export async function registerTeacher(args: {
   inviteCode?: string;
 }): Promise<{ userId: string } | { error: string }> {
   const email = args.email.trim().toLowerCase();
-  const existing = await db.select({ id: users.id }).from(users).where(eq(users.email, email));
-  if (existing[0]) return { error: "Un compte existe déjà avec cet e-mail." };
   if (args.password.length < 8) return { error: "Mot de passe : 8 caractères minimum." };
 
   const invite = args.inviteCode?.trim() ? await resolveInvite(args.inviteCode) : null;
@@ -62,15 +60,31 @@ export async function registerTeacher(args: {
   const inserted = await db
     .insert(users)
     .values({ email, passwordHash, displayName: args.displayName.trim() || "Enseignant" })
+    .onConflictDoNothing()
     .returning({ id: users.id });
-  const userId = inserted[0]!.id;
+
+  let userId: string;
+  if (inserted[0]) {
+    userId = inserted[0].id;
+  } else {
+    const row = (await db.select().from(users).where(eq(users.email, email)))[0];
+    if (!row?.passwordHash) return { error: "Un compte existe déjà avec cet e-mail." };
+    const match = await bcrypt.compare(args.password, row.passwordHash);
+    if (!match) return { error: "Un compte existe déjà avec cet e-mail." };
+    const membership = await db
+      .select({ organizationId: organizationMembers.organizationId })
+      .from(organizationMembers)
+      .where(eq(organizationMembers.userId, row.id));
+    if (membership.length > 0) return { error: "Un compte existe déjà avec cet e-mail." };
+    userId = row.id;
+  }
 
   if (invite) {
     await db.insert(organizationMembers).values({
       userId,
       organizationId: invite.organizationId,
       role: invite.role,
-    });
+    }).onConflictDoNothing();
   } else {
     const org = await db
       .insert(organizations)
@@ -84,7 +98,7 @@ export async function registerTeacher(args: {
       userId,
       organizationId: org[0]!.id,
       role: "org_admin",
-    });
+    }).onConflictDoNothing();
   }
 
   await promoteIfBootstrapAdmin(userId, email);
