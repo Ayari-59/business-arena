@@ -352,6 +352,27 @@ async function resolveGameRound(
       .onConflictDoNothing();
 
     const finished = roundIndex >= scenario.roundsCount;
+
+    // Post-traitement AVANT l'avancement d'état : si l'une de ces étapes
+    // échoue, le round reste en « resolving » et le catch le remet à « open ».
+    await debriefRound(gameId, roundIndex);
+
+    const pedagogyByTeam = await readPedagogyInputs(roundRow.id);
+    await persistRoundScores({
+      roundId: roundRow.id,
+      scenario,
+      teamRows,
+      results: output.results,
+      allDecisions,
+      pedagogyByTeam,
+    });
+    await updateRankings(gameId, teamRows.map((t) => t.id));
+
+    if (!finished) {
+      await openSituationsForRound(gameId, roundIndex + 1, output.results);
+    }
+
+    // Avancement d'état seulement après succès complet du post-traitement
     await db
       .update(rounds)
       .set({ status: "resolved", resolvedAt: new Date() })
@@ -376,27 +397,6 @@ async function resolveGameRound(
       })
       .where(eq(games.id, gameId));
 
-    // Moteur pédagogique d'abord (doc 03) : le débriefing calcule les scores
-    // de situations dont dépend la dimension « maîtrise des modèles » du BPI
-    await debriefRound(gameId, roundIndex);
-
-    // Scoring BPI du tour (doc 08) puis classement de partie
-    // La dépendance pedagogy→scoring est explicite : readPedagogyInputs
-    // lit les finalScore produits par debriefRound ci-dessus.
-    const pedagogyByTeam = await readPedagogyInputs(roundRow.id);
-    await persistRoundScores({
-      roundId: roundRow.id,
-      scenario,
-      teamRows,
-      results: output.results,
-      allDecisions,
-      pedagogyByTeam,
-    });
-    await updateRankings(gameId, teamRows.map((t) => t.id));
-
-    if (!finished) {
-      await openSituationsForRound(gameId, roundIndex + 1, output.results);
-    }
     return { roundIndex, finished };
   } catch (error) {
     // libère le verrou pour permettre une nouvelle tentative

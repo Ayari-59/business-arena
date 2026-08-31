@@ -4,7 +4,7 @@ import { and, eq } from "drizzle-orm";
 /**
  * Tests de protection de resolveGameRound :
  * A) Tour déjà en résolution → une seule résolution
- * B) Échec pendant la résolution → verrou libéré
+ * B) Échec pendant la résolution → verrou libéré, round récupérable
  * C) Ordre pedagogy → scoring respecté
  */
 
@@ -16,6 +16,7 @@ vi.mock("@/db", async () => {
 import { db } from "@/db";
 import { games, rounds, roundResults, scores, users } from "@/db/schema";
 import { createSoloGame, resolveCurrentRound } from "@/services/game.service";
+import * as pedagogy from "@/services/pedagogy.service";
 import type { RoundDecisions } from "@/engine/types";
 
 const DECISIONS: RoundDecisions = {
@@ -81,19 +82,56 @@ describe("A — tour déjà en résolution (double résolution simultanée)", ()
   });
 });
 
-describe("B — échec pendant la résolution → verrou libéré", () => {
-  it("le tour revient à 'open' si une erreur survient après le verrouillage", async () => {
+describe("B — échec pendant le post-traitement → verrou libéré, état récupérable", () => {
+  it("le round revient à 'open' si debriefRound échoue", async () => {
     const gameId = await createSoloGame(userId, "quarter", 2);
 
-    // On vérifie que le mécanisme catch libère le verrou en testant le
-    // comportement observable : après un échec, on peut retenter avec succès
-    // Forcer un échec est complexe sans mock profond, donc on vérifie le
-    // comportement normal : après résolution, le tour suivant est bien ouvert
-    await resolveCurrentRound({ gameId, userId, playerDecisions: DECISIONS });
+    const spy = vi.spyOn(pedagogy, "debriefRound").mockRejectedValueOnce(
+      new Error("simulated post-processing failure"),
+    );
+
+    await expect(
+      resolveCurrentRound({ gameId, userId, playerDecisions: DECISIONS }),
+    ).rejects.toThrow("simulated post-processing failure");
+
+    spy.mockRestore();
 
     const allRounds = await db.select().from(rounds).where(eq(rounds.gameId, gameId));
+    const round1 = allRounds.find((r) => r.index === 1)!;
+    expect(round1.status).toBe("open");
+
+    const game = (await db.select().from(games).where(eq(games.id, gameId)))[0]!;
+    expect(game.currentRound).toBe(1);
+    expect(game.status).toBe("running");
+  });
+
+  it("après échec, une nouvelle tentative réussit normalement", async () => {
+    const gameId = await createSoloGame(userId, "quarter", 2);
+
+    const spy = vi.spyOn(pedagogy, "debriefRound").mockRejectedValueOnce(
+      new Error("transient failure"),
+    );
+
+    await expect(
+      resolveCurrentRound({ gameId, userId, playerDecisions: DECISIONS }),
+    ).rejects.toThrow("transient failure");
+
+    spy.mockRestore();
+
+    const result = await resolveCurrentRound({
+      gameId, userId, playerDecisions: DECISIONS,
+    });
+    expect(result.roundIndex).toBe(1);
+
+    const allRounds = await db.select().from(rounds).where(eq(rounds.gameId, gameId));
+    const round1 = allRounds.find((r) => r.index === 1)!;
+    expect(round1.status).toBe("resolved");
+
     const round2 = allRounds.find((r) => r.index === 2);
     expect(round2?.status).toBe("open");
+
+    const game = (await db.select().from(games).where(eq(games.id, gameId)))[0]!;
+    expect(game.currentRound).toBe(2);
   });
 });
 
