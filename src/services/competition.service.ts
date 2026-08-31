@@ -268,29 +268,29 @@ async function stageStandings(stageId: string): Promise<GroupStanding[][]> {
     .select()
     .from(games)
     .where(eq(games.competitionStageId, stageId));
-  const standings: GroupStanding[][] = [];
-  for (const game of stageGames) {
-    const teamRows = await db.select().from(teams).where(eq(teams.gameId, game.id));
-    const rankings = await db
-      .select()
-      .from(gameRankings)
-      .where(eq(gameRankings.gameId, game.id));
-    standings.push(
-      rankings.map((r) => {
-        const detail = r.detail as {
-          dimensions?: Record<string, number>;
-          cumulativeNetIncome?: number;
-        };
-        return {
-          entryId: teamRows.find((t) => t.id === r.teamId)?.name ?? "?",
-          bpi: Number(r.bpi),
-          financial: detail.dimensions?.["financial"] ?? 0,
-          lastTreasury: detail.cumulativeNetIncome ?? 0,
-        };
-      }),
-    );
-  }
-  return standings;
+  if (stageGames.length === 0) return [];
+  const gameIds = stageGames.map((g) => g.id);
+  const allTeams = await db.select().from(teams).where(inArray(teams.gameId, gameIds));
+  const allRankings = await db
+    .select()
+    .from(gameRankings)
+    .where(inArray(gameRankings.gameId, gameIds));
+  return stageGames.map((game) => {
+    const teamRows = allTeams.filter((t) => t.gameId === game.id);
+    const rankings = allRankings.filter((r) => r.gameId === game.id);
+    return rankings.map((r) => {
+      const detail = r.detail as {
+        dimensions?: Record<string, number>;
+        cumulativeNetIncome?: number;
+      };
+      return {
+        entryId: teamRows.find((t) => t.id === r.teamId)?.name ?? "?",
+        bpi: Number(r.bpi),
+        financial: detail.dimensions?.["financial"] ?? 0,
+        lastTreasury: detail.cumulativeNetIncome ?? 0,
+      };
+    });
+  });
 }
 
 /** Lance la finale : qualifie les meilleurs de chaque groupe (doc 04 §3). */
