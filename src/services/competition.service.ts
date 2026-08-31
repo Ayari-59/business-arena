@@ -1,5 +1,5 @@
 import { randomInt } from "node:crypto";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   competitionEntries,
@@ -91,36 +91,74 @@ export async function joinCompetition(args: {
   const label = args.teamLabel.trim().slice(0, 40);
   if (!label) return { error: "Donnez un nom à votre équipe." };
 
+  // Fast non-atomic pre-check (safety net, not authoritative)
   const entries = await db
     .select()
     .from(competitionEntries)
     .where(eq(competitionEntries.competitionId, competition.id));
-  // déjà inscrit quelque part ?
   const existing = entries.find((e) => e.memberUserIds.includes(args.userId));
   if (existing) return { competitionId: competition.id };
 
-  const sameLabel = entries.find((e) => e.teamLabel.toLowerCase() === label.toLowerCase());
-  if (sameLabel) {
-    if (sameLabel.memberUserIds.length >= 6)
-      return { error: "Cette équipe est complète (6 joueurs max)." };
-    await db
-      .update(competitionEntries)
-      .set({ memberUserIds: [...sameLabel.memberUserIds, args.userId] })
-      .where(
-        and(
-          eq(competitionEntries.competitionId, competition.id),
-          eq(competitionEntries.teamLabel, sameLabel.teamLabel),
-        ),
-      );
+  // Atomic join: UPDATE with array_append + WHERE guards
+  const updated = await db
+    .update(competitionEntries)
+    .set({
+      memberUserIds: sql`array_append(${competitionEntries.memberUserIds}, ${args.userId}::uuid)`,
+    })
+    .where(
+      and(
+        eq(competitionEntries.competitionId, competition.id),
+        sql`lower(${competitionEntries.teamLabel}) = lower(${label})`,
+        sql`NOT (${args.userId}::uuid = ANY(${competitionEntries.memberUserIds}))`,
+        sql`array_length(${competitionEntries.memberUserIds}, 1) < 6`,
+      ),
+    )
+    .returning({ teamLabel: competitionEntries.teamLabel });
+
+  if (updated.length > 0) {
+    // Successfully joined existing team
   } else {
+    // Determine why UPDATE returned 0 rows
+    const sameLabel = entries.find((e) => e.teamLabel.toLowerCase() === label.toLowerCase());
+    if (sameLabel) {
+      if (sameLabel.memberUserIds.includes(args.userId))
+        return { competitionId: competition.id };
+      return { error: "Cette équipe est complète (6 joueurs max)." };
+    }
+    // New team — INSERT with capacity guard
     if (entries.length >= 32) return { error: "Le concours est complet (32 équipes)." };
-    await db.insert(competitionEntries).values({
-      competitionId: competition.id,
-      teamLabel: label,
-      memberUserIds: [args.userId],
-      organizationId: competition.organizationId,
-      status: "registered",
-    });
+    try {
+      await db.insert(competitionEntries).values({
+        competitionId: competition.id,
+        teamLabel: label,
+        memberUserIds: [args.userId],
+        organizationId: competition.organizationId,
+        status: "registered",
+      });
+    } catch (err: unknown) {
+      const pg = (err as { cause?: { code?: string } }).cause ?? (err as { code?: string });
+      if (pg.code === "23505") {
+        // Case-insensitive label collision — retry as join
+        const retried = await db
+          .update(competitionEntries)
+          .set({
+            memberUserIds: sql`array_append(${competitionEntries.memberUserIds}, ${args.userId}::uuid)`,
+          })
+          .where(
+            and(
+              eq(competitionEntries.competitionId, competition.id),
+              sql`lower(${competitionEntries.teamLabel}) = lower(${label})`,
+              sql`NOT (${args.userId}::uuid = ANY(${competitionEntries.memberUserIds}))`,
+              sql`array_length(${competitionEntries.memberUserIds}, 1) < 6`,
+            ),
+          )
+          .returning({ teamLabel: competitionEntries.teamLabel });
+        if (retried.length === 0)
+          return { error: "Cette équipe est complète (6 joueurs max)." };
+      } else {
+        throw err;
+      }
+    }
   }
   if (args.pseudo?.trim()) {
     await db.update(users).set({ displayName: args.pseudo.trim() }).where(eq(users.id, args.userId));
