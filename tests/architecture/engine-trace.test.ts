@@ -16,7 +16,7 @@ import { describe, expect, it } from "vitest";
  */
 
 const RESOLUTION_SOURCE = readFileSync("src/services/round-resolution.service.ts", "utf-8");
-const GAME_SOURCE = readFileSync("src/services/game.service.ts", "utf-8");
+const GAME_SOURCE = readFileSync("src/services/game-view.service.ts", "utf-8");
 
 /** Contenu d'un littéral `{ … }` qui démarre à `ancre`, accolades comptées. */
 function corpsApres(ancre: string, source: string, fichier: string): string {
@@ -52,7 +52,7 @@ function clesDePremierNiveau(corps: string): Set<string> {
 describe("trace du moteur persistée", () => {
   it("tout bloc relu à l'affichage est bien écrit à la clôture", () => {
     const ecrites = clesDePremierNiveau(corpsApres("engineTrace: {", RESOLUTION_SOURCE, "round-resolution.service.ts"));
-    const relues = clesDePremierNiveau(corpsApres("const trace = row.engineTrace as {", GAME_SOURCE, "game.service.ts"));
+    const relues = clesDePremierNiveau(corpsApres("const trace = row.engineTrace as {", GAME_SOURCE, "game-view.service.ts"));
 
     expect(ecrites.size, "la liste écrite n'a pas été trouvée").toBeGreaterThan(5);
     expect(relues.size, "la liste relue n'a pas été trouvée").toBeGreaterThan(5);
