@@ -146,25 +146,27 @@ export async function getTeacherGames(teacherId: string): Promise<TeacherGameSum
     .from(games)
     .where(eq(games.createdBy, teacherId))
     .orderBy(desc(games.createdAt));
-  const out: TeacherGameSummary[] = [];
-  for (const g of rows) {
-    if ((g.difficultyProfile as { kind?: string }).kind !== "class") continue;
-    const teamRows = await db
-      .select({ id: teams.id })
-      .from(teams)
-      .where(and(eq(teams.gameId, g.id), eq(teams.controller, "human")));
-    out.push({
-      gameId: g.id,
-      joinCode: g.joinCode,
-      status: g.status,
-      currentRound: g.currentRound,
-      roundsCount: (g.scenarioSnapshot as { roundsCount: number }).roundsCount,
-      roundDays: (g.scenarioSnapshot as { roundDays: number }).roundDays,
-      teamsCount: teamRows.length,
-      createdAt: g.createdAt,
-    });
-  }
-  return out;
+  const classGames = rows.filter(
+    (g) => (g.difficultyProfile as { kind?: string }).kind === "class",
+  );
+  if (classGames.length === 0) return [];
+  const gameIds = classGames.map((g) => g.id);
+  const allTeams = await db
+    .select({ gameId: teams.gameId })
+    .from(teams)
+    .where(and(inArray(teams.gameId, gameIds), eq(teams.controller, "human")));
+  const countByGame = new Map<string, number>();
+  for (const t of allTeams) countByGame.set(t.gameId, (countByGame.get(t.gameId) ?? 0) + 1);
+  return classGames.map((g) => ({
+    gameId: g.id,
+    joinCode: g.joinCode,
+    status: g.status,
+    currentRound: g.currentRound,
+    roundsCount: (g.scenarioSnapshot as { roundsCount: number }).roundsCount,
+    roundDays: (g.scenarioSnapshot as { roundDays: number }).roundDays,
+    teamsCount: countByGame.get(g.id) ?? 0,
+    createdAt: g.createdAt,
+  }));
 }
 
 /**
