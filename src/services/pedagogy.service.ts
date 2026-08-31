@@ -38,6 +38,7 @@ import { evaluateDiagnosis, evaluateQuiz } from "@/pedagogy/evaluation";
 import { detectSituations } from "@/pedagogy/detection";
 import { AXES, aggregateAxis, updateMastery } from "@/pedagogy/progress";
 import { adaptiveHintMultiplier, playerStrength } from "@/pedagogy/adaptivity";
+import { computeRawSituationScore } from "@/pedagogy/scoring";
 import type { CompanyRoundResult } from "@/engine/types";
 
 /**
@@ -412,16 +413,11 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
     const levels = await unlockedLevels(instance.id);
     const diagScore =
       ((instance.diagnosis as { score?: number } | null)?.score as number | undefined) ?? 0;
-    // Aucune question posée : le score repose ENTIÈREMENT sur le diagnostic.
-    // Ne pas neutraliser la moitié « questions » reviendrait à plafonner
-    // toutes les situations à 50 % pour une question jamais posée.
-    let raw: number;
-    if (askedQuestions(def, quizMode).length === 0) {
-      raw = diagScore;
-    } else {
-      const quizStored = instance.quiz as { score?: number } | null;
-      let knowledgeScore = quizStored?.score ?? null;
-      if (knowledgeScore === null) {
+    const hasQuizQuestions = askedQuestions(def, quizMode).length > 0;
+    let quizScore: number | null = null;
+    if (hasQuizQuestions) {
+      quizScore = (instance.quiz as { score?: number } | null)?.score ?? null;
+      if (quizScore === null) {
         // instances antérieures au QCM : repli sur le choix de modèle historisé
         const choice = (
           await db
@@ -429,12 +425,10 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
             .from(modelChoices)
             .where(eq(modelChoices.situationInstanceId, instance.id))
         )[0];
-        knowledgeScore = choice ? Number(choice.modelScore ?? 0) : 0;
+        quizScore = choice ? Number(choice.modelScore ?? 0) : 0;
       }
-      raw = 0.5 * diagScore + 0.5 * knowledgeScore;
     }
-    // Score de base (avant pénalité d'indices) : commun à toute l'équipe.
-    // La pénalité, elle, est individuelle : un élève faible paie moins cher.
+    const raw = computeRawSituationScore({ diagnosisScore: diagScore, quizScore, hasQuizQuestions });
     const baseMultiplier = hintScoreMultiplier(levels, def.hints);
     const teamScore = raw * baseMultiplier;
 
@@ -1201,10 +1195,13 @@ export async function getGameGradeSheet(
     // le fait le débriefing, faute de quoi l'écart contiendrait aussi les
     // questions laissées sans réponse.
     const sansMalus = moyenne(
-      rendues.map((l) => {
-        const diag = l.rawDiagnosis ?? 0;
-        return l.quiz !== null ? 0.5 * diag + 0.5 * l.quiz : diag;
-      }),
+      rendues.map((l) =>
+        computeRawSituationScore({
+          diagnosisScore: l.rawDiagnosis ?? 0,
+          quizScore: l.quiz,
+          hasQuizQuestions: l.quiz !== null,
+        }),
+      ),
     );
     const hintPenalty =
       average !== null && sansMalus !== null ? Math.max(0, surVingt(sansMalus - average)) : 0;
