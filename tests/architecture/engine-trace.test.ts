@@ -15,20 +15,21 @@ import { describe, expect, it } from "vitest";
  * confronte les deux listes.
  */
 
-const SOURCE = readFileSync("src/services/game.service.ts", "utf-8");
+const RESOLUTION_SOURCE = readFileSync("src/services/round-resolution.service.ts", "utf-8");
+const GAME_SOURCE = readFileSync("src/services/game.service.ts", "utf-8");
 
 /** Contenu d'un littéral `{ … }` qui démarre à `ancre`, accolades comptées. */
-function corpsApres(ancre: string): string {
-  const debut = SOURCE.indexOf(ancre);
-  expect(debut, `ancre introuvable dans game.service.ts : « ${ancre} »`).toBeGreaterThan(-1);
+function corpsApres(ancre: string, source: string, fichier: string): string {
+  const debut = source.indexOf(ancre);
+  expect(debut, `ancre introuvable dans ${fichier} : « ${ancre} »`).toBeGreaterThan(-1);
   let i = debut + ancre.length;
   let profondeur = 1;
-  while (i < SOURCE.length && profondeur > 0) {
-    if (SOURCE[i] === "{") profondeur += 1;
-    else if (SOURCE[i] === "}") profondeur -= 1;
+  while (i < source.length && profondeur > 0) {
+    if (source[i] === "{") profondeur += 1;
+    else if (source[i] === "}") profondeur -= 1;
     i += 1;
   }
-  return SOURCE.slice(debut + ancre.length, i - 1);
+  return source.slice(debut + ancre.length, i - 1);
 }
 
 /** Clés de premier niveau d'un littéral (objet ou type). */
@@ -50,8 +51,8 @@ function clesDePremierNiveau(corps: string): Set<string> {
 
 describe("trace du moteur persistée", () => {
   it("tout bloc relu à l'affichage est bien écrit à la clôture", () => {
-    const ecrites = clesDePremierNiveau(corpsApres("engineTrace: {"));
-    const relues = clesDePremierNiveau(corpsApres("const trace = row.engineTrace as {"));
+    const ecrites = clesDePremierNiveau(corpsApres("engineTrace: {", RESOLUTION_SOURCE, "round-resolution.service.ts"));
+    const relues = clesDePremierNiveau(corpsApres("const trace = row.engineTrace as {", GAME_SOURCE, "game.service.ts"));
 
     expect(ecrites.size, "la liste écrite n'a pas été trouvée").toBeGreaterThan(5);
     expect(relues.size, "la liste relue n'a pas été trouvée").toBeGreaterThan(5);
