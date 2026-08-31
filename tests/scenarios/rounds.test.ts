@@ -46,7 +46,7 @@ describe("durée d'une partie", () => {
   it("la création de partie applique la durée demandée", () => {
     // La fonction peut être juste et n'être appelée nulle part : la partie
     // durerait alors six tours comme avant, sans qu'aucun autre test ne bouge.
-    const service = readFileSync("src/services/game.service.ts", "utf-8");
+    const service = readFileSync("src/services/game-creation.service.ts", "utf-8");
     const appel = service.slice(service.indexOf("const scenarioSnapshot"));
     const bloc = appel.slice(0, appel.indexOf(";"));
     expect(bloc, "la durée demandée n'entre pas dans l'instantané du scénario").toContain(

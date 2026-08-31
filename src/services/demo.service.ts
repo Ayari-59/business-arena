@@ -4,10 +4,10 @@ import { db } from "@/db";
 import { organizationMembers, organizations, users } from "@/db/schema";
 import {
   closeCurrentRound,
-  createClassGame,
   joinGameByCode,
   submitTeamDecisions,
 } from "@/services/game.service";
+import { createClassGame } from "@/services/game-creation.service";
 import {
   getTeamSituations,
   submitDiagnosis,
