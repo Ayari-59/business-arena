@@ -35,7 +35,8 @@ import {
 import { presetFromProfile, quizModeFromProfile, type QuizMode } from "@/config/difficulty";
 import { hintScoreMultiplier, nextUnlockableLevel } from "@/pedagogy/hints";
 import { evaluateDiagnosis, evaluateQuiz } from "@/pedagogy/evaluation";
-import { detectSituations } from "@/pedagogy/detection";
+import { buildTriggerContext, detectSituations } from "@/pedagogy/detection";
+import type { TriggerFact } from "@/pedagogy/detection";
 import { AXES, aggregateAxis, updateMastery } from "@/pedagogy/progress";
 import { adaptiveHintMultiplier, playerStrength } from "@/pedagogy/adaptivity";
 import { computeRawSituationScore } from "@/pedagogy/scoring";
@@ -218,6 +219,7 @@ export async function openSituationsForRound(
             situationId,
             origin: "detected",
             status: "open",
+            triggerContext: buildTriggerContext(s.trigger.detect, result),
             openedAt: new Date(),
           });
       }
@@ -659,6 +661,8 @@ export interface SituationView {
    * après : un bouton actif qui refuse laisse croire que le malus est déjà pris.
    */
   hintLimit: string | null;
+  /** Faits chiffrés ayant déclenché la situation (A1 — « Pourquoi cette situation ? »). */
+  triggerFacts: TriggerFact[] | null;
   diagnosis: { selected: string[]; freeText: string; score?: number; finalScore?: number } | null;
   /** Rempli uniquement après débriefing. */
   debrief: {
@@ -673,7 +677,7 @@ export interface SituationView {
     quizScore: number | null;
     /** Modèle attendu, servi seulement quand la question n'a PAS été posée. */
     modelInsight: { prompt: string; answer: string; explain: string } | null;
-    concepts: { code: string; name: string }[];
+    concepts: { code: string; name: string; domain: string }[];
     finalScore: number;
   } | null;
 }
@@ -722,6 +726,7 @@ function toView(
       if (next === null || debriefed || next <= hintCap.cap) return null;
       return def.hints.some((h) => h.level === next) ? hintCap.reason : null;
     })(),
+    triggerFacts: (instance.triggerContext as TriggerFact[] | null) ?? null,
     diagnosis,
     debrief: debriefed
       ? {
@@ -745,7 +750,7 @@ function toView(
           concepts: def.conceptCodes
             .map((code) => conceptByCode.get(code))
             .filter((c): c is NonNullable<typeof c> => Boolean(c))
-            .map((c) => ({ code: c.code, name: c.name })),
+            .map((c) => ({ code: c.code, name: c.name, domain: c.domain })),
           finalScore: diagnosis?.finalScore ?? 0,
         }
       : null,

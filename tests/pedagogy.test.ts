@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { hintScoreMultiplier, nextUnlockableLevel } from "../src/pedagogy/hints";
 import { evaluateDiagnosis, evaluateQuiz } from "../src/pedagogy/evaluation";
-import { detectSituations } from "../src/pedagogy/detection";
+import { buildTriggerContext, DETECTION_METADATA, detectSituations } from "../src/pedagogy/detection";
+import type { TriggerFact } from "../src/pedagogy/detection";
 import { updateMastery } from "../src/pedagogy/progress";
 import {
   playerStrength,
@@ -9,6 +10,7 @@ import {
   adaptiveHintMultiplier,
 } from "../src/pedagogy/adaptivity";
 import { NOVA_SITUATIONS, situationByCode } from "../src/config/scenarios/nova/situations";
+import { ALL_SITUATIONS } from "../src/config/scenarios/registry";
 import { CONCEPTS, conceptByCode } from "../src/config/pedagogy/concepts";
 import { DECISION_MODELS, modelByCode } from "../src/config/pedagogy/models";
 import type { CompanyRoundResult } from "../src/engine/types";
@@ -166,6 +168,92 @@ describe("détection de situations (doc 03 §1.1)", () => {
   });
 });
 
+describe("métadonnées de détection (A1 — causalité visible)", () => {
+  const base = {
+    incomeStatement: { netIncome: 10000, fixedCosts: 90000 },
+    functionalBalance: { netTreasury: -5000 },
+    market: { bySegment: { s: { sold: 1000, lost: 200 } } },
+    production: { utilizationRate: 0.99 },
+    balanceSheet: { cash: 200000, overdraft: 0 },
+  } as unknown as CompanyRoundResult;
+
+  it("couvre les 5 codes de détection", () => {
+    const codes: string[] = [
+      "profitable_illiquid",
+      "below_breakeven",
+      "stockout",
+      "capacity_saturated",
+      "idle_cash",
+    ];
+    for (const code of codes) {
+      expect(DETECTION_METADATA[code as keyof typeof DETECTION_METADATA], code).toBeDefined();
+    }
+  });
+
+  it("buildTriggerContext retourne des faits non vides pour chaque code", () => {
+    const codes = Object.keys(DETECTION_METADATA) as (keyof typeof DETECTION_METADATA)[];
+    for (const code of codes) {
+      const facts = buildTriggerContext(code, base);
+      expect(facts.length, code).toBeGreaterThan(0);
+      for (const fact of facts) {
+        expect(fact.label.length, `${code}: label vide`).toBeGreaterThan(0);
+        expect(fact.value.length, `${code}: value vide`).toBeGreaterThan(0);
+        expect(["positive", "negative", "neutral"]).toContain(fact.direction);
+      }
+    }
+  });
+
+  it("profitable_illiquid : résultat positif, trésorerie négative", () => {
+    const facts = buildTriggerContext("profitable_illiquid", base);
+    expect(facts).toHaveLength(2);
+    expect(facts[0]!.direction).toBe("positive");
+    expect(facts[1]!.direction).toBe("negative");
+  });
+
+  it("below_breakeven : résultat négatif", () => {
+    const losing = {
+      ...base,
+      incomeStatement: { ...base.incomeStatement, netIncome: -5000 },
+    } as unknown as CompanyRoundResult;
+    const facts = buildTriggerContext("below_breakeven", losing);
+    expect(facts).toHaveLength(1);
+    expect(facts[0]!.direction).toBe("negative");
+  });
+
+  it("stockout : unités vendues et demande perdue", () => {
+    const facts = buildTriggerContext("stockout", base);
+    expect(facts).toHaveLength(2);
+    expect(facts[0]!.label).toContain("vendues");
+    expect(facts[1]!.label).toContain("non servie");
+  });
+
+  it("capacity_saturated : taux d'utilisation et demande perdue", () => {
+    const facts = buildTriggerContext("capacity_saturated", base);
+    expect(facts).toHaveLength(2);
+    expect(facts[0]!.label).toContain("utilisation");
+    expect(facts[1]!.label).toContain("non servie");
+  });
+
+  it("idle_cash : trésorerie, charges, ratio", () => {
+    const facts = buildTriggerContext("idle_cash", base);
+    expect(facts).toHaveLength(3);
+    expect(facts.every((f) => f.direction === "neutral")).toBe(true);
+  });
+
+  it("les faits n'utilisent jamais de formulation causale directe", () => {
+    const codes = Object.keys(DETECTION_METADATA) as (keyof typeof DETECTION_METADATA)[];
+    for (const code of codes) {
+      const facts = buildTriggerContext(code, base);
+      for (const fact of facts) {
+        expect(fact.label).not.toMatch(/votre décision/i);
+        expect(fact.label).not.toMatch(/vous avez/i);
+        expect(fact.value).not.toMatch(/votre décision/i);
+        expect(fact.value).not.toMatch(/a provoqué/i);
+      }
+    }
+  });
+});
+
 describe("progression (doc 03 §6)", () => {
   it("la maîtrise converge vers le score obtenu, bornée 0..100", () => {
     const after = updateMastery(50, 1, 1);
@@ -235,6 +323,13 @@ describe("cohérence des référentiels", () => {
         );
         expect(modelByCode.get(o.id)?.name, `${s.code}/${o.id}`).toBe(o.label);
       }
+    }
+  });
+  it("chaque situation détectée a ses métadonnées de déclenchement (A1)", () => {
+    const detected = ALL_SITUATIONS.filter((s) => "detect" in s.trigger);
+    for (const s of detected) {
+      const code = (s.trigger as { detect: string }).detect;
+      expect(DETECTION_METADATA[code as keyof typeof DETECTION_METADATA], `${s.code} → ${code}`).toBeDefined();
     }
   });
   it("6 situations scriptées (une par tour) + 5 détectées", () => {

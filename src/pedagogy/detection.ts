@@ -1,5 +1,6 @@
 import type { CompanyRoundResult } from "../engine/types";
 import type { DetectCode } from "../config/scenarios/nova/situations";
+import { formatEuro, formatPercent, formatUnits } from "../lib/format";
 
 /**
  * Détection de situations (doc 03 §1.1) : des règles observent les résultats
@@ -46,4 +47,86 @@ export function detectSituations(
   }
 
   return detected;
+}
+
+// ---------------------------------------------------------------------------
+// Métadonnées de détection (A1 — causalité visible, doc 03 §1.1)
+//
+// Chaque règle porte les faits chiffrés qui l'ont déclenchée. Ces faits sont
+// présentés au joueur dans le bloc « Pourquoi cette situation ? » et utilisent
+// UNIQUEMENT des valeurs extraites du CompanyRoundResult — jamais de
+// formulation du type « Votre décision X a provoqué Y ».
+// ---------------------------------------------------------------------------
+
+export interface TriggerFact {
+  label: string;
+  value: string;
+  /** Sémantique pour le rendu : vert / rouge / neutre. */
+  direction: "positive" | "negative" | "neutral";
+}
+
+interface DetectionMeta {
+  buildFacts(result: CompanyRoundResult): TriggerFact[];
+}
+
+function marketTotals(result: CompanyRoundResult): { sold: number; lost: number } {
+  const segments = Object.values(result.market.bySegment);
+  const sold = segments.reduce((s, d) => s + d.sold, 0);
+  const lost = segments.reduce((s, d) => s + d.lost, 0);
+  return { sold, lost };
+}
+
+export const DETECTION_METADATA: Record<DetectCode, DetectionMeta> = {
+  profitable_illiquid: {
+    buildFacts(r) {
+      return [
+        { label: "Résultat net", value: formatEuro(r.incomeStatement.netIncome), direction: "positive" },
+        { label: "Trésorerie nette", value: formatEuro(r.functionalBalance.netTreasury), direction: "negative" },
+      ];
+    },
+  },
+  below_breakeven: {
+    buildFacts(r) {
+      return [
+        { label: "Résultat net", value: formatEuro(r.incomeStatement.netIncome), direction: "negative" },
+      ];
+    },
+  },
+  stockout: {
+    buildFacts(r) {
+      const { sold, lost } = marketTotals(r);
+      return [
+        { label: "Unités vendues", value: formatUnits(sold), direction: "neutral" },
+        { label: "Demande non servie", value: `${formatUnits(lost)} (${formatPercent(lost / sold)})`, direction: "negative" },
+      ];
+    },
+  },
+  capacity_saturated: {
+    buildFacts(r) {
+      const { sold, lost } = marketTotals(r);
+      return [
+        { label: "Taux d'utilisation", value: formatPercent(r.production.utilizationRate), direction: "neutral" },
+        { label: "Demande non servie", value: `${formatUnits(lost)} (${formatPercent(lost / sold)})`, direction: "negative" },
+      ];
+    },
+  },
+  idle_cash: {
+    buildFacts(r) {
+      const cash = r.balanceSheet.cash;
+      const fixedCosts = r.incomeStatement.fixedCosts;
+      const ratioVal = (cash / fixedCosts).toFixed(1).replace(".", ",");
+      return [
+        { label: "Trésorerie disponible", value: formatEuro(cash), direction: "neutral" },
+        { label: "Charges de structure", value: formatEuro(fixedCosts), direction: "neutral" },
+        { label: "Ratio trésorerie / charges", value: `${ratioVal}×`, direction: "neutral" },
+      ];
+    },
+  },
+};
+
+export function buildTriggerContext(
+  code: DetectCode,
+  result: CompanyRoundResult,
+): TriggerFact[] {
+  return DETECTION_METADATA[code].buildFacts(result);
 }
