@@ -140,7 +140,7 @@ export default function GuidePage() {
           intro="Chaque tour suit la même boucle : une situation vous arrive, vous la diagnostiquez, vous mobilisez vos connaissances, vous décidez, puis la simulation rend son verdict."
         >
           <ol className="space-y-5">
-            <Step n={1} title="Lisez la situation du tour">
+            <Step n={1} title="Lisez la situation">
               Pas d&apos;énoncé d&apos;exercice : un problème d&apos;entreprise (« la trésorerie se
               tend », « un concurrent casse les prix »). À vous de comprendre ce qui se joue.
             </Step>

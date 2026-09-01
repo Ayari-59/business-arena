@@ -222,7 +222,7 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
   );
 }
 
-/** Débriefing d'une situation du tour résolu : correction du diagnostic et du QCM + notions. */
+/** Débriefing d'une situation résolue : correction du diagnostic et du QCM + notions. */
 export function SituationDebrief({ situation }: { situation: SituationView }) {
   const debrief = situation.debrief;
   if (!debrief) return null;

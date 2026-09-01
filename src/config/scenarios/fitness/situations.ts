@@ -69,7 +69,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
     ],
     modelRelevance: {
       breakeven_analysis: "optimal",
-      cvp_analysis: "acceptable",
+      sensitivity_analysis: "acceptable",
       capacity_analysis: "acceptable",
       npv: "irrelevant",
     },
@@ -440,7 +440,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
     ],
     modelRelevance: {
       breakeven_analysis: "optimal",
-      cvp_analysis: "acceptable",
+      variance_analysis: "acceptable",
       npv: "acceptable",
       psych_pricing: "irrelevant",
     },

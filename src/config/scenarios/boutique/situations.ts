@@ -70,7 +70,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
     ],
     modelRelevance: {
       breakeven_analysis: "optimal",
-      cvp_analysis: "acceptable",
+      marginal_analysis: "acceptable",
       psych_pricing: "acceptable",
       npv: "irrelevant",
     },
@@ -404,7 +404,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
     ],
     modelRelevance: {
       breakeven_analysis: "optimal",
-      cvp_analysis: "acceptable",
+      variance_analysis: "acceptable",
       elasticity_analysis: "acceptable",
       npv: "irrelevant",
     },

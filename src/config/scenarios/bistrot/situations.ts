@@ -69,7 +69,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
     ],
     modelRelevance: {
       breakeven_analysis: "optimal",
-      cvp_analysis: "acceptable",
+      cash_budget: "acceptable",
       relevant_costs: "acceptable",
       npv: "irrelevant",
     },
@@ -430,7 +430,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
     ],
     modelRelevance: {
       breakeven_analysis: "optimal",
-      cvp_analysis: "acceptable",
+      sensitivity_analysis: "acceptable",
       variance_analysis: "acceptable",
       npv: "irrelevant",
     },
@@ -610,7 +610,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
     modelRelevance: {
       return_analysis: "optimal",
       breakeven_analysis: "misleading",
-      cvp_analysis: "acceptable",
+      sensitivity_analysis: "acceptable",
       npv: "irrelevant",
     },
     conceptCodes: ["profitability_vs_return", "margin_rates", "safety_margin", "fixed_costs"],

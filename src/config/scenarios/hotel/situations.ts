@@ -70,7 +70,7 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
     ],
     modelRelevance: {
       breakeven_analysis: "optimal",
-      cvp_analysis: "acceptable",
+      sensitivity_analysis: "acceptable",
       capacity_analysis: "acceptable",
       npv: "irrelevant",
     },
@@ -396,7 +396,7 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
     modelRelevance: {
       breakeven_analysis: "optimal",
       elasticity_analysis: "acceptable",
-      cvp_analysis: "acceptable",
+      sensitivity_analysis: "acceptable",
       npv: "irrelevant",
     },
     conceptCodes: ["breakeven", "safety_margin", "contribution_margin", "price_elasticity"],
