@@ -1,4 +1,4 @@
-import { formatEuro } from "@/lib/format";
+import { formatEuro, formatPercent } from "@/lib/format";
 
 /**
  * Graphiques SVG serveur, sobres et accessibles (skill dataviz) :
@@ -7,6 +7,11 @@ import { formatEuro } from "@/lib/format";
  * - un seul axe (tout est en €), légende dès 2 séries, labels directs sur le
  *   dernier point, grille discrète, <title> natifs comme couche de survol.
  */
+
+const SEGMENT_COLORS = [
+  "#3987e5", "#d95926", "#7c3aed", "#10b981", "#f59e0b",
+  "#ec4899", "#06b6d4", "#84cc16",
+];
 
 const W = 560;
 const H = 190;
@@ -125,6 +130,48 @@ export function TreasuryChart({
               </rect>
               <text x={cx} y={H - 6} textAnchor="middle" fontSize="10" fill="#898781">
                 T{h.round}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    </figure>
+  );
+}
+
+export function MarketShareChart({
+  segments,
+}: {
+  segments: { name: string; share: number }[];
+}) {
+  if (segments.length === 0) return null;
+  const barH = 28;
+  const gap = 6;
+  const labelW = 110;
+  const chartW = 400;
+  const totalH = segments.length * (barH + gap) - gap + 8;
+
+  return (
+    <figure>
+      <figcaption className="mb-2 text-xs text-slate-400">
+        Parts de marché par segment
+      </figcaption>
+      <svg viewBox={`0 0 ${labelW + chartW + 60} ${totalH}`} className="w-full" role="img" aria-label="Parts de marché par segment">
+        {segments.map((seg, i) => {
+          const y = i * (barH + gap);
+          const w = Math.max(2, seg.share * chartW);
+          const color = SEGMENT_COLORS[i % SEGMENT_COLORS.length]!;
+          return (
+            <g key={seg.name}>
+              <text x={labelW - 8} y={y + barH / 2 + 4} textAnchor="end" fontSize="11" fill="#c3c2b7">
+                {seg.name}
+              </text>
+              <rect x={labelW} y={y} width={chartW} height={barH} rx="4" fill="#1e293b" />
+              <rect x={labelW} y={y} width={w} height={barH} rx="4" fill={color} opacity="0.85">
+                <title>{`${seg.name} : ${formatPercent(seg.share)}`}</title>
+              </rect>
+              <text x={labelW + w + 6} y={y + barH / 2 + 4} fontSize="11" fill={color} fontWeight="600">
+                {formatPercent(seg.share)}
               </text>
             </g>
           );

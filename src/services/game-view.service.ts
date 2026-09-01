@@ -174,6 +174,8 @@ export interface GameView {
    * snapshot, donc une partie garde le vocabulaire de son scénario.
    */
   vocabulary: ScenarioVocabulary;
+  /** Le secteur joué, pour l'identité visuelle (icône, couleur). */
+  sector: import("@/config/scenarios/registry").Sector;
   /**
    * Noms des segments du snapshot joué, par code. Sans cela le tableau du
    * marché retomberait sur les codes bruts dès qu'on quitte NOVA.
@@ -895,6 +897,9 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     vocabulary: scenarioByCode(
       (game.scenarioSnapshot as { code?: string } | null)?.code,
     ).vocabulary,
+    sector: scenarioByCode(
+      (game.scenarioSnapshot as { code?: string } | null)?.code,
+    ).sector,
     segmentNames: Object.fromEntries(
       (game.scenarioSnapshot as EngineScenarioConfig).market.segments.map((s) => [
         s.code,
