@@ -1,5 +1,5 @@
 import { randomInt } from "node:crypto";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   getLicenceStatus,
@@ -11,6 +11,7 @@ import {
   competitions,
   games,
   orgInvites,
+  orgLicences,
   organizationMembers,
   organizations,
   platformSettings,
@@ -211,39 +212,124 @@ export interface PlatformOverview {
 
 export async function getPlatformOverview(adminId: string): Promise<PlatformOverview> {
   await requirePlatformAdmin(adminId);
-  const [orgRows, userRows, gameRows, competitionRows, memberRows, inviteRows] = await Promise.all([
+  const ALERTE_JOURS = 30;
+  const jours = (de: Date, a: Date) =>
+    Math.ceil((a.getTime() - de.getTime()) / (24 * 60 * 60 * 1000));
+
+  const [
+    orgRows,
+    userCountRows,
+    gameRows,
+    competitionCountRows,
+    memberRows,
+    inviteRows,
+    allLicences,
+  ] = await Promise.all([
     db.select().from(organizations),
-    db.select({ id: users.id }).from(users),
+    db.select({ count: sql<number>`count(*)::int` }).from(users),
     db.select({ id: games.id, organizationId: games.organizationId }).from(games),
-    db.select({ id: competitions.id }).from(competitions),
+    db.select({ count: sql<number>`count(*)::int` }).from(competitions),
     db.select().from(organizationMembers),
     db.select().from(orgInvites),
+    db.select().from(orgLicences).orderBy(desc(orgLicences.endsAt)),
   ]);
-  const licenceStatuts = await Promise.all(orgRows.map((o) => getLicenceStatus(o.id)));
-  const licenceListes = await Promise.all(orgRows.map((o) => listOrgLicences(o.id)));
+  const userCount = userCountRows[0]!.count;
+  const competitionCount = competitionCountRows[0]!.count;
+
+  const licencesByOrg = new Map<string, typeof allLicences>();
+  for (const lic of allLicences) {
+    const arr = licencesByOrg.get(lic.organizationId) ?? [];
+    arr.push(lic);
+    licencesByOrg.set(lic.organizationId, arr);
+  }
+
+  const now = new Date();
 
   return {
     stats: {
       organizations: orgRows.length,
-      users: userRows.length,
+      users: userCount,
       games: gameRows.length,
-      competitions: competitionRows.length,
+      competitions: competitionCount,
     },
     organizations: orgRows
-      .map((org, i) => {
+      .map((org) => {
         const members = memberRows.filter((m) => m.organizationId === org.id);
+        const teachers = members.filter((m) => m.role !== "student").length;
+        const orgLicRows = licencesByOrg.get(org.id) ?? [];
+        const licences: OrgLicence[] = orgLicRows.map((r) => ({
+          id: r.id,
+          label: r.label,
+          startsAt: r.startsAt,
+          endsAt: r.endsAt,
+          maxTeachers: r.maxTeachers,
+          reference: r.reference,
+          amountCents: r.amountCents,
+        }));
+
+        let licence: LicenceStatus;
+        if (orgLicRows.length === 0) {
+          licence = { state: "libre", licence: null, teachers, daysLeft: null, blocking: null };
+        } else {
+          const courante =
+            orgLicRows.find((r) => r.startsAt <= now && now <= r.endsAt) ?? orgLicRows[0]!;
+          const lic: OrgLicence = {
+            id: courante.id,
+            label: courante.label,
+            startsAt: courante.startsAt,
+            endsAt: courante.endsAt,
+            maxTeachers: courante.maxTeachers,
+            reference: courante.reference,
+            amountCents: courante.amountCents,
+          };
+          const daysLeft = jours(now, courante.endsAt);
+          if (now < courante.startsAt) {
+            licence = {
+              state: "a_venir",
+              licence: lic,
+              teachers,
+              daysLeft,
+              blocking: `La licence « ${courante.label} » ne commence que le ${courante.startsAt.toLocaleDateString("fr-FR")}.`,
+            };
+          } else if (now > courante.endsAt) {
+            licence = {
+              state: "expiree",
+              licence: lic,
+              teachers,
+              daysLeft,
+              blocking: `La licence « ${courante.label} » a expiré le ${courante.endsAt.toLocaleDateString("fr-FR")}. Les parties en cours se terminent normalement ; le renouvellement rouvre la création.`,
+            };
+          } else if (courante.maxTeachers !== null && teachers > courante.maxTeachers) {
+            licence = {
+              state: "active",
+              licence: lic,
+              teachers,
+              daysLeft,
+              blocking: `La licence couvre ${courante.maxTeachers} enseignants et l'établissement en compte ${teachers}.`,
+            };
+          } else {
+            licence = {
+              state: daysLeft <= ALERTE_JOURS ? "bientot_expiree" : "active",
+              licence: lic,
+              teachers,
+              daysLeft,
+              blocking: null,
+            };
+          }
+        }
+
         return {
           organizationId: org.id,
           name: org.name,
           kind: org.kind,
           members: members.length,
-          teachers: members.filter((m) => m.role !== "student").length,
+          teachers,
           games: gameRows.filter((g) => g.organizationId === org.id).length,
           adminInvites: inviteRows
             .filter((inv) => inv.organizationId === org.id && inv.role === "org_admin")
             .map((inv) => ({ id: inv.id, code: inv.code, active: inv.active })),
-          licence: licenceStatuts[i]!,
-          licences: licenceListes[i]!,
+          licence,
+          licences,
         };
       })
       .sort((a, b) => b.games - a.games),
