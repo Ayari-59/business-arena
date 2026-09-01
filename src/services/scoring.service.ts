@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { gameRankings, games, roundResults, rounds, scores, situationInstances } from "@/db/schema";
 import { parseScenarioConfig } from "@/config/scenarios/schema";
@@ -142,18 +142,29 @@ export async function updateRankings(gameId: string, teamIds: string[]): Promise
   entries.sort(
     (a, b) => b.bpi - a.bpi || b.financialAvg - a.financialAvg || b.lastTreasury - a.lastTreasury,
   );
-  for (const [rank, entry] of entries.entries()) {
-    const detail = {
-      cumulativeNetIncome: entry.cumulativeNetIncome,
-      roundBpis: entry.roundBpis.map((v) => Math.round(v * 100) / 100),
-      dimensions: entry.dimensions,
-    };
+  if (entries.length > 0) {
     await db
       .insert(gameRankings)
-      .values({ gameId, teamId: entry.teamId, bpi: entry.bpi.toFixed(2), rank: rank + 1, detail })
+      .values(
+        entries.map((entry, i) => ({
+          gameId,
+          teamId: entry.teamId,
+          bpi: entry.bpi.toFixed(2),
+          rank: i + 1,
+          detail: {
+            cumulativeNetIncome: entry.cumulativeNetIncome,
+            roundBpis: entry.roundBpis.map((v) => Math.round(v * 100) / 100),
+            dimensions: entry.dimensions,
+          },
+        })),
+      )
       .onConflictDoUpdate({
         target: [gameRankings.gameId, gameRankings.teamId],
-        set: { bpi: entry.bpi.toFixed(2), rank: rank + 1, detail },
+        set: {
+          bpi: sql`excluded.bpi`,
+          rank: sql`excluded.rank`,
+          detail: sql`excluded.detail`,
+        },
       });
   }
 }

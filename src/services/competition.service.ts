@@ -504,22 +504,21 @@ export async function getOrganizerCompetitions(organizerId: string) {
     .from(competitions)
     .where(eq(competitions.organizerId, organizerId))
     .orderBy(desc(competitions.createdAt));
-  const out = [];
-  for (const c of rows) {
-    const entries = await db
-      .select()
-      .from(competitionEntries)
-      .where(eq(competitionEntries.competitionId, c.id));
-    out.push({
-      competitionId: c.id,
-      name: c.name,
-      status: c.status,
-      joinCode: c.joinCode,
-      entriesCount: entries.length,
-      createdAt: c.createdAt,
-    });
-  }
-  return out;
+  if (rows.length === 0) return [];
+  const allEntries = await db
+    .select({ competitionId: competitionEntries.competitionId })
+    .from(competitionEntries)
+    .where(inArray(competitionEntries.competitionId, rows.map((c) => c.id)));
+  const countByComp = new Map<string, number>();
+  for (const e of allEntries) countByComp.set(e.competitionId, (countByComp.get(e.competitionId) ?? 0) + 1);
+  return rows.map((c) => ({
+    competitionId: c.id,
+    name: c.name,
+    status: c.status,
+    joinCode: c.joinCode,
+    entriesCount: countByComp.get(c.id) ?? 0,
+    createdAt: c.createdAt,
+  }));
 }
 
 /** Le concours auquel participe un joueur, et sa partie en cours s'il y en a une. */
@@ -539,27 +538,25 @@ export async function getPlayerCompetition(
 
   let myGameId: string | null = null;
   if (mine) {
+    const competitionGameIds = new Set(
+      view.stages.flatMap((s) => s.games.map((g) => g.gameId)),
+    );
     const membership = await db.select().from(players).where(eq(players.userId, userId));
     if (membership.length > 0) {
       const teamRows = await db
         .select()
         .from(teams)
         .where(inArray(teams.id, membership.map((m) => m.teamId)));
-      const stageIds = new Set(
-        (
-          await db
-            .select()
-            .from(competitionStages)
-            .where(eq(competitionStages.competitionId, competitionId))
-        ).map((s) => s.id),
-      );
-      const gameRows = teamRows.length
-        ? await db.select().from(games).where(inArray(games.id, teamRows.map((t) => t.gameId)))
-        : [];
-      const running = gameRows
-        .filter((g) => g.competitionStageId && stageIds.has(g.competitionStageId))
-        .sort((a, b) => (a.status === "running" ? -1 : 1) - (b.status === "running" ? -1 : 1));
-      myGameId = running[0]?.id ?? null;
+      const myGameIds = teamRows
+        .map((t) => t.gameId)
+        .filter((gid) => competitionGameIds.has(gid));
+      if (myGameIds.length > 0) {
+        const running = view.stages
+          .flatMap((s) => s.games)
+          .filter((g) => myGameIds.includes(g.gameId))
+          .sort((a, b) => (a.status === "running" ? -1 : 1) - (b.status === "running" ? -1 : 1));
+        myGameId = running[0]?.gameId ?? null;
+      }
     }
   }
   return { view, myGameId, myTeamLabel: mine?.teamLabel ?? null };
