@@ -59,7 +59,7 @@ const MIROIR: Record<number, number> = {
  * plus, pour rester lisible sur le fond presque blanc.
  */
 const SURCHARGES: Record<string, number> = {
-  "amber-500": 900,
+  "amber-500": 800,
   "amber-400": 900,
 };
 
