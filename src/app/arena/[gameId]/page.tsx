@@ -177,7 +177,52 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
         </section>
       ) : null}
 
-      {/* ── 6. Formulaire de décision / Écran de fin ── */}
+      {/* ── 6. Contexte prospectif ── */}
+      {!finished && view.announcedEventCards.length > 0 ? (
+        <section className="rounded-xl border border-amber-400/30 bg-slate-900 p-4">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-400">
+            ⚡ Votre enseignant a tiré une carte : elle s&apos;appliquera à ce tour
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {view.announcedEventCards.map((card, i) => (
+              <EventCard
+                key={`${card.code}-${card.teamId ?? "market"}`}
+                code={card.code}
+                delayMs={i * 450}
+                announced
+                targetLabel={
+                  card.teamId
+                    ? card.isMyTeam
+                      ? "🎯 Votre équipe"
+                      : `→ ${card.teamName ?? "Une autre équipe"}`
+                    : "Toute la classe"
+                }
+                highlight={card.isMyTeam}
+              />
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-slate-500">
+            Adaptez vos décisions en conséquence : c&apos;est tout l&apos;intérêt d&apos;être prévenu.
+          </p>
+        </section>
+      ) : null}
+
+      {!finished && view.seasonNotes.length > 0 ? (
+        <section className="rounded-xl border border-sky-400/20 bg-slate-900 px-4 py-3 text-sm text-sky-200">
+          🌤️ Saison du tour :{" "}
+          {view.seasonNotes
+            .map(
+              (n) =>
+                `${n.name} ×${n.coef.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} (${
+                  n.coef > 1 ? "haute saison" : "basse saison"
+                })`,
+            )
+            .join(" · ")}
+          {". "}Dimensionnez votre volume en conséquence.
+        </section>
+      ) : null}
+
+      {/* ── 7. Formulaire de décision / Écran de fin ── */}
       {finished ? (
         <section className="rounded-xl border border-amber-400/30 bg-slate-900 p-6 text-center">
           <h2 className="text-xl font-bold text-amber-300">
@@ -234,7 +279,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
         </section>
       )}
 
-      {/* ── 7. Débriefing pédagogique (tour précédent) ── */}
+      {/* ── 8. Débriefing pédagogique (tour précédent) ── */}
       {r && situations.debriefed.length > 0 ? (
         <section className="space-y-4">
           <h2 className="text-sm font-semibold text-slate-200">
@@ -246,7 +291,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
         </section>
       ) : null}
 
-      {/* ── 8. Résumé des performances ── */}
+      {/* ── 9. Résumé des performances ── */}
       {r ? (
         <>
           <section aria-label="Indicateurs clés" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -270,7 +315,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
             />
           </section>
 
-          {/* ── 9. Classement ── */}
+          {/* ── 10. Classement ── */}
           <section className="grid gap-4 lg:grid-cols-2">
             <div className="rounded-xl border border-white/10 bg-slate-900 p-4">
               <h2 className="mb-3 text-sm font-semibold text-slate-200">
@@ -306,51 +351,6 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
             {view.playerDimensions ? <BpiPanel dimensions={view.playerDimensions} /> : null}
           </section>
         </>
-      ) : null}
-
-      {/* ── 10. Contexte prospectif ── */}
-      {!finished && view.announcedEventCards.length > 0 ? (
-        <section className="rounded-xl border border-amber-400/30 bg-slate-900 p-4">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-400">
-            ⚡ Votre enseignant a tiré une carte : elle s&apos;appliquera à ce tour
-          </p>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {view.announcedEventCards.map((card, i) => (
-              <EventCard
-                key={`${card.code}-${card.teamId ?? "market"}`}
-                code={card.code}
-                delayMs={i * 450}
-                announced
-                targetLabel={
-                  card.teamId
-                    ? card.isMyTeam
-                      ? "🎯 Votre équipe"
-                      : `→ ${card.teamName ?? "Une autre équipe"}`
-                    : "Toute la classe"
-                }
-                highlight={card.isMyTeam}
-              />
-            ))}
-          </div>
-          <p className="mt-2 text-xs text-slate-500">
-            Adaptez vos décisions en conséquence : c&apos;est tout l&apos;intérêt d&apos;être prévenu.
-          </p>
-        </section>
-      ) : null}
-
-      {!finished && view.seasonNotes.length > 0 ? (
-        <section className="rounded-xl border border-sky-400/20 bg-slate-900 px-4 py-3 text-sm text-sky-200">
-          🌤️ Saison du tour :{" "}
-          {view.seasonNotes
-            .map(
-              (n) =>
-                `${n.name} ×${n.coef.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} (${
-                  n.coef > 1 ? "haute saison" : "basse saison"
-                })`,
-            )
-            .join(" · ")}
-          {". "}Dimensionnez votre volume en conséquence.
-        </section>
       ) : null}
 
       {/* ── 11. Résultats détaillés (repliable) ── */}
