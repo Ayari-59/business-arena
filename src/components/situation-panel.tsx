@@ -8,6 +8,7 @@ import {
   type PedagogyState,
 } from "@/app/arena/[gameId]/actions";
 import type { SituationView } from "@/services/pedagogy.service";
+import type { InterpretationFact } from "@/pedagogy/detection";
 
 const initial: PedagogyState = { error: null };
 
@@ -57,6 +58,32 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
         <p className="mt-2 text-sm leading-relaxed text-slate-300">{situation.narrative}</p>
         <p className="mt-2 text-sm font-medium text-amber-200">{situation.problem}</p>
       </header>
+
+      {situation.triggerFacts && situation.triggerFacts.length > 0 ? (
+        <details className="mb-4 rounded-lg border border-slate-700/60 bg-slate-950/50">
+          <summary className="cursor-pointer px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-400 hover:text-slate-300">
+            Pourquoi cette situation ?
+          </summary>
+          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 px-4 pb-3 pt-1">
+            {situation.triggerFacts.map((fact, i) => (
+              <div key={i} className="col-span-2 flex items-baseline justify-between gap-3">
+                <dt className="text-xs text-slate-500">{fact.label}</dt>
+                <dd
+                  className={`text-sm font-medium ${
+                    fact.direction === "positive"
+                      ? "text-emerald-400"
+                      : fact.direction === "negative"
+                        ? "text-red-400"
+                        : "text-slate-300"
+                  }`}
+                >
+                  {fact.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </details>
+      ) : null}
 
       <div className="space-y-4">
         {/* 1. Diagnostic */}
@@ -277,6 +304,51 @@ export function SituationDebrief({ situation }: { situation: SituationView }) {
             </div>
           </div>
         ) : null}
+        {debrief.consequenceFacts && debrief.consequenceFacts.length > 0 ? (
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Qu&apos;a-t-il évolué ?
+            </p>
+            <div className="mt-1 space-y-1.5">
+              {debrief.consequenceFacts.map((fact, i) => (
+                <div
+                  key={i}
+                  className="flex items-baseline justify-between gap-3 rounded-lg border border-white/5 bg-slate-950 px-3 py-2"
+                >
+                  <span className="text-xs text-slate-500">{fact.label}</span>
+                  <span className="flex items-baseline gap-2 text-sm">
+                    <span className="text-slate-500">{fact.before}</span>
+                    <span className="text-slate-600">→</span>
+                    <span className="text-slate-200">{fact.after}</span>
+                    <span
+                      className={`text-xs font-medium ${
+                        fact.direction === "positive"
+                          ? "text-emerald-400"
+                          : fact.direction === "negative"
+                            ? "text-red-400"
+                            : "text-slate-400"
+                      }`}
+                    >
+                      {fact.delta}
+                    </span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+        {debrief.interpretation ? (
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Comment interpréter cette évolution ?
+            </p>
+            <div className="mt-1 space-y-2 rounded-lg border border-white/5 bg-slate-950 px-3 py-2">
+              <p className="text-sm font-medium text-slate-200">{debrief.interpretation.mechanism}</p>
+              <p className="text-sm text-slate-300">{debrief.interpretation.explanation}</p>
+              <p className="text-sm italic text-amber-200/80">{debrief.interpretation.takeaway}</p>
+            </div>
+          </div>
+        ) : null}
         {debrief.concepts.length > 0 ? (
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
@@ -287,8 +359,9 @@ export function SituationDebrief({ situation }: { situation: SituationView }) {
                 <a
                   key={c.code}
                   href={`/notions#${c.code}`}
-                  className="rounded-full border border-white/10 px-3 py-1 text-xs text-amber-200 hover:border-amber-400/40"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1 text-xs text-amber-200 hover:border-amber-400/40"
                 >
+                  <span className="text-[10px] uppercase tracking-wider text-slate-500">{c.domain}</span>
                   {c.name}
                 </a>
               ))}

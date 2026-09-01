@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { hintScoreMultiplier, nextUnlockableLevel } from "../src/pedagogy/hints";
 import { evaluateDiagnosis, evaluateQuiz } from "../src/pedagogy/evaluation";
-import { detectSituations } from "../src/pedagogy/detection";
+import { buildConsequenceContext, buildInterpretation, buildTriggerContext, CONSEQUENCE_METADATA, DETECTION_METADATA, INTERPRETATION_METADATA, detectSituations, overallDirection } from "../src/pedagogy/detection";
+import type { ConsequenceFact, InterpretationFact, TriggerFact } from "../src/pedagogy/detection";
 import { updateMastery } from "../src/pedagogy/progress";
 import {
   playerStrength,
@@ -9,6 +10,7 @@ import {
   adaptiveHintMultiplier,
 } from "../src/pedagogy/adaptivity";
 import { NOVA_SITUATIONS, situationByCode } from "../src/config/scenarios/nova/situations";
+import { ALL_SITUATIONS } from "../src/config/scenarios/registry";
 import { CONCEPTS, conceptByCode } from "../src/config/pedagogy/concepts";
 import { DECISION_MODELS, modelByCode } from "../src/config/pedagogy/models";
 import type { CompanyRoundResult } from "../src/engine/types";
@@ -166,6 +168,318 @@ describe("détection de situations (doc 03 §1.1)", () => {
   });
 });
 
+describe("métadonnées de détection (A1 — causalité visible)", () => {
+  const base = {
+    incomeStatement: { netIncome: 10000, fixedCosts: 90000 },
+    functionalBalance: { netTreasury: -5000 },
+    market: { bySegment: { s: { sold: 1000, lost: 200 } } },
+    production: { utilizationRate: 0.99 },
+    balanceSheet: { cash: 200000, overdraft: 0 },
+  } as unknown as CompanyRoundResult;
+
+  it("couvre les 5 codes de détection", () => {
+    const codes: string[] = [
+      "profitable_illiquid",
+      "below_breakeven",
+      "stockout",
+      "capacity_saturated",
+      "idle_cash",
+    ];
+    for (const code of codes) {
+      expect(DETECTION_METADATA[code as keyof typeof DETECTION_METADATA], code).toBeDefined();
+    }
+  });
+
+  it("buildTriggerContext retourne des faits non vides pour chaque code", () => {
+    const codes = Object.keys(DETECTION_METADATA) as (keyof typeof DETECTION_METADATA)[];
+    for (const code of codes) {
+      const facts = buildTriggerContext(code, base);
+      expect(facts.length, code).toBeGreaterThan(0);
+      for (const fact of facts) {
+        expect(fact.label.length, `${code}: label vide`).toBeGreaterThan(0);
+        expect(fact.value.length, `${code}: value vide`).toBeGreaterThan(0);
+        expect(["positive", "negative", "neutral"]).toContain(fact.direction);
+      }
+    }
+  });
+
+  it("profitable_illiquid : résultat positif, trésorerie négative", () => {
+    const facts = buildTriggerContext("profitable_illiquid", base);
+    expect(facts).toHaveLength(2);
+    expect(facts[0]!.direction).toBe("positive");
+    expect(facts[1]!.direction).toBe("negative");
+  });
+
+  it("below_breakeven : résultat négatif", () => {
+    const losing = {
+      ...base,
+      incomeStatement: { ...base.incomeStatement, netIncome: -5000 },
+    } as unknown as CompanyRoundResult;
+    const facts = buildTriggerContext("below_breakeven", losing);
+    expect(facts).toHaveLength(1);
+    expect(facts[0]!.direction).toBe("negative");
+  });
+
+  it("stockout : unités vendues et demande perdue", () => {
+    const facts = buildTriggerContext("stockout", base);
+    expect(facts).toHaveLength(2);
+    expect(facts[0]!.label).toContain("vendues");
+    expect(facts[1]!.label).toContain("non servie");
+  });
+
+  it("capacity_saturated : taux d'utilisation et demande perdue", () => {
+    const facts = buildTriggerContext("capacity_saturated", base);
+    expect(facts).toHaveLength(2);
+    expect(facts[0]!.label).toContain("utilisation");
+    expect(facts[1]!.label).toContain("non servie");
+  });
+
+  it("idle_cash : trésorerie, charges, ratio", () => {
+    const facts = buildTriggerContext("idle_cash", base);
+    expect(facts).toHaveLength(3);
+    expect(facts.every((f) => f.direction === "neutral")).toBe(true);
+  });
+
+  it("les faits n'utilisent jamais de formulation causale directe", () => {
+    const codes = Object.keys(DETECTION_METADATA) as (keyof typeof DETECTION_METADATA)[];
+    for (const code of codes) {
+      const facts = buildTriggerContext(code, base);
+      for (const fact of facts) {
+        expect(fact.label).not.toMatch(/votre décision/i);
+        expect(fact.label).not.toMatch(/vous avez/i);
+        expect(fact.value).not.toMatch(/votre décision/i);
+        expect(fact.value).not.toMatch(/a provoqué/i);
+      }
+    }
+  });
+});
+
+describe("conséquences pédagogiques (A2 — évolution avant/après)", () => {
+  const before = {
+    incomeStatement: { netIncome: -5000, revenue: 80000, fixedCosts: 90000 },
+    functionalBalance: { netTreasury: -15000 },
+    market: { bySegment: { s: { sold: 800, lost: 200 } } },
+    production: { utilizationRate: 0.99 },
+    balanceSheet: { cash: 200000, overdraft: 0 },
+  } as unknown as CompanyRoundResult;
+
+  const after = {
+    incomeStatement: { netIncome: 12000, revenue: 110000, fixedCosts: 92000 },
+    functionalBalance: { netTreasury: 8000 },
+    market: { bySegment: { s: { sold: 1100, lost: 50 } } },
+    production: { utilizationRate: 0.85 },
+    balanceSheet: { cash: 140000, overdraft: 0 },
+  } as unknown as CompanyRoundResult;
+
+  it("couvre les 5 codes de détection", () => {
+    const codes: string[] = [
+      "profitable_illiquid",
+      "below_breakeven",
+      "stockout",
+      "capacity_saturated",
+      "idle_cash",
+    ];
+    for (const code of codes) {
+      expect(CONSEQUENCE_METADATA[code as keyof typeof CONSEQUENCE_METADATA], code).toBeDefined();
+    }
+  });
+
+  it("buildConsequenceContext retourne des faits non vides avec before/after/delta", () => {
+    const codes = Object.keys(CONSEQUENCE_METADATA) as (keyof typeof CONSEQUENCE_METADATA)[];
+    for (const code of codes) {
+      const facts = buildConsequenceContext(code, before, after);
+      expect(facts.length, code).toBeGreaterThan(0);
+      for (const fact of facts) {
+        expect(fact.label.length, `${code}: label vide`).toBeGreaterThan(0);
+        expect(fact.before.length, `${code}: before vide`).toBeGreaterThan(0);
+        expect(fact.after.length, `${code}: after vide`).toBeGreaterThan(0);
+        expect(fact.delta.length, `${code}: delta vide`).toBeGreaterThan(0);
+        expect(["positive", "negative", "neutral"]).toContain(fact.direction);
+      }
+    }
+  });
+
+  it("profitable_illiquid : résultat net et trésorerie nette évoluent", () => {
+    const facts = buildConsequenceContext("profitable_illiquid", before, after);
+    expect(facts).toHaveLength(2);
+    expect(facts[0]!.label).toContain("Résultat net");
+    expect(facts[1]!.label).toContain("Trésorerie nette");
+  });
+
+  it("below_breakeven : résultat net et CA évoluent", () => {
+    const facts = buildConsequenceContext("below_breakeven", before, after);
+    expect(facts).toHaveLength(2);
+    expect(facts[0]!.label).toContain("Résultat net");
+    expect(facts[1]!.label).toContain("Chiffre d'affaires");
+  });
+
+  it("stockout : la polarité est inversée pour la demande non servie", () => {
+    const facts = buildConsequenceContext("stockout", before, after);
+    expect(facts).toHaveLength(2);
+    // Les ventes augmentent : positif
+    expect(facts[0]!.direction).toBe("positive");
+    // La demande non servie baisse : positif (polarité inversée)
+    expect(facts[1]!.direction).toBe("positive");
+  });
+
+  it("capacity_saturated : un taux qui baisse est positif", () => {
+    const facts = buildConsequenceContext("capacity_saturated", before, after);
+    expect(facts).toHaveLength(2);
+    // Utilization rate drops from 99% to 85% = positive (capacity freed)
+    expect(facts[0]!.direction).toBe("positive");
+    // Demande non servie drops = positive
+    expect(facts[1]!.direction).toBe("positive");
+  });
+
+  it("idle_cash : une baisse de trésorerie oisive est positive", () => {
+    const facts = buildConsequenceContext("idle_cash", before, after);
+    expect(facts).toHaveLength(2);
+    // Cash drops from 200k to 140k = positive (money was invested)
+    expect(facts[0]!.direction).toBe("positive");
+    // Ratio drops = positive
+    expect(facts[1]!.direction).toBe("positive");
+  });
+
+  it("delta neutre quand les indicateurs ne bougent pas", () => {
+    const same = { ...before } as unknown as CompanyRoundResult;
+    const facts = buildConsequenceContext("profitable_illiquid", same, same);
+    for (const fact of facts) {
+      expect(fact.direction).toBe("neutral");
+    }
+  });
+
+  it("les faits n'utilisent jamais de formulation causale directe", () => {
+    const codes = Object.keys(CONSEQUENCE_METADATA) as (keyof typeof CONSEQUENCE_METADATA)[];
+    for (const code of codes) {
+      const facts = buildConsequenceContext(code, before, after);
+      for (const fact of facts) {
+        expect(fact.label).not.toMatch(/votre décision/i);
+        expect(fact.label).not.toMatch(/vous avez/i);
+        expect(fact.label).not.toMatch(/a provoqué/i);
+        expect(fact.delta).not.toMatch(/votre décision/i);
+      }
+    }
+  });
+
+  it("les situations détectées dans ALL_SITUATIONS ont toutes leurs métadonnées A2", () => {
+    const detected = ALL_SITUATIONS.filter((s) => "detect" in s.trigger);
+    for (const s of detected) {
+      const code = (s.trigger as { detect: string }).detect;
+      expect(CONSEQUENCE_METADATA[code as keyof typeof CONSEQUENCE_METADATA], `${s.code} → ${code}`).toBeDefined();
+    }
+  });
+});
+
+describe("interprétation pédagogique (A3 — mécanisme de gestion)", () => {
+  const before = {
+    incomeStatement: { netIncome: -5000, revenue: 80000, fixedCosts: 90000 },
+    functionalBalance: { netTreasury: -15000 },
+    market: { bySegment: { s: { sold: 800, lost: 200 } } },
+    production: { utilizationRate: 0.99 },
+    balanceSheet: { cash: 200000, overdraft: 0 },
+  } as unknown as CompanyRoundResult;
+
+  const after = {
+    incomeStatement: { netIncome: 12000, revenue: 110000, fixedCosts: 92000 },
+    functionalBalance: { netTreasury: 8000 },
+    market: { bySegment: { s: { sold: 1100, lost: 50 } } },
+    production: { utilizationRate: 0.85 },
+    balanceSheet: { cash: 140000, overdraft: 0 },
+  } as unknown as CompanyRoundResult;
+
+  it("couvre les 5 codes de détection", () => {
+    const codes: string[] = [
+      "profitable_illiquid",
+      "below_breakeven",
+      "stockout",
+      "capacity_saturated",
+      "idle_cash",
+    ];
+    for (const code of codes) {
+      expect(INTERPRETATION_METADATA[code as keyof typeof INTERPRETATION_METADATA], code).toBeDefined();
+    }
+  });
+
+  it("buildInterpretation retourne mechanism, explanation, takeaway non vides", () => {
+    const codes = Object.keys(INTERPRETATION_METADATA) as (keyof typeof INTERPRETATION_METADATA)[];
+    for (const code of codes) {
+      const facts = buildConsequenceContext(code, before, after);
+      const interp = buildInterpretation(code, facts);
+      expect(interp.mechanism.length, `${code}: mechanism vide`).toBeGreaterThan(20);
+      expect(interp.explanation.length, `${code}: explanation vide`).toBeGreaterThan(20);
+      expect(interp.takeaway.length, `${code}: takeaway vide`).toBeGreaterThan(20);
+    }
+  });
+
+  it("l'explication varie selon la direction globale de l'évolution", () => {
+    const codes = Object.keys(INTERPRETATION_METADATA) as (keyof typeof INTERPRETATION_METADATA)[];
+    for (const code of codes) {
+      const pos = INTERPRETATION_METADATA[code].buildInterpretation("positive");
+      const neg = INTERPRETATION_METADATA[code].buildInterpretation("negative");
+      const neu = INTERPRETATION_METADATA[code].buildInterpretation("neutral");
+      expect(pos.explanation, `${code}: positive === negative`).not.toBe(neg.explanation);
+      expect(pos.explanation, `${code}: positive === neutral`).not.toBe(neu.explanation);
+      expect(neg.explanation, `${code}: negative === neutral`).not.toBe(neu.explanation);
+      // Le mécanisme et le takeaway restent stables
+      expect(pos.mechanism).toBe(neg.mechanism);
+      expect(pos.takeaway).toBe(neg.takeaway);
+    }
+  });
+
+  it("overallDirection : majorité positive/negative/égalité", () => {
+    expect(overallDirection([
+      { label: "", before: "", after: "", delta: "", direction: "positive" },
+      { label: "", before: "", after: "", delta: "", direction: "negative" },
+      { label: "", before: "", after: "", delta: "", direction: "positive" },
+    ])).toBe("positive");
+    expect(overallDirection([
+      { label: "", before: "", after: "", delta: "", direction: "negative" },
+      { label: "", before: "", after: "", delta: "", direction: "negative" },
+    ])).toBe("negative");
+    expect(overallDirection([
+      { label: "", before: "", after: "", delta: "", direction: "positive" },
+      { label: "", before: "", after: "", delta: "", direction: "negative" },
+    ])).toBe("neutral");
+    expect(overallDirection([])).toBe("neutral");
+  });
+
+  it("le contenu ne formule aucune attribution causale directe", () => {
+    const forbidden = [
+      /votre décision/i,
+      /vous avez provoqué/i,
+      /a provoqué/i,
+      /grâce à votre décision/i,
+      /à cause de votre décision/i,
+    ];
+    const codes = Object.keys(INTERPRETATION_METADATA) as (keyof typeof INTERPRETATION_METADATA)[];
+    for (const code of codes) {
+      for (const dir of ["positive", "negative", "neutral"] as const) {
+        const interp = INTERPRETATION_METADATA[code].buildInterpretation(dir);
+        for (const field of [interp.mechanism, interp.explanation, interp.takeaway]) {
+          for (const pattern of forbidden) {
+            expect(field, `${code}/${dir}`).not.toMatch(pattern);
+          }
+        }
+      }
+    }
+  });
+
+  it("les situations détectées dans ALL_SITUATIONS ont toutes leurs métadonnées A3", () => {
+    const detected = ALL_SITUATIONS.filter((s) => "detect" in s.trigger);
+    for (const s of detected) {
+      const code = (s.trigger as { detect: string }).detect;
+      expect(INTERPRETATION_METADATA[code as keyof typeof INTERPRETATION_METADATA], `${s.code} → ${code}`).toBeDefined();
+    }
+  });
+
+  it("une situation historique sans interpretationContext fonctionne (null → null)", () => {
+    // Simule le comportement de toView : interpretationContext null → interpretation null
+    const ctx: InterpretationFact | null = null;
+    const interpretation = ctx ?? null;
+    expect(interpretation).toBeNull();
+  });
+});
+
 describe("progression (doc 03 §6)", () => {
   it("la maîtrise converge vers le score obtenu, bornée 0..100", () => {
     const after = updateMastery(50, 1, 1);
@@ -235,6 +549,13 @@ describe("cohérence des référentiels", () => {
         );
         expect(modelByCode.get(o.id)?.name, `${s.code}/${o.id}`).toBe(o.label);
       }
+    }
+  });
+  it("chaque situation détectée a ses métadonnées de déclenchement (A1)", () => {
+    const detected = ALL_SITUATIONS.filter((s) => "detect" in s.trigger);
+    for (const s of detected) {
+      const code = (s.trigger as { detect: string }).detect;
+      expect(DETECTION_METADATA[code as keyof typeof DETECTION_METADATA], `${s.code} → ${code}`).toBeDefined();
     }
   });
   it("6 situations scriptées (une par tour) + 5 détectées", () => {

@@ -1,4 +1,4 @@
-import { attachModelQuestions, hints, type SituationDef } from "../situation-kit";
+import { attachModelQuestions, hints, type DecisionLever, type SituationDef } from "../situation-kit";
 
 /**
  * Situations pédagogiques de LA TABLE D'AUGUSTIN (restauration).
@@ -82,6 +82,18 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 1 },
     weight: 1,
+    decisionLevers: [
+      {
+        field: "productionPlan",
+        direction: "review",
+        hint: "Le nombre de couverts à préparer dépend directement du seuil de rentabilité : en dessous de 50 par jour, chaque service est déficitaire.",
+      },
+      {
+        field: "price",
+        direction: "review",
+        hint: "Le ticket moyen fixe la marge par couvert et donc le nombre de couverts nécessaires pour couvrir vos charges de structure.",
+      },
+    ],
   },
   {
     code: "bistrot_t2_fournisseur",
@@ -158,6 +170,18 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 2 },
     weight: 1,
+    decisionLevers: [
+      {
+        field: "qualityBudget",
+        direction: "review",
+        hint: "Le choix du fournisseur impacte directement la qualité perçue. Un budget qualité bien calibré protège la réputation, qui réagit vite en restauration.",
+      },
+      {
+        field: "price",
+        direction: "review",
+        hint: "Si le coût des denrées baisse avec le cash & carry, la marge par couvert augmente — mais une baisse de fréquentation peut annuler le gain.",
+      },
+    ],
   },
   {
     code: "bistrot_t3_matieres",
@@ -234,6 +258,23 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 3 },
     weight: 1.5,
+    decisionLevers: [
+      {
+        field: "price",
+        direction: "up",
+        hint: "Répercutez une partie de la hausse sur le prix du soir, là où l'élasticité est plus faible, pour protéger la marge sans trop perdre de couverts.",
+      },
+      {
+        field: "productionPlan",
+        direction: "down",
+        hint: "En août, la demande chute : ajustez la préparation à la baisse pour éviter le gâchis de denrées déjà plus chères.",
+      },
+      {
+        field: "qualityBudget",
+        direction: "review",
+        hint: "Retravailler la carte pour mettre en avant les plats dont la marge résiste permet de retrouver du ratio sans toucher au prix.",
+      },
+    ],
   },
   {
     code: "bistrot_t4_banquets",
@@ -310,6 +351,18 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 4 },
     weight: 1.5,
+    decisionLevers: [
+      {
+        field: "productionPlan",
+        direction: "up",
+        hint: "La demande de décembre bondit : ajustez la préparation à la hausse, mais restez sous les plafonds salle et brigade pour éviter le gâchis de denrées perdues.",
+      },
+      {
+        field: "maintenanceBudget",
+        direction: "review",
+        hint: "Un pic de service sollicite fortement la cuisine. Anticipez l'entretien pour éviter une panne en plein rush de décembre.",
+      },
+    ],
   },
   {
     code: "bistrot_detect_below_breakeven",
@@ -386,6 +439,23 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { detect: "below_breakeven" },
     weight: 1,
+    decisionLevers: [
+      {
+        field: "price",
+        direction: "review",
+        hint: "Le ticket moyen est un levier rapide, mais l'élasticité diffère selon les services. Vérifiez où une hausse modérée serait absorbée sans perdre de couverts.",
+      },
+      {
+        field: "qualityBudget",
+        direction: "review",
+        hint: "Deux points de ratio matières gagnés par un travail sur la carte rapportent environ 4 000 € par trimestre, sans toucher au prix ni à la fréquentation.",
+      },
+      {
+        field: "marketingBudget",
+        direction: "up",
+        hint: "Si l'écart au seuil se mesure en couverts manquants, un effort promotionnel ciblé peut ramener les clients plus vite qu'une hausse de prix.",
+      },
+    ],
   },
   {
     code: "bistrot_t5_terrasse",
@@ -460,6 +530,18 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 5 },
     weight: 1,
+    decisionLevers: [
+      {
+        field: "productionPlan",
+        direction: "up",
+        hint: "La verrière ajoute environ 1 800 couverts par trimestre en saison : préparez-vous à servir davantage si l'investissement est retenu.",
+      },
+      {
+        field: "maintenanceBudget",
+        direction: "up",
+        hint: "Une terrasse couverte et chauffée s'entretient : intégrez le surcoût de maintenance dans votre calcul de VAN.",
+      },
+    ],
   },
   {
     code: "bistrot_t6_valeur",
@@ -534,6 +616,18 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 6 },
     weight: 1,
+    decisionLevers: [
+      {
+        field: "price",
+        direction: "review",
+        hint: "Le ticket moyen nourrit le résultat, mais c'est le rapport résultat / capitaux engagés qui mesure la vraie performance. Vérifiez que vos prix maximisent la rentabilité, pas seulement le chiffre.",
+      },
+      {
+        field: "qualityBudget",
+        direction: "review",
+        hint: "Un investissement qualité n'a de sens que s'il améliore le résultat plus vite qu'il ne gonfle les capitaux engagés.",
+      },
+    ],
   },
   {
     code: "bistrot_detect_idle_cash",
@@ -608,6 +702,23 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { detect: "idle_cash" },
     weight: 0.8,
+    decisionLevers: [
+      {
+        field: "maintenanceBudget",
+        direction: "review",
+        hint: "Une partie de la trésorerie excédentaire pourrait financer un entretien préventif, évitant un décaissement imprévu plus coûteux.",
+      },
+      {
+        field: "marketingBudget",
+        direction: "review",
+        hint: "Avant de bloquer l'excédent en placement, vérifiez si un effort commercial ne rapporterait pas davantage que les 2 % du banquier.",
+      },
+      {
+        field: "productionPlan",
+        direction: "review",
+        hint: "Projetez les couverts du prochain trimestre : la trésorerie nécessaire pour les denrées fixe le montant que vous pouvez réellement immobiliser.",
+      },
+    ],
   },
 ];
 

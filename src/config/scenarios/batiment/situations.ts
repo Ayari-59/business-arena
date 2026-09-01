@@ -1,4 +1,4 @@
-import { attachModelQuestions, hints, type SituationDef } from "../situation-kit";
+import { attachModelQuestions, hints, type DecisionLever, type SituationDef } from "../situation-kit";
 
 /**
  * Situations pédagogiques de MARTEL & FILS (bâtiment, rénovation).
@@ -83,6 +83,18 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 1 },
     weight: 1,
+    decisionLevers: [
+      {
+        field: "productionPlan",
+        direction: "up",
+        hint: "Le seuil de rentabilité fixe le minimum de mètres carrés à livrer. Planifiez assez de chantiers pour dépasser les 810 m² par trimestre, sinon la structure mange le résultat.",
+      },
+      {
+        field: "price",
+        direction: "review",
+        hint: "Chaque euro de plus au mètre carré abaisse le seuil. Vérifiez que vos devis reflètent la marge nécessaire pour couvrir quatorze salaires.",
+      },
+    ],
   },
   {
     code: "batiment_t2_devis",
@@ -165,6 +177,18 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 2 },
     weight: 1,
+    decisionLevers: [
+      {
+        field: "price",
+        direction: "down",
+        hint: "En période creuse, un prix inférieur au coût complet mais supérieur au coût variable enrichit l'entreprise : les 58 € par mètre carré n'existeraient pas sans ce chantier.",
+      },
+      {
+        field: "productionPlan",
+        direction: "up",
+        hint: "Deux semaines creuses coûtent des salaires sans rien produire. Remplir ce creux, même à prix réduit, vaut mieux que le vide.",
+      },
+    ],
   },
   {
     code: "batiment_t3_bfr",
@@ -250,6 +274,23 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 3 },
     weight: 1.2,
+    decisionLevers: [
+      {
+        field: "productionPlan",
+        direction: "review",
+        hint: "Chaque chantier supplémentaire creuse le besoin en fonds de roulement. Avant de signer, vérifiez que la trésorerie peut tenir le décalage entre les dépenses et les encaissements.",
+      },
+      {
+        field: "marketingBudget",
+        direction: "review",
+        hint: "Gagner plus de chantiers sans financer le cycle aggrave le découvert. Ajustez la prospection au rythme que la trésorerie peut absorber.",
+      },
+      {
+        field: "price",
+        direction: "up",
+        hint: "Négociez des acomptes ou des délais de paiement plus courts. Un prix légèrement supérieur compense le coût du financement du décalage.",
+      },
+    ],
   },
   {
     code: "batiment_t4_retenue",
@@ -335,6 +376,23 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 4 },
     weight: 1.1,
+    decisionLevers: [
+      {
+        field: "price",
+        direction: "up",
+        hint: "La retenue de garantie immobilise cinq pour cent pendant un an. Intégrez ce coût de financement dans vos devis pour ne pas financer le client à vos frais.",
+      },
+      {
+        field: "productionPlan",
+        direction: "review",
+        hint: "Planifiez les chantiers en décalant les dates de lancement pour lisser les besoins de trésorerie mois par mois, pas trimestre par trimestre.",
+      },
+      {
+        field: "maintenanceBudget",
+        direction: "review",
+        hint: "Quand la caisse est tendue par les retenues et les délais, reportez les dépenses d'équipement non urgentes au mois où les encaissements arrivent.",
+      },
+    ],
   },
   {
     code: "batiment_t5_sous_traiter",
@@ -422,6 +480,23 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 5 },
     weight: 1,
+    decisionLevers: [
+      {
+        field: "productionPlan",
+        direction: "up",
+        hint: "Six cents mètres carrés refusés rapportent zéro. Sous-traiter les livre à 127 € de marge unitaire sans engager l'entreprise au-delà du chantier.",
+      },
+      {
+        field: "price",
+        direction: "review",
+        hint: "La marge baisse de 162 à 127 € par mètre carré sous-traité. Vérifiez que vos devis absorbent cet écart sans perdre de compétitivité.",
+      },
+      {
+        field: "maintenanceBudget",
+        direction: "review",
+        hint: "Si le matériel est le goulot, un investissement ponctuel en équipement pourrait éviter la sous-traitance sur les prochains pics.",
+      },
+    ],
   },
   {
     code: "batiment_t6_nacelle",
@@ -506,6 +581,18 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 6 },
     weight: 1,
+    decisionLevers: [
+      {
+        field: "maintenanceBudget",
+        direction: "up",
+        hint: "Acheter la nacelle transfère la charge de la location vers l'entretien. Prévoyez 1 800 € par trimestre, et vérifiez que cette ligne ne sera pas sacrifiée un trimestre creux.",
+      },
+      {
+        field: "productionPlan",
+        direction: "review",
+        hint: "L'investissement ne se justifie que si la nacelle tourne deux mois par trimestre, durablement. Revoyez votre plan de chantiers sur six ans, pas sur un seul trimestre.",
+      },
+    ],
   },
   {
     code: "batiment_detect_idle_cash",
@@ -586,6 +673,18 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { detect: "idle_cash" },
     weight: 0.8,
+    decisionLevers: [
+      {
+        field: "maintenanceBudget",
+        direction: "review",
+        hint: "Ne lancez pas d'achats d'équipement sous prétexte que le compte est plein : cet argent est déjà promis au chantier à venir.",
+      },
+      {
+        field: "productionPlan",
+        direction: "review",
+        hint: "L'acompte doit couvrir six mois de dépenses. Vérifiez dans le budget de trésorerie que le rythme de chantier planifié n'assèche pas cette avance avant les prochains encaissements.",
+      },
+    ],
   },
   {
     code: "batiment_detect_capacite",
@@ -666,6 +765,23 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { detect: "capacity_saturated" },
     weight: 0.8,
+    decisionLevers: [
+      {
+        field: "productionPlan",
+        direction: "review",
+        hint: "Identifiez le goulot — heures de compagnons ou matériel — avant de planifier plus de chantiers. Seul le plafond le plus bas commande.",
+      },
+      {
+        field: "maintenanceBudget",
+        direction: "up",
+        hint: "Si le matériel est la contrainte active, investir en entretien ou en équipement neuf est le seul levier qui libère de la capacité.",
+      },
+      {
+        field: "price",
+        direction: "up",
+        hint: "Quand la demande dépasse la capacité, c'est le moment de relever les devis : vous refusez déjà des chantiers, autant garder les mieux payés.",
+      },
+    ],
   },
 ];
 

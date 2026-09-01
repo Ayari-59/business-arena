@@ -1,4 +1,4 @@
-import { attachModelQuestions, hints, type SituationDef } from "../situation-kit";
+import { attachModelQuestions, hints, type SituationDef, type DecisionLever } from "../situation-kit";
 
 /**
  * Situations pédagogiques de MAILLE & CO (commerce de détail).
@@ -83,6 +83,10 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 1 },
     weight: 1,
+    decisionLevers: [
+      { field: "price", direction: "review", hint: "Vos étiquettes fixent la marge unitaire : chaque euro de prix en plus rapproche le seuil de rentabilité, mais peut coûter des volumes si vous dépassez la sensibilité de vos segments." },
+      { field: "productionPlan", direction: "review", hint: "Le volume commandé détermine votre stock et votre BFR : dimensionnez-le en fonction du seuil de rentabilité, pas de l'intuition." },
+    ],
   },
   {
     code: "boutique_t2_circuit",
@@ -160,6 +164,11 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 2 },
     weight: 1,
+    decisionLevers: [
+      { field: "productionPlan", direction: "review", hint: "Le choix du fournisseur détermine ce que vous mettez en rayon : qualité perçue, possibilité de réassort et trésorerie mobilisée en dépendent directement." },
+      { field: "qualityBudget", direction: "review", hint: "L'image de la boutique se construit par la sélection des produits : le déstockeur économise sur l'achat mais dégrade l'expérience des clientes fidèles." },
+      { field: "price", direction: "review", hint: "Le coefficient que chaque fournisseur vous laisse tenir n'est pas le même : recalculez votre marge unitaire selon la source choisie avant de fixer vos étiquettes." },
+    ],
   },
   {
     code: "boutique_t4_noel",
@@ -242,6 +251,11 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 4 },
     weight: 1.5,
+    decisionLevers: [
+      { field: "productionPlan", direction: "up", hint: "Le pic saisonnier exige un stock supérieur à la normale : dimensionnez la commande sur la demande anticipée, dans la limite de votre capacité de traitement." },
+      { field: "marketingBudget", direction: "review", hint: "Le trafic du pic est déjà acquis par la saison, mais le taux de transformation et le panier moyen dépendent de l'animation en boutique : chaque point de conversion perdu coûte des milliers d'euros." },
+      { field: "price", direction: "review", hint: "À Noël, certains segments sont moins sensibles au prix : c'est le moment de placer les références à plus forte marge et de soigner le panier moyen." },
+    ],
   },
   {
     code: "boutique_t5_coton",
@@ -319,6 +333,11 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 5 },
     weight: 1.5,
+    decisionLevers: [
+      { field: "price", direction: "up", hint: "Répercuter la hausse du coût d'achat sur le prix de vente préserve la marge unitaire, mais l'élasticité-prix vous dit combien de volume cela coûte sur chaque segment." },
+      { field: "productionPlan", direction: "review", hint: "Avec un coût d'achat plus élevé, chaque article invendu pèse davantage sur la trésorerie : ajustez les quantités commandées à la demande attendue après la hausse." },
+      { field: "marketingBudget", direction: "review", hint: "Si vous absorbez la hausse, la communication peut compenser en volume ce que la marge perd en unitaire — mais chiffrez l'élasticité avant d'investir." },
+    ],
   },
   {
     code: "boutique_detect_below_breakeven",
@@ -394,6 +413,11 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { detect: "below_breakeven" },
     weight: 1,
+    decisionLevers: [
+      { field: "price", direction: "up", hint: "Augmenter le prix relève la marge unitaire et abaisse le seuil de rentabilité, à condition que l'élasticité ne fasse pas perdre plus de volume que la marge n'en gagne." },
+      { field: "marketingBudget", direction: "review", hint: "La promotion peut ramener du trafic et du volume, mais elle coûte : vérifiez que chaque euro investi rapporte plus d'un euro de marge supplémentaire." },
+      { field: "maintenanceBudget", direction: "down", hint: "Les charges de structure sont le numérateur du seuil : chaque euro économisé sur l'entretien de la boutique abaisse directement le nombre d'articles à vendre pour équilibrer." },
+    ],
   },
   {
     code: "boutique_detect_profitable_illiquid",
@@ -469,6 +493,11 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { detect: "profitable_illiquid" },
     weight: 1,
+    decisionLevers: [
+      { field: "productionPlan", direction: "down", hint: "Réduire le stock commandé libère de la trésorerie immédiatement : chaque article en moins en réserve, c'est son prix d'achat qui reste en caisse." },
+      { field: "price", direction: "review", hint: "Proposer un escompte pour paiement comptant aux comités d'entreprise accélère les encaissements et comprime le BFR, au prix d'une concession sur la marge." },
+      { field: "maintenanceBudget", direction: "review", hint: "Les décaissements de structure pèsent sur la trésorerie au moment où ils tombent : étalez ou décalez ce qui peut l'être pour lisser les sorties de caisse." },
+    ],
   },
   {
     code: "boutique_t3_soldes",
@@ -554,6 +583,10 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 3 },
     weight: 1,
+    decisionLevers: [
+      { field: "price", direction: "down", hint: "Baisser le prix des invendus libère de la trésorerie et de l'espace en réserve : le coût d'achat est engagé, seul l'encaissement futur compte encore." },
+      { field: "productionPlan", direction: "review", hint: "La place libérée par le déstockage accueille la collection suivante, qui tournera : pensez rotation du stock, pas récupération du coût d'achat." },
+    ],
   },
   {
     code: "boutique_t6_capitaux",
@@ -628,6 +661,10 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 6 },
     weight: 1,
+    decisionLevers: [
+      { field: "productionPlan", direction: "review", hint: "La commande de la prochaine collection est le premier décaissement à projeter : son montant et son calendrier déterminent combien de trésorerie doit rester disponible." },
+      { field: "maintenanceBudget", direction: "review", hint: "Les charges de structure tombent chaque mois, que la boutique vende ou non : intégrez-les au budget de trésorerie pour repérer les mois tendus avant d'y être." },
+    ],
   },
   {
     code: "boutique_detect_idle_cash",
@@ -702,6 +739,10 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { detect: "idle_cash" },
     weight: 0.8,
+    decisionLevers: [
+      { field: "productionPlan", direction: "review", hint: "La commande de la collection suivante va ponctionner la caisse : chiffrez-la avant de décider combien placer, pour ne pas financer un placement à 2 % par un découvert à 9 %." },
+      { field: "maintenanceBudget", direction: "review", hint: "Les charges fixes du trimestre à venir sortiront quoi qu'il arrive : soustrayez-les du solde disponible avant d'envisager un placement." },
+    ],
   },
 ];
 

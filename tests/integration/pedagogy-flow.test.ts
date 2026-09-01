@@ -72,14 +72,63 @@ describe("référentiels et instanciation", () => {
   });
 
   it("la situation scriptée du tour 1 est ouverte pour l'équipe du joueur", async () => {
-    const { current, debriefed } = await getTeamSituations(gameId, userId);
-    expect(debriefed).toHaveLength(0);
+    const { current, debriefedByRound } = await getTeamSituations(gameId, userId);
+    expect(debriefedByRound).toHaveLength(0);
     expect(current).toHaveLength(1);
     expect(current[0]!.code).toBe("nova_t1_takeover");
     expect(current[0]!.problem).not.toMatch(/calculez/i); // question ouverte (§3)
     expect(current[0]!.unlockedHints).toHaveLength(0);
     expect(current[0]!.nextHint).toEqual({ level: 1, costRatio: 0.05 });
   });
+});
+
+describe("cadre analytique avant décision (A7)", () => {
+  it("les situations courantes portent des analyticalHints non vides", async () => {
+    const { current } = await getTeamSituations(gameId, userId);
+    expect(current[0]!.analyticalHints.length).toBeGreaterThan(0);
+  });
+
+  it("seuls les modèles optimal et acceptable apparaissent, pas misleading ni irrelevant", async () => {
+    const { current } = await getTeamSituations(gameId, userId);
+    const codes = current[0]!.analyticalHints.map((h) => h.code);
+    expect(codes).toContain("breakeven_analysis");
+    expect(codes).toContain("cvp_analysis");
+    expect(codes).toContain("psych_pricing");
+    expect(codes).not.toContain("npv");
+  });
+
+  it("les hints sont triés alphabétiquement par nom", async () => {
+    const { current } = await getTeamSituations(gameId, userId);
+    const names = current[0]!.analyticalHints.map((h) => h.name);
+    expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, "fr")));
+  });
+
+  it("aucun hint ne contient de champ relevance ou credit", async () => {
+    const { current } = await getTeamSituations(gameId, userId);
+    for (const h of current[0]!.analyticalHints) {
+      expect(h).not.toHaveProperty("relevance");
+      expect(h).not.toHaveProperty("credit");
+    }
+  });
+});
+
+describe("pont situation→décision (A8)", () => {
+  it("les situations courantes portent des decisionLevers non vides", async () => {
+    const { current } = await getTeamSituations(gameId, userId);
+    expect(current[0]!.decisionLevers.length).toBeGreaterThan(0);
+  });
+
+  it("chaque lever a un field valide, une direction et un hint", async () => {
+    const { current } = await getTeamSituations(gameId, userId);
+    const validFields = ["price", "productionPlan", "marketingBudget", "qualityBudget", "maintenanceBudget"];
+    const validDirections = ["up", "down", "review"];
+    for (const lever of current[0]!.decisionLevers) {
+      expect(validFields).toContain(lever.field);
+      expect(validDirections).toContain(lever.direction);
+      expect(lever.hint.length).toBeGreaterThan(0);
+    }
+  });
+
 });
 
 describe("indices, diagnostic, QCM de connaissances", () => {
@@ -140,9 +189,9 @@ describe("débriefing et progression", () => {
   it("la résolution du tour débriefe la situation et fait progresser la maîtrise", async () => {
     await resolveCurrentRound({ gameId, userId, playerDecisions: DECISIONS });
 
-    const { current, debriefed } = await getTeamSituations(gameId, userId);
-    expect(debriefed).toHaveLength(1);
-    const d = debriefed[0]!;
+    const { current, debriefedByRound } = await getTeamSituations(gameId, userId);
+    expect(debriefedByRound).toHaveLength(1);
+    const d = debriefedByRound[0]!.situations[0]!;
     expect(d.code).toBe("nova_t1_takeover");
     expect(d.debrief).not.toBeNull();
     expect(d.debrief!.correctOptionIds.sort()).toEqual(["cover_fixed", "unit_margin"]);
@@ -182,6 +231,24 @@ describe("débriefing et progression", () => {
     expect(instances.every((i) => i.status === "debriefed")).toBe(true);
   });
 
+  it("les analyticalHints sont vides après débriefing (A7)", async () => {
+    const { debriefedByRound } = await getTeamSituations(gameId, userId);
+    for (const dr of debriefedByRound) {
+      for (const s of dr.situations) {
+        expect(s.analyticalHints).toEqual([]);
+      }
+    }
+  });
+
+  it("les decisionLevers sont vides après débriefing (A8)", async () => {
+    const { debriefedByRound } = await getTeamSituations(gameId, userId);
+    for (const dr of debriefedByRound) {
+      for (const s of dr.situations) {
+        expect(s.decisionLevers).toEqual([]);
+      }
+    }
+  });
+
   it("après débriefing, indices et réponses sont verrouillés", async () => {
     const round1 = (
       await db.select().from(rounds).where(and(eq(rounds.gameId, gameId), eq(rounds.index, 1)))
@@ -196,6 +263,35 @@ describe("débriefing et progression", () => {
     await expect(
       submitDiagnosis({ instanceId: instance.id, userId, selectedOptionIds: [] }),
     ).rejects.toThrow();
+  });
+});
+
+describe("mémoire pédagogique inter-tours (A6)", () => {
+  it("tous les tours résolus sont présents dans debriefedByRound", async () => {
+    const { debriefedByRound } = await getTeamSituations(gameId, userId);
+    expect(debriefedByRound.length).toBe(2);
+  });
+
+  it("les tours sont triés par index décroissant (le plus récent en premier)", async () => {
+    const { debriefedByRound } = await getTeamSituations(gameId, userId);
+    expect(debriefedByRound[0]!.roundIndex).toBe(2);
+    expect(debriefedByRound[1]!.roundIndex).toBe(1);
+  });
+
+  it("chaque groupe contient les situations du tour correspondant", async () => {
+    const { debriefedByRound } = await getTeamSituations(gameId, userId);
+    const round1 = debriefedByRound.find((dr) => dr.roundIndex === 1)!;
+    expect(round1.situations.length).toBeGreaterThanOrEqual(1);
+    expect(round1.situations[0]!.code).toBe("nova_t1_takeover");
+    expect(round1.situations[0]!.debrief).not.toBeNull();
+  });
+
+  it("les situations du tour courant ne fuient pas dans debriefedByRound", async () => {
+    const { current, debriefedByRound } = await getTeamSituations(gameId, userId);
+    const allDebriefedIds = debriefedByRound.flatMap((dr) => dr.situations).map((s) => s.instanceId);
+    for (const s of current) {
+      expect(allDebriefedIds).not.toContain(s.instanceId);
+    }
   });
 });
 

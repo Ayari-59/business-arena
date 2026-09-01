@@ -53,6 +53,9 @@ export const situationInstances = pgTable(
     status: situationStatus("status").notNull().default("open"),
     diagnosis: jsonb("diagnosis"), // options cochées + texte libre
     quiz: jsonb("quiz"), // réponses au QCM de connaissances + score
+    triggerContext: jsonb("trigger_context"), // faits chiffrés ayant déclenché la situation (A1)
+    consequenceContext: jsonb("consequence_context"), // évolution avant/après au débriefing (A2)
+    interpretationContext: jsonb("interpretation_context"), // interprétation pédagogique au débriefing (A3)
     openedAt: timestamp("opened_at", { withTimezone: true }),
     answeredAt: timestamp("answered_at", { withTimezone: true }),
     ...timestamps,

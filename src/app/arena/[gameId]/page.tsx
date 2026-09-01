@@ -177,7 +177,130 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
         </section>
       ) : null}
 
-      {/* ── 6. Formulaire de décision / Écran de fin ── */}
+      {/* ── 6. Contexte prospectif ── */}
+      {!finished && view.announcedEventCards.length > 0 ? (
+        <section className="rounded-xl border border-amber-400/30 bg-slate-900 p-4">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-400">
+            ⚡ Votre enseignant a tiré une carte : elle s&apos;appliquera à ce tour
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {view.announcedEventCards.map((card, i) => (
+              <EventCard
+                key={`${card.code}-${card.teamId ?? "market"}`}
+                code={card.code}
+                delayMs={i * 450}
+                announced
+                targetLabel={
+                  card.teamId
+                    ? card.isMyTeam
+                      ? "🎯 Votre équipe"
+                      : `→ ${card.teamName ?? "Une autre équipe"}`
+                    : "Toute la classe"
+                }
+                highlight={card.isMyTeam}
+              />
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-slate-500">
+            Adaptez vos décisions en conséquence : c&apos;est tout l&apos;intérêt d&apos;être prévenu.
+          </p>
+        </section>
+      ) : null}
+
+      {!finished && view.seasonNotes.length > 0 ? (
+        <section className="rounded-xl border border-sky-400/20 bg-slate-900 px-4 py-3 text-sm text-sky-200">
+          🌤️ Saison du tour :{" "}
+          {view.seasonNotes
+            .map(
+              (n) =>
+                `${n.name} ×${n.coef.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} (${
+                  n.coef > 1 ? "haute saison" : "basse saison"
+                })`,
+            )
+            .join(" · ")}
+          {". "}Dimensionnez votre volume en conséquence.
+        </section>
+      ) : null}
+
+      {/* ── 6.5 Grille d'analyse (A7) ── */}
+      {!finished && (() => {
+        const allHints = [...new Map(
+          situations.current
+            .flatMap((s) => s.analyticalHints)
+            .map((h) => [h.code, h] as const)
+        ).values()].sort((a, b) => a.name.localeCompare(b.name, "fr"));
+        return allHints.length > 0 ? (
+          <section className="space-y-3">
+            <h2 className="text-sm font-semibold text-slate-200">
+              Grille d&apos;analyse : quels modèles mobiliser ?
+            </h2>
+            <p className="text-xs text-slate-400">
+              Ces modèles sont pertinents pour les situations de ce tour. Lequel vous semble le plus adapté ?
+            </p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {allHints.map((h) => (
+                <details key={h.code} className="rounded-lg border border-slate-700 bg-slate-800/50">
+                  <summary className="cursor-pointer px-3 py-2.5">
+                    <span className="text-sm font-medium text-slate-200">{h.name}</span>
+                    <span className="ml-2 text-xs text-slate-500">Niveau {h.difficulty}</span>
+                    <span className="mt-1 block text-xs text-slate-400">{h.objective}</span>
+                  </summary>
+                  <p className="px-3 pb-3 text-xs text-slate-400">{h.description}</p>
+                </details>
+              ))}
+            </div>
+          </section>
+        ) : null;
+      })()}
+
+      {/* ── 6.75 Pont situation → décision (A8) ── */}
+      {!finished && (() => {
+        const FIELD_LABELS: Record<string, string> = {
+          price: "Prix de vente",
+          productionPlan: "Plan de production",
+          marketingBudget: "Budget marketing",
+          qualityBudget: "Budget qualité",
+          maintenanceBudget: "Budget maintenance",
+        };
+        const DIRECTION_ICONS: Record<string, string> = { up: "↑", down: "↓", review: "⟳" };
+        const byField = new Map<string, { direction: string; hints: string[] }>();
+        for (const s of situations.current) {
+          for (const lever of s.decisionLevers ?? []) {
+            const existing = byField.get(lever.field);
+            if (!existing) {
+              byField.set(lever.field, { direction: lever.direction, hints: [lever.hint] });
+            } else {
+              existing.hints.push(lever.hint);
+              if (existing.direction !== lever.direction) existing.direction = "review";
+            }
+          }
+        }
+        const levers = [...byField.entries()].map(([field, { direction, hints: fieldHints }]) => ({
+          field, direction, hints: fieldHints, label: FIELD_LABELS[field] ?? field,
+        }));
+        return levers.length > 0 ? (
+          <section className="space-y-3">
+            <h2 className="text-sm font-semibold text-slate-200">
+              Leviers à considérer pour vos décisions
+            </h2>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {levers.map((l) => (
+                <div key={l.field} className="flex gap-2 rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
+                  <span className="mt-0.5 text-base leading-none text-amber-400">{DIRECTION_ICONS[l.direction]}</span>
+                  <div className="min-w-0">
+                    <span className="text-sm font-medium text-slate-200">{l.label}</span>
+                    {l.hints.map((h, i) => (
+                      <p key={i} className="mt-0.5 text-xs text-slate-400">{h}</p>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null;
+      })()}
+
+      {/* ── 7. Formulaire de décision / Écran de fin ── */}
       {finished ? (
         <section className="rounded-xl border border-amber-400/30 bg-slate-900 p-6 text-center">
           <h2 className="text-xl font-bold text-amber-300">
@@ -234,19 +357,28 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
         </section>
       )}
 
-      {/* ── 7. Débriefing pédagogique (tour précédent) ── */}
-      {r && situations.debriefed.length > 0 ? (
+      {/* ── 8. Mémoire pédagogique (tous les tours débriefés) ── */}
+      {r && situations.debriefedByRound.length > 0 ? (
         <section className="space-y-4">
           <h2 className="text-sm font-semibold text-slate-200">
-            Analyse du tour écoulé : ce qu&apos;il fallait voir
+            Mémoire pédagogique : ce qu&apos;il fallait voir
           </h2>
-          {situations.debriefed.map((s) => (
-            <SituationDebrief key={s.instanceId} situation={s} />
+          {situations.debriefedByRound.map((dr, i) => (
+            <details key={dr.roundIndex} open={i === 0} className="rounded-lg border border-slate-700 bg-slate-800/50">
+              <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-slate-200">
+                {periodLabel(view.roundDays, dr.roundIndex)} — {dr.situations.length} situation{dr.situations.length > 1 ? "s" : ""}
+              </summary>
+              <div className="space-y-4 px-4 pb-4">
+                {dr.situations.map((s) => (
+                  <SituationDebrief key={s.instanceId} situation={s} />
+                ))}
+              </div>
+            </details>
           ))}
         </section>
       ) : null}
 
-      {/* ── 8. Résumé des performances ── */}
+      {/* ── 9. Résumé des performances ── */}
       {r ? (
         <>
           <section aria-label="Indicateurs clés" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -270,7 +402,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
             />
           </section>
 
-          {/* ── 9. Classement ── */}
+          {/* ── 10. Classement ── */}
           <section className="grid gap-4 lg:grid-cols-2">
             <div className="rounded-xl border border-white/10 bg-slate-900 p-4">
               <h2 className="mb-3 text-sm font-semibold text-slate-200">
@@ -306,51 +438,6 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
             {view.playerDimensions ? <BpiPanel dimensions={view.playerDimensions} /> : null}
           </section>
         </>
-      ) : null}
-
-      {/* ── 10. Contexte prospectif ── */}
-      {!finished && view.announcedEventCards.length > 0 ? (
-        <section className="rounded-xl border border-amber-400/30 bg-slate-900 p-4">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-400">
-            ⚡ Votre enseignant a tiré une carte : elle s&apos;appliquera à ce tour
-          </p>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {view.announcedEventCards.map((card, i) => (
-              <EventCard
-                key={`${card.code}-${card.teamId ?? "market"}`}
-                code={card.code}
-                delayMs={i * 450}
-                announced
-                targetLabel={
-                  card.teamId
-                    ? card.isMyTeam
-                      ? "🎯 Votre équipe"
-                      : `→ ${card.teamName ?? "Une autre équipe"}`
-                    : "Toute la classe"
-                }
-                highlight={card.isMyTeam}
-              />
-            ))}
-          </div>
-          <p className="mt-2 text-xs text-slate-500">
-            Adaptez vos décisions en conséquence : c&apos;est tout l&apos;intérêt d&apos;être prévenu.
-          </p>
-        </section>
-      ) : null}
-
-      {!finished && view.seasonNotes.length > 0 ? (
-        <section className="rounded-xl border border-sky-400/20 bg-slate-900 px-4 py-3 text-sm text-sky-200">
-          🌤️ Saison du tour :{" "}
-          {view.seasonNotes
-            .map(
-              (n) =>
-                `${n.name} ×${n.coef.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} (${
-                  n.coef > 1 ? "haute saison" : "basse saison"
-                })`,
-            )
-            .join(" · ")}
-          {". "}Dimensionnez votre volume en conséquence.
-        </section>
       ) : null}
 
       {/* ── 11. Résultats détaillés (repliable) ── */}

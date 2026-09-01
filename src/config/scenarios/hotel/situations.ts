@@ -1,4 +1,4 @@
-import { attachModelQuestions, hints, type SituationDef } from "../situation-kit";
+import { attachModelQuestions, hints, type DecisionLever, type SituationDef } from "../situation-kit";
 
 /**
  * Situations pédagogiques de L'ESCALE (hôtellerie).
@@ -83,6 +83,11 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 1 },
     weight: 1,
+    decisionLevers: [
+      { field: "price", direction: "review", hint: "Votre prix de 95 € détermine la marge unitaire de 74 €. Chaque euro de prix en plus ou en moins déplace directement le seuil de rentabilité." },
+      { field: "productionPlan", direction: "review", hint: "Préparer plus de chambres que nécessaire coûte en blanchisserie et petit-déjeuner inutiles ; en préparer trop peu, c'est renoncer à des nuitées à 74 € de marge." },
+      { field: "maintenanceBudget", direction: "review", hint: "L'entretien de base protège la capacité de vos 60 chambres. Négliger la maintenance, c'est réduire votre offre sans le décider." },
+    ],
   },
   {
     code: "hotel_t2_yield",
@@ -159,6 +164,10 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 2 },
     weight: 1.5,
+    decisionLevers: [
+      { field: "price", direction: "down", hint: "À 18h avec 17 chambres vides, baisser le prix au-dessus du coût variable de 21 € rapporte plus que zéro. Chaque nuitée à 58 € dégage encore 37 € de marge." },
+      { field: "marketingBudget", direction: "review", hint: "Investir en visibilité directe peut réduire le besoin de brader en dernière minute via les plateformes." },
+    ],
   },
   {
     code: "hotel_t3_saison",
@@ -235,6 +244,11 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 3 },
     weight: 1.5,
+    decisionLevers: [
+      { field: "price", direction: "up", hint: "La forte demande estivale permet de monter les prix, mais la clientèle loisirs (élasticité −1,75) sanctionne les excès plus durement que les affaires." },
+      { field: "productionPlan", direction: "up", hint: "Préparez le maximum de chambres pour capter le pic de demande touristique. Une chambre non prête en haute saison est une perte définitive." },
+      { field: "marketingBudget", direction: "review", hint: "Le segment loisirs ne se capte pas comme le segment affaires. Revoyez vos canaux et votre budget promotionnel pour cibler les vacanciers." },
+    ],
   },
   {
     code: "hotel_t5_renovation",
@@ -310,6 +324,11 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 5 },
     weight: 1.5,
+    decisionLevers: [
+      { field: "maintenanceBudget", direction: "up", hint: "Les 90 000 € de rénovation passent par le budget d'entretien. C'est un investissement capacitaire à juger sur les flux futurs actualisés, pas sur le coût immédiat." },
+      { field: "productionPlan", direction: "up", hint: "Dix chambres rouvertes ajoutent 900 nuitées par trimestre à votre offre. Augmentez les chambres préparées pour exploiter cette nouvelle capacité." },
+      { field: "price", direction: "review", hint: "Des chambres rénovées peuvent justifier un tarif supérieur, mais la VAN dépend du taux d'occupation attendu, pas du prix affiché." },
+    ],
   },
   {
     code: "hotel_detect_below_breakeven",
@@ -385,6 +404,11 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { detect: "below_breakeven" },
     weight: 1,
+    decisionLevers: [
+      { field: "price", direction: "down", hint: "Baisser le prix peut remplir davantage, mais seulement si l'élasticité du segment visé compense la perte de marge unitaire. Chiffrez avant de décider." },
+      { field: "marketingBudget", direction: "up", hint: "Un effort commercial ciblé peut ramener du volume sans casser le tarif. C'est un levier complémentaire au prix pour franchir le seuil d'équilibre." },
+      { field: "qualityBudget", direction: "review", hint: "Un service dégradé fait fuir la clientèle fidèle. Vérifiez que la qualité n'est pas en cause avant de jouer sur le prix." },
+    ],
   },
   {
     code: "hotel_detect_capacity_saturated",
@@ -461,6 +485,11 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { detect: "capacity_saturated" },
     weight: 1,
+    decisionLevers: [
+      { field: "price", direction: "up", hint: "Quand la demande dépasse la capacité, monter le prix ne coûte aucune nuitée et augmente la marge sur chacune. C'est le levier gratuit par excellence." },
+      { field: "maintenanceBudget", direction: "up", hint: "Si la saturation est durable, investir dans la réouverture de chambres ajoute de la capacité. Mais vérifiez d'abord que le pic n'est pas saisonnier." },
+      { field: "productionPlan", direction: "up", hint: "Préparez toutes les chambres disponibles pour maximiser l'offre face à une demande excédentaire." },
+    ],
   },
   {
     code: "hotel_t4_plateformes",
@@ -535,6 +564,11 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 4 },
     weight: 1,
+    decisionLevers: [
+      { field: "marketingBudget", direction: "up", hint: "Investir dans la visibilité directe (site, référencement, fidélisation) réduit la dépendance aux plateformes et leurs 18 % de commission." },
+      { field: "price", direction: "review", hint: "Le prix affiché est identique, mais la marge nette diffère selon le canal. Pensez votre tarif en fonction de ce qui vous reste réellement après commission." },
+      { field: "qualityBudget", direction: "review", hint: "Un service irréprochable fidélise en direct. Les clients satisfaits reviennent sans passer par la plateforme, et vous économisez la commission." },
+    ],
   },
   {
     code: "hotel_t6_ecarts",
@@ -609,6 +643,11 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 6 },
     weight: 1,
+    decisionLevers: [
+      { field: "price", direction: "review", hint: "L'écart de prix moyen révèle si votre politique tarifaire s'est appliquée comme prévu. Un prix réalisé systématiquement inférieur signale un biais à corriger." },
+      { field: "productionPlan", direction: "review", hint: "L'écart de volume traduit un décalage entre chambres prévues et nuitées réellement vendues. Ajustez votre plan de préparation aux tendances observées." },
+      { field: "marketingBudget", direction: "review", hint: "Si l'écart de volume est favorable mais le prix moyen a baissé, votre effort commercial a peut-être attiré une clientèle plus sensible au prix." },
+    ],
   },
   {
     code: "hotel_detect_idle_cash",
@@ -683,6 +722,11 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { detect: "idle_cash" },
     weight: 0.8,
+    decisionLevers: [
+      { field: "maintenanceBudget", direction: "review", hint: "Avant de placer votre excédent, vérifiez si un investissement d'entretien différé ne serait pas plus rentable que 2 % bancaires." },
+      { field: "price", direction: "review", hint: "En saison creuse, ajuster le tarif peut maintenir un flux minimum de nuitées et limiter le recours à la trésorerie accumulée." },
+      { field: "productionPlan", direction: "down", hint: "En saison creuse, réduire le nombre de chambres préparées diminue les coûts variables et préserve la trésorerie pour les échéances à venir." },
+    ],
   },
 ];
 

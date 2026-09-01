@@ -199,7 +199,7 @@ describe("réglage des questions par l'enseignant", () => {
 
     // Et le débriefing donne quand même le modèle attendu, en lecture seule.
     const after = await getTeamSituations(gameId, userId);
-    const debriefed = after.debriefed.find((s) => s.instanceId === situation.instanceId)!;
+    const debriefed = after.debriefedByRound.flatMap((dr) => dr.situations).find((s) => s.instanceId === situation.instanceId)!;
     expect(debriefed.debrief!.modelInsight).not.toBeNull();
     expect(debriefed.debrief!.modelInsight!.answer.length).toBeGreaterThan(0);
     expect(debriefed.debrief!.modelInsight!.explain.length).toBeGreaterThan(0);

@@ -232,7 +232,7 @@ describe("une équipe restée sans joueur ne compte pas comme un échec", () => 
 
     // Le score que l'élève voit sur son propre débriefing est la référence :
     // le carnet doit afficher celui-là, et non sa moitié.
-    const vue = (await getTeamSituations(gameId, eleveId)).debriefed[0]!;
+    const vue = (await getTeamSituations(gameId, eleveId)).debriefedByRound[0]!.situations[0]!;
     const scoreEleve = vue.debrief!.finalScore;
     expect(scoreEleve).toBeGreaterThan(0);
 
@@ -301,7 +301,7 @@ describe("une équipe muette n'est pas une situation ratée", () => {
     expect(ligne.debriefed).toBe(1);
     expect(ligne.unanswered).toBe(1);
     // et surtout : le score est celui de l'équipe qui a répondu, pas sa moitié
-    const vue = (await getTeamSituations(gameId, parle)).debriefed[0]!;
+    const vue = (await getTeamSituations(gameId, parle)).debriefedByRound[0]!.situations[0]!;
     expect(ligne.averageScore).toBeCloseTo(vue.debrief!.finalScore, 9);
   });
 

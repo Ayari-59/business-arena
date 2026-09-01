@@ -1,4 +1,4 @@
-import { attachModelQuestions, hints, type SituationDef } from "../situation-kit";
+import { attachModelQuestions, hints, type DecisionLever, type SituationDef } from "../situation-kit";
 
 /**
  * Situations pédagogiques de VOLT FITNESS (modèle par abonnement).
@@ -82,6 +82,18 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 1 },
     weight: 1,
+    decisionLevers: [
+      {
+        field: "price",
+        direction: "review",
+        hint: "Votre prix fixe la marge par adhérent (105 − 15 = 90 €). Dans un modèle récurrent, chaque euro de marge se répète trimestre après trimestre : évaluez son impact cumulé avant de le modifier.",
+      },
+      {
+        field: "productionPlan",
+        direction: "review",
+        hint: "Le nombre d'abonnements proposés doit rester en deçà de la capacité réelle (2 200 places). Au-delà, la promesse de service ne peut plus être tenue.",
+      },
+    ],
   },
   {
     code: "fitness_t2_attrition",
@@ -158,6 +170,23 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 2 },
     weight: 1.5,
+    decisionLevers: [
+      {
+        field: "qualityBudget",
+        direction: "up",
+        hint: "Améliorer l'encadrement et les équipements réduit l'attrition. Cinq points de rétention en plus valent 300 € par adhérent — bien plus qu'une campagne publicitaire.",
+      },
+      {
+        field: "maintenanceBudget",
+        direction: "up",
+        hint: "Un vestiaire propre et des machines en état sont les premiers remparts contre la résiliation. L'entretien est un investissement direct en rétention.",
+      },
+      {
+        field: "marketingBudget",
+        direction: "review",
+        hint: "Avant de recruter, calculez combien coûte un nouvel adhérent et comparez à la valeur d'un adhérent conservé. Le budget publicité ne se justifie que si la rétention est déjà solide.",
+      },
+    ],
   },
   {
     code: "fitness_t3_ete",
@@ -234,6 +263,23 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 3 },
     weight: 1.5,
+    decisionLevers: [
+      {
+        field: "marketingBudget",
+        direction: "up",
+        hint: "Le creux de l'été se prépare avant : une campagne ciblée au printemps ou une offre estivale peut limiter la chute des inscriptions.",
+      },
+      {
+        field: "price",
+        direction: "review",
+        hint: "Une formule annuelle ou un tarif estival réduit protège contre l'hémorragie saisonnière en engageant les adhérents au-delà du trimestre.",
+      },
+      {
+        field: "maintenanceBudget",
+        direction: "review",
+        hint: "L'été est le moment idéal pour l'entretien lourd, mais ne coupez pas la maintenance visible : les adhérents qui restent jugent la salle vide plus sévèrement.",
+      },
+    ],
   },
   {
     code: "fitness_t5_saturation",
@@ -310,6 +356,23 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 5 },
     weight: 1.5,
+    decisionLevers: [
+      {
+        field: "productionPlan",
+        direction: "down",
+        hint: "Réduire le nombre d'abonnements vendus préserve l'expérience et la rétention de toute la base. Mieux vaut 1 800 adhérents fidèles que 2 200 mécontents.",
+      },
+      {
+        field: "price",
+        direction: "up",
+        hint: "Un prix plus élevé régule naturellement la demande et sélectionne les adhérents les plus engagés, sans dégrader le service.",
+      },
+      {
+        field: "qualityBudget",
+        direction: "up",
+        hint: "Investir dans de nouveaux équipements ou des créneaux encadrés supplémentaires augmente la capacité effective sans agrandir la surface.",
+      },
+    ],
   },
   {
     code: "fitness_detect_below_breakeven",
@@ -386,6 +449,23 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { detect: "below_breakeven" },
     weight: 1,
+    decisionLevers: [
+      {
+        field: "marketingBudget",
+        direction: "up",
+        hint: "Il manque des adhérents pour couvrir la structure : un effort commercial ciblé peut combler l'écart, à condition que le coût d'acquisition reste inférieur à la valeur vie.",
+      },
+      {
+        field: "qualityBudget",
+        direction: "up",
+        hint: "Retenir les adhérents existants en améliorant le service coûte moins cher que d'en recruter de nouveaux et agit sur toute la base à la fois.",
+      },
+      {
+        field: "price",
+        direction: "review",
+        hint: "Augmenter le prix améliore la marge unitaire mais risque d'accélérer les départs. Chiffrez l'élasticité avant de toucher au tarif.",
+      },
+    ],
   },
   {
     code: "fitness_t4_annuel",
@@ -460,6 +540,18 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 4 },
     weight: 1,
+    decisionLevers: [
+      {
+        field: "price",
+        direction: "down",
+        hint: "Accepter 340 € au lieu de 420 € sur l'année semble une perte, mais l'encaissement immédiat finance l'exploitation et l'attrition bloquée sécurise le revenu.",
+      },
+      {
+        field: "productionPlan",
+        direction: "review",
+        hint: "Des adhérents engagés pour douze mois rendent la fréquentation plus prévisible. Ajustez votre capacité à une base stable plutôt qu'à des flux trimestriels.",
+      },
+    ],
   },
   {
     code: "fitness_t6_seconde_salle",
@@ -534,6 +626,23 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 6 },
     weight: 1,
+    decisionLevers: [
+      {
+        field: "productionPlan",
+        direction: "review",
+        hint: "Ouvrir une seconde salle double la capacité mais aussi les charges fixes. Chiffrez le seuil de rentabilité du nouveau site avant de décider.",
+      },
+      {
+        field: "marketingBudget",
+        direction: "review",
+        hint: "Une nouvelle salle dans un quartier inconnu exige un budget d'acquisition : prévoyez le coût de recrutement des premiers adhérents jusqu'au seuil de rentabilité.",
+      },
+      {
+        field: "maintenanceBudget",
+        direction: "review",
+        hint: "Deux sites signifient deux budgets d'entretien. Assurez-vous que la maintenance de la première salle ne souffrira pas du partage des ressources.",
+      },
+    ],
   },
   {
     code: "fitness_detect_idle_cash",
@@ -608,6 +717,18 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { detect: "idle_cash" },
     weight: 0.8,
+    decisionLevers: [
+      {
+        field: "maintenanceBudget",
+        direction: "review",
+        hint: "La trésorerie excédentaire peut financer des travaux d'entretien reportés, à condition de conserver assez pour couvrir les charges jusqu'à la prochaine vague d'inscriptions.",
+      },
+      {
+        field: "qualityBudget",
+        direction: "review",
+        hint: "Investir dans du matériel neuf améliore la rétention, mais vérifiez d'abord que le solde couvre les décaissements du trimestre, été compris.",
+      },
+    ],
   },
 ];
 
