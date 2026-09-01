@@ -11,6 +11,7 @@ import {
   modelChoices,
   playerSkills,
   players,
+  roundResults,
   rounds,
   situationConcepts,
   situationInstances,
@@ -35,8 +36,8 @@ import {
 import { presetFromProfile, quizModeFromProfile, type QuizMode } from "@/config/difficulty";
 import { hintScoreMultiplier, nextUnlockableLevel } from "@/pedagogy/hints";
 import { evaluateDiagnosis, evaluateQuiz } from "@/pedagogy/evaluation";
-import { buildTriggerContext, detectSituations } from "@/pedagogy/detection";
-import type { TriggerFact } from "@/pedagogy/detection";
+import { buildConsequenceContext, buildTriggerContext, detectSituations } from "@/pedagogy/detection";
+import type { ConsequenceFact, TriggerFact } from "@/pedagogy/detection";
 import { AXES, aggregateAxis, updateMastery } from "@/pedagogy/progress";
 import { adaptiveHintMultiplier, playerStrength } from "@/pedagogy/adaptivity";
 import { computeRawSituationScore } from "@/pedagogy/scoring";
@@ -487,6 +488,47 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
     : [];
   const choiceByInstance = new Map(choiceRows.map((c) => [c.situationInstanceId, c]));
 
+  // A2 — Conséquences pédagogiques : charger les résultats avant/après pour
+  // construire le snapshot d'évolution des indicateurs au débriefing.
+  const afterResults = await db
+    .select()
+    .from(roundResults)
+    .where(eq(roundResults.roundId, roundRow.id));
+  const afterByTeam = new Map<string, CompanyRoundResult>();
+  for (const r of afterResults) {
+    afterByTeam.set(r.teamId, {
+      incomeStatement: r.incomeStatement,
+      balanceSheet: r.balanceSheet,
+      functionalBalance: { frng: Number(r.frng), bfr: Number(r.bfr), netTreasury: Number(r.netTreasury) },
+      market: { bySegment: r.marketDetail as CompanyRoundResult["market"]["bySegment"], totalShare: Number(r.marketShare) },
+      production: (r.engineTrace as { production?: CompanyRoundResult["production"] })?.production ?? { utilizationRate: 0 },
+    } as CompanyRoundResult);
+  }
+  let beforeByTeam = new Map<string, CompanyRoundResult>();
+  if (roundIndex > 1) {
+    const prevRoundRow = (
+      await db
+        .select()
+        .from(rounds)
+        .where(and(eq(rounds.gameId, gameId), eq(rounds.index, roundIndex - 1)))
+    )[0];
+    if (prevRoundRow) {
+      const beforeResults = await db
+        .select()
+        .from(roundResults)
+        .where(eq(roundResults.roundId, prevRoundRow.id));
+      for (const r of beforeResults) {
+        beforeByTeam.set(r.teamId, {
+          incomeStatement: r.incomeStatement,
+          balanceSheet: r.balanceSheet,
+          functionalBalance: { frng: Number(r.frng), bfr: Number(r.bfr), netTreasury: Number(r.netTreasury) },
+          market: { bySegment: r.marketDetail as CompanyRoundResult["market"]["bySegment"], totalShare: Number(r.marketShare) },
+          production: (r.engineTrace as { production?: CompanyRoundResult["production"] })?.production ?? { utilizationRate: 0 },
+        } as CompanyRoundResult);
+      }
+    }
+  }
+
   for (const instance of toDebrief) {
     const def = situationByCode.get(codeById.get(instance.situationId) ?? "");
     if (!def) continue;
@@ -507,6 +549,16 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
     const baseMultiplier = hintScoreMultiplier(levels, def.hints);
     const teamScore = raw * baseMultiplier;
 
+    // A2 — snapshot conséquences pour les situations détectées
+    let consequenceContext: ConsequenceFact[] | null = null;
+    if (instance.origin === "detected" && "detect" in def.trigger) {
+      const before = beforeByTeam.get(instance.teamId);
+      const after = afterByTeam.get(instance.teamId);
+      if (before && after) {
+        consequenceContext = buildConsequenceContext(def.trigger.detect, before, after);
+      }
+    }
+
     await db
       .update(situationInstances)
       .set({
@@ -516,6 +568,7 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
           finalScore: teamScore,
           hintLevelsUsed: levels,
         },
+        ...(consequenceContext !== null ? { consequenceContext } : {}),
       })
       .where(eq(situationInstances.id, instance.id));
 
@@ -677,6 +730,8 @@ export interface SituationView {
     quizScore: number | null;
     /** Modèle attendu, servi seulement quand la question n'a PAS été posée. */
     modelInsight: { prompt: string; answer: string; explain: string } | null;
+    /** Évolution avant/après des indicateurs (A2 — « Qu'a-t-il évolué ? »). */
+    consequenceFacts: ConsequenceFact[] | null;
     concepts: { code: string; name: string; domain: string }[];
     finalScore: number;
   } | null;
@@ -747,6 +802,7 @@ function toView(
           // modèle attendu et son explication. Sans cela, retirer les
           // questions retirerait aussi la leçon centrale de la situation.
           modelInsight: modelAsked ? null : modelInsight(def),
+          consequenceFacts: (instance.consequenceContext as ConsequenceFact[] | null) ?? null,
           concepts: def.conceptCodes
             .map((code) => conceptByCode.get(code))
             .filter((c): c is NonNullable<typeof c> => Boolean(c))

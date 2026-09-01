@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { hintScoreMultiplier, nextUnlockableLevel } from "../src/pedagogy/hints";
 import { evaluateDiagnosis, evaluateQuiz } from "../src/pedagogy/evaluation";
-import { buildTriggerContext, DETECTION_METADATA, detectSituations } from "../src/pedagogy/detection";
-import type { TriggerFact } from "../src/pedagogy/detection";
+import { buildConsequenceContext, buildTriggerContext, CONSEQUENCE_METADATA, DETECTION_METADATA, detectSituations } from "../src/pedagogy/detection";
+import type { ConsequenceFact, TriggerFact } from "../src/pedagogy/detection";
 import { updateMastery } from "../src/pedagogy/progress";
 import {
   playerStrength,
@@ -250,6 +250,122 @@ describe("métadonnées de détection (A1 — causalité visible)", () => {
         expect(fact.value).not.toMatch(/votre décision/i);
         expect(fact.value).not.toMatch(/a provoqué/i);
       }
+    }
+  });
+});
+
+describe("conséquences pédagogiques (A2 — évolution avant/après)", () => {
+  const before = {
+    incomeStatement: { netIncome: -5000, revenue: 80000, fixedCosts: 90000 },
+    functionalBalance: { netTreasury: -15000 },
+    market: { bySegment: { s: { sold: 800, lost: 200 } } },
+    production: { utilizationRate: 0.99 },
+    balanceSheet: { cash: 200000, overdraft: 0 },
+  } as unknown as CompanyRoundResult;
+
+  const after = {
+    incomeStatement: { netIncome: 12000, revenue: 110000, fixedCosts: 92000 },
+    functionalBalance: { netTreasury: 8000 },
+    market: { bySegment: { s: { sold: 1100, lost: 50 } } },
+    production: { utilizationRate: 0.85 },
+    balanceSheet: { cash: 140000, overdraft: 0 },
+  } as unknown as CompanyRoundResult;
+
+  it("couvre les 5 codes de détection", () => {
+    const codes: string[] = [
+      "profitable_illiquid",
+      "below_breakeven",
+      "stockout",
+      "capacity_saturated",
+      "idle_cash",
+    ];
+    for (const code of codes) {
+      expect(CONSEQUENCE_METADATA[code as keyof typeof CONSEQUENCE_METADATA], code).toBeDefined();
+    }
+  });
+
+  it("buildConsequenceContext retourne des faits non vides avec before/after/delta", () => {
+    const codes = Object.keys(CONSEQUENCE_METADATA) as (keyof typeof CONSEQUENCE_METADATA)[];
+    for (const code of codes) {
+      const facts = buildConsequenceContext(code, before, after);
+      expect(facts.length, code).toBeGreaterThan(0);
+      for (const fact of facts) {
+        expect(fact.label.length, `${code}: label vide`).toBeGreaterThan(0);
+        expect(fact.before.length, `${code}: before vide`).toBeGreaterThan(0);
+        expect(fact.after.length, `${code}: after vide`).toBeGreaterThan(0);
+        expect(fact.delta.length, `${code}: delta vide`).toBeGreaterThan(0);
+        expect(["positive", "negative", "neutral"]).toContain(fact.direction);
+      }
+    }
+  });
+
+  it("profitable_illiquid : résultat net et trésorerie nette évoluent", () => {
+    const facts = buildConsequenceContext("profitable_illiquid", before, after);
+    expect(facts).toHaveLength(2);
+    expect(facts[0]!.label).toContain("Résultat net");
+    expect(facts[1]!.label).toContain("Trésorerie nette");
+  });
+
+  it("below_breakeven : résultat net et CA évoluent", () => {
+    const facts = buildConsequenceContext("below_breakeven", before, after);
+    expect(facts).toHaveLength(2);
+    expect(facts[0]!.label).toContain("Résultat net");
+    expect(facts[1]!.label).toContain("Chiffre d'affaires");
+  });
+
+  it("stockout : la polarité est inversée pour la demande non servie", () => {
+    const facts = buildConsequenceContext("stockout", before, after);
+    expect(facts).toHaveLength(2);
+    // Les ventes augmentent : positif
+    expect(facts[0]!.direction).toBe("positive");
+    // La demande non servie baisse : positif (polarité inversée)
+    expect(facts[1]!.direction).toBe("positive");
+  });
+
+  it("capacity_saturated : un taux qui baisse est positif", () => {
+    const facts = buildConsequenceContext("capacity_saturated", before, after);
+    expect(facts).toHaveLength(2);
+    // Utilization rate drops from 99% to 85% = positive (capacity freed)
+    expect(facts[0]!.direction).toBe("positive");
+    // Demande non servie drops = positive
+    expect(facts[1]!.direction).toBe("positive");
+  });
+
+  it("idle_cash : une baisse de trésorerie oisive est positive", () => {
+    const facts = buildConsequenceContext("idle_cash", before, after);
+    expect(facts).toHaveLength(2);
+    // Cash drops from 200k to 140k = positive (money was invested)
+    expect(facts[0]!.direction).toBe("positive");
+    // Ratio drops = positive
+    expect(facts[1]!.direction).toBe("positive");
+  });
+
+  it("delta neutre quand les indicateurs ne bougent pas", () => {
+    const same = { ...before } as unknown as CompanyRoundResult;
+    const facts = buildConsequenceContext("profitable_illiquid", same, same);
+    for (const fact of facts) {
+      expect(fact.direction).toBe("neutral");
+    }
+  });
+
+  it("les faits n'utilisent jamais de formulation causale directe", () => {
+    const codes = Object.keys(CONSEQUENCE_METADATA) as (keyof typeof CONSEQUENCE_METADATA)[];
+    for (const code of codes) {
+      const facts = buildConsequenceContext(code, before, after);
+      for (const fact of facts) {
+        expect(fact.label).not.toMatch(/votre décision/i);
+        expect(fact.label).not.toMatch(/vous avez/i);
+        expect(fact.label).not.toMatch(/a provoqué/i);
+        expect(fact.delta).not.toMatch(/votre décision/i);
+      }
+    }
+  });
+
+  it("les situations détectées dans ALL_SITUATIONS ont toutes leurs métadonnées A2", () => {
+    const detected = ALL_SITUATIONS.filter((s) => "detect" in s.trigger);
+    for (const s of detected) {
+      const code = (s.trigger as { detect: string }).detect;
+      expect(CONSEQUENCE_METADATA[code as keyof typeof CONSEQUENCE_METADATA], `${s.code} → ${code}`).toBeDefined();
     }
   });
 });

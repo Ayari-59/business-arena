@@ -130,3 +130,193 @@ export function buildTriggerContext(
 ): TriggerFact[] {
   return DETECTION_METADATA[code].buildFacts(result);
 }
+
+// ---------------------------------------------------------------------------
+// Conséquences pédagogiques (A2 — évolution avant/après, doc 03 §1.1)
+//
+// Chaque règle de détection porte aussi les indicateurs à comparer entre le
+// tour de détection (avant) et le tour de résolution (après). Les faits
+// montrent une ÉVOLUTION constatée, jamais une attribution causale : le
+// système ne dit pas « Votre décision X a provoqué Y ».
+// ---------------------------------------------------------------------------
+
+export interface ConsequenceFact {
+  label: string;
+  before: string;
+  after: string;
+  delta: string;
+  /** Sémantique économique : une baisse de « demande non servie » est positive. */
+  direction: "positive" | "negative" | "neutral";
+}
+
+interface ConsequenceMeta {
+  buildFacts(before: CompanyRoundResult, after: CompanyRoundResult): ConsequenceFact[];
+}
+
+function deltaEuro(before: number, after: number): { delta: string; direction: ConsequenceFact["direction"] } {
+  const diff = after - before;
+  const sign = diff >= 0 ? "+" : "";
+  return {
+    delta: `${sign}${formatEuro(diff)}`,
+    direction: diff > 0 ? "positive" : diff < 0 ? "negative" : "neutral",
+  };
+}
+
+function deltaPercent(before: number, after: number): { delta: string; direction: ConsequenceFact["direction"] } {
+  const diff = after - before;
+  const sign = diff >= 0 ? "+" : "";
+  return {
+    delta: `${sign}${formatPercent(diff)}`,
+    direction: diff > 0 ? "positive" : diff < 0 ? "negative" : "neutral",
+  };
+}
+
+function deltaUnits(before: number, after: number): { delta: string; direction: ConsequenceFact["direction"] } {
+  const diff = after - before;
+  const sign = diff >= 0 ? "+" : "";
+  return {
+    delta: `${sign}${formatUnits(diff)}`,
+    direction: diff > 0 ? "positive" : diff < 0 ? "negative" : "neutral",
+  };
+}
+
+export const CONSEQUENCE_METADATA: Record<DetectCode, ConsequenceMeta> = {
+  profitable_illiquid: {
+    buildFacts(before, after) {
+      const ni = deltaEuro(before.incomeStatement.netIncome, after.incomeStatement.netIncome);
+      const nt = deltaEuro(before.functionalBalance.netTreasury, after.functionalBalance.netTreasury);
+      return [
+        {
+          label: "Résultat net",
+          before: formatEuro(before.incomeStatement.netIncome),
+          after: formatEuro(after.incomeStatement.netIncome),
+          ...ni,
+        },
+        {
+          label: "Trésorerie nette",
+          before: formatEuro(before.functionalBalance.netTreasury),
+          after: formatEuro(after.functionalBalance.netTreasury),
+          delta: nt.delta,
+          direction: nt.direction,
+        },
+      ];
+    },
+  },
+  below_breakeven: {
+    buildFacts(before, after) {
+      const ni = deltaEuro(before.incomeStatement.netIncome, after.incomeStatement.netIncome);
+      const rev = deltaEuro(before.incomeStatement.revenue, after.incomeStatement.revenue);
+      return [
+        {
+          label: "Résultat net",
+          before: formatEuro(before.incomeStatement.netIncome),
+          after: formatEuro(after.incomeStatement.netIncome),
+          ...ni,
+        },
+        {
+          label: "Chiffre d'affaires",
+          before: formatEuro(before.incomeStatement.revenue),
+          after: formatEuro(after.incomeStatement.revenue),
+          ...rev,
+        },
+      ];
+    },
+  },
+  stockout: {
+    buildFacts(before, after) {
+      const bTotals = marketTotals(before);
+      const aTotals = marketTotals(after);
+      const sold = deltaUnits(bTotals.sold, aTotals.sold);
+      const lost = deltaUnits(bTotals.lost, aTotals.lost);
+      return [
+        {
+          label: "Unités vendues",
+          before: formatUnits(bTotals.sold),
+          after: formatUnits(aTotals.sold),
+          ...sold,
+        },
+        {
+          label: "Demande non servie",
+          before: formatUnits(bTotals.lost),
+          after: formatUnits(aTotals.lost),
+          delta: lost.delta,
+          // Polarity inversée : une baisse de demande non servie est positive
+          direction: aTotals.lost < bTotals.lost ? "positive" : aTotals.lost > bTotals.lost ? "negative" : "neutral",
+        },
+      ];
+    },
+  },
+  capacity_saturated: {
+    buildFacts(before, after) {
+      const ur = deltaPercent(before.production.utilizationRate, after.production.utilizationRate);
+      const bTotals = marketTotals(before);
+      const aTotals = marketTotals(after);
+      const lost = deltaUnits(bTotals.lost, aTotals.lost);
+      return [
+        {
+          label: "Taux d'utilisation",
+          before: formatPercent(before.production.utilizationRate),
+          after: formatPercent(after.production.utilizationRate),
+          delta: ur.delta,
+          // Polarity inversée : un taux qui baisse signifie de la capacité libérée
+          direction: after.production.utilizationRate < before.production.utilizationRate
+            ? "positive"
+            : after.production.utilizationRate > before.production.utilizationRate
+              ? "negative"
+              : "neutral",
+        },
+        {
+          label: "Demande non servie",
+          before: formatUnits(bTotals.lost),
+          after: formatUnits(aTotals.lost),
+          delta: lost.delta,
+          direction: aTotals.lost < bTotals.lost ? "positive" : aTotals.lost > bTotals.lost ? "negative" : "neutral",
+        },
+      ];
+    },
+  },
+  idle_cash: {
+    buildFacts(before, after) {
+      const cash = deltaEuro(before.balanceSheet.cash, after.balanceSheet.cash);
+      const bRatio = before.incomeStatement.fixedCosts > 0
+        ? before.balanceSheet.cash / before.incomeStatement.fixedCosts
+        : 0;
+      const aRatio = after.incomeStatement.fixedCosts > 0
+        ? after.balanceSheet.cash / after.incomeStatement.fixedCosts
+        : 0;
+      const bRatioStr = bRatio.toFixed(1).replace(".", ",");
+      const aRatioStr = aRatio.toFixed(1).replace(".", ",");
+      const ratioDiff = aRatio - bRatio;
+      const ratioDelta = `${ratioDiff >= 0 ? "+" : ""}${ratioDiff.toFixed(1).replace(".", ",")}×`;
+      return [
+        {
+          label: "Trésorerie disponible",
+          before: formatEuro(before.balanceSheet.cash),
+          after: formatEuro(after.balanceSheet.cash),
+          delta: cash.delta,
+          // Polarity inversée : une baisse de trésorerie oisive est positive (investie)
+          direction: after.balanceSheet.cash < before.balanceSheet.cash
+            ? "positive"
+            : after.balanceSheet.cash > before.balanceSheet.cash
+              ? "negative"
+              : "neutral",
+        },
+        {
+          label: "Ratio trésorerie / charges",
+          before: `${bRatioStr}×`,
+          after: `${aRatioStr}×`,
+          delta: ratioDelta,
+          direction: aRatio < bRatio ? "positive" : aRatio > bRatio ? "negative" : "neutral",
+        },
+      ];
+    },
+  },
+};
+
+export function buildConsequenceContext(
+  code: DetectCode,
+  before: CompanyRoundResult,
+  after: CompanyRoundResult,
+): ConsequenceFact[] {
+  return CONSEQUENCE_METADATA[code].buildFacts(before, after);
+}

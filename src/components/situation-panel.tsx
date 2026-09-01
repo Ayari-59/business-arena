@@ -303,6 +303,39 @@ export function SituationDebrief({ situation }: { situation: SituationView }) {
             </div>
           </div>
         ) : null}
+        {debrief.consequenceFacts && debrief.consequenceFacts.length > 0 ? (
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Qu&apos;a-t-il évolué ?
+            </p>
+            <div className="mt-1 space-y-1.5">
+              {debrief.consequenceFacts.map((fact, i) => (
+                <div
+                  key={i}
+                  className="flex items-baseline justify-between gap-3 rounded-lg border border-white/5 bg-slate-950 px-3 py-2"
+                >
+                  <span className="text-xs text-slate-500">{fact.label}</span>
+                  <span className="flex items-baseline gap-2 text-sm">
+                    <span className="text-slate-500">{fact.before}</span>
+                    <span className="text-slate-600">→</span>
+                    <span className="text-slate-200">{fact.after}</span>
+                    <span
+                      className={`text-xs font-medium ${
+                        fact.direction === "positive"
+                          ? "text-emerald-400"
+                          : fact.direction === "negative"
+                            ? "text-red-400"
+                            : "text-slate-400"
+                      }`}
+                    >
+                      {fact.delta}
+                    </span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
         {debrief.concepts.length > 0 ? (
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
