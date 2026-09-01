@@ -222,6 +222,37 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
         </section>
       ) : null}
 
+      {/* ── 6.5 Grille d'analyse (A7) ── */}
+      {!finished && (() => {
+        const allHints = [...new Map(
+          situations.current
+            .flatMap((s) => s.analyticalHints)
+            .map((h) => [h.code, h] as const)
+        ).values()].sort((a, b) => a.name.localeCompare(b.name, "fr"));
+        return allHints.length > 0 ? (
+          <section className="space-y-3">
+            <h2 className="text-sm font-semibold text-slate-200">
+              Grille d&apos;analyse : quels modèles mobiliser ?
+            </h2>
+            <p className="text-xs text-slate-400">
+              Ces modèles sont pertinents pour les situations de ce tour. Lequel vous semble le plus adapté ?
+            </p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {allHints.map((h) => (
+                <details key={h.code} className="rounded-lg border border-slate-700 bg-slate-800/50">
+                  <summary className="cursor-pointer px-3 py-2.5">
+                    <span className="text-sm font-medium text-slate-200">{h.name}</span>
+                    <span className="ml-2 text-xs text-slate-500">Niveau {h.difficulty}</span>
+                    <span className="mt-1 block text-xs text-slate-400">{h.objective}</span>
+                  </summary>
+                  <p className="px-3 pb-3 text-xs text-slate-400">{h.description}</p>
+                </details>
+              ))}
+            </div>
+          </section>
+        ) : null;
+      })()}
+
       {/* ── 7. Formulaire de décision / Écran de fin ── */}
       {finished ? (
         <section className="rounded-xl border border-amber-400/30 bg-slate-900 p-6 text-center">

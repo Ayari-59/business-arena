@@ -82,6 +82,36 @@ describe("référentiels et instanciation", () => {
   });
 });
 
+describe("cadre analytique avant décision (A7)", () => {
+  it("les situations courantes portent des analyticalHints non vides", async () => {
+    const { current } = await getTeamSituations(gameId, userId);
+    expect(current[0]!.analyticalHints.length).toBeGreaterThan(0);
+  });
+
+  it("seuls les modèles optimal et acceptable apparaissent, pas misleading ni irrelevant", async () => {
+    const { current } = await getTeamSituations(gameId, userId);
+    const codes = current[0]!.analyticalHints.map((h) => h.code);
+    expect(codes).toContain("breakeven_analysis");
+    expect(codes).toContain("cvp_analysis");
+    expect(codes).toContain("psych_pricing");
+    expect(codes).not.toContain("npv");
+  });
+
+  it("les hints sont triés alphabétiquement par nom", async () => {
+    const { current } = await getTeamSituations(gameId, userId);
+    const names = current[0]!.analyticalHints.map((h) => h.name);
+    expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, "fr")));
+  });
+
+  it("aucun hint ne contient de champ relevance ou credit", async () => {
+    const { current } = await getTeamSituations(gameId, userId);
+    for (const h of current[0]!.analyticalHints) {
+      expect(h).not.toHaveProperty("relevance");
+      expect(h).not.toHaveProperty("credit");
+    }
+  });
+});
+
 describe("indices, diagnostic, QCM de connaissances", () => {
   it("les indices se débloquent séquentiellement et sont tracés", async () => {
     const { current } = await getTeamSituations(gameId, userId);
@@ -180,6 +210,15 @@ describe("débriefing et progression", () => {
       .where(eq(situationInstances.roundId, round2.id));
     expect(instances.length).toBeGreaterThanOrEqual(1);
     expect(instances.every((i) => i.status === "debriefed")).toBe(true);
+  });
+
+  it("les analyticalHints sont vides après débriefing (A7)", async () => {
+    const { debriefedByRound } = await getTeamSituations(gameId, userId);
+    for (const dr of debriefedByRound) {
+      for (const s of dr.situations) {
+        expect(s.analyticalHints).toEqual([]);
+      }
+    }
   });
 
   it("après débriefing, indices et réponses sont verrouillés", async () => {

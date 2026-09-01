@@ -21,7 +21,7 @@ import {
   users,
 } from "@/db/schema";
 import { CONCEPTS, conceptByCode } from "@/config/pedagogy/concepts";
-import { DECISION_MODELS } from "@/config/pedagogy/models";
+import { DECISION_MODELS, modelByCode } from "@/config/pedagogy/models";
 import type { SituationDef } from "@/config/scenarios/nova/situations";
 import {
   MODEL_QUESTION_ID,
@@ -696,6 +696,14 @@ function modelInsight(
   return { prompt: question.prompt, answer, explain: question.explain };
 }
 
+export interface AnalyticalHint {
+  code: string;
+  name: string;
+  description: string;
+  objective: string;
+  difficulty: number;
+}
+
 export interface SituationView {
   instanceId: string;
   code: string;
@@ -718,6 +726,8 @@ export interface SituationView {
    * après : un bouton actif qui refuse laisse croire que le malus est déjà pris.
    */
   hintLimit: string | null;
+  /** Modèles d'analyse pertinents pour cette situation (A7 — cadre analytique avant la décision). Vide après débriefing. */
+  analyticalHints: AnalyticalHint[];
   /** Faits chiffrés ayant déclenché la situation (A1 — « Pourquoi cette situation ? »). */
   triggerFacts: TriggerFact[] | null;
   diagnosis: { selected: string[]; freeText: string; score?: number; finalScore?: number } | null;
@@ -787,6 +797,14 @@ function toView(
       if (next === null || debriefed || next <= hintCap.cap) return null;
       return def.hints.some((h) => h.level === next) ? hintCap.reason : null;
     })(),
+    analyticalHints: debriefed
+      ? []
+      : Object.entries(def.modelRelevance)
+          .filter(([, rel]) => rel === "optimal" || rel === "acceptable")
+          .map(([code]) => modelByCode.get(code))
+          .filter((m): m is NonNullable<typeof m> => Boolean(m))
+          .map((m) => ({ code: m.code, name: m.name, description: m.description, objective: m.objective, difficulty: m.difficulty }))
+          .sort((a, b) => a.name.localeCompare(b.name, "fr")),
     triggerFacts: (instance.triggerContext as TriggerFact[] | null) ?? null,
     diagnosis,
     debrief: debriefed
