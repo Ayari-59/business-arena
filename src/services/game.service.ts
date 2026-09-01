@@ -100,14 +100,13 @@ export async function nommerEquipe(args: {
   if (game.currentRound > 1) {
     throw new Error("Le nom se fige après le premier tour : celui-ci est déjà clos.");
   }
-  const team = await findUserTeam(args.gameId, args.userId);
+  const { team, allTeams } = await findUserTeam(args.gameId, args.userId);
   if (!team) throw new Error("Vous n'êtes pas membre de cette partie");
 
   const valide = validerNomEquipe(args.nom);
   if ("erreur" in valide) throw new Error(valide.erreur);
 
-  const voisines = await db.select().from(teams).where(eq(teams.gameId, args.gameId));
-  const prise = voisines.some(
+  const prise = allTeams.some(
     (t) =>
       t.id !== team.id &&
       t.name.localeCompare(valide.nom, "fr", { sensitivity: "base" }) === 0,

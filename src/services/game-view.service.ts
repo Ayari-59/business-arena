@@ -387,9 +387,8 @@ export interface StudyReports {
 export async function getGameView(gameId: string, userId: string): Promise<GameView | null> {
   const game = (await db.select().from(games).where(eq(games.id, gameId)))[0];
   if (!game) return null;
-  const playerTeam = await findUserTeam(gameId, userId);
+  const { team: playerTeam, allTeams: teamRows } = await findUserTeam(gameId, userId);
   if (!playerTeam) return null;
-  const teamRows = await db.select().from(teams).where(eq(teams.gameId, gameId));
 
   const gameRounds = await db
     .select()
@@ -496,12 +495,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       };
       lastEvents = trace.events ?? [];
     }
-    const decisionRow = (
-      await db
-        .select()
-        .from(decisions)
-        .where(and(eq(decisions.roundId, lastRound.id), eq(decisions.teamId, playerTeam.id)))
-    )[0];
+    const decisionRow = playerDecisionRows.find((d) => d.roundId === lastRound.id);
     if (decisionRow) lastDecisions = decisionRow.payload as RoundDecisions;
   }
 
@@ -509,14 +503,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
   let pendingDecisions: RoundDecisions | null = null;
   const currentRoundRow = gameRounds.find((r) => r.index === game.currentRound);
   if (currentRoundRow && currentRoundRow.status === "open") {
-    const row = (
-      await db
-        .select()
-        .from(decisions)
-        .where(
-          and(eq(decisions.roundId, currentRoundRow.id), eq(decisions.teamId, playerTeam.id)),
-        )
-    )[0];
+    const row = playerDecisionRows.find((d) => d.roundId === currentRoundRow.id);
     if (row && row.status === "validated") pendingDecisions = row.payload as RoundDecisions;
   }
 

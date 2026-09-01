@@ -67,19 +67,19 @@ function sumSold(bySegment: CompanyRoundResult["market"]["bySegment"]): number {
   return Object.values(bySegment).reduce((s, d) => s + d.sold, 0);
 }
 
-/** Équipe (humaine) d'un utilisateur dans une partie, ou null. */
+/** Équipe (humaine) d'un utilisateur dans une partie, avec la liste complète des équipes. */
 export async function findUserTeam(gameId: string, userId: string) {
-  const teamRows = await db.select().from(teams).where(eq(teams.gameId, gameId));
-  const humanIds = teamRows.filter((t) => t.controller === "human").map((t) => t.id);
-  if (humanIds.length === 0) return null;
+  const allTeams = await db.select().from(teams).where(eq(teams.gameId, gameId));
+  const humanIds = allTeams.filter((t) => t.controller === "human").map((t) => t.id);
+  if (humanIds.length === 0) return { team: null, allTeams };
   const membership = (
     await db
       .select()
       .from(players)
       .where(and(inArray(players.teamId, humanIds), eq(players.userId, userId)))
   )[0];
-  if (!membership) return null;
-  return teamRows.find((t) => t.id === membership.teamId) ?? null;
+  if (!membership) return { team: null, allTeams };
+  return { team: allTeams.find((t) => t.id === membership.teamId) ?? null, allTeams };
 }
 
 /** Soumet (valide) les décisions de l'équipe de l'utilisateur pour le tour courant. */
@@ -92,7 +92,7 @@ export async function submitTeamDecisions(args: {
   const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
   if (!game) throw new Error("Partie introuvable");
   if (game.status !== "running") throw new Error("Cette partie est terminée");
-  const team = await findUserTeam(args.gameId, args.userId);
+  const { team } = await findUserTeam(args.gameId, args.userId);
   if (!team) throw new Error("Vous n'êtes pas membre de cette partie");
 
   const roundRow = (
