@@ -15,24 +15,6 @@
  * ------------------------------------------------------------------------- */
 
 /* ---------------------------------------------------------------------------
- * Retouches du thème clair.
- *
- * L'inversion mécanique de l'échelle garde le palier 500 pour pivot, donc
- * l'ambre du bouton d'action reste tel quel. Sur fond sombre il portait un
- * texte sombre, très lisible ; sur fond clair il porte un texte clair, et le
- * rapport de contraste tombe à 1,9 pour 1, soit le bouton le plus important du
- * site devenu le moins lisible. Deux paliers plus foncés le ramènent au-dessus
- * du seuil de 4,5 pour 1.
- *
- * Mesuré par tests/e2e/contraste.e2e.ts, qui refuse que le thème clair soit
- * moins lisible que le thème d'origine.
- * ------------------------------------------------------------------------- */
-[data-theme="clair"] {
-  --color-amber-500: oklch(47.3% 0.137 46.201);
-  --color-amber-400: oklch(41.4% 0.112 45.904);
-}
-
-/* ---------------------------------------------------------------------------
  * Le logo est un fichier, pas du texte : aucune feuille de style ne peut en
  * changer l'encre. Sur fond clair, son nom écrit en gris pâle disparaîtrait,
  * d'où un second fichier et cette bascule. Le fond n'appelle QUE le fichier
