@@ -98,8 +98,9 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
         {/* 1. Diagnostic */}
         <section className="rounded-lg bg-slate-950 p-4">
           <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-            1 · Votre diagnostic
+            Votre diagnostic
           </h4>
+          <p className="mt-1 text-xs text-slate-500">Quel est le problème principal ?</p>
           {diagnosisDone ? (
             <p className="mt-2 text-sm text-emerald-300">
               ✓ Diagnostic enregistré, il sera corrigé au débriefing du tour.
@@ -134,8 +135,9 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
         {situation.quizQuestions.length > 0 ? (
           <section className="rounded-lg bg-slate-950 p-4">
             <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-              2 · {quizHeading(situation.quizQuestions)}
+              {quizHeading(situation.quizQuestions)}
             </h4>
+            <p className="mt-1 text-xs text-slate-500">Comment analyser ce problème ?</p>
             {quizDone ? (
               <p className="mt-2 text-sm text-emerald-300">
                 ✓ Réponse validée, la correction sera révélée au débriefing du tour.

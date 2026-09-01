@@ -222,7 +222,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
         </section>
       ) : null}
 
-      {/* ── 6.5 Grille d'analyse (A7) ── */}
+      {/* ── 6.5 Points clés à examiner (A7) ── */}
       {!finished && (() => {
         const allHints = [...new Map(
           situations.current
@@ -232,28 +232,31 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
         return allHints.length > 0 ? (
           <section className="space-y-3">
             <h2 className="text-sm font-semibold text-slate-200">
-              Grille d&apos;analyse : quels modèles mobiliser ?
+              Points clés à examiner
             </h2>
             <p className="text-xs text-slate-400">
-              Ces modèles sont pertinents pour les situations de ce tour. Lequel vous semble le plus adapté ?
+              Les variables et notions à observer pour analyser les situations de ce tour.
             </p>
             <div className="grid gap-2 sm:grid-cols-2">
               {allHints.map((h) => (
-                <details key={h.code} className="rounded-lg border border-slate-700 bg-slate-800/50">
-                  <summary className="cursor-pointer px-3 py-2.5">
-                    <span className="text-sm font-medium text-slate-200">{h.name}</span>
-                    <span className="ml-2 text-xs text-slate-500">Niveau {h.difficulty}</span>
-                    <span className="mt-1 block text-xs text-slate-400">{h.objective}</span>
-                  </summary>
-                  <p className="px-3 pb-3 text-xs text-slate-400">{h.description}</p>
-                </details>
+                <div key={h.code} className="rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{h.name}</p>
+                  <p className="mt-1 text-xs text-slate-400">{h.objective}</p>
+                  {h.keyPoints.length > 0 ? (
+                    <ul className="mt-2 space-y-0.5">
+                      {h.keyPoints.map((kp) => (
+                        <li key={kp} className="text-sm text-slate-300">· {kp}</li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
               ))}
             </div>
           </section>
         ) : null;
       })()}
 
-      {/* ── 6.75 Pont situation → décision (A8) ── */}
+      {/* ── 6.75 Leviers d'action (A8) ── */}
       {!finished && (() => {
         const FIELD_LABELS: Record<string, string> = {
           price: "Prix de vente",
@@ -281,7 +284,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
         return levers.length > 0 ? (
           <section className="space-y-3">
             <h2 className="text-sm font-semibold text-slate-200">
-              Leviers à considérer pour vos décisions
+              Leviers d&apos;action
             </h2>
             <div className="grid gap-2 sm:grid-cols-2">
               {levers.map((l) => (
