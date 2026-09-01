@@ -208,6 +208,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       qualitySensitivity: scenario.production.qualitySensitivity,
       qualityScale: scenario.production.qualityScale,
       utilizationRate: production.utilizationRate,
+      overheatThreshold: scenario.production.overheatThreshold,
     });
     const materialMultiplier = mods.materialCostMultiplier * supplierCostMul;
     const unitCost = unitVariableCost(
@@ -796,6 +797,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         maintenanceBudget: w.decisions.maintenanceBudget,
         maintenanceReference: scenario.production.maintenanceReference,
         availabilityDecay: scenario.production.availabilityDecay,
+        availabilityFloor: scenario.production.availabilityFloor,
       }),
       finishedGoods: finalStock,
       finance: finance.closing,

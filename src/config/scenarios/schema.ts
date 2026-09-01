@@ -78,6 +78,8 @@ export const engineScenarioConfigSchema = z.object({
     qualityInertia: z.number().min(0).max(1),
     maintenanceReference: z.number().nonnegative(),
     availabilityDecay: z.number().min(0).max(0.5),
+    overheatThreshold: z.number().min(0.5).max(1).optional(),
+    availabilityFloor: z.number().min(0).max(0.9).optional(),
   }),
   marketing: z.object({ scale: z.number().positive() }),
   finance: z.object({
@@ -199,6 +201,8 @@ export const engineScenarioConfigSchema = z.object({
       attritionThreshold: z.number().min(0.8).max(1),
       maxHiresPerRound: z.number().int().positive(),
       maxHeadcount: z.number().int().positive(),
+      salaryIndexBounds: z.tuple([z.number().min(0.5), z.number().max(2)]).optional(),
+      moraleBounds: z.tuple([z.number().min(0), z.number().max(2)]).optional(),
     })
     .optional(),
   events: z.array(eventSchema),
@@ -232,7 +236,15 @@ export const engineScenarioConfigSchema = z.object({
       marketShareTarget: z.number().gt(0).lte(1),
       utilizationTarget: z.number().gt(0).lte(1),
     }),
+    coherenceThresholds: z.object({
+      premiumPriceRatio: z.number().positive().optional(),
+      minQualityEffortRatio: z.number().min(0).max(1).optional(),
+      highMarketingLostRatio: z.number().min(0).max(1).optional(),
+      lowMaintenanceRatio: z.number().min(0).max(1).optional(),
+      highUtilizationFloor: z.number().min(0).max(1).optional(),
+    }).optional(),
   }),
+  enrichedBots: z.boolean().optional(),
 }) satisfies z.ZodType<EngineScenarioConfig>;
 
 const scenarioWithChecks = engineScenarioConfigSchema.superRefine((s, ctx) => {

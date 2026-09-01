@@ -43,9 +43,11 @@ export function computeProducedQuality(args: {
   qualitySensitivity: number;
   qualityScale: number;
   utilizationRate: number;
+  overheatThreshold?: number;
 }): number {
+  const threshold = args.overheatThreshold ?? 0.95;
   const base = 1 + args.qualitySensitivity * Math.log(1 + args.qualityBudget / args.qualityScale);
-  const overheat = args.utilizationRate > 0.95 ? 1 - (args.utilizationRate - 0.95) : 1;
+  const overheat = args.utilizationRate > threshold ? 1 - (args.utilizationRate - threshold) : 1;
   return Math.max(0.1, base * overheat);
 }
 
@@ -66,11 +68,13 @@ export function updateAvailability(args: {
   maintenanceBudget: number;
   maintenanceReference: number;
   availabilityDecay: number;
+  availabilityFloor?: number;
 }): number {
+  const floor = args.availabilityFloor ?? 0.3;
   const ratio =
     args.maintenanceReference > 0
       ? Math.min(1, args.maintenanceBudget / args.maintenanceReference)
       : 1;
   const next = args.current - args.availabilityDecay * (1 - ratio) + 0.5 * args.availabilityDecay * ratio;
-  return Math.min(1, Math.max(0.3, next));
+  return Math.min(1, Math.max(floor, next));
 }

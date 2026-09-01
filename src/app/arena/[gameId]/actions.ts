@@ -95,12 +95,12 @@ export async function playRoundAction(
   }
 
   try {
+    const justification = String(formData.get("justification") ?? "").trim() || undefined;
     const kind = await getGameKind(gameId);
     if (kind === "solo") {
-      await resolveCurrentRound({ gameId, userId, playerDecisions: parsed.data });
+      await resolveCurrentRound({ gameId, userId, playerDecisions: parsed.data, justification });
     } else {
-      // partie de classe : on valide, l'enseignant clôt le tour (ADR-04)
-      await submitTeamDecisions({ gameId, userId, payload: parsed.data });
+      await submitTeamDecisions({ gameId, userId, payload: parsed.data, justification });
     }
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Erreur lors de la simulation." };

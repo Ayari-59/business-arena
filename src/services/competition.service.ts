@@ -1,5 +1,5 @@
 import { randomInt } from "node:crypto";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   competitionEntries,
@@ -12,7 +12,7 @@ import {
   users,
 } from "@/db/schema";
 import { composeGroups, podium, qualifiers, type GroupStanding } from "@/competition";
-import { createGameCore } from "@/services/game.service";
+import { createGameCore } from "@/services/game-creation.service";
 import { DEFAULT_QUIZ_MODE } from "@/config/difficulty";
 import type { Periodicity } from "@/config/scenarios/periodicity";
 
@@ -51,10 +51,11 @@ export async function createCompetition(args: {
   groupSize: number;
   advancePerGroup: number;
 }): Promise<{ competitionId: string; joinCode: string }> {
-  const { getOrCreateNovaScenarioIdPublic } = await import("./game.service");
+  const { getOrCreateNovaScenarioIdPublic } = await import("./game-creation.service");
   const scenarioId = await getOrCreateNovaScenarioIdPublic();
+  const joinCode = makeCode();
   const rules: CompetitionRules = {
-    joinCode: makeCode(),
+    joinCode,
     periodicity: args.periodicity,
     groupSize: Math.min(Math.max(args.groupSize, 2), 6),
     advancePerGroup: Math.min(Math.max(args.advancePerGroup, 1), 4),
@@ -68,10 +69,11 @@ export async function createCompetition(args: {
       status: "registration",
       scenarioId,
       rules,
+      joinCode,
       organizerId: args.organizerId,
     })
     .returning({ id: competitions.id });
-  return { competitionId: inserted[0]!.id, joinCode: rules.joinCode };
+  return { competitionId: inserted[0]!.id, joinCode };
 }
 
 /** Inscription d'un joueur : crée l'équipe (team_label) ou la rejoint. */
@@ -81,46 +83,83 @@ export async function joinCompetition(args: {
   teamLabel: string;
   pseudo?: string;
 }): Promise<{ competitionId: string } | { error: string }> {
-  const all = await db.select().from(competitions);
-  const competition = all.find(
-    (c) => rulesOf(c).joinCode === args.code.trim().toUpperCase(),
-  );
+  const competition = (
+    await db.select().from(competitions).where(eq(competitions.joinCode, args.code.trim().toUpperCase()))
+  )[0];
   if (!competition) return { error: "Code de concours inconnu." };
   if (competition.status !== "registration")
     return { error: "Les inscriptions de ce concours sont closes." };
   const label = args.teamLabel.trim().slice(0, 40);
   if (!label) return { error: "Donnez un nom à votre équipe." };
 
+  // Fast non-atomic pre-check (safety net, not authoritative)
   const entries = await db
     .select()
     .from(competitionEntries)
     .where(eq(competitionEntries.competitionId, competition.id));
-  // déjà inscrit quelque part ?
   const existing = entries.find((e) => e.memberUserIds.includes(args.userId));
   if (existing) return { competitionId: competition.id };
 
-  const sameLabel = entries.find((e) => e.teamLabel.toLowerCase() === label.toLowerCase());
-  if (sameLabel) {
-    if (sameLabel.memberUserIds.length >= 6)
-      return { error: "Cette équipe est complète (6 joueurs max)." };
-    await db
-      .update(competitionEntries)
-      .set({ memberUserIds: [...sameLabel.memberUserIds, args.userId] })
-      .where(
-        and(
-          eq(competitionEntries.competitionId, competition.id),
-          eq(competitionEntries.teamLabel, sameLabel.teamLabel),
-        ),
-      );
+  // Atomic join: UPDATE with array_append + WHERE guards
+  const updated = await db
+    .update(competitionEntries)
+    .set({
+      memberUserIds: sql`array_append(${competitionEntries.memberUserIds}, ${args.userId}::uuid)`,
+    })
+    .where(
+      and(
+        eq(competitionEntries.competitionId, competition.id),
+        sql`lower(${competitionEntries.teamLabel}) = lower(${label})`,
+        sql`NOT (${args.userId}::uuid = ANY(${competitionEntries.memberUserIds}))`,
+        sql`array_length(${competitionEntries.memberUserIds}, 1) < 6`,
+      ),
+    )
+    .returning({ teamLabel: competitionEntries.teamLabel });
+
+  if (updated.length > 0) {
+    // Successfully joined existing team
   } else {
+    // Determine why UPDATE returned 0 rows
+    const sameLabel = entries.find((e) => e.teamLabel.toLowerCase() === label.toLowerCase());
+    if (sameLabel) {
+      if (sameLabel.memberUserIds.includes(args.userId))
+        return { competitionId: competition.id };
+      return { error: "Cette équipe est complète (6 joueurs max)." };
+    }
+    // New team — INSERT with capacity guard
     if (entries.length >= 32) return { error: "Le concours est complet (32 équipes)." };
-    await db.insert(competitionEntries).values({
-      competitionId: competition.id,
-      teamLabel: label,
-      memberUserIds: [args.userId],
-      organizationId: competition.organizationId,
-      status: "registered",
-    });
+    try {
+      await db.insert(competitionEntries).values({
+        competitionId: competition.id,
+        teamLabel: label,
+        memberUserIds: [args.userId],
+        organizationId: competition.organizationId,
+        status: "registered",
+      });
+    } catch (err: unknown) {
+      const pg = (err as { cause?: { code?: string } }).cause ?? (err as { code?: string });
+      if (pg.code === "23505") {
+        // Case-insensitive label collision — retry as join
+        const retried = await db
+          .update(competitionEntries)
+          .set({
+            memberUserIds: sql`array_append(${competitionEntries.memberUserIds}, ${args.userId}::uuid)`,
+          })
+          .where(
+            and(
+              eq(competitionEntries.competitionId, competition.id),
+              sql`lower(${competitionEntries.teamLabel}) = lower(${label})`,
+              sql`NOT (${args.userId}::uuid = ANY(${competitionEntries.memberUserIds}))`,
+              sql`array_length(${competitionEntries.memberUserIds}, 1) < 6`,
+            ),
+          )
+          .returning({ teamLabel: competitionEntries.teamLabel });
+        if (retried.length === 0)
+          return { error: "Cette équipe est complète (6 joueurs max)." };
+      } else {
+        throw err;
+      }
+    }
   }
   if (args.pseudo?.trim()) {
     await db.update(users).set({ displayName: args.pseudo.trim() }).where(eq(users.id, args.userId));
@@ -230,29 +269,29 @@ async function stageStandings(stageId: string): Promise<GroupStanding[][]> {
     .select()
     .from(games)
     .where(eq(games.competitionStageId, stageId));
-  const standings: GroupStanding[][] = [];
-  for (const game of stageGames) {
-    const teamRows = await db.select().from(teams).where(eq(teams.gameId, game.id));
-    const rankings = await db
-      .select()
-      .from(gameRankings)
-      .where(eq(gameRankings.gameId, game.id));
-    standings.push(
-      rankings.map((r) => {
-        const detail = r.detail as {
-          dimensions?: Record<string, number>;
-          cumulativeNetIncome?: number;
-        };
-        return {
-          entryId: teamRows.find((t) => t.id === r.teamId)?.name ?? "?",
-          bpi: Number(r.bpi),
-          financial: detail.dimensions?.["financial"] ?? 0,
-          lastTreasury: detail.cumulativeNetIncome ?? 0,
-        };
-      }),
-    );
-  }
-  return standings;
+  if (stageGames.length === 0) return [];
+  const gameIds = stageGames.map((g) => g.id);
+  const allTeams = await db.select().from(teams).where(inArray(teams.gameId, gameIds));
+  const allRankings = await db
+    .select()
+    .from(gameRankings)
+    .where(inArray(gameRankings.gameId, gameIds));
+  return stageGames.map((game) => {
+    const teamRows = allTeams.filter((t) => t.gameId === game.id);
+    const rankings = allRankings.filter((r) => r.gameId === game.id);
+    return rankings.map((r) => {
+      const detail = r.detail as {
+        dimensions?: Record<string, number>;
+        cumulativeNetIncome?: number;
+      };
+      return {
+        entryId: teamRows.find((t) => t.id === r.teamId)?.name ?? "?",
+        bpi: Number(r.bpi),
+        financial: detail.dimensions?.["financial"] ?? 0,
+        lastTreasury: detail.cumulativeNetIncome ?? 0,
+      };
+    });
+  });
 }
 
 /** Lance la finale : qualifie les meilleurs de chaque groupe (doc 04 §3). */
@@ -399,7 +438,6 @@ export async function getCompetitionView(competitionId: string): Promise<Competi
     await db.select().from(competitions).where(eq(competitions.id, competitionId))
   )[0];
   if (!competition) return null;
-  const rules = rulesOf(competition);
   const entries = await db
     .select()
     .from(competitionEntries)
@@ -447,7 +485,7 @@ export async function getCompetitionView(competitionId: string): Promise<Competi
     competitionId,
     name: competition.name,
     status: competition.status,
-    joinCode: rules.joinCode,
+    joinCode: competition.joinCode,
     organizerId: competition.organizerId,
     entries: entries.map((e) => ({
       teamLabel: e.teamLabel,
@@ -466,22 +504,21 @@ export async function getOrganizerCompetitions(organizerId: string) {
     .from(competitions)
     .where(eq(competitions.organizerId, organizerId))
     .orderBy(desc(competitions.createdAt));
-  const out = [];
-  for (const c of rows) {
-    const entries = await db
-      .select()
-      .from(competitionEntries)
-      .where(eq(competitionEntries.competitionId, c.id));
-    out.push({
-      competitionId: c.id,
-      name: c.name,
-      status: c.status,
-      joinCode: rulesOf(c).joinCode,
-      entriesCount: entries.length,
-      createdAt: c.createdAt,
-    });
-  }
-  return out;
+  if (rows.length === 0) return [];
+  const allEntries = await db
+    .select({ competitionId: competitionEntries.competitionId })
+    .from(competitionEntries)
+    .where(inArray(competitionEntries.competitionId, rows.map((c) => c.id)));
+  const countByComp = new Map<string, number>();
+  for (const e of allEntries) countByComp.set(e.competitionId, (countByComp.get(e.competitionId) ?? 0) + 1);
+  return rows.map((c) => ({
+    competitionId: c.id,
+    name: c.name,
+    status: c.status,
+    joinCode: c.joinCode,
+    entriesCount: countByComp.get(c.id) ?? 0,
+    createdAt: c.createdAt,
+  }));
 }
 
 /** Le concours auquel participe un joueur, et sa partie en cours s'il y en a une. */
@@ -501,27 +538,25 @@ export async function getPlayerCompetition(
 
   let myGameId: string | null = null;
   if (mine) {
+    const competitionGameIds = new Set(
+      view.stages.flatMap((s) => s.games.map((g) => g.gameId)),
+    );
     const membership = await db.select().from(players).where(eq(players.userId, userId));
     if (membership.length > 0) {
       const teamRows = await db
         .select()
         .from(teams)
         .where(inArray(teams.id, membership.map((m) => m.teamId)));
-      const stageIds = new Set(
-        (
-          await db
-            .select()
-            .from(competitionStages)
-            .where(eq(competitionStages.competitionId, competitionId))
-        ).map((s) => s.id),
-      );
-      const gameRows = teamRows.length
-        ? await db.select().from(games).where(inArray(games.id, teamRows.map((t) => t.gameId)))
-        : [];
-      const running = gameRows
-        .filter((g) => g.competitionStageId && stageIds.has(g.competitionStageId))
-        .sort((a, b) => (a.status === "running" ? -1 : 1) - (b.status === "running" ? -1 : 1));
-      myGameId = running[0]?.id ?? null;
+      const myGameIds = teamRows
+        .map((t) => t.gameId)
+        .filter((gid) => competitionGameIds.has(gid));
+      if (myGameIds.length > 0) {
+        const running = view.stages
+          .flatMap((s) => s.games)
+          .filter((g) => myGameIds.includes(g.gameId))
+          .sort((a, b) => (a.status === "running" ? -1 : 1) - (b.status === "running" ? -1 : 1));
+        myGameId = running[0]?.gameId ?? null;
+      }
     }
   }
   return { view, myGameId, myTeamLabel: mine?.teamLabel ?? null };

@@ -55,7 +55,8 @@ export function computeHr(args: {
   if (!c) return neutral;
 
   const d = args.decisions ?? {};
-  const salaryIndex = clamp(d.salaryIndex ?? 1, 0.8, 1.3);
+  const [siMin, siMax] = c.salaryIndexBounds ?? [0.8, 1.3];
+  const salaryIndex = clamp(d.salaryIndex ?? 1, siMin, siMax);
   const fired = clamp(Math.floor(d.fire ?? 0), 0, Math.max(0, args.headcount - 1));
   const hired = clamp(
     Math.floor(d.hire ?? 0),
@@ -77,7 +78,8 @@ export function computeHr(args: {
   const cost =
     payrollExtra + hired * c.hiringCost + fired * c.firingCost + trainingBudget;
 
-  const morale = clamp(1 + c.moraleSensitivity * (salaryIndex - 1), 0.85, 1.12);
+  const [mMin, mMax] = c.moraleBounds ?? [0.85, 1.12];
+  const morale = clamp(1 + c.moraleSensitivity * (salaryIndex - 1), mMin, mMax);
 
   const nextProductivity = Math.min(
     c.maxProductivity,

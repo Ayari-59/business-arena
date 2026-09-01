@@ -114,7 +114,7 @@ describe("parcours enseignant et élève", () => {
     await aller(eleve, new URL(eleve.url()).pathname);
     const vu = await texte(eleve);
     expect(vu).not.toMatch(/Session expirée|Décisions invalides/i);
-    expect(vu).toContain("Décisions validées");
+    expect(vu).toContain("Décisions enregistrées");
     expect(await eleve.inputValue('input[name="price"]')).toBe("780");
   });
 

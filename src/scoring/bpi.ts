@@ -77,28 +77,31 @@ export function strategyCoherence(args: {
   result: CompanyRoundResult;
 }): number {
   const { scenario, decisions, result } = args;
+  const ct = scenario.scoring.coherenceThresholds;
   let score = 60;
   const refPrice = [...scenario.market.segments].sort((a, b) => b.size - a.size)[0]?.refPrice ?? 60;
 
-  // positionnement premium sans effort qualité
-  if (decisions.price > refPrice * 1.15 && decisions.qualityBudget < 0.3 * scenario.production.qualityScale) {
+  const premiumPriceRatio = ct?.premiumPriceRatio ?? 1.15;
+  const minQualityEffortRatio = ct?.minQualityEffortRatio ?? 0.3;
+  const highMarketingLostRatio = ct?.highMarketingLostRatio ?? 0.2;
+  const lowMaintenanceRatio = ct?.lowMaintenanceRatio ?? 0.5;
+  const highUtilizationFloor = ct?.highUtilizationFloor ?? 0.9;
+
+  if (decisions.price > refPrice * premiumPriceRatio && decisions.qualityBudget < minQualityEffortRatio * scenario.production.qualityScale) {
     score -= 20;
   }
-  // marketing massif en pleine rupture de capacité
   const segments = Object.values(result.market.bySegment);
   const sold = segments.reduce((s, d) => s + d.sold, 0);
   const lost = segments.reduce((s, d) => s + d.lost, 0);
-  if (decisions.marketingBudget > scenario.marketing.scale && sold > 0 && lost > 0.2 * sold) {
+  if (decisions.marketingBudget > scenario.marketing.scale && sold > 0 && lost > highMarketingLostRatio * sold) {
     score -= 20;
   }
-  // maintenance négligée alors que la production sature
   if (
-    decisions.maintenanceBudget < 0.5 * scenario.production.maintenanceReference &&
-    result.production.utilizationRate > 0.9
+    decisions.maintenanceBudget < lowMaintenanceRatio * scenario.production.maintenanceReference &&
+    result.production.utilizationRate > highUtilizationFloor
   ) {
     score -= 10;
   }
-  // pilotage équilibré : bénéficiaire ET liquide
   if (result.incomeStatement.netIncome > 0 && result.functionalBalance.netTreasury >= 0) {
     score += 25;
   }

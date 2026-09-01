@@ -3,6 +3,11 @@ import { hintScoreMultiplier, nextUnlockableLevel } from "../src/pedagogy/hints"
 import { evaluateDiagnosis, evaluateQuiz } from "../src/pedagogy/evaluation";
 import { detectSituations } from "../src/pedagogy/detection";
 import { updateMastery } from "../src/pedagogy/progress";
+import {
+  playerStrength,
+  hintCostDiscount,
+  adaptiveHintMultiplier,
+} from "../src/pedagogy/adaptivity";
 import { NOVA_SITUATIONS, situationByCode } from "../src/config/scenarios/nova/situations";
 import { CONCEPTS, conceptByCode } from "../src/config/pedagogy/concepts";
 import { DECISION_MODELS, modelByCode } from "../src/config/pedagogy/models";
@@ -239,5 +244,42 @@ describe("cohérence des référentiels", () => {
     // quatre pannes, plus la trésorerie qui dort : la seule qui s'ouvre alors
     // que tout va bien
     expect(detected).toHaveLength(5);
+  });
+});
+
+describe("difficulté adaptive (§28 bis)", () => {
+  const hintDefs = situationByCode.get("nova_t4_paradox")!.hints;
+
+  it("playerStrength : moyenne des axes, 0 sans données", () => {
+    expect(playerStrength([])).toBe(0);
+    expect(playerStrength([{ value: 80 }, { value: 60 }])).toBe(70);
+    expect(playerStrength([{ value: 100 }])).toBe(100);
+  });
+
+  it("hintCostDiscount : débutant paie moitié, expert plein tarif", () => {
+    expect(hintCostDiscount(0)).toBe(0.5);
+    expect(hintCostDiscount(100)).toBe(1.0);
+    expect(hintCostDiscount(50)).toBe(0.75);
+    expect(hintCostDiscount(-10)).toBe(0.5);
+    expect(hintCostDiscount(200)).toBe(1.0);
+  });
+
+  it("adaptiveHintMultiplier réduit le coût pour les élèves faibles", () => {
+    const levels = [1, 2, 3];
+    const expertMultiplier = adaptiveHintMultiplier(levels, hintDefs, 100);
+    const beginnerMultiplier = adaptiveHintMultiplier(levels, hintDefs, 0);
+    expect(beginnerMultiplier).toBeGreaterThan(expertMultiplier);
+    expect(expertMultiplier).toBeCloseTo(hintScoreMultiplier(levels, hintDefs), 9);
+  });
+
+  it("le plancher de 0.2 reste en vigueur pour tous les niveaux", () => {
+    const allLevels = [1, 2, 3, 4, 5];
+    expect(adaptiveHintMultiplier(allLevels, hintDefs, 0)).toBeGreaterThanOrEqual(0.2);
+    expect(adaptiveHintMultiplier(allLevels, hintDefs, 100)).toBeCloseTo(0.2, 9);
+  });
+
+  it("sans indices débloqués, le discount n'a aucun effet", () => {
+    expect(adaptiveHintMultiplier([], hintDefs, 0)).toBe(1);
+    expect(adaptiveHintMultiplier([], hintDefs, 100)).toBe(1);
   });
 });

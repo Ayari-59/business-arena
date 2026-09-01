@@ -70,7 +70,12 @@ export const games = pgTable(
       .references(() => users.id, { onDelete: "restrict" }),
     ...timestamps,
   },
-  (t) => [index("games_class_idx").on(t.classId), index("games_status_idx").on(t.status)],
+  (t) => [
+    index("games_class_idx").on(t.classId),
+    index("games_status_idx").on(t.status),
+    index("games_created_by_idx").on(t.createdBy),
+    index("games_competition_stage_idx").on(t.competitionStageId),
+  ],
 );
 
 /** Une équipe = une entreprise virtuelle, humaine ou bot (ADR-02, ADR-03). */
@@ -103,7 +108,7 @@ export const players = pgTable(
     role: playerRole("role").notNull().default("member"),
     ...timestamps,
   },
-  (t) => [primaryKey({ columns: [t.teamId, t.userId] })],
+  (t) => [primaryKey({ columns: [t.teamId, t.userId] }), index("players_user_id_idx").on(t.userId)],
 );
 
 export const rounds = pgTable(

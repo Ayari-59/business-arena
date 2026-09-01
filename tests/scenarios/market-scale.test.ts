@@ -144,7 +144,7 @@ describe("dimensionnement du marché", () => {
   it("la création de partie dimensionne réellement le marché", () => {
     // La fonction peut être parfaite et n'être appelée nulle part : le défaut
     // serait alors exactement celui d'avant, sans qu'aucun autre test ne bouge.
-    const service = readFileSync("src/services/game.service.ts", "utf-8");
+    const service = readFileSync("src/services/game-creation.service.ts", "utf-8");
     expect(service, "le service n'importe pas le dimensionnement").toContain("applyMarketScale");
     const appel = service.slice(service.indexOf("const scenarioSnapshot"));
     expect(

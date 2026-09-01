@@ -1,4 +1,4 @@
-import { desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import {
   concepts,
@@ -36,30 +36,37 @@ export interface PlayerProfile {
 }
 
 export async function getPlayerProfile(userId: string): Promise<PlayerProfile | null> {
-  const user = (await db.select().from(users).where(eq(users.id, userId)))[0];
+  const [user, skillRows, progressRows, memberships] = await Promise.all([
+    db.select().from(users).where(eq(users.id, userId)).then((r) => r[0]),
+    db.select().from(playerSkills).where(eq(playerSkills.userId, userId)),
+    db
+      .select({ mastery: learningProgress.mastery, code: concepts.code, name: concepts.name, domain: concepts.domain })
+      .from(learningProgress)
+      .innerJoin(concepts, eq(concepts.id, learningProgress.conceptId))
+      .where(eq(learningProgress.userId, userId)),
+    db.select().from(players).where(eq(players.userId, userId)),
+  ]);
   if (!user) return null;
 
-  const skillRows = await db.select().from(playerSkills).where(eq(playerSkills.userId, userId));
-  const progressRows = await db
-    .select({ mastery: learningProgress.mastery, code: concepts.code, name: concepts.name, domain: concepts.domain })
-    .from(learningProgress)
-    .innerJoin(concepts, eq(concepts.id, learningProgress.conceptId))
-    .where(eq(learningProgress.userId, userId));
-
-  const memberships = await db.select().from(players).where(eq(players.userId, userId));
   const teamRows = memberships.length
     ? await db.select().from(teams).where(inArray(teams.id, memberships.map((m) => m.teamId)))
     : [];
-  const gameRows = teamRows.length
-    ? await db
-        .select()
-        .from(games)
-        .where(inArray(games.id, teamRows.map((t) => t.gameId)))
-        .orderBy(desc(games.createdAt))
-    : [];
-  const rankingRows = gameRows.length
-    ? await db.select().from(gameRankings).where(inArray(gameRankings.gameId, gameRows.map((g) => g.id)))
-    : [];
+  const teamIds = teamRows.map((t) => t.id);
+  const [gameRows, rankingRows] = await Promise.all([
+    teamRows.length
+      ? db
+          .select()
+          .from(games)
+          .where(inArray(games.id, teamRows.map((t) => t.gameId)))
+          .orderBy(desc(games.createdAt))
+      : Promise.resolve([]),
+    teamIds.length
+      ? db.select().from(gameRankings).where(and(
+          inArray(gameRankings.gameId, teamRows.map((t) => t.gameId)),
+          inArray(gameRankings.teamId, teamIds),
+        ))
+      : Promise.resolve([]),
+  ]);
 
   return {
     displayName: user.displayName,

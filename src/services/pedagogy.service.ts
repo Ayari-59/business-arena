@@ -37,6 +37,8 @@ import { hintScoreMultiplier, nextUnlockableLevel } from "@/pedagogy/hints";
 import { evaluateDiagnosis, evaluateQuiz } from "@/pedagogy/evaluation";
 import { detectSituations } from "@/pedagogy/detection";
 import { AXES, aggregateAxis, updateMastery } from "@/pedagogy/progress";
+import { adaptiveHintMultiplier, playerStrength } from "@/pedagogy/adaptivity";
+import { computeRawSituationScore } from "@/pedagogy/scoring";
 import type { CompanyRoundResult } from "@/engine/types";
 
 /**
@@ -287,20 +289,14 @@ export async function unlockHint(args: {
   instanceId: string;
   userId: string;
 }): Promise<{ level: number; text: string }> {
-  const { instance, situationRow, def } = await loadInstanceForUser(args.instanceId, args.userId);
+  const { instance, situationRow, def, game } = await loadInstanceForUser(args.instanceId, args.userId);
   if (instance.status === "debriefed") throw new Error("Cette situation est déjà débriefée");
   const levels = await unlockedLevels(args.instanceId);
   const next = nextUnlockableLevel(levels);
   if (next === null) throw new Error("Tous les indices sont déjà débloqués");
-  // Plafonds : niveau de difficulté de la partie (préréglage en données,
-  // doc 08 §2), et §25 : jamais plus que le niveau 3 en mode compétition.
-  const roundRow = (await db.select().from(rounds).where(eq(rounds.id, instance.roundId)))[0];
-  if (roundRow) {
-    const game = (await db.select().from(games).where(eq(games.id, roundRow.gameId)))[0];
-    if (game) {
-      const { cap, reason } = hintCapOf(game);
-      if (next > cap) throw new Error(reason);
-    }
+  if (game) {
+    const { cap, reason } = hintCapOf(game);
+    if (next > cap) throw new Error(reason);
   }
   const hintRow = (
     await db
@@ -403,36 +399,111 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
   const gameRow = (await db.select().from(games).where(eq(games.id, gameId)))[0];
   const quizMode = quizModeFromProfile(gameRow?.difficultyProfile);
 
-  for (const instance of instances) {
-    if (instance.status === "debriefed") continue;
+  const toDebrief = instances.filter((i) => i.status !== "debriefed");
+  if (toDebrief.length === 0) return;
+
+  const instanceIds = toDebrief.map((i) => i.id);
+  const teamIds = [...new Set(toDebrief.map((i) => i.teamId))];
+
+  const allUsages = await db
+    .select()
+    .from(hintUsages)
+    .where(inArray(hintUsages.situationInstanceId, instanceIds));
+  const levelsByInstance = new Map<string, number[]>();
+  for (const u of allUsages) {
+    const list = levelsByInstance.get(u.situationInstanceId) ?? [];
+    list.push(u.level);
+    levelsByInstance.set(u.situationInstanceId, list);
+  }
+
+  const allMembers = await db
+    .select()
+    .from(players)
+    .where(inArray(players.teamId, teamIds));
+  const membersByTeam = new Map<string, (typeof allMembers)[number][]>();
+  for (const m of allMembers) {
+    const list = membersByTeam.get(m.teamId) ?? [];
+    list.push(m);
+    membersByTeam.set(m.teamId, list);
+  }
+
+  const allUserIds = [...new Set(allMembers.map((m) => m.userId))];
+  const allSkills = allUserIds.length
+    ? await db.select().from(playerSkills).where(inArray(playerSkills.userId, allUserIds))
+    : [];
+  const skillsByUser = new Map<string, { value: string }[]>();
+  for (const s of allSkills) {
+    const list = skillsByUser.get(s.userId) ?? [];
+    list.push(s);
+    skillsByUser.set(s.userId, list);
+  }
+
+  const allRelevantConceptIds: string[] = [];
+  for (const inst of toDebrief) {
+    const def = situationByCode.get(codeById.get(inst.situationId) ?? "");
+    if (!def) continue;
+    for (const code of def.conceptCodes) {
+      const cid = conceptIdByCode.get(code);
+      if (cid) allRelevantConceptIds.push(cid);
+    }
+  }
+  const uniqueConceptIds = [...new Set(allRelevantConceptIds)];
+  const allProgress =
+    allUserIds.length && uniqueConceptIds.length
+      ? await db
+          .select()
+          .from(learningProgress)
+          .where(
+            and(
+              inArray(learningProgress.userId, allUserIds),
+              inArray(learningProgress.conceptId, uniqueConceptIds),
+            ),
+          )
+      : [];
+  const progressMap = new Map<string, { mastery: string; evidenceCount: number }>();
+  for (const p of allProgress) {
+    progressMap.set(`${p.userId}:${p.conceptId}`, {
+      mastery: p.mastery,
+      evidenceCount: p.evidenceCount,
+    });
+  }
+
+  const fallbackChoiceIds = toDebrief
+    .filter((inst) => {
+      const def = situationByCode.get(codeById.get(inst.situationId) ?? "");
+      if (!def) return false;
+      const hasQuiz = askedQuestions(def, quizMode).length > 0;
+      if (!hasQuiz) return false;
+      return (inst.quiz as { score?: number } | null)?.score == null;
+    })
+    .map((i) => i.id);
+  const choiceRows = fallbackChoiceIds.length
+    ? await db
+        .select()
+        .from(modelChoices)
+        .where(inArray(modelChoices.situationInstanceId, fallbackChoiceIds))
+    : [];
+  const choiceByInstance = new Map(choiceRows.map((c) => [c.situationInstanceId, c]));
+
+  for (const instance of toDebrief) {
     const def = situationByCode.get(codeById.get(instance.situationId) ?? "");
     if (!def) continue;
 
-    const levels = await unlockedLevels(instance.id);
+    const levels = levelsByInstance.get(instance.id) ?? [];
     const diagScore =
       ((instance.diagnosis as { score?: number } | null)?.score as number | undefined) ?? 0;
-    // Aucune question posée : le score repose ENTIÈREMENT sur le diagnostic.
-    // Ne pas neutraliser la moitié « questions » reviendrait à plafonner
-    // toutes les situations à 50 % pour une question jamais posée.
-    let raw: number;
-    if (askedQuestions(def, quizMode).length === 0) {
-      raw = diagScore;
-    } else {
-      const quizStored = instance.quiz as { score?: number } | null;
-      let knowledgeScore = quizStored?.score ?? null;
-      if (knowledgeScore === null) {
-        // instances antérieures au QCM : repli sur le choix de modèle historisé
-        const choice = (
-          await db
-            .select()
-            .from(modelChoices)
-            .where(eq(modelChoices.situationInstanceId, instance.id))
-        )[0];
-        knowledgeScore = choice ? Number(choice.modelScore ?? 0) : 0;
+    const hasQuizQuestions = askedQuestions(def, quizMode).length > 0;
+    let quizScore: number | null = null;
+    if (hasQuizQuestions) {
+      quizScore = (instance.quiz as { score?: number } | null)?.score ?? null;
+      if (quizScore === null) {
+        const choice = choiceByInstance.get(instance.id);
+        quizScore = choice ? Number(choice.modelScore ?? 0) : 0;
       }
-      raw = 0.5 * diagScore + 0.5 * knowledgeScore;
     }
-    const score = raw * hintScoreMultiplier(levels, def.hints);
+    const raw = computeRawSituationScore({ diagnosisScore: diagScore, quizScore, hasQuizQuestions });
+    const baseMultiplier = hintScoreMultiplier(levels, def.hints);
+    const teamScore = raw * baseMultiplier;
 
     await db
       .update(situationInstances)
@@ -440,33 +511,28 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
         status: "debriefed",
         diagnosis: {
           ...((instance.diagnosis as object) ?? {}),
-          finalScore: score,
+          finalScore: teamScore,
           hintLevelsUsed: levels,
         },
       })
       .where(eq(situationInstances.id, instance.id));
 
-    // Progression des joueurs de l'équipe sur les concepts de la situation
-    const members = await db
-      .select()
-      .from(players)
-      .where(eq(players.teamId, instance.teamId));
+    const members = membersByTeam.get(instance.teamId) ?? [];
     for (const member of members) {
+      const memberSkills = (skillsByUser.get(member.userId) ?? []).map((s) => ({
+        value: Number(s.value),
+      }));
+      const strength = playerStrength(memberSkills);
+      const memberMultiplier = adaptiveHintMultiplier(levels, def.hints, strength);
+      const score = raw * memberMultiplier;
+
       for (const conceptCode of def.conceptCodes) {
         const conceptId = conceptIdByCode.get(conceptCode);
         if (!conceptId) continue;
-        const current = (
-          await db
-            .select()
-            .from(learningProgress)
-            .where(
-              and(
-                eq(learningProgress.userId, member.userId),
-                eq(learningProgress.conceptId, conceptId),
-              ),
-            )
-        )[0];
+        const key = `${member.userId}:${conceptId}`;
+        const current = progressMap.get(key);
         const mastery = updateMastery(Number(current?.mastery ?? 0), score, def.weight);
+        const evidenceCount = (current?.evidenceCount ?? 0) + 1;
         await db
           .insert(learningProgress)
           .values({
@@ -480,12 +546,39 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
             target: [learningProgress.userId, learningProgress.conceptId],
             set: {
               mastery: mastery.toFixed(2),
-              evidenceCount: (current?.evidenceCount ?? 0) + 1,
+              evidenceCount,
               lastEventAt: new Date(),
             },
           });
+        progressMap.set(key, { mastery: mastery.toFixed(2), evidenceCount });
       }
-      await recomputeSkills(member.userId);
+    }
+  }
+
+  // Recompute skills once for all affected users
+  const codeByConceptId = new Map(conceptRows.map((r) => [r.id, r.code]));
+  for (const userId of allUserIds) {
+    const progress = await db
+      .select({ mastery: learningProgress.mastery, conceptId: learningProgress.conceptId })
+      .from(learningProgress)
+      .where(eq(learningProgress.userId, userId));
+    if (progress.length === 0) continue;
+    const byAxis = new Map<string, number[]>();
+    for (const p of progress) {
+      const def = conceptByCode.get(codeByConceptId.get(p.conceptId) ?? "");
+      if (!def) continue;
+      const list = byAxis.get(def.axis) ?? [];
+      list.push(Number(p.mastery));
+      byAxis.set(def.axis, list);
+    }
+    for (const axis of AXES) {
+      const masteries = byAxis.get(axis);
+      if (!masteries || masteries.length === 0) continue;
+      const value = aggregateAxis(masteries).toFixed(2);
+      await db
+        .insert(playerSkills)
+        .values({ userId, axis, value })
+        .onConflictDoUpdate({ target: [playerSkills.userId, playerSkills.axis], set: { value } });
     }
   }
 }
@@ -698,18 +791,24 @@ export async function getTeamSituations(
     .filter((r) => r.status === "resolved")
     .sort((a, b) => b.index - a.index)[0];
 
-  const build = async (instance: typeof situationInstances.$inferSelect) => {
-    const def = situationByCode.get(codeById.get(instance.situationId) ?? "");
-    if (!def) return null;
-    const levels = await unlockedLevels(instance.id);
-    return toView(instance, def, levels, quizMode, hintCap);
-  };
+  const allHints = await db
+    .select({ situationInstanceId: hintUsages.situationInstanceId, level: hintUsages.level })
+    .from(hintUsages)
+    .where(inArray(hintUsages.situationInstanceId, instances.map((i) => i.id)));
+  const levelsByInstance = new Map<string, number[]>();
+  for (const h of allHints) {
+    const arr = levelsByInstance.get(h.situationInstanceId) ?? [];
+    arr.push(h.level);
+    levelsByInstance.set(h.situationInstanceId, arr);
+  }
 
   const current: SituationView[] = [];
   const debriefed: SituationView[] = [];
   for (const instance of instances) {
-    const view = await build(instance);
-    if (!view) continue;
+    const def = situationByCode.get(codeById.get(instance.situationId) ?? "");
+    if (!def) continue;
+    const levels = levelsByInstance.get(instance.id) ?? [];
+    const view = toView(instance, def, levels, quizMode, hintCap);
     if (currentRound && instance.roundId === currentRound.id && instance.status !== "debriefed") {
       current.push(view);
     } else if (lastDebriefedRound && instance.roundId === lastDebriefedRound.id) {
@@ -1190,10 +1289,13 @@ export async function getGameGradeSheet(
     // le fait le débriefing, faute de quoi l'écart contiendrait aussi les
     // questions laissées sans réponse.
     const sansMalus = moyenne(
-      rendues.map((l) => {
-        const diag = l.rawDiagnosis ?? 0;
-        return l.quiz !== null ? 0.5 * diag + 0.5 * l.quiz : diag;
-      }),
+      rendues.map((l) =>
+        computeRawSituationScore({
+          diagnosisScore: l.rawDiagnosis ?? 0,
+          quizScore: l.quiz,
+          hasQuizQuestions: l.quiz !== null,
+        }),
+      ),
     );
     const hintPenalty =
       average !== null && sansMalus !== null ? Math.max(0, surVingt(sansMalus - average)) : 0;
@@ -1236,5 +1338,159 @@ export async function getGameGradeSheet(
     quizMode: quizModeFromProfile(game.difficultyProfile),
     roundsResolved: resolved.length,
     teams: teamGrades.sort((a, b) => a.name.localeCompare(b.name, "fr")),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Vue par élève : la progression individuelle que l'enseignant ne voit pas
+// ---------------------------------------------------------------------------
+
+export interface StudentProgress {
+  userId: string;
+  displayName: string;
+  teamName: string;
+  skills: { axis: string; value: number }[];
+  /** Force globale [0, 100] — moyenne des 7 axes. */
+  strength: number;
+  concepts: { code: string; name: string; mastery: number }[];
+  /** Score moyen sur les situations débriefées de cette partie. */
+  averageScore: number | null;
+  situationsAnswered: number;
+  situationsUnanswered: number;
+  hintsUsed: number;
+}
+
+export interface StudentProgressView {
+  gameId: string;
+  scenarioTitle: string;
+  classAverage: { strength: number; averageScore: number | null };
+  students: StudentProgress[];
+}
+
+export async function getStudentProgressView(
+  gameId: string,
+  teacherId: string,
+): Promise<StudentProgressView | null> {
+  const game = (await db.select().from(games).where(eq(games.id, gameId)))[0];
+  if (!game || game.createdBy !== teacherId) return null;
+
+  const teamRows = (await db.select().from(teams).where(eq(teams.gameId, gameId))).filter(
+    (t) => t.controller === "human",
+  );
+  const teamIds = teamRows.map((t) => t.id);
+  const teamNameById = new Map(teamRows.map((t) => [t.id, t.name]));
+
+  const memberships = teamIds.length
+    ? await db
+        .select({ userId: players.userId, teamId: players.teamId, name: users.displayName })
+        .from(players)
+        .innerJoin(users, eq(users.id, players.userId))
+        .where(inArray(players.teamId, teamIds))
+    : [];
+  if (memberships.length === 0)
+    return {
+      gameId,
+      scenarioTitle: scenarioByCode((game.scenarioSnapshot as { code?: string } | null)?.code).title,
+      classAverage: { strength: 0, averageScore: null },
+      students: [],
+    };
+
+  const userIds = [...new Set(memberships.map((m) => m.userId))];
+
+  const allSkills = await db
+    .select()
+    .from(playerSkills)
+    .where(inArray(playerSkills.userId, userIds));
+  const skillsByUser = new Map<string, { axis: string; value: number }[]>();
+  for (const s of allSkills) {
+    const list = skillsByUser.get(s.userId) ?? [];
+    list.push({ axis: s.axis, value: Number(s.value) });
+    skillsByUser.set(s.userId, list);
+  }
+
+  const conceptRows = await db.select().from(concepts);
+  const conceptNameById = new Map(conceptRows.map((r) => [r.id, { code: r.code, name: r.name }]));
+  const allProgress = await db
+    .select()
+    .from(learningProgress)
+    .where(inArray(learningProgress.userId, userIds));
+  const progressByUser = new Map<string, { code: string; name: string; mastery: number }[]>();
+  for (const p of allProgress) {
+    const concept = conceptNameById.get(p.conceptId);
+    if (!concept) continue;
+    const list = progressByUser.get(p.userId) ?? [];
+    list.push({ code: concept.code, name: concept.name, mastery: Number(p.mastery) });
+    progressByUser.set(p.userId, list);
+  }
+
+  const roundRows = await db.select().from(rounds).where(eq(rounds.gameId, gameId));
+  const instances = teamIds.length && roundRows.length
+    ? await db
+        .select()
+        .from(situationInstances)
+        .where(inArray(situationInstances.teamId, teamIds))
+    : [];
+  const usages = instances.length
+    ? await db
+        .select()
+        .from(hintUsages)
+        .where(inArray(hintUsages.situationInstanceId, instances.map((i) => i.id)))
+    : [];
+  const hintsByTeam = new Map<string, number>();
+  for (const u of usages) {
+    const teamId = instances.find((i) => i.id === u.situationInstanceId)?.teamId;
+    if (teamId) hintsByTeam.set(teamId, (hintsByTeam.get(teamId) ?? 0) + 1);
+  }
+
+  const scoresByTeam = new Map<string, { answered: number; unanswered: number; scores: number[] }>();
+  for (const inst of instances) {
+    const entry = scoresByTeam.get(inst.teamId) ?? { answered: 0, unanswered: 0, scores: [] };
+    if (inst.status === "debriefed") {
+      const diag = inst.diagnosis as { finalScore?: number; selected?: string[] } | null;
+      if (diag?.selected !== undefined) {
+        entry.answered++;
+        if (typeof diag.finalScore === "number") entry.scores.push(diag.finalScore);
+      } else {
+        entry.unanswered++;
+      }
+    }
+    scoresByTeam.set(inst.teamId, entry);
+  }
+
+  const students: StudentProgress[] = memberships.map((m) => {
+    const skills = skillsByUser.get(m.userId) ?? [];
+    const strength = playerStrength(skills);
+    const teamData = scoresByTeam.get(m.teamId);
+    const avg = teamData && teamData.scores.length > 0
+      ? teamData.scores.reduce((a, b) => a + b, 0) / teamData.scores.length
+      : null;
+    return {
+      userId: m.userId,
+      displayName: m.name,
+      teamName: (teamNameById.get(m.teamId) ?? "").replace(/\s*\(vous\)\s*$/, ""),
+      skills: skills.sort((a, b) => b.value - a.value),
+      strength: Math.round(strength * 10) / 10,
+      concepts: (progressByUser.get(m.userId) ?? []).sort((a, b) => a.mastery - b.mastery),
+      averageScore: avg,
+      situationsAnswered: teamData?.answered ?? 0,
+      situationsUnanswered: teamData?.unanswered ?? 0,
+      hintsUsed: hintsByTeam.get(m.teamId) ?? 0,
+    };
+  });
+
+  const strengths = students.map((s) => s.strength);
+  const avgStrength = strengths.length > 0
+    ? strengths.reduce((a, b) => a + b, 0) / strengths.length
+    : 0;
+  const allScores = students.filter((s) => s.averageScore !== null).map((s) => s.averageScore!);
+  const avgScore = allScores.length > 0
+    ? allScores.reduce((a, b) => a + b, 0) / allScores.length
+    : null;
+
+  return {
+    gameId,
+    scenarioTitle: scenarioByCode((game.scenarioSnapshot as { code?: string } | null)?.code).title,
+    classAverage: { strength: Math.round(avgStrength * 10) / 10, averageScore: avgScore },
+    students: students.sort((a, b) => a.strength - b.strength),
   };
 }
