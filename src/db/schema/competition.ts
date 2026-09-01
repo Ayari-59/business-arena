@@ -45,6 +45,7 @@ export const competitions = pgTable("competitions", {
     .notNull()
     .references(() => scenarios.id, { onDelete: "restrict" }),
   rules: jsonb("rules"),
+  joinCode: text("join_code").notNull().unique(),
   organizerId: uuid("organizer_id")
     .notNull()
     .references(() => users.id, { onDelete: "restrict" }),

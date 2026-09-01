@@ -53,8 +53,9 @@ export async function createCompetition(args: {
 }): Promise<{ competitionId: string; joinCode: string }> {
   const { getOrCreateNovaScenarioIdPublic } = await import("./game-creation.service");
   const scenarioId = await getOrCreateNovaScenarioIdPublic();
+  const joinCode = makeCode();
   const rules: CompetitionRules = {
-    joinCode: makeCode(),
+    joinCode,
     periodicity: args.periodicity,
     groupSize: Math.min(Math.max(args.groupSize, 2), 6),
     advancePerGroup: Math.min(Math.max(args.advancePerGroup, 1), 4),
@@ -68,10 +69,11 @@ export async function createCompetition(args: {
       status: "registration",
       scenarioId,
       rules,
+      joinCode,
       organizerId: args.organizerId,
     })
     .returning({ id: competitions.id });
-  return { competitionId: inserted[0]!.id, joinCode: rules.joinCode };
+  return { competitionId: inserted[0]!.id, joinCode };
 }
 
 /** Inscription d'un joueur : crée l'équipe (team_label) ou la rejoint. */
@@ -81,10 +83,9 @@ export async function joinCompetition(args: {
   teamLabel: string;
   pseudo?: string;
 }): Promise<{ competitionId: string } | { error: string }> {
-  const all = await db.select().from(competitions);
-  const competition = all.find(
-    (c) => rulesOf(c).joinCode === args.code.trim().toUpperCase(),
-  );
+  const competition = (
+    await db.select().from(competitions).where(eq(competitions.joinCode, args.code.trim().toUpperCase()))
+  )[0];
   if (!competition) return { error: "Code de concours inconnu." };
   if (competition.status !== "registration")
     return { error: "Les inscriptions de ce concours sont closes." };
@@ -437,7 +438,6 @@ export async function getCompetitionView(competitionId: string): Promise<Competi
     await db.select().from(competitions).where(eq(competitions.id, competitionId))
   )[0];
   if (!competition) return null;
-  const rules = rulesOf(competition);
   const entries = await db
     .select()
     .from(competitionEntries)
@@ -485,7 +485,7 @@ export async function getCompetitionView(competitionId: string): Promise<Competi
     competitionId,
     name: competition.name,
     status: competition.status,
-    joinCode: rules.joinCode,
+    joinCode: competition.joinCode,
     organizerId: competition.organizerId,
     entries: entries.map((e) => ({
       teamLabel: e.teamLabel,
@@ -514,7 +514,7 @@ export async function getOrganizerCompetitions(organizerId: string) {
       competitionId: c.id,
       name: c.name,
       status: c.status,
-      joinCode: rulesOf(c).joinCode,
+      joinCode: c.joinCode,
       entriesCount: entries.length,
       createdAt: c.createdAt,
     });
