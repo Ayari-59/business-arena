@@ -279,14 +279,23 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
         </section>
       )}
 
-      {/* ── 8. Débriefing pédagogique (tour précédent) ── */}
-      {r && situations.debriefed.length > 0 ? (
+      {/* ── 8. Mémoire pédagogique (tous les tours débriefés) ── */}
+      {r && situations.debriefedByRound.length > 0 ? (
         <section className="space-y-4">
           <h2 className="text-sm font-semibold text-slate-200">
-            Analyse du tour écoulé : ce qu&apos;il fallait voir
+            Mémoire pédagogique : ce qu&apos;il fallait voir
           </h2>
-          {situations.debriefed.map((s) => (
-            <SituationDebrief key={s.instanceId} situation={s} />
+          {situations.debriefedByRound.map((dr, i) => (
+            <details key={dr.roundIndex} open={i === 0} className="rounded-lg border border-slate-700 bg-slate-800/50">
+              <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-slate-200">
+                {periodLabel(view.roundDays, dr.roundIndex)} — {dr.situations.length} situation{dr.situations.length > 1 ? "s" : ""}
+              </summary>
+              <div className="space-y-4 px-4 pb-4">
+                {dr.situations.map((s) => (
+                  <SituationDebrief key={s.instanceId} situation={s} />
+                ))}
+              </div>
+            </details>
           ))}
         </section>
       ) : null}

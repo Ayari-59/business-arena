@@ -72,8 +72,8 @@ describe("référentiels et instanciation", () => {
   });
 
   it("la situation scriptée du tour 1 est ouverte pour l'équipe du joueur", async () => {
-    const { current, debriefed } = await getTeamSituations(gameId, userId);
-    expect(debriefed).toHaveLength(0);
+    const { current, debriefedByRound } = await getTeamSituations(gameId, userId);
+    expect(debriefedByRound).toHaveLength(0);
     expect(current).toHaveLength(1);
     expect(current[0]!.code).toBe("nova_t1_takeover");
     expect(current[0]!.problem).not.toMatch(/calculez/i); // question ouverte (§3)
@@ -140,9 +140,9 @@ describe("débriefing et progression", () => {
   it("la résolution du tour débriefe la situation et fait progresser la maîtrise", async () => {
     await resolveCurrentRound({ gameId, userId, playerDecisions: DECISIONS });
 
-    const { current, debriefed } = await getTeamSituations(gameId, userId);
-    expect(debriefed).toHaveLength(1);
-    const d = debriefed[0]!;
+    const { current, debriefedByRound } = await getTeamSituations(gameId, userId);
+    expect(debriefedByRound).toHaveLength(1);
+    const d = debriefedByRound[0]!.situations[0]!;
     expect(d.code).toBe("nova_t1_takeover");
     expect(d.debrief).not.toBeNull();
     expect(d.debrief!.correctOptionIds.sort()).toEqual(["cover_fixed", "unit_margin"]);
@@ -196,6 +196,35 @@ describe("débriefing et progression", () => {
     await expect(
       submitDiagnosis({ instanceId: instance.id, userId, selectedOptionIds: [] }),
     ).rejects.toThrow();
+  });
+});
+
+describe("mémoire pédagogique inter-tours (A6)", () => {
+  it("tous les tours résolus sont présents dans debriefedByRound", async () => {
+    const { debriefedByRound } = await getTeamSituations(gameId, userId);
+    expect(debriefedByRound.length).toBe(2);
+  });
+
+  it("les tours sont triés par index décroissant (le plus récent en premier)", async () => {
+    const { debriefedByRound } = await getTeamSituations(gameId, userId);
+    expect(debriefedByRound[0]!.roundIndex).toBe(2);
+    expect(debriefedByRound[1]!.roundIndex).toBe(1);
+  });
+
+  it("chaque groupe contient les situations du tour correspondant", async () => {
+    const { debriefedByRound } = await getTeamSituations(gameId, userId);
+    const round1 = debriefedByRound.find((dr) => dr.roundIndex === 1)!;
+    expect(round1.situations.length).toBeGreaterThanOrEqual(1);
+    expect(round1.situations[0]!.code).toBe("nova_t1_takeover");
+    expect(round1.situations[0]!.debrief).not.toBeNull();
+  });
+
+  it("les situations du tour courant ne fuient pas dans debriefedByRound", async () => {
+    const { current, debriefedByRound } = await getTeamSituations(gameId, userId);
+    const allDebriefedIds = debriefedByRound.flatMap((dr) => dr.situations).map((s) => s.instanceId);
+    for (const s of current) {
+      expect(allDebriefedIds).not.toContain(s.instanceId);
+    }
   });
 });
 

@@ -820,13 +820,18 @@ function toView(
   };
 }
 
-/** Situations de l'équipe du joueur : tour courant (à traiter) + tour débriefé. */
+export interface DebriefedRound {
+  roundIndex: number;
+  situations: SituationView[];
+}
+
+/** Situations de l'équipe du joueur : tour courant (à traiter) + tous les tours débriefés. */
 export async function getTeamSituations(
   gameId: string,
   userId: string,
-): Promise<{ current: SituationView[]; debriefed: SituationView[] }> {
+): Promise<{ current: SituationView[]; debriefedByRound: DebriefedRound[] }> {
   const game = (await db.select().from(games).where(eq(games.id, gameId)))[0];
-  if (!game) return { current: [], debriefed: [] };
+  if (!game) return { current: [], debriefedByRound: [] };
   const teamRows = await db.select().from(teams).where(eq(teams.gameId, gameId));
   const humanIds = teamRows.filter((t) => t.controller === "human").map((t) => t.id);
   const membership = (
@@ -835,7 +840,7 @@ export async function getTeamSituations(
       .from(players)
       .where(and(inArray(players.teamId, humanIds.length ? humanIds : ["-"]), eq(players.userId, userId)))
   )[0];
-  if (!membership) return { current: [], debriefed: [] };
+  if (!membership) return { current: [], debriefedByRound: [] };
 
   const gameRounds = await db.select().from(rounds).where(eq(rounds.gameId, gameId));
   const instances = await db
@@ -847,7 +852,7 @@ export async function getTeamSituations(
         eq(situationInstances.teamId, membership.teamId),
       ),
     );
-  if (instances.length === 0) return { current: [], debriefed: [] };
+  if (instances.length === 0) return { current: [], debriefedByRound: [] };
 
   const situationRows = await db.select().from(situations);
   const codeById = new Map(situationRows.map((r) => [r.id, r.code]));
@@ -855,9 +860,8 @@ export async function getTeamSituations(
   const hintCap = hintCapOf(game);
 
   const currentRound = gameRounds.find((r) => r.index === game.currentRound);
-  const lastDebriefedRound = gameRounds
-    .filter((r) => r.status === "resolved")
-    .sort((a, b) => b.index - a.index)[0];
+  const resolvedRoundIds = new Set(gameRounds.filter((r) => r.status === "resolved").map((r) => r.id));
+  const roundIndexById = new Map(gameRounds.map((r) => [r.id, r.index]));
 
   const allHints = await db
     .select({ situationInstanceId: hintUsages.situationInstanceId, level: hintUsages.level })
@@ -871,7 +875,7 @@ export async function getTeamSituations(
   }
 
   const current: SituationView[] = [];
-  const debriefed: SituationView[] = [];
+  const debriefedMap = new Map<number, SituationView[]>();
   for (const instance of instances) {
     const def = situationByCode.get(codeById.get(instance.situationId) ?? "");
     if (!def) continue;
@@ -879,11 +883,17 @@ export async function getTeamSituations(
     const view = toView(instance, def, levels, quizMode, hintCap);
     if (currentRound && instance.roundId === currentRound.id && instance.status !== "debriefed") {
       current.push(view);
-    } else if (lastDebriefedRound && instance.roundId === lastDebriefedRound.id) {
-      debriefed.push(view);
+    } else if (resolvedRoundIds.has(instance.roundId)) {
+      const idx = roundIndexById.get(instance.roundId)!;
+      const arr = debriefedMap.get(idx) ?? [];
+      arr.push(view);
+      debriefedMap.set(idx, arr);
     }
   }
-  return { current, debriefed };
+  const debriefedByRound: DebriefedRound[] = [...debriefedMap.entries()]
+    .sort((a, b) => b[0] - a[0])
+    .map(([roundIndex, situations]) => ({ roundIndex, situations }));
+  return { current, debriefedByRound };
 }
 
 export interface TeacherPedagogyView {
