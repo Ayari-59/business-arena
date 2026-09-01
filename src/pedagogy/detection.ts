@@ -320,3 +320,160 @@ export function buildConsequenceContext(
 ): ConsequenceFact[] {
   return CONSEQUENCE_METADATA[code].buildFacts(before, after);
 }
+
+// ---------------------------------------------------------------------------
+// Interprétation pédagogique (A3 — mécanisme de gestion, doc 03 §1.1)
+//
+// Chaque règle de détection porte une interprétation qui relie les faits
+// observés (A1) et l'évolution mesurée (A2) à un mécanisme de gestion.
+// L'interprétation est contextualisée par la direction globale de l'évolution
+// (amélioration, dégradation, stabilité) mais ne formule AUCUNE attribution
+// causale : le système ne dit pas « Votre décision X a provoqué Y ».
+// ---------------------------------------------------------------------------
+
+export interface InterpretationFact {
+  mechanism: string;
+  explanation: string;
+  takeaway: string;
+}
+
+type OverallDirection = "positive" | "negative" | "neutral";
+
+interface InterpretationMeta {
+  buildInterpretation(direction: OverallDirection): InterpretationFact;
+}
+
+export function overallDirection(facts: ConsequenceFact[]): OverallDirection {
+  let pos = 0;
+  let neg = 0;
+  for (const f of facts) {
+    if (f.direction === "positive") pos++;
+    else if (f.direction === "negative") neg++;
+  }
+  if (pos > neg) return "positive";
+  if (neg > pos) return "negative";
+  return "neutral";
+}
+
+export const INTERPRETATION_METADATA: Record<DetectCode, InterpretationMeta> = {
+  profitable_illiquid: {
+    buildInterpretation(direction) {
+      return {
+        mechanism:
+          "Le résultat comptable mesure la rentabilité sur une période, tandis que la " +
+          "trésorerie reflète les flux réels d'encaissement et de décaissement. Ces deux " +
+          "grandeurs peuvent évoluer dans des directions opposées.",
+        explanation:
+          direction === "positive"
+            ? "La trésorerie nette s'est améliorée, ce qui traduit un meilleur alignement " +
+              "entre les flux d'encaissement et les besoins de financement à court terme."
+            : direction === "negative"
+              ? "La tension de trésorerie persiste malgré un résultat positif. L'écart entre " +
+                "rentabilité comptable et liquidité disponible reste significatif."
+              : "L'écart entre la rentabilité comptable et la trésorerie disponible reste " +
+                "comparable à la période précédente.",
+        takeaway:
+          "Une entreprise peut être rentable et manquer de liquidités : le résultat ne " +
+          "garantit pas la capacité à honorer ses échéances.",
+      };
+    },
+  },
+  below_breakeven: {
+    buildInterpretation(direction) {
+      return {
+        mechanism:
+          "Le seuil de rentabilité est le niveau d'activité à partir duquel le chiffre " +
+          "d'affaires couvre l'ensemble des charges, fixes et variables. En dessous, chaque " +
+          "euro de vente ne suffit pas à absorber les coûts de structure.",
+        explanation:
+          direction === "positive"
+            ? "Le résultat net s'est rapproché de l'équilibre ou l'a dépassé, ce qui est " +
+              "cohérent avec une meilleure couverture des charges par le volume d'activité."
+            : direction === "negative"
+              ? "Le résultat net s'est éloigné de l'équilibre. Le niveau d'activité reste " +
+                "insuffisant pour couvrir les charges de structure."
+              : "Le niveau de résultat est resté comparable. La couverture des charges par " +
+                "l'activité n'a pas significativement évolué.",
+        takeaway:
+          "Le résultat dépend du rapport entre le volume d'activité et le niveau des " +
+          "charges. Agir sur les prix, les volumes ou les coûts modifie la position par " +
+          "rapport au seuil de rentabilité.",
+      };
+    },
+  },
+  stockout: {
+    buildInterpretation(direction) {
+      return {
+        mechanism:
+          "Une rupture de stock survient lorsque la demande excède la quantité disponible " +
+          "à la vente. La demande non servie représente des ventes potentielles que " +
+          "l'entreprise n'a pas pu réaliser.",
+        explanation:
+          direction === "positive"
+            ? "La demande non servie a diminué, ce qui traduit une meilleure adéquation " +
+              "entre la disponibilité des produits et le niveau de demande."
+            : direction === "negative"
+              ? "La demande non servie a augmenté. L'écart entre la demande et la " +
+                "disponibilité s'est creusé."
+              : "Le niveau de demande non servie est resté comparable. L'adéquation entre " +
+                "offre et demande n'a pas significativement évolué.",
+        takeaway:
+          "Une entreprise peut perdre des ventes non pas faute de clients, mais faute de " +
+          "produits disponibles. La gestion des stocks arbitre entre le coût de détention " +
+          "et le risque de rupture.",
+      };
+    },
+  },
+  capacity_saturated: {
+    buildInterpretation(direction) {
+      return {
+        mechanism:
+          "La capacité de production est une contrainte physique : lorsque l'outil de " +
+          "production est utilisé à son maximum, toute demande supplémentaire ne peut être " +
+          "satisfaite sans investissement ou sous-traitance.",
+        explanation:
+          direction === "positive"
+            ? "La pression sur la capacité a diminué, ce qui traduit un meilleur équilibre " +
+              "entre le volume de demande et les moyens de production disponibles."
+            : direction === "negative"
+              ? "La saturation de l'outil de production persiste ou s'est aggravée. La " +
+                "demande continue de dépasser la capacité disponible."
+              : "Le taux d'utilisation et la demande non servie sont restés comparables. La " +
+                "contrainte de capacité n'a pas significativement évolué.",
+        takeaway:
+          "Quand la demande dépasse la capacité, l'entreprise fait face à un arbitrage : " +
+          "investir pour accroître sa capacité, ajuster sa politique commerciale, ou " +
+          "accepter de ne pas servir une partie de la demande.",
+      };
+    },
+  },
+  idle_cash: {
+    buildInterpretation(direction) {
+      return {
+        mechanism:
+          "La trésorerie qui dépasse largement les besoins de fonctionnement représente un " +
+          "coût d'opportunité : cet argent disponible ne produit aucun rendement alors " +
+          "qu'il pourrait être mobilisé — investissement, placement, remboursement anticipé.",
+        explanation:
+          direction === "positive"
+            ? "La trésorerie disponible a diminué par rapport aux charges de structure, ce " +
+              "qui traduit une mobilisation des liquidités excédentaires."
+            : direction === "negative"
+              ? "L'excédent de trésorerie s'est maintenu ou amplifié. Les liquidités " +
+                "disponibles restent significativement supérieures aux besoins de fonctionnement."
+              : "Le rapport entre la trésorerie et les charges de structure est resté comparable.",
+        takeaway:
+          "Conserver des liquidités assure la sécurité financière, mais au-delà d'un seuil, " +
+          "l'argent qui dort représente un manque à gagner. L'arbitrage porte sur l'équilibre " +
+          "entre sécurité et rendement.",
+      };
+    },
+  },
+};
+
+export function buildInterpretation(
+  code: DetectCode,
+  consequenceFacts: ConsequenceFact[],
+): InterpretationFact {
+  return INTERPRETATION_METADATA[code].buildInterpretation(overallDirection(consequenceFacts));
+}

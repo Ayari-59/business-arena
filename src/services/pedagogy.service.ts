@@ -36,8 +36,8 @@ import {
 import { presetFromProfile, quizModeFromProfile, type QuizMode } from "@/config/difficulty";
 import { hintScoreMultiplier, nextUnlockableLevel } from "@/pedagogy/hints";
 import { evaluateDiagnosis, evaluateQuiz } from "@/pedagogy/evaluation";
-import { buildConsequenceContext, buildTriggerContext, detectSituations } from "@/pedagogy/detection";
-import type { ConsequenceFact, TriggerFact } from "@/pedagogy/detection";
+import { buildConsequenceContext, buildInterpretation, buildTriggerContext, detectSituations } from "@/pedagogy/detection";
+import type { ConsequenceFact, InterpretationFact, TriggerFact } from "@/pedagogy/detection";
 import { AXES, aggregateAxis, updateMastery } from "@/pedagogy/progress";
 import { adaptiveHintMultiplier, playerStrength } from "@/pedagogy/adaptivity";
 import { computeRawSituationScore } from "@/pedagogy/scoring";
@@ -551,11 +551,14 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
 
     // A2 — snapshot conséquences pour les situations détectées
     let consequenceContext: ConsequenceFact[] | null = null;
+    // A3 — interprétation pédagogique contextuelle
+    let interpretationContext: InterpretationFact | null = null;
     if (instance.origin === "detected" && "detect" in def.trigger) {
       const before = beforeByTeam.get(instance.teamId);
       const after = afterByTeam.get(instance.teamId);
       if (before && after) {
         consequenceContext = buildConsequenceContext(def.trigger.detect, before, after);
+        interpretationContext = buildInterpretation(def.trigger.detect, consequenceContext);
       }
     }
 
@@ -569,6 +572,7 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
           hintLevelsUsed: levels,
         },
         ...(consequenceContext !== null ? { consequenceContext } : {}),
+        ...(interpretationContext !== null ? { interpretationContext } : {}),
       })
       .where(eq(situationInstances.id, instance.id));
 
@@ -732,6 +736,8 @@ export interface SituationView {
     modelInsight: { prompt: string; answer: string; explain: string } | null;
     /** Évolution avant/après des indicateurs (A2 — « Qu'a-t-il évolué ? »). */
     consequenceFacts: ConsequenceFact[] | null;
+    /** Interprétation pédagogique contextuelle (A3 — « Comment interpréter cette évolution ? »). */
+    interpretation: InterpretationFact | null;
     concepts: { code: string; name: string; domain: string }[];
     finalScore: number;
   } | null;
@@ -803,6 +809,7 @@ function toView(
           // questions retirerait aussi la leçon centrale de la situation.
           modelInsight: modelAsked ? null : modelInsight(def),
           consequenceFacts: (instance.consequenceContext as ConsequenceFact[] | null) ?? null,
+          interpretation: (instance.interpretationContext as InterpretationFact | null) ?? null,
           concepts: def.conceptCodes
             .map((code) => conceptByCode.get(code))
             .filter((c): c is NonNullable<typeof c> => Boolean(c))

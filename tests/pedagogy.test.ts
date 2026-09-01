@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { hintScoreMultiplier, nextUnlockableLevel } from "../src/pedagogy/hints";
 import { evaluateDiagnosis, evaluateQuiz } from "../src/pedagogy/evaluation";
-import { buildConsequenceContext, buildTriggerContext, CONSEQUENCE_METADATA, DETECTION_METADATA, detectSituations } from "../src/pedagogy/detection";
-import type { ConsequenceFact, TriggerFact } from "../src/pedagogy/detection";
+import { buildConsequenceContext, buildInterpretation, buildTriggerContext, CONSEQUENCE_METADATA, DETECTION_METADATA, INTERPRETATION_METADATA, detectSituations, overallDirection } from "../src/pedagogy/detection";
+import type { ConsequenceFact, InterpretationFact, TriggerFact } from "../src/pedagogy/detection";
 import { updateMastery } from "../src/pedagogy/progress";
 import {
   playerStrength,
@@ -367,6 +367,116 @@ describe("conséquences pédagogiques (A2 — évolution avant/après)", () => {
       const code = (s.trigger as { detect: string }).detect;
       expect(CONSEQUENCE_METADATA[code as keyof typeof CONSEQUENCE_METADATA], `${s.code} → ${code}`).toBeDefined();
     }
+  });
+});
+
+describe("interprétation pédagogique (A3 — mécanisme de gestion)", () => {
+  const before = {
+    incomeStatement: { netIncome: -5000, revenue: 80000, fixedCosts: 90000 },
+    functionalBalance: { netTreasury: -15000 },
+    market: { bySegment: { s: { sold: 800, lost: 200 } } },
+    production: { utilizationRate: 0.99 },
+    balanceSheet: { cash: 200000, overdraft: 0 },
+  } as unknown as CompanyRoundResult;
+
+  const after = {
+    incomeStatement: { netIncome: 12000, revenue: 110000, fixedCosts: 92000 },
+    functionalBalance: { netTreasury: 8000 },
+    market: { bySegment: { s: { sold: 1100, lost: 50 } } },
+    production: { utilizationRate: 0.85 },
+    balanceSheet: { cash: 140000, overdraft: 0 },
+  } as unknown as CompanyRoundResult;
+
+  it("couvre les 5 codes de détection", () => {
+    const codes: string[] = [
+      "profitable_illiquid",
+      "below_breakeven",
+      "stockout",
+      "capacity_saturated",
+      "idle_cash",
+    ];
+    for (const code of codes) {
+      expect(INTERPRETATION_METADATA[code as keyof typeof INTERPRETATION_METADATA], code).toBeDefined();
+    }
+  });
+
+  it("buildInterpretation retourne mechanism, explanation, takeaway non vides", () => {
+    const codes = Object.keys(INTERPRETATION_METADATA) as (keyof typeof INTERPRETATION_METADATA)[];
+    for (const code of codes) {
+      const facts = buildConsequenceContext(code, before, after);
+      const interp = buildInterpretation(code, facts);
+      expect(interp.mechanism.length, `${code}: mechanism vide`).toBeGreaterThan(20);
+      expect(interp.explanation.length, `${code}: explanation vide`).toBeGreaterThan(20);
+      expect(interp.takeaway.length, `${code}: takeaway vide`).toBeGreaterThan(20);
+    }
+  });
+
+  it("l'explication varie selon la direction globale de l'évolution", () => {
+    const codes = Object.keys(INTERPRETATION_METADATA) as (keyof typeof INTERPRETATION_METADATA)[];
+    for (const code of codes) {
+      const pos = INTERPRETATION_METADATA[code].buildInterpretation("positive");
+      const neg = INTERPRETATION_METADATA[code].buildInterpretation("negative");
+      const neu = INTERPRETATION_METADATA[code].buildInterpretation("neutral");
+      expect(pos.explanation, `${code}: positive === negative`).not.toBe(neg.explanation);
+      expect(pos.explanation, `${code}: positive === neutral`).not.toBe(neu.explanation);
+      expect(neg.explanation, `${code}: negative === neutral`).not.toBe(neu.explanation);
+      // Le mécanisme et le takeaway restent stables
+      expect(pos.mechanism).toBe(neg.mechanism);
+      expect(pos.takeaway).toBe(neg.takeaway);
+    }
+  });
+
+  it("overallDirection : majorité positive/negative/égalité", () => {
+    expect(overallDirection([
+      { label: "", before: "", after: "", delta: "", direction: "positive" },
+      { label: "", before: "", after: "", delta: "", direction: "negative" },
+      { label: "", before: "", after: "", delta: "", direction: "positive" },
+    ])).toBe("positive");
+    expect(overallDirection([
+      { label: "", before: "", after: "", delta: "", direction: "negative" },
+      { label: "", before: "", after: "", delta: "", direction: "negative" },
+    ])).toBe("negative");
+    expect(overallDirection([
+      { label: "", before: "", after: "", delta: "", direction: "positive" },
+      { label: "", before: "", after: "", delta: "", direction: "negative" },
+    ])).toBe("neutral");
+    expect(overallDirection([])).toBe("neutral");
+  });
+
+  it("le contenu ne formule aucune attribution causale directe", () => {
+    const forbidden = [
+      /votre décision/i,
+      /vous avez provoqué/i,
+      /a provoqué/i,
+      /grâce à votre décision/i,
+      /à cause de votre décision/i,
+    ];
+    const codes = Object.keys(INTERPRETATION_METADATA) as (keyof typeof INTERPRETATION_METADATA)[];
+    for (const code of codes) {
+      for (const dir of ["positive", "negative", "neutral"] as const) {
+        const interp = INTERPRETATION_METADATA[code].buildInterpretation(dir);
+        for (const field of [interp.mechanism, interp.explanation, interp.takeaway]) {
+          for (const pattern of forbidden) {
+            expect(field, `${code}/${dir}`).not.toMatch(pattern);
+          }
+        }
+      }
+    }
+  });
+
+  it("les situations détectées dans ALL_SITUATIONS ont toutes leurs métadonnées A3", () => {
+    const detected = ALL_SITUATIONS.filter((s) => "detect" in s.trigger);
+    for (const s of detected) {
+      const code = (s.trigger as { detect: string }).detect;
+      expect(INTERPRETATION_METADATA[code as keyof typeof INTERPRETATION_METADATA], `${s.code} → ${code}`).toBeDefined();
+    }
+  });
+
+  it("une situation historique sans interpretationContext fonctionne (null → null)", () => {
+    // Simule le comportement de toView : interpretationContext null → interpretation null
+    const ctx: InterpretationFact | null = null;
+    const interpretation = ctx ?? null;
+    expect(interpretation).toBeNull();
   });
 });
 

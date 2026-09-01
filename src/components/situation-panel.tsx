@@ -8,6 +8,7 @@ import {
   type PedagogyState,
 } from "@/app/arena/[gameId]/actions";
 import type { SituationView } from "@/services/pedagogy.service";
+import type { InterpretationFact } from "@/pedagogy/detection";
 
 const initial: PedagogyState = { error: null };
 
@@ -333,6 +334,18 @@ export function SituationDebrief({ situation }: { situation: SituationView }) {
                   </span>
                 </div>
               ))}
+            </div>
+          </div>
+        ) : null}
+        {debrief.interpretation ? (
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Comment interpréter cette évolution ?
+            </p>
+            <div className="mt-1 space-y-2 rounded-lg border border-white/5 bg-slate-950 px-3 py-2">
+              <p className="text-sm font-medium text-slate-200">{debrief.interpretation.mechanism}</p>
+              <p className="text-sm text-slate-300">{debrief.interpretation.explanation}</p>
+              <p className="text-sm italic text-amber-200/80">{debrief.interpretation.takeaway}</p>
             </div>
           </div>
         ) : null}
