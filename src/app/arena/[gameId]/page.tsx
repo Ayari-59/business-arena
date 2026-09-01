@@ -17,6 +17,7 @@ import { StudyReportsPanel } from "@/components/study-reports";
 import { FinancialStatements } from "@/components/financial-statements";
 import { DilemmaCard, ParametersPanels } from "@/components/decision-context";
 import { SalesHistory } from "@/components/sales-history";
+import { RoundStatusPoller } from "@/components/round-status-poller";
 import type { KpiFormat } from "@/config/scenarios/sector-kpis";
 import { surtitreDePartie } from "@/config/scenarios/presentation";
 
@@ -605,7 +606,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
           {view.kind === "class" && view.pendingDecisions ? (
             <p className="mb-4 rounded-lg border border-emerald-400/30 bg-emerald-950/30 px-3 py-2 text-sm text-emerald-300">
               ✓ Décisions validées, en attente de la clôture du tour par l&apos;enseignant.
-              Vous pouvez encore les modifier ci-dessous. Actualisez la page après la clôture.
+              Vous pouvez encore les modifier ci-dessous. La page se mettra à jour automatiquement après la clôture du tour.
             </p>
           ) : null}
           <DecisionForm
@@ -643,6 +644,15 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
           />
         </section>
       )}
+
+      {!finished && view.kind === "class" ? (
+        <RoundStatusPoller
+          gameId={view.gameId}
+          currentRound={view.currentRound}
+          roundStatus="open"
+          endpoint="round-status"
+        />
+      ) : null}
     </main>
   );
 }

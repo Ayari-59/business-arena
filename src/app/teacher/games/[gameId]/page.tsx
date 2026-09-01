@@ -8,6 +8,7 @@ import { closeRoundAction, setQuizModeAction } from "../../actions";
 import { QUIZ_MODES } from "@/config/difficulty";
 import { CardDeck } from "@/components/card-deck";
 import { SubmitButton } from "@/components/submit-button";
+import { RoundStatusPoller } from "@/components/round-status-poller";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,7 @@ export default async function TeacherGamePage({
   const finished = view.status === "finished";
   const humanTeams = view.teams.filter((t) => t.controller === "human");
   const allSubmitted = humanTeams.every((t) => t.hasSubmitted);
+  const submittedCount = humanTeams.filter((t) => t.hasSubmitted).length;
   const closeAction = closeRoundAction.bind(null, view.gameId);
 
   return (
@@ -372,6 +374,16 @@ export default async function TeacherGamePage({
           </ol>
         )}
       </section>
+
+      {!finished ? (
+        <RoundStatusPoller
+          gameId={view.gameId}
+          currentRound={view.currentRound}
+          roundStatus="open"
+          endpoint="submissions"
+          submittedCount={submittedCount}
+        />
+      ) : null}
     </main>
   );
 }
