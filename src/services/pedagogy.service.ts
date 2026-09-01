@@ -25,6 +25,7 @@ import { DECISION_MODELS, modelByCode } from "@/config/pedagogy/models";
 import type { SituationDef } from "@/config/scenarios/nova/situations";
 import {
   MODEL_QUESTION_ID,
+  type DecisionLever,
   type QuizQuestionDef,
 } from "@/config/scenarios/situation-kit";
 import {
@@ -728,6 +729,8 @@ export interface SituationView {
   hintLimit: string | null;
   /** Modèles d'analyse pertinents pour cette situation (A7 — cadre analytique avant la décision). Vide après débriefing. */
   analyticalHints: AnalyticalHint[];
+  /** Leviers décisionnels suggérés par la situation (A8 — pont situation→décision). Vide après débriefing. */
+  decisionLevers: DecisionLever[];
   /** Faits chiffrés ayant déclenché la situation (A1 — « Pourquoi cette situation ? »). */
   triggerFacts: TriggerFact[] | null;
   diagnosis: { selected: string[]; freeText: string; score?: number; finalScore?: number } | null;
@@ -805,6 +808,7 @@ function toView(
           .filter((m): m is NonNullable<typeof m> => Boolean(m))
           .map((m) => ({ code: m.code, name: m.name, description: m.description, objective: m.objective, difficulty: m.difficulty }))
           .sort((a, b) => a.name.localeCompare(b.name, "fr")),
+    decisionLevers: debriefed ? [] : (def.decisionLevers ?? []),
     triggerFacts: (instance.triggerContext as TriggerFact[] | null) ?? null,
     diagnosis,
     debrief: debriefed

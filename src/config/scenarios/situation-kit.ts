@@ -9,6 +9,21 @@ import { modelByCode } from "../pedagogy/models";
 
 export type ModelRelevance = "optimal" | "acceptable" | "misleading" | "irrelevant";
 
+export type DecisionField =
+  | "price"
+  | "productionPlan"
+  | "marketingBudget"
+  | "qualityBudget"
+  | "maintenanceBudget";
+
+export type LeverDirection = "up" | "down" | "review";
+
+export interface DecisionLever {
+  field: DecisionField;
+  direction: LeverDirection;
+  hint: string;
+}
+
 export type DetectCode =
   | "profitable_illiquid"
   | "stockout"
@@ -59,6 +74,7 @@ export interface SituationDef {
   hints: SituationHintDef[];
   trigger: { round: number } | { detect: DetectCode };
   weight: number;
+  decisionLevers: DecisionLever[];
 }
 
 /** Coûts standard des 5 niveaux (doc 03 §4) : cumulés = 45 % de score restant. */

@@ -253,6 +253,53 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
         ) : null;
       })()}
 
+      {/* ── 6.75 Pont situation → décision (A8) ── */}
+      {!finished && (() => {
+        const FIELD_LABELS: Record<string, string> = {
+          price: "Prix de vente",
+          productionPlan: "Plan de production",
+          marketingBudget: "Budget marketing",
+          qualityBudget: "Budget qualité",
+          maintenanceBudget: "Budget maintenance",
+        };
+        const DIRECTION_ICONS: Record<string, string> = { up: "↑", down: "↓", review: "⟳" };
+        const byField = new Map<string, { direction: string; hints: string[] }>();
+        for (const s of situations.current) {
+          for (const lever of s.decisionLevers ?? []) {
+            const existing = byField.get(lever.field);
+            if (!existing) {
+              byField.set(lever.field, { direction: lever.direction, hints: [lever.hint] });
+            } else {
+              existing.hints.push(lever.hint);
+              if (existing.direction !== lever.direction) existing.direction = "review";
+            }
+          }
+        }
+        const levers = [...byField.entries()].map(([field, { direction, hints: fieldHints }]) => ({
+          field, direction, hints: fieldHints, label: FIELD_LABELS[field] ?? field,
+        }));
+        return levers.length > 0 ? (
+          <section className="space-y-3">
+            <h2 className="text-sm font-semibold text-slate-200">
+              Leviers à considérer pour vos décisions
+            </h2>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {levers.map((l) => (
+                <div key={l.field} className="flex gap-2 rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
+                  <span className="mt-0.5 text-base leading-none text-amber-400">{DIRECTION_ICONS[l.direction]}</span>
+                  <div className="min-w-0">
+                    <span className="text-sm font-medium text-slate-200">{l.label}</span>
+                    {l.hints.map((h, i) => (
+                      <p key={i} className="mt-0.5 text-xs text-slate-400">{h}</p>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null;
+      })()}
+
       {/* ── 7. Formulaire de décision / Écran de fin ── */}
       {finished ? (
         <section className="rounded-xl border border-amber-400/30 bg-slate-900 p-6 text-center">

@@ -1,4 +1,4 @@
-import { attachModelQuestions, hints, type SituationDef } from "../situation-kit";
+import { attachModelQuestions, hints, type DecisionLever, type SituationDef } from "../situation-kit";
 
 /**
  * Situations pédagogiques d'ATLAS CONSEIL (services intellectuels).
@@ -83,6 +83,18 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 1 },
     weight: 1,
+    decisionLevers: [
+      {
+        field: "productionPlan",
+        direction: "review",
+        hint: "Évaluez combien de jours-consultants vous pouvez réellement vendre ce trimestre : un jour non vendu ne se rattrape pas, et c'est là que se joue votre résultat.",
+      },
+      {
+        field: "price",
+        direction: "review",
+        hint: "Votre TJM détermine la marge par jour vendu. Vérifiez qu'il couvre bien vos charges de structure une fois rapportées au nombre de jours facturables.",
+      },
+    ],
   },
   {
     code: "conseil_t2_creances",
@@ -158,6 +170,18 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 2 },
     weight: 1.5,
+    decisionLevers: [
+      {
+        field: "price",
+        direction: "up",
+        hint: "Négociez des acomptes ou facturez à l'avancement : chaque euro encaissé plus tôt réduit le BFR sans coûter un centime.",
+      },
+      {
+        field: "marketingBudget",
+        direction: "review",
+        hint: "La prospection génère de nouvelles missions, donc de nouvelles créances. Calibrez votre développement commercial à la capacité de financement de votre poste clients.",
+      },
+    ],
   },
   {
     code: "conseil_t3_banc",
@@ -234,6 +258,23 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 3 },
     weight: 1.5,
+    decisionLevers: [
+      {
+        field: "price",
+        direction: "down",
+        hint: "Un tarif réduit vaut mieux qu'un consultant sur le banc, tant que la journée dépasse les 90 € de frais variables. Mais attention à ne pas en faire la nouvelle référence.",
+      },
+      {
+        field: "marketingBudget",
+        direction: "up",
+        hint: "Investir en prospection maintenant prépare le carnet du trimestre suivant : c'est une charge immédiate pour un effet différé, mais le creux est le pire moment pour couper.",
+      },
+      {
+        field: "productionPlan",
+        direction: "review",
+        hint: "Réexaminez votre plan de missions : pouvez-vous accepter des formats plus courts ou plus souples pour occuper les consultants inactifs ?",
+      },
+    ],
   },
   {
     code: "conseil_t4_recrutement",
@@ -310,6 +351,23 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 4 },
     weight: 1.5,
+    decisionLevers: [
+      {
+        field: "productionPlan",
+        direction: "up",
+        hint: "La demande dépasse votre capacité : planifiez davantage de missions pour capter l'opportunité avant la concurrence.",
+      },
+      {
+        field: "qualityBudget",
+        direction: "up",
+        hint: "La formation améliore la productivité de vos consultants actuels : c'est de la capacité supplémentaire sans le délai ni le coût du recrutement.",
+      },
+      {
+        field: "marketingBudget",
+        direction: "up",
+        hint: "Investissez en prospection pour convertir la demande réglementaire en missions signées avant que le marché ne se referme.",
+      },
+    ],
   },
   {
     code: "conseil_detect_below_breakeven",
@@ -385,6 +443,23 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { detect: "below_breakeven" },
     weight: 1,
+    decisionLevers: [
+      {
+        field: "price",
+        direction: "down",
+        hint: "Acceptez temporairement un TJM réduit pour remplir le banc : toute mission au-dessus de 90 € de frais variables améliore le résultat, même très en dessous du tarif habituel.",
+      },
+      {
+        field: "marketingBudget",
+        direction: "up",
+        hint: "Augmentez la prospection pour remplir le carnet, même si l'effet est différé. Couper maintenant creuse le creux du trimestre suivant.",
+      },
+      {
+        field: "productionPlan",
+        direction: "up",
+        hint: "Cherchez à vendre davantage de jours-consultants pour franchir le seuil d'occupation d'équilibre : chiffrez l'écart en jours, il est souvent plus petit qu'on ne croit.",
+      },
+    ],
   },
   {
     code: "conseil_detect_profitable_illiquid",
@@ -460,6 +535,18 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { detect: "profitable_illiquid" },
     weight: 1,
+    decisionLevers: [
+      {
+        field: "price",
+        direction: "review",
+        hint: "Intégrez des acomptes ou une facturation à l'avancement dans vos conditions commerciales : c'est le levier de trésorerie gratuit d'un cabinet sans stock.",
+      },
+      {
+        field: "marketingBudget",
+        direction: "review",
+        hint: "Chaque nouvelle mission signée gonfle le poste clients avant de produire du cash. Calibrez votre développement commercial à votre capacité de financement.",
+      },
+    ],
   },
   {
     code: "conseil_t5_mission_rabais",
@@ -534,6 +621,18 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 5 },
     weight: 1,
+    decisionLevers: [
+      {
+        field: "price",
+        direction: "review",
+        hint: "380 € est très en dessous du tarif habituel, mais la marge sur coût variable (290 €) est réelle. Le calcul marginal dit oui quand le planning est vide, non quand il est plein.",
+      },
+      {
+        field: "productionPlan",
+        direction: "review",
+        hint: "Vérifiez si le consultant visé a d'autres missions possibles ce trimestre : accepter cette mission, c'est renoncer à toute mission mieux payée sur la même période.",
+      },
+    ],
   },
   {
     code: "conseil_t6_resistance",
@@ -608,6 +707,23 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 6 },
     weight: 1,
+    decisionLevers: [
+      {
+        field: "marketingBudget",
+        direction: "up",
+        hint: "Diversifiez votre portefeuille clients par la prospection : un quart de l'activité chez un seul client est une exposition dangereuse que seul un carnet plus large peut réduire.",
+      },
+      {
+        field: "price",
+        direction: "review",
+        hint: "Simulez l'effet d'une variation de tarif sur votre seuil de rentabilité : avec des charges presque entièrement fixes, le levier d'exploitation amplifie chaque mouvement.",
+      },
+      {
+        field: "productionPlan",
+        direction: "review",
+        hint: "Préparez un plan de missions alternatif sans le grand compte : combien de jours-consultants faudrait-il remplacer, et le carnet actuel peut-il absorber le choc ?",
+      },
+    ],
   },
   {
     code: "conseil_detect_idle_cash",
@@ -682,6 +798,23 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { detect: "idle_cash" },
     weight: 0.8,
+    decisionLevers: [
+      {
+        field: "maintenanceBudget",
+        direction: "review",
+        hint: "Avant de bloquer du cash, vérifiez que votre outillage ne nécessite pas un investissement plus rentable que les 2 % du placement.",
+      },
+      {
+        field: "marketingBudget",
+        direction: "review",
+        hint: "Un carnet qui se vide appelle de la prospection : mieux vaut investir dans le remplissage du carnet que bloquer du cash à 2 % pendant que les salaires continuent de tomber.",
+      },
+      {
+        field: "productionPlan",
+        direction: "review",
+        hint: "Projetez vos missions du trimestre suivant : le cash d'aujourd'hui devra financer les salaires même si le carnet reste creux. Ne bloquez que l'excédent qui survit à cette projection.",
+      },
+    ],
   },
 ];
 

@@ -112,6 +112,25 @@ describe("cadre analytique avant décision (A7)", () => {
   });
 });
 
+describe("pont situation→décision (A8)", () => {
+  it("les situations courantes portent des decisionLevers non vides", async () => {
+    const { current } = await getTeamSituations(gameId, userId);
+    expect(current[0]!.decisionLevers.length).toBeGreaterThan(0);
+  });
+
+  it("chaque lever a un field valide, une direction et un hint", async () => {
+    const { current } = await getTeamSituations(gameId, userId);
+    const validFields = ["price", "productionPlan", "marketingBudget", "qualityBudget", "maintenanceBudget"];
+    const validDirections = ["up", "down", "review"];
+    for (const lever of current[0]!.decisionLevers) {
+      expect(validFields).toContain(lever.field);
+      expect(validDirections).toContain(lever.direction);
+      expect(lever.hint.length).toBeGreaterThan(0);
+    }
+  });
+
+});
+
 describe("indices, diagnostic, QCM de connaissances", () => {
   it("les indices se débloquent séquentiellement et sont tracés", async () => {
     const { current } = await getTeamSituations(gameId, userId);
@@ -217,6 +236,15 @@ describe("débriefing et progression", () => {
     for (const dr of debriefedByRound) {
       for (const s of dr.situations) {
         expect(s.analyticalHints).toEqual([]);
+      }
+    }
+  });
+
+  it("les decisionLevers sont vides après débriefing (A8)", async () => {
+    const { debriefedByRound } = await getTeamSituations(gameId, userId);
+    for (const dr of debriefedByRound) {
+      for (const s of dr.situations) {
+        expect(s.decisionLevers).toEqual([]);
       }
     }
   });

@@ -1,4 +1,4 @@
-import { attachModelQuestions, hints, type SituationDef } from "../situation-kit";
+import { attachModelQuestions, hints, type DecisionLever, type SituationDef } from "../situation-kit";
 
 /**
  * Situations pédagogiques de PIXEL & CO (e-commerce).
@@ -83,6 +83,10 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 1 },
     weight: 1,
+    decisionLevers: [
+      { field: "marketingBudget", direction: "review", hint: "Chaque euro de publicité doit rapporter plus qu'il ne coûte. Calibrez le budget d'acquisition pour que le coût par client reste sous la marge par commande." },
+      { field: "price", direction: "review", hint: "Le panier moyen détermine la marge qui doit absorber le coût d'acquisition. Un prix trop bas ne laisse rien après la publicité." },
+    ],
   },
   {
     code: "ecom_t2_fidelisation",
@@ -159,6 +163,10 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 2 },
     weight: 1.5,
+    decisionLevers: [
+      { field: "qualityBudget", direction: "up", hint: "La qualité (photos, service, délais) fait revenir les clients sans coût d'acquisition. Investir ici maintenant, c'est de la marge gratuite au tour suivant." },
+      { field: "marketingBudget", direction: "review", hint: "Un client fidèle rapporte quatre fois plus qu'un client acquis. Réévaluez la part du budget consacrée à l'acquisition face à celle qui nourrit la fidélisation." },
+    ],
   },
   {
     code: "ecom_t4_pic",
@@ -235,6 +243,11 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 4 },
     weight: 1.5,
+    decisionLevers: [
+      { field: "productionPlan", direction: "up", hint: "Le pic exige du stock supplémentaire, mais uniquement à hauteur de ce que l'entrepôt peut expédier. Inutile d'acheter au-delà de la capacité de préparation." },
+      { field: "marketingBudget", direction: "up", hint: "Les enchères publicitaires montent en période de fêtes. Réservez un budget d'acquisition suffisant pour capter la demande saisonnière." },
+      { field: "maintenanceBudget", direction: "review", hint: "La capacité de l'entrepôt est le goulot d'étranglement. Vérifiez si un investissement logistique permet de desserrer cette contrainte avant le pic." },
+    ],
   },
   {
     code: "ecom_t5_commission",
@@ -311,6 +324,10 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 5 },
     weight: 1.5,
+    decisionLevers: [
+      { field: "price", direction: "review", hint: "La commission se calcule sur le prix, pas sur la marge. Ajuster le prix du canal partenaire peut compenser la hausse, mais au risque de perdre du volume." },
+      { field: "marketingBudget", direction: "review", hint: "Si la marge par commande marketplace diminue, chaque euro de publicité rapporte davantage en direct. Rééquilibrez l'effort d'acquisition entre les deux canaux." },
+    ],
   },
   {
     code: "ecom_detect_below_breakeven",
@@ -386,6 +403,11 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { detect: "below_breakeven" },
     weight: 1,
+    decisionLevers: [
+      { field: "marketingBudget", direction: "down", hint: "Si le coût d'acquisition dépasse la marge par commande, chaque nouveau client aggrave la perte. Réduisez le budget jusqu'à retrouver une marge nette positive." },
+      { field: "price", direction: "up", hint: "Relever le panier moyen augmente la marge disponible pour absorber le coût d'acquisition. C'est l'un des trois vrais leviers de redressement." },
+      { field: "qualityBudget", direction: "review", hint: "Investir dans la qualité fait revenir les clients existants, dont le coût d'acquisition est nul. C'est un levier différé mais puissant pour sortir du déficit." },
+    ],
   },
   {
     code: "ecom_detect_profitable_illiquid",
@@ -460,6 +482,10 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { detect: "profitable_illiquid" },
     weight: 1,
+    decisionLevers: [
+      { field: "productionPlan", direction: "down", hint: "Le stock immobilise la trésorerie bien avant de générer des ventes. Réduisez les achats pour libérer du cash et abaisser le BFR." },
+      { field: "maintenanceBudget", direction: "review", hint: "La logistique et les délais fournisseurs pèsent sur le cycle de trésorerie. Négocier les échéances ou optimiser l'infrastructure peut desserrer la contrainte sans toucher au résultat." },
+    ],
   },
   {
     code: "ecommerce_t3_retours",
@@ -534,6 +560,10 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 3 },
     weight: 1,
+    decisionLevers: [
+      { field: "qualityBudget", direction: "up", hint: "De meilleures photos, un guide des tailles, des descriptions précises : la prévention coûte moins cher que les retours qu'elle évite." },
+      { field: "price", direction: "review", hint: "Le coût des retours réduit la marge réelle par commande. Vérifiez que le prix couvre encore la structure une fois ce coût intégré." },
+    ],
   },
   {
     code: "ecommerce_t6_scenarios",
@@ -608,6 +638,11 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 6 },
     weight: 1,
+    decisionLevers: [
+      { field: "marketingBudget", direction: "review", hint: "Si le coût d'acquisition monte de 60 %, le budget actuel devient peut-être déficitaire. Testez plusieurs hypothèses avant de fixer le montant." },
+      { field: "qualityBudget", direction: "up", hint: "Quand le trafic payant devient trop cher, la base fidèle est le meilleur amortisseur. Investir dans la qualité réduit la dépendance à la publicité." },
+      { field: "price", direction: "review", hint: "Un coût d'acquisition en hausse grignote la marge. Vérifiez à quel prix le modèle reste rentable dans le scénario le plus défavorable." },
+    ],
   },
   {
     code: "ecom_detect_idle_cash",
@@ -682,6 +717,10 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { detect: "idle_cash" },
     weight: 0.8,
+    decisionLevers: [
+      { field: "productionPlan", direction: "down", hint: "Le trimestre creux ne justifie pas un stock élevé. Réduisez les achats pour ne pas immobiliser du cash qui pourrait être placé ou gardé en réserve." },
+      { field: "maintenanceBudget", direction: "review", hint: "L'excédent de trésorerie peut financer un investissement logistique ou plateforme, à condition de conserver assez de liquidités pour le trimestre à venir." },
+    ],
   },
 ];
 

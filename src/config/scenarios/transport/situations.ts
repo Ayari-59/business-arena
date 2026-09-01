@@ -1,4 +1,4 @@
-import { attachModelQuestions, hints, type SituationDef } from "../situation-kit";
+import { attachModelQuestions, hints, type DecisionLever, type SituationDef } from "../situation-kit";
 
 /**
  * Situations pédagogiques de ROUTE & CIE (transport routier).
@@ -82,6 +82,18 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 1 },
     weight: 1,
+    decisionLevers: [
+      {
+        field: "productionPlan",
+        direction: "up",
+        hint: "Le seuil de rentabilité fixe un plancher de palettes à charger. Planifiez suffisamment de tournées pour dépasser les 3 800 palettes du trimestre, sans quoi les camions roulent à perte.",
+      },
+      {
+        field: "price",
+        direction: "review",
+        hint: "Chaque euro de prix en plus élargit la marge unitaire et abaisse le seuil. Vérifiez que vos tarifs couvrent bien la structure avant de chercher du volume.",
+      },
+    ],
   },
   {
     code: "transport_t2_retour_vide",
@@ -169,6 +181,18 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 2 },
     weight: 1,
+    decisionLevers: [
+      {
+        field: "price",
+        direction: "down",
+        hint: "Sur les retours à vide, accepter un tarif inférieur au prix moyen reste rentable tant qu'il couvre le coût de route. Chaque palette à 52 € laisse 27 € que le retour à vide ne laisse pas.",
+      },
+      {
+        field: "productionPlan",
+        direction: "review",
+        hint: "Intégrez les retours chargés dans la planification des tournées. La capacité de transport est périssable : une place vide dans un camion qui part est perdue définitivement.",
+      },
+    ],
   },
   {
     code: "transport_t3_gazole",
@@ -256,6 +280,18 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 3 },
     weight: 1.1,
+    decisionLevers: [
+      {
+        field: "price",
+        direction: "up",
+        hint: "La hausse du gazole ampute la marge de 3,24 € par palette. Répercutez-la dans vos tarifs ou négociez une clause d'indexation pour ne plus subir ce risque seul.",
+      },
+      {
+        field: "maintenanceBudget",
+        direction: "review",
+        hint: "Un entretien rigoureux de la flotte limite la surconsommation. Vérifiez que le budget maintenance permet de maintenir les moteurs au rendement optimal face à la hausse du carburant.",
+      },
+    ],
   },
   {
     code: "transport_t4_grand_compte",
@@ -346,6 +382,18 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 4 },
     weight: 1.2,
+    decisionLevers: [
+      {
+        field: "marketingBudget",
+        direction: "up",
+        hint: "Un tiers du trafic chez un seul client concentre le risque de trésorerie et le risque commercial. Investissez dans le développement d'autres comptes pour diversifier le portefeuille.",
+      },
+      {
+        field: "price",
+        direction: "review",
+        hint: "Un délai de paiement à soixante jours a un coût de financement réel. Intégrez-le dans la négociation tarifaire ou proposez un escompte pour paiement anticipé.",
+      },
+    ],
   },
   {
     code: "transport_t5_flotte",
@@ -432,6 +480,18 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 5 },
     weight: 1,
+    decisionLevers: [
+      {
+        field: "maintenanceBudget",
+        direction: "down",
+        hint: "Des porteurs neufs font passer l'entretien de 21 000 à 5 500 € par trimestre. Le renouvellement libère du budget maintenance pour le reste de la flotte.",
+      },
+      {
+        field: "qualityBudget",
+        direction: "up",
+        hint: "Les pannes immobilisent des tournées et dégradent la fiabilité du service. Investir dans la qualité de la flotte, c'est aussi investir dans la ponctualité promise aux clients.",
+      },
+    ],
   },
   {
     code: "transport_t6_contrat_refuse",
@@ -516,6 +576,23 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 6 },
     weight: 1,
+    decisionLevers: [
+      {
+        field: "price",
+        direction: "review",
+        hint: "Un contrat à 57 € semble rentable, mais il immobilise des porteurs qui transportent à 78 €. Comparez la marge par porteur, pas le prix affiché, avant de fixer vos tarifs.",
+      },
+      {
+        field: "productionPlan",
+        direction: "review",
+        hint: "À quatre-vingts pour cent de remplissage, la capacité n'est pas libre. Réservez la flotte aux clients qui maximisent la marge par unité de capacité rare.",
+      },
+      {
+        field: "marketingBudget",
+        direction: "up",
+        hint: "Plutôt que de brader la capacité sur un contrat exclusif, investissez dans la prospection de clients prêts à payer le tarif courant.",
+      },
+    ],
   },
   {
     code: "transport_detect_idle_cash",
@@ -600,6 +677,18 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { detect: "idle_cash" },
     weight: 0.8,
+    decisionLevers: [
+      {
+        field: "maintenanceBudget",
+        direction: "review",
+        hint: "Avant de considérer ce solde comme disponible, vérifiez que les échéances de maintenance de la flotte sont couvertes. L'argent issu de l'affacturage doit d'abord faire rouler les camions.",
+      },
+      {
+        field: "productionPlan",
+        direction: "review",
+        hint: "Un budget de trésorerie daté révèle combien ce solde doit financer en gazole et en salaires dans les semaines à venir. Ajustez le plan de tournées à ce que la trésorerie peut réellement porter.",
+      },
+    ],
   },
   {
     code: "transport_detect_sous_seuil",
@@ -685,6 +774,23 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { detect: "below_breakeven" },
     weight: 0.9,
+    decisionLevers: [
+      {
+        field: "price",
+        direction: "up",
+        hint: "Chaque euro de prix supplémentaire élargit la marge unitaire et abaisse le seuil. Mais attention : la hausse se paie en volume perdu, et c'est ce compromis qu'il faut chiffrer.",
+      },
+      {
+        field: "productionPlan",
+        direction: "up",
+        hint: "Sous le seuil, il manque des palettes. Augmentez le nombre de tournées planifiées ou le remplissage par tournée pour combler l'écart en volume.",
+      },
+      {
+        field: "maintenanceBudget",
+        direction: "down",
+        hint: "Le coût variable est le seul levier que vous maîtrisez entièrement. Réduire les charges d'entretien par palette augmente la marge unitaire sans toucher au prix ni au volume.",
+      },
+    ],
   },
 ];
 

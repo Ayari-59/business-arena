@@ -13,6 +13,7 @@
 
 import { attachModelQuestions, hints } from "../situation-kit";
 import type {
+  DecisionLever,
   DetectCode,
   ModelRelevance,
   QuizQuestionDef,
@@ -21,6 +22,7 @@ import type {
 } from "../situation-kit";
 
 export type {
+  DecisionLever,
   DetectCode,
   ModelRelevance,
   QuizQuestionDef,
@@ -86,6 +88,10 @@ export const NOVA_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 1 },
     weight: 1,
+    decisionLevers: [
+      { field: "price", direction: "review", hint: "Le prix fixe la marge unitaire — et donc le nombre d'unités nécessaires pour couvrir les charges fixes." },
+      { field: "productionPlan", direction: "review", hint: "Produire trop crée du stock mort ; produire trop peu fait perdre des ventes. Le seuil de rentabilité donne le plancher." },
+    ],
   },
   {
     code: "nova_t2_price_war",
@@ -146,6 +152,10 @@ export const NOVA_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 2 },
     weight: 1,
+    decisionLevers: [
+      { field: "price", direction: "review", hint: "L'élasticité varie par segment : un même mouvement de prix n'a pas le même effet sur les étudiants et les passionnés." },
+      { field: "marketingBudget", direction: "review", hint: "Le marketing amplifie l'attractivité, mais ne compense pas un prix mal positionné par rapport aux seuils psychologiques." },
+    ],
   },
   {
     code: "nova_t3_capacity",
@@ -205,6 +215,10 @@ export const NOVA_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 3 },
     weight: 1,
+    decisionLevers: [
+      { field: "productionPlan", direction: "up", hint: "Produire au plafond AVANT le pic constitue le stock qui servira la demande quand la capacité d'un tour ne suffira plus." },
+      { field: "maintenanceBudget", direction: "review", hint: "La disponibilité machine dépend de la maintenance : négliger l'entretien réduit la capacité réelle." },
+    ],
   },
   {
     code: "nova_t4_paradox",
@@ -264,6 +278,10 @@ export const NOVA_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 4 },
     weight: 1.5,
+    decisionLevers: [
+      { field: "price", direction: "review", hint: "Le prix détermine le délai d'encaissement via le volume vendu : plus de ventes, plus de créances." },
+      { field: "productionPlan", direction: "review", hint: "Chaque unité produite mobilise du cash (matières, main-d'œuvre) bien avant l'encaissement de la vente." },
+    ],
   },
   {
     code: "nova_t5_returns",
@@ -323,6 +341,10 @@ export const NOVA_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 5 },
     weight: 1,
+    decisionLevers: [
+      { field: "price", direction: "review", hint: "Le prix agit sur la marge ET sur le volume : la rentabilité se joue sur le couple, pas sur l'un seul." },
+      { field: "qualityBudget", direction: "review", hint: "La qualité soutient le prix et la fidélité, mais chaque euro de budget qualité pèse sur la rentabilité immédiate." },
+    ],
   },
   {
     code: "nova_t6_final",
@@ -381,6 +403,11 @@ export const NOVA_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { round: 6 },
     weight: 1,
+    decisionLevers: [
+      { field: "price", direction: "review", hint: "Le prix est le levier le plus visible : il traduit votre positionnement et engage le résultat." },
+      { field: "productionPlan", direction: "review", hint: "Dernier tour : le stock final est perdu. Ajustez la production au plus près de la demande attendue." },
+      { field: "marketingBudget", direction: "review", hint: "Investir en marketing au dernier tour ne rapporte que si l'effet est immédiat : arbitrage court terme." },
+    ],
   },
 
   // --- Situations détectées (doc 03 §1.1) -------------------------------
@@ -434,6 +461,10 @@ export const NOVA_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { detect: "profitable_illiquid" },
     weight: 1,
+    decisionLevers: [
+      { field: "productionPlan", direction: "review", hint: "Chaque unité produite immobilise du cash en stocks et créances : produire moins réduit le BFR." },
+      { field: "price", direction: "up", hint: "Un prix plus élevé réduit le volume à servir et accélère la couverture du BFR par euro vendu." },
+    ],
   },
   {
     code: "detect_stockout",
@@ -485,6 +516,10 @@ export const NOVA_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { detect: "stockout" },
     weight: 0.8,
+    decisionLevers: [
+      { field: "productionPlan", direction: "up", hint: "Planifiez au-dessus de la demande attendue pour constituer un stock de sécurité avant le pic." },
+      { field: "maintenanceBudget", direction: "review", hint: "La capacité réelle dépend de la disponibilité machine : un entretien négligé ampute la production." },
+    ],
   },
   {
     code: "detect_below_breakeven",
@@ -544,6 +579,11 @@ export const NOVA_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { detect: "below_breakeven" },
     weight: 0.8,
+    decisionLevers: [
+      { field: "price", direction: "up", hint: "Augmenter le prix relève la marge unitaire et abaisse le seuil de rentabilité — si la demande suit." },
+      { field: "productionPlan", direction: "review", hint: "Produire au-delà du volume vendable crée du stock et aggrave la perte : ajustez au volume réaliste." },
+      { field: "marketingBudget", direction: "review", hint: "Le marketing pèse dans les charges fixes : chaque euro doit être comparé au volume de ventes supplémentaire qu'il génère." },
+    ],
   },
   {
     code: "detect_capacity_saturated",
@@ -603,6 +643,11 @@ export const NOVA_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { detect: "capacity_saturated" },
     weight: 1,
+    decisionLevers: [
+      { field: "productionPlan", direction: "up", hint: "Poussez la production au plafond disponible pour ne pas laisser de marge sur la table." },
+      { field: "maintenanceBudget", direction: "up", hint: "La maintenance augmente la disponibilité machine : chaque point gagné libère des unités supplémentaires." },
+      { field: "price", direction: "review", hint: "Si la demande dépasse durablement la capacité, un prix plus élevé rationalise les ventes et améliore la marge." },
+    ],
   },
   {
     code: "detect_idle_cash",
@@ -677,6 +722,9 @@ export const NOVA_SITUATIONS: SituationDef[] = [
     ]),
     trigger: { detect: "idle_cash" },
     weight: 0.8,
+    decisionLevers: [
+      { field: "productionPlan", direction: "review", hint: "Le plan de production détermine les décaissements du tour : projetez-les avant de décider combien placer." },
+    ],
   },
 ];
 
