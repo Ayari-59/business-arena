@@ -1,4 +1,4 @@
-import { attachModelQuestions, hints, type DecisionLever, type SituationDef } from "../situation-kit";
+import { attachModelQuestions, hints, type DecisionLever, type SituationCategory, type SituationDef } from "../situation-kit";
 
 /**
  * Situations pédagogiques de L'ESCALE (hôtellerie).
@@ -10,6 +10,7 @@ import { attachModelQuestions, hints, type DecisionLever, type SituationDef } fr
 export const HOTEL_SITUATIONS: SituationDef[] = [
   {
     code: "hotel_t1_reprise",
+    category: "prise_de_poste",
     title: "Soixante chambres et un crédit",
     narrative:
       "Vous reprenez L'ESCALE : 60 chambres, quatorze salariés, 900 000 € de crédit immobilier et une clientèle partagée entre affaires en semaine et tourisme le week-end. Le trimestre offre 5 400 nuitées à vendre. Pas une de plus, pas une reportable.",
@@ -91,6 +92,7 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
   },
   {
     code: "hotel_t2_yield",
+    category: "decision_strategique",
     title: "Brader ou tenir son prix ?",
     narrative:
       "Jeudi soir, 18 h. Dix-sept chambres sont encore libres pour la nuit. Une plateforme vous propose de les écouler à 58 €, bien en dessous de votre tarif affiché de 95 €, et sous les yeux de vos clients habituels.",
@@ -171,6 +173,7 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
   },
   {
     code: "hotel_t3_saison",
+    category: "contexte_marche",
     title: "La haute saison arrive",
     narrative:
       "L'été approche : le tourisme de loisirs double, la clientèle affaires s'effondre et les séminaires disparaissent complètement. Vos concurrents affichent déjà leurs tarifs de juillet.",
@@ -252,6 +255,7 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
   },
   {
     code: "hotel_t5_renovation",
+    category: "decision_strategique",
     title: "Dix chambres condamnées",
     narrative:
       "Dix chambres du deuxième étage sont hors service depuis des années : salles de bains hors normes, moquettes fatiguées. Les rouvrir coûterait 90 000 €, amortis sur dix ans. Elles ajouteraient 900 nuitées vendables par trimestre.",
@@ -332,6 +336,7 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
   },
   {
     code: "hotel_detect_below_breakeven",
+    category: "alerte_comptable",
     title: "Sous le taux d'occupation d'équilibre",
     narrative:
       "Le trimestre s'achève en perte d'exploitation. L'hôtel a tourné, le personnel était là, les chambres étaient propres, mais trop d'entre elles sont restées vides trop souvent.",
@@ -412,6 +417,7 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
   },
   {
     code: "hotel_detect_capacity_saturated",
+    category: "alerte_comptable",
     title: "Complet, et des clients refusés",
     narrative:
       "L'hôtel a affiché complet plusieurs nuits, et la réception a dû refuser du monde. C'est une excellente nouvelle. C'est aussi le signe que vous laissez de l'argent sur la table.",
@@ -493,6 +499,7 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
   },
   {
     code: "hotel_t4_plateformes",
+    category: "contexte_marche",
     title: "Dix-huit pour cent de commission",
     narrative:
       "Les plateformes de réservation prélèvent 18 % sur chaque nuitée qu'elles apportent. Elles représentent désormais un tiers de vos arrivées, et beaucoup de ces clients ne vous auraient jamais trouvé. Votre réception, elle, encaisse le tarif plein mais ne remplit pas l'hôtel à elle seule.",
@@ -572,6 +579,7 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
   },
   {
     code: "hotel_t6_ecarts",
+    category: "contexte_marche",
     title: "La saison prévue, la saison vécue",
     narrative:
       "La saison est finie. Vous aviez annoncé un taux d'occupation et un prix moyen ; l'hôtel a fait autre chose. Le chiffre d'affaires final est proche de la prévision, mais ce n'est pas pour les raisons que vous croyiez : vous avez vendu plus de nuitées que prévu, à un prix moyen plus bas.",
@@ -651,6 +659,7 @@ export const HOTEL_SITUATIONS: SituationDef[] = [
   },
   {
     code: "hotel_detect_idle_cash",
+    category: "tresorerie_dormante",
     title: "Le compte plein de fin de saison",
     narrative:
       "La saison forte est passée et le compte affiche plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an ; il facture votre découvert 9 %. L'échéance du crédit immobilier, elle, tombera comme chaque trimestre, saison creuse comprise.",

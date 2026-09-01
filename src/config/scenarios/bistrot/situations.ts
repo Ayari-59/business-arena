@@ -1,4 +1,4 @@
-import { attachModelQuestions, hints, type DecisionLever, type SituationDef } from "../situation-kit";
+import { attachModelQuestions, hints, type DecisionLever, type SituationCategory, type SituationDef } from "../situation-kit";
 
 /**
  * Situations pédagogiques de LA TABLE D'AUGUSTIN (restauration).
@@ -9,6 +9,7 @@ import { attachModelQuestions, hints, type DecisionLever, type SituationDef } fr
 export const BISTROT_SITUATIONS: SituationDef[] = [
   {
     code: "bistrot_t1_reprise",
+    category: "prise_de_poste",
     title: "Le premier service",
     narrative:
       "Vous reprenez LA TABLE D'AUGUSTIN : 70 couverts, une brigade de dix, une carte héritée du chef précédent. Le comptable de la reprise vous a laissé une phrase : « surveille ton ratio matières, le reste suivra ».",
@@ -97,6 +98,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
   },
   {
     code: "bistrot_t2_fournisseur",
+    category: "decision_strategique",
     title: "Le cash & carry ou le maraîcher",
     narrative:
       "Votre grossiste passe trois fois par semaine, facture à 21 jours, qualité régulière. Le cash & carry vous ferait gagner 14 % sur les denrées, payées comptant, à condition d'aller charger vous-même. Le maraîcher du coin coûte 20 % de plus, réglé à 15 jours, mais c'est lui que vous écririez sur l'ardoise.",
@@ -185,6 +187,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
   },
   {
     code: "bistrot_t3_matieres",
+    category: "contexte_marche",
     title: "Le beurre a pris 24 %",
     narrative:
       "Votre grossiste annonce une hausse brutale sur la moitié de votre carte : beurre, viande, énergie. Nous sommes en août, la salle est à moitié vide et les bureaux du quartier sont fermés.",
@@ -278,6 +281,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
   },
   {
     code: "bistrot_t4_banquets",
+    category: "contexte_marche",
     title: "La saison des banquets",
     narrative:
       "Décembre arrive : les repas d'entreprise et les banquets de fin d'année concentrent l'essentiel de leur budget annuel sur ce trimestre. Ils règlent à 30 jours, réservent des semaines à l'avance, et remplissent la salle un soir entier.",
@@ -366,6 +370,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
   },
   {
     code: "bistrot_detect_below_breakeven",
+    category: "alerte_comptable",
     title: "Le service ne couvre plus ses frais",
     narrative:
       "Le trimestre est déficitaire. La cuisine a bien tourné, les avis sont corrects, mais le compte d'exploitation ne suit pas.",
@@ -459,6 +464,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
   },
   {
     code: "bistrot_t5_terrasse",
+    category: "decision_strategique",
     title: "La terrasse sous verrière",
     narrative:
       "Le bailleur propose de couvrir et de chauffer la terrasse : 48 000 €, amortis sur douze trimestres. Elle ajouterait environ 1 800 couverts par trimestre, mais du printemps à l'automne seulement : en plein hiver, personne ne s'y installe. Chaque couvert laisse une vingtaine d'euros de marge.",
@@ -545,6 +551,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
   },
   {
     code: "bistrot_t6_valeur",
+    category: "decision_strategique",
     title: "Ce que vaut vraiment le bistrot",
     narrative:
       "Votre associé veut sortir du capital et demande ce que vaut sa part. Le bistrot a dégagé un résultat correct sur l'année, mais il a fallu 260 000 € de capitaux propres pour le faire tourner. Le restaurant d'en face gagne un peu moins que vous, avec deux fois moins de capitaux engagés.",
@@ -631,6 +638,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
   },
   {
     code: "bistrot_detect_idle_cash",
+    category: "tresorerie_dormante",
     title: "La caisse fait le plein",
     narrative:
       "Les clients paient au comptant et la caisse le montre : vous détenez plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an, et facture votre découvert 9 %. Vos fournisseurs, eux, seront réglés à vingt et un jours comme d'habitude.",

@@ -1,4 +1,4 @@
-import { attachModelQuestions, hints, type DecisionLever, type SituationDef } from "../situation-kit";
+import { attachModelQuestions, hints, type DecisionLever, type SituationCategory, type SituationDef } from "../situation-kit";
 
 /**
  * Situations pédagogiques de ROUTE & CIE (transport routier).
@@ -9,6 +9,7 @@ import { attachModelQuestions, hints, type DecisionLever, type SituationDef } fr
 export const TRANSPORT_SITUATIONS: SituationDef[] = [
   {
     code: "transport_t1_revient",
+    category: "prise_de_poste",
     title: "Ce que coûte vraiment une palette",
     narrative:
       "Vous reprenez ROUTE & CIE : sept porteurs, dix chauffeurs, un dépôt. La palette se facture 74 € en moyenne. Le gazole et les péages coûtent 18 €, l'entretien et les pneumatiques 7 €. Tout le reste, la conduite comprise, tombe chaque trimestre à l'identique.",
@@ -97,6 +98,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
   },
   {
     code: "transport_t2_retour_vide",
+    category: "contexte_marche",
     title: "Le camion qui rentre à vide",
     narrative:
       "Vos porteurs partent chargés vers la métropole et reviennent vides trois fois sur quatre. Le chauffeur est payé et le camion s'amortit, que vous chargiez ou non. La bourse de fret propose des lots à 52 € la palette pour ces retours : sous votre prix moyen de 74 €, et même sous votre coût de revient complet, qui approche 54 €.",
@@ -196,6 +198,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
   },
   {
     code: "transport_t3_gazole",
+    category: "contexte_marche",
     title: "Le gazole prend dix-huit pour cent",
     narrative:
       "Le carburant a bondi de dix-huit pour cent en six semaines. Personne dans l'entreprise n'a rien décidé, et pourtant chaque palette coûte désormais 3,24 € de plus. Vos contrats industriels sont signés pour l'année, la bourse de fret, elle, s'ajuste en quelques jours.",
@@ -295,6 +298,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
   },
   {
     code: "transport_t4_grand_compte",
+    category: "contexte_marche",
     title: "Le grand compte qui paie à soixante jours",
     narrative:
       "Votre plus gros client industriel représente près du tiers du trafic et règle à soixante jours. Le gazole, lui, se paie à quinze jours en carte accréditive, et les chauffeurs le 30 de chaque mois. Le trimestre est bénéficiaire, et pourtant le découvert se creuse.",
@@ -397,6 +401,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
   },
   {
     code: "transport_t5_flotte",
+    category: "decision_strategique",
     title: "Renouveler la flotte ou la réparer",
     narrative:
       "Trois de vos porteurs ont passé les huit cents mille kilomètres. Leur entretien coûte 21 000 € par trimestre et grimpe, leurs pannes immobilisent des tournées. Les remplacer coûterait 315 000 €, financés sur six ans, pour un entretien retombant à 5 500 € et une consommation en baisse de neuf pour cent.",
@@ -495,6 +500,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
   },
   {
     code: "transport_t6_contrat_refuse",
+    category: "decision_strategique",
     title: "Le contrat qu'il faut savoir refuser",
     narrative:
       "Un distributeur propose un contrat trimestriel de deux mille huit cents palettes à 57 €, à condition d'immobiliser deux porteurs à son service exclusif. Un porteur emmène mille quatre cents palettes par trimestre à pleine charge, et le contrat les remplirait donc entièrement. Vos autres clients paient en moyenne 78 €, et votre flotte tourne aujourd'hui à quatre-vingts pour cent.",
@@ -596,6 +602,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
   },
   {
     code: "transport_detect_idle_cash",
+    category: "tresorerie_dormante",
     title: "L'affacturage a rempli le compte",
     narrative:
       "Vous avez cédé une partie du poste clients pour passer un cap, et le compte affiche aujourd'hui un solde confortable. Il serait tentant d'y voir un excédent à placer. Mais cet argent est le produit de créances déjà vendues : il ne reviendra pas une seconde fois, et il doit couvrir le gazole des prochaines semaines, les salaires de fin de mois et l'échéance du crédit de flotte. Le placer à trois mois immobiliserait exactement ce qui doit faire rouler les camions.",
@@ -692,6 +699,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
   },
   {
     code: "transport_detect_sous_seuil",
+    category: "alerte_comptable",
     title: "Les camions roulent, l'entreprise perd",
     narrative:
       "Le trafic du trimestre est passé sous le seuil de rentabilité. Les camions ont pourtant roulé, les chauffeurs ont fait leurs heures, et le carnet n'était pas vide. C'est la situation la plus traître du transport : l'activité donne l'illusion de la santé.",

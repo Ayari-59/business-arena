@@ -17,6 +17,7 @@ import type {
   DetectCode,
   ModelRelevance,
   QuizQuestionDef,
+  SituationCategory,
   SituationDef,
   SituationHintDef,
 } from "../situation-kit";
@@ -26,6 +27,7 @@ export type {
   DetectCode,
   ModelRelevance,
   QuizQuestionDef,
+  SituationCategory,
   SituationDef,
   SituationHintDef,
 };
@@ -33,6 +35,7 @@ export type {
 export const NOVA_SITUATIONS: SituationDef[] = [
   {
     code: "nova_t1_takeover",
+    category: "prise_de_poste",
     title: "Prise en main",
     narrative:
       "Vous venez de reprendre NOVA. L'ancien dirigeant vous laisse un atelier, quatre opérateurs, un produit apprécié, et un marché où SoundBox casse les prix pendant qu'Auris vise le haut de gamme.",
@@ -95,6 +98,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
   },
   {
     code: "nova_t2_price_war",
+    category: "contexte_marche",
     title: "Le prix fait la demande",
     narrative:
       "Vos ventes du premier tour sont tombées. Sur le segment étudiant, SoundBox affiche un prix agressif et rafle des parts de marché, pendant que les passionnés, eux, n'ont presque pas bougé.",
@@ -159,6 +163,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
   },
   {
     code: "nova_t3_capacity",
+    category: "decision_strategique",
     title: "Produire n'est pas vendre",
     narrative:
       "La demande décolle : marketing, croissance du marché… et la chaîne CampusTech vous ouvre ses rayons. Mais l'atelier a plafonné et des clients sont repartis les mains vides.",
@@ -222,6 +227,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
   },
   {
     code: "nova_t4_paradox",
+    category: "contexte_marche",
     title: "Le paradoxe du succès",
     narrative:
       "Trimestre record : le pic saisonnier et la grosse commande CampusTech gonflent votre chiffre d'affaires, le résultat est positif… et pourtant votre banquier appelle : le compte vire au rouge.",
@@ -285,6 +291,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
   },
   {
     code: "nova_t5_returns",
+    category: "decision_strategique",
     title: "Gagner de l'argent… ou être rentable ?",
     narrative:
       "Le contrecoup saisonnier tasse les ventes et les matières premières ont renchéri de 20 %. En comité, on compare : Auris affiche un résultat plus faible que d'autres, mais avec deux fois moins de capitaux engagés.",
@@ -348,6 +355,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
   },
   {
     code: "nova_t6_final",
+    category: "decision_strategique",
     title: "Le grand oral",
     narrative:
       "Dernier tour : votre conseil d'administration attend un cap assumé. Consolider la marge ? Défendre la part de marché ? Reconstituer la trésorerie ? Tout, vous ne pourrez pas.",
@@ -413,6 +421,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
   // --- Situations détectées (doc 03 §1.1) -------------------------------
   {
     code: "detect_profitable_illiquid",
+    category: "alerte_comptable",
     title: "Bénéficiaire… mais à découvert",
     narrative:
       "Vos comptes du tour écoulé affichent un résultat positif, et pourtant votre trésorerie nette est passée dans le rouge.",
@@ -468,6 +477,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
   },
   {
     code: "detect_stockout",
+    category: "alerte_comptable",
     title: "Des clients repartis sans acheter",
     narrative:
       "Au tour écoulé, une part importante de la demande qui vous était adressée n'a pas pu être servie : votre stock était vide.",
@@ -523,6 +533,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
   },
   {
     code: "detect_below_breakeven",
+    category: "alerte_comptable",
     title: "Sous la ligne de flottaison",
     narrative: "Le tour écoulé s'est soldé par une perte : vos ventes n'ont pas couvert vos charges.",
     problem: "Votre entreprise perd de l'argent. Où se situe le problème : volume, prix, ou coûts ?",
@@ -587,6 +598,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
   },
   {
     code: "detect_capacity_saturated",
+    category: "alerte_comptable",
     title: "L'atelier au taquet",
     narrative:
       "Vos machines ont tourné à plein régime, et pourtant des clients sont repartis les mains vides. Votre équipementier propose 2 000 unités de capacité trimestrielle supplémentaire pour 40 000 €, amortis sur 16 trimestres. Un sous-traitant, lui, facture 52 € l'unité finie. Chaque enceinte vendue 59 € dégage environ 21 € de marge sur coût variable.",
@@ -651,6 +663,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
   },
   {
     code: "detect_idle_cash",
+    category: "tresorerie_dormante",
     title: "L'argent qui dort",
     narrative:
       "Le trimestre s'est bien passé. Votre compte affiche plus d'un tour et demi de charges de structure, aucun découvert, et cet argent ne fait rien. Votre banquier propose de placer une partie du solde : il vous le bloque jusqu'au trimestre suivant et vous le rend avec 2 % l'an. Le même banquier facture votre découvert 9 %.",

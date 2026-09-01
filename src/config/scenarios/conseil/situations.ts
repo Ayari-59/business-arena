@@ -1,4 +1,4 @@
-import { attachModelQuestions, hints, type DecisionLever, type SituationDef } from "../situation-kit";
+import { attachModelQuestions, hints, type DecisionLever, type SituationCategory, type SituationDef } from "../situation-kit";
 
 /**
  * Situations pédagogiques d'ATLAS CONSEIL (services intellectuels).
@@ -10,6 +10,7 @@ import { attachModelQuestions, hints, type DecisionLever, type SituationDef } fr
 export const CONSEIL_SITUATIONS: SituationDef[] = [
   {
     code: "conseil_t1_reprise",
+    category: "prise_de_poste",
     title: "Douze consultants et un carnet",
     narrative:
       "Vous prenez la direction d'ATLAS CONSEIL : douze consultants, un carnet de commandes correct, 180 000 € de factures en attente de règlement et presque rien à l'actif immobilisé. Le trimestre offre 720 jours-consultants à vendre.",
@@ -98,6 +99,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
   },
   {
     code: "conseil_t2_creances",
+    category: "contexte_marche",
     title: "Soixante jours d'attente",
     narrative:
       "Vos grands comptes règlent à 60 jours, le secteur public aussi. Les missions sont livrées, les factures émises, le résultat est bon. Votre compte bancaire, lui, ne suit pas : 180 000 € dorment en créances.",
@@ -185,6 +187,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
   },
   {
     code: "conseil_t3_banc",
+    category: "alerte_comptable",
     title: "Des consultants sur le banc",
     narrative:
       "L'été : les décideurs sont en congés, les marchés publics ne se notifient plus, le carnet se vide. Quatre de vos douze consultants n'ont aucune mission ce trimestre. Leurs salaires, eux, tombent normalement.",
@@ -278,6 +281,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
   },
   {
     code: "conseil_t4_recrutement",
+    category: "decision_strategique",
     title: "Le marché s'ouvre : êtes-vous prêts ?",
     narrative:
       "Un décret impose un audit à toutes les entreprises de plus de 250 salariés. Le marché s'ouvre pour tout le monde en même temps. Recruter un consultant coûte 8 000 €, et il ne produira qu'au trimestre suivant.",
@@ -371,6 +375,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
   },
   {
     code: "conseil_detect_below_breakeven",
+    category: "alerte_comptable",
     title: "Le banc coûte plus cher que les missions ne rapportent",
     narrative:
       "Résultat d'exploitation négatif. Les missions livrées étaient bonnes, les clients satisfaits, mais trop de jours-consultants sont restés invendus.",
@@ -463,6 +468,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
   },
   {
     code: "conseil_detect_profitable_illiquid",
+    category: "alerte_comptable",
     title: "Bénéficiaire et à découvert",
     narrative:
       "Le trimestre est bénéficiaire, le carnet est plein, les consultants sont staffés. Et pourtant, vous êtes à découvert : les grands comptes règlent à 60 jours, et vous venez d'en signer trois.",
@@ -550,6 +556,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
   },
   {
     code: "conseil_t5_mission_rabais",
+    category: "decision_strategique",
     title: "Trois cent quatre-vingts euros la journée",
     narrative:
       "Une collectivité propose une mission de 60 jours à 380 € la journée, très en dessous de votre tarif habituel. Vos consultants sont salariés et payés quoi qu'il arrive ; sans cette mission, une partie d'entre eux resterait au bureau. Chaque jour de mission coûte environ 90 € de frais de déplacement et de documentation.",
@@ -636,6 +643,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
   },
   {
     code: "conseil_t6_resistance",
+    category: "contexte_marche",
     title: "Jusqu'où le cabinet peut-il encaisser",
     narrative:
       "Vous préparez le budget de l'année suivante. Un grand compte, qui pèse un quart de votre activité, laisse entendre qu'il pourrait internaliser. Vos charges de structure, elles, sont connues et ne bougeront pas : les salaires de douze consultants tombent chaque mois.",
@@ -727,6 +735,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
   },
   {
     code: "conseil_detect_idle_cash",
+    category: "tresorerie_dormante",
     title: "Le compte se remplit, le carnet se vide",
     narrative:
       "Les grosses factures de fin de mission sont rentrées d'un coup : le compte affiche plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an, et facture le découvert 9 %. Le carnet de commandes, lui, est plus creux qu'il ne l'a été depuis longtemps.",
