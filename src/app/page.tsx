@@ -190,7 +190,7 @@ export default async function Home({
             </div>
             <div className="mt-3 rounded-lg border border-amber-400/20 bg-amber-950/20 p-3">
               <p className="text-[10px] uppercase tracking-[0.25em] text-amber-400">
-                Situation du tour
+                Alerte comptable
               </p>
               <p className="mt-1 text-sm font-medium text-slate-200">
                 Votre entreprise gagne de l&apos;argent mais n&apos;en a plus en caisse.
@@ -198,10 +198,10 @@ export default async function Home({
               </p>
               <div className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
                 <span className="rounded-full bg-slate-950 px-2.5 py-1 text-slate-400">
-                  1 · Diagnostic
+                  Diagnostic
                 </span>
                 <span className="rounded-full bg-slate-950 px-2.5 py-1 text-slate-400">
-                  2 · Choix du modèle
+                  Connaissances
                 </span>
                 <span className="rounded-full border border-amber-400/40 px-2.5 py-1 text-amber-300">
                   💡 Indice 1 (−5 %)

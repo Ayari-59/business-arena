@@ -77,7 +77,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
     ],
     modelRelevance: {
       breakeven_analysis: "optimal",
-      cvp_analysis: "acceptable",
+      marginal_analysis: "acceptable",
       psych_pricing: "acceptable",
       npv: "irrelevant",
     },
@@ -142,7 +142,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
     modelRelevance: {
       elasticity_analysis: "optimal",
       psych_pricing: "optimal",
-      cvp_analysis: "acceptable",
+      sensitivity_analysis: "acceptable",
       breakeven_analysis: "acceptable",
       relevant_costs: "irrelevant",
     },
@@ -206,7 +206,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
     modelRelevance: {
       capacity_analysis: "optimal",
       productivity_analysis: "acceptable",
-      cvp_analysis: "acceptable",
+      scenarios_method: "acceptable",
       breakeven_analysis: "irrelevant",
       elasticity_analysis: "misleading",
     },
@@ -272,7 +272,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
       cash_budget: "optimal",
       breakeven_analysis: "misleading",
       return_analysis: "irrelevant",
-      cvp_analysis: "irrelevant",
+      npv: "irrelevant",
     },
     conceptCodes: ["frng", "bfr", "net_treasury", "receivables_financing", "loan_schedule"],
     hints: hints([
@@ -334,7 +334,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
     modelRelevance: {
       return_analysis: "optimal",
       breakeven_analysis: "acceptable",
-      cvp_analysis: "acceptable",
+      sensitivity_analysis: "acceptable",
       frng_bfr_analysis: "irrelevant",
       psych_pricing: "irrelevant",
     },
@@ -570,7 +570,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
           "SR = charges de structure ÷ marge unitaire : seuls les deux termes de la fraction déplacent le seuil ; le volume, lui, dit où vous êtes PAR RAPPORT au seuil.",
       },
     ],
-    modelRelevance: { breakeven_analysis: "optimal", cvp_analysis: "optimal", frng_bfr_analysis: "irrelevant" },
+    modelRelevance: { breakeven_analysis: "optimal", sensitivity_analysis: "optimal", frng_bfr_analysis: "irrelevant" },
     conceptCodes: [
       "breakeven",
       "contribution_margin",

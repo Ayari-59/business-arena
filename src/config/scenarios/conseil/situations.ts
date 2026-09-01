@@ -71,7 +71,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
     modelRelevance: {
       breakeven_analysis: "optimal",
       capacity_analysis: "acceptable",
-      cvp_analysis: "acceptable",
+      sensitivity_analysis: "acceptable",
       npv: "irrelevant",
     },
     conceptCodes: ["capacity", "contribution_margin", "fixed_costs", "breakeven"],

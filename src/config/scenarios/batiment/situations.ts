@@ -70,7 +70,7 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
     ],
     modelRelevance: {
       breakeven_analysis: "optimal",
-      cvp_analysis: "acceptable",
+      sensitivity_analysis: "acceptable",
       capacity_analysis: "acceptable",
       npv: "irrelevant",
     },

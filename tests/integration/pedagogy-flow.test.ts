@@ -92,7 +92,7 @@ describe("cadre analytique avant décision (A7)", () => {
     const { current } = await getTeamSituations(gameId, userId);
     const codes = current[0]!.analyticalHints.map((h) => h.code);
     expect(codes).toContain("breakeven_analysis");
-    expect(codes).toContain("cvp_analysis");
+    expect(codes).toContain("marginal_analysis");
     expect(codes).toContain("psych_pricing");
     expect(codes).not.toContain("npv");
   });

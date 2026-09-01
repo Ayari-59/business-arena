@@ -68,7 +68,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
       },
     ],
     modelRelevance: {
-      cvp_analysis: "optimal",
+      marginal_analysis: "optimal",
       breakeven_analysis: "acceptable",
       capacity_analysis: "acceptable",
       npv: "irrelevant",
@@ -269,7 +269,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
     ],
     modelRelevance: {
       sensitivity_analysis: "optimal",
-      cvp_analysis: "acceptable",
+      variance_analysis: "acceptable",
       breakeven_analysis: "acceptable",
       psych_pricing: "irrelevant",
     },
@@ -768,7 +768,7 @@ export const TRANSPORT_SITUATIONS: SituationDef[] = [
     ],
     modelRelevance: {
       breakeven_analysis: "optimal",
-      cvp_analysis: "acceptable",
+      sensitivity_analysis: "acceptable",
       variance_analysis: "acceptable",
       npv: "irrelevant",
     },

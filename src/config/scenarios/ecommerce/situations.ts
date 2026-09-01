@@ -395,7 +395,7 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
     modelRelevance: {
       breakeven_analysis: "optimal",
       marginal_analysis: "acceptable",
-      cvp_analysis: "acceptable",
+      sensitivity_analysis: "acceptable",
       npv: "irrelevant",
     },
     conceptCodes: ["average_basket", "breakeven", "contribution_margin", "fixed_costs", "safety_margin"],
@@ -552,7 +552,7 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
       },
     ],
     modelRelevance: {
-      cvp_analysis: "optimal",
+      sensitivity_analysis: "optimal",
       elasticity_analysis: "misleading",
       breakeven_analysis: "acceptable",
       relevant_costs: "acceptable",
@@ -634,7 +634,7 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
       scenarios_method: "optimal",
       breakeven_analysis: "misleading",
       sensitivity_analysis: "acceptable",
-      cvp_analysis: "acceptable",
+      decision_tree: "acceptable",
     },
     conceptCodes: ["demand_market_share", "contribution_margin", "safety_margin", "profitability_vs_return"],
     hints: hints([
