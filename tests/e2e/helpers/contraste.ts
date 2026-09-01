@@ -113,7 +113,18 @@ const DANS_LA_PAGE = () => {
 /** Applique un thème puis mesure tous les textes de la page ouverte. */
 export async function mesurerContraste(page: Page, theme: string): Promise<MesureContraste[]> {
   await page.evaluate((t) => {
+    // Couper les transitions CSS pour que le changement de thème prenne effet
+    // immédiatement. Sans cela, les éléments qui portent la classe `transition`
+    // se trouvent à mi-chemin entre l'ancien et le nouveau thème au moment de
+    // la mesure, et le contraste intermédiaire n'a rien à voir avec le
+    // contraste réel de l'état final.
+    const gel = document.createElement("style");
+    gel.textContent = "*, *::before, *::after { transition-duration: 0s !important; }";
+    document.head.appendChild(gel);
     document.documentElement.dataset.theme = t;
+    // Forcer le recalcul des styles avec les transitions désactivées.
+    void document.documentElement.offsetHeight;
+    gel.remove();
   }, theme);
   await page.waitForTimeout(120);
   return page.evaluate(DANS_LA_PAGE);
