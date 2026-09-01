@@ -108,7 +108,7 @@ export const players = pgTable(
     role: playerRole("role").notNull().default("member"),
     ...timestamps,
   },
-  (t) => [primaryKey({ columns: [t.teamId, t.userId] })],
+  (t) => [primaryKey({ columns: [t.teamId, t.userId] }), index("players_user_id_idx").on(t.userId)],
 );
 
 export const rounds = pgTable(

@@ -1,5 +1,6 @@
 import {
   boolean,
+  index,
   integer,
   numeric,
   jsonb,
@@ -58,6 +59,7 @@ export const situationInstances = pgTable(
   },
   (t) => [
     uniqueIndex("situation_instances_uq").on(t.roundId, t.teamId, t.situationId),
+    index("situation_instances_team_id_idx").on(t.teamId),
   ],
 );
 
