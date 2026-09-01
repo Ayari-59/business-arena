@@ -708,6 +708,7 @@ export interface AnalyticalHint {
 export interface SituationView {
   instanceId: string;
   code: string;
+  category: import("@/config/scenarios/situation-kit").SituationCategory;
   title: string;
   narrative: string;
   problem: string;
@@ -771,6 +772,7 @@ function toView(
   return {
     instanceId: instance.id,
     code: def.code,
+    category: def.category,
     title: def.title,
     narrative: def.narrative,
     problem: def.problem,

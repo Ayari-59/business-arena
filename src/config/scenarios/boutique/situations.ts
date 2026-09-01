@@ -1,4 +1,4 @@
-import { attachModelQuestions, hints, type SituationDef, type DecisionLever } from "../situation-kit";
+import { attachModelQuestions, hints, type SituationCategory, type SituationDef, type DecisionLever } from "../situation-kit";
 
 /**
  * Situations pédagogiques de MAILLE & CO (commerce de détail).
@@ -10,6 +10,7 @@ import { attachModelQuestions, hints, type SituationDef, type DecisionLever } fr
 export const BOUTIQUE_SITUATIONS: SituationDef[] = [
   {
     code: "boutique_t1_reprise",
+    category: "prise_de_poste",
     title: "La reprise de la boutique",
     narrative:
       "Vous reprenez MAILLE & CO : 90 m² en centre-ville, six salariées, 1 200 articles en réserve et un bail qui court. L'ancienne propriétaire vous laisse un carnet où elle notait ses prix d'achat, et rien d'autre.",
@@ -90,6 +91,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
   },
   {
     code: "boutique_t2_circuit",
+    category: "decision_strategique",
     title: "Trois représentants, trois modèles",
     narrative:
       "Trois commerciaux se succèdent dans votre arrière-boutique. Le grossiste propose son catalogue habituel à 45 jours. Le déstockeur casse les prix de 18 %, mais veut un chèque à l'enlèvement et ne garantit aucun réassort. Les créateurs demandent 22 % de plus, réglés à 30 jours, et vous laissent l'exclusivité sur la ville.",
@@ -172,6 +174,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
   },
   {
     code: "boutique_t4_noel",
+    category: "contexte_marche",
     title: "Le trimestre qui fait l'année",
     narrative:
       "Le quatrième trimestre pèse près d'une fois et demie un trimestre ordinaire, et les comités d'entreprise passent leurs commandes de fin d'année. Votre grossiste veut vos volumes maintenant : les délais de livraison sont de six semaines, et il ne reprendra rien.",
@@ -259,6 +262,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
   },
   {
     code: "boutique_t5_coton",
+    category: "contexte_marche",
     title: "Le coton a flambé",
     narrative:
       "Votre grossiste annonce +18 % sur la prochaine collection : mauvaise récolte, fret en hausse. Vos étiquettes, elles, sont imprimées. Le trimestre de Noël vient de vider votre trésorerie dans le réassort.",
@@ -341,6 +345,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
   },
   {
     code: "boutique_detect_below_breakeven",
+    category: "alerte_comptable",
     title: "Le trimestre s'est terminé dans le rouge",
     narrative:
       "Les comptes du trimestre sont sortis : le résultat d'exploitation est négatif. La boutique a pourtant été ouverte tous les jours, les vendeuses ont fait leur travail, et la vitrine était soignée.",
@@ -421,6 +426,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
   },
   {
     code: "boutique_detect_profitable_illiquid",
+    category: "alerte_comptable",
     title: "Rentable, et pourtant à découvert",
     narrative:
       "Votre expert-comptable est formel : le trimestre est bénéficiaire. Votre banquier l'est tout autant : vous êtes à découvert. La réserve est pleine, et les comités d'entreprise règlent à 45 jours.",
@@ -501,6 +507,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
   },
   {
     code: "boutique_t3_soldes",
+    category: "decision_strategique",
     title: "Solder, ou garder pour l'an prochain",
     narrative:
       "Il reste 400 pièces de la collection de printemps, achetées 18 € l'unité et affichées 45 €. Elles ne partiront plus au tarif plein. Un client déstockeur en offre 22 € l'unité, tout de suite. Accepter, c'est décider une démarque ; refuser, c'est occuper une réserve jusqu'au printemps prochain, quand la mode aura tourné.",
@@ -590,6 +597,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
   },
   {
     code: "boutique_t6_capitaux",
+    category: "decision_strategique",
     title: "L'argent dort dans la réserve",
     narrative:
       "Votre banquier reçoit les comptes de l'année. La boutique dégage un résultat honorable, mais il constate que le stock et les créances immobilisent une somme considérable, et que cet argent ne rapporte rien tant qu'il n'est pas vendu ni encaissé. Il vous demande le budget de trésorerie du prochain exercice.",
@@ -668,6 +676,7 @@ export const BOUTIQUE_SITUATIONS: SituationDef[] = [
   },
   {
     code: "boutique_detect_idle_cash",
+    category: "tresorerie_dormante",
     title: "La caisse pleine d'après-soldes",
     narrative:
       "Les soldes ont vidé la réserve et rempli le compte : vous détenez plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an. Il facture par ailleurs votre découvert 9 %. La collection d'automne, elle, se commande dans quelques semaines et se paie avant d'être vendue.",

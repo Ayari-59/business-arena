@@ -8,6 +8,15 @@ import {
   type PedagogyState,
 } from "@/app/arena/[gameId]/actions";
 import type { SituationView } from "@/services/pedagogy.service";
+import type { SituationCategory } from "@/config/scenarios/situation-kit";
+
+const CATEGORY_LABELS: Record<SituationCategory, string> = {
+  prise_de_poste: "Prise de poste",
+  contexte_marche: "Contexte de marché",
+  decision_strategique: "Décision stratégique",
+  alerte_comptable: "Alerte comptable",
+  tresorerie_dormante: "Trésorerie dormante",
+};
 import type { InterpretationFact } from "@/pedagogy/detection";
 
 const initial: PedagogyState = { error: null };
@@ -52,7 +61,7 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
     <article className="rounded-xl border border-amber-400/20 bg-slate-900 p-5">
       <header className="mb-3">
         <p className="text-[11px] uppercase tracking-[0.25em] text-amber-400">
-          Situation {situation.origin === "detected" ? "détectée dans vos comptes" : "du tour"}
+          {CATEGORY_LABELS[situation.category]}
         </p>
         <h3 className="mt-1 text-lg font-semibold text-slate-100">{situation.title}</h3>
         <p className="mt-2 text-sm leading-relaxed text-slate-300">{situation.narrative}</p>

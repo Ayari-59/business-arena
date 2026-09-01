@@ -1,4 +1,4 @@
-import { attachModelQuestions, hints, type DecisionLever, type SituationDef } from "../situation-kit";
+import { attachModelQuestions, hints, type DecisionLever, type SituationCategory, type SituationDef } from "../situation-kit";
 
 /**
  * Situations pédagogiques de VOLT FITNESS (modèle par abonnement).
@@ -9,6 +9,7 @@ import { attachModelQuestions, hints, type DecisionLever, type SituationDef } fr
 export const FITNESS_SITUATIONS: SituationDef[] = [
   {
     code: "fitness_t1_recurrent",
+    category: "prise_de_poste",
     title: "Mille six cents adhérents et un crédit",
     narrative:
       "Vous reprenez VOLT FITNESS : 1 200 m², huit salariés, un parc de machines financé à crédit et 1 600 adhérents qui paient 105 € par trimestre. Le chiffre d'affaires du prochain trimestre est déjà connu, à ceux qui partiront près.",
@@ -97,6 +98,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
   },
   {
     code: "fitness_t2_attrition",
+    category: "contexte_marche",
     title: "Ceux qui ne reviennent pas",
     narrative:
       "Le tableau des renouvellements est sorti. Sur les 400 inscrits de janvier, 62 renouvellent. Chez les pratiquants réguliers, en revanche, neuf sur dix restent, et certains sont là depuis six ans.",
@@ -190,6 +192,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
   },
   {
     code: "fitness_t3_ete",
+    category: "contexte_marche",
     title: "Le creux de l'été",
     narrative:
       "Juillet. Le plateau est vide à quatorze heures, les cours collectifs sont annulés faute d'inscrits, et la moitié des adhérents de janvier ne s'est pas réinscrite. Le loyer, les salaires et l'échéance du crédit, eux, tombent comme chaque trimestre.",
@@ -283,6 +286,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
   },
   {
     code: "fitness_t5_saturation",
+    category: "alerte_comptable",
     title: "Trop de monde aux heures de pointe",
     narrative:
       "Dix-huit heures trente. File d'attente devant les tapis, vestiaires pleins, et trois avis en ligne cette semaine sur le thème « impossible de s'entraîner correctement ». Vos adhérents réguliers commencent à demander un remboursement.",
@@ -376,6 +380,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
   },
   {
     code: "fitness_detect_below_breakeven",
+    category: "alerte_comptable",
     title: "Sous le seuil",
     narrative:
       "Le trimestre s'achève en perte. La salle a ouvert tous les jours, les coachs étaient présents, le matériel fonctionnait, mais les adhérents n'étaient pas assez nombreux.",
@@ -469,6 +474,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
   },
   {
     code: "fitness_t4_annuel",
+    category: "contexte_marche",
     title: "Douze mois encaissés d'avance",
     narrative:
       "Votre responsable commercial propose une formule annuelle : 340 € réglés en une fois, contre 105 € par trimestre aujourd'hui, soit 420 € sur l'année. Vous perdez 80 € par adhérent, mais vous encaissez tout au premier jour, et l'adhérent ne peut plus partir en cours d'année.",
@@ -555,6 +561,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
   },
   {
     code: "fitness_t6_seconde_salle",
+    category: "decision_strategique",
     title: "Une seconde salle, ou pas",
     narrative:
       "Un local se libère dans le quartier voisin : 220 000 € d'aménagement. Vous ne savez pas si la demande y est. Votre étude interne dit qu'il y a environ deux chances sur trois d'atteindre 1 400 adhérents, et une sur trois de plafonner à 600, auquel cas la salle perdrait de l'argent chaque trimestre.",
@@ -646,6 +653,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
   },
   {
     code: "fitness_detect_idle_cash",
+    category: "tresorerie_dormante",
     title: "Janvier a rempli la caisse",
     narrative:
       "Les inscriptions de début d'année ont fait entrer beaucoup d'argent d'un coup : plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an, et facture le découvert 9 %. Cet argent doit pourtant faire vivre la salle jusqu'à décembre, y compris pendant l'été où plus personne ne s'inscrit.",
