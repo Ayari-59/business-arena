@@ -57,6 +57,13 @@
       "when": 1788393600000,
       "tag": "0007_competition_join_code",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1788480000000,
+      "tag": "0008_games_priority_indexes",
+      "breakpoints": true
     }
   ]
 }
