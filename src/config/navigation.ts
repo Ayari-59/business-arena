@@ -63,6 +63,11 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
         libelle: "Parcours",
         aide: "Ce que traverse une classe, de la première décision au dernier bilan.",
       },
+      {
+        href: "/fonctionnalites",
+        libelle: "Fonctionnalités",
+        aide: "9 scénarios, 79 situations, 18 modèles : tout ce que la plateforme met entre les mains de vos étudiants.",
+      },
     ],
   },
   {

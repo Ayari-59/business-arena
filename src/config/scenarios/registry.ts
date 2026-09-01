@@ -65,6 +65,30 @@ export const SECTOR_LABELS: Record<Sector, string> = {
   transport: "Transport",
 };
 
+export const SECTOR_ICONS: Record<Sector, string> = {
+  industrie: "🏭",
+  commerce: "🛍️",
+  ecommerce: "🛒",
+  hotellerie: "🏨",
+  restauration: "🍽️",
+  services: "💼",
+  abonnement: "🏋️",
+  batiment: "🏗️",
+  transport: "🚛",
+};
+
+export const SECTOR_COLORS: Record<Sector, { accent: string; bg: string }> = {
+  industrie: { accent: "text-blue-400", bg: "bg-blue-400/10" },
+  commerce: { accent: "text-pink-400", bg: "bg-pink-400/10" },
+  ecommerce: { accent: "text-violet-400", bg: "bg-violet-400/10" },
+  hotellerie: { accent: "text-amber-400", bg: "bg-amber-400/10" },
+  restauration: { accent: "text-orange-400", bg: "bg-orange-400/10" },
+  services: { accent: "text-cyan-400", bg: "bg-cyan-400/10" },
+  abonnement: { accent: "text-lime-400", bg: "bg-lime-400/10" },
+  batiment: { accent: "text-yellow-400", bg: "bg-yellow-400/10" },
+  transport: { accent: "text-teal-400", bg: "bg-teal-400/10" },
+};
+
 export interface ScenarioVocabulary {
   /** Ce que l'entreprise vend, au singulier et au pluriel (« nuitée »/« nuitées »). */
   unit: string;
