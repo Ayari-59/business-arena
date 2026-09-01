@@ -797,18 +797,24 @@ export async function getTeamSituations(
     .filter((r) => r.status === "resolved")
     .sort((a, b) => b.index - a.index)[0];
 
-  const build = async (instance: typeof situationInstances.$inferSelect) => {
-    const def = situationByCode.get(codeById.get(instance.situationId) ?? "");
-    if (!def) return null;
-    const levels = await unlockedLevels(instance.id);
-    return toView(instance, def, levels, quizMode, hintCap);
-  };
+  const allHints = await db
+    .select({ situationInstanceId: hintUsages.situationInstanceId, level: hintUsages.level })
+    .from(hintUsages)
+    .where(inArray(hintUsages.situationInstanceId, instances.map((i) => i.id)));
+  const levelsByInstance = new Map<string, number[]>();
+  for (const h of allHints) {
+    const arr = levelsByInstance.get(h.situationInstanceId) ?? [];
+    arr.push(h.level);
+    levelsByInstance.set(h.situationInstanceId, arr);
+  }
 
   const current: SituationView[] = [];
   const debriefed: SituationView[] = [];
   for (const instance of instances) {
-    const view = await build(instance);
-    if (!view) continue;
+    const def = situationByCode.get(codeById.get(instance.situationId) ?? "");
+    if (!def) continue;
+    const levels = levelsByInstance.get(instance.id) ?? [];
+    const view = toView(instance, def, levels, quizMode, hintCap);
     if (currentRound && instance.roundId === currentRound.id && instance.status !== "debriefed") {
       current.push(view);
     } else if (lastDebriefedRound && instance.roundId === lastDebriefedRound.id) {
