@@ -289,20 +289,14 @@ export async function unlockHint(args: {
   instanceId: string;
   userId: string;
 }): Promise<{ level: number; text: string }> {
-  const { instance, situationRow, def } = await loadInstanceForUser(args.instanceId, args.userId);
+  const { instance, situationRow, def, game } = await loadInstanceForUser(args.instanceId, args.userId);
   if (instance.status === "debriefed") throw new Error("Cette situation est déjà débriefée");
   const levels = await unlockedLevels(args.instanceId);
   const next = nextUnlockableLevel(levels);
   if (next === null) throw new Error("Tous les indices sont déjà débloqués");
-  // Plafonds : niveau de difficulté de la partie (préréglage en données,
-  // doc 08 §2), et §25 : jamais plus que le niveau 3 en mode compétition.
-  const roundRow = (await db.select().from(rounds).where(eq(rounds.id, instance.roundId)))[0];
-  if (roundRow) {
-    const game = (await db.select().from(games).where(eq(games.id, roundRow.gameId)))[0];
-    if (game) {
-      const { cap, reason } = hintCapOf(game);
-      if (next > cap) throw new Error(reason);
-    }
+  if (game) {
+    const { cap, reason } = hintCapOf(game);
+    if (next > cap) throw new Error(reason);
   }
   const hintRow = (
     await db

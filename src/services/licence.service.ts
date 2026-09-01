@@ -207,12 +207,3 @@ export async function listOrgLicences(organizationId: string): Promise<OrgLicenc
 }
 
 /** État des licences de tous les établissements, pour l'espace administrateur. */
-export async function getLicenceOverview(): Promise<
-  { organizationId: string; name: string; status: LicenceStatus }[]
-> {
-  const orgs = await db.select().from(organizations);
-  const statuts = await Promise.all(orgs.map((o) => getLicenceStatus(o.id)));
-  return orgs
-    .map((o, i) => ({ organizationId: o.id, name: o.name, status: statuts[i]! }))
-    .sort((a, b) => a.name.localeCompare(b.name, "fr"));
-}
