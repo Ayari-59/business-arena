@@ -1,4 +1,4 @@
-import { attachModelQuestions, hints, type DecisionLever, type SituationDef } from "../situation-kit";
+import { attachModelQuestions, hints, type DecisionLever, type SituationCategory, type SituationDef } from "../situation-kit";
 
 /**
  * Situations pédagogiques de MARTEL & FILS (bâtiment, rénovation).
@@ -9,6 +9,7 @@ import { attachModelQuestions, hints, type DecisionLever, type SituationDef } fr
 export const BATIMENT_SITUATIONS: SituationDef[] = [
   {
     code: "batiment_t1_marge",
+    category: "prise_de_poste",
     title: "Quatorze compagnons et un dépôt",
     narrative:
       "Vous reprenez MARTEL & FILS : quatorze compagnons, un dépôt, des échafaudages, et un carnet qui se remplit au coup par coup. Le mètre carré rénové se facture 380 €, il coûte 168 € de matériaux et 42 € de frais de chantier. Le reste tombe tous les trimestres, que les équipes travaillent ou non.",
@@ -98,6 +99,7 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
   },
   {
     code: "batiment_t2_devis",
+    category: "decision_strategique",
     title: "Le devis qu'il ne faudrait pas signer",
     narrative:
       "Un promoteur propose un lot de finitions à 268 € le mètre carré. Votre prix de revient complet ressort à 325 €, structure comprise. Votre conducteur de travaux veut refuser. Mais vos équipes ont deux semaines creuses en février, et elles seront payées de toute façon.",
@@ -192,6 +194,7 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
   },
   {
     code: "batiment_t3_bfr",
+    category: "alerte_comptable",
     title: "Un carnet plein et un compte à sec",
     narrative:
       "Le trimestre est le meilleur depuis longtemps : les équipes n'ont pas arrêté, le résultat est positif. Pourtant votre comptable vous appelle : le compte est en découvert, et la traite des matériaux se présente lundi. Vos clients, eux, règlent entre trente et quatre-vingt-dix jours.",
@@ -294,6 +297,7 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
   },
   {
     code: "batiment_t4_retenue",
+    category: "contexte_marche",
     title: "Cinq pour cent qui manquent toujours",
     narrative:
       "Le marché de la commune est terminé et réceptionné. La facture part, mais le maître d'ouvrage retient cinq pour cent au titre de la garantie de parfait achèvement, pour un an. Sur les autres chantiers, le mandatement arrive à quatre-vingt-dix jours. Et lundi, les salaires.",
@@ -396,6 +400,7 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
   },
   {
     code: "batiment_t5_sous_traiter",
+    category: "decision_strategique",
     title: "Embaucher, sous-traiter ou refuser",
     narrative:
       "Le carnet déborde de six cents mètres carrés que vos équipes ne pourront pas absorber. Un confrère propose de les prendre en sous-traitance à 245 € le mètre carré. Embaucher deux compagnons coûterait 19 200 € par trimestre, plus 6 400 € de recrutement, et ils ne seraient opérationnels qu'au tour suivant.",
@@ -500,6 +505,7 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
   },
   {
     code: "batiment_t6_nacelle",
+    category: "decision_strategique",
     title: "La nacelle ou la location",
     narrative:
       "Vous louez une nacelle deux mois par trimestre, pour 11 000 € à chaque fois. L'acheter coûterait 96 000 €, amortissables sur six ans, avec 1 800 € d'entretien par trimestre. Votre banquier suivrait, à condition que le calcul tienne debout devant lui.",
@@ -596,6 +602,7 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
   },
   {
     code: "batiment_detect_idle_cash",
+    category: "tresorerie_dormante",
     title: "L'acompte du gros chantier dort sur le compte",
     narrative:
       "L'acompte de trente pour cent versé à la signature du marché de la commune est arrivé, et le compte affiche un solde comme vous n'en aviez pas vu depuis deux ans. La tentation est grande d'y voir un excédent. Mais cet argent n'est pas à vous : il doit payer les matériaux du chantier, les salaires des compagnons pendant les six mois de travaux, et il faudra encore tenir quatre-vingt-dix jours après la réception avant que le solde n'arrive. Le placer immobiliserait exactement la somme qui doit servir à travailler.",
@@ -688,6 +695,7 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
   },
   {
     code: "batiment_detect_capacite",
+    category: "alerte_comptable",
     title: "Les équipes ne suivent plus",
     narrative:
       "Vos compagnons enchaînent sans temps mort et vous refusez des chantiers chaque semaine. Le matériel, lui, tourne à plein : deux équipes attendent parfois le même échafaudage. La demande est là, la capacité ne l'est plus.",

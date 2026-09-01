@@ -24,6 +24,13 @@ export interface DecisionLever {
   hint: string;
 }
 
+export type SituationCategory =
+  | "prise_de_poste"
+  | "contexte_marche"
+  | "decision_strategique"
+  | "alerte_comptable"
+  | "tresorerie_dormante";
+
 export type DetectCode =
   | "profitable_illiquid"
   | "stockout"
@@ -59,6 +66,7 @@ export interface QuizQuestionDef {
 
 export interface SituationDef {
   code: string;
+  category: SituationCategory;
   title: string;
   narrative: string;
   problem: string; // question ouverte

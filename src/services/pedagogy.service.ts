@@ -700,14 +700,15 @@ function modelInsight(
 export interface AnalyticalHint {
   code: string;
   name: string;
-  description: string;
   objective: string;
   difficulty: number;
+  keyPoints: string[];
 }
 
 export interface SituationView {
   instanceId: string;
   code: string;
+  category: import("@/config/scenarios/situation-kit").SituationCategory;
   title: string;
   narrative: string;
   problem: string;
@@ -771,6 +772,7 @@ function toView(
   return {
     instanceId: instance.id,
     code: def.code,
+    category: def.category,
     title: def.title,
     narrative: def.narrative,
     problem: def.problem,
@@ -806,7 +808,15 @@ function toView(
           .filter(([, rel]) => rel === "optimal" || rel === "acceptable")
           .map(([code]) => modelByCode.get(code))
           .filter((m): m is NonNullable<typeof m> => Boolean(m))
-          .map((m) => ({ code: m.code, name: m.name, description: m.description, objective: m.objective, difficulty: m.difficulty }))
+          .map((m) => ({
+            code: m.code,
+            name: m.name,
+            objective: m.objective,
+            difficulty: m.difficulty,
+            keyPoints: m.conceptCodes
+              .map((c) => conceptByCode.get(c)?.name)
+              .filter((n): n is string => Boolean(n)),
+          }))
           .sort((a, b) => a.name.localeCompare(b.name, "fr")),
     decisionLevers: debriefed ? [] : (def.decisionLevers ?? []),
     triggerFacts: (instance.triggerContext as TriggerFact[] | null) ?? null,

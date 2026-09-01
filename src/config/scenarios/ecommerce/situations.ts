@@ -1,4 +1,4 @@
-import { attachModelQuestions, hints, type DecisionLever, type SituationDef } from "../situation-kit";
+import { attachModelQuestions, hints, type DecisionLever, type SituationCategory, type SituationDef } from "../situation-kit";
 
 /**
  * Situations pédagogiques de PIXEL & CO (e-commerce).
@@ -10,6 +10,7 @@ import { attachModelQuestions, hints, type DecisionLever, type SituationDef } fr
 export const ECOMMERCE_SITUATIONS: SituationDef[] = [
   {
     code: "ecom_t1_acquisition",
+    category: "prise_de_poste",
     title: "Le premier euro de publicité",
     narrative:
       "Vous reprenez PIXEL & CO : un entrepôt loué, 2 000 références en stock, un site qui fonctionne et zéro notoriété. Sans budget de publicité, le compteur de visiteurs reste à trois chiffres par jour.",
@@ -90,6 +91,7 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
   },
   {
     code: "ecom_t2_fidelisation",
+    category: "decision_strategique",
     title: "Deux clients, deux coûts",
     narrative:
       "Votre tableau de bord distingue deux populations : ceux qui arrivent par la publicité, et ceux qui reviennent d'eux-mêmes. Les seconds achètent plus cher, plus souvent, et ne coûtent rien à faire venir.",
@@ -170,6 +172,7 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
   },
   {
     code: "ecom_t4_pic",
+    category: "contexte_marche",
     title: "Black Friday et fêtes",
     narrative:
       "Le quatrième trimestre pèse plus d'une fois et demie un trimestre ordinaire. Vos concurrents ont réservé leurs espaces publicitaires depuis septembre, et votre entrepôt prépare 7 000 commandes par trimestre, pas une de plus.",
@@ -251,6 +254,7 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
   },
   {
     code: "ecom_t5_commission",
+    category: "contexte_marche",
     title: "Ce que la place de marché prélève",
     narrative:
       "La place de marché qui vous apporte un quart de vos commandes annonce que sa commission montera l'an prochain. Son responsable vous propose d'en reparler si vous vous engagez sur un volume.",
@@ -331,6 +335,7 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
   },
   {
     code: "ecom_detect_below_breakeven",
+    category: "alerte_comptable",
     title: "Le trimestre est déficitaire",
     narrative:
       "Le chiffre d'affaires a progressé, les commandes aussi, et le résultat d'exploitation est négatif. Le tableau de bord publicitaire, lui, affiche de bons chiffres.",
@@ -411,6 +416,7 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
   },
   {
     code: "ecom_detect_profitable_illiquid",
+    category: "alerte_comptable",
     title: "Bénéficiaire, et pourtant à découvert",
     narrative:
       "Les comptes sont bons, l'entrepôt est plein, et votre banquier vous appelle. Le stock a été payé à 45 jours, mais la marketplace, elle, règle à 30.",
@@ -489,6 +495,7 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
   },
   {
     code: "ecommerce_t3_retours",
+    category: "contexte_marche",
     title: "Une commande sur huit revient",
     narrative:
       "Le service client remonte un chiffre que personne ne regardait : 12 % des commandes sont retournées. Chaque retour, ce sont des frais de port dans les deux sens, un article à contrôler et à remettre en rayon, parfois invendable. La marge affichée sur une commande, elle, n'en tient aucun compte.",
@@ -567,6 +574,7 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
   },
   {
     code: "ecommerce_t6_scenarios",
+    category: "decision_strategique",
     title: "Et si le trafic doublait de prix",
     narrative:
       "Les enchères publicitaires montent : vos concurrents payent de plus en plus cher le même clic. Votre coût d'acquisition a déjà progressé cette année. Pour le budget de l'an prochain, personne ne peut vous dire s'il augmentera de 10 % ou de 60 %.",
@@ -646,6 +654,7 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
   },
   {
     code: "ecom_detect_idle_cash",
+    category: "tresorerie_dormante",
     title: "L'après-fêtes",
     narrative:
       "Le pic des fêtes a rempli le compte : plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an, et facture le découvert 9 %. Le trimestre qui s'ouvre est le plus creux de l'année, et les retours de décembre ne sont pas tous remboursés.",
