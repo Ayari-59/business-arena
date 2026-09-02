@@ -206,7 +206,7 @@ export function FinancialStatements({
             />
           </div>
         </div>
-        <p className="mt-2 text-[11px] text-slate-500">
+        <p className="mt-2 text-xs text-slate-500">
           {placement > 0.5 && b.overdraft > 0.5
             ? "Vous détenez un placement ET un découvert : vous payez le second bien plus cher que le premier ne rapporte. "
             : ""}
@@ -272,7 +272,7 @@ export function FinancialStatements({
             <Row label="Indice de sécurité" value={pct(result.breakeven.safetyIndex)} />
           </div>
         </div>
-        <p className="mt-2 text-[11px] text-slate-500">
+        <p className="mt-2 text-xs text-slate-500">
           Les charges de structure tombent quoi qu&apos;il arrive : chaque unité vendue au-dessus
           du coût variable les éponge : le seuil dit combien il en faut.
         </p>
@@ -295,7 +295,7 @@ export function FinancialStatements({
           strong
           tone={result.cashFlow.closing >= 0 ? "good" : "bad"}
         />
-        <p className="mt-2 text-[11px] text-slate-500">
+        <p className="mt-2 text-xs text-slate-500">
           Le résultat est une opinion, la trésorerie est un fait : ce tableau montre où
           l&apos;argent est réellement entré et sorti.
         </p>

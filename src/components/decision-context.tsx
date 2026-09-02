@@ -125,7 +125,7 @@ export function ParametersPanels({
         <div className="mt-2 overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-[11px] uppercase tracking-wide text-slate-500">
+              <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
                 <th className="pb-1 pr-3 font-medium">Clientèle</th>
                 <th className="pb-1 pr-3 text-right font-medium">Taille</th>
                 <th className="pb-1 pr-3 text-right font-medium">Prix usuel</th>
@@ -156,7 +156,7 @@ export function ParametersPanels({
             </tbody>
           </table>
         </div>
-        <p className="mt-2 text-[11px] leading-relaxed text-slate-600">
+        <p className="mt-2 text-xs leading-relaxed text-slate-600">
           Le prix usuel est celui auquel cette clientèle a l&apos;habitude d&apos;acheter, pas une
           consigne. Vous fixez UN prix pour tout le monde.
         </p>

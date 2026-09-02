@@ -56,7 +56,7 @@ function Section({
 
 export default function GuidePage() {
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100">
+    <main id="main" className="min-h-screen bg-slate-950 text-slate-100">
       <nav className="mx-auto flex max-w-4xl items-center justify-between px-6 py-5">
         <Link href="/">
           <SiteLogo />

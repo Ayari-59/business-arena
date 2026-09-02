@@ -38,7 +38,7 @@ export function EventCard({
         <div className="card-face card-back rounded-xl border border-amber-400/30 bg-gradient-to-br from-slate-900 to-slate-950">
           <div className="flex h-full flex-col items-center justify-center gap-2">
             <BrandMark className="h-9 w-9 text-amber-400/80" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-amber-400/70">
+            <span className="text-xs font-bold uppercase tracking-[0.3em] text-amber-400/70">
               Business Arena
             </span>
           </div>
@@ -53,14 +53,14 @@ export function EventCard({
             <div className="flex items-start justify-between">
               <span className="text-3xl">{card.emoji}</span>
               <span
-                className={`rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wide ${category.className}`}
+                className={`rounded-full border px-2 py-0.5 text-xs uppercase tracking-wide ${category.className}`}
               >
                 {announced ? "annoncée" : category.label}
               </span>
             </div>
             {targetLabel ? (
               <span
-                className={`mt-1.5 inline-flex w-fit rounded-full border px-2 py-0.5 text-[10px] font-semibold ${
+                className={`mt-1.5 inline-flex w-fit rounded-full border px-2 py-0.5 text-xs font-semibold ${
                   highlight
                     ? "border-sky-400/60 bg-sky-400/10 text-sky-300"
                     : "border-white/10 bg-white/5 text-slate-400"
@@ -74,7 +74,7 @@ export function EventCard({
             <p className="mt-auto pt-2 text-xs font-semibold text-slate-200">
               ⚡ {card.effectLabel}
             </p>
-            <p className="mt-1.5 border-t border-white/5 pt-1.5 text-[11px] leading-snug text-slate-500">
+            <p className="mt-1.5 border-t border-white/5 pt-1.5 text-xs leading-snug text-slate-500">
               💡 {card.conceptHint}
             </p>
           </div>

@@ -21,7 +21,7 @@ export default async function OrgAdminPage() {
   }
 
   return (
-    <main className="mx-auto max-w-5xl space-y-8 p-6">
+    <main id="main" className="mx-auto max-w-5xl space-y-8 p-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-amber-400">
@@ -153,7 +153,7 @@ export default async function OrgAdminPage() {
                   <td className="py-2 pr-3 text-slate-400">{t.email}</td>
                   <td className="py-2 pr-3">
                     {t.role === "org_admin" ? (
-                      <span className="rounded bg-amber-400/15 px-1.5 py-0.5 text-[11px] text-amber-300">
+                      <span className="rounded bg-amber-400/15 px-1.5 py-0.5 text-xs text-amber-300">
                         admin
                       </span>
                     ) : (

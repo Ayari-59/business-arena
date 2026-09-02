@@ -33,7 +33,7 @@ export function SalesHistory({
       <div className="mt-3 overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-[11px] uppercase tracking-wide text-slate-500">
+            <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
               <th className="pb-1 pr-3 font-medium">Tour</th>
               <th className="pb-1 pr-3 text-right font-medium">
                 {vocabulary.priceLabel}
@@ -47,7 +47,7 @@ export function SalesHistory({
               <th className="pb-1 pr-3 text-right font-medium">Total vendu</th>
               <th className="pb-1 text-right font-medium">Manquées</th>
             </tr>
-            <tr className="text-left text-[10px] text-slate-600">
+            <tr className="text-left text-xs text-slate-600">
               <th className="pb-1 pr-3" />
               <th className="pb-1 pr-3" />
               {history.segments.map((name) => (

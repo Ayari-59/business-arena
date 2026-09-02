@@ -82,7 +82,7 @@ function EquipmentPanel({
                   {owned} en service{pendCount > 0 ? ` + ${pendCount} en attente` : ""}
                 </span>
               </div>
-              <div className="mt-2 flex flex-wrap gap-3 text-[11px] text-slate-500">
+              <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-500">
                 <span>{t.costPerUnit.toLocaleString("fr-FR")} €/u</span>
                 <span>Amorti en {Math.round(t.depreciationRounds)} tours</span>
                 <span>Maintenance ×{t.maintenanceMultiplier.toLocaleString("fr-FR")}</span>
@@ -92,7 +92,7 @@ function EquipmentPanel({
               </div>
               <div className="mt-2 grid grid-cols-2 gap-3">
                 <label className="block">
-                  <span className="text-[10px] font-medium uppercase tracking-wide text-emerald-400">
+                  <span className="text-xs font-medium uppercase tracking-wide text-emerald-400">
                     Acheter
                   </span>
                   <span className="mt-0.5 flex items-center gap-1.5 rounded border border-white/10 bg-slate-950 px-2 py-1 focus-within:border-emerald-400/60">
@@ -109,16 +109,16 @@ function EquipmentPanel({
                       }
                       className="w-full bg-transparent text-sm tabular-nums text-slate-100 outline-none"
                     />
-                    <span className="text-[10px] text-slate-500">max {t.maxPerRound}</span>
+                    <span className="text-xs text-slate-500">max {t.maxPerRound}</span>
                   </span>
                   {buy > 0 ? (
-                    <span className="mt-0.5 block text-[10px] text-emerald-300/80">
+                    <span className="mt-0.5 block text-xs text-emerald-300/80">
                       = {(buy * t.costPerUnit).toLocaleString("fr-FR")} €
                     </span>
                   ) : null}
                 </label>
                 <label className="block">
-                  <span className="text-[10px] font-medium uppercase tracking-wide text-red-400">
+                  <span className="text-xs font-medium uppercase tracking-wide text-red-400">
                     Vendre
                   </span>
                   <span className="mt-0.5 flex items-center gap-1.5 rounded border border-white/10 bg-slate-950 px-2 py-1 focus-within:border-red-400/60">
@@ -135,10 +135,10 @@ function EquipmentPanel({
                       }
                       className="w-full bg-transparent text-sm tabular-nums text-slate-100 outline-none"
                     />
-                    <span className="text-[10px] text-slate-500">max {owned}</span>
+                    <span className="text-xs text-slate-500">max {owned}</span>
                   </span>
                   {sell > 0 ? (
-                    <span className="mt-0.5 block text-[10px] text-red-300/80">
+                    <span className="mt-0.5 block text-xs text-red-300/80">
                       = {Math.round(sell * avgBook * t.resaleRatio).toLocaleString("fr-FR")} € (VNC {Math.round(sell * avgBook).toLocaleString("fr-FR")} €)
                     </span>
                   ) : null}
@@ -178,7 +178,7 @@ function EquipmentPanel({
           </div>
         </div>
       ) : null}
-      <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+      <p className="mt-3 text-xs leading-relaxed text-slate-500">
         Les machines achetées entrent en service au tour suivant. La revente se fait à la
         valeur de marché (VNC × ratio de revente) : vendre en dessous de la VNC génère une
         perte de cession, un coût bien réel que le résultat encaisse.
@@ -217,7 +217,7 @@ function Field({
         />
         <span className="text-xs text-slate-500">{suffix}</span>
       </span>
-      {hint ? <span className="mt-1 block text-xs text-slate-500">{hint}</span> : null}
+      {hint ? <span className="mt-1 block text-[13px] text-slate-500">{hint}</span> : null}
     </label>
   );
 }
@@ -249,7 +249,7 @@ function OptionalField({
         />
         <span className="text-xs text-slate-500">{suffix}</span>
       </span>
-      {hint ? <span className="mt-1 block text-xs text-slate-500">{hint}</span> : null}
+      {hint ? <span className="mt-1 block text-[13px] text-slate-500">{hint}</span> : null}
     </label>
   );
 }
@@ -490,9 +490,9 @@ export function DecisionForm({
             </span>
           </div>
           {capacityFacts.bottleneck === "labor" ? (
-            <p className="mt-2 text-[11px] text-amber-300/80">{v.laborBottleneckHint}</p>
+            <p className="mt-2 text-xs text-amber-300/80">{v.laborBottleneckHint}</p>
           ) : capacityFacts.bottleneck === "machine" ? (
-            <p className="mt-2 text-[11px] text-sky-300/80">{v.capacityBottleneckHint}</p>
+            <p className="mt-2 text-xs text-sky-300/80">{v.capacityBottleneckHint}</p>
           ) : null}
         </div>
       ) : null}
@@ -523,7 +523,7 @@ export function DecisionForm({
                       : ""}
                   </span>
                   <span className="mt-0.5 block text-xs text-slate-400">{s.narrative}</span>
-                  <span className="mt-1 flex flex-wrap gap-3 text-[11px]">
+                  <span className="mt-1 flex flex-wrap gap-3 text-xs">
                     {s.qualityBonus !== 0 ? (
                       <span className={s.qualityBonus > 0 ? "text-emerald-400" : "text-amber-400"}>
                         Qualité {s.qualityBonus > 0 ? "+" : ""}{Math.round(s.qualityBonus * 100)} %
@@ -544,7 +544,7 @@ export function DecisionForm({
               </label>
             ))}
           </div>
-          <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+          <p className="mt-3 text-xs leading-relaxed text-slate-500">
             Le choix du fournisseur impacte votre coût variable, la qualité perçue de vos
             produits, le délai de paiement fournisseur (BFR) et le risque de rupture de
             chaîne. L&apos;assurance étendue couvre le litige fournisseur.
@@ -696,7 +696,7 @@ export function DecisionForm({
                 suffix="€"
                 hint="Bloqué jusqu'au tour suivant : cet argent ne paiera rien ce tour-ci."
               />
-              <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+              <p className="mt-2 text-xs leading-relaxed text-slate-500">
                 {treasuryOffer.maturedPlacement > 0.5
                   ? `${Math.round(treasuryOffer.maturedPlacement).toLocaleString("fr-FR")} € placés au tour précédent sont revenus en caisse, intérêts compris. `
                   : ""}
@@ -708,7 +708,7 @@ export function DecisionForm({
               </p>
             </div>
           ) : null}
-          <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+          <p className="mt-3 text-xs leading-relaxed text-slate-500">
             Découvert autorisé jusqu&apos;à{" "}
             {Math.round(treasuryOffer.overdraftLimit).toLocaleString("fr-FR")} €. Au-delà, la
             banque cède vos créances d&apos;office, au tarif fort. Si vous ne gérez pas votre
@@ -755,7 +755,7 @@ export function DecisionForm({
               </label>
             ))}
           </div>
-          <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+          <p className="mt-3 text-xs leading-relaxed text-slate-500">
             Un coût certain contre un risque incertain : plus la couverture est large, plus
             la prime pèse sur votre seuil de rentabilité.
           </p>
@@ -832,7 +832,7 @@ export function DecisionForm({
               </label>
             ))}
           </div>
-          <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+          <p className="mt-3 text-xs leading-relaxed text-slate-500">
             L&apos;information a un prix, facturé en charges de structure : il se lit au seuil
             de rentabilité. Décider sans données coûte souvent plus cher.
           </p>
@@ -881,7 +881,7 @@ export function DecisionForm({
           </div>
           {bankFile ? (
             <>
-              <p className="mt-3 text-[11px] leading-relaxed text-slate-400">
+              <p className="mt-3 text-xs leading-relaxed text-slate-400">
                 Confiance de votre banque :{" "}
               <strong className="text-slate-200">{Math.round(bankFile.trust * 100)} %</strong>. Elle
               vous consent ce tour un découvert de{" "}
@@ -901,7 +901,7 @@ export function DecisionForm({
                 ? ` Votre dernier plan s'est révélé juste à ${Math.round(bankFile.lastReliability * 100)} %.`
                 : ""}
             </p>
-            <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+            <p className="mt-2 text-xs leading-relaxed text-slate-500">
               Ce plan n&apos;est pas un exercice : sans la ligne de trésorerie, la banque
               n&apos;instruit aucune demande d&apos;emprunt. Et l&apos;écart entre ce que vous
               annoncez et ce qui sera constaté fixera, au tour suivant, le plafond de votre
@@ -909,7 +909,7 @@ export function DecisionForm({
             </p>
             </>
           ) : (
-            <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+            <p className="mt-3 text-xs leading-relaxed text-slate-500">
               Annoncer avant de savoir, puis mesurer l&apos;écart : c&apos;est le seul moyen de
               savoir si vous avez compris ce marché ou si vous avez eu de la chance. L&apos;écart
               vous sera montré avec les résultats du tour. Cette partie a été ouverte avant le
@@ -928,7 +928,7 @@ export function DecisionForm({
           placeholder="Pourquoi ces choix ce tour-ci ?"
           className="w-full resize-y rounded border border-slate-700 bg-slate-800/50 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:border-amber-400/50 focus:outline-none"
         />
-        <p className="mt-1 text-[11px] text-slate-500">
+        <p className="mt-1 text-xs text-slate-500">
           Notez ici la logique de vos décisions. L&apos;enseignant pourra la lire au débriefing.
         </p>
       </fieldset>

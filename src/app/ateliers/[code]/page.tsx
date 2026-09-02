@@ -89,7 +89,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
 
   return (
     <div className="mx-auto grid max-w-6xl gap-10 px-6 py-12 lg:grid-cols-[1fr_220px] print:block print:max-w-none print:px-0 print:py-0 print:text-black">
-      <main className="min-w-0">
+      <main id="main" className="min-w-0">
         <p className="text-xs uppercase tracking-[0.3em] text-slate-500 print:hidden">
           <Link href="/ateliers" className="hover:text-slate-300">
             Ateliers et animations
@@ -98,7 +98,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
         </p>
 
         <header className="mt-4 border-b border-white/10 pb-6 print:border-black/20">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-400 print:text-black">
+          <p className="text-xs font-semibold uppercase tracking-wider text-amber-400 print:text-black">
             {atelier.nature} · {atelier.diplome} · {atelier.annee}
           </p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-50 print:text-black">
@@ -142,7 +142,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
 
         {/* À retenir : les faits que l'enseignant veut avant de lire le reste. */}
         <div className="mt-8 break-inside-avoid rounded-xl border-l-2 border-amber-400 bg-amber-950/10 px-5 py-4 print:border-black/40 print:bg-transparent">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-300 print:text-black">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-300 print:text-black">
             À retenir
           </p>
           <ul className="mt-2 space-y-1.5 text-sm leading-relaxed text-slate-300 print:text-black">
@@ -211,7 +211,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
                   <tr key={k} className="border-t border-white/5 first:border-t-0 print:border-black/10">
                     <th
                       scope="row"
-                      className="w-56 px-4 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-slate-500"
+                      className="w-56 px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500"
                     >
                       {k}
                     </th>
@@ -295,7 +295,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
               <li key={s.numero} className="relative break-inside-avoid">
                 <span
                   aria-hidden
-                  className="absolute -left-[31px] top-1.5 flex h-5 w-5 items-center justify-center rounded-full border border-amber-400/50 bg-slate-950 text-[10px] font-bold text-amber-300 print:border-black/40 print:bg-white print:text-black"
+                  className="absolute -left-[31px] top-1.5 flex h-5 w-5 items-center justify-center rounded-full border border-amber-400/50 bg-slate-950 text-xs font-bold text-amber-300 print:border-black/40 print:bg-white print:text-black"
                 >
                   {s.numero}
                 </span>
@@ -317,7 +317,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
                     {s.processus.map((p) => (
                       <span
                         key={p}
-                        className="rounded-full border border-white/10 px-2.5 py-1 text-[11px] text-slate-400 print:border-black/20 print:text-black"
+                        className="rounded-full border border-white/10 px-2.5 py-1 text-xs text-slate-400 print:border-black/20 print:text-black"
                       >
                         {p}
                       </span>
@@ -326,7 +326,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
 
                   <div className="mt-4 grid gap-4 sm:grid-cols-2">
                     <div>
-                      <h4 className="text-[10px] uppercase tracking-[0.2em] text-slate-600">
+                      <h4 className="text-xs uppercase tracking-[0.2em] text-slate-600">
                         Compétences travaillées
                       </h4>
                       <ul className="mt-1.5 space-y-1 text-sm text-slate-300 print:text-black">
@@ -336,7 +336,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
                       </ul>
                     </div>
                     <div>
-                      <h4 className="text-[10px] uppercase tracking-[0.2em] text-slate-600">
+                      <h4 className="text-xs uppercase tracking-[0.2em] text-slate-600">
                         Notions mobilisées
                       </h4>
                       <p className="mt-1.5 text-sm text-slate-400 print:text-black">
@@ -346,7 +346,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
                   </div>
 
                   <div className="mt-4 rounded-lg border border-white/5 bg-slate-950/60 p-3 print:border-black/15 print:bg-transparent">
-                    <h4 className="text-[10px] uppercase tracking-[0.2em] text-slate-600">
+                    <h4 className="text-xs uppercase tracking-[0.2em] text-slate-600">
                       Ce que vous préparez avant
                     </h4>
                     <p className="mt-1.5 text-sm leading-relaxed text-slate-300 print:text-black">
@@ -354,7 +354,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
                     </p>
                   </div>
 
-                  <h4 className="mt-4 text-[10px] uppercase tracking-[0.2em] text-slate-600">
+                  <h4 className="mt-4 text-xs uppercase tracking-[0.2em] text-slate-600">
                     Minutage
                   </h4>
                   <ol className="mt-1.5 space-y-2">
@@ -377,7 +377,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
 
                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
                     <div className="rounded-lg border border-emerald-400/20 bg-emerald-950/10 p-3 print:border-black/15 print:bg-transparent">
-                      <h4 className="text-[10px] uppercase tracking-[0.2em] text-emerald-300/80 print:text-black">
+                      <h4 className="text-xs uppercase tracking-[0.2em] text-emerald-300/80 print:text-black">
                         Livrable de la séance
                       </h4>
                       <p className="mt-1.5 text-sm leading-relaxed text-slate-300 print:text-black">
@@ -385,7 +385,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
                       </p>
                     </div>
                     <div className="rounded-lg border border-sky-400/20 bg-sky-950/10 p-3 print:border-black/15 print:bg-transparent">
-                      <h4 className="text-[10px] uppercase tracking-[0.2em] text-sky-300/80 print:text-black">
+                      <h4 className="text-xs uppercase tracking-[0.2em] text-sky-300/80 print:text-black">
                         Trace pour le {atelier.traceLabel}
                       </h4>
                       <p className="mt-1.5 text-sm italic leading-relaxed text-slate-300 print:text-black">
@@ -394,7 +394,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
                     </div>
                   </div>
 
-                  <h4 className="mt-4 text-[10px] uppercase tracking-[0.2em] text-slate-600">
+                  <h4 className="mt-4 text-xs uppercase tracking-[0.2em] text-slate-600">
                     Ce qui est évalué
                   </h4>
                   <ul className="mt-1.5 space-y-1 text-sm text-slate-400 print:text-black">
@@ -481,7 +481,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
 
       <aside className="hidden lg:block print:hidden">
         <nav className="sticky top-8 border-l border-white/10 pl-4">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-600">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-600">
             Sommaire
           </p>
           <ul className="mt-3 space-y-2 text-xs">

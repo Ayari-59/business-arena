@@ -29,7 +29,7 @@ function Etoiles({ n }: { n: number }) {
 
 export default function AteliersPage() {
   return (
-    <main className="relative overflow-hidden">
+    <main id="main" className="relative overflow-hidden">
       <div
         aria-hidden
         className="pointer-events-none absolute -top-40 left-1/2 h-[420px] w-[900px] -translate-x-1/2 rounded-full bg-amber-400/10 blur-3xl"
@@ -69,7 +69,7 @@ export default function AteliersPage() {
               Tableau récapitulatif des ateliers publiés.
             </caption>
             <thead>
-              <tr className="text-left text-[11px] uppercase tracking-wide text-slate-500">
+              <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
                 <th className="px-4 py-2 font-medium">Diplôme</th>
                 <th className="px-4 py-2 font-medium">Atelier</th>
                 <th className="px-4 py-2 font-medium">Entreprise</th>
@@ -110,7 +110,7 @@ export default function AteliersPage() {
               key={a.code}
               className="rounded-2xl border border-white/10 bg-slate-900 p-5 transition hover:border-amber-400/40"
             >
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-400">
+              <p className="text-xs font-semibold uppercase tracking-wider text-amber-400">
                 {a.nature} · {a.diplome}
               </p>
               <h3 className="mt-2 text-lg font-bold text-slate-50">{a.titre}</h3>

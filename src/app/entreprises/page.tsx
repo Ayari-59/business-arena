@@ -46,11 +46,11 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
             {EMOJIS[d.sector]}
           </span>
           <span
-            className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider ${a.puce}`}
+            className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider ${a.puce}`}
           >
             {SECTOR_LABELS[d.sector]}
           </span>
-          <span className="text-[11px] uppercase tracking-wider text-slate-600">
+          <span className="text-xs uppercase tracking-wider text-slate-600">
             {d.situations.length} situations · {d.bots.length} concurrents
           </span>
         </div>
@@ -69,21 +69,21 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
             ["Le goulot", `${v.capacityBottleneckLabel.toLowerCase()} ou équipe`],
           ].map(([label, valeur]) => (
             <div key={label} className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2">
-              <dt className="text-[10px] uppercase tracking-wide text-slate-600">{label}</dt>
+              <dt className="text-xs uppercase tracking-wide text-slate-600">{label}</dt>
               <dd className="mt-0.5 text-sm text-slate-200">{valeur}</dd>
             </div>
           ))}
         </dl>
 
         <div className="mt-5 rounded-xl border border-white/5 bg-slate-950/60 p-4">
-          <p className="text-[10px] uppercase tracking-[0.25em] text-slate-600">
+          <p className="text-xs uppercase tracking-[0.25em] text-slate-600">
             Ce que vous trouvez en arrivant
           </p>
           <p className="mt-2 text-sm leading-relaxed text-slate-300">{d.context}</p>
         </div>
 
         <div className="mt-4 rounded-xl border border-white/10 bg-slate-950 p-4">
-          <p className="text-[10px] uppercase tracking-[0.25em] text-slate-600">
+          <p className="text-xs uppercase tracking-[0.25em] text-slate-600">
             Le premier arbitrage
           </p>
           <p className="mt-2 text-sm font-medium text-slate-100">{d.dilemma.question}</p>
@@ -99,14 +99,14 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
         </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-1.5">
-          <span className="text-[10px] uppercase tracking-wide text-slate-600">
+          <span className="text-xs uppercase tracking-wide text-slate-600">
             Ses indicateurs
           </span>
           {d.kpis.slice(0, 5).map((k) => (
             <span
               key={k.key}
               title={k.hint}
-              className="rounded-full border border-white/10 px-2.5 py-1 text-[11px] text-slate-400"
+              className="rounded-full border border-white/10 px-2.5 py-1 text-xs text-slate-400"
             >
               {k.label}
             </span>
@@ -131,7 +131,7 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
 
 export default function EntreprisesPage() {
   return (
-    <main className="relative overflow-hidden">
+    <main id="main" className="relative overflow-hidden">
       <div
         aria-hidden
         className="pointer-events-none absolute -top-40 left-1/2 h-[420px] w-[900px] -translate-x-1/2 rounded-full bg-amber-400/10 blur-3xl"
@@ -185,7 +185,7 @@ export default function EntreprisesPage() {
           <div className="mt-6 overflow-x-auto">
             <table className="w-full min-w-[720px] text-sm">
               <thead>
-                <tr className="text-left text-[11px] uppercase tracking-wide text-slate-500">
+                <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
                   <th className="pb-2 pr-4 font-medium">Entreprise</th>
                   <th className="pb-2 pr-4 font-medium">Ce qu&apos;elle vend</th>
                   <th className="pb-2 pr-4 font-medium">L&apos;invendu devient</th>

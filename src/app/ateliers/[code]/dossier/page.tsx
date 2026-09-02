@@ -52,7 +52,7 @@ export default async function DossierElevePage({
   const periodicite = PERIODICITY_LABELS[dossier.periodicite].singular.toLowerCase();
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-12 print:max-w-none print:px-0 print:py-0 print:text-black">
+    <main id="main" className="mx-auto max-w-3xl px-6 py-12 print:max-w-none print:px-0 print:py-0 print:text-black">
       <p className="text-xs uppercase tracking-[0.3em] text-slate-500 print:hidden">
         <Link href={`/ateliers/${atelier.code}`} className="hover:text-slate-300">
           {atelier.titre}
@@ -61,7 +61,7 @@ export default async function DossierElevePage({
       </p>
 
       <header className="mt-4 border-b border-white/10 pb-6 print:border-black/20">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-400 print:text-black">
+        <p className="text-xs font-semibold uppercase tracking-wider text-amber-400 print:text-black">
           Dossier élève · {dossier.entete.diplome} · {dossier.entete.annee}
         </p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-50 print:text-black">
@@ -91,7 +91,7 @@ export default async function DossierElevePage({
       </header>
 
       <section className="mt-8 break-inside-avoid rounded-xl border-l-2 border-amber-400 bg-amber-950/10 px-5 py-4 print:border-black/40 print:bg-transparent">
-        <h2 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-300 print:text-black">
+        <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-300 print:text-black">
           L&apos;entreprise que vous dirigez
         </h2>
         <p className="mt-2 text-lg font-bold text-slate-50 print:text-black">{entreprise.titre}</p>
@@ -137,7 +137,7 @@ export default async function DossierElevePage({
               key={s.numero}
               className="break-inside-avoid rounded-xl border border-white/10 p-5 print:border-black/20"
             >
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-400 print:text-black">
+              <p className="text-xs font-semibold uppercase tracking-wider text-amber-400 print:text-black">
                 Séance {s.numero}
                 {s.tourJoue !== null ? ` · vous jouez le tour ${s.tourJoue}` : " · aucun tour joué"}
               </p>
@@ -146,7 +146,7 @@ export default async function DossierElevePage({
                 {s.objectif}
               </p>
 
-              <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400 print:text-black">
+              <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 print:text-black">
                 À la fin, vous savez faire
               </p>
               <ul className="mt-1 space-y-1 text-sm text-slate-300 print:text-black">
@@ -155,7 +155,7 @@ export default async function DossierElevePage({
                 ))}
               </ul>
 
-              <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400 print:text-black">
+              <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 print:text-black">
                 Ce que vous rendez
               </p>
               <p className="mt-1 text-sm leading-relaxed text-slate-300 print:text-black">
@@ -171,7 +171,7 @@ export default async function DossierElevePage({
                 </a>
               </p>
 
-              <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400 print:text-black">
+              <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 print:text-black">
                 Ce qui sera regardé
               </p>
               <ul className="mt-1 space-y-1 text-sm text-slate-300 print:text-black">
@@ -234,7 +234,7 @@ export default async function DossierElevePage({
               <tr>
                 <td
                   colSpan={dossier.tableauDeBord.tours.length + 1}
-                  className="border border-white/15 bg-white/5 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-300 print:border-black/40 print:bg-transparent print:text-black"
+                  className="border border-white/15 bg-white/5 px-2 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-amber-300 print:border-black/40 print:bg-transparent print:text-black"
                 >
                   Ce que nous décidons
                 </td>
@@ -252,7 +252,7 @@ export default async function DossierElevePage({
               <tr>
                 <td
                   colSpan={dossier.tableauDeBord.tours.length + 1}
-                  className="border border-white/15 bg-white/5 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-300 print:border-black/40 print:bg-transparent print:text-black"
+                  className="border border-white/15 bg-white/5 px-2 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-amber-300 print:border-black/40 print:bg-transparent print:text-black"
                 >
                   Ce que cela a donné
                 </td>

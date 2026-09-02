@@ -18,14 +18,14 @@ export function CompetitiveBenchmark({
 
       <div className="mb-4 flex items-baseline gap-3 rounded-lg border border-fuchsia-400/20 bg-fuchsia-950/20 px-4 py-3">
         <div>
-          <p className="text-[11px] uppercase tracking-wide text-slate-500">
+          <p className="text-xs uppercase tracking-wide text-slate-500">
             Indice de compétitivité-prix
           </p>
           <p className={`text-2xl font-semibold tabular-nums ${idxTone}`}>
             {(playerIdx * 100).toFixed(0)}
           </p>
         </div>
-        <p className="text-[11px] leading-snug text-slate-500">
+        <p className="text-xs leading-snug text-slate-500">
           {playerIdx >= 1.05
             ? "Votre prix est inférieur au marché : vous captez de la demande, mais marquez-vous assez ?"
             : playerIdx < 0.95
@@ -37,7 +37,7 @@ export function CompetitiveBenchmark({
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-[11px] uppercase tracking-wide text-slate-500">
+            <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
               <th className="pb-2 pr-3 font-medium">Entreprise</th>
               <th className="pb-2 pr-3 text-right font-medium">Prix moyen</th>
               <th className="pb-2 pr-3 text-right font-medium">Part de marché</th>
@@ -53,7 +53,7 @@ export function CompetitiveBenchmark({
                 <td className="py-2 pr-3">
                   {c.name}
                   {c.isPlayer ? (
-                    <span className="ml-1.5 text-[10px] text-amber-400/70">vous</span>
+                    <span className="ml-1.5 text-xs text-amber-400/70">vous</span>
                   ) : null}
                 </td>
                 <td className="py-2 pr-3 text-right tabular-nums">
@@ -79,7 +79,7 @@ export function CompetitiveBenchmark({
         </table>
       </div>
 
-      <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+      <p className="mt-2 text-xs leading-relaxed text-slate-500">
         L&apos;indice de compétitivité-prix compare votre prix au marché : au-dessus de
         100, vous êtes moins cher ; en dessous, plus cher. Le prix n&apos;est qu&apos;un levier
         parmi d&apos;autres : marketing, qualité et stock font le reste.

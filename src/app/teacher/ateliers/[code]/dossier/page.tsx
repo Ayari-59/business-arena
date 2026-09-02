@@ -48,7 +48,7 @@ export default async function DossierEnseignantPage({
   const dossier = dossierEnseignant(atelier);
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-12 print:max-w-none print:px-0 print:py-0 print:text-black">
+    <main id="main" className="mx-auto max-w-3xl px-6 py-12 print:max-w-none print:px-0 print:py-0 print:text-black">
       <p className="text-xs uppercase tracking-[0.3em] text-slate-500 print:hidden">
         <Link href={`/ateliers/${atelier.code}`} className="hover:text-slate-300">
           {atelier.titre}
@@ -57,7 +57,7 @@ export default async function DossierEnseignantPage({
       </p>
 
       <header className="mt-4 border-b border-white/10 pb-6 print:border-black/20">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-400 print:text-black">
+        <p className="text-xs font-semibold uppercase tracking-wider text-amber-400 print:text-black">
           Dossier enseignant · {atelier.diplome} · {atelier.annee}
         </p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-50 print:text-black">
@@ -96,7 +96,7 @@ export default async function DossierEnseignantPage({
               key={situation.code}
               className="break-inside-avoid rounded-xl border border-white/10 p-5 print:border-black/20"
             >
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-400 print:text-black">
+              <p className="text-xs font-semibold uppercase tracking-wider text-amber-400 print:text-black">
                 {quand}
               </p>
               <h2 className="mt-1 text-xl font-bold text-slate-50 print:text-black">
@@ -109,7 +109,7 @@ export default async function DossierEnseignantPage({
                 {situation.problem}
               </p>
 
-              <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-400 print:text-black">
+              <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-400 print:text-black">
                 Attendu au diagnostic
               </p>
               <ul className="mt-1 space-y-1 text-sm text-slate-300 print:text-black">
@@ -118,7 +118,7 @@ export default async function DossierEnseignantPage({
                 ))}
               </ul>
 
-              <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-rose-400 print:text-black">
+              <p className="mt-3 text-xs font-semibold uppercase tracking-[0.2em] text-rose-400 print:text-black">
                 Ce que la classe proposera de travers
               </p>
               <ul className="mt-1 space-y-1 text-sm text-slate-400 print:text-black">

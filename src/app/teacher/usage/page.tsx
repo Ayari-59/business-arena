@@ -39,7 +39,7 @@ export default async function UsagePage() {
   const maxHints = Math.max(1, ...usage.hintsByLevel.map((h) => h.count));
 
   return (
-    <main className="mx-auto max-w-4xl space-y-8 p-6">
+    <main id="main" className="mx-auto max-w-4xl space-y-8 p-6">
       <header>
         <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Espace enseignant</p>
         <h1 className="mt-1 text-2xl font-bold">Carnet d&apos;usage</h1>
@@ -89,7 +89,7 @@ export default async function UsagePage() {
           <div className="mt-4 overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-[11px] uppercase tracking-wide text-slate-500">
+                <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
                   <th className="pb-2 pr-3 font-medium">Situation</th>
                   <th className="pb-2 pr-3 font-medium">Secteur</th>
                   <th className="pb-2 pr-3 text-right font-medium">Équipes</th>

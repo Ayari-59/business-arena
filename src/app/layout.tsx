@@ -22,11 +22,15 @@ export const metadata: Metadata = {
   },
 };
 
+/**
+ * Le zoom reste libre : un élève malvoyant pince pour agrandir, et rien ne
+ * doit l'en empêcher (WCAG 1.4.4). L'installation en application (manifest,
+ * service worker) ne dépend pas de cette ligne.
+ */
 export const viewport: Viewport = {
   themeColor: "#d97706",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
 };
 
 export default function RootLayout({
@@ -46,6 +50,13 @@ export default function RootLayout({
     <html lang="fr" data-theme={THEME_PAR_DEFAUT}>
       <body className="min-h-screen bg-slate-950 text-slate-100 antialiased">
         <script dangerouslySetInnerHTML={{ __html: amorce }} />
+        {/* Premier élément focusable : au clavier, on saute la navigation. */}
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-amber-400 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-slate-950"
+        >
+          Aller au contenu
+        </a>
         <SiteHeader />
         {children}
         <script

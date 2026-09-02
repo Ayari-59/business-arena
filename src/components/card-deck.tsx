@@ -130,7 +130,7 @@ export function CardDeck({
                   className={`h-7 w-7 ${isTeamDraw ? "text-sky-400/80" : "text-amber-400/80"}`}
                 />
                 <span
-                  className={`text-[9px] font-bold uppercase tracking-widest ${
+                  className={`text-xs font-bold uppercase tracking-widest ${
                     isTeamDraw ? "text-sky-400/80" : "text-amber-400/70"
                   }`}
                 >

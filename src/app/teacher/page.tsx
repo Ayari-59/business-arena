@@ -32,7 +32,7 @@ export default async function TeacherDashboard({
   const isOrgAdmin = staff?.organizations.some((o) => o.role === "org_admin") ?? false;
 
   return (
-    <main className="mx-auto max-w-4xl space-y-8 p-6">
+    <main id="main" className="mx-auto max-w-4xl space-y-8 p-6">
       <header className="flex items-end justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Espace enseignant</p>
@@ -214,7 +214,7 @@ export default async function TeacherDashboard({
                 </label>
               ))}
             </div>
-            <p className="mt-2 text-[11px] leading-relaxed text-slate-600">
+            <p className="mt-2 text-xs leading-relaxed text-slate-600">
               Le réglage se modifie ensuite à tout moment depuis la partie. Les situations déjà
               débriefées gardent le score obtenu sous l&apos;ancien réglage.
             </p>

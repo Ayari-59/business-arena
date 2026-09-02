@@ -60,7 +60,7 @@ export default async function FormulairesPage({
   const formulaires = formulairesAtelier(atelier);
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-12 print:max-w-none print:px-0 print:py-0 print:text-black">
+    <main id="main" className="mx-auto max-w-3xl px-6 py-12 print:max-w-none print:px-0 print:py-0 print:text-black">
       <p className="text-xs uppercase tracking-[0.3em] text-slate-500 print:hidden">
         <Link href={`/ateliers/${atelier.code}`} className="hover:text-slate-300">
           {atelier.titre}
@@ -69,7 +69,7 @@ export default async function FormulairesPage({
       </p>
 
       <header className="mt-4 border-b border-white/10 pb-6 print:hidden">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-400">
+        <p className="text-xs font-semibold uppercase tracking-wider text-amber-400">
           {atelier.nature} · {atelier.diplome} · {atelier.annee}
         </p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-50">
@@ -106,10 +106,10 @@ export default async function FormulairesPage({
             }`}
           >
             <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-white/10 pb-3 print:border-black/40">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-400 print:text-black">
+              <p className="text-xs font-semibold uppercase tracking-wider text-amber-400 print:text-black">
                 Séance {f.seance} · {f.seanceTitre}
               </p>
-              <p className="text-[11px] uppercase tracking-wider text-slate-500 print:text-black">
+              <p className="text-xs uppercase tracking-wider text-slate-500 print:text-black">
                 {f.tourJoue !== null ? `Tour joué : ${f.tourJoue}` : "Aucun tour joué"}
               </p>
             </div>
@@ -159,7 +159,7 @@ export default async function FormulairesPage({
             </ol>
 
             <div className="mt-6 break-inside-avoid border-t border-white/10 pt-4 print:border-black/40">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400 print:text-black">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 print:text-black">
                 Avant de rendre, nous avons vérifié
               </p>
               <ul className="mt-2 space-y-1.5 text-sm text-slate-300 print:text-black">
@@ -175,7 +175,7 @@ export default async function FormulairesPage({
               </ul>
             </div>
 
-            <p className="mt-4 text-[10px] uppercase tracking-wider text-slate-600 print:text-black">
+            <p className="mt-4 text-xs uppercase tracking-wider text-slate-600 print:text-black">
               {atelier.titre} · {scenario.title}
             </p>
           </section>

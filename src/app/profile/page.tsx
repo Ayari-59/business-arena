@@ -24,7 +24,7 @@ export default async function ProfilePage() {
 
   if (!profile) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center gap-4 p-8 text-center">
+      <main id="main" className="flex min-h-screen flex-col items-center justify-center gap-4 p-8 text-center">
         <h1 className="text-2xl font-bold">Profil de compétences</h1>
         <p className="max-w-md text-sm text-slate-400">
           Votre profil se construit en jouant : lancez une première partie pour commencer
@@ -38,7 +38,7 @@ export default async function ProfilePage() {
   }
 
   return (
-    <main className="mx-auto max-w-3xl space-y-8 p-6">
+    <main id="main" className="mx-auto max-w-3xl space-y-8 p-6">
       <header>
         <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Business Arena</p>
         <h1 className="mt-1 text-2xl font-bold">Profil · {profile.displayName}</h1>

@@ -98,7 +98,7 @@ export function OrientationForm({ contactEmail }: { contactEmail: string }) {
                 }`}
               >
                 <span className="block font-medium">{titre}</span>
-                <span className="mt-0.5 block text-[11px] leading-relaxed text-slate-500">
+                <span className="mt-0.5 block text-xs leading-relaxed text-slate-500">
                   {aide}
                 </span>
               </button>
