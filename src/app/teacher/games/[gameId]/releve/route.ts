@@ -29,6 +29,7 @@ const COLONNES = [
   "Rang",
   "Score composite",
   "Résultat cumulé €",
+  "Source des décisions (dernier tour)",
 ] as const;
 
 /** Une cellule de tableur : décimale à la française, guillemets échappés. */
@@ -74,6 +75,7 @@ export async function GET(
           cellule(equipe.rank),
           cellule(equipe.bpi),
           cellule(equipe.cumulativeNetIncome === null ? null : Math.round(equipe.cumulativeNetIncome)),
+          cellule(equipe.lastDecisionSourceLabel),
         ].join(";"),
       );
     }

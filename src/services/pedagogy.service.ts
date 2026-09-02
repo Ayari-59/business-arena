@@ -3,6 +3,7 @@ import { db } from "@/db";
 import {
   concepts,
   decisionModels,
+  decisions,
   gameRankings,
   games,
   hintUsages,
@@ -35,6 +36,7 @@ import {
   situationByCode,
 } from "@/config/scenarios/registry";
 import { presetFromProfile, quizModeFromProfile, type QuizMode } from "@/config/difficulty";
+import { decrireSource, lireSource, type DecisionSourceMap } from "@/config/decision-source";
 import { hintScoreMultiplier, nextUnlockableLevel } from "@/pedagogy/hints";
 import { evaluateDiagnosis, evaluateQuiz } from "@/pedagogy/evaluation";
 import { buildConsequenceContext, buildInterpretation, buildTriggerContext, detectSituations } from "@/pedagogy/detection";
@@ -1278,6 +1280,14 @@ export interface TeamGrade {
   rank: number | null;
   bpi: number | null;
   cumulativeNetIncome: number | null;
+  /**
+   * Source des pivots (prix, volume) au dernier tour clos : 'default' quand
+   * l'équipe a validé les valeurs proposées, 'carried' quand rien n'a été
+   * validé. Null pour un tour antérieur à cette mesure, ou sans tour clos.
+   */
+  lastDecisionSource: DecisionSourceMap | null;
+  /** La même, en toutes lettres pour le tableur : « prix : modifié · volume : par défaut ». */
+  lastDecisionSourceLabel: string;
   situations: {
     code: string;
     title: string;
@@ -1315,6 +1325,17 @@ export async function getGameGradeSheet(
   const teamIds = teamRows.map((t) => t.id);
   const roundRows = await db.select().from(rounds).where(eq(rounds.gameId, gameId));
   const resolved = roundRows.filter((r) => r.status === "resolved");
+
+  // La source des décisions du dernier tour clos : qui a décidé, qui a laissé
+  // faire. Une colonne du relevé, pas une note.
+  const dernierClos = [...resolved].sort((a, b) => b.index - a.index)[0];
+  const dernieresDecisions =
+    dernierClos && teamIds.length
+      ? await db
+          .select()
+          .from(decisions)
+          .where(and(eq(decisions.roundId, dernierClos.id), inArray(decisions.teamId, teamIds)))
+      : [];
 
   const instances =
     teamIds.length && roundRows.length
@@ -1428,6 +1449,12 @@ export async function getGameGradeSheet(
       cumulativeNetIncome: classement
         ? Number((classement.detail as { cumulativeNetIncome?: number })?.cumulativeNetIncome ?? 0)
         : null,
+      lastDecisionSource: lireSource(
+        dernieresDecisions.find((d) => d.teamId === team.id)?.decisionSource,
+      ),
+      lastDecisionSourceLabel: decrireSource(
+        lireSource(dernieresDecisions.find((d) => d.teamId === team.id)?.decisionSource),
+      ),
       situations: lignes.map(({ code, title, round, answered, score, hints }) => ({
         code,
         title,

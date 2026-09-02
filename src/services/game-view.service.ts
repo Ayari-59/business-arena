@@ -17,7 +17,7 @@ import { computeSectorKpis, type KpiFormat } from "@/config/scenarios/sector-kpi
 import { presetFromProfile } from "@/config/difficulty";
 import { porteUnNomParDefaut } from "@/config/nom-equipe";
 import { cardByCode } from "@/config/events/cards";
-import { neutralDecisions } from "@/engine/bots";
+import { proposedDecisionsFor, startingDecisionsFor } from "@/services/decision-baseline";
 import { type BpiDimension } from "@/scoring/bpi";
 import { orderOfferForRound } from "@/engine/simulation";
 import { computeRatios } from "@/engine/finance/ratios";
@@ -138,6 +138,11 @@ export interface GameView {
    * tout le monde.
    */
   startingDecisions: RoundDecisions;
+  /**
+   * Ce que le formulaire PROPOSE ce tour (tour précédent, sinon point de
+   * départ) : la référence pour dire si l'équipe a touché prix et volume.
+   */
+  proposedDecisions: RoundDecisions;
   /** Offre d'assurance du scénario (prime déjà à l'échelle de la périodicité). */
   insuranceOffer: { premium: number; coveredEventCodes: string[] } | null;
   /** Formules d'assurance (si le scénario en propose plusieurs). */
@@ -885,40 +890,21 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     ranking,
     playerDimensions,
     lastDecisions,
-    startingDecisions: (() => {
-      /**
-       * Le formulaire n'accepte pas n'importe quel nombre : ses champs
-       * avancent par pas de 1, le prix par pas de 0,1. Une valeur par défaut
-       * calculée, donc décimale, rend le tour ENTIÈREMENT insoumettable : le
-       * navigateur refuse la validation sans message visible, et l'élève clique
-       * sans que rien ne se passe. Un défaut proposé doit être soumettable tel
-       * quel.
-       */
-      const auPas = (d: RoundDecisions): RoundDecisions => ({
-        ...d,
-        price: Math.round(d.price * 10) / 10,
-        productionPlan: Math.round(d.productionPlan),
-        marketingBudget: Math.round(d.marketingBudget),
-        qualityBudget: Math.round(d.qualityBudget),
-        maintenanceBudget: Math.round(d.maintenanceBudget),
+    // Le point de départ et les valeurs proposées viennent du même calcul que
+    // celui du serveur (decision-baseline) : ce que le formulaire propose est
+    // exactement ce à quoi la validation sera comparée.
+    startingDecisions: startingDecisionsFor(
+      game.scenarioSnapshot as EngineScenarioConfig,
+      stateRow?.state as CompanyState | undefined,
+      game.currentRound,
+    ),
+    proposedDecisions: (() => {
+      return proposedDecisionsFor({
+        snapshot: game.scenarioSnapshot as EngineScenarioConfig,
+        state: stateRow?.state as CompanyState | undefined,
+        roundIndex: game.currentRound,
+        previousPayload: lastDecisions,
       });
-      const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
-      const state = stateRow?.state as CompanyState | undefined;
-      // Sans état persisté il n'y a pas de capacité à viser : on s'en tient
-      // alors au prix de référence du secteur, jamais à celui d'un autre.
-      if (!state) {
-        const main = [...snapshot.market.segments].sort((a, b) => b.size - a.size)[0];
-        return auPas({
-          price: main?.refPrice ?? 50,
-          productionPlan: 0,
-          marketingBudget: 0.5 * snapshot.marketing.scale,
-          qualityBudget: 0.5 * snapshot.production.qualityScale,
-          maintenanceBudget: snapshot.production.maintenanceReference,
-        });
-      }
-      return auPas(
-        neutralDecisions({ scenario: snapshot, state, roundIndex: game.currentRound }),
-      );
     })(),
     insuranceOffer: (() => {
       const offer = (

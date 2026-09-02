@@ -1,7 +1,13 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { playRoundAction, type PlayRoundState } from "@/app/arena/[gameId]/actions";
+import {
+  pivotFieldsFor,
+  pivotsNonTouches,
+  type PivotField,
+  type PivotFieldInfo,
+} from "@/config/decision-source";
 import type { RoundDecisions } from "@/engine/types";
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
 import { formatEuro } from "@/lib/format";
@@ -259,6 +265,7 @@ export function DecisionForm({
   roundIndex,
   periodName,
   defaults,
+  proposed,
   kind,
   alreadySubmitted,
   insuranceOffer,
@@ -281,6 +288,12 @@ export function DecisionForm({
   roundIndex: number;
   periodName: string;
   defaults: RoundDecisions;
+  /**
+   * Les valeurs PROPOSÉES pour ce tour (tour précédent, sinon point de départ
+   * du secteur) : la référence pour dire si un pivot a été touché. Distinct de
+   * `defaults`, qui reprend aussi ce que l'équipe a déjà validé ce tour.
+   */
+  proposed?: RoundDecisions;
   kind: "solo" | "class";
   alreadySubmitted: boolean;
   /** Offre d'assurance du scénario (prime déjà à l'échelle de la périodicité). */
@@ -388,6 +401,35 @@ export function DecisionForm({
   const action = playRoundAction.bind(null, gameId);
   const [state, formAction, pending] = useActionState(action, initialState);
   const reserves = Math.max(0, distributableReserves ?? 0);
+
+  // Les pivots (prix, volume) validés sans avoir été touchés : on le dit avant
+  // d'envoyer, une fois. « Oui » confirme et envoie ; « Non » ramène au champ.
+  const reference = proposed ?? defaults;
+  const [nonTouches, setNonTouches] = useState<PivotFieldInfo[] | null>(null);
+  const confirme = useRef(false);
+  const verifierPivots = (e: React.FormEvent<HTMLFormElement>) => {
+    if (confirme.current) return;
+    const form = e.currentTarget;
+    const lire = (name: PivotField) =>
+      Number((form.elements.namedItem(name) as HTMLInputElement | null)?.value ?? NaN);
+    const intacts = pivotsNonTouches(
+      { price: lire("price"), productionPlan: lire("productionPlan") },
+      { price: reference.price, productionPlan: reference.productionPlan },
+    );
+    if (intacts.length === 0) return;
+    e.preventDefault();
+    setNonTouches(pivotFieldsFor(v).filter((p) => intacts.includes(p.key)));
+  };
+  const garderLesValeurs = (e: React.MouseEvent<HTMLButtonElement>) => {
+    confirme.current = true;
+    setNonTouches(null);
+    e.currentTarget.form?.requestSubmit();
+  };
+  const lesModifier = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const premier = nonTouches?.[0]?.key;
+    setNonTouches(null);
+    if (premier) (e.currentTarget.form?.elements.namedItem(premier) as HTMLInputElement | null)?.focus();
+  };
   const [equipBuyQty, setEquipBuyQty] = useState<Record<string, number>>({});
   const [equipSellQty, setEquipSellQty] = useState<Record<string, number>>({});
   const on = enabled ?? {
@@ -405,7 +447,7 @@ export function DecisionForm({
   const v = vocabulary;
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form action={formAction} onSubmit={verifierPivots} className="space-y-4">
       {orderOffer ? (
         <fieldset className="rounded-lg border border-sky-400/25 bg-sky-950/20 p-4">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-sky-300">
@@ -938,6 +980,33 @@ export function DecisionForm({
         <p className="rounded-lg border border-red-400/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
           {state.error}
         </p>
+      ) : null}
+      {nonTouches ? (
+        <div
+          role="alert"
+          className="rounded-lg border border-orange-400/40 bg-orange-950/30 px-4 py-3 text-sm text-orange-100"
+        >
+          <p>
+            Vous validez avec les valeurs proposées pour :{" "}
+            <strong>{nonTouches.map((p) => p.label).join(", ")}</strong>. C&apos;est un choix ?
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={garderLesValeurs}
+              className="rounded-lg bg-orange-400 px-3 py-1.5 text-xs font-semibold text-slate-950 hover:bg-orange-300"
+            >
+              Oui, je garde ces valeurs
+            </button>
+            <button
+              type="button"
+              onClick={lesModifier}
+              className="rounded-lg border border-orange-400/50 px-3 py-1.5 text-xs font-semibold text-orange-200 hover:bg-orange-400/10"
+            >
+              Non, je les modifie
+            </button>
+          </div>
+        </div>
       ) : null}
       <button
         type="submit"

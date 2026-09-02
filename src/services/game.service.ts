@@ -10,7 +10,8 @@ import {
   teams,
   users,
 } from "@/db/schema";
-import { scenarioByCode } from "@/config/scenarios/registry";
+import { scenarioByCode, type ScenarioVocabulary } from "@/config/scenarios/registry";
+import { lireSource, type DecisionSourceMap } from "@/config/decision-source";
 import {
   presetFromProfile,
   quizModeFromProfile,
@@ -124,6 +125,13 @@ export async function getGameKind(gameId: string): Promise<GameKind> {
   return ((game.difficultyProfile as { kind?: GameKind }).kind ?? "solo") as GameKind;
 }
 
+/** Le vocabulaire du secteur joué : c'est lui qui nomme prix et volume. */
+export async function getGameVocabulary(gameId: string): Promise<ScenarioVocabulary> {
+  const game = (await db.select().from(games).where(eq(games.id, gameId)))[0];
+  if (!game) throw new Error("Partie introuvable");
+  return scenarioByCode((game.scenarioSnapshot as { code?: string } | null)?.code).vocabulary;
+}
+
 // ---------------------------------------------------------------------------
 // Lecture : vues enseignant (§27)
 // ---------------------------------------------------------------------------
@@ -218,6 +226,8 @@ export interface TeacherGameView {
     controller: "human" | "bot";
     playerNames: string[];
     hasSubmitted: boolean;
+    /** Source des pivots (prix, volume) des décisions validées ce tour ; null sans validation. */
+    decisionSource: DecisionSourceMap | null;
     lastNetIncome: number | null;
     lastNetTreasury: number | null;
   }[];
@@ -296,6 +306,9 @@ export async function getTeacherGameView(
         hasSubmitted:
           t.controller === "bot" ||
           submitted.some((d) => d.teamId === t.id && d.status === "validated"),
+        decisionSource: lireSource(
+          submitted.find((d) => d.teamId === t.id && d.status === "validated")?.decisionSource,
+        ),
         lastNetIncome: last ? Number(last.netIncome) : null,
         lastNetTreasury: last ? Number(last.netTreasury) : null,
       };

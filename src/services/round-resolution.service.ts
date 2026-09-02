@@ -1,5 +1,5 @@
 import { randomInt } from "node:crypto";
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import {
   companyStates,
@@ -19,6 +19,8 @@ import {
 import { TEACHER_DRAWABLE_CODES, TEAM_CARD_CODES } from "@/config/events/cards";
 import { botDecisions, type BotProfile } from "@/engine/bots";
 import { carryOverDecisions, fallbackDecisions } from "@/services/decision.service";
+import { proposedDecisionsFor } from "@/services/decision-baseline";
+import { SOURCE_RECONDUITE, decisionSourceOf } from "@/config/decision-source";
 import {
   persistRoundScores,
   readPedagogyInputs,
@@ -28,6 +30,7 @@ import { simulateRound } from "@/engine/simulation";
 import type {
   CompanyRoundResult,
   CompanyState,
+  EngineScenarioConfig,
   EventInstance,
   RoundDecisions,
 } from "@/engine/types";
@@ -117,6 +120,15 @@ export async function submitTeamDecisions(args: {
   }
 
   const justification = args.justification?.trim() || null;
+  // D'où viennent prix et volume : comparés à ce que le formulaire proposait
+  // pour ce tour, recalculé ici et non reçu du client.
+  const decisionSource = await sourceDesPivots({
+    gameId: args.gameId,
+    snapshot: game.scenarioSnapshot as EngineScenarioConfig,
+    teamId: team.id,
+    roundIndex: game.currentRound,
+    payload: args.payload,
+  });
   await db
     .insert(decisions)
     .values({
@@ -124,6 +136,7 @@ export async function submitTeamDecisions(args: {
       teamId: team.id,
       payload: args.payload,
       justification,
+      decisionSource,
       status: "validated",
       validatedAt: new Date(),
       validatedBy: args.userId,
@@ -133,12 +146,60 @@ export async function submitTeamDecisions(args: {
       set: {
         payload: args.payload,
         justification,
+        decisionSource,
         status: "validated",
         validatedAt: new Date(),
         validatedBy: args.userId,
       },
     });
   return { roundIndex: game.currentRound };
+}
+
+/**
+ * La source des pivots d'une décision validée : ce que le formulaire proposait
+ * (décisions du tour précédent, sinon point de départ du secteur) face à ce
+ * qui a été validé. Le calcul est celui de decision-baseline, le même que
+ * pour l'affichage.
+ */
+async function sourceDesPivots(args: {
+  gameId: string;
+  snapshot: EngineScenarioConfig;
+  teamId: string;
+  roundIndex: number;
+  payload: RoundDecisions;
+}) {
+  const previousRound =
+    args.roundIndex > 1
+      ? (
+          await db
+            .select()
+            .from(rounds)
+            .where(and(eq(rounds.gameId, args.gameId), eq(rounds.index, args.roundIndex - 1)))
+        )[0]
+      : undefined;
+  const previous = previousRound
+    ? (
+        await db
+          .select()
+          .from(decisions)
+          .where(and(eq(decisions.roundId, previousRound.id), eq(decisions.teamId, args.teamId)))
+      )[0]
+    : undefined;
+  const stateRow = (
+    await db
+      .select()
+      .from(companyStates)
+      .where(eq(companyStates.teamId, args.teamId))
+      .orderBy(desc(companyStates.roundIndex))
+      .limit(1)
+  )[0];
+  const proposees = proposedDecisionsFor({
+    snapshot: args.snapshot,
+    state: stateRow?.state as CompanyState | undefined,
+    roundIndex: args.roundIndex,
+    previousPayload: previous?.payload as RoundDecisions | undefined,
+  });
+  return decisionSourceOf(args.payload, proposees);
 }
 
 /**
@@ -282,6 +343,20 @@ async function resolveGameRound(
           roundId: roundRow.id,
           teamId: t.id,
           payload: allDecisions[t.id]!,
+          // Reconduit : rien n'a été décidé. Sinon (solo, ou ligne absente),
+          // la source se lit face à ce que le formulaire proposait. Une ligne
+          // déjà validée garde la source calculée à la validation.
+          decisionSource: carriedOver.has(t.id)
+            ? SOURCE_RECONDUITE
+            : decisionSourceOf(
+                allDecisions[t.id]!,
+                proposedDecisionsFor({
+                  snapshot: scenario,
+                  state: states.find((s) => s.id === t.id),
+                  roundIndex,
+                  previousPayload: previousPayloads[t.id],
+                }),
+              ),
           status: carriedOver.has(t.id) ? ("carried_over" as const) : ("locked" as const),
           validatedAt: new Date(),
         })),

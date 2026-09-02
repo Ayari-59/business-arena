@@ -5,6 +5,7 @@ import { getGuestUserId } from "@/lib/guest";
 import { roundDecisionsSchema } from "@/services/decision-schema";
 import {
   getGameKind,
+  getGameVocabulary,
   nommerEquipe,
   resolveCurrentRound,
   submitTeamDecisions,
@@ -23,6 +24,16 @@ export async function playRoundAction(
 ): Promise<PlayRoundState> {
   const userId = await getGuestUserId();
   if (!userId) return { error: "Session expirée : relancez une partie depuis l'accueil." };
+
+  // Le volume est un pivot : vide ou nul, ce n'est pas une décision, c'est une
+  // absence. Le schéma acceptait 0 sans un mot ; on le refuse ici, dans la
+  // langue du secteur.
+  const volumeBrut = String(formData.get("productionPlan") ?? "").trim().replace(",", ".");
+  const volume = volumeBrut === "" ? NaN : Number(volumeBrut);
+  if (!Number.isFinite(volume) || volume < 1) {
+    const v = await getGameVocabulary(gameId);
+    return { error: `${v.productionPlanLabel} : le volume doit être ≥ 1 (en ${v.units}).` };
+  }
 
   const parsed = roundDecisionsSchema.safeParse({
     price: formData.get("price"),

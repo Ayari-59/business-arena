@@ -36,8 +36,10 @@ import { situationByCode } from "@/config/scenarios/registry";
 import { GET } from "@/app/teacher/games/[gameId]/releve/route";
 import type { RoundDecisions } from "@/engine/types";
 
+// Un prix et un volume qui ne sont pas ceux que le secteur propose : la
+// source des décisions doit les voir comme des choix.
 const DECISIONS: RoundDecisions = {
-  price: 59,
+  price: 61,
   productionPlan: 4800,
   marketingBudget: 6000,
   qualityBudget: 3000,
@@ -136,11 +138,17 @@ describe("export du relevé en tableur", () => {
     const texte = await (await appeler(gameId)).text();
     const lignes = texte.replace(/^\ufeff/, "").trim().split("\r\n");
     expect(lignes[0]).toContain("Élève;Équipe");
-    expect(lignes[0]!.split(";")).toHaveLength(12);
+    expect(lignes[0]!.split(";")).toHaveLength(13);
+    expect(lignes[0]).toContain("Source des décisions (dernier tour)");
     // deux élèves, donc deux lignes, quel que soit le nombre d'équipes
     expect(lignes).toHaveLength(3);
     expect(texte).toContain("Zoé Martin");
     expect(texte).toContain("Léo Dupont");
+    // Les deux équipes ont validé un prix et un volume autres que ceux que le
+    // secteur proposait : la source du dernier tour dit qu'elles ont décidé.
+    for (const ligne of lignes.slice(1)) {
+      expect(ligne.split(";").at(-1), ligne).toBe("prix : modifié · volume : modifié");
+    }
   });
 
   it("écrit les nombres à la française, sinon le tableur les lit comme du texte", async () => {

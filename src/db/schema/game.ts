@@ -142,6 +142,12 @@ export const decisions = pgTable(
     payload: jsonb("payload").notNull(), // RoundDecisions, validé contre decision_options
     forecast: jsonb("forecast"), // prévisions du joueur → analyse des écarts
     justification: text("justification"),
+    /**
+     * D'où viennent les pivots (prix, volume) : { price, productionPlan } en
+     * 'default' | 'edited' | 'carried'. Null pour les tours antérieurs à cette
+     * colonne : inconnu, jamais recalculé.
+     */
+    decisionSource: jsonb("decision_source"),
     status: decisionStatus("status").notNull().default("draft"),
     validatedAt: timestamp("validated_at", { withTimezone: true }),
     validatedBy: uuid("validated_by").references(() => users.id, {
