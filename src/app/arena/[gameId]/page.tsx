@@ -22,6 +22,7 @@ import { CompetitiveBenchmark } from "@/components/competitive-benchmark";
 import { DashboardTabs } from "@/components/dashboard-tabs";
 import { RoundStatusPoller } from "@/components/round-status-poller";
 import { RoundStatusBanner } from "@/components/round-status-banner";
+import { EventBanner } from "@/components/event-banner";
 import { ArenaLayout, type ArenaTab } from "@/components/arena-layout";
 import type { KpiFormat } from "@/config/scenarios/sector-kpis";
 import { surtitreDePartie } from "@/config/scenarios/presentation";
@@ -148,6 +149,13 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
           finished={finished}
         />
       </div>
+
+      {/* ── Cartes annoncées : visibles quel que soit l'onglet actif ── */}
+      {!finished && view.announcedEventCards.length > 0 ? (
+        <div className="mt-4">
+          <EventBanner cards={view.announcedEventCards} />
+        </div>
+      ) : null}
 
       {/* ── Team naming ── */}
       {view.peutSeNommer ? (
