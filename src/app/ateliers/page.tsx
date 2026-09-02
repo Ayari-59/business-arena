@@ -4,7 +4,8 @@ import { ATELIERS, dureeTotaleHeures } from "@/config/ateliers";
 import { scenarioByCode } from "@/config/scenarios/registry";
 
 export const metadata: Metadata = {
-  title: "Ateliers et animations · BUSINESS ARENA",
+  alternates: { canonical: "/ateliers" },
+  title: "Ateliers et animations",
   description:
     "Des déroulés de plusieurs séances, adossés à une partie réelle, avec les livrables attendus, la trace écrite de chaque séance et les critères d'évaluation.",
 };

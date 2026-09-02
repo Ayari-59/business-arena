@@ -34,7 +34,7 @@ export async function generateMetadata({
   const atelier = atelierByCode.get(code);
   if (!atelier) return {};
   return {
-    title: `Dossier élève · ${atelier.titre} · BUSINESS ARENA`,
+    title: `Dossier élève · ${atelier.titre}`,
     description: `Ce que vous allez diriger, ce que vous rendez et sur quoi vous serez évalué, pour ${atelier.diplome}.`,
   };
 }

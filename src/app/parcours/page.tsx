@@ -4,7 +4,8 @@ import { PARCOURS } from "@/config/parcours";
 import { SiteLogo } from "@/components/site-logo";
 
 export const metadata: Metadata = {
-  title: "Parcours par diplôme · BUSINESS ARENA",
+  alternates: { canonical: "/parcours" },
+  title: "Parcours par diplôme",
   description:
     "STMG, BTS MCO, NDRC, CG : la correspondance entre votre référentiel et ce que vos étudiants vivent dans l'arène, avec les réglages de partie conseillés.",
 };

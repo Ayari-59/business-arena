@@ -2,11 +2,20 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
 import { CLE_THEME, THEMES, THEME_PAR_DEFAUT } from "@/config/themes";
+import { SITE_URL } from "@/config/site";
+import { DESCRIPTION_ACCUEIL, GABARIT_DE_TITRE, NOM_DU_SITE, TITRE_ACCUEIL } from "@/config/seo";
 
+/**
+ * Les métadonnées communes. Chaque page donne son titre propre, que le
+ * gabarit complète du nom du site ; la page d'accueil, elle, porte le titre
+ * entier. L'image de partage vient de opengraph-image.tsx, à côté.
+ */
 export const metadata: Metadata = {
-  title: "BUSINESS ARENA",
-  description:
-    "Simulation, apprentissage, aide à la décision et compétition en management",
+  metadataBase: new URL(SITE_URL),
+  title: { default: TITRE_ACCUEIL, template: GABARIT_DE_TITRE },
+  description: DESCRIPTION_ACCUEIL,
+  openGraph: { siteName: NOM_DU_SITE, locale: "fr_FR", type: "website" },
+  twitter: { card: "summary_large_image" },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

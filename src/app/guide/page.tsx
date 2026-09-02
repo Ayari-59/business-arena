@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import { SiteLogo } from "@/components/site-logo";
 
 export const metadata: Metadata = {
-  title: "Guide de prise en main · BUSINESS ARENA",
+  alternates: { canonical: "/guide" },
+  title: "Guide de prise en main",
   description:
     "Démarrer en 2 minutes : lancer une partie, rejoindre une classe, animer un tour, tirer les cartes événements et lire ses résultats.",
 };

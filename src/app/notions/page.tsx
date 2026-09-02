@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { CONCEPTS } from "@/config/pedagogy/concepts";
 
@@ -10,6 +11,13 @@ const DOMAIN_LABELS: Record<string, string> = {
   production: "Production",
   finance: "Finance",
   profitability: "Rentabilité",
+};
+
+export const metadata: Metadata = {
+  title: "Fiches notions de gestion",
+  description:
+    "Seuil de rentabilité, BFR, trésorerie nette, marge sur coût variable : les notions du programme, reliées à ce que l'arène fait vivre.",
+  alternates: { canonical: "/notions" },
 };
 
 export default function ConceptsPage() {
