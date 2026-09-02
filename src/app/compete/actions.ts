@@ -6,6 +6,8 @@ import { joinCompetition } from "@/services/competition.service";
 
 export interface JoinCompetitionState {
   error: string | null;
+  /** Le joueur est déjà inscrit : on le dit, avec le nom de son équipe, au lieu de rediriger. */
+  dejaInscrit: { competitionId: string; teamLabel: string } | null;
 }
 
 export async function joinCompetitionAction(
@@ -15,9 +17,15 @@ export async function joinCompetitionAction(
   const code = String(formData.get("code") ?? "").trim();
   const teamLabel = String(formData.get("teamLabel") ?? "").trim();
   const pseudo = String(formData.get("pseudo") ?? "").trim();
-  if (code.length < 4) return { error: "Saisissez le code du concours." };
+  if (code.length < 4) return { error: "Saisissez le code du concours.", dejaInscrit: null };
   const userId = await getOrCreateGuestUserId();
   const result = await joinCompetition({ code, userId, teamLabel, pseudo });
-  if ("error" in result) return { error: result.error };
+  if ("error" in result) return { error: result.error, dejaInscrit: null };
+  if (result.alreadyMember) {
+    return {
+      error: null,
+      dejaInscrit: { competitionId: result.competitionId, teamLabel: result.alreadyMember },
+    };
+  }
   redirect(`/compete/${result.competitionId}`);
 }
