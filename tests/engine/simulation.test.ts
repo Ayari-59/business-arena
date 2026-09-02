@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { simulateRound } from "../../src/engine/simulation";
+import { simulateRound, fleetMaintenanceMultiplier } from "../../src/engine/simulation";
 import { createRng } from "../../src/engine/random";
 import type {
   CompanyState,
   EngineScenarioConfig,
+  EquipmentItem,
+  EquipmentTypeDef,
   RoundDecisions,
   SimulationInput,
 } from "../../src/engine/types";
@@ -244,5 +246,63 @@ describe("simulateRound : partie chaînée et propriété d'équilibre (doc 09 �
       companies = out.companies;
       events = out.events;
     }
+  });
+});
+
+describe("fleetMaintenanceMultiplier", () => {
+  const typeDefs: EquipmentTypeDef[] = [
+    { code: "eco", name: "Éco", capacityPerUnit: 10, costPerUnit: 5000, depreciationRounds: 8, maintenanceMultiplier: 0.7, maxPerRound: 3 },
+    { code: "std", name: "Std", capacityPerUnit: 10, costPerUnit: 8000, depreciationRounds: 8, maintenanceMultiplier: 1.0, maxPerRound: 3 },
+    { code: "pro", name: "Pro", capacityPerUnit: 10, costPerUnit: 12000, depreciationRounds: 8, maintenanceMultiplier: 1.3, maxPerRound: 3 },
+  ];
+  const types = new Map<string, EquipmentTypeDef>(typeDefs.map((t) => [t.code, t]));
+
+  it("renvoie 1 pour un parc vide", () => {
+    expect(fleetMaintenanceMultiplier([], types)).toBe(1);
+  });
+
+  it("renvoie le multiplicateur exact pour un parc homogène", () => {
+    const fleet: EquipmentItem[] = [{ typeCode: "pro", count: 5, acquiredRound: 1, bookValue: 60000 }];
+    expect(fleetMaintenanceMultiplier(fleet, types)).toBe(1.3);
+  });
+
+  it("moyenne pondérée par capacité pour un parc mixte", () => {
+    const fleet: EquipmentItem[] = [
+      { typeCode: "eco", count: 3, acquiredRound: 1, bookValue: 15000 },
+      { typeCode: "pro", count: 2, acquiredRound: 1, bookValue: 24000 },
+    ];
+    // (3×10×0.7 + 2×10×1.3) / (3×10 + 2×10) = (21 + 26) / 50 = 0.94
+    expect(fleetMaintenanceMultiplier(fleet, types)).toBeCloseTo(0.94, 10);
+  });
+});
+
+describe("maintenanceMultiplier affecte la disponibilité", () => {
+  it("un parc premium (×1.3) perd plus de disponibilité qu'un parc standard à budget égal", () => {
+    const eqTypes: EngineScenarioConfig["equipment"] = {
+      types: [
+        { code: "std", name: "Std", capacityPerUnit: 1100, costPerUnit: 50000, depreciationRounds: 8, maintenanceMultiplier: 1.0, maxPerRound: 5 },
+        { code: "pro", name: "Pro", capacityPerUnit: 1100, costPerUnit: 80000, depreciationRounds: 8, maintenanceMultiplier: 1.3, maxPerRound: 5 },
+      ],
+      initialFleet: [{ typeCode: "std", count: 5 }],
+    };
+    const s = { ...scenario(), equipment: eqTypes };
+    const stdFleet: EquipmentItem[] = [{ typeCode: "std", count: 5, acquiredRound: 0, bookValue: 250000 }];
+    const proFleet: EquipmentItem[] = [{ typeCode: "pro", count: 5, acquiredRound: 0, bookValue: 400000 }];
+    const makeInput = (fleet: EquipmentItem[]): SimulationInput => ({
+      scenario: s,
+      roundIndex: 1,
+      companies: [
+        { ...company("a"), fleet, machineCapacity: 5500, availability: 0.9 },
+        { ...company("b"), machineCapacity: 5500, availability: 0.9, fleet: stdFleet },
+      ],
+      decisions: { a: baseDecisions(), b: baseDecisions() },
+      activeEvents: [],
+      seed: 42,
+    });
+    const outStd = simulateRound(makeInput(stdFleet));
+    const outPro = simulateRound(makeInput(proFleet));
+    const availStd = outStd.companies.find((c) => c.id === "a")!.availability;
+    const availPro = outPro.companies.find((c) => c.id === "a")!.availability;
+    expect(availPro).toBeLessThan(availStd);
   });
 });

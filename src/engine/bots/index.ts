@@ -1,4 +1,5 @@
-import type { CompanyState, EngineScenarioConfig, RoundDecisions } from "../types";
+import type { CompanyState, EngineScenarioConfig, EquipmentTypeDef, RoundDecisions } from "../types";
+import { fleetMaintenanceMultiplier } from "../simulation";
 
 /**
  * Bots de stratégie (ADR-03) : générateurs de décisions PURS et déterministes.
@@ -226,7 +227,13 @@ function enrichDecisions(
 
 export function botDecisions(profile: BotProfile, ctx: BotContext): RoundDecisions {
   const ref = mainRefPrice(ctx.scenario);
-  const maintenance = ctx.scenario.production.maintenanceReference;
+  const maintenanceMul = ctx.scenario.equipment
+    ? fleetMaintenanceMultiplier(
+        [...(ctx.state.fleet ?? []), ...(ctx.state.pendingFleet ?? [])],
+        new Map<string, EquipmentTypeDef>(ctx.scenario.equipment.types.map((t) => [t.code, t])),
+      )
+    : 1;
+  const maintenance = ctx.scenario.production.maintenanceReference * maintenanceMul;
   const mkt = ctx.scenario.marketing.scale;
   const qual = ctx.scenario.production.qualityScale;
   let base: RoundDecisions;
