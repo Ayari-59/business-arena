@@ -171,4 +171,39 @@ export const ECOMMERCE_CARDS: EventCardDef[] = [
     emoji: "🛒",
     scope: "market",
   },
+  {
+    code: "ecom_major_breakdown",
+    title: "Panne du système de tri",
+    flavor:
+      "Le convoyeur principal de l'entrepôt se bloque. Les commandes s'empilent, les délais explosent : deux tours pour rétablir la cadence.",
+    effectLabel:
+      "Disponibilité −30 % pendant 2 tours (une entreprise tirée au sort)",
+    conceptHint: "Risque opérationnel & maintenance préventive",
+    category: "internal",
+    emoji: "🛑",
+    scope: "team",
+  },
+  {
+    code: "ecom_tech_obsolescence",
+    title: "WMS dépassé",
+    flavor:
+      "Le logiciel de gestion d'entrepôt ne suit plus le volume. Les erreurs de picking augmentent et les consommables coûtent plus cher.",
+    effectLabel:
+      "Disponibilité −10 % et coût matières +8 % pendant 2 tours (une entreprise tirée au sort)",
+    conceptHint: "Cycle de vie des actifs & veille technologique",
+    category: "internal",
+    emoji: "⏳",
+    scope: "team",
+  },
+  {
+    code: "ecom_used_equipment_deal",
+    title: "Matériel logistique de reprise",
+    flavor:
+      "Un e-commerçant en redressement cède ses transpalettes et son convoyeur automatisé à prix sacrifié. Votre entrepôt peut les absorber.",
+    effectLabel: "Disponibilité +12 % ce tour (équipe ciblée)",
+    conceptHint: "Décision d'investissement & coût d'opportunité",
+    category: "internal",
+    emoji: "🏭",
+    scope: "team",
+  },
 ];

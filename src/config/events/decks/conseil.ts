@@ -171,4 +171,39 @@ export const CONSEIL_CARDS: EventCardDef[] = [
     emoji: "🤝",
     scope: "market",
   },
+  {
+    code: "conseil_major_breakdown",
+    title: "Crash du serveur",
+    flavor:
+      "Le serveur de fichiers tombe. Livrables, modèles de proposition et bases clients inaccessibles : deux tours pour tout restaurer.",
+    effectLabel:
+      "Disponibilité −30 % pendant 2 tours (une entreprise tirée au sort)",
+    conceptHint: "Risque opérationnel & plan de continuité d'activité",
+    category: "internal",
+    emoji: "🛑",
+    scope: "team",
+  },
+  {
+    code: "conseil_tech_obsolescence",
+    title: "Parc informatique obsolète",
+    flavor:
+      "Les postes de travail rament, les licences logicielles ne sont plus maintenues. La productivité baisse et les coûts de support explosent.",
+    effectLabel:
+      "Disponibilité −10 % et coût matières +8 % pendant 2 tours (une entreprise tirée au sort)",
+    conceptHint: "Cycle de vie des actifs & veille technologique",
+    category: "internal",
+    emoji: "⏳",
+    scope: "team",
+  },
+  {
+    code: "conseil_used_equipment_deal",
+    title: "Matériel informatique reconditionné",
+    flavor:
+      "Un cabinet en restructuration cède ses stations de travail haut de gamme et ses licences transférables à prix cassé.",
+    effectLabel: "Disponibilité +12 % ce tour (équipe ciblée)",
+    conceptHint: "Décision d'investissement & coût d'opportunité",
+    category: "internal",
+    emoji: "🏭",
+    scope: "team",
+  },
 ];

@@ -178,17 +178,19 @@ const rawBoutique = {
       {
         code: "extended",
         name: "Multirisque + perte d'exploitation",
-        premiumPerRound: 1800,
-        coveredEventCodes: ["boutique_degat_des_eaux", "boutique_rupture_appro"],
+        premiumPerRound: 2200,
+        coveredEventCodes: ["boutique_degat_des_eaux", "boutique_rupture_appro", "boutique_major_breakdown"],
       },
       {
         code: "premium",
         name: "Tous risques commerce connecté",
-        premiumPerRound: 3200,
+        premiumPerRound: 3800,
         coveredEventCodes: [
           "boutique_degat_des_eaux",
           "boutique_rupture_appro",
           "boutique_demarque",
+          "boutique_major_breakdown",
+          "boutique_tech_obsolescence",
         ],
       },
     ],
@@ -417,6 +419,34 @@ const rawBoutique = {
       probability: 0,
       duration: 2,
       modifiers: [{ target: "demand", op: "mul", value: 1.16 }],
+    },
+    // Événements machines (§ équipement) : pannes, obsolescence et
+    // opportunités d'équipement. APPENDRE en fin de liste (PRNG).
+    {
+      code: "boutique_major_breakdown",
+      scope: "company",
+      probability: 0.03,
+      minRound: 4,
+      duration: 2,
+      modifiers: [{ target: "availability", op: "mul", value: 0.7 }],
+    },
+    {
+      code: "boutique_tech_obsolescence",
+      scope: "company",
+      probability: 0.03,
+      minRound: 4,
+      duration: 2,
+      modifiers: [
+        { target: "availability", op: "mul", value: 0.9 },
+        { target: "material_cost", op: "mul", value: 1.08 },
+      ],
+    },
+    {
+      code: "boutique_used_equipment_deal",
+      scope: "company",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "availability", op: "mul", value: 1.12 }],
     },
   ],
   // Le coton flambe au tour 5 : la marge d'achat se comprime juste après Noël,

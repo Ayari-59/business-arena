@@ -183,17 +183,19 @@ const rawBistrot = {
       {
         code: "extended",
         name: "Multirisque + perte d'exploitation",
-        premiumPerRound: 1500,
-        coveredEventCodes: ["bistrot_panne_froid", "bistrot_degat_des_eaux"],
+        premiumPerRound: 1900,
+        coveredEventCodes: ["bistrot_panne_froid", "bistrot_degat_des_eaux", "bistrot_major_breakdown"],
       },
       {
         code: "premium",
         name: "Tous risques établissement recevant du public",
-        premiumPerRound: 2600,
+        premiumPerRound: 3100,
         coveredEventCodes: [
           "bistrot_panne_froid",
           "bistrot_degat_des_eaux",
           "bistrot_fermeture_administrative",
+          "bistrot_major_breakdown",
+          "bistrot_tech_obsolescence",
         ],
       },
     ],
@@ -433,6 +435,34 @@ const rawBistrot = {
       probability: 0,
       duration: 1,
       modifiers: [{ target: "demand", op: "mul", value: 1.25 }],
+    },
+    // Événements machines (§ équipement) : pannes, obsolescence et
+    // opportunités d'équipement. APPENDRE en fin de liste (PRNG).
+    {
+      code: "bistrot_major_breakdown",
+      scope: "company",
+      probability: 0.03,
+      minRound: 4,
+      duration: 2,
+      modifiers: [{ target: "availability", op: "mul", value: 0.7 }],
+    },
+    {
+      code: "bistrot_tech_obsolescence",
+      scope: "company",
+      probability: 0.03,
+      minRound: 4,
+      duration: 2,
+      modifiers: [
+        { target: "availability", op: "mul", value: 0.9 },
+        { target: "material_cost", op: "mul", value: 1.08 },
+      ],
+    },
+    {
+      code: "bistrot_used_equipment_deal",
+      scope: "company",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "availability", op: "mul", value: 1.12 }],
     },
   ],
   // Le beurre, la viande et l'énergie flambent au tour 3 : le ratio matières

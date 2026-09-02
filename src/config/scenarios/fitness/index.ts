@@ -188,14 +188,14 @@ const rawFitness = {
       {
         code: "extended",
         name: "RC + bris de machines",
-        premiumPerRound: 3100,
-        coveredEventCodes: ["fitness_accident", "fitness_panne_parc"],
+        premiumPerRound: 3700,
+        coveredEventCodes: ["fitness_accident", "fitness_panne_parc", "fitness_major_breakdown"],
       },
       {
         code: "premium",
         name: "Tous risques établissement sportif",
-        premiumPerRound: 5400,
-        coveredEventCodes: ["fitness_accident", "fitness_panne_parc", "fitness_degat_des_eaux"],
+        premiumPerRound: 6300,
+        coveredEventCodes: ["fitness_accident", "fitness_panne_parc", "fitness_degat_des_eaux", "fitness_major_breakdown", "fitness_tech_obsolescence"],
       },
     ],
   },
@@ -429,6 +429,34 @@ const rawFitness = {
       probability: 0,
       duration: 1,
       modifiers: [{ target: "demand", op: "mul", value: 1.28 }],
+    },
+    // Événements machines (§ équipement) : pannes, obsolescence et
+    // opportunités d'équipement. APPENDRE en fin de liste (PRNG).
+    {
+      code: "fitness_major_breakdown",
+      scope: "company",
+      probability: 0.03,
+      minRound: 4,
+      duration: 2,
+      modifiers: [{ target: "availability", op: "mul", value: 0.7 }],
+    },
+    {
+      code: "fitness_tech_obsolescence",
+      scope: "company",
+      probability: 0.03,
+      minRound: 4,
+      duration: 2,
+      modifiers: [
+        { target: "availability", op: "mul", value: 0.9 },
+        { target: "material_cost", op: "mul", value: 1.08 },
+      ],
+    },
+    {
+      code: "fitness_used_equipment_deal",
+      scope: "company",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "availability", op: "mul", value: 1.12 }],
     },
   ],
   // L'énergie flambe au tour 3, en plein creux d'été : les charges montent

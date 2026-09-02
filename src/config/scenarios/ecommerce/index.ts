@@ -196,14 +196,14 @@ const rawEcommerce = {
       {
         code: "extended",
         name: "Cyber + perte d'exploitation",
-        premiumPerRound: 2900,
-        coveredEventCodes: ["ecom_cyberattaque", "ecom_entrepot"],
+        premiumPerRound: 3500,
+        coveredEventCodes: ["ecom_cyberattaque", "ecom_entrepot", "ecom_major_breakdown"],
       },
       {
         code: "premium",
         name: "Tous risques e-commerce",
-        premiumPerRound: 5200,
-        coveredEventCodes: ["ecom_cyberattaque", "ecom_entrepot", "ecom_transporteur"],
+        premiumPerRound: 6000,
+        coveredEventCodes: ["ecom_cyberattaque", "ecom_entrepot", "ecom_transporteur", "ecom_major_breakdown", "ecom_tech_obsolescence"],
       },
     ],
   },
@@ -439,6 +439,34 @@ const rawEcommerce = {
       probability: 0,
       duration: 1,
       modifiers: [{ target: "demand", op: "mul", value: 1.45 }],
+    },
+    // Événements machines (§ équipement) : pannes, obsolescence et
+    // opportunités d'équipement. APPENDRE en fin de liste (PRNG).
+    {
+      code: "ecom_major_breakdown",
+      scope: "company",
+      probability: 0.03,
+      minRound: 4,
+      duration: 2,
+      modifiers: [{ target: "availability", op: "mul", value: 0.7 }],
+    },
+    {
+      code: "ecom_tech_obsolescence",
+      scope: "company",
+      probability: 0.03,
+      minRound: 4,
+      duration: 2,
+      modifiers: [
+        { target: "availability", op: "mul", value: 0.9 },
+        { target: "material_cost", op: "mul", value: 1.08 },
+      ],
+    },
+    {
+      code: "ecom_used_equipment_deal",
+      scope: "company",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "availability", op: "mul", value: 1.12 }],
     },
   ],
   // Les frais de port explosent au dernier tour. Ils tombaient au tour 5, où

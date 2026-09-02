@@ -171,4 +171,39 @@ export const FITNESS_CARDS: EventCardDef[] = [
     emoji: "🏃",
     scope: "market",
   },
+  {
+    code: "fitness_major_breakdown",
+    title: "Panne électrique du plateau",
+    flavor:
+      "Un court-circuit sur le tableau général prive le plateau de courant. Tapis, vélos et rameurs à l'arrêt : deux tours de réparations.",
+    effectLabel:
+      "Disponibilité −30 % pendant 2 tours (une entreprise tirée au sort)",
+    conceptHint: "Risque opérationnel & maintenance préventive",
+    category: "internal",
+    emoji: "🛑",
+    scope: "team",
+  },
+  {
+    code: "fitness_tech_obsolescence",
+    title: "Machines connectées dépassées",
+    flavor:
+      "L'application des machines cardio n'est plus compatible avec les smartphones récents. Les adhérents se plaignent, la maintenance coûte plus cher.",
+    effectLabel:
+      "Disponibilité −10 % et coût matières +8 % pendant 2 tours (une entreprise tirée au sort)",
+    conceptHint: "Cycle de vie des actifs & veille technologique",
+    category: "internal",
+    emoji: "⏳",
+    scope: "team",
+  },
+  {
+    code: "fitness_used_equipment_deal",
+    title: "Parc de machines de reprise",
+    flavor:
+      "Une salle de sport en liquidation brade son parc : tapis de course, presses et vélos elliptiques encore sous garantie constructeur.",
+    effectLabel: "Disponibilité +12 % ce tour (équipe ciblée)",
+    conceptHint: "Décision d'investissement & coût d'opportunité",
+    category: "internal",
+    emoji: "🏭",
+    scope: "team",
+  },
 ];

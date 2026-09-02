@@ -171,4 +171,39 @@ export const BISTROT_CARDS: EventCardDef[] = [
     emoji: "🎉",
     scope: "market",
   },
+  {
+    code: "bistrot_major_breakdown",
+    title: "Panne du four principal",
+    flavor:
+      "Le four tombe en panne sèche. La moitié de la carte est indisponible, les couverts chutent : deux tours pour le remplacer.",
+    effectLabel:
+      "Disponibilité −30 % pendant 2 tours (une entreprise tirée au sort)",
+    conceptHint: "Risque opérationnel & maintenance préventive",
+    category: "internal",
+    emoji: "🛑",
+    scope: "team",
+  },
+  {
+    code: "bistrot_tech_obsolescence",
+    title: "Équipement de cuisson vétuste",
+    flavor:
+      "Les plaques et le four consomment trop d'énergie et chauffent mal. Les plats mettent plus de temps, les factures grimpent.",
+    effectLabel:
+      "Disponibilité −10 % et coût matières +8 % pendant 2 tours (une entreprise tirée au sort)",
+    conceptHint: "Cycle de vie des actifs & veille technologique",
+    category: "internal",
+    emoji: "⏳",
+    scope: "team",
+  },
+  {
+    code: "bistrot_used_equipment_deal",
+    title: "Matériel de cuisine de reprise",
+    flavor:
+      "Un restaurant étoilé ferme ses portes et brade son matériel professionnel : piano, cellule de refroidissement et batterie inox.",
+    effectLabel: "Disponibilité +12 % ce tour (équipe ciblée)",
+    conceptHint: "Décision d'investissement & coût d'opportunité",
+    category: "internal",
+    emoji: "🏭",
+    scope: "team",
+  },
 ];
