@@ -596,12 +596,12 @@ export function DecisionForm({
           tombent, que la caisse soit pleine ou vide.
         </p>
       ) : null}
+      {on.finance ? (
       <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
         <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
           💶 Financer · emprunt, capital, investissement
         </legend>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {on.finance ? (
             <>
               <Field name="newLoan" label="Nouvel emprunt" defaultValue={0} suffix="€"
                 hint="À 5 %/an, amortissement constant sur la durée contractuelle : emprunter engage." />
@@ -630,20 +630,22 @@ export function DecisionForm({
               {on.dividend ? (
                 <Field
                   name="dividend"
-                  label="Dividende versé aux associés"
+                  label="Affectation du résultat · dividende versé aux associés"
                   defaultValue={0}
                   suffix="€"
                   hint={
                     reserves > 0
                       ? `Réserves distribuables : ${formatEuro(reserves)}, les bénéfices des tours passés. Ce qui sort ne finance plus rien, et le versement se fait en trésorerie, pas en résultat : on peut être rentable sans pouvoir payer.`
-                      : "Rien à distribuer : les réserves se constituent des bénéfices des tours passés, et une perte doit d'abord être rattrapée."
+                      : roundIndex <= 1
+                        ? "Rien à distribuer au premier tour : l'affectation du résultat s'ouvre à partir du tour 2, une fois le premier résultat connu, et seulement sur des bénéfices."
+                        : "Rien à distribuer : les réserves se constituent des bénéfices des tours passés, et une perte doit d'abord être rattrapée."
                   }
                 />
               ) : null}
             </>
-          ) : null}
         </div>
       </fieldset>
+      ) : null}
       {on.investment && equipmentOffer ? (
         <>
           <EquipmentPanel
