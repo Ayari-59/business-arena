@@ -4,7 +4,7 @@ import { getSession } from "@/lib/session";
 import { getTeacherGames } from "@/services/game.service";
 import { getOrganizerCompetitions } from "@/services/competition.service";
 import { getStaffContext } from "@/services/admin.service";
-import { createClassGameAction, logoutAction } from "./actions";
+import { createClassGameAction, logoutAction, logoutEverywhereAction } from "./actions";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { compter } from "@/lib/format";
 import { DEFAULT_QUIZ_MODE, DIFFICULTY_PRESETS, QUIZ_MODES } from "@/config/difficulty";
@@ -60,6 +60,14 @@ export default async function TeacherDashboard({
           <form action={logoutAction}>
             <button className="text-xs text-slate-500 underline hover:text-slate-300">
               Se déconnecter
+            </button>
+          </form>
+          <form action={logoutEverywhereAction}>
+            <button
+              className="text-xs text-slate-500 underline hover:text-slate-300"
+              title="Ferme aussi les sessions ouvertes sur d'autres appareils"
+            >
+              Se déconnecter partout
             </button>
           </form>
         </div>

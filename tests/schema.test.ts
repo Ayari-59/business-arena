@@ -7,7 +7,7 @@ import * as schema from "../src/db/schema";
 const EXPECTED_TABLES = [
   "users", "organizations", "organization_members", "classes", "class_members",
   "org_invites",
-  "org_licences", "platform_settings",
+  "org_licences", "platform_settings", "login_attempts",
   "scenarios", "concepts", "decision_models", "decision_model_concepts",
   "situations", "situation_models", "situation_concepts", "hints",
   "event_definitions", "decision_options",

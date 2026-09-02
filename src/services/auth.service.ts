@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 import bcrypt from "bcryptjs";
-import { eq } from "drizzle-orm";
+import { and, eq, gt, or, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { organizationMembers, organizations, users } from "@/db/schema";
+import { loginAttempts, organizationMembers, organizations, users } from "@/db/schema";
 import {
   getPlatformConfig,
   promoteIfBootstrapAdmin,
@@ -105,17 +105,84 @@ export async function registerTeacher(args: {
   return { userId };
 }
 
+/** Fenêtre glissante et plafond de la limitation des tentatives. */
+export const FENETRE_TENTATIVES_MS = 15 * 60 * 1000;
+export const MAX_ECHECS = 5;
+
+/** Le même message quel que soit le cas : l'e-mail inconnu n'est pas dit. */
+const IDENTIFIANTS_INCORRECTS = "Identifiants incorrects.";
+
+/**
+ * Échecs récents pour cet e-mail OU cette adresse. En base, pas en mémoire :
+ * Vercel sert depuis plusieurs instances qui ne partagent rien.
+ */
+async function echecsRecents(email: string, ip: string | null, now: number) {
+  const depuis = new Date(now - FENETRE_TENTATIVES_MS);
+  const memeOrigine = ip ? or(eq(loginAttempts.email, email), eq(loginAttempts.ip, ip)) : eq(loginAttempts.email, email);
+  return db
+    .select()
+    .from(loginAttempts)
+    .where(and(gt(loginAttempts.createdAt, depuis), memeOrigine));
+}
+
 export async function loginTeacher(args: {
   email: string;
   password: string;
-}): Promise<{ userId: string } | { error: string }> {
+  /** Adresse d'origine, si connue : la limitation compte aussi par adresse. */
+  ip?: string | null;
+  now?: number;
+}): Promise<
+  | { userId: string; sessionVersion: number }
+  | { error: string; retryAfterMinutes?: number }
+> {
   const email = args.email.trim().toLowerCase();
+  const ip = args.ip?.trim() || null;
+  const now = args.now ?? Date.now();
+
+  const echecs = await echecsRecents(email, ip, now);
+  if (echecs.length >= MAX_ECHECS) {
+    const plusAncien = Math.min(...echecs.map((e) => e.createdAt.getTime()));
+    const minutes = Math.max(1, Math.ceil((plusAncien + FENETRE_TENTATIVES_MS - now) / 60_000));
+    return {
+      error: `Trop de tentatives, réessayez dans ${minutes} minute${minutes > 1 ? "s" : ""}.`,
+      retryAfterMinutes: minutes,
+    };
+  }
+
+  const echec = async () => {
+    await db.insert(loginAttempts).values({ email, ip, createdAt: new Date(now) });
+    return { error: IDENTIFIANTS_INCORRECTS };
+  };
+
+  // Un mot de passe trop court ne peut pas être le bon : même message, même
+  // compteur, pour ne rien dire de plus qu'à un mot de passe faux.
+  if (args.password.length < 8) return echec();
   const row = (await db.select().from(users).where(eq(users.email, email)))[0];
-  if (!row?.passwordHash) return { error: "Identifiants incorrects." };
+  if (!row?.passwordHash) return echec();
   const ok = await bcrypt.compare(args.password, row.passwordHash);
-  if (!ok) return { error: "Identifiants incorrects." };
+  if (!ok) return echec();
+
+  // Succès : le compteur repart de zéro pour cet e-mail et cette adresse.
+  await db
+    .delete(loginAttempts)
+    .where(ip ? or(eq(loginAttempts.email, email), eq(loginAttempts.ip, ip)) : eq(loginAttempts.email, email));
   await promoteIfBootstrapAdmin(row.id, email);
-  return { userId: row.id };
+  return { userId: row.id, sessionVersion: row.sessionVersion };
+}
+
+/**
+ * « Se déconnecter partout » : la version de session du compte avance d'un
+ * cran, et tout cookie signé pour l'ancienne est refusé. Rend la nouvelle
+ * version, pour ne pas fermer la session qui vient de le demander si on veut
+ * la garder.
+ */
+export async function bumpSessionVersion(userId: string): Promise<number> {
+  const rows = await db
+    .update(users)
+    .set({ sessionVersion: sql`${users.sessionVersion} + 1` })
+    .where(eq(users.id, userId))
+    .returning({ v: users.sessionVersion });
+  return rows[0]?.v ?? 1;
 }
 
 /** Établissement de rattachement d'un membre du personnel (org_admin OU teacher). */

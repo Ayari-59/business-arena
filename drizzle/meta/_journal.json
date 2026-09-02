@@ -92,6 +92,13 @@
       "when": 1788825600000,
       "tag": "0012_interpretation_context",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1788390000000,
+      "tag": "0014_login_hardening",
+      "breakpoints": true
     }
   ]
 }

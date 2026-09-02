@@ -1,10 +1,16 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { clearSession, getSession, setSession } from "@/lib/session";
-import { loginTeacher, registerTeacher, getTeacherOrgId } from "@/services/auth.service";
+import {
+  bumpSessionVersion,
+  getTeacherOrgId,
+  loginTeacher,
+  registerTeacher,
+} from "@/services/auth.service";
 import {
   closeCurrentRound,
   createClassGame,
@@ -47,16 +53,31 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
   redirect("/teacher");
 }
 
+/** L'adresse d'origine telle que Vercel la transmet ; null hors proxy. */
+async function adresseOrigine(): Promise<string | null> {
+  const h = await headers();
+  return h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || null;
+}
+
 export async function loginAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
-  const result = await loginTeacher({ email, password });
+  const result = await loginTeacher({ email, password, ip: await adresseOrigine() });
+  // Une action serveur ne porte pas de code HTTP : le 429 est le message.
   if ("error" in result) return { error: result.error };
-  await setSession(result.userId, "teacher");
+  await setSession(result.userId, "teacher", result.sessionVersion);
   redirect("/teacher");
 }
 
 export async function logoutAction(): Promise<void> {
+  await clearSession();
+  redirect("/teacher/login");
+}
+
+/** Ferme cette session et toutes les autres : les cookies antérieurs sont refusés. */
+export async function logoutEverywhereAction(): Promise<void> {
+  const session = await getSession();
+  if (session) await bumpSessionVersion(session.userId);
   await clearSession();
   redirect("/teacher/login");
 }
