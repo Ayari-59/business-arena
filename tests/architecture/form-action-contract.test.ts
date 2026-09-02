@@ -44,7 +44,7 @@ const CONTRACTS: FormContract[] = [
   {
     nom: "création d'un concours",
     action: { file: "src/app/teacher/actions.ts", fn: "createCompetitionAction" },
-    sources: ["src/app/teacher/page.tsx"],
+    sources: ["src/components/competition-create-form.tsx"],
   },
   {
     nom: "décisions du tour",
