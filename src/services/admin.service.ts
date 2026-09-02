@@ -109,8 +109,12 @@ const DEFAULT_CONFIG: PlatformConfig = {
 };
 
 export async function getPlatformConfig(): Promise<PlatformConfig> {
-  const row = (await db.select().from(platformSettings).where(eq(platformSettings.id, 1)))[0];
-  return { ...DEFAULT_CONFIG, ...((row?.settings as Partial<PlatformConfig>) ?? {}) };
+  try {
+    const row = (await db.select().from(platformSettings).where(eq(platformSettings.id, 1)))[0];
+    return { ...DEFAULT_CONFIG, ...((row?.settings as Partial<PlatformConfig>) ?? {}) };
+  } catch {
+    return { ...DEFAULT_CONFIG };
+  }
 }
 
 export async function updatePlatformConfig(
