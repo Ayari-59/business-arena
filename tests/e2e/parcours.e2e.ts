@@ -80,8 +80,9 @@ describe("parcours enseignant et élève", () => {
     await eleve.fill('input[name="code"]', codeInvitation);
     await eleve.fill('input[name="pseudo"]', "Élève E2E");
     await eleve.getByRole("button", { name: "Rejoindre la partie" }).click();
-    // On attend l'écran de décision plutôt que l'URL : la navigation se fait
-    // côté client, sans nouvel événement de chargement.
+    // La page est organisée en onglets : le formulaire de décision vit dans
+    // l'onglet « Décisions », pas dans l'onglet « Situation » affiché par défaut.
+    await eleve.getByRole("tab", { name: /Décisions/ }).click({ timeout: 30_000 });
     await eleve.waitForSelector('input[name="price"]', { timeout: 30_000 });
     expect(eleve.url()).toMatch(/\/arena\//);
 
@@ -115,6 +116,9 @@ describe("parcours enseignant et élève", () => {
     const vu = await texte(eleve);
     expect(vu).not.toMatch(/Session expirée|Décisions invalides/i);
     expect(vu).toContain("Décisions enregistrées");
+    // La recharge remet l'onglet « Situation » par défaut ; on revient sur
+    // « Décisions » pour relire le prix enregistré.
+    await eleve.getByRole("tab", { name: /Décisions/ }).click();
     expect(await eleve.inputValue('input[name="price"]')).toBe("780");
   });
 
@@ -130,6 +134,10 @@ describe("parcours enseignant et élève", () => {
     // l'appelait « matières premières » dans les neuf secteurs. Un cabinet de
     // conseil n'achète pas de matières : il paie des frais de mission.
     await aller(eleve, new URL(eleve.url()).pathname);
+    // Les états financiers vivent dans l'onglet « Résultats » puis le
+    // sous-onglet « Finance ». On y navigue avant d'ouvrir les détails.
+    await eleve.getByRole("tab", { name: /Résultats/ }).click();
+    await eleve.getByRole("tab", { name: /Finance/ }).click();
     await eleve.evaluate(() => {
       // les comptes sont dépliables : leur contenu ne compte pas dans le texte
       // visible tant qu'ils sont fermés.
@@ -201,6 +209,7 @@ describe("parcours enseignant et élève", () => {
     await executive.fill('input[name="code"]', code);
     await executive.fill('input[name="pseudo"]', "Élève Executive");
     await executive.getByRole("button", { name: "Rejoindre la partie" }).click();
+    await executive.getByRole("tab", { name: /Décisions/ }).click({ timeout: 30_000 });
     await executive.waitForSelector('input[name="dividend"]', { timeout: 30_000 });
 
     const vu = await texte(executive);
