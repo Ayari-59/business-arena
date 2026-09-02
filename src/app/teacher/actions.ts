@@ -181,28 +181,76 @@ export async function closeRoundAction(gameId: string): Promise<void> {
 }
 
 const createCompetitionSchema = z.object({
-  name: z.string().min(1).max(80).catch("Business Arena Championship"),
+  // Le nom est la seule saisie libre : vide, on le dit, on ne le remplace pas.
+  name: z
+    .string()
+    .trim()
+    .min(1, "Donnez un nom au concours.")
+    .max(80, "Nom du concours : 80 caractères maximum."),
   periodicity: z.enum(["month", "quarter", "year"]).catch("quarter"),
   groupSize: z.coerce.number().int().min(2).max(6).catch(3),
   advancePerGroup: z.coerce.number().int().min(1).max(4).catch(1),
 });
 
-export async function createCompetitionAction(formData: FormData): Promise<void> {
+/** Ce que l'enseignant avait saisi : rendu au formulaire quand la création échoue. */
+export interface CreateCompetitionValues {
+  name: string;
+  periodicity: string;
+  groupSize: string;
+  advancePerGroup: string;
+}
+
+export interface CreateCompetitionState {
+  error: string | null;
+  values: CreateCompetitionValues | null;
+}
+
+/**
+ * Crée un concours, ou dit pourquoi il n'a pas été créé.
+ *
+ * Constaté en production : une première soumission repartait sans un mot, le
+ * nom effacé, aucun concours dans la liste. L'action renvoyait vers la page de
+ * connexion sans organisation rattachée, et laissait toute autre erreur
+ * remonter sans la montrer. Elle répond maintenant toujours par un état : une
+ * erreur lisible et la saisie intacte, ou la redirection vers le concours.
+ */
+export async function createCompetitionAction(
+  _prev: CreateCompetitionState,
+  formData: FormData,
+): Promise<CreateCompetitionState> {
+  const values: CreateCompetitionValues = {
+    name: String(formData.get("name") ?? ""),
+    periodicity: String(formData.get("periodicity") ?? "quarter"),
+    groupSize: String(formData.get("groupSize") ?? "3"),
+    advancePerGroup: String(formData.get("advancePerGroup") ?? "1"),
+  };
   const session = await getSession();
-  if (!session) redirect("/teacher/login");
+  if (!session) return { error: "Session expirée : reconnectez-vous.", values };
+  const parsed = createCompetitionSchema.safeParse(values);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide.", values };
+  }
   const organizationId = await getTeacherOrgId(session.userId);
-  if (!organizationId) redirect("/teacher/login");
-  const parsed = createCompetitionSchema.parse({
-    name: formData.get("name"),
-    periodicity: formData.get("periodicity"),
-    groupSize: formData.get("groupSize"),
-    advancePerGroup: formData.get("advancePerGroup"),
-  });
-  const { competitionId } = await createCompetition({
-    organizerId: session.userId,
-    organizationId,
-    ...parsed,
-  });
+  if (!organizationId) {
+    return {
+      error: "Votre compte n'est rattaché à aucun établissement, le concours n'a pas pu être créé.",
+      values,
+    };
+  }
+  let competitionId: string;
+  try {
+    ({ competitionId } = await createCompetition({
+      organizerId: session.userId,
+      organizationId,
+      ...parsed.data,
+    }));
+  } catch (erreur) {
+    const detail = erreur instanceof Error && erreur.message ? ` (${erreur.message})` : "";
+    return {
+      error: `Le concours n'a pas pu être créé, votre saisie est conservée : réessayez${detail}.`,
+      values,
+    };
+  }
   redirect(`/teacher/competitions/${competitionId}`);
 }
 

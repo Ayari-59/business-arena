@@ -4,7 +4,7 @@ import { getSession } from "@/lib/session";
 import { getTeacherGames } from "@/services/game.service";
 import { getOrganizerCompetitions } from "@/services/competition.service";
 import { getStaffContext } from "@/services/admin.service";
-import { createClassGameAction, createCompetitionAction, logoutAction } from "./actions";
+import { createClassGameAction, logoutAction } from "./actions";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { compter } from "@/lib/format";
 import { DEFAULT_QUIZ_MODE, DIFFICULTY_PRESETS, QUIZ_MODES } from "@/config/difficulty";
@@ -14,6 +14,7 @@ import {
   SECTOR_LABELS,
   economicDefaults,
 } from "@/config/scenarios/registry";
+import { CompetitionCreateForm } from "@/components/competition-create-form";
 import { EconomicParams } from "@/components/economic-params";
 import { SubmitButton } from "@/components/submit-button";
 
@@ -239,56 +240,7 @@ export default async function TeacherDashboard({
         <h2 className="text-sm font-semibold text-slate-200">
           Organiser un concours · Business Arena Championship
         </h2>
-        <form action={createCompetitionAction} className="mt-4 grid gap-4 sm:grid-cols-2">
-          <label className="block sm:col-span-2">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Nom du concours
-            </span>
-            <input
-              name="name"
-              required
-              maxLength={80}
-              placeholder="Championnat BTS MCO 2026"
-              className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm"
-            />
-          </label>
-          <label className="block">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Équipes par groupe
-            </span>
-            <select name="groupSize" defaultValue={3} className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm">
-              {[2, 3, 4, 5, 6].map((n) => (
-                <option key={n} value={n}>{n} équipes par partie</option>
-              ))}
-            </select>
-          </label>
-          <label className="block">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Qualifiés par groupe
-            </span>
-            <select name="advancePerGroup" defaultValue={1} className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm">
-              {[1, 2, 3].map((n) => (
-                <option key={n} value={n}>{n} par groupe → finale</option>
-              ))}
-            </select>
-          </label>
-          <label className="block sm:col-span-2">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Périodicité
-            </span>
-            <select name="periodicity" defaultValue="quarter" className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm">
-              <option value="month">Un mois par tour</option>
-              <option value="quarter">Un trimestre par tour</option>
-              <option value="year">Une année par tour</option>
-            </select>
-          </label>
-          <SubmitButton
-            pendingLabel="Ouverture du concours…"
-            className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300 sm:col-span-2"
-          >
-            Créer le concours et ouvrir les inscriptions
-          </SubmitButton>
-        </form>
+        <CompetitionCreateForm />
         <p className="mt-2 text-xs text-slate-500">
           Les équipes s&apos;inscrivent avec le code sur /compete. Mode compétition :
           décisions verrouillées après validation, indices limités.
