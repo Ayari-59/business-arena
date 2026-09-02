@@ -165,7 +165,23 @@ function enrichDecisions(
     }
   }
 
-  if (s.investment && profile === "growth" && ctx.roundIndex >= 2) {
+  if (s.equipment && ctx.roundIndex >= 2) {
+    const machCap = ctx.state.machineCapacity * ctx.state.availability;
+    const utilization = ctx.lastSoldUnits !== undefined
+      ? ctx.lastSoldUnits / Math.max(1, machCap)
+      : 0.65;
+    if (profile === "growth" && utilization > 0.85) {
+      const sorted = [...s.equipment.types].sort((a, b) => a.costPerUnit - b.costPerUnit);
+      const pick = sorted[Math.min(1, sorted.length - 1)]!;
+      base.investment = { equipmentBuy: [{ typeCode: pick.code, quantity: 1 }] };
+    } else if (profile === "premium" && utilization > 0.9) {
+      const best = [...s.equipment.types].sort((a, b) => b.capacityPerUnit - a.capacityPerUnit)[0]!;
+      base.investment = { equipmentBuy: [{ typeCode: best.code, quantity: 1 }] };
+    } else if (profile === "price_aggressive" && utilization > 0.9) {
+      const cheapest = [...s.equipment.types].sort((a, b) => a.costPerUnit - b.costPerUnit)[0]!;
+      base.investment = { equipmentBuy: [{ typeCode: cheapest.code, quantity: 1 }] };
+    }
+  } else if (s.investment && profile === "growth" && ctx.roundIndex >= 2) {
     const machCap = ctx.state.machineCapacity * ctx.state.availability;
     const utilization = ctx.lastSoldUnits !== undefined
       ? ctx.lastSoldUnits / Math.max(1, machCap)

@@ -205,6 +205,46 @@ const rawFitness = {
     depreciationRounds: 28,
     maxPerRound: 600,
   },
+  // Équipements typés : 3 niveaux d'aménagement de plateau.
+  // Capacité initiale = 2 × 400 + 2 × 700 = 2 200 (identique au legacy).
+  equipment: {
+    types: [
+      {
+        code: "plateau_basique",
+        name: "Plateau basique",
+        capacityPerUnit: 400,
+        costPerUnit: 18000,
+        depreciationRounds: 24,
+        maintenanceMultiplier: 1.3,
+        maxPerRound: 3,
+        resaleRatio: 0.4,
+      },
+      {
+        code: "plateau_equipe",
+        name: "Plateau équipé",
+        capacityPerUnit: 700,
+        costPerUnit: 38000,
+        depreciationRounds: 28,
+        maintenanceMultiplier: 1.0,
+        maxPerRound: 2,
+        resaleRatio: 0.5,
+      },
+      {
+        code: "espace_premium",
+        name: "Espace premium connecté",
+        capacityPerUnit: 1100,
+        costPerUnit: 75000,
+        depreciationRounds: 32,
+        maintenanceMultiplier: 0.7,
+        maxPerRound: 1,
+        resaleRatio: 0.55,
+      },
+    ],
+    initialFleet: [
+      { typeCode: "plateau_basique", count: 2 },
+      { typeCode: "plateau_equipe", count: 2 },
+    ],
+  },
   studies: {
     marketCost: 1500,
     priceCost: 1200,
@@ -442,6 +482,12 @@ export function fitnessCompany(
     hoursPerEmployee: 455,
     productivity: 1,
     finishedGoods: { quantity: 0, unitCost: 0 },
+    // Parc initial : 2 basiques (36 000 €) + 2 équipés (76 000 €) = 112 000 €
+    // (amorti à ~61 % → ~68 000 € de VNC)
+    fleet: [
+      { typeCode: "plateau_basique", count: 2, acquiredRound: 0, bookValue: 20000 },
+      { typeCode: "plateau_equipe", count: 2, acquiredRound: 0, bookValue: 48000 },
+    ],
     // crédit d'équipement : 420 000 € sur 28 trimestres → 15 000 €/tour
     loans: [{ remaining: 420000, perRound: 15000 }],
     finance: {

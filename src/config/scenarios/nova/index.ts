@@ -398,6 +398,47 @@ const rawNova = {
     depreciationRounds: 16,
     maxPerRound: 2000,
   },
+  // Équipements typés (inspiré Simuland) : 3 types de lignes de production.
+  // Capacité initiale = 4 × 1 000 + 2 × 1 500 = 7 000 (identique au legacy).
+  // Amortissement initial = 4×15000/24 + 2×30000/24 = 2500+2500 = 5000 (= legacy).
+  equipment: {
+    types: [
+      {
+        code: "manual",
+        name: "Ligne manuelle",
+        capacityPerUnit: 1000,
+        costPerUnit: 15000,
+        depreciationRounds: 24,
+        maintenanceMultiplier: 1.3,
+        maxPerRound: 3,
+        resaleRatio: 0.4,
+      },
+      {
+        code: "semi_auto",
+        name: "Ligne semi-automatique",
+        capacityPerUnit: 1500,
+        costPerUnit: 30000,
+        depreciationRounds: 24,
+        maintenanceMultiplier: 1.0,
+        maxPerRound: 2,
+        resaleRatio: 0.5,
+      },
+      {
+        code: "auto",
+        name: "Ligne automatisée",
+        capacityPerUnit: 2500,
+        costPerUnit: 55000,
+        depreciationRounds: 32,
+        maintenanceMultiplier: 0.7,
+        maxPerRound: 1,
+        resaleRatio: 0.6,
+      },
+    ],
+    initialFleet: [
+      { typeCode: "manual", count: 4 },
+      { typeCode: "semi_auto", count: 2 },
+    ],
+  },
   // Sous-traitance : unités finies à 52 € (coût variable interne ≈ 38 €) —
   // la marge d'une commande sous-traitée se calcule, elle ne se devine pas.
   subcontracting: { unitCost: 52 },
@@ -567,6 +608,12 @@ export function novaCompany(
     hoursPerEmployee: 540, // capacité MOD = 4 × 540 / 0,3 = 7 200 u/tour
     productivity: 1,
     finishedGoods: { quantity: 0, unitCost: 0 },
+    // Parc initial : 4 manuelles (60 000 €) + 2 semi-auto (60 000 €) = 120 000 €
+    // (partie de fixedAssetsNet, amorti à ~60 % de la VNC → ~72 000 € de VNC)
+    fleet: [
+      { typeCode: "manual", count: 4, acquiredRound: 0, bookValue: 30000 },
+      { typeCode: "semi_auto", count: 2, acquiredRound: 0, bookValue: 42000 },
+    ],
     // dette reprise : 80 000 € amortis sur 20 trimestres → 4 000 €/tour
     loans: [{ remaining: 80000, perRound: 4000 }],
     finance: {

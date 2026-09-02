@@ -1,12 +1,191 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { playRoundAction, type PlayRoundState } from "@/app/arena/[gameId]/actions";
 import type { RoundDecisions } from "@/engine/types";
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
 import { formatEuro } from "@/lib/format";
 
 const initialState: PlayRoundState = { error: null };
+
+function EquipmentPanel({
+  offer,
+  vocabulary,
+  buyQty,
+  setBuyQty,
+  sellQty,
+  setSellQty,
+}: {
+  offer: NonNullable<Parameters<typeof DecisionForm>[0]["equipmentOffer"]>;
+  vocabulary: ScenarioVocabulary;
+  buyQty: Record<string, number>;
+  setBuyQty: React.Dispatch<React.SetStateAction<Record<string, number>>>;
+  sellQty: Record<string, number>;
+  setSellQty: React.Dispatch<React.SetStateAction<Record<string, number>>>;
+}) {
+  const totalCapacity = offer.fleet.reduce((sum, f) => {
+    const typ = offer.types.find((t) => t.code === f.typeCode);
+    return sum + (typ ? f.count * typ.capacityPerUnit : 0);
+  }, 0);
+  const totalPending = offer.pendingFleet.reduce((sum, f) => {
+    const typ = offer.types.find((t) => t.code === f.typeCode);
+    return sum + (typ ? f.count * typ.capacityPerUnit : 0);
+  }, 0);
+  const buyImpact = offer.types.reduce((sum, t) => sum + (buyQty[t.code] ?? 0) * t.capacityPerUnit, 0);
+  const sellImpact = offer.types.reduce((sum, t) => sum + (sellQty[t.code] ?? 0) * t.capacityPerUnit, 0);
+  const totalCost = offer.types.reduce((sum, t) => sum + (buyQty[t.code] ?? 0) * t.costPerUnit, 0);
+  const totalSale = offer.types.reduce((sum, t) => {
+    const f = offer.fleet.find((fl) => fl.typeCode === t.code);
+    if (!f || !f.count) return sum;
+    const avgBook = f.bookValue / f.count;
+    return sum + (sellQty[t.code] ?? 0) * avgBook * t.resaleRatio;
+  }, 0);
+
+  return (
+    <fieldset className="rounded-lg border border-indigo-400/25 bg-indigo-950/20 p-4">
+      <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-indigo-300">
+        🏭 Parc machines · investir ou céder
+      </legend>
+      <div className="mb-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+        <span className="text-slate-400">Capacité en service</span>
+        <span className="text-right text-slate-200">
+          {Math.round(totalCapacity).toLocaleString("fr-FR")} {vocabulary.perRoundLabel}
+        </span>
+        {totalPending > 0 ? (
+          <>
+            <span className="text-slate-400">En cours d&apos;installation</span>
+            <span className="text-right text-emerald-300">
+              +{Math.round(totalPending).toLocaleString("fr-FR")} {vocabulary.perRoundLabel}
+            </span>
+          </>
+        ) : null}
+      </div>
+      <div className="space-y-3">
+        {offer.types.map((t) => {
+          const fl = offer.fleet.find((f) => f.typeCode === t.code);
+          const pend = offer.pendingFleet.find((f) => f.typeCode === t.code);
+          const owned = fl?.count ?? 0;
+          const pendCount = pend?.count ?? 0;
+          const buy = buyQty[t.code] ?? 0;
+          const sell = sellQty[t.code] ?? 0;
+          const avgBook = owned > 0 ? (fl?.bookValue ?? 0) / owned : 0;
+          return (
+            <div key={t.code} className="rounded-lg border border-white/5 bg-slate-900 px-3 py-2.5">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <span className="text-sm font-medium text-slate-200">{t.name}</span>
+                  <span className="ml-2 text-xs text-slate-500">
+                    {Math.round(t.capacityPerUnit).toLocaleString("fr-FR")} {vocabulary.perRoundLabel}/u
+                  </span>
+                </div>
+                <span className="shrink-0 text-xs tabular-nums text-slate-400">
+                  {owned} en service{pendCount > 0 ? ` + ${pendCount} en attente` : ""}
+                </span>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-3 text-[11px] text-slate-500">
+                <span>{t.costPerUnit.toLocaleString("fr-FR")} €/u</span>
+                <span>Amorti en {Math.round(t.depreciationRounds)} tours</span>
+                <span>Maintenance ×{t.maintenanceMultiplier.toLocaleString("fr-FR")}</span>
+                {owned > 0 ? (
+                  <span>VNC moy. {Math.round(avgBook).toLocaleString("fr-FR")} €</span>
+                ) : null}
+              </div>
+              <div className="mt-2 grid grid-cols-2 gap-3">
+                <label className="block">
+                  <span className="text-[10px] font-medium uppercase tracking-wide text-emerald-400">
+                    Acheter
+                  </span>
+                  <span className="mt-0.5 flex items-center gap-1.5 rounded border border-white/10 bg-slate-950 px-2 py-1 focus-within:border-emerald-400/60">
+                    <input
+                      type="number"
+                      min={0}
+                      max={t.maxPerRound}
+                      value={buy}
+                      onChange={(e) =>
+                        setBuyQty((prev) => ({
+                          ...prev,
+                          [t.code]: Math.min(t.maxPerRound, Math.max(0, parseInt(e.target.value) || 0)),
+                        }))
+                      }
+                      className="w-full bg-transparent text-sm tabular-nums text-slate-100 outline-none"
+                    />
+                    <span className="text-[10px] text-slate-500">max {t.maxPerRound}</span>
+                  </span>
+                  {buy > 0 ? (
+                    <span className="mt-0.5 block text-[10px] text-emerald-300/80">
+                      = {(buy * t.costPerUnit).toLocaleString("fr-FR")} €
+                    </span>
+                  ) : null}
+                </label>
+                <label className="block">
+                  <span className="text-[10px] font-medium uppercase tracking-wide text-red-400">
+                    Vendre
+                  </span>
+                  <span className="mt-0.5 flex items-center gap-1.5 rounded border border-white/10 bg-slate-950 px-2 py-1 focus-within:border-red-400/60">
+                    <input
+                      type="number"
+                      min={0}
+                      max={owned}
+                      value={sell}
+                      onChange={(e) =>
+                        setSellQty((prev) => ({
+                          ...prev,
+                          [t.code]: Math.min(owned, Math.max(0, parseInt(e.target.value) || 0)),
+                        }))
+                      }
+                      className="w-full bg-transparent text-sm tabular-nums text-slate-100 outline-none"
+                    />
+                    <span className="text-[10px] text-slate-500">max {owned}</span>
+                  </span>
+                  {sell > 0 ? (
+                    <span className="mt-0.5 block text-[10px] text-red-300/80">
+                      = {Math.round(sell * avgBook * t.resaleRatio).toLocaleString("fr-FR")} € (VNC {Math.round(sell * avgBook).toLocaleString("fr-FR")} €)
+                    </span>
+                  ) : null}
+                </label>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {(buyImpact > 0 || sellImpact > 0) ? (
+        <div className="mt-3 rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-xs">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+            {buyImpact > 0 ? (
+              <>
+                <span className="text-emerald-400">Capacité ajoutée (t+1)</span>
+                <span className="text-right tabular-nums text-emerald-300">
+                  +{Math.round(buyImpact).toLocaleString("fr-FR")} {vocabulary.perRoundLabel}
+                </span>
+                <span className="text-slate-400">Investissement</span>
+                <span className="text-right tabular-nums text-slate-200">
+                  {totalCost.toLocaleString("fr-FR")} €
+                </span>
+              </>
+            ) : null}
+            {sellImpact > 0 ? (
+              <>
+                <span className="text-red-400">Capacité retirée</span>
+                <span className="text-right tabular-nums text-red-300">
+                  −{Math.round(sellImpact).toLocaleString("fr-FR")} {vocabulary.perRoundLabel}
+                </span>
+                <span className="text-slate-400">Produit de cession</span>
+                <span className="text-right tabular-nums text-slate-200">
+                  {Math.round(totalSale).toLocaleString("fr-FR")} €
+                </span>
+              </>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+      <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+        Les machines achetées entrent en service au tour suivant. La revente se fait à la
+        valeur de marché (VNC × ratio de revente) : vendre en dessous de la VNC génère une
+        perte de cession, un coût bien réel que le résultat encaisse.
+      </p>
+    </fieldset>
+  );
+}
 
 function Field({
   name,
@@ -94,6 +273,7 @@ export function DecisionForm({
   capitalAllowance,
   insuranceFormulas,
   suppliersOffer,
+  equipmentOffer,
   capacityFacts,
   vocabulary,
 }: {
@@ -179,6 +359,21 @@ export function DecisionForm({
     supplyRiskProbability: number;
     materialCostPerUnit: number;
   }[] | null;
+  /** Équipements typés : catalogue de machines et parc actuel. */
+  equipmentOffer?: {
+    types: {
+      code: string;
+      name: string;
+      capacityPerUnit: number;
+      costPerUnit: number;
+      depreciationRounds: number;
+      maintenanceMultiplier: number;
+      maxPerRound: number;
+      resaleRatio: number;
+    }[];
+    fleet: { typeCode: string; count: number; bookValue: number }[];
+    pendingFleet: { typeCode: string; count: number }[];
+  } | null;
   /** Vocabulaire du secteur joué (registre des scénarios). */
   vocabulary: ScenarioVocabulary;
   /** Capacité de production : goulots et levier RH. */
@@ -193,6 +388,8 @@ export function DecisionForm({
   const action = playRoundAction.bind(null, gameId);
   const [state, formAction, pending] = useActionState(action, initialState);
   const reserves = Math.max(0, distributableReserves ?? 0);
+  const [equipBuyQty, setEquipBuyQty] = useState<Record<string, number>>({});
+  const [equipSellQty, setEquipSellQty] = useState<Record<string, number>>({});
   const on = enabled ?? {
     quality: true,
     maintenance: true,
@@ -421,7 +618,7 @@ export function DecisionForm({
                     ? `Apport des associés · enveloppe restante : ${Math.round(capitalAllowance.remaining).toLocaleString("fr-FR")} € sur ${Math.round(capitalAllowance.total).toLocaleString("fr-FR")} € pour toute la partie. Les associés ne suivent pas indéfiniment.`
                     : "Apport des associés : trésorerie et capitaux propres, sans intérêts mais dilutif."
                 } />
-            {on.investment && investmentOffer ? (
+            {on.investment && investmentOffer && !equipmentOffer ? (
               <Field
                 name="machineCapacityUnits"
                 label={`Investissement capacité (${investmentOffer.costPerCapacityUnit.toLocaleString("fr-FR")} €/u)`}
@@ -447,6 +644,28 @@ export function DecisionForm({
           ) : null}
         </div>
       </fieldset>
+      {on.investment && equipmentOffer ? (
+        <>
+          <EquipmentPanel
+            offer={equipmentOffer}
+            vocabulary={v}
+            buyQty={equipBuyQty}
+            setBuyQty={setEquipBuyQty}
+            sellQty={equipSellQty}
+            setSellQty={setEquipSellQty}
+          />
+          <input type="hidden" name="equipmentBuyJson" value={JSON.stringify(
+            equipmentOffer.types
+              .filter((t) => (equipBuyQty[t.code] ?? 0) > 0)
+              .map((t) => ({ typeCode: t.code, quantity: equipBuyQty[t.code] ?? 0 }))
+          )} />
+          <input type="hidden" name="equipmentSellJson" value={JSON.stringify(
+            equipmentOffer.types
+              .filter((t) => (equipSellQty[t.code] ?? 0) > 0)
+              .map((t) => ({ typeCode: t.code, quantity: equipSellQty[t.code] ?? 0 }))
+          )} />
+        </>
+      ) : null}
       {on.finance && treasuryOffer ? (
         <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">

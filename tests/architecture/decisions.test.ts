@@ -23,7 +23,7 @@ const champsDuFormulaire = new Set(
     .map((m) => m[1]!)
     // Ces deux là ne sont pas des décisions de gestion : l'un porte le choix du
     // modèle d'analyse, l'autre le champ technique du bouton de validation.
-    .filter((n) => !["quiz_model_choice", "options", "justification"].includes(n)),
+    .filter((n) => !["quiz_model_choice", "options", "justification", "equipmentBuyJson", "equipmentSellJson"].includes(n)),
 );
 
 describe("leviers de décision", () => {

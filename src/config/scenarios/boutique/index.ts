@@ -199,6 +199,47 @@ const rawBoutique = {
     depreciationRounds: 20,
     maxPerRound: 2500,
   },
+  // Équipements typés : 3 niveaux de mobilier et de logistique de magasin.
+  // Capacité initiale = 1 × 1 500 + 1 × 2 500 + 1 × 3 500 = 7 500 (identique au legacy).
+  equipment: {
+    types: [
+      {
+        code: "rayonnage_simple",
+        name: "Rayonnage simple",
+        capacityPerUnit: 1500,
+        costPerUnit: 16000,
+        depreciationRounds: 16,
+        maintenanceMultiplier: 1.3,
+        maxPerRound: 4,
+        resaleRatio: 0.4,
+      },
+      {
+        code: "gondoles_optimisees",
+        name: "Gondoles optimisées",
+        capacityPerUnit: 2500,
+        costPerUnit: 35000,
+        depreciationRounds: 20,
+        maintenanceMultiplier: 1.0,
+        maxPerRound: 2,
+        resaleRatio: 0.5,
+      },
+      {
+        code: "stock_automatise",
+        name: "Stock automatisé",
+        capacityPerUnit: 3500,
+        costPerUnit: 58000,
+        depreciationRounds: 24,
+        maintenanceMultiplier: 0.7,
+        maxPerRound: 1,
+        resaleRatio: 0.55,
+      },
+    ],
+    initialFleet: [
+      { typeCode: "rayonnage_simple", count: 1 },
+      { typeCode: "gondoles_optimisees", count: 1 },
+      { typeCode: "stock_automatise", count: 1 },
+    ],
+  },
   studies: {
     marketCost: 1200,
     priceCost: 900,
@@ -429,6 +470,13 @@ export function boutiqueCompany(
     hoursPerEmployee: 455,
     productivity: 1,
     finishedGoods: { quantity: 1200, unitCost: 21.5 },
+    // Parc initial : 1 rayonnage (16 000 €) + 1 gondoles (35 000 €) + 1 automatisé (58 000 €) = 109 000 €
+    // (amorti à ~63 % → ~69 000 € de VNC)
+    fleet: [
+      { typeCode: "rayonnage_simple", count: 1, acquiredRound: 0, bookValue: 9000 },
+      { typeCode: "gondoles_optimisees", count: 1, acquiredRound: 0, bookValue: 22000 },
+      { typeCode: "stock_automatise", count: 1, acquiredRound: 0, bookValue: 38000 },
+    ],
     // emprunt d'installation : 70 000 € sur 20 trimestres → 3 500 €/tour
     loans: [{ remaining: 70000, perRound: 3500 }],
     finance: {

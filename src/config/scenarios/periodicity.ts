@@ -157,6 +157,21 @@ export function applyPeriodicity(
           },
         }
       : {}),
+    // Équipements typés : la capacité par machine est par TOUR (× k), le coût
+    // physique ne change pas, la durée d'amortissement en tours varie en 1/k.
+    ...(scenario.equipment
+      ? {
+          equipment: {
+            types: scenario.equipment.types.map((t) => ({
+              ...t,
+              capacityPerUnit: t.capacityPerUnit * k,
+              depreciationRounds: t.depreciationRounds / k,
+              maxPerRound: Math.max(1, Math.round(t.maxPerRound * k)),
+            })),
+            initialFleet: scenario.equipment.initialFleet,
+          },
+        }
+      : {}),
     scoring: {
       ...scenario.scoring,
       benchmarks: {
@@ -184,6 +199,7 @@ export function applyPeriodicityToCompany<
     machineCapacity: number;
     hoursPerEmployee: number;
     loans?: { remaining: number; perRound: number }[];
+    fleet?: { typeCode: string; count: number; acquiredRound: number; bookValue: number }[];
   },
 >(company: T, periodicity: Periodicity): T {
   const k = PERIODICITY_DAYS[periodicity] / 90;
@@ -196,5 +212,7 @@ export function applyPeriodicityToCompany<
     ...(company.loans
       ? { loans: company.loans.map((l) => ({ ...l, perRound: l.perRound * k })) }
       : {}),
+    // le parc physique ne change pas (stock), seule la capacité par type
+    // change via le scénario — le bookValue est un stock, pas un flux
   };
 }

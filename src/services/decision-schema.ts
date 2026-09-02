@@ -43,6 +43,12 @@ export const roundDecisionsSchema = z.object({
   investment: z
     .object({
       machineCapacityUnits: z.coerce.number().min(0).max(50000).optional(),
+      equipmentBuy: z
+        .array(z.object({ typeCode: z.string().min(1), quantity: z.coerce.number().int().min(0).max(100) }))
+        .optional(),
+      equipmentSell: z
+        .array(z.object({ typeCode: z.string().min(1), quantity: z.coerce.number().int().min(0).max(100) }))
+        .optional(),
     })
     .optional(),
   finance: z

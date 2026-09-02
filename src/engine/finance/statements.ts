@@ -48,8 +48,10 @@ export interface FinanceInput {
    * Le plafonnement aux réserves distribuables est fait par l'appelant.
    */
   dividend?: number;
-  /** Investissement du tour : décaissé et immobilisé immédiatement. */
+  /** Investissement du tour : décaissé et immobilisé (net de la revente). */
   investmentOutlay: number;
+  /** Perte de cession d'équipement (VNC − produit de cession). */
+  disposalLoss?: number;
   /**
    * Gestion de trésorerie (optionnel) : mobilisation de créances demandée et
    * paramètres du scénario. Au-delà du plafond de découvert, un affacturage
@@ -138,7 +140,8 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
       input.maintenanceCost -
       input.fixedCosts;
     const depreciation = Math.min(input.depreciation, o.fixedAssetsNet);
-    const operatingIncome = ebitda - depreciation;
+    const disposalLoss = input.disposalLoss ?? 0;
+    const operatingIncome = ebitda - depreciation - disposalLoss;
     // charges financières : intérêts de la dette + coûts de mobilisation
     const interest =
       (o.financialDebt * input.loanAnnualRate + o.overdraft * input.overdraftAnnualRate) *
@@ -219,7 +222,7 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
 
     // --- Bilan de clôture -------------------------------------------------
     const closing: BalanceSheet = {
-      fixedAssetsNet: o.fixedAssetsNet - depreciation + input.investmentOutlay,
+      fixedAssetsNet: o.fixedAssetsNet - depreciation + input.investmentOutlay - disposalLoss,
       inventoryValue: o.inventoryValue + input.inventoryChange,
       receivables: receivablesEnd,
       cash: Math.max(0, closingNet),

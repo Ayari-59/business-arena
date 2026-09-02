@@ -210,6 +210,47 @@ const rawBatiment = {
     depreciationRounds: 24,
     maxPerRound: 400,
   },
+  // Équipements typés : 3 niveaux de matériel de chantier.
+  // Capacité initiale = 2 × 250 + 1 × 400 + 1 × 600 = 1 500 (identique au legacy).
+  equipment: {
+    types: [
+      {
+        code: "outillage_manuel",
+        name: "Outillage manuel",
+        capacityPerUnit: 250,
+        costPerUnit: 35000,
+        depreciationRounds: 20,
+        maintenanceMultiplier: 1.3,
+        maxPerRound: 4,
+        resaleRatio: 0.4,
+      },
+      {
+        code: "nacelle_fourgon",
+        name: "Nacelle et fourgon",
+        capacityPerUnit: 400,
+        costPerUnit: 65000,
+        depreciationRounds: 24,
+        maintenanceMultiplier: 1.0,
+        maxPerRound: 2,
+        resaleRatio: 0.5,
+      },
+      {
+        code: "mini_grue",
+        name: "Mini-grue",
+        capacityPerUnit: 600,
+        costPerUnit: 130000,
+        depreciationRounds: 28,
+        maintenanceMultiplier: 0.7,
+        maxPerRound: 1,
+        resaleRatio: 0.55,
+      },
+    ],
+    initialFleet: [
+      { typeCode: "outillage_manuel", count: 2 },
+      { typeCode: "nacelle_fourgon", count: 1 },
+      { typeCode: "mini_grue", count: 1 },
+    ],
+  },
   studies: {
     marketCost: 2100,
     priceCost: 1600,
@@ -440,6 +481,13 @@ export function batimentCompany(
     productivity: 1,
     // chantiers commencés, non facturés : 260 m² au coût variable de 210 €
     finishedGoods: { quantity: 260, unitCost: 210 },
+    // Parc initial : 2 outillage (70 000 €) + 1 nacelle (65 000 €) + 1 mini-grue (130 000 €) = 265 000 €
+    // (amorti à ~63 % → ~166 000 € de VNC)
+    fleet: [
+      { typeCode: "outillage_manuel", count: 2, acquiredRound: 0, bookValue: 38000 },
+      { typeCode: "nacelle_fourgon", count: 1, acquiredRound: 0, bookValue: 42000 },
+      { typeCode: "mini_grue", count: 1, acquiredRound: 0, bookValue: 86000 },
+    ],
     // crédit de matériel : 240 000 € sur 24 trimestres → 10 000 €/tour
     loans: [{ remaining: 240000, perRound: 10000 }],
     finance: {

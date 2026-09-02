@@ -205,6 +205,46 @@ const rawBistrot = {
     depreciationRounds: 24,
     maxPerRound: 1500,
   },
+  // Équipements typés : 3 niveaux de cuisine.
+  // Capacité initiale = 2 × 1 500 + 2 × 3 000 = 9 000 (identique au legacy).
+  equipment: {
+    types: [
+      {
+        code: "cuisine_traditionnelle",
+        name: "Cuisine traditionnelle",
+        capacityPerUnit: 1500,
+        costPerUnit: 15000,
+        depreciationRounds: 20,
+        maintenanceMultiplier: 1.3,
+        maxPerRound: 4,
+        resaleRatio: 0.4,
+      },
+      {
+        code: "cuisine_semi_pro",
+        name: "Cuisine semi-professionnelle",
+        capacityPerUnit: 3000,
+        costPerUnit: 36000,
+        depreciationRounds: 24,
+        maintenanceMultiplier: 1.0,
+        maxPerRound: 2,
+        resaleRatio: 0.5,
+      },
+      {
+        code: "cuisine_pro",
+        name: "Cuisine professionnelle",
+        capacityPerUnit: 5000,
+        costPerUnit: 70000,
+        depreciationRounds: 28,
+        maintenanceMultiplier: 0.7,
+        maxPerRound: 1,
+        resaleRatio: 0.55,
+      },
+    ],
+    initialFleet: [
+      { typeCode: "cuisine_traditionnelle", count: 2 },
+      { typeCode: "cuisine_semi_pro", count: 2 },
+    ],
+  },
   studies: {
     marketCost: 900,
     priceCost: 700,
@@ -445,6 +485,12 @@ export function bistrotCompany(
     hoursPerEmployee: 455,
     productivity: 1,
     finishedGoods: { quantity: 0, unitCost: 0 },
+    // Parc initial : 2 traditionnelles (30 000 €) + 2 semi-pro (72 000 €) = 102 000 €
+    // (amorti à ~61 % → ~62 000 € de VNC)
+    fleet: [
+      { typeCode: "cuisine_traditionnelle", count: 2, acquiredRound: 0, bookValue: 16000 },
+      { typeCode: "cuisine_semi_pro", count: 2, acquiredRound: 0, bookValue: 46000 },
+    ],
     // emprunt d'installation : 105 000 € sur 24 trimestres → 4 375 €/tour
     loans: [{ remaining: 105000, perRound: 4375 }],
     finance: {

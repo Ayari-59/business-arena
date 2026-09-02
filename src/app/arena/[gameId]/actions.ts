@@ -55,9 +55,20 @@ export async function playRoundAction(
           salaryIndex: Number(formData.get("salaryPercent") || 100) / 100,
         }
       : undefined,
-    investment: formData.has("machineCapacityUnits")
-      ? { machineCapacityUnits: formData.get("machineCapacityUnits") || 0 }
-      : undefined,
+    investment: (() => {
+      const hasMachine = formData.has("machineCapacityUnits");
+      const buyRaw = formData.get("equipmentBuyJson");
+      const sellRaw = formData.get("equipmentSellJson");
+      const equipBuy = buyRaw ? JSON.parse(String(buyRaw)) : undefined;
+      const equipSell = sellRaw ? JSON.parse(String(sellRaw)) : undefined;
+      const hasEquip = (equipBuy && equipBuy.length > 0) || (equipSell && equipSell.length > 0);
+      if (!hasMachine && !hasEquip) return undefined;
+      return {
+        machineCapacityUnits: hasMachine ? (formData.get("machineCapacityUnits") || 0) : undefined,
+        equipmentBuy: equipBuy && equipBuy.length > 0 ? equipBuy : undefined,
+        equipmentSell: equipSell && equipSell.length > 0 ? equipSell : undefined,
+      };
+    })(),
     finance: {
       newLoan: formData.get("newLoan") || 0,
       loanRepayment: formData.get("loanRepayment") || 0,

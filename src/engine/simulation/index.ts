@@ -2,6 +2,8 @@ import type {
   CompanyRoundResult,
   CompanyState,
   EngineScenarioConfig,
+  EquipmentItem,
+  EquipmentTypeDef,
   OrderOfferDef,
   SegmentSalesDetail,
   SimulationInput,
@@ -37,6 +39,26 @@ import {
   effectiveModifiers,
   tickEvents,
 } from "../events";
+
+// --- Helpers pour le parc d'équipements typés ---
+
+function mergeFleet(active: EquipmentItem[], pending: EquipmentItem[]): EquipmentItem[] {
+  return [...active, ...pending];
+}
+
+function fleetCapacity(
+  fleet: EquipmentItem[],
+  types: Map<string, EquipmentTypeDef>,
+): number {
+  return fleet.reduce((sum, item) => {
+    const typ = types.get(item.typeCode);
+    return sum + (typ ? item.count * typ.capacityPerUnit : 0);
+  }, 0);
+}
+
+function fleetCountOf(fleet: EquipmentItem[], typeCode: string): number {
+  return fleet.reduce((s, f) => s + (f.typeCode === typeCode ? f.count : 0), 0);
+}
 
 export const ENGINE_VERSION = "0.1.0";
 
@@ -121,6 +143,13 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     scrapValue: number;
     investUnits: number;
     investOutlay: number;
+    equipBought: { typeCode: string; typeName: string; quantity: number; unitCost: number }[];
+    equipSold: { typeCode: string; typeName: string; quantity: number; salePrice: number; bookValue: number }[];
+    equipSaleProceeds: number;
+    equipDisposalLoss: number;
+    equipNewFleet: EquipmentItem[];
+    equipPendingFleet: EquipmentItem[];
+    equipDepreciation: number;
     chosenFormula: import("../types").InsuranceFormulaDef | null;
     supplier: import("../types").SupplierDef | null;
     supplyDisruption: boolean;
@@ -194,9 +223,16 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       ? rng.next() < supplier.supplyRiskProbability
       : false;
     const supplyAvailabilityHit = supplyDisruption ? (supplier?.supplyRiskAvailabilityHit ?? 1) : 1;
+    // Capacité machine : soit calculée du parc typé, soit homogène (legacy).
+    const effectiveMachineCapacity = scenario.equipment
+      ? fleetCapacity(
+          mergeFleet(state.fleet ?? [], state.pendingFleet ?? []),
+          new Map(scenario.equipment.types.map((t) => [t.code, t])),
+        )
+      : state.machineCapacity + (state.pendingCapacity ?? 0);
     const production = computeProduction({
       planned: decisions.productionPlan,
-      machineCapacity: state.machineCapacity + (state.pendingCapacity ?? 0),
+      machineCapacity: effectiveMachineCapacity,
       availability: state.availability * mods.availabilityMultiplier * supplyAvailabilityHit,
       headcount: state.headcount,
       hoursPerEmployee: state.hoursPerEmployee,
@@ -225,14 +261,100 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const netProduced = production.produced - defectUnits;
     const scrapValue = defectUnits * unitCost;
     const stock = addToStock(state.finishedGoods, netProduced, unitCost);
-    // Investissement capacitaire : décaissé maintenant, en service à t+1.
-    const investUnits = scenario.investment
-      ? Math.min(
-          Math.max(0, raw.investment?.machineCapacityUnits ?? 0),
-          scenario.investment.maxPerRound,
-        )
-      : 0;
-    const investOutlay = investUnits * (scenario.investment?.costPerCapacityUnit ?? 0);
+    // --- Investissement capacitaire ---
+    // Deux systèmes : homogène (legacy) ou typé (equipment).
+    const equip = scenario.equipment;
+    let investUnits = 0;
+    let investOutlay = 0;
+    let equipBought: Working["equipBought"] = [];
+    let equipSold: Working["equipSold"] = [];
+    let equipSaleProceeds = 0;
+    let equipDisposalLoss = 0;
+    let equipNewFleet: EquipmentItem[] = [];
+    let equipPendingFleet: EquipmentItem[] = [];
+    let equipDepreciation = 0;
+
+    if (equip) {
+      const typeMap = new Map(equip.types.map((t) => [t.code, t]));
+      // Parc actif = parc existant + pending du tour précédent
+      const activeFleet = mergeFleet(state.fleet ?? [], state.pendingFleet ?? []);
+      // Ventes d'équipement (retrait du parc actif)
+      const sellRequests = raw.investment?.equipmentSell ?? [];
+      let fleet = [...activeFleet.map((f) => ({ ...f }))];
+      for (const req of sellRequests) {
+        const typ = typeMap.get(req.typeCode);
+        if (!typ || req.quantity <= 0) continue;
+        let toSell = Math.min(req.quantity, fleetCountOf(fleet, req.typeCode));
+        if (toSell <= 0) continue;
+        const resaleRatio = typ.resaleRatio ?? 0.5;
+        let soldBookValue = 0;
+        let soldCount = 0;
+        // Vendre en commençant par les plus anciens (FIFO)
+        for (const item of fleet) {
+          if (item.typeCode !== req.typeCode || item.count <= 0) continue;
+          const take = Math.min(toSell, item.count);
+          const bvPerUnit = item.count > 0 ? item.bookValue / item.count : 0;
+          soldBookValue += take * bvPerUnit;
+          item.count -= take;
+          item.bookValue -= take * bvPerUnit;
+          soldCount += take;
+          toSell -= take;
+          if (toSell <= 0) break;
+        }
+        const salePrice = soldBookValue * resaleRatio;
+        equipSaleProceeds += salePrice;
+        equipDisposalLoss += soldBookValue - salePrice;
+        equipSold.push({
+          typeCode: req.typeCode,
+          typeName: typ.name,
+          quantity: soldCount,
+          salePrice,
+          bookValue: soldBookValue,
+        });
+      }
+      fleet = fleet.filter((f) => f.count > 0);
+      // Achats d'équipement (en attente, en service à t+1)
+      const buyRequests = raw.investment?.equipmentBuy ?? [];
+      const newPending: EquipmentItem[] = [];
+      for (const req of buyRequests) {
+        const typ = typeMap.get(req.typeCode);
+        if (!typ || req.quantity <= 0) continue;
+        const qty = Math.min(req.quantity, typ.maxPerRound);
+        const cost = qty * typ.costPerUnit;
+        investOutlay += cost;
+        investUnits += qty * typ.capacityPerUnit;
+        newPending.push({
+          typeCode: req.typeCode,
+          count: qty,
+          acquiredRound: roundIndex,
+          bookValue: cost,
+        });
+        equipBought.push({
+          typeCode: req.typeCode,
+          typeName: typ.name,
+          quantity: qty,
+          unitCost: typ.costPerUnit,
+        });
+      }
+      // Amortissement du parc actif (chaque lot s'amortit linéairement)
+      for (const item of fleet) {
+        const typ = typeMap.get(item.typeCode);
+        if (!typ || item.bookValue <= 0) continue;
+        const originalCost = item.count * typ.costPerUnit;
+        const depPerRound = originalCost / typ.depreciationRounds;
+        const dep = Math.min(depPerRound, item.bookValue);
+        equipDepreciation += dep;
+        item.bookValue = Math.max(0, item.bookValue - dep);
+      }
+      equipNewFleet = fleet.filter((f) => f.count > 0);
+      equipPendingFleet = newPending;
+    } else if (scenario.investment) {
+      investUnits = Math.min(
+        Math.max(0, raw.investment?.machineCapacityUnits ?? 0),
+        scenario.investment.maxPerRound,
+      );
+      investOutlay = investUnits * scenario.investment.costPerCapacityUnit;
+    }
     return {
       state,
       decisions,
@@ -253,6 +375,13 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       scrapValue,
       investUnits,
       investOutlay,
+      equipBought,
+      equipSold,
+      equipSaleProceeds,
+      equipDisposalLoss,
+      equipNewFleet,
+      equipPendingFleet,
+      equipDepreciation,
       chosenFormula,
       supplier,
       supplyDisruption,
@@ -500,11 +629,12 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       maintenanceCost: w.decisions.maintenanceBudget,
       fixedCosts: scenario.fixedCostsPerRound + insurancePremium + hrCost + studiesCost,
       // amortissements : base du scénario + investissements en service
-      // (y compris celui mis en service ce tour)
-      depreciation:
-        scenario.finance.depreciationPerRound +
-        (w.state.extraDepreciationPerRound ?? 0) +
-        (w.state.pendingDepreciationPerRound ?? 0),
+      // (y compris celui mis en service ce tour) OU amortissement du parc typé
+      depreciation: scenario.equipment
+        ? w.equipDepreciation
+        : scenario.finance.depreciationPerRound +
+          (w.state.extraDepreciationPerRound ?? 0) +
+          (w.state.pendingDepreciationPerRound ?? 0),
       loanAnnualRate: scenario.finance.loanAnnualRate,
       overdraftAnnualRate: conditions.overdraftAnnualRate,
       interestMultiplier: w.mods.interestMultiplier,
@@ -514,7 +644,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       loanRepayment: mandatoryRepayment + earlyRepayment,
       capitalIncrease,
       dividend,
-      investmentOutlay: w.investOutlay,
+      investmentOutlay: w.investOutlay - w.equipSaleProceeds,
+      disposalLoss: w.equipDisposalLoss,
       ...(scenario.treasury
         ? {
             treasury: {
@@ -657,8 +788,17 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
             },
           }
         : {}),
-      ...(w.investUnits > 0
-        ? { investment: { capacityUnits: w.investUnits, outlay: w.investOutlay } }
+      ...(w.investOutlay > 0 || w.equipSold.length > 0
+        ? {
+            investment: {
+              capacityUnits: w.investUnits,
+              outlay: w.investOutlay,
+              ...(w.equipBought.length > 0 ? { bought: w.equipBought } : {}),
+              ...(w.equipSold.length > 0 ? { sold: w.equipSold } : {}),
+              ...(w.equipSaleProceeds > 0 ? { saleProceeds: w.equipSaleProceeds } : {}),
+              ...(w.equipDisposalLoss > 0 ? { disposalLoss: w.equipDisposalLoss } : {}),
+            },
+          }
         : {}),
       ...(scheduled
         ? {
@@ -764,19 +904,33 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     for (const segment of scenario.market.segments) {
       lastMarketShare[segment.code] = perSegment[segment.code]?.share ?? 0;
     }
+    // Mise à jour du parc et de la capacité machine pour le prochain tour.
+    const nextFleetState = scenario.equipment
+      ? {
+          machineCapacity: fleetCapacity(
+            w.equipNewFleet,
+            new Map(scenario.equipment.types.map((t) => [t.code, t])),
+          ),
+          fleet: w.equipNewFleet,
+          pendingFleet: w.equipPendingFleet,
+          pendingCapacity: undefined,
+          extraDepreciationPerRound: undefined,
+          pendingDepreciationPerRound: undefined,
+        }
+      : {
+          machineCapacity: w.state.machineCapacity + (w.state.pendingCapacity ?? 0),
+          pendingCapacity: w.investUnits,
+          extraDepreciationPerRound:
+            (w.state.extraDepreciationPerRound ?? 0) + (w.state.pendingDepreciationPerRound ?? 0),
+          pendingDepreciationPerRound: scenario.investment
+            ? w.investOutlay / scenario.investment.depreciationRounds
+            : 0,
+        };
     nextCompanies.push({
       ...w.state,
       headcount: w.hr.nextHeadcount,
       productivity: w.hr.nextProductivity,
-      // Investissement : la capacité achetée au tour précédent entre en
-      // service, celle de ce tour attend son installation (t+1).
-      machineCapacity: w.state.machineCapacity + (w.state.pendingCapacity ?? 0),
-      pendingCapacity: w.investUnits,
-      extraDepreciationPerRound:
-        (w.state.extraDepreciationPerRound ?? 0) + (w.state.pendingDepreciationPerRound ?? 0),
-      pendingDepreciationPerRound: scenario.investment
-        ? w.investOutlay / scenario.investment.depreciationRounds
-        : 0,
+      ...nextFleetState,
       ...(scheduled ? { loans: nextLoans } : {}),
       ...(capitalIncrease > 0 || w.state.capitalRaised !== undefined
         ? { capitalRaised: raisedBefore + capitalIncrease }

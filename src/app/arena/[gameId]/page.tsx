@@ -383,6 +383,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
             capitalAllowance={view.capitalAllowance}
             insuranceFormulas={view.insuranceFormulas}
             suppliersOffer={view.suppliersOffer}
+            equipmentOffer={view.equipmentOffer}
             capacityFacts={view.capacityFacts}
           />
         </section>
@@ -765,11 +766,29 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                 ) : null}
 
                 {r.investment ? (
-                  <p className="rounded-lg border border-amber-400/30 bg-amber-950/20 px-3 py-2 text-xs text-amber-200">
-                    🏗️ Investissement : +{formatUnits(r.investment.capacityUnits)} u de
-                    capacité ({formatEuro(r.investment.outlay)}), en service au prochain tour,
-                    avec un amortissement en hausse.
-                  </p>
+                  <div className="rounded-lg border border-amber-400/30 bg-amber-950/20 px-3 py-2 text-xs text-amber-200">
+                    <p>
+                      🏗️ Investissement : +{formatUnits(r.investment.capacityUnits)} u de
+                      capacité ({formatEuro(r.investment.outlay)}), en service au prochain tour.
+                    </p>
+                    {r.investment.bought && r.investment.bought.length > 0 ? (
+                      <p className="mt-1 text-slate-300">
+                        Achat : {r.investment.bought.map((b: { quantity: number; typeName: string; unitCost: number }) =>
+                          `${b.quantity} × ${b.typeName} (${formatEuro(b.unitCost)}/u)`
+                        ).join(", ")}
+                      </p>
+                    ) : null}
+                    {r.investment.sold && r.investment.sold.length > 0 ? (
+                      <p className="mt-1 text-slate-300">
+                        Cession : {r.investment.sold.map((s: { quantity: number; typeName: string; salePrice: number }) =>
+                          `${s.quantity} × ${s.typeName} (${formatEuro(s.salePrice)})`
+                        ).join(", ")}
+                        {r.investment.disposalLoss && r.investment.disposalLoss > 0.5
+                          ? ` · perte de cession ${formatEuro(r.investment.disposalLoss)}`
+                          : ""}
+                      </p>
+                    ) : null}
+                  </div>
                 ) : null}
 
                 {r.qualityCosts &&

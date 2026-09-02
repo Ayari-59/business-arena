@@ -236,6 +236,47 @@ const rawTransport = {
     depreciationRounds: 24,
     maxPerRound: 2500,
   },
+  // Équipements typés : 3 catégories de véhicules.
+  // Capacité initiale = 1 × 1 000 + 3 × 2 000 + 1 × 3 000 = 10 000 (identique au legacy).
+  equipment: {
+    types: [
+      {
+        code: "fourgon_urbain",
+        name: "Fourgon urbain",
+        capacityPerUnit: 1000,
+        costPerUnit: 45000,
+        depreciationRounds: 20,
+        maintenanceMultiplier: 1.3,
+        maxPerRound: 4,
+        resaleRatio: 0.4,
+      },
+      {
+        code: "porteur_12t",
+        name: "Porteur 12 t",
+        capacityPerUnit: 2000,
+        costPerUnit: 95000,
+        depreciationRounds: 24,
+        maintenanceMultiplier: 1.0,
+        maxPerRound: 3,
+        resaleRatio: 0.5,
+      },
+      {
+        code: "semi_remorque",
+        name: "Semi-remorque",
+        capacityPerUnit: 3000,
+        costPerUnit: 165000,
+        depreciationRounds: 28,
+        maintenanceMultiplier: 0.7,
+        maxPerRound: 1,
+        resaleRatio: 0.55,
+      },
+    ],
+    initialFleet: [
+      { typeCode: "fourgon_urbain", count: 1 },
+      { typeCode: "porteur_12t", count: 3 },
+      { typeCode: "semi_remorque", count: 1 },
+    ],
+  },
   studies: {
     marketCost: 2400,
     priceCost: 1800,
@@ -469,6 +510,13 @@ export function transportCompany(
     hoursPerEmployee: 455,
     productivity: 1,
     finishedGoods: { quantity: 0, unitCost: 0 },
+    // Parc initial : 1 fourgon (45 000 €) + 3 porteurs (285 000 €) + 1 semi (165 000 €) = 495 000 €
+    // (amorti à ~63 % → ~314 000 € de VNC)
+    fleet: [
+      { typeCode: "fourgon_urbain", count: 1, acquiredRound: 0, bookValue: 24000 },
+      { typeCode: "porteur_12t", count: 3, acquiredRound: 0, bookValue: 180000 },
+      { typeCode: "semi_remorque", count: 1, acquiredRound: 0, bookValue: 110000 },
+    ],
     // crédit de flotte : 300 000 € sur 24 trimestres → 12 500 €/tour
     loans: [{ remaining: 300000, perRound: 12500 }],
     finance: {

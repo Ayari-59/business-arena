@@ -158,6 +158,27 @@ export const engineScenarioConfigSchema = z.object({
       maxPerRound: z.number().positive(),
     })
     .optional(),
+  equipment: z
+    .object({
+      types: z
+        .array(
+          z.object({
+            code: z.string().min(1),
+            name: z.string().min(1),
+            capacityPerUnit: z.number().positive(),
+            costPerUnit: z.number().positive(),
+            depreciationRounds: z.number().positive(),
+            maintenanceMultiplier: z.number().positive(),
+            maxPerRound: z.number().int().positive(),
+            resaleRatio: z.number().min(0).max(1).optional(),
+          }),
+        )
+        .min(1),
+      initialFleet: z
+        .array(z.object({ typeCode: z.string().min(1), count: z.number().int().positive() }))
+        .min(1),
+    })
+    .optional(),
   // Études achetables : l'information a un prix (charge de structure).
   studies: z
     .object({
