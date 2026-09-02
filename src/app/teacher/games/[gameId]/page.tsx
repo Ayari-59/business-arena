@@ -4,9 +4,10 @@ import { getTeacherGameView } from "@/services/game.service";
 import { getGameGradeSheet, getTeacherPedagogyView } from "@/services/pedagogy.service";
 import { formatEuro } from "@/lib/format";
 import { periodLabel } from "@/config/scenarios/periodicity";
-import { closeRoundAction, setQuizModeAction } from "../../actions";
+import { setQuizModeAction } from "../../actions";
 import { QUIZ_MODES } from "@/config/difficulty";
 import { CardDeck } from "@/components/card-deck";
+import { CloseRoundForm } from "@/components/close-round-form";
 import { SubmitButton } from "@/components/submit-button";
 import { GuardedForm } from "@/components/guarded-action";
 import { RoundStatusPoller } from "@/components/round-status-poller";
@@ -28,9 +29,7 @@ export default async function TeacherGamePage({
 
   const finished = view.status === "finished";
   const humanTeams = view.teams.filter((t) => t.controller === "human");
-  const allSubmitted = humanTeams.every((t) => t.hasSubmitted);
   const submittedCount = humanTeams.filter((t) => t.hasSubmitted).length;
-  const closeAction = closeRoundAction.bind(null, view.gameId);
 
   return (
     <main id="main" className="mx-auto max-w-4xl space-y-8 p-6">
@@ -175,15 +174,12 @@ export default async function TeacherGamePage({
           </table>
         </div>
         {!finished ? (
-          <GuardedForm action={closeAction} label="clôture du tour" timeoutMs={45_000} className="mt-4">
-            <SubmitButton
-              pendingLabel="Simulation du tour en cours…"
-              className="w-full rounded-lg bg-amber-400 px-4 py-3 text-sm font-semibold text-slate-950 hover:bg-amber-300"
-            >
-              Clore le tour {view.currentRound} et simuler
-              {allSubmitted ? "" : " (les équipes sans décisions reconduisent le tour précédent)"}
-            </SubmitButton>
-          </GuardedForm>
+          <CloseRoundForm
+            gameId={view.gameId}
+            tour={view.currentRound}
+            validees={submittedCount}
+            total={humanTeams.length}
+          />
         ) : null}
       </section>
 
