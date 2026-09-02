@@ -4,7 +4,8 @@ import { DECISION_MODELS } from "@/config/pedagogy/models";
 import { NAVIGATION } from "@/config/navigation";
 
 export const metadata = {
-  title: "Fonctionnalités · Business Arena",
+  alternates: { canonical: "/fonctionnalites" },
+  title: "Fonctionnalités",
   description:
     "9 scénarios sectoriels, 79 situations pédagogiques, 18 modèles d'analyse : tout ce que la plateforme met entre les mains de vos étudiants.",
 };

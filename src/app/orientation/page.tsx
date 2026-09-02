@@ -13,7 +13,8 @@ import { ATELIERS } from "@/config/ateliers";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Choisir sa simulation · Business Arena",
+  alternates: { canonical: "/orientation" },
+  title: "Choisir sa simulation",
   description:
     "Quatre questions pour trouver l'entreprise, le niveau et la durée qui conviennent à votre classe.",
 };

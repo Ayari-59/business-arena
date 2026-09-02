@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import { SiteLogo } from "@/components/site-logo";
 
 export const metadata: Metadata = {
-  title: "Mentions légales & données personnelles · BUSINESS ARENA",
+  alternates: { canonical: "/mentions-legales" },
+  title: "Mentions légales & données personnelles",
   description:
     "Éditeur, hébergement, cookies et protection des données : les élèves jouent sans compte, sans e-mail, sans traceur.",
 };

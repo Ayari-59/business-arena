@@ -9,7 +9,8 @@ import {
 } from "@/config/scenarios/presentation";
 
 export const metadata: Metadata = {
-  title: `Les ${SCENARIOS.length} entreprises · BUSINESS ARENA`,
+  alternates: { canonical: "/entreprises" },
+  title: `${SCENARIOS.length} entreprises jouables`,
   description: `Un atelier, un hôtel, un bistrot, un chantier, une flotte de camions. ${SCENARIOS.length} métiers, ${SCENARIOS.length} contraintes, ${SCENARIOS.length} façons de perdre de l'argent.`,
 };
 

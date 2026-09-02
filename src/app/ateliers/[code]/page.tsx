@@ -18,7 +18,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { code } = await params;
   const a = atelierByCode.get(code);
-  if (!a) return { title: "Atelier introuvable · BUSINESS ARENA" };
+  if (!a) return { title: "Atelier introuvable" };
   return { title: `${a.titre} · ${a.diplome}`, description: a.resume };
 }
 

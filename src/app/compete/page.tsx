@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import { CompetitionJoinForm } from "@/components/competition-join-form";
+
+/** Page d'entrée par code : un titre pour l'onglet, rien pour les moteurs. */
+export const metadata: Metadata = {
+  title: "Rejoindre un concours",
+  robots: { index: false, follow: false },
+};
 
 export default function CompetePage() {
   return (

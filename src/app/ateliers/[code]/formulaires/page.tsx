@@ -38,7 +38,7 @@ export async function generateMetadata({
   const atelier = atelierByCode.get(code);
   if (!atelier) return {};
   return {
-    title: `Formulaires des livrables · ${atelier.titre} · BUSINESS ARENA`,
+    title: `Formulaires des livrables · ${atelier.titre}`,
     description: `Une feuille à remplir par séance, à imprimer et à distribuer, pour ${atelier.diplome}.`,
   };
 }

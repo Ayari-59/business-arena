@@ -1,5 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { JoinForm } from "@/components/join-form";
+
+/** Page d'entrée par code : un titre pour l'onglet, rien pour les moteurs. */
+export const metadata: Metadata = {
+  title: "Rejoindre une partie",
+  robots: { index: false, follow: false },
+};
 
 export default function JoinPage() {
   return (

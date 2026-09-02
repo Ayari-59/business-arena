@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { startGameAction } from "./actions";
 import { getPlatformConfig } from "@/services/admin.service";
@@ -15,6 +16,7 @@ import {
 } from "@/config/scenarios/presentation";
 import { LIENS_LEGAUX, NAVIGATION } from "@/config/navigation";
 import { SubmitButton } from "@/components/submit-button";
+import { DESCRIPTION_ACCUEIL, TITRE_ACCUEIL } from "@/config/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -93,6 +95,16 @@ function MiniKpi({ label, value, tone }: { label: string; value: string; tone?: 
     </div>
   );
 }
+
+/**
+ * La page d'accueil porte le titre entier du site (pas de gabarit) : c'est
+ * elle qu'un lien partagé ou un moteur de recherche présentent.
+ */
+export const metadata: Metadata = {
+  title: { absolute: TITRE_ACCUEIL },
+  description: DESCRIPTION_ACCUEIL,
+  alternates: { canonical: "/" },
+};
 
 export default async function Home({
   searchParams,
