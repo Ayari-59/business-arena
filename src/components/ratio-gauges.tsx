@@ -44,7 +44,7 @@ function GaugeBar({ ratio }: { ratio: RatioDef }) {
           style={{ width: `${Math.min(100, fillPct)}%` }}
         />
       </div>
-      <p className="text-[10px] leading-snug text-slate-600">{ratio.hint}</p>
+      <p className="text-xs leading-snug text-slate-600">{ratio.hint}</p>
     </div>
   );
 }
@@ -118,7 +118,7 @@ export function RatioGauges({
           <GaugeBar key={r.label} ratio={r} />
         ))}
       </div>
-      <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+      <p className="mt-3 text-xs leading-relaxed text-slate-500">
         Un ratio seul ne dit rien : c&apos;est l&apos;ensemble qui raconte la stratégie
         financière. L&apos;effet de levier montre si la dette sert la rentabilité ou la
         fragilise.

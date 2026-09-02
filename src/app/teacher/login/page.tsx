@@ -12,7 +12,7 @@ export default async function TeacherLoginPage() {
   if (session) redirect("/teacher");
   const demoSeeded = await isDemoSeeded();
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
+    <main id="main" className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
       <div className="flex flex-col items-center text-center">
         <SiteLogo />
         <h1 className="mt-4 text-3xl font-bold">Espace enseignant</h1>

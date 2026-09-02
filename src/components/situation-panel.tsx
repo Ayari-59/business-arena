@@ -60,7 +60,7 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
   return (
     <article className="rounded-xl border border-amber-400/20 bg-slate-900 p-5">
       <header className="mb-3">
-        <p className="text-[11px] uppercase tracking-[0.25em] text-amber-400">
+        <p className="text-xs uppercase tracking-[0.25em] text-amber-400">
           {CATEGORY_LABELS[situation.category]}
         </p>
         <h3 className="mt-1 text-lg font-semibold text-slate-100">{situation.title}</h3>
@@ -232,7 +232,7 @@ export function SituationDebrief({ situation }: { situation: SituationView }) {
     <article className="rounded-xl border border-white/10 bg-slate-900 p-5">
       <header className="mb-3 flex items-start justify-between gap-3">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.25em] text-slate-500">Débriefing</p>
+          <p className="text-xs uppercase tracking-[0.25em] text-slate-500">Débriefing</p>
           <h3 className="mt-1 text-base font-semibold text-slate-100">{situation.title}</h3>
         </div>
         <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300">
@@ -372,7 +372,7 @@ export function SituationDebrief({ situation }: { situation: SituationView }) {
                   href={`/notions#${c.code}`}
                   className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1 text-xs text-amber-200 hover:border-amber-400/40"
                 >
-                  <span className="text-[10px] uppercase tracking-wider text-slate-500">{c.domain}</span>
+                  <span className="text-xs uppercase tracking-wider text-slate-500">{c.domain}</span>
                   {c.name}
                 </a>
               ))}

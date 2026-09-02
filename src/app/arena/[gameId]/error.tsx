@@ -8,7 +8,7 @@ export default function ArenaError({
   reset: () => void;
 }) {
   return (
-    <main className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center p-6 text-center">
+    <main id="main" className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center p-6 text-center">
       <h1 className="text-xl font-bold text-slate-100">
         Une erreur est survenue
       </h1>

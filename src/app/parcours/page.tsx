@@ -19,7 +19,7 @@ const FIT_BADGE: Record<string, { label: string; className: string }> = {
 
 export default function ParcoursPage() {
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100">
+    <main id="main" className="min-h-screen bg-slate-950 text-slate-100">
       <nav className="mx-auto flex max-w-4xl items-center justify-between px-6 py-5">
         <Link href="/">
           <SiteLogo />
@@ -109,7 +109,7 @@ export default function ParcoursPage() {
                       <td className="py-3 pr-3 text-xs leading-relaxed">{b.enJeu}</td>
                       <td className="py-3">
                         <span
-                          className={`whitespace-nowrap rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wide ${FIT_BADGE[b.fit]!.className}`}
+                          className={`whitespace-nowrap rounded-full border px-2 py-0.5 text-xs uppercase tracking-wide ${FIT_BADGE[b.fit]!.className}`}
                         >
                           {FIT_BADGE[b.fit]!.label}
                         </span>

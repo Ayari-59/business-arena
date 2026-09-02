@@ -92,7 +92,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
   const defaultTab = finished ? "resultats" : r ? "situation" : "situation";
 
   return (
-    <main className="mx-auto max-w-5xl px-6 pt-6 pb-12">
+    <main id="main" className="mx-auto max-w-5xl px-6 pt-6 pb-12">
       {/* ── Header ── */}
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -498,11 +498,11 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                                 key={k.key}
                                 className="rounded-lg border border-white/10 bg-slate-950 px-3 py-2.5"
                               >
-                                <p className="text-[11px] uppercase tracking-wide text-slate-500">{k.label}</p>
+                                <p className="text-xs uppercase tracking-wide text-slate-500">{k.label}</p>
                                 <p className="mt-0.5 text-lg font-semibold tabular-nums text-slate-100">
                                   {formatKpi(k.value, k.format)}
                                 </p>
-                                <p className="mt-1 text-[11px] leading-snug text-slate-500">{k.hint}</p>
+                                <p className="mt-1 text-xs leading-snug text-slate-500">{k.hint}</p>
                               </div>
                             ))}
                           </div>
@@ -602,7 +602,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                           <div className="mt-2 overflow-x-auto">
                             <table className="w-full text-sm">
                               <thead>
-                                <tr className="text-left text-[11px] uppercase tracking-wide text-slate-500">
+                                <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
                                   <th className="pb-1 pr-3 font-medium" />
                                   <th className="pb-1 pr-3 text-right font-medium">Prévu</th>
                                   <th className="pb-1 pr-3 text-right font-medium">Réalisé</th>
@@ -649,7 +649,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                             </table>
                           </div>
                           {r.bank && r.bank.reliability !== null ? (
-                            <p className="mt-2 text-[11px] leading-relaxed text-slate-400">
+                            <p className="mt-2 text-xs leading-relaxed text-slate-400">
                               Votre banque a lu cet écart. Plan jugé juste à{" "}
                               <strong className="text-slate-200">
                                 {Math.round(r.bank.reliability * 100)} %
@@ -662,7 +662,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                               son taux.
                             </p>
                           ) : null}
-                          <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+                          <p className="mt-2 text-xs leading-relaxed text-slate-500">
                             L&apos;écart vaut mieux que la prévision : il dit ce que vous n&apos;aviez pas
                             vu. Un écart qui se répète dans le même sens n&apos;est pas de la malchance,
                             c&apos;est un biais dans votre modèle.

@@ -74,7 +74,7 @@ export function SiteHeader() {
               réglage en cours pour un défaut, et invite aux retours. */}
           <span
             title="Version bêta : la plateforme est pleinement utilisable, mais scénarios et contenus évoluent encore. Vos retours sont les bienvenus."
-            className="rounded-full border border-sky-400/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-sky-300"
+            className="rounded-full border border-sky-400/40 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-sky-300"
           >
             Bêta
           </span>
@@ -147,7 +147,7 @@ export function SiteHeader() {
           <div className="mt-4 space-y-4 border-t border-white/10 pt-4">
             {NAVIGATION.map((groupe) => (
               <div key={groupe.code}>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
                   {groupe.titre}
                 </p>
                 <div className="mt-1.5 space-y-0.5">
@@ -159,7 +159,7 @@ export function SiteHeader() {
             ))}
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-4 border-t border-white/10 pt-3 text-[11px] text-slate-500">
+          <div className="mt-4 flex flex-wrap gap-4 border-t border-white/10 pt-3 text-xs text-slate-500">
             {LIENS_LEGAUX.map((lien) => (
               <Link key={lien.href} href={lien.href} className="hover:text-slate-300">
                 {lien.libelle}
@@ -203,7 +203,7 @@ function Entree({
       >
         {lien.libelle}
       </span>
-      <span className="mt-0.5 block text-[11px] leading-relaxed text-slate-400">{lien.aide}</span>
+      <span className="mt-0.5 block text-xs leading-relaxed text-slate-400">{lien.aide}</span>
     </Link>
   );
 }

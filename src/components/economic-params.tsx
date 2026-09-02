@@ -111,7 +111,7 @@ export function EconomicParams({
           ⚙️ Paramètres économiques (avancé) · laissez vide pour les valeurs du scénario
         </summary>
 
-        <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+        <p className="mt-3 text-xs leading-relaxed text-slate-500">
           Les valeurs en filigrane sont celles de{" "}
           <strong className="text-slate-400">{selected.label}</strong>. Montants en base
           trimestrielle, redimensionnés selon la périodicité choisie. Une valeur hors bornes est
@@ -120,7 +120,7 @@ export function EconomicParams({
 
         {GROUPS.map((group) => (
           <section key={group.title} className="mt-4">
-            <h3 className="text-[11px] font-semibold uppercase tracking-wider text-amber-400/80">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-amber-400/80">
               {group.title}
             </h3>
             <div className="mt-2 grid gap-3 sm:grid-cols-3">
@@ -131,7 +131,7 @@ export function EconomicParams({
                 const unavailable = fallback === null;
                 return (
                   <label key={field.name} className="block">
-                    <span className="text-[11px] text-slate-500">{field.label}</span>
+                    <span className="text-xs text-slate-500">{field.label}</span>
                     <span className="mt-1 flex items-center gap-1.5 rounded-lg border border-white/10 bg-slate-900 px-2.5 py-1.5 focus-within:border-amber-400/60">
                       <input
                         type="text"
@@ -141,7 +141,7 @@ export function EconomicParams({
                         disabled={unavailable}
                         className="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-600 disabled:cursor-not-allowed"
                       />
-                      <span className="whitespace-nowrap text-[11px] text-slate-500">
+                      <span className="whitespace-nowrap text-xs text-slate-500">
                         {field.suffix === "unit" ? `€/${selected.unit}` : field.suffix}
                       </span>
                     </span>
@@ -150,7 +150,7 @@ export function EconomicParams({
               })}
             </div>
             {group.note ? (
-              <p className="mt-2 text-[11px] leading-relaxed text-slate-600">{group.note}</p>
+              <p className="mt-2 text-xs leading-relaxed text-slate-600">{group.note}</p>
             ) : null}
           </section>
         ))}

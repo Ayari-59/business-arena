@@ -22,7 +22,7 @@ export default async function OrientationPage() {
   const config = await getPlatformConfig();
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-12">
+    <main id="main" className="mx-auto max-w-5xl px-6 py-12">
       <p className="text-xs uppercase tracking-[0.3em] text-amber-400">
         Business Arena · orientation
       </p>

@@ -19,7 +19,7 @@ export default async function PlayerCompetitionPage({
   const { view, myGameId, myTeamLabel } = data;
 
   return (
-    <main className="mx-auto max-w-4xl space-y-6 p-6">
+    <main id="main" className="mx-auto max-w-4xl space-y-6 p-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Concours</p>

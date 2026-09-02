@@ -41,7 +41,7 @@ function LicenceField({
 }) {
   return (
     <label className="block">
-      <span className="text-[10px] uppercase tracking-wide text-slate-500">{label}</span>
+      <span className="text-xs uppercase tracking-wide text-slate-500">{label}</span>
       <input
         name={name}
         type={type}
@@ -62,7 +62,7 @@ export default async function AdminPage() {
   const demoSeeded = await isDemoSeeded();
 
   return (
-    <main className="mx-auto max-w-5xl space-y-8 p-6">
+    <main id="main" className="mx-auto max-w-5xl space-y-8 p-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Administration générale</p>
@@ -220,7 +220,7 @@ export default async function AdminPage() {
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-sm font-semibold text-slate-100">
                   {org.name}
-                  <span className="ml-2 rounded bg-slate-800 px-1.5 py-0.5 text-[10px] uppercase text-slate-500">
+                  <span className="ml-2 rounded bg-slate-800 px-1.5 py-0.5 text-xs uppercase text-slate-500">
                     {org.kind === "public" ? "grand public" : org.kind === "school" ? "établissement" : org.kind}
                   </span>
                 </p>
@@ -327,7 +327,7 @@ export default async function AdminPage() {
                       Enregistrer la licence
                     </button>
                   </form>
-                  <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+                  <p className="mt-2 text-xs leading-relaxed text-slate-500">
                     Sans licence, l&apos;établissement reste ouvert : la limite n&apos;existe que
                     là où une vente l&apos;a définie. Une licence expirée ferme la création de
                     nouvelles parties et laisse se terminer les classes en cours.

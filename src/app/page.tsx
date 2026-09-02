@@ -82,7 +82,7 @@ const AUDIENCES = [
 function MiniKpi({ label, value, tone }: { label: string; value: string; tone?: "good" | "bad" }) {
   return (
     <div className="rounded-lg border border-white/10 bg-slate-950/80 px-3 py-2">
-      <p className="text-[10px] uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
       <p
         className={`text-sm font-semibold ${
           tone === "good" ? "text-emerald-400" : tone === "bad" ? "text-red-400" : "text-slate-100"
@@ -110,7 +110,7 @@ export default async function Home({
     ? secteur!
     : DEFAULT_SCENARIO_CODE;
   return (
-    <main className="relative overflow-hidden">
+    <main id="main" className="relative overflow-hidden">
       {/* halo décoratif */}
       <div
         aria-hidden
@@ -178,7 +178,7 @@ export default async function Home({
           <div className="rounded-2xl border border-white/10 bg-slate-900/90 p-4 shadow-2xl shadow-amber-400/5">
             <div className="flex items-center justify-between border-b border-white/5 pb-3">
               <p className="text-xs font-semibold text-slate-300">NOVA · Trimestre 4 / 6</p>
-              <span className="rounded-full border border-red-400/40 bg-red-950/40 px-2 py-0.5 text-[10px] text-red-300">
+              <span className="rounded-full border border-red-400/40 bg-red-950/40 px-2 py-0.5 text-xs text-red-300">
                 ⚠ trésorerie sous tension
               </span>
             </div>
@@ -189,14 +189,14 @@ export default async function Home({
               <MiniKpi label="BFR" value="84 805 €" />
             </div>
             <div className="mt-3 rounded-lg border border-amber-400/20 bg-amber-950/20 p-3">
-              <p className="text-[10px] uppercase tracking-[0.25em] text-amber-400">
+              <p className="text-xs uppercase tracking-[0.25em] text-amber-400">
                 Alerte comptable
               </p>
               <p className="mt-1 text-sm font-medium text-slate-200">
                 Votre entreprise gagne de l&apos;argent mais n&apos;en a plus en caisse.
                 Identifiez les causes possibles.
               </p>
-              <div className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
+              <div className="mt-2 flex flex-wrap gap-1.5 text-xs">
                 <span className="rounded-full bg-slate-950 px-2.5 py-1 text-slate-400">
                   Diagnostic
                 </span>
@@ -268,7 +268,7 @@ export default async function Home({
                     {EMBLEMES_SECTEUR[d.sector]}
                   </span>
                   <span
-                    className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${a.puce}`}
+                    className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider ${a.puce}`}
                   >
                     {SECTOR_LABELS[d.sector]}
                   </span>
@@ -280,7 +280,7 @@ export default async function Home({
                   {promesseEntreprise(d) ?? d.tagline}
                 </p>
                 <p className="relative mt-2 text-sm leading-relaxed text-slate-400">{d.tagline}</p>
-                <p className="relative mt-3 text-[11px] text-slate-600">
+                <p className="relative mt-3 text-xs text-slate-600">
                   Vous y vendez des {d.vocabulary.units} · {d.situations.length} situations à
                   traiter
                 </p>
@@ -470,7 +470,7 @@ export default async function Home({
                       long passait à la ligne et décalait le titre de sa tuile par
                       rapport aux deux autres.
                     */}
-                    <span className="mt-1 flex min-h-[1.75rem] items-start justify-center text-[11px] leading-tight text-slate-500">
+                    <span className="mt-1 flex min-h-[1.75rem] items-start justify-center text-xs leading-tight text-slate-500">
                       {hint}
                     </span>
                   </label>
@@ -530,7 +530,7 @@ export default async function Home({
                 Les noms sont lus des préréglages : ils ne peuvent pas se désaccorder
                 de ce que la partie ouvrira vraiment.
               */}
-              <span className="mt-1.5 block text-[11px] leading-relaxed text-slate-500">
+              <span className="mt-1.5 block text-xs leading-relaxed text-slate-500">
                 De {DIFFICULTY_PRESETS[0]!.name} à{" "}
                 {DIFFICULTY_PRESETS[DIFFICULTY_PRESETS.length - 1]!.name}, chaque cran
                 ouvre de nouvelles décisions et retire des indices.

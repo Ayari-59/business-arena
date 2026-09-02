@@ -15,7 +15,7 @@ const DOMAIN_LABELS: Record<string, string> = {
 export default function ConceptsPage() {
   const domains = [...new Set(CONCEPTS.map((c) => c.domain))];
   return (
-    <main className="mx-auto max-w-3xl space-y-8 p-6">
+    <main id="main" className="mx-auto max-w-3xl space-y-8 p-6">
       <header>
         <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Business Arena</p>
         <h1 className="mt-1 text-2xl font-bold">Fiches notions</h1>

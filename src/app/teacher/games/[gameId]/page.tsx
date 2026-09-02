@@ -32,7 +32,7 @@ export default async function TeacherGamePage({
   const closeAction = closeRoundAction.bind(null, view.gameId);
 
   return (
-    <main className="mx-auto max-w-4xl space-y-8 p-6">
+    <main id="main" className="mx-auto max-w-4xl space-y-8 p-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Pilotage de partie</p>
@@ -137,7 +137,7 @@ export default async function TeacherGamePage({
                   <td className="py-2 pr-3">
                     {t.name}
                     {t.controller === "bot" ? (
-                      <span className="ml-2 rounded bg-slate-800 px-1.5 py-0.5 text-[10px] uppercase text-slate-500">
+                      <span className="ml-2 rounded bg-slate-800 px-1.5 py-0.5 text-xs uppercase text-slate-500">
                         bot
                       </span>
                     ) : null}
@@ -279,7 +279,7 @@ export default async function TeacherGamePage({
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-[11px] uppercase tracking-wide text-slate-500">
+                <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
                   <th className="pb-2 pr-3 font-medium">Équipe</th>
                   <th className="pb-2 pr-3 font-medium">Élèves</th>
                   <th className="pb-2 pr-3 text-right font-medium">Rendues</th>

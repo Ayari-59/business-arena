@@ -24,7 +24,7 @@ export default async function TeacherCompetitionPage({
   const finalDone = finalStage !== undefined && finalStage.games.every((g) => g.status === "finished");
 
   return (
-    <main className="mx-auto max-w-4xl space-y-6 p-6">
+    <main id="main" className="mx-auto max-w-4xl space-y-6 p-6">
       <header>
         <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Concours</p>
         <h1 className="text-2xl font-bold">{view.name}</h1>
