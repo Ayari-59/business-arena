@@ -273,6 +273,7 @@ export async function createSoloGame(
   level?: number,
   variableWorld = false,
   scenarioCode?: string,
+  roundsCount?: number,
 ): Promise<string> {
   const config = await getPlatformConfig();
   if (!config.allowPublicPlay) {
@@ -291,10 +292,7 @@ export async function createSoloGame(
     level,
     variableWorld,
     scenarioCode,
-    // Partie publique jouée seul : on ne pose pas de questions de
-    // connaissances à quelqu'un qui découvre la plateforme sans professeur.
-    // Reste la question du modèle d'analyse, qui est la compétence même du
-    // jeu et se répond en jouant, pas en révisant.
+    roundsCount,
     quizMode: "model",
   });
   const humanTeam = (

@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { SCENARIOS } from "@/config/scenarios/registry";
 import { neutralDecisions } from "@/engine/bots";
+import { fleetMaintenanceMultiplier } from "@/engine/simulation";
 import { roundDecisionsSchema } from "@/services/decision-schema";
+import type { EquipmentTypeDef } from "@/engine/types";
 
 /**
  * Le point de départ d'un tour appartient au secteur joué.
@@ -65,8 +67,15 @@ describe("le point de départ d'un tour vient du secteur", () => {
         0.5 * d.scenario.production.qualityScale,
         6,
       );
+      const state = d.company("t", "Test", "human");
+      const maintenanceMul = d.scenario.equipment
+        ? fleetMaintenanceMultiplier(
+            [...(state.fleet ?? []), ...(state.pendingFleet ?? [])],
+            new Map<string, EquipmentTypeDef>(d.scenario.equipment.types.map((t) => [t.code, t])),
+          )
+        : 1;
       expect(dep.maintenanceBudget, `${d.code}`).toBeCloseTo(
-        d.scenario.production.maintenanceReference,
+        d.scenario.production.maintenanceReference * maintenanceMul,
         6,
       );
     }

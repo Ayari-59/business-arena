@@ -56,6 +56,22 @@ function fleetCapacity(
   }, 0);
 }
 
+export function fleetMaintenanceMultiplier(
+  fleet: EquipmentItem[],
+  types: Map<string, EquipmentTypeDef>,
+): number {
+  let totalCapacity = 0;
+  let weightedSum = 0;
+  for (const item of fleet) {
+    const typ = types.get(item.typeCode);
+    if (!typ) continue;
+    const cap = item.count * typ.capacityPerUnit;
+    totalCapacity += cap;
+    weightedSum += cap * typ.maintenanceMultiplier;
+  }
+  return totalCapacity > 0 ? weightedSum / totalCapacity : 1;
+}
+
 function fleetCountOf(fleet: EquipmentItem[], typeCode: string): number {
   return fleet.reduce((s, f) => s + (f.typeCode === typeCode ? f.count : 0), 0);
 }
@@ -949,7 +965,14 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       availability: updateAvailability({
         current: w.state.availability,
         maintenanceBudget: w.decisions.maintenanceBudget,
-        maintenanceReference: scenario.production.maintenanceReference,
+        maintenanceReference: scenario.production.maintenanceReference * (
+          scenario.equipment
+            ? fleetMaintenanceMultiplier(
+                mergeFleet(w.state.fleet ?? [], w.state.pendingFleet ?? []),
+                new Map(scenario.equipment.types.map((t) => [t.code, t])),
+              )
+            : 1
+        ),
         availabilityDecay: scenario.production.availabilityDecay,
         availabilityFloor: scenario.production.availabilityFloor,
       }),

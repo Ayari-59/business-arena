@@ -145,7 +145,7 @@ export default async function Home({
               href="#jouer"
               className="rounded-lg bg-amber-500 px-6 py-3 text-center text-sm font-semibold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400"
             >
-              Lancer une partie gratuite
+              Tester le simulateur
             </a>
             <Link
               href="/entreprises"
@@ -491,6 +491,23 @@ export default async function Home({
                 <option value={4}>4 · marché disputé</option>
                 <option value={6}>6 · forte concurrence</option>
                 <option value={8}>8 · guerre de tous contre tous</option>
+              </select>
+            </label>
+            <label className="mt-4 block">
+              <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                Nombre de tours
+              </span>
+              <select
+                name="roundsCount"
+                defaultValue=""
+                className="mt-2 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+              >
+                <option value="">Toute la partie</option>
+                {[3, 4, 5, 6].map((n) => (
+                  <option key={n} value={n}>
+                    {n} tours
+                  </option>
+                ))}
               </select>
             </label>
             <label className="mt-4 block">

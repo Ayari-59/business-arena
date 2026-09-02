@@ -23,6 +23,8 @@ import { getTeacherOrgId, registerTeacher } from "@/services/auth.service";
 import { closeCurrentRound, createClassGame, getGameView, joinGameByCode } from "@/services/game.service";
 import { users } from "@/db/schema";
 import { scenarioByCode } from "@/config/scenarios/registry";
+import { fleetMaintenanceMultiplier } from "@/engine/simulation";
+import type { EquipmentTypeDef } from "@/engine/types";
 
 let teacherId: string;
 let orgId: string;
@@ -115,8 +117,15 @@ describe("le repli d'une équipe absente", () => {
     const view = await getGameView(gameId, eleve[0]!.id);
     expect(view!.lastDecisions).toBeNull(); // rien à reconduire au tour 1
     expect(view!.startingDecisions.price).toBeCloseTo(principal.refPrice, 6);
+    const etat = hotel.company("t", "T", "human");
+    const maintenanceMul = hotel.scenario.equipment
+      ? fleetMaintenanceMultiplier(
+          [...(etat.fleet ?? []), ...(etat.pendingFleet ?? [])],
+          new Map<string, EquipmentTypeDef>(hotel.scenario.equipment.types.map((t) => [t.code, t])),
+        )
+      : 1;
     expect(view!.startingDecisions.maintenanceBudget).toBeCloseTo(
-      hotel.scenario.production.maintenanceReference,
+      hotel.scenario.production.maintenanceReference * maintenanceMul,
       6,
     );
   });
