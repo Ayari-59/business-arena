@@ -5,24 +5,29 @@ interface RatioDef {
   value: number;
   hint: string;
   thresholds: { good: number; warning: number };
+  invert?: boolean;
 }
 
 function GaugeBar({ ratio }: { ratio: RatioDef }) {
   const clamped = Math.max(-1, Math.min(1, ratio.value));
   const fillPct = Math.abs(clamped) * 100;
   const isNegative = ratio.value < 0;
-  const tone =
-    ratio.value >= ratio.thresholds.good
-      ? "bg-emerald-500"
-      : ratio.value >= ratio.thresholds.warning
-        ? "bg-amber-500"
-        : "bg-red-500";
-  const textTone =
-    ratio.value >= ratio.thresholds.good
-      ? "text-emerald-400"
-      : ratio.value >= ratio.thresholds.warning
-        ? "text-amber-400"
-        : "text-red-400";
+  const isGood = ratio.invert
+    ? ratio.value <= ratio.thresholds.good
+    : ratio.value >= ratio.thresholds.good;
+  const isWarning = ratio.invert
+    ? ratio.value <= ratio.thresholds.warning
+    : ratio.value >= ratio.thresholds.warning;
+  const tone = isGood
+    ? "bg-emerald-500"
+    : isWarning
+      ? "bg-amber-500"
+      : "bg-red-500";
+  const textTone = isGood
+    ? "text-emerald-400"
+    : isWarning
+      ? "text-amber-400"
+      : "text-red-400";
 
   return (
     <div className="space-y-1">
@@ -92,7 +97,8 @@ export function RatioGauges({
       hint: debtToEquity > 1
         ? "L'entreprise doit plus à ses prêteurs qu'à ses associés."
         : "L'endettement reste contenu.",
-      thresholds: { good: 0, warning: 0.8 },
+      thresholds: { good: 0.5, warning: 1 },
+      invert: true,
     },
     {
       label: "Rotation de l'actif (CA / Actif)",
