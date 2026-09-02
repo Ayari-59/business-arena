@@ -295,6 +295,34 @@ const rawNova = {
         { target: "order_subcontract", op: "add", value: 2500 },
       ],
     },
+    // Événements machines (§ équipement) : pannes sévères, obsolescence et
+    // opportunités d'équipement. APPENDRE en fin de liste (PRNG).
+    {
+      code: "major_breakdown",
+      scope: "company",
+      probability: 0.03,
+      minRound: 4,
+      duration: 2,
+      modifiers: [{ target: "availability", op: "mul", value: 0.7 }],
+    },
+    {
+      code: "tech_obsolescence",
+      scope: "company",
+      probability: 0.03,
+      minRound: 4,
+      duration: 2,
+      modifiers: [
+        { target: "availability", op: "mul", value: 0.9 },
+        { target: "material_cost", op: "mul", value: 1.08 },
+      ],
+    },
+    {
+      code: "used_equipment_deal",
+      scope: "company",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "availability", op: "mul", value: 1.12 }],
+    },
   ],
   // Fournisseurs (doc 02 §5bis) : 3 fournisseurs avec des profils distincts.
   // Le standard est le référent (coût = 22 €, délai = 22 j, pas de risque).
@@ -356,6 +384,7 @@ const rawNova = {
           "natural_disaster",
           "cold_wave",
           "machine_breakdown",
+          "major_breakdown",
           "supplier_dispute",
           "cyberattack",
         ],
@@ -368,6 +397,8 @@ const rawNova = {
           "natural_disaster",
           "cold_wave",
           "machine_breakdown",
+          "major_breakdown",
+          "tech_obsolescence",
           "supplier_dispute",
           "cyberattack",
           "rate_hike",
