@@ -215,17 +215,19 @@ const rawTransport = {
       {
         code: "extended",
         name: "RC, marchandise et bris de véhicule",
-        premiumPerRound: 9800,
-        coveredEventCodes: ["transport_accident", "transport_panne_flotte"],
+        premiumPerRound: 11600,
+        coveredEventCodes: ["transport_accident", "transport_panne_flotte", "transport_major_breakdown"],
       },
       {
         code: "premium",
         name: "Flotte tous risques et perte d'exploitation",
-        premiumPerRound: 15400,
+        premiumPerRound: 18000,
         coveredEventCodes: [
           "transport_accident",
           "transport_panne_flotte",
           "transport_vol_remorque",
+          "transport_major_breakdown",
+          "transport_tech_obsolescence",
         ],
       },
     ],
@@ -457,6 +459,34 @@ const rawTransport = {
       probability: 0,
       duration: 1,
       modifiers: [{ target: "order", op: "add", value: 900 }],
+    },
+    // Événements machines (§ équipement) : pannes, obsolescence et
+    // opportunités d'équipement. APPENDRE en fin de liste (PRNG).
+    {
+      code: "transport_major_breakdown",
+      scope: "company",
+      probability: 0.03,
+      minRound: 4,
+      duration: 2,
+      modifiers: [{ target: "availability", op: "mul", value: 0.7 }],
+    },
+    {
+      code: "transport_tech_obsolescence",
+      scope: "company",
+      probability: 0.03,
+      minRound: 4,
+      duration: 2,
+      modifiers: [
+        { target: "availability", op: "mul", value: 0.9 },
+        { target: "material_cost", op: "mul", value: 1.08 },
+      ],
+    },
+    {
+      code: "transport_used_equipment_deal",
+      scope: "company",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "availability", op: "mul", value: 1.12 }],
     },
   ],
   // Le gazole prend dix-huit pour cent au tour 3, en plein creux d'été : les

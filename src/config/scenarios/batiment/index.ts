@@ -188,17 +188,19 @@ const rawBatiment = {
       {
         code: "extended",
         name: "RC professionnelle et matériel de chantier",
-        premiumPerRound: 7100,
-        coveredEventCodes: ["batiment_sinistre_chantier", "batiment_vol_materiel"],
+        premiumPerRound: 8500,
+        coveredEventCodes: ["batiment_sinistre_chantier", "batiment_vol_materiel", "batiment_major_breakdown"],
       },
       {
         code: "premium",
         name: "Décennale renforcée et tous risques chantier",
-        premiumPerRound: 11800,
+        premiumPerRound: 13800,
         coveredEventCodes: [
           "batiment_sinistre_chantier",
           "batiment_vol_materiel",
           "batiment_malfacon",
+          "batiment_major_breakdown",
+          "batiment_tech_obsolescence",
         ],
       },
     ],
@@ -427,6 +429,34 @@ const rawBatiment = {
       probability: 0,
       duration: 1,
       modifiers: [{ target: "order", op: "add", value: 180 }],
+    },
+    // Événements machines (§ équipement) : pannes, obsolescence et
+    // opportunités d'équipement. APPENDRE en fin de liste (PRNG).
+    {
+      code: "batiment_major_breakdown",
+      scope: "company",
+      probability: 0.03,
+      minRound: 4,
+      duration: 2,
+      modifiers: [{ target: "availability", op: "mul", value: 0.7 }],
+    },
+    {
+      code: "batiment_tech_obsolescence",
+      scope: "company",
+      probability: 0.03,
+      minRound: 4,
+      duration: 2,
+      modifiers: [
+        { target: "availability", op: "mul", value: 0.9 },
+        { target: "material_cost", op: "mul", value: 1.08 },
+      ],
+    },
+    {
+      code: "batiment_used_equipment_deal",
+      scope: "company",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "availability", op: "mul", value: 1.12 }],
     },
   ],
   // Le crédit immobilier se resserre au tour 4 : les particuliers reportent

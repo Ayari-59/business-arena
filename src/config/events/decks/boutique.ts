@@ -159,4 +159,39 @@ export const BOUTIQUE_CARDS: EventCardDef[] = [
     emoji: "🌳",
     scope: "market",
   },
+  {
+    code: "boutique_major_breakdown",
+    title: "Effondrement d'un rayonnage",
+    flavor:
+      "Un rayonnage central cède sous le poids des stocks. Marchandises abîmées, allées condamnées : la surface de vente est amputée le temps des réparations.",
+    effectLabel:
+      "Disponibilité −30 % pendant 2 tours (une entreprise tirée au sort)",
+    conceptHint: "Risque opérationnel & maintenance du mobilier commercial",
+    category: "internal",
+    emoji: "🛑",
+    scope: "team",
+  },
+  {
+    code: "boutique_tech_obsolescence",
+    title: "Caisse enregistreuse obsolète",
+    flavor:
+      "Le logiciel de caisse ne reçoit plus de mises à jour. Les erreurs d'inventaire se multiplient et le réapprovisionnement coûte plus cher.",
+    effectLabel:
+      "Disponibilité −10 % et coût matières +8 % pendant 2 tours (une entreprise tirée au sort)",
+    conceptHint: "Cycle de vie des actifs & veille technologique",
+    category: "internal",
+    emoji: "⏳",
+    scope: "team",
+  },
+  {
+    code: "boutique_used_equipment_deal",
+    title: "Mobilier commercial de reprise",
+    flavor:
+      "Une enseigne voisine liquide son mobilier : présentoirs, portants et mannequins quasi neufs, à prix cassé.",
+    effectLabel: "Disponibilité +12 % ce tour (équipe ciblée)",
+    conceptHint: "Décision d'investissement & coût d'opportunité",
+    category: "internal",
+    emoji: "🏭",
+    scope: "team",
+  },
 ];

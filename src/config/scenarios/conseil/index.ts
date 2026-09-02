@@ -188,17 +188,19 @@ const rawConseil = {
       {
         code: "extended",
         name: "RC pro + protection juridique",
-        premiumPerRound: 3400,
-        coveredEventCodes: ["conseil_litige_client", "conseil_depart_consultant"],
+        premiumPerRound: 4100,
+        coveredEventCodes: ["conseil_litige_client", "conseil_depart_consultant", "conseil_major_breakdown"],
       },
       {
         code: "premium",
         name: "RC pro + cyber + perte d'exploitation",
-        premiumPerRound: 5600,
+        premiumPerRound: 6600,
         coveredEventCodes: [
           "conseil_litige_client",
           "conseil_depart_consultant",
           "conseil_cyberattaque",
+          "conseil_major_breakdown",
+          "conseil_tech_obsolescence",
         ],
       },
     ],
@@ -431,6 +433,34 @@ const rawConseil = {
       probability: 0,
       duration: 1,
       modifiers: [{ target: "demand", op: "mul", value: 1.18 }],
+    },
+    // Événements machines (§ équipement) : pannes, obsolescence et
+    // opportunités d'équipement. APPENDRE en fin de liste (PRNG).
+    {
+      code: "conseil_major_breakdown",
+      scope: "company",
+      probability: 0.03,
+      minRound: 4,
+      duration: 2,
+      modifiers: [{ target: "availability", op: "mul", value: 0.7 }],
+    },
+    {
+      code: "conseil_tech_obsolescence",
+      scope: "company",
+      probability: 0.03,
+      minRound: 4,
+      duration: 2,
+      modifiers: [
+        { target: "availability", op: "mul", value: 0.9 },
+        { target: "material_cost", op: "mul", value: 1.08 },
+      ],
+    },
+    {
+      code: "conseil_used_equipment_deal",
+      scope: "company",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "availability", op: "mul", value: 1.12 }],
     },
   ],
   // Une réglementation nouvelle au tour 4 ouvre un marché : encore faut-il

@@ -171,4 +171,39 @@ export const HOTEL_CARDS: EventCardDef[] = [
     emoji: "🎸",
     scope: "market",
   },
+  {
+    code: "hotel_major_breakdown",
+    title: "Panne de la climatisation centrale",
+    flavor:
+      "Le groupe froid central rend l'âme en pleine saison. Chambres étouffantes, clients relogés : deux tours pour installer un nouveau système.",
+    effectLabel:
+      "Disponibilité −30 % pendant 2 tours (une entreprise tirée au sort)",
+    conceptHint: "Risque opérationnel & maintenance préventive",
+    category: "internal",
+    emoji: "🛑",
+    scope: "team",
+  },
+  {
+    code: "hotel_tech_obsolescence",
+    title: "Domotique vieillissante",
+    flavor:
+      "Les serrures connectées et le système de réservation affichent leur âge. Les pannes se multiplient et la maintenance coûte de plus en plus cher.",
+    effectLabel:
+      "Disponibilité −10 % et coût matières +8 % pendant 2 tours (une entreprise tirée au sort)",
+    conceptHint: "Cycle de vie des actifs & veille technologique",
+    category: "internal",
+    emoji: "⏳",
+    scope: "team",
+  },
+  {
+    code: "hotel_used_equipment_deal",
+    title: "Mobilier hôtelier de reprise",
+    flavor:
+      "Un hôtel de charme en liquidation cède son mobilier haut de gamme : literie, luminaires et équipements de salle de bains, quasi neufs.",
+    effectLabel: "Disponibilité +12 % ce tour (équipe ciblée)",
+    conceptHint: "Décision d'investissement & coût d'opportunité",
+    category: "internal",
+    emoji: "🏭",
+    scope: "team",
+  },
 ];

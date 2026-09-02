@@ -24,7 +24,7 @@ export function RoundStatusBanner({
           Partie terminée
         </p>
         <p className="mt-1 text-sm text-slate-300">
-          {roundsCount} tours joués. Consultez vos résultats ci-dessous.
+          {roundsCount} tours joués. Consultez vos résultats dans l&apos;onglet Résultats.
         </p>
       </section>
     );
@@ -61,7 +61,7 @@ export function RoundStatusBanner({
         href="#decisions"
         className="mt-3 inline-block rounded-lg bg-amber-400 px-5 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300"
       >
-        Prendre mes décisions
+        Prendre mes décisions →
       </a>
     </section>
   );

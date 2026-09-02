@@ -185,17 +185,19 @@ const rawHotel = {
       {
         code: "extended",
         name: "Multirisque + perte d'exploitation",
-        premiumPerRound: 4200,
-        coveredEventCodes: ["hotel_degat_des_eaux", "hotel_panne_chaudiere"],
+        premiumPerRound: 5000,
+        coveredEventCodes: ["hotel_degat_des_eaux", "hotel_panne_chaudiere", "hotel_major_breakdown"],
       },
       {
         code: "premium",
         name: "Tous risques établissement",
-        premiumPerRound: 7000,
+        premiumPerRound: 8200,
         coveredEventCodes: [
           "hotel_degat_des_eaux",
           "hotel_panne_chaudiere",
           "hotel_cyber_reservation",
+          "hotel_major_breakdown",
+          "hotel_tech_obsolescence",
         ],
       },
     ],
@@ -431,6 +433,34 @@ const rawHotel = {
       probability: 0,
       duration: 1,
       modifiers: [{ target: "demand", op: "mul", value: 1.3 }],
+    },
+    // Événements machines (§ équipement) : pannes, obsolescence et
+    // opportunités d'équipement. APPENDRE en fin de liste (PRNG).
+    {
+      code: "hotel_major_breakdown",
+      scope: "company",
+      probability: 0.03,
+      minRound: 4,
+      duration: 2,
+      modifiers: [{ target: "availability", op: "mul", value: 0.7 }],
+    },
+    {
+      code: "hotel_tech_obsolescence",
+      scope: "company",
+      probability: 0.03,
+      minRound: 4,
+      duration: 2,
+      modifiers: [
+        { target: "availability", op: "mul", value: 0.9 },
+        { target: "material_cost", op: "mul", value: 1.08 },
+      ],
+    },
+    {
+      code: "hotel_used_equipment_deal",
+      scope: "company",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "availability", op: "mul", value: 1.12 }],
     },
   ],
   // L'énergie flambe au tour 4 : la facture explose juste après la saison

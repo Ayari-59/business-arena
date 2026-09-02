@@ -158,4 +158,39 @@ export const BATIMENT_CARDS: EventCardDef[] = [
     emoji: "📞",
     scope: "team",
   },
+  {
+    code: "batiment_major_breakdown",
+    title: "Immobilisation de l'engin principal",
+    flavor:
+      "La mini-grue tombe en panne hydraulique. Le chantier est à l'arrêt, les sous-traitants attendent : deux tours pour la remettre en service.",
+    effectLabel:
+      "Disponibilité −30 % pendant 2 tours (une entreprise tirée au sort)",
+    conceptHint: "Risque opérationnel & maintenance préventive",
+    category: "internal",
+    emoji: "🛑",
+    scope: "team",
+  },
+  {
+    code: "batiment_tech_obsolescence",
+    title: "Engins vieillissants",
+    flavor:
+      "Les engins ne sont plus aux normes antipollution et consomment trop de carburant. Les pièces détachées se raréfient et coûtent plus cher.",
+    effectLabel:
+      "Disponibilité −10 % et coût matières +8 % pendant 2 tours (une entreprise tirée au sort)",
+    conceptHint: "Cycle de vie des actifs & veille technologique",
+    category: "internal",
+    emoji: "⏳",
+    scope: "team",
+  },
+  {
+    code: "batiment_used_equipment_deal",
+    title: "Matériel de chantier d'occasion",
+    flavor:
+      "Un artisan partant à la retraite cède sa nacelle et son fourgon, révisés et en bon état, à un prix très en dessous du marché.",
+    effectLabel: "Disponibilité +12 % ce tour (équipe ciblée)",
+    conceptHint: "Décision d'investissement & coût d'opportunité",
+    category: "internal",
+    emoji: "🏭",
+    scope: "team",
+  },
 ];

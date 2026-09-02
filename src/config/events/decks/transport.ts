@@ -158,4 +158,39 @@ export const TRANSPORT_CARDS: EventCardDef[] = [
     emoji: "📞",
     scope: "team",
   },
+  {
+    code: "transport_major_breakdown",
+    title: "Panne moteur grave",
+    flavor:
+      "Un moteur casse net sur l'autoroute. Le véhicule est immobilisé au garage pour plusieurs semaines : deux tours de capacité réduite.",
+    effectLabel:
+      "Disponibilité −30 % pendant 2 tours (une entreprise tirée au sort)",
+    conceptHint: "Risque opérationnel & maintenance préventive",
+    category: "internal",
+    emoji: "🛑",
+    scope: "team",
+  },
+  {
+    code: "transport_tech_obsolescence",
+    title: "Norme antipollution dépassée",
+    flavor:
+      "Les zones à faibles émissions se multiplient. Vos véhicules les plus anciens n'y entrent plus et les pièces aux nouvelles normes coûtent cher.",
+    effectLabel:
+      "Disponibilité −10 % et coût matières +8 % pendant 2 tours (une entreprise tirée au sort)",
+    conceptHint: "Cycle de vie des actifs & veille technologique",
+    category: "internal",
+    emoji: "⏳",
+    scope: "team",
+  },
+  {
+    code: "transport_used_equipment_deal",
+    title: "Véhicule d'occasion certifié",
+    flavor:
+      "Un transporteur en cessation d'activité cède un porteur révisé, avec contrôle technique à jour, bien en dessous de l'argus.",
+    effectLabel: "Disponibilité +12 % ce tour (équipe ciblée)",
+    conceptHint: "Décision d'investissement & coût d'opportunité",
+    category: "internal",
+    emoji: "🏭",
+    scope: "team",
+  },
 ];
