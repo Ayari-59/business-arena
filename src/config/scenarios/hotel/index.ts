@@ -207,6 +207,46 @@ const rawHotel = {
     depreciationRounds: 40,
     maxPerRound: 900, // 10 chambres par trimestre au maximum
   },
+  // Équipements typés : 3 niveaux de chambres.
+  // Capacité initiale = 4 × 900 + 1 × 1 800 = 5 400 (identique au legacy).
+  equipment: {
+    types: [
+      {
+        code: "chambre_standard",
+        name: "Chambre standard",
+        capacityPerUnit: 900,
+        costPerUnit: 80000,
+        depreciationRounds: 32,
+        maintenanceMultiplier: 1.3,
+        maxPerRound: 3,
+        resaleRatio: 0.4,
+      },
+      {
+        code: "chambre_renovee",
+        name: "Chambre rénovée",
+        capacityPerUnit: 1800,
+        costPerUnit: 180000,
+        depreciationRounds: 40,
+        maintenanceMultiplier: 1.0,
+        maxPerRound: 2,
+        resaleRatio: 0.5,
+      },
+      {
+        code: "suite_premium",
+        name: "Suite premium",
+        capacityPerUnit: 2700,
+        costPerUnit: 310000,
+        depreciationRounds: 48,
+        maintenanceMultiplier: 0.7,
+        maxPerRound: 1,
+        resaleRatio: 0.55,
+      },
+    ],
+    initialFleet: [
+      { typeCode: "chambre_standard", count: 4 },
+      { typeCode: "chambre_renovee", count: 1 },
+    ],
+  },
   studies: {
     marketCost: 2600,
     priceCost: 2200,
@@ -444,6 +484,12 @@ export function hotelCompany(
     hoursPerEmployee: 455,
     productivity: 1,
     finishedGoods: { quantity: 0, unitCost: 0 },
+    // Parc initial : 4 standard (320 000 €) + 1 rénovée (180 000 €) = 500 000 €
+    // (amorti à ~62 % → ~310 000 € de VNC)
+    fleet: [
+      { typeCode: "chambre_standard", count: 4, acquiredRound: 0, bookValue: 184000 },
+      { typeCode: "chambre_renovee", count: 1, acquiredRound: 0, bookValue: 126000 },
+    ],
     // crédit immobilier : 900 000 € sur 40 trimestres → 22 500 €/tour
     loans: [{ remaining: 900000, perRound: 22500 }],
     finance: {

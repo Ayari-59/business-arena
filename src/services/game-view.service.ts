@@ -255,6 +255,21 @@ export interface GameView {
   seasonNotes: { name: string; coef: number }[];
   /** Investissement proposé par le scénario (échelle de la périodicité). */
   investmentOffer: { costPerCapacityUnit: number; maxPerRound: number } | null;
+  /** Équipements typés : catalogue de machines et parc actuel. */
+  equipmentOffer: {
+    types: {
+      code: string;
+      name: string;
+      capacityPerUnit: number;
+      costPerUnit: number;
+      depreciationRounds: number;
+      maintenanceMultiplier: number;
+      maxPerRound: number;
+      resaleRatio: number;
+    }[];
+    fleet: { typeCode: string; count: number; bookValue: number }[];
+    pendingFleet: { typeCode: string; count: number }[];
+  } | null;
   /** Échéance d'emprunt obligatoire du prochain tour et dette restante. */
   debtSchedule: { nextMandatory: number; outstanding: number } | null;
   /**
@@ -969,7 +984,17 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
       const state = stateRow?.state as CompanyState | undefined;
       if (!state) return null;
-      const mc = state.machineCapacity + (state.pendingCapacity ?? 0);
+      let mc: number;
+      if (snapshot.equipment) {
+        const types = new Map(snapshot.equipment.types.map((t) => [t.code, t]));
+        const all = [...(state.fleet ?? []), ...(state.pendingFleet ?? [])];
+        mc = all.reduce((sum, item) => {
+          const typ = types.get(item.typeCode);
+          return sum + (typ ? item.count * typ.capacityPerUnit : 0);
+        }, 0);
+      } else {
+        mc = state.machineCapacity + (state.pendingCapacity ?? 0);
+      }
       const lc = (state.headcount * state.hoursPerEmployee * state.productivity) /
         snapshot.product.hoursPerUnit;
       const bottleneck: "machine" | "labor" | "balanced" =
@@ -998,6 +1023,48 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       return offer
         ? { costPerCapacityUnit: offer.costPerCapacityUnit, maxPerRound: offer.maxPerRound }
         : null;
+    })(),
+    equipmentOffer: (() => {
+      const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+      if (!snapshot.equipment) return null;
+      const state = stateRow?.state as CompanyState | undefined;
+      const activeFleet = (state?.fleet ?? []) as { typeCode: string; count: number; bookValue: number }[];
+      const pending = (state?.pendingFleet ?? []) as { typeCode: string; count: number }[];
+      const fleetByType = new Map<string, { count: number; bookValue: number }>();
+      for (const item of activeFleet) {
+        const existing = fleetByType.get(item.typeCode);
+        if (existing) {
+          existing.count += item.count;
+          existing.bookValue += item.bookValue;
+        } else {
+          fleetByType.set(item.typeCode, { count: item.count, bookValue: item.bookValue });
+        }
+      }
+      const pendingByType = new Map<string, number>();
+      for (const item of pending) {
+        pendingByType.set(item.typeCode, (pendingByType.get(item.typeCode) ?? 0) + item.count);
+      }
+      return {
+        types: snapshot.equipment.types.map((t) => ({
+          code: t.code,
+          name: t.name,
+          capacityPerUnit: t.capacityPerUnit,
+          costPerUnit: t.costPerUnit,
+          depreciationRounds: t.depreciationRounds,
+          maintenanceMultiplier: t.maintenanceMultiplier,
+          maxPerRound: t.maxPerRound,
+          resaleRatio: t.resaleRatio ?? 0.3,
+        })),
+        fleet: snapshot.equipment.types.map((t) => ({
+          typeCode: t.code,
+          count: fleetByType.get(t.code)?.count ?? 0,
+          bookValue: fleetByType.get(t.code)?.bookValue ?? 0,
+        })),
+        pendingFleet: snapshot.equipment.types.map((t) => ({
+          typeCode: t.code,
+          count: pendingByType.get(t.code) ?? 0,
+        })),
+      };
     })(),
     debtSchedule: (() => {
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;

@@ -213,6 +213,47 @@ const rawEcommerce = {
     depreciationRounds: 16,
     maxPerRound: 3000,
   },
+  // Équipements typés : 3 niveaux de préparation de commandes.
+  // Capacité initiale = 3 × 1 000 + 1 × 1 500 + 1 × 2 500 = 7 000 (identique au legacy).
+  equipment: {
+    types: [
+      {
+        code: "preparation_manuelle",
+        name: "Préparation manuelle",
+        capacityPerUnit: 1000,
+        costPerUnit: 5000,
+        depreciationRounds: 12,
+        maintenanceMultiplier: 1.3,
+        maxPerRound: 5,
+        resaleRatio: 0.4,
+      },
+      {
+        code: "convoyeur_semi_auto",
+        name: "Convoyeur semi-automatique",
+        capacityPerUnit: 1500,
+        costPerUnit: 10000,
+        depreciationRounds: 16,
+        maintenanceMultiplier: 1.0,
+        maxPerRound: 3,
+        resaleRatio: 0.5,
+      },
+      {
+        code: "automate_tri",
+        name: "Automate de tri",
+        capacityPerUnit: 2500,
+        costPerUnit: 22000,
+        depreciationRounds: 20,
+        maintenanceMultiplier: 0.7,
+        maxPerRound: 1,
+        resaleRatio: 0.55,
+      },
+    ],
+    initialFleet: [
+      { typeCode: "preparation_manuelle", count: 3 },
+      { typeCode: "convoyeur_semi_auto", count: 1 },
+      { typeCode: "automate_tri", count: 1 },
+    ],
+  },
   studies: {
     marketCost: 1600,
     priceCost: 1400,
@@ -453,6 +494,13 @@ export function ecommerceCompany(
     hoursPerEmployee: 455,
     productivity: 1,
     finishedGoods: { quantity: 2000, unitCost: 27 },
+    // Parc initial : 3 manuelles (15 000 €) + 1 convoyeur (10 000 €) + 1 automate (22 000 €) = 47 000 €
+    // (amorti à ~64 % → ~30 000 € de VNC)
+    fleet: [
+      { typeCode: "preparation_manuelle", count: 3, acquiredRound: 0, bookValue: 8000 },
+      { typeCode: "convoyeur_semi_auto", count: 1, acquiredRound: 0, bookValue: 7000 },
+      { typeCode: "automate_tri", count: 1, acquiredRound: 0, bookValue: 15000 },
+    ],
     // prêt d'amorçage : 90 000 € sur 16 trimestres → 5 625 €/tour
     loans: [{ remaining: 90000, perRound: 5625 }],
     finance: {

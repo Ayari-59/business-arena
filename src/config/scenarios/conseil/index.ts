@@ -205,6 +205,46 @@ const rawConseil = {
   },
   // PAS de bloc `investment` : dans un cabinet, la capacité ne s'achète pas,
   // elle se recrute. Le levier capacitaire est le bloc `hr`, et lui seul.
+  // Équipements typés : 3 niveaux d'aménagement de poste.
+  // Capacité initiale = 2 × 250 + 2 × 500 = 1 500 (identique au legacy).
+  equipment: {
+    types: [
+      {
+        code: "poste_junior",
+        name: "Poste junior",
+        capacityPerUnit: 250,
+        costPerUnit: 8000,
+        depreciationRounds: 12,
+        maintenanceMultiplier: 1.3,
+        maxPerRound: 4,
+        resaleRatio: 0.3,
+      },
+      {
+        code: "poste_confirme",
+        name: "Poste confirmé",
+        capacityPerUnit: 500,
+        costPerUnit: 18000,
+        depreciationRounds: 16,
+        maintenanceMultiplier: 1.0,
+        maxPerRound: 3,
+        resaleRatio: 0.45,
+      },
+      {
+        code: "bureau_associe",
+        name: "Bureau associé",
+        capacityPerUnit: 750,
+        costPerUnit: 35000,
+        depreciationRounds: 20,
+        maintenanceMultiplier: 0.7,
+        maxPerRound: 1,
+        resaleRatio: 0.55,
+      },
+    ],
+    initialFleet: [
+      { typeCode: "poste_junior", count: 2 },
+      { typeCode: "poste_confirme", count: 2 },
+    ],
+  },
   studies: {
     marketCost: 2400,
     priceCost: 2000,
@@ -446,6 +486,12 @@ export function conseilCompany(
     hoursPerEmployee: 60,
     productivity: 1,
     finishedGoods: { quantity: 0, unitCost: 0 },
+    // Parc initial : 2 juniors (16 000 €) + 2 confirmés (36 000 €) = 52 000 €
+    // (amorti à ~62 % → ~32 000 € de VNC)
+    fleet: [
+      { typeCode: "poste_junior", count: 2, acquiredRound: 0, bookValue: 9000 },
+      { typeCode: "poste_confirme", count: 2, acquiredRound: 0, bookValue: 23000 },
+    ],
     // prêt d'amorçage : 70 000 € sur 20 trimestres → 3 500 €/tour
     loans: [{ remaining: 70000, perRound: 3500 }],
     finance: {

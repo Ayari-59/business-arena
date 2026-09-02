@@ -170,6 +170,20 @@ export interface EngineScenarioConfig {
     maxPerRound: number;
   };
   /**
+   * Équipements typés (optionnel) : remplace le système d'investissement
+   * homogène par un parc de machines de types différents, chacun avec son
+   * coût, sa capacité, son amortissement et ses besoins de maintenance.
+   * Inspiré de Simuland (3 types, investissement, amortissement).
+   *
+   * Quand présent, la capacité machine est CALCULÉE depuis le parc ; le
+   * champ `investment` reste lisible (coût moyen, plafond global) mais les
+   * décisions passent par `equipmentBuy`/`equipmentSell`.
+   */
+  equipment?: {
+    types: EquipmentTypeDef[];
+    initialFleet: { typeCode: string; count: number }[];
+  };
+  /**
    * Sous-traitance (optionnel) : unités achetées finies pour servir les
    * commandes fermes au-delà du stock (cible « order_subcontract »).
    */
@@ -315,6 +329,40 @@ export interface OrderOfferDef {
   price: number;
   /** Délai de règlement en jours (0 = comptant). */
   paymentDelayDays: number;
+}
+
+/**
+ * Type d'équipement (doc 02 §6.5bis) : une catégorie de machine avec ses
+ * caractéristiques propres. Le joueur achète et vend des machines par type ;
+ * la capacité totale est la somme des capacités du parc.
+ */
+export interface EquipmentTypeDef {
+  code: string;
+  name: string;
+  /** Unités de capacité fournies par machine de ce type. */
+  capacityPerUnit: number;
+  /** Prix d'achat d'une machine (décaissé immédiatement). */
+  costPerUnit: number;
+  /** Durée d'amortissement linéaire en tours. */
+  depreciationRounds: number;
+  /** Multiplicateur du budget de maintenance de référence (1 = neutre). */
+  maintenanceMultiplier: number;
+  /** Achats max par tour pour ce type. */
+  maxPerRound: number;
+  /** Part de la valeur nette comptable récupérée à la revente (0..1, défaut 0.5). */
+  resaleRatio?: number;
+}
+
+/**
+ * Machine possédée dans le parc d'une entreprise : type, quantité,
+ * tour d'acquisition et valeur nette comptable résiduelle.
+ */
+export interface EquipmentItem {
+  typeCode: string;
+  count: number;
+  acquiredRound: number;
+  /** Valeur nette comptable totale restante (pour l'amortissement). */
+  bookValue: number;
 }
 
 export interface ScoringConfig {
@@ -463,6 +511,13 @@ export interface CompanyState {
   finance: BalanceSheet;
   /** Parts de marché du tour précédent, par segment (fidélité). */
   lastMarketShare: Record<SegmentCode, number>;
+  /**
+   * Parc d'équipements typés (présent quand le scénario a `equipment`).
+   * Chaque entrée est un lot de machines du même type acquises au même tour.
+   */
+  fleet?: EquipmentItem[];
+  /** Machines achetées ce tour, en attente d'installation (en service à t+1). */
+  pendingFleet?: EquipmentItem[];
   /** Capacité machine achetée au tour précédent, mise en service ce tour. */
   pendingCapacity?: number;
   /** Amortissement de l'investissement en attente de mise en service. */
@@ -529,8 +584,16 @@ export interface RoundDecisions {
    * Investissement capacitaire (si le scénario le propose) : unités de
    * capacité machine achetées ce tour — décaissées maintenant, en service au
    * tour suivant. Action ponctuelle : jamais reconduite.
+   *
+   * Avec équipements typés : `equipmentBuy` et `equipmentSell` remplacent
+   * `machineCapacityUnits`. Les deux systèmes ne coexistent pas dans une
+   * même partie.
    */
-  investment?: { machineCapacityUnits?: number };
+  investment?: {
+    machineCapacityUnits?: number;
+    equipmentBuy?: { typeCode: string; quantity: number }[];
+    equipmentSell?: { typeCode: string; quantity: number }[];
+  };
   /**
    * Financement. Avec échéancier (finance.loanDurationRounds) : les échéances
    * sont prélevées automatiquement et loanRepayment est un remboursement
@@ -684,7 +747,14 @@ export interface CompanyRoundResult {
     onCredit: number;
   };
   /** Investissement du tour : capacité achetée (en service à t+1) et montant. */
-  investment?: { capacityUnits: number; outlay: number };
+  investment?: {
+    capacityUnits: number;
+    outlay: number;
+    bought?: { typeCode: string; typeName: string; quantity: number; unitCost: number }[];
+    sold?: { typeCode: string; typeName: string; quantity: number; salePrice: number; bookValue: number }[];
+    saleProceeds?: number;
+    disposalLoss?: number;
+  };
   /** Coûts de la qualité (prévention) et de la non-qualité (défaillances). */
   qualityCosts?: {
     prevention: number;
