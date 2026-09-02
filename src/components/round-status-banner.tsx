@@ -1,4 +1,5 @@
 import { periodLabel } from "@/config/scenarios/periodicity";
+import { libelleStatut, type StatutSituations } from "@/config/situation-rendu";
 
 interface Props {
   currentRound: number;
@@ -7,6 +8,34 @@ interface Props {
   pendingDecisions: boolean;
   kind: "solo" | "class";
   finished: boolean;
+  /** Rendu des situations du tour ; null quand le tour n'en pose aucune. */
+  situations?: StatutSituations | null;
+}
+
+/**
+ * Le rendu de la situation, à côté de « À vous de jouer » : une équipe qui
+ * n'a rendu qu'une moitié doit le lire sans ouvrir l'onglet Situation.
+ */
+function StatutSituation({ statut }: { statut: StatutSituations | null | undefined }) {
+  if (!statut) return null;
+  const rendue = statut.manques.length === 0;
+  return (
+    <p
+      className={`mt-1 text-sm ${rendue ? "text-emerald-300" : "text-amber-300"}`}
+      data-testid="statut-situation"
+    >
+      {rendue ? "✓ " : "⚠ "}
+      {libelleStatut(statut)}
+      {!rendue ? (
+        <>
+          {" · "}
+          <a href="#situation" className="underline hover:text-amber-200">
+            Ouvrir la situation
+          </a>
+        </>
+      ) : null}
+    </p>
+  );
 }
 
 export function RoundStatusBanner({
@@ -16,6 +45,7 @@ export function RoundStatusBanner({
   pendingDecisions,
   kind,
   finished,
+  situations,
 }: Props) {
   if (finished) {
     return (
@@ -39,6 +69,7 @@ export function RoundStatusBanner({
         <p className="mt-1 text-sm font-medium text-emerald-200">
           Décisions enregistrées
         </p>
+        <StatutSituation statut={situations} />
         <p className="mt-1 text-sm text-slate-400">
           {kind === "class"
             ? "En attente de la clôture du tour par l'enseignant. La page se mettra à jour automatiquement."
@@ -54,6 +85,7 @@ export function RoundStatusBanner({
         {periodLabel(roundDays, currentRound)} / {roundsCount}
       </p>
       <p className="mt-1 text-sm font-medium text-amber-200">À vous de jouer</p>
+      <StatutSituation statut={situations} />
       <p className="mt-1 text-sm text-slate-400">
         Vos décisions pour ce tour sont attendues.
       </p>
