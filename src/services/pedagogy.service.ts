@@ -577,7 +577,15 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
       })
       .where(eq(situationInstances.id, instance.id));
 
-    const members = membersByTeam.get(instance.teamId) ?? [];
+    // Une ligne de progression ne se crée que s'il y a eu une réponse. Une
+    // situation non rendue n'est pas une mesure à zéro, c'est une absence :
+    // la vue enseignant affichait « 2 » puis « 1 » de maîtrise sans qu'aucun
+    // élève ait rien saisi.
+    const repondu =
+      typeof (instance.diagnosis as { score?: unknown } | null)?.score === "number" ||
+      typeof (instance.quiz as { score?: unknown } | null)?.score === "number" ||
+      choiceByInstance.has(instance.id);
+    const members = repondu ? (membersByTeam.get(instance.teamId) ?? []) : [];
     for (const member of members) {
       const memberSkills = (skillsByUser.get(member.userId) ?? []).map((s) => ({
         value: Number(s.value),
@@ -929,7 +937,14 @@ export async function getTeamSituations(
 }
 
 export interface TeacherPedagogyView {
+  /**
+   * Maîtrise MESURÉE : moyenne des élèves qui ont au moins une réponse sur la
+   * notion (les lignes de progression ne se créent qu'avec une réponse).
+   * Vide tant qu'aucune situation n'a été rendue.
+   */
   conceptMastery: { code: string; name: string; average: number; students: number }[];
+  /** Notions EXPOSÉES par les situations du tour courant : une liste, pas un score. */
+  conceptsExposed: { code: string; name: string }[];
   hintsUsedByTeam: { teamName: string; count: number }[];
   /** QCM de connaissances : combien soumis, taux de bonnes réponses moyen. */
   quizStats: { submitted: number; averageScore: number };
@@ -996,8 +1011,29 @@ export async function getTeacherPedagogyView(
     .map((i) => (i.quiz as { score?: number } | null)?.score)
     .filter((s): s is number => typeof s === "number");
 
+  // Les notions du tour courant : celles des situations ouvertes ce tour, pour
+  // que l'enseignant sache ce qui est en jeu, sans le confondre avec ce qui
+  // est acquis.
+  const currentRound = gameRounds.find((r) => r.index === game.currentRound);
+  const exposedCodes = new Set<string>();
+  if (currentRound) {
+    const situationIds = [
+      ...new Set(instances.filter((i) => i.roundId === currentRound.id).map((i) => i.situationId)),
+    ];
+    const situationRows = situationIds.length
+      ? await db.select().from(situations).where(inArray(situations.id, situationIds))
+      : [];
+    for (const row of situationRows) {
+      for (const code of situationByCode.get(row.code)?.conceptCodes ?? []) exposedCodes.add(code);
+    }
+  }
+  const conceptsExposed = conceptRows
+    .filter((c) => exposedCodes.has(c.code))
+    .map((c) => ({ code: c.code, name: c.name }));
+
   return {
     conceptMastery,
+    conceptsExposed,
     hintsUsedByTeam: teamRows
       .filter((t) => t.controller === "human")
       .map((t) => ({ teamName: t.name, count: hintsByTeam.get(t.id) ?? 0 })),
