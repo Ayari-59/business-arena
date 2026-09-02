@@ -20,6 +20,10 @@ import { PERIODICITY_LABELS, periodicityFromRoundDays } from "@/config/scenarios
  * Le message n'est donc pas le cœur du formulaire, c'est sa sortie de secours :
  * il part avec le profil et la recommandation déjà écrits, pour que la réponse
  * commence là où la page s'est arrêtée.
+ *
+ * Sans adresse de contact configurée, le bouton d'envoi disparaît, et rien ne
+ * le remplace : l'état de la configuration regarde l'administrateur, pas le
+ * visiteur, à qui la recommandation suffit.
  */
 export function OrientationForm({ contactEmail }: { contactEmail: string }) {
   const diplomes = diplomesProposes();
@@ -188,12 +192,7 @@ export function OrientationForm({ contactEmail }: { contactEmail: string }) {
             >
               Nous écrire avec ce profil
             </a>
-          ) : (
-            <span className="text-xs leading-relaxed text-slate-500">
-              L&apos;adresse de contact n&apos;est pas encore renseignée : la recommandation
-              ci-dessus reste valable, seul l&apos;envoi du message manque.
-            </span>
-          )}
+          ) : null}
         </div>
       </div>
     </div>
