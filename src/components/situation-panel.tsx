@@ -1,12 +1,12 @@
 "use client";
 
-import { useActionState } from "react";
 import {
   submitDiagnosisAction,
   submitQuizAction,
   unlockHintAction,
   type PedagogyState,
 } from "@/app/arena/[gameId]/actions";
+import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import type { SituationView } from "@/services/pedagogy.service";
 import type { SituationCategory } from "@/config/scenarios/situation-kit";
 
@@ -41,18 +41,20 @@ function ErrorBox({ error }: { error: string | null }) {
 
 /** Une situation active : diagnostic → QCM de connaissances → indices à la demande. */
 export function SituationCard({ gameId, situation }: { gameId: string; situation: SituationView }) {
-  const [hintState, hintAction, hintPending] = useActionState(
-    unlockHintAction.bind(null, gameId, situation.instanceId),
-    initial,
-  );
-  const [diagState, diagAction, diagPending] = useActionState(
+  const hint = useGuardedAction(unlockHintAction.bind(null, gameId, situation.instanceId), initial, {
+    label: "indice",
+  });
+  const diag = useGuardedAction(
     submitDiagnosisAction.bind(null, gameId, situation.instanceId),
     initial,
+    { label: "diagnostic" },
   );
-  const [quizState, quizAction, quizPending] = useActionState(
-    submitQuizAction.bind(null, gameId, situation.instanceId),
-    initial,
-  );
+  const quiz = useGuardedAction(submitQuizAction.bind(null, gameId, situation.instanceId), initial, {
+    label: "modèle d'analyse",
+  });
+  const { state: hintState, formAction: hintAction, pending: hintPending } = hint;
+  const { state: diagState, formAction: diagAction, pending: diagPending } = diag;
+  const { state: quizState, formAction: quizAction, pending: quizPending } = quiz;
 
   const diagnosisDone = situation.diagnosis !== null;
   const quizDone = situation.quizAnswers !== null;
@@ -106,7 +108,7 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
               ✓ Diagnostic enregistré, il sera corrigé au débriefing du tour.
             </p>
           ) : (
-            <form action={diagAction} className="mt-2 space-y-2">
+            <form ref={diag.formRef} action={diagAction} className="mt-2 space-y-2">
               {situation.diagnosticOptions.map((option) => (
                 <label key={option.id} className="flex items-start gap-2 text-sm text-slate-200">
                   <input type="checkbox" name="options" value={option.id} className="mt-1 accent-amber-400" />
@@ -120,6 +122,7 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
                 className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
               />
               <ErrorBox error={diagState.error} />
+              <GuardError message={diag.guardError} />
               <button
                 type="submit"
                 disabled={diagPending}
@@ -143,7 +146,7 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
                 ✓ Réponse validée, la correction sera révélée au débriefing du tour.
               </p>
             ) : (
-              <form action={quizAction} className="mt-2 space-y-4">
+              <form ref={quiz.formRef} action={quizAction} className="mt-2 space-y-4">
                 {situation.quizQuestions.map((question, index) => (
                   <fieldset key={question.id}>
                     <legend className="text-sm font-medium text-slate-200">
@@ -169,6 +172,7 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
                   </fieldset>
                 ))}
                 <ErrorBox error={quizState.error} />
+                <GuardError message={quiz.guardError} />
                 <button
                   type="submit"
                   disabled={quizPending}
@@ -197,8 +201,9 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
             </ol>
           ) : null}
           {situation.nextHint ? (
-            <form action={hintAction} className="mt-2">
+            <form ref={hint.formRef} action={hintAction} className="mt-2">
               <ErrorBox error={hintState.error} />
+              <GuardError message={hint.guardError} />
               <button
                 type="submit"
                 disabled={hintPending}

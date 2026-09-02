@@ -1,12 +1,12 @@
 "use client";
 
-import { useActionState } from "react";
 import {
   finishCompetitionAction,
   startFinalAction,
   startQualificationAction,
   type CompetitionActionState,
 } from "@/app/teacher/actions";
+import { GuardError, useGuardedAction } from "@/components/guarded-action";
 
 const initial: CompetitionActionState = { error: null };
 
@@ -27,17 +27,19 @@ export function CompetitionControl({
   action: keyof typeof ACTIONS;
 }) {
   const config = ACTIONS[action];
-  const [state, formAction, pending] = useActionState(
+  const { state, formAction, pending, formRef, guardError } = useGuardedAction(
     config.fn.bind(null, competitionId),
     initial,
+    { label: `concours : ${action}`, timeoutMs: 45_000 },
   );
   return (
-    <form action={formAction} className="space-y-2">
+    <form ref={formRef} action={formAction} className="space-y-2">
       {state.error ? (
         <p className="rounded-lg border border-red-400/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
           {state.error}
         </p>
       ) : null}
+      <GuardError message={guardError} />
       <button
         type="submit"
         disabled={pending}

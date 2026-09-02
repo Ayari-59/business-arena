@@ -15,6 +15,7 @@ import {
   economicDefaults,
 } from "@/config/scenarios/registry";
 import { CompetitionCreateForm } from "@/components/competition-create-form";
+import { GuardedForm } from "@/components/guarded-action";
 import { EconomicParams } from "@/components/economic-params";
 import { SubmitButton } from "@/components/submit-button";
 
@@ -83,7 +84,12 @@ export default async function TeacherDashboard({
           </Link>{" "}
           donnent un déroulé de plusieurs séances avec les réglages qui vont avec.
         </p>
-        <form action={createClassGameAction} className="mt-4 grid gap-4 sm:grid-cols-3">
+        <GuardedForm
+          action={createClassGameAction}
+          label="création de partie"
+          timeoutMs={30_000}
+          className="mt-4 grid gap-4 sm:grid-cols-3"
+        >
           <EconomicParams
             scenarios={SCENARIOS.map((d) => ({
               code: d.code,
@@ -228,7 +234,7 @@ export default async function TeacherDashboard({
           >
             Créer la partie et obtenir le code d&apos;invitation
           </SubmitButton>
-        </form>
+        </GuardedForm>
         <p className="mt-2 text-xs text-slate-500">
           Le nombre total d&apos;entreprises (équipes + bots) est plafonné à 8. Les élèves
           rejoignent avec le code, répartis automatiquement dans les équipes. Le niveau règle

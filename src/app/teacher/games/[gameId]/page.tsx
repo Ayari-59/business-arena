@@ -8,6 +8,7 @@ import { closeRoundAction, setQuizModeAction } from "../../actions";
 import { QUIZ_MODES } from "@/config/difficulty";
 import { CardDeck } from "@/components/card-deck";
 import { SubmitButton } from "@/components/submit-button";
+import { GuardedForm } from "@/components/guarded-action";
 import { RoundStatusPoller } from "@/components/round-status-poller";
 
 export const dynamic = "force-dynamic";
@@ -89,7 +90,11 @@ export default async function TeacherGamePage({
             {QUIZ_MODES.map((m) => {
               const active = m.code === view.quizMode;
               return (
-                <form key={m.code} action={setQuizModeAction.bind(null, view.gameId)}>
+                <GuardedForm
+                  key={m.code}
+                  action={setQuizModeAction.bind(null, view.gameId)}
+                  label="questions posées"
+                >
                   <input type="hidden" name="mode" value={m.code} />
                   <SubmitButton
                     disabled={active}
@@ -109,7 +114,7 @@ export default async function TeacherGamePage({
                     </span>
                     <span className="mt-1 block text-xs text-slate-500">{m.help}</span>
                   </SubmitButton>
-                </form>
+                </GuardedForm>
               );
             })}
           </div>
@@ -170,7 +175,7 @@ export default async function TeacherGamePage({
           </table>
         </div>
         {!finished ? (
-          <form action={closeAction} className="mt-4">
+          <GuardedForm action={closeAction} label="clôture du tour" timeoutMs={45_000} className="mt-4">
             <SubmitButton
               pendingLabel="Simulation du tour en cours…"
               className="w-full rounded-lg bg-amber-400 px-4 py-3 text-sm font-semibold text-slate-950 hover:bg-amber-300"
@@ -178,7 +183,7 @@ export default async function TeacherGamePage({
               Clore le tour {view.currentRound} et simuler
               {allSubmitted ? "" : " (les équipes sans décisions reconduisent le tour précédent)"}
             </SubmitButton>
-          </form>
+          </GuardedForm>
         ) : null}
       </section>
 

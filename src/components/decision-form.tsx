@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { playRoundAction, type PlayRoundState } from "@/app/arena/[gameId]/actions";
+import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import type { RoundDecisions } from "@/engine/types";
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
 import { formatEuro } from "@/lib/format";
@@ -386,7 +387,11 @@ export function DecisionForm({
   } | null;
 }) {
   const action = playRoundAction.bind(null, gameId);
-  const [state, formAction, pending] = useActionState(action, initialState);
+  const { state, formAction, pending, formRef, guardError } = useGuardedAction(
+    action,
+    initialState,
+    { label: "décisions du tour", timeoutMs: 45_000 },
+  );
   const reserves = Math.max(0, distributableReserves ?? 0);
   const [equipBuyQty, setEquipBuyQty] = useState<Record<string, number>>({});
   const [equipSellQty, setEquipSellQty] = useState<Record<string, number>>({});
@@ -405,7 +410,7 @@ export function DecisionForm({
   const v = vocabulary;
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form ref={formRef} action={formAction} className="space-y-4">
       {orderOffer ? (
         <fieldset className="rounded-lg border border-sky-400/25 bg-sky-950/20 p-4">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-sky-300">
@@ -939,6 +944,7 @@ export function DecisionForm({
           {state.error}
         </p>
       ) : null}
+      <GuardError message={guardError} />
       <button
         type="submit"
         disabled={pending}
