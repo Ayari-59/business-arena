@@ -6,6 +6,7 @@ import { getOrganizerCompetitions } from "@/services/competition.service";
 import { getStaffContext } from "@/services/admin.service";
 import { createClassGameAction, createCompetitionAction, logoutAction } from "./actions";
 import { periodLabel } from "@/config/scenarios/periodicity";
+import { compter } from "@/lib/format";
 import { DEFAULT_QUIZ_MODE, DIFFICULTY_PRESETS, QUIZ_MODES } from "@/config/difficulty";
 import {
   DEFAULT_SCENARIO_CODE,
@@ -290,7 +291,7 @@ export default async function TeacherDashboard({
         </form>
         <p className="mt-2 text-xs text-slate-500">
           Les équipes s&apos;inscrivent avec le code sur /compete. Mode compétition :
-          décisions verrouillées après validation, indices limités (§25).
+          décisions verrouillées après validation, indices limités.
         </p>
         {competitions.length > 0 ? (
           <ul className="mt-4 space-y-2">
@@ -305,7 +306,7 @@ export default async function TeacherDashboard({
                     <span className="ml-3 text-slate-300">{c.name}</span>
                   </span>
                   <span className="text-slate-400">
-                    {c.entriesCount} équipes ·{" "}
+                    {compter(c.entriesCount, "équipe")} ·{" "}
                     {c.status === "registration"
                       ? "inscriptions"
                       : c.status === "running"
@@ -331,7 +332,7 @@ export default async function TeacherDashboard({
             >
               <span>
                 <span className="font-mono text-amber-300">{g.joinCode}</span>
-                <span className="ml-3 text-slate-300">{g.teamsCount} équipes</span>
+                <span className="ml-3 text-slate-300">{compter(g.teamsCount, "équipe")}</span>
               </span>
               <span className="text-slate-400">
                 {g.status === "finished"
