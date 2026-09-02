@@ -188,7 +188,7 @@ export default function FonctionnalitesPage() {
             href="/"
             className="rounded-lg bg-amber-500 px-6 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400"
           >
-            Lancer une partie gratuite
+            Tester le simulateur
           </Link>
           <Link
             href="/entreprises"
