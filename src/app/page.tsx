@@ -495,6 +495,23 @@ export default async function Home({
             </label>
             <label className="mt-4 block">
               <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                Nombre de tours
+              </span>
+              <select
+                name="roundsCount"
+                defaultValue=""
+                className="mt-2 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+              >
+                <option value="">Toute la partie</option>
+                {[3, 4, 5, 6].map((n) => (
+                  <option key={n} value={n}>
+                    {n} tours
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="mt-4 block">
+              <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
                 Niveau de difficulté
               </span>
               <select
