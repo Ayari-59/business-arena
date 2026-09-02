@@ -1,3 +1,5 @@
+import { Sparkline } from "@/components/charts";
+
 /** Carte KPI (stat tile) : bordure sémantique, valeur en ink primaire, trend optionnel. */
 export function KpiCard({
   label,
@@ -5,12 +7,14 @@ export function KpiCard({
   hint,
   tone = "neutral",
   trend,
+  sparklineData,
 }: {
   label: string;
   value: string;
   hint?: string;
   tone?: "neutral" | "good" | "critical";
   trend?: { direction: "up" | "down" | "flat"; label: string };
+  sparklineData?: number[];
 }) {
   const border =
     tone === "good"
@@ -45,6 +49,9 @@ export function KpiCard({
           <span className={`text-xs font-medium ${trendColor}`}>
             {trendArrow} {trend.label}
           </span>
+        ) : null}
+        {sparklineData && sparklineData.length >= 2 ? (
+          <Sparkline data={sparklineData} />
         ) : null}
       </div>
       {hint ? <p className="mt-1 pl-2 text-xs text-slate-500">{hint}</p> : null}

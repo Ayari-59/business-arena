@@ -256,6 +256,36 @@ const NOVA_CARDS: EventCardDef[] = [
     emoji: "📋",
     scope: "team",
   },
+  {
+    code: "major_breakdown",
+    title: "Panne majeure",
+    flavor: "Un roulement critique lâche et entraîne la chaîne d'assemblage. Deux tours pour remettre en état.",
+    effectLabel: "Disponibilité machine −30 % pendant 2 tours (une entreprise tirée au sort)",
+    conceptHint: "La maintenance préventive coûte. Ne pas la faire coûte bien plus — en capacité perdue et en ventes manquées.",
+    category: "internal",
+    emoji: "🛑",
+    scope: "team",
+  },
+  {
+    code: "tech_obsolescence",
+    title: "Obsolescence technologique",
+    flavor: "La nouvelle norme de composants rend vos machines moins performantes et les pièces plus chères.",
+    effectLabel: "Disponibilité −10 % et coût matières +8 % pendant 2 tours (une entreprise tirée au sort)",
+    conceptHint: "L'investissement ne sert pas qu'à produire plus : il sert aussi à ne pas produire moins.",
+    category: "internal",
+    emoji: "⏳",
+    scope: "team",
+  },
+  {
+    code: "used_equipment_deal",
+    title: "Équipement d'occasion",
+    flavor: "Un concurrent en liquidation cède sa ligne de montage à prix cassé. Votre atelier peut l'absorber.",
+    effectLabel: "Disponibilité machine +12 % ce tour (équipe ciblée)",
+    conceptHint: "Racheter un actif d'occasion : un investissement rapide, mais quel effet sur la capacité réelle ?",
+    category: "internal",
+    emoji: "🏭",
+    scope: "team",
+  },
 ];
 
 /**

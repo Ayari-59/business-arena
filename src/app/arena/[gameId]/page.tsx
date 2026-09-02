@@ -15,8 +15,10 @@ import { DecisionForm } from "@/components/decision-form";
 import { TeamNameForm } from "@/components/team-name-form";
 import { StudyReportsPanel } from "@/components/study-reports";
 import { FinancialStatements } from "@/components/financial-statements";
+import { RatioGauges } from "@/components/ratio-gauges";
 import { DilemmaCard, ParametersPanels } from "@/components/decision-context";
 import { SalesHistory } from "@/components/sales-history";
+import { CompetitiveBenchmark } from "@/components/competitive-benchmark";
 import { DashboardTabs } from "@/components/dashboard-tabs";
 import { RoundStatusPoller } from "@/components/round-status-poller";
 import { RoundStatusBanner } from "@/components/round-status-banner";
@@ -422,6 +424,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                     value={formatEuro(r.incomeStatement.revenue)}
                     hint={`Part de marché : ${formatPercent(r.market.totalShare)}`}
                     trend={trend(r.incomeStatement.revenue, "revenue")}
+                    sparklineData={view.history.map((h) => h.revenue)}
                   />
                   <KpiCard
                     label="Résultat net"
@@ -429,6 +432,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                     tone={r.incomeStatement.netIncome >= 0 ? "good" : "critical"}
                     hint={`Seuil de rentabilité : ${Number.isFinite(r.breakeven.breakEvenUnits) ? `${formatUnits(r.breakeven.breakEvenUnits)} ${view.vocabulary.units}` : "inatteignable"}`}
                     trend={trend(r.incomeStatement.netIncome, "netIncome")}
+                    sparklineData={view.history.map((h) => h.netIncome)}
                   />
                   <KpiCard
                     label="Trésorerie nette"
@@ -436,6 +440,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                     tone={treasuryTone}
                     hint={`FRNG ${formatEuro(r.functionalBalance.frng)} − BFR ${formatEuro(r.functionalBalance.bfr)}`}
                     trend={trend(r.functionalBalance.netTreasury, "netTreasury")}
+                    sparklineData={view.history.map((h) => h.netTreasury)}
                   />
                   <KpiCard
                     label={view.vocabulary.productionLabel}
@@ -559,6 +564,10 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                     </table>
                   </div>
                 </section>
+
+                {view.competitiveBenchmark ? (
+                  <CompetitiveBenchmark benchmark={view.competitiveBenchmark} />
+                ) : null}
 
                 {view.lastEvents.length > 0 ? (
                   <section>
@@ -698,6 +707,17 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                   otherVariableCostPerUnit={view.costFacts.otherVariableCostPerUnit}
                   vocabulary={view.vocabulary}
                 />
+
+                {r.ratios && r.ratios.profitability !== undefined ? (
+                  <RatioGauges
+                    profitability={r.ratios.profitability}
+                    roce={r.ratios.returnOnCapitalEmployed}
+                    roe={r.ratios.returnOnEquity}
+                    leverage={r.ratios.leverage}
+                    debtToEquity={r.ratios.debtToEquity}
+                    assetTurnover={r.ratios.assetTurnover}
+                  />
+                ) : null}
 
                 {r.bank && r.bank.loanRequested > 0 && r.bank.loanGranted === 0 ? (
                   <p className="rounded-lg border border-rose-400/30 bg-rose-950/30 px-3 py-2 text-xs text-rose-200">

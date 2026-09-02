@@ -8,6 +8,38 @@ import { formatEuro, formatPercent } from "@/lib/format";
  *   dernier point, grille discrète, <title> natifs comme couche de survol.
  */
 
+/**
+ * Sparkline SVG miniature pour les KPI cards : un trait fin de 48×16,
+ * coloré selon la tendance (dernier point vs premier).
+ */
+export function Sparkline({ data, width = 48, height = 16 }: { data: number[]; width?: number; height?: number }) {
+  if (data.length < 2) return null;
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+  const step = width / (data.length - 1);
+  const points = data.map((v, i) => `${(i * step).toFixed(1)},${(height - ((v - min) / range) * height).toFixed(1)}`);
+  const trending = data[data.length - 1]! >= data[0]!;
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="inline-block align-middle">
+      <polyline
+        points={points.join(" ")}
+        fill="none"
+        stroke={trending ? "#34d399" : "#f87171"}
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+      <circle
+        cx={((data.length - 1) * step).toFixed(1)}
+        cy={(height - ((data[data.length - 1]! - min) / range) * height).toFixed(1)}
+        r="2"
+        fill={trending ? "#34d399" : "#f87171"}
+      />
+    </svg>
+  );
+}
+
 const SEGMENT_COLORS = [
   "#3987e5", "#d95926", "#7c3aed", "#10b981", "#f59e0b",
   "#ec4899", "#06b6d4", "#84cc16",

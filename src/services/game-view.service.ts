@@ -329,6 +329,22 @@ export interface GameView {
   } | null;
   /** Rapports des études achetées au dernier tour résolu (doc 02 §8bis). */
   studyReports: StudyReports | null;
+  /**
+   * Benchmark concurrentiel : prix, parts de marché et indice de compétitivité
+   * de chaque équipe du dernier tour résolu. Gratuit (pas une étude) : on voit
+   * ses concurrents sur le marché, on ne leur ouvre pas les livres.
+   */
+  competitiveBenchmark: {
+    competitors: {
+      name: string;
+      isPlayer: boolean;
+      avgPrice: number | null;
+      marketShare: number;
+      revenue: number;
+    }[];
+    marketAvgPrice: number;
+    competitivenessIndex: number;
+  } | null;
 }
 
 /** Rapports d'études : des données riches et variées pour décider. */
@@ -489,7 +505,11 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
           bfr: Number(row.bfr),
           netTreasury: Number(row.netTreasury),
         },
-        ratios: {} as CompanyRoundResult["ratios"],
+        ratios: computeRatios(
+          row.incomeStatement as CompanyRoundResult["incomeStatement"],
+          row.balanceSheet as CompanyRoundResult["balanceSheet"],
+          (game.scenarioSnapshot as EngineScenarioConfig).finance.taxRate,
+        ),
         market: {
           bySegment: row.marketDetail as CompanyRoundResult["market"]["bySegment"],
           totalShare: Number(row.marketShare),
@@ -699,6 +719,38 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       };
     }
     return reports;
+  })();
+
+  const competitiveBenchmark: GameView["competitiveBenchmark"] = (() => {
+    if (!lastRound) return null;
+    const lastRows = gameResults.filter((r) => r.roundId === lastRound.id);
+    if (lastRows.length === 0) return null;
+    const competitors = lastRows
+      .map((row) => {
+        const detail = row.marketDetail as Record<string, { sold?: number }> | null;
+        const units = detail
+          ? Object.values(detail).reduce((sum, d) => sum + (d.sold ?? 0), 0)
+          : 0;
+        return {
+          name: teamDisplayName(teamRows.find((t) => t.id === row.teamId)?.name ?? "?"),
+          isPlayer: row.teamId === playerTeam.id,
+          avgPrice: units > 1 ? Number(row.revenue) / units : null,
+          marketShare: Number(row.marketShare),
+          revenue: Number(row.revenue),
+        };
+      })
+      .sort((a, b) => b.marketShare - a.marketShare);
+    const withPrice = competitors.filter((c) => c.avgPrice !== null);
+    const marketAvgPrice =
+      withPrice.length > 0
+        ? withPrice.reduce((s, c) => s + c.avgPrice!, 0) / withPrice.length
+        : 0;
+    const player = competitors.find((c) => c.isPlayer);
+    const competitivenessIndex =
+      player && marketAvgPrice > 0 && player.avgPrice !== null
+        ? marketAvgPrice / player.avgPrice
+        : 1;
+    return { competitors, marketAvgPrice, competitivenessIndex };
   })();
 
   const profile = game.difficultyProfile as { kind?: GameKind };
@@ -1148,6 +1200,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       return catalog ? { ...catalog } : null;
     })(),
     studyReports,
+    competitiveBenchmark,
     orderOffer: (() => {
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
       const offer = orderOfferForRound(snapshot, game.currentRound, game.seed);
