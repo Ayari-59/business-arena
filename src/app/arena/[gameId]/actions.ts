@@ -11,6 +11,7 @@ import {
   submitTeamDecisions,
 } from "@/services/game.service";
 import { submitDiagnosis, submitQuiz, unlockHint } from "@/services/pedagogy.service";
+import { manques, messageIncomplet } from "@/config/situation-rendu";
 
 export interface PlayRoundState {
   error: string | null;
@@ -153,8 +154,16 @@ export async function unlockHintAction(
   return { error: null };
 }
 
-/** Enregistre le diagnostic du joueur (options + analyse libre). */
-export async function submitDiagnosisAction(
+/**
+ * Rend la situation d'un coup : diagnostic ET modèle, ou rien (vague 1, P6).
+ * Le formulaire grise son bouton tant qu'une moitié manque ; ici on refuse
+ * une soumission incomplète avec le même message, pour qu'un formulaire
+ * forgé ou une page périmée ne rende pas une demi-copie.
+ *
+ * `questions` (champ caché) liste les questions encore à répondre : vide
+ * quand le modèle n'est pas demandé, ou déjà validé avant cette version.
+ */
+export async function submitSituationAction(
   gameId: string,
   instanceId: string,
   _prev: PedagogyState,
@@ -162,36 +171,23 @@ export async function submitDiagnosisAction(
 ): Promise<PedagogyState> {
   const userId = await getGuestUserId();
   if (!userId) return { error: "Session expirée." };
-  const selected = formData.getAll("options").map(String);
+  const options = formData.getAll("options").map(String).filter(Boolean);
   const freeText = String(formData.get("freeText") ?? "");
-  try {
-    await submitDiagnosis({ instanceId, userId, selectedOptionIds: selected, freeText });
-  } catch (error) {
-    return { error: error instanceof Error ? error.message : "Erreur." };
-  }
-  revalidatePath(`/arena/${gameId}`);
-  return { error: null };
-}
-
-/** Enregistre les réponses au QCM de mobilisation des connaissances. */
-export async function submitQuizAction(
-  gameId: string,
-  instanceId: string,
-  _prev: PedagogyState,
-  formData: FormData,
-): Promise<PedagogyState> {
-  const userId = await getGuestUserId();
-  if (!userId) return { error: "Session expirée." };
-  const answers: Record<string, string> = {};
+  const questions = String(formData.get("questions") ?? "")
+    .split(",")
+    .map((q) => q.trim())
+    .filter(Boolean);
+  const reponses: Record<string, string> = {};
   for (const [key, value] of formData.entries()) {
     if (key.startsWith("quiz_") && typeof value === "string" && value) {
-      answers[key.slice("quiz_".length)] = value;
+      reponses[key.slice("quiz_".length)] = value;
     }
   }
-  if (Object.keys(answers).length === 0)
-    return { error: "Répondez aux questions avant de valider." };
+  const m = manques({ options, questions, reponses });
+  if (m.length > 0) return { error: messageIncomplet(m) };
   try {
-    await submitQuiz({ instanceId, userId, answers });
+    await submitDiagnosis({ instanceId, userId, selectedOptionIds: options, freeText });
+    if (questions.length > 0) await submitQuiz({ instanceId, userId, answers: reponses });
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Erreur." };
   }

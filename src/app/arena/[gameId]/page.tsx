@@ -27,6 +27,7 @@ import { ArenaLayout, type ArenaTab } from "@/components/arena-layout";
 import type { KpiFormat } from "@/config/scenarios/sector-kpis";
 import { surtitreDePartie } from "@/config/scenarios/presentation";
 import { SECTOR_ICONS, SECTOR_COLORS, SECTOR_LABELS } from "@/config/scenarios/registry";
+import { libelleStatut, statutDesSituations } from "@/config/situation-rendu";
 
 export const dynamic = "force-dynamic";
 
@@ -67,6 +68,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
   const view = await getGameView(gameId, userId);
   if (!view) notFound();
   const situations = await getTeamSituations(gameId, userId);
+  const statutSituations = statutDesSituations(situations.current);
 
   const r = view.lastResult;
   const finished = view.status === "finished";
@@ -147,6 +149,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
           pendingDecisions={view.pendingDecisions !== null}
           kind={view.kind}
           finished={finished}
+          situations={statutSituations}
         />
       </div>
 
@@ -297,8 +300,18 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                 ) : null}
 
                 {/* Pedagogical situations */}
-                {situations.current.length > 0 ? (
+                {situations.current.length > 0 && statutSituations ? (
                   <section className="space-y-4">
+                    <p
+                      className={`rounded-lg border px-4 py-2 text-sm ${
+                        statutSituations.manques.length === 0
+                          ? "border-emerald-400/30 bg-emerald-950/20 text-emerald-300"
+                          : "border-amber-400/30 bg-amber-950/20 text-amber-300"
+                      }`}
+                    >
+                      {statutSituations.manques.length === 0 ? "✓ " : "⚠ "}
+                      {libelleStatut(statutSituations)}
+                    </p>
                     {situations.current.map((s) => (
                       <SituationCard key={s.instanceId} gameId={view.gameId} situation={s} />
                     ))}

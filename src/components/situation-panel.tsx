@@ -1,12 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
-  submitDiagnosisAction,
-  submitQuizAction,
+  submitSituationAction,
   unlockHintAction,
   type PedagogyState,
 } from "@/app/arena/[gameId]/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
+import { STATUT_RENDUE, estRendue, manques, messageIncomplet } from "@/config/situation-rendu";
 import type { SituationView } from "@/services/pedagogy.service";
 import type { SituationCategory } from "@/config/scenarios/situation-kit";
 
@@ -39,25 +40,79 @@ function ErrorBox({ error }: { error: string | null }) {
   );
 }
 
-/** Une situation active : diagnostic → QCM de connaissances → indices à la demande. */
+/** Clé du brouillon dans le navigateur : survit à un rechargement, pas au rendu. */
+function cleBrouillon(instanceId: string): string {
+  return `ba:situation:${instanceId}`;
+}
+
+interface BrouillonLocal {
+  options: string[];
+  freeText: string;
+  reponses: Record<string, string>;
+}
+
+/**
+ * Une situation active : diagnostic + modèle d'analyse rendus d'un seul
+ * geste, indices à la demande. Le brouillon vit dans l'état du composant
+ * (React le rétablit après la remise à zéro du formulaire) et, en plus, dans
+ * le stockage local du navigateur pour survivre à un rechargement.
+ */
 export function SituationCard({ gameId, situation }: { gameId: string; situation: SituationView }) {
   const hint = useGuardedAction(unlockHintAction.bind(null, gameId, situation.instanceId), initial, {
     label: "indice",
   });
-  const diag = useGuardedAction(
-    submitDiagnosisAction.bind(null, gameId, situation.instanceId),
+  const rendu = useGuardedAction(
+    submitSituationAction.bind(null, gameId, situation.instanceId),
     initial,
-    { label: "diagnostic" },
+    { label: "rendu de situation" },
   );
-  const quiz = useGuardedAction(submitQuizAction.bind(null, gameId, situation.instanceId), initial, {
-    label: "modèle d'analyse",
-  });
   const { state: hintState, formAction: hintAction, pending: hintPending } = hint;
-  const { state: diagState, formAction: diagAction, pending: diagPending } = diag;
-  const { state: quizState, formAction: quizAction, pending: quizPending } = quiz;
+  const { state: renduState, formAction: renduAction, pending: renduPending } = rendu;
 
   const diagnosisDone = situation.diagnosis !== null;
   const quizDone = situation.quizAnswers !== null;
+  const rendue = estRendue(situation);
+  // Questions encore à répondre : toutes, sauf si le modèle a déjà été validé
+  // (rendu en deux temps d'une version antérieure) — on ne le redemande pas.
+  const questionsARendre = quizDone ? [] : situation.quizQuestions;
+
+  const [options, setOptions] = useState<string[]>(situation.diagnosis?.selected ?? []);
+  const [freeText, setFreeText] = useState(situation.diagnosis?.freeText ?? "");
+  const [reponses, setReponses] = useState<Record<string, string>>(situation.quizAnswers ?? {});
+
+  useEffect(() => {
+    if (rendue) return;
+    try {
+      const brut = window.localStorage.getItem(cleBrouillon(situation.instanceId));
+      if (!brut) return;
+      const b = JSON.parse(brut) as Partial<BrouillonLocal>;
+      if (!diagnosisDone && Array.isArray(b.options)) setOptions(b.options.map(String));
+      if (!diagnosisDone && typeof b.freeText === "string") setFreeText(b.freeText);
+      if (!quizDone && b.reponses && typeof b.reponses === "object") setReponses(b.reponses);
+    } catch {
+      // stockage indisponible : le brouillon reste en mémoire
+    }
+  }, [situation.instanceId, rendue, diagnosisDone, quizDone]);
+
+  useEffect(() => {
+    if (rendue) return;
+    try {
+      const b: BrouillonLocal = { options, freeText, reponses };
+      window.localStorage.setItem(cleBrouillon(situation.instanceId), JSON.stringify(b));
+    } catch {
+      // idem
+    }
+  }, [situation.instanceId, rendue, options, freeText, reponses]);
+
+  const manquants = manques({
+    options,
+    questions: questionsARendre.map((q) => q.id),
+    reponses,
+  });
+  const complet = manquants.length === 0;
+
+  const basculerOption = (id: string, coche: boolean) =>
+    setOptions((prec) => (coche ? [...new Set([...prec, id])] : prec.filter((o) => o !== id)));
 
   return (
     <article className="rounded-xl border border-amber-400/20 bg-slate-900 p-5">
@@ -96,94 +151,129 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
         </details>
       ) : null}
 
+      <p
+        className={`mb-4 rounded-lg border px-3 py-2 text-sm ${
+          rendue
+            ? "border-emerald-400/30 bg-emerald-950/20 text-emerald-300"
+            : "border-amber-400/30 bg-amber-950/20 text-amber-300"
+        }`}
+        data-testid="statut-situation"
+      >
+        {rendue
+          ? `✓ ${STATUT_RENDUE}`
+          : manquants.length > 0
+            ? `⚠ ${messageIncomplet(manquants)}`
+            : "Brouillon complet : rendez votre situation pour qu'elle soit corrigée."}
+      </p>
+
       <div className="space-y-4">
-        {/* 1. Diagnostic */}
-        <section className="rounded-lg bg-slate-950 p-4">
-          <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-            Votre diagnostic
-          </h4>
-          <p className="mt-1 text-xs text-slate-500">Quel est le problème principal ?</p>
-          {diagnosisDone ? (
-            <p className="mt-2 text-sm text-emerald-300">
-              ✓ Diagnostic enregistré, il sera corrigé au débriefing du tour.
+        {rendue ? (
+          <section className="rounded-lg bg-slate-950 p-4">
+            <p className="text-sm text-emerald-300">
+              ✓ Diagnostic et modèle enregistrés, la correction sera révélée au débriefing du tour.
             </p>
-          ) : (
-            <form ref={diag.formRef} action={diagAction} className="mt-2 space-y-2">
-              {situation.diagnosticOptions.map((option) => (
-                <label key={option.id} className="flex items-start gap-2 text-sm text-slate-200">
-                  <input type="checkbox" name="options" value={option.id} className="mt-1 accent-amber-400" />
-                  <span>{option.label}</span>
-                </label>
-              ))}
-              <textarea
-                name="freeText"
-                rows={2}
-                placeholder="Votre analyse en quelques mots (facultatif mais valorisé)…"
-                className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
-              />
-              <ErrorBox error={diagState.error} />
-              <GuardError message={diag.guardError} />
+          </section>
+        ) : (
+          <form ref={rendu.formRef} action={renduAction} className="space-y-4">
+            <input type="hidden" name="questions" value={questionsARendre.map((q) => q.id).join(",")} />
+
+            {/* 1. Diagnostic */}
+            <section className="rounded-lg bg-slate-950 p-4">
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Votre diagnostic
+              </h4>
+              <p className="mt-1 text-xs text-slate-500">Quel est le problème principal ?</p>
+              <div className="mt-2 space-y-2">
+                {situation.diagnosticOptions.map((option) => (
+                  <label key={option.id} className="flex items-start gap-2 text-sm text-slate-200">
+                    <input
+                      type="checkbox"
+                      name="options"
+                      value={option.id}
+                      checked={options.includes(option.id)}
+                      onChange={(e) => basculerOption(option.id, e.target.checked)}
+                      className="mt-1 accent-amber-400"
+                    />
+                    <span>{option.label}</span>
+                  </label>
+                ))}
+                <textarea
+                  name="freeText"
+                  rows={2}
+                  value={freeText}
+                  onChange={(e) => setFreeText(e.target.value)}
+                  placeholder="Votre analyse en quelques mots (facultatif mais valorisé)…"
+                  className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+                />
+              </div>
+            </section>
+
+            {/* 2. Questions : connaissances et/ou modèle d'analyse */}
+            {situation.quizQuestions.length > 0 ? (
+              <section className="rounded-lg bg-slate-950 p-4">
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  {quizHeading(situation.quizQuestions)}
+                </h4>
+                <p className="mt-1 text-xs text-slate-500">Comment analyser ce problème ?</p>
+                {quizDone ? (
+                  <p className="mt-2 text-sm text-emerald-300">
+                    ✓ Réponse validée, la correction sera révélée au débriefing du tour.
+                  </p>
+                ) : (
+                  <div className="mt-2 space-y-4">
+                    {situation.quizQuestions.map((question, index) => (
+                      <fieldset key={question.id}>
+                        <legend className="text-sm font-medium text-slate-200">
+                          {index + 1}. {question.prompt}
+                        </legend>
+                        <div className="mt-1.5 space-y-1.5">
+                          {question.options.map((option) => (
+                            <label
+                              key={option.id}
+                              className="flex items-start gap-2 text-sm text-slate-300"
+                            >
+                              <input
+                                type="radio"
+                                name={`quiz_${question.id}`}
+                                value={option.id}
+                                checked={reponses[question.id] === option.id}
+                                onChange={() =>
+                                  setReponses((prec) => ({ ...prec, [question.id]: option.id }))
+                                }
+                                className="mt-1 accent-amber-400"
+                              />
+                              <span>{option.label}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </fieldset>
+                    ))}
+                  </div>
+                )}
+              </section>
+            ) : null}
+
+            {/* 3. Le rendu, en une fois */}
+            <div className="space-y-2">
+              <ErrorBox error={renduState.error} />
+              <GuardError message={rendu.guardError} />
               <button
                 type="submit"
-                disabled={diagPending}
-                className="rounded-lg bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-100 hover:bg-slate-700 disabled:opacity-60"
+                disabled={!complet || renduPending}
+                aria-disabled={!complet || renduPending}
+                title={complet ? undefined : messageIncomplet(manquants)}
+                className="rounded-lg bg-amber-400 px-5 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {diagPending ? "Envoi…" : "Enregistrer mon diagnostic"}
+                {renduPending ? "Envoi…" : "Rendre ma situation"}
               </button>
-            </form>
-          )}
-        </section>
-
-        {/* 2. Questions : connaissances et/ou modèle d'analyse */}
-        {situation.quizQuestions.length > 0 ? (
-          <section className="rounded-lg bg-slate-950 p-4">
-            <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-              {quizHeading(situation.quizQuestions)}
-            </h4>
-            <p className="mt-1 text-xs text-slate-500">Comment analyser ce problème ?</p>
-            {quizDone ? (
-              <p className="mt-2 text-sm text-emerald-300">
-                ✓ Réponse validée, la correction sera révélée au débriefing du tour.
-              </p>
-            ) : (
-              <form ref={quiz.formRef} action={quizAction} className="mt-2 space-y-4">
-                {situation.quizQuestions.map((question, index) => (
-                  <fieldset key={question.id}>
-                    <legend className="text-sm font-medium text-slate-200">
-                      {index + 1}. {question.prompt}
-                    </legend>
-                    <div className="mt-1.5 space-y-1.5">
-                      {question.options.map((option) => (
-                        <label
-                          key={option.id}
-                          className="flex items-start gap-2 text-sm text-slate-300"
-                        >
-                          <input
-                            type="radio"
-                            name={`quiz_${question.id}`}
-                            value={option.id}
-                            required
-                            className="mt-1 accent-amber-400"
-                          />
-                          <span>{option.label}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </fieldset>
-                ))}
-                <ErrorBox error={quizState.error} />
-                <GuardError message={quiz.guardError} />
-                <button
-                  type="submit"
-                  disabled={quizPending}
-                  className="rounded-lg bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-100 hover:bg-slate-700 disabled:opacity-60"
-                >
-                  {quizPending ? "Envoi…" : "Valider mes réponses"}
-                </button>
-              </form>
-            )}
-          </section>
-        ) : null}
+              {!complet ? (
+                <p className="text-xs text-slate-500">
+                  Le rendu part complet ou pas du tout : diagnostic et modèle seront corrigés ensemble au débriefing.
+                </p>
+              ) : null}
+            </div>
+          </form>
+        )}
 
         {/* 3. Indices */}
         <section className="rounded-lg bg-slate-950 p-4">
