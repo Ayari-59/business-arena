@@ -39,7 +39,8 @@ Correspondance avec la liste imposée (§30) : `events` → `event_definitions` 
 
 | Table | Colonnes principales | Contraintes |
 |---|---|---|
-| `users` | id, email **unique**, password_hash (nullable si magic link), display_name, avatar, locale, is_platform_admin bool | email citext |
+| `users` | id, email **unique**, password_hash (nullable si magic link), display_name, avatar, locale, is_platform_admin bool, session_version int (défaut 1, incrémenté par « Se déconnecter partout » : tout cookie signé pour une version antérieure est refusé) | email citext |
+| `login_attempts` | id, email, ip (nullable), created_at — un échec de connexion par ligne ; 5 échecs par e-mail OU par adresse sur 15 min bloquent le suivant ; purgés à la première connexion réussie. En base et non en mémoire : plusieurs instances Vercel | index (email), index (ip) |
 | `organizations` | id, name, slug **unique**, kind enum(`school`,`company`,`public`) | — |
 | `organization_members` | user_id FK, organization_id FK, role enum(`student`,`teacher`,`org_admin`) | PK (user_id, organization_id) |
 | `classes` | id, organization_id FK, teacher_id FK→users, name, join_code **unique**, school_year | index (organization_id) |
