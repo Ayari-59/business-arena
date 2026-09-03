@@ -137,11 +137,17 @@ export default async function Home({
 
       {/* ---------- Hero ---------- */}
       <section className="mx-auto grid max-w-6xl items-center gap-10 px-6 py-14 lg:grid-cols-2 lg:py-20">
-        <div>
+        {/* La colonne est un conteneur de requête : le titre se dimensionne à SA
+            largeur (unités cqw), pas à celle de l'écran. Il tient donc sur une
+            seule ligne aussi bien en pleine largeur (mobile) qu'en demi-colonne
+            (desktop), sans jamais déborder. */}
+        <div style={{ containerType: "inline-size" }}>
           <p className="text-xs uppercase tracking-[0.3em] text-amber-400">
             Simulation · Apprentissage · Décision · Compétition
           </p>
-          <h1 className="mt-4 text-4xl font-bold leading-tight tracking-tight text-slate-50 sm:text-5xl">
+          {/* whitespace-nowrap + taille fluide en cqw : chaque phrase sur une
+              ligne, quel que soit le support ; le <br/> sépare les deux lignes. */}
+          <h1 className="mt-4 whitespace-nowrap text-[clamp(1rem,6.8cqw,3rem)] font-bold leading-tight tracking-tight text-slate-50">
             Dirigez une entreprise.
             <br />
             <span className="text-amber-400">Apprenez à décider.</span>
