@@ -18,10 +18,13 @@ import {
 import {
   applyEconomicOverrides,
   applyEventIntensity,
+  applyScoringWeightOverrides,
   presetByLevel,
   sanitizeEconomicOverrides,
+  sanitizeScoringWeightOverrides,
   type EconomicOverrides,
   type QuizMode,
+  type ScoringWeightOverrides,
 } from "@/config/difficulty";
 import {
   applyPeriodicity,
@@ -119,6 +122,8 @@ export interface CreateGameArgs {
   level?: number;
   /** Paramètres économiques modulés à la création (base trimestrielle). */
   economicOverrides?: EconomicOverrides;
+  /** Pondérations du BPI ajustées par l'enseignant (six dimensions, doc 08). */
+  scoringWeightOverrides?: ScoringWeightOverrides;
   /** Monde variable (doc 02 §9bis) : variante du scénario dérivée de la graine. */
   variableWorld?: boolean;
   /**
@@ -160,6 +165,8 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
     : undefined;
   const sanitized = sanitizeEconomicOverrides(args.economicOverrides);
   const overrides = Object.keys(sanitized).length > 0 ? sanitized : undefined;
+  const sanitizedScoring = sanitizeScoringWeightOverrides(args.scoringWeightOverrides);
+  const scoringOverrides = Object.keys(sanitizedScoring).length > 0 ? sanitizedScoring : undefined;
   // Monde variable : la variante seedée s'applique AVANT les réglages
   // explicites de l'enseignant (qui gardent donc le dernier mot).
   const baseScenario = args.variableWorld
@@ -174,7 +181,10 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
   const scenarioSnapshot = applyEventIntensity(
     applyPeriodicity(
       applyRoundsCount(
-        applyMarketScale(applyEconomicOverrides(baseScenario, overrides), concurrents),
+        applyMarketScale(
+          applyScoringWeightOverrides(applyEconomicOverrides(baseScenario, overrides), scoringOverrides),
+          concurrents,
+        ),
         args.roundsCount,
       ),
       args.periodicity,
@@ -198,6 +208,7 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
         kind: args.kind,
         ...(preset ? { difficulty: { level: preset.level, name: preset.name } } : {}),
         ...(overrides ? { economicOverrides: overrides } : {}),
+        ...(scoringOverrides ? { scoringWeightOverrides: scoringOverrides } : {}),
         ...(args.variableWorld ? { variableWorld: true } : {}),
         // Questions des situations. L'absence du champ vaut « full » pour les
         // parties d'avant le réglage : leur comportement ne change pas.
@@ -314,6 +325,7 @@ export async function createClassGame(args: {
   botCount: number;
   level?: number;
   economicOverrides?: EconomicOverrides;
+  scoringWeightOverrides?: ScoringWeightOverrides;
   variableWorld?: boolean;
   scenarioCode?: string;
   quizMode?: QuizMode;
@@ -338,6 +350,7 @@ export async function createClassGame(args: {
     joinCode,
     level: args.level,
     economicOverrides: args.economicOverrides,
+    scoringWeightOverrides: args.scoringWeightOverrides,
     variableWorld: args.variableWorld,
     scenarioCode: args.scenarioCode,
     quizMode: args.quizMode,

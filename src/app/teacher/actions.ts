@@ -156,6 +156,15 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
     depreciationPerRound: optionalNumber(formData.get("depreciationPerRound")),
     baseDefectRate: optionalRate(formData.get("baseDefectRate")),
   };
+  // Pondérations du BPI, saisies en % (poids relatifs, renormalisés côté service).
+  const scoringWeightOverrides = {
+    economic: optionalRate(formData.get("bpiEconomic")),
+    financial: optionalRate(formData.get("bpiFinancial")),
+    commercial: optionalRate(formData.get("bpiCommercial")),
+    profitability: optionalRate(formData.get("bpiProfitability")),
+    pilotage: optionalRate(formData.get("bpiPilotage")),
+    decisionMastery: optionalRate(formData.get("bpiDecisionMastery")),
+  };
   const organizationId = await getTeacherOrgId(session.userId);
   if (!organizationId) {
     echecCreation(
@@ -172,6 +181,7 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
       botCount: parsed.botCount,
       level: parsed.level,
       economicOverrides,
+      scoringWeightOverrides,
       variableWorld: formData.get("variableWorld") === "on",
       scenarioCode: parsed.scenarioCode,
       quizMode: parsed.quizMode,
