@@ -1,1 +1,1 @@
-ALTER TABLE "decisions" ADD COLUMN "decision_source" jsonb;
+ALTER TABLE "decisions" ADD COLUMN IF NOT EXISTS "decision_source" jsonb;
