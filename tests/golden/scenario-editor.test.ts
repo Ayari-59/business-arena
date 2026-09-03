@@ -298,6 +298,39 @@ describe("partage, fork et import", () => {
     expect(await canTeacherLaunchScenario(fork.code, bob)).toBe(true);
   });
 
+  it("forker l'un de ses propres scénarios en crée une copie distincte, possédée", async () => {
+    const s = await createScenarioDraftFromBuiltIn({
+      baseCode: "hotel",
+      authorId: alice,
+      title: "Hôtel — variante",
+    });
+    const fork = await forkScenario(s.id, alice, "Hôtel — variante B");
+    expect(fork.id).not.toBe(s.id);
+    expect(fork.code).not.toBe(s.code);
+    expect(fork.status).toBe("draft");
+    const copie = await getScenarioById(fork.id, alice);
+    expect(copie!.summary.authorId).toBe(alice);
+    expect(copie!.summary.title).toBe("Hôtel — variante B");
+  });
+
+  it("retirer un scénario : statut retiré, hors banque partagée, toujours lançable et réactivable", async () => {
+    const s = await createScenarioDraftFromBuiltIn({
+      baseCode: "nova",
+      authorId: alice,
+      title: "NOVA — à retirer",
+    });
+    await setScenarioStatus(s.id, "published", alice);
+    expect((await listSharedScenarios(bob)).some((x) => x.id === s.id)).toBe(true);
+    // Retiré : sort de la banque partagée, mais reste possédé et réactivable.
+    const archived = await setScenarioStatus(s.id, "archived", alice);
+    expect(archived.status).toBe("archived");
+    expect((await listSharedScenarios(bob)).some((x) => x.id === s.id)).toBe(false);
+    // L'auteur peut toujours le lancer (parties de suivi) et le republier.
+    expect(await canTeacherLaunchScenario(s.code, alice)).toBe(true);
+    const reactivated = await setScenarioStatus(s.id, "published", alice);
+    expect(reactivated.status).toBe("published");
+  });
+
   it("forker le brouillon d'un autre est refusé", async () => {
     const s = await createScenarioDraftFromBuiltIn({
       baseCode: "nova",

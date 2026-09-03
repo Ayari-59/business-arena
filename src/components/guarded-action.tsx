@@ -205,6 +205,80 @@ export function GuardError({ message }: { message: string | null }) {
 }
 
 /**
+ * Un <form> gardé qui demande confirmation avant d'agir : pour les gestes
+ * destructifs (supprimer un scénario, une situation). Le premier clic arme la
+ * confirmation en place — « Oui / Non » — plutôt qu'une `confirm()` native,
+ * qui ne se teste pas et casse le style. « Oui » est le vrai envoi (gardé) ;
+ * les enfants sont les champs cachés de l'action.
+ */
+export function ConfirmForm({
+  action,
+  label,
+  className,
+  children,
+  trigger,
+  confirmPrompt,
+  confirmLabel = "Oui",
+  cancelLabel = "Non",
+  triggerClassName = "rounded-lg border border-white/10 px-3 py-1 text-xs text-red-300 hover:border-red-400/50",
+}: {
+  action: (fd: FormData) => Promise<unknown>;
+  label: string;
+  className?: string;
+  children: React.ReactNode;
+  trigger: string;
+  confirmPrompt: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  triggerClassName?: string;
+}) {
+  const [armed, setArmed] = useState(false);
+  const sansEtat = useCallback(
+    async (_prev: null, fd: FormData) => {
+      await action(fd);
+    },
+    [action],
+  );
+  const { formAction, pending, formRef, guardError } = useGuardedAction<null>(sansEtat, null, {
+    label,
+  });
+  return (
+    <form ref={formRef} action={formAction} className={className}>
+      <fieldset disabled={pending} className="contents">
+        {children}
+        {armed ? (
+          <span className="inline-flex items-center gap-2">
+            <span className="text-xs text-slate-400">{confirmPrompt}</span>
+            <button
+              type="submit"
+              className="rounded-lg border border-red-400/50 bg-red-400/10 px-3 py-1 text-xs font-semibold text-red-200 hover:bg-red-400/20"
+            >
+              {confirmLabel}
+            </button>
+            <button
+              type="button"
+              onClick={() => setArmed(false)}
+              className="rounded-lg border border-white/10 px-3 py-1 text-xs text-slate-300 hover:border-white/30"
+            >
+              {cancelLabel}
+            </button>
+          </span>
+        ) : (
+          <button type="button" onClick={() => setArmed(true)} className={triggerClassName}>
+            {trigger}
+          </button>
+        )}
+      </fieldset>
+      {guardError ? (
+        <div className="mt-2">
+          <GuardError message={guardError} />
+        </div>
+      ) : null}
+    </form>
+  );
+}
+
+/**
  * Un <form> gardé pour les actions sans état (celles des pages serveur).
  * Les enfants restent rendus côté serveur ; le bouton d'envoi reste le
  * SubmitButton habituel. Tout le formulaire est désactivé pendant l'attente,

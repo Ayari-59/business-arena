@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { listScenariosByAuthor, listSharedScenarios } from "@/services/scenario-editor.service";
 import { SCENARIOS, SECTOR_LABELS } from "@/config/scenarios/registry";
-import { GuardedForm } from "@/components/guarded-action";
+import { ConfirmForm, GuardedForm } from "@/components/guarded-action";
 import {
   deleteScenarioAction,
   duplicateScenarioAction,
@@ -17,13 +17,26 @@ export const dynamic = "force-dynamic";
 const STATUT_LABEL: Record<string, string> = {
   draft: "Brouillon",
   published: "Publié",
-  archived: "Archivé",
+  archived: "Retiré",
 };
 const STATUT_CLASS: Record<string, string> = {
   draft: "border-amber-400/40 bg-amber-400/10 text-amber-300",
   published: "border-emerald-400/40 bg-emerald-400/10 text-emerald-300",
   archived: "border-white/10 bg-slate-800 text-slate-400",
 };
+
+/** Un bouton de changement de statut (cycle de vie du scénario). */
+function StatutForm({ id, to, label }: { id: string; to: string; label: string }) {
+  return (
+    <GuardedForm action={publishScenarioAction} label="statut du scénario">
+      <input type="hidden" name="scenarioId" value={id} />
+      <input type="hidden" name="status" value={to} />
+      <button className="rounded-lg border border-white/10 px-3 py-1 text-xs text-slate-200 hover:border-emerald-400/50">
+        {label}
+      </button>
+    </GuardedForm>
+  );
+}
 
 export default async function TeacherScenariosPage({
   searchParams,
@@ -84,7 +97,7 @@ export default async function TeacherScenariosPage({
                     </span>
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Link
                     href={`/teacher/scenarios/${s.id}`}
                     className="rounded-lg border border-white/10 px-3 py-1 text-xs text-slate-200 hover:border-amber-400/50"
@@ -97,23 +110,32 @@ export default async function TeacherScenariosPage({
                   >
                     Exporter
                   </a>
-                  <GuardedForm action={publishScenarioAction} label="statut du scénario">
-                    <input type="hidden" name="scenarioId" value={s.id} />
-                    <input
-                      type="hidden"
-                      name="status"
-                      value={s.status === "published" ? "draft" : "published"}
-                    />
-                    <button className="rounded-lg border border-white/10 px-3 py-1 text-xs text-slate-200 hover:border-emerald-400/50">
-                      {s.status === "published" ? "Dépublier" : "Publier"}
+                  <GuardedForm action={forkScenarioAction} label="copie d'un de mes scénarios">
+                    <input type="hidden" name="sourceId" value={s.id} />
+                    <input type="hidden" name="title" value={`${s.title} (copie)`} />
+                    <button className="rounded-lg border border-white/10 px-3 py-1 text-xs text-slate-200 hover:border-amber-400/50">
+                      Dupliquer
                     </button>
                   </GuardedForm>
-                  <GuardedForm action={deleteScenarioAction} label="suppression du scénario">
+                  {/* Cycle de vie : brouillon → publié → retiré, et retour. */}
+                  {s.status === "draft" ? (
+                    <StatutForm id={s.id} to="published" label="Publier" />
+                  ) : s.status === "published" ? (
+                    <>
+                      <StatutForm id={s.id} to="draft" label="Dépublier" />
+                      <StatutForm id={s.id} to="archived" label="Retirer" />
+                    </>
+                  ) : (
+                    <StatutForm id={s.id} to="published" label="Réactiver" />
+                  )}
+                  <ConfirmForm
+                    action={deleteScenarioAction}
+                    label="suppression du scénario"
+                    trigger="Supprimer"
+                    confirmPrompt="Supprimer définitivement ?"
+                  >
                     <input type="hidden" name="scenarioId" value={s.id} />
-                    <button className="rounded-lg border border-white/10 px-3 py-1 text-xs text-red-300 hover:border-red-400/50">
-                      Supprimer
-                    </button>
-                  </GuardedForm>
+                  </ConfirmForm>
                 </div>
               </li>
             ))}
@@ -121,17 +143,25 @@ export default async function TeacherScenariosPage({
         )}
         <p className="mt-3 text-xs text-slate-500">
           Un scénario <strong className="text-slate-400">publié</strong> devient sélectionnable au
-          lancement d&apos;une partie, et visible des autres enseignants. Un brouillon reste privé.
+          lancement d&apos;une partie, et visible des autres enseignants. Un{" "}
+          <strong className="text-slate-400">brouillon</strong> reste privé. Un scénario{" "}
+          <strong className="text-slate-400">retiré</strong> n&apos;est plus proposé ni partagé,
+          mais les parties déjà lancées avec lui continuent — et il se réactive à tout moment.
         </p>
       </section>
 
-      {shared.length > 0 ? (
-        <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
-          <h2 className="text-sm font-semibold text-slate-200">Scénarios partagés</h2>
-          <p className="mt-1 text-xs text-slate-500">
-            Publiés par d&apos;autres enseignants. Dupliquez-en un pour en obtenir votre propre copie
-            éditable.
+      <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
+        <h2 className="text-sm font-semibold text-slate-200">Scénarios partagés</h2>
+        <p className="mt-1 text-xs text-slate-500">
+          Publiés par d&apos;autres enseignants. Dupliquez-en un pour en obtenir votre propre copie
+          éditable.
+        </p>
+        {shared.length === 0 ? (
+          <p className="mt-4 text-sm text-slate-500">
+            Rien de partagé pour l&apos;instant. Dès qu&apos;un collègue publie un scénario, il
+            apparaît ici, prêt à dupliquer.
           </p>
+        ) : (
           <ul className="mt-4 space-y-2">
             {shared.map((s) => (
               <li
@@ -154,8 +184,8 @@ export default async function TeacherScenariosPage({
               </li>
             ))}
           </ul>
-        </section>
-      ) : null}
+        )}
+      </section>
 
       <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
         <h2 className="text-sm font-semibold text-slate-200">Importer un scénario</h2>
