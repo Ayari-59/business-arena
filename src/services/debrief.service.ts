@@ -13,7 +13,7 @@ import {
   situationInstances,
   situations,
 } from "@/db/schema";
-import { conceptByCode } from "@/config/pedagogy/concepts";
+import { conceptByCode, situationLevel } from "@/config/pedagogy/concepts";
 import { modelByCode } from "@/config/pedagogy/models";
 import type { SituationDef } from "@/config/scenarios/nova/situations";
 import {
@@ -519,6 +519,16 @@ export interface SituationView {
   missed: boolean;
   /** Situation manquée puis rattrapée (score compté pour moitié). */
   retaken: boolean;
+  /**
+   * Niveau pédagogique de la situation (1..6), celui de sa notion la plus
+   * avancée. Sert à ordonner les situations d'un tour (fondations d'abord).
+   */
+  level: number;
+  /**
+   * Situation dont le niveau dépasse celui fixé pour la partie : signalée à
+   * l'élève (« au-dessus du niveau »), jamais cachée (filtrage doux, #2).
+   */
+  aboveGameLevel: boolean;
   /** Rempli uniquement après débriefing. */
   debrief: {
     correctOptionIds: string[];
@@ -586,6 +596,8 @@ export function toView(
     origin: instance.origin,
     status: instance.status,
     weight: def.weight,
+    level: situationLevel(def.conceptCodes),
+    aboveGameLevel: modelCtx ? situationLevel(def.conceptCodes) > modelCtx.level : false,
     diagnosticOptions: def.diagnosticOptions.map(({ id, label }) => ({ id, label })),
     // Seules les questions réellement posées sont servies : en mode « model »
     // la question du modèle uniquement, en mode « off » aucune.

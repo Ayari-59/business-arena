@@ -1,5 +1,6 @@
 import type { BotProfile } from "../../engine/bots";
 import type { CompanyState, EngineScenarioConfig } from "../../engine/types";
+import { scoringWeightsV2 } from "../../scoring/bpi";
 import type { SituationDef } from "./situation-kit";
 import {
   ABONNEMENT_KPIS,
@@ -714,7 +715,14 @@ export function economicDefaults(d: ScenarioDefinition): Record<string, string |
   const creditDelays = s.market.segments
     .map((seg) => seg.paymentDelayDays)
     .filter((v) => v > 0);
+  const bpi = scoringWeightsV2(s.scoring);
   return {
+    bpiEconomic: pct(bpi.economic),
+    bpiFinancial: pct(bpi.financial),
+    bpiCommercial: pct(bpi.commercial),
+    bpiProfitability: pct(bpi.profitability),
+    bpiPilotage: pct(bpi.pilotage),
+    bpiDecisionMastery: pct(bpi.decision_mastery),
     taxRate: pct(s.finance.taxRate),
     vatRate: pct(s.finance.vatRate ?? 0),
     customerPaymentDelayDays: num(creditDelays.length ? Math.max(...creditDelays) : 0),
