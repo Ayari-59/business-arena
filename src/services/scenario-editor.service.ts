@@ -11,6 +11,7 @@ import {
 } from "@/config/scenarios/serialize";
 import { essaiABlanc, type EssaiVerdict } from "@/config/scenarios/essai-a-blanc";
 import { patchSituationText, type SituationTextPatch } from "@/config/scenarios/situation-patch";
+import { buildSituation, type NewSituationInput } from "@/config/scenarios/situation-build";
 
 /**
  * CRUD des scénarios ENSEIGNANTS en base — le socle de l'éditeur visuel (PR 1).
@@ -232,5 +233,44 @@ export async function updateSituationText(
   if (index < 0) throw new Error("Situation introuvable dans ce scénario");
   const situations = [...stored.situations];
   situations[index] = patchSituationText(situations[index]!, patch);
+  return updateScenarioDefinition(id, { ...stored, situations }, authorId);
+}
+
+/**
+ * Ajoute une situation créée DE ZÉRO à un scénario enseignant. Le code est
+ * engendré (unique, hors des codes du référentiel intégré) ; `buildSituation`
+ * valide tout (matrice « optimal », notions/modèles existants, cinq indices…)
+ * et attache la question du modèle. Vérifie la propriété.
+ */
+export async function addSituation(
+  id: string,
+  input: NewSituationInput,
+  authorId?: string,
+): Promise<{ summary: ScenarioSummary; code: string }> {
+  const row = await loadEditableRow(id, authorId);
+  const stored = parseStoredScenario(row.definition);
+  const existants = new Set(stored.situations.map((s) => s.code));
+  let code = `sc-situ-${randomUUID().slice(0, 8)}`;
+  while (existants.has(code)) code = `sc-situ-${randomUUID().slice(0, 8)}`;
+  const built = buildSituation(input, code);
+  const summary = await updateScenarioDefinition(
+    id,
+    { ...stored, situations: [...stored.situations, built] },
+    authorId,
+  );
+  return { summary, code };
+}
+
+export async function deleteSituation(
+  id: string,
+  situationCode: string,
+  authorId?: string,
+): Promise<ScenarioSummary> {
+  const row = await loadEditableRow(id, authorId);
+  const stored = parseStoredScenario(row.definition);
+  const situations = stored.situations.filter((s) => s.code !== situationCode);
+  if (situations.length === stored.situations.length) {
+    throw new Error("Situation introuvable dans ce scénario");
+  }
   return updateScenarioDefinition(id, { ...stored, situations }, authorId);
 }

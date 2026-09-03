@@ -8,7 +8,7 @@ import { situationLevel } from "@/config/pedagogy/concepts";
 import { formatEuro } from "@/lib/format";
 import { GuardedForm } from "@/components/guarded-action";
 import { SubmitButton } from "@/components/submit-button";
-import { updateEconomicsAction, updateNarrativeAction } from "../actions";
+import { deleteSituationAction, updateEconomicsAction, updateNarrativeAction } from "../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -353,10 +353,18 @@ export default async function ScenarioEditorPage({
 
       {/* Situations pédagogiques — édition du texte. */}
       <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
-        <h2 className="text-sm font-semibold text-slate-200">Situations pédagogiques</h2>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold text-slate-200">Situations pédagogiques</h2>
+          <Link
+            href={`/teacher/scenarios/${id}/situations/new`}
+            className="whitespace-nowrap rounded-lg border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-xs font-medium text-amber-200 hover:bg-amber-400/20"
+          >
+            + Nouvelle situation
+          </Link>
+        </div>
         <p className="mt-1 text-xs text-slate-500">
-          Les situations héritées du secteur. Vous en éditez le texte (récit, options, indices,
-          correction) ; leur structure d&apos;analyse reste celle du secteur d&apos;origine.
+          Éditez le texte d&apos;une situation héritée, ou composez-en une nouvelle (récit,
+          diagnostic, modèle d&apos;analyse, notions, indices).
         </p>
         {def.situations.length === 0 ? (
           <p className="mt-3 text-sm text-slate-500">Ce scénario ne porte aucune situation.</p>
@@ -377,12 +385,21 @@ export default async function ScenarioEditorPage({
                       Niveau {niveau} · {decl}
                     </p>
                   </div>
-                  <Link
-                    href={`/teacher/scenarios/${id}/situations/${encodeURIComponent(s.code)}`}
-                    className="whitespace-nowrap rounded-lg border border-white/10 px-3 py-1 text-xs text-slate-200 hover:border-amber-400/50"
-                  >
-                    Éditer le texte
-                  </Link>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={`/teacher/scenarios/${id}/situations/${encodeURIComponent(s.code)}`}
+                      className="whitespace-nowrap rounded-lg border border-white/10 px-3 py-1 text-xs text-slate-200 hover:border-amber-400/50"
+                    >
+                      Éditer le texte
+                    </Link>
+                    <GuardedForm action={deleteSituationAction} label="suppression de la situation">
+                      <input type="hidden" name="scenarioId" value={id} />
+                      <input type="hidden" name="situationCode" value={s.code} />
+                      <button className="rounded-lg border border-white/10 px-3 py-1 text-xs text-red-300 hover:border-red-400/50">
+                        Supprimer
+                      </button>
+                    </GuardedForm>
+                  </div>
                 </li>
               );
             })}
