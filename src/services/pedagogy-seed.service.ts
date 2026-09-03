@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { CONCEPTS, CONCEPT_PREREQUISITES } from "@/config/pedagogy/concepts";
 import { DECISION_MODELS } from "@/config/pedagogy/models";
 import { ALL_SITUATIONS } from "@/config/scenarios/registry";
+import type { SituationDef } from "@/config/scenarios/situation-kit";
 
 /**
  * Seed idempotent des référentiels pédagogiques (concepts, modèles, situations
@@ -25,7 +26,22 @@ const DOMAIN_TO_DB: Record<string, "market" | "commercial" | "costs" | "margins"
   profitability: "profitability",
 };
 
-export async function seedPedagogyReferentials(): Promise<void> {
+export async function seedPedagogyReferentials(
+  /**
+   * Situations d'un scénario ENSEIGNANT à semer en plus du référentiel intégré.
+   * Un scénario base porte ses propres situations, absentes de `ALL_SITUATIONS`
+   * (qui n'agrège que les 9 secteurs code) : sans ce seed, l'instanciation ne
+   * trouverait pas leur id. Idempotent (mêmes `onConflictDoNothing`).
+   */
+  extraSituations: SituationDef[] = [],
+): Promise<void> {
+  // Dédup par code : un intégré prime sur un homonyme fourni (défensif).
+  const seen = new Set(ALL_SITUATIONS.map((s) => s.code));
+  const allSituations: SituationDef[] = [
+    ...ALL_SITUATIONS,
+    ...extraSituations.filter((s) => !seen.has(s.code)),
+  ];
+
   await db
     .insert(concepts)
     .values(
@@ -57,7 +73,7 @@ export async function seedPedagogyReferentials(): Promise<void> {
   await db
     .insert(situations)
     .values(
-      ALL_SITUATIONS.map((s) => ({
+      allSituations.map((s) => ({
         code: s.code,
         titleKey: s.title,
         narrativeKey: s.narrative,
@@ -96,7 +112,7 @@ export async function seedPedagogyReferentials(): Promise<void> {
       .where(eq(concepts.id, row.id));
   }
 
-  const hintValues = ALL_SITUATIONS.flatMap((s) =>
+  const hintValues = allSituations.flatMap((s) =>
     s.hints.map((h) => ({
       situationId: situationIdByCode.get(s.code)!,
       level: h.level,
@@ -106,7 +122,7 @@ export async function seedPedagogyReferentials(): Promise<void> {
   );
   if (hintValues.length > 0) await db.insert(hints).values(hintValues).onConflictDoNothing();
 
-  const relevanceValues = ALL_SITUATIONS.flatMap((s) =>
+  const relevanceValues = allSituations.flatMap((s) =>
     Object.entries(s.modelRelevance)
       .filter(([code]) => modelIdByCode.has(code))
       .map(([code, relevance]) => ({
@@ -118,7 +134,7 @@ export async function seedPedagogyReferentials(): Promise<void> {
   if (relevanceValues.length > 0)
     await db.insert(situationModels).values(relevanceValues).onConflictDoNothing();
 
-  const conceptValues = ALL_SITUATIONS.flatMap((s) =>
+  const conceptValues = allSituations.flatMap((s) =>
     s.conceptCodes
       .filter((code) => conceptIdByCode.has(code))
       .map((code) => ({

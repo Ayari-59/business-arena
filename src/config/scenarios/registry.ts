@@ -694,6 +694,16 @@ export function scenarioByCode(code: string | undefined | null): ScenarioDefinit
   return (code ? byCode.get(code) : undefined) ?? NOVA_DEFINITION;
 }
 
+/**
+ * Un code correspond-il à l'un des 9 secteurs INTÉGRÉS (résolus depuis le code) ?
+ * Sinon c'est un scénario enseignant, à charger depuis la base. Sert de garde à
+ * la résolution : `scenarioByCode` retombe silencieusement sur NOVA pour un code
+ * inconnu, ce qui masquerait un scénario base non hydraté.
+ */
+export function isBuiltInScenarioCode(code: string | undefined | null): boolean {
+  return code != null && byCode.has(code);
+}
+
 /** Toutes les situations, tous scénarios confondus (référentiel à semer). */
 export const ALL_SITUATIONS: SituationDef[] = SCENARIOS.flatMap((s) => s.situations);
 
