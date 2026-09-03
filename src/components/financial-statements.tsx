@@ -162,6 +162,13 @@ export function FinancialStatements({
             indent
           />
         ) : null}
+        {(cr.taxLossUsed ?? 0) > 0.5 ? (
+          <Row
+            label="dont déficit antérieur imputé (report)"
+            value={euro(cr.taxLossUsed ?? 0)}
+            indent
+          />
+        ) : null}
         <Row label="− Impôt sur les sociétés" value={euro(-cr.tax)} indent />
         <Row
           label="= RÉSULTAT NET"

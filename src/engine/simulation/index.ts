@@ -691,6 +691,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       overdraftAnnualRate: gelee ? 0 : conditions.overdraftAnnualRate,
       interestMultiplier: w.mods.interestMultiplier,
       taxRate: scenario.finance.taxRate,
+      openingTaxLossCarryforward: w.state.taxLossCarryforward ?? 0,
       vatRate: scenario.finance.vatRate ?? 0,
       newLoan,
       loanRepayment: gelee ? 0 : mandatoryRepayment + earlyRepayment,
@@ -1011,6 +1012,12 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       // crise n'en portent jamais le champ, snapshot inchangé en régime nominal.
       ...(statut === "defaillant" || w.state.status !== undefined ? { status: statut } : {}),
       ...(crisisStreak > 0 || w.state.crisisStreak !== undefined ? { crisisStreak } : {}),
+      // Déficit reportable : suivi seulement à partir du moment où une perte
+      // apparaît (puis maintenu, même retombé à 0). Les parties sans perte n'en
+      // portent jamais le champ — snapshot inchangé pour le cas courant.
+      ...(finance.taxLossCarryforward > 0 || w.state.taxLossCarryforward !== undefined
+        ? { taxLossCarryforward: finance.taxLossCarryforward }
+        : {}),
       ...(bank ? { bankTrust: confianceApres } : {}),
       perceivedQuality: updatePerceivedQuality(
         w.state.perceivedQuality,
