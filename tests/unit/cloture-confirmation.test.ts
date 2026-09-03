@@ -40,6 +40,9 @@ vi.mock("@/services/game.service", () => ({
   drawEventCardForNextRound: vi.fn(),
   setQuizMode: vi.fn(),
 }));
+vi.mock("@/services/pedagogy.service", () => ({
+  setMissedPolicy: vi.fn(),
+}));
 
 const { getSession } = await import("@/lib/session");
 const { closeCurrentRound } = await import("@/services/game.service");

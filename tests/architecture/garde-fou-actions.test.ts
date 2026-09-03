@@ -58,7 +58,9 @@ describe("pages serveur gardées", () => {
       const directs = (source.match(/<form\s+action=\{([a-zA-Z.]+)/g) ?? []).map((m) =>
         m.replace(/<form\s+action=\{/, ""),
       );
-      expect(directs.filter((a) => a !== "logoutAction")).toEqual([]);
+      expect(
+        directs.filter((a) => a !== "logoutAction" && a !== "logoutEverywhereAction"),
+      ).toEqual([]);
     });
   }
 });
