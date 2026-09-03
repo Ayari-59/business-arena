@@ -78,24 +78,9 @@ export { openSituationsForRound } from "./situation-instance.service";
 export { unlockHint } from "./hints.service";
 
 /** Enregistre le diagnostic (options cochées + texte libre) et le score F1. */
-export async function submitDiagnosis(args: {
-  instanceId: string;
-  userId: string;
-  selectedOptionIds: string[];
-  freeText?: string;
-}): Promise<{ score: number }> {
-  const { instance, def } = await loadInstanceForUser(args.instanceId, args.userId);
-  if (instance.status === "debriefed") throw new Error("Cette situation est déjà débriefée");
-  const score = evaluateDiagnosis(args.selectedOptionIds, def.diagnosticOptions);
-  await db
-    .update(situationInstances)
-    .set({
-      diagnosis: { selected: args.selectedOptionIds, freeText: args.freeText ?? "", score },
-      status: instance.status === "open" ? "diagnosed" : instance.status,
-    })
-    .where(eq(situationInstances.id, args.instanceId));
-  return { score };
-}
+// Diagnostic (enregistrement + score F1) : extrait dans diagnosis.service.ts
+// (refactoring V2, étape 9).
+export { submitDiagnosis } from "./diagnosis.service";
 
 /**
  * Enregistre les réponses au QCM de mobilisation des connaissances (2-3
