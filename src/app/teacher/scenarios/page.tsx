@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
-import { listScenariosByAuthor } from "@/services/scenario-editor.service";
+import { listScenariosByAuthor, listSharedScenarios } from "@/services/scenario-editor.service";
 import { SCENARIOS, SECTOR_LABELS } from "@/config/scenarios/registry";
 import { GuardedForm } from "@/components/guarded-action";
 import {
   deleteScenarioAction,
   duplicateScenarioAction,
+  forkScenarioAction,
+  importScenarioAction,
   publishScenarioAction,
 } from "./actions";
 
@@ -32,6 +34,7 @@ export default async function TeacherScenariosPage({
   const session = await getSession();
   if (!session) redirect("/teacher/login");
   const mine = await listScenariosByAuthor(session.userId);
+  const shared = await listSharedScenarios(session.userId);
 
   return (
     <main id="main" className="mx-auto max-w-4xl space-y-8 p-6">
@@ -88,6 +91,12 @@ export default async function TeacherScenariosPage({
                   >
                     Éditer
                   </Link>
+                  <a
+                    href={`/teacher/scenarios/${s.id}/export`}
+                    className="rounded-lg border border-white/10 px-3 py-1 text-xs text-slate-200 hover:border-amber-400/50"
+                  >
+                    Exporter
+                  </a>
                   <GuardedForm action={publishScenarioAction} label="statut du scénario">
                     <input type="hidden" name="scenarioId" value={s.id} />
                     <input
@@ -112,8 +121,69 @@ export default async function TeacherScenariosPage({
         )}
         <p className="mt-3 text-xs text-slate-500">
           Un scénario <strong className="text-slate-400">publié</strong> devient sélectionnable au
-          lancement d&apos;une partie. Un brouillon reste privé à votre espace.
+          lancement d&apos;une partie, et visible des autres enseignants. Un brouillon reste privé.
         </p>
+      </section>
+
+      {shared.length > 0 ? (
+        <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
+          <h2 className="text-sm font-semibold text-slate-200">Scénarios partagés</h2>
+          <p className="mt-1 text-xs text-slate-500">
+            Publiés par d&apos;autres enseignants. Dupliquez-en un pour en obtenir votre propre copie
+            éditable.
+          </p>
+          <ul className="mt-4 space-y-2">
+            {shared.map((s) => (
+              <li
+                key={s.id}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/10 bg-slate-950 px-4 py-3"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-slate-100">{s.title}</p>
+                  {s.authorName ? (
+                    <p className="text-xs text-slate-500">par {s.authorName}</p>
+                  ) : null}
+                </div>
+                <GuardedForm action={forkScenarioAction} label="copie d'un scénario partagé">
+                  <input type="hidden" name="sourceId" value={s.id} />
+                  <input type="hidden" name="title" value={`${s.title} (copie)`} />
+                  <button className="whitespace-nowrap rounded-lg border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-xs font-medium text-amber-200 hover:bg-amber-400/20">
+                    Dupliquer
+                  </button>
+                </GuardedForm>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
+        <h2 className="text-sm font-semibold text-slate-200">Importer un scénario</h2>
+        <p className="mt-1 text-xs text-slate-500">
+          Depuis un fichier JSON exporté (d&apos;un autre espace, d&apos;un collègue). Il devient un
+          brouillon dans votre espace.
+        </p>
+        <GuardedForm
+          action={importScenarioAction}
+          label="import d'un scénario"
+          className="mt-3 flex flex-wrap items-center gap-3"
+        >
+          <input
+            type="text"
+            name="title"
+            placeholder="Titre (facultatif)"
+            className="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+          />
+          <input
+            type="file"
+            name="file"
+            accept="application/json,.json"
+            className="text-xs text-slate-400 file:mr-3 file:rounded-lg file:border file:border-white/10 file:bg-slate-800 file:px-3 file:py-1.5 file:text-xs file:text-slate-200"
+          />
+          <button className="rounded-lg border border-amber-400/40 bg-amber-400/10 px-3 py-1.5 text-xs font-medium text-amber-200 hover:bg-amber-400/20">
+            Importer
+          </button>
+        </GuardedForm>
       </section>
 
       <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
