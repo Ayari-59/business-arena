@@ -87,6 +87,9 @@ function situation(partiel: Partial<SituationView> = {}): SituationView {
     decisionLevers: [],
     triggerFacts: null,
     diagnosis: null,
+    rendered: false,
+    missed: false,
+    retaken: false,
     debrief: null,
     ...partiel,
   };

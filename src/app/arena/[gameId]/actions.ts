@@ -9,7 +9,7 @@ import {
   resolveCurrentRound,
   submitTeamDecisions,
 } from "@/services/game.service";
-import { submitDiagnosis, submitQuiz, unlockHint } from "@/services/pedagogy.service";
+import { retakeSituation, submitDiagnosis, submitQuiz, unlockHint } from "@/services/pedagogy.service";
 import { manques, messageIncomplet } from "@/config/situation-rendu";
 
 export interface PlayRoundState {
@@ -177,6 +177,41 @@ export async function submitSituationAction(
   try {
     await submitDiagnosis({ instanceId, userId, selectedOptionIds: options, freeText });
     if (questions.length > 0) await submitQuiz({ instanceId, userId, answers: reponses });
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Erreur." };
+  }
+  revalidatePath(`/arena/${gameId}`);
+  return { error: null };
+}
+
+/**
+ * Rattrapage d'une situation manquée (V1-6, politique retake50). Même forme que
+ * le rendu unique ; le service note à 50 % et refuse hors de la fenêtre.
+ */
+export async function retakeSituationAction(
+  gameId: string,
+  instanceId: string,
+  _prev: PedagogyState,
+  formData: FormData,
+): Promise<PedagogyState> {
+  const userId = await getGuestUserId();
+  if (!userId) return { error: "Session expirée." };
+  const options = formData.getAll("options").map(String).filter(Boolean);
+  const freeText = String(formData.get("freeText") ?? "");
+  const questions = String(formData.get("questions") ?? "")
+    .split(",")
+    .map((q) => q.trim())
+    .filter(Boolean);
+  const reponses: Record<string, string> = {};
+  for (const [key, value] of formData.entries()) {
+    if (key.startsWith("quiz_") && typeof value === "string" && value) {
+      reponses[key.slice("quiz_".length)] = value;
+    }
+  }
+  const m = manques({ options, questions, reponses });
+  if (m.length > 0) return { error: messageIncomplet(m) };
+  try {
+    await retakeSituation({ instanceId, userId, selectedOptionIds: options, freeText, answers: reponses });
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Erreur." };
   }

@@ -17,6 +17,7 @@ import {
   startFinal,
   startQualification,
 } from "@/services/competition.service";
+import { setMissedPolicy } from "@/services/pedagogy.service";
 import { DEFAULT_SCENARIO_CODE, SCENARIOS } from "@/config/scenarios/registry";
 import { DEFAULT_QUIZ_MODE } from "@/config/difficulty";
 
@@ -177,6 +178,18 @@ export async function closeRoundAction(gameId: string): Promise<void> {
   const session = await getSession();
   if (!session) redirect("/teacher/login");
   await closeCurrentRound({ gameId, teacherId: session.userId });
+  revalidatePath(`/teacher/games/${gameId}`);
+}
+
+/** Règle la politique des situations manquées (consultation seule / rattrapage 50 %). */
+export async function setMissedPolicyAction(gameId: string, formData: FormData): Promise<void> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  const policy = z
+    .enum(["readonly", "retake50"])
+    .catch("retake50")
+    .parse(formData.get("policy"));
+  await setMissedPolicy({ gameId, teacherId: session.userId, policy });
   revalidatePath(`/teacher/games/${gameId}`);
 }
 

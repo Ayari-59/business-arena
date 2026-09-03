@@ -18,6 +18,10 @@ import {
 } from "@/config/difficulty";
 import { validerNomEquipe } from "@/config/nom-equipe";
 import {
+  missedSituationPolicyFromProfile,
+  type MissedSituationPolicy,
+} from "@/config/missed-situation";
+import {
   findUserTeam,
   readPendingEvents,
 } from "@/services/round-resolution.service";
@@ -205,6 +209,8 @@ export interface TeacherGameView {
   scenarioEventCodes: string[];
   /** Questions posées dans les situations de cette partie. */
   quizMode: QuizMode;
+  /** Politique des situations manquées (consultation seule / rattrapage 50 %). */
+  missedPolicy: MissedSituationPolicy;
   /**
    * Réglages figés à la création, que l'enseignant ne peut plus consulter
    * ailleurs : le niveau n'était lisible que côté élève, et la case du monde
@@ -280,6 +286,10 @@ export async function getTeacherGameView(
       (game.scenarioSnapshot as { events?: { code: string }[] }).events ?? []
     ).map((e) => e.code),
     quizMode: quizModeFromProfile(game.difficultyProfile),
+    missedPolicy: missedSituationPolicyFromProfile(
+      game.difficultyProfile,
+      (game.difficultyProfile as { kind?: string } | null)?.kind,
+    ),
     difficulty: (() => {
       const preset = presetFromProfile(game.difficultyProfile);
       return { level: preset.level, name: preset.name, hintMaxLevel: preset.hintMaxLevel };
