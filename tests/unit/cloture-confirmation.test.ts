@@ -43,6 +43,9 @@ vi.mock("@/services/game.service", () => ({
 vi.mock("@/services/pedagogy.service", () => ({
   setMissedPolicy: vi.fn(),
 }));
+vi.mock("@/services/scenario-editor.service", () => ({
+  canTeacherLaunchScenario: vi.fn().mockResolvedValue(true),
+}));
 
 const { getSession } = await import("@/lib/session");
 const { closeCurrentRound } = await import("@/services/game.service");
