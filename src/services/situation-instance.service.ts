@@ -1,7 +1,8 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { games, hintUsages, players, rounds, situationInstances, situations, teams } from "@/db/schema";
-import { scenarioByCode, situationByCode } from "@/config/scenarios/registry";
+import { situationByCode } from "@/config/scenarios/registry";
+import { resolveScenarioDefinition } from "@/services/scenario-source.service";
 import { presetFromProfile } from "@/config/difficulty";
 import { buildTriggerContext, detectSituations } from "@/pedagogy/detection";
 import type { CompanyRoundResult } from "@/engine/types";
@@ -45,7 +46,7 @@ export async function openSituationsForRound(
   // scénario de la partie (un code inconnu retombe sur NOVA).
   const gameRow = (await db.select().from(games).where(eq(games.id, gameId)))[0];
   const snapshotCode = (gameRow?.scenarioSnapshot as { code?: string } | null)?.code;
-  const definition = scenarioByCode(snapshotCode);
+  const definition = await resolveScenarioDefinition(snapshotCode);
 
   const values: (typeof situationInstances.$inferInsert)[] = [];
   const scripted = definition.situations.filter(
@@ -108,12 +109,22 @@ export async function loadInstanceForUser(instanceId: string, userId: string) {
   const situationRow = (
     await db.select().from(situations).where(eq(situations.id, instance.situationId))
   )[0]!;
-  const def = situationByCode.get(situationRow.code);
-  if (!def) throw new Error("Définition de situation manquante");
   const teamRow = (await db.select().from(teams).where(eq(teams.id, instance.teamId)))[0];
   const gameRow = teamRow
     ? (await db.select().from(games).where(eq(games.id, teamRow.gameId)))[0]
     : undefined;
+  // La définition vient du référentiel intégré ; pour une situation propre à un
+  // scénario ENSEIGNANT (absente de `situationByCode`), on la retrouve dans la
+  // définition du scénario joué, résolue depuis la base.
+  let def = situationByCode.get(situationRow.code);
+  if (!def) {
+    const snapshotCode = (gameRow?.scenarioSnapshot as { code?: string } | null)?.code;
+    if (snapshotCode) {
+      const definition = await resolveScenarioDefinition(snapshotCode);
+      def = definition.situations.find((s) => s.code === situationRow.code);
+    }
+  }
+  if (!def) throw new Error("Définition de situation manquante");
   return { instance, situationRow, def, game: gameRow };
 }
 

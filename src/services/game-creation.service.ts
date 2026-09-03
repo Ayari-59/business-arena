@@ -16,6 +16,10 @@ import {
   type ScenarioDefinition,
 } from "@/config/scenarios/registry";
 import {
+  customSituationsOf,
+  resolveScenarioDefinition,
+} from "@/services/scenario-source.service";
+import {
   applyEconomicOverrides,
   applyEventIntensity,
   applyScoringWeightOverrides,
@@ -154,9 +158,11 @@ export async function getOrCreateNovaScenarioIdPublic(): Promise<string> {
 
 /** Cœur commun de création : partie + équipes + tours + états initiaux. */
 export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame> {
-  const definition = scenarioByCode(args.scenarioCode);
+  const definition = await resolveScenarioDefinition(args.scenarioCode);
   const scenarioId = await getOrCreateScenarioId(definition);
-  await seedPedagogyReferentials(); // référentiels concepts/modèles/situations (idempotent)
+  // Référentiels concepts/modèles/situations (idempotent) + les situations
+  // propres à un scénario enseignant, absentes du référentiel intégré.
+  await seedPedagogyReferentials(customSituationsOf(definition));
   const seed = randomInt(1, 2 ** 31);
   // Pipeline du snapshot (ADR-01 + ADR-10) : paramètres économiques modulés
   // (base trimestrielle) → périodicité → intensité d'événements du niveau.
@@ -290,7 +296,7 @@ export async function createSoloGame(
   if (!config.allowPublicPlay) {
     throw new Error("Les parties publiques sont désactivées par l'administrateur.");
   }
-  const definition = scenarioByCode(scenarioCode);
+  const definition = await resolveScenarioDefinition(scenarioCode);
   const organizationId = await getOrCreatePublicOrgId();
   const botCount = Math.min(Math.max(companiesCount, 2), definition.bots.length + 1) - 1;
   const { gameId } = await createGameCore({
