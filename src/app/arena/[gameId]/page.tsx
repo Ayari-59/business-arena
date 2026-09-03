@@ -164,8 +164,12 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
           return (
             <details
               key={p.round}
+              // Cible du retour après une validation en solo : la période la plus
+              // récente, déjà ouverte sur son onglet Résultats. scroll-mt dégage
+              // la hauteur de l'en-tête collant pour que le titre reste visible.
+              id={isLatest ? "dernier-resultat" : undefined}
               open={isLatest}
-              className="group rounded-xl border border-white/10 bg-slate-950/40 [&[open]]:border-white/20"
+              className="group scroll-mt-24 rounded-xl border border-white/10 bg-slate-950/40 [&[open]]:border-white/20"
             >
               <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-5">
                 <span className="flex items-center gap-2 text-sm font-semibold text-slate-100">
