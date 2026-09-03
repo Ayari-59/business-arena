@@ -1,8 +1,10 @@
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { getCompetitionView } from "@/services/competition.service";
 import { CompetitionBoard } from "@/components/competition-board";
 import { CompetitionControl } from "@/components/competition-controls";
+import { CompetitionSettings, CompetitionSteps } from "@/components/competition-steps";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +27,12 @@ export default async function TeacherCompetitionPage({
 
   return (
     <main id="main" className="mx-auto max-w-4xl space-y-6 p-6">
+      <Link
+        href="/teacher"
+        className="inline-block text-sm text-slate-400 underline-offset-4 hover:text-amber-300 hover:underline"
+      >
+        ← Mes parties et concours
+      </Link>
       <header>
         <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Concours</p>
         <h1 className="text-2xl font-bold">{view.name}</h1>
@@ -33,6 +41,11 @@ export default async function TeacherCompetitionPage({
           {" · "}les équipes s&apos;inscrivent sur <span className="font-mono">/compete</span>.
         </p>
       </header>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <CompetitionSettings rules={view.rules} joinCode={view.joinCode} />
+        <CompetitionSteps concours={view} />
+      </div>
 
       {view.status === "registration" ? (
         <CompetitionControl competitionId={competitionId} action="qualification" />

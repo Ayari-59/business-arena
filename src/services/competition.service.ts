@@ -76,13 +76,19 @@ export async function createCompetition(args: {
   return { competitionId: inserted[0]!.id, joinCode };
 }
 
-/** Inscription d'un joueur : crée l'équipe (team_label) ou la rejoint. */
+/**
+ * Inscription d'un joueur : crée l'équipe (team_label) ou la rejoint.
+ *
+ * Un joueur déjà inscrit n'est pas réinscrit ni déplacé : la réponse porte
+ * alors `alreadyMember`, le nom de son équipe, pour que la page le dise au
+ * lieu de rediriger en silence (vague 1, K4).
+ */
 export async function joinCompetition(args: {
   code: string;
   userId: string;
   teamLabel: string;
   pseudo?: string;
-}): Promise<{ competitionId: string } | { error: string }> {
+}): Promise<{ competitionId: string; alreadyMember?: string } | { error: string }> {
   const competition = (
     await db.select().from(competitions).where(eq(competitions.joinCode, args.code.trim().toUpperCase()))
   )[0];
@@ -98,7 +104,7 @@ export async function joinCompetition(args: {
     .from(competitionEntries)
     .where(eq(competitionEntries.competitionId, competition.id));
   const existing = entries.find((e) => e.memberUserIds.includes(args.userId));
-  if (existing) return { competitionId: competition.id };
+  if (existing) return { competitionId: competition.id, alreadyMember: existing.teamLabel };
 
   // Atomic join: UPDATE with array_append + WHERE guards
   const updated = await db
@@ -123,7 +129,7 @@ export async function joinCompetition(args: {
     const sameLabel = entries.find((e) => e.teamLabel.toLowerCase() === label.toLowerCase());
     if (sameLabel) {
       if (sameLabel.memberUserIds.includes(args.userId))
-        return { competitionId: competition.id };
+        return { competitionId: competition.id, alreadyMember: sameLabel.teamLabel };
       return { error: "Cette équipe est complète (6 joueurs max)." };
     }
     // New team — INSERT with capacity guard
@@ -417,6 +423,8 @@ export interface CompetitionView {
   status: string;
   joinCode: string;
   organizerId: string;
+  /** Réglages fixés à la création : ce que l'organisateur doit pouvoir relire. */
+  rules: { periodicity: Periodicity; groupSize: number; advancePerGroup: number };
   entries: { teamLabel: string; members: number; status: string }[];
   stages: {
     index: number;
@@ -481,12 +489,18 @@ export async function getCompetitionView(competitionId: string): Promise<Competi
     }
   }
 
+  const rules = rulesOf(competition);
   return {
     competitionId,
     name: competition.name,
     status: competition.status,
     joinCode: competition.joinCode,
     organizerId: competition.organizerId,
+    rules: {
+      periodicity: rules.periodicity,
+      groupSize: rules.groupSize,
+      advancePerGroup: rules.advancePerGroup,
+    },
     entries: entries.map((e) => ({
       teamLabel: e.teamLabel,
       members: e.memberUserIds.length,

@@ -2,13 +2,19 @@
 
 import { joinCompetitionAction, type JoinCompetitionState } from "@/app/compete/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
+import { messageDejaInscrit } from "@/config/concours";
 
-const initial: JoinCompetitionState = { error: null };
+const initial: JoinCompetitionState = { error: null, dejaInscrit: null };
 
-export function CompetitionJoinForm() {
+export function CompetitionJoinForm({
+  initialState = initial,
+}: {
+  /** État de départ : celui d'un formulaire vierge, sauf pour un rendu de test. */
+  initialState?: JoinCompetitionState;
+}) {
   const { state, formAction, pending, formRef, guardError } = useGuardedAction(
     joinCompetitionAction,
-    initial,
+    initialState,
     { label: "inscription à un concours" },
   );
   return (
@@ -57,6 +63,20 @@ export function CompetitionJoinForm() {
         <p className="rounded-lg border border-red-400/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
           {state.error}
         </p>
+      ) : null}
+      {state.dejaInscrit ? (
+        <div
+          role="status"
+          className="space-y-2 rounded-lg border border-amber-400/30 bg-amber-950/20 px-3 py-2 text-sm text-amber-200"
+        >
+          <p>{messageDejaInscrit(state.dejaInscrit.teamLabel)}</p>
+          <a
+            href={`/compete/${state.dejaInscrit.competitionId}`}
+            className="inline-block rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300"
+          >
+            Ouvrir mon équipe →
+          </a>
+        </div>
       ) : null}
       <GuardError message={guardError} />
       <button

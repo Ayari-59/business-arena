@@ -15,6 +15,7 @@ const SECTIONS = [
   { id: "demarrer", label: "⚡ En 2 minutes" },
   { id: "eleves", label: "🎮 Côté élèves" },
   { id: "enseignants", label: "🧑‍🏫 Côté enseignants" },
+  { id: "concours", label: "🏆 Les concours" },
   { id: "cartes", label: "🃏 Les cartes" },
   { id: "bpi", label: "📊 Le score BPI" },
   { id: "etablissements", label: "🏛️ Établissements" },
@@ -233,7 +234,45 @@ export default function GuidePage() {
               Créez un concours : inscriptions par code, groupes tirés au sort (tirage seedé,
               auditable), parties en mode compétition : décisions verrouillées après validation,
               indices limités au niveau 3, aucun tirage manuel de cartes. Qualification au BPI,
-              finale, podium.
+              finale, podium. Le déroulé complet est{" "}
+              <a href="#concours" className="text-amber-300 underline-offset-4 hover:underline">
+                décrit ci-dessous
+              </a>
+              .
+            </Step>
+          </ol>
+        </Section>
+
+        <Section
+          id="concours"
+          title="🏆 Les concours : un championnat entre équipes"
+          intro="Un concours enchaîne quatre étapes. L'enseignant l'organise depuis son espace ; les équipes s'inscrivent sur /compete avec le code qu'il leur donne."
+        >
+          <ol className="space-y-5">
+            <Step n={1} title="Inscriptions">
+              L&apos;enseignant crée le concours (périodicité, équipes par groupe, qualifiés par
+              groupe) et obtient un <strong className="text-slate-200">code à 6 caractères</strong>.
+              Chaque équipe s&apos;inscrit sur /compete avec ce code et le nom de son équipe ; les
+              coéquipiers rejoignent en saisissant exactement le même nom (2 à 6 joueurs par
+              équipe, 32 équipes au plus). Un joueur déjà inscrit qui ressaisit le code retrouve son
+              équipe.
+            </Step>
+            <Step n={2} title="Qualifications">
+              L&apos;enseignant clôt les inscriptions : les équipes sont tirées au sort dans des
+              groupes de la taille choisie (tirage seedé, rejouable pour audit). Chaque groupe
+              joue une partie complète en <strong className="text-slate-200">mode compétition</strong> :
+              décisions verrouillées après validation, indices limités aux niveaux 1 à 3, aucun
+              tirage manuel de cartes. L&apos;enseignant clôt les tours de chaque partie depuis son
+              pilotage habituel.
+            </Step>
+            <Step n={3} title="Finale">
+              Quand toutes les parties de qualification sont terminées, les meilleures équipes de
+              chaque groupe au <Link href="#bpi" className="text-amber-300 underline-offset-4 hover:underline">score BPI</Link>{" "}
+              se qualifient. Elles jouent une seule partie, aux mêmes règles.
+            </Step>
+            <Step n={4} title="Podium">
+              À la fin de la finale, l&apos;enseignant proclame le podium : or, argent, bronze au
+              classement BPI. Les équipes le voient sur leur page du concours.
             </Step>
           </ol>
         </Section>
