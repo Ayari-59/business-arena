@@ -71,7 +71,10 @@ describe("NOVA — invariant 3 : aucune stratégie ne dépasse le découvert ava
     it(`stratégie ${strategy}`, () => {
       const run = playStrategy(strategy);
       for (let round = 1; round <= 3; round++) {
-        expect(playerRound(run, round).functionalBalance.netTreasury).toBeGreaterThan(-OVERDRAFT_LIMIT);
+        // « Ne dépasse pas » le découvert autorisé : le toucher exactement est
+        // permis (le garde-fou V1-4 amène price_aggressive pile au plafond),
+        // tolérance de 1 € pour le bruit de calcul flottant.
+        expect(playerRound(run, round).functionalBalance.netTreasury).toBeGreaterThan(-OVERDRAFT_LIMIT - 1);
       }
     });
   }

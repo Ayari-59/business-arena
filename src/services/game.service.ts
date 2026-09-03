@@ -17,6 +17,7 @@ import {
   type QuizMode,
 } from "@/config/difficulty";
 import { validerNomEquipe } from "@/config/nom-equipe";
+import { PERSONALITY_LABELS, botPersonalityFromSeed } from "@/engine/bots";
 import {
   findUserTeam,
   readPendingEvents,
@@ -216,6 +217,8 @@ export interface TeacherGameView {
     teamId: string;
     name: string;
     controller: "human" | "bot";
+    /** Personnalité du bot (réservée à l'enseignant) ; null pour une équipe humaine. */
+    botPersonality: string | null;
     playerNames: string[];
     hasSubmitted: boolean;
     lastNetIncome: number | null;
@@ -292,6 +295,10 @@ export async function getTeacherGameView(
         teamId: t.id,
         name: teamDisplayName(t.name),
         controller: t.controller,
+        botPersonality:
+          t.controller === "bot"
+            ? PERSONALITY_LABELS[botPersonalityFromSeed(Number(game.seed), t.botProfile ?? "balanced")]
+            : null,
         playerNames: memberships.filter((m) => m.teamId === t.id).map((m) => m.name),
         hasSubmitted:
           t.controller === "bot" ||

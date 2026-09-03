@@ -15,12 +15,111 @@ export type BotProfile =
   | "balanced" // équilibré, adapte la production aux ventes
   | "growth"; // pousse volume + marketing (stratégie de croissance)
 
+/**
+ * Personnalité d'un bot (V1-4) : module la réaction aux prix, orthogonale à la
+ * stratégie (passive/premium…). Tirée de façon déterministe à la graine de la
+ * partie, montrée à l'enseignant seul.
+ */
+export type BotPersonality = "prudent" | "suiveur" | "agressif";
+
+export const BOT_PERSONALITIES: BotPersonality[] = ["prudent", "suiveur", "agressif"];
+
+export const PERSONALITY_LABELS: Record<BotPersonality, string> = {
+  prudent: "Prudent",
+  suiveur: "Suiveur",
+  agressif: "Agressif",
+};
+
+/**
+ * Coefficients de réaction au prix : `down` quand l'humain casse les prix,
+ * `up` quand il monte ; `cvFloor` est le multiple du coût variable sous lequel
+ * le bot ne descend jamais. « suiveur » est la réaction par défaut (moitié de
+ * l'écart à la baisse, 30 % à la hausse, plancher coût variable + 15 %).
+ */
+const PERSONALITY_REACTION: Record<BotPersonality, { down: number; up: number; cvFloor: number }> = {
+  prudent: { down: 0.25, up: 0.15, cvFloor: 1.25 },
+  suiveur: { down: 0.5, up: 0.3, cvFloor: 1.15 },
+  agressif: { down: 0.8, up: 0.1, cvFloor: 1.1 },
+};
+
+function hashStr(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
+  return h >>> 0;
+}
+
+/**
+ * Personnalité d'un bot, tirée de façon déterministe de la graine de partie et
+ * de sa stratégie : identique pour toute partie de même graine (anti-triche,
+ * reproductible), sans champ à stocker.
+ */
+export function botPersonalityFromSeed(seed: number, botProfile: string): BotPersonality {
+  const idx = (((seed >>> 0) ^ hashStr(botProfile)) >>> 0) % BOT_PERSONALITIES.length;
+  return BOT_PERSONALITIES[idx]!;
+}
+
+/** Coût variable par unité (matières + autres coûts variables). */
+export function variableCostPerUnit(scenario: EngineScenarioConfig): number {
+  return scenario.product.materialCostPerUnit + scenario.product.otherVariableCostPerUnit;
+}
+
 export interface BotContext {
   scenario: EngineScenarioConfig;
   state: CompanyState;
   roundIndex: number;
   /** Unités vendues au tour précédent (undefined au tour 1). */
   lastSoldUnits?: number;
+  /** Prix moyen des équipes humaines au tour précédent (undefined si aucune / au T1). */
+  humanAvgPrice?: number;
+  /** Personnalité du bot (défaut « suiveur »). */
+  personality?: BotPersonality;
+}
+
+/**
+ * Réaction au prix moyen humain (V1-4). L'humain casse les prix (plus de 5 %
+ * sous le bot) → le bot baisse d'une fraction de l'écart, jamais sous son coût
+ * variable planchonné ; l'humain vend plus cher → le bot monte d'une fraction.
+ * Aucune lecture des cartes marché : le bot les subit comme tout le monde.
+ */
+function reactToHumanPrice(price: number, ctx: BotContext): number {
+  if (ctx.humanAvgPrice === undefined || ctx.humanAvgPrice <= 0) return price;
+  const react = PERSONALITY_REACTION[ctx.personality ?? "suiveur"];
+  const diff = ctx.humanAvgPrice - price;
+  const seuil = 0.05 * price;
+  if (diff < -seuil) {
+    const plancher = variableCostPerUnit(ctx.scenario) * react.cvFloor;
+    return Math.max(plancher, price + react.down * diff);
+  }
+  if (diff > seuil) return price + react.up * diff;
+  return price;
+}
+
+/**
+ * Garde-fou financier (V1-4) : le bot ne dépense pas au-delà de sa trésorerie
+ * d'ouverture + son découvert autorisé, et ne produit pas au-delà de sa
+ * capacité ni de la demande prévue × 1,2. Ce qui a fait plonger SoundBox à
+ * −30 900 € : un plan de production démesuré, sans garde-fou de caisse.
+ */
+function applyFinancialGuardRail(base: RoundDecisions, ctx: BotContext): void {
+  // Production : bornée par la capacité et la demande prévue × 1,2 (la demande
+  // prévue est l'écoulement du tour précédent ; au T1, la seule capacité). C'est
+  // ce qui empêche le plan démesuré qui a fait plonger SoundBox.
+  const cap = capacity(ctx);
+  const forecast = ctx.lastSoldUnits !== undefined ? ctx.lastSoldUnits * 1.2 : cap;
+  base.productionPlan = Math.max(0, Math.min(base.productionPlan, cap, forecast));
+
+  // Dépenses discrétionnaires (marketing, qualité, maintenance) : pas au-delà de
+  // la trésorerie d'ouverture + le découvert autorisé. La production, elle, est
+  // financée par le cycle (les ventes), pas mise en regard de la seule caisse.
+  const envelope = ctx.state.finance.cash + ctx.scenario.finance.overdraftLimit;
+  const discretionnaire =
+    (base.marketingBudget ?? 0) + (base.qualityBudget ?? 0) + (base.maintenanceBudget ?? 0);
+  if (discretionnaire > envelope && discretionnaire > 0) {
+    const k = Math.max(0, envelope) / discretionnaire;
+    base.marketingBudget = (base.marketingBudget ?? 0) * k;
+    base.qualityBudget = (base.qualityBudget ?? 0) * k;
+    base.maintenanceBudget = (base.maintenanceBudget ?? 0) * k;
+  }
 }
 
 /** Segment dominant (plus grosse demande de base) — sert de référence de prix. */
@@ -284,6 +383,10 @@ export function botDecisions(profile: BotProfile, ctx: BotContext): RoundDecisio
       };
       break;
   }
-  if (ctx.scenario.enrichedBots) return enrichDecisions(profile, ctx, base);
-  return base;
+  const enriched = ctx.scenario.enrichedBots ? enrichDecisions(profile, ctx, base) : base;
+  // Réaction au prix humain puis garde-fou financier (V1-4), appliqués en dernier
+  // pour cadrer la décision finale, quelle que soit la stratégie.
+  enriched.price = reactToHumanPrice(enriched.price, ctx);
+  applyFinancialGuardRail(enriched, ctx);
+  return enriched;
 }
