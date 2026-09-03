@@ -4,10 +4,12 @@ import { db } from "@/db";
 import { scenarios } from "@/db/schema";
 import { isBuiltInScenarioCode, scenarioByCode } from "@/config/scenarios/registry";
 import {
+  hydrateDefinition,
   parseStoredScenario,
   serializeDefinition,
   type StoredScenarioDefinition,
 } from "@/config/scenarios/serialize";
+import { essaiABlanc, type EssaiVerdict } from "@/config/scenarios/essai-a-blanc";
 
 /**
  * CRUD des scénarios ENSEIGNANTS en base — le socle de l'éditeur visuel (PR 1).
@@ -199,4 +201,15 @@ export async function canTeacherLaunchScenario(
   if (isBuiltInScenarioCode(code)) return true;
   const rows = await db.select().from(scenarios).where(eq(scenarios.code, code));
   return rows.some((r) => r.definition != null && r.authorId === teacherId);
+}
+
+/**
+ * Essai à blanc d'un scénario enseignant : rejoue 5 stratégies et rend un
+ * verdict de jouabilité. Filet informatif (ne bloque pas la publication), pur
+ * moteur. Vérifie la propriété.
+ */
+export async function runEssaiABlanc(id: string, authorId?: string): Promise<EssaiVerdict> {
+  const row = await loadEditableRow(id, authorId);
+  const definition = hydrateDefinition(parseStoredScenario(row.definition));
+  return essaiABlanc(definition);
 }
