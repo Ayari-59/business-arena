@@ -1,8 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
 import { nommerEquipeAction, type NomEquipeState } from "@/app/arena/[gameId]/actions";
 import { NOM_EQUIPE_MAX } from "@/config/nom-equipe";
+import { GuardError, useGuardedAction } from "@/components/guarded-action";
 
 const initial: NomEquipeState = { error: null };
 
@@ -18,10 +18,13 @@ const initial: NomEquipeState = { error: null };
  */
 export function TeamNameForm({ gameId, nomActuel }: { gameId: string; nomActuel: string }) {
   const action = nommerEquipeAction.bind(null, gameId);
-  const [state, formAction, pending] = useActionState(action, initial);
+  const { state, formAction, pending, formRef, guardError } = useGuardedAction(action, initial, {
+    label: "nom d'entreprise",
+  });
 
   return (
     <form
+      ref={formRef}
       action={formAction}
       className="rounded-xl border border-amber-400/30 bg-amber-950/10 p-4"
     >
@@ -67,6 +70,11 @@ export function TeamNameForm({ gameId, nomActuel }: { gameId: string; nomActuel:
         <p role="alert" className="mt-2 text-xs text-rose-300">
           {state.error}
         </p>
+      ) : null}
+      {guardError ? (
+        <div className="mt-2">
+          <GuardError message={guardError} />
+        </div>
       ) : null}
     </form>
   );

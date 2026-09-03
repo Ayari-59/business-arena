@@ -1,14 +1,19 @@
 "use client";
 
-import { useActionState } from "react";
 import { joinGameAction, type JoinState } from "@/app/join/actions";
+import { GuardError, useGuardedAction } from "@/components/guarded-action";
 
 const initial: JoinState = { error: null };
 
 export function JoinForm() {
-  const [state, formAction, pending] = useActionState(joinGameAction, initial);
+  const { state, formAction, pending, formRef, guardError } = useGuardedAction(
+    joinGameAction,
+    initial,
+    { label: "rejoindre une partie" },
+  );
   return (
     <form
+      ref={formRef}
       action={formAction}
       className="w-full max-w-sm space-y-4 rounded-2xl border border-white/10 bg-slate-900 p-6"
     >
@@ -41,6 +46,7 @@ export function JoinForm() {
           {state.error}
         </p>
       ) : null}
+      <GuardError message={guardError} />
       <button
         type="submit"
         disabled={pending}

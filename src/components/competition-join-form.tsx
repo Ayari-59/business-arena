@@ -1,14 +1,19 @@
 "use client";
 
-import { useActionState } from "react";
 import { joinCompetitionAction, type JoinCompetitionState } from "@/app/compete/actions";
+import { GuardError, useGuardedAction } from "@/components/guarded-action";
 
 const initial: JoinCompetitionState = { error: null };
 
 export function CompetitionJoinForm() {
-  const [state, formAction, pending] = useActionState(joinCompetitionAction, initial);
+  const { state, formAction, pending, formRef, guardError } = useGuardedAction(
+    joinCompetitionAction,
+    initial,
+    { label: "inscription à un concours" },
+  );
   return (
     <form
+      ref={formRef}
       action={formAction}
       className="w-full max-w-sm space-y-4 rounded-2xl border border-white/10 bg-slate-900 p-6"
     >
@@ -53,6 +58,7 @@ export function CompetitionJoinForm() {
           {state.error}
         </p>
       ) : null}
+      <GuardError message={guardError} />
       <button
         type="submit"
         disabled={pending}

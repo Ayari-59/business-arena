@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
 import { createCompetitionAction, type CreateCompetitionState } from "@/app/teacher/actions";
+import { GuardError, useGuardedAction } from "@/components/guarded-action";
 
 /**
  * Le formulaire « Organiser un concours ».
@@ -27,13 +27,17 @@ export function CompetitionCreateForm({
   /** État de départ : celui d'un formulaire vierge, sauf pour reprendre un échec. */
   initial?: CreateCompetitionState;
 }) {
-  const [state, formAction, pending] = useActionState(createCompetitionAction, initial);
+  const { state, formAction, pending, formRef, guardError } = useGuardedAction(
+    createCompetitionAction,
+    initial,
+    { label: "création de concours" },
+  );
   // Après une action, React remet les champs à leur defaultValue : c'est donc
   // par là que la saisie revient, en cas d'échec, à sa place.
   const v = state.values;
 
   return (
-    <form action={formAction} className="mt-4 grid gap-4 sm:grid-cols-2">
+    <form ref={formRef} action={formAction} className="mt-4 grid gap-4 sm:grid-cols-2">
       <label className="block sm:col-span-2">
         <span className={etiquette}>Nom du concours</span>
         <input
@@ -80,6 +84,11 @@ export function CompetitionCreateForm({
         >
           {state.error}
         </p>
+      ) : null}
+      {guardError ? (
+        <div className="sm:col-span-2">
+          <GuardError message={guardError} />
+        </div>
       ) : null}
       <button
         type="submit"
