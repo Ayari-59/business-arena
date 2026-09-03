@@ -902,7 +902,12 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                     </summary>
                     <div className="space-y-4 px-4 pb-4">
                       {dr.situations.map((s) => (
-                        <SituationDebrief key={s.instanceId} situation={s} />
+                        <SituationDebrief
+                          key={s.instanceId}
+                          situation={s}
+                          gameId={view.gameId}
+                          retakeable={situations.missedPolicy === "retake50" && i === 0}
+                        />
                       ))}
                     </div>
                   </details>

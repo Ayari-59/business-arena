@@ -45,6 +45,11 @@ import type { ConsequenceFact, InterpretationFact, TriggerFact } from "@/pedagog
 import { AXES, aggregateAxis, updateMastery } from "@/pedagogy/progress";
 import { adaptiveHintMultiplier, playerStrength } from "@/pedagogy/adaptivity";
 import { computeRawSituationScore } from "@/pedagogy/scoring";
+import {
+  RETAKE_MULTIPLIER,
+  missedSituationPolicyFromProfile,
+  type MissedSituationPolicy,
+} from "@/config/missed-situation";
 import type { CompanyRoundResult } from "@/engine/types";
 
 /**
@@ -379,6 +384,79 @@ export async function submitQuiz(args: {
     })
     .where(eq(situationInstances.id, args.instanceId));
   return { score };
+}
+
+/**
+ * Rattrapage d'une situation manquée (V1-6, politique `retake50`). Une reprise
+ * unique, avant la clôture suivante, notée à la moitié du score. Le tour clos
+ * n'est PAS recalculé (son BPI reste figé) : le rattrapage vaut pour la Mémoire
+ * et l'apprentissage, pas rétroactivement pour le classement.
+ */
+export async function retakeSituation(args: {
+  instanceId: string;
+  userId: string;
+  selectedOptionIds: string[];
+  freeText?: string;
+  answers: Record<string, string>;
+}): Promise<{ finalScore: number }> {
+  const { instance, def, game } = await loadInstanceForUser(args.instanceId, args.userId);
+  const kind = (game?.difficultyProfile as { kind?: string } | null)?.kind;
+  if (missedSituationPolicyFromProfile(game?.difficultyProfile, kind) !== "retake50") {
+    throw new Error("Le rattrapage n'est pas ouvert pour cette partie");
+  }
+  if (instance.status !== "debriefed") throw new Error("Cette situation n'est pas encore débriefée");
+  const diag = instance.diagnosis as { selected?: string[]; retaken?: boolean } | null;
+  if (diag?.retaken) throw new Error("Cette situation a déjà été rattrapée");
+  if (Array.isArray(diag?.selected)) throw new Error("Cette situation a déjà été rendue");
+
+  // Fenêtre : uniquement le dernier tour clos, avant la clôture suivante.
+  const gameRounds = await db.select().from(rounds).where(eq(rounds.gameId, game!.id));
+  const resolved = gameRounds.filter((r) => r.status === "resolved").map((r) => r.index);
+  const maxResolved = resolved.length ? Math.max(...resolved) : 0;
+  const myRound = gameRounds.find((r) => r.id === instance.roundId)?.index ?? 0;
+  if (myRound !== maxResolved) {
+    throw new Error("Le rattrapage n'est ouvert que jusqu'à la clôture suivante");
+  }
+
+  const asked = askedQuestions(def, quizModeFromProfile(game?.difficultyProfile));
+  const hasQuizQuestions = asked.length > 0;
+  const validIds = new Set(asked.map((q) => q.id));
+  const cleanAnswers: Record<string, string> = {};
+  for (const [q, o] of Object.entries(args.answers)) if (validIds.has(q)) cleanAnswers[q] = o;
+  const diagScore = evaluateDiagnosis(args.selectedOptionIds, def.diagnosticOptions);
+  const quizScore = hasQuizQuestions ? evaluateQuiz(cleanAnswers, asked) : null;
+  const raw = computeRawSituationScore({ diagnosisScore: diagScore, quizScore, hasQuizQuestions });
+  const finalScore = raw * RETAKE_MULTIPLIER;
+
+  await db
+    .update(situationInstances)
+    .set({
+      diagnosis: {
+        selected: args.selectedOptionIds,
+        freeText: args.freeText ?? "",
+        score: diagScore,
+        finalScore,
+        retaken: true,
+      },
+      quiz: hasQuizQuestions ? { answers: cleanAnswers, score: quizScore ?? 0 } : instance.quiz,
+    })
+    .where(eq(situationInstances.id, args.instanceId));
+  return { finalScore };
+}
+
+/** Règle la politique des situations manquées d'une partie (V1-6, jsonb, sans migration). */
+export async function setMissedPolicy(args: {
+  gameId: string;
+  teacherId: string;
+  policy: MissedSituationPolicy;
+}): Promise<void> {
+  const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
+  if (!game || game.createdBy !== args.teacherId) throw new Error("Partie introuvable");
+  const profile = (game.difficultyProfile as Record<string, unknown> | null) ?? {};
+  await db
+    .update(games)
+    .set({ difficultyProfile: { ...profile, missedSituationPolicy: args.policy } })
+    .where(eq(games.id, args.gameId));
 }
 
 // ---------------------------------------------------------------------------
@@ -767,6 +845,12 @@ export interface SituationView {
   /** Faits chiffrés ayant déclenché la situation (A1 — « Pourquoi cette situation ? »). */
   triggerFacts: TriggerFact[] | null;
   diagnosis: { selected: string[]; freeText: string; score?: number; finalScore?: number } | null;
+  /** L'équipe a rendu (diagnostic soumis) cette situation. */
+  rendered: boolean;
+  /** Situation débriefée sans avoir été rendue (V1-6 — consultable en Mémoire). */
+  missed: boolean;
+  /** Situation manquée puis rattrapée (score compté pour moitié). */
+  retaken: boolean;
   /** Rempli uniquement après débriefing. */
   debrief: {
     correctOptionIds: string[];
@@ -815,8 +899,15 @@ function toView(
   const asked = askedQuestions(def, quizMode, modelCtx);
   const modelAsked = asked.some((q) => q.id === MODEL_QUESTION_ID);
   const debriefed = instance.status === "debriefed";
-  const diagnosis = instance.diagnosis as SituationView["diagnosis"];
+  const diagnosis = instance.diagnosis as
+    | (SituationView["diagnosis"] & { retaken?: boolean })
+    | null;
   const quizStored = instance.quiz as { answers?: Record<string, string>; score?: number } | null;
+  // Rendue = l'équipe a soumis son diagnostic. Une situation débriefée sans
+  // diagnostic est « manquée » (V1-6) : consultable, score 0.
+  const rendered = Array.isArray(diagnosis?.selected);
+  const retaken = diagnosis?.retaken === true;
+  const missed = debriefed && !rendered;
   return {
     instanceId: instance.id,
     code: def.code,
@@ -871,6 +962,9 @@ function toView(
     decisionLevers: debriefed ? [] : (def.decisionLevers ?? []),
     triggerFacts: (instance.triggerContext as TriggerFact[] | null) ?? null,
     diagnosis,
+    rendered,
+    missed,
+    retaken,
     debrief: debriefed
       ? {
           correctOptionIds: def.diagnosticOptions.filter((o) => o.correct).map((o) => o.id),
@@ -888,8 +982,10 @@ function toView(
           quizScore: quizStored?.score ?? null,
           // Question du modèle non posée : le débriefing donne quand même le
           // modèle attendu et son explication. Sans cela, retirer les
-          // questions retirerait aussi la leçon centrale de la situation.
-          modelInsight: modelAsked ? null : modelInsight(def),
+          // questions retirerait aussi la leçon centrale de la situation. Une
+          // situation MANQUÉE (V1-6) donne toujours le modèle attendu, même si
+          // la question était posée : c'est l'essentiel à consulter.
+          modelInsight: modelAsked && !missed ? null : modelInsight(def),
           consequenceFacts: (instance.consequenceContext as ConsequenceFact[] | null) ?? null,
           interpretation: (instance.interpretationContext as InterpretationFact | null) ?? null,
           concepts: def.conceptCodes
@@ -911,9 +1007,17 @@ export interface DebriefedRound {
 export async function getTeamSituations(
   gameId: string,
   userId: string,
-): Promise<{ current: SituationView[]; debriefedByRound: DebriefedRound[] }> {
+): Promise<{
+  current: SituationView[];
+  debriefedByRound: DebriefedRound[];
+  missedPolicy: MissedSituationPolicy;
+}> {
   const game = (await db.select().from(games).where(eq(games.id, gameId)))[0];
-  if (!game) return { current: [], debriefedByRound: [] };
+  const policy = missedSituationPolicyFromProfile(
+    game?.difficultyProfile,
+    (game?.difficultyProfile as { kind?: string } | null)?.kind,
+  );
+  if (!game) return { current: [], debriefedByRound: [], missedPolicy: policy };
   const teamRows = await db.select().from(teams).where(eq(teams.gameId, gameId));
   const humanIds = teamRows.filter((t) => t.controller === "human").map((t) => t.id);
   const membership = (
@@ -922,7 +1026,7 @@ export async function getTeamSituations(
       .from(players)
       .where(and(inArray(players.teamId, humanIds.length ? humanIds : ["-"]), eq(players.userId, userId)))
   )[0];
-  if (!membership) return { current: [], debriefedByRound: [] };
+  if (!membership) return { current: [], debriefedByRound: [], missedPolicy: policy };
 
   const gameRounds = await db.select().from(rounds).where(eq(rounds.gameId, gameId));
   const instances = await db
@@ -934,7 +1038,7 @@ export async function getTeamSituations(
         eq(situationInstances.teamId, membership.teamId),
       ),
     );
-  if (instances.length === 0) return { current: [], debriefedByRound: [] };
+  if (instances.length === 0) return { current: [], debriefedByRound: [], missedPolicy: policy };
 
   const situationRows = await db.select().from(situations);
   const codeById = new Map(situationRows.map((r) => [r.id, r.code]));
@@ -975,7 +1079,7 @@ export async function getTeamSituations(
   const debriefedByRound: DebriefedRound[] = [...debriefedMap.entries()]
     .sort((a, b) => b[0] - a[0])
     .map(([roundIndex, situations]) => ({ roundIndex, situations }));
-  return { current, debriefedByRound };
+  return { current, debriefedByRound, missedPolicy: policy };
 }
 
 export interface TeacherPedagogyView {

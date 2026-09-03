@@ -4,9 +4,10 @@ import { getTeacherGameView } from "@/services/game.service";
 import { getGameGradeSheet, getTeacherPedagogyView } from "@/services/pedagogy.service";
 import { formatEuro } from "@/lib/format";
 import { periodLabel } from "@/config/scenarios/periodicity";
-import { setQuizModeAction } from "../../actions";
+import { setMissedPolicyAction, setQuizModeAction } from "../../actions";
 import { QUIZ_MODES } from "@/config/difficulty";
 import { estParDefaut } from "@/config/decision-source";
+import { MISSED_POLICY_LABELS, MISSED_POLICY_HELP } from "@/config/missed-situation";
 import { CardDeck } from "@/components/card-deck";
 import { CloseRoundForm } from "@/components/close-round-form";
 import { SubmitButton } from "@/components/submit-button";
@@ -113,6 +114,45 @@ export default async function TeacherGamePage({
                       {m.name}
                     </span>
                     <span className="mt-1 block text-xs text-slate-500">{m.help}</span>
+                  </SubmitButton>
+                </GuardedForm>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
+
+      {!finished ? (
+        <section className="rounded-xl border border-white/10 bg-slate-900 p-4">
+          <h2 className="text-sm font-semibold text-slate-200">📚 Situations manquées</h2>
+          <p className="mt-1 max-w-3xl text-xs text-slate-500">
+            Une situation non rendue reste consultable par l&apos;élève dans l&apos;onglet Mémoire.
+            Vous choisissez si elle peut être rattrapée. Réglage appliqué aux tours à venir ; les
+            situations déjà rattrapées gardent leur score.
+          </p>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            {(["readonly", "retake50"] as const).map((p) => {
+              const active = p === view.missedPolicy;
+              return (
+                <GuardedForm
+                  key={p}
+                  action={setMissedPolicyAction.bind(null, view.gameId)}
+                  label="situations manquées"
+                >
+                  <input type="hidden" name="policy" value={p} />
+                  <SubmitButton
+                    disabled={active}
+                    className={`h-full w-full rounded-lg border px-3 py-3 text-left transition ${
+                      active
+                        ? "cursor-default border-amber-400/60 bg-amber-400/10"
+                        : "border-white/10 bg-slate-950 hover:border-amber-400/40"
+                    }`}
+                  >
+                    <span className={`text-sm font-medium ${active ? "text-amber-300" : "text-slate-200"}`}>
+                      {active ? "✓ " : ""}
+                      {MISSED_POLICY_LABELS[p]}
+                    </span>
+                    <span className="mt-1 block text-xs text-slate-500">{MISSED_POLICY_HELP[p]}</span>
                   </SubmitButton>
                 </GuardedForm>
               );

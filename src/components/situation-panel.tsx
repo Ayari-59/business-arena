@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import {
+  retakeSituationAction,
   submitSituationAction,
   unlockHintAction,
   type PedagogyState,
@@ -318,11 +319,22 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
 }
 
 /** Débriefing d'une situation résolue : correction du diagnostic et du QCM + notions. */
-export function SituationDebrief({ situation }: { situation: SituationView }) {
+export function SituationDebrief({
+  situation,
+  gameId,
+  retakeable = false,
+}: {
+  situation: SituationView;
+  /** Requis pour proposer un rattrapage (V1-6). */
+  gameId?: string;
+  /** La situation manquée est encore rattrapable (politique retake50, dernier tour clos). */
+  retakeable?: boolean;
+}) {
   const debrief = situation.debrief;
   if (!debrief) return null;
   const selected = new Set(situation.diagnosis?.selected ?? []);
   const answers = situation.quizAnswers ?? {};
+  const scoreSur100 = Math.round(debrief.finalScore * 100);
   return (
     <article className="rounded-xl border border-white/10 bg-slate-900 p-5">
       <header className="mb-3 flex items-start justify-between gap-3">
@@ -330,10 +342,28 @@ export function SituationDebrief({ situation }: { situation: SituationView }) {
           <p className="text-xs uppercase tracking-[0.25em] text-slate-500">Débriefing</p>
           <h3 className="mt-1 text-base font-semibold text-slate-100">{situation.title}</h3>
         </div>
-        <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300">
-          Score : {Math.round(debrief.finalScore * 100)} / 100
+        <span
+          className={`rounded-full border px-3 py-1 text-xs ${
+            situation.missed
+              ? "border-amber-400/40 text-amber-300"
+              : situation.retaken
+                ? "border-sky-400/40 text-sky-300"
+                : "border-white/10 text-slate-300"
+          }`}
+        >
+          {situation.missed
+            ? "Non rendue · 0 / 100"
+            : situation.retaken
+              ? `Rattrapée · ${scoreSur100} / 100`
+              : `Score : ${scoreSur100} / 100`}
         </span>
       </header>
+      {situation.missed ? (
+        <p className="mb-3 rounded-lg border border-amber-400/20 bg-amber-950/10 px-3 py-2 text-sm text-slate-300">
+          <span className="font-medium text-amber-200">Situation non rendue.</span> {situation.narrative}{" "}
+          {situation.problem} Le modèle attendu et la correction restent consultables ci-dessous.
+        </p>
+      ) : null}
       <div className="space-y-3 text-sm">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Diagnostic</p>
@@ -475,6 +505,98 @@ export function SituationDebrief({ situation }: { situation: SituationView }) {
           </div>
         ) : null}
       </div>
+      {situation.missed && !situation.retaken && retakeable && gameId ? (
+        <SituationRetake gameId={gameId} situation={situation} />
+      ) : null}
     </article>
+  );
+}
+
+/**
+ * Rattrapage d'une situation manquée (V1-6, politique retake50) : un seul rendu,
+ * noté à 50 %, avant la clôture suivante. Même forme que le rendu normal.
+ */
+function SituationRetake({ gameId, situation }: { gameId: string; situation: SituationView }) {
+  const rendu = useGuardedAction(
+    retakeSituationAction.bind(null, gameId, situation.instanceId),
+    initial,
+    { label: "rattrapage de situation" },
+  );
+  const { state, formAction, pending } = rendu;
+  const questions = situation.quizQuestions;
+  const [options, setOptions] = useState<string[]>([]);
+  const [freeText, setFreeText] = useState("");
+  const [reponses, setReponses] = useState<Record<string, string>>({});
+  const manquants = manques({ options, questions: questions.map((q) => q.id), reponses });
+  const complet = manquants.length === 0;
+
+  return (
+    <form ref={rendu.formRef} action={formAction} className="mt-4 space-y-3 rounded-lg border border-sky-400/30 bg-sky-950/10 p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-sky-300">
+        Rattrapage · score compté pour moitié
+      </p>
+      <input type="hidden" name="questions" value={questions.map((q) => q.id).join(",")} />
+      <div className="space-y-1.5">
+        <p className="text-xs text-slate-400">Votre diagnostic</p>
+        {situation.diagnosticOptions.map((option) => (
+          <label key={option.id} className="flex items-start gap-2 text-sm text-slate-200">
+            <input
+              type="checkbox"
+              name="options"
+              value={option.id}
+              checked={options.includes(option.id)}
+              onChange={(e) =>
+                setOptions((prec) =>
+                  e.target.checked ? [...new Set([...prec, option.id])] : prec.filter((o) => o !== option.id),
+                )
+              }
+              className="mt-1 accent-sky-400"
+            />
+            <span>{option.label}</span>
+          </label>
+        ))}
+        <textarea
+          name="freeText"
+          rows={2}
+          value={freeText}
+          onChange={(e) => setFreeText(e.target.value)}
+          placeholder="Votre analyse en quelques mots (facultatif)…"
+          className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-sky-400/60"
+        />
+      </div>
+      {questions.map((question, index) => (
+        <fieldset key={question.id}>
+          <legend className="text-sm font-medium text-slate-200">
+            {index + 1}. {question.prompt}
+          </legend>
+          <div className="mt-1.5 space-y-1.5">
+            {question.options.map((option) => (
+              <label key={option.id} className="flex items-start gap-2 text-sm text-slate-300">
+                <input
+                  type="radio"
+                  name={`quiz_${question.id}`}
+                  value={option.id}
+                  checked={reponses[question.id] === option.id}
+                  onChange={() => setReponses((prec) => ({ ...prec, [question.id]: option.id }))}
+                  className="mt-1 accent-sky-400"
+                />
+                <span>{option.label}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      ))}
+      <ErrorBox error={state.error} />
+      <GuardError message={rendu.guardError} />
+      <button
+        type="submit"
+        disabled={!complet || pending}
+        aria-disabled={!complet || pending}
+        title={complet ? undefined : messageIncomplet(manquants)}
+        className="rounded-lg bg-sky-400 px-5 py-2 text-sm font-semibold text-slate-950 hover:bg-sky-300 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {pending ? "Envoi…" : "Rattraper cette situation"}
+      </button>
+    </form>
   );
 }
