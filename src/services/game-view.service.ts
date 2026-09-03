@@ -72,6 +72,20 @@ export interface GameView {
   }[];
   lastResult: CompanyRoundResult | null;
   /**
+   * Tous les tours RÉSOLUS, du plus ancien au plus récent : de quoi rebâtir le
+   * tableau de bord complet de chaque période dans l'accordéon de l'arène, sans
+   * se limiter au dernier tour. Le dernier élément recoupe `lastResult`.
+   */
+  periods: {
+    round: number;
+    result: CompanyRoundResult;
+    events: string[];
+    decisions: RoundDecisions | null;
+    forecastReview: GameView["forecastReview"];
+    sectorKpis: GameView["sectorKpis"];
+    competitiveBenchmark: GameView["competitiveBenchmark"];
+  }[];
+  /**
    * La prévision du tour écoulé face au réalisé. Null si le joueur n'a rien
    * annoncé : on ne reproche pas une prévision qui n'a pas été faite.
    */
@@ -423,11 +437,183 @@ export interface StudyReports {
   };
 }
 
+/**
+ * Ligne de résultat persistée (table `roundResults`) telle que lue ici : on ne
+ * type que les champs relus pour reconstituer un `CompanyRoundResult`.
+ */
+interface PersistedResultRow {
+  teamId: string;
+  roundId: string;
+  incomeStatement: unknown;
+  balanceSheet: unknown;
+  cashFlow: unknown;
+  frng: unknown;
+  bfr: unknown;
+  netTreasury: unknown;
+  marketShare: unknown;
+  marketDetail: unknown;
+  revenue: unknown;
+  netIncome: unknown;
+  engineTrace: unknown;
+}
+
+/**
+ * Reconstitue le résultat complet d'un tour à partir de sa ligne persistée et
+ * de sa trace moteur. Un seul endroit pour cette reconstruction : elle sert au
+ * dernier tour (affiché en direct) comme à chaque tour passé de l'accordéon.
+ */
+function reconstructResult(
+  row: PersistedResultRow,
+  taxRate: number,
+): { result: CompanyRoundResult; events: string[] } {
+  const trace = row.engineTrace as {
+    production: CompanyRoundResult["production"];
+    breakeven: CompanyRoundResult["breakeven"];
+    events: string[];
+    extraOrders?: CompanyRoundResult["extraOrders"] | null;
+    orderOffer?: CompanyRoundResult["orderOffer"] | null;
+    studies?: CompanyRoundResult["studies"] | null;
+    capital?: CompanyRoundResult["capital"] | null;
+    insurance?: CompanyRoundResult["insurance"] | null;
+    supplier?: CompanyRoundResult["supplier"] | null;
+    hr?: CompanyRoundResult["hr"] | null;
+    investment?: CompanyRoundResult["investment"] | null;
+    qualityCosts?: CompanyRoundResult["qualityCosts"] | null;
+    debt?: CompanyRoundResult["debt"] | null;
+    treasury?: CompanyRoundResult["treasury"] | null;
+    bank?: CompanyRoundResult["bank"] | null;
+  };
+  const result: CompanyRoundResult = {
+    companyId: row.teamId,
+    incomeStatement: row.incomeStatement as CompanyRoundResult["incomeStatement"],
+    balanceSheet: row.balanceSheet as CompanyRoundResult["balanceSheet"],
+    cashFlow: row.cashFlow as CompanyRoundResult["cashFlow"],
+    functionalBalance: {
+      frng: Number(row.frng),
+      bfr: Number(row.bfr),
+      netTreasury: Number(row.netTreasury),
+    },
+    ratios: computeRatios(
+      row.incomeStatement as CompanyRoundResult["incomeStatement"],
+      row.balanceSheet as CompanyRoundResult["balanceSheet"],
+      taxRate,
+    ),
+    market: {
+      bySegment: row.marketDetail as CompanyRoundResult["market"]["bySegment"],
+      totalShare: Number(row.marketShare),
+    },
+    production: trace.production,
+    breakeven: trace.breakeven,
+    extraOrders: trace.extraOrders ?? undefined,
+    orderOffer: trace.orderOffer ?? undefined,
+    studies: trace.studies ?? undefined,
+    capital: trace.capital ?? undefined,
+    insurance: trace.insurance ?? undefined,
+    supplier: trace.supplier ?? undefined,
+    hr: trace.hr ?? undefined,
+    investment: trace.investment ?? undefined,
+    qualityCosts: trace.qualityCosts ?? undefined,
+    debt: trace.debt ?? undefined,
+    treasury: trace.treasury ?? undefined,
+    bank: trace.bank ?? undefined,
+    kpis: {},
+  };
+  return { result, events: trace.events ?? [] };
+}
+
+/** La prévision d'un tour face au réalisé (identique pour tout tour résolu). */
+function buildForecastReview(
+  round: number,
+  result: CompanyRoundResult,
+  forecast: RoundDecisions["forecast"] | null | undefined,
+): GameView["forecastReview"] {
+  if (!forecast) return null;
+  const sold =
+    Object.values(result.market.bySegment).reduce((sum, d) => sum + d.sold, 0) +
+    (result.extraOrders?.delivered ?? 0) +
+    (result.orderOffer?.delivered ?? 0);
+  const lines: NonNullable<GameView["forecastReview"]>["lines"] = [];
+  const push = (
+    label: string,
+    expected: number | undefined,
+    actual: number,
+    format: "units" | "euro",
+  ) => {
+    if (expected === undefined) return;
+    lines.push({
+      label,
+      forecast: expected,
+      actual,
+      relative: Math.abs(expected) > 0.5 ? (actual - expected) / Math.abs(expected) : null,
+      format,
+    });
+  };
+  push("Ventes", forecast.expectedUnits, sold, "units");
+  push("Trésorerie nette", forecast.expectedCash, result.functionalBalance.netTreasury, "euro");
+  return lines.length > 0 ? { round, lines } : null;
+}
+
+/** Indicateurs du métier d'un tour (l'attrition se lit sur le tour précédent). */
+function buildSectorKpis(
+  result: CompanyRoundResult,
+  previousSegments: CompanyRoundResult["market"]["bySegment"] | null,
+  snapshot: EngineScenarioConfig,
+): GameView["sectorKpis"] {
+  const segmentUnits = Object.values(result.market.bySegment).reduce((sum, s) => sum + s.sold, 0);
+  const totalUnits =
+    segmentUnits + (result.extraOrders?.delivered ?? 0) + (result.orderOffer?.delivered ?? 0);
+  return computeSectorKpis(scenarioByCode(snapshot.code).kpis, {
+    result,
+    previousSegments,
+    segmentUnits,
+    totalUnits,
+    roundDays: snapshot.roundDays,
+    scenario: snapshot,
+  });
+}
+
+/** Benchmark concurrentiel d'un tour (prix moyen, parts, indice de compétitivité). */
+function buildBenchmark(
+  rows: PersistedResultRow[],
+  teamRows: { id: string; name: string }[],
+  playerTeamId: string,
+): GameView["competitiveBenchmark"] {
+  if (rows.length === 0) return null;
+  const competitors = rows
+    .map((row) => {
+      const detail = row.marketDetail as Record<string, { sold?: number }> | null;
+      const units = detail
+        ? Object.values(detail).reduce((sum, d) => sum + (d.sold ?? 0), 0)
+        : 0;
+      return {
+        name: teamDisplayName(teamRows.find((t) => t.id === row.teamId)?.name ?? "?"),
+        isPlayer: row.teamId === playerTeamId,
+        avgPrice: units > 1 ? Number(row.revenue) / units : null,
+        marketShare: Number(row.marketShare),
+        revenue: Number(row.revenue),
+      };
+    })
+    .sort((a, b) => b.marketShare - a.marketShare);
+  const withPrice = competitors.filter((c) => c.avgPrice !== null);
+  const marketAvgPrice =
+    withPrice.length > 0
+      ? withPrice.reduce((s, c) => s + c.avgPrice!, 0) / withPrice.length
+      : 0;
+  const player = competitors.find((c) => c.isPlayer);
+  const competitivenessIndex =
+    player && marketAvgPrice > 0 && player.avgPrice !== null
+      ? marketAvgPrice / player.avgPrice
+      : 1;
+  return { competitors, marketAvgPrice, competitivenessIndex };
+}
+
 export async function getGameView(gameId: string, userId: string): Promise<GameView | null> {
   const game = (await db.select().from(games).where(eq(games.id, gameId)))[0];
   if (!game) return null;
   const { team: playerTeam, allTeams: teamRows } = await findUserTeam(gameId, userId);
   if (!playerTeam) return null;
+  const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+  const taxRate = snapshot.finance.taxRate;
 
   const gameRounds = await db
     .select()
@@ -484,62 +670,44 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
   if (lastRound) {
     const row = gameResults.find((r) => r.roundId === lastRound.id && r.teamId === playerTeam.id);
     if (row) {
-      const trace = row.engineTrace as {
-        production: CompanyRoundResult["production"];
-        breakeven: CompanyRoundResult["breakeven"];
-        events: string[];
-        extraOrders?: CompanyRoundResult["extraOrders"] | null;
-        orderOffer?: CompanyRoundResult["orderOffer"] | null;
-        studies?: CompanyRoundResult["studies"] | null;
-        capital?: CompanyRoundResult["capital"] | null;
-        insurance?: CompanyRoundResult["insurance"] | null;
-        supplier?: CompanyRoundResult["supplier"] | null;
-        hr?: CompanyRoundResult["hr"] | null;
-        investment?: CompanyRoundResult["investment"] | null;
-        qualityCosts?: CompanyRoundResult["qualityCosts"] | null;
-        debt?: CompanyRoundResult["debt"] | null;
-        treasury?: CompanyRoundResult["treasury"] | null;
-        bank?: CompanyRoundResult["bank"] | null;
-      };
-      lastResult = {
-        companyId: playerTeam.id,
-        incomeStatement: row.incomeStatement as CompanyRoundResult["incomeStatement"],
-        balanceSheet: row.balanceSheet as CompanyRoundResult["balanceSheet"],
-        cashFlow: row.cashFlow as CompanyRoundResult["cashFlow"],
-        functionalBalance: {
-          frng: Number(row.frng),
-          bfr: Number(row.bfr),
-          netTreasury: Number(row.netTreasury),
-        },
-        ratios: computeRatios(
-          row.incomeStatement as CompanyRoundResult["incomeStatement"],
-          row.balanceSheet as CompanyRoundResult["balanceSheet"],
-          (game.scenarioSnapshot as EngineScenarioConfig).finance.taxRate,
-        ),
-        market: {
-          bySegment: row.marketDetail as CompanyRoundResult["market"]["bySegment"],
-          totalShare: Number(row.marketShare),
-        },
-        production: trace.production,
-        breakeven: trace.breakeven,
-        extraOrders: trace.extraOrders ?? undefined,
-        orderOffer: trace.orderOffer ?? undefined,
-        studies: trace.studies ?? undefined,
-        capital: trace.capital ?? undefined,
-        insurance: trace.insurance ?? undefined,
-        supplier: trace.supplier ?? undefined,
-        hr: trace.hr ?? undefined,
-        investment: trace.investment ?? undefined,
-        qualityCosts: trace.qualityCosts ?? undefined,
-        debt: trace.debt ?? undefined,
-        treasury: trace.treasury ?? undefined,
-        bank: trace.bank ?? undefined,
-        kpis: {},
-      };
-      lastEvents = trace.events ?? [];
+      const rec = reconstructResult(row as PersistedResultRow, taxRate);
+      lastResult = rec.result;
+      lastEvents = rec.events;
     }
     const decisionRow = playerDecisionRows.find((d) => d.roundId === lastRound.id);
     if (decisionRow) lastDecisions = decisionRow.payload as RoundDecisions;
+  }
+
+  // Tableau de bord complet de CHAQUE tour résolu (accordéon de l'arène) : on
+  // reconstitue le résultat, la prévision, les indicateurs métier et le
+  // benchmark tour par tour, sans se limiter au dernier.
+  const periods: GameView["periods"] = [];
+  for (let i = 0; i < resolved.length; i++) {
+    const rnd = resolved[i];
+    if (!rnd) continue;
+    const idx = roundIndexById.get(rnd.id)!;
+    const row = gameResults.find((g) => g.roundId === rnd.id && g.teamId === playerTeam.id);
+    if (!row) continue;
+    const { result, events } = reconstructResult(row as PersistedResultRow, taxRate);
+    const dec =
+      (playerDecisionRows.find((d) => d.roundId === rnd.id)?.payload as RoundDecisions | undefined) ??
+      null;
+    const prevRnd = resolved[i - 1];
+    const prevRow = prevRnd
+      ? gameResults.find((g) => g.roundId === prevRnd.id && g.teamId === playerTeam.id)
+      : undefined;
+    const prevSegments =
+      (prevRow?.marketDetail as CompanyRoundResult["market"]["bySegment"]) ?? null;
+    const rowsOfRound = gameResults.filter((g) => g.roundId === rnd.id) as PersistedResultRow[];
+    periods.push({
+      round: idx,
+      result,
+      events,
+      decisions: dec,
+      forecastReview: buildForecastReview(idx, result, dec?.forecast),
+      sectorKpis: buildSectorKpis(result, prevSegments, snapshot),
+      competitiveBenchmark: buildBenchmark(rowsOfRound, teamRows, playerTeam.id),
+    });
   }
 
   // Décisions déjà soumises pour le tour courant (mode classe : en attente de clôture)
@@ -784,6 +952,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       };
     }),
     lastResult,
+    periods,
     forecastReview: (() => {
       if (!lastRound || !lastResult) return null;
       const round = roundIndexById.get(lastRound.id)!;

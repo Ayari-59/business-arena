@@ -80,9 +80,9 @@ describe("parcours enseignant et élève", () => {
     await eleve.fill('input[name="code"]', codeInvitation);
     await eleve.fill('input[name="pseudo"]', "Élève E2E");
     await eleve.getByRole("button", { name: "Rejoindre la partie" }).click();
-    // La page est organisée en onglets : le formulaire de décision vit dans
-    // l'onglet « Décisions », pas dans l'onglet « Situation » affiché par défaut.
-    await eleve.getByRole("tab", { name: /Décisions/ }).click({ timeout: 30_000 });
+    // La page est un accordéon de périodes : la période active (tour en cours)
+    // est dépliée d'emblée, formulaire de décision compris — aucun onglet à
+    // ouvrir pour atteindre le prix.
     await eleve.waitForSelector('input[name="price"]', { timeout: 30_000 });
     expect(eleve.url()).toMatch(/\/arena\//);
 
@@ -121,9 +121,9 @@ describe("parcours enseignant et élève", () => {
     const vu = await texte(eleve);
     expect(vu).not.toMatch(/Session expirée|Décisions invalides/i);
     expect(vu).toContain("Décisions enregistrées");
-    // La recharge remet l'onglet « Situation » par défaut ; on revient sur
-    // « Décisions » pour relire le prix enregistré.
-    await eleve.getByRole("tab", { name: /Décisions/ }).click();
+    // Après recharge, la période active reste dépliée : le prix enregistré se
+    // relit directement, sans navigation par onglet.
+    await eleve.waitForSelector('input[name="price"]', { timeout: 30_000 });
     expect(await eleve.inputValue('input[name="price"]')).toBe("780");
   });
 
@@ -142,10 +142,10 @@ describe("parcours enseignant et élève", () => {
     // l'appelait « matières premières » dans les neuf secteurs. Un cabinet de
     // conseil n'achète pas de matières : il paie des frais de mission.
     await aller(eleve, new URL(eleve.url()).pathname);
-    // Les états financiers vivent dans l'onglet « Résultats » puis le
-    // sous-onglet « Finance ». On y navigue avant d'ouvrir les détails.
-    await eleve.getByRole("tab", { name: /Résultats/ }).click();
-    await eleve.getByRole("tab", { name: /Finance/ }).click();
+    // Les résultats d'une période vivent dans sa carte, dépliée par défaut pour
+    // le tour le plus récent ; les états financiers sont dans le sous-onglet
+    // « Finance ». On y navigue, puis on ouvre les comptes dépliables.
+    await eleve.getByRole("tab", { name: /Finance/ }).click({ timeout: 30_000 });
     await eleve.evaluate(() => {
       // les comptes sont dépliables : leur contenu ne compte pas dans le texte
       // visible tant qu'ils sont fermés.
@@ -217,7 +217,8 @@ describe("parcours enseignant et élève", () => {
     await executive.fill('input[name="code"]', code);
     await executive.fill('input[name="pseudo"]', "Élève Executive");
     await executive.getByRole("button", { name: "Rejoindre la partie" }).click();
-    await executive.getByRole("tab", { name: /Décisions/ }).click({ timeout: 30_000 });
+    // Période active dépliée d'emblée : le champ dividende du formulaire est là
+    // sans passer par un onglet.
     await executive.waitForSelector('input[name="dividend"]', { timeout: 30_000 });
 
     const vu = await texte(executive);
