@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { playRoundAction, type PlayRoundState } from "@/app/arena/[gameId]/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import {
@@ -49,10 +49,11 @@ function EquipmentPanel({
   }, 0);
 
   return (
-    <fieldset className="rounded-lg border border-indigo-400/25 bg-indigo-950/20 p-4">
-      <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-indigo-300">
-        🏭 Parc machines · investir ou céder
-      </legend>
+    <Family
+      legend="🏭 Parc machines · investir ou céder"
+      tone="border-indigo-400/25 bg-indigo-950/20"
+      legendClass="text-xs font-semibold uppercase tracking-wide text-indigo-300"
+    >
       <div className="mb-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
         <span className="text-slate-400">Capacité en service</span>
         <span className="text-right text-slate-200">
@@ -190,7 +191,7 @@ function EquipmentPanel({
         valeur de marché (VNC × ratio de revente) : vendre en dessous de la VNC génère une
         perte de cession, un coût bien réel que le résultat encaisse.
       </p>
-    </fieldset>
+    </Family>
   );
 }
 
@@ -258,6 +259,36 @@ function OptionalField({
       </span>
       {hint ? <span className="mt-1 block text-[13px] text-slate-500">{hint}</span> : null}
     </label>
+  );
+}
+
+/**
+ * Une famille de décisions, repliable. L'accordéon des périodes situe le tour ;
+ * ces accordéons rangent les leviers d'UN tour par famille — cœur ouvert,
+ * avancé replié — pour garder le formulaire scannable sans rien cacher au
+ * moteur (un `details` fermé reste dans le DOM et se soumet).
+ */
+function Family({
+  legend,
+  children,
+  defaultOpen = false,
+  tone = "border-white/10 bg-slate-950",
+  legendClass = "text-xs font-semibold uppercase tracking-wide text-slate-400",
+}: {
+  legend: ReactNode;
+  children: ReactNode;
+  defaultOpen?: boolean;
+  tone?: string;
+  legendClass?: string;
+}) {
+  return (
+    <details open={defaultOpen} className={`group rounded-lg border ${tone}`}>
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 [&::-webkit-details-marker]:hidden">
+        <span className={legendClass}>{legend}</span>
+        <span className="text-xs text-slate-500 transition-transform group-open:rotate-90">▸</span>
+      </summary>
+      <div className="border-t border-white/10 p-4">{children}</div>
+    </details>
   );
 }
 
@@ -437,6 +468,12 @@ export function DecisionForm({
   };
   const [equipBuyQty, setEquipBuyQty] = useState<Record<string, number>>({});
   const [equipSellQty, setEquipSellQty] = useState<Record<string, number>>({});
+  // Déplier / replier toutes les familles d'un coup. On mute directement les
+  // <details> (non contrôlés) plutôt que d'en tenir l'état en React.
+  const setAllFamilies = (open: boolean) =>
+    formRef.current
+      ?.querySelectorAll("details")
+      .forEach((d) => ((d as HTMLDetailsElement).open = open));
   const on = enabled ?? {
     quality: true,
     maintenance: true,
@@ -453,11 +490,28 @@ export function DecisionForm({
 
   return (
     <form ref={formRef} action={formAction} onSubmit={verifierPivots} className="space-y-4">
+      <div className="flex items-center justify-end gap-2 text-xs text-slate-400">
+        <button
+          type="button"
+          onClick={() => setAllFamilies(true)}
+          className="rounded-md border border-white/10 px-2.5 py-1 hover:text-slate-200"
+        >
+          Tout déplier
+        </button>
+        <button
+          type="button"
+          onClick={() => setAllFamilies(false)}
+          className="rounded-md border border-white/10 px-2.5 py-1 hover:text-slate-200"
+        >
+          Tout replier
+        </button>
+      </div>
       {orderOffer ? (
-        <fieldset className="rounded-lg border border-sky-400/25 bg-sky-950/20 p-4">
-          <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-sky-300">
-            📦 Commande exceptionnelle · {orderOffer.title}
-          </legend>
+        <Family
+          legend={`📦 Commande exceptionnelle · ${orderOffer.title}`}
+          tone="border-sky-400/25 bg-sky-950/20"
+          legendClass="text-xs font-semibold uppercase tracking-wide text-sky-300"
+        >
           <p className="text-sm leading-relaxed text-slate-300">{orderOffer.narrative}</p>
           <p className="mt-2 text-xs text-slate-400">
             <strong className="text-slate-200">
@@ -489,12 +543,9 @@ export function DecisionForm({
               Accepter la commande, à prendre ou à laisser : elle ne repassera pas.
             </span>
           </label>
-        </fieldset>
+        </Family>
       ) : null}
-      <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
-        <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
-          🎯 Vos ventes · le prix et le volume du tour
-        </legend>
+      <Family legend="🎯 Vos ventes · le prix et le volume du tour" defaultOpen>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field name="price" label={v.priceLabel} defaultValue={defaults.price} step={0.1}
             suffix={`€/${v.unit}`}
@@ -503,7 +554,7 @@ export function DecisionForm({
             defaultValue={Math.round(defaults.productionPlan)} suffix={v.units}
             hint="Le volume réel sera borné par vos capacités." />
         </div>
-      </fieldset>
+      </Family>
       {capacityFacts ? (
         <div className="rounded-lg border border-white/10 bg-slate-950 px-4 py-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
@@ -544,10 +595,11 @@ export function DecisionForm({
         </div>
       ) : null}
       {suppliersOffer && suppliersOffer.length > 0 ? (
-        <fieldset className="rounded-lg border border-emerald-400/25 bg-emerald-950/20 p-4">
-          <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-emerald-300">
-            🏭 {v.supplierPanelLabel}
-          </legend>
+        <Family
+          legend={`🏭 ${v.supplierPanelLabel}`}
+          tone="border-emerald-400/25 bg-emerald-950/20"
+          legendClass="text-xs font-semibold uppercase tracking-wide text-emerald-300"
+        >
           <div className="space-y-2">
             {suppliersOffer.map((s) => (
               <label
@@ -596,12 +648,9 @@ export function DecisionForm({
             produits, le délai de paiement fournisseur (BFR) et le risque de rupture de
             chaîne. L&apos;assurance étendue couvre le litige fournisseur.
           </p>
-        </fieldset>
+        </Family>
       ) : null}
-      <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
-        <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
-          📣 Vos budgets du tour
-        </legend>
+      <Family legend="📣 Vos budgets du tour" defaultOpen>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field name="marketingBudget" label="Budget marketing" defaultValue={defaults.marketingBudget} suffix="€" />
           {on.quality ? (
@@ -616,12 +665,9 @@ export function DecisionForm({
             <input type="hidden" name="maintenanceBudget" value={defaults.maintenanceBudget} />
           )}
         </div>
-      </fieldset>
+      </Family>
       {on.hr ? (
-        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
-          <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
-            👥 Ressources humaines
-          </legend>
+        <Family legend="👥 Ressources humaines">
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <Field name="hire" label="Embauches" defaultValue={0} suffix="pers."
               hint="Arrivée au tour suivant, coût de recrutement immédiat." />
@@ -632,7 +678,7 @@ export function DecisionForm({
             <Field name="salaryPercent" label="Salaires (marché = 100)" defaultValue={Math.round((defaults.hr?.salaryIndex ?? 1) * 100)} suffix="%"
               hint="Sous-payer démotive et fait partir les salariés." />
           </div>
-        </fieldset>
+        </Family>
       ) : null}
       {on.finance && debtSchedule && debtSchedule.outstanding > 0.5 ? (
         <p className="rounded-lg border border-amber-400/20 bg-amber-950/20 px-3 py-2 text-xs text-amber-200">
@@ -644,10 +690,7 @@ export function DecisionForm({
         </p>
       ) : null}
       {on.finance ? (
-      <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
-        <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
-          💶 Financer · emprunt, capital, investissement
-        </legend>
+      <Family legend="💶 Financer · emprunt, capital, investissement">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <>
               <Field name="newLoan" label="Nouvel emprunt" defaultValue={0} suffix="€"
@@ -691,7 +734,7 @@ export function DecisionForm({
               ) : null}
             </>
         </div>
-      </fieldset>
+      </Family>
       ) : null}
       {on.investment && equipmentOffer ? (
         <>
@@ -716,10 +759,7 @@ export function DecisionForm({
         </>
       ) : null}
       {on.finance && treasuryOffer ? (
-        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
-          <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
-            💶 Trésorerie · mobiliser le poste clients
-          </legend>
+        <Family legend="💶 Trésorerie · mobiliser le poste clients">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field
               name="discount"
@@ -763,13 +803,10 @@ export function DecisionForm({
             banque cède vos créances d&apos;office, au tarif fort. Si vous ne gérez pas votre
             trésorerie, quelqu&apos;un la gérera pour vous.
           </p>
-        </fieldset>
+        </Family>
       ) : null}
       {on.insurance && insuranceFormulas && insuranceFormulas.length > 0 ? (
-        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
-          <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
-            🛡️ Assurance · choisissez votre couverture
-          </legend>
+        <Family legend="🛡️ Assurance · choisissez votre couverture">
           <div className="space-y-2">
             <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-3 py-2.5">
               <input
@@ -808,7 +845,7 @@ export function DecisionForm({
             Un coût certain contre un risque incertain : plus la couverture est large, plus
             la prime pèse sur votre seuil de rentabilité.
           </p>
-        </fieldset>
+        </Family>
       ) : on.insurance && insuranceOffer ? (
         <label className="flex items-start gap-3 rounded-lg border border-white/10 bg-slate-950 px-3 py-3">
           <input
@@ -829,10 +866,7 @@ export function DecisionForm({
         </label>
       ) : null}
       {studiesOffer ? (
-        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
-          <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
-            📊 Acheter de l&apos;information · livrée avec les résultats du tour
-          </legend>
+        <Family legend={"📊 Acheter de l'information · livrée avec les résultats du tour"}>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {(
               [
@@ -885,7 +919,7 @@ export function DecisionForm({
             L&apos;information a un prix, facturé en charges de structure : il se lit au seuil
             de rentabilité. Décider sans données coûte souvent plus cher.
           </p>
-        </fieldset>
+        </Family>
       ) : null}
       {/*
         Gardé sur `on.finance` SEUL, jamais sur `bankFile`. Une partie ouverte
@@ -895,12 +929,13 @@ export function DecisionForm({
         depuis le premier tour. Le texte change, les champs restent.
       */}
       {on.finance ? (
-        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
-          <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
-            {bankFile
+        <Family
+          legend={
+            bankFile
               ? "🏦 Votre plan de trésorerie · la pièce que lit la banque"
-              : "🔭 Votre prévision · facultative, sans effet sur le tour"}
-          </legend>
+              : "🔭 Votre prévision · facultative, sans effet sur le tour"
+          }
+        >
           {bankFile && bankFile.refusedLoan !== null ? (
             <p className="mb-3 rounded-md border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-xs leading-relaxed text-rose-200">
               Au tour précédent, votre demande de{" "}
@@ -965,12 +1000,13 @@ export function DecisionForm({
               dossier bancaire : votre prévision n&apos;y change aucun calcul.
             </p>
           )}
-        </fieldset>
+        </Family>
       ) : null}
-      <fieldset className="rounded-lg border border-slate-700/60 px-4 pb-4 pt-3">
-        <legend className="px-1 text-xs font-medium text-slate-400">
-          En quelques mots (facultatif)
-        </legend>
+      <Family
+        legend="✍️ En quelques mots (facultatif)"
+        tone="border-slate-700/60"
+        legendClass="text-xs font-medium text-slate-400"
+      >
         <textarea
           name="justification"
           rows={2}
@@ -980,7 +1016,7 @@ export function DecisionForm({
         <p className="mt-1 text-xs text-slate-500">
           Notez ici la logique de vos décisions. L&apos;enseignant pourra la lire au débriefing.
         </p>
-      </fieldset>
+      </Family>
       {state.error ? (
         <p className="rounded-lg border border-red-400/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
           {state.error}

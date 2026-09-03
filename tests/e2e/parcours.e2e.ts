@@ -217,8 +217,14 @@ describe("parcours enseignant et élève", () => {
     await executive.fill('input[name="code"]', code);
     await executive.fill('input[name="pseudo"]', "Élève Executive");
     await executive.getByRole("button", { name: "Rejoindre la partie" }).click();
-    // Période active dépliée d'emblée : le champ dividende du formulaire est là
-    // sans passer par un onglet.
+    // Le formulaire range ses décisions par famille en accordéon : le champ
+    // dividende vit dans « Financer », repliée par défaut. On attend le
+    // formulaire (le prix, dans une famille ouverte), puis on déplie tout pour
+    // que le champ et son texte comptent dans le rendu visible.
+    await executive.waitForSelector('input[name="price"]', { timeout: 30_000 });
+    await executive.evaluate(() =>
+      document.querySelectorAll("details").forEach((d) => d.setAttribute("open", "")),
+    );
     await executive.waitForSelector('input[name="dividend"]', { timeout: 30_000 });
 
     const vu = await texte(executive);
