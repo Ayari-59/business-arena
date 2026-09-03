@@ -138,9 +138,10 @@ export default async function AdminPage() {
               className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
             />
             <span className="mt-1 block text-xs text-slate-500">
-              Tant qu&apos;elle est vide, la page d&apos;orientation rend sa recommandation mais
-              n&apos;ouvre aucun courrier : mieux vaut pas de bouton qu&apos;un bouton qui
-              n&apos;écrit à personne.
+              Par défaut <strong className="text-slate-400">contact@business-arena.fr</strong>, pour
+              que la demande d&apos;information soit active sans réglage. Remplacez-la par la vôtre,
+              ou videz-la pour retirer le bouton d&apos;envoi : mieux vaut pas de bouton qu&apos;un
+              bouton qui n&apos;écrit à personne.
             </span>
           </label>
           <SubmitButton

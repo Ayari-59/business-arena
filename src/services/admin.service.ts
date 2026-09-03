@@ -94,9 +94,11 @@ export interface PlatformConfig {
   /** Message d'annonce affiché sur la landing (vide = aucun). */
   announcement: string;
   /**
-   * Adresse à laquelle le formulaire d'orientation écrit. Vide, la page rend
-   * quand même sa recommandation : c'est l'envoi du message qui manque, et la
-   * page le dit plutôt que d'ouvrir un courrier sans destinataire.
+   * Adresse à laquelle le formulaire d'orientation écrit. Une adresse par
+   * défaut est fournie (voir DEFAULT_CONFIG) pour que la demande d'information
+   * soit active sans réglage : sans elle, le bouton disparaît et la page ne
+   * rend que sa recommandation. Un administrateur peut la remplacer, ou la
+   * vider pour retirer le bouton.
    */
   contactEmail: string;
 }
@@ -105,7 +107,7 @@ const DEFAULT_CONFIG: PlatformConfig = {
   allowPublicPlay: true,
   allowSelfServiceTeachers: true,
   announcement: "",
-  contactEmail: "",
+  contactEmail: "contact@business-arena.fr",
 };
 
 export async function getPlatformConfig(): Promise<PlatformConfig> {
