@@ -539,6 +539,13 @@ export interface CompanyState {
    */
   reserves?: number;
   /**
+   * Déficit fiscal reportable (report en avant des pertes). Distinct des
+   * `reserves` comptables : il s'alimente du résultat AVANT impôt négatif et
+   * s'impute sur les bénéfices imposables futurs avant calcul de l'IS. Part de
+   * zéro, jamais négatif. Absent = aucun déficit à reporter.
+   */
+  taxLossCarryforward?: number;
+  /**
    * Confiance de la banque (0..1), construite sur la fiabilité des plans de
    * trésorerie déposés aux tours passés. Absente = confiance pleine : une
    * entreprise qui n'a encore rien promis n'a rien à se faire pardonner.
@@ -667,6 +674,12 @@ export interface IncomeStatement {
   /** Produits financiers du tour (intérêts du placement arrivé à terme). */
   financialIncome?: number;
   pretaxIncome: number;
+  /**
+   * Déficit reporté imputé sur le bénéfice de ce tour (report en avant des
+   * pertes). Présent seulement quand une perte antérieure a réduit l'impôt :
+   * le lecteur voit alors pourquoi l'IS est plus faible que `taxRate × résultat`.
+   */
+  taxLossUsed?: number;
   tax: number;
   netIncome: number;
 }

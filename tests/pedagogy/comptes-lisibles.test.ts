@@ -77,6 +77,7 @@ const SANS_FICHE: string[] = [
   "− Qualité",
   "− Maintenance",
   "− Impôt sur les sociétés",
+  "dont déficit antérieur imputé (report)",
   "− Charges financières (intérêts, agios, mobilisations)",
   "+ Produits financiers (placement)",
   "= RÉSULTAT NET",

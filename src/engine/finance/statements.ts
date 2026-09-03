@@ -36,6 +36,14 @@ export interface FinanceInput {
   overdraftAnnualRate: number;
   interestMultiplier: number; // événements (hausse des taux)
   taxRate: number;
+  /**
+   * Déficit fiscal reportable à l'ouverture (report en avant des pertes, doc
+   * 02). Les pertes des tours précédents s'imputent sur le bénéfice imposable
+   * de ce tour AVANT calcul de l'impôt. Absent = 0. Report intégral et illimité
+   * dans le temps : le plafond réel (1 M€ + 50 % au-delà) ne se déclenche jamais
+   * à l'échelle du jeu, l'omettre est donc exact ET plus simple.
+   */
+  openingTaxLossCarryforward?: number;
   /** Taux de TVA (0 = désactivée) — voir EngineScenarioConfig.finance.vatRate. */
   vatRate: number;
   newLoan: number;
@@ -79,6 +87,8 @@ export interface FinanceInput {
 export interface FinanceOutput {
   incomeStatement: IncomeStatement;
   closing: BalanceSheet;
+  /** Déficit fiscal reportable de clôture, à réinjecter au tour suivant. */
+  taxLossCarryforward: number;
   cashFlow: { opening: number; items: CashFlowItem[]; closing: number };
   treasury: {
     discounted: number;
@@ -149,7 +159,15 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
         input.interestMultiplier +
       financingCost;
     const pretaxIncome = operatingIncome - interest + placementIncome;
-    const tax = input.taxRate * Math.max(0, pretaxIncome);
+    // Report déficitaire : les pertes reportées s'imputent sur le bénéfice
+    // imposable avant l'impôt ; le stock diminue de ce qui est imputé et
+    // s'accroît de la perte du tour. `closing = max(0, ouverture − résultat)`
+    // couvre les deux cas d'un seul trait.
+    const openingLossCarryforward = input.openingTaxLossCarryforward ?? 0;
+    const taxLossUsed = Math.min(openingLossCarryforward, Math.max(0, pretaxIncome));
+    const taxableIncome = Math.max(0, pretaxIncome - openingLossCarryforward);
+    const closingLossCarryforward = Math.max(0, openingLossCarryforward - pretaxIncome);
+    const tax = input.taxRate * taxableIncome;
     const netIncome = pretaxIncome - tax;
 
     const incomeStatement: IncomeStatement = {
@@ -169,6 +187,7 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
       interest,
       financialIncome: placementIncome,
       pretaxIncome,
+      ...(taxLossUsed > 0 ? { taxLossUsed } : {}),
       tax,
       netIncome,
     };
@@ -237,6 +256,7 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
     return {
       incomeStatement,
       closing,
+      taxLossCarryforward: closingLossCarryforward,
       cashFlow: { opening: openingNet, items, closing: closingNet },
       receivablesEnd,
       closingNet,
@@ -259,6 +279,7 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
   return {
     incomeStatement: pass.incomeStatement,
     closing: pass.closing,
+    taxLossCarryforward: pass.taxLossCarryforward,
     cashFlow: pass.cashFlow,
     treasury: {
       discounted,
