@@ -479,6 +479,14 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                                 <span>
                                   <span className="mr-2 text-slate-500">#{row.rank}</span>
                                   {row.name}
+                                  {row.defaillant ? (
+                                    <span
+                                      className="ml-2 rounded-full border border-red-400/40 bg-red-950/40 px-2 py-0.5 text-xs font-semibold text-red-300"
+                                      title="Entreprise défaillante : deux tours de cessation de paiements. Activité gelée jusqu'à recapitalisation."
+                                    >
+                                      ⚠️ Défaillante
+                                    </span>
+                                  ) : null}
                                 </span>
                                 <span className="tabular-nums">
                                   <span className="font-semibold">{row.bpi.toFixed(1)}</span>
