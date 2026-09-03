@@ -57,7 +57,7 @@ export const metadata: Metadata = {
  * service worker) ne dépend pas de cette ligne.
  */
 export const viewport: Viewport = {
-  themeColor: "#f2741a",
+  themeColor: "#f2ac05",
   width: "device-width",
   initialScale: 1,
 };

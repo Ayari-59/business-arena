@@ -6,10 +6,12 @@
  *
  * Le fond du site est déjà un bleu nuit — l'échelle « slate » de Tailwind, très
  * marine dans ses paliers sombres ; on n'y touche pas. Ce qui change, c'est
- * l'accent : l'ambre doré d'origine devient un orange franc, la couleur de
- * l'action et des chiffres qui comptent. On redéfinit donc la seule échelle
- * « amber », et le thème clair suit : le script de génération lit ces valeurs
- * (voir scripts/generer-theme-clair.ts) pour que les deux thèmes s'accordent.
+ * l'accent : l'ambre doré d'origine devient un or vif (jaune éclatant), la
+ * couleur de l'action et des chiffres qui comptent. On redéfinit donc la seule
+ * échelle « amber », et le thème clair suit : le script de génération lit ces
+ * valeurs (voir scripts/generer-theme-clair.ts) pour que les deux thèmes
+ * s'accordent. Le palier 800 est volontairement foncé : en thème clair, le
+ * bouton d'action (bg-amber-500 → 800, texte clair) doit y rester lisible.
  *
  * Les fontes montent aussi en gamme : Fraunces (à empattements) porte les
  * titres, Sora (grotesque) porte l'interface. next/font les héberge au build ;
@@ -19,17 +21,17 @@
   --font-sans: var(--font-sora), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
 
-  --color-amber-50: #fff4ec;
-  --color-amber-100: #ffe4d1;
-  --color-amber-200: #ffcba6;
-  --color-amber-300: #ffab73;
-  --color-amber-400: #ff9450;
-  --color-amber-500: #ff8a3d;
-  --color-amber-600: #f2741a;
-  --color-amber-700: #d65a08;
-  --color-amber-800: #a9470c;
-  --color-amber-900: #7c3410;
-  --color-amber-950: #431806;
+  --color-amber-50: #fffbec;
+  --color-amber-100: #fff4d0;
+  --color-amber-200: #ffe8a4;
+  --color-amber-300: #ffdb70;
+  --color-amber-400: #ffce44;
+  --color-amber-500: #ffc21e;
+  --color-amber-600: #f2ac05;
+  --color-amber-700: #cc8d04;
+  --color-amber-800: #8a5d04;
+  --color-amber-900: #6d4a06;
+  --color-amber-950: #3f2a03;
 }
 
 /* Les titres de tête portent le display à empattements ; le reste reste en
