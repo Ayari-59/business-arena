@@ -10,9 +10,29 @@ import {
   updateScenarioDefinition,
 } from "@/services/scenario-editor.service";
 import { isBuiltInScenarioCode, scenarioByCode } from "@/config/scenarios/registry";
+import {
+  applyEconomicOverrides,
+  applyScoringWeightOverrides,
+  sanitizeEconomicOverrides,
+  sanitizeScoringWeightOverrides,
+} from "@/config/difficulty";
+import { applyMarketSettings } from "@/config/scenarios/engine-settings";
 
 function texte(form: FormData, name: string): string {
   return String(form.get(name) ?? "").trim();
+}
+
+/** Champ numérique optionnel : vide = valeur inchangée. */
+function optionalNumber(form: FormData, name: string): number | undefined {
+  const s = texte(form, name).replace(",", ".");
+  if (s === "") return undefined;
+  const n = Number(s);
+  return Number.isFinite(n) ? n : undefined;
+}
+/** Taux saisi en pourcentage (20 → 0,2). */
+function optionalRate(form: FormData, name: string): number | undefined {
+  const n = optionalNumber(form, name);
+  return n === undefined ? undefined : n / 100;
 }
 
 /** Duplique un secteur intégré en brouillon enseignant puis ouvre l'éditeur. */
@@ -77,6 +97,73 @@ export async function updateNarrativeAction(formData: FormData): Promise<void> {
     session.userId,
   );
   redirect(`/teacher/scenarios/${id}?ok=1`);
+}
+
+/** Enregistre les paramètres moteur (économie, BPI, marché) d'un brouillon. */
+export async function updateEconomicsAction(formData: FormData): Promise<void> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  const id = texte(formData, "scenarioId");
+  const loaded = await getScenarioById(id, session.userId);
+  if (!loaded) {
+    redirect("/teacher/scenarios?echec=" + encodeURIComponent("Scénario introuvable."));
+  }
+
+  const economic = sanitizeEconomicOverrides({
+    taxRate: optionalRate(formData, "taxRate"),
+    vatRate: optionalRate(formData, "vatRate"),
+    customerPaymentDelayDays: optionalNumber(formData, "customerPaymentDelayDays"),
+    supplierPaymentDelayDays: optionalNumber(formData, "supplierPaymentDelayDays"),
+    loanAnnualRate: optionalRate(formData, "loanAnnualRate"),
+    loanDurationRounds: optionalNumber(formData, "loanDurationRounds"),
+    overdraftAnnualRate: optionalRate(formData, "overdraftAnnualRate"),
+    overdraftLimit: optionalNumber(formData, "overdraftLimit"),
+    discountMaxShare: optionalRate(formData, "discountMaxShare"),
+    factoringFeeRate: optionalRate(formData, "factoringFeeRate"),
+    fixedCostsPerRound: optionalNumber(formData, "fixedCostsPerRound"),
+    materialCostPerUnit: optionalNumber(formData, "materialCostPerUnit"),
+    otherVariableCostPerUnit: optionalNumber(formData, "otherVariableCostPerUnit"),
+    depreciationPerRound: optionalNumber(formData, "depreciationPerRound"),
+    baseDefectRate: optionalRate(formData, "baseDefectRate"),
+  });
+  const scoring = sanitizeScoringWeightOverrides({
+    economic: optionalRate(formData, "bpiEconomic"),
+    financial: optionalRate(formData, "bpiFinancial"),
+    commercial: optionalRate(formData, "bpiCommercial"),
+    profitability: optionalRate(formData, "bpiProfitability"),
+    pilotage: optionalRate(formData, "bpiPilotage"),
+    decisionMastery: optionalRate(formData, "bpiDecisionMastery"),
+  });
+  const segCount = optionalNumber(formData, "segCount") ?? 0;
+  const segments = Array.from({ length: segCount }, (_, i) => ({
+    code: texte(formData, `seg${i}Code`),
+    size: optionalNumber(formData, `seg${i}Size`),
+    refPrice: optionalNumber(formData, `seg${i}RefPrice`),
+  })).filter((s) => s.code);
+  const market = {
+    competitionIntensity: optionalNumber(formData, "competitionIntensity"),
+    segments,
+  };
+
+  const nextConfig = applyMarketSettings(
+    applyScoringWeightOverrides(applyEconomicOverrides(loaded.definition.scenario, economic), scoring),
+    market,
+  );
+
+  try {
+    await updateScenarioDefinition(
+      id,
+      { ...loaded.definition, scenario: nextConfig },
+      session.userId,
+    );
+  } catch {
+    // parseScenarioConfig refuse une config incohérente (prix ≤ 0, etc.).
+    redirect(
+      `/teacher/scenarios/${id}?echec=` +
+        encodeURIComponent("Réglages refusés : une valeur rend le scénario incohérent."),
+    );
+  }
+  redirect(`/teacher/scenarios/${id}?ok=eco`);
 }
 
 export async function publishScenarioAction(formData: FormData): Promise<void> {

@@ -21,9 +21,11 @@ import {
   createScenarioDraftFromBuiltIn,
   deleteScenario,
   getScenarioById,
+  runEssaiABlanc,
   setScenarioStatus,
   updateScenarioDefinition,
 } from "@/services/scenario-editor.service";
+import { applyEconomicOverrides } from "@/config/difficulty";
 
 let alice: string;
 let bob: string;
@@ -93,6 +95,37 @@ describe("propriété d'un scénario enseignant", () => {
     await deleteScenario(s.id, alice);
     const rows = await db.select().from(scenarios).where(eq(scenarios.id, s.id));
     expect(rows).toHaveLength(0);
+  });
+});
+
+describe("paramètres moteur et essai à blanc", () => {
+  it("l'édition de la config se persiste et l'essai à blanc rend un verdict", async () => {
+    const s = await createScenarioDraftFromBuiltIn({
+      baseCode: "nova",
+      authorId: alice,
+      title: "NOVA — réglé",
+    });
+    const loaded = await getScenarioById(s.id, alice);
+    const nextConfig = applyEconomicOverrides(loaded!.definition.scenario, {
+      fixedCostsPerRound: 42000,
+    });
+    await updateScenarioDefinition(s.id, { ...loaded!.definition, scenario: nextConfig }, alice);
+
+    const reread = await getScenarioById(s.id, alice);
+    expect(reread!.definition.scenario.fixedCostsPerRound).toBe(42000);
+
+    const verdict = await runEssaiABlanc(s.id, alice);
+    expect(verdict.detail).toHaveLength(5);
+    expect(["jouable", "a-surveiller", "injouable"]).toContain(verdict.verdict);
+  });
+
+  it("l'essai à blanc refuse un autre auteur", async () => {
+    const s = await createScenarioDraftFromBuiltIn({
+      baseCode: "nova",
+      authorId: alice,
+      title: "NOVA — privé",
+    });
+    await expect(runEssaiABlanc(s.id, bob)).rejects.toThrow(/appartient/);
   });
 });
 
