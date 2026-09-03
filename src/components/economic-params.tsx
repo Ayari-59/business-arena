@@ -71,6 +71,16 @@ const GROUPS: { title: string; note?: string; fields: Field[] }[] = [
   },
 ];
 
+/** Les six dimensions du BPI v2, pondérables par l'enseignant (saisie en %). */
+const BPI_FIELDS: { name: string; label: string; hint: string }[] = [
+  { name: "bpiEconomic", label: "Performance économique", hint: "Résultat d'exploitation vs benchmark" },
+  { name: "bpiFinancial", label: "Performance financière", hint: "Variation du résultat net, plancher si perte" },
+  { name: "bpiCommercial", label: "Performance commerciale", hint: "Chiffre d'affaires et part de marché" },
+  { name: "bpiProfitability", label: "Rentabilité", hint: "Rentabilité des capitaux propres" },
+  { name: "bpiPilotage", label: "Pilotage", hint: "Exécution opérationnelle et cohérence des décisions" },
+  { name: "bpiDecisionMastery", label: "Maîtrise décisionnelle", hint: "Scores des situations rendues" },
+];
+
 export function EconomicParams({
   scenarios,
   defaultCode,
@@ -154,6 +164,38 @@ export function EconomicParams({
             ) : null}
           </section>
         ))}
+      </details>
+
+      <details className="rounded-lg border border-white/10 bg-slate-950 p-4 sm:col-span-3">
+        <summary className="cursor-pointer text-xs font-medium uppercase tracking-wide text-slate-400">
+          📊 Pondérations du BPI (avancé) · laissez vide pour les poids du scénario
+        </summary>
+
+        <p className="mt-3 text-xs leading-relaxed text-slate-500">
+          Le BPI est la moyenne pondérée de six dimensions. Les valeurs en filigrane sont celles de{" "}
+          <strong className="text-slate-400">{selected.label}</strong>. Ce sont des poids{" "}
+          <strong className="text-slate-400">relatifs</strong> : inutile de tomber juste à 100 %, ils
+          sont renormalisés. Une dimension laissée vide garde le poids du scénario.
+        </p>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          {BPI_FIELDS.map((field) => (
+            <label key={field.name} className="block">
+              <span className="text-xs text-slate-500">{field.label}</span>
+              <span className="mt-1 flex items-center gap-1.5 rounded-lg border border-white/10 bg-slate-900 px-2.5 py-1.5 focus-within:border-amber-400/60">
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  name={field.name}
+                  placeholder={selected.defaults[field.name] ?? ""}
+                  className="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-600"
+                />
+                <span className="whitespace-nowrap text-xs text-slate-500">%</span>
+              </span>
+              <span className="mt-1 block text-xs text-slate-600">{field.hint}</span>
+            </label>
+          ))}
+        </div>
       </details>
     </>
   );

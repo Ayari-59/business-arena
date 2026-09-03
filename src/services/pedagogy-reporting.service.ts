@@ -111,9 +111,13 @@ export async function getTeamSituations(
       debriefedMap.set(idx, arr);
     }
   }
+  // Ordonnancement par niveau (#2) : au sein d'un tour, les situations les plus
+  // fondamentales d'abord. Tri stable : à niveau égal, l'ordre d'origine tient.
+  const byLevel = (a: SituationView, b: SituationView) => a.level - b.level;
+  current.sort(byLevel);
   const debriefedByRound: DebriefedRound[] = [...debriefedMap.entries()]
     .sort((a, b) => b[0] - a[0])
-    .map(([roundIndex, situations]) => ({ roundIndex, situations }));
+    .map(([roundIndex, situations]) => ({ roundIndex, situations: [...situations].sort(byLevel) }));
   return { current, debriefedByRound, missedPolicy: policy };
 }
 

@@ -100,7 +100,7 @@ describe("lisibilité des thèmes", () => {
     // Celui-là est passé à 1,9 pour 1 sans que rien ne le signale.
     for (const theme of THEMES) {
       const ratio = [...parTheme.get(theme.code)!].find(([cle]) =>
-        cle.includes("Lancer une partie"),
+        cle.includes("Tester le simulateur"),
       );
       expect(ratio, `${theme.code} : bouton de lancement introuvable`).toBeDefined();
       expect(ratio![1], `${theme.code} : bouton de lancement à ${ratio![1]}`).toBeGreaterThanOrEqual(

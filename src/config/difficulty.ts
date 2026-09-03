@@ -309,6 +309,109 @@ export function applyEconomicOverrides(
   };
 }
 
+/* ────────────────────────────────────────────────────────────────────────────
+ * PONDÉRATIONS DU BPI, PARAMÉTRABLES PAR L'ENSEIGNANT (V2 couche 2, chantier #3).
+ *
+ * Hors moteur : le module de scoring (src/scoring/bpi.ts) reste pur et ignore
+ * ces réglages ; on ne fait que réécrire `scenario.scoring.weights` AVANT de
+ * figer le snapshot, exactement comme les paramètres économiques. Tout le
+ * scoring aval (tour et classement) lit alors les poids surchargés sans le
+ * savoir.
+ *
+ * L'enseignant pondère les SIX dimensions affichées du BPI v2. En interne, le
+ * scénario porte sept poids : « pilotage » y est la SOMME de `strategy` +
+ * `operational`, et le scoring v2 ne lit jamais que cette somme. On répartit
+ * donc « pilotage » entre les deux en conservant le ratio d'origine — neutre
+ * pour le calcul, et le schéma (somme = 1) reste satisfait.
+ * ──────────────────────────────────────────────────────────────────────────── */
+export const scoringWeightOverridesSchema = z.object({
+  economic: z.number().min(0).max(1).optional(),
+  financial: z.number().min(0).max(1).optional(),
+  commercial: z.number().min(0).max(1).optional(),
+  profitability: z.number().min(0).max(1).optional(),
+  pilotage: z.number().min(0).max(1).optional(),
+  decisionMastery: z.number().min(0).max(1).optional(),
+});
+
+export type ScoringWeightOverrides = z.infer<typeof scoringWeightOverridesSchema>;
+
+/** Les six dimensions pondérables du BPI v2, dans l'ordre d'affichage. */
+export const SCORING_WEIGHT_DIMENSIONS = [
+  "economic",
+  "financial",
+  "commercial",
+  "profitability",
+  "pilotage",
+  "decisionMastery",
+] as const;
+
+/** Validation champ par champ : une valeur hors bornes est ignorée. */
+export function sanitizeScoringWeightOverrides(
+  raw: ScoringWeightOverrides | undefined,
+): ScoringWeightOverrides {
+  if (!raw) return {};
+  const out: Record<string, unknown> = {};
+  for (const [key, fieldSchema] of Object.entries(scoringWeightOverridesSchema.shape)) {
+    const value = (raw as Record<string, unknown>)[key];
+    if (value === undefined) continue;
+    const parsed = (fieldSchema as z.ZodType).safeParse(value);
+    if (parsed.success && parsed.data !== undefined) out[key] = parsed.data;
+  }
+  return out as ScoringWeightOverrides;
+}
+
+/**
+ * Réécrit les pondérations du BPI depuis les réglages de l'enseignant. Les
+ * dimensions non fournies gardent la valeur du scénario. Le résultat est
+ * TOUJOURS renormalisé (somme = 1, exigée par le schéma de scoring) : les
+ * réglages expriment un poids RELATIF, jamais une valeur absolue. Une somme
+ * nulle (tout à zéro) est ignorée — retour au scénario.
+ */
+export function applyScoringWeightOverrides(
+  scenario: EngineScenarioConfig,
+  overrides: ScoringWeightOverrides | undefined,
+): EngineScenarioConfig {
+  if (!overrides || Object.values(overrides).every((v) => v === undefined)) return scenario;
+  const base = scenario.scoring.weights;
+  const basePilotage = base.strategy + base.operational;
+  const six = {
+    economic: overrides.economic ?? base.economic,
+    financial: overrides.financial ?? base.financial,
+    commercial: overrides.commercial ?? base.commercial,
+    profitability: overrides.profitability ?? base.profitability,
+    pilotage: overrides.pilotage ?? basePilotage,
+    decisionMastery: overrides.decisionMastery ?? base.decisionMastery,
+  };
+  const sum =
+    six.economic +
+    six.financial +
+    six.commercial +
+    six.profitability +
+    six.pilotage +
+    six.decisionMastery;
+  if (sum <= 0) return scenario;
+  const k = 1 / sum;
+  // Répartition stratégie / opérationnel : conserve le ratio d'origine (le
+  // scoring v2 n'en lit que la somme, via « pilotage »).
+  const stratShare = basePilotage > 0 ? base.strategy / basePilotage : 0.5;
+  const pilotageW = six.pilotage * k;
+  return {
+    ...scenario,
+    scoring: {
+      ...scenario.scoring,
+      weights: {
+        economic: six.economic * k,
+        financial: six.financial * k,
+        commercial: six.commercial * k,
+        profitability: six.profitability * k,
+        strategy: pilotageW * stratShare,
+        operational: pilotageW * (1 - stratShare),
+        decisionMastery: six.decisionMastery * k,
+      },
+    },
+  };
+}
+
 /** Applique l'intensité d'événements du niveau (les probabilités 0 restent 0). */
 export function applyEventIntensity(
   scenario: EngineScenarioConfig,
