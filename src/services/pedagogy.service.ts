@@ -42,6 +42,7 @@ import { AXES, aggregateAxis, updateMastery } from "@/pedagogy/progress";
 import { adaptiveHintMultiplier, playerStrength } from "@/pedagogy/adaptivity";
 import { computeRawSituationScore } from "@/pedagogy/scoring";
 import { loadInstanceForUser, unlockedLevels } from "./situation-instance.service";
+import { hintCapOf } from "./hints.service";
 import {
   RETAKE_MULTIPLIER,
   missedSituationPolicyFromProfile,
@@ -71,60 +72,10 @@ export { openSituationsForRound } from "./situation-instance.service";
 // Interactions joueur : indices, diagnostic, QCM de connaissances
 // ---------------------------------------------------------------------------
 
-/**
- * Plafond d'indices de la partie, et la phrase qui l'explique.
- *
- * Une seule definition pour les deux usages : le refus au moment du clic, et
- * l'affichage qui doit l'annoncer AVANT. Les avoir separes est ce qui a produit
- * un bouton propose puis refuse.
- */
-function hintCapOf(game: typeof games.$inferSelect): { cap: number; reason: string } {
-  const preset = presetFromProfile(game.difficultyProfile);
-  const cap = game.mode === "competition" ? Math.min(preset.hintMaxLevel, 3) : preset.hintMaxLevel;
-  return {
-    cap,
-    reason:
-      cap === 0
-        ? `Niveau ${preset.name} : aucun indice, conditions réelles`
-        : game.mode === "competition" && cap === 3
-          ? "Mode compétition : indices limités aux niveaux 1 à 3"
-          : `Niveau ${preset.name} : indices limités aux niveaux 1 à ${cap}`,
-  };
-}
-
-/** Débloque le prochain indice (séquentiel, irréversible, tracé — doc 03 §4). */
-export async function unlockHint(args: {
-  instanceId: string;
-  userId: string;
-}): Promise<{ level: number; text: string }> {
-  const { instance, situationRow, def, game } = await loadInstanceForUser(args.instanceId, args.userId);
-  if (instance.status === "debriefed") throw new Error("Cette situation est déjà débriefée");
-  const levels = await unlockedLevels(args.instanceId);
-  const next = nextUnlockableLevel(levels);
-  if (next === null) throw new Error("Tous les indices sont déjà débloqués");
-  if (game) {
-    const { cap, reason } = hintCapOf(game);
-    if (next > cap) throw new Error(reason);
-  }
-  const hintRow = (
-    await db
-      .select()
-      .from(hints)
-      .where(and(eq(hints.situationId, situationRow.id), eq(hints.level, next)))
-  )[0];
-  if (!hintRow) throw new Error("Indice introuvable");
-  await db
-    .insert(hintUsages)
-    .values({
-      situationInstanceId: args.instanceId,
-      hintId: hintRow.id,
-      level: next,
-      userId: args.userId,
-    })
-    .onConflictDoNothing();
-  const text = def.hints.find((h) => h.level === next)?.text ?? hintRow.textKey;
-  return { level: next, text };
-}
+// Indices (plafond + déblocage) : extraits dans hints.service.ts (refactoring
+// V2, étape 9). `hintCapOf` est importé en tête (utilisé par toView) ;
+// `unlockHint` est ré-exporté pour les appelants existants.
+export { unlockHint } from "./hints.service";
 
 /** Enregistre le diagnostic (options cochées + texte libre) et le score F1. */
 export async function submitDiagnosis(args: {
