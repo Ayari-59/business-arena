@@ -194,6 +194,12 @@ describe("réglages globaux du jeu", () => {
     expect((await getPlatformConfig()).announcement).toBe("Finale le 12 juin !");
   });
 
+  it("l'adresse de contact par défaut active la demande d'information", async () => {
+    // Sans réglage, une adresse par défaut est servie : le bouton « Nous
+    // écrire » de la page d'orientation n'est plus inactif faute de mail.
+    expect((await getPlatformConfig()).contactEmail).toBe("contact@business-arena.fr");
+  });
+
   it("la connexion promeut aussi les e-mails bootstrap", async () => {
     const login = await loginTeacher({ email: "direction@business-arena.fr", password: "motdepasse!" });
     expect("userId" in login).toBe(true);
