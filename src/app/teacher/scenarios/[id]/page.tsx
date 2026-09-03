@@ -6,7 +6,7 @@ import { SECTOR_LABELS, economicDefaults, type ScenarioDefinition } from "@/conf
 import { readMarketForm } from "@/config/scenarios/engine-settings";
 import { situationLevel } from "@/config/pedagogy/concepts";
 import { formatEuro } from "@/lib/format";
-import { GuardedForm } from "@/components/guarded-action";
+import { ConfirmForm, GuardedForm } from "@/components/guarded-action";
 import { SubmitButton } from "@/components/submit-button";
 import { deleteSituationAction, updateEconomicsAction, updateNarrativeAction } from "../actions";
 
@@ -392,13 +392,15 @@ export default async function ScenarioEditorPage({
                     >
                       Éditer le texte
                     </Link>
-                    <GuardedForm action={deleteSituationAction} label="suppression de la situation">
+                    <ConfirmForm
+                      action={deleteSituationAction}
+                      label="suppression de la situation"
+                      trigger="Supprimer"
+                      confirmPrompt="Supprimer cette situation ?"
+                    >
                       <input type="hidden" name="scenarioId" value={id} />
                       <input type="hidden" name="situationCode" value={s.code} />
-                      <button className="rounded-lg border border-white/10 px-3 py-1 text-xs text-red-300 hover:border-red-400/50">
-                        Supprimer
-                      </button>
-                    </GuardedForm>
+                    </ConfirmForm>
                   </div>
                 </li>
               );

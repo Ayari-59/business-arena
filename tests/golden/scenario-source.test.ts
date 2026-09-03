@@ -107,6 +107,21 @@ describe("2 — résolution code vs base", () => {
     expect(published.status).toBe("published");
   });
 
+  it("un scénario retiré (archivé) se résout encore : les parties déjà lancées continuent", async () => {
+    const summary = await createScenarioDraftFromBuiltIn({
+      baseCode: "hotel",
+      authorId: userId,
+      title: "Hôtel — à retirer",
+    });
+    await setScenarioStatus(summary.id, "published");
+    await setScenarioStatus(summary.id, "archived");
+    // Le scénario sort du catalogue de lancement, mais le resolver le rend
+    // toujours : une partie ouverte avec ce code garde un scénario jouable.
+    const def = await resolveScenarioDefinition(summary.code);
+    expect(def.code).toBe(summary.code);
+    expect(def.situations.length).toBeGreaterThan(0);
+  });
+
   it("refuse d'éditer ou de duppliquer vers un secteur intégré", async () => {
     await expect(
       createScenarioDraftFromBuiltIn({ baseCode: "inconnu", authorId: userId, title: "x" }),
