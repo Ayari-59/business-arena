@@ -3,13 +3,17 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import {
+  addSituation,
   createScenarioDraftFromBuiltIn,
   deleteScenario,
+  deleteSituation,
   getScenarioById,
   setScenarioStatus,
   updateScenarioDefinition,
   updateSituationText,
 } from "@/services/scenario-editor.service";
+import { DECISION_MODELS } from "@/config/pedagogy/models";
+import type { DetectCode, ModelRelevance, SituationCategory } from "@/config/scenarios/situation-kit";
 import { isBuiltInScenarioCode, scenarioByCode } from "@/config/scenarios/registry";
 import {
   applyEconomicOverrides,
@@ -202,6 +206,71 @@ export async function updateSituationAction(formData: FormData): Promise<void> {
     );
   }
   redirect(`/teacher/scenarios/${id}/situations/${encodeURIComponent(code)}?ok=1`);
+}
+
+const RELEVANCES: ModelRelevance[] = ["optimal", "acceptable", "misleading", "irrelevant"];
+
+/** Crée une situation de zéro et l'ajoute au brouillon, puis ouvre son éditeur. */
+export async function addSituationAction(formData: FormData): Promise<void> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  const id = texte(formData, "scenarioId");
+
+  const correctIndex = optionalNumber(formData, "correct");
+  const diagnostic = [0, 1, 2, 3].map((i) => ({
+    label: texte(formData, `diag${i}`),
+    correct: correctIndex === i,
+  }));
+
+  const modelRelevance: Record<string, ModelRelevance> = {};
+  for (const m of DECISION_MODELS) {
+    const v = texte(formData, `model_${m.code}`);
+    if ((RELEVANCES as string[]).includes(v)) modelRelevance[m.code] = v as ModelRelevance;
+  }
+
+  const triggerType = texte(formData, "triggerType");
+  const trigger =
+    triggerType === "detect"
+      ? { detect: texte(formData, "triggerDetect") as DetectCode }
+      : { round: optionalNumber(formData, "triggerRound") ?? 1 };
+
+  const input = {
+    category: texte(formData, "category") as SituationCategory,
+    title: texte(formData, "title"),
+    narrative: texte(formData, "narrative"),
+    problem: texte(formData, "problem"),
+    diagnostic,
+    modelRelevance,
+    conceptCodes: formData.getAll("notion").map(String),
+    hints: [0, 1, 2, 3, 4].map((i) => texte(formData, `hint${i}`)) as [
+      string,
+      string,
+      string,
+      string,
+      string,
+    ],
+    modelExplain: texte(formData, "modelExplain"),
+    trigger,
+    weight: optionalNumber(formData, "weight") ?? 1,
+  };
+
+  let code: string;
+  try {
+    ({ code } = await addSituation(id, input, session.userId));
+  } catch (e) {
+    const raison = e instanceof Error ? e.message : "Situation refusée.";
+    redirect(`/teacher/scenarios/${id}/situations/new?echec=` + encodeURIComponent(raison));
+  }
+  redirect(`/teacher/scenarios/${id}/situations/${encodeURIComponent(code)}?ok=1`);
+}
+
+export async function deleteSituationAction(formData: FormData): Promise<void> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  const id = texte(formData, "scenarioId");
+  const code = texte(formData, "situationCode");
+  await deleteSituation(id, code, session.userId);
+  redirect(`/teacher/scenarios/${id}?ok=situ`);
 }
 
 export async function publishScenarioAction(formData: FormData): Promise<void> {

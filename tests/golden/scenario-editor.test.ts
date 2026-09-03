@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 /**
  * Éditeur de scénarios, PR 2 — service d'édition et gardes d'autorisation.
@@ -15,11 +15,13 @@ vi.mock("@/db", async () => {
 });
 
 import { db } from "@/db";
-import { scenarios, users } from "@/db/schema";
+import { rounds, scenarios, situationInstances, situations, users } from "@/db/schema";
 import {
+  addSituation,
   canTeacherLaunchScenario,
   createScenarioDraftFromBuiltIn,
   deleteScenario,
+  deleteSituation,
   getScenarioById,
   runEssaiABlanc,
   setScenarioStatus,
@@ -27,6 +29,8 @@ import {
   updateSituationText,
 } from "@/services/scenario-editor.service";
 import { applyEconomicOverrides } from "@/config/difficulty";
+import { createSoloGame } from "@/services/game.service";
+import type { NewSituationInput } from "@/config/scenarios/situation-build";
 
 let alice: string;
 let bob: string;
@@ -188,6 +192,72 @@ describe("édition d'une situation", () => {
         bob,
       ),
     ).rejects.toThrow(/appartient/);
+  });
+});
+
+const nouvelleSituation = (): NewSituationInput => ({
+  category: "decision_strategique",
+  title: "Situation créée de zéro",
+  narrative: "Récit de test.",
+  problem: "Question de test ?",
+  diagnostic: [
+    { label: "Mauvaise", correct: false },
+    { label: "Bonne", correct: true },
+  ],
+  modelRelevance: { cvp_analysis: "optimal", breakeven_analysis: "acceptable" },
+  conceptCodes: ["demand_market_share"],
+  hints: ["i1", "i2", "i3", "i4", "i5"],
+  modelExplain: "Correction de test.",
+  trigger: { round: 1 },
+  weight: 1,
+});
+
+describe("création d'une situation de zéro", () => {
+  it("s'ajoute, se sème et s'instancie au tour 1 quand la partie se lance", async () => {
+    const s = await createScenarioDraftFromBuiltIn({
+      baseCode: "nova",
+      authorId: alice,
+      title: "NOVA — situation neuve",
+    });
+    const { code } = await addSituation(s.id, nouvelleSituation(), alice);
+    expect(code).toMatch(/^sc-situ-/);
+
+    const reread = await getScenarioById(s.id, alice);
+    expect(reread!.definition.situations.some((x) => x.code === code)).toBe(true);
+
+    const gameId = await createSoloGame(alice, "quarter", 3, undefined, false, s.code);
+    // La situation neuve a été semée.
+    const seeded = await db.select().from(situations).where(eq(situations.code, code));
+    expect(seeded).toHaveLength(1);
+    // Et instanciée au tour 1.
+    const gameRounds = await db.select().from(rounds).where(eq(rounds.gameId, gameId));
+    const round1 = gameRounds.find((r) => r.index === 1)!;
+    const instances = await db
+      .select()
+      .from(situationInstances)
+      .where(
+        and(
+          eq(situationInstances.roundId, round1.id),
+          eq(situationInstances.situationId, seeded[0]!.id),
+        ),
+      );
+    expect(instances.length).toBeGreaterThan(0);
+  });
+
+  it("se supprime, et refuse un modèle sans « optimal » ou un autre auteur", async () => {
+    const s = await createScenarioDraftFromBuiltIn({
+      baseCode: "nova",
+      authorId: alice,
+      title: "NOVA — suppression situ",
+    });
+    const { code } = await addSituation(s.id, nouvelleSituation(), alice);
+    await deleteSituation(s.id, code, alice);
+    const reread = await getScenarioById(s.id, alice);
+    expect(reread!.definition.situations.some((x) => x.code === code)).toBe(false);
+
+    const sansOptimal = { ...nouvelleSituation(), modelRelevance: { cvp_analysis: "acceptable" as const } };
+    await expect(addSituation(s.id, sansOptimal, alice)).rejects.toThrow(/optimal/);
+    await expect(addSituation(s.id, nouvelleSituation(), bob)).rejects.toThrow(/appartient/);
   });
 });
 
