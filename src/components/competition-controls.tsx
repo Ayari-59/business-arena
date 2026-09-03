@@ -7,6 +7,8 @@ import {
   type CompetitionActionState,
 } from "@/app/teacher/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
+import { LongActionProgress } from "@/components/long-action-progress";
+import { ATTENTES } from "@/config/cloture";
 
 const initial: CompetitionActionState = { error: null };
 
@@ -14,9 +16,18 @@ const ACTIONS = {
   qualification: {
     fn: startQualificationAction,
     label: "Clore les inscriptions et tirer les groupes de qualification",
+    attente: ATTENTES.tirageGroupes,
   },
-  final: { fn: startFinalAction, label: "Qualifier les meilleurs et lancer la finale" },
-  finish: { fn: finishCompetitionAction, label: "Clore le concours et proclamer le podium" },
+  final: {
+    fn: startFinalAction,
+    label: "Qualifier les meilleurs et lancer la finale",
+    attente: ATTENTES.finale,
+  },
+  finish: {
+    fn: finishCompetitionAction,
+    label: "Clore le concours et proclamer le podium",
+    attente: ATTENTES.podium,
+  },
 } as const;
 
 export function CompetitionControl({
@@ -40,6 +51,7 @@ export function CompetitionControl({
         </p>
       ) : null}
       <GuardError message={guardError} />
+      {pending ? <LongActionProgress label={config.attente} /> : null}
       <button
         type="submit"
         disabled={pending}

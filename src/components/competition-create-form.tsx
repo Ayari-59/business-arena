@@ -2,6 +2,8 @@
 
 import { createCompetitionAction, type CreateCompetitionState } from "@/app/teacher/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
+import { LongActionProgress } from "@/components/long-action-progress";
+import { ATTENTES } from "@/config/cloture";
 
 /**
  * Le formulaire « Organiser un concours ».
@@ -88,6 +90,11 @@ export function CompetitionCreateForm({
       {guardError ? (
         <div className="sm:col-span-2">
           <GuardError message={guardError} />
+        </div>
+      ) : null}
+      {pending ? (
+        <div className="sm:col-span-2">
+          <LongActionProgress label={ATTENTES.creationConcours} />
         </div>
       ) : null}
       <button

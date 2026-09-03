@@ -18,6 +18,8 @@ import { CompetitionCreateForm } from "@/components/competition-create-form";
 import { GuardedForm } from "@/components/guarded-action";
 import { EconomicParams } from "@/components/economic-params";
 import { SubmitButton } from "@/components/submit-button";
+import { FormPendingProgress } from "@/components/long-action-progress";
+import { ATTENTES } from "@/config/cloture";
 
 export const dynamic = "force-dynamic";
 
@@ -236,6 +238,7 @@ export default async function TeacherDashboard({
             </p>
           </fieldset>
 
+          <FormPendingProgress label={ATTENTES.creationPartie} className="sm:col-span-3" />
           <SubmitButton
             pendingLabel="Création de la partie et des équipes…"
             className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300 sm:col-span-3"

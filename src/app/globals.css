@@ -66,6 +66,28 @@
   backface-visibility: hidden;
 }
 
+/* Barre de progression indéterminée des actions longues (clôture, création). */
+.barre-indeterminee {
+  animation: barre-indeterminee 1.4s ease-in-out infinite;
+}
+
+@keyframes barre-indeterminee {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .barre-indeterminee {
+    animation: none;
+    width: 100%;
+    opacity: 0.6;
+  }
+}
+
 .card-back {
   transform: rotateY(180deg);
 }

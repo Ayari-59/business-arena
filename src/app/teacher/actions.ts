@@ -194,11 +194,31 @@ export async function setQuizModeAction(gameId: string, formData: FormData): Pro
   revalidatePath(`/teacher/games/${gameId}`);
 }
 
-export async function closeRoundAction(gameId: string): Promise<void> {
+export interface CloseRoundState {
+  error: string | null;
+}
+
+/**
+ * Clôt le tour que l'enseignant a confirmé (champ `roundIndex`). Un double
+ * envoi retombe sur un tour déjà clos : le serveur ne simule rien de plus
+ * et la page se rafraîchit simplement.
+ */
+export async function closeRoundAction(
+  gameId: string,
+  _prev: CloseRoundState,
+  formData: FormData,
+): Promise<CloseRoundState> {
   const session = await getSession();
   if (!session) redirect("/teacher/login");
-  await closeCurrentRound({ gameId, teacherId: session.userId });
+  const brut = Number(formData.get("roundIndex"));
+  const expectedRound = Number.isInteger(brut) && brut > 0 ? brut : undefined;
+  try {
+    await closeCurrentRound({ gameId, teacherId: session.userId, expectedRound });
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "La clôture a échoué." };
+  }
   revalidatePath(`/teacher/games/${gameId}`);
+  return { error: null };
 }
 
 const createCompetitionSchema = z.object({

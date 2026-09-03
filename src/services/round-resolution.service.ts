@@ -581,14 +581,51 @@ export async function drawEventCardForNextRound(args: {
   return { eventCode, teamId: targetTeamId };
 }
 
-/** Mode classe : l'enseignant (créateur de la partie) clôt le tour courant. */
+/**
+ * Mode classe : l'enseignant (créateur de la partie) clôt le tour courant.
+ *
+ * `expectedRound` est le tour que l'enseignant a vu à l'écran. Un double
+ * envoi du même formulaire arrive après que le premier a fait avancer la
+ * partie : sans ce garde, il clorait le tour suivant. La clôture est alors
+ * idempotente : un tour déjà clos (ou en cours de résolution par une
+ * requête concurrente) est rendu tel quel, sans rien simuler.
+ */
 export async function closeCurrentRound(args: {
   gameId: string;
   teacherId: string;
-}): Promise<{ roundIndex: number; finished: boolean }> {
+  expectedRound?: number;
+}): Promise<{ roundIndex: number; finished: boolean; alreadyClosed: boolean }> {
   const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
   if (!game) throw new Error("Partie introuvable");
   if (game.createdBy !== args.teacherId)
     throw new Error("Seul l'enseignant qui a créé la partie peut clore un tour");
-  return resolveGameRound(args.gameId);
+  if (args.expectedRound !== undefined) {
+    const attendu = (
+      await db
+        .select({ status: rounds.status })
+        .from(rounds)
+        .where(and(eq(rounds.gameId, args.gameId), eq(rounds.index, args.expectedRound)))
+    )[0];
+    if (!attendu) throw new Error("Tour introuvable");
+    if (attendu.status !== "open" || game.currentRound !== args.expectedRound) {
+      return {
+        roundIndex: args.expectedRound,
+        finished: game.status === "finished",
+        alreadyClosed: true,
+      };
+    }
+  }
+  try {
+    return { ...(await resolveGameRound(args.gameId)), alreadyClosed: false };
+  } catch (error) {
+    // Deux clôtures concurrentes du même tour : la seconde n'a rien à faire.
+    if (
+      args.expectedRound !== undefined &&
+      error instanceof Error &&
+      error.message === "Ce tour est déjà en cours de résolution"
+    ) {
+      return { roundIndex: args.expectedRound, finished: false, alreadyClosed: true };
+    }
+    throw error;
+  }
 }

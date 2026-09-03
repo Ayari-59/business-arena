@@ -111,7 +111,7 @@ describe("partie de classe complète", () => {
     // un élève ne peut pas clore ; l'enseignant si
     await expect(closeCurrentRound({ gameId, teacherId: alice })).rejects.toThrow();
     const r1 = await closeCurrentRound({ gameId, teacherId });
-    expect(r1).toEqual({ roundIndex: 1, finished: false });
+    expect(r1).toMatchObject({ roundIndex: 1, finished: false });
 
     // la décision de Bruno est marquée reconduite
     const round1 = (
