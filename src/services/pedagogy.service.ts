@@ -36,11 +36,12 @@ import { presetFromProfile, quizModeFromProfile, type QuizMode } from "@/config/
 import { decrireSource, lireSource, type DecisionSourceMap } from "@/config/decision-source";
 import { hintScoreMultiplier, nextUnlockableLevel } from "@/pedagogy/hints";
 import { evaluateDiagnosis, evaluateQuiz } from "@/pedagogy/evaluation";
-import { buildConsequenceContext, buildInterpretation, buildTriggerContext, detectSituations } from "@/pedagogy/detection";
+import { buildConsequenceContext, buildInterpretation } from "@/pedagogy/detection";
 import type { ConsequenceFact, InterpretationFact, TriggerFact } from "@/pedagogy/detection";
 import { AXES, aggregateAxis, updateMastery } from "@/pedagogy/progress";
 import { adaptiveHintMultiplier, playerStrength } from "@/pedagogy/adaptivity";
 import { computeRawSituationScore } from "@/pedagogy/scoring";
+import { loadInstanceForUser, unlockedLevels } from "./situation-instance.service";
 import {
   RETAKE_MULTIPLIER,
   missedSituationPolicyFromProfile,
@@ -60,119 +61,15 @@ import type { CompanyRoundResult } from "@/engine/types";
 // pas casser les appels via @/services/pedagogy.service.
 export { seedPedagogyReferentials } from "./pedagogy-seed.service";
 
-// ---------------------------------------------------------------------------
-// Instanciation des situations d'un tour (scriptées + détectées, doc 03 §1.1)
-// ---------------------------------------------------------------------------
-
-export async function openSituationsForRound(
-  gameId: string,
-  roundIndex: number,
-  previousResults?: Record<string, CompanyRoundResult>,
-): Promise<void> {
-  const roundRow = (
-    await db
-      .select()
-      .from(rounds)
-      .where(and(eq(rounds.gameId, gameId), eq(rounds.index, roundIndex)))
-  )[0];
-  if (!roundRow) return;
-  const humanTeams = await db
-    .select()
-    .from(teams)
-    .where(and(eq(teams.gameId, gameId), eq(teams.controller, "human")));
-  if (humanTeams.length === 0) return;
-
-  const situationRows = await db.select().from(situations);
-  const situationIdByCode = new Map(situationRows.map((r) => [r.code, r.id]));
-
-  // Les situations appartiennent au scénario JOUÉ : une partie d'hôtellerie
-  // n'ouvre jamais une situation d'atelier. Le snapshot porte le code du
-  // scénario de la partie (un code inconnu retombe sur NOVA).
-  const gameRow = (await db.select().from(games).where(eq(games.id, gameId)))[0];
-  const snapshotCode = (gameRow?.scenarioSnapshot as { code?: string } | null)?.code;
-  const definition = scenarioByCode(snapshotCode);
-
-  const values: (typeof situationInstances.$inferInsert)[] = [];
-  const scripted = definition.situations.filter(
-    (s) => "round" in s.trigger && s.trigger.round === roundIndex,
-  );
-  for (const team of humanTeams) {
-    for (const s of scripted) {
-      const situationId = situationIdByCode.get(s.code);
-      if (situationId)
-        values.push({
-          roundId: roundRow.id,
-          teamId: team.id,
-          situationId,
-          origin: "scripted",
-          status: "open",
-          openedAt: new Date(),
-        });
-    }
-    const result = previousResults?.[team.id];
-    if (result) {
-      const detected = new Set(
-        detectSituations(result, {
-          placement: presetFromProfile(gameRow?.difficultyProfile).decisions.placement,
-        }),
-      );
-      // Résolution par le déclencheur porté par la situation, pas par une
-      // convention de nommage : chaque scénario nomme ses situations librement.
-      for (const s of definition.situations) {
-        if (!("detect" in s.trigger) || !detected.has(s.trigger.detect)) continue;
-        const situationId = situationIdByCode.get(s.code);
-        if (situationId)
-          values.push({
-            roundId: roundRow.id,
-            teamId: team.id,
-            situationId,
-            origin: "detected",
-            status: "open",
-            triggerContext: buildTriggerContext(s.trigger.detect, result),
-            openedAt: new Date(),
-          });
-      }
-    }
-  }
-  if (values.length > 0)
-    await db.insert(situationInstances).values(values).onConflictDoNothing();
-}
+// Cycle de vie des situations (ouverture d'un tour, chargement d'une instance) :
+// extrait dans situation-instance.service.ts (refactoring V2, étape 9).
+// `openSituationsForRound` est ré-exporté pour les appelants existants ;
+// `loadInstanceForUser`/`unlockedLevels` sont importés en tête.
+export { openSituationsForRound } from "./situation-instance.service";
 
 // ---------------------------------------------------------------------------
 // Interactions joueur : indices, diagnostic, QCM de connaissances
 // ---------------------------------------------------------------------------
-
-async function loadInstanceForUser(instanceId: string, userId: string) {
-  const instance = (
-    await db.select().from(situationInstances).where(eq(situationInstances.id, instanceId))
-  )[0];
-  if (!instance) throw new Error("Situation introuvable");
-  const membership = (
-    await db
-      .select()
-      .from(players)
-      .where(and(eq(players.teamId, instance.teamId), eq(players.userId, userId)))
-  )[0];
-  if (!membership) throw new Error("Vous n'êtes pas membre de cette équipe");
-  const situationRow = (
-    await db.select().from(situations).where(eq(situations.id, instance.situationId))
-  )[0]!;
-  const def = situationByCode.get(situationRow.code);
-  if (!def) throw new Error("Définition de situation manquante");
-  const teamRow = (await db.select().from(teams).where(eq(teams.id, instance.teamId)))[0];
-  const gameRow = teamRow
-    ? (await db.select().from(games).where(eq(games.id, teamRow.gameId)))[0]
-    : undefined;
-  return { instance, situationRow, def, game: gameRow };
-}
-
-async function unlockedLevels(instanceId: string): Promise<number[]> {
-  const rows = await db
-    .select({ level: hintUsages.level })
-    .from(hintUsages)
-    .where(eq(hintUsages.situationInstanceId, instanceId));
-  return rows.map((r) => r.level);
-}
 
 /**
  * Plafond d'indices de la partie, et la phrase qui l'explique.
