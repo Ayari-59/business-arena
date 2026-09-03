@@ -18,7 +18,6 @@ import { presetFromProfile } from "@/config/difficulty";
 import { porteUnNomParDefaut } from "@/config/nom-equipe";
 import { cardByCode } from "@/config/events/cards";
 import { proposedDecisionsFor, startingDecisionsFor } from "@/services/decision-baseline";
-import { type BpiDimension } from "@/scoring/bpi";
 import { orderOfferForRound } from "@/engine/simulation";
 import { computeRatios } from "@/engine/finance/ratios";
 import { conditionsBancaires, confianceInitiale } from "@/engine/finance/bank";
@@ -128,8 +127,8 @@ export interface GameView {
     rank: number;
     bpi: number;
   }[];
-  /** Moyennes 0-100 des 7 dimensions BPI de l'équipe du joueur (doc 08). */
-  playerDimensions: Partial<Record<BpiDimension, number>> | null;
+  /** Moyennes 0-100 des dimensions BPI de l'équipe du joueur (6 en v2, doc 08). */
+  playerDimensions: Partial<Record<string, number>> | null;
   lastDecisions: RoundDecisions | null;
   /**
    * Le point de départ du secteur, servi au tour 1 quand il n'y a encore rien
@@ -579,8 +578,8 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     .sort((a, b) => a.rank - b.rank);
   const playerRankingRow = rankingRows.find((r) => r.teamId === playerTeam.id);
   const playerDimensions =
-    ((playerRankingRow?.detail as { dimensions?: Partial<Record<BpiDimension, number>> })
-      ?.dimensions as Partial<Record<BpiDimension, number>> | undefined) ?? null;
+    ((playerRankingRow?.detail as { dimensions?: Partial<Record<string, number>> })
+      ?.dimensions as Partial<Record<string, number>> | undefined) ?? null;
 
   // Rapports des études achetées au dernier tour résolu (doc 02 §8bis) :
   // construits à la lecture depuis les résultats persistés — la facture est

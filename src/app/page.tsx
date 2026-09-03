@@ -241,7 +241,7 @@ export default async function Home({
             ],
             [`${CONCEPTS.length} fiches notions`, "du CA au FRNG/BFR"],
             [`${DECISION_MODELS.length} modèles`, "d'aide à la décision"],
-            ["7 dimensions", "de performance (BPI)"],
+            ["6 dimensions", "de performance (BPI)"],
           ].map(([big, small]) => (
             <div key={big}>
               <p className="text-2xl font-bold text-amber-400">{big}</p>

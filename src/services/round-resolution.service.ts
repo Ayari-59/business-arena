@@ -335,6 +335,25 @@ async function resolveGameRound(
         .filter((e) => e.scope === "market" || e.companyId === teamId)
         .map((e) => e.code);
 
+    // Valeurs proposées et source des pivots par équipe : calculées une fois,
+    // réutilisées pour la trace des décisions ET pour la cohérence du BPI v2.
+    const proposedByTeam: Record<string, RoundDecisions> = {};
+    const decisionSourceByTeam: Record<string, ReturnType<typeof decisionSourceOf>> = {};
+    for (const t of teamRows) {
+      const proposed = proposedDecisionsFor({
+        snapshot: scenario,
+        state: states.find((s) => s.id === t.id),
+        roundIndex,
+        previousPayload: previousPayloads[t.id],
+      });
+      proposedByTeam[t.id] = proposed;
+      // Reconduit : rien n'a été décidé. Sinon, la source se lit face à ce que
+      // le formulaire proposait.
+      decisionSourceByTeam[t.id] = carriedOver.has(t.id)
+        ? SOURCE_RECONDUITE
+        : decisionSourceOf(allDecisions[t.id]!, proposed);
+    }
+
     // Persistance (idempotente)
     await db
       .insert(decisions)
@@ -343,20 +362,9 @@ async function resolveGameRound(
           roundId: roundRow.id,
           teamId: t.id,
           payload: allDecisions[t.id]!,
-          // Reconduit : rien n'a été décidé. Sinon (solo, ou ligne absente),
-          // la source se lit face à ce que le formulaire proposait. Une ligne
-          // déjà validée garde la source calculée à la validation.
-          decisionSource: carriedOver.has(t.id)
-            ? SOURCE_RECONDUITE
-            : decisionSourceOf(
-                allDecisions[t.id]!,
-                proposedDecisionsFor({
-                  snapshot: scenario,
-                  state: states.find((s) => s.id === t.id),
-                  roundIndex,
-                  previousPayload: previousPayloads[t.id],
-                }),
-              ),
+          // Une ligne déjà validée garde la source calculée à la validation
+          // (onConflict ne réécrit que le statut).
+          decisionSource: decisionSourceByTeam[t.id],
           status: carriedOver.has(t.id) ? ("carried_over" as const) : ("locked" as const),
           validatedAt: new Date(),
         })),
@@ -435,10 +443,15 @@ async function resolveGameRound(
     const pedagogyByTeam = await readPedagogyInputs(roundRow.id);
     await persistRoundScores({
       roundId: roundRow.id,
+      roundIndex,
+      gameId,
       scenario,
       teamRows,
       results: output.results,
       allDecisions,
+      decisionSourceByTeam,
+      proposedByTeam,
+      carriedTeams: carriedOver,
       pedagogyByTeam,
     });
     await updateRankings(gameId, teamRows.map((t) => t.id));

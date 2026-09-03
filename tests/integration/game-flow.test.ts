@@ -94,12 +94,12 @@ describe("parcours complet d'une partie solo", () => {
     expect(ranking).toHaveLength(4);
     expect([...ranking.map((r) => r.rank)].sort()).toEqual([1, 2, 3, 4]);
 
-    // scoring BPI (doc 08) : 7 dimensions × 4 équipes × 6 tours, BPI ∈ [0,100]
+    // scoring BPI v2 (doc 08, V1-2) : 6 dimensions × 4 équipes × 6 tours, BPI ∈ [0,100]
     const gameRoundIds = allRounds.map((r) => r.id);
     const scoreRows = (await db.select().from(scores)).filter((s) =>
       gameRoundIds.includes(s.roundId),
     );
-    expect(scoreRows).toHaveLength(6 * 4 * 7);
+    expect(scoreRows).toHaveLength(6 * 4 * 6);
     for (const row of scoreRows) {
       expect(Number(row.normalized)).toBeGreaterThanOrEqual(0);
       expect(Number(row.normalized)).toBeLessThanOrEqual(100);
@@ -109,7 +109,7 @@ describe("parcours complet d'une partie solo", () => {
       expect(Number(r.bpi)).toBeLessThanOrEqual(100);
       const detail = r.detail as { roundBpis: number[]; dimensions: Record<string, number> };
       expect(detail.roundBpis).toHaveLength(6);
-      expect(Object.keys(detail.dimensions)).toHaveLength(7);
+      expect(Object.keys(detail.dimensions)).toHaveLength(6);
     }
 
     // profil joueur (étape 11) : la partie apparaît avec rang et BPI

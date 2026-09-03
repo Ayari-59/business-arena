@@ -488,9 +488,11 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                             ))}
                           </ol>
                           <p className="mt-3 text-xs text-slate-500">
-                            Le BPI (0-100) pondère 7 dimensions : économique 30 %, financière 20 %,
-                            commerciale 15 %, opérationnelle 10 %, rentabilité 10 %, stratégie 10 %,
-                            maîtrise des modèles 5 %. Les derniers tours pèsent plus lourd.
+                            Le BPI (0-100) pondère 6 dimensions : économique 30 %, financière 20 %,
+                            commerciale 15 %, pilotage 20 %, rentabilité 10 %, maîtrise décisionnelle
+                            5 %. La performance financière suit la variation du résultat (une perte
+                            plafonne à 20) ; le pilotage ne récompense que les décisions vraiment
+                            prises. Les derniers tours pèsent plus lourd.
                           </p>
                         </div>
                         {view.playerDimensions ? <BpiPanel dimensions={view.playerDimensions} /> : null}
