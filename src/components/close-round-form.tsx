@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { closeRoundAction, type CloseRoundState } from "@/app/teacher/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import { LongActionProgress } from "@/components/long-action-progress";
@@ -29,6 +29,12 @@ export function CloseRoundForm({
   ouvert?: boolean;
 }) {
   const [confirmation, setConfirmation] = useState(ouvert);
+  // Le tour clôturé, la mise à jour RSC réutilise ce composant pour le tour
+  // suivant sans le remonter : sans ce garde, l'état « confirmation ouverte »
+  // du tour qu'on vient de clore se reporterait sur le suivant, et l'enseignant
+  // tomberait sur « Clore le tour n+1 ? » sans l'avoir demandé. On le referme
+  // dès que le numéro de tour change.
+  useEffect(() => setConfirmation(ouvert), [tour, ouvert]);
   const { state, formAction, pending, formRef, guardError } = useGuardedAction(
     closeRoundAction.bind(null, gameId),
     initial,

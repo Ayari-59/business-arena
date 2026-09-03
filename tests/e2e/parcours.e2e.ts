@@ -109,6 +109,11 @@ describe("parcours enseignant et élève", () => {
     await eleve.fill('input[name="price"]', "780");
     await eleve.getByRole("button", { name: /Valider les décisions de l'équipe/ }).click();
 
+    // Le prix est touché mais le volume (« Jours à staffer ») reste à sa valeur
+    // proposée : le garde-fou des pivots (A1) demande de confirmer avant
+    // d'envoyer. On confirme, comme le ferait un élève qui assume ce volume.
+    await eleve.getByRole("button", { name: /je garde ces valeurs/ }).click({ timeout: 10_000 });
+
     // On relit la page : ce qui compte est que le serveur ait ENREGISTRÉ le
     // tour, pas que le bouton ait changé d'étiquette.
     await eleve.waitForTimeout(2_000);
@@ -125,6 +130,9 @@ describe("parcours enseignant et élève", () => {
   it("l'enseignant clôture le tour et la partie avance", async () => {
     await aller(prof, urlPartie);
     await prof.getByRole("button", { name: /Clore le tour 1 et simuler/ }).click();
+    // Le clic ouvre d'abord une confirmation (équipes validées + irréversibilité,
+    // A2) : c'est « Clore et simuler » qui lance réellement la résolution.
+    await prof.getByRole("button", { name: "Clore et simuler", exact: true }).click();
     await prof.waitForSelector("text=/Clore le tour 2 et simuler/", { timeout: 60_000 });
     expect(await texte(prof)).toContain("Trimestre 2");
   });
