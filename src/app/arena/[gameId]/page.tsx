@@ -12,6 +12,8 @@ import { DecisionForm } from "@/components/decision-form";
 import { TeamNameForm } from "@/components/team-name-form";
 import { DilemmaCard, ParametersPanels } from "@/components/decision-context";
 import { PeriodDashboard } from "@/components/period-dashboard";
+import { PeriodDecisionsRecap } from "@/components/period-decisions-recap";
+import { SegmentedTabs } from "@/components/segmented-tabs";
 import { RoundStatusPoller } from "@/components/round-status-poller";
 import { RoundStatusBanner } from "@/components/round-status-banner";
 import { EventBanner } from "@/components/event-banner";
@@ -188,26 +190,44 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                   </span>
                 </span>
               </summary>
-              <div className="space-y-6 border-t border-white/10 p-4 sm:p-5">
-                <PeriodDashboard view={view} period={p} standing={isLatest} />
-                {dr ? (
-                  <section className="space-y-4">
-                    <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-                      Débriefing des situations · {periodLabel(view.roundDays, p.round)}
-                    </h3>
-                    {dr.situations.map((s) => (
-                      <SituationDebrief
-                        key={s.instanceId}
-                        situation={s}
-                        gameId={view.gameId}
-                        retakeable={
-                          situations.missedPolicy === "retake50" &&
-                          p.round === mostRecentDebriefedRound
-                        }
-                      />
-                    ))}
-                  </section>
-                ) : null}
+              <div className="border-t border-white/10 p-4 sm:p-5">
+                {/* Les trois facettes d'une période close : ce qu'on a analysé
+                    (Situation + correction), ce qu'on a décidé, ce qui en est
+                    ressorti. Les onglets ne s'opposent pas à l'accordéon — il
+                    situe la période, ils en montrent une face à la fois. */}
+                <SegmentedTabs
+                  defaultKey={isLatest ? "resultats" : "situation"}
+                  tabs={[
+                    { key: "situation", label: "Situation", icon: "📋" },
+                    { key: "decisions", label: "Décisions", icon: "✏️" },
+                    { key: "resultats", label: "Résultats", icon: "📊" },
+                  ]}
+                >
+                  {{
+                    situation: dr ? (
+                      <section className="space-y-4">
+                        <p className="text-xs text-slate-500">
+                          La situation posée ce tour-là et sa correction.
+                        </p>
+                        {dr.situations.map((s) => (
+                          <SituationDebrief
+                            key={s.instanceId}
+                            situation={s}
+                            gameId={view.gameId}
+                            retakeable={
+                              situations.missedPolicy === "retake50" &&
+                              p.round === mostRecentDebriefedRound
+                            }
+                          />
+                        ))}
+                      </section>
+                    ) : null,
+                    decisions: p.decisions ? (
+                      <PeriodDecisionsRecap decisions={p.decisions} vocabulary={view.vocabulary} />
+                    ) : null,
+                    resultats: <PeriodDashboard view={view} period={p} standing={isLatest} />,
+                  }}
+                </SegmentedTabs>
               </div>
             </details>
           );
