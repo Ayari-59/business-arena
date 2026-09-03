@@ -317,4 +317,25 @@ describe("le bandeau d'en-tête reprend le statut à côté de « À vous de jou
     const html = bandeau(null);
     expect(html).not.toContain("statut-situation");
   });
+
+  it("signale le passage de période dès le deuxième tour, pas au premier", () => {
+    const render = (currentRound: number) =>
+      renderToStaticMarkup(
+        createElement(RoundStatusBanner, {
+          currentRound,
+          roundsCount: 6,
+          roundDays: 30,
+          pendingDecisions: false,
+          kind: "class" as const,
+          finished: false,
+          situations: null,
+        }),
+      );
+    // Tour 1 : pas de « nouveau tour » (rien n'a été clos avant).
+    expect(render(1)).not.toContain("Nouveau tour");
+    // Tour 2 : le passage est annoncé, avec le tour clos et le tour entamé.
+    const tour2 = render(2);
+    expect(tour2).toContain("Nouveau tour");
+    expect(tour2).toContain("est clos");
+  });
 });

@@ -84,7 +84,16 @@ export function RoundStatusBanner({
       <p className="text-xs font-semibold uppercase tracking-widest text-amber-400">
         {periodLabel(roundDays, currentRound)} / {roundsCount}
       </p>
-      <p className="mt-1 text-sm font-medium text-amber-200">À vous de jouer</p>
+      {/* Passage de période : quand un nouveau tour s'ouvre (le précédent vient
+          d'être clos), on le dit franchement — sinon l'élève voit les chiffres
+          changer sans comprendre qu'il a changé de période. */}
+      {currentRound > 1 ? (
+        <p className="mt-2 rounded-lg border border-sky-400/30 bg-sky-400/10 px-3 py-1.5 text-xs text-sky-200">
+          ↪ Nouveau tour : le {periodLabel(roundDays, currentRound - 1)} est clos (ses résultats sont
+          dans l&apos;onglet Résultats). Vous entamez le {periodLabel(roundDays, currentRound)}.
+        </p>
+      ) : null}
+      <p className="mt-2 text-sm font-medium text-amber-200">À vous de jouer</p>
       <StatutSituation statut={situations} />
       <p className="mt-1 text-sm text-slate-400">
         Vos décisions pour ce tour sont attendues.
