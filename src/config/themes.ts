@@ -33,13 +33,13 @@ export const THEMES: Theme[] = [
     code: "sombre",
     nom: "Sombre",
     description: "Gris bleuté et ambre, l'habillage d'origine.",
-    apercu: { fond: "#020618", accent: "#f59e0b" },
+    apercu: { fond: "#020618", accent: "#ff8a3d" },
   },
   {
     code: "clair",
     nom: "Clair",
     description: "Fond clair, lisible en salle éclairée et économe à l'impression.",
-    apercu: { fond: "#f8fafc", accent: "#b45309" },
+    apercu: { fond: "#f8fafc", accent: "#a9470c" },
   },
 ];
 

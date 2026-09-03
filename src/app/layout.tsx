@@ -1,10 +1,29 @@
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
+import { Fraunces, Sora } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
 import { CLE_THEME, THEMES, THEME_PAR_DEFAUT } from "@/config/themes";
 import { SITE_URL } from "@/config/site";
 import { DESCRIPTION_ACCUEIL, GABARIT_DE_TITRE, NOM_DU_SITE, TITRE_ACCUEIL } from "@/config/seo";
+
+// Fraunces porte les titres (h1) ; Sora, tout le reste. next/font héberge les
+// fichiers au build : la CSP « font-src 'self' » les sert sans tiers, et il n'y
+// a ni requête au chargement ni saut de mise en page. Les variables sont lues
+// par globals.css (--font-display, --font-sans).
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-fraunces",
+  display: "swap",
+});
+
+const sora = Sora({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-sora",
+  display: "swap",
+});
 
 /**
  * Les métadonnées communes. Chaque page donne son titre propre, que le
@@ -38,7 +57,7 @@ export const metadata: Metadata = {
  * service worker) ne dépend pas de cette ligne.
  */
 export const viewport: Viewport = {
-  themeColor: "#d97706",
+  themeColor: "#f2741a",
   width: "device-width",
   initialScale: 1,
 };
@@ -62,7 +81,7 @@ export default async function RootLayout({
     `if(${codes}.indexOf(c)>-1)document.documentElement.dataset.theme=c}catch(e){}`;
 
   return (
-    <html lang="fr" data-theme={THEME_PAR_DEFAUT}>
+    <html lang="fr" data-theme={THEME_PAR_DEFAUT} className={`${sora.variable} ${fraunces.variable}`}>
       <body className="min-h-screen bg-slate-950 text-slate-100 antialiased">
         <script nonce={nonce} dangerouslySetInnerHTML={{ __html: amorce }} />
         {/* Premier élément focusable : au clavier, on saute la navigation. */}

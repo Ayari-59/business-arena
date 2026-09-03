@@ -21,6 +21,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 
 export const SOURCE_TAILWIND = "node_modules/tailwindcss/theme.css";
+export const SOURCE_GLOBALS = "src/app/globals.css";
 export const FICHIER_GENERE = "src/app/theme-clair.css";
 
 /**
@@ -63,7 +64,10 @@ const SURCHARGES: Record<string, number> = {
   "amber-400": 900,
 };
 
-export function genererThemeClair(sourceTailwind: string): string {
+export function genererThemeClair(
+  sourceTailwind: string,
+  sourceGlobals: string = readFileSync(SOURCE_GLOBALS, "utf-8"),
+): string {
   const palette = new Map<string, string>();
   for (const [, teinte, palier, valeur] of sourceTailwind.matchAll(
     /--color-([a-z]+)-(\d+):\s*([^;]+);/g,
@@ -72,6 +76,17 @@ export function genererThemeClair(sourceTailwind: string): string {
   }
   if (palette.size < 100) {
     throw new Error(`échelle Tailwind introuvable dans ${SOURCE_TAILWIND}`);
+  }
+
+  // Les teintes redéfinies dans globals.css (@theme) — l'accent orange — priment
+  // sur l'échelle de Tailwind. Le sombre les applique directement ; le clair,
+  // engendré ici, doit renverser LES MÊMES couleurs pour que les deux thèmes
+  // s'accordent, faute de quoi l'orange du sombre redeviendrait de l'ambre au
+  // clair. On surcharge donc la palette avant le miroir.
+  for (const [, teinte, palier, valeur] of sourceGlobals.matchAll(
+    /--color-([a-z]+)-(\d+):\s*(#[0-9a-fA-F]{3,8}|[^;]+);/g,
+  )) {
+    if (teinte && palier && valeur) palette.set(`${teinte}-${palier}`, valeur.trim());
   }
 
   const lignes: string[] = [];

@@ -2,6 +2,44 @@
 @import "./theme-clair.css";
 
 /* ---------------------------------------------------------------------------
+ * Montée en gamme visuelle : « bleu nuit & orange ».
+ *
+ * Le fond du site est déjà un bleu nuit — l'échelle « slate » de Tailwind, très
+ * marine dans ses paliers sombres ; on n'y touche pas. Ce qui change, c'est
+ * l'accent : l'ambre doré d'origine devient un orange franc, la couleur de
+ * l'action et des chiffres qui comptent. On redéfinit donc la seule échelle
+ * « amber », et le thème clair suit : le script de génération lit ces valeurs
+ * (voir scripts/generer-theme-clair.ts) pour que les deux thèmes s'accordent.
+ *
+ * Les fontes montent aussi en gamme : Fraunces (à empattements) porte les
+ * titres, Sora (grotesque) porte l'interface. next/font les héberge au build ;
+ * la CSP « font-src 'self' » les sert sans tiers.
+ * ------------------------------------------------------------------------- */
+@theme {
+  --font-sans: var(--font-sora), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
+
+  --color-amber-50: #fff4ec;
+  --color-amber-100: #ffe4d1;
+  --color-amber-200: #ffcba6;
+  --color-amber-300: #ffab73;
+  --color-amber-400: #ff9450;
+  --color-amber-500: #ff8a3d;
+  --color-amber-600: #f2741a;
+  --color-amber-700: #d65a08;
+  --color-amber-800: #a9470c;
+  --color-amber-900: #7c3410;
+  --color-amber-950: #431806;
+}
+
+/* Les titres de tête portent le display à empattements ; le reste reste en
+ * grotesque. Réservé au h1 pour ne pas alourdir les libellés d'interface. */
+h1 {
+  font-family: var(--font-display);
+  letter-spacing: -0.015em;
+}
+
+/* ---------------------------------------------------------------------------
  * Les thèmes.
  *
  * Le site en propose deux, un sombre et un clair. Le sombre n'a pas de bloc :
