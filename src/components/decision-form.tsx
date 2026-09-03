@@ -474,6 +474,18 @@ export function DecisionForm({
     formRef.current
       ?.querySelectorAll("details")
       .forEach((d) => ((d as HTMLDetailsElement).open = open));
+
+  // Un champ requis dans une famille repliée est invisible : le navigateur ne
+  // peut pas y afficher sa bulle de validation et abandonne l'envoi en silence
+  // (« An invalid form control is not focusable »). On rouvre la famille du
+  // champ fautif, en phase de capture, avant que le navigateur ne tente d'y
+  // poser le focus — la validation redevient visible.
+  const revelerFamilleInvalide = (e: React.FormEvent<HTMLFormElement>) => {
+    const famille = (e.target as HTMLElement).closest?.("details") as
+      | HTMLDetailsElement
+      | null;
+    if (famille && !famille.open) famille.open = true;
+  };
   const on = enabled ?? {
     quality: true,
     maintenance: true,
@@ -489,7 +501,13 @@ export function DecisionForm({
   const v = vocabulary;
 
   return (
-    <form ref={formRef} action={formAction} onSubmit={verifierPivots} className="space-y-4">
+    <form
+      ref={formRef}
+      action={formAction}
+      onSubmit={verifierPivots}
+      onInvalidCapture={revelerFamilleInvalide}
+      className="space-y-4"
+    >
       <div className="flex items-center justify-end gap-2 text-xs text-slate-400">
         <button
           type="button"
