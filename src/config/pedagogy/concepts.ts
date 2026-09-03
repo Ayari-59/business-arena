@@ -557,3 +557,81 @@ export const CONCEPT_PREREQUISITES: Record<string, readonly string[]> = {
 export function prerequisitesOf(code: string): readonly string[] {
   return CONCEPT_PREREQUISITES[code] ?? [];
 }
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * NIVEAU PÉDAGOGIQUE D'UNE NOTION (V2 couche 2, chantier #2).
+ *
+ * Chaque notion est rangée dans l'un des six paliers du parcours — les mêmes
+ * six niveaux de difficulté que l'enseignant fixe à la création (1 Découverte …
+ * 6 Executive, cf. DIFFICULTY_PRESETS). C'est un recouvrement pédagogique
+ * cohérent avec le graphe : une notion n'est jamais d'un niveau inférieur à ses
+ * prérequis (invariant vérifié par notions-dag.test.ts).
+ *
+ * Sert au filtrage DOUX : on ordonne les situations d'un tour par niveau (les
+ * fondations d'abord) et on signale celles dont le niveau dépasse celui de la
+ * partie — sans jamais rien cacher.
+ * ──────────────────────────────────────────────────────────────────────────── */
+export type ConceptLevel = 1 | 2 | 3 | 4 | 5 | 6;
+
+export const CONCEPT_LEVEL: Record<string, ConceptLevel> = {
+  // 1 — Découverte
+  fixed_costs: 1,
+  variable_costs: 1,
+  demand_market_share: 1,
+  capacity: 1,
+  stock: 1,
+  // 2 — Fondamentaux
+  revenue: 2,
+  contribution_margin: 2,
+  price_elasticity: 2,
+  segmentation: 2,
+  seasonality: 2,
+  productivity: 2,
+  // 3 — Marge & coût
+  margin_rates: 3,
+  breakeven: 3,
+  full_unit_cost: 3,
+  depreciation: 3,
+  psych_price: 3,
+  markup_coefficient: 3,
+  stock_rotation: 3,
+  assortment: 3,
+  average_basket: 3,
+  conversion_rate: 3,
+  ebitda_margin: 3,
+  // 4 — Gestion courante
+  dead_point: 4,
+  safety_margin: 4,
+  markdown: 4,
+  frng: 4,
+  bfr: 4,
+  distribution_commission: 4,
+  sales_per_sqm: 4,
+  // 5 — Analyse & trésorerie
+  net_treasury: 5,
+  receivables_financing: 5,
+  profitability_vs_return: 5,
+  loan_schedule: 5,
+  // 6 — Investissement
+  discounting: 6,
+  irr_payback: 6,
+};
+
+/** Niveau d'une notion (1..6), défaut 1 si notion inconnue. */
+export function conceptLevel(code: string): ConceptLevel {
+  return CONCEPT_LEVEL[code] ?? 1;
+}
+
+/**
+ * Niveau d'une situation : celui de sa notion la plus avancée (une situation
+ * n'est abordable qu'une fois sa notion la plus exigeante à portée). Défaut 1
+ * si la situation ne porte aucune notion.
+ */
+export function situationLevel(conceptCodes: readonly string[]): ConceptLevel {
+  let max: ConceptLevel = 1;
+  for (const code of conceptCodes) {
+    const l = conceptLevel(code);
+    if (l > max) max = l;
+  }
+  return max;
+}

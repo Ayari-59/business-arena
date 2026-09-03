@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { CONCEPTS, CONCEPT_PREREQUISITES } from "../../src/config/pedagogy/concepts";
+import {
+  CONCEPTS,
+  CONCEPT_LEVEL,
+  CONCEPT_PREREQUISITES,
+  conceptLevel,
+  situationLevel,
+} from "../../src/config/pedagogy/concepts";
 
 /**
  * Le graphe des prérequis des notions (V2 couche 2, chantier #1).
@@ -86,5 +92,37 @@ describe("graphe des prérequis des notions", () => {
     expect(isolated, `notions inatteignables depuis une racine : ${isolated.join(", ")}`).toEqual(
       [],
     );
+  });
+
+  it("range chaque notion dans un des six niveaux, jamais sous ses prérequis", () => {
+    for (const c of CONCEPTS) {
+      const level = CONCEPT_LEVEL[c.code];
+      expect(level, `notion sans niveau : ${c.code}`).toBeDefined();
+      expect(level, `niveau hors 1..6 pour ${c.code} : ${level}`).toBeGreaterThanOrEqual(1);
+      expect(level, `niveau hors 1..6 pour ${c.code} : ${level}`).toBeLessThanOrEqual(6);
+    }
+    for (const code of Object.keys(CONCEPT_LEVEL)) {
+      expect(CODES, `niveau attribué à une notion inconnue : ${code}`).toContain(code);
+    }
+    // Monotonie : une notion ne peut pas être d'un niveau plus bas qu'un de ses
+    // prérequis, sinon le parcours proposerait l'aval avant l'amont.
+    for (const [code, prereqs] of Object.entries(CONCEPT_PREREQUISITES)) {
+      for (const p of prereqs) {
+        expect(
+          conceptLevel(code),
+          `${code} (niveau ${conceptLevel(code)}) est sous son prérequis ${p} (niveau ${conceptLevel(p)})`,
+        ).toBeGreaterThanOrEqual(conceptLevel(p));
+      }
+    }
+  });
+
+  it("donne à une situation le niveau de sa notion la plus avancée", () => {
+    // La notion la plus exigeante commande : une situation qui touche à la VAN
+    // est de niveau 6, même si elle rappelle aussi les coûts fixes (niveau 1).
+    expect(situationLevel(["irr_payback", "fixed_costs"])).toBe(6);
+    expect(situationLevel(["revenue", "contribution_margin"])).toBe(2);
+    expect(situationLevel(["fixed_costs"])).toBe(1);
+    // Situation sans notion : niveau plancher, jamais indéfini.
+    expect(situationLevel([])).toBe(1);
   });
 });
