@@ -17,7 +17,7 @@ import {
   openSituationsForRound,
 } from "@/services/pedagogy.service";
 import { TEACHER_DRAWABLE_CODES, TEAM_CARD_CODES } from "@/config/events/cards";
-import { botDecisions, type BotProfile } from "@/engine/bots";
+import { botDecisions, botPersonalityFromSeed, type BotProfile } from "@/engine/bots";
 import { carryOverDecisions, fallbackDecisions } from "@/services/decision.service";
 import { proposedDecisionsFor } from "@/services/decision-baseline";
 import { SOURCE_RECONDUITE, decisionSourceOf } from "@/config/decision-source";
@@ -276,17 +276,30 @@ async function resolveGameRound(
       }
     }
 
+    // Prix moyen des équipes humaines au tour précédent : ce à quoi les bots
+    // réagissent (V1-4). Undefined au tour 1 ou sans équipe humaine.
+    const prixHumainsPrecedents = teamRows
+      .filter((t) => t.controller === "human")
+      .map((t) => (previousPayloads[t.id] as RoundDecisions | undefined)?.price)
+      .filter((p): p is number => typeof p === "number" && p > 0);
+    const humanAvgPrice = prixHumainsPrecedents.length
+      ? prixHumainsPrecedents.reduce((a, c) => a + c, 0) / prixHumainsPrecedents.length
+      : undefined;
+
     const allDecisions: Record<string, RoundDecisions> = {};
     const carriedOver = new Set<string>();
     for (const team of teamRows) {
       const state = states.find((s) => s.id === team.id);
       if (!state) throw new Error(`État manquant pour ${team.name}`);
       if (team.controller === "bot") {
-        allDecisions[team.id] = botDecisions((team.botProfile ?? "balanced") as BotProfile, {
+        const botProfile = (team.botProfile ?? "balanced") as BotProfile;
+        allDecisions[team.id] = botDecisions(botProfile, {
           scenario,
           state,
           roundIndex,
           lastSoldUnits: lastSold[team.id],
+          humanAvgPrice,
+          personality: botPersonalityFromSeed(Number(game.seed), botProfile),
         });
         continue;
       }

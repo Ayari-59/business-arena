@@ -143,7 +143,7 @@ export default async function TeacherGamePage({
                     {t.name}
                     {t.controller === "bot" ? (
                       <span className="ml-2 rounded bg-slate-800 px-1.5 py-0.5 text-xs uppercase text-slate-500">
-                        bot
+                        bot{t.botPersonality ? ` · ${t.botPersonality}` : ""}
                       </span>
                     ) : null}
                   </td>
