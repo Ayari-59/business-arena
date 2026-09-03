@@ -63,15 +63,15 @@ describe("place du bandeau dans l'arène", () => {
     "utf8",
   );
 
-  it("le bandeau est rendu avant les onglets, pas dedans", () => {
+  it("le bandeau est rendu avant l'accordéon de périodes, pas dedans", () => {
     const bandeau = source.indexOf("<EventBanner");
-    const onglets = source.indexOf("<ArenaLayout");
+    const accordeon = source.indexOf("periods.map(");
     expect(bandeau).toBeGreaterThan(-1);
-    expect(onglets).toBeGreaterThan(-1);
-    expect(bandeau).toBeLessThan(onglets);
+    expect(accordeon).toBeGreaterThan(-1);
+    expect(bandeau).toBeLessThan(accordeon);
   });
 
-  it("le bloc détaillé reste dans l'onglet Situation", () => {
+  it("le bloc détaillé reste dans la période active", () => {
     expect(source).toContain("a tiré une carte : elle s&apos;appliquera à ce tour");
   });
 });
