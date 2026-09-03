@@ -202,32 +202,59 @@ export default async function TeacherGamePage({
         <section className="rounded-xl border border-white/10 bg-slate-900 p-4">
           <h2 className="mb-3 text-sm font-semibold text-slate-200">Vue pédagogique</h2>
           <div className="grid gap-4 lg:grid-cols-3">
-            <div>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                Maîtrise des notions (de la plus fragile à la plus solide)
-              </h3>
-              {pedagogy.conceptMastery.length === 0 ? (
-                <p className="mt-2 text-xs text-slate-500">
-                  Disponible dès qu&apos;un tour avec situations aura été débriefé.
-                </p>
-              ) : (
-                <ul className="mt-2 space-y-1.5">
-                  {pedagogy.conceptMastery.slice(0, 8).map((c) => (
-                    <li key={c.code} className="text-sm">
-                      <div className="flex items-center justify-between text-slate-300">
-                        <span>{c.name}</span>
-                        <span className="tabular-nums text-slate-400">{Math.round(c.average)}</span>
-                      </div>
-                      <div className="mt-0.5 h-1.5 rounded-full bg-slate-950">
-                        <div
-                          className={`h-1.5 rounded-full ${c.average < 40 ? "bg-red-400" : c.average < 70 ? "bg-amber-400" : "bg-emerald-400"}`}
-                          style={{ width: `${Math.max(3, Math.min(100, c.average))}%` }}
-                        />
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  Notions exposées ce tour
+                </h3>
+                {pedagogy.conceptsExposed.length === 0 ? (
+                  <p className="mt-2 text-xs text-slate-500">Aucune situation ouverte ce tour.</p>
+                ) : (
+                  <ul className="mt-2 flex flex-wrap gap-1.5">
+                    {pedagogy.conceptsExposed.map((c) => (
+                      <li
+                        key={c.code}
+                        className="rounded-full border border-white/10 bg-slate-950 px-2.5 py-0.5 text-xs text-slate-300"
+                      >
+                        {c.name}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <div>
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  Maîtrise mesurée (de la plus fragile à la plus solide)
+                </h3>
+                {pedagogy.conceptMastery.length === 0 ? (
+                  <p className="mt-2 text-xs text-slate-500">
+                    Aucune situation rendue : rien n&apos;est mesuré pour l&apos;instant.
+                  </p>
+                ) : (
+                  <ul className="mt-2 space-y-1.5">
+                    {pedagogy.conceptMastery.slice(0, 8).map((c) => (
+                      <li key={c.code} className="text-sm">
+                        <div className="flex items-center justify-between text-slate-300">
+                          <span>
+                            {c.name}
+                            <span className="ml-1.5 text-xs text-slate-500">
+                              · {c.students} élève{c.students > 1 ? "s" : ""}
+                            </span>
+                          </span>
+                          <span className="tabular-nums text-slate-400">{Math.round(c.average)}</span>
+                        </div>
+                        {/* 0 = barre vide : un zéro mesuré se voit comme un zéro. */}
+                        <div className="mt-0.5 h-1.5 rounded-full bg-slate-950">
+                          <div
+                            className={`h-1.5 rounded-full ${c.average < 40 ? "bg-red-400" : c.average < 70 ? "bg-amber-400" : "bg-emerald-400"}`}
+                            style={{ width: `${Math.max(0, Math.min(100, c.average))}%` }}
+                          />
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
             <div>
               <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
