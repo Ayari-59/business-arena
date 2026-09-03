@@ -26,6 +26,7 @@ import { DECISION_MODELS, modelByCode } from "@/config/pedagogy/models";
 import type { SituationDef } from "@/config/scenarios/nova/situations";
 import {
   MODEL_QUESTION_ID,
+  modelQuestionFor,
   type DecisionLever,
   type QuizQuestionDef,
 } from "@/config/scenarios/situation-kit";
@@ -359,7 +360,7 @@ export async function submitQuiz(args: {
   if (instance.quiz) throw new Error("Le QCM de cette situation est déjà validé");
   // L'enseignant a retiré les QCM de cette partie : le formulaire n'est plus
   // servi, et une soumission forgée ne doit pas non plus être acceptée.
-  const asked = askedQuestions(def, quizModeFromProfile(game?.difficultyProfile));
+  const asked = askedQuestions(def, quizModeFromProfile(game?.difficultyProfile), modelCtxOf(game));
   if (asked.length === 0) {
     throw new Error("Les QCM sont désactivés pour cette partie");
   }
@@ -690,10 +691,31 @@ async function recomputeSkills(userId: string): Promise<void> {
  * que la question du modèle d'analyse : les questions de connaissances
  * redemandent hors contexte ce que le diagnostic teste déjà en situation.
  */
-function askedQuestions(def: SituationDef, mode: QuizMode): QuizQuestionDef[] {
+/** Niveau + graine d'une partie : reconstruit la question du modèle par niveau (P8). */
+export interface ModelCtx {
+  level: number;
+  seed: number;
+}
+
+function modelCtxOf(game: typeof games.$inferSelect | undefined): ModelCtx | undefined {
+  if (!game) return undefined;
+  return { level: presetFromProfile(game.difficultyProfile).level, seed: Number(game.seed) };
+}
+
+/**
+ * Questions réellement posées pour cette partie. Le mode « model » ne garde
+ * que la question du modèle d'analyse. Avec un contexte de partie, la question
+ * du modèle est reconstruite pour le niveau et la graine (distracteurs par
+ * niveau, ordre mélangé) ; sans contexte, la version canonique suffit (les
+ * appels qui ne regardent que le NOMBRE de questions n'ont pas besoin du niveau).
+ */
+function askedQuestions(def: SituationDef, mode: QuizMode, ctx?: ModelCtx): QuizQuestionDef[] {
   if (mode === "off") return [];
-  if (mode === "model") return def.quiz.filter((q) => q.id === MODEL_QUESTION_ID);
-  return def.quiz;
+  const base = mode === "model" ? def.quiz.filter((q) => q.id === MODEL_QUESTION_ID) : def.quiz;
+  if (!ctx) return base;
+  return base.map((q) =>
+    q.id === MODEL_QUESTION_ID ? modelQuestionFor(def, ctx.level, ctx.seed) : q,
+  );
 }
 
 /** Modèle attendu d'une situation, pour le débriefing quand la question n'est pas posée. */
@@ -767,14 +789,30 @@ export interface SituationView {
   } | null;
 }
 
+/** Exactement trois notions par modèle candidat (P8) : celles du modèle, complétées au besoin par celles de la situation. */
+function troisNotions(modelConceptCodes: string[], situationConceptCodes: string[]): string[] {
+  const noms: string[] = [];
+  const vus = new Set<string>();
+  for (const code of [...modelConceptCodes, ...situationConceptCodes]) {
+    const nom = conceptByCode.get(code)?.name;
+    if (nom && !vus.has(nom)) {
+      vus.add(nom);
+      noms.push(nom);
+    }
+    if (noms.length === 3) break;
+  }
+  return noms;
+}
+
 function toView(
   instance: typeof situationInstances.$inferSelect,
   def: SituationDef,
   levels: number[],
   quizMode: QuizMode = "full",
   hintCap: { cap: number; reason: string } = { cap: 5, reason: "" },
+  modelCtx?: ModelCtx,
 ): SituationView {
-  const asked = askedQuestions(def, quizMode);
+  const asked = askedQuestions(def, quizMode, modelCtx);
   const modelAsked = asked.some((q) => q.id === MODEL_QUESTION_ID);
   const debriefed = instance.status === "debriefed";
   const diagnosis = instance.diagnosis as SituationView["diagnosis"];
@@ -812,22 +850,24 @@ function toView(
       if (next === null || debriefed || next <= hintCap.cap) return null;
       return def.hints.some((h) => h.level === next) ? hintCap.reason : null;
     })(),
-    analyticalHints: debriefed
-      ? []
-      : Object.entries(def.modelRelevance)
-          .filter(([, rel]) => rel === "optimal" || rel === "acceptable")
-          .map(([code]) => modelByCode.get(code))
-          .filter((m): m is NonNullable<typeof m> => Boolean(m))
-          .map((m) => ({
-            code: m.code,
-            name: m.name,
-            objective: m.objective,
-            difficulty: m.difficulty,
-            keyPoints: m.conceptCodes
-              .map((c) => conceptByCode.get(c)?.name)
-              .filter((n): n is string => Boolean(n)),
-          }))
-          .sort((a, b) => a.name.localeCompare(b.name, "fr")),
+    // « Points clés à examiner » : servis seulement APRÈS la réponse au modèle
+    // (P8) — ou tout de suite si aucune question n'est posée. Avant la réponse,
+    // les livrer reviendrait à souffler le cadre d'analyse.
+    analyticalHints:
+      debriefed || !(quizStored != null || asked.length === 0)
+        ? []
+        : Object.entries(def.modelRelevance)
+            .filter(([, rel]) => rel === "optimal" || rel === "acceptable")
+            .map(([code]) => modelByCode.get(code))
+            .filter((m): m is NonNullable<typeof m> => Boolean(m))
+            .map((m) => ({
+              code: m.code,
+              name: m.name,
+              objective: m.objective,
+              difficulty: m.difficulty,
+              keyPoints: troisNotions(m.conceptCodes, def.conceptCodes),
+            }))
+            .sort((a, b) => a.name.localeCompare(b.name, "fr")),
     decisionLevers: debriefed ? [] : (def.decisionLevers ?? []),
     triggerFacts: (instance.triggerContext as TriggerFact[] | null) ?? null,
     diagnosis,
@@ -922,7 +962,7 @@ export async function getTeamSituations(
     const def = situationByCode.get(codeById.get(instance.situationId) ?? "");
     if (!def) continue;
     const levels = levelsByInstance.get(instance.id) ?? [];
-    const view = toView(instance, def, levels, quizMode, hintCap);
+    const view = toView(instance, def, levels, quizMode, hintCap, modelCtxOf(game));
     if (currentRound && instance.roundId === currentRound.id && instance.status !== "debriefed") {
       current.push(view);
     } else if (resolvedRoundIds.has(instance.roundId)) {
