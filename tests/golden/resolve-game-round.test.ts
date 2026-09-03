@@ -140,7 +140,7 @@ describe("C — ordre pedagogy → scoring", () => {
     const gameId = await createSoloGame(userId, "quarter", 2);
     await resolveCurrentRound({ gameId, userId, playerDecisions: DECISIONS });
 
-    // Si le scoring existait, les scores doivent être présents (7 dimensions × N équipes)
+    // Si le scoring existait, les scores doivent être présents (6 dimensions v2 × N équipes)
     const allRounds = await db.select().from(rounds).where(eq(rounds.gameId, gameId));
     const resolvedRound = allRounds.find((r) => r.status === "resolved")!;
 
@@ -149,8 +149,8 @@ describe("C — ordre pedagogy → scoring", () => {
       .from(scores)
       .where(eq(scores.roundId, resolvedRound.id));
 
-    // 7 dimensions BPI × 2 équipes = 14 scores
-    expect(scoreRows.length).toBe(14);
+    // 6 dimensions BPI v2 × 2 équipes = 12 scores
+    expect(scoreRows.length).toBe(12);
     for (const row of scoreRows) {
       expect(Number(row.normalized)).toBeGreaterThanOrEqual(0);
       expect(Number(row.normalized)).toBeLessThanOrEqual(100);

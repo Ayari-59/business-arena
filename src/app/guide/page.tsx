@@ -277,7 +277,7 @@ export default function GuidePage() {
         <Section
           id="bpi"
           title="📊 Le Business Performance Index"
-          intro="Le classement ne récompense pas que le profit : le BPI (0-100) pondère 7 dimensions."
+          intro="Le classement ne récompense pas que le profit : le BPI (0-100) pondère 6 dimensions."
         >
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -291,12 +291,11 @@ export default function GuidePage() {
               <tbody className="text-slate-300">
                 {[
                   ["Économique", "30 %", "résultat d'exploitation, chiffre d'affaires"],
-                  ["Financière", "20 %", "trésorerie nette, équilibre FRNG/BFR"],
+                  ["Financière", "20 %", "variation du résultat net (une perte plafonne à 20)"],
                   ["Commerciale", "15 %", "part de marché, service de la demande"],
-                  ["Opérationnelle", "10 %", "utilisation des capacités, ruptures"],
+                  ["Pilotage", "20 %", "exécution (capacités, ruptures) et cohérence des décisions prises"],
                   ["Rentabilité", "10 %", "rentabilité des capitaux (ROE)"],
-                  ["Stratégie", "10 %", "cohérence et anticipation des décisions"],
-                  ["Maîtrise des modèles", "5 %", "bons diagnostics, QCM réussis, sobriété en indices"],
+                  ["Maîtrise décisionnelle", "5 %", "situations rendues : bon diagnostic et bon modèle"],
                 ].map(([d, w, m]) => (
                   <tr key={d} className="border-t border-white/5">
                     <td className="py-2 pr-3">{d}</td>
