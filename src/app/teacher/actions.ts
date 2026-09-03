@@ -24,7 +24,8 @@ import {
   startQualification,
 } from "@/services/competition.service";
 import { setMissedPolicy } from "@/services/pedagogy.service";
-import { DEFAULT_SCENARIO_CODE, SCENARIOS } from "@/config/scenarios/registry";
+import { DEFAULT_SCENARIO_CODE } from "@/config/scenarios/registry";
+import { canTeacherLaunchScenario } from "@/services/scenario-editor.service";
 import { DEFAULT_QUIZ_MODE } from "@/config/difficulty";
 
 export interface FormState {
@@ -83,8 +84,6 @@ export async function logoutEverywhereAction(): Promise<void> {
   redirect("/teacher/login");
 }
 
-const SCENARIO_CODES = SCENARIOS.map((s) => s.code) as [string, ...string[]];
-
 const createGameSchema = z.object({
   periodicity: z.enum(["month", "quarter", "year"]).catch("quarter"),
   humanTeamsCount: z.coerce.number().int().min(1).max(8).catch(4),
@@ -93,8 +92,10 @@ const createGameSchema = z.object({
   // Tours joués : vide ou hors bornes = tous ceux du scénario. Le service
   // rabote de toute façon à ce que le secteur porte.
   roundsCount: z.coerce.number().int().min(1).max(24).optional().catch(undefined),
-  // Secteur joué : un code inconnu retombe sur le scénario par défaut.
-  scenarioCode: z.enum(SCENARIO_CODES).catch(DEFAULT_SCENARIO_CODE),
+  // Secteur joué : un secteur intégré OU un scénario enseignant. La
+  // vérification d'autorisation (propriété du scénario) se fait dans l'action ;
+  // un code non lançable retombe sur le scénario par défaut.
+  scenarioCode: z.string().min(1).catch(DEFAULT_SCENARIO_CODE),
   // Questions posées dans les situations (voir QUIZ_MODES).
   quizMode: z.enum(["full", "model", "off"]).catch(DEFAULT_QUIZ_MODE),
 });
@@ -171,6 +172,11 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
       "Votre compte n'est rattaché à aucun établissement, la partie n'a pas pu être créée.",
     );
   }
+  // Un secteur intégré ou l'un des scénarios de CE prof ; sinon on retombe sur
+  // le scénario par défaut plutôt que de lancer le brouillon d'un autre.
+  const scenarioCode = (await canTeacherLaunchScenario(parsed.scenarioCode, session.userId))
+    ? parsed.scenarioCode
+    : DEFAULT_SCENARIO_CODE;
   let gameId: string;
   try {
     ({ gameId } = await createClassGame({
@@ -183,7 +189,7 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
       economicOverrides,
       scoringWeightOverrides,
       variableWorld: formData.get("variableWorld") === "on",
-      scenarioCode: parsed.scenarioCode,
+      scenarioCode,
       quizMode: parsed.quizMode,
       roundsCount: parsed.roundsCount,
     }));

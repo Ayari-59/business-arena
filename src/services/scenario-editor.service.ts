@@ -94,11 +94,33 @@ export async function createScenarioDraftFromBuiltIn(args: {
   return toSummary(row);
 }
 
+/**
+ * Charge une ligne de scénario ENSEIGNANT éditable et vérifie la propriété.
+ * `authorId` fourni ⇒ la ligne doit lui appartenir (garde d'autorisation) ; on
+ * refuse aussi tout secteur intégré. Jette sinon.
+ */
+async function loadEditableRow(
+  id: string,
+  authorId?: string,
+): Promise<typeof scenarios.$inferSelect> {
+  const row = (await db.select().from(scenarios).where(eq(scenarios.id, id)))[0];
+  if (!row || row.definition == null) throw new Error("Scénario introuvable");
+  if (isBuiltInScenarioCode(row.code)) {
+    throw new Error("Un secteur intégré ne s'édite pas");
+  }
+  if (authorId !== undefined && row.authorId !== authorId) {
+    throw new Error("Ce scénario ne vous appartient pas");
+  }
+  return row;
+}
+
 export async function getScenarioById(
   id: string,
+  authorId?: string,
 ): Promise<{ summary: ScenarioSummary; definition: StoredScenarioDefinition } | null> {
   const row = (await db.select().from(scenarios).where(eq(scenarios.id, id)))[0];
   if (!row || row.definition == null) return null;
+  if (authorId !== undefined && row.authorId !== authorId) return null;
   return { summary: toSummary(row), definition: parseStoredScenario(row.definition) };
 }
 
@@ -114,17 +136,15 @@ export async function listScenariosByAuthor(authorId: string): Promise<ScenarioS
 /**
  * Écrit une nouvelle version de l'habillage/config d'un brouillon. L'identité de
  * la ligne (code, version) fait foi : elle est ré-imposée à la config stockée,
- * pour qu'un éditeur ne puisse pas la désynchroniser. Refuse un scénario intégré.
+ * pour qu'un éditeur ne puisse pas la désynchroniser. Refuse un secteur intégré
+ * et, si `authorId` est fourni, un scénario d'un autre auteur.
  */
 export async function updateScenarioDefinition(
   id: string,
   next: StoredScenarioDefinition,
+  authorId?: string,
 ): Promise<ScenarioSummary> {
-  const row = (await db.select().from(scenarios).where(eq(scenarios.id, id)))[0];
-  if (!row) throw new Error("Scénario introuvable");
-  if (isBuiltInScenarioCode(row.code)) {
-    throw new Error("Un secteur intégré ne s'édite pas");
-  }
+  const row = await loadEditableRow(id, authorId);
   const stored = parseStoredScenario({
     ...next,
     code: row.code,
@@ -149,12 +169,9 @@ export async function updateScenarioDefinition(
 export async function setScenarioStatus(
   id: string,
   status: "draft" | "published" | "archived",
+  authorId?: string,
 ): Promise<ScenarioSummary> {
-  const row = (await db.select().from(scenarios).where(eq(scenarios.id, id)))[0];
-  if (!row) throw new Error("Scénario introuvable");
-  if (isBuiltInScenarioCode(row.code)) {
-    throw new Error("Un secteur intégré n'a pas de statut modifiable");
-  }
+  await loadEditableRow(id, authorId);
   const [updated] = await db
     .update(scenarios)
     .set({ status, updatedAt: new Date() })
@@ -162,4 +179,24 @@ export async function setScenarioStatus(
     .returning();
   if (!updated) throw new Error("Changement de statut impossible");
   return toSummary(updated);
+}
+
+export async function deleteScenario(id: string, authorId?: string): Promise<void> {
+  await loadEditableRow(id, authorId);
+  await db.delete(scenarios).where(eq(scenarios.id, id));
+}
+
+/**
+ * Un enseignant peut-il LANCER une partie sur ce code ? Vrai pour un secteur
+ * intégré, ou pour l'un de ses propres scénarios (quel que soit le statut). Le
+ * partage (publiés d'autrui) viendra plus tard ; ici on protège d'abord contre
+ * le lancement du brouillon d'un autre.
+ */
+export async function canTeacherLaunchScenario(
+  code: string,
+  teacherId: string,
+): Promise<boolean> {
+  if (isBuiltInScenarioCode(code)) return true;
+  const rows = await db.select().from(scenarios).where(eq(scenarios.code, code));
+  return rows.some((r) => r.definition != null && r.authorId === teacherId);
 }

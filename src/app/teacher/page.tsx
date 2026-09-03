@@ -14,6 +14,8 @@ import {
   SECTOR_LABELS,
   economicDefaults,
 } from "@/config/scenarios/registry";
+import { listScenariosByAuthor } from "@/services/scenario-editor.service";
+import { resolveScenarioDefinition } from "@/services/scenario-source.service";
 import { CompetitionCreateForm } from "@/components/competition-create-form";
 import { GuardedForm } from "@/components/guarded-action";
 import { EconomicParams } from "@/components/economic-params";
@@ -36,6 +38,23 @@ export default async function TeacherDashboard({
   const staff = await getStaffContext(session.userId);
   const isOrgAdmin = staff?.organizations.some((o) => o.role === "org_admin") ?? false;
 
+  // Scénarios enseignants PUBLIÉS de ce prof : lançables comme un secteur
+  // intégré. Un brouillon reste privé à l'éditeur tant qu'il n'est pas publié.
+  const mesScenarios = await listScenariosByAuthor(session.userId);
+  const scenariosPublies = await Promise.all(
+    mesScenarios
+      .filter((s) => s.status === "published")
+      .map(async (s) => {
+        const def = await resolveScenarioDefinition(s.code);
+        return {
+          code: s.code,
+          label: `★ ${def.title}`,
+          unit: def.vocabulary.unit,
+          defaults: economicDefaults(def),
+        };
+      }),
+  );
+
   return (
     <main id="main" className="mx-auto max-w-4xl space-y-8 p-6">
       <header className="flex items-end justify-between">
@@ -44,6 +63,12 @@ export default async function TeacherDashboard({
           <h1 className="text-2xl font-bold">Mes parties</h1>
         </div>
         <div className="flex items-center gap-4">
+          <Link
+            href="/teacher/scenarios"
+            className="text-xs text-amber-300 underline-offset-4 hover:underline"
+          >
+            Mes scénarios
+          </Link>
           <Link
             href="/teacher/usage"
             className="text-xs text-amber-300 underline-offset-4 hover:underline"
@@ -101,12 +126,15 @@ export default async function TeacherDashboard({
           className="mt-4 grid gap-4 sm:grid-cols-3"
         >
           <EconomicParams
-            scenarios={SCENARIOS.map((d) => ({
-              code: d.code,
-              label: `${SECTOR_LABELS[d.sector]} · ${d.title}`,
-              unit: d.vocabulary.unit,
-              defaults: economicDefaults(d),
-            }))}
+            scenarios={[
+              ...SCENARIOS.map((d) => ({
+                code: d.code,
+                label: `${SECTOR_LABELS[d.sector]} · ${d.title}`,
+                unit: d.vocabulary.unit,
+                defaults: economicDefaults(d),
+              })),
+              ...scenariosPublies,
+            ]}
             defaultCode={DEFAULT_SCENARIO_CODE}
           />
 
