@@ -1,23 +1,32 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 export type SegmentedTab = { key: string; label: string; icon?: string };
 
 /**
  * Un jeu d'onglets local et autonome : contrairement à `ArenaLayout`, il ne
- * touche ni au hash de l'URL ni à une barre collante — plusieurs instances
- * (une par période de l'accordéon) cohabitent donc sans se marcher dessus.
+ * touche ni à une barre collante ni, par défaut, au hash de l'URL — plusieurs
+ * instances (une par période de l'accordéon) cohabitent sans se marcher dessus.
  * Seul l'onglet dont le contenu est fourni (non `null`) est proposé.
+ *
+ * `syncAnchors` : les clés d'onglets qui portent une ancre de page (un panneau
+ * dont le contenu a un `id` cible d'un lien `href="#id"`). Comme seul le panneau
+ * actif est monté, un lien vers un onglet inactif ne trouverait pas sa cible ;
+ * on écoute donc le hash et on active l'onglet correspondant avant de défiler.
+ * À ne fournir QUE là où ces ancres existent (le tour en cours), pour qu'aucune
+ * autre instance ne réagisse au même hash.
  */
 export function SegmentedTabs({
   tabs,
   children,
   defaultKey,
+  syncAnchors,
 }: {
   tabs: SegmentedTab[];
   children: Record<string, ReactNode>;
   defaultKey?: string;
+  syncAnchors?: string[];
 }) {
   const visible = tabs.filter((t) => children[t.key] != null);
   const [active, setActive] = useState(
@@ -26,6 +35,27 @@ export function SegmentedTabs({
       : visible[0]?.key ?? "",
   );
   const current = visible.find((t) => t.key === active) ? active : visible[0]?.key;
+
+  const visibleKeys = visible.map((t) => t.key).join(",");
+  const anchorKeys = (syncAnchors ?? []).join(",");
+  useEffect(() => {
+    if (!anchorKeys) return;
+    const anchors = anchorKeys.split(",");
+    const keys = visibleKeys ? visibleKeys.split(",") : [];
+    const appliquerDepuisHash = () => {
+      const cible = window.location.hash.slice(1);
+      if (!anchors.includes(cible) || !keys.includes(cible)) return;
+      setActive(cible);
+      // Le panneau se monte au rendu suivant : on défile une fois qu'il existe.
+      requestAnimationFrame(() =>
+        document.getElementById(cible)?.scrollIntoView({ behavior: "smooth", block: "start" }),
+      );
+    };
+    appliquerDepuisHash();
+    window.addEventListener("hashchange", appliquerDepuisHash);
+    return () => window.removeEventListener("hashchange", appliquerDepuisHash);
+  }, [anchorKeys, visibleKeys]);
+
   if (visible.length === 0) return null;
 
   return (
