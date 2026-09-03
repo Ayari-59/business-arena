@@ -253,9 +253,9 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
               {/* Le tour en cours porte les mêmes onglets que les tours clos, dès
                   le premier tour : Situation (à lire), Décisions (à rendre) et
                   Résultats — ce dernier vide tant que le tour n'est pas clos.
-                  Défaut sur « Décisions » : le formulaire reste sous les yeux. */}
+                  Défaut sur « Situation » : on lit l'énoncé avant de décider. */}
               <SegmentedTabs
-                defaultKey="decisions"
+                defaultKey="situation"
                 syncAnchors={["situation", "decisions"]}
                 tabs={[
                   { key: "situation", label: "Situation", icon: "📋" },

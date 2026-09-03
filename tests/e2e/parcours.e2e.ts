@@ -80,9 +80,9 @@ describe("parcours enseignant et élève", () => {
     await eleve.fill('input[name="code"]', codeInvitation);
     await eleve.fill('input[name="pseudo"]', "Élève E2E");
     await eleve.getByRole("button", { name: "Rejoindre la partie" }).click();
-    // La page est un accordéon de périodes : la période active (tour en cours)
-    // est dépliée d'emblée, formulaire de décision compris — aucun onglet à
-    // ouvrir pour atteindre le prix.
+    // La période active (tour en cours) ouvre sur l'onglet « Situation » ; on
+    // passe à « Décisions » pour atteindre le formulaire (prix, volume, etc.).
+    await eleve.getByRole("tab", { name: /Décisions/ }).first().click();
     await eleve.waitForSelector('input[name="price"]', { timeout: 30_000 });
     expect(eleve.url()).toMatch(/\/arena\//);
 
@@ -121,8 +121,9 @@ describe("parcours enseignant et élève", () => {
     const vu = await texte(eleve);
     expect(vu).not.toMatch(/Session expirée|Décisions invalides/i);
     expect(vu).toContain("Décisions enregistrées");
-    // Après recharge, la période active reste dépliée : le prix enregistré se
-    // relit directement, sans navigation par onglet.
+    // Après recharge, le tour rouvre sur « Situation » : on repasse à
+    // « Décisions » pour relire le prix enregistré.
+    await eleve.getByRole("tab", { name: /Décisions/ }).first().click();
     await eleve.waitForSelector('input[name="price"]', { timeout: 30_000 });
     expect(await eleve.inputValue('input[name="price"]')).toBe("780");
   });
@@ -217,10 +218,11 @@ describe("parcours enseignant et élève", () => {
     await executive.fill('input[name="code"]', code);
     await executive.fill('input[name="pseudo"]', "Élève Executive");
     await executive.getByRole("button", { name: "Rejoindre la partie" }).click();
-    // Le formulaire range ses décisions par famille en accordéon : le champ
-    // dividende vit dans « Financer », repliée par défaut. On attend le
-    // formulaire (le prix, dans une famille ouverte), puis on déplie tout pour
-    // que le champ et son texte comptent dans le rendu visible.
+    // Le tour ouvre sur « Situation » : on passe à « Décisions » pour le
+    // formulaire. Il range ses décisions par famille en accordéon : le champ
+    // dividende vit dans « Financer », repliée par défaut. On attend le prix,
+    // puis on déplie tout pour que le champ dividende compte dans le rendu.
+    await executive.getByRole("tab", { name: /Décisions/ }).first().click();
     await executive.waitForSelector('input[name="price"]', { timeout: 30_000 });
     await executive.evaluate(() =>
       document.querySelectorAll("details").forEach((d) => d.setAttribute("open", "")),
