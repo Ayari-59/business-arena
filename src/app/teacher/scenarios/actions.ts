@@ -7,7 +7,9 @@ import {
   createScenarioDraftFromBuiltIn,
   deleteScenario,
   deleteSituation,
+  forkScenario,
   getScenarioById,
+  importScenario,
   setScenarioStatus,
   updateScenarioDefinition,
   updateSituationText,
@@ -283,6 +285,42 @@ export async function publishScenarioAction(formData: FormData): Promise<void> {
   }
   await setScenarioStatus(id, status, session.userId);
   redirect("/teacher/scenarios");
+}
+
+/** Copie un scénario partagé (ou l'un des siens) en un nouveau brouillon. */
+export async function forkScenarioAction(formData: FormData): Promise<void> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  const sourceId = texte(formData, "sourceId");
+  const title = texte(formData, "title");
+  let summary;
+  try {
+    summary = await forkScenario(sourceId, session.userId, title || "Scénario copié");
+  } catch (e) {
+    const raison = e instanceof Error ? e.message : "Copie impossible.";
+    redirect("/teacher/scenarios?echec=" + encodeURIComponent(raison));
+  }
+  redirect(`/teacher/scenarios/${summary.id}`);
+}
+
+/** Importe un scénario depuis un fichier JSON (export d'un autre espace). */
+export async function importScenarioAction(formData: FormData): Promise<void> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  const file = formData.get("file");
+  const title = texte(formData, "title");
+  if (!(file instanceof File) || file.size === 0) {
+    redirect("/teacher/scenarios?echec=" + encodeURIComponent("Aucun fichier fourni."));
+  }
+  let summary;
+  try {
+    const parsed = JSON.parse(await (file as File).text());
+    summary = await importScenario(parsed, session.userId, title || "Scénario importé");
+  } catch (e) {
+    const raison = e instanceof Error ? e.message : "Fichier illisible.";
+    redirect("/teacher/scenarios?echec=" + encodeURIComponent(`Import refusé : ${raison}`));
+  }
+  redirect(`/teacher/scenarios/${summary.id}`);
 }
 
 export async function deleteScenarioAction(formData: FormData): Promise<void> {

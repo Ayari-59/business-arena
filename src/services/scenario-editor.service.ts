@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { scenarios } from "@/db/schema";
+import { scenarios, users } from "@/db/schema";
 import { isBuiltInScenarioCode, scenarioByCode } from "@/config/scenarios/registry";
 import {
   hydrateDefinition,
@@ -53,9 +53,50 @@ function toSummary(row: typeof scenarios.$inferSelect): ScenarioSummary {
 }
 
 /**
- * Duplique un secteur INTÉGRÉ en un brouillon enseignant éditable, sous une
- * identité neuve (code unique, version « 1 », statut `draft`). Le brouillon est
- * une copie de données autonome : éditer un secteur intégré reste impossible.
+ * Insère un nouveau brouillon enseignant à partir de données d'habillage
+ * (`StoredScenarioDefinition`), sous une identité NEUVE (code unique, version
+ * « 1 », statut `draft`). Cœur commun à la duplication d'un secteur, au fork
+ * d'un scénario partagé et à l'import. On repique l'identité neuve dans la
+ * config moteur ET l'habillage : le code stocké doit coïncider avec la ligne
+ * (le snapshot et la résolution s'y fient).
+ */
+async function insertDraftFromStored(
+  source: StoredScenarioDefinition,
+  authorId: string,
+  title: string,
+): Promise<ScenarioSummary> {
+  const code = newScenarioCode();
+  const version = "1";
+  const stored: StoredScenarioDefinition = {
+    ...source,
+    code,
+    title,
+    scenario: { ...source.scenario, code, version },
+  };
+  const [row] = await db
+    .insert(scenarios)
+    .values({
+      code,
+      version,
+      title,
+      summary: stored.tagline,
+      minCompanies: 1,
+      maxCompanies: 8,
+      roundsCount: stored.scenario.roundsCount,
+      baseDifficulty: 1,
+      config: stored.scenario,
+      definition: stored,
+      status: "draft",
+      authorId,
+    })
+    .returning();
+  if (!row) throw new Error("Création du brouillon de scénario impossible");
+  return toSummary(row);
+}
+
+/**
+ * Duplique un secteur INTÉGRÉ en un brouillon enseignant éditable. Le brouillon
+ * est une copie de données autonome : éditer un secteur intégré reste impossible.
  */
 export async function createScenarioDraftFromBuiltIn(args: {
   baseCode: string;
@@ -65,37 +106,58 @@ export async function createScenarioDraftFromBuiltIn(args: {
   if (!isBuiltInScenarioCode(args.baseCode)) {
     throw new Error(`Base inconnue : « ${args.baseCode} » n'est pas un secteur intégré`);
   }
-  const base = scenarioByCode(args.baseCode);
-  const code = newScenarioCode();
-  const version = "1";
-  // On repique l'identité neuve dans la config moteur ET l'habillage : le code
-  // stocké doit coïncider avec la ligne (le snapshot et la résolution s'y fient).
-  const stored: StoredScenarioDefinition = {
-    ...serializeDefinition(base),
-    code,
-    title: args.title,
-    scenario: { ...base.scenario, code, version },
-  };
+  return insertDraftFromStored(serializeDefinition(scenarioByCode(args.baseCode)), args.authorId, args.title);
+}
 
-  const [row] = await db
-    .insert(scenarios)
-    .values({
-      code,
-      version,
-      title: args.title,
-      summary: stored.tagline,
-      minCompanies: 1,
-      maxCompanies: 8,
-      roundsCount: stored.scenario.roundsCount,
-      baseDifficulty: 1,
-      config: stored.scenario,
-      definition: stored,
-      status: "draft",
-      authorId: args.authorId,
-    })
-    .returning();
-  if (!row) throw new Error("Création du brouillon de scénario impossible");
-  return toSummary(row);
+export interface SharedScenario extends ScenarioSummary {
+  authorName: string | null;
+}
+
+/**
+ * Scénarios PUBLIÉS par d'AUTRES enseignants — la banque partagée. Un scénario
+ * n'y figure qu'une fois publié ; les brouillons restent privés à leur auteur.
+ */
+export async function listSharedScenarios(viewerId: string): Promise<SharedScenario[]> {
+  const rows = await db
+    .select({ s: scenarios, authorName: users.displayName })
+    .from(scenarios)
+    .leftJoin(users, eq(users.id, scenarios.authorId))
+    .where(and(eq(scenarios.status, "published")))
+    .orderBy(desc(scenarios.updatedAt));
+  return rows
+    .filter((r) => r.s.definition != null && r.s.authorId !== viewerId)
+    .map((r) => ({ ...toSummary(r.s), authorName: r.authorName }));
+}
+
+/**
+ * Copie un scénario existant en un NOUVEAU brouillon appartenant à `authorId`.
+ * Autorisé si le scénario est publié (banque partagée) OU s'il appartient déjà
+ * à l'appelant (dupliquer son propre scénario). Refuse le brouillon d'un autre.
+ */
+export async function forkScenario(
+  sourceId: string,
+  authorId: string,
+  title: string,
+): Promise<ScenarioSummary> {
+  const row = (await db.select().from(scenarios).where(eq(scenarios.id, sourceId)))[0];
+  if (!row || row.definition == null) throw new Error("Scénario introuvable");
+  if (row.status !== "published" && row.authorId !== authorId) {
+    throw new Error("Ce scénario n'est pas partagé");
+  }
+  return insertDraftFromStored(parseStoredScenario(row.definition), authorId, title);
+}
+
+/**
+ * Importe un scénario depuis des données JSON (export d'un autre espace) en un
+ * nouveau brouillon. `parseStoredScenario` valide la forme et re-valide la
+ * config moteur ; un JSON incohérent est refusé sans rien créer.
+ */
+export async function importScenario(
+  raw: unknown,
+  authorId: string,
+  title: string,
+): Promise<ScenarioSummary> {
+  return insertDraftFromStored(parseStoredScenario(raw), authorId, title);
 }
 
 /**

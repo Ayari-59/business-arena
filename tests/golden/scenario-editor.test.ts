@@ -22,7 +22,10 @@ import {
   createScenarioDraftFromBuiltIn,
   deleteScenario,
   deleteSituation,
+  forkScenario,
   getScenarioById,
+  importScenario,
+  listSharedScenarios,
   runEssaiABlanc,
   setScenarioStatus,
   updateScenarioDefinition,
@@ -258,6 +261,66 @@ describe("création d'une situation de zéro", () => {
     const sansOptimal = { ...nouvelleSituation(), modelRelevance: { cvp_analysis: "acceptable" as const } };
     await expect(addSituation(s.id, sansOptimal, alice)).rejects.toThrow(/optimal/);
     await expect(addSituation(s.id, nouvelleSituation(), bob)).rejects.toThrow(/appartient/);
+  });
+});
+
+describe("partage, fork et import", () => {
+  it("un scénario publié apparaît dans la banque partagée des autres, pas de son auteur", async () => {
+    const s = await createScenarioDraftFromBuiltIn({
+      baseCode: "nova",
+      authorId: alice,
+      title: "NOVA — à partager",
+    });
+    // Brouillon : invisible pour tous dans la banque.
+    expect((await listSharedScenarios(bob)).some((x) => x.id === s.id)).toBe(false);
+    await setScenarioStatus(s.id, "published", alice);
+    // Publié : visible pour bob (avec le nom d'auteur), pas pour alice.
+    const pourBob = await listSharedScenarios(bob);
+    const vu = pourBob.find((x) => x.id === s.id);
+    expect(vu).toBeDefined();
+    expect(vu!.authorName).toBe("Alice");
+    expect((await listSharedScenarios(alice)).some((x) => x.id === s.id)).toBe(false);
+  });
+
+  it("forker un scénario publié en crée une copie possédée par le forkeur", async () => {
+    const s = await createScenarioDraftFromBuiltIn({
+      baseCode: "nova",
+      authorId: alice,
+      title: "NOVA — publié pour fork",
+    });
+    await setScenarioStatus(s.id, "published", alice);
+    const fork = await forkScenario(s.id, bob, "Ma copie");
+    expect(fork.code).not.toBe(s.code);
+    expect(fork.status).toBe("draft");
+    const chezBob = await getScenarioById(fork.id, bob);
+    expect(chezBob).not.toBeNull();
+    expect(chezBob!.summary.authorId).toBe(bob);
+    expect(await canTeacherLaunchScenario(fork.code, bob)).toBe(true);
+  });
+
+  it("forker le brouillon d'un autre est refusé", async () => {
+    const s = await createScenarioDraftFromBuiltIn({
+      baseCode: "nova",
+      authorId: alice,
+      title: "NOVA — brouillon privé",
+    });
+    await expect(forkScenario(s.id, bob, "vol")).rejects.toThrow(/pas partagé/);
+  });
+
+  it("l'import d'un JSON exporté crée un brouillon possédé, et refuse un JSON invalide", async () => {
+    const s = await createScenarioDraftFromBuiltIn({
+      baseCode: "hotel",
+      authorId: alice,
+      title: "Hôtel — export",
+    });
+    const exported = (await getScenarioById(s.id, alice))!.definition;
+    const imported = await importScenario(exported, bob, "Hôtel importé");
+    expect(imported.code).not.toBe(s.code);
+    const chezBob = await getScenarioById(imported.id, bob);
+    expect(chezBob!.summary.authorId).toBe(bob);
+    expect(chezBob!.definition.sector).toBe(exported.sector);
+
+    await expect(importScenario({ pas: "un scénario" }, bob, "x")).rejects.toThrow();
   });
 });
 
