@@ -71,6 +71,10 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
   const statutSituations = statutDesSituations(situations.current);
 
   const r = view.lastResult;
+  // Le tour que montrent les Résultats est le DERNIER tour CLOS, distinct du
+  // tour ouvert (`currentRound`) où l'on prend ses décisions. Sans ce repère,
+  // on confond « ce que je décide » et « ce qui s'est passé ».
+  const resultRound = view.history.at(-1)?.round ?? Math.max(1, view.currentRound - 1);
   const finished = view.status === "finished";
   const treasuryTone = r && r.functionalBalance.netTreasury < 0 ? "critical" : "neutral";
 
@@ -405,6 +409,16 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
 
             /* ═══ RÉSULTATS TAB ═══ */
             resultats: r ? (
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-slate-900 px-4 py-2.5">
+                  <span className="rounded-full border border-sky-400/30 bg-sky-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-sky-300">
+                    📊 {periodLabel(view.roundDays, resultRound)} · tour clos
+                  </span>
+                  <span className="text-xs text-slate-500">
+                    Ce qui s&apos;est passé au tour précédent. Vos décisions du tour en cours sont dans
+                    l&apos;onglet Décisions.
+                  </span>
+                </div>
               <DashboardTabs>
                 {{
                   synthese: (
@@ -855,14 +869,22 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                   ),
                 }}
               </DashboardTabs>
+              </div>
             ) : null,
 
             /* ═══ DÉCISIONS TAB ═══ */
             decisions: !finished ? (
               <section id="decisions" className="rounded-xl border border-white/10 bg-slate-900 p-6">
-                <h2 className="mb-4 text-sm font-semibold text-slate-200">
-                  Vos décisions · {periodLabel(view.roundDays, view.currentRound).toLowerCase()}
-                </h2>
+                <div className="mb-4 flex flex-wrap items-center gap-2">
+                  <span className="rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-300">
+                    ✏️ {periodLabel(view.roundDays, view.currentRound)} · tour en cours
+                  </span>
+                  <span className="text-xs text-slate-500">
+                    Le tour que vous jouez. Ses résultats apparaîtront dans l&apos;onglet Résultats une
+                    fois le tour clos.
+                  </span>
+                </div>
+                <h2 className="mb-4 text-sm font-semibold text-slate-200">Vos décisions</h2>
                 <DecisionForm
                   gameId={view.gameId}
                   roundIndex={view.currentRound}

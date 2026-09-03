@@ -136,6 +136,18 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
         <p className="mt-2 text-sm font-medium text-amber-200">{situation.problem}</p>
       </header>
 
+      {/* Deux temps : l'énoncé ci-dessus se LIT ; le diagnostic ci-dessous se
+          REND. La séparation évite de confondre ce qu'on découvre et ce qu'on
+          a à produire, tout en gardant l'énoncé sous les yeux. */}
+      <div className="mb-3 border-t border-white/10 pt-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-amber-400">
+          Votre analyse
+        </p>
+        <p className="mt-1 text-xs text-slate-500">
+          Posez votre diagnostic, choisissez le modèle d&apos;analyse, puis rendez.
+        </p>
+      </div>
+
       {situation.triggerFacts && situation.triggerFacts.length > 0 ? (
         <details className="mb-4 rounded-lg border border-slate-700/60 bg-slate-950/50">
           <summary className="cursor-pointer px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-400 hover:text-slate-300">
