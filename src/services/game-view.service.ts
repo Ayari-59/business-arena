@@ -126,6 +126,8 @@ export interface GameView {
     cumulativeNetIncome: number;
     rank: number;
     bpi: number;
+    /** Entreprise en cessation de paiements caractérisée (V2 couche 2, #5). */
+    defaillant: boolean;
   }[];
   /** Moyennes 0-100 des dimensions BPI de l'équipe du joueur (6 en v2, doc 08). */
   playerDimensions: Partial<Record<string, number>> | null;
@@ -573,6 +575,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         ),
         rank: r.rank,
         bpi: Number(r.bpi),
+        defaillant: Boolean((r.detail as { defaillant?: boolean })?.defaillant),
       };
     })
     .sort((a, b) => a.rank - b.rank);

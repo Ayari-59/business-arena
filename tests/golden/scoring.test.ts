@@ -16,7 +16,7 @@ vi.mock("@/db", async () => {
 });
 
 import { db } from "@/db";
-import { gameRankings, rounds, scores, users } from "@/db/schema";
+import { companyStates, gameRankings, rounds, scores, teams, users } from "@/db/schema";
 import {
   createSoloGame,
   resolveCurrentRound,
@@ -221,6 +221,49 @@ describe("4 — mise à jour du classement", () => {
       const detail = row.detail as { roundBpis: number[] };
       expect(detail.roundBpis).toHaveLength(2);
     }
+  });
+});
+
+describe("6 — marqueur de défaillance dans le classement", () => {
+  it("detail.defaillant vaut false pour une partie qui tourne normalement", async () => {
+    const gameId = await createSoloGame(userId, "quarter", 2);
+    await resolveCurrentRound({ gameId, userId, playerDecisions: DECISIONS });
+
+    const rankings = await db
+      .select()
+      .from(gameRankings)
+      .where(eq(gameRankings.gameId, gameId));
+
+    for (const row of rankings) {
+      expect((row.detail as { defaillant?: boolean }).defaillant).toBe(false);
+    }
+  });
+
+  it("un état défaillant écrit pour une équipe fait passer son detail.defaillant à true", async () => {
+    const gameId = await createSoloGame(userId, "quarter", 2);
+    await resolveCurrentRound({ gameId, userId, playerDecisions: DECISIONS });
+
+    const gameTeams = await db.select().from(teams).where(eq(teams.gameId, gameId));
+    const teamIds = gameTeams.map((t) => t.id);
+    const cible = teamIds[0]!;
+
+    // On force le dernier état connu de l'équipe cible à « defaillant » : c'est
+    // l'état le plus récent qui fait foi, indépendamment du reste du classement.
+    await db
+      .insert(companyStates)
+      .values({ teamId: cible, roundIndex: 999, state: { status: "defaillant" } })
+      .onConflictDoNothing();
+    await updateRankings(gameId, teamIds);
+
+    const rankings = await db
+      .select()
+      .from(gameRankings)
+      .where(eq(gameRankings.gameId, gameId));
+
+    const cibleRow = rankings.find((r) => r.teamId === cible)!;
+    const autreRow = rankings.find((r) => r.teamId !== cible)!;
+    expect((cibleRow.detail as { defaillant?: boolean }).defaillant).toBe(true);
+    expect((autreRow.detail as { defaillant?: boolean }).defaillant).toBe(false);
   });
 });
 

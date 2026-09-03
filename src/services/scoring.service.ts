@@ -1,6 +1,6 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { gameRankings, games, roundResults, rounds, scores, situationInstances, situations } from "@/db/schema";
+import { companyStates, gameRankings, games, roundResults, rounds, scores, situationInstances, situations } from "@/db/schema";
 import { parseScenarioConfig } from "@/config/scenarios/schema";
 import {
   BPI_V2_DIMENSIONS,
@@ -208,6 +208,23 @@ export async function updateRankings(gameId: string, teamIds: string[]): Promise
     ? await db.select().from(roundResults).where(inArray(roundResults.roundId, roundIds))
     : [];
 
+  // Défaillance : l'état le plus récent de chaque équipe fait foi. Le moteur
+  // n'écrit `status` que dès qu'une entreprise devient (ou a été) défaillante,
+  // donc l'absence de champ vaut « active ». On garde ce booléen dans le
+  // classement pour que l'arène et l'enseignant nomment la faillite sans
+  // rejouer le moteur.
+  const stateRows = teamIds.length
+    ? await db.select().from(companyStates).where(inArray(companyStates.teamId, teamIds))
+    : [];
+  const defaillantByTeam = new Map<string, boolean>();
+  const latestRoundByTeam = new Map<string, number>();
+  for (const row of stateRows) {
+    if (row.roundIndex >= (latestRoundByTeam.get(row.teamId) ?? -1)) {
+      latestRoundByTeam.set(row.teamId, row.roundIndex);
+      defaillantByTeam.set(row.teamId, (row.state as { status?: string }).status === "defaillant");
+    }
+  }
+
   const entries = teamIds.map((teamId) => {
     const roundBpis: number[] = [];
     const dimensionSums = new Map<string, { sum: number; n: number }>();
@@ -242,6 +259,7 @@ export async function updateRankings(gameId: string, teamIds: string[]): Promise
       roundBpis,
       cumulativeNetIncome,
       lastTreasury,
+      defaillant: defaillantByTeam.get(teamId) ?? false,
       financialAvg: financialAvg ? financialAvg.sum / financialAvg.n : 0,
       dimensions: Object.fromEntries(
         [...dimensionSums.entries()].map(([d, { sum, n }]) => [d, sum / n]),
@@ -265,6 +283,7 @@ export async function updateRankings(gameId: string, teamIds: string[]): Promise
             cumulativeNetIncome: entry.cumulativeNetIncome,
             roundBpis: entry.roundBpis.map((v) => Math.round(v * 100) / 100),
             dimensions: entry.dimensions,
+            defaillant: entry.defaillant,
           },
         })),
       )

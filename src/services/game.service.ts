@@ -240,7 +240,14 @@ export interface TeacherGameView {
     lastNetIncome: number | null;
     lastNetTreasury: number | null;
   }[];
-  ranking: { name: string; cumulativeNetIncome: number; rank: number; bpi: number }[];
+  ranking: {
+    name: string;
+    cumulativeNetIncome: number;
+    rank: number;
+    bpi: number;
+    /** Entreprise en cessation de paiements caractérisée (V2 couche 2, #5). */
+    defaillant: boolean;
+  }[];
 }
 
 export async function getTeacherGameView(
@@ -338,6 +345,7 @@ export async function getTeacherGameView(
         ),
         rank: r.rank,
         bpi: Number(r.bpi),
+        defaillant: Boolean((r.detail as { defaillant?: boolean })?.defaillant),
       }))
       .sort((a, b) => a.rank - b.rank),
   };

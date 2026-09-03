@@ -32,6 +32,7 @@ export default async function TeacherGamePage({
   const finished = view.status === "finished";
   const humanTeams = view.teams.filter((t) => t.controller === "human");
   const submittedCount = humanTeams.filter((t) => t.hasSubmitted).length;
+  const defaillantes = view.ranking.filter((row) => row.defaillant);
 
   return (
     <main id="main" className="mx-auto max-w-4xl space-y-8 p-6">
@@ -64,6 +65,29 @@ export default async function TeacherGamePage({
           </p>
         </div>
       </header>
+
+      {defaillantes.length > 0 ? (
+        <section className="rounded-xl border border-red-400/40 bg-red-950/30 p-4">
+          <h2 className="text-sm font-semibold text-red-300">
+            ⚠️ {defaillantes.length === 1 ? "Une entreprise défaillante" : `${defaillantes.length} entreprises défaillantes`}
+          </h2>
+          <p className="mt-1 text-xs text-red-200/80">
+            Deux tours consécutifs de cessation de paiements. L&apos;activité est gelée (ni
+            production, ni charges) et la note financière tombe à zéro. Seule une augmentation de
+            capital qui ramène le découvert sous le plafond fait repartir l&apos;entreprise.
+          </p>
+          <ul className="mt-2 flex flex-wrap gap-2">
+            {defaillantes.map((row) => (
+              <li
+                key={row.name}
+                className="rounded-full border border-red-400/40 bg-red-950/40 px-3 py-1 text-xs font-semibold text-red-200"
+              >
+                {row.name}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {!finished && view.mode === "learning" ? (
         <CardDeck
@@ -441,6 +465,11 @@ export default async function TeacherGamePage({
                 <span>
                   <span className="mr-2 text-slate-500">#{row.rank}</span>
                   {row.name}
+                  {row.defaillant ? (
+                    <span className="ml-2 rounded-full border border-red-400/40 bg-red-950/40 px-2 py-0.5 text-xs font-semibold text-red-300">
+                      ⚠️ Défaillante
+                    </span>
+                  ) : null}
                 </span>
                 <span className="tabular-nums">
                   <span className="font-semibold text-slate-100">BPI {row.bpi.toFixed(1)}</span>
