@@ -6,6 +6,7 @@ import { formatEuro } from "@/lib/format";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { closeRoundAction, setQuizModeAction } from "../../actions";
 import { QUIZ_MODES } from "@/config/difficulty";
+import { estParDefaut } from "@/config/decision-source";
 import { CardDeck } from "@/components/card-deck";
 import { SubmitButton } from "@/components/submit-button";
 import { GuardedForm } from "@/components/guarded-action";
@@ -154,7 +155,17 @@ export default async function TeacherGamePage({
                     {finished ? (
                       "—"
                     ) : t.hasSubmitted ? (
-                      <span className="text-emerald-400">validées</span>
+                      <>
+                        <span className="text-emerald-400">validées</span>
+                        {estParDefaut(t.decisionSource) ? (
+                          <span
+                            title="Prix et volume validés sans modification des valeurs proposées"
+                            className="ml-2 rounded bg-orange-950/60 px-1.5 py-0.5 text-xs text-orange-300"
+                          >
+                            par défaut
+                          </span>
+                        ) : null}
+                      </>
                     ) : (
                       <span className="text-amber-300">en attente</span>
                     )}

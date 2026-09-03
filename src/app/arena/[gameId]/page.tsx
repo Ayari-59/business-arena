@@ -844,6 +844,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                   vocabulary={view.vocabulary}
                   periodName={periodLabel(view.roundDays, view.currentRound).toLowerCase()}
                   defaults={view.pendingDecisions ?? view.lastDecisions ?? view.startingDecisions}
+                  proposed={view.proposedDecisions}
                   kind={view.kind}
                   alreadySubmitted={view.pendingDecisions !== null}
                   insuranceOffer={
