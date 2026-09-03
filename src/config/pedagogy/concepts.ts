@@ -472,3 +472,88 @@ export const CONCEPTS: ConceptDef[] = [
 ];
 
 export const conceptByCode = new Map(CONCEPTS.map((c) => [c.code, c]));
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * GRAPHE DES PRÉREQUIS (V2 couche 2, chantier #1).
+ *
+ * `A` figurant dans la liste de `B` se lit « avoir saisi A avant d'aborder B ».
+ * C'est un DAG : cinq racines de démarrage (listes vides), aucune boucle, et
+ * toute notion est atteignable depuis une racine. L'invariant est vérifié par
+ * tests/architecture/notions-dag.test.ts, qui échoue au moindre cycle, code
+ * inconnu, ou notion isolée.
+ *
+ * Portée : ce graphe et son seuil (PREREQUISITE_MASTERY_THRESHOLD) alimenteront
+ * le filtrage par niveau et l'ordonnancement des situations (chantier #2). Les
+ * situations DÉTECTÉES restent des moments réactifs, ouvertes sur leur seul
+ * déclencheur — on ne cache pas un atelier avancé (VAN/TRI) derrière une chaîne
+ * de maîtrise, sous peine de le rendre inatteignable en partie courte.
+ *
+ * Quatre arêtes ont été tranchées avec l'enseignant, contre la première ébauche :
+ *  - `frng` ancré sur `fixed_costs` (et non `depreciation`) : on comprend le
+ *    fonds de roulement comme « ressources durables − immobilisations » sans
+ *    maîtriser le mécanisme d'amortissement, qui n'en est qu'un raffinement.
+ *  - `bfr` ancré sur `stock` (et non `stock_rotation`) : le besoin en fonds de
+ *    roulement se comprend AVANT les ratios de rotation, qui expliquent ensuite
+ *    pourquoi il bouge. La rotation (KPI commercial) reste fille de `stock` : les
+ *    deux sont sœurs, pas parent-enfant — les lier sur-verrouillerait la rotation.
+ *  - `loan_schedule` conserve `net_treasury` : la fiche elle-même est écrite
+ *    autour du risque de trésorerie (« engager sa trésorerie future »,
+ *    « CAF < échéances = danger ») ; la détacher en ferait une racine ouverte
+ *    au grand débutant, à rebours du gating recherché.
+ *  - `ebitda_margin` placé en amont (marge & coût), avant le cycle
+ *    trésorerie / VAN : c'est un solde de marge d'exploitation, pas une notion
+ *    de gestion courante.
+ * ──────────────────────────────────────────────────────────────────────────── */
+export const CONCEPT_PREREQUISITES: Record<string, readonly string[]> = {
+  // Niveau 1 — Découverte : racines (démarrage débutant, aucun prérequis)
+  fixed_costs: [],
+  variable_costs: [],
+  demand_market_share: [],
+  capacity: [],
+  stock: [],
+
+  // Niveau 2 — Fondamentaux
+  revenue: ["demand_market_share"],
+  price_elasticity: ["demand_market_share"],
+  segmentation: ["demand_market_share"],
+  seasonality: ["demand_market_share"],
+  conversion_rate: ["demand_market_share"],
+  productivity: ["capacity"],
+  contribution_margin: ["revenue", "variable_costs"],
+
+  // Niveau 3 — Marge & coût
+  margin_rates: ["contribution_margin"],
+  breakeven: ["contribution_margin", "fixed_costs"],
+  full_unit_cost: ["fixed_costs", "variable_costs"],
+  depreciation: ["fixed_costs"],
+  psych_price: ["price_elasticity"],
+  markup_coefficient: ["margin_rates"],
+  stock_rotation: ["stock"],
+  assortment: ["segmentation"],
+  average_basket: ["revenue"],
+  ebitda_margin: ["contribution_margin", "fixed_costs"],
+
+  // Niveau 4 — Gestion courante
+  dead_point: ["breakeven"],
+  safety_margin: ["breakeven"],
+  markdown: ["stock_rotation", "margin_rates"],
+  frng: ["fixed_costs"],
+  bfr: ["stock"],
+  distribution_commission: ["margin_rates"],
+  sales_per_sqm: ["average_basket"],
+
+  // Niveau 5 — Analyse & trésorerie
+  net_treasury: ["frng", "bfr"],
+  receivables_financing: ["bfr"],
+  profitability_vs_return: ["margin_rates", "breakeven"],
+  loan_schedule: ["net_treasury"],
+
+  // Niveau 6 — Investissement
+  discounting: ["net_treasury", "profitability_vs_return"],
+  irr_payback: ["discounting"],
+};
+
+/** Prérequis d'une notion (codes), liste vide si racine ou notion inconnue. */
+export function prerequisitesOf(code: string): readonly string[] {
+  return CONCEPT_PREREQUISITES[code] ?? [];
+}
