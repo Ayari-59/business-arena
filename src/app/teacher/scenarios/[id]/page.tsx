@@ -4,6 +4,7 @@ import { getSession } from "@/lib/session";
 import { getScenarioById, runEssaiABlanc } from "@/services/scenario-editor.service";
 import { SECTOR_LABELS, economicDefaults, type ScenarioDefinition } from "@/config/scenarios/registry";
 import { readMarketForm } from "@/config/scenarios/engine-settings";
+import { situationLevel } from "@/config/pedagogy/concepts";
 import { formatEuro } from "@/lib/format";
 import { GuardedForm } from "@/components/guarded-action";
 import { SubmitButton } from "@/components/submit-button";
@@ -349,6 +350,45 @@ export default async function ScenarioEditorPage({
 
         <SubmitButton>Enregistrer les paramètres moteur</SubmitButton>
       </GuardedForm>
+
+      {/* Situations pédagogiques — édition du texte. */}
+      <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
+        <h2 className="text-sm font-semibold text-slate-200">Situations pédagogiques</h2>
+        <p className="mt-1 text-xs text-slate-500">
+          Les situations héritées du secteur. Vous en éditez le texte (récit, options, indices,
+          correction) ; leur structure d&apos;analyse reste celle du secteur d&apos;origine.
+        </p>
+        {def.situations.length === 0 ? (
+          <p className="mt-3 text-sm text-slate-500">Ce scénario ne porte aucune situation.</p>
+        ) : (
+          <ul className="mt-4 space-y-2">
+            {def.situations.map((s) => {
+              const niveau = situationLevel(s.conceptCodes);
+              const decl =
+                "round" in s.trigger ? `tour ${s.trigger.round}` : `détectée (${s.trigger.detect})`;
+              return (
+                <li
+                  key={s.code}
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/10 bg-slate-950 px-4 py-3"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-slate-100">{s.title}</p>
+                    <p className="text-xs text-slate-500">
+                      Niveau {niveau} · {decl}
+                    </p>
+                  </div>
+                  <Link
+                    href={`/teacher/scenarios/${id}/situations/${encodeURIComponent(s.code)}`}
+                    className="whitespace-nowrap rounded-lg border border-white/10 px-3 py-1 text-xs text-slate-200 hover:border-amber-400/50"
+                  >
+                    Éditer le texte
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
     </main>
   );
 }

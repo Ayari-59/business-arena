@@ -10,6 +10,7 @@ import {
   type StoredScenarioDefinition,
 } from "@/config/scenarios/serialize";
 import { essaiABlanc, type EssaiVerdict } from "@/config/scenarios/essai-a-blanc";
+import { patchSituationText, type SituationTextPatch } from "@/config/scenarios/situation-patch";
 
 /**
  * CRUD des scénarios ENSEIGNANTS en base — le socle de l'éditeur visuel (PR 1).
@@ -212,4 +213,24 @@ export async function runEssaiABlanc(id: string, authorId?: string): Promise<Ess
   const row = await loadEditableRow(id, authorId);
   const definition = hydrateDefinition(parseStoredScenario(row.definition));
   return essaiABlanc(definition);
+}
+
+/**
+ * Édite le TEXTE d'une situation d'un scénario enseignant (titre, récit,
+ * problème, options de diagnostic, indices, correction du modèle, tour, poids).
+ * La structure est préservée ; vérifie la propriété.
+ */
+export async function updateSituationText(
+  id: string,
+  situationCode: string,
+  patch: SituationTextPatch,
+  authorId?: string,
+): Promise<ScenarioSummary> {
+  const row = await loadEditableRow(id, authorId);
+  const stored = parseStoredScenario(row.definition);
+  const index = stored.situations.findIndex((s) => s.code === situationCode);
+  if (index < 0) throw new Error("Situation introuvable dans ce scénario");
+  const situations = [...stored.situations];
+  situations[index] = patchSituationText(situations[index]!, patch);
+  return updateScenarioDefinition(id, { ...stored, situations }, authorId);
 }
