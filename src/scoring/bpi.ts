@@ -350,7 +350,11 @@ export function rawDimensionScoresV2(args: {
 
   return {
     economic: normalizeToBenchmark(result.incomeStatement.operatingIncome, b.operatingIncome),
-    financial: financialV2Score(result, pedagogy.previousNetIncome),
+    // Faillite (V2 couche 2, #5) : une entreprise défaillante a, par définition,
+    // cessé de payer — sa performance financière est au plancher, quel que soit
+    // le reste du bilan. Les autres dimensions tombent d'elles-mêmes (gelée, elle
+    // ne vend ni ne produit).
+    financial: result.defaillant ? 0 : financialV2Score(result, pedagogy.previousNetIncome),
     commercial:
       0.5 * normalizeToBenchmark(result.incomeStatement.revenue, b.revenue) +
       0.5 * clamp01(result.market.totalShare / b.marketShareTarget) * 100,

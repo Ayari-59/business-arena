@@ -544,6 +544,17 @@ export interface CompanyState {
    * entreprise qui n'a encore rien promis n'a rien à se faire pardonner.
    */
   bankTrust?: number;
+  /**
+   * Défaillance (cessation de paiements, V2 couche 2). Une entreprise passe
+   * `defaillant` après deux tours consécutifs de crise de trésorerie
+   * caractérisée (découvert au-delà du plafond, plus de créances à céder).
+   * Défaillante, elle est gelée (ne produit plus, ne dépense plus, n'emprunte
+   * plus) SAUF l'augmentation de capital : une recapitalisation qui la ramène
+   * sous le plafond la fait repasser `active`. Absent = active (rétro-compat).
+   */
+  status?: "active" | "defaillant";
+  /** Tours de crise consécutifs, pour le seuil de défaillance. Absent = 0. */
+  crisisStreak?: number;
 }
 
 export interface RoundDecisions {
@@ -695,6 +706,12 @@ export interface SegmentSalesDetail {
 
 export interface CompanyRoundResult {
   companyId: CompanyId;
+  /**
+   * L'entreprise est en défaillance à l'issue de ce tour (cessation de
+   * paiements tenue deux tours). Sert au plancher de score et à l'affichage.
+   * Absent = active.
+   */
+  defaillant?: boolean;
   incomeStatement: IncomeStatement;
   balanceSheet: BalanceSheet;
   cashFlow: { opening: number; items: CashFlowItem[]; closing: number };

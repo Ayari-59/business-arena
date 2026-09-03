@@ -180,8 +180,33 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     (insuranceOffer ? [{ code: "default", name: "Assurance catastrophe", premiumPerRound: insuranceOffer.premiumPerRound, coveredEventCodes: insuranceOffer.coveredEventCodes }] : []);
 
   const working: Working[] = input.companies.map((state) => {
-    const raw = input.decisions[state.id];
-    if (!raw) throw new Error(`Décisions manquantes pour ${state.id} (ADR-04 : reconduire en amont)`);
+    const soumis = input.decisions[state.id];
+    if (!soumis) throw new Error(`Décisions manquantes pour ${state.id} (ADR-04 : reconduire en amont)`);
+    // Gel de faillite (V2 couche 2, #5) : une entreprise défaillante ne produit
+    // plus, ne dépense plus, n'emprunte plus. Seule l'augmentation de capital
+    // reste ouverte — une recapitalisation qui la ramène sous le plafond de
+    // découvert la fait repasser `active` (voir plus bas). Le prix est sans
+    // effet sans production ; on le laisse tel quel.
+    const raw =
+      state.status === "defaillant"
+        ? {
+            ...soumis,
+            productionPlan: 0,
+            marketingBudget: 0,
+            qualityBudget: 0,
+            maintenanceBudget: 0,
+            insurance: undefined,
+            acceptOrder: false,
+            studies: undefined,
+            hr: undefined,
+            investment: undefined,
+            treasury: undefined,
+            forecast: undefined,
+            finance: soumis.finance?.capitalIncrease
+              ? { capitalIncrease: soumis.finance.capitalIncrease }
+              : undefined,
+          }
+        : soumis;
     const decisions = {
       price: raw.price,
       productionPlan: Math.max(0, raw.productionPlan),
@@ -629,6 +654,15 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       Math.max(0, reservesBefore),
     );
 
+    // Faillite (#5) : une entreprise défaillante est DORMANTE, pas seulement
+    // muette. Geler la seule production tout en laissant courir les charges de
+    // structure et les intérêts la ferait perdre PLUS vite qu'en continuant —
+    // l'inverse d'une cessation d'activité. On neutralise donc aussi ses charges
+    // passives (structure, amortissements, intérêts) : ses capitaux propres se
+    // figent jusqu'à recapitalisation. Le remboursement d'emprunt est neutre sur
+    // les capitaux propres (cash ET dette baissent) mais on le suspend aussi,
+    // une entreprise à l'arrêt ne décaissant plus rien.
+    const gelee = w.state.status === "defaillant";
     const finance = computeFinance({
       opening: w.state.finance,
       roundDays: scenario.roundDays,
@@ -643,21 +677,23 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       marketingCost: w.decisions.marketingBudget,
       qualityCost: w.decisions.qualityBudget,
       maintenanceCost: w.decisions.maintenanceBudget,
-      fixedCosts: scenario.fixedCostsPerRound + insurancePremium + hrCost + studiesCost,
+      fixedCosts: gelee ? 0 : scenario.fixedCostsPerRound + insurancePremium + hrCost + studiesCost,
       // amortissements : base du scénario + investissements en service
       // (y compris celui mis en service ce tour) OU amortissement du parc typé
-      depreciation: scenario.equipment
-        ? w.equipDepreciation
-        : scenario.finance.depreciationPerRound +
-          (w.state.extraDepreciationPerRound ?? 0) +
-          (w.state.pendingDepreciationPerRound ?? 0),
-      loanAnnualRate: scenario.finance.loanAnnualRate,
-      overdraftAnnualRate: conditions.overdraftAnnualRate,
+      depreciation: gelee
+        ? 0
+        : scenario.equipment
+          ? w.equipDepreciation
+          : scenario.finance.depreciationPerRound +
+            (w.state.extraDepreciationPerRound ?? 0) +
+            (w.state.pendingDepreciationPerRound ?? 0),
+      loanAnnualRate: gelee ? 0 : scenario.finance.loanAnnualRate,
+      overdraftAnnualRate: gelee ? 0 : conditions.overdraftAnnualRate,
       interestMultiplier: w.mods.interestMultiplier,
       taxRate: scenario.finance.taxRate,
       vatRate: scenario.finance.vatRate ?? 0,
       newLoan,
-      loanRepayment: mandatoryRepayment + earlyRepayment,
+      loanRepayment: gelee ? 0 : mandatoryRepayment + earlyRepayment,
       capitalIncrease,
       dividend,
       investmentOutlay: w.investOutlay - w.equipSaleProceeds,
@@ -688,7 +724,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     // séquentiellement, nouvel emprunt à la durée standard (1re échéance à t+1).
     let nextLoans = w.state.loans;
     let nextMandatory = 0;
-    if (scheduled) {
+    if (scheduled && !gelee) {
       let earlyLeft = earlyRepayment;
       nextLoans = loans
         .map((l) => {
@@ -706,6 +742,19 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       }
       nextMandatory = nextLoans.reduce((s, l) => s + Math.min(l.perRound, l.remaining), 0);
     }
+
+    // Faillite (V2 couche 2, #5) : cessation de paiements = crise de trésorerie
+    // CARACTÉRISÉE (découvert au-delà du plafond ET plus aucune créance à céder,
+    // finance.treasury.crisis). On ne s'appuie QUE sur ce signal : un scénario
+    // sans bloc `treasury` ne modélise aucun mécanisme de cessation de paiements
+    // dure (ni affacturage forcé ni crise) — y déclarer une faillite sur un
+    // simple dépassement de découvert « autorisé » confondrait un pilotage
+    // agressif avec l'insolvabilité. Deux tours consécutifs → défaillance ; le
+    // compteur retombe à zéro dès qu'un tour repasse sous le plafond (une
+    // recapitalisation, par exemple), ce qui dégèle l'entreprise.
+    const enCessationDePaiements = finance.treasury.crisis;
+    const crisisStreak = enCessationDePaiements ? (w.state.crisisStreak ?? 0) + 1 : 0;
+    const statut: "active" | "defaillant" = crisisStreak >= 2 ? "defaillant" : "active";
 
     const functionalBalance = computeFunctionalBalance(finance.closing);
     // Le plan de CE tour n'est jugeable qu'une fois le tour joué : sa
@@ -753,6 +802,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
 
     results[w.state.id] = {
       companyId: w.state.id,
+      ...(statut === "defaillant" ? { defaillant: true } : {}),
       incomeStatement: finance.incomeStatement,
       balanceSheet: finance.closing,
       cashFlow: finance.cashFlow,
@@ -956,6 +1006,11 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       // ouvert : une partie qui passerait au niveau 6 en cours de route
       // trouverait sinon des réserves vides malgré ses bénéfices.
       reserves: reservesBefore + finance.incomeStatement.netIncome - dividend,
+      // Faillite : statut et compteur de crise portés au tour suivant. Suivis
+      // seulement dès qu'une crise apparaît (puis maintenus) — les parties sans
+      // crise n'en portent jamais le champ, snapshot inchangé en régime nominal.
+      ...(statut === "defaillant" || w.state.status !== undefined ? { status: statut } : {}),
+      ...(crisisStreak > 0 || w.state.crisisStreak !== undefined ? { crisisStreak } : {}),
       ...(bank ? { bankTrust: confianceApres } : {}),
       perceivedQuality: updatePerceivedQuality(
         w.state.perceivedQuality,
