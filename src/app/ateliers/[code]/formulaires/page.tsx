@@ -22,7 +22,10 @@ import { PrintButton } from "@/components/print-button";
  * l'enseignant, et deux gardes vérifient que le découpage n'ajoute ni ne perd
  * rien.
  */
-export const dynamic = "force-static";
+// Rendu à la requête (et non figé au build) : la CSP à nonce exige que chaque
+// page porte le nonce de sa requête, ce qu'une page statique ne peut pas faire.
+// Le contenu reste identique — il vient du registre, sans base ni requête.
+export const dynamic = "force-dynamic";
 
 export async function generateStaticParams() {
   const { ATELIERS } = await import("@/config/ateliers");

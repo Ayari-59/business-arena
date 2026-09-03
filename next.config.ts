@@ -6,8 +6,9 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   headers: async () => [
     {
-      // Un seul endroit de vérité pour les en-têtes de sécurité : ici, pas
-      // dans un vercel.json (il n'y en a pas).
+      // Les en-têtes statiques, servis partout (fichiers statiques compris) :
+      // ils ne dépendent pas de la requête. La CSP, elle, porte un nonce par
+      // requête et est posée par le proxy (src/proxy.ts), pas ici.
       source: "/(.*)",
       headers: securityHeaders(),
     },

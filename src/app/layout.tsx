@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
 import { CLE_THEME, THEMES, THEME_PAR_DEFAUT } from "@/config/themes";
@@ -42,9 +43,14 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  // Le nonce de la requête, tiré par le proxy (src/proxy.ts) : la CSP refuse
+  // désormais tout script inline qui ne le porte pas. Nos deux scripts inline
+  // le reçoivent ; Next appose le sien sur les scripts qu'il engendre.
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
+
   // Le thème est relu et posé avant le premier affichage. Placé ici, en tête du
   // corps, ce script s'exécute pendant l'analyse du document, donc avant que
   // quoi que ce soit soit peint : sans lui, une page choisie en clair
@@ -58,7 +64,7 @@ export default function RootLayout({
   return (
     <html lang="fr" data-theme={THEME_PAR_DEFAUT}>
       <body className="min-h-screen bg-slate-950 text-slate-100 antialiased">
-        <script dangerouslySetInnerHTML={{ __html: amorce }} />
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: amorce }} />
         {/* Premier élément focusable : au clavier, on saute la navigation. */}
         <a
           href="#main"
@@ -69,6 +75,7 @@ export default function RootLayout({
         <SiteHeader />
         {children}
         <script
+          nonce={nonce}
           dangerouslySetInnerHTML={{
             __html: `if("serviceWorker"in navigator)window.addEventListener("load",function(){navigator.serviceWorker.register("/sw.js")});window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();window.__bip=e;window.dispatchEvent(new Event("bip-ready"))})`,
           }}

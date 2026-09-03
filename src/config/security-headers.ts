@@ -6,23 +6,32 @@
  * (clickjacking), un navigateur pouvait deviner un type de contenu, et le
  * référent partait entier vers n'importe quel lien externe.
  *
- * Ce fichier est lu par next.config.ts (chemin relatif : la configuration
- * ne connaît pas l'alias « @ ») et par le test qui le garde.
+ * Deux sources se partagent ces en-têtes :
+ * - les cinq en-têtes statiques (ci-dessous) ne dépendent pas de la requête ;
+ *   next.config.ts les pose sur « /(.*) », fichiers statiques compris ;
+ * - la CSP porte un nonce tiré à chaque requête : le proxy (src/proxy.ts) la
+ *   pose, car un nonce ne peut pas être figé dans une configuration statique.
+ *
+ * Ce fichier est lu par next.config.ts (chemin relatif : la configuration ne
+ * connaît pas l'alias « @ »), par le proxy et par le test qui les garde.
  */
 
 /**
  * Ce que le site charge réellement, inventorié avant d'écrire la politique :
  *
- * - scripts : les bundles de Next (« self »), plus des scripts INLINE que Next
- *   injecte lui-même (données de rendu serveur, `self.__next_f.push`) et deux
- *   que le layout pose (amorce du thème, enregistrement du service worker).
- *   Sans nonce, ils exigent 'unsafe-inline'. Un nonce demande un middleware
- *   qui n'existe pas encore : c'est la prochaine étape, documentée ici, pas
- *   un oubli.
+ * - scripts : les bundles de Next (« self »), plus des scripts INLINE — ceux
+ *   que Next injecte (données de rendu serveur `self.__next_f.push`, rejeu de
+ *   formulaire) et deux que le layout pose (amorce du thème, enregistrement du
+ *   service worker). Chacun porte désormais le nonce de la requête ; Next
+ *   l'appose lui-même sur ses scripts, le layout sur les siens.
+ *   'strict-dynamic' étend la confiance aux scripts chargés par un script déjà
+ *   de confiance. Plus de 'unsafe-inline' : un script injecté sans le nonce
+ *   (le vecteur XSS) est refusé. En développement, React s'appuie sur eval.
  * - styles : Tailwind en feuille (« self ») et des styles inline posés par
- *   React (`style={{…}}`) : 'unsafe-inline'.
+ *   React (`style={{…}}`). Un nonce ne couvre pas un attribut `style=` ;
+ *   'unsafe-inline' y reste, faute de pouvoir réécrire toutes les vues.
  * - polices : aucune police externe, tout vient du système.
- * - images : le logo et les icônes (« self »), les data: URI éventuels.
+ * - images : le logo et les icônes (« self »), les data: et blob: URI.
  * - connexions : les appels fetch du polling de tour, vers l'origine.
  * - service worker : /sw.js, même origine ; manifeste PWA, même origine.
  * - aucun script, style, image ni police d'un tiers.
@@ -30,11 +39,14 @@
  * En développement, Turbopack a besoin d'eval et d'un WebSocket de
  * rechargement : ces deux permissions n'existent qu'à ce moment-là.
  */
-export function contentSecurityPolicy(env: string | undefined = process.env.NODE_ENV): string {
+export function contentSecurityPolicy(
+  nonce: string,
+  env: string | undefined = process.env.NODE_ENV,
+): string {
   const dev = env !== "production";
   const directives = [
     "default-src 'self'",
-    `script-src 'self' 'unsafe-inline'${dev ? " 'unsafe-eval'" : ""}`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${dev ? " 'unsafe-eval'" : ""}`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
     "font-src 'self' data:",
@@ -50,18 +62,22 @@ export function contentSecurityPolicy(env: string | undefined = process.env.NODE
 }
 
 /**
- * Passage en mode bloquant : après une semaine sans violation remontée dans
- * la console des navigateurs (message « [Report Only] »), renommer la clé
- * ci-dessous en « Content-Security-Policy ». Rien d'autre à changer.
+ * La CSP est désormais bloquante (elle l'était en Report-Only le temps d'une
+ * observation). Le nonce ferme la porte aux scripts inline injectés ; pour la
+ * repasser en observation, renommer en « Content-Security-Policy-Report-Only ».
  */
-export const CSP_HEADER_NAME = "Content-Security-Policy-Report-Only";
+export const CSP_HEADER_NAME = "Content-Security-Policy";
 
 export interface HeaderPair {
   key: string;
   value: string;
 }
 
-export function securityHeaders(env: string | undefined = process.env.NODE_ENV): HeaderPair[] {
+/**
+ * Les cinq en-têtes de sécurité statiques (sans la CSP, portée par le proxy).
+ * Posés partout par next.config, fichiers statiques compris.
+ */
+export function securityHeaders(): HeaderPair[] {
   return [
     { key: "X-Content-Type-Options", value: "nosniff" },
     { key: "X-Frame-Options", value: "DENY" },
@@ -69,6 +85,5 @@ export function securityHeaders(env: string | undefined = process.env.NODE_ENV):
     { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
     // Deux ans, sous-domaines compris, candidat à la liste de préchargement.
     { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
-    { key: CSP_HEADER_NAME, value: contentSecurityPolicy(env) },
   ];
 }
