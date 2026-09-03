@@ -83,12 +83,14 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
     return { direction: dir, label: formatPercent(Math.abs(pct)) };
   }
 
+  // Ordre du déroulé d'un tour : on lit la Situation, on prend ses Décisions,
+  // puis on en voit les Résultats — l'Historique garde les tours passés.
   const arenaTabs: ArenaTab[] = [];
   if (!finished) arenaTabs.push({ key: "situation", label: "Situation", icon: "📋" });
-  if (r) arenaTabs.push({ key: "resultats", label: "Résultats", icon: "📊" });
   if (!finished) arenaTabs.push({ key: "decisions", label: "Décisions", icon: "✏️" });
+  if (r) arenaTabs.push({ key: "resultats", label: "Résultats", icon: "📊" });
   if (r && situations.debriefedByRound.length > 0) {
-    arenaTabs.push({ key: "memoire", label: "Mémoire", icon: "📚" });
+    arenaTabs.push({ key: "memoire", label: "Historique", icon: "📚" });
   }
 
   const defaultTab = finished ? "resultats" : r ? "situation" : "situation";

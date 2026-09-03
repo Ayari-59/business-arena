@@ -126,7 +126,7 @@ export default async function TeacherGamePage({
         <section className="rounded-xl border border-white/10 bg-slate-900 p-4">
           <h2 className="text-sm font-semibold text-slate-200">📚 Situations manquées</h2>
           <p className="mt-1 max-w-3xl text-xs text-slate-500">
-            Une situation non rendue reste consultable par l&apos;élève dans l&apos;onglet Mémoire.
+            Une situation non rendue reste consultable par l&apos;élève dans l&apos;onglet Historique.
             Vous choisissez si elle peut être rattrapée. Réglage appliqué aux tours à venir ; les
             situations déjà rattrapées gardent leur score.
           </p>
