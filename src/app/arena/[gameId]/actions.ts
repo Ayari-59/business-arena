@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { getGuestUserId } from "@/lib/guest";
 import { roundDecisionsSchema } from "@/services/decision-schema";
 import {
@@ -117,9 +118,10 @@ export async function playRoundAction(
     return { error: "Décisions invalides : vérifiez les montants saisis." };
   }
 
+  let kind: Awaited<ReturnType<typeof getGameKind>>;
   try {
     const justification = String(formData.get("justification") ?? "").trim() || undefined;
-    const kind = await getGameKind(gameId);
+    kind = await getGameKind(gameId);
     if (kind === "solo") {
       await resolveCurrentRound({ gameId, userId, playerDecisions: parsed.data, justification });
     } else {
@@ -129,6 +131,14 @@ export async function playRoundAction(
     return { error: error instanceof Error ? error.message : "Erreur lors de la simulation." };
   }
   revalidatePath(`/arena/${gameId}`);
+  // En solo, valider a résolu le tour tout de suite : on amène le joueur sur
+  // les résultats fraîchement livrés. L'ancre pointe la période la plus récente
+  // (celle qu'il vient de jouer), dépliée et ouverte sur son onglet Résultats.
+  // En classe, on ne redirige pas : les résultats n'arriveront qu'à la clôture
+  // par l'enseignant. redirect() est hors du try (il lève NEXT_REDIRECT).
+  if (kind === "solo") {
+    redirect(`/arena/${gameId}#dernier-resultat`);
+  }
   return { error: null };
 }
 
