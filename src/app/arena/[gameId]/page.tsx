@@ -244,13 +244,26 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                 </span>
               </span>
               <span className="text-xs text-slate-500">
-                Lisez la situation, puis rendez vos décisions. Ses résultats ouvriront la
-                période suivante.
+                Trois onglets : la situation à lire, vos décisions à rendre, et les
+                résultats — à venir une fois le tour clos.
               </span>
             </div>
 
-            <div className="space-y-6 p-4 sm:p-5">
-              {/* ── Situation : ce qu'il faut lire et analyser ── */}
+            <div className="p-4 sm:p-5">
+              {/* Le tour en cours porte les mêmes onglets que les tours clos, dès
+                  le premier tour : Situation (à lire), Décisions (à rendre) et
+                  Résultats — ce dernier vide tant que le tour n'est pas clos.
+                  Défaut sur « Décisions » : le formulaire reste sous les yeux. */}
+              <SegmentedTabs
+                defaultKey="decisions"
+                tabs={[
+                  { key: "situation", label: "Situation", icon: "📋" },
+                  { key: "decisions", label: "Décisions", icon: "✏️" },
+                  { key: "resultats", label: "Résultats", icon: "📊" },
+                ]}
+              >
+                {{
+                  situation: (
               <div id="situation" className="space-y-6">
                 {/* Briefing / Introduction (tour 1) */}
                 {periods.length === 0 ? (
@@ -453,9 +466,9 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                   ) : null;
                 })()}
               </div>
-
-              {/* ── Décisions : ce que l'équipe rend pour ce tour ── */}
-              <section id="decisions" className="rounded-xl border border-amber-400/20 bg-slate-900 p-6">
+                  ),
+                  decisions: (
+                    <section id="decisions" className="rounded-xl border border-amber-400/20 bg-slate-900 p-6">
                 <div className="mb-4 border-b border-white/10 pb-3">
                   <h2 className="text-sm font-semibold text-slate-200">
                     Vos décisions · {periodLabel(view.roundDays, view.currentRound).toLowerCase()}
@@ -499,6 +512,19 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                   capacityFacts={view.capacityFacts}
                 />
               </section>
+                  ),
+                  resultats: (
+                    <div className="rounded-xl border border-white/10 bg-slate-900 p-8 text-center">
+                      <p className="text-sm text-slate-400">
+                        📊 Les résultats de ce tour n&apos;existent pas encore.
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        Ils s&apos;afficheront ici une fois le tour clos — et ouvriront la période suivante.
+                      </p>
+                    </div>
+                  ),
+                }}
+              </SegmentedTabs>
             </div>
           </section>
         ) : null}
