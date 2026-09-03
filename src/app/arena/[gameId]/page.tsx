@@ -256,6 +256,7 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
                   Défaut sur « Décisions » : le formulaire reste sous les yeux. */}
               <SegmentedTabs
                 defaultKey="decisions"
+                syncAnchors={["situation", "decisions"]}
                 tabs={[
                   { key: "situation", label: "Situation", icon: "📋" },
                   { key: "decisions", label: "Décisions", icon: "✏️" },
