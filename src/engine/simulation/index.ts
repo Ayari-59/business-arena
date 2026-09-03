@@ -655,6 +655,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       overdraftAnnualRate: conditions.overdraftAnnualRate,
       interestMultiplier: w.mods.interestMultiplier,
       taxRate: scenario.finance.taxRate,
+      openingTaxLossCarryforward: w.state.taxLossCarryforward ?? 0,
       vatRate: scenario.finance.vatRate ?? 0,
       newLoan,
       loanRepayment: mandatoryRepayment + earlyRepayment,
@@ -956,6 +957,12 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       // ouvert : une partie qui passerait au niveau 6 en cours de route
       // trouverait sinon des réserves vides malgré ses bénéfices.
       reserves: reservesBefore + finance.incomeStatement.netIncome - dividend,
+      // Déficit reportable : suivi seulement à partir du moment où une perte
+      // apparaît (puis maintenu, même retombé à 0). Les parties sans perte n'en
+      // portent jamais le champ — snapshot inchangé pour le cas courant.
+      ...(finance.taxLossCarryforward > 0 || w.state.taxLossCarryforward !== undefined
+        ? { taxLossCarryforward: finance.taxLossCarryforward }
+        : {}),
       ...(bank ? { bankTrust: confianceApres } : {}),
       perceivedQuality: updatePerceivedQuality(
         w.state.perceivedQuality,
