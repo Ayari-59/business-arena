@@ -24,6 +24,7 @@ import {
   runEssaiABlanc,
   setScenarioStatus,
   updateScenarioDefinition,
+  updateSituationText,
 } from "@/services/scenario-editor.service";
 import { applyEconomicOverrides } from "@/config/difficulty";
 
@@ -126,6 +127,67 @@ describe("paramètres moteur et essai à blanc", () => {
       title: "NOVA — privé",
     });
     await expect(runEssaiABlanc(s.id, bob)).rejects.toThrow(/appartient/);
+  });
+});
+
+describe("édition d'une situation", () => {
+  it("le texte d'une situation se met à jour et se relit", async () => {
+    const s = await createScenarioDraftFromBuiltIn({
+      baseCode: "nova",
+      authorId: alice,
+      title: "NOVA — situations",
+    });
+    const loaded = await getScenarioById(s.id, alice);
+    const cible = loaded!.definition.situations[0]!;
+
+    await updateSituationText(
+      s.id,
+      cible.code,
+      {
+        title: "Titre revu",
+        narrative: "Récit revu",
+        problem: "Problème revu ?",
+        diagnosticLabels: cible.diagnosticOptions.map((_, i) => `Option ${i}`),
+        hintTexts: cible.hints.map((_, i) => `Indice ${i}`),
+        modelExplain: "Correction revue.",
+      },
+      alice,
+    );
+
+    const reread = await getScenarioById(s.id, alice);
+    const apres = reread!.definition.situations.find((x) => x.code === cible.code)!;
+    expect(apres.title).toBe("Titre revu");
+    expect(apres.narrative).toBe("Récit revu");
+    // Structure préservée.
+    expect(apres.modelRelevance).toEqual(cible.modelRelevance);
+    expect(apres.diagnosticOptions.map((o) => o.correct)).toEqual(
+      cible.diagnosticOptions.map((o) => o.correct),
+    );
+  });
+
+  it("refuse l'édition par un autre auteur", async () => {
+    const s = await createScenarioDraftFromBuiltIn({
+      baseCode: "nova",
+      authorId: alice,
+      title: "NOVA — privé situ",
+    });
+    const loaded = await getScenarioById(s.id, alice);
+    const cible = loaded!.definition.situations[0]!;
+    await expect(
+      updateSituationText(
+        s.id,
+        cible.code,
+        {
+          title: "x",
+          narrative: "x",
+          problem: "x",
+          diagnosticLabels: cible.diagnosticOptions.map(() => "x"),
+          hintTexts: cible.hints.map(() => "x"),
+          modelExplain: "x",
+        },
+        bob,
+      ),
+    ).rejects.toThrow(/appartient/);
   });
 });
 

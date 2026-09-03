@@ -8,6 +8,7 @@ import {
   getScenarioById,
   setScenarioStatus,
   updateScenarioDefinition,
+  updateSituationText,
 } from "@/services/scenario-editor.service";
 import { isBuiltInScenarioCode, scenarioByCode } from "@/config/scenarios/registry";
 import {
@@ -164,6 +165,43 @@ export async function updateEconomicsAction(formData: FormData): Promise<void> {
     );
   }
   redirect(`/teacher/scenarios/${id}?ok=eco`);
+}
+
+/** Enregistre le texte d'une situation d'un brouillon. */
+export async function updateSituationAction(formData: FormData): Promise<void> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  const id = texte(formData, "scenarioId");
+  const code = texte(formData, "situationCode");
+
+  const diagCount = optionalNumber(formData, "diagCount") ?? 0;
+  const diagnosticLabels = Array.from({ length: diagCount }, (_, i) => texte(formData, `diag${i}`));
+  const hintTexts = Array.from({ length: 5 }, (_, i) => texte(formData, `hint${i}`));
+
+  try {
+    await updateSituationText(
+      id,
+      code,
+      {
+        title: texte(formData, "title"),
+        narrative: texte(formData, "narrative"),
+        problem: texte(formData, "problem"),
+        diagnosticLabels,
+        hintTexts,
+        modelExplain: texte(formData, "modelExplain"),
+        triggerRound: optionalNumber(formData, "triggerRound"),
+        weight: optionalNumber(formData, "weight"),
+      },
+      session.userId,
+    );
+  } catch (e) {
+    const raison = e instanceof Error ? e.message : "Enregistrement refusé.";
+    redirect(
+      `/teacher/scenarios/${id}/situations/${encodeURIComponent(code)}?echec=` +
+        encodeURIComponent(raison),
+    );
+  }
+  redirect(`/teacher/scenarios/${id}/situations/${encodeURIComponent(code)}?ok=1`);
 }
 
 export async function publishScenarioAction(formData: FormData): Promise<void> {
