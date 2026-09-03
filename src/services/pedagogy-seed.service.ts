@@ -1,6 +1,7 @@
+import { eq } from "drizzle-orm";
 import { concepts, decisionModels, hints, situationConcepts, situationModels, situations } from "@/db/schema";
 import { db } from "@/db";
-import { CONCEPTS } from "@/config/pedagogy/concepts";
+import { CONCEPTS, CONCEPT_PREREQUISITES } from "@/config/pedagogy/concepts";
 import { DECISION_MODELS } from "@/config/pedagogy/models";
 import { ALL_SITUATIONS } from "@/config/scenarios/registry";
 
@@ -76,6 +77,24 @@ export async function seedPedagogyReferentials(): Promise<void> {
   const situationIdByCode = new Map(situationRows.map((r) => [r.code, r.id]));
   const modelIdByCode = new Map(modelRows.map((r) => [r.code, r.id]));
   const conceptIdByCode = new Map(conceptRows.map((r) => [r.code, r.id]));
+
+  // Prérequis (V2 couche 2, #1) : on résout les codes du graphe en ids puis on
+  // renseigne prerequisiteIds. onConflictDoNothing ci-dessus ne touche pas les
+  // notions déjà présentes ; cette passe est donc auto-réparatrice (backfill des
+  // parties antérieures) tout en restant idempotente — on n'écrit que si l'ordre
+  // ou le contenu diffère de ce qui est déjà en base.
+  const sameIds = (a: readonly string[], b: readonly string[]) =>
+    a.length === b.length && a.every((v, i) => v === b[i]);
+  for (const row of conceptRows) {
+    const desired = (CONCEPT_PREREQUISITES[row.code] ?? [])
+      .map((code) => conceptIdByCode.get(code))
+      .filter((id): id is string => Boolean(id));
+    if (sameIds(desired, row.prerequisiteIds ?? [])) continue;
+    await db
+      .update(concepts)
+      .set({ prerequisiteIds: desired })
+      .where(eq(concepts.id, row.id));
+  }
 
   const hintValues = ALL_SITUATIONS.flatMap((s) =>
     s.hints.map((h) => ({
