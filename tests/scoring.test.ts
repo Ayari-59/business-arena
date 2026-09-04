@@ -160,10 +160,37 @@ describe("BPI d'un tour (doc 08 §1)", () => {
 
 describe("BPI de partie (doc 08 §1.4)", () => {
   it("poids croissants : le dernier tour pèse plus que le premier", () => {
-    // [0, 100] → le 100 final domine : BPI > 50
-    expect(gameBpi([0, 100])).toBeCloseTo((1 / 3) * 0 + (2 / 3) * 100, 9);
-    expect(gameBpi([100, 0])).toBeCloseTo((1 / 3) * 100, 9);
-    expect(gameBpi([60, 60, 60])).toBeCloseTo(60, 9);
+    // [tour 1 : 0, tour 2 : 100] → le 100 final domine : BPI > 50
+    expect(
+      gameBpi([
+        { index: 1, bpi: 0 },
+        { index: 2, bpi: 100 },
+      ]),
+    ).toBeCloseTo((1 / 3) * 0 + (2 / 3) * 100, 9);
+    expect(
+      gameBpi([
+        { index: 1, bpi: 100 },
+        { index: 2, bpi: 0 },
+      ]),
+    ).toBeCloseTo((1 / 3) * 100, 9);
+    expect(
+      gameBpi([
+        { index: 1, bpi: 60 },
+        { index: 2, bpi: 60 },
+        { index: 3, bpi: 60 },
+      ]),
+    ).toBeCloseTo(60, 9);
     expect(gameBpi([])).toBe(0);
+  });
+
+  it("poids par indice RÉEL : un tour sauté ne décale pas les suivants", () => {
+    // Tours joués 1 et 3 (le 2 sauté). Le tour 3 pèse 3, pas 2.
+    // Σ des indices présents = 1 + 3 = 4.
+    expect(
+      gameBpi([
+        { index: 1, bpi: 0 },
+        { index: 3, bpi: 100 },
+      ]),
+    ).toBeCloseTo((1 / 4) * 0 + (3 / 4) * 100, 9); // 75, et non 66,7 (ancien calcul par position)
   });
 });

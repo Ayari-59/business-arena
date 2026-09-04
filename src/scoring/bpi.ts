@@ -203,12 +203,19 @@ export function computeRoundScores(
 
 /**
  * BPI de partie (doc 08 §1.4) : moyenne des BPI de tours à poids croissants
- * (le tour T pèse T / Σ(1..T) — on juge la trajectoire, pas le départ).
+ * (le tour d'indice T pèse T — on juge la trajectoire, pas le départ).
+ *
+ * Le poids suit l'INDICE RÉEL du tour (1-based, tel que posé à la création de
+ * partie), pas la position dans la liste : un tour non scoré au milieu (équipe
+ * absente ce tour-là) ne décale plus le poids des tours suivants. Avant, la
+ * liste filtrée [tour 1, tour 3] pesait 1 puis 2 ; le tour 3 est désormais
+ * pesé 3 (Σ des indices présents au dénominateur).
  */
-export function gameBpi(roundBpis: number[]): number {
-  if (roundBpis.length === 0) return 0;
-  const totalWeight = (roundBpis.length * (roundBpis.length + 1)) / 2;
-  return roundBpis.reduce((sum, bpi, i) => sum + ((i + 1) / totalWeight) * bpi, 0);
+export function gameBpi(rounds: { index: number; bpi: number }[]): number {
+  if (rounds.length === 0) return 0;
+  const totalWeight = rounds.reduce((sum, r) => sum + r.index, 0);
+  if (totalWeight <= 0) return 0;
+  return rounds.reduce((sum, r) => sum + (r.index / totalWeight) * r.bpi, 0);
 }
 
 export function scoringWeights(config: ScoringConfig): Record<BpiDimension, number> {
