@@ -92,6 +92,12 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
     titre: "Entrer",
     liens: [
       {
+        href: "/jouer",
+        libelle: "Jouer en solo",
+        aide: "Lancez une partie tout de suite : choisissez un secteur et un niveau, et pilotez l'entreprise seul contre des concurrents simulés.",
+        enTete: true,
+      },
+      {
         href: "/join",
         libelle: "Rejoindre une partie",
         aide: "Votre enseignant vous a donné un code : c'est ici qu'il s'utilise.",
