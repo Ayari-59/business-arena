@@ -10,7 +10,6 @@ import {
   ACTION_PRINCIPALE,
   LIENS_LEGAUX,
   NAVIGATION,
-  liensDeTete,
   type LienDeMenu,
 } from "@/config/navigation";
 
@@ -95,25 +94,11 @@ export function SiteHeader() {
           </span>
         </div>
 
-        <div className="flex flex-wrap items-center justify-end gap-2.5">
-          <div className="mr-1 hidden items-center gap-6 text-sm text-slate-400 lg:flex">
-            {liensDeTete().map((lien) => (
-              <Link
-                key={lien.href}
-                href={lien.href}
-                title={lien.aide}
-                aria-current={estCourant(lien.href) ? "page" : undefined}
-                className={
-                  estCourant(lien.href)
-                    ? "text-slate-100 underline decoration-amber-400/60 underline-offset-8"
-                    : "hover:text-slate-200"
-                }
-              >
-                {lien.libelle}
-              </Link>
-            ))}
-          </div>
-
+        {/* Barre volontairement pauvre : l'action principale, et le menu. Les
+            liens de navigation, le thème et l'installation vivent DANS le menu,
+            pour ne pas empiler à droite des contrôles hétéroclites qu'on ne
+            sait pas lire. */}
+        <div className="flex items-center justify-end gap-2.5">
           <Link
             href={ACTION_PRINCIPALE.href}
             title={ACTION_PRINCIPALE.aide}
@@ -122,9 +107,6 @@ export function SiteHeader() {
           >
             {ACTION_PRINCIPALE.libelle}
           </Link>
-
-          <ThemeSwitcher />
-          <InstallButton />
 
           <button
             type="button"
@@ -213,6 +195,21 @@ export function SiteHeader() {
                 </div>
               );
             })}
+          </div>
+
+          {/* Réglages : ce qui était éparpillé dans la barre, réuni et nommé. */}
+          <div className="mt-3 border-t border-white/10 pt-3">
+            <p className="px-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+              Réglages
+            </p>
+            <div className="mt-1.5 flex items-center justify-between gap-3 px-3">
+              <span className="text-sm text-slate-300">Apparence</span>
+              <ThemeSwitcher />
+            </div>
+            {/* N'apparaît que si l'installation est réellement possible. */}
+            <div className="mt-2 px-3 empty:hidden">
+              <InstallButton />
+            </div>
           </div>
 
           <div className="mt-3 flex flex-wrap gap-4 border-t border-white/10 pt-3 text-xs text-slate-500">
