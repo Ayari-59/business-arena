@@ -113,6 +113,243 @@ export default async function ArenaPage({
     );
   }
 
+  // ── Contenu de la phase « Analyser », en trois sections réutilisables ──────
+  // En solo, le tour guidé décompose « Analyser » en étapes courtes : Données →
+  // (Marché & alertes, dès le 2ᵉ tour) → Analyser. En classe, l'onglet
+  // « Situation » les réunit sur un seul écran. On extrait donc trois blocs
+  // plutôt que de les dupliquer d'un mode à l'autre.
+  const premierTour = periods.length === 0;
+
+  // DONNÉES : ce avec quoi on entre dans le tour — l'entreprise (au 1er tour),
+  // les paramètres du secteur et la capacité de production.
+  const donneesSection = premierTour ? (
+    <section className="space-y-4 rounded-xl border border-white/10 bg-slate-900 p-6 text-slate-300">
+      <div>
+        <h2 className="text-lg font-semibold text-slate-100">
+          {periodLabel(view.roundDays, 1)} · prise en main
+        </h2>
+        <p className="mt-2 text-sm leading-relaxed">
+          Vous reprenez <strong>{view.intro.company}</strong>,{" "}
+          {appositive(view.intro.tagline)}. {view.intro.briefing}
+        </p>
+      </div>
+      <div className="rounded-lg border border-white/5 bg-slate-950 p-4">
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+          Ce que vous trouvez en arrivant
+        </h3>
+        <p className="mt-2 text-sm leading-relaxed">{view.intro.context}</p>
+      </div>
+      <ParametersPanels
+        intro={view.intro}
+        vocabulary={view.vocabulary}
+        capacityFacts={view.capacityFacts}
+      />
+    </section>
+  ) : (
+    <section className="space-y-3 rounded-xl border border-white/10 bg-slate-900 p-6">
+      <div>
+        <h2 className="text-sm font-semibold text-slate-200">Vos paramètres et votre capacité</h2>
+        <p className="mt-1 text-xs text-slate-500">Les données avec lesquelles vous entamez ce tour.</p>
+      </div>
+      <ParametersPanels
+        intro={view.intro}
+        vocabulary={view.vocabulary}
+        capacityFacts={view.capacityFacts}
+      />
+    </section>
+  );
+
+  // MARCHÉ & ALERTES : ce qui a bougé et ce qu'on vous signale — où vous en êtes
+  // (dès le 2ᵉ tour), les cartes événements annoncées, la saison.
+  const alertesSection = (
+    <>
+      {view.roundBriefing ? (
+        <section className="space-y-2 rounded-xl border border-white/10 bg-slate-900 p-6 text-slate-300">
+          <h2 className="text-lg font-semibold text-slate-100">
+            {periodLabel(view.roundDays, view.currentRound)} · où vous en êtes
+          </h2>
+          <p className="text-sm leading-relaxed">{view.roundBriefing.headline}</p>
+        </section>
+      ) : null}
+      {view.announcedEventCards.length > 0 ? (
+        <section className="rounded-xl border border-amber-400/30 bg-slate-900 p-4">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-400">
+            ⚡ Votre enseignant a tiré une carte : elle s&apos;appliquera à ce tour
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {view.announcedEventCards.map((card, i) => (
+              <EventCard
+                key={`${card.code}-${card.teamId ?? "market"}`}
+                code={card.code}
+                delayMs={i * 450}
+                announced
+                targetLabel={
+                  card.teamId
+                    ? card.isMyTeam
+                      ? "🎯 Votre équipe"
+                      : `→ ${card.teamName ?? "Une autre équipe"}`
+                    : "Toute la classe"
+                }
+                highlight={card.isMyTeam}
+              />
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-slate-500">
+            Adaptez vos décisions en conséquence : c&apos;est tout l&apos;intérêt d&apos;être prévenu.
+          </p>
+        </section>
+      ) : null}
+      {view.seasonNotes.length > 0 ? (
+        <section className="rounded-xl border border-sky-400/20 bg-slate-900 px-4 py-3 text-sm text-sky-200">
+          🌤️ Saison du tour :{" "}
+          {view.seasonNotes
+            .map(
+              (n) =>
+                `${n.name} ×${n.coef.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} (${
+                  n.coef > 1 ? "haute saison" : "basse saison"
+                })`,
+            )
+            .join(" · ")}
+          {". "}Dimensionnez votre volume en conséquence.
+        </section>
+      ) : null}
+    </>
+  );
+
+  // ANALYSER : l'arbitrage du tour, les situations à lire, les points clés et les
+  // leviers d'action.
+  const analyseSection = (
+    <>
+      {premierTour ? (
+        <>
+          <DilemmaCard
+            title="Votre premier arbitrage"
+            question={view.intro.dilemma.question}
+            routes={view.intro.dilemma.routes}
+          />
+          <p className="text-sm leading-relaxed text-slate-300">
+            Fixez votre {view.vocabulary.priceLabel.toLowerCase()}, votre volume et vos budgets,
+            puis observez.
+          </p>
+        </>
+      ) : view.roundBriefing ? (
+        <DilemmaCard
+          title="L'arbitrage de ce tour"
+          question={view.roundBriefing.question}
+          routes={view.roundBriefing.routes}
+        />
+      ) : null}
+
+      {situations.current.length > 0 && statutSituations ? (
+        <section className="space-y-4">
+          <p
+            className={`rounded-lg border px-4 py-2 text-sm ${
+              statutSituations.manques.length === 0
+                ? "border-emerald-400/30 bg-emerald-950/20 text-emerald-300"
+                : "border-amber-400/30 bg-amber-950/20 text-amber-300"
+            }`}
+          >
+            {statutSituations.manques.length === 0 ? "✓ " : "⚠ "}
+            {libelleStatut(statutSituations)}
+          </p>
+          {situations.current.map((s) => (
+            <SituationCard key={s.instanceId} gameId={view.gameId} situation={s} />
+          ))}
+        </section>
+      ) : null}
+
+      {(() => {
+        const allHints = [...new Map(
+          situations.current
+            .flatMap((s) => s.analyticalHints)
+            .map((h) => [h.code, h] as const)
+        ).values()].sort((a, b) => a.name.localeCompare(b.name, "fr"));
+        return allHints.length > 0 ? (
+          <section className="space-y-3">
+            <h2 className="text-sm font-semibold text-slate-200">
+              Points clés à examiner
+            </h2>
+            <p className="text-xs text-slate-400">
+              Les variables et notions à observer pour analyser les situations de ce tour.
+            </p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {allHints.map((h) => (
+                <div key={h.code} className="rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{h.name}</p>
+                  <p className="mt-1 text-xs text-slate-400">{h.objective}</p>
+                  {h.keyPoints.length > 0 ? (
+                    <ul className="mt-2 space-y-0.5">
+                      {h.keyPoints.map((kp) => (
+                        <li key={kp} className="text-sm text-slate-300">· {kp}</li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null;
+      })()}
+
+      {(() => {
+        const FIELD_LABELS: Record<string, string> = {
+          price: "Prix de vente",
+          productionPlan: "Plan de production",
+          marketingBudget: "Budget marketing",
+          qualityBudget: "Budget qualité",
+          maintenanceBudget: "Budget maintenance",
+        };
+        const DIRECTION_ICONS: Record<string, string> = { up: "↑", down: "↓", review: "⟳" };
+        // Un levier ne se conseille que si l'élève a le contrôle correspondant
+        // sous les yeux : aux premiers niveaux, budgets qualité et maintenance
+        // sont masqués (decision-form). Les pointer ici enverrait « ↑ Budget
+        // maintenance » vers un champ introuvable — le lien décision→action, cœur
+        // de l'app, rompu.
+        const champActionnable = (field: string): boolean => {
+          if (field === "qualityBudget") return view.enabledDecisions.quality;
+          if (field === "maintenanceBudget") return view.enabledDecisions.maintenance;
+          return true; // prix, production, marketing : toujours ouverts
+        };
+        const byField = new Map<string, { direction: string; hints: string[] }>();
+        for (const s of situations.current) {
+          for (const lever of s.decisionLevers ?? []) {
+            if (!champActionnable(lever.field)) continue;
+            const existing = byField.get(lever.field);
+            if (!existing) {
+              byField.set(lever.field, { direction: lever.direction, hints: [lever.hint] });
+            } else {
+              existing.hints.push(lever.hint);
+              if (existing.direction !== lever.direction) existing.direction = "review";
+            }
+          }
+        }
+        const levers = [...byField.entries()].map(([field, { direction, hints: fieldHints }]) => ({
+          field, direction, hints: fieldHints, label: FIELD_LABELS[field] ?? field,
+        }));
+        return levers.length > 0 ? (
+          <section className="space-y-3">
+            <h2 className="text-sm font-semibold text-slate-200">
+              Leviers d&apos;action
+            </h2>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {levers.map((l) => (
+                <div key={l.field} className="flex gap-2 rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
+                  <span className="mt-0.5 text-base leading-none text-amber-400">{DIRECTION_ICONS[l.direction]}</span>
+                  <div className="min-w-0">
+                    <span className="text-sm font-medium text-slate-200">{l.label}</span>
+                    {l.hints.map((h, i) => (
+                      <p key={i} className="mt-0.5 text-xs text-slate-400">{h}</p>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null;
+      })()}
+    </>
+  );
+
   return (
     <main id="main" className="mx-auto max-w-5xl px-6 pt-6 pb-12">
       {/* ── Header ── */}
@@ -356,19 +593,24 @@ export default async function ArenaPage({
                   Résultats — ce dernier vide tant que le tour n'est pas clos.
                   Défaut sur « Situation » : on lit l'énoncé avant de décider. */}
               <SegmentedTabs
-                defaultKey="situation"
-                // En solo, le tour devient un fil d'étapes guidé : Analyser puis
-                // Décider, avec un bouton « étape suivante » explicite — le joueur
-                // sait toujours où il en est. (L'onglet Résultats du tour actif est
-                // vide tant qu'il n'est pas clos ; on ne le propose donc pas en
-                // solo, les résultats arrivant après la simulation.) En classe, on
-                // garde les trois onglets libres.
+                defaultKey={view.kind === "solo" ? "donnees" : "situation"}
+                // En solo, le tour est un fil d'étapes guidé qui décompose
+                // « Analyser » : Données → (Marché & alertes, dès le 2e tour) →
+                // Analyser, puis Décider — chaque écran court, avec un bouton
+                // « étape suivante » explicite. En classe, l'onglet « Situation »
+                // réunit tout et les trois onglets restent libres. (L'onglet
+                // Résultats du tour actif est vide tant qu'il n'est pas clos ;
+                // inutile en solo, les résultats arrivant après la simulation.)
                 guided={view.kind === "solo"}
                 syncAnchors={["situation", "decisions"]}
                 tabs={
                   view.kind === "solo"
                     ? [
-                        { key: "situation", label: "Analyser", icon: "📋" },
+                        { key: "donnees", label: "Données", icon: "📊" },
+                        ...(premierTour
+                          ? []
+                          : [{ key: "marche", label: "Marché & alertes", icon: "⚡" }]),
+                        { key: "situation", label: "Analyser", icon: "🔍" },
                         { key: "decisions", label: "Décider", icon: "✏️" },
                       ]
                     : [
@@ -379,220 +621,27 @@ export default async function ArenaPage({
                 }
               >
                 {{
+                  donnees: (
+                    <div id="donnees" className="space-y-6">
+                      {donneesSection}
+                      {premierTour ? alertesSection : null}
+                    </div>
+                  ),
+                  marche: premierTour ? null : (
+                    <div id="marche" className="space-y-6">{alertesSection}</div>
+                  ),
                   situation: (
-              <div id="situation" className="space-y-6">
-                {/* Briefing / Introduction (tour 1) */}
-                {periods.length === 0 ? (
-                  <section className="space-y-4 rounded-xl border border-white/10 bg-slate-900 p-6 text-slate-300">
-                    <div>
-                      <h2 className="text-lg font-semibold text-slate-100">
-                        {periodLabel(view.roundDays, 1)} · prise en main
-                      </h2>
-                      <p className="mt-2 text-sm leading-relaxed">
-                        Vous reprenez <strong>{view.intro.company}</strong>,{" "}
-                        {appositive(view.intro.tagline)}. {view.intro.briefing}
-                      </p>
+                    <div id="situation" className="space-y-6">
+                      {view.kind === "solo" ? (
+                        analyseSection
+                      ) : (
+                        <>
+                          {donneesSection}
+                          {alertesSection}
+                          {analyseSection}
+                        </>
+                      )}
                     </div>
-                    <div className="rounded-lg border border-white/5 bg-slate-950 p-4">
-                      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                        Ce que vous trouvez en arrivant
-                      </h3>
-                      <p className="mt-2 text-sm leading-relaxed">{view.intro.context}</p>
-                    </div>
-                    <ParametersPanels
-                      intro={view.intro}
-                      vocabulary={view.vocabulary}
-                      capacityFacts={view.capacityFacts}
-                    />
-                    <DilemmaCard
-                      title="Votre premier arbitrage"
-                      question={view.intro.dilemma.question}
-                      routes={view.intro.dilemma.routes}
-                    />
-                    <p className="text-sm leading-relaxed">
-                      Fixez votre {view.vocabulary.priceLabel.toLowerCase()}, votre volume et vos budgets,
-                      puis observez.
-                    </p>
-                  </section>
-                ) : null}
-
-                {view.roundBriefing ? (
-                  <section className="space-y-4 rounded-xl border border-white/10 bg-slate-900 p-6 text-slate-300">
-                    <div>
-                      <h2 className="text-lg font-semibold text-slate-100">
-                        {periodLabel(view.roundDays, view.currentRound)} · où vous en êtes
-                      </h2>
-                      <p className="mt-2 text-sm leading-relaxed">{view.roundBriefing.headline}</p>
-                    </div>
-                    <ParametersPanels
-                      intro={view.intro}
-                      vocabulary={view.vocabulary}
-                      capacityFacts={view.capacityFacts}
-                    />
-                    <DilemmaCard
-                      title="L'arbitrage de ce tour"
-                      question={view.roundBriefing.question}
-                      routes={view.roundBriefing.routes}
-                    />
-                  </section>
-                ) : null}
-
-                {/* Events */}
-                {view.announcedEventCards.length > 0 ? (
-                  <section className="rounded-xl border border-amber-400/30 bg-slate-900 p-4">
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-400">
-                      ⚡ Votre enseignant a tiré une carte : elle s&apos;appliquera à ce tour
-                    </p>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {view.announcedEventCards.map((card, i) => (
-                        <EventCard
-                          key={`${card.code}-${card.teamId ?? "market"}`}
-                          code={card.code}
-                          delayMs={i * 450}
-                          announced
-                          targetLabel={
-                            card.teamId
-                              ? card.isMyTeam
-                                ? "🎯 Votre équipe"
-                                : `→ ${card.teamName ?? "Une autre équipe"}`
-                              : "Toute la classe"
-                          }
-                          highlight={card.isMyTeam}
-                        />
-                      ))}
-                    </div>
-                    <p className="mt-2 text-xs text-slate-500">
-                      Adaptez vos décisions en conséquence : c&apos;est tout l&apos;intérêt d&apos;être prévenu.
-                    </p>
-                  </section>
-                ) : null}
-
-                {view.seasonNotes.length > 0 ? (
-                  <section className="rounded-xl border border-sky-400/20 bg-slate-900 px-4 py-3 text-sm text-sky-200">
-                    🌤️ Saison du tour :{" "}
-                    {view.seasonNotes
-                      .map(
-                        (n) =>
-                          `${n.name} ×${n.coef.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} (${
-                            n.coef > 1 ? "haute saison" : "basse saison"
-                          })`,
-                      )
-                      .join(" · ")}
-                    {". "}Dimensionnez votre volume en conséquence.
-                  </section>
-                ) : null}
-
-                {/* Pedagogical situations */}
-                {situations.current.length > 0 && statutSituations ? (
-                  <section className="space-y-4">
-                    <p
-                      className={`rounded-lg border px-4 py-2 text-sm ${
-                        statutSituations.manques.length === 0
-                          ? "border-emerald-400/30 bg-emerald-950/20 text-emerald-300"
-                          : "border-amber-400/30 bg-amber-950/20 text-amber-300"
-                      }`}
-                    >
-                      {statutSituations.manques.length === 0 ? "✓ " : "⚠ "}
-                      {libelleStatut(statutSituations)}
-                    </p>
-                    {situations.current.map((s) => (
-                      <SituationCard key={s.instanceId} gameId={view.gameId} situation={s} />
-                    ))}
-                  </section>
-                ) : null}
-
-                {/* Analytical hints */}
-                {(() => {
-                  const allHints = [...new Map(
-                    situations.current
-                      .flatMap((s) => s.analyticalHints)
-                      .map((h) => [h.code, h] as const)
-                  ).values()].sort((a, b) => a.name.localeCompare(b.name, "fr"));
-                  return allHints.length > 0 ? (
-                    <section className="space-y-3">
-                      <h2 className="text-sm font-semibold text-slate-200">
-                        Points clés à examiner
-                      </h2>
-                      <p className="text-xs text-slate-400">
-                        Les variables et notions à observer pour analyser les situations de ce tour.
-                      </p>
-                      <div className="grid gap-2 sm:grid-cols-2">
-                        {allHints.map((h) => (
-                          <div key={h.code} className="rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{h.name}</p>
-                            <p className="mt-1 text-xs text-slate-400">{h.objective}</p>
-                            {h.keyPoints.length > 0 ? (
-                              <ul className="mt-2 space-y-0.5">
-                                {h.keyPoints.map((kp) => (
-                                  <li key={kp} className="text-sm text-slate-300">· {kp}</li>
-                                ))}
-                              </ul>
-                            ) : null}
-                          </div>
-                        ))}
-                      </div>
-                    </section>
-                  ) : null;
-                })()}
-
-                {/* Action levers */}
-                {(() => {
-                  const FIELD_LABELS: Record<string, string> = {
-                    price: "Prix de vente",
-                    productionPlan: "Plan de production",
-                    marketingBudget: "Budget marketing",
-                    qualityBudget: "Budget qualité",
-                    maintenanceBudget: "Budget maintenance",
-                  };
-                  const DIRECTION_ICONS: Record<string, string> = { up: "↑", down: "↓", review: "⟳" };
-                  // Un levier ne se conseille que si l'élève a le contrôle
-                  // correspondant sous les yeux : aux premiers niveaux, budgets
-                  // qualité et maintenance sont masqués (decision-form). Les
-                  // pointer ici enverrait « ↑ Budget maintenance » vers un champ
-                  // introuvable — le lien décision→action, cœur de l'app, rompu.
-                  const champActionnable = (field: string): boolean => {
-                    if (field === "qualityBudget") return view.enabledDecisions.quality;
-                    if (field === "maintenanceBudget") return view.enabledDecisions.maintenance;
-                    return true; // prix, production, marketing : toujours ouverts
-                  };
-                  const byField = new Map<string, { direction: string; hints: string[] }>();
-                  for (const s of situations.current) {
-                    for (const lever of s.decisionLevers ?? []) {
-                      if (!champActionnable(lever.field)) continue;
-                      const existing = byField.get(lever.field);
-                      if (!existing) {
-                        byField.set(lever.field, { direction: lever.direction, hints: [lever.hint] });
-                      } else {
-                        existing.hints.push(lever.hint);
-                        if (existing.direction !== lever.direction) existing.direction = "review";
-                      }
-                    }
-                  }
-                  const levers = [...byField.entries()].map(([field, { direction, hints: fieldHints }]) => ({
-                    field, direction, hints: fieldHints, label: FIELD_LABELS[field] ?? field,
-                  }));
-                  return levers.length > 0 ? (
-                    <section className="space-y-3">
-                      <h2 className="text-sm font-semibold text-slate-200">
-                        Leviers d&apos;action
-                      </h2>
-                      <div className="grid gap-2 sm:grid-cols-2">
-                        {levers.map((l) => (
-                          <div key={l.field} className="flex gap-2 rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
-                            <span className="mt-0.5 text-base leading-none text-amber-400">{DIRECTION_ICONS[l.direction]}</span>
-                            <div className="min-w-0">
-                              <span className="text-sm font-medium text-slate-200">{l.label}</span>
-                              {l.hints.map((h, i) => (
-                                <p key={i} className="mt-0.5 text-xs text-slate-400">{h}</p>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </section>
-                  ) : null;
-                })()}
-              </div>
                   ),
                   decisions: (
                     <section id="decisions" className="rounded-xl border border-amber-400/20 bg-slate-900 p-6">
