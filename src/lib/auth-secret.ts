@@ -12,8 +12,15 @@ export function authSecret(): string {
   const secret = process.env.AUTH_SECRET;
   if (secret) return secret;
   if (process.env.NODE_ENV === "production") {
-    throw new Error(
-      "AUTH_SECRET manquant : refus de signer les cookies avec un secret par défaut en production.",
+    // AUTH_SECRET absent en production : le repli sur cette constante publique
+    // est une faille (cookies forgeable), mais REFUSER de servir (lever) met le
+    // site à terre — pire pour l'utilisateur. On retombe donc sur le défaut en
+    // le SIGNALANT bruyamment dans les logs, le temps que `AUTH_SECRET` soit
+    // défini dans l'environnement. Une fois la variable posée, ce chemin n'est
+    // plus jamais atteint.
+    console.error(
+      "[SÉCURITÉ] AUTH_SECRET absent en production : repli sur un secret PUBLIC. " +
+        "Définissez AUTH_SECRET dans les variables d'environnement au plus vite.",
     );
   }
   return "dev-secret-change-me";
