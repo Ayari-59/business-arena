@@ -226,7 +226,10 @@ export async function updateRankings(gameId: string, teamIds: string[]): Promise
   }
 
   const entries = teamIds.map((teamId) => {
-    const roundBpis: number[] = [];
+    // On garde l'INDICE RÉEL de chaque tour scoré : la pondération de trajectoire
+    // (gameBpi) pèse le tour par son indice, pas par sa position dans la liste —
+    // un tour sauté au milieu ne sous-pondère plus les tours suivants.
+    const roundScores: { index: number; bpi: number }[] = [];
     const dimensionSums = new Map<string, { sum: number; n: number }>();
     for (const round of gameRounds) {
       const rows = scoreRows.filter((s) => s.roundId === round.id && s.teamId === teamId);
@@ -241,8 +244,9 @@ export async function updateRankings(gameId: string, teamIds: string[]): Promise
         agg.n += 1;
         dimensionSums.set(dimension, agg);
       }
-      roundBpis.push(bpi);
+      roundScores.push({ index: round.index, bpi });
     }
+    const roundBpis = roundScores.map((r) => r.bpi);
     const teamResults = resultRows.filter((r) => r.teamId === teamId);
     const cumulativeNetIncome = teamResults.reduce((sum, r) => sum + Number(r.netIncome), 0);
     const lastTreasury = teamResults.length
@@ -255,7 +259,7 @@ export async function updateRankings(gameId: string, teamIds: string[]): Promise
     const financialAvg = dimensionSums.get("financial");
     return {
       teamId,
-      bpi: gameBpi(roundBpis),
+      bpi: gameBpi(roundScores),
       roundBpis,
       cumulativeNetIncome,
       lastTreasury,
