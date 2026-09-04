@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { users } from "@/db/schema";
+import { authSecret } from "@/lib/auth-secret";
 
 /**
  * Session enseignant : cookie signé HMAC.
@@ -41,7 +42,7 @@ export interface SessionPayload {
 }
 
 function secret(): string {
-  return process.env.AUTH_SECRET ?? "dev-secret-change-me";
+  return authSecret();
 }
 
 function sign(payload: string, cle: string): string {
