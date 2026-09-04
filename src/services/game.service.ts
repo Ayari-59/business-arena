@@ -10,7 +10,8 @@ import {
   teams,
   users,
 } from "@/db/schema";
-import { scenarioByCode, type ScenarioVocabulary } from "@/config/scenarios/registry";
+import type { ScenarioVocabulary } from "@/config/scenarios/registry";
+import { resolveScenarioDefinition } from "@/services/scenario-source.service";
 import { lireSource, type DecisionSourceMap } from "@/config/decision-source";
 import {
   presetFromProfile,
@@ -134,7 +135,9 @@ export async function getGameKind(gameId: string): Promise<GameKind> {
 export async function getGameVocabulary(gameId: string): Promise<ScenarioVocabulary> {
   const game = (await db.select().from(games).where(eq(games.id, gameId)))[0];
   if (!game) throw new Error("Partie introuvable");
-  return scenarioByCode((game.scenarioSnapshot as { code?: string } | null)?.code).vocabulary;
+  return (
+    await resolveScenarioDefinition((game.scenarioSnapshot as { code?: string } | null)?.code)
+  ).vocabulary;
 }
 
 // ---------------------------------------------------------------------------
@@ -279,7 +282,7 @@ export async function getTeacherGameView(
     : [];
 
   const rankingRows = await db.select().from(gameRankings).where(eq(gameRankings.gameId, gameId));
-  const snapshotDefinition = scenarioByCode(
+  const snapshotDefinition = await resolveScenarioDefinition(
     (game.scenarioSnapshot as { code?: string } | null)?.code,
   );
 

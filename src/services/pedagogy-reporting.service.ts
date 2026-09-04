@@ -16,7 +16,8 @@ import {
   teams,
   users,
 } from "@/db/schema";
-import { SCENARIOS, scenarioByCode, situationByCode } from "@/config/scenarios/registry";
+import { SCENARIOS, DEFAULT_SCENARIO_CODE, situationByCode } from "@/config/scenarios/registry";
+import { resolveScenarioDefinition } from "@/services/scenario-source.service";
 import { quizModeFromProfile, type QuizMode } from "@/config/difficulty";
 import { decrireSource, lireSource, type DecisionSourceMap } from "@/config/decision-source";
 import { playerStrength } from "@/pedagogy/adaptivity";
@@ -310,15 +311,23 @@ export async function getTeacherUsageView(teacherId: string): Promise<TeacherUsa
         .where(inArray(hintUsages.situationInstanceId, instances.map((i) => i.id)))
     : [];
 
-  // Secteurs : le code vient du SNAPSHOT, donc du scénario réellement joué.
+  // Secteurs : le code vient du SNAPSHOT, donc du scénario réellement joué. On
+  // garde le code tel quel (un scénario enseignant n'est plus confondu avec
+  // NOVA) et on résout son titre par la source unique (registre ou base).
   const sectorCounts = new Map<string, number>();
   for (const g of gameRows) {
-    const code = scenarioByCode((g.scenarioSnapshot as { code?: string } | null)?.code).code;
+    const code = (g.scenarioSnapshot as { code?: string } | null)?.code ?? DEFAULT_SCENARIO_CODE;
     sectorCounts.set(code, (sectorCounts.get(code) ?? 0) + 1);
   }
-  const sectors = [...sectorCounts.entries()]
-    .map(([code, count]) => ({ code, title: scenarioByCode(code).title, games: count }))
-    .sort((a, b) => b.games - a.games);
+  const sectors = (
+    await Promise.all(
+      [...sectorCounts.entries()].map(async ([code, count]) => ({
+        code,
+        title: (await resolveScenarioDefinition(code)).title,
+        games: count,
+      })),
+    )
+  ).sort((a, b) => b.games - a.games);
 
   // Une équipe sans joueur n'a jamais rien rendu, et son instance est pourtant
   // débriefée avec un score de zéro comme les autres. La moyenner reviendrait à
@@ -688,8 +697,8 @@ export async function getGameGradeSheet(
   return {
     gameId,
     joinCode: game.joinCode ?? null,
-    scenarioTitle: scenarioByCode(
-      (game.scenarioSnapshot as { code?: string } | null)?.code,
+    scenarioTitle: (
+      await resolveScenarioDefinition((game.scenarioSnapshot as { code?: string } | null)?.code)
     ).title,
     quizMode: quizModeFromProfile(game.difficultyProfile),
     roundsResolved: resolved.length,
@@ -746,7 +755,9 @@ export async function getStudentProgressView(
   if (memberships.length === 0)
     return {
       gameId,
-      scenarioTitle: scenarioByCode((game.scenarioSnapshot as { code?: string } | null)?.code).title,
+      scenarioTitle: (
+        await resolveScenarioDefinition((game.scenarioSnapshot as { code?: string } | null)?.code)
+      ).title,
       classAverage: { strength: 0, averageScore: null },
       students: [],
     };
@@ -845,7 +856,9 @@ export async function getStudentProgressView(
 
   return {
     gameId,
-    scenarioTitle: scenarioByCode((game.scenarioSnapshot as { code?: string } | null)?.code).title,
+    scenarioTitle: (
+      await resolveScenarioDefinition((game.scenarioSnapshot as { code?: string } | null)?.code)
+    ).title,
     classAverage: { strength: Math.round(avgStrength * 10) / 10, averageScore: avgScore },
     students: students.sort((a, b) => a.strength - b.strength),
   };
