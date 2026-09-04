@@ -116,7 +116,7 @@ export default function GuidePage() {
             <div className="rounded-xl border border-white/10 bg-slate-950 p-5">
               <p className="text-sm font-semibold text-amber-300">Je veux essayer, tout de suite</p>
               <p className="mt-2 text-sm leading-relaxed text-slate-400">
-                Depuis l&apos;<Link href="/" className="text-amber-300 underline-offset-4 hover:underline">accueil</Link>,
+                Depuis la page <Link href="/jouer" className="text-amber-300 underline-offset-4 hover:underline">Jouer</Link>,
                 choisissez votre secteur (atelier, boutique, hôtel, restaurant, cabinet de
                 conseil, boutique en ligne ou salle de sport), la périodicité et le nombre de
                 concurrents, puis{" "}
