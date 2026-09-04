@@ -64,7 +64,7 @@ export function SiteHeader() {
           le voit depuis un ordinateur de bureau. */}
       <nav
         aria-label="Navigation principale"
-        className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-4 sm:px-6"
+        className="relative z-40 mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-3.5 sm:px-6"
       >
         <div className="flex items-center gap-2.5">
           <Link href="/" aria-label="Accueil">
@@ -80,8 +80,8 @@ export function SiteHeader() {
           </span>
         </div>
 
-        <div className="flex flex-wrap items-center justify-end gap-3">
-          <div className="hidden items-center gap-5 text-sm text-slate-400 lg:flex">
+        <div className="flex flex-wrap items-center justify-end gap-2.5">
+          <div className="mr-1 hidden items-center gap-6 text-sm text-slate-400 lg:flex">
             {liensDeTete().map((lien) => (
               <Link
                 key={lien.href}
@@ -128,6 +128,16 @@ export function SiteHeader() {
         </div>
       </nav>
 
+      {/* Voile derrière le panneau : sans lui, sur téléphone la page
+          transparaissait dessous et le menu semblait flotter à moitié ouvert.
+          Un clic dessus referme. Posé sous la barre (z-30) pour ne pas la
+          ternir, mais au-dessus du reste de la page. */}
+      <div
+        aria-hidden
+        onClick={() => setOuvert(false)}
+        className={`fixed inset-0 z-30 bg-slate-950/70 backdrop-blur-sm ${ouvert ? "block" : "hidden"}`}
+      />
+
       <div
         id="plan-du-site"
         className={`absolute inset-x-0 top-full z-50 origin-top px-4 pb-4 sm:left-auto sm:right-6 sm:w-[26rem] sm:px-0 ${
@@ -137,29 +147,34 @@ export function SiteHeader() {
         {/* Le plan est plus haut qu'un écran de téléphone. Il défile donc
             dans son propre cadre : sans cela, les dernières entrées ne
             s'atteignent qu'en faisant défiler la page DERRIÈRE le menu. */}
-        <div className="max-h-[calc(100vh-5rem)] overflow-y-auto rounded-2xl border border-white/10 bg-slate-900 p-5 shadow-2xl">
+        <div className="max-h-[calc(100dvh-4.5rem)] overflow-y-auto rounded-2xl border border-white/10 bg-slate-900 p-4 shadow-2xl">
           <Entree
             lien={ACTION_PRINCIPALE}
             courant={estCourant(ACTION_PRINCIPALE.href)}
             accent
           />
 
-          <div className="mt-4 space-y-4 border-t border-white/10 pt-4">
+          <div className="mt-3 space-y-3 border-t border-white/10 pt-3">
             {NAVIGATION.map((groupe) => (
               <div key={groupe.code}>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                <p className="px-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
                   {groupe.titre}
                 </p>
-                <div className="mt-1.5 space-y-0.5">
+                <div className="mt-1 space-y-0.5">
                   {groupe.liens.map((lien) => (
-                    <Entree key={lien.href} lien={lien} courant={estCourant(lien.href)} />
+                    <Entree
+                      key={lien.href}
+                      lien={lien}
+                      courant={estCourant(lien.href)}
+                      compact={groupe.code === "entrer"}
+                    />
                   ))}
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-4 border-t border-white/10 pt-3 text-xs text-slate-500">
+          <div className="mt-3 flex flex-wrap gap-4 border-t border-white/10 pt-3 text-xs text-slate-500">
             {LIENS_LEGAUX.map((lien) => (
               <Link key={lien.href} href={lien.href} className="hover:text-slate-300">
                 {lien.libelle}
@@ -183,19 +198,24 @@ function Entree({
   lien,
   courant,
   accent = false,
+  compact = false,
 }: {
   lien: LienDeMenu;
   courant: boolean;
   accent?: boolean;
+  /** Libellé seul (l'aide reste au survol) : pour les entrées dont le nom se
+   *  suffit — « Rejoindre une partie », « Espace enseignant », « Concours ». */
+  compact?: boolean;
 }) {
   return (
     <Link
       href={lien.href}
+      title={lien.aide}
       aria-current={courant ? "page" : undefined}
-      className={`block rounded-lg px-3 py-2 transition ${
+      className={`block rounded-lg px-3 transition ${
         accent
-          ? "border border-amber-400/40 bg-amber-950/20 hover:border-amber-400"
-          : "hover:bg-white/5"
+          ? "border border-amber-400/40 bg-amber-950/20 py-2.5 hover:border-amber-400"
+          : `${compact ? "py-1" : "py-1.5"} hover:bg-white/5`
       } ${courant ? "bg-white/5" : ""}`}
     >
       <span
@@ -203,7 +223,9 @@ function Entree({
       >
         {lien.libelle}
       </span>
-      <span className="mt-0.5 block text-xs leading-relaxed text-slate-400">{lien.aide}</span>
+      {compact ? null : (
+        <span className="mt-0.5 block text-xs leading-relaxed text-slate-400">{lien.aide}</span>
+      )}
     </Link>
   );
 }
