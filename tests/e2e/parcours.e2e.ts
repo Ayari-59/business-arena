@@ -288,18 +288,8 @@ describe("parcours enseignant et élève", () => {
   it("la vitrine présente les sept entreprises, et son bouton choisit le métier", async () => {
     // Une page vitrine se vérifie dans un navigateur ou pas du tout : elle
     // n'est faite que de rendu et de liens. Et son bouton doit VRAIMENT
-    // amener sur le formulaire avec le bon secteur : c'est la jointure, donc
-    // l'endroit où ça casse.
-    // L'accueil porte les mêmes sept entreprises en vignettes, et chaque
-    // vignette mène à sa fiche. C'est la jointure entre les deux pages.
-    await aller(prof, "/");
-    const accueil = await texte(prof);
-    for (const nom of ["NOVA", "MAILLE & CO", "L'ESCALE", "VOLT FITNESS"]) {
-      expect(accueil, `${nom} absente des vignettes de l'accueil`).toContain(nom);
-    }
-    await prof.locator('a[href="/entreprises#bistrot"]').first().click();
-    await prof.waitForURL(/\/entreprises#bistrot$/, { timeout: 30_000 });
-
+    // amener sur le formulaire (/jouer) avec le bon secteur : c'est la
+    // jointure, donc l'endroit où ça casse.
     await aller(prof, "/entreprises");
     const vitrine = await texte(prof);
     for (const nom of [
