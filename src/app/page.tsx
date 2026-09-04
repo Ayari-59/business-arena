@@ -395,10 +395,11 @@ export default async function Home({
         {/*
           Colonnes centrées l'une sur l'autre : le texte est bien plus court que
           le formulaire, et les aligner par le haut laissait un vide sous lui.
-          La colonne de droite passe à 460 px, faute de quoi le libellé du
-          niveau se faisait couper par le rendu natif du sélecteur.
+          La colonne de droite est large (540 px) : le formulaire y respire, ses
+          cartes de secteur s'étalent, sa hauteur se rapproche de celle du texte.
+          Le texte, lui, reste borné par son max-w-lg et ne s'étire pas.
         */}
-        <div className="grid items-start gap-8 lg:grid-cols-[1fr_460px] lg:items-center">
+        <div className="grid items-start gap-8 lg:grid-cols-[1fr_540px] lg:items-center">
           <div>
             <h2 className="text-2xl font-bold text-slate-50">Lancez votre première partie</h2>
             <p className="mt-3 max-w-lg text-sm leading-relaxed text-slate-400">

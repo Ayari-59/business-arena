@@ -92,7 +92,7 @@ export function QuickConfigFields({
 
       {/* 1 · Entreprise */}
       <p className={`mt-4 ${label}`}>Votre entreprise</p>
-      <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4">
+      <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-5">
         {scenarios.map((s) => {
           const on = s.code === scenario;
           return (
