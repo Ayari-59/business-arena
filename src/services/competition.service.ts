@@ -1,5 +1,5 @@
 import { randomInt } from "node:crypto";
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   competitionEntries,
@@ -271,10 +271,16 @@ export async function startQualification(args: {
 
 /** Classements d'une phase, par partie, exprimés en entries (labels d'équipe). */
 async function stageStandings(stageId: string): Promise<GroupStanding[][]> {
+  // Ordre STABLE, identique à celui de getCompetitionView : les classements
+  // sont ensuite associés aux cartes de partie PAR INDEX. Sans ORDER BY, deux
+  // requêtes non ordonnées peuvent renvoyer les lignes dans un ordre différent
+  // (surtout pendant des clôtures concurrentes) et le classement d'un groupe
+  // s'afficherait sous la carte d'un autre.
   const stageGames = await db
     .select()
     .from(games)
-    .where(eq(games.competitionStageId, stageId));
+    .where(eq(games.competitionStageId, stageId))
+    .orderBy(asc(games.id));
   if (stageGames.length === 0) return [];
   const gameIds = stageGames.map((g) => g.id);
   const allTeams = await db.select().from(teams).where(inArray(teams.gameId, gameIds));
@@ -459,10 +465,13 @@ export async function getCompetitionView(competitionId: string): Promise<Competi
 
   const stageViews = [];
   for (const stage of stages) {
+    // Même ORDER BY que stageStandings : l'association standings[i] ↔ carte de
+    // partie se fait par index, les deux ordres doivent coïncider.
     const stageGames = await db
       .select()
       .from(games)
-      .where(eq(games.competitionStageId, stage.id));
+      .where(eq(games.competitionStageId, stage.id))
+      .orderBy(asc(games.id));
     const standings = await stageStandings(stage.id);
     stageViews.push({
       index: stage.index,
