@@ -240,6 +240,8 @@ export interface TeacherGameView {
     hasSubmitted: boolean;
     /** Source des pivots (prix, volume) des décisions validées ce tour ; null sans validation. */
     decisionSource: DecisionSourceMap | null;
+    /** La justification écrite par l'équipe pour ce tour ; null si vide ou non validée. */
+    justification: string | null;
     lastNetIncome: number | null;
     lastNetTreasury: number | null;
   }[];
@@ -336,6 +338,8 @@ export async function getTeacherGameView(
         decisionSource: lireSource(
           submitted.find((d) => d.teamId === t.id && d.status === "validated")?.decisionSource,
         ),
+        justification:
+          submitted.find((d) => d.teamId === t.id && d.status === "validated")?.justification ?? null,
         lastNetIncome: last ? Number(last.netIncome) : null,
         lastNetTreasury: last ? Number(last.netTreasury) : null,
       };
