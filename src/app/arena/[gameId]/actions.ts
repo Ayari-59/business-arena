@@ -72,8 +72,21 @@ export async function playRoundAction(
       const hasMachine = formData.has("machineCapacityUnits");
       const buyRaw = formData.get("equipmentBuyJson");
       const sellRaw = formData.get("equipmentSellJson");
-      const equipBuy = buyRaw ? JSON.parse(String(buyRaw)) : undefined;
-      const equipSell = sellRaw ? JSON.parse(String(sellRaw)) : undefined;
+      // Champs cachés alimentés par l'îlot d'équipement : un formulaire forgé
+      // (ou une page périmée) peut envoyer un JSON invalide. On parse en sûreté
+      // — un contenu illisible devient « pas d'équipement » plutôt qu'un 500,
+      // et Zod valide ensuite la forme du tableau retenu.
+      const parseEquip = (raw: FormDataEntryValue | null): unknown[] | undefined => {
+        if (!raw) return undefined;
+        try {
+          const v = JSON.parse(String(raw));
+          return Array.isArray(v) ? v : undefined;
+        } catch {
+          return undefined;
+        }
+      };
+      const equipBuy = parseEquip(buyRaw);
+      const equipSell = parseEquip(sellRaw);
       const hasEquip = (equipBuy && equipBuy.length > 0) || (equipSell && equipSell.length > 0);
       if (!hasMachine && !hasEquip) return undefined;
       return {

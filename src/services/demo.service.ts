@@ -155,18 +155,18 @@ export async function seedDemoWorld(): Promise<DemoWorld> {
     for (const situation of current) {
       const def = situationByCode.get(situation.code);
       if (!def) continue;
-      await unlockHint({ instanceId: situation.instanceId, userId: lea }).catch(() => {});
+      await unlockHint({ instanceId: situation.instanceId, userId: lea }).catch((e) => console.warn("[seed démo] étape best-effort ignorée :", e));
       await submitDiagnosis({
         instanceId: situation.instanceId,
         userId: lea,
         selectedOptionIds: def.diagnosticOptions.filter((o) => o.correct).map((o) => o.id),
         freeText: "Analyse de l'équipe : nous relions les chiffres du tableau de bord au concept en jeu.",
-      }).catch(() => {});
+      }).catch((e) => console.warn("[seed démo] étape best-effort ignorée :", e));
       await submitQuiz({
         instanceId: situation.instanceId,
         userId: lea,
         answers: Object.fromEntries(def.quiz.map((q) => [q.id, q.correctOptionId])),
-      }).catch(() => {});
+      }).catch((e) => console.warn("[seed démo] étape best-effort ignorée :", e));
     }
 
     // Décisions des trois équipes (styles contrastés), puis clôture
@@ -175,7 +175,7 @@ export async function seedDemoWorld(): Promise<DemoWorld> {
         gameId,
         userId: studentId,
         payload: TEAM_DECISIONS[teamIndex]!,
-      }).catch(() => {});
+      }).catch((e) => console.warn("[seed démo] étape best-effort ignorée :", e));
     }
     await closeCurrentRound({ gameId, teacherId });
   }

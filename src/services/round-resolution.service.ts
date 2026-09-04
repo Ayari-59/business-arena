@@ -124,7 +124,10 @@ export async function submitTeamDecisions(args: {
   // pour ce tour, recalculé ici et non reçu du client.
   const decisionSource = await sourceDesPivots({
     gameId: args.gameId,
-    snapshot: game.scenarioSnapshot as EngineScenarioConfig,
+    // Validé par la même porte que le reste du moteur (parseScenarioConfig)
+    // plutôt qu'un cast brut : cette lecture du snapshot était la seule à la
+    // contourner.
+    snapshot: parseScenarioConfig(game.scenarioSnapshot),
     teamId: team.id,
     roundIndex: game.currentRound,
     payload: args.payload,
