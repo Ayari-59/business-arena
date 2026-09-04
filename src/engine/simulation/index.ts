@@ -1019,11 +1019,18 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         ? { taxLossCarryforward: finance.taxLossCarryforward }
         : {}),
       ...(bank ? { bankTrust: confianceApres } : {}),
+      // Le bonus qualité du fournisseur s'applique à la qualité PRODUITE ce
+      // tour, avant lissage — et non en addition APRÈS l'inertie. Ajouté après,
+      // il se composait : `previous` contenant déjà le bonus des tours passés,
+      // l'effet réel valait bonus/(1-inertie) au point fixe (×2,5 en nova) et
+      // persistait plusieurs tours après un changement de fournisseur. Fondu
+      // dans le produit, l'effet à l'équilibre vaut exactement le bonus, et il
+      // décroît normalement par inertie dès qu'on quitte le fournisseur.
       perceivedQuality: updatePerceivedQuality(
         w.state.perceivedQuality,
-        w.producedQuality,
+        w.producedQuality + w.supplierQualityBonus,
         scenario.production.qualityInertia,
-      ) + w.supplierQualityBonus,
+      ),
       availability: updateAvailability({
         current: w.state.availability,
         maintenanceBudget: w.decisions.maintenanceBudget,
