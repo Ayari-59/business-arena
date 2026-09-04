@@ -102,7 +102,7 @@ describe("partie de classe complète", () => {
 
     // Alice valide, Bruno ne fait rien → reconduction/repli à la clôture
     await submitTeamDecisions({ gameId, userId: alice, payload: DECISIONS });
-    let teacherView = await getTeacherGameView(gameId, teacherId);
+    const teacherView = await getTeacherGameView(gameId, teacherId);
     const aliceRow = teacherView!.teams.find((t) => t.teamId === aliceTeam)!;
     const brunoRow = teacherView!.teams.find((t) => t.teamId === brunoTeam)!;
     expect(aliceRow.hasSubmitted).toBe(true);

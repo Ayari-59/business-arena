@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 /**
  * Tests de protection de resolveGameRound :
@@ -48,7 +48,6 @@ describe("A — tour déjà en résolution (double résolution simultanée)", ()
     ]);
 
     const fulfilled = [a, b].filter((r) => r.status === "fulfilled");
-    const rejected = [a, b].filter((r) => r.status === "rejected");
 
     // Au moins un a réussi
     expect(fulfilled.length).toBeGreaterThanOrEqual(1);

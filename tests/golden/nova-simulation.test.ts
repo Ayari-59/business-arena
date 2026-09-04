@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { simulateRound } from "../../src/engine/simulation";
-import { botDecisions } from "../../src/engine/bots";
+import { botDecisions, type BotProfile } from "../../src/engine/bots";
 import { novaScenario, novaCompany } from "../../src/config/scenarios/nova";
 import type { RoundDecisions, SimulationInput, SimulationOutput } from "../../src/engine/types";
 
@@ -164,7 +164,7 @@ describe("golden NOVA — multi-tour (3 rounds)", () => {
       };
       for (const c of companies) {
         if (c.controller === "bot") {
-          decisions[c.id] = botDecisions(c.botProfile as any, {
+          decisions[c.id] = botDecisions(c.botProfile as BotProfile, {
             scenario: novaScenario,
             state: c,
             roundIndex,

@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { botDecisions, neutralDecisions } from "../../src/engine/bots";
 import type { BotProfile, BotContext } from "../../src/engine/bots";
 import { novaScenario, novaCompany } from "../../src/config/scenarios/nova";
-import type { RoundDecisions } from "../../src/engine/types";
 
 /**
  * Tests unitaires des bots : vérifient le déterminisme (même input + même seed

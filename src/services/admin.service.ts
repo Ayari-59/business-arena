@@ -3,7 +3,6 @@ import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   getLicenceStatus,
-  listOrgLicences,
   type LicenceStatus,
   type OrgLicence,
 } from "@/services/licence.service";

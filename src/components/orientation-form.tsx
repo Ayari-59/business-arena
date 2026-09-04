@@ -8,7 +8,7 @@ import {
   recommander,
   type Semestre,
 } from "@/config/orientation";
-import { PERIODICITY_LABELS, periodicityFromRoundDays } from "@/config/scenarios/periodicity";
+import { PERIODICITY_LABELS } from "@/config/scenarios/periodicity";
 
 /**
  * Le formulaire d'orientation.

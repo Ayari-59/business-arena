@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 /**
  * Tests de scoring.service.ts :
@@ -22,7 +22,6 @@ import {
   resolveCurrentRound,
 } from "@/services/game.service";
 import {
-  persistRoundScores,
   readPedagogyInputs,
   updateRankings,
 } from "@/services/scoring.service";

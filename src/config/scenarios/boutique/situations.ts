@@ -1,4 +1,4 @@
-import { attachModelQuestions, hints, type SituationCategory, type SituationDef, type DecisionLever } from "../situation-kit";
+import { attachModelQuestions, hints, type SituationDef } from "../situation-kit";
 
 /**
  * Situations pédagogiques de MAILLE & CO (commerce de détail).

@@ -19,7 +19,6 @@ const CATEGORY_LABELS: Record<SituationCategory, string> = {
   alerte_comptable: "Alerte comptable",
   tresorerie_dormante: "Trésorerie dormante",
 };
-import type { InterpretationFact } from "@/pedagogy/detection";
 
 const initial: PedagogyState = { error: null };
 
