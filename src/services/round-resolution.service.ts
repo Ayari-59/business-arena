@@ -244,7 +244,16 @@ async function resolveGameRound(
           inArray(companyStates.teamId, teamRows.map((t) => t.id)),
         ),
       );
-    const states = stateRows.map((r) => r.state as CompanyState);
+    // Ordre STABLE des entreprises passées au moteur : `simulateRound` consomme
+    // `companies` dans l'ordre du tableau pour ses tirages seedés (événement
+    // ciblé, rupture d'approvisionnement). Les lignes SQL n'ont pas d'ordre
+    // garanti (pas d'ORDER BY) : à graine égale mais ordre de lignes différent
+    // (rejeu à froid, VACUUM), le moteur désignait une victime différente et la
+    // promesse « même graine ⇒ même résultat » (anti-triche) tombait. On trie
+    // par id — les décisions restant indexées par id, rien d'autre ne bouge.
+    const states = stateRows
+      .map((r) => r.state as CompanyState)
+      .sort((a, b) => a.id.localeCompare(b.id));
     if (states.length !== teamRows.length) throw new Error("États d'entreprises incomplets");
 
     // Décisions soumises pour ce tour + ventes et décisions du tour précédent
