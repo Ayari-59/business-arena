@@ -239,7 +239,7 @@ describe("assurance catastrophe", () => {
     const b = out.results["b"]!;
     expect(a.insurance).toEqual({ premium: 2500, neutralizedEvents: [] });
     expect(a.incomeStatement.fixedCosts - b.incomeStatement.fixedCosts).toBeCloseTo(2500, 6);
-    expect(a.breakeven.breakEvenUnits).toBeGreaterThan(b.breakeven.breakEvenUnits);
+    expect(a.breakeven.breakEvenUnits).toBeGreaterThan(b.breakeven.breakEvenUnits!);
   });
 
   it("un événement non couvert frappe aussi les assurés", () => {

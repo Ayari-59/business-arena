@@ -136,8 +136,18 @@ export function StudyReportsPanel({ reports }: { reports: StudyReports }) {
               rows={[
                 ["Coût variable unitaire", euro(reports.finance.costs.unitVariableCost)],
                 ["Marge sur coût variable / u", euro(reports.finance.costs.unitMargin)],
-                ["Seuil de rentabilité", `${units(reports.finance.costs.breakEvenUnits)} u`],
-                ["Marge de sécurité", euro(reports.finance.costs.safetyMargin)],
+                [
+                  "Seuil de rentabilité",
+                  reports.finance.costs.breakEvenUnits != null
+                    ? `${units(reports.finance.costs.breakEvenUnits)} u`
+                    : "jamais atteint",
+                ],
+                [
+                  "Marge de sécurité",
+                  reports.finance.costs.safetyMargin != null
+                    ? euro(reports.finance.costs.safetyMargin)
+                    : "—",
+                ],
               ]}
             />
             <p className="text-slate-500">

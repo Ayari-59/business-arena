@@ -91,11 +91,16 @@ describe("seuil de rentabilité (doc 02 §5, §15)", () => {
     expect(r.breakEvenUnits).toBeCloseTo(96000 / 21, 6); // ≈ 4571,4
     expect(r.breakEvenRevenue).toBeCloseTo(96000 / (21 / 59), 6); // ≈ 269 714
     expect(r.safetyMargin).toBeCloseTo(295000 - 96000 / (21 / 59), 6);
-    expect(r.safetyIndex).toBeCloseTo(r.safetyMargin / 295000, 9);
+    expect(r.safetyIndex).toBeCloseTo(r.safetyMargin! / 295000, 9);
   });
-  it("marge unitaire nulle ou négative ⇒ seuil inatteignable", () => {
+  it("marge unitaire nulle ou négative ⇒ seuil jamais atteint (null, pas ±Infinity)", () => {
     const r = computeBreakeven({ fixedCosts: 1000, price: 10, uvc: 12, revenue: 500 });
-    expect(r.breakEvenUnits).toBe(Infinity);
+    // Aucune contribution : le seuil n'existe pas. Tout est null, et surtout la
+    // marge de sécurité ne déborde plus à −Infinity (qui s'affichait « −∞ € »).
+    expect(r.breakEvenUnits).toBeNull();
+    expect(r.breakEvenRevenue).toBeNull();
+    expect(r.safetyMargin).toBeNull();
+    expect(r.safetyIndex).toBeNull();
   });
   it("point mort : jour où le CA cumulé atteint le seuil", () => {
     // seuil 60 000, CA 90 000 sur 90 jours ⇒ jour 60

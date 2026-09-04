@@ -265,18 +265,21 @@ export function FinancialStatements({
             <Row
               label="Seuil de rentabilité"
               value={
-                Number.isFinite(result.breakeven.breakEvenUnits)
+                result.breakeven.breakEvenUnits != null && result.breakeven.breakEvenRevenue != null
                   ? `${units(result.breakeven.breakEvenUnits)} u (${euro(result.breakeven.breakEvenRevenue)})`
-                  : "inatteignable à cette marge"
+                  : "seuil jamais atteint (marge sur coût variable nulle ou négative)"
               }
               strong
             />
             <Row
               label="Marge de sécurité"
-              value={euro(result.breakeven.safetyMargin)}
-              tone={result.breakeven.safetyMargin >= 0 ? "good" : "bad"}
+              value={result.breakeven.safetyMargin != null ? euro(result.breakeven.safetyMargin) : "—"}
+              tone={result.breakeven.safetyMargin != null && result.breakeven.safetyMargin >= 0 ? "good" : "bad"}
             />
-            <Row label="Indice de sécurité" value={pct(result.breakeven.safetyIndex)} />
+            <Row
+              label="Indice de sécurité"
+              value={result.breakeven.safetyIndex != null ? pct(result.breakeven.safetyIndex) : "—"}
+            />
           </div>
         </div>
         <p className="mt-2 text-xs text-slate-500">

@@ -83,7 +83,7 @@ export function PeriodDashboard({
                 label="Résultat net"
                 value={formatEuro(r.incomeStatement.netIncome)}
                 tone={r.incomeStatement.netIncome >= 0 ? "good" : "critical"}
-                hint={`Seuil de rentabilité : ${Number.isFinite(r.breakeven.breakEvenUnits) ? `${formatUnits(r.breakeven.breakEvenUnits)} ${view.vocabulary.units}` : "inatteignable"}`}
+                hint={`Seuil de rentabilité : ${r.breakeven.breakEvenUnits != null ? `${formatUnits(r.breakeven.breakEvenUnits)} ${view.vocabulary.units}` : "jamais atteint"}`}
                 trend={trend(r.incomeStatement.netIncome, "netIncome")}
                 sparklineData={history.map((h) => h.netIncome)}
               />

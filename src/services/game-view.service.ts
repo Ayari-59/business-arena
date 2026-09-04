@@ -407,8 +407,8 @@ export interface StudyReports {
     costs: {
       unitVariableCost: number;
       unitMargin: number;
-      breakEvenUnits: number;
-      safetyMargin: number;
+      breakEvenUnits: number | null;
+      safetyMargin: number | null;
     };
     sector: { teams: number; avgRevenue: number; avgNetIncome: number; avgNetTreasury: number };
   };
