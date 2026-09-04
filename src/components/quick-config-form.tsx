@@ -154,7 +154,7 @@ export function QuickConfigFields({
       {/* Options repliées */}
       <details className="mt-4 rounded-lg border border-dashed border-white/15 px-3">
         <summary className="cursor-pointer list-none py-2.5 text-xs font-semibold text-slate-300 [&::-webkit-details-marker]:hidden">
-          <span className="text-slate-500">⚙</span> Options du marché — rythme, entreprises, tours
+          <span className="text-slate-500">⚙</span> Options du marché (rythme, entreprises, tours)
         </summary>
         <div className="pb-3">
           <p className={`mt-1 ${label}`}>Chaque tour représente…</p>
@@ -181,7 +181,7 @@ export function QuickConfigFields({
                 type="button"
                 onClick={() => setCompanies(c.value)}
                 aria-pressed={c.value === companies}
-                aria-label={`${c.value} entreprises — ${c.hint}`}
+                aria-label={`${c.value} entreprises : ${c.hint}`}
                 className={`${tile} py-2.5 text-base font-semibold ${c.value === companies ? tileOn : ""}`}
               >
                 {c.value}
