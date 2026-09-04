@@ -125,14 +125,15 @@ export function SiteHeader() {
         </div>
       </nav>
 
-      {/* Voile derrière le panneau : sans lui, sur téléphone la page
-          transparaissait dessous et le menu semblait flotter à moitié ouvert.
-          Un clic dessus referme. Posé sous la barre (z-30) pour ne pas la
-          ternir, mais au-dessus du reste de la page. */}
+      {/* Voile derrière le panneau, SUR TÉLÉPHONE seulement : là, le panneau
+          pleine largeur laissait transparaître la page dessous et semblait à
+          moitié ouvert. Sur grand écran le menu n'est qu'une carte de coin :
+          pas besoin d'assombrir toute la page (la fermeture au clic-dehors est
+          assurée par le gestionnaire plus haut). Posé sous la barre (z-30). */}
       <div
         aria-hidden
         onClick={() => setOuvert(false)}
-        className={`fixed inset-0 z-30 bg-slate-950/70 backdrop-blur-sm ${ouvert ? "block" : "hidden"}`}
+        className={`fixed inset-0 z-30 bg-slate-950/70 backdrop-blur-sm sm:hidden ${ouvert ? "block" : "hidden"}`}
       />
 
       <div
