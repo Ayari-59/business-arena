@@ -164,6 +164,12 @@ export async function setOrgLicence(args: {
   reference?: string | null;
   amountCents?: number | null;
 }): Promise<{ licenceId: string }> {
+  // Dates invalides (champ vide ou malformé → `new Date("")` = Invalid Date) :
+  // toute comparaison avec un NaN est fausse, la garde `endsAt <= startsAt`
+  // laissait donc passer une licence à dates invalides. On les refuse d'abord.
+  if (Number.isNaN(args.startsAt.getTime()) || Number.isNaN(args.endsAt.getTime())) {
+    throw new Error("Dates de licence invalides : renseignez un début et une fin valides.");
+  }
   if (args.endsAt <= args.startsAt) {
     throw new Error("La fin de la licence doit suivre son début.");
   }
