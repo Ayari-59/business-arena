@@ -143,7 +143,7 @@ describe("études achetables : l'information a un prix", () => {
     // 1 500 + 1 200 = 2 700 € de charges fixes en plus
     expect(bA.incomeStatement.fixedCosts - pA.incomeStatement.fixedCosts).toBeCloseTo(2700, 6);
     // le seuil de rentabilité monte : l'information se lit comme les autres charges
-    expect(bA.breakeven.breakEvenUnits).toBeGreaterThan(pA.breakeven.breakEvenUnits);
+    expect(bA.breakeven.breakEvenUnits).toBeGreaterThan(pA.breakeven.breakEvenUnits!);
     // et la trésorerie la décaisse (l'impôt peut amortir l'écart)
     expect(bA.cashFlow.closing).toBeLessThan(pA.cashFlow.closing);
   });

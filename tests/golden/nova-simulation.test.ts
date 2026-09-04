@@ -120,7 +120,7 @@ describe("golden NOVA — tour 1 mono-tour", () => {
   });
 
   it("Auris a un seuil de rentabilité plus bas (premium, qualité)", () => {
-    expect(auris.breakeven.breakEvenUnits).toBeLessThan(player.breakeven.breakEvenUnits);
+    expect(auris.breakeven.breakEvenUnits).toBeLessThan(player.breakeven.breakEvenUnits!);
   });
 
   it("pas d'événement au tour 1", () => {

@@ -747,10 +747,12 @@ export interface CompanyRoundResult {
     producedQuality: number;
   };
   breakeven: {
-    breakEvenUnits: number;
-    breakEvenRevenue: number;
-    safetyMargin: number;
-    safetyIndex: number;
+    // `null` quand la marge sur coût variable est nulle ou négative : le seuil
+    // de rentabilité n'existe pas (aucun volume ne le couvre).
+    breakEvenUnits: number | null;
+    breakEvenRevenue: number | null;
+    safetyMargin: number | null;
+    safetyIndex: number | null;
   };
   /**
    * Commandes fermes (événement « order ») : demandées, livrées du stock,

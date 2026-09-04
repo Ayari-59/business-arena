@@ -148,7 +148,7 @@ describe("simulateRound : cohérence économique et comptable", () => {
     const a = out.results["a"]!;
     const b = out.results["b"]!;
     expect(b.market.totalShare).toBeGreaterThan(a.market.totalShare);
-    expect(a.breakeven.breakEvenUnits).toBeLessThan(b.breakeven.breakEvenUnits);
+    expect(a.breakeven.breakEvenUnits).toBeLessThan(b.breakeven.breakEvenUnits!);
   });
   it("production bornée par les capacités, jamais par décret (§13)", () => {
     const out = simulateRound(

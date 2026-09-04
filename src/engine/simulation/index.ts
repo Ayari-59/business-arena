@@ -970,8 +970,10 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         payables: finance.closing.payables,
         market_share: totalShare,
         utilization_rate: w.utilizationRate,
-        break_even_units: breakeven.breakEvenUnits,
-        safety_margin: breakeven.safetyMargin,
+        // Le carnet KPI est un Record<string, number> (persisté en base, où les
+        // non-finis étaient déjà repliés sur 0) : un seuil inexistant s'y note 0.
+        break_even_units: breakeven.breakEvenUnits ?? 0,
+        safety_margin: breakeven.safetyMargin ?? 0,
         roe: ratios.returnOnEquity,
         roce: ratios.returnOnCapitalEmployed,
       },
