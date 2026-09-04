@@ -131,13 +131,15 @@ export async function playRoundAction(
     return { error: error instanceof Error ? error.message : "Erreur lors de la simulation." };
   }
   revalidatePath(`/arena/${gameId}`);
-  // En solo, valider a résolu le tour tout de suite : on amène le joueur sur
-  // les résultats fraîchement livrés. L'ancre pointe la période la plus récente
-  // (celle qu'il vient de jouer), dépliée et ouverte sur son onglet Résultats.
+  // En solo, valider a résolu le tour tout de suite. Plutôt que de jeter le
+  // joueur directement sur les résultats, on l'amène sur un écran intermédiaire
+  // « Tour simulé » (paramètre ?simule) qui marque l'étape et propose deux
+  // suites explicites : voir les résultats, ou passer au tour suivant — sans
+  // enchaîner sur un bouton « simuler » d'allure identique.
   // En classe, on ne redirige pas : les résultats n'arriveront qu'à la clôture
   // par l'enseignant. redirect() est hors du try (il lève NEXT_REDIRECT).
   if (kind === "solo") {
-    redirect(`/arena/${gameId}#dernier-resultat`);
+    redirect(`/arena/${gameId}?simule=1`);
   }
   return { error: null };
 }
