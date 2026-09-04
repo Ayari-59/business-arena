@@ -1,4 +1,5 @@
 import { randomInt } from "node:crypto";
+import { cache } from "react";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
@@ -110,14 +111,22 @@ const DEFAULT_CONFIG: PlatformConfig = {
   contactEmail: "contact@business-arena.fr",
 };
 
-export async function getPlatformConfig(): Promise<PlatformConfig> {
+/**
+ * Configuration de la plateforme (bannière, adresse de contact, accès public).
+ * Quasi immuable et lue à chaque affichage des pages vitrine (accueil, /jouer,
+ * /orientation…). `cache()` la mémorise à l'échelle d'une requête : les
+ * multiples lectures d'un même rendu (page + panorama admin, etc.) ne touchent
+ * la base qu'une fois. La révalidation entre requêtes reste inutile ici — le
+ * réglage change rarement et une valeur d'un rendu au suivant n'a pas d'enjeu.
+ */
+export const getPlatformConfig = cache(async (): Promise<PlatformConfig> => {
   try {
     const row = (await db.select().from(platformSettings).where(eq(platformSettings.id, 1)))[0];
     return { ...DEFAULT_CONFIG, ...((row?.settings as Partial<PlatformConfig>) ?? {}) };
   } catch {
     return { ...DEFAULT_CONFIG };
   }
-}
+});
 
 export async function updatePlatformConfig(
   adminId: string,
