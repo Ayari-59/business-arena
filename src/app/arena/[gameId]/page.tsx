@@ -521,9 +521,20 @@ export default async function ArenaPage({
                     maintenanceBudget: "Budget maintenance",
                   };
                   const DIRECTION_ICONS: Record<string, string> = { up: "↑", down: "↓", review: "⟳" };
+                  // Un levier ne se conseille que si l'élève a le contrôle
+                  // correspondant sous les yeux : aux premiers niveaux, budgets
+                  // qualité et maintenance sont masqués (decision-form). Les
+                  // pointer ici enverrait « ↑ Budget maintenance » vers un champ
+                  // introuvable — le lien décision→action, cœur de l'app, rompu.
+                  const champActionnable = (field: string): boolean => {
+                    if (field === "qualityBudget") return view.enabledDecisions.quality;
+                    if (field === "maintenanceBudget") return view.enabledDecisions.maintenance;
+                    return true; // prix, production, marketing : toujours ouverts
+                  };
                   const byField = new Map<string, { direction: string; hints: string[] }>();
                   for (const s of situations.current) {
                     for (const lever of s.decisionLevers ?? []) {
+                      if (!champActionnable(lever.field)) continue;
                       const existing = byField.get(lever.field);
                       if (!existing) {
                         byField.set(lever.field, { direction: lever.direction, hints: [lever.hint] });
