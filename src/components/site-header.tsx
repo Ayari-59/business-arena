@@ -32,12 +32,27 @@ import {
 export function SiteHeader() {
   const chemin = usePathname();
   const [ouvert, setOuvert] = useState(false);
+  // Les groupes du plan sont repliés : à l'ouverture, le menu tient sur
+  // l'action principale et trois en-têtes. On déplie ce qu'on veut.
+  const [groupesOuverts, setGroupesOuverts] = useState<Set<string>>(new Set());
   const cadre = useRef<HTMLElement>(null);
+
+  const basculerGroupe = (code: string) =>
+    setGroupesOuverts((etat) => {
+      const suivant = new Set(etat);
+      if (suivant.has(code)) suivant.delete(code);
+      else suivant.add(code);
+      return suivant;
+    });
 
   // Un menu qui reste ouvert derrière la page qu'on vient d'appeler masque
   // cette page. On le referme donc au changement d'adresse, à la touche
   // d'échappement, et au clic à côté.
   useEffect(() => setOuvert(false), [chemin]);
+  // Menu refermé : on replie les groupes, pour rouvrir sur un plan court.
+  useEffect(() => {
+    if (!ouvert) setGroupesOuverts(new Set());
+  }, [ouvert]);
   useEffect(() => {
     if (!ouvert) return;
     const auClavier = (e: KeyboardEvent) => {
@@ -154,24 +169,38 @@ export function SiteHeader() {
             accent
           />
 
-          <div className="mt-3 space-y-3 border-t border-white/10 pt-3">
-            {NAVIGATION.map((groupe) => (
-              <div key={groupe.code}>
-                <p className="px-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                  {groupe.titre}
-                </p>
-                <div className="mt-1 space-y-0.5">
-                  {groupe.liens.map((lien) => (
-                    <Entree
-                      key={lien.href}
-                      lien={lien}
-                      courant={estCourant(lien.href)}
-                      compact={groupe.code === "entrer"}
-                    />
-                  ))}
+          <div className="mt-3 space-y-1 border-t border-white/10 pt-3">
+            {NAVIGATION.map((groupe) => {
+              const ouvertGroupe = groupesOuverts.has(groupe.code);
+              return (
+                <div key={groupe.code}>
+                  <button
+                    type="button"
+                    onClick={() => basculerGroupe(groupe.code)}
+                    aria-expanded={ouvertGroupe}
+                    aria-controls={`groupe-${groupe.code}`}
+                    className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left transition hover:bg-white/5"
+                  >
+                    <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                      {groupe.titre}
+                    </span>
+                    <span
+                      aria-hidden
+                      className={`text-slate-400 transition-transform ${ouvertGroupe ? "rotate-180" : ""}`}
+                    >
+                      ⌄
+                    </span>
+                  </button>
+                  {ouvertGroupe ? (
+                    <div id={`groupe-${groupe.code}`} className="mt-0.5 space-y-0.5 pb-1">
+                      {groupe.liens.map((lien) => (
+                        <Entree key={lien.href} lien={lien} courant={estCourant(lien.href)} />
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="mt-3 flex flex-wrap gap-4 border-t border-white/10 pt-3 text-xs text-slate-500">
@@ -198,24 +227,19 @@ function Entree({
   lien,
   courant,
   accent = false,
-  compact = false,
 }: {
   lien: LienDeMenu;
   courant: boolean;
   accent?: boolean;
-  /** Libellé seul (l'aide reste au survol) : pour les entrées dont le nom se
-   *  suffit — « Rejoindre une partie », « Espace enseignant », « Concours ». */
-  compact?: boolean;
 }) {
   return (
     <Link
       href={lien.href}
-      title={lien.aide}
       aria-current={courant ? "page" : undefined}
-      className={`block rounded-lg px-3 transition ${
+      className={`block rounded-lg px-3 py-2 transition ${
         accent
-          ? "border border-amber-400/40 bg-amber-950/20 py-2.5 hover:border-amber-400"
-          : `${compact ? "py-1" : "py-1.5"} hover:bg-white/5`
+          ? "border border-amber-400/40 bg-amber-950/20 hover:border-amber-400"
+          : "hover:bg-white/5"
       } ${courant ? "bg-white/5" : ""}`}
     >
       <span
@@ -223,9 +247,7 @@ function Entree({
       >
         {lien.libelle}
       </span>
-      {compact ? null : (
-        <span className="mt-0.5 block text-xs leading-relaxed text-slate-400">{lien.aide}</span>
-      )}
+      <span className="mt-0.5 block text-xs leading-relaxed text-slate-400">{lien.aide}</span>
     </Link>
   );
 }

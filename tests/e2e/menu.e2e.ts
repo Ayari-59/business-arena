@@ -43,6 +43,11 @@ describe("le menu du site", () => {
       expect(await bouton.isVisible(), `pas de bouton de menu sur ${largeur.nom}`).toBe(true);
       await bouton.click();
 
+      // Le plan est un accordéon : ses groupes s'ouvrent repliés. On les déplie
+      // tous, puis on vérifie que chaque page reste réellement joignable.
+      const groupes = page.locator('#plan-du-site button[aria-controls^="groupe-"]');
+      for (let i = 0; i < (await groupes.count()); i += 1) await groupes.nth(i).click();
+
       const invisibles: string[] = [];
       for (const lien of tousLesLiens()) {
         const cible = page.locator(`#plan-du-site a[href="${lien.href}"]`);
@@ -92,6 +97,9 @@ describe("le menu du site", () => {
   it("conduit à la page demandée, et se referme en arrivant", async () => {
     const lien = tousLesLiens().find((l) => l.href === "/notions")!;
     await page.getByRole("button", { name: "Menu" }).click();
+    // Déplier les groupes de l'accordéon pour atteindre le lien voulu.
+    const groupes = page.locator('#plan-du-site button[aria-controls^="groupe-"]');
+    for (let i = 0; i < (await groupes.count()); i += 1) await groupes.nth(i).click();
     await page.locator(`#plan-du-site a[href="${lien.href}"]`).click();
     await page.waitForURL(new RegExp(`${lien.href}$`), { timeout: 30_000 });
     await expect
