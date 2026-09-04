@@ -1,6 +1,6 @@
 import { desc, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { orgLicences, organizationMembers, organizations } from "@/db/schema";
+import { orgLicences, organizationMembers } from "@/db/schema";
 
 /**
  * La licence d'établissement : ce qui est vendu, et ce qui est refusé.

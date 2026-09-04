@@ -16,8 +16,6 @@ import {
 
 let organizerId: string;
 let orgId: string;
-let competitionId: string;
-let joinCode: string;
 
 async function makeUser(name: string): Promise<string> {
   const inserted = await db
@@ -55,7 +53,6 @@ describe("joinCompetition — atomic guards", () => {
   it("two concurrent joins to the same team produce exactly one membership each", async () => {
     const { competitionId: cId, joinCode: code } = await freshCompetition();
     const u1 = await makeUser("concurrent-1");
-    const u2 = await makeUser("concurrent-2");
 
     // First user creates the team
     await joinCompetition({ code, userId: u1, teamLabel: "Racing" });

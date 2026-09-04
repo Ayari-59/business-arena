@@ -282,7 +282,7 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
       production: (r.engineTrace as { production?: CompanyRoundResult["production"] })?.production ?? { utilizationRate: 0 },
     } as CompanyRoundResult);
   }
-  let beforeByTeam = new Map<string, CompanyRoundResult>();
+  const beforeByTeam = new Map<string, CompanyRoundResult>();
   if (roundIndex > 1) {
     const prevRoundRow = (
       await db

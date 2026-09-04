@@ -2,7 +2,6 @@ import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   ACTION_PRINCIPALE,
-  LIENS_LEGAUX,
   NAVIGATION,
   liensDeTete,
   tousLesLiens,

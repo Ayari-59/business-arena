@@ -307,8 +307,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const equip = scenario.equipment;
     let investUnits = 0;
     let investOutlay = 0;
-    let equipBought: Working["equipBought"] = [];
-    let equipSold: Working["equipSold"] = [];
+    const equipBought: Working["equipBought"] = [];
+    const equipSold: Working["equipSold"] = [];
     let equipSaleProceeds = 0;
     let equipDisposalLoss = 0;
     let equipNewFleet: EquipmentItem[] = [];

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { SCENARIOS, SECTOR_LABELS, SECTOR_ICONS } from "@/config/scenarios/registry";
 import { DECISION_MODELS } from "@/config/pedagogy/models";
-import { NAVIGATION } from "@/config/navigation";
 
 export const metadata = {
   alternates: { canonical: "/fonctionnalites" },

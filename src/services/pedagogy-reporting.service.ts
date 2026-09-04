@@ -6,7 +6,6 @@ import {
   gameRankings,
   games,
   hintUsages,
-  hints,
   learningProgress,
   playerSkills,
   players,

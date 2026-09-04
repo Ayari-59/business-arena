@@ -7,7 +7,6 @@ import {
   games,
   roundResults,
   rounds,
-  teams,
 } from "@/db/schema";
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
 import { resolveScenarioDefinition } from "@/services/scenario-source.service";
