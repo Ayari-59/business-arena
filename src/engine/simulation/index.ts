@@ -503,6 +503,12 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
   const roundOffer = orderOfferForRound(scenario, roundIndex, input.seed);
 
   working.forEach((w, i) => {
+    // Faillite (V2 couche 2, #5) : une entreprise défaillante est dormante — elle
+    // ne vend RIEN ce tour. Le marché l'écarte déjà (attraction nulle ⇒ 0 unité
+    // de segment). Restait une fuite : une commande ferme d'événement, ou une
+    // commande exceptionnelle, puisait dans son STOCK RÉSIDUEL. Une entreprise à
+    // l'arrêt n'honore pas de commande ; son stock reste gelé jusqu'à la reprise.
+    const dormant = w.state.status === "defaillant";
     const perSegment: Record<string, SegmentSalesDetail> = {};
     let segmentUnits = 0;
     let weightedCredit = 0;
@@ -520,7 +526,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     // marché, réglées comptant, au prix imposé le cas échéant. Livrées du
     // stock restant ; au-delà, sous-traitées si l'offre le permet et que le
     // scénario a un sous-traitant (coût unitaire majoré — coûts pertinents !).
-    const orderRequested = w.mods.extraOrderUnits;
+    const orderRequested = dormant ? 0 : w.mods.extraOrderUnits;
     const orderDelivered = Math.min(orderRequested, Math.max(0, w.stock.quantity - segmentUnits));
     const orderShortfall = orderRequested - orderDelivered;
     const subcontracted = scenario.subcontracting
@@ -533,7 +539,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     // marché et les commandes fermes (pas de sous-traitance — à prendre avec
     // ses moyens). Son délai de règlement décide de la part du CA qui part
     // en créances : rentabilité contre BFR, l'arbitrage est là.
-    const offerAccepted = Boolean(roundOffer && w.decisions.acceptOrder);
+    const offerAccepted = !dormant && Boolean(roundOffer && w.decisions.acceptOrder);
     const offerDelivered =
       offerAccepted && roundOffer
         ? Math.min(
