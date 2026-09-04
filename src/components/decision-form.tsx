@@ -272,7 +272,7 @@ function OptionalField({
 function Family({
   legend,
   children,
-  defaultOpen = false,
+  defaultOpen = true,
   tone = "border-white/10 bg-slate-950",
   legendClass = "text-xs font-semibold uppercase tracking-wide text-slate-400",
 }: {
@@ -469,23 +469,23 @@ export function DecisionForm({
   };
   const [equipBuyQty, setEquipBuyQty] = useState<Record<string, number>>({});
   const [equipSellQty, setEquipSellQty] = useState<Record<string, number>>({});
-  // Déplier / replier toutes les familles d'un coup. On mute directement les
-  // <details> (non contrôlés) plutôt que d'en tenir l'état en React.
-  const setAllFamilies = (open: boolean) =>
-    formRef.current
-      ?.querySelectorAll("details")
-      .forEach((d) => ((d as HTMLDetailsElement).open = open));
+  // L'étape affichée de l'assistant de décision (voir plus bas). Les étapes
+  // inactives restent MONTÉES (attribut `hidden`, jamais démontées) : le
+  // formulaire se soumet toujours en entier, quelle que soit l'étape à l'écran.
+  const [etape, setEtape] = useState(0);
 
-  // Un champ requis dans une famille repliée est invisible : le navigateur ne
-  // peut pas y afficher sa bulle de validation et abandonne l'envoi en silence
-  // (« An invalid form control is not focusable »). On rouvre la famille du
-  // champ fautif, en phase de capture, avant que le navigateur ne tente d'y
-  // poser le focus — la validation redevient visible.
+  // Un champ requis dans une famille repliée — OU sur une étape masquée — est
+  // invisible : le navigateur ne peut pas y afficher sa bulle de validation et
+  // abandonne l'envoi en silence (« An invalid form control is not focusable »).
+  // En phase de capture, avant que le navigateur ne tente d'y poser le focus, on
+  // rouvre la famille du champ fautif ET on affiche son étape.
   const revelerFamilleInvalide = (e: React.FormEvent<HTMLFormElement>) => {
-    const famille = (e.target as HTMLElement).closest?.("details") as
-      | HTMLDetailsElement
-      | null;
+    const cible = e.target as HTMLElement;
+    const famille = cible.closest?.("details") as HTMLDetailsElement | null;
     if (famille && !famille.open) famille.open = true;
+    const section = cible.closest?.("[data-etape]") as HTMLElement | null;
+    const i = Number(section?.dataset.etape);
+    if (!Number.isNaN(i)) setEtape(i);
   };
   const on = enabled ?? {
     quality: true,
@@ -501,6 +501,31 @@ export function DecisionForm({
   // Vocabulaire du secteur : c'est lui qui parle à l'élève, pas le moteur.
   const v = vocabulary;
 
+  // Répartition des leviers en étapes courtes (anti-scroll) : plutôt qu'un long
+  // formulaire qu'on déroule, quelques écrans qu'on parcourt. Une étape sans
+  // aucun contenu au niveau de difficulté courant est retirée ; l'index
+  // d'affichage se calcule sur les étapes RÉELLEMENT visibles.
+  const financeVisible =
+    on.finance ||
+    (on.insurance && (!!insuranceOffer || (insuranceFormulas?.length ?? 0) > 0)) ||
+    (on.investment && !!equipmentOffer);
+  const etapesVisibles = [
+    "marche",
+    "operations",
+    financeVisible ? "finance" : null,
+    "plan",
+  ].filter((x): x is string => x !== null);
+  const META: Record<string, { titre: string; icone: string }> = {
+    marche: { titre: "Marché & prix", icone: "🎯" },
+    operations: { titre: "Budgets & équipe", icone: "📣" },
+    finance: { titre: "Financement", icone: "💶" },
+    plan: { titre: "Information & plan", icone: "📊" },
+  };
+  const idx = (cle: string) => etapesVisibles.indexOf(cle);
+  const total = etapesVisibles.length;
+  const courante = Math.min(etape, total - 1);
+  const derniere = courante === total - 1;
+
   return (
     <form
       ref={formRef}
@@ -509,22 +534,40 @@ export function DecisionForm({
       onInvalidCapture={revelerFamilleInvalide}
       className="space-y-4"
     >
-      <div className="flex items-center justify-end gap-2 text-xs text-slate-400">
-        <button
-          type="button"
-          onClick={() => setAllFamilies(true)}
-          className="rounded-md border border-white/10 px-2.5 py-1 hover:text-slate-200"
-        >
-          Tout déplier
-        </button>
-        <button
-          type="button"
-          onClick={() => setAllFamilies(false)}
-          className="rounded-md border border-white/10 px-2.5 py-1 hover:text-slate-200"
-        >
-          Tout replier
-        </button>
-      </div>
+      {/* Barre d'étapes : où j'en suis, saut direct possible. Les libellés se
+          replient en simples numéros sur petit écran. */}
+      <ol className="flex flex-wrap gap-1.5" aria-label="Étapes de décision">
+        {etapesVisibles.map((cle, i) => {
+          const actif = i === courante;
+          const fait = i < courante;
+          return (
+            <li key={cle} className="min-w-0 flex-1">
+              <button
+                type="button"
+                onClick={() => setEtape(i)}
+                aria-current={actif ? "step" : undefined}
+                className={`flex w-full items-center justify-center gap-1.5 rounded-lg border px-2 py-2 text-xs font-medium transition ${
+                  actif
+                    ? "border-amber-400/60 bg-amber-400/10 text-amber-200"
+                    : fait
+                      ? "border-emerald-400/30 bg-emerald-950/20 text-emerald-300/80 hover:text-emerald-200"
+                      : "border-white/10 text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                <span aria-hidden>{fait ? "✓" : META[cle]!.icone}</span>
+                <span className="hidden truncate sm:inline">{META[cle]!.titre}</span>
+                <span className="sm:hidden">{i + 1}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ol>
+
+      <section
+        data-etape={idx("marche")}
+        hidden={courante !== idx("marche")}
+        className="space-y-4"
+      >
       {orderOffer ? (
         <Family
           legend={`📦 Commande exceptionnelle · ${orderOffer.title}`}
@@ -669,6 +712,13 @@ export function DecisionForm({
           </p>
         </Family>
       ) : null}
+      </section>
+
+      <section
+        data-etape={idx("operations")}
+        hidden={courante !== idx("operations")}
+        className="space-y-4"
+      >
       <Family legend="📣 Vos budgets du tour" defaultOpen>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field name="marketingBudget" label="Budget marketing" defaultValue={defaults.marketingBudget} suffix="€" />
@@ -699,6 +749,14 @@ export function DecisionForm({
           </div>
         </Family>
       ) : null}
+      </section>
+
+      {financeVisible ? (
+      <section
+        data-etape={idx("finance")}
+        hidden={courante !== idx("finance")}
+        className="space-y-4"
+      >
       {on.finance && debtSchedule && debtSchedule.outstanding > 0.5 ? (
         <p className="rounded-lg border border-amber-400/20 bg-amber-950/20 px-3 py-2 text-xs text-amber-200">
           🏦 Échéance d&apos;emprunt du tour :{" "}
@@ -884,6 +942,14 @@ export function DecisionForm({
           </span>
         </label>
       ) : null}
+      </section>
+      ) : null}
+
+      <section
+        data-etape={idx("plan")}
+        hidden={courante !== idx("plan")}
+        className="space-y-4"
+      >
       {studiesOffer ? (
         <Family legend={"📊 Acheter de l'information · livrée avec les résultats du tour"}>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -1036,6 +1102,7 @@ export function DecisionForm({
           Notez ici la logique de vos décisions. L&apos;enseignant pourra la lire au débriefing.
         </p>
       </Family>
+      </section>
       {state.error ? (
         <p className="rounded-lg border border-red-400/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
           {state.error}
@@ -1075,19 +1142,46 @@ export function DecisionForm({
         // plutôt qu'un bouton grisé « Envoi en cours… ».
         <SimulationProgress periodName={periodName} />
       ) : (
-        <button
-          type="submit"
-          disabled={pending}
-          className="w-full rounded-lg bg-amber-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 disabled:cursor-wait disabled:opacity-60"
-        >
-          {pending
-            ? "Envoi en cours…"
-            : kind === "solo"
-              ? `Valider mes décisions et simuler · ${periodName}`
-              : alreadySubmitted
-                ? "Mettre à jour mes décisions validées"
-                : `Valider les décisions de l'équipe · ${periodName}`}
-        </button>
+        // Pied de navigation de l'assistant : « Précédent »/« Suivant » d'une
+        // étape à l'autre, et « Valider » (envoi réel) à la dernière seulement.
+        // Le bouton d'avance est de type `button` : changer d'étape ne soumet
+        // rien, seul le « Valider » final déclenche la résolution du tour.
+        <div className="flex items-center justify-between gap-3 border-t border-white/10 pt-4">
+          <button
+            type="button"
+            onClick={() => setEtape((e) => Math.max(0, Math.min(e, total - 1) - 1))}
+            disabled={courante === 0}
+            className="rounded-lg border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:text-slate-100 disabled:cursor-not-allowed disabled:opacity-30"
+          >
+            ← Précédent
+          </button>
+          <span className="shrink-0 text-xs tabular-nums text-slate-500">
+            Étape {courante + 1} / {total}
+          </span>
+          {derniere ? (
+            <button
+              type="submit"
+              disabled={pending}
+              className="rounded-lg bg-amber-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 disabled:cursor-wait disabled:opacity-60"
+            >
+              {pending
+                ? "Envoi en cours…"
+                : kind === "solo"
+                  ? "Valider mes décisions et simuler"
+                  : alreadySubmitted
+                    ? "Mettre à jour mes décisions validées"
+                    : "Valider les décisions de l'équipe"}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setEtape((e) => Math.min(total - 1, Math.min(e, total - 1) + 1))}
+              className="rounded-lg bg-amber-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-300"
+            >
+              Suivant →
+            </button>
+          )}
+        </div>
       )}
       {!(pending && kind === "solo") ? (
         <p className="text-center text-xs text-slate-500">
