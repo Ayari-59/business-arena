@@ -314,8 +314,9 @@ export default async function ArenaPage({
                 </span>
               </span>
               <span className="text-xs text-slate-500">
-                Trois onglets : la situation à lire, vos décisions à rendre, et les
-                résultats — à venir une fois le tour clos.
+                {view.kind === "solo"
+                  ? "Deux étapes : analysez la situation, puis rendez vos décisions et simulez."
+                  : "Trois onglets : la situation à lire, vos décisions à rendre, et les résultats — à venir une fois le tour clos."}
               </span>
             </div>
 
@@ -347,12 +348,26 @@ export default async function ArenaPage({
                   Défaut sur « Situation » : on lit l'énoncé avant de décider. */}
               <SegmentedTabs
                 defaultKey="situation"
+                // En solo, le tour devient un fil d'étapes guidé : Analyser puis
+                // Décider, avec un bouton « étape suivante » explicite — le joueur
+                // sait toujours où il en est. (L'onglet Résultats du tour actif est
+                // vide tant qu'il n'est pas clos ; on ne le propose donc pas en
+                // solo, les résultats arrivant après la simulation.) En classe, on
+                // garde les trois onglets libres.
+                guided={view.kind === "solo"}
                 syncAnchors={["situation", "decisions"]}
-                tabs={[
-                  { key: "situation", label: "Situation", icon: "📋" },
-                  { key: "decisions", label: "Décisions", icon: "✏️" },
-                  { key: "resultats", label: "Résultats", icon: "📊" },
-                ]}
+                tabs={
+                  view.kind === "solo"
+                    ? [
+                        { key: "situation", label: "Analyser", icon: "📋" },
+                        { key: "decisions", label: "Décider", icon: "✏️" },
+                      ]
+                    : [
+                        { key: "situation", label: "Situation", icon: "📋" },
+                        { key: "decisions", label: "Décisions", icon: "✏️" },
+                        { key: "resultats", label: "Résultats", icon: "📊" },
+                      ]
+                }
               >
                 {{
                   situation: (
