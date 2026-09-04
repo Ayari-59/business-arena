@@ -66,6 +66,7 @@ export function QuickConfigFields({
   const [period, setPeriod] = useState<string>("quarter");
   const [companies, setCompanies] = useState<string>("3");
   const [rounds, setRounds] = useState<string>("");
+  const [optionsOuvertes, setOptionsOuvertes] = useState(false);
 
   const minLevel = levels[0]?.level ?? 1;
   const maxLevel = levels[levels.length - 1]?.level ?? 6;
@@ -151,11 +152,23 @@ export function QuickConfigFields({
       </div>
       <p className="mt-2 min-h-[2.5em] text-[13px] leading-snug text-slate-300">{cur?.tagline}</p>
 
-      {/* Options repliées */}
-      <details className="mt-4 rounded-lg border border-dashed border-white/15 px-3">
-        <summary className="cursor-pointer list-none py-2.5 text-xs font-semibold text-slate-300 [&::-webkit-details-marker]:hidden">
-          <span className="text-slate-500">⚙</span> Options du marché (rythme, entreprises, tours)
-        </summary>
+      {/* Options repliées.
+          Volontairement un bouton + rendu conditionnel, PAS un <details> natif :
+          le contenu d'un <details> fermé garde un DOM qui, sur le thème clair,
+          ne reçoit pas l'inversion des variables de thème (fond resté sombre,
+          texte inversé) et devenait illisible. Fermé = hors du DOM ; ouvert =
+          rendu normal, contraste correct. */}
+      <div className="mt-4 rounded-lg border border-dashed border-white/15 px-3">
+        <button
+          type="button"
+          onClick={() => setOptionsOuvertes((o) => !o)}
+          aria-expanded={optionsOuvertes}
+          className="flex w-full items-center gap-1.5 py-2.5 text-left text-xs font-semibold text-slate-300"
+        >
+          <span className="text-slate-400">⚙</span> Options du marché (rythme, entreprises, tours)
+          <span className={`ml-auto transition-transform ${optionsOuvertes ? "rotate-180" : ""}`}>⌄</span>
+        </button>
+        {optionsOuvertes && (
         <div className="pb-3">
           <p className={`mt-1 ${label}`}>Chaque tour représente…</p>
           <div className="mt-2 grid grid-cols-3 gap-2">
@@ -211,7 +224,8 @@ export function QuickConfigFields({
             ))}
           </div>
         </div>
-      </details>
+        )}
+      </div>
 
       {/* Récap vivant */}
       <p className="mt-4 rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2.5 text-[13px] text-slate-300">
