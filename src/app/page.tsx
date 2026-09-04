@@ -6,7 +6,7 @@ import { DIFFICULTY_PRESETS } from "@/config/difficulty";
 import { etendueDesDecisions, leviersDuNiveau } from "@/config/decisions";
 import { CONCEPTS } from "@/config/pedagogy/concepts";
 import { DECISION_MODELS } from "@/config/pedagogy/models";
-import { DEFAULT_SCENARIO_CODE, SCENARIOS, SECTOR_LABELS } from "@/config/scenarios/registry";
+import { DEFAULT_SCENARIO_CODE, SCENARIOS, SECTOR_ICONS, SECTOR_LABELS } from "@/config/scenarios/registry";
 import {
   ACCENTS_SECTEUR,
   classesVignetteFinale,
@@ -16,6 +16,7 @@ import {
 } from "@/config/scenarios/presentation";
 import { LIENS_LEGAUX, NAVIGATION } from "@/config/navigation";
 import { SubmitButton } from "@/components/submit-button";
+import { QuickConfigFields } from "@/components/quick-config-form";
 import { DESCRIPTION_ACCUEIL, TITRE_ACCUEIL } from "@/config/seo";
 
 export const dynamic = "force-dynamic";
@@ -443,117 +444,21 @@ export default async function Home({
             className="rounded-2xl border border-white/10 bg-slate-900/80 p-6 shadow-xl shadow-black/30 ring-1 ring-white/5"
           >
             <h3 className="text-sm font-semibold text-slate-100">Configurer la partie</h3>
-            <label className="mt-4 block">
-              <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                Secteur d&apos;activité
-              </span>
-              <select
-                name="scenarioCode"
-                defaultValue={scenarioChoisi}
-                className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
-              >
-                {SCENARIOS.map((s) => (
-                  <option key={s.code} value={s.code}>
-                    {SECTOR_LABELS[s.sector]} · {s.tagline}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <fieldset className="mt-4">
-              <legend className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                Périodicité : chaque tour représente…
-              </legend>
-              <div className="mt-2 grid grid-cols-3 gap-2">
-                {(
-                  [
-                    ["month", "Un mois", "délais redoutables"],
-                    ["quarter", "Un trimestre", "le rythme classique"],
-                    ["year", "Une année", "vision long terme"],
-                  ] as const
-                ).map(([value, label, hint]) => (
-                  <label
-                    key={value}
-                    className="cursor-pointer rounded-lg border border-white/10 bg-slate-950 px-2 py-3 text-center transition hover:border-white/25 has-[:checked]:border-amber-400/70 has-[:checked]:bg-amber-400/10 has-[:checked]:ring-1 has-[:checked]:ring-amber-400/30"
-                  >
-                    <input
-                      type="radio"
-                      name="periodicity"
-                      value={value}
-                      defaultChecked={value === "quarter"}
-                      className="sr-only"
-                    />
-                    <span className="block text-sm font-medium text-slate-100">{label}</span>
-                    {/*
-                      Hauteur réservée à deux lignes : sans elle, le sous-titre le plus
-                      long passait à la ligne et décalait le titre de sa tuile par
-                      rapport aux deux autres.
-                    */}
-                    <span className="mt-1 flex min-h-[1.75rem] items-start justify-center text-xs leading-tight text-slate-500">
-                      {hint}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </fieldset>
-            <label className="mt-4 block">
-              <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                Entreprises sur le marché
-              </span>
-              <select
-                name="companiesCount"
-                defaultValue={3}
-                className="mt-2 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
-              >
-                <option value={2}>2 · duel face à un seul concurrent</option>
-                <option value={3}>3 · le marché classique (recommandé)</option>
-                <option value={4}>4 · marché disputé</option>
-                <option value={6}>6 · forte concurrence</option>
-                <option value={8}>8 · guerre de tous contre tous</option>
-              </select>
-            </label>
-            <label className="mt-4 block">
-              <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                Nombre de tours
-              </span>
-              <select
-                name="roundsCount"
-                defaultValue=""
-                className="mt-2 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
-              >
-                <option value="">Toute la partie</option>
-                {[3, 4, 5, 6].map((n) => (
-                  <option key={n} value={n}>
-                    {n} tours
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="mt-4 block">
-              <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                Niveau de difficulté
-              </span>
-              <select
-                name="level"
-                defaultValue={3}
-                className="mt-2 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
-              >
-                {DIFFICULTY_PRESETS.map((p) => (
-                  <option key={p.level} value={p.level}>
-                    {p.level} · {p.name} · {leviersDuNiveau(p.level).length} décisions
-                  </option>
-                ))}
-              </select>
-              {/*
-                Le libellé complet se faisait couper par le rendu natif du sélecteur.
-                Les noms sont lus des préréglages : ils ne peuvent pas se désaccorder
-                de ce que la partie ouvrira vraiment.
-              */}
-              <span className="mt-1.5 block text-xs leading-relaxed text-slate-500">
-                De {DIFFICULTY_PRESETS[0]!.name} à{" "}
-                {DIFFICULTY_PRESETS[DIFFICULTY_PRESETS.length - 1]!.name}, chaque cran
-                ouvre de nouvelles décisions et retire des indices.
-              </span>
-            </label>
+            <QuickConfigFields
+              scenarios={SCENARIOS.map((s) => ({
+                code: s.code,
+                icon: SECTOR_ICONS[s.sector],
+                label: SECTOR_LABELS[s.sector],
+                tagline: s.tagline,
+              }))}
+              levels={DIFFICULTY_PRESETS.map((p) => ({
+                level: p.level,
+                name: p.name,
+                tagline: p.tagline,
+                decisions: leviersDuNiveau(p.level).length,
+              }))}
+              defaultScenario={scenarioChoisi}
+            />
             <SubmitButton
               pendingLabel="Création de la partie…"
               className="mt-5 w-full rounded-lg bg-amber-500 px-4 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400"
