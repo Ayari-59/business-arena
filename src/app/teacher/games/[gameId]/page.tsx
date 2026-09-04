@@ -228,6 +228,11 @@ export default async function TeacherGamePage({
                             par défaut
                           </span>
                         ) : null}
+                        {t.justification ? (
+                          <p className="mt-1 max-w-md text-xs italic leading-relaxed text-slate-400">
+                            « {t.justification} »
+                          </p>
+                        ) : null}
                       </>
                     ) : (
                       <span className="text-amber-300">en attente</span>
