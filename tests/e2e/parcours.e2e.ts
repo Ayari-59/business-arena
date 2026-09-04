@@ -97,7 +97,11 @@ describe("parcours enseignant et élève", () => {
   });
 
   it("les écrans de décision ne parlent ni anglais ni en millièmes d'euro", async () => {
-    const vu = await texte(eleve);
+    // L'écran de décision est désormais en étapes : certaines familles
+    // (assurance…) vivent sur une étape masquée, exclue de `innerText`. On lit
+    // donc tout le contenu du formulaire, visible ou non, pour que la garde
+    // « français, pas de millièmes » couvre l'ensemble des leviers.
+    const vu = (await eleve.locator('form:has(input[name="price"])').textContent()) ?? "";
     // les couvertures d'assurance sont en français (écart de la 1re recette)
     expect(vu).not.toMatch(/natural disaster|cold wave|machine breakdown/i);
     // aucun montant à trois décimales (écart de la 2e recette)
@@ -107,6 +111,14 @@ describe("parcours enseignant et élève", () => {
   it("il joue son tour au tarif de son métier, que la validation accepte", async () => {
     // 780 € la journée : refusé par l'ancien plafond à 500 €
     await eleve.fill('input[name="price"]', "780");
+    // L'assistant de décision est en étapes : « Valider » n'apparaît qu'à la
+    // dernière. On avance jusque-là (le prix saisi persiste, champs toujours
+    // montés), puis on valide.
+    for (let i = 0; i < 8; i++) {
+      const suivant = eleve.getByRole("button", { name: /Suivant/ });
+      if (!(await suivant.isVisible().catch(() => false))) break;
+      await suivant.click();
+    }
     await eleve.getByRole("button", { name: /Valider les décisions de l'équipe/ }).click();
 
     // Le prix est touché mais le volume (« Jours à staffer ») reste à sa valeur
