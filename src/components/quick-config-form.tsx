@@ -78,7 +78,7 @@ export function QuickConfigFields({
   const label = "text-xs font-medium uppercase tracking-wide text-slate-400";
   const tile =
     "cursor-pointer rounded-lg border border-white/10 bg-slate-950 px-2 py-2.5 text-center text-slate-100 transition hover:border-white/25";
-  const tileOn = "border-amber-400/70 bg-amber-400/10 text-amber-100 ring-1 ring-amber-400/30";
+  const tileOn = "border-amber-400/70 bg-amber-400/10 text-slate-100 ring-1 ring-amber-400/30";
 
   return (
     <div>
@@ -168,7 +168,7 @@ export function QuickConfigFields({
                 className={`${tile} ${p.value === period ? tileOn : ""}`}
               >
                 <span className="block text-sm font-medium">{p.label}</span>
-                <span className="mt-0.5 block text-xs leading-tight text-slate-500">{p.hint}</span>
+                <span className="mt-0.5 block text-xs leading-tight text-slate-400">{p.hint}</span>
               </button>
             ))}
           </div>
@@ -202,7 +202,7 @@ export function QuickConfigFields({
                 aria-pressed={r.value === rounds}
                 className={`rounded-lg border px-3 py-1.5 text-sm transition ${
                   r.value === rounds
-                    ? "border-amber-400/70 bg-amber-400/10 text-amber-100 ring-1 ring-amber-400/30"
+                    ? "border-amber-400/70 bg-amber-400/10 text-slate-100 ring-1 ring-amber-400/30"
                     : "border-white/10 bg-slate-950 text-slate-300 hover:border-white/25"
                 }`}
               >

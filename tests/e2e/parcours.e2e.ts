@@ -319,7 +319,7 @@ describe("parcours enseignant et élève", () => {
 
     await prof.getByRole("link", { name: "Diriger LA TABLE D'AUGUSTIN" }).click();
     await prof.waitForURL(/secteur=bistrot/, { timeout: 30_000 });
-    expect(await prof.locator('select[name="scenarioCode"]').inputValue()).toBe("bistrot");
+    expect(await prof.locator('input[name="scenarioCode"]').inputValue()).toBe("bistrot");
   });
 
   it("l'atelier professionnel s'affiche en entier et tient ses comptes", async () => {
