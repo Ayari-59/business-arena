@@ -40,10 +40,12 @@ describe("périodicité (ADR-01) : redimensionnement du scénario", () => {
     }
   });
 
-  it("libellés de périodes", () => {
-    expect(periodLabel(30, 2)).toBe("Mois 2");
-    expect(periodLabel(90, 4)).toBe("Trimestre 4");
-    expect(periodLabel(360, 1)).toBe("Année 1");
+  it("libellé d'un tour : « Tour N » quelle que soit la durée du tour", () => {
+    // Choix produit : l'affichage joueur est unifié sur « tour ». La durée
+    // reste un paramètre de la partie (sélecteur), mais ne teinte plus le libellé.
+    expect(periodLabel(30, 2)).toBe("Tour 2");
+    expect(periodLabel(90, 4)).toBe("Tour 4");
+    expect(periodLabel(360, 1)).toBe("Tour 1");
     expect(periodicityFromRoundDays(90)).toBe("quarter");
   });
 });

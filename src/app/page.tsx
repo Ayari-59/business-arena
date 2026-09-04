@@ -171,7 +171,7 @@ export default async function Home() {
         <div className="relative">
           <div className="rounded-2xl border border-white/10 bg-slate-900/90 p-4 shadow-2xl shadow-amber-400/5">
             <div className="flex items-center justify-between border-b border-white/5 pb-3">
-              <p className="text-xs font-semibold text-slate-300">NOVA · Trimestre 4 / 6</p>
+              <p className="text-xs font-semibold text-slate-300">NOVA · Tour 4 / 6</p>
               <span className="rounded-full border border-red-400/40 bg-red-950/40 px-2 py-0.5 text-xs text-red-300">
                 ⚠ trésorerie sous tension
               </span>

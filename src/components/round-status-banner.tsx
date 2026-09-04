@@ -54,7 +54,7 @@ export function RoundStatusBanner({
           Partie terminée
         </p>
         <p className="mt-1 text-sm text-slate-300">
-          {roundsCount} tours joués. Dépliez chaque période ci-dessous pour revoir ses résultats.
+          {roundsCount} tours joués. Dépliez chaque tour ci-dessous pour revoir ses résultats.
         </p>
       </section>
     );

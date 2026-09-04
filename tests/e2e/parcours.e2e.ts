@@ -135,7 +135,7 @@ describe("parcours enseignant et élève", () => {
     // A2) : c'est « Clore et simuler » qui lance réellement la résolution.
     await prof.getByRole("button", { name: "Clore et simuler", exact: true }).click();
     await prof.waitForSelector("text=/Clore le tour 2 et simuler/", { timeout: 60_000 });
-    expect(await texte(prof)).toContain("Trimestre 2");
+    expect(await texte(prof)).toContain("Tour 2");
   });
 
   it("l'analyse des coûts nomme ce que le métier achète", async () => {

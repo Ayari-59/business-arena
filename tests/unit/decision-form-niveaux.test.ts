@@ -33,7 +33,7 @@ function rendu(niveau: 1 | 2 | 3 | 4 | 5 | 6, roundIndex: number, extra: Partial
   const props: Props = {
     gameId: "partie-test",
     roundIndex,
-    periodName: "Trimestre",
+    periodName: "tour 1",
     defaults: {
       price: 79,
       productionPlan: 1000,
