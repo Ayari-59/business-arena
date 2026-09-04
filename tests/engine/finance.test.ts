@@ -111,6 +111,36 @@ describe("ratios et effet de levier (§17)", () => {
   });
 });
 
+describe("ROE quand les capitaux propres sont effacés (§17)", () => {
+  // Bilan d'une entreprise dont les pertes cumulées ont dépassé le capital :
+  // capitaux propres négatifs. `computeFinance` ne plancherise pas les CP
+  // (statements.ts), donc ce cas est atteignable en partie réelle.
+  const insolvent: BalanceSheet = {
+    fixedAssetsNet: 50000,
+    inventoryValue: 0,
+    receivables: 0,
+    cash: 0,
+    equity: -20000,
+    financialDebt: 60000,
+    payables: 0,
+    overdraft: 0,
+  };
+
+  it("CP ≤ 0 avec perte → −100 % (plancher), pas 0 (neutre)", () => {
+    // Sans garde, une perte sur des CP négatifs donnerait un ratio POSITIF
+    // (−10000 ÷ −20000 = +0,5), qui se lirait comme une réussite.
+    const is = { revenue: 40000, operatingIncome: -8000, netIncome: -10000 } as never;
+    const ratios = computeRatios(is, insolvent, 0.25);
+    expect(ratios.returnOnEquity).toBe(-1);
+  });
+
+  it("CP ≤ 0 mais résultat positif (redressement) → 0 (neutre)", () => {
+    const is = { revenue: 40000, operatingIncome: 3000, netIncome: 2000 } as never;
+    const ratios = computeRatios(is, insolvent, 0.25);
+    expect(ratios.returnOnEquity).toBe(0);
+  });
+});
+
 describe("VAN, TRI, délai de récupération (doc 02 §6.5)", () => {
   it("VAN à taux nul = somme des flux ; VAN connue à 10 %", () => {
     expect(npv([-100, 60, 60], 0)).toBeCloseTo(20, 9);
