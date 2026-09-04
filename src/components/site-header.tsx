@@ -10,7 +10,6 @@ import {
   ACTION_PRINCIPALE,
   LIENS_LEGAUX,
   NAVIGATION,
-  liensDeTete,
   type LienDeMenu,
 } from "@/config/navigation";
 
@@ -32,12 +31,27 @@ import {
 export function SiteHeader() {
   const chemin = usePathname();
   const [ouvert, setOuvert] = useState(false);
+  // Les groupes du plan sont repliés : à l'ouverture, le menu tient sur
+  // l'action principale et trois en-têtes. On déplie ce qu'on veut.
+  const [groupesOuverts, setGroupesOuverts] = useState<Set<string>>(new Set());
   const cadre = useRef<HTMLElement>(null);
+
+  const basculerGroupe = (code: string) =>
+    setGroupesOuverts((etat) => {
+      const suivant = new Set(etat);
+      if (suivant.has(code)) suivant.delete(code);
+      else suivant.add(code);
+      return suivant;
+    });
 
   // Un menu qui reste ouvert derrière la page qu'on vient d'appeler masque
   // cette page. On le referme donc au changement d'adresse, à la touche
   // d'échappement, et au clic à côté.
   useEffect(() => setOuvert(false), [chemin]);
+  // Menu refermé : on replie les groupes, pour rouvrir sur un plan court.
+  useEffect(() => {
+    if (!ouvert) setGroupesOuverts(new Set());
+  }, [ouvert]);
   useEffect(() => {
     if (!ouvert) return;
     const auClavier = (e: KeyboardEvent) => {
@@ -64,7 +78,7 @@ export function SiteHeader() {
           le voit depuis un ordinateur de bureau. */}
       <nav
         aria-label="Navigation principale"
-        className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-4 sm:px-6"
+        className="relative z-40 mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-3.5 sm:px-6"
       >
         <div className="flex items-center gap-2.5">
           <Link href="/" aria-label="Accueil">
@@ -80,25 +94,11 @@ export function SiteHeader() {
           </span>
         </div>
 
-        <div className="flex flex-wrap items-center justify-end gap-3">
-          <div className="hidden items-center gap-5 text-sm text-slate-400 lg:flex">
-            {liensDeTete().map((lien) => (
-              <Link
-                key={lien.href}
-                href={lien.href}
-                title={lien.aide}
-                aria-current={estCourant(lien.href) ? "page" : undefined}
-                className={
-                  estCourant(lien.href)
-                    ? "text-slate-100 underline decoration-amber-400/60 underline-offset-8"
-                    : "hover:text-slate-200"
-                }
-              >
-                {lien.libelle}
-              </Link>
-            ))}
-          </div>
-
+        {/* Barre volontairement pauvre : l'action principale, et le menu. Les
+            liens de navigation, le thème et l'installation vivent DANS le menu,
+            pour ne pas empiler à droite des contrôles hétéroclites qu'on ne
+            sait pas lire. */}
+        <div className="flex items-center justify-end gap-2.5">
           <Link
             href={ACTION_PRINCIPALE.href}
             title={ACTION_PRINCIPALE.aide}
@@ -107,9 +107,6 @@ export function SiteHeader() {
           >
             {ACTION_PRINCIPALE.libelle}
           </Link>
-
-          <ThemeSwitcher />
-          <InstallButton />
 
           <button
             type="button"
@@ -128,6 +125,17 @@ export function SiteHeader() {
         </div>
       </nav>
 
+      {/* Voile derrière le panneau, SUR TÉLÉPHONE seulement : là, le panneau
+          pleine largeur laissait transparaître la page dessous et semblait à
+          moitié ouvert. Sur grand écran le menu n'est qu'une carte de coin :
+          pas besoin d'assombrir toute la page (la fermeture au clic-dehors est
+          assurée par le gestionnaire plus haut). Posé sous la barre (z-30). */}
+      <div
+        aria-hidden
+        onClick={() => setOuvert(false)}
+        className={`fixed inset-0 z-30 bg-slate-950/70 backdrop-blur-sm sm:hidden ${ouvert ? "block" : "hidden"}`}
+      />
+
       <div
         id="plan-du-site"
         className={`absolute inset-x-0 top-full z-50 origin-top px-4 pb-4 sm:left-auto sm:right-6 sm:w-[26rem] sm:px-0 ${
@@ -137,29 +145,75 @@ export function SiteHeader() {
         {/* Le plan est plus haut qu'un écran de téléphone. Il défile donc
             dans son propre cadre : sans cela, les dernières entrées ne
             s'atteignent qu'en faisant défiler la page DERRIÈRE le menu. */}
-        <div className="max-h-[calc(100vh-5rem)] overflow-y-auto rounded-2xl border border-white/10 bg-slate-900 p-5 shadow-2xl">
-          <Entree
-            lien={ACTION_PRINCIPALE}
-            courant={estCourant(ACTION_PRINCIPALE.href)}
-            accent
-          />
+        <div className="max-h-[calc(100dvh-4.5rem)] overflow-y-auto rounded-2xl border border-white/10 bg-slate-900 p-4 shadow-2xl">
+          {/* L'action principale est une ligne, comme les en-têtes de groupe :
+              le menu ouvert est une liste homogène. L'ambre et la flèche la
+              distinguent (aller directement), le chevron distingue les groupes
+              (déplier). */}
+          <Link
+            href={ACTION_PRINCIPALE.href}
+            title={ACTION_PRINCIPALE.aide}
+            aria-current={estCourant(ACTION_PRINCIPALE.href) ? "page" : undefined}
+            className="flex items-center justify-between rounded-lg border border-amber-400/40 bg-amber-950/20 px-3 py-2 transition hover:border-amber-400"
+          >
+            <span className="text-sm font-semibold text-amber-300">
+              {ACTION_PRINCIPALE.libelle}
+            </span>
+            <span aria-hidden className="text-amber-300">
+              →
+            </span>
+          </Link>
 
-          <div className="mt-4 space-y-4 border-t border-white/10 pt-4">
-            {NAVIGATION.map((groupe) => (
-              <div key={groupe.code}>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                  {groupe.titre}
-                </p>
-                <div className="mt-1.5 space-y-0.5">
-                  {groupe.liens.map((lien) => (
-                    <Entree key={lien.href} lien={lien} courant={estCourant(lien.href)} />
-                  ))}
+          <div className="mt-3 space-y-1 border-t border-white/10 pt-3">
+            {NAVIGATION.map((groupe) => {
+              const ouvertGroupe = groupesOuverts.has(groupe.code);
+              return (
+                <div key={groupe.code}>
+                  <button
+                    type="button"
+                    onClick={() => basculerGroupe(groupe.code)}
+                    aria-expanded={ouvertGroupe}
+                    aria-controls={`groupe-${groupe.code}`}
+                    className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left transition hover:bg-white/5"
+                  >
+                    <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                      {groupe.titre}
+                    </span>
+                    <span
+                      aria-hidden
+                      className={`text-slate-400 transition-transform ${ouvertGroupe ? "rotate-180" : ""}`}
+                    >
+                      ⌄
+                    </span>
+                  </button>
+                  {ouvertGroupe ? (
+                    <div id={`groupe-${groupe.code}`} className="mt-0.5 space-y-0.5 pb-1">
+                      {groupe.liens.map((lien) => (
+                        <Entree key={lien.href} lien={lien} courant={estCourant(lien.href)} />
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-4 border-t border-white/10 pt-3 text-xs text-slate-500">
+          {/* Réglages : ce qui était éparpillé dans la barre, réuni et nommé. */}
+          <div className="mt-3 border-t border-white/10 pt-3">
+            <p className="px-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+              Réglages
+            </p>
+            <div className="mt-1.5 flex items-center justify-between gap-3 px-3">
+              <span className="text-sm text-slate-300">Apparence</span>
+              <ThemeSwitcher />
+            </div>
+            {/* N'apparaît que si l'installation est réellement possible. */}
+            <div className="mt-2 px-3 empty:hidden">
+              <InstallButton />
+            </div>
+          </div>
+
+          <div className="mt-3 flex flex-wrap gap-4 border-t border-white/10 pt-3 text-xs text-slate-500">
             {LIENS_LEGAUX.map((lien) => (
               <Link key={lien.href} href={lien.href} className="hover:text-slate-300">
                 {lien.libelle}
@@ -179,30 +233,14 @@ export function SiteHeader() {
  * distinguent pas les uns des autres pour qui découvre le site, et c'est cette
  * phrase qui évite d'ouvrir les trois pour trouver la bonne.
  */
-function Entree({
-  lien,
-  courant,
-  accent = false,
-}: {
-  lien: LienDeMenu;
-  courant: boolean;
-  accent?: boolean;
-}) {
+function Entree({ lien, courant }: { lien: LienDeMenu; courant: boolean }) {
   return (
     <Link
       href={lien.href}
       aria-current={courant ? "page" : undefined}
-      className={`block rounded-lg px-3 py-2 transition ${
-        accent
-          ? "border border-amber-400/40 bg-amber-950/20 hover:border-amber-400"
-          : "hover:bg-white/5"
-      } ${courant ? "bg-white/5" : ""}`}
+      className={`block rounded-lg px-3 py-2 transition hover:bg-white/5 ${courant ? "bg-white/5" : ""}`}
     >
-      <span
-        className={`block text-sm font-medium ${accent ? "text-amber-300" : "text-slate-100"}`}
-      >
-        {lien.libelle}
-      </span>
+      <span className="block text-sm font-medium text-slate-100">{lien.libelle}</span>
       <span className="mt-0.5 block text-xs leading-relaxed text-slate-400">{lien.aide}</span>
     </Link>
   );

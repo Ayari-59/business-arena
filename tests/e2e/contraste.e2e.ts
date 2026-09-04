@@ -46,6 +46,10 @@ beforeAll(async () => {
     // maintenant toute la navigation et ses phrases d'aide en petits corps.
     await aller(page, "/");
     await page.getByRole("button", { name: "Menu" }).click();
+    // Le plan est un accordéon : on déplie ses groupes pour que les phrases
+    // d'aide en petits corps soient réellement rendues, donc mesurées.
+    const groupes = page.locator('#plan-du-site button[aria-controls^="groupe-"]');
+    for (let i = 0; i < (await groupes.count()); i += 1) await groupes.nth(i).click();
     await page.locator("#plan-du-site a").first().waitFor({ state: "visible" });
     relever("menu", await mesurerContraste(page, theme.code));
     parTheme.set(theme.code, releve);
