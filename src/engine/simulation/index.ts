@@ -208,7 +208,11 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
           }
         : soumis;
     const decisions = {
-      price: raw.price,
+      // Prix borné à ≥ 0 comme les autres leviers : le schéma (min 1) et les
+      // bots (plancher au coût variable) protègent le jeu, mais un appelant hors
+      // schéma (import, éditeur, test) pouvait injecter un prix ≤ 0 — attraction
+      // nulle et marge de sécurité −Infinity. Clamp défensif dans le moteur.
+      price: Math.max(0, raw.price),
       productionPlan: Math.max(0, raw.productionPlan),
       marketingBudget: Math.max(0, raw.marketingBudget),
       qualityBudget: Math.max(0, raw.qualityBudget),

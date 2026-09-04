@@ -193,7 +193,14 @@ export function computeRoundScores(
     let bpi = 0;
     for (const dimension of BPI_DIMENSIONS) {
       const peers = raws.map((r) => r.raw[dimension]);
-      const score = 0.5 * raw[dimension] + 0.5 * peerPercentile(raw[dimension], peers);
+      // Une seule entreprise : pas de pairs à départager. `peerPercentile`
+      // renvoie alors 100, ce qui offrait +50 gratuits sur chaque dimension
+      // (0,5×raw + 50) et gonflait le BPI. Sans pair, la note est le seul
+      // benchmark (100 % raw), pas un rang inventé.
+      const score =
+        peers.length <= 1
+          ? raw[dimension]
+          : 0.5 * raw[dimension] + 0.5 * peerPercentile(raw[dimension], peers);
       normalized[dimension] = score;
       bpi += weightOf[dimension] * score;
     }
@@ -426,7 +433,14 @@ export function computeRoundScoresV2(
     let bpi = 0;
     for (const dimension of BPI_V2_DIMENSIONS) {
       const peers = raws.map((r) => r.raw[dimension]);
-      const score = 0.5 * raw[dimension] + 0.5 * peerPercentile(raw[dimension], peers);
+      // Une seule entreprise : pas de pairs à départager. `peerPercentile`
+      // renvoie alors 100, ce qui offrait +50 gratuits sur chaque dimension
+      // (0,5×raw + 50) et gonflait le BPI. Sans pair, la note est le seul
+      // benchmark (100 % raw), pas un rang inventé.
+      const score =
+        peers.length <= 1
+          ? raw[dimension]
+          : 0.5 * raw[dimension] + 0.5 * peerPercentile(raw[dimension], peers);
       normalized[dimension] = score;
       bpi += weightOf[dimension] * score;
     }
