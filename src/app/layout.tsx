@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: { default: TITRE_ACCUEIL, template: GABARIT_DE_TITRE },
   description: DESCRIPTION_ACCUEIL,
-  openGraph: { siteName: NOM_DU_SITE, locale: "fr_FR", type: "website" },
+  openGraph: { siteName: NOM_DU_SITE, locale: "fr_FR", type: "website", url: SITE_URL },
   twitter: { card: "summary_large_image" },
   manifest: "/manifest.json",
   appleWebApp: {
