@@ -9,10 +9,8 @@ import {
   rounds,
   teams,
 } from "@/db/schema";
-import {
-  scenarioByCode,
-  type ScenarioVocabulary,
-} from "@/config/scenarios/registry";
+import type { ScenarioVocabulary } from "@/config/scenarios/registry";
+import { resolveScenarioDefinition } from "@/services/scenario-source.service";
 import { computeSectorKpis, type KpiFormat } from "@/config/scenarios/sector-kpis";
 import { presetFromProfile } from "@/config/difficulty";
 import { porteUnNomParDefaut } from "@/config/nom-equipe";
@@ -558,11 +556,12 @@ function buildSectorKpis(
   result: CompanyRoundResult,
   previousSegments: CompanyRoundResult["market"]["bySegment"] | null,
   snapshot: EngineScenarioConfig,
+  kpis: Parameters<typeof computeSectorKpis>[0],
 ): GameView["sectorKpis"] {
   const segmentUnits = Object.values(result.market.bySegment).reduce((sum, s) => sum + s.sold, 0);
   const totalUnits =
     segmentUnits + (result.extraOrders?.delivered ?? 0) + (result.orderOffer?.delivered ?? 0);
-  return computeSectorKpis(scenarioByCode(snapshot.code).kpis, {
+  return computeSectorKpis(kpis, {
     result,
     previousSegments,
     segmentUnits,
@@ -613,6 +612,10 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
   const { team: playerTeam, allTeams: teamRows } = await findUserTeam(gameId, userId);
   if (!playerTeam) return null;
   const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+  // Le scénario réellement joué : intégré (registre) OU enseignant (base). Le
+  // registre synchrone retombe sur NOVA pour un code base — d'où la résolution
+  // par la source unique, ici, une fois, réutilisée dans toute la vue.
+  const scenarioDef = await resolveScenarioDefinition(snapshot.code);
   const taxRate = snapshot.finance.taxRate;
 
   const gameRounds = await db
@@ -705,7 +708,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       events,
       decisions: dec,
       forecastReview: buildForecastReview(idx, result, dec?.forecast),
-      sectorKpis: buildSectorKpis(result, prevSegments, snapshot),
+      sectorKpis: buildSectorKpis(result, prevSegments, snapshot, scenarioDef.kpis),
       competitiveBenchmark: buildBenchmark(rowsOfRound, teamRows, playerTeam.id),
     });
   }
@@ -1041,7 +1044,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     roundBriefing: (() => {
       if (!lastResult) return null;
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
-      const definition = scenarioByCode(snapshot.code);
+      const definition = scenarioDef;
       const preset = presetFromProfile(game.difficultyProfile);
       return roundBriefing({
         result: lastResult,
@@ -1118,12 +1121,8 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         materialCostPerUnit: Math.round(snapshot.product.materialCostPerUnit * s.costMultiplier * 100) / 100,
       }));
     })(),
-    vocabulary: scenarioByCode(
-      (game.scenarioSnapshot as { code?: string } | null)?.code,
-    ).vocabulary,
-    sector: scenarioByCode(
-      (game.scenarioSnapshot as { code?: string } | null)?.code,
-    ).sector,
+    vocabulary: scenarioDef.vocabulary,
+    sector: scenarioDef.sector,
     segmentNames: Object.fromEntries(
       (game.scenarioSnapshot as EngineScenarioConfig).market.segments.map((s) => [
         s.code,
@@ -1151,7 +1150,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
             (r) => r.roundId === previousRound.id && r.teamId === playerTeam.id,
           )
         : undefined;
-      return computeSectorKpis(scenarioByCode(snapshot.code).kpis, {
+      return computeSectorKpis(scenarioDef.kpis, {
         result: lastResult,
         previousSegments:
           (previousRow?.marketDetail as CompanyRoundResult["market"]["bySegment"]) ?? null,
@@ -1163,7 +1162,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     })(),
     intro: (() => {
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
-      const definition = scenarioByCode(snapshot.code);
+      const definition = scenarioDef;
       const state = stateRow?.state as CompanyState | undefined;
       return {
         title: definition.title,
