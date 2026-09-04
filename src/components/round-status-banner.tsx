@@ -43,7 +43,6 @@ export function RoundStatusBanner({
   roundsCount,
   roundDays,
   pendingDecisions,
-  kind,
   finished,
   situations,
 }: Props) {
@@ -70,10 +69,12 @@ export function RoundStatusBanner({
           Décisions enregistrées
         </p>
         <StatutSituation statut={situations} />
+        {/* Ce bloc ne s'affiche qu'en classe : en solo, valider résout le tour
+            sur-le-champ (pas de décisions « en attente »). L'ancienne branche
+            solo « Résolution en cours. » était donc morte. */}
         <p className="mt-1 text-sm text-slate-400">
-          {kind === "class"
-            ? "En attente de la clôture du tour par l'enseignant. La page se mettra à jour automatiquement."
-            : "Résolution en cours."}
+          En attente de la clôture du tour par l&apos;enseignant. La page se mettra à jour
+          automatiquement.
         </p>
       </section>
     );

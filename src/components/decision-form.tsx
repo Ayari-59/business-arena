@@ -253,7 +253,7 @@ function OptionalField({
           inputMode="decimal"
           name={name}
           placeholder={placeholder}
-          className="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-600"
+          className="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500"
         />
         <span className="text-xs text-slate-500">{suffix}</span>
       </span>
