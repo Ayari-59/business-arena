@@ -28,7 +28,13 @@ function appositive(tagline: string): string {
   return trimmed.charAt(0).toLowerCase() + trimmed.slice(1);
 }
 
-export default async function ArenaPage({ params }: { params: Promise<{ gameId: string }> }) {
+export default async function ArenaPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ gameId: string }>;
+  searchParams: Promise<{ simule?: string }>;
+}) {
   const { gameId } = await params;
   const userId = await getGuestUserId();
   if (!userId) notFound();
@@ -48,6 +54,63 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
   );
   const mostRecentDebriefedRound = situations.debriefedByRound[0]?.roundIndex ?? null;
   const hasActivePeriod = !finished;
+
+  // ── Écran intermédiaire « Tour simulé » (solo, après une validation) ──
+  // Valider a résolu le tour à l'instant (playRoundAction redirige ici avec
+  // ?simule). Plutôt que de jeter le joueur directement sur les résultats ou
+  // sur le tour suivant — deux boutons « simuler » d'allure identique —, on
+  // marque l'étape et on laisse choisir. Aucun chiffre n'est dévoilé ici :
+  // c'est le rôle de « voir les résultats ».
+  const { simule } = await searchParams;
+  const tourJoue = periods.at(-1) ?? null;
+  if (simule != null && view.kind === "solo" && tourJoue !== null) {
+    return (
+      <main
+        id="main"
+        className="mx-auto flex min-h-[70vh] max-w-xl flex-col items-center justify-center px-6 py-12 text-center"
+      >
+        <span
+          className={`flex h-16 w-16 items-center justify-center rounded-2xl text-3xl ${SECTOR_COLORS[view.sector].bg}`}
+        >
+          {SECTOR_ICONS[view.sector]}
+        </span>
+        <p className="mt-6 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-300">
+          <span aria-hidden>✓</span> Tour simulé
+        </p>
+        <h1 className="mt-3 text-3xl font-bold text-slate-50">
+          {periodLabel(view.roundDays, tourJoue.round)} joué
+        </h1>
+        <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-400">
+          Vos décisions sont enregistrées et le tour est résolu. Regardez ce
+          qu&apos;elles ont produit, ou enchaînez sur la suite.
+        </p>
+        <div className="mt-8 flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
+          <Link
+            href={`/arena/${gameId}#dernier-resultat`}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300"
+          >
+            <span aria-hidden>📊</span> Voir les résultats
+          </Link>
+          {finished ? (
+            <Link
+              href={`/arena/${gameId}`}
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-amber-400/40 px-6 py-3 text-sm font-semibold text-amber-300 transition hover:border-amber-400 hover:bg-amber-400/10"
+            >
+              <span aria-hidden>🏁</span> Bilan de la partie
+            </Link>
+          ) : (
+            <Link
+              href={`/arena/${gameId}#tour-en-cours`}
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-white/30 hover:bg-white/5"
+            >
+              Passer au {periodLabel(view.roundDays, view.currentRound)}
+              <span aria-hidden>→</span>
+            </Link>
+          )}
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main id="main" className="mx-auto max-w-5xl px-6 pt-6 pb-12">
@@ -239,7 +302,10 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
 
         {/* ── Période active : le tour en cours, ouvert ── */}
         {hasActivePeriod ? (
-          <section className="rounded-xl border-2 border-amber-400/40 bg-slate-950/40">
+          <section
+            id="tour-en-cours"
+            className="scroll-mt-24 rounded-xl border-2 border-amber-400/40 bg-slate-950/40"
+          >
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-400/20 px-4 py-3 sm:px-5">
               <span className="flex items-center gap-2 text-sm font-semibold text-amber-200">
                 ✏️ {periodLabel(view.roundDays, view.currentRound)}
