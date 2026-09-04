@@ -186,7 +186,7 @@ export default function FonctionnalitesPage() {
         </p>
         <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <Link
-            href="/"
+            href="/jouer"
             className="rounded-lg bg-amber-500 px-6 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400"
           >
             Tester le simulateur

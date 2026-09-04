@@ -13,6 +13,7 @@ import { SITE_URL } from "@/config/site";
 /** Pages publiques de premier niveau (hors ateliers, listés à part). */
 export const PAGES_PUBLIQUES = [
   "/",
+  "/jouer",
   "/entreprises",
   "/ateliers",
   "/parcours",

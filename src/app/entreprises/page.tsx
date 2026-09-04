@@ -116,7 +116,7 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
 
         <div className="mt-5 flex flex-wrap items-center gap-4">
           <Link
-            href={`/?secteur=${d.code}#jouer`}
+            href={`/jouer?secteur=${d.code}`}
             className="rounded-lg bg-slate-100 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-white"
           >
             Diriger {nomSeul(d)}
@@ -238,7 +238,7 @@ export default function EntreprisesPage() {
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Link
-            href="/#jouer"
+            href="/jouer"
             className="rounded-lg bg-amber-500 px-6 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400"
           >
             Tester le simulateur

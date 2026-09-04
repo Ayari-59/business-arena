@@ -61,6 +61,7 @@ describe("métadonnées communes (layout)", () => {
 describe("pages publiques : titre distinct, description, canonique", () => {
   const PUBLIQUES: [string, string, string][] = [
     ["/page", "Business Arena · Simulation d'entreprise pour BTS, DCG et écoles", "/"],
+    ["/jouer/page", "Lancer une partie", "/jouer"],
     ["/entreprises/page", "entreprises jouables", "/entreprises"],
     ["/notions/page", "Fiches notions de gestion", "/notions"],
     ["/guide/page", "Guide de prise en main", "/guide"],

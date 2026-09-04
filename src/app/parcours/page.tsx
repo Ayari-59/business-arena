@@ -33,7 +33,7 @@ export default function ParcoursPage() {
             Enseignants
           </Link>
           <Link
-            href="/"
+            href="/jouer"
             className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-300"
           >
             Jouer
