@@ -4,6 +4,7 @@ import { rawDimensionScoresV2 } from "../../src/scoring/bpi";
 import type {
   CompanyState,
   EngineScenarioConfig,
+  EventInstance,
   RoundDecisions,
   SimulationInput,
 } from "../../src/engine/types";
@@ -182,6 +183,37 @@ describe("faillite", () => {
     expect(societeA(r3).crisisStreak).toBe(0);
     // L'apport est bien pris en compte malgré le gel (capitaux propres en hausse).
     expect(societeA(r3).finance.equity).toBeGreaterThan(societeA(r2).finance.equity);
+  });
+
+  it("une entreprise défaillante n'écoule pas son stock résiduel, même sur commande ferme", () => {
+    // Défaillante, avec un stock de tours passés. Une commande ferme (événement)
+    // arrive : sans garde, elle puisait dans ce stock — une entreprise à l'arrêt
+    // se remettait à vendre. Elle ne doit rien vendre ; son stock reste gelé.
+    const defaillante: CompanyState = {
+      ...company(),
+      status: "defaillant",
+      crisisStreak: 2,
+      finishedGoods: { quantity: 1000, unitCost: 20 },
+    };
+    const commandeFerme: EventInstance = {
+      code: "big_order",
+      scope: "company",
+      companyId: "a",
+      roundsLeft: 1,
+      modifiers: [{ target: "order", op: "add", value: 500 }],
+    };
+    const out = simulateRound({
+      scenario: scenario(),
+      roundIndex: 3,
+      companies: [defaillante],
+      decisions: { a: base() },
+      activeEvents: [commandeFerme],
+      seed: 42,
+    });
+    const a = out.results["a"]!;
+    expect(a.incomeStatement.revenue).toBe(0); // aucune vente
+    expect(a.production.produced).toBe(0); // aucune production
+    expect(societeA(out).finishedGoods.quantity).toBe(1000); // stock intact
   });
 
   it("la performance financière d'une entreprise défaillante est au plancher", () => {
