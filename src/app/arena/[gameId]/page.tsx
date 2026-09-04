@@ -253,6 +253,27 @@ export default async function ArenaPage({ params }: { params: Promise<{ gameId: 
               </span>
             </div>
 
+            {/* En solo, valider a résolu le tour précédent à l'instant : on met
+                « voir les résultats » en tête du tour suivant, pour ne pas
+                enchaîner sur un bouton « simuler » d'allure identique sans être
+                passé par ses résultats. Le formulaire reste derrière l'onglet
+                Décisions. Le lien remonte à la période close, ouverte sur ses
+                résultats (#dernier-resultat). */}
+            {view.kind === "solo" && latestRound !== null ? (
+              <a
+                href="#dernier-resultat"
+                className="flex items-center justify-between gap-3 border-b border-emerald-400/20 bg-emerald-400/5 px-4 py-3 text-sm transition hover:bg-emerald-400/10 sm:px-5"
+              >
+                <span className="flex items-center gap-2 font-medium text-emerald-200">
+                  <span aria-hidden>📊</span>
+                  {periodLabel(view.roundDays, latestRound)} simulé — voir les résultats
+                </span>
+                <span aria-hidden className="text-emerald-300">
+                  ↑
+                </span>
+              </a>
+            ) : null}
+
             <div className="p-4 sm:p-5">
               {/* Le tour en cours porte les mêmes onglets que les tours clos, dès
                   le premier tour : Situation (à lire), Décisions (à rendre) et
