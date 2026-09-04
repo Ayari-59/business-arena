@@ -58,7 +58,16 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
 /** L'adresse d'origine telle que Vercel la transmet ; null hors proxy. */
 async function adresseOrigine(): Promise<string | null> {
   const h = await headers();
-  return h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || null;
+  // On veut l'IP la MOINS falsifiable. `x-real-ip` est posé par la plateforme
+  // et n'est pas contrôlé par le client. À défaut, on prend le DERNIER maillon
+  // de `x-forwarded-for` — celui ajouté par le proxy de confiance —, pas le
+  // premier, que le client peut préfixer à volonté (il suffisait sinon de faire
+  // tourner cette valeur pour échapper à la limitation par IP).
+  return (
+    h.get("x-real-ip") ||
+    h.get("x-forwarded-for")?.split(",").pop()?.trim() ||
+    null
+  );
 }
 
 export async function loginAction(_prev: FormState, formData: FormData): Promise<FormState> {
