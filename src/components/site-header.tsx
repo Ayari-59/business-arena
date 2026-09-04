@@ -163,11 +163,23 @@ export function SiteHeader() {
             dans son propre cadre : sans cela, les dernières entrées ne
             s'atteignent qu'en faisant défiler la page DERRIÈRE le menu. */}
         <div className="max-h-[calc(100dvh-4.5rem)] overflow-y-auto rounded-2xl border border-white/10 bg-slate-900 p-4 shadow-2xl">
-          <Entree
-            lien={ACTION_PRINCIPALE}
-            courant={estCourant(ACTION_PRINCIPALE.href)}
-            accent
-          />
+          {/* L'action principale est une ligne, comme les en-têtes de groupe :
+              le menu ouvert est une liste homogène. L'ambre et la flèche la
+              distinguent (aller directement), le chevron distingue les groupes
+              (déplier). */}
+          <Link
+            href={ACTION_PRINCIPALE.href}
+            title={ACTION_PRINCIPALE.aide}
+            aria-current={estCourant(ACTION_PRINCIPALE.href) ? "page" : undefined}
+            className="flex items-center justify-between rounded-lg border border-amber-400/40 bg-amber-950/20 px-3 py-2 transition hover:border-amber-400"
+          >
+            <span className="text-sm font-semibold text-amber-300">
+              {ACTION_PRINCIPALE.libelle}
+            </span>
+            <span aria-hidden className="text-amber-300">
+              →
+            </span>
+          </Link>
 
           <div className="mt-3 space-y-1 border-t border-white/10 pt-3">
             {NAVIGATION.map((groupe) => {
@@ -223,30 +235,14 @@ export function SiteHeader() {
  * distinguent pas les uns des autres pour qui découvre le site, et c'est cette
  * phrase qui évite d'ouvrir les trois pour trouver la bonne.
  */
-function Entree({
-  lien,
-  courant,
-  accent = false,
-}: {
-  lien: LienDeMenu;
-  courant: boolean;
-  accent?: boolean;
-}) {
+function Entree({ lien, courant }: { lien: LienDeMenu; courant: boolean }) {
   return (
     <Link
       href={lien.href}
       aria-current={courant ? "page" : undefined}
-      className={`block rounded-lg px-3 py-2 transition ${
-        accent
-          ? "border border-amber-400/40 bg-amber-950/20 hover:border-amber-400"
-          : "hover:bg-white/5"
-      } ${courant ? "bg-white/5" : ""}`}
+      className={`block rounded-lg px-3 py-2 transition hover:bg-white/5 ${courant ? "bg-white/5" : ""}`}
     >
-      <span
-        className={`block text-sm font-medium ${accent ? "text-amber-300" : "text-slate-100"}`}
-      >
-        {lien.libelle}
-      </span>
+      <span className="block text-sm font-medium text-slate-100">{lien.libelle}</span>
       <span className="mt-0.5 block text-xs leading-relaxed text-slate-400">{lien.aide}</span>
     </Link>
   );
