@@ -12,6 +12,7 @@ import {
 import type { RoundDecisions } from "@/engine/types";
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
 import { formatEuro } from "@/lib/format";
+import { SimulationProgress } from "@/components/simulation-progress";
 
 const initialState: PlayRoundState = { error: null };
 
@@ -1068,24 +1069,33 @@ export function DecisionForm({
           </div>
         </div>
       ) : null}
-      <button
-        type="submit"
-        disabled={pending}
-        className="w-full rounded-lg bg-amber-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 disabled:cursor-wait disabled:opacity-60"
-      >
-        {pending
-          ? "Envoi en cours…"
-          : kind === "solo"
-            ? `Valider mes décisions et simuler · ${periodName}`
-            : alreadySubmitted
-              ? "Mettre à jour mes décisions validées"
-              : `Valider les décisions de l'équipe · ${periodName}`}
-      </button>
-      <p className="text-center text-xs text-slate-500">
-        {kind === "solo"
-          ? "Mode apprentissage : les résultats sont calculés immédiatement, à vous d'analyser."
-          : "Vos décisions restent modifiables jusqu'à la clôture du tour par l'enseignant."}
-      </p>
+      {pending && kind === "solo" ? (
+        // Le tour se résout côté serveur puis redirige : entre les deux, on
+        // rend l'attente tangible — la machine tourne, étape après étape —
+        // plutôt qu'un bouton grisé « Envoi en cours… ».
+        <SimulationProgress periodName={periodName} />
+      ) : (
+        <button
+          type="submit"
+          disabled={pending}
+          className="w-full rounded-lg bg-amber-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 disabled:cursor-wait disabled:opacity-60"
+        >
+          {pending
+            ? "Envoi en cours…"
+            : kind === "solo"
+              ? `Valider mes décisions et simuler · ${periodName}`
+              : alreadySubmitted
+                ? "Mettre à jour mes décisions validées"
+                : `Valider les décisions de l'équipe · ${periodName}`}
+        </button>
+      )}
+      {!(pending && kind === "solo") ? (
+        <p className="text-center text-xs text-slate-500">
+          {kind === "solo"
+            ? "Mode apprentissage : les résultats sont calculés immédiatement, à vous d'analyser."
+            : "Vos décisions restent modifiables jusqu'à la clôture du tour par l'enseignant."}
+        </p>
+      ) : null}
     </form>
   );
 }
