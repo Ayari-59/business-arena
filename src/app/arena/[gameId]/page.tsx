@@ -201,7 +201,7 @@ export default async function ArenaPage({
           <h2 className="text-xl font-bold text-amber-300">
             {view.ranking.find((row) => row.isPlayer)?.rank === 1
               ? `🏆 Victoire ! ${view.playerTeamName} domine le marché.`
-              : "Partie terminée. Analysez votre trajectoire période par période ci-dessous."}
+              : "Partie terminée. Analysez votre trajectoire tour par tour ci-dessous."}
           </h2>
           <p className="mt-2 text-sm text-slate-400">
             Résultat cumulé : {formatEuro(view.ranking.find((row) => row.isPlayer)?.cumulativeNetIncome ?? 0)}
@@ -224,7 +224,7 @@ export default async function ArenaPage({
       <div className="mt-6 space-y-4">
         {periods.length > 0 ? (
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-            {finished ? "Vos périodes" : "Périodes passées"}
+            {finished ? "Vos tours" : "Tours passés"}
           </p>
         ) : null}
 
@@ -601,8 +601,8 @@ export default async function ArenaPage({
                     Vos décisions · {periodLabel(view.roundDays, view.currentRound).toLowerCase()}
                   </h2>
                   <p className="mt-1 text-xs text-slate-500">
-                    Une fois rendues et le tour clos, elles produiront les résultats de cette
-                    période — et la période suivante s&apos;ouvrira.
+                    Une fois rendues et le tour clos, elles produiront les résultats de ce
+                    tour — et le tour suivant s&apos;ouvrira.
                   </p>
                 </div>
                 <DecisionForm
@@ -646,7 +646,7 @@ export default async function ArenaPage({
                         📊 Les résultats de ce tour n&apos;existent pas encore.
                       </p>
                       <p className="mt-1 text-xs text-slate-500">
-                        Ils s&apos;afficheront ici une fois le tour clos — et ouvriront la période suivante.
+                        Ils s&apos;afficheront ici une fois le tour clos — et ouvriront le tour suivant.
                       </p>
                     </div>
                   ),

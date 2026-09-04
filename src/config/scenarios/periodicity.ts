@@ -37,8 +37,16 @@ export function periodicityFromRoundDays(roundDays: number): Periodicity {
   return "year";
 }
 
-export function periodLabel(roundDays: number, index: number): string {
-  return `${PERIODICITY_LABELS[periodicityFromRoundDays(roundDays)].singular} ${index}`;
+/**
+ * Le libellé d'un tour à l'écran. Unifié sur « Tour N » (choix produit) :
+ * quelle que soit la durée réelle d'un tour (mois, trimestre, année, fixée au
+ * lancement de la partie), le joueur lit « Tour 1 », « Tour 2 »… La durée reste
+ * un paramètre de la partie — le sélecteur « un trimestre par tour » l'annonce
+ * au lancement — mais elle ne teinte plus chaque libellé. `_roundDays` est donc
+ * conservé dans la signature (les appelants le passent) sans influer sur le texte.
+ */
+export function periodLabel(_roundDays: number, index: number): string {
+  return `Tour ${index}`;
 }
 
 const compound = (ratePerQuarter: number, k: number) => Math.pow(1 + ratePerQuarter, k) - 1;
