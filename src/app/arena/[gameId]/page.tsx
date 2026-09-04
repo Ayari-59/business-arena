@@ -14,6 +14,7 @@ import { DilemmaCard, ParametersPanels } from "@/components/decision-context";
 import { PeriodDashboard } from "@/components/period-dashboard";
 import { PeriodDecisionsRecap } from "@/components/period-decisions-recap";
 import { SegmentedTabs } from "@/components/segmented-tabs";
+import { CycleDecisions } from "@/components/cycle-decisions";
 import { RoundStatusPoller } from "@/components/round-status-poller";
 import { RoundStatusBanner } from "@/components/round-status-banner";
 import { EventBanner } from "@/components/event-banner";
@@ -183,6 +184,14 @@ export default async function ArenaPage({
       {view.peutSeNommer ? (
         <div className="mt-6">
           <TeamNameForm gameId={gameId} nomActuel={view.playerTeamName} />
+        </div>
+      ) : null}
+
+      {/* Carte mentale du cycle, une fois au tout début (solo, tour 1) : le
+          joueur reçoit le plan avant de plonger. */}
+      {view.kind === "solo" && periods.length === 0 && !finished ? (
+        <div className="mt-6">
+          <CycleDecisions />
         </div>
       ) : null}
 
