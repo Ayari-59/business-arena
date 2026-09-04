@@ -435,14 +435,24 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
   const salesBySegment = new Map<string, SegmentSalesDetail[]>();
   for (const segment of scenario.market.segments) {
     const attractions = working.map((w) =>
-      attractionScore({
-        price: w.decisions.price,
-        marketingBudget: w.decisions.marketingBudget,
-        perceivedQuality: w.state.perceivedQuality,
-        lastShare: w.state.lastMarketShare[segment.code] ?? 0,
-        segment,
-        marketingScale: scenario.marketing.scale,
-      }),
+      // Faillite (V2 couche 2, #5) : une entreprise défaillante est dormante ce
+      // tour — production nulle, stock non réapprovisionné. La laisser dans le
+      // calcul d'attraction lui faisait capter une part (son prix cassé donne
+      // une attraction élevée) qu'elle ne pouvait pas servir : la demande
+      // captée partait intégralement en « perdue », amputant d'autant les
+      // concurrents actifs sans faute de leur part. Attraction nulle → part 0
+      // (allocateShares écarte les scores ≤ 0), et les parts se renormalisent
+      // entre les entreprises réellement au marché.
+      w.state.status === "defaillant"
+        ? 0
+        : attractionScore({
+            price: w.decisions.price,
+            marketingBudget: w.decisions.marketingBudget,
+            perceivedQuality: w.state.perceivedQuality,
+            lastShare: w.state.lastMarketShare[segment.code] ?? 0,
+            segment,
+            marketingScale: scenario.marketing.scale,
+          }),
     );
     const shares = allocateShares(
       attractions,
