@@ -139,10 +139,10 @@ export const REFERENTIELS: Record<string, Referentiel> = {
 /**
  * Les diplômes dont la liste n'a pas encore été confrontée à son texte.
  *
- * Elle est vide : les six diplômes publiés ont été lus sur leurs textes. Ce
- * n'est pas un état définitif et la liste n'est pas là pour décorer. Une
- * filière ajoutée demain y entrera le temps qu'on ouvre son arrêté, et c'est
- * précisément à cela qu'elle sert : un diplôme dont le texte n'a pas été lu
- * doit se voir, plutôt que de se confondre avec ceux qui l'ont été.
+ * Le BTS MHR y figure : son animation est publiée, mais ses blocs n'ont pas
+ * encore été relus sur l'arrêté, et cela doit se voir plutôt que de se
+ * confondre avec les diplômes dont le texte a été lu. Ce n'est pas un état
+ * définitif : le jour où l'on ouvre son texte, il rejoint REFERENTIELS et sort
+ * d'ici. C'est précisément à cela que sert cette liste.
  */
-export const REFERENTIELS_NON_VERIFIES = [] as const;
+export const REFERENTIELS_NON_VERIFIES = ["mhr"] as const;
