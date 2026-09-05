@@ -1146,23 +1146,28 @@ export function DecisionForm({
         // étape à l'autre, et « Valider » (envoi réel) à la dernière seulement.
         // Le bouton d'avance est de type `button` : changer d'étape ne soumet
         // rien, seul le « Valider » final déclenche la résolution du tour.
-        <div className="flex items-center justify-between gap-3 border-t border-white/10 pt-4">
+        // Sur mobile, l'action principale passe en pleine largeur sur sa propre
+        // ligne (via `order` + `flex-wrap`) : sinon, coincée entre « Précédent »
+        // et « Étape X/Y », elle rétrécissait, son libellé passait à la ligne et
+        // débordait le bas de l'écran. Sur grand écran, tout revient sur une
+        // seule rangée : Précédent · Étape · action.
+        <div className="flex flex-wrap items-center gap-3 border-t border-white/10 pt-4">
           <button
             type="button"
             onClick={() => setEtape((e) => Math.max(0, Math.min(e, total - 1) - 1))}
             disabled={courante === 0}
-            className="rounded-lg border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:text-slate-100 disabled:cursor-not-allowed disabled:opacity-30"
+            className="order-2 shrink-0 rounded-lg border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:text-slate-100 disabled:cursor-not-allowed disabled:opacity-30 sm:order-1"
           >
             ← Précédent
           </button>
-          <span className="shrink-0 text-xs tabular-nums text-slate-500">
+          <span className="order-3 shrink-0 text-xs tabular-nums text-slate-500 sm:order-2 sm:mr-auto">
             Étape {courante + 1} / {total}
           </span>
           {derniere ? (
             <button
               type="submit"
               disabled={pending}
-              className="rounded-lg bg-amber-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 disabled:cursor-wait disabled:opacity-60"
+              className="order-1 w-full rounded-lg bg-amber-400 px-5 py-2.5 text-center text-sm font-semibold text-slate-950 transition hover:bg-amber-300 disabled:cursor-wait disabled:opacity-60 sm:order-3 sm:w-auto"
             >
               {pending
                 ? "Envoi en cours…"
@@ -1176,7 +1181,7 @@ export function DecisionForm({
             <button
               type="button"
               onClick={() => setEtape((e) => Math.min(total - 1, Math.min(e, total - 1) + 1))}
-              className="rounded-lg bg-amber-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-300"
+              className="order-1 w-full rounded-lg bg-amber-400 px-5 py-2.5 text-center text-sm font-semibold text-slate-950 transition hover:bg-amber-300 sm:order-3 sm:w-auto"
             >
               Suivant →
             </button>
