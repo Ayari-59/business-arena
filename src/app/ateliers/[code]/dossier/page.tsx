@@ -56,7 +56,7 @@ export default async function DossierElevePage({
 
   return (
     <main id="main" className="mx-auto max-w-3xl px-6 py-12 print:max-w-none print:px-0 print:py-0 print:text-black">
-      <p className="text-xs uppercase tracking-[0.3em] text-slate-500 print:hidden">
+      <p className="text-xs uppercase tracking-[0.3em] text-slate-400 print:hidden">
         <Link href={`/ateliers/${atelier.code}`} className="hover:text-slate-300">
           {atelier.titre}
         </Link>{" "}
@@ -165,7 +165,7 @@ export default async function DossierElevePage({
                 {s.livrable}
               </p>
 
-              <p className="mt-1 text-xs text-slate-500 print:hidden">
+              <p className="mt-1 text-xs text-slate-400 print:hidden">
                 <a
                   href={`/ateliers/${atelier.code}/formulaires`}
                   className="text-amber-300 underline-offset-4 hover:underline"
@@ -183,7 +183,7 @@ export default async function DossierElevePage({
                 ))}
               </ul>
 
-              <p className="mt-4 text-xs leading-relaxed text-slate-500 print:text-black">
+              <p className="mt-4 text-xs leading-relaxed text-slate-400 print:text-black">
                 Notions à mobiliser : {s.notions.join(", ")}.
               </p>
               <p className="mt-2 border-t border-white/10 pt-2 text-xs italic leading-relaxed text-slate-400 print:border-black/20 print:text-black">

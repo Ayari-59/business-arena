@@ -24,7 +24,7 @@ export function CompetitionSettings({
       <dl className="grid gap-x-4 gap-y-2 text-sm sm:grid-cols-[auto_1fr]">
         {lignes.map(([nom, valeur]) => (
           <div key={nom} className="contents">
-            <dt className="text-slate-500">{nom}</dt>
+            <dt className="text-slate-400">{nom}</dt>
             <dd className={nom === "Code d'inscription" ? "font-mono text-amber-300" : "text-slate-300"}>
               {valeur}
             </dd>
@@ -66,7 +66,7 @@ export function CompetitionSteps({ concours }: { concours: ConcoursPourDeroule }
               {etape.nom}
               {etape.etat === "courante" ? " · en cours" : ""}
             </p>
-            <p className="mt-1 text-xs text-slate-500">{etape.detail}</p>
+            <p className="mt-1 text-xs text-slate-400">{etape.detail}</p>
           </li>
         ))}
       </ol>

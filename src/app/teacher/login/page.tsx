@@ -22,7 +22,7 @@ export default async function TeacherLoginPage() {
         </p>
       </div>
       <TeacherAuthForms />
-      <Link href="/guide#enseignants" className="text-xs text-slate-500 underline-offset-4 hover:text-slate-300 hover:underline">
+      <Link href="/guide#enseignants" className="text-xs text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline">
         Première fois ? Consultez le guide de prise en main
       </Link>
       {demoSeeded ? (
@@ -39,7 +39,7 @@ export default async function TeacherLoginPage() {
               Mot de passe : {DEMO_ACCOUNTS.password}
             </li>
           </ul>
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 text-xs text-slate-400">
             Une classe de 3 tours joués et un concours prêt à lancer vous attendent.
           </p>
         </div>

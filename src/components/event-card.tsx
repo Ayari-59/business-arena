@@ -74,7 +74,7 @@ export function EventCard({
             <p className="mt-auto pt-2 text-xs font-semibold text-slate-200">
               ⚡ {card.effectLabel}
             </p>
-            <p className="mt-1.5 border-t border-white/5 pt-1.5 text-xs leading-snug text-slate-500">
+            <p className="mt-1.5 border-t border-white/5 pt-1.5 text-xs leading-snug text-slate-400">
               💡 {card.conceptHint}
             </p>
           </div>

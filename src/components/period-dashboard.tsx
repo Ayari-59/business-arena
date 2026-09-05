@@ -140,7 +140,7 @@ export function PeriodDashboard({
                         }`}
                       >
                         <span>
-                          <span className="mr-2 text-slate-500">#{row.rank}</span>
+                          <span className="mr-2 text-slate-400">#{row.rank}</span>
                           {row.name}
                           {row.defaillant ? (
                             <span
@@ -153,14 +153,14 @@ export function PeriodDashboard({
                         </span>
                         <span className="tabular-nums">
                           <span className="font-semibold">{row.bpi.toFixed(1)}</span>
-                          <span className="ml-2 text-xs text-slate-500">
+                          <span className="ml-2 text-xs text-slate-400">
                             {formatEuro(row.cumulativeNetIncome)} cumulés
                           </span>
                         </span>
                       </li>
                     ))}
                   </ol>
-                  <p className="mt-3 text-xs text-slate-500">
+                  <p className="mt-3 text-xs text-slate-400">
                     Le BPI (0-100) pondère 6 dimensions : économique 30 %, financière 20 %,
                     commerciale 15 %, pilotage 20 %, rentabilité 10 %, maîtrise décisionnelle
                     5 %. La performance financière suit la variation du résultat (une perte
@@ -171,7 +171,7 @@ export function PeriodDashboard({
                 {view.playerDimensions ? <BpiPanel dimensions={view.playerDimensions} /> : null}
               </section>
             ) : (
-              <p className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-xs text-slate-500">
+              <p className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-xs text-slate-400">
                 Le classement BPI reflète la position actuelle : il se consulte sur le tour le
                 plus récent.
               </p>
@@ -192,11 +192,11 @@ export function PeriodDashboard({
                       key={k.key}
                       className="rounded-lg border border-white/10 bg-slate-950 px-3 py-2.5"
                     >
-                      <p className="text-xs uppercase tracking-wide text-slate-500">{k.label}</p>
+                      <p className="text-xs uppercase tracking-wide text-slate-400">{k.label}</p>
                       <p className="mt-0.5 text-lg font-semibold tabular-nums text-slate-100">
                         {formatKpi(k.value, k.format)}
                       </p>
-                      <p className="mt-1 text-xs leading-snug text-slate-500">{k.hint}</p>
+                      <p className="mt-1 text-xs leading-snug text-slate-400">{k.hint}</p>
                     </div>
                   ))}
                 </div>
@@ -210,7 +210,7 @@ export function PeriodDashboard({
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
+                    <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
                       <th className="pb-2 pr-3 font-medium">Segment</th>
                       <th className="pb-2 pr-3 text-right font-medium">Demande</th>
                       <th className="pb-2 pr-3 text-right font-medium">Vendu</th>
@@ -296,7 +296,7 @@ export function PeriodDashboard({
                 <div className="mt-2 overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
+                      <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
                         <th className="pb-1 pr-3 font-medium" />
                         <th className="pb-1 pr-3 text-right font-medium">Prévu</th>
                         <th className="pb-1 pr-3 text-right font-medium">Réalisé</th>
@@ -356,7 +356,7 @@ export function PeriodDashboard({
                     son taux.
                   </p>
                 ) : null}
-                <p className="mt-2 text-xs leading-relaxed text-slate-500">
+                <p className="mt-2 text-xs leading-relaxed text-slate-400">
                   L&apos;écart vaut mieux que la prévision : il dit ce que vous n&apos;aviez pas
                   vu. Un écart qui se répète dans le même sens n&apos;est pas de la malchance,
                   c&apos;est un biais dans votre modèle.

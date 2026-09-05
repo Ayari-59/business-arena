@@ -35,7 +35,7 @@ export function KpiCard({
       ? "text-emerald-400"
       : trend?.direction === "down"
         ? "text-red-400"
-        : "text-slate-500";
+        : "text-slate-400";
   const trendArrow =
     trend?.direction === "up" ? "↑" : trend?.direction === "down" ? "↓" : "→";
 
@@ -54,7 +54,7 @@ export function KpiCard({
           <Sparkline data={sparklineData} />
         ) : null}
       </div>
-      {hint ? <p className="mt-1 pl-2 text-xs text-slate-500">{hint}</p> : null}
+      {hint ? <p className="mt-1 pl-2 text-xs text-slate-400">{hint}</p> : null}
     </div>
   );
 }

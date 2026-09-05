@@ -75,7 +75,7 @@ const RENVOIS: {
 function MiniKpi({ label, value, tone }: { label: string; value: string; tone?: "good" | "bad" }) {
   return (
     <div className="rounded-lg border border-white/10 bg-slate-950/80 px-3 py-2">
-      <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="text-xs uppercase tracking-wide text-slate-400">{label}</p>
       <p
         className={`text-sm font-semibold ${
           tone === "good" ? "text-emerald-400" : tone === "bad" ? "text-red-400" : "text-slate-100"
@@ -232,7 +232,7 @@ export default async function Home() {
           ].map(([big, small]) => (
             <div key={big}>
               <p className="text-2xl font-bold text-amber-400">{big}</p>
-              <p className="mt-1 text-xs text-slate-500">{small}</p>
+              <p className="mt-1 text-xs text-slate-400">{small}</p>
             </div>
           ))}
         </div>

@@ -106,7 +106,7 @@ export function InstallButton() {
             <button
               type="button"
               onClick={() => setShowIosHelp(false)}
-              className="mt-3 text-xs text-slate-500 underline-offset-4 hover:text-slate-300 hover:underline"
+              className="mt-3 text-xs text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline"
             >
               Fermer
             </button>

@@ -83,7 +83,7 @@ function EquipmentPanel({
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <span className="text-sm font-medium text-slate-200">{t.name}</span>
-                  <span className="ml-2 text-xs text-slate-500">
+                  <span className="ml-2 text-xs text-slate-400">
                     {Math.round(t.capacityPerUnit).toLocaleString("fr-FR")} {vocabulary.perRoundLabel}/u
                   </span>
                 </div>
@@ -91,7 +91,7 @@ function EquipmentPanel({
                   {owned} en service{pendCount > 0 ? ` + ${pendCount} en attente` : ""}
                 </span>
               </div>
-              <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-500">
+              <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-400">
                 <span>{t.costPerUnit.toLocaleString("fr-FR")} €/u</span>
                 <span>Amorti en {Math.round(t.depreciationRounds)} tours</span>
                 <span>Maintenance ×{t.maintenanceMultiplier.toLocaleString("fr-FR")}</span>
@@ -118,7 +118,7 @@ function EquipmentPanel({
                       }
                       className="w-full bg-transparent text-sm tabular-nums text-slate-100 outline-none"
                     />
-                    <span className="text-xs text-slate-500">max {t.maxPerRound}</span>
+                    <span className="text-xs text-slate-400">max {t.maxPerRound}</span>
                   </span>
                   {buy > 0 ? (
                     <span className="mt-0.5 block text-xs text-emerald-300/80">
@@ -144,7 +144,7 @@ function EquipmentPanel({
                       }
                       className="w-full bg-transparent text-sm tabular-nums text-slate-100 outline-none"
                     />
-                    <span className="text-xs text-slate-500">max {owned}</span>
+                    <span className="text-xs text-slate-400">max {owned}</span>
                   </span>
                   {sell > 0 ? (
                     <span className="mt-0.5 block text-xs text-red-300/80">
@@ -187,7 +187,7 @@ function EquipmentPanel({
           </div>
         </div>
       ) : null}
-      <p className="mt-3 text-xs leading-relaxed text-slate-500">
+      <p className="mt-3 text-xs leading-relaxed text-slate-400">
         Les machines achetées entrent en service au tour suivant. La revente se fait à la
         valeur de marché (VNC × ratio de revente) : vendre en dessous de la VNC génère une
         perte de cession, un coût bien réel que le résultat encaisse.
@@ -224,9 +224,9 @@ function Field({
           required
           className="w-full bg-transparent text-sm text-slate-100 outline-none"
         />
-        <span className="text-xs text-slate-500">{suffix}</span>
+        <span className="text-xs text-slate-400">{suffix}</span>
       </span>
-      {hint ? <span className="mt-1 block text-[13px] text-slate-500">{hint}</span> : null}
+      {hint ? <span className="mt-1 block text-[13px] text-slate-400">{hint}</span> : null}
     </label>
   );
 }
@@ -254,11 +254,11 @@ function OptionalField({
           inputMode="decimal"
           name={name}
           placeholder={placeholder}
-          className="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-600"
+          className="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500"
         />
-        <span className="text-xs text-slate-500">{suffix}</span>
+        <span className="text-xs text-slate-400">{suffix}</span>
       </span>
-      {hint ? <span className="mt-1 block text-[13px] text-slate-500">{hint}</span> : null}
+      {hint ? <span className="mt-1 block text-[13px] text-slate-400">{hint}</span> : null}
     </label>
   );
 }
@@ -286,7 +286,7 @@ function Family({
     <details open={defaultOpen} className={`group rounded-lg border ${tone}`}>
       <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 [&::-webkit-details-marker]:hidden">
         <span className={legendClass}>{legend}</span>
-        <span className="text-xs text-slate-500 transition-transform group-open:rotate-90">▸</span>
+        <span className="text-xs text-slate-400 transition-transform group-open:rotate-90">▸</span>
       </summary>
       <div className="border-t border-white/10 p-4">{children}</div>
     </details>
@@ -589,7 +589,7 @@ export function DecisionForm({
               : "règlement comptant"}
             . Servie sur votre stock restant après le marché.
           </p>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-slate-400">
             {orderOffer.paymentDelayDays > 0
               ? "Belle marge… mais ce chiffre d'affaires dormira en créances : votre BFR gonflera d'autant. Qui finance l'attente ?"
               : "Du cash dès la livraison… mais une marge mince : comparez le prix à votre coût variable avant de signer."}
@@ -630,7 +630,7 @@ export function DecisionForm({
             <span className="text-slate-400">{v.laborLabel}</span>
             <span className="text-right text-slate-200">
               {Math.round(capacityFacts.laborCapacity).toLocaleString("fr-FR")} {v.perRoundLabel}
-              <span className="ml-1 text-xs text-slate-500">
+              <span className="ml-1 text-xs text-slate-400">
                 ({capacityFacts.headcount} pers. × prod. {Math.round(capacityFacts.productivity * 100)} %)
               </span>
             </span>
@@ -690,7 +690,7 @@ export function DecisionForm({
                         Qualité {s.qualityBonus > 0 ? "+" : ""}{Math.round(s.qualityBonus * 100)} %
                       </span>
                     ) : null}
-                    <span className="text-slate-500">
+                    <span className="text-slate-400">
                       Délai fournisseur : {s.paymentDelayDays} j
                     </span>
                     {s.supplyRiskProbability > 0 ? (
@@ -705,7 +705,7 @@ export function DecisionForm({
               </label>
             ))}
           </div>
-          <p className="mt-3 text-xs leading-relaxed text-slate-500">
+          <p className="mt-3 text-xs leading-relaxed text-slate-400">
             Le choix du fournisseur impacte votre coût variable, la qualité perçue de vos
             produits, le délai de paiement fournisseur (BFR) et le risque de rupture de
             chaîne. L&apos;assurance étendue couvre le litige fournisseur.
@@ -862,7 +862,7 @@ export function DecisionForm({
                 suffix="€"
                 hint="Bloqué jusqu'au tour suivant : cet argent ne paiera rien ce tour-ci."
               />
-              <p className="mt-2 text-xs leading-relaxed text-slate-500">
+              <p className="mt-2 text-xs leading-relaxed text-slate-400">
                 {treasuryOffer.maturedPlacement > 0.5
                   ? `${Math.round(treasuryOffer.maturedPlacement).toLocaleString("fr-FR")} € placés au tour précédent sont revenus en caisse, intérêts compris. `
                   : ""}
@@ -874,7 +874,7 @@ export function DecisionForm({
               </p>
             </div>
           ) : null}
-          <p className="mt-3 text-xs leading-relaxed text-slate-500">
+          <p className="mt-3 text-xs leading-relaxed text-slate-400">
             Découvert autorisé jusqu&apos;à{" "}
             {Math.round(treasuryOffer.overdraftLimit).toLocaleString("fr-FR")} €. Au-delà, la
             banque cède vos créances d&apos;office, au tarif fort. Si vous ne gérez pas votre
@@ -911,14 +911,14 @@ export function DecisionForm({
                   <span className="text-sm font-medium text-slate-200">
                     {f.name} · {formatEuro(f.premium)}
                   </span>
-                  <span className="mt-0.5 block text-xs text-slate-500">
+                  <span className="mt-0.5 block text-xs text-slate-400">
                     Couvre : {f.coveredLabels.join(", ")}.
                   </span>
                 </span>
               </label>
             ))}
           </div>
-          <p className="mt-3 text-xs leading-relaxed text-slate-500">
+          <p className="mt-3 text-xs leading-relaxed text-slate-400">
             Un coût certain contre un risque incertain : plus la couverture est large, plus
             la prime pèse sur votre seuil de rentabilité.
           </p>
@@ -935,7 +935,7 @@ export function DecisionForm({
             <span className="text-sm font-medium text-slate-200">
               🛡️ Assurance catastrophe · {formatEuro(insuranceOffer.premium)} ce tour
             </span>
-            <span className="mt-0.5 block text-xs text-slate-500">
+            <span className="mt-0.5 block text-xs text-slate-400">
               Couvre : {insuranceOffer.coveredLabels.join(", ")}. Un coût certain contre un
               risque incertain, à vous d&apos;arbitrer.
             </span>
@@ -995,12 +995,12 @@ export function DecisionForm({
                   <span className="text-sm font-medium text-slate-200">
                     {study.label} · {formatEuro(study.cost)}
                   </span>
-                  <span className="mt-0.5 block text-xs text-slate-500">{study.hint}</span>
+                  <span className="mt-0.5 block text-xs text-slate-400">{study.hint}</span>
                 </span>
               </label>
             ))}
           </div>
-          <p className="mt-3 text-xs leading-relaxed text-slate-500">
+          <p className="mt-3 text-xs leading-relaxed text-slate-400">
             L&apos;information a un prix, facturé en charges de structure : il se lit au seuil
             de rentabilité. Décider sans données coûte souvent plus cher.
           </p>
@@ -1070,7 +1070,7 @@ export function DecisionForm({
                 ? ` Votre dernier plan s'est révélé juste à ${Math.round(bankFile.lastReliability * 100)} %.`
                 : ""}
             </p>
-            <p className="mt-2 text-xs leading-relaxed text-slate-500">
+            <p className="mt-2 text-xs leading-relaxed text-slate-400">
               Ce plan n&apos;est pas un exercice : sans la ligne de trésorerie, la banque
               n&apos;instruit aucune demande d&apos;emprunt. Et l&apos;écart entre ce que vous
               annoncez et ce qui sera constaté fixera, au tour suivant, le plafond de votre
@@ -1078,7 +1078,7 @@ export function DecisionForm({
             </p>
             </>
           ) : (
-            <p className="mt-3 text-xs leading-relaxed text-slate-500">
+            <p className="mt-3 text-xs leading-relaxed text-slate-400">
               Annoncer avant de savoir, puis mesurer l&apos;écart : c&apos;est le seul moyen de
               savoir si vous avez compris ce marché ou si vous avez eu de la chance. L&apos;écart
               vous sera montré avec les résultats du tour. Cette partie a été ouverte avant le
@@ -1095,16 +1095,21 @@ export function DecisionForm({
         <textarea
           name="justification"
           rows={2}
+          aria-label="Justification de vos décisions (facultatif)"
           placeholder="Pourquoi ces choix ce tour-ci ?"
           className="w-full resize-y rounded border border-slate-700 bg-slate-800/50 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:border-amber-400/50 focus:outline-none"
         />
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-slate-400">
           Notez ici la logique de vos décisions. L&apos;enseignant pourra la lire au débriefing.
         </p>
       </Family>
       </section>
       {state.error ? (
-        <p className="rounded-lg border border-red-400/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
+        <p
+          role="alert"
+          aria-live="assertive"
+          className="rounded-lg border border-red-400/30 bg-red-950/40 px-3 py-2 text-sm text-red-300"
+        >
           {state.error}
         </p>
       ) : null}
@@ -1162,7 +1167,7 @@ export function DecisionForm({
           >
             ← Précédent
           </button>
-          <span className="order-3 shrink-0 text-xs tabular-nums text-slate-500 sm:order-2 sm:mr-auto">
+          <span className="order-3 shrink-0 text-xs tabular-nums text-slate-400 sm:order-2 sm:mr-auto">
             Étape {courante + 1} / {total}
           </span>
           {derniere ? (
@@ -1191,7 +1196,7 @@ export function DecisionForm({
         </div>
       )}
       {!(pending && kind === "solo") ? (
-        <p className="text-center text-xs text-slate-500">
+        <p className="text-center text-xs text-slate-400">
           {kind === "solo"
             ? "Mode apprentissage : les résultats sont calculés immédiatement, à vous d'analyser."
             : "Vos décisions restent modifiables jusqu'à la clôture du tour par l'enseignant."}

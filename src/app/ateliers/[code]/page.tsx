@@ -90,7 +90,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
   return (
     <div className="mx-auto grid max-w-6xl gap-10 px-6 py-12 lg:grid-cols-[1fr_220px] print:block print:max-w-none print:px-0 print:py-0 print:text-black">
       <main id="main" className="min-w-0">
-        <p className="text-xs uppercase tracking-[0.3em] text-slate-500 print:hidden">
+        <p className="text-xs uppercase tracking-[0.3em] text-slate-400 print:hidden">
           <Link href="/ateliers" className="hover:text-slate-300">
             Ateliers et animations
           </Link>{" "}
@@ -211,7 +211,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
                   <tr key={k} className="border-t border-white/5 first:border-t-0 print:border-black/10">
                     <th
                       scope="row"
-                      className="w-56 px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500"
+                      className="w-56 px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-400"
                     >
                       {k}
                     </th>
@@ -242,7 +242,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
                 ] as const
               ).map(([k, v]) => (
                 <div key={k} className="flex gap-3">
-                  <dt className="w-32 shrink-0 text-xs uppercase tracking-wide text-slate-500">
+                  <dt className="w-32 shrink-0 text-xs uppercase tracking-wide text-slate-400">
                     {k}
                   </dt>
                   <dd className="text-slate-200 print:text-black">{v}</dd>
@@ -302,7 +302,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
                 <article className="rounded-xl border border-white/10 bg-slate-900 p-5 print:border-black/20 print:bg-transparent">
                   <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                     <h3 className="text-xl font-bold text-slate-50 print:text-black">{s.titre}</h3>
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-slate-400">
                       {minutesEnTexte(s.dureeMinutes)}
                       {s.tourJoue !== null ? ` · tour ${s.tourJoue} joué en séance` : ""}
                     </span>
@@ -487,7 +487,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
           <ul className="mt-3 space-y-2 text-xs">
             {SOMMAIRE.map(([id, label]) => (
               <li key={id}>
-                <a href={`#${id}`} className="text-slate-500 transition hover:text-amber-300">
+                <a href={`#${id}`} className="text-slate-400 transition hover:text-amber-300">
                   {label}
                 </a>
               </li>

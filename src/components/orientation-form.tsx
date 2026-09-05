@@ -102,7 +102,7 @@ export function OrientationForm({ contactEmail }: { contactEmail: string }) {
                 }`}
               >
                 <span className="block font-medium">{titre}</span>
-                <span className="mt-0.5 block text-xs leading-relaxed text-slate-500">
+                <span className="mt-0.5 block text-xs leading-relaxed text-slate-400">
                   {aide}
                 </span>
               </button>
@@ -135,7 +135,7 @@ export function OrientationForm({ contactEmail }: { contactEmail: string }) {
             placeholder="Effectif, volume horaire, contraintes de salle, ce que vous avez déjà essayé, ce qui vous manque…"
             className={champ}
           />
-          <span className="mt-1 block text-xs text-slate-500">
+          <span className="mt-1 block text-xs text-slate-400">
             Facultatif. C&apos;est ce champ qui nous permet de répondre autre chose que la
             recommandation automatique.
           </span>
@@ -147,17 +147,17 @@ export function OrientationForm({ contactEmail }: { contactEmail: string }) {
           Ce que nous vous conseillons
         </p>
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
-          <dt className="text-slate-500">Entreprise</dt>
+          <dt className="text-slate-400">Entreprise</dt>
           <dd className="font-medium text-slate-100">{reco.scenarioTitre}</dd>
-          <dt className="text-slate-500">Niveau</dt>
+          <dt className="text-slate-400">Niveau</dt>
           <dd className="font-medium text-slate-100">
             {reco.niveau} · {reco.niveauNom}
           </dd>
-          <dt className="text-slate-500">Durée</dt>
+          <dt className="text-slate-400">Durée</dt>
           <dd className="font-medium text-slate-100">
             {reco.tours} tours, un {periodiciteLabel} par tour
           </dd>
-          <dt className="text-slate-500">Atelier</dt>
+          <dt className="text-slate-400">Atelier</dt>
           <dd className="font-medium text-slate-100">
             {reco.atelierCode ? (
               <Link

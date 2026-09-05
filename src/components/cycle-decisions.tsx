@@ -18,7 +18,7 @@ export function CycleDecisions() {
     <section className="rounded-xl border border-white/10 bg-slate-900 p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm font-semibold text-slate-100">Comment se déroule une partie</p>
-        <span className="text-xs text-slate-500">un cycle répété à chaque tour ↻</span>
+        <span className="text-xs text-slate-400">un cycle répété à chaque tour ↻</span>
       </div>
       <ol className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {CYCLE.map((etape) => (

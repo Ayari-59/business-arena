@@ -321,7 +321,7 @@ export default function GuidePage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
+                <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
                   <th className="pb-2 pr-3 font-medium">Dimension</th>
                   <th className="pb-2 pr-3 text-right font-medium">Poids</th>
                   <th className="pb-2 font-medium">Ce qu&apos;elle mesure</th>

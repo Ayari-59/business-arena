@@ -35,7 +35,7 @@ export default function CompetePage() {
             </li>
           ))}
         </ol>
-        <p className="mt-3 text-xs text-slate-500">
+        <p className="mt-3 text-xs text-slate-400">
           <Link href="/guide#concours" className="text-amber-300 underline-offset-4 hover:underline">
             Tout savoir sur les concours dans le guide →
           </Link>

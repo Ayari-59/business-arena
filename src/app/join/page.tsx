@@ -20,7 +20,7 @@ export default function JoinPage() {
         </p>
       </div>
       <JoinForm />
-      <Link href="/guide" className="text-xs text-slate-500 underline-offset-4 hover:text-slate-300 hover:underline">
+      <Link href="/guide" className="text-xs text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline">
         Première fois ? Consultez le guide de prise en main
       </Link>
     </main>

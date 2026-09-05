@@ -46,7 +46,7 @@ export default async function ProfilePage() {
           Vos compétences évoluent à chaque situation traitée : diagnostics justes, modèles
           bien choisis et autonomie (peu d&apos;indices) font progresser la maîtrise.
         </p>
-        <Link href="/" className="mt-2 inline-block text-xs text-slate-500 underline-offset-4 hover:underline">
+        <Link href="/" className="mt-2 inline-block text-xs text-slate-400 underline-offset-4 hover:underline">
           ← Retour à l&apos;accueil
         </Link>
       </header>
@@ -54,7 +54,7 @@ export default async function ProfilePage() {
       <section className="rounded-xl border border-white/10 bg-slate-900 p-5">
         <h2 className="mb-3 text-sm font-semibold text-slate-200">Compétences par axe (§28)</h2>
         {profile.skills.length === 0 ? (
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-400">
             Encore aucune mesure : traitez les situations proposées pendant vos parties.
           </p>
         ) : (
@@ -77,7 +77,7 @@ export default async function ProfilePage() {
       <section className="rounded-xl border border-white/10 bg-slate-900 p-5">
         <h2 className="mb-3 text-sm font-semibold text-slate-200">Maîtrise des notions</h2>
         {profile.concepts.length === 0 ? (
-          <p className="text-sm text-slate-500">Les notions rencontrées en jeu apparaîtront ici.</p>
+          <p className="text-sm text-slate-400">Les notions rencontrées en jeu apparaîtront ici.</p>
         ) : (
           <ul className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
             {profile.concepts.map((c) => (
@@ -100,7 +100,7 @@ export default async function ProfilePage() {
       <section className="rounded-xl border border-white/10 bg-slate-900 p-5">
         <h2 className="mb-3 text-sm font-semibold text-slate-200">Mes parties</h2>
         {profile.games.length === 0 ? (
-          <p className="text-sm text-slate-500">Aucune partie jouée sur ce navigateur.</p>
+          <p className="text-sm text-slate-400">Aucune partie jouée sur ce navigateur.</p>
         ) : (
           <ul className="space-y-2">
             {profile.games.map((g) => (
@@ -111,7 +111,7 @@ export default async function ProfilePage() {
                 >
                   <span>
                     {g.teamName}
-                    <span className="ml-2 text-xs text-slate-500">
+                    <span className="ml-2 text-xs text-slate-400">
                       {g.kind === "class" ? "partie de classe" : "solo"} ·{" "}
                       {g.status === "finished" ? "terminée" : `tour ${g.currentRound}/${g.roundsCount}`}
                     </span>

@@ -170,7 +170,7 @@ export default async function NewSituationPage({
           <div className="mt-1 max-h-64 space-y-3 overflow-y-auto pr-1">
             {[...parDomaine.entries()].map(([domaine, notions]) => (
               <div key={domaine}>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{domaine}</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{domaine}</p>
                 <div className="mt-1 grid gap-1 sm:grid-cols-2">
                   {notions.map((n) => (
                     <label key={n.code} className="flex items-center gap-2 text-sm text-slate-300">
@@ -190,7 +190,7 @@ export default async function NewSituationPage({
           </legend>
           {[0, 1, 2, 3, 4].map((i) => (
             <label key={i} className="block">
-              <span className="text-xs text-slate-500">Indice {i + 1}</span>
+              <span className="text-xs text-slate-400">Indice {i + 1}</span>
               <input name={`hint${i}`} className={champ} />
             </label>
           ))}
@@ -202,18 +202,18 @@ export default async function NewSituationPage({
           </legend>
           <div className="grid gap-3 sm:grid-cols-3">
             <label className="block">
-              <span className="text-xs text-slate-500">Type</span>
+              <span className="text-xs text-slate-400">Type</span>
               <select name="triggerType" defaultValue="round" className={champ}>
                 <option value="round">À un tour</option>
                 <option value="detect">Sur détection</option>
               </select>
             </label>
             <label className="block">
-              <span className="text-xs text-slate-500">Tour (si « à un tour »)</span>
+              <span className="text-xs text-slate-400">Tour (si « à un tour »)</span>
               <input type="text" inputMode="numeric" name="triggerRound" defaultValue="1" className={champ} />
             </label>
             <label className="block">
-              <span className="text-xs text-slate-500">Détection (si « sur détection »)</span>
+              <span className="text-xs text-slate-400">Détection (si « sur détection »)</span>
               <select name="triggerDetect" defaultValue={DETECT_CODES[0]} className={champ}>
                 {DETECT_CODES.map((d) => (
                   <option key={d} value={d}>

@@ -37,7 +37,7 @@ export default function AteliersPage() {
       />
 
       <section className="mx-auto max-w-4xl px-6 py-14">
-        <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
           <Link href="/" className="hover:text-slate-300">
             Accueil
           </Link>{" "}
@@ -66,11 +66,11 @@ export default function AteliersPage() {
         <h2 className="mt-12 text-xl font-bold text-slate-100">Les ateliers disponibles</h2>
         <div className="mt-4 overflow-x-auto rounded-xl border border-white/10">
           <table className="w-full min-w-[640px] text-sm">
-            <caption className="border-b border-white/5 bg-slate-900/60 px-4 py-2 text-left text-xs italic text-slate-500">
+            <caption className="border-b border-white/5 bg-slate-900/60 px-4 py-2 text-left text-xs italic text-slate-400">
               Tableau récapitulatif des ateliers publiés.
             </caption>
             <thead>
-              <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
+              <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
                 <th className="px-4 py-2 font-medium">Diplôme</th>
                 <th className="px-4 py-2 font-medium">Atelier</th>
                 <th className="px-4 py-2 font-medium">Entreprise</th>
@@ -83,7 +83,7 @@ export default function AteliersPage() {
                 <tr key={a.code} className="border-t border-white/5">
                   <td className="px-4 py-3 font-medium text-slate-200">
                     {a.diplome}
-                    <span className="block text-xs text-slate-500">{a.annee}</span>
+                    <span className="block text-xs text-slate-400">{a.annee}</span>
                   </td>
                   <td className="px-4 py-3 text-slate-300">{a.titre}</td>
                   <td className="px-4 py-3 text-slate-400">
@@ -97,7 +97,7 @@ export default function AteliersPage() {
                   </td>
                   <td className="px-4 py-3">
                     <Etoiles n={a.difficulte} />
-                    <span className="block text-xs text-slate-500">{a.difficulteLabel}</span>
+                    <span className="block text-xs text-slate-400">{a.difficulteLabel}</span>
                   </td>
                 </tr>
               ))}

@@ -186,7 +186,7 @@ export default function EntreprisesPage() {
           <div className="mt-6 overflow-x-auto">
             <table className="w-full min-w-[720px] text-sm">
               <thead>
-                <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
+                <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
                   <th className="pb-2 pr-4 font-medium">Entreprise</th>
                   <th className="pb-2 pr-4 font-medium">Ce qu&apos;elle vend</th>
                   <th className="pb-2 pr-4 font-medium">L&apos;invendu devient</th>

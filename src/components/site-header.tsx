@@ -213,7 +213,7 @@ export function SiteHeader() {
             </div>
           </div>
 
-          <div className="mt-3 flex flex-wrap gap-4 border-t border-white/10 pt-3 text-xs text-slate-500">
+          <div className="mt-3 flex flex-wrap gap-4 border-t border-white/10 pt-3 text-xs text-slate-400">
             {LIENS_LEGAUX.map((lien) => (
               <Link key={lien.href} href={lien.href} className="hover:text-slate-300">
                 {lien.libelle}

@@ -75,7 +75,7 @@ export function ParametersPanels({
         </h3>
         <ul className="mt-2 space-y-1 text-sm text-slate-400">
           <li>
-            <span className="text-slate-500">{vocabulary.capacityLabel} : </span>
+            <span className="text-slate-400">{vocabulary.capacityLabel} : </span>
             <span className="text-slate-200">
               {formatUnits(intro.capacity)} {vocabulary.perRoundLabel}
             </span>
@@ -88,7 +88,7 @@ export function ParametersPanels({
           */}
           {capacityFacts && capacityFacts.bottleneck === "labor" ? (
             <li>
-              <span className="text-slate-500">{vocabulary.laborLabel} : </span>
+              <span className="text-slate-400">{vocabulary.laborLabel} : </span>
               <span className="text-amber-300">
                 {formatUnits(capacityFacts.laborCapacity)} {vocabulary.perRoundLabel}
               </span>
@@ -96,22 +96,22 @@ export function ParametersPanels({
             </li>
           ) : null}
           <li>
-            <span className="text-slate-500">Charges de structure : </span>
+            <span className="text-slate-400">Charges de structure : </span>
             <span className="text-slate-200">{formatEuro(intro.fixedCostsPerRound)} par tour</span>
             , que vous vendiez ou non
           </li>
           <li>
-            <span className="text-slate-500">Coût variable : </span>
+            <span className="text-slate-400">Coût variable : </span>
             <span className="text-slate-200">{formatEuro(intro.variableCostPerUnit)}</span> par{" "}
             {vocabulary.unit} vendu
           </li>
           <li>
-            <span className="text-slate-500">Trésorerie d&apos;ouverture : </span>
+            <span className="text-slate-400">Trésorerie d&apos;ouverture : </span>
             <span className="text-slate-200">{formatEuro(intro.cash)}</span>
           </li>
           {intro.competitors.length > 0 ? (
             <li>
-              <span className="text-slate-500">Face à vous : </span>
+              <span className="text-slate-400">Face à vous : </span>
               <span className="text-slate-200">{intro.competitors.join(", ")}</span>
             </li>
           ) : null}
@@ -142,26 +142,26 @@ export function ParametersPanels({
             return (
               <li key={seg.name} className="rounded-lg border border-white/5 bg-slate-900/60 p-3">
                 <p className="text-sm font-semibold text-slate-100">{nom}</p>
-                {qualif ? <p className="mt-0.5 text-xs text-slate-500">{qualif}</p> : null}
+                {qualif ? <p className="mt-0.5 text-xs text-slate-400">{qualif}</p> : null}
                 <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-2">
                 <div>
-                  <dt className="text-xs uppercase tracking-wide text-slate-500">Taille</dt>
+                  <dt className="text-xs uppercase tracking-wide text-slate-400">Taille</dt>
                   <dd className="tabular-nums text-slate-300">{formatUnits(seg.size)}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs uppercase tracking-wide text-slate-500">Prix usuel</dt>
+                  <dt className="text-xs uppercase tracking-wide text-slate-400">Prix usuel</dt>
                   <dd className="tabular-nums text-slate-300">{formatEuro(seg.refPrice)}</dd>
                 </div>
                 {showShare ? (
                   <div>
-                    <dt className="text-xs uppercase tracking-wide text-slate-500">Votre part</dt>
+                    <dt className="text-xs uppercase tracking-wide text-slate-400">Votre part</dt>
                     <dd className="tabular-nums text-amber-300">
                       {seg.yourShare === null ? "—" : formatPercent(seg.yourShare)}
                     </dd>
                   </div>
                 ) : null}
                 <div>
-                  <dt className="text-xs uppercase tracking-wide text-slate-500">Règlement</dt>
+                  <dt className="text-xs uppercase tracking-wide text-slate-400">Règlement</dt>
                   <dd className="text-slate-400">
                     {seg.paymentDelayDays > 0 ? `à ${seg.paymentDelayDays} j` : "comptant"}
                   </dd>
@@ -175,7 +175,7 @@ export function ParametersPanels({
         <div className="mt-2 hidden overflow-x-auto sm:block">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
+              <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
                 <th className="pb-1 pr-3 font-medium">Clientèle</th>
                 <th className="pb-1 pr-3 text-right font-medium">Taille</th>
                 <th className="pb-1 pr-3 text-right font-medium">Prix usuel</th>

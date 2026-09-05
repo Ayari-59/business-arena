@@ -124,7 +124,7 @@ export default async function ScenarioEditorPage({
         <div className="flex items-center justify-between gap-3">
           <div>
             <h2 className="text-sm font-semibold text-slate-200">Essai à blanc</h2>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-slate-400">
               Rejoue cinq stratégies types et vérifie qu&apos;il existe une façon de gagner, sans
               qu&apos;une erreur emporte l&apos;entreprise. N&apos;empêche pas de publier.
             </p>
@@ -150,7 +150,7 @@ export default async function ScenarioEditorPage({
             </ul>
             <div className="overflow-x-auto">
               <table className="w-full text-xs tabular-nums">
-                <thead className="text-slate-500">
+                <thead className="text-slate-400">
                   <tr>
                     <th className="py-1 text-left font-medium">Stratégie</th>
                     <th className="py-1 text-right font-medium">Résultat/tour</th>
@@ -218,15 +218,15 @@ export default async function ScenarioEditorPage({
             <div key={i} className="rounded-lg border border-white/5 bg-slate-900 p-3">
               <p className="text-xs font-semibold text-slate-300">Route {i + 1}</p>
               <label className="mt-2 block">
-                <span className="text-xs text-slate-500">Intitulé</span>
+                <span className="text-xs text-slate-400">Intitulé</span>
                 <input name={`route${i}Label`} defaultValue={route.label} className={champ} />
               </label>
               <label className="mt-2 block">
-                <span className="text-xs text-slate-500">Ce qu&apos;elle rapporte</span>
+                <span className="text-xs text-slate-400">Ce qu&apos;elle rapporte</span>
                 <input name={`route${i}Gain`} defaultValue={route.gain} className={champ} />
               </label>
               <label className="mt-2 block">
-                <span className="text-xs text-slate-500">Ce qu&apos;elle coûte</span>
+                <span className="text-xs text-slate-400">Ce qu&apos;elle coûte</span>
                 <input name={`route${i}Risque`} defaultValue={route.risque} className={champ} />
               </label>
             </div>
@@ -243,7 +243,7 @@ export default async function ScenarioEditorPage({
       >
         <div>
           <h2 className="text-sm font-semibold text-slate-200">Paramètres moteur</h2>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-slate-400">
             Les valeurs affichées sont celles du scénario. Lancez un essai à blanc après un
             changement pour vérifier que le secteur reste jouable.
           </p>
@@ -258,7 +258,7 @@ export default async function ScenarioEditorPage({
             <div className="grid gap-3 sm:grid-cols-3">
               {group.fields.map((f) => (
                 <label key={f.name} className="block">
-                  <span className="text-xs text-slate-500">{f.label}</span>
+                  <span className="text-xs text-slate-400">{f.label}</span>
                   <span className="mt-1 flex items-center gap-1.5 rounded-lg border border-white/10 bg-slate-900 px-2.5 py-1.5 focus-within:border-amber-400/60">
                     <input
                       type="text"
@@ -267,7 +267,7 @@ export default async function ScenarioEditorPage({
                       defaultValue={eco[f.name] ?? ""}
                       className="w-full bg-transparent text-sm text-slate-100 outline-none"
                     />
-                    <span className="whitespace-nowrap text-xs text-slate-500">{f.suffix}</span>
+                    <span className="whitespace-nowrap text-xs text-slate-400">{f.suffix}</span>
                   </span>
                 </label>
               ))}
@@ -282,7 +282,7 @@ export default async function ScenarioEditorPage({
           <div className="grid gap-3 sm:grid-cols-3">
             {BPI_FIELDS.map((f) => (
               <label key={f.name} className="block">
-                <span className="text-xs text-slate-500">{f.label}</span>
+                <span className="text-xs text-slate-400">{f.label}</span>
                 <span className="mt-1 flex items-center gap-1.5 rounded-lg border border-white/10 bg-slate-900 px-2.5 py-1.5 focus-within:border-amber-400/60">
                   <input
                     type="text"
@@ -291,7 +291,7 @@ export default async function ScenarioEditorPage({
                     defaultValue={eco[f.name] ?? ""}
                     className="w-full bg-transparent text-sm text-slate-100 outline-none"
                   />
-                  <span className="whitespace-nowrap text-xs text-slate-500">%</span>
+                  <span className="whitespace-nowrap text-xs text-slate-400">%</span>
                 </span>
               </label>
             ))}
@@ -303,7 +303,7 @@ export default async function ScenarioEditorPage({
             Marché
           </legend>
           <label className="block sm:max-w-xs">
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-slate-400">
               Intensité concurrentielle (plus haut = concurrence plus dure)
             </span>
             <input
@@ -323,7 +323,7 @@ export default async function ScenarioEditorPage({
                 <input type="hidden" name={`seg${i}Code`} value={seg.code} />
                 <div className="mt-2 grid gap-3 sm:grid-cols-2">
                   <label className="block">
-                    <span className="text-xs text-slate-500">Demande (unités/tour)</span>
+                    <span className="text-xs text-slate-400">Demande (unités/tour)</span>
                     <input
                       type="text"
                       inputMode="decimal"
@@ -333,7 +333,7 @@ export default async function ScenarioEditorPage({
                     />
                   </label>
                   <label className="block">
-                    <span className="text-xs text-slate-500">Prix de référence (€)</span>
+                    <span className="text-xs text-slate-400">Prix de référence (€)</span>
                     <input
                       type="text"
                       inputMode="decimal"
@@ -362,12 +362,12 @@ export default async function ScenarioEditorPage({
             + Nouvelle situation
           </Link>
         </div>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-slate-400">
           Éditez le texte d&apos;une situation héritée, ou composez-en une nouvelle (récit,
           diagnostic, modèle d&apos;analyse, notions, indices).
         </p>
         {def.situations.length === 0 ? (
-          <p className="mt-3 text-sm text-slate-500">Ce scénario ne porte aucune situation.</p>
+          <p className="mt-3 text-sm text-slate-400">Ce scénario ne porte aucune situation.</p>
         ) : (
           <ul className="mt-4 space-y-2">
             {def.situations.map((s) => {
@@ -381,7 +381,7 @@ export default async function ScenarioEditorPage({
                 >
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-slate-100">{s.title}</p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-slate-400">
                       Niveau {niveau} · {decl}
                     </p>
                   </div>

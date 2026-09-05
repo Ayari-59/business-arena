@@ -113,7 +113,7 @@ export default function MentionsLegalesPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
+                <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
                   <th className="pb-2 pr-3 font-medium">Qui</th>
                   <th className="pb-2 pr-3 font-medium">Données</th>
                   <th className="pb-2 pr-3 font-medium">Finalité</th>
