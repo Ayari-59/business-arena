@@ -132,7 +132,7 @@ export function SegmentedTabs({
                   tabIndex={estCourant ? 0 : -1}
                   onClick={() => setActive(tab.key)}
                   onKeyDown={(e) => auClavier(e, index)}
-                  className={`flex flex-1 items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition ${
+                  className={`flex min-w-0 items-center gap-2 rounded-lg border px-2 py-2 text-left transition sm:flex-1 sm:gap-2.5 sm:px-3 ${
                     estCourant
                       ? "border-amber-400/50 bg-amber-400/10"
                       : estFait
@@ -152,9 +152,15 @@ export function SegmentedTabs({
                   >
                     {estFait ? "✓" : index + 1}
                   </span>
+                  {/* Sur petit écran, seul le libellé de l'étape COURANTE s'affiche
+                      (les autres se réduisent à leur pastille numérotée) : sans
+                      cela, quatre libellés côte à côte débordaient la largeur du
+                      téléphone et poussaient toute la page hors de l'écran. */}
                   <span
-                    className={`truncate text-sm font-medium ${
-                      estCourant ? "text-amber-100" : estFait ? "text-emerald-200" : "text-slate-300"
+                    className={`min-w-0 truncate text-sm font-medium ${
+                      estCourant
+                        ? "text-amber-100"
+                        : `hidden sm:inline ${estFait ? "text-emerald-200" : "text-slate-300"}`
                     }`}
                   >
                     {tab.label}
