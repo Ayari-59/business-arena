@@ -89,7 +89,7 @@ export default function FonctionnalitesPage() {
             >
               <p className="text-5xl font-bold tabular-nums text-amber-400">{s.value}</p>
               <p className="mt-2 text-sm font-semibold text-slate-200">{s.label}</p>
-              <p className="mt-2 text-xs leading-relaxed text-slate-500">{s.detail}</p>
+              <p className="mt-2 text-xs leading-relaxed text-slate-400">{s.detail}</p>
             </div>
           ))}
         </div>
@@ -109,7 +109,7 @@ export default function FonctionnalitesPage() {
               <span className="text-2xl">{SECTOR_ICONS[s.sector]}</span>
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-slate-200">{s.title}</p>
-                <p className="text-xs text-slate-500">{SECTOR_LABELS[s.sector]}</p>
+                <p className="text-xs text-slate-400">{SECTOR_LABELS[s.sector]}</p>
               </div>
             </div>
           ))}
@@ -153,7 +153,7 @@ export default function FonctionnalitesPage() {
               <span className="mt-0.5 text-xs text-amber-400">●</span>
               <div className="min-w-0">
                 <p className="text-sm font-medium text-slate-200">{m.name}</p>
-                <p className="text-xs text-slate-500">{m.description}</p>
+                <p className="text-xs text-slate-400">{m.description}</p>
               </div>
             </div>
           ))}
@@ -169,7 +169,7 @@ export default function FonctionnalitesPage() {
               className="rounded-xl border border-emerald-400/20 bg-emerald-950/20 px-4 py-4 text-center"
             >
               <p className="text-sm font-semibold text-emerald-400">{d.label}</p>
-              <p className="mt-1 text-xs text-slate-500">{d.desc}</p>
+              <p className="mt-1 text-xs text-slate-400">{d.desc}</p>
             </div>
           ))}
         </div>

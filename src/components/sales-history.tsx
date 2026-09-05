@@ -33,7 +33,7 @@ export function SalesHistory({
       <div className="mt-3 overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
+            <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
               <th className="pb-1 pr-3 font-medium">Tour</th>
               <th className="pb-1 pr-3 text-right font-medium">
                 {vocabulary.priceLabel}
@@ -71,7 +71,7 @@ export function SalesHistory({
                 </td>
                 {row.bySegment.map((seg, i) => (
                   <Fragment key={i}>
-                    <td className="py-1.5 pr-3 text-right tabular-nums text-slate-500">
+                    <td className="py-1.5 pr-3 text-right tabular-nums text-slate-400">
                       {formatUnits(seg.potential)}
                     </td>
                     <td className="py-1.5 pr-3 text-right tabular-nums">
@@ -99,7 +99,7 @@ export function SalesHistory({
         </table>
       </div>
 
-      <p className="mt-3 text-xs leading-relaxed text-slate-500">
+      <p className="mt-3 text-xs leading-relaxed text-slate-400">
         La colonne « prévu » est ce que vous aviez annoncé avant de jouer le tour.
         De quoi construire une prévision plutôt que de deviner : moyenne des tours passés,
         tendance d&apos;un tour à l&apos;autre, coefficient de saison en rapportant chaque tour
@@ -112,7 +112,7 @@ export function SalesHistory({
           sait pas de quel canal il vient, et ne peut pas comparer une vente
           par un tiers à une vente en direct. */}
       {history.commissions.length > 0 ? (
-        <p className="mt-2 text-xs leading-relaxed text-slate-500">
+        <p className="mt-2 text-xs leading-relaxed text-slate-400">
           {history.commissions.map((c) => (
             <span key={c.segment} className="block">
               {c.segment} : le canal prélève {Math.round(c.rate * 100)} % du prix de vente.

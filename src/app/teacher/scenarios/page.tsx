@@ -77,7 +77,7 @@ export default async function TeacherScenariosPage({
       <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
         <h2 className="text-sm font-semibold text-slate-200">Mes scénarios</h2>
         {mine.length === 0 ? (
-          <p className="mt-3 text-sm text-slate-500">
+          <p className="mt-3 text-sm text-slate-400">
             Aucun scénario pour l&apos;instant. Dupliquez un secteur ci-dessous pour commencer.
           </p>
         ) : (
@@ -141,7 +141,7 @@ export default async function TeacherScenariosPage({
             ))}
           </ul>
         )}
-        <p className="mt-3 text-xs text-slate-500">
+        <p className="mt-3 text-xs text-slate-400">
           Un scénario <strong className="text-slate-400">publié</strong> devient sélectionnable au
           lancement d&apos;une partie, et visible des autres enseignants. Un{" "}
           <strong className="text-slate-400">brouillon</strong> reste privé. Un scénario{" "}
@@ -152,12 +152,12 @@ export default async function TeacherScenariosPage({
 
       <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
         <h2 className="text-sm font-semibold text-slate-200">Scénarios partagés</h2>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-slate-400">
           Publiés par d&apos;autres enseignants. Dupliquez-en un pour en obtenir votre propre copie
           éditable.
         </p>
         {shared.length === 0 ? (
-          <p className="mt-4 text-sm text-slate-500">
+          <p className="mt-4 text-sm text-slate-400">
             Rien de partagé pour l&apos;instant. Dès qu&apos;un collègue publie un scénario, il
             apparaît ici, prêt à dupliquer.
           </p>
@@ -171,7 +171,7 @@ export default async function TeacherScenariosPage({
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-slate-100">{s.title}</p>
                   {s.authorName ? (
-                    <p className="text-xs text-slate-500">par {s.authorName}</p>
+                    <p className="text-xs text-slate-400">par {s.authorName}</p>
                   ) : null}
                 </div>
                 <GuardedForm action={forkScenarioAction} label="copie d'un scénario partagé">
@@ -189,7 +189,7 @@ export default async function TeacherScenariosPage({
 
       <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
         <h2 className="text-sm font-semibold text-slate-200">Importer un scénario</h2>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-slate-400">
           Depuis un fichier JSON exporté (d&apos;un autre espace, d&apos;un collègue). Il devient un
           brouillon dans votre espace.
         </p>
@@ -218,7 +218,7 @@ export default async function TeacherScenariosPage({
 
       <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
         <h2 className="text-sm font-semibold text-slate-200">Partir d&apos;un secteur</h2>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-slate-400">
           Chaque secteur est calibré et jouable. La copie hérite de ses règles ; vous en changez
           l&apos;habillage (le moteur reste inchangé).
         </p>
@@ -230,7 +230,7 @@ export default async function TeacherScenariosPage({
             >
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium text-slate-100">{d.title}</p>
-                <p className="text-xs text-slate-500">{SECTOR_LABELS[d.sector]}</p>
+                <p className="text-xs text-slate-400">{SECTOR_LABELS[d.sector]}</p>
               </div>
               <GuardedForm action={duplicateScenarioAction} label="duplication du secteur">
                 <input type="hidden" name="baseCode" value={d.code} />

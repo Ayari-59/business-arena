@@ -86,13 +86,13 @@ export default async function TeacherDashboard({
             </Link>
           ) : null}
           <form action={logoutAction}>
-            <button className="text-xs text-slate-500 underline hover:text-slate-300">
+            <button className="text-xs text-slate-400 underline hover:text-slate-300">
               Se déconnecter
             </button>
           </form>
           <form action={logoutEverywhereAction}>
             <button
-              className="text-xs text-slate-500 underline hover:text-slate-300"
+              className="text-xs text-slate-400 underline hover:text-slate-300"
               title="Ferme aussi les sessions ouvertes sur d'autres appareils"
             >
               Se déconnecter partout
@@ -112,7 +112,7 @@ export default async function TeacherDashboard({
 
       <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
         <h2 className="text-sm font-semibold text-slate-200">Créer une partie</h2>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-slate-400">
           Vous ne savez pas quels réglages prendre ?{" "}
           <Link href="/ateliers" className="text-amber-300 underline-offset-4 hover:underline">
             Les ateliers professionnels
@@ -196,7 +196,7 @@ export default async function TeacherDashboard({
                 </option>
               ))}
             </select>
-            <span className="mt-1 block text-xs text-slate-500">
+            <span className="mt-1 block text-xs text-slate-400">
               Une partie se raccourcit pour tenir dans un nombre de séances donné. Elle ne
               s&apos;allonge pas : les situations et les événements d&apos;un secteur sont écrits
               pour un nombre de tours, au delà les équipes joueraient sans matière.
@@ -230,7 +230,7 @@ export default async function TeacherDashboard({
               <span className="text-sm font-medium text-slate-200">
                 🌍 Monde variable · chaque partie diffère
               </span>
-              <span className="mt-0.5 block text-xs text-slate-500">
+              <span className="mt-0.5 block text-xs text-slate-400">
                 Croissance des segments, saisonnalité, événements et commandes exceptionnelles
                 varient d&apos;une partie à l&apos;autre (déterministe par partie : toutes vos
                 équipes jouent le même monde). Décochez pour le scénario classique, identique
@@ -255,7 +255,7 @@ export default async function TeacherDashboard({
                   />
                   <span>
                     <span className="text-sm font-medium text-slate-200">{m.name}</span>
-                    <span className="mt-0.5 block text-xs text-slate-500">{m.help}</span>
+                    <span className="mt-0.5 block text-xs text-slate-400">{m.help}</span>
                   </span>
                 </label>
               ))}
@@ -274,7 +274,7 @@ export default async function TeacherDashboard({
             Créer la partie et obtenir le code d&apos;invitation
           </SubmitButton>
         </GuardedForm>
-        <p className="mt-2 text-xs text-slate-500">
+        <p className="mt-2 text-xs text-slate-400">
           Le nombre total d&apos;entreprises (équipes + bots) est plafonné à 8. Les élèves
           rejoignent avec le code, répartis automatiquement dans les équipes. Le niveau règle
           les décisions ouvertes, le plafond d&apos;indices et la fréquence des événements.
@@ -286,7 +286,7 @@ export default async function TeacherDashboard({
           Organiser un concours · Business Arena Championship
         </h2>
         <CompetitionCreateForm />
-        <p className="mt-2 text-xs text-slate-500">
+        <p className="mt-2 text-xs text-slate-400">
           Les équipes s&apos;inscrivent avec le code sur /compete. Mode compétition :
           décisions verrouillées après validation, indices limités.
         </p>
@@ -319,7 +319,7 @@ export default async function TeacherDashboard({
 
       <section className="space-y-3">
         {games.length === 0 ? (
-          <p className="text-sm text-slate-500">Aucune partie pour l&apos;instant.</p>
+          <p className="text-sm text-slate-400">Aucune partie pour l&apos;instant.</p>
         ) : (
           games.map((g) => (
             <Link

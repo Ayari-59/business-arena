@@ -87,13 +87,13 @@ export default function ParcoursPage() {
                 {p.recommended.periodicityLabel} · TVA{" "}
                 {p.recommended.vat ? "activée (20 %)" : "désactivée"}
               </p>
-              <p className="mt-1 text-xs leading-relaxed text-slate-500">{p.recommended.notes}</p>
+              <p className="mt-1 text-xs leading-relaxed text-slate-400">{p.recommended.notes}</p>
             </div>
 
             <div className="mt-5 overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
+                  <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
                     <th className="pb-2 pr-3 font-medium">Référentiel</th>
                     <th className="pb-2 pr-3 font-medium">Notions</th>
                     <th className="pb-2 pr-3 font-medium">Dans l&apos;arène</th>
@@ -122,7 +122,7 @@ export default function ParcoursPage() {
             </div>
 
             {p.limite ? (
-              <p className="mt-4 rounded-lg border border-white/10 bg-slate-950 px-4 py-3 text-xs leading-relaxed text-slate-500">
+              <p className="mt-4 rounded-lg border border-white/10 bg-slate-950 px-4 py-3 text-xs leading-relaxed text-slate-400">
                 ⚖️ Limite assumée : {p.limite}
               </p>
             ) : null}

@@ -20,7 +20,7 @@ const pct = (v: number) => `${Math.round(v * 100)} %`;
 const one = (v: number) => v.toFixed(1).replace(".", ",");
 
 function Empty({ children }: { children: React.ReactNode }) {
-  return <p className="text-sm text-slate-500">{children}</p>;
+  return <p className="text-sm text-slate-400">{children}</p>;
 }
 
 export default async function UsagePage() {
@@ -50,7 +50,7 @@ export default async function UsagePage() {
         </p>
         <Link
           href="/teacher"
-          className="mt-3 inline-block text-xs text-slate-500 underline-offset-4 hover:underline"
+          className="mt-3 inline-block text-xs text-slate-400 underline-offset-4 hover:underline"
         >
           ← Retour à mes parties
         </Link>
@@ -60,7 +60,7 @@ export default async function UsagePage() {
         {totals.map((t) => (
           <div key={t.label} className="rounded-xl border border-white/10 bg-slate-900 p-4">
             <p className="text-2xl font-bold tabular-nums text-amber-400">{t.value}</p>
-            <p className="mt-1 text-xs leading-tight text-slate-500">{t.label}</p>
+            <p className="mt-1 text-xs leading-tight text-slate-400">{t.label}</p>
           </div>
         ))}
       </section>
@@ -69,7 +69,7 @@ export default async function UsagePage() {
         <h2 className="text-sm font-semibold text-slate-200">
           Les situations qui résistent
         </h2>
-        <p className="mt-1 max-w-2xl text-xs leading-relaxed text-slate-500">
+        <p className="mt-1 max-w-2xl text-xs leading-relaxed text-slate-400">
           Classées par score moyen croissant : les plus difficiles en tête. Le score comprend le
           malus d&apos;indices, ce qui explique qu&apos;une situation très aidée descende. Le
           compte est en équipes, celui des notions plus bas en élèves. Deux silences ne
@@ -89,7 +89,7 @@ export default async function UsagePage() {
           <div className="mt-4 overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
+                <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
                   <th className="pb-2 pr-3 font-medium">Situation</th>
                   <th className="pb-2 pr-3 font-medium">Secteur</th>
                   <th className="pb-2 pr-3 text-right font-medium">Équipes</th>
@@ -102,7 +102,7 @@ export default async function UsagePage() {
                 {usage.situations.map((s) => (
                   <tr key={s.code} className="border-t border-white/5">
                     <td className="py-2 pr-3">{s.title}</td>
-                    <td className="py-2 pr-3 text-slate-500">{s.scenario}</td>
+                    <td className="py-2 pr-3 text-slate-400">{s.scenario}</td>
                     <td className="py-2 pr-3 text-right tabular-nums text-slate-400">
                       {s.debriefed}
                     </td>
@@ -140,7 +140,7 @@ export default async function UsagePage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
           <h2 className="text-sm font-semibold text-slate-200">Jusqu&apos;où vont les indices</h2>
-          <p className="mt-1 text-xs leading-relaxed text-slate-500">
+          <p className="mt-1 text-xs leading-relaxed text-slate-400">
             Les cinq niveaux vont de l&apos;observation à la méthode détaillée. Beaucoup de
             niveaux 4 et 5 signalent une marche trop haute, pas des élèves paresseux.
           </p>
@@ -152,7 +152,7 @@ export default async function UsagePage() {
             <ul className="mt-4 space-y-2">
               {usage.hintsByLevel.map((h) => (
                 <li key={h.level} className="flex items-center gap-3 text-sm">
-                  <span className="w-16 shrink-0 text-slate-500">Niveau {h.level}</span>
+                  <span className="w-16 shrink-0 text-slate-400">Niveau {h.level}</span>
                   <span className="h-2 flex-1 overflow-hidden rounded-full bg-slate-950">
                     <span
                       className="block h-full rounded-full bg-amber-400/70"
@@ -170,7 +170,7 @@ export default async function UsagePage() {
 
         <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
           <h2 className="text-sm font-semibold text-slate-200">Secteurs joués</h2>
-          <p className="mt-1 text-xs leading-relaxed text-slate-500">
+          <p className="mt-1 text-xs leading-relaxed text-slate-400">
             Un secteur jamais joué n&apos;est pas forcément mauvais : il est peut-être
             simplement invisible au moment de créer la partie.
           </p>
@@ -197,7 +197,7 @@ export default async function UsagePage() {
         <h2 className="text-sm font-semibold text-slate-200">
           Notions les moins ancrées, toutes classes confondues
         </h2>
-        <p className="mt-1 max-w-2xl text-xs leading-relaxed text-slate-500">
+        <p className="mt-1 max-w-2xl text-xs leading-relaxed text-slate-400">
           Maîtrise moyenne de vos élèves, sur 100. C&apos;est ici que se lisent les notions à
           reprendre en cours plutôt que dans le jeu.
         </p>

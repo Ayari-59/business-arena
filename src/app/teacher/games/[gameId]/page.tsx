@@ -45,7 +45,7 @@ export default async function TeacherGamePage({
           <p className="mt-1 text-sm text-slate-400">
             Les élèves rejoignent sur <span className="font-mono">/join</span> avec ce code.
           </p>
-          <p className="mt-1 text-xs text-slate-500">{view.scenarioTitle}</p>
+          <p className="mt-1 text-xs text-slate-400">{view.scenarioTitle}</p>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2">
           <p className="rounded-full border border-white/10 px-4 py-1 text-sm text-slate-300">
@@ -106,7 +106,7 @@ export default async function TeacherGamePage({
           <h2 className="text-sm font-semibold text-slate-200">
             📝 Questions posées dans les situations
           </h2>
-          <p className="mt-1 max-w-3xl text-xs text-slate-500">
+          <p className="mt-1 max-w-3xl text-xs text-slate-400">
             Le diagnostic est toujours posé : c&apos;est le cœur de la situation. Ce réglage ne
             porte que sur les questions qui le suivent. Les situations déjà débriefées gardent
             le score obtenu sous l&apos;ancien réglage.
@@ -137,7 +137,7 @@ export default async function TeacherGamePage({
                       {active ? "✓ " : ""}
                       {m.name}
                     </span>
-                    <span className="mt-1 block text-xs text-slate-500">{m.help}</span>
+                    <span className="mt-1 block text-xs text-slate-400">{m.help}</span>
                   </SubmitButton>
                 </GuardedForm>
               );
@@ -149,7 +149,7 @@ export default async function TeacherGamePage({
       {!finished ? (
         <section className="rounded-xl border border-white/10 bg-slate-900 p-4">
           <h2 className="text-sm font-semibold text-slate-200">📚 Situations manquées</h2>
-          <p className="mt-1 max-w-3xl text-xs text-slate-500">
+          <p className="mt-1 max-w-3xl text-xs text-slate-400">
             Une situation non rendue reste consultable par l&apos;élève dans l&apos;onglet Historique.
             Vous choisissez si elle peut être rattrapée. Réglage appliqué aux tours à venir ; les
             situations déjà rattrapées gardent leur score.
@@ -176,7 +176,7 @@ export default async function TeacherGamePage({
                       {active ? "✓ " : ""}
                       {MISSED_POLICY_LABELS[p]}
                     </span>
-                    <span className="mt-1 block text-xs text-slate-500">{MISSED_POLICY_HELP[p]}</span>
+                    <span className="mt-1 block text-xs text-slate-400">{MISSED_POLICY_HELP[p]}</span>
                   </SubmitButton>
                 </GuardedForm>
               );
@@ -192,7 +192,7 @@ export default async function TeacherGamePage({
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
+              <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
                 <th className="pb-2 pr-3 font-medium">Équipe</th>
                 <th className="pb-2 pr-3 font-medium">Joueurs</th>
                 <th className="pb-2 pr-3 font-medium">Décisions</th>
@@ -206,7 +206,7 @@ export default async function TeacherGamePage({
                   <td className="py-2 pr-3">
                     {t.name}
                     {t.controller === "bot" ? (
-                      <span className="ml-2 rounded bg-slate-800 px-1.5 py-0.5 text-xs uppercase text-slate-500">
+                      <span className="ml-2 rounded bg-slate-800 px-1.5 py-0.5 text-xs uppercase text-slate-400">
                         bot{t.botPersonality ? ` · ${t.botPersonality}` : ""}
                       </span>
                     ) : null}
@@ -273,7 +273,7 @@ export default async function TeacherGamePage({
                   Notions exposées ce tour
                 </h3>
                 {pedagogy.conceptsExposed.length === 0 ? (
-                  <p className="mt-2 text-xs text-slate-500">Aucune situation ouverte ce tour.</p>
+                  <p className="mt-2 text-xs text-slate-400">Aucune situation ouverte ce tour.</p>
                 ) : (
                   <ul className="mt-2 flex flex-wrap gap-1.5">
                     {pedagogy.conceptsExposed.map((c) => (
@@ -292,7 +292,7 @@ export default async function TeacherGamePage({
                   Maîtrise mesurée (de la plus fragile à la plus solide)
                 </h3>
                 {pedagogy.conceptMastery.length === 0 ? (
-                  <p className="mt-2 text-xs text-slate-500">
+                  <p className="mt-2 text-xs text-slate-400">
                     Aucune situation rendue : rien n&apos;est mesuré pour l&apos;instant.
                   </p>
                 ) : (
@@ -302,7 +302,7 @@ export default async function TeacherGamePage({
                         <div className="flex items-center justify-between text-slate-300">
                           <span>
                             {c.name}
-                            <span className="ml-1.5 text-xs text-slate-500">
+                            <span className="ml-1.5 text-xs text-slate-400">
                               · {c.students} élève{c.students > 1 ? "s" : ""}
                             </span>
                           </span>
@@ -352,7 +352,7 @@ export default async function TeacherGamePage({
                   </span>
                 </li>
               </ul>
-              <p className="mt-2 text-xs text-slate-500">
+              <p className="mt-2 text-xs text-slate-400">
                 {view.quizMode === "off"
                   ? "Aucune question n'est posée dans cette partie : ces chiffres portent sur les tours joués sous un autre réglage."
                   : view.quizMode === "model"
@@ -369,7 +369,7 @@ export default async function TeacherGamePage({
           <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-sm font-semibold text-slate-200">Relevé de notes</h2>
-              <p className="mt-1 max-w-2xl text-xs leading-relaxed text-slate-500">
+              <p className="mt-1 max-w-2xl text-xs leading-relaxed text-slate-400">
                 Deux mesures séparées, et non fondues en une : la note tirée des situations
                 rendues dit ce que l&apos;équipe a compris, le score composite dit ce que
                 l&apos;entreprise a fait. Une bonne analyse peut mener à un mauvais
@@ -387,7 +387,7 @@ export default async function TeacherGamePage({
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
+                <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
                   <th className="pb-2 pr-3 font-medium">Équipe</th>
                   <th className="pb-2 pr-3 font-medium">Élèves</th>
                   <th className="pb-2 pr-3 text-right font-medium">Rendues</th>
@@ -402,7 +402,7 @@ export default async function TeacherGamePage({
                 {releve.teams.map((equipe) => (
                   <tr key={equipe.teamId} className="border-t border-white/5">
                     <td className="py-2 pr-3">{equipe.name}</td>
-                    <td className="py-2 pr-3 text-xs text-slate-500">
+                    <td className="py-2 pr-3 text-xs text-slate-400">
                       {equipe.students.length > 0 ? equipe.students.join(", ") : "aucun élève"}
                     </td>
                     <td className="py-2 pr-3 text-right tabular-nums text-slate-400">
@@ -449,7 +449,7 @@ export default async function TeacherGamePage({
             </table>
           </div>
           {releve.roundsResolved === 0 ? (
-            <p className="mt-3 text-xs text-slate-500">
+            <p className="mt-3 text-xs text-slate-400">
               Aucun tour clôturé : le relevé se remplit à la première clôture.
             </p>
           ) : null}
@@ -459,7 +459,7 @@ export default async function TeacherGamePage({
       <section className="rounded-xl border border-white/10 bg-slate-900 p-4">
         <h2 className="mb-3 text-sm font-semibold text-slate-200">Classement</h2>
         {view.ranking.length === 0 ? (
-          <p className="text-sm text-slate-500">Disponible après le premier tour.</p>
+          <p className="text-sm text-slate-400">Disponible après le premier tour.</p>
         ) : (
           <ol className="space-y-2">
             {view.ranking.map((row) => (
@@ -468,7 +468,7 @@ export default async function TeacherGamePage({
                 className="flex items-center justify-between rounded-lg bg-slate-950 px-3 py-2 text-sm text-slate-300"
               >
                 <span>
-                  <span className="mr-2 text-slate-500">#{row.rank}</span>
+                  <span className="mr-2 text-slate-400">#{row.rank}</span>
                   {row.name}
                   {row.defaillant ? (
                     <span className="ml-2 rounded-full border border-red-400/40 bg-red-950/40 px-2 py-0.5 text-xs font-semibold text-red-300">
@@ -478,7 +478,7 @@ export default async function TeacherGamePage({
                 </span>
                 <span className="tabular-nums">
                   <span className="font-semibold text-slate-100">BPI {row.bpi.toFixed(1)}</span>
-                  <span className="ml-2 text-xs text-slate-500">
+                  <span className="ml-2 text-xs text-slate-400">
                     {formatEuro(row.cumulativeNetIncome)} cumulés
                   </span>
                 </span>

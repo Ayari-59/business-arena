@@ -195,7 +195,7 @@ export default async function ArenaPage({
               />
             ))}
           </div>
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 text-xs text-slate-400">
             Adaptez vos décisions en conséquence : c&apos;est tout l&apos;intérêt d&apos;être prévenu.
           </p>
         </section>
@@ -268,7 +268,7 @@ export default async function ArenaPage({
             <div className="grid gap-2 sm:grid-cols-2">
               {allHints.map((h) => (
                 <div key={h.code} className="rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{h.name}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{h.name}</p>
                   <p className="mt-1 text-xs text-slate-400">{h.objective}</p>
                   {h.keyPoints.length > 0 ? (
                     <ul className="mt-2 space-y-0.5">
@@ -357,7 +357,7 @@ export default async function ArenaPage({
             className="group rounded-xl border border-white/10 bg-slate-950/40 [&[open]]:border-white/20"
           >
             <summary className="flex cursor-pointer items-center gap-2 px-4 py-3 text-sm font-semibold text-slate-100 sm:px-5">
-              <span aria-hidden className="text-slate-500 transition-transform group-open:rotate-90">
+              <span aria-hidden className="text-slate-400 transition-transform group-open:rotate-90">
                 ▸
               </span>
               <span aria-hidden>🔍</span>
@@ -400,10 +400,10 @@ export default async function ArenaPage({
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Link href="/profile" className="text-xs text-slate-500 underline-offset-4 hover:text-slate-300 hover:underline">
+          <Link href="/profile" className="text-xs text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline">
             Mon profil
           </Link>
-          <Link href="/notions" className="text-xs text-slate-500 underline-offset-4 hover:text-slate-300 hover:underline">
+          <Link href="/notions" className="text-xs text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline">
             Fiches notions
           </Link>
           <p className={`rounded-full border border-white/10 px-3 py-1 text-xs ${SECTOR_COLORS[view.sector].accent}`}>
@@ -499,7 +499,7 @@ export default async function ArenaPage({
           ══════════════════════════════════════════════════════════════════ */}
       <div className="mt-6 space-y-4">
         {periods.length > 0 ? (
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
             {finished ? "Vos tours" : "Tours passés"}
           </p>
         ) : null}
@@ -521,7 +521,7 @@ export default async function ArenaPage({
             >
               <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-5">
                 <span className="flex items-center gap-2 text-sm font-semibold text-slate-100">
-                  <span className="text-slate-500 transition-transform group-open:rotate-90">▸</span>
+                  <span className="text-slate-400 transition-transform group-open:rotate-90">▸</span>
                   📊 {periodLabel(view.roundDays, p.round)}
                   <span className="rounded-full border border-sky-400/30 bg-sky-400/10 px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-sky-300">
                     tour clos
@@ -558,7 +558,7 @@ export default async function ArenaPage({
                   {{
                     situation: dr ? (
                       <section className="space-y-4">
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-slate-400">
                           La situation posée ce tour-là et sa correction.
                         </p>
                         {dr.situations.map((s) => (
@@ -598,9 +598,9 @@ export default async function ArenaPage({
                   tour en cours
                 </span>
               </span>
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-slate-400">
                 {view.kind === "solo"
-                  ? "Deux étapes : analysez la situation, puis rendez vos décisions et simulez."
+                  ? "Trois temps : lisez la situation, analysez-la, puis rendez vos décisions et simulez."
                   : "Trois onglets : la situation à lire, vos décisions à rendre, et les résultats — à venir une fois le tour clos."}
               </span>
             </div>
@@ -685,7 +685,7 @@ export default async function ArenaPage({
                   <h2 className="text-sm font-semibold text-slate-200">
                     Vos décisions · {periodLabel(view.roundDays, view.currentRound).toLowerCase()}
                   </h2>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-slate-400">
                     Une fois rendues et le tour clos, elles produiront les résultats de ce
                     tour — et le tour suivant s&apos;ouvrira.
                   </p>
@@ -730,7 +730,7 @@ export default async function ArenaPage({
                       <p className="text-sm text-slate-400">
                         📊 Les résultats de ce tour n&apos;existent pas encore.
                       </p>
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className="mt-1 text-xs text-slate-400">
                         Ils s&apos;afficheront ici une fois le tour clos — et ouvriront le tour suivant.
                       </p>
                     </div>

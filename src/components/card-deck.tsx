@@ -64,7 +64,7 @@ export function CardDeck({
           🖨️ Imprimer le deck physique
         </a>
       </div>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-slate-400">
         Cartes <strong className="text-slate-300">marché</strong> pour toute la classe, cartes{" "}
         <strong className="text-slate-300">équipe</strong> pour cibler une seule entreprise.
         Annoncées aux équipes, appliquées à la clôture du tour. Vous pouvez aussi faire tirer les
@@ -143,7 +143,7 @@ export function CardDeck({
                 </span>
               </span>
             </button>
-            <span className="text-xs text-slate-500">ou</span>
+            <span className="text-xs text-slate-400">ou</span>
             <select
               name="eventCode"
               defaultValue=""
@@ -167,7 +167,7 @@ export function CardDeck({
           </div>
         </form>
       ) : (
-        <p className="mt-3 text-xs text-slate-500">
+        <p className="mt-3 text-xs text-slate-400">
           Quatre cartes maximum par tour : clôturez le tour pour continuer.
         </p>
       )}

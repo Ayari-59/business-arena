@@ -94,7 +94,7 @@ export default async function SituationEditorPage({
           </legend>
           {situation.diagnosticOptions.map((o, i) => (
             <label key={o.id} className="block">
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-slate-400">
                 Option {i + 1}
                 {o.correct ? (
                   <span className="ml-2 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-2 py-0.5 text-emerald-300">
@@ -113,7 +113,7 @@ export default async function SituationEditorPage({
           </legend>
           {situation.hints.map((h, i) => (
             <label key={h.level} className="block">
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-slate-400">
                 Indice {h.level} · −{h.costRatio.toString().replace(".", ",")} du score
               </span>
               <input name={`hint${i}`} defaultValue={h.text} className={champ} />
@@ -129,7 +129,7 @@ export default async function SituationEditorPage({
             rows={3}
             className={champ}
           />
-          <span className="mt-1 block text-xs text-slate-500">
+          <span className="mt-1 block text-xs text-slate-400">
             Affichée après la question « quel modèle d&apos;analyse mobilisez-vous ? ».
           </span>
         </label>

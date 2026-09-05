@@ -41,7 +41,7 @@ function LicenceField({
 }) {
   return (
     <label className="block">
-      <span className="text-xs uppercase tracking-wide text-slate-500">{label}</span>
+      <span className="text-xs uppercase tracking-wide text-slate-400">{label}</span>
       <input
         name={name}
         type={type}
@@ -68,7 +68,7 @@ export default async function AdminPage() {
           <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Administration générale</p>
           <h1 className="text-2xl font-bold">Plateforme Business Arena</h1>
         </div>
-        <nav className="flex gap-4 text-xs text-slate-500">
+        <nav className="flex gap-4 text-xs text-slate-400">
           <Link href="/teacher" className="hover:text-slate-300">Espace enseignant</Link>
           <Link href="/" className="hover:text-slate-300">Landing</Link>
         </nav>
@@ -137,7 +137,7 @@ export default async function AdminPage() {
               placeholder="Ex : contact@votre-domaine.fr"
               className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
             />
-            <span className="mt-1 block text-xs text-slate-500">
+            <span className="mt-1 block text-xs text-slate-400">
               Par défaut <strong className="text-slate-400">contact@business-arena.fr</strong>, pour
               que la demande d&apos;information soit active sans réglage. Remplacez-la par la vôtre,
               ou videz-la pour retirer le bouton d&apos;envoi : mieux vaut pas de bouton qu&apos;un
@@ -156,7 +156,7 @@ export default async function AdminPage() {
       {/* Monde démo */}
       <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
         <h2 className="text-sm font-semibold text-slate-200">Monde de démonstration</h2>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-slate-400">
           Un établissement complet pour présenter le produit : direction, enseignant, une
           partie de classe déjà jouée sur 3 tours (le tour 4, celui de la crise de trésorerie, est
           le prochain), vues pédagogiques alimentées, et un concours prêt à lancer.
@@ -172,7 +172,7 @@ export default async function AdminPage() {
                 Enseignant : {DEMO_ACCOUNTS.teacher.email} / {DEMO_ACCOUNTS.password}
               </li>
             </ul>
-            <p className="mt-2 text-xs text-slate-500">
+            <p className="mt-2 text-xs text-slate-400">
               Ces identifiants sont aussi affichés sur la page de connexion enseignant.
             </p>
           </div>
@@ -188,7 +188,7 @@ export default async function AdminPage() {
       {/* Nouvel établissement */}
       <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
         <h2 className="text-sm font-semibold text-slate-200">Déployer un nouvel établissement</h2>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-slate-400">
           Crée l&apos;établissement et génère un code d&apos;invitation administrateur : la
           personne qui s&apos;inscrit avec ce code devient admin de l&apos;établissement et
           peut à son tour inviter ses enseignants.
@@ -221,7 +221,7 @@ export default async function AdminPage() {
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-sm font-semibold text-slate-100">
                   {org.name}
-                  <span className="ml-2 rounded bg-slate-800 px-1.5 py-0.5 text-xs uppercase text-slate-500">
+                  <span className="ml-2 rounded bg-slate-800 px-1.5 py-0.5 text-xs uppercase text-slate-400">
                     {org.kind === "public" ? "grand public" : org.kind === "school" ? "établissement" : org.kind}
                   </span>
                 </p>
@@ -232,7 +232,7 @@ export default async function AdminPage() {
               </div>
               {org.kind !== "public" ? (
                 <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-                  <span className="text-slate-500">Codes admin :</span>
+                  <span className="text-slate-400">Codes admin :</span>
                   {org.adminInvites.length === 0 ? (
                     <span className="text-slate-600">aucun</span>
                   ) : (
@@ -250,7 +250,7 @@ export default async function AdminPage() {
                           <form
                             action={deactivateAdminInviteAction.bind(null, invite.id, org.organizationId)}
                           >
-                            <button className="text-slate-500 hover:text-red-400" title="Désactiver">
+                            <button className="text-slate-400 hover:text-red-400" title="Désactiver">
                               ✕
                             </button>
                           </form>
@@ -328,7 +328,7 @@ export default async function AdminPage() {
                       Enregistrer la licence
                     </button>
                   </form>
-                  <p className="mt-2 text-xs leading-relaxed text-slate-500">
+                  <p className="mt-2 text-xs leading-relaxed text-slate-400">
                     Sans licence, l&apos;établissement reste ouvert : la limite n&apos;existe que
                     là où une vente l&apos;a définie. Une licence expirée ferme la création de
                     nouvelles parties et laisse se terminer les classes en cours.

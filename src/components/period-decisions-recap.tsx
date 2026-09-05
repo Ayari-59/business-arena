@@ -76,13 +76,13 @@ export function PeriodDecisionsRecap({
 
   return (
     <div className="space-y-4">
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-slate-400">
         Ce que votre équipe a rendu pour ce tour. À relire en face des résultats.
       </p>
       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {core.map((row) => (
           <div key={row.label} className="rounded-lg border border-white/10 bg-slate-950 px-3 py-2.5">
-            <dt className="text-xs uppercase tracking-wide text-slate-500">{row.label}</dt>
+            <dt className="text-xs uppercase tracking-wide text-slate-400">{row.label}</dt>
             <dd className="mt-0.5 text-base font-semibold tabular-nums text-slate-100">{row.value}</dd>
           </div>
         ))}

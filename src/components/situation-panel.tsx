@@ -34,7 +34,11 @@ function quizHeading(questions: { id: string }[]): string {
 function ErrorBox({ error }: { error: string | null }) {
   if (!error) return null;
   return (
-    <p className="rounded-lg border border-red-400/30 bg-red-950/40 px-3 py-2 text-xs text-red-300">
+    <p
+      role="alert"
+      aria-live="assertive"
+      className="rounded-lg border border-red-400/30 bg-red-950/40 px-3 py-2 text-xs text-red-300"
+    >
       {error}
     </p>
   );
@@ -143,7 +147,7 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 px-4 pb-3 pt-1">
             {situation.triggerFacts.map((fact, i) => (
               <div key={i} className="col-span-2 flex items-baseline justify-between gap-3">
-                <dt className="text-xs text-slate-500">{fact.label}</dt>
+                <dt className="text-xs text-slate-400">{fact.label}</dt>
                 <dd
                   className={`text-sm font-medium ${
                     fact.direction === "positive"
@@ -180,30 +184,36 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
               <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                 Votre diagnostic
               </h4>
-              <p className="mt-1 text-xs text-slate-500">Quel est le problème principal ?</p>
-              <div className="mt-2 space-y-2">
-                {situation.diagnosticOptions.map((option) => (
-                  <label key={option.id} className="flex items-start gap-2 text-sm text-slate-200">
-                    <input
-                      type="checkbox"
-                      name="options"
-                      value={option.id}
-                      checked={options.includes(option.id)}
-                      onChange={(e) => basculerOption(option.id, e.target.checked)}
-                      className="mt-1 accent-amber-400"
-                    />
-                    <span>{option.label}</span>
-                  </label>
-                ))}
-                <textarea
-                  name="freeText"
-                  rows={2}
-                  value={freeText}
-                  onChange={(e) => setFreeText(e.target.value)}
-                  placeholder="Votre analyse en quelques mots (facultatif mais valorisé)…"
-                  className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
-                />
-              </div>
+              {/* Les cases forment un groupe : fieldset + legend le disent au
+                  lecteur d'écran, qui annonce alors « Quel est le problème
+                  principal ? » avant d'égrener les options. */}
+              <fieldset className="mt-1 min-w-0 border-0 p-0">
+                <legend className="text-xs text-slate-400">Quel est le problème principal ?</legend>
+                <div className="mt-2 space-y-2">
+                  {situation.diagnosticOptions.map((option) => (
+                    <label key={option.id} className="flex items-start gap-2 text-sm text-slate-200">
+                      <input
+                        type="checkbox"
+                        name="options"
+                        value={option.id}
+                        checked={options.includes(option.id)}
+                        onChange={(e) => basculerOption(option.id, e.target.checked)}
+                        className="mt-1 accent-amber-400"
+                      />
+                      <span>{option.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+              <textarea
+                name="freeText"
+                rows={2}
+                value={freeText}
+                onChange={(e) => setFreeText(e.target.value)}
+                aria-label="Votre analyse écrite du problème (facultatif)"
+                placeholder="Votre analyse en quelques mots (facultatif mais valorisé)…"
+                className="mt-2 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+              />
             </section>
 
             {/* 2. Questions : connaissances et/ou modèle d'analyse */}
@@ -212,7 +222,7 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
                 <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                   {quizHeading(situation.quizQuestions)}
                 </h4>
-                <p className="mt-1 text-xs text-slate-500">Comment analyser ce problème ?</p>
+                <p className="mt-1 text-xs text-slate-400">Comment analyser ce problème ?</p>
                 {quizDone ? (
                   <p className="mt-2 text-sm text-emerald-300">
                     ✓ Réponse validée, la correction sera révélée au débriefing du tour.
@@ -265,7 +275,7 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
                 {renduPending ? "Envoi…" : "Valider mon analyse"}
               </button>
               {!complet ? (
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-400">
                   Le rendu part complet ou pas du tout : diagnostic et modèle seront corrigés ensemble au débriefing.
                 </p>
               ) : null}
@@ -303,11 +313,11 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
               </button>
             </form>
           ) : situation.hintLimit ? (
-            <p className="mt-2 text-xs text-slate-500">
+            <p className="mt-2 text-xs text-slate-400">
               {situation.hintLimit}. À vous de trancher avec ce que vous avez.
             </p>
           ) : situation.unlockedHints.length === 5 ? (
-            <p className="mt-2 text-xs text-slate-500">Tous les indices sont débloqués.</p>
+            <p className="mt-2 text-xs text-slate-400">Tous les indices sont débloqués.</p>
           ) : null}
         </section>
       </div>
@@ -336,7 +346,7 @@ export function SituationDebrief({
     <article className="rounded-xl border border-white/10 bg-slate-900 p-5">
       <header className="mb-3 flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.25em] text-slate-500">Débriefing</p>
+          <p className="text-xs uppercase tracking-[0.25em] text-slate-400">Débriefing</p>
           <h3 className="mt-1 text-base font-semibold text-slate-100">{situation.title}</h3>
         </div>
         <span
@@ -369,7 +379,7 @@ export function SituationDebrief({
               const correct = debrief.correctOptionIds.includes(option.id);
               const chosen = selected.has(option.id);
               return (
-                <li key={option.id} className={correct ? "text-emerald-300" : chosen ? "text-red-400" : "text-slate-500"}>
+                <li key={option.id} className={correct ? "text-emerald-300" : chosen ? "text-red-400" : "text-slate-400"}>
                   {correct ? "✓" : chosen ? "✗" : "·"} {option.label}
                   {chosen && !correct ? " (coché à tort)" : ""}
                   {correct && !chosen ? " (manqué)" : ""}
@@ -418,7 +428,7 @@ export function SituationDebrief({
                         <span className="text-emerald-300"> · le plus juste : {correctLabel}</span>
                       ) : null}
                     </p>
-                    <p className="mt-1 text-xs text-slate-500">{correction.explain}</p>
+                    <p className="mt-1 text-xs text-slate-400">{correction.explain}</p>
                   </li>
                 );
               })}
@@ -433,7 +443,7 @@ export function SituationDebrief({
             <div className="mt-1 rounded-lg border border-white/5 bg-slate-950 px-3 py-2">
               <p className="text-slate-300">{debrief.modelInsight.prompt}</p>
               <p className="mt-1 text-emerald-300">{debrief.modelInsight.answer}</p>
-              <p className="mt-1 text-xs text-slate-500">{debrief.modelInsight.explain}</p>
+              <p className="mt-1 text-xs text-slate-400">{debrief.modelInsight.explain}</p>
             </div>
           </div>
         ) : null}
@@ -448,9 +458,9 @@ export function SituationDebrief({
                   key={i}
                   className="flex items-baseline justify-between gap-3 rounded-lg border border-white/5 bg-slate-950 px-3 py-2"
                 >
-                  <span className="text-xs text-slate-500">{fact.label}</span>
+                  <span className="text-xs text-slate-400">{fact.label}</span>
                   <span className="flex items-baseline gap-2 text-sm">
-                    <span className="text-slate-500">{fact.before}</span>
+                    <span className="text-slate-400">{fact.before}</span>
                     <span className="text-slate-600">→</span>
                     <span className="text-slate-200">{fact.after}</span>
                     <span
@@ -494,7 +504,7 @@ export function SituationDebrief({
                   href={`/notions#${c.code}`}
                   className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1 text-xs text-amber-200 hover:border-amber-400/40"
                 >
-                  <span className="text-xs uppercase tracking-wider text-slate-500">{c.domain}</span>
+                  <span className="text-xs uppercase tracking-wider text-slate-400">{c.domain}</span>
                   {c.name}
                 </a>
               ))}
@@ -534,29 +544,32 @@ function SituationRetake({ gameId, situation }: { gameId: string; situation: Sit
       </p>
       <input type="hidden" name="questions" value={questions.map((q) => q.id).join(",")} />
       <div className="space-y-1.5">
-        <p className="text-xs text-slate-400">Votre diagnostic</p>
-        {situation.diagnosticOptions.map((option) => (
-          <label key={option.id} className="flex items-start gap-2 text-sm text-slate-200">
-            <input
-              type="checkbox"
-              name="options"
-              value={option.id}
-              checked={options.includes(option.id)}
-              onChange={(e) =>
-                setOptions((prec) =>
-                  e.target.checked ? [...new Set([...prec, option.id])] : prec.filter((o) => o !== option.id),
-                )
-              }
-              className="mt-1 accent-sky-400"
-            />
-            <span>{option.label}</span>
-          </label>
-        ))}
+        <fieldset className="min-w-0 space-y-1.5 border-0 p-0">
+          <legend className="text-xs text-slate-400">Votre diagnostic</legend>
+          {situation.diagnosticOptions.map((option) => (
+            <label key={option.id} className="flex items-start gap-2 text-sm text-slate-200">
+              <input
+                type="checkbox"
+                name="options"
+                value={option.id}
+                checked={options.includes(option.id)}
+                onChange={(e) =>
+                  setOptions((prec) =>
+                    e.target.checked ? [...new Set([...prec, option.id])] : prec.filter((o) => o !== option.id),
+                  )
+                }
+                className="mt-1 accent-sky-400"
+              />
+              <span>{option.label}</span>
+            </label>
+          ))}
+        </fieldset>
         <textarea
           name="freeText"
           rows={2}
           value={freeText}
           onChange={(e) => setFreeText(e.target.value)}
+          aria-label="Votre analyse écrite du problème (facultatif)"
           placeholder="Votre analyse en quelques mots (facultatif)…"
           className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-sky-400/60"
         />

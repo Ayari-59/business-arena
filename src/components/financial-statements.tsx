@@ -55,7 +55,7 @@ function Panel({
     >
       <summary className="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-slate-200 hover:text-amber-200">
         {title}
-        <span className="float-right text-xs text-slate-500 group-open:hidden">déplier</span>
+        <span className="float-right text-xs text-slate-400 group-open:hidden">déplier</span>
       </summary>
       <div className="border-t border-white/5 px-4 py-3">{children}</div>
     </details>
@@ -181,7 +181,7 @@ export function FinancialStatements({
       <Panel title="Bilan">
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
               Actif
             </p>
             <Row label="Immobilisations nettes" value={euro(b.fixedAssetsNet)} />
@@ -194,7 +194,7 @@ export function FinancialStatements({
             <Row label="TOTAL ACTIF" value={euro(totalAssets)} strong />
           </div>
           <div>
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
               Passif
             </p>
             <Row label="Capitaux propres" value={euro(b.equity)} />
@@ -213,7 +213,7 @@ export function FinancialStatements({
             />
           </div>
         </div>
-        <p className="mt-2 text-xs text-slate-500">
+        <p className="mt-2 text-xs text-slate-400">
           {placement > 0.5 && b.overdraft > 0.5
             ? "Vous détenez un placement ET un découvert : vous payez le second bien plus cher que le premier ne rapporte. "
             : ""}
@@ -226,7 +226,7 @@ export function FinancialStatements({
       <Panel title="Analyse des coûts">
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
               À l&apos;unité
             </p>
             <Row label={vocabulary.materialLabel} value={euro(materialCostPerUnit)} indent />
@@ -251,7 +251,7 @@ export function FinancialStatements({
             ) : null}
           </div>
           <div>
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
               Sur le tour
             </p>
             <Row
@@ -282,7 +282,7 @@ export function FinancialStatements({
             />
           </div>
         </div>
-        <p className="mt-2 text-xs text-slate-500">
+        <p className="mt-2 text-xs text-slate-400">
           Les charges de structure tombent quoi qu&apos;il arrive : chaque unité vendue au-dessus
           du coût variable les éponge : le seuil dit combien il en faut.
         </p>
@@ -305,7 +305,7 @@ export function FinancialStatements({
           strong
           tone={result.cashFlow.closing >= 0 ? "good" : "bad"}
         />
-        <p className="mt-2 text-xs text-slate-500">
+        <p className="mt-2 text-xs text-slate-400">
           Le résultat est une opinion, la trésorerie est un fait : ce tableau montre où
           l&apos;argent est réellement entré et sorti.
         </p>

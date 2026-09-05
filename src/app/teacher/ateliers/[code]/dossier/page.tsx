@@ -49,7 +49,7 @@ export default async function DossierEnseignantPage({
 
   return (
     <main id="main" className="mx-auto max-w-3xl px-6 py-12 print:max-w-none print:px-0 print:py-0 print:text-black">
-      <p className="text-xs uppercase tracking-[0.3em] text-slate-500 print:hidden">
+      <p className="text-xs uppercase tracking-[0.3em] text-slate-400 print:hidden">
         <Link href={`/ateliers/${atelier.code}`} className="hover:text-slate-300">
           {atelier.titre}
         </Link>{" "}
@@ -139,7 +139,7 @@ export default async function DossierEnseignantPage({
                 ))}
               </div>
 
-              <div className="mt-4 border-t border-white/10 pt-3 text-xs leading-relaxed text-slate-500 print:border-black/20 print:text-black">
+              <div className="mt-4 border-t border-white/10 pt-3 text-xs leading-relaxed text-slate-400 print:border-black/20 print:text-black">
                 <p>
                   Notions :{" "}
                   {situation.conceptCodes

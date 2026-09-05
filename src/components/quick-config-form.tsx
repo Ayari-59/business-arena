@@ -113,12 +113,12 @@ export function QuickConfigFields({
           );
         })}
       </div>
-      <p className="mt-2 text-xs leading-snug text-slate-500">{sec?.tagline}</p>
+      <p className="mt-2 text-xs leading-snug text-slate-400">{sec?.tagline}</p>
 
       {/* 2 · Niveau */}
       <div className="mt-5 flex items-baseline justify-between gap-3">
         <p className={label}>Votre niveau de défi</p>
-        <span className="text-xs tabular-nums text-slate-500">
+        <span className="text-xs tabular-nums text-slate-400">
           {cur ? `≈ ${cur.decisions} décisions / tour` : ""}
         </span>
       </div>
@@ -143,7 +143,7 @@ export function QuickConfigFields({
             onClick={() => setLevel(l.level)}
             aria-label={`Niveau ${l.level} · ${l.name}`}
             className={`px-1 text-xs tabular-nums ${
-              l.level === level ? "font-bold text-amber-300" : "text-slate-500 hover:text-slate-300"
+              l.level === level ? "font-bold text-amber-300" : "text-slate-400 hover:text-slate-300"
             }`}
           >
             {l.level}
@@ -201,7 +201,7 @@ export function QuickConfigFields({
               </button>
             ))}
           </div>
-          <p className="mt-1.5 text-xs text-slate-500">
+          <p className="mt-1.5 text-xs text-slate-400">
             <span className="font-semibold text-slate-300">{comp.value} entreprises</span> · {comp.hint}
           </p>
 

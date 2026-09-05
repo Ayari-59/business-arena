@@ -118,7 +118,7 @@ export function RatioGauges({
           <GaugeBar key={r.label} ratio={r} />
         ))}
       </div>
-      <p className="mt-3 text-xs leading-relaxed text-slate-500">
+      <p className="mt-3 text-xs leading-relaxed text-slate-400">
         Un ratio seul ne dit rien : c&apos;est l&apos;ensemble qui raconte la stratégie
         financière. L&apos;effet de levier montre si la dette sert la rentabilité ou la
         fragilise.

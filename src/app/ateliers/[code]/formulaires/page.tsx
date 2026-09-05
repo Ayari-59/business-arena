@@ -64,7 +64,7 @@ export default async function FormulairesPage({
 
   return (
     <main id="main" className="mx-auto max-w-3xl px-6 py-12 print:max-w-none print:px-0 print:py-0 print:text-black">
-      <p className="text-xs uppercase tracking-[0.3em] text-slate-500 print:hidden">
+      <p className="text-xs uppercase tracking-[0.3em] text-slate-400 print:hidden">
         <Link href={`/ateliers/${atelier.code}`} className="hover:text-slate-300">
           {atelier.titre}
         </Link>{" "}
@@ -112,7 +112,7 @@ export default async function FormulairesPage({
               <p className="text-xs font-semibold uppercase tracking-wider text-amber-400 print:text-black">
                 Séance {f.seance} · {f.seanceTitre}
               </p>
-              <p className="text-xs uppercase tracking-wider text-slate-500 print:text-black">
+              <p className="text-xs uppercase tracking-wider text-slate-400 print:text-black">
                 {f.tourJoue !== null ? `Tour joué : ${f.tourJoue}` : "Aucun tour joué"}
               </p>
             </div>
@@ -134,7 +134,7 @@ export default async function FormulairesPage({
               {f.document ?? f.seanceTitre}
             </h2>
             {f.precisions.length > 0 ? (
-              <p className="mt-1 text-xs uppercase tracking-wider text-slate-500 print:text-black">
+              <p className="mt-1 text-xs uppercase tracking-wider text-slate-400 print:text-black">
                 {f.precisions.join(" · ")}
               </p>
             ) : null}

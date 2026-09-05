@@ -31,13 +31,13 @@ export default function ConceptsPage() {
           Les notions de gestion communes à tous les secteurs du jeu, de l&apos;atelier au
           chantier. Trois niveaux de lecture : l&apos;intuition, la méthode, la formule.
         </p>
-        <Link href="/" className="mt-2 inline-block text-xs text-slate-500 underline-offset-4 hover:underline">
+        <Link href="/" className="mt-2 inline-block text-xs text-slate-400 underline-offset-4 hover:underline">
           ← Retour à l&apos;accueil
         </Link>
       </header>
       {domains.map((domain) => (
         <section key={domain}>
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">
             {DOMAIN_LABELS[domain] ?? domain}
           </h2>
           <div className="space-y-3">
@@ -49,7 +49,7 @@ export default function ConceptsPage() {
               >
                 <summary className="cursor-pointer list-none px-4 py-3">
                   <span className="text-sm font-semibold text-slate-100">{c.name}</span>
-                  <span className="ml-2 text-xs text-slate-500">{c.definition}</span>
+                  <span className="ml-2 text-xs text-slate-400">{c.definition}</span>
                 </summary>
                 <div className="space-y-2 border-t border-white/5 px-4 py-3 text-sm text-slate-300">
                   <p><span className="font-semibold text-amber-300">L&apos;intuition.</span> {c.intuition}</p>
