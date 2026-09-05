@@ -168,7 +168,7 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
         {rendue ? (
           <section className="rounded-lg bg-slate-950 p-4">
             <p className="text-sm text-emerald-300">
-              ✓ Diagnostic et modèle enregistrés, la correction sera révélée au débriefing du tour.
+              ✓ Analyse rendue — la correction sera révélée au débriefing du tour.
             </p>
           </section>
         ) : (

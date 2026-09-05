@@ -270,9 +270,9 @@ describe("la carte de situation : un seul bouton, grisé tant qu'une moitié man
     const html = carte(
       situation({ diagnosis: { selected: ["a"], freeText: "" }, quizAnswers: { model_choice: "m1" } }),
     );
-    // Plus d'étiquette « Situation rendue » : juste la confirmation
-    // d'enregistrement, et le formulaire a disparu.
-    expect(html).toContain("Diagnostic et modèle enregistrés");
+    // Plus d'étiquette de statut : juste la confirmation « Analyse rendue »,
+    // et le formulaire a disparu.
+    expect(html).toContain("Analyse rendue");
     expect(html).not.toContain("statut-situation");
     expect(html).not.toContain("Valider mon analyse");
     expect(html).not.toContain('name="options"');
