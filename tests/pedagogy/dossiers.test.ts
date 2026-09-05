@@ -141,12 +141,12 @@ describe("les deux dossiers d'un atelier", () => {
   it("les corrigés restent derrière la session, le dossier élève reste public", () => {
     // Le partage des deux pages est ce qui rend la séparation réelle : une
     // page de corrigés en accès libre annulerait tout le reste.
-    const corriges = readFileSync("src/app/teacher/ateliers/[code]/dossier/page.tsx", "utf-8");
+    const corriges = readFileSync("src/app/teacher/animations/[code]/dossier/page.tsx", "utf-8");
     expect(corriges, "la page des corrigés ne demande pas de session").toContain("getSession()");
     expect(corriges, "la page des corrigés ne renvoie pas au login").toContain(
       'redirect("/teacher/login")',
     );
-    const eleve = readFileSync("src/app/ateliers/[code]/dossier/page.tsx", "utf-8");
+    const eleve = readFileSync("src/app/animations/[code]/dossier/page.tsx", "utf-8");
     expect(eleve, "le dossier élève lit les corrigés").not.toContain("dossierEnseignant");
   });
 

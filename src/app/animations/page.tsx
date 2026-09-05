@@ -4,7 +4,7 @@ import { ATELIERS, dureeTotaleHeures } from "@/config/ateliers";
 import { scenarioByCode } from "@/config/scenarios/registry";
 
 export const metadata: Metadata = {
-  alternates: { canonical: "/ateliers" },
+  alternates: { canonical: "/animations" },
   title: "Ateliers et animations",
   description:
     "Des déroulés de plusieurs séances, adossés à une partie réelle, avec les livrables attendus, la trace écrite de chaque séance et les critères d'évaluation.",
@@ -135,7 +135,7 @@ export default function AteliersPage() {
                 </div>
               </dl>
               <Link
-                href={`/ateliers/${a.code}`}
+                href={`/animations/${a.code}`}
                 className="mt-4 inline-block text-sm font-semibold text-amber-300 underline-offset-4 hover:underline"
               >
                 Voir le déroulé →

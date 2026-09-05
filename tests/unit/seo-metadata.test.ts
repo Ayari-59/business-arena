@@ -65,7 +65,7 @@ describe("pages publiques : titre distinct, description, canonique", () => {
     ["/entreprises/page", "entreprises jouables", "/entreprises"],
     ["/notions/page", "Fiches notions de gestion", "/notions"],
     ["/guide/page", "Guide de prise en main", "/guide"],
-    ["/ateliers/page", "Ateliers et animations", "/ateliers"],
+    ["/animations/page", "Ateliers et animations", "/animations"],
     ["/parcours/page", "Parcours par diplôme", "/parcours"],
     ["/fonctionnalites/page", "Fonctionnalités", "/fonctionnalites"],
     ["/orientation/page", "Choisir sa simulation", "/orientation"],
@@ -94,7 +94,7 @@ describe("pages publiques : titre distinct, description, canonique", () => {
     const source = [
       "entreprises",
       "guide",
-      "ateliers",
+      "animations",
       "parcours",
       "fonctionnalites",
       "orientation",

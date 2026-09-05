@@ -57,7 +57,7 @@ export default async function DossierElevePage({
   return (
     <main id="main" className="mx-auto max-w-3xl px-6 py-12 print:max-w-none print:px-0 print:py-0 print:text-black">
       <p className="text-xs uppercase tracking-[0.3em] text-slate-400 print:hidden">
-        <Link href={`/ateliers/${atelier.code}`} className="hover:text-slate-300">
+        <Link href={`/animations/${atelier.code}`} className="hover:text-slate-300">
           {atelier.titre}
         </Link>{" "}
         / Dossier élève
@@ -79,13 +79,13 @@ export default async function DossierElevePage({
         <div className="mt-4 flex flex-wrap gap-3 print:hidden">
           <PrintButton label="Imprimer ce dossier" />
           <Link
-            href={`/ateliers/${atelier.code}/formulaires`}
+            href={`/animations/${atelier.code}/formulaires`}
             className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-white/30"
           >
             Formulaires à remplir
           </Link>
           <a
-            href={`/ateliers/${atelier.code}/tableau-de-bord`}
+            href={`/animations/${atelier.code}/tableau-de-bord`}
             className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-white/30"
           >
             Tableau de bord en tableur
@@ -167,7 +167,7 @@ export default async function DossierElevePage({
 
               <p className="mt-1 text-xs text-slate-400 print:hidden">
                 <a
-                  href={`/ateliers/${atelier.code}/formulaires`}
+                  href={`/animations/${atelier.code}/formulaires`}
                   className="text-amber-300 underline-offset-4 hover:underline"
                 >
                   La feuille à remplir pour ce livrable
@@ -208,7 +208,7 @@ export default async function DossierElevePage({
         </p>
         <p className="mt-2 text-sm leading-relaxed text-slate-400 print:hidden">
           <a
-            href={`/ateliers/${atelier.code}/tableau-de-bord`}
+            href={`/animations/${atelier.code}/tableau-de-bord`}
             className="text-amber-300 underline-offset-4 hover:underline"
           >
             La même chose en tableur
