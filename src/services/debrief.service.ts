@@ -1,4 +1,4 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   concepts,
@@ -248,6 +248,15 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
       evidenceCount: p.evidenceCount,
     });
   }
+  // Le pilote neon-http facture chaque requête comme un aller-retour HTTPS.
+  // Plutôt qu'un upsert par (membre × concept) au fil de la boucle — des
+  // centaines pour une classe — on accumule l'état FINAL de chaque clé en
+  // mémoire (progressMap porte déjà l'accumulation) et on écrit tout d'un
+  // seul upsert multi-lignes après la boucle.
+  const progressUpserts = new Map<
+    string,
+    { userId: string; conceptId: string; mastery: string; evidenceCount: number }
+  >();
 
   const fallbackChoiceIds = toDebrief
     .filter((inst) => {
@@ -378,35 +387,69 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
         const current = progressMap.get(key);
         const mastery = updateMastery(Number(current?.mastery ?? 0), score, def.weight);
         const evidenceCount = (current?.evidenceCount ?? 0) + 1;
-        await db
-          .insert(learningProgress)
-          .values({
-            userId: member.userId,
-            conceptId,
-            mastery: mastery.toFixed(2),
-            evidenceCount: 1,
-            lastEventAt: new Date(),
-          })
-          .onConflictDoUpdate({
-            target: [learningProgress.userId, learningProgress.conceptId],
-            set: {
-              mastery: mastery.toFixed(2),
-              evidenceCount,
-              lastEventAt: new Date(),
-            },
-          });
+        // Accumulation en mémoire : plusieurs situations d'un même tour peuvent
+        // toucher le même concept pour le même élève ; progressMap porte la
+        // valeur courante, progressUpserts garde l'état FINAL à écrire.
         progressMap.set(key, { mastery: mastery.toFixed(2), evidenceCount });
+        progressUpserts.set(key, {
+          userId: member.userId,
+          conceptId,
+          mastery: mastery.toFixed(2),
+          evidenceCount,
+        });
       }
     }
   }
 
-  // Recompute skills once for all affected users
+  // Écriture groupée de la progression : un seul upsert multi-lignes au lieu
+  // d'un par (membre × concept). Sur conflit, chaque ligne applique sa propre
+  // valeur via `excluded`.
+  if (progressUpserts.size > 0) {
+    await db
+      .insert(learningProgress)
+      .values(
+        [...progressUpserts.values()].map((r) => ({
+          userId: r.userId,
+          conceptId: r.conceptId,
+          mastery: r.mastery,
+          evidenceCount: r.evidenceCount,
+          lastEventAt: new Date(),
+        })),
+      )
+      .onConflictDoUpdate({
+        target: [learningProgress.userId, learningProgress.conceptId],
+        set: {
+          mastery: sql`excluded.mastery`,
+          evidenceCount: sql`excluded.evidence_count`,
+          lastEventAt: sql`excluded.last_event_at`,
+        },
+      });
+  }
+
+  // Recalcul des compétences par axe pour tous les élèves touchés. On lit toute
+  // leur progression en UNE requête (au lieu d'un select par élève) puis on
+  // écrit tous les axes d'un seul upsert multi-lignes.
   const codeByConceptId = new Map(conceptRows.map((r) => [r.id, r.code]));
+  const allProgressByUser =
+    allUserIds.length > 0
+      ? await db
+          .select({
+            userId: learningProgress.userId,
+            mastery: learningProgress.mastery,
+            conceptId: learningProgress.conceptId,
+          })
+          .from(learningProgress)
+          .where(inArray(learningProgress.userId, allUserIds))
+      : [];
+  const progressByUser = new Map<string, { mastery: string; conceptId: string }[]>();
+  for (const p of allProgressByUser) {
+    const list = progressByUser.get(p.userId) ?? [];
+    list.push({ mastery: p.mastery, conceptId: p.conceptId });
+    progressByUser.set(p.userId, list);
+  }
+  const skillRows: (typeof playerSkills.$inferInsert)[] = [];
   for (const userId of allUserIds) {
-    const progress = await db
-      .select({ mastery: learningProgress.mastery, conceptId: learningProgress.conceptId })
-      .from(learningProgress)
-      .where(eq(learningProgress.userId, userId));
+    const progress = progressByUser.get(userId) ?? [];
     if (progress.length === 0) continue;
     const byAxis = new Map<string, number[]>();
     for (const p of progress) {
@@ -419,12 +462,17 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
     for (const axis of AXES) {
       const masteries = byAxis.get(axis);
       if (!masteries || masteries.length === 0) continue;
-      const value = aggregateAxis(masteries).toFixed(2);
-      await db
-        .insert(playerSkills)
-        .values({ userId, axis, value })
-        .onConflictDoUpdate({ target: [playerSkills.userId, playerSkills.axis], set: { value } });
+      skillRows.push({ userId, axis, value: aggregateAxis(masteries).toFixed(2) });
     }
+  }
+  if (skillRows.length > 0) {
+    await db
+      .insert(playerSkills)
+      .values(skillRows)
+      .onConflictDoUpdate({
+        target: [playerSkills.userId, playerSkills.axis],
+        set: { value: sql`excluded.value` },
+      });
   }
 }
 
