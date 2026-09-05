@@ -8,7 +8,7 @@ import {
   type PedagogyState,
 } from "@/app/arena/[gameId]/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
-import { STATUT_RENDUE, estRendue, manques, messageIncomplet } from "@/config/situation-rendu";
+import { estRendue, manques, messageIncomplet } from "@/config/situation-rendu";
 import type { SituationView } from "@/services/pedagogy.service";
 import type { SituationCategory } from "@/config/scenarios/situation-kit";
 
@@ -161,26 +161,9 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
         </details>
       ) : null}
 
-      {/* On n'affiche plus « Situation incomplète » tant qu'elle ne l'est pas :
-          le bouton grisé (et son infobulle) le disent déjà. Ne restent que la
-          confirmation de rendu et, une fois le brouillon complet, l'invite à
-          le rendre. */}
-      {rendue ? (
-        <p
-          className="mb-4 rounded-lg border border-emerald-400/30 bg-emerald-950/20 px-3 py-2 text-sm text-emerald-300"
-          data-testid="statut-situation"
-        >
-          ✓ {STATUT_RENDUE}
-        </p>
-      ) : manquants.length === 0 ? (
-        <p
-          className="mb-4 rounded-lg border border-amber-400/30 bg-amber-950/20 px-3 py-2 text-sm text-amber-300"
-          data-testid="statut-situation"
-        >
-          Brouillon complet : rendez votre situation pour qu&apos;elle soit corrigée.
-        </p>
-      ) : null}
-
+      {/* Pas d'étiquette de statut ici : le bouton de rendu grisé (et son
+          infobulle) disent déjà ce qui manque, et une fois l'analyse rendue le
+          fil d'étapes passe aux décisions — inutile d'afficher « rendue ». */}
       <div className="space-y-4">
         {rendue ? (
           <section className="rounded-lg bg-slate-950 p-4">

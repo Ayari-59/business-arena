@@ -46,6 +46,8 @@ export function SegmentedTabs({
   syncAnchors,
   label = "Sections",
   guided = false,
+  autoAdvanceTo,
+  autoAdvanceWhen = false,
 }: {
   tabs: SegmentedTab[];
   children: Record<string, ReactNode>;
@@ -53,6 +55,15 @@ export function SegmentedTabs({
   syncAnchors?: string[];
   label?: string;
   guided?: boolean;
+  /**
+   * Passe AUTOMATIQUEMENT à l'onglet `autoAdvanceTo` à l'instant où
+   * `autoAdvanceWhen` bascule de faux à vrai (ex. : l'analyse vient d'être
+   * rendue → on enchaîne sur « Décider »). On n'avance qu'à la TRANSITION : si la
+   * condition est déjà vraie au montage (retour sur un tour déjà traité), on ne
+   * force rien et l'utilisateur reste libre de naviguer.
+   */
+  autoAdvanceTo?: string;
+  autoAdvanceWhen?: boolean;
 }) {
   const baseId = useId();
   const boutons = useRef<Record<string, HTMLButtonElement | null>>({});
@@ -83,6 +94,17 @@ export function SegmentedTabs({
     window.addEventListener("hashchange", appliquerDepuisHash);
     return () => window.removeEventListener("hashchange", appliquerDepuisHash);
   }, [anchorKeys, visibleKeys]);
+
+  // Avance automatique à la TRANSITION faux→vrai de `autoAdvanceWhen` (voir la
+  // prop). `dejaVrai` retient la valeur précédente pour ne pas rebondir quand la
+  // condition est déjà vraie au montage ni à chaque re-rendu.
+  const dejaVrai = useRef(autoAdvanceWhen);
+  useEffect(() => {
+    if (autoAdvanceTo && autoAdvanceWhen && !dejaVrai.current) {
+      setActive(autoAdvanceTo);
+    }
+    dejaVrai.current = autoAdvanceWhen;
+  }, [autoAdvanceWhen, autoAdvanceTo]);
 
   if (visible.length === 0) return null;
 

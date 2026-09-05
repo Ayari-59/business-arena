@@ -266,11 +266,14 @@ describe("la carte de situation : un seul bouton, grisé tant qu'une moitié man
     expect(html).toMatch(/<button[^>]*type="submit"[^>]*disabled=""/);
   });
 
-  it("rendue : le statut d'attente remplace le formulaire", () => {
+  it("rendue : la confirmation d'enregistrement remplace le formulaire", () => {
     const html = carte(
       situation({ diagnosis: { selected: ["a"], freeText: "" }, quizAnswers: { model_choice: "m1" } }),
     );
-    expect(html).toContain(STATUT_RENDUE);
+    // Plus d'étiquette « Situation rendue » : juste la confirmation
+    // d'enregistrement, et le formulaire a disparu.
+    expect(html).toContain("Diagnostic et modèle enregistrés");
+    expect(html).not.toContain("statut-situation");
     expect(html).not.toContain("Valider mon analyse");
     expect(html).not.toContain('name="options"');
   });
@@ -307,12 +310,13 @@ describe("le bandeau d'en-tête reprend le statut à côté de « À vous de jou
     expect(html).toContain('href="#decisions"');
   });
 
-  it("rendue : en attente du débriefing, y compris une fois les décisions enregistrées", () => {
+  it("le bandeau ne montre plus de statut de situation, même une fois rendue", () => {
     const rendue = statutDesSituations([
       situation({ diagnosis: { selected: ["a"], freeText: "" }, quizAnswers: { model_choice: "m1" } }),
     ]);
-    expect(bandeau(rendue)).toContain(STATUT_RENDUE);
-    expect(bandeau(rendue, true)).toContain(STATUT_RENDUE);
+    expect(bandeau(rendue)).not.toContain("statut-situation");
+    expect(bandeau(rendue, true)).not.toContain("statut-situation");
+    expect(bandeau(rendue, true)).toContain("Décisions enregistrées");
   });
 
   it("aucune situation ce tour : rien de plus dans le bandeau", () => {

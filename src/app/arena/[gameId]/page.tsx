@@ -21,7 +21,7 @@ import { RoundStatusBanner } from "@/components/round-status-banner";
 import { EventBanner } from "@/components/event-banner";
 import { surtitreDePartie } from "@/config/scenarios/presentation";
 import { SECTOR_ICONS, SECTOR_COLORS, SECTOR_LABELS } from "@/config/scenarios/registry";
-import { libelleStatut, statutDesSituations } from "@/config/situation-rendu";
+import { statutDesSituations } from "@/config/situation-rendu";
 
 export const dynamic = "force-dynamic";
 
@@ -238,21 +238,14 @@ export default async function ArenaPage({
     />
   ) : null;
 
-  // Statut des situations du tour : on n'affiche que la CONFIRMATION une fois
-  // tout rendu. Tant qu'il reste des QCM, un « Situation incomplète » ne sert à
-  // rien — l'accordéon et son bouton grisé le disent déjà.
-  const statutBadge =
-    situations.current.length > 0 && statutSituations && statutSituations.manques.length === 0 ? (
-      <p className="rounded-lg border border-emerald-400/30 bg-emerald-950/20 px-4 py-2 text-sm text-emerald-300">
-        ✓ {libelleStatut(statutSituations)}
-      </p>
-    ) : null;
+  // En solo, une fois toutes les situations rendues, le fil d'étapes enchaîne
+  // sur « Décider » — pas d'étiquette « rendue » à afficher.
+  const toutRendu = !!statutSituations && statutSituations.manques.length === 0;
 
   // Toutes les situations du tour, empilées (mode CLASSE : un seul écran).
   const situationsBloc =
     situations.current.length > 0 && statutSituations ? (
       <section className="space-y-4">
-        {statutBadge}
         {situations.current.map((s) => (
           <SituationCard key={s.instanceId} gameId={view.gameId} situation={s} />
         ))}
@@ -385,13 +378,12 @@ export default async function ArenaPage({
     ) : null;
 
   // ÉTAPE « ANALYSER » (solo) : les aides d'analyse (points clés & leviers) en
-  // tête, puis le décompte des QCM à rendre, puis l'accordéon des situations.
-  // Le contexte (données, marché, alertes, arbitrage) vit dans « Situation ».
+  // tête, puis l'accordéon des situations. Le contexte (données, marché,
+  // alertes, arbitrage) vit dans « Situation ».
   const analyserContenu =
     situations.current.length > 0 && statutSituations ? (
       <div id="analyser" className="space-y-6">
         {pointsClesEtLeviers}
-        {statutBadge}
         {qcmBloc}
       </div>
     ) : null;
@@ -654,6 +646,10 @@ export default async function ArenaPage({
                 // résultats arrivant après la simulation.)
                 guided={view.kind === "solo"}
                 syncAnchors={["situation", "decisions"]}
+                // Solo : dès que toutes les situations sont rendues, on enchaîne
+                // sur « Décider » (pas d'étiquette « rendue », on avance).
+                autoAdvanceTo={view.kind === "solo" ? "decisions" : undefined}
+                autoAdvanceWhen={view.kind === "solo" && toutRendu}
                 tabs={
                   view.kind === "solo"
                     ? [

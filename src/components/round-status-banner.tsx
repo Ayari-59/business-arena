@@ -1,5 +1,5 @@
 import { periodLabel } from "@/config/scenarios/periodicity";
-import { libelleStatut, type StatutSituations } from "@/config/situation-rendu";
+import type { StatutSituations } from "@/config/situation-rendu";
 
 interface Props {
   currentRound: number;
@@ -8,23 +8,12 @@ interface Props {
   pendingDecisions: boolean;
   kind: "solo" | "class";
   finished: boolean;
-  /** Rendu des situations du tour ; null quand le tour n'en pose aucune. */
+  /**
+   * Rendu des situations du tour ; null quand le tour n'en pose aucune. Le
+   * bandeau n'affiche plus de statut de rendu (« Situation rendue / incomplète »
+   * ne servaient à rien) — le champ reste accepté pour compatibilité des appels.
+   */
   situations?: StatutSituations | null;
-}
-
-/**
- * Le rendu de la situation, à côté de « À vous de jouer ». On n'affiche que la
- * CONFIRMATION une fois la situation rendue : dire « Situation incomplète » tant
- * qu'elle ne l'est pas ne servait à rien — l'onglet Analyser et son bouton grisé
- * le racontent déjà — et faisait redite avec le même avertissement plus bas.
- */
-function StatutSituation({ statut }: { statut: StatutSituations | null | undefined }) {
-  if (!statut || statut.manques.length > 0) return null;
-  return (
-    <p className="mt-1 text-sm text-emerald-300" data-testid="statut-situation">
-      ✓ {libelleStatut(statut)}
-    </p>
-  );
 }
 
 export function RoundStatusBanner({
@@ -34,7 +23,6 @@ export function RoundStatusBanner({
   pendingDecisions,
   kind,
   finished,
-  situations,
 }: Props) {
   if (finished) {
     return (
@@ -58,7 +46,6 @@ export function RoundStatusBanner({
         <p className="mt-1 text-sm font-medium text-emerald-200">
           Décisions enregistrées
         </p>
-        <StatutSituation statut={situations} />
         <p className="mt-1 text-sm text-slate-400">
           {kind === "class"
             ? "En attente de la clôture du tour par l'enseignant. La page se mettra à jour automatiquement."
@@ -83,7 +70,6 @@ export function RoundStatusBanner({
         </p>
       ) : null}
       <p className="mt-2 text-sm font-medium text-amber-200">À vous de jouer</p>
-      <StatutSituation statut={situations} />
       <p className="mt-1 text-sm text-slate-400">
         Vos décisions pour ce tour sont attendues.
       </p>
