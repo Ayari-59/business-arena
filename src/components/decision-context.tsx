@@ -122,7 +122,46 @@ export function ParametersPanels({
         <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
           Le marché en face de vous
         </h3>
-        <div className="mt-2 overflow-x-auto">
+
+        {/*
+          En portrait, un tableau à cinq colonnes force soit un défilement
+          horizontal, soit des noms de clientèle repliés sur trois lignes. Sur
+          petit écran on montre donc UNE CARTE PAR CLIENTÈLE (nom en tête, ses
+          chiffres en grille) ; le tableau reprend dès `sm`.
+        */}
+        <ul className="mt-3 space-y-2 sm:hidden">
+          {intro.segments.map((seg) => (
+            <li key={seg.name} className="rounded-lg border border-white/5 bg-slate-900/60 p-3">
+              <p className="text-sm font-medium text-slate-200">{seg.name}</p>
+              <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-2">
+                <div>
+                  <dt className="text-xs uppercase tracking-wide text-slate-500">Taille</dt>
+                  <dd className="tabular-nums text-slate-300">{formatUnits(seg.size)}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs uppercase tracking-wide text-slate-500">Prix usuel</dt>
+                  <dd className="tabular-nums text-slate-300">{formatEuro(seg.refPrice)}</dd>
+                </div>
+                {showShare ? (
+                  <div>
+                    <dt className="text-xs uppercase tracking-wide text-slate-500">Votre part</dt>
+                    <dd className="tabular-nums text-amber-300">
+                      {seg.yourShare === null ? "—" : formatPercent(seg.yourShare)}
+                    </dd>
+                  </div>
+                ) : null}
+                <div>
+                  <dt className="text-xs uppercase tracking-wide text-slate-500">Règlement</dt>
+                  <dd className="text-slate-400">
+                    {seg.paymentDelayDays > 0 ? `à ${seg.paymentDelayDays} j` : "comptant"}
+                  </dd>
+                </div>
+              </dl>
+            </li>
+          ))}
+        </ul>
+
+        <div className="mt-2 hidden overflow-x-auto sm:block">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
