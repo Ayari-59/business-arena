@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getGuestUserId } from "@/lib/guest";
 import { db } from "@/db";
 import { games, rounds, players, teams } from "@/db/schema";
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 export async function GET(
   _request: Request,
@@ -12,33 +12,44 @@ export async function GET(
   if (!userId) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
 
   const { gameId } = await params;
-  const game = (await db.select().from(games).where(eq(games.id, gameId)))[0];
-  if (!game) return NextResponse.json({ error: "Partie introuvable" }, { status: 404 });
 
-  const teamRows = await db.select().from(teams).where(eq(teams.gameId, gameId));
-  const humanIds = teamRows.filter((t) => t.controller === "human").map((t) => t.id);
-  if (humanIds.length === 0) return NextResponse.json({ error: "Accès refusé" }, { status: 403 });
+  // Statut de partie + statut du tour courant en UNE requête : jointure
+  // games ⋈ rounds sur l'index courant (au lieu d'un select games puis un
+  // select rounds séparé). Le pilote neon-http facture chaque requête comme un
+  // aller-retour HTTPS, et cet endpoint est sondé par chaque élève à intervalle
+  // régulier.
+  const row = (
+    await db
+      .select({
+        currentRound: games.currentRound,
+        gameStatus: games.status,
+        roundStatus: rounds.status,
+      })
+      .from(games)
+      .leftJoin(rounds, and(eq(rounds.gameId, games.id), eq(rounds.index, games.currentRound)))
+      .where(eq(games.id, gameId))
+  )[0];
+  if (!row) return NextResponse.json({ error: "Partie introuvable" }, { status: 404 });
 
+  // Auth en UNE requête : l'utilisateur doit être joueur d'une équipe HUMAINE de
+  // cette partie (jointure players ⋈ teams), au lieu d'un select teams puis un
+  // select players. Aucune équipe humaine correspondante ⇒ accès refusé.
   const membership = (
     await db
-      .select()
+      .select({ teamId: players.teamId })
       .from(players)
-      .where(and(inArray(players.teamId, humanIds), eq(players.userId, userId)))
+      .innerJoin(teams, eq(players.teamId, teams.id))
+      .where(
+        and(eq(teams.gameId, gameId), eq(teams.controller, "human"), eq(players.userId, userId)),
+      )
   )[0];
   if (!membership) return NextResponse.json({ error: "Accès refusé" }, { status: 403 });
 
-  const currentRoundRow = (
-    await db
-      .select({ status: rounds.status })
-      .from(rounds)
-      .where(and(eq(rounds.gameId, gameId), eq(rounds.index, game.currentRound)))
-  )[0];
-
   return NextResponse.json(
     {
-      currentRound: game.currentRound,
-      roundStatus: currentRoundRow?.status ?? "pending",
-      gameStatus: game.status,
+      currentRound: row.currentRound,
+      roundStatus: row.roundStatus ?? "pending",
+      gameStatus: row.gameStatus,
     },
     { headers: { "cache-control": "no-store" } },
   );

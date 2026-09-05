@@ -204,8 +204,20 @@ export async function updateRankings(gameId: string, teamIds: string[]): Promise
   const scoreRows = roundIds.length
     ? await db.select().from(scores).where(inArray(scores.roundId, roundIds))
     : [];
+  // On ne lit que les quatre colonnes réellement utilisées (identité + les deux
+  // agrégats financiers) : un `select()` complet rapatriait les gros JSONB
+  // (états financiers, trace moteur, détail marché) de CHAQUE équipe × tour à
+  // chaque clôture — coût qui croît avec la partie, pour des données inutilisées.
   const resultRows = roundIds.length
-    ? await db.select().from(roundResults).where(inArray(roundResults.roundId, roundIds))
+    ? await db
+        .select({
+          teamId: roundResults.teamId,
+          roundId: roundResults.roundId,
+          netIncome: roundResults.netIncome,
+          netTreasury: roundResults.netTreasury,
+        })
+        .from(roundResults)
+        .where(inArray(roundResults.roundId, roundIds))
     : [];
 
   // Défaillance : l'état le plus récent de chaque équipe fait foi. Le moteur
