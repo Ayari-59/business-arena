@@ -15,7 +15,7 @@
 export const DIAGNOSTIC = "le diagnostic";
 export const MODELE = "le modèle";
 
-export const STATUT_RENDUE = "Situation rendue · en attente du débriefing";
+export const STATUT_RENDUE = "Analyse rendue · en attente du débriefing";
 
 export type Manque = typeof DIAGNOSTIC | typeof MODELE;
 

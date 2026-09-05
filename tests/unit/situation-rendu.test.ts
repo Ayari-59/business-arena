@@ -266,11 +266,14 @@ describe("la carte de situation : un seul bouton, grisé tant qu'une moitié man
     expect(html).toMatch(/<button[^>]*type="submit"[^>]*disabled=""/);
   });
 
-  it("rendue : le statut d'attente remplace le formulaire", () => {
+  it("rendue : la confirmation d'enregistrement remplace le formulaire", () => {
     const html = carte(
       situation({ diagnosis: { selected: ["a"], freeText: "" }, quizAnswers: { model_choice: "m1" } }),
     );
-    expect(html).toContain(STATUT_RENDUE);
+    // Plus d'étiquette de statut : juste la confirmation « Analyse rendue »,
+    // et le formulaire a disparu.
+    expect(html).toContain("Analyse rendue");
+    expect(html).not.toContain("statut-situation");
     expect(html).not.toContain("Valider mon analyse");
     expect(html).not.toContain('name="options"');
   });
@@ -298,19 +301,22 @@ describe("le bandeau d'en-tête reprend le statut à côté de « À vous de jou
     );
   }
 
-  it("incomplète : message et lien vers l'onglet Situation", () => {
+  it("incomplète : plus d'étiquette de statut, seul l'appel à décider demeure", () => {
     const html = bandeau(statutDesSituations([situation()]));
     expect(html).toContain("À vous de jouer");
-    expect(html).toContain("Situation incomplète : il manque le diagnostic et le modèle");
-    expect(html).toContain('href="#situation"');
+    // On n'affiche plus « Situation incomplète » : le bouton grisé le dit déjà.
+    expect(html).not.toContain("statut-situation");
+    expect(html).not.toContain("Situation incomplète");
+    expect(html).toContain('href="#decisions"');
   });
 
-  it("rendue : en attente du débriefing, y compris une fois les décisions enregistrées", () => {
+  it("le bandeau ne montre plus de statut de situation, même une fois rendue", () => {
     const rendue = statutDesSituations([
       situation({ diagnosis: { selected: ["a"], freeText: "" }, quizAnswers: { model_choice: "m1" } }),
     ]);
-    expect(bandeau(rendue)).toContain(STATUT_RENDUE);
-    expect(bandeau(rendue, true)).toContain(STATUT_RENDUE);
+    expect(bandeau(rendue)).not.toContain("statut-situation");
+    expect(bandeau(rendue, true)).not.toContain("statut-situation");
+    expect(bandeau(rendue, true)).toContain("Décisions enregistrées");
   });
 
   it("aucune situation ce tour : rien de plus dans le bandeau", () => {

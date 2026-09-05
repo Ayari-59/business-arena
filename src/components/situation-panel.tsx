@@ -8,7 +8,7 @@ import {
   type PedagogyState,
 } from "@/app/arena/[gameId]/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
-import { STATUT_RENDUE, estRendue, manques, messageIncomplet } from "@/config/situation-rendu";
+import { estRendue, manques, messageIncomplet } from "@/config/situation-rendu";
 import type { SituationView } from "@/services/pedagogy.service";
 import type { SituationCategory } from "@/config/scenarios/situation-kit";
 
@@ -161,26 +161,14 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
         </details>
       ) : null}
 
-      <p
-        className={`mb-4 rounded-lg border px-3 py-2 text-sm ${
-          rendue
-            ? "border-emerald-400/30 bg-emerald-950/20 text-emerald-300"
-            : "border-amber-400/30 bg-amber-950/20 text-amber-300"
-        }`}
-        data-testid="statut-situation"
-      >
-        {rendue
-          ? `✓ ${STATUT_RENDUE}`
-          : manquants.length > 0
-            ? `⚠ ${messageIncomplet(manquants)}`
-            : "Brouillon complet : rendez votre situation pour qu'elle soit corrigée."}
-      </p>
-
+      {/* Pas d'étiquette de statut ici : le bouton de rendu grisé (et son
+          infobulle) disent déjà ce qui manque, et une fois l'analyse rendue le
+          fil d'étapes passe aux décisions — inutile d'afficher « rendue ». */}
       <div className="space-y-4">
         {rendue ? (
           <section className="rounded-lg bg-slate-950 p-4">
             <p className="text-sm text-emerald-300">
-              ✓ Diagnostic et modèle enregistrés, la correction sera révélée au débriefing du tour.
+              ✓ Analyse rendue — la correction sera révélée au débriefing du tour.
             </p>
           </section>
         ) : (
