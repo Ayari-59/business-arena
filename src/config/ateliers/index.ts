@@ -2,6 +2,7 @@ import { ATELIER_CG1 } from "./cg1";
 import { ATELIER_MCO } from "./mco";
 import { ATELIER_DCG } from "./dcg";
 import { ATELIER_GPME } from "./gpme";
+import { ATELIER_MHR } from "./mhr";
 import { ATELIER_NDRC } from "./ndrc";
 import { ATELIER_STMG } from "./stmg";
 import type { AtelierDefinition } from "./types";
@@ -15,7 +16,7 @@ export type { AtelierDefinition, AtelierPhase, AtelierSeance } from "./types";
  * l'expertise comptable. Un enseignant de STMG ne doit pas faire défiler cinq
  * ateliers de BTS avant de trouver le sien.
  */
-export const ATELIERS: readonly AtelierDefinition[] = [ATELIER_STMG, ATELIER_CG1, ATELIER_MCO, ATELIER_NDRC, ATELIER_GPME, ATELIER_DCG];
+export const ATELIERS: readonly AtelierDefinition[] = [ATELIER_STMG, ATELIER_CG1, ATELIER_MCO, ATELIER_NDRC, ATELIER_GPME, ATELIER_MHR, ATELIER_DCG];
 
 export const atelierByCode = new Map(ATELIERS.map((a) => [a.code, a]));
 
