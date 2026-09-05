@@ -65,7 +65,7 @@ export default async function FormulairesPage({
   return (
     <main id="main" className="mx-auto max-w-3xl px-6 py-12 print:max-w-none print:px-0 print:py-0 print:text-black">
       <p className="text-xs uppercase tracking-[0.3em] text-slate-400 print:hidden">
-        <Link href={`/ateliers/${atelier.code}`} className="hover:text-slate-300">
+        <Link href={`/animations/${atelier.code}`} className="hover:text-slate-300">
           {atelier.titre}
         </Link>{" "}
         / Formulaires
@@ -86,13 +86,13 @@ export default async function FormulairesPage({
         <div className="mt-4 flex flex-wrap gap-3">
           <PrintButton label="Imprimer les formulaires" />
           <a
-            href={`/ateliers/${atelier.code}/formulaires/tableur`}
+            href={`/animations/${atelier.code}/formulaires/tableur`}
             className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-white/30"
           >
             Les mêmes en tableur
           </a>
           <Link
-            href={`/ateliers/${atelier.code}/dossier`}
+            href={`/animations/${atelier.code}/dossier`}
             className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-white/30"
           >
             Le dossier élève

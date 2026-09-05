@@ -114,7 +114,7 @@ export default async function TeacherDashboard({
         <h2 className="text-sm font-semibold text-slate-200">Créer une partie</h2>
         <p className="mt-1 text-xs text-slate-400">
           Vous ne savez pas quels réglages prendre ?{" "}
-          <Link href="/ateliers" className="text-amber-300 underline-offset-4 hover:underline">
+          <Link href="/animations" className="text-amber-300 underline-offset-4 hover:underline">
             Les ateliers professionnels
           </Link>{" "}
           donnent un déroulé de plusieurs séances avec les réglages qui vont avec.

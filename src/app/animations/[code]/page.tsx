@@ -91,7 +91,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
     <div className="mx-auto grid max-w-6xl gap-10 px-6 py-12 lg:grid-cols-[1fr_220px] print:block print:max-w-none print:px-0 print:py-0 print:text-black">
       <main id="main" className="min-w-0">
         <p className="text-xs uppercase tracking-[0.3em] text-slate-400 print:hidden">
-          <Link href="/ateliers" className="hover:text-slate-300">
+          <Link href="/animations" className="hover:text-slate-300">
             Ateliers et animations
           </Link>{" "}
           / {atelier.diplome}
@@ -114,25 +114,25 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
           <div className="mt-4 flex flex-wrap gap-3 print:hidden">
             <PrintButton label="Imprimer cette fiche" />
             <Link
-              href={`/ateliers/${atelier.code}/dossier`}
+              href={`/animations/${atelier.code}/dossier`}
               className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-white/30"
             >
               Dossier élève
             </Link>
             <Link
-              href={`/ateliers/${atelier.code}/formulaires`}
+              href={`/animations/${atelier.code}/formulaires`}
               className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-white/30"
             >
               Formulaires des livrables
             </Link>
             <Link
-              href={`/teacher/ateliers/${atelier.code}/dossier`}
+              href={`/teacher/animations/${atelier.code}/dossier`}
               className="rounded-lg border border-amber-400/40 px-4 py-2 text-sm font-medium text-amber-300 transition hover:border-amber-400 hover:bg-amber-400/10"
             >
               Corrigés des situations
             </Link>
             <a
-              href={`/teacher/ateliers/${atelier.code}/grille`}
+              href={`/teacher/animations/${atelier.code}/grille`}
               className="rounded-lg border border-amber-400/40 px-4 py-2 text-sm font-medium text-amber-300 transition hover:border-amber-400 hover:bg-amber-400/10"
             >
               Grille de correction
@@ -467,7 +467,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
         </p>
 
         <div className="mt-8 flex flex-wrap gap-4 text-sm print:hidden">
-          <Link href="/ateliers" className="text-slate-400 underline-offset-4 hover:underline">
+          <Link href="/animations" className="text-slate-400 underline-offset-4 hover:underline">
             Tous les ateliers
           </Link>
           <Link href="/entreprises" className="text-slate-400 underline-offset-4 hover:underline">
