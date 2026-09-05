@@ -130,10 +130,20 @@ export function ParametersPanels({
           chiffres en grille) ; le tableau reprend dès `sm`.
         */}
         <ul className="mt-3 space-y-2 sm:hidden">
-          {intro.segments.map((seg) => (
-            <li key={seg.name} className="rounded-lg border border-white/5 bg-slate-900/60 p-3">
-              <p className="text-sm font-medium text-slate-200">{seg.name}</p>
-              <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-2">
+          {intro.segments.map((seg) => {
+            // Les noms portent souvent un qualificatif entre parenthèses
+            // (« Étudiants (sensibles au prix) »). Laissé d'un bloc, il s'enroule
+            // sur le petit écran, parenthèse ouverte en haut, fermée en bas. On
+            // le détache : nom en tête, qualificatif en sous-titre, sans
+            // parenthèses.
+            const m = seg.name.match(/^(.*?)\s*\(([^)]*)\)\s*$/);
+            const nom = m ? m[1] : seg.name;
+            const qualif = m ? m[2] : null;
+            return (
+              <li key={seg.name} className="rounded-lg border border-white/5 bg-slate-900/60 p-3">
+                <p className="text-sm font-semibold text-slate-100">{nom}</p>
+                {qualif ? <p className="mt-0.5 text-xs text-slate-500">{qualif}</p> : null}
+                <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-2">
                 <div>
                   <dt className="text-xs uppercase tracking-wide text-slate-500">Taille</dt>
                   <dd className="tabular-nums text-slate-300">{formatUnits(seg.size)}</dd>
@@ -158,7 +168,8 @@ export function ParametersPanels({
                 </div>
               </dl>
             </li>
-          ))}
+            );
+          })}
         </ul>
 
         <div className="mt-2 hidden overflow-x-auto sm:block">
