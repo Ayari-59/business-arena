@@ -870,6 +870,31 @@ export interface CompanyRoundResult {
   kpis: Record<string, number>;
 }
 
+/**
+ * Trace moteur persistée dans `round_results.engine_trace` : la matière du
+ * débriefing, jamais exposée brute. Un SEUL type partagé par l'écriture
+ * (round-resolution.service) et la lecture (game-view.service) : sans lui, les
+ * deux listes de champs vivaient chacune de leur côté et un oubli côté lecture
+ * désérialisait `undefined` en silence.
+ */
+export interface EngineTrace {
+  production: CompanyRoundResult["production"];
+  breakeven: CompanyRoundResult["breakeven"];
+  events: string[];
+  extraOrders?: CompanyRoundResult["extraOrders"] | null;
+  orderOffer?: CompanyRoundResult["orderOffer"] | null;
+  studies?: CompanyRoundResult["studies"] | null;
+  capital?: CompanyRoundResult["capital"] | null;
+  insurance?: CompanyRoundResult["insurance"] | null;
+  supplier?: CompanyRoundResult["supplier"] | null;
+  hr?: CompanyRoundResult["hr"] | null;
+  investment?: CompanyRoundResult["investment"] | null;
+  qualityCosts?: CompanyRoundResult["qualityCosts"] | null;
+  debt?: CompanyRoundResult["debt"] | null;
+  treasury?: CompanyRoundResult["treasury"] | null;
+  bank?: CompanyRoundResult["bank"] | null;
+}
+
 export interface EventInstance {
   code: string;
   scope: "market" | "company";

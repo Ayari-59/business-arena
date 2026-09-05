@@ -16,6 +16,7 @@ import { id, timestamps } from "./_shared";
 import { classes, organizations, users } from "./identity";
 import { scenarios } from "./catalog";
 import { competitionStages } from "./competition";
+import type { EngineScenarioConfig, RoundDecisions } from "@/engine/types";
 
 export const gameMode = pgEnum("game_mode", ["learning", "competition", "contest"]);
 export const gameStatus = pgEnum("game_status", [
@@ -56,7 +57,7 @@ export const games = pgTable(
     scenarioId: uuid("scenario_id")
       .notNull()
       .references(() => scenarios.id, { onDelete: "restrict" }),
-    scenarioSnapshot: jsonb("scenario_snapshot").notNull(),
+    scenarioSnapshot: jsonb("scenario_snapshot").$type<EngineScenarioConfig>().notNull(),
     engineVersion: text("engine_version").notNull(),
     seed: bigint("seed", { mode: "number" }).notNull(),
     mode: gameMode("mode").notNull().default("learning"),
@@ -143,7 +144,7 @@ export const decisions = pgTable(
     teamId: uuid("team_id")
       .notNull()
       .references(() => teams.id, { onDelete: "cascade" }),
-    payload: jsonb("payload").notNull(), // RoundDecisions, validé contre decision_options
+    payload: jsonb("payload").$type<RoundDecisions>().notNull(), // validé contre decision_options
     forecast: jsonb("forecast"), // prévisions du joueur → analyse des écarts
     justification: text("justification"),
     /**
