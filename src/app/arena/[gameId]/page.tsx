@@ -216,48 +216,56 @@ export default async function ArenaPage({
     </>
   );
 
-  // ANALYSER : l'arbitrage du tour, les situations à lire, les points clés et les
-  // leviers d'action.
-  const analyseSection = (
+  // ARBITRAGE : la question qui cadre le tour.
+  const dilemmeSection = premierTour ? (
     <>
-      {premierTour ? (
-        <>
-          <DilemmaCard
-            title="Votre premier arbitrage"
-            question={view.intro.dilemma.question}
-            routes={view.intro.dilemma.routes}
-          />
-          <p className="text-sm leading-relaxed text-slate-300">
-            Fixez votre {view.vocabulary.priceLabel.toLowerCase()}, votre volume et vos budgets,
-            puis observez.
-          </p>
-        </>
-      ) : view.roundBriefing ? (
-        <DilemmaCard
-          title="L'arbitrage de ce tour"
-          question={view.roundBriefing.question}
-          routes={view.roundBriefing.routes}
-        />
-      ) : null}
+      <DilemmaCard
+        title="Votre premier arbitrage"
+        question={view.intro.dilemma.question}
+        routes={view.intro.dilemma.routes}
+      />
+      <p className="text-sm leading-relaxed text-slate-300">
+        Fixez votre {view.vocabulary.priceLabel.toLowerCase()}, votre volume et vos budgets,
+        puis observez.
+      </p>
+    </>
+  ) : view.roundBriefing ? (
+    <DilemmaCard
+      title="L'arbitrage de ce tour"
+      question={view.roundBriefing.question}
+      routes={view.roundBriefing.routes}
+    />
+  ) : null;
 
-      {situations.current.length > 0 && statutSituations ? (
-        <section className="space-y-4">
-          <p
-            className={`rounded-lg border px-4 py-2 text-sm ${
-              statutSituations.manques.length === 0
-                ? "border-emerald-400/30 bg-emerald-950/20 text-emerald-300"
-                : "border-amber-400/30 bg-amber-950/20 text-amber-300"
-            }`}
-          >
-            {statutSituations.manques.length === 0 ? "✓ " : "⚠ "}
-            {libelleStatut(statutSituations)}
-          </p>
-          {situations.current.map((s) => (
-            <SituationCard key={s.instanceId} gameId={view.gameId} situation={s} />
-          ))}
-        </section>
-      ) : null}
+  // Statut des situations du tour (combien à rendre) — au-dessus des QCM.
+  const statutBadge =
+    situations.current.length > 0 && statutSituations ? (
+      <p
+        className={`rounded-lg border px-4 py-2 text-sm ${
+          statutSituations.manques.length === 0
+            ? "border-emerald-400/30 bg-emerald-950/20 text-emerald-300"
+            : "border-amber-400/30 bg-amber-950/20 text-amber-300"
+        }`}
+      >
+        {statutSituations.manques.length === 0 ? "✓ " : "⚠ "}
+        {libelleStatut(statutSituations)}
+      </p>
+    ) : null;
 
+  // Toutes les situations du tour, empilées (mode CLASSE : un seul écran).
+  const situationsBloc =
+    situations.current.length > 0 && statutSituations ? (
+      <section className="space-y-4">
+        {statutBadge}
+        {situations.current.map((s) => (
+          <SituationCard key={s.instanceId} gameId={view.gameId} situation={s} />
+        ))}
+      </section>
+    ) : null;
+
+  // POINTS CLÉS & LEVIERS : les aides d'analyse du tour (agrégées des situations).
+  const pointsClesEtLeviers = (
+    <>
       {(() => {
         const allHints = [...new Map(
           situations.current
@@ -349,6 +357,22 @@ export default async function ArenaPage({
       })()}
     </>
   );
+
+  // ÉTAPES D'ANALYSE (solo) : une par situation, pour séparer les QCM d'un tour
+  // — chaque situation son propre écran. Le cadrage (arbitrage, points clés,
+  // leviers) et le marché vivent dans « Données & marché » ; chaque étape ici
+  // ne porte que sa situation (le statut du tour s'affiche sur la première).
+  const analyseSteps = situations.current.map((s, i) => ({
+    key: `analyser-${i}`,
+    label: situations.current.length > 1 ? `Analyser ${i + 1}` : "Analyser",
+    node: (
+      <div id={i === 0 ? "situation" : `situation-${i}`} className="space-y-4">
+        {i === 0 ? statutBadge : null}
+        <SituationCard gameId={view.gameId} situation={s} />
+      </div>
+    ),
+  }));
+  const analyseChildren = Object.fromEntries(analyseSteps.map((st) => [st.key, st.node]));
 
   return (
     <main id="main" className="mx-auto max-w-5xl px-6 pt-6 pb-12">
@@ -595,22 +619,24 @@ export default async function ArenaPage({
               <SegmentedTabs
                 defaultKey={view.kind === "solo" ? "donnees" : "situation"}
                 // En solo, le tour est un fil d'étapes guidé qui décompose
-                // « Analyser » : Données → (Marché & alertes, dès le 2e tour) →
-                // Analyser, puis Décider — chaque écran court, avec un bouton
-                // « étape suivante » explicite. En classe, l'onglet « Situation »
-                // réunit tout et les trois onglets restent libres. (L'onglet
-                // Résultats du tour actif est vide tant qu'il n'est pas clos ;
-                // inutile en solo, les résultats arrivant après la simulation.)
+                // « Analyser » : « Données & marché » (paramètres, capacité, où
+                // vous en êtes, événements, saison, arbitrage et aides d'analyse)
+                // → UNE ÉTAPE PAR SITUATION (chaque QCM sur son propre écran) →
+                // Décider. En classe, l'onglet « Situation » réunit tout et les
+                // trois onglets restent libres. (L'onglet Résultats du tour actif
+                // est vide tant qu'il n'est pas clos ; inutile en solo, les
+                // résultats arrivant après la simulation.)
                 guided={view.kind === "solo"}
                 syncAnchors={["situation", "decisions"]}
                 tabs={
                   view.kind === "solo"
                     ? [
-                        { key: "donnees", label: "Données", icon: "📊" },
-                        ...(premierTour
-                          ? []
-                          : [{ key: "marche", label: "Marché & alertes", icon: "⚡" }]),
-                        { key: "situation", label: "Analyser", icon: "🔍" },
+                        {
+                          key: "donnees",
+                          label: premierTour ? "Données" : "Données & marché",
+                          icon: "📊",
+                        },
+                        ...analyseSteps.map((st) => ({ key: st.key, label: st.label, icon: "🔍" })),
                         { key: "decisions", label: "Décider", icon: "✏️" },
                       ]
                     : [
@@ -621,26 +647,26 @@ export default async function ArenaPage({
                 }
               >
                 {{
+                  // Données & marché : tout le contexte et les aides d'analyse du
+                  // tour, réunis avant les QCM (marché & alertes intégrés ici).
                   donnees: (
                     <div id="donnees" className="space-y-6">
                       {donneesSection}
-                      {premierTour ? alertesSection : null}
+                      {alertesSection}
+                      {dilemmeSection}
+                      {pointsClesEtLeviers}
                     </div>
                   ),
-                  marche: premierTour ? null : (
-                    <div id="marche" className="space-y-6">{alertesSection}</div>
-                  ),
+                  // Une étape par situation (solo) : chaque QCM sur son écran.
+                  ...analyseChildren,
+                  // Mode classe : l'onglet « Situation » réunit tout sur un écran.
                   situation: (
                     <div id="situation" className="space-y-6">
-                      {view.kind === "solo" ? (
-                        analyseSection
-                      ) : (
-                        <>
-                          {donneesSection}
-                          {alertesSection}
-                          {analyseSection}
-                        </>
-                      )}
+                      {donneesSection}
+                      {alertesSection}
+                      {dilemmeSection}
+                      {situationsBloc}
+                      {pointsClesEtLeviers}
                     </div>
                   ),
                   decisions: (
