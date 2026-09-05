@@ -1146,11 +1146,13 @@ export function DecisionForm({
         // étape à l'autre, et « Valider » (envoi réel) à la dernière seulement.
         // Le bouton d'avance est de type `button` : changer d'étape ne soumet
         // rien, seul le « Valider » final déclenche la résolution du tour.
-        // Sur mobile, l'action principale passe en pleine largeur sur sa propre
-        // ligne (via `order` + `flex-wrap`) : sinon, coincée entre « Précédent »
-        // et « Étape X/Y », elle rétrécissait, son libellé passait à la ligne et
-        // débordait le bas de l'écran. Sur grand écran, tout revient sur une
-        // seule rangée : Précédent · Étape · action.
+        // Sur mobile, l'action principale se replie sur sa propre ligne (via
+        // `order` + `flex-wrap`), calée à droite par `ml-auto` : coincée entre
+        // « Précédent » et « Étape X/Y », elle rétrécissait et son libellé
+        // débordait. On garde un bouton à la TAILLE DE SON CONTENU plutôt qu'une
+        // barre pleine largeur, qui paraissait trop lourde sur téléphone. Sur
+        // grand écran, tout revient sur une seule rangée : Précédent · Étape ·
+        // action (poussée à droite par le `sm:mr-auto` du compteur).
         <div className="flex flex-wrap items-center gap-3 border-t border-white/10 pt-4">
           <button
             type="button"
@@ -1167,12 +1169,12 @@ export function DecisionForm({
             <button
               type="submit"
               disabled={pending}
-              className="order-1 w-full rounded-lg bg-amber-400 px-5 py-2.5 text-center text-sm font-semibold text-slate-950 transition hover:bg-amber-300 disabled:cursor-wait disabled:opacity-60 sm:order-3 sm:w-auto"
+              className="order-1 ml-auto rounded-lg bg-amber-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 disabled:cursor-wait disabled:opacity-60 sm:order-3 sm:ml-0"
             >
               {pending
                 ? "Envoi en cours…"
                 : kind === "solo"
-                  ? "Valider mes décisions et simuler"
+                  ? "Valider et simuler"
                   : alreadySubmitted
                     ? "Mettre à jour mes décisions validées"
                     : "Valider les décisions de l'équipe"}
@@ -1181,7 +1183,7 @@ export function DecisionForm({
             <button
               type="button"
               onClick={() => setEtape((e) => Math.min(total - 1, Math.min(e, total - 1) + 1))}
-              className="order-1 w-full rounded-lg bg-amber-400 px-5 py-2.5 text-center text-sm font-semibold text-slate-950 transition hover:bg-amber-300 sm:order-3 sm:w-auto"
+              className="order-1 ml-auto rounded-lg bg-amber-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 sm:order-3 sm:ml-0"
             >
               Suivant →
             </button>
