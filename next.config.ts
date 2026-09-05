@@ -6,9 +6,9 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   headers: async () => [
     {
-      // Les en-têtes statiques, servis partout (fichiers statiques compris) :
-      // ils ne dépendent pas de la requête. La CSP, elle, porte un nonce par
-      // requête et est posée par le proxy (src/proxy.ts), pas ici.
+      // Tous les en-têtes de sécurité, CSP comprise, servis partout (fichiers
+      // statiques compris). Ils ne dépendent pas de la requête : les pages
+      // restent donc éligibles au rendu statique (plus de nonce par requête).
       source: "/(.*)",
       headers: securityHeaders(),
     },

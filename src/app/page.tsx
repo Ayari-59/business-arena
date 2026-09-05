@@ -8,7 +8,12 @@ import { SCENARIOS } from "@/config/scenarios/registry";
 import { LIENS_LEGAUX, NAVIGATION } from "@/config/navigation";
 import { DESCRIPTION_ACCUEIL, TITRE_ACCUEIL } from "@/config/seo";
 
-export const dynamic = "force-dynamic";
+// La landing ne lit que la configuration de plateforme (rien par utilisateur) :
+// on la met en cache et on la régénère au plus toutes les 5 min (ISR) plutôt
+// que de la recalculer à chaque visite — l'essentiel du trafic public et des
+// robots tape ici. (Avant en force-dynamic ; le nonce CSP par requête forçait
+// de toute façon tout le site en dynamique, ce n'est plus le cas.)
+export const revalidate = 300;
 
 /**
  * Landing page (§34) : moderne, immersive, compréhensible par un étudiant de

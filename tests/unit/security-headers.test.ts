@@ -1,8 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { NextRequest } from "next/server";
 import nextConfig from "../../next.config";
 import { CSP_HEADER_NAME, contentSecurityPolicy, securityHeaders } from "@/config/security-headers";
-import { proxy } from "@/proxy";
 
 /**
  * LES EN-TÊTES DE SÉCURITÉ SONT SERVIS SUR TOUTES LES RÉPONSES.
@@ -12,9 +10,10 @@ import { proxy } from "@/proxy";
  * Permissions-Policy absents ; X-Powered-By: Next.js ; HSTS sans
  * includeSubDomains ni preload.
  *
- * Deux sources : les cinq en-têtes statiques (next.config, « /(.*) ») et la
- * CSP à nonce (le proxy). La CSP ne peut pas être figée dans next.config : son
- * nonce change à chaque requête.
+ * Tous ces en-têtes — CSP comprise — sont STATIQUES et posés par next.config
+ * sur « /(.*) ». On a renoncé au nonce par requête (qui imposait un middleware
+ * et un rendu dynamique de tout le site) : la CSP reste active mais tolère les
+ * scripts inline.
  */
 
 const STATIQUES = [
@@ -43,10 +42,10 @@ describe("configuration Next", () => {
     for (const attendu of STATIQUES) expect(cles).toContain(attendu);
   });
 
-  it("ne fige pas la CSP dans next.config : elle porte un nonce, c'est le rôle du proxy", async () => {
+  it("pose la CSP en statique sur toutes les routes (plus de nonce, plus de proxy)", async () => {
     const globale = await regleGlobale();
     const cles = globale.headers.map((h) => h.key);
-    expect(cles).not.toContain("Content-Security-Policy");
+    expect(cles).toContain("Content-Security-Policy");
     expect(cles).not.toContain("Content-Security-Policy-Report-Only");
   });
 
@@ -73,8 +72,8 @@ describe("valeurs des en-têtes statiques", () => {
     );
   });
 
-  it("n'inclut plus la CSP : elle est portée par le proxy", () => {
-    expect(parCle["Content-Security-Policy"]).toBeUndefined();
+  it("inclut la CSP parmi les en-têtes statiques", () => {
+    expect(parCle["Content-Security-Policy"]).toBeTruthy();
   });
 });
 
@@ -89,50 +88,24 @@ describe("politique de sécurité du contenu", () => {
     expect(CSP_HEADER_NAME).toBe("Content-Security-Policy");
   });
 
-  it("en production : scripts au nonce et 'strict-dynamic', jamais 'unsafe-inline' ni eval", () => {
-    const csp = contentSecurityPolicy("TESTNONCE", "production");
+  it("en production : politique stricte, scripts inline tolérés, jamais d'eval ni de tiers", () => {
+    const csp = contentSecurityPolicy("production");
     expect(directive(csp, "default-src")).toBe("default-src 'self'");
     expect(directive(csp, "frame-ancestors")).toBe("frame-ancestors 'none'");
     expect(directive(csp, "base-uri")).toBe("base-uri 'self'");
     expect(directive(csp, "form-action")).toBe("form-action 'self'");
     expect(directive(csp, "object-src")).toBe("object-src 'none'");
     expect(directive(csp, "connect-src")).toBe("connect-src 'self'");
-    // Le cœur du durcissement : le nonce remplace 'unsafe-inline' sur les
-    // scripts ; 'strict-dynamic' étend la confiance aux scripts qu'ils chargent.
-    expect(directive(csp, "script-src")).toBe(
-      "script-src 'self' 'nonce-TESTNONCE' 'strict-dynamic'",
-    );
+    expect(directive(csp, "script-src")).toBe("script-src 'self' 'unsafe-inline'");
     expect(csp).not.toContain("'unsafe-eval'");
-    // Les styles inline de React (attributs style=) restent tolérés.
     expect(directive(csp, "style-src")).toBe("style-src 'self' 'unsafe-inline'");
     // Aucun hôte tiers : rien à charger ailleurs.
     expect(csp).not.toMatch(/https?:\/\//);
   });
 
   it("en développement seulement : eval et WebSocket pour le rechargement", () => {
-    const csp = contentSecurityPolicy("TESTNONCE", "development");
+    const csp = contentSecurityPolicy("development");
     expect(csp).toContain("'unsafe-eval'");
     expect(csp).toContain("ws: wss:");
-  });
-});
-
-describe("proxy : la CSP à nonce", () => {
-  const cspDe = (url: string) =>
-    proxy(new NextRequest(new URL(url))).headers.get("Content-Security-Policy");
-
-  it("pose une CSP bloquante avec un nonce sur la réponse", () => {
-    const csp = cspDe("http://localhost/compete");
-    expect(csp).toBeTruthy();
-    const scriptSrc = csp!
-      .split(";")
-      .map((d) => d.trim())
-      .find((d) => d.startsWith("script-src "))!;
-    expect(scriptSrc).toMatch(/'nonce-[^']+'/);
-    expect(scriptSrc).toContain("'strict-dynamic'");
-    expect(scriptSrc).not.toContain("'unsafe-inline'");
-  });
-
-  it("tire un nonce différent à chaque requête", () => {
-    expect(cspDe("http://localhost/")).not.toBe(cspDe("http://localhost/"));
   });
 });
