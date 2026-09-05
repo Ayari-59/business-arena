@@ -435,24 +435,12 @@ export interface StudyReports {
 }
 
 /**
- * Ligne de résultat persistée (table `roundResults`) telle que lue ici : on ne
- * type que les champs relus pour reconstituer un `CompanyRoundResult`.
+ * Ligne de résultat persistée : le type de la table fait foi (`$inferSelect`),
+ * plutôt qu'une interface miroir recopiée à la main qui divergeait du schéma
+ * sans avertissement. Les colonnes JSONB portent désormais leur type (voir
+ * `db/schema/results.ts`).
  */
-interface PersistedResultRow {
-  teamId: string;
-  roundId: string;
-  incomeStatement: unknown;
-  balanceSheet: unknown;
-  cashFlow: unknown;
-  frng: unknown;
-  bfr: unknown;
-  netTreasury: unknown;
-  marketShare: unknown;
-  marketDetail: unknown;
-  revenue: unknown;
-  netIncome: unknown;
-  engineTrace: unknown;
-}
+type PersistedResultRow = typeof roundResults.$inferSelect;
 
 /**
  * Reconstitue le résultat complet d'un tour à partir de sa ligne persistée et
@@ -463,40 +451,22 @@ function reconstructResult(
   row: PersistedResultRow,
   taxRate: number,
 ): { result: CompanyRoundResult; events: string[] } {
-  const trace = row.engineTrace as {
-    production: CompanyRoundResult["production"];
-    breakeven: CompanyRoundResult["breakeven"];
-    events: string[];
-    extraOrders?: CompanyRoundResult["extraOrders"] | null;
-    orderOffer?: CompanyRoundResult["orderOffer"] | null;
-    studies?: CompanyRoundResult["studies"] | null;
-    capital?: CompanyRoundResult["capital"] | null;
-    insurance?: CompanyRoundResult["insurance"] | null;
-    supplier?: CompanyRoundResult["supplier"] | null;
-    hr?: CompanyRoundResult["hr"] | null;
-    investment?: CompanyRoundResult["investment"] | null;
-    qualityCosts?: CompanyRoundResult["qualityCosts"] | null;
-    debt?: CompanyRoundResult["debt"] | null;
-    treasury?: CompanyRoundResult["treasury"] | null;
-    bank?: CompanyRoundResult["bank"] | null;
-  };
+  // `engineTrace` porte désormais le type `EngineTrace` (colonne typée) : plus
+  // de cast, plus de liste de champs recopiée en face de celle de l'écriture.
+  const trace = row.engineTrace;
   const result: CompanyRoundResult = {
     companyId: row.teamId,
-    incomeStatement: row.incomeStatement as CompanyRoundResult["incomeStatement"],
-    balanceSheet: row.balanceSheet as CompanyRoundResult["balanceSheet"],
-    cashFlow: row.cashFlow as CompanyRoundResult["cashFlow"],
+    incomeStatement: row.incomeStatement,
+    balanceSheet: row.balanceSheet,
+    cashFlow: row.cashFlow,
     functionalBalance: {
       frng: Number(row.frng),
       bfr: Number(row.bfr),
       netTreasury: Number(row.netTreasury),
     },
-    ratios: computeRatios(
-      row.incomeStatement as CompanyRoundResult["incomeStatement"],
-      row.balanceSheet as CompanyRoundResult["balanceSheet"],
-      taxRate,
-    ),
+    ratios: computeRatios(row.incomeStatement, row.balanceSheet, taxRate),
     market: {
-      bySegment: row.marketDetail as CompanyRoundResult["market"]["bySegment"],
+      bySegment: row.marketDetail,
       totalShare: Number(row.marketShare),
     },
     production: trace.production,
@@ -672,12 +642,12 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
   if (lastRound) {
     const row = gameResults.find((r) => r.roundId === lastRound.id && r.teamId === playerTeam.id);
     if (row) {
-      const rec = reconstructResult(row as PersistedResultRow, taxRate);
+      const rec = reconstructResult(row, taxRate);
       lastResult = rec.result;
       lastEvents = rec.events;
     }
     const decisionRow = playerDecisionRows.find((d) => d.roundId === lastRound.id);
-    if (decisionRow) lastDecisions = decisionRow.payload as RoundDecisions;
+    if (decisionRow) lastDecisions = decisionRow.payload;
   }
 
   // Tableau de bord complet de CHAQUE tour résolu (accordéon de l'arène) : on
@@ -690,17 +660,14 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     const idx = roundIndexById.get(rnd.id)!;
     const row = gameResults.find((g) => g.roundId === rnd.id && g.teamId === playerTeam.id);
     if (!row) continue;
-    const { result, events } = reconstructResult(row as PersistedResultRow, taxRate);
-    const dec =
-      (playerDecisionRows.find((d) => d.roundId === rnd.id)?.payload as RoundDecisions | undefined) ??
-      null;
+    const { result, events } = reconstructResult(row, taxRate);
+    const dec = playerDecisionRows.find((d) => d.roundId === rnd.id)?.payload ?? null;
     const prevRnd = resolved[i - 1];
     const prevRow = prevRnd
       ? gameResults.find((g) => g.roundId === prevRnd.id && g.teamId === playerTeam.id)
       : undefined;
-    const prevSegments =
-      (prevRow?.marketDetail as CompanyRoundResult["market"]["bySegment"]) ?? null;
-    const rowsOfRound = gameResults.filter((g) => g.roundId === rnd.id) as PersistedResultRow[];
+    const prevSegments = prevRow?.marketDetail ?? null;
+    const rowsOfRound = gameResults.filter((g) => g.roundId === rnd.id);
     periods.push({
       round: idx,
       result,
