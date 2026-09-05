@@ -238,18 +238,13 @@ export default async function ArenaPage({
     />
   ) : null;
 
-  // Statut des situations du tour (combien à rendre) — au-dessus des QCM.
+  // Statut des situations du tour : on n'affiche que la CONFIRMATION une fois
+  // tout rendu. Tant qu'il reste des QCM, un « Situation incomplète » ne sert à
+  // rien — l'accordéon et son bouton grisé le disent déjà.
   const statutBadge =
-    situations.current.length > 0 && statutSituations ? (
-      <p
-        className={`rounded-lg border px-4 py-2 text-sm ${
-          statutSituations.manques.length === 0
-            ? "border-emerald-400/30 bg-emerald-950/20 text-emerald-300"
-            : "border-amber-400/30 bg-amber-950/20 text-amber-300"
-        }`}
-      >
-        {statutSituations.manques.length === 0 ? "✓ " : "⚠ "}
-        {libelleStatut(statutSituations)}
+    situations.current.length > 0 && statutSituations && statutSituations.manques.length === 0 ? (
+      <p className="rounded-lg border border-emerald-400/30 bg-emerald-950/20 px-4 py-2 text-sm text-emerald-300">
+        ✓ {libelleStatut(statutSituations)}
       </p>
     ) : null;
 

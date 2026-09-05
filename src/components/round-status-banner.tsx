@@ -13,27 +13,16 @@ interface Props {
 }
 
 /**
- * Le rendu de la situation, à côté de « À vous de jouer » : une équipe qui
- * n'a rendu qu'une moitié doit le lire sans ouvrir l'onglet Situation.
+ * Le rendu de la situation, à côté de « À vous de jouer ». On n'affiche que la
+ * CONFIRMATION une fois la situation rendue : dire « Situation incomplète » tant
+ * qu'elle ne l'est pas ne servait à rien — l'onglet Analyser et son bouton grisé
+ * le racontent déjà — et faisait redite avec le même avertissement plus bas.
  */
 function StatutSituation({ statut }: { statut: StatutSituations | null | undefined }) {
-  if (!statut) return null;
-  const rendue = statut.manques.length === 0;
+  if (!statut || statut.manques.length > 0) return null;
   return (
-    <p
-      className={`mt-1 text-sm ${rendue ? "text-emerald-300" : "text-amber-300"}`}
-      data-testid="statut-situation"
-    >
-      {rendue ? "✓ " : "⚠ "}
-      {libelleStatut(statut)}
-      {!rendue ? (
-        <>
-          {" · "}
-          <a href="#situation" className="underline hover:text-amber-200">
-            Ouvrir la situation
-          </a>
-        </>
-      ) : null}
+    <p className="mt-1 text-sm text-emerald-300" data-testid="statut-situation">
+      ✓ {libelleStatut(statut)}
     </p>
   );
 }

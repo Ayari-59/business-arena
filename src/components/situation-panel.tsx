@@ -161,20 +161,25 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
         </details>
       ) : null}
 
-      <p
-        className={`mb-4 rounded-lg border px-3 py-2 text-sm ${
-          rendue
-            ? "border-emerald-400/30 bg-emerald-950/20 text-emerald-300"
-            : "border-amber-400/30 bg-amber-950/20 text-amber-300"
-        }`}
-        data-testid="statut-situation"
-      >
-        {rendue
-          ? `✓ ${STATUT_RENDUE}`
-          : manquants.length > 0
-            ? `⚠ ${messageIncomplet(manquants)}`
-            : "Brouillon complet : rendez votre situation pour qu'elle soit corrigée."}
-      </p>
+      {/* On n'affiche plus « Situation incomplète » tant qu'elle ne l'est pas :
+          le bouton grisé (et son infobulle) le disent déjà. Ne restent que la
+          confirmation de rendu et, une fois le brouillon complet, l'invite à
+          le rendre. */}
+      {rendue ? (
+        <p
+          className="mb-4 rounded-lg border border-emerald-400/30 bg-emerald-950/20 px-3 py-2 text-sm text-emerald-300"
+          data-testid="statut-situation"
+        >
+          ✓ {STATUT_RENDUE}
+        </p>
+      ) : manquants.length === 0 ? (
+        <p
+          className="mb-4 rounded-lg border border-amber-400/30 bg-amber-950/20 px-3 py-2 text-sm text-amber-300"
+          data-testid="statut-situation"
+        >
+          Brouillon complet : rendez votre situation pour qu&apos;elle soit corrigée.
+        </p>
+      ) : null}
 
       <div className="space-y-4">
         {rendue ? (
