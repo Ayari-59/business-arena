@@ -238,10 +238,6 @@ export default async function ArenaPage({
     />
   ) : null;
 
-  // En solo, une fois toutes les situations rendues, le fil d'étapes enchaîne
-  // sur « Décider » — pas d'étiquette « rendue » à afficher.
-  const toutRendu = !!statutSituations && statutSituations.manques.length === 0;
-
   // Toutes les situations du tour, empilées (mode CLASSE : un seul écran).
   const situationsBloc =
     situations.current.length > 0 && statutSituations ? (
@@ -646,10 +642,6 @@ export default async function ArenaPage({
                 // résultats arrivant après la simulation.)
                 guided={view.kind === "solo"}
                 syncAnchors={["situation", "decisions"]}
-                // Solo : dès que toutes les situations sont rendues, on enchaîne
-                // sur « Décider » (pas d'étiquette « rendue », on avance).
-                autoAdvanceTo={view.kind === "solo" ? "decisions" : undefined}
-                autoAdvanceWhen={view.kind === "solo" && toutRendu}
                 tabs={
                   view.kind === "solo"
                     ? [
