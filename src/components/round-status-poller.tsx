@@ -72,6 +72,20 @@ export function RoundStatusPoller({
           }
 
           if (changed) router.refresh();
+
+          // Côté prof : une fois que TOUTES les équipes humaines ont rendu,
+          // le compteur ne bougera plus jusqu'à ce que le prof clôture le tour
+          // (ce qui recharge la page et remonte le poller). Inutile de continuer
+          // à sonder — on arrête. Le retour sur l'onglet relancera un sondage.
+          if (
+            endpoint === "submissions" &&
+            typeof data.submittedCount === "number" &&
+            typeof data.totalHumanTeams === "number" &&
+            data.totalHumanTeams > 0 &&
+            data.submittedCount >= data.totalHumanTeams
+          ) {
+            return; // `finally` remet `fetching` à false ; pas de reprogrammation
+          }
         }
       } catch {
         // erreur réseau — silencieux, on retentera au prochain tour

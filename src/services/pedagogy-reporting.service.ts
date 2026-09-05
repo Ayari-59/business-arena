@@ -75,7 +75,13 @@ export async function getTeamSituations(
     );
   if (instances.length === 0) return { current: [], debriefedByRound: [], missedPolicy: policy };
 
-  const situationRows = await db.select().from(situations);
+  // On ne charge que les situations réellement référencées par les instances de
+  // cette équipe, pas toute la table (lue à chaque rendu de l'arène).
+  const situationIds = [...new Set(instances.map((i) => i.situationId))];
+  const situationRows = await db
+    .select()
+    .from(situations)
+    .where(inArray(situations.id, situationIds));
   const codeById = new Map(situationRows.map((r) => [r.id, r.code]));
   const quizMode = quizModeFromProfile(game.difficultyProfile);
   const hintCap = hintCapOf(game);
