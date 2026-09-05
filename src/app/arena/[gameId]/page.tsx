@@ -365,7 +365,11 @@ export default async function ArenaPage({
   // ne porte que sa situation (le statut du tour s'affiche sur la première).
   const analyseSteps = situations.current.map((s, i) => ({
     key: `analyser-${i}`,
-    label: situations.current.length > 1 ? `Analyser ${i + 1}` : "Analyser",
+    // Quand le tour ne pose qu'une situation, « Analyser » suffit. Dès qu'il y
+    // en a plusieurs, un « Analyser 1 / 2 » générique ne dit rien du contenu :
+    // on nomme chaque étape par le TITRE de sa situation (tronqué par le fil
+    // d'étapes), pour que le joueur sache ce qu'il va analyser avant d'y aller.
+    label: situations.current.length > 1 ? s.title : "Analyser",
     node: (
       <div id={i === 0 ? "situation" : `situation-${i}`} className="space-y-4">
         {i === 0 ? statutBadge : null}
