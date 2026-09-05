@@ -113,8 +113,13 @@ export async function getPlatformConfig(): Promise<PlatformConfig> {
   try {
     const row = (await db.select().from(platformSettings).where(eq(platformSettings.id, 1)))[0];
     return { ...DEFAULT_CONFIG, ...((row?.settings as Partial<PlatformConfig>) ?? {}) };
-  } catch {
-    return { ...DEFAULT_CONFIG };
+  } catch (e) {
+    // Panne base : on NE retombe PAS sur les défauts permissifs. Renvoyer
+    // allowPublicPlay/allowSelfServiceTeachers à true en cas d'incident
+    // OUVRIRAIT le jeu public et l'auto-inscription enseignant sans contrôle.
+    // Repli FERMÉ (et on journalise) : on préfère brider que d'ouvrir par erreur.
+    console.error("[getPlatformConfig] lecture de la config plateforme échouée :", e);
+    return { ...DEFAULT_CONFIG, allowPublicPlay: false, allowSelfServiceTeachers: false };
   }
 }
 
