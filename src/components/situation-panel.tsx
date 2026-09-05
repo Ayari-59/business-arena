@@ -274,7 +274,7 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
                 title={complet ? undefined : messageIncomplet(manquants)}
                 className="rounded-lg bg-amber-400 px-5 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {renduPending ? "Envoi…" : "Rendre ma situation"}
+                {renduPending ? "Envoi…" : "Valider mon analyse"}
               </button>
               {!complet ? (
                 <p className="text-xs text-slate-500">

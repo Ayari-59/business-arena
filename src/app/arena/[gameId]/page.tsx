@@ -148,17 +148,16 @@ export default async function ArenaPage({
       />
     </section>
   ) : (
-    <section className="space-y-3 rounded-xl border border-white/10 bg-slate-900 p-6">
-      <div>
-        <h2 className="text-sm font-semibold text-slate-200">Vos paramètres et votre capacité</h2>
-        <p className="mt-1 text-xs text-slate-500">Les données avec lesquelles vous entamez ce tour.</p>
-      </div>
-      <ParametersPanels
-        intro={view.intro}
-        vocabulary={view.vocabulary}
-        capacityFacts={view.capacityFacts}
-      />
-    </section>
+    // Dès le 2ᵉ tour, on montre les panneaux directement : pas d'en-tête « Vos
+    // paramètres et votre capacité » ni de carte englobante par-dessus, qui
+    // faisaient doublon avec les titres propres des panneaux (« Votre
+    // entreprise », « Le marché en face de vous ») et rognaient la largeur sur
+    // téléphone (une carte dans une carte).
+    <ParametersPanels
+      intro={view.intro}
+      vocabulary={view.vocabulary}
+      capacityFacts={view.capacityFacts}
+    />
   );
 
   // MARCHÉ & ALERTES : ce qui a bougé et ce qu'on vous signale — où vous en êtes

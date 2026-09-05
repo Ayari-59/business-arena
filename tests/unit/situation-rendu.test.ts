@@ -246,7 +246,7 @@ describe("la carte de situation : un seul bouton, grisé tant qu'une moitié man
   it("rien de rendu : statut en tête, bouton unique et désactivé", () => {
     const html = carte(situation());
     expect(html).toContain("Situation incomplète : il manque le diagnostic et le modèle");
-    expect(html).toContain("Rendre ma situation");
+    expect(html).toContain("Valider mon analyse");
     expect(html).not.toContain("Enregistrer mon diagnostic");
     expect(html).not.toContain("Valider mes réponses");
     expect(html.match(/type="submit"/g)?.length).toBe(1);
@@ -271,7 +271,7 @@ describe("la carte de situation : un seul bouton, grisé tant qu'une moitié man
       situation({ diagnosis: { selected: ["a"], freeText: "" }, quizAnswers: { model_choice: "m1" } }),
     );
     expect(html).toContain(STATUT_RENDUE);
-    expect(html).not.toContain("Rendre ma situation");
+    expect(html).not.toContain("Valider mon analyse");
     expect(html).not.toContain('name="options"');
   });
 
