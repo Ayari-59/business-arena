@@ -114,10 +114,11 @@ export default async function ArenaPage({
     );
   }
 
-  // ── Contenu de la phase « Analyser », en trois sections réutilisables ──────
-  // En solo, le tour guidé décompose « Analyser » en étapes courtes : Données →
-  // (Marché & alertes, dès le 2ᵉ tour) → Analyser. En classe, l'onglet
-  // « Situation » les réunit sur un seul écran. On extrait donc trois blocs
+  // ── Contenu du tour, en sections réutilisables ────────────────────────────
+  // Le tour se lit en trois temps : Situation (le contexte : données, marché,
+  // alertes, arbitrage) → Analyser (les aides puis les QCM en accordéon) →
+  // Décider. En solo c'est un fil d'étapes guidé ; en classe, l'onglet
+  // « Situation » réunit tout sur un seul écran. On extrait donc des blocs
   // plutôt que de les dupliquer d'un mode à l'autre.
   const premierTour = periods.length === 0;
 
@@ -359,25 +360,47 @@ export default async function ArenaPage({
     </>
   );
 
-  // ÉTAPES D'ANALYSE (solo) : une par situation, pour séparer les QCM d'un tour
-  // — chaque situation son propre écran. Le cadrage (arbitrage, points clés,
-  // leviers) et le marché vivent dans « Données & marché » ; chaque étape ici
-  // ne porte que sa situation (le statut du tour s'affiche sur la première).
-  const analyseSteps = situations.current.map((s, i) => ({
-    key: `analyser-${i}`,
-    // Quand le tour ne pose qu'une situation, « Analyser » suffit. Dès qu'il y
-    // en a plusieurs, un « Analyser 1 / 2 » générique ne dit rien du contenu :
-    // on nomme chaque étape par le TITRE de sa situation (tronqué par le fil
-    // d'étapes), pour que le joueur sache ce qu'il va analyser avant d'y aller.
-    label: situations.current.length > 1 ? s.title : "Analyser",
-    node: (
-      <div id={i === 0 ? "situation" : `situation-${i}`} className="space-y-4">
-        {i === 0 ? statutBadge : null}
-        <SituationCard gameId={view.gameId} situation={s} />
+  // QCM DU TOUR (solo) : plusieurs situations tiennent sur UN seul écran
+  // « Analyser », dépliables en accordéon (un panneau par situation, le premier
+  // ouvert) plutôt qu'un onglet par QCM — moins « usine ». Une seule situation
+  // s'affiche directement, sans accordéon.
+  const qcmBloc =
+    situations.current.length > 1 ? (
+      <div className="space-y-3">
+        {situations.current.map((s, i) => (
+          <details
+            key={s.instanceId}
+            open={i === 0}
+            className="group rounded-xl border border-white/10 bg-slate-950/40 [&[open]]:border-white/20"
+          >
+            <summary className="flex cursor-pointer items-center gap-2 px-4 py-3 text-sm font-semibold text-slate-100 sm:px-5">
+              <span aria-hidden className="text-slate-500 transition-transform group-open:rotate-90">
+                ▸
+              </span>
+              <span aria-hidden>🔍</span>
+              <span className="min-w-0">{s.title}</span>
+            </summary>
+            <div className="border-t border-white/10 p-4 sm:p-5">
+              <SituationCard gameId={view.gameId} situation={s} />
+            </div>
+          </details>
+        ))}
       </div>
-    ),
-  }));
-  const analyseChildren = Object.fromEntries(analyseSteps.map((st) => [st.key, st.node]));
+    ) : situations.current[0] ? (
+      <SituationCard gameId={view.gameId} situation={situations.current[0]} />
+    ) : null;
+
+  // ÉTAPE « ANALYSER » (solo) : les aides d'analyse (points clés & leviers) en
+  // tête, puis le décompte des QCM à rendre, puis l'accordéon des situations.
+  // Le contexte (données, marché, alertes, arbitrage) vit dans « Situation ».
+  const analyserContenu =
+    situations.current.length > 0 && statutSituations ? (
+      <div id="analyser" className="space-y-6">
+        {pointsClesEtLeviers}
+        {statutBadge}
+        {qcmBloc}
+      </div>
+    ) : null;
 
   return (
     <main id="main" className="mx-auto max-w-5xl px-6 pt-6 pb-12">
@@ -627,12 +650,11 @@ export default async function ArenaPage({
                   Résultats — ce dernier vide tant que le tour n'est pas clos.
                   Défaut sur « Situation » : on lit l'énoncé avant de décider. */}
               <SegmentedTabs
-                defaultKey={view.kind === "solo" ? "donnees" : "situation"}
-                // En solo, le tour est un fil d'étapes guidé qui décompose
-                // « Analyser » : « Données & marché » (paramètres, capacité, où
-                // vous en êtes, événements, saison, arbitrage et aides d'analyse)
-                // → UNE ÉTAPE PAR SITUATION (chaque QCM sur son propre écran) →
-                // Décider. En classe, l'onglet « Situation » réunit tout et les
+                defaultKey="situation"
+                // En solo, le tour est un fil d'étapes guidé en trois temps :
+                // Situation (données, marché, alertes, arbitrage) → Analyser
+                // (aides d'analyse puis les QCM en accordéon) → Décider. En
+                // classe, l'onglet « Situation » réunit tout sur un écran et les
                 // trois onglets restent libres. (L'onglet Résultats du tour actif
                 // est vide tant qu'il n'est pas clos ; inutile en solo, les
                 // résultats arrivant après la simulation.)
@@ -641,12 +663,8 @@ export default async function ArenaPage({
                 tabs={
                   view.kind === "solo"
                     ? [
-                        {
-                          key: "donnees",
-                          label: premierTour ? "Données" : "Données & marché",
-                          icon: "📊",
-                        },
-                        ...analyseSteps.map((st) => ({ key: st.key, label: st.label, icon: "🔍" })),
+                        { key: "situation", label: "Situation", icon: "📋" },
+                        { key: "analyser", label: "Analyser", icon: "🔍" },
                         { key: "decisions", label: "Décider", icon: "✏️" },
                       ]
                     : [
@@ -657,28 +675,28 @@ export default async function ArenaPage({
                 }
               >
                 {{
-                  // Données & marché : tout le contexte et les aides d'analyse du
-                  // tour, réunis avant les QCM (marché & alertes intégrés ici).
-                  donnees: (
-                    <div id="donnees" className="space-y-6">
-                      {donneesSection}
-                      {alertesSection}
-                      {dilemmeSection}
-                      {pointsClesEtLeviers}
-                    </div>
-                  ),
-                  // Une étape par situation (solo) : chaque QCM sur son écran.
-                  ...analyseChildren,
-                  // Mode classe : l'onglet « Situation » réunit tout sur un écran.
-                  situation: (
-                    <div id="situation" className="space-y-6">
-                      {donneesSection}
-                      {alertesSection}
-                      {dilemmeSection}
-                      {situationsBloc}
-                      {pointsClesEtLeviers}
-                    </div>
-                  ),
+                  // « Situation » : le contexte du tour. En solo, uniquement le
+                  // décor (données, marché, alertes, arbitrage) — les aides et
+                  // les QCM passent dans « Analyser ». En classe, l'onglet réunit
+                  // tout sur un seul écran (situations et aides comprises).
+                  situation:
+                    view.kind === "solo" ? (
+                      <div id="situation" className="space-y-6">
+                        {donneesSection}
+                        {alertesSection}
+                        {dilemmeSection}
+                      </div>
+                    ) : (
+                      <div id="situation" className="space-y-6">
+                        {donneesSection}
+                        {alertesSection}
+                        {dilemmeSection}
+                        {situationsBloc}
+                        {pointsClesEtLeviers}
+                      </div>
+                    ),
+                  // « Analyser » (solo) : aides d'analyse puis QCM en accordéon.
+                  ...(view.kind === "solo" ? { analyser: analyserContenu } : {}),
                   decisions: (
                     <section id="decisions" className="rounded-xl border border-amber-400/20 bg-slate-900 p-6">
                 <div className="mb-4 border-b border-white/10 pb-3">
