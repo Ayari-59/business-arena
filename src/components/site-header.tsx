@@ -9,6 +9,7 @@ import { SiteLogo } from "@/components/site-logo";
 import {
   ACTION_PRINCIPALE,
   LIENS_LEGAUX,
+  liensDeTete,
   NAVIGATION,
   type LienDeMenu,
 } from "@/config/navigation";
@@ -22,11 +23,13 @@ import {
  * et donc plus rien, chaque page ayant exactement la même importance que la
  * suivante.
  *
- * Trois choses restent visibles : les catalogues, l'entrée qui répond à la
- * question d'un enseignant qui arrive, et un bouton qui déplie le plan complet.
- * Le plan est le MÊME à toutes les largeurs, parce qu'il est lu du registre :
- * c'est ce qui garantit qu'aucune page ne redevienne inatteignable sur
- * téléphone le jour où l'on en ajoutera une.
+ * Sur grand écran, les liens de tête s'affichent À PLAT : un menu horizontal
+ * direct, sans détour par un panneau. En dessous, ils se replient — la barre
+ * d'un téléphone ne tient pas une rangée de liens. À toutes les largeurs, un
+ * bouton « Menu » déplie le plan COMPLET, lu du registre : c'est lui qui
+ * garantit qu'aucune page ne redevienne inatteignable, sur téléphone comme sur
+ * grand écran, le jour où l'on en ajoutera une. L'orientation n'a plus son
+ * bouton dédié dans la barre ; elle reste en tête de ce plan.
  */
 export function SiteHeader() {
   const chemin = usePathname();
@@ -94,26 +97,36 @@ export function SiteHeader() {
           </span>
         </div>
 
-        {/* Barre volontairement pauvre : l'action principale, et le menu. Les
-            liens de navigation, le thème et l'installation vivent DANS le menu,
-            pour ne pas empiler à droite des contrôles hétéroclites qu'on ne
-            sait pas lire. */}
-        <div className="flex items-center justify-end gap-2.5">
-          <Link
-            href={ACTION_PRINCIPALE.href}
-            title={ACTION_PRINCIPALE.aide}
-            aria-current={estCourant(ACTION_PRINCIPALE.href) ? "page" : undefined}
-            className="hidden rounded-lg border border-amber-400/40 px-3 py-1.5 text-xs font-semibold text-amber-300 transition hover:border-amber-400 hover:bg-amber-400/10 sm:block"
-          >
-            {ACTION_PRINCIPALE.libelle}
-          </Link>
+        {/* Les liens de tête, à plat sur grand écran : un menu horizontal
+            direct. Sous lg, ils se replient dans le panneau « Menu », qui reste
+            le plan COMPLET à toutes les largeurs (le thème et l'installation y
+            vivent aussi, pour ne pas empiler des contrôles hétéroclites). */}
+        <div className="flex items-center justify-end gap-1.5">
+          <ul className="hidden items-center gap-0.5 lg:flex">
+            {liensDeTete().map((lien) => (
+              <li key={lien.href}>
+                <Link
+                  href={lien.href}
+                  title={lien.aide}
+                  aria-current={estCourant(lien.href) ? "page" : undefined}
+                  className={`block rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+                    estCourant(lien.href)
+                      ? "bg-white/10 text-white"
+                      : "text-slate-300 hover:bg-white/5 hover:text-white"
+                  }`}
+                >
+                  {lien.libelle}
+                </Link>
+              </li>
+            ))}
+          </ul>
 
           <button
             type="button"
             onClick={() => setOuvert((v) => !v)}
             aria-expanded={ouvert}
             aria-controls="plan-du-site"
-            className="flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900 px-2.5 py-1 text-xs text-slate-300 transition hover:border-white/25 hover:text-slate-100"
+            className="flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900 px-2.5 py-1.5 text-xs text-slate-300 transition hover:border-white/25 hover:text-slate-100"
           >
             <span aria-hidden className="flex flex-col gap-[3px]">
               <span className="block h-px w-3.5 bg-current" />
