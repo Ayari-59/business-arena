@@ -30,12 +30,12 @@ export function DilemmaCard({
   footer?: string;
 }) {
   return (
-    <div className="rounded-lg border border-amber-400/25 bg-amber-950/10 p-4">
+    <div className="rounded-lg border border-amber-400/25 bg-amber-950/10 p-1.5 sm:p-4">
       <h3 className="text-xs font-semibold uppercase tracking-wide text-amber-400">{title}</h3>
       <p className="mt-2 text-sm font-medium text-slate-100">{question}</p>
       <div className={`mt-3 grid gap-3 ${routes.length > 2 ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
         {routes.map((route) => (
-          <div key={route.label} className="rounded-lg border border-white/10 bg-slate-950 p-3">
+          <div key={route.label} className="rounded-lg border border-white/10 bg-slate-950 p-1.5 sm:p-3">
             <p className="text-sm font-medium text-slate-200">{route.label}</p>
             <p className="mt-1.5 text-xs leading-relaxed text-emerald-300/90">
               <span className="font-semibold">Ce que cela rapporte. </span>
@@ -69,7 +69,7 @@ export function ParametersPanels({
   const showShare = intro.segments.some((s) => s.yourShare !== null);
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <div className="rounded-lg border border-white/5 bg-slate-950 p-4">
+      <div className="rounded-lg border border-white/5 bg-slate-950 p-1.5 sm:p-4">
         <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
           Votre entreprise
         </h3>
@@ -118,7 +118,7 @@ export function ParametersPanels({
         </ul>
       </div>
 
-      <div className="rounded-lg border border-white/5 bg-slate-950 p-4">
+      <div className="rounded-lg border border-white/5 bg-slate-950 p-1.5 sm:p-4">
         <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
           Le marché en face de vous
         </h3>
@@ -140,7 +140,7 @@ export function ParametersPanels({
             const nom = m ? m[1] : seg.name;
             const qualif = m ? m[2] : null;
             return (
-              <li key={seg.name} className="rounded-lg border border-white/5 bg-slate-900/60 p-3">
+              <li key={seg.name} className="rounded-lg border border-white/5 bg-slate-900/60 p-1.5 sm:p-3">
                 <p className="text-sm font-semibold text-slate-100">{nom}</p>
                 {qualif ? <p className="mt-0.5 text-xs text-slate-400">{qualif}</p> : null}
                 <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-2">

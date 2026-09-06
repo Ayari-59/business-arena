@@ -125,7 +125,7 @@ export default async function ArenaPage({
   // DONNÉES : ce avec quoi on entre dans le tour — l'entreprise (au 1er tour),
   // les paramètres du secteur et la capacité de production.
   const donneesSection = premierTour ? (
-    <section className="space-y-4 rounded-xl border border-white/10 bg-slate-900 p-6 text-slate-300">
+    <section className="space-y-4 rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4 text-slate-300">
       <div>
         <h2 className="text-lg font-semibold text-slate-100">
           {periodLabel(view.roundDays, 1)} · prise en main
@@ -135,7 +135,7 @@ export default async function ArenaPage({
           {appositive(view.intro.tagline)}. {view.intro.briefing}
         </p>
       </div>
-      <div className="rounded-lg border border-white/5 bg-slate-950 p-4">
+      <div className="rounded-lg border border-white/5 bg-slate-950 p-1.5 sm:p-4">
         <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
           Ce que vous trouvez en arrivant
         </h3>
@@ -165,7 +165,7 @@ export default async function ArenaPage({
   const alertesSection = (
     <>
       {view.roundBriefing ? (
-        <section className="space-y-2 rounded-xl border border-white/10 bg-slate-900 p-6 text-slate-300">
+        <section className="space-y-2 rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4 text-slate-300">
           <h2 className="text-lg font-semibold text-slate-100">
             {periodLabel(view.roundDays, view.currentRound)} · où vous en êtes
           </h2>
@@ -173,7 +173,7 @@ export default async function ArenaPage({
         </section>
       ) : null}
       {view.announcedEventCards.length > 0 ? (
-        <section className="rounded-xl border border-amber-400/30 bg-slate-900 p-4">
+        <section className="rounded-xl border border-amber-400/30 bg-slate-900 p-1.5 sm:p-4">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-400">
             ⚡ Votre enseignant a tiré une carte : elle s&apos;appliquera à ce tour
           </p>
@@ -201,7 +201,7 @@ export default async function ArenaPage({
         </section>
       ) : null}
       {view.seasonNotes.length > 0 ? (
-        <section className="rounded-xl border border-sky-400/20 bg-slate-900 px-4 py-3 text-sm text-sky-200">
+        <section className="rounded-xl border border-sky-400/20 bg-slate-900 px-1.5 py-2.5 sm:px-4 sm:py-3 text-sm text-sky-200">
           🌤️ Saison du tour :{" "}
           {view.seasonNotes
             .map(
