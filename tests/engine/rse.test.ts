@@ -229,6 +229,83 @@ describe("RSE Lot 2 : l'investissement propre réduit les rebuts", () => {
   });
 });
 
+describe("RSE Lot 2B : climat social (moins de départs)", () => {
+  const hrConfig = {
+    salaryPerEmployeePerRound: 8000,
+    includedHeadcount: 4,
+    hiringCost: 5000,
+    firingCost: 3000,
+    trainingScale: 5000,
+    trainingSensitivity: 0.1,
+    maxProductivity: 1.5,
+    moraleSensitivity: 0.2,
+    attritionThreshold: 0.95,
+    maxHiresPerRound: 3,
+    maxHeadcount: 10,
+  };
+
+  it("un capital-image élevé retient les salariés quand le salaire glisse sous le marché", () => {
+    const sc = { ...scenario(), hr: hrConfig };
+    const out = simulateRound({
+      scenario: sc,
+      roundIndex: 1,
+      // Salaire 0,90 < seuil d'attrition 0,95 : sans RSE, un départ ; avec un
+      // capital-image mûr, le seuil effectif descend et personne ne part.
+      companies: [company("a", { rseImageCapital: 3 }), company("b")],
+      decisions: {
+        a: { ...baseDecisions(), hr: { salaryIndex: 0.9 } },
+        b: { ...baseDecisions(), hr: { salaryIndex: 0.9 } },
+      },
+      activeEvents: [],
+      seed: 4242,
+    });
+    expect(out.results["a"]!.hr!.departed).toBe(0);
+    expect(out.results["b"]!.hr!.departed).toBe(1);
+    expect(out.results["a"]!.rse!.attritionRelief).toBeGreaterThan(0);
+  });
+});
+
+describe("RSE Lot 2B : financement vert", () => {
+  const bankConfig = { memory: 0.7, maxOverdraftSpread: 0.1, minOverdraftShare: 0.3 };
+
+  it("à confiance partielle, le capital-image adoucit le taux de découvert (intérêts plus bas)", () => {
+    const sc = { ...scenario(), finance: { ...scenario().finance, bank: bankConfig } };
+    // Découvert d'ouverture identique, confiance partielle identique : seul le
+    // capital-image RSE distingue A de B.
+    const inOverdraft = (id: string, over = {}) =>
+      company(id, {
+        bankTrust: 0.5,
+        finance: {
+          // Bilan d'ouverture équilibré : actif 100 000 = capitaux propres
+          // 80 000 + découvert 20 000.
+          fixedAssetsNet: 100000,
+          inventoryValue: 0,
+          receivables: 0,
+          cash: 0,
+          equity: 80000,
+          financialDebt: 0,
+          payables: 0,
+          overdraft: 20000,
+        },
+        ...over,
+      });
+    const out = simulateRound({
+      scenario: sc,
+      roundIndex: 1,
+      companies: [inOverdraft("a", { rseImageCapital: 3 }), inOverdraft("b")],
+      decisions: { a: baseDecisions(), b: baseDecisions() },
+      activeEvents: [],
+      seed: 4242,
+    });
+    expect(out.results["a"]!.rse!.financingBonus).toBeGreaterThan(0);
+    expect(out.results["b"]!.rse?.financingBonus ?? 0).toBe(0);
+    // Taux de découvert plus doux ⇒ charges financières plus basses pour A.
+    expect(out.results["a"]!.incomeStatement.interest).toBeLessThan(
+      out.results["b"]!.incomeStatement.interest,
+    );
+  });
+});
+
 describe("RSE Lot 2 : rétro-compatibilité", () => {
   it("sans aucune décision RSE, aucun champ rse, aucun capital, aucune charge", () => {
     const out = simulateRound(input());

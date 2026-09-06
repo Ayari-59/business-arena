@@ -34,6 +34,18 @@ export interface RseEngineConfig {
   cleanDefectReductionMax: number;
   /** Inertie du capital « process propre » (0..1). */
   cleanInertia: number;
+  /**
+   * FINANCEMENT VERT (Lot 2B) : gain de confiance bancaire par unité de
+   * capital-image (borné à 1). Une entreprise engagée rassure sa banque —
+   * découvert plus large, taux plus doux. 0 = pas de financement vert.
+   */
+  financingTrustBonus: number;
+  /**
+   * CLIMAT SOCIAL (Lot 2B) : part du seuil d'attrition retirée à capital-image
+   * saturant (0..1). Un employeur engagé retient mieux : on démissionne moins
+   * vite quand le salaire glisse sous le marché. 0 = pas d'effet social.
+   */
+  socialAttritionRelief: number;
 }
 
 export interface EngineScenarioConfig {
@@ -864,6 +876,10 @@ export interface CompanyRoundResult {
     imageFactor: number;
     /** Réduction du taux de rebuts appliquée ce tour (0..1), issue du capital d'ouverture. */
     defectReduction: number;
+    /** Financement vert (Lot 2B) : bonus de confiance bancaire appliqué (0..1). */
+    financingBonus: number;
+    /** Climat social (Lot 2B) : part du seuil d'attrition retirée ce tour (0..1). */
+    attritionRelief: number;
   };
   /** Assurance du tour : prime payée, formule choisie et événements neutralisés. */
   insurance?: { premium: number; formulaCode?: string; neutralizedEvents: string[] };

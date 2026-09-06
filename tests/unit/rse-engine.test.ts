@@ -5,6 +5,8 @@ import {
   updateRseCapital,
   imageAttractionFactor,
   cleanDefectReduction,
+  financingTrustBonus,
+  socialAttritionRelief,
 } from "@/engine/rse";
 
 /**
@@ -66,6 +68,22 @@ describe("cleanDefectReduction", () => {
   });
 });
 
+describe("financingTrustBonus (Lot 2B)", () => {
+  it("nul sans capital, positif et saturant avec capital", () => {
+    expect(financingTrustBonus(0, 0.15)).toBe(0);
+    expect(financingTrustBonus(2, 0.15)).toBeCloseTo(0.15 * (2 / 3), 6);
+    expect(financingTrustBonus(1e9, 0.15)).toBeLessThanOrEqual(0.15);
+  });
+});
+
+describe("socialAttritionRelief (Lot 2B)", () => {
+  it("nulle sans capital, bornée par le coefficient", () => {
+    expect(socialAttritionRelief(0, 0.5)).toBe(0);
+    expect(socialAttritionRelief(2, 0.5)).toBeCloseTo(0.5 * (2 / 3), 6);
+    expect(socialAttritionRelief(1e9, 0.5)).toBeLessThanOrEqual(0.5);
+  });
+});
+
 describe("DEFAULT_RSE_CONFIG", () => {
   it("porte des grandeurs plausibles (bornées, inerties dans [0,1])", () => {
     expect(DEFAULT_RSE_CONFIG.imageDemandSensitivity).toBeGreaterThan(0);
@@ -75,5 +93,8 @@ describe("DEFAULT_RSE_CONFIG", () => {
     expect(DEFAULT_RSE_CONFIG.cleanInertia).toBeLessThan(1);
     expect(DEFAULT_RSE_CONFIG.cleanDefectReductionMax).toBeGreaterThan(0);
     expect(DEFAULT_RSE_CONFIG.cleanDefectReductionMax).toBeLessThanOrEqual(1);
+    expect(DEFAULT_RSE_CONFIG.financingTrustBonus).toBeGreaterThan(0);
+    expect(DEFAULT_RSE_CONFIG.socialAttritionRelief).toBeGreaterThan(0);
+    expect(DEFAULT_RSE_CONFIG.socialAttritionRelief).toBeLessThanOrEqual(1);
   });
 });
