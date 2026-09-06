@@ -75,7 +75,7 @@ export default async function ArenaPage({
         >
           {SECTOR_ICONS[view.sector]}
         </span>
-        <p className="mt-6 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-300">
+        <p className="mt-6 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.3em] text-amber-300">
           <span aria-hidden>✓</span> Tour simulé
         </p>
         <h1 className="mt-3 text-3xl font-bold text-slate-50">
@@ -88,7 +88,7 @@ export default async function ArenaPage({
         <div className="mt-8 flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
           <Link
             href={`/arena/${gameId}#dernier-resultat`}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-6 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400"
           >
             <span aria-hidden>📊</span> Voir les résultats
           </Link>

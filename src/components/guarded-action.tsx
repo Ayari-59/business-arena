@@ -1,5 +1,6 @@
 "use client";
 
+import { unstable_rethrow } from "next/navigation";
 import { useActionState, useCallback, useEffect, useRef, useState } from "react";
 
 /**
@@ -99,6 +100,13 @@ export function garder<S>(
       options.onSucces?.();
       return (resultat ?? prev) as S;
     } catch (e) {
+      // Une action qui réussit puis appelle redirect()/notFound() interrompt le
+      // flux en LEVANT un signal interne de Next (NEXT_REDIRECT…). Ce n'est pas
+      // une panne : sans ce rethrow, le garde le prenait pour un échec, affichait
+      // « le serveur n'a pas répondu » et avalait la navigation vers les
+      // résultats. unstable_rethrow relance ces signaux vers le framework et ne
+      // fait rien pour une vraie erreur.
+      unstable_rethrow(e);
       const raison = decrireErreur(e);
       console.warn("[action-failed]", options.label, raison);
       options.onEchec?.({ label: options.label, raison, saisie });
