@@ -104,14 +104,14 @@ export function PeriodDashboard({
 
             {history.length > 0 ? (
               <section className="grid gap-3 lg:grid-cols-3">
-                <div className="rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-4 lg:col-span-2">
+                <div className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4 lg:col-span-2">
                   <RevenueChart history={history} roundsCount={view.roundsCount} />
                 </div>
                 <div className="space-y-3">
-                  <div className="rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-4">
+                  <div className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
                     <TreasuryChart history={history} roundsCount={view.roundsCount} />
                   </div>
-                  <div className="rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-4">
+                  <div className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
                     <MarketShareChart
                       segments={Object.entries(r.market.bySegment)
                         .filter(([, d]) => d.potential > 0)
@@ -127,7 +127,7 @@ export function PeriodDashboard({
 
             {standing ? (
               <section className="grid gap-3 lg:grid-cols-2">
-                <div className="rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-4">
+                <div className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
                   <h2 className="mb-2 text-sm font-semibold text-slate-200">
                     Classement · Business Performance Index
                   </h2>
@@ -289,7 +289,7 @@ export function PeriodDashboard({
             ) : null}
 
             {period.forecastReview ? (
-              <div className="rounded-lg border border-sky-400/25 bg-sky-950/20 px-2 py-3 sm:p-4">
+              <div className="rounded-lg border border-sky-400/25 bg-sky-950/20 px-1.5 py-3 sm:p-4">
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-sky-300">
                   🏦 Votre plan face au réalisé
                 </h3>

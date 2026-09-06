@@ -7,7 +7,7 @@ export function BpiPanel({
   dimensions: Partial<Record<string, number>>;
 }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-4">
+    <div className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
       <h2 className="mb-3 text-sm font-semibold text-slate-200">Votre profil de performance</h2>
       <ul className="space-y-2">
         {DIMENSION_DISPLAY_ORDER.map((dimension) => {
