@@ -9,6 +9,7 @@ import { FinancialStatements } from "@/components/financial-statements";
 import { RatioGauges } from "@/components/ratio-gauges";
 import { SalesHistory } from "@/components/sales-history";
 import { CompetitiveBenchmark } from "@/components/competitive-benchmark";
+import { RseReportPanel } from "@/components/rse-report";
 import { DashboardTabs } from "@/components/dashboard-tabs";
 import type { KpiFormat } from "@/config/scenarios/sector-kpis";
 import type { GameView } from "@/services/game-view.service";
@@ -167,6 +168,12 @@ export function PeriodDashboard({
             </section>
 
             <RseCard rse={period.rse} />
+
+            {/* Rapport extra-financier (Lot 3) : pluriannuel, donc affiché une
+                seule fois — sur le dernier tour clos (standing). */}
+            {standing && view.rseReport.available ? (
+              <RseReportPanel report={view.rseReport} />
+            ) : null}
 
             {history.length > 0 ? (
               <section className="grid gap-3 lg:grid-cols-3">
