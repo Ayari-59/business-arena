@@ -21,6 +21,8 @@ import { conditionsBancaires, confianceInitiale } from "@/engine/finance/bank";
 import { irr, npv, paybackPeriod } from "@/engine/investment";
 import { roundBriefing, type RoundBriefing } from "@/pedagogy/round-briefing";
 import { computeRseIndex, type RseIndex } from "@/scoring/rse";
+import { RSE_CARD_CODES } from "@/engine/rse";
+import { computeRseReport, type RseReport } from "@/scoring/rse-report";
 import type {
   CompanyRoundResult,
   CompanyState,
@@ -85,6 +87,12 @@ export interface GameView {
     /** Indice RSE du tour (mesure indicative, sans effet sur la partie — Lot 1). */
     rse: RseIndex;
   }[];
+  /**
+   * Rapport extra-financier (Lot 3) : synthèse DPEF SIMPLIFIÉE et indicative sur
+   * tous les tours joués. `available` est faux quand l'équipe n'a jamais engagé
+   * la RSE — l'écran invite alors à l'ouvrir plutôt que d'afficher des zéros.
+   */
+  rseReport: RseReport;
   /**
    * La prévision du tour écoulé face au réalisé. Null si le joueur n'a rien
    * annoncé : on ne reproche pas une prévision qui n'a pas été faite.
@@ -928,6 +936,12 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     }),
     lastResult,
     periods,
+    // Rapport extra-financier (Lot 3) : synthèse indicative dérivée de tous les
+    // tours résolus. Lecture seule, comme l'indice RSE.
+    rseReport: computeRseReport(
+      periods.map((p) => ({ round: p.round, result: p.result, events: p.events, rse: p.rse })),
+      RSE_CARD_CODES,
+    ),
     forecastReview: (() => {
       if (!lastRound || !lastResult) return null;
       const round = roundIndexById.get(lastRound.id)!;
