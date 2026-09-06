@@ -267,7 +267,7 @@ export default async function ArenaPage({
             </p>
             <div className="grid gap-2 sm:grid-cols-2">
               {allHints.map((h) => (
-                <div key={h.code} className="rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
+                <div key={h.code} className="rounded-lg border border-slate-700 bg-slate-800/50 px-2.5 py-2">
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{h.name}</p>
                   <p className="mt-1 text-xs text-slate-400">{h.objective}</p>
                   {h.keyPoints.length > 0 ? (
@@ -326,7 +326,7 @@ export default async function ArenaPage({
             </h2>
             <div className="grid gap-2 sm:grid-cols-2">
               {levers.map((l) => (
-                <div key={l.field} className="flex gap-2 rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
+                <div key={l.field} className="flex gap-2 rounded-lg border border-slate-700 bg-slate-800/50 px-2.5 py-2">
                   <span className="mt-0.5 text-base leading-none text-amber-400">{DIRECTION_ICONS[l.direction]}</span>
                   <div className="min-w-0">
                     <span className="text-sm font-medium text-slate-200">{l.label}</span>
@@ -363,7 +363,7 @@ export default async function ArenaPage({
               <span aria-hidden>🔍</span>
               <span className="min-w-0">{s.title}</span>
             </summary>
-            <div className="border-t border-white/10 p-3 sm:p-5">
+            <div className="border-t border-white/10 p-2.5 sm:p-4">
               <SituationCard gameId={view.gameId} situation={s} />
             </div>
           </details>
@@ -385,7 +385,7 @@ export default async function ArenaPage({
     ) : null;
 
   return (
-    <main id="main" className="mx-auto max-w-5xl px-4 pt-6 pb-12 sm:px-6">
+    <main id="main" className="mx-auto max-w-5xl px-3 pt-5 pb-12 sm:px-6">
       {/* ── Header ── */}
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -519,7 +519,7 @@ export default async function ArenaPage({
               open={isLatest}
               className="group scroll-mt-24 rounded-xl border border-white/10 bg-slate-950/40 [&[open]]:border-white/20"
             >
-              <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-5">
+              <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-3 px-3 py-2.5 sm:px-4">
                 <span className="flex items-center gap-2 text-sm font-semibold text-slate-100">
                   <span className="text-slate-400 transition-transform group-open:rotate-90">▸</span>
                   📊 {periodLabel(view.roundDays, p.round)}
@@ -542,7 +542,7 @@ export default async function ArenaPage({
                   </span>
                 </span>
               </summary>
-              <div className="border-t border-white/10 p-3 sm:p-5">
+              <div className="border-t border-white/10 p-2.5 sm:p-4">
                 {/* Les trois facettes d'une période close : ce qu'on a analysé
                     (Situation + correction), ce qu'on a décidé, ce qui en est
                     ressorti. Les onglets ne s'opposent pas à l'accordéon — il
@@ -591,7 +591,7 @@ export default async function ArenaPage({
             id="tour-en-cours"
             className="scroll-mt-24 rounded-xl border-2 border-amber-400/40 bg-slate-950/40"
           >
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-400/20 px-4 py-3 sm:px-5">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-400/20 px-3 py-2.5 sm:px-4">
               <span className="flex items-center gap-2 text-sm font-semibold text-amber-200">
                 ✏️ {periodLabel(view.roundDays, view.currentRound)}
                 <span className="rounded-full border border-amber-400/40 bg-amber-400/10 px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-amber-300">
