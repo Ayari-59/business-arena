@@ -27,6 +27,8 @@ const CASH_LABELS: Record<string, string> = {
   qualite: "Budget qualité",
   maintenance: "Budget maintenance",
   engagement_rse: "Engagement RSE",
+  sanction_rse: "Sanction RSE (amende)",
+  subvention_rse: "Éco-subvention RSE",
   interets: "Charges financières",
   placement_arrive_a_terme: "Placement arrivé à terme",
   produits_financiers: "Produits financiers (placement)",
@@ -165,6 +167,12 @@ export function FinancialStatements({
             value={euro(cr.financialIncome ?? 0)}
             indent
           />
+        ) : null}
+        {(cr.exceptionalCharge ?? 0) > 0.5 ? (
+          <Row label="− Sanction RSE (exceptionnel)" value={euro(-(cr.exceptionalCharge ?? 0))} indent />
+        ) : null}
+        {(cr.exceptionalIncome ?? 0) > 0.5 ? (
+          <Row label="+ Éco-subvention RSE (exceptionnel)" value={euro(cr.exceptionalIncome ?? 0)} indent />
         ) : null}
         {(cr.taxLossUsed ?? 0) > 0.5 ? (
           <Row

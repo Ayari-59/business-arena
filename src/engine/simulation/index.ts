@@ -144,18 +144,29 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     if (state.status === "defaillant") continue;
     const draws = evaluateRseCards({
       imageCapital: Math.max(0, state.rseImageCapital ?? 0),
+      cleanCapital: Math.max(0, state.rseCleanCapital ?? 0),
       roundIndex,
       config: rseCardsConfig,
-      roll: rseCardRng.next(),
+      scale: scenario.marketing.scale,
+      // Deux tirages INDÉPENDANTS (bad buzz, sanction), sur le stream dédié.
+      badBuzzRoll: rseCardRng.next(),
+      sanctionRoll: rseCardRng.next(),
     });
     for (const d of draws) {
       if (active.some((e) => e.code === d.code && e.companyId === state.id)) continue;
+      // Chaque carte porte UN effet : demande (2C), amende ou subvention (2C.2).
+      const modifiers =
+        d.demandFactor !== undefined
+          ? [{ target: "demand" as const, op: "mul" as const, value: d.demandFactor }]
+          : d.penalty !== undefined
+            ? [{ target: "financial_penalty" as const, op: "add" as const, value: d.penalty }]
+            : [{ target: "financial_aid" as const, op: "add" as const, value: d.aid ?? 0 }];
       const instance = {
         code: d.code,
         scope: "company" as const,
         companyId: state.id,
         roundsLeft: d.duration,
-        modifiers: [{ target: "demand" as const, op: "mul" as const, value: d.demandFactor }],
+        modifiers,
       };
       active.push(instance);
       drawn.push(instance);
@@ -839,6 +850,9 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       maintenanceCost: w.decisions.maintenanceBudget,
       // Faillite : entreprise gelée, aucune dépense — donc pas d'engagement RSE.
       rseCost: gelee ? 0 : w.rseCost,
+      // Cartes RSE à effet trésorerie (Lot 2C.2) : amende / éco-subvention.
+      exceptionalCharge: gelee ? 0 : w.mods.oneOffCharge,
+      exceptionalIncome: gelee ? 0 : w.mods.oneOffIncome,
       fixedCosts: gelee ? 0 : scenario.fixedCostsPerRound + insurancePremium + hrCost + studiesCost,
       // amortissements : base du scénario + investissements en service
       // (y compris celui mis en service ce tour) OU amortissement du parc typé

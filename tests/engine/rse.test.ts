@@ -381,6 +381,55 @@ describe("RSE Lot 2C : cartes événement", () => {
   });
 });
 
+describe("RSE Lot 2C.2 : cartes à effet trésorerie", () => {
+  const withCards = (over: Partial<(typeof DEFAULT_RSE_CONFIG)["cards"]>) => ({
+    ...scenario(),
+    rse: { ...DEFAULT_RSE_CONFIG, cards: { ...DEFAULT_RSE_CONFIG.cards, ...over } },
+  });
+
+  it("💶 un capital « process propre » mûr décroche une éco-subvention (produit exceptionnel encaissé)", () => {
+    const out = simulateRound({
+      scenario: withCards({ minRound: 1 }),
+      roundIndex: 1,
+      companies: [company("a", { rseCleanCapital: 1 }), company("b")],
+      decisions: { a: baseDecisions(), b: baseDecisions() },
+      activeEvents: [],
+      seed: 4242,
+    });
+    const a = out.results["a"]!;
+    expect(out.newEvents.some((e) => e.code === RSE_CARD_CODES.subvention && e.companyId === "a")).toBe(
+      true,
+    );
+    expect(a.incomeStatement.exceptionalIncome ?? 0).toBeGreaterThan(0);
+    // Aide encaissée ⇒ meilleur résultat qu'une entreprise sans engagement.
+    expect(a.incomeStatement.netIncome).toBeGreaterThan(out.results["b"]!.incomeStatement.netIncome);
+    for (const r of Object.values(out.results)) {
+      expect(Math.abs(balanceGap(r.balanceSheet))).toBeLessThan(0.01);
+    }
+  });
+
+  it("⚖️ un engagement d'image tiède peut être sanctionné (amende, charge exceptionnelle)", () => {
+    const out = simulateRound({
+      // On isole la sanction : bad buzz désactivé, sanction certaine.
+      scenario: withCards({ minRound: 1, badBuzzProbability: 0, sanctionProbability: 1 }),
+      roundIndex: 1,
+      companies: [company("a", { rseImageCapital: 0.15 }), company("b")],
+      decisions: { a: baseDecisions(), b: baseDecisions() },
+      activeEvents: [],
+      seed: 4242,
+    });
+    const a = out.results["a"]!;
+    expect(out.newEvents.some((e) => e.code === RSE_CARD_CODES.sanction && e.companyId === "a")).toBe(
+      true,
+    );
+    expect(a.incomeStatement.exceptionalCharge ?? 0).toBeGreaterThan(0);
+    expect(a.incomeStatement.netIncome).toBeLessThan(out.results["b"]!.incomeStatement.netIncome);
+    for (const r of Object.values(out.results)) {
+      expect(Math.abs(balanceGap(r.balanceSheet))).toBeLessThan(0.01);
+    }
+  });
+});
+
 describe("RSE Lot 2 : rétro-compatibilité", () => {
   it("sans aucune décision RSE, aucun champ rse, aucun capital, aucune charge", () => {
     const out = simulateRound(input());

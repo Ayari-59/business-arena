@@ -86,52 +86,78 @@ describe("socialAttritionRelief (Lot 2B)", () => {
   });
 });
 
-describe("evaluateRseCards (Lot 2C)", () => {
+describe("evaluateRseCards (Lot 2C / 2C.2)", () => {
   const cards = DEFAULT_RSE_CONFIG.cards;
+  const base = {
+    roundIndex: cards.minRound,
+    config: cards,
+    scale: 10000,
+    badBuzzRoll: 0.99,
+    sanctionRoll: 0.99,
+  };
+  const codes = (draws: { code: string }[]) => draws.map((d) => d.code);
 
-  it("rien avant minRound, même avec un capital mûr", () => {
+  it("rien avant minRound, même avec des capitaux mûrs", () => {
     expect(
-      evaluateRseCards({ imageCapital: 1, roundIndex: cards.minRound - 1, config: cards, roll: 0 }),
+      evaluateRseCards({ ...base, imageCapital: 1, cleanCapital: 1, roundIndex: cards.minRound - 1 }),
     ).toEqual([]);
   });
 
-  it("rien à capital nul — la RSE reste facultative (ni label, ni bad buzz)", () => {
-    expect(
-      evaluateRseCards({ imageCapital: 0, roundIndex: cards.minRound, config: cards, roll: 0 }),
-    ).toEqual([]);
+  it("rien à capitaux nuls — la RSE reste facultative", () => {
+    expect(evaluateRseCards({ ...base, imageCapital: 0, cleanCapital: 0 })).toEqual([]);
   });
 
-  it("un capital mûr décroche le label (bonus de demande durable)", () => {
+  it("un capital-image mûr décroche le label (bonus de demande durable)", () => {
     const drawn = evaluateRseCards({
+      ...base,
       imageCapital: cards.labelImageThreshold,
-      roundIndex: cards.minRound,
-      config: cards,
-      roll: 0.99,
+      cleanCapital: 0,
     });
-    expect(drawn).toHaveLength(1);
-    expect(drawn[0]!.code).toBe(RSE_CARD_CODES.label);
+    expect(codes(drawn)).toEqual([RSE_CARD_CODES.label]);
     expect(drawn[0]!.demandFactor).toBeGreaterThan(1);
     expect(drawn[0]!.duration).toBe(cards.labelDuration);
   });
 
-  it("un engagement tiède risque le bad buzz — mais seulement au tirage défavorable", () => {
-    const tiede = cards.badBuzzImageCeiling / 2;
-    const declenche = evaluateRseCards({
-      imageCapital: tiede,
-      roundIndex: cards.minRound,
-      config: cards,
-      roll: cards.badBuzzProbability - 0.01,
+  it("un capital « process propre » mûr décroche l'éco-subvention (produit exceptionnel)", () => {
+    const drawn = evaluateRseCards({
+      ...base,
+      imageCapital: 0,
+      cleanCapital: cards.aidCleanThreshold,
     });
-    expect(declenche).toHaveLength(1);
-    expect(declenche[0]!.code).toBe(RSE_CARD_CODES.badBuzz);
-    expect(declenche[0]!.demandFactor).toBeLessThan(1);
-    // Tirage favorable : rien.
+    expect(codes(drawn)).toEqual([RSE_CARD_CODES.subvention]);
+    expect(drawn[0]!.aid).toBeCloseTo(cards.aidAmount * base.scale, 6);
+  });
+
+  it("label et subvention se cumulent (deux piliers, deux upsides)", () => {
+    const drawn = evaluateRseCards({
+      ...base,
+      imageCapital: cards.labelImageThreshold,
+      cleanCapital: cards.aidCleanThreshold,
+    });
+    expect(codes(drawn).sort()).toEqual([RSE_CARD_CODES.label, RSE_CARD_CODES.subvention].sort());
+  });
+
+  it("zone tiède : bad buzz et sanction sont deux risques indépendants", () => {
+    const tiede = cards.badBuzzImageCeiling / 2;
+    // Les deux tirages défavorables ⇒ les deux cartes.
+    const both = evaluateRseCards({
+      ...base,
+      imageCapital: tiede,
+      cleanCapital: 0,
+      badBuzzRoll: cards.badBuzzProbability - 0.01,
+      sanctionRoll: cards.sanctionProbability - 0.01,
+    });
+    expect(codes(both).sort()).toEqual([RSE_CARD_CODES.badBuzz, RSE_CARD_CODES.sanction].sort());
+    const sanction = both.find((d) => d.code === RSE_CARD_CODES.sanction)!;
+    expect(sanction.penalty).toBeCloseTo(cards.fineAmount * base.scale, 6);
+    // Tirages favorables ⇒ aucune carte de risque.
     expect(
       evaluateRseCards({
+        ...base,
         imageCapital: tiede,
-        roundIndex: cards.minRound,
-        config: cards,
-        roll: cards.badBuzzProbability + 0.01,
+        cleanCapital: 0,
+        badBuzzRoll: cards.badBuzzProbability + 0.01,
+        sanctionRoll: cards.sanctionProbability + 0.01,
       }),
     ).toEqual([]);
   });

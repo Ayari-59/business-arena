@@ -68,6 +68,17 @@ export interface FinanceInput {
   /** Perte de cession d'équipement (VNC − produit de cession). */
   disposalLoss?: number;
   /**
+   * Charge exceptionnelle du tour (Lot 2C.2) : amende RSE. Décaissée et
+   * retranchée du résultat avant impôt (comme une charge ordinaire côté bilan),
+   * donc l'équilibre tient par construction. Absente = 0.
+   */
+  exceptionalCharge?: number;
+  /**
+   * Produit exceptionnel du tour (Lot 2C.2) : éco-subvention RSE. Encaissé et
+   * ajouté au résultat avant impôt. Absent = 0.
+   */
+  exceptionalIncome?: number;
+  /**
    * Gestion de trésorerie (optionnel) : mobilisation de créances demandée et
    * paramètres du scénario. Au-delà du plafond de découvert, un affacturage
    * FORCÉ au taux punitif ramène le solde dans les clous (deux passes,
@@ -167,7 +178,12 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
         periodFraction *
         input.interestMultiplier +
       financingCost;
-    const pretaxIncome = operatingIncome - interest + placementIncome;
+    // Résultat exceptionnel (Lot 2C.2) : amende (charge) / éco-subvention
+    // (produit) des cartes RSE. Imputé avant l'impôt, décaissé/encaissé ce tour.
+    const exceptionalCharge = input.exceptionalCharge ?? 0;
+    const exceptionalIncome = input.exceptionalIncome ?? 0;
+    const pretaxIncome =
+      operatingIncome - interest + placementIncome - exceptionalCharge + exceptionalIncome;
     // Report déficitaire : les pertes reportées s'imputent sur le bénéfice
     // imposable avant l'impôt ; le stock diminue de ce qui est imputé et
     // s'accroît de la perte du tour. `closing = max(0, ouverture − résultat)`
@@ -196,6 +212,8 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
       operatingIncome,
       interest,
       financialIncome: placementIncome,
+      ...(exceptionalCharge > 0 ? { exceptionalCharge } : {}),
+      ...(exceptionalIncome > 0 ? { exceptionalIncome } : {}),
       pretaxIncome,
       ...(taxLossUsed > 0 ? { taxLossUsed } : {}),
       tax,
@@ -234,6 +252,8 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
       { label: "maintenance", amount: -input.maintenanceCost },
       { label: "engagement_rse", amount: -rseCost },
       { label: "interets", amount: -interest },
+      { label: "sanction_rse", amount: -exceptionalCharge },
+      { label: "subvention_rse", amount: exceptionalIncome },
       { label: "impot", amount: -tax },
       { label: "tva_decaissee", amount: -openingVat },
       { label: "investissement", amount: -input.investmentOutlay },
