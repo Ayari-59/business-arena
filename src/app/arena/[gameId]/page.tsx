@@ -239,14 +239,6 @@ export default async function ArenaPage({
   ) : null;
 
   // Toutes les situations du tour, empilées (mode CLASSE : un seul écran).
-  const situationsBloc =
-    situations.current.length > 0 && statutSituations ? (
-      <section className="space-y-4">
-        {situations.current.map((s) => (
-          <SituationCard key={s.instanceId} gameId={view.gameId} situation={s} />
-        ))}
-      </section>
-    ) : null;
 
   // POINTS CLÉS & LEVIERS : les aides d'analyse du tour (agrégées des situations).
   const pointsClesEtLeviers = (
@@ -601,24 +593,24 @@ export default async function ArenaPage({
               <span className="text-xs text-slate-400">
                 {view.kind === "solo"
                   ? "Trois temps : lisez la situation, analysez-la, puis rendez vos décisions et simulez."
-                  : "Trois onglets : la situation à lire, vos décisions à rendre, et les résultats — à venir une fois le tour clos."}
+                  : "Trois temps : lisez la situation, analysez-la, puis rendez vos décisions ; les résultats arrivent à la clôture du tour."}
               </span>
             </div>
 
-            {/* En solo, valider a résolu le tour précédent à l'instant : on met
+            {/* Le tour précédent vient de livrer ses résultats (solo : la
+                simulation ; classe : la clôture par l'enseignant) : on met
                 « voir les résultats » en tête du tour suivant, pour ne pas
-                enchaîner sur un bouton « simuler » d'allure identique sans être
-                passé par ses résultats. Le formulaire reste derrière l'onglet
-                Décisions. Le lien remonte à la période close, ouverte sur ses
+                enchaîner sur une nouvelle saisie sans être passé par ses
+                résultats. Le lien remonte à la période close, ouverte sur ses
                 résultats (#dernier-resultat). */}
-            {view.kind === "solo" && latestRound !== null ? (
+            {latestRound !== null ? (
               <a
                 href="#dernier-resultat"
                 className="flex items-center justify-between gap-3 border-b border-emerald-400/20 bg-emerald-400/5 px-3 py-2.5 text-sm transition hover:bg-emerald-400/10 sm:px-4"
               >
                 <span className="flex items-center gap-2 font-medium text-emerald-200">
                   <span aria-hidden>📊</span>
-                  {periodLabel(view.roundDays, latestRound)} simulé — voir les résultats
+                  {periodLabel(view.roundDays, latestRound)} {view.kind === "solo" ? "simulé" : "clos"} — voir les résultats
                 </span>
                 <span aria-hidden className="text-emerald-300">
                   ↑
@@ -633,52 +625,35 @@ export default async function ArenaPage({
                   Défaut sur « Situation » : on lit l'énoncé avant de décider. */}
               <SegmentedTabs
                 defaultKey="situation"
-                // En solo, le tour est un fil d'étapes guidé en trois temps :
-                // Situation (données, marché, alertes, arbitrage) → Analyser
-                // (aides d'analyse puis les QCM en accordéon) → Décider. En
-                // classe, l'onglet « Situation » réunit tout sur un écran et les
-                // trois onglets restent libres. (L'onglet Résultats du tour actif
-                // est vide tant qu'il n'est pas clos ; inutile en solo, les
-                // résultats arrivant après la simulation.)
-                guided={view.kind === "solo"}
+                // Un seul parcours, solo comme en classe : un fil d'étapes guidé
+                // en trois temps — Situation (données, marché, alertes,
+                // arbitrage) → Analyser (aides d'analyse puis les QCM en
+                // accordéon) → Décider. En solo, « Décider » simule aussitôt ; en
+                // classe, il rend les décisions et les résultats arrivent à la
+                // clôture du tour, dans l'accordéon des tours passés (donc pas
+                // d'onglet Résultats vide ici).
+                guided
                 syncAnchors={["situation", "decisions"]}
-                tabs={
-                  view.kind === "solo"
-                    ? [
-                        { key: "situation", label: "Situation", icon: "📋" },
-                        { key: "analyser", label: "Analyser", icon: "🔍" },
-                        { key: "decisions", label: "Décider", icon: "✏️" },
-                      ]
-                    : [
-                        { key: "situation", label: "Situation", icon: "📋" },
-                        { key: "decisions", label: "Décisions", icon: "✏️" },
-                        { key: "resultats", label: "Résultats", icon: "📊" },
-                      ]
-                }
+                tabs={[
+                  { key: "situation", label: "Situation", icon: "📋" },
+                  { key: "analyser", label: "Analyser", icon: "🔍" },
+                  { key: "decisions", label: "Décider", icon: "✏️" },
+                ]}
               >
                 {{
-                  // « Situation » : le contexte du tour. En solo, uniquement le
-                  // décor (données, marché, alertes, arbitrage) — les aides et
-                  // les QCM passent dans « Analyser ». En classe, l'onglet réunit
-                  // tout sur un seul écran (situations et aides comprises).
-                  situation:
-                    view.kind === "solo" ? (
-                      <div id="situation" className="space-y-6">
-                        {donneesSection}
-                        {alertesSection}
-                        {dilemmeSection}
-                      </div>
-                    ) : (
-                      <div id="situation" className="space-y-6">
-                        {donneesSection}
-                        {alertesSection}
-                        {dilemmeSection}
-                        {situationsBloc}
-                        {pointsClesEtLeviers}
-                      </div>
-                    ),
-                  // « Analyser » (solo) : aides d'analyse puis QCM en accordéon.
-                  ...(view.kind === "solo" ? { analyser: analyserContenu } : {}),
+                  // « Situation » : le décor du tour (données, marché, alertes,
+                  // arbitrage). L'analyse (aides d'analyse + QCM) vit dans
+                  // « Analyser », et la saisie dans « Décider ».
+                  situation: (
+                    <div id="situation" className="space-y-6">
+                      {donneesSection}
+                      {alertesSection}
+                      {dilemmeSection}
+                    </div>
+                  ),
+                  // « Analyser » : aides d'analyse (points clés & leviers) puis
+                  // les QCM des situations en accordéon.
+                  analyser: analyserContenu,
                   decisions: (
                     <section id="decisions">
                 <div className="mb-4 border-b border-white/10 pb-3">
@@ -724,16 +699,6 @@ export default async function ArenaPage({
                   capacityFacts={view.capacityFacts}
                 />
               </section>
-                  ),
-                  resultats: (
-                    <div className="rounded-xl border border-white/10 bg-slate-900 p-8 text-center">
-                      <p className="text-sm text-slate-400">
-                        📊 Les résultats de ce tour n&apos;existent pas encore.
-                      </p>
-                      <p className="mt-1 text-xs text-slate-400">
-                        Ils s&apos;afficheront ici une fois le tour clos — et ouvriront le tour suivant.
-                      </p>
-                    </div>
                   ),
                 }}
               </SegmentedTabs>
