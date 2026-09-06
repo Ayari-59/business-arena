@@ -79,7 +79,7 @@ function EquipmentPanel({
           const sell = sellQty[t.code] ?? 0;
           const avgBook = owned > 0 ? (fl?.bookValue ?? 0) / owned : 0;
           return (
-            <div key={t.code} className="rounded-lg border border-white/5 bg-slate-900 px-3 py-2.5">
+            <div key={t.code} className="rounded-lg border border-white/5 bg-slate-900 px-2.5 py-2">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <span className="text-sm font-medium text-slate-200">{t.name}</span>
@@ -284,11 +284,11 @@ function Family({
 }) {
   return (
     <details open={defaultOpen} className={`group rounded-lg border ${tone}`}>
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 sm:px-4 sm:py-3 [&::-webkit-details-marker]:hidden">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-2.5 py-2 sm:px-3.5 sm:py-2.5 [&::-webkit-details-marker]:hidden">
         <span className={legendClass}>{legend}</span>
         <span className="text-xs text-slate-400 transition-transform group-open:rotate-90">▸</span>
       </summary>
-      <div className="border-t border-white/10 p-3 sm:p-4">{children}</div>
+      <div className="border-t border-white/10 p-2.5 sm:p-3.5">{children}</div>
     </details>
   );
 }
@@ -618,7 +618,7 @@ export function DecisionForm({
         </div>
       </Family>
       {capacityFacts ? (
-        <div className="rounded-lg border border-white/10 bg-slate-950 px-3 py-2.5 sm:px-4 sm:py-3">
+        <div className="rounded-lg border border-white/10 bg-slate-950 px-2.5 py-2 sm:px-3.5 sm:py-2.5">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
             ⚙️ {v.capacityPanelTitle}
           </p>
@@ -666,7 +666,7 @@ export function DecisionForm({
             {suppliersOffer.map((s) => (
               <label
                 key={s.code}
-                className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-3 py-2.5"
+                className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-2.5 py-2"
               >
                 <input
                   type="radio"
@@ -885,7 +885,7 @@ export function DecisionForm({
       {on.insurance && insuranceFormulas && insuranceFormulas.length > 0 ? (
         <Family legend="🛡️ Assurance · choisissez votre couverture">
           <div className="space-y-2">
-            <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-3 py-2.5">
+            <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-2.5 py-2">
               <input
                 type="radio"
                 name="insurance"
@@ -898,7 +898,7 @@ export function DecisionForm({
             {insuranceFormulas.map((f) => (
               <label
                 key={f.code}
-                className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-3 py-2.5"
+                className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-2.5 py-2"
               >
                 <input
                   type="radio"
@@ -924,7 +924,7 @@ export function DecisionForm({
           </p>
         </Family>
       ) : on.insurance && insuranceOffer ? (
-        <label className="flex items-start gap-3 rounded-lg border border-white/10 bg-slate-950 px-3 py-3">
+        <label className="flex items-start gap-3 rounded-lg border border-white/10 bg-slate-950 px-2.5 py-2">
           <input
             type="checkbox"
             name="insurance"
@@ -983,7 +983,7 @@ export function DecisionForm({
             ).map((study) => (
               <label
                 key={study.name}
-                className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-3 py-2.5"
+                className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-2.5 py-2"
               >
                 <input
                   type="checkbox"

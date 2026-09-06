@@ -119,7 +119,7 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
     setOptions((prec) => (coche ? [...new Set([...prec, id])] : prec.filter((o) => o !== id)));
 
   return (
-    <article className="rounded-xl border border-amber-400/20 bg-slate-900 p-5">
+    <article className="rounded-xl border border-amber-400/20 bg-slate-900 p-3.5 sm:p-5">
       <header className="mb-3">
         <div className="flex items-center gap-2">
           <p className="text-xs uppercase tracking-[0.25em] text-amber-400">
@@ -141,10 +141,10 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
 
       {situation.triggerFacts && situation.triggerFacts.length > 0 ? (
         <details className="mb-4 rounded-lg border border-slate-700/60 bg-slate-950/50">
-          <summary className="cursor-pointer px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-400 hover:text-slate-300">
+          <summary className="cursor-pointer px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-400 hover:text-slate-300 sm:px-4 sm:py-2.5">
             Pourquoi cette situation ?
           </summary>
-          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 px-4 pb-3 pt-1">
+          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 px-3 pb-3 pt-1 sm:px-4">
             {situation.triggerFacts.map((fact, i) => (
               <div key={i} className="col-span-2 flex items-baseline justify-between gap-3">
                 <dt className="text-xs text-slate-400">{fact.label}</dt>
@@ -170,7 +170,7 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
           fil d'étapes passe aux décisions — inutile d'afficher « rendue ». */}
       <div className="space-y-4">
         {rendue ? (
-          <section className="rounded-lg bg-slate-950 p-4">
+          <section className="rounded-lg bg-slate-950 p-3 sm:p-4">
             <p className="text-sm text-emerald-300">
               ✓ Analyse rendue — la correction sera révélée au débriefing du tour.
             </p>
@@ -180,7 +180,7 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
             <input type="hidden" name="questions" value={questionsARendre.map((q) => q.id).join(",")} />
 
             {/* 1. Diagnostic */}
-            <section className="rounded-lg bg-slate-950 p-4">
+            <section className="rounded-lg bg-slate-950 p-3 sm:p-4">
               <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                 Votre diagnostic
               </h4>
@@ -218,7 +218,7 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
 
             {/* 2. Questions : connaissances et/ou modèle d'analyse */}
             {situation.quizQuestions.length > 0 ? (
-              <section className="rounded-lg bg-slate-950 p-4">
+              <section className="rounded-lg bg-slate-950 p-3 sm:p-4">
                 <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                   {quizHeading(situation.quizQuestions)}
                 </h4>
@@ -284,7 +284,7 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
         )}
 
         {/* 3. Indices */}
-        <section className="rounded-lg bg-slate-950 p-4">
+        <section className="rounded-lg bg-slate-950 p-3 sm:p-4">
           <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
             Besoin d&apos;aide ? Indices progressifs
           </h4>
@@ -343,7 +343,7 @@ export function SituationDebrief({
   const answers = situation.quizAnswers ?? {};
   const scoreSur100 = Math.round(debrief.finalScore * 100);
   return (
-    <article className="rounded-xl border border-white/10 bg-slate-900 p-5">
+    <article className="rounded-xl border border-white/10 bg-slate-900 p-3.5 sm:p-5">
       <header className="mb-3 flex items-start justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.25em] text-slate-400">Débriefing</p>
@@ -538,7 +538,7 @@ function SituationRetake({ gameId, situation }: { gameId: string; situation: Sit
   const complet = manquants.length === 0;
 
   return (
-    <form ref={rendu.formRef} action={formAction} className="mt-4 space-y-3 rounded-lg border border-sky-400/30 bg-sky-950/10 p-4">
+    <form ref={rendu.formRef} action={formAction} className="mt-4 space-y-3 rounded-lg border border-sky-400/30 bg-sky-950/10 p-3 sm:p-4">
       <p className="text-xs font-semibold uppercase tracking-wide text-sky-300">
         Rattrapage · score compté pour moitié
       </p>
