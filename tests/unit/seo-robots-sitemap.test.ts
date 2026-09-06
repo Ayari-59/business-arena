@@ -73,9 +73,9 @@ describe("sitemap.xml", () => {
 
   it("liste chaque atelier publié avec sa page, son dossier et ses formulaires", () => {
     for (const a of ATELIERS) {
-      expect(urls).toContain(`${SITE_URL}/ateliers/${a.code}`);
-      expect(urls).toContain(`${SITE_URL}/ateliers/${a.code}/dossier`);
-      expect(urls).toContain(`${SITE_URL}/ateliers/${a.code}/formulaires`);
+      expect(urls).toContain(`${SITE_URL}/animations/${a.code}`);
+      expect(urls).toContain(`${SITE_URL}/animations/${a.code}/dossier`);
+      expect(urls).toContain(`${SITE_URL}/animations/${a.code}/formulaires`);
     }
   });
 

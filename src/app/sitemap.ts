@@ -15,7 +15,7 @@ export const PAGES_PUBLIQUES = [
   "/",
   "/jouer",
   "/entreprises",
-  "/ateliers",
+  "/animations",
   "/parcours",
   "/fonctionnalites",
   "/notions",
@@ -36,19 +36,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const ateliers: MetadataRoute.Sitemap = ATELIERS.flatMap((a) => [
     {
-      url: `${SITE_URL}/ateliers/${a.code}`,
+      url: `${SITE_URL}/animations/${a.code}`,
       lastModified: DATE_DE_BUILD,
       changeFrequency: "monthly" as const,
       priority: 0.7,
     },
     {
-      url: `${SITE_URL}/ateliers/${a.code}/dossier`,
+      url: `${SITE_URL}/animations/${a.code}/dossier`,
       lastModified: DATE_DE_BUILD,
       changeFrequency: "monthly" as const,
       priority: 0.5,
     },
     {
-      url: `${SITE_URL}/ateliers/${a.code}/formulaires`,
+      url: `${SITE_URL}/animations/${a.code}/formulaires`,
       lastModified: DATE_DE_BUILD,
       changeFrequency: "monthly" as const,
       priority: 0.5,

@@ -34,7 +34,7 @@ afterAll(async () => {
 describe("les documents d'un atelier", () => {
   for (const atelier of ATELIERS) {
     it(`${atelier.code} : chaque rubrique demandée est sur la feuille`, async () => {
-      await aller(page, `/ateliers/${atelier.code}/formulaires`);
+      await aller(page, `/animations/${atelier.code}/formulaires`);
       // La page met les intitulés en capitales et les rubriques en majuscule
       // initiale : c'est de la typographie, elle ne change pas ce qui est
       // demandé. On compare donc ce qui est écrit, pas comment c'est dessiné.
@@ -63,7 +63,7 @@ describe("les documents d'un atelier", () => {
     for (const atelier of ATELIERS) {
       const prof = dossierEnseignant(atelier);
       for (const chemin of ["formulaires", "dossier"]) {
-        await aller(page, `/ateliers/${atelier.code}/${chemin}`);
+        await aller(page, `/animations/${atelier.code}/${chemin}`);
         const texte = await page.locator("main").innerText();
         for (const s of prof.situations) {
           for (const c of s.corriges) {

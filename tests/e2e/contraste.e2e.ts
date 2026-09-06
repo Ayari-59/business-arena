@@ -17,7 +17,7 @@ import { THEMES, THEME_PAR_DEFAUT } from "../../src/config/themes";
  * pas pour objet de les corriger. Il garde une chose : qu'un thème ne dégrade
  * pas ce qui était lisible.
  */
-const PAGES = ["/", "/jouer", "/entreprises", "/concepts", "/ateliers"];
+const PAGES = ["/", "/jouer", "/entreprises", "/concepts", "/animations"];
 
 let navigateur: Browser;
 let page: Page;

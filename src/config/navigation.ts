@@ -53,8 +53,8 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
         enTete: true,
       },
       {
-        href: "/ateliers",
-        libelle: "Ateliers",
+        href: "/animations",
+        libelle: "Animations",
         aide: "Des déroulés de séance prêts à animer, avec leurs livrables et leur grille d'évaluation.",
         enTete: true,
       },

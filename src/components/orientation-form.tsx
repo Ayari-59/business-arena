@@ -161,7 +161,7 @@ export function OrientationForm({ contactEmail }: { contactEmail: string }) {
           <dd className="font-medium text-slate-100">
             {reco.atelierCode ? (
               <Link
-                href={`/ateliers/${reco.atelierCode}`}
+                href={`/animations/${reco.atelierCode}`}
                 className="text-amber-300 underline-offset-4 hover:underline"
               >
                 Voir le déroulé prêt à animer

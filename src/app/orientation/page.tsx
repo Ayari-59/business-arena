@@ -51,7 +51,7 @@ export default async function OrientationPage() {
           les fiches des entreprises
         </Link>{" "}
         ou{" "}
-        <Link href="/ateliers" className="text-slate-400 underline-offset-4 hover:underline">
+        <Link href="/animations" className="text-slate-400 underline-offset-4 hover:underline">
           les ateliers publiés
         </Link>
         .

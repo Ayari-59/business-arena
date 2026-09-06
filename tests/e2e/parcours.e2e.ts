@@ -328,7 +328,7 @@ describe("parcours enseignant et élève", () => {
     // Une fiche d'atelier est un contrat de temps. Les totaux affichés sont
     // calculés à partir du déroulé : ce test vérifie qu'ils arrivent bien
     // jusqu'à la page, et que les six séances y sont toutes.
-    await aller(prof, "/ateliers");
+    await aller(prof, "/animations");
     expect(await texte(prof)).toContain("BTS Comptabilité et Gestion");
 
     // On désigne la fiche par son adresse et non par le premier lien de la
@@ -336,8 +336,8 @@ describe("parcours enseignant et élève", () => {
     // la liste, et il est devenu rouge le jour où une animation de découverte
     // est passée devant lui. L'ordre du registre est une décision de
     // présentation, pas un contrat de test.
-    await prof.locator('a[href="/ateliers/cg1"]').first().click();
-    await prof.waitForURL(/\/ateliers\/cg1$/, { timeout: 30_000 });
+    await prof.locator('a[href="/animations/cg1"]').first().click();
+    await prof.waitForURL(/\/animations\/cg1$/, { timeout: 30_000 });
     // Comparaison insensible à la casse : plusieurs intitulés sont mis en
     // CAPITALES par le CSS, si bien que le texte visible ne correspond pas à
     // celui du code. Le piège avait déjà coûté un faux échec sur « Note ».
@@ -369,8 +369,8 @@ describe("parcours enseignant et élève", () => {
     for (const chemin of [
       "/",
       "/entreprises",
-      "/ateliers",
-      "/ateliers/cg1",
+      "/animations",
+      "/animations/cg1",
       "/guide",
       "/parcours",
       "/concepts",
