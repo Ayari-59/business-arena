@@ -14,6 +14,7 @@ import { SITE_URL } from "@/config/site";
 export const PAGES_PUBLIQUES = [
   "/",
   "/jouer",
+  "/enseignants",
   "/entreprises",
   "/animations",
   "/parcours",
