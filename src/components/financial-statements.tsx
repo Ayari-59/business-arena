@@ -53,11 +53,11 @@ function Panel({
       className="group rounded-xl border border-white/10 bg-slate-900"
       open={defaultOpen}
     >
-      <summary className="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-slate-200 hover:text-amber-200">
+      <summary className="cursor-pointer select-none px-3 py-2.5 sm:px-4 sm:py-3 text-sm font-semibold text-slate-200 hover:text-amber-200">
         {title}
         <span className="float-right text-xs text-slate-400 group-open:hidden">déplier</span>
       </summary>
-      <div className="border-t border-white/5 px-4 py-3">{children}</div>
+      <div className="border-t border-white/5 px-3 py-2.5 sm:px-4 sm:py-3">{children}</div>
     </details>
   );
 }

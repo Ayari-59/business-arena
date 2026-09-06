@@ -24,7 +24,7 @@ export function SalesHistory({
   if (history.rounds.length === 0) return null;
 
   return (
-    <details className="rounded-xl border border-white/10 bg-slate-900 p-4">
+    <details className="rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-4">
       <summary className="cursor-pointer text-sm font-semibold text-slate-200">
         📈 Historique de vos ventes ({history.rounds.length} tour
         {history.rounds.length > 1 ? "s" : ""})

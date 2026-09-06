@@ -40,7 +40,7 @@ export function KpiCard({
     trend?.direction === "up" ? "↑" : trend?.direction === "down" ? "↓" : "→";
 
   return (
-    <div className={`relative overflow-hidden rounded-xl border ${border} bg-slate-900 p-4`}>
+    <div className={`relative overflow-hidden rounded-xl border ${border} bg-slate-900 p-3 sm:p-4`}>
       <div className={`absolute inset-y-0 left-0 w-1 ${stripe}`} />
       <p className="pl-2 text-xs uppercase tracking-wide text-slate-400">{label}</p>
       <div className="mt-1 flex items-baseline gap-2 pl-2">

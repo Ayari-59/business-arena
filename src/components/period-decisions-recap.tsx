@@ -75,7 +75,7 @@ export function PeriodDecisionsRecap({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <p className="text-xs text-slate-400">
         Ce que votre équipe a rendu pour ce tour. À relire en face des résultats.
       </p>
