@@ -589,7 +589,7 @@ export default async function ArenaPage({
         {hasActivePeriod ? (
           <section
             id="tour-en-cours"
-            className="scroll-mt-24 rounded-xl border-2 border-amber-400/40 bg-slate-950/40"
+            className="scroll-mt-24 rounded-xl border border-amber-400/30 bg-slate-950/40"
           >
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-400/20 px-3 py-2.5 sm:px-4">
               <span className="flex items-center gap-2 text-sm font-semibold text-amber-200">
@@ -680,7 +680,7 @@ export default async function ArenaPage({
                   // « Analyser » (solo) : aides d'analyse puis QCM en accordéon.
                   ...(view.kind === "solo" ? { analyser: analyserContenu } : {}),
                   decisions: (
-                    <section id="decisions" className="rounded-xl border border-amber-400/20 bg-slate-900 p-6">
+                    <section id="decisions" className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
                 <div className="mb-4 border-b border-white/10 pb-3">
                   <h2 className="text-sm font-semibold text-slate-200">
                     Vos décisions · {periodLabel(view.roundDays, view.currentRound).toLowerCase()}
