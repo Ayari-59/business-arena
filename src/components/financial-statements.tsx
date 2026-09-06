@@ -57,7 +57,7 @@ function Panel({
         {title}
         <span className="float-right text-xs text-slate-400 group-open:hidden">déplier</span>
       </summary>
-      <div className="border-t border-white/5 px-3 py-2.5 sm:px-4 sm:py-3">{children}</div>
+      <div className="border-t border-white/5 px-2 py-2.5 sm:px-4 sm:py-3">{children}</div>
     </details>
   );
 }
@@ -77,7 +77,7 @@ function Row({
 }) {
   return (
     <div
-      className={`flex items-baseline justify-between gap-4 py-1 text-xs ${
+      className={`flex items-baseline justify-between gap-2 py-1 text-xs ${
         strong ? "border-t border-white/10 font-semibold text-slate-100" : "text-slate-300"
       } ${indent ? "pl-4 text-slate-400" : ""}`}
     >
@@ -179,7 +179,7 @@ export function FinancialStatements({
       </Panel>
 
       <Panel title="Bilan">
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-2 sm:grid-cols-2">
           <div>
             <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
               Actif
@@ -224,7 +224,7 @@ export function FinancialStatements({
       </Panel>
 
       <Panel title="Analyse des coûts">
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-2 sm:grid-cols-2">
           <div>
             <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
               À l&apos;unité

@@ -211,9 +211,9 @@ export function PeriodDashboard({
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
-                      <th className="pb-2 pr-3 font-medium">Segment</th>
-                      <th className="pb-2 pr-3 text-right font-medium">Demande</th>
-                      <th className="pb-2 pr-3 text-right font-medium">Vendu</th>
+                      <th className="pb-2 pr-2 font-medium">Segment</th>
+                      <th className="pb-2 pr-2 text-right font-medium">Demande</th>
+                      <th className="pb-2 pr-2 text-right font-medium">Vendu</th>
                       <th className="pb-2 text-right font-medium">Manqué</th>
                     </tr>
                   </thead>
@@ -222,9 +222,9 @@ export function PeriodDashboard({
                       .filter(([, d]) => d.potential > 0)
                       .map(([code, d]) => (
                         <tr key={code} className="border-t border-white/5">
-                          <td className="py-2 pr-3">{view.segmentNames[code] ?? code}</td>
-                          <td className="py-2 pr-3 text-right tabular-nums">{formatUnits(d.demandForCompany)}</td>
-                          <td className="py-2 pr-3 text-right tabular-nums">{formatUnits(d.sold)}</td>
+                          <td className="py-2 pr-2">{view.segmentNames[code] ?? code}</td>
+                          <td className="py-2 pr-2 text-right tabular-nums">{formatUnits(d.demandForCompany)}</td>
+                          <td className="py-2 pr-2 text-right tabular-nums">{formatUnits(d.sold)}</td>
                           <td className={`py-2 text-right tabular-nums ${d.lost > 1 ? "text-red-400" : ""}`}>
                             {formatUnits(d.lost)}
                           </td>
@@ -297,10 +297,10 @@ export function PeriodDashboard({
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
-                        <th className="pb-1 pr-3 font-medium" />
-                        <th className="pb-1 pr-3 text-right font-medium">Prévu</th>
-                        <th className="pb-1 pr-3 text-right font-medium">Réalisé</th>
-                        <th className="pb-1 pr-3 text-right font-medium">Écart</th>
+                        <th className="pb-1 pr-2 font-medium" />
+                        <th className="pb-1 pr-2 text-right font-medium">Prévu</th>
+                        <th className="pb-1 pr-2 text-right font-medium">Réalisé</th>
+                        <th className="pb-1 pr-2 text-right font-medium">Écart</th>
                         <th className="pb-1 text-right font-medium">Écart relatif</th>
                       </tr>
                     </thead>
@@ -312,15 +312,15 @@ export function PeriodDashboard({
                         const severe = line.relative !== null && Math.abs(line.relative) > 0.1;
                         return (
                           <tr key={line.label} className="border-t border-white/5">
-                            <td className="py-1.5 pr-3">{line.label}</td>
-                            <td className="py-1.5 pr-3 text-right tabular-nums text-slate-400">
+                            <td className="py-1.5 pr-2">{line.label}</td>
+                            <td className="py-1.5 pr-2 text-right tabular-nums text-slate-400">
                               {show(line.forecast)}
                             </td>
-                            <td className="py-1.5 pr-3 text-right tabular-nums text-slate-100">
+                            <td className="py-1.5 pr-2 text-right tabular-nums text-slate-100">
                               {show(line.actual)}
                             </td>
                             <td
-                              className={`py-1.5 pr-3 text-right tabular-nums ${
+                              className={`py-1.5 pr-2 text-right tabular-nums ${
                                 severe ? "text-amber-300" : "text-emerald-300"
                               }`}
                             >
