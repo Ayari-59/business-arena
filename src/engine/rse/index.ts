@@ -45,65 +45,102 @@ export const DEFAULT_RSE_CONFIG: RseEngineConfig = {
     badBuzzImageCeiling: 0.25,
     badBuzzProbability: 0.25,
     badBuzzDemandMalus: 0.25,
+    aidCleanThreshold: 0.7,
+    aidAmount: 1,
+    sanctionProbability: 0.2,
+    fineAmount: 1,
   },
 };
 
-/** Codes des cartes événement RSE (Lot 2C), reliés à leur habillage narratif. */
+/** Codes des cartes événement RSE (Lot 2C / 2C.2), reliés à leur habillage. */
 export const RSE_CARD_CODES = {
   label: "rse_label",
   badBuzz: "rse_bad_buzz",
+  subvention: "rse_subvention",
+  sanction: "rse_sanction",
 } as const;
 
 export interface RseCardDraw {
   code: string;
-  /** Facteur appliqué à l'attractivité (> 1 = bonus, < 1 = malus). */
-  demandFactor: number;
   /** Durée en tours. */
   duration: number;
+  /** Cartes à effet demande (label, bad buzz) : facteur d'attractivité. */
+  demandFactor?: number;
+  /** Éco-subvention (2C.2) : produit exceptionnel encaissé, en €. */
+  aid?: number;
+  /** Sanction (2C.2) : charge exceptionnelle décaissée, en €. */
+  penalty?: number;
 }
 
 /**
- * CARTES ÉVÉNEMENT RSE (Lot 2C) — décision PURE, tirée sur le capital-image
- * d'OUVERTURE. Deux cartes qui s'excluent (le plafond bad buzz est sous le
- * seuil label) :
+ * CARTES ÉVÉNEMENT RSE (Lot 2C / 2C.2) — décision PURE, tirée sur les capitaux
+ * d'OUVERTURE. Chaque capital a son upside et le zone tiède de l'image porte
+ * ses risques ; les cartes peuvent se cumuler (au plus une par pilier) :
  *
- * - 🏅 LABEL : un capital mûr est récompensé par un bonus de demande durable.
- * - 📢 BAD BUZZ : un engagement TIÈDE (capital positif mais faible) expose à un
- *   risque probabiliste — « on ne peut pas s'afficher responsable à moitié ».
+ * IMAGE (rse.budget) :
+ * - 🏅 LABEL : capital mûr → bonus de demande durable.
+ * - 📢 BAD BUZZ : capital TIÈDE (>0 et < plafond) → malus de demande, un tour.
+ * - ⚖️ SANCTION : même zone tiède → risque d'AMENDE (charge exceptionnelle).
+ * PROCESS PROPRE (rse.investment) :
+ * - 💶 ÉCO-SUBVENTION : capital « propre » mûr → aide (produit exceptionnel).
  *
- * Un capital NUL ne déclenche RIEN : qui n'a jamais joué la RSE n'est ni primé
- * ni sanctionné (la RSE reste facultative). Rien avant `minRound` : un bénéfice
- * différé n'existe pas sur un horizon trop court.
+ * Un capital NUL sur les deux piliers ne déclenche RIEN : qui n'a jamais joué
+ * la RSE n'est ni primé ni sanctionné (la RSE reste facultative). Rien avant
+ * `minRound` : un bénéfice différé n'existe pas sur un horizon trop court.
  *
- * `roll` est UN tirage seedé (0..1) pour la part probabiliste du bad buzz.
+ * Montants d'amende/subvention en MULTIPLE de `scale` (échelle marketing du
+ * scénario) → auto-calibrés par secteur. `badBuzzRoll` et `sanctionRoll` sont
+ * deux tirages seedés INDÉPENDANTS.
  */
 export function evaluateRseCards(args: {
   imageCapital: number;
+  cleanCapital: number;
   roundIndex: number;
   config: RseEngineConfig["cards"];
-  roll: number;
+  scale: number;
+  badBuzzRoll: number;
+  sanctionRoll: number;
 }): RseCardDraw[] {
-  const { imageCapital, roundIndex, config, roll } = args;
-  if (roundIndex < config.minRound || imageCapital <= 0) return [];
+  const { imageCapital, cleanCapital, roundIndex, config, scale, badBuzzRoll, sanctionRoll } = args;
+  if (roundIndex < config.minRound || (imageCapital <= 0 && cleanCapital <= 0)) return [];
+  const cards: RseCardDraw[] = [];
+
+  // Pilier IMAGE.
   if (imageCapital >= config.labelImageThreshold) {
-    return [
-      {
-        code: RSE_CARD_CODES.label,
-        demandFactor: 1 + Math.max(0, config.labelDemandBonus),
-        duration: Math.max(1, config.labelDuration),
-      },
-    ];
-  }
-  if (imageCapital < config.badBuzzImageCeiling && roll < config.badBuzzProbability) {
-    return [
-      {
+    cards.push({
+      code: RSE_CARD_CODES.label,
+      demandFactor: 1 + Math.max(0, config.labelDemandBonus),
+      duration: Math.max(1, config.labelDuration),
+    });
+  } else if (imageCapital > 0 && imageCapital < config.badBuzzImageCeiling) {
+    // Zone tiède : bad buzz (demande) et sanction (cash) sont deux risques
+    // distincts, tirés indépendamment — ils peuvent tomber ensemble ou non.
+    if (badBuzzRoll < config.badBuzzProbability) {
+      cards.push({
         code: RSE_CARD_CODES.badBuzz,
         demandFactor: Math.max(0, 1 - Math.max(0, config.badBuzzDemandMalus)),
         duration: 1,
-      },
-    ];
+      });
+    }
+    if (sanctionRoll < config.sanctionProbability) {
+      cards.push({
+        code: RSE_CARD_CODES.sanction,
+        penalty: Math.max(0, config.fineAmount) * Math.max(0, scale),
+        duration: 1,
+      });
+    }
   }
-  return [];
+
+  // Pilier PROCESS PROPRE : indépendant de l'image (cumulable avec un label).
+  if (cleanCapital >= config.aidCleanThreshold) {
+    cards.push({
+      code: RSE_CARD_CODES.subvention,
+      aid: Math.max(0, config.aidAmount) * Math.max(0, scale),
+      duration: 1,
+    });
+  }
+
+  return cards;
 }
 
 /**

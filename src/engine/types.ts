@@ -68,6 +68,14 @@ export interface RseEngineConfig {
     badBuzzProbability: number;
     /** Malus de demande du bad buzz (0,25 = −25 %), un tour. */
     badBuzzDemandMalus: number;
+    /** 💶 Éco-subvention : capital « process propre » ≥ ce seuil → aide (Lot 2C.2). */
+    aidCleanThreshold: number;
+    /** Montant de l'éco-subvention, en MULTIPLE de l'échelle marketing du scénario. */
+    aidAmount: number;
+    /** ⚖️ Sanction : probabilité d'amende par tour dans la zone d'image tiède (Lot 2C.2). */
+    sanctionProbability: number;
+    /** Montant de l'amende, en MULTIPLE de l'échelle marketing du scénario. */
+    fineAmount: number;
   };
 }
 
@@ -518,7 +526,9 @@ export type ModifierTarget =
   | "interest_rate" // multiplie les taux d'intérêt du tour
   | "order" // commande ferme : unités vendues d'office (add), réglées comptant, dans la limite du stock
   | "order_price" // prix unitaire IMPOSÉ des unités de commande ferme du tour (valeur absolue)
-  | "order_subcontract"; // unités de la commande sous-traitables (add) — au coût scenario.subcontracting
+  | "order_subcontract" // unités de la commande sous-traitables (add) — au coût scenario.subcontracting
+  | "financial_penalty" // charge exceptionnelle du tour (€ absolus, add) — ex. amende RSE
+  | "financial_aid"; // produit exceptionnel du tour (€ absolus, add) — ex. éco-subvention RSE
 
 export interface EventModifier {
   target: ModifierTarget;
@@ -769,6 +779,10 @@ export interface IncomeStatement {
   interest: number;
   /** Produits financiers du tour (intérêts du placement arrivé à terme). */
   financialIncome?: number;
+  /** Charge exceptionnelle du tour (ex. amende RSE, Lot 2C.2). Absente si nulle. */
+  exceptionalCharge?: number;
+  /** Produit exceptionnel du tour (ex. éco-subvention RSE, Lot 2C.2). Absent si nul. */
+  exceptionalIncome?: number;
   pretaxIncome: number;
   /**
    * Déficit reporté imputé sur le bénéfice de ce tour (report en avant des

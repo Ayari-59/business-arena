@@ -323,6 +323,30 @@ const RSE_CARDS: EventCardDef[] = [
     emoji: "📢",
     scope: "team",
   },
+  {
+    code: "rse_sanction",
+    title: "Contrôle et sanction",
+    flavor:
+      "Un contrôle épingle un engagement en trompe-l'œil : l'amende tombe, en charge exceptionnelle.",
+    effectLabel: "Amende — charge exceptionnelle ce tour",
+    conceptHint:
+      "Le risque RSE n'est pas que d'image : la réglementation a un coût, comptabilisé hors exploitation.",
+    category: "macro",
+    emoji: "⚖️",
+    scope: "team",
+  },
+  {
+    code: "rse_subvention",
+    title: "Éco-subvention",
+    flavor:
+      "Votre investissement dans un process plus propre est reconnu : une aide vient soutenir l'effort.",
+    effectLabel: "Aide — produit exceptionnel ce tour",
+    conceptHint:
+      "L'investissement responsable peut être cofinancé : une subvention améliore le résultat hors exploitation.",
+    category: "macro",
+    emoji: "💶",
+    scope: "team",
+  },
 ];
 
 export const EVENT_CARDS: EventCardDef[] = [

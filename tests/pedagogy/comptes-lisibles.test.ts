@@ -81,6 +81,8 @@ const SANS_FICHE: string[] = [
   "dont déficit antérieur imputé (report)",
   "− Charges financières (intérêts, agios, mobilisations)",
   "+ Produits financiers (placement)",
+  "− Sanction RSE (exceptionnel)",
+  "+ Éco-subvention RSE (exceptionnel)",
   "= RÉSULTAT NET",
   "= Résultat d'exploitation",
   "Production stockée (± Δ stock)",
