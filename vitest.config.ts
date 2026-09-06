@@ -3,7 +3,15 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   resolve: {
-    alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
+    alias: {
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
+      // next/font/google est résolu par le compilateur de Next au build ;
+      // sous vitest il n'existe pas, donc on le remplace par un stub pour les
+      // tests qui importent le layout (métadonnées, viewport).
+      "next/font/google": fileURLToPath(
+        new URL("./tests/setup/next-font-google.ts", import.meta.url),
+      ),
+    },
   },
   test: {
     include: ["tests/**/*.test.ts"],

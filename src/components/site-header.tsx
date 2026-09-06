@@ -74,7 +74,10 @@ export function SiteHeader() {
   const estCourant = (href: string) => chemin === href || chemin.startsWith(`${href}/`);
 
   return (
-    <header ref={cadre} className="relative z-40 border-b border-white/5 print:hidden">
+    <header
+      ref={cadre}
+      className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/70 backdrop-blur-md supports-[backdrop-filter]:bg-slate-950/55 print:static print:bg-transparent print:hidden"
+    >
       {/* La rangée a le droit de passer à la ligne. Sans cela, un bouton qui
           apparaît (l'invite d'installation ne se montre que sur certains
           appareils) pousse la fin de la barre hors de l'écran, et personne ne
@@ -91,7 +94,7 @@ export function SiteHeader() {
               réglage en cours pour un défaut, et invite aux retours. */}
           <span
             title="Version bêta : la plateforme est pleinement utilisable, mais scénarios et contenus évoluent encore. Vos retours sont les bienvenus."
-            className="rounded-full border border-sky-400/40 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-sky-300"
+            className="rounded-full border border-amber-400/30 bg-amber-400/5 px-2 py-0.5 text-xs font-semibold uppercase tracking-[0.18em] text-amber-200/90"
           >
             Bêta
           </span>
@@ -111,7 +114,7 @@ export function SiteHeader() {
                   aria-current={estCourant(lien.href) ? "page" : undefined}
                   className={`block rounded-lg px-3 py-1.5 text-sm font-medium transition ${
                     estCourant(lien.href)
-                      ? "bg-white/10 text-white"
+                      ? "bg-amber-400/10 text-amber-200 ring-1 ring-inset ring-amber-400/20"
                       : "text-slate-300 hover:bg-white/5 hover:text-white"
                   }`}
                 >
