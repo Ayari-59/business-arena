@@ -128,7 +128,7 @@ export function PeriodDashboard({
             {standing ? (
               <section className="grid gap-3 lg:grid-cols-2">
                 <div className="rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-4">
-                  <h2 className="mb-3 text-sm font-semibold text-slate-200">
+                  <h2 className="mb-2 text-sm font-semibold text-slate-200">
                     Classement · Business Performance Index
                   </h2>
                   <ol className="space-y-2">
@@ -186,7 +186,7 @@ export function PeriodDashboard({
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-sky-300">
                   📐 Indicateurs du métier
                 </h3>
-                <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {period.sectorKpis.map((k) => (
                     <div
                       key={k.key}
@@ -204,7 +204,7 @@ export function PeriodDashboard({
             ) : null}
 
             <section>
-              <h3 className="mb-3 text-sm font-semibold text-slate-200">
+              <h3 className="mb-2 text-sm font-semibold text-slate-200">
                 Marché du tour écoulé
               </h3>
               <div className="overflow-x-auto">
@@ -289,7 +289,7 @@ export function PeriodDashboard({
             ) : null}
 
             {period.forecastReview ? (
-              <div className="rounded-lg border border-sky-400/25 bg-sky-950/20 p-3 sm:p-4">
+              <div className="rounded-lg border border-sky-400/25 bg-sky-950/20 px-2 py-3 sm:p-4">
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-sky-300">
                   🏦 Votre plan face au réalisé
                 </h3>
