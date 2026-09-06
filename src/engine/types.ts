@@ -46,6 +46,29 @@ export interface RseEngineConfig {
    * vite quand le salaire glisse sous le marché. 0 = pas d'effet social.
    */
   socialAttritionRelief: number;
+  /**
+   * CARTES ÉVÉNEMENT RSE (Lot 2C). Le monde réagit au standing par des cartes à
+   * effet DEMANDE, tirées sur le capital-image d'OUVERTURE. Elles ne concernent
+   * que les entreprises qui ONT joué la RSE : un capital nul ne déclenche rien
+   * (ni label, ni bad buzz), ce qui laisse la RSE facultative aux niveaux qui ne
+   * l'ouvrent pas.
+   */
+  cards: {
+    /** Pas de carte RSE avant ce tour (l'horizon où un capital a pu se bâtir). */
+    minRound: number;
+    /** 🏅 Label : capital-image ≥ ce seuil → bonus de demande, plusieurs tours. */
+    labelImageThreshold: number;
+    /** Bonus de demande du label (0,15 = +15 %). */
+    labelDemandBonus: number;
+    /** Durée du label, en tours. */
+    labelDuration: number;
+    /** 📢 Bad buzz : risque quand 0 < capital-image < ce plafond (engagement tiède). */
+    badBuzzImageCeiling: number;
+    /** Probabilité de bad buzz par tour dans la zone tiède. */
+    badBuzzProbability: number;
+    /** Malus de demande du bad buzz (0,25 = −25 %), un tour. */
+    badBuzzDemandMalus: number;
+  };
 }
 
 export interface EngineScenarioConfig {

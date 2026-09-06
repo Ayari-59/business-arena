@@ -32,6 +32,8 @@ import {
   cleanDefectReduction,
   financingTrustBonus,
   socialAttritionRelief,
+  evaluateRseCards,
+  RSE_CARD_CODES,
 } from "../rse";
 import { computeFunctionalBalance } from "../finance/functional";
 import { computeRatios } from "../finance/ratios";
@@ -130,6 +132,36 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     input.activeEvents,
     rng,
   );
+  // 1bis. Cartes événement RSE (Lot 2C) : company-scope, tirées sur le
+  // capital-image d'OUVERTURE de chaque entreprise. Elles n'entrent PAS dans
+  // marketMods (scope company) et leur effet demande est appliqué via
+  // l'attraction (le moteur n'applique pas les modificateurs de demande
+  // company-scope ailleurs — voir rseCardFactor plus bas). RNG DÉDIÉ : ne pas
+  // consommer le stream principal préserve tous les tirages existants.
+  const rseCardsConfig = scenario.rse?.cards ?? DEFAULT_RSE_CONFIG.cards;
+  const rseCardRng = createRng(deriveRoundSeed(input.seed ^ 0x52534332, roundIndex));
+  for (const state of input.companies) {
+    if (state.status === "defaillant") continue;
+    const draws = evaluateRseCards({
+      imageCapital: Math.max(0, state.rseImageCapital ?? 0),
+      roundIndex,
+      config: rseCardsConfig,
+      roll: rseCardRng.next(),
+    });
+    for (const d of draws) {
+      if (active.some((e) => e.code === d.code && e.companyId === state.id)) continue;
+      const instance = {
+        code: d.code,
+        scope: "company" as const,
+        companyId: state.id,
+        roundsLeft: d.duration,
+        modifiers: [{ target: "demand" as const, op: "mul" as const, value: d.demandFactor }],
+      };
+      active.push(instance);
+      drawn.push(instance);
+    }
+  }
+
   const marketMods = effectiveModifiers(
     active.filter((e) => e.scope === "market"),
     "",
@@ -186,6 +218,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     rseInvestment: number;
     rseCost: number;
     rseImageFactor: number;
+    rseCardFactor: number;
     rseDefectReduction: number;
     rseAttritionRelief: number;
     rseNextImageCapital: number;
@@ -348,6 +381,20 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const rseCost = rseBudget + rseInvestment;
     const rseScale = scenario.marketing.scale;
     const rseImageFactor = imageAttractionFactor(rseOpeningImage, rseConfig.imageDemandSensitivity);
+    // Cartes RSE (Lot 2C) : leur effet demande passe par l'attraction (le moteur
+    // n'applique pas les modificateurs de demande company-scope ailleurs). On
+    // isole les SEULS codes RSE : les autres événements company-scope à modif de
+    // demande (conseil, nova) gardent leur comportement historique intact.
+    const rseCardFactor = active
+      .filter(
+        (e) =>
+          e.companyId === state.id &&
+          (e.code === RSE_CARD_CODES.label || e.code === RSE_CARD_CODES.badBuzz),
+      )
+      .reduce(
+        (f, e) => f * (e.modifiers.find((m) => m.target === "demand")?.value ?? 1),
+        1,
+      );
     const rseDefectReduction = cleanDefectReduction(
       rseOpeningClean,
       rseConfig.cleanDefectReductionMax,
@@ -508,6 +555,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       rseInvestment,
       rseCost,
       rseImageFactor,
+      rseCardFactor,
       rseDefectReduction,
       rseAttritionRelief,
       rseNextImageCapital,
@@ -537,7 +585,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
             lastShare: w.state.lastMarketShare[segment.code] ?? 0,
             segment,
             marketingScale: scenario.marketing.scale,
-            imageFactor: w.rseImageFactor,
+            // Capital-image (2A) ET cartes RSE (2C) modulent l'attractivité.
+            imageFactor: w.rseImageFactor * w.rseCardFactor,
           }),
     );
     const shares = allocateShares(

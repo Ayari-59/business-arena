@@ -37,7 +37,74 @@ export const DEFAULT_RSE_CONFIG: RseEngineConfig = {
   cleanInertia: 0.75,
   financingTrustBonus: 0.15,
   socialAttritionRelief: 0.5,
+  cards: {
+    minRound: 3,
+    labelImageThreshold: 0.7,
+    labelDemandBonus: 0.15,
+    labelDuration: 2,
+    badBuzzImageCeiling: 0.25,
+    badBuzzProbability: 0.25,
+    badBuzzDemandMalus: 0.25,
+  },
 };
+
+/** Codes des cartes événement RSE (Lot 2C), reliés à leur habillage narratif. */
+export const RSE_CARD_CODES = {
+  label: "rse_label",
+  badBuzz: "rse_bad_buzz",
+} as const;
+
+export interface RseCardDraw {
+  code: string;
+  /** Facteur appliqué à l'attractivité (> 1 = bonus, < 1 = malus). */
+  demandFactor: number;
+  /** Durée en tours. */
+  duration: number;
+}
+
+/**
+ * CARTES ÉVÉNEMENT RSE (Lot 2C) — décision PURE, tirée sur le capital-image
+ * d'OUVERTURE. Deux cartes qui s'excluent (le plafond bad buzz est sous le
+ * seuil label) :
+ *
+ * - 🏅 LABEL : un capital mûr est récompensé par un bonus de demande durable.
+ * - 📢 BAD BUZZ : un engagement TIÈDE (capital positif mais faible) expose à un
+ *   risque probabiliste — « on ne peut pas s'afficher responsable à moitié ».
+ *
+ * Un capital NUL ne déclenche RIEN : qui n'a jamais joué la RSE n'est ni primé
+ * ni sanctionné (la RSE reste facultative). Rien avant `minRound` : un bénéfice
+ * différé n'existe pas sur un horizon trop court.
+ *
+ * `roll` est UN tirage seedé (0..1) pour la part probabiliste du bad buzz.
+ */
+export function evaluateRseCards(args: {
+  imageCapital: number;
+  roundIndex: number;
+  config: RseEngineConfig["cards"];
+  roll: number;
+}): RseCardDraw[] {
+  const { imageCapital, roundIndex, config, roll } = args;
+  if (roundIndex < config.minRound || imageCapital <= 0) return [];
+  if (imageCapital >= config.labelImageThreshold) {
+    return [
+      {
+        code: RSE_CARD_CODES.label,
+        demandFactor: 1 + Math.max(0, config.labelDemandBonus),
+        duration: Math.max(1, config.labelDuration),
+      },
+    ];
+  }
+  if (imageCapital < config.badBuzzImageCeiling && roll < config.badBuzzProbability) {
+    return [
+      {
+        code: RSE_CARD_CODES.badBuzz,
+        demandFactor: Math.max(0, 1 - Math.max(0, config.badBuzzDemandMalus)),
+        duration: 1,
+      },
+    ];
+  }
+  return [];
+}
 
 /**
  * Effort normalisé d'une dépense RSE : rendements décroissants, exactement

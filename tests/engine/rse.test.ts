@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { simulateRound } from "@/engine/simulation";
 import { balanceGap } from "@/engine/finance/statements";
+import { DEFAULT_RSE_CONFIG, RSE_CARD_CODES } from "@/engine/rse";
 import type {
   CompanyState,
   EngineScenarioConfig,
@@ -303,6 +304,80 @@ describe("RSE Lot 2B : financement vert", () => {
     expect(out.results["a"]!.incomeStatement.interest).toBeLessThan(
       out.results["b"]!.incomeStatement.interest,
     );
+  });
+});
+
+describe("RSE Lot 2C : cartes événement", () => {
+  const withCards = (over: Partial<(typeof DEFAULT_RSE_CONFIG)["cards"]>) => ({
+    ...scenario(),
+    rse: { ...DEFAULT_RSE_CONFIG, cards: { ...DEFAULT_RSE_CONFIG.cards, ...over } },
+  });
+
+  it("🏅 un capital-image mûr décroche le label et gagne des parts", () => {
+    const out = simulateRound({
+      scenario: withCards({ minRound: 1 }),
+      roundIndex: 1,
+      companies: [company("a", { rseImageCapital: 1 }), company("b")],
+      decisions: { a: baseDecisions(), b: baseDecisions() },
+      activeEvents: [],
+      seed: 4242,
+    });
+    expect(out.newEvents.some((e) => e.code === RSE_CARD_CODES.label && e.companyId === "a")).toBe(
+      true,
+    );
+    expect(out.results["a"]!.market.totalShare).toBeGreaterThan(
+      out.results["b"]!.market.totalShare,
+    );
+  });
+
+  it("📢 un engagement tiède déclenche le bad buzz et perd des parts", () => {
+    const out = simulateRound({
+      scenario: withCards({ minRound: 1, badBuzzProbability: 1 }),
+      roundIndex: 1,
+      // A : capital dans la zone tiède (0 < 0,15 < plafond) ; B : jamais engagé.
+      companies: [company("a", { rseImageCapital: 0.15 }), company("b")],
+      decisions: { a: baseDecisions(), b: baseDecisions() },
+      activeEvents: [],
+      seed: 4242,
+    });
+    expect(
+      out.newEvents.some((e) => e.code === RSE_CARD_CODES.badBuzz && e.companyId === "a"),
+    ).toBe(true);
+    expect(out.results["a"]!.market.totalShare).toBeLessThan(
+      out.results["b"]!.market.totalShare,
+    );
+  });
+
+  it("aucune carte avant l'horizon minRound, même à capital mûr", () => {
+    const out = simulateRound({
+      scenario: withCards({ minRound: 5 }),
+      roundIndex: 2,
+      companies: [company("a", { rseImageCapital: 1 }), company("b")],
+      decisions: { a: baseDecisions(), b: baseDecisions() },
+      activeEvents: [],
+      seed: 4242,
+    });
+    expect(
+      out.newEvents.some(
+        (e) => e.code === RSE_CARD_CODES.label || e.code === RSE_CARD_CODES.badBuzz,
+      ),
+    ).toBe(false);
+  });
+
+  it("aucune carte RSE pour une entreprise qui n'a jamais engagé (capital nul)", () => {
+    const out = simulateRound({
+      scenario: withCards({ minRound: 1, badBuzzProbability: 1 }),
+      roundIndex: 3,
+      companies: [company("a"), company("b")],
+      decisions: { a: baseDecisions(), b: baseDecisions() },
+      activeEvents: [],
+      seed: 4242,
+    });
+    expect(
+      out.newEvents.some(
+        (e) => e.code === RSE_CARD_CODES.label || e.code === RSE_CARD_CODES.badBuzz,
+      ),
+    ).toBe(false);
   });
 });
 
