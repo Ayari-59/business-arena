@@ -70,7 +70,7 @@ export function PeriodDashboard({
     <DashboardTabs>
       {{
         synthese: (
-          <div className="space-y-6">
+          <div className="space-y-3">
             <section aria-label="Indicateurs clés" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
               <KpiCard
                 label="Chiffre d'affaires"
@@ -103,11 +103,11 @@ export function PeriodDashboard({
             </section>
 
             {history.length > 0 ? (
-              <section className="grid gap-4 lg:grid-cols-3">
+              <section className="grid gap-3 lg:grid-cols-3">
                 <div className="rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-4 lg:col-span-2">
                   <RevenueChart history={history} roundsCount={view.roundsCount} />
                 </div>
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <div className="rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-4">
                     <TreasuryChart history={history} roundsCount={view.roundsCount} />
                   </div>
@@ -126,7 +126,7 @@ export function PeriodDashboard({
             ) : null}
 
             {standing ? (
-              <section className="grid gap-4 lg:grid-cols-2">
+              <section className="grid gap-3 lg:grid-cols-2">
                 <div className="rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-4">
                   <h2 className="mb-3 text-sm font-semibold text-slate-200">
                     Classement · Business Performance Index
@@ -180,7 +180,7 @@ export function PeriodDashboard({
         ),
 
         marche: (
-          <div className="space-y-6">
+          <div className="space-y-3">
             {period.sectorKpis.length > 0 ? (
               <section aria-label="Indicateurs du métier">
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-sky-300">
@@ -190,7 +190,7 @@ export function PeriodDashboard({
                   {period.sectorKpis.map((k) => (
                     <div
                       key={k.key}
-                      className="rounded-lg border border-white/10 bg-slate-950 px-3 py-2.5"
+                      className="rounded-lg border border-white/10 bg-slate-950 px-2.5 py-2"
                     >
                       <p className="text-xs uppercase tracking-wide text-slate-400">{k.label}</p>
                       <p className="mt-0.5 text-lg font-semibold tabular-nums text-slate-100">
@@ -369,7 +369,7 @@ export function PeriodDashboard({
         ),
 
         finance: (
-          <div className="space-y-4">
+          <div className="space-y-3">
             <FinancialStatements
               result={r}
               price={period.decisions?.price ?? null}

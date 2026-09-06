@@ -557,7 +557,7 @@ export default async function ArenaPage({
                 >
                   {{
                     situation: dr ? (
-                      <section className="space-y-4">
+                      <section className="space-y-3">
                         <p className="text-xs text-slate-400">
                           La situation posée ce tour-là et sa correction.
                         </p>

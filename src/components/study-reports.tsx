@@ -13,7 +13,7 @@ const pct = (v: number) => `${(v * 100).toFixed(1).replace(".", ",")} %`;
 
 function Report({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <article className="rounded-xl border border-indigo-400/20 bg-slate-900 p-4">
+    <article className="rounded-xl border border-indigo-400/20 bg-slate-900 p-3 sm:p-4">
       <h4 className="text-xs font-semibold uppercase tracking-wide text-indigo-300">{title}</h4>
       <div className="mt-2 space-y-2 text-xs text-slate-300">{children}</div>
     </article>
