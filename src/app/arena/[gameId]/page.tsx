@@ -363,7 +363,7 @@ export default async function ArenaPage({
               <span aria-hidden>🔍</span>
               <span className="min-w-0">{s.title}</span>
             </summary>
-            <div className="border-t border-white/10 p-4 sm:p-5">
+            <div className="border-t border-white/10 p-3 sm:p-5">
               <SituationCard gameId={view.gameId} situation={s} />
             </div>
           </details>
@@ -385,7 +385,7 @@ export default async function ArenaPage({
     ) : null;
 
   return (
-    <main id="main" className="mx-auto max-w-5xl px-6 pt-6 pb-12">
+    <main id="main" className="mx-auto max-w-5xl px-4 pt-6 pb-12 sm:px-6">
       {/* ── Header ── */}
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -542,7 +542,7 @@ export default async function ArenaPage({
                   </span>
                 </span>
               </summary>
-              <div className="border-t border-white/10 p-4 sm:p-5">
+              <div className="border-t border-white/10 p-3 sm:p-5">
                 {/* Les trois facettes d'une période close : ce qu'on a analysé
                     (Situation + correction), ce qu'on a décidé, ce qui en est
                     ressorti. Les onglets ne s'opposent pas à l'accordéon — il

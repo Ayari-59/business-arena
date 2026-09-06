@@ -284,11 +284,11 @@ function Family({
 }) {
   return (
     <details open={defaultOpen} className={`group rounded-lg border ${tone}`}>
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 [&::-webkit-details-marker]:hidden">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 sm:px-4 sm:py-3 [&::-webkit-details-marker]:hidden">
         <span className={legendClass}>{legend}</span>
         <span className="text-xs text-slate-400 transition-transform group-open:rotate-90">▸</span>
       </summary>
-      <div className="border-t border-white/10 p-4">{children}</div>
+      <div className="border-t border-white/10 p-3 sm:p-4">{children}</div>
     </details>
   );
 }
@@ -618,7 +618,7 @@ export function DecisionForm({
         </div>
       </Family>
       {capacityFacts ? (
-        <div className="rounded-lg border border-white/10 bg-slate-950 px-4 py-3">
+        <div className="rounded-lg border border-white/10 bg-slate-950 px-3 py-2.5 sm:px-4 sm:py-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
             ⚙️ {v.capacityPanelTitle}
           </p>
