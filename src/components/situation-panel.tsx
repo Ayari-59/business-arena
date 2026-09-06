@@ -119,7 +119,7 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
     setOptions((prec) => (coche ? [...new Set([...prec, id])] : prec.filter((o) => o !== id)));
 
   return (
-    <article className="rounded-xl border border-amber-400/20 bg-slate-900 p-1.5 sm:p-5">
+    <article className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-5">
       <header className="mb-3">
         <div className="flex items-center gap-2">
           <p className="text-xs uppercase tracking-[0.25em] text-amber-400">
