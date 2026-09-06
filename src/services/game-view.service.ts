@@ -20,6 +20,7 @@ import { computeRatios } from "@/engine/finance/ratios";
 import { conditionsBancaires, confianceInitiale } from "@/engine/finance/bank";
 import { irr, npv, paybackPeriod } from "@/engine/investment";
 import { roundBriefing, type RoundBriefing } from "@/pedagogy/round-briefing";
+import { computeRseIndex, type RseIndex } from "@/scoring/rse";
 import type {
   CompanyRoundResult,
   CompanyState,
@@ -81,6 +82,8 @@ export interface GameView {
     forecastReview: GameView["forecastReview"];
     sectorKpis: GameView["sectorKpis"];
     competitiveBenchmark: GameView["competitiveBenchmark"];
+    /** Indice RSE du tour (mesure indicative, sans effet sur la partie — Lot 1). */
+    rse: RseIndex;
   }[];
   /**
    * La prévision du tour écoulé face au réalisé. Null si le joueur n'a rien
@@ -676,6 +679,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       forecastReview: buildForecastReview(idx, result, dec?.forecast),
       sectorKpis: buildSectorKpis(result, prevSegments, snapshot, scenarioDef.kpis),
       competitiveBenchmark: buildBenchmark(rowsOfRound, teamRows, playerTeam.id),
+      rse: computeRseIndex(result),
     });
   }
 
