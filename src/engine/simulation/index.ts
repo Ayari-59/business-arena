@@ -30,6 +30,8 @@ import {
   updateRseCapital,
   imageAttractionFactor,
   cleanDefectReduction,
+  financingTrustBonus,
+  socialAttritionRelief,
 } from "../rse";
 import { computeFunctionalBalance } from "../finance/functional";
 import { computeRatios } from "../finance/ratios";
@@ -185,6 +187,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     rseCost: number;
     rseImageFactor: number;
     rseDefectReduction: number;
+    rseAttritionRelief: number;
     rseNextImageCapital: number;
     rseNextCleanCapital: number;
   }
@@ -244,9 +247,28 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       finance: raw.finance,
       forecast: raw.forecast,
     };
+    // Engagement RSE (Lot 2) : réglages effectifs et capitaux d'OUVERTURE. Lus
+    // ici car le climat social (Lot 2B) les consomme dès le calcul RH ; l'effet
+    // image et la réduction des rebuts, plus bas, s'en servent aussi.
+    const rseConfig = scenario.rse ?? DEFAULT_RSE_CONFIG;
+    const rseOpeningImage = Math.max(0, state.rseImageCapital ?? 0);
+    const rseOpeningClean = Math.max(0, state.rseCleanCapital ?? 0);
+    // CLIMAT SOCIAL (Lot 2B) : un employeur engagé retient mieux. On abaisse le
+    // seuil d'attrition effectif — le salaire peut glisser plus bas avant qu'une
+    // démission ne survienne. Effet DIFFÉRÉ (capital d'ouverture), comme l'image.
+    const rseAttritionRelief = socialAttritionRelief(
+      rseOpeningImage,
+      rseConfig.socialAttritionRelief,
+    );
     // RH (doc 02 §4.1) : morale du tour, coûts, mouvements d'effectif à t+1.
     const hr = computeHr({
-      config: scenario.hr,
+      config:
+        scenario.hr && rseAttritionRelief > 0
+          ? {
+              ...scenario.hr,
+              attritionThreshold: scenario.hr.attritionThreshold * (1 - rseAttritionRelief),
+            }
+          : scenario.hr,
       decisions: raw.hr,
       headcount: state.headcount,
       productivity: state.productivity,
@@ -319,13 +341,12 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     // n'alimente le capital qu'à la clôture : ses effets (image → demande,
     // rebuts en moins) se lisent sur le capital d'OUVERTURE, donc ils sont
     // DIFFÉRÉS. C'est l'arbitrage : payer maintenant, gagner plus tard.
-    const rseConfig = scenario.rse ?? DEFAULT_RSE_CONFIG;
+    // (rseConfig, rseOpeningImage, rseOpeningClean déclarés plus haut : le
+    // climat social les consomme dès le calcul RH.)
     const rseBudget = Math.max(0, raw.rse?.budget ?? 0);
     const rseInvestment = Math.max(0, raw.rse?.investment ?? 0);
     const rseCost = rseBudget + rseInvestment;
     const rseScale = scenario.marketing.scale;
-    const rseOpeningImage = Math.max(0, state.rseImageCapital ?? 0);
-    const rseOpeningClean = Math.max(0, state.rseCleanCapital ?? 0);
     const rseImageFactor = imageAttractionFactor(rseOpeningImage, rseConfig.imageDemandSensitivity);
     const rseDefectReduction = cleanDefectReduction(
       rseOpeningClean,
@@ -488,6 +509,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       rseCost,
       rseImageFactor,
       rseDefectReduction,
+      rseAttritionRelief,
       rseNextImageCapital,
       rseNextCleanCapital,
     };
@@ -694,10 +716,19 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     // consenti ce tour et le taux auquel il est facturé.
     const bank = scenario.finance.bank;
     const confianceAvant = confianceInitiale(w.state);
+    // FINANCEMENT VERT (Lot 2B) : le capital-image RSE relève la confiance
+    // servie à la banque (borné à 1) — découvert plus large, taux plus doux.
+    // Effet DIFFÉRÉ (capital d'ouverture) : un engagement d'aujourd'hui
+    // n'améliore les conditions qu'aux tours suivants.
+    const rseFinancingBonus = financingTrustBonus(
+      w.state.rseImageCapital ?? 0,
+      (scenario.rse ?? DEFAULT_RSE_CONFIG).financingTrustBonus,
+    );
+    const confianceGreen = Math.min(1, confianceAvant + rseFinancingBonus);
     const planFourni = planDepose(w.decisions.forecast);
     const conditions = bank
       ? conditionsBancaires(
-          confianceAvant,
+          confianceGreen,
           {
             overdraftLimit: scenario.finance.overdraftLimit,
             overdraftAnnualRate: scenario.finance.overdraftAnnualRate,
@@ -991,6 +1022,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
               cleanCapital: w.rseNextCleanCapital,
               imageFactor: w.rseImageFactor,
               defectReduction: w.rseDefectReduction,
+              financingBonus: rseFinancingBonus,
+              attritionRelief: w.rseAttritionRelief,
             },
           }
         : {}),

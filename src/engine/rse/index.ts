@@ -35,6 +35,8 @@ export const DEFAULT_RSE_CONFIG: RseEngineConfig = {
   imageInertia: 0.6,
   cleanDefectReductionMax: 0.4,
   cleanInertia: 0.75,
+  financingTrustBonus: 0.15,
+  socialAttritionRelief: 0.5,
 };
 
 /**
@@ -77,4 +79,24 @@ export function imageAttractionFactor(imageCapital: number, sensitivity: number)
 export function cleanDefectReduction(cleanCapital: number, max: number): number {
   const c = Math.max(0, cleanCapital);
   return Math.max(0, Math.min(1, max)) * (c / (1 + c));
+}
+
+/**
+ * FINANCEMENT VERT (Lot 2B) : bonus de confiance bancaire tiré du capital-image
+ * (borné à 1, le maximum de confiance). Saturant, comme les autres effets : un
+ * capital mûr rassure la banque sans jamais la rendre naïve.
+ */
+export function financingTrustBonus(imageCapital: number, coef: number): number {
+  const c = Math.max(0, imageCapital);
+  return Math.max(0, coef) * (c / (1 + c));
+}
+
+/**
+ * CLIMAT SOCIAL (Lot 2B) : part du seuil d'attrition retirée par le
+ * capital-image (0..1, saturant). Plus le capital est mûr, plus l'employeur
+ * retient — le salaire peut glisser plus bas avant qu'on démissionne.
+ */
+export function socialAttritionRelief(imageCapital: number, coef: number): number {
+  const c = Math.max(0, imageCapital);
+  return Math.max(0, Math.min(1, coef)) * (c / (1 + c));
 }
