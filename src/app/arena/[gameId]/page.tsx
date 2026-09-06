@@ -680,7 +680,7 @@ export default async function ArenaPage({
                   // « Analyser » (solo) : aides d'analyse puis QCM en accordéon.
                   ...(view.kind === "solo" ? { analyser: analyserContenu } : {}),
                   decisions: (
-                    <section id="decisions" className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
+                    <section id="decisions">
                 <div className="mb-4 border-b border-white/10 pb-3">
                   <h2 className="text-sm font-semibold text-slate-200">
                     Vos décisions · {periodLabel(view.roundDays, view.currentRound).toLowerCase()}
