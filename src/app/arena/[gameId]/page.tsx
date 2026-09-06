@@ -363,7 +363,7 @@ export default async function ArenaPage({
               <span aria-hidden>🔍</span>
               <span className="min-w-0">{s.title}</span>
             </summary>
-            <div className="border-t border-white/10 p-2.5 sm:p-4">
+            <div className="border-t border-white/10 px-1.5 py-2.5 sm:p-4">
               <SituationCard gameId={view.gameId} situation={s} />
             </div>
           </details>
@@ -385,7 +385,7 @@ export default async function ArenaPage({
     ) : null;
 
   return (
-    <main id="main" className="mx-auto max-w-5xl px-3 pt-5 pb-12 sm:px-6">
+    <main id="main" className="mx-auto max-w-5xl px-2 pt-5 pb-12 sm:px-6">
       {/* ── Header ── */}
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -497,7 +497,7 @@ export default async function ArenaPage({
           trésorerie) et se rouvre sur son tableau de bord complet + son
           débriefing. Le tour en cours est la période active, toujours ouverte.
           ══════════════════════════════════════════════════════════════════ */}
-      <div className="mt-6 space-y-4">
+      <div className="mt-4 space-y-2">
         {periods.length > 0 ? (
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
             {finished ? "Vos tours" : "Tours passés"}
@@ -542,7 +542,7 @@ export default async function ArenaPage({
                   </span>
                 </span>
               </summary>
-              <div className="border-t border-white/10 p-2.5 sm:p-4">
+              <div className="border-t border-white/10 px-1.5 py-2.5 sm:p-4">
                 {/* Les trois facettes d'une période close : ce qu'on a analysé
                     (Situation + correction), ce qu'on a décidé, ce qui en est
                     ressorti. Les onglets ne s'opposent pas à l'accordéon — il
@@ -626,7 +626,7 @@ export default async function ArenaPage({
               </a>
             ) : null}
 
-            <div className="p-2.5 sm:p-4">
+            <div className="px-1.5 py-2.5 sm:p-4">
               {/* Le tour en cours porte les mêmes onglets que les tours clos, dès
                   le premier tour : Situation (à lire), Décisions (à rendre) et
                   Résultats — ce dernier vide tant que le tour n'est pas clos.
