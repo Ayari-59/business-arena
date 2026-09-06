@@ -36,7 +36,7 @@ export function TeacherAuthForms() {
   );
 
   return (
-    <div className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-900 p-6">
+    <div className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-6">
       <div className="mb-5 grid grid-cols-2 gap-2">
         {(
           [

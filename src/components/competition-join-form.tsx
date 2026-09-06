@@ -21,7 +21,7 @@ export function CompetitionJoinForm({
     <form
       ref={formRef}
       action={formAction}
-      className="w-full max-w-sm space-y-4 rounded-2xl border border-white/10 bg-slate-900 p-6"
+      className="w-full max-w-sm space-y-4 rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-6"
     >
       <label className="block">
         <span className="text-xs font-medium uppercase tracking-wide text-slate-400">

@@ -106,21 +106,21 @@ export default async function ScenarioEditorPage({
       </header>
 
       {ok ? (
-        <p className="rounded-xl border border-emerald-400/30 bg-emerald-950/30 px-4 py-3 text-sm text-emerald-200">
+        <p className="rounded-xl border border-emerald-400/30 bg-emerald-950/30 px-1.5 py-2.5 sm:px-4 sm:py-3 text-sm text-emerald-200">
           {ok === "eco" ? "Paramètres moteur enregistrés." : "Habillage enregistré."}
         </p>
       ) : null}
       {echec ? (
         <p
           role="alert"
-          className="rounded-xl border border-red-400/30 bg-red-950/30 px-4 py-3 text-sm text-red-200"
+          className="rounded-xl border border-red-400/30 bg-red-950/30 px-1.5 py-2.5 sm:px-4 sm:py-3 text-sm text-red-200"
         >
           {echec}
         </p>
       ) : null}
 
       {/* Essai à blanc — filet de jouabilité, non bloquant. */}
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
+      <section className="rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-6">
         <div className="flex items-center justify-between gap-3">
           <div>
             <h2 className="text-sm font-semibold text-slate-200">Essai à blanc</h2>
@@ -182,7 +182,7 @@ export default async function ScenarioEditorPage({
       <GuardedForm
         action={updateNarrativeAction}
         label="enregistrement de l'habillage"
-        className="space-y-5 rounded-2xl border border-white/10 bg-slate-900 p-6"
+        className="space-y-5 rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-6"
       >
         <h2 className="text-sm font-semibold text-slate-200">Habillage — ce que l&apos;élève lit</h2>
         <input type="hidden" name="scenarioId" value={id} />
@@ -206,7 +206,7 @@ export default async function ScenarioEditorPage({
           <span className={titre}>Contexte d&apos;arrivée</span>
           <textarea name="context" defaultValue={def.context} rows={3} className={champ} />
         </label>
-        <fieldset className="space-y-4 rounded-lg border border-white/10 bg-slate-950 p-4">
+        <fieldset className="space-y-4 rounded-lg border border-white/10 bg-slate-950 p-1.5 sm:p-4">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-amber-400/80">
             Premier arbitrage
           </legend>
@@ -239,7 +239,7 @@ export default async function ScenarioEditorPage({
       <GuardedForm
         action={updateEconomicsAction}
         label="enregistrement des paramètres moteur"
-        className="space-y-5 rounded-2xl border border-white/10 bg-slate-900 p-6"
+        className="space-y-5 rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-6"
       >
         <div>
           <h2 className="text-sm font-semibold text-slate-200">Paramètres moteur</h2>
@@ -251,7 +251,7 @@ export default async function ScenarioEditorPage({
         <input type="hidden" name="scenarioId" value={id} />
 
         {ECO_GROUPS.map((group) => (
-          <fieldset key={group.title} className="rounded-lg border border-white/10 bg-slate-950 p-4">
+          <fieldset key={group.title} className="rounded-lg border border-white/10 bg-slate-950 p-1.5 sm:p-4">
             <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-amber-400/80">
               {group.title}
             </legend>
@@ -275,7 +275,7 @@ export default async function ScenarioEditorPage({
           </fieldset>
         ))}
 
-        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
+        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-1.5 sm:p-4">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-amber-400/80">
             Pondérations du BPI · poids relatifs (renormalisés)
           </legend>
@@ -298,7 +298,7 @@ export default async function ScenarioEditorPage({
           </div>
         </fieldset>
 
-        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
+        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-1.5 sm:p-4">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-amber-400/80">
             Marché
           </legend>
@@ -352,7 +352,7 @@ export default async function ScenarioEditorPage({
       </GuardedForm>
 
       {/* Situations pédagogiques — édition du texte. */}
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
+      <section className="rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-6">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-sm font-semibold text-slate-200">Situations pédagogiques</h2>
           <Link
@@ -377,7 +377,7 @@ export default async function ScenarioEditorPage({
               return (
                 <li
                   key={s.code}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/10 bg-slate-950 px-4 py-3"
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/10 bg-slate-950 px-1.5 py-2.5 sm:px-4 sm:py-3"
                 >
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-slate-100">{s.title}</p>

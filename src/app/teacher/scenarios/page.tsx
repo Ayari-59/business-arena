@@ -50,7 +50,7 @@ export default async function TeacherScenariosPage({
   const shared = await listSharedScenarios(session.userId);
 
   return (
-    <main id="main" className="mx-auto max-w-4xl space-y-8 p-6">
+    <main id="main" className="mx-auto max-w-4xl space-y-8 px-2 py-6 sm:p-6">
       <header className="flex items-end justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Espace enseignant</p>
@@ -68,13 +68,13 @@ export default async function TeacherScenariosPage({
       {echec ? (
         <p
           role="alert"
-          className="rounded-xl border border-red-400/30 bg-red-950/30 px-4 py-3 text-sm text-red-200"
+          className="rounded-xl border border-red-400/30 bg-red-950/30 px-1.5 py-2.5 sm:px-4 sm:py-3 text-sm text-red-200"
         >
           {echec}
         </p>
       ) : null}
 
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
+      <section className="rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-6">
         <h2 className="text-sm font-semibold text-slate-200">Mes scénarios</h2>
         {mine.length === 0 ? (
           <p className="mt-3 text-sm text-slate-400">
@@ -85,7 +85,7 @@ export default async function TeacherScenariosPage({
             {mine.map((s) => (
               <li
                 key={s.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/10 bg-slate-950 px-4 py-3"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/10 bg-slate-950 px-1.5 py-2.5 sm:px-4 sm:py-3"
               >
                 <div className="min-w-0">
                   <p className="flex items-center gap-2 text-sm font-medium text-slate-100">
@@ -150,7 +150,7 @@ export default async function TeacherScenariosPage({
         </p>
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
+      <section className="rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-6">
         <h2 className="text-sm font-semibold text-slate-200">Scénarios partagés</h2>
         <p className="mt-1 text-xs text-slate-400">
           Publiés par d&apos;autres enseignants. Dupliquez-en un pour en obtenir votre propre copie
@@ -166,7 +166,7 @@ export default async function TeacherScenariosPage({
             {shared.map((s) => (
               <li
                 key={s.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/10 bg-slate-950 px-4 py-3"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/10 bg-slate-950 px-1.5 py-2.5 sm:px-4 sm:py-3"
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-slate-100">{s.title}</p>
@@ -187,7 +187,7 @@ export default async function TeacherScenariosPage({
         )}
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
+      <section className="rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-6">
         <h2 className="text-sm font-semibold text-slate-200">Importer un scénario</h2>
         <p className="mt-1 text-xs text-slate-400">
           Depuis un fichier JSON exporté (d&apos;un autre espace, d&apos;un collègue). Il devient un
@@ -216,7 +216,7 @@ export default async function TeacherScenariosPage({
         </GuardedForm>
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
+      <section className="rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-6">
         <h2 className="text-sm font-semibold text-slate-200">Partir d&apos;un secteur</h2>
         <p className="mt-1 text-xs text-slate-400">
           Chaque secteur est calibré et jouable. La copie hérite de ses règles ; vous en changez
@@ -226,7 +226,7 @@ export default async function TeacherScenariosPage({
           {SCENARIOS.map((d) => (
             <li
               key={d.code}
-              className="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-slate-950 px-4 py-3"
+              className="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-slate-950 px-1.5 py-2.5 sm:px-4 sm:py-3"
             >
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium text-slate-100">{d.title}</p>

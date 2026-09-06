@@ -26,7 +26,7 @@ export default async function TeacherCompetitionPage({
   const finalDone = finalStage !== undefined && finalStage.games.every((g) => g.status === "finished");
 
   return (
-    <main id="main" className="mx-auto max-w-4xl space-y-6 p-6">
+    <main id="main" className="mx-auto max-w-4xl space-y-6 px-2 py-6 sm:p-6">
       <Link
         href="/teacher"
         className="inline-block text-sm text-slate-400 underline-offset-4 hover:text-amber-300 hover:underline"
@@ -57,7 +57,7 @@ export default async function TeacherCompetitionPage({
         <CompetitionControl competitionId={competitionId} action="finish" />
       ) : null}
       {view.status === "running" && !qualificationDone && qualification ? (
-        <p className="rounded-lg border border-white/10 bg-slate-900 px-4 py-3 text-sm text-slate-400">
+        <p className="rounded-lg border border-white/10 bg-slate-900 px-1.5 py-2.5 sm:px-4 sm:py-3 text-sm text-slate-400">
           Pilotez chaque partie (clôture des tours) via les liens « Piloter » ci-dessous.
           Règles du mode compétition : décisions verrouillées après validation, indices
           limités aux niveaux 1 à 3.

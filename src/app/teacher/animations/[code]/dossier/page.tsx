@@ -48,7 +48,7 @@ export default async function DossierEnseignantPage({
   const dossier = dossierEnseignant(atelier);
 
   return (
-    <main id="main" className="mx-auto max-w-3xl px-6 py-12 print:max-w-none print:px-0 print:py-0 print:text-black">
+    <main id="main" className="mx-auto max-w-3xl px-4 py-12 sm:px-6 print:max-w-none print:px-0 print:py-0 print:text-black">
       <p className="text-xs uppercase tracking-[0.3em] text-slate-400 print:hidden">
         <Link href={`/animations/${atelier.code}`} className="hover:text-slate-300">
           {atelier.titre}
@@ -94,7 +94,7 @@ export default async function DossierEnseignantPage({
           return (
             <article
               key={situation.code}
-              className="break-inside-avoid rounded-xl border border-white/10 p-5 print:border-black/20"
+              className="break-inside-avoid rounded-xl border border-white/10 p-1.5 sm:p-5 print:border-black/20"
             >
               <p className="text-xs font-semibold uppercase tracking-wider text-amber-400 print:text-black">
                 {quand}

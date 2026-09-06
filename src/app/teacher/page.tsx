@@ -56,7 +56,7 @@ export default async function TeacherDashboard({
   );
 
   return (
-    <main id="main" className="mx-auto max-w-4xl space-y-8 p-6">
+    <main id="main" className="mx-auto max-w-4xl space-y-8 px-2 py-6 sm:p-6">
       <header className="flex items-end justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Espace enseignant</p>
@@ -104,13 +104,13 @@ export default async function TeacherDashboard({
       {echec ? (
         <p
           role="alert"
-          className="rounded-xl border border-red-400/30 bg-red-950/30 px-4 py-3 text-sm text-red-200"
+          className="rounded-xl border border-red-400/30 bg-red-950/30 px-1.5 py-2.5 sm:px-4 sm:py-3 text-sm text-red-200"
         >
           La partie n&apos;a pas été créée. {echec}
         </p>
       ) : null}
 
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
+      <section className="rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-6">
         <h2 className="text-sm font-semibold text-slate-200">Créer une partie</h2>
         <p className="mt-1 text-xs text-slate-400">
           Vous ne savez pas quels réglages prendre ?{" "}
@@ -281,7 +281,7 @@ export default async function TeacherDashboard({
         </p>
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
+      <section className="rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-6">
         <h2 className="text-sm font-semibold text-slate-200">
           Organiser un concours · Business Arena Championship
         </h2>
@@ -296,7 +296,7 @@ export default async function TeacherDashboard({
               <li key={c.competitionId}>
                 <Link
                   href={`/teacher/competitions/${c.competitionId}`}
-                  className="flex items-center justify-between rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-sm transition hover:border-amber-400/40"
+                  className="flex items-center justify-between rounded-xl border border-white/10 bg-slate-950 px-1.5 py-2.5 sm:px-4 sm:py-3 text-sm transition hover:border-amber-400/40"
                 >
                   <span>
                     <span className="font-mono text-amber-300">{c.joinCode}</span>
@@ -325,7 +325,7 @@ export default async function TeacherDashboard({
             <Link
               key={g.gameId}
               href={`/teacher/games/${g.gameId}`}
-              className="flex items-center justify-between rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-sm transition hover:border-amber-400/40"
+              className="flex items-center justify-between rounded-xl border border-white/10 bg-slate-900 px-1.5 py-2.5 sm:px-4 sm:py-3 text-sm transition hover:border-amber-400/40"
             >
               <span>
                 <span className="font-mono text-amber-300">{g.joinCode}</span>
