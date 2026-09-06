@@ -12,6 +12,7 @@ import { CompetitiveBenchmark } from "@/components/competitive-benchmark";
 import { DashboardTabs } from "@/components/dashboard-tabs";
 import type { KpiFormat } from "@/config/scenarios/sector-kpis";
 import type { GameView } from "@/services/game-view.service";
+import type { RseIndex, RsePillar } from "@/scoring/rse";
 
 type Period = GameView["periods"][number];
 
@@ -26,6 +27,69 @@ function formatKpi(value: number, format: KpiFormat): string {
     case "units":
       return formatUnits(value);
   }
+}
+
+/**
+ * Indice RSE du tour (Lot 1) : une MESURE, affichée mais sans effet sur la
+ * partie. Trois piliers ESG dérivés du résultat ; un pilier « non évalué »
+ * (aucun signal dans ce scénario) reste neutre et le dit.
+ */
+const RSE_PILLARS = [
+  { key: "environment", label: "Environnement", bar: "bg-emerald-400" },
+  { key: "social", label: "Social", bar: "bg-fuchsia-400" },
+  { key: "governance", label: "Gouvernance", bar: "bg-sky-400" },
+] as const;
+
+function RseCard({ rse }: { rse: RseIndex }) {
+  return (
+    <section
+      aria-label="Indice RSE du tour"
+      className="rounded-xl border border-emerald-400/20 bg-slate-900 p-1.5 sm:p-4"
+    >
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="text-sm font-semibold text-slate-200">🌱 Indice RSE</h2>
+        <span className="tabular-nums text-lg font-semibold text-emerald-300">
+          {rse.score}
+          <span className="text-xs text-slate-400"> / 100</span>
+        </span>
+      </div>
+      <div className="mt-3 space-y-2">
+        {RSE_PILLARS.map(({ key, label, bar }) => {
+          const p = rse[key] as RsePillar;
+          return (
+            <div key={key} className="flex items-center gap-3 text-xs">
+              <span className="w-24 shrink-0 text-slate-400">{label}</span>
+              <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-800">
+                <span
+                  className={`block h-full rounded-full ${p.evaluated ? bar : "bg-slate-600"}`}
+                  style={{ width: `${p.score}%` }}
+                />
+              </span>
+              <span className="w-16 shrink-0 text-right tabular-nums text-slate-300">
+                {p.evaluated ? p.score : <span className="text-slate-500">non évalué</span>}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      {rse.notes.length > 0 ? (
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {rse.notes.map((n) => (
+            <span
+              key={n}
+              className="rounded-full border border-white/10 bg-slate-950 px-2 py-0.5 text-xs text-slate-400"
+            >
+              {n}
+            </span>
+          ))}
+        </div>
+      ) : null}
+      <p className="mt-3 text-xs leading-snug text-slate-500">
+        Mesure indicative : elle reflète vos décisions (fournisseur, rebuts, salaires,
+        formation, transparence) mais n&apos;influe pas encore sur la partie.
+      </p>
+    </section>
+  );
 }
 
 /**
@@ -101,6 +165,8 @@ export function PeriodDashboard({
                 hint={`Utilisation : ${formatPercent(r.production.utilizationRate)}`}
               />
             </section>
+
+            <RseCard rse={period.rse} />
 
             {history.length > 0 ? (
               <section className="grid gap-3 lg:grid-cols-3">
