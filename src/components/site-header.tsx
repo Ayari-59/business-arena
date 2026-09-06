@@ -90,14 +90,6 @@ export function SiteHeader() {
           <Link href="/" aria-label="Accueil">
             <SiteLogo className="h-6 w-[7.5rem] sm:h-8 sm:w-40" />
           </Link>
-          {/* La plateforme évolue vite : le dire évite de faire passer un
-              réglage en cours pour un défaut, et invite aux retours. */}
-          <span
-            title="Version bêta : la plateforme est pleinement utilisable, mais scénarios et contenus évoluent encore. Vos retours sont les bienvenus."
-            className="rounded-full border border-amber-400/30 bg-amber-400/5 px-2 py-0.5 text-xs font-semibold uppercase tracking-[0.18em] text-amber-200/90"
-          >
-            Bêta
-          </span>
         </div>
 
         {/* Les liens de tête, à plat sur grand écran : un menu horizontal

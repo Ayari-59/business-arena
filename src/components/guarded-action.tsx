@@ -48,6 +48,10 @@ class DelaiDepasse extends Error {
 }
 
 export function avecDelai<T>(promesse: Promise<T>, ms: number): Promise<T> {
+  // Délai infini : aucune coupure. Certaines actions redirigent sur succès et
+  // peuvent être longues (résolution d'un tour à froid) ; les couper afficherait
+  // un faux « serveur muet » juste avant que les résultats n'arrivent.
+  if (!Number.isFinite(ms)) return promesse;
   return new Promise<T>((resolve, reject) => {
     const minuteur = setTimeout(() => reject(new DelaiDepasse(ms)), ms);
     promesse.then(
