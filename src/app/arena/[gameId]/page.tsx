@@ -15,7 +15,6 @@ import { PeriodDashboard } from "@/components/period-dashboard";
 import { PeriodDecisionsRecap } from "@/components/period-decisions-recap";
 import { SegmentedTabs } from "@/components/segmented-tabs";
 import { CycleDecisions } from "@/components/cycle-decisions";
-import { AstucePaysage } from "@/components/astuce-paysage";
 import { RoundStatusPoller } from "@/components/round-status-poller";
 import { RoundStatusBanner } from "@/components/round-status-banner";
 import { EventBanner } from "@/components/event-banner";
@@ -422,11 +421,6 @@ export default async function ArenaPage({
           </p>
         </div>
       </header>
-
-      {/* Astuce paysage (téléphone en portrait uniquement, fermable). */}
-      <div className="mt-4">
-        <AstucePaysage />
-      </div>
 
       {/* ── Status banner ── */}
       <div className="mt-6">

@@ -436,7 +436,11 @@ export function DecisionForm({
   const { state, formAction, pending, formRef, guardError } = useGuardedAction(
     action,
     initialState,
-    { label: "décisions du tour", timeoutMs: 45_000 },
+    // Pas de délai : la résolution du tour redirige vers les résultats et peut
+    // être longue (démarrage à froid + simulation). Un délai coupait l'attente
+    // et affichait « le serveur n'a pas répondu » juste avant les résultats. Une
+    // vraie erreur d'action reste signalée par `state.error`.
+    { label: "décisions du tour", timeoutMs: Infinity },
   );
   const reserves = Math.max(0, distributableReserves ?? 0);
 

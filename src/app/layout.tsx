@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter_Tight } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
+import { InstallPrompt } from "@/components/install-prompt";
 
 /**
  * Les deux voix typographiques de la maison, auto-hébergées par next/font
@@ -92,6 +93,8 @@ export default async function RootLayout({
         </a>
         <SiteHeader />
         {children}
+        {/* Invite d'installation, sur mobile uniquement (fermable, mémorisée). */}
+        <InstallPrompt />
         <script
           dangerouslySetInnerHTML={{
             __html: `if("serviceWorker"in navigator)window.addEventListener("load",function(){navigator.serviceWorker.register("/sw.js")});window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();window.__bip=e;window.dispatchEvent(new Event("bip-ready"))})`,
