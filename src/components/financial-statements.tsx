@@ -57,7 +57,7 @@ function Panel({
         {title}
         <span className="float-right text-xs text-slate-400 group-open:hidden">déplier</span>
       </summary>
-      <div className="border-t border-white/5 px-2 py-2.5 sm:px-4 sm:py-3">{children}</div>
+      <div className="border-t border-white/5 px-1.5 py-2 sm:px-4 sm:py-3">{children}</div>
     </details>
   );
 }
