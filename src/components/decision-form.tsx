@@ -532,7 +532,7 @@ export function DecisionForm({
       action={formAction}
       onSubmit={verifierPivots}
       onInvalidCapture={revelerFamilleInvalide}
-      className="space-y-4"
+      className="space-y-3"
     >
       {/* Barre d'étapes : où j'en suis, saut direct possible. Les libellés se
           replient en simples numéros sur petit écran. */}
@@ -566,7 +566,7 @@ export function DecisionForm({
       <section
         data-etape={idx("marche")}
         hidden={courante !== idx("marche")}
-        className="space-y-4"
+        className="space-y-3"
       >
       {orderOffer ? (
         <Family
@@ -608,7 +608,7 @@ export function DecisionForm({
         </Family>
       ) : null}
       <Family legend="🎯 Vos ventes · le prix et le volume du tour" defaultOpen>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field name="price" label={v.priceLabel} defaultValue={defaults.price} step={0.1}
             suffix={`€/${v.unit}`}
             hint="Attention aux seuils psychologiques…" />
@@ -717,10 +717,10 @@ export function DecisionForm({
       <section
         data-etape={idx("operations")}
         hidden={courante !== idx("operations")}
-        className="space-y-4"
+        className="space-y-3"
       >
       <Family legend="📣 Vos budgets du tour" defaultOpen>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field name="marketingBudget" label="Budget marketing" defaultValue={defaults.marketingBudget} suffix="€" />
           {on.quality ? (
             <Field name="qualityBudget" label="Budget qualité" defaultValue={defaults.qualityBudget} suffix="€" />
@@ -737,7 +737,7 @@ export function DecisionForm({
       </Family>
       {on.hr ? (
         <Family legend="👥 Ressources humaines">
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Field name="hire" label="Embauches" defaultValue={0} suffix="pers."
               hint="Arrivée au tour suivant, coût de recrutement immédiat." />
             <Field name="fire" label="Licenciements" defaultValue={0} suffix="pers."
@@ -755,7 +755,7 @@ export function DecisionForm({
       <section
         data-etape={idx("finance")}
         hidden={courante !== idx("finance")}
-        className="space-y-4"
+        className="space-y-3"
       >
       {on.finance && debtSchedule && debtSchedule.outstanding > 0.5 ? (
         <p className="rounded-lg border border-amber-400/20 bg-amber-950/20 px-3 py-2 text-xs text-amber-200">
@@ -768,7 +768,7 @@ export function DecisionForm({
       ) : null}
       {on.finance ? (
       <Family legend="💶 Financer · emprunt, capital, investissement">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <>
               <Field name="newLoan" label="Nouvel emprunt" defaultValue={0} suffix="€"
                 hint="À 5 %/an, amortissement constant sur la durée contractuelle : emprunter engage." />
@@ -837,7 +837,7 @@ export function DecisionForm({
       ) : null}
       {on.finance && treasuryOffer ? (
         <Family legend="💶 Trésorerie · mobiliser le poste clients">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Field
               name="discount"
               label={`Escompte (${(treasuryOffer.discountAnnualRate * 100).toLocaleString("fr-FR")} %/an)`}
@@ -854,7 +854,7 @@ export function DecisionForm({
             />
           </div>
           {on.placement && treasuryOffer.placementAnnualRate !== null ? (
-            <div className="mt-4 border-t border-white/5 pt-4">
+            <div className="mt-3 border-t border-white/5 pt-3">
               <Field
                 name="placement"
                 label={`Placer le surplus (${(treasuryOffer.placementAnnualRate * 100).toLocaleString("fr-FR")} %/an)`}
@@ -948,7 +948,7 @@ export function DecisionForm({
       <section
         data-etape={idx("plan")}
         hidden={courante !== idx("plan")}
-        className="space-y-4"
+        className="space-y-3"
       >
       {studiesOffer ? (
         <Family legend={"📊 Acheter de l'information · livrée avec les résultats du tour"}>
@@ -1028,7 +1028,7 @@ export function DecisionForm({
               trésorerie ne l&apos;accompagnait. La banque ne prête pas contre une intention.
             </p>
           ) : null}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <OptionalField
               name="expectedUnits"
               label={`${v.units.charAt(0).toUpperCase()}${v.units.slice(1)} que vous pensez vendre`}
@@ -1158,7 +1158,7 @@ export function DecisionForm({
         // barre pleine largeur, qui paraissait trop lourde sur téléphone. Sur
         // grand écran, tout revient sur une seule rangée : Précédent · Étape ·
         // action (poussée à droite par le `sm:mr-auto` du compteur).
-        <div className="flex flex-wrap items-center gap-3 border-t border-white/10 pt-4">
+        <div className="flex flex-wrap items-center gap-3 border-t border-white/10 pt-3">
           <button
             type="button"
             onClick={() => setEtape((e) => Math.max(0, Math.min(e, total - 1) - 1))}
