@@ -126,6 +126,15 @@ export async function playRoundAction(
           placement: formData.get("placement") || 0,
         }
       : undefined,
+    // Engagement RSE (Lot 2) : ouvert dès Arbitrage ; les champs sont absents
+    // aux niveaux qui ne l'exposent pas.
+    rse:
+      formData.has("rseBudget") || formData.has("rseInvestment")
+        ? {
+            budget: formData.get("rseBudget") || 0,
+            investment: formData.get("rseInvestment") || 0,
+          }
+        : undefined,
   });
   if (!parsed.success) {
     return { error: "Décisions invalides : vérifiez les montants saisis." };

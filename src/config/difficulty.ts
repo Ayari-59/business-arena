@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { EngineScenarioConfig } from "@/engine/types";
+import { DEFAULT_RSE_CONFIG } from "@/engine/rse";
 
 /**
  * Niveaux de difficulté (doc 08 §2, §20) : la difficulté n'est PAS un entier
@@ -29,6 +30,13 @@ export interface DifficultyPreset {
     /** Investissement capacitaire — doc 08 : dès ARBITRAGE. */
     investment: boolean;
     /**
+     * Engagement RSE (Lot 2) — le levier « payer maintenant, gagner plus tard ».
+     * Ouvert dès ARBITRAGE : c'est un arbitrage inter-temporel qui suppose déjà
+     * de savoir lire une marge et une trésorerie, et il ne prend son sens que
+     * sur un horizon assez long (≥ 5-6 tours).
+     */
+    rse: boolean;
+    /**
      * Placement du surplus de trésorerie. Réservé aux niveaux hauts : c'est
      * l'arbitrage inverse du découvert, et il ne se pose qu'à quelqu'un qui
      * sait déjà lire une trésorerie. Placer trop, c'est payer un découvert à
@@ -54,7 +62,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     name: "Découverte",
     tagline: "Prix, production, marketing : l'essentiel, avec tous les indices.",
     hintMaxLevel: 5,
-    decisions: { quality: false, maintenance: false, finance: false, insurance: false, hr: false, investment: false, placement: false, dividend: false },
+    decisions: { quality: false, maintenance: false, finance: false, insurance: false, hr: false, investment: false, rse: false, placement: false, dividend: false },
     eventProbabilityMultiplier: 0.5,
   },
   {
@@ -63,7 +71,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     name: "Gestion",
     tagline: "Qualité et maintenance entrent en jeu.",
     hintMaxLevel: 5,
-    decisions: { quality: true, maintenance: true, finance: false, insurance: false, hr: false, investment: false, placement: false, dividend: false },
+    decisions: { quality: true, maintenance: true, finance: false, insurance: false, hr: false, investment: false, rse: false, placement: false, dividend: false },
     eventProbabilityMultiplier: 0.75,
   },
   {
@@ -72,7 +80,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     name: "Pilotage",
     tagline: "Financement et assurance : la trésorerie se pilote. Indices limités.",
     hintMaxLevel: 3,
-    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: false, investment: false, placement: false, dividend: false },
+    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: false, investment: false, rse: false, placement: false, dividend: false },
     eventProbabilityMultiplier: 1,
   },
   {
@@ -81,7 +89,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     name: "Arbitrage",
     tagline: "Les aléas frappent plus souvent : anticipez.",
     hintMaxLevel: 3,
-    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: true, investment: true, placement: false, dividend: false },
+    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: true, investment: true, rse: true, placement: false, dividend: false },
     eventProbabilityMultiplier: 1.25,
   },
   {
@@ -90,7 +98,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     name: "Stratégie",
     tagline: "Deux indices, pas un de plus, et un marché nerveux.",
     hintMaxLevel: 2,
-    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: true, investment: true, placement: true, dividend: false },
+    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: true, investment: true, rse: true, placement: true, dividend: false },
     eventProbabilityMultiplier: 1.5,
   },
   {
@@ -100,7 +108,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     tagline:
       "Affectation du résultat, aucun indice, événements doublés : vous répondez aussi aux associés.",
     hintMaxLevel: 0,
-    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: true, investment: true, placement: true, dividend: true },
+    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: true, investment: true, rse: true, placement: true, dividend: true },
     eventProbabilityMultiplier: 2,
   },
 ];
@@ -114,7 +122,7 @@ export const LEGACY_PRESET: DifficultyPreset = {
   name: "Pilotage",
   tagline: "",
   hintMaxLevel: 5,
-  decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: false, investment: false, placement: false, dividend: false },
+  decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: false, investment: false, rse: false, placement: false, dividend: false },
   eventProbabilityMultiplier: 1,
 };
 
@@ -212,6 +220,14 @@ export const economicOverridesSchema = z.object({
   otherVariableCostPerUnit: z.number().min(0).max(500).optional(),
   /** Taux de rebuts de base (active les coûts de la non-qualité, 0-15 %). */
   baseDefectRate: z.number().min(0).max(0.15).optional(),
+  /**
+   * RSE (Lot 2) — force de l'effet image → demande. Facteur d'attractivité au
+   * point d'équilibre ≈ 1 + valeur × ln(1 + budget/échelle marketing). 0 = la
+   * RSE ne fait plus rien sur la demande (l'indice reste mesuré).
+   */
+  rseImageDemandSensitivity: z.number().min(0).max(2).optional(),
+  /** RSE (Lot 2) — réduction maximale du taux de rebuts par le « process propre » (0-90 %). */
+  rseCleanDefectReductionMax: z.number().min(0).max(0.9).optional(),
 });
 
 export type EconomicOverrides = z.infer<typeof economicOverridesSchema>;
@@ -296,6 +312,23 @@ export function applyEconomicOverrides(
         }
       : {}),
     fixedCostsPerRound: overrides.fixedCostsPerRound ?? scenario.fixedCostsPerRound,
+    // RSE (Lot 2) : les réglages écrasent le bloc `rse` du scénario (créé à
+    // partir des défauts s'il est absent). Les grandeurs non fournies gardent
+    // leur valeur ; on ne touche qu'aux deux exposées à l'enseignant.
+    ...(overrides.rseImageDemandSensitivity !== undefined ||
+    overrides.rseCleanDefectReductionMax !== undefined
+      ? {
+          rse: {
+            ...(scenario.rse ?? DEFAULT_RSE_CONFIG),
+            imageDemandSensitivity:
+              overrides.rseImageDemandSensitivity ??
+              (scenario.rse ?? DEFAULT_RSE_CONFIG).imageDemandSensitivity,
+            cleanDefectReductionMax:
+              overrides.rseCleanDefectReductionMax ??
+              (scenario.rse ?? DEFAULT_RSE_CONFIG).cleanDefectReductionMax,
+          },
+        }
+      : {}),
     // Non-qualité : l'activer à la création crée le bloc qualityCosts
     // (sensibilité aux retours externes : donnée ci-dessous, pas du dur).
     ...(overrides.baseDefectRate !== undefined && overrides.baseDefectRate > 0

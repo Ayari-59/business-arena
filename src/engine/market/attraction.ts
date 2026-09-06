@@ -48,12 +48,19 @@ export function attractionScore(args: {
   lastShare: number;
   segment: SegmentConfig;
   marketingScale: number;
+  /**
+   * Facteur image RSE (Lot 2), ≥ 1 (1 = neutre). Capital de marque lent, à
+   * l'inverse du marketing : il tient au capital d'ouverture, donc aux
+   * engagements des tours PASSÉS. Défaut 1 pour tout appelant sans RSE.
+   */
+  imageFactor?: number;
 }): number {
   const { price, marketingBudget, perceivedQuality, lastShare, segment, marketingScale } = args;
   return (
     priceEffect(price, segment) *
     marketingEffect(marketingBudget, segment, marketingScale) *
     qualityEffect(perceivedQuality, segment) *
-    loyaltyEffect(lastShare, segment)
+    loyaltyEffect(lastShare, segment) *
+    Math.max(0, args.imageFactor ?? 1)
   );
 }

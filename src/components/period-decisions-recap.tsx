@@ -73,6 +73,10 @@ export function PeriodDecisionsRecap({
     if (d.treasury.factoring) chips.push(`💶 Affacturage ${formatEuro(d.treasury.factoring)}`);
     if (d.treasury.placement) chips.push(`💶 Placement ${formatEuro(d.treasury.placement)}`);
   }
+  if (d.rse) {
+    if (d.rse.budget) chips.push(`🌱 Budget RSE ${formatEuro(d.rse.budget)}`);
+    if (d.rse.investment) chips.push(`🌱 Investissement propre ${formatEuro(d.rse.investment)}`);
+  }
 
   return (
     <div className="space-y-3">

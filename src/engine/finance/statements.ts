@@ -30,6 +30,13 @@ export interface FinanceInput {
   marketingCost: number;
   qualityCost: number;
   maintenanceCost: number;
+  /**
+   * Engagement RSE (Lot 2) : dépense d'exploitation du tour (budget + effort
+   * process propre). Traitée en tout point comme le marketing — retranchée de
+   * l'EBITDA, décaissée dans le tour — donc l'équilibre du bilan tient par
+   * construction. Absente = 0.
+   */
+  rseCost?: number;
   fixedCosts: number;
   depreciation: number;
   loanAnnualRate: number;
@@ -143,11 +150,13 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
     const variableProductionCost = input.purchases + input.otherVariableCash;
     const commissionCost = input.commissionCost ?? 0;
     const grossMargin = input.revenue - input.cogs - commissionCost;
+    const rseCost = input.rseCost ?? 0;
     const ebitda =
       grossMargin -
       input.marketingCost -
       input.qualityCost -
       input.maintenanceCost -
+      rseCost -
       input.fixedCosts;
     const depreciation = Math.min(input.depreciation, o.fixedAssetsNet);
     const disposalLoss = input.disposalLoss ?? 0;
@@ -180,6 +189,7 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
       marketingCost: input.marketingCost,
       qualityCost: input.qualityCost,
       maintenanceCost: input.maintenanceCost,
+      ...(rseCost > 0 ? { engagementRse: rseCost } : {}),
       fixedCosts: input.fixedCosts,
       ebitda,
       depreciation,
@@ -222,6 +232,7 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
       { label: "marketing", amount: -input.marketingCost },
       { label: "qualite", amount: -input.qualityCost },
       { label: "maintenance", amount: -input.maintenanceCost },
+      { label: "engagement_rse", amount: -rseCost },
       { label: "interets", amount: -interest },
       { label: "impot", amount: -tax },
       { label: "tva_decaissee", amount: -openingVat },

@@ -66,6 +66,12 @@ export const roundDecisionsSchema = z.object({
       placement: z.coerce.number().min(0).max(1000000).optional(),
     })
     .optional(),
+  rse: z
+    .object({
+      budget: z.coerce.number().min(0).max(500000).optional(),
+      investment: z.coerce.number().min(0).max(500000).optional(),
+    })
+    .optional(),
   forecast: z
     .object({
       expectedUnits: z.coerce.number().min(0).max(10_000_000).optional(),

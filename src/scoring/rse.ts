@@ -68,6 +68,18 @@ function environment(r: CompanyRoundResult, notes: string[]): RsePillar {
     if (r.qualityCosts.prevention > 0) score += 5;
   }
 
+  // Levier RSE explicite (Lot 2) : l'engagement volontaire compte pour ce qu'il
+  // EST, en plus de ce qu'il produit déjà (rebuts, fournisseur). Le capital
+  // « process propre » (durable) pèse plus que la dépense d'un tour ; le
+  // capital-image témoigne d'un engagement inscrit dans la durée.
+  if (r.rse) {
+    evaluated = true;
+    score += clamp(r.rse.cleanCapital * 15, 0, 15);
+    score += clamp(r.rse.imageCapital * 8, 0, 8);
+    if (r.rse.investment > 0) notes.push("Investissement process propre");
+    else if (r.rse.budget > 0) notes.push("Engagement RSE volontaire");
+  }
+
   return { score: round(clamp(score)), evaluated };
 }
 

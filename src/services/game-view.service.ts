@@ -262,6 +262,7 @@ export interface GameView {
     insurance: boolean;
     hr: boolean;
     investment: boolean;
+    rse: boolean;
     placement: boolean;
     dividend: boolean;
   };
@@ -486,6 +487,7 @@ function reconstructResult(
     debt: trace.debt ?? undefined,
     treasury: trace.treasury ?? undefined,
     bank: trace.bank ?? undefined,
+    rse: trace.rse ?? undefined,
     kpis: {},
   };
   return { result, events: trace.events ?? [] };
