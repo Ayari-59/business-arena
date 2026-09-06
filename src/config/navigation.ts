@@ -47,6 +47,12 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
     titre: "Découvrir",
     liens: [
       {
+        href: "/enseignants",
+        libelle: "Pour les enseignants",
+        aide: "Pourquoi la plateforme apprend à décider et pas à cliquer, ses ateliers clés en main et sa prise en main en classe.",
+        enTete: true,
+      },
+      {
         href: "/entreprises",
         libelle: "Entreprises",
         aide: "Les fiches des entreprises jouables : leur marché, leurs contraintes, ce qu'on y apprend.",
