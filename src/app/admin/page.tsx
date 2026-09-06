@@ -7,13 +7,13 @@ import { formatEuro } from "@/lib/format";
 import {
   createEstablishmentAction,
   deactivateAdminInviteAction,
-  deleteLicenceAction,
   newAdminInviteAction,
   seedDemoAction,
   setLicenceAction,
   updatePlatformConfigAction,
 } from "./actions";
 import { SubmitButton } from "@/components/submit-button";
+import { DeleteLicenceButton } from "@/components/delete-licence-button";
 
 export const dynamic = "force-dynamic";
 
@@ -304,11 +304,7 @@ export default async function AdminPage() {
                           {l.amountCents !== null ? (
                             <span className="tabular-nums">{formatEuro(l.amountCents / 100)}</span>
                           ) : null}
-                          <form action={deleteLicenceAction.bind(null, l.id)}>
-                            <button className="text-slate-600 hover:text-red-400" title="Supprimer">
-                              ✕
-                            </button>
-                          </form>
+                          <DeleteLicenceButton licenceId={l.id} />
                         </li>
                       ))}
                     </ul>
