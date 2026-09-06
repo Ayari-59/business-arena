@@ -56,6 +56,25 @@ describe("computeRseIndex", () => {
     expect(rse.notes).toContain("Rupture d'approvisionnement");
   });
 
+  it("le levier RSE explicite (Lot 2) relève le pilier environnement et le note", () => {
+    const sans = computeRseIndex(result({}));
+    const avec = computeRseIndex(
+      result({
+        rse: {
+          budget: 12000,
+          investment: 8000,
+          imageCapital: 0.8,
+          cleanCapital: 1.2,
+          imageFactor: 1.16,
+          defectReduction: 0.22,
+        } as CompanyRoundResult["rse"],
+      }),
+    );
+    expect(avec.environment.evaluated).toBe(true);
+    expect(avec.environment.score).toBeGreaterThan(sans.environment.score);
+    expect(avec.notes).toContain("Investissement process propre");
+  });
+
   it("les notes restent bornées à 0–100", () => {
     const rse = computeRseIndex(
       result({

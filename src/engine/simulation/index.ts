@@ -24,6 +24,13 @@ import { computeHr } from "../hr";
 import { unitVariableCost } from "../costs";
 import { computeBreakeven } from "../costs/breakeven";
 import { balanceGap, computeFinance } from "../finance/statements";
+import {
+  DEFAULT_RSE_CONFIG,
+  rseEffort,
+  updateRseCapital,
+  imageAttractionFactor,
+  cleanDefectReduction,
+} from "../rse";
 import { computeFunctionalBalance } from "../finance/functional";
 import { computeRatios } from "../finance/ratios";
 import {
@@ -170,6 +177,16 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     supplier: import("../types").SupplierDef | null;
     supplyDisruption: boolean;
     supplierQualityBonus: number;
+    // Engagement RSE (Lot 2). Les EFFETS (facteur image, réduction rebuts) sont
+    // dérivés du capital d'OUVERTURE — différés. Les CAPITAUX « next » intègrent
+    // la dépense de ce tour et alimentent l'état suivant.
+    rseBudget: number;
+    rseInvestment: number;
+    rseCost: number;
+    rseImageFactor: number;
+    rseDefectReduction: number;
+    rseNextImageCapital: number;
+    rseNextCleanCapital: number;
   }
 
   // Assurance (doc 02 §7.2) : pour les assurés, les événements couverts
@@ -201,6 +218,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
             hr: undefined,
             investment: undefined,
             treasury: undefined,
+            rse: undefined,
             forecast: undefined,
             finance: soumis.finance?.capitalIncrease
               ? { capitalIncrease: soumis.finance.capitalIncrease }
@@ -296,11 +314,45 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       scenario.product.materialCostPerUnit * materialMultiplier,
       scenario.product.otherVariableCostPerUnit,
     );
+    // --- Engagement RSE (Lot 2) ---
+    // La dépense de CE tour est une charge décaissée (comme le marketing) et
+    // n'alimente le capital qu'à la clôture : ses effets (image → demande,
+    // rebuts en moins) se lisent sur le capital d'OUVERTURE, donc ils sont
+    // DIFFÉRÉS. C'est l'arbitrage : payer maintenant, gagner plus tard.
+    const rseConfig = scenario.rse ?? DEFAULT_RSE_CONFIG;
+    const rseBudget = Math.max(0, raw.rse?.budget ?? 0);
+    const rseInvestment = Math.max(0, raw.rse?.investment ?? 0);
+    const rseCost = rseBudget + rseInvestment;
+    const rseScale = scenario.marketing.scale;
+    const rseOpeningImage = Math.max(0, state.rseImageCapital ?? 0);
+    const rseOpeningClean = Math.max(0, state.rseCleanCapital ?? 0);
+    const rseImageFactor = imageAttractionFactor(rseOpeningImage, rseConfig.imageDemandSensitivity);
+    const rseDefectReduction = cleanDefectReduction(
+      rseOpeningClean,
+      rseConfig.cleanDefectReductionMax,
+    );
+    const rseNextImageCapital = updateRseCapital(
+      rseOpeningImage,
+      rseEffort(rseBudget, rseScale),
+      rseConfig.imageInertia,
+    );
+    const rseNextCleanCapital = updateRseCapital(
+      rseOpeningClean,
+      rseEffort(rseInvestment, rseScale),
+      rseConfig.cleanInertia,
+    );
     // Non-qualité interne (doc 02 §4.2) : rebuts fonction de la qualité
     // produite — payés (matières, MOD) mais invendables : seul le net entre
-    // en stock, la perte est valorisée au coût variable.
+    // en stock, la perte est valorisée au coût variable. Le capital « process
+    // propre » RSE en retranche une part (effet différé, capital d'ouverture).
     const defectRate = scenario.qualityCosts
-      ? Math.min(0.5, Math.max(0, scenario.qualityCosts.baseDefectRate * (2 - producedQuality)))
+      ? Math.min(
+          0.5,
+          Math.max(
+            0,
+            scenario.qualityCosts.baseDefectRate * (2 - producedQuality) * (1 - rseDefectReduction),
+          ),
+        )
       : 0;
     const defectUnits = production.produced * defectRate;
     const netProduced = production.produced - defectUnits;
@@ -431,6 +483,13 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       supplier,
       supplyDisruption,
       supplierQualityBonus,
+      rseBudget,
+      rseInvestment,
+      rseCost,
+      rseImageFactor,
+      rseDefectReduction,
+      rseNextImageCapital,
+      rseNextCleanCapital,
     };
   });
 
@@ -456,6 +515,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
             lastShare: w.state.lastMarketShare[segment.code] ?? 0,
             segment,
             marketingScale: scenario.marketing.scale,
+            imageFactor: w.rseImageFactor,
           }),
     );
     const shares = allocateShares(
@@ -697,6 +757,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       marketingCost: w.decisions.marketingBudget,
       qualityCost: w.decisions.qualityBudget,
       maintenanceCost: w.decisions.maintenanceBudget,
+      // Faillite : entreprise gelée, aucune dépense — donc pas d'engagement RSE.
+      rseCost: gelee ? 0 : w.rseCost,
       fixedCosts: gelee ? 0 : scenario.fixedCostsPerRound + insurancePremium + hrCost + studiesCost,
       // amortissements : base du scénario + investissements en service
       // (y compris celui mis en service ce tour) OU amortissement du parc typé
@@ -918,6 +980,20 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
             },
           }
         : {}),
+      // Engagement RSE (Lot 2) : présent dès qu'on dépense OU qu'un capital
+      // court encore (l'effet différé se lit même sans dépense ce tour).
+      ...(w.rseCost > 0 || w.rseNextImageCapital > 0 || w.rseNextCleanCapital > 0
+        ? {
+            rse: {
+              budget: w.rseBudget,
+              investment: w.rseInvestment,
+              imageCapital: w.rseNextImageCapital,
+              cleanCapital: w.rseNextCleanCapital,
+              imageFactor: w.rseImageFactor,
+              defectReduction: w.rseDefectReduction,
+            },
+          }
+        : {}),
       ...(w.insured
         ? {
             insurance: {
@@ -1041,6 +1117,15 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         ? { taxLossCarryforward: finance.taxLossCarryforward }
         : {}),
       ...(bank ? { bankTrust: confianceApres } : {}),
+      // Capitaux RSE (Lot 2) : suivis seulement dès qu'un capital existe (puis
+      // maintenus, même retombés à 0 par inertie) — les parties sans engagement
+      // n'en portent jamais le champ, snapshot inchangé en régime nominal.
+      ...(w.rseNextImageCapital > 0 || w.state.rseImageCapital !== undefined
+        ? { rseImageCapital: w.rseNextImageCapital }
+        : {}),
+      ...(w.rseNextCleanCapital > 0 || w.state.rseCleanCapital !== undefined
+        ? { rseCleanCapital: w.rseNextCleanCapital }
+        : {}),
       // Le bonus qualité du fournisseur s'applique à la qualité PRODUITE ce
       // tour, avant lissage — et non en addition APRÈS l'inertie. Ajouté après,
       // il se composait : `previous` contenant déjà le bonus des tours passés,

@@ -108,6 +108,7 @@ describe("niveaux de difficulté et paramètres économiques", () => {
       insurance: true,
       hr: true, // Stratégie : RH et investissement ouverts dès Arbitrage
       investment: true,
+      rse: true, // engagement RSE ouvert dès Arbitrage
       placement: true, // et le placement du surplus, propre aux niveaux hauts
       dividend: false, // l'affectation du résultat n'appartient qu'au niveau 6
     });
@@ -207,6 +208,7 @@ describe("niveaux de difficulté et paramètres économiques", () => {
       insurance: false,
       hr: false,
       investment: false,
+      rse: false,
       placement: false,
       dividend: false,
     });

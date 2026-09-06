@@ -42,6 +42,8 @@ export const LEVIERS: readonly LevierDeDecision[] = [
   { champ: "fire", nom: "Départs", ouvertPar: "hr" },
   { champ: "trainingBudget", nom: "Budget formation", ouvertPar: "hr" },
   { champ: "salaryPercent", nom: "Niveau des salaires", ouvertPar: "hr" },
+  { champ: "rseBudget", nom: "Budget RSE", ouvertPar: "rse" },
+  { champ: "rseInvestment", nom: "Investissement RSE (process propre)", ouvertPar: "rse" },
   { champ: "newLoan", nom: "Nouvel emprunt", ouvertPar: "finance" },
   { champ: "loanRepayment", nom: "Remboursement d'emprunt", ouvertPar: "finance" },
   { champ: "capitalIncrease", nom: "Augmentation de capital", ouvertPar: "finance" },

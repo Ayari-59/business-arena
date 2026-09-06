@@ -339,6 +339,7 @@ export function DecisionForm({
     insurance: boolean;
     hr: boolean;
     investment: boolean;
+    rse: boolean;
     placement: boolean;
     dividend: boolean;
   };
@@ -494,6 +495,7 @@ export function DecisionForm({
     insurance: true,
     hr: false,
     investment: false,
+    rse: false,
     placement: false,
     dividend: false,
   };
@@ -746,6 +748,21 @@ export function DecisionForm({
               hint="Élève la productivité dès le tour suivant." />
             <Field name="salaryPercent" label="Salaires (marché = 100)" defaultValue={Math.round((defaults.hr?.salaryIndex ?? 1) * 100)} suffix="%"
               hint="Sous-payer démotive et fait partir les salariés." />
+          </div>
+        </Family>
+      ) : null}
+      {on.rse ? (
+        <Family legend="🌱 Engagement RSE">
+          <p className="mb-2 text-xs text-slate-400">
+            Ça coûte maintenant, ça rapporte plus tard : l&apos;effet met plusieurs
+            tours à se construire — et à retomber si vous cessez. Sur un horizon
+            court, ce peut être un pari perdant.
+          </p>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Field name="rseBudget" label="Budget RSE" defaultValue={0} suffix="€"
+              hint="Dépense d'exploitation : bâtit un capital-image qui relève lentement la demande (l'inverse du marketing)." />
+            <Field name="rseInvestment" label="Investissement process propre" defaultValue={0} suffix="€"
+              hint="Réduit durablement les rebuts, tour après tour." />
           </div>
         </Family>
       ) : null}

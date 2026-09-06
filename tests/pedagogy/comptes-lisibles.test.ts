@@ -76,6 +76,7 @@ const SANS_FICHE: string[] = [
   "− Marketing",
   "− Qualité",
   "− Maintenance",
+  "− Engagement RSE",
   "− Impôt sur les sociétés",
   "dont déficit antérieur imputé (report)",
   "− Charges financières (intérêts, agios, mobilisations)",

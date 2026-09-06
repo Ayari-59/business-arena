@@ -19,6 +19,23 @@ export type SupplierCode = string;
 // Configuration de scénario (sous-ensemble consommé par le moteur v0.1)
 // ---------------------------------------------------------------------------
 
+/**
+ * Paramètres de l'engagement RSE (Lot 2). Grandeurs SANS dimension : la dépense
+ * est normalisée par l'échelle marketing du scénario (cf. engine/rse), donc ces
+ * réglages se transposent d'un secteur à l'autre. Absent du scénario →
+ * DEFAULT_RSE_CONFIG. Réglable par l'enseignant via economicOverrides.
+ */
+export interface RseEngineConfig {
+  /** Force de l'effet image → demande : facteur = 1 + sensibilité × capital-image. */
+  imageDemandSensitivity: number;
+  /** Inertie du capital-image (0..1), report d'un tour sur l'autre. Élevé = lent à monter ET à retomber. */
+  imageInertia: number;
+  /** Réduction maximale du taux de rebuts par le capital « process propre » (0..1). */
+  cleanDefectReductionMax: number;
+  /** Inertie du capital « process propre » (0..1). */
+  cleanInertia: number;
+}
+
 export interface EngineScenarioConfig {
   code: string;
   version: string;
@@ -62,6 +79,12 @@ export interface EngineScenarioConfig {
     /** Effet marketing : 1 + sens(segment) × ln(1 + budget/scale). */
     scale: number;
   };
+  /**
+   * Engagement RSE (Lot 2). Absent → DEFAULT_RSE_CONFIG. Sans effet tant que
+   * l'équipe ne dépense pas : le capital reste à 0 et les facteurs à leur
+   * valeur neutre (rétro-compatible avec toute partie existante).
+   */
+  rse?: RseEngineConfig;
   finance: {
     /** Taux d'emprunt annuel. */
     loanAnnualRate: number;
@@ -552,6 +575,16 @@ export interface CompanyState {
    */
   bankTrust?: number;
   /**
+   * Capital-image RSE (Lot 2) : stock lissé de l'engagement passé, qui relève
+   * l'attractivité au tour suivant. Absent = 0 (aucun engagement encore).
+   */
+  rseImageCapital?: number;
+  /**
+   * Capital « process propre » RSE (Lot 2) : réduit durablement le taux de
+   * rebuts. Absent = 0.
+   */
+  rseCleanCapital?: number;
+  /**
    * Défaillance (cessation de paiements, V2 couche 2). Une entreprise passe
    * `defaillant` après deux tours consécutifs de crise de trésorerie
    * caractérisée (découvert au-delà du plafond, plus de créances à céder).
@@ -641,6 +674,17 @@ export interface RoundDecisions {
     placement?: number;
   };
   /**
+   * Engagement RSE (Lot 2) — le levier « payer maintenant, gagner plus tard ».
+   * `budget` : dépense d'exploitation du tour, bâtit le capital-image (demande
+   * différée). `investment` : effort « process propre », bâtit le capital de
+   * réduction durable des rebuts. Les DEUX sont des charges décaissées ce tour.
+   * Ouvert par le niveau de difficulté (decisions.rse), dès Arbitrage.
+   */
+  rse?: {
+    budget?: number;
+    investment?: number;
+  };
+  /**
    * Plan de trésorerie du joueur pour CE tour, déposé avec les décisions.
    * Quand le scénario ouvre un `finance.bank`, c'est la pièce du dossier
    * bancaire : sans elle la banque ne prête pas, et l'écart entre ce qui est
@@ -677,6 +721,12 @@ export interface IncomeStatement {
   marketingCost: number;
   qualityCost: number;
   maintenanceCost: number;
+  /**
+   * Engagement RSE (Lot 2) : dépense d'exploitation du tour (budget + effort
+   * process propre), retranchée avant l'EBITDA comme le marketing. Absente si
+   * nulle — les parties sans RSE n'affichent pas la ligne.
+   */
+  engagementRse?: number;
   fixedCosts: number;
   ebitda: number;
   depreciation: number;
@@ -795,6 +845,26 @@ export interface CompanyRoundResult {
     defectUnits: number;
     returnedUnits: number;
   };
+  /**
+   * Engagement RSE du tour (Lot 2). Présent dès que l'équipe dépense OU porte
+   * déjà du capital. `imageFactor` et `defectReduction` sont les effets
+   * APPLIQUÉS ce tour, dérivés du capital d'OUVERTURE — l'effet est différé :
+   * la dépense du tour ne se lit dans le capital qu'à partir du tour suivant.
+   */
+  rse?: {
+    /** Dépense d'exploitation RSE décidée ce tour (bâtit le capital-image). */
+    budget: number;
+    /** Effort « process propre » décidé ce tour (bâtit le capital de propreté). */
+    investment: number;
+    /** Capital-image à la CLÔTURE (après intégration de la dépense du tour). */
+    imageCapital: number;
+    /** Capital « process propre » à la clôture. */
+    cleanCapital: number;
+    /** Facteur d'attractivité appliqué ce tour (≥ 1), issu du capital d'ouverture. */
+    imageFactor: number;
+    /** Réduction du taux de rebuts appliquée ce tour (0..1), issue du capital d'ouverture. */
+    defectReduction: number;
+  };
   /** Assurance du tour : prime payée, formule choisie et événements neutralisés. */
   insurance?: { premium: number; formulaCode?: string; neutralizedEvents: string[] };
   /** Fournisseur choisi ce tour : code, surcoût/économie, risque de rupture. */
@@ -893,6 +963,7 @@ export interface EngineTrace {
   debt?: CompanyRoundResult["debt"] | null;
   treasury?: CompanyRoundResult["treasury"] | null;
   bank?: CompanyRoundResult["bank"] | null;
+  rse?: CompanyRoundResult["rse"] | null;
 }
 
 export interface EventInstance {

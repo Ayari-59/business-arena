@@ -26,6 +26,7 @@ const CASH_LABELS: Record<string, string> = {
   marketing: "Budget marketing",
   qualite: "Budget qualité",
   maintenance: "Budget maintenance",
+  engagement_rse: "Engagement RSE",
   interets: "Charges financières",
   placement_arrive_a_terme: "Placement arrivé à terme",
   produits_financiers: "Produits financiers (placement)",
@@ -150,6 +151,9 @@ export function FinancialStatements({
         <Row label="− Marketing" value={euro(-cr.marketingCost)} indent />
         <Row label="− Qualité" value={euro(-cr.qualityCost)} indent />
         <Row label="− Maintenance" value={euro(-cr.maintenanceCost)} indent />
+        {(cr.engagementRse ?? 0) > 0.5 ? (
+          <Row label="− Engagement RSE" value={euro(-(cr.engagementRse ?? 0))} indent />
+        ) : null}
         <Row label="− Charges de structure" value={euro(-cr.fixedCosts)} indent />
         <Row label="= Excédent brut d'exploitation (EBE)" value={euro(cr.ebitda)} strong />
         <Row label="− Dotations aux amortissements" value={euro(-cr.depreciation)} indent />
