@@ -7,6 +7,8 @@ import {
   cleanDefectReduction,
   financingTrustBonus,
   socialAttritionRelief,
+  evaluateRseCards,
+  RSE_CARD_CODES,
 } from "@/engine/rse";
 
 /**
@@ -84,6 +86,57 @@ describe("socialAttritionRelief (Lot 2B)", () => {
   });
 });
 
+describe("evaluateRseCards (Lot 2C)", () => {
+  const cards = DEFAULT_RSE_CONFIG.cards;
+
+  it("rien avant minRound, même avec un capital mûr", () => {
+    expect(
+      evaluateRseCards({ imageCapital: 1, roundIndex: cards.minRound - 1, config: cards, roll: 0 }),
+    ).toEqual([]);
+  });
+
+  it("rien à capital nul — la RSE reste facultative (ni label, ni bad buzz)", () => {
+    expect(
+      evaluateRseCards({ imageCapital: 0, roundIndex: cards.minRound, config: cards, roll: 0 }),
+    ).toEqual([]);
+  });
+
+  it("un capital mûr décroche le label (bonus de demande durable)", () => {
+    const drawn = evaluateRseCards({
+      imageCapital: cards.labelImageThreshold,
+      roundIndex: cards.minRound,
+      config: cards,
+      roll: 0.99,
+    });
+    expect(drawn).toHaveLength(1);
+    expect(drawn[0]!.code).toBe(RSE_CARD_CODES.label);
+    expect(drawn[0]!.demandFactor).toBeGreaterThan(1);
+    expect(drawn[0]!.duration).toBe(cards.labelDuration);
+  });
+
+  it("un engagement tiède risque le bad buzz — mais seulement au tirage défavorable", () => {
+    const tiede = cards.badBuzzImageCeiling / 2;
+    const declenche = evaluateRseCards({
+      imageCapital: tiede,
+      roundIndex: cards.minRound,
+      config: cards,
+      roll: cards.badBuzzProbability - 0.01,
+    });
+    expect(declenche).toHaveLength(1);
+    expect(declenche[0]!.code).toBe(RSE_CARD_CODES.badBuzz);
+    expect(declenche[0]!.demandFactor).toBeLessThan(1);
+    // Tirage favorable : rien.
+    expect(
+      evaluateRseCards({
+        imageCapital: tiede,
+        roundIndex: cards.minRound,
+        config: cards,
+        roll: cards.badBuzzProbability + 0.01,
+      }),
+    ).toEqual([]);
+  });
+});
+
 describe("DEFAULT_RSE_CONFIG", () => {
   it("porte des grandeurs plausibles (bornées, inerties dans [0,1])", () => {
     expect(DEFAULT_RSE_CONFIG.imageDemandSensitivity).toBeGreaterThan(0);
@@ -96,5 +149,11 @@ describe("DEFAULT_RSE_CONFIG", () => {
     expect(DEFAULT_RSE_CONFIG.financingTrustBonus).toBeGreaterThan(0);
     expect(DEFAULT_RSE_CONFIG.socialAttritionRelief).toBeGreaterThan(0);
     expect(DEFAULT_RSE_CONFIG.socialAttritionRelief).toBeLessThanOrEqual(1);
+    // Cartes (2C) : le plafond bad buzz est SOUS le seuil label (zones
+    // disjointes), et il y a un horizon minimal.
+    expect(DEFAULT_RSE_CONFIG.cards.badBuzzImageCeiling).toBeLessThan(
+      DEFAULT_RSE_CONFIG.cards.labelImageThreshold,
+    );
+    expect(DEFAULT_RSE_CONFIG.cards.minRound).toBeGreaterThanOrEqual(1);
   });
 });
