@@ -614,7 +614,7 @@ export default async function ArenaPage({
             {view.kind === "solo" && latestRound !== null ? (
               <a
                 href="#dernier-resultat"
-                className="flex items-center justify-between gap-3 border-b border-emerald-400/20 bg-emerald-400/5 px-4 py-3 text-sm transition hover:bg-emerald-400/10 sm:px-5"
+                className="flex items-center justify-between gap-3 border-b border-emerald-400/20 bg-emerald-400/5 px-3 py-2.5 text-sm transition hover:bg-emerald-400/10 sm:px-4"
               >
                 <span className="flex items-center gap-2 font-medium text-emerald-200">
                   <span aria-hidden>📊</span>
@@ -626,7 +626,7 @@ export default async function ArenaPage({
               </a>
             ) : null}
 
-            <div className="p-4 sm:p-5">
+            <div className="p-2.5 sm:p-4">
               {/* Le tour en cours porte les mêmes onglets que les tours clos, dès
                   le premier tour : Situation (à lire), Décisions (à rendre) et
                   Résultats — ce dernier vide tant que le tour n'est pas clos.
