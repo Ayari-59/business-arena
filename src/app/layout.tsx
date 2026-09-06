@@ -1,6 +1,26 @@
 import type { Metadata, Viewport } from "next";
+import { Fraunces, Inter_Tight } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
+
+/**
+ * Les deux voix typographiques de la maison, auto-hébergées par next/font
+ * (aucune requête au chargement). Fraunces, un serif de caractère, ne sert
+ * qu'aux grands titres (règle h1 dans globals.css) ; Inter Tight, une
+ * grotesque nette et un peu resserrée, porte tout le reste. Chacune expose une
+ * variable CSS que le thème (@theme) branche sur --font-display et --font-sans,
+ * si bien qu'aucun composant n'a à nommer une police.
+ */
+const policeTitre = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-brand-display",
+  display: "swap",
+});
+const policeTexte = Inter_Tight({
+  subsets: ["latin"],
+  variable: "--font-brand-sans",
+  display: "swap",
+});
 import { CLE_THEME, THEMES, THEME_PAR_DEFAUT } from "@/config/themes";
 import { SITE_URL } from "@/config/site";
 import { DESCRIPTION_ACCUEIL, GABARIT_DE_TITRE, NOM_DU_SITE, TITRE_ACCUEIL } from "@/config/seo";
@@ -56,7 +76,11 @@ export default async function RootLayout({
     `if(${codes}.indexOf(c)>-1)document.documentElement.dataset.theme=c}catch(e){}`;
 
   return (
-    <html lang="fr" data-theme={THEME_PAR_DEFAUT}>
+    <html
+      lang="fr"
+      data-theme={THEME_PAR_DEFAUT}
+      className={`${policeTitre.variable} ${policeTexte.variable}`}
+    >
       <body className="min-h-screen bg-slate-950 text-slate-100 antialiased">
         <script dangerouslySetInnerHTML={{ __html: amorce }} />
         {/* Premier élément focusable : au clavier, on saute la navigation. */}
