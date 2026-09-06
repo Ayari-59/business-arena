@@ -27,7 +27,7 @@ export function CompetitionBoard({
   return (
     <div className="space-y-6">
       {view.podium && view.podium.length > 0 ? (
-        <section className="rounded-xl border border-amber-400/40 bg-slate-900 p-6 text-center">
+        <section className="rounded-xl border border-amber-400/40 bg-slate-900 p-1.5 sm:p-6 text-center">
           <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Podium</p>
           <p className="mt-3 text-2xl font-bold text-amber-300">🏆 {view.podium[0]}</p>
           <div className="mt-2 flex justify-center gap-6 text-sm text-slate-300">
@@ -37,7 +37,7 @@ export function CompetitionBoard({
         </section>
       ) : null}
 
-      <section className="rounded-xl border border-white/10 bg-slate-900 p-4">
+      <section className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
         <h2 className="mb-3 text-sm font-semibold text-slate-200">
           Équipes inscrites ({view.entries.length})
         </h2>
@@ -63,7 +63,7 @@ export function CompetitionBoard({
       </section>
 
       {view.stages.map((stage) => (
-        <section key={stage.index} className="rounded-xl border border-white/10 bg-slate-900 p-4">
+        <section key={stage.index} className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
           <h2 className="mb-3 text-sm font-semibold text-slate-200">
             {STAGE_LABELS[stage.kind] ?? stage.kind}
             <span className="ml-2 text-xs font-normal text-slate-400">

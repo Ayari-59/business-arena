@@ -73,7 +73,7 @@ export function CompetitionControl({
           role="dialog"
           aria-modal="true"
           aria-label={config.label}
-          className="space-y-3 rounded-lg border border-amber-400/40 bg-slate-950 p-4"
+          className="space-y-3 rounded-lg border border-amber-400/40 bg-slate-950 p-1.5 sm:p-4"
         >
           <p className="text-sm text-amber-200">{config.effet}</p>
           <div className="flex flex-wrap gap-2">

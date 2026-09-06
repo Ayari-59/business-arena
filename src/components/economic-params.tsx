@@ -116,7 +116,7 @@ export function EconomicParams({
         </span>
       </label>
 
-      <details className="rounded-lg border border-white/10 bg-slate-950 p-4 sm:col-span-3">
+      <details className="rounded-lg border border-white/10 bg-slate-950 p-1.5 sm:p-4 sm:col-span-3">
         <summary className="cursor-pointer text-xs font-medium uppercase tracking-wide text-slate-400">
           ⚙️ Paramètres économiques (avancé) · laissez vide pour les valeurs du scénario
         </summary>
@@ -166,7 +166,7 @@ export function EconomicParams({
         ))}
       </details>
 
-      <details className="rounded-lg border border-white/10 bg-slate-950 p-4 sm:col-span-3">
+      <details className="rounded-lg border border-white/10 bg-slate-950 p-1.5 sm:p-4 sm:col-span-3">
         <summary className="cursor-pointer text-xs font-medium uppercase tracking-wide text-slate-400">
           📊 Pondérations du BPI (avancé) · laissez vide pour les poids du scénario
         </summary>

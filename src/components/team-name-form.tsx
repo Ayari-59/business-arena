@@ -26,7 +26,7 @@ export function TeamNameForm({ gameId, nomActuel }: { gameId: string; nomActuel:
     <form
       ref={formRef}
       action={formAction}
-      className="rounded-xl border border-amber-400/30 bg-amber-950/10 p-4"
+      className="rounded-xl border border-amber-400/30 bg-amber-950/10 p-1.5 sm:p-4"
     >
       <p className="text-xs font-semibold uppercase tracking-wide text-amber-300">
         ✍️ Nommez votre entreprise

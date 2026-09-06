@@ -79,7 +79,7 @@ export default async function NewSituationPage({
       {echec ? (
         <p
           role="alert"
-          className="rounded-xl border border-red-400/30 bg-red-950/30 px-4 py-3 text-sm text-red-200"
+          className="rounded-xl border border-red-400/30 bg-red-950/30 px-1.5 py-2.5 sm:px-4 sm:py-3 text-sm text-red-200"
         >
           {echec}
         </p>
@@ -88,7 +88,7 @@ export default async function NewSituationPage({
       <GuardedForm
         action={addSituationAction}
         label="création de la situation"
-        className="space-y-5 rounded-2xl border border-white/10 bg-slate-900 p-6"
+        className="space-y-5 rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-6"
       >
         <input type="hidden" name="scenarioId" value={id} />
 
@@ -122,7 +122,7 @@ export default async function NewSituationPage({
           <textarea name="problem" rows={2} className={champ} />
         </label>
 
-        <fieldset className="space-y-3 rounded-lg border border-white/10 bg-slate-950 p-4">
+        <fieldset className="space-y-3 rounded-lg border border-white/10 bg-slate-950 p-1.5 sm:p-4">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-amber-400/80">
             Diagnostic · cochez la bonne réponse
           </legend>
@@ -138,7 +138,7 @@ export default async function NewSituationPage({
           ))}
         </fieldset>
 
-        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
+        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-1.5 sm:p-4">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-amber-400/80">
             Modèles d&apos;analyse · au moins un « optimal »
           </legend>
@@ -163,7 +163,7 @@ export default async function NewSituationPage({
           <textarea name="modelExplain" rows={3} className={champ} />
         </label>
 
-        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
+        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-1.5 sm:p-4">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-amber-400/80">
             Notions travaillées · au moins une
           </legend>
@@ -184,7 +184,7 @@ export default async function NewSituationPage({
           </div>
         </fieldset>
 
-        <fieldset className="space-y-3 rounded-lg border border-white/10 bg-slate-950 p-4">
+        <fieldset className="space-y-3 rounded-lg border border-white/10 bg-slate-950 p-1.5 sm:p-4">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-amber-400/80">
             Indices (coût croissant)
           </legend>
@@ -196,7 +196,7 @@ export default async function NewSituationPage({
           ))}
         </fieldset>
 
-        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
+        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-1.5 sm:p-4">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-amber-400/80">
             Déclenchement
           </legend>

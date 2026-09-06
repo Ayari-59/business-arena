@@ -26,7 +26,7 @@ export default async function TeacherLoginPage() {
         Première fois ? Consultez le guide de prise en main
       </Link>
       {demoSeeded ? (
-        <div className="w-full max-w-md rounded-2xl border border-emerald-400/20 bg-emerald-950/20 p-4 text-sm">
+        <div className="w-full max-w-md rounded-2xl border border-emerald-400/20 bg-emerald-950/20 p-1.5 sm:p-4 text-sm">
           <p className="text-xs font-semibold uppercase tracking-wide text-emerald-400">
             Comptes de démonstration
           </p>

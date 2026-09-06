@@ -53,14 +53,14 @@ export default async function SituationEditorPage({
       </header>
 
       {ok ? (
-        <p className="rounded-xl border border-emerald-400/30 bg-emerald-950/30 px-4 py-3 text-sm text-emerald-200">
+        <p className="rounded-xl border border-emerald-400/30 bg-emerald-950/30 px-1.5 py-2.5 sm:px-4 sm:py-3 text-sm text-emerald-200">
           Situation enregistrée.
         </p>
       ) : null}
       {echec ? (
         <p
           role="alert"
-          className="rounded-xl border border-red-400/30 bg-red-950/30 px-4 py-3 text-sm text-red-200"
+          className="rounded-xl border border-red-400/30 bg-red-950/30 px-1.5 py-2.5 sm:px-4 sm:py-3 text-sm text-red-200"
         >
           {echec}
         </p>
@@ -69,7 +69,7 @@ export default async function SituationEditorPage({
       <GuardedForm
         action={updateSituationAction}
         label="enregistrement de la situation"
-        className="space-y-5 rounded-2xl border border-white/10 bg-slate-900 p-6"
+        className="space-y-5 rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-6"
       >
         <input type="hidden" name="scenarioId" value={id} />
         <input type="hidden" name="situationCode" value={situation.code} />
@@ -88,7 +88,7 @@ export default async function SituationEditorPage({
           <textarea name="problem" defaultValue={situation.problem} rows={2} className={champ} />
         </label>
 
-        <fieldset className="space-y-3 rounded-lg border border-white/10 bg-slate-950 p-4">
+        <fieldset className="space-y-3 rounded-lg border border-white/10 bg-slate-950 p-1.5 sm:p-4">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-amber-400/80">
             Options de diagnostic
           </legend>
@@ -107,7 +107,7 @@ export default async function SituationEditorPage({
           ))}
         </fieldset>
 
-        <fieldset className="space-y-3 rounded-lg border border-white/10 bg-slate-950 p-4">
+        <fieldset className="space-y-3 rounded-lg border border-white/10 bg-slate-950 p-1.5 sm:p-4">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-amber-400/80">
             Indices (coût croissant)
           </legend>

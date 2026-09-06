@@ -17,7 +17,7 @@ export function CompetitionSettings({
     ["Règles de compétition", "Décisions verrouillées après validation, indices limités aux niveaux 1 à 3, aucun tirage manuel de cartes."],
   ];
   return (
-    <section className="rounded-xl border border-white/10 bg-slate-900 p-4" aria-labelledby="reglages-titre">
+    <section className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4" aria-labelledby="reglages-titre">
       <h2 id="reglages-titre" className="mb-3 text-sm font-semibold text-slate-200">
         Réglages
       </h2>
@@ -39,7 +39,7 @@ export function CompetitionSettings({
 export function CompetitionSteps({ concours }: { concours: ConcoursPourDeroule }) {
   const deroule = derouleConcours(concours);
   return (
-    <section className="rounded-xl border border-white/10 bg-slate-900 p-4" aria-labelledby="deroule-titre">
+    <section className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4" aria-labelledby="deroule-titre">
       <h2 id="deroule-titre" className="mb-3 text-sm font-semibold text-slate-200">
         Déroulé
       </h2>

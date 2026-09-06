@@ -35,7 +35,7 @@ export default async function TeacherGamePage({
   const defaillantes = view.ranking.filter((row) => row.defaillant);
 
   return (
-    <main id="main" className="mx-auto max-w-4xl space-y-8 p-6">
+    <main id="main" className="mx-auto max-w-4xl space-y-8 px-2 py-6 sm:p-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Pilotage de partie</p>
@@ -67,7 +67,7 @@ export default async function TeacherGamePage({
       </header>
 
       {defaillantes.length > 0 ? (
-        <section className="rounded-xl border border-red-400/40 bg-red-950/30 p-4">
+        <section className="rounded-xl border border-red-400/40 bg-red-950/30 p-1.5 sm:p-4">
           <h2 className="text-sm font-semibold text-red-300">
             ⚠️ {defaillantes.length === 1 ? "Une entreprise défaillante" : `${defaillantes.length} entreprises défaillantes`}
           </h2>
@@ -102,7 +102,7 @@ export default async function TeacherGamePage({
       ) : null}
 
       {!finished ? (
-        <section className="rounded-xl border border-white/10 bg-slate-900 p-4">
+        <section className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
           <h2 className="text-sm font-semibold text-slate-200">
             📝 Questions posées dans les situations
           </h2>
@@ -147,7 +147,7 @@ export default async function TeacherGamePage({
       ) : null}
 
       {!finished ? (
-        <section className="rounded-xl border border-white/10 bg-slate-900 p-4">
+        <section className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
           <h2 className="text-sm font-semibold text-slate-200">📚 Situations manquées</h2>
           <p className="mt-1 max-w-3xl text-xs text-slate-400">
             Une situation non rendue reste consultable par l&apos;élève dans l&apos;onglet Historique.
@@ -185,7 +185,7 @@ export default async function TeacherGamePage({
         </section>
       ) : null}
 
-      <section className="rounded-xl border border-white/10 bg-slate-900 p-4">
+      <section className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
         <h2 className="mb-3 text-sm font-semibold text-slate-200">
           Équipes · état des décisions du tour {view.currentRound}
         </h2>
@@ -264,7 +264,7 @@ export default async function TeacherGamePage({
       </section>
 
       {pedagogy ? (
-        <section className="rounded-xl border border-white/10 bg-slate-900 p-4">
+        <section className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
           <h2 className="mb-3 text-sm font-semibold text-slate-200">Vue pédagogique</h2>
           <div className="grid gap-4 lg:grid-cols-3">
             <div className="space-y-4">
@@ -365,7 +365,7 @@ export default async function TeacherGamePage({
       ) : null}
 
       {releve && releve.teams.length > 0 ? (
-        <section className="rounded-xl border border-white/10 bg-slate-900 p-4">
+        <section className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
           <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-sm font-semibold text-slate-200">Relevé de notes</h2>
@@ -456,7 +456,7 @@ export default async function TeacherGamePage({
         </section>
       ) : null}
 
-      <section className="rounded-xl border border-white/10 bg-slate-900 p-4">
+      <section className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
         <h2 className="mb-3 text-sm font-semibold text-slate-200">Classement</h2>
         {view.ranking.length === 0 ? (
           <p className="text-sm text-slate-400">Disponible après le premier tour.</p>
