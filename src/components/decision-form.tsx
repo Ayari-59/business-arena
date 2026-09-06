@@ -507,21 +507,28 @@ export function DecisionForm({
   // formulaire qu'on déroule, quelques écrans qu'on parcourt. Une étape sans
   // aucun contenu au niveau de difficulté courant est retirée ; l'index
   // d'affichage se calcule sur les étapes RÉELLEMENT visibles.
-  const financeVisible =
-    on.finance ||
-    (on.insurance && (!!insuranceOffer || (insuranceFormulas?.length ?? 0) > 0)) ||
-    (on.investment && !!equipmentOffer);
+  const produireVisible = on.quality || on.maintenance;
+  const equipeVisible = on.hr || on.rse;
+  const financerVisible = on.finance || (on.investment && !!equipmentOffer);
+  const couvertureVisible =
+    on.dividend ||
+    (on.finance && !!treasuryOffer) ||
+    (on.insurance && (!!insuranceOffer || (insuranceFormulas?.length ?? 0) > 0));
   const etapesVisibles = [
-    "marche",
-    "operations",
-    financeVisible ? "finance" : null,
-    "plan",
+    "vendre",
+    produireVisible ? "produire" : null,
+    equipeVisible ? "equipe" : null,
+    financerVisible ? "financer" : null,
+    couvertureVisible ? "couverture" : null,
+    "prevoir",
   ].filter((x): x is string => x !== null);
   const META: Record<string, { titre: string; icone: string }> = {
-    marche: { titre: "Marché & prix", icone: "🎯" },
-    operations: { titre: "Budgets & équipe", icone: "📣" },
-    finance: { titre: "Financement", icone: "💶" },
-    plan: { titre: "Information & plan", icone: "📊" },
+    vendre: { titre: "Vendre & s'approvisionner", icone: "🎯" },
+    produire: { titre: "Produire", icone: "🏭" },
+    equipe: { titre: "Équipe & RSE", icone: "👥" },
+    financer: { titre: "Financer & investir", icone: "💶" },
+    couverture: { titre: "Trésorerie & couverture", icone: "🛡️" },
+    prevoir: { titre: "S'informer & prévoir", icone: "📊" },
   };
   const idx = (cle: string) => etapesVisibles.indexOf(cle);
   const total = etapesVisibles.length;
@@ -566,8 +573,8 @@ export function DecisionForm({
       </ol>
 
       <section
-        data-etape={idx("marche")}
-        hidden={courante !== idx("marche")}
+        data-etape={idx("vendre")}
+        hidden={courante !== idx("vendre")}
         className="space-y-3"
       >
       {orderOffer ? (
@@ -714,16 +721,21 @@ export function DecisionForm({
           </p>
         </Family>
       ) : null}
+      <Family legend="📣 Marketing · soutenir la demande" defaultOpen>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Field name="marketingBudget" label="Budget marketing" defaultValue={defaults.marketingBudget} suffix="€"
+            hint="Fait venir les clients ce tour-ci ; l'effet retombe vite si on cesse." />
+        </div>
+      </Family>
       </section>
 
       <section
-        data-etape={idx("operations")}
-        hidden={courante !== idx("operations")}
+        data-etape={idx("produire")}
+        hidden={courante !== idx("produire")}
         className="space-y-3"
       >
-      <Family legend="📣 Vos budgets du tour" defaultOpen>
+      <Family legend="🏭 Production · qualité & maintenance" defaultOpen>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Field name="marketingBudget" label="Budget marketing" defaultValue={defaults.marketingBudget} suffix="€" />
           {on.quality ? (
             <Field name="qualityBudget" label="Budget qualité" defaultValue={defaults.qualityBudget} suffix="€" />
           ) : (
@@ -737,6 +749,13 @@ export function DecisionForm({
           )}
         </div>
       </Family>
+      </section>
+
+      <section
+        data-etape={idx("equipe")}
+        hidden={courante !== idx("equipe")}
+        className="space-y-3"
+      >
       {on.hr ? (
         <Family legend="👥 Ressources humaines">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -768,10 +787,9 @@ export function DecisionForm({
       ) : null}
       </section>
 
-      {financeVisible ? (
       <section
-        data-etape={idx("finance")}
-        hidden={courante !== idx("finance")}
+        data-etape={idx("financer")}
+        hidden={courante !== idx("financer")}
         className="space-y-3"
       >
       {on.finance && debtSchedule && debtSchedule.outstanding > 0.5 ? (
@@ -811,21 +829,6 @@ export function DecisionForm({
                 hint={`En service au tour suivant, amorti linéairement. Max ${Math.round(investmentOffer.maxPerRound).toLocaleString("fr-FR")} u par tour.`}
               />
             ) : null}
-              {on.dividend ? (
-                <Field
-                  name="dividend"
-                  label="Affectation du résultat · dividende versé aux associés"
-                  defaultValue={0}
-                  suffix="€"
-                  hint={
-                    reserves > 0
-                      ? `Réserves distribuables : ${formatEuro(reserves)}, les bénéfices des tours passés. Ce qui sort ne finance plus rien, et le versement se fait en trésorerie, pas en résultat : on peut être rentable sans pouvoir payer.`
-                      : roundIndex <= 1
-                        ? "Rien à distribuer au premier tour : l'affectation du résultat s'ouvre à partir du tour 2, une fois le premier résultat connu, et seulement sur des bénéfices."
-                        : "Rien à distribuer : les réserves se constituent des bénéfices des tours passés, et une perte doit d'abord être rattrapée."
-                  }
-                />
-              ) : null}
             </>
         </div>
       </Family>
@@ -851,6 +854,30 @@ export function DecisionForm({
               .map((t) => ({ typeCode: t.code, quantity: equipSellQty[t.code] ?? 0 }))
           )} />
         </>
+      ) : null}
+      </section>
+
+      <section
+        data-etape={idx("couverture")}
+        hidden={courante !== idx("couverture")}
+        className="space-y-3"
+      >
+      {on.dividend ? (
+        <Family legend="💰 Affectation du résultat · dividende">
+          <Field
+            name="dividend"
+            label="Dividende versé aux associés"
+            defaultValue={0}
+            suffix="€"
+            hint={
+              reserves > 0
+                ? `Réserves distribuables : ${formatEuro(reserves)}, les bénéfices des tours passés. Ce qui sort ne finance plus rien, et le versement se fait en trésorerie, pas en résultat : on peut être rentable sans pouvoir payer.`
+                : roundIndex <= 1
+                  ? "Rien à distribuer au premier tour : l'affectation du résultat s'ouvre à partir du tour 2, une fois le premier résultat connu, et seulement sur des bénéfices."
+                  : "Rien à distribuer : les réserves se constituent des bénéfices des tours passés, et une perte doit d'abord être rattrapée."
+            }
+          />
+        </Family>
       ) : null}
       {on.finance && treasuryOffer ? (
         <Family legend="💶 Trésorerie · mobiliser le poste clients">
@@ -960,11 +987,10 @@ export function DecisionForm({
         </label>
       ) : null}
       </section>
-      ) : null}
 
       <section
-        data-etape={idx("plan")}
-        hidden={courante !== idx("plan")}
+        data-etape={idx("prevoir")}
+        hidden={courante !== idx("prevoir")}
         className="space-y-3"
       >
       {studiesOffer ? (
