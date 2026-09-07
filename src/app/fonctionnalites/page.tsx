@@ -51,7 +51,7 @@ const PILLARS = [
 const DIFFERENTIATORS = [
   { label: "Sans compte", desc: "Aucune inscription requise pour les étudiants" },
   { label: "Sans installation", desc: "Fonctionne dans le navigateur, sur tout appareil" },
-  { label: "Gratuit", desc: "Accès complet à tous les scénarios et fonctionnalités" },
+  { label: "Essai gratuit", desc: "Découvrez tous les scénarios et fonctionnalités sans engagement" },
   { label: "Testé", desc: "727 tests automatisés, moteur déterministe vérifié" },
 ];
 

@@ -14,7 +14,7 @@ export const NOM_DU_SITE = "Business Arena";
 export const TITRE_ACCUEIL = "Business Arena · Simulation d'entreprise pour BTS, DCG et écoles";
 
 export const DESCRIPTION_ACCUEIL =
-  "Jeu d'entreprise pédagogique gratuit et sans compte élève : 9 secteurs, 79 situations, 18 modèles d'analyse. Pilotez prix, production, trésorerie et affrontez la concurrence.";
+  "Jeu d'entreprise pédagogique à essayer gratuitement, sans compte élève : 9 secteurs, 79 situations, 18 modèles d'analyse. Pilotez prix, production, trésorerie et affrontez la concurrence.";
 
 /** Le gabarit des autres pages : leur titre propre, puis le nom du site. */
 export const GABARIT_DE_TITRE = "%s · Business Arena";

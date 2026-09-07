@@ -65,7 +65,7 @@ export default function Image() {
             Apprenez à décider.
           </span>
           <span style={{ fontSize: 24, color: "#94a3b8", marginTop: 28, lineHeight: 1.4 }}>
-            9 secteurs, 79 situations, 18 modèles d&apos;analyse. Gratuit, sans compte élève.
+            9 secteurs, 79 situations, 18 modèles d&apos;analyse. Essai gratuit, sans compte élève.
           </span>
           <span style={{ fontSize: 26, fontWeight: 700, marginTop: "auto", color: "#f8fafc" }}>
             business-arena.fr
