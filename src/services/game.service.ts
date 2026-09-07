@@ -229,6 +229,37 @@ export async function setGameSchedule(args: {
     .where(eq(games.id, args.gameId));
 }
 
+/**
+ * Fenêtres par tour (planning fin) : chaque tour n'est jouable qu'entre son
+ * ouverture et son échéance. Chaque borne peut être null. Le verrou par tour se
+ * combine à la fenêtre globale de la partie et à celle de l'étape de concours :
+ * l'élève joue pendant l'intersection des fenêtres posées.
+ *
+ * On n'écrit que les tours cités (par leur index 1..N) et on ignore un index
+ * inconnu : la mise à jour est ciblée, un tour absent reste inchangé.
+ */
+export async function setRoundWindows(args: {
+  gameId: string;
+  teacherId: string;
+  windows: { index: number; opensAt: Date | null; deadline: Date | null }[];
+}): Promise<void> {
+  const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
+  if (!game || game.createdBy !== args.teacherId) {
+    throw new Error("Partie introuvable");
+  }
+  for (const w of args.windows) {
+    if (w.opensAt && w.deadline && w.opensAt.getTime() > w.deadline.getTime()) {
+      throw new Error(`Tour ${w.index} : l'ouverture doit précéder l'échéance.`);
+    }
+  }
+  for (const w of args.windows) {
+    await db
+      .update(rounds)
+      .set({ opensAt: w.opensAt, deadline: w.deadline })
+      .where(and(eq(rounds.gameId, args.gameId), eq(rounds.index, w.index)));
+  }
+}
+
 export interface TeacherGameView {
   gameId: string;
   joinCode: string | null;
@@ -242,6 +273,8 @@ export interface TeacherGameView {
   /** Fenêtre globale de jeu (planning), en ISO ou null. */
   opensAt: string | null;
   closesAt: string | null;
+  /** Fenêtre de chaque tour (planning fin), triée par index. Dates en ISO ou null. */
+  rounds: { index: number; status: string; opensAt: string | null; deadline: string | null }[];
   /** Secteur joué : titre du scénario et codes d'événements de SON deck. */
   scenarioCode: string;
   scenarioTitle: string;
@@ -332,6 +365,14 @@ export async function getTeacherGameView(
     roundDays: (game.scenarioSnapshot as { roundDays: number }).roundDays,
     opensAt: game.opensAt ? game.opensAt.toISOString() : null,
     closesAt: game.closesAt ? game.closesAt.toISOString() : null,
+    rounds: [...gameRounds]
+      .sort((a, b) => a.index - b.index)
+      .map((r) => ({
+        index: r.index,
+        status: r.status,
+        opensAt: r.opensAt ? r.opensAt.toISOString() : null,
+        deadline: r.deadline ? r.deadline.toISOString() : null,
+      })),
     scenarioCode: snapshotDefinition.code,
     scenarioTitle: snapshotDefinition.title,
     // Le deck vient du SNAPSHOT, pas de la version courante du scénario :

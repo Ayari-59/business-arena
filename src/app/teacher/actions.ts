@@ -17,11 +17,13 @@ import {
   drawEventCardForNextRound,
   setGameSchedule,
   setQuizMode,
+  setRoundWindows,
 } from "@/services/game.service";
 import { parisLocalToUtc } from "@/lib/paris-time";
 import {
   createCompetition,
   finishCompetition,
+  setStageWindow,
   startFinal,
   startQualification,
 } from "@/services/competition.service";
@@ -235,6 +237,28 @@ export async function setGameScheduleAction(gameId: string, formData: FormData):
   revalidatePath(`/teacher/games/${gameId}`);
 }
 
+/**
+ * Règle la fenêtre de chaque tour (planning fin). Le formulaire porte un couple
+ * de champs par tour, nommés `opensAt-<index>` / `deadline-<index>` en heure de
+ * Paris ; un champ vide = pas de borne. On lit tous les index présents.
+ */
+export async function setRoundWindowsAction(gameId: string, formData: FormData): Promise<void> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  const indexes = new Set<number>();
+  for (const key of formData.keys()) {
+    const m = /^(?:opensAt|deadline)-(\d+)$/.exec(key);
+    if (m) indexes.add(Number(m[1]));
+  }
+  const windows = [...indexes].map((index) => ({
+    index,
+    opensAt: parisLocalToUtc(String(formData.get(`opensAt-${index}`) ?? "") || null),
+    deadline: parisLocalToUtc(String(formData.get(`deadline-${index}`) ?? "") || null),
+  }));
+  await setRoundWindows({ gameId, teacherId: session.userId, windows });
+  revalidatePath(`/teacher/games/${gameId}`);
+}
+
 export interface CloseRoundState {
   error: string | null;
 }
@@ -389,6 +413,36 @@ export async function finishCompetitionAction(
   _formData: FormData,
 ): Promise<CompetitionActionState> {
   return runCompetitionAction(competitionId, finishCompetition);
+}
+
+/**
+ * Règle la fenêtre d'une étape de concours (qualification ou finale). Champs
+ * `startsAt`/`endsAt` en heure de Paris ; un champ vide = pas de borne. Le
+ * verrou d'étape se combine à la fenêtre de chaque partie et de chaque tour.
+ */
+export async function setStageWindowAction(
+  competitionId: string,
+  stageId: string,
+  _prev: CompetitionActionState,
+  formData: FormData,
+): Promise<CompetitionActionState> {
+  const session = await getSession();
+  if (!session) return { error: "Session expirée : reconnectez-vous." };
+  const startsAt = parisLocalToUtc(String(formData.get("startsAt") ?? "") || null);
+  const endsAt = parisLocalToUtc(String(formData.get("endsAt") ?? "") || null);
+  try {
+    await setStageWindow({
+      competitionId,
+      stageId,
+      organizerId: session.userId,
+      startsAt,
+      endsAt,
+    });
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Erreur." };
+  }
+  revalidatePath(`/teacher/competitions/${competitionId}`);
+  return { error: null };
 }
 
 export interface DrawCardState {
