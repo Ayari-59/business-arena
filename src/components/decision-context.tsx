@@ -38,11 +38,13 @@ export function DilemmaCard({
           <div key={route.label} className="rounded-lg border border-white/10 bg-slate-950 p-1.5 sm:p-3">
             <p className="text-sm font-medium text-slate-200">{route.label}</p>
             <p className="mt-1.5 text-xs leading-relaxed text-emerald-300/90">
-              <span className="font-semibold">Ce que cela rapporte. </span>
+              <span className="sr-only">Ce que cela rapporte. </span>
+              <span aria-hidden className="font-semibold">+ </span>
               {route.gain}
             </p>
             <p className="mt-1.5 text-xs leading-relaxed text-red-300/80">
-              <span className="font-semibold">Ce que cela coûte. </span>
+              <span className="sr-only">Ce que cela coûte. </span>
+              <span aria-hidden className="font-semibold">− </span>
               {route.risque}
             </p>
           </div>
