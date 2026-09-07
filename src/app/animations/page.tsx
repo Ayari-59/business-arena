@@ -5,7 +5,7 @@ import { scenarioByCode } from "@/config/scenarios/registry";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/animations" },
-  title: "Ateliers et animations",
+  title: "Ateliers",
   description:
     "Des déroulés de plusieurs séances, adossés à une partie réelle, avec les livrables attendus, la trace écrite de chaque séance et les critères d'évaluation.",
 };
@@ -41,7 +41,7 @@ export default function AteliersPage() {
           <Link href="/" className="hover:text-slate-300">
             Accueil
           </Link>{" "}
-          / Ateliers et animations
+          / Ateliers
         </p>
         <h1 className="mt-4 text-4xl font-bold leading-tight tracking-tight text-slate-50 sm:text-5xl">
           Des déroulés prêts à animer
