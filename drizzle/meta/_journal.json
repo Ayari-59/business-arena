@@ -1,125 +1,132 @@
 {
-  "version": "7",
-  "dialect": "postgresql",
-  "entries": [
-    {
-      "idx": 0,
-      "version": "7",
-      "when": 1787647411335,
-      "tag": "0000_lethal_post",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1787649290540,
-      "tag": "0001_lucky_pete_wisdom",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1787652771166,
-      "tag": "0002_friendly_thaddeus_ross",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1787659785853,
-      "tag": "0003_useful_triton",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1787756084047,
-      "tag": "0004_greedy_maverick",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1787933004378,
-      "tag": "0005_cooing_wild_pack",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1788307200000,
-      "tag": "0006_competition_entries_label_ci",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "7",
-      "when": 1788393600000,
-      "tag": "0007_competition_join_code",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "7",
-      "when": 1788480000000,
-      "tag": "0008_games_priority_indexes",
-      "breakpoints": true
-    },
-    {
-      "idx": 9,
-      "version": "7",
-      "when": 1788566400000,
-      "tag": "0009_secondary_indexes",
-      "breakpoints": true
-    },
-    {
-      "idx": 10,
-      "version": "7",
-      "when": 1788652800000,
-      "tag": "0010_trigger_context",
-      "breakpoints": true
-    },
-    {
-      "idx": 11,
-      "version": "7",
-      "when": 1788739200000,
-      "tag": "0011_consequence_context",
-      "breakpoints": true
-    },
-    {
-      "idx": 12,
-      "version": "7",
-      "when": 1788825600000,
-      "tag": "0012_interpretation_context",
-      "breakpoints": true
-    },
-    {
-      "idx": 13,
-      "version": "7",
-      "when": 1788912000000,
-      "tag": "0013_decision_source",
-      "breakpoints": true
-    },
-    {
-      "idx": 14,
-      "version": "7",
-      "when": 1788998400000,
-      "tag": "0014_login_hardening",
-      "breakpoints": true
-    },
-    {
-      "idx": 15,
-      "version": "7",
-      "when": 1789084800000,
-      "tag": "0015_bpi_v2",
-      "breakpoints": true
-    },
-    {
-      "idx": 16,
-      "version": "7",
-      "when": 1789171200000,
-      "tag": "0016_scenario_definition",
-      "breakpoints": true
-    }
-  ]
+	"version": "7",
+	"dialect": "postgresql",
+	"entries": [
+		{
+			"idx": 0,
+			"version": "7",
+			"when": 1787647411335,
+			"tag": "0000_lethal_post",
+			"breakpoints": true
+		},
+		{
+			"idx": 1,
+			"version": "7",
+			"when": 1787649290540,
+			"tag": "0001_lucky_pete_wisdom",
+			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "7",
+			"when": 1787652771166,
+			"tag": "0002_friendly_thaddeus_ross",
+			"breakpoints": true
+		},
+		{
+			"idx": 3,
+			"version": "7",
+			"when": 1787659785853,
+			"tag": "0003_useful_triton",
+			"breakpoints": true
+		},
+		{
+			"idx": 4,
+			"version": "7",
+			"when": 1787756084047,
+			"tag": "0004_greedy_maverick",
+			"breakpoints": true
+		},
+		{
+			"idx": 5,
+			"version": "7",
+			"when": 1787933004378,
+			"tag": "0005_cooing_wild_pack",
+			"breakpoints": true
+		},
+		{
+			"idx": 6,
+			"version": "7",
+			"when": 1788307200000,
+			"tag": "0006_competition_entries_label_ci",
+			"breakpoints": true
+		},
+		{
+			"idx": 7,
+			"version": "7",
+			"when": 1788393600000,
+			"tag": "0007_competition_join_code",
+			"breakpoints": true
+		},
+		{
+			"idx": 8,
+			"version": "7",
+			"when": 1788480000000,
+			"tag": "0008_games_priority_indexes",
+			"breakpoints": true
+		},
+		{
+			"idx": 9,
+			"version": "7",
+			"when": 1788566400000,
+			"tag": "0009_secondary_indexes",
+			"breakpoints": true
+		},
+		{
+			"idx": 10,
+			"version": "7",
+			"when": 1788652800000,
+			"tag": "0010_trigger_context",
+			"breakpoints": true
+		},
+		{
+			"idx": 11,
+			"version": "7",
+			"when": 1788739200000,
+			"tag": "0011_consequence_context",
+			"breakpoints": true
+		},
+		{
+			"idx": 12,
+			"version": "7",
+			"when": 1788825600000,
+			"tag": "0012_interpretation_context",
+			"breakpoints": true
+		},
+		{
+			"idx": 13,
+			"version": "7",
+			"when": 1788912000000,
+			"tag": "0013_decision_source",
+			"breakpoints": true
+		},
+		{
+			"idx": 14,
+			"version": "7",
+			"when": 1788998400000,
+			"tag": "0014_login_hardening",
+			"breakpoints": true
+		},
+		{
+			"idx": 15,
+			"version": "7",
+			"when": 1789084800000,
+			"tag": "0015_bpi_v2",
+			"breakpoints": true
+		},
+		{
+			"idx": 16,
+			"version": "7",
+			"when": 1789171200000,
+			"tag": "0016_scenario_definition",
+			"breakpoints": true
+		},
+		{
+			"idx": 17,
+			"version": "7",
+			"when": 1789257600000,
+			"tag": "0017_previous_lester",
+			"breakpoints": true
+		}
+	]
 }

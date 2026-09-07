@@ -6,6 +6,7 @@ import {
   pgTable,
   primaryKey,
   text,
+  timestamp,
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
@@ -64,6 +65,10 @@ export const competitionStages = pgTable(
     kind: stageKind("kind").notNull(),
     format: jsonb("format").notNull(), // { teamsPerGame, advanceCount, tieBreakers[] }
     status: stageStatus("status").notNull().default("pending"),
+    // Fenêtre commune d'épreuve (planning concours). null = pas de fenêtre.
+    // Les parties rattachées à l'étape héritent de ce verrou.
+    startsAt: timestamp("starts_at", { withTimezone: true }),
+    endsAt: timestamp("ends_at", { withTimezone: true }),
     ...timestamps,
   },
   (t) => [uniqueIndex("competition_stages_uq").on(t.competitionId, t.index)],

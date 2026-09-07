@@ -23,6 +23,7 @@ import { roundBriefing, type RoundBriefing } from "@/pedagogy/round-briefing";
 import { computeRseIndex, type RseIndex } from "@/scoring/rse";
 import { RSE_CARD_CODES } from "@/engine/rse";
 import { computeRseReport, type RseReport } from "@/scoring/rse-report";
+import { playWindowFor, playLockMessage } from "@/services/play-lock";
 import type {
   CompanyRoundResult,
   CompanyState,
@@ -55,6 +56,18 @@ export interface GameView {
   kind: GameKind;
   status: string;
   currentRound: number;
+  /**
+   * Verrou temporel du tour courant (planning). `playable` faux = hors fenêtre :
+   * l'écran passe en lecture seule et « Valider » est grisé. Dates en ISO.
+   * Sans fenêtre réglée, toujours ouvert (solo libre, ou classe non planifiée).
+   */
+  playLock: {
+    playable: boolean;
+    state: "before" | "open" | "after";
+    message: string | null;
+    opensAt: string | null;
+    closesAt: string | null;
+  };
   roundsCount: number;
   roundDays: number;
   playerTeamId: string;
@@ -911,12 +924,27 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     return { competitors, marketAvgPrice, competitivenessIndex };
   })();
 
+  const playWindow = await playWindowFor(
+    { opensAt: game.opensAt, closesAt: game.closesAt, competitionStageId: game.competitionStageId },
+    currentRoundRow
+      ? { opensAt: currentRoundRow.opensAt, deadline: currentRoundRow.deadline }
+      : null,
+  );
+  const playLock = {
+    playable: playWindow.playable,
+    state: playWindow.state,
+    message: playLockMessage(playWindow),
+    opensAt: playWindow.opensAt ? playWindow.opensAt.toISOString() : null,
+    closesAt: playWindow.closesAt ? playWindow.closesAt.toISOString() : null,
+  };
+
   const profile = game.difficultyProfile as { kind?: GameKind };
   return {
     gameId,
     kind: profile.kind ?? "solo",
     status: game.status,
     currentRound: game.currentRound,
+    playLock,
     roundsCount: (game.scenarioSnapshot as { roundsCount: number }).roundsCount,
     roundDays: (game.scenarioSnapshot as { roundDays: number }).roundDays,
     playerTeamId: playerTeam.id,

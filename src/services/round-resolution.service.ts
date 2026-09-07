@@ -19,6 +19,7 @@ import {
 import { TEACHER_DRAWABLE_CODES, TEAM_CARD_CODES } from "@/config/events/cards";
 import { botDecisions, botPersonalityFromSeed, type BotProfile } from "@/engine/bots";
 import { carryOverDecisions, fallbackDecisions } from "@/services/decision.service";
+import { assertPlayable } from "@/services/play-lock";
 import { proposedDecisionsFor } from "@/services/decision-baseline";
 import { SOURCE_RECONDUITE, decisionSourceOf } from "@/config/decision-source";
 import {
@@ -105,6 +106,10 @@ export async function submitTeamDecisions(args: {
       .where(and(eq(rounds.gameId, args.gameId), eq(rounds.index, game.currentRound)))
   )[0];
   if (!roundRow || roundRow.status !== "open") throw new Error("Ce tour n'est pas ouvert");
+
+  // Planning : verrou temporel (fenêtre partie / tour / étape de concours).
+  // Une partie sans fenêtre reste toujours jouable (exemption automatique).
+  await assertPlayable(game, roundRow);
 
   // §25 (mode compétition) : décisions verrouillées après validation
   if (game.mode === "competition") {

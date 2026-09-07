@@ -15,8 +15,10 @@ import {
   closeCurrentRound,
   createClassGame,
   drawEventCardForNextRound,
+  setGameSchedule,
   setQuizMode,
 } from "@/services/game.service";
+import { parisLocalToUtc } from "@/lib/paris-time";
 import {
   createCompetition,
   finishCompetition,
@@ -217,6 +219,19 @@ export async function setQuizModeAction(gameId: string, formData: FormData): Pro
     .catch(DEFAULT_QUIZ_MODE)
     .parse(formData.get("mode"));
   await setQuizMode({ gameId, teacherId: session.userId, mode });
+  revalidatePath(`/teacher/games/${gameId}`);
+}
+
+/**
+ * Règle la fenêtre globale de jeu (planning). Champs `opensAt`/`closesAt` en
+ * heure de Paris (datetime-local) ; un champ vide = pas de borne.
+ */
+export async function setGameScheduleAction(gameId: string, formData: FormData): Promise<void> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  const opensAt = parisLocalToUtc(String(formData.get("opensAt") ?? "") || null);
+  const closesAt = parisLocalToUtc(String(formData.get("closesAt") ?? "") || null);
+  await setGameSchedule({ gameId, teacherId: session.userId, opensAt, closesAt });
   revalidatePath(`/teacher/games/${gameId}`);
 }
 

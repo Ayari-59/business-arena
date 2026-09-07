@@ -316,10 +316,17 @@ export function DecisionForm({
   equipmentOffer,
   capacityFacts,
   vocabulary,
+  verrou,
 }: {
   gameId: string;
   roundIndex: number;
   periodName: string;
+  /**
+   * Verrou temporel (planning) : message à afficher quand le tour est hors de
+   * sa fenêtre. Null = jouable. Le formulaire reste visible (lecture seule) mais
+   * « Valider » est grisé ; le serveur refuse de toute façon.
+   */
+  verrou?: string | null;
   defaults: RoundDecisions;
   /**
    * Les valeurs PROPOSÉES pour ce tour (tour précédent, sinon point de départ
@@ -547,6 +554,16 @@ export function DecisionForm({
       onInvalidCapture={revelerFamilleInvalide}
       className="space-y-3"
     >
+      {/* Verrou de planning : hors de la fenêtre, on l'annonce et « Valider »
+          est grisé (le serveur refuse de toute façon). La page reste lisible. */}
+      {verrou ? (
+        <p
+          role="status"
+          className="flex items-center gap-2 rounded-lg border border-amber-400/30 bg-amber-400/5 px-3 py-2 text-sm text-amber-200"
+        >
+          <span aria-hidden>🔒</span> {verrou}
+        </p>
+      ) : null}
       {/* Barre d'étapes : où j'en suis, saut direct possible. Les libellés se
           replient en simples numéros sur petit écran. */}
       <ol className="flex flex-wrap gap-1.5" aria-label="Étapes de décision">
@@ -1220,8 +1237,8 @@ export function DecisionForm({
           {derniere ? (
             <button
               type="submit"
-              disabled={pending}
-              className="order-1 ml-auto rounded-lg bg-amber-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 disabled:cursor-wait disabled:opacity-60 sm:order-3 sm:ml-0"
+              disabled={pending || verrou != null}
+              className="order-1 ml-auto rounded-lg bg-amber-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60 sm:order-3 sm:ml-0"
             >
               {pending
                 ? "Envoi en cours…"

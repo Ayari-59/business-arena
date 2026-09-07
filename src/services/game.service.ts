@@ -205,6 +205,30 @@ export async function setQuizMode(args: {
     .where(eq(games.id, args.gameId));
 }
 
+/**
+ * Fenêtre globale de jeu (planning) : la partie n'est jouable qu'entre ces deux
+ * instants. Chacun peut être null (pas de borne). L'ouverture doit précéder la
+ * fermeture. Le verrou par tour et l'étape de concours s'appliquent en plus.
+ */
+export async function setGameSchedule(args: {
+  gameId: string;
+  teacherId: string;
+  opensAt: Date | null;
+  closesAt: Date | null;
+}): Promise<void> {
+  const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
+  if (!game || game.createdBy !== args.teacherId) {
+    throw new Error("Partie introuvable");
+  }
+  if (args.opensAt && args.closesAt && args.opensAt.getTime() > args.closesAt.getTime()) {
+    throw new Error("L'ouverture doit précéder la fermeture.");
+  }
+  await db
+    .update(games)
+    .set({ opensAt: args.opensAt, closesAt: args.closesAt })
+    .where(eq(games.id, args.gameId));
+}
+
 export interface TeacherGameView {
   gameId: string;
   joinCode: string | null;
@@ -215,6 +239,9 @@ export interface TeacherGameView {
   currentRound: number;
   roundsCount: number;
   roundDays: number;
+  /** Fenêtre globale de jeu (planning), en ISO ou null. */
+  opensAt: string | null;
+  closesAt: string | null;
   /** Secteur joué : titre du scénario et codes d'événements de SON deck. */
   scenarioCode: string;
   scenarioTitle: string;
@@ -303,6 +330,8 @@ export async function getTeacherGameView(
     currentRound: game.currentRound,
     roundsCount: (game.scenarioSnapshot as { roundsCount: number }).roundsCount,
     roundDays: (game.scenarioSnapshot as { roundDays: number }).roundDays,
+    opensAt: game.opensAt ? game.opensAt.toISOString() : null,
+    closesAt: game.closesAt ? game.closesAt.toISOString() : null,
     scenarioCode: snapshotDefinition.code,
     scenarioTitle: snapshotDefinition.title,
     // Le deck vient du SNAPSHOT, pas de la version courante du scénario :
