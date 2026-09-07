@@ -647,7 +647,7 @@ export function DecisionForm({
         </Family>
       ) : null}
       <Family legend="🎯 Vos ventes · le prix et le volume du tour" defaultOpen>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-2 gap-3">
           <Field name="price" label={v.priceLabel} defaultValue={defaults.price} step={0.1}
             suffix={`€/${v.unit}`}
             hint="Attention aux seuils psychologiques…" />
@@ -765,7 +765,7 @@ export function DecisionForm({
         className="space-y-3"
       >
       <Family legend="🏭 Production · qualité & maintenance" defaultOpen>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-2 gap-3">
           {on.quality ? (
             <Field name="qualityBudget" label="Budget qualité" defaultValue={defaults.qualityBudget} suffix="€" />
           ) : (

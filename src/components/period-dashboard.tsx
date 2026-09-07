@@ -259,7 +259,7 @@ export function PeriodDashboard({
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-sky-300">
                   📐 Indicateurs du métier
                 </h3>
-                <div className="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="mt-2 grid grid-cols-2 gap-3 lg:grid-cols-3">
                   {period.sectorKpis.map((k) => (
                     <div
                       key={k.key}
