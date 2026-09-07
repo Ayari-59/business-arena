@@ -29,6 +29,7 @@ import {
   readPendingEvents,
 } from "@/services/round-resolution.service";
 import { teamDisplayName } from "@/services/game-view.service";
+import { entitlementsForOrg } from "@/services/entitlements.service";
 
 // Re-exports depuis game-creation.service.ts pour compatibilité des consommateurs existants
 export {
@@ -275,6 +276,10 @@ export interface TeacherGameView {
   closesAt: string | null;
   /** Fenêtre de chaque tour (planning fin), triée par index. Dates en ISO ou null. */
   rounds: { index: number; status: string; opensAt: string | null; deadline: string | null }[];
+  /** Freemium : la partie s'est arrêtée avant la fin du scénario, faute de licence. */
+  planCapped: boolean;
+  /** Freemium : l'export du relevé est-il ouvert (licence) ? Sinon on propose l'upsell. */
+  canExportGradebook: boolean;
   /** Secteur joué : titre du scénario et codes d'événements de SON deck. */
   scenarioCode: string;
   scenarioTitle: string;
@@ -365,6 +370,10 @@ export async function getTeacherGameView(
     roundDays: (game.scenarioSnapshot as { roundDays: number }).roundDays,
     opensAt: game.opensAt ? game.opensAt.toISOString() : null,
     closesAt: game.closesAt ? game.closesAt.toISOString() : null,
+    planCapped: Boolean(
+      (game.difficultyProfile as { planCapped?: boolean } | null)?.planCapped,
+    ),
+    canExportGradebook: (await entitlementsForOrg(game.organizationId)).gradebookExport,
     rounds: [...gameRounds]
       .sort((a, b) => a.index - b.index)
       .map((r) => ({

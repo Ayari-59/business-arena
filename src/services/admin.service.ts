@@ -7,6 +7,7 @@ import {
   type LicenceStatus,
   type OrgLicence,
 } from "@/services/licence.service";
+import { DEFAULT_FREE_TIER, type FreeTier } from "@/config/entitlements";
 import {
   competitions,
   games,
@@ -101,6 +102,11 @@ export interface PlatformConfig {
    * vider pour retirer le bouton.
    */
   contactEmail: string;
+  /**
+   * Palier gratuit (freemium) : ce à quoi un compte SANS licence active a droit.
+   * Réglé ici, appliqué par entitlements.service. Voir config/entitlements.ts.
+   */
+  freeTier: FreeTier;
 }
 
 const DEFAULT_CONFIG: PlatformConfig = {
@@ -108,6 +114,7 @@ const DEFAULT_CONFIG: PlatformConfig = {
   allowSelfServiceTeachers: true,
   announcement: "",
   contactEmail: "contact@business-arena.fr",
+  freeTier: DEFAULT_FREE_TIER,
 };
 
 /**

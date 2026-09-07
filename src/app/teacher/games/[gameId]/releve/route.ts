@@ -1,5 +1,6 @@
 import { getSession } from "@/lib/session";
 import { getGameGradeSheet } from "@/services/pedagogy.service";
+import { entitlementsForUser } from "@/services/entitlements.service";
 
 /**
  * Le relevé de notes en tableur, une ligne par élève.
@@ -58,6 +59,15 @@ export async function GET(
 ) {
   const session = await getSession();
   if (!session) return new Response("Connexion requise.", { status: 401 });
+
+  // Palier gratuit : l'export du relevé est réservé à l'offre établissement.
+  const ent = await entitlementsForUser(session.userId);
+  if (!ent.gradebookExport) {
+    return new Response(
+      "L'export du relevé de notes est réservé à l'offre établissement.",
+      { status: 402 },
+    );
+  }
 
   const { gameId } = await params;
   const releve = await getGameGradeSheet(gameId, session.userId);

@@ -22,5 +22,13 @@ export async function createTestDb() {
       if (trimmed) await client.exec(trimmed);
     }
   }
-  return drizzle(client, { schema });
+  const database = drizzle(client, { schema });
+  // Palier gratuit « illimité » par défaut en test : les tests jouent des
+  // parties complètes et créent des concours. Le freemium borné est vérifié à
+  // part, par les tests qui écrivent eux-mêmes une config restrictive.
+  await database.insert(schema.platformSettings).values({
+    id: 1,
+    settings: { freeTier: { maxRounds: null, competitions: true, ai: true, gradebookExport: true } },
+  });
+  return database;
 }

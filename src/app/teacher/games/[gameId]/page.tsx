@@ -76,6 +76,19 @@ export default async function TeacherGamePage({
         </div>
       </header>
 
+      {view.planCapped ? (
+        <section className="rounded-xl border border-amber-400/40 bg-amber-950/20 p-1.5 sm:p-4">
+          <h2 className="text-sm font-semibold text-amber-300">
+            🔒 Version gratuite — la partie s&apos;est arrêtée avant la fin
+          </h2>
+          <p className="mt-1 max-w-3xl text-xs text-amber-200/80">
+            Le palier gratuit s&apos;arrête au tour {view.currentRound} sur {view.roundsCount}.
+            Activez une licence établissement pour jouer le scénario jusqu&apos;au bout, ouvrir les
+            concours, l&apos;export du relevé et le feedback IA.
+          </p>
+        </section>
+      ) : null}
+
       {defaillantes.length > 0 ? (
         <section className="rounded-xl border border-red-400/40 bg-red-950/30 p-1.5 sm:p-4">
           <h2 className="text-sm font-semibold text-red-300">
@@ -492,12 +505,21 @@ export default async function TeacherGamePage({
                 situation non rendue est comptée à part, jamais moyennée à zéro.
               </p>
             </div>
-            <a
-              href={`/teacher/games/${view.gameId}/releve`}
-              className="shrink-0 rounded-lg border border-amber-400/40 px-4 py-2 text-xs font-semibold text-amber-300 hover:bg-amber-400/10"
-            >
-              ⬇ Tableur (une ligne par élève)
-            </a>
+            {view.canExportGradebook ? (
+              <a
+                href={`/teacher/games/${view.gameId}/releve`}
+                className="shrink-0 rounded-lg border border-amber-400/40 px-4 py-2 text-xs font-semibold text-amber-300 hover:bg-amber-400/10"
+              >
+                ⬇ Tableur (une ligne par élève)
+              </a>
+            ) : (
+              <span
+                className="shrink-0 rounded-lg border border-white/10 px-4 py-2 text-xs font-medium text-slate-400"
+                title="Réservé à l'offre établissement"
+              >
+                🔒 Export tableur · offre établissement
+              </span>
+            )}
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

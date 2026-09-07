@@ -20,6 +20,7 @@ import { TEACHER_DRAWABLE_CODES, TEAM_CARD_CODES } from "@/config/events/cards";
 import { botDecisions, botPersonalityFromSeed, type BotProfile } from "@/engine/bots";
 import { carryOverDecisions, fallbackDecisions } from "@/services/decision.service";
 import { assertPlayable } from "@/services/play-lock";
+import { entitlementsForOrg } from "@/services/entitlements.service";
 import { proposedDecisionsFor } from "@/services/decision-baseline";
 import { SOURCE_RECONDUITE, decisionSourceOf } from "@/config/decision-source";
 import {
@@ -465,7 +466,13 @@ async function resolveGameRound(
       .values(output.companies.map((state) => ({ teamId: state.id, roundIndex, state })))
       .onConflictDoNothing();
 
-    const finished = roundIndex >= scenario.roundsCount;
+    // Palier gratuit : la partie s'arrête au dernier tour ouvert par le plan,
+    // même si le scénario en prévoit davantage (« ne va pas au bout »). Une
+    // licence en cours lève la borne ; sans établissement (solo public), le
+    // palier gratuit s'applique aussi.
+    const ent = await entitlementsForOrg(game.organizationId);
+    const cappedByPlan = ent.maxRounds != null && roundIndex >= ent.maxRounds;
+    const finished = roundIndex >= scenario.roundsCount || cappedByPlan;
 
     // Post-traitement AVANT l'avancement d'état : si l'une de ces étapes
     // échoue, le round reste en « resolving » et le catch le remet à « open ».
@@ -512,6 +519,9 @@ async function resolveGameRound(
           activeEvents: output.events,
           pendingEvents: [],
           pendingEventCodes: undefined,
+          // Vrai seulement si la partie s'arrête AVANT la fin du scénario, du
+          // fait du palier gratuit : sert la bannière d'upsell côté prof.
+          planCapped: cappedByPlan && roundIndex < scenario.roundsCount,
         },
       })
       .where(eq(games.id, gameId));

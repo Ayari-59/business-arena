@@ -29,11 +29,20 @@ export async function createEstablishmentAction(formData: FormData): Promise<voi
 
 export async function updatePlatformConfigAction(formData: FormData): Promise<void> {
   const adminId = await requireAdminSession();
+  // Palier gratuit : champ « tours » vide = pas de limite de tours (null).
+  const bornTours = String(formData.get("freeMaxRounds") ?? "").trim();
+  const maxRounds = bornTours === "" ? null : Math.max(1, Math.floor(Number(bornTours) || 1));
   await updatePlatformConfig(adminId, {
     allowPublicPlay: formData.get("allowPublicPlay") === "on",
     allowSelfServiceTeachers: formData.get("allowSelfServiceTeachers") === "on",
     announcement: String(formData.get("announcement") ?? "").trim(),
     contactEmail: String(formData.get("contactEmail") ?? "").trim(),
+    freeTier: {
+      maxRounds,
+      competitions: formData.get("freeCompetitions") === "on",
+      ai: formData.get("freeAi") === "on",
+      gradebookExport: formData.get("freeGradebookExport") === "on",
+    },
   });
   revalidatePath("/admin");
   revalidatePath("/");
