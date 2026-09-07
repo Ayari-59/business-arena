@@ -691,6 +691,7 @@ export default async function ArenaPage({
                   suppliersOffer={view.suppliersOffer}
                   equipmentOffer={view.equipmentOffer}
                   capacityFacts={view.capacityFacts}
+                  verrou={view.playLock.playable ? null : (view.playLock.message ?? "Ce tour n'est pas encore ouvert.")}
                 />
               </section>
                   ),

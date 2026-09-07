@@ -65,6 +65,11 @@ export const games = pgTable(
     status: gameStatus("status").notNull().default("draft"),
     currentRound: integer("current_round").notNull().default(0),
     roundDuration: interval("round_duration"), // null = pas de pression temporelle
+    // Fenêtre globale de jeu (planning). null = pas de fenêtre : la partie suit
+    // le pilotage manuel des tours. Le verrou par tour (rounds.opensAt/deadline)
+    // s'applique à l'intérieur de cette fenêtre.
+    opensAt: timestamp("opens_at", { withTimezone: true }),
+    closesAt: timestamp("closes_at", { withTimezone: true }),
     joinCode: text("join_code").unique(), // code d'invitation des joueurs (parties de classe)
     createdBy: uuid("created_by")
       .notNull()
