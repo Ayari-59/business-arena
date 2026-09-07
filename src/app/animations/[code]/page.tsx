@@ -92,7 +92,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
       <main id="main" className="min-w-0">
         <p className="text-xs uppercase tracking-[0.3em] text-slate-400 print:hidden">
           <Link href="/animations" className="hover:text-slate-300">
-            Ateliers et animations
+            Ateliers
           </Link>{" "}
           / {atelier.diplome}
         </p>
