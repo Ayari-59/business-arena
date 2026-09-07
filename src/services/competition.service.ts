@@ -419,6 +419,100 @@ export async function finishCompetition(args: {
   return { podium: ranking };
 }
 
+/**
+ * Réglage de la page publique d'annonce par l'organisateur. Contrôle
+ * d'appartenance via organizerId ; les champs libres sont bornés côté appelant
+ * (action). `visible` bascule la page en ligne (true) ou en 404 (false).
+ */
+export async function setPublicPage(args: {
+  competitionId: string;
+  organizerId: string;
+  visible: boolean;
+  tagline: string | null;
+  description: string | null;
+  organizerLabel: string | null;
+  accent: string | null;
+}): Promise<void> {
+  const competition = await loadOwnedCompetition(args.competitionId, args.organizerId);
+  await db
+    .update(competitions)
+    .set({
+      publicVisible: args.visible,
+      tagline: args.tagline,
+      description: args.description,
+      organizerLabel: args.organizerLabel,
+      accent: args.accent,
+    })
+    .where(eq(competitions.id, competition.id));
+}
+
+export interface PublicCompetition {
+  name: string;
+  status: string;
+  joinCode: string;
+  tagline: string | null;
+  description: string | null;
+  organizerLabel: string | null;
+  accent: string | null;
+  /** Nombre d'équipes déjà inscrites. */
+  entriesCount: number;
+  /** Étapes datées (planning), pour le programme public. Dates en ISO ou null. */
+  stages: { kind: string; startsAt: string | null; endsAt: string | null }[];
+}
+
+/**
+ * La page publique d'un concours, par son code. Renvoie null si le concours
+ * n'existe pas ou n'a pas été publié (public_visible faux) : la page est alors
+ * un 404, jamais un aperçu du concours d'un autre. Ne renvoie rien
+ * d'identifiant sur l'organisateur ni sur les équipes — c'est une page ouverte.
+ */
+export async function getPublicCompetition(code: string): Promise<PublicCompetition | null> {
+  const competition = (
+    await db
+      .select()
+      .from(competitions)
+      .where(eq(competitions.joinCode, code.trim().toUpperCase()))
+  )[0];
+  if (!competition || !competition.publicVisible) return null;
+
+  const entries = await db
+    .select({ teamLabel: competitionEntries.teamLabel })
+    .from(competitionEntries)
+    .where(eq(competitionEntries.competitionId, competition.id));
+
+  const stages = (
+    await db
+      .select()
+      .from(competitionStages)
+      .where(eq(competitionStages.competitionId, competition.id))
+  ).sort((a, b) => a.index - b.index);
+
+  return {
+    name: competition.name,
+    status: competition.status,
+    joinCode: competition.joinCode,
+    tagline: competition.tagline,
+    description: competition.description,
+    organizerLabel: competition.organizerLabel,
+    accent: competition.accent,
+    entriesCount: entries.length,
+    stages: stages.map((s) => ({
+      kind: s.kind,
+      startsAt: s.startsAt ? s.startsAt.toISOString() : null,
+      endsAt: s.endsAt ? s.endsAt.toISOString() : null,
+    })),
+  };
+}
+
+/** Les codes des concours publiés (pour le plan du site). */
+export async function getPublicCompetitionCodes(): Promise<string[]> {
+  const rows = await db
+    .select({ joinCode: competitions.joinCode })
+    .from(competitions)
+    .where(eq(competitions.publicVisible, true));
+  return rows.map((r) => r.joinCode);
+}
+
 // ---------------------------------------------------------------------------
 // Lectures
 // ---------------------------------------------------------------------------
@@ -445,6 +539,14 @@ export interface CompetitionView {
     }[];
   }[];
   podium: string[] | null;
+  /** Réglages de la page publique d'annonce (pour préremplir le panneau prof). */
+  publicPage: {
+    visible: boolean;
+    tagline: string | null;
+    description: string | null;
+    organizerLabel: string | null;
+    accent: string | null;
+  };
 }
 
 export async function getCompetitionView(competitionId: string): Promise<CompetitionView | null> {
@@ -517,6 +619,13 @@ export async function getCompetitionView(competitionId: string): Promise<Competi
     })),
     stages: stageViews,
     podium: finalPodium,
+    publicPage: {
+      visible: competition.publicVisible,
+      tagline: competition.tagline,
+      description: competition.description,
+      organizerLabel: competition.organizerLabel,
+      accent: competition.accent,
+    },
   };
 }
 

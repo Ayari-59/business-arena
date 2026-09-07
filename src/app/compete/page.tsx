@@ -9,7 +9,13 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function CompetePage() {
+export default async function CompetePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ code?: string }>;
+}) {
+  const { code } = await searchParams;
+  const defaultCode = (code ?? "").trim().toUpperCase().slice(0, 6);
   return (
     <main id="main" className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
       <div className="text-center">
@@ -41,7 +47,7 @@ export default function CompetePage() {
           </Link>
         </p>
       </section>
-      <CompetitionJoinForm />
+      <CompetitionJoinForm defaultCode={defaultCode} />
     </main>
   );
 }

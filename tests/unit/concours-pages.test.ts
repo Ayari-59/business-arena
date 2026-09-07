@@ -118,9 +118,12 @@ describe("la page enseignant du concours", () => {
 });
 
 describe("/compete explique le concours", () => {
-  it("cinq lignes et un lien vers le guide", () => {
+  it("cinq lignes et un lien vers le guide", async () => {
     expect(EXPLICATIONS_CONCOURS).toHaveLength(5);
-    const html = renderToStaticMarkup(createElement(CompetePage));
+    // Composant serveur asynchrone : on le résout (searchParams vide) avant de
+    // rendre l'élément obtenu.
+    const element = await CompetePage({ searchParams: Promise.resolve({}) });
+    const html = renderToStaticMarkup(element);
     for (const ligne of EXPLICATIONS_CONCOURS) {
       expect(html).toContain(ligne.replace(/'/g, "&#x27;"));
     }
