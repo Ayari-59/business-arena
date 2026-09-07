@@ -20,17 +20,22 @@ export function CycleDecisions() {
         <p className="text-sm font-semibold text-slate-100">Comment se déroule une partie</p>
         <span className="text-xs text-slate-400">un cycle répété à chaque tour ↻</span>
       </div>
-      <ol className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Sur mobile, chaque étape tient sur une ligne (pastille à gauche, texte
+          à droite) pour ne pas empiler quatre cartes pleine hauteur ; dès `sm`,
+          on retrouve les cartes en grille, pastille au-dessus. */}
+      <ol className="mt-3 grid gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4">
         {CYCLE.map((etape) => (
           <li
             key={etape.n}
-            className="rounded-lg border border-white/10 bg-slate-950/40 p-3"
+            className="flex items-start gap-3 rounded-lg border border-white/10 bg-slate-950/40 p-3 sm:block"
           >
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-400 text-xs font-semibold text-slate-950">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-400 text-xs font-semibold text-slate-950">
               {etape.n}
             </span>
-            <p className="mt-2 text-sm font-medium text-amber-100">{etape.titre}</p>
-            <p className="mt-0.5 text-xs leading-relaxed text-slate-400">{etape.texte}</p>
+            <div className="sm:mt-2">
+              <p className="text-sm font-medium text-amber-100">{etape.titre}</p>
+              <p className="mt-0.5 text-xs leading-relaxed text-slate-400">{etape.texte}</p>
+            </div>
           </li>
         ))}
       </ol>
