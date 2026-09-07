@@ -475,9 +475,18 @@ export function DecisionForm({
     e.currentTarget.form?.requestSubmit();
   };
   const lesModifier = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const form = e.currentTarget.form;
     const premier = nonTouches?.[0]?.key;
     setNonTouches(null);
-    if (premier) (e.currentTarget.form?.elements.namedItem(premier) as HTMLInputElement | null)?.focus();
+    if (!form || !premier) return;
+    const champ = form.elements.namedItem(premier) as HTMLInputElement | null;
+    // Le champ pivot vit à l'étape « Vendre », pas forcément celle affichée : on
+    // révèle son étape AVANT de poser le focus, sinon il est masqué (`hidden`)
+    // et le focus reste sans effet (l'élève ne verrait rien se passer).
+    const section = champ?.closest("[data-etape]") as HTMLElement | null;
+    const i = Number(section?.dataset.etape);
+    if (!Number.isNaN(i)) setEtape(i);
+    requestAnimationFrame(() => champ?.focus());
   };
   const [equipBuyQty, setEquipBuyQty] = useState<Record<string, number>>({});
   const [equipSellQty, setEquipSellQty] = useState<Record<string, number>>({});
@@ -1178,38 +1187,38 @@ export function DecisionForm({
         </p>
       ) : null}
       <GuardError message={guardError} />
-      {nonTouches ? (
-        <div
-          role="alert"
-          className="rounded-lg border border-orange-400/40 bg-orange-950/30 px-4 py-3 text-sm text-orange-100"
-        >
-          <p>
+      {pending && kind === "solo" ? (
+        // Le tour se résout côté serveur puis redirige : entre les deux, on
+        // rend l'attente tangible — la machine tourne, étape après étape —
+        // plutôt qu'un bouton grisé « Envoi en cours… ».
+        <SimulationProgress periodName={periodName} />
+      ) : nonTouches ? (
+        // Pivots laissés aux valeurs proposées : la confirmation REMPLACE le
+        // pied de navigation au lieu de s'y ajouter. Sans ça, « Oui/Non » et
+        // « Valider » cohabitaient à l'écran (double boutonnage) ; ici une
+        // seule action est offerte à la fois.
+        <div role="alert" className="border-t border-orange-400/30 pt-3">
+          <p className="text-sm text-orange-100">
             Vous validez avec les valeurs proposées pour :{" "}
             <strong>{nonTouches.map((p) => p.label).join(", ")}</strong>. C&apos;est un choix ?
           </p>
-          <div className="mt-2 flex flex-wrap gap-2">
+          <div className="mt-3 flex flex-wrap gap-3">
             <button
               type="button"
               onClick={garderLesValeurs}
-              className="rounded-lg bg-orange-400 px-3 py-1.5 text-xs font-semibold text-slate-950 hover:bg-orange-300"
+              className="rounded-lg bg-orange-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-orange-300"
             >
               Oui, je garde ces valeurs
             </button>
             <button
               type="button"
               onClick={lesModifier}
-              className="rounded-lg border border-orange-400/50 px-3 py-1.5 text-xs font-semibold text-orange-200 hover:bg-orange-400/10"
+              className="rounded-lg border border-orange-400/50 px-4 py-2.5 text-sm font-semibold text-orange-200 transition hover:bg-orange-400/10"
             >
               Non, je les modifie
             </button>
           </div>
         </div>
-      ) : null}
-      {pending && kind === "solo" ? (
-        // Le tour se résout côté serveur puis redirige : entre les deux, on
-        // rend l'attente tangible — la machine tourne, étape après étape —
-        // plutôt qu'un bouton grisé « Envoi en cours… ».
-        <SimulationProgress periodName={periodName} />
       ) : (
         // Pied de navigation de l'assistant : « Précédent »/« Suivant » d'une
         // étape à l'autre, et « Valider » (envoi réel) à la dernière seulement.
