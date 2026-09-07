@@ -13,8 +13,16 @@ import { CloseRoundForm } from "@/components/close-round-form";
 import { SubmitButton } from "@/components/submit-button";
 import { GuardedForm } from "@/components/guarded-action";
 import { RoundStatusPoller } from "@/components/round-status-poller";
-import { setGameScheduleAction } from "../../actions";
+import { setGameScheduleAction, setRoundWindowsAction } from "../../actions";
 import { utcToParisLocalInput } from "@/lib/paris-time";
+
+/** Libellé court de l'état d'un tour, pour le tableau du planning fin. */
+const ROUND_STATUS_LABEL: Record<string, string> = {
+  pending: "à venir",
+  open: "en cours",
+  resolving: "en calcul",
+  resolved: "clos",
+};
 
 export const dynamic = "force-dynamic";
 
@@ -222,6 +230,71 @@ export default async function TeacherGamePage({
             </div>
             <SubmitButton className="mt-3 rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-400">
               Enregistrer le planning
+            </SubmitButton>
+          </GuardedForm>
+        </section>
+      ) : null}
+
+      {!finished ? (
+        <section className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
+          <h2 className="text-sm font-semibold text-slate-200">⏱️ Planning des tours</h2>
+          <p className="mt-1 max-w-3xl text-xs text-slate-400">
+            Ouverture et échéance de chaque tour (heure de Paris). Ces bornes s&apos;ajoutent à
+            la fenêtre globale : un tour n&apos;est jouable que pendant l&apos;intersection des
+            deux. Laissez un couple vide pour laisser le tour suivre le pilotage manuel.
+          </p>
+          <GuardedForm
+            action={setRoundWindowsAction.bind(null, view.gameId)}
+            label="planning des tours"
+            className="mt-3"
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
+                    <th className="pb-2 pr-3 font-medium">Tour</th>
+                    <th className="pb-2 pr-3 font-medium">Ouverture</th>
+                    <th className="pb-2 font-medium">Échéance</th>
+                  </tr>
+                </thead>
+                <tbody className="text-slate-300">
+                  {view.rounds.map((r) => (
+                    <tr key={r.index} className="border-t border-white/5">
+                      <td className="py-2 pr-3 align-middle whitespace-nowrap">
+                        <span className="font-semibold text-slate-200">Tour {r.index}</span>
+                        <span className="ml-2 rounded bg-slate-800 px-1.5 py-0.5 text-xs text-slate-400">
+                          {ROUND_STATUS_LABEL[r.status] ?? r.status}
+                        </span>
+                      </td>
+                      <td className="py-2 pr-3">
+                        <label className="block">
+                          <span className="sr-only">Ouverture du tour {r.index}</span>
+                          <input
+                            type="datetime-local"
+                            name={`opensAt-${r.index}`}
+                            defaultValue={utcToParisLocalInput(r.opensAt ? new Date(r.opensAt) : null)}
+                            className="w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-amber-400/50 focus:outline-none"
+                          />
+                        </label>
+                      </td>
+                      <td className="py-2">
+                        <label className="block">
+                          <span className="sr-only">Échéance du tour {r.index}</span>
+                          <input
+                            type="datetime-local"
+                            name={`deadline-${r.index}`}
+                            defaultValue={utcToParisLocalInput(r.deadline ? new Date(r.deadline) : null)}
+                            className="w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-amber-400/50 focus:outline-none"
+                          />
+                        </label>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <SubmitButton className="mt-3 rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-400">
+              Enregistrer le planning des tours
             </SubmitButton>
           </GuardedForm>
         </section>
