@@ -23,6 +23,7 @@ import { parisLocalToUtc } from "@/lib/paris-time";
 import {
   createCompetition,
   finishCompetition,
+  setPublicPage,
   setStageWindow,
   startFinal,
   startQualification,
@@ -31,6 +32,12 @@ import { setMissedPolicy } from "@/services/pedagogy.service";
 import { DEFAULT_SCENARIO_CODE } from "@/config/scenarios/registry";
 import { canTeacherLaunchScenario } from "@/services/scenario-editor.service";
 import { DEFAULT_QUIZ_MODE } from "@/config/difficulty";
+import {
+  ACCENTS_CONCOURS,
+  DESCRIPTION_MAX,
+  ORGANIZER_LABEL_MAX,
+  TAGLINE_MAX,
+} from "@/config/concours-public";
 
 export interface FormState {
   error: string | null;
@@ -437,6 +444,44 @@ export async function setStageWindowAction(
       organizerId: session.userId,
       startsAt,
       endsAt,
+    });
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Erreur." };
+  }
+  revalidatePath(`/teacher/competitions/${competitionId}`);
+  return { error: null };
+}
+
+const ACCENT_CLES = ACCENTS_CONCOURS.map((a) => a.cle);
+
+/** Un champ libre : trimé, borné, null si vide. */
+function champLibre(value: FormDataEntryValue | null, max: number): string | null {
+  const t = String(value ?? "").trim();
+  return t ? t.slice(0, max) : null;
+}
+
+/**
+ * Enregistre la page publique d'annonce d'un concours. Les champs libres sont
+ * bornés ; l'accent est validé contre la palette (une clé inconnue devient
+ * null → laiton par défaut). `visible` publie la page ou la remet en 404.
+ */
+export async function setCompetitionPublicPageAction(
+  competitionId: string,
+  _prev: CompetitionActionState,
+  formData: FormData,
+): Promise<CompetitionActionState> {
+  const session = await getSession();
+  if (!session) return { error: "Session expirée : reconnectez-vous." };
+  const accentBrut = String(formData.get("accent") ?? "");
+  try {
+    await setPublicPage({
+      competitionId,
+      organizerId: session.userId,
+      visible: formData.get("visible") === "on",
+      tagline: champLibre(formData.get("tagline"), TAGLINE_MAX),
+      description: champLibre(formData.get("description"), DESCRIPTION_MAX),
+      organizerLabel: champLibre(formData.get("organizerLabel"), ORGANIZER_LABEL_MAX),
+      accent: ACCENT_CLES.includes(accentBrut) ? accentBrut : null,
     });
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Erreur." };

@@ -6,6 +6,8 @@ import { CompetitionBoard } from "@/components/competition-board";
 import { CompetitionControl } from "@/components/competition-controls";
 import { CompetitionSettings, CompetitionSteps } from "@/components/competition-steps";
 import { StageSchedule } from "@/components/stage-schedule";
+import { PublicPageForm } from "@/components/public-page-form";
+import { SITE_URL } from "@/config/site";
 
 export const dynamic = "force-dynamic";
 
@@ -88,6 +90,27 @@ export default async function TeacherCompetitionPage({
           </div>
         </section>
       ) : null}
+
+      <section className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
+        <h2 className="text-sm font-semibold text-slate-200">🌐 Page publique d&apos;annonce</h2>
+        <p className="mt-1 max-w-3xl text-xs text-slate-400">
+          Une page ouverte pour annoncer l&apos;événement, avec un bouton d&apos;inscription et des
+          boutons de partage (LinkedIn, X, Facebook, WhatsApp). Les dates du programme reprennent
+          le planning des étapes. Rien n&apos;est en ligne tant que vous n&apos;avez pas coché « Rendre
+          la page publique ».
+        </p>
+        <div className="mt-3">
+          <PublicPageForm
+            competitionId={competitionId}
+            publicUrl={`${SITE_URL}/concours/${view.joinCode}`}
+            visible={view.publicPage.visible}
+            tagline={view.publicPage.tagline}
+            description={view.publicPage.description}
+            organizerLabel={view.publicPage.organizerLabel}
+            accent={view.publicPage.accent}
+          />
+        </div>
+      </section>
 
       <CompetitionBoard view={view} gameLinkBase="/teacher/games" />
     </main>

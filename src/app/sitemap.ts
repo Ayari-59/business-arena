@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { ATELIERS } from "@/config/ateliers";
 import { SITE_URL } from "@/config/site";
+import { getPublicCompetitionCodes } from "@/services/competition.service";
 
 /**
  * Le plan du site : les pages publiques, et elles seules.
@@ -27,7 +28,26 @@ export const PAGES_PUBLIQUES = [
 
 const DATE_DE_BUILD = new Date();
 
-export default function sitemap(): MetadataRoute.Sitemap {
+/**
+ * Les concours publiés ont chacun leur page d'annonce. La lecture en base peut
+ * échouer (base indisponible au moment où un moteur demande le plan) : on ne
+ * fait alors pas tomber tout le sitemap, on renvoie les pages statiques seules.
+ */
+async function concoursPublies(): Promise<MetadataRoute.Sitemap> {
+  try {
+    const codes = await getPublicCompetitionCodes();
+    return codes.map((code) => ({
+      url: `${SITE_URL}/concours/${code}`,
+      lastModified: DATE_DE_BUILD,
+      changeFrequency: "daily" as const,
+      priority: 0.6,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const pages: MetadataRoute.Sitemap = PAGES_PUBLIQUES.map((chemin) => ({
     url: `${SITE_URL}${chemin}`,
     lastModified: DATE_DE_BUILD,
@@ -56,5 +76,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ]);
 
-  return [...pages, ...ateliers];
+  return [...pages, ...ateliers, ...(await concoursPublies())];
 }

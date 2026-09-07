@@ -23,6 +23,7 @@ const COMPOSANTS_GARDES = [
   "src/components/competition-join-form.tsx", // /compete
   "src/components/close-round-form.tsx", // clôture du tour (confirmée)
   "src/components/stage-schedule.tsx", // fenêtre d'une étape de concours
+  "src/components/public-page-form.tsx", // page publique d'annonce du concours
 ];
 
 /** Pages serveur : GuardedForm autour des actions sans état. */

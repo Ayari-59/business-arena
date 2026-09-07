@@ -1,10 +1,15 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import robots, { CHEMINS_PRIVES } from "@/app/robots";
 import sitemap, { PAGES_PUBLIQUES } from "@/app/sitemap";
 import { ATELIERS } from "@/config/ateliers";
 import { SITE_URL } from "@/config/site";
+
+// Le plan du site lit désormais les concours publiés en base : on la remplace
+// par un objet vide. La lecture échoue alors et retombe (try/catch) sur les
+// seules pages statiques — c'est ce comportement de repli qu'on teste ici.
+vi.mock("@/db", () => ({ db: {} }));
 
 /**
  * ROBOTS ET PLAN DU SITE.
@@ -62,8 +67,12 @@ describe("robots.txt", () => {
 });
 
 describe("sitemap.xml", () => {
-  const entrees = sitemap();
-  const urls = entrees.map((e) => e.url);
+  let entrees: Awaited<ReturnType<typeof sitemap>>;
+  let urls: string[];
+  beforeAll(async () => {
+    entrees = await sitemap();
+    urls = entrees.map((e) => e.url);
+  });
 
   it("contient au moins la racine, les entreprises et le guide", () => {
     expect(urls).toContain(`${SITE_URL}/`);

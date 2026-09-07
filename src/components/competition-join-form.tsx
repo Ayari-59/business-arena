@@ -8,9 +8,12 @@ const initial: JoinCompetitionState = { error: null, dejaInscrit: null };
 
 export function CompetitionJoinForm({
   initialState = initial,
+  defaultCode = "",
 }: {
   /** État de départ : celui d'un formulaire vierge, sauf pour un rendu de test. */
   initialState?: JoinCompetitionState;
+  /** Code prérempli quand on arrive depuis la page publique d'un concours. */
+  defaultCode?: string;
 }) {
   const { state, formAction, pending, formRef, guardError } = useGuardedAction(
     joinCompetitionAction,
@@ -30,6 +33,7 @@ export function CompetitionJoinForm({
         <input
           name="code"
           required
+          defaultValue={defaultCode}
           autoCapitalize="characters"
           autoComplete="off"
           placeholder="EX : R4KT7B"

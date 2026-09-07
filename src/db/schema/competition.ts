@@ -1,4 +1,5 @@
 import {
+  boolean,
   index,
   integer,
   jsonb,
@@ -51,6 +52,13 @@ export const competitions = pgTable("competitions", {
   organizerId: uuid("organizer_id")
     .notNull()
     .references(() => users.id, { onDelete: "restrict" }),
+  // Page publique d'annonce (/concours/[joinCode]). Tant que public_visible est
+  // faux, la page renvoie 404 : l'organisateur la remplit puis la publie.
+  publicVisible: boolean("public_visible").notNull().default(false),
+  tagline: text("tagline"), // accroche courte
+  description: text("description"), // présentation longue
+  organizerLabel: text("organizer_label"), // établissement / organisateur affiché
+  accent: text("accent"), // clé de couleur d'accent (voir config/concours-public)
   ...timestamps,
 }, (t) => [index("competitions_organizer_id_idx").on(t.organizerId)]);
 
