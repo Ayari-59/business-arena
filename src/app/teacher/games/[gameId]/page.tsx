@@ -45,7 +45,7 @@ export default async function TeacherGamePage({
   const defaillantes = view.ranking.filter((row) => row.defaillant);
 
   return (
-    <main id="main" className="mx-auto max-w-4xl space-y-8 px-2 py-6 sm:p-6">
+    <main id="main" className="mx-auto max-w-4xl space-y-4 px-2 py-6 sm:space-y-8 sm:p-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Pilotage de partie</p>

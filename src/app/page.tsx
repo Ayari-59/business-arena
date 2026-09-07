@@ -117,7 +117,7 @@ export default async function Home() {
       ) : null}
 
       {/* ---------- Hero ---------- */}
-      <section className="mx-auto grid max-w-6xl items-center gap-10 px-6 py-14 lg:grid-cols-2 lg:py-20">
+      <section className="mx-auto grid max-w-6xl items-center gap-6 px-6 py-8 sm:gap-10 sm:py-14 lg:grid-cols-2 lg:py-20">
         {/* La colonne est un conteneur de requête : le titre se dimensionne à SA
             largeur (unités cqw), pas à celle de l'écran. Il tient donc sur une
             seule ligne aussi bien en pleine largeur (mobile) qu'en demi-colonne
@@ -239,12 +239,12 @@ export default async function Home() {
       </section>
 
       {/* ---------- Explorer : renvois vers les pages dédiées ---------- */}
-      <section className="mx-auto max-w-6xl px-6 py-16">
+      <section className="mx-auto max-w-6xl px-6 py-10 sm:py-16">
         <h2 className="text-center text-2xl font-bold text-slate-50">Par où commencer ?</h2>
         <p className="mx-auto mt-3 max-w-2xl text-center text-sm leading-relaxed text-slate-400">
           Chaque page va droit au but. Choisissez la vôtre.
         </p>
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
           {RENVOIS.map((r) => (
             <Link
               key={r.href}

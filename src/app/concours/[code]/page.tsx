@@ -81,8 +81,8 @@ export default async function ConcoursPublicPage({
     .filter((s) => s.fenetre !== null);
 
   return (
-    <main id="main" className="mx-auto max-w-3xl px-4 py-10 sm:py-16">
-      <article className="space-y-10">
+    <main id="main" className="mx-auto max-w-3xl px-4 py-8 sm:py-16">
+      <article className="space-y-6 sm:space-y-10">
         <header className="space-y-4">
           <div className="flex flex-wrap items-center gap-3">
             <span
@@ -113,7 +113,7 @@ export default async function ConcoursPublicPage({
 
         {/* Inscription */}
         <section
-          className="rounded-2xl border p-6"
+          className="rounded-2xl border p-4 sm:p-6"
           style={{ borderColor: `${accent.vif}40`, background: `${accent.vif}0d` }}
         >
           {ouvert ? (

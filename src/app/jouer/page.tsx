@@ -50,7 +50,7 @@ export default async function JouerPage({
         className="pointer-events-none absolute -top-40 left-1/2 h-[500px] w-[900px] -translate-x-1/2 rounded-full bg-amber-400/10 blur-3xl"
       />
 
-      <section className="mx-auto max-w-6xl px-6 py-16">
+      <section className="mx-auto max-w-6xl px-6 py-8 sm:py-16">
         {/*
           Colonnes centrées l'une sur l'autre : le texte est bien plus court que
           le formulaire, et les aligner par le haut laissait un vide sous lui.
@@ -58,7 +58,7 @@ export default async function JouerPage({
           cartes de secteur s'étalent, sa hauteur se rapproche de celle du texte.
           Le texte, lui, reste borné par son max-w-lg et ne s'étire pas.
         */}
-        <div className="grid items-start gap-8 lg:grid-cols-[1fr_540px] lg:items-center">
+        <div className="grid items-start gap-6 sm:gap-8 lg:grid-cols-[1fr_540px] lg:items-center">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Partie solo</p>
             <h1 className="mt-3 text-3xl font-bold leading-tight tracking-tight text-slate-50 sm:text-4xl">
@@ -104,7 +104,7 @@ export default async function JouerPage({
           ) : (
             <form
               action={startGameAction}
-              className="rounded-2xl border border-white/10 bg-slate-900/80 p-6 shadow-xl shadow-black/30 ring-1 ring-white/5"
+              className="rounded-2xl border border-white/10 bg-slate-900/80 p-4 shadow-xl shadow-black/30 ring-1 ring-white/5 sm:p-6"
             >
               <h2 className="text-sm font-semibold text-slate-100">Configurer la partie</h2>
               <QuickConfigFields
