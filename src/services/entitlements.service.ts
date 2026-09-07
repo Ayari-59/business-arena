@@ -27,8 +27,9 @@ async function freeTier(): Promise<FreeTier> {
     const stored = (row?.settings as { freeTier?: Partial<FreeTier> } | null)?.freeTier;
     return { ...DEFAULT_FREE_TIER, ...(stored ?? {}) };
   } catch (e) {
-    // Panne base : on retombe sur le palier gratuit par défaut (le plus
-    // restrictif), jamais sur un accès complet ouvert par erreur.
+    // Panne base : on retombe sur le palier par défaut, qui est OUVERT
+    // (freemium éteint). Un incident de lecture ne doit pas transformer le
+    // site en paywall et bloquer des utilisateurs par erreur.
     console.error("[entitlements] lecture du palier gratuit échouée :", e);
     return DEFAULT_FREE_TIER;
   }

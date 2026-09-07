@@ -29,12 +29,21 @@ export interface FreeTier {
   gradebookExport: boolean;
 }
 
-/** Palier gratuit par défaut : jouable, mais qui n'ouvre ni la fin, ni les extras. */
+/**
+ * Palier gratuit PAR DÉFAUT : tout ouvert.
+ *
+ * Choix de déploiement : le freemium est ÉTEINT tant que l'administrateur ne
+ * l'allume pas depuis /admin. Sans config (première mise en ligne, ou incident
+ * de lecture), l'accès reste complet — on ne coupe donc jamais un pilote ni un
+ * établissement existant au moment du déploiement. L'admin resserre ensuite
+ * (ex. 3 tours, concours fermés) pour poser le mur. Un exemple de palier
+ * commercial figure dans l'étude de marché.
+ */
 export const DEFAULT_FREE_TIER: FreeTier = {
-  maxRounds: 3,
-  competitions: false,
-  ai: false,
-  gradebookExport: false,
+  maxRounds: null,
+  competitions: true,
+  ai: true,
+  gradebookExport: true,
 };
 
 /** Ce qu'ouvre une licence en cours : tout, sans borne. */

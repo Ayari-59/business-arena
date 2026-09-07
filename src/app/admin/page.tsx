@@ -151,7 +151,8 @@ export default async function AdminPage() {
             </legend>
             <p className="mb-3 text-xs text-slate-400">
               Ce à quoi un compte <strong className="text-slate-300">sans licence active</strong> a droit.
-              Une licence en cours ouvre tout. Ces réglages s&apos;appliquent à tout le monde en accès libre.
+              Une licence en cours ouvre tout. <strong className="text-slate-300">Par défaut tout est ouvert</strong> :
+              resserrez ces réglages (ex. 3 tours, concours fermés) pour activer le freemium.
             </p>
             <label className="block">
               <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
