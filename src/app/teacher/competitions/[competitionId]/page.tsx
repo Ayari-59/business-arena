@@ -5,6 +5,7 @@ import { getCompetitionView } from "@/services/competition.service";
 import { CompetitionBoard } from "@/components/competition-board";
 import { CompetitionControl } from "@/components/competition-controls";
 import { CompetitionSettings, CompetitionSteps } from "@/components/competition-steps";
+import { StageSchedule } from "@/components/stage-schedule";
 import { PublicPageForm } from "@/components/public-page-form";
 import { SITE_URL } from "@/config/site";
 
@@ -64,6 +65,30 @@ export default async function TeacherCompetitionPage({
           Règles du mode compétition : décisions verrouillées après validation, indices
           limités aux niveaux 1 à 3.
         </p>
+      ) : null}
+
+      {view.status !== "finished" && view.stages.length > 0 ? (
+        <section className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
+          <h2 className="text-sm font-semibold text-slate-200">🗓️ Planning des étapes</h2>
+          <p className="mt-1 max-w-3xl text-xs text-slate-400">
+            Fenêtre pendant laquelle les équipes peuvent jouer les parties de chaque étape (heure
+            de Paris). En dehors, l&apos;arène passe en lecture seule. Cette fenêtre s&apos;ajoute à
+            celle de chaque partie et de chaque tour. Laissez un champ vide pour ne pas poser de
+            borne.
+          </p>
+          <div className="mt-3 grid gap-3 lg:grid-cols-2">
+            {view.stages.map((stage) => (
+              <StageSchedule
+                key={stage.stageId}
+                competitionId={competitionId}
+                stageId={stage.stageId}
+                kind={stage.kind}
+                startsAt={stage.startsAt}
+                endsAt={stage.endsAt}
+              />
+            ))}
+          </div>
+        </section>
       ) : null}
 
       <section className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">

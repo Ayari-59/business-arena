@@ -22,13 +22,14 @@ const COMPOSANTS_GARDES = [
   "src/components/join-form.tsx", // /join
   "src/components/competition-join-form.tsx", // /compete
   "src/components/close-round-form.tsx", // clôture du tour (confirmée)
+  "src/components/stage-schedule.tsx", // fenêtre d'une étape de concours
   "src/components/public-page-form.tsx", // page publique d'annonce du concours
 ];
 
 /** Pages serveur : GuardedForm autour des actions sans état. */
 const PAGES_GARDEES: { file: string; formulaires: number }[] = [
   { file: "src/app/teacher/page.tsx", formulaires: 1 }, // création de partie
-  { file: "src/app/teacher/games/[gameId]/page.tsx", formulaires: 3 }, // questions posées, situations manquées, planning (clôture via CloseRoundForm client)
+  { file: "src/app/teacher/games/[gameId]/page.tsx", formulaires: 4 }, // questions posées, situations manquées, planning de la partie, planning des tours (clôture via CloseRoundForm client)
 ];
 
 describe("composants client gardés", () => {

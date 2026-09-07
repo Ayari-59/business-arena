@@ -420,6 +420,36 @@ export async function finishCompetition(args: {
 }
 
 /**
+ * Fenêtre d'une étape de concours (planning) : les parties de cette étape ne
+ * sont jouables qu'entre `startsAt` et `endsAt`. Chaque borne peut être null.
+ * L'ouverture doit précéder la fermeture. Le verrou d'étape se combine à la
+ * fenêtre de chaque partie et de chaque tour (intersection des fenêtres).
+ */
+export async function setStageWindow(args: {
+  competitionId: string;
+  stageId: string;
+  organizerId: string;
+  startsAt: Date | null;
+  endsAt: Date | null;
+}): Promise<void> {
+  const competition = await loadOwnedCompetition(args.competitionId, args.organizerId);
+  if (args.startsAt && args.endsAt && args.startsAt.getTime() > args.endsAt.getTime()) {
+    throw new Error("L'ouverture doit précéder la fermeture.");
+  }
+  const result = await db
+    .update(competitionStages)
+    .set({ startsAt: args.startsAt, endsAt: args.endsAt })
+    .where(
+      and(
+        eq(competitionStages.id, args.stageId),
+        eq(competitionStages.competitionId, competition.id),
+      ),
+    )
+    .returning({ id: competitionStages.id });
+  if (result.length === 0) throw new Error("Étape introuvable");
+}
+
+/**
  * Réglage de la page publique d'annonce par l'organisateur. Contrôle
  * d'appartenance via organizerId ; les champs libres sont bornés côté appelant
  * (action). `visible` bascule la page en ligne (true) ou en 404 (false).
@@ -527,9 +557,13 @@ export interface CompetitionView {
   rules: { periodicity: Periodicity; groupSize: number; advancePerGroup: number };
   entries: { teamLabel: string; members: number; status: string }[];
   stages: {
+    stageId: string;
     index: number;
     kind: string;
     status: string;
+    /** Fenêtre de l'étape (planning), en ISO ou null. */
+    startsAt: string | null;
+    endsAt: string | null;
     games: {
       gameId: string;
       status: string;
@@ -576,9 +610,12 @@ export async function getCompetitionView(competitionId: string): Promise<Competi
       .orderBy(asc(games.id));
     const standings = await stageStandings(stage.id);
     stageViews.push({
+      stageId: stage.id,
       index: stage.index,
       kind: stage.kind,
       status: stage.status,
+      startsAt: stage.startsAt ? stage.startsAt.toISOString() : null,
+      endsAt: stage.endsAt ? stage.endsAt.toISOString() : null,
       games: stageGames.map((g, i) => ({
         gameId: g.id,
         status: g.status,
