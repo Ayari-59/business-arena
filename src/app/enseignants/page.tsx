@@ -61,7 +61,7 @@ const ETAPES = [
 const CONFIANCE = [
   { label: "Sans compte élève", desc: "Les élèves rejoignent par un code, aucune donnée personnelle exigée" },
   { label: "Dans le navigateur", desc: "Rien à installer, sur ordinateur comme sur téléphone" },
-  { label: "Gratuit", desc: "Accès complet aux secteurs, ateliers et concours" },
+  { label: "Essai gratuit", desc: "Prenez en main les secteurs, ateliers et concours sans engagement" },
   { label: "Référentiels lus sur le texte", desc: "Chaque atelier cite sa provenance ; ce qui n'a pas été vérifié le dit" },
 ];
 
