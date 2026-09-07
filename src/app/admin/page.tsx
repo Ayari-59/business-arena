@@ -144,6 +144,49 @@ export default async function AdminPage() {
               bouton qui n&apos;écrit à personne.
             </span>
           </label>
+
+          <fieldset className="rounded-xl border border-amber-400/25 bg-amber-950/10 p-4">
+            <legend className="px-2 text-xs font-semibold uppercase tracking-wide text-amber-300">
+              Palier gratuit (freemium)
+            </legend>
+            <p className="mb-3 text-xs text-slate-400">
+              Ce à quoi un compte <strong className="text-slate-300">sans licence active</strong> a droit.
+              Une licence en cours ouvre tout. <strong className="text-slate-300">Par défaut tout est ouvert</strong> :
+              resserrez ces réglages (ex. 3 tours, concours fermés) pour activer le freemium.
+            </p>
+            <label className="block">
+              <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                Tours jouables en gratuit (vide = illimité)
+              </span>
+              <input
+                name="freeMaxRounds"
+                type="number"
+                min={1}
+                max={24}
+                defaultValue={overview.config.freeTier.maxRounds ?? ""}
+                placeholder="Ex : 3"
+                className="mt-1 w-40 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+              />
+              <span className="mt-1 block text-xs text-slate-400">
+                La partie gratuite se termine à ce tour, même si le scénario en prévoit plus : c&apos;est le mur « ne va pas au bout ».
+              </span>
+            </label>
+            <div className="mt-3 space-y-2">
+              <label className="flex items-center gap-3 text-sm text-slate-300">
+                <input type="checkbox" name="freeCompetitions" defaultChecked={overview.config.freeTier.competitions} className="h-4 w-4 accent-amber-400" />
+                Concours autorisés en gratuit
+              </label>
+              <label className="flex items-center gap-3 text-sm text-slate-300">
+                <input type="checkbox" name="freeAi" defaultChecked={overview.config.freeTier.ai} className="h-4 w-4 accent-amber-400" />
+                Feedback IA autorisé en gratuit
+              </label>
+              <label className="flex items-center gap-3 text-sm text-slate-300">
+                <input type="checkbox" name="freeGradebookExport" defaultChecked={overview.config.freeTier.gradebookExport} className="h-4 w-4 accent-amber-400" />
+                Export du relevé de notes autorisé en gratuit
+              </label>
+            </div>
+          </fieldset>
+
           <SubmitButton
             pendingLabel="Enregistrement…"
             className="rounded-lg bg-amber-400 px-5 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300"

@@ -13,6 +13,7 @@ import {
 } from "@/db/schema";
 import { composeGroups, podium, qualifiers, type GroupStanding } from "@/competition";
 import { createGameCore } from "@/services/game-creation.service";
+import { entitlementsForOrg } from "@/services/entitlements.service";
 import { DEFAULT_QUIZ_MODE } from "@/config/difficulty";
 import type { Periodicity } from "@/config/scenarios/periodicity";
 
@@ -51,6 +52,13 @@ export async function createCompetition(args: {
   groupSize: number;
   advancePerGroup: number;
 }): Promise<{ competitionId: string; joinCode: string }> {
+  // Palier gratuit : le mode concours est réservé à l'offre établissement.
+  const ent = await entitlementsForOrg(args.organizationId);
+  if (!ent.competitions) {
+    throw new Error(
+      "Les concours sont réservés à l'offre établissement. Activez une licence pour les ouvrir.",
+    );
+  }
   const { getOrCreateNovaScenarioIdPublic } = await import("./game-creation.service");
   const scenarioId = await getOrCreateNovaScenarioIdPublic();
   const joinCode = makeCode();
