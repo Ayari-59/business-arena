@@ -450,7 +450,7 @@ export function SituationDebrief({
         {debrief.consequenceFacts && debrief.consequenceFacts.length > 0 ? (
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-              Qu&apos;a-t-il évolué ?
+              Qu&apos;est-ce qui a évolué ?
             </p>
             <div className="mt-1 space-y-1.5">
               {debrief.consequenceFacts.map((fact, i) => (

@@ -423,7 +423,7 @@ export const CONCEPTS: ConceptDef[] = [
     domain: "profitability",
     axis: "analysis",
     definition:
-      "Ce que l'exploitation dégage avant les amortissements, les intérêts et l'impôt : le premier chiffre qui dise si l'activité elle même gagne de l'argent.",
+      "Ce que l'exploitation dégage avant les amortissements, les intérêts et l'impôt : le premier chiffre qui dise si l'activité elle-même gagne de l'argent.",
     intuition:
       "C'est le résultat débarrassé de trois choses qui ne viennent pas du métier : la façon dont l'entreprise a financé ses murs, la façon dont elle les amortit, et ce que le fisc lui prend. Deux boutiques identiques, dont l'une a emprunté et l'autre non, ont le même excédent brut et des résultats nets différents. C'est pour cela qu'on le regarde en premier quand on compare deux affaires.",
     method:
@@ -438,9 +438,9 @@ export const CONCEPTS: ConceptDef[] = [
     definition:
       "La part du prix d'une immobilisation que l'exercice supporte, parce qu'il s'en est servi.",
     intuition:
-      "Un agencement payé une fois sert plusieurs années. Le mettre entier dans les charges de l'année de l'achat écraserait ce résultat là et flatterait les suivants, alors que le magasin a travaillé pareil. On en étale donc le coût sur la durée d'usage. C'est une charge qui ne se décaisse pas : elle pèse sur le résultat sans rien sortir de la caisse, ce qui explique qu'une entreprise puisse afficher une perte sans manquer d'argent.",
+      "Un agencement payé une fois sert plusieurs années. Le mettre entier dans les charges de l'année de l'achat écraserait ce résultat-là et flatterait les suivants, alors que le magasin a travaillé pareil. On en étale donc le coût sur la durée d'usage. C'est une charge qui ne se décaisse pas : elle pèse sur le résultat sans rien sortir de la caisse, ce qui explique qu'une entreprise puisse afficher une perte sans manquer d'argent.",
     method:
-      "Divisez la valeur d'entrée du bien par le nombre d'exercices pendant lesquels il servira. Ce que le bilan appelle valeur nette est ce qui n'a pas encore été amorti. À ne pas confondre avec le tableau d'amortissement d'un emprunt : celui là parle du remboursement d'une dette, celui ci de l'usure d'un bien. Le mot est le même, la chose n'a aucun rapport.",
+      "Divisez la valeur d'entrée du bien par le nombre d'exercices pendant lesquels il servira. Ce que le bilan appelle valeur nette est ce qui n'a pas encore été amorti. À ne pas confondre avec le tableau d'amortissement d'un emprunt : celui-là parle du remboursement d'une dette, celui-ci de l'usure d'un bien. Le mot est le même, la chose n'a aucun rapport.",
     formula: "Dotation de l'exercice = valeur d'entrée / durée d'usage en exercices",
   },
   {
@@ -453,7 +453,7 @@ export const CONCEPTS: ConceptDef[] = [
     intuition:
       "Le coût variable dit ce que coûte la prochaine unité, le coût de revient ce que coûte une unité en moyenne. Les deux sont justes et ne répondent pas à la même question : le premier décide d'accepter une commande de plus, le second dit si le prix affiché tient sur l'année. Les confondre fait refuser des commandes rentables, ou vendre à perte en croyant gagner.",
     method:
-      "Ajoutez au coût variable d'une unité la part de structure qu'elle porte, c'est à dire les charges de structure du tour divisées par les unités vendues. Ce coût baisse donc quand le volume monte, sans qu'aucune charge n'ait bougé : c'est l'effet du partage et non une économie. Un coût de revient calculé sur un tour creux fait donc peur pour rien.",
+      "Ajoutez au coût variable d'une unité la part de structure qu'elle porte, c'est-à-dire les charges de structure du tour divisées par les unités vendues. Ce coût baisse donc quand le volume monte, sans qu'aucune charge n'ait bougé : c'est l'effet du partage et non une économie. Un coût de revient calculé sur un tour creux fait donc peur pour rien.",
     formula: "Coût de revient unitaire = coût variable unitaire + charges de structure / unités vendues",
   },
   {
