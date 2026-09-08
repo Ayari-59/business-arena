@@ -446,7 +446,6 @@ export function PeriodDashboard({
             <FinancialStatements
               result={r}
               price={period.decisions?.price ?? null}
-              materialCostPerUnit={view.costFacts.materialCostPerUnit}
               otherVariableCostPerUnit={view.costFacts.otherVariableCostPerUnit}
               vocabulary={view.vocabulary}
             />

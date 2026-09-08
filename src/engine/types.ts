@@ -846,6 +846,13 @@ export interface CompanyRoundResult {
     producedQuality: number;
   };
   breakeven: {
+    /**
+     * Coût variable unitaire RÉEL du tour (matière ajustée du fournisseur choisi
+     * + autres coûts variables), tel qu'employé pour le seuil. Source de vérité
+     * des affichages « à l'unité », pour qu'ils ne divergent pas du seuil ni de
+     * la marge sur coût variable.
+     */
+    unitVariableCost: number;
     // `null` quand la marge sur coût variable est nulle ou négative : le seuil
     // de rentabilité n'existe pas (aucun volume ne le couvre).
     breakEvenUnits: number | null;
