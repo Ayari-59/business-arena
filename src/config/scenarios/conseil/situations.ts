@@ -602,7 +602,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
         id: "conseil_risque_tarif",
         prompt: "Le vrai danger d'une mission acceptée bien en dessous du tarif est…",
         options: [
-          { id: "a", label: "Qu'elle devienne la référence du client pour les missions suivantes, et occupe des consultants indisponibles pour mieux payé" },
+          { id: "a", label: "Qu'elle devienne la référence du client pour les missions suivantes, et occupe des consultants indisponibles pour des missions mieux payées" },
           { id: "b", label: "Qu'elle fasse baisser mécaniquement les salaires" },
           { id: "c", label: "Qu'elle augmente les charges de structure du cabinet" },
           { id: "d", label: "Qu'elle soit interdite par la réglementation des marchés publics" },

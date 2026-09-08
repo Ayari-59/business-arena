@@ -199,7 +199,7 @@ export default async function TeacherDashboard({
             <span className="mt-1 block text-xs text-slate-400">
               Une partie se raccourcit pour tenir dans un nombre de séances donné. Elle ne
               s&apos;allonge pas : les situations et les événements d&apos;un secteur sont écrits
-              pour un nombre de tours, au delà les équipes joueraient sans matière.
+              pour un nombre de tours, au-delà, les équipes joueraient sans matière.
             </span>
           </label>
           <label className="block sm:col-span-3">
