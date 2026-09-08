@@ -3,6 +3,14 @@
  */
 
 export interface BreakevenResult {
+  /**
+   * Coût variable unitaire RÉEL du tour, tel qu'employé pour le seuil : matière
+   * ajustée du choix de fournisseur (et d'un éventuel événement) + autres coûts
+   * variables. C'est la source de vérité pour tout affichage « à l'unité » —
+   * l'exposer ici évite qu'un panneau recalcule un coût standard qui divergerait
+   * du seuil et de la marge sur coût variable.
+   */
+  unitVariableCost: number;
   /** Nombre d'unités pour couvrir les charges fixes. `null` = seuil jamais atteint. */
   breakEvenUnits: number | null;
   /** CA correspondant au seuil. `null` = seuil jamais atteint. */
@@ -31,7 +39,7 @@ export function computeBreakeven(args: {
   const safetyMargin = breakEvenRevenue === null ? null : args.revenue - breakEvenRevenue;
   const safetyIndex =
     safetyMargin === null ? null : args.revenue > 0 ? safetyMargin / args.revenue : 0;
-  return { breakEvenUnits, breakEvenRevenue, safetyMargin, safetyIndex };
+  return { unitVariableCost: args.uvc, breakEvenUnits, breakEvenRevenue, safetyMargin, safetyIndex };
 }
 
 /**

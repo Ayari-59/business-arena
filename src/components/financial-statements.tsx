@@ -99,14 +99,14 @@ function Row({
 export function FinancialStatements({
   result,
   price,
-  materialCostPerUnit,
   otherVariableCostPerUnit,
   vocabulary,
 }: {
   result: CompanyRoundResult;
   /** Prix de vente du tour (analyse des coûts) — null si inconnu. */
   price: number | null;
-  materialCostPerUnit: number;
+  /** Autres coûts variables à l'unité (énergie, commission, ménage…) : la seule
+   *  part figée du coût variable — elle n'est pas ajustée par le fournisseur. */
   otherVariableCostPerUnit: number;
   /** Le métier nomme lui-même ce qu'il achète : on ne vend pas des matières
    *  premières dans une salle de sport. */
@@ -114,7 +114,12 @@ export function FinancialStatements({
 }) {
   const cr = result.incomeStatement;
   const b = result.balanceSheet;
-  const cvu = materialCostPerUnit + otherVariableCostPerUnit;
+  // Coût variable unitaire RÉEL du tour, tel que le moteur l'a employé pour le
+  // seuil et la marge sur coût variable : il intègre le choix de fournisseur.
+  // On en déduit la part matière (total − autres) plutôt que de réafficher un
+  // coût standard qui contredirait les totaux ci-dessus.
+  const cvu = result.breakeven.unitVariableCost;
+  const materialCostPerUnit = cvu - otherVariableCostPerUnit;
   const soldUnits = Object.values(result.market.bySegment).reduce((s, d) => s + d.sold, 0)
     + (result.extraOrders?.delivered ?? 0)
     + (result.extraOrders?.subcontracted ?? 0)

@@ -755,8 +755,10 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     const purchased = lastResult?.studies?.purchased ?? [];
     if (!lastRound || !lastResult || purchased.length === 0) return null;
     const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
-    const cvu =
-      snapshot.product.materialCostPerUnit + snapshot.product.otherVariableCostPerUnit;
+    // Coût variable unitaire RÉEL du dernier tour (fournisseur choisi inclus),
+    // tel que le moteur l'a employé pour le seuil — et non le coût standard du
+    // scénario, qui divergerait dès qu'une équipe change de fournisseur.
+    const cvu = lastResult.breakeven.unitVariableCost;
     const lastRows = gameResults.filter((r) => r.roundId === lastRound.id);
     const reports: StudyReports = {
       round: lastRound.index,
