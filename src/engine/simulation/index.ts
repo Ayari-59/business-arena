@@ -14,6 +14,7 @@ import { computePotentialDemand } from "../market/demand";
 import { attractionScore } from "../market/attraction";
 import { allocateShares } from "../market/allocation";
 import {
+  computeDefectRate,
   computeProducedQuality,
   computeProduction,
   updateAvailability,
@@ -425,13 +426,17 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     // en stock, la perte est valorisée au coût variable. Le capital « process
     // propre » RSE en retranche une part (effet différé, capital d'ouverture).
     const defectRate = scenario.qualityCosts
-      ? Math.min(
-          0.5,
-          Math.max(
-            0,
-            scenario.qualityCosts.baseDefectRate * (2 - producedQuality) * (1 - rseDefectReduction),
-          ),
-        )
+      ? computeDefectRate({
+          baseDefectRate: scenario.qualityCosts.baseDefectRate,
+          producedQuality,
+          rseDefectReduction,
+          // La maintenance n'agit sur les rebuts que si le scénario l'active
+          // (maintenanceDefectSensitivity > 0) ; sinon facteur neutre, comportement
+          // historique. Référence : budget de maintenance de référence du scénario.
+          maintenanceBudget: decisions.maintenanceBudget,
+          maintenanceReference: scenario.production.maintenanceReference,
+          maintenanceDefectSensitivity: scenario.qualityCosts.maintenanceDefectSensitivity,
+        })
       : 0;
     const defectUnits = production.produced * defectRate;
     const netProduced = production.produced - defectUnits;
