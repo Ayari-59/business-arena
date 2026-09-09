@@ -51,6 +51,36 @@ export function computeProducedQuality(args: {
   return Math.max(0.1, base * overheat);
 }
 
+/**
+ * Taux de rebut interne (doc 02 §4.2) : les rebuts croissent quand la qualité
+ * produite baisse. La MAINTENANCE peut aussi jouer (facteur optionnel) : sous le
+ * budget de maintenance de référence les rebuts augmentent, au-dessus ils
+ * diminuent, borné. Le facteur vaut 1 (neutre) au budget de référence, et
+ * l'effet est totalement inactif si `maintenanceDefectSensitivity` vaut 0 ou est
+ * absent — les scénarios qui ne l'activent pas gardent leur comportement exact.
+ * Résultat borné à [0, 0.5].
+ */
+export function computeDefectRate(args: {
+  baseDefectRate: number;
+  producedQuality: number;
+  rseDefectReduction?: number;
+  maintenanceBudget?: number;
+  maintenanceReference?: number;
+  maintenanceDefectSensitivity?: number;
+}): number {
+  const rse = args.rseDefectReduction ?? 0;
+  const s = args.maintenanceDefectSensitivity ?? 0;
+  const ref = args.maintenanceReference ?? 0;
+  let maintenanceFactor = 1;
+  if (s > 0 && ref > 0) {
+    const ratio = (args.maintenanceBudget ?? 0) / ref;
+    // ratio < 1 (sous-entretien) → > 1 (plus de rebuts) ; ratio > 1 → < 1.
+    maintenanceFactor = Math.min(1 + s, Math.max(1 - s, 1 + s * (1 - ratio)));
+  }
+  const raw = args.baseDefectRate * (2 - args.producedQuality) * (1 - rse) * maintenanceFactor;
+  return Math.min(0.5, Math.max(0, raw));
+}
+
 export function updatePerceivedQuality(
   previous: number,
   produced: number,
