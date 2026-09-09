@@ -10,6 +10,8 @@ import type {
   SimulationOutput,
 } from "../types";
 import { createRng, deriveRoundSeed } from "../random";
+import { toGamme, toGammeDecisions, type GammeDecision, type GammeProduct } from "../gamme";
+import type { StockLot } from "../inventory/cump";
 import { computePotentialDemand } from "../market/demand";
 import { attractionScore } from "../market/attraction";
 import { allocateShares } from "../market/allocation";
@@ -88,6 +90,95 @@ function fleetCountOf(fleet: EquipmentItem[], typeCode: string): number {
   return fleet.reduce((s, f) => s + (f.typeCode === typeCode ? f.count : 0), 0);
 }
 
+// --- Helpers de la gamme (multi-produits) ---
+//
+// Règle d'or : pour une gamme d'UN produit, chaque helper renvoie la valeur du
+// produit unique SANS la recomposer (pas de 0 + x, pas de x × w / w), afin que
+// le chemin mono-produit reste identique au bit près à son histoire.
+
+function sumExact(values: number[]): number {
+  if (values.length === 1) return values[0]!;
+  return values.reduce((a, b) => a + b, 0);
+}
+
+function weightedAverage(values: number[], weights: number[]): number {
+  if (values.length === 1) return values[0]!;
+  const total = weights.reduce((a, b) => a + b, 0);
+  if (total <= 0) return values[0] ?? 0;
+  return values.reduce((s, v, k) => s + v * (weights[k] ?? 0), 0) / total;
+}
+
+function aggregateLot(lots: StockLot[]): StockLot {
+  if (lots.length === 1) return lots[0]!;
+  const quantity = lots.reduce((s, l) => s + l.quantity, 0);
+  const value = lots.reduce((s, l) => s + l.quantity * l.unitCost, 0);
+  return { quantity, unitCost: quantity > 0 ? value / quantity : 0 };
+}
+
+/**
+ * Production d'une gamme sous capacités PARTAGÉES (doc 02 §4 étendu). Un
+ * seul produit : `computeProduction` historique, tel quel. Plusieurs : la
+ * capacité machine (en unités) et les heures de main-d'œuvre sont un pool
+ * commun ; si la somme des plans dépasse l'un ou l'autre, TOUS les plans sont
+ * réduits du même facteur — c'est le facteur rare, et l'arbitrage est laissé
+ * à l'équipe (elle choisit ses plans, le moteur ne priorise pas à sa place).
+ */
+function allocateProduction(args: {
+  gamme: GammeProduct[];
+  plans: number[];
+  machineCapacity: number;
+  availability: number;
+  headcount: number;
+  hoursPerEmployee: number;
+  productivity: number;
+}): {
+  perProduct: number[];
+  produced: number;
+  machineCapacity: number;
+  laborCapacity: number;
+  utilizationRate: number;
+} {
+  if (args.gamme.length === 1) {
+    const r = computeProduction({
+      planned: args.plans[0]!,
+      machineCapacity: args.machineCapacity,
+      availability: args.availability,
+      headcount: args.headcount,
+      hoursPerEmployee: args.hoursPerEmployee,
+      productivity: args.productivity,
+      hoursPerUnit: args.gamme[0]!.hoursPerUnit,
+    });
+    return {
+      perProduct: [r.produced],
+      produced: r.produced,
+      machineCapacity: r.machineCapacity,
+      laborCapacity: r.laborCapacity,
+      utilizationRate: r.utilizationRate,
+    };
+  }
+  const machineCapacity = Math.max(0, args.machineCapacity * args.availability);
+  const laborHours = args.headcount * args.hoursPerEmployee * args.productivity;
+  const plans = args.plans.map((p) => Math.max(0, p));
+  const totalPlan = plans.reduce((a, b) => a + b, 0);
+  const hoursNeeded = plans.reduce((s, p, k) => s + p * args.gamme[k]!.hoursPerUnit, 0);
+  const machineFactor = totalPlan > 0 ? Math.min(1, machineCapacity / totalPlan) : 1;
+  const laborFactor = hoursNeeded > 0 ? Math.min(1, laborHours / hoursNeeded) : 1;
+  const factor = Math.min(machineFactor, laborFactor);
+  const perProduct = plans.map((p) => p * factor);
+  const produced = perProduct.reduce((a, b) => a + b, 0);
+  // Capacité main-d'œuvre exprimée en unités AU MIX PLANIFIÉ (heures moyennes
+  // pondérées par plan) — comparable à la capacité machine, en unités.
+  const laborCapacity =
+    hoursNeeded > 0 && totalPlan > 0 ? laborHours / (hoursNeeded / totalPlan) : Infinity;
+  return {
+    perProduct,
+    produced,
+    machineCapacity,
+    laborCapacity,
+    utilizationRate: machineCapacity > 0 ? produced / machineCapacity : 0,
+  };
+}
+
 export const ENGINE_VERSION = "0.1.0";
 
 /**
@@ -124,6 +215,12 @@ export function orderOfferForRound(
 export function simulateRound(input: SimulationInput): SimulationOutput {
   const { scenario, roundIndex } = input;
   const rng = createRng(deriveRoundSeed(input.seed, roundIndex));
+  // La gamme : un produit (les secteurs historiques, marché = scenario.market,
+  // chemin identique au bit près) ou plusieurs (chacun avec son marché, usine
+  // et finance communes). `multi` gouverne les seuls champs ajoutés à l'état et
+  // aux résultats : rien n'est émis en mono-produit.
+  const gamme = toGamme(scenario);
+  const multi = gamme.length > 1;
 
   // 1. Événements : tirage + poursuite des événements actifs (doc 02 §7).
   const { active, drawn } = drawEvents(
@@ -181,13 +278,15 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
 
   // 2. Demande potentielle du marché par segment (doc 02 §3.1).
   const potentialBySegment: Record<string, number> = {};
-  for (const segment of scenario.market.segments) {
-    potentialBySegment[segment.code] = computePotentialDemand(
-      segment,
-      roundIndex,
-      scenario.market.seasonality,
-      demandMultiplierFor(marketMods, segment.code),
-    );
+  for (const product of gamme) {
+    for (const segment of product.market.segments) {
+      potentialBySegment[segment.code] = computePotentialDemand(
+        segment,
+        roundIndex,
+        product.market.seasonality,
+        demandMultiplierFor(marketMods, segment.code),
+      );
+    }
   }
 
   // 3. Production, qualité et stock disponible par entreprise (doc 02 §4-5).
@@ -195,13 +294,22 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     state: CompanyState;
     decisions: Required<Pick<import("../types").RoundDecisions, "price" | "productionPlan" | "marketingBudget" | "qualityBudget" | "maintenanceBudget">> &
       import("../types").RoundDecisions;
+    /** Décisions par produit, dans l'ordre de la gamme (mono : les scalaires recopiés). */
+    gamme: GammeDecision[];
+    /** Unités produites par produit (mono : [produced]). */
+    producedPerProduct: number[];
     produced: number;
     machineCapacity: number;
     laborCapacity: number;
     utilizationRate: number;
     producedQuality: number;
-    unitCost: number;
-    stock: { quantity: number; unitCost: number };
+    /** Coût variable unitaire par produit (mono : [unitCost]). */
+    unitCosts: number[];
+    /** Stocks d'ouverture et de fin de production, par produit. */
+    openingStocks: StockLot[];
+    productStocks: StockLot[];
+    productDefectUnits: number[];
+    productScrap: number[];
     materialMultiplier: number;
     mods: ReturnType<typeof effectiveModifiers>;
     insured: boolean;
@@ -268,6 +376,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
             treasury: undefined,
             rse: undefined,
             forecast: undefined,
+            products: undefined,
             finance: soumis.finance?.capitalIncrease
               ? { capitalIncrease: soumis.finance.capitalIncrease }
               : undefined,
@@ -291,6 +400,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       treasury: raw.treasury,
       finance: raw.finance,
       forecast: raw.forecast,
+      products: raw.products,
     };
     // Engagement RSE (Lot 2) : réglages effectifs et capitaux d'OUVERTURE. Lus
     // ici car le climat social (Lot 2B) les consomme dès le calcul RH ; l'effet
@@ -360,14 +470,16 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
           new Map(scenario.equipment.types.map((t) => [t.code, t])),
         )
       : state.machineCapacity + (state.pendingCapacity ?? 0);
-    const production = computeProduction({
-      planned: decisions.productionPlan,
+    // Décisions par produit (mono : les scalaires bornés ci-dessus, recopiés).
+    const gammeDecisions = toGammeDecisions(decisions, gamme);
+    const production = allocateProduction({
+      gamme,
+      plans: gammeDecisions.map((d) => d.productionPlan),
       machineCapacity: effectiveMachineCapacity,
       availability: state.availability * mods.availabilityMultiplier * supplyAvailabilityHit,
       headcount: state.headcount,
       hoursPerEmployee: state.hoursPerEmployee,
       productivity: state.productivity * hr.morale,
-      hoursPerUnit: scenario.product.hoursPerUnit,
     });
     const producedQuality = computeProducedQuality({
       qualityBudget: decisions.qualityBudget,
@@ -377,9 +489,10 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       overheatThreshold: scenario.production.overheatThreshold,
     });
     const materialMultiplier = mods.materialCostMultiplier * supplierCostMul;
-    const unitCost = unitVariableCost(
-      scenario.product.materialCostPerUnit * materialMultiplier,
-      scenario.product.otherVariableCostPerUnit,
+    // Coût variable unitaire de chaque produit (mono : le seul, expression
+    // historique inchangée).
+    const unitCosts = gamme.map((p) =>
+      unitVariableCost(p.materialCostPerUnit * materialMultiplier, p.otherVariableCostPerUnit),
     );
     // --- Engagement RSE (Lot 2) ---
     // La dépense de CE tour est une charge décaissée (comme le marketing) et
@@ -438,10 +551,18 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
           maintenanceDefectSensitivity: scenario.qualityCosts.maintenanceDefectSensitivity,
         })
       : 0;
-    const defectUnits = production.produced * defectRate;
-    const netProduced = production.produced - defectUnits;
-    const scrapValue = defectUnits * unitCost;
-    const stock = addToStock(state.finishedGoods, netProduced, unitCost);
+    // Rebuts et entrée en stock, PRODUIT PAR PRODUIT (mono : expressions
+    // historiques sur le produit unique et le lot `finishedGoods`).
+    const openingStocks: StockLot[] = gamme.map((p) =>
+      multi ? (state.finishedGoodsByProduct?.[p.code] ?? { quantity: 0, unitCost: 0 }) : state.finishedGoods,
+    );
+    const productDefectUnits = production.perProduct.map((q) => q * defectRate);
+    const productScrap = productDefectUnits.map((d, k) => d * unitCosts[k]!);
+    const productStocks = production.perProduct.map((q, k) =>
+      addToStock(openingStocks[k]!, q - productDefectUnits[k]!, unitCosts[k]!),
+    );
+    const defectUnits = sumExact(productDefectUnits);
+    const scrapValue = sumExact(productScrap);
     // --- Investissement capacitaire ---
     // Deux systèmes : homogène (legacy) ou typé (equipment).
     const equip = scenario.equipment;
@@ -539,13 +660,18 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     return {
       state,
       decisions,
+      gamme: gammeDecisions,
+      producedPerProduct: production.perProduct,
       produced: production.produced,
       machineCapacity: production.machineCapacity,
       laborCapacity: production.laborCapacity,
       utilizationRate: production.utilizationRate,
       producedQuality,
-      unitCost,
-      stock,
+      unitCosts,
+      openingStocks,
+      productStocks,
+      productDefectUnits,
+      productScrap,
       materialMultiplier,
       mods,
       insured,
@@ -582,65 +708,74 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
   // 4. Marché : attraction → parts → demande adressée → ventes contraintes
   //    par le stock (doc 02 §3.2-3.4).
   const salesBySegment = new Map<string, SegmentSalesDetail[]>();
-  for (const segment of scenario.market.segments) {
-    const attractions = working.map((w) =>
-      // Faillite (V2 couche 2, #5) : une entreprise défaillante est dormante ce
-      // tour — production nulle, stock non réapprovisionné. La laisser dans le
-      // calcul d'attraction lui faisait capter une part (son prix cassé donne
-      // une attraction élevée) qu'elle ne pouvait pas servir : la demande
-      // captée partait intégralement en « perdue », amputant d'autant les
-      // concurrents actifs sans faute de leur part. Attraction nulle → part 0
-      // (allocateShares écarte les scores ≤ 0), et les parts se renormalisent
-      // entre les entreprises réellement au marché.
-      w.state.status === "defaillant"
-        ? 0
-        : attractionScore({
-            price: w.decisions.price,
-            marketingBudget: w.decisions.marketingBudget,
-            perceivedQuality: w.state.perceivedQuality,
-            lastShare: w.state.lastMarketShare[segment.code] ?? 0,
-            segment,
-            marketingScale: scenario.marketing.scale,
-            // Capital-image (2A) ET cartes RSE (2C) modulent l'attractivité.
-            imageFactor: w.rseImageFactor * w.rseCardFactor,
-          }),
-    );
-    const shares = allocateShares(
-      attractions,
-      segment.competitionIntensity ?? scenario.market.competitionIntensity,
-      scenario.market.outsideAttraction,
-    );
-    const potential = potentialBySegment[segment.code] ?? 0;
-    salesBySegment.set(
-      segment.code,
-      working.map((_, i) => ({
-        potential,
-        attraction: attractions[i] ?? 0,
-        share: shares[i] ?? 0,
-        demandForCompany: potential * (shares[i] ?? 0),
-        sold: 0,
-        lost: 0,
-        revenue: 0,
-        commission: 0,
-      })),
-    );
-  }
+  // UN MARCHÉ PAR PRODUIT : la concurrence se joue produit par produit, sur
+  // les segments du produit, avec le prix et le marketing décidés pour lui.
+  // Mono-produit : le marché du produit unique est `scenario.market`, même
+  // ordre de segments, mêmes décisions — chemin identique.
+  gamme.forEach((product, k) => {
+    for (const segment of product.market.segments) {
+      const attractions = working.map((w) =>
+        // Faillite (V2 couche 2, #5) : une entreprise défaillante est dormante ce
+        // tour — production nulle, stock non réapprovisionné. La laisser dans le
+        // calcul d'attraction lui faisait capter une part (son prix cassé donne
+        // une attraction élevée) qu'elle ne pouvait pas servir : la demande
+        // captée partait intégralement en « perdue », amputant d'autant les
+        // concurrents actifs sans faute de leur part. Attraction nulle → part 0
+        // (allocateShares écarte les scores ≤ 0), et les parts se renormalisent
+        // entre les entreprises réellement au marché.
+        w.state.status === "defaillant"
+          ? 0
+          : attractionScore({
+              price: w.gamme[k]!.price,
+              marketingBudget: w.gamme[k]!.marketingBudget,
+              perceivedQuality: w.state.perceivedQuality,
+              lastShare: w.state.lastMarketShare[segment.code] ?? 0,
+              segment,
+              marketingScale: scenario.marketing.scale,
+              // Capital-image (2A) ET cartes RSE (2C) modulent l'attractivité.
+              imageFactor: w.rseImageFactor * w.rseCardFactor,
+            }),
+      );
+      const shares = allocateShares(
+        attractions,
+        segment.competitionIntensity ?? product.market.competitionIntensity,
+        product.market.outsideAttraction,
+      );
+      const potential = potentialBySegment[segment.code] ?? 0;
+      salesBySegment.set(
+        segment.code,
+        working.map((_, i) => ({
+          potential,
+          attraction: attractions[i] ?? 0,
+          share: shares[i] ?? 0,
+          demandForCompany: potential * (shares[i] ?? 0),
+          sold: 0,
+          lost: 0,
+          revenue: 0,
+          commission: 0,
+        })),
+      );
+    }
+  });
 
-  // Contrainte de stock : ventes limitées au stock, réparties au prorata des segments.
+  // Contrainte de stock : ventes limitées au stock DU PRODUIT, réparties au
+  // prorata de ses segments.
   working.forEach((w, i) => {
-    const demands = scenario.market.segments.map(
-      (s) => salesBySegment.get(s.code)?.[i]?.demandForCompany ?? 0,
-    );
-    const totalDemand = demands.reduce((a, b) => a + b, 0);
-    const available = w.stock.quantity;
-    const serviceRate = totalDemand > 0 ? Math.min(1, available / totalDemand) : 0;
-    scenario.market.segments.forEach((s) => {
-      const detail = salesBySegment.get(s.code)?.[i];
-      if (!detail) return;
-      detail.sold = detail.demandForCompany * serviceRate;
-      detail.lost = detail.demandForCompany - detail.sold;
-      detail.revenue = detail.sold * w.decisions.price;
-      detail.commission = detail.revenue * (s.commissionRate ?? 0);
+    gamme.forEach((product, k) => {
+      const demands = product.market.segments.map(
+        (s) => salesBySegment.get(s.code)?.[i]?.demandForCompany ?? 0,
+      );
+      const totalDemand = demands.reduce((a, b) => a + b, 0);
+      const available = w.productStocks[k]!.quantity;
+      const serviceRate = totalDemand > 0 ? Math.min(1, available / totalDemand) : 0;
+      product.market.segments.forEach((s) => {
+        const detail = salesBySegment.get(s.code)?.[i];
+        if (!detail) return;
+        detail.sold = detail.demandForCompany * serviceRate;
+        detail.lost = detail.demandForCompany - detail.sold;
+        detail.revenue = detail.sold * w.gamme[k]!.price;
+        detail.commission = detail.revenue * (s.commissionRate ?? 0);
+      });
     });
   });
 
@@ -662,29 +797,42 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const dormant = w.state.status === "defaillant";
     const perSegment: Record<string, SegmentSalesDetail> = {};
     let segmentUnits = 0;
-    let weightedCredit = 0;
     let commissionCost = 0;
-    for (const segment of scenario.market.segments) {
-      const detail = salesBySegment.get(segment.code)?.[i];
-      if (!detail) continue;
-      perSegment[segment.code] = detail;
-      segmentUnits += detail.sold;
-      commissionCost += detail.commission;
-      weightedCredit +=
-        detail.sold * Math.min(1, segment.paymentDelayDays / scenario.roundDays);
-    }
+    // Unités et crédit pondéré PAR PRODUIT (mono : le produit unique accumule
+    // exactement ce que `segmentUnits` accumulait, dans le même ordre).
+    const productSegmentUnits: number[] = gamme.map(() => 0);
+    const productCredit: number[] = gamme.map(() => 0);
+    const productLost: number[] = gamme.map(() => 0);
+    gamme.forEach((product, k) => {
+      for (const segment of product.market.segments) {
+        const detail = salesBySegment.get(segment.code)?.[i];
+        if (!detail) continue;
+        perSegment[segment.code] = detail;
+        segmentUnits += detail.sold;
+        commissionCost += detail.commission;
+        productSegmentUnits[k]! += detail.sold;
+        productLost[k]! += detail.lost;
+        productCredit[k]! +=
+          detail.sold * Math.min(1, segment.paymentDelayDays / scenario.roundDays);
+      }
+    });
+    // Le premier produit de la gamme porte les commandes fermes d'événement et
+    // la commande exceptionnelle du tour (mono : le seul produit).
+    const mainStock = w.productStocks[0]!;
+    const mainUnits = productSegmentUnits[0]!;
+    const mainPrice = w.gamme[0]!.price;
     // Commandes fermes (événement « order ») : vendues d'office en plus du
     // marché, réglées comptant, au prix imposé le cas échéant. Livrées du
     // stock restant ; au-delà, sous-traitées si l'offre le permet et que le
     // scénario a un sous-traitant (coût unitaire majoré — coûts pertinents !).
     const orderRequested = dormant ? 0 : w.mods.extraOrderUnits;
-    const orderDelivered = Math.min(orderRequested, Math.max(0, w.stock.quantity - segmentUnits));
+    const orderDelivered = Math.min(orderRequested, Math.max(0, mainStock.quantity - mainUnits));
     const orderShortfall = orderRequested - orderDelivered;
     const subcontracted = scenario.subcontracting
       ? Math.min(orderShortfall, w.mods.orderSubcontractMax)
       : 0;
     const subcontractCost = subcontracted * (scenario.subcontracting?.unitCost ?? 0);
-    const orderUnitPrice = w.mods.orderUnitPrice ?? w.decisions.price;
+    const orderUnitPrice = w.mods.orderUnitPrice ?? mainPrice;
 
     // Commande exceptionnelle acceptée : livrée du stock restant après le
     // marché et les commandes fermes (pas de sous-traitance — à prendre avec
@@ -695,7 +843,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       offerAccepted && roundOffer
         ? Math.min(
             roundOffer.units,
-            Math.max(0, w.stock.quantity - segmentUnits - orderDelivered),
+            Math.max(0, mainStock.quantity - mainUnits - orderDelivered),
           )
         : 0;
     const offerRevenue = offerDelivered * (roundOffer?.price ?? 0);
@@ -705,46 +853,69 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
 
     // Non-qualité externe : retours clients fonction de la qualité perçue,
     // remboursés au prix de vente (unités détruites — la marge part entière).
-    const returnedUnits = scenario.qualityCosts
-      ? segmentUnits *
-        Math.min(
+    const returnRate = scenario.qualityCosts
+      ? Math.min(
           0.3,
           scenario.qualityCosts.externalReturnSensitivity *
             Math.max(0, 1 - w.state.perceivedQuality),
         )
       : 0;
-    const refund = returnedUnits * w.decisions.price;
+    const productReturned = productSegmentUnits.map((u) =>
+      scenario.qualityCosts ? u * returnRate : 0,
+    );
+    const returnedUnits = sumExact(productReturned);
+    const refund = sumExact(productReturned.map((r, k) => r * w.gamme[k]!.price));
 
-    const soldUnits = segmentUnits + orderDelivered + offerDelivered;
+    // Ventes par produit : le marché du produit, plus, pour le premier de la
+    // gamme, les commandes fermes et la commande exceptionnelle (mono : tout).
+    const productSold = productSegmentUnits.map((u, k) =>
+      k === 0 ? u + orderDelivered + offerDelivered : u,
+    );
+    const soldUnits = sumExact(productSold);
+    const productSegmentRevenue = productSegmentUnits.map((u, k) => u * w.gamme[k]!.price);
     const revenue =
-      segmentUnits * w.decisions.price +
+      sumExact(productSegmentRevenue) +
       (orderDelivered + subcontracted) * orderUnitPrice +
       offerRevenue -
       refund;
     // Part du CA à crédit, en euros : segments à leurs délais, commandes
     // fermes d'événement comptant, commande exceptionnelle à SON délai.
     const creditRevenue =
-      weightedCredit * w.decisions.price + offerRevenue * offerCreditShare;
+      sumExact(productCredit.map((c, k) => c * w.gamme[k]!.price)) +
+      offerRevenue * offerCreditShare;
     const receivableRatio = revenue > 0 ? Math.min(1, creditRevenue / revenue) : 0;
 
-    const { stock: stockAfterSales, cost: cogsFromStock } = removeFromStock(w.stock, soldUnits);
+    const removals = w.productStocks.map((s, k) => removeFromStock(s, productSold[k]!));
+    const cogsFromStock = sumExact(removals.map((r) => r.cost));
     // Activité périssable : ce qui n'est pas vendu dans le tour est perdu —
     // la nuit d'hôtel vide, le couvert non servi, l'heure de conseil non
     // facturée ne se reportent pas. Le gâchis est une charge du tour, au même
     // titre qu'un rebut, et le stock final est nul.
-    const spoiled = scenario.perishable ? stockValue(stockAfterSales) : 0;
-    const finalStock = scenario.perishable ? { quantity: 0, unitCost: 0 } : stockAfterSales;
+    const spoiled = scenario.perishable
+      ? sumExact(removals.map((r) => stockValue(r.stock)))
+      : 0;
+    const finalStocks: StockLot[] = removals.map((r) =>
+      scenario.perishable ? { quantity: 0, unitCost: 0 } : r.stock,
+    );
+    const finalStock = aggregateLot(finalStocks);
     // Coût des ventes : sorties de stock + unités sous-traitées (achetées
     // finies et revendues) + rebuts internes (produits, payés, invendables)
     // + capacité périmée.
     const cogs = cogsFromStock + subcontractCost + w.scrapValue + spoiled;
-    const inventoryChange = stockValue(finalStock) - stockValue(w.state.finishedGoods);
-    const purchases =
-      w.produced * scenario.product.materialCostPerUnit * w.materialMultiplier;
+    const inventoryChange =
+      sumExact(finalStocks.map(stockValue)) - sumExact(w.openingStocks.map(stockValue));
+    const purchases = sumExact(
+      w.producedPerProduct.map(
+        (q, k) => q * gamme[k]!.materialCostPerUnit * w.materialMultiplier,
+      ),
+    );
     // La sous-traitance est décaissée avec les autres charges variables
     // (cohérence : achats + variables décaissés = coût des ventes + Δ stock).
     const otherVariableCash =
-      w.produced * scenario.product.otherVariableCostPerUnit + subcontractCost;
+      sumExact(w.producedPerProduct.map((q, k) => q * gamme[k]!.otherVariableCostPerUnit)) +
+      subcontractCost;
+    // Marketing : somme des budgets par produit (mono : le scalaire).
+    const marketingTotal = sumExact(w.gamme.map((d) => d.marketingBudget));
 
     // Prime d'assurance et RH : charges de structure du tour.
     const insurancePremium = w.insured ? (w.chosenFormula?.premiumPerRound ?? 0) : 0;
@@ -850,7 +1021,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       inventoryChange,
       cogs,
       commissionCost,
-      marketingCost: w.decisions.marketingBudget,
+      marketingCost: marketingTotal,
       qualityCost: w.decisions.qualityBudget,
       maintenanceCost: w.decisions.maintenanceBudget,
       // Faillite : entreprise gelée, aucune dépense — donc pas d'engagement RSE.
@@ -967,13 +1138,19 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       hrCost +
       studiesCost +
       finance.incomeStatement.depreciation +
-      w.decisions.marketingBudget +
+      marketingTotal +
       w.decisions.qualityBudget +
       w.decisions.maintenanceBudget;
+    // Seuil : en gamme, prix moyen pondéré par les unités vendues et coût
+    // variable moyen pondéré par les unités produites (mono : les valeurs du
+    // produit unique, sans recomposition).
     const breakeven = computeBreakeven({
       fixedCosts: structureCosts,
-      price: w.decisions.price,
-      uvc: w.unitCost,
+      price: weightedAverage(
+        w.gamme.map((d) => d.price),
+        productSegmentUnits,
+      ),
+      uvc: weightedAverage(w.unitCosts, w.producedPerProduct),
       revenue,
     });
 
@@ -992,7 +1169,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       ratios,
       market: { bySegment: perSegment, totalShare },
       production: {
-        planned: w.decisions.productionPlan,
+        planned: sumExact(w.gamme.map((d) => d.productionPlan)),
         produced: w.produced,
         machineCapacity: w.machineCapacity,
         laborCapacity: w.laborCapacity,
@@ -1000,6 +1177,30 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         producedQuality: w.producedQuality,
       },
       breakeven,
+      // Gamme : détail par produit, émis SEULEMENT en multi-produits — le
+      // résultat sérialisé d'une partie mono-produit ne change pas.
+      ...(multi
+        ? {
+            products: Object.fromEntries(
+              gamme.map((product, k) => [
+                product.code,
+                {
+                  planned: w.gamme[k]!.productionPlan,
+                  produced: w.producedPerProduct[k]!,
+                  defectUnits: w.productDefectUnits[k]!,
+                  unitVariableCost: w.unitCosts[k]!,
+                  price: w.gamme[k]!.price,
+                  marketingBudget: w.gamme[k]!.marketingBudget,
+                  sold: productSegmentUnits[k]!,
+                  lost: productLost[k]!,
+                  revenue: productSegmentRevenue[k]!,
+                  stock: finalStocks[k]!,
+                  segments: product.market.segments.map((s) => s.code),
+                },
+              ]),
+            ),
+          }
+        : {}),
       ...(orderRequested > 0
         ? {
             extraOrders: {
@@ -1167,8 +1368,10 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     };
 
     const lastMarketShare: Record<string, number> = {};
-    for (const segment of scenario.market.segments) {
-      lastMarketShare[segment.code] = perSegment[segment.code]?.share ?? 0;
+    for (const product of gamme) {
+      for (const segment of product.market.segments) {
+        lastMarketShare[segment.code] = perSegment[segment.code]?.share ?? 0;
+      }
     }
     // Mise à jour du parc et de la capacité machine pour le prochain tour.
     const nextFleetState = scenario.equipment
@@ -1254,6 +1457,14 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         availabilityFloor: scenario.production.availabilityFloor,
       }),
       finishedGoods: finalStock,
+      // Gamme : stocks par produit, émis SEULEMENT en multi-produits.
+      ...(multi
+        ? {
+            finishedGoodsByProduct: Object.fromEntries(
+              gamme.map((product, k) => [product.code, finalStocks[k]!]),
+            ),
+          }
+        : {}),
       finance: finance.closing,
       lastMarketShare,
     });
