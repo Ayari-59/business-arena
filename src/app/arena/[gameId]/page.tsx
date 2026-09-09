@@ -250,100 +250,64 @@ export default async function ArenaPage({
 
   // Toutes les situations du tour, empilées (mode CLASSE : un seul écran).
 
-  // POINTS CLÉS & LEVIERS : les aides d'analyse du tour (agrégées des situations).
-  const pointsClesEtLeviers = (
-    <>
-      {(() => {
-        const allHints = [...new Map(
-          situations.current
-            .flatMap((s) => s.analyticalHints)
-            .map((h) => [h.code, h] as const)
-        ).values()].sort((a, b) => a.name.localeCompare(b.name, "fr"));
-        return allHints.length > 0 ? (
-          <section className="space-y-3">
-            <h2 className="text-sm font-semibold text-slate-200">
-              Points clés à examiner
-            </h2>
-            <p className="text-xs text-slate-400">
-              Les variables et notions à observer pour analyser les situations de ce tour.
-            </p>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {allHints.map((h) => (
-                <div key={h.code} className="rounded-lg border border-slate-700 bg-slate-800/50 px-2.5 py-2">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{h.name}</p>
-                  <p className="mt-1 text-xs text-slate-400">{h.objective}</p>
-                  {h.keyPoints.length > 0 ? (
-                    <ul className="mt-2 space-y-0.5">
-                      {h.keyPoints.map((kp) => (
-                        <li key={kp} className="text-sm text-slate-300">· {kp}</li>
-                      ))}
-                    </ul>
-                  ) : null}
-                </div>
-              ))}
-            </div>
-          </section>
-        ) : null;
-      })()}
-
-      {(() => {
-        const FIELD_LABELS: Record<string, string> = {
-          price: "Prix de vente",
-          productionPlan: "Plan de production",
-          marketingBudget: "Budget marketing",
-          qualityBudget: "Budget qualité",
-          maintenanceBudget: "Budget maintenance",
-        };
-        const DIRECTION_ICONS: Record<string, string> = { up: "↑", down: "↓", review: "⟳" };
-        // Un levier ne se conseille que si l'élève a le contrôle correspondant
-        // sous les yeux : aux premiers niveaux, budgets qualité et maintenance
-        // sont masqués (decision-form). Les pointer ici enverrait « ↑ Budget
-        // maintenance » vers un champ introuvable — le lien décision→action, cœur
-        // de l'app, rompu.
-        const champActionnable = (field: string): boolean => {
-          if (field === "qualityBudget") return view.enabledDecisions.quality;
-          if (field === "maintenanceBudget") return view.enabledDecisions.maintenance;
-          return true; // prix, production, marketing : toujours ouverts
-        };
-        const byField = new Map<string, { direction: string; hints: string[] }>();
-        for (const s of situations.current) {
-          for (const lever of s.decisionLevers ?? []) {
-            if (!champActionnable(lever.field)) continue;
-            const existing = byField.get(lever.field);
-            if (!existing) {
-              byField.set(lever.field, { direction: lever.direction, hints: [lever.hint] });
-            } else {
-              existing.hints.push(lever.hint);
-              if (existing.direction !== lever.direction) existing.direction = "review";
-            }
-          }
+  // LEVIERS D'ACTION, EN FORME D'INDICE : une piste par champ de décision,
+  // repliée par défaut et révélée à la demande. Les « points clés » ont été
+  // retirés (redondants avec la situation et ses indices progressifs). Volume
+  // réduit à une ligne par levier — le champ, le sens, la piste la plus utile.
+  const leviersIndice = (() => {
+    const FIELD_LABELS: Record<string, string> = {
+      price: "Prix de vente",
+      productionPlan: "Plan de production",
+      marketingBudget: "Budget marketing",
+      qualityBudget: "Budget qualité",
+      maintenanceBudget: "Budget maintenance",
+    };
+    const DIRECTION_ICONS: Record<string, string> = { up: "↑", down: "↓", review: "⟳" };
+    // Un levier ne se conseille que si l'élève a le contrôle correspondant sous
+    // les yeux : aux premiers niveaux, budgets qualité et maintenance sont
+    // masqués (decision-form). Les pointer ici enverrait « ↑ Budget maintenance »
+    // vers un champ introuvable — le lien décision→action, cœur de l'app, rompu.
+    const champActionnable = (field: string): boolean => {
+      if (field === "qualityBudget") return view.enabledDecisions.quality;
+      if (field === "maintenanceBudget") return view.enabledDecisions.maintenance;
+      return true; // prix, production, marketing : toujours ouverts
+    };
+    // Un seul indice par champ : la première piste rencontrée. Deux situations
+    // qui tirent le même champ en sens opposés → « à revoir ».
+    const byField = new Map<string, { direction: string; hint: string }>();
+    for (const s of situations.current) {
+      for (const lever of s.decisionLevers ?? []) {
+        if (!champActionnable(lever.field)) continue;
+        const existing = byField.get(lever.field);
+        if (!existing) {
+          byField.set(lever.field, { direction: lever.direction, hint: lever.hint });
+        } else if (existing.direction !== lever.direction) {
+          existing.direction = "review";
         }
-        const levers = [...byField.entries()].map(([field, { direction, hints: fieldHints }]) => ({
-          field, direction, hints: fieldHints, label: FIELD_LABELS[field] ?? field,
-        }));
-        return levers.length > 0 ? (
-          <section className="space-y-3">
-            <h2 className="text-sm font-semibold text-slate-200">
-              Leviers d&apos;action
-            </h2>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {levers.map((l) => (
-                <div key={l.field} className="flex gap-2 rounded-lg border border-slate-700 bg-slate-800/50 px-2.5 py-2">
-                  <span className="mt-0.5 text-base leading-none text-amber-400">{DIRECTION_ICONS[l.direction]}</span>
-                  <div className="min-w-0">
-                    <span className="text-sm font-medium text-slate-200">{l.label}</span>
-                    {l.hints.map((h, i) => (
-                      <p key={i} className="mt-0.5 text-xs text-slate-400">{h}</p>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        ) : null;
-      })()}
-    </>
-  );
+      }
+    }
+    const levers = [...byField.entries()].map(([field, { direction, hint }]) => ({
+      field, direction, hint, label: FIELD_LABELS[field] ?? field,
+    }));
+    if (levers.length === 0) return null;
+    return (
+      <details className="rounded-lg border border-slate-700 bg-slate-800/40">
+        <summary className="cursor-pointer px-3 py-2 text-sm font-medium text-amber-300 hover:text-amber-200">
+          💡 Besoin d&apos;une piste ? Voir les leviers d&apos;action
+        </summary>
+        <ul className="space-y-1.5 px-3 pb-3 pt-1">
+          {levers.map((l) => (
+            <li key={l.field} className="flex gap-2 text-sm leading-snug text-slate-300">
+              <span className="mt-px leading-none text-amber-400">{DIRECTION_ICONS[l.direction]}</span>
+              <span>
+                <span className="font-medium text-slate-200">{l.label}</span> — {l.hint}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </details>
+    );
+  })();
 
   // QCM DU TOUR (solo) : plusieurs situations tiennent sur UN seul écran
   // « Analyser », dépliables en accordéon (un panneau par situation, le premier
@@ -375,13 +339,13 @@ export default async function ArenaPage({
       <SituationCard gameId={view.gameId} situation={situations.current[0]} />
     ) : null;
 
-  // ÉTAPE « ANALYSER » (solo) : les aides d'analyse (points clés & leviers) en
-  // tête, puis l'accordéon des situations. Le contexte (données, marché,
-  // alertes, arbitrage) vit dans « Situation ».
+  // ÉTAPE « ANALYSER » (solo) : le QCM des situations, précédé d'un indice
+  // repliable (les leviers d'action). Le contexte (données, marché, alertes,
+  // arbitrage) vit dans « Situation ».
   const analyserContenu =
     situations.current.length > 0 && statutSituations ? (
       <div id="analyser" className="space-y-6">
-        {pointsClesEtLeviers}
+        {leviersIndice}
         {qcmBloc}
       </div>
     ) : null;
