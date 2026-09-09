@@ -1152,14 +1152,14 @@ export function DecisionForm({
         </Family>
       ) : null}
       <Family
-        legend="✍️ En quelques mots (facultatif)"
+        legend="✍️ En quelques mots"
         tone="border-slate-700/60"
         legendClass="text-xs font-medium text-slate-400"
       >
         <textarea
           name="justification"
           rows={2}
-          aria-label="Justification de vos décisions (facultatif)"
+          aria-label="Justification de vos décisions"
           placeholder="Pourquoi ces choix ce tour-ci ?"
           className="w-full resize-y rounded border border-slate-700 bg-slate-800/50 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:border-amber-400/50 focus:outline-none"
         />
