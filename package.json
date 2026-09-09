@@ -21,6 +21,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.124.0",
     "@neondatabase/serverless": "^1.0.2",
     "@types/pg": "^8.23.1",
     "bcryptjs": "^3.0.3",

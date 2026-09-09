@@ -15,6 +15,9 @@ import { GuardedForm } from "@/components/guarded-action";
 import { RoundStatusPoller } from "@/components/round-status-poller";
 import { setGameScheduleAction, setRoundWindowsAction } from "../../actions";
 import { utcToParisLocalInput } from "@/lib/paris-time";
+import { JustificationsReview } from "@/components/justifications-review";
+import { entitlementsForUser } from "@/services/entitlements.service";
+import { resolveAiSurface } from "@/services/ai.service";
 
 /** Libellé court de l'état d'un tour, pour le tableau du planning fin. */
 const ROUND_STATUS_LABEL: Record<string, string> = {
@@ -43,6 +46,11 @@ export default async function TeacherGamePage({
   const humanTeams = view.teams.filter((t) => t.controller === "human");
   const submittedCount = humanTeams.filter((t) => t.hasSubmitted).length;
   const defaillantes = view.ranking.filter((row) => row.defaillant);
+
+  // Synthèse IA des justifications (facultative) : droit du compte + réglage
+  // admin + clé API.
+  const aiEnt = await entitlementsForUser(session.userId);
+  const aiReview = aiEnt.ai && (await resolveAiSurface("teacherReview")) !== null;
 
   return (
     <main id="main" className="mx-auto max-w-4xl space-y-4 px-2 py-6 sm:space-y-8 sm:p-6">
@@ -389,6 +397,7 @@ export default async function TeacherGamePage({
             total={humanTeams.length}
           />
         ) : null}
+        <JustificationsReview gameId={gameId} available={aiReview} />
       </section>
 
       {pedagogy ? (

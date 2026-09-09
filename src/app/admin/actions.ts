@@ -12,6 +12,7 @@ import {
 } from "@/services/admin.service";
 import { seedDemoWorld } from "@/services/demo.service";
 import { deleteOrgLicence, setOrgLicence } from "@/services/licence.service";
+import { DEFAULT_AI_CONFIG, isAiModelId } from "@/config/ai";
 
 async function requireAdminSession(): Promise<string> {
   const session = await getSession();
@@ -32,6 +33,7 @@ export async function updatePlatformConfigAction(formData: FormData): Promise<vo
   // Palier gratuit : champ « tours » vide = pas de limite de tours (null).
   const bornTours = String(formData.get("freeMaxRounds") ?? "").trim();
   const maxRounds = bornTours === "" ? null : Math.max(1, Math.floor(Number(bornTours) || 1));
+  const aiModelRaw = formData.get("aiModel");
   await updatePlatformConfig(adminId, {
     allowPublicPlay: formData.get("allowPublicPlay") === "on",
     allowSelfServiceTeachers: formData.get("allowSelfServiceTeachers") === "on",
@@ -42,6 +44,12 @@ export async function updatePlatformConfigAction(formData: FormData): Promise<vo
       competitions: formData.get("freeCompetitions") === "on",
       ai: formData.get("freeAi") === "on",
       gradebookExport: formData.get("freeGradebookExport") === "on",
+    },
+    ai: {
+      coach: formData.get("aiCoach") === "on",
+      teacherReview: formData.get("aiTeacherReview") === "on",
+      tutor: formData.get("aiTutor") === "on",
+      model: isAiModelId(aiModelRaw) ? aiModelRaw : DEFAULT_AI_CONFIG.model,
     },
   });
   revalidatePath("/admin");

@@ -20,6 +20,9 @@ import { EventBanner } from "@/components/event-banner";
 import { surtitreDePartie } from "@/config/scenarios/presentation";
 import { SECTOR_ICONS, SECTOR_COLORS, SECTOR_LABELS } from "@/config/scenarios/registry";
 import { statutDesSituations } from "@/config/situation-rendu";
+import { AiAssistant } from "@/components/ai-assistant";
+import { entitlementsForUser } from "@/services/entitlements.service";
+import { resolveAiSurface } from "@/services/ai.service";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +45,15 @@ export default async function ArenaPage({
   if (!view) notFound();
   const situations = await getTeamSituations(gameId, userId);
   const statutSituations = statutDesSituations(situations.current);
+
+  // Assistant IA (facultatif) : coach de tour (solo) et tuteur. Disponibles
+  // seulement si le compte y a droit (mur freemium), la surface est allumée en
+  // admin et une clé API est configurée. Le coach ne s'affiche qu'une fois un
+  // tour joué ; le tuteur, dès l'ouverture.
+  const aiEnt = await entitlementsForUser(userId);
+  const aiCoachEnabled =
+    aiEnt.ai && view.kind === "solo" && (await resolveAiSurface("coach")) !== null;
+  const aiTutor = aiEnt.ai && (await resolveAiSurface("tutor")) !== null;
 
   const finished = view.status === "finished";
   // Chaque période est une pièce de l'accordéon. Les tours RÉSOLUS forment la
@@ -692,6 +704,9 @@ export default async function ArenaPage({
           </section>
         ) : null}
       </div>
+
+      {/* ── Assistant IA (coach de tour + tuteur) ── */}
+      <AiAssistant gameId={gameId} coach={aiCoachEnabled && periods.length > 0} tutor={aiTutor} />
 
       {/* ── RoundStatusPoller ── */}
       {!finished && view.kind === "class" ? (

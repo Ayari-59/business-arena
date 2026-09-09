@@ -8,6 +8,7 @@ import {
   type OrgLicence,
 } from "@/services/licence.service";
 import { DEFAULT_FREE_TIER, type FreeTier } from "@/config/entitlements";
+import { DEFAULT_AI_CONFIG, type AiConfig } from "@/config/ai";
 import {
   competitions,
   games,
@@ -107,6 +108,12 @@ export interface PlatformConfig {
    * Réglé ici, appliqué par entitlements.service. Voir config/entitlements.ts.
    */
   freeTier: FreeTier;
+  /**
+   * Assistant IA (facultatif) : quelles surfaces sont allumées et quel modèle.
+   * Réglé ici, appliqué par ai.service. Éteint par défaut — aucun coût sans
+   * réglage explicite, et une clé ANTHROPIC_API_KEY reste requise côté serveur.
+   */
+  ai: AiConfig;
 }
 
 const DEFAULT_CONFIG: PlatformConfig = {
@@ -115,6 +122,7 @@ const DEFAULT_CONFIG: PlatformConfig = {
   announcement: "",
   contactEmail: "contact@business-arena.fr",
   freeTier: DEFAULT_FREE_TIER,
+  ai: DEFAULT_AI_CONFIG,
 };
 
 /**

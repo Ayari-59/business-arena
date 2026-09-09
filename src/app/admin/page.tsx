@@ -4,6 +4,7 @@ import { getSession } from "@/lib/session";
 import { getPlatformOverview, getStaffContext } from "@/services/admin.service";
 import { DEMO_ACCOUNTS, isDemoSeeded } from "@/services/demo.service";
 import { formatEuro } from "@/lib/format";
+import { AI_MODELS } from "@/config/ai";
 import {
   createEstablishmentAction,
   deactivateAdminInviteAction,
@@ -185,6 +186,45 @@ export default async function AdminPage() {
                 Export du relevé de notes autorisé en gratuit
               </label>
             </div>
+          </fieldset>
+
+          <fieldset className="rounded-xl border border-sky-400/25 bg-sky-950/10 p-4">
+            <legend className="px-2 text-xs font-semibold uppercase tracking-wide text-sky-300">
+              Assistant IA
+            </legend>
+            <p className="mb-3 text-xs text-slate-400">
+              Surfaces d&apos;assistance par IA. <strong className="text-slate-300">Éteintes par défaut</strong> ;
+              elles restent inertes tant qu&apos;une clé <code className="text-slate-300">ANTHROPIC_API_KEY</code> n&apos;est pas
+              configurée côté serveur, et le mur « Feedback IA » du palier gratuit s&apos;applique aussi.
+            </p>
+            <div className="space-y-2">
+              <label className="flex items-center gap-3 text-sm text-slate-300">
+                <input type="checkbox" name="aiCoach" defaultChecked={overview.config.ai.coach} className="h-4 w-4 accent-sky-400" />
+                Coach de tour (élève, solo) — un retour après chaque tour
+              </label>
+              <label className="flex items-center gap-3 text-sm text-slate-300">
+                <input type="checkbox" name="aiTutor" defaultChecked={overview.config.ai.tutor} className="h-4 w-4 accent-sky-400" />
+                Tuteur conversationnel (élève) — répond aux questions en cours de partie
+              </label>
+              <label className="flex items-center gap-3 text-sm text-slate-300">
+                <input type="checkbox" name="aiTeacherReview" defaultChecked={overview.config.ai.teacherReview} className="h-4 w-4 accent-sky-400" />
+                Synthèse des justifications (enseignant) — aide au débriefing
+              </label>
+            </div>
+            <label className="mt-3 block">
+              <span className="text-xs font-medium uppercase tracking-wide text-slate-400">Modèle</span>
+              <select
+                name="aiModel"
+                defaultValue={overview.config.ai.model}
+                className="mt-1 block w-full max-w-sm rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-sky-400/60"
+              >
+                {AI_MODELS.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.label}
+                  </option>
+                ))}
+              </select>
+            </label>
           </fieldset>
 
           <SubmitButton
