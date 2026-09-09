@@ -1,5 +1,13 @@
-import type { CompanyState, EngineScenarioConfig, EquipmentTypeDef, RoundDecisions } from "../types";
+import type {
+  CompanyState,
+  EngineScenarioConfig,
+  EquipmentTypeDef,
+  ProductCode,
+  ProductDecisions,
+  RoundDecisions,
+} from "../types";
 import { fleetMaintenanceMultiplier } from "../simulation";
+import { isMultiProduct, toGamme, type GammeProduct } from "../gamme";
 
 /**
  * Bots de stratégie (ADR-03) : générateurs de décisions PURS et déterministes.
@@ -69,6 +77,12 @@ export interface BotContext {
   roundIndex: number;
   /** Unités vendues au tour précédent (undefined au tour 1). */
   lastSoldUnits?: number;
+  /**
+   * Gamme : unités vendues par produit au tour précédent (cf. soldByProduct).
+   * Sans lui, le bot répartit son plan sur la demande de base de chaque
+   * produit ; avec lui, il suit ses ventes référence par référence.
+   */
+  lastSoldByProduct?: Record<ProductCode, number>;
   /** Prix moyen des équipes humaines au tour précédent (undefined si aucune / au T1). */
   humanAvgPrice?: number;
   /** Personnalité du bot (défaut « suiveur »). */
@@ -138,10 +152,13 @@ function capacity(ctx: BotContext): number {
 
 /** Anticipation saisonnière : produire avant le pic (ratio saison à venir / saison courante). */
 function seasonalFactor(ctx: BotContext): number {
-  const season = ctx.scenario.market.seasonality;
-  const current = season[ctx.roundIndex - 1] ?? 1;
-  const next = season[ctx.roundIndex] ?? current;
-  return Math.min(1.4, Math.max(0.8, current > 0 ? next / current : 1));
+  return seasonalRatio(ctx.scenario.market.seasonality, ctx.roundIndex, 0.8, 1.4);
+}
+
+function seasonalRatio(season: number[], roundIndex: number, floor: number, ceil: number): number {
+  const current = season[roundIndex - 1] ?? 1;
+  const next = season[roundIndex] ?? current;
+  return Math.min(ceil, Math.max(floor, current > 0 ? next / current : 1));
 }
 
 /** Plan de production : viser les ventes passées ajustées de la saison, sans gonfler le stock. */
@@ -324,6 +341,97 @@ function enrichDecisions(
   return base;
 }
 
+/**
+ * Gamme : unités vendues par produit, à partir du détail par segment d'un
+ * résultat (chaque segment appartient à un seul produit). `undefined` en
+ * mono-produit, où le bot n'a pas besoin de cette lecture.
+ */
+export function soldByProduct(
+  scenario: EngineScenarioConfig,
+  bySegment: Record<string, { sold: number }>,
+): Record<ProductCode, number> | undefined {
+  if (!isMultiProduct(scenario)) return undefined;
+  const out: Record<ProductCode, number> = {};
+  for (const p of toGamme(scenario)) {
+    out[p.code] = p.market.segments.reduce((sum, s) => sum + (bySegment[s.code]?.sold ?? 0), 0);
+  }
+  return out;
+}
+
+const AGGRESSIVENESS: Record<BotProfile, number> = {
+  passive: 0.6,
+  price_aggressive: 1.15,
+  premium: 1.0,
+  balanced: 1.05,
+  growth: 1.25,
+};
+
+/** Prix de référence d'un produit : celui du segment dominant de SON marché. */
+function productRefPrice(p: GammeProduct): number {
+  const main = [...p.market.segments].sort((a, b) => b.size - a.size)[0];
+  return main ? main.refPrice : 50;
+}
+
+/**
+ * Les décisions par produit d'un bot qui joue une gamme.
+ *
+ * Le bot garde sa stratégie (profil, réaction au prix humain, garde-fou) mais
+ * la décline référence par référence : le prix de chaque produit est celui de
+ * son segment dominant, affecté du MÊME rapport que le prix scalaire porte au
+ * prix de référence du scénario (un bot agressif l'est sur toute la gamme, et
+ * la réaction au prix humain se propage), sans jamais descendre sous le coût
+ * variable du produit ; le plan suit les ventes passées de chaque produit,
+ * anticipe SA saisonnalité et déduit SON stock, puis la somme est ramenée à la
+ * capacité partagée ; le marketing se répartit au prorata des marchés.
+ */
+function gammeDecisions(
+  profile: BotProfile,
+  ctx: BotContext,
+  base: RoundDecisions,
+): Record<ProductCode, ProductDecisions> {
+  const gamme = toGamme(ctx.scenario);
+  const ref = mainRefPrice(ctx.scenario);
+  const priceRatio = ref > 0 ? base.price / ref : 1;
+
+  const sizes = gamme.map((p) => p.market.segments.reduce((sum, s) => sum + s.size, 0));
+  const totalSize = sizes.reduce((a, b) => a + b, 0);
+  const weights = sizes.map((s) => (totalSize > 0 ? s / totalSize : 1 / gamme.length));
+
+  const machineCap = ctx.state.machineCapacity * ctx.state.availability;
+  const laborHours = ctx.state.headcount * ctx.state.hoursPerEmployee * ctx.state.productivity;
+  const meanHours = gamme.reduce((sum, p, k) => sum + p.hoursPerUnit * weights[k]!, 0);
+  const cap = Math.min(machineCap, meanHours > 0 ? laborHours / meanHours : Infinity);
+  const aggressiveness = AGGRESSIVENESS[profile];
+
+  const targets = gamme.map((p, k) => {
+    if (profile === "passive") return cap * aggressiveness * weights[k]!;
+    const stock = ctx.state.finishedGoodsByProduct?.[p.code]?.quantity ?? 0;
+    const lastSold = ctx.lastSoldByProduct?.[p.code];
+    const basis = lastSold !== undefined ? lastSold * aggressiveness : cap * 0.65 * aggressiveness * weights[k]!;
+    // Les accessoires d'une gamme peuvent doubler d'un tour à l'autre : la
+    // fourchette d'anticipation est plus large qu'en mono-produit.
+    const season = seasonalRatio(p.market.seasonality, ctx.roundIndex, 0.5, 2);
+    return Math.max(0, basis * season - stock * 0.5);
+  });
+  const total = targets.reduce((a, b) => a + b, 0);
+  // Capacité partagée : la même coupe proportionnelle que le moteur. Et le
+  // garde-fou de caisse mono-produit (pas plus de 1,2 fois les ventes passées)
+  // devient 1,6 fois : une gamme saisonnière varie davantage qu'un produit.
+  const ceiling = Math.min(cap, ctx.lastSoldUnits !== undefined ? ctx.lastSoldUnits * 1.6 : cap);
+  const cut = total > ceiling && total > 0 ? ceiling / total : 1;
+
+  const products: Record<ProductCode, ProductDecisions> = {};
+  gamme.forEach((p, k) => {
+    const floor = (p.materialCostPerUnit + p.otherVariableCostPerUnit) * 1.1;
+    products[p.code] = {
+      price: Math.max(floor, productRefPrice(p) * priceRatio),
+      productionPlan: targets[k]! * cut,
+      marketingBudget: (base.marketingBudget ?? 0) * weights[k]!,
+    };
+  });
+  return products;
+}
+
 export function botDecisions(profile: BotProfile, ctx: BotContext): RoundDecisions {
   const ref = mainRefPrice(ctx.scenario);
   const maintenanceMul = ctx.scenario.equipment
@@ -388,5 +496,12 @@ export function botDecisions(profile: BotProfile, ctx: BotContext): RoundDecisio
   // pour cadrer la décision finale, quelle que soit la stratégie.
   enriched.price = reactToHumanPrice(enriched.price, ctx);
   applyFinancialGuardRail(enriched, ctx);
+  // Gamme : la décision se décline par produit ; les scalaires restent la
+  // lecture agrégée (plan = somme des plans). Mono-produit : rien n'est ajouté.
+  if (isMultiProduct(ctx.scenario)) {
+    const products = gammeDecisions(profile, ctx, enriched);
+    enriched.products = products;
+    enriched.productionPlan = Object.values(products).reduce((sum, p) => sum + p.productionPlan, 0);
+  }
   return enriched;
 }

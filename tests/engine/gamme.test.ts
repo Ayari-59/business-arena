@@ -176,7 +176,10 @@ describe("gamme — un produit dormant ne change rien aux agrégats", () => {
         },
       ]),
     );
-  const multi = simulateRound(input(dormant, withProducts(scalarDecisions(dormant, companies()))));
+  // Les bots reçoivent les MÊMES décisions scalaires que dans la partie mono
+  // (calculées sur NOVA) : ce que l'on mesure ici est le moteur, pas le bot,
+  // qui en gamme jouerait par produit.
+  const multi = simulateRound(input(dormant, withProducts(scalarDecisions(novaScenario, companies()))));
 
   it.each(["player", "soundbox", "auris"])("%s : mêmes CA, résultat, caisse, FRNG, BFR, TN", (id) => {
     const m = mono.results[id]!;
@@ -281,9 +284,33 @@ describe("gamme — deux produits vivants partagent l'usine", () => {
     expect(player.incomeStatement.marketingCost).toBe(6000);
   });
 
-  it("les bots jouent la gamme sans la connaître (part égale du plan)", () => {
+  it("les bots jouent la gamme produit par produit", () => {
+    // Le bot connaît la gamme : un plan par produit dont la somme est le plan
+    // scalaire, et un prix par produit dérivé du segment dominant de SON marché
+    // avec le même rapport que le prix scalaire porte au prix de référence.
     const sb = out.results["soundbox"]!;
-    expect(sb.products?.[A]?.planned).toBeCloseTo(base.soundbox.productionPlan / 2, 9);
-    expect(sb.products?.[B]?.planned).toBeCloseTo(base.soundbox.productionPlan / 2, 9);
+    const plans = base.soundbox.products!;
+    expect(plans[A]!.productionPlan).toBeGreaterThan(0);
+    expect(plans[B]!.productionPlan).toBeGreaterThan(0);
+    expect(plans[A]!.productionPlan + plans[B]!.productionPlan).toBeCloseTo(
+      base.soundbox.productionPlan,
+      9,
+    );
+    expect(sb.products?.[A]?.planned).toBeCloseTo(plans[A]!.productionPlan, 9);
+    expect(sb.products?.[B]?.planned).toBeCloseTo(plans[B]!.productionPlan, 9);
+    // Prix agressif sur les deux références (0,88 × référence du segment
+    // dominant), jamais sous le coût variable du produit + 10 % : B coûte
+    // 50 €, son prix plancher (55 €) l'emporte sur 0,88 × 59.
+    expect(plans[A]!.price).toBeCloseTo(59 * 0.88, 9);
+    expect(plans[B]!.price).toBeCloseTo(Math.max(50 * 1.1, 59 * 0.88), 9);
+    // Et la somme des budgets marketing par produit est le budget scalaire.
+    expect(plans[A]!.marketingBudget! + plans[B]!.marketingBudget!).toBeCloseTo(
+      base.soundbox.marketingBudget,
+      9,
+    );
+  });
+
+  it("un scénario mono-produit ne reçoit aucune décision par produit", () => {
+    expect(scalarDecisions(novaScenario, companies()).soundbox.products).toBeUndefined();
   });
 });

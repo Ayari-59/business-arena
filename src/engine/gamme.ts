@@ -3,6 +3,7 @@ import type {
   ProductCode,
   ProductDef,
   RoundDecisions,
+  SegmentConfig,
 } from "./types";
 
 /**
@@ -76,6 +77,33 @@ export function toGamme(scenario: EngineScenarioConfig): GammeProduct[] {
         p.market.competitionIntensity ?? scenario.market.competitionIntensity,
     },
   }));
+}
+
+/**
+ * Applique une transformation de segment à TOUS les marchés du scénario : le
+ * marché du scénario et, en gamme, celui de chaque produit. Les variantes
+ * dérivées à la création d'une partie (dimensionnement de classe, périodicité,
+ * monde variable, surcharges enseignantes) ne touchaient que `market` : en
+ * gamme, les segments des produits — les seuls que le moteur simule — auraient
+ * gardé leur taille de calibration. Mono-produit : seul `market` bouge et la
+ * clé `products` n'est jamais émise.
+ */
+export function mapGammeSegments(
+  scenario: EngineScenarioConfig,
+  fn: (segment: SegmentConfig) => SegmentConfig,
+): EngineScenarioConfig {
+  return {
+    ...scenario,
+    market: { ...scenario.market, segments: scenario.market.segments.map(fn) },
+    ...(scenario.products
+      ? {
+          products: scenario.products.map((p) => ({
+            ...p,
+            market: { ...p.market, segments: p.market.segments.map(fn) },
+          })),
+        }
+      : {}),
+  };
 }
 
 /**

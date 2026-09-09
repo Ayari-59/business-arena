@@ -1,97 +1,271 @@
-import type { CompanyState, EngineScenarioConfig } from "../../../engine/types";
+import type {
+  CompanyState,
+  EngineScenarioConfig,
+  ProductDef,
+  SegmentConfig,
+} from "../../../engine/types";
 import type { BotProfile } from "../../../engine/bots";
 import { parseScenarioConfig } from "../schema";
 
 /**
- * Scénario BOUTIQUE — « MAILLE & CO », concept store de prêt-à-porter
- * indépendant, 6 tours trimestriels.
+ * Scénario BOUTIQUE — « MAILLE & CO », marque de vêtements en maille,
+ * 6 tours trimestriels. Le PREMIER secteur à GAMME du jeu.
  *
- * Ce que le secteur apporte de propre au commerce de détail :
- * - on n'a rien à fabriquer, on ACHÈTE pour revendre : la marge se joue au
- *   coefficient multiplicateur, pas à l'atelier ;
- * - le stock est un ACTIF qui dort — la boutique démarre d'ailleurs avec
- *   1 200 articles en rayon, donc du BFR dès le tour 1 ;
- * - la saisonnalité est brutale (Noël pèse près d'un tour et demi de
- *   ventes ordinaires) : rater son approvisionnement de T4, c'est rater
- *   l'exercice ;
- * - les trois circuits d'achat (grossiste, déstockeur, créateur) opposent
- *   frontalement prix d'achat, image et délai de règlement.
+ * Maille & Co dessine sa collection et la fait tricoter par des façonniers,
+ * puis la vend dans sa boutique de centre-ville et à des comités
+ * d'entreprise : on n'y fabrique rien soi-même, on ACHÈTE des pièces
+ * confectionnées pour les revendre. Ce que le commerce apporte de propre :
+ * - la marge se joue au coefficient multiplicateur, pas à l'atelier ;
+ * - le stock est un ACTIF qui dort — la boutique ouvre avec 1 110 pièces en
+ *   réserve, donc du BFR dès le tour 1 ;
+ * - la saisonnalité est brutale et DIFFÉRENTE d'une référence à l'autre : la
+ *   maille se vend l'hiver, les accessoires font plus du double à Noël, le
+ *   cardigan lisse la courbe ;
+ * - les trois façonniers opposent frontalement prix d'achat, image et délai
+ *   de règlement.
  *
- * Calibration (base trimestrielle) : ~4 400 articles vendus à 45 €, coût
- * d'achat 18 € + 3,50 € de frais variables → 23,50 € de marge unitaire ;
- * 84 000 € de charges de structure décaissées → seuil ≈ 3 575 articles.
+ * Ce que la GAMME apporte : le MIX. Le bonnet fait du volume, le pull mérinos
+ * fait la marge ; cinq références se disputent la même réserve (7 500 pièces
+ * de capacité de traitement par trimestre) au moment du réassort de Noël ; et
+ * chaque référence a SON marché — ses segments, sa concurrence.
+ *
+ * Calibration (base trimestrielle, mix de référence, 4 400 pièces) :
+ *   pull col rond      59 € · achat 25 €   + 3,50 € · MCV 30,50 € · 1 500
+ *   cardigan           79 € · achat 34 €   + 4 €    · MCV 41 €    ·   700
+ *   pull mérinos      129 € · achat 56 €   + 5 €    · MCV 68 €    ·   350
+ *   écharpe            35 € · achat 14 €   + 2 €    · MCV 19 €    · 1 000
+ *   bonnet             25 € · achat 9,50 € + 1,50 € · MCV 14 €    ·   850
+ * CA ≈ 245 000 €, MCV ≈ 129 000 €, 84 000 € de charges de structure décaissées
+ * + 4 500 € d'amortissements → résultat d'exploitation ≈ 40 000 € ; MCV
+ * moyenne 29,35 € → seuil (84 000 ÷ 29,35) ≈ 2 862 pièces à mix constant. Les concurrents
+ * s'alignent sur le prix des passants (55 € le pull) : à ce prix, la marge
+ * unitaire tombe à 26,50 € et le seuil monte vers 3 300 pièces.
  */
-const rawBoutique = {
-  code: "boutique",
-  version: "0.1.0",
-  roundsCount: 6,
-  roundDays: 90,
-  market: {
-    segments: [
-      {
-        code: "fideles",
-        name: "Clientes fidèles (carte de fidélité)",
-        size: 5000,
-        growth: 0.02,
-        priceElasticity: -0.9,
-        refPrice: 52,
-        minAcceptablePrice: 30,
-        psychThresholds: [{ threshold: 80, penalty: 0.92 }],
-        marketingSensitivity: 0.1,
-        qualitySensitivity: 0.35,
-        loyalty: 0.45,
-        priceEffectBounds: { min: 0.35, max: 2.4 },
-        paymentDelayDays: 0,
-      },
-      {
-        code: "chalands",
-        name: "Chalands de passage (sensibles au prix)",
-        size: 11000,
-        growth: 0.05,
-        priceElasticity: -2.1,
-        refPrice: 42,
-        minAcceptablePrice: 22,
-        psychThresholds: [
-          { threshold: 40, penalty: 0.9 },
-          { threshold: 50, penalty: 0.94 },
-        ],
-        marketingSensitivity: 0.28,
-        qualitySensitivity: 0.12,
-        loyalty: 0.08,
-        priceEffectBounds: { min: 0.15, max: 4 },
-        paymentDelayDays: 0,
-      },
-      {
-        code: "entreprises",
-        name: "Comités d'entreprise (règlement à 45 j)",
-        size: 6000,
-        growth: 0.06,
-        priceElasticity: -1.3,
-        refPrice: 46,
-        minAcceptablePrice: 28,
-        psychThresholds: [],
-        marketingSensitivity: 0.06,
-        qualitySensitivity: 0.25,
-        loyalty: 0.4,
-        priceEffectBounds: { min: 0.3, max: 2.6 },
-        paymentDelayDays: 45,
-        // les CE commandent pour les fêtes : le gros de leur budget part au T4
-        seasonality: [0.6, 0.8, 0.9, 1.9, 0.6, 0.8],
-      },
+
+// --- Les trois clientèles du commerce, déclinées par référence ------------
+//
+// Chaque référence a SON marché, donc ses propres segments (codes uniques
+// sur la gamme : parts de marché et demandes sont indexées par code). Les
+// trois archétypes gardent d'une référence à l'autre la même psychologie :
+// les fidèles arbitrent sur la qualité, les passants sur le prix, les
+// comités d'entreprise achètent au volume et règlent à 45 jours.
+
+type SegmentOver = Pick<SegmentConfig, "code" | "name" | "size" | "refPrice"> &
+  Partial<SegmentConfig>;
+
+/** Clientes fidèles : peu sensibles au prix, très sensibles à la qualité. */
+const fideles = (s: SegmentOver): SegmentConfig => ({
+  growth: 0.02,
+  priceElasticity: -0.9,
+  minAcceptablePrice: Math.round(s.refPrice * 0.58),
+  psychThresholds: [{ threshold: Math.round(s.refPrice * 1.5), penalty: 0.92 }],
+  marketingSensitivity: 0.1,
+  qualitySensitivity: 0.35,
+  loyalty: 0.45,
+  priceEffectBounds: { min: 0.35, max: 2.4 },
+  paymentDelayDays: 0,
+  ...s,
+});
+
+/** Passants : très sensibles au prix, aux seuils psychologiques et à l'animation. */
+const passage = (s: SegmentOver & { seuils: [number, number] }): SegmentConfig => {
+  const { seuils, ...rest } = s;
+  return {
+    growth: 0.05,
+    priceElasticity: -2.1,
+    minAcceptablePrice: Math.round(s.refPrice * 0.52),
+    psychThresholds: [
+      { threshold: seuils[0], penalty: 0.9 },
+      { threshold: seuils[1], penalty: 0.94 },
     ],
-    // Noël écrase tout : T4 vaut près d'une fois et demie un trimestre ordinaire
-    seasonality: [0.95, 1.0, 1.05, 1.45, 0.95, 1.0],
-    outsideAttraction: 0.6,
-    competitionIntensity: 1.8,
-  },
-  product: {
-    code: "article-mode",
-    // coût d'achat marchandises : le nerf du commerce (coefficient ≈ 2,5)
-    materialCostPerUnit: 18,
+    marketingSensitivity: 0.28,
+    qualitySensitivity: 0.12,
+    loyalty: 0.08,
+    priceEffectBounds: { min: 0.15, max: 4 },
+    paymentDelayDays: 0,
+    ...rest,
+  };
+};
+
+/** Comités d'entreprise : achat au volume, règlement à 45 jours, budget de fin d'année. */
+const entreprises = (s: SegmentOver): SegmentConfig => ({
+  growth: 0.06,
+  priceElasticity: -1.3,
+  minAcceptablePrice: Math.round(s.refPrice * 0.6),
+  psychThresholds: [],
+  marketingSensitivity: 0.06,
+  qualitySensitivity: 0.25,
+  loyalty: 0.4,
+  priceEffectBounds: { min: 0.3, max: 2.6 },
+  paymentDelayDays: 45,
+  // les CE commandent pour les fêtes : le gros de leur budget part au T4
+  seasonality: [0.6, 0.8, 0.9, 1.9, 0.6, 0.8],
+  ...s,
+});
+
+// --- La gamme ------------------------------------------------------------
+
+/**
+ * Le marché du pull col rond, cœur de gamme. C'est aussi le marché « du
+ * scénario » (`market`) : celui que lisent les affichages mono-produit, les
+ * bots pour leur prix de référence et les gardes de calibration. Le moteur,
+ * lui, ne simule que les marchés des produits.
+ */
+const PULL_MARKET = {
+  segments: [
+    fideles({ code: "pull_fideles", name: "Clientes fidèles · pull col rond", size: 2200, refPrice: 62 }),
+    passage({
+      code: "pull_passage",
+      name: "Passants · pull col rond",
+      size: 4000,
+      refPrice: 55,
+      seuils: [50, 60],
+    }),
+    entreprises({ code: "pull_ce", name: "Comités d'entreprise · pull col rond", size: 1300, refPrice: 58 }),
+  ],
+  // La maille se vend l'hiver : Noël vaut une fois et demie un trimestre
+  // ordinaire, l'été en vaut à peine les deux tiers.
+  seasonality: [1.0, 0.7, 1.0, 1.5, 1.0, 0.7],
+  outsideAttraction: 0.6,
+  competitionIntensity: 1.8,
+};
+
+const GAMME: ProductDef[] = [
+  {
+    code: "pull-col-rond",
+    name: "Pull col rond",
+    // coût d'achat au façonnier : le nerf du commerce (coefficient ≈ 2,4)
+    materialCostPerUnit: 25,
     // sacs, cintres, commissions carte bancaire, logistique retour
     otherVariableCostPerUnit: 3.5,
     hoursPerUnit: 0.12,
+    market: PULL_MARKET,
   },
+  {
+    code: "cardigan",
+    name: "Cardigan boutonné",
+    materialCostPerUnit: 34,
+    otherVariableCostPerUnit: 4,
+    hoursPerUnit: 0.15,
+    market: {
+      segments: [
+        fideles({ code: "cardigan_fideles", name: "Clientes fidèles · cardigan", size: 1500, refPrice: 84 }),
+        passage({
+          code: "cardigan_passage",
+          name: "Passants · cardigan",
+          size: 1800,
+          refPrice: 74,
+          seuils: [70, 80],
+        }),
+      ],
+      // la pièce de mi-saison : elle lisse la courbe de la boutique
+      seasonality: [1.1, 0.9, 1.2, 1.1, 1.1, 0.9],
+    },
+  },
+  {
+    code: "pull-merinos",
+    name: "Pull mérinos premium",
+    materialCostPerUnit: 56,
+    otherVariableCostPerUnit: 5,
+    hoursPerUnit: 0.2,
+    market: {
+      segments: [
+        fideles({
+          code: "merinos_fideles",
+          name: "Clientes fidèles · pull mérinos",
+          size: 900,
+          refPrice: 135,
+          priceElasticity: -0.7,
+          qualitySensitivity: 0.45,
+        }),
+        entreprises({
+          code: "merinos_affaires",
+          name: "Cadeaux d'affaires · pull mérinos (règlement à 60 j)",
+          size: 800,
+          refPrice: 125,
+          priceElasticity: -1.0,
+          qualitySensitivity: 0.4,
+          loyalty: 0.3,
+          paymentDelayDays: 60,
+          seasonality: [0.5, 0.4, 0.9, 2.2, 0.5, 0.4],
+        }),
+      ],
+      // la pièce de fête : elle fait la marge, à Noël surtout
+      seasonality: [0.9, 0.6, 1.0, 1.7, 0.9, 0.6],
+      competitionIntensity: 1.5,
+    },
+  },
+  {
+    code: "echarpe",
+    name: "Écharpe",
+    materialCostPerUnit: 14,
+    otherVariableCostPerUnit: 2,
+    hoursPerUnit: 0.06,
+    market: {
+      segments: [
+        passage({
+          code: "echarpe_passage",
+          name: "Passants · écharpe",
+          size: 3300,
+          refPrice: 36,
+          seuils: [30, 40],
+        }),
+        entreprises({
+          code: "echarpe_ce",
+          name: "Comités d'entreprise · écharpe (dotations de Noël)",
+          size: 1700,
+          refPrice: 33,
+          seasonality: [0.4, 0.3, 0.8, 2.5, 0.4, 0.3],
+        }),
+      ],
+      // l'accessoire de Noël : plus du double au T4, presque rien l'été
+      seasonality: [0.9, 0.3, 0.9, 2.1, 0.9, 0.3],
+      competitionIntensity: 2.0,
+    },
+  },
+  {
+    code: "bonnet",
+    name: "Bonnet",
+    materialCostPerUnit: 9.5,
+    otherVariableCostPerUnit: 1.5,
+    hoursPerUnit: 0.05,
+    market: {
+      segments: [
+        passage({
+          code: "bonnet_passage",
+          name: "Passants · bonnet",
+          size: 3000,
+          refPrice: 26,
+          seuils: [20, 30],
+        }),
+        entreprises({
+          code: "bonnet_ce",
+          name: "Comités d'entreprise · bonnet (dotations de Noël)",
+          size: 1500,
+          refPrice: 24,
+          seasonality: [0.4, 0.3, 0.8, 2.5, 0.4, 0.3],
+        }),
+      ],
+      seasonality: [0.9, 0.2, 0.8, 2.3, 0.9, 0.2],
+      competitionIntensity: 2.0,
+    },
+  },
+];
+
+const rawBoutique = {
+  code: "boutique",
+  version: "0.2.0",
+  roundsCount: 6,
+  roundDays: 90,
+  market: PULL_MARKET,
+  // Le produit « de référence » des affichages mono-produit : le cœur de gamme.
+  product: {
+    code: "pull-col-rond",
+    materialCostPerUnit: 25,
+    otherVariableCostPerUnit: 3.5,
+    hoursPerUnit: 0.12,
+  },
+  products: GAMME,
   production: {
     // « qualité » = soin de la sélection et du merchandising
     qualitySensitivity: 0.18,
@@ -112,7 +286,7 @@ const rawBoutique = {
     // ne change rien n'apprend pas à en faire un.
     bank: { memory: 0.6, maxOverdraftSpread: 0.05, minOverdraftShare: 0.4 },
     taxRate: 0.25,
-    // le commerce paie ses fournisseurs à 45 jours (usage de la profession)
+    // le commerce paie ses façonniers à 45 jours (usage de la profession)
     supplierPaymentDelayDays: 45,
     loanDurationRounds: 20,
     maxCapitalIncreaseTotal: 80000,
@@ -133,9 +307,9 @@ const rawBoutique = {
   suppliers: [
     {
       code: "grossiste",
-      name: "Grossiste de la place",
+      name: "Façonnier de référence",
       narrative:
-        "Le circuit classique : catalogue large, qualité constante, règlement à 45 jours. Aucune surprise, aucune envolée.",
+        "Le tricoteur historique de la marque : qualité constante, réassort en six semaines, règlement à 45 jours. Aucune surprise, aucune envolée.",
       costMultiplier: 1,
       qualityBonus: 0,
       paymentDelayDays: 45,
@@ -144,7 +318,7 @@ const rawBoutique = {
     },
     {
       code: "destockeur",
-      name: "Déstockeur (fins de série)",
+      name: "Fins de série d'un tricoteur portugais",
       narrative:
         "Des fins de série à −18 % sur le prix d'achat, mais payées comptant à l'enlèvement et sans garantie de réassort : ce qui part est parti.",
       costMultiplier: 0.82,
@@ -155,9 +329,9 @@ const rawBoutique = {
     },
     {
       code: "createur",
-      name: "Créateurs en direct",
+      name: "Atelier de tricotage local",
       narrative:
-        "Des pièces exclusives payées 22 % plus cher, réglées à 30 jours. Elles font la réputation de la boutique et la fidélité des clientes.",
+        "Des pièces tricotées à trente kilomètres, étiquetées « fabriqué en France », payées 22 % plus cher et réglées à 30 jours. Elles font la réputation de la marque et la fidélité des clientes.",
       costMultiplier: 1.22,
       qualityBonus: 0.09,
       paymentDelayDays: 30,
@@ -202,7 +376,7 @@ const rawBoutique = {
     maxPerRound: 2500,
   },
   // Équipements typés : 3 niveaux de mobilier et de logistique de magasin.
-  // Capacité initiale = 1 × 1 500 + 1 × 2 500 + 1 × 3 500 = 7 500 (identique au legacy).
+  // Capacité initiale = 1 × 1 500 + 1 × 2 500 + 1 × 3 500 = 7 500 pièces.
   equipment: {
     types: [
       {
@@ -248,14 +422,16 @@ const rawBoutique = {
     financeCost: 700,
     projectCost: 1000,
   },
+  // Les commandes exceptionnelles portent sur le cœur de gamme, le pull col
+  // rond (59 € au tarif boutique, 28,50 € de coût variable).
   orderOffers: [
     {
       code: "boutique_offer_ce_noel",
       title: "Comité d'entreprise · dotation de Noël",
       narrative:
-        "Le CSE d'une clinique privée veut habiller ses dotations de fin d'année. Belle commande, mais mandat administratif : vous serez payés au rythme de la comptabilité publique.",
+        "Le CSE d'une clinique privée veut offrir un pull à chacun de ses salariés pour les fêtes. Belle commande, mais mandat administratif : vous serez payés au rythme de la comptabilité publique.",
       units: 600,
-      price: 41,
+      price: 52,
       paymentDelayDays: 60,
     },
     {
@@ -264,16 +440,16 @@ const rawBoutique = {
       narrative:
         "L'association des commerçants organise un week-end vide-dressing, encaissement immédiat en caisse. Le prix est cassé, la caisse se remplit, la marge s'efface.",
       units: 500,
-      price: 29,
+      price: 38,
       paymentDelayDays: 0,
     },
     {
       code: "boutique_offer_hotel_uniformes",
       title: "Groupe hôtelier · tenues d'accueil",
       narrative:
-        "Un groupe hôtelier habille les tenues d'accueil de ses réceptions. Le service achats valide vite, puis paie quand ses procédures le permettent.",
+        "Un groupe hôtelier veut un pull brodé à son chiffre pour les réceptions de ses établissements. Le service achats valide vite, puis paie quand ses procédures le permettent.",
       units: 800,
-      price: 44,
+      price: 54,
       paymentDelayDays: 60,
     },
     {
@@ -282,7 +458,7 @@ const rawBoutique = {
       narrative:
         "Une marketplace vous ouvre un créneau flash sur sa page d'accueil. Marge mince, virement quasi immédiat.",
       units: 700,
-      price: 31,
+      price: 41,
       paymentDelayDays: 0,
     },
     {
@@ -291,7 +467,7 @@ const rawBoutique = {
       narrative:
         "Un palace vous propose un corner saisonnier dans son hall : votre meilleur prix de l'année, mais réglé comme il règle tous ses fournisseurs.",
       units: 450,
-      price: 58,
+      price: 74,
       paymentDelayDays: 90,
     },
     {
@@ -300,7 +476,7 @@ const rawBoutique = {
       narrative:
         "Un déstockeur reprend la fin de collection, enlèvement et paiement comptant. Vous ne gagnez presque rien, mais la réserve se vide.",
       units: 900,
-      price: 26,
+      price: 33,
       paymentDelayDays: 0,
     },
   ],
@@ -327,12 +503,18 @@ const rawBoutique = {
       modifiers: [{ target: "demand", op: "mul", value: 0.82 }],
     },
     {
+      // une influenceuse : ce sont les passants qui poussent la porte
       code: "boutique_influenceur",
       scope: "market",
       probability: 0.04,
       minRound: 2,
       duration: 1,
-      modifiers: [{ target: "demand:chalands", op: "mul", value: 1.3 }],
+      modifiers: [
+        { target: "demand:pull_passage", op: "mul", value: 1.3 },
+        { target: "demand:cardigan_passage", op: "mul", value: 1.3 },
+        { target: "demand:echarpe_passage", op: "mul", value: 1.3 },
+        { target: "demand:bonnet_passage", op: "mul", value: 1.3 },
+      ],
     },
     {
       code: "boutique_demarque",
@@ -359,6 +541,7 @@ const rawBoutique = {
       modifiers: [{ target: "demand", op: "mul", value: 0.9 }],
     },
     {
+      // la laine flambe : scriptée au tour 5 (voir scriptedEvents)
       code: "boutique_coton",
       scope: "market",
       probability: 0,
@@ -374,11 +557,16 @@ const rawBoutique = {
       modifiers: [{ target: "interest_rate", op: "mul", value: 1.5 }],
     },
     {
+      // fête des mères anticipée : les fidèles arrivent avec une liste
       code: "boutique_pretexte_fete",
       scope: "market",
       probability: 0.04,
       duration: 1,
-      modifiers: [{ target: "demand:fideles", op: "mul", value: 1.22 }],
+      modifiers: [
+        { target: "demand:pull_fideles", op: "mul", value: 1.22 },
+        { target: "demand:cardigan_fideles", op: "mul", value: 1.22 },
+        { target: "demand:merinos_fideles", op: "mul", value: 1.22 },
+      ],
     },
     // Cartes « équipe » et cartes enseignant : jamais tirées par le PRNG.
     // APPENDRE en fin de liste (le PRNG consomme un tirage par événement).
@@ -449,7 +637,7 @@ const rawBoutique = {
       modifiers: [{ target: "availability", op: "mul", value: 1.12 }],
     },
   ],
-  // Le coton flambe au tour 5 : la marge d'achat se comprime juste après Noël,
+  // La laine flambe au tour 5 : la marge d'achat se comprime juste après Noël,
   // quand la trésorerie a déjà tout donné dans le réassort.
   scriptedEvents: [{ round: 5, eventCode: "boutique_coton" }],
   scoring: {
@@ -464,7 +652,7 @@ const rawBoutique = {
     },
     benchmarks: {
       operatingIncome: { min: -35000, target: 32000 },
-      revenue: { min: 90000, target: 235000 },
+      revenue: { min: 95000, target: 245000 },
       netTreasury: { min: -45000, target: 55000 },
       returnOnEquity: { min: -0.1, target: 0.07 },
       marketShareTarget: 0.28,
@@ -476,10 +664,27 @@ const rawBoutique = {
 export const boutiqueScenario: EngineScenarioConfig = parseScenarioConfig(rawBoutique);
 
 /**
+ * Stock d'ouverture, référence par référence, au coût variable d'achat
+ * (façonnier + frais) : 1 110 pièces, 27 510 €.
+ */
+const OPENING_STOCK: Record<string, { quantity: number; unitCost: number }> = {
+  "pull-col-rond": { quantity: 400, unitCost: 28.5 },
+  cardigan: { quantity: 150, unitCost: 38 },
+  "pull-merinos": { quantity: 60, unitCost: 61 },
+  echarpe: { quantity: 250, unitCost: 16 },
+  bonnet: { quantity: 250, unitCost: 11 },
+};
+const OPENING_UNITS = Object.values(OPENING_STOCK).reduce((s, l) => s + l.quantity, 0);
+const OPENING_VALUE = Object.values(OPENING_STOCK).reduce(
+  (s, l) => s + l.quantity * l.unitCost,
+  0,
+);
+
+/**
  * État initial de la boutique. Contrairement à un industriel, un commerçant
- * OUVRE avec du stock : 1 200 articles à 21,50 € dorment en réserve, et
- * 20 000 € sont dus aux fournisseurs. Le BFR est là dès le premier tour —
- * c'est le point de départ de la leçon.
+ * OUVRE avec du stock : 1 110 pièces de la collection passée dorment en
+ * réserve, et 20 000 € sont dus aux façonniers. Le BFR est là dès le premier
+ * tour — c'est le point de départ de la leçon.
  */
 export function boutiqueCompany(
   id: string,
@@ -499,7 +704,9 @@ export function boutiqueCompany(
     headcount: 6,
     hoursPerEmployee: 455,
     productivity: 1,
-    finishedGoods: { quantity: 1200, unitCost: 21.5 },
+    // le lot agrégé (lecture mono-produit) et son détail par référence
+    finishedGoods: { quantity: OPENING_UNITS, unitCost: OPENING_VALUE / OPENING_UNITS },
+    finishedGoodsByProduct: { ...OPENING_STOCK },
     // Parc initial : 1 rayonnage (16 000 €) + 1 gondoles (35 000 €) + 1 automatisé (58 000 €) = 109 000 €
     // (amorti à ~63 % → ~69 000 € de VNC)
     fleet: [
@@ -511,10 +718,10 @@ export function boutiqueCompany(
     loans: [{ remaining: 70000, perRound: 3500 }],
     finance: {
       fixedAssetsNet: 120000,
-      inventoryValue: 25800, // 1 200 × 21,50 €
+      inventoryValue: OPENING_VALUE, // 27 510 €
       receivables: 18000,
       cash: 22000,
-      equity: 95800,
+      equity: 120000 + OPENING_VALUE + 18000 + 22000 - 70000 - 20000, // 97 510 €
       financialDebt: 70000,
       payables: 20000,
       overdraft: 0,

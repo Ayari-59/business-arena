@@ -1,4 +1,5 @@
 import type { EngineScenarioConfig } from "../../engine/types";
+import { mapGammeSegments } from "../../engine/gamme";
 
 /**
  * Périodicité d'une partie (ADR-01) : un tour peut représenter un mois, un
@@ -69,17 +70,17 @@ export function applyPeriodicity(
   const k = days / 90;
   if (k === 1) return scenario;
 
+  // Demande de base et croissance : sur le marché du scénario et, en gamme,
+  // sur celui de chaque produit (les seuls segments que le moteur simule).
+  const redimensionne = mapGammeSegments(scenario, (s) => ({
+    ...s,
+    size: s.size * k,
+    growth: compound(s.growth, k),
+  }));
+
   return {
-    ...scenario,
+    ...redimensionne,
     roundDays: days,
-    market: {
-      ...scenario.market,
-      segments: scenario.market.segments.map((s) => ({
-        ...s,
-        size: s.size * k,
-        growth: compound(s.growth, k),
-      })),
-    },
     production: {
       ...scenario.production,
       qualityScale: scenario.production.qualityScale * k,
