@@ -210,8 +210,8 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
                 rows={2}
                 value={freeText}
                 onChange={(e) => setFreeText(e.target.value)}
-                aria-label="Votre analyse écrite du problème (facultatif)"
-                placeholder="Votre analyse en quelques mots (facultatif mais valorisé)…"
+                aria-label="Votre analyse écrite du problème"
+                placeholder="Votre analyse du problème en quelques mots…"
                 className="mt-2 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
               />
             </section>
@@ -229,10 +229,10 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
                   </p>
                 ) : (
                   <div className="mt-2 space-y-4">
-                    {situation.quizQuestions.map((question, index) => (
+                    {situation.quizQuestions.map((question) => (
                       <fieldset key={question.id}>
                         <legend className="text-sm font-medium text-slate-200">
-                          {index + 1}. {question.prompt}
+                          {question.prompt}
                         </legend>
                         <div className="mt-1.5 space-y-1.5">
                           {question.options.map((option) => (
@@ -569,15 +569,15 @@ function SituationRetake({ gameId, situation }: { gameId: string; situation: Sit
           rows={2}
           value={freeText}
           onChange={(e) => setFreeText(e.target.value)}
-          aria-label="Votre analyse écrite du problème (facultatif)"
-          placeholder="Votre analyse en quelques mots (facultatif)…"
+          aria-label="Votre analyse écrite du problème"
+          placeholder="Votre analyse du problème en quelques mots…"
           className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-sky-400/60"
         />
       </div>
-      {questions.map((question, index) => (
+      {questions.map((question) => (
         <fieldset key={question.id}>
           <legend className="text-sm font-medium text-slate-200">
-            {index + 1}. {question.prompt}
+            {question.prompt}
           </legend>
           <div className="mt-1.5 space-y-1.5">
             {question.options.map((option) => (
