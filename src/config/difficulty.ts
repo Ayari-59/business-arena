@@ -286,6 +286,18 @@ export function applyEconomicOverrides(
       otherVariableCostPerUnit:
         overrides.otherVariableCostPerUnit ?? scenario.product.otherVariableCostPerUnit,
     },
+    // Gamme : la surcharge des coûts s'applique à CHAQUE produit. Clé émise
+    // seulement si le scénario en porte une (mono-produit inchangé).
+    ...(scenario.products
+      ? {
+          products: scenario.products.map((p) => ({
+            ...p,
+            materialCostPerUnit: overrides.materialCostPerUnit ?? p.materialCostPerUnit,
+            otherVariableCostPerUnit:
+              overrides.otherVariableCostPerUnit ?? p.otherVariableCostPerUnit,
+          })),
+        }
+      : {}),
     finance: {
       ...scenario.finance,
       taxRate: overrides.taxRate ?? scenario.finance.taxRate,

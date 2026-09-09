@@ -103,6 +103,19 @@ export interface EngineScenarioConfig {
     /** Heures de main-d'œuvre par unité produite. */
     hoursPerUnit: number;
   };
+  /**
+   * GAMME (optionnel) : plusieurs produits par entreprise. Chaque produit porte
+   * SON marché (« un marché par produit » : ses segments, sa saisonnalité, sa
+   * concurrence), et la gamme partage l'usine (capacité machine, main-d'œuvre)
+   * et la finance. Absent = mono-produit historique : `product` + `market`
+   * forment alors une gamme d'un seul produit (cf. engine/gamme.ts), au
+   * comportement STRICTEMENT identique. Quand présent (≥ 2 produits),
+   * `product` et `market` restent lus par les affichages mono mais le moteur
+   * ne simule que la gamme. Les codes de segments doivent être uniques sur
+   * toute la gamme : parts de marché et demandes potentielles sont indexées
+   * par code de segment.
+   */
+  products?: ProductDef[];
   production: {
     /** Effet du budget qualité : producedQuality = 1 + sens × ln(1 + budget/scale). */
     qualitySensitivity: number;
@@ -514,6 +527,28 @@ export interface SegmentConfig {
   competitionIntensity?: number;
 }
 
+/**
+ * Marché propre à un produit de la gamme. Les segments sont obligatoires ;
+ * saisonnalité, attraction extérieure et intensité concurrentielle retombent
+ * sur celles du marché du scénario quand elles sont absentes.
+ */
+export interface ProductMarketConfig {
+  segments: SegmentConfig[];
+  seasonality?: number[];
+  outsideAttraction?: number;
+  competitionIntensity?: number;
+}
+
+/** Un produit de la gamme : ses coûts variables, sa main-d'œuvre, son marché. */
+export interface ProductDef {
+  code: ProductCode;
+  name: string;
+  materialCostPerUnit: number;
+  otherVariableCostPerUnit: number;
+  hoursPerUnit: number;
+  market: ProductMarketConfig;
+}
+
 export interface EventDefinitionConfig {
   code: string;
   scope: "market" | "company";
@@ -583,6 +618,12 @@ export interface CompanyState {
   productivity: number;
   /** Stock de produits finis : quantité et coût unitaire moyen pondéré. */
   finishedGoods: { quantity: number; unitCost: number };
+  /**
+   * Stocks par produit (scénarios à gamme). `finishedGoods` en reste
+   * l'agrégat (quantité totale, coût moyen pondéré) pour les lecteurs mono.
+   * Absent en mono-produit : l'instantané d'une partie existante ne change pas.
+   */
+  finishedGoodsByProduct?: Record<ProductCode, { quantity: number; unitCost: number }>;
   finance: BalanceSheet;
   /** Parts de marché du tour précédent, par segment (fidélité). */
   lastMarketShare: Record<SegmentCode, number>;
@@ -649,12 +690,31 @@ export interface CompanyState {
   crisisStreak?: number;
 }
 
+/**
+ * Décisions propres à UN produit de la gamme. Le prix et le plan sont les
+ * pivots ; le marketing soutient la demande sur le marché du produit. Le
+ * budget qualité, la maintenance, les RH, la finance restent des leviers
+ * d'entreprise (l'usine et la caisse sont communes à la gamme).
+ */
+export interface ProductDecisions {
+  price: number;
+  productionPlan: number;
+  marketingBudget?: number;
+}
+
 export interface RoundDecisions {
   price: number;
   productionPlan: number;
   marketingBudget: number;
   qualityBudget: number;
   maintenanceBudget: number;
+  /**
+   * Décisions par produit (scénarios à gamme). Absent en mono-produit, où les
+   * champs scalaires ci-dessus suffisent. En gamme, un produit sans entrée
+   * reçoit le prix scalaire et une part égale du plan et du marketing
+   * scalaires (cf. engine/gamme.ts : toGammeDecisions).
+   */
+  products?: Record<ProductCode, ProductDecisions>;
   /**
    * Assurance : `true` = formule unique (rétro-compatible) ; `string` =
    * code de la formule choisie ; `false`/absent = non assuré.
@@ -823,6 +883,29 @@ export interface SegmentSalesDetail {
   commission: number;
 }
 
+/**
+ * Résultat d'UN produit de la gamme dans le tour (scénarios à gamme). Le
+ * compte de résultat, le bilan et les KPI restent ceux de l'entreprise ; ce
+ * bloc dit ce que chaque référence a produit, vendu et rapporté.
+ */
+export interface ProductRoundResult {
+  planned: number;
+  produced: number;
+  defectUnits: number;
+  unitVariableCost: number;
+  price: number;
+  marketingBudget: number;
+  /** Unités vendues sur le marché du produit (hors commandes fermes et exceptionnelle). */
+  sold: number;
+  lost: number;
+  /** Chiffre d'affaires du marché du produit, au prix pratiqué. */
+  revenue: number;
+  /** Stock de fin de tour du produit (CUMP). */
+  stock: { quantity: number; unitCost: number };
+  /** Codes des segments qui composent le marché du produit. */
+  segments: SegmentCode[];
+}
+
 export interface CompanyRoundResult {
   companyId: CompanyId;
   /**
@@ -867,6 +950,11 @@ export interface CompanyRoundResult {
     safetyMargin: number | null;
     safetyIndex: number | null;
   };
+  /**
+   * Détail par produit (scénarios à gamme, ≥ 2 produits). Absent en
+   * mono-produit : le résultat sérialisé d'une partie existante ne change pas.
+   */
+  products?: Record<ProductCode, ProductRoundResult>;
   /**
    * Commandes fermes (événement « order ») : demandées, livrées du stock,
    * sous-traitées ; prix unitaire imposé le cas échéant (sinon prix propre).
