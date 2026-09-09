@@ -89,6 +89,19 @@ const rawNova = {
     maintenanceReference: 4000,
     availabilityDecay: 0.05,
   },
+  // Non-qualité interne : rebuts d'atelier (enceintes défectueuses, composants
+  // gâchés). ~0,8 % à qualité et maintenance normales — volontairement bas : la
+  // marge de NOVA est serrée, et au-delà de ~1 % le rebut éroderait le pic de
+  // créances (BFR) du tour 4, qui porte la dramaturgie « bénéficiaire mais
+  // illiquide » (doc 07 §16). La maintenance des machines pilote le rebut
+  // (unidirectionnel, s = 0,15) : sous-entretenir l'atelier augmente les rebuts,
+  // bien entretenir n'apporte pas de bonus. Support de l'analyse d'écart de
+  // rendement matière (P5 / DCG) — le cas d'école industriel.
+  qualityCosts: {
+    baseDefectRate: 0.008,
+    externalReturnSensitivity: 0,
+    maintenanceDefectSensitivity: 0.15,
+  },
   marketing: { scale: 12000 },
   finance: {
     loanAnnualRate: 0.05,
