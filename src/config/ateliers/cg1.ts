@@ -3,7 +3,7 @@ import type { AtelierDefinition } from "./types";
 /**
  * ATELIER PROFESSIONNEL · BTS CG, première année.
  *
- * Six séances de trois heures, une partie de six tours, un tour par séance.
+ * Sept séances de trois heures : six tours joués à raison d'un par séance, et une séance d'analyse des écarts sur coût de production.
  * L'entreprise est la même du début à la fin : c'est ce qui distingue un
  * atelier d'une suite d'exercices. Les élèves ne calculent pas un seuil de
  * rentabilité, ils calculent LEUR seuil, celui de l'entreprise qu'ils ont mal
@@ -22,12 +22,12 @@ export const ATELIER_CG1: AtelierDefinition = {
   referentielLabel: "Processus",
   referentielAccord: "mobilisés",
   pitch:
-    "Six séances de trois heures. Chaque équipe dirige la même entreprise du premier au dernier tour, décide, subit ses décisions, et produit à chaque séance un document professionnel qui s'évalue.",
+    "Sept séances de trois heures. Chaque équipe dirige la même entreprise du premier au dernier tour, décide, subit ses décisions, analyse ses écarts sur coût de production, et produit à chaque séance un document professionnel qui s'évalue.",
   resume:
-    "Une partie de six trimestres étalée sur six séances, du diagnostic d'ouverture à la soutenance du rapport de gestion.",
+    "Une partie de six trimestres étalée sur sept séances, du diagnostic d'ouverture à la soutenance du rapport de gestion, l'écart sur coût de production compris.",
   difficulte: 2,
   difficulteLabel: "Initiation",
-  format: "6 séances de 3 h",
+  format: "7 séances de 3 h",
   pourquoi:
     "En atelier professionnel, la difficulté n'est pas de faire calculer un seuil de rentabilité : c'est de faire comprendre à quoi il sert. Un dossier fournit les chiffres et demande la réponse. Ici les chiffres sont ceux que l'équipe a produits au tour précédent, personne ne connaît la réponse, et une décision prise sans le calcul se paie au tour suivant. Le compte de résultat, le bilan, la TVA à décaisser et le besoin en fonds de roulement ne sont plus des documents à recopier : ce sont les conséquences de ce que l'équipe a fait.",
   reglages: {
@@ -77,7 +77,7 @@ export const ATELIER_CG1: AtelierDefinition = {
           minutes: 15,
           titre: "Le cadre",
           detail:
-            "Vous annoncez la règle du jeu : six séances, six trimestres, une seule entreprise, et un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code.",
+            "Vous annoncez la règle du jeu : sept séances, six trimestres, une seule entreprise, et un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code.",
         },
         {
           minutes: 30,
@@ -417,6 +417,72 @@ export const ATELIER_CG1: AtelierDefinition = {
     },
     {
       numero: 6,
+      titre: "Écart sur coût de production",
+      dureeMinutes: 180,
+      tourJoue: null,
+      processus: [
+        "P5 · Analyse et prévision de l'activité",
+      ],
+      objectif:
+        "Confronter le coût de production réel au coût préétabli, et décomposer l'écart sur matières en prix et quantité, l'écart sur main-d'œuvre en taux et temps, et lire l'écart sur charges indirectes.",
+      competences: [
+        "Je décompose l'écart sur matières en écart sur prix et écart sur quantité consommée.",
+        "Je décompose l'écart sur main-d'œuvre en écart sur taux et écart sur temps.",
+        "Je rapproche les charges indirectes réelles de leur budget et j'en lis l'effet d'activité.",
+        "Je vérifie que la somme des sous-écarts retombe sur l'écart total.",
+      ],
+      notions: [
+        "coût de production préétabli",
+        "écart sur matières et sur main-d'œuvre",
+        "écart sur charges indirectes",
+        "budget des charges indirectes",
+      ],
+      preparation:
+        "Aucun tour n'est joué : la séance travaille un trimestre déjà clôturé. Préparez, ou faites établir, la fiche de coût préétabli du produit, matière et main-d'œuvre par unité et budget des charges indirectes, puis la trame de décomposition en sous-écarts, prix et quantité d'un côté, taux et temps de l'autre.",
+      deroule: [
+        {
+          minutes: 15,
+          titre: "Le coût préétabli",
+          detail:
+            "La classe pose la fiche de coût préétabli du produit : matière et main-d'œuvre par unité, et le budget des charges indirectes. C'est la référence à laquelle le réel sera comparé.",
+        },
+        {
+          minutes: 40,
+          titre: "L'écart total",
+          detail:
+            "Chaque équipe rapproche le coût de production réel d'un trimestre clôturé du coût préétabli de sa production réelle, et isole l'écart total avant de l'ouvrir.",
+        },
+        {
+          minutes: 45,
+          titre: "Les charges directes",
+          detail:
+            "L'équipe décompose l'écart sur matières en écart sur prix et écart sur quantité consommée, puis l'écart sur main-d'œuvre en écart sur taux et écart sur temps.",
+        },
+        {
+          minutes: 40,
+          titre: "Les charges indirectes",
+          detail:
+            "L'équipe rapproche ses charges indirectes réelles de leur budget et lit l'effet d'une activité inférieure ou supérieure à la normale.",
+        },
+        {
+          minutes: 40,
+          titre: "Contrôle et lecture",
+          detail:
+            "La somme des sous-écarts est confrontée à l'écart total : le contrôle est la discipline de la séance. Chaque équipe nomme la cause de son plus gros sous-écart.",
+        },
+      ],
+      livrable:
+        "La fiche d'écart sur coût de production : coût préétabli et coût réel de la production, écart sur matières décomposé en prix et quantité, écart sur main-d'œuvre décomposé en taux et temps, écart sur charges indirectes rapproché du budget, et le contrôle par la somme des sous-écarts.",
+      tracePasseport:
+        "J'ai décomposé l'écart sur coût de production en écarts sur matières, sur main-d'œuvre et sur charges indirectes, et contrôlé par la somme des sous-écarts.",
+      evaluation: [
+        "L'écart sur matières se décompose en écart sur prix et écart sur quantité.",
+        "L'écart sur main-d'œuvre se décompose en écart sur taux et écart sur temps.",
+        "La somme des sous-écarts retombe sur l'écart total, et le contrôle est montré.",
+      ],
+    },
+    {
+      numero: 7,
       titre: "Rendre compte",
       dureeMinutes: 180,
       tourJoue: 6,
@@ -489,25 +555,25 @@ export const ATELIER_CG1: AtelierDefinition = {
   formats: [
     {
       nom: "Atelier hebdomadaire",
-      quand: "Six semaines consécutives, trois heures par semaine",
+      quand: "Sept semaines consécutives, trois heures par semaine",
       comment:
-        "Le tempo pour lequel l'atelier est écrit. Une séance, un trimestre, un livrable. L'attente d'une semaine entre deux tours joue en votre faveur : les équipes reviennent avec leurs calculs faits et leurs regrets aussi.",
+        "Le tempo pour lequel l'atelier est écrit. Une séance par semaine, un livrable à chaque fois, six tours joués et une séance d'analyse des écarts. L'attente d'une semaine entre deux tours joue en votre faveur : les équipes reviennent avec leurs calculs faits et leurs regrets aussi.",
     },
     {
       nom: "Semaine bloquée",
-      quand: "Cinq jours, six demi-journées de trois heures",
+      quand: "Cinq jours, sept demi-journées de trois heures",
       comment:
-        "Les six séances tiennent dans la semaine, à raison d'une le matin et une l'après-midi les trois premiers jours, puis les livrables et la soutenance. Prévoyez une demi-journée de plus pour le rapport : quatre pages ne s'écrivent pas entre deux tours.",
+        "Les sept séances tiennent dans la semaine, deux par jour les trois premiers jours puis une le quatrième matin, avant les livrables et la soutenance. Prévoyez une demi-journée de plus pour le rapport : quatre pages ne s'écrivent pas entre deux tours.",
     },
     {
       nom: "Fil rouge sur l'année",
-      quand: "Six séances réparties sur les deux premiers trimestres",
+      quand: "Sept séances réparties sur les deux premiers trimestres",
       comment:
         "Une séance toutes les trois ou quatre semaines, placée juste après le cours qui donne l'outil. Le seuil de rentabilité vient d'être vu, la séance 2 le fait servir. C'est le montage qui ancre le mieux, et celui qui demande le plus de discipline : la partie reste ouverte des mois.",
     },
   ],
   evaluationFinale: [
-    "Six livrables d'équipe, un par séance, notés sur les critères annoncés au début de chaque séance.",
+    "Sept livrables d'équipe, un par séance, notés sur les critères annoncés au début de chaque séance.",
     "Le rapport de gestion et sa soutenance, qui pèsent le plus lourd parce qu'ils rassemblent tout.",
     "La note pédagogique que la plateforme calcule pour chaque équipe : diagnostics justes, modèles d'analyse bien choisis, questions de connaissances, indices consommés. Elle éclaire le travail de raisonnement, que les livrables ne montrent pas toujours.",
     "Le classement final ne compte pas dans la note. Une équipe peut bien raisonner et mal finir : c'est la vie des entreprises, ce ne doit pas être celle des élèves.",
