@@ -6,12 +6,16 @@ import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import {
   pivotFieldsFor,
   pivotsNonTouches,
+  productFieldName,
+  readProductFields,
   type PivotField,
   type PivotFieldInfo,
 } from "@/config/decision-source";
+import { scalarsOfGamme } from "@/engine/gamme";
 import type { RoundDecisions } from "@/engine/types";
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
-import { formatEuro } from "@/lib/format";
+import type { GameView } from "@/services/game-view.service";
+import { formatEuro, formatUnits } from "@/lib/format";
 import { SimulationProgress } from "@/components/simulation-progress";
 
 const initialState: PlayRoundState = { error: null };
@@ -264,6 +268,114 @@ function OptionalField({
 }
 
 /**
+ * GAMME : un prix, un volume et un marketing PAR RÉFÉRENCE. Chaque ligne
+ * rappelle ce qu'il faut pour décider — le prix usuel de la clientèle
+ * dominante, le coût variable, le stock en réserve et la saison du tour —,
+ * parce que c'est ici que se joue le mix. Les scalaires historiques (prix
+ * moyen, volume total) sont dérivés côté serveur : aucun champ scalaire n'est
+ * envoyé pour ces trois décisions.
+ */
+function GammeFields({
+  gamme,
+  defaults,
+  vocabulary: v,
+}: {
+  gamme: NonNullable<GameView["gamme"]>;
+  defaults: RoundDecisions;
+  vocabulary: ScenarioVocabulary;
+}) {
+  const n = gamme.length;
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
+            <th className="pb-2 pr-3 font-medium">Référence</th>
+            <th className="pb-2 pr-3 font-medium">{v.priceLabel}</th>
+            <th className="pb-2 pr-3 font-medium">{v.productionPlanLabel}</th>
+            <th className="pb-2 font-medium">Marketing</th>
+          </tr>
+        </thead>
+        <tbody>
+          {gamme.map((p) => {
+            const own = defaults.products?.[p.code];
+            const price = own?.price ?? p.refPrice;
+            const plan = Math.round(own?.productionPlan ?? 0);
+            const marketing = Math.round(own?.marketingBudget ?? defaults.marketingBudget / n);
+            const cvu = p.materialCostPerUnit + p.otherVariableCostPerUnit;
+            return (
+              <tr key={p.code} className="border-t border-white/5 align-top">
+                <td className="py-2 pr-3">
+                  <span className="block text-sm font-medium text-slate-100">{p.name}</span>
+                  <span className="mt-0.5 block text-xs leading-snug text-slate-400">
+                    prix usuel {formatEuro(p.refPrice)} · coût variable {formatEuro(cvu)}
+                    <br />
+                    {v.leftoverLabel.toLowerCase()} {formatUnits(p.stock)} {v.units}
+                    {Math.abs(p.seasonCoef - 1) > 0.01
+                      ? ` · saison ×${p.seasonCoef.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}`
+                      : ""}
+                  </span>
+                </td>
+                <td className="py-2 pr-3">
+                  <span className="flex items-center gap-1 rounded-lg border border-white/10 bg-slate-950 px-2 py-1.5 focus-within:border-amber-400/60">
+                    <input
+                      type="number"
+                      name={productFieldName(p.code, "price")}
+                      aria-label={`${v.priceLabel} · ${p.name}`}
+                      defaultValue={Math.round(price * 10) / 10}
+                      step={0.1}
+                      min={0}
+                      required
+                      className="w-20 bg-transparent text-sm text-slate-100 outline-none"
+                    />
+                    <span className="text-xs text-slate-400">€</span>
+                  </span>
+                </td>
+                <td className="py-2 pr-3">
+                  <span className="flex items-center gap-1 rounded-lg border border-white/10 bg-slate-950 px-2 py-1.5 focus-within:border-amber-400/60">
+                    <input
+                      type="number"
+                      name={productFieldName(p.code, "productionPlan")}
+                      aria-label={`${v.productionPlanLabel} · ${p.name}`}
+                      defaultValue={plan}
+                      step={1}
+                      min={0}
+                      required
+                      className="w-20 bg-transparent text-sm text-slate-100 outline-none"
+                    />
+                    <span className="text-xs text-slate-400">{v.units}</span>
+                  </span>
+                </td>
+                <td className="py-2">
+                  <span className="flex items-center gap-1 rounded-lg border border-white/10 bg-slate-950 px-2 py-1.5 focus-within:border-amber-400/60">
+                    <input
+                      type="number"
+                      name={productFieldName(p.code, "marketingBudget")}
+                      aria-label={`Marketing · ${p.name}`}
+                      defaultValue={marketing}
+                      step={1}
+                      min={0}
+                      required
+                      className="w-20 bg-transparent text-sm text-slate-100 outline-none"
+                    />
+                    <span className="text-xs text-slate-400">€</span>
+                  </span>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+      <p className="mt-2 text-xs leading-relaxed text-slate-400">
+        Les références partagent la même réserve : si la somme des volumes dépasse votre
+        capacité, toutes sont réduites dans la même proportion. Le prix se fixe référence
+        par référence ; le marketing soutient la demande de chacune.
+      </p>
+    </div>
+  );
+}
+
+/**
  * Une famille de décisions, repliable. L'accordéon des périodes situe le tour ;
  * ces accordéons rangent les leviers d'UN tour par famille — cœur ouvert,
  * avancé replié — pour garder le formulaire scannable sans rien cacher au
@@ -317,8 +429,11 @@ export function DecisionForm({
   capacityFacts,
   vocabulary,
   verrou,
+  gamme = null,
 }: {
   gameId: string;
+  /** Gamme du scénario joué (prix, volume et marketing par référence) ; null en mono-produit. */
+  gamme?: GameView["gamme"];
   roundIndex: number;
   periodName: string;
   /**
@@ -461,8 +576,14 @@ export function DecisionForm({
     const form = e.currentTarget;
     const lire = (name: PivotField) =>
       Number((form.elements.namedItem(name) as HTMLInputElement | null)?.value ?? NaN);
+    // Gamme : les pivots sont les scalaires dérivés des champs par produit,
+    // du même calcul que le serveur et que la proposition.
+    const products = gamme ? readProductFields(new FormData(form).entries()) : undefined;
+    const saisie = products
+      ? scalarsOfGamme(products)
+      : { price: lire("price"), productionPlan: lire("productionPlan") };
     const intacts = pivotsNonTouches(
-      { price: lire("price"), productionPlan: lire("productionPlan") },
+      { price: saisie.price, productionPlan: saisie.productionPlan },
       { price: reference.price, productionPlan: reference.productionPlan },
     );
     if (intacts.length === 0) return;
@@ -479,7 +600,9 @@ export function DecisionForm({
     const premier = nonTouches?.[0]?.key;
     setNonTouches(null);
     if (!form || !premier) return;
-    const champ = form.elements.namedItem(premier) as HTMLInputElement | null;
+    // En gamme, le pivot vit dans la première ligne du tableau des références.
+    const nom = gamme?.[0] ? productFieldName(gamme[0].code, premier) : premier;
+    const champ = form.elements.namedItem(nom) as HTMLInputElement | null;
     // Le champ pivot vit à l'étape « Vendre », pas forcément celle affichée : on
     // révèle son étape AVANT de poser le focus, sinon il est masqué (`hidden`)
     // et le focus reste sans effet (l'élève ne verrait rien se passer).
@@ -646,16 +769,22 @@ export function DecisionForm({
           </label>
         </Family>
       ) : null}
-      <Family legend="🎯 Vos ventes · le prix et le volume du tour" defaultOpen>
-        <div className="grid grid-cols-2 gap-3">
-          <Field name="price" label={v.priceLabel} defaultValue={defaults.price} step={0.1}
-            suffix={`€/${v.unit}`}
-            hint="Attention aux seuils psychologiques…" />
-          <Field name="productionPlan" label={v.productionPlanLabel}
-            defaultValue={Math.round(defaults.productionPlan)} suffix={v.units}
-            hint="Le volume réel sera borné par vos capacités." />
-        </div>
-      </Family>
+      {gamme ? (
+        <Family legend="🎯 Vos ventes · le prix, le volume et le marketing de chaque référence" defaultOpen>
+          <GammeFields gamme={gamme} defaults={defaults} vocabulary={v} />
+        </Family>
+      ) : (
+        <Family legend="🎯 Vos ventes · le prix et le volume du tour" defaultOpen>
+          <div className="grid grid-cols-2 gap-3">
+            <Field name="price" label={v.priceLabel} defaultValue={defaults.price} step={0.1}
+              suffix={`€/${v.unit}`}
+              hint="Attention aux seuils psychologiques…" />
+            <Field name="productionPlan" label={v.productionPlanLabel}
+              defaultValue={Math.round(defaults.productionPlan)} suffix={v.units}
+              hint="Le volume réel sera borné par vos capacités." />
+          </div>
+        </Family>
+      )}
       {capacityFacts ? (
         <div className="rounded-lg border border-white/10 bg-slate-950 px-1.5 py-2 sm:px-3.5 sm:py-2.5">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
@@ -751,12 +880,14 @@ export function DecisionForm({
           </p>
         </Family>
       ) : null}
-      <Family legend="📣 Marketing · soutenir la demande" defaultOpen>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Field name="marketingBudget" label="Budget marketing" defaultValue={defaults.marketingBudget} suffix="€"
-            hint="Fait venir les clients ce tour-ci ; l'effet retombe vite si on cesse." />
-        </div>
-      </Family>
+      {gamme ? null : (
+        <Family legend="📣 Marketing · soutenir la demande" defaultOpen>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Field name="marketingBudget" label="Budget marketing" defaultValue={defaults.marketingBudget} suffix="€"
+              hint="Fait venir les clients ce tour-ci ; l'effet retombe vite si on cesse." />
+          </div>
+        </Family>
+      )}
       </section>
 
       <section

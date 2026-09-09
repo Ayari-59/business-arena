@@ -16,6 +16,7 @@ import { porteUnNomParDefaut } from "@/config/nom-equipe";
 import { cardByCode } from "@/config/events/cards";
 import { proposedDecisionsFor, startingDecisionsFor } from "@/services/decision-baseline";
 import { orderOfferForRound } from "@/engine/simulation";
+import { isMultiProduct, toGamme } from "@/engine/gamme";
 import { computeRatios } from "@/engine/finance/ratios";
 import { conditionsBancaires, confianceInitiale } from "@/engine/finance/bank";
 import { irr, npv, paybackPeriod } from "@/engine/investment";
@@ -222,6 +223,24 @@ export interface GameView {
    * marché retomberait sur les codes bruts dès qu'on quitte NOVA.
    */
   segmentNames: Record<string, string>;
+  /**
+   * GAMME : les références du scénario joué, dans l'ordre du moteur, avec ce
+   * que le formulaire et les tableaux de bord doivent savoir de chacune —
+   * coûts, main-d'œuvre, prix de référence de sa clientèle dominante, ses
+   * segments, sa saison du tour à jouer et son stock à l'ouverture. `null` en
+   * mono-produit : l'arène reste alors celle d'un seul produit.
+   */
+  gamme: {
+    code: string;
+    name: string;
+    materialCostPerUnit: number;
+    otherVariableCostPerUnit: number;
+    hoursPerUnit: number;
+    refPrice: number;
+    segments: { code: string; name: string }[];
+    seasonCoef: number;
+    stock: number;
+  }[] | null;
   /**
    * Indicateurs du métier joué (RevPAR en hôtellerie, ratio matières en
    * restauration…), déjà calculés : l'arène ne fait que les mettre en forme.
@@ -510,6 +529,9 @@ function reconstructResult(
     bank: trace.bank ?? undefined,
     rse: trace.rse ?? undefined,
     kpis: {},
+    // Gamme : clé émise seulement quand la ligne la porte, pour que le résultat
+    // reconstruit d'une partie mono-produit garde exactement sa forme.
+    ...(trace.products ? { products: trace.products } : {}),
   };
   return { result, events: trace.events ?? [] };
 }
@@ -768,7 +790,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     if (purchased.includes("market")) {
       const own = lastResult.market.bySegment;
       reports.market = {
-        segments: snapshot.market.segments.map((seg) => {
+        segments: toGamme(snapshot).flatMap((p) => p.market.segments).map((seg) => {
           const d = own[seg.code];
           return {
             name: seg.name,
@@ -803,7 +825,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     if (purchased.includes("price")) {
       reports.price = {
         yourPrice: lastDecisions?.price ?? 0,
-        segments: snapshot.market.segments.map((seg) => ({
+        segments: toGamme(snapshot).flatMap((p) => p.market.segments).map((seg) => ({
           name: seg.name,
           refPrice: seg.refPrice,
           elasticity: Math.round(seg.priceElasticity * 10) / 10,
@@ -1019,10 +1041,12 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     })(),
     salesHistory: (() => {
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
-      const codes = snapshot.market.segments.map((seg) => seg.code);
+      // En gamme, l'historique couvre les clientèles de toutes les références.
+      const segments = toGamme(snapshot).flatMap((p) => p.market.segments);
+      const codes = segments.map((seg) => seg.code);
       return {
-        segments: snapshot.market.segments.map((seg) => seg.name),
-        commissions: snapshot.market.segments
+        segments: segments.map((seg) => seg.name),
+        commissions: segments
           .filter((seg) => (seg.commissionRate ?? 0) > 0)
           .map((seg) => ({ segment: seg.name, rate: seg.commissionRate! })),
         rounds: gameResults
@@ -1139,12 +1163,33 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     })(),
     vocabulary: scenarioDef.vocabulary,
     sector: scenarioDef.sector,
+    // Tous les segments que le moteur simule : en gamme, ceux de chaque
+    // produit (le marché du scénario n'en est que le premier).
     segmentNames: Object.fromEntries(
-      (game.scenarioSnapshot as EngineScenarioConfig).market.segments.map((s) => [
-        s.code,
-        s.name,
-      ]),
+      toGamme(game.scenarioSnapshot as EngineScenarioConfig).flatMap((p) =>
+        p.market.segments.map((s) => [s.code, s.name] as const),
+      ),
     ),
+    gamme: (() => {
+      const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+      if (!isMultiProduct(snapshot)) return null;
+      const state = stateRow?.state as CompanyState | undefined;
+      const idx = game.currentRound - 1;
+      return toGamme(snapshot).map((p) => {
+        const main = [...p.market.segments].sort((a, b) => b.size - a.size)[0];
+        return {
+          code: p.code,
+          name: p.name,
+          materialCostPerUnit: p.materialCostPerUnit,
+          otherVariableCostPerUnit: p.otherVariableCostPerUnit,
+          hoursPerUnit: p.hoursPerUnit,
+          refPrice: main?.refPrice ?? 0,
+          segments: p.market.segments.map((s) => ({ code: s.code, name: s.name })),
+          seasonCoef: p.market.seasonality[idx] ?? 1,
+          stock: Math.round(state?.finishedGoodsByProduct?.[p.code]?.quantity ?? 0),
+        };
+      });
+    })(),
     sectorKpis: (() => {
       if (!lastResult) return [];
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
@@ -1192,13 +1237,15 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         variableCostPerUnit:
           snapshot.product.materialCostPerUnit + snapshot.product.otherVariableCostPerUnit,
         cash: Math.round(state?.finance.cash ?? 0),
-        segments: snapshot.market.segments.map((seg) => ({
-          name: seg.name,
-          size: Math.round(seg.size),
-          refPrice: seg.refPrice,
-          paymentDelayDays: seg.paymentDelayDays,
-          yourShare: lastResult?.market.bySegment[seg.code]?.share ?? null,
-        })),
+        segments: toGamme(snapshot)
+          .flatMap((p) => p.market.segments)
+          .map((seg) => ({
+            name: seg.name,
+            size: Math.round(seg.size),
+            refPrice: seg.refPrice,
+            paymentDelayDays: seg.paymentDelayDays,
+            yourShare: lastResult?.market.bySegment[seg.code]?.share ?? null,
+          })),
         competitors: teamRows
           .filter((t) => t.id !== playerTeam.id)
           .map((t) => teamDisplayName(t.name)),
@@ -1393,6 +1440,19 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
       const idx = game.currentRound - 1;
       const notes: { name: string; coef: number }[] = [];
+      if (isMultiProduct(snapshot)) {
+        // Chaque référence a sa saison : c'est elle que l'équipe doit lire.
+        for (const p of toGamme(snapshot)) {
+          const coef = p.market.seasonality[idx];
+          if (coef !== undefined && Math.abs(coef - 1) > 0.01)
+            notes.push({ name: p.name, coef });
+          for (const seg of p.market.segments) {
+            const c = seg.seasonality?.[idx];
+            if (c !== undefined && Math.abs(c - 1) > 0.01) notes.push({ name: seg.name, coef: c });
+          }
+        }
+        return notes;
+      }
       const global = snapshot.market.seasonality[idx];
       if (global !== undefined && Math.abs(global - 1) > 0.01)
         notes.push({ name: "Marché", coef: global });

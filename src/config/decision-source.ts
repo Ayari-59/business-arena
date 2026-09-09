@@ -1,4 +1,4 @@
-import type { RoundDecisions } from "@/engine/types";
+import type { ProductCode, ProductDecisions, RoundDecisions } from "@/engine/types";
 
 /**
  * D'où viennent les valeurs d'une décision.
@@ -105,4 +105,50 @@ export function lireSource(raw: unknown): DecisionSourceMap | null {
   const ok = (v: unknown): v is DecisionSource => v === "default" || v === "edited" || v === "carried";
   if (!ok(o.price) || !ok(o.productionPlan)) return null;
   return { price: o.price, productionPlan: o.productionPlan };
+}
+
+/**
+ * GAMME : les champs par produit du formulaire s'appellent
+ * `product.<code>.price`, `product.<code>.productionPlan` et
+ * `product.<code>.marketingBudget`. Cette lecture est partagée par le
+ * formulaire (vérification des pivots avant envoi) et par l'action serveur.
+ * Une valeur vide ou illisible est laissée `NaN` : c'est au schéma de refuser.
+ */
+export const PRODUCT_FIELD_PREFIX = "product.";
+
+export function productFieldName(
+  code: ProductCode,
+  field: keyof Pick<ProductDecisions, "price" | "productionPlan" | "marketingBudget">,
+): string {
+  return `${PRODUCT_FIELD_PREFIX}${code}.${field}`;
+}
+
+export function readProductFields(
+  entries: Iterable<[string, FormDataEntryValue | string | null]>,
+): Record<ProductCode, ProductDecisions> | undefined {
+  const out: Record<ProductCode, { price?: number; productionPlan?: number; marketingBudget?: number }> = {};
+  for (const [key, raw] of entries) {
+    if (!key.startsWith(PRODUCT_FIELD_PREFIX)) continue;
+    const rest = key.slice(PRODUCT_FIELD_PREFIX.length);
+    const dot = rest.lastIndexOf(".");
+    if (dot <= 0) continue;
+    const code = rest.slice(0, dot);
+    const field = rest.slice(dot + 1);
+    if (field !== "price" && field !== "productionPlan" && field !== "marketingBudget") continue;
+    const text = String(raw ?? "").trim().replace(",", ".");
+    const value = text === "" ? NaN : Number(text);
+    (out[code] ??= {})[field] = value;
+  }
+  const codes = Object.keys(out);
+  if (codes.length === 0) return undefined;
+  const products: Record<ProductCode, ProductDecisions> = {};
+  for (const code of codes) {
+    const p = out[code]!;
+    products[code] = {
+      price: p.price ?? NaN,
+      productionPlan: p.productionPlan ?? NaN,
+      ...(p.marketingBudget !== undefined ? { marketingBudget: p.marketingBudget } : {}),
+    };
+  }
+  return products;
 }

@@ -63,10 +63,13 @@ export function ParametersPanels({
   intro,
   vocabulary,
   capacityFacts,
+  gamme = null,
 }: {
   intro: GameView["intro"];
   vocabulary: GameView["vocabulary"];
   capacityFacts: GameView["capacityFacts"];
+  /** Gamme du scénario joué : les coûts se lisent alors référence par référence. */
+  gamme?: GameView["gamme"];
 }) {
   const showShare = intro.segments.some((s) => s.yourShare !== null);
   return (
@@ -102,11 +105,26 @@ export function ParametersPanels({
             <span className="text-slate-200">{formatEuro(intro.fixedCostsPerRound)} par tour</span>
             , que vous vendiez ou non
           </li>
-          <li>
-            <span className="text-slate-400">Coût variable : </span>
-            <span className="text-slate-200">{formatEuro(intro.variableCostPerUnit)}</span> par{" "}
-            {vocabulary.unit} vendu
-          </li>
+          {gamme ? (
+            <li>
+              <span className="text-slate-400">Coût variable : </span>
+              {gamme.map((p, i) => (
+                <span key={p.code}>
+                  {i > 0 ? " · " : ""}
+                  {p.name.toLowerCase()}{" "}
+                  <span className="text-slate-200">
+                    {formatEuro(p.materialCostPerUnit + p.otherVariableCostPerUnit)}
+                  </span>
+                </span>
+              ))}
+            </li>
+          ) : (
+            <li>
+              <span className="text-slate-400">Coût variable : </span>
+              <span className="text-slate-200">{formatEuro(intro.variableCostPerUnit)}</span> par{" "}
+              {vocabulary.unit} vendu
+            </li>
+          )}
           <li>
             <span className="text-slate-400">Trésorerie d&apos;ouverture : </span>
             <span className="text-slate-200">{formatEuro(intro.cash)}</span>
@@ -210,7 +228,10 @@ export function ParametersPanels({
         </div>
         <p className="mt-2 text-xs leading-relaxed text-slate-600">
           Le prix usuel est celui auquel cette clientèle a l&apos;habitude d&apos;acheter, pas une
-          consigne. Vous fixez UN prix pour tout le monde.
+          consigne.{" "}
+          {gamme
+            ? "Vous fixez UN prix par référence, pour toutes ses clientèles."
+            : "Vous fixez UN prix pour tout le monde."}
         </p>
       </div>
     </div>

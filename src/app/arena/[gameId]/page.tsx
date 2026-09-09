@@ -155,6 +155,7 @@ export default async function ArenaPage({
         intro={view.intro}
         vocabulary={view.vocabulary}
         capacityFacts={view.capacityFacts}
+        gamme={view.gamme}
       />
     </section>
   ) : (
@@ -167,6 +168,7 @@ export default async function ArenaPage({
       intro={view.intro}
       vocabulary={view.vocabulary}
       capacityFacts={view.capacityFacts}
+      gamme={view.gamme}
     />
   );
 
@@ -527,7 +529,7 @@ export default async function ArenaPage({
                       </section>
                     ) : null,
                     decisions: p.decisions ? (
-                      <PeriodDecisionsRecap decisions={p.decisions} vocabulary={view.vocabulary} />
+                      <PeriodDecisionsRecap decisions={p.decisions} vocabulary={view.vocabulary} gamme={view.gamme} />
                     ) : null,
                     resultats: <PeriodDashboard view={view} period={p} standing={isLatest} />,
                   }}
@@ -659,6 +661,7 @@ export default async function ArenaPage({
                   suppliersOffer={view.suppliersOffer}
                   equipmentOffer={view.equipmentOffer}
                   capacityFacts={view.capacityFacts}
+                  gamme={view.gamme}
                   verrou={view.playLock.playable ? null : (view.playLock.message ?? "Ce tour n'est pas encore ouvert.")}
                 />
               </section>

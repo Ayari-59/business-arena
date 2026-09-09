@@ -1119,6 +1119,12 @@ export interface EngineTrace {
   treasury?: CompanyRoundResult["treasury"] | null;
   bank?: CompanyRoundResult["bank"] | null;
   rse?: CompanyRoundResult["rse"] | null;
+  /**
+   * Gamme : le détail par produit du tour. Absent (ou null) en mono-produit et
+   * sur les lignes écrites avant la gamme ; sans lui, l'accordéon des périodes
+   * ne pourrait plus dire ce que chaque référence a vendu.
+   */
+  products?: CompanyRoundResult["products"] | null;
 }
 
 export interface EventInstance {

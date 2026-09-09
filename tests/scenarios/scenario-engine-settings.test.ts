@@ -65,3 +65,32 @@ describe("essai à blanc", () => {
     expect(a.verdict).toBe(b.verdict);
   });
 });
+
+describe("réglages de marché d'un scénario à gamme", () => {
+  it("le formulaire liste les clientèles de toutes les références", async () => {
+    const { boutiqueScenario } = await import("../../src/config/scenarios/boutique");
+    const form = readMarketForm(boutiqueScenario);
+    expect(form.segments).toHaveLength(11);
+    expect(form.segments.map((s) => s.code)).toContain("bonnet_ce");
+  });
+
+  it("un segment d'une référence édité l'est dans le marché de cette référence", async () => {
+    const { boutiqueScenario } = await import("../../src/config/scenarios/boutique");
+    const { parseScenarioConfig } = await import("../../src/config/scenarios/schema");
+    const edited = applyMarketSettings(boutiqueScenario, {
+      competitionIntensity: 2.2,
+      segments: [{ code: "bonnet_ce", size: 2000, refPrice: 27 }],
+    });
+    const bonnet = edited.products!.find((p) => p.code === "bonnet")!;
+    const ce = bonnet.market.segments.find((s) => s.code === "bonnet_ce")!;
+    expect(ce.size).toBe(2000);
+    expect(ce.refPrice).toBe(27);
+    // Le marché du scénario (cœur de gamme) et les autres références sont intacts.
+    expect(edited.market.competitionIntensity).toBe(2.2);
+    expect(edited.market.segments).toEqual(boutiqueScenario.market.segments);
+    expect(edited.products!.find((p) => p.code === "echarpe")).toEqual(
+      boutiqueScenario.products!.find((p) => p.code === "echarpe"),
+    );
+    expect(() => parseScenarioConfig(edited)).not.toThrow();
+  });
+});

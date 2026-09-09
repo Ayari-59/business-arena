@@ -1,6 +1,7 @@
 import type {
   EngineScenarioConfig,
   ProductCode,
+  ProductDecisions,
   ProductDef,
   RoundDecisions,
   SegmentConfig,
@@ -136,4 +137,27 @@ export function toGammeDecisions(
       marketingBudget: Math.max(0, own?.marketingBudget ?? decisions.marketingBudget / n),
     };
   });
+}
+
+/**
+ * Les scalaires d'une décision à gamme, dérivés des décisions par produit :
+ * le plan est la somme des plans, le marketing la somme des budgets, le prix
+ * la moyenne des prix pondérée par les plans (simple moyenne si tous les plans
+ * sont nuls). Le formulaire et l'action serveur en font le MÊME usage — c'est
+ * ce qui permet de comparer une saisie à la proposition sur les pivots
+ * historiques (`price`, `productionPlan`) sans connaître la gamme.
+ */
+export function scalarsOfGamme(
+  products: Record<ProductCode, Pick<ProductDecisions, "price" | "productionPlan" | "marketingBudget">>,
+): Pick<RoundDecisions, "price" | "productionPlan" | "marketingBudget"> {
+  const entries = Object.values(products);
+  const productionPlan = entries.reduce((s, p) => s + Math.max(0, p.productionPlan), 0);
+  const marketingBudget = entries.reduce((s, p) => s + Math.max(0, p.marketingBudget ?? 0), 0);
+  const price =
+    productionPlan > 0
+      ? entries.reduce((s, p) => s + p.price * Math.max(0, p.productionPlan), 0) / productionPlan
+      : entries.length > 0
+        ? entries.reduce((s, p) => s + p.price, 0) / entries.length
+        : 0;
+  return { price, productionPlan, marketingBudget };
 }
