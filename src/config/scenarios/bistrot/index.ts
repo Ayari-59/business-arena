@@ -106,6 +106,17 @@ const rawBistrot = {
     maintenanceReference: 4000,
     availabilityDecay: 0.07,
   },
+  // Non-qualité interne : plats ratés / denrées gâchées. ~2 % à qualité et
+  // maintenance normales. La maintenance de la cuisine pilote aussi le rebut
+  // (unidirectionnel, s = 0,15) : sous-entretenir augmente les plats ratés ;
+  // bien entretenir n'apporte pas de bonus. Pas de « retour client » industriel
+  // en restauration (externalReturnSensitivity = 0). Support de l'analyse
+  // d'écart de rendement matière (P5 / DCG).
+  qualityCosts: {
+    baseDefectRate: 0.02,
+    externalReturnSensitivity: 0,
+    maintenanceDefectSensitivity: 0.15,
+  },
   marketing: { scale: 7000 },
   finance: {
     loanAnnualRate: 0.058,

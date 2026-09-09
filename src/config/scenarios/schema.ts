@@ -207,6 +207,7 @@ export const engineScenarioConfigSchema = z.object({
     .object({
       baseDefectRate: z.number().min(0).max(0.2),
       externalReturnSensitivity: z.number().min(0).max(2),
+      maintenanceDefectSensitivity: z.number().min(0).max(1).optional(),
     })
     .optional(),
   hr: z

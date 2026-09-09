@@ -265,10 +265,10 @@ export interface EngineScenarioConfig {
     /** Retours clients : ventes × sens × max(0, 1 − qualité perçue). */
     externalReturnSensitivity: number;
     /**
-     * Sensibilité des rebuts à la MAINTENANCE (optionnel). 0 ou absent = aucun
-     * effet (comportement historique inchangé). Si > 0 : sous le budget de
-     * maintenance de référence les rebuts augmentent (jusqu'à ×(1 + s)), au-dessus
-     * ils diminuent (jusqu'à ×(1 − s)). Facteur neutre (×1) au budget de référence.
+     * Sensibilité des rebuts à la MAINTENANCE (optionnel, unidirectionnel). 0 ou
+     * absent = aucun effet (comportement historique inchangé). Si > 0 : sous le
+     * budget de maintenance de référence les rebuts augmentent (jusqu'à ×(1 + s)) ;
+     * au budget de référence ou au-dessus, aucun effet (facteur plafonné à 1).
      */
     maintenanceDefectSensitivity?: number;
   };
