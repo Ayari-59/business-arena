@@ -339,13 +339,12 @@ export default async function ArenaPage({
       <SituationCard gameId={view.gameId} situation={situations.current[0]} />
     ) : null;
 
-  // ÉTAPE « ANALYSER » (solo) : le QCM des situations, précédé d'un indice
-  // repliable (les leviers d'action). Le contexte (données, marché, alertes,
-  // arbitrage) vit dans « Situation ».
+  // ÉTAPE « ANALYSER » (solo) : le QCM des situations. Le contexte (données,
+  // marché, alertes, arbitrage) vit dans « Situation » ; les leviers d'action
+  // sont sur « Décider », au plus près des champs de décision qu'ils désignent.
   const analyserContenu =
     situations.current.length > 0 && statutSituations ? (
       <div id="analyser" className="space-y-6">
-        {leviersIndice}
         {qcmBloc}
       </div>
     ) : null;
@@ -612,11 +611,13 @@ export default async function ArenaPage({
                       {dilemmeSection}
                     </div>
                   ),
-                  // « Analyser » : aides d'analyse (points clés & leviers) puis
-                  // les QCM des situations en accordéon.
+                  // « Analyser » : les QCM des situations en accordéon.
                   analyser: analyserContenu,
+                  // « Décider » : la piste (leviers d'action) en indice repliable,
+                  // au plus près des champs qu'elle désigne, puis la saisie.
                   decisions: (
                     <section id="decisions">
+                {leviersIndice ? <div className="mb-4">{leviersIndice}</div> : null}
                 <div className="mb-4 border-b border-white/10 pb-3">
                   <h2 className="text-sm font-semibold text-slate-200">
                     Vos décisions · {periodLabel(view.roundDays, view.currentRound).toLowerCase()}
