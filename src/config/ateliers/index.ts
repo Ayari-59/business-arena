@@ -1,5 +1,6 @@
 import { ATELIER_AVANCE } from "./avance";
 import { ATELIER_CG1 } from "./cg1";
+import { ATELIER_COUTS_PARTIELS } from "./couts-partiels";
 import { ATELIER_MCO } from "./mco";
 import { ATELIER_DCG } from "./dcg";
 import { ATELIER_DCG_RSE } from "./dcg-rse";
@@ -25,6 +26,7 @@ export const ATELIERS: readonly AtelierDefinition[] = [
   ATELIER_DEBUTANT,
   ATELIER_STMG,
   ATELIER_CG1,
+  ATELIER_COUTS_PARTIELS,
   ATELIER_MCO,
   ATELIER_NDRC,
   ATELIER_GPME,
