@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { SCENARIOS } from "../../src/config/scenarios/registry";
+import { toGamme } from "../../src/engine/gamme";
 import { ATELIERS } from "../../src/config/ateliers";
 import { computeFinance } from "../../src/engine/finance/statements";
 import { runGame } from "../../src/engine/simulation/runGame";
@@ -108,8 +109,12 @@ describe("la commission d'un canal partenaire", () => {
     // d'affaires du canal, faute de quoi la séance de négociation ferait
     // travailler des élèves sur un nombre que personne ne peut retrouver.
     for (const d of SCENARIOS) {
+      // En gamme, chaque référence a son marché et ses canaux : les taux se
+      // lisent sur tous les segments de la gamme (mono : ceux du scénario).
       const taux = new Map(
-        d.scenario.market.segments.map((s) => [s.code, s.commissionRate ?? 0] as const),
+        toGamme(d.scenario)
+          .flatMap((p) => p.market.segments)
+          .map((s) => [s.code, s.commissionRate ?? 0] as const),
       );
       if ([...taux.values()].every((t) => t === 0)) continue;
       for (const strategie of STRATEGIES) {

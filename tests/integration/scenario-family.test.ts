@@ -74,6 +74,18 @@ describe("une famille de scénarios se joue selon le niveau", () => {
     expect(gamme.communicationOffer).not.toBeNull();
   });
 
+  it("PIXEL & CO au niveau 3 est une commande à panier moyen, au niveau 4 les quatre rayons et la capsule à bâtir", async () => {
+    const mono = (await getGameView(await createSoloGame(userId, "quarter", 3, 3, false, "ecommerce"), userId))!;
+    expect(mono.gamme).toBeNull();
+    expect(mono.scenarioIcon).toBe("📦");
+    const gamme = (await getGameView(await createSoloGame(userId, "quarter", 3, 4, false, "ecommerce"), userId))!;
+    expect(gamme.gamme?.map((p) => p.code)).toEqual(["decoration", "mobilier", "luminaires", "capsule"]);
+    expect(gamme.scenarioIcon).toBe("🛋️");
+    expect(gamme.gamme!.find((p) => p.code === "capsule")!.rd?.development?.available).toBe(false);
+    expect(gamme.rdOffer).not.toBeNull();
+    expect(gamme.communicationOffer).not.toBeNull();
+  });
+
   it("MAILLE & CO au niveau 1 est un article, au niveau 3 la gamme de cinq références", async () => {
     const mono = (await getGameView(await createSoloGame(userId, "quarter", 3, 1, false, "boutique"), userId))!;
     expect(mono.gamme).toBeNull();

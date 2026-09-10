@@ -143,6 +143,15 @@ const IDENTITES_SCENARIO: Record<string, { accent: AccentSecteur }> = {
       barre: "bg-purple-400",
     },
   },
+  "ecommerce-gamme": {
+    accent: {
+      bord: "hover:border-yellow-400/50",
+      halo: "bg-yellow-400/10",
+      texte: "text-yellow-300",
+      puce: "border-yellow-400/30 bg-yellow-950/30 text-yellow-200",
+      barre: "bg-yellow-400",
+    },
+  },
   "boutique-mono": {
     accent: {
       bord: "hover:border-pink-400/50",

@@ -37,6 +37,8 @@ import { conseilGammeBots, conseilGammeCompany, conseilGammeScenario } from "./c
 import { CONSEIL_GAMME_SITUATIONS } from "./conseil-gamme/situations";
 import { ecommerceBots, ecommerceCompany, ecommerceScenario } from "./ecommerce";
 import { ECOMMERCE_SITUATIONS } from "./ecommerce/situations";
+import { ecommerceGammeBots, ecommerceGammeCompany, ecommerceGammeScenario } from "./ecommerce-gamme";
+import { ECOMMERCE_GAMME_SITUATIONS } from "./ecommerce-gamme/situations";
 import { fitnessBots, fitnessCompany, fitnessScenario } from "./fitness";
 import { FITNESS_SITUATIONS } from "./fitness/situations";
 import { batimentBots, batimentCompany, batimentScenario } from "./batiment";
@@ -827,6 +829,41 @@ export const ECOMMERCE_DEFINITION: ScenarioDefinition = {
   kpis: ECOMMERCE_KPIS,
 };
 
+export const ECOMMERCE_GAMME_DEFINITION: ScenarioDefinition = {
+  code: ecommerceGammeScenario.code,
+  title: "PIXEL & CO · Composez le catalogue",
+  sector: "ecommerce",
+  icon: "🛋️",
+  shortName: "PIXEL & CO · gamme",
+  tagline: "Pure player de décoration : la déco, le petit mobilier, les luminaires, et une collection de créateurs à bâtir.",
+  briefing:
+    "Ouvrir votre boutique ne coûte presque rien, c'est un site. Mais personne n'y arrive tout seul : chaque visiteur se paie en publicité, et vous ne vendez plus une commande mais quatre rayons, chacun à son panier, à ses frais de port et à sa place de marché, avec le même entrepôt et le même budget. La question n'est donc pas de savoir si vous gagnez de l'argent sur une commande, mais sur laquelle, et si vous en gagnez assez pour rembourser ce que ce client vous a coûté. La collection de créateurs, elle, reste à bâtir avant de rapporter.",
+  context:
+    "Le site fonctionne, les fournisseurs sont en place, l'entrepôt prépare les commandes de trois rayons. Mais l'ancien propriétaire avait coupé la publicité pour économiser, le trafic s'est effondré avec elle, et le fauteuil qu'on expédie coûte plus cher à livrer que le coussin qu'on vend dix fois plus. Un projet de collection de créateurs dort dans un dossier : il faut des exclusivités et un shooting avant la première commande.",
+  dilemma: {
+    question: "Sur internet, chaque visiteur se paie, et chaque rayon ne rapporte pas la même chose. Où mettez-vous vos euros de publicité ?",
+    routes: [
+      {
+        label: "Pousser la décoration",
+        gain: "Le rayon qui tourne, des colis légers, une place de marché qui apporte du volume.",
+        risque: "Le plus petit panier du catalogue : la publicité y coûte presque autant qu'elle rapporte.",
+      },
+      {
+        label: "Miser sur le mobilier, et bâtir la capsule",
+        gain: "La marge par commande la plus haute, et une collection que personne d'autre ne vend.",
+        risque: "Des colis volumineux qui saturent l'entrepôt, une commission plus lourde sur les places de marché, et un budget engagé avant la première commande.",
+      },
+    ],
+  },
+  playerTeamName: "PIXEL & CO",
+  vocabulary: { ...ECOMMERCE_DEFINITION.vocabulary },
+  scenario: ecommerceGammeScenario,
+  company: ecommerceGammeCompany,
+  bots: ecommerceGammeBots,
+  situations: ECOMMERCE_GAMME_SITUATIONS,
+  kpis: ECOMMERCE_KPIS,
+};
+
 export const FITNESS_DEFINITION: ScenarioDefinition = {
   code: fitnessScenario.code,
   title: "VOLT FITNESS · Gardez vos adhérents",
@@ -1007,6 +1044,7 @@ export const SCENARIOS: ScenarioDefinition[] = [
   CONSEIL_DEFINITION,
   CONSEIL_GAMME_DEFINITION,
   ECOMMERCE_DEFINITION,
+  ECOMMERCE_GAMME_DEFINITION,
   FITNESS_DEFINITION,
   BATIMENT_DEFINITION,
   TRANSPORT_DEFINITION,
@@ -1083,6 +1121,15 @@ export const SCENARIO_FAMILIES: readonly ScenarioFamily[] = [
     gammeFromLevel: 4,
     monoLabel: "un seul ticket moyen",
     gammeLabel: "la formule du midi, la carte du soir, les banquets et un traiteur à bâtir",
+  },
+  {
+    head: ECOMMERCE_DEFINITION.code,
+    mono: ECOMMERCE_DEFINITION.code,
+    gamme: ECOMMERCE_GAMME_DEFINITION.code,
+    // Le niveau qui ouvre la R&D : la collection de créateurs se bâtit avant de se vendre.
+    gammeFromLevel: 4,
+    monoLabel: "une seule commande à panier moyen",
+    gammeLabel: "les quatre rayons, décoration, mobilier, luminaires et une collection de créateurs à bâtir",
   },
 ];
 
