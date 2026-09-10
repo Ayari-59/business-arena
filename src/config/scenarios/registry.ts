@@ -16,6 +16,8 @@ import {
 } from "./sector-kpis";
 import { novaBots, novaCompany, novaScenario } from "./nova";
 import { NOVA_SITUATIONS } from "./nova/situations";
+import { novaGammeBots, novaGammeCompany, novaGammeScenario } from "./nova-gamme";
+import { NOVA_GAMME_SITUATIONS } from "./nova-gamme/situations";
 import { boutiqueBots, boutiqueCompany, boutiqueScenario } from "./boutique";
 import { BOUTIQUE_SITUATIONS } from "./boutique/situations";
 import { hotelBots, hotelCompany, hotelScenario } from "./hotel";
@@ -238,6 +240,65 @@ export const NOVA_DEFINITION: ScenarioDefinition = {
   company: novaCompany,
   bots: novaBots,
   situations: NOVA_SITUATIONS,
+  kpis: INDUSTRIE_KPIS,
+};
+
+/**
+ * NOVA en trois références. Le NOVA d'origine reste tel quel (les ateliers
+ * STMG, l'instantané doré du moteur) ; celui-ci est un SECOND scénario, celui
+ * des ateliers de gestion, qui ajoute le mix au même atelier.
+ */
+export const NOVA_GAMME_DEFINITION: ScenarioDefinition = {
+  code: novaGammeScenario.code,
+  title: "NOVA · Composez la gamme",
+  sector: "industrie",
+  tagline: "Fabricant d'enceintes portables : trois références, un atelier.",
+  briefing:
+    "Tout ce que vous vendez sort de votre atelier, dont la capacité est limitée, et vous y fabriquez trois enceintes qui ne rapportent pas la même chose. La petite se vend par milliers pour quelques euros de marge, la grande se vend par centaines pour beaucoup plus. Quand les commandes dépassent ce que l'atelier peut sortir, la question n'est plus combien produire, mais quoi produire.",
+  context:
+    "L'ancien dirigeant est parti à la retraite le mois dernier. Il vous laisse un atelier en état, une équipe qui connaît les trois produits, et un carnet de commandes vide : rien n'est signé pour le trimestre qui s'ouvre. La concurrence, elle, est installée depuis des années, l'une sur les prix bas de l'entrée de gamme, l'autre sur le haut de gamme des passionnés.",
+  dilemma: {
+    question:
+      "Trois enceintes, trois clientèles, un seul atelier. Laquelle remplit vos lignes ce trimestre ?",
+    routes: [
+      {
+        label: "Remplir l'atelier de volume, avec la petite enceinte",
+        gain: "C'est la clientèle la plus nombreuse et la moins fidèle aux concurrents. Les lignes tournent à plein, et chaque enceinte de plus ne coûte que ses composants.",
+        risque: "La marge par enceinte est mince, ces clients partent au premier prix plus bas, et chaque place prise sur les lignes n'est plus disponible pour une enceinte qui rapporte davantage.",
+      },
+      {
+        label: "Réserver l'atelier à la valeur, avec la grande enceinte",
+        gain: "Une marge plusieurs fois plus large sur chaque enceinte, auprès de passionnés et de studios qui reviennent d'un trimestre à l'autre et regardent la qualité avant le prix.",
+        risque: "Cette clientèle est bien plus petite. L'atelier tournera au ralenti, le stock coûtera cher à constituer, et les charges de structure tomberont quand même.",
+      },
+    ],
+  },
+  playerTeamName: "NOVA",
+  vocabulary: {
+    unit: "enceinte",
+    units: "enceintes",
+    unitsGender: "f",
+    productionLabel: "Production",
+    productionPlanLabel: "Plan de production",
+    priceLabel: "Prix de vente",
+    leftoverLabel: "Stock",
+    capacityPanelTitle: "Capacité de production",
+    capacityLabel: "Capacité des lignes",
+    capacityBottleneckLabel: "Lignes de production",
+    capacityBottleneckHint:
+      "Vos lignes limitent la production, toutes références confondues : quand la somme des plans les dépasse, chacun est coupé au prorata. L'investissement capacitaire prend effet au tour suivant.",
+    laborLabel: "Capacité main-d'œuvre",
+    laborBottleneckHint:
+      "Votre main-d'œuvre limite la production : une Studio demande près de trois fois les heures d'une Go. Envisagez d'embaucher ou de former vos salariés.",
+    perRoundLabel: "enceintes/tour",
+    materialLabel: "Matières et composants",
+    otherVariableLabel: "Main-d'œuvre directe, énergie",
+    supplierPanelLabel: "Fournisseur de composants",
+  },
+  scenario: novaGammeScenario,
+  company: novaGammeCompany,
+  bots: novaGammeBots,
+  situations: NOVA_GAMME_SITUATIONS,
   kpis: INDUSTRIE_KPIS,
 };
 
@@ -672,6 +733,7 @@ export const TRANSPORT_DEFINITION: ScenarioDefinition = {
 
 export const SCENARIOS: ScenarioDefinition[] = [
   NOVA_DEFINITION,
+  NOVA_GAMME_DEFINITION,
   BOUTIQUE_DEFINITION,
   HOTEL_DEFINITION,
   BISTROT_DEFINITION,
@@ -696,7 +758,7 @@ export function scenarioByCode(code: string | undefined | null): ScenarioDefinit
 }
 
 /**
- * Un code correspond-il à l'un des 9 secteurs INTÉGRÉS (résolus depuis le code) ?
+ * Un code correspond-il à l'un des secteurs INTÉGRÉS (résolus depuis le code) ?
  * Sinon c'est un scénario enseignant, à charger depuis la base. Sert de garde à
  * la résolution : `scenarioByCode` retombe silencieusement sur NOVA pour un code
  * inconnu, ce qui masquerait un scénario base non hydraté.

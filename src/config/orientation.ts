@@ -7,7 +7,7 @@ import type { Periodicity } from "./scenarios/periodicity";
 /**
  * Choisir la bonne simulation.
  *
- * Neuf secteurs, six niveaux, trois périodicités et une durée réglable font
+ * Les secteurs du registre, six niveaux, trois périodicités et une durée réglable font
  * beaucoup de combinaisons pour un enseignant qui découvre la plateforme, et
  * le mauvais choix ne se voit qu'en séance trois. Ce module répond à quatre
  * questions simples et rend un réglage complet, avec les RAISONS de chaque
@@ -92,10 +92,10 @@ export const OBJECTIFS: readonly Objectif[] = [
   {
     code: "diagnostic_financier",
     libelle: "Le diagnostic financier complet",
-    secteur: "nova",
+    secteur: "nova-gamme",
     niveauMinimum: 4,
     raison:
-      "NOVA est le seul secteur dont le cycle d'exploitation est complet de bout en bout : bilan fonctionnel, soldes intermédiaires, investissement et financement s'y lisent ensemble.",
+      "NOVA est le seul secteur dont le cycle d'exploitation est complet de bout en bout : bilan fonctionnel, soldes intermédiaires, investissement et financement s'y lisent ensemble. En trois références, le mix s'y ajoute au diagnostic.",
   },
 ];
 

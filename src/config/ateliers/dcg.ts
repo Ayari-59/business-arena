@@ -34,7 +34,7 @@ export const ATELIER_DCG: AtelierDefinition = {
   pourquoi:
     "Un sujet de finance d'entreprise donne les flux et demande la valeur actuelle nette. L'exercice est juste, et il laisse intacte la question qui compte : d'où viennent ces flux, et qui les a estimés. Ici l'équipe produit elle-même sa prévision, la dépose, puis découvre au trimestre suivant l'écart entre ce qu'elle avait annoncé et ce qui s'est produit. Elle apprend alors ce qu'aucune correction ne transmet : qu'un calcul d'investissement ne vaut que ce que valent les hypothèses de celui qui l'a fait, et que la banque, elle, regarde d'abord la fiabilité des plans précédents.",
   reglages: {
-    scenarioCode: "nova",
+    scenarioCode: "nova-gamme",
     periodicite: "quarter",
     periodiciteLabel: "Un trimestre par tour",
     niveau: 5,
@@ -47,7 +47,7 @@ export const ATELIER_DCG: AtelierDefinition = {
     tours: 4,
     effectifParEquipe: "trois élèves",
     notes:
-      "NOVA porte un cycle d'exploitation complet, des stocks, des délais de règlement des deux côtés et une capacité de production qui s'investit. Le niveau retenu ouvre le financement, l'investissement et le placement des excédents, c'est-à-dire la matière de la finance d'entreprise. Le monde variable est ici ACTIVÉ, à la différence des ateliers de BTS : à ce niveau, la distinction entre une bonne décision et un bon résultat fait partie de ce qui s'évalue. Les questions de connaissances sont désactivées et seul le choix du modèle d'analyse est demandé.",
+      "NOVA se joue ici en trois références qui se disputent la même capacité : quand la demande dépasse l'atelier, la marge par unité de capacité décide de ce qu'on produit, et l'investissement se juge sur le mix qu'il libère. NOVA porte un cycle d'exploitation complet, des stocks, des délais de règlement des deux côtés et une capacité de production qui s'investit. Le niveau retenu ouvre le financement, l'investissement et le placement des excédents, c'est-à-dire la matière de la finance d'entreprise. Le monde variable est ici ACTIVÉ, à la différence des ateliers de BTS : à ce niveau, la distinction entre une bonne décision et un bon résultat fait partie de ce qui s'évalue. Les questions de connaissances sont désactivées et seul le choix du modèle d'analyse est demandé.",
   },
   seances: [
     {

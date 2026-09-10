@@ -99,6 +99,34 @@ export const EMBLEMES_SECTEUR: Record<Sector, string> = {
 };
 
 /**
+ * Deux scénarios peuvent partager un métier : NOVA existe en une référence
+ * (les ateliers STMG) et en trois (les ateliers de gestion). Sur la vitrine,
+ * chacun garde pourtant SA couleur et SON emblème, sans quoi deux vignettes
+ * voisines se confondraient. L'identité se lit donc par scénario, et retombe
+ * sur celle du métier quand le scénario n'en déclare pas.
+ */
+const IDENTITES_SCENARIO: Record<string, { accent: AccentSecteur; embleme: string }> = {
+  "nova-gamme": {
+    accent: {
+      bord: "hover:border-teal-400/50",
+      halo: "bg-teal-400/10",
+      texte: "text-teal-300",
+      puce: "border-teal-400/30 bg-teal-950/30 text-teal-200",
+      barre: "bg-teal-400",
+    },
+    embleme: "🎚️",
+  },
+};
+
+export function accentsDe(d: Pick<ScenarioDefinition, "code" | "sector">): AccentSecteur {
+  return IDENTITES_SCENARIO[d.code]?.accent ?? ACCENTS_SECTEUR[d.sector];
+}
+
+export function emblemeDe(d: Pick<ScenarioDefinition, "code" | "sector">): string {
+  return IDENTITES_SCENARIO[d.code]?.embleme ?? EMBLEMES_SECTEUR[d.sector];
+}
+
+/**
  * Les titres du registre s'écrivent « NOVA · Prenez les commandes » : le nom
  * de l'entreprise, puis ce qu'on y fait. Les deux ne se lisent pas au même
  * endroit, d'où ces deux lectures.
