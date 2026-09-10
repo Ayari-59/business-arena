@@ -25,8 +25,17 @@ export function marketingEffect(
   segment: SegmentConfig,
   scale: number,
 ): number {
-  if (budget <= 0) return 1;
-  return 1 + segment.marketingSensitivity * Math.log(1 + budget / scale);
+  const base = budget <= 0 ? 1 : 1 + segment.marketingSensitivity * Math.log(1 + budget / scale);
+  // Porte marketing : sans budget, le segment ne garde qu'une part de son
+  // attraction ; la porte s'ouvre vite avec le budget rapporté à l'échelle
+  // (aux deux tiers pour un sixième de l'échelle, en grand au tiers). Seul
+  // le budget quasi nul est puni : c'est le trafic qu'on n'achète pas.
+  // Absente : rien ne change, un scénario historique reste identique au bit
+  // près.
+  if (segment.marketingGate === undefined) return base;
+  const gate = segment.marketingGate;
+  const ouverture = gate + (1 - gate) * (1 - Math.exp((-6 * Math.max(0, budget)) / scale));
+  return base * ouverture;
 }
 
 /** Effet qualité perçue (référence = 1). */

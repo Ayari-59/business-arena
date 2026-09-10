@@ -131,7 +131,7 @@ const rawHotel = {
     factoringFeeRate: 0.022,
     forcedFactoringFeeRate: 0.055,
     // 2 %/an : de quoi valoriser le surplus, jamais de quoi financer
-    // un découvert à 9 %. L'arbitrage doit rester perdant à l'envers.
+    // un découvert à 12 %. L'arbitrage doit rester perdant à l'envers.
     placementAnnualRate: 0.02,
   },
   // structure ≈ 186 000 €/tour : 158 000 décaissés (salaires des équipes,

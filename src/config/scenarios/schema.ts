@@ -31,6 +31,7 @@ const segmentSchema = z.object({
   // Une commission de 100 % ne serait plus un canal de vente : la borne haute
   // est stricte, et un scénario qui la franchit ne se charge pas.
   commissionRate: z.number().gte(0).lt(1).optional(),
+  marketingGate: z.number().min(0).max(1).optional(),
   seasonality: z.array(z.number().nonnegative()).optional(),
 });
 
