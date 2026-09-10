@@ -325,26 +325,31 @@ function LienPrixFaconnier({
   );
 }
 
-function GammeFields({
+const CELLULE_SAISIE =
+  "flex items-center gap-1 rounded-lg border border-white/10 bg-slate-950 px-2 py-1.5 focus-within:border-amber-400/60";
+
+/** Une référence en développement ne se vend ni ne se produit : rien à saisir. */
+function enDeveloppement(p: NonNullable<GameView["gamme"]>[number]): boolean {
+  const dev = p.rd?.development;
+  return !!dev && !dev.available;
+}
+
+/**
+ * Le tableau des VENTES de la gamme : le prix, le volume et le façonnier de
+ * chaque référence. Les budgets (marketing, qualité, R&D) vivent dans le
+ * tableau des budgets, avec l'entretien : la fenêtre des ventes ne porte que
+ * ce qui fait le chiffre d'affaires et la marge.
+ */
+function GammeVentes({
   gamme,
   defaults,
   vocabulary: v,
-  quality,
-  rd,
-  roundIndex,
 }: {
   gamme: NonNullable<GameView["gamme"]>;
   defaults: RoundDecisions;
   vocabulary: ScenarioVocabulary;
-  /** Le budget qualité est-il ouvert à ce niveau ? */
-  quality: boolean;
-  /** La R&D est-elle ouverte (niveau ET scénario) ? */
-  rd: boolean;
-  roundIndex: number;
 }) {
-  const n = gamme.length;
   const avecFournisseurs = gamme.some((p) => p.suppliers);
-  const avecRd = rd && gamme.some((p) => p.rd);
   // Le prix saisi et le façonnier choisi de chaque référence, pour montrer la
   // marge en direct : les champs restent non contrôlés (le formulaire les
   // envoie), on ne fait que les écouter.
@@ -368,9 +373,6 @@ function GammeFields({
             <th className="pb-2 pr-3 font-medium">Référence</th>
             <th className="pb-2 pr-3 font-medium">{v.priceLabel}</th>
             <th className="pb-2 pr-3 font-medium">{v.productionPlanLabel}</th>
-            <th className="pb-2 pr-3 font-medium">Marketing</th>
-            {quality ? <th className="pb-2 pr-3 font-medium">Qualité</th> : null}
-            {avecRd ? <th className="pb-2 pr-3 font-medium">R&amp;D</th> : null}
             {avecFournisseurs ? <th className="pb-2 font-medium">Fournisseur</th> : null}
           </tr>
         </thead>
@@ -379,21 +381,14 @@ function GammeFields({
             const own = defaults.products?.[p.code];
             const price = own?.price ?? p.refPrice;
             const plan = Math.round(own?.productionPlan ?? 0);
-            const marketing = Math.round(own?.marketingBudget ?? defaults.marketingBudget / n);
-            const qualite = Math.round(own?.qualityBudget ?? defaults.qualityBudget / n);
             const suppliers = p.suppliers;
             const reference = suppliers?.[0];
             const choisi = suppliers?.find((s) => s.code === faconniers[p.code]) ?? reference;
             const achat = choisi ? choisi.materialCostPerUnit : p.materialCostPerUnit;
-            const rdDefaut = Math.round(own?.rdBudget ?? 0);
-            const dev = p.rd?.development;
             // Une référence EN DÉVELOPPEMENT ne se vend ni ne se produit : la
-            // ligne ne porte que sa R&D (et, cachés, des champs neutres pour
-            // que la lecture par référence reste complète).
-            if (dev && !dev.available) {
-              const colonnes = 3 + (quality ? 1 : 0);
-              const reste = Math.max(0, dev.cost - dev.invested);
-              const pret = reste <= 0;
+            // ligne le dit, et porte, cachés, des champs neutres pour que la
+            // lecture par référence reste complète.
+            if (enDeveloppement(p)) {
               return (
                 <tr key={p.code} className="border-t border-white/5 align-top">
                   <td className="py-2 pr-3">
@@ -403,35 +398,14 @@ function GammeFields({
                     </span>
                     <input type="hidden" name={productFieldName(p.code, "price")} value={Math.round(price * 10) / 10} />
                     <input type="hidden" name={productFieldName(p.code, "productionPlan")} value={0} />
-                    <input type="hidden" name={productFieldName(p.code, "marketingBudget")} value={0} />
-                    {quality ? <input type="hidden" name={productFieldName(p.code, "qualityBudget")} value={0} /> : null}
                     {suppliers && faconniers[p.code] ? (
                       <input type="hidden" name={productFieldName(p.code, "supplierChoice")} value={faconniers[p.code]} />
                     ) : null}
                   </td>
-                  <td className="py-2 pr-3 text-xs leading-snug text-slate-400" colSpan={colonnes}>
-                    {pret
-                      ? `Développement financé (${formatEuro(dev.invested)} engagés) : vendable dès le tour ${Math.max(dev.availableFromRound, roundIndex + 1)}.`
-                      : `${formatEuro(dev.invested)} engagés sur ${formatEuro(dev.cost)} : il reste ${formatEuro(reste)} à financer. Une fois le coût couvert, la référence se vend dès le tour suivant, et au plus tôt au tour ${dev.availableFromRound}.`}
+                  <td className="py-2 pr-3 text-xs leading-snug text-slate-400" colSpan={2 + (avecFournisseurs ? 1 : 0)}>
+                    Rien à vendre tant que la référence n&apos;est pas bâtie : son financement se
+                    décide dans les budgets du tour, à la R&amp;D.
                   </td>
-                  {avecRd ? (
-                    <td className="py-2 pr-3">
-                      <span className="flex items-center gap-1 rounded-lg border border-white/10 bg-slate-950 px-2 py-1.5 focus-within:border-amber-400/60">
-                        <input
-                          type="number"
-                          name={productFieldName(p.code, "rdBudget")}
-                          aria-label={`R&D · ${p.name}`}
-                          defaultValue={rdDefaut}
-                          step={1}
-                          min={0}
-                          required
-                          className="w-24 bg-transparent text-sm text-slate-100 outline-none"
-                        />
-                        <span className="text-xs text-slate-400">€</span>
-                      </span>
-                    </td>
-                  ) : null}
-                  {avecFournisseurs ? <td className="py-2 text-xs text-slate-400">—</td> : null}
                 </tr>
               );
             }
@@ -453,7 +427,7 @@ function GammeFields({
                   />
                 </td>
                 <td className="py-2 pr-3">
-                  <span className="flex items-center gap-1 rounded-lg border border-white/10 bg-slate-950 px-2 py-1.5 focus-within:border-amber-400/60">
+                  <span className={CELLULE_SAISIE}>
                     <input
                       type="number"
                       name={productFieldName(p.code, "price")}
@@ -472,7 +446,7 @@ function GammeFields({
                   </span>
                 </td>
                 <td className="py-2 pr-3">
-                  <span className="flex items-center gap-1 rounded-lg border border-white/10 bg-slate-950 px-2 py-1.5 focus-within:border-amber-400/60">
+                  <span className={CELLULE_SAISIE}>
                     <input
                       type="number"
                       name={productFieldName(p.code, "productionPlan")}
@@ -486,55 +460,6 @@ function GammeFields({
                     <span className="text-xs text-slate-400">{v.units}</span>
                   </span>
                 </td>
-                <td className="py-2 pr-3">
-                  <span className="flex items-center gap-1 rounded-lg border border-white/10 bg-slate-950 px-2 py-1.5 focus-within:border-amber-400/60">
-                    <input
-                      type="number"
-                      name={productFieldName(p.code, "marketingBudget")}
-                      aria-label={`Marketing · ${p.name}`}
-                      defaultValue={marketing}
-                      step={1}
-                      min={0}
-                      required
-                      className="w-20 bg-transparent text-sm text-slate-100 outline-none"
-                    />
-                    <span className="text-xs text-slate-400">€</span>
-                  </span>
-                </td>
-                {quality ? (
-                  <td className="py-2 pr-3">
-                    <span className="flex items-center gap-1 rounded-lg border border-white/10 bg-slate-950 px-2 py-1.5 focus-within:border-amber-400/60">
-                      <input
-                        type="number"
-                        name={productFieldName(p.code, "qualityBudget")}
-                        aria-label={`Qualité · ${p.name}`}
-                        defaultValue={qualite}
-                        step={1}
-                        min={0}
-                        required
-                        className="w-20 bg-transparent text-sm text-slate-100 outline-none"
-                      />
-                      <span className="text-xs text-slate-400">€</span>
-                    </span>
-                  </td>
-                ) : null}
-                {avecRd ? (
-                  <td className="py-2 pr-3">
-                    <span className="flex items-center gap-1 rounded-lg border border-white/10 bg-slate-950 px-2 py-1.5 focus-within:border-amber-400/60">
-                      <input
-                        type="number"
-                        name={productFieldName(p.code, "rdBudget")}
-                        aria-label={`R&D · ${p.name}`}
-                        defaultValue={rdDefaut}
-                        step={1}
-                        min={0}
-                        required
-                        className="w-24 bg-transparent text-sm text-slate-100 outline-none"
-                      />
-                      <span className="text-xs text-slate-400">€</span>
-                    </span>
-                  </td>
-                ) : null}
                 {avecFournisseurs ? (
                   <td className="py-2">
                     {suppliers ? (
@@ -570,15 +495,148 @@ function GammeFields({
       <p className="mt-2 text-xs leading-relaxed text-slate-400">
         Les références partagent la même réserve : si la somme des volumes dépasse votre
         capacité, toutes sont réduites dans la même proportion. Le prix se fixe référence
-        par référence ; le marketing soutient la demande de chacune.
-        {avecRd
-          ? " La R&D lance une référence à développer (le coût couvert, elle se vend dès le tour suivant) et, au-delà, élève son niveau technique : une qualité perçue qui monte avec retard et s'érode si la R&D cesse. Elle se paie le tour même, en charge."
+        par référence.
+        {avecFournisseurs
+          ? " Chaque référence a ses façonniers et le prix d'achat est celui de la référence chez chacun : la marge affichée est le prix saisi moins ce coût d'achat et les autres frais variables, le coefficient est le prix divisé par le coût d'achat. Le bonus de qualité, le délai de règlement et le risque de rupture du façonnier ne touchent que la référence qu'il fournit."
           : ""}
+      </p>
+    </div>
+  );
+}
+
+/**
+ * Le tableau des BUDGETS de la gamme : le marketing, la qualité et la R&D de
+ * chaque référence, une ligne par référence. Il vit dans la famille des
+ * budgets du tour, avec l'entretien, pour que les quatre budgets se décident
+ * au même endroit et que la fenêtre des ventes reste légère.
+ */
+function GammeBudgets({
+  gamme,
+  defaults,
+  quality,
+  rd,
+  roundIndex,
+}: {
+  gamme: NonNullable<GameView["gamme"]>;
+  defaults: RoundDecisions;
+  /** Le budget qualité est-il ouvert à ce niveau ? */
+  quality: boolean;
+  /** La R&D est-elle ouverte (niveau ET scénario) ? */
+  rd: boolean;
+  roundIndex: number;
+}) {
+  const n = gamme.length;
+  const avecRd = rd && gamme.some((p) => p.rd);
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
+            <th className="pb-2 pr-3 font-medium">Référence</th>
+            <th className="pb-2 pr-3 font-medium">Marketing</th>
+            {quality ? <th className="pb-2 pr-3 font-medium">Qualité</th> : null}
+            {avecRd ? <th className="pb-2 pr-3 font-medium">R&amp;D</th> : null}
+          </tr>
+        </thead>
+        <tbody>
+          {gamme.map((p) => {
+            const own = defaults.products?.[p.code];
+            const marketing = Math.round(own?.marketingBudget ?? defaults.marketingBudget / n);
+            const qualite = Math.round(own?.qualityBudget ?? defaults.qualityBudget / n);
+            const rdDefaut = Math.round(own?.rdBudget ?? 0);
+            const dev = p.rd?.development;
+            const champRd = avecRd ? (
+              <td className="py-2 pr-3">
+                <span className={CELLULE_SAISIE}>
+                  <input
+                    type="number"
+                    name={productFieldName(p.code, "rdBudget")}
+                    aria-label={`R&D · ${p.name}`}
+                    defaultValue={rdDefaut}
+                    step={1}
+                    min={0}
+                    required
+                    className="w-24 bg-transparent text-sm text-slate-100 outline-none"
+                  />
+                  <span className="text-xs text-slate-400">€</span>
+                </span>
+              </td>
+            ) : null;
+            // Une référence EN DÉVELOPPEMENT ne porte que sa R&D : ni marketing
+            // ni qualité (cachés, à zéro), et la ligne dit où en est son financement.
+            if (dev && !dev.available) {
+              const reste = Math.max(0, dev.cost - dev.invested);
+              const pret = reste <= 0;
+              return (
+                <tr key={p.code} className="border-t border-white/5 align-top">
+                  <td className="py-2 pr-3">
+                    <span className="block text-sm font-medium text-slate-100">{p.name}</span>
+                    <span className="mt-0.5 block text-xs leading-snug text-amber-300">
+                      🔬 en développement
+                    </span>
+                    <input type="hidden" name={productFieldName(p.code, "marketingBudget")} value={0} />
+                    {quality ? <input type="hidden" name={productFieldName(p.code, "qualityBudget")} value={0} /> : null}
+                  </td>
+                  <td className="py-2 pr-3 text-xs leading-snug text-slate-400" colSpan={1 + (quality ? 1 : 0)}>
+                    {pret
+                      ? `Développement financé (${formatEuro(dev.invested)} engagés) : vendable dès le tour ${Math.max(dev.availableFromRound, roundIndex + 1)}.`
+                      : `${formatEuro(dev.invested)} engagés sur ${formatEuro(dev.cost)} : il reste ${formatEuro(reste)} à financer. Une fois le coût couvert, la référence se vend dès le tour suivant, et au plus tôt au tour ${dev.availableFromRound}.`}
+                  </td>
+                  {champRd}
+                </tr>
+              );
+            }
+            return (
+              <tr key={p.code} className="border-t border-white/5 align-top">
+                <td className="py-2 pr-3">
+                  <span className="block text-sm font-medium text-slate-100">{p.name}</span>
+                </td>
+                <td className="py-2 pr-3">
+                  <span className={CELLULE_SAISIE}>
+                    <input
+                      type="number"
+                      name={productFieldName(p.code, "marketingBudget")}
+                      aria-label={`Marketing · ${p.name}`}
+                      defaultValue={marketing}
+                      step={1}
+                      min={0}
+                      required
+                      className="w-20 bg-transparent text-sm text-slate-100 outline-none"
+                    />
+                    <span className="text-xs text-slate-400">€</span>
+                  </span>
+                </td>
+                {quality ? (
+                  <td className="py-2 pr-3">
+                    <span className={CELLULE_SAISIE}>
+                      <input
+                        type="number"
+                        name={productFieldName(p.code, "qualityBudget")}
+                        aria-label={`Qualité · ${p.name}`}
+                        defaultValue={qualite}
+                        step={1}
+                        min={0}
+                        required
+                        className="w-20 bg-transparent text-sm text-slate-100 outline-none"
+                      />
+                      <span className="text-xs text-slate-400">€</span>
+                    </span>
+                  </td>
+                ) : null}
+                {champRd}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+      <p className="mt-2 text-xs leading-relaxed text-slate-400">
+        Le marketing soutient la demande de la référence qui le reçoit ; l&apos;effet retombe
+        vite si on cesse.
         {quality
           ? " Le budget qualité fait la qualité de la référence qui le reçoit : réparti à parts égales, il vaut ce qu'il valait pour toute la gamme ; concentré, il distingue une référence."
           : ""}
-        {avecFournisseurs
-          ? " Chaque référence a ses façonniers et le prix d'achat est celui de la référence chez chacun : la marge affichée est le prix saisi moins ce coût d'achat et les autres frais variables, le coefficient est le prix divisé par le coût d'achat. Le bonus de qualité, le délai de règlement et le risque de rupture du façonnier ne touchent que la référence qu'il fournit."
+        {avecRd
+          ? " La R&D lance une référence à développer (le coût couvert, elle se vend dès le tour suivant) et, au-delà, élève son niveau technique : une qualité perçue qui monte avec retard et s'érode si la R&D cesse. Elle se paie le tour même, en charge."
           : ""}
       </p>
     </div>
@@ -872,9 +930,9 @@ export function DecisionForm({
   // aucun contenu au niveau de difficulté courant est retirée ; l'index
   // d'affichage se calcule sur les étapes RÉELLEMENT visibles.
   // Les quatre budgets du tour (marketing, qualité, maintenance, R&D) se
-  // décident au même endroit, avec les ventes : en mono-produit dans une seule
-  // famille, en gamme dans le tableau des références (l'entretien, qui est de
-  // l'entreprise, juste après). Il n'y a donc plus d'étape « Produire ».
+  // décident au même endroit, dans une seule famille après les ventes : en
+  // mono-produit quatre champs, en gamme un tableau par référence puis
+  // l'entretien, qui est de l'entreprise. Il n'y a donc plus d'étape « Produire ».
   const equipeVisible = on.hr || on.rse;
   const financerVisible = on.finance || (on.investment && !!equipmentOffer);
   const couvertureVisible =
@@ -992,15 +1050,8 @@ export function DecisionForm({
         </Family>
       ) : null}
       {gamme ? (
-        <Family legend="🎯 Vos ventes · le prix, le volume et le marketing de chaque référence" defaultOpen>
-          <GammeFields
-            gamme={gamme}
-            defaults={defaults}
-            vocabulary={v}
-            quality={on.quality}
-            rd={on.rd && !!rdOffer}
-            roundIndex={roundIndex}
-          />
+        <Family legend="🎯 Vos ventes · le prix et le volume de chaque référence" defaultOpen>
+          <GammeVentes gamme={gamme} defaults={defaults} vocabulary={v} />
         </Family>
       ) : null}
       {gamme ? (
@@ -1203,28 +1254,38 @@ export function DecisionForm({
         </Family>
       )}
       {gamme ? (
-        // En gamme, le marketing, la qualité et la R&D se décident référence par
-        // référence dans le tableau des ventes ; l'entretien de la réserve et du
-        // linéaire est de l'entreprise, et vient ici, avec les autres budgets.
-        // Quand le niveau n'ouvre pas la qualité, le scalaire caché part d'ici.
-        <>
+        // En gamme, les quatre budgets du tour se décident au même endroit :
+        // le marketing, la qualité et la R&D référence par référence dans un
+        // tableau, puis l'entretien de la capacité, qui est de l'entreprise.
+        // La fenêtre des ventes ne porte ainsi que le prix, le volume et le
+        // façonnier. Quand le niveau n'ouvre pas la qualité ou l'entretien, le
+        // scalaire caché part d'ici.
+        <Family
+          legend={`💸 Les budgets du tour · ${["marketing", on.quality ? "qualité" : null, on.rd && !!rdOffer && gamme.some((p) => p.rd) ? "R&D" : null, on.maintenance ? "entretien" : null].filter(Boolean).join(", ")}`}
+          defaultOpen
+        >
+          <GammeBudgets
+            gamme={gamme}
+            defaults={defaults}
+            quality={on.quality}
+            rd={on.rd && !!rdOffer}
+            roundIndex={roundIndex}
+          />
           {on.quality ? null : <input type="hidden" name="qualityBudget" value={defaults.qualityBudget} />}
           {on.maintenance ? (
-            <Family legend={`🧰 Entretien · ${v.capacityLabel.toLowerCase()}`} defaultOpen>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <Field
-                  name="maintenanceBudget"
-                  label="Budget d'entretien"
-                  defaultValue={defaults.maintenanceBudget}
-                  suffix="€"
-                  hint={`Un entretien insuffisant dégrade la disponibilité de votre capacité (${v.capacityLabel.toLowerCase()}) : ce que vous pouvez offrir à la vente.`}
-                />
-              </div>
-            </Family>
+            <div className="mt-3 grid grid-cols-1 gap-3 border-t border-white/5 pt-3 sm:grid-cols-2">
+              <Field
+                name="maintenanceBudget"
+                label={`Budget d'entretien · ${v.capacityLabel.toLowerCase()}`}
+                defaultValue={defaults.maintenanceBudget}
+                suffix="€"
+                hint={`Un entretien insuffisant dégrade la disponibilité de votre capacité (${v.capacityLabel.toLowerCase()}) : ce que vous pouvez offrir à la vente.`}
+              />
+            </div>
           ) : (
             <input type="hidden" name="maintenanceBudget" value={defaults.maintenanceBudget} />
           )}
-        </>
+        </Family>
       ) : null}
       {communicationOffer ? (
         // La communication (levier `communication`) : le budget de MARQUE, en
