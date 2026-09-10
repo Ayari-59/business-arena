@@ -346,6 +346,26 @@ describe("le formulaire en gamme", () => {
     expect(html).toContain("marge");
   });
 
+  it("un commerce ne produit rien : pas d'étape « Produire » en gamme, l'entretien rejoint l'approvisionnement", () => {
+    const niveau3 = rendu(gamme, { enabled: presetByLevel.get(3)!.decisions });
+    expect(niveau3).not.toContain("Produire");
+    expect(niveau3).toContain("Entretien · réserve et linéaire");
+    expect(niveau3).toContain('name="maintenanceBudget"');
+    expect(niveau3).not.toContain("Production · qualité");
+    // Le budget d'entretien vit dans la première étape, avec les ventes.
+    const etapeEntretien = niveau3.indexOf('name="maintenanceBudget"');
+    const etapeSuivante = niveau3.indexOf('data-etape="1"');
+    expect(etapeEntretien).toBeGreaterThan(0);
+    expect(etapeEntretien).toBeLessThan(etapeSuivante);
+    // Niveau 1 : ni qualité ni entretien ouverts, les scalaires cachés partent quand même.
+    const niveau1 = rendu(gamme);
+    expect(niveau1).not.toContain("Produire");
+    expect(niveau1).toContain('type="hidden" name="qualityBudget"');
+    expect(niveau1).toContain('type="hidden" name="maintenanceBudget"');
+    // Mono-produit : l'étape « Produire » est toujours là.
+    expect(rendu(null, { enabled: presetByLevel.get(3)!.decisions })).toContain("Produire");
+  });
+
   it("en mono-produit, la qualité et le fournisseur restent des champs d'entreprise, l'écart relatif au référent", () => {
     const majore = suppliersOffer.map((s) => ({ ...s, costMultiplier: s.costMultiplier * 1.05 }));
     const html = rendu(null, { enabled: presetByLevel.get(3)!.decisions, suppliersOffer: majore });

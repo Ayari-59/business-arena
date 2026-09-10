@@ -782,7 +782,11 @@ export function DecisionForm({
   // formulaire qu'on déroule, quelques écrans qu'on parcourt. Une étape sans
   // aucun contenu au niveau de difficulté courant est retirée ; l'index
   // d'affichage se calcule sur les étapes RÉELLEMENT visibles.
-  const produireVisible = on.quality || on.maintenance;
+  // En gamme (MAILLE & CO : un commerce), la qualité se décide référence par
+  // référence dans le tableau des ventes ; il ne resterait à « Produire » que
+  // l'entretien, et un commerce ne produit rien : l'étape disparaît, l'entretien
+  // rejoint la première étape, avec l'approvisionnement.
+  const produireVisible = !gamme && (on.quality || on.maintenance);
   const equipeVisible = on.hr || on.rse;
   const financerVisible = on.finance || (on.investment && !!equipmentOffer);
   const couvertureVisible =
@@ -1075,8 +1079,33 @@ export function DecisionForm({
           </div>
         </Family>
       )}
+      {gamme ? (
+        // Pas d'étape « Produire » en gamme : l'entretien de la réserve et du
+        // linéaire se décide ici, avec l'approvisionnement. La qualité, elle, est
+        // dans le tableau des références ; quand le niveau ne l'ouvre pas, le
+        // scalaire caché part d'ici.
+        <>
+          {on.quality ? null : <input type="hidden" name="qualityBudget" value={defaults.qualityBudget} />}
+          {on.maintenance ? (
+            <Family legend={`🧰 Entretien · ${v.capacityLabel.toLowerCase()}`} defaultOpen>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Field
+                  name="maintenanceBudget"
+                  label="Budget d'entretien"
+                  defaultValue={defaults.maintenanceBudget}
+                  suffix="€"
+                  hint={`Un entretien insuffisant dégrade la disponibilité de votre ${v.capacityLabel.toLowerCase()} : ce que vous pouvez mettre en rayon.`}
+                />
+              </div>
+            </Family>
+          ) : (
+            <input type="hidden" name="maintenanceBudget" value={defaults.maintenanceBudget} />
+          )}
+        </>
+      ) : null}
       </section>
 
+      {produireVisible ? (
       <section
         data-etape={idx("produire")}
         hidden={courante !== idx("produire")}
@@ -1084,13 +1113,7 @@ export function DecisionForm({
       >
       <Family legend="🏭 Production · qualité & maintenance" defaultOpen>
         <div className="grid grid-cols-2 gap-3">
-          {on.quality && gamme ? (
-            // En gamme, la qualité se décide référence par référence (étape « Vendre »).
-            <p className="text-xs leading-relaxed text-slate-400">
-              Le budget qualité se décide référence par référence, dans le tableau de vos
-              ventes ; la maintenance reste commune à la réserve.
-            </p>
-          ) : on.quality ? (
+          {on.quality ? (
             <Field name="qualityBudget" label="Budget qualité" defaultValue={defaults.qualityBudget} suffix="€" />
           ) : (
             <input type="hidden" name="qualityBudget" value={defaults.qualityBudget} />
@@ -1104,6 +1127,7 @@ export function DecisionForm({
         </div>
       </Family>
       </section>
+      ) : null}
 
       <section
         data-etape={idx("equipe")}
