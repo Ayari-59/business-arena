@@ -1,0 +1,316 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`LA TABLE D'AUGUSTIN · gamme — calibration > la partie de référence ne bouge pas sans qu'on le veuille 1`] = `
+{
+  "balanced": [
+    {
+      "resultat": 5694,
+      "tresorerie": 27849,
+      "vendu": {
+        "banquets": 1444,
+        "carte-soir": 3026,
+        "formule-midi": 2301,
+        "traiteur": 0,
+      },
+    },
+    {
+      "resultat": 2091,
+      "tresorerie": 25334,
+      "vendu": {
+        "banquets": 818,
+        "carte-soir": 2678,
+        "formule-midi": 1582,
+        "traiteur": 406,
+      },
+    },
+    {
+      "resultat": 10318,
+      "tresorerie": 38854,
+      "vendu": {
+        "banquets": 1167,
+        "carte-soir": 3619,
+        "formule-midi": 2051,
+        "traiteur": 822,
+      },
+    },
+    {
+      "resultat": -11229,
+      "tresorerie": 28026,
+      "vendu": {
+        "banquets": 601,
+        "carte-soir": 2802,
+        "formule-midi": 1827,
+        "traiteur": 643,
+      },
+    },
+    {
+      "resultat": 23202,
+      "tresorerie": 47454,
+      "vendu": {
+        "banquets": 825,
+        "carte-soir": 3375,
+        "formule-midi": 2082,
+        "traiteur": 767,
+      },
+    },
+    {
+      "resultat": 27664,
+      "tresorerie": 73731,
+      "vendu": {
+        "banquets": 850,
+        "carte-soir": 3484,
+        "formule-midi": 2148,
+        "traiteur": 790,
+      },
+    },
+  ],
+  "growth": [
+    {
+      "resultat": 5738,
+      "tresorerie": 30996,
+      "vendu": {
+        "banquets": 1536,
+        "carte-soir": 3601,
+        "formule-midi": 2739,
+        "traiteur": 0,
+      },
+    },
+    {
+      "resultat": 19434,
+      "tresorerie": 45547,
+      "vendu": {
+        "banquets": 1036,
+        "carte-soir": 3794,
+        "formule-midi": 2242,
+        "traiteur": 484,
+      },
+    },
+    {
+      "resultat": 19242,
+      "tresorerie": 64920,
+      "vendu": {
+        "banquets": 1573,
+        "carte-soir": 3847,
+        "formule-midi": 2677,
+        "traiteur": 734,
+      },
+    },
+    {
+      "resultat": 2223,
+      "tresorerie": 71281,
+      "vendu": {
+        "banquets": 955,
+        "carte-soir": 3508,
+        "formule-midi": 2810,
+        "traiteur": 677,
+      },
+    },
+    {
+      "resultat": 18100,
+      "tresorerie": 84267,
+      "vendu": {
+        "banquets": 1092,
+        "carte-soir": 3517,
+        "formule-midi": 2668,
+        "traiteur": 672,
+      },
+    },
+    {
+      "resultat": 34620,
+      "tresorerie": 117451,
+      "vendu": {
+        "banquets": 1212,
+        "carte-soir": 3910,
+        "formule-midi": 2964,
+        "traiteur": 745,
+      },
+    },
+  ],
+  "passive": [
+    {
+      "resultat": 6655,
+      "tresorerie": 26476,
+      "vendu": {
+        "banquets": 1191,
+        "carte-soir": 2270,
+        "formule-midi": 1824,
+        "traiteur": 0,
+      },
+    },
+    {
+      "resultat": 5297,
+      "tresorerie": 31844,
+      "vendu": {
+        "banquets": 1170,
+        "carte-soir": 2230,
+        "formule-midi": 1792,
+        "traiteur": 0,
+      },
+    },
+    {
+      "resultat": -8898,
+      "tresorerie": 26400,
+      "vendu": {
+        "banquets": 1099,
+        "carte-soir": 2191,
+        "formule-midi": 1760,
+        "traiteur": 0,
+      },
+    },
+    {
+      "resultat": -13908,
+      "tresorerie": 12397,
+      "vendu": {
+        "banquets": 1128,
+        "carte-soir": 2151,
+        "formule-midi": 1728,
+        "traiteur": 0,
+      },
+    },
+    {
+      "resultat": -2386,
+      "tresorerie": 7631,
+      "vendu": {
+        "banquets": 1108,
+        "carte-soir": 2111,
+        "formule-midi": 1696,
+        "traiteur": 0,
+      },
+    },
+    {
+      "resultat": -783,
+      "tresorerie": 5981,
+      "vendu": {
+        "banquets": 1087,
+        "carte-soir": 2072,
+        "formule-midi": 1664,
+        "traiteur": 0,
+      },
+    },
+  ],
+  "premium": [
+    {
+      "resultat": -15444,
+      "tresorerie": 6621,
+      "vendu": {
+        "banquets": 1023,
+        "carte-soir": 2207,
+        "formule-midi": 1523,
+        "traiteur": 0,
+      },
+    },
+    {
+      "resultat": -3782,
+      "tresorerie": -6492,
+      "vendu": {
+        "banquets": 553,
+        "carte-soir": 1866,
+        "formule-midi": 1000,
+        "traiteur": 388,
+      },
+    },
+    {
+      "resultat": 4401,
+      "tresorerie": -3995,
+      "vendu": {
+        "banquets": 811,
+        "carte-soir": 2454,
+        "formule-midi": 856,
+        "traiteur": 762,
+      },
+    },
+    {
+      "resultat": -25903,
+      "tresorerie": -20000,
+      "vendu": {
+        "banquets": 398,
+        "carte-soir": 1816,
+        "formule-midi": 727,
+        "traiteur": 569,
+      },
+    },
+    {
+      "resultat": -1138,
+      "tresorerie": -20000,
+      "vendu": {
+        "banquets": 522,
+        "carte-soir": 2091,
+        "formule-midi": 791,
+        "traiteur": 648,
+      },
+    },
+    {
+      "resultat": -513,
+      "tresorerie": -20000,
+      "vendu": {
+        "banquets": 513,
+        "carte-soir": 2063,
+        "formule-midi": 778,
+        "traiteur": 637,
+      },
+    },
+  ],
+  "price_aggressive": [
+    {
+      "resultat": 9501,
+      "tresorerie": 33072,
+      "vendu": {
+        "banquets": 1664,
+        "carte-soir": 3304,
+        "formule-midi": 2515,
+        "traiteur": 0,
+      },
+    },
+    {
+      "resultat": -4358,
+      "tresorerie": 29762,
+      "vendu": {
+        "banquets": 1031,
+        "carte-soir": 3192,
+        "formule-midi": 1889,
+        "traiteur": 0,
+      },
+    },
+    {
+      "resultat": 7234,
+      "tresorerie": 43986,
+      "vendu": {
+        "banquets": 1647,
+        "carte-soir": 4038,
+        "formule-midi": 2817,
+        "traiteur": 0,
+      },
+    },
+    {
+      "resultat": -14424,
+      "tresorerie": 30599,
+      "vendu": {
+        "banquets": 928,
+        "carte-soir": 3413,
+        "formule-midi": 2741,
+        "traiteur": 0,
+      },
+    },
+    {
+      "resultat": 16895,
+      "tresorerie": 44053,
+      "vendu": {
+        "banquets": 1190,
+        "carte-soir": 3827,
+        "formule-midi": 2913,
+        "traiteur": 0,
+      },
+    },
+    {
+      "resultat": 28571,
+      "tresorerie": 72334,
+      "vendu": {
+        "banquets": 1322,
+        "carte-soir": 4253,
+        "formule-midi": 3236,
+        "traiteur": 0,
+      },
+    },
+  ],
+}
+`;
