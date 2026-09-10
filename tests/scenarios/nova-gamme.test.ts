@@ -74,13 +74,20 @@ describe("NOVA · gamme — la gamme", () => {
     expect(new Set(segments).size).toBe(segments.length);
   });
 
-  it("le NOVA One est le NOVA d'origine : mêmes coûts, mêmes étudiants, même CampusTech", () => {
+  it("le NOVA One est le NOVA d'origine : mêmes coûts, mêmes ressorts, même CampusTech", () => {
     const one = toGamme(novaGammeScenario)[1]!;
     expect(one.materialCostPerUnit).toBe(novaScenario.product.materialCostPerUnit);
     expect(one.otherVariableCostPerUnit).toBe(novaScenario.product.otherVariableCostPerUnit);
     expect(one.hoursPerUnit).toBe(novaScenario.product.hoursPerUnit);
-    const segment = (code: string) => novaScenario.market.segments.find((s) => s.code === code);
-    expect(one.market.segments.find((s) => s.code === "etudiants")).toEqual(segment("etudiants"));
+    const segment = (code: string) => novaScenario.market.segments.find((s) => s.code === code)!;
+    // Les étudiants gardent leurs ressorts (élasticité, seuils, fidélité) ; une
+    // partie d'entre eux achète désormais un Go, le segment est un peu moins
+    // large, mais reste le plus gros du marché : c'est lui qui fixe le prix de
+    // référence des bots (59 €, pas les 55 € de CampusTech).
+    const etudiants = one.market.segments.find((s) => s.code === "etudiants")!;
+    expect({ ...etudiants, size: 0 }).toEqual({ ...segment("etudiants"), size: 0 });
+    expect(etudiants.size).toBeLessThan(segment("etudiants").size);
+    expect(etudiants.size).toBeGreaterThan(segment("campustech").size);
     expect(one.market.segments.find((s) => s.code === "campustech")).toEqual(segment("campustech"));
     // Les passionnés, eux, sont montés en gamme : ils achètent un Studio.
     expect(one.market.segments.map((s) => s.code)).not.toContain("passionnes");

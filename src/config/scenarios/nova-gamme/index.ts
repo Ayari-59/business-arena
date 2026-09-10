@@ -108,12 +108,15 @@ const campustech = novaSegments.find((s) => s.code === "campustech")!;
 
 /**
  * Le marché du NOVA One, cœur de gamme : les étudiants et CampusTech du NOVA
- * d'origine, tels quels. C'est aussi le marché « du scénario » (`market`) :
+ * d'origine, aux mêmes ressorts. C'est aussi le marché « du scénario » (`market`) :
  * celui que lisent les affichages mono-produit, le prix de référence des bots
  * et les gardes de calibration.
  */
 const ONE_MARKET = {
-  segments: [etudiants, campustech],
+  // Une partie des étudiants du NOVA d'origine achète désormais un Go : le
+  // segment du One est un peu moins large, ses ressorts sont les mêmes (et il
+  // reste le plus gros du marché : c'est lui qui fixe le prix de référence).
+  segments: [{ ...etudiants, size: 12500 }, campustech],
   seasonality: [0.9, 0.95, 1.0, 1.35, 0.9, 1.0],
   outsideAttraction: 0.55,
   competitionIntensity: 1.6,
@@ -133,7 +136,7 @@ const GAMME: ProductDef[] = [
         {
           code: "lyceens",
           name: "Lycéens et cadeaux (très sensibles au prix)",
-          size: 5000,
+          size: 3000,
           growth: 0.05,
           priceElasticity: -2.4,
           refPrice: 34,
@@ -153,7 +156,7 @@ const GAMME: ProductDef[] = [
         {
           code: "gms",
           name: "Grande distribution (centrale d'achat, 60 j)",
-          size: 3500,
+          size: 2200,
           growth: 0.04,
           priceElasticity: -1.4,
           refPrice: 31,
