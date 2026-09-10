@@ -326,12 +326,21 @@ function LienPrixFaconnier({
 }
 
 const CELLULE_SAISIE =
-  "flex items-center gap-1 rounded-lg border border-white/10 bg-slate-950 px-2 py-1.5 focus-within:border-amber-400/60";
+  "inline-flex items-center gap-1 rounded-lg border border-white/10 bg-slate-950 px-2 py-1.5 focus-within:border-amber-400/60";
 
 /** Une référence en développement ne se vend ni ne se produit : rien à saisir. */
 function enDeveloppement(p: NonNullable<GameView["gamme"]>[number]): boolean {
   const dev = p.rd?.development;
   return !!dev && !dev.available;
+}
+
+/** La pastille d'une référence en développement, à côté de son nom. */
+function EnDeveloppement() {
+  return (
+    <span className="ml-2 inline-block whitespace-nowrap rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-0.5 align-middle text-xs font-medium text-amber-300">
+      🔬 en développement
+    </span>
+  );
 }
 
 /**
@@ -370,7 +379,7 @@ function GammeVentes({
       <table className="w-full text-sm">
         <thead>
           <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
-            <th className="pb-2 pr-3 font-medium">Référence</th>
+            <th className="w-full pb-2 pr-3 font-medium">Référence</th>
             <th className="pb-2 pr-3 font-medium">{v.priceLabel}</th>
             <th className="pb-2 pr-3 font-medium">{v.productionPlanLabel}</th>
             {avecFournisseurs ? <th className="pb-2 font-medium">Fournisseur</th> : null}
@@ -390,11 +399,13 @@ function GammeVentes({
             // lecture par référence reste complète.
             if (enDeveloppement(p)) {
               return (
-                <tr key={p.code} className="border-t border-white/5 align-top">
+                <tr key={p.code} className="border-t border-white/5 align-middle">
                   <td className="py-2 pr-3">
-                    <span className="block text-sm font-medium text-slate-100">{p.name}</span>
-                    <span className="mt-0.5 block text-xs leading-snug text-amber-300">
-                      🔬 en développement
+                    <span className="text-sm font-medium text-slate-100">{p.name}</span>
+                    <EnDeveloppement />
+                    <span className="mt-0.5 block text-xs leading-snug text-slate-400">
+                      Rien à vendre tant qu&apos;elle n&apos;est pas bâtie : son financement se décide
+                      dans les budgets du tour, à la R&amp;D.
                     </span>
                     <input type="hidden" name={productFieldName(p.code, "price")} value={Math.round(price * 10) / 10} />
                     <input type="hidden" name={productFieldName(p.code, "productionPlan")} value={0} />
@@ -402,9 +413,8 @@ function GammeVentes({
                       <input type="hidden" name={productFieldName(p.code, "supplierChoice")} value={faconniers[p.code]} />
                     ) : null}
                   </td>
-                  <td className="py-2 pr-3 text-xs leading-snug text-slate-400" colSpan={2 + (avecFournisseurs ? 1 : 0)}>
-                    Rien à vendre tant que la référence n&apos;est pas bâtie : son financement se
-                    décide dans les budgets du tour, à la R&amp;D.
+                  <td className="py-2 pr-3 text-center text-xs text-slate-500" colSpan={2 + (avecFournisseurs ? 1 : 0)}>
+                    —
                   </td>
                 </tr>
               );
@@ -471,7 +481,7 @@ function GammeVentes({
                           const code = e.currentTarget.value;
                           setFaconniers((etat) => ({ ...etat, [p.code]: code }));
                         }}
-                        className="w-full min-w-44 rounded-lg border border-white/10 bg-slate-950 px-2 py-1.5 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+                        className="w-full min-w-56 rounded-lg border border-white/10 bg-slate-950 px-2 py-1.5 text-sm text-slate-100 outline-none focus:border-amber-400/60"
                       >
                         {suppliers.map((s) => (
                           <option key={s.code} value={s.code}>
@@ -532,10 +542,10 @@ function GammeBudgets({
       <table className="w-full text-sm">
         <thead>
           <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
-            <th className="pb-2 pr-3 font-medium">Référence</th>
+            <th className="w-full pb-2 pr-3 font-medium">Référence</th>
             <th className="pb-2 pr-3 font-medium">Marketing</th>
             {quality ? <th className="pb-2 pr-3 font-medium">Qualité</th> : null}
-            {avecRd ? <th className="pb-2 pr-3 font-medium">R&amp;D</th> : null}
+            {avecRd ? <th className="pb-2 font-medium">R&amp;D</th> : null}
           </tr>
         </thead>
         <tbody>
@@ -546,7 +556,7 @@ function GammeBudgets({
             const rdDefaut = Math.round(own?.rdBudget ?? 0);
             const dev = p.rd?.development;
             const champRd = avecRd ? (
-              <td className="py-2 pr-3">
+              <td className="py-2">
                 <span className={CELLULE_SAISIE}>
                   <input
                     type="number"
@@ -556,7 +566,7 @@ function GammeBudgets({
                     step={1}
                     min={0}
                     required
-                    className="w-24 bg-transparent text-sm text-slate-100 outline-none"
+                    className="w-20 bg-transparent text-sm text-slate-100 outline-none"
                   />
                   <span className="text-xs text-slate-400">€</span>
                 </span>
@@ -568,28 +578,29 @@ function GammeBudgets({
               const reste = Math.max(0, dev.cost - dev.invested);
               const pret = reste <= 0;
               return (
-                <tr key={p.code} className="border-t border-white/5 align-top">
+                <tr key={p.code} className="border-t border-white/5 align-middle">
                   <td className="py-2 pr-3">
-                    <span className="block text-sm font-medium text-slate-100">{p.name}</span>
-                    <span className="mt-0.5 block text-xs leading-snug text-amber-300">
-                      🔬 en développement
+                    <span className="text-sm font-medium text-slate-100">{p.name}</span>
+                    <EnDeveloppement />
+                    <span className="mt-0.5 block text-xs leading-snug text-slate-400">
+                      {pret
+                        ? `Financée (${formatEuro(dev.invested)} engagés) : vendable dès le tour ${Math.max(dev.availableFromRound, roundIndex + 1)}.`
+                        : `${formatEuro(dev.invested)} engagés sur ${formatEuro(dev.cost)} : il reste ${formatEuro(reste)} à financer, puis elle se vend dès le tour suivant (au plus tôt le tour ${dev.availableFromRound}).`}
                     </span>
                     <input type="hidden" name={productFieldName(p.code, "marketingBudget")} value={0} />
                     {quality ? <input type="hidden" name={productFieldName(p.code, "qualityBudget")} value={0} /> : null}
                   </td>
-                  <td className="py-2 pr-3 text-xs leading-snug text-slate-400" colSpan={1 + (quality ? 1 : 0)}>
-                    {pret
-                      ? `Développement financé (${formatEuro(dev.invested)} engagés) : vendable dès le tour ${Math.max(dev.availableFromRound, roundIndex + 1)}.`
-                      : `${formatEuro(dev.invested)} engagés sur ${formatEuro(dev.cost)} : il reste ${formatEuro(reste)} à financer. Une fois le coût couvert, la référence se vend dès le tour suivant, et au plus tôt au tour ${dev.availableFromRound}.`}
+                  <td className="py-2 pr-3 text-center text-xs text-slate-500" colSpan={1 + (quality ? 1 : 0)}>
+                    —
                   </td>
                   {champRd}
                 </tr>
               );
             }
             return (
-              <tr key={p.code} className="border-t border-white/5 align-top">
+              <tr key={p.code} className="border-t border-white/5 align-middle">
                 <td className="py-2 pr-3">
-                  <span className="block text-sm font-medium text-slate-100">{p.name}</span>
+                  <span className="text-sm font-medium text-slate-100">{p.name}</span>
                 </td>
                 <td className="py-2 pr-3">
                   <span className={CELLULE_SAISIE}>
@@ -630,14 +641,13 @@ function GammeBudgets({
         </tbody>
       </table>
       <p className="mt-2 text-xs leading-relaxed text-slate-400">
-        Le marketing soutient la demande de la référence qui le reçoit ; l&apos;effet retombe
-        vite si on cesse.
-        {quality
-          ? " Le budget qualité fait la qualité de la référence qui le reçoit : réparti à parts égales, il vaut ce qu'il valait pour toute la gamme ; concentré, il distingue une référence."
-          : ""}
+        Chaque budget va à la référence qui le reçoit, et se paie le tour même. Le marketing
+        soutient sa demande, et retombe vite si on cesse
+        {quality ? " ; la qualité fait sa qualité perçue" : ""}
         {avecRd
-          ? " La R&D lance une référence à développer (le coût couvert, elle se vend dès le tour suivant) et, au-delà, élève son niveau technique : une qualité perçue qui monte avec retard et s'érode si la R&D cesse. Elle se paie le tour même, en charge."
+          ? " ; la R&D la bâtit quand elle est à développer, puis élève son niveau technique, avec retard, et s'érode si elle cesse"
           : ""}
+        .
       </p>
     </div>
   );
