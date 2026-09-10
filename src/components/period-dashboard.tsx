@@ -1,4 +1,5 @@
 import { formatEuro, formatPercent, formatUnits } from "@/lib/format";
+import { COMMUNICATION_AXIS_LABELS } from "@/engine/market/communication";
 import { KpiCard } from "@/components/kpi-card";
 import { EventCard } from "@/components/event-card";
 import { cardByCode } from "@/config/events/cards";
@@ -366,6 +367,18 @@ export function PeriodDashboard({
               <h3 className="mb-2 text-sm font-semibold text-slate-200">
                 Marché du tour écoulé
               </h3>
+              {r.communication ? (
+                <p className="mb-2 text-xs text-slate-400">
+                  📣 Communication :{" "}
+                  {r.communication.axis
+                    ? `axe « ${COMMUNICATION_AXIS_LABELS[r.communication.axis].label.toLowerCase()} »`
+                    : "aucun axe"}
+                  {r.communication.brandBudget > 0 ? ` · marque ${formatEuro(r.communication.brandBudget)}` : ""}
+                  {" · notoriété "}
+                  {Math.round(r.communication.brandAwareness * 100)} % en fin de tour. L&apos;axe porte (✓) ou
+                  dessert (✗) le marketing selon ce que chaque clientèle regarde.
+                </p>
+              ) : null}
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -374,6 +387,7 @@ export function PeriodDashboard({
                       <th className="pb-2 pr-2 text-right font-medium">Demande</th>
                       <th className="pb-2 pr-2 text-right font-medium">Vendu</th>
                       <th className="pb-2 text-right font-medium">Manqué</th>
+                      {r.communication?.axis ? <th className="pb-2 pl-2 text-right font-medium">Axe</th> : null}
                     </tr>
                   </thead>
                   <tbody className="text-slate-300">
@@ -387,6 +401,20 @@ export function PeriodDashboard({
                           <td className={`py-2 text-right tabular-nums ${d.lost > 1 ? "text-red-400" : ""}`}>
                             {formatUnits(d.lost)}
                           </td>
+                          {r.communication?.axis ? (
+                            <td className="py-2 pl-2 text-right text-xs">
+                              {(() => {
+                                const fit = r.communication!.fitBySegment[code] ?? 1;
+                                return fit > 1 ? (
+                                  <span className="text-emerald-300">✓ porte</span>
+                                ) : fit < 1 ? (
+                                  <span className="text-red-400">✗ dessert</span>
+                                ) : (
+                                  <span className="text-slate-500">· neutre</span>
+                                );
+                              })()}
+                            </td>
+                          ) : null}
                         </tr>
                       ))}
                   </tbody>

@@ -17,6 +17,7 @@ import { cardByCode } from "@/config/events/cards";
 import { proposedDecisionsFor, startingDecisionsFor } from "@/services/decision-baseline";
 import { orderOfferForRound } from "@/engine/simulation";
 import { isMultiProduct, isProductAvailable, rdOpeningOf, suppliersOf, toGamme } from "@/engine/gamme";
+import { COMMUNICATION_AXES, COMMUNICATION_AXIS_LABELS } from "@/engine/market/communication";
 import { computeRatios } from "@/engine/finance/ratios";
 import { conditionsBancaires, confianceInitiale } from "@/engine/finance/bank";
 import { irr, npv, paybackPeriod } from "@/engine/investment";
@@ -30,6 +31,7 @@ import type {
   CompanyState,
   EngineScenarioConfig,
   RoundDecisions,
+  CommunicationAxis,
 } from "@/engine/types";
 import {
   findUserTeam,
@@ -276,6 +278,17 @@ export interface GameView {
    * levier. En mono-produit, c'est lui qui ouvre le champ R&D du formulaire.
    */
   rdOffer: { techScale: number } | null;
+  /**
+   * Le levier communication du scénario : les axes possibles (code, libellé,
+   * ce qu'il fait), l'échelle du budget de marque, la notoriété acquise à
+   * l'ouverture du tour et l'axe tenu au tour précédent. `null` sans levier.
+   */
+  communicationOffer: {
+    axes: { code: CommunicationAxis; label: string; hint: string }[];
+    brandScale: number;
+    brandAwareness: number;
+    lastAxis: CommunicationAxis | null;
+  } | null;
   /**
    * D'où l'équipe repart pour le tour à jouer : le stock de chaque référence
    * (une seule en mono-produit, sous le code du produit) et les trois postes
@@ -580,6 +593,9 @@ function reconstructResult(
     // Gamme : clé émise seulement quand la ligne la porte, pour que le résultat
     // reconstruit d'une partie mono-produit garde exactement sa forme.
     ...(trace.products ? { products: trace.products } : {}),
+    // R&D (mono) et communication : mêmes règles, clé émise seulement si portée.
+    ...(trace.rd ? { rd: trace.rd } : {}),
+    ...(trace.communication ? { communication: trace.communication } : {}),
   };
   return { result, events: trace.events ?? [] };
 }
@@ -1286,6 +1302,17 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     rdOffer: (() => {
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
       return snapshot.rd ? { techScale: snapshot.rd.techScale } : null;
+    })(),
+    communicationOffer: (() => {
+      const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+      if (!snapshot.communication) return null;
+      const state = stateRow?.state as CompanyState | undefined;
+      return {
+        axes: COMMUNICATION_AXES.map((code) => ({ code, ...COMMUNICATION_AXIS_LABELS[code] })),
+        brandScale: snapshot.communication.brandScale,
+        brandAwareness: state?.brandAwareness ?? 0,
+        lastAxis: state?.lastCommunicationAxis ?? null,
+      };
     })(),
     sectorKpis: (() => {
       if (!lastResult) return [];

@@ -16,6 +16,7 @@ import type { RoundDecisions } from "@/engine/types";
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
 import type { GameView } from "@/services/game-view.service";
 import { formatEuro, formatEuroCents, formatUnits } from "@/lib/format";
+import { COMMUNICATION_AXIS_LABELS } from "@/engine/market/communication";
 import { SimulationProgress } from "@/components/simulation-progress";
 
 const initialState: PlayRoundState = { error: null };
@@ -640,8 +641,11 @@ export function DecisionForm({
   verrou,
   gamme = null,
   rdOffer = null,
+  communicationOffer = null,
 }: {
   gameId: string;
+  /** Levier communication du scénario (marque et axe) ; null sans levier. */
+  communicationOffer?: GameView["communicationOffer"];
   /** Gamme du scénario joué (prix, volume et marketing par référence) ; null en mono-produit. */
   gamme?: GameView["gamme"];
   /** Levier R&D du scénario (échelle du budget par tour) ; null sans levier. */
@@ -857,6 +861,8 @@ export function DecisionForm({
     rd: false,
   };
   const rdMono = on.rd && !!rdOffer && !gamme;
+  // L'axe de communication tenu : écouté pour dire à qui il parle.
+  const [axe, setAxe] = useState<string>(defaults.communicationAxis ?? "");
 
   // Vocabulaire du secteur : c'est lui qui parle à l'élève, pas le moteur.
   const v = vocabulary;
@@ -999,6 +1005,9 @@ export function DecisionForm({
             roundIndex={roundIndex}
           />
         </Family>
+      ) : null}
+      {gamme ? (
+        <></>
       ) : (
         <Family legend="🎯 Vos ventes · le prix et le volume du tour" defaultOpen>
           <div className="grid grid-cols-2 gap-3">
@@ -1169,6 +1178,49 @@ export function DecisionForm({
           </div>
         </Family>
       )}
+      {communicationOffer ? (
+        // La communication (levier `communication`) : le budget de MARQUE, en
+        // gamme seulement (les budgets par référence restent le marketing
+        // spécifique), et l'AXE tenu ce tour. L'axe est un choix d'entreprise :
+        // un seul, lisible, dont le formulaire dit à qui il parle.
+        <Family legend={gamme ? "📣 Communication · la marque et l'axe" : "📣 Communication · l'axe"} defaultOpen>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {gamme ? (
+              <Field
+                name="brandMarketingBudget"
+                label="Budget de marque"
+                defaultValue={Math.round(defaults.brandMarketingBudget ?? 0)}
+                suffix="€"
+                hint={`Bâtit la notoriété de la marque, pour toute la gamme, avec retard : elle vaut ${Math.round(communicationOffer.brandAwareness * 100)} % à l'ouverture, et s'use si vous cessez. Les budgets par référence, eux, agissent tout de suite.`}
+              />
+            ) : null}
+            <label className="block">
+              <span className="text-xs font-medium uppercase tracking-wide text-slate-400">Axe de communication</span>
+              <select
+                name="communicationAxis"
+                value={axe}
+                onChange={(e) => setAxe(e.currentTarget.value)}
+                className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+              >
+                <option value="">Aucun axe : le budget parle à tout le monde, sans porter nulle part</option>
+                {communicationOffer.axes.map((a) => (
+                  <option key={a.code} value={a.code}>
+                    {a.label}
+                  </option>
+                ))}
+              </select>
+              <span className="mt-1 block text-[13px] text-slate-400">
+                {axe
+                  ? COMMUNICATION_AXIS_LABELS[axe as keyof typeof COMMUNICATION_AXIS_LABELS].hint
+                  : "Le même budget rend davantage quand l'axe correspond à ce que la clientèle regarde, et dessert quand il ne lui parle pas."}
+                {communicationOffer.lastAxis && axe && axe !== communicationOffer.lastAxis
+                  ? " Changer d'axe use la notoriété acquise : une marque qui change de discours repart de plus bas."
+                  : ""}
+              </span>
+            </label>
+          </div>
+        </Family>
+      ) : null}
       {gamme ? (
         // Pas d'étape « Produire » en gamme : l'entretien de la réserve et du
         // linéaire se décide ici, avec l'approvisionnement. La qualité, elle, est

@@ -1,4 +1,5 @@
 import { formatEuro, formatUnits } from "@/lib/format";
+import { COMMUNICATION_AXIS_LABELS } from "@/engine/market/communication";
 import type { RoundDecisions } from "@/engine/types";
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
 import type { GameView } from "@/services/game-view.service";
@@ -51,6 +52,8 @@ export function PeriodDecisionsRecap({
 
   // Leviers optionnels réellement actionnés ce tour-là.
   const chips: string[] = [];
+  if (d.communicationAxis) chips.push(`📣 Axe : ${COMMUNICATION_AXIS_LABELS[d.communicationAxis].label.toLowerCase()}`);
+  if ((d.brandMarketingBudget ?? 0) > 0) chips.push(`🏷️ Marque : ${formatEuro(d.brandMarketingBudget!)}`);
   if (d.insurance) chips.push("🛡️ Assurance souscrite");
   // En gamme, le fournisseur se lit référence par référence dans le tableau.
   if (d.supplierChoice && !avecFournisseur) chips.push(`🚚 Fournisseur : ${d.supplierChoice}`);

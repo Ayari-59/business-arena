@@ -55,6 +55,9 @@ export function auPas(d: RoundDecisions): RoundDecisions {
         : d.rdBudget !== undefined
           ? { rdBudget: Math.round(d.rdBudget) }
           : {}),
+      ...(d.brandMarketingBudget !== undefined
+        ? { brandMarketingBudget: Math.round(d.brandMarketingBudget) }
+        : {}),
     };
   }
   return {
@@ -111,13 +114,35 @@ export function startingDecisionsFor(
       qualityBudget: 0.5 * snapshot.production.qualityScale,
       maintenanceBudget: snapshot.production.maintenanceReference,
       ...(snapshot.rd ? { rdBudget: 0 } : {}),
+      // Communication : la marque et l'axe sont un choix de l'équipe, rien de proposé.
+      ...(snapshot.communication && products ? { brandMarketingBudget: 0 } : {}),
       ...(products ? { products } : {}),
     });
   }
   // La R&D n'est jamais proposée : investir pour lancer une référence ou
   // élever son niveau technique est la décision de l'équipe, pas du bot
-  // équilibré qui sert de neutre pour le reste.
-  return auPas(sansRd(neutralDecisions({ scenario: snapshot, state, roundIndex })));
+  // équilibré qui sert de neutre pour le reste. Ni la marque, ni l'axe de
+  // communication : le marketing proposé revient tout entier aux références.
+  return auPas(sansRd(sansCommunication(neutralDecisions({ scenario: snapshot, state, roundIndex }))));
+}
+
+function sansCommunication(d: RoundDecisions): RoundDecisions {
+  const { communicationAxis: _axe, ...reste } = d;
+  void _axe;
+  if (d.brandMarketingBudget === undefined || !d.products) return reste;
+  const n = Object.keys(d.products).length;
+  return {
+    ...reste,
+    brandMarketingBudget: 0,
+    products: Object.fromEntries(
+      Object.entries(d.products).map(([code, p]) => [
+        code,
+        p.marketingBudget !== undefined
+          ? { ...p, marketingBudget: p.marketingBudget + (d.brandMarketingBudget ?? 0) / n }
+          : p,
+      ]),
+    ),
+  };
 }
 
 function sansRd(d: RoundDecisions): RoundDecisions {

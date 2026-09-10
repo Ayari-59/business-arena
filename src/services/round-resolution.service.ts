@@ -439,6 +439,8 @@ async function resolveGameRound(
               bank: r.bank ?? null,
               rse: r.rse ?? null,
               products: r.products ?? null,
+              rd: r.rd ?? null,
+              communication: r.communication ?? null,
             },
             revenue: toMoney(r.incomeStatement.revenue),
             netIncome: toMoney(r.incomeStatement.netIncome),

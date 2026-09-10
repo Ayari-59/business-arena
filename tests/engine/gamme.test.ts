@@ -785,3 +785,120 @@ describe("gamme — la R&D lance une référence, puis élève son niveau techni
     ).toThrow();
   });
 });
+
+describe("gamme — la marque et l'axe de communication", () => {
+  const COMM = {
+    brandScale: 10000,
+    brandSensitivity: 0.2,
+    brandMax: 0.3,
+    brandInertia: 0.5,
+    axisFit: 1.3,
+    axisMisfit: 0.7,
+    axisSwitchDecay: 0.6,
+  };
+  // NOVA + B, avec le levier communication. A garde les étudiants (élastiques,
+  // peu sensibles à la qualité), les passionnés (l'inverse) et CampusTech.
+  const scenario = parseScenarioConfig({ ...gammeScenario(), communication: COMM });
+  const decide = (
+    extra: Partial<RoundDecisions>,
+    marketingA = 6000,
+  ): RoundDecisions => ({
+    ...PLAYER,
+    products: {
+      [A]: { price: 59, productionPlan: 4000, marketingBudget: marketingA, qualityBudget: 3000 },
+      [B]: { price: 80, productionPlan: 800, marketingBudget: 0, qualityBudget: 0 },
+    },
+    ...extra,
+  });
+  const round = (states: CompanyState[], player: RoundDecisions, roundIndex = 1) => {
+    const [, soundbox, auris] = states as [CompanyState, CompanyState, CompanyState];
+    return simulateRound({
+      scenario,
+      roundIndex,
+      companies: states,
+      decisions: {
+        player,
+        soundbox: botDecisions("price_aggressive", { scenario, state: soundbox, roundIndex }),
+        auris: botDecisions("premium", { scenario, state: auris, roundIndex }),
+      },
+      activeEvents: [],
+      seed: SEED,
+    });
+  };
+  const demande = (out: ReturnType<typeof round>, segment: string) =>
+    out.results["player"]!.market.bySegment[segment]!.demandForCompany;
+
+  it("l'axe prix porte auprès des étudiants et dessert auprès des passionnés ; l'axe qualité fait l'inverse", () => {
+    const sans = round(companies(), decide({}));
+    const prix = round(companies(), decide({ communicationAxis: "prix" }));
+    const qualite = round(companies(), decide({ communicationAxis: "qualite" }));
+    expect(prix.results["player"]!.communication!.fitBySegment["etudiants"]).toBe(COMM.axisFit);
+    expect(prix.results["player"]!.communication!.fitBySegment["passionnes"]).toBe(COMM.axisMisfit);
+    expect(qualite.results["player"]!.communication!.fitBySegment["etudiants"]).toBe(COMM.axisMisfit);
+    expect(qualite.results["player"]!.communication!.fitBySegment["passionnes"]).toBe(COMM.axisFit);
+    expect(demande(prix, "etudiants")).toBeGreaterThan(demande(sans, "etudiants"));
+    expect(demande(prix, "passionnes")).toBeLessThan(demande(sans, "passionnes"));
+    expect(demande(qualite, "passionnes")).toBeGreaterThan(demande(sans, "passionnes"));
+    expect(demande(qualite, "etudiants")).toBeLessThan(demande(sans, "etudiants"));
+    // Sans axe, l'adéquation est neutre partout et rien ne bouge.
+    for (const fit of Object.values(sans.results["player"]!.communication!.fitBySegment)) expect(fit).toBe(1);
+  });
+
+  it("un axe prix n'est pas crédible sur un prix élevé", () => {
+    const cher = round(
+      companies(),
+      decide({
+        communicationAxis: "prix",
+        products: {
+          [A]: { price: 75, productionPlan: 4000, marketingBudget: 6000 },
+          [B]: { price: 80, productionPlan: 800, marketingBudget: 0 },
+        },
+      }),
+    );
+    expect(cher.results["player"]!.communication!.fitBySegment["etudiants"]).toBe(COMM.axisMisfit);
+  });
+
+  it("le budget de marque bâtit une notoriété qui porte toute la gamme au tour suivant, se paie en marketing, et s'use si l'axe change", () => {
+    const t1 = round(companies(), decide({ brandMarketingBudget: 10000, communicationAxis: "qualite" }));
+    const p1 = t1.results["player"]!;
+    const attendu = (1 - COMM.brandInertia) * Math.min(COMM.brandMax, COMM.brandSensitivity * Math.log(2));
+    expect(p1.communication!.brandAwareness).toBeCloseTo(attendu, 9);
+    expect(p1.communication!.brandBudget).toBe(10000);
+    // La marque est dans la ligne marketing du compte de résultat.
+    const sansMarque = round(companies(), decide({ communicationAxis: "qualite" })).results["player"]!;
+    expect(p1.incomeStatement.marketingCost - sansMarque.incomeStatement.marketingCost).toBeCloseTo(10000, 6);
+    // Le tour suivant, la notoriété d'ouverture relève la demande sur A ET sur B.
+    const t2 = round(t1.companies, decide({ communicationAxis: "qualite" }), 2);
+    const t2sans = round(round(companies(), decide({ communicationAxis: "qualite" })).companies, decide({ communicationAxis: "qualite" }), 2);
+    expect(demande(t2, "passionnes")).toBeGreaterThan(demande(t2sans, "passionnes"));
+    expect(demande(t2, B)).toBeGreaterThan(demande(t2sans, B));
+    expect(t1.companies.find((c) => c.id === "player")!.brandAwareness).toBeCloseTo(attendu, 9);
+    // Changer d'axe use la notoriété acquise ; la garder, non.
+    const garde = round(t1.companies, decide({ communicationAxis: "qualite" }), 2).results["player"]!;
+    const change = round(t1.companies, decide({ communicationAxis: "prix" }), 2).results["player"]!;
+    expect(garde.communication!.brandAwareness).toBeCloseTo(COMM.brandInertia * attendu, 9);
+    expect(change.communication!.brandAwareness).toBeCloseTo(COMM.brandInertia * attendu * COMM.axisSwitchDecay, 9);
+  });
+
+  it("les bots tiennent l'axe de leur profil et consacrent une part de leur marketing à la marque", () => {
+    const [, soundbox, auris] = companies() as [CompanyState, CompanyState, CompanyState];
+    const agressif = botDecisions("price_aggressive", { scenario, state: soundbox, roundIndex: 1 });
+    const premium = botDecisions("premium", { scenario, state: auris, roundIndex: 1 });
+    const passif = botDecisions("passive", { scenario, state: auris, roundIndex: 1 });
+    expect(agressif.communicationAxis).toBe("prix");
+    expect(premium.communicationAxis).toBe("qualite");
+    expect(passif.communicationAxis).toBeUndefined();
+    // Marque + spécifique = le marketing scalaire, à la part du profil.
+    const specifique = Object.values(premium.products!).reduce((s, p) => s + (p.marketingBudget ?? 0), 0);
+    expect(premium.brandMarketingBudget! + specifique).toBeCloseTo(premium.marketingBudget, 6);
+    expect(premium.brandMarketingBudget! / premium.marketingBudget).toBeCloseTo(0.4, 9);
+  });
+
+  it("sans levier communication, rien n'est émis et le marketing reste un budget unique", () => {
+    const out = simulateRound(input(gammeScenario(), scalarDecisions(gammeScenario(), companies())));
+    expect(out.results["player"]!.communication).toBeUndefined();
+    expect(out.companies[0]!.brandAwareness).toBeUndefined();
+    expect(JSON.stringify(out)).not.toContain("brandAwareness");
+    expect(botDecisions("premium", { scenario: gammeScenario(), state: companies()[2]!, roundIndex: 1 }).communicationAxis).toBeUndefined();
+  });
+});

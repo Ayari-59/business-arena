@@ -156,6 +156,20 @@ describe("NOVA · gamme — la gamme", () => {
     expect(t1.rd?.development?.launched).toBe(false);
   });
 
+  it("porte le levier communication : marque et axe, que les bots tiennent selon leur profil", () => {
+    expect(novaGammeScenario.communication).toBeDefined();
+    expect(novaScenario.communication).toBeUndefined();
+    const t1 = joueur(partie("balanced"))[0]!;
+    expect(t1.communication?.axis).toBe("qualite");
+    expect(t1.communication!.brandBudget).toBeGreaterThan(0);
+    // L'axe qualité porte auprès des audiophiles et dessert auprès des lycéens.
+    expect(t1.communication!.fitBySegment["passionnes"]).toBeGreaterThan(1);
+    expect(t1.communication!.fitBySegment["lyceens"]).toBeLessThan(1);
+    const agressif = joueur(partie("price_aggressive"))[0]!;
+    expect(agressif.communication?.axis).toBe("prix");
+    expect(agressif.communication!.fitBySegment["lyceens"]).toBeGreaterThan(1);
+  });
+
   it("ouvre sans stock, sur aucune référence, avec le bilan du NOVA d'origine", () => {
     const c = novaGammeCompany("t", "T", "human");
     expect(c.finishedGoods.quantity).toBe(0);

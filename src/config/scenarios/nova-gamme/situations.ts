@@ -83,12 +83,13 @@ export const NOVA_GAMME_SITUATIONS: SituationDef[] = [
     category: "contexte_marche",
     title: "Trois marchés, trois réactions",
     narrative:
-      "Le premier tour a tranché. Sur la Go, SoundBox a baissé son prix de quelques euros et les lycéens ont suivi en masse ; sur la One, les étudiants ont bougé aussi, moins vite. Sur la Studio, rien : les passionnés et les studios ont acheté au prix fort, chez celui qui avait la meilleure réputation.",
+      "Le premier tour a tranché. Sur la Go, SoundBox a baissé son prix de quelques euros, l'a crié partout, et les lycéens ont suivi en masse ; sur la One, les étudiants ont bougé aussi, moins vite. Chez les passionnés, rien : ils ont acheté au prix fort, chez celui qui parlait de qualité et avait la meilleure réputation.",
     problem:
-      "Pourquoi les trois références ne réagissent-elles pas de la même façon au prix, et comment fixer chacun des trois prix pour le prochain tour ?",
+      "Pourquoi les références ne réagissent-elles pas de la même façon au prix, comment fixer chacun des prix, et sur quel axe communiquer pour le prochain tour ?",
     diagnosticOptions: [
       { id: "novag_elasticites", label: "Chaque référence a ses clients, donc sa sensibilité au prix : forte sur la Go, faible sur la Studio", correct: true },
       { id: "novag_seuils_psy", label: "Sur la Go et la One, des niveaux de prix agissent comme des seuils psychologiques", correct: true },
+      { id: "novag_axe_coherent", label: "Le même budget rend plus quand l'axe de communication dit ce que la clientèle regarde : le prix aux lycéens, la qualité aux passionnés", correct: true },
       { id: "novag_qualite_effondree", label: "Notre qualité s'est effondrée d'un tour à l'autre", correct: false },
       { id: "novag_un_seul_prix", label: "Il faut réagir sur toute la gamme avec la même baisse en pourcentage", correct: false },
     ],
@@ -133,12 +134,13 @@ export const NOVA_GAMME_SITUATIONS: SituationDef[] = [
       "Quels clients achètent une Go ? Une Studio ? Ont-ils le même rapport au prix ?",
       "La sensibilité au prix se mesure : c'est l'élasticité, et elle est propre à chaque marché de la gamme.",
       "Une analyse de l'élasticité, référence par référence, dirait où une baisse rapporte et où elle ne fait que coûter.",
-      "Baissez là où l'élasticité dépasse 1 en valeur absolue (la Go, la One sous ses seuils) ; tenez le prix de la Studio, et soignez plutôt sa qualité.",
+      "Baissez là où l'élasticité dépasse 1 en valeur absolue (la Go, la One sous ses seuils) ; tenez le prix de la Studio, et soignez plutôt sa qualité. Puis donnez au budget l'axe qui parle à la clientèle visée : le prix n'est crédible que si vous êtes vraiment moins cher, et changer d'axe chaque tour use la notoriété.",
     ]),
     trigger: { round: 2 },
     weight: 1,
     decisionLevers: [
       { field: "price", direction: "review", hint: "Trois marchés, trois élasticités : une baisse qui paie sur la Go coûte de la marge sur la Studio sans rien rapporter en volume." },
+      { field: "marketingBudget", direction: "review", hint: "Le budget se partage entre la marque, qui bâtit une notoriété lente pour toute la gamme, et chaque référence, à effet immédiat ; l'axe choisi décide de ce qu'il rend auprès de chaque clientèle." },
       { field: "qualityBudget", direction: "review", hint: "Les clients de la Studio arbitrent sur la qualité perçue bien plus que sur le prix : c'est là que le budget qualité rend le plus." },
     ],
   },

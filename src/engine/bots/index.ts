@@ -5,6 +5,7 @@ import type {
   ProductCode,
   ProductDecisions,
   RoundDecisions,
+  CommunicationAxis,
 } from "../types";
 import { fleetMaintenanceMultiplier } from "../simulation";
 import { isMultiProduct, isProductAvailable, rdOpeningOf, toGamme, type GammeProduct } from "../gamme";
@@ -127,6 +128,8 @@ function applyFinancialGuardRail(base: RoundDecisions, ctx: BotContext): void {
   // la trésorerie d'ouverture + le découvert autorisé. La production, elle, est
   // financée par le cycle (les ventes), pas mise en regard de la seule caisse.
   const envelope = ctx.state.finance.cash + ctx.scenario.finance.overdraftLimit;
+  // Le budget de marque (communication) est dérivé du marketing APRÈS ce
+  // garde-fou : il en fait partie, il n'est pas à compter deux fois.
   const discretionnaire =
     (base.marketingBudget ?? 0) +
     (base.qualityBudget ?? 0) +
@@ -456,7 +459,8 @@ function gammeDecisions(
     products[p.code] = {
       price: Math.max(floor, productRefPrice(p) * priceRatio),
       productionPlan: targets[k]! * cut,
-      marketingBudget: (base.marketingBudget ?? 0) * weightsAlive[k]!,
+      // Communication : la part de marque est retirée du marketing spécifique.
+      marketingBudget: (base.marketingBudget ?? 0) * (1 - brandShare(profile, ctx)) * weightsAlive[k]!,
       qualityBudget: available[k] ? (base.qualityBudget ?? 0) * planShare : 0,
       ...(supplierChoice !== undefined ? { supplierChoice } : {}),
       ...(rdBudget !== undefined ? { rdBudget } : {}),
@@ -492,6 +496,26 @@ function botRdBudget(profile: BotProfile, ctx: BotContext, p: GammeProduct, avai
   }
   const upkeep = { premium: 0.4, growth: 0.2, balanced: 0.1, price_aggressive: 0, passive: 0 }[profile];
   return upkeep * cfg.techScale;
+}
+
+/**
+ * Communication (levier `communication`) : l'axe qu'un bot tient, fidèle à son
+ * profil — le prix pour l'agressif, la qualité pour le premium et
+ * l'équilibré, l'image pour la croissance qui bâtit sa notoriété ; le passif
+ * ne communique sur rien. Et la part du marketing qu'il consacre à la marque,
+ * en gamme.
+ */
+const BOT_AXIS: Record<BotProfile, CommunicationAxis | undefined> = {
+  passive: undefined,
+  price_aggressive: "prix",
+  premium: "qualite",
+  balanced: "qualite",
+  growth: "image",
+};
+
+function brandShare(profile: BotProfile, ctx: BotContext): number {
+  if (!ctx.scenario.communication || !isMultiProduct(ctx.scenario)) return 0;
+  return { passive: 0, price_aggressive: 0.2, premium: 0.4, balanced: 0.3, growth: 0.5 }[profile];
 }
 
 export function botDecisions(profile: BotProfile, ctx: BotContext): RoundDecisions {
@@ -572,6 +596,13 @@ export function botDecisions(profile: BotProfile, ctx: BotContext): RoundDecisio
     if (ctx.scenario.rd) {
       enriched.rdBudget = Object.values(products).reduce((sum, p) => sum + (p.rdBudget ?? 0), 0);
     }
+    if (ctx.scenario.communication) {
+      enriched.brandMarketingBudget = enriched.marketingBudget * brandShare(profile, ctx);
+    }
+  }
+  if (ctx.scenario.communication) {
+    const axis = BOT_AXIS[profile];
+    if (axis) enriched.communicationAxis = axis;
   }
   return enriched;
 }
