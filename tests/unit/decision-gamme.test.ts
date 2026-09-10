@@ -348,24 +348,45 @@ describe("le formulaire en gamme", () => {
     expect(html).toContain("marge");
   });
 
-  it("un commerce ne produit rien : pas d'étape « Produire » en gamme, l'entretien rejoint l'approvisionnement", () => {
+  it("les budgets se décident au même endroit : en gamme, le tableau des références puis l'entretien, avant la communication", () => {
     const niveau3 = rendu(gamme, { enabled: presetByLevel.get(3)!.decisions });
     expect(niveau3).not.toContain("Produire");
     expect(niveau3).toContain("Entretien · réserve et linéaire");
     expect(niveau3).toContain('name="maintenanceBudget"');
     expect(niveau3).not.toContain("Production · qualité");
-    // Le budget d'entretien vit dans la première étape, avec les ventes.
+    // Le budget d'entretien vit dans la première étape, avec les ventes, et
+    // suit le tableau des références (marketing, qualité par référence).
     const etapeEntretien = niveau3.indexOf('name="maintenanceBudget"');
     const etapeSuivante = niveau3.indexOf('data-etape="1"');
-    expect(etapeEntretien).toBeGreaterThan(0);
+    expect(etapeEntretien).toBeGreaterThan(niveau3.indexOf('name="product.bonnet.qualityBudget"'));
     expect(etapeEntretien).toBeLessThan(etapeSuivante);
     // Niveau 1 : ni qualité ni entretien ouverts, les scalaires cachés partent quand même.
     const niveau1 = rendu(gamme);
     expect(niveau1).not.toContain("Produire");
     expect(niveau1).toContain('type="hidden" name="qualityBudget"');
     expect(niveau1).toContain('type="hidden" name="maintenanceBudget"');
-    // Mono-produit : l'étape « Produire » est toujours là.
-    expect(rendu(null, { enabled: presetByLevel.get(3)!.decisions })).toContain("Produire");
+  });
+
+  it("en mono-produit, marketing, qualité, maintenance et R&D forment une seule famille, dans la première étape", () => {
+    const html = rendu(null, { enabled: presetByLevel.get(4)!.decisions, rdOffer: { techScale: 10000 } });
+    expect(html).not.toContain("Produire");
+    expect(html).toContain("Les budgets du tour · marketing, qualité, maintenance, R&amp;D");
+    const positions = ["marketingBudget", "qualityBudget", "maintenanceBudget", "rdBudget"].map((n) => html.indexOf(`name="${n}"`));
+    for (const p of positions) expect(p).toBeGreaterThan(0);
+    // Dans cet ordre, contigus (aucune autre famille entre eux), avant la deuxième étape.
+    const debut = html.indexOf("Les budgets du tour");
+    const fin = html.indexOf("</details>", debut + 1);
+    for (const p of positions) {
+      expect(p).toBeGreaterThan(debut);
+      expect(p).toBeLessThan(fin);
+    }
+    expect([...positions].sort((a, b) => a - b)).toEqual(positions);
+    expect(positions[3]!).toBeLessThan(html.indexOf('data-etape="1"'));
+    // Un niveau qui ne les ouvre pas : le titre ne les promet pas, les scalaires partent cachés.
+    const niveau1 = rendu(null, { enabled: presetByLevel.get(1)!.decisions });
+    expect(niveau1).toContain("Les budgets du tour · marketing<");
+    expect(niveau1).toContain('type="hidden" name="qualityBudget"');
+    expect(niveau1).toContain('type="hidden" name="maintenanceBudget"');
   });
 
   it("en mono-produit, la qualité et le fournisseur restent des champs d'entreprise, l'écart relatif au référent", () => {
