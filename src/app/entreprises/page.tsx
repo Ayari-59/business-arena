@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SCENARIOS, SECTOR_LABELS, type ScenarioDefinition } from "@/config/scenarios/registry";
+import { SCENARIO_CHOICES, SECTOR_LABELS, familyOf, type ScenarioDefinition } from "@/config/scenarios/registry";
 import {
   accentsDe,
   emblemeDe,
@@ -10,8 +10,8 @@ import {
 
 export const metadata: Metadata = {
   alternates: { canonical: "/entreprises" },
-  title: `${SCENARIOS.length} entreprises jouables`,
-  description: `Un atelier, un hôtel, un bistrot, un chantier, une flotte de camions. ${SCENARIOS.length} métiers, ${SCENARIOS.length} contraintes, ${SCENARIOS.length} façons de perdre de l'argent.`,
+  title: `${SCENARIO_CHOICES.length} entreprises jouables`,
+  description: `Un atelier, un hôtel, un bistrot, un chantier, une flotte de camions. ${SCENARIO_CHOICES.length} métiers, ${SCENARIO_CHOICES.length} contraintes, ${SCENARIO_CHOICES.length} façons de perdre de l'argent.`,
 };
 
 /**
@@ -29,6 +29,7 @@ export const metadata: Metadata = {
  */
 
 function Fiche({ d }: { d: ScenarioDefinition }) {
+  const famille = familyOf(d.code);
   const a = accentsDe(d);
   const v = d.vocabulary;
   return (
@@ -59,6 +60,14 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
         <h2 className="mt-3 text-2xl font-bold tracking-tight text-slate-50">{nomSeul(d)}</h2>
         <p className={`text-sm font-medium ${a.texte}`}>{promesse(d) ?? d.tagline}</p>
         <p className="mt-3 text-sm leading-relaxed text-slate-400">{d.briefing}</p>
+        {famille ? (
+          // Le même métier en un produit ou en gamme : c'est le niveau de
+          // difficulté qui décide, et la fiche le dit avant qu'on ne choisisse.
+          <p className="mt-3 rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-sm leading-relaxed text-slate-300">
+            Jusqu&apos;au niveau {famille.gammeFromLevel - 1}, {famille.monoLabel} ; à partir du niveau{" "}
+            {famille.gammeFromLevel}, {famille.gammeLabel}.
+          </p>
+        ) : null}
 
         {/* La carte d'identité du métier : ce qui change vraiment d'un secteur
             à l'autre, et que le décor seul ne dit pas. */}
@@ -140,7 +149,7 @@ export default function EntreprisesPage() {
 
       <section className="mx-auto max-w-6xl px-6 py-14">
         <p className="text-xs uppercase tracking-[0.3em] text-amber-400">
-          {SCENARIOS.length} métiers · {SCENARIOS.length} contraintes
+          {SCENARIO_CHOICES.length} métiers · {SCENARIO_CHOICES.length} contraintes
         </p>
         <h1 className="mt-4 max-w-3xl text-4xl font-bold leading-tight tracking-tight text-slate-50 sm:text-5xl">
           Toutes les entreprises gagnent de l&apos;argent de la même façon.
@@ -154,7 +163,7 @@ export default function EntreprisesPage() {
           résultat est le même partout ; ce qui change, c&apos;est ce qui vous tue.
         </p>
         <div className="mt-8 flex flex-wrap gap-2">
-          {SCENARIOS.map((d) => (
+          {SCENARIO_CHOICES.map((d) => (
             <a
               key={d.code}
               href={`#${d.code}`}
@@ -168,7 +177,7 @@ export default function EntreprisesPage() {
 
       <section className="mx-auto max-w-6xl px-6 pb-16">
         <div className="grid gap-6">
-          {SCENARIOS.map((d) => (
+          {SCENARIO_CHOICES.map((d) => (
             <Fiche key={d.code} d={d} />
           ))}
         </div>
@@ -195,7 +204,7 @@ export default function EntreprisesPage() {
                 </tr>
               </thead>
               <tbody>
-                {SCENARIOS.map((d) => (
+                {SCENARIO_CHOICES.map((d) => (
                   <tr key={d.code} className="border-t border-white/5">
                     <td className="py-2.5 pr-4">
                       <a

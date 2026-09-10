@@ -4,7 +4,7 @@ import { startGameAction } from "../actions";
 import { getPlatformConfig } from "@/services/admin.service";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
 import { etendueDesDecisions, leviersDuNiveau } from "@/config/decisions";
-import { DEFAULT_SCENARIO_CODE, SCENARIOS, SECTOR_LABELS } from "@/config/scenarios/registry";
+import { DEFAULT_SCENARIO_CODE, SCENARIO_CHOICES, SECTOR_LABELS, familyOf } from "@/config/scenarios/registry";
 import { SubmitButton } from "@/components/submit-button";
 import { QuickConfigFields } from "@/components/quick-config-form";
 
@@ -38,7 +38,7 @@ export default async function JouerPage({
   // Les fiches d'entreprise renvoient ici avec leur métier en poche : le
   // sélecteur doit s'ouvrir dessus, sinon le clic n'a servi à rien.
   const { secteur } = await searchParams;
-  const scenarioChoisi = SCENARIOS.some((s) => s.code === secteur)
+  const scenarioChoisi = SCENARIO_CHOICES.some((s) => s.code === secteur)
     ? secteur!
     : DEFAULT_SCENARIO_CODE;
 
@@ -65,7 +65,7 @@ export default async function JouerPage({
               Lancez votre première partie
             </h1>
             <p className="mt-4 max-w-lg text-sm leading-relaxed text-slate-400">
-              Choisissez l&apos;un des {SCENARIOS.length} métiers, puis menez votre entreprise
+              Choisissez l&apos;un des {SCENARIO_CHOICES.length} métiers, puis menez votre entreprise
               face à des concurrents qui ne vous feront aucun cadeau. De {decisions.minimum} à{" "}
               {decisions.maximum} décisions par tour selon le niveau : prix, volumes, marketing,
               qualité, financement. Chacune compte, et la crise de trésorerie réserve une leçon
@@ -78,7 +78,7 @@ export default async function JouerPage({
             </ul>
             <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm">
               <Link href="/entreprises" className="text-amber-300 underline-offset-4 hover:underline">
-                Découvrir les {SCENARIOS.length} entreprises
+                Découvrir les {SCENARIO_CHOICES.length} entreprises
               </Link>
               <Link href="/join" className="text-amber-300 underline-offset-4 hover:underline">
                 J&apos;ai un code (élève)
@@ -108,13 +108,19 @@ export default async function JouerPage({
             >
               <h2 className="text-sm font-semibold text-slate-100">Configurer la partie</h2>
               <QuickConfigFields
-                scenarios={SCENARIOS.map((s) => ({
-                  code: s.code,
-                  icon: s.icon,
-                  label: s.shortName,
-                  sector: SECTOR_LABELS[s.sector],
-                  tagline: s.tagline,
-                }))}
+                scenarios={SCENARIO_CHOICES.map((s) => {
+                  const famille = familyOf(s.code);
+                  return {
+                    code: s.code,
+                    icon: s.icon,
+                    label: s.shortName,
+                    sector: SECTOR_LABELS[s.sector],
+                    tagline: s.tagline,
+                    ...(famille
+                      ? { variante: { gammeFromLevel: famille.gammeFromLevel, mono: famille.monoLabel, gamme: famille.gammeLabel } }
+                      : {}),
+                  };
+                })}
                 levels={DIFFICULTY_PRESETS.map((p) => ({
                   level: p.level,
                   name: p.name,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SCENARIOS, scenarioByCode, ALL_SITUATIONS } from "../../src/config/scenarios/registry";
+import { SCENARIOS, scenarioByCode, ALL_SITUATIONS, familyOf } from "../../src/config/scenarios/registry";
 import { balanceGap } from "../../src/engine/finance/statements";
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";
 import { DECISION_MODELS } from "../../src/config/pedagogy/models";
@@ -466,9 +466,12 @@ describe("registre des scénarios", () => {
       // et le suffixe par tour doit nommer l'unité du secteur
       expect(v.perRoundLabel, d.code).toContain("/tour");
       // aucun secteur ne réutilise le mot d'un autre pour son goulot physique
+      // (les deux variantes d'une même famille, en un produit ou en gamme,
+      // partagent le même métier et donc le même mot).
       const prior = seen.get(v.capacityBottleneckLabel);
+      const memeFamille = prior !== undefined && familyOf(prior) !== undefined && familyOf(prior) === familyOf(d.code);
       expect(
-        prior,
+        memeFamille ? undefined : prior,
         `« ${v.capacityBottleneckLabel} » partagé entre ${prior} et ${d.code}`,
       ).toBeUndefined();
       seen.set(v.capacityBottleneckLabel, d.code);
@@ -534,5 +537,46 @@ describe("le pictogramme et le nom court d'un scénario", () => {
     }
     expect(scenarioByCode("nova").icon).not.toBe(scenarioByCode("nova-gamme").icon);
     expect(scenarioByCode("nova-gamme").shortName).toContain("gamme");
+  });
+});
+
+describe("les familles de scénarios : un produit ou la gamme, selon le niveau", () => {
+  it("NOVA et MAILLE & CO se présentent en une seule tuile, et le niveau choisit la variante", async () => {
+    const { SCENARIO_CHOICES, SCENARIO_FAMILIES, scenarioCodeForLevel } = await import("../../src/config/scenarios/registry");
+    const codes = SCENARIO_CHOICES.map((d) => d.code);
+    expect(codes).toContain("nova");
+    expect(codes).toContain("boutique");
+    expect(codes).not.toContain("nova-gamme");
+    expect(codes).not.toContain("boutique-mono");
+    // Chaque famille : sa tête est proposée, ses deux variantes existent au registre.
+    for (const f of SCENARIO_FAMILIES) {
+      expect(codes).toContain(f.head);
+      expect(scenarioByCode(f.mono).code).toBe(f.mono);
+      expect(scenarioByCode(f.gamme).code).toBe(f.gamme);
+      expect(scenarioByCode(f.mono).scenario.products).toBeUndefined();
+      expect(scenarioByCode(f.gamme).scenario.products?.length ?? 0).toBeGreaterThan(1);
+      expect(scenarioByCode(f.mono).sector).toBe(scenarioByCode(f.gamme).sector);
+    }
+    // NOVA : une enceinte jusqu'au niveau 3, la gamme à partir du 4 (la R&D s'ouvre).
+    expect(scenarioCodeForLevel("nova", 1)).toBe("nova");
+    expect(scenarioCodeForLevel("nova", 3)).toBe("nova");
+    expect(scenarioCodeForLevel("nova", 4)).toBe("nova-gamme");
+    expect(scenarioCodeForLevel("nova", 6)).toBe("nova-gamme");
+    // Le code d'une variante répond à la même règle : demander la gamme à un niveau bas donne le mono.
+    expect(scenarioCodeForLevel("nova-gamme", 2)).toBe("nova");
+    // MAILLE & CO : un article jusqu'au niveau 2, la gamme à partir du 3.
+    expect(scenarioCodeForLevel("boutique", 1)).toBe("boutique-mono");
+    expect(scenarioCodeForLevel("boutique", 2)).toBe("boutique-mono");
+    expect(scenarioCodeForLevel("boutique", 3)).toBe("boutique");
+    expect(scenarioCodeForLevel("boutique-mono", 5)).toBe("boutique");
+    // Sans niveau : le plus simple. Hors famille : le code tel quel.
+    expect(scenarioCodeForLevel("nova", undefined)).toBe("nova");
+    expect(scenarioCodeForLevel("hotel", 6)).toBe("hotel");
+    expect(scenarioCodeForLevel("scenario-enseignant-inconnu", 6)).toBe("scenario-enseignant-inconnu");
+    // Une famille ne peut ouvrir la gamme qu'à un niveau qui existe.
+    for (const f of SCENARIO_FAMILIES) {
+      expect(f.gammeFromLevel).toBeGreaterThan(1);
+      expect(f.gammeFromLevel).toBeLessThanOrEqual(6);
+    }
   });
 });

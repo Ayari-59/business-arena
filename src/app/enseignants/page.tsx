@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ATELIERS, dureeTotaleHeures } from "@/config/ateliers";
 import { REFERENTIELS_NON_VERIFIES } from "@/config/ateliers/referentiels";
-import { SCENARIOS } from "@/config/scenarios/registry";
+import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/enseignants" },
@@ -16,7 +16,7 @@ const DIPLOMES = [...new Set(ATELIERS.map((a) => a.diplome))];
 const HEURES_TOTALES = Math.round(ATELIERS.reduce((s, a) => s + dureeTotaleHeures(a), 0));
 
 const HERO_STATS = [
-  { value: `${SCENARIOS.length}`, label: "secteurs jouables", detail: "Industrie, commerce, hôtellerie, e-commerce, conseil, BTP, transport…" },
+  { value: `${SCENARIO_CHOICES.length}`, label: "secteurs jouables", detail: "Industrie, commerce, hôtellerie, e-commerce, conseil, BTP, transport…" },
   { value: `${ATELIERS.length}`, label: "ateliers clés en main", detail: "Déroulés de séance minutés, livrables et grilles d'évaluation compris" },
   { value: `${DIPLOMES.length}`, label: "diplômes visés", detail: "Du lycée à l'expertise comptable, chacun adossé à son référentiel" },
 ];

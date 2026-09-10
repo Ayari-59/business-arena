@@ -33,7 +33,9 @@ beforeAll(async () => {
     .values({ email: "maille@test.local", displayName: "Maille" })
     .returning({ id: users.id });
   userId = inserted[0]!.id;
-  gameId = await createSoloGame(userId, "quarter", 2, undefined, false, "boutique");
+  // Niveau 3 : c'est le niveau à partir duquel MAILLE & CO se joue en gamme
+  // (en dessous, la famille donne la boutique en un seul article).
+  gameId = await createSoloGame(userId, "quarter", 2, 3, false, "boutique");
 });
 
 const CODES = ["pull-col-rond", "cardigan", "pull-merinos", "echarpe", "bonnet"];

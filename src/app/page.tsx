@@ -4,7 +4,7 @@ import { getPlatformConfig } from "@/services/admin.service";
 import { etendueDesDecisions } from "@/config/decisions";
 import { CONCEPTS } from "@/config/pedagogy/concepts";
 import { DECISION_MODELS } from "@/config/pedagogy/models";
-import { SCENARIOS } from "@/config/scenarios/registry";
+import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
 import { LIENS_LEGAUX, NAVIGATION } from "@/config/navigation";
 import { DESCRIPTION_ACCUEIL, TITRE_ACCUEIL } from "@/config/seo";
 
@@ -44,7 +44,7 @@ const RENVOIS: {
     icon: "🏭",
     title: "Les entreprises",
     href: "/entreprises",
-    aide: `${SCENARIOS.length} secteurs, ${SCENARIOS.length} économies réelles : leur marché, leurs contraintes, ce qu'on y apprend.`,
+    aide: `${SCENARIO_CHOICES.length} secteurs, ${SCENARIO_CHOICES.length} économies réelles : leur marché, leurs contraintes, ce qu'on y apprend.`,
   },
   {
     icon: "⚙️",
@@ -135,7 +135,7 @@ export default async function Home() {
           </h1>
           <p className="mt-5 max-w-xl text-lg leading-relaxed text-slate-400">
             Un atelier, un hôtel, un chantier, une flotte de camions :{" "}
-            {SCENARIOS.length} secteurs, {SCENARIOS.length} économies réelles. Fixez vos prix,
+            {SCENARIO_CHOICES.length} secteurs, {SCENARIO_CHOICES.length} économies réelles. Fixez vos prix,
             approvisionnez, recrutez, affrontez la concurrence. Situation après situation,
             découvrez les modèles de gestion qui font les bonnes décisions.
           </p>
@@ -150,7 +150,7 @@ export default async function Home() {
               href="/entreprises"
               className="rounded-lg border border-white/15 px-6 py-3 text-center text-sm font-semibold text-slate-200 transition hover:border-amber-400/50"
             >
-              Voir les {SCENARIOS.length} entreprises
+              Voir les {SCENARIO_CHOICES.length} entreprises
             </Link>
             <Link
               href="/teacher/login"

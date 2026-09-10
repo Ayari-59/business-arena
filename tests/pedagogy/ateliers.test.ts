@@ -6,7 +6,7 @@ import {
   REFERENTIELS,
   REFERENTIELS_NON_VERIFIES,
 } from "../../src/config/ateliers/referentiels";
-import { SCENARIOS, scenarioByCode } from "../../src/config/scenarios/registry";
+import { SCENARIOS, scenarioByCode, scenarioCodeForLevel } from "../../src/config/scenarios/registry";
 import { DIFFICULTY_PRESETS } from "../../src/config/difficulty";
 
 /**
@@ -19,6 +19,18 @@ import { DIFFICULTY_PRESETS } from "../../src/config/difficulty";
  * ici.
  */
 describe("ateliers professionnels", () => {
+  it("chaque atelier joue la variante que son niveau appelle", () => {
+    // NOVA et MAILLE & CO se jouent en un produit ou en gamme selon le
+    // niveau : la partie créée pour un atelier suit cette règle, et le dossier
+    // de l'élève doit décrire la même entreprise que celle qu'il dirigera.
+    for (const a of ATELIERS) {
+      expect(
+        scenarioCodeForLevel(a.reglages.scenarioCode, a.reglages.niveau),
+        `${a.code} : le niveau ${a.reglages.niveau} ne joue pas ${a.reglages.scenarioCode}`,
+      ).toBe(a.reglages.scenarioCode);
+    }
+  });
+
   it("les codes d'atelier sont uniques", () => {
     const codes = ATELIERS.map((a) => a.code);
     expect(new Set(codes).size).toBe(codes.length);

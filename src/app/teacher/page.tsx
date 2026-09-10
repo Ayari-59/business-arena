@@ -10,7 +10,8 @@ import { compter } from "@/lib/format";
 import { DEFAULT_QUIZ_MODE, DIFFICULTY_PRESETS, QUIZ_MODES } from "@/config/difficulty";
 import {
   DEFAULT_SCENARIO_CODE,
-  SCENARIOS,
+  SCENARIO_CHOICES,
+  familyOf,
   SECTOR_LABELS,
   economicDefaults,
 } from "@/config/scenarios/registry";
@@ -24,6 +25,16 @@ import { FormPendingProgress } from "@/components/long-action-progress";
 import { ATTENTES } from "@/config/cloture";
 
 export const dynamic = "force-dynamic";
+
+/**
+ * Un scénario à famille se joue en un produit ou en gamme selon le niveau
+ * choisi juste à côté : le libellé du choix le dit, pour que l'enseignant
+ * n'aille pas chercher une case « gamme » qui n'existe pas.
+ */
+function familleNote(code: string): string {
+  const famille = familyOf(code);
+  return famille ? ` (${famille.monoLabel} jusqu'au niveau ${famille.gammeFromLevel - 1}, la gamme dès le niveau ${famille.gammeFromLevel})` : "";
+}
 
 export default async function TeacherDashboard({
   searchParams,
@@ -127,9 +138,9 @@ export default async function TeacherDashboard({
         >
           <EconomicParams
             scenarios={[
-              ...SCENARIOS.map((d) => ({
+              ...SCENARIO_CHOICES.map((d) => ({
                 code: d.code,
-                label: `${d.icon} ${SECTOR_LABELS[d.sector]} · ${d.title}`,
+                label: `${d.icon} ${SECTOR_LABELS[d.sector]} · ${d.title}${familleNote(d.code)}`,
                 unit: d.vocabulary.unit,
                 defaults: economicDefaults(d),
               })),

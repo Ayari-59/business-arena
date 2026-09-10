@@ -116,6 +116,15 @@ const IDENTITES_SCENARIO: Record<string, { accent: AccentSecteur }> = {
       barre: "bg-teal-400",
     },
   },
+  "boutique-mono": {
+    accent: {
+      bord: "hover:border-pink-400/50",
+      halo: "bg-pink-400/10",
+      texte: "text-pink-300",
+      puce: "border-pink-400/30 bg-pink-950/30 text-pink-200",
+      barre: "bg-pink-400",
+    },
+  },
 };
 
 export function accentsDe(d: Pick<ScenarioDefinition, "code" | "sector">): AccentSecteur {
