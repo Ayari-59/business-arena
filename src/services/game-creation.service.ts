@@ -13,6 +13,7 @@ import {
 import {
   DEFAULT_SCENARIO_CODE,
   scenarioByCode,
+  scenarioCodeForLevel,
   type ScenarioDefinition,
 } from "@/config/scenarios/registry";
 import {
@@ -159,7 +160,10 @@ export async function getOrCreateNovaScenarioIdPublic(): Promise<string> {
 
 /** Cœur commun de création : partie + équipes + tours + états initiaux. */
 export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame> {
-  const definition = await resolveScenarioDefinition(args.scenarioCode);
+  // Un scénario à famille (NOVA, MAILLE & CO) se joue en un produit ou en
+  // gamme selon le niveau : c'est ici que le code choisi devient le code joué.
+  const codeJoue = args.scenarioCode ? scenarioCodeForLevel(args.scenarioCode, args.level) : args.scenarioCode;
+  const definition = await resolveScenarioDefinition(codeJoue);
   const scenarioId = await getOrCreateScenarioId(definition);
   // Référentiels concepts/modèles/situations (idempotent) + les situations
   // propres à un scénario enseignant, absentes du référentiel intégré.
@@ -301,7 +305,9 @@ export async function createSoloGame(
   if (!config.allowPublicPlay) {
     throw new Error("Les parties publiques sont désactivées par l'administrateur.");
   }
-  const definition = await resolveScenarioDefinition(scenarioCode);
+  const definition = await resolveScenarioDefinition(
+    scenarioCode ? scenarioCodeForLevel(scenarioCode, level) : scenarioCode,
+  );
   const organizationId = await getOrCreatePublicOrgId();
   const botCount = Math.min(Math.max(companiesCount, 2), definition.bots.length + 1) - 1;
   const { gameId } = await createGameCore({

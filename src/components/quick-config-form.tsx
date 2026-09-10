@@ -26,6 +26,12 @@ export interface QuickScenario {
   /** Le secteur, en légende de la tuile. */
   sector: string;
   tagline: string;
+  /**
+   * Un scénario à famille se joue en un produit ou en gamme selon le niveau :
+   * ce que chaque variante fait jouer, et le niveau à partir duquel c'est la
+   * gamme. Absent : le scénario est le même à tous les niveaux.
+   */
+  variante?: { gammeFromLevel: number; mono: string; gamme: string };
 }
 export interface QuickLevel {
   level: number;
@@ -156,6 +162,15 @@ export function QuickConfigFields({
         ))}
       </div>
       <p className="mt-2 min-h-[2.5em] text-[13px] leading-snug text-slate-300">{cur?.tagline}</p>
+      {sec?.variante ? (
+        // Le niveau décide de la variante jouée : on le dit à côté du curseur,
+        // là où le choix se fait, avec ce que l'autre variante attend.
+        <p className="mt-1 rounded-lg border border-amber-400/20 bg-amber-400/5 px-3 py-2 text-[13px] leading-snug text-amber-100/90" data-variante>
+          {level >= sec.variante.gammeFromLevel
+            ? `À ce niveau, ${sec.label} se joue en gamme : ${sec.variante.gamme}. En dessous du niveau ${sec.variante.gammeFromLevel}, ${sec.variante.mono}.`
+            : `À ce niveau, ${sec.label} se joue avec ${sec.variante.mono}. À partir du niveau ${sec.variante.gammeFromLevel}, ${sec.variante.gamme}.`}
+        </p>
+      ) : null}
 
       {/* Options repliées.
           Volontairement un bouton + rendu conditionnel, PAS un <details> natif :

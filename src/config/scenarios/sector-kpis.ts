@@ -170,7 +170,12 @@ export const HOTELLERIE_KPIS: SectorKpiDef[] = [
  */
 const ARTICLES_PAR_TICKET = 1.6;
 
-export const COMMERCE_KPIS: SectorKpiDef[] = [
+/**
+ * Les indicateurs du commerce, pour une gamme comme pour un article unique :
+ * seule change la clientèle fidèle dont on mesure l'attrition.
+ */
+export function commerceKpis(loyalSegments: string[]): SectorKpiDef[] {
+  return [
   {
     key: "panier_moyen",
     label: "Panier moyen",
@@ -196,9 +201,15 @@ export const COMMERCE_KPIS: SectorKpiDef[] = [
     hint: "Part de vos clientes fidèles perdue depuis le tour précédent. Reconquérir coûte plus cher que retenir.",
     format: "percent",
     // Maille & Co : les clientes fidèles de chaque référence de la gamme.
-    compute: attritionOn(["pull_fideles", "cardigan_fideles", "merinos_fideles"]),
+    compute: attritionOn(loyalSegments),
   },
 ];
+}
+
+/** MAILLE & CO en gamme : les fidèles de chaque pull. */
+export const COMMERCE_KPIS: SectorKpiDef[] = commerceKpis(["pull_fideles", "cardigan_fideles", "merinos_fideles"]);
+/** MAILLE & CO en un seul article : une seule clientèle fidèle. */
+export const COMMERCE_MONO_KPIS: SectorKpiDef[] = commerceKpis(["fideles"]);
 
 // ---------------------------------------------------------------------------
 // RESTAURATION

@@ -34,7 +34,7 @@ export const ATELIER_DEBUTANT: AtelierDefinition = {
   pourquoi:
     "Un débutant à qui l'on explique la marge l'oublie avant la sonnerie, parce qu'il n'en a pas eu besoin. Ici l'équipe fixe un prix parce qu'il faut bien en fixer un, et découvre au trimestre suivant si elle a gagné ou perdu à ce prix. La leçon vient de la décision, pas du cours. Chaque séance n'ajoute qu'une chose : d'abord le prix, puis le volume à commander, puis la promotion, puis la saison, si bien qu'à la fin la classe a manipulé les quatre leviers de base sans jamais avoir eu à tout tenir en même temps. C'est le seul moment où l'on peut se tromper sans conséquence, et c'est ce qui rend l'erreur précieuse.",
   reglages: {
-    scenarioCode: "boutique",
+    scenarioCode: "boutique-mono",
     periodicite: "quarter",
     periodiciteLabel: "Un trimestre par tour",
     niveau: 1,
@@ -47,7 +47,7 @@ export const ATELIER_DEBUTANT: AtelierDefinition = {
     tours: 4,
     effectifParEquipe: "deux élèves",
     notes:
-      "La boutique fait tricoter pour revendre : la marge s'y lit sans détour, référence par référence, et rien n'y brouille la découverte. Le niveau retenu n'ouvre que le prix et le volume : ni trésorerie, ni recrutement, ni investissement, pour qu'un débutant ne prenne aucune décision qu'il ne comprend pas. La taxe et les questions de connaissances sont désactivées, le monde variable aussi, pour que toutes vos classes vivent le même parcours et que l'erreur vienne des choix, pas du hasard.",
+      "La boutique achète pour revendre un seul article de mode : la marge s'y lit sans détour, et rien n'y brouille la découverte. La gamme de cinq références attend les niveaux suivants. Le niveau retenu n'ouvre que le prix et le volume : ni trésorerie, ni recrutement, ni investissement, pour qu'un débutant ne prenne aucune décision qu'il ne comprend pas. La taxe et les questions de connaissances sont désactivées, le monde variable aussi, pour que toutes vos classes vivent le même parcours et que l'erreur vienne des choix, pas du hasard.",
   },
   seances: [
     {

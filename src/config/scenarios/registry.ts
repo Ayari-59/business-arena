@@ -5,6 +5,7 @@ import type { SituationDef } from "./situation-kit";
 import {
   ABONNEMENT_KPIS,
   COMMERCE_KPIS,
+  COMMERCE_MONO_KPIS,
   ECOMMERCE_KPIS,
   HOTELLERIE_KPIS,
   INDUSTRIE_KPIS,
@@ -20,6 +21,8 @@ import { novaGammeBots, novaGammeCompany, novaGammeScenario } from "./nova-gamme
 import { NOVA_GAMME_SITUATIONS } from "./nova-gamme/situations";
 import { boutiqueBots, boutiqueCompany, boutiqueScenario } from "./boutique";
 import { BOUTIQUE_SITUATIONS } from "./boutique/situations";
+import { boutiqueMonoBots, boutiqueMonoCompany, boutiqueMonoScenario } from "./boutique-mono";
+import { BOUTIQUE_MONO_SITUATIONS } from "./boutique-mono/situations";
 import { hotelBots, hotelCompany, hotelScenario } from "./hotel";
 import { HOTEL_SITUATIONS } from "./hotel/situations";
 import { bistrotBots, bistrotCompany, bistrotScenario } from "./bistrot";
@@ -371,6 +374,61 @@ export const BOUTIQUE_DEFINITION: ScenarioDefinition = {
   bots: boutiqueBots,
   situations: BOUTIQUE_SITUATIONS,
   kpis: COMMERCE_KPIS,
+};
+
+export const BOUTIQUE_MONO_DEFINITION: ScenarioDefinition = {
+  code: boutiqueMonoScenario.code,
+  title: "MAILLE & CO · Tenez la boutique",
+  sector: "commerce",
+  icon: "🧣",
+  shortName: "MAILLE & CO · un article",
+  tagline: "Concept store de prêt-à-porter en centre-ville : un article de mode, une boutique.",
+  briefing:
+    "Vous ne fabriquez rien, vous achetez pour revendre. Votre marge se joue entièrement entre le prix auquel vous achetez et celui auquel vous vendez. Ce que vous commandez dort en réserve, et vous l'avez payé bien avant qu'une cliente l'emporte.",
+  context:
+    "La boutique tourne depuis des années et la clientèle du quartier la connaît. Votre prédécesseur commandait toujours la même chose aux mêmes fournisseurs, et la réserve déborde encore de pièces de la saison passée. Vous, vous devez commander la saison qui vient sans savoir ce qui se vendra.",
+  dilemma: {
+    question: "Vous achetez aujourd'hui ce que vous vendrez dans plusieurs semaines. Combien commandez-vous ?",
+    routes: [
+      {
+        label: "Commander large",
+        gain: "La réserve suit la demande, aucune cliente ne repart les mains vides, et le pic de fin d'année se passe sans rupture.",
+        risque: "Chaque pièce invendue reste payée et dort en réserve. Votre argent est immobilisé dans des cartons.",
+      },
+      {
+        label: "Commander serré",
+        gain: "Peu d'argent immobilisé, une réserve saine, et de la trésorerie disponible pour le reste.",
+        risque: "Une pièce qui manque est une vente perdue, et une cliente qui a trouvé ailleurs revient rarement.",
+      },
+    ],
+  },
+  playerTeamName: "MAILLE & CO",
+  vocabulary: {
+    unit: "article",
+    units: "articles",
+    unitsGender: "m",
+    productionLabel: "Approvisionnement",
+    productionPlanLabel: "Articles à mettre en rayon",
+    priceLabel: "Prix de vente moyen",
+    leftoverLabel: "Stock en réserve",
+    capacityPanelTitle: "Capacité de traitement",
+    capacityLabel: "Réserve et linéaire",
+    capacityBottleneckLabel: "Réserve",
+    capacityBottleneckHint:
+      "Votre réserve et votre linéaire limitent ce que la boutique peut écouler : agrandir prend effet au tour suivant.",
+    laborLabel: "Capacité de l'équipe",
+    laborBottleneckHint:
+      "Votre équipe de vente limite le flux en boutique : envisagez d'embaucher ou de former vos vendeuses.",
+    perRoundLabel: "articles/tour",
+    materialLabel: "Achats de marchandises",
+    otherVariableLabel: "Sacs, commissions, logistique",
+    supplierPanelLabel: "Fournisseur de la collection",
+  },
+  scenario: boutiqueMonoScenario,
+  company: boutiqueMonoCompany,
+  bots: boutiqueMonoBots,
+  situations: BOUTIQUE_MONO_SITUATIONS,
+  kpis: COMMERCE_MONO_KPIS,
 };
 
 export const HOTEL_DEFINITION: ScenarioDefinition = {
@@ -766,6 +824,7 @@ export const SCENARIOS: ScenarioDefinition[] = [
   NOVA_DEFINITION,
   NOVA_GAMME_DEFINITION,
   BOUTIQUE_DEFINITION,
+  BOUTIQUE_MONO_DEFINITION,
   HOTEL_DEFINITION,
   BISTROT_DEFINITION,
   CONSEIL_DEFINITION,
@@ -776,6 +835,74 @@ export const SCENARIOS: ScenarioDefinition[] = [
 ];
 
 export const DEFAULT_SCENARIO_CODE = NOVA_DEFINITION.code;
+
+/**
+ * UNE FAMILLE : le même métier en un seul produit ou en gamme, selon le niveau.
+ *
+ * NOVA se joue en une enceinte ou en trois ; MAILLE & CO en un article ou en
+ * cinq. Proposer les deux variantes côte à côte demandait à l'enseignant un
+ * choix qu'il n'avait pas à faire : la gamme est un pas de plus, comme la
+ * qualité ou la trésorerie, et c'est le niveau de difficulté qui le franchit.
+ * Aux choix (partie solo, espace enseignant, page des entreprises), une
+ * famille se présente par sa TÊTE, une seule tuile ; à la création de la
+ * partie, le niveau décide de la variante réellement jouée.
+ */
+export interface ScenarioFamily {
+  /** Le code affiché dans les choix. */
+  head: string;
+  /** La variante en un seul produit, jouée sous `gammeFromLevel`. */
+  mono: string;
+  /** La variante en gamme, jouée à partir de `gammeFromLevel`. */
+  gamme: string;
+  gammeFromLevel: number;
+  /** Ce que chaque variante fait jouer, pour le dire à qui choisit (« une seule enceinte »). */
+  monoLabel: string;
+  gammeLabel: string;
+}
+
+export const SCENARIO_FAMILIES: readonly ScenarioFamily[] = [
+  {
+    head: NOVA_DEFINITION.code,
+    mono: NOVA_DEFINITION.code,
+    gamme: NOVA_GAMME_DEFINITION.code,
+    // Le niveau qui ouvre la R&D : la Studio se développe avant de se vendre.
+    gammeFromLevel: 4,
+    monoLabel: "une seule enceinte",
+    gammeLabel: "la gamme Go, One et Studio, la Studio à développer",
+  },
+  {
+    head: BOUTIQUE_DEFINITION.code,
+    mono: BOUTIQUE_MONO_DEFINITION.code,
+    gamme: BOUTIQUE_DEFINITION.code,
+    // Le niveau où la qualité et le fournisseur se décident référence par référence.
+    gammeFromLevel: 3,
+    monoLabel: "un seul article de mode",
+    gammeLabel: "la gamme de cinq références",
+  },
+];
+
+/** La famille d'un code de scénario, s'il en a une (tête ou variante). */
+export function familyOf(code: string | undefined | null): ScenarioFamily | undefined {
+  if (!code) return undefined;
+  return SCENARIO_FAMILIES.find((f) => f.head === code || f.mono === code || f.gamme === code);
+}
+
+/**
+ * Le scénario réellement joué pour un code et un niveau : la variante de sa
+ * famille que le niveau appelle, ou le code lui-même hors famille (les sept
+ * autres secteurs, les scénarios publiés par un enseignant).
+ */
+export function scenarioCodeForLevel(code: string, level: number | undefined | null): string {
+  const family = familyOf(code);
+  if (!family) return code;
+  return (level ?? 1) >= family.gammeFromLevel ? family.gamme : family.mono;
+}
+
+/** Les scénarios proposés au choix : une tuile par famille, les variantes n'y figurent pas. */
+export const SCENARIO_CHOICES: ScenarioDefinition[] = SCENARIOS.filter((d) => {
+  const family = familyOf(d.code);
+  return !family || family.head === d.code;
+});
 
 const byCode = new Map(SCENARIOS.map((s) => [s.code, s]));
 

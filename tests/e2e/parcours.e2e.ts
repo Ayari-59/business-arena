@@ -253,7 +253,9 @@ describe("parcours enseignant et élève", () => {
     // dividende vit dans « Financer », repliée par défaut. On attend le prix,
     // puis on déplie tout pour que le champ dividende compte dans le rendu.
     await ouvrirDecisions(executive);
-    await executive.waitForSelector('input[name="price"]', { timeout: 30_000 });
+    // Au niveau 6, NOVA se joue en gamme : le prix est celui de chaque
+    // référence (`product.<code>.price`), pas un champ unique.
+    await executive.waitForSelector('input[name="price"], input[name$=".price"]', { timeout: 30_000 });
     // L'assistant est en étapes : le dividende vit sur « Trésorerie &
     // couverture », masquée tant qu'on ne l'affiche pas. On y va, puis on
     // déplie tout pour que le champ compte dans le texte rendu.

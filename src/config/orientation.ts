@@ -1,6 +1,6 @@
 import { ATELIERS } from "./ateliers";
 import { DIFFICULTY_PRESETS } from "./difficulty";
-import { SCENARIOS, scenarioByCode } from "./scenarios/registry";
+import { SCENARIOS, scenarioByCode, scenarioCodeForLevel } from "./scenarios/registry";
 import { tourDuPic } from "./scenarios/rounds";
 import type { Periodicity } from "./scenarios/periodicity";
 
@@ -170,6 +170,9 @@ export function recommander(demande: Demande): Recommandation {
   }
   niveau = Math.min(maximum, Math.max(1, niveau));
   const preset = DIFFICULTY_PRESETS.find((p) => p.level === niveau)!;
+  // Un scénario à famille se joue en un produit ou en gamme selon le niveau
+  // retenu : la recommandation nomme la variante que la partie jouera.
+  scenarioCode = scenarioCodeForLevel(scenarioCode, niveau);
 
   // 3. La durée : celle de l'atelier, raccourcie au premier semestre, et
   //    jamais plus longue que ce que le secteur porte.

@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { TITRE_ACCUEIL } from "@/config/seo";
 import { DECISION_MODELS } from "@/config/pedagogy/models";
-import { ALL_SITUATIONS, SCENARIOS } from "@/config/scenarios/registry";
+import { ALL_SITUATIONS, SCENARIO_CHOICES } from "@/config/scenarios/registry";
 
 /**
  * L'image d'un lien partagé : le tableau de bord de NOVA, celui de la page
@@ -67,7 +67,7 @@ export default function Image() {
             Apprenez à décider.
           </span>
           <span style={{ fontSize: 24, color: "#94a3b8", marginTop: 28, lineHeight: 1.4 }}>
-            {SCENARIOS.length} secteurs, {ALL_SITUATIONS.length} situations, {DECISION_MODELS.length} modèles
+            {SCENARIO_CHOICES.length} secteurs, {ALL_SITUATIONS.length} situations, {DECISION_MODELS.length} modèles
             d&apos;analyse. Essai gratuit, sans compte élève.
           </span>
           <span style={{ fontSize: 26, fontWeight: 700, marginTop: "auto", color: "#f8fafc" }}>

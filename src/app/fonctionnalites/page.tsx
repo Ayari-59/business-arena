@@ -1,15 +1,15 @@
 import Link from "next/link";
-import { ALL_SITUATIONS, SCENARIOS, SECTOR_LABELS } from "@/config/scenarios/registry";
+import { ALL_SITUATIONS, SCENARIO_CHOICES, SECTOR_LABELS } from "@/config/scenarios/registry";
 import { DECISION_MODELS } from "@/config/pedagogy/models";
 
 export const metadata = {
   alternates: { canonical: "/fonctionnalites" },
   title: "Fonctionnalités",
-  description: `${SCENARIOS.length} scénarios sectoriels, ${ALL_SITUATIONS.length} situations pédagogiques, ${DECISION_MODELS.length} modèles d'analyse : tout ce que la plateforme met entre les mains de vos étudiants.`,
+  description: `${SCENARIO_CHOICES.length} scénarios sectoriels, ${ALL_SITUATIONS.length} situations pédagogiques, ${DECISION_MODELS.length} modèles d'analyse : tout ce que la plateforme met entre les mains de vos étudiants.`,
 };
 
 const HERO_STATS = [
-  { value: String(SCENARIOS.length), label: "scénarios sectoriels", detail: "Industrie, commerce, hôtellerie, restauration, e-commerce, conseil, fitness, BTP, transport" },
+  { value: String(SCENARIO_CHOICES.length), label: "scénarios sectoriels", detail: "Industrie, commerce, hôtellerie, restauration, e-commerce, conseil, fitness, BTP, transport" },
   { value: String(ALL_SITUATIONS.length), label: "situations pédagogiques", detail: "Déclenchées par le contexte de chaque tour, adaptées au secteur et à la difficulté" },
   { value: String(DECISION_MODELS.length), label: "modèles d'analyse", detail: "Seuil de rentabilité, coûts pertinents, FRNG/BFR, VAN, TRI, arbre de décision…" },
 ];
@@ -97,10 +97,10 @@ export default function FonctionnalitesPage() {
       {/* Sectors grid */}
       <section className="mx-auto max-w-5xl px-6 pb-16">
         <h2 className="mb-6 text-center text-sm font-semibold uppercase tracking-wide text-slate-400">
-          {SCENARIOS.length} secteurs, {SCENARIOS.length} économies réelles
+          {SCENARIO_CHOICES.length} secteurs, {SCENARIO_CHOICES.length} économies réelles
         </h2>
         <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-3">
-          {SCENARIOS.map((s) => (
+          {SCENARIO_CHOICES.map((s) => (
             <div
               key={s.code}
               className="flex items-center gap-3 rounded-xl border border-white/10 bg-slate-900 px-4 py-3"
