@@ -254,6 +254,10 @@ describe("parcours enseignant et élève", () => {
     // puis on déplie tout pour que le champ dividende compte dans le rendu.
     await ouvrirDecisions(executive);
     await executive.waitForSelector('input[name="price"]', { timeout: 30_000 });
+    // L'assistant est en étapes : le dividende vit sur « Trésorerie &
+    // couverture », masquée tant qu'on ne l'affiche pas. On y va, puis on
+    // déplie tout pour que le champ compte dans le texte rendu.
+    await executive.getByRole("button", { name: /Trésorerie & couverture/ }).first().click();
     await executive.evaluate(() =>
       document.querySelectorAll("details").forEach((d) => d.setAttribute("open", "")),
     );
