@@ -144,6 +144,28 @@ export interface ScenarioVocabulary {
   otherVariableLabel: string;
   /** Le titre du panneau de choix du fournisseur (« Fournisseur de denrées »). */
   supplierPanelLabel: string;
+  /**
+   * L'unité dans laquelle le secteur compte le temps de travail : l'heure
+   * partout, sauf là où la journée est l'unité même de ce qu'on vend (un
+   * cabinet de conseil compte des jours-consultants, pas des heures).
+   * Absente : l'heure.
+   */
+  laborTimeUnit?: "heure" | "jour";
+}
+
+/** Les mots du temps de travail d'un secteur : « 720 h », « Heures par unité », ou leurs pendants en jours. */
+export function tempsDeTravail(v: Pick<ScenarioVocabulary, "laborTimeUnit">): {
+  abrege: string;
+  singulier: string;
+  pluriel: string;
+  Pluriel: string;
+  /** Le pronom qui reprend le pluriel : « tiennent-elles » pour les heures, « tiennent-ils » pour les jours. */
+  pronom: "elles" | "ils";
+} {
+  const jour = v.laborTimeUnit === "jour";
+  return jour
+    ? { abrege: "j", singulier: "jour", pluriel: "jours", Pluriel: "Jours", pronom: "ils" }
+    : { abrege: "h", singulier: "heure", pluriel: "heures", Pluriel: "Heures", pronom: "elles" };
 }
 
 export interface ScenarioDefinition {
@@ -582,6 +604,7 @@ export const CONSEIL_DEFINITION: ScenarioDefinition = {
     capacityBottleneckHint:
       "Vos locaux limitent la taille du cabinet, cas rare : la contrainte habituelle est l'effectif.",
     laborLabel: "Jours-consultants disponibles",
+    laborTimeUnit: "jour",
     laborBottleneckHint:
       "Vos consultants SONT la capacité du cabinet : elle ne s'achète pas, elle se recrute. Embaucher produit son effet au tour suivant.",
     perRoundLabel: "jours/tour",

@@ -1,6 +1,7 @@
 import { suppliersOf, toGamme, withoutRd } from "../../engine/gamme";
 import { axisAffinity, COMMUNICATION_AXES, COMMUNICATION_AXIS_LABELS } from "../../engine/market/communication";
 import type { CommunicationAxis, SegmentConfig } from "../../engine/types";
+import { tempsDeTravail } from "../scenarios/registry";
 import type { ScenarioDefinition } from "../scenarios/registry";
 
 /**
@@ -133,6 +134,8 @@ export function dossiersDeService(
   );
   const pic = tourFort(definition, tours);
   const heures = etat.headcount * etat.hoursPerEmployee;
+  // L'heure partout, le jour là où c'est l'unité du métier (le conseil).
+  const temps = tempsDeTravail(v);
   const echeance = (etat.loans ?? []).reduce((s, l) => s + l.perRound, 0);
   const restant = (etat.loans ?? []).reduce((s, l) => s + l.remaining, 0);
   // Les références à développer avant de vendre (levier R&D), et la
@@ -164,7 +167,7 @@ export function dossiersDeService(
           const ecart = Math.round((ratio - 1) * 100);
           return {
             libelle: multi ? `${p.name} · ${s.name}` : s.name,
-            valeur: `achat ${euro(p.materialCostPerUnit * s.costMultiplier)} (${ecart === 0 ? "coût de référence" : `${ecart > 0 ? "+" : "−"}${Math.abs(ecart)} %`}) · règlement ${jours(s.paymentDelayDays)}${s.qualityBonus !== 0 ? ` · qualité ${s.qualityBonus > 0 ? "+" : "−"}${Math.abs(Math.round(s.qualityBonus * 100))} %` : ""}${s.supplyRiskProbability > 0 ? ` · risque de rupture ${pct(s.supplyRiskProbability)} par tour` : ""}`,
+            valeur: `${v.materialLabel.toLowerCase()} ${euro(p.materialCostPerUnit * s.costMultiplier)} par ${v.unit} (${ecart === 0 ? "coût de référence" : `${ecart > 0 ? "+" : "−"}${Math.abs(ecart)} %`}) · règlement ${jours(s.paymentDelayDays)}${s.qualityBonus !== 0 ? ` · qualité ${s.qualityBonus > 0 ? "+" : "−"}${Math.abs(Math.round(s.qualityBonus * 100))} %` : ""}${s.supplyRiskProbability > 0 ? ` · risque de rupture ${pct(s.supplyRiskProbability)} par tour` : ""}`,
           };
         });
       }),
@@ -254,11 +257,11 @@ export function dossiersDeService(
     code: "rh",
     titre: "Service ressources humaines",
     mission: config.hr
-      ? "Ajuster l'effectif, la formation et les salaires pour que la main-d'œuvre suive le volume décidé, sans payer des heures qui ne servent pas."
+      ? `Ajuster l'effectif, la formation et les salaires pour que la main-d'œuvre suive le volume décidé, sans payer des ${temps.pluriel} qui ne servent pas.`
       : "Vérifier chaque tour que la main-d'œuvre disponible couvre le volume décidé : c'est la seconde limite de l'entreprise, après la capacité.",
     lignes: [
       { libelle: "Effectif", valeur: `${etat.headcount} personnes` },
-      { libelle: "Heures disponibles par tour", valeur: `${entier(heures)} h (${etat.hoursPerEmployee} h par personne)` },
+      { libelle: `${temps.Pluriel} disponibles par tour`, valeur: `${entier(heures)} ${temps.abrege} (${etat.hoursPerEmployee} ${temps.abrege} par personne)` },
       ...(config.hr
         ? [
             { libelle: "Salaire chargé par personne et par tour", valeur: euro(config.hr.salaryPerEmployeePerRound) },
@@ -270,15 +273,15 @@ export function dossiersDeService(
         : []),
     ],
     tableau: {
-      entetes: [multi ? "Référence" : "Produit", "Heures par unité", `Capacité de l'équipe (${v.perRoundLabel})`],
+      entetes: [multi ? "Référence" : "Produit", `${temps.Pluriel} par unité`, `Capacité de l'équipe (${v.perRoundLabel})`],
       lignes: toGamme(config).map((p) => [
         config.products ? p.name : v.unit,
-        `${p.hoursPerUnit.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} h`,
+        `${p.hoursPerUnit.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} ${temps.abrege}`,
         entier(p.hoursPerUnit > 0 ? heures / p.hoursPerUnit : 0),
       ]),
     },
     questions: [
-      "Les heures nécessaires au volume décidé tiennent-elles dans les heures disponibles ?",
+      `Les ${temps.pluriel} nécessaires au volume décidé tiennent-${temps.pronom} dans les ${temps.pluriel} disponibles ?`,
       config.hr
         ? "Une embauche coûte tout de suite et ne produit qu'au tour suivant : le tour du pic s'anticipe."
         : "Si la main-d'œuvre est la limite, le levier n'est pas ouvert à ce niveau : le volume doit s'y plier.",
