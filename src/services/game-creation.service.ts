@@ -38,7 +38,7 @@ import {
 import { applyMarketScale } from "@/config/scenarios/market-scale";
 import { applyRoundsCount } from "@/config/scenarios/rounds";
 import { applyScenarioVariability } from "@/config/scenarios/variability";
-import type { EngineScenarioConfig } from "@/engine/types";
+import { withoutRd } from "@/engine/gamme";
 import { openSituationsForRound, seedPedagogyReferentials } from "@/services/pedagogy.service";
 import { getPlatformConfig } from "@/services/admin.service";
 import { assertCanCreateGame } from "@/services/licence.service";
@@ -368,23 +368,4 @@ export async function createClassGame(args: {
     roundsCount: args.roundsCount,
   });
   return { gameId, joinCode };
-}
-
-/** Le scénario sans levier R&D : bloc `rd` retiré, références livrées prêtes. */
-function withoutRd(scenario: EngineScenarioConfig): EngineScenarioConfig {
-  if (!scenario.rd) return scenario;
-  const { rd: _rd, ...rest } = scenario;
-  void _rd;
-  return {
-    ...rest,
-    ...(scenario.products
-      ? {
-          products: scenario.products.map((p) => {
-            const { development: _dev, ...produit } = p;
-            void _dev;
-            return produit;
-          }),
-        }
-      : {}),
-  };
 }

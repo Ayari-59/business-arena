@@ -30,6 +30,7 @@ export function historiqueEquipe(view: GameView, codeProduitMono: string): Histo
           manque: entier(x.lost),
           stockFin: entier(x.stock.quantity),
           chiffreAffaires: entier(x.revenue),
+          ...(x.rd ? { rdEngage: entier(x.rd.budget) } : {}),
         }))
       : [
           {
@@ -42,6 +43,7 @@ export function historiqueEquipe(view: GameView, codeProduitMono: string): Histo
               r.production.produced - Object.values(r.market.bySegment).reduce((s, d) => s + d.sold, 0),
             ),
             chiffreAffaires: entier(r.incomeStatement.revenue),
+            ...(r.rd ? { rdEngage: entier(r.rd.budget) } : {}),
           },
         ];
     return {
@@ -61,6 +63,17 @@ export function historiqueEquipe(view: GameView, codeProduitMono: string): Histo
       caisse: view.ouverture.cash,
       creances: view.ouverture.receivables,
       dettesFournisseurs: view.ouverture.payables,
+      // Où en est chaque référence à développer : une référence déjà vendable
+      // au tour à jouer n'a plus rien à financer.
+      ...(view.gamme?.some((g) => g.rd?.development)
+        ? {
+            developpement: Object.fromEntries(
+              view.gamme
+                .filter((g) => g.rd?.development)
+                .map((g) => [g.code, { engage: entier(g.rd!.development!.invested), lancee: g.rd!.development!.available }]),
+            ),
+          }
+        : {}),
     },
   };
 }

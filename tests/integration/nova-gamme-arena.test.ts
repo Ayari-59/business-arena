@@ -20,6 +20,7 @@ vi.mock("@/db", async () => {
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { createSoloGame, getGameView, resolveCurrentRound } from "@/services/game.service";
+import { cockpitEquipe } from "@/services/cockpit.service";
 import type { RoundDecisions } from "@/engine/types";
 
 let userId: string;
@@ -54,6 +55,12 @@ describe("NOVA · gamme dans l'arène", () => {
     expect(view.proposedDecisions.products!["nova-studio"]!.rdBudget).toBe(0);
     expect(view.proposedDecisions.brandMarketingBudget).toBe(0);
     expect(view.proposedDecisions.communicationAxis).toBeUndefined();
+    // Le cockpit de l'équipe prévoit la même partie : la Studio à financer, la marque à budgéter.
+    const cockpit = (await cockpitEquipe(view))!;
+    const parametres = cockpit.feuilles[0]!;
+    expect(parametres.lignes.find((l) => l[0]?.v === "Déjà engagé avant le tour 1 · NOVA Studio")![1]!.v).toBe(0);
+    expect(JSON.stringify(cockpit)).toContain("Vendable ce tour");
+    expect(JSON.stringify(cockpit)).toContain("Budget de marque (à saisir)");
   });
 
   it("la R&D, la marque et l'axe joués reviennent à l'écran, et la Studio se lance au tour 2", async () => {
@@ -86,5 +93,12 @@ describe("NOVA · gamme dans l'arène", () => {
     // La décision rendue garde son détail.
     expect(view.periods[0]!.decisions?.communicationAxis).toBe("qualite");
     expect(view.periods[0]!.decisions?.products?.["nova-studio"]?.rdBudget).toBe(25000);
+    // Le cockpit du tour 2 sait la Studio lancée et porte la R&D engagée dans l'historique.
+    const cockpit = (await cockpitEquipe(view))!;
+    expect(JSON.stringify(cockpit)).not.toContain("Vendable ce tour");
+    const historique = cockpit.feuilles.find((f) => f.nom === "Historique")!;
+    const rangStudio = historique.lignes.findIndex((l) => l[0]?.v === "NOVA STUDIO");
+    const rd = historique.lignes.slice(rangStudio).find((l) => l[0]?.v === "Recherche et développement")!;
+    expect(rd[1]!.v).toBe(25000);
   });
 });

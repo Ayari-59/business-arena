@@ -1,5 +1,5 @@
 import type { CompanyState, EngineScenarioConfig } from "../../engine/types";
-import { toGamme, type GammeProduct } from "../../engine/gamme";
+import { toGamme, withoutRd, type GammeProduct } from "../../engine/gamme";
 import type { ScenarioDefinition } from "../scenarios/registry";
 
 /**
@@ -68,6 +68,8 @@ export interface HistoriqueEquipe {
       manque: number;
       stockFin: number;
       chiffreAffaires: number;
+      /** Budget R&D engagé au tour (scénarios avec levier `rd`). */
+      rdEngage?: number;
     }[];
     chiffreAffaires: number;
     resultatNet: number;
@@ -80,6 +82,12 @@ export interface HistoriqueEquipe {
     caisse: number;
     creances: number;
     dettesFournisseurs: number;
+    /**
+     * Où en est le développement de chaque référence à développer : ce qui a
+     * déjà été engagé, et si elle est déjà lancée (auquel cas il n'y a plus
+     * rien à financer). Absent : rien d'engagé, rien de lancé.
+     */
+    developpement?: Record<string, { engage: number; lancee: boolean }>;
   };
 }
 
@@ -92,6 +100,12 @@ export interface CockpitSource {
   /** Le nombre d'entreprises sur le marché (équipes + concurrents pilotés) : la part moyenne de chacune. */
   concurrents: number;
   historique?: HistoriqueEquipe;
+  /**
+   * Le niveau de l'atelier n'ouvre pas la R&D : la partie se jouera sans le
+   * levier et avec toutes les références livrées prêtes, le cockpit prévoit
+   * la même chose. Sans effet sur un instantané de partie, déjà transformé.
+   */
+  sansRd?: boolean;
 }
 
 /** La lettre de colonne d'un tour : le tour d'indice 0 est en B, A portant les intitulés. */
@@ -155,7 +169,8 @@ function demandeMoyenne(p: GammeProduct, tour: number, diviseur: number): number
 
 export function cockpitSpec(source: CockpitSource): ClasseurSpec {
   const definition = source.scenario;
-  const config = source.config ?? definition.scenario;
+  const brut = source.config ?? definition.scenario;
+  const config = source.sansRd ? withoutRd(brut) : brut;
   const gamme = toGamme(config);
   const etat: CompanyState = definition.company("cockpit", definition.playerTeamName, "human");
   const tours = source.tours;
@@ -190,6 +205,15 @@ export function cockpitSpec(source: CockpitSource): ClasseurSpec {
   poser("marketingRef", "Budget marketing de référence par tour", Math.round(0.5 * config.marketing.scale), "euro");
   poser("qualiteRef", "Budget qualité de référence par tour", Math.round(0.5 * config.production.qualityScale), "euro");
   poser("maintenanceRef", "Budget maintenance de référence par tour", Math.round(config.production.maintenanceReference), "euro");
+  if (config.communication && gamme.length > 1) {
+    poser(
+      "marqueRef",
+      "Budget de marque de référence par tour",
+      Math.round(0.5 * config.communication.brandScale),
+      "euro",
+      "bâtit une notoriété qui porte toute la gamme, avec retard et inertie",
+    );
+  }
   poser("is", "Taux d'impôt sur les bénéfices", config.finance.taxRate, "pct");
   poser("echeance", "Échéance d'emprunt par tour", Math.round(echeance), "euro");
   poser("decouvert", "Découvert autorisé", config.finance.overdraftLimit, "euro");
@@ -231,6 +255,41 @@ export function cockpitSpec(source: CockpitSource): ClasseurSpec {
   }
   const gammeRef = (code: string, col: "B" | "C" | "D" | "E" | "F" | "G") =>
     ref(NOM_PARAMETRES, `${col}${ligneGamme[code]}`);
+
+  // Les références à développer : celles qui portent un développement et ne
+  // sont pas encore lancées. Sans levier R&D, il n'y en a aucune (le scénario
+  // joué les livre prêtes).
+  const developpement = ouverture?.developpement ?? {};
+  const aDevelopper = config.rd
+    ? gamme.filter((p) => p.development && !developpement[p.code]?.lancee)
+    : [];
+  if (config.rd) {
+    P.push([]);
+    P.push([t("LA RECHERCHE ET DÉVELOPPEMENT", "section")]);
+    P.push([
+      t(
+        "Une référence à développer ne se vend pas tant que la R&D cumulée n'atteint pas son coût ; elle est vendable au tour qui suit, jamais avant le tour indiqué. Au-delà, la R&D relève le niveau technique perçu.",
+        "note",
+      ),
+    ]);
+    for (const p of aDevelopper) {
+      const dev = p.development!;
+      poser(`devCout_${p.code}`, `Coût de développement · ${p.name}`, Math.round(dev.cost), "euro");
+      poser(`devTour_${p.code}`, `Vendable au plus tôt au tour · ${p.name}`, dev.availableFromRound ?? 1, "unites");
+      poser(`devEngage_${p.code}`, `Déjà engagé avant le tour ${tours[0]} · ${p.name}`, Math.round(developpement[p.code]?.engage ?? 0), "euro");
+    }
+    if (aDevelopper.length === 0) P.push([t("Toutes les références sont lancées : la R&D ne sert plus qu'au niveau technique.", "note")]);
+  }
+  if (config.communication) {
+    P.push([]);
+    P.push([t("LA COMMUNICATION", "section")]);
+    P.push([
+      t(
+        "L'axe de communication (prix, qualité, innovation, image) ne coûte rien : il décide de ce que chaque euro de marketing rend, selon ce que chaque clientèle regarde. Il se choisit dans le jeu, pas ici.",
+        "note",
+      ),
+    ]);
+  }
 
   // ------------------------------------------------------------------ Prévision logistique
   const L: CelluleSpec[][] = [];
@@ -278,10 +337,18 @@ export function cockpitSpec(source: CockpitSource): ClasseurSpec {
     );
     const rangPrix = rangDemande + 1;
     const rangStockDebut = rangDemande + 3;
+    // Une référence à développer : ses lignes de R&D suivent la marge (rangs
+    // fixes après la demande), et ses ventes comme sa mise en fabrication
+    // sont nulles tant qu'elle n'est pas vendable.
+    const enDeveloppement = aDevelopper.some((x) => x.code === p.code);
+    const rangRd = rangDemande + 12;
+    const rangRdCumul = rangDemande + 13;
+    const rangVendable = rangDemande + 14;
+    const siVendable = (i: number, formule: string) => (enDeveloppement ? `(${formule})*${colonne(i)}${rangVendable}` : formule);
     poserLigne(
       "plan",
       `${v.productionPlanLabel} (à saisir — préremplie : de quoi servir la demande)`,
-      tours.map((_, i) => f(`MAX(0,${colonne(i)}${rangDemande}-${colonne(i)}${rangStockDebut})`, "unites", "saisie")),
+      tours.map((_, i) => f(siVendable(i, `MAX(0,${colonne(i)}${rangDemande}-${colonne(i)}${rangStockDebut})`), "unites", "saisie")),
     );
     const rangPlan = rangDemande + 2;
     poserLigne(
@@ -300,7 +367,7 @@ export function cockpitSpec(source: CockpitSource): ClasseurSpec {
     poserLigne(
       "ventes",
       "Ventes prévues",
-      tours.map((_, i) => f(`MIN(${colonne(i)}${rangDisponible},${colonne(i)}${rangDemande})`, "unites")),
+      tours.map((_, i) => f(siVendable(i, `MIN(${colonne(i)}${rangDisponible},${colonne(i)}${rangDemande})`), "unites")),
     );
     const rangVentes = rangDemande + 5;
     poserLigne(
@@ -333,6 +400,32 @@ export function cockpitSpec(source: CockpitSource): ClasseurSpec {
       "Marge sur coût variable",
       tours.map((_, i) => f(`${colonne(i)}${rangDemande + 8}-${colonne(i)}${rangDemande + 10}`, "euro")),
     );
+    if (config.rd) {
+      const dev = enDeveloppement ? p.development! : null;
+      const cout = param[`devCout_${p.code}`];
+      const engage = param[`devEngage_${p.code}`];
+      const tourMin = param[`devTour_${p.code}`];
+      // Préremplie : de quoi lancer la référence dès le premier tour couvert,
+      // rien ensuite ; zéro pour une référence déjà prête.
+      poserLigne(
+        "rd",
+        dev ? "Recherche et développement (à saisir — préremplie : de quoi lancer la référence)" : "Recherche et développement (à saisir)",
+        tours.map((_, i) => (dev && i === 0 ? f(`MAX(0,${cout}-${engage})`, "euro", "saisie") : n(0, "euro", "saisie"))),
+      );
+      if (dev) {
+        if (L.length !== rangRd) throw new Error(`cockpit : la ligne R&D de ${p.code} n'est pas au rang attendu`);
+        poserLigne(
+          "rdCumul",
+          "R&D cumulée à l'ouverture du tour",
+          tours.map((_, i) => (i === 0 ? f(engage!, "euro") : f(`${colonne(i - 1)}${rangRdCumul}+${colonne(i - 1)}${rangRd}`, "euro"))),
+        );
+        poserLigne(
+          "vendable",
+          "Vendable ce tour (1 = oui, 0 = pas encore)",
+          tours.map((tour, i) => f(`IF(${colonne(i)}${rangRdCumul}>=${cout},IF(${tour}>=${tourMin},1,0),0)`, "unites")),
+        );
+      }
+    }
     L.push([]);
     ligneL[p.code] = lignes;
   }
@@ -364,6 +457,9 @@ export function cockpitSpec(source: CockpitSource): ClasseurSpec {
   poserTotal("achats", `Total ${v.materialLabel.toLowerCase()}`, tours.map((_, i) => f(somme("achats", i), "euro")));
   poserTotal("cv", "Coût variable des ventes, toutes références", tours.map((_, i) => f(somme("cv", i), "euro")));
   poserTotal("marge", "Marge sur coût variable, toutes références", tours.map((_, i) => f(somme("marge", i), "euro")));
+  if (config.rd) {
+    poserTotal("rd", "Recherche et développement, toutes références", tours.map((_, i) => f(somme("rd", i), "euro")));
+  }
 
   // ------------------------------------------------------------------ Prévision résultat & trésorerie
   const R: CelluleSpec[][] = [];
@@ -387,16 +483,34 @@ export function cockpitSpec(source: CockpitSource): ClasseurSpec {
   poserR("cv", "Coût variable des ventes", tours.map((_, i) => f(logi("cv", i), "euro")));
   poserR("mcv", "Marge sur coût variable", tours.map((_, i) => f(`${colonne(i)}${ligneR.ca}-${colonne(i)}${ligneR.cv}`, "euro")));
   poserR("marketing", "Budget marketing (à saisir)", tours.map(() => f(param.marketingRef!, "euro", "saisie")));
+  if (param.marqueRef) {
+    poserR("marque", "Budget de marque (à saisir)", tours.map(() => f(param.marqueRef!, "euro", "saisie")));
+  }
   poserR("qualite", "Budget qualité (à saisir)", tours.map(() => f(param.qualiteRef!, "euro", "saisie")));
   poserR("maintenance", "Budget maintenance (à saisir)", tours.map(() => f(param.maintenanceRef!, "euro", "saisie")));
+  if (config.rd) {
+    poserR("rd", "Recherche et développement", tours.map((_, i) => f(logi("rd", i), "euro")));
+  }
   poserR("fixes", "Charges de structure", tours.map(() => f(param.fixes!, "euro")));
   poserR("amortissements", "Amortissements", tours.map(() => f(param.amortissements!, "euro")));
+  // Les charges du tour hors coût variable : budgets décidés, R&D, structure.
+  // Toutes sont décaissées dans le tour, sauf l'amortissement.
+  const chargesDecaissees = ["marketing", "marque", "qualite", "maintenance", "rd", "fixes"].filter((c) => ligneR[c] !== undefined);
+  const libelleCharges = [
+    "structure",
+    "marketing",
+    ...(ligneR.marque !== undefined ? ["marque"] : []),
+    "qualité",
+    "maintenance",
+    ...(ligneR.rd !== undefined ? ["R&D"] : []),
+    "impôt",
+  ].join(", ");
   poserR(
     "re",
     "Résultat d'exploitation",
     tours.map((_, i) =>
       f(
-        `${colonne(i)}${ligneR.mcv}-${colonne(i)}${ligneR.marketing}-${colonne(i)}${ligneR.qualite}-${colonne(i)}${ligneR.maintenance}-${colonne(i)}${ligneR.fixes}-${colonne(i)}${ligneR.amortissements}`,
+        [`${colonne(i)}${ligneR.mcv}`, ...chargesDecaissees.map((c) => `${colonne(i)}${ligneR[c]}`), `${colonne(i)}${ligneR.amortissements}`].join("-"),
         "euro",
       ),
     ),
@@ -439,13 +553,8 @@ export function cockpitSpec(source: CockpitSource): ClasseurSpec {
   );
   poserR(
     "decCharges",
-    "Charges décaissées (structure, marketing, qualité, maintenance, impôt)",
-    tours.map((_, i) =>
-      f(
-        `${colonne(i)}${ligneR.fixes}+${colonne(i)}${ligneR.marketing}+${colonne(i)}${ligneR.qualite}+${colonne(i)}${ligneR.maintenance}+${colonne(i)}${ligneR.impot}`,
-        "euro",
-      ),
-    ),
+    `Charges décaissées (${libelleCharges})`,
+    tours.map((_, i) => f([...chargesDecaissees, "impot"].map((c) => `${colonne(i)}${ligneR[c]}`).join("+"), "euro")),
   );
   poserR("emprunt", "Échéance d'emprunt", tours.map(() => f(param.echeance!, "euro")));
   poserR(
@@ -491,6 +600,7 @@ export function cockpitSpec(source: CockpitSource): ClasseurSpec {
       H.push([t("Demande non servie"), ...serie("manque", "unites")]);
       H.push([t(`${v.leftoverLabel} en fin de tour`), ...serie("stockFin", "unites")]);
       H.push([t("Chiffre d'affaires"), ...serie("chiffreAffaires", "euro")]);
+      if (config.rd) H.push([t("Recherche et développement"), ...serie("rdEngage", "euro")]);
       H.push([]);
     }
     H.push([t("L'ENTREPRISE", "section")]);

@@ -184,6 +184,142 @@ describe("le cockpit de prévision", () => {
   });
 });
 
+describe("le cockpit de NOVA · gamme : la R&D et la marque", () => {
+  const gea = () => ATELIERS.find((a) => a.code === "gea")!;
+
+  it("la Studio ne se vend pas tant que sa R&D cumulée n'atteint pas son coût", () => {
+    const spec = cockpitAtelier(gea());
+    const parametres = spec.feuilles[0]!;
+    const libelles = parametres.lignes.map((l) => String(l[0]?.v ?? ""));
+    expect(libelles).toContain("Coût de développement · NOVA Studio");
+    expect(parametres.lignes.find((l) => l[0]?.v === "Coût de développement · NOVA Studio")![1]!.v).toBe(25000);
+    expect(parametres.lignes.find((l) => l[0]?.v === "Vendable au plus tôt au tour · NOVA Studio")![1]!.v).toBe(2);
+    expect(parametres.lignes.find((l) => l[0]?.v === "Déjà engagé avant le tour 1 · NOVA Studio")![1]!.v).toBe(0);
+    // Go et One sont livrées prêtes : rien à développer.
+    expect(libelles.filter((l) => l.startsWith("Coût de développement"))).toHaveLength(1);
+
+    const references = referencesResolues(spec);
+    const logistique = spec.feuilles[1]!;
+    const rangStudio = logistique.lignes.findIndex((l) => l[0]?.v === "NOVA STUDIO");
+    const rangGo = logistique.lignes.findIndex((l) => l[0]?.v === "NOVA GO");
+    const bloc = (debut: number) =>
+      logistique.lignes.slice(debut + 1).map((l) => String(l[0]?.v ?? "")).slice(0, 15);
+    expect(bloc(rangStudio)).toContain("Vendable ce tour (1 = oui, 0 = pas encore)");
+    expect(bloc(rangGo)).not.toContain("Vendable ce tour (1 = oui, 0 = pas encore)");
+    // La R&D de la Studio est préremplie de quoi la lancer dès le premier tour, rien ensuite.
+    const rd = logistique.lignes.find((l) => String(l[0]?.v).startsWith("Recherche et développement (à saisir — préremplie"))!;
+    expect(rd[1]!.f).toMatch(/^MAX\(0,'Paramètres'!B\d+-'Paramètres'!B\d+\)$/);
+    expect(rd[2]!.v).toBe(0);
+    // Vendable = R&D cumulée ≥ coût ET tour ≥ tour minimal ; ventes et mise en fabrication en dépendent.
+    const vendable = references.filter((r) => r.intitule.startsWith("Vendable ce tour"));
+    expect(vendable).toHaveLength(4);
+    expect(vendable[0]!.cibles).toEqual(
+      expect.arrayContaining(["R&D cumulée à l'ouverture du tour", "Coût de développement · NOVA Studio", "Vendable au plus tôt au tour · NOVA Studio"]),
+    );
+    const ventesStudio = references.filter(
+      (r) => r.feuille === "Prévision logistique" && r.intitule === "Ventes prévues" && r.cibles.some((c) => c.startsWith("Vendable ce tour")),
+    );
+    expect(ventesStudio).toHaveLength(4);
+    const ventesTotales = references.filter((r) => r.feuille === "Prévision logistique" && r.intitule === "Ventes prévues");
+    expect(ventesTotales).toHaveLength(12);
+    // La R&D cumulée d'un tour est celle du précédent plus ce qu'on y a engagé.
+    const cumul = references.filter((r) => r.intitule === "R&D cumulée à l'ouverture du tour");
+    expect(cumul[0]!.cibles).toEqual(["Déjà engagé avant le tour 1 · NOVA Studio"]);
+    expect(cumul[1]!.cibles).toEqual(["R&D cumulée à l'ouverture du tour", "Recherche et développement (à saisir — préremplie : de quoi lancer la référence)"]);
+  });
+
+  it("la R&D et la marque pèsent sur le résultat et sur la trésorerie", () => {
+    const references = referencesResolues(cockpitAtelier(gea()));
+    const resultat = (intitule: string) => references.find((r) => r.feuille === "Prévision résultat" && r.intitule === intitule)!;
+    expect(resultat("Recherche et développement").cibles).toEqual(["Recherche et développement, toutes références"]);
+    expect(resultat("Budget de marque (à saisir)").cibles).toEqual(["Budget de marque de référence par tour"]);
+    expect(resultat("Résultat d'exploitation").cibles).toEqual(
+      expect.arrayContaining(["Recherche et développement", "Budget de marque (à saisir)", "Budget marketing (à saisir)"]),
+    );
+    const decaissees = references.find((r) => r.feuille === "Prévision résultat" && r.intitule.startsWith("Charges décaissées"))!;
+    expect(decaissees.intitule).toBe("Charges décaissées (structure, marketing, marque, qualité, maintenance, R&D, impôt)");
+    expect(decaissees.cibles).toEqual(
+      expect.arrayContaining(["Recherche et développement", "Budget de marque (à saisir)", "Impôt sur les bénéfices"]),
+    );
+    // Un secteur sans levier n'a ni l'une ni l'autre.
+    const stmg = referencesResolues(cockpitAtelier(ATELIERS.find((a) => a.code === "stmg")!));
+    expect(stmg.some((r) => r.intitule.startsWith("Recherche et développement"))).toBe(false);
+    expect(stmg.some((r) => r.intitule.startsWith("Budget de marque"))).toBe(false);
+  });
+
+  it("un niveau qui ferme la R&D prévoit la Studio livrée prête", () => {
+    const definition = scenarioByCode("nova-gamme");
+    const spec = cockpitSpec({ scenario: definition, tours: [1, 2, 3, 4], concurrents: 8, sansRd: true });
+    const texte = JSON.stringify(spec);
+    expect(texte).not.toContain("Vendable ce tour");
+    expect(texte).not.toContain("Recherche et développement");
+    expect(texte).toContain("Budget de marque (à saisir)");
+  });
+
+  it("une équipe dont la Studio est lancée n'a plus rien à financer, et son historique porte la R&D", () => {
+    const definition = scenarioByCode("nova-gamme");
+    const spec = cockpitSpec({
+      scenario: definition,
+      config: definition.scenario,
+      tours: [2, 3, 4],
+      concurrents: 3,
+      historique: {
+        equipe: "Les Acoustiques",
+        tours: [
+          {
+            tour: 1,
+            produits: [
+              { code: "nova-go", prix: 59, misEnRayon: 900, vendu: 850, manque: 0, stockFin: 50, chiffreAffaires: 50150, rdEngage: 0 },
+              { code: "nova-one", prix: 99, misEnRayon: 700, vendu: 650, manque: 20, stockFin: 50, chiffreAffaires: 64350, rdEngage: 0 },
+              { code: "nova-studio", prix: 129, misEnRayon: 0, vendu: 0, manque: 0, stockFin: 0, chiffreAffaires: 0, rdEngage: 25000 },
+            ],
+            chiffreAffaires: 114500,
+            resultatNet: -12000,
+            tresorerieNette: 40000,
+          },
+        ],
+        ouverture: {
+          tour: 2,
+          stocks: { "nova-go": 50, "nova-one": 50, "nova-studio": 0 },
+          caisse: 40000,
+          creances: 30000,
+          dettesFournisseurs: 20000,
+          developpement: { "nova-studio": { engage: 25000, lancee: true } },
+        },
+      },
+    });
+    const texte = JSON.stringify(spec);
+    expect(texte).not.toContain("Vendable ce tour");
+    expect(texte).toContain("Toutes les références sont lancées");
+    const historique = spec.feuilles[3]!;
+    const rangStudio = historique.lignes.findIndex((l) => l[0]?.v === "NOVA STUDIO");
+    const rd = historique.lignes.slice(rangStudio).find((l) => l[0]?.v === "Recherche et développement")!;
+    expect(rd[1]!.v).toBe(25000);
+    // Une Studio en cours de développement repart de ce qui est engagé.
+    const enCours = cockpitSpec({
+      scenario: definition,
+      config: definition.scenario,
+      tours: [2, 3, 4],
+      concurrents: 3,
+      historique: {
+        equipe: "Les Prudents",
+        tours: [],
+        ouverture: {
+          tour: 2,
+          stocks: {},
+          caisse: 40000,
+          creances: 0,
+          dettesFournisseurs: 0,
+          developpement: { "nova-studio": { engage: 10000, lancee: false } },
+        },
+      },
+    });
+    const parametres = enCours.feuilles[0]!;
+    expect(parametres.lignes.find((l) => l[0]?.v === "Déjà engagé avant le tour 2 · NOVA Studio")![1]!.v).toBe(10000);
+    expect(JSON.stringify(enCours)).toContain("Vendable ce tour");
+  });
+});
+
 describe("les dossiers de service", () => {
   it("chaque atelier distribue quatre services, chacun avec ses chiffres et ses questions", () => {
     for (const a of ATELIERS) {
