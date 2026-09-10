@@ -495,6 +495,23 @@ describe("registre des scénarios", () => {
           `${d.code}/${segment.code} : saisonnalité du segment`,
         ).toBeGreaterThanOrEqual(s.roundsCount);
       }
+      // Gamme : chaque produit porte son marché, et c'est lui que le moteur
+      // simule ; sa saisonnalité et celles de ses segments couvrent la partie.
+      for (const p of s.products ?? []) {
+        if (p.market.seasonality) {
+          expect(
+            p.market.seasonality.length,
+            `${d.code}/${p.code} : saisonnalité du produit`,
+          ).toBeGreaterThanOrEqual(s.roundsCount);
+        }
+        for (const segment of p.market.segments) {
+          if (!segment.seasonality) continue;
+          expect(
+            segment.seasonality.length,
+            `${d.code}/${p.code}/${segment.code} : saisonnalité du segment`,
+          ).toBeGreaterThanOrEqual(s.roundsCount);
+        }
+      }
     }
   });
 });

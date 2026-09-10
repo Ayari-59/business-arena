@@ -413,7 +413,7 @@ export const ATELIER_STMG: AtelierDefinition = {
   ],
   prolongements: [
     "Rejouer la même année avec le monde variable activé : la classe découvre qu'une bonne décision peut mal finir, ce qui ouvre la question du risque et donne tout son sens au pari de la troisième séance.",
-    "Basculer sur le concept store pour opposer, sur le même déroulé, une entreprise qui fabrique et une entreprise qui achète pour revendre.",
+    "Basculer sur la boutique de maille pour opposer, sur le même déroulé, une entreprise qui fabrique et une entreprise qui achète pour revendre.",
     "En terminale, prolonger jusqu'au sixième trimestre en montant d'un cran le niveau de jeu, ce qui ouvre les décisions de trésorerie que le programme de la spécialité gestion et finance mobilise, et fait vivre l'après pic.",
   ],
   faq: [

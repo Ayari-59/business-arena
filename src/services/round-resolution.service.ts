@@ -17,7 +17,7 @@ import {
   openSituationsForRound,
 } from "@/services/pedagogy.service";
 import { TEACHER_DRAWABLE_CODES, TEAM_CARD_CODES } from "@/config/events/cards";
-import { botDecisions, botPersonalityFromSeed, type BotProfile } from "@/engine/bots";
+import { botDecisions, botPersonalityFromSeed, soldByProduct, type BotProfile } from "@/engine/bots";
 import { carryOverDecisions, fallbackDecisions } from "@/services/decision.service";
 import { assertPlayable } from "@/services/play-lock";
 import { entitlementsForOrg } from "@/services/entitlements.service";
@@ -268,6 +268,7 @@ async function resolveGameRound(
     // Décisions soumises pour ce tour + ventes et décisions du tour précédent
     const submitted = await db.select().from(decisions).where(eq(decisions.roundId, roundRow.id));
     const lastSold: Record<string, number> = {};
+    const lastSoldByProduct: Record<string, Record<string, number>> = {};
     const previousPayloads: Record<string, RoundDecisions> = {};
     if (roundIndex > 1) {
       const prevRound = (
@@ -282,9 +283,11 @@ async function resolveGameRound(
           .from(roundResults)
           .where(eq(roundResults.roundId, prevRound.id));
         for (const r of prevResults) {
-          lastSold[r.teamId] = sumSold(
-            (r.marketDetail ?? {}) as CompanyRoundResult["market"]["bySegment"],
-          );
+          const bySegment = (r.marketDetail ?? {}) as CompanyRoundResult["market"]["bySegment"];
+          lastSold[r.teamId] = sumSold(bySegment);
+          // Gamme : les bots suivent leurs ventes référence par référence.
+          const parProduit = soldByProduct(scenario, bySegment);
+          if (parProduit) lastSoldByProduct[r.teamId] = parProduit;
         }
         const prevDecisions = await db
           .select()
@@ -316,6 +319,7 @@ async function resolveGameRound(
           state,
           roundIndex,
           lastSoldUnits: lastSold[team.id],
+          lastSoldByProduct: lastSoldByProduct[team.id],
           humanAvgPrice,
           personality: botPersonalityFromSeed(Number(game.seed), botProfile),
         });
@@ -434,6 +438,7 @@ async function resolveGameRound(
               treasury: r.treasury ?? null,
               bank: r.bank ?? null,
               rse: r.rse ?? null,
+              products: r.products ?? null,
             },
             revenue: toMoney(r.incomeStatement.revenue),
             netIncome: toMoney(r.incomeStatement.netIncome),

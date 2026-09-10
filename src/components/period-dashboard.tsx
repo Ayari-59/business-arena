@@ -276,6 +276,58 @@ export function PeriodDashboard({
               </section>
             ) : null}
 
+            {r.products && view.gamme ? (
+              <section aria-label="Vos références">
+                <h3 className="mb-2 text-sm font-semibold text-slate-200">
+                  Vos références sur le tour écoulé
+                </h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
+                        <th className="pb-2 pr-2 font-medium">Référence</th>
+                        <th className="pb-2 pr-2 text-right font-medium">Prix</th>
+                        <th className="pb-2 pr-2 text-right font-medium">Mis en rayon</th>
+                        <th className="pb-2 pr-2 text-right font-medium">Vendu</th>
+                        <th className="pb-2 pr-2 text-right font-medium">Manqué</th>
+                        <th className="pb-2 pr-2 text-right font-medium">CA</th>
+                        <th className="pb-2 pr-2 text-right font-medium">Marge / u</th>
+                        <th className="pb-2 text-right font-medium">{view.vocabulary.leftoverLabel}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-slate-300">
+                      {view.gamme.map((g) => {
+                        const p = r.products![g.code];
+                        if (!p) return null;
+                        const marge = p.price - p.unitVariableCost;
+                        return (
+                          <tr key={g.code} className="border-t border-white/5">
+                            <td className="py-2 pr-2 text-slate-100">{g.name}</td>
+                            <td className="py-2 pr-2 text-right tabular-nums">{formatEuro(p.price)}</td>
+                            <td className="py-2 pr-2 text-right tabular-nums">{formatUnits(p.produced)}</td>
+                            <td className="py-2 pr-2 text-right tabular-nums">{formatUnits(p.sold)}</td>
+                            <td className={`py-2 pr-2 text-right tabular-nums ${p.lost > 1 ? "text-red-400" : ""}`}>
+                              {formatUnits(p.lost)}
+                            </td>
+                            <td className="py-2 pr-2 text-right tabular-nums">{formatEuro(p.revenue)}</td>
+                            <td className={`py-2 pr-2 text-right tabular-nums ${marge < 0 ? "text-red-400" : ""}`}>
+                              {formatEuro(marge)}
+                            </td>
+                            <td className="py-2 text-right tabular-nums">{formatUnits(p.stock.quantity)}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="mt-2 text-xs leading-relaxed text-slate-400">
+                  La marge par unité est le prix moins le coût variable de la référence. Ce
+                  qu&apos;une référence rapporte, c&apos;est cette marge multipliée par ce qu&apos;elle
+                  vend : le mix décide autant que le volume.
+                </p>
+              </section>
+            ) : null}
+
             <section>
               <h3 className="mb-2 text-sm font-semibold text-slate-200">
                 Marché du tour écoulé
@@ -446,7 +498,20 @@ export function PeriodDashboard({
             <FinancialStatements
               result={r}
               price={period.decisions?.price ?? null}
-              otherVariableCostPerUnit={view.costFacts.otherVariableCostPerUnit}
+              // Gamme : la part « autres coûts variables » est la moyenne des
+              // références, pondérée par ce que chacune a mis en rayon, pour
+              // rester cohérente avec le coût variable unitaire du seuil.
+              otherVariableCostPerUnit={(() => {
+                if (!view.gamme || !r.products) return view.costFacts.otherVariableCostPerUnit;
+                let poids = 0;
+                let somme = 0;
+                for (const g of view.gamme) {
+                  const produced = r.products[g.code]?.produced ?? 0;
+                  poids += produced;
+                  somme += produced * g.otherVariableCostPerUnit;
+                }
+                return poids > 0 ? somme / poids : view.costFacts.otherVariableCostPerUnit;
+              })()}
               vocabulary={view.vocabulary}
             />
 
@@ -590,7 +655,11 @@ export function PeriodDashboard({
             ) : null}
 
             {standing && view.salesHistory.rounds.length > 0 ? (
-              <SalesHistory history={view.salesHistory} vocabulary={view.vocabulary} />
+              <SalesHistory
+                history={view.salesHistory}
+                vocabulary={view.vocabulary}
+                priceLabel={view.gamme ? "Prix moyen" : undefined}
+              />
             ) : null}
           </div>
         ),

@@ -47,7 +47,7 @@ export const ATELIER_DEBUTANT: AtelierDefinition = {
     tours: 4,
     effectifParEquipe: "deux élèves",
     notes:
-      "La boutique achète pour revendre : la marge s'y lit sans détour, et rien n'y brouille la découverte. Le niveau retenu n'ouvre que le prix et le volume : ni trésorerie, ni recrutement, ni investissement, pour qu'un débutant ne prenne aucune décision qu'il ne comprend pas. La taxe et les questions de connaissances sont désactivées, le monde variable aussi, pour que toutes vos classes vivent le même parcours et que l'erreur vienne des choix, pas du hasard.",
+      "La boutique fait tricoter pour revendre : la marge s'y lit sans détour, référence par référence, et rien n'y brouille la découverte. Le niveau retenu n'ouvre que le prix et le volume : ni trésorerie, ni recrutement, ni investissement, pour qu'un débutant ne prenne aucune décision qu'il ne comprend pas. La taxe et les questions de connaissances sont désactivées, le monde variable aussi, pour que toutes vos classes vivent le même parcours et que l'erreur vienne des choix, pas du hasard.",
   },
   seances: [
     {

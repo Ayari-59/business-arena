@@ -3,10 +3,12 @@ import type { AtelierDefinition } from "./types";
 /**
  * ATELIER PROFESSIONNEL · BTS MCO.
  *
- * Cinq séances de trois heures sur MAILLE & CO, le concept store. Le choix du
- * secteur n'est pas neutre : en MCO, la gestion opérationnelle ne s'apprend pas
- * sur une usine. On n'y fabrique rien, on achète pour revendre, et tout se joue
- * sur le coefficient, l'assortiment, la saisonnalité et la rotation du stock.
+ * Cinq séances de trois heures sur MAILLE & CO, la marque de maille et sa
+ * boutique. Le choix du secteur n'est pas neutre : en MCO, la gestion
+ * opérationnelle ne s'apprend pas sur une usine. On n'y fabrique rien, on fait
+ * tricoter pour revendre, et tout se joue sur le coefficient, l'assortiment
+ * (cinq références qui n'ont ni la même marge ni la même saison), la
+ * saisonnalité et la rotation du stock.
  *
  * Les quatre premières séances jouent un trimestre chacune et s'arrêtent sur
  * celui de Noël, qui décide de l'exercice. La cinquième ne joue rien : elle
@@ -25,7 +27,7 @@ export const ATELIER_MCO: AtelierDefinition = {
   pitch:
     "Cinq séances de trois heures. Chaque équipe tient le même magasin d'un trimestre à l'autre, choisit son assortiment, fixe ses prix, prépare Noël, et rend à chaque séance un document que l'on retrouve en magasin.",
   resume:
-    "Quatre trimestres dans un concept store, du diagnostic du linéaire au tableau de bord commercial, avec Noël comme épreuve.",
+    "Quatre trimestres dans une boutique de maille à cinq références, du diagnostic du linéaire au tableau de bord commercial, avec Noël comme épreuve.",
   difficulte: 2,
   difficulteLabel: "Initiation",
   format: "5 séances de 3 h",
@@ -45,7 +47,7 @@ export const ATELIER_MCO: AtelierDefinition = {
     tours: 4,
     effectifParEquipe: "trois élèves",
     notes:
-      "MAILLE & CO porte un stock, trois circuits d'achat qui opposent le prix, l'image et le délai de règlement, et une saisonnalité de fin d'année qui décide de l'exercice. Le niveau retenu ouvre le financement sans ouvrir le recrutement ni l'investissement : la gestion opérationnelle d'un point de vente se joue sur l'offre, le prix et le stock, pas sur la structure. Le monde variable est décoché pour que toutes vos classes affrontent le même Noël.",
+      "MAILLE & CO porte un stock, cinq références qui n'ont ni la même marge ni la même saison, trois façonniers qui opposent le prix, l'image et le délai de règlement, et une saisonnalité de fin d'année qui décide de l'exercice. Le niveau retenu ouvre le financement sans ouvrir le recrutement ni l'investissement : la gestion opérationnelle d'un point de vente se joue sur l'offre, le prix et le stock, pas sur la structure. Le monde variable est décoché pour que toutes vos classes affrontent le même Noël.",
   },
   seances: [
     {

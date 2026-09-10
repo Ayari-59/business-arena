@@ -195,7 +195,8 @@ export const COMMERCE_KPIS: SectorKpiDef[] = [
     label: "Attrition clientèle fidèle",
     hint: "Part de vos clientes fidèles perdue depuis le tour précédent. Reconquérir coûte plus cher que retenir.",
     format: "percent",
-    compute: attritionOn(["fideles"]),
+    // Maille & Co : les clientes fidèles de chaque référence de la gamme.
+    compute: attritionOn(["pull_fideles", "cardigan_fideles", "merinos_fideles"]),
   },
 ];
 

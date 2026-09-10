@@ -1,6 +1,7 @@
 import { formatEuro, formatUnits } from "@/lib/format";
 import type { RoundDecisions } from "@/engine/types";
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
+import type { GameView } from "@/services/game-view.service";
 
 /**
  * Récapitulatif en lecture seule des décisions d'un tour clos. Sert l'onglet
@@ -11,17 +12,30 @@ import type { ScenarioVocabulary } from "@/config/scenarios/registry";
 export function PeriodDecisionsRecap({
   decisions,
   vocabulary,
+  gamme = null,
 }: {
   decisions: RoundDecisions;
   vocabulary: ScenarioVocabulary;
+  /** Gamme du scénario joué : le récapitulatif se lit alors référence par référence. */
+  gamme?: GameView["gamme"];
 }) {
   const d = decisions;
+  const parProduit =
+    gamme && d.products
+      ? gamme.map((p) => ({ name: p.name, own: d.products![p.code] })).filter((x) => x.own)
+      : [];
 
-  const core: { label: string; value: string }[] = [
-    { label: vocabulary.priceLabel, value: formatEuro(d.price) },
-    { label: vocabulary.productionLabel, value: `${formatUnits(d.productionPlan)} ${vocabulary.units}` },
-    { label: "Budget marketing", value: formatEuro(d.marketingBudget) },
-  ];
+  const core: { label: string; value: string }[] = parProduit.length
+    ? [
+        { label: "Prix moyen", value: formatEuro(d.price) },
+        { label: vocabulary.productionLabel, value: `${formatUnits(d.productionPlan)} ${vocabulary.units}` },
+        { label: "Budget marketing", value: formatEuro(d.marketingBudget) },
+      ]
+    : [
+        { label: vocabulary.priceLabel, value: formatEuro(d.price) },
+        { label: vocabulary.productionLabel, value: `${formatUnits(d.productionPlan)} ${vocabulary.units}` },
+        { label: "Budget marketing", value: formatEuro(d.marketingBudget) },
+      ];
   if (d.qualityBudget > 0) core.push({ label: "Budget qualité", value: formatEuro(d.qualityBudget) });
   if (d.maintenanceBudget > 0)
     core.push({ label: "Budget maintenance", value: formatEuro(d.maintenanceBudget) });
@@ -83,6 +97,34 @@ export function PeriodDecisionsRecap({
       <p className="text-xs text-slate-400">
         Ce que votre équipe a rendu pour ce tour. À relire en face des résultats.
       </p>
+      {parProduit.length > 0 ? (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
+                <th className="pb-1 pr-3 font-medium">Référence</th>
+                <th className="pb-1 pr-3 text-right font-medium">{vocabulary.priceLabel}</th>
+                <th className="pb-1 pr-3 text-right font-medium">{vocabulary.productionPlanLabel}</th>
+                <th className="pb-1 text-right font-medium">Marketing</th>
+              </tr>
+            </thead>
+            <tbody className="text-slate-300">
+              {parProduit.map(({ name, own }) => (
+                <tr key={name} className="border-t border-white/5">
+                  <td className="py-1.5 pr-3 text-slate-100">{name}</td>
+                  <td className="py-1.5 pr-3 text-right tabular-nums">{formatEuro(own!.price)}</td>
+                  <td className="py-1.5 pr-3 text-right tabular-nums">
+                    {formatUnits(own!.productionPlan)} {vocabulary.units}
+                  </td>
+                  <td className="py-1.5 text-right tabular-nums">
+                    {formatEuro(own!.marketingBudget ?? 0)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {core.map((row) => (
           <div key={row.label} className="rounded-lg border border-white/10 bg-slate-950 px-3 py-2.5">

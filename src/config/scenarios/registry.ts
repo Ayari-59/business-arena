@@ -243,15 +243,16 @@ export const NOVA_DEFINITION: ScenarioDefinition = {
 
 export const BOUTIQUE_DEFINITION: ScenarioDefinition = {
   code: boutiqueScenario.code,
-  title: "MAILLE & CO · Tenez la boutique",
+  title: "MAILLE & CO · Habillez l'hiver",
   sector: "commerce",
-  tagline: "Concept store de prêt-à-porter en centre-ville.",
+  tagline: "Marque de vêtements en maille : cinq références, une boutique.",
   briefing:
-    "Vous ne fabriquez rien, vous achetez pour revendre. Votre marge se joue entièrement entre le prix auquel vous achetez et celui auquel vous vendez. Ce que vous commandez dort en réserve, et vous l'avez payé bien avant qu'une cliente l'emporte.",
+    "Vous ne fabriquez rien, vous faites tricoter pour revendre. Votre marge se joue entre le prix auquel vous achetez chaque pièce à vos façonniers et celui auquel vous la vendez, et elle n'est pas la même sur un bonnet et sur un pull mérinos. Ce que vous commandez dort en réserve, et vous l'avez payé bien avant qu'une cliente ne l'emporte.",
   context:
-    "La boutique tourne depuis des années et la clientèle du quartier la connaît. Votre prédécesseur commandait toujours la même chose aux mêmes fournisseurs, et la réserve déborde encore de pièces de la saison passée. Vous, vous devez commander la saison qui vient sans savoir ce qui se vendra.",
+    "La marque tourne depuis des années et la clientèle du quartier la connaît. Votre prédécesseur commandait toujours les mêmes quantités des mêmes références aux mêmes façonniers, et la réserve déborde encore de pièces de la saison passée. Vous, vous devez commander la collection qui vient, référence par référence, sans savoir ce qui se vendra.",
   dilemma: {
-    question: "Vous achetez aujourd'hui ce que vous vendrez dans plusieurs semaines. Combien commandez-vous ?",
+    question:
+      "Vous achetez aujourd'hui ce que vous vendrez dans plusieurs semaines. Combien commandez-vous, et de quoi ?",
     routes: [
       {
         label: "Commander large",
@@ -272,20 +273,20 @@ export const BOUTIQUE_DEFINITION: ScenarioDefinition = {
     unitsGender: "m",
     productionLabel: "Approvisionnement",
     productionPlanLabel: "Articles à mettre en rayon",
-    priceLabel: "Prix de vente moyen",
+    priceLabel: "Prix de vente",
     leftoverLabel: "Stock en réserve",
     capacityPanelTitle: "Capacité de traitement",
     capacityLabel: "Réserve et linéaire",
     capacityBottleneckLabel: "Réserve",
     capacityBottleneckHint:
-      "Votre réserve et votre linéaire limitent ce que la boutique peut écouler : agrandir prend effet au tour suivant.",
+      "Votre réserve et votre linéaire limitent ce que la boutique peut écouler, toutes références confondues : agrandir prend effet au tour suivant.",
     laborLabel: "Capacité de l'équipe",
     laborBottleneckHint:
       "Votre équipe de vente limite le flux en boutique : envisagez d'embaucher ou de former vos vendeuses.",
     perRoundLabel: "articles/tour",
-    materialLabel: "Achats de marchandises",
+    materialLabel: "Achats de marchandises (façonniers)",
     otherVariableLabel: "Sacs, commissions, logistique",
-    supplierPanelLabel: "Fournisseur de la collection",
+    supplierPanelLabel: "Façonnier de la collection",
   },
   scenario: boutiqueScenario,
   company: boutiqueCompany,

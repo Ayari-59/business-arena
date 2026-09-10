@@ -17,9 +17,12 @@ import type { GameView } from "@/services/game.service";
 export function SalesHistory({
   history,
   vocabulary,
+  priceLabel,
 }: {
   history: GameView["salesHistory"];
   vocabulary: GameView["vocabulary"];
+  /** En gamme, la colonne de prix est un prix MOYEN pondéré : on le dit. */
+  priceLabel?: string;
 }) {
   if (history.rounds.length === 0) return null;
 
@@ -36,7 +39,7 @@ export function SalesHistory({
             <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
               <th className="pb-1 pr-3 font-medium">Tour</th>
               <th className="pb-1 pr-3 text-right font-medium">
-                {vocabulary.priceLabel}
+                {priceLabel ?? vocabulary.priceLabel}
               </th>
               {history.segments.map((name) => (
                 <th key={name} className="pb-1 pr-3 text-right font-medium" colSpan={3}>

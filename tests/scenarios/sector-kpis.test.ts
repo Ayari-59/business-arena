@@ -128,11 +128,11 @@ describe("indicateurs du commerce", () => {
 
   it("une rupture de stock fait chuter le taux de transformation", () => {
     const servi = ctx({
-      result: result({ segments: { fideles: segment({ demandForCompany: 400, sold: 400 }) } }),
+      result: result({ segments: { pull_fideles: segment({ demandForCompany: 400, sold: 400 }) } }),
     });
     const rupture = ctx({
       result: result({
-        segments: { fideles: segment({ demandForCompany: 400, sold: 250, lost: 150 }) },
+        segments: { pull_fideles: segment({ demandForCompany: 400, sold: 250, lost: 150 }) },
       }),
     });
     expect(valueOf(COMMERCE_KPIS, "transformation", servi)).toBeCloseTo(1, 9);
@@ -143,18 +143,18 @@ describe("indicateurs du commerce", () => {
     // la demande s'effondre de moitié mais le POTENTIEL aussi : personne n'est parti
     const saison = ctx({
       result: result({
-        segments: { fideles: segment({ potential: 500, demandForCompany: 150 }) },
+        segments: { pull_fideles: segment({ potential: 500, demandForCompany: 150 }) },
       }),
-      previousSegments: { fideles: segment({ potential: 1000, demandForCompany: 300 }) },
+      previousSegments: { pull_fideles: segment({ potential: 1000, demandForCompany: 300 }) },
     });
     expect(valueOf(COMMERCE_KPIS, "attrition", saison)).toBeCloseTo(0, 9);
 
     // ici le potentiel est stable et la part recule : c'est une vraie attrition
     const perte = ctx({
       result: result({
-        segments: { fideles: segment({ potential: 1000, demandForCompany: 240 }) },
+        segments: { pull_fideles: segment({ potential: 1000, demandForCompany: 240 }) },
       }),
-      previousSegments: { fideles: segment({ potential: 1000, demandForCompany: 300 }) },
+      previousSegments: { pull_fideles: segment({ potential: 1000, demandForCompany: 300 }) },
     });
     expect(valueOf(COMMERCE_KPIS, "attrition", perte)).toBeCloseTo(0.2, 9);
   });
@@ -162,9 +162,9 @@ describe("indicateurs du commerce", () => {
   it("gagner des clients n'affiche jamais une attrition négative", () => {
     const gain = ctx({
       result: result({
-        segments: { fideles: segment({ potential: 1000, demandForCompany: 400 }) },
+        segments: { pull_fideles: segment({ potential: 1000, demandForCompany: 400 }) },
       }),
-      previousSegments: { fideles: segment({ potential: 1000, demandForCompany: 300 }) },
+      previousSegments: { pull_fideles: segment({ potential: 1000, demandForCompany: 300 }) },
     });
     expect(valueOf(COMMERCE_KPIS, "attrition", gain)).toBe(0);
   });

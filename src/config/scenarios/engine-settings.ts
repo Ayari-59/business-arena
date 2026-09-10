@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { EngineScenarioConfig } from "../../engine/types";
+import { mapGammeSegments, toGamme } from "../../engine/gamme";
 
 /**
  * Réglages de MARCHÉ d'un scénario, éditables par l'enseignant (PR 3).
@@ -37,14 +38,18 @@ export function readMarketForm(config: EngineScenarioConfig): {
   competitionIntensity: number;
   segments: { code: string; name: string; size: number; refPrice: number }[];
 } {
+  // Gamme : les segments de chaque produit (les seuls que le moteur simule),
+  // à plat — leurs codes sont uniques sur toute la gamme.
   return {
     competitionIntensity: config.market.competitionIntensity,
-    segments: config.market.segments.map((s) => ({
-      code: s.code,
-      name: s.name,
-      size: s.size,
-      refPrice: s.refPrice,
-    })),
+    segments: toGamme(config)
+      .flatMap((p) => p.market.segments)
+      .map((s) => ({
+        code: s.code,
+        name: s.name,
+        size: s.size,
+        refPrice: s.refPrice,
+      })),
   };
 }
 
@@ -58,21 +63,23 @@ export function applyMarketSettings(
   settings: MarketSettings,
 ): EngineScenarioConfig {
   const byCode = new Map(settings.segments.map((s) => [s.code, s]));
+  // Le marché du scénario et, en gamme, celui de chaque produit : un segment
+  // édité l'est partout où son code apparaît.
+  const edited = mapGammeSegments(config, (seg) => {
+    const edit = byCode.get(seg.code);
+    if (!edit) return seg;
+    return {
+      ...seg,
+      size: edit.size ?? seg.size,
+      refPrice: edit.refPrice ?? seg.refPrice,
+    };
+  });
   return {
-    ...config,
+    ...edited,
     market: {
-      ...config.market,
+      ...edited.market,
       competitionIntensity:
         settings.competitionIntensity ?? config.market.competitionIntensity,
-      segments: config.market.segments.map((seg) => {
-        const edit = byCode.get(seg.code);
-        if (!edit) return seg;
-        return {
-          ...seg,
-          size: edit.size ?? seg.size,
-          refPrice: edit.refPrice ?? seg.refPrice,
-        };
-      }),
     },
   };
 }

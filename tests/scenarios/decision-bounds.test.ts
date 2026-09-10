@@ -25,10 +25,16 @@ const decision = (over: Record<string, unknown>) =>
     ...over,
   });
 
+/** Tous les segments d'un scénario : son marché et, en gamme, celui de chaque produit. */
+const segmentsDe = (d: (typeof SCENARIOS)[number]) => [
+  ...d.scenario.market.segments,
+  ...(d.scenario.products ?? []).flatMap((p) => p.market.segments),
+];
+
 describe("les bornes techniques laissent jouer tous les secteurs", () => {
   it("le prix de référence de chaque secteur passe la validation", () => {
     for (const d of SCENARIOS) {
-      for (const segment of d.scenario.market.segments) {
+      for (const segment of segmentsDe(d)) {
         expect(
           decision({ price: segment.refPrice }).success,
           `${d.code}/${segment.code} : tarif de référence ${segment.refPrice} € refusé`,
@@ -41,7 +47,7 @@ describe("les bornes techniques laissent jouer tous les secteurs", () => {
     // Un seuil psychologique est une borne que l'élève DOIT pouvoir franchir
     // pour en éprouver l'effet : la refuser lui cache la règle du secteur.
     for (const d of SCENARIOS) {
-      for (const segment of d.scenario.market.segments) {
+      for (const segment of segmentsDe(d)) {
         for (const seuil of segment.psychThresholds ?? []) {
           expect(
             decision({ price: seuil.threshold }).success,

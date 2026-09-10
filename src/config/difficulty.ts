@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { EngineScenarioConfig } from "@/engine/types";
+import { mapGammeSegments } from "@/engine/gamme";
 import { DEFAULT_RSE_CONFIG } from "@/engine/rse";
 
 /**
@@ -264,22 +265,19 @@ export function applyEconomicOverrides(
 ): EngineScenarioConfig {
   if (!overrides || Object.values(overrides).every((v) => v === undefined)) return scenario;
   const treasury = scenario.treasury;
+  // Délai client : appliqué aux seuls segments qui font DÉJÀ crédit. Un
+  // particulier qui paie en caisse continue de payer en caisse — sans quoi
+  // le réglage effacerait la distinction que le scénario met en scène. En
+  // gamme, la règle vaut pour le marché de chaque produit.
+  const delai = overrides.customerPaymentDelayDays;
+  const avecDelais =
+    delai === undefined
+      ? scenario
+      : mapGammeSegments(scenario, (s) =>
+          s.paymentDelayDays > 0 ? { ...s, paymentDelayDays: delai } : s,
+        );
   return {
-    ...scenario,
-    market: {
-      ...scenario.market,
-      // Délai client : appliqué aux seuls segments qui font DÉJÀ crédit. Un
-      // particulier qui paie en caisse continue de payer en caisse — sans quoi
-      // le réglage effacerait la distinction que le scénario met en scène.
-      segments:
-        overrides.customerPaymentDelayDays === undefined
-          ? scenario.market.segments
-          : scenario.market.segments.map((s) =>
-              s.paymentDelayDays > 0
-                ? { ...s, paymentDelayDays: overrides.customerPaymentDelayDays! }
-                : s,
-            ),
-    },
+    ...avecDelais,
     product: {
       ...scenario.product,
       materialCostPerUnit: overrides.materialCostPerUnit ?? scenario.product.materialCostPerUnit,
