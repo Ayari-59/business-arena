@@ -1217,7 +1217,7 @@ export function DecisionForm({
                   label="Budget d'entretien"
                   defaultValue={defaults.maintenanceBudget}
                   suffix="€"
-                  hint={`Un entretien insuffisant dégrade la disponibilité de votre ${v.capacityLabel.toLowerCase()} : ce que vous pouvez mettre en rayon.`}
+                  hint={`Un entretien insuffisant dégrade la disponibilité de votre capacité (${v.capacityLabel.toLowerCase()}) : ce que vous pouvez offrir à la vente.`}
                 />
               </div>
             </Family>
