@@ -1,4 +1,5 @@
 import { DIFFICULTY_PRESETS, type DifficultyPreset } from "./difficulty";
+import type { EngineScenarioConfig } from "../engine/types";
 
 /**
  * Les leviers de décision d'un tour.
@@ -28,6 +29,12 @@ export interface LevierDeDecision {
    * du scénario (les neuf en proposent, mais rien ne l'impose).
    */
   ouvertPar: keyof DifficultyPreset["decisions"] | "toujours" | "secteur";
+  /**
+   * Pour un levier « secteur » que seuls certains scénarios offrent : ce que
+   * le scénario doit déclarer pour que le levier existe à l'écran. Absent, le
+   * levier est compté pour tous les secteurs.
+   */
+  secteurSi?: (scenario: EngineScenarioConfig) => boolean;
 }
 
 export const LEVIERS: readonly LevierDeDecision[] = [
@@ -36,8 +43,13 @@ export const LEVIERS: readonly LevierDeDecision[] = [
   { champ: "productionPlan", nom: "Volume du tour", ouvertPar: "toujours" },
   { champ: "supplierChoice", nom: "Choix du fournisseur", ouvertPar: "secteur" },
   { champ: "marketingBudget", nom: "Budget marketing", ouvertPar: "toujours" },
-  { champ: "brandMarketingBudget", nom: "Budget de marque", ouvertPar: "secteur" },
-  { champ: "communicationAxis", nom: "Axe de communication", ouvertPar: "secteur" },
+  {
+    champ: "brandMarketingBudget",
+    nom: "Budget de marque",
+    ouvertPar: "secteur",
+    secteurSi: (s) => Boolean(s.communication) && Boolean(s.products),
+  },
+  { champ: "communicationAxis", nom: "Axe de communication", ouvertPar: "secteur", secteurSi: (s) => Boolean(s.communication) },
   { champ: "qualityBudget", nom: "Budget qualité", ouvertPar: "quality" },
   { champ: "maintenanceBudget", nom: "Budget maintenance", ouvertPar: "maintenance" },
   { champ: "rdBudget", nom: "Recherche et développement", ouvertPar: "rd" },
@@ -70,16 +82,19 @@ export const LEVIERS: readonly LevierDeDecision[] = [
  * Les leviers « secteur » sont comptés : les neuf métiers proposent tous un
  * fournisseur, des études et une commande exceptionnelle. Les compter revient
  * donc à décrire ce qu'une équipe rencontre vraiment, et non un minimum
- * théorique que personne ne joue.
+ * théorique que personne ne joue. Ceux que seuls certains scénarios offrent
+ * (la marque, l'axe de communication) ne sont retenus que si le scénario
+ * donné les déclare ; sans scénario, ils sont comptés, comme l'étendue.
  */
-export function leviersDuNiveau(niveau: number): LevierDeDecision[] {
+export function leviersDuNiveau(niveau: number, scenario?: EngineScenarioConfig): LevierDeDecision[] {
   const preset = DIFFICULTY_PRESETS.find((p) => p.level === niveau);
   if (!preset) return [];
   return LEVIERS.filter(
     (l) =>
-      l.ouvertPar === "toujours" ||
-      l.ouvertPar === "secteur" ||
-      preset.decisions[l.ouvertPar] === true,
+      (l.ouvertPar === "toujours" ||
+        l.ouvertPar === "secteur" ||
+        preset.decisions[l.ouvertPar] === true) &&
+      (!scenario || !l.secteurSi || l.secteurSi(scenario)),
   );
 }
 
