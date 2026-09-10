@@ -26,6 +26,9 @@ let urlPartie = "";
 
 const EMAIL = unique("prof");
 const MOTDEPASSE = "motdepasse-e2e!";
+// Au niveau 5, ATLAS CONSEIL se joue en gamme : le prix de la journée d'audit
+// vit sur sa ligne du tableau des offres, pas dans un champ unique.
+const PRIX_AUDIT = 'input[name="product.audit.price"]';
 
 /**
  * Ouvre le formulaire de décisions du tour en cours.
@@ -73,6 +76,8 @@ describe("parcours enseignant et élève", () => {
   });
 
   it("il crée une partie de conseil, et la page de pilotage dit ses réglages", async () => {
+    // Au niveau 5, ATLAS CONSEIL se joue en gamme : trois offres, chacune à
+    // son tarif, vendues par les mêmes consultants.
     await prof.selectOption('select[name="scenarioCode"]', "conseil");
     await prof.selectOption('select[name="humanTeamsCount"]', "1");
     await prof.selectOption('select[name="botCount"]', "1");
@@ -101,16 +106,19 @@ describe("parcours enseignant et élève", () => {
     // La période active (tour en cours) ouvre sur « Situation » ; on passe à
     // « Décider » pour atteindre le formulaire (prix, volume, etc.).
     await ouvrirDecisions(eleve);
-    await eleve.waitForSelector('input[name="price"]', { timeout: 30_000 });
+    await eleve.waitForSelector(PRIX_AUDIT, { timeout: 30_000 });
     expect(eleve.url()).toMatch(/\/arena\//);
 
     const vu = await texte(eleve);
     expect(vu).toContain("jour");
     // le vocabulaire du métier, et non celui de l'atelier historique
     expect(vu).not.toContain("enceinte");
+    // les trois offres du cabinet, pas un tarif unique
+    expect(vu).toContain("Audit");
+    expect(vu).toContain("Transformation");
 
-    // le point de départ vient du secteur : la journée de conseil, pas 59 €
-    const prix = await eleve.inputValue('input[name="price"]');
+    // le point de départ vient du secteur : la journée d'audit, pas 59 €
+    const prix = await eleve.inputValue(PRIX_AUDIT);
     expect(Number(prix), `prix par défaut ${prix}`).toBeGreaterThan(300);
   });
 
@@ -119,7 +127,7 @@ describe("parcours enseignant et élève", () => {
     // (assurance…) vivent sur une étape masquée, exclue de `innerText`. On lit
     // donc tout le contenu du formulaire, visible ou non, pour que la garde
     // « français, pas de millièmes » couvre l'ensemble des leviers.
-    const vu = (await eleve.locator('form:has(input[name="price"])').textContent()) ?? "";
+    const vu = (await eleve.locator(`form:has(${PRIX_AUDIT})`).textContent()) ?? "";
     // les couvertures d'assurance sont en français (écart de la 1re recette)
     expect(vu).not.toMatch(/natural disaster|cold wave|machine breakdown/i);
     // aucun montant à trois décimales (écart de la 2e recette)
@@ -127,8 +135,8 @@ describe("parcours enseignant et élève", () => {
   });
 
   it("il joue son tour au tarif de son métier, que la validation accepte", async () => {
-    // 780 € la journée : refusé par l'ancien plafond à 500 €
-    await eleve.fill('input[name="price"]', "780");
+    // 780 € la journée d'audit : refusé par l'ancien plafond à 500 €
+    await eleve.fill(PRIX_AUDIT, "780");
     // L'assistant de décision est en étapes : « Valider » n'apparaît qu'à la
     // dernière. On avance jusque-là (le prix saisi persiste, champs toujours
     // montés), puis on valide.
@@ -154,8 +162,8 @@ describe("parcours enseignant et élève", () => {
     // Après recharge, le tour rouvre sur « Situation » : on repasse à
     // « Décider » pour relire le prix enregistré.
     await ouvrirDecisions(eleve);
-    await eleve.waitForSelector('input[name="price"]', { timeout: 30_000 });
-    expect(await eleve.inputValue('input[name="price"]')).toBe("780");
+    await eleve.waitForSelector(PRIX_AUDIT, { timeout: 30_000 });
+    expect(await eleve.inputValue(PRIX_AUDIT)).toBe("780");
   });
 
   it("l'enseignant clôture le tour et la partie avance", async () => {

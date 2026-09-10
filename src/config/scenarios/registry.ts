@@ -31,6 +31,8 @@ import { bistrotBots, bistrotCompany, bistrotScenario } from "./bistrot";
 import { BISTROT_SITUATIONS } from "./bistrot/situations";
 import { conseilBots, conseilCompany, conseilScenario } from "./conseil";
 import { CONSEIL_SITUATIONS } from "./conseil/situations";
+import { conseilGammeBots, conseilGammeCompany, conseilGammeScenario } from "./conseil-gamme";
+import { CONSEIL_GAMME_SITUATIONS } from "./conseil-gamme/situations";
 import { ecommerceBots, ecommerceCompany, ecommerceScenario } from "./ecommerce";
 import { ECOMMERCE_SITUATIONS } from "./ecommerce/situations";
 import { fitnessBots, fitnessCompany, fitnessScenario } from "./fitness";
@@ -677,6 +679,62 @@ export const CONSEIL_DEFINITION: ScenarioDefinition = {
 };
 
 
+export const CONSEIL_GAMME_DEFINITION: ScenarioDefinition = {
+  code: conseilGammeScenario.code,
+  title: "ATLAS CONSEIL · Composez l'offre",
+  sector: "services",
+  icon: "🧭",
+  shortName: "ATLAS CONSEIL · gamme",
+  tagline: "Cabinet de conseil, 12 consultants : l'audit, la transformation, et une pratique cyber à bâtir.",
+  briefing:
+    "Vous vendez du temps, et il ne se stocke pas : une journée non facturée est perdue. Vos consultants sont payés que le carnet soit plein ou vide. Et vous ne vendez pas une journée mais trois offres, chacune à son taux et à ses clients, avec les mêmes consultants : remplir les journées compte, ce qu'on y vend compte autant. La pratique cyber, elle, reste à bâtir avant de rapporter.",
+  context:
+    "Le cabinet vient d'un associé qui facturait toutes les missions au même taux, l'audit d'une PME comme la transformation d'un groupe. Les grands comptes paient à soixante jours, et le poste clients est presque tout le bilan. Un projet de pratique cyber dort dans un dossier : les DSI achètent toute l'année, mais il faut des méthodes et des certifications avant la première mission.",
+  dilemma: {
+    question: "Douze consultants, trois offres. Faut-il remplir le banc avec de l'audit au tarif PME, tenir la transformation au tarif des grands comptes, ou financer la pratique cyber qui ne vendra rien ce trimestre ?",
+    routes: [
+      {
+        label: "Remplir par l'audit",
+        gain: "Des consultants occupés, un carnet régulier, des PME qui règlent à trente jours.",
+        risque: "Un taux moyen qui descend, et des journées qui manqueront à la transformation quand les grands comptes appelleront.",
+      },
+      {
+        label: "Bâtir l'offre cyber",
+        gain: "Une offre au tarif le plus haut du cabinet, des clients qui achètent en été, et un cabinet qui ne dépend plus des congés des décideurs.",
+        risque: "Un budget de méthodes et de certifications engagé avant la première mission, en charge du tour, avec des salaires qui tombent pendant que l'offre se construit.",
+      },
+    ],
+  },
+  playerTeamName: "ATLAS CONSEIL",
+  vocabulary: {
+    unit: "jour-conseil",
+    units: "jours-conseil",
+    unitsGender: "m",
+    productionLabel: "Staffing",
+    productionPlanLabel: "Jours à staffer",
+    priceLabel: "Taux journalier",
+    leftoverLabel: "Jours non facturés",
+    capacityPanelTitle: "Capacité de staffing",
+    capacityLabel: "Capacité des locaux",
+    capacityBottleneckLabel: "Locaux",
+    capacityBottleneckHint:
+      "Vos locaux limitent la taille du cabinet, cas rare : la contrainte habituelle est l'effectif, partagé entre les trois offres.",
+    laborLabel: "Jours-consultants disponibles",
+    laborBottleneckHint:
+      "Vos consultants SONT la capacité du cabinet, pour les trois offres à la fois : elle ne s'achète pas, elle se recrute. Embaucher produit son effet au tour suivant.",
+    perRoundLabel: "jours/tour",
+    materialLabel: "Frais de mission",
+    otherVariableLabel: "Sous-traitance d'appoint",
+    supplierPanelLabel: "Renfort sur les missions",
+    laborTimeUnit: "jour",
+  },
+  scenario: conseilGammeScenario,
+  company: conseilGammeCompany,
+  bots: conseilGammeBots,
+  situations: CONSEIL_GAMME_SITUATIONS,
+  kpis: SERVICES_KPIS,
+};
+
 export const ECOMMERCE_DEFINITION: ScenarioDefinition = {
   code: ecommerceScenario.code,
   title: "PIXEL & CO · Achetez votre trafic",
@@ -909,6 +967,7 @@ export const SCENARIOS: ScenarioDefinition[] = [
   HOTEL_GAMME_DEFINITION,
   BISTROT_DEFINITION,
   CONSEIL_DEFINITION,
+  CONSEIL_GAMME_DEFINITION,
   ECOMMERCE_DEFINITION,
   FITNESS_DEFINITION,
   BATIMENT_DEFINITION,
@@ -968,6 +1027,15 @@ export const SCENARIO_FAMILIES: readonly ScenarioFamily[] = [
     gammeFromLevel: 4,
     monoLabel: "une seule nuitée à prix moyen",
     gammeLabel: "les trois chambres, standard, supérieure et suite",
+  },
+  {
+    head: CONSEIL_DEFINITION.code,
+    mono: CONSEIL_DEFINITION.code,
+    gamme: CONSEIL_GAMME_DEFINITION.code,
+    // Le niveau qui ouvre la R&D : la pratique cyber se bâtit avant de se vendre.
+    gammeFromLevel: 4,
+    monoLabel: "une seule journée à taux moyen",
+    gammeLabel: "les trois offres, audit, transformation et une pratique cyber à bâtir",
   },
 ];
 
