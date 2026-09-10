@@ -29,6 +29,8 @@ import { hotelGammeBots, hotelGammeCompany, hotelGammeScenario } from "./hotel-g
 import { HOTEL_GAMME_SITUATIONS } from "./hotel-gamme/situations";
 import { bistrotBots, bistrotCompany, bistrotScenario } from "./bistrot";
 import { BISTROT_SITUATIONS } from "./bistrot/situations";
+import { bistrotGammeBots, bistrotGammeCompany, bistrotGammeScenario } from "./bistrot-gamme";
+import { BISTROT_GAMME_SITUATIONS } from "./bistrot-gamme/situations";
 import { conseilBots, conseilCompany, conseilScenario } from "./conseil";
 import { CONSEIL_SITUATIONS } from "./conseil/situations";
 import { conseilGammeBots, conseilGammeCompany, conseilGammeScenario } from "./conseil-gamme";
@@ -622,6 +624,41 @@ export const BISTROT_DEFINITION: ScenarioDefinition = {
   kpis: RESTAURATION_KPIS,
 };
 
+export const BISTROT_GAMME_DEFINITION: ScenarioDefinition = {
+  code: bistrotGammeScenario.code,
+  title: "LA TABLE D'AUGUSTIN · Composez la carte",
+  sector: "restauration",
+  icon: "🍷",
+  shortName: "LA TABLE D'AUGUSTIN · gamme",
+  tagline: "Bistrot de 70 couverts : la formule du midi, la carte du soir, les banquets, et un traiteur à bâtir.",
+  briefing:
+    "Un couvert non servi est perdu, et ce que la cuisine a préparé sans le vendre part à la poubelle. Vous ne vendez plus un couvert mais quatre offres, chacune à son prix, à sa clientèle et à son coût de denrées, avec la même cuisine et la même brigade : remplir compte, ce qu'on sert compte autant. L'activité traiteur, elle, reste à bâtir avant de rapporter.",
+  context:
+    "Le bistrot vient d'un chef qui affichait le même ticket à midi et le soir. Les bureaux du quartier veulent une formule rapide, les habitués du soir une carte, les entreprises des banquets réglés à un mois. Un projet traiteur dort dans un tiroir : il faut un véhicule frigorifique et un agrément avant le premier buffet.",
+  dilemma: {
+    question: "Une cuisine, une brigade, quatre cartes. Faut-il remplir le midi à petit prix, tenir la carte du soir, réserver des soirs aux banquets, ou financer le traiteur qui ne vendra rien ce trimestre ?",
+    routes: [
+      {
+        label: "Remplir par le midi",
+        gain: "Une salle pleine tous les jours, des clients réguliers qui paient comptant.",
+        risque: "Un ticket qui baisse, et une brigade occupée à servir vite ce qui rapporte le moins.",
+      },
+      {
+        label: "Tenir le soir, et bâtir le traiteur",
+        gain: "Le meilleur ticket du bistrot, des soirs entiers vendus d'un coup, et une activité qui ne connaît ni la taille de la salle ni les congés de la clientèle.",
+        risque: "Des soirs retirés à la carte, des banquets réglés à un mois, une salle vide à midi, et un budget engagé avant la première commande traiteur.",
+      },
+    ],
+  },
+  playerTeamName: "LA TABLE D'AUGUSTIN",
+  vocabulary: { ...BISTROT_DEFINITION.vocabulary },
+  scenario: bistrotGammeScenario,
+  company: bistrotGammeCompany,
+  bots: bistrotGammeBots,
+  situations: BISTROT_GAMME_SITUATIONS,
+  kpis: RESTAURATION_KPIS,
+};
+
 export const CONSEIL_DEFINITION: ScenarioDefinition = {
   code: conseilScenario.code,
   title: "ATLAS CONSEIL · Vendez le temps de vos équipes",
@@ -966,6 +1003,7 @@ export const SCENARIOS: ScenarioDefinition[] = [
   HOTEL_DEFINITION,
   HOTEL_GAMME_DEFINITION,
   BISTROT_DEFINITION,
+  BISTROT_GAMME_DEFINITION,
   CONSEIL_DEFINITION,
   CONSEIL_GAMME_DEFINITION,
   ECOMMERCE_DEFINITION,
@@ -1036,6 +1074,15 @@ export const SCENARIO_FAMILIES: readonly ScenarioFamily[] = [
     gammeFromLevel: 4,
     monoLabel: "une seule journée à taux moyen",
     gammeLabel: "les trois offres, audit, transformation et une pratique cyber à bâtir",
+  },
+  {
+    head: BISTROT_DEFINITION.code,
+    mono: BISTROT_DEFINITION.code,
+    gamme: BISTROT_GAMME_DEFINITION.code,
+    // Le niveau qui ouvre la R&D : l'activité traiteur se bâtit avant de se vendre.
+    gammeFromLevel: 4,
+    monoLabel: "un seul ticket moyen",
+    gammeLabel: "la formule du midi, la carte du soir, les banquets et un traiteur à bâtir",
   },
 ];
 

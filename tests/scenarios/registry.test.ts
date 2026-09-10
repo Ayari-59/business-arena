@@ -578,9 +578,13 @@ describe("les familles de scénarios : un produit ou la gamme, selon le niveau",
     expect(scenarioCodeForLevel("conseil", 4)).toBe("conseil-gamme");
     expect(scenarioCodeForLevel("conseil-gamme", 2)).toBe("conseil");
     expect(codes).not.toContain("conseil-gamme");
+    // LA TABLE D'AUGUSTIN : un seul ticket moyen jusqu'au niveau 3, les quatre offres à partir du 4.
+    expect(scenarioCodeForLevel("bistrot", 3)).toBe("bistrot");
+    expect(scenarioCodeForLevel("bistrot", 4)).toBe("bistrot-gamme");
+    expect(codes).not.toContain("bistrot-gamme");
     // Sans niveau : le plus simple. Hors famille : le code tel quel.
     expect(scenarioCodeForLevel("nova", undefined)).toBe("nova");
-    expect(scenarioCodeForLevel("bistrot", 6)).toBe("bistrot");
+    expect(scenarioCodeForLevel("ecommerce", 6)).toBe("ecommerce");
     expect(scenarioCodeForLevel("scenario-enseignant-inconnu", 6)).toBe("scenario-enseignant-inconnu");
     // Une famille ne peut ouvrir la gamme qu'à un niveau qui existe.
     for (const f of SCENARIO_FAMILIES) {
