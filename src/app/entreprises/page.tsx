@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SCENARIOS, SECTOR_LABELS, type ScenarioDefinition } from "@/config/scenarios/registry";
 import {
-  ACCENTS_SECTEUR as ACCENTS,
-  EMBLEMES_SECTEUR as EMOJIS,
+  accentsDe,
+  emblemeDe,
   nomEntreprise as nomSeul,
   promesseEntreprise as promesse,
 } from "@/config/scenarios/presentation";
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
  */
 
 function Fiche({ d }: { d: ScenarioDefinition }) {
-  const a = ACCENTS[d.sector];
+  const a = accentsDe(d);
   const v = d.vocabulary;
   return (
     <article
@@ -44,7 +44,7 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
       <div className="relative p-6">
         <div className="flex flex-wrap items-center gap-3">
           <span className="text-2xl" aria-hidden>
-            {EMOJIS[d.sector]}
+            {emblemeDe(d)}
           </span>
           <span
             className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider ${a.puce}`}
@@ -158,9 +158,9 @@ export default function EntreprisesPage() {
             <a
               key={d.code}
               href={`#${d.code}`}
-              className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition hover:brightness-125 ${ACCENTS[d.sector].puce}`}
+              className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition hover:brightness-125 ${accentsDe(d).puce}`}
             >
-              {EMOJIS[d.sector]} {nomSeul(d)}
+              {emblemeDe(d)} {nomSeul(d)}
             </a>
           ))}
         </div>
@@ -200,7 +200,7 @@ export default function EntreprisesPage() {
                     <td className="py-2.5 pr-4">
                       <a
                         href={`#${d.code}`}
-                        className={`font-medium ${ACCENTS[d.sector].texte} underline-offset-4 hover:underline`}
+                        className={`font-medium ${accentsDe(d).texte} underline-offset-4 hover:underline`}
                       >
                         {nomSeul(d)}
                       </a>

@@ -72,7 +72,7 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
       {
         href: "/fonctionnalites",
         libelle: "Fonctionnalités",
-        aide: "9 scénarios, 79 situations, 18 modèles : tout ce que la plateforme met entre les mains de vos étudiants.",
+        aide: "Les scénarios, les situations, les modèles d'analyse : tout ce que la plateforme met entre les mains de vos étudiants.",
       },
     ],
   },

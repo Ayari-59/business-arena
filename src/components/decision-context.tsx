@@ -111,7 +111,7 @@ export function ParametersPanels({
               {gamme.map((p, i) => (
                 <span key={p.code}>
                   {i > 0 ? " · " : ""}
-                  {p.name.toLowerCase()}{" "}
+                  {p.name}{" "}
                   <span className="text-slate-200">
                     {formatEuro(p.materialCostPerUnit + p.otherVariableCostPerUnit)}
                   </span>

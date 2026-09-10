@@ -87,7 +87,7 @@ describe("pages publiques : titre distinct, description, canonique", () => {
     const m = await meta("/page");
     expect((m.title as { absolute: string }).absolute).toContain("BTS, DCG");
     expect(m.description).toContain("sans compte élève");
-    expect(m.description).toContain("9 secteurs");
+    expect(m.description).toMatch(/\d+ secteurs, \d+ situations/);
   });
 
   it("aucun titre de page ne se termine plus par le nom du site en dur", () => {

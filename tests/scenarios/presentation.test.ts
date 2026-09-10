@@ -3,8 +3,9 @@ import { describe, expect, it } from "vitest";
 import { SCENARIOS } from "../../src/config/scenarios/registry";
 import {
   ACCENTS_SECTEUR,
+  accentsDe,
   surtitreDePartie,
-  EMBLEMES_SECTEUR,
+  emblemeDe,
   nomEntreprise,
   promesseEntreprise,
 } from "../../src/config/scenarios/presentation";
@@ -20,14 +21,16 @@ import {
  */
 describe("identité visuelle des secteurs", () => {
   it("chaque métier a sa propre couleur, jamais celle d'un autre", () => {
-    const barres = SCENARIOS.map((d) => ACCENTS_SECTEUR[d.sector].barre);
+    // Deux scénarios peuvent partager un métier (NOVA en une référence, NOVA
+    // en trois) : l'identité se lit par scénario, et reste distincte.
+    const barres = SCENARIOS.map((d) => accentsDe(d).barre);
     expect(new Set(barres).size, `couleurs partagées : ${barres.join(", ")}`).toBe(barres.length);
-    const textes = SCENARIOS.map((d) => ACCENTS_SECTEUR[d.sector].texte);
+    const textes = SCENARIOS.map((d) => accentsDe(d).texte);
     expect(new Set(textes).size).toBe(textes.length);
   });
 
   it("chaque métier a son propre emblème", () => {
-    const emblemes = SCENARIOS.map((d) => EMBLEMES_SECTEUR[d.sector]);
+    const emblemes = SCENARIOS.map((d) => emblemeDe(d));
     expect(new Set(emblemes).size, `emblèmes partagés : ${emblemes.join(" ")}`).toBe(
       emblemes.length,
     );
@@ -46,9 +49,11 @@ describe("identité visuelle des secteurs", () => {
     expect(bloc.length, "le bloc des accents est introuvable").toBeGreaterThan(200);
     expect(bloc, "une classe est assemblée avec un gabarit").not.toContain("`");
     for (const d of SCENARIOS) {
-      for (const [role, valeur] of Object.entries(ACCENTS_SECTEUR[d.sector])) {
-        expect(valeur, `${d.sector}/${role} vide`).not.toBe("");
+      for (const [role, valeur] of Object.entries(accentsDe(d))) {
+        expect(valeur, `${d.code}/${role} vide`).not.toBe("");
       }
+      expect(accentsDe(d).barre.startsWith("bg-"), d.code).toBe(true);
+      expect(ACCENTS_SECTEUR[d.sector].barre.startsWith("bg-"), d.sector).toBe(true);
     }
   });
 

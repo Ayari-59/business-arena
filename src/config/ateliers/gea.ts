@@ -37,7 +37,7 @@ export const ATELIER_GEA: AtelierDefinition = {
   pourquoi:
     "Le coût de revient se calcule au tableau et s'oublie à la sortie, parce qu'un exercice donne les charges et demande le coût. Ici l'équipe fixe son volume de production et son prix, découvre au trimestre suivant sa marge réelle une fois les charges fixes absorbées, et voit sa trésorerie se tendre alors que son compte de résultat est bénéficiaire, parce que ses clients paient à soixante jours. Le besoin en fonds de roulement cesse d'être une formule : une équipe qui a vendu davantage sans financer son cycle se retrouve à court de caisse au meilleur de son activité, et son tableau de trésorerie le lui dit avant sa banque.",
   reglages: {
-    scenarioCode: "nova",
+    scenarioCode: "nova-gamme",
     periodicite: "quarter",
     periodiciteLabel: "Un trimestre par tour",
     niveau: 4,
@@ -50,7 +50,7 @@ export const ATELIER_GEA: AtelierDefinition = {
     tours: 4,
     effectifParEquipe: "trois élèves",
     notes:
-      "NOVA porte un coût de production, des charges fixes qui pèsent tant que le volume ne les absorbe pas, des délais de règlement qui creusent le besoin en fonds de roulement, et un compte-clé qui fait bondir la demande au quatrième trimestre. Le niveau retenu ouvre la trésorerie, l'assurance, le recrutement et l'investissement : la gestion généraliste demande de voir l'entreprise entière, du coût de revient au financement de sa croissance. Le monde variable est décoché pour que toutes vos classes travaillent le même exercice.",
+      "NOVA se joue ici en trois références, qui se disputent le même atelier : le coût de revient et la marge se calculent enceinte par enceinte, et le mix devient une décision. NOVA porte un coût de production, des charges fixes qui pèsent tant que le volume ne les absorbe pas, des délais de règlement qui creusent le besoin en fonds de roulement, et un compte-clé qui fait bondir la demande au quatrième trimestre. Le niveau retenu ouvre la trésorerie, l'assurance, le recrutement et l'investissement : la gestion généraliste demande de voir l'entreprise entière, du coût de revient au financement de sa croissance. Le monde variable est décoché pour que toutes vos classes travaillent le même exercice.",
   },
   seances: [
     {

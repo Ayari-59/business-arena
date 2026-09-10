@@ -1,18 +1,17 @@
 import Link from "next/link";
-import { SCENARIOS, SECTOR_LABELS, SECTOR_ICONS } from "@/config/scenarios/registry";
+import { ALL_SITUATIONS, SCENARIOS, SECTOR_LABELS, SECTOR_ICONS } from "@/config/scenarios/registry";
 import { DECISION_MODELS } from "@/config/pedagogy/models";
 
 export const metadata = {
   alternates: { canonical: "/fonctionnalites" },
   title: "Fonctionnalités",
-  description:
-    "9 scénarios sectoriels, 79 situations pédagogiques, 18 modèles d'analyse : tout ce que la plateforme met entre les mains de vos étudiants.",
+  description: `${SCENARIOS.length} scénarios sectoriels, ${ALL_SITUATIONS.length} situations pédagogiques, ${DECISION_MODELS.length} modèles d'analyse : tout ce que la plateforme met entre les mains de vos étudiants.`,
 };
 
 const HERO_STATS = [
-  { value: "9", label: "scénarios sectoriels", detail: "Industrie, commerce, hôtellerie, restauration, e-commerce, conseil, fitness, BTP, transport" },
-  { value: "79", label: "situations pédagogiques", detail: "Déclenchées par le contexte de chaque tour, adaptées au secteur et à la difficulté" },
-  { value: "18", label: "modèles d'analyse", detail: "Seuil de rentabilité, coûts pertinents, FRNG/BFR, VAN, TRI, arbre de décision…" },
+  { value: String(SCENARIOS.length), label: "scénarios sectoriels", detail: "Industrie, commerce, hôtellerie, restauration, e-commerce, conseil, fitness, BTP, transport" },
+  { value: String(ALL_SITUATIONS.length), label: "situations pédagogiques", detail: "Déclenchées par le contexte de chaque tour, adaptées au secteur et à la difficulté" },
+  { value: String(DECISION_MODELS.length), label: "modèles d'analyse", detail: "Seuil de rentabilité, coûts pertinents, FRNG/BFR, VAN, TRI, arbre de décision…" },
 ];
 
 const PILLARS = [

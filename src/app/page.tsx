@@ -44,7 +44,7 @@ const RENVOIS: {
     icon: "🏭",
     title: "Les entreprises",
     href: "/entreprises",
-    aide: "9 secteurs, 9 économies réelles : leur marché, leurs contraintes, ce qu'on y apprend.",
+    aide: `${SCENARIOS.length} secteurs, ${SCENARIOS.length} économies réelles : leur marché, leurs contraintes, ce qu'on y apprend.`,
   },
   {
     icon: "⚙️",

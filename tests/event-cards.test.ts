@@ -16,7 +16,12 @@ const RSE_CODES = new Set<string>(Object.values(RSE_CARD_CODES));
 
 describe("deck de cartes événements", () => {
   it("chaque événement de chaque scénario a sa carte, et réciproquement", () => {
-    const eventCodes = SCENARIOS.flatMap((d) => d.scenario.events.map((e) => e.code)).sort();
+    // Deux scénarios du même métier partagent le même deck : NOVA en une
+    // référence et NOVA en trois jouent les mêmes événements, sous les mêmes
+    // codes. Un code d'événement ne compte donc qu'une fois.
+    const eventCodes = [
+      ...new Set(SCENARIOS.flatMap((d) => d.scenario.events.map((e) => e.code))),
+    ].sort();
     const cardCodes = EVENT_CARDS.map((c) => c.code)
       .filter((c) => !RSE_CODES.has(c))
       .sort();

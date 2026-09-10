@@ -38,7 +38,7 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
   pourquoi:
     "Un sujet d'examen présente la RSE comme un chapitre : on définit, on classe les trois piliers, on récite les obligations de reporting. L'élève apprend le vocabulaire sans jamais rencontrer la seule question qui rend la RSE difficile à gérer : elle coûte maintenant et rapporte plus tard, quand elle rapporte. Ici l'équipe décide elle-même du montant qu'elle engage, le paie sur sa marge du trimestre, et découvre aux tours suivants un capital d'image qui monte lentement, un financement qui se détend, un climat social qui se tient, ou au contraire un bad buzz et une sanction quand l'engagement reste tiède. Elle apprend alors ce qu'aucune récitation ne transmet : que la responsabilité est un investissement à horizon, qu'elle peut être un mauvais calcul à court terme, et qu'un rapport extra-financier n'a de valeur que s'il rend compte de décisions réellement prises.",
   reglages: {
-    scenarioCode: "nova",
+    scenarioCode: "nova-gamme",
     periodicite: "quarter",
     periodiciteLabel: "Un trimestre par tour",
     niveau: 5,
@@ -51,7 +51,7 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
     tours: 5,
     effectifParEquipe: "trois élèves",
     notes:
-      "NOVA porte un cycle d'exploitation complet, des fournisseurs, de la non-qualité et une capacité qui s'investit : de quoi rendre la RSE tangible plutôt que déclarative. Le niveau Stratégie ouvre le financement, l'investissement et l'engagement RSE, c'est-à-dire les leviers de l'atelier. Le monde variable est activé : à ce niveau, distinguer une bonne décision d'un bon résultat fait partie de ce qui s'évalue, et la RSE en est l'illustration la plus nette, puisqu'un engagement juste peut ne pas payer sur cinq tours. La cinquième séance joue le dernier tour ; la sixième ne joue rien et sert à rendre compte.",
+      "NOVA se joue ici en trois références, chacune avec son catalogue de fournisseurs et son budget qualité : le choix responsable se fait ligne par ligne, et son coût se lit sur la marge de chaque enceinte. NOVA porte un cycle d'exploitation complet, des fournisseurs, de la non-qualité et une capacité qui s'investit : de quoi rendre la RSE tangible plutôt que déclarative. Le niveau Stratégie ouvre le financement, l'investissement et l'engagement RSE, c'est-à-dire les leviers de l'atelier. Le monde variable est activé : à ce niveau, distinguer une bonne décision d'un bon résultat fait partie de ce qui s'évalue, et la RSE en est l'illustration la plus nette, puisqu'un engagement juste peut ne pas payer sur cinq tours. La cinquième séance joue le dernier tour ; la sixième ne joue rien et sert à rendre compte.",
   },
   seances: [
     {
