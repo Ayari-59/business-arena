@@ -656,7 +656,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
     category: "tresorerie_dormante",
     title: "Janvier a rempli la caisse",
     narrative:
-      "Les inscriptions de début d'année ont fait entrer beaucoup d'argent d'un coup : plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an, et facture le découvert 9 %. Cet argent doit pourtant faire vivre la salle jusqu'à décembre, y compris pendant l'été où plus personne ne s'inscrit.",
+      "Les inscriptions de début d'année ont fait entrer beaucoup d'argent d'un coup : plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an, et facture le découvert 13 %. Cet argent doit pourtant faire vivre la salle jusqu'à décembre, y compris pendant l'été où plus personne ne s'inscrit.",
     problem:
       "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant ?",
     diagnosticOptions: [
@@ -686,14 +686,14 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
         id: "fitness_detect_idle_cash_placement_exces",
         prompt: "Placer la totalité de sa trésorerie expose l'entreprise à…",
         options: [
-          { id: "a", label: "Ouvrir un découvert à 9 % tout en détenant un placement à 2 %" },
+          { id: "a", label: "Ouvrir un découvert à 13 % tout en détenant un placement à 2 %" },
           { id: "b", label: "Perdre le capital placé si le trimestre est mauvais" },
           { id: "c", label: "Un redressement fiscal sur les produits financiers" },
           { id: "d", label: "Une baisse mécanique de son chiffre d'affaires" },
         ],
         correctOptionId: "a",
         explain:
-          "Le placement est bloqué : il ne paie rien pendant le tour. Si les décaissements dépassent ce qui reste en caisse, la banque ouvre un découvert, et vous payez d'un côté quatre fois ce que vous gagnez de l'autre.",
+          "Le placement est bloqué : il ne paie rien pendant le tour. Si les décaissements dépassent ce qui reste en caisse, la banque ouvre un découvert, et vous payez d'un côté six fois et demie ce que vous gagnez de l'autre.",
       },
       {
         id: "fitness_encaisse_avance",
@@ -721,7 +721,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
       "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro.",
       "Attention : le placement est bloqué jusqu'au tour suivant. Il ne réglera rien de ce qui tombera d'ici là.",
       "Projetez l'année entière, et surtout le creux de l'été : les charges tombent tous les mois, les inscriptions non.",
-      "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte quatre fois ce que le placement rapporte : l'erreur n'est pas symétrique.",
+      "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte six fois et demie ce que le placement rapporte : l'erreur n'est pas symétrique.",
     ]),
     trigger: { detect: "idle_cash" },
     weight: 0.8,

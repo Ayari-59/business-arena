@@ -86,7 +86,7 @@ const PATCHES: Record<string, SituationTextPatch> = {
   conseil_detect_idle_cash: {
     title: "Le compte se remplit, le carnet se vide, et la pratique cyber attend",
     narrative:
-      "Les grosses factures de fin de mission sont rentrées d'un coup : le compte affiche plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an, et facture le découvert 9 %. Le carnet d'audit et de transformation, lui, est plus creux qu'il ne l'a été depuis longtemps, et la pratique cyber, qui vendrait à des DSI qui ne connaissent pas les congés, n'est pas encore financée.",
+      "Les grosses factures de fin de mission sont rentrées d'un coup : le compte affiche plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an, et facture le découvert 13 %. Le carnet d'audit et de transformation, lui, est plus creux qu'il ne l'a été depuis longtemps, et la pratique cyber, qui vendrait à des DSI qui ne connaissent pas les congés, n'est pas encore financée.",
     problem:
       "Cet argent qui dort, faut-il le placer, le mettre dans l'offre cyber, ou le garder, et jusqu'à quel montant ?",
     diagnosticLabels: [
@@ -100,7 +100,7 @@ const PATCHES: Record<string, SituationTextPatch> = {
       "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro ; une offre cyber lancée rapporte 750 € par journée vendue, mais seulement une fois bâtie.",
       "Attention : le placement est bloqué jusqu'au tour suivant, et la R&D est une charge du tour. Ni l'un ni l'autre ne réglera ce qui tombera d'ici là.",
       "Projetez le trimestre à venir avec le carnet TEL QU'IL EST, offre par offre : les salaires de vos consultants tomberont, les encaissements peut-être pas.",
-      "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte quatre fois ce que le placement rapporte : l'erreur n'est pas symétrique.",
+      "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte six fois et demie ce que le placement rapporte : l'erreur n'est pas symétrique.",
     ],
     modelExplain:
       "Le budget de trésorerie confronte les encaissements attendus au carnet réel, offre par offre, aux salaires certains et à ce que coûte de bâtir l'offre cyber. C'est le seul document qui empêche de prendre un solde de fin de mission pour un excédent durable.",

@@ -113,7 +113,7 @@ const PATCHES: Record<string, SituationTextPatch> = {
   hotel_detect_idle_cash: {
     title: "Le compte plein de fin de saison, et trois chambres à faire passer l'hiver",
     narrative:
-      "La saison forte est passée : les suites des grandes occasions et les supérieures des escapades ont fait le plein, et le compte affiche plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an ; il facture votre découvert 9 %. L'échéance du crédit immobilier, elle, tombera comme chaque trimestre, saison creuse comprise, et l'hiver ne vendra ni suites ni escapades.",
+      "La saison forte est passée : les suites des grandes occasions et les supérieures des escapades ont fait le plein, et le compte affiche plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an ; il facture votre découvert 12 %. L'échéance du crédit immobilier, elle, tombera comme chaque trimestre, saison creuse comprise, et l'hiver ne vendra ni suites ni escapades.",
     problem:
       "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant, quand le mix de l'hiver ne ressemble pas à celui de l'été ?",
     diagnosticLabels: [
@@ -127,7 +127,7 @@ const PATCHES: Record<string, SituationTextPatch> = {
       "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro.",
       "Attention : le placement est bloqué jusqu'au tour suivant. Il ne réglera rien de ce qui tombera d'ici là.",
       "Projetez la saison creuse chambre par chambre : la standard des groupes et la supérieure des affaires reviennent, les suites et les escapades s'effacent. Salaires, énergie, entretien et échéance du crédit tombent quand même.",
-      "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte quatre fois ce que le placement rapporte : l'erreur n'est pas symétrique.",
+      "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte six fois ce que le placement rapporte : l'erreur n'est pas symétrique.",
     ],
     modelExplain:
       "Le budget de trésorerie projette la saison creuse à venir, chambre par chambre, échéance du crédit comprise. Seul lui distingue un vrai excédent de ce qui doit faire passer l'hiver.",
