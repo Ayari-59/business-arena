@@ -20,6 +20,8 @@ import { db } from "@/db";
 import { decisions, users } from "@/db/schema";
 import { createSoloGame, getGameView, resolveCurrentRound } from "@/services/game.service";
 import { scalarsOfGamme } from "@/engine/gamme";
+import { cockpitEquipe } from "@/services/cockpit.service";
+import { referencesResolues } from "@/config/ateliers/cockpit";
 import type { RoundDecisions } from "@/engine/types";
 
 let userId: string;
@@ -104,5 +106,32 @@ describe("MAILLE & CO dans l'arène", () => {
       expect(period.result.products![code]!.planned).toBeCloseTo(600, 6);
       expect(period.result.products![code]!.price).toBe(55);
     }
+  });
+});
+
+describe("le cockpit de l'équipe", () => {
+  it("couvre les tours restants, part de l'état réel et porte l'historique joué", async () => {
+    const view = (await getGameView(gameId, userId))!;
+    const spec = (await cockpitEquipe(view))!;
+    expect(spec.feuilles.map((f) => f.nom)).toEqual([
+      "Paramètres",
+      "Prévision logistique",
+      "Prévision résultat",
+      "Historique",
+    ]);
+    // Deux tours joués : le cockpit commence au tour 3 (la partie en compte 2 ici → tour 3 hors partie ⇒ dernier tour).
+    const logistique = spec.feuilles[1]!;
+    const entetes = logistique.lignes[3]!.slice(1).map((c) => c.v);
+    expect(entetes[0]).toMatch(/^Tour \d$/);
+    // Le stock d'ouverture de chaque référence est celui du moteur.
+    const parametres = spec.feuilles[0]!;
+    const bonnet = parametres.lignes.find((l) => l[0]?.v === "Bonnet")!;
+    expect(bonnet[6]!.v).toBe(view.ouverture.stocks["bonnet"]);
+    // L'historique porte les deux tours joués, référence par référence.
+    const historique = spec.feuilles[3]!;
+    expect(historique.lignes[3]!.slice(1).map((c) => c.v)).toEqual(["Tour 1", "Tour 2"]);
+    // Et aucune formule ne vise le vide.
+    const perdues = referencesResolues(spec).flatMap((r) => r.cibles.filter((c) => c.startsWith("?")));
+    expect(perdues).toEqual([]);
   });
 });

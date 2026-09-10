@@ -242,6 +242,18 @@ export interface GameView {
     stock: number;
   }[] | null;
   /**
+   * D'où l'équipe repart pour le tour à jouer : le stock de chaque référence
+   * (une seule en mono-produit, sous le code du produit) et les trois postes
+   * qui font le budget de trésorerie. Ce sont les chiffres d'ouverture du
+   * cockpit de prévision.
+   */
+  ouverture: {
+    stocks: Record<string, number>;
+    cash: number;
+    receivables: number;
+    payables: number;
+  };
+  /**
    * Indicateurs du métier joué (RevPAR en hôtellerie, ratio matières en
    * restauration…), déjà calculés : l'arène ne fait que les mettre en forme.
    */
@@ -1170,6 +1182,24 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         p.market.segments.map((s) => [s.code, s.name] as const),
       ),
     ),
+    ouverture: (() => {
+      const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+      const state = stateRow?.state as CompanyState | undefined;
+      const stocks: Record<string, number> = {};
+      for (const p of toGamme(snapshot)) {
+        stocks[p.code] = Math.round(
+          isMultiProduct(snapshot)
+            ? (state?.finishedGoodsByProduct?.[p.code]?.quantity ?? 0)
+            : (state?.finishedGoods.quantity ?? 0),
+        );
+      }
+      return {
+        stocks,
+        cash: Math.round(state?.finance.cash ?? 0),
+        receivables: Math.round(state?.finance.receivables ?? 0),
+        payables: Math.round(state?.finance.payables ?? 0),
+      };
+    })(),
     gamme: (() => {
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
       if (!isMultiProduct(snapshot)) return null;

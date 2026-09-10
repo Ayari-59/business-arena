@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Browser, Page } from "playwright-core";
-import { aller, ouvrirNavigateur } from "./helpers/browser";
+import { aller, BASE, ouvrirNavigateur } from "./helpers/browser";
 import { ATELIERS } from "../../src/config/ateliers";
 import { formulairesAtelier } from "../../src/config/ateliers/formulaires";
 import { dossierEnseignant } from "../../src/config/ateliers/dossiers";
@@ -55,6 +55,20 @@ describe("les documents d'un atelier", () => {
       }
     }, 60_000);
   }
+
+  it("le cockpit de prévision se télécharge en classeur, pour chaque atelier", async () => {
+    // Le classeur se construit dans le registre et s'y vérifie ; ici on
+    // s'assure seulement qu'il ARRIVE : un fichier .xlsx, pas une page d'erreur.
+    for (const atelier of ATELIERS) {
+      const reponse = await page.request.get(`${BASE}/animations/${atelier.code}/cockpit`);
+      expect(reponse.status(), `${atelier.code} : cockpit indisponible`).toBe(200);
+      expect(reponse.headers()["content-type"]).toContain("spreadsheetml");
+      expect(reponse.headers()["content-disposition"]).toMatch(/\.xlsx"$/);
+      const corps = await reponse.body();
+      // Un .xlsx est une archive zip : elle commence par « PK ».
+      expect(corps.subarray(0, 2).toString("ascii")).toBe("PK");
+    }
+  }, 120_000);
 
   it("aucune feuille distribuée ne porte de corrigé", async () => {
     // La faute qu'on ne rattrape pas : elle ne se voit ni à la relecture ni à

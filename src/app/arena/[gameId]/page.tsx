@@ -626,7 +626,15 @@ export default async function ArenaPage({
                   </h2>
                   <p className="mt-1 text-xs text-slate-400">
                     Une fois rendues et le tour clos, elles produiront les résultats de ce
-                    tour — et le tour suivant s&apos;ouvrira.
+                    tour — et le tour suivant s&apos;ouvrira.{" "}
+                    <a
+                      href={`/arena/${view.gameId}/cockpit`}
+                      className="text-amber-300 underline-offset-4 hover:underline"
+                    >
+                      Cockpit de prévision (Excel)
+                    </a>
+                    {" "}: vos hypothèses, votre logistique et votre trésorerie, calculées avant de
+                    valider.
                   </p>
                 </div>
                 <DecisionForm

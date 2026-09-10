@@ -90,6 +90,12 @@ export default async function DossierElevePage({
           >
             Tableau de bord en tableur
           </a>
+          <a
+            href={`/animations/${atelier.code}/cockpit`}
+            className="rounded-lg border border-amber-400/40 px-4 py-2 text-sm font-medium text-amber-300 transition hover:border-amber-400 hover:bg-amber-400/10"
+          >
+            Cockpit de prévision (Excel)
+          </a>
         </div>
       </header>
 
@@ -106,6 +112,56 @@ export default async function DossierElevePage({
           Vous la dirigez pendant {dossier.tours} tours, un {periodicite} par tour. Vous n&apos;êtes
           pas seul sur le marché : les autres équipes vendent aux mêmes clients que vous, et ce que
           vous ne prenez pas, quelqu&apos;un le prend.
+        </p>
+      </section>
+
+      {/* Ce que l'équipe vend : une référence, ou la gamme entière chez
+          MAILLE & CO. Les chiffres sont ceux du jeu — prix usuel de la
+          clientèle dominante, coûts, stock d'ouverture, saison par tour. */}
+      <section className="mt-8 break-inside-avoid">
+        <h2 className="text-xl font-bold text-slate-100 print:text-black">
+          {dossier.gamme.length > 1 ? "Ce que vous vendez : la gamme" : "Ce que vous vendez"}
+        </h2>
+        <div className="mt-3 overflow-x-auto">
+          <table className="w-full border-collapse text-xs">
+            <thead>
+              <tr className="text-left uppercase tracking-wide text-slate-400 print:text-black">
+                <th className="border-b border-white/10 py-1.5 pr-3 font-medium print:border-black/30">
+                  {dossier.gamme.length > 1 ? "Référence" : "Produit"}
+                </th>
+                <th className="border-b border-white/10 py-1.5 pr-3 text-right font-medium print:border-black/30">Prix usuel</th>
+                <th className="border-b border-white/10 py-1.5 pr-3 text-right font-medium print:border-black/30">Coût variable</th>
+                <th className="border-b border-white/10 py-1.5 pr-3 text-right font-medium print:border-black/30">Marge usuelle</th>
+                <th className="border-b border-white/10 py-1.5 pr-3 text-right font-medium print:border-black/30">Stock à l&apos;ouverture</th>
+                {dossier.tableauDeBord.tours.map((t) => (
+                  <th key={t} className="border-b border-white/10 py-1.5 pr-2 text-right font-medium print:border-black/30">
+                    Saison T{t}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="text-slate-300 print:text-black">
+              {dossier.gamme.map((g) => (
+                <tr key={g.code} className="border-b border-white/5 print:border-black/20">
+                  <td className="py-1.5 pr-3 font-medium text-slate-100 print:text-black">{g.nom}</td>
+                  <td className="py-1.5 pr-3 text-right tabular-nums">{g.prixUsuel.toLocaleString("fr-FR")} €</td>
+                  <td className="py-1.5 pr-3 text-right tabular-nums">{g.coutVariable.toLocaleString("fr-FR")} €</td>
+                  <td className="py-1.5 pr-3 text-right tabular-nums">{g.margeUsuelle.toLocaleString("fr-FR")} €</td>
+                  <td className="py-1.5 pr-3 text-right tabular-nums">{g.stockOuverture.toLocaleString("fr-FR")}</td>
+                  {g.saison.map((c, i) => (
+                    <td key={i} className="py-1.5 pr-2 text-right tabular-nums text-slate-400 print:text-black">
+                      ×{c.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-2 text-xs leading-relaxed text-slate-400 print:text-black">
+          Le prix usuel est celui que la clientèle principale a l&apos;habitude de payer, pas une
+          consigne. La marge usuelle est ce qu&apos;il reste, à ce prix, une fois payés le coût
+          d&apos;achat et les frais variables : c&apos;est elle qui couvre les charges de structure.
         </p>
       </section>
 
@@ -189,6 +245,83 @@ export default async function DossierElevePage({
               <p className="mt-2 border-t border-white/10 pt-2 text-xs italic leading-relaxed text-slate-400 print:border-black/20 print:text-black">
                 À verser à votre {dossier.entete.traceLabel} : « {s.trace} »
               </p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      {/* Les quatre dossiers de service : chaque membre de l'équipe a sa
+          page, avec les chiffres de son domaine tels que le jeu les applique
+          et les questions à s'être posées avant de valider. */}
+      <section className="mt-10 break-before-page">
+        <h2 className="text-xl font-bold text-slate-100 print:text-black">
+          Vos dossiers de service
+        </h2>
+        <p className="mt-2 text-sm leading-relaxed text-slate-400 print:text-black">
+          Une équipe se répartit les rôles. Chaque service a sa page : ce qu&apos;il décide, les
+          chiffres de son domaine, et les trois questions à avoir posées avant de valider le tour.
+          Le{" "}
+          <a
+            href={`/animations/${atelier.code}/cockpit`}
+            className="text-amber-300 underline-offset-4 hover:underline print:text-black print:no-underline"
+          >
+            cockpit de prévision
+          </a>{" "}
+          reprend ces chiffres dans un classeur qui calcule la logistique, le résultat et la
+          trésorerie de chaque tour à partir de vos hypothèses.
+        </p>
+        <div className="mt-4 space-y-6">
+          {dossier.services.map((service) => (
+            <article
+              key={service.code}
+              className="break-inside-avoid rounded-xl border border-white/10 p-5 print:border-black/20"
+            >
+              <h3 className="text-lg font-bold text-slate-50 print:text-black">{service.titre}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-slate-300 print:text-black">
+                {service.mission}
+              </p>
+              <dl className="mt-4 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
+                {service.lignes.map((l) => (
+                  <div key={l.libelle} className="flex justify-between gap-3 border-b border-white/5 py-1 print:border-black/10">
+                    <dt className="text-slate-400 print:text-black">{l.libelle}</dt>
+                    <dd className="text-right tabular-nums text-slate-100 print:text-black">{l.valeur}</dd>
+                  </div>
+                ))}
+              </dl>
+              {service.tableau ? (
+                <div className="mt-4 overflow-x-auto">
+                  <table className="w-full border-collapse text-xs">
+                    <thead>
+                      <tr className="text-left uppercase tracking-wide text-slate-400 print:text-black">
+                        {service.tableau.entetes.map((e) => (
+                          <th key={e} className="border-b border-white/10 py-1.5 pr-3 font-medium print:border-black/30">
+                            {e}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="text-slate-300 print:text-black">
+                      {service.tableau.lignes.map((ligne, i) => (
+                        <tr key={i} className="border-b border-white/5 print:border-black/20">
+                          {ligne.map((c, j) => (
+                            <td key={j} className={`py-1.5 pr-3 ${j > 0 ? "tabular-nums" : "text-slate-100 print:text-black"}`}>
+                              {c}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : null}
+              <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 print:text-black">
+                Avant de valider le tour
+              </p>
+              <ul className="mt-1 space-y-1 text-sm text-slate-300 print:text-black">
+                {service.questions.map((q) => (
+                  <li key={q}>· {q}</li>
+                ))}
+              </ul>
             </article>
           ))}
         </div>
