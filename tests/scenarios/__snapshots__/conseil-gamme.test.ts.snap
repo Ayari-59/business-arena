@@ -1,0 +1,286 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ATLAS CONSEIL · gamme — calibration > la partie de référence ne bouge pas sans qu'on le veuille 1`] = `
+{
+  "balanced": [
+    {
+      "resultat": 16423,
+      "tresorerie": 28736,
+      "vendu": {
+        "audit": 322,
+        "cyber": 0,
+        "transformation": 189,
+      },
+    },
+    {
+      "resultat": -8927,
+      "tresorerie": 65309,
+      "vendu": {
+        "audit": 191,
+        "cyber": 73,
+        "transformation": 108,
+      },
+    },
+    {
+      "resultat": 51271,
+      "tresorerie": 76924,
+      "vendu": {
+        "audit": 237,
+        "cyber": 96,
+        "transformation": 174,
+      },
+    },
+    {
+      "resultat": 55555,
+      "tresorerie": 125598,
+      "vendu": {
+        "audit": 228,
+        "cyber": 106,
+        "transformation": 175,
+      },
+    },
+    {
+      "resultat": 79101,
+      "tresorerie": 179623,
+      "vendu": {
+        "audit": 262,
+        "cyber": 111,
+        "transformation": 192,
+      },
+    },
+    {
+      "resultat": 93731,
+      "tresorerie": 266816,
+      "vendu": {
+        "audit": 275,
+        "cyber": 116,
+        "transformation": 202,
+      },
+    },
+  ],
+  "growth": [
+    {
+      "resultat": 33157,
+      "tresorerie": 25441,
+      "vendu": {
+        "audit": 383,
+        "cyber": 0,
+        "transformation": 225,
+      },
+    },
+    {
+      "resultat": 30029,
+      "tresorerie": 85695,
+      "vendu": {
+        "audit": 271,
+        "cyber": 87,
+        "transformation": 153,
+      },
+    },
+    {
+      "resultat": 60649,
+      "tresorerie": 124667,
+      "vendu": {
+        "audit": 289,
+        "cyber": 100,
+        "transformation": 210,
+      },
+    },
+    {
+      "resultat": 115600,
+      "tresorerie": 197232,
+      "vendu": {
+        "audit": 330,
+        "cyber": 131,
+        "transformation": 250,
+      },
+    },
+    {
+      "resultat": 117399,
+      "tresorerie": 304188,
+      "vendu": {
+        "audit": 345,
+        "cyber": 125,
+        "transformation": 250,
+      },
+    },
+    {
+      "resultat": 120080,
+      "tresorerie": 427737,
+      "vendu": {
+        "audit": 345,
+        "cyber": 125,
+        "transformation": 250,
+      },
+    },
+  ],
+  "passive": [
+    {
+      "resultat": 22748,
+      "tresorerie": 57438,
+      "vendu": {
+        "audit": 258,
+        "cyber": 0,
+        "transformation": 174,
+      },
+    },
+    {
+      "resultat": 22790,
+      "tresorerie": 85103,
+      "vendu": {
+        "audit": 258,
+        "cyber": 0,
+        "transformation": 174,
+      },
+    },
+    {
+      "resultat": -9710,
+      "tresorerie": 99945,
+      "vendu": {
+        "audit": 210,
+        "cyber": 0,
+        "transformation": 157,
+      },
+    },
+    {
+      "resultat": 23721,
+      "tresorerie": 103134,
+      "vendu": {
+        "audit": 258,
+        "cyber": 0,
+        "transformation": 174,
+      },
+    },
+    {
+      "resultat": 21337,
+      "tresorerie": 118563,
+      "vendu": {
+        "audit": 258,
+        "cyber": 0,
+        "transformation": 174,
+      },
+    },
+    {
+      "resultat": 22961,
+      "tresorerie": 143437,
+      "vendu": {
+        "audit": 258,
+        "cyber": 0,
+        "transformation": 174,
+      },
+    },
+  ],
+  "premium": [
+    {
+      "resultat": 41623,
+      "tresorerie": 22709,
+      "vendu": {
+        "audit": 265,
+        "cyber": 0,
+        "transformation": 180,
+      },
+    },
+    {
+      "resultat": 6944,
+      "tresorerie": 87216,
+      "vendu": {
+        "audit": 150,
+        "cyber": 70,
+        "transformation": 98,
+      },
+    },
+    {
+      "resultat": 21297,
+      "tresorerie": 97989,
+      "vendu": {
+        "audit": 127,
+        "cyber": 92,
+        "transformation": 128,
+      },
+    },
+    {
+      "resultat": 25809,
+      "tresorerie": 121322,
+      "vendu": {
+        "audit": 116,
+        "cyber": 96,
+        "transformation": 122,
+      },
+    },
+    {
+      "resultat": 35024,
+      "tresorerie": 143944,
+      "vendu": {
+        "audit": 127,
+        "cyber": 96,
+        "transformation": 128,
+      },
+    },
+    {
+      "resultat": 36372,
+      "tresorerie": 182923,
+      "vendu": {
+        "audit": 127,
+        "cyber": 96,
+        "transformation": 128,
+      },
+    },
+  ],
+  "price_aggressive": [
+    {
+      "resultat": 29485,
+      "tresorerie": 50820,
+      "vendu": {
+        "audit": 353,
+        "cyber": 0,
+        "transformation": 207,
+      },
+    },
+    {
+      "resultat": -54399,
+      "tresorerie": 57468,
+      "vendu": {
+        "audit": 229,
+        "cyber": 0,
+        "transformation": 130,
+      },
+    },
+    {
+      "resultat": 8018,
+      "tresorerie": 30256,
+      "vendu": {
+        "audit": 311,
+        "cyber": 0,
+        "transformation": 193,
+      },
+    },
+    {
+      "resultat": 29301,
+      "tresorerie": 46647,
+      "vendu": {
+        "audit": 326,
+        "cyber": 0,
+        "transformation": 212,
+      },
+    },
+    {
+      "resultat": 70030,
+      "tresorerie": 75134,
+      "vendu": {
+        "audit": 411,
+        "cyber": 0,
+        "transformation": 256,
+      },
+    },
+    {
+      "resultat": 86937,
+      "tresorerie": 149721,
+      "vendu": {
+        "audit": 444,
+        "cyber": 0,
+        "transformation": 276,
+      },
+    },
+  ],
+}
+`;

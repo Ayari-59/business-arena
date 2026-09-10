@@ -573,6 +573,11 @@ describe("les familles de scénarios : un produit ou la gamme, selon le niveau",
     expect(scenarioCodeForLevel("hotel", 3)).toBe("hotel");
     expect(scenarioCodeForLevel("hotel", 4)).toBe("hotel-gamme");
     expect(codes).not.toContain("hotel-gamme");
+    // ATLAS CONSEIL : une journée à taux moyen jusqu'au niveau 3, les trois offres à partir du 4.
+    expect(scenarioCodeForLevel("conseil", 3)).toBe("conseil");
+    expect(scenarioCodeForLevel("conseil", 4)).toBe("conseil-gamme");
+    expect(scenarioCodeForLevel("conseil-gamme", 2)).toBe("conseil");
+    expect(codes).not.toContain("conseil-gamme");
     // Sans niveau : le plus simple. Hors famille : le code tel quel.
     expect(scenarioCodeForLevel("nova", undefined)).toBe("nova");
     expect(scenarioCodeForLevel("bistrot", 6)).toBe("bistrot");
