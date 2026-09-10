@@ -24,6 +24,9 @@ export function PeriodDecisionsRecap({
     gamme && d.products
       ? gamme.map((p) => ({ name: p.name, own: d.products![p.code] })).filter((x) => x.own)
       : [];
+  // Colonnes qualité et fournisseur : seulement si au moins une référence les porte.
+  const avecQualite = parProduit.some((x) => x.own!.qualityBudget !== undefined);
+  const avecFournisseur = parProduit.some((x) => x.own!.supplierChoice !== undefined);
 
   const core: { label: string; value: string }[] = parProduit.length
     ? [
@@ -47,7 +50,8 @@ export function PeriodDecisionsRecap({
   // Leviers optionnels réellement actionnés ce tour-là.
   const chips: string[] = [];
   if (d.insurance) chips.push("🛡️ Assurance souscrite");
-  if (d.supplierChoice) chips.push(`🚚 Fournisseur : ${d.supplierChoice}`);
+  // En gamme, le fournisseur se lit référence par référence dans le tableau.
+  if (d.supplierChoice && !avecFournisseur) chips.push(`🚚 Fournisseur : ${d.supplierChoice}`);
   if (d.acceptOrder) chips.push("📦 Commande exceptionnelle acceptée");
   if (d.studies) {
     const labels: Record<string, string> = {
@@ -105,7 +109,9 @@ export function PeriodDecisionsRecap({
                 <th className="pb-1 pr-3 font-medium">Référence</th>
                 <th className="pb-1 pr-3 text-right font-medium">{vocabulary.priceLabel}</th>
                 <th className="pb-1 pr-3 text-right font-medium">{vocabulary.productionPlanLabel}</th>
-                <th className="pb-1 text-right font-medium">Marketing</th>
+                <th className="pb-1 pr-3 text-right font-medium">Marketing</th>
+                {avecQualite ? <th className="pb-1 pr-3 text-right font-medium">Qualité</th> : null}
+                {avecFournisseur ? <th className="pb-1 font-medium">Fournisseur</th> : null}
               </tr>
             </thead>
             <tbody className="text-slate-300">
@@ -116,9 +122,17 @@ export function PeriodDecisionsRecap({
                   <td className="py-1.5 pr-3 text-right tabular-nums">
                     {formatUnits(own!.productionPlan)} {vocabulary.units}
                   </td>
-                  <td className="py-1.5 text-right tabular-nums">
+                  <td className="py-1.5 pr-3 text-right tabular-nums">
                     {formatEuro(own!.marketingBudget ?? 0)}
                   </td>
+                  {avecQualite ? (
+                    <td className="py-1.5 pr-3 text-right tabular-nums">
+                      {formatEuro(own!.qualityBudget ?? 0)}
+                    </td>
+                  ) : null}
+                  {avecFournisseur ? (
+                    <td className="py-1.5 text-slate-300">{own!.supplierChoice ?? "—"}</td>
+                  ) : null}
                 </tr>
               ))}
             </tbody>

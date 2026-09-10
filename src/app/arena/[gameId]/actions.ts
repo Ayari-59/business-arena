@@ -29,11 +29,13 @@ export async function playRoundAction(
   const userId = await getGuestUserId();
   if (!userId) return { error: "Session expirée : relancez une partie depuis l'accueil." };
 
-  // GAMME : le formulaire envoie un prix, un plan et un marketing PAR
-  // RÉFÉRENCE (`product.<code>.*`). Les scalaires historiques en sont dérivés
-  // ici — plan = somme, prix = moyenne pondérée, marketing = somme —, du même
-  // calcul que le formulaire et que la proposition, pour que la comparaison
-  // des pivots reste juste. Mono-produit : les champs scalaires font foi.
+  // GAMME : le formulaire envoie un prix, un plan, un marketing — et, selon le
+  // niveau et le scénario, une qualité et un fournisseur — PAR RÉFÉRENCE
+  // (`product.<code>.*`). Les scalaires historiques en sont dérivés ici — plan
+  // = somme, prix = moyenne pondérée, marketing et qualité = somme, fournisseur
+  // = celui de la référence au plan le plus fort —, du même calcul que le
+  // formulaire et que la proposition, pour que la comparaison des pivots reste
+  // juste. Mono-produit : les champs scalaires font foi.
   const products = readProductFields(formData.entries());
   const scalars = products ? scalarsOfGamme(products) : null;
 
@@ -52,7 +54,10 @@ export async function playRoundAction(
     productionPlan: scalars ? scalars.productionPlan : formData.get("productionPlan"),
     marketingBudget: scalars ? scalars.marketingBudget : formData.get("marketingBudget"),
     ...(products ? { products } : {}),
-    qualityBudget: formData.get("qualityBudget"),
+    // Gamme : la qualité et le fournisseur se décident par référence quand le
+    // formulaire les y porte ; les scalaires en sont dérivés (somme, et
+    // fournisseur de la référence au plan le plus fort).
+    qualityBudget: scalars?.qualityBudget ?? formData.get("qualityBudget"),
     maintenanceBudget: formData.get("maintenanceBudget"),
     insurance: (() => {
       const raw = formData.get("insurance");
@@ -60,7 +65,7 @@ export async function playRoundAction(
       if (typeof raw === "string" && raw.length > 0) return raw;
       return false;
     })(),
-    supplierChoice: formData.get("supplierChoice") || undefined,
+    supplierChoice: scalars?.supplierChoice ?? (formData.get("supplierChoice") || undefined),
     acceptOrder: formData.get("acceptOrder") === "on",
     studies: (() => {
       const picked = {

@@ -67,6 +67,17 @@ export function applyScenarioVariability(
       })),
       ...(p.market.seasonality ? { seasonality: p.market.seasonality.map(amplifie) } : {}),
     },
+    // Le catalogue propre d'une référence reçoit la même texture que celui
+    // du scénario (mêmes facteurs, aucun tirage supplémentaire).
+    ...(p.suppliers
+      ? {
+          suppliers: p.suppliers.map((s) => ({
+            ...s,
+            costMultiplier: s.costMultiplier * supplierCostFactor,
+            supplyRiskProbability: Math.min(0.3, s.supplyRiskProbability * supplierRiskFactor),
+          })),
+        }
+      : {}),
   }));
 
   return {

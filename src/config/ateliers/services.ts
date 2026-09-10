@@ -1,4 +1,4 @@
-import { toGamme } from "../../engine/gamme";
+import { suppliersOf, toGamme } from "../../engine/gamme";
 import type { ScenarioDefinition } from "../scenarios/registry";
 
 /**
@@ -120,10 +120,21 @@ export function dossiersDeService(definition: ScenarioDefinition, tours: number)
       { libelle: `${v.capacityLabel}`, valeur: `${entier(etat.machineCapacity)} ${v.perRoundLabel}` },
       { libelle: `${v.leftoverLabel} à l'ouverture`, valeur: `${entier(gamme.reduce((s, g) => s + g.stockOuverture, 0))} ${v.units}` },
       { libelle: "Délai de règlement des fournisseurs", valeur: jours(config.finance.supplierPaymentDelayDays) },
-      ...(config.suppliers ?? []).map((s) => ({
-        libelle: s.name,
-        valeur: `${s.costMultiplier === 1 ? "coût de référence" : `${s.costMultiplier < 1 ? "" : "+"}${Math.round((s.costMultiplier - 1) * 100)} % sur le coût d'achat`} · règlement ${jours(s.paymentDelayDays)}${s.qualityBonus !== 0 ? ` · qualité ${s.qualityBonus > 0 ? "+" : ""}${Math.round(s.qualityBonus * 100)} %` : ""}${s.supplyRiskProbability > 0 ? ` · risque de rupture ${pct(s.supplyRiskProbability)} par tour` : ""}`,
-      })),
+      // Les fournisseurs : ceux du scénario en mono-produit ; en gamme, le
+      // catalogue de chaque référence quand elle a le sien, avec le prix
+      // d'achat de la référence chez chacun.
+      ...toGamme(config).flatMap((p) => {
+        const catalogue = suppliersOf(p, config) ?? [];
+        const reference = catalogue[0];
+        return catalogue.map((s) => {
+          const ratio = reference ? s.costMultiplier / reference.costMultiplier : s.costMultiplier;
+          const ecart = Math.round((ratio - 1) * 100);
+          return {
+            libelle: multi ? `${p.name} · ${s.name}` : s.name,
+            valeur: `achat ${euro(p.materialCostPerUnit * s.costMultiplier)} (${ecart === 0 ? "coût de référence" : `${ecart > 0 ? "+" : "−"}${Math.abs(ecart)} %`}) · règlement ${jours(s.paymentDelayDays)}${s.qualityBonus !== 0 ? ` · qualité ${s.qualityBonus > 0 ? "+" : "−"}${Math.abs(Math.round(s.qualityBonus * 100))} %` : ""}${s.supplyRiskProbability > 0 ? ` · risque de rupture ${pct(s.supplyRiskProbability)} par tour` : ""}`,
+          };
+        });
+      }),
     ],
     tableau: {
       entetes: [multi ? "Référence" : "Produit", v.materialLabel, v.otherVariableLabel, "Coût variable", `${v.leftoverLabel} à l'ouverture`],

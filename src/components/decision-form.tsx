@@ -15,7 +15,7 @@ import { scalarsOfGamme } from "@/engine/gamme";
 import type { RoundDecisions } from "@/engine/types";
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
 import type { GameView } from "@/services/game-view.service";
-import { formatEuro, formatUnits } from "@/lib/format";
+import { formatEuro, formatEuroCents, formatUnits } from "@/lib/format";
 import { SimulationProgress } from "@/components/simulation-progress";
 
 const initialState: PlayRoundState = { error: null };
@@ -268,23 +268,91 @@ function OptionalField({
 }
 
 /**
- * GAMME : un prix, un volume et un marketing PAR RÉFÉRENCE. Chaque ligne
- * rappelle ce qu'il faut pour décider — le prix usuel de la clientèle
- * dominante, le coût variable, le stock en réserve et la saison du tour —,
- * parce que c'est ici que se joue le mix. Les scalaires historiques (prix
- * moyen, volume total) sont dérivés côté serveur : aucun champ scalaire n'est
- * envoyé pour ces trois décisions.
+ * GAMME : un prix, un volume, un marketing — et, quand le niveau et le
+ * scénario les ouvrent, un budget qualité et un fournisseur — PAR RÉFÉRENCE.
+ * Chaque ligne rappelle ce qu'il faut pour décider — le prix usuel de la
+ * clientèle dominante, le coût variable, le stock en réserve et la saison du
+ * tour —, parce que c'est ici que se joue le mix. Les scalaires historiques
+ * (prix moyen, volume total, qualité totale, fournisseur dominant) sont
+ * dérivés côté serveur : aucun champ scalaire n'est envoyé pour ces décisions.
  */
+/** Le multiplicateur d'un fournisseur, lu par rapport au fournisseur de RÉFÉRENCE de son catalogue. */
+export function ecartFournisseur(
+  s: { costMultiplier: number },
+  reference: { costMultiplier: number } | undefined,
+): string {
+  const ratio = reference && reference.costMultiplier > 0 ? s.costMultiplier / reference.costMultiplier : s.costMultiplier;
+  const pct = Math.round((ratio - 1) * 100);
+  return pct === 0 ? "coût de référence" : `${pct > 0 ? "+" : "−"}${Math.abs(pct)} %`;
+}
+
+/**
+ * Le lien entre le façonnier et le prix : ce que la référence coûte à
+ * l'achat chez le façonnier choisi, ce qu'elle coûte en tout (coût variable),
+ * ce qu'il en reste au prix saisi (marge unitaire) et le coefficient
+ * multiplicateur (prix / coût d'achat), la règle de pouce du commerce.
+ */
+function LienPrixFaconnier({
+  price,
+  achat,
+  autres,
+}: {
+  price: number;
+  achat: number;
+  autres: number;
+}) {
+  const cvu = achat + autres;
+  const marge = price - cvu;
+  const coefficient = achat > 0 ? price / achat : 0;
+  return (
+    <span className="mt-1 block text-xs leading-snug">
+      <span className="text-slate-400">achat </span>
+      <span className="text-slate-200">{formatEuroCents(achat)}</span>
+      <span className="text-slate-400"> · coût variable </span>
+      <span className="text-slate-200">{formatEuroCents(cvu)}</span>
+      <span className="text-slate-400"> · marge </span>
+      <span className={marge < 0 ? "font-medium text-red-400" : "font-medium text-emerald-300"}>
+        {formatEuroCents(marge)}
+      </span>
+      {coefficient > 0 ? (
+        <span className="text-slate-400">
+          {" "}
+          · coef. {coefficient.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
 function GammeFields({
   gamme,
   defaults,
   vocabulary: v,
+  quality,
 }: {
   gamme: NonNullable<GameView["gamme"]>;
   defaults: RoundDecisions;
   vocabulary: ScenarioVocabulary;
+  /** Le budget qualité est-il ouvert à ce niveau ? */
+  quality: boolean;
 }) {
   const n = gamme.length;
+  const avecFournisseurs = gamme.some((p) => p.suppliers);
+  // Le prix saisi et le façonnier choisi de chaque référence, pour montrer la
+  // marge en direct : les champs restent non contrôlés (le formulaire les
+  // envoie), on ne fait que les écouter.
+  const [prix, setPrix] = useState<Record<string, number>>(() =>
+    Object.fromEntries(gamme.map((p) => [p.code, defaults.products?.[p.code]?.price ?? p.refPrice])),
+  );
+  const [faconniers, setFaconniers] = useState<Record<string, string | undefined>>(() =>
+    Object.fromEntries(
+      gamme.map((p) => {
+        const own = defaults.products?.[p.code]?.supplierChoice ?? defaults.supplierChoice;
+        const valide = p.suppliers?.some((s) => s.code === own) ? own : p.suppliers?.[0]?.code;
+        return [p.code, valide];
+      }),
+    ),
+  );
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
@@ -293,7 +361,9 @@ function GammeFields({
             <th className="pb-2 pr-3 font-medium">Référence</th>
             <th className="pb-2 pr-3 font-medium">{v.priceLabel}</th>
             <th className="pb-2 pr-3 font-medium">{v.productionPlanLabel}</th>
-            <th className="pb-2 font-medium">Marketing</th>
+            <th className="pb-2 pr-3 font-medium">Marketing</th>
+            {quality ? <th className="pb-2 pr-3 font-medium">Qualité</th> : null}
+            {avecFournisseurs ? <th className="pb-2 font-medium">Fournisseur</th> : null}
           </tr>
         </thead>
         <tbody>
@@ -302,19 +372,27 @@ function GammeFields({
             const price = own?.price ?? p.refPrice;
             const plan = Math.round(own?.productionPlan ?? 0);
             const marketing = Math.round(own?.marketingBudget ?? defaults.marketingBudget / n);
-            const cvu = p.materialCostPerUnit + p.otherVariableCostPerUnit;
+            const qualite = Math.round(own?.qualityBudget ?? defaults.qualityBudget / n);
+            const suppliers = p.suppliers;
+            const reference = suppliers?.[0];
+            const choisi = suppliers?.find((s) => s.code === faconniers[p.code]) ?? reference;
+            const achat = choisi ? choisi.materialCostPerUnit : p.materialCostPerUnit;
             return (
               <tr key={p.code} className="border-t border-white/5 align-top">
                 <td className="py-2 pr-3">
                   <span className="block text-sm font-medium text-slate-100">{p.name}</span>
                   <span className="mt-0.5 block text-xs leading-snug text-slate-400">
-                    prix usuel {formatEuro(p.refPrice)} · coût variable {formatEuro(cvu)}
-                    <br />
-                    {v.leftoverLabel.toLowerCase()} {formatUnits(p.stock)} {v.units}
+                    prix usuel {formatEuro(p.refPrice)} · {v.leftoverLabel.toLowerCase()}{" "}
+                    {formatUnits(p.stock)} {v.units}
                     {Math.abs(p.seasonCoef - 1) > 0.01
                       ? ` · saison ×${p.seasonCoef.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}`
                       : ""}
                   </span>
+                  <LienPrixFaconnier
+                    price={prix[p.code] ?? price}
+                    achat={achat}
+                    autres={p.otherVariableCostPerUnit}
+                  />
                 </td>
                 <td className="py-2 pr-3">
                   <span className="flex items-center gap-1 rounded-lg border border-white/10 bg-slate-950 px-2 py-1.5 focus-within:border-amber-400/60">
@@ -323,6 +401,10 @@ function GammeFields({
                       name={productFieldName(p.code, "price")}
                       aria-label={`${v.priceLabel} · ${p.name}`}
                       defaultValue={Math.round(price * 10) / 10}
+                      onChange={(e) => {
+                        const saisi = Number(e.currentTarget.value.replace(",", "."));
+                        setPrix((etat) => ({ ...etat, [p.code]: Number.isFinite(saisi) ? saisi : 0 }));
+                      }}
                       step={0.1}
                       min={0}
                       required
@@ -346,7 +428,7 @@ function GammeFields({
                     <span className="text-xs text-slate-400">{v.units}</span>
                   </span>
                 </td>
-                <td className="py-2">
+                <td className="py-2 pr-3">
                   <span className="flex items-center gap-1 rounded-lg border border-white/10 bg-slate-950 px-2 py-1.5 focus-within:border-amber-400/60">
                     <input
                       type="number"
@@ -361,6 +443,50 @@ function GammeFields({
                     <span className="text-xs text-slate-400">€</span>
                   </span>
                 </td>
+                {quality ? (
+                  <td className="py-2 pr-3">
+                    <span className="flex items-center gap-1 rounded-lg border border-white/10 bg-slate-950 px-2 py-1.5 focus-within:border-amber-400/60">
+                      <input
+                        type="number"
+                        name={productFieldName(p.code, "qualityBudget")}
+                        aria-label={`Qualité · ${p.name}`}
+                        defaultValue={qualite}
+                        step={1}
+                        min={0}
+                        required
+                        className="w-20 bg-transparent text-sm text-slate-100 outline-none"
+                      />
+                      <span className="text-xs text-slate-400">€</span>
+                    </span>
+                  </td>
+                ) : null}
+                {avecFournisseurs ? (
+                  <td className="py-2">
+                    {suppliers ? (
+                      <select
+                        name={productFieldName(p.code, "supplierChoice")}
+                        aria-label={`Fournisseur · ${p.name}`}
+                        defaultValue={faconniers[p.code]}
+                        onChange={(e) => {
+                          const code = e.currentTarget.value;
+                          setFaconniers((etat) => ({ ...etat, [p.code]: code }));
+                        }}
+                        className="w-full min-w-44 rounded-lg border border-white/10 bg-slate-950 px-2 py-1.5 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+                      >
+                        {suppliers.map((s) => (
+                          <option key={s.code} value={s.code}>
+                            {s.name} · {formatEuroCents(s.materialCostPerUnit)}/u ({ecartFournisseur(s, reference)})
+                            {s.qualityBonus !== 0
+                              ? ` · qualité ${s.qualityBonus > 0 ? "+" : "−"}${Math.abs(Math.round(s.qualityBonus * 100))} %`
+                              : ""}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className="text-xs text-slate-400">—</span>
+                    )}
+                  </td>
+                ) : null}
               </tr>
             );
           })}
@@ -370,6 +496,12 @@ function GammeFields({
         Les références partagent la même réserve : si la somme des volumes dépasse votre
         capacité, toutes sont réduites dans la même proportion. Le prix se fixe référence
         par référence ; le marketing soutient la demande de chacune.
+        {quality
+          ? " Le budget qualité fait la qualité de la référence qui le reçoit : réparti à parts égales, il vaut ce qu'il valait pour toute la gamme ; concentré, il distingue une référence."
+          : ""}
+        {avecFournisseurs
+          ? " Chaque référence a ses façonniers et le prix d'achat est celui de la référence chez chacun : la marge affichée est le prix saisi moins ce coût d'achat et les autres frais variables, le coefficient est le prix divisé par le coût d'achat. Le bonus de qualité, le délai de règlement et le risque de rupture du façonnier ne touchent que la référence qu'il fournit."
+          : ""}
       </p>
     </div>
   );
@@ -771,7 +903,7 @@ export function DecisionForm({
       ) : null}
       {gamme ? (
         <Family legend="🎯 Vos ventes · le prix, le volume et le marketing de chaque référence" defaultOpen>
-          <GammeFields gamme={gamme} defaults={defaults} vocabulary={v} />
+          <GammeFields gamme={gamme} defaults={defaults} vocabulary={v} quality={on.quality} />
         </Family>
       ) : (
         <Family legend="🎯 Vos ventes · le prix et le volume du tour" defaultOpen>
@@ -824,62 +956,117 @@ export function DecisionForm({
           ) : null}
         </div>
       ) : null}
-      {suppliersOffer && suppliersOffer.length > 0 ? (
-        <Family
-          legend={`🏭 ${v.supplierPanelLabel}`}
-          tone="border-emerald-400/25 bg-emerald-950/20"
-          legendClass="text-xs font-semibold uppercase tracking-wide text-emerald-300"
-        >
-          <div className="space-y-2">
-            {suppliersOffer.map((s) => (
-              <label
-                key={s.code}
-                className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-2.5 py-2"
-              >
-                <input
-                  type="radio"
-                  name="supplierChoice"
-                  value={s.code}
-                  defaultChecked={(defaults.supplierChoice ?? suppliersOffer[0]?.code) === s.code}
-                  className="mt-0.5 h-4 w-4 accent-emerald-400"
-                />
-                <span>
-                  <span className="text-sm font-medium text-slate-200">
-                    {s.name} · {v.materialLabel.toLowerCase()} à{" "}
-                    {s.materialCostPerUnit.toLocaleString("fr-FR")} €/u
-                    {s.costMultiplier !== 1
-                      ? ` (${s.costMultiplier < 1 ? "" : "+"}${Math.round((s.costMultiplier - 1) * 100)} %)`
-                      : ""}
-                  </span>
-                  <span className="mt-0.5 block text-xs text-slate-400">{s.narrative}</span>
-                  <span className="mt-1 flex flex-wrap gap-3 text-xs">
-                    {s.qualityBonus !== 0 ? (
-                      <span className={s.qualityBonus > 0 ? "text-emerald-400" : "text-amber-400"}>
-                        Qualité {s.qualityBonus > 0 ? "+" : ""}{Math.round(s.qualityBonus * 100)} %
+      {(() => {
+        // Mono-produit : les fournisseurs du scénario, à choisir ici (radio),
+        // leur coût lu par rapport au fournisseur de référence. Gamme : la
+        // fiche de chaque façonnier, avec les références qu'il fournit et le
+        // prix d'achat de chacune chez lui — le choix se fait dans le tableau.
+        type Fiche = {
+          code: string;
+          name: string;
+          narrative: string;
+          qualityBonus: number;
+          paymentDelayDays: number;
+          supplyRiskProbability: number;
+          prix: { reference: string; achat: number; ecart: string }[];
+        };
+        const fiches: Fiche[] = [];
+        if (gamme) {
+          for (const p of gamme) {
+            const reference = p.suppliers?.[0];
+            for (const s of p.suppliers ?? []) {
+              const cle = `${s.code}·${s.name}`;
+              let fiche = fiches.find((f) => `${f.code}·${f.name}` === cle);
+              if (!fiche) {
+                fiche = { ...s, prix: [] };
+                fiches.push(fiche);
+              }
+              fiche.prix.push({ reference: p.name, achat: s.materialCostPerUnit, ecart: ecartFournisseur(s, reference) });
+            }
+          }
+        } else if (suppliersOffer && suppliersOffer.length > 0) {
+          const reference = suppliersOffer[0];
+          for (const s of suppliersOffer) {
+            fiches.push({ ...s, prix: [{ reference: v.unit, achat: s.materialCostPerUnit, ecart: ecartFournisseur(s, reference) }] });
+          }
+        }
+        if (fiches.length === 0) return null;
+        return (
+          <Family
+            legend={`🏭 ${v.supplierPanelLabel}`}
+            tone="border-emerald-400/25 bg-emerald-950/20"
+            legendClass="text-xs font-semibold uppercase tracking-wide text-emerald-300"
+          >
+            {gamme ? (
+              <p className="mb-2 text-xs leading-relaxed text-emerald-200/80">
+                Chaque référence a ses façonniers ; le choix se fait ligne par ligne dans le
+                tableau de vos ventes. Voici ce que chacun propose, et à quel prix d&apos;achat
+                pour chaque référence qu&apos;il fournit.
+              </p>
+            ) : null}
+            <div className="space-y-2">
+              {fiches.map((s) => (
+                <label
+                  key={`${s.code}·${s.name}`}
+                  className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-2.5 py-2"
+                >
+                  {gamme ? null : (
+                    <input
+                      type="radio"
+                      name="supplierChoice"
+                      value={s.code}
+                      defaultChecked={(defaults.supplierChoice ?? fiches[0]?.code) === s.code}
+                      className="mt-0.5 h-4 w-4 accent-emerald-400"
+                    />
+                  )}
+                  <span>
+                    <span className="text-sm font-medium text-slate-200">
+                      {s.name}
+                      {gamme
+                        ? ""
+                        : ` · ${v.materialLabel.toLowerCase()} à ${formatEuroCents(s.prix[0]!.achat)}/${v.unit} (${s.prix[0]!.ecart})`}
+                    </span>
+                    <span className="mt-0.5 block text-xs text-slate-400">{s.narrative}</span>
+                    {gamme ? (
+                      <span className="mt-1 block text-xs text-slate-300">
+                        {s.prix.map((x, i) => (
+                          <span key={x.reference}>
+                            {i > 0 ? " · " : ""}
+                            {x.reference} {formatEuroCents(x.achat)} ({x.ecart})
+                          </span>
+                        ))}
                       </span>
                     ) : null}
-                    <span className="text-slate-400">
-                      Délai fournisseur : {s.paymentDelayDays} j
-                    </span>
-                    {s.supplyRiskProbability > 0 ? (
-                      <span className="text-red-400">
-                        Risque de rupture : {Math.round(s.supplyRiskProbability * 100)} %/tour
+                    <span className="mt-1 flex flex-wrap gap-3 text-xs">
+                      {s.qualityBonus !== 0 ? (
+                        <span className={s.qualityBonus > 0 ? "text-emerald-400" : "text-amber-400"}>
+                          Qualité {s.qualityBonus > 0 ? "+" : "−"}{Math.abs(Math.round(s.qualityBonus * 100))} %
+                        </span>
+                      ) : null}
+                      <span className="text-slate-400">
+                        Délai de règlement : {s.paymentDelayDays === 0 ? "comptant" : `${s.paymentDelayDays} j`}
                       </span>
-                    ) : (
-                      <span className="text-emerald-400/60">Approvisionnement fiable</span>
-                    )}
+                      {s.supplyRiskProbability > 0 ? (
+                        <span className="text-red-400">
+                          Risque de rupture : {Math.round(s.supplyRiskProbability * 100)} %/tour
+                        </span>
+                      ) : (
+                        <span className="text-emerald-400/60">Approvisionnement fiable</span>
+                      )}
+                    </span>
                   </span>
-                </span>
-              </label>
-            ))}
-          </div>
-          <p className="mt-3 text-xs leading-relaxed text-slate-400">
-            Le choix du fournisseur impacte votre coût variable, la qualité perçue de vos
-            produits, le délai de paiement fournisseur (BFR) et le risque de rupture de
-            chaîne. L&apos;assurance étendue couvre le litige fournisseur.
-          </p>
-        </Family>
-      ) : null}
+                </label>
+              ))}
+            </div>
+            <p className="mt-3 text-xs leading-relaxed text-slate-400">
+              Le prix d&apos;achat entre dans le coût variable : c&apos;est ce qui reste entre lui et
+              votre prix de vente qui fait la marge. Le bonus de qualité joue sur la qualité
+              perçue, le délai de règlement sur la trésorerie (BFR), le risque de rupture sur
+              ce que vous recevez. L&apos;assurance étendue couvre le litige fournisseur.
+            </p>
+          </Family>
+        );
+      })()}
       {gamme ? null : (
         <Family legend="📣 Marketing · soutenir la demande" defaultOpen>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -897,7 +1084,13 @@ export function DecisionForm({
       >
       <Family legend="🏭 Production · qualité & maintenance" defaultOpen>
         <div className="grid grid-cols-2 gap-3">
-          {on.quality ? (
+          {on.quality && gamme ? (
+            // En gamme, la qualité se décide référence par référence (étape « Vendre »).
+            <p className="text-xs leading-relaxed text-slate-400">
+              Le budget qualité se décide référence par référence, dans le tableau de vos
+              ventes ; la maintenance reste commune à la réserve.
+            </p>
+          ) : on.quality ? (
             <Field name="qualityBudget" label="Budget qualité" defaultValue={defaults.qualityBudget} suffix="€" />
           ) : (
             <input type="hidden" name="qualityBudget" value={defaults.qualityBudget} />

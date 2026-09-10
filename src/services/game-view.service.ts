@@ -16,7 +16,7 @@ import { porteUnNomParDefaut } from "@/config/nom-equipe";
 import { cardByCode } from "@/config/events/cards";
 import { proposedDecisionsFor, startingDecisionsFor } from "@/services/decision-baseline";
 import { orderOfferForRound } from "@/engine/simulation";
-import { isMultiProduct, toGamme } from "@/engine/gamme";
+import { isMultiProduct, suppliersOf, toGamme } from "@/engine/gamme";
 import { computeRatios } from "@/engine/finance/ratios";
 import { conditionsBancaires, confianceInitiale } from "@/engine/finance/bank";
 import { irr, npv, paybackPeriod } from "@/engine/investment";
@@ -240,6 +240,21 @@ export interface GameView {
     segments: { code: string; name: string }[];
     seasonCoef: number;
     stock: number;
+    /**
+     * Les fournisseurs auxquels LA référence peut s'adresser (son catalogue
+     * propre, sinon celui du scénario), avec le prix d'achat de la référence
+     * chez chacun. `null` si le scénario n'en propose pas.
+     */
+    suppliers: {
+      code: string;
+      name: string;
+      narrative: string;
+      costMultiplier: number;
+      qualityBonus: number;
+      paymentDelayDays: number;
+      supplyRiskProbability: number;
+      materialCostPerUnit: number;
+    }[] | null;
   }[] | null;
   /**
    * D'où l'équipe repart pour le tour à jouer : le stock de chaque référence
@@ -1217,6 +1232,17 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
           segments: p.market.segments.map((s) => ({ code: s.code, name: s.name })),
           seasonCoef: p.market.seasonality[idx] ?? 1,
           stock: Math.round(state?.finishedGoodsByProduct?.[p.code]?.quantity ?? 0),
+          suppliers:
+            suppliersOf(p, snapshot)?.map((s) => ({
+              code: s.code,
+              name: s.name,
+              narrative: s.narrative,
+              costMultiplier: s.costMultiplier,
+              qualityBonus: s.qualityBonus,
+              paymentDelayDays: s.paymentDelayDays,
+              supplyRiskProbability: s.supplyRiskProbability,
+              materialCostPerUnit: Math.round(p.materialCostPerUnit * s.costMultiplier * 100) / 100,
+            })) ?? null,
         };
       });
     })(),

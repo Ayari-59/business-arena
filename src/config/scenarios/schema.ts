@@ -31,10 +31,24 @@ const segmentSchema = z.object({
   seasonality: z.array(z.number().nonnegative()).optional(),
 });
 
+const supplierSchema = z.object({
+  code: z.string().min(1),
+  name: z.string().min(1),
+  narrative: z.string().min(1),
+  costMultiplier: z.number().min(0.5).max(2),
+  qualityBonus: z.number().min(-0.1).max(0.15),
+  paymentDelayDays: z.number().int().nonnegative(),
+  supplyRiskProbability: z.number().min(0).max(0.3),
+  supplyRiskAvailabilityHit: z.number().min(0.5).max(1),
+});
+
 /**
  * Un produit de la gamme et son marché. Les segments sont obligatoires ; la
  * saisonnalité, l'attraction extérieure et l'intensité concurrentielle sont
- * optionnelles (à défaut, celles du marché du scénario).
+ * optionnelles (à défaut, celles du marché du scénario). Le catalogue de
+ * fournisseurs propre à la référence est optionnel (à défaut, celui du
+ * scénario) ; un seul fournisseur y suffit — c'est alors une référence sans
+ * alternative.
  */
 const productDefSchema = z.object({
   code: z.string().min(1),
@@ -48,6 +62,7 @@ const productDefSchema = z.object({
     outsideAttraction: z.number().nonnegative().optional(),
     competitionIntensity: z.number().min(1).optional(),
   }),
+  suppliers: z.array(supplierSchema).min(1).optional(),
 });
 
 const modifierSchema = z.object({
@@ -141,21 +156,7 @@ export const engineScenarioConfigSchema = z.object({
   fixedCostsPerRound: z.number().nonnegative(),
   // Activité de service : la capacité non vendue est perdue, jamais stockée.
   perishable: z.boolean().optional(),
-  suppliers: z
-    .array(
-      z.object({
-        code: z.string().min(1),
-        name: z.string().min(1),
-        narrative: z.string().min(1),
-        costMultiplier: z.number().min(0.5).max(2),
-        qualityBonus: z.number().min(-0.1).max(0.15),
-        paymentDelayDays: z.number().int().nonnegative(),
-        supplyRiskProbability: z.number().min(0).max(0.3),
-        supplyRiskAvailabilityHit: z.number().min(0.5).max(1),
-      }),
-    )
-    .min(2)
-    .optional(),
+  suppliers: z.array(supplierSchema).min(2).optional(),
   insurance: z
     .object({
       premiumPerRound: z.number().nonnegative(),
@@ -324,6 +325,21 @@ const scenarioWithChecks = engineScenarioConfigSchema.superRefine((s, ctx) => {
           });
         }
         segmentCodes.add(seg.code);
+      }
+      // Le catalogue propre d'une référence : codes uniques EN SON SEIN (le
+      // même code peut désigner un fournisseur différent d'une référence à
+      // l'autre — le déstockeur des bonnets n'est pas celui des pulls).
+      if (p.suppliers) {
+        const supplierCodes = new Set<string>();
+        for (const sup of p.suppliers) {
+          if (supplierCodes.has(sup.code)) {
+            ctx.addIssue({
+              code: "custom",
+              message: `gamme : fournisseur « ${sup.code} » en double pour « ${p.code} »`,
+            });
+          }
+          supplierCodes.add(sup.code);
+        }
       }
     }
   }

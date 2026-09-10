@@ -3,6 +3,7 @@ import type {
   EngineScenarioConfig,
   ProductDef,
   SegmentConfig,
+  SupplierDef,
 } from "../../../engine/types";
 import type { BotProfile } from "../../../engine/bots";
 import { parseScenarioConfig } from "../schema";
@@ -130,6 +131,84 @@ const PULL_MARKET = {
   competitionIntensity: 1.8,
 };
 
+// ---------------------------------------------------------------------------
+// LES FAÇONNIERS. Le tricoteur du mérinos n'est pas celui des bonnets : chaque
+// référence a son catalogue, et le premier de chaque catalogue est son
+// façonnier de référence (coût ×1, celui des textes). Les multiplicateurs
+// s'appliquent au coût d'achat de LA référence.
+// ---------------------------------------------------------------------------
+const FACONNIER_REFERENCE: SupplierDef = {
+  code: "grossiste",
+  name: "Façonnier de référence",
+  narrative:
+    "Le tricoteur historique de la marque : qualité constante, réassort en six semaines, règlement à 45 jours. Aucune surprise, aucune envolée.",
+  costMultiplier: 1,
+  qualityBonus: 0,
+  paymentDelayDays: 45,
+  supplyRiskProbability: 0.03,
+  supplyRiskAvailabilityHit: 0.9,
+};
+const DESTOCKEUR_PULLS: SupplierDef = {
+  code: "destockeur",
+  name: "Fins de série d'un tricoteur portugais",
+  narrative:
+    "Des fins de série à −18 % sur le prix d'achat, mais payées comptant à l'enlèvement et sans garantie de réassort : ce qui part est parti.",
+  costMultiplier: 0.82,
+  qualityBonus: -0.06,
+  paymentDelayDays: 0,
+  supplyRiskProbability: 0.12,
+  supplyRiskAvailabilityHit: 0.78,
+};
+const ATELIER_LOCAL: SupplierDef = {
+  code: "createur",
+  name: "Atelier de tricotage local",
+  narrative:
+    "Des pièces tricotées à trente kilomètres, étiquetées « fabriqué en France », payées 22 % plus cher et réglées à 30 jours. Elles font la réputation de la marque et la fidélité des clientes.",
+  costMultiplier: 1.22,
+  qualityBonus: 0.09,
+  paymentDelayDays: 30,
+  supplyRiskProbability: 0.05,
+  supplyRiskAvailabilityHit: 0.88,
+};
+const FILATURE_MERINOS: SupplierDef = {
+  code: "filature",
+  name: "Filature mérinos italienne",
+  narrative:
+    "Le mérinos extra-fin d'une filature de Biella, tricoté sur place : 15 % plus cher, réglé à 30 jours, et la pièce que les clientes fidèles reconnaissent au toucher.",
+  costMultiplier: 1.15,
+  qualityBonus: 0.12,
+  paymentDelayDays: 30,
+  supplyRiskProbability: 0.04,
+  supplyRiskAvailabilityHit: 0.85,
+};
+const TRICOTEUR_ACCESSOIRES: SupplierDef = {
+  code: "accessoiriste",
+  name: "Tricoteur d'accessoires du Nord",
+  narrative:
+    "Un atelier spécialisé dans les bonnets et les écharpes, en grande série : 10 % moins cher, réglé à 30 jours, une maille un peu plus lâche et un carnet de commandes qui déborde avant Noël.",
+  costMultiplier: 0.9,
+  qualityBonus: -0.02,
+  paymentDelayDays: 30,
+  supplyRiskProbability: 0.08,
+  supplyRiskAvailabilityHit: 0.85,
+};
+const DESTOCKEUR_ACCESSOIRES: SupplierDef = {
+  code: "destockeur",
+  name: "Fins de série d'accessoires",
+  narrative:
+    "Des lots de bonnets et d'écharpes de la saison passée à −22 %, payés comptant, aux coloris qu'il reste : pour le volume de Noël, pas pour la vitrine.",
+  costMultiplier: 0.78,
+  qualityBonus: -0.08,
+  paymentDelayDays: 0,
+  supplyRiskProbability: 0.15,
+  supplyRiskAvailabilityHit: 0.75,
+};
+
+/** Le catalogue des pulls et cardigans : celui des affichages mono-produit. */
+const FACONNIERS_PULLS: SupplierDef[] = [FACONNIER_REFERENCE, DESTOCKEUR_PULLS, ATELIER_LOCAL];
+const FACONNIERS_MERINOS: SupplierDef[] = [FACONNIER_REFERENCE, FILATURE_MERINOS, ATELIER_LOCAL];
+const FACONNIERS_ACCESSOIRES: SupplierDef[] = [FACONNIER_REFERENCE, TRICOTEUR_ACCESSOIRES, DESTOCKEUR_ACCESSOIRES];
+
 const GAMME: ProductDef[] = [
   {
     code: "pull-col-rond",
@@ -140,6 +219,7 @@ const GAMME: ProductDef[] = [
     otherVariableCostPerUnit: 3.5,
     hoursPerUnit: 0.12,
     market: PULL_MARKET,
+    suppliers: FACONNIERS_PULLS,
   },
   {
     code: "cardigan",
@@ -147,6 +227,7 @@ const GAMME: ProductDef[] = [
     materialCostPerUnit: 34,
     otherVariableCostPerUnit: 4,
     hoursPerUnit: 0.15,
+    suppliers: FACONNIERS_PULLS,
     market: {
       segments: [
         fideles({ code: "cardigan_fideles", name: "Clientes fidèles · cardigan", size: 1500, refPrice: 84 }),
@@ -168,6 +249,8 @@ const GAMME: ProductDef[] = [
     materialCostPerUnit: 56,
     otherVariableCostPerUnit: 5,
     hoursPerUnit: 0.2,
+    // Pas de fins de série sur le premium : on le fait tricoter, on ne le déstocke pas.
+    suppliers: FACONNIERS_MERINOS,
     market: {
       segments: [
         fideles({
@@ -201,6 +284,7 @@ const GAMME: ProductDef[] = [
     materialCostPerUnit: 14,
     otherVariableCostPerUnit: 2,
     hoursPerUnit: 0.06,
+    suppliers: FACONNIERS_ACCESSOIRES,
     market: {
       segments: [
         passage({
@@ -229,6 +313,7 @@ const GAMME: ProductDef[] = [
     materialCostPerUnit: 9.5,
     otherVariableCostPerUnit: 1.5,
     hoursPerUnit: 0.05,
+    suppliers: FACONNIERS_ACCESSOIRES,
     market: {
       segments: [
         passage({
