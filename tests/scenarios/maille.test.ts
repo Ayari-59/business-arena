@@ -90,6 +90,38 @@ describe("MAILLE & CO — la gamme", () => {
       }
     }
   });
+
+  it("chaque référence a ses façonniers : le tricoteur du mérinos n'est pas celui des bonnets", () => {
+    const codes = Object.fromEntries(
+      toGamme(boutiqueScenario).map((p) => [p.code, p.suppliers!.map((s) => s.code)]),
+    );
+    expect(codes["pull-col-rond"]).toEqual(["grossiste", "destockeur", "createur"]);
+    expect(codes["cardigan"]).toEqual(codes["pull-col-rond"]);
+    // Pas de fins de série sur le premium : une filature à la place.
+    expect(codes["pull-merinos"]).toEqual(["grossiste", "filature", "createur"]);
+    expect(codes["echarpe"]).toEqual(["grossiste", "accessoiriste", "destockeur"]);
+    expect(codes["bonnet"]).toEqual(codes["echarpe"]);
+    // Le premier de chaque catalogue est le façonnier de référence (coût ×1),
+    // et le catalogue du scénario est celui des pulls (affichages mono-produit).
+    for (const p of toGamme(boutiqueScenario)) {
+      expect(p.suppliers![0]!.costMultiplier, p.code).toBe(1);
+      expect(p.suppliers![0]!.qualityBonus, p.code).toBe(0);
+    }
+    expect(boutiqueScenario.suppliers!.map((s) => s.code)).toEqual(codes["pull-col-rond"]);
+    // Le déstockeur des accessoires n'est pas celui des pulls : même code,
+    // autre offre (−22 % contre −18 %).
+    const destockPull = toGamme(boutiqueScenario)[0]!.suppliers!.find((s) => s.code === "destockeur")!;
+    const destockBonnet = toGamme(boutiqueScenario)[4]!.suppliers!.find((s) => s.code === "destockeur")!;
+    expect(destockBonnet.costMultiplier).toBeLessThan(destockPull.costMultiplier);
+    // Chez chaque façonnier, chaque référence reste vendable au-dessus de son coût.
+    for (const p of toGamme(boutiqueScenario)) {
+      for (const s of p.suppliers!) {
+        const variable = p.materialCostPerUnit * s.costMultiplier + p.otherVariableCostPerUnit;
+        const prixMin = Math.min(...p.market.segments.map((seg) => seg.refPrice));
+        expect(prixMin, `${p.code} chez ${s.code}`).toBeGreaterThan(variable * 1.2);
+      }
+    }
+  });
 });
 
 describe("MAILLE & CO — dramaturgie", () => {

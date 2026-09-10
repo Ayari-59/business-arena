@@ -10,7 +10,8 @@ import type {
   SimulationOutput,
 } from "../types";
 import { createRng, deriveRoundSeed } from "../random";
-import { toGamme, toGammeDecisions, type GammeDecision, type GammeProduct } from "../gamme";
+import { suppliersOf, toGamme, toGammeDecisions, type GammeDecision, type GammeProduct } from "../gamme";
+import type { SupplierDef } from "../types";
 import type { StockLot } from "../inventory/cump";
 import { computePotentialDemand } from "../market/demand";
 import { attractionScore } from "../market/attraction";
@@ -469,12 +470,16 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     // Fournisseur choisi (doc 02 §5bis) : coût, qualité, délai, risque de
     // rupture. Mono-produit : le fournisseur scalaire. Gamme : chaque
     // référence a le sien (`products[code].supplierChoice`, sinon le
-    // scalaire) ; le fournisseur scalaire reste celui du bloc d'entreprise.
-    const suppliers = scenario.suppliers;
-    const resolveSupplier = (code: string | undefined) =>
-      suppliers ? (suppliers.find((s) => s.code === code) ?? suppliers[0]!) : null;
-    const supplier = resolveSupplier(decisions.supplierChoice);
-    const productSuppliers = multi ? gammeDecisions.map((d) => resolveSupplier(d.supplierChoice)) : [supplier];
+    // scalaire), résolu dans SON catalogue — le sien s'il en déclare un,
+    // sinon celui du scénario ; un code inconnu du catalogue retombe sur son
+    // premier fournisseur. Le fournisseur scalaire reste celui du bloc
+    // d'entreprise.
+    const resolveIn = (catalogue: SupplierDef[] | null, code: string | undefined) =>
+      catalogue ? (catalogue.find((s) => s.code === code) ?? catalogue[0]!) : null;
+    const supplier = resolveIn(suppliersOf({}, scenario), decisions.supplierChoice);
+    const productSuppliers = multi
+      ? gammeDecisions.map((d, k) => resolveIn(suppliersOf(gamme[k]!, scenario), d.supplierChoice))
+      : [supplier];
     // La rupture se tire UNE fois par fournisseur réellement utilisé, dans
     // l'ordre de la gamme (mono : le seul tirage historique).
     const disruptionBySupplier = new Map<string, boolean>();

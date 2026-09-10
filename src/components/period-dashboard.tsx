@@ -294,7 +294,7 @@ export function PeriodDashboard({
                         <th className="pb-2 pr-2 text-right font-medium">Marge / u</th>
                         <th className="pb-2 pr-2 text-right font-medium">{view.vocabulary.leftoverLabel}</th>
                         <th className="pb-2 pr-2 text-right font-medium">Qualité perçue</th>
-                        {view.suppliersOffer ? <th className="pb-2 font-medium">Fournisseur</th> : null}
+                        {view.gamme.some((g) => g.suppliers) ? <th className="pb-2 font-medium">Fournisseur</th> : null}
                       </tr>
                     </thead>
                     <tbody className="text-slate-300">
@@ -328,7 +328,7 @@ export function PeriodDashboard({
                                 ? `${Math.round(p.perceivedQuality * 100)} %`
                                 : "—"}
                             </td>
-                            {view.suppliersOffer ? (
+                            {view.gamme!.some((x) => x.suppliers) ? (
                               <td className="py-2 text-slate-300">{p.supplier?.name ?? "—"}</td>
                             ) : null}
                           </tr>

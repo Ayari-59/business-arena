@@ -1,5 +1,5 @@
 import { neutralDecisions } from "@/engine/bots";
-import { isMultiProduct, scalarsOfGamme, toGamme } from "@/engine/gamme";
+import { isMultiProduct, scalarsOfGamme, suppliersOf, toGamme } from "@/engine/gamme";
 import type { CompanyState, EngineScenarioConfig, RoundDecisions } from "@/engine/types";
 
 /**
@@ -75,11 +75,13 @@ export function startingDecisionsFor(
     // zéro, marketing et qualité répartis à parts égales, fournisseur de
     // référence pour toutes.
     const gamme = toGamme(snapshot);
-    const supplier = snapshot.suppliers?.[0]?.code;
     const products = isMultiProduct(snapshot)
       ? Object.fromEntries(
           gamme.map((p) => {
             const dominant = [...p.market.segments].sort((a, b) => b.size - a.size)[0];
+            // Le fournisseur de référence de LA référence : le premier de son
+            // catalogue (le sien, sinon celui du scénario).
+            const supplier = suppliersOf(p, snapshot)?.[0]?.code;
             return [
               p.code,
               {

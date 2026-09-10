@@ -547,6 +547,13 @@ export interface ProductDef {
   otherVariableCostPerUnit: number;
   hoursPerUnit: number;
   market: ProductMarketConfig;
+  /**
+   * Catalogue de fournisseurs PROPRE à la référence (le tricoteur du mérinos
+   * n'est pas celui des bonnets). Absent : la référence s'approvisionne dans
+   * `scenario.suppliers`. Le premier est le fournisseur de référence de la
+   * référence ; `costMultiplier` s'applique à SON coût matières.
+   */
+  suppliers?: SupplierDef[];
 }
 
 export interface EventDefinitionConfig {

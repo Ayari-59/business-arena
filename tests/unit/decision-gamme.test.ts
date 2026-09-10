@@ -217,6 +217,20 @@ describe("l'action serveur en gamme", () => {
 describe("le formulaire en gamme", () => {
   type Props = Parameters<typeof DecisionForm>[0];
   const boutique = scenarioByCode("boutique");
+  // Le catalogue de chaque référence (le sien, sinon celui du scénario), tel
+  // que la vue le sert — ici affecté d'un monde variable de +5 % sur tous les
+  // façonniers, pour vérifier que l'écart affiché reste relatif au référent.
+  const catalogue = (p: NonNullable<typeof boutique.scenario.products>[number], facteur = 1) =>
+    (p.suppliers ?? boutique.scenario.suppliers ?? []).map((s) => ({
+      code: s.code,
+      name: s.name,
+      narrative: s.narrative,
+      costMultiplier: s.costMultiplier * facteur,
+      qualityBonus: s.qualityBonus,
+      paymentDelayDays: s.paymentDelayDays,
+      supplyRiskProbability: s.supplyRiskProbability,
+      materialCostPerUnit: Math.round(p.materialCostPerUnit * s.costMultiplier * facteur * 100) / 100,
+    }));
   const gamme: NonNullable<Props["gamme"]> = boutique.scenario.products!.map((p) => ({
     code: p.code,
     name: p.name,
@@ -227,7 +241,9 @@ describe("le formulaire en gamme", () => {
     segments: p.market.segments.map((s) => ({ code: s.code, name: s.name })),
     seasonCoef: 1,
     stock: 0,
+    suppliers: catalogue(p, 1.05),
   }));
+  const sansFournisseurs: NonNullable<Props["gamme"]> = gamme.map((g) => ({ ...g, suppliers: null }));
   const defaults: Props["defaults"] = {
     price: 50,
     productionPlan: 4400,
@@ -284,15 +300,15 @@ describe("le formulaire en gamme", () => {
     expect(html).toContain('aria-label="Prix de vente · Pull mérinos premium"');
   });
 
-  it("au niveau 1, sans qualité ni fournisseur, ne propose ni l'une ni l'autre par référence", () => {
-    const html = rendu(gamme);
+  it("au niveau 1, sans qualité, ne propose pas de budget qualité par référence", () => {
+    const html = rendu(sansFournisseurs);
     expect(html).not.toContain(".qualityBudget");
     expect(html).not.toContain(".supplierChoice");
     // Le scalaire caché reste envoyé : le serveur ne dérive rien des références.
     expect(html).toContain('name="qualityBudget"');
   });
 
-  it("quand le niveau ouvre la qualité et que le scénario a des fournisseurs, les propose par référence", () => {
+  it("quand le niveau ouvre la qualité et que les références ont des façonniers, les propose par référence", () => {
     const html = rendu(gamme, { enabled: presetByLevel.get(3)!.decisions, suppliersOffer });
     for (const p of gamme) {
       expect(html).toContain(`name="product.${p.code}.qualityBudget"`);
@@ -302,16 +318,43 @@ describe("le formulaire en gamme", () => {
     // ignorés par le serveur et tromperaient l'élève.
     expect(html).not.toContain('name="qualityBudget"');
     expect(html).not.toContain('name="supplierChoice"');
-    // Chaque référence propose les trois façonniers, le premier par défaut.
-    expect(html).toContain("Atelier de tricotage local");
+    // Le premier façonnier de chaque catalogue est proposé par défaut.
     expect(html).toContain('<option value="grossiste" selected="">');
   });
 
-  it("en mono-produit, la qualité et le fournisseur restent des champs d'entreprise", () => {
-    const html = rendu(null, { enabled: presetByLevel.get(3)!.decisions, suppliersOffer });
+  it("chaque référence propose SON catalogue, au prix d'achat de la référence, l'écart lu par rapport à son référent", () => {
+    const html = rendu(gamme, { enabled: presetByLevel.get(3)!.decisions });
+    // Le mérinos a une filature, pas de déstockeur ; les accessoires ont un
+    // tricoteur d'accessoires et leur propre déstockeur.
+    expect(html).toContain("Filature mérinos italienne");
+    expect(html).toContain("accessoires du Nord");
+    // Prix d'achat de LA référence chez le façonnier (bonnet 9,50 × 0,90 × 1,05
+    // de monde variable = 8,98 € chez le tricoteur d'accessoires), et écart
+    // relatif au façonnier de référence (−10 %, +22 % pour l'atelier local des
+    // pulls), quel que soit le facteur du monde variable.
+    expect(html).toContain("8,98");
+    expect(html).toContain("(−10 %)");
+    expect(html).toContain("(+22 %)");
+    expect(html).toContain("(coût de référence)");
+    expect(html).toContain("(−18 %)");
+    expect(html).not.toContain("(+5 %)");
+    // La fiche du façonnier dit le délai de règlement, pas un « délai fournisseur ».
+    expect(html).toContain("Délai de règlement");
+    expect(html).not.toContain("Délai fournisseur");
+    // Et le lien avec le prix : achat, coût variable, marge et coefficient.
+    expect(html).toContain("coef.");
+    expect(html).toContain("marge");
+  });
+
+  it("en mono-produit, la qualité et le fournisseur restent des champs d'entreprise, l'écart relatif au référent", () => {
+    const majore = suppliersOffer.map((s) => ({ ...s, costMultiplier: s.costMultiplier * 1.05 }));
+    const html = rendu(null, { enabled: presetByLevel.get(3)!.decisions, suppliersOffer: majore });
     expect(html).toContain('name="qualityBudget"');
     expect(html).toContain('name="supplierChoice"');
     expect(html).not.toContain("product.");
+    expect(html).toContain("(coût de référence)");
+    expect(html).toContain("(−18 %)");
+    expect(html).not.toContain("+5 %");
   });
 
   it("en mono-produit, le formulaire n'a pas changé", () => {

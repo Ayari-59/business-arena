@@ -5,6 +5,7 @@ import type {
   ProductDef,
   RoundDecisions,
   SegmentConfig,
+  SupplierDef,
 } from "./types";
 
 /**
@@ -32,6 +33,20 @@ export interface GammeProduct {
   otherVariableCostPerUnit: number;
   hoursPerUnit: number;
   market: EngineScenarioConfig["market"];
+  /** Catalogue de fournisseurs propre à la référence (absent : celui du scénario). */
+  suppliers?: SupplierDef[];
+}
+
+/**
+ * Le catalogue de fournisseurs d'une référence : le sien, sinon celui du
+ * scénario, sinon aucun (le coût matières est alors le coût de référence).
+ */
+export function suppliersOf(
+  product: Pick<GammeProduct, "suppliers">,
+  scenario: Pick<EngineScenarioConfig, "suppliers">,
+): SupplierDef[] | null {
+  const catalogue = product.suppliers ?? scenario.suppliers;
+  return catalogue && catalogue.length > 0 ? catalogue : null;
 }
 
 /** Décisions d'un produit, alignées sur l'ordre de la gamme. */
@@ -79,6 +94,7 @@ export function toGamme(scenario: EngineScenarioConfig): GammeProduct[] {
       competitionIntensity:
         p.market.competitionIntensity ?? scenario.market.competitionIntensity,
     },
+    ...(p.suppliers ? { suppliers: p.suppliers } : {}),
   }));
 }
 

@@ -531,6 +531,98 @@ describe("gamme — la qualité et le fournisseur se décident par référence",
     expect(b.produced).toBeCloseTo(1000, 9);
   });
 
+  it("une référence à catalogue propre s'approvisionne chez SES fournisseurs, les bots aussi", () => {
+    // B déclare son propre catalogue : un tricoteur spécialisé (référence,
+    // moins cher que le standard du scénario) et un atelier premium. Le code
+    // « lowcost » du scénario n'y existe pas : B retombe sur SON référent.
+    const specialise = parseScenarioConfig({
+      ...gammeScenario({
+        ...productB(),
+        suppliers: [
+          {
+            code: "specialiste",
+            name: "Tricoteur spécialisé",
+            narrative: "Le spécialiste de B.",
+            costMultiplier: 1,
+            qualityBonus: 0,
+            paymentDelayDays: 30,
+            supplyRiskProbability: 0,
+            supplyRiskAvailabilityHit: 1,
+          },
+          {
+            code: "atelier",
+            name: "Atelier premium de B",
+            narrative: "Plus cher, mieux fini.",
+            costMultiplier: 1.3,
+            qualityBonus: 0.1,
+            paymentDelayDays: 15,
+            supplyRiskProbability: 0,
+            supplyRiskAvailabilityHit: 1,
+          },
+        ],
+      }),
+      suppliers: scenario.suppliers!.map((s) => ({ ...s, supplyRiskProbability: 0 })),
+      // Les bots n'arbitrent leurs fournisseurs que lorsqu'ils sont « enrichis ».
+      enrichedBots: true,
+    });
+    const gammeB = toGamme(specialise)[1]!;
+    expect(gammeB.suppliers?.map((s) => s.code)).toEqual(["specialiste", "atelier"]);
+    // A garde le catalogue du scénario.
+    expect(toGamme(specialise)[0]!.suppliers).toBeUndefined();
+
+    const r = simulateRound(
+      input(
+        specialise,
+        player({
+          [A]: { price: 59, productionPlan: 3000, qualityBudget: 1500, supplierChoice: "lowcost" },
+          [B]: { price: 95, productionPlan: 3000, qualityBudget: 1500, supplierChoice: "lowcost" },
+        }),
+        states,
+      ),
+    ).results["player"]!;
+    expect(r.products![A]!.supplier?.code).toBe("lowcost");
+    expect(r.products![B]!.supplier?.code).toBe("specialiste");
+    expect(r.products![B]!.unitVariableCost).toBeCloseTo(30 + 20, 9);
+    const atelier = simulateRound(
+      input(
+        specialise,
+        player({
+          [A]: { price: 59, productionPlan: 3000, qualityBudget: 1500 },
+          [B]: { price: 95, productionPlan: 3000, qualityBudget: 1500, supplierChoice: "atelier" },
+        }),
+        states,
+      ),
+    ).results["player"]!;
+    expect(atelier.products![B]!.supplier?.code).toBe("atelier");
+    expect(atelier.products![B]!.unitVariableCost).toBeCloseTo(30 * 1.3 + 20, 9);
+
+    // Les bots appliquent leur règle de profil au catalogue de chaque
+    // référence : le premium prend le mieux-disant qualité partout, l'agressif
+    // le moins cher partout.
+    const premium = botDecisions("premium", { scenario: specialise, state: states[2]!, roundIndex: 1 });
+    expect(premium.products![A]!.supplierChoice).toBe("premium");
+    expect(premium.products![B]!.supplierChoice).toBe("atelier");
+    const agressif = botDecisions("price_aggressive", { scenario: specialise, state: states[1]!, roundIndex: 1 });
+    expect(agressif.products![A]!.supplierChoice).toBe("lowcost");
+    expect(agressif.products![B]!.supplierChoice).toBe("specialiste");
+  });
+
+  it("refuse deux fournisseurs de même code dans le catalogue d'une référence", () => {
+    const doublon = {
+      code: "x",
+      name: "X",
+      narrative: "x",
+      costMultiplier: 1,
+      qualityBonus: 0,
+      paymentDelayDays: 0,
+      supplyRiskProbability: 0,
+      supplyRiskAvailabilityHit: 1,
+    };
+    expect(() => gammeScenario({ ...productB(), suppliers: [doublon, { ...doublon, name: "Y" }] })).toThrow(
+      /fournisseur/,
+    );
+  });
+
   it("un produit sans fournisseur propre prend le fournisseur scalaire", () => {
     const r = simulateRound(
       input(

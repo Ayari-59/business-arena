@@ -8,6 +8,7 @@ import type {
 } from "../types";
 import { fleetMaintenanceMultiplier } from "../simulation";
 import { isMultiProduct, toGamme, type GammeProduct } from "../gamme";
+import type { SupplierDef } from "../types";
 
 /**
  * Bots de stratégie (ADR-03) : générateurs de décisions PURS et déterministes.
@@ -258,28 +259,8 @@ function enrichDecisions(
   }
 
   if (s.suppliers && s.suppliers.length > 0) {
-    const suppliers = s.suppliers;
-    switch (profile) {
-      case "passive":
-        break;
-      case "price_aggressive": {
-        const cheapest = [...suppliers].sort((a, b) => a.costMultiplier - b.costMultiplier)[0]!;
-        base.supplierChoice = cheapest.code;
-        break;
-      }
-      case "premium": {
-        const best = [...suppliers].sort((a, b) => b.qualityBonus - a.qualityBonus)[0]!;
-        base.supplierChoice = best.code;
-        break;
-      }
-      case "balanced":
-        break;
-      case "growth": {
-        const cheapest = [...suppliers].sort((a, b) => a.costMultiplier - b.costMultiplier)[0]!;
-        base.supplierChoice = cheapest.code;
-        break;
-      }
-    }
+    const choice = pickSupplier(profile, s.suppliers);
+    if (choice !== undefined) base.supplierChoice = choice;
   }
 
   if (s.equipment && ctx.roundIndex >= 2) {
@@ -339,6 +320,24 @@ function enrichDecisions(
   }
 
   return base;
+}
+
+/**
+ * Le fournisseur qu'un profil choisit dans un catalogue : le moins cher pour
+ * les profils agressif et croissance, le mieux-disant qualité pour le premium,
+ * aucun choix (le fournisseur de référence) pour les autres.
+ */
+function pickSupplier(profile: BotProfile, suppliers: SupplierDef[]): string | undefined {
+  switch (profile) {
+    case "price_aggressive":
+    case "growth":
+      return [...suppliers].sort((a, b) => a.costMultiplier - b.costMultiplier)[0]!.code;
+    case "premium":
+      return [...suppliers].sort((a, b) => b.qualityBonus - a.qualityBonus)[0]!.code;
+    case "passive":
+    case "balanced":
+      return undefined;
+  }
 }
 
 /**
@@ -422,19 +421,24 @@ function gammeDecisions(
 
   // La qualité suit le plan : une référence qui pèse deux fois plus dans la
   // production reçoit deux fois plus de budget qualité (à défaut de plan, au
-  // prorata des marchés). Le fournisseur est le même pour toute la gamme —
-  // un bot ne panache pas ses façonniers.
+  // prorata des marchés). Le fournisseur suit la même règle de profil sur
+  // toute la gamme, appliquée au catalogue de chaque référence quand elle a
+  // le sien (le moins cher partout, le mieux-disant partout).
   const planTotal = total * cut;
   const products: Record<ProductCode, ProductDecisions> = {};
   gamme.forEach((p, k) => {
     const floor = (p.materialCostPerUnit + p.otherVariableCostPerUnit) * 1.1;
     const planShare = planTotal > 0 ? (targets[k]! * cut) / planTotal : weights[k]!;
+    // Même porte que le choix scalaire : seuls les bots « enrichis » arbitrent
+    // leurs fournisseurs ; les autres restent chez le façonnier de référence.
+    const supplierChoice =
+      p.suppliers && ctx.scenario.enrichedBots ? pickSupplier(profile, p.suppliers) : base.supplierChoice;
     products[p.code] = {
       price: Math.max(floor, productRefPrice(p) * priceRatio),
       productionPlan: targets[k]! * cut,
       marketingBudget: (base.marketingBudget ?? 0) * weights[k]!,
       qualityBudget: (base.qualityBudget ?? 0) * planShare,
-      ...(base.supplierChoice !== undefined ? { supplierChoice: base.supplierChoice } : {}),
+      ...(supplierChoice !== undefined ? { supplierChoice } : {}),
     };
   });
   return products;
