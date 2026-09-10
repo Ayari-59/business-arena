@@ -164,11 +164,11 @@ export function FinancialStatements({
         <Row label="− Marketing" value={euro(-cr.marketingCost)} indent />
         <Row label="− Qualité" value={euro(-cr.qualityCost)} indent />
         <Row label="− Maintenance" value={euro(-cr.maintenanceCost)} indent />
-        {(cr.engagementRse ?? 0) > 0.5 ? (
-          <Row label="− Engagement RSE" value={euro(-(cr.engagementRse ?? 0))} indent />
-        ) : null}
         {(cr.rdCost ?? 0) > 0.5 ? (
           <Row label="− Recherche et développement" value={euro(-(cr.rdCost ?? 0))} indent />
+        ) : null}
+        {(cr.engagementRse ?? 0) > 0.5 ? (
+          <Row label="− Engagement RSE" value={euro(-(cr.engagementRse ?? 0))} indent />
         ) : null}
         <Row label="− Charges de structure" value={euro(-cr.fixedCosts)} indent />
         <Row label="= Excédent brut d'exploitation (EBE)" value={euro(cr.ebitda)} strong />

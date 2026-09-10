@@ -16,8 +16,9 @@ import type { EngineScenarioConfig } from "../engine/types";
  * mentirait sans que rien ne le signale.
  *
  * L'ordre de cette liste est celui du cycle d'exploitation, et c'est celui du
- * formulaire : on vend, on achète, on fait venir les clients, on paie ses
- * équipes, on finance, on se couvre, on s'informe, on prévoit.
+ * formulaire : on vend, on achète, on décide ses budgets (marketing, qualité,
+ * maintenance, R&D) puis sa communication, on paie ses équipes, on finance,
+ * on se couvre, on s'informe, on prévoit.
  */
 export interface LevierDeDecision {
   /** Le `name` du champ dans le formulaire de décision. */
@@ -42,7 +43,12 @@ export const LEVIERS: readonly LevierDeDecision[] = [
   { champ: "price", nom: "Prix de vente", ouvertPar: "toujours" },
   { champ: "productionPlan", nom: "Volume du tour", ouvertPar: "toujours" },
   { champ: "supplierChoice", nom: "Choix du fournisseur", ouvertPar: "secteur" },
+  // Les quatre budgets du tour se décident au même endroit : marketing,
+  // qualité, maintenance, R&D. La communication (marque, axe) les suit.
   { champ: "marketingBudget", nom: "Budget marketing", ouvertPar: "toujours" },
+  { champ: "qualityBudget", nom: "Budget qualité", ouvertPar: "quality" },
+  { champ: "maintenanceBudget", nom: "Budget maintenance", ouvertPar: "maintenance" },
+  { champ: "rdBudget", nom: "Recherche et développement", ouvertPar: "rd" },
   {
     champ: "brandMarketingBudget",
     nom: "Budget de marque",
@@ -50,9 +56,6 @@ export const LEVIERS: readonly LevierDeDecision[] = [
     secteurSi: (s) => Boolean(s.communication) && Boolean(s.products),
   },
   { champ: "communicationAxis", nom: "Axe de communication", ouvertPar: "secteur", secteurSi: (s) => Boolean(s.communication) },
-  { champ: "qualityBudget", nom: "Budget qualité", ouvertPar: "quality" },
-  { champ: "maintenanceBudget", nom: "Budget maintenance", ouvertPar: "maintenance" },
-  { champ: "rdBudget", nom: "Recherche et développement", ouvertPar: "rd" },
   { champ: "hire", nom: "Embauches", ouvertPar: "hr" },
   { champ: "fire", nom: "Départs", ouvertPar: "hr" },
   { champ: "trainingBudget", nom: "Budget formation", ouvertPar: "hr" },

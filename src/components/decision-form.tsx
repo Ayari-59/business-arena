@@ -871,11 +871,10 @@ export function DecisionForm({
   // formulaire qu'on déroule, quelques écrans qu'on parcourt. Une étape sans
   // aucun contenu au niveau de difficulté courant est retirée ; l'index
   // d'affichage se calcule sur les étapes RÉELLEMENT visibles.
-  // En gamme (MAILLE & CO : un commerce), la qualité se décide référence par
-  // référence dans le tableau des ventes ; il ne resterait à « Produire » que
-  // l'entretien, et un commerce ne produit rien : l'étape disparaît, l'entretien
-  // rejoint la première étape, avec l'approvisionnement.
-  const produireVisible = !gamme && (on.quality || on.maintenance || rdMono);
+  // Les quatre budgets du tour (marketing, qualité, maintenance, R&D) se
+  // décident au même endroit, avec les ventes : en mono-produit dans une seule
+  // famille, en gamme dans le tableau des références (l'entretien, qui est de
+  // l'entreprise, juste après). Il n'y a donc plus d'étape « Produire ».
   const equipeVisible = on.hr || on.rse;
   const financerVisible = on.finance || (on.investment && !!equipmentOffer);
   const couvertureVisible =
@@ -884,15 +883,13 @@ export function DecisionForm({
     (on.insurance && (!!insuranceOffer || (insuranceFormulas?.length ?? 0) > 0));
   const etapesVisibles = [
     "vendre",
-    produireVisible ? "produire" : null,
     equipeVisible ? "equipe" : null,
     financerVisible ? "financer" : null,
     couvertureVisible ? "couverture" : null,
     "prevoir",
   ].filter((x): x is string => x !== null);
   const META: Record<string, { titre: string; icone: string }> = {
-    vendre: { titre: "Vendre & s'approvisionner", icone: "🎯" },
-    produire: { titre: "Produire", icone: "🏭" },
+    vendre: { titre: "Vendre, s'approvisionner & budgéter", icone: "🎯" },
     equipe: { titre: "Équipe & RSE", icone: "👥" },
     financer: { titre: "Financer & investir", icone: "💶" },
     couverture: { titre: "Trésorerie & couverture", icone: "🛡️" },
@@ -1171,13 +1168,64 @@ export function DecisionForm({
         );
       })()}
       {gamme ? null : (
-        <Family legend="📣 Marketing · soutenir la demande" defaultOpen>
+        // Les budgets du tour, au même endroit : marketing, qualité, maintenance
+        // et R&D. Un budget que le niveau n'ouvre pas part caché, à sa valeur
+        // proposée, pour que la lecture côté serveur reste complète.
+        <Family
+          legend={`💸 Les budgets du tour · ${["marketing", on.quality ? "qualité" : null, on.maintenance ? "maintenance" : null, rdMono ? "R&D" : null].filter(Boolean).join(", ")}`}
+          defaultOpen
+        >
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Field name="marketingBudget" label="Budget marketing" defaultValue={defaults.marketingBudget} suffix="€"
               hint="Fait venir les clients ce tour-ci ; l'effet retombe vite si on cesse." />
+            {on.quality ? (
+              <Field name="qualityBudget" label="Budget qualité" defaultValue={defaults.qualityBudget} suffix="€"
+                hint="Prévention : moins de rebuts et de retours, une qualité perçue qui monte." />
+            ) : (
+              <input type="hidden" name="qualityBudget" value={defaults.qualityBudget} />
+            )}
+            {on.maintenance ? (
+              <Field name="maintenanceBudget" label="Budget maintenance" defaultValue={defaults.maintenanceBudget} suffix="€"
+                hint="Une maintenance insuffisante dégrade la disponibilité machine." />
+            ) : (
+              <input type="hidden" name="maintenanceBudget" value={defaults.maintenanceBudget} />
+            )}
+            {rdMono ? (
+              <Field
+                name="rdBudget"
+                label="Recherche et développement"
+                defaultValue={Math.round(defaults.rdBudget ?? 0)}
+                suffix="€"
+                hint="Élève le niveau technique du produit : une qualité perçue qui monte avec retard, et s'érode si la R&D cesse. Une charge du tour."
+              />
+            ) : null}
           </div>
         </Family>
       )}
+      {gamme ? (
+        // En gamme, le marketing, la qualité et la R&D se décident référence par
+        // référence dans le tableau des ventes ; l'entretien de la réserve et du
+        // linéaire est de l'entreprise, et vient ici, avec les autres budgets.
+        // Quand le niveau n'ouvre pas la qualité, le scalaire caché part d'ici.
+        <>
+          {on.quality ? null : <input type="hidden" name="qualityBudget" value={defaults.qualityBudget} />}
+          {on.maintenance ? (
+            <Family legend={`🧰 Entretien · ${v.capacityLabel.toLowerCase()}`} defaultOpen>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Field
+                  name="maintenanceBudget"
+                  label="Budget d'entretien"
+                  defaultValue={defaults.maintenanceBudget}
+                  suffix="€"
+                  hint={`Un entretien insuffisant dégrade la disponibilité de votre ${v.capacityLabel.toLowerCase()} : ce que vous pouvez mettre en rayon.`}
+                />
+              </div>
+            </Family>
+          ) : (
+            <input type="hidden" name="maintenanceBudget" value={defaults.maintenanceBudget} />
+          )}
+        </>
+      ) : null}
       {communicationOffer ? (
         // La communication (levier `communication`) : le budget de MARQUE, en
         // gamme seulement (les budgets par référence restent le marketing
@@ -1221,64 +1269,7 @@ export function DecisionForm({
           </div>
         </Family>
       ) : null}
-      {gamme ? (
-        // Pas d'étape « Produire » en gamme : l'entretien de la réserve et du
-        // linéaire se décide ici, avec l'approvisionnement. La qualité, elle, est
-        // dans le tableau des références ; quand le niveau ne l'ouvre pas, le
-        // scalaire caché part d'ici.
-        <>
-          {on.quality ? null : <input type="hidden" name="qualityBudget" value={defaults.qualityBudget} />}
-          {on.maintenance ? (
-            <Family legend={`🧰 Entretien · ${v.capacityLabel.toLowerCase()}`} defaultOpen>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <Field
-                  name="maintenanceBudget"
-                  label="Budget d'entretien"
-                  defaultValue={defaults.maintenanceBudget}
-                  suffix="€"
-                  hint={`Un entretien insuffisant dégrade la disponibilité de votre ${v.capacityLabel.toLowerCase()} : ce que vous pouvez mettre en rayon.`}
-                />
-              </div>
-            </Family>
-          ) : (
-            <input type="hidden" name="maintenanceBudget" value={defaults.maintenanceBudget} />
-          )}
-        </>
-      ) : null}
       </section>
-
-      {produireVisible ? (
-      <section
-        data-etape={idx("produire")}
-        hidden={courante !== idx("produire")}
-        className="space-y-3"
-      >
-      <Family legend={rdMono ? "🏭 Production · qualité, maintenance & R&D" : "🏭 Production · qualité & maintenance"} defaultOpen>
-        <div className="grid grid-cols-2 gap-3">
-          {on.quality ? (
-            <Field name="qualityBudget" label="Budget qualité" defaultValue={defaults.qualityBudget} suffix="€" />
-          ) : (
-            <input type="hidden" name="qualityBudget" value={defaults.qualityBudget} />
-          )}
-          {on.maintenance ? (
-            <Field name="maintenanceBudget" label="Budget maintenance" defaultValue={defaults.maintenanceBudget} suffix="€"
-              hint="Une maintenance insuffisante dégrade la disponibilité machine." />
-          ) : (
-            <input type="hidden" name="maintenanceBudget" value={defaults.maintenanceBudget} />
-          )}
-          {rdMono ? (
-            <Field
-              name="rdBudget"
-              label="Recherche et développement"
-              defaultValue={Math.round(defaults.rdBudget ?? 0)}
-              suffix="€"
-              hint="Élève le niveau technique du produit : une qualité perçue qui monte avec retard, et s'érode si la R&D cesse. Une charge du tour."
-            />
-          ) : null}
-        </div>
-      </Family>
-      </section>
-      ) : null}
 
       <section
         data-etape={idx("equipe")}
