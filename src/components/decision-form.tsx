@@ -1374,8 +1374,14 @@ export function DecisionForm({
           <span className="order-3 shrink-0 text-xs tabular-nums text-slate-400 sm:order-2 sm:mr-auto">
             Étape {courante + 1} / {total}
           </span>
+          {/* Deux boutons DISTINCTS (clés) et non un seul nœud dont le type
+              bascule : sans cela, React réutilisait le même <button> en passant
+              de « Suivant » (type=button) à « Valider » (type=submit) pendant le
+              clic, et le navigateur exécutait l'activation par défaut sur un
+              bouton devenu submit — le dernier « Suivant » envoyait le tour. */}
           {derniere ? (
             <button
+              key="valider"
               type="submit"
               disabled={pending || verrou != null}
               className="order-1 ml-auto rounded-lg bg-amber-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60 sm:order-3 sm:ml-0"
@@ -1390,6 +1396,7 @@ export function DecisionForm({
             </button>
           ) : (
             <button
+              key="suivant"
               type="button"
               onClick={() => setEtape((e) => Math.min(total - 1, Math.min(e, total - 1) + 1))}
               className="order-1 ml-auto rounded-lg bg-amber-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 sm:order-3 sm:ml-0"
