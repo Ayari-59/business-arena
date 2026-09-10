@@ -27,6 +27,24 @@ let urlPartie = "";
 const EMAIL = unique("prof");
 const MOTDEPASSE = "motdepasse-e2e!";
 
+/**
+ * Ouvre le formulaire de décisions du tour en cours.
+ *
+ * Le tour se joue en trois temps, « Situation → Analyser → Décider », et la
+ * page ouvre sur le premier. Tant que rien n'est rendu, un bouton « Prendre
+ * mes décisions » y mène directement ; une fois les décisions enregistrées,
+ * il n'y a plus que l'onglet « Décider ». Le test passait par un onglet
+ * « Décisions » qui n'existe plus : il attendait un écran que personne ne voit.
+ */
+async function ouvrirDecisions(page: Page): Promise<void> {
+  const raccourci = page.getByRole("button", { name: /Prendre mes décisions/ }).first();
+  if (await raccourci.isVisible().catch(() => false)) {
+    await raccourci.click();
+  } else {
+    await page.getByRole("tab", { name: /Décider/ }).first().click();
+  }
+}
+
 beforeAll(async () => {
   navigateur = await ouvrirNavigateur();
   prof = await navigateur.newPage();
@@ -80,9 +98,9 @@ describe("parcours enseignant et élève", () => {
     await eleve.fill('input[name="code"]', codeInvitation);
     await eleve.fill('input[name="pseudo"]', "Élève E2E");
     await eleve.getByRole("button", { name: "Rejoindre la partie" }).click();
-    // La période active (tour en cours) ouvre sur l'onglet « Situation » ; on
-    // passe à « Décisions » pour atteindre le formulaire (prix, volume, etc.).
-    await eleve.getByRole("tab", { name: /Décisions/ }).first().click();
+    // La période active (tour en cours) ouvre sur « Situation » ; on passe à
+    // « Décider » pour atteindre le formulaire (prix, volume, etc.).
+    await ouvrirDecisions(eleve);
     await eleve.waitForSelector('input[name="price"]', { timeout: 30_000 });
     expect(eleve.url()).toMatch(/\/arena\//);
 
@@ -115,7 +133,7 @@ describe("parcours enseignant et élève", () => {
     // dernière. On avance jusque-là (le prix saisi persiste, champs toujours
     // montés), puis on valide.
     for (let i = 0; i < 8; i++) {
-      const suivant = eleve.getByRole("button", { name: /Suivant/ });
+      const suivant = eleve.getByRole("button", { name: /^Suivant/ }).first();
       if (!(await suivant.isVisible().catch(() => false))) break;
       await suivant.click();
     }
@@ -134,8 +152,8 @@ describe("parcours enseignant et élève", () => {
     expect(vu).not.toMatch(/Session expirée|Décisions invalides/i);
     expect(vu).toContain("Décisions enregistrées");
     // Après recharge, le tour rouvre sur « Situation » : on repasse à
-    // « Décisions » pour relire le prix enregistré.
-    await eleve.getByRole("tab", { name: /Décisions/ }).first().click();
+    // « Décider » pour relire le prix enregistré.
+    await ouvrirDecisions(eleve);
     await eleve.waitForSelector('input[name="price"]', { timeout: 30_000 });
     expect(await eleve.inputValue('input[name="price"]')).toBe("780");
   });
@@ -230,11 +248,11 @@ describe("parcours enseignant et élève", () => {
     await executive.fill('input[name="code"]', code);
     await executive.fill('input[name="pseudo"]', "Élève Executive");
     await executive.getByRole("button", { name: "Rejoindre la partie" }).click();
-    // Le tour ouvre sur « Situation » : on passe à « Décisions » pour le
+    // Le tour ouvre sur « Situation » : on passe à « Décider » pour le
     // formulaire. Il range ses décisions par famille en accordéon : le champ
     // dividende vit dans « Financer », repliée par défaut. On attend le prix,
     // puis on déplie tout pour que le champ dividende compte dans le rendu.
-    await executive.getByRole("tab", { name: /Décisions/ }).first().click();
+    await ouvrirDecisions(executive);
     await executive.waitForSelector('input[name="price"]', { timeout: 30_000 });
     await executive.evaluate(() =>
       document.querySelectorAll("details").forEach((d) => d.setAttribute("open", "")),

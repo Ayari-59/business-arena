@@ -272,7 +272,7 @@ export default async function Home() {
       <footer className="border-t border-white/5">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-8 text-xs text-slate-600">
           <p>
-            BUSINESS <span className="text-amber-400/70">ARENA</span> · simulation
+            BUSINESS <span className="accent-arena">ARENA</span> · simulation
             d&apos;entreprise, apprentissage de la décision.
           </p>
           {/* Le pied de page ne recopie plus le menu : il lit le même plan.
