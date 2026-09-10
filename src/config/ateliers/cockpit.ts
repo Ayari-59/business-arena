@@ -1,6 +1,6 @@
 import type { CompanyState, EngineScenarioConfig } from "../../engine/types";
 import { toGamme, withoutRd, type GammeProduct } from "../../engine/gamme";
-import type { ScenarioDefinition } from "../scenarios/registry";
+import { tempsDeTravail, type ScenarioDefinition } from "../scenarios/registry";
 
 /**
  * LE COCKPIT : un classeur d'aide à la décision, référence par référence.
@@ -175,6 +175,7 @@ export function cockpitSpec(source: CockpitSource): ClasseurSpec {
   const etat: CompanyState = definition.company("cockpit", definition.playerTeamName, "human");
   const tours = source.tours;
   const v = definition.vocabulary;
+  const temps = tempsDeTravail(v);
   // La demande de base d'une entreprise moyenne. Un scénario du registre est
   // calibré pour trois concurrents et le marché est redimensionné à la
   // création de la partie ; un instantané de partie porte déjà ce
@@ -199,7 +200,7 @@ export function cockpitSpec(source: CockpitSource): ClasseurSpec {
   P.push([]);
   P.push([t("L'ENTREPRISE", "section")]);
   poser("capacite", `${v.capacityLabel} (${v.perRoundLabel})`, Math.round(etat.machineCapacity), "unites");
-  poser("heures", "Heures de main-d'œuvre disponibles par tour", Math.round(etat.headcount * etat.hoursPerEmployee * etat.productivity), "unites", `${etat.headcount} personnes × ${etat.hoursPerEmployee} h`);
+  poser("heures", `${temps.Pluriel} de main-d'œuvre disponibles par tour`, Math.round(etat.headcount * etat.hoursPerEmployee * etat.productivity), "unites", `${etat.headcount} personnes × ${etat.hoursPerEmployee} ${temps.abrege}`);
   poser("fixes", "Charges de structure décaissées par tour", config.fixedCostsPerRound, "euro");
   poser("amortissements", "Amortissements par tour", config.finance.depreciationPerRound, "euro");
   poser("marketingRef", "Budget marketing de référence par tour", Math.round(0.5 * config.marketing.scale), "euro");
@@ -234,7 +235,7 @@ export function cockpitSpec(source: CockpitSource): ClasseurSpec {
     t(v.materialLabel, "entete"),
     t(v.otherVariableLabel, "entete"),
     t("Coût variable", "entete"),
-    t("Heures par unité", "entete"),
+    t(`${temps.Pluriel} par unité`, "entete"),
     t(`${v.leftoverLabel} à l'ouverture`, "entete"),
     ...tours.map((tour) => t(`Saison T${tour}`, "entete")),
   ]);
@@ -447,10 +448,10 @@ export function cockpitSpec(source: CockpitSource): ClasseurSpec {
   );
   poserTotal(
     "heures",
-    "Heures de main-d'œuvre nécessaires",
+    `${temps.Pluriel} de main-d'œuvre nécessaires`,
     tours.map((_, i) => f(gamme.map((p) => `${gammeRef(p.code, "F")}*${colonne(i)}${ligneL[p.code]!.plan}`).join("+"), "unites")),
   );
-  poserTotal("heuresDispo", "Heures disponibles", tours.map(() => f(param.heures!, "unites")));
+  poserTotal("heuresDispo", `${temps.Pluriel} disponibles`, tours.map(() => f(param.heures!, "unites")));
   poserTotal("ventes", "Total ventes prévues", tours.map((_, i) => f(somme("ventes", i), "unites")));
   poserTotal("manque", "Total demande non servie", tours.map((_, i) => f(somme("manque", i), "unites")));
   poserTotal("ca", "Chiffre d'affaires prévu, toutes références", tours.map((_, i) => f(somme("ca", i), "euro")));

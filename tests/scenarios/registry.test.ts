@@ -580,3 +580,34 @@ describe("les familles de scénarios : un produit ou la gamme, selon le niveau",
     }
   });
 });
+
+describe("les coûts d'une unité vendue restent plausibles", () => {
+  it("le coût variable reste sous le prix usuel, et aucun fournisseur ne le fait tomber sous un plancher", async () => {
+    // ATLAS CONSEIL affichait « Réseau de freelances · achat 48,40 € » pour
+    // une journée de consultant : le mécanisme fournisseur multipliait les
+    // frais de mission, et le dossier appelait « achat » ce qui n'en est pas
+    // un. Un fournisseur qui divise par deux ou triple un coût d'achat ne
+    // décrit plus une entreprise.
+    const { toGamme, suppliersOf } = await import("../../src/engine/gamme");
+    for (const d of SCENARIOS) {
+      for (const p of toGamme(d.scenario)) {
+        const dominant = [...p.market.segments].sort((a, b) => b.size - a.size)[0]!;
+        const variable = p.materialCostPerUnit + p.otherVariableCostPerUnit;
+        expect(variable, `${d.code}/${p.code} : coût variable ${variable} ≥ prix usuel ${dominant.refPrice}`).toBeLessThan(dominant.refPrice);
+        for (const s of suppliersOf(p, d.scenario) ?? []) {
+          expect(s.costMultiplier, `${d.code}/${p.code}/${s.code} : ×${s.costMultiplier}`).toBeGreaterThanOrEqual(0.5);
+          expect(s.costMultiplier, `${d.code}/${p.code}/${s.code} : ×${s.costMultiplier}`).toBeLessThanOrEqual(2);
+          expect(p.materialCostPerUnit * s.costMultiplier + p.otherVariableCostPerUnit, `${d.code}/${p.code}/${s.code}`).toBeLessThan(dominant.refPrice);
+        }
+      }
+      // L'unité de temps de travail, quand elle est déclarée, est l'une des deux connues.
+      if (d.vocabulary.laborTimeUnit !== undefined) expect(["heure", "jour"]).toContain(d.vocabulary.laborTimeUnit);
+    }
+    // Le conseil compte des jours, et ses « fournisseurs » sont des politiques de mission, pas des journées à 50 €.
+    const conseil = scenarioByCode("conseil");
+    expect(conseil.vocabulary.laborTimeUnit).toBe("jour");
+    for (const s of conseil.scenario.suppliers ?? []) {
+      expect(s.name).not.toMatch(/freelance|expert/i);
+    }
+  });
+});
