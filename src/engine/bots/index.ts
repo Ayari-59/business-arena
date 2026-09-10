@@ -420,13 +420,21 @@ function gammeDecisions(
   const ceiling = Math.min(cap, ctx.lastSoldUnits !== undefined ? ctx.lastSoldUnits * 1.6 : cap);
   const cut = total > ceiling && total > 0 ? ceiling / total : 1;
 
+  // La qualité suit le plan : une référence qui pèse deux fois plus dans la
+  // production reçoit deux fois plus de budget qualité (à défaut de plan, au
+  // prorata des marchés). Le fournisseur est le même pour toute la gamme —
+  // un bot ne panache pas ses façonniers.
+  const planTotal = total * cut;
   const products: Record<ProductCode, ProductDecisions> = {};
   gamme.forEach((p, k) => {
     const floor = (p.materialCostPerUnit + p.otherVariableCostPerUnit) * 1.1;
+    const planShare = planTotal > 0 ? (targets[k]! * cut) / planTotal : weights[k]!;
     products[p.code] = {
       price: Math.max(floor, productRefPrice(p) * priceRatio),
       productionPlan: targets[k]! * cut,
       marketingBudget: (base.marketingBudget ?? 0) * weights[k]!,
+      qualityBudget: (base.qualityBudget ?? 0) * planShare,
+      ...(base.supplierChoice !== undefined ? { supplierChoice: base.supplierChoice } : {}),
     };
   });
   return products;

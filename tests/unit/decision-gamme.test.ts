@@ -74,6 +74,38 @@ describe("lecture des champs par produit", () => {
     expect(readProductFields(formulaire({ price: "59", productionPlan: "100" }).entries())).toBeUndefined();
   });
 
+  it("relit la qualité et le fournisseur d'une référence, et ignore un fournisseur vide", () => {
+    expect(productFieldName("bonnet", "qualityBudget")).toBe("product.bonnet.qualityBudget");
+    expect(productFieldName("bonnet", "supplierChoice")).toBe("product.bonnet.supplierChoice");
+    const products = readProductFields(
+      formulaire({
+        "product.bonnet.price": "25",
+        "product.bonnet.productionPlan": "850",
+        "product.bonnet.qualityBudget": "1 200",
+        "product.bonnet.supplierChoice": "createur",
+        "product.echarpe.price": "35",
+        "product.echarpe.productionPlan": "600",
+        "product.echarpe.supplierChoice": "",
+      }).entries(),
+    );
+    expect(products!.bonnet).toEqual({ price: 25, productionPlan: 850, qualityBudget: NaN, supplierChoice: "createur" });
+    expect(products!.echarpe).toEqual({ price: 35, productionPlan: 600 });
+  });
+
+  it("dérive la qualité (somme) et le fournisseur (celui du plan le plus fort) quand les références les portent", () => {
+    const s = scalarsOfGamme({
+      a: { price: 100, productionPlan: 300, qualityBudget: 1000, supplierChoice: "grossiste" },
+      b: { price: 50, productionPlan: 900, qualityBudget: 500, supplierChoice: "createur" },
+    });
+    expect(s.qualityBudget).toBe(1500);
+    expect(s.supplierChoice).toBe("createur");
+    // Sans qualité ni fournisseur par référence : rien n'est dérivé, les
+    // champs scalaires du formulaire font foi.
+    const sans = scalarsOfGamme({ a: { price: 100, productionPlan: 300 }, b: { price: 50, productionPlan: 900 } });
+    expect(sans.qualityBudget).toBeUndefined();
+    expect(sans.supplierChoice).toBeUndefined();
+  });
+
   it("dérive les scalaires : plan = somme, prix = moyenne pondérée, marketing = somme", () => {
     const s = scalarsOfGamme({
       a: { price: 100, productionPlan: 300, marketingBudget: 1000 },
@@ -113,6 +145,40 @@ describe("l'action serveur en gamme", () => {
     expect(payload.productionPlan).toBe(2000);
     expect(payload.marketingBudget).toBe(4000);
     expect(payload.price).toBeCloseTo((59 * 1500 + 25 * 500) / 2000, 9);
+  });
+
+  it("transmet la qualité et le fournisseur de chaque référence, et en dérive les scalaires", async () => {
+    vi.mocked(submitTeamDecisions).mockClear();
+    const etat = await playRoundAction(
+      "partie",
+      { error: null },
+      formulaire({
+        maintenanceBudget: "0",
+        // Le champ scalaire est absent : la qualité vient des références.
+        "product.pull-col-rond.price": "59",
+        "product.pull-col-rond.productionPlan": "1500",
+        "product.pull-col-rond.marketingBudget": "3000",
+        "product.pull-col-rond.qualityBudget": "2000",
+        "product.pull-col-rond.supplierChoice": "grossiste",
+        "product.bonnet.price": "25",
+        "product.bonnet.productionPlan": "500",
+        "product.bonnet.marketingBudget": "1000",
+        "product.bonnet.qualityBudget": "500",
+        "product.bonnet.supplierChoice": "createur",
+      }),
+    );
+    expect(etat.error).toBeNull();
+    const payload = vi.mocked(submitTeamDecisions).mock.calls[0]![0].payload;
+    expect(payload.products!["pull-col-rond"]).toEqual({
+      price: 59,
+      productionPlan: 1500,
+      marketingBudget: 3000,
+      qualityBudget: 2000,
+      supplierChoice: "grossiste",
+    });
+    expect(payload.products!.bonnet!.supplierChoice).toBe("createur");
+    expect(payload.qualityBudget).toBe(2500);
+    expect(payload.supplierChoice).toBe("grossiste");
   });
 
   it("refuse une gamme dont tous les volumes sont nuls, dans la langue du secteur", async () => {
@@ -176,7 +242,17 @@ describe("le formulaire en gamme", () => {
       bonnet: { price: 25, productionPlan: 850, marketingBudget: 900 },
     },
   };
-  const rendu = (g: Props["gamme"]) =>
+  const suppliersOffer: NonNullable<Props["suppliersOffer"]> = boutique.scenario.suppliers!.map((s) => ({
+    code: s.code,
+    name: s.name,
+    narrative: s.narrative,
+    costMultiplier: s.costMultiplier,
+    qualityBonus: s.qualityBonus,
+    paymentDelayDays: s.paymentDelayDays,
+    supplyRiskProbability: s.supplyRiskProbability,
+    materialCostPerUnit: 20,
+  }));
+  const rendu = (g: Props["gamme"], extra: Partial<Props> = {}) =>
     renderToStaticMarkup(
       createElement(DecisionForm, {
         gameId: "partie-test",
@@ -188,6 +264,7 @@ describe("le formulaire en gamme", () => {
         enabled: presetByLevel.get(1)!.decisions,
         vocabulary: boutique.vocabulary,
         gamme: g,
+        ...extra,
       }),
     );
 
@@ -205,6 +282,36 @@ describe("le formulaire en gamme", () => {
     // Les valeurs proposées de chaque référence sont bien celles du produit.
     expect(html).toContain('name="product.pull-merinos.price" value="129"');
     expect(html).toContain('aria-label="Prix de vente · Pull mérinos premium"');
+  });
+
+  it("au niveau 1, sans qualité ni fournisseur, ne propose ni l'une ni l'autre par référence", () => {
+    const html = rendu(gamme);
+    expect(html).not.toContain(".qualityBudget");
+    expect(html).not.toContain(".supplierChoice");
+    // Le scalaire caché reste envoyé : le serveur ne dérive rien des références.
+    expect(html).toContain('name="qualityBudget"');
+  });
+
+  it("quand le niveau ouvre la qualité et que le scénario a des fournisseurs, les propose par référence", () => {
+    const html = rendu(gamme, { enabled: presetByLevel.get(3)!.decisions, suppliersOffer });
+    for (const p of gamme) {
+      expect(html).toContain(`name="product.${p.code}.qualityBudget"`);
+      expect(html).toContain(`name="product.${p.code}.supplierChoice"`);
+    }
+    // Plus de champ qualité ni de radio fournisseur scalaires : ils seraient
+    // ignorés par le serveur et tromperaient l'élève.
+    expect(html).not.toContain('name="qualityBudget"');
+    expect(html).not.toContain('name="supplierChoice"');
+    // Chaque référence propose les trois façonniers, le premier par défaut.
+    expect(html).toContain("Atelier de tricotage local");
+    expect(html).toContain('<option value="grossiste" selected="">');
+  });
+
+  it("en mono-produit, la qualité et le fournisseur restent des champs d'entreprise", () => {
+    const html = rendu(null, { enabled: presetByLevel.get(3)!.decisions, suppliersOffer });
+    expect(html).toContain('name="qualityBudget"');
+    expect(html).toContain('name="supplierChoice"');
+    expect(html).not.toContain("product.");
   });
 
   it("en mono-produit, le formulaire n'a pas changé", () => {
@@ -235,5 +342,25 @@ describe("la proposition mise au pas en gamme", () => {
     expect(d.productionPlan).toBe(2000);
     expect(d.marketingBudget).toBe(4000);
     expect(d.price).toBeCloseTo(Math.round(((60 * 1500 + 25 * 500) / 2000) * 10) / 10, 9);
+    // Sans qualité par référence, le scalaire est simplement arrondi.
+    expect(d.qualityBudget).toBe(10);
+  });
+
+  it("arrondit la qualité de chaque référence, garde son fournisseur, et redérive les scalaires", () => {
+    const d = auPas({
+      price: 999,
+      productionPlan: 1,
+      marketingBudget: 1,
+      qualityBudget: 1,
+      maintenanceBudget: 0,
+      supplierChoice: "grossiste",
+      products: {
+        a: { price: 60, productionPlan: 1500, qualityBudget: 1999.6, supplierChoice: "createur" },
+        b: { price: 25, productionPlan: 500, qualityBudget: 500.4, supplierChoice: "grossiste" },
+      },
+    });
+    expect(d.products!.a).toEqual({ price: 60, productionPlan: 1500, qualityBudget: 2000, supplierChoice: "createur" });
+    expect(d.qualityBudget).toBe(2500);
+    expect(d.supplierChoice).toBe("createur");
   });
 });

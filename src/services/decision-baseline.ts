@@ -34,6 +34,8 @@ export function auPas(d: RoundDecisions): RoundDecisions {
           ...(p.marketingBudget !== undefined
             ? { marketingBudget: Math.round(p.marketingBudget) }
             : {}),
+          ...(p.qualityBudget !== undefined ? { qualityBudget: Math.round(p.qualityBudget) } : {}),
+          ...(p.supplierChoice !== undefined ? { supplierChoice: p.supplierChoice } : {}),
         },
       ]),
     );
@@ -44,8 +46,9 @@ export function auPas(d: RoundDecisions): RoundDecisions {
       price: Math.round(scalars.price * 10) / 10,
       productionPlan: Math.round(scalars.productionPlan),
       marketingBudget: Math.round(scalars.marketingBudget),
-      qualityBudget: Math.round(d.qualityBudget),
+      qualityBudget: Math.round(scalars.qualityBudget ?? d.qualityBudget),
       maintenanceBudget: Math.round(d.maintenanceBudget),
+      ...(scalars.supplierChoice !== undefined ? { supplierChoice: scalars.supplierChoice } : {}),
     };
   }
   return {
@@ -69,8 +72,10 @@ export function startingDecisionsFor(
   if (!state) {
     const main = [...snapshot.market.segments].sort((a, b) => b.size - a.size)[0];
     // Gamme : chaque référence part du prix de sa clientèle dominante, plan à
-    // zéro, marketing réparti à parts égales.
+    // zéro, marketing et qualité répartis à parts égales, fournisseur de
+    // référence pour toutes.
     const gamme = toGamme(snapshot);
+    const supplier = snapshot.suppliers?.[0]?.code;
     const products = isMultiProduct(snapshot)
       ? Object.fromEntries(
           gamme.map((p) => {
@@ -81,6 +86,8 @@ export function startingDecisionsFor(
                 price: dominant?.refPrice ?? 50,
                 productionPlan: 0,
                 marketingBudget: (0.5 * snapshot.marketing.scale) / gamme.length,
+                qualityBudget: (0.5 * snapshot.production.qualityScale) / gamme.length,
+                ...(supplier !== undefined ? { supplierChoice: supplier } : {}),
               },
             ];
           }),

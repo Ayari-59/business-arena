@@ -606,8 +606,14 @@ export interface CompanyState {
   name: string;
   controller: "human" | "bot";
   botProfile?: string;
-  /** Qualité perçue courante (1 = référence). */
+  /** Qualité perçue courante (1 = référence). En gamme : moyenne pondérée des références. */
   perceivedQuality: number;
+  /**
+   * Gamme : qualité perçue de chaque référence, par code produit. Émis
+   * SEULEMENT en multi-produits ; absent, chaque référence part de
+   * `perceivedQuality`.
+   */
+  perceivedQualityByProduct?: Record<ProductCode, number>;
   /** Capacité machine totale (unités/tour à 100 % de disponibilité). */
   machineCapacity: number;
   /** Disponibilité machine courante (0..1). */
@@ -692,14 +698,20 @@ export interface CompanyState {
 
 /**
  * Décisions propres à UN produit de la gamme. Le prix et le plan sont les
- * pivots ; le marketing soutient la demande sur le marché du produit. Le
- * budget qualité, la maintenance, les RH, la finance restent des leviers
- * d'entreprise (l'usine et la caisse sont communes à la gamme).
+ * pivots ; le marketing soutient la demande sur le marché du produit ; le
+ * budget qualité fait la qualité produite (et perçue) de la référence ; le
+ * fournisseur fixe son coût matières, son bonus de qualité, son délai de
+ * règlement et son risque de rupture. La maintenance, les RH, la finance
+ * restent des leviers d'entreprise (l'usine et la caisse sont communes).
  */
 export interface ProductDecisions {
   price: number;
   productionPlan: number;
   marketingBudget?: number;
+  /** Budget qualité de la référence (absent : part égale du scalaire). */
+  qualityBudget?: number;
+  /** Fournisseur de la référence (absent : le fournisseur scalaire). */
+  supplierChoice?: string;
 }
 
 export interface RoundDecisions {
@@ -895,6 +907,20 @@ export interface ProductRoundResult {
   unitVariableCost: number;
   price: number;
   marketingBudget: number;
+  /** Budget qualité consacré à la référence ce tour. */
+  qualityBudget: number;
+  /** Qualité produite de la référence ce tour (1 = référence). */
+  producedQuality: number;
+  /** Qualité perçue de la référence en fin de tour, après inertie. */
+  perceivedQuality: number;
+  /** Fournisseur de la référence ce tour (absent si le scénario n'en propose pas). */
+  supplier?: {
+    code: string;
+    name: string;
+    costMultiplier: number;
+    qualityBonus: number;
+    supplyDisruption: boolean;
+  };
   /** Unités vendues sur le marché du produit (hors commandes fermes et exceptionnelle). */
   sold: number;
   lost: number;

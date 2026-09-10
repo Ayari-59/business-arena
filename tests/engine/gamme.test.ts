@@ -117,7 +117,7 @@ describe("gamme — normalisation", () => {
   it("les décisions mono sont recopiées telles quelles", () => {
     const gamme = toGamme(novaScenario);
     const [d] = toGammeDecisions(PLAYER, gamme);
-    expect(d).toEqual({ price: 59, productionPlan: 4800, marketingBudget: 6000 });
+    expect(d).toEqual({ price: 59, productionPlan: 4800, marketingBudget: 6000, qualityBudget: 3000 });
   });
 
   it("en gamme, un produit sans entrée reçoit le prix scalaire et une part égale du plan", () => {
@@ -129,14 +129,29 @@ describe("gamme — normalisation", () => {
     expect(gamme[1]!.market.seasonality).toEqual(novaScenario.market.seasonality);
     expect(gamme[1]!.market.outsideAttraction).toBe(novaScenario.market.outsideAttraction);
     const decisions = toGammeDecisions(PLAYER, gamme);
-    expect(decisions[0]).toEqual({ price: 59, productionPlan: 2400, marketingBudget: 3000 });
-    expect(decisions[1]).toEqual({ price: 59, productionPlan: 2400, marketingBudget: 3000 });
-    // Une entrée explicite fait foi.
+    // Part égale du plan, du marketing ET de la qualité scalaires.
+    expect(decisions[0]).toEqual({ price: 59, productionPlan: 2400, marketingBudget: 3000, qualityBudget: 1500 });
+    expect(decisions[1]).toEqual({ price: 59, productionPlan: 2400, marketingBudget: 3000, qualityBudget: 1500 });
+    // Une entrée explicite fait foi, fournisseur compris ; un produit sans
+    // fournisseur propre reçoit le fournisseur scalaire.
     const explicit = toGammeDecisions(
-      { ...PLAYER, products: { [B]: { price: 80, productionPlan: 1000, marketingBudget: 500 } } },
+      {
+        ...PLAYER,
+        supplierChoice: "standard",
+        products: {
+          [B]: { price: 80, productionPlan: 1000, marketingBudget: 500, qualityBudget: 2500, supplierChoice: "premium" },
+        },
+      },
       gamme,
     );
-    expect(explicit[1]).toEqual({ price: 80, productionPlan: 1000, marketingBudget: 500 });
+    expect(explicit[0]).toMatchObject({ price: 59, qualityBudget: 1500, supplierChoice: "standard" });
+    expect(explicit[1]).toEqual({
+      price: 80,
+      productionPlan: 1000,
+      marketingBudget: 500,
+      qualityBudget: 2500,
+      supplierChoice: "premium",
+    });
   });
 });
 
@@ -312,5 +327,229 @@ describe("gamme — deux produits vivants partagent l'usine", () => {
 
   it("un scénario mono-produit ne reçoit aucune décision par produit", () => {
     expect(scalarDecisions(novaScenario, companies()).soundbox.products).toBeUndefined();
+  });
+
+  it("les bots répartissent leur budget qualité au prorata du plan et gardent un seul fournisseur", () => {
+    // Auris (premium) dépense 1,5 × l'échelle qualité : la somme des budgets
+    // par produit est le budget scalaire, et chaque référence en reçoit la
+    // part de son plan. Son fournisseur est le même sur toute la gamme.
+    const auris = base.auris;
+    const plans = auris.products!;
+    expect(auris.qualityBudget).toBeGreaterThan(0);
+    expect(plans[A]!.qualityBudget! + plans[B]!.qualityBudget!).toBeCloseTo(auris.qualityBudget, 9);
+    expect(plans[A]!.qualityBudget! / auris.qualityBudget).toBeCloseTo(
+      plans[A]!.productionPlan / auris.productionPlan,
+      9,
+    );
+    expect(plans[A]!.supplierChoice).toBe(auris.supplierChoice);
+    expect(plans[B]!.supplierChoice).toBe(auris.supplierChoice);
+  });
+});
+
+describe("gamme — la qualité et le fournisseur se décident par référence", () => {
+  // NOVA + produit B, avec des coûts de non-qualité (rebuts, retours) pour
+  // que la qualité de chaque référence se lise aussi dans ses rebuts.
+  const scenario = parseScenarioConfig({
+    ...gammeScenario(),
+    qualityCosts: { baseDefectRate: 0.04, externalReturnSensitivity: 0.1 },
+  });
+  const states = companies();
+  const base = scalarDecisions(scenario, states);
+  const player = (products: RoundDecisions["products"]): Record<string, RoundDecisions> => ({
+    ...base,
+    player: { ...PLAYER, supplierChoice: "standard", products },
+  });
+  const egal = simulateRound(
+    input(
+      scenario,
+      player({
+        [A]: { price: 59, productionPlan: 3000, marketingBudget: 3000, qualityBudget: 1500 },
+        [B]: { price: 95, productionPlan: 3000, marketingBudget: 3000, qualityBudget: 1500 },
+      }),
+      states,
+    ),
+  );
+  const concentre = simulateRound(
+    input(
+      scenario,
+      player({
+        [A]: { price: 59, productionPlan: 3000, marketingBudget: 3000, qualityBudget: 3000 },
+        [B]: { price: 95, productionPlan: 3000, marketingBudget: 3000, qualityBudget: 0 },
+      }),
+      states,
+    ),
+  );
+
+  it("un budget réparti à parts égales donne à chaque référence la qualité que le scalaire donnait à l'entreprise", () => {
+    // Même budget total (3 000 €) que le joueur mono-produit ; en gamme
+    // l'échelle est divisée par deux, donc 1 500 € par référence valent
+    // exactement 3 000 € pour l'entreprise mono-produit.
+    const r = egal.results["player"]!;
+    expect(r.products![A]!.qualityBudget).toBe(1500);
+    expect(r.products![A]!.producedQuality).toBeCloseTo(r.products![B]!.producedQuality, 12);
+    expect(r.products![A]!.producedQuality).toBeCloseTo(r.production.producedQuality, 12);
+    expect(r.incomeStatement.qualityCost).toBe(3000);
+    expect(r.qualityCosts?.prevention).toBe(3000);
+  });
+
+  it("concentré sur une référence, il la distingue : qualité produite, rebuts, qualité perçue", () => {
+    const r = concentre.results["player"]!;
+    const a = r.products![A]!;
+    const b = r.products![B]!;
+    expect(a.qualityBudget).toBe(3000);
+    expect(b.qualityBudget).toBe(0);
+    expect(a.producedQuality).toBeGreaterThan(b.producedQuality);
+    // Moins de qualité produite, plus de rebuts (NOVA porte des coûts de non-qualité).
+    expect(b.defectUnits / b.produced).toBeGreaterThan(a.defectUnits / a.produced);
+    expect(a.perceivedQuality).toBeGreaterThan(b.perceivedQuality);
+    // Le budget total est inchangé : seule la répartition a bougé.
+    expect(r.incomeStatement.qualityCost).toBe(3000);
+    // L'état suivant suit chaque référence, et la qualité de l'entreprise
+    // est leur moyenne pondérée par les unités produites.
+    const next = concentre.companies.find((c) => c.id === "player")!;
+    expect(next.perceivedQualityByProduct![A]).toBe(a.perceivedQuality);
+    expect(next.perceivedQualityByProduct![B]).toBe(b.perceivedQuality);
+    expect(next.perceivedQuality).toBeGreaterThan(Math.min(a.perceivedQuality, b.perceivedQuality));
+    expect(next.perceivedQuality).toBeLessThan(Math.max(a.perceivedQuality, b.perceivedQuality));
+    // Un état mono-produit ne porte jamais ce champ.
+    expect(
+      simulateRound(input(novaScenario, scalarDecisions(novaScenario, companies()))).companies[0]!
+        .perceivedQualityByProduct,
+    ).toBeUndefined();
+  });
+
+  it("la qualité perçue d'une référence est celle que son marché voit au tour suivant", () => {
+    // Au tour 2, la référence B (sans qualité) attire moins que la même
+    // référence B d'une équipe qui l'a soignée : la qualité perçue par
+    // produit entre bien dans l'attraction du produit.
+    const tour2 = (apres: ReturnType<typeof simulateRound>) =>
+      simulateRound({
+        scenario,
+        roundIndex: 2,
+        companies: apres.companies,
+        decisions: player({
+          [A]: { price: 59, productionPlan: 3000, marketingBudget: 3000, qualityBudget: 1500 },
+          [B]: { price: 95, productionPlan: 3000, marketingBudget: 3000, qualityBudget: 1500 },
+        }),
+        activeEvents: [],
+        seed: SEED,
+      });
+    const apresEgal = tour2(egal).results["player"]!;
+    const apresConcentre = tour2(concentre).results["player"]!;
+    // La demande captée (avant contrainte de stock) suit la qualité perçue
+    // de CHAQUE référence : B en perd, A en gagne.
+    const demande = (r: typeof apresEgal, codes: string[]) =>
+      codes.reduce((s, c) => s + r.market.bySegment[c]!.demandForCompany, 0);
+    expect(demande(apresConcentre, ["b-pro"])).toBeLessThan(demande(apresEgal, ["b-pro"]));
+    expect(demande(apresConcentre, apresEgal.products![A]!.segments)).toBeGreaterThan(
+      demande(apresEgal, apresEgal.products![A]!.segments),
+    );
+  });
+
+  it("chaque référence achète chez son fournisseur : coût, bonus qualité, délai de règlement", () => {
+    const standard = scenario.suppliers!.find((s) => s.code === "standard")!;
+    const lowcost = scenario.suppliers!.find((s) => s.code === "lowcost")!;
+    const premium = scenario.suppliers!.find((s) => s.code === "premium")!;
+    // Le fournisseur low-cost porte un risque de rupture : on le neutralise
+    // ici pour ne mesurer que le coût et le délai (la rupture a son test).
+    const sansRupture = parseScenarioConfig({
+      ...scenario,
+      suppliers: scenario.suppliers!.map((s) => ({ ...s, supplyRiskProbability: 0 })),
+    });
+    const panache = simulateRound(
+      input(
+        sansRupture,
+        player({
+          [A]: { price: 59, productionPlan: 3000, marketingBudget: 3000, qualityBudget: 1500, supplierChoice: "lowcost" },
+          [B]: { price: 95, productionPlan: 3000, marketingBudget: 3000, qualityBudget: 1500, supplierChoice: "premium" },
+        }),
+        states,
+      ),
+    );
+    const r = panache.results["player"]!;
+    const a = r.products![A]!;
+    const b = r.products![B]!;
+    expect(a.supplier).toMatchObject({ code: "lowcost", supplyDisruption: false });
+    expect(b.supplier).toMatchObject({ code: "premium", supplyDisruption: false });
+    // Coût variable de chaque référence au prix d'achat de SON fournisseur.
+    expect(a.unitVariableCost).toBeCloseTo(
+      novaScenario.product.materialCostPerUnit * lowcost.costMultiplier +
+        novaScenario.product.otherVariableCostPerUnit,
+      9,
+    );
+    expect(b.unitVariableCost).toBeCloseTo(30 * premium.costMultiplier + 20, 9);
+    // Le bonus qualité du fournisseur ne joue que sur SA référence : à budget
+    // qualité égal, B (premium, +0,05) est mieux perçu que A (low-cost, −0,03).
+    expect(b.perceivedQuality).toBeGreaterThan(a.perceivedQuality);
+    // Les dettes fournisseurs suivent les délais de chaque fournisseur, entre
+    // ceux d'une gamme tout au standard et… ceux d'une gamme tout au premium.
+    const toutStandard = simulateRound(
+      input(
+        sansRupture,
+        player({
+          [A]: { price: 59, productionPlan: 3000, marketingBudget: 3000, qualityBudget: 1500, supplierChoice: "standard" },
+          [B]: { price: 95, productionPlan: 3000, marketingBudget: 3000, qualityBudget: 1500, supplierChoice: "standard" },
+        }),
+        states,
+      ),
+    ).results["player"]!;
+    expect(standard.paymentDelayDays).toBeGreaterThan(premium.paymentDelayDays);
+    expect(lowcost.paymentDelayDays).toBeGreaterThan(standard.paymentDelayDays);
+    // Panaché (45 j et 15 j, pondérés par les achats) contre tout standard (22 j).
+    expect(r.balanceSheet.payables).not.toBeCloseTo(toutStandard.balanceSheet.payables, 2);
+    // Le bloc fournisseur d'entreprise reste celui du scalaire.
+    expect(r.supplier?.code).toBe("standard");
+  });
+
+  it("une rupture d'approvisionnement n'ampute que les références du fournisseur défaillant", () => {
+    // Une rupture certaine (probabilité 1) dépasse ce que le schéma admet
+    // (0,3) : on l'injecte après validation, le moteur ne revalide pas.
+    const fragile: EngineScenarioConfig = {
+      ...scenario,
+      suppliers: scenario.suppliers!.map((s) =>
+        s.code === "lowcost"
+          ? { ...s, supplyRiskProbability: 1, supplyRiskAvailabilityHit: 0.5 }
+          : { ...s, supplyRiskProbability: 0 },
+      ),
+    };
+    const r = simulateRound(
+      input(
+        fragile,
+        player({
+          [A]: { price: 59, productionPlan: 2000, marketingBudget: 3000, qualityBudget: 1500, supplierChoice: "standard" },
+          [B]: { price: 95, productionPlan: 2000, marketingBudget: 3000, qualityBudget: 1500, supplierChoice: "lowcost" },
+        }),
+        states,
+      ),
+    ).results["player"]!;
+    const a = r.products![A]!;
+    const b = r.products![B]!;
+    expect(b.supplier?.supplyDisruption).toBe(true);
+    expect(a.supplier?.supplyDisruption).toBe(false);
+    // Sous la capacité : A produit son plan, B la moitié du sien.
+    expect(a.produced).toBeCloseTo(2000, 9);
+    expect(b.produced).toBeCloseTo(1000, 9);
+  });
+
+  it("un produit sans fournisseur propre prend le fournisseur scalaire", () => {
+    const r = simulateRound(
+      input(
+        scenario,
+        {
+          ...base,
+          player: {
+            ...PLAYER,
+            supplierChoice: "premium",
+            products: {
+              [A]: { price: 59, productionPlan: 3000, qualityBudget: 1500 },
+              [B]: { price: 95, productionPlan: 3000, qualityBudget: 1500 },
+            },
+          },
+        },
+        states,
+      ),
+    ).results["player"]!;
+    expect(r.products![A]!.supplier?.code).toBe("premium");
+    expect(r.products![B]!.supplier?.code).toBe("premium");
   });
 });

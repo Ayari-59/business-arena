@@ -109,16 +109,21 @@ export function lireSource(raw: unknown): DecisionSourceMap | null {
 
 /**
  * GAMME : les champs par produit du formulaire s'appellent
- * `product.<code>.price`, `product.<code>.productionPlan` et
- * `product.<code>.marketingBudget`. Cette lecture est partagée par le
+ * `product.<code>.price`, `product.<code>.productionPlan`,
+ * `product.<code>.marketingBudget`, `product.<code>.qualityBudget` et
+ * `product.<code>.supplierChoice`. Cette lecture est partagée par le
  * formulaire (vérification des pivots avant envoi) et par l'action serveur.
- * Une valeur vide ou illisible est laissée `NaN` : c'est au schéma de refuser.
+ * Une valeur numérique vide ou illisible est laissée `NaN` : c'est au schéma
+ * de refuser ; un fournisseur vide est simplement absent.
  */
 export const PRODUCT_FIELD_PREFIX = "product.";
 
+const PRODUCT_NUMBER_FIELDS = ["price", "productionPlan", "marketingBudget", "qualityBudget"] as const;
+type ProductNumberField = (typeof PRODUCT_NUMBER_FIELDS)[number];
+
 export function productFieldName(
   code: ProductCode,
-  field: keyof Pick<ProductDecisions, "price" | "productionPlan" | "marketingBudget">,
+  field: ProductNumberField | "supplierChoice",
 ): string {
   return `${PRODUCT_FIELD_PREFIX}${code}.${field}`;
 }
@@ -126,7 +131,7 @@ export function productFieldName(
 export function readProductFields(
   entries: Iterable<[string, FormDataEntryValue | string | null]>,
 ): Record<ProductCode, ProductDecisions> | undefined {
-  const out: Record<ProductCode, { price?: number; productionPlan?: number; marketingBudget?: number }> = {};
+  const out: Record<ProductCode, Partial<Record<ProductNumberField, number>> & { supplierChoice?: string }> = {};
   for (const [key, raw] of entries) {
     if (!key.startsWith(PRODUCT_FIELD_PREFIX)) continue;
     const rest = key.slice(PRODUCT_FIELD_PREFIX.length);
@@ -134,10 +139,14 @@ export function readProductFields(
     if (dot <= 0) continue;
     const code = rest.slice(0, dot);
     const field = rest.slice(dot + 1);
-    if (field !== "price" && field !== "productionPlan" && field !== "marketingBudget") continue;
-    const text = String(raw ?? "").trim().replace(",", ".");
-    const value = text === "" ? NaN : Number(text);
-    (out[code] ??= {})[field] = value;
+    const text = String(raw ?? "").trim();
+    if (field === "supplierChoice") {
+      if (text !== "") (out[code] ??= {}).supplierChoice = text;
+      continue;
+    }
+    if (!(PRODUCT_NUMBER_FIELDS as readonly string[]).includes(field)) continue;
+    const value = text === "" ? NaN : Number(text.replace(",", "."));
+    (out[code] ??= {})[field as ProductNumberField] = value;
   }
   const codes = Object.keys(out);
   if (codes.length === 0) return undefined;
@@ -148,6 +157,8 @@ export function readProductFields(
       price: p.price ?? NaN,
       productionPlan: p.productionPlan ?? NaN,
       ...(p.marketingBudget !== undefined ? { marketingBudget: p.marketingBudget } : {}),
+      ...(p.qualityBudget !== undefined ? { qualityBudget: p.qualityBudget } : {}),
+      ...(p.supplierChoice !== undefined ? { supplierChoice: p.supplierChoice } : {}),
     };
   }
   return products;

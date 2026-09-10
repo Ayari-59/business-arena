@@ -268,21 +268,28 @@ function OptionalField({
 }
 
 /**
- * GAMME : un prix, un volume et un marketing PAR RÉFÉRENCE. Chaque ligne
- * rappelle ce qu'il faut pour décider — le prix usuel de la clientèle
- * dominante, le coût variable, le stock en réserve et la saison du tour —,
- * parce que c'est ici que se joue le mix. Les scalaires historiques (prix
- * moyen, volume total) sont dérivés côté serveur : aucun champ scalaire n'est
- * envoyé pour ces trois décisions.
+ * GAMME : un prix, un volume, un marketing — et, quand le niveau et le
+ * scénario les ouvrent, un budget qualité et un fournisseur — PAR RÉFÉRENCE.
+ * Chaque ligne rappelle ce qu'il faut pour décider — le prix usuel de la
+ * clientèle dominante, le coût variable, le stock en réserve et la saison du
+ * tour —, parce que c'est ici que se joue le mix. Les scalaires historiques
+ * (prix moyen, volume total, qualité totale, fournisseur dominant) sont
+ * dérivés côté serveur : aucun champ scalaire n'est envoyé pour ces décisions.
  */
 function GammeFields({
   gamme,
   defaults,
   vocabulary: v,
+  quality,
+  suppliers,
 }: {
   gamme: NonNullable<GameView["gamme"]>;
   defaults: RoundDecisions;
   vocabulary: ScenarioVocabulary;
+  /** Le budget qualité est-il ouvert à ce niveau ? */
+  quality: boolean;
+  /** Fournisseurs du scénario (null : pas de choix). */
+  suppliers: { code: string; name: string; costMultiplier: number; qualityBonus: number }[] | null;
 }) {
   const n = gamme.length;
   return (
@@ -293,7 +300,9 @@ function GammeFields({
             <th className="pb-2 pr-3 font-medium">Référence</th>
             <th className="pb-2 pr-3 font-medium">{v.priceLabel}</th>
             <th className="pb-2 pr-3 font-medium">{v.productionPlanLabel}</th>
-            <th className="pb-2 font-medium">Marketing</th>
+            <th className="pb-2 pr-3 font-medium">Marketing</th>
+            {quality ? <th className="pb-2 pr-3 font-medium">Qualité</th> : null}
+            {suppliers ? <th className="pb-2 font-medium">Fournisseur</th> : null}
           </tr>
         </thead>
         <tbody>
@@ -302,6 +311,8 @@ function GammeFields({
             const price = own?.price ?? p.refPrice;
             const plan = Math.round(own?.productionPlan ?? 0);
             const marketing = Math.round(own?.marketingBudget ?? defaults.marketingBudget / n);
+            const qualite = Math.round(own?.qualityBudget ?? defaults.qualityBudget / n);
+            const fournisseur = own?.supplierChoice ?? defaults.supplierChoice ?? suppliers?.[0]?.code;
             const cvu = p.materialCostPerUnit + p.otherVariableCostPerUnit;
             return (
               <tr key={p.code} className="border-t border-white/5 align-top">
@@ -346,7 +357,7 @@ function GammeFields({
                     <span className="text-xs text-slate-400">{v.units}</span>
                   </span>
                 </td>
-                <td className="py-2">
+                <td className="py-2 pr-3">
                   <span className="flex items-center gap-1 rounded-lg border border-white/10 bg-slate-950 px-2 py-1.5 focus-within:border-amber-400/60">
                     <input
                       type="number"
@@ -361,6 +372,45 @@ function GammeFields({
                     <span className="text-xs text-slate-400">€</span>
                   </span>
                 </td>
+                {quality ? (
+                  <td className="py-2 pr-3">
+                    <span className="flex items-center gap-1 rounded-lg border border-white/10 bg-slate-950 px-2 py-1.5 focus-within:border-amber-400/60">
+                      <input
+                        type="number"
+                        name={productFieldName(p.code, "qualityBudget")}
+                        aria-label={`Qualité · ${p.name}`}
+                        defaultValue={qualite}
+                        step={1}
+                        min={0}
+                        required
+                        className="w-20 bg-transparent text-sm text-slate-100 outline-none"
+                      />
+                      <span className="text-xs text-slate-400">€</span>
+                    </span>
+                  </td>
+                ) : null}
+                {suppliers ? (
+                  <td className="py-2">
+                    <select
+                      name={productFieldName(p.code, "supplierChoice")}
+                      aria-label={`Fournisseur · ${p.name}`}
+                      defaultValue={fournisseur}
+                      className="w-full min-w-36 rounded-lg border border-white/10 bg-slate-950 px-2 py-1.5 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+                    >
+                      {suppliers.map((s) => (
+                        <option key={s.code} value={s.code}>
+                          {s.name}
+                          {s.costMultiplier !== 1
+                            ? ` · ${s.costMultiplier < 1 ? "" : "+"}${Math.round((s.costMultiplier - 1) * 100)} %`
+                            : ""}
+                          {s.qualityBonus !== 0
+                            ? ` · qualité ${s.qualityBonus > 0 ? "+" : ""}${Math.round(s.qualityBonus * 100)} %`
+                            : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                ) : null}
               </tr>
             );
           })}
@@ -370,6 +420,12 @@ function GammeFields({
         Les références partagent la même réserve : si la somme des volumes dépasse votre
         capacité, toutes sont réduites dans la même proportion. Le prix se fixe référence
         par référence ; le marketing soutient la demande de chacune.
+        {quality
+          ? " Le budget qualité fait la qualité de la référence qui le reçoit : réparti à parts égales, il vaut ce qu'il valait pour toute la gamme ; concentré, il distingue une référence."
+          : ""}
+        {suppliers
+          ? " Chaque référence a son fournisseur : son coût d'achat, son bonus de qualité, son délai de règlement et son risque de rupture ne touchent qu'elle."
+          : ""}
       </p>
     </div>
   );
@@ -771,7 +827,13 @@ export function DecisionForm({
       ) : null}
       {gamme ? (
         <Family legend="🎯 Vos ventes · le prix, le volume et le marketing de chaque référence" defaultOpen>
-          <GammeFields gamme={gamme} defaults={defaults} vocabulary={v} />
+          <GammeFields
+            gamme={gamme}
+            defaults={defaults}
+            vocabulary={v}
+            quality={on.quality}
+            suppliers={suppliersOffer && suppliersOffer.length > 0 ? suppliersOffer : null}
+          />
         </Family>
       ) : (
         <Family legend="🎯 Vos ventes · le prix et le volume du tour" defaultOpen>
@@ -830,19 +892,27 @@ export function DecisionForm({
           tone="border-emerald-400/25 bg-emerald-950/20"
           legendClass="text-xs font-semibold uppercase tracking-wide text-emerald-300"
         >
+          {gamme ? (
+            <p className="mb-2 text-xs leading-relaxed text-emerald-200/80">
+              En gamme, le fournisseur se choisit référence par référence, dans le tableau
+              de vos ventes. Voici ce que chacun propose.
+            </p>
+          ) : null}
           <div className="space-y-2">
             {suppliersOffer.map((s) => (
               <label
                 key={s.code}
                 className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-2.5 py-2"
               >
-                <input
-                  type="radio"
-                  name="supplierChoice"
-                  value={s.code}
-                  defaultChecked={(defaults.supplierChoice ?? suppliersOffer[0]?.code) === s.code}
-                  className="mt-0.5 h-4 w-4 accent-emerald-400"
-                />
+                {gamme ? null : (
+                  <input
+                    type="radio"
+                    name="supplierChoice"
+                    value={s.code}
+                    defaultChecked={(defaults.supplierChoice ?? suppliersOffer[0]?.code) === s.code}
+                    className="mt-0.5 h-4 w-4 accent-emerald-400"
+                  />
+                )}
                 <span>
                   <span className="text-sm font-medium text-slate-200">
                     {s.name} · {v.materialLabel.toLowerCase()} à{" "}
@@ -897,7 +967,13 @@ export function DecisionForm({
       >
       <Family legend="🏭 Production · qualité & maintenance" defaultOpen>
         <div className="grid grid-cols-2 gap-3">
-          {on.quality ? (
+          {on.quality && gamme ? (
+            // En gamme, la qualité se décide référence par référence (étape « Vendre »).
+            <p className="text-xs leading-relaxed text-slate-400">
+              Le budget qualité se décide référence par référence, dans le tableau de vos
+              ventes ; la maintenance reste commune à la réserve.
+            </p>
+          ) : on.quality ? (
             <Field name="qualityBudget" label="Budget qualité" defaultValue={defaults.qualityBudget} suffix="€" />
           ) : (
             <input type="hidden" name="qualityBudget" value={defaults.qualityBudget} />

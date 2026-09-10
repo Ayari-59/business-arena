@@ -39,6 +39,8 @@ export interface GammeDecision {
   price: number;
   productionPlan: number;
   marketingBudget: number;
+  qualityBudget: number;
+  supplierChoice?: string;
 }
 
 /** Le scénario simule-t-il une gamme (≥ 2 produits) ? */
@@ -109,14 +111,18 @@ export function mapGammeSegments(
 
 /**
  * Les décisions par produit, dans l'ordre de la gamme, à partir des décisions
- * DÉJÀ BORNÉES du tour (prix, plan et marketing ≥ 0). Mono-produit : on
- * recopie les scalaires. Gamme : l'entrée `products[code]` fait foi ; un
- * produit sans entrée reçoit le prix scalaire et une part égale du plan et du
- * marketing scalaires — c'est ce qui permet à un bot ou à une reconduction
- * mono-produit de jouer une gamme sans la connaître.
+ * DÉJÀ BORNÉES du tour (prix, plan, marketing et qualité ≥ 0). Mono-produit :
+ * on recopie les scalaires. Gamme : l'entrée `products[code]` fait foi ; un
+ * produit sans entrée reçoit le prix et le fournisseur scalaires et une part
+ * égale du plan, du marketing et de la qualité scalaires — c'est ce qui permet
+ * à un bot ou à une reconduction mono-produit de jouer une gamme sans la
+ * connaître.
  */
 export function toGammeDecisions(
-  decisions: Pick<RoundDecisions, "price" | "productionPlan" | "marketingBudget" | "products">,
+  decisions: Pick<
+    RoundDecisions,
+    "price" | "productionPlan" | "marketingBudget" | "qualityBudget" | "supplierChoice" | "products"
+  >,
   gamme: GammeProduct[],
 ): GammeDecision[] {
   if (gamme.length === 1) {
@@ -125,31 +131,45 @@ export function toGammeDecisions(
         price: decisions.price,
         productionPlan: decisions.productionPlan,
         marketingBudget: decisions.marketingBudget,
+        qualityBudget: decisions.qualityBudget,
+        ...(decisions.supplierChoice !== undefined ? { supplierChoice: decisions.supplierChoice } : {}),
       },
     ];
   }
   const n = gamme.length;
   return gamme.map((p) => {
     const own = decisions.products?.[p.code];
+    const supplierChoice = own?.supplierChoice ?? decisions.supplierChoice;
     return {
       price: Math.max(0, own?.price ?? decisions.price),
       productionPlan: Math.max(0, own?.productionPlan ?? decisions.productionPlan / n),
       marketingBudget: Math.max(0, own?.marketingBudget ?? decisions.marketingBudget / n),
+      qualityBudget: Math.max(0, own?.qualityBudget ?? decisions.qualityBudget / n),
+      ...(supplierChoice !== undefined ? { supplierChoice } : {}),
     };
   });
 }
 
 /**
  * Les scalaires d'une décision à gamme, dérivés des décisions par produit :
- * le plan est la somme des plans, le marketing la somme des budgets, le prix
- * la moyenne des prix pondérée par les plans (simple moyenne si tous les plans
- * sont nuls). Le formulaire et l'action serveur en font le MÊME usage — c'est
- * ce qui permet de comparer une saisie à la proposition sur les pivots
+ * le plan est la somme des plans, le marketing et la qualité la somme des
+ * budgets, le prix la moyenne des prix pondérée par les plans (simple moyenne
+ * si tous les plans sont nuls), le fournisseur celui de la référence au plan
+ * le plus fort. La qualité et le fournisseur ne sont dérivés que si au moins
+ * une référence les porte (sinon les champs scalaires du formulaire font
+ * foi). Le formulaire et l'action serveur en font le MÊME usage — c'est ce
+ * qui permet de comparer une saisie à la proposition sur les pivots
  * historiques (`price`, `productionPlan`) sans connaître la gamme.
  */
 export function scalarsOfGamme(
-  products: Record<ProductCode, Pick<ProductDecisions, "price" | "productionPlan" | "marketingBudget">>,
-): Pick<RoundDecisions, "price" | "productionPlan" | "marketingBudget"> {
+  products: Record<
+    ProductCode,
+    Pick<ProductDecisions, "price" | "productionPlan" | "marketingBudget" | "qualityBudget" | "supplierChoice">
+  >,
+): Pick<RoundDecisions, "price" | "productionPlan" | "marketingBudget"> & {
+  qualityBudget?: number;
+  supplierChoice?: string;
+} {
   const entries = Object.values(products);
   const productionPlan = entries.reduce((s, p) => s + Math.max(0, p.productionPlan), 0);
   const marketingBudget = entries.reduce((s, p) => s + Math.max(0, p.marketingBudget ?? 0), 0);
@@ -159,5 +179,23 @@ export function scalarsOfGamme(
       : entries.length > 0
         ? entries.reduce((s, p) => s + p.price, 0) / entries.length
         : 0;
-  return { price, productionPlan, marketingBudget };
+  const withQuality = entries.filter((p) => p.qualityBudget !== undefined);
+  const qualityBudget =
+    withQuality.length > 0
+      ? withQuality.reduce((s, p) => s + Math.max(0, p.qualityBudget ?? 0), 0)
+      : undefined;
+  const withSupplier = entries.filter((p) => p.supplierChoice !== undefined);
+  const supplierChoice =
+    withSupplier.length > 0
+      ? withSupplier.reduce((best, p) =>
+          Math.max(0, p.productionPlan) > Math.max(0, best.productionPlan) ? p : best,
+        ).supplierChoice
+      : undefined;
+  return {
+    price,
+    productionPlan,
+    marketingBudget,
+    ...(qualityBudget !== undefined ? { qualityBudget } : {}),
+    ...(supplierChoice !== undefined ? { supplierChoice } : {}),
+  };
 }

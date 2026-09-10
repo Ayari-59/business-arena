@@ -292,7 +292,9 @@ export function PeriodDashboard({
                         <th className="pb-2 pr-2 text-right font-medium">Manqué</th>
                         <th className="pb-2 pr-2 text-right font-medium">CA</th>
                         <th className="pb-2 pr-2 text-right font-medium">Marge / u</th>
-                        <th className="pb-2 text-right font-medium">{view.vocabulary.leftoverLabel}</th>
+                        <th className="pb-2 pr-2 text-right font-medium">{view.vocabulary.leftoverLabel}</th>
+                        <th className="pb-2 pr-2 text-right font-medium">Qualité perçue</th>
+                        {view.suppliersOffer ? <th className="pb-2 font-medium">Fournisseur</th> : null}
                       </tr>
                     </thead>
                     <tbody className="text-slate-300">
@@ -302,7 +304,14 @@ export function PeriodDashboard({
                         const marge = p.price - p.unitVariableCost;
                         return (
                           <tr key={g.code} className="border-t border-white/5">
-                            <td className="py-2 pr-2 text-slate-100">{g.name}</td>
+                            <td className="py-2 pr-2 text-slate-100">
+                              {g.name}
+                              {p.supplier?.supplyDisruption ? (
+                                <span className="ml-1 text-xs text-red-400" title="Rupture d'approvisionnement ce tour">
+                                  ⚠︎ rupture
+                                </span>
+                              ) : null}
+                            </td>
                             <td className="py-2 pr-2 text-right tabular-nums">{formatEuro(p.price)}</td>
                             <td className="py-2 pr-2 text-right tabular-nums">{formatUnits(p.produced)}</td>
                             <td className="py-2 pr-2 text-right tabular-nums">{formatUnits(p.sold)}</td>
@@ -313,7 +322,15 @@ export function PeriodDashboard({
                             <td className={`py-2 pr-2 text-right tabular-nums ${marge < 0 ? "text-red-400" : ""}`}>
                               {formatEuro(marge)}
                             </td>
-                            <td className="py-2 text-right tabular-nums">{formatUnits(p.stock.quantity)}</td>
+                            <td className="py-2 pr-2 text-right tabular-nums">{formatUnits(p.stock.quantity)}</td>
+                            <td className="py-2 pr-2 text-right tabular-nums">
+                              {p.perceivedQuality !== undefined
+                                ? `${Math.round(p.perceivedQuality * 100)} %`
+                                : "—"}
+                            </td>
+                            {view.suppliersOffer ? (
+                              <td className="py-2 text-slate-300">{p.supplier?.name ?? "—"}</td>
+                            ) : null}
                           </tr>
                         );
                       })}
@@ -321,9 +338,11 @@ export function PeriodDashboard({
                   </table>
                 </div>
                 <p className="mt-2 text-xs leading-relaxed text-slate-400">
-                  La marge par unité est le prix moins le coût variable de la référence. Ce
-                  qu&apos;une référence rapporte, c&apos;est cette marge multipliée par ce qu&apos;elle
-                  vend : le mix décide autant que le volume.
+                  La marge par unité est le prix moins le coût variable de la référence, au
+                  prix d&apos;achat de son fournisseur. Ce qu&apos;une référence rapporte, c&apos;est
+                  cette marge multipliée par ce qu&apos;elle vend : le mix décide autant que le
+                  volume. La qualité perçue (100 % = la référence du secteur) suit, avec
+                  inertie, le budget qualité et le fournisseur de chaque référence.
                 </p>
               </section>
             ) : null}

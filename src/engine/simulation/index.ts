@@ -302,9 +302,22 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     machineCapacity: number;
     laborCapacity: number;
     utilizationRate: number;
+    /** Qualité produite de l'entreprise (mono : celle du produit ; gamme : moyenne pondérée). */
     producedQuality: number;
+    /** Qualité produite par produit (mono : [producedQuality]). */
+    productQuality: number[];
+    /** Qualité perçue d'OUVERTURE par produit (mono : [state.perceivedQuality]). */
+    productPerceived: number[];
+    /** Budget qualité total du tour (mono : le scalaire ; gamme : somme des références). */
+    qualityTotal: number;
+    /** Fournisseur de chaque produit (mono : [supplier]). */
+    productSuppliers: (import("../types").SupplierDef | null)[];
+    /** Rupture d'approvisionnement subie par chaque produit. */
+    productDisruptions: boolean[];
     /** Coût variable unitaire par produit (mono : [unitCost]). */
     unitCosts: number[];
+    /** Multiplicateur du coût matières par produit (mono : [materialMultiplier]). */
+    materialMultipliers: number[];
     /** Stocks d'ouverture et de fin de production, par produit. */
     openingStocks: StockLot[];
     productStocks: StockLot[];
@@ -330,7 +343,6 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     chosenFormula: import("../types").InsuranceFormulaDef | null;
     supplier: import("../types").SupplierDef | null;
     supplyDisruption: boolean;
-    supplierQualityBonus: number;
     // Engagement RSE (Lot 2). Les EFFETS (facteur image, réduction rebuts) sont
     // dérivés du capital d'OUVERTURE — différés. Les CAPITAUX « next » intègrent
     // la dépense de ce tour et alimentent l'état suivant.
@@ -452,16 +464,29 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       : [];
     const companyEvents = insured ? active.filter((e) => !covered.has(e.code)) : active;
     const mods = effectiveModifiers(companyEvents, state.id);
-    // Fournisseur choisi (doc 02 §5bis) : coût, qualité, risque de rupture
+    // Décisions par produit (mono : les scalaires bornés ci-dessus, recopiés).
+    const gammeDecisions = toGammeDecisions(decisions, gamme);
+    // Fournisseur choisi (doc 02 §5bis) : coût, qualité, délai, risque de
+    // rupture. Mono-produit : le fournisseur scalaire. Gamme : chaque
+    // référence a le sien (`products[code].supplierChoice`, sinon le
+    // scalaire) ; le fournisseur scalaire reste celui du bloc d'entreprise.
     const suppliers = scenario.suppliers;
-    const supplier = suppliers
-      ? (suppliers.find((s) => s.code === decisions.supplierChoice) ?? suppliers[0]!)
-      : null;
-    const supplierCostMul = supplier?.costMultiplier ?? 1;
-    const supplierQualityBonus = supplier?.qualityBonus ?? 0;
-    const supplyDisruption = supplier && supplier.supplyRiskProbability > 0
-      ? rng.next() < supplier.supplyRiskProbability
-      : false;
+    const resolveSupplier = (code: string | undefined) =>
+      suppliers ? (suppliers.find((s) => s.code === code) ?? suppliers[0]!) : null;
+    const supplier = resolveSupplier(decisions.supplierChoice);
+    const productSuppliers = multi ? gammeDecisions.map((d) => resolveSupplier(d.supplierChoice)) : [supplier];
+    // La rupture se tire UNE fois par fournisseur réellement utilisé, dans
+    // l'ordre de la gamme (mono : le seul tirage historique).
+    const disruptionBySupplier = new Map<string, boolean>();
+    for (const s of productSuppliers) {
+      if (!s || disruptionBySupplier.has(s.code)) continue;
+      disruptionBySupplier.set(
+        s.code,
+        s.supplyRiskProbability > 0 ? rng.next() < s.supplyRiskProbability : false,
+      );
+    }
+    const productDisruptions = productSuppliers.map((s) => (s ? (disruptionBySupplier.get(s.code) ?? false) : false));
+    const supplyDisruption = supplier ? (disruptionBySupplier.get(supplier.code) ?? false) : false;
     const supplyAvailabilityHit = supplyDisruption ? (supplier?.supplyRiskAvailabilityHit ?? 1) : 1;
     // Capacité machine : soit calculée du parc typé, soit homogène (legacy).
     const effectiveMachineCapacity = scenario.equipment
@@ -470,29 +495,57 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
           new Map(scenario.equipment.types.map((t) => [t.code, t])),
         )
       : state.machineCapacity + (state.pendingCapacity ?? 0);
-    // Décisions par produit (mono : les scalaires bornés ci-dessus, recopiés).
-    const gammeDecisions = toGammeDecisions(decisions, gamme);
+    // Mono-produit : la rupture ampute la disponibilité de l'usine (chemin
+    // historique). Gamme : elle ampute le plan des SEULES références que le
+    // fournisseur défaillant fournit — les autres ne sont pas touchées.
     const production = allocateProduction({
       gamme,
-      plans: gammeDecisions.map((d) => d.productionPlan),
+      plans: multi
+        ? gammeDecisions.map((d, k) =>
+            d.productionPlan *
+            (productDisruptions[k]! ? (productSuppliers[k]?.supplyRiskAvailabilityHit ?? 1) : 1),
+          )
+        : gammeDecisions.map((d) => d.productionPlan),
       machineCapacity: effectiveMachineCapacity,
-      availability: state.availability * mods.availabilityMultiplier * supplyAvailabilityHit,
+      availability:
+        state.availability * mods.availabilityMultiplier * (multi ? 1 : supplyAvailabilityHit),
       headcount: state.headcount,
       hoursPerEmployee: state.hoursPerEmployee,
       productivity: state.productivity * hr.morale,
     });
-    const producedQuality = computeProducedQuality({
-      qualityBudget: decisions.qualityBudget,
-      qualitySensitivity: scenario.production.qualitySensitivity,
-      qualityScale: scenario.production.qualityScale,
-      utilizationRate: production.utilizationRate,
-      overheatThreshold: scenario.production.overheatThreshold,
-    });
-    const materialMultiplier = mods.materialCostMultiplier * supplierCostMul;
+    // Qualité produite PAR PRODUIT. En gamme, l'échelle du budget qualité est
+    // divisée par le nombre de références : un budget réparti à parts égales
+    // donne à chacune exactement la qualité que le scalaire donnait à
+    // l'entreprise ; concentré sur une référence, il la distingue.
+    const qualityScale = multi
+      ? scenario.production.qualityScale / gamme.length
+      : scenario.production.qualityScale;
+    const productQuality = gammeDecisions.map((d) =>
+      computeProducedQuality({
+        qualityBudget: d.qualityBudget,
+        qualitySensitivity: scenario.production.qualitySensitivity,
+        qualityScale,
+        utilizationRate: production.utilizationRate,
+        overheatThreshold: scenario.production.overheatThreshold,
+      }),
+    );
+    const producedQuality = multi
+      ? weightedAverage(productQuality, production.perProduct)
+      : productQuality[0]!;
+    const qualityTotal = multi ? sumExact(gammeDecisions.map((d) => d.qualityBudget)) : decisions.qualityBudget;
+    // Qualité perçue d'ouverture par produit : en gamme, celle de la
+    // référence si elle est suivie, sinon celle de l'entreprise.
+    const productPerceived = gamme.map((p) =>
+      multi ? (state.perceivedQualityByProduct?.[p.code] ?? state.perceivedQuality) : state.perceivedQuality,
+    );
+    const materialMultiplier = mods.materialCostMultiplier * (supplier?.costMultiplier ?? 1);
+    const materialMultipliers = multi
+      ? productSuppliers.map((s) => mods.materialCostMultiplier * (s?.costMultiplier ?? 1))
+      : [materialMultiplier];
     // Coût variable unitaire de chaque produit (mono : le seul, expression
     // historique inchangée).
-    const unitCosts = gamme.map((p) =>
-      unitVariableCost(p.materialCostPerUnit * materialMultiplier, p.otherVariableCostPerUnit),
+    const unitCosts = gamme.map((p, k) =>
+      unitVariableCost(p.materialCostPerUnit * materialMultipliers[k]!, p.otherVariableCostPerUnit),
     );
     // --- Engagement RSE (Lot 2) ---
     // La dépense de CE tour est une charge décaissée (comme le marketing) et
@@ -538,25 +591,29 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     // produite — payés (matières, MOD) mais invendables : seul le net entre
     // en stock, la perte est valorisée au coût variable. Le capital « process
     // propre » RSE en retranche une part (effet différé, capital d'ouverture).
-    const defectRate = scenario.qualityCosts
-      ? computeDefectRate({
-          baseDefectRate: scenario.qualityCosts.baseDefectRate,
-          producedQuality,
-          rseDefectReduction,
-          // La maintenance n'agit sur les rebuts que si le scénario l'active
-          // (maintenanceDefectSensitivity > 0) ; sinon facteur neutre, comportement
-          // historique. Référence : budget de maintenance de référence du scénario.
-          maintenanceBudget: decisions.maintenanceBudget,
-          maintenanceReference: scenario.production.maintenanceReference,
-          maintenanceDefectSensitivity: scenario.qualityCosts.maintenanceDefectSensitivity,
-        })
-      : 0;
+    // Taux de rebut PAR PRODUIT : la qualité produite de chaque référence
+    // (mono : le seul, sur la qualité produite historique).
+    const productDefectRate = productQuality.map((quality) =>
+      scenario.qualityCosts
+        ? computeDefectRate({
+            baseDefectRate: scenario.qualityCosts.baseDefectRate,
+            producedQuality: quality,
+            rseDefectReduction,
+            // La maintenance n'agit sur les rebuts que si le scénario l'active
+            // (maintenanceDefectSensitivity > 0) ; sinon facteur neutre, comportement
+            // historique. Référence : budget de maintenance de référence du scénario.
+            maintenanceBudget: decisions.maintenanceBudget,
+            maintenanceReference: scenario.production.maintenanceReference,
+            maintenanceDefectSensitivity: scenario.qualityCosts.maintenanceDefectSensitivity,
+          })
+        : 0,
+    );
     // Rebuts et entrée en stock, PRODUIT PAR PRODUIT (mono : expressions
     // historiques sur le produit unique et le lot `finishedGoods`).
     const openingStocks: StockLot[] = gamme.map((p) =>
       multi ? (state.finishedGoodsByProduct?.[p.code] ?? { quantity: 0, unitCost: 0 }) : state.finishedGoods,
     );
-    const productDefectUnits = production.perProduct.map((q) => q * defectRate);
+    const productDefectUnits = production.perProduct.map((q, k) => q * productDefectRate[k]!);
     const productScrap = productDefectUnits.map((d, k) => d * unitCosts[k]!);
     const productStocks = production.perProduct.map((q, k) =>
       addToStock(openingStocks[k]!, q - productDefectUnits[k]!, unitCosts[k]!),
@@ -667,7 +724,13 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       laborCapacity: production.laborCapacity,
       utilizationRate: production.utilizationRate,
       producedQuality,
+      productQuality,
+      productPerceived,
+      qualityTotal,
+      productSuppliers,
+      productDisruptions,
       unitCosts,
+      materialMultipliers,
       openingStocks,
       productStocks,
       productDefectUnits,
@@ -692,7 +755,6 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       chosenFormula,
       supplier,
       supplyDisruption,
-      supplierQualityBonus,
       rseBudget,
       rseInvestment,
       rseCost,
@@ -728,7 +790,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
           : attractionScore({
               price: w.gamme[k]!.price,
               marketingBudget: w.gamme[k]!.marketingBudget,
-              perceivedQuality: w.state.perceivedQuality,
+              // La qualité perçue DE LA RÉFÉRENCE (mono : celle de l'entreprise).
+              perceivedQuality: w.productPerceived[k]!,
               lastShare: w.state.lastMarketShare[segment.code] ?? 0,
               segment,
               marketingScale: scenario.marketing.scale,
@@ -853,15 +916,17 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
 
     // Non-qualité externe : retours clients fonction de la qualité perçue,
     // remboursés au prix de vente (unités détruites — la marge part entière).
-    const returnRate = scenario.qualityCosts
-      ? Math.min(
-          0.3,
-          scenario.qualityCosts.externalReturnSensitivity *
-            Math.max(0, 1 - w.state.perceivedQuality),
-        )
-      : 0;
-    const productReturned = productSegmentUnits.map((u) =>
-      scenario.qualityCosts ? u * returnRate : 0,
+    // Le taux de retour est celui de chaque référence (mono : de l'entreprise).
+    const productReturnRate = w.productPerceived.map((perceived) =>
+      scenario.qualityCosts
+        ? Math.min(
+            0.3,
+            scenario.qualityCosts.externalReturnSensitivity * Math.max(0, 1 - perceived),
+          )
+        : 0,
+    );
+    const productReturned = productSegmentUnits.map((u, k) =>
+      scenario.qualityCosts ? u * productReturnRate[k]! : 0,
     );
     const returnedUnits = sumExact(productReturned);
     const refund = sumExact(productReturned.map((r, k) => r * w.gamme[k]!.price));
@@ -904,11 +969,20 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const cogs = cogsFromStock + subcontractCost + w.scrapValue + spoiled;
     const inventoryChange =
       sumExact(finalStocks.map(stockValue)) - sumExact(w.openingStocks.map(stockValue));
-    const purchases = sumExact(
-      w.producedPerProduct.map(
-        (q, k) => q * gamme[k]!.materialCostPerUnit * w.materialMultiplier,
-      ),
+    // Achats de matières au coût du fournisseur DE CHAQUE RÉFÉRENCE (mono : le
+    // multiplicateur unique, expression historique).
+    const productPurchases = w.producedPerProduct.map(
+      (q, k) => q * gamme[k]!.materialCostPerUnit * w.materialMultipliers[k]!,
     );
+    const purchases = sumExact(productPurchases);
+    // Délai de règlement fournisseur : celui du fournisseur (mono), ou la
+    // moyenne des délais des fournisseurs de chaque référence pondérée par
+    // ses achats (gamme).
+    const payableRatioOf = (s: import("../types").SupplierDef | null) =>
+      Math.min(1, (s?.paymentDelayDays ?? scenario.finance.supplierPaymentDelayDays) / scenario.roundDays);
+    const payableRatio = multi
+      ? weightedAverage(w.productSuppliers.map(payableRatioOf), productPurchases)
+      : payableRatioOf(w.supplier);
     // La sous-traitance est décaissée avec les autres charges variables
     // (cohérence : achats + variables décaissés = coût des ventes + Δ stock).
     const otherVariableCash =
@@ -1016,13 +1090,13 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       revenue,
       receivableRatio,
       purchases,
-      payableRatio: Math.min(1, (w.supplier?.paymentDelayDays ?? scenario.finance.supplierPaymentDelayDays) / scenario.roundDays),
+      payableRatio,
       otherVariableCash,
       inventoryChange,
       cogs,
       commissionCost,
       marketingCost: marketingTotal,
-      qualityCost: w.decisions.qualityBudget,
+      qualityCost: w.qualityTotal,
       maintenanceCost: w.decisions.maintenanceBudget,
       // Faillite : entreprise gelée, aucune dépense — donc pas d'engagement RSE.
       rseCost: gelee ? 0 : w.rseCost,
@@ -1139,7 +1213,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       studiesCost +
       finance.incomeStatement.depreciation +
       marketingTotal +
-      w.decisions.qualityBudget +
+      w.qualityTotal +
       w.decisions.maintenanceBudget;
     // Seuil : en gamme, prix moyen pondéré par les unités vendues et coût
     // variable moyen pondéré par les unités produites (mono : les valeurs du
@@ -1158,6 +1232,23 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     // commandes fermes s'ajoutent au CA sans gonfler la part de marché).
     const totalShare = totalPotential > 0 ? segmentUnits / totalPotential : 0;
     totalSold += soldUnits;
+
+    // Qualité perçue de fin de tour, PAR RÉFÉRENCE. Le bonus qualité du
+    // fournisseur s'applique à la qualité PRODUITE ce tour, avant lissage — et
+    // non en addition APRÈS l'inertie. Ajouté après, il se composait :
+    // `previous` contenant déjà le bonus des tours passés, l'effet réel valait
+    // bonus/(1-inertie) au point fixe (×2,5 en nova) et persistait plusieurs
+    // tours après un changement de fournisseur. Fondu dans le produit, l'effet
+    // à l'équilibre vaut exactement le bonus, et il décroît normalement par
+    // inertie dès qu'on quitte le fournisseur. (Mono : le produit unique et
+    // le fournisseur scalaire — expression historique.)
+    const productNextPerceived = w.productPerceived.map((previous, k) =>
+      updatePerceivedQuality(
+        previous,
+        w.productQuality[k]! + (w.productSuppliers[k]?.qualityBonus ?? 0),
+        scenario.production.qualityInertia,
+      ),
+    );
 
     results[w.state.id] = {
       companyId: w.state.id,
@@ -1191,6 +1282,20 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
                   unitVariableCost: w.unitCosts[k]!,
                   price: w.gamme[k]!.price,
                   marketingBudget: w.gamme[k]!.marketingBudget,
+                  qualityBudget: w.gamme[k]!.qualityBudget,
+                  producedQuality: w.productQuality[k]!,
+                  perceivedQuality: productNextPerceived[k]!,
+                  ...(w.productSuppliers[k]
+                    ? {
+                        supplier: {
+                          code: w.productSuppliers[k]!.code,
+                          name: w.productSuppliers[k]!.name,
+                          costMultiplier: w.productSuppliers[k]!.costMultiplier,
+                          qualityBonus: w.productSuppliers[k]!.qualityBonus,
+                          supplyDisruption: w.productDisruptions[k]!,
+                        },
+                      }
+                    : {}),
                   sold: productSegmentUnits[k]!,
                   lost: productLost[k]!,
                   revenue: productSegmentRevenue[k]!,
@@ -1272,7 +1377,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       ...(scenario.qualityCosts
         ? {
             qualityCosts: {
-              prevention: w.decisions.qualityBudget,
+              prevention: w.qualityTotal,
               internalFailure: w.scrapValue,
               externalFailure: refund,
               defectUnits: w.defectUnits,
@@ -1430,18 +1535,18 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       ...(w.rseNextCleanCapital > 0 || w.state.rseCleanCapital !== undefined
         ? { rseCleanCapital: w.rseNextCleanCapital }
         : {}),
-      // Le bonus qualité du fournisseur s'applique à la qualité PRODUITE ce
-      // tour, avant lissage — et non en addition APRÈS l'inertie. Ajouté après,
-      // il se composait : `previous` contenant déjà le bonus des tours passés,
-      // l'effet réel valait bonus/(1-inertie) au point fixe (×2,5 en nova) et
-      // persistait plusieurs tours après un changement de fournisseur. Fondu
-      // dans le produit, l'effet à l'équilibre vaut exactement le bonus, et il
-      // décroît normalement par inertie dès qu'on quitte le fournisseur.
-      perceivedQuality: updatePerceivedQuality(
-        w.state.perceivedQuality,
-        w.producedQuality + w.supplierQualityBonus,
-        scenario.production.qualityInertia,
-      ),
+      // Gamme : chaque référence suit sa propre qualité perçue ; celle de
+      // l'entreprise en est la moyenne pondérée par les unités produites.
+      perceivedQuality: multi
+        ? weightedAverage(productNextPerceived, w.producedPerProduct)
+        : productNextPerceived[0]!,
+      ...(multi
+        ? {
+            perceivedQualityByProduct: Object.fromEntries(
+              gamme.map((product, k) => [product.code, productNextPerceived[k]!]),
+            ),
+          }
+        : {}),
       availability: updateAvailability({
         current: w.state.availability,
         maintenanceBudget: w.decisions.maintenanceBudget,
