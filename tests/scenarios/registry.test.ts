@@ -569,9 +569,13 @@ describe("les familles de scénarios : un produit ou la gamme, selon le niveau",
     expect(scenarioCodeForLevel("boutique", 2)).toBe("boutique-mono");
     expect(scenarioCodeForLevel("boutique", 3)).toBe("boutique");
     expect(scenarioCodeForLevel("boutique-mono", 5)).toBe("boutique");
+    // L'ESCALE : une nuitée à prix moyen jusqu'au niveau 3, les trois chambres à partir du 4.
+    expect(scenarioCodeForLevel("hotel", 3)).toBe("hotel");
+    expect(scenarioCodeForLevel("hotel", 4)).toBe("hotel-gamme");
+    expect(codes).not.toContain("hotel-gamme");
     // Sans niveau : le plus simple. Hors famille : le code tel quel.
     expect(scenarioCodeForLevel("nova", undefined)).toBe("nova");
-    expect(scenarioCodeForLevel("hotel", 6)).toBe("hotel");
+    expect(scenarioCodeForLevel("bistrot", 6)).toBe("bistrot");
     expect(scenarioCodeForLevel("scenario-enseignant-inconnu", 6)).toBe("scenario-enseignant-inconnu");
     // Une famille ne peut ouvrir la gamme qu'à un niveau qui existe.
     for (const f of SCENARIO_FAMILIES) {

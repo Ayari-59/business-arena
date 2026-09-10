@@ -25,6 +25,8 @@ import { boutiqueMonoBots, boutiqueMonoCompany, boutiqueMonoScenario } from "./b
 import { BOUTIQUE_MONO_SITUATIONS } from "./boutique-mono/situations";
 import { hotelBots, hotelCompany, hotelScenario } from "./hotel";
 import { HOTEL_SITUATIONS } from "./hotel/situations";
+import { hotelGammeBots, hotelGammeCompany, hotelGammeScenario } from "./hotel-gamme";
+import { HOTEL_GAMME_SITUATIONS } from "./hotel-gamme/situations";
 import { bistrotBots, bistrotCompany, bistrotScenario } from "./bistrot";
 import { BISTROT_SITUATIONS } from "./bistrot/situations";
 import { conseilBots, conseilCompany, conseilScenario } from "./conseil";
@@ -508,6 +510,61 @@ export const HOTEL_DEFINITION: ScenarioDefinition = {
   kpis: HOTELLERIE_KPIS,
 };
 
+export const HOTEL_GAMME_DEFINITION: ScenarioDefinition = {
+  code: hotelGammeScenario.code,
+  title: "L'ESCALE · Vendez chaque chambre",
+  sector: "hotellerie",
+  icon: "🏨",
+  shortName: "L'ESCALE · gamme",
+  tagline: "Hôtel 3 étoiles de 60 chambres : standard, supérieures et suites, un même bâtiment.",
+  briefing:
+    "Une chambre vide ce soir est perdue : elle ne se vendra pas deux fois demain. Vos charges tombent que l'hôtel soit plein ou non. Et vous ne vendez pas une nuitée mais trois chambres, chacune à son prix et à sa clientèle : le remplissage compte, le mix des chambres vendues compte autant.",
+  context:
+    "L'hôtel vient d'un exploitant qui affichait un seul prix moyen toute l'année, sans distinguer la suite de la chambre du fond. Les plateformes de réservation apportent des clients, mais prennent leur commission au passage. La saison qui s'ouvre ne remplira pas l'hôtel toute seule, et elle ne remplira pas les trois chambres de la même façon.",
+  dilemma: {
+    question: "Trois chambres, un bâtiment. Faut-il vendre beaucoup de standard à petit prix, ou tenir les supérieures et les suites à leur prix ?",
+    routes: [
+      {
+        label: "Remplir par la standard",
+        gain: "Des chambres occupées plutôt que vides, une clientèle nombreuse, un hôtel qui tourne.",
+        risque: "Le prix moyen descend, les équipes travaillent pour une marge mince, et la suite bradée un jour se vend mal le lendemain.",
+      },
+      {
+        label: "Tenir le haut de gamme",
+        gain: "Chaque nuitée vendue rapporte pleinement, et l'hôtel garde l'image qui fait venir ses clients d'affaires et ses grandes occasions.",
+        risque: "Des chambres restent vides alors que les charges tombent, et les suites ne se vendent pas toutes les nuits.",
+      },
+    ],
+  },
+  playerTeamName: "L'ESCALE",
+  vocabulary: {
+    unit: "nuitée",
+    units: "nuitées",
+    unitsGender: "f",
+    productionLabel: "Ouverture",
+    productionPlanLabel: "Nuitées mises en vente",
+    priceLabel: "Prix par nuitée",
+    leftoverLabel: "Nuitées perdues",
+    capacityPanelTitle: "Capacité d'accueil",
+    capacityLabel: "Chambres ouvertes",
+    capacityBottleneckLabel: "Chambres",
+    capacityBottleneckHint:
+      "Vos chambres limitent le remplissage, tous types confondus : rénover et rouvrir des chambres prend effet au tour suivant.",
+    laborLabel: "Capacité des équipes",
+    laborBottleneckHint:
+      "Vos équipes d'étage et de réception limitent le nombre de chambres exploitables, et une suite demande plus d'heures qu'une standard : envisagez d'embaucher ou de former.",
+    perRoundLabel: "nuitées/tour",
+    materialLabel: "Petit-déjeuner et linge",
+    otherVariableLabel: "Commissions, énergie, ménage",
+    supplierPanelLabel: "Prestataires du séjour",
+  },
+  scenario: hotelGammeScenario,
+  company: hotelGammeCompany,
+  bots: hotelGammeBots,
+  situations: HOTEL_GAMME_SITUATIONS,
+  kpis: HOTELLERIE_KPIS,
+};
+
 export const BISTROT_DEFINITION: ScenarioDefinition = {
   code: bistrotScenario.code,
   title: "LA TABLE D'AUGUSTIN · Tenez le service",
@@ -849,6 +906,7 @@ export const SCENARIOS: ScenarioDefinition[] = [
   BOUTIQUE_DEFINITION,
   BOUTIQUE_MONO_DEFINITION,
   HOTEL_DEFINITION,
+  HOTEL_GAMME_DEFINITION,
   BISTROT_DEFINITION,
   CONSEIL_DEFINITION,
   ECOMMERCE_DEFINITION,
@@ -901,6 +959,15 @@ export const SCENARIO_FAMILIES: readonly ScenarioFamily[] = [
     gammeFromLevel: 3,
     monoLabel: "un seul article de mode",
     gammeLabel: "la gamme de cinq références",
+  },
+  {
+    head: HOTEL_DEFINITION.code,
+    mono: HOTEL_DEFINITION.code,
+    gamme: HOTEL_GAMME_DEFINITION.code,
+    // Le niveau où l'on arbitre : trois prix, trois clientèles, un bâtiment.
+    gammeFromLevel: 4,
+    monoLabel: "une seule nuitée à prix moyen",
+    gammeLabel: "les trois chambres, standard, supérieure et suite",
   },
 ];
 

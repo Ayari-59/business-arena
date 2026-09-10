@@ -116,6 +116,15 @@ const IDENTITES_SCENARIO: Record<string, { accent: AccentSecteur }> = {
       barre: "bg-teal-400",
     },
   },
+  "hotel-gamme": {
+    accent: {
+      bord: "hover:border-fuchsia-400/50",
+      halo: "bg-fuchsia-400/10",
+      texte: "text-fuchsia-300",
+      puce: "border-fuchsia-400/30 bg-fuchsia-950/30 text-fuchsia-200",
+      barre: "bg-fuchsia-400",
+    },
+  },
   "boutique-mono": {
     accent: {
       bord: "hover:border-pink-400/50",
