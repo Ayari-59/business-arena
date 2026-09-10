@@ -516,3 +516,92 @@ describe("la R&D par référence", () => {
     expect(scalarsOfGamme(products!).rdBudget).toBe(28000);
   });
 });
+
+describe("la marque et l'axe de communication", () => {
+  type Props = Parameters<typeof DecisionForm>[0];
+  const boutique = scenarioByCode("boutique");
+  const gamme: NonNullable<Props["gamme"]> = boutique.scenario.products!.map((p) => ({
+    code: p.code,
+    name: p.name,
+    materialCostPerUnit: p.materialCostPerUnit,
+    otherVariableCostPerUnit: p.otherVariableCostPerUnit,
+    hoursPerUnit: p.hoursPerUnit,
+    refPrice: p.market.segments[0]!.refPrice,
+    segments: p.market.segments.map((s) => ({ code: s.code, name: s.name })),
+    seasonCoef: 1,
+    stock: 0,
+    suppliers: null,
+    rd: null,
+  }));
+  const offer: NonNullable<Props["communicationOffer"]> = {
+    axes: [
+      { code: "prix", label: "Le prix", hint: "…" },
+      { code: "qualite", label: "La qualité", hint: "…" },
+    ],
+    brandScale: 8000,
+    brandAwareness: 0.12,
+    lastAxis: "qualite",
+  };
+  const defaults: Props["defaults"] = {
+    price: 50,
+    productionPlan: 4400,
+    marketingBudget: 4500,
+    qualityBudget: 0,
+    maintenanceBudget: 0,
+    brandMarketingBudget: 1500,
+    communicationAxis: "qualite",
+    products: Object.fromEntries(
+      gamme.map((g) => [g.code, { price: g.refPrice, productionPlan: 500, marketingBudget: 600 }]),
+    ),
+  };
+  const rendu = (g: Props["gamme"], extra: Partial<Props> = {}) =>
+    renderToStaticMarkup(
+      createElement(DecisionForm, {
+        gameId: "partie-test",
+        roundIndex: 2,
+        periodName: "tour 2",
+        defaults,
+        kind: "class",
+        alreadySubmitted: false,
+        enabled: presetByLevel.get(3)!.decisions,
+        vocabulary: boutique.vocabulary,
+        gamme: g,
+        communicationOffer: offer,
+        ...extra,
+      }),
+    );
+
+  it("en gamme, propose un budget de marque et un axe, et rappelle la notoriété acquise", () => {
+    const html = rendu(gamme);
+    expect(html).toContain('name="brandMarketingBudget"');
+    expect(html).toContain('value="1500"');
+    expect(html).toContain('name="communicationAxis"');
+    expect(html).toContain("12 % à l&#x27;ouverture");
+    expect(html).toMatch(/<option[^>]*value="qualite"[^>]*selected/);
+  });
+
+  it("en mono-produit, propose l'axe sans budget de marque ; sans levier, rien", () => {
+    const mono = rendu(null, { defaults: { ...defaults, products: undefined, brandMarketingBudget: undefined } });
+    expect(mono).toContain('name="communicationAxis"');
+    expect(mono).not.toContain('name="brandMarketingBudget"');
+    const sans = rendu(gamme, { communicationOffer: null });
+    expect(sans).not.toContain("communicationAxis");
+    expect(sans).not.toContain("brandMarketingBudget");
+  });
+
+  it("l'action relit la marque et l'axe, et refuse un axe inconnu", async () => {
+    const { roundDecisionsSchema } = await import("@/services/decision-schema");
+    const ok = roundDecisionsSchema.safeParse({
+      price: 59, productionPlan: 100, marketingBudget: 0, qualityBudget: 0, maintenanceBudget: 0,
+      brandMarketingBudget: "2500", communicationAxis: "prix",
+    });
+    expect(ok.success).toBe(true);
+    expect(ok.data!.brandMarketingBudget).toBe(2500);
+    expect(ok.data!.communicationAxis).toBe("prix");
+    const ko = roundDecisionsSchema.safeParse({
+      price: 59, productionPlan: 100, marketingBudget: 0, qualityBudget: 0, maintenanceBudget: 0,
+      communicationAxis: "buzz",
+    });
+    expect(ko.success).toBe(false);
+  });
+});

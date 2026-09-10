@@ -381,6 +381,26 @@ export interface EngineScenarioConfig {
     techMax: number;
     techInertia: number;
   };
+  /**
+   * Communication (levier « marque et axe »). Absent : le marketing reste un
+   * budget unique, rien n'est ajouté nulle part. Présent : en gamme, le budget
+   * se scinde en un budget de MARQUE, qui bâtit une notoriété avec inertie au
+   * bénéfice de toute la gamme, et des budgets SPÉCIFIQUES par référence à
+   * effet immédiat ; et l'entreprise choisit un AXE de communication (prix,
+   * qualité, innovation, image). Le même budget rend `axisFit` fois plus
+   * quand l'axe correspond à ce que le segment regarde, `axisMisfit` fois
+   * quand il ne lui parle pas ; un axe prix sur un prix élevé n'est pas
+   * crédible ; changer d'axe use la notoriété acquise.
+   */
+  communication?: {
+    brandScale: number;
+    brandSensitivity: number;
+    brandMax: number;
+    brandInertia: number;
+    axisFit: number;
+    axisMisfit: number;
+    axisSwitchDecay: number;
+  };
   enrichedBots?: boolean;
 }
 
@@ -533,6 +553,13 @@ export interface SegmentConfig {
    */
   commissionRate?: number;
   /**
+   * Adéquation explicite des axes de communication à ce segment (levier
+   * communication) : "fit" quand le segment y est réceptif, "misfit" quand
+   * l'axe ne lui parle pas. À défaut, elle se lit des ressorts du segment
+   * (élasticité pour le prix, sensibilité à la qualité, fidélité pour l'image).
+   */
+  axisAffinity?: Partial<Record<CommunicationAxis, "fit" | "misfit" | "neutral">>;
+  /**
    * Saisonnalité propre au segment (doc 02 §3.1 : Seasonality(s, t)) ;
    * à défaut, la saisonnalité globale du marché s'applique. Un coefficient 0
    * fait apparaître/disparaître le segment (ex. compte-clé à partir du tour 3).
@@ -640,6 +667,9 @@ export interface BalanceSheet {
   vatLiability?: number;
 }
 
+/** Les axes de communication : ce que la marque met en avant. */
+export type CommunicationAxis = "prix" | "qualite" | "innovation" | "image";
+
 export interface ProductRdState {
   /** Budget R&D cumulé sur la référence depuis l'ouverture. */
   invested: number;
@@ -671,6 +701,14 @@ export interface CompanyState {
    * tant que le scénario n'a pas de levier R&D — snapshot inchangé.
    */
   rdByProduct?: Record<ProductCode, ProductRdState>;
+  /**
+   * Notoriété de marque (levier communication) : bâtie par le budget de
+   * marque, avec inertie ; agit sur l'attraction de toute la gamme au tour
+   * SUIVANT. Absente sans levier — snapshot inchangé.
+   */
+  brandAwareness?: number;
+  /** Axe de communication tenu au tour précédent (levier communication). */
+  lastCommunicationAxis?: CommunicationAxis;
   /** Capacité machine totale (unités/tour à 100 % de disponibilité). */
   machineCapacity: number;
   /** Disponibilité machine courante (0..1). */
@@ -785,6 +823,14 @@ export interface RoundDecisions {
    * part égale. Charge décaissée du tour, ligne propre au compte de résultat.
    */
   rdBudget?: number;
+  /**
+   * Budget de MARQUE du tour (levier communication, gamme) : bâtit la
+   * notoriété au bénéfice de toute la gamme ; les budgets par référence
+   * restent le marketing spécifique. Charge du tour, dans la ligne marketing.
+   */
+  brandMarketingBudget?: number;
+  /** Axe de communication du tour (levier communication). Absent : neutre. */
+  communicationAxis?: CommunicationAxis;
   /**
    * Décisions par produit (scénarios à gamme). Absent en mono-produit, où les
    * champs scalaires ci-dessus suffisent. En gamme, un produit sans entrée
@@ -1027,6 +1073,17 @@ export interface CompanyRoundResult {
    */
   rd?: { budget: number; techLevel: number };
   /**
+   * Communication du tour (levier communication) : l'axe tenu, le budget de
+   * marque, la notoriété en fin de tour et, par segment, l'adéquation de
+   * l'axe (1 = neutre, > 1 l'axe a porté, < 1 il a desservi).
+   */
+  communication?: {
+    axis: CommunicationAxis | null;
+    brandBudget: number;
+    brandAwareness: number;
+    fitBySegment: Record<SegmentCode, number>;
+  };
+  /**
    * L'entreprise est en défaillance à l'issue de ce tour (cessation de
    * paiements tenue deux tours). Sert au plancher de score et à l'affichage.
    * Absent = active.
@@ -1243,6 +1300,10 @@ export interface EngineTrace {
    * ne pourrait plus dire ce que chaque référence a vendu.
    */
   products?: CompanyRoundResult["products"] | null;
+  /** R&D en mono-produit (levier `rd`) : budget et niveau technique du tour. */
+  rd?: CompanyRoundResult["rd"] | null;
+  /** Communication (levier `communication`) : axe, marque, notoriété, adéquation par segment. */
+  communication?: CompanyRoundResult["communication"] | null;
 }
 
 export interface EventInstance {

@@ -65,6 +65,15 @@ export async function playRoundAction(
       const rd = scalars?.rdBudget ?? formData.get("rdBudget");
       return rd !== undefined && rd !== null && rd !== "" ? { rdBudget: rd } : {};
     })(),
+    // Communication : marque et axe, absents quand le formulaire ne les porte pas.
+    ...(() => {
+      const brand = formData.get("brandMarketingBudget");
+      const axis = formData.get("communicationAxis");
+      return {
+        ...(brand !== null && brand !== "" ? { brandMarketingBudget: brand } : {}),
+        ...(typeof axis === "string" && axis !== "" ? { communicationAxis: axis } : {}),
+      };
+    })(),
     insurance: (() => {
       const raw = formData.get("insurance");
       if (raw === "on" || raw === "true") return true;

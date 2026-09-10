@@ -92,6 +92,10 @@ export function applyPeriodicity(
     // de disponibilité est une date réelle, il se compte en tours de la
     // nouvelle durée.
     ...(scenario.rd ? { rd: { ...scenario.rd, techScale: scenario.rd.techScale * k } } : {}),
+    // Communication : l'échelle du budget de marque est un flux par tour (× k).
+    ...(scenario.communication
+      ? { communication: { ...scenario.communication, brandScale: scenario.communication.brandScale * k } }
+      : {}),
     ...(redimensionne.products
       ? {
           products: redimensionne.products.map((p) =>

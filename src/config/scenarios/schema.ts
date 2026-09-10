@@ -19,6 +19,9 @@ const segmentSchema = z.object({
     z.object({ threshold: z.number().positive(), penalty: z.number().gt(0).lte(1) }),
   ),
   marketingSensitivity: z.number().nonnegative(),
+  axisAffinity: z
+    .record(z.enum(["prix", "qualite", "innovation", "image"]), z.enum(["fit", "misfit", "neutral"]))
+    .optional(),
   qualitySensitivity: z.number().nonnegative(),
   loyalty: z.number().nonnegative(),
   priceEffectBounds: z
@@ -303,6 +306,18 @@ export const engineScenarioConfigSchema = z.object({
       techSensitivity: z.number().nonnegative(),
       techMax: z.number().min(0).max(1),
       techInertia: z.number().min(0).max(1),
+    })
+    .optional(),
+  // Communication (marque et axe) : le levier n'existe que si le bloc est déclaré.
+  communication: z
+    .object({
+      brandScale: z.number().positive(),
+      brandSensitivity: z.number().nonnegative(),
+      brandMax: z.number().min(0).max(2),
+      brandInertia: z.number().min(0).max(1),
+      axisFit: z.number().min(1).max(3),
+      axisMisfit: z.number().min(0).max(1),
+      axisSwitchDecay: z.number().min(0).max(1),
     })
     .optional(),
 }) satisfies z.ZodType<EngineScenarioConfig>;

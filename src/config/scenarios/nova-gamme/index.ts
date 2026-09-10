@@ -269,6 +269,20 @@ const rawNovaGamme = {
   // et qui s'érode de moitié par tour sans entretien. Échelle : 10 000 € par
   // trimestre donnent environ +4 % à l'équilibre.
   rd: { techScale: 10000, techSensitivity: 0.08, techMax: 0.12, techInertia: 0.5 },
+  // Le levier communication : un budget de marque qui bâtit la notoriété de
+  // NOVA pour toute la gamme (jusqu'à +25 % d'attraction, avec retard, et qui
+  // s'use de moitié par tour sans entretien), et un axe de communication. Le
+  // même euro rend 30 % de plus quand l'axe parle à la clientèle, 30 % de
+  // moins quand il ne lui parle pas ; changer d'axe use la notoriété de 40 %.
+  communication: {
+    brandScale: 8000,
+    brandSensitivity: 0.18,
+    brandMax: 0.25,
+    brandInertia: 0.5,
+    axisFit: 1.3,
+    axisMisfit: 0.7,
+    axisSwitchDecay: 0.6,
+  },
   scoring: {
     weights: novaScenario.scoring.weights,
     benchmarks: {

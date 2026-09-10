@@ -10,6 +10,7 @@ import type {
   SimulationOutput,
 } from "../types";
 import { createRng, deriveRoundSeed } from "../random";
+import { axisFitFactor, brandFactor, updateBrandAwareness } from "../market/communication";
 import {
   isProductAvailable,
   rdOpeningOf,
@@ -329,6 +330,16 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     productAvailable: boolean[];
     rdTotal: number;
     productRdNext: (import("../types").ProductRdState | null)[];
+    /**
+     * Communication (levier `communication`, sinon neutre et rien n'est émis) :
+     * notoriété d'ouverture, axe et budget de marque du tour, adéquation de
+     * l'axe par segment (remplie au marché) et notoriété de clôture.
+     */
+    brandOpening: number;
+    communicationAxis: import("../types").CommunicationAxis | undefined;
+    brandBudget: number;
+    axisFitBySegment: Record<string, number>;
+    brandNext: number;
     /** Fournisseur de chaque produit (mono : [supplier]). */
     productSuppliers: (import("../types").SupplierDef | null)[];
     /** Rupture d'approvisionnement subie par chaque produit. */
@@ -408,6 +419,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
             rse: undefined,
             forecast: undefined,
             products: undefined,
+            brandMarketingBudget: undefined,
+            communicationAxis: undefined,
             finance: soumis.finance?.capitalIncrease
               ? { capitalIncrease: soumis.finance.capitalIncrease }
               : undefined,
@@ -432,6 +445,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       finance: raw.finance,
       forecast: raw.forecast,
       products: raw.products,
+      brandMarketingBudget: raw.brandMarketingBudget,
+      communicationAxis: raw.communicationAxis,
     };
     // Engagement RSE (Lot 2) : réglages effectifs et capitaux d'OUVERTURE. Lus
     // ici car le climat social (Lot 2B) les consomme dès le calcul RH ; l'effet
@@ -603,6 +618,19 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         techLevel,
       };
     });
+    // Communication (levier `communication`) : la notoriété d'ouverture, l'axe
+    // et le budget de marque du tour (gamme seulement : en mono, le marketing
+    // reste un budget unique), la notoriété de clôture — usée si l'axe change.
+    const comm = scenario.communication;
+    const brandOpening = comm ? Math.max(0, state.brandAwareness ?? 0) : 0;
+    const communicationAxis = comm ? decisions.communicationAxis : undefined;
+    const brandBudget = comm && multi ? Math.max(0, decisions.brandMarketingBudget ?? 0) : 0;
+    const axisChanged =
+      comm !== undefined &&
+      state.lastCommunicationAxis !== undefined &&
+      communicationAxis !== undefined &&
+      communicationAxis !== state.lastCommunicationAxis;
+    const brandNext = comm ? updateBrandAwareness(brandOpening, brandBudget, axisChanged, comm) : 0;
     const materialMultiplier = mods.materialCostMultiplier * (supplier?.costMultiplier ?? 1);
     const materialMultipliers = multi
       ? productSuppliers.map((s) => mods.materialCostMultiplier * (s?.costMultiplier ?? 1))
@@ -796,6 +824,11 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       productAvailable,
       rdTotal,
       productRdNext,
+      brandOpening,
+      communicationAxis,
+      brandBudget,
+      axisFitBySegment: {},
+      brandNext,
       productSuppliers,
       productDisruptions,
       unitCosts,
@@ -845,7 +878,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
   // ordre de segments, mêmes décisions — chemin identique.
   gamme.forEach((product, k) => {
     for (const segment of product.market.segments) {
-      const attractions = working.map((w) =>
+      const attractions = working.map((w) => {
         // Faillite (V2 couche 2, #5) : une entreprise défaillante est dormante ce
         // tour — production nulle, stock non réapprovisionné. La laisser dans le
         // calcul d'attraction lui faisait capter une part (son prix cassé donne
@@ -856,20 +889,40 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         // entre les entreprises réellement au marché.
         // Une référence en développement n'est pas au marché : attraction
         // nulle, sa demande se renormalise entre celles qui la vendent.
-        w.state.status === "defaillant" || !w.productAvailable[k]
-          ? 0
-          : attractionScore({
-              price: w.gamme[k]!.price,
-              marketingBudget: w.gamme[k]!.marketingBudget,
-              // La qualité perçue DE LA RÉFÉRENCE (mono : celle de l'entreprise).
-              perceivedQuality: w.productPerceived[k]!,
-              lastShare: w.state.lastMarketShare[segment.code] ?? 0,
+        if (w.state.status === "defaillant" || !w.productAvailable[k]) return 0;
+        // Communication : l'adéquation de l'axe à CE segment porte (ou dessert)
+        // le marketing spécifique de la référence et la notoriété de marque.
+        // Sans levier : facteur 1, expression historique.
+        const comm = scenario.communication;
+        const rd = w.productRdOpening[k];
+        const fit = comm
+          ? axisFitFactor(
+              w.communicationAxis,
               segment,
-              marketingScale: scenario.marketing.scale,
-              // Capital-image (2A) ET cartes RSE (2C) modulent l'attractivité.
-              imageFactor: w.rseImageFactor * w.rseCardFactor,
-            }),
-      );
+              {
+                price: w.gamme[k]!.price,
+                techLevel: rd?.techLevel ?? 0,
+                freshlyLaunched: rd?.launchRound !== undefined && roundIndex - rd.launchRound <= 1,
+              },
+              comm,
+            )
+          : 1;
+        if (comm) w.axisFitBySegment[segment.code] = fit;
+        return attractionScore({
+          price: w.gamme[k]!.price,
+          marketingBudget: comm ? w.gamme[k]!.marketingBudget * fit : w.gamme[k]!.marketingBudget,
+          // La qualité perçue DE LA RÉFÉRENCE (mono : celle de l'entreprise).
+          perceivedQuality: w.productPerceived[k]!,
+          lastShare: w.state.lastMarketShare[segment.code] ?? 0,
+          segment,
+          marketingScale: scenario.marketing.scale,
+          // Capital-image (2A) ET cartes RSE (2C) modulent l'attractivité ;
+          // la notoriété de marque (communication) aussi, à l'adéquation de l'axe.
+          imageFactor: comm
+            ? w.rseImageFactor * w.rseCardFactor * brandFactor(w.brandOpening, fit)
+            : w.rseImageFactor * w.rseCardFactor,
+        });
+      });
       const shares = allocateShares(
         attractions,
         segment.competitionIntensity ?? product.market.competitionIntensity,
@@ -1059,8 +1112,11 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const otherVariableCash =
       sumExact(w.producedPerProduct.map((q, k) => q * gamme[k]!.otherVariableCostPerUnit)) +
       subcontractCost;
-    // Marketing : somme des budgets par produit (mono : le scalaire).
-    const marketingTotal = sumExact(w.gamme.map((d) => d.marketingBudget));
+    // Marketing : somme des budgets par produit (mono : le scalaire), plus le
+    // budget de marque quand le levier communication existe.
+    const marketingTotal = scenario.communication
+      ? sumExact(w.gamme.map((d) => d.marketingBudget)) + w.brandBudget
+      : sumExact(w.gamme.map((d) => d.marketingBudget));
 
     // Prime d'assurance et RH : charges de structure du tour.
     const insurancePremium = w.insured ? (w.chosenFormula?.premiumPerRound ?? 0) : 0;
@@ -1335,6 +1391,17 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       // R&D en mono-produit : budget et niveau technique du produit unique.
       ...(scenario.rd && !multi
         ? { rd: { budget: w.gamme[0]!.rdBudget, techLevel: w.productRdNext[0]!.techLevel } }
+        : {}),
+      // Communication : l'axe, la marque, la notoriété, l'adéquation par segment.
+      ...(scenario.communication
+        ? {
+            communication: {
+              axis: w.communicationAxis ?? null,
+              brandBudget: w.brandBudget,
+              brandAwareness: w.brandNext,
+              fitBySegment: w.axisFitBySegment,
+            },
+          }
         : {}),
       incomeStatement: finance.incomeStatement,
       balanceSheet: finance.closing,
@@ -1657,6 +1724,13 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
             rdByProduct: Object.fromEntries(
               gamme.map((product, k) => [product.code, w.productRdNext[k]!]),
             ),
+          }
+        : {}),
+      // Communication : notoriété et axe tenu, émis SEULEMENT avec le levier.
+      ...(scenario.communication
+        ? {
+            brandAwareness: w.brandNext,
+            ...(w.communicationAxis !== undefined ? { lastCommunicationAxis: w.communicationAxis } : {}),
           }
         : {}),
       availability: updateAvailability({

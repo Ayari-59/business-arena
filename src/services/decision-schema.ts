@@ -40,6 +40,10 @@ export const roundDecisionsSchema = z.object({
   // R&D (scénarios avec levier `rd`) : le scalaire (mono-produit, ou somme
   // des références en gamme). Absent partout ailleurs.
   rdBudget: z.coerce.number().min(0).max(500000).optional(),
+  // Communication (scénarios avec levier `communication`) : le budget de
+  // marque (gamme) et l'axe tenu ce tour.
+  brandMarketingBudget: z.coerce.number().min(0).max(200000).optional(),
+  communicationAxis: z.enum(["prix", "qualite", "innovation", "image"]).optional(),
   insurance: z.union([z.boolean(), z.string()]).optional(),
   supplierChoice: z.string().optional(),
   acceptOrder: z.boolean().optional(),
