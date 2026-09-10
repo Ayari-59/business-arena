@@ -46,8 +46,23 @@ const ratio = (numerator: number, denominator: number): number | null =>
 /** Capacité offerte du tour (déjà dégradée par la disponibilité). */
 const offered = (ctx: SectorKpiContext) => ctx.result.production.machineCapacity;
 
-/** Part des matières dans le coût variable, d'après le scénario joué. */
+/**
+ * Part des matières dans le coût variable, d'après le scénario joué. En gamme,
+ * pondérée par les volumes produits de chaque référence (à défaut, parts
+ * égales) ; en mono-produit, la formule historique, inchangée.
+ */
 const materialShare = (ctx: SectorKpiContext) => {
+  const gamme = ctx.scenario.products;
+  if (gamme && gamme.length > 1) {
+    let material = 0;
+    let total = 0;
+    for (const p of gamme) {
+      const weight = ctx.result.products?.[p.code]?.produced ?? 1;
+      material += p.materialCostPerUnit * weight;
+      total += (p.materialCostPerUnit + p.otherVariableCostPerUnit) * weight;
+    }
+    return total > 0 ? material / total : 0;
+  }
   const { materialCostPerUnit, otherVariableCostPerUnit } = ctx.scenario.product;
   const total = materialCostPerUnit + otherVariableCostPerUnit;
   return total > 0 ? materialCostPerUnit / total : 0;

@@ -31,6 +31,25 @@ const segmentSchema = z.object({
   seasonality: z.array(z.number().nonnegative()).optional(),
 });
 
+/**
+ * Un produit de la gamme et son marché. Les segments sont obligatoires ; la
+ * saisonnalité, l'attraction extérieure et l'intensité concurrentielle sont
+ * optionnelles (à défaut, celles du marché du scénario).
+ */
+const productDefSchema = z.object({
+  code: z.string().min(1),
+  name: z.string().min(1),
+  materialCostPerUnit: z.number().nonnegative(),
+  otherVariableCostPerUnit: z.number().nonnegative(),
+  hoursPerUnit: z.number().positive(),
+  market: z.object({
+    segments: z.array(segmentSchema).min(1),
+    seasonality: z.array(z.number().nonnegative()).min(1).optional(),
+    outsideAttraction: z.number().nonnegative().optional(),
+    competitionIntensity: z.number().min(1).optional(),
+  }),
+});
+
 const modifierSchema = z.object({
   target: z.union([
     z.literal("material_cost"),
@@ -72,6 +91,9 @@ export const engineScenarioConfigSchema = z.object({
     otherVariableCostPerUnit: z.number().nonnegative(),
     hoursPerUnit: z.number().positive(),
   }),
+  // Gamme : cette clé DOIT être déclarée ici, sans quoi le parse la retirerait
+  // en silence et une partie à gamme retomberait en mono-produit.
+  products: z.array(productDefSchema).min(2).optional(),
   production: z.object({
     qualitySensitivity: z.number().nonnegative(),
     qualityScale: z.number().positive(),
@@ -283,6 +305,28 @@ const scenarioWithChecks = engineScenarioConfigSchema.superRefine((s, ctx) => {
       }
     }
   };
+  // Gamme : codes de produits uniques, et codes de segments uniques sur TOUTE
+  // la gamme — parts de marché et demandes potentielles sont indexées par
+  // code de segment, deux produits qui partageraient un code se confondraient.
+  if (s.products) {
+    const productCodes = new Set<string>();
+    const segmentCodes = new Set<string>();
+    for (const p of s.products) {
+      if (productCodes.has(p.code)) {
+        ctx.addIssue({ code: "custom", message: `gamme : code de produit en double « ${p.code} »` });
+      }
+      productCodes.add(p.code);
+      for (const seg of p.market.segments) {
+        if (segmentCodes.has(seg.code)) {
+          ctx.addIssue({
+            code: "custom",
+            message: `gamme : code de segment « ${seg.code} » partagé par deux produits`,
+          });
+        }
+        segmentCodes.add(seg.code);
+      }
+    }
+  }
   checkCoverage("assurance", s.insurance?.coveredEventCodes ?? []);
   for (const f of s.insurance?.formulas ?? []) {
     checkCoverage(`assurance (${f.code})`, f.coveredEventCodes);

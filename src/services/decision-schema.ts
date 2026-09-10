@@ -21,6 +21,18 @@ export const roundDecisionsSchema = z.object({
   marketingBudget: z.coerce.number().min(0).max(200000),
   qualityBudget: z.coerce.number().min(0).max(200000),
   maintenanceBudget: z.coerce.number().min(0).max(100000),
+  // Gamme : décisions par produit (prix, plan, marketing). Mêmes bornes
+  // techniques que les scalaires ; absent en mono-produit.
+  products: z
+    .record(
+      z.string().min(1),
+      z.object({
+        price: z.coerce.number().min(1).max(PRIX_MAX),
+        productionPlan: z.coerce.number().min(0).max(50000),
+        marketingBudget: z.coerce.number().min(0).max(200000).optional(),
+      }),
+    )
+    .optional(),
   insurance: z.union([z.boolean(), z.string()]).optional(),
   supplierChoice: z.string().optional(),
   acceptOrder: z.boolean().optional(),
