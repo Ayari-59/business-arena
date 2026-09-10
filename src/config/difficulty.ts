@@ -51,6 +51,13 @@ export interface DifficultyPreset {
      * indices, ce qui n'est pas ouvrir un cran.
      */
     dividend: boolean;
+    /**
+     * Recherche et développement : lancer une référence à développer, élever
+     * le niveau technique. Un investissement immatériel qui coûte maintenant
+     * et rapporte plus tard : ouvert avec l'investissement, au niveau
+     * Arbitrage. Fermé, les références à développer sont livrées prêtes.
+     */
+    rd: boolean;
   };
   /** Multiplicateur des probabilités d'événements aléatoires (les 0 restent 0). */
   eventProbabilityMultiplier: number;
@@ -63,7 +70,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     name: "Découverte",
     tagline: "Prix, production, marketing : l'essentiel, avec tous les indices.",
     hintMaxLevel: 5,
-    decisions: { quality: false, maintenance: false, finance: false, insurance: false, hr: false, investment: false, rse: false, placement: false, dividend: false },
+    decisions: { quality: false, maintenance: false, finance: false, insurance: false, hr: false, investment: false, rse: false, placement: false, dividend: false, rd: false },
     eventProbabilityMultiplier: 0.5,
   },
   {
@@ -72,7 +79,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     name: "Gestion",
     tagline: "Qualité et maintenance entrent en jeu.",
     hintMaxLevel: 5,
-    decisions: { quality: true, maintenance: true, finance: false, insurance: false, hr: false, investment: false, rse: false, placement: false, dividend: false },
+    decisions: { quality: true, maintenance: true, finance: false, insurance: false, hr: false, investment: false, rse: false, placement: false, dividend: false, rd: false },
     eventProbabilityMultiplier: 0.75,
   },
   {
@@ -81,7 +88,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     name: "Pilotage",
     tagline: "Financement et assurance : la trésorerie se pilote. Indices limités.",
     hintMaxLevel: 3,
-    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: false, investment: false, rse: false, placement: false, dividend: false },
+    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: false, investment: false, rse: false, placement: false, dividend: false, rd: false },
     eventProbabilityMultiplier: 1,
   },
   {
@@ -90,7 +97,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     name: "Arbitrage",
     tagline: "Les aléas frappent plus souvent : anticipez.",
     hintMaxLevel: 3,
-    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: true, investment: true, rse: true, placement: false, dividend: false },
+    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: true, investment: true, rse: true, placement: false, dividend: false, rd: true },
     eventProbabilityMultiplier: 1.25,
   },
   {
@@ -99,7 +106,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     name: "Stratégie",
     tagline: "Deux indices, pas un de plus, et un marché nerveux.",
     hintMaxLevel: 2,
-    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: true, investment: true, rse: true, placement: true, dividend: false },
+    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: true, investment: true, rse: true, placement: true, dividend: false, rd: true },
     eventProbabilityMultiplier: 1.5,
   },
   {
@@ -109,7 +116,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     tagline:
       "Affectation du résultat, aucun indice, événements doublés : vous répondez aussi aux associés.",
     hintMaxLevel: 0,
-    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: true, investment: true, rse: true, placement: true, dividend: true },
+    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: true, investment: true, rse: true, placement: true, dividend: true, rd: true },
     eventProbabilityMultiplier: 2,
   },
 ];
@@ -123,7 +130,7 @@ export const LEGACY_PRESET: DifficultyPreset = {
   name: "Pilotage",
   tagline: "",
   hintMaxLevel: 5,
-  decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: false, investment: false, rse: false, placement: false, dividend: false },
+  decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: false, investment: false, rse: false, placement: false, dividend: false, rd: false },
   eventProbabilityMultiplier: 1,
 };
 

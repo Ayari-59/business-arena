@@ -10,7 +10,15 @@ import type {
   SimulationOutput,
 } from "../types";
 import { createRng, deriveRoundSeed } from "../random";
-import { suppliersOf, toGamme, toGammeDecisions, type GammeDecision, type GammeProduct } from "../gamme";
+import {
+  isProductAvailable,
+  rdOpeningOf,
+  suppliersOf,
+  toGamme,
+  toGammeDecisions,
+  type GammeDecision,
+  type GammeProduct,
+} from "../gamme";
 import type { SupplierDef } from "../types";
 import type { StockLot } from "../inventory/cump";
 import { computePotentialDemand } from "../market/demand";
@@ -311,6 +319,16 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     productPerceived: number[];
     /** Budget qualité total du tour (mono : le scalaire ; gamme : somme des références). */
     qualityTotal: number;
+    /**
+     * R&D (scénarios avec bloc `rd`, sinon tout à zéro et rien n'est émis) :
+     * l'état d'ouverture de chaque référence, sa disponibilité ce tour (une
+     * référence en développement ne se produit ni ne se vend), le budget du
+     * tour et l'état de clôture qui alimentera le tour suivant.
+     */
+    productRdOpening: (import("../types").ProductRdState | null)[];
+    productAvailable: boolean[];
+    rdTotal: number;
+    productRdNext: (import("../types").ProductRdState | null)[];
     /** Fournisseur de chaque produit (mono : [supplier]). */
     productSuppliers: (import("../types").SupplierDef | null)[];
     /** Rupture d'approvisionnement subie par chaque produit. */
@@ -466,7 +484,23 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const companyEvents = insured ? active.filter((e) => !covered.has(e.code)) : active;
     const mods = effectiveModifiers(companyEvents, state.id);
     // Décisions par produit (mono : les scalaires bornés ci-dessus, recopiés).
-    const gammeDecisions = toGammeDecisions(decisions, gamme);
+    const gammeDecisionsBrutes = toGammeDecisions(decisions, gamme);
+    // R&D (levier `rd`) : l'état d'ouverture de chaque référence. Une
+    // référence à développer n'est vendable qu'une fois son coût couvert par
+    // la R&D cumulée des tours PASSÉS (le lancement suit le tour qui couvre
+    // le coût) et jamais avant son tour de disponibilité. Sans bloc `rd`,
+    // tout est disponible et rien n'est calculé : chemin historique.
+    const productRdOpening = gamme.map((p) => rdOpeningOf(scenario, state, p.code));
+    const productAvailable = gamme.map((p, k) => isProductAvailable(p, productRdOpening[k]!, roundIndex));
+    // Une référence en développement ne se produit pas : son plan tombe à
+    // zéro, sa R&D reste (c'est elle qui la fera naître). Faillite : plus de
+    // R&D non plus, l'entreprise est gelée.
+    const gammeDecisions = gammeDecisionsBrutes.map((d, k) => ({
+      ...d,
+      productionPlan: productAvailable[k] ? d.productionPlan : 0,
+      rdBudget: scenario.rd && state.status !== "defaillant" ? d.rdBudget : 0,
+    }));
+    const rdTotal = scenario.rd ? sumExact(gammeDecisions.map((d) => d.rdBudget)) : 0;
     // Fournisseur choisi (doc 02 §5bis) : coût, qualité, délai, risque de
     // rupture. Mono-produit : le fournisseur scalaire. Gamme : chaque
     // référence a le sien (`products[code].supplierChoice`, sinon le
@@ -543,6 +577,32 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const productPerceived = gamme.map((p) =>
       multi ? (state.perceivedQualityByProduct?.[p.code] ?? state.perceivedQuality) : state.perceivedQuality,
     );
+    // R&D de clôture : le cumul investi ; le lancement dès que le coût est
+    // couvert (effectif au tour suivant) ; le niveau technique nourri par la
+    // R&D au-delà du coût de développement, à rendements décroissants et
+    // lissé — il s'érode quand la R&D cesse, la concurrence rattrape.
+    const productRdNext = productRdOpening.map((rd, k) => {
+      if (!rd || !scenario.rd) return null;
+      const cfg = scenario.rd;
+      const dev = gamme[k]!.development;
+      const budget = gammeDecisions[k]!.rdBudget;
+      const remaining = dev ? Math.max(0, dev.cost - rd.invested) : 0;
+      const beyond = Math.max(0, budget - remaining);
+      const target = Math.min(cfg.techMax, cfg.techSensitivity * Math.log(1 + beyond / cfg.techScale));
+      const techLevel = cfg.techInertia * rd.techLevel + (1 - cfg.techInertia) * target;
+      const invested = rd.invested + budget;
+      const launched = productAvailable[k]!;
+      return {
+        invested,
+        launched,
+        ...(launched
+          ? { launchRound: rd.launchRound ?? roundIndex }
+          : rd.launchRound !== undefined
+            ? { launchRound: rd.launchRound }
+            : {}),
+        techLevel,
+      };
+    });
     const materialMultiplier = mods.materialCostMultiplier * (supplier?.costMultiplier ?? 1);
     const materialMultipliers = multi
       ? productSuppliers.map((s) => mods.materialCostMultiplier * (s?.costMultiplier ?? 1))
@@ -732,6 +792,10 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       productQuality,
       productPerceived,
       qualityTotal,
+      productRdOpening,
+      productAvailable,
+      rdTotal,
+      productRdNext,
       productSuppliers,
       productDisruptions,
       unitCosts,
@@ -790,7 +854,9 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         // concurrents actifs sans faute de leur part. Attraction nulle → part 0
         // (allocateShares écarte les scores ≤ 0), et les parts se renormalisent
         // entre les entreprises réellement au marché.
-        w.state.status === "defaillant"
+        // Une référence en développement n'est pas au marché : attraction
+        // nulle, sa demande se renormalise entre celles qui la vendent.
+        w.state.status === "defaillant" || !w.productAvailable[k]
           ? 0
           : attractionScore({
               price: w.gamme[k]!.price,
@@ -1105,6 +1171,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       maintenanceCost: w.decisions.maintenanceBudget,
       // Faillite : entreprise gelée, aucune dépense — donc pas d'engagement RSE.
       rseCost: gelee ? 0 : w.rseCost,
+      // R&D : ligne et flux absents sans levier (rdTotal = 0).
+      ...(w.rdTotal > 0 ? { rdCost: w.rdTotal } : {}),
       // Cartes RSE à effet trésorerie (Lot 2C.2) : amende / éco-subvention.
       exceptionalCharge: gelee ? 0 : w.mods.oneOffCharge,
       exceptionalIncome: gelee ? 0 : w.mods.oneOffIncome,
@@ -1219,6 +1287,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       finance.incomeStatement.depreciation +
       marketingTotal +
       w.qualityTotal +
+      w.rdTotal +
       w.decisions.maintenanceBudget;
     // Seuil : en gamme, prix moyen pondéré par les unités vendues et coût
     // variable moyen pondéré par les unités produites (mono : les valeurs du
@@ -1247,10 +1316,15 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     // à l'équilibre vaut exactement le bonus, et il décroît normalement par
     // inertie dès qu'on quitte le fournisseur. (Mono : le produit unique et
     // le fournisseur scalaire — expression historique.)
+    // Le niveau technique acquis (R&D) s'ajoute de même, sur le capital
+    // d'OUVERTURE : effet différé, comme l'image RSE. Sans levier R&D : 0,
+    // expression historique.
     const productNextPerceived = w.productPerceived.map((previous, k) =>
       updatePerceivedQuality(
         previous,
-        w.productQuality[k]! + (w.productSuppliers[k]?.qualityBonus ?? 0),
+        w.productQuality[k]! +
+          (w.productSuppliers[k]?.qualityBonus ?? 0) +
+          (w.productRdOpening[k]?.techLevel ?? 0),
         scenario.production.qualityInertia,
       ),
     );
@@ -1258,6 +1332,10 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     results[w.state.id] = {
       companyId: w.state.id,
       ...(statut === "defaillant" ? { defaillant: true } : {}),
+      // R&D en mono-produit : budget et niveau technique du produit unique.
+      ...(scenario.rd && !multi
+        ? { rd: { budget: w.gamme[0]!.rdBudget, techLevel: w.productRdNext[0]!.techLevel } }
+        : {}),
       incomeStatement: finance.incomeStatement,
       balanceSheet: finance.closing,
       cashFlow: finance.cashFlow,
@@ -1298,6 +1376,27 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
                           costMultiplier: w.productSuppliers[k]!.costMultiplier,
                           qualityBonus: w.productSuppliers[k]!.qualityBonus,
                           supplyDisruption: w.productDisruptions[k]!,
+                        },
+                      }
+                    : {}),
+                  ...(w.productRdNext[k]
+                    ? {
+                        rd: {
+                          budget: w.gamme[k]!.rdBudget,
+                          techLevel: w.productRdNext[k]!.techLevel,
+                          ...(product.development
+                            ? {
+                                development: {
+                                  cost: product.development.cost,
+                                  availableFromRound: product.development.availableFromRound ?? 1,
+                                  invested: w.productRdNext[k]!.invested,
+                                  launched: w.productRdNext[k]!.launched,
+                                  ...(w.productRdNext[k]!.launchRound !== undefined
+                                    ? { launchRound: w.productRdNext[k]!.launchRound }
+                                    : {}),
+                                },
+                              }
+                            : {}),
                         },
                       }
                     : {}),
@@ -1549,6 +1648,14 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         ? {
             perceivedQualityByProduct: Object.fromEntries(
               gamme.map((product, k) => [product.code, productNextPerceived[k]!]),
+            ),
+          }
+        : {}),
+      // R&D : l'état de chaque référence, émis SEULEMENT avec le levier.
+      ...(scenario.rd
+        ? {
+            rdByProduct: Object.fromEntries(
+              gamme.map((product, k) => [product.code, w.productRdNext[k]!]),
             ),
           }
         : {}),

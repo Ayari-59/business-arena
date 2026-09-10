@@ -87,6 +87,26 @@ export function applyPeriodicity(
       maintenanceReference: scenario.production.maintenanceReference * k,
     },
     marketing: { scale: scenario.marketing.scale * k },
+    // R&D : l'échelle du budget est un flux par tour (× k) ; le coût de
+    // développement d'une référence est un total, il ne bouge pas ; son tour
+    // de disponibilité est une date réelle, il se compte en tours de la
+    // nouvelle durée.
+    ...(scenario.rd ? { rd: { ...scenario.rd, techScale: scenario.rd.techScale * k } } : {}),
+    ...(redimensionne.products
+      ? {
+          products: redimensionne.products.map((p) =>
+            p.development?.availableFromRound !== undefined
+              ? {
+                  ...p,
+                  development: {
+                    ...p.development,
+                    availableFromRound: Math.max(1, Math.round((p.development.availableFromRound - 1) / k) + 1),
+                  },
+                }
+              : p,
+          ),
+        }
+      : {}),
     finance: {
       ...scenario.finance,
       depreciationPerRound: scenario.finance.depreciationPerRound * k,

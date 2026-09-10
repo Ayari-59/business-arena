@@ -19,12 +19,13 @@ export const NOVA_GAMME_SITUATIONS: SituationDef[] = [
     category: "prise_de_poste",
     title: "Trois enceintes, un atelier",
     narrative:
-      "Vous reprenez NOVA. L'ancien dirigeant vous laisse un atelier, quatre opérateurs et trois enceintes au catalogue : la Go de poche, la One qui a fait la marque, la Studio des passionnés. SoundBox casse les prix sur les deux premières, Auris ne vend presque que du haut de gamme.",
+      "Vous reprenez NOVA. L'ancien dirigeant vous laisse un atelier, quatre opérateurs, deux enceintes en vente, la Go de poche et la One qui a fait la marque, et un prototype de Studio dans les cartons : il faudra le financer pour le vendre. SoundBox casse les prix sur les deux premières, Auris ne vend presque que du haut de gamme.",
     problem:
-      "Avant de fixer vos trois prix et vos trois volumes : que doit rapporter chaque enceinte, et combien faut-il en vendre, toutes références confondues, pour ne pas perdre d'argent ?",
+      "Avant de fixer vos prix et vos volumes : que doit rapporter chaque enceinte, combien faut-il en vendre pour ne pas perdre d'argent, et la Studio vaut-elle sa recherche ?",
     diagnosticOptions: [
       { id: "novag_marge_par_reference", label: "Chaque référence a sa marge sur coût variable, et elles n'ont rien à voir entre elles", correct: true },
       { id: "novag_seuil_mix", label: "Le seuil de rentabilité dépend du mix vendu : plus de Studio, moins d'enceintes à vendre", correct: true },
+      { id: "novag_rd_horizon", label: "La recherche se paie maintenant et ne rapporte qu'une fois la Studio en vente : c'est un investissement à horizon", correct: true },
       { id: "novag_meme_prix", label: "Il faut aligner les trois prix sur celui de la One pour simplifier", correct: false },
       { id: "novag_max_volume", label: "Produire l'atelier à plein de Go, l'enceinte la plus demandée, quoi qu'il arrive", correct: false },
     ],
@@ -68,13 +69,13 @@ export const NOVA_GAMME_SITUATIONS: SituationDef[] = [
       "Combien laisse une Go une fois ses composants et sa main-d'œuvre payés ? Et une Studio ?",
       "Il existe un volume précis, toutes références confondues, à partir duquel vous cessez de perdre de l'argent — et il dépend de ce que vous vendez.",
       "Une analyse du seuil de rentabilité à mix constant donnerait un objectif chiffré à votre premier trimestre.",
-      "Calculez la marge moyenne d'une enceinte au mix prévu (13 € la Go, 21 € la One, 59 € la Studio), puis divisez les charges de structure par cette marge.",
+      "Calculez la marge moyenne d'une enceinte au mix prévu (15 € la Go, 21 € la One, 59 € la Studio une fois lancée), puis divisez les charges de structure par cette marge. Et comparez le coût de développement de la Studio aux marges qu'elle rapportera d'ici Noël : financée dès ce tour, elle se vend au suivant.",
     ]),
     trigger: { round: 1 },
     weight: 1,
     decisionLevers: [
       { field: "price", direction: "review", hint: "Trois prix, trois marges unitaires : c'est le mix de ces marges qui fixe le nombre d'enceintes nécessaires pour couvrir les charges de structure." },
-      { field: "productionPlan", direction: "review", hint: "Trois plans qui se partagent le même atelier : trop de Go remplit les lignes pour peu de marge, trop de Studio dort en stock." },
+      { field: "productionPlan", direction: "review", hint: "Des plans qui se partagent le même atelier : trop de Go remplit les lignes pour peu de marge. La Studio, elle, ne se produit qu'une fois développée : sa R&D se décide maintenant, et se finance." },
     ],
   },
   {
@@ -146,7 +147,7 @@ export const NOVA_GAMME_SITUATIONS: SituationDef[] = [
     category: "decision_strategique",
     title: "Quoi produire, quand tout se vend",
     narrative:
-      "La demande décolle sur les trois références, et CampusTech vous ouvre ses rayons pour la One. Mais l'atelier a plafonné : les trois plans additionnés dépassaient ce que les lignes peuvent sortir, la coupe a été proportionnelle, et des clients sont repartis les mains vides… sur la Studio comme sur la Go.",
+      "La demande décolle, la Studio est sur le marché chez ceux qui l'ont développée, et CampusTech vous ouvre ses rayons pour la One. Mais l'atelier a plafonné : les plans additionnés dépassaient ce que les lignes peuvent sortir, la coupe a été proportionnelle, et des clients sont repartis les mains vides… sur la Studio comme sur la Go.",
     problem:
       "Votre marché demande plus que votre atelier ne produit. Quelle référence produire en priorité, et que préparer avant le pic de fin d'année ?",
     diagnosticOptions: [
@@ -196,7 +197,7 @@ export const NOVA_GAMME_SITUATIONS: SituationDef[] = [
       "Vos trois plans additionnés ont-ils atteint votre plafond ? Qui a été coupé, et de combien ?",
       "Quand l'atelier est le goulot, chaque enceinte produite en prend la place d'une autre : que rapporte cette place selon la référence ?",
       "Une analyse de capacité, croisée avec la marge de chaque référence et la saisonnalité, dirait quoi produire dès maintenant.",
-      "Classez les références par marge par enceinte (59 € la Studio, 21 € la One, 13 € la Go), servez la demande dans cet ordre, et produisez au plafond dès ce tour pour stocker la Go et la One avant Noël.",
+      "Classez les références par marge par enceinte (59 € la Studio, 21 € la One, 15 € la Go), servez la demande dans cet ordre, et produisez au plafond dès ce tour pour stocker la Go et la One avant Noël.",
     ]),
     trigger: { round: 3 },
     weight: 1,
@@ -718,7 +719,7 @@ export const NOVA_GAMME_SITUATIONS: SituationDef[] = [
 /** Pourquoi le modèle pertinent est le bon outil — correction du débriefing. */
 const MODEL_EXPLAIN: Record<string, string> = {
   novag_t1_reprise:
-    "Le seuil de rentabilité, calculé à mix constant, donne un objectif chiffré au premier trimestre : le volume d'enceintes, toutes références confondues, qui couvre exactement les charges de structure.",
+    "Le seuil de rentabilité, calculé à mix constant, donne un objectif chiffré au premier trimestre : le volume d'enceintes, toutes références confondues, qui couvre exactement les charges de structure. La recherche sur la Studio s'y ajoute en charge, et se juge sur les marges qu'elle apportera.",
   novag_t2_trois_marches:
     "L'analyse de l'élasticité mesure la sensibilité au prix de CHAQUE marché de la gamme : c'est elle qui dit où une baisse rapporte du volume et où elle ne fait que coûter de la marge.",
   novag_t3_facteur_rare:

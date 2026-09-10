@@ -38,6 +38,7 @@ import {
 import { applyMarketScale } from "@/config/scenarios/market-scale";
 import { applyRoundsCount } from "@/config/scenarios/rounds";
 import { applyScenarioVariability } from "@/config/scenarios/variability";
+import type { EngineScenarioConfig } from "@/engine/types";
 import { openSituationsForRound, seedPedagogyReferentials } from "@/services/pedagogy.service";
 import { getPlatformConfig } from "@/services/admin.service";
 import { assertCanCreateGame } from "@/services/licence.service";
@@ -197,13 +198,17 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
     ),
     preset?.eventProbabilityMultiplier ?? 1,
   );
+  // R&D : un niveau qui ne l'ouvre pas ne doit pas laisser une référence à
+  // développer hors de portée pour toute la partie. Le levier est retiré du
+  // snapshot et les références à développer sont livrées prêtes.
+  const scenarioJoue = preset && !preset.decisions.rd ? withoutRd(scenarioSnapshot) : scenarioSnapshot;
 
   const [game] = await db
     .insert(games)
     .values({
       organizationId: args.organizationId,
       scenarioId,
-      scenarioSnapshot,
+      scenarioSnapshot: scenarioJoue,
       engineVersion: ENGINE_VERSION,
       seed,
       mode: args.mode ?? "learning",
@@ -363,4 +368,23 @@ export async function createClassGame(args: {
     roundsCount: args.roundsCount,
   });
   return { gameId, joinCode };
+}
+
+/** Le scénario sans levier R&D : bloc `rd` retiré, références livrées prêtes. */
+function withoutRd(scenario: EngineScenarioConfig): EngineScenarioConfig {
+  if (!scenario.rd) return scenario;
+  const { rd: _rd, ...rest } = scenario;
+  void _rd;
+  return {
+    ...rest,
+    ...(scenario.products
+      ? {
+          products: scenario.products.map((p) => {
+            const { development: _dev, ...produit } = p;
+            void _dev;
+            return produit;
+          }),
+        }
+      : {}),
+  };
 }

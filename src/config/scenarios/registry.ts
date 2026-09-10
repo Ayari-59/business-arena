@@ -254,22 +254,22 @@ export const NOVA_GAMME_DEFINITION: ScenarioDefinition = {
   sector: "industrie",
   tagline: "Fabricant d'enceintes portables : trois références, un atelier.",
   briefing:
-    "Tout ce que vous vendez sort de votre atelier, dont la capacité est limitée, et vous y fabriquez trois enceintes qui ne rapportent pas la même chose. La petite se vend par milliers pour quelques euros de marge, la grande se vend par centaines pour beaucoup plus. Quand les commandes dépassent ce que l'atelier peut sortir, la question n'est plus combien produire, mais quoi produire.",
+    "Tout ce que vous vendez sort de votre atelier, dont la capacité est limitée, et vous y fabriquez des enceintes qui ne rapportent pas la même chose. La petite se vend par milliers pour quelques euros de marge, la grande se vendra par centaines pour beaucoup plus, mais elle n'est encore qu'un prototype : la développer se paie avant de rapporter. Quand les commandes dépassent ce que l'atelier peut sortir, la question n'est plus combien produire, mais quoi produire.",
   context:
-    "L'ancien dirigeant est parti à la retraite le mois dernier. Il vous laisse un atelier en état, une équipe qui connaît les trois produits, et un carnet de commandes vide : rien n'est signé pour le trimestre qui s'ouvre. La concurrence, elle, est installée depuis des années, l'une sur les prix bas de l'entrée de gamme, l'autre sur le haut de gamme des passionnés.",
+    "L'ancien dirigeant est parti à la retraite le mois dernier. Il vous laisse un atelier en état, une équipe qui connaît les deux produits en vente, un prototype de grande enceinte dans les cartons, et un carnet de commandes vide : rien n'est signé pour le trimestre qui s'ouvre. La concurrence, elle, est installée depuis des années, l'une sur les prix bas de l'entrée de gamme, l'autre sur le haut de gamme des passionnés.",
   dilemma: {
     question:
-      "Trois enceintes, trois clientèles, un seul atelier. Laquelle remplit vos lignes ce trimestre ?",
+      "Deux enceintes en vente, un prototype à financer, un seul atelier. Que faites-vous de vos lignes et de votre caisse ce trimestre ?",
     routes: [
       {
-        label: "Remplir l'atelier de volume, avec la petite enceinte",
-        gain: "C'est la clientèle la plus nombreuse et la moins fidèle aux concurrents. Les lignes tournent à plein, et chaque enceinte de plus ne coûte que ses composants.",
-        risque: "La marge par enceinte est mince, ces clients partent au premier prix plus bas, et chaque place prise sur les lignes n'est plus disponible pour une enceinte qui rapporte davantage.",
+        label: "Remplir l'atelier de volume, sans toucher au prototype",
+        gain: "C'est la clientèle la plus nombreuse et la moins fidèle aux concurrents. Les lignes tournent à plein, chaque enceinte de plus ne coûte que ses composants, et la caisse ne finance rien d'incertain.",
+        risque: "La marge par enceinte est mince, ces clients partent au premier prix plus bas, et pendant ce temps un concurrent lance la grande enceinte et prend la clientèle qui paie cher.",
       },
       {
-        label: "Réserver l'atelier à la valeur, avec la grande enceinte",
-        gain: "Une marge plusieurs fois plus large sur chaque enceinte, auprès de passionnés et de studios qui reviennent d'un trimestre à l'autre et regardent la qualité avant le prix.",
-        risque: "Cette clientèle est bien plus petite. L'atelier tournera au ralenti, le stock coûtera cher à constituer, et les charges de structure tomberont quand même.",
+        label: "Financer la grande enceinte dès maintenant",
+        gain: "Une marge plusieurs fois plus large sur chaque enceinte, auprès de passionnés et de studios qui reviennent d'un trimestre à l'autre, et l'avantage de celui qui arrive le premier sur leur marché.",
+        risque: "La recherche se paie ce trimestre, en charge et en caisse, pour une enceinte qui ne se vendra qu'au suivant. Il faut la financer, et cette clientèle reste bien plus petite que celle du volume.",
       },
     ],
   },

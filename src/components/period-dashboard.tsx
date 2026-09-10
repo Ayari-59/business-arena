@@ -294,6 +294,7 @@ export function PeriodDashboard({
                         <th className="pb-2 pr-2 text-right font-medium">Marge / u</th>
                         <th className="pb-2 pr-2 text-right font-medium">{view.vocabulary.leftoverLabel}</th>
                         <th className="pb-2 pr-2 text-right font-medium">Qualité perçue</th>
+                        {view.gamme.some((g) => g.rd) ? <th className="pb-2 pr-2 text-right font-medium">R&amp;D</th> : null}
                         {view.gamme.some((g) => g.suppliers) ? <th className="pb-2 font-medium">Fournisseur</th> : null}
                       </tr>
                     </thead>
@@ -302,6 +303,8 @@ export function PeriodDashboard({
                         const p = r.products![g.code];
                         if (!p) return null;
                         const marge = p.price - p.unitVariableCost;
+                        const dev = p.rd?.development;
+                        const enDeveloppement = dev ? !dev.launched : false;
                         return (
                           <tr key={g.code} className="border-t border-white/5">
                             <td className="py-2 pr-2 text-slate-100">
@@ -310,6 +313,13 @@ export function PeriodDashboard({
                                 <span className="ml-1 text-xs text-red-400" title="Rupture d'approvisionnement ce tour">
                                   ⚠︎ rupture
                                 </span>
+                              ) : null}
+                              {enDeveloppement ? (
+                                <span className="ml-1 text-xs text-amber-300" title="Référence en développement : pas encore vendable">
+                                  🔬 en développement · {Math.round((100 * dev!.invested) / Math.max(1, dev!.cost))} %
+                                </span>
+                              ) : dev && dev.launchRound === period.round ? (
+                                <span className="ml-1 text-xs text-emerald-300">🚀 lancée ce tour</span>
                               ) : null}
                             </td>
                             <td className="py-2 pr-2 text-right tabular-nums">{formatEuro(p.price)}</td>
@@ -328,6 +338,11 @@ export function PeriodDashboard({
                                 ? `${Math.round(p.perceivedQuality * 100)} %`
                                 : "—"}
                             </td>
+                            {view.gamme!.some((x) => x.rd) ? (
+                              <td className="py-2 pr-2 text-right tabular-nums" title="Budget R&D du tour · niveau technique acquis">
+                                {p.rd ? `${formatEuro(p.rd.budget)} · +${Math.round(p.rd.techLevel * 100)} %` : "—"}
+                              </td>
+                            ) : null}
                             {view.gamme!.some((x) => x.suppliers) ? (
                               <td className="py-2 text-slate-300">{p.supplier?.name ?? "—"}</td>
                             ) : null}

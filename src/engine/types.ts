@@ -366,6 +366,21 @@ export interface EngineScenarioConfig {
   /** Références du scoring BPI (doc 08 §1.1) — bornes min/cible par tour. */
   scoring: ScoringConfig;
   /** V2 : les bots utilisent les décisions financières, RH, investissement et trésorerie. Absent = false. */
+  /**
+   * Recherche et développement (levier R&D). Absent : aucun levier R&D, aucun
+   * champ ajouté nulle part. Présent : chaque référence (mono : le produit)
+   * peut recevoir un budget R&D qui, au-delà du coût de développement d'une
+   * référence à lancer, élève son NIVEAU TECHNIQUE — un bonus de qualité
+   * perçue à effet différé, qui s'érode quand la R&D cesse (la concurrence
+   * rattrape). Effet à rendements décroissants : techSensitivity ×
+   * ln(1 + R&D / techScale), plafonné à techMax, lissé par techInertia.
+   */
+  rd?: {
+    techScale: number;
+    techSensitivity: number;
+    techMax: number;
+    techInertia: number;
+  };
   enrichedBots?: boolean;
 }
 
@@ -540,6 +555,21 @@ export interface ProductMarketConfig {
 }
 
 /** Un produit de la gamme : ses coûts variables, sa main-d'œuvre, son marché. */
+/**
+ * Recherche et développement d'une référence (gamme). Une référence qui
+ * porte un `development` n'est PAS vendable à l'ouverture : il faut lui
+ * consacrer, cumulé sur un ou plusieurs tours, au moins `cost` de budget R&D ;
+ * elle est lancée au tour qui suit celui où le cumul atteint le coût, et
+ * jamais avant `availableFromRound`. Monter en gamme se paie avant de
+ * rapporter : c'est une décision de valeur actuelle nette grandeur nature.
+ */
+export interface ProductDevelopmentDef {
+  /** Budget R&D cumulé à engager avant le lancement. */
+  cost: number;
+  /** Tour de lancement au plus tôt (1 = dès l'ouverture, coût couvert). */
+  availableFromRound?: number;
+}
+
 export interface ProductDef {
   code: ProductCode;
   name: string;
@@ -547,6 +577,8 @@ export interface ProductDef {
   otherVariableCostPerUnit: number;
   hoursPerUnit: number;
   market: ProductMarketConfig;
+  /** La référence est à développer avant d'être vendue (voir ProductDevelopmentDef). */
+  development?: ProductDevelopmentDef;
   /**
    * Catalogue de fournisseurs PROPRE à la référence (le tricoteur du mérinos
    * n'est pas celui des bonnets). Absent : la référence s'approvisionne dans
@@ -608,6 +640,17 @@ export interface BalanceSheet {
   vatLiability?: number;
 }
 
+export interface ProductRdState {
+  /** Budget R&D cumulé sur la référence depuis l'ouverture. */
+  invested: number;
+  /** La référence est vendable (lancée, ou sans développement à faire). */
+  launched: boolean;
+  /** Tour à partir duquel la référence a été vendable (absent : pas encore). */
+  launchRound?: number;
+  /** Niveau technique acquis (bonus de qualité perçue, 0 = référence). */
+  techLevel: number;
+}
+
 export interface CompanyState {
   id: CompanyId;
   name: string;
@@ -621,6 +664,13 @@ export interface CompanyState {
    * `perceivedQuality`.
    */
   perceivedQualityByProduct?: Record<ProductCode, number>;
+  /**
+   * R&D par référence (scénarios avec bloc `rd`) : le cumul investi, le
+   * lancement (tour où la référence est devenue vendable) et le niveau
+   * technique acquis. Mono-produit : sous le code du produit unique. Absent
+   * tant que le scénario n'a pas de levier R&D — snapshot inchangé.
+   */
+  rdByProduct?: Record<ProductCode, ProductRdState>;
   /** Capacité machine totale (unités/tour à 100 % de disponibilité). */
   machineCapacity: number;
   /** Disponibilité machine courante (0..1). */
@@ -719,6 +769,8 @@ export interface ProductDecisions {
   qualityBudget?: number;
   /** Fournisseur de la référence (absent : le fournisseur scalaire). */
   supplierChoice?: string;
+  /** Budget R&D de la référence (scénarios avec bloc `rd` ; absent : part égale du scalaire). */
+  rdBudget?: number;
 }
 
 export interface RoundDecisions {
@@ -727,6 +779,12 @@ export interface RoundDecisions {
   marketingBudget: number;
   qualityBudget: number;
   maintenanceBudget: number;
+  /**
+   * Budget R&D du tour (scénarios avec bloc `rd`). Mono-produit : la R&D du
+   * produit ; gamme : le scalaire dont chaque référence sans entrée reçoit une
+   * part égale. Charge décaissée du tour, ligne propre au compte de résultat.
+   */
+  rdBudget?: number;
   /**
    * Décisions par produit (scénarios à gamme). Absent en mono-produit, où les
    * champs scalaires ci-dessus suffisent. En gamme, un produit sans entrée
@@ -858,6 +916,12 @@ export interface IncomeStatement {
    * nulle — les parties sans RSE n'affichent pas la ligne.
    */
   engagementRse?: number;
+  /**
+   * Recherche et développement du tour (scénarios avec levier R&D) : une
+   * charge d'exploitation décaissée, retranchée avant l'EBITDA comme le
+   * marketing. Absente si nulle.
+   */
+  rdCost?: number;
   fixedCosts: number;
   ebitda: number;
   depreciation: number;
@@ -928,6 +992,22 @@ export interface ProductRoundResult {
     qualityBonus: number;
     supplyDisruption: boolean;
   };
+  /**
+   * R&D de la référence (scénarios avec bloc `rd`) : le budget du tour, l'état
+   * du développement en fin de tour et le niveau technique acquis.
+   */
+  rd?: {
+    budget: number;
+    techLevel: number;
+    /** Absent quand la référence n'a pas de développement à faire. */
+    development?: {
+      cost: number;
+      availableFromRound: number;
+      invested: number;
+      launched: boolean;
+      launchRound?: number;
+    };
+  };
   /** Unités vendues sur le marché du produit (hors commandes fermes et exceptionnelle). */
   sold: number;
   lost: number;
@@ -941,6 +1021,11 @@ export interface ProductRoundResult {
 
 export interface CompanyRoundResult {
   companyId: CompanyId;
+  /**
+   * R&D du tour en mono-produit (scénarios avec bloc `rd`) : budget engagé et
+   * niveau technique du produit en fin de tour. En gamme, voir `products[].rd`.
+   */
+  rd?: { budget: number; techLevel: number };
   /**
    * L'entreprise est en défaillance à l'issue de ce tour (cessation de
    * paiements tenue deux tours). Sert au plancher de score et à l'affichage.

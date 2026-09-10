@@ -16,7 +16,7 @@ import { porteUnNomParDefaut } from "@/config/nom-equipe";
 import { cardByCode } from "@/config/events/cards";
 import { proposedDecisionsFor, startingDecisionsFor } from "@/services/decision-baseline";
 import { orderOfferForRound } from "@/engine/simulation";
-import { isMultiProduct, suppliersOf, toGamme } from "@/engine/gamme";
+import { isMultiProduct, isProductAvailable, rdOpeningOf, suppliersOf, toGamme } from "@/engine/gamme";
 import { computeRatios } from "@/engine/finance/ratios";
 import { conditionsBancaires, confianceInitiale } from "@/engine/finance/bank";
 import { irr, npv, paybackPeriod } from "@/engine/investment";
@@ -255,7 +255,27 @@ export interface GameView {
       supplyRiskProbability: number;
       materialCostPerUnit: number;
     }[] | null;
+    /**
+     * R&D de la référence (scénarios avec levier `rd`) : son niveau technique
+     * acquis et, pour une référence à développer, où en est le développement
+     * et si elle est vendable au tour à jouer. `null` sans levier R&D.
+     */
+    rd: {
+      techLevel: number;
+      development: {
+        cost: number;
+        availableFromRound: number;
+        invested: number;
+        available: boolean;
+        launchRound: number | null;
+      } | null;
+    } | null;
   }[] | null;
+  /**
+   * Le levier R&D du scénario (échelle du budget par tour), `null` sans
+   * levier. En mono-produit, c'est lui qui ouvre le champ R&D du formulaire.
+   */
+  rdOffer: { techScale: number } | null;
   /**
    * D'où l'équipe repart pour le tour à jouer : le stock de chaque référence
    * (une seule en mono-produit, sous le code du produit) et les trois postes
@@ -330,6 +350,7 @@ export interface GameView {
     hr: boolean;
     investment: boolean;
     rse: boolean;
+    rd: boolean;
     placement: boolean;
     dividend: boolean;
   };
@@ -1243,8 +1264,28 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
               supplyRiskProbability: s.supplyRiskProbability,
               materialCostPerUnit: Math.round(p.materialCostPerUnit * s.costMultiplier * 100) / 100,
             })) ?? null,
+          rd: (() => {
+            const rd = rdOpeningOf(snapshot, state ?? {}, p.code);
+            if (!rd) return null;
+            return {
+              techLevel: rd.techLevel,
+              development: p.development
+                ? {
+                    cost: p.development.cost,
+                    availableFromRound: p.development.availableFromRound ?? 1,
+                    invested: rd.invested,
+                    available: isProductAvailable(p, rd, game.currentRound),
+                    launchRound: rd.launchRound ?? null,
+                  }
+                : null,
+            };
+          })(),
         };
       });
+    })(),
+    rdOffer: (() => {
+      const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+      return snapshot.rd ? { techScale: snapshot.rd.techScale } : null;
     })(),
     sectorKpis: (() => {
       if (!lastResult) return [];

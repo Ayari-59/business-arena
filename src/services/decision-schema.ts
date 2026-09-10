@@ -33,9 +33,13 @@ export const roundDecisionsSchema = z.object({
         marketingBudget: z.coerce.number().min(0).max(200000).optional(),
         qualityBudget: z.coerce.number().min(0).max(200000).optional(),
         supplierChoice: z.string().min(1).optional(),
+        rdBudget: z.coerce.number().min(0).max(500000).optional(),
       }),
     )
     .optional(),
+  // R&D (scénarios avec levier `rd`) : le scalaire (mono-produit, ou somme
+  // des références en gamme). Absent partout ailleurs.
+  rdBudget: z.coerce.number().min(0).max(500000).optional(),
   insurance: z.union([z.boolean(), z.string()]).optional(),
   supplierChoice: z.string().optional(),
   acceptOrder: z.boolean().optional(),
