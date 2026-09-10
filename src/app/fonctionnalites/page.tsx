@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ALL_SITUATIONS, SCENARIOS, SECTOR_LABELS, SECTOR_ICONS } from "@/config/scenarios/registry";
+import { ALL_SITUATIONS, SCENARIOS, SECTOR_LABELS } from "@/config/scenarios/registry";
 import { DECISION_MODELS } from "@/config/pedagogy/models";
 
 export const metadata = {
@@ -105,7 +105,7 @@ export default function FonctionnalitesPage() {
               key={s.code}
               className="flex items-center gap-3 rounded-xl border border-white/10 bg-slate-900 px-4 py-3"
             >
-              <span className="text-2xl">{SECTOR_ICONS[s.sector]}</span>
+              <span className="text-2xl">{s.icon}</span>
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-slate-200">{s.title}</p>
                 <p className="text-xs text-slate-400">{SECTOR_LABELS[s.sector]}</p>

@@ -19,8 +19,12 @@ import { useState } from "react";
 
 export interface QuickScenario {
   code: string;
+  /** Le pictogramme du scénario (pas seulement celui du secteur : deux NOVA se ressemblent). */
   icon: string;
+  /** Le nom court du scénario (« NOVA · gamme »). */
   label: string;
+  /** Le secteur, en légende de la tuile. */
+  sector: string;
   tagline: string;
 }
 export interface QuickLevel {
@@ -108,7 +112,8 @@ export function QuickConfigFields({
               }`}
             >
               <span className="text-2xl leading-none">{s.icon}</span>
-              <span className="text-xs font-semibold text-slate-100">{s.label}</span>
+              <span className="text-xs font-semibold leading-tight text-slate-100">{s.label}</span>
+              <span className="text-xs leading-tight text-slate-400">{s.sector}</span>
             </button>
           );
         })}

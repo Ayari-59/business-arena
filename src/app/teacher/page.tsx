@@ -129,7 +129,7 @@ export default async function TeacherDashboard({
             scenarios={[
               ...SCENARIOS.map((d) => ({
                 code: d.code,
-                label: `${SECTOR_LABELS[d.sector]} · ${d.title}`,
+                label: `${d.icon} ${SECTOR_LABELS[d.sector]} · ${d.title}`,
                 unit: d.vocabulary.unit,
                 defaults: economicDefaults(d),
               })),

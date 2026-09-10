@@ -4,7 +4,7 @@ import { startGameAction } from "../actions";
 import { getPlatformConfig } from "@/services/admin.service";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
 import { etendueDesDecisions, leviersDuNiveau } from "@/config/decisions";
-import { DEFAULT_SCENARIO_CODE, SCENARIOS, SECTOR_ICONS, SECTOR_LABELS } from "@/config/scenarios/registry";
+import { DEFAULT_SCENARIO_CODE, SCENARIOS, SECTOR_LABELS } from "@/config/scenarios/registry";
 import { SubmitButton } from "@/components/submit-button";
 import { QuickConfigFields } from "@/components/quick-config-form";
 
@@ -110,8 +110,9 @@ export default async function JouerPage({
               <QuickConfigFields
                 scenarios={SCENARIOS.map((s) => ({
                   code: s.code,
-                  icon: SECTOR_ICONS[s.sector],
-                  label: SECTOR_LABELS[s.sector],
+                  icon: s.icon,
+                  label: s.shortName,
+                  sector: SECTOR_LABELS[s.sector],
                   tagline: s.tagline,
                 }))}
                 levels={DIFFICULTY_PRESETS.map((p) => ({

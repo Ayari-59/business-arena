@@ -84,7 +84,7 @@ export default async function ArenaPage({
         <span
           className={`flex h-16 w-16 items-center justify-center rounded-2xl text-3xl ${SECTOR_COLORS[view.sector].bg}`}
         >
-          {SECTOR_ICONS[view.sector]}
+          {view.scenarioIcon}
         </span>
         <p className="mt-6 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.3em] text-amber-300">
           <span aria-hidden>✓</span> Tour simulé
@@ -357,7 +357,7 @@ export default async function ArenaPage({
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex items-center gap-3">
           <span className={`flex h-12 w-12 items-center justify-center rounded-xl text-2xl ${SECTOR_COLORS[view.sector].bg}`}>
-            {SECTOR_ICONS[view.sector]}
+            {view.scenarioIcon}
           </span>
           <div>
             <p className={`text-xs uppercase tracking-[0.3em] ${SECTOR_COLORS[view.sector].accent}`}>
