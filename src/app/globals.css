@@ -95,6 +95,20 @@ h1 {
 }
 
 /* ---------------------------------------------------------------------------
+ * « ARENA » en pied de page : un ambre atténué à 70 % sur fond sombre, qui
+ * lisait à 5,2 pour 1. Le même voile sur fond clair tombait à 3,9 : sous le
+ * seuil AA, et le seul texte que le thème clair dégradait. Sur fond clair,
+ * l'ambre du thème (déjà un laiton sombre) s'écrit plein.
+ * ------------------------------------------------------------------------- */
+.accent-arena {
+  color: rgb(251 191 36 / 0.7);
+}
+
+[data-theme="clair"] .accent-arena {
+  color: var(--color-amber-400);
+}
+
+/* ---------------------------------------------------------------------------
  * Cartes événement : retournement 3D à l'apparition (pur théâtre CSS — le
  * tirage réel est fait par le moteur seedé). animationDelay inline = cascade.
  * ------------------------------------------------------------------------- */
