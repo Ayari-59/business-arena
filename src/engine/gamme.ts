@@ -136,6 +136,30 @@ export function toGamme(scenario: EngineScenarioConfig): GammeProduct[] {
 }
 
 /**
+ * Le scénario SANS levier R&D : bloc `rd` retiré, références livrées prêtes
+ * (plus rien à développer). C'est le scénario qu'une partie joue quand son
+ * niveau n'ouvre pas la R&D, et celui que le cockpit d'un tel atelier doit
+ * prévoir. Sans bloc `rd`, le scénario est rendu tel quel.
+ */
+export function withoutRd(scenario: EngineScenarioConfig): EngineScenarioConfig {
+  if (!scenario.rd) return scenario;
+  const { rd: _rd, ...rest } = scenario;
+  void _rd;
+  return {
+    ...rest,
+    ...(scenario.products
+      ? {
+          products: scenario.products.map((p) => {
+            const { development: _dev, ...produit } = p;
+            void _dev;
+            return produit;
+          }),
+        }
+      : {}),
+  };
+}
+
+/**
  * Applique une transformation de segment à TOUS les marchés du scénario : le
  * marché du scénario et, en gamme, celui de chaque produit. Les variantes
  * dérivées à la création d'une partie (dimensionnement de classe, périodicité,
