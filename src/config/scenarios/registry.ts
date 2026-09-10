@@ -151,6 +151,9 @@ export interface ScenarioDefinition {
    * Le pictogramme du scénario, distinct de celui du secteur quand deux
    * scénarios partagent un secteur : NOVA se joue en un produit ou en gamme,
    * et une tuile « 🏭 Industrie » deux fois ne dit pas laquelle est laquelle.
+   * C'est l'emblème que la vitrine (`presentation.ts`) affiche aussi : une
+   * seule source, sinon la page des entreprises et la tuile de la partie
+   * solo montreraient deux images du même scénario.
    */
   icon: string;
   /** Le nom court, pour une tuile ou une pastille (« NOVA · gamme »). */
@@ -262,7 +265,7 @@ export const NOVA_GAMME_DEFINITION: ScenarioDefinition = {
   code: novaGammeScenario.code,
   title: "NOVA · Composez la gamme",
   sector: "industrie",
-  icon: "🎛️",
+  icon: "🎚️",
   shortName: "NOVA · gamme",
   tagline: "Fabricant d'enceintes portables : trois références, un atelier.",
   briefing:
@@ -318,7 +321,7 @@ export const BOUTIQUE_DEFINITION: ScenarioDefinition = {
   code: boutiqueScenario.code,
   title: "MAILLE & CO · Habillez l'hiver",
   sector: "commerce",
-  icon: "🧶",
+  icon: "👗",
   shortName: "MAILLE & CO",
   tagline: "Marque de vêtements en maille : cinq références, une boutique.",
   briefing:
@@ -374,7 +377,7 @@ export const HOTEL_DEFINITION: ScenarioDefinition = {
   code: hotelScenario.code,
   title: "L'ESCALE · Remplissez l'hôtel",
   sector: "hotellerie",
-  icon: "🏨",
+  icon: "🛎️",
   shortName: "L'ESCALE",
   tagline: "Hôtel 3 étoiles de 60 chambres en ville moyenne.",
   briefing:
@@ -484,7 +487,7 @@ export const CONSEIL_DEFINITION: ScenarioDefinition = {
   code: conseilScenario.code,
   title: "ATLAS CONSEIL · Vendez le temps de vos équipes",
   sector: "services",
-  icon: "💼",
+  icon: "📊",
   shortName: "ATLAS CONSEIL",
   tagline: "Cabinet de conseil et bureau d'études, 12 consultants.",
   briefing:
@@ -540,7 +543,7 @@ export const ECOMMERCE_DEFINITION: ScenarioDefinition = {
   code: ecommerceScenario.code,
   title: "PIXEL & CO · Achetez votre trafic",
   sector: "ecommerce",
-  icon: "🛒",
+  icon: "📦",
   shortName: "PIXEL & CO",
   tagline: "Pure player de décoration et petit mobilier.",
   briefing:
@@ -707,7 +710,7 @@ export const TRANSPORT_DEFINITION: ScenarioDefinition = {
   code: transportScenario.code,
   title: "ROUTE & CIE · Remplissez les camions",
   sector: "transport",
-  icon: "🚛",
+  icon: "🚚",
   shortName: "ROUTE & CIE",
   tagline: "Transporteur routier régional, sept porteurs.",
   briefing:
