@@ -666,7 +666,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
     category: "tresorerie_dormante",
     title: "L'argent qui dort",
     narrative:
-      "Le trimestre s'est bien passé. Votre compte affiche plus d'un tour et demi de charges de structure, aucun découvert, et cet argent ne fait rien. Votre banquier propose de placer une partie du solde : il vous le bloque jusqu'au trimestre suivant et vous le rend avec 2 % l'an. Le même banquier facture votre découvert 9 %.",
+      "Le trimestre s'est bien passé. Votre compte affiche plus d'un tour et demi de charges de structure, aucun découvert, et cet argent ne fait rien. Votre banquier propose de placer une partie du solde : il vous le bloque jusqu'au trimestre suivant et vous le rend avec 2 % l'an. Le même banquier facture votre découvert 12 %.",
     problem:
       "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant ?",
     diagnosticOptions: [
@@ -696,14 +696,14 @@ export const NOVA_SITUATIONS: SituationDef[] = [
         id: "nova_placement_exces",
         prompt: "Placer la totalité de sa trésorerie expose l'entreprise à…",
         options: [
-          { id: "a", label: "Ouvrir un découvert à 9 % tout en détenant un placement à 2 %" },
+          { id: "a", label: "Ouvrir un découvert à 12 % tout en détenant un placement à 2 %" },
           { id: "b", label: "Perdre le capital placé si le trimestre est mauvais" },
           { id: "c", label: "Un redressement fiscal sur les produits financiers" },
           { id: "d", label: "Une baisse mécanique de son chiffre d'affaires" },
         ],
         correctOptionId: "a",
         explain:
-          "Le placement est bloqué : il ne paie rien pendant le tour. Si les décaissements dépassent ce qui reste en caisse, la banque ouvre un découvert, et vous payez d'un côté quatre fois ce que vous gagnez de l'autre.",
+          "Le placement est bloqué : il ne paie rien pendant le tour. Si les décaissements dépassent ce qui reste en caisse, la banque ouvre un découvert, et vous payez d'un côté six fois ce que vous gagnez de l'autre.",
       },
       {
         id: "nova_produits_financiers",
@@ -731,7 +731,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
       "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro.",
       "Attention : le placement est bloqué jusqu'au tour suivant. Il ne réglera ni les matières, ni les salaires, ni l'échéance d'emprunt de ce trimestre.",
       "Projetez donc les décaissements du tour à venir avant de décider du montant : c'est un budget de trésorerie, même sommaire.",
-      "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte quatre fois ce que le placement rapporte : l'erreur n'est pas symétrique.",
+      "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte six fois ce que le placement rapporte : l'erreur n'est pas symétrique.",
     ]),
     trigger: { detect: "idle_cash" },
     weight: 0.8,

@@ -575,7 +575,7 @@ export const BISTROT_DEFINITION: ScenarioDefinition = {
   shortName: "LA TABLE D'AUGUSTIN",
   tagline: "Bistrot de 70 couverts, midi et soir.",
   briefing:
-    "Un couvert non servi est perdu, et ce que la cuisine a préparé sans le vendre part à la poubelle. Deux limites vous arrêtent en même temps : le nombre de places en salle et les heures de votre brigade. Prévoir trop coûte, prévoir trop peu aussi.",
+    "Un couvert non servi est perdu, et ce que la cuisine a préparé sans le vendre part à la poubelle. Deux limites vous arrêtent en même temps : ce que la salle et la cuisine peuvent servir, et les heures de votre brigade. Prévoir trop coûte, prévoir trop peu aussi.",
   context:
     "Le bistrot est connu du quartier : la salle se remplit le midi en semaine, et le soir le week-end. Chaque semaine, la cuisine commande des denrées qui ne se gardent pas. Ce qui est préparé et non servi est perdu le soir même.",
   dilemma: {
@@ -603,10 +603,10 @@ export const BISTROT_DEFINITION: ScenarioDefinition = {
     priceLabel: "Ticket moyen",
     leftoverLabel: "Denrées perdues",
     capacityPanelTitle: "Capacité de service",
-    capacityLabel: "Places en salle",
-    capacityBottleneckLabel: "Salle",
+    capacityLabel: "Capacité salle et cuisine",
+    capacityBottleneckLabel: "Salle et cuisine",
     capacityBottleneckHint:
-      "Votre salle limite le nombre de couverts : couvrir la terrasse prend effet au tour suivant.",
+      "Votre salle et votre cuisine limitent le nombre de couverts : la terrasse couverte et le matériel de cuisine prennent effet au tour suivant.",
     laborLabel: "Capacité brigade",
     laborBottleneckHint:
       "Votre brigade limite le service : des places libres ne servent à rien sans personnel pour les tenir. Embauchez ou formez.",

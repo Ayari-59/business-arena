@@ -682,7 +682,7 @@ export const BOUTIQUE_MONO_SITUATIONS: SituationDef[] = [
     category: "tresorerie_dormante",
     title: "La caisse pleine d'après-soldes",
     narrative:
-      "Les soldes ont vidé la réserve et rempli le compte : vous détenez plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an. Il facture par ailleurs votre découvert 9 %. La collection d'automne, elle, se commande dans quelques semaines et se paie avant d'être vendue.",
+      "Les soldes ont vidé la réserve et rempli le compte : vous détenez plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an. Il facture par ailleurs votre découvert 13 %. La collection d'automne, elle, se commande dans quelques semaines et se paie avant d'être vendue.",
     problem:
       "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant ?",
     diagnosticOptions: [
@@ -712,14 +712,14 @@ export const BOUTIQUE_MONO_SITUATIONS: SituationDef[] = [
         id: "boutique_detect_idle_cash_placement_exces",
         prompt: "Placer la totalité de sa trésorerie expose l'entreprise à…",
         options: [
-          { id: "a", label: "Ouvrir un découvert à 9 % tout en détenant un placement à 2 %" },
+          { id: "a", label: "Ouvrir un découvert à 13 % tout en détenant un placement à 2 %" },
           { id: "b", label: "Perdre le capital placé si le trimestre est mauvais" },
           { id: "c", label: "Un redressement fiscal sur les produits financiers" },
           { id: "d", label: "Une baisse mécanique de son chiffre d'affaires" },
         ],
         correctOptionId: "a",
         explain:
-          "Le placement est bloqué : il ne paie rien pendant le tour. Si les décaissements dépassent ce qui reste en caisse, la banque ouvre un découvert, et vous payez d'un côté quatre fois ce que vous gagnez de l'autre.",
+          "Le placement est bloqué : il ne paie rien pendant le tour. Si les décaissements dépassent ce qui reste en caisse, la banque ouvre un découvert, et vous payez d'un côté six fois et demie ce que vous gagnez de l'autre.",
       },
       {
         id: "boutique_saison_achats",
@@ -747,12 +747,12 @@ export const BOUTIQUE_MONO_SITUATIONS: SituationDef[] = [
       "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro.",
       "Attention : le placement est bloqué jusqu'au tour suivant. Il ne réglera rien de ce qui tombera d'ici là.",
       "Projetez surtout la commande de la collection suivante : elle se paie au fournisseur avant qu'une seule pièce ne soit vendue.",
-      "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte quatre fois ce que le placement rapporte : l'erreur n'est pas symétrique.",
+      "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte six fois et demie ce que le placement rapporte : l'erreur n'est pas symétrique.",
     ]),
     trigger: { detect: "idle_cash" },
     weight: 0.8,
     decisionLevers: [
-      { field: "productionPlan", direction: "review", hint: "La commande de la collection suivante va ponctionner la caisse : chiffrez-la avant de décider combien placer, pour ne pas financer un placement à 2 % par un découvert à 9 %." },
+      { field: "productionPlan", direction: "review", hint: "La commande de la collection suivante va ponctionner la caisse : chiffrez-la avant de décider combien placer, pour ne pas financer un placement à 2 % par un découvert à 13 %." },
       { field: "maintenanceBudget", direction: "review", hint: "Les charges fixes du trimestre à venir sortiront quoi qu'il arrive : soustrayez-les du solde disponible avant d'envisager un placement." },
     ],
   },

@@ -21,7 +21,8 @@ import { parseScenarioConfig } from "../schema";
  *
  * Calibration (base trimestrielle) : ~6 000 couverts à ~33 €, 13 € de coût
  * variable → ~20 € de marge ; 90 000 € de structure décaissée → seuil
- * ≈ 4 500 couverts, soit 50 par jour d'ouverture.
+ * ≈ 4 500 couverts, soit 70 par jour sur 64 jours d'ouverture : un service
+ * plein chaque jour.
  */
 const rawBistrot = {
   code: "bistrot",
@@ -212,11 +213,12 @@ const rawBistrot = {
     ],
   },
   investment: {
-    // couvrir et chauffer la terrasse : ~1 900 € par place gagnée sur le
-    // trimestre (156 services) → 12 € par couvert de capacité
-    costPerCapacityUnit: 12,
-    depreciationRounds: 24,
-    maxPerRound: 1500,
+    // couvrir et chauffer la terrasse : 48 000 € pour 1 800 couverts de plus
+    // par trimestre, amortis sur douze trimestres (la situation du tour 5) →
+    // 27 € par couvert de capacité, 1 800 couverts au plus par tour
+    costPerCapacityUnit: 27,
+    depreciationRounds: 12,
+    maxPerRound: 1800,
   },
   // Équipements typés : 3 niveaux de cuisine.
   // Capacité initiale = 2 × 1 500 + 2 × 3 000 = 9 000 (identique au legacy).
@@ -527,7 +529,7 @@ export function bistrotCompany(
     productivity: 1,
     finishedGoods: { quantity: 0, unitCost: 0 },
     // Parc initial : 2 traditionnelles (30 000 €) + 2 semi-pro (72 000 €) = 102 000 €
-    // (amorti à ~61 % → ~62 000 € de VNC)
+    // d'origine, dont il reste 61 % en valeur nette → ~62 000 € de VNC
     fleet: [
       { typeCode: "cuisine_traditionnelle", count: 2, acquiredRound: 0, bookValue: 16000 },
       { typeCode: "cuisine_semi_pro", count: 2, acquiredRound: 0, bookValue: 46000 },
