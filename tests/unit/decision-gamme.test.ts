@@ -37,6 +37,7 @@ const { playRoundAction } = await import("@/app/arena/[gameId]/actions");
 const { submitTeamDecisions } = await import("@/services/game.service");
 const { readProductFields, productFieldName } = await import("@/config/decision-source");
 const { scalarsOfGamme } = await import("@/engine/gamme");
+const { formatEuro } = await import("@/lib/format");
 const { DecisionForm } = await import("@/components/decision-form");
 const { presetByLevel } = await import("@/config/difficulty");
 const { scenarioByCode } = await import("@/config/scenarios/registry");
@@ -242,6 +243,7 @@ describe("le formulaire en gamme", () => {
     seasonCoef: 1,
     stock: 0,
     suppliers: catalogue(p, 1.05),
+    rd: null,
   }));
   const sansFournisseurs: NonNullable<Props["gamme"]> = gamme.map((g) => ({ ...g, suppliers: null }));
   const defaults: Props["defaults"] = {
@@ -425,5 +427,92 @@ describe("la proposition mise au pas en gamme", () => {
     expect(d.products!.a).toEqual({ price: 60, productionPlan: 1500, qualityBudget: 2000, supplierChoice: "createur" });
     expect(d.qualityBudget).toBe(2500);
     expect(d.supplierChoice).toBe("createur");
+  });
+});
+
+describe("la R&D par référence", () => {
+  type Props = Parameters<typeof DecisionForm>[0];
+  const boutique = scenarioByCode("boutique");
+  const gammeRd: NonNullable<Props["gamme"]> = boutique.scenario.products!.map((p, i) => ({
+    code: p.code,
+    name: p.name,
+    materialCostPerUnit: p.materialCostPerUnit,
+    otherVariableCostPerUnit: p.otherVariableCostPerUnit,
+    hoursPerUnit: p.hoursPerUnit,
+    refPrice: p.market.segments[0]!.refPrice,
+    segments: p.market.segments.map((s) => ({ code: s.code, name: s.name })),
+    seasonCoef: 1,
+    stock: 0,
+    suppliers: null,
+    // Le mérinos (i = 2) est à développer : 40 000 €, 12 000 déjà engagés.
+    rd: {
+      techLevel: 0,
+      development:
+        i === 2
+          ? { cost: 40000, availableFromRound: 2, invested: 12000, available: false, launchRound: null }
+          : null,
+    },
+  }));
+  const defaults: Props["defaults"] = {
+    price: 50,
+    productionPlan: 4400,
+    marketingBudget: 4500,
+    qualityBudget: 0,
+    maintenanceBudget: 0,
+    rdBudget: 0,
+    products: Object.fromEntries(
+      gammeRd.map((g) => [g.code, { price: g.refPrice, productionPlan: 500, marketingBudget: 900, rdBudget: 0 }]),
+    ),
+  };
+  const rendu = (extra: Partial<Props> = {}) =>
+    renderToStaticMarkup(
+      createElement(DecisionForm, {
+        gameId: "partie-test",
+        roundIndex: 1,
+        periodName: "tour 1",
+        defaults,
+        kind: "class",
+        alreadySubmitted: false,
+        enabled: presetByLevel.get(4)!.decisions,
+        vocabulary: boutique.vocabulary,
+        gamme: gammeRd,
+        rdOffer: { techScale: 10000 },
+        ...extra,
+      }),
+    );
+
+  it("au niveau qui ouvre la R&D, chaque référence porte son budget, et la référence en développement ne se vend pas", () => {
+    const html = rendu();
+    expect(html).toContain('name="product.pull-col-rond.rdBudget"');
+    expect(html).toContain('name="product.pull-merinos.rdBudget"');
+    // La référence en développement : pas de saisie de volume, un champ caché à zéro.
+    expect(html).toContain("en développement");
+    expect(html).toContain('name="product.pull-merinos.productionPlan" value="0"');
+    expect(html).toContain(`${formatEuro(12000)} engagés sur ${formatEuro(40000)}`);
+    expect(html).toContain(`il reste ${formatEuro(28000)} à financer`);
+    // Les autres références gardent leur saisie normale.
+    expect(html).toContain('name="product.pull-col-rond.productionPlan" value="500"');
+  });
+
+  it("au niveau qui ne l'ouvre pas, aucun champ R&D ; sans levier dans le scénario non plus", () => {
+    const ferme = rendu({ enabled: presetByLevel.get(3)!.decisions });
+    expect(ferme).not.toContain("rdBudget");
+    const sansLevier = rendu({ rdOffer: null });
+    expect(sansLevier).not.toContain("rdBudget");
+  });
+
+  it("l'action relit la R&D de chaque référence et en dérive le scalaire", async () => {
+    const champs: Record<string, string> = {};
+    for (const g of gammeRd) {
+      champs[`product.${g.code}.price`] = String(g.refPrice);
+      champs[`product.${g.code}.productionPlan`] = g.code === "pull-merinos" ? "0" : "500";
+      champs[`product.${g.code}.marketingBudget`] = "900";
+      champs[`product.${g.code}.rdBudget`] = g.code === "pull-merinos" ? "28000" : "0";
+    }
+    champs.maintenanceBudget = "0";
+    const products = readProductFields(formulaire(champs).entries());
+    expect(products!["pull-merinos"]!.rdBudget).toBe(28000);
+    expect(products!["bonnet"]!.rdBudget).toBe(0);
+    expect(scalarsOfGamme(products!).rdBudget).toBe(28000);
   });
 });

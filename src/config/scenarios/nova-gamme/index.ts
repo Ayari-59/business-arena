@@ -15,9 +15,9 @@ import { novaBots, novaScenario } from "../nova";
  * Celui-ci est le NOVA des ateliers de gestion (GEA, CG, DCG) : même atelier,
  * même finance, mais trois produits qui se disputent la même capacité.
  *
- *   NOVA Go      34 € · matières 12 € + 9 €  · MCV 13 € · 0,18 h · l'entrée de gamme
+ *   NOVA Go      34 € · matières 10 € + 9 €  · MCV 15 € · 0,18 h · l'entrée de gamme
  *   NOVA One     59 € · matières 22 € + 16 € · MCV 21 € · 0,30 h · le cœur de gamme
- *   NOVA Studio 129 € · matières 48 € + 22 € · MCV 59 € · 0,50 h · le haut de gamme
+ *   NOVA Studio 129 € · matières 48 € + 22 € · MCV 59 € · 0,50 h · le haut de gamme, à développer
  *
  * Ce que la gamme apporte à NOVA : le MIX. L'atelier sort 7 000 enceintes par
  * trimestre, quelle que soit la référence ; une Studio y rapporte presque
@@ -28,9 +28,10 @@ import { novaBots, novaScenario } from "../nova";
  * unité de capacité.
  *
  * Chaque référence a SON marché (segments, concurrence, saison) et SON
- * catalogue de composants. Le One garde exactement le marché et les
- * fournisseurs du NOVA d'origine, moins les passionnés, qui montent en gamme
- * vers le Studio.
+ * catalogue de composants. Le One garde le marché et les fournisseurs du
+ * NOVA d'origine ; la moitié de ses passionnés, les audiophiles, n'achètent
+ * que la Studio — qui n'existe qu'à l'état de prototype à la reprise et se
+ * développe à coups de R&D.
  */
 
 // --- Les composants, référence par référence -------------------------------
@@ -113,10 +114,12 @@ const campustech = novaSegments.find((s) => s.code === "campustech")!;
  * et les gardes de calibration.
  */
 const ONE_MARKET = {
-  // Une partie des étudiants du NOVA d'origine achète désormais un Go : le
-  // segment du One est un peu moins large, ses ressorts sont les mêmes (et il
-  // reste le plus gros du marché : c'est lui qui fixe le prix de référence).
-  segments: [{ ...etudiants, size: 12500 }, campustech],
+  // Les étudiants et CampusTech du NOVA d'origine, tels quels ; et la moitié
+  // de ses passionnés, qui achètent un One tant que la Studio n'existe pas —
+  // l'autre moitié, les audiophiles, n'achètera QUE la Studio, une fois
+  // développée. Les étudiants restent le plus gros segment : c'est lui qui
+  // fixe le prix de référence.
+  segments: [etudiants, { ...passionnes, size: 5000 }, campustech],
   seasonality: [0.9, 0.95, 1.0, 1.35, 0.9, 1.0],
   outsideAttraction: 0.55,
   competitionIntensity: 1.6,
@@ -127,7 +130,7 @@ const GAMME: ProductDef[] = [
     code: "nova-go",
     name: "NOVA Go",
     // l'enceinte de poche : un kit simple, une marge mince, du volume
-    materialCostPerUnit: 12,
+    materialCostPerUnit: 10,
     otherVariableCostPerUnit: 9, // MOD 6 € + énergie/divers 3 €
     hoursPerUnit: 0.18,
     suppliers: COMPOSANTS_GO,
@@ -192,12 +195,20 @@ const GAMME: ProductDef[] = [
     otherVariableCostPerUnit: 22, // MOD 16 € + énergie/divers 6 €
     hoursPerUnit: 0.5,
     suppliers: COMPOSANTS_STUDIO,
+    // La montée en gamme se paie avant de rapporter : la Studio n'existe
+    // qu'à l'état de prototype à la reprise. 25 000 € de R&D (un bon quart
+    // d'un trimestre de charges de structure) avant de la vendre, et
+    // pas avant le tour 2 : lancée au tour 2 si tout est engagé dès le tour 1,
+    // au tour 3 en étalant. Une décision de valeur actuelle nette grandeur nature, avec
+    // Noël au tour 4 comme horizon.
+    development: { cost: 25000, availableFromRound: 2 },
     market: {
       segments: [
         {
           ...passionnes,
-          name: "Passionnés (sensibles à la qualité)",
-          size: 2600,
+          code: "audiophiles",
+          name: "Audiophiles (haut de gamme, sensibles à la qualité)",
+          size: 3400,
           refPrice: 129,
           minAcceptablePrice: 90,
           psychThresholds: [{ threshold: 150, penalty: 0.9 }],
@@ -205,7 +216,7 @@ const GAMME: ProductDef[] = [
         {
           code: "studios",
           name: "Studios et podcasteurs (30 j)",
-          size: 1800,
+          size: 2400,
           growth: 0.08,
           priceElasticity: -0.9,
           refPrice: 139,
@@ -253,6 +264,11 @@ const rawNovaGamme = {
   // Le catalogue du scénario est celui du One (affichages mono-produit).
   suppliers: COMPOSANTS_ONE,
   orderOffers: ORDER_OFFERS,
+  // Le levier R&D : au-delà du coût de développement, la R&D élève le niveau
+  // technique d'une référence — jusqu'à +12 % de qualité perçue, avec retard,
+  // et qui s'érode de moitié par tour sans entretien. Échelle : 10 000 € par
+  // trimestre donnent environ +4 % à l'équilibre.
+  rd: { techScale: 10000, techSensitivity: 0.08, techMax: 0.12, techInertia: 0.5 },
   scoring: {
     weights: novaScenario.scoring.weights,
     benchmarks: {

@@ -27,6 +27,7 @@ const CASH_LABELS: Record<string, string> = {
   qualite: "Budget qualité",
   maintenance: "Budget maintenance",
   engagement_rse: "Engagement RSE",
+  recherche_developpement: "Recherche et développement",
   sanction_rse: "Sanction RSE (amende)",
   subvention_rse: "Éco-subvention RSE",
   interets: "Charges financières",
@@ -125,7 +126,12 @@ export function FinancialStatements({
     + (result.extraOrders?.subcontracted ?? 0)
     + (result.orderOffer?.delivered ?? 0);
   const structure =
-    cr.fixedCosts + cr.marketingCost + cr.qualityCost + cr.maintenanceCost + cr.depreciation;
+    cr.fixedCosts +
+    cr.marketingCost +
+    cr.qualityCost +
+    cr.maintenanceCost +
+    (cr.rdCost ?? 0) +
+    cr.depreciation;
   const placement = b.shortTermInvestment ?? 0;
   const totalAssets =
     b.fixedAssetsNet + b.inventoryValue + b.receivables + b.cash + placement;
@@ -160,6 +166,9 @@ export function FinancialStatements({
         <Row label="− Maintenance" value={euro(-cr.maintenanceCost)} indent />
         {(cr.engagementRse ?? 0) > 0.5 ? (
           <Row label="− Engagement RSE" value={euro(-(cr.engagementRse ?? 0))} indent />
+        ) : null}
+        {(cr.rdCost ?? 0) > 0.5 ? (
+          <Row label="− Recherche et développement" value={euro(-(cr.rdCost ?? 0))} indent />
         ) : null}
         <Row label="− Charges de structure" value={euro(-cr.fixedCosts)} indent />
         <Row label="= Excédent brut d'exploitation (EBE)" value={euro(cr.ebitda)} strong />

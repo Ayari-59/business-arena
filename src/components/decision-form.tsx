@@ -329,15 +329,21 @@ function GammeFields({
   defaults,
   vocabulary: v,
   quality,
+  rd,
+  roundIndex,
 }: {
   gamme: NonNullable<GameView["gamme"]>;
   defaults: RoundDecisions;
   vocabulary: ScenarioVocabulary;
   /** Le budget qualité est-il ouvert à ce niveau ? */
   quality: boolean;
+  /** La R&D est-elle ouverte (niveau ET scénario) ? */
+  rd: boolean;
+  roundIndex: number;
 }) {
   const n = gamme.length;
   const avecFournisseurs = gamme.some((p) => p.suppliers);
+  const avecRd = rd && gamme.some((p) => p.rd);
   // Le prix saisi et le façonnier choisi de chaque référence, pour montrer la
   // marge en direct : les champs restent non contrôlés (le formulaire les
   // envoie), on ne fait que les écouter.
@@ -363,6 +369,7 @@ function GammeFields({
             <th className="pb-2 pr-3 font-medium">{v.productionPlanLabel}</th>
             <th className="pb-2 pr-3 font-medium">Marketing</th>
             {quality ? <th className="pb-2 pr-3 font-medium">Qualité</th> : null}
+            {avecRd ? <th className="pb-2 pr-3 font-medium">R&amp;D</th> : null}
             {avecFournisseurs ? <th className="pb-2 font-medium">Fournisseur</th> : null}
           </tr>
         </thead>
@@ -377,6 +384,56 @@ function GammeFields({
             const reference = suppliers?.[0];
             const choisi = suppliers?.find((s) => s.code === faconniers[p.code]) ?? reference;
             const achat = choisi ? choisi.materialCostPerUnit : p.materialCostPerUnit;
+            const rdDefaut = Math.round(own?.rdBudget ?? 0);
+            const dev = p.rd?.development;
+            // Une référence EN DÉVELOPPEMENT ne se vend ni ne se produit : la
+            // ligne ne porte que sa R&D (et, cachés, des champs neutres pour
+            // que la lecture par référence reste complète).
+            if (dev && !dev.available) {
+              const colonnes = 3 + (quality ? 1 : 0);
+              const reste = Math.max(0, dev.cost - dev.invested);
+              const pret = reste <= 0;
+              return (
+                <tr key={p.code} className="border-t border-white/5 align-top">
+                  <td className="py-2 pr-3">
+                    <span className="block text-sm font-medium text-slate-100">{p.name}</span>
+                    <span className="mt-0.5 block text-xs leading-snug text-amber-300">
+                      🔬 en développement
+                    </span>
+                    <input type="hidden" name={productFieldName(p.code, "price")} value={Math.round(price * 10) / 10} />
+                    <input type="hidden" name={productFieldName(p.code, "productionPlan")} value={0} />
+                    <input type="hidden" name={productFieldName(p.code, "marketingBudget")} value={0} />
+                    {quality ? <input type="hidden" name={productFieldName(p.code, "qualityBudget")} value={0} /> : null}
+                    {suppliers && faconniers[p.code] ? (
+                      <input type="hidden" name={productFieldName(p.code, "supplierChoice")} value={faconniers[p.code]} />
+                    ) : null}
+                  </td>
+                  <td className="py-2 pr-3 text-xs leading-snug text-slate-400" colSpan={colonnes}>
+                    {pret
+                      ? `Développement financé (${formatEuro(dev.invested)} engagés) : vendable dès le tour ${Math.max(dev.availableFromRound, roundIndex + 1)}.`
+                      : `${formatEuro(dev.invested)} engagés sur ${formatEuro(dev.cost)} : il reste ${formatEuro(reste)} à financer. Une fois le coût couvert, la référence se vend dès le tour suivant, et au plus tôt au tour ${dev.availableFromRound}.`}
+                  </td>
+                  {avecRd ? (
+                    <td className="py-2 pr-3">
+                      <span className="flex items-center gap-1 rounded-lg border border-white/10 bg-slate-950 px-2 py-1.5 focus-within:border-amber-400/60">
+                        <input
+                          type="number"
+                          name={productFieldName(p.code, "rdBudget")}
+                          aria-label={`R&D · ${p.name}`}
+                          defaultValue={rdDefaut}
+                          step={1}
+                          min={0}
+                          required
+                          className="w-24 bg-transparent text-sm text-slate-100 outline-none"
+                        />
+                        <span className="text-xs text-slate-400">€</span>
+                      </span>
+                    </td>
+                  ) : null}
+                  {avecFournisseurs ? <td className="py-2 text-xs text-slate-400">—</td> : null}
+                </tr>
+              );
+            }
             return (
               <tr key={p.code} className="border-t border-white/5 align-top">
                 <td className="py-2 pr-3">
@@ -460,6 +517,23 @@ function GammeFields({
                     </span>
                   </td>
                 ) : null}
+                {avecRd ? (
+                  <td className="py-2 pr-3">
+                    <span className="flex items-center gap-1 rounded-lg border border-white/10 bg-slate-950 px-2 py-1.5 focus-within:border-amber-400/60">
+                      <input
+                        type="number"
+                        name={productFieldName(p.code, "rdBudget")}
+                        aria-label={`R&D · ${p.name}`}
+                        defaultValue={rdDefaut}
+                        step={1}
+                        min={0}
+                        required
+                        className="w-24 bg-transparent text-sm text-slate-100 outline-none"
+                      />
+                      <span className="text-xs text-slate-400">€</span>
+                    </span>
+                  </td>
+                ) : null}
                 {avecFournisseurs ? (
                   <td className="py-2">
                     {suppliers ? (
@@ -496,6 +570,9 @@ function GammeFields({
         Les références partagent la même réserve : si la somme des volumes dépasse votre
         capacité, toutes sont réduites dans la même proportion. Le prix se fixe référence
         par référence ; le marketing soutient la demande de chacune.
+        {avecRd
+          ? " La R&D lance une référence à développer (le coût couvert, elle se vend dès le tour suivant) et, au-delà, élève son niveau technique : une qualité perçue qui monte avec retard et s'érode si la R&D cesse. Elle se paie le tour même, en charge."
+          : ""}
         {quality
           ? " Le budget qualité fait la qualité de la référence qui le reçoit : réparti à parts égales, il vaut ce qu'il valait pour toute la gamme ; concentré, il distingue une référence."
           : ""}
@@ -562,10 +639,13 @@ export function DecisionForm({
   vocabulary,
   verrou,
   gamme = null,
+  rdOffer = null,
 }: {
   gameId: string;
   /** Gamme du scénario joué (prix, volume et marketing par référence) ; null en mono-produit. */
   gamme?: GameView["gamme"];
+  /** Levier R&D du scénario (échelle du budget par tour) ; null sans levier. */
+  rdOffer?: GameView["rdOffer"];
   roundIndex: number;
   periodName: string;
   /**
@@ -596,6 +676,7 @@ export function DecisionForm({
     rse: boolean;
     placement: boolean;
     dividend: boolean;
+    rd: boolean;
   };
   /** Bénéfices des tours passés non distribués : le plafond du dividende. */
   distributableReserves?: number;
@@ -773,7 +854,9 @@ export function DecisionForm({
     rse: false,
     placement: false,
     dividend: false,
+    rd: false,
   };
+  const rdMono = on.rd && !!rdOffer && !gamme;
 
   // Vocabulaire du secteur : c'est lui qui parle à l'élève, pas le moteur.
   const v = vocabulary;
@@ -786,7 +869,7 @@ export function DecisionForm({
   // référence dans le tableau des ventes ; il ne resterait à « Produire » que
   // l'entretien, et un commerce ne produit rien : l'étape disparaît, l'entretien
   // rejoint la première étape, avec l'approvisionnement.
-  const produireVisible = !gamme && (on.quality || on.maintenance);
+  const produireVisible = !gamme && (on.quality || on.maintenance || rdMono);
   const equipeVisible = on.hr || on.rse;
   const financerVisible = on.finance || (on.investment && !!equipmentOffer);
   const couvertureVisible =
@@ -907,7 +990,14 @@ export function DecisionForm({
       ) : null}
       {gamme ? (
         <Family legend="🎯 Vos ventes · le prix, le volume et le marketing de chaque référence" defaultOpen>
-          <GammeFields gamme={gamme} defaults={defaults} vocabulary={v} quality={on.quality} />
+          <GammeFields
+            gamme={gamme}
+            defaults={defaults}
+            vocabulary={v}
+            quality={on.quality}
+            rd={on.rd && !!rdOffer}
+            roundIndex={roundIndex}
+          />
         </Family>
       ) : (
         <Family legend="🎯 Vos ventes · le prix et le volume du tour" defaultOpen>
@@ -1111,7 +1201,7 @@ export function DecisionForm({
         hidden={courante !== idx("produire")}
         className="space-y-3"
       >
-      <Family legend="🏭 Production · qualité & maintenance" defaultOpen>
+      <Family legend={rdMono ? "🏭 Production · qualité, maintenance & R&D" : "🏭 Production · qualité & maintenance"} defaultOpen>
         <div className="grid grid-cols-2 gap-3">
           {on.quality ? (
             <Field name="qualityBudget" label="Budget qualité" defaultValue={defaults.qualityBudget} suffix="€" />
@@ -1124,6 +1214,15 @@ export function DecisionForm({
           ) : (
             <input type="hidden" name="maintenanceBudget" value={defaults.maintenanceBudget} />
           )}
+          {rdMono ? (
+            <Field
+              name="rdBudget"
+              label="Recherche et développement"
+              defaultValue={Math.round(defaults.rdBudget ?? 0)}
+              suffix="€"
+              hint="Élève le niveau technique du produit : une qualité perçue qui monte avec retard, et s'érode si la R&D cesse. Une charge du tour."
+            />
+          ) : null}
         </div>
       </Family>
       </section>

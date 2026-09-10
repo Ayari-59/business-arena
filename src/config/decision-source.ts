@@ -110,15 +110,15 @@ export function lireSource(raw: unknown): DecisionSourceMap | null {
 /**
  * GAMME : les champs par produit du formulaire s'appellent
  * `product.<code>.price`, `product.<code>.productionPlan`,
- * `product.<code>.marketingBudget`, `product.<code>.qualityBudget` et
- * `product.<code>.supplierChoice`. Cette lecture est partagée par le
+ * `product.<code>.marketingBudget`, `product.<code>.qualityBudget`,
+ * `product.<code>.supplierChoice` et `product.<code>.rdBudget`. Cette lecture est partagée par le
  * formulaire (vérification des pivots avant envoi) et par l'action serveur.
  * Une valeur numérique vide ou illisible est laissée `NaN` : c'est au schéma
  * de refuser ; un fournisseur vide est simplement absent.
  */
 export const PRODUCT_FIELD_PREFIX = "product.";
 
-const PRODUCT_NUMBER_FIELDS = ["price", "productionPlan", "marketingBudget", "qualityBudget"] as const;
+const PRODUCT_NUMBER_FIELDS = ["price", "productionPlan", "marketingBudget", "qualityBudget", "rdBudget"] as const;
 type ProductNumberField = (typeof PRODUCT_NUMBER_FIELDS)[number];
 
 export function productFieldName(
@@ -159,6 +159,7 @@ export function readProductFields(
       ...(p.marketingBudget !== undefined ? { marketingBudget: p.marketingBudget } : {}),
       ...(p.qualityBudget !== undefined ? { qualityBudget: p.qualityBudget } : {}),
       ...(p.supplierChoice !== undefined ? { supplierChoice: p.supplierChoice } : {}),
+      ...(p.rdBudget !== undefined ? { rdBudget: p.rdBudget } : {}),
     };
   }
   return products;

@@ -7,7 +7,7 @@ import type {
   RoundDecisions,
 } from "../types";
 import { fleetMaintenanceMultiplier } from "../simulation";
-import { isMultiProduct, toGamme, type GammeProduct } from "../gamme";
+import { isMultiProduct, isProductAvailable, rdOpeningOf, toGamme, type GammeProduct } from "../gamme";
 import type { SupplierDef } from "../types";
 
 /**
@@ -128,11 +128,15 @@ function applyFinancialGuardRail(base: RoundDecisions, ctx: BotContext): void {
   // financée par le cycle (les ventes), pas mise en regard de la seule caisse.
   const envelope = ctx.state.finance.cash + ctx.scenario.finance.overdraftLimit;
   const discretionnaire =
-    (base.marketingBudget ?? 0) + (base.qualityBudget ?? 0) + (base.maintenanceBudget ?? 0);
+    (base.marketingBudget ?? 0) +
+    (base.qualityBudget ?? 0) +
+    (base.maintenanceBudget ?? 0) +
+    (base.rdBudget ?? 0);
   if (discretionnaire > envelope && discretionnaire > 0) {
     const k = Math.max(0, envelope) / discretionnaire;
     base.marketingBudget = (base.marketingBudget ?? 0) * k;
     base.qualityBudget = (base.qualityBudget ?? 0) * k;
+    if (base.rdBudget !== undefined) base.rdBudget = base.rdBudget * k;
     base.maintenanceBudget = (base.maintenanceBudget ?? 0) * k;
   }
 }
@@ -402,11 +406,26 @@ function gammeDecisions(
   const cap = Math.min(machineCap, meanHours > 0 ? laborHours / meanHours : Infinity);
   const aggressiveness = AGGRESSIVENESS[profile];
 
+  // R&D (levier `rd`) : une référence en développement ne se produit ni ne se
+  // vend ; le bot ne lui met ni plan, ni marketing, ni qualité — seulement la
+  // R&D qui la fera naître, selon son profil.
+  const available = gamme.map((p) =>
+    isProductAvailable(p, rdOpeningOf(ctx.scenario, ctx.state, p.code), ctx.roundIndex),
+  );
+  // Le poids d'une référence en développement se reporte sur les autres : le
+  // bot répartit son atelier et son marketing entre ce qu'il peut vendre.
+  const aliveTotal = weights.reduce((sum, w, k) => sum + (available[k] ? w : 0), 0);
+  const weightsAlive = weights.map((w, k) =>
+    available[k] ? (aliveTotal > 0 ? w / aliveTotal : 1 / gamme.length) : 0,
+  );
   const targets = gamme.map((p, k) => {
-    if (profile === "passive") return cap * aggressiveness * weights[k]!;
+    if (!available[k]) return 0;
+    if (profile === "passive") return cap * aggressiveness * weightsAlive[k]!;
     const stock = ctx.state.finishedGoodsByProduct?.[p.code]?.quantity ?? 0;
+    // Zéro vente au tour passé n'est pas une information : la référence
+    // n'était pas encore lancée, ou n'a rien vendu — on repart du marché.
     const lastSold = ctx.lastSoldByProduct?.[p.code];
-    const basis = lastSold !== undefined ? lastSold * aggressiveness : cap * 0.65 * aggressiveness * weights[k]!;
+    const basis = lastSold ? lastSold * aggressiveness : cap * 0.65 * aggressiveness * weightsAlive[k]!;
     // Les accessoires d'une gamme peuvent doubler d'un tour à l'autre : la
     // fourchette d'anticipation est plus large qu'en mono-produit.
     const season = seasonalRatio(p.market.seasonality, ctx.roundIndex, 0.5, 2);
@@ -428,20 +447,51 @@ function gammeDecisions(
   const products: Record<ProductCode, ProductDecisions> = {};
   gamme.forEach((p, k) => {
     const floor = (p.materialCostPerUnit + p.otherVariableCostPerUnit) * 1.1;
-    const planShare = planTotal > 0 ? (targets[k]! * cut) / planTotal : weights[k]!;
+    const planShare = planTotal > 0 ? (targets[k]! * cut) / planTotal : weightsAlive[k]!;
     // Même porte que le choix scalaire : seuls les bots « enrichis » arbitrent
     // leurs fournisseurs ; les autres restent chez le façonnier de référence.
     const supplierChoice =
       p.suppliers && ctx.scenario.enrichedBots ? pickSupplier(profile, p.suppliers) : base.supplierChoice;
+    const rdBudget = ctx.scenario.rd ? botRdBudget(profile, ctx, p, available[k]!) : undefined;
     products[p.code] = {
       price: Math.max(floor, productRefPrice(p) * priceRatio),
       productionPlan: targets[k]! * cut,
-      marketingBudget: (base.marketingBudget ?? 0) * weights[k]!,
-      qualityBudget: (base.qualityBudget ?? 0) * planShare,
+      marketingBudget: (base.marketingBudget ?? 0) * weightsAlive[k]!,
+      qualityBudget: available[k] ? (base.qualityBudget ?? 0) * planShare : 0,
       ...(supplierChoice !== undefined ? { supplierChoice } : {}),
+      ...(rdBudget !== undefined ? { rdBudget } : {}),
     };
   });
   return products;
+}
+
+/**
+ * La R&D d'un bot sur une référence (levier `rd`). Une référence à développer
+ * est financée sur un nombre de tours propre au profil : le premium, la
+ * croissance et l'équilibré d'un coup, dans la limite de ce que leur caisse
+ * permet (le reste au tour suivant) ; l'agressif et le passif jamais — l'un
+ * vend du volume, l'autre ce qu'il a. Le nombre de tours restants se lit de
+ * la part déjà couverte, pour que le cumul atteigne le coût au tour prévu.
+ * Une référence lancée reçoit une R&D d'entretien de son niveau technique,
+ * chez ceux qui vendent la qualité.
+ */
+function botRdBudget(profile: BotProfile, ctx: BotContext, p: GammeProduct, available: boolean): number {
+  const cfg = ctx.scenario.rd!;
+  const rd = rdOpeningOf(ctx.scenario, ctx.state, p.code);
+  if (!available && p.development) {
+    const cost = p.development.cost;
+    const remaining = Math.max(0, cost - (rd?.invested ?? 0));
+    const tours = { premium: 1, growth: 1, balanced: 1, price_aggressive: 0, passive: 0 }[profile];
+    if (tours === 0 || remaining <= 0) return 0;
+    const couvert = cost > 0 ? (rd?.invested ?? 0) / cost : 1;
+    const restants = Math.max(1, Math.ceil(tours * (1 - couvert) - 1e-9));
+    // Jamais plus de la moitié de ce que la caisse et le découvert
+    // permettent : un bot ne se ruine pas pour un prototype, il attend un tour.
+    const enveloppe = ctx.state.finance.cash + ctx.scenario.finance.overdraftLimit;
+    return Math.max(0, Math.min(remaining / restants, 0.5 * enveloppe));
+  }
+  const upkeep = { premium: 0.4, growth: 0.2, balanced: 0.1, price_aggressive: 0, passive: 0 }[profile];
+  return upkeep * cfg.techScale;
 }
 
 export function botDecisions(profile: BotProfile, ctx: BotContext): RoundDecisions {
@@ -503,6 +553,11 @@ export function botDecisions(profile: BotProfile, ctx: BotContext): RoundDecisio
       };
       break;
   }
+  // R&D en mono-produit (levier `rd`) : l'entretien du niveau technique chez
+  // ceux qui vendent la qualité. En gamme, la R&D se décide par référence.
+  if (ctx.scenario.rd && !isMultiProduct(ctx.scenario)) {
+    base.rdBudget = botRdBudget(profile, ctx, toGamme(ctx.scenario)[0]!, true);
+  }
   const enriched = ctx.scenario.enrichedBots ? enrichDecisions(profile, ctx, base) : base;
   // Réaction au prix humain puis garde-fou financier (V1-4), appliqués en dernier
   // pour cadrer la décision finale, quelle que soit la stratégie.
@@ -514,6 +569,9 @@ export function botDecisions(profile: BotProfile, ctx: BotContext): RoundDecisio
     const products = gammeDecisions(profile, ctx, enriched);
     enriched.products = products;
     enriched.productionPlan = Object.values(products).reduce((sum, p) => sum + p.productionPlan, 0);
+    if (ctx.scenario.rd) {
+      enriched.rdBudget = Object.values(products).reduce((sum, p) => sum + (p.rdBudget ?? 0), 0);
+    }
   }
   return enriched;
 }

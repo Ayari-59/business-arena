@@ -27,6 +27,7 @@ export function PeriodDecisionsRecap({
   // Colonnes qualité et fournisseur : seulement si au moins une référence les porte.
   const avecQualite = parProduit.some((x) => x.own!.qualityBudget !== undefined);
   const avecFournisseur = parProduit.some((x) => x.own!.supplierChoice !== undefined);
+  const avecRd = parProduit.some((x) => x.own!.rdBudget !== undefined);
 
   const core: { label: string; value: string }[] = parProduit.length
     ? [
@@ -42,6 +43,7 @@ export function PeriodDecisionsRecap({
   if (d.qualityBudget > 0) core.push({ label: "Budget qualité", value: formatEuro(d.qualityBudget) });
   if (d.maintenanceBudget > 0)
     core.push({ label: "Budget maintenance", value: formatEuro(d.maintenanceBudget) });
+  if ((d.rdBudget ?? 0) > 0) core.push({ label: "Recherche et développement", value: formatEuro(d.rdBudget!) });
   if (d.forecast?.expectedUnits !== undefined)
     core.push({ label: "Ventes prévues", value: `${formatUnits(d.forecast.expectedUnits)} ${vocabulary.units}` });
   if (d.forecast?.expectedCash !== undefined)
@@ -111,6 +113,7 @@ export function PeriodDecisionsRecap({
                 <th className="pb-1 pr-3 text-right font-medium">{vocabulary.productionPlanLabel}</th>
                 <th className="pb-1 pr-3 text-right font-medium">Marketing</th>
                 {avecQualite ? <th className="pb-1 pr-3 text-right font-medium">Qualité</th> : null}
+                {avecRd ? <th className="pb-1 pr-3 text-right font-medium">R&amp;D</th> : null}
                 {avecFournisseur ? <th className="pb-1 font-medium">Fournisseur</th> : null}
               </tr>
             </thead>
@@ -129,6 +132,9 @@ export function PeriodDecisionsRecap({
                     <td className="py-1.5 pr-3 text-right tabular-nums">
                       {formatEuro(own!.qualityBudget ?? 0)}
                     </td>
+                  ) : null}
+                  {avecRd ? (
+                    <td className="py-1.5 pr-3 text-right tabular-nums">{formatEuro(own!.rdBudget ?? 0)}</td>
                   ) : null}
                   {avecFournisseur ? (
                     <td className="py-1.5 text-slate-300">{own!.supplierChoice ?? "—"}</td>

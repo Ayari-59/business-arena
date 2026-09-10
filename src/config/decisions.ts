@@ -38,6 +38,7 @@ export const LEVIERS: readonly LevierDeDecision[] = [
   { champ: "marketingBudget", nom: "Budget marketing", ouvertPar: "toujours" },
   { champ: "qualityBudget", nom: "Budget qualité", ouvertPar: "quality" },
   { champ: "maintenanceBudget", nom: "Budget maintenance", ouvertPar: "maintenance" },
+  { champ: "rdBudget", nom: "Recherche et développement", ouvertPar: "rd" },
   { champ: "hire", nom: "Embauches", ouvertPar: "hr" },
   { champ: "fire", nom: "Départs", ouvertPar: "hr" },
   { champ: "trainingBudget", nom: "Budget formation", ouvertPar: "hr" },

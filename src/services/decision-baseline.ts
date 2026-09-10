@@ -36,6 +36,7 @@ export function auPas(d: RoundDecisions): RoundDecisions {
             : {}),
           ...(p.qualityBudget !== undefined ? { qualityBudget: Math.round(p.qualityBudget) } : {}),
           ...(p.supplierChoice !== undefined ? { supplierChoice: p.supplierChoice } : {}),
+          ...(p.rdBudget !== undefined ? { rdBudget: Math.round(p.rdBudget) } : {}),
         },
       ]),
     );
@@ -49,6 +50,11 @@ export function auPas(d: RoundDecisions): RoundDecisions {
       qualityBudget: Math.round(scalars.qualityBudget ?? d.qualityBudget),
       maintenanceBudget: Math.round(d.maintenanceBudget),
       ...(scalars.supplierChoice !== undefined ? { supplierChoice: scalars.supplierChoice } : {}),
+      ...(scalars.rdBudget !== undefined
+        ? { rdBudget: scalars.rdBudget }
+        : d.rdBudget !== undefined
+          ? { rdBudget: Math.round(d.rdBudget) }
+          : {}),
     };
   }
   return {
@@ -58,6 +64,7 @@ export function auPas(d: RoundDecisions): RoundDecisions {
     marketingBudget: Math.round(d.marketingBudget),
     qualityBudget: Math.round(d.qualityBudget),
     maintenanceBudget: Math.round(d.maintenanceBudget),
+    ...(d.rdBudget !== undefined ? { rdBudget: Math.round(d.rdBudget) } : {}),
   };
 }
 
@@ -90,6 +97,8 @@ export function startingDecisionsFor(
                 marketingBudget: (0.5 * snapshot.marketing.scale) / gamme.length,
                 qualityBudget: (0.5 * snapshot.production.qualityScale) / gamme.length,
                 ...(supplier !== undefined ? { supplierChoice: supplier } : {}),
+                // R&D : rien de proposé, la décision d'investir est celle de l'équipe.
+                ...(snapshot.rd ? { rdBudget: 0 } : {}),
               },
             ];
           }),
@@ -101,10 +110,32 @@ export function startingDecisionsFor(
       marketingBudget: 0.5 * snapshot.marketing.scale,
       qualityBudget: 0.5 * snapshot.production.qualityScale,
       maintenanceBudget: snapshot.production.maintenanceReference,
+      ...(snapshot.rd ? { rdBudget: 0 } : {}),
       ...(products ? { products } : {}),
     });
   }
-  return auPas(neutralDecisions({ scenario: snapshot, state, roundIndex }));
+  // La R&D n'est jamais proposée : investir pour lancer une référence ou
+  // élever son niveau technique est la décision de l'équipe, pas du bot
+  // équilibré qui sert de neutre pour le reste.
+  return auPas(sansRd(neutralDecisions({ scenario: snapshot, state, roundIndex })));
+}
+
+function sansRd(d: RoundDecisions): RoundDecisions {
+  if (d.rdBudget === undefined) return d;
+  return {
+    ...d,
+    rdBudget: 0,
+    ...(d.products
+      ? {
+          products: Object.fromEntries(
+            Object.entries(d.products).map(([code, p]) => [
+              code,
+              p.rdBudget !== undefined ? { ...p, rdBudget: 0 } : p,
+            ]),
+          ),
+        }
+      : {}),
+  };
 }
 
 /** Les valeurs proposées pour ce tour : le tour précédent, sinon le départ. */

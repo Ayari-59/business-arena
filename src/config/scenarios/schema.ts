@@ -63,6 +63,12 @@ const productDefSchema = z.object({
     competitionIntensity: z.number().min(1).optional(),
   }),
   suppliers: z.array(supplierSchema).min(1).optional(),
+  development: z
+    .object({
+      cost: z.number().nonnegative(),
+      availableFromRound: z.number().int().min(1).optional(),
+    })
+    .optional(),
 });
 
 const modifierSchema = z.object({
@@ -290,6 +296,15 @@ export const engineScenarioConfigSchema = z.object({
     }).optional(),
   }),
   enrichedBots: z.boolean().optional(),
+  // Recherche et développement : le levier n'existe que si le bloc est déclaré.
+  rd: z
+    .object({
+      techScale: z.number().positive(),
+      techSensitivity: z.number().nonnegative(),
+      techMax: z.number().min(0).max(1),
+      techInertia: z.number().min(0).max(1),
+    })
+    .optional(),
 }) satisfies z.ZodType<EngineScenarioConfig>;
 
 const scenarioWithChecks = engineScenarioConfigSchema.superRefine((s, ctx) => {

@@ -37,6 +37,11 @@ export interface FinanceInput {
    * construction. Absente = 0.
    */
   rseCost?: number;
+  /**
+   * Recherche et développement du tour (levier R&D) : même traitement que le
+   * marketing — retranchée de l'EBITDA, décaissée dans le tour. Absente = 0.
+   */
+  rdCost?: number;
   fixedCosts: number;
   depreciation: number;
   loanAnnualRate: number;
@@ -162,12 +167,14 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
     const commissionCost = input.commissionCost ?? 0;
     const grossMargin = input.revenue - input.cogs - commissionCost;
     const rseCost = input.rseCost ?? 0;
+    const rdCost = input.rdCost ?? 0;
     const ebitda =
       grossMargin -
       input.marketingCost -
       input.qualityCost -
       input.maintenanceCost -
       rseCost -
+      rdCost -
       input.fixedCosts;
     const depreciation = Math.min(input.depreciation, o.fixedAssetsNet);
     const disposalLoss = input.disposalLoss ?? 0;
@@ -206,6 +213,7 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
       qualityCost: input.qualityCost,
       maintenanceCost: input.maintenanceCost,
       ...(rseCost > 0 ? { engagementRse: rseCost } : {}),
+      ...(rdCost > 0 ? { rdCost } : {}),
       fixedCosts: input.fixedCosts,
       ebitda,
       depreciation,
@@ -251,6 +259,9 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
       { label: "qualite", amount: -input.qualityCost },
       { label: "maintenance", amount: -input.maintenanceCost },
       { label: "engagement_rse", amount: -rseCost },
+      // Ligne absente sans levier R&D : un flux à zéro ferait chercher un
+      // levier qui n'existe pas dans ce secteur.
+      ...(rdCost > 0 ? [{ label: "recherche_developpement", amount: -rdCost }] : []),
       { label: "interets", amount: -interest },
       { label: "sanction_rse", amount: -exceptionalCharge },
       { label: "subvention_rse", amount: exceptionalIncome },

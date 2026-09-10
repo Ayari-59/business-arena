@@ -117,7 +117,7 @@ describe("gamme — normalisation", () => {
   it("les décisions mono sont recopiées telles quelles", () => {
     const gamme = toGamme(novaScenario);
     const [d] = toGammeDecisions(PLAYER, gamme);
-    expect(d).toEqual({ price: 59, productionPlan: 4800, marketingBudget: 6000, qualityBudget: 3000 });
+    expect(d).toEqual({ price: 59, productionPlan: 4800, marketingBudget: 6000, qualityBudget: 3000, rdBudget: 0 });
   });
 
   it("en gamme, un produit sans entrée reçoit le prix scalaire et une part égale du plan", () => {
@@ -130,8 +130,8 @@ describe("gamme — normalisation", () => {
     expect(gamme[1]!.market.outsideAttraction).toBe(novaScenario.market.outsideAttraction);
     const decisions = toGammeDecisions(PLAYER, gamme);
     // Part égale du plan, du marketing ET de la qualité scalaires.
-    expect(decisions[0]).toEqual({ price: 59, productionPlan: 2400, marketingBudget: 3000, qualityBudget: 1500 });
-    expect(decisions[1]).toEqual({ price: 59, productionPlan: 2400, marketingBudget: 3000, qualityBudget: 1500 });
+    expect(decisions[0]).toEqual({ price: 59, productionPlan: 2400, marketingBudget: 3000, qualityBudget: 1500, rdBudget: 0 });
+    expect(decisions[1]).toEqual({ price: 59, productionPlan: 2400, marketingBudget: 3000, qualityBudget: 1500, rdBudget: 0 });
     // Une entrée explicite fait foi, fournisseur compris ; un produit sans
     // fournisseur propre reçoit le fournisseur scalaire.
     const explicit = toGammeDecisions(
@@ -151,6 +151,7 @@ describe("gamme — normalisation", () => {
       marketingBudget: 500,
       qualityBudget: 2500,
       supplierChoice: "premium",
+      rdBudget: 0,
     });
   });
 });
@@ -643,5 +644,144 @@ describe("gamme — la qualité et le fournisseur se décident par référence",
     ).results["player"]!;
     expect(r.products![A]!.supplier?.code).toBe("premium");
     expect(r.products![B]!.supplier?.code).toBe("premium");
+  });
+});
+
+describe("gamme — la R&D lance une référence, puis élève son niveau technique", () => {
+  // NOVA + un produit B À DÉVELOPPER : 30 000 € de R&D avant de le vendre,
+  // jamais avant le tour 2. Le levier `rd` du scénario ouvre la R&D.
+  const RD = { techScale: 10000, techSensitivity: 0.1, techMax: 0.15, techInertia: 0.5 };
+  const scenario = parseScenarioConfig({
+    ...gammeScenario({ ...productB(), development: { cost: 30000, availableFromRound: 2 } }),
+    rd: RD,
+  });
+  const decisionsRd = (rd: number, planB = 1000): RoundDecisions => ({
+    ...PLAYER,
+    products: {
+      [A]: { price: 59, productionPlan: 4000, marketingBudget: 6000, qualityBudget: 3000, rdBudget: 0 },
+      [B]: { price: 80, productionPlan: planB, marketingBudget: 2000, qualityBudget: 1000, rdBudget: rd },
+    },
+  });
+  const round = (states: CompanyState[], rd: number, roundIndex: number) => {
+    const [, soundbox, auris] = states as [CompanyState, CompanyState, CompanyState];
+    return simulateRound({
+      scenario,
+      roundIndex,
+      companies: states,
+      decisions: {
+        player: decisionsRd(rd),
+        soundbox: botDecisions("price_aggressive", { scenario, state: soundbox, roundIndex }),
+        auris: botDecisions("premium", { scenario, state: auris, roundIndex }),
+      },
+      activeEvents: [],
+      seed: SEED,
+    });
+  };
+
+  it("une référence en développement ne se produit ni ne se vend, mais sa R&D se paie", () => {
+    const t1 = round(companies(), 20000, 1);
+    const p = t1.results["player"]!;
+    const b = p.products![B]!;
+    expect(b.planned).toBe(0);
+    expect(b.produced).toBe(0);
+    expect(b.sold).toBe(0);
+    expect(b.lost).toBe(0);
+    expect(b.rd).toEqual({
+      budget: 20000,
+      techLevel: 0,
+      development: { cost: 30000, availableFromRound: 2, invested: 20000, launched: false },
+    });
+    // La charge R&D est au compte de résultat, décaissée, et relève le seuil.
+    expect(p.incomeStatement.rdCost).toBe(20000);
+    expect(p.cashFlow.items.some((c) => c.label === "recherche_developpement" && c.amount === -20000)).toBe(true);
+    const sans = round(companies(), 0, 1).results["player"]!;
+    expect(p.incomeStatement.netIncome).toBeLessThan(sans.incomeStatement.netIncome);
+    expect(p.breakeven.breakEvenUnits!).toBeGreaterThan(sans.breakeven.breakEvenUnits!);
+    // Le produit A, lui, porte tout : le plan de B ne consomme aucune capacité.
+    expect(p.products![A]!.produced).toBeCloseTo(4000, 6);
+    // L'état suit le cumul.
+    const state = t1.companies.find((c) => c.id === "player")!;
+    expect(state.rdByProduct?.[B]).toMatchObject({ invested: 20000, launched: false });
+  });
+
+  it("le lancement suit le tour où le cumul couvre le coût, jamais avant le tour de disponibilité", () => {
+    // 30 000 € dès le tour 1 : le coût est couvert, mais B n'ouvre qu'au tour 2.
+    const t1 = round(companies(), 30000, 1);
+    expect(t1.results["player"]!.products![B]!.produced).toBe(0);
+    const t2 = round(t1.companies, 0, 2);
+    const b2 = t2.results["player"]!.products![B]!;
+    expect(b2.planned).toBe(1000);
+    expect(b2.produced).toBeGreaterThan(0);
+    expect(b2.sold).toBeGreaterThan(0);
+    expect(b2.rd?.development).toMatchObject({ launched: true, launchRound: 2, invested: 30000 });
+    // Un cumul insuffisant ne lance rien, même après le tour de disponibilité.
+    const t1bis = round(companies(), 10000, 1);
+    const t2bis = round(t1bis.companies, 10000, 2);
+    expect(t2bis.results["player"]!.products![B]!.produced).toBe(0);
+    const t3bis = round(t2bis.companies, 10000, 3);
+    expect(t3bis.results["player"]!.products![B]!.produced).toBe(0);
+    const t4bis = round(t3bis.companies, 0, 4);
+    expect(t4bis.results["player"]!.products![B]!.rd?.development).toMatchObject({ launched: true, launchRound: 4 });
+  });
+
+  it("la R&D au-delà du coût élève le niveau technique, qui nourrit la qualité perçue au tour suivant, puis s'érode", () => {
+    const t1 = round(companies(), 30000, 1);
+    const t2 = round(t1.companies, 20000, 2); // lancée, 20 000 € de R&D d'entretien
+    const b2 = t2.results["player"]!.products![B]!;
+    const attendu = (1 - RD.techInertia) * Math.min(RD.techMax, RD.techSensitivity * Math.log(1 + 20000 / RD.techScale));
+    expect(b2.rd!.techLevel).toBeCloseTo(attendu, 9);
+    // Au tour 3, la qualité perçue de B monte par rapport à une référence sans R&D.
+    const t3 = round(t2.companies, 0, 3);
+    const t2sans = round(t1.companies, 0, 2);
+    const t3sans = round(t2sans.companies, 0, 3);
+    expect(t3.results["player"]!.products![B]!.perceivedQuality).toBeGreaterThan(
+      t3sans.results["player"]!.products![B]!.perceivedQuality,
+    );
+    // Sans R&D, le niveau s'érode d'un facteur d'inertie par tour.
+    expect(t3.results["player"]!.products![B]!.rd!.techLevel).toBeCloseTo(b2.rd!.techLevel * RD.techInertia, 9);
+  });
+
+  it("les bots développent la référence selon leur profil : le premium d'un coup, l'agressif jamais", () => {
+    const [, soundbox, auris] = companies() as [CompanyState, CompanyState, CompanyState];
+    const premium = botDecisions("premium", { scenario, state: auris, roundIndex: 1 }).products![B]!;
+    const agressif = botDecisions("price_aggressive", { scenario, state: soundbox, roundIndex: 1 }).products![B]!;
+    // Le premium finance d'un coup… dans la limite de la moitié de sa caisse
+    // et de son découvert (25 000 + 30 000) : 27 500 ce tour, le reste au suivant.
+    expect(premium.rdBudget).toBeCloseTo(27500, 6);
+    expect(agressif.rdBudget).toBe(0);
+    // Ni plan, ni marketing sur une référence qu'on ne peut pas vendre.
+    expect(premium.productionPlan).toBe(0);
+    expect(premium.marketingBudget).toBe(0);
+    const passif = botDecisions("passive", { scenario, state: soundbox, roundIndex: 1 }).products![B]!;
+    expect(passif.rdBudget).toBe(0);
+    // Au tour suivant, le premium solde le reste (2 500) ; une fois lancée, il
+    // entretient le niveau technique de chaque référence, l'agressif non.
+    const t1 = round(companies(), 30000, 1);
+    const aurisT2 = t1.companies.find((c) => c.id === "auris")!;
+    const t2 = botDecisions("premium", { scenario, state: aurisT2, roundIndex: 2 });
+    expect(t2.products![B]!.rdBudget).toBeCloseTo(2500, 6);
+    const aurisT3 = round(t1.companies, 0, 2).companies.find((c) => c.id === "auris")!;
+    const t3 = botDecisions("premium", { scenario, state: aurisT3, roundIndex: 3 });
+    expect(t3.products![B]!.rdBudget).toBeCloseTo(0.4 * RD.techScale, 6);
+    expect(t3.rdBudget).toBeCloseTo(0.4 * RD.techScale * 2, 6);
+    expect(botDecisions("price_aggressive", { scenario, state: aurisT3, roundIndex: 3 }).products![B]!.rdBudget).toBe(0);
+  });
+
+  it("sans levier R&D, rien n'est émis : ni état, ni ligne, ni champ par produit", () => {
+    const out = simulateRound(input(gammeScenario(), scalarDecisions(gammeScenario(), companies())));
+    const p = out.results["player"]!;
+    expect(p.incomeStatement.rdCost).toBeUndefined();
+    expect(p.products![A]!.rd).toBeUndefined();
+    expect(out.companies[0]!.rdByProduct).toBeUndefined();
+    expect(JSON.stringify(out)).not.toContain("rdBudget");
+  });
+
+  it("le schéma refuse un coût de développement négatif", () => {
+    expect(() =>
+      parseScenarioConfig({
+        ...gammeScenario({ ...productB(), development: { cost: -1 } }),
+        rd: RD,
+      }),
+    ).toThrow();
   });
 });

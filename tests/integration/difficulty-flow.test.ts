@@ -111,6 +111,7 @@ describe("niveaux de difficulté et paramètres économiques", () => {
       rse: true, // engagement RSE ouvert dès Arbitrage
       placement: true, // et le placement du surplus, propre aux niveaux hauts
       dividend: false, // l'affectation du résultat n'appartient qu'au niveau 6
+      rd: true, // la R&D s'ouvre avec l'investissement, dès Arbitrage
     });
   });
 
@@ -211,6 +212,7 @@ describe("niveaux de difficulté et paramètres économiques", () => {
       rse: false,
       placement: false,
       dividend: false,
+      rd: false,
     });
     // Découverte : TVA non modulée → désactivée, calibration du scénario intacte
     const game = (await db.select().from(games).where(eq(games.id, easy.gameId)))[0]!;

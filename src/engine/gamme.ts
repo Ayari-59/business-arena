@@ -1,8 +1,11 @@
 import type {
+  CompanyState,
   EngineScenarioConfig,
   ProductCode,
   ProductDecisions,
   ProductDef,
+  ProductDevelopmentDef,
+  ProductRdState,
   RoundDecisions,
   SegmentConfig,
   SupplierDef,
@@ -35,6 +38,8 @@ export interface GammeProduct {
   market: EngineScenarioConfig["market"];
   /** Catalogue de fournisseurs propre à la référence (absent : celui du scénario). */
   suppliers?: SupplierDef[];
+  /** La référence est à développer avant d'être vendue (gamme seulement). */
+  development?: ProductDevelopmentDef;
 }
 
 /**
@@ -49,6 +54,35 @@ export function suppliersOf(
   return catalogue && catalogue.length > 0 ? catalogue : null;
 }
 
+/**
+ * L'état R&D d'ouverture d'une référence : celui de l'entreprise, sinon le
+ * point de départ (rien d'investi, rien de lancé). `null` sans levier R&D.
+ */
+export function rdOpeningOf(
+  scenario: Pick<EngineScenarioConfig, "rd">,
+  state: Pick<CompanyState, "rdByProduct">,
+  code: ProductCode,
+): ProductRdState | null {
+  if (!scenario.rd) return null;
+  return state.rdByProduct?.[code] ?? { invested: 0, launched: false, techLevel: 0 };
+}
+
+/**
+ * Une référence est-elle vendable ce tour ? Sans développement à faire, ou
+ * sans levier R&D : toujours. Sinon, une fois lancée, ou dès que la R&D
+ * cumulée des tours PASSÉS couvre son coût et que son tour de disponibilité
+ * est atteint — le lancement suit donc le tour qui a couvert le coût.
+ */
+export function isProductAvailable(
+  product: Pick<GammeProduct, "development">,
+  rd: ProductRdState | null,
+  roundIndex: number,
+): boolean {
+  const dev = product.development;
+  if (!dev || !rd) return true;
+  return rd.launched || (rd.invested >= dev.cost && roundIndex >= (dev.availableFromRound ?? 1));
+}
+
 /** Décisions d'un produit, alignées sur l'ordre de la gamme. */
 export interface GammeDecision {
   price: number;
@@ -56,6 +90,8 @@ export interface GammeDecision {
   marketingBudget: number;
   qualityBudget: number;
   supplierChoice?: string;
+  /** Budget R&D de la référence (0 sans levier R&D). */
+  rdBudget: number;
 }
 
 /** Le scénario simule-t-il une gamme (≥ 2 produits) ? */
@@ -95,6 +131,7 @@ export function toGamme(scenario: EngineScenarioConfig): GammeProduct[] {
         p.market.competitionIntensity ?? scenario.market.competitionIntensity,
     },
     ...(p.suppliers ? { suppliers: p.suppliers } : {}),
+    ...(p.development ? { development: p.development } : {}),
   }));
 }
 
@@ -137,7 +174,7 @@ export function mapGammeSegments(
 export function toGammeDecisions(
   decisions: Pick<
     RoundDecisions,
-    "price" | "productionPlan" | "marketingBudget" | "qualityBudget" | "supplierChoice" | "products"
+    "price" | "productionPlan" | "marketingBudget" | "qualityBudget" | "supplierChoice" | "products" | "rdBudget"
   >,
   gamme: GammeProduct[],
 ): GammeDecision[] {
@@ -149,6 +186,7 @@ export function toGammeDecisions(
         marketingBudget: decisions.marketingBudget,
         qualityBudget: decisions.qualityBudget,
         ...(decisions.supplierChoice !== undefined ? { supplierChoice: decisions.supplierChoice } : {}),
+        rdBudget: Math.max(0, decisions.rdBudget ?? 0),
       },
     ];
   }
@@ -162,6 +200,7 @@ export function toGammeDecisions(
       marketingBudget: Math.max(0, own?.marketingBudget ?? decisions.marketingBudget / n),
       qualityBudget: Math.max(0, own?.qualityBudget ?? decisions.qualityBudget / n),
       ...(supplierChoice !== undefined ? { supplierChoice } : {}),
+      rdBudget: Math.max(0, own?.rdBudget ?? (decisions.rdBudget ?? 0) / n),
     };
   });
 }
@@ -180,11 +219,13 @@ export function toGammeDecisions(
 export function scalarsOfGamme(
   products: Record<
     ProductCode,
-    Pick<ProductDecisions, "price" | "productionPlan" | "marketingBudget" | "qualityBudget" | "supplierChoice">
+    Pick<ProductDecisions, "price" | "productionPlan" | "marketingBudget" | "qualityBudget" | "supplierChoice" | "rdBudget">
   >,
 ): Pick<RoundDecisions, "price" | "productionPlan" | "marketingBudget"> & {
   qualityBudget?: number;
   supplierChoice?: string;
+  /** Somme des budgets R&D, dérivée seulement si une référence en porte un. */
+  rdBudget?: number;
 } {
   const entries = Object.values(products);
   const productionPlan = entries.reduce((s, p) => s + Math.max(0, p.productionPlan), 0);
@@ -207,11 +248,15 @@ export function scalarsOfGamme(
           Math.max(0, p.productionPlan) > Math.max(0, best.productionPlan) ? p : best,
         ).supplierChoice
       : undefined;
+  const withRd = entries.filter((p) => p.rdBudget !== undefined);
+  const rdBudget =
+    withRd.length > 0 ? withRd.reduce((s, p) => s + Math.max(0, p.rdBudget ?? 0), 0) : undefined;
   return {
     price,
     productionPlan,
     marketingBudget,
     ...(qualityBudget !== undefined ? { qualityBudget } : {}),
     ...(supplierChoice !== undefined ? { supplierChoice } : {}),
+    ...(rdBudget !== undefined ? { rdBudget } : {}),
   };
 }

@@ -80,18 +80,14 @@ describe("NOVA · gamme — la gamme", () => {
     expect(one.otherVariableCostPerUnit).toBe(novaScenario.product.otherVariableCostPerUnit);
     expect(one.hoursPerUnit).toBe(novaScenario.product.hoursPerUnit);
     const segment = (code: string) => novaScenario.market.segments.find((s) => s.code === code)!;
-    // Les étudiants gardent leurs ressorts (élasticité, seuils, fidélité) ; une
-    // partie d'entre eux achète désormais un Go, le segment est un peu moins
-    // large, mais reste le plus gros du marché : c'est lui qui fixe le prix de
-    // référence des bots (59 €, pas les 55 € de CampusTech).
-    const etudiants = one.market.segments.find((s) => s.code === "etudiants")!;
-    expect({ ...etudiants, size: 0 }).toEqual({ ...segment("etudiants"), size: 0 });
-    expect(etudiants.size).toBeLessThan(segment("etudiants").size);
-    expect(etudiants.size).toBeGreaterThan(segment("campustech").size);
+    expect(one.market.segments.find((s) => s.code === "etudiants")).toEqual(segment("etudiants"));
     expect(one.market.segments.find((s) => s.code === "campustech")).toEqual(segment("campustech"));
-    // Les passionnés, eux, sont montés en gamme : ils achètent un Studio.
-    expect(one.market.segments.map((s) => s.code)).not.toContain("passionnes");
-    expect(toGamme(novaGammeScenario)[2]!.market.segments.map((s) => s.code)).toContain("passionnes");
+    // La moitié des passionnés du NOVA d'origine achètent un One, aux mêmes
+    // ressorts ; l'autre moitié, les audiophiles, n'achète que la Studio.
+    const passionnes = one.market.segments.find((s) => s.code === "passionnes")!;
+    expect({ ...passionnes, size: 0 }).toEqual({ ...segment("passionnes"), size: 0 });
+    expect(passionnes.size).toBeLessThan(segment("passionnes").size);
+    expect(toGamme(novaGammeScenario)[2]!.market.segments.map((s) => s.code)).toContain("audiophiles");
     // Même atelier, même finance, mêmes concurrents.
     expect(novaGammeScenario.fixedCostsPerRound).toBe(novaScenario.fixedCostsPerRound);
     expect(novaGammeScenario.finance).toEqual(novaScenario.finance);
@@ -146,6 +142,20 @@ describe("NOVA · gamme — la gamme", () => {
     }
   });
 
+  it("la Studio est à développer : un coût de R&D, un lancement au plus tôt au tour 2, rien à vendre avant", () => {
+    const studio = toGamme(novaGammeScenario)[2]!;
+    expect(studio.development).toEqual({ cost: 25000, availableFromRound: 2 });
+    expect(toGamme(novaGammeScenario)[0]!.development).toBeUndefined();
+    expect(toGamme(novaGammeScenario)[1]!.development).toBeUndefined();
+    expect(novaGammeScenario.rd).toBeDefined();
+    // Le NOVA d'origine, lui, n'a pas de levier R&D.
+    expect(novaScenario.rd).toBeUndefined();
+    const t1 = joueur(partie("balanced"))[0]!.products!["nova-studio"]!;
+    expect(t1.produced).toBe(0);
+    expect(t1.sold).toBe(0);
+    expect(t1.rd?.development?.launched).toBe(false);
+  });
+
   it("ouvre sans stock, sur aucune référence, avec le bilan du NOVA d'origine", () => {
     const c = novaGammeCompany("t", "T", "human");
     expect(c.finishedGoods.quantity).toBe(0);
@@ -169,6 +179,18 @@ describe("NOVA · gamme — dramaturgie", () => {
     expect(demande).toBeGreaterThan(t4.production.machineCapacity);
     const perdu = Object.values(t4.market.bySegment).reduce((s, x) => s + x.lost, 0);
     expect(perdu).toBeGreaterThan(1000);
+  });
+
+  it("celui qui finance la Studio dès le tour 1 la vend au tour 2 ; qui ne la développe pas ne la vend jamais", () => {
+    const equilibre = joueur(balanced);
+    expect(equilibre[0]!.incomeStatement.rdCost).toBeGreaterThanOrEqual(25000);
+    expect(equilibre[1]!.products!["nova-studio"]!.rd?.development).toMatchObject({ launched: true, launchRound: 2 });
+    expect(equilibre[1]!.products!["nova-studio"]!.sold).toBeGreaterThan(0);
+    const passif = joueur(partie("passive"));
+    for (const r of passif) {
+      expect(r.products!["nova-studio"]!.sold).toBe(0);
+      expect(r.incomeStatement.rdCost).toBeUndefined();
+    }
   });
 
   it("CampusTech n'existe pas avant le tour 3, la hausse matières frappe le tour 5", () => {
@@ -207,12 +229,16 @@ describe("NOVA · gamme — calibration", () => {
   const resultats = STRATEGIES.map((s) => ({ s, cumul: cumul(partie(s)) }));
   const OVERDRAFT_LIMIT = novaGammeScenario.finance.overdraftLimit;
 
-  it("le secteur peut se gagner, et par plus d'une stratégie", () => {
+  it("le secteur peut se gagner, et par plus d'une stratégie — dont l'équilibrée", () => {
+    // Même profil que le NOVA d'origine : premium et équilibrée gagnent, la
+    // croissance à prix bas s'y perd, le passif et l'agressif y laissent
+    // des plumes. La Studio récompense qui la développe.
     const gagnantes = resultats.filter((r) => r.cumul > 0);
     expect(
       gagnantes.length,
       resultats.map((r) => `${r.s} ${Math.round(r.cumul / 1000)} k€`).join(", "),
-    ).toBeGreaterThanOrEqual(3);
+    ).toBeGreaterThanOrEqual(2);
+    expect(resultats.find((r) => r.s === "balanced")!.cumul).toBeGreaterThan(0);
   });
 
   it("la stratégie passive est punie, sans mort précoce", () => {

@@ -59,6 +59,12 @@ export async function playRoundAction(
     // fournisseur de la référence au plan le plus fort).
     qualityBudget: scalars?.qualityBudget ?? formData.get("qualityBudget"),
     maintenanceBudget: formData.get("maintenanceBudget"),
+    // R&D : par référence en gamme (scalaire = somme), scalaire en mono ;
+    // absent quand le formulaire ne porte pas le levier.
+    ...(() => {
+      const rd = scalars?.rdBudget ?? formData.get("rdBudget");
+      return rd !== undefined && rd !== null && rd !== "" ? { rdBudget: rd } : {};
+    })(),
     insurance: (() => {
       const raw = formData.get("insurance");
       if (raw === "on" || raw === "true") return true;
