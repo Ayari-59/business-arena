@@ -1,6 +1,7 @@
 import { ATELIERS, type AtelierDefinition } from "./index";
 import { scenarioByCode, type ScenarioDefinition } from "../scenarios/registry";
 import { leviersDuNiveau } from "../decisions";
+import { DIFFICULTY_PRESETS } from "../difficulty";
 import type { SituationDef } from "../scenarios/situation-kit";
 import {
   dossiersDeService,
@@ -139,6 +140,9 @@ export interface DossierEnseignant {
 /** Les séances d'un atelier, vues par l'élève. */
 export function dossierEleve(atelier: AtelierDefinition): DossierEleve {
   const scenario = scenarioByCode(atelier.reglages.scenarioCode);
+  // Un niveau qui n'ouvre pas la R&D joue les références livrées prêtes : le
+  // dossier ne doit pas annoncer un développement que la partie n'aura pas.
+  const rdOuverte = DIFFICULTY_PRESETS.find((p) => p.level === atelier.reglages.niveau)?.decisions.rd ?? false;
   return {
     entete: {
       titre: atelier.titre,
@@ -176,9 +180,9 @@ export function dossierEleve(atelier: AtelierDefinition): DossierEleve {
     })),
     evaluationFinale: [...atelier.evaluationFinale],
     gamme: referencesDuDossier(scenario, atelier.reglages.tours),
-    services: dossiersDeService(scenario, atelier.reglages.tours),
+    services: dossiersDeService(scenario, atelier.reglages.tours, { sansRd: !rdOuverte }),
     tableauDeBord: {
-      decisions: leviersDuNiveau(atelier.reglages.niveau).map((l) => l.nom),
+      decisions: leviersDuNiveau(atelier.reglages.niveau, scenario.scenario).map((l) => l.nom),
       resultats: [...RESULTATS_COMMUNS, ...scenario.kpis.map((k) => k.label), "Place au classement"],
       tours: Array.from({ length: atelier.reglages.tours }, (_, i) => i + 1),
     },

@@ -327,7 +327,8 @@ describe("les dossiers de service", () => {
       expect(dossier.services.map((s) => s.code)).toEqual(["approvisionnement", "commercial", "rh", "financier"]);
       for (const s of dossier.services) {
         expect(s.lignes.length, `${a.code}/${s.code} : aucun chiffre`).toBeGreaterThan(1);
-        expect(s.questions.length, `${a.code}/${s.code} : aucune question`).toBe(3);
+        expect(s.questions.length, `${a.code}/${s.code} : aucune question`).toBeGreaterThanOrEqual(3);
+        expect(s.questions.length, `${a.code}/${s.code} : trop de questions`).toBeLessThanOrEqual(4);
         expect(s.mission.length, `${a.code}/${s.code}`).toBeGreaterThan(40);
         for (const l of s.lignes) expect(l.valeur, `${a.code}/${s.code}/${l.libelle}`).not.toMatch(/NaN|undefined/);
       }

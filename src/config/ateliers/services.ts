@@ -1,4 +1,6 @@
-import { suppliersOf, toGamme } from "../../engine/gamme";
+import { suppliersOf, toGamme, withoutRd } from "../../engine/gamme";
+import { axisAffinity, COMMUNICATION_AXES, COMMUNICATION_AXIS_LABELS } from "../../engine/market/communication";
+import type { CommunicationAxis, SegmentConfig } from "../../engine/types";
 import type { ScenarioDefinition } from "../scenarios/registry";
 
 /**
@@ -98,8 +100,30 @@ function tourFort(definition: ScenarioDefinition, tours: number): number {
   return meilleur;
 }
 
-export function dossiersDeService(definition: ScenarioDefinition, tours: number): DossierService[] {
-  const config = definition.scenario;
+/**
+ * Les axes de communication qui portent et ceux qui desservent auprès d'une
+ * clientèle, au prix qu'elle a l'habitude de payer. L'innovation dépend de ce
+ * qu'on a de neuf à montrer : elle se juge en partie, pas dans le dossier.
+ */
+function axesPourClientele(segment: SegmentConfig): { portent: string[]; desservent: string[] } {
+  const portent: string[] = [];
+  const desservent: string[] = [];
+  const nom = (a: CommunicationAxis) => COMMUNICATION_AXIS_LABELS[a].label.replace(/^(Le |La |L')/, "").toLowerCase();
+  for (const axe of COMMUNICATION_AXES) {
+    if (axe === "innovation") continue;
+    const a = axisAffinity(axe, segment, { price: segment.refPrice, techLevel: 0, freshlyLaunched: false });
+    if (a === "fit") portent.push(nom(axe));
+    if (a === "misfit") desservent.push(nom(axe));
+  }
+  return { portent, desservent };
+}
+
+export function dossiersDeService(
+  definition: ScenarioDefinition,
+  tours: number,
+  options: { sansRd?: boolean } = {},
+): DossierService[] {
+  const config = options.sansRd ? withoutRd(definition.scenario) : definition.scenario;
   const v = definition.vocabulary;
   const etat = definition.company("dossier", definition.playerTeamName, "human");
   const gamme = referencesDuDossier(definition, tours);
@@ -111,6 +135,11 @@ export function dossiersDeService(definition: ScenarioDefinition, tours: number)
   const heures = etat.headcount * etat.hoursPerEmployee;
   const echeance = (etat.loans ?? []).reduce((s, l) => s + l.perRound, 0);
   const restant = (etat.loans ?? []).reduce((s, l) => s + l.remaining, 0);
+  // Les références à développer avant de vendre (levier R&D), et la
+  // communication (marque en gamme, axe partout où le levier existe).
+  const aDevelopper = config.rd ? toGamme(config).filter((p) => p.development) : [];
+  const communication = config.communication;
+  const marque = communication && multi;
 
   const approvisionnement: DossierService = {
     code: "approvisionnement",
@@ -120,6 +149,10 @@ export function dossiersDeService(definition: ScenarioDefinition, tours: number)
       { libelle: `${v.capacityLabel}`, valeur: `${entier(etat.machineCapacity)} ${v.perRoundLabel}` },
       { libelle: `${v.leftoverLabel} à l'ouverture`, valeur: `${entier(gamme.reduce((s, g) => s + g.stockOuverture, 0))} ${v.units}` },
       { libelle: "Délai de règlement des fournisseurs", valeur: jours(config.finance.supplierPaymentDelayDays) },
+      ...aDevelopper.map((p) => ({
+        libelle: `À développer avant de vendre : ${p.name}`,
+        valeur: `${euro(p.development!.cost)} de R&D cumulée, vendable au tour qui suit et au plus tôt au tour ${p.development!.availableFromRound ?? 1}`,
+      })),
       // Les fournisseurs : ceux du scénario en mono-produit ; en gamme, le
       // catalogue de chaque référence quand elle a le sien, avec le prix
       // d'achat de la référence chez chacun.
@@ -146,15 +179,34 @@ export function dossiersDeService(definition: ScenarioDefinition, tours: number)
         ? "Si la somme des volumes dépasse la capacité, quelle référence sacrifier en premier : celle qui rapporte le moins par unité de capacité."
         : "Le volume tient-il dans la capacité ? Au-delà, il est réduit d'office.",
       "Le fournisseur retenu se paie-t-il comptant ou à délai ? La réponse change la trésorerie, pas le résultat.",
+      ...(aDevelopper.length > 0
+        ? ["Une référence à développer ne se vend qu'au tour qui suit le tour où sa R&D cumulée atteint son coût : quel tour visez-vous, et que produisez-vous d'ici là ?"]
+        : []),
     ],
   };
 
   const commercial: DossierService = {
     code: "commercial",
     titre: "Service commercial",
-    mission: `Fixer ${v.priceLabel.toLowerCase()}${multi ? " de chaque référence" : ""} et le budget marketing, en lisant chaque clientèle : ce qu'elle a l'habitude de payer, ce qu'elle supporte, quand elle achète.`,
+    mission: `Fixer ${v.priceLabel.toLowerCase()}${multi ? " de chaque référence" : ""} et le budget marketing${marque ? ", partagé entre la marque et chaque référence," : ""}${communication ? " puis choisir l'axe de communication," : ""} en lisant chaque clientèle : ce qu'elle a l'habitude de payer, ce qu'elle supporte, quand elle achète${communication ? ", ce qu'elle regarde" : ""}.`,
     lignes: [
       { libelle: "Budget marketing de référence par tour", valeur: euro(0.5 * config.marketing.scale) },
+      ...(marque
+        ? [
+            {
+              libelle: "Budget de marque de référence par tour",
+              valeur: `${euro(0.5 * communication.brandScale)} · bâtit une notoriété qui porte toute la gamme au tour suivant, jusqu'à +${Math.round(communication.brandMax * 100)} %, et s'use si l'on cesse`,
+            },
+          ]
+        : []),
+      ...(communication
+        ? [
+            {
+              libelle: "Axe de communication (un seul par tour)",
+              valeur: `${COMMUNICATION_AXES.map((a) => COMMUNICATION_AXIS_LABELS[a].label.toLowerCase()).join(", ")} · un axe qui parle à la clientèle rend ×${communication.axisFit.toLocaleString("fr-FR")}, un axe qui ne lui parle pas ×${communication.axisMisfit.toLocaleString("fr-FR")} ; en changer use ${Math.round((1 - communication.axisSwitchDecay) * 100)} % de la notoriété acquise`,
+            },
+          ]
+        : []),
       { libelle: "Tour de la demande la plus forte", valeur: `tour ${pic}` },
       ...(config.orderOffers ?? []).slice(0, 3).map((o) => ({
         libelle: `Commande exceptionnelle possible : ${o.title}`,
@@ -162,13 +214,28 @@ export function dossiersDeService(definition: ScenarioDefinition, tours: number)
       })),
     ],
     tableau: {
-      entetes: [multi ? "Clientèle · référence" : "Clientèle", "Demande de base par tour", "Prix usuel", "Règlement", `Saison (tour ${pic})`],
+      entetes: [
+        multi ? "Clientèle · référence" : "Clientèle",
+        "Demande de base par tour",
+        "Prix usuel",
+        "Règlement",
+        `Saison (tour ${pic})`,
+        ...(communication ? ["Axe qui porte · axe qui dessert"] : []),
+      ],
       lignes: clienteles.map((c) => [
         c.segment.name,
         `${entier(c.segment.size)} ${v.units}`,
         euro(c.segment.refPrice),
         jours(c.segment.paymentDelayDays),
         `×${(c.segment.seasonality?.[pic - 1] ?? c.saison[pic - 1] ?? 1).toLocaleString("fr-FR", { maximumFractionDigits: 2 })}`,
+        ...(communication
+          ? [
+              (() => {
+                const { portent, desservent } = axesPourClientele(c.segment);
+                return `${portent.length > 0 ? portent.join(", ") : "aucun"} · ${desservent.length > 0 ? desservent.join(", ") : "aucun"}`;
+              })(),
+            ]
+          : []),
       ]),
     },
     questions: [
@@ -177,6 +244,9 @@ export function dossiersDeService(definition: ScenarioDefinition, tours: number)
         ? "Quelle référence porte la marge, quelle référence porte le volume ? Le mix vendu décide du seuil autant que les quantités."
         : "Un euro de prix en plus rapporte-t-il plus de marge qu'il ne coûte de ventes ?",
       "Les clientèles qui règlent à délai pèsent sur la trésorerie : le service financier doit le savoir avant la validation.",
+      ...(communication
+        ? ["Un seul axe pour toutes les clientèles : à laquelle parle-t-il, laquelle dessert-il, et l'entreprise est-elle crédible en le tenant ?"]
+        : []),
     ],
   };
 
@@ -233,11 +303,18 @@ export function dossiersDeService(definition: ScenarioDefinition, tours: number)
       { libelle: "Taux d'emprunt · taux de découvert", valeur: `${pct(config.finance.loanAnnualRate)} · ${pct(config.finance.overdraftAnnualRate)} par an` },
       { libelle: "Découvert autorisé", valeur: euro(config.finance.overdraftLimit) },
       { libelle: "Impôt sur les bénéfices", valeur: pct(config.finance.taxRate) },
+      ...aDevelopper.map((p) => ({
+        libelle: `R&D à financer avant de vendre ${p.name}`,
+        valeur: `${euro(p.development!.cost)}, en charge du tour où elle s'engage, décaissée dans le tour`,
+      })),
     ],
     questions: [
       "Quelles ventes du tour seront encaissées ce tour-ci, et lesquelles au tour suivant ?",
       "Les achats du tour se paient-ils maintenant ou plus tard ? Le fournisseur choisi fixe la réponse.",
       "Le solde prévu en fin de tour reste-t-il au-dessus du découvert autorisé, y compris au tour du pic où l'on achète avant de vendre ?",
+      ...(aDevelopper.length > 0
+        ? ["La R&D se paie tout de suite et ne vend qu'au tour suivant : la caisse du tour la supporte-t-elle sans passer sous le découvert ?"]
+        : []),
     ],
   };
 
