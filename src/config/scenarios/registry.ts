@@ -147,6 +147,17 @@ export interface ScenarioDefinition {
   code: string;
   title: string;
   sector: Sector;
+  /**
+   * Le pictogramme du scénario, distinct de celui du secteur quand deux
+   * scénarios partagent un secteur : NOVA se joue en un produit ou en gamme,
+   * et une tuile « 🏭 Industrie » deux fois ne dit pas laquelle est laquelle.
+   * C'est l'emblème que la vitrine (`presentation.ts`) affiche aussi : une
+   * seule source, sinon la page des entreprises et la tuile de la partie
+   * solo montreraient deux images du même scénario.
+   */
+  icon: string;
+  /** Le nom court, pour une tuile ou une pastille (« NOVA · gamme »). */
+  shortName: string;
   /** Une phrase : ce que l'élève dirige. */
   tagline: string;
   /**
@@ -194,6 +205,8 @@ export const NOVA_DEFINITION: ScenarioDefinition = {
   code: novaScenario.code,
   title: "NOVA · Prenez les commandes",
   sector: "industrie",
+  icon: "🔊",
+  shortName: "NOVA",
   tagline: "Fabricant d'enceintes portables.",
   briefing:
     "Tout ce que vous vendez sort de votre atelier, dont la capacité est limitée. Produire plus que vous ne vendez immobilise votre argent en stock ; produire moins laisse repartir des clients. Tout se joue sur le prix et sur le volume que vous lancez.",
@@ -252,6 +265,8 @@ export const NOVA_GAMME_DEFINITION: ScenarioDefinition = {
   code: novaGammeScenario.code,
   title: "NOVA · Composez la gamme",
   sector: "industrie",
+  icon: "🎚️",
+  shortName: "NOVA · gamme",
   tagline: "Fabricant d'enceintes portables : trois références, un atelier.",
   briefing:
     "Tout ce que vous vendez sort de votre atelier, dont la capacité est limitée, et vous y fabriquez des enceintes qui ne rapportent pas la même chose. La petite se vend par milliers pour quelques euros de marge, la grande se vendra par centaines pour beaucoup plus, mais elle n'est encore qu'un prototype : la développer se paie avant de rapporter. Quand les commandes dépassent ce que l'atelier peut sortir, la question n'est plus combien produire, mais quoi produire.",
@@ -306,6 +321,8 @@ export const BOUTIQUE_DEFINITION: ScenarioDefinition = {
   code: boutiqueScenario.code,
   title: "MAILLE & CO · Habillez l'hiver",
   sector: "commerce",
+  icon: "👗",
+  shortName: "MAILLE & CO",
   tagline: "Marque de vêtements en maille : cinq références, une boutique.",
   briefing:
     "Vous ne fabriquez rien, vous faites tricoter pour revendre. Votre marge se joue entre le prix auquel vous achetez chaque pièce à vos façonniers et celui auquel vous la vendez, et elle n'est pas la même sur un bonnet et sur un pull mérinos. Ce que vous commandez dort en réserve, et vous l'avez payé bien avant qu'une cliente ne l'emporte.",
@@ -360,6 +377,8 @@ export const HOTEL_DEFINITION: ScenarioDefinition = {
   code: hotelScenario.code,
   title: "L'ESCALE · Remplissez l'hôtel",
   sector: "hotellerie",
+  icon: "🛎️",
+  shortName: "L'ESCALE",
   tagline: "Hôtel 3 étoiles de 60 chambres en ville moyenne.",
   briefing:
     "Une chambre vide ce soir est perdue : elle ne se vendra pas deux fois demain. Vos charges tombent que l'hôtel soit plein ou non. Vous jouez donc sur deux tableaux à la fois, le nombre de chambres occupées et le prix que vous arrivez à tenir.",
@@ -413,6 +432,8 @@ export const BISTROT_DEFINITION: ScenarioDefinition = {
   code: bistrotScenario.code,
   title: "LA TABLE D'AUGUSTIN · Tenez le service",
   sector: "restauration",
+  icon: "🍽️",
+  shortName: "LA TABLE D'AUGUSTIN",
   tagline: "Bistrot de 70 couverts, midi et soir.",
   briefing:
     "Un couvert non servi est perdu, et ce que la cuisine a préparé sans le vendre part à la poubelle. Deux limites vous arrêtent en même temps : le nombre de places en salle et les heures de votre brigade. Prévoir trop coûte, prévoir trop peu aussi.",
@@ -466,6 +487,8 @@ export const CONSEIL_DEFINITION: ScenarioDefinition = {
   code: conseilScenario.code,
   title: "ATLAS CONSEIL · Vendez le temps de vos équipes",
   sector: "services",
+  icon: "📊",
+  shortName: "ATLAS CONSEIL",
   tagline: "Cabinet de conseil et bureau d'études, 12 consultants.",
   briefing:
     "Ce que vous facturez, c'est du temps de travail. Une journée non vendue ne se rattrape jamais, et les salaires tombent que le carnet soit plein ou vide. Vos clients règlent à 45 jours : l'argent gagné met des semaines à arriver en caisse.",
@@ -520,6 +543,8 @@ export const ECOMMERCE_DEFINITION: ScenarioDefinition = {
   code: ecommerceScenario.code,
   title: "PIXEL & CO · Achetez votre trafic",
   sector: "ecommerce",
+  icon: "📦",
+  shortName: "PIXEL & CO",
   tagline: "Pure player de décoration et petit mobilier.",
   briefing:
     "Ouvrir votre boutique ne coûte presque rien, c'est un site. Mais personne n'y arrive tout seul : chaque visiteur se paie en publicité. La question n'est donc pas de savoir si vous gagnez de l'argent sur une commande, mais si vous en gagnez assez pour rembourser ce que ce client vous a coûté.",
@@ -573,6 +598,8 @@ export const FITNESS_DEFINITION: ScenarioDefinition = {
   code: fitnessScenario.code,
   title: "VOLT FITNESS · Gardez vos adhérents",
   sector: "abonnement",
+  icon: "🏋️",
+  shortName: "VOLT FITNESS",
   tagline: "Salle de sport de 1 200 m² en périphérie.",
   briefing:
     "Vos adhérents paient un abonnement chaque trimestre. Vous ne les gagnez donc pas une fois, vous les gardez ou vous les perdez. Chaque départ n'enlève pas seulement un abonnement à ce trimestre, il l'enlève à tous les suivants.",
@@ -627,6 +654,8 @@ export const BATIMENT_DEFINITION: ScenarioDefinition = {
   code: batimentScenario.code,
   title: "MARTEL & FILS · Tenez les chantiers",
   sector: "batiment",
+  icon: "🏗️",
+  shortName: "MARTEL & FILS",
   tagline: "Entreprise de rénovation, quatorze compagnons.",
   briefing:
     "Vous achetez les matériaux, vous payez vos compagnons chaque mois, et vous facturez à la fin du chantier. Vos clients règlent ensuite quand leurs procédures le permettent. Entre la dépense et la recette, il se passe des mois, et c'est vous qui financez l'attente.",
@@ -681,6 +710,8 @@ export const TRANSPORT_DEFINITION: ScenarioDefinition = {
   code: transportScenario.code,
   title: "ROUTE & CIE · Remplissez les camions",
   sector: "transport",
+  icon: "🚚",
+  shortName: "ROUTE & CIE",
   tagline: "Transporteur routier régional, sept porteurs.",
   briefing:
     "Vos camions partent chaque matin, chargés ou non. Le gazole, les péages et le chauffeur se paient de la même façon dans les deux cas. Une place vide au départ est perdue pour toujours : tout le métier consiste à décider ce qu'on met dedans, et à quel prix, avant que la porte ne se ferme.",
