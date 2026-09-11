@@ -568,15 +568,21 @@ export function botDecisions(profile: BotProfile, ctx: BotContext): RoundDecisio
         maintenanceBudget: maintenance,
       };
       break;
-    case "premium":
+    case "premium": {
+      // Le supplément de prix du premium est celui du métier : 30 % là où la
+      // qualité se paie, moins là où les clients comparent d'abord les prix
+      // (mesuré : à 1,3 le premium perd 285 k€ dans le bâtiment et 455 k€ dans
+      // le transport, faute de volume, quelle que soit sa dépense).
+      const premium = ctx.scenario.bots?.premiumPriceRatio ?? 1.3;
       base = {
-        price: ref * 1.3,
+        price: ref * premium,
         productionPlan: adaptivePlan(ctx, 1.0),
         marketingBudget: 0.5 * mkt,
         qualityBudget: 1.5 * qual,
         maintenanceBudget: maintenance,
       };
       break;
+    }
     case "balanced":
       base = {
         price: ref,

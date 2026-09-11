@@ -141,6 +141,9 @@ const rawBatiment = {
   // d'encadrement, 33 600 de dépôt, de véhicules, d'échafaudages, d'assurance
   // décennale et de bureau) + 14 000 d'amortissements
   fixedCostsPerRound: 168000,
+  // Les marchés se gagnent sur devis : un concurrent qui facture 30 % de plus
+  // que les autres ne remplit pas ses chantiers. Le premium se joue à +15 %.
+  bots: { premiumPriceRatio: 1.15 },
   suppliers: [
     {
       code: "negoce_regional",
