@@ -243,10 +243,33 @@ const GAMME: ProductDef[] = [
  * portent sur le cœur de gamme (le One), aux mêmes conditions. Les codes
  * restent propres au scénario pour que deux parties ne se confondent pas.
  */
-const ORDER_OFFERS = (novaScenario.orderOffers ?? []).map((o) => ({
-  ...o,
-  code: o.code.replace(/^offer_/, "novag_offer_"),
-}));
+/**
+ * La référence de chaque commande, et son prix quand la référence n'est pas
+ * celle du mono : les distributeurs et l'export prennent la One (le prix du mono est
+ * le sien), les lycées, le déstockeur et les coffrets la Go, à son prix.
+ */
+const CIBLES: Record<string, { productCode: string; price?: number }> = {
+  offer_export_nordics: { productCode: "nova-one" },
+  offer_flash_marketplace: { productCode: "nova-one" },
+  offer_export_dach: { productCode: "nova-one" },
+  offer_lycees: { productCode: "nova-go", price: 30 },
+  offer_export_japan: { productCode: "nova-one" },
+  offer_destockeur: { productCode: "nova-go", price: 24 },
+  offer_duty_free: { productCode: "nova-one" },
+  offer_campus_uk: { productCode: "nova-one" },
+  offer_coffrets_noel: { productCode: "nova-go", price: 38 },
+  offer_comite_entreprise: { productCode: "nova-one" },
+};
+
+const ORDER_OFFERS = (novaScenario.orderOffers ?? []).map((o) => {
+  const cible = CIBLES[o.code];
+  if (!cible) throw new Error(`Commande exceptionnelle sans référence : ${o.code}`);
+  return {
+    ...o,
+    ...cible,
+    code: o.code.replace(/^offer_/, "novag_offer_"),
+  };
+});
 
 const rawNovaGamme = {
   ...novaScenario,

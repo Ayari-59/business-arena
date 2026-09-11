@@ -1,4 +1,4 @@
-import { suppliersOf, toGamme, withoutRd } from "../../engine/gamme";
+import { suppliersOf, toGamme, withoutRd, offerProductIndex } from "../../engine/gamme";
 import { axisAffinity, COMMUNICATION_AXES, COMMUNICATION_AXIS_LABELS } from "../../engine/market/communication";
 import type { CommunicationAxis, SegmentConfig } from "../../engine/types";
 import { tempsDeTravail } from "../scenarios/registry";
@@ -213,7 +213,9 @@ export function dossiersDeService(
       { libelle: "Tour de la demande la plus forte", valeur: `tour ${pic}` },
       ...(config.orderOffers ?? []).slice(0, 3).map((o) => ({
         libelle: `Commande exceptionnelle possible : ${o.title}`,
-        valeur: `${entier(o.units)} ${v.units} à ${euro(o.price)}, règlement ${jours(o.paymentDelayDays)}`,
+        valeur: `${entier(o.units)} ${v.units} à ${euro(o.price)}, règlement ${jours(o.paymentDelayDays)}${
+          multi ? ` · sur la référence ${gamme[offerProductIndex(gamme, o)]!.nom}` : ""
+        }`,
       })),
     ],
     tableau: {

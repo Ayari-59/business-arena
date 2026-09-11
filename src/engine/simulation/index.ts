@@ -19,6 +19,7 @@ import {
   toGammeDecisions,
   type GammeDecision,
   type GammeProduct,
+  offerProductIndex,
 } from "../gamme";
 import type { SupplierDef } from "../types";
 import type { StockLot } from "../inventory/cump";
@@ -1025,12 +1026,21 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     // marché et les commandes fermes (pas de sous-traitance — à prendre avec
     // ses moyens). Son délai de règlement décide de la part du CA qui part
     // en créances : rentabilité contre BFR, l'arbitrage est là.
+    // En gamme, la commande porte sur la référence qu'elle nomme et se sert
+    // sur SON stock (mono, et offre sans référence : la première, expression
+    // historique au bit près).
+    const offerIndex = offerProductIndex(gamme, roundOffer);
     const offerAccepted = !dormant && Boolean(roundOffer && w.decisions.acceptOrder);
     const offerDelivered =
       offerAccepted && roundOffer
         ? Math.min(
             roundOffer.units,
-            Math.max(0, mainStock.quantity - mainUnits - orderDelivered),
+            Math.max(
+              0,
+              w.productStocks[offerIndex]!.quantity -
+                productSegmentUnits[offerIndex]! -
+                (offerIndex === 0 ? orderDelivered : 0),
+            ),
           )
         : 0;
     const offerRevenue = offerDelivered * (roundOffer?.price ?? 0);
@@ -1057,8 +1067,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
 
     // Ventes par produit : le marché du produit, plus, pour le premier de la
     // gamme, les commandes fermes et la commande exceptionnelle (mono : tout).
-    const productSold = productSegmentUnits.map((u, k) =>
-      k === 0 ? u + orderDelivered + offerDelivered : u,
+    const productSold = productSegmentUnits.map(
+      (u, k) => u + (k === 0 ? orderDelivered : 0) + (k === offerIndex ? offerDelivered : 0),
     );
     const soldUnits = sumExact(productSold);
     const productSegmentRevenue = productSegmentUnits.map((u, k) => u * w.gamme[k]!.price);
@@ -1467,9 +1477,15 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
                         },
                       }
                     : {}),
-                  sold: productSegmentUnits[k]!,
+                  // Les ventes de la référence : son marché, plus les commandes
+                  // fermes (première référence) et la commande exceptionnelle
+                  // (la référence qu'elle nomme), au prix de chacune.
+                  sold: productSold[k]!,
                   lost: productLost[k]!,
-                  revenue: productSegmentRevenue[k]!,
+                  revenue:
+                    productSegmentRevenue[k]! +
+                    (k === 0 ? (orderDelivered + subcontracted) * orderUnitPrice : 0) +
+                    (k === offerIndex ? offerRevenue : 0),
                   stock: finalStocks[k]!,
                   segments: product.market.segments.map((s) => s.code),
                 },
@@ -1510,6 +1526,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
               revenue: offerRevenue,
               paymentDelayDays: roundOffer.paymentDelayDays,
               onCredit: offerRevenue * offerCreditShare,
+              ...(gamme.length > 1 ? { productCode: gamme[offerIndex]!.code } : {}),
             },
           }
         : {}),

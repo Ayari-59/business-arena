@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { SCENARIOS, scenarioByCode } from "../../src/config/scenarios/registry";
+import { isMultiProduct, offerProductIndex, toGamme } from "../../src/engine/gamme";
 import { botDecisions, type BotProfile } from "../../src/engine/bots";
 import { runGame, soldUnits } from "../../src/engine/simulation/runGame";
 import type { CompanyRoundResult, CompanyState } from "../../src/engine/types";
@@ -94,13 +95,25 @@ describe("LA TABLE D'AUGUSTIN : les chiffres des énoncés sortent de la configu
   });
 });
 
-describe("aucune offre de commande ne vend sous le coût variable sans le dire", () => {
+describe("aucune offre de commande ne vend sous le coût variable de SA référence, et en gamme chacune nomme la sienne", () => {
   for (const d of SCENARIOS) {
     it(`${d.code}`, () => {
-      const p = d.scenario.product;
-      const variable = p.materialCostPerUnit + p.otherVariableCostPerUnit;
+      const gamme = toGamme(d.scenario);
       for (const o of d.scenario.orderOffers ?? []) {
-        expect(o.price, `${o.code} à ${o.price} € pour ${variable} € de coût variable`).toBeGreaterThanOrEqual(variable);
+        if (isMultiProduct(d.scenario)) {
+          // Une commande calibrée pour le mono, servie sur la première
+          // référence d'une gamme, n'a plus de sens : chacune nomme sa référence.
+          expect(o.productCode, `${o.code} sans référence`).toBeDefined();
+          expect(gamme.some((p) => p.code === o.productCode), `${o.code} : référence ${o.productCode} inconnue`).toBe(true);
+        }
+        const p = gamme[offerProductIndex(gamme, o)]!;
+        // Une référence à bâtir n'a pas de stock : une commande dessus serait un piège.
+        expect(p.development, `${o.code} porte sur ${p.code}, à développer`).toBeUndefined();
+        const variable = p.materialCostPerUnit + p.otherVariableCostPerUnit;
+        expect(o.price, `${o.code} à ${o.price} € pour ${variable} € de coût variable (${p.code})`).toBeGreaterThanOrEqual(variable);
+        // Et jamais plus du double du prix usuel de la référence : une commande reste une commande.
+        const usuel = Math.max(...p.market.segments.map((s) => s.refPrice));
+        expect(o.price, `${o.code} à ${o.price} € pour ${usuel} € de prix usuel (${p.code})`).toBeLessThanOrEqual(usuel * 2);
       }
     });
   }

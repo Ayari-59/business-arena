@@ -140,10 +140,29 @@ const GAMME: ProductDef[] = [
  * Les offres de commande du cabinet d'origine, sous d'autres codes : elles
  * portent sur le cœur de gamme (l'audit), aux mêmes conditions.
  */
-const ORDER_OFFERS = (conseilScenario.orderOffers ?? []).map((o) => ({
-  ...o,
-  code: o.code.replace(/^conseil_offer_/, "conseilg_offer_"),
-}));
+/**
+ * La référence de chaque commande, et son prix quand la référence n'est pas
+ * celle du mono : le programme de transformation et la due diligence sont de la
+ * transformation, le reste de l'audit et de la conformité.
+ */
+const CIBLES: Record<string, { productCode: string; price?: number }> = {
+  conseil_offer_transformation: { productCode: "transformation" },
+  conseil_offer_appel_offres: { productCode: "audit" },
+  conseil_offer_due_diligence: { productCode: "transformation" },
+  conseil_offer_formation: { productCode: "audit" },
+  conseil_offer_assistance: { productCode: "audit" },
+  conseil_offer_audit_flash: { productCode: "audit" },
+};
+
+const ORDER_OFFERS = (conseilScenario.orderOffers ?? []).map((o) => {
+  const cible = CIBLES[o.code];
+  if (!cible) throw new Error(`Commande exceptionnelle sans référence : ${o.code}`);
+  return {
+    ...o,
+    ...cible,
+    code: o.code.replace(/^conseil_offer_/, "conseilg_offer_"),
+  };
+});
 
 const rawConseilGamme = {
   ...conseilScenario,

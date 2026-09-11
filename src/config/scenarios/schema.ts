@@ -231,6 +231,7 @@ export const engineScenarioConfigSchema = z.object({
         units: z.number().positive(),
         price: z.number().positive(),
         paymentDelayDays: z.number().min(0).max(180),
+        productCode: z.string().min(1).optional(),
       }),
     )
     .min(1)

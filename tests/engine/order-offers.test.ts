@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { orderOfferForRound, simulateRound } from "../../src/engine/simulation";
+import type { BotProfile } from "../../src/engine/bots";
 import { applyPeriodicity } from "../../src/config/scenarios/periodicity";
 import type {
   CompanyState,
@@ -253,5 +254,71 @@ describe("périodicité", () => {
     expect(monthly.orderOffers![0]!.units).toBeCloseTo(500 / 3, 6);
     expect(monthly.orderOffers![0]!.price).toBe(74);
     expect(monthly.orderOffers![0]!.paymentDelayDays).toBe(90);
+  });
+});
+
+describe("en gamme, la commande exceptionnelle porte sur SA référence", () => {
+  it("se sert sur le stock de la référence nommée, à son coût, et la trace la nomme ; les autres références ne bougent pas", async () => {
+    const { runGame, soldUnits } = await import("../../src/engine/simulation/runGame");
+    const { botDecisions, soldByProduct } = await import("../../src/engine/bots");
+    const { offerProductIndex, toGamme } = await import("../../src/engine/gamme");
+    const { ecommerceGammeScenario, ecommerceGammeCompany, ecommerceGammeBots } = await import(
+      "../../src/config/scenarios/ecommerce-gamme"
+    );
+    const hotelier = ecommerceGammeScenario.orderOffers!.find((o) => o.code === "ecomg_offer_hotelier")!;
+    expect(hotelier.productCode).toBe("mobilier");
+    const scenario = { ...ecommerceGammeScenario, roundsCount: 1, orderOffers: [hotelier] };
+    const gamme = toGamme(scenario);
+    expect(offerProductIndex(gamme, hotelier)).toBe(1);
+    expect(offerProductIndex(gamme, { productCode: "inconnue" })).toBe(0);
+    expect(offerProductIndex(gamme, null)).toBe(0);
+
+    const partie = (accepte: boolean) => {
+      const companies: CompanyState[] = [
+        ecommerceGammeCompany("player", "PIXEL", "bot", "balanced"),
+        ...ecommerceGammeBots.slice(0, 2).map((b) => ecommerceGammeCompany(b.id, b.name, "bot", b.profile)),
+      ];
+      return runGame({
+        scenario,
+        initialCompanies: companies,
+        providers: Object.fromEntries(
+          companies.map((c) => [
+            c.id,
+            (ctx: { state: CompanyState; roundIndex: number; lastResult?: import("../../src/engine/types").CompanyRoundResult }) => ({
+              ...botDecisions(c.botProfile as BotProfile, {
+                scenario,
+                state: ctx.state,
+                roundIndex: ctx.roundIndex,
+                lastSoldUnits: ctx.lastResult ? soldUnits(ctx.lastResult) : undefined,
+                lastSoldByProduct: ctx.lastResult ? soldByProduct(scenario, ctx.lastResult.market.bySegment) : undefined,
+              }),
+              acceptOrder: c.id === "player" && accepte,
+            }),
+          ]),
+        ),
+        seed: 7,
+      });
+    };
+    const sans = partie(false).rounds[0]!.results["player"]!;
+    const avec = partie(true).rounds[0]!.results["player"]!;
+    expect(sans.orderOffer?.delivered).toBe(0);
+    expect(avec.orderOffer?.accepted).toBe(true);
+    expect(avec.orderOffer!.delivered).toBeGreaterThan(0);
+    expect(avec.orderOffer!.productCode).toBe("mobilier");
+    expect(avec.orderOffer!.unitPrice).toBe(108);
+    // La commande part du mobilier : ses ventes montent d'autant, son stock baisse d'autant ; la décoration est intacte.
+    expect(avec.products!["mobilier"]!.sold - sans.products!["mobilier"]!.sold).toBeCloseTo(avec.orderOffer!.delivered, 6);
+    expect(avec.products!["decoration"]!.sold).toBeCloseTo(sans.products!["decoration"]!.sold, 6);
+    expect(avec.products!["decoration"]!.stock.quantity).toBeCloseTo(sans.products!["decoration"]!.stock.quantity, 6);
+    expect(avec.products!["mobilier"]!.stock.quantity).toBeLessThan(sans.products!["mobilier"]!.stock.quantity);
+    // Et le chiffre d'affaires porte le prix de la commande, pas celui de la décoration.
+    expect(avec.incomeStatement.revenue - sans.incomeStatement.revenue).toBeCloseTo(avec.orderOffer!.delivered * 108, 3);
+  });
+
+  it("en mono-produit, la trace ne nomme aucune référence : rien ne change", () => {
+    const out = simulateRound(input({ decisions: { a: { ...base(), acceptOrder: true }, b: base() } }));
+    const r = out.results["a"]!;
+    expect(r.orderOffer?.accepted).toBe(true);
+    expect(r.orderOffer?.productCode).toBeUndefined();
   });
 });

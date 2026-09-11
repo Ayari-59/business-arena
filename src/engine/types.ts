@@ -450,6 +450,12 @@ export interface OrderOfferDef {
   price: number;
   /** Délai de règlement en jours (0 = comptant). */
   paymentDelayDays: number;
+  /**
+   * En gamme, la référence sur laquelle porte la commande (code produit) :
+   * elle se sert sur SON stock, à SON coût variable. Absente : la première
+   * référence de la gamme (mono : le seul produit).
+   */
+  productCode?: string;
 }
 
 /**
@@ -1162,6 +1168,8 @@ export interface CompanyRoundResult {
     revenue: number;
     paymentDelayDays: number;
     onCredit: number;
+    /** En gamme : la référence servie (absent en mono-produit). */
+    productCode?: string;
   };
   /** Investissement du tour : capacité achetée (en service à t+1) et montant. */
   investment?: {
