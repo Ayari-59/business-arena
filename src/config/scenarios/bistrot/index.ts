@@ -144,8 +144,9 @@ const rawBistrot = {
     // un découvert à 14 %. L'arbitrage doit rester perdant à l'envers.
     placementAnnualRate: 0.02,
   },
-  // structure ≈ 96 000 €/tour : 90 000 décaissés (brigade, loyer, énergie,
-  // assurances, redevances) + 6 000 d'amortissements de la cuisine
+  // structure ≈ 96 000 €/tour : 90 000 décaissés (72 000 de brigade — dix
+  // personnes à 2 400 € chargés par mois — et 18 000 de loyer, d'énergie,
+  // d'assurances et de redevances) + 6 000 d'amortissements de la cuisine
   fixedCostsPerRound: 90000,
   suppliers: [
     {
@@ -323,7 +324,9 @@ const rawBistrot = {
     },
   ],
   hr: {
-    salaryPerEmployeePerRound: 7800,
+    // 2 400 € chargés par mois : la brigade d'un bistrot est payée au voisinage
+    // du minimum, ce qui laisse à la structure de quoi payer les murs.
+    salaryPerEmployeePerRound: 7200,
     includedHeadcount: 10,
     hiringCost: 2000,
     firingCost: 4500,

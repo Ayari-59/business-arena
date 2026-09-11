@@ -526,10 +526,11 @@ export function hotelCompany(
       fixedAssetsNet: 1450000,
       inventoryValue: 0,
       receivables: 62000,
-      cash: 88000,
+      cash: 64000,
       equity: 660000,
       financialDebt: 900000,
-      payables: 40000,
+      // 30 jours de blanchisserie et de petits-déjeuners : le délai des énoncés
+      payables: 16000,
       overdraft: 0,
     },
     lastMarketShare: {},

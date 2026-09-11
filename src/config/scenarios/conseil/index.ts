@@ -535,10 +535,11 @@ export function conseilCompany(
       fixedAssetsNet: 95000,
       inventoryValue: 0,
       receivables: 180000, // deux mois de CA immobilisés : le BFR du conseil
-      cash: 40000,
+      cash: 22000,
       equity: 205000,
       financialDebt: 70000,
-      payables: 40000,
+      // 30 jours de frais de mission : le délai des énoncés
+      payables: 22000,
       overdraft: 0,
     },
     lastMarketShare: {},

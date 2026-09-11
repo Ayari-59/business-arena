@@ -554,9 +554,12 @@ export function transportCompany(
       inventoryValue: 0,
       receivables: 290000,
       cash: 30000,
-      equity: 652000,
+      // Les 63 000 € de dettes fournisseurs en trop n'avaient pas de
+      // contrepartie : rendus aux capitaux propres, la caisse reste ce qu'elle est.
+      equity: 715000,
       financialDebt: 300000,
-      payables: 88000,
+      // 15 jours de gazole et de péages : le délai des énoncés
+      payables: 25000,
       overdraft: 0,
     },
     lastMarketShare: {},
