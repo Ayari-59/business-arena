@@ -38,6 +38,7 @@ import { computeHr } from "../hr";
 import { subscriptionChurnRate } from "../subscription";
 import { unitVariableCost } from "../costs";
 import { computeBreakeven } from "../costs/breakeven";
+import { calculateVariances } from "../costs/variance";
 import { balanceGap, computeFinance } from "../finance/statements";
 import {
   DEFAULT_RSE_CONFIG,
@@ -1038,6 +1039,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const productSegmentUnits: number[] = gamme.map(() => 0);
     const productCredit: number[] = gamme.map(() => 0);
     const productLost: number[] = gamme.map(() => 0);
+    const productSegmentSales: Record<string, SegmentSalesDetail>[] = gamme.map(() => ({}));
     gamme.forEach((product, k) => {
       for (const segment of product.market.segments) {
         const detail = salesBySegment.get(segment.code)?.[i];
@@ -1049,6 +1051,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         productLost[k]! += detail.lost;
         productCredit[k]! +=
           detail.sold * Math.min(1, segment.paymentDelayDays / scenario.roundDays);
+        productSegmentSales[k]![segment.code] = detail;
       }
     });
     // Le premier produit de la gamme porte les commandes fermes d'événement et
@@ -1569,6 +1572,19 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
                     (scenario.subscription && k === 0 ? retainedRevenue : 0),
                   stock: finalStocks[k]!,
                   segments: product.market.segments.map((s) => s.code),
+                  // Variance analysis: actual vs. standard costs/revenues (pilot NOVA, optional)
+                  ...((() => {
+                    const vars = calculateVariances({
+                      standardMaterialCost: product.materialCostPerUnit,
+                      standardOtherVariableCost: product.otherVariableCostPerUnit,
+                      actualMaterialMultiplier: w.productSuppliers[k]?.costMultiplier ?? 1,
+                      actualQuantityProduced: w.producedPerProduct[k]!,
+                      defectUnits: w.productDefectUnits[k]!,
+                      actualPrice: w.gamme[k]!.price,
+                      segmentSales: productSegmentSales[k]!,
+                    });
+                    return vars ? { variances: vars } : {};
+                  })()),
                 },
               ]),
             ),

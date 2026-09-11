@@ -1132,6 +1132,29 @@ export interface ProductRoundResult {
   revenue: number;
   /** Stock de fin de tour du produit (CUMP). */
   stock: { quantity: number; unitCost: number };
+  /**
+   * Variance analysis (pilot on NOVA, optional — present only if variances tracked).
+   * Decomposes actual vs. standard costs and revenues to diagnose performance drivers.
+   * Absent in mono-product scenarios without pedagogy, or when all variances are zero.
+   */
+  variances?: {
+    // Cost variances (€), positive = unfavorable (cost overrun)
+    materialPriceVariance: number;
+    materialEfficiencyVariance: number;
+    laborRateVariance: number;
+    laborEfficiencyVariance: number;
+    totalCostVariance: number;
+    // Percentage of actual COGS for relative comparison
+    costVarianceRatio: number;
+    // Revenue variances by segment
+    revenueVarianceBySegment: Record<SegmentCode, {
+      priceVariance: number;  // positive = favorable
+      volumeVariance: number; // positive = favorable
+      totalVariance: number;
+    }>;
+    // Contribution margin variance: how pricing and volume combined beat/missed plan
+    contributionMarginVariance: number;
+  };
   /** Codes des segments qui composent le marché du produit. */
   segments: SegmentCode[];
 }
