@@ -62,15 +62,11 @@ function materialEfficiencyVariance(
   return defectUnits * standardCost;
 }
 
-/** Labor rate variance: impact of labor cost changes per unit. */
-function laborRateVariance(
-  standardCost: number,
-  actualMultiplier: number,
-  quantityProduced: number,
-): number {
-  const actualCost = standardCost * actualMultiplier;
-  const variance = (actualCost - standardCost) * quantityProduced;
-  return variance;
+/** Labor rate variance: impact of labor cost changes per unit (MVP: always 0, no labor multiplier). */
+function laborRateVariance(): number {
+  // MVP: labor costs are fixed per scenario, no supplier/multiplier affects labor
+  // Future: when labor is configurable, add actualMultiplier parameter
+  return 0;
 }
 
 /** Labor efficiency variance: impact of defects/rework on labor hours. */
@@ -134,11 +130,7 @@ export function calculateVariances(input: VarianceInput): VarianceOutput | null 
     actualQuantityProduced,
   );
   const matEffVar = materialEfficiencyVariance(standardMaterialCost, defectUnits);
-  const labRateVar = laborRateVariance(
-    standardOtherVariableCost,
-    actualMaterialMultiplier,
-    actualQuantityProduced,
-  );
+  const labRateVar = laborRateVariance();
   const labEffVar = laborEfficiencyVariance(standardOtherVariableCost, defectUnits);
 
   const totalCostVar = matPriceVar + matEffVar + labRateVar + labEffVar;

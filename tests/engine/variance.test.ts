@@ -31,8 +31,10 @@ describe("variance calculation", () => {
       expect(result.materialPriceVariance).toBeCloseTo(2200, 0);
       // No efficiency variance (no defects)
       expect(result.materialEfficiencyVariance).toBeCloseTo(0, 0);
-      // No labor rate variance (multiplier only applies to material)
-      expect(result.laborRateVariance).toBeCloseTo(2200, 0);
+      // No labor rate variance (MVP: labor costs fixed per scenario)
+      expect(result.laborRateVariance).toBeCloseTo(0, 0);
+      // Total = only material price variance
+      expect(result.totalCostVariance).toBeCloseTo(2200, 0);
     }
   });
 
