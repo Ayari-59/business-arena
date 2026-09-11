@@ -134,3 +134,37 @@ export const playerSkills = pgTable(
   },
   (t) => [primaryKey({ columns: [t.userId, t.axis] })],
 );
+
+/** Étapes d'apprentissage complétées par un utilisateur. */
+export const completedLearningSteps = pgTable(
+  "completed_learning_steps",
+  {
+    id: id(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    stepId: text("step_id").notNull(),
+    pathId: text("path_id").notNull(),
+    completedAt: timestamp("completed_at", { withTimezone: true }).notNull().defaultNow(),
+    ...timestamps,
+  },
+  (t) => [
+    index("completed_learning_steps_user_idx").on(t.userId),
+    index("completed_learning_steps_step_idx").on(t.stepId),
+  ],
+);
+
+/** Progression dans un sentier pédagogique par utilisateur. */
+export const learningPathProgression = pgTable(
+  "learning_path_progression",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    pathId: text("path_id").notNull(),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+    completionScore: numeric("completion_score", { precision: 5, scale: 2 }).notNull().default("0"),
+    ...timestamps,
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.pathId] })],
+);

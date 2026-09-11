@@ -43,6 +43,7 @@ import { AXES, aggregateAxis, updateMastery } from "@/pedagogy/progress";
 import { adaptiveHintMultiplier, playerStrength } from "@/pedagogy/adaptivity";
 import { computeRawSituationScore } from "@/pedagogy/scoring";
 import type { CompanyRoundResult } from "@/engine/types";
+import { getCompletedStepsForUser, isSituationAccessible } from "@/services/learning-progress.service";
 
 /**
  * Moteur pédagogique côté services (étapes 8-9, doc 03) : instancie les
@@ -735,6 +736,10 @@ export interface SituationView {
   /** Faits chiffrés ayant déclenché la situation (A1 — « Pourquoi cette situation ? »). */
   triggerFacts: TriggerFact[] | null;
   diagnosis: { selected: string[]; freeText: string; score?: number; finalScore?: number } | null;
+  /** Étapes d'apprentissage requises pour accéder à cette situation. */
+  requiredLearningSteps: string[];
+  /** True si l'utilisateur a complété toutes les étapes requises. */
+  isAccessible: boolean;
   /** Rempli uniquement après débriefing. */
   debrief: {
     correctOptionIds: string[];
@@ -763,12 +768,15 @@ function toView(
   levels: number[],
   quizMode: QuizMode = "full",
   hintCap: { cap: number; reason: string } = { cap: 5, reason: "" },
+  completedSteps: string[] = [],
 ): SituationView {
   const asked = askedQuestions(def, quizMode);
   const modelAsked = asked.some((q) => q.id === MODEL_QUESTION_ID);
   const debriefed = instance.status === "debriefed";
   const diagnosis = instance.diagnosis as SituationView["diagnosis"];
   const quizStored = instance.quiz as { answers?: Record<string, string>; score?: number } | null;
+  const requiredSteps = def.requiredLearningSteps ?? [];
+  const isAccessible = isSituationAccessible(requiredSteps.length > 0 ? requiredSteps : undefined, completedSteps);
   return {
     instanceId: instance.id,
     code: def.code,
@@ -821,6 +829,8 @@ function toView(
     decisionLevers: debriefed ? [] : (def.decisionLevers ?? []),
     triggerFacts: (instance.triggerContext as TriggerFact[] | null) ?? null,
     diagnosis,
+    requiredLearningSteps: requiredSteps,
+    isAccessible,
     debrief: debriefed
       ? {
           correctOptionIds: def.diagnosticOptions.filter((o) => o.correct).map((o) => o.id),
@@ -891,6 +901,9 @@ export async function getTeamSituations(
   const quizMode = quizModeFromProfile(game.difficultyProfile);
   const hintCap = hintCapOf(game);
 
+  // Fetch user's completed learning steps
+  const completedSteps = await getCompletedStepsForUser(userId);
+
   const currentRound = gameRounds.find((r) => r.index === game.currentRound);
   const resolvedRoundIds = new Set(gameRounds.filter((r) => r.status === "resolved").map((r) => r.id));
   const roundIndexById = new Map(gameRounds.map((r) => [r.id, r.index]));
@@ -912,7 +925,7 @@ export async function getTeamSituations(
     const def = situationByCode.get(codeById.get(instance.situationId) ?? "");
     if (!def) continue;
     const levels = levelsByInstance.get(instance.id) ?? [];
-    const view = toView(instance, def, levels, quizMode, hintCap);
+    const view = toView(instance, def, levels, quizMode, hintCap, completedSteps);
     if (currentRound && instance.roundId === currentRound.id && instance.status !== "debriefed") {
       current.push(view);
     } else if (resolvedRoundIds.has(instance.roundId)) {

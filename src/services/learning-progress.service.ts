@@ -140,8 +140,8 @@ export function getConceptPrerequisites(
   }
 
   return concept.prerequisites
-    .map((code) => getConceptByCode(code))
-    .filter((c) => c !== undefined) as ConceptDef[];
+    .map((code: string) => getConceptByCode(code))
+    .filter((c: ConceptDef | undefined) => c !== undefined) as ConceptDef[];
 }
 
 /**
@@ -219,7 +219,7 @@ export function areConceptPrerequisitesMet(
   }
 
   const masteredSet = new Set(masteredConcepts);
-  return concept.prerequisites.every((prereq) => masteredSet.has(prereq));
+  return concept.prerequisites.every((prereq: string) => masteredSet.has(prereq));
 }
 
 /**

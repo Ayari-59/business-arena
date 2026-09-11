@@ -83,6 +83,8 @@ export interface SituationDef {
   trigger: { round: number } | { detect: DetectCode };
   weight: number;
   decisionLevers: DecisionLever[];
+  /** Étapes d'apprentissage obligatoires pour accéder à cette situation. */
+  requiredLearningSteps?: string[];
 }
 
 /** Coûts standard des 5 niveaux (doc 03 §4) : cumulés = 45 % de score restant. */

@@ -33,6 +33,7 @@ export interface ConceptDef {
   intuition: string;
   method: string;
   formula?: string;
+  prerequisites?: string[]; // codes de concepts à maîtriser d'abord
 }
 
 export const CONCEPTS: ConceptDef[] = [
