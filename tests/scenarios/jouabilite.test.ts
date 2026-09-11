@@ -58,7 +58,9 @@ describe("jouabilité de chaque secteur", () => {
           `${d.code}, tour ${round} : bilan déséquilibré`,
         ).toBeLessThan(0.01);
 
-        const vendu = Object.values(moi.market.bySegment).reduce((s, x) => s + x.sold, 0);
+        const vendu =
+          Object.values(moi.market.bySegment).reduce((s, x) => s + x.sold, 0) +
+          (moi.subscription?.retained ?? 0);
         ventes.push(vendu);
         expect(
           Number.isFinite(moi.incomeStatement.netIncome),

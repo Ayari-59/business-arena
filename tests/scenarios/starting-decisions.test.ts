@@ -41,7 +41,9 @@ describe("le point de départ d'un tour vient du secteur", () => {
   it("le prix est celui de la clientèle principale, jamais celui d'un autre métier", () => {
     for (const d of SCENARIOS) {
       const principale = [...d.scenario.market.segments].sort((a, b) => b.size - a.size)[0]!;
-      expect(depart(d).price, `${d.code}`).toBeCloseTo(principale.refPrice, 6);
+      // Abonnement : la référence est le prix que le portefeuille juge normal.
+      const attendu = d.scenario.subscription?.refPrice ?? principale.refPrice;
+      expect(depart(d).price, `${d.code}`).toBeCloseTo(attendu, 6);
     }
     // et les sept ne partent pas tous du même prix, ce qui était le défaut
     const prix = new Set(SCENARIOS.map((d) => Math.round(depart(d).price)));

@@ -35,6 +35,7 @@ import {
 } from "../production";
 import { addToStock, removeFromStock, stockValue } from "../inventory/cump";
 import { computeHr } from "../hr";
+import { subscriptionChurnRate } from "../subscription";
 import { unitVariableCost } from "../costs";
 import { computeBreakeven } from "../costs/breakeven";
 import { balanceGap, computeFinance } from "../finance/statements";
@@ -386,6 +387,17 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     rseAttritionRelief: number;
     rseNextImageCapital: number;
     rseNextCleanCapital: number;
+    /**
+     * Abonnement (bloc `subscription`, sinon tout à zéro et rien n'est émis) :
+     * portefeuille d'ouverture, occupation, taux d'attrition, adhérents restés
+     * (à servir en priorité) et, rempli au marché, adhérents effectivement
+     * servis sur la capacité du tour.
+     */
+    subOpening: number;
+    subOccupancy: number;
+    subChurnRate: number;
+    subRetained: number;
+    subServed: number;
   }
 
   // Assurance (doc 02 §7.2) : pour les assurés, les événements couverts
@@ -808,6 +820,23 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       );
       investOutlay = investUnits * scenario.investment.costPerCapacityUnit;
     }
+    // Abonnement : le portefeuille d'ouverture part en partie (attrition
+    // fonction de la qualité perçue, du prix et de la saturation du tour) ;
+    // le reste sera servi en priorité sur la capacité, au marché.
+    const sub = scenario.subscription;
+    const subOpening = sub ? Math.max(0, state.members ?? 0) : 0;
+    const subCapacity = Math.min(production.machineCapacity, production.laborCapacity);
+    const subOccupancy = sub ? (subCapacity > 0 ? subOpening / subCapacity : 1) : 0;
+    const subChurnRate = sub
+      ? subscriptionChurnRate({
+          config: sub,
+          perceivedQuality: productPerceived[0]!,
+          price: gammeDecisions[0]!.price,
+          occupancy: subOccupancy,
+          roundIndex,
+        })
+      : 0;
+    const subRetained = subOpening * (1 - subChurnRate);
     return {
       state,
       decisions,
@@ -867,6 +896,11 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       rseAttritionRelief,
       rseNextImageCapital,
       rseNextCleanCapital,
+      subOpening,
+      subOccupancy,
+      subChurnRate,
+      subRetained,
+      subServed: 0,
     };
   });
 
@@ -954,7 +988,20 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         (s) => salesBySegment.get(s.code)?.[i]?.demandForCompany ?? 0,
       );
       const totalDemand = demands.reduce((a, b) => a + b, 0);
-      const available = w.productStocks[k]!.quantity;
+      // Abonnement : les adhérents restés sont servis d'abord sur la capacité
+      // de la première référence (une entreprise défaillante n'en sert aucun) ;
+      // le marché n'a que les places restantes. Sans le modèle : expression
+      // historique.
+      if (scenario.subscription && k === 0) {
+        w.subServed =
+          w.state.status === "defaillant"
+            ? 0
+            : Math.min(w.subRetained, w.productStocks[k]!.quantity);
+      }
+      const available =
+        scenario.subscription && k === 0
+          ? w.productStocks[k]!.quantity - w.subServed
+          : w.productStocks[k]!.quantity;
       const serviceRate = totalDemand > 0 ? Math.min(1, available / totalDemand) : 0;
       product.market.segments.forEach((s) => {
         const detail = salesBySegment.get(s.code)?.[i];
@@ -1067,16 +1114,29 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
 
     // Ventes par produit : le marché du produit, plus, pour le premier de la
     // gamme, les commandes fermes et la commande exceptionnelle (mono : tout).
+    // Abonnement : les adhérents conservés sont des ventes de la première
+    // référence, au prix du tour, réglées comptant. Sans le modèle : zéro,
+    // et l'expression historique est conservée telle quelle.
+    const retainedRevenue = scenario.subscription ? w.subServed * w.gamme[0]!.price : 0;
     const productSold = productSegmentUnits.map(
-      (u, k) => u + (k === 0 ? orderDelivered : 0) + (k === offerIndex ? offerDelivered : 0),
+      (u, k) =>
+        u +
+        (k === 0 ? orderDelivered : 0) +
+        (k === offerIndex ? offerDelivered : 0) +
+        (scenario.subscription && k === 0 ? w.subServed : 0),
     );
     const soldUnits = sumExact(productSold);
     const productSegmentRevenue = productSegmentUnits.map((u, k) => u * w.gamme[k]!.price);
-    const revenue =
-      sumExact(productSegmentRevenue) +
-      (orderDelivered + subcontracted) * orderUnitPrice +
-      offerRevenue -
-      refund;
+    const revenue = scenario.subscription
+      ? sumExact(productSegmentRevenue) +
+        retainedRevenue +
+        (orderDelivered + subcontracted) * orderUnitPrice +
+        offerRevenue -
+        refund
+      : sumExact(productSegmentRevenue) +
+        (orderDelivered + subcontracted) * orderUnitPrice +
+        offerRevenue -
+        refund;
     // Part du CA à crédit, en euros : segments à leurs délais, commandes
     // fermes d'événement comptant, commande exceptionnelle à SON délai.
     const creditRevenue =
@@ -1372,6 +1432,10 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     // commandes fermes s'ajoutent au CA sans gonfler la part de marché).
     const totalShare = totalPotential > 0 ? segmentUnits / totalPotential : 0;
     totalSold += soldUnits;
+    // Abonnement : le portefeuille de clôture ouvre le tour suivant — les
+    // adhérents servis plus les nouveaux venus du marché (les commandes
+    // fermes et l'offre du tour sont des contrats d'un tour, hors portefeuille).
+    const subClosing = scenario.subscription && !dormant ? w.subServed + productSegmentUnits[0]! : 0;
 
     // Qualité perçue de fin de tour, PAR RÉFÉRENCE. Le bonus qualité du
     // fournisseur s'applique à la qualité PRODUITE ce tour, avant lissage — et
@@ -1419,6 +1483,22 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       functionalBalance,
       ratios,
       market: { bySegment: perSegment, totalShare },
+      // Abonnement : le portefeuille du tour, émis SEULEMENT avec le modèle.
+      ...(scenario.subscription
+        ? {
+            subscription: {
+              opening: w.subOpening,
+              churnRate: w.subChurnRate,
+              churned: w.subOpening - w.subRetained,
+              retained: w.subServed,
+              unserved: w.subRetained - w.subServed,
+              newMembers: dormant ? 0 : productSegmentUnits[0]!,
+              closing: subClosing,
+              occupancy: w.subOccupancy,
+              retainedRevenue,
+            },
+          }
+        : {}),
       production: {
         planned: sumExact(w.gamme.map((d) => d.productionPlan)),
         produced: w.produced,
@@ -1485,7 +1565,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
                   revenue:
                     productSegmentRevenue[k]! +
                     (k === 0 ? (orderDelivered + subcontracted) * orderUnitPrice : 0) +
-                    (k === offerIndex ? offerRevenue : 0),
+                    (k === offerIndex ? offerRevenue : 0) +
+                    (scenario.subscription && k === 0 ? retainedRevenue : 0),
                   stock: finalStocks[k]!,
                   segments: product.market.segments.map((s) => s.code),
                 },
@@ -1775,6 +1856,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         : {}),
       finance: finance.closing,
       lastMarketShare,
+      // Abonnement : le portefeuille de clôture, émis SEULEMENT avec le modèle.
+      ...(scenario.subscription ? { members: subClosing } : {}),
     });
   });
 

@@ -124,7 +124,8 @@ export function FinancialStatements({
   const soldUnits = Object.values(result.market.bySegment).reduce((s, d) => s + d.sold, 0)
     + (result.extraOrders?.delivered ?? 0)
     + (result.extraOrders?.subcontracted ?? 0)
-    + (result.orderOffer?.delivered ?? 0);
+    + (result.orderOffer?.delivered ?? 0)
+    + (result.subscription?.retained ?? 0);
   const structure =
     cr.fixedCosts +
     cr.marketingCost +

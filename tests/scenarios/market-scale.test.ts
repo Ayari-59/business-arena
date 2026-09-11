@@ -7,6 +7,7 @@ import {
   facteurDeMarche,
 } from "../../src/config/scenarios/market-scale";
 import { simulateRound } from "../../src/engine/simulation";
+import { soldUnits } from "../../src/engine/simulation/runGame";
 import { botDecisions, type BotProfile } from "../../src/engine/bots";
 import type { CompanyState, EngineScenarioConfig, RoundDecisions } from "../../src/engine/types";
 
@@ -60,7 +61,7 @@ function meilleurCumul(
     });
     for (const c of companies) {
       const r = out.results[c.id]!;
-      dernier[c.id] = Object.values(r.market.bySegment).reduce((s, x) => s + x.sold, 0);
+      dernier[c.id] = soldUnits(r);
       cumul[c.id] = (cumul[c.id] ?? 0) + r.incomeStatement.netIncome;
     }
     companies = out.companies;

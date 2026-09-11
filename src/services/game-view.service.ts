@@ -211,6 +211,17 @@ export interface GameView {
     hoursPerEmployee: number;
     productivity: number;
     hoursPerUnit: number;
+    /**
+     * Abonnement : le portefeuille d'ouverture et ce qu'il en restera au taux
+     * d'attrition de base — la place à prévoir avant tout nouveau venu.
+     * Absent hors modèle par abonnement.
+     */
+    subscription?: {
+      members: number;
+      expectedRetained: number;
+      baseChurnRate: number;
+      refPrice: number;
+    };
   } | null;
   /**
    * Vocabulaire du secteur joué : on ne vend pas des « unités » dans un hôtel
@@ -601,6 +612,7 @@ function reconstructResult(
     // R&D (mono) et communication : mêmes règles, clé émise seulement si portée.
     ...(trace.rd ? { rd: trace.rd } : {}),
     ...(trace.communication ? { communication: trace.communication } : {}),
+    ...(trace.subscription ? { subscription: trace.subscription } : {}),
   };
   return { result, events: trace.events ?? [] };
 }
@@ -615,7 +627,8 @@ function buildForecastReview(
   const sold =
     Object.values(result.market.bySegment).reduce((sum, d) => sum + d.sold, 0) +
     (result.extraOrders?.delivered ?? 0) +
-    (result.orderOffer?.delivered ?? 0);
+    (result.orderOffer?.delivered ?? 0) +
+    (result.subscription?.retained ?? 0);
   const lines: NonNullable<GameView["forecastReview"]>["lines"] = [];
   const push = (
     label: string,
@@ -646,7 +659,10 @@ function buildSectorKpis(
 ): GameView["sectorKpis"] {
   const segmentUnits = Object.values(result.market.bySegment).reduce((sum, s) => sum + s.sold, 0);
   const totalUnits =
-    segmentUnits + (result.extraOrders?.delivered ?? 0) + (result.orderOffer?.delivered ?? 0);
+    segmentUnits +
+    (result.extraOrders?.delivered ?? 0) +
+    (result.orderOffer?.delivered ?? 0) +
+    (result.subscription?.retained ?? 0);
   return computeSectorKpis(kpis, {
     result,
     previousSegments,
@@ -1078,7 +1094,8 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       const sold =
         Object.values(lastResult.market.bySegment).reduce((sum, d) => sum + d.sold, 0) +
         (lastResult.extraOrders?.delivered ?? 0) +
-        (lastResult.orderOffer?.delivered ?? 0);
+        (lastResult.orderOffer?.delivered ?? 0) +
+        (lastResult.subscription?.retained ?? 0);
       const lines: {
         label: string;
         forecast: number;
@@ -1337,7 +1354,8 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       const totalUnits =
         segmentUnits +
         (lastResult.extraOrders?.delivered ?? 0) +
-        (lastResult.orderOffer?.delivered ?? 0);
+        (lastResult.orderOffer?.delivered ?? 0) +
+        (lastResult.subscription?.retained ?? 0);
       // Segments du tour précédent : seule donnée nécessaire à l'attrition.
       const previousRound = resolved.at(-2);
       const previousRow = previousRound
@@ -1404,6 +1422,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         snapshot.product.hoursPerUnit;
       const bottleneck: "machine" | "labor" | "balanced" =
         mc < lc * 0.95 ? "machine" : lc < mc * 0.95 ? "labor" : "balanced";
+      const sub = snapshot.subscription;
       return {
         machineCapacity: Math.round(mc),
         laborCapacity: Math.round(lc),
@@ -1412,6 +1431,16 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         hoursPerEmployee: state.hoursPerEmployee,
         productivity: state.productivity,
         hoursPerUnit: snapshot.product.hoursPerUnit,
+        ...(sub
+          ? {
+              subscription: {
+                members: Math.round(state.members ?? 0),
+                expectedRetained: Math.round((state.members ?? 0) * (1 - sub.baseChurnRate)),
+                baseChurnRate: sub.baseChurnRate,
+                refPrice: sub.refPrice,
+              },
+            }
+          : {}),
       };
     })(),
     difficulty: (() => {

@@ -236,6 +236,15 @@ export interface EngineScenarioConfig {
    */
   perishable?: boolean;
   /**
+   * Modèle par ABONNEMENT (optionnel) : l'entreprise porte un portefeuille
+   * d'adhérents d'un tour à l'autre. Chaque tour, une part du portefeuille
+   * part (attrition) ; le reste est servi en priorité sur la capacité du tour
+   * et paie le prix de la première référence ; les nouveaux adhérents sont
+   * ceux que le marché apporte sur les places restantes. Absent : rien ne
+   * change, un scénario historique reste identique au bit près.
+   */
+  subscription?: SubscriptionConfig;
+  /**
    * Investissement capacitaire (optionnel — doc 02 §6.5) : acheter de la
    * capacité machine. Décaissement et immobilisation immédiats, mise en
    * service au tour SUIVANT, amortissement linéaire dès la mise en service.
@@ -696,6 +705,38 @@ export interface ProductRdState {
   techLevel: number;
 }
 
+/**
+ * Paramètres du modèle par abonnement (`EngineScenarioConfig.subscription`).
+ *
+ * Taux d'attrition du tour :
+ *   base × qualitéPerçue^(−sensibilitéQualité) × (prix ÷ prixRéférence)^(sensibilitéPrix)
+ *   + saturation × max(0, (occupation − seuil) ÷ (1 − seuil))
+ * borné à `maxChurnRate`. L'occupation est le portefeuille d'ouverture
+ * rapporté à la capacité du tour (la plus serrée de la surface et de
+ * l'encadrement) : sur-vendre dégrade l'expérience, donc la rétention.
+ */
+export interface SubscriptionConfig {
+  /** Part du portefeuille qui part chaque tour, à qualité et prix de référence, sans saturation (0..1). */
+  baseChurnRate: number;
+  /** Sensibilité de l'attrition à la qualité perçue (0 = aucune). */
+  qualityChurnSensitivity: number;
+  /** Sensibilité de l'attrition au prix rapporté à `refPrice` (0 = aucune). */
+  priceChurnSensitivity: number;
+  /** Prix de référence du modèle (celui que le portefeuille juge « normal »). */
+  refPrice: number;
+  /** Occupation (portefeuille ÷ capacité) au-delà de laquelle la saturation fait partir (0..1). */
+  crowdingThreshold: number;
+  /** Attrition supplémentaire à occupation totale (occupation = 1). */
+  crowdingChurn: number;
+  /** Plafond du taux d'attrition (défaut 0,6). */
+  maxChurnRate?: number;
+  /**
+   * Saisonnalité de l'attrition de base, par tour (1 = neutre) : l'été fait
+   * partir plus que janvier. Absente : le taux de base vaut toute l'année.
+   */
+  churnSeasonality?: number[];
+}
+
 export interface CompanyState {
   id: CompanyId;
   name: string;
@@ -743,6 +784,11 @@ export interface CompanyState {
   finance: BalanceSheet;
   /** Parts de marché du tour précédent, par segment (fidélité). */
   lastMarketShare: Record<SegmentCode, number>;
+  /**
+   * Portefeuille d'adhérents d'ouverture (scénarios par abonnement). Émis
+   * SEULEMENT avec `scenario.subscription` — snapshot inchangé sans le modèle.
+   */
+  members?: number;
   /**
    * Parc d'équipements typés (présent quand le scénario a `equipment`).
    * Chaque entrée est un lot de machines du même type acquises au même tour.
@@ -1116,6 +1162,25 @@ export interface CompanyRoundResult {
     debtToEquity: number;
     assetTurnover: number;
   };
+  /**
+   * Abonnement (scénarios avec bloc `subscription`) : le portefeuille du tour.
+   * `retained` est servi en priorité sur la capacité ; `unserved` sont les
+   * adhérents restés sans place (perdus) ; `newMembers` viennent du marché ;
+   * `closing` = retained + newMembers ouvre le tour suivant.
+   */
+  subscription?: {
+    opening: number;
+    churnRate: number;
+    churned: number;
+    retained: number;
+    unserved: number;
+    newMembers: number;
+    closing: number;
+    /** Portefeuille d'ouverture ÷ capacité du tour. */
+    occupancy: number;
+    /** Chiffre d'affaires des adhérents conservés (au prix de la première référence). */
+    retainedRevenue: number;
+  };
   market: { bySegment: Record<SegmentCode, SegmentSalesDetail>; totalShare: number };
   production: {
     planned: number;
@@ -1321,6 +1386,8 @@ export interface EngineTrace {
   rd?: CompanyRoundResult["rd"] | null;
   /** Communication (levier `communication`) : axe, marque, notoriété, adéquation par segment. */
   communication?: CompanyRoundResult["communication"] | null;
+  /** Abonnement (bloc `subscription`) : le portefeuille d'adhérents du tour. */
+  subscription?: CompanyRoundResult["subscription"] | null;
 }
 
 export interface EventInstance {

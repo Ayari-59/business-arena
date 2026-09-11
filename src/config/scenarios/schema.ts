@@ -166,6 +166,19 @@ export const engineScenarioConfigSchema = z.object({
   fixedCostsPerRound: z.number().nonnegative(),
   // Activité de service : la capacité non vendue est perdue, jamais stockée.
   perishable: z.boolean().optional(),
+  // Modèle par abonnement : le portefeuille n'existe que si le bloc est déclaré.
+  subscription: z
+    .object({
+      baseChurnRate: z.number().min(0).max(1),
+      qualityChurnSensitivity: z.number().nonnegative(),
+      priceChurnSensitivity: z.number().nonnegative(),
+      refPrice: z.number().positive(),
+      crowdingThreshold: z.number().min(0).max(1),
+      crowdingChurn: z.number().min(0).max(1),
+      maxChurnRate: z.number().min(0).max(1).optional(),
+      churnSeasonality: z.array(z.number().nonnegative()).optional(),
+    })
+    .optional(),
   suppliers: z.array(supplierSchema).min(2).optional(),
   insurance: z
     .object({

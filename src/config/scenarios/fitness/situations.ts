@@ -55,16 +55,16 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
       {
         id: "seuil_adherents",
         prompt:
-          "Avec 78 000 € de charges de structure décaissées et 90 € de marge par adhérent, combien faut-il d'adhérents pour équilibrer ?",
+          "Avec 105 000 € de charges de structure décaissées et 90 € de marge par adhérent, combien faut-il d'adhérents pour équilibrer ?",
         options: [
-          { id: "a", label: "Environ 870, soit 40 % de la capacité" },
+          { id: "a", label: "Environ 1 170, soit 53 % de la capacité" },
           { id: "b", label: "Environ 2 200, soit la capacité entière" },
           { id: "c", label: "Environ 1 600, l'effectif actuel" },
-          { id: "d", label: "Environ 430" },
+          { id: "d", label: "Environ 1 000, le millier de places rond" },
         ],
         correctOptionId: "a",
         explain:
-          "78 000 ÷ 90 ≈ 867 adhérents sur 2 200 places. Au-delà, chaque adhérent supplémentaire apporte 90 € presque intégralement en résultat.",
+          "105 000 ÷ 90 ≈ 1 167 adhérents sur 2 200 places. Au-delà, chaque adhérent supplémentaire apporte 90 € presque intégralement en résultat.",
       },
     ],
     modelRelevance: {
@@ -78,7 +78,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
       "Distinguez ce que coûte UN adhérent de plus de ce que coûte la salle, pleine ou vide.",
       "Le loyer, les coachs et le crédit tombent identiquement que vous ayez 800 ou 2 000 adhérents.",
       "Chaque adhérent laisse 105 − 15 = 90 € par trimestre pour couvrir cette structure.",
-      "Seuil = 78 000 ÷ 90 ≈ 870 adhérents. Vous en avez 1 600 : la marge de sécurité existe, mais l'été arrive.",
+      "Seuil = 105 000 ÷ 90 ≈ 1 170 adhérents. Vous en avez 1 600 : la marge de sécurité existe, 430 adhérents, mais l'été arrive.",
       "Et surtout : ces 90 € reviennent CHAQUE trimestre tant que l'adhérent reste. C'est ce qui distingue ce modèle de tous les autres.",
     ]),
     trigger: { round: 1 },
@@ -247,7 +247,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Avec 1 600 adhérents et un seuil à 870, la marge de sécurité est de 730 adhérents. Un été qui en fait partir 800 fait basculer l'exercice.",
+          "Avec 1 600 adhérents et un seuil à 1 170, la marge de sécurité est de 430 adhérents. Un été qui en fait partir 500 fait basculer le trimestre.",
       },
     ],
     modelRelevance: {
@@ -261,7 +261,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
       "Regardez la saisonnalité de chaque segment : lequel s'effondre, lequel résiste ?",
       "Les inscrits de janvier tombent à 0,25 de leur niveau. Les réguliers, eux, restent à 0,75.",
       "Vos charges, elles, sont à 1,0 toute l'année. Seuls les 15 € de variable par adhérent disparaissent.",
-      "Calculez votre marge de sécurité : combien d'adhérents pouvez-vous perdre avant de passer sous le seuil de 870 ?",
+      "Calculez votre marge de sécurité : combien d'adhérents pouvez-vous perdre avant de passer sous le seuil de 1 170 ?",
       "Les vraies réponses se jouent AVANT : fidéliser les inscrits de janvier, signer des contrats entreprises moins saisonniers, ou vendre des engagements annuels plutôt que trimestriels.",
     ]),
     trigger: { round: 3 },
@@ -564,7 +564,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
     category: "decision_strategique",
     title: "Une seconde salle, ou pas",
     narrative:
-      "Un local se libère dans le quartier voisin : 220 000 € d'aménagement. Vous ne savez pas si la demande y est. Votre étude interne dit qu'il y a environ deux chances sur trois d'atteindre 1 400 adhérents, et une sur trois de plafonner à 600, auquel cas la salle perdrait de l'argent chaque trimestre.",
+      "Un local se libère dans le quartier voisin : 220 000 € d'aménagement. Vous ne savez pas si la demande y est. Votre étude interne dit qu'il y a environ deux chances sur trois d'atteindre 1 400 adhérents, et une sur trois de plafonner à 600, auquel cas la salle perdrait de l'argent chaque trimestre. Le second site ne s'ouvre pas dans la partie : l'exercice se raisonne sur le papier, et seul l'agrandissement de votre plateau actuel se décide dans vos investissements.",
     problem:
       "Comment décider d'un investissement dont le résultat dépend d'un événement incertain ?",
     diagnosticOptions: [
@@ -637,7 +637,7 @@ export const FITNESS_SITUATIONS: SituationDef[] = [
       {
         field: "productionPlan",
         direction: "review",
-        hint: "Ouvrir une seconde salle double la capacité mais aussi les charges fixes. Chiffrez le seuil de rentabilité du nouveau site avant de décider.",
+        hint: "Ouvrir une seconde salle doublerait la capacité mais aussi les charges fixes. Chiffrez le seuil de rentabilité du nouveau site sur le papier ; dans la partie, seul votre plateau actuel s'agrandit, par l'investissement.",
       },
       {
         field: "marketingBudget",

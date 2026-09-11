@@ -71,5 +71,10 @@ export function runGame(args: {
 
 /** Unités vendues par une entreprise sur un tour (agrégat utile aux bots). */
 export function soldUnits(result: CompanyRoundResult): number {
-  return Object.values(result.market.bySegment).reduce((sum, s) => sum + s.sold, 0);
+  // Abonnement : les adhérents conservés sont des ventes du tour au même
+  // titre que les nouveaux venus du marché.
+  return (
+    Object.values(result.market.bySegment).reduce((sum, s) => sum + s.sold, 0) +
+    (result.subscription?.retained ?? 0)
+  );
 }

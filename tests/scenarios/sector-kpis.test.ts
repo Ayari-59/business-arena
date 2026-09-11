@@ -7,6 +7,7 @@ import {
   SERVICES_KPIS,
   computeSectorKpis,
   type SectorKpiContext,
+  ABONNEMENT_KPIS,
 } from "../../src/config/scenarios/sector-kpis";
 import { SCENARIOS, scenarioByCode } from "../../src/config/scenarios/registry";
 import type { CompanyRoundResult, SegmentSalesDetail } from "../../src/engine/types";
@@ -256,5 +257,38 @@ describe("robustesse, tous secteurs", () => {
         expect(k.hint.length, `${d.code}/${k.key} : sans explication`).toBeGreaterThan(30);
       }
     }
+  });
+});
+
+describe("indicateurs par abonnement", () => {
+  const abonnement = ctx({
+    result: {
+      ...result({ revenue: 210_000, cogs: 30_000 }),
+      subscription: {
+        opening: 1600,
+        churnRate: 0.15,
+        churned: 240,
+        retained: 1360,
+        unserved: 0,
+        newMembers: 640,
+        closing: 2000,
+        occupancy: 1600 / 2200,
+        retainedRevenue: 142_800,
+      },
+    } as CompanyRoundResult,
+    totalUnits: 2000,
+    scenario: scenarioByCode("fitness").scenario,
+  });
+
+  it("l'attrition est celle du portefeuille, dès le premier tour", () => {
+    expect(valueOf(ABONNEMENT_KPIS, "attrition", abonnement)).toBeCloseTo(0.15, 9);
+  });
+
+  it("la valeur vie divise la marge par adhérent par l'attrition du portefeuille", () => {
+    expect(valueOf(ABONNEMENT_KPIS, "ltv", abonnement)).toBeCloseTo((210_000 - 30_000) / 2000 / 0.15, 6);
+  });
+
+  it("le revenu par adhérent compte les adhérents conservés", () => {
+    expect(valueOf(ABONNEMENT_KPIS, "revenu_par_adherent", abonnement)).toBeCloseTo(105, 9);
   });
 });
