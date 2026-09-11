@@ -168,6 +168,50 @@ export function PeriodDashboard({
               />
             </section>
 
+            {r.subscription ? (
+              <section
+                data-testid="portefeuille-tour"
+                className="rounded-xl border border-white/10 bg-slate-900 px-3 py-3 text-sm"
+              >
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  🔁 Portefeuille d&apos;{view.vocabulary.units}
+                </p>
+                <div className="mt-2 grid gap-x-4 gap-y-1 sm:grid-cols-2">
+                  <span className="text-slate-400">En début de tour</span>
+                  <span className="text-right text-slate-200">
+                    {formatUnits(r.subscription.opening)} {view.vocabulary.units}
+                  </span>
+                  <span className="text-slate-400">Partis (attrition)</span>
+                  <span
+                    className={`text-right ${r.subscription.churnRate > 0.2 ? "text-amber-400" : "text-slate-200"}`}
+                  >
+                    − {formatUnits(r.subscription.churned)} ({formatPercent(r.subscription.churnRate)})
+                  </span>
+                  {r.subscription.unserved > 0.5 ? (
+                    <>
+                      <span className="text-slate-400">Restés sans place</span>
+                      <span className="text-right text-rose-400">
+                        − {formatUnits(r.subscription.unserved)}
+                      </span>
+                    </>
+                  ) : null}
+                  <span className="text-slate-400">Nouveaux venus du marché</span>
+                  <span className="text-right text-emerald-400">
+                    + {formatUnits(r.subscription.newMembers)}
+                  </span>
+                  <span className="text-slate-400">En fin de tour</span>
+                  <span className="text-right font-medium text-slate-100">
+                    {formatUnits(r.subscription.closing)} {view.vocabulary.units}
+                  </span>
+                </div>
+                <p className="mt-2 text-xs text-slate-400">
+                  {r.subscription.occupancy > 0.85
+                    ? `Occupation ${formatPercent(r.subscription.occupancy)} : la salle sature, et la saturation se paie en départs.`
+                    : `Occupation ${formatPercent(r.subscription.occupancy)}. Chaque ${view.vocabulary.unit} conservé rapporte à nouveau sans rien coûter à recruter.`}
+                </p>
+              </section>
+            ) : null}
+
             <RseCard rse={period.rse} />
 
             {/* Rapport extra-financier (Lot 3) : pluriannuel, donc affiché une

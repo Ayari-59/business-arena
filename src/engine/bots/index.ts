@@ -1,3 +1,4 @@
+import { computePotentialDemand } from "../market/demand";
 import type {
   CompanyState,
   EngineScenarioConfig,
@@ -146,6 +147,9 @@ function applyFinancialGuardRail(base: RoundDecisions, ctx: BotContext): void {
 
 /** Segment dominant (plus grosse demande de base) — sert de référence de prix. */
 function mainRefPrice(scenario: EngineScenarioConfig): number {
+  // Abonnement : le prix que le portefeuille juge normal est la référence —
+  // c'est lui qui retient ou fait partir les adhérents.
+  if (scenario.subscription) return scenario.subscription.refPrice;
   const main = [...scenario.market.segments].sort((a, b) => b.size - a.size)[0];
   return main ? main.refPrice : 50;
 }
@@ -178,6 +182,21 @@ function adaptivePlan(ctx: BotContext, aggressiveness: number): number {
       ? ctx.lastSoldUnits * aggressiveness
       : cap * 0.65 * aggressiveness;
   const target = base * seasonalFactor(ctx);
+  // Abonnement : une salle prévoit la place de ses adhérents qui restent —
+  // on ne met pas dehors ceux qui ont payé — plus la part visée des nouveaux
+  // que la saison amène, à son tempérament. Sans le modèle : expression
+  // historique.
+  const sub = ctx.scenario.subscription;
+  if (sub) {
+    const retained = (ctx.state.members ?? 0) * (1 - sub.baseChurnRate);
+    const potential = ctx.scenario.market.segments.reduce(
+      (sum, segment) =>
+        sum + computePotentialDemand(segment, ctx.roundIndex, ctx.scenario.market.seasonality, 1),
+      0,
+    );
+    const share = ctx.scenario.scoring.benchmarks.marketShareTarget;
+    return Math.max(0, Math.min(cap, retained + potential * share * aggressiveness));
+  }
   return Math.max(0, Math.min(cap, target - stock * 0.5));
 }
 

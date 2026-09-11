@@ -284,7 +284,10 @@ async function resolveGameRound(
           .where(eq(roundResults.roundId, prevRound.id));
         for (const r of prevResults) {
           const bySegment = (r.marketDetail ?? {}) as CompanyRoundResult["market"]["bySegment"];
-          lastSold[r.teamId] = sumSold(bySegment);
+          // Abonnement : les adhérents conservés sont des ventes du tour ; sans
+          // eux, le bot planifierait pour ses seuls nouveaux venus et mettrait
+          // sa base dehors.
+          lastSold[r.teamId] = sumSold(bySegment) + (r.engineTrace?.subscription?.retained ?? 0);
           // Gamme : les bots suivent leurs ventes référence par référence.
           const parProduit = soldByProduct(scenario, bySegment);
           if (parProduit) lastSoldByProduct[r.teamId] = parProduit;
@@ -441,6 +444,7 @@ async function resolveGameRound(
               products: r.products ?? null,
               rd: r.rd ?? null,
               communication: r.communication ?? null,
+              subscription: r.subscription ?? null,
             },
             revenue: toMoney(r.incomeStatement.revenue),
             netIncome: toMoney(r.incomeStatement.netIncome),

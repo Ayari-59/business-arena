@@ -839,6 +839,12 @@ export function DecisionForm({
     bottleneck: "machine" | "labor" | "balanced";
     headcount: number;
     productivity: number;
+    subscription?: {
+      members: number;
+      expectedRetained: number;
+      baseChurnRate: number;
+      refPrice: number;
+    };
   } | null;
 }) {
   const action = playRoundAction.bind(null, gameId);
@@ -1091,6 +1097,18 @@ export function DecisionForm({
             ⚙️ {v.capacityPanelTitle}
           </p>
           <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+            {capacityFacts.subscription ? (
+              <>
+                <span className="text-slate-400">Portefeuille d&apos;{v.units}</span>
+                <span className="text-right text-slate-200" data-testid="portefeuille-adherents">
+                  {capacityFacts.subscription.members.toLocaleString("fr-FR")} {v.units}
+                  <span className="ml-1 text-xs text-slate-400">
+                    (~{capacityFacts.subscription.expectedRetained.toLocaleString("fr-FR")} resteront à{" "}
+                    {Math.round(capacityFacts.subscription.baseChurnRate * 100)} % d&apos;attrition)
+                  </span>
+                </span>
+              </>
+            ) : null}
             <span className="text-slate-400">{v.capacityLabel}</span>
             <span className="text-right text-slate-200">
               {Math.round(capacityFacts.machineCapacity).toLocaleString("fr-FR")} {v.perRoundLabel}

@@ -91,6 +91,11 @@ const weightedShare = (
  * ne soit parti.
  */
 const attritionOn = (loyalSegments: string[]) => (ctx: SectorKpiContext): number | null => {
+  // Modèle par abonnement : l'attrition est celle du portefeuille, mesurée
+  // par le moteur — pas une lecture indirecte des parts de marché.
+  if (ctx.result.subscription) {
+    return ctx.result.subscription.opening > 0 ? ctx.result.subscription.churnRate : null;
+  }
   if (!ctx.previousSegments) return null;
   const before = weightedShare(ctx.previousSegments, loyalSegments);
   const now = weightedShare(ctx.result.market.bySegment, loyalSegments);
@@ -314,7 +319,7 @@ export const ABONNEMENT_KPIS: SectorKpiDef[] = [
   {
     key: "attrition",
     label: "Taux d'attrition",
-    hint: "Part de vos adhérents réguliers perdue depuis le tour précédent. Dans un modèle par abonnement, c'est LE chiffre qui décide du résultat.",
+    hint: "Part de votre portefeuille d'adhérents partie ce tour. Dans un modèle par abonnement, c'est LE chiffre qui décide du résultat.",
     format: "percent",
     compute: attritionOn(["reguliers"]),
   },

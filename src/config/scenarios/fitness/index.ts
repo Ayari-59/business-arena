@@ -18,9 +18,9 @@ import { parseScenarioConfig } from "../schema";
  *   l'équipe ne peut en encadrer que ~2 420. Sur-vendre des abonnements
  *   dégrade l'expérience — donc la rétention. Le piège se referme seul.
  *
- * Calibration (base trimestrielle) : ~1 600 adhérents à 105 € le trimestre
- * (35 €/mois), 15 € de coût variable → 90 € de marge ; 78 000 € de
- * structure décaissée → seuil ≈ 870 adhérents, soit 40 % de la capacité.
+ * Calibration (base trimestrielle) : 1 600 adhérents en portefeuille à 105 €
+ * le trimestre (35 €/mois), 15 € de coût variable → 90 € de marge ; 105 000 €
+ * de structure décaissée → seuil ≈ 1 170 adhérents, soit 53 % de la capacité.
  */
 const rawFitness = {
   code: "fitness",
@@ -30,12 +30,29 @@ const rawFitness = {
   // Un trimestre d'abonnement non vendu est perdu : on ne rattrape pas
   // janvier en juillet. La capacité d'accueil est périssable.
   perishable: true,
+  // Le PORTEFEUILLE d'adhérents : 1 600 à la reprise, 15 % qui partent chaque
+  // trimestre à qualité et prix de référence (valeur vie 90 ÷ 0,15 = 600 €),
+  // davantage l'été, davantage si la salle se dégrade ou se renchérit, et
+  // davantage au-delà de 85 % d'occupation : 300 adhérents de trop font
+  // passer l'attrition de 15 à 16 %, une salle pleine à 25 %.
+  subscription: {
+    baseChurnRate: 0.15,
+    qualityChurnSensitivity: 1,
+    priceChurnSensitivity: 0.6,
+    refPrice: 105,
+    crowdingThreshold: 0.85,
+    crowdingChurn: 0.1,
+    maxChurnRate: 0.5,
+    churnSeasonality: [1, 1, 1.5, 1, 1, 1],
+  },
+  // Le marché ci-dessous est celui des NOUVEAUX adhérents : ceux qui poussent
+  // la porte ce trimestre. Les anciens sont dans le portefeuille.
   market: {
     segments: [
       {
         code: "resolutions",
         name: "Bonnes résolutions (janvier, volatils)",
-        size: 7000,
+        size: 1000,
         growth: 0.04,
         // ceux-là comparent les prix de toutes les salles de la ville
         priceElasticity: -2.4,
@@ -57,7 +74,7 @@ const rawFitness = {
       {
         code: "reguliers",
         name: "Pratiquants réguliers (base fidèle)",
-        size: 5250,
+        size: 400,
         growth: 0.03,
         priceElasticity: -0.8,
         refPrice: 118,
@@ -74,7 +91,7 @@ const rawFitness = {
       {
         code: "entreprises",
         name: "Contrats entreprises (45 j)",
-        size: 3000,
+        size: 250,
         growth: 0.07,
         priceElasticity: -1.3,
         refPrice: 100,
@@ -137,9 +154,11 @@ const rawFitness = {
     // un découvert à 13 %. L'arbitrage doit rester perdant à l'envers.
     placementAnnualRate: 0.02,
   },
-  // structure ≈ 94 000 €/tour : 78 000 décaissés (loyer du plateau, salaires
-  // des coachs et de l'accueil, énergie, assurances) + 16 000 d'amortissements
-  fixedCostsPerRound: 78000,
+  // structure ≈ 121 000 €/tour : 105 000 décaissés (56 000 de salaires des
+  // huit coachs et de l'accueil, 49 000 de loyer du plateau de 1 200 m²,
+  // d'énergie et d'assurances) + 16 000 d'amortissements. Seuil ≈ 1 170
+  // adhérents, 53 % de la capacité.
+  fixedCostsPerRound: 105000,
   suppliers: [
     {
       code: "parc_standard",
@@ -523,12 +542,15 @@ export function fitnessCompany(
       inventoryValue: 0,
       receivables: 24000, // uniquement les contrats entreprises
       cash: 46000,
-      equity: 272000,
+      equity: 285000,
       financialDebt: 420000,
-      payables: 18000,
+      // un mois de consommables et d'entretien du parc, réglé à 30 jours
+      payables: 5000,
       overdraft: 0,
     },
     lastMarketShare: {},
+    // le portefeuille repris : 1 600 adhérents qui paient chaque trimestre
+    members: 1600,
   };
 }
 
