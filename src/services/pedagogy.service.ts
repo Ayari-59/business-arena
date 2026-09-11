@@ -599,6 +599,10 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
       }
     }
 
+    // Only track learning progress if the team submitted a diagnosis (V1-5: measure only)
+    const diagnosisSubmitted = (instance.diagnosis as { selected?: string[] } | null)?.selected !== undefined;
+    if (!diagnosisSubmitted) continue;
+
     for (const member of members) {
       const memberSkills = (skillsByUser.get(member.userId) ?? []).map((s) => ({
         value: Number(s.value),
