@@ -973,80 +973,6 @@ export interface TeacherPedagogyView {
 }
 
 /** Vue pédagogique enseignant (§27) : « ma classe maîtrise-t-elle le BFR ? » */
-export async function getTeacherPedagogyView(
-  gameId: string,
-  teacherId: string,
-): Promise<TeacherPedagogyView | null> {
-  const game = (await db.select().from(games).where(eq(games.id, gameId)))[0];
-  if (!game || game.createdBy !== teacherId) return null;
-
-  const teamRows = await db.select().from(teams).where(eq(teams.gameId, gameId));
-  const teamIds = teamRows.map((t) => t.id);
-  const memberships = teamIds.length
-    ? await db.select().from(players).where(inArray(players.teamId, teamIds))
-    : [];
-  const userIds = [...new Set(memberships.map((m) => m.userId))];
-
-  const conceptRows = await db.select().from(concepts);
-  const progress = userIds.length
-    ? await db.select().from(learningProgress).where(inArray(learningProgress.userId, userIds))
-    : [];
-  const byConcept = new Map<string, number[]>();
-  for (const p of progress) {
-    const list = byConcept.get(p.conceptId) ?? [];
-    list.push(Number(p.mastery));
-    byConcept.set(p.conceptId, list);
-  }
-  const conceptMastery = conceptRows
-    .filter((c) => byConcept.has(c.id))
-    .map((c) => {
-      const values = byConcept.get(c.id)!;
-      return {
-        code: c.code,
-        name: c.name,
-        average: values.reduce((a, b) => a + b, 0) / values.length,
-        students: values.length,
-      };
-    })
-    .sort((a, b) => a.average - b.average);
-
-  const gameRounds = await db.select().from(rounds).where(eq(rounds.gameId, gameId));
-  const instances = gameRounds.length
-    ? await db
-        .select()
-        .from(situationInstances)
-        .where(inArray(situationInstances.roundId, gameRounds.map((r) => r.id)))
-    : [];
-  const instanceIds = instances.map((i) => i.id);
-  const usages = instanceIds.length
-    ? await db.select().from(hintUsages).where(inArray(hintUsages.situationInstanceId, instanceIds))
-    : [];
-  const instanceTeam = new Map(instances.map((i) => [i.id, i.teamId]));
-  const hintsByTeam = new Map<string, number>();
-  for (const u of usages) {
-    const teamId = instanceTeam.get(u.situationInstanceId);
-    if (!teamId) continue;
-    hintsByTeam.set(teamId, (hintsByTeam.get(teamId) ?? 0) + 1);
-  }
-
-  const quizScores = instances
-    .map((i) => (i.quiz as { score?: number } | null)?.score)
-    .filter((s): s is number => typeof s === "number");
-
-  return {
-    conceptMastery,
-    hintsUsedByTeam: teamRows
-      .filter((t) => t.controller === "human")
-      .map((t) => ({ teamName: t.name, count: hintsByTeam.get(t.id) ?? 0 })),
-    quizStats: {
-      submitted: quizScores.length,
-      averageScore:
-        quizScores.length === 0
-          ? 0
-          : quizScores.reduce((a, b) => a + b, 0) / quizScores.length,
-    },
-  };
-}
 
 // ---------------------------------------------------------------------------
 // Carnet d'usage : ce que la vue par partie ne peut pas dire
@@ -1269,4 +1195,4 @@ export async function getTeacherUsageView(teacherId: string): Promise<TeacherUsa
 }
 
 // Re-exports from modular services
-export { getGameGradeSheet, getStudentProgressView } from "@/services/pedagogy-reporting.service";
+export { getTeacherPedagogyView, getGameGradeSheet, getStudentProgressView } from "@/services/pedagogy-reporting.service";
