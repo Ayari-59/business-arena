@@ -512,6 +512,7 @@ const rawBoutique = {
   orderOffers: [
     {
       code: "boutique_offer_ce_noel",
+      productCode: "pull-col-rond",
       title: "Comité d'entreprise · dotation de Noël",
       narrative:
         "Le CSE d'une clinique privée veut offrir un pull à chacun de ses salariés pour les fêtes. Belle commande, mais mandat administratif : vous serez payés au rythme de la comptabilité publique.",
@@ -521,6 +522,7 @@ const rawBoutique = {
     },
     {
       code: "boutique_offer_vide_dressing",
+      productCode: "pull-col-rond",
       title: "Vide-dressing du centre-ville",
       narrative:
         "L'association des commerçants organise un week-end vide-dressing, encaissement immédiat en caisse. Le prix est cassé, la caisse se remplit, la marge s'efface.",
@@ -530,6 +532,7 @@ const rawBoutique = {
     },
     {
       code: "boutique_offer_hotel_uniformes",
+      productCode: "pull-col-rond",
       title: "Groupe hôtelier · tenues d'accueil",
       narrative:
         "Un groupe hôtelier veut un pull brodé à son chiffre pour les réceptions de ses établissements. Le service achats valide vite, puis paie quand ses procédures le permettent.",
@@ -539,6 +542,7 @@ const rawBoutique = {
     },
     {
       code: "boutique_offer_marketplace",
+      productCode: "pull-col-rond",
       title: "Marketplace · opération flash",
       narrative:
         "Une marketplace vous ouvre un créneau flash sur sa page d'accueil. Marge mince, virement quasi immédiat.",
@@ -548,6 +552,7 @@ const rawBoutique = {
     },
     {
       code: "boutique_offer_boutique_hotel",
+      productCode: "cardigan",
       title: "Corner en boutique d'hôtel",
       narrative:
         "Un palace vous propose un corner saisonnier dans son hall : votre meilleur prix de l'année, mais réglé comme il règle tous ses fournisseurs.",
@@ -557,6 +562,7 @@ const rawBoutique = {
     },
     {
       code: "boutique_offer_destockage",
+      productCode: "pull-col-rond",
       title: "Déstockeur · reprise de collection",
       narrative:
         "Un déstockeur reprend la fin de collection, enlèvement et paiement comptant. Vous ne gagnez presque rien, mais la réserve se vide.",

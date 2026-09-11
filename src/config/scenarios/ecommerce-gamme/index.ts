@@ -199,10 +199,30 @@ const GAMME: ProductDef[] = [
  * Les offres de commande du pure player d'origine, sous d'autres codes : elles
  * portent sur le cœur de gamme (la décoration), aux mêmes conditions.
  */
-const ORDER_OFFERS = (ecommerceScenario.orderOffers ?? []).map((o) => ({
-  ...o,
-  code: o.code.replace(/^ecom_offer_/, "ecomg_offer_"),
-}));
+/**
+ * La référence de chaque commande, et son prix quand la référence n'est pas
+ * celle du mono : le groupe hôtelier rééquipe ses chambres en mobilier (108 € la commande,
+ * contre 125 € au prix usuel), la créatrice signe des luminaires, le reste est
+ * de la décoration.
+ */
+const CIBLES: Record<string, { productCode: string; price?: number }> = {
+  ecom_offer_coffrets_ce: { productCode: "decoration" },
+  ecom_offer_flash_marketplace: { productCode: "decoration" },
+  ecom_offer_hotelier: { productCode: "mobilier", price: 108 },
+  ecom_offer_destockage: { productCode: "decoration" },
+  ecom_offer_abonnement_box: { productCode: "decoration" },
+  ecom_offer_influenceur: { productCode: "luminaires" },
+};
+
+const ORDER_OFFERS = (ecommerceScenario.orderOffers ?? []).map((o) => {
+  const cible = CIBLES[o.code];
+  if (!cible) throw new Error(`Commande exceptionnelle sans référence : ${o.code}`);
+  return {
+    ...o,
+    ...cible,
+    code: o.code.replace(/^ecom_offer_/, "ecomg_offer_"),
+  };
+});
 
 const rawEcommerceGamme = {
   ...ecommerceScenario,

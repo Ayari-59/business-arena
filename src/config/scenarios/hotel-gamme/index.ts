@@ -148,10 +148,28 @@ const GAMME: ProductDef[] = [
  * Les offres de commande de l'hôtel d'origine, sous d'autres codes : elles
  * portent sur le cœur de gamme (la chambre standard), aux mêmes conditions.
  */
-const ORDER_OFFERS = (hotelScenario.orderOffers ?? []).map((o) => ({
-  ...o,
-  code: o.code.replace(/^hotel_offer_/, "hotelg_offer_"),
-}));
+/**
+ * La référence de chaque commande, et son prix quand la référence n'est pas
+ * celle du mono : le séminaire clé en main loge en supérieure, tout le reste en standard.
+ */
+const CIBLES: Record<string, { productCode: string; price?: number }> = {
+  hotel_offer_congres: { productCode: "chambre-standard" },
+  hotel_offer_tour_operateur: { productCode: "chambre-standard" },
+  hotel_offer_chantier: { productCode: "chambre-standard" },
+  hotel_offer_seminaire: { productCode: "chambre-superieure" },
+  hotel_offer_compagnie_aerienne: { productCode: "chambre-standard" },
+  hotel_offer_plateforme_flash: { productCode: "chambre-standard" },
+};
+
+const ORDER_OFFERS = (hotelScenario.orderOffers ?? []).map((o) => {
+  const cible = CIBLES[o.code];
+  if (!cible) throw new Error(`Commande exceptionnelle sans référence : ${o.code}`);
+  return {
+    ...o,
+    ...cible,
+    code: o.code.replace(/^hotel_offer_/, "hotelg_offer_"),
+  };
+});
 
 const rawHotelGamme = {
   ...hotelScenario,

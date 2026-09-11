@@ -284,3 +284,17 @@ export function scalarsOfGamme(
     ...(rdBudget !== undefined ? { rdBudget } : {}),
   };
 }
+
+/**
+ * La référence sur laquelle porte une commande exceptionnelle : celle que
+ * l'offre nomme (`productCode`), sinon la première de la gamme (mono : le
+ * seul produit). Un code inconnu retombe sur la première.
+ */
+export function offerProductIndex(
+  gamme: readonly { code: string }[],
+  offer: { productCode?: string } | null | undefined,
+): number {
+  if (!offer?.productCode) return 0;
+  const k = gamme.findIndex((p) => p.code === offer.productCode);
+  return k >= 0 ? k : 0;
+}

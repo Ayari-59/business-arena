@@ -785,6 +785,8 @@ export function DecisionForm({
     price: number;
     paymentDelayDays: number;
     unitVariableCost: number;
+    /** En gamme : la référence sur laquelle porte la commande. */
+    productName?: string | null;
   } | null;
   /** Catalogue d'études du scénario : l'information a un prix. */
   studiesOffer?: {
@@ -1039,7 +1041,10 @@ export function DecisionForm({
             {orderOffer.paymentDelayDays > 0
               ? `règlement à ${orderOffer.paymentDelayDays} jours`
               : "règlement comptant"}
-            . Servie sur votre stock restant après le marché.
+            .{" "}
+            {orderOffer.productName
+              ? `Elle porte sur la référence « ${orderOffer.productName} » et se sert sur son stock restant après le marché.`
+              : "Servie sur votre stock restant après le marché."}
           </p>
           <p className="mt-1 text-xs text-slate-400">
             {orderOffer.paymentDelayDays > 0

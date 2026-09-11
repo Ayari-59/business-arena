@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { SCENARIOS, scenarioByCode, ALL_SITUATIONS, familyOf } from "../../src/config/scenarios/registry";
+import { offerProductIndex, toGamme } from "../../src/engine/gamme";
 import { balanceGap } from "../../src/engine/finance/statements";
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";
 import { DECISION_MODELS } from "../../src/config/pedagogy/models";
@@ -206,11 +207,11 @@ describe("registre des scénarios", () => {
     // bistrot, qui privatisait la salle pour plusieurs services d'affilée.
     for (const d of SCENARIOS) {
       const c = d.company("player", d.playerTeamName, "human");
-      const capacite = Math.min(
-        c.machineCapacity,
-        (c.headcount * c.hoursPerEmployee) / d.scenario.product.hoursPerUnit,
-      );
+      const gamme = toGamme(d.scenario);
       for (const o of d.scenario.orderOffers ?? []) {
+        // En gamme, la commande se produit avec les heures de SA référence.
+        const p = gamme[offerProductIndex(gamme, o)]!;
+        const capacite = Math.min(c.machineCapacity, (c.headcount * c.hoursPerEmployee) / p.hoursPerUnit);
         expect(
           o.units,
           `${d.code}/${o.code} : ${o.units} pour ${Math.round(capacite)} de capacité`,

@@ -16,7 +16,7 @@ import { porteUnNomParDefaut } from "@/config/nom-equipe";
 import { cardByCode } from "@/config/events/cards";
 import { proposedDecisionsFor, startingDecisionsFor } from "@/services/decision-baseline";
 import { orderOfferForRound } from "@/engine/simulation";
-import { isMultiProduct, isProductAvailable, rdOpeningOf, suppliersOf, toGamme } from "@/engine/gamme";
+import { isMultiProduct, isProductAvailable, rdOpeningOf, suppliersOf, toGamme, offerProductIndex } from "@/engine/gamme";
 import { COMMUNICATION_AXES, COMMUNICATION_AXIS_LABELS } from "@/engine/market/communication";
 import { computeRatios } from "@/engine/finance/ratios";
 import { conditionsBancaires, confianceInitiale } from "@/engine/finance/bank";
@@ -439,6 +439,9 @@ export interface GameView {
     paymentDelayDays: number;
     unitVariableCost: number;
     refPrice: number;
+    /** En gamme : la référence sur laquelle porte la commande (null en mono-produit). */
+    productCode: string | null;
+    productName: string | null;
   } | null;
   /** Coûts unitaires du scénario (après surcharges éco) — analyse des coûts. */
   costFacts: { materialCostPerUnit: number; otherVariableCostPerUnit: number };
@@ -961,6 +964,10 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         };
       }
       const offer = orderOfferForRound(snapshot, game.currentRound, game.seed);
+      // La marge de l'offre se calcule au coût variable de SA référence.
+      const offerGamme = toGamme(snapshot);
+      const offerCible = offerGamme[offerProductIndex(offerGamme, offer)]!;
+      const offerCvu = offerCible.materialCostPerUnit + offerCible.otherVariableCostPerUnit;
       reports.project = {
         investment,
         currentOffer: offer
@@ -968,7 +975,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
               title: offer.title,
               units: offer.units,
               price: offer.price,
-              margin: offer.units * (offer.price - cvu),
+              margin: offer.units * (offer.price - offerCvu),
               carryCost:
                 offer.units *
                 offer.price *
@@ -1551,6 +1558,10 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
       const offer = orderOfferForRound(snapshot, game.currentRound, game.seed);
       if (!offer) return null;
+      // La commande porte sur une référence : son coût variable et son prix
+      // usuel sont ceux de CETTE référence (mono : le produit du scénario).
+      const gamme = toGamme(snapshot);
+      const cible = gamme[offerProductIndex(gamme, offer)]!;
       return {
         code: offer.code,
         title: offer.title,
@@ -1558,9 +1569,10 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         units: offer.units,
         price: offer.price,
         paymentDelayDays: offer.paymentDelayDays,
-        unitVariableCost:
-          snapshot.product.materialCostPerUnit + snapshot.product.otherVariableCostPerUnit,
-        refPrice: snapshot.market.segments[0]?.refPrice ?? offer.price,
+        unitVariableCost: cible.materialCostPerUnit + cible.otherVariableCostPerUnit,
+        refPrice: cible.market.segments[0]?.refPrice ?? offer.price,
+        productCode: isMultiProduct(snapshot) ? cible.code : null,
+        productName: isMultiProduct(snapshot) ? cible.name : null,
       };
     })(),
     seasonNotes: (() => {

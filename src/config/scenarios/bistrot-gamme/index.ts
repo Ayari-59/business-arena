@@ -206,10 +206,30 @@ const GAMME: ProductDef[] = [
  * Les offres de commande du bistrot d'origine, sous d'autres codes : elles
  * portent sur le cœur de gamme (la formule du midi), aux mêmes conditions.
  */
-const ORDER_OFFERS = (bistrotScenario.orderOffers ?? []).map((o) => ({
-  ...o,
-  code: o.code.replace(/^bistrot_offer_/, "bistrotg_offer_"),
-}));
+/**
+ * La référence de chaque commande, et son prix quand la référence n'est pas
+ * celle du mono : mariages et buffets d'inauguration sont des banquets, la cantine, le
+ * tournage et la livraison de la formule du midi, les journées d'étude de la
+ * carte du soir.
+ */
+const CIBLES: Record<string, { productCode: string; price?: number }> = {
+  bistrot_offer_mariage: { productCode: "banquets" },
+  bistrot_offer_cantine_entreprise: { productCode: "formule-midi" },
+  bistrot_offer_traiteur: { productCode: "banquets" },
+  bistrot_offer_tournage: { productCode: "formule-midi" },
+  bistrot_offer_seminaire: { productCode: "carte-soir" },
+  bistrot_offer_livraison: { productCode: "formule-midi" },
+};
+
+const ORDER_OFFERS = (bistrotScenario.orderOffers ?? []).map((o) => {
+  const cible = CIBLES[o.code];
+  if (!cible) throw new Error(`Commande exceptionnelle sans référence : ${o.code}`);
+  return {
+    ...o,
+    ...cible,
+    code: o.code.replace(/^bistrot_offer_/, "bistrotg_offer_"),
+  };
+});
 
 const rawBistrotGamme = {
   ...bistrotScenario,
