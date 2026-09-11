@@ -71,6 +71,16 @@ const GROUPS: { title: string; note?: string; fields: Field[] }[] = [
   },
 ];
 
+/** Les six dimensions du BPI v2, pondérables par l'enseignant (saisie en %). */
+const BPI_FIELDS: { name: string; label: string; hint: string }[] = [
+  { name: "bpiEconomic", label: "Performance économique", hint: "Résultat d'exploitation vs benchmark" },
+  { name: "bpiFinancial", label: "Performance financière", hint: "Variation du résultat net, plancher si perte" },
+  { name: "bpiCommercial", label: "Performance commerciale", hint: "Chiffre d'affaires et part de marché" },
+  { name: "bpiProfitability", label: "Rentabilité", hint: "Rentabilité des capitaux propres" },
+  { name: "bpiPilotage", label: "Pilotage", hint: "Exécution opérationnelle et cohérence des décisions" },
+  { name: "bpiDecisionMastery", label: "Maîtrise décisionnelle", hint: "Scores des situations rendues" },
+];
+
 export function EconomicParams({
   scenarios,
   defaultCode,
@@ -99,19 +109,19 @@ export function EconomicParams({
             </option>
           ))}
         </select>
-        <span className="mt-1 block text-xs text-slate-500">
+        <span className="mt-1 block text-xs text-slate-400">
           Chaque secteur enseigne ce que les autres ne peuvent pas : le stock et le coefficient
           multiplicateur dans le commerce, le taux d&apos;occupation en hôtellerie, le ratio
           matières en restauration, le poste clients dans les services.
         </span>
       </label>
 
-      <details className="rounded-lg border border-white/10 bg-slate-950 p-4 sm:col-span-3">
+      <details className="rounded-lg border border-white/10 bg-slate-950 p-1.5 sm:p-4 sm:col-span-3">
         <summary className="cursor-pointer text-xs font-medium uppercase tracking-wide text-slate-400">
           ⚙️ Paramètres économiques (avancé) · laissez vide pour les valeurs du scénario
         </summary>
 
-        <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+        <p className="mt-3 text-xs leading-relaxed text-slate-400">
           Les valeurs en filigrane sont celles de{" "}
           <strong className="text-slate-400">{selected.label}</strong>. Montants en base
           trimestrielle, redimensionnés selon la périodicité choisie. Une valeur hors bornes est
@@ -120,7 +130,7 @@ export function EconomicParams({
 
         {GROUPS.map((group) => (
           <section key={group.title} className="mt-4">
-            <h3 className="text-[11px] font-semibold uppercase tracking-wider text-amber-400/80">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-amber-400/80">
               {group.title}
             </h3>
             <div className="mt-2 grid gap-3 sm:grid-cols-3">
@@ -131,7 +141,7 @@ export function EconomicParams({
                 const unavailable = fallback === null;
                 return (
                   <label key={field.name} className="block">
-                    <span className="text-[11px] text-slate-500">{field.label}</span>
+                    <span className="text-xs text-slate-400">{field.label}</span>
                     <span className="mt-1 flex items-center gap-1.5 rounded-lg border border-white/10 bg-slate-900 px-2.5 py-1.5 focus-within:border-amber-400/60">
                       <input
                         type="text"
@@ -139,9 +149,9 @@ export function EconomicParams({
                         name={field.name}
                         placeholder={unavailable ? "non proposé" : (fallback ?? "")}
                         disabled={unavailable}
-                        className="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-600 disabled:cursor-not-allowed"
+                        className="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500 disabled:cursor-not-allowed"
                       />
-                      <span className="whitespace-nowrap text-[11px] text-slate-500">
+                      <span className="whitespace-nowrap text-xs text-slate-400">
                         {field.suffix === "unit" ? `€/${selected.unit}` : field.suffix}
                       </span>
                     </span>
@@ -150,10 +160,42 @@ export function EconomicParams({
               })}
             </div>
             {group.note ? (
-              <p className="mt-2 text-[11px] leading-relaxed text-slate-600">{group.note}</p>
+              <p className="mt-2 text-xs leading-relaxed text-slate-600">{group.note}</p>
             ) : null}
           </section>
         ))}
+      </details>
+
+      <details className="rounded-lg border border-white/10 bg-slate-950 p-1.5 sm:p-4 sm:col-span-3">
+        <summary className="cursor-pointer text-xs font-medium uppercase tracking-wide text-slate-400">
+          📊 Pondérations du BPI (avancé) · laissez vide pour les poids du scénario
+        </summary>
+
+        <p className="mt-3 text-xs leading-relaxed text-slate-400">
+          Le BPI est la moyenne pondérée de six dimensions. Les valeurs en filigrane sont celles de{" "}
+          <strong className="text-slate-400">{selected.label}</strong>. Ce sont des poids{" "}
+          <strong className="text-slate-400">relatifs</strong> : inutile de tomber juste à 100 %, ils
+          sont renormalisés. Une dimension laissée vide garde le poids du scénario.
+        </p>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          {BPI_FIELDS.map((field) => (
+            <label key={field.name} className="block">
+              <span className="text-xs text-slate-400">{field.label}</span>
+              <span className="mt-1 flex items-center gap-1.5 rounded-lg border border-white/10 bg-slate-900 px-2.5 py-1.5 focus-within:border-amber-400/60">
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  name={field.name}
+                  placeholder={selected.defaults[field.name] ?? ""}
+                  className="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500"
+                />
+                <span className="whitespace-nowrap text-xs text-slate-400">%</span>
+              </span>
+              <span className="mt-1 block text-xs text-slate-600">{field.hint}</span>
+            </label>
+          ))}
+        </div>
       </details>
     </>
   );

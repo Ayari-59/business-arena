@@ -13,15 +13,23 @@ import {
 import {
   DEFAULT_SCENARIO_CODE,
   scenarioByCode,
+  scenarioCodeForLevel,
   type ScenarioDefinition,
 } from "@/config/scenarios/registry";
 import {
+  customSituationsOf,
+  resolveScenarioDefinition,
+} from "@/services/scenario-source.service";
+import {
   applyEconomicOverrides,
   applyEventIntensity,
+  applyScoringWeightOverrides,
   presetByLevel,
   sanitizeEconomicOverrides,
+  sanitizeScoringWeightOverrides,
   type EconomicOverrides,
   type QuizMode,
+  type ScoringWeightOverrides,
 } from "@/config/difficulty";
 import {
   applyPeriodicity,
@@ -31,6 +39,7 @@ import {
 import { applyMarketScale } from "@/config/scenarios/market-scale";
 import { applyRoundsCount } from "@/config/scenarios/rounds";
 import { applyScenarioVariability } from "@/config/scenarios/variability";
+import { withoutRd } from "@/engine/gamme";
 import { openSituationsForRound, seedPedagogyReferentials } from "@/services/pedagogy.service";
 import { getPlatformConfig } from "@/services/admin.service";
 import { assertCanCreateGame } from "@/services/licence.service";
@@ -119,6 +128,8 @@ export interface CreateGameArgs {
   level?: number;
   /** Paramètres économiques modulés à la création (base trimestrielle). */
   economicOverrides?: EconomicOverrides;
+  /** Pondérations du BPI ajustées par l'enseignant (six dimensions, doc 08). */
+  scoringWeightOverrides?: ScoringWeightOverrides;
   /** Monde variable (doc 02 §9bis) : variante du scénario dérivée de la graine. */
   variableWorld?: boolean;
   /**
@@ -149,9 +160,14 @@ export async function getOrCreateNovaScenarioIdPublic(): Promise<string> {
 
 /** Cœur commun de création : partie + équipes + tours + états initiaux. */
 export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame> {
-  const definition = scenarioByCode(args.scenarioCode);
+  // Un scénario à famille (NOVA, MAILLE & CO) se joue en un produit ou en
+  // gamme selon le niveau : c'est ici que le code choisi devient le code joué.
+  const codeJoue = args.scenarioCode ? scenarioCodeForLevel(args.scenarioCode, args.level) : args.scenarioCode;
+  const definition = await resolveScenarioDefinition(codeJoue);
   const scenarioId = await getOrCreateScenarioId(definition);
-  await seedPedagogyReferentials(); // référentiels concepts/modèles/situations (idempotent)
+  // Référentiels concepts/modèles/situations (idempotent) + les situations
+  // propres à un scénario enseignant, absentes du référentiel intégré.
+  await seedPedagogyReferentials(customSituationsOf(definition));
   const seed = randomInt(1, 2 ** 31);
   // Pipeline du snapshot (ADR-01 + ADR-10) : paramètres économiques modulés
   // (base trimestrielle) → périodicité → intensité d'événements du niveau.
@@ -160,6 +176,8 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
     : undefined;
   const sanitized = sanitizeEconomicOverrides(args.economicOverrides);
   const overrides = Object.keys(sanitized).length > 0 ? sanitized : undefined;
+  const sanitizedScoring = sanitizeScoringWeightOverrides(args.scoringWeightOverrides);
+  const scoringOverrides = Object.keys(sanitizedScoring).length > 0 ? sanitizedScoring : undefined;
   // Monde variable : la variante seedée s'applique AVANT les réglages
   // explicites de l'enseignant (qui gardent donc le dernier mot).
   const baseScenario = args.variableWorld
@@ -174,20 +192,27 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
   const scenarioSnapshot = applyEventIntensity(
     applyPeriodicity(
       applyRoundsCount(
-        applyMarketScale(applyEconomicOverrides(baseScenario, overrides), concurrents),
+        applyMarketScale(
+          applyScoringWeightOverrides(applyEconomicOverrides(baseScenario, overrides), scoringOverrides),
+          concurrents,
+        ),
         args.roundsCount,
       ),
       args.periodicity,
     ),
     preset?.eventProbabilityMultiplier ?? 1,
   );
+  // R&D : un niveau qui ne l'ouvre pas ne doit pas laisser une référence à
+  // développer hors de portée pour toute la partie. Le levier est retiré du
+  // snapshot et les références à développer sont livrées prêtes.
+  const scenarioJoue = preset && !preset.decisions.rd ? withoutRd(scenarioSnapshot) : scenarioSnapshot;
 
   const [game] = await db
     .insert(games)
     .values({
       organizationId: args.organizationId,
       scenarioId,
-      scenarioSnapshot,
+      scenarioSnapshot: scenarioJoue,
       engineVersion: ENGINE_VERSION,
       seed,
       mode: args.mode ?? "learning",
@@ -198,6 +223,7 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
         kind: args.kind,
         ...(preset ? { difficulty: { level: preset.level, name: preset.name } } : {}),
         ...(overrides ? { economicOverrides: overrides } : {}),
+        ...(scoringOverrides ? { scoringWeightOverrides: scoringOverrides } : {}),
         ...(args.variableWorld ? { variableWorld: true } : {}),
         // Questions des situations. L'absence du champ vaut « full » pour les
         // parties d'avant le réglage : leur comportement ne change pas.
@@ -279,7 +305,9 @@ export async function createSoloGame(
   if (!config.allowPublicPlay) {
     throw new Error("Les parties publiques sont désactivées par l'administrateur.");
   }
-  const definition = scenarioByCode(scenarioCode);
+  const definition = await resolveScenarioDefinition(
+    scenarioCode ? scenarioCodeForLevel(scenarioCode, level) : scenarioCode,
+  );
   const organizationId = await getOrCreatePublicOrgId();
   const botCount = Math.min(Math.max(companiesCount, 2), definition.bots.length + 1) - 1;
   const { gameId } = await createGameCore({
@@ -314,6 +342,7 @@ export async function createClassGame(args: {
   botCount: number;
   level?: number;
   economicOverrides?: EconomicOverrides;
+  scoringWeightOverrides?: ScoringWeightOverrides;
   variableWorld?: boolean;
   scenarioCode?: string;
   quizMode?: QuizMode;
@@ -338,6 +367,7 @@ export async function createClassGame(args: {
     joinCode,
     level: args.level,
     economicOverrides: args.economicOverrides,
+    scoringWeightOverrides: args.scoringWeightOverrides,
     variableWorld: args.variableWorld,
     scenarioCode: args.scenarioCode,
     quizMode: args.quizMode,

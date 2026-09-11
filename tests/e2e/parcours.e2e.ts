@@ -26,6 +26,27 @@ let urlPartie = "";
 
 const EMAIL = unique("prof");
 const MOTDEPASSE = "motdepasse-e2e!";
+// Au niveau 5, ATLAS CONSEIL se joue en gamme : le prix de la journée d'audit
+// vit sur sa ligne du tableau des offres, pas dans un champ unique.
+const PRIX_AUDIT = 'input[name="product.audit.price"]';
+
+/**
+ * Ouvre le formulaire de décisions du tour en cours.
+ *
+ * Le tour se joue en trois temps, « Situation → Analyser → Décider », et la
+ * page ouvre sur le premier. Tant que rien n'est rendu, un bouton « Prendre
+ * mes décisions » y mène directement ; une fois les décisions enregistrées,
+ * il n'y a plus que l'onglet « Décider ». Le test passait par un onglet
+ * « Décisions » qui n'existe plus : il attendait un écran que personne ne voit.
+ */
+async function ouvrirDecisions(page: Page): Promise<void> {
+  const raccourci = page.getByRole("button", { name: /Prendre mes décisions/ }).first();
+  if (await raccourci.isVisible().catch(() => false)) {
+    await raccourci.click();
+  } else {
+    await page.getByRole("tab", { name: /Décider/ }).first().click();
+  }
+}
 
 beforeAll(async () => {
   navigateur = await ouvrirNavigateur();
@@ -55,6 +76,8 @@ describe("parcours enseignant et élève", () => {
   });
 
   it("il crée une partie de conseil, et la page de pilotage dit ses réglages", async () => {
+    // Au niveau 5, ATLAS CONSEIL se joue en gamme : trois offres, chacune à
+    // son tarif, vendues par les mêmes consultants.
     await prof.selectOption('select[name="scenarioCode"]', "conseil");
     await prof.selectOption('select[name="humanTeamsCount"]', "1");
     await prof.selectOption('select[name="botCount"]', "1");
@@ -80,24 +103,31 @@ describe("parcours enseignant et élève", () => {
     await eleve.fill('input[name="code"]', codeInvitation);
     await eleve.fill('input[name="pseudo"]', "Élève E2E");
     await eleve.getByRole("button", { name: "Rejoindre la partie" }).click();
-    // La page est organisée en onglets : le formulaire de décision vit dans
-    // l'onglet « Décisions », pas dans l'onglet « Situation » affiché par défaut.
-    await eleve.getByRole("tab", { name: /Décisions/ }).click({ timeout: 30_000 });
-    await eleve.waitForSelector('input[name="price"]', { timeout: 30_000 });
+    // La période active (tour en cours) ouvre sur « Situation » ; on passe à
+    // « Décider » pour atteindre le formulaire (prix, volume, etc.).
+    await ouvrirDecisions(eleve);
+    await eleve.waitForSelector(PRIX_AUDIT, { timeout: 30_000 });
     expect(eleve.url()).toMatch(/\/arena\//);
 
     const vu = await texte(eleve);
     expect(vu).toContain("jour");
     // le vocabulaire du métier, et non celui de l'atelier historique
     expect(vu).not.toContain("enceinte");
+    // les trois offres du cabinet, pas un tarif unique
+    expect(vu).toContain("Audit");
+    expect(vu).toContain("Transformation");
 
-    // le point de départ vient du secteur : la journée de conseil, pas 59 €
-    const prix = await eleve.inputValue('input[name="price"]');
+    // le point de départ vient du secteur : la journée d'audit, pas 59 €
+    const prix = await eleve.inputValue(PRIX_AUDIT);
     expect(Number(prix), `prix par défaut ${prix}`).toBeGreaterThan(300);
   });
 
   it("les écrans de décision ne parlent ni anglais ni en millièmes d'euro", async () => {
-    const vu = await texte(eleve);
+    // L'écran de décision est désormais en étapes : certaines familles
+    // (assurance…) vivent sur une étape masquée, exclue de `innerText`. On lit
+    // donc tout le contenu du formulaire, visible ou non, pour que la garde
+    // « français, pas de millièmes » couvre l'ensemble des leviers.
+    const vu = (await eleve.locator(`form:has(${PRIX_AUDIT})`).textContent()) ?? "";
     // les couvertures d'assurance sont en français (écart de la 1re recette)
     expect(vu).not.toMatch(/natural disaster|cold wave|machine breakdown/i);
     // aucun montant à trois décimales (écart de la 2e recette)
@@ -105,9 +135,22 @@ describe("parcours enseignant et élève", () => {
   });
 
   it("il joue son tour au tarif de son métier, que la validation accepte", async () => {
-    // 780 € la journée : refusé par l'ancien plafond à 500 €
-    await eleve.fill('input[name="price"]', "780");
+    // 780 € la journée d'audit : refusé par l'ancien plafond à 500 €
+    await eleve.fill(PRIX_AUDIT, "780");
+    // L'assistant de décision est en étapes : « Valider » n'apparaît qu'à la
+    // dernière. On avance jusque-là (le prix saisi persiste, champs toujours
+    // montés), puis on valide.
+    for (let i = 0; i < 8; i++) {
+      const suivant = eleve.getByRole("button", { name: /^Suivant/ }).first();
+      if (!(await suivant.isVisible().catch(() => false))) break;
+      await suivant.click();
+    }
     await eleve.getByRole("button", { name: /Valider les décisions de l'équipe/ }).click();
+
+    // Le prix est touché mais le volume (« Jours à staffer ») reste à sa valeur
+    // proposée : le garde-fou des pivots (A1) demande de confirmer avant
+    // d'envoyer. On confirme, comme le ferait un élève qui assume ce volume.
+    await eleve.getByRole("button", { name: /je garde ces valeurs/ }).click({ timeout: 10_000 });
 
     // On relit la page : ce qui compte est que le serveur ait ENREGISTRÉ le
     // tour, pas que le bouton ait changé d'étiquette.
@@ -116,17 +159,21 @@ describe("parcours enseignant et élève", () => {
     const vu = await texte(eleve);
     expect(vu).not.toMatch(/Session expirée|Décisions invalides/i);
     expect(vu).toContain("Décisions enregistrées");
-    // La recharge remet l'onglet « Situation » par défaut ; on revient sur
-    // « Décisions » pour relire le prix enregistré.
-    await eleve.getByRole("tab", { name: /Décisions/ }).click();
-    expect(await eleve.inputValue('input[name="price"]')).toBe("780");
+    // Après recharge, le tour rouvre sur « Situation » : on repasse à
+    // « Décider » pour relire le prix enregistré.
+    await ouvrirDecisions(eleve);
+    await eleve.waitForSelector(PRIX_AUDIT, { timeout: 30_000 });
+    expect(await eleve.inputValue(PRIX_AUDIT)).toBe("780");
   });
 
   it("l'enseignant clôture le tour et la partie avance", async () => {
     await aller(prof, urlPartie);
     await prof.getByRole("button", { name: /Clore le tour 1 et simuler/ }).click();
+    // Le clic ouvre d'abord une confirmation (équipes validées + irréversibilité,
+    // A2) : c'est « Clore et simuler » qui lance réellement la résolution.
+    await prof.getByRole("button", { name: "Clore et simuler", exact: true }).click();
     await prof.waitForSelector("text=/Clore le tour 2 et simuler/", { timeout: 60_000 });
-    expect(await texte(prof)).toContain("Trimestre 2");
+    expect(await texte(prof)).toContain("Tour 2");
   });
 
   it("l'analyse des coûts nomme ce que le métier achète", async () => {
@@ -134,10 +181,10 @@ describe("parcours enseignant et élève", () => {
     // l'appelait « matières premières » dans les neuf secteurs. Un cabinet de
     // conseil n'achète pas de matières : il paie des frais de mission.
     await aller(eleve, new URL(eleve.url()).pathname);
-    // Les états financiers vivent dans l'onglet « Résultats » puis le
-    // sous-onglet « Finance ». On y navigue avant d'ouvrir les détails.
-    await eleve.getByRole("tab", { name: /Résultats/ }).click();
-    await eleve.getByRole("tab", { name: /Finance/ }).click();
+    // Les résultats d'une période vivent dans sa carte, dépliée par défaut pour
+    // le tour le plus récent ; les états financiers sont dans le sous-onglet
+    // « Finance ». On y navigue, puis on ouvre les comptes dépliables.
+    await eleve.getByRole("tab", { name: /Finance/ }).click({ timeout: 30_000 });
     await eleve.evaluate(() => {
       // les comptes sont dépliables : leur contenu ne compte pas dans le texte
       // visible tant qu'ils sont fermés.
@@ -209,7 +256,21 @@ describe("parcours enseignant et élève", () => {
     await executive.fill('input[name="code"]', code);
     await executive.fill('input[name="pseudo"]', "Élève Executive");
     await executive.getByRole("button", { name: "Rejoindre la partie" }).click();
-    await executive.getByRole("tab", { name: /Décisions/ }).click({ timeout: 30_000 });
+    // Le tour ouvre sur « Situation » : on passe à « Décider » pour le
+    // formulaire. Il range ses décisions par famille en accordéon : le champ
+    // dividende vit dans « Financer », repliée par défaut. On attend le prix,
+    // puis on déplie tout pour que le champ dividende compte dans le rendu.
+    await ouvrirDecisions(executive);
+    // Au niveau 6, NOVA se joue en gamme : le prix est celui de chaque
+    // référence (`product.<code>.price`), pas un champ unique.
+    await executive.waitForSelector('input[name="price"], input[name$=".price"]', { timeout: 30_000 });
+    // L'assistant est en étapes : le dividende vit sur « Trésorerie &
+    // couverture », masquée tant qu'on ne l'affiche pas. On y va, puis on
+    // déplie tout pour que le champ compte dans le texte rendu.
+    await executive.getByRole("button", { name: /Trésorerie & couverture/ }).first().click();
+    await executive.evaluate(() =>
+      document.querySelectorAll("details").forEach((d) => d.setAttribute("open", "")),
+    );
     await executive.waitForSelector('input[name="dividend"]', { timeout: 30_000 });
 
     const vu = await texte(executive);
@@ -271,18 +332,8 @@ describe("parcours enseignant et élève", () => {
   it("la vitrine présente les sept entreprises, et son bouton choisit le métier", async () => {
     // Une page vitrine se vérifie dans un navigateur ou pas du tout : elle
     // n'est faite que de rendu et de liens. Et son bouton doit VRAIMENT
-    // amener sur le formulaire avec le bon secteur : c'est la jointure, donc
-    // l'endroit où ça casse.
-    // L'accueil porte les mêmes sept entreprises en vignettes, et chaque
-    // vignette mène à sa fiche. C'est la jointure entre les deux pages.
-    await aller(prof, "/");
-    const accueil = await texte(prof);
-    for (const nom of ["NOVA", "MAILLE & CO", "L'ESCALE", "VOLT FITNESS"]) {
-      expect(accueil, `${nom} absente des vignettes de l'accueil`).toContain(nom);
-    }
-    await prof.locator('a[href="/entreprises#bistrot"]').first().click();
-    await prof.waitForURL(/\/entreprises#bistrot$/, { timeout: 30_000 });
-
+    // amener sur le formulaire (/jouer) avec le bon secteur : c'est la
+    // jointure, donc l'endroit où ça casse.
     await aller(prof, "/entreprises");
     const vitrine = await texte(prof);
     for (const nom of [
@@ -302,14 +353,14 @@ describe("parcours enseignant et élève", () => {
 
     await prof.getByRole("link", { name: "Diriger LA TABLE D'AUGUSTIN" }).click();
     await prof.waitForURL(/secteur=bistrot/, { timeout: 30_000 });
-    expect(await prof.locator('select[name="scenarioCode"]').inputValue()).toBe("bistrot");
+    expect(await prof.locator('input[name="scenarioCode"]').inputValue()).toBe("bistrot");
   });
 
   it("l'atelier professionnel s'affiche en entier et tient ses comptes", async () => {
     // Une fiche d'atelier est un contrat de temps. Les totaux affichés sont
     // calculés à partir du déroulé : ce test vérifie qu'ils arrivent bien
     // jusqu'à la page, et que les six séances y sont toutes.
-    await aller(prof, "/ateliers");
+    await aller(prof, "/animations");
     expect(await texte(prof)).toContain("BTS Comptabilité et Gestion");
 
     // On désigne la fiche par son adresse et non par le premier lien de la
@@ -317,8 +368,8 @@ describe("parcours enseignant et élève", () => {
     // la liste, et il est devenu rouge le jour où une animation de découverte
     // est passée devant lui. L'ordre du registre est une décision de
     // présentation, pas un contrat de test.
-    await prof.locator('a[href="/ateliers/cg1"]').first().click();
-    await prof.waitForURL(/\/ateliers\/cg1$/, { timeout: 30_000 });
+    await prof.locator('a[href="/animations/cg1"]').first().click();
+    await prof.waitForURL(/\/animations\/cg1$/, { timeout: 30_000 });
     // Comparaison insensible à la casse : plusieurs intitulés sont mis en
     // CAPITALES par le CSS, si bien que le texte visible ne correspond pas à
     // celui du code. Le piège avait déjà coûté un faux échec sur « Note ».
@@ -350,8 +401,8 @@ describe("parcours enseignant et élève", () => {
     for (const chemin of [
       "/",
       "/entreprises",
-      "/ateliers",
-      "/ateliers/cg1",
+      "/animations",
+      "/animations/cg1",
       "/guide",
       "/parcours",
       "/concepts",

@@ -46,8 +46,23 @@ const ratio = (numerator: number, denominator: number): number | null =>
 /** Capacité offerte du tour (déjà dégradée par la disponibilité). */
 const offered = (ctx: SectorKpiContext) => ctx.result.production.machineCapacity;
 
-/** Part des matières dans le coût variable, d'après le scénario joué. */
+/**
+ * Part des matières dans le coût variable, d'après le scénario joué. En gamme,
+ * pondérée par les volumes produits de chaque référence (à défaut, parts
+ * égales) ; en mono-produit, la formule historique, inchangée.
+ */
 const materialShare = (ctx: SectorKpiContext) => {
+  const gamme = ctx.scenario.products;
+  if (gamme && gamme.length > 1) {
+    let material = 0;
+    let total = 0;
+    for (const p of gamme) {
+      const weight = ctx.result.products?.[p.code]?.produced ?? 1;
+      material += p.materialCostPerUnit * weight;
+      total += (p.materialCostPerUnit + p.otherVariableCostPerUnit) * weight;
+    }
+    return total > 0 ? material / total : 0;
+  }
   const { materialCostPerUnit, otherVariableCostPerUnit } = ctx.scenario.product;
   const total = materialCostPerUnit + otherVariableCostPerUnit;
   return total > 0 ? materialCostPerUnit / total : 0;
@@ -76,6 +91,11 @@ const weightedShare = (
  * ne soit parti.
  */
 const attritionOn = (loyalSegments: string[]) => (ctx: SectorKpiContext): number | null => {
+  // Modèle par abonnement : l'attrition est celle du portefeuille, mesurée
+  // par le moteur — pas une lecture indirecte des parts de marché.
+  if (ctx.result.subscription) {
+    return ctx.result.subscription.opening > 0 ? ctx.result.subscription.churnRate : null;
+  }
   if (!ctx.previousSegments) return null;
   const before = weightedShare(ctx.previousSegments, loyalSegments);
   const now = weightedShare(ctx.result.market.bySegment, loyalSegments);
@@ -155,7 +175,12 @@ export const HOTELLERIE_KPIS: SectorKpiDef[] = [
  */
 const ARTICLES_PAR_TICKET = 1.6;
 
-export const COMMERCE_KPIS: SectorKpiDef[] = [
+/**
+ * Les indicateurs du commerce, pour une gamme comme pour un article unique :
+ * seule change la clientèle fidèle dont on mesure l'attrition.
+ */
+export function commerceKpis(loyalSegments: string[]): SectorKpiDef[] {
+  return [
   {
     key: "panier_moyen",
     label: "Panier moyen",
@@ -180,9 +205,16 @@ export const COMMERCE_KPIS: SectorKpiDef[] = [
     label: "Attrition clientèle fidèle",
     hint: "Part de vos clientes fidèles perdue depuis le tour précédent. Reconquérir coûte plus cher que retenir.",
     format: "percent",
-    compute: attritionOn(["fideles"]),
+    // Maille & Co : les clientes fidèles de chaque référence de la gamme.
+    compute: attritionOn(loyalSegments),
   },
 ];
+}
+
+/** MAILLE & CO en gamme : les fidèles de chaque pull. */
+export const COMMERCE_KPIS: SectorKpiDef[] = commerceKpis(["pull_fideles", "cardigan_fideles", "merinos_fideles"]);
+/** MAILLE & CO en un seul article : une seule clientèle fidèle. */
+export const COMMERCE_MONO_KPIS: SectorKpiDef[] = commerceKpis(["fideles"]);
 
 // ---------------------------------------------------------------------------
 // RESTAURATION
@@ -287,7 +319,7 @@ export const ABONNEMENT_KPIS: SectorKpiDef[] = [
   {
     key: "attrition",
     label: "Taux d'attrition",
-    hint: "Part de vos adhérents réguliers perdue depuis le tour précédent. Dans un modèle par abonnement, c'est LE chiffre qui décide du résultat.",
+    hint: "Part de votre portefeuille d'adhérents partie ce tour. Dans un modèle par abonnement, c'est LE chiffre qui décide du résultat.",
     format: "percent",
     compute: attritionOn(["reguliers"]),
   },

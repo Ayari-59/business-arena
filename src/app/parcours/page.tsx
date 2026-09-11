@@ -4,7 +4,8 @@ import { PARCOURS } from "@/config/parcours";
 import { SiteLogo } from "@/components/site-logo";
 
 export const metadata: Metadata = {
-  title: "Parcours par diplôme · BUSINESS ARENA",
+  alternates: { canonical: "/parcours" },
+  title: "Parcours par diplôme",
   description:
     "STMG, BTS MCO, NDRC, CG : la correspondance entre votre référentiel et ce que vos étudiants vivent dans l'arène, avec les réglages de partie conseillés.",
 };
@@ -19,7 +20,7 @@ const FIT_BADGE: Record<string, { label: string; className: string }> = {
 
 export default function ParcoursPage() {
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100">
+    <main id="main" className="min-h-screen bg-slate-950 text-slate-100">
       <nav className="mx-auto flex max-w-4xl items-center justify-between px-6 py-5">
         <Link href="/">
           <SiteLogo />
@@ -32,7 +33,7 @@ export default function ParcoursPage() {
             Enseignants
           </Link>
           <Link
-            href="/"
+            href="/jouer"
             className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-300"
           >
             Jouer
@@ -86,13 +87,13 @@ export default function ParcoursPage() {
                 {p.recommended.periodicityLabel} · TVA{" "}
                 {p.recommended.vat ? "activée (20 %)" : "désactivée"}
               </p>
-              <p className="mt-1 text-xs leading-relaxed text-slate-500">{p.recommended.notes}</p>
+              <p className="mt-1 text-xs leading-relaxed text-slate-400">{p.recommended.notes}</p>
             </div>
 
             <div className="mt-5 overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
+                  <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
                     <th className="pb-2 pr-3 font-medium">Référentiel</th>
                     <th className="pb-2 pr-3 font-medium">Notions</th>
                     <th className="pb-2 pr-3 font-medium">Dans l&apos;arène</th>
@@ -109,7 +110,7 @@ export default function ParcoursPage() {
                       <td className="py-3 pr-3 text-xs leading-relaxed">{b.enJeu}</td>
                       <td className="py-3">
                         <span
-                          className={`whitespace-nowrap rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wide ${FIT_BADGE[b.fit]!.className}`}
+                          className={`whitespace-nowrap rounded-full border px-2 py-0.5 text-xs uppercase tracking-wide ${FIT_BADGE[b.fit]!.className}`}
                         >
                           {FIT_BADGE[b.fit]!.label}
                         </span>
@@ -121,7 +122,7 @@ export default function ParcoursPage() {
             </div>
 
             {p.limite ? (
-              <p className="mt-4 rounded-lg border border-white/10 bg-slate-950 px-4 py-3 text-xs leading-relaxed text-slate-500">
+              <p className="mt-4 rounded-lg border border-white/10 bg-slate-950 px-4 py-3 text-xs leading-relaxed text-slate-400">
                 ⚖️ Limite assumée : {p.limite}
               </p>
             ) : null}

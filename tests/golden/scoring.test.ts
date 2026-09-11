@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 /**
  * Tests de scoring.service.ts :
@@ -16,13 +16,12 @@ vi.mock("@/db", async () => {
 });
 
 import { db } from "@/db";
-import { gameRankings, rounds, scores, users } from "@/db/schema";
+import { companyStates, gameRankings, rounds, scores, teams, users } from "@/db/schema";
 import {
   createSoloGame,
   resolveCurrentRound,
 } from "@/services/game.service";
 import {
-  persistRoundScores,
   readPedagogyInputs,
   updateRankings,
 } from "@/services/scoring.service";
@@ -46,20 +45,21 @@ beforeAll(async () => {
   userId = inserted[0]!.id;
 });
 
-describe("1 — persistance des scores BPI", () => {
-  it("7 dimensions × 2 équipes = 14 scores après un tour", async () => {
+describe("1 — persistance des scores BPI (v2)", () => {
+  it("6 dimensions × 2 équipes = 12 scores après un tour, tour marqué bpiVersion 2", async () => {
     const gameId = await createSoloGame(userId, "quarter", 2);
     await resolveCurrentRound({ gameId, userId, playerDecisions: DECISIONS });
 
     const allRounds = await db.select().from(rounds).where(eq(rounds.gameId, gameId));
     const resolvedRound = allRounds.find((r) => r.status === "resolved")!;
+    expect(resolvedRound.bpiVersion).toBe(2);
 
     const scoreRows = await db
       .select()
       .from(scores)
       .where(eq(scores.roundId, resolvedRound.id));
 
-    expect(scoreRows).toHaveLength(14);
+    expect(scoreRows).toHaveLength(12);
     for (const row of scoreRows) {
       expect(Number(row.normalized)).toBeGreaterThanOrEqual(0);
       expect(Number(row.normalized)).toBeLessThanOrEqual(100);
@@ -67,7 +67,7 @@ describe("1 — persistance des scores BPI", () => {
     }
   });
 
-  it("les 7 dimensions sont toutes représentées pour chaque équipe", async () => {
+  it("les 6 dimensions v2 sont toutes représentées pour chaque équipe", async () => {
     const gameId = await createSoloGame(userId, "quarter", 2);
     await resolveCurrentRound({ gameId, userId, playerDecisions: DECISIONS });
 
@@ -82,8 +82,8 @@ describe("1 — persistance des scores BPI", () => {
     expect(teamIds).toHaveLength(2);
 
     const expectedDimensions = [
-      "economic", "financial", "commercial", "operational",
-      "profitability", "strategy", "decision_mastery",
+      "economic", "financial", "commercial",
+      "profitability", "pilotage", "decision_mastery",
     ];
     for (const teamId of teamIds) {
       const teamDims = scoreRows
@@ -201,7 +201,7 @@ describe("4 — mise à jour du classement", () => {
         cumulativeNetIncome: number;
       };
       expect(detail.roundBpis).toHaveLength(1);
-      expect(Object.keys(detail.dimensions).length).toBe(7);
+      expect(Object.keys(detail.dimensions).length).toBe(6);
       expect(typeof detail.cumulativeNetIncome).toBe("number");
     }
   });
@@ -220,6 +220,49 @@ describe("4 — mise à jour du classement", () => {
       const detail = row.detail as { roundBpis: number[] };
       expect(detail.roundBpis).toHaveLength(2);
     }
+  });
+});
+
+describe("6 — marqueur de défaillance dans le classement", () => {
+  it("detail.defaillant vaut false pour une partie qui tourne normalement", async () => {
+    const gameId = await createSoloGame(userId, "quarter", 2);
+    await resolveCurrentRound({ gameId, userId, playerDecisions: DECISIONS });
+
+    const rankings = await db
+      .select()
+      .from(gameRankings)
+      .where(eq(gameRankings.gameId, gameId));
+
+    for (const row of rankings) {
+      expect((row.detail as { defaillant?: boolean }).defaillant).toBe(false);
+    }
+  });
+
+  it("un état défaillant écrit pour une équipe fait passer son detail.defaillant à true", async () => {
+    const gameId = await createSoloGame(userId, "quarter", 2);
+    await resolveCurrentRound({ gameId, userId, playerDecisions: DECISIONS });
+
+    const gameTeams = await db.select().from(teams).where(eq(teams.gameId, gameId));
+    const teamIds = gameTeams.map((t) => t.id);
+    const cible = teamIds[0]!;
+
+    // On force le dernier état connu de l'équipe cible à « defaillant » : c'est
+    // l'état le plus récent qui fait foi, indépendamment du reste du classement.
+    await db
+      .insert(companyStates)
+      .values({ teamId: cible, roundIndex: 999, state: { status: "defaillant" } })
+      .onConflictDoNothing();
+    await updateRankings(gameId, teamIds);
+
+    const rankings = await db
+      .select()
+      .from(gameRankings)
+      .where(eq(gameRankings.gameId, gameId));
+
+    const cibleRow = rankings.find((r) => r.teamId === cible)!;
+    const autreRow = rankings.find((r) => r.teamId !== cible)!;
+    expect((cibleRow.detail as { defaillant?: boolean }).defaillant).toBe(true);
+    expect((autreRow.detail as { defaillant?: boolean }).defaillant).toBe(false);
   });
 });
 

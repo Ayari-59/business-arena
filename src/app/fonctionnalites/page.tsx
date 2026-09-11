@@ -1,18 +1,17 @@
 import Link from "next/link";
-import { SCENARIOS, SECTOR_LABELS, SECTOR_ICONS } from "@/config/scenarios/registry";
+import { ALL_SITUATIONS, SCENARIO_CHOICES, SECTOR_LABELS } from "@/config/scenarios/registry";
 import { DECISION_MODELS } from "@/config/pedagogy/models";
-import { NAVIGATION } from "@/config/navigation";
 
 export const metadata = {
-  title: "Fonctionnalités · Business Arena",
-  description:
-    "9 scénarios sectoriels, 79 situations pédagogiques, 18 modèles d'analyse : tout ce que la plateforme met entre les mains de vos étudiants.",
+  alternates: { canonical: "/fonctionnalites" },
+  title: "Fonctionnalités",
+  description: `${SCENARIO_CHOICES.length} scénarios sectoriels, ${ALL_SITUATIONS.length} situations pédagogiques, ${DECISION_MODELS.length} modèles d'analyse : tout ce que la plateforme met entre les mains de vos étudiants.`,
 };
 
 const HERO_STATS = [
-  { value: "9", label: "scénarios sectoriels", detail: "Industrie, commerce, hôtellerie, restauration, e-commerce, conseil, fitness, BTP, transport" },
-  { value: "79", label: "situations pédagogiques", detail: "Déclenchées par le contexte de chaque tour, adaptées au secteur et à la difficulté" },
-  { value: "18", label: "modèles d'analyse", detail: "Seuil de rentabilité, coûts pertinents, FRNG/BFR, VAN, TRI, arbre de décision…" },
+  { value: String(SCENARIO_CHOICES.length), label: "scénarios sectoriels", detail: "Industrie, commerce, hôtellerie, restauration, e-commerce, conseil, fitness, BTP, transport" },
+  { value: String(ALL_SITUATIONS.length), label: "situations pédagogiques", detail: "Déclenchées par le contexte de chaque tour, adaptées au secteur et à la difficulté" },
+  { value: String(DECISION_MODELS.length), label: "modèles d'analyse", detail: "Seuil de rentabilité, coûts pertinents, FRNG/BFR, VAN, TRI, arbre de décision…" },
 ];
 
 const PILLARS = [
@@ -51,13 +50,13 @@ const PILLARS = [
 const DIFFERENTIATORS = [
   { label: "Sans compte", desc: "Aucune inscription requise pour les étudiants" },
   { label: "Sans installation", desc: "Fonctionne dans le navigateur, sur tout appareil" },
-  { label: "Gratuit", desc: "Accès complet à tous les scénarios et fonctionnalités" },
+  { label: "Essai gratuit", desc: "Découvrez tous les scénarios et fonctionnalités sans engagement" },
   { label: "Testé", desc: "727 tests automatisés, moteur déterministe vérifié" },
 ];
 
 export default function FonctionnalitesPage() {
   return (
-    <main className="relative overflow-hidden">
+    <main id="main" className="relative overflow-hidden">
       <div
         aria-hidden
         className="pointer-events-none absolute -top-40 left-1/2 h-[500px] w-[900px] -translate-x-1/2 rounded-full bg-amber-400/10 blur-3xl"
@@ -89,7 +88,7 @@ export default function FonctionnalitesPage() {
             >
               <p className="text-5xl font-bold tabular-nums text-amber-400">{s.value}</p>
               <p className="mt-2 text-sm font-semibold text-slate-200">{s.label}</p>
-              <p className="mt-2 text-xs leading-relaxed text-slate-500">{s.detail}</p>
+              <p className="mt-2 text-xs leading-relaxed text-slate-400">{s.detail}</p>
             </div>
           ))}
         </div>
@@ -98,18 +97,18 @@ export default function FonctionnalitesPage() {
       {/* Sectors grid */}
       <section className="mx-auto max-w-5xl px-6 pb-16">
         <h2 className="mb-6 text-center text-sm font-semibold uppercase tracking-wide text-slate-400">
-          {SCENARIOS.length} secteurs, {SCENARIOS.length} économies réelles
+          {SCENARIO_CHOICES.length} secteurs, {SCENARIO_CHOICES.length} économies réelles
         </h2>
         <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-3">
-          {SCENARIOS.map((s) => (
+          {SCENARIO_CHOICES.map((s) => (
             <div
               key={s.code}
               className="flex items-center gap-3 rounded-xl border border-white/10 bg-slate-900 px-4 py-3"
             >
-              <span className="text-2xl">{SECTOR_ICONS[s.sector]}</span>
+              <span className="text-2xl">{s.icon}</span>
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-slate-200">{s.title}</p>
-                <p className="text-xs text-slate-500">{SECTOR_LABELS[s.sector]}</p>
+                <p className="text-xs text-slate-400">{SECTOR_LABELS[s.sector]}</p>
               </div>
             </div>
           ))}
@@ -153,7 +152,7 @@ export default function FonctionnalitesPage() {
               <span className="mt-0.5 text-xs text-amber-400">●</span>
               <div className="min-w-0">
                 <p className="text-sm font-medium text-slate-200">{m.name}</p>
-                <p className="text-xs text-slate-500">{m.description}</p>
+                <p className="text-xs text-slate-400">{m.description}</p>
               </div>
             </div>
           ))}
@@ -169,7 +168,7 @@ export default function FonctionnalitesPage() {
               className="rounded-xl border border-emerald-400/20 bg-emerald-950/20 px-4 py-4 text-center"
             >
               <p className="text-sm font-semibold text-emerald-400">{d.label}</p>
-              <p className="mt-1 text-xs text-slate-500">{d.desc}</p>
+              <p className="mt-1 text-xs text-slate-400">{d.desc}</p>
             </div>
           ))}
         </div>
@@ -185,7 +184,7 @@ export default function FonctionnalitesPage() {
         </p>
         <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <Link
-            href="/"
+            href="/jouer"
             className="rounded-lg bg-amber-500 px-6 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400"
           >
             Tester le simulateur

@@ -167,6 +167,9 @@ const rawTransport = {
   // première version inversait en chargeant la palette de 43 € de frais de
   // route, soit le coût d'un camion complet posé sur une seule palette.
   fixedCostsPerRound: 186000,
+  // Le transport se vend au tarif de la palette, et les chargeurs comparent :
+  // 30 % de plus vide les camions. Le premium se joue à +10 %.
+  bots: { premiumPriceRatio: 1.1 },
   suppliers: [
     {
       code: "carte_reseau",
@@ -554,9 +557,12 @@ export function transportCompany(
       inventoryValue: 0,
       receivables: 290000,
       cash: 30000,
-      equity: 652000,
+      // Les 63 000 € de dettes fournisseurs en trop n'avaient pas de
+      // contrepartie : rendus aux capitaux propres, la caisse reste ce qu'elle est.
+      equity: 715000,
       financialDebt: 300000,
-      payables: 88000,
+      // 15 jours de gazole et de péages : le délai des énoncés
+      payables: 25000,
       overdraft: 0,
     },
     lastMarketShare: {},

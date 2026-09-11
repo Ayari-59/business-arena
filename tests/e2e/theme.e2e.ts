@@ -38,6 +38,8 @@ describe("la bascule de thème", () => {
   it("le bouton annonce le thème vers lequel il mène, pas celui qui est actif", async () => {
     // Un bouton qui afficherait le thème COURANT se lirait comme un état, et on
     // cliquerait dessus en croyant y aller alors qu'on y est déjà.
+    // Le sélecteur de thème vit désormais dans le menu (zone Réglages) ; on ouvre.
+    await page.getByRole("button", { name: "Menu" }).click();
     const bouton = page.getByRole("button", { name: `Passer au thème ${AUTRE.nom.toLowerCase()}` });
     await expect.poll(() => bouton.count()).toBe(1);
     expect((await bouton.innerText()).trim().toLowerCase()).toBe(AUTRE.nom.toLowerCase());

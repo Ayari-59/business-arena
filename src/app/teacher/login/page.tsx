@@ -12,7 +12,7 @@ export default async function TeacherLoginPage() {
   if (session) redirect("/teacher");
   const demoSeeded = await isDemoSeeded();
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
+    <main id="main" className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
       <div className="flex flex-col items-center text-center">
         <SiteLogo />
         <h1 className="mt-4 text-3xl font-bold">Espace enseignant</h1>
@@ -22,11 +22,11 @@ export default async function TeacherLoginPage() {
         </p>
       </div>
       <TeacherAuthForms />
-      <Link href="/guide#enseignants" className="text-xs text-slate-500 underline-offset-4 hover:text-slate-300 hover:underline">
+      <Link href="/guide#enseignants" className="text-xs text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline">
         Première fois ? Consultez le guide de prise en main
       </Link>
       {demoSeeded ? (
-        <div className="w-full max-w-md rounded-2xl border border-emerald-400/20 bg-emerald-950/20 p-4 text-sm">
+        <div className="w-full max-w-md rounded-2xl border border-emerald-400/20 bg-emerald-950/20 p-1.5 sm:p-4 text-sm">
           <p className="text-xs font-semibold uppercase tracking-wide text-emerald-400">
             Comptes de démonstration
           </p>
@@ -39,7 +39,7 @@ export default async function TeacherLoginPage() {
               Mot de passe : {DEMO_ACCOUNTS.password}
             </li>
           </ul>
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 text-xs text-slate-400">
             Une classe de 3 tours joués et un concours prêt à lancer vous attendent.
           </p>
         </div>

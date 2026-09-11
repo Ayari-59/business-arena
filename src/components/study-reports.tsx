@@ -13,7 +13,7 @@ const pct = (v: number) => `${(v * 100).toFixed(1).replace(".", ",")} %`;
 
 function Report({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <article className="rounded-xl border border-indigo-400/20 bg-slate-900 p-4">
+    <article className="rounded-xl border border-indigo-400/20 bg-slate-900 p-1.5 sm:p-4">
       <h4 className="text-xs font-semibold uppercase tracking-wide text-indigo-300">{title}</h4>
       <div className="mt-2 space-y-2 text-xs text-slate-300">{children}</div>
     </article>
@@ -34,7 +34,7 @@ function Table({
     <div className="overflow-x-auto">
       <table className="w-full text-left text-xs">
         <thead>
-          <tr className="text-slate-500">
+          <tr className="text-slate-400">
             {head.map((h) => (
               <th key={h} className="py-1 pr-3 font-medium">
                 {h}
@@ -113,7 +113,7 @@ export function StudyReportsPanel({ reports }: { reports: StudyReports }) {
                 s.thresholds.length > 0 ? s.thresholds.map((t) => `${t} €`).join(", ") : "—",
               ])}
             />
-            <p className="text-slate-500">
+            <p className="text-slate-400">
               Élasticité : une baisse de prix de 1 % fait varier la demande du segment de ce
               pourcentage. Sous le plancher, la méfiance s&apos;installe : trop beau pour être vrai.
             </p>
@@ -136,11 +136,21 @@ export function StudyReportsPanel({ reports }: { reports: StudyReports }) {
               rows={[
                 ["Coût variable unitaire", euro(reports.finance.costs.unitVariableCost)],
                 ["Marge sur coût variable / u", euro(reports.finance.costs.unitMargin)],
-                ["Seuil de rentabilité", `${units(reports.finance.costs.breakEvenUnits)} u`],
-                ["Marge de sécurité", euro(reports.finance.costs.safetyMargin)],
+                [
+                  "Seuil de rentabilité",
+                  reports.finance.costs.breakEvenUnits != null
+                    ? `${units(reports.finance.costs.breakEvenUnits)} u`
+                    : "jamais atteint",
+                ],
+                [
+                  "Marge de sécurité",
+                  reports.finance.costs.safetyMargin != null
+                    ? euro(reports.finance.costs.safetyMargin)
+                    : "—",
+                ],
               ]}
             />
-            <p className="text-slate-500">
+            <p className="text-slate-400">
               Secteur ({reports.finance.sector.teams} concurrents) · CA moyen{" "}
               {euro(reports.finance.sector.avgRevenue)}, résultat net moyen{" "}
               {euro(reports.finance.sector.avgNetIncome)}, trésorerie nette moyenne{" "}

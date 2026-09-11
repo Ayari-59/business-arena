@@ -1,7 +1,14 @@
 import { ATELIERS, type AtelierDefinition } from "./index";
 import { scenarioByCode, type ScenarioDefinition } from "../scenarios/registry";
 import { leviersDuNiveau } from "../decisions";
+import { DIFFICULTY_PRESETS } from "../difficulty";
 import type { SituationDef } from "../scenarios/situation-kit";
+import {
+  dossiersDeService,
+  referencesDuDossier,
+  type DossierService,
+  type ReferenceDossier,
+} from "./services";
 
 /**
  * LES DEUX DOSSIERS D'UN ATELIER.
@@ -73,6 +80,14 @@ export interface DossierEleve {
   /** Comment l'atelier se note, ce que l'élève a le droit de savoir. */
   evaluationFinale: string[];
   /**
+   * La gamme que l'équipe vend : une référence en mono-produit, plusieurs
+   * quand le scénario en porte (MAILLE & CO). Prix usuels, coûts, stock
+   * d'ouverture et saison — les chiffres du cockpit, sur le papier.
+   */
+  gamme: ReferenceDossier[];
+  /** Les quatre dossiers de service : approvisionnement, commercial, RH, financier. */
+  services: DossierService[];
+  /**
    * Le tableau de bord à remplir, tour après tour.
    *
    * Les lignes se lisent du produit et non d'une liste écrite ici : les
@@ -125,6 +140,9 @@ export interface DossierEnseignant {
 /** Les séances d'un atelier, vues par l'élève. */
 export function dossierEleve(atelier: AtelierDefinition): DossierEleve {
   const scenario = scenarioByCode(atelier.reglages.scenarioCode);
+  // Un niveau qui n'ouvre pas la R&D joue les références livrées prêtes : le
+  // dossier ne doit pas annoncer un développement que la partie n'aura pas.
+  const rdOuverte = DIFFICULTY_PRESETS.find((p) => p.level === atelier.reglages.niveau)?.decisions.rd ?? false;
   return {
     entete: {
       titre: atelier.titre,
@@ -161,8 +179,10 @@ export function dossierEleve(atelier: AtelierDefinition): DossierEleve {
       evaluation: [...s.evaluation],
     })),
     evaluationFinale: [...atelier.evaluationFinale],
+    gamme: referencesDuDossier(scenario, atelier.reglages.tours),
+    services: dossiersDeService(scenario, atelier.reglages.tours, { sansRd: !rdOuverte }),
     tableauDeBord: {
-      decisions: leviersDuNiveau(atelier.reglages.niveau).map((l) => l.nom),
+      decisions: leviersDuNiveau(atelier.reglages.niveau, scenario.scenario).map((l) => l.nom),
       resultats: [...RESULTATS_COMMUNS, ...scenario.kpis.map((k) => k.label), "Place au classement"],
       tours: Array.from({ length: atelier.reglages.tours }, (_, i) => i + 1),
     },

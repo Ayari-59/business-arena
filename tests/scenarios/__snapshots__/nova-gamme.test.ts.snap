@@ -1,0 +1,186 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`NOVA · gamme — instantané doré > la partie de référence (équilibrée contre SoundBox et Auris) est figée 1`] = `
+[
+  {
+    "bfr": -18033,
+    "ca": 274399,
+    "produits": {
+      "nova-go": {
+        "perdu": 386,
+        "plan": 677,
+        "prix": 34,
+        "stock": 0,
+        "vendu": 677,
+      },
+      "nova-one": {
+        "perdu": 778,
+        "plan": 4261,
+        "prix": 59,
+        "stock": 0,
+        "vendu": 4261,
+      },
+      "nova-studio": {
+        "perdu": 0,
+        "plan": 0,
+        "prix": 129,
+        "stock": 0,
+        "vendu": 0,
+      },
+    },
+    "resultat": -38056,
+    "tour": 1,
+    "tresorerie": 5978,
+  },
+  {
+    "bfr": -13285,
+    "ca": 393084,
+    "produits": {
+      "nova-go": {
+        "perdu": 306,
+        "plan": 790,
+        "prix": 34,
+        "stock": 0,
+        "vendu": 790,
+      },
+      "nova-one": {
+        "perdu": 864,
+        "plan": 4709,
+        "prix": 59,
+        "stock": 0,
+        "vendu": 4709,
+      },
+      "nova-studio": {
+        "perdu": 2255,
+        "plan": 685,
+        "prix": 129,
+        "stock": 0,
+        "vendu": 685,
+      },
+    },
+    "resultat": 37530,
+    "tour": 2,
+    "tresorerie": 39760,
+  },
+  {
+    "bfr": 23440,
+    "ca": 436195,
+    "produits": {
+      "nova-go": {
+        "perdu": 582,
+        "plan": 861,
+        "prix": 34,
+        "stock": 0,
+        "vendu": 861,
+      },
+      "nova-one": {
+        "perdu": 1845,
+        "plan": 5328,
+        "prix": 59,
+        "stock": 0,
+        "vendu": 5328,
+      },
+      "nova-studio": {
+        "perdu": 2723,
+        "plan": 718,
+        "prix": 129,
+        "stock": 0,
+        "vendu": 718,
+      },
+    },
+    "resultat": 40299,
+    "tour": 3,
+    "tresorerie": 44333,
+  },
+  {
+    "bfr": 66306,
+    "ca": 315198,
+    "produits": {
+      "nova-go": {
+        "perdu": 2175,
+        "plan": 626,
+        "prix": 34,
+        "stock": 0,
+        "vendu": 626,
+      },
+      "nova-one": {
+        "perdu": 10856,
+        "plan": 3729,
+        "prix": 59,
+        "stock": 0,
+        "vendu": 3729,
+      },
+      "nova-studio": {
+        "perdu": 3605,
+        "plan": 573,
+        "prix": 129,
+        "stock": 0,
+        "vendu": 573,
+      },
+    },
+    "resultat": 5971,
+    "tour": 4,
+    "tresorerie": 8438,
+  },
+  {
+    "bfr": 76635,
+    "ca": 367278,
+    "produits": {
+      "nova-go": {
+        "perdu": 599,
+        "plan": 730,
+        "prix": 34,
+        "stock": 0,
+        "vendu": 730,
+      },
+      "nova-one": {
+        "perdu": 6133,
+        "plan": 4351,
+        "prix": 59,
+        "stock": 0,
+        "vendu": 4351,
+      },
+      "nova-studio": {
+        "perdu": 3043,
+        "plan": 665,
+        "prix": 129,
+        "stock": 0,
+        "vendu": 665,
+      },
+    },
+    "resultat": 801,
+    "tour": 5,
+    "tresorerie": -90,
+  },
+  {
+    "bfr": 70928,
+    "ca": 385642,
+    "produits": {
+      "nova-go": {
+        "perdu": 2697,
+        "plan": 766,
+        "prix": 34,
+        "stock": 0,
+        "vendu": 766,
+      },
+      "nova-one": {
+        "perdu": 16878,
+        "plan": 4569,
+        "prix": 59,
+        "stock": 0,
+        "vendu": 4569,
+      },
+      "nova-studio": {
+        "perdu": 3511,
+        "plan": 698,
+        "prix": 129,
+        "stock": 0,
+        "vendu": 698,
+      },
+    },
+    "resultat": 18108,
+    "tour": 6,
+    "tresorerie": 24726,
+  },
+]
+`;

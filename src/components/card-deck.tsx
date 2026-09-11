@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { drawCardAction, type DrawCardState } from "@/app/teacher/actions";
+import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import { cardsForEventCodes } from "@/config/events/cards";
 import { EventCard } from "@/components/event-card";
 import { BrandMark } from "@/components/brand-mark";
@@ -31,7 +32,11 @@ export function CardDeck({
   /** Secteur joué — pour imprimer le bon deck physique. */
   scenarioCode: string;
 }) {
-  const [state, formAction, pending] = useActionState(drawCardAction.bind(null, gameId), initial);
+  const { state, formAction, pending, formRef, guardError } = useGuardedAction(
+    drawCardAction.bind(null, gameId),
+    initial,
+    { label: "tirage de carte" },
+  );
   const [target, setTarget] = useState<string>("");
 
   const marketPending = pendingEvents.filter((c) => c.teamId === null);
@@ -59,7 +64,7 @@ export function CardDeck({
           🖨️ Imprimer le deck physique
         </a>
       </div>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-slate-400">
         Cartes <strong className="text-slate-300">marché</strong> pour toute la classe, cartes{" "}
         <strong className="text-slate-300">équipe</strong> pour cibler une seule entreprise.
         Annoncées aux équipes, appliquées à la clôture du tour. Vous pouvez aussi faire tirer les
@@ -87,7 +92,7 @@ export function CardDeck({
       ) : null}
 
       {!allFull ? (
-        <form action={formAction} className="mt-4 space-y-3">
+        <form ref={formRef} action={formAction} className="mt-4 space-y-3">
           <div className="flex flex-wrap items-center gap-2">
             <label htmlFor="card-target" className="text-xs font-semibold text-slate-400">
               Destinataire
@@ -130,7 +135,7 @@ export function CardDeck({
                   className={`h-7 w-7 ${isTeamDraw ? "text-sky-400/80" : "text-amber-400/80"}`}
                 />
                 <span
-                  className={`text-[9px] font-bold uppercase tracking-widest ${
+                  className={`text-xs font-bold uppercase tracking-widest ${
                     isTeamDraw ? "text-sky-400/80" : "text-amber-400/70"
                   }`}
                 >
@@ -138,7 +143,7 @@ export function CardDeck({
                 </span>
               </span>
             </button>
-            <span className="text-xs text-slate-500">ou</span>
+            <span className="text-xs text-slate-400">ou</span>
             <select
               name="eventCode"
               defaultValue=""
@@ -162,7 +167,7 @@ export function CardDeck({
           </div>
         </form>
       ) : (
-        <p className="mt-3 text-xs text-slate-500">
+        <p className="mt-3 text-xs text-slate-400">
           Quatre cartes maximum par tour : clôturez le tour pour continuer.
         </p>
       )}
@@ -170,6 +175,11 @@ export function CardDeck({
         <p className="mt-3 rounded-lg border border-red-400/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
           {state.error}
         </p>
+      ) : null}
+      {guardError ? (
+        <div className="mt-3">
+          <GuardError message={guardError} />
+        </div>
       ) : null}
     </section>
   );

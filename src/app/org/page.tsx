@@ -21,7 +21,7 @@ export default async function OrgAdminPage() {
   }
 
   return (
-    <main className="mx-auto max-w-5xl space-y-8 p-6">
+    <main id="main" className="mx-auto max-w-5xl space-y-8 p-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-amber-400">
@@ -29,7 +29,7 @@ export default async function OrgAdminPage() {
           </p>
           <h1 className="text-2xl font-bold">{dashboard.name}</h1>
         </div>
-        <nav className="flex gap-4 text-xs text-slate-500">
+        <nav className="flex gap-4 text-xs text-slate-400">
           <Link href="/teacher" className="hover:text-slate-300">Espace enseignant</Link>
           <Link href="/" className="hover:text-slate-300">Landing</Link>
         </nav>
@@ -75,7 +75,7 @@ export default async function OrgAdminPage() {
             </p>
           ) : null}
           {dashboard.licence.licence.reference ? (
-            <p className="mt-2 text-xs text-slate-500">
+            <p className="mt-2 text-xs text-slate-400">
               Référence : <span className="font-mono">{dashboard.licence.licence.reference}</span>
             </p>
           ) : null}
@@ -101,7 +101,7 @@ export default async function OrgAdminPage() {
       {/* Invitations enseignants */}
       <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
         <h2 className="text-sm font-semibold text-slate-200">Inviter des enseignants</h2>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-slate-400">
           Partagez un code : l&apos;enseignant s&apos;inscrit sur /teacher/login avec ce code et
           rejoint automatiquement votre établissement.
         </p>
@@ -118,7 +118,7 @@ export default async function OrgAdminPage() {
               {invite.code}
               {invite.active ? (
                 <form action={deactivateTeacherInviteAction.bind(null, invite.id)}>
-                  <button className="text-slate-500 hover:text-red-400" title="Désactiver">✕</button>
+                  <button className="text-slate-400 hover:text-red-400" title="Désactiver">✕</button>
                 </form>
               ) : null}
             </span>
@@ -139,7 +139,7 @@ export default async function OrgAdminPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
+              <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
                 <th className="pb-2 pr-3 font-medium">Nom</th>
                 <th className="pb-2 pr-3 font-medium">E-mail</th>
                 <th className="pb-2 pr-3 font-medium">Rôle</th>
@@ -153,7 +153,7 @@ export default async function OrgAdminPage() {
                   <td className="py-2 pr-3 text-slate-400">{t.email}</td>
                   <td className="py-2 pr-3">
                     {t.role === "org_admin" ? (
-                      <span className="rounded bg-amber-400/15 px-1.5 py-0.5 text-[11px] text-amber-300">
+                      <span className="rounded bg-amber-400/15 px-1.5 py-0.5 text-xs text-amber-300">
                         admin
                       </span>
                     ) : (
@@ -173,7 +173,7 @@ export default async function OrgAdminPage() {
         <div className="rounded-2xl border border-white/10 bg-slate-900 p-6">
           <h2 className="mb-3 text-sm font-semibold text-slate-200">Dernières parties</h2>
           {dashboard.games.length === 0 ? (
-            <p className="text-sm text-slate-500">Aucune partie pour l&apos;instant.</p>
+            <p className="text-sm text-slate-400">Aucune partie pour l&apos;instant.</p>
           ) : (
             <ul className="space-y-2 text-sm">
               {dashboard.games.slice(0, 10).map((g) => (
@@ -184,7 +184,7 @@ export default async function OrgAdminPage() {
                     ) : null}
                     par {g.createdBy}
                   </span>
-                  <span className="text-xs text-slate-500">
+                  <span className="text-xs text-slate-400">
                     {g.status === "finished" ? "terminée" : g.status === "running" ? "en cours" : g.status}
                   </span>
                 </li>
@@ -195,13 +195,13 @@ export default async function OrgAdminPage() {
         <div className="rounded-2xl border border-white/10 bg-slate-900 p-6">
           <h2 className="mb-3 text-sm font-semibold text-slate-200">Concours</h2>
           {dashboard.competitions.length === 0 ? (
-            <p className="text-sm text-slate-500">Aucun concours pour l&apos;instant.</p>
+            <p className="text-sm text-slate-400">Aucun concours pour l&apos;instant.</p>
           ) : (
             <ul className="space-y-2 text-sm">
               {dashboard.competitions.map((c) => (
                 <li key={c.competitionId} className="flex items-center justify-between rounded-lg bg-slate-950 px-3 py-2 text-slate-300">
                   <span>{c.name}</span>
-                  <span className="text-xs text-slate-500">
+                  <span className="text-xs text-slate-400">
                     {c.status === "registration" ? "inscriptions" : c.status === "running" ? "en cours" : "terminé"}
                   </span>
                 </li>

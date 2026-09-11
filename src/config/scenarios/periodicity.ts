@@ -1,4 +1,5 @@
 import type { EngineScenarioConfig } from "../../engine/types";
+import { mapGammeSegments } from "../../engine/gamme";
 
 /**
  * Périodicité d'une partie (ADR-01) : un tour peut représenter un mois, un
@@ -37,8 +38,16 @@ export function periodicityFromRoundDays(roundDays: number): Periodicity {
   return "year";
 }
 
-export function periodLabel(roundDays: number, index: number): string {
-  return `${PERIODICITY_LABELS[periodicityFromRoundDays(roundDays)].singular} ${index}`;
+/**
+ * Le libellé d'un tour à l'écran. Unifié sur « Tour N » (choix produit) :
+ * quelle que soit la durée réelle d'un tour (mois, trimestre, année, fixée au
+ * lancement de la partie), le joueur lit « Tour 1 », « Tour 2 »… La durée reste
+ * un paramètre de la partie — le sélecteur « un trimestre par tour » l'annonce
+ * au lancement — mais elle ne teinte plus chaque libellé. `_roundDays` est donc
+ * conservé dans la signature (les appelants le passent) sans influer sur le texte.
+ */
+export function periodLabel(_roundDays: number, index: number): string {
+  return `Tour ${index}`;
 }
 
 const compound = (ratePerQuarter: number, k: number) => Math.pow(1 + ratePerQuarter, k) - 1;
@@ -61,23 +70,47 @@ export function applyPeriodicity(
   const k = days / 90;
   if (k === 1) return scenario;
 
+  // Demande de base et croissance : sur le marché du scénario et, en gamme,
+  // sur celui de chaque produit (les seuls segments que le moteur simule).
+  const redimensionne = mapGammeSegments(scenario, (s) => ({
+    ...s,
+    size: s.size * k,
+    growth: compound(s.growth, k),
+  }));
+
   return {
-    ...scenario,
+    ...redimensionne,
     roundDays: days,
-    market: {
-      ...scenario.market,
-      segments: scenario.market.segments.map((s) => ({
-        ...s,
-        size: s.size * k,
-        growth: compound(s.growth, k),
-      })),
-    },
     production: {
       ...scenario.production,
       qualityScale: scenario.production.qualityScale * k,
       maintenanceReference: scenario.production.maintenanceReference * k,
     },
     marketing: { scale: scenario.marketing.scale * k },
+    // R&D : l'échelle du budget est un flux par tour (× k) ; le coût de
+    // développement d'une référence est un total, il ne bouge pas ; son tour
+    // de disponibilité est une date réelle, il se compte en tours de la
+    // nouvelle durée.
+    ...(scenario.rd ? { rd: { ...scenario.rd, techScale: scenario.rd.techScale * k } } : {}),
+    // Communication : l'échelle du budget de marque est un flux par tour (× k).
+    ...(scenario.communication
+      ? { communication: { ...scenario.communication, brandScale: scenario.communication.brandScale * k } }
+      : {}),
+    ...(redimensionne.products
+      ? {
+          products: redimensionne.products.map((p) =>
+            p.development?.availableFromRound !== undefined
+              ? {
+                  ...p,
+                  development: {
+                    ...p.development,
+                    availableFromRound: Math.max(1, Math.round((p.development.availableFromRound - 1) / k) + 1),
+                  },
+                }
+              : p,
+          ),
+        }
+      : {}),
     finance: {
       ...scenario.finance,
       depreciationPerRound: scenario.finance.depreciationPerRound * k,

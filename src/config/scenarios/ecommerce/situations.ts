@@ -1,4 +1,4 @@
-import { attachModelQuestions, hints, type DecisionLever, type SituationCategory, type SituationDef } from "../situation-kit";
+import { attachModelQuestions, hints, type SituationDef } from "../situation-kit";
 
 /**
  * Situations pédagogiques de PIXEL & CO (e-commerce).
@@ -498,7 +498,7 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
     category: "contexte_marche",
     title: "Une commande sur huit revient",
     narrative:
-      "Le service client remonte un chiffre que personne ne regardait : 12 % des commandes sont retournées. Chaque retour, ce sont des frais de port dans les deux sens, un article à contrôler et à remettre en rayon, parfois invendable. La marge affichée sur une commande, elle, n'en tient aucun compte.",
+      "Le service client remonte un chiffre que personne ne regardait : 12 % des commandes sont retournées. Chaque retour, ce sont des frais de port dans les deux sens, un article à contrôler et à remettre en rayon, parfois invendable. Le coût moyen de ces retours ordinaires se cache dans vos 11 € de logistique par commande ; mais dès que la qualité perçue baisse (photos, fiches, délais), les retours dépassent la normale, sont remboursés, et l'article ne revient pas en rayon. La marge affichée sur une commande, elle, n'en tient aucun compte.",
     problem:
       "Que devient votre marge quand une commande sur huit revient, et où faut-il agir ?",
     diagnosticOptions: [
@@ -657,7 +657,7 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
     category: "tresorerie_dormante",
     title: "L'après-fêtes",
     narrative:
-      "Le pic des fêtes a rempli le compte : plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an, et facture le découvert 9 %. Le trimestre qui s'ouvre est le plus creux de l'année, et les retours de décembre ne sont pas tous remboursés.",
+      "Le pic des fêtes a rempli le compte : plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an, et facture le découvert 14 %. Le trimestre qui s'ouvre est le plus creux de l'année, et les retours de décembre ne sont pas tous remboursés.",
     problem:
       "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant ?",
     diagnosticOptions: [
@@ -687,14 +687,14 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
         id: "ecom_detect_idle_cash_placement_exces",
         prompt: "Placer la totalité de sa trésorerie expose l'entreprise à…",
         options: [
-          { id: "a", label: "Ouvrir un découvert à 9 % tout en détenant un placement à 2 %" },
+          { id: "a", label: "Ouvrir un découvert à 14 % tout en détenant un placement à 2 %" },
           { id: "b", label: "Perdre le capital placé si le trimestre est mauvais" },
           { id: "c", label: "Un redressement fiscal sur les produits financiers" },
           { id: "d", label: "Une baisse mécanique de son chiffre d'affaires" },
         ],
         correctOptionId: "a",
         explain:
-          "Le placement est bloqué : il ne paie rien pendant le tour. Si les décaissements dépassent ce qui reste en caisse, la banque ouvre un découvert, et vous payez d'un côté quatre fois ce que vous gagnez de l'autre.",
+          "Le placement est bloqué : il ne paie rien pendant le tour. Si les décaissements dépassent ce qui reste en caisse, la banque ouvre un découvert, et vous payez d'un côté sept fois ce que vous gagnez de l'autre.",
       },
       {
         id: "ecom_retours_a_venir",
@@ -722,7 +722,7 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
       "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro.",
       "Attention : le placement est bloqué jusqu'au tour suivant. Il ne réglera rien de ce qui tombera d'ici là.",
       "Projetez le trimestre creux : publicité pour maintenir le trafic, règlement des fournisseurs du pic, et remboursement des retours de décembre.",
-      "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte quatre fois ce que le placement rapporte : l'erreur n'est pas symétrique.",
+      "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte sept fois ce que le placement rapporte : l'erreur n'est pas symétrique.",
     ]),
     trigger: { detect: "idle_cash" },
     weight: 0.8,

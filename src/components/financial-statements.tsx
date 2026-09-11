@@ -26,6 +26,10 @@ const CASH_LABELS: Record<string, string> = {
   marketing: "Budget marketing",
   qualite: "Budget qualité",
   maintenance: "Budget maintenance",
+  engagement_rse: "Engagement RSE",
+  recherche_developpement: "Recherche et développement",
+  sanction_rse: "Sanction RSE (amende)",
+  subvention_rse: "Éco-subvention RSE",
   interets: "Charges financières",
   placement_arrive_a_terme: "Placement arrivé à terme",
   produits_financiers: "Produits financiers (placement)",
@@ -53,11 +57,11 @@ function Panel({
       className="group rounded-xl border border-white/10 bg-slate-900"
       open={defaultOpen}
     >
-      <summary className="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-slate-200 hover:text-amber-200">
+      <summary className="cursor-pointer select-none px-3 py-2.5 sm:px-4 sm:py-3 text-sm font-semibold text-slate-200 hover:text-amber-200">
         {title}
-        <span className="float-right text-xs text-slate-500 group-open:hidden">déplier</span>
+        <span className="float-right text-xs text-slate-400 group-open:hidden">déplier</span>
       </summary>
-      <div className="border-t border-white/5 px-4 py-3">{children}</div>
+      <div className="border-t border-white/5 px-1.5 py-2 sm:px-4 sm:py-3">{children}</div>
     </details>
   );
 }
@@ -77,7 +81,7 @@ function Row({
 }) {
   return (
     <div
-      className={`flex items-baseline justify-between gap-4 py-1 text-xs ${
+      className={`flex items-baseline justify-between gap-2 py-1 text-xs ${
         strong ? "border-t border-white/10 font-semibold text-slate-100" : "text-slate-300"
       } ${indent ? "pl-4 text-slate-400" : ""}`}
     >
@@ -96,14 +100,14 @@ function Row({
 export function FinancialStatements({
   result,
   price,
-  materialCostPerUnit,
   otherVariableCostPerUnit,
   vocabulary,
 }: {
   result: CompanyRoundResult;
   /** Prix de vente du tour (analyse des coûts) — null si inconnu. */
   price: number | null;
-  materialCostPerUnit: number;
+  /** Autres coûts variables à l'unité (énergie, commission, ménage…) : la seule
+   *  part figée du coût variable — elle n'est pas ajustée par le fournisseur. */
   otherVariableCostPerUnit: number;
   /** Le métier nomme lui-même ce qu'il achète : on ne vend pas des matières
    *  premières dans une salle de sport. */
@@ -111,13 +115,24 @@ export function FinancialStatements({
 }) {
   const cr = result.incomeStatement;
   const b = result.balanceSheet;
-  const cvu = materialCostPerUnit + otherVariableCostPerUnit;
+  // Coût variable unitaire RÉEL du tour, tel que le moteur l'a employé pour le
+  // seuil et la marge sur coût variable : il intègre le choix de fournisseur.
+  // On en déduit la part matière (total − autres) plutôt que de réafficher un
+  // coût standard qui contredirait les totaux ci-dessus.
+  const cvu = result.breakeven.unitVariableCost;
+  const materialCostPerUnit = cvu - otherVariableCostPerUnit;
   const soldUnits = Object.values(result.market.bySegment).reduce((s, d) => s + d.sold, 0)
     + (result.extraOrders?.delivered ?? 0)
     + (result.extraOrders?.subcontracted ?? 0)
-    + (result.orderOffer?.delivered ?? 0);
+    + (result.orderOffer?.delivered ?? 0)
+    + (result.subscription?.retained ?? 0);
   const structure =
-    cr.fixedCosts + cr.marketingCost + cr.qualityCost + cr.maintenanceCost + cr.depreciation;
+    cr.fixedCosts +
+    cr.marketingCost +
+    cr.qualityCost +
+    cr.maintenanceCost +
+    (cr.rdCost ?? 0) +
+    cr.depreciation;
   const placement = b.shortTermInvestment ?? 0;
   const totalAssets =
     b.fixedAssetsNet + b.inventoryValue + b.receivables + b.cash + placement;
@@ -150,6 +165,12 @@ export function FinancialStatements({
         <Row label="− Marketing" value={euro(-cr.marketingCost)} indent />
         <Row label="− Qualité" value={euro(-cr.qualityCost)} indent />
         <Row label="− Maintenance" value={euro(-cr.maintenanceCost)} indent />
+        {(cr.rdCost ?? 0) > 0.5 ? (
+          <Row label="− Recherche et développement" value={euro(-(cr.rdCost ?? 0))} indent />
+        ) : null}
+        {(cr.engagementRse ?? 0) > 0.5 ? (
+          <Row label="− Engagement RSE" value={euro(-(cr.engagementRse ?? 0))} indent />
+        ) : null}
         <Row label="− Charges de structure" value={euro(-cr.fixedCosts)} indent />
         <Row label="= Excédent brut d'exploitation (EBE)" value={euro(cr.ebitda)} strong />
         <Row label="− Dotations aux amortissements" value={euro(-cr.depreciation)} indent />
@@ -159,6 +180,19 @@ export function FinancialStatements({
           <Row
             label="+ Produits financiers (placement)"
             value={euro(cr.financialIncome ?? 0)}
+            indent
+          />
+        ) : null}
+        {(cr.exceptionalCharge ?? 0) > 0.5 ? (
+          <Row label="− Sanction RSE (exceptionnel)" value={euro(-(cr.exceptionalCharge ?? 0))} indent />
+        ) : null}
+        {(cr.exceptionalIncome ?? 0) > 0.5 ? (
+          <Row label="+ Éco-subvention RSE (exceptionnel)" value={euro(cr.exceptionalIncome ?? 0)} indent />
+        ) : null}
+        {(cr.taxLossUsed ?? 0) > 0.5 ? (
+          <Row
+            label="dont déficit antérieur imputé (report)"
+            value={euro(cr.taxLossUsed ?? 0)}
             indent
           />
         ) : null}
@@ -172,9 +206,9 @@ export function FinancialStatements({
       </Panel>
 
       <Panel title="Bilan">
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-2 sm:grid-cols-2">
           <div>
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
               Actif
             </p>
             <Row label="Immobilisations nettes" value={euro(b.fixedAssetsNet)} />
@@ -187,7 +221,7 @@ export function FinancialStatements({
             <Row label="TOTAL ACTIF" value={euro(totalAssets)} strong />
           </div>
           <div>
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
               Passif
             </p>
             <Row label="Capitaux propres" value={euro(b.equity)} />
@@ -206,7 +240,7 @@ export function FinancialStatements({
             />
           </div>
         </div>
-        <p className="mt-2 text-[11px] text-slate-500">
+        <p className="mt-2 text-xs text-slate-400">
           {placement > 0.5 && b.overdraft > 0.5
             ? "Vous détenez un placement ET un découvert : vous payez le second bien plus cher que le premier ne rapporte. "
             : ""}
@@ -217,9 +251,9 @@ export function FinancialStatements({
       </Panel>
 
       <Panel title="Analyse des coûts">
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-2 sm:grid-cols-2">
           <div>
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
               À l&apos;unité
             </p>
             <Row label={vocabulary.materialLabel} value={euro(materialCostPerUnit)} indent />
@@ -244,7 +278,7 @@ export function FinancialStatements({
             ) : null}
           </div>
           <div>
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
               Sur le tour
             </p>
             <Row
@@ -258,21 +292,24 @@ export function FinancialStatements({
             <Row
               label="Seuil de rentabilité"
               value={
-                Number.isFinite(result.breakeven.breakEvenUnits)
+                result.breakeven.breakEvenUnits != null && result.breakeven.breakEvenRevenue != null
                   ? `${units(result.breakeven.breakEvenUnits)} u (${euro(result.breakeven.breakEvenRevenue)})`
-                  : "inatteignable à cette marge"
+                  : "seuil jamais atteint (marge sur coût variable nulle ou négative)"
               }
               strong
             />
             <Row
               label="Marge de sécurité"
-              value={euro(result.breakeven.safetyMargin)}
-              tone={result.breakeven.safetyMargin >= 0 ? "good" : "bad"}
+              value={result.breakeven.safetyMargin != null ? euro(result.breakeven.safetyMargin) : "—"}
+              tone={result.breakeven.safetyMargin != null && result.breakeven.safetyMargin >= 0 ? "good" : "bad"}
             />
-            <Row label="Indice de sécurité" value={pct(result.breakeven.safetyIndex)} />
+            <Row
+              label="Indice de sécurité"
+              value={result.breakeven.safetyIndex != null ? pct(result.breakeven.safetyIndex) : "—"}
+            />
           </div>
         </div>
-        <p className="mt-2 text-[11px] text-slate-500">
+        <p className="mt-2 text-xs text-slate-400">
           Les charges de structure tombent quoi qu&apos;il arrive : chaque unité vendue au-dessus
           du coût variable les éponge : le seuil dit combien il en faut.
         </p>
@@ -295,7 +332,7 @@ export function FinancialStatements({
           strong
           tone={result.cashFlow.closing >= 0 ? "good" : "bad"}
         />
-        <p className="mt-2 text-[11px] text-slate-500">
+        <p className="mt-2 text-xs text-slate-400">
           Le résultat est une opinion, la trésorerie est un fait : ce tableau montre où
           l&apos;argent est réellement entré et sorti.
         </p>

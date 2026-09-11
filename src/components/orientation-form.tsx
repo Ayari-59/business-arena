@@ -8,7 +8,7 @@ import {
   recommander,
   type Semestre,
 } from "@/config/orientation";
-import { PERIODICITY_LABELS, periodicityFromRoundDays } from "@/config/scenarios/periodicity";
+import { PERIODICITY_LABELS } from "@/config/scenarios/periodicity";
 
 /**
  * Le formulaire d'orientation.
@@ -20,6 +20,10 @@ import { PERIODICITY_LABELS, periodicityFromRoundDays } from "@/config/scenarios
  * Le message n'est donc pas le cœur du formulaire, c'est sa sortie de secours :
  * il part avec le profil et la recommandation déjà écrits, pour que la réponse
  * commence là où la page s'est arrêtée.
+ *
+ * Sans adresse de contact configurée, le bouton d'envoi disparaît, et rien ne
+ * le remplace : l'état de la configuration regarde l'administrateur, pas le
+ * visiteur, à qui la recommandation suffit.
  */
 export function OrientationForm({ contactEmail }: { contactEmail: string }) {
   const diplomes = diplomesProposes();
@@ -98,7 +102,7 @@ export function OrientationForm({ contactEmail }: { contactEmail: string }) {
                 }`}
               >
                 <span className="block font-medium">{titre}</span>
-                <span className="mt-0.5 block text-[11px] leading-relaxed text-slate-500">
+                <span className="mt-0.5 block text-xs leading-relaxed text-slate-400">
                   {aide}
                 </span>
               </button>
@@ -131,7 +135,7 @@ export function OrientationForm({ contactEmail }: { contactEmail: string }) {
             placeholder="Effectif, volume horaire, contraintes de salle, ce que vous avez déjà essayé, ce qui vous manque…"
             className={champ}
           />
-          <span className="mt-1 block text-xs text-slate-500">
+          <span className="mt-1 block text-xs text-slate-400">
             Facultatif. C&apos;est ce champ qui nous permet de répondre autre chose que la
             recommandation automatique.
           </span>
@@ -143,21 +147,21 @@ export function OrientationForm({ contactEmail }: { contactEmail: string }) {
           Ce que nous vous conseillons
         </p>
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
-          <dt className="text-slate-500">Entreprise</dt>
+          <dt className="text-slate-400">Entreprise</dt>
           <dd className="font-medium text-slate-100">{reco.scenarioTitre}</dd>
-          <dt className="text-slate-500">Niveau</dt>
+          <dt className="text-slate-400">Niveau</dt>
           <dd className="font-medium text-slate-100">
             {reco.niveau} · {reco.niveauNom}
           </dd>
-          <dt className="text-slate-500">Durée</dt>
+          <dt className="text-slate-400">Durée</dt>
           <dd className="font-medium text-slate-100">
             {reco.tours} tours, un {periodiciteLabel} par tour
           </dd>
-          <dt className="text-slate-500">Atelier</dt>
+          <dt className="text-slate-400">Atelier</dt>
           <dd className="font-medium text-slate-100">
             {reco.atelierCode ? (
               <Link
-                href={`/ateliers/${reco.atelierCode}`}
+                href={`/animations/${reco.atelierCode}`}
                 className="text-amber-300 underline-offset-4 hover:underline"
               >
                 Voir le déroulé prêt à animer
@@ -188,12 +192,7 @@ export function OrientationForm({ contactEmail }: { contactEmail: string }) {
             >
               Nous écrire avec ce profil
             </a>
-          ) : (
-            <span className="text-xs leading-relaxed text-slate-500">
-              L&apos;adresse de contact n&apos;est pas encore renseignée : la recommandation
-              ci-dessus reste valable, seul l&apos;envoi du message manque.
-            </span>
-          )}
+          ) : null}
         </div>
       </div>
     </div>

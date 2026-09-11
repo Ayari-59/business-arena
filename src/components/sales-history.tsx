@@ -17,14 +17,17 @@ import type { GameView } from "@/services/game.service";
 export function SalesHistory({
   history,
   vocabulary,
+  priceLabel,
 }: {
   history: GameView["salesHistory"];
   vocabulary: GameView["vocabulary"];
+  /** En gamme, la colonne de prix est un prix MOYEN pondéré : on le dit. */
+  priceLabel?: string;
 }) {
   if (history.rounds.length === 0) return null;
 
   return (
-    <details className="rounded-xl border border-white/10 bg-slate-900 p-4">
+    <details className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
       <summary className="cursor-pointer text-sm font-semibold text-slate-200">
         📈 Historique de vos ventes ({history.rounds.length} tour
         {history.rounds.length > 1 ? "s" : ""})
@@ -33,10 +36,10 @@ export function SalesHistory({
       <div className="mt-3 overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-[11px] uppercase tracking-wide text-slate-500">
+            <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
               <th className="pb-1 pr-3 font-medium">Tour</th>
               <th className="pb-1 pr-3 text-right font-medium">
-                {vocabulary.priceLabel}
+                {priceLabel ?? vocabulary.priceLabel}
               </th>
               {history.segments.map((name) => (
                 <th key={name} className="pb-1 pr-3 text-right font-medium" colSpan={3}>
@@ -47,7 +50,7 @@ export function SalesHistory({
               <th className="pb-1 pr-3 text-right font-medium">Total vendu</th>
               <th className="pb-1 text-right font-medium">Manquées</th>
             </tr>
-            <tr className="text-left text-[10px] text-slate-600">
+            <tr className="text-left text-xs text-slate-600">
               <th className="pb-1 pr-3" />
               <th className="pb-1 pr-3" />
               {history.segments.map((name) => (
@@ -71,7 +74,7 @@ export function SalesHistory({
                 </td>
                 {row.bySegment.map((seg, i) => (
                   <Fragment key={i}>
-                    <td className="py-1.5 pr-3 text-right tabular-nums text-slate-500">
+                    <td className="py-1.5 pr-3 text-right tabular-nums text-slate-400">
                       {formatUnits(seg.potential)}
                     </td>
                     <td className="py-1.5 pr-3 text-right tabular-nums">
@@ -99,7 +102,7 @@ export function SalesHistory({
         </table>
       </div>
 
-      <p className="mt-3 text-xs leading-relaxed text-slate-500">
+      <p className="mt-3 text-xs leading-relaxed text-slate-400">
         La colonne « prévu » est ce que vous aviez annoncé avant de jouer le tour.
         De quoi construire une prévision plutôt que de deviner : moyenne des tours passés,
         tendance d&apos;un tour à l&apos;autre, coefficient de saison en rapportant chaque tour
@@ -112,7 +115,7 @@ export function SalesHistory({
           sait pas de quel canal il vient, et ne peut pas comparer une vente
           par un tiers à une vente en direct. */}
       {history.commissions.length > 0 ? (
-        <p className="mt-2 text-xs leading-relaxed text-slate-500">
+        <p className="mt-2 text-xs leading-relaxed text-slate-400">
           {history.commissions.map((c) => (
             <span key={c.segment} className="block">
               {c.segment} : le canal prélève {Math.round(c.rate * 100)} % du prix de vente.

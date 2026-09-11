@@ -21,7 +21,8 @@ import { parseScenarioConfig } from "../schema";
  *
  * Calibration (base trimestrielle) : ~6 000 couverts à ~33 €, 13 € de coût
  * variable → ~20 € de marge ; 90 000 € de structure décaissée → seuil
- * ≈ 4 500 couverts, soit 50 par jour d'ouverture.
+ * ≈ 4 500 couverts, soit 70 par jour sur 64 jours d'ouverture : un service
+ * plein chaque jour.
  */
 const rawBistrot = {
   code: "bistrot",
@@ -106,6 +107,17 @@ const rawBistrot = {
     maintenanceReference: 4000,
     availabilityDecay: 0.07,
   },
+  // Non-qualité interne : plats ratés / denrées gâchées. ~2 % à qualité et
+  // maintenance normales. La maintenance de la cuisine pilote aussi le rebut
+  // (unidirectionnel, s = 0,15) : sous-entretenir augmente les plats ratés ;
+  // bien entretenir n'apporte pas de bonus. Pas de « retour client » industriel
+  // en restauration (externalReturnSensitivity = 0). Support de l'analyse
+  // d'écart de rendement matière (P5 / DCG).
+  qualityCosts: {
+    baseDefectRate: 0.02,
+    externalReturnSensitivity: 0,
+    maintenanceDefectSensitivity: 0.15,
+  },
   marketing: { scale: 7000 },
   finance: {
     loanAnnualRate: 0.058,
@@ -129,11 +141,12 @@ const rawBistrot = {
     factoringFeeRate: 0.03,
     forcedFactoringFeeRate: 0.07,
     // 2 %/an : de quoi valoriser le surplus, jamais de quoi financer
-    // un découvert à 9 %. L'arbitrage doit rester perdant à l'envers.
+    // un découvert à 14 %. L'arbitrage doit rester perdant à l'envers.
     placementAnnualRate: 0.02,
   },
-  // structure ≈ 96 000 €/tour : 90 000 décaissés (brigade, loyer, énergie,
-  // assurances, redevances) + 6 000 d'amortissements de la cuisine
+  // structure ≈ 96 000 €/tour : 90 000 décaissés (72 000 de brigade — dix
+  // personnes à 2 400 € chargés par mois — et 18 000 de loyer, d'énergie,
+  // d'assurances et de redevances) + 6 000 d'amortissements de la cuisine
   fixedCostsPerRound: 90000,
   suppliers: [
     {
@@ -201,11 +214,12 @@ const rawBistrot = {
     ],
   },
   investment: {
-    // couvrir et chauffer la terrasse : ~1 900 € par place gagnée sur le
-    // trimestre (156 services) → 12 € par couvert de capacité
-    costPerCapacityUnit: 12,
-    depreciationRounds: 24,
-    maxPerRound: 1500,
+    // couvrir et chauffer la terrasse : 48 000 € pour 1 800 couverts de plus
+    // par trimestre, amortis sur douze trimestres (la situation du tour 5) →
+    // 27 € par couvert de capacité, 1 800 couverts au plus par tour
+    costPerCapacityUnit: 27,
+    depreciationRounds: 12,
+    maxPerRound: 1800,
   },
   // Équipements typés : 3 niveaux de cuisine.
   // Capacité initiale = 2 × 1 500 + 2 × 3 000 = 9 000 (identique au legacy).
@@ -310,7 +324,9 @@ const rawBistrot = {
     },
   ],
   hr: {
-    salaryPerEmployeePerRound: 7800,
+    // 2 400 € chargés par mois : la brigade d'un bistrot est payée au voisinage
+    // du minimum, ce qui laisse à la structure de quoi payer les murs.
+    salaryPerEmployeePerRound: 7200,
     includedHeadcount: 10,
     hiringCost: 2000,
     firingCost: 4500,
@@ -516,7 +532,7 @@ export function bistrotCompany(
     productivity: 1,
     finishedGoods: { quantity: 0, unitCost: 0 },
     // Parc initial : 2 traditionnelles (30 000 €) + 2 semi-pro (72 000 €) = 102 000 €
-    // (amorti à ~61 % → ~62 000 € de VNC)
+    // d'origine, dont il reste 61 % en valeur nette → ~62 000 € de VNC
     fleet: [
       { typeCode: "cuisine_traditionnelle", count: 2, acquiredRound: 0, bookValue: 16000 },
       { typeCode: "cuisine_semi_pro", count: 2, acquiredRound: 0, bookValue: 46000 },

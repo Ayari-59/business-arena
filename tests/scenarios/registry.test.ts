@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { SCENARIOS, scenarioByCode, ALL_SITUATIONS } from "../../src/config/scenarios/registry";
+import { SCENARIOS, scenarioByCode, ALL_SITUATIONS, familyOf } from "../../src/config/scenarios/registry";
+import { offerProductIndex, toGamme } from "../../src/engine/gamme";
 import { balanceGap } from "../../src/engine/finance/statements";
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";
 import { DECISION_MODELS } from "../../src/config/pedagogy/models";
@@ -206,11 +207,11 @@ describe("registre des scénarios", () => {
     // bistrot, qui privatisait la salle pour plusieurs services d'affilée.
     for (const d of SCENARIOS) {
       const c = d.company("player", d.playerTeamName, "human");
-      const capacite = Math.min(
-        c.machineCapacity,
-        (c.headcount * c.hoursPerEmployee) / d.scenario.product.hoursPerUnit,
-      );
+      const gamme = toGamme(d.scenario);
       for (const o of d.scenario.orderOffers ?? []) {
+        // En gamme, la commande se produit avec les heures de SA référence.
+        const p = gamme[offerProductIndex(gamme, o)]!;
+        const capacite = Math.min(c.machineCapacity, (c.headcount * c.hoursPerEmployee) / p.hoursPerUnit);
         expect(
           o.units,
           `${d.code}/${o.code} : ${o.units} pour ${Math.round(capacite)} de capacité`,
@@ -466,9 +467,12 @@ describe("registre des scénarios", () => {
       // et le suffixe par tour doit nommer l'unité du secteur
       expect(v.perRoundLabel, d.code).toContain("/tour");
       // aucun secteur ne réutilise le mot d'un autre pour son goulot physique
+      // (les deux variantes d'une même famille, en un produit ou en gamme,
+      // partagent le même métier et donc le même mot).
       const prior = seen.get(v.capacityBottleneckLabel);
+      const memeFamille = prior !== undefined && familyOf(prior) !== undefined && familyOf(prior) === familyOf(d.code);
       expect(
-        prior,
+        memeFamille ? undefined : prior,
         `« ${v.capacityBottleneckLabel} » partagé entre ${prior} et ${d.code}`,
       ).toBeUndefined();
       seen.set(v.capacityBottleneckLabel, d.code);
@@ -495,6 +499,133 @@ describe("registre des scénarios", () => {
           `${d.code}/${segment.code} : saisonnalité du segment`,
         ).toBeGreaterThanOrEqual(s.roundsCount);
       }
+      // Gamme : chaque produit porte son marché, et c'est lui que le moteur
+      // simule ; sa saisonnalité et celles de ses segments couvrent la partie.
+      for (const p of s.products ?? []) {
+        if (p.market.seasonality) {
+          expect(
+            p.market.seasonality.length,
+            `${d.code}/${p.code} : saisonnalité du produit`,
+          ).toBeGreaterThanOrEqual(s.roundsCount);
+        }
+        for (const segment of p.market.segments) {
+          if (!segment.seasonality) continue;
+          expect(
+            segment.seasonality.length,
+            `${d.code}/${p.code}/${segment.code} : saisonnalité du segment`,
+          ).toBeGreaterThanOrEqual(s.roundsCount);
+        }
+      }
+    }
+  });
+});
+
+describe("le pictogramme et le nom court d'un scénario", () => {
+  it("deux scénarios du même secteur ne se ressemblent pas", () => {
+    // Le choix de l'entreprise se fait sur une tuile : un pictogramme et un
+    // nom court. NOVA se joue en un produit ou en gamme ; deux tuiles
+    // « 🏭 Industrie » ne disaient pas laquelle est laquelle.
+    for (const d of SCENARIOS) {
+      expect(d.icon.length, d.code).toBeGreaterThan(0);
+      expect(d.shortName.length, d.code).toBeGreaterThan(0);
+      expect(d.title.toUpperCase().startsWith(d.shortName.split(" · ")[0]!.toUpperCase()), `${d.code} : le nom court n'est pas la tête du titre`).toBe(true);
+    }
+    const parSecteur = new Map<string, typeof SCENARIOS[number][]>();
+    for (const d of SCENARIOS) parSecteur.set(d.sector, [...(parSecteur.get(d.sector) ?? []), d]);
+    for (const [secteur, defs] of parSecteur) {
+      expect(new Set(defs.map((d) => d.icon)).size, `${secteur} : deux scénarios avec le même pictogramme`).toBe(defs.length);
+      expect(new Set(defs.map((d) => d.shortName)).size, `${secteur} : deux scénarios avec le même nom court`).toBe(defs.length);
+    }
+    expect(scenarioByCode("nova").icon).not.toBe(scenarioByCode("nova-gamme").icon);
+    expect(scenarioByCode("nova-gamme").shortName).toContain("gamme");
+  });
+});
+
+describe("les familles de scénarios : un produit ou la gamme, selon le niveau", () => {
+  it("NOVA et MAILLE & CO se présentent en une seule tuile, et le niveau choisit la variante", async () => {
+    const { SCENARIO_CHOICES, SCENARIO_FAMILIES, scenarioCodeForLevel } = await import("../../src/config/scenarios/registry");
+    const codes = SCENARIO_CHOICES.map((d) => d.code);
+    expect(codes).toContain("nova");
+    expect(codes).toContain("boutique");
+    expect(codes).not.toContain("nova-gamme");
+    expect(codes).not.toContain("boutique-mono");
+    // Chaque famille : sa tête est proposée, ses deux variantes existent au registre.
+    for (const f of SCENARIO_FAMILIES) {
+      expect(codes).toContain(f.head);
+      expect(scenarioByCode(f.mono).code).toBe(f.mono);
+      expect(scenarioByCode(f.gamme).code).toBe(f.gamme);
+      expect(scenarioByCode(f.mono).scenario.products).toBeUndefined();
+      expect(scenarioByCode(f.gamme).scenario.products?.length ?? 0).toBeGreaterThan(1);
+      expect(scenarioByCode(f.mono).sector).toBe(scenarioByCode(f.gamme).sector);
+    }
+    // NOVA : une enceinte jusqu'au niveau 3, la gamme à partir du 4 (la R&D s'ouvre).
+    expect(scenarioCodeForLevel("nova", 1)).toBe("nova");
+    expect(scenarioCodeForLevel("nova", 3)).toBe("nova");
+    expect(scenarioCodeForLevel("nova", 4)).toBe("nova-gamme");
+    expect(scenarioCodeForLevel("nova", 6)).toBe("nova-gamme");
+    // Le code d'une variante répond à la même règle : demander la gamme à un niveau bas donne le mono.
+    expect(scenarioCodeForLevel("nova-gamme", 2)).toBe("nova");
+    // MAILLE & CO : un article jusqu'au niveau 2, la gamme à partir du 3.
+    expect(scenarioCodeForLevel("boutique", 1)).toBe("boutique-mono");
+    expect(scenarioCodeForLevel("boutique", 2)).toBe("boutique-mono");
+    expect(scenarioCodeForLevel("boutique", 3)).toBe("boutique");
+    expect(scenarioCodeForLevel("boutique-mono", 5)).toBe("boutique");
+    // L'ESCALE : une nuitée à prix moyen jusqu'au niveau 3, les trois chambres à partir du 4.
+    expect(scenarioCodeForLevel("hotel", 3)).toBe("hotel");
+    expect(scenarioCodeForLevel("hotel", 4)).toBe("hotel-gamme");
+    expect(codes).not.toContain("hotel-gamme");
+    // ATLAS CONSEIL : une journée à taux moyen jusqu'au niveau 3, les trois offres à partir du 4.
+    expect(scenarioCodeForLevel("conseil", 3)).toBe("conseil");
+    expect(scenarioCodeForLevel("conseil", 4)).toBe("conseil-gamme");
+    expect(scenarioCodeForLevel("conseil-gamme", 2)).toBe("conseil");
+    expect(codes).not.toContain("conseil-gamme");
+    // LA TABLE D'AUGUSTIN : un seul ticket moyen jusqu'au niveau 3, les quatre offres à partir du 4.
+    expect(scenarioCodeForLevel("bistrot", 3)).toBe("bistrot");
+    expect(scenarioCodeForLevel("bistrot", 4)).toBe("bistrot-gamme");
+    expect(codes).not.toContain("bistrot-gamme");
+    // PIXEL & CO : une commande à panier moyen jusqu'au niveau 3, les quatre rayons à partir du 4.
+    expect(scenarioCodeForLevel("ecommerce", 3)).toBe("ecommerce");
+    expect(scenarioCodeForLevel("ecommerce", 4)).toBe("ecommerce-gamme");
+    expect(codes).not.toContain("ecommerce-gamme");
+    // Sans niveau : le plus simple. Hors famille : le code tel quel.
+    expect(scenarioCodeForLevel("nova", undefined)).toBe("nova");
+    expect(scenarioCodeForLevel("fitness", 6)).toBe("fitness");
+    expect(scenarioCodeForLevel("scenario-enseignant-inconnu", 6)).toBe("scenario-enseignant-inconnu");
+    // Une famille ne peut ouvrir la gamme qu'à un niveau qui existe.
+    for (const f of SCENARIO_FAMILIES) {
+      expect(f.gammeFromLevel).toBeGreaterThan(1);
+      expect(f.gammeFromLevel).toBeLessThanOrEqual(6);
+    }
+  });
+});
+
+describe("les coûts d'une unité vendue restent plausibles", () => {
+  it("le coût variable reste sous le prix usuel, et aucun fournisseur ne le fait tomber sous un plancher", async () => {
+    // ATLAS CONSEIL affichait « Réseau de freelances · achat 48,40 € » pour
+    // une journée de consultant : le mécanisme fournisseur multipliait les
+    // frais de mission, et le dossier appelait « achat » ce qui n'en est pas
+    // un. Un fournisseur qui divise par deux ou triple un coût d'achat ne
+    // décrit plus une entreprise.
+    const { toGamme, suppliersOf } = await import("../../src/engine/gamme");
+    for (const d of SCENARIOS) {
+      for (const p of toGamme(d.scenario)) {
+        const dominant = [...p.market.segments].sort((a, b) => b.size - a.size)[0]!;
+        const variable = p.materialCostPerUnit + p.otherVariableCostPerUnit;
+        expect(variable, `${d.code}/${p.code} : coût variable ${variable} ≥ prix usuel ${dominant.refPrice}`).toBeLessThan(dominant.refPrice);
+        for (const s of suppliersOf(p, d.scenario) ?? []) {
+          expect(s.costMultiplier, `${d.code}/${p.code}/${s.code} : ×${s.costMultiplier}`).toBeGreaterThanOrEqual(0.5);
+          expect(s.costMultiplier, `${d.code}/${p.code}/${s.code} : ×${s.costMultiplier}`).toBeLessThanOrEqual(2);
+          expect(p.materialCostPerUnit * s.costMultiplier + p.otherVariableCostPerUnit, `${d.code}/${p.code}/${s.code}`).toBeLessThan(dominant.refPrice);
+        }
+      }
+      // L'unité de temps de travail, quand elle est déclarée, est l'une des deux connues.
+      if (d.vocabulary.laborTimeUnit !== undefined) expect(["heure", "jour"]).toContain(d.vocabulary.laborTimeUnit);
+    }
+    // Le conseil compte des jours, et ses « fournisseurs » sont des politiques de mission, pas des journées à 50 €.
+    const conseil = scenarioByCode("conseil");
+    expect(conseil.vocabulary.laborTimeUnit).toBe("jour");
+    for (const s of conseil.scenario.suppliers ?? []) {
+      expect(s.name).not.toMatch(/freelance|expert/i);
     }
   });
 });

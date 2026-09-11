@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SCENARIOS, SECTOR_LABELS, type ScenarioDefinition } from "@/config/scenarios/registry";
+import { SCENARIO_CHOICES, SECTOR_LABELS, familyOf, type ScenarioDefinition } from "@/config/scenarios/registry";
 import {
-  ACCENTS_SECTEUR as ACCENTS,
-  EMBLEMES_SECTEUR as EMOJIS,
+  accentsDe,
+  emblemeDe,
   nomEntreprise as nomSeul,
   promesseEntreprise as promesse,
 } from "@/config/scenarios/presentation";
 
 export const metadata: Metadata = {
-  title: `Les ${SCENARIOS.length} entreprises · BUSINESS ARENA`,
-  description: `Un atelier, un hôtel, un bistrot, un chantier, une flotte de camions. ${SCENARIOS.length} métiers, ${SCENARIOS.length} contraintes, ${SCENARIOS.length} façons de perdre de l'argent.`,
+  alternates: { canonical: "/entreprises" },
+  title: `${SCENARIO_CHOICES.length} entreprises jouables`,
+  description: `Un atelier, un hôtel, un bistrot, un chantier, une flotte de camions. ${SCENARIO_CHOICES.length} métiers, ${SCENARIO_CHOICES.length} contraintes, ${SCENARIO_CHOICES.length} façons de perdre de l'argent.`,
 };
 
 /**
@@ -28,7 +29,8 @@ export const metadata: Metadata = {
  */
 
 function Fiche({ d }: { d: ScenarioDefinition }) {
-  const a = ACCENTS[d.sector];
+  const famille = familyOf(d.code);
+  const a = accentsDe(d);
   const v = d.vocabulary;
   return (
     <article
@@ -43,14 +45,14 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
       <div className="relative p-6">
         <div className="flex flex-wrap items-center gap-3">
           <span className="text-2xl" aria-hidden>
-            {EMOJIS[d.sector]}
+            {emblemeDe(d)}
           </span>
           <span
-            className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider ${a.puce}`}
+            className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider ${a.puce}`}
           >
             {SECTOR_LABELS[d.sector]}
           </span>
-          <span className="text-[11px] uppercase tracking-wider text-slate-600">
+          <span className="text-xs uppercase tracking-wider text-slate-600">
             {d.situations.length} situations · {d.bots.length} concurrents
           </span>
         </div>
@@ -58,6 +60,14 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
         <h2 className="mt-3 text-2xl font-bold tracking-tight text-slate-50">{nomSeul(d)}</h2>
         <p className={`text-sm font-medium ${a.texte}`}>{promesse(d) ?? d.tagline}</p>
         <p className="mt-3 text-sm leading-relaxed text-slate-400">{d.briefing}</p>
+        {famille ? (
+          // Le même métier en un produit ou en gamme : c'est le niveau de
+          // difficulté qui décide, et la fiche le dit avant qu'on ne choisisse.
+          <p className="mt-3 rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-sm leading-relaxed text-slate-300">
+            Jusqu&apos;au niveau {famille.gammeFromLevel - 1}, {famille.monoLabel} ; à partir du niveau{" "}
+            {famille.gammeFromLevel}, {famille.gammeLabel}.
+          </p>
+        ) : null}
 
         {/* La carte d'identité du métier : ce qui change vraiment d'un secteur
             à l'autre, et que le décor seul ne dit pas. */}
@@ -69,21 +79,21 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
             ["Le goulot", `${v.capacityBottleneckLabel.toLowerCase()} ou équipe`],
           ].map(([label, valeur]) => (
             <div key={label} className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2">
-              <dt className="text-[10px] uppercase tracking-wide text-slate-600">{label}</dt>
+              <dt className="text-xs uppercase tracking-wide text-slate-600">{label}</dt>
               <dd className="mt-0.5 text-sm text-slate-200">{valeur}</dd>
             </div>
           ))}
         </dl>
 
         <div className="mt-5 rounded-xl border border-white/5 bg-slate-950/60 p-4">
-          <p className="text-[10px] uppercase tracking-[0.25em] text-slate-600">
+          <p className="text-xs uppercase tracking-[0.25em] text-slate-600">
             Ce que vous trouvez en arrivant
           </p>
           <p className="mt-2 text-sm leading-relaxed text-slate-300">{d.context}</p>
         </div>
 
         <div className="mt-4 rounded-xl border border-white/10 bg-slate-950 p-4">
-          <p className="text-[10px] uppercase tracking-[0.25em] text-slate-600">
+          <p className="text-xs uppercase tracking-[0.25em] text-slate-600">
             Le premier arbitrage
           </p>
           <p className="mt-2 text-sm font-medium text-slate-100">{d.dilemma.question}</p>
@@ -99,14 +109,14 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
         </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-1.5">
-          <span className="text-[10px] uppercase tracking-wide text-slate-600">
+          <span className="text-xs uppercase tracking-wide text-slate-600">
             Ses indicateurs
           </span>
           {d.kpis.slice(0, 5).map((k) => (
             <span
               key={k.key}
               title={k.hint}
-              className="rounded-full border border-white/10 px-2.5 py-1 text-[11px] text-slate-400"
+              className="rounded-full border border-white/10 px-2.5 py-1 text-xs text-slate-400"
             >
               {k.label}
             </span>
@@ -115,7 +125,7 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
 
         <div className="mt-5 flex flex-wrap items-center gap-4">
           <Link
-            href={`/?secteur=${d.code}#jouer`}
+            href={`/jouer?secteur=${d.code}`}
             className="rounded-lg bg-slate-100 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-white"
           >
             Diriger {nomSeul(d)}
@@ -131,7 +141,7 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
 
 export default function EntreprisesPage() {
   return (
-    <main className="relative overflow-hidden">
+    <main id="main" className="relative overflow-hidden">
       <div
         aria-hidden
         className="pointer-events-none absolute -top-40 left-1/2 h-[420px] w-[900px] -translate-x-1/2 rounded-full bg-amber-400/10 blur-3xl"
@@ -139,7 +149,7 @@ export default function EntreprisesPage() {
 
       <section className="mx-auto max-w-6xl px-6 py-14">
         <p className="text-xs uppercase tracking-[0.3em] text-amber-400">
-          {SCENARIOS.length} métiers · {SCENARIOS.length} contraintes
+          {SCENARIO_CHOICES.length} métiers · {SCENARIO_CHOICES.length} contraintes
         </p>
         <h1 className="mt-4 max-w-3xl text-4xl font-bold leading-tight tracking-tight text-slate-50 sm:text-5xl">
           Toutes les entreprises gagnent de l&apos;argent de la même façon.
@@ -153,13 +163,13 @@ export default function EntreprisesPage() {
           résultat est le même partout ; ce qui change, c&apos;est ce qui vous tue.
         </p>
         <div className="mt-8 flex flex-wrap gap-2">
-          {SCENARIOS.map((d) => (
+          {SCENARIO_CHOICES.map((d) => (
             <a
               key={d.code}
               href={`#${d.code}`}
-              className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition hover:brightness-125 ${ACCENTS[d.sector].puce}`}
+              className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition hover:brightness-125 ${accentsDe(d).puce}`}
             >
-              {EMOJIS[d.sector]} {nomSeul(d)}
+              {emblemeDe(d)} {nomSeul(d)}
             </a>
           ))}
         </div>
@@ -167,7 +177,7 @@ export default function EntreprisesPage() {
 
       <section className="mx-auto max-w-6xl px-6 pb-16">
         <div className="grid gap-6">
-          {SCENARIOS.map((d) => (
+          {SCENARIO_CHOICES.map((d) => (
             <Fiche key={d.code} d={d} />
           ))}
         </div>
@@ -185,7 +195,7 @@ export default function EntreprisesPage() {
           <div className="mt-6 overflow-x-auto">
             <table className="w-full min-w-[720px] text-sm">
               <thead>
-                <tr className="text-left text-[11px] uppercase tracking-wide text-slate-500">
+                <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
                   <th className="pb-2 pr-4 font-medium">Entreprise</th>
                   <th className="pb-2 pr-4 font-medium">Ce qu&apos;elle vend</th>
                   <th className="pb-2 pr-4 font-medium">L&apos;invendu devient</th>
@@ -194,12 +204,12 @@ export default function EntreprisesPage() {
                 </tr>
               </thead>
               <tbody>
-                {SCENARIOS.map((d) => (
+                {SCENARIO_CHOICES.map((d) => (
                   <tr key={d.code} className="border-t border-white/5">
                     <td className="py-2.5 pr-4">
                       <a
                         href={`#${d.code}`}
-                        className={`font-medium ${ACCENTS[d.sector].texte} underline-offset-4 hover:underline`}
+                        className={`font-medium ${accentsDe(d).texte} underline-offset-4 hover:underline`}
                       >
                         {nomSeul(d)}
                       </a>
@@ -237,7 +247,7 @@ export default function EntreprisesPage() {
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Link
-            href="/#jouer"
+            href="/jouer"
             className="rounded-lg bg-amber-500 px-6 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400"
           >
             Tester le simulateur

@@ -1,4 +1,5 @@
 import type { EngineScenarioConfig } from "../../engine/types";
+import { mapGammeSegments } from "../../engine/gamme";
 
 /**
  * Dimensionnement du marché selon la taille de la classe.
@@ -51,14 +52,11 @@ export function applyMarketScale(
 ): EngineScenarioConfig {
   const facteur = facteurDeMarche(concurrents);
   if (facteur === 1) return scenario;
-  return {
-    ...scenario,
-    market: {
-      ...scenario.market,
-      segments: scenario.market.segments.map((s) => ({
-        ...s,
-        size: Math.round(s.size * facteur),
-      })),
-    },
-  };
+  // En gamme, chaque produit porte son marché : il est dimensionné comme
+  // celui du scénario, sans quoi la classe jouerait sur des segments de
+  // calibration pendant que le moteur ignore `market`.
+  return mapGammeSegments(scenario, (s) => ({
+    ...s,
+    size: Math.round(s.size * facteur),
+  }));
 }

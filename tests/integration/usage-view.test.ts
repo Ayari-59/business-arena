@@ -73,7 +73,9 @@ beforeAll(async () => {
 
   // Deux parties pour l'enseignante, dans deux secteurs différents.
   novaGameId = await createSoloGame(teacherId, "quarter", 3);
-  const boutiqueId = await createSoloGame(teacherId, "quarter", 3, undefined, false, "boutique");
+  // Niveau 3 : MAILLE & CO se joue en gamme à partir de là ; sans niveau, la
+  // famille donnerait la boutique en un seul article (« boutique-mono »).
+  const boutiqueId = await createSoloGame(teacherId, "quarter", 3, 3, false, "boutique");
   await setQuizMode({ gameId: novaGameId, teacherId, mode: "model" });
 
   // NOVA : trois indices ouverts et un diagnostic à moitié juste.

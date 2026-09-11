@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import { SiteLogo } from "@/components/site-logo";
 
 export const metadata: Metadata = {
-  title: "Guide de prise en main · BUSINESS ARENA",
+  alternates: { canonical: "/guide" },
+  title: "Guide de prise en main",
   description:
     "Démarrer en 2 minutes : lancer une partie, rejoindre une classe, animer un tour, tirer les cartes événements et lire ses résultats.",
 };
@@ -14,6 +15,7 @@ const SECTIONS = [
   { id: "demarrer", label: "⚡ En 2 minutes" },
   { id: "eleves", label: "🎮 Côté élèves" },
   { id: "enseignants", label: "🧑‍🏫 Côté enseignants" },
+  { id: "concours", label: "🏆 Les concours" },
   { id: "cartes", label: "🃏 Les cartes" },
   { id: "bpi", label: "📊 Le score BPI" },
   { id: "etablissements", label: "🏛️ Établissements" },
@@ -56,7 +58,7 @@ function Section({
 
 export default function GuidePage() {
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100">
+    <main id="main" className="min-h-screen bg-slate-950 text-slate-100">
       <nav className="mx-auto flex max-w-4xl items-center justify-between px-6 py-5">
         <Link href="/">
           <SiteLogo />
@@ -72,7 +74,7 @@ export default function GuidePage() {
             Enseignants
           </Link>
           <Link
-            href="/"
+            href="/jouer"
             className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-300"
           >
             Jouer
@@ -114,7 +116,7 @@ export default function GuidePage() {
             <div className="rounded-xl border border-white/10 bg-slate-950 p-5">
               <p className="text-sm font-semibold text-amber-300">Je veux essayer, tout de suite</p>
               <p className="mt-2 text-sm leading-relaxed text-slate-400">
-                Depuis l&apos;<Link href="/" className="text-amber-300 underline-offset-4 hover:underline">accueil</Link>,
+                Depuis la page <Link href="/jouer" className="text-amber-300 underline-offset-4 hover:underline">Jouer</Link>,
                 choisissez votre secteur (atelier, boutique, hôtel, restaurant, cabinet de
                 conseil, boutique en ligne ou salle de sport), la périodicité et le nombre de
                 concurrents, puis{" "}
@@ -232,7 +234,45 @@ export default function GuidePage() {
               Créez un concours : inscriptions par code, groupes tirés au sort (tirage seedé,
               auditable), parties en mode compétition : décisions verrouillées après validation,
               indices limités au niveau 3, aucun tirage manuel de cartes. Qualification au BPI,
-              finale, podium.
+              finale, podium. Le déroulé complet est{" "}
+              <a href="#concours" className="text-amber-300 underline-offset-4 hover:underline">
+                décrit ci-dessous
+              </a>
+              .
+            </Step>
+          </ol>
+        </Section>
+
+        <Section
+          id="concours"
+          title="🏆 Les concours : un championnat entre équipes"
+          intro="Un concours enchaîne quatre étapes. L'enseignant l'organise depuis son espace ; les équipes s'inscrivent sur /compete avec le code qu'il leur donne."
+        >
+          <ol className="space-y-5">
+            <Step n={1} title="Inscriptions">
+              L&apos;enseignant crée le concours (périodicité, équipes par groupe, qualifiés par
+              groupe) et obtient un <strong className="text-slate-200">code à 6 caractères</strong>.
+              Chaque équipe s&apos;inscrit sur /compete avec ce code et le nom de son équipe ; les
+              coéquipiers rejoignent en saisissant exactement le même nom (2 à 6 joueurs par
+              équipe, 32 équipes au plus). Un joueur déjà inscrit qui ressaisit le code retrouve son
+              équipe.
+            </Step>
+            <Step n={2} title="Qualifications">
+              L&apos;enseignant clôt les inscriptions : les équipes sont tirées au sort dans des
+              groupes de la taille choisie (tirage seedé, rejouable pour audit). Chaque groupe
+              joue une partie complète en <strong className="text-slate-200">mode compétition</strong> :
+              décisions verrouillées après validation, indices limités aux niveaux 1 à 3, aucun
+              tirage manuel de cartes. L&apos;enseignant clôt les tours de chaque partie depuis son
+              pilotage habituel.
+            </Step>
+            <Step n={3} title="Finale">
+              Quand toutes les parties de qualification sont terminées, les meilleures équipes de
+              chaque groupe au <Link href="#bpi" className="text-amber-300 underline-offset-4 hover:underline">score BPI</Link>{" "}
+              se qualifient. Elles jouent une seule partie, aux mêmes règles.
+            </Step>
+            <Step n={4} title="Podium">
+              À la fin de la finale, l&apos;enseignant proclame le podium : or, argent, bronze au
+              classement BPI. Les équipes le voient sur leur page du concours.
             </Step>
           </ol>
         </Section>
@@ -276,12 +316,12 @@ export default function GuidePage() {
         <Section
           id="bpi"
           title="📊 Le Business Performance Index"
-          intro="Le classement ne récompense pas que le profit : le BPI (0-100) pondère 7 dimensions."
+          intro="Le classement ne récompense pas que le profit : le BPI (0-100) pondère 6 dimensions."
         >
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
+                <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
                   <th className="pb-2 pr-3 font-medium">Dimension</th>
                   <th className="pb-2 pr-3 text-right font-medium">Poids</th>
                   <th className="pb-2 font-medium">Ce qu&apos;elle mesure</th>
@@ -290,12 +330,11 @@ export default function GuidePage() {
               <tbody className="text-slate-300">
                 {[
                   ["Économique", "30 %", "résultat d'exploitation, chiffre d'affaires"],
-                  ["Financière", "20 %", "trésorerie nette, équilibre FRNG/BFR"],
+                  ["Financière", "20 %", "variation du résultat net (une perte plafonne à 20)"],
                   ["Commerciale", "15 %", "part de marché, service de la demande"],
-                  ["Opérationnelle", "10 %", "utilisation des capacités, ruptures"],
+                  ["Pilotage", "20 %", "exécution (capacités, ruptures) et cohérence des décisions prises"],
                   ["Rentabilité", "10 %", "rentabilité des capitaux (ROE)"],
-                  ["Stratégie", "10 %", "cohérence et anticipation des décisions"],
-                  ["Maîtrise des modèles", "5 %", "bons diagnostics, QCM réussis, sobriété en indices"],
+                  ["Maîtrise décisionnelle", "5 %", "situations rendues : bon diagnostic et bon modèle"],
                 ].map(([d, w, m]) => (
                   <tr key={d} className="border-t border-white/5">
                     <td className="py-2 pr-3">{d}</td>
@@ -384,7 +423,7 @@ export default function GuidePage() {
           </p>
           <div className="mt-5 flex flex-wrap justify-center gap-3">
             <Link
-              href="/"
+              href="/jouer"
               className="rounded-lg bg-amber-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-300"
             >
               Jouer maintenant

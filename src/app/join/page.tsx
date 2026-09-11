@@ -1,9 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { JoinForm } from "@/components/join-form";
 
+/** Page d'entrée par code : un titre pour l'onglet, rien pour les moteurs. */
+export const metadata: Metadata = {
+  title: "Rejoindre une partie",
+  robots: { index: false, follow: false },
+};
+
 export default function JoinPage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
+    <main id="main" className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
       <div className="text-center">
         <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Business Arena</p>
         <h1 className="mt-2 text-3xl font-bold">Rejoindre une partie</h1>
@@ -13,7 +20,7 @@ export default function JoinPage() {
         </p>
       </div>
       <JoinForm />
-      <Link href="/guide" className="text-xs text-slate-500 underline-offset-4 hover:text-slate-300 hover:underline">
+      <Link href="/guide" className="text-xs text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline">
         Première fois ? Consultez le guide de prise en main
       </Link>
     </main>

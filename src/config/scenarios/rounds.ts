@@ -1,4 +1,5 @@
 import type { EngineScenarioConfig } from "../../engine/types";
+import { toGamme } from "../../engine/gamme";
 
 /**
  * Le nombre de tours d'une partie.
@@ -47,11 +48,21 @@ export function applyRoundsCount(
  * semestre le recréait pour trois diplômes à la fois.
  */
 export function tourDuPic(scenario: EngineScenarioConfig): number {
+  // En gamme, la demande du secteur est celle de tous les marchés produits,
+  // chacun avec sa saisonnalité ; en mono-produit, la gamme d'un produit est
+  // le marché du scénario lui-même.
+  const gamme = toGamme(scenario);
   const demandeParTour = Array.from({ length: scenario.roundsCount }, (_, r) =>
-    scenario.market.segments.reduce((total, segment) => {
-      const saison = segment.seasonality?.[r] ?? 1;
-      return total + segment.size * saison;
-    }, 0) * (scenario.market.seasonality?.[r] ?? 1),
+    gamme.reduce(
+      (secteur, produit) =>
+        secteur +
+        produit.market.segments.reduce((total, segment) => {
+          const saison = segment.seasonality?.[r] ?? 1;
+          return total + segment.size * saison;
+        }, 0) *
+          (produit.market.seasonality?.[r] ?? 1),
+      0,
+    ),
   );
   return demandeParTour.indexOf(Math.max(...demandeParTour)) + 1;
 }

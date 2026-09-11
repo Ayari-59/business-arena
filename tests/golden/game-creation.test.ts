@@ -20,7 +20,6 @@ import { companyStates, games, players, rounds, teams, users } from "@/db/schema
 import {
   createSoloGame,
   createClassGame,
-  createGameCore,
 } from "@/services/game-creation.service";
 
 let userId: string;
@@ -204,7 +203,7 @@ describe("3 — pipeline de création", () => {
     const game = (
       await db.select().from(games).where(eq(games.id, gameId))
     )[0]!;
-    const snapshot = game.scenarioSnapshot as Record<string, unknown>;
+    const snapshot = game.scenarioSnapshot;
 
     expect(snapshot).toHaveProperty("roundsCount");
     expect(snapshot).toHaveProperty("market");

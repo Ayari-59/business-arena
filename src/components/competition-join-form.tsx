@@ -1,16 +1,30 @@
 "use client";
 
-import { useActionState } from "react";
 import { joinCompetitionAction, type JoinCompetitionState } from "@/app/compete/actions";
+import { GuardError, useGuardedAction } from "@/components/guarded-action";
+import { messageDejaInscrit } from "@/config/concours";
 
-const initial: JoinCompetitionState = { error: null };
+const initial: JoinCompetitionState = { error: null, dejaInscrit: null };
 
-export function CompetitionJoinForm() {
-  const [state, formAction, pending] = useActionState(joinCompetitionAction, initial);
+export function CompetitionJoinForm({
+  initialState = initial,
+  defaultCode = "",
+}: {
+  /** État de départ : celui d'un formulaire vierge, sauf pour un rendu de test. */
+  initialState?: JoinCompetitionState;
+  /** Code prérempli quand on arrive depuis la page publique d'un concours. */
+  defaultCode?: string;
+}) {
+  const { state, formAction, pending, formRef, guardError } = useGuardedAction(
+    joinCompetitionAction,
+    initialState,
+    { label: "inscription à un concours" },
+  );
   return (
     <form
+      ref={formRef}
       action={formAction}
-      className="w-full max-w-sm space-y-4 rounded-2xl border border-white/10 bg-slate-900 p-6"
+      className="w-full max-w-sm space-y-4 rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-6"
     >
       <label className="block">
         <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
@@ -19,6 +33,7 @@ export function CompetitionJoinForm() {
         <input
           name="code"
           required
+          defaultValue={defaultCode}
           autoCapitalize="characters"
           autoComplete="off"
           placeholder="EX : R4KT7B"
@@ -53,6 +68,21 @@ export function CompetitionJoinForm() {
           {state.error}
         </p>
       ) : null}
+      {state.dejaInscrit ? (
+        <div
+          role="status"
+          className="space-y-2 rounded-lg border border-amber-400/30 bg-amber-950/20 px-3 py-2 text-sm text-amber-200"
+        >
+          <p>{messageDejaInscrit(state.dejaInscrit.teamLabel)}</p>
+          <a
+            href={`/compete/${state.dejaInscrit.competitionId}`}
+            className="inline-block rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300"
+          >
+            Ouvrir mon équipe →
+          </a>
+        </div>
+      ) : null}
+      <GuardError message={guardError} />
       <button
         type="submit"
         disabled={pending}

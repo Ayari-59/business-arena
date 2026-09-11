@@ -1,8 +1,8 @@
+import { scenarioByCode } from "../../src/config/scenarios/registry";
 import { describe, expect, it } from "vitest";
 import { botDecisions, neutralDecisions } from "../../src/engine/bots";
 import type { BotProfile, BotContext } from "../../src/engine/bots";
 import { novaScenario, novaCompany } from "../../src/config/scenarios/nova";
-import type { RoundDecisions } from "../../src/engine/types";
 
 /**
  * Tests unitaires des bots : vérifient le déterminisme (même input + même seed
@@ -120,4 +120,24 @@ describe("chaque profil produit des décisions valides", () => {
       expect(d.maintenanceBudget).toBeGreaterThanOrEqual(0);
     });
   }
+});
+
+describe("le supplément de prix du premium est celui du métier", () => {
+  it("vaut 30 % par défaut, et ce que le scénario déclare sinon", () => {
+    const batiment = scenarioByCode("batiment");
+    const transport = scenarioByCode("transport");
+    expect(batiment.scenario.bots?.premiumPriceRatio).toBe(1.15);
+    expect(transport.scenario.bots?.premiumPriceRatio).toBe(1.1);
+    for (const d of [batiment, transport]) {
+      const ref = [...d.scenario.market.segments].sort((a, b) => b.size - a.size)[0]!.refPrice;
+      const premium = botDecisions("premium", {
+        scenario: d.scenario,
+        state: d.company("t", "T", "bot", "premium"),
+        roundIndex: 1,
+      });
+      expect(premium.price).toBeCloseTo(ref * d.scenario.bots!.premiumPriceRatio!, 6);
+    }
+    // Les autres métiers gardent le supplément historique.
+    expect(scenarioByCode("nova").scenario.bots).toBeUndefined();
+  });
 });

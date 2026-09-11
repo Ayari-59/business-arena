@@ -1,10 +1,23 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { playRoundAction, type PlayRoundState } from "@/app/arena/[gameId]/actions";
+import { GuardError, useGuardedAction } from "@/components/guarded-action";
+import {
+  pivotFieldsFor,
+  pivotsNonTouches,
+  productFieldName,
+  readProductFields,
+  type PivotField,
+  type PivotFieldInfo,
+} from "@/config/decision-source";
+import { scalarsOfGamme } from "@/engine/gamme";
 import type { RoundDecisions } from "@/engine/types";
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
-import { formatEuro } from "@/lib/format";
+import type { GameView } from "@/services/game-view.service";
+import { formatEuro, formatEuroCents, formatUnits } from "@/lib/format";
+import { COMMUNICATION_AXIS_LABELS } from "@/engine/market/communication";
+import { SimulationProgress } from "@/components/simulation-progress";
 
 const initialState: PlayRoundState = { error: null };
 
@@ -42,10 +55,11 @@ function EquipmentPanel({
   }, 0);
 
   return (
-    <fieldset className="rounded-lg border border-indigo-400/25 bg-indigo-950/20 p-4">
-      <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-indigo-300">
-        🏭 Parc machines · investir ou céder
-      </legend>
+    <Family
+      legend="🏭 Parc machines · investir ou céder"
+      tone="border-indigo-400/25 bg-indigo-950/20"
+      legendClass="text-xs font-semibold uppercase tracking-wide text-indigo-300"
+    >
       <div className="mb-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
         <span className="text-slate-400">Capacité en service</span>
         <span className="text-right text-slate-200">
@@ -70,11 +84,11 @@ function EquipmentPanel({
           const sell = sellQty[t.code] ?? 0;
           const avgBook = owned > 0 ? (fl?.bookValue ?? 0) / owned : 0;
           return (
-            <div key={t.code} className="rounded-lg border border-white/5 bg-slate-900 px-3 py-2.5">
+            <div key={t.code} className="rounded-lg border border-white/5 bg-slate-900 px-2.5 py-2">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <span className="text-sm font-medium text-slate-200">{t.name}</span>
-                  <span className="ml-2 text-xs text-slate-500">
+                  <span className="ml-2 text-xs text-slate-400">
                     {Math.round(t.capacityPerUnit).toLocaleString("fr-FR")} {vocabulary.perRoundLabel}/u
                   </span>
                 </div>
@@ -82,7 +96,7 @@ function EquipmentPanel({
                   {owned} en service{pendCount > 0 ? ` + ${pendCount} en attente` : ""}
                 </span>
               </div>
-              <div className="mt-2 flex flex-wrap gap-3 text-[11px] text-slate-500">
+              <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-400">
                 <span>{t.costPerUnit.toLocaleString("fr-FR")} €/u</span>
                 <span>Amorti en {Math.round(t.depreciationRounds)} tours</span>
                 <span>Maintenance ×{t.maintenanceMultiplier.toLocaleString("fr-FR")}</span>
@@ -92,7 +106,7 @@ function EquipmentPanel({
               </div>
               <div className="mt-2 grid grid-cols-2 gap-3">
                 <label className="block">
-                  <span className="text-[10px] font-medium uppercase tracking-wide text-emerald-400">
+                  <span className="text-xs font-medium uppercase tracking-wide text-emerald-400">
                     Acheter
                   </span>
                   <span className="mt-0.5 flex items-center gap-1.5 rounded border border-white/10 bg-slate-950 px-2 py-1 focus-within:border-emerald-400/60">
@@ -109,16 +123,16 @@ function EquipmentPanel({
                       }
                       className="w-full bg-transparent text-sm tabular-nums text-slate-100 outline-none"
                     />
-                    <span className="text-[10px] text-slate-500">max {t.maxPerRound}</span>
+                    <span className="text-xs text-slate-400">max {t.maxPerRound}</span>
                   </span>
                   {buy > 0 ? (
-                    <span className="mt-0.5 block text-[10px] text-emerald-300/80">
+                    <span className="mt-0.5 block text-xs text-emerald-300/80">
                       = {(buy * t.costPerUnit).toLocaleString("fr-FR")} €
                     </span>
                   ) : null}
                 </label>
                 <label className="block">
-                  <span className="text-[10px] font-medium uppercase tracking-wide text-red-400">
+                  <span className="text-xs font-medium uppercase tracking-wide text-red-400">
                     Vendre
                   </span>
                   <span className="mt-0.5 flex items-center gap-1.5 rounded border border-white/10 bg-slate-950 px-2 py-1 focus-within:border-red-400/60">
@@ -135,10 +149,10 @@ function EquipmentPanel({
                       }
                       className="w-full bg-transparent text-sm tabular-nums text-slate-100 outline-none"
                     />
-                    <span className="text-[10px] text-slate-500">max {owned}</span>
+                    <span className="text-xs text-slate-400">max {owned}</span>
                   </span>
                   {sell > 0 ? (
-                    <span className="mt-0.5 block text-[10px] text-red-300/80">
+                    <span className="mt-0.5 block text-xs text-red-300/80">
                       = {Math.round(sell * avgBook * t.resaleRatio).toLocaleString("fr-FR")} € (VNC {Math.round(sell * avgBook).toLocaleString("fr-FR")} €)
                     </span>
                   ) : null}
@@ -178,12 +192,12 @@ function EquipmentPanel({
           </div>
         </div>
       ) : null}
-      <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+      <p className="mt-3 text-xs leading-relaxed text-slate-400">
         Les machines achetées entrent en service au tour suivant. La revente se fait à la
         valeur de marché (VNC × ratio de revente) : vendre en dessous de la VNC génère une
         perte de cession, un coût bien réel que le résultat encaisse.
       </p>
-    </fieldset>
+    </Family>
   );
 }
 
@@ -215,9 +229,9 @@ function Field({
           required
           className="w-full bg-transparent text-sm text-slate-100 outline-none"
         />
-        <span className="text-xs text-slate-500">{suffix}</span>
+        <span className="text-xs text-slate-400">{suffix}</span>
       </span>
-      {hint ? <span className="mt-1 block text-xs text-slate-500">{hint}</span> : null}
+      {hint ? <span className="mt-1 block text-[13px] text-slate-400">{hint}</span> : null}
     </label>
   );
 }
@@ -245,12 +259,427 @@ function OptionalField({
           inputMode="decimal"
           name={name}
           placeholder={placeholder}
-          className="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-600"
+          className="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500"
         />
-        <span className="text-xs text-slate-500">{suffix}</span>
+        <span className="text-xs text-slate-400">{suffix}</span>
       </span>
-      {hint ? <span className="mt-1 block text-xs text-slate-500">{hint}</span> : null}
+      {hint ? <span className="mt-1 block text-[13px] text-slate-400">{hint}</span> : null}
     </label>
+  );
+}
+
+/**
+ * GAMME : un prix, un volume, un marketing — et, quand le niveau et le
+ * scénario les ouvrent, un budget qualité et un fournisseur — PAR RÉFÉRENCE.
+ * Chaque ligne rappelle ce qu'il faut pour décider — le prix usuel de la
+ * clientèle dominante, le coût variable, le stock en réserve et la saison du
+ * tour —, parce que c'est ici que se joue le mix. Les scalaires historiques
+ * (prix moyen, volume total, qualité totale, fournisseur dominant) sont
+ * dérivés côté serveur : aucun champ scalaire n'est envoyé pour ces décisions.
+ */
+/** Le multiplicateur d'un fournisseur, lu par rapport au fournisseur de RÉFÉRENCE de son catalogue. */
+export function ecartFournisseur(
+  s: { costMultiplier: number },
+  reference: { costMultiplier: number } | undefined,
+): string {
+  const ratio = reference && reference.costMultiplier > 0 ? s.costMultiplier / reference.costMultiplier : s.costMultiplier;
+  const pct = Math.round((ratio - 1) * 100);
+  return pct === 0 ? "coût de référence" : `${pct > 0 ? "+" : "−"}${Math.abs(pct)} %`;
+}
+
+/**
+ * Le lien entre le façonnier et le prix : ce que la référence coûte à
+ * l'achat chez le façonnier choisi, ce qu'elle coûte en tout (coût variable),
+ * ce qu'il en reste au prix saisi (marge unitaire) et le coefficient
+ * multiplicateur (prix / coût d'achat), la règle de pouce du commerce.
+ */
+function LienPrixFaconnier({
+  price,
+  achat,
+  autres,
+}: {
+  price: number;
+  achat: number;
+  autres: number;
+}) {
+  const cvu = achat + autres;
+  const marge = price - cvu;
+  const coefficient = achat > 0 ? price / achat : 0;
+  return (
+    <span className="mt-1 block text-xs leading-snug">
+      <span className="text-slate-400">achat </span>
+      <span className="text-slate-200">{formatEuroCents(achat)}</span>
+      <span className="text-slate-400"> · coût variable </span>
+      <span className="text-slate-200">{formatEuroCents(cvu)}</span>
+      <span className="text-slate-400"> · marge </span>
+      <span className={marge < 0 ? "font-medium text-red-400" : "font-medium text-emerald-300"}>
+        {formatEuroCents(marge)}
+      </span>
+      {coefficient > 0 ? (
+        <span className="text-slate-400">
+          {" "}
+          · coef. {coefficient.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
+const CELLULE_SAISIE =
+  "inline-flex items-center gap-1 rounded-lg border border-white/10 bg-slate-950 px-2 py-1.5 focus-within:border-amber-400/60";
+
+/** Une référence en développement ne se vend ni ne se produit : rien à saisir. */
+function enDeveloppement(p: NonNullable<GameView["gamme"]>[number]): boolean {
+  const dev = p.rd?.development;
+  return !!dev && !dev.available;
+}
+
+/** La pastille d'une référence en développement, à côté de son nom. */
+function EnDeveloppement() {
+  return (
+    <span className="ml-2 inline-block whitespace-nowrap rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-0.5 align-middle text-xs font-medium text-amber-300">
+      🔬 en développement
+    </span>
+  );
+}
+
+/**
+ * Le tableau des VENTES de la gamme : le prix, le volume et le façonnier de
+ * chaque référence. Les budgets (marketing, qualité, R&D) vivent dans le
+ * tableau des budgets, avec l'entretien : la fenêtre des ventes ne porte que
+ * ce qui fait le chiffre d'affaires et la marge.
+ */
+function GammeVentes({
+  gamme,
+  defaults,
+  vocabulary: v,
+}: {
+  gamme: NonNullable<GameView["gamme"]>;
+  defaults: RoundDecisions;
+  vocabulary: ScenarioVocabulary;
+}) {
+  const avecFournisseurs = gamme.some((p) => p.suppliers);
+  // Le prix saisi et le façonnier choisi de chaque référence, pour montrer la
+  // marge en direct : les champs restent non contrôlés (le formulaire les
+  // envoie), on ne fait que les écouter.
+  const [prix, setPrix] = useState<Record<string, number>>(() =>
+    Object.fromEntries(gamme.map((p) => [p.code, defaults.products?.[p.code]?.price ?? p.refPrice])),
+  );
+  const [faconniers, setFaconniers] = useState<Record<string, string | undefined>>(() =>
+    Object.fromEntries(
+      gamme.map((p) => {
+        const own = defaults.products?.[p.code]?.supplierChoice ?? defaults.supplierChoice;
+        const valide = p.suppliers?.some((s) => s.code === own) ? own : p.suppliers?.[0]?.code;
+        return [p.code, valide];
+      }),
+    ),
+  );
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
+            <th className="w-full pb-2 pr-3 font-medium">Référence</th>
+            <th className="pb-2 pr-3 font-medium">{v.priceLabel}</th>
+            <th className="pb-2 pr-3 font-medium">{v.productionPlanLabel}</th>
+            {avecFournisseurs ? <th className="pb-2 font-medium">Fournisseur</th> : null}
+          </tr>
+        </thead>
+        <tbody>
+          {gamme.map((p) => {
+            const own = defaults.products?.[p.code];
+            const price = own?.price ?? p.refPrice;
+            const plan = Math.round(own?.productionPlan ?? 0);
+            const suppliers = p.suppliers;
+            const reference = suppliers?.[0];
+            const choisi = suppliers?.find((s) => s.code === faconniers[p.code]) ?? reference;
+            const achat = choisi ? choisi.materialCostPerUnit : p.materialCostPerUnit;
+            // Une référence EN DÉVELOPPEMENT ne se vend ni ne se produit : la
+            // ligne le dit, et porte, cachés, des champs neutres pour que la
+            // lecture par référence reste complète.
+            if (enDeveloppement(p)) {
+              return (
+                <tr key={p.code} className="border-t border-white/5 align-middle">
+                  <td className="py-2 pr-3">
+                    <span className="text-sm font-medium text-slate-100">{p.name}</span>
+                    <EnDeveloppement />
+                    <span className="mt-0.5 block text-xs leading-snug text-slate-400">
+                      Rien à vendre tant qu&apos;elle n&apos;est pas bâtie : son financement se décide
+                      dans les budgets du tour, à la R&amp;D.
+                    </span>
+                    <input type="hidden" name={productFieldName(p.code, "price")} value={Math.round(price * 10) / 10} />
+                    <input type="hidden" name={productFieldName(p.code, "productionPlan")} value={0} />
+                    {suppliers && faconniers[p.code] ? (
+                      <input type="hidden" name={productFieldName(p.code, "supplierChoice")} value={faconniers[p.code]} />
+                    ) : null}
+                  </td>
+                  <td className="py-2 pr-3 text-center text-xs text-slate-500" colSpan={2 + (avecFournisseurs ? 1 : 0)}>
+                    —
+                  </td>
+                </tr>
+              );
+            }
+            return (
+              <tr key={p.code} className="border-t border-white/5 align-top">
+                <td className="py-2 pr-3">
+                  <span className="block text-sm font-medium text-slate-100">{p.name}</span>
+                  <span className="mt-0.5 block text-xs leading-snug text-slate-400">
+                    prix usuel {formatEuro(p.refPrice)} · {v.leftoverLabel.toLowerCase()}{" "}
+                    {formatUnits(p.stock)} {v.units}
+                    {Math.abs(p.seasonCoef - 1) > 0.01
+                      ? ` · saison ×${p.seasonCoef.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}`
+                      : ""}
+                  </span>
+                  <LienPrixFaconnier
+                    price={prix[p.code] ?? price}
+                    achat={achat}
+                    autres={p.otherVariableCostPerUnit}
+                  />
+                </td>
+                <td className="py-2 pr-3">
+                  <span className={CELLULE_SAISIE}>
+                    <input
+                      type="number"
+                      name={productFieldName(p.code, "price")}
+                      aria-label={`${v.priceLabel} · ${p.name}`}
+                      defaultValue={Math.round(price * 10) / 10}
+                      onChange={(e) => {
+                        const saisi = Number(e.currentTarget.value.replace(",", "."));
+                        setPrix((etat) => ({ ...etat, [p.code]: Number.isFinite(saisi) ? saisi : 0 }));
+                      }}
+                      step={0.1}
+                      min={0}
+                      required
+                      className="w-20 bg-transparent text-sm text-slate-100 outline-none"
+                    />
+                    <span className="text-xs text-slate-400">€</span>
+                  </span>
+                </td>
+                <td className="py-2 pr-3">
+                  <span className={CELLULE_SAISIE}>
+                    <input
+                      type="number"
+                      name={productFieldName(p.code, "productionPlan")}
+                      aria-label={`${v.productionPlanLabel} · ${p.name}`}
+                      defaultValue={plan}
+                      step={1}
+                      min={0}
+                      required
+                      className="w-20 bg-transparent text-sm text-slate-100 outline-none"
+                    />
+                    <span className="text-xs text-slate-400">{v.units}</span>
+                  </span>
+                </td>
+                {avecFournisseurs ? (
+                  <td className="py-2">
+                    {suppliers ? (
+                      <select
+                        name={productFieldName(p.code, "supplierChoice")}
+                        aria-label={`Fournisseur · ${p.name}`}
+                        defaultValue={faconniers[p.code]}
+                        onChange={(e) => {
+                          const code = e.currentTarget.value;
+                          setFaconniers((etat) => ({ ...etat, [p.code]: code }));
+                        }}
+                        className="w-full min-w-56 rounded-lg border border-white/10 bg-slate-950 px-2 py-1.5 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+                      >
+                        {suppliers.map((s) => (
+                          <option key={s.code} value={s.code}>
+                            {s.name} · {formatEuroCents(s.materialCostPerUnit)}/u ({ecartFournisseur(s, reference)})
+                            {s.qualityBonus !== 0
+                              ? ` · qualité ${s.qualityBonus > 0 ? "+" : "−"}${Math.abs(Math.round(s.qualityBonus * 100))} %`
+                              : ""}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className="text-xs text-slate-400">—</span>
+                    )}
+                  </td>
+                ) : null}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+      <p className="mt-2 text-xs leading-relaxed text-slate-400">
+        Les références partagent la même réserve : si la somme des volumes dépasse votre
+        capacité, toutes sont réduites dans la même proportion. Le prix se fixe référence
+        par référence.
+        {avecFournisseurs
+          ? " Chaque référence a ses façonniers et le prix d'achat est celui de la référence chez chacun : la marge affichée est le prix saisi moins ce coût d'achat et les autres frais variables, le coefficient est le prix divisé par le coût d'achat. Le bonus de qualité, le délai de règlement et le risque de rupture du façonnier ne touchent que la référence qu'il fournit."
+          : ""}
+      </p>
+    </div>
+  );
+}
+
+/**
+ * Le tableau des BUDGETS de la gamme : le marketing, la qualité et la R&D de
+ * chaque référence, une ligne par référence. Il vit dans la famille des
+ * budgets du tour, avec l'entretien, pour que les quatre budgets se décident
+ * au même endroit et que la fenêtre des ventes reste légère.
+ */
+function GammeBudgets({
+  gamme,
+  defaults,
+  quality,
+  rd,
+  roundIndex,
+}: {
+  gamme: NonNullable<GameView["gamme"]>;
+  defaults: RoundDecisions;
+  /** Le budget qualité est-il ouvert à ce niveau ? */
+  quality: boolean;
+  /** La R&D est-elle ouverte (niveau ET scénario) ? */
+  rd: boolean;
+  roundIndex: number;
+}) {
+  const n = gamme.length;
+  const avecRd = rd && gamme.some((p) => p.rd);
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
+            <th className="w-full pb-2 pr-3 font-medium">Référence</th>
+            <th className="pb-2 pr-3 font-medium">Marketing</th>
+            {quality ? <th className="pb-2 pr-3 font-medium">Qualité</th> : null}
+            {avecRd ? <th className="pb-2 font-medium">R&amp;D</th> : null}
+          </tr>
+        </thead>
+        <tbody>
+          {gamme.map((p) => {
+            const own = defaults.products?.[p.code];
+            const marketing = Math.round(own?.marketingBudget ?? defaults.marketingBudget / n);
+            const qualite = Math.round(own?.qualityBudget ?? defaults.qualityBudget / n);
+            const rdDefaut = Math.round(own?.rdBudget ?? 0);
+            const dev = p.rd?.development;
+            const champRd = avecRd ? (
+              <td className="py-2">
+                <span className={CELLULE_SAISIE}>
+                  <input
+                    type="number"
+                    name={productFieldName(p.code, "rdBudget")}
+                    aria-label={`R&D · ${p.name}`}
+                    defaultValue={rdDefaut}
+                    step={1}
+                    min={0}
+                    required
+                    className="w-20 bg-transparent text-sm text-slate-100 outline-none"
+                  />
+                  <span className="text-xs text-slate-400">€</span>
+                </span>
+              </td>
+            ) : null;
+            // Une référence EN DÉVELOPPEMENT ne porte que sa R&D : ni marketing
+            // ni qualité (cachés, à zéro), et la ligne dit où en est son financement.
+            if (dev && !dev.available) {
+              const reste = Math.max(0, dev.cost - dev.invested);
+              const pret = reste <= 0;
+              return (
+                <tr key={p.code} className="border-t border-white/5 align-middle">
+                  <td className="py-2 pr-3">
+                    <span className="text-sm font-medium text-slate-100">{p.name}</span>
+                    <EnDeveloppement />
+                    <span className="mt-0.5 block text-xs leading-snug text-slate-400">
+                      {pret
+                        ? `Financée (${formatEuro(dev.invested)} engagés) : vendable dès le tour ${Math.max(dev.availableFromRound, roundIndex + 1)}.`
+                        : `${formatEuro(dev.invested)} engagés sur ${formatEuro(dev.cost)} : il reste ${formatEuro(reste)} à financer, puis elle se vend dès le tour suivant (au plus tôt le tour ${dev.availableFromRound}).`}
+                    </span>
+                    <input type="hidden" name={productFieldName(p.code, "marketingBudget")} value={0} />
+                    {quality ? <input type="hidden" name={productFieldName(p.code, "qualityBudget")} value={0} /> : null}
+                  </td>
+                  <td className="py-2 pr-3 text-center text-xs text-slate-500" colSpan={1 + (quality ? 1 : 0)}>
+                    —
+                  </td>
+                  {champRd}
+                </tr>
+              );
+            }
+            return (
+              <tr key={p.code} className="border-t border-white/5 align-middle">
+                <td className="py-2 pr-3">
+                  <span className="text-sm font-medium text-slate-100">{p.name}</span>
+                </td>
+                <td className="py-2 pr-3">
+                  <span className={CELLULE_SAISIE}>
+                    <input
+                      type="number"
+                      name={productFieldName(p.code, "marketingBudget")}
+                      aria-label={`Marketing · ${p.name}`}
+                      defaultValue={marketing}
+                      step={1}
+                      min={0}
+                      required
+                      className="w-20 bg-transparent text-sm text-slate-100 outline-none"
+                    />
+                    <span className="text-xs text-slate-400">€</span>
+                  </span>
+                </td>
+                {quality ? (
+                  <td className="py-2 pr-3">
+                    <span className={CELLULE_SAISIE}>
+                      <input
+                        type="number"
+                        name={productFieldName(p.code, "qualityBudget")}
+                        aria-label={`Qualité · ${p.name}`}
+                        defaultValue={qualite}
+                        step={1}
+                        min={0}
+                        required
+                        className="w-20 bg-transparent text-sm text-slate-100 outline-none"
+                      />
+                      <span className="text-xs text-slate-400">€</span>
+                    </span>
+                  </td>
+                ) : null}
+                {champRd}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+      <p className="mt-2 text-xs leading-relaxed text-slate-400">
+        Chaque budget va à la référence qui le reçoit, et se paie le tour même. Le marketing
+        soutient sa demande, et retombe vite si on cesse
+        {quality ? " ; la qualité fait sa qualité perçue" : ""}
+        {avecRd
+          ? " ; la R&D la bâtit quand elle est à développer, puis élève son niveau technique, avec retard, et s'érode si elle cesse"
+          : ""}
+        .
+      </p>
+    </div>
+  );
+}
+
+/**
+ * Une famille de décisions, repliable. L'accordéon des périodes situe le tour ;
+ * ces accordéons rangent les leviers d'UN tour par famille — cœur ouvert,
+ * avancé replié — pour garder le formulaire scannable sans rien cacher au
+ * moteur (un `details` fermé reste dans le DOM et se soumet).
+ */
+function Family({
+  legend,
+  children,
+  defaultOpen = true,
+  tone = "border-white/10 bg-slate-950",
+  legendClass = "text-xs font-semibold uppercase tracking-wide text-slate-400",
+}: {
+  legend: ReactNode;
+  children: ReactNode;
+  defaultOpen?: boolean;
+  tone?: string;
+  legendClass?: string;
+}) {
+  return (
+    <details open={defaultOpen} className={`group rounded-lg border ${tone}`}>
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-1.5 py-2 sm:px-3.5 sm:py-2.5 [&::-webkit-details-marker]:hidden">
+        <span className={legendClass}>{legend}</span>
+        <span className="text-xs text-slate-400 transition-transform group-open:rotate-90">▸</span>
+      </summary>
+      <div className="border-t border-white/10 p-1.5 sm:p-3.5">{children}</div>
+    </details>
   );
 }
 
@@ -259,6 +688,7 @@ export function DecisionForm({
   roundIndex,
   periodName,
   defaults,
+  proposed,
   kind,
   alreadySubmitted,
   insuranceOffer,
@@ -276,11 +706,33 @@ export function DecisionForm({
   equipmentOffer,
   capacityFacts,
   vocabulary,
+  verrou,
+  gamme = null,
+  rdOffer = null,
+  communicationOffer = null,
 }: {
   gameId: string;
+  /** Levier communication du scénario (marque et axe) ; null sans levier. */
+  communicationOffer?: GameView["communicationOffer"];
+  /** Gamme du scénario joué (prix, volume et marketing par référence) ; null en mono-produit. */
+  gamme?: GameView["gamme"];
+  /** Levier R&D du scénario (échelle du budget par tour) ; null sans levier. */
+  rdOffer?: GameView["rdOffer"];
   roundIndex: number;
   periodName: string;
+  /**
+   * Verrou temporel (planning) : message à afficher quand le tour est hors de
+   * sa fenêtre. Null = jouable. Le formulaire reste visible (lecture seule) mais
+   * « Valider » est grisé ; le serveur refuse de toute façon.
+   */
+  verrou?: string | null;
   defaults: RoundDecisions;
+  /**
+   * Les valeurs PROPOSÉES pour ce tour (tour précédent, sinon point de départ
+   * du secteur) : la référence pour dire si un pivot a été touché. Distinct de
+   * `defaults`, qui reprend aussi ce que l'équipe a déjà validé ce tour.
+   */
+  proposed?: RoundDecisions;
   kind: "solo" | "class";
   alreadySubmitted: boolean;
   /** Offre d'assurance du scénario (prime déjà à l'échelle de la périodicité). */
@@ -293,8 +745,10 @@ export function DecisionForm({
     insurance: boolean;
     hr: boolean;
     investment: boolean;
+    rse: boolean;
     placement: boolean;
     dividend: boolean;
+    rd: boolean;
   };
   /** Bénéfices des tours passés non distribués : le plafond du dividende. */
   distributableReserves?: number;
@@ -331,6 +785,8 @@ export function DecisionForm({
     price: number;
     paymentDelayDays: number;
     unitVariableCost: number;
+    /** En gamme : la référence sur laquelle porte la commande. */
+    productName?: string | null;
   } | null;
   /** Catalogue d'études du scénario : l'information a un prix. */
   studiesOffer?: {
@@ -383,13 +839,91 @@ export function DecisionForm({
     bottleneck: "machine" | "labor" | "balanced";
     headcount: number;
     productivity: number;
+    subscription?: {
+      members: number;
+      expectedRetained: number;
+      baseChurnRate: number;
+      refPrice: number;
+    };
   } | null;
 }) {
   const action = playRoundAction.bind(null, gameId);
-  const [state, formAction, pending] = useActionState(action, initialState);
+  const { state, formAction, pending, formRef, guardError } = useGuardedAction(
+    action,
+    initialState,
+    // Pas de délai : la résolution du tour redirige vers les résultats et peut
+    // être longue (démarrage à froid + simulation). Un délai coupait l'attente
+    // et affichait « le serveur n'a pas répondu » juste avant les résultats. Une
+    // vraie erreur d'action reste signalée par `state.error`.
+    { label: "décisions du tour", timeoutMs: Infinity },
+  );
   const reserves = Math.max(0, distributableReserves ?? 0);
+
+  // Les pivots (prix, volume) validés sans avoir été touchés : on le dit avant
+  // d'envoyer, une fois. « Oui » confirme et envoie ; « Non » ramène au champ.
+  const reference = proposed ?? defaults;
+  const [nonTouches, setNonTouches] = useState<PivotFieldInfo[] | null>(null);
+  const confirme = useRef(false);
+  const verifierPivots = (e: React.FormEvent<HTMLFormElement>) => {
+    if (confirme.current) return;
+    const form = e.currentTarget;
+    const lire = (name: PivotField) =>
+      Number((form.elements.namedItem(name) as HTMLInputElement | null)?.value ?? NaN);
+    // Gamme : les pivots sont les scalaires dérivés des champs par produit,
+    // du même calcul que le serveur et que la proposition.
+    const products = gamme ? readProductFields(new FormData(form).entries()) : undefined;
+    const saisie = products
+      ? scalarsOfGamme(products)
+      : { price: lire("price"), productionPlan: lire("productionPlan") };
+    const intacts = pivotsNonTouches(
+      { price: saisie.price, productionPlan: saisie.productionPlan },
+      { price: reference.price, productionPlan: reference.productionPlan },
+    );
+    if (intacts.length === 0) return;
+    e.preventDefault();
+    setNonTouches(pivotFieldsFor(v).filter((p) => intacts.includes(p.key)));
+  };
+  const garderLesValeurs = (e: React.MouseEvent<HTMLButtonElement>) => {
+    confirme.current = true;
+    setNonTouches(null);
+    e.currentTarget.form?.requestSubmit();
+  };
+  const lesModifier = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const form = e.currentTarget.form;
+    const premier = nonTouches?.[0]?.key;
+    setNonTouches(null);
+    if (!form || !premier) return;
+    // En gamme, le pivot vit dans la première ligne du tableau des références.
+    const nom = gamme?.[0] ? productFieldName(gamme[0].code, premier) : premier;
+    const champ = form.elements.namedItem(nom) as HTMLInputElement | null;
+    // Le champ pivot vit à l'étape « Vendre », pas forcément celle affichée : on
+    // révèle son étape AVANT de poser le focus, sinon il est masqué (`hidden`)
+    // et le focus reste sans effet (l'élève ne verrait rien se passer).
+    const section = champ?.closest("[data-etape]") as HTMLElement | null;
+    const i = Number(section?.dataset.etape);
+    if (!Number.isNaN(i)) setEtape(i);
+    requestAnimationFrame(() => champ?.focus());
+  };
   const [equipBuyQty, setEquipBuyQty] = useState<Record<string, number>>({});
   const [equipSellQty, setEquipSellQty] = useState<Record<string, number>>({});
+  // L'étape affichée de l'assistant de décision (voir plus bas). Les étapes
+  // inactives restent MONTÉES (attribut `hidden`, jamais démontées) : le
+  // formulaire se soumet toujours en entier, quelle que soit l'étape à l'écran.
+  const [etape, setEtape] = useState(0);
+
+  // Un champ requis dans une famille repliée — OU sur une étape masquée — est
+  // invisible : le navigateur ne peut pas y afficher sa bulle de validation et
+  // abandonne l'envoi en silence (« An invalid form control is not focusable »).
+  // En phase de capture, avant que le navigateur ne tente d'y poser le focus, on
+  // rouvre la famille du champ fautif ET on affiche son étape.
+  const revelerFamilleInvalide = (e: React.FormEvent<HTMLFormElement>) => {
+    const cible = e.target as HTMLElement;
+    const famille = cible.closest?.("details") as HTMLDetailsElement | null;
+    if (famille && !famille.open) famille.open = true;
+    const section = cible.closest?.("[data-etape]") as HTMLElement | null;
+    const i = Number(section?.dataset.etape);
+    if (!Number.isNaN(i)) setEtape(i);
+  };
   const on = enabled ?? {
     quality: true,
     maintenance: true,
@@ -397,20 +931,111 @@ export function DecisionForm({
     insurance: true,
     hr: false,
     investment: false,
+    rse: false,
     placement: false,
     dividend: false,
+    rd: false,
   };
+  const rdMono = on.rd && !!rdOffer && !gamme;
+  // L'axe de communication tenu : écouté pour dire à qui il parle.
+  const [axe, setAxe] = useState<string>(defaults.communicationAxis ?? "");
 
   // Vocabulaire du secteur : c'est lui qui parle à l'élève, pas le moteur.
   const v = vocabulary;
 
+  // Répartition des leviers en étapes courtes (anti-scroll) : plutôt qu'un long
+  // formulaire qu'on déroule, quelques écrans qu'on parcourt. Une étape sans
+  // aucun contenu au niveau de difficulté courant est retirée ; l'index
+  // d'affichage se calcule sur les étapes RÉELLEMENT visibles.
+  // Les quatre budgets du tour (marketing, qualité, maintenance, R&D) et la
+  // communication ont leur étape, « Budgéter » : ce que l'entreprise dépense
+  // ce tour pour soutenir son offre. « Vendre » ne garde que le prix, le
+  // volume et l'approvisionnement. Il n'y a plus d'étape « Produire ».
+  const equipeVisible = on.hr || on.rse;
+  const financerVisible = on.finance || (on.investment && !!equipmentOffer);
+  const couvertureVisible =
+    on.dividend ||
+    (on.finance && !!treasuryOffer) ||
+    (on.insurance && (!!insuranceOffer || (insuranceFormulas?.length ?? 0) > 0));
+  const etapesVisibles = [
+    "vendre",
+    "budgets",
+    equipeVisible ? "equipe" : null,
+    financerVisible ? "financer" : null,
+    couvertureVisible ? "couverture" : null,
+    "prevoir",
+  ].filter((x): x is string => x !== null);
+  const META: Record<string, { titre: string; icone: string }> = {
+    vendre: { titre: "Vendre & s'approvisionner", icone: "🎯" },
+    budgets: { titre: "Budgéter", icone: "💸" },
+    equipe: { titre: "Équipe & RSE", icone: "👥" },
+    financer: { titre: "Financer & investir", icone: "💶" },
+    couverture: { titre: "Trésorerie & couverture", icone: "🛡️" },
+    prevoir: { titre: "S'informer & prévoir", icone: "📊" },
+  };
+  const idx = (cle: string) => etapesVisibles.indexOf(cle);
+  const total = etapesVisibles.length;
+  const courante = Math.min(etape, total - 1);
+  const derniere = courante === total - 1;
+
   return (
-    <form action={formAction} className="space-y-4">
+    <form
+      ref={formRef}
+      action={formAction}
+      onSubmit={verifierPivots}
+      onInvalidCapture={revelerFamilleInvalide}
+      className="space-y-3"
+    >
+      {/* Verrou de planning : hors de la fenêtre, on l'annonce et « Valider »
+          est grisé (le serveur refuse de toute façon). La page reste lisible. */}
+      {verrou ? (
+        <p
+          role="status"
+          className="flex items-center gap-2 rounded-lg border border-amber-400/30 bg-amber-400/5 px-3 py-2 text-sm text-amber-200"
+        >
+          <span aria-hidden>🔒</span> {verrou}
+        </p>
+      ) : null}
+      {/* Barre d'étapes : où j'en suis, saut direct possible. Les libellés se
+          replient en simples numéros sur petit écran. */}
+      <ol className="flex flex-wrap gap-1.5" aria-label="Étapes de décision">
+        {etapesVisibles.map((cle, i) => {
+          const actif = i === courante;
+          const fait = i < courante;
+          return (
+            <li key={cle} className="min-w-0 flex-1">
+              <button
+                type="button"
+                onClick={() => setEtape(i)}
+                aria-current={actif ? "step" : undefined}
+                className={`flex w-full items-center justify-center gap-1.5 rounded-lg border px-2 py-2 text-xs font-medium transition ${
+                  actif
+                    ? "border-amber-400/60 bg-amber-400/10 text-amber-200"
+                    : fait
+                      ? "border-emerald-400/30 bg-emerald-950/20 text-emerald-300/80 hover:text-emerald-200"
+                      : "border-white/10 text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                <span aria-hidden>{fait ? "✓" : META[cle]!.icone}</span>
+                <span className="hidden truncate sm:inline">{META[cle]!.titre}</span>
+                <span className="sm:hidden">{i + 1}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ol>
+
+      <section
+        data-etape={idx("vendre")}
+        hidden={courante !== idx("vendre")}
+        className="space-y-3"
+      >
       {orderOffer ? (
-        <fieldset className="rounded-lg border border-sky-400/25 bg-sky-950/20 p-4">
-          <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-sky-300">
-            📦 Commande exceptionnelle · {orderOffer.title}
-          </legend>
+        <Family
+          legend={`📦 Commande exceptionnelle · ${orderOffer.title}`}
+          tone="border-sky-400/25 bg-sky-950/20"
+          legendClass="text-xs font-semibold uppercase tracking-wide text-sky-300"
+        >
           <p className="text-sm leading-relaxed text-slate-300">{orderOffer.narrative}</p>
           <p className="mt-2 text-xs text-slate-400">
             <strong className="text-slate-200">
@@ -424,9 +1049,12 @@ export function DecisionForm({
             {orderOffer.paymentDelayDays > 0
               ? `règlement à ${orderOffer.paymentDelayDays} jours`
               : "règlement comptant"}
-            . Servie sur votre stock restant après le marché.
+            .{" "}
+            {orderOffer.productName
+              ? `Elle porte sur la référence « ${orderOffer.productName} » et se sert sur son stock restant après le marché.`
+              : "Servie sur votre stock restant après le marché."}
           </p>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-slate-400">
             {orderOffer.paymentDelayDays > 0
               ? "Belle marge… mais ce chiffre d'affaires dormira en créances : votre BFR gonflera d'autant. Qui finance l'attente ?"
               : "Du cash dès la livraison… mais une marge mince : comparez le prix à votre coût variable avant de signer."}
@@ -442,27 +1070,45 @@ export function DecisionForm({
               Accepter la commande, à prendre ou à laisser : elle ne repassera pas.
             </span>
           </label>
-        </fieldset>
+        </Family>
       ) : null}
-      <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
-        <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
-          🎯 Vos ventes · le prix et le volume du tour
-        </legend>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field name="price" label={v.priceLabel} defaultValue={defaults.price} step={0.1}
-            suffix={`€/${v.unit}`}
-            hint="Attention aux seuils psychologiques…" />
-          <Field name="productionPlan" label={v.productionPlanLabel}
-            defaultValue={Math.round(defaults.productionPlan)} suffix={v.units}
-            hint="Le volume réel sera borné par vos capacités." />
-        </div>
-      </fieldset>
+      {gamme ? (
+        <Family legend="🎯 Vos ventes · le prix et le volume de chaque référence" defaultOpen>
+          <GammeVentes gamme={gamme} defaults={defaults} vocabulary={v} />
+        </Family>
+      ) : null}
+      {gamme ? (
+        <></>
+      ) : (
+        <Family legend="🎯 Vos ventes · le prix et le volume du tour" defaultOpen>
+          <div className="grid grid-cols-2 gap-3">
+            <Field name="price" label={v.priceLabel} defaultValue={defaults.price} step={0.1}
+              suffix={`€/${v.unit}`}
+              hint="Attention aux seuils psychologiques…" />
+            <Field name="productionPlan" label={v.productionPlanLabel}
+              defaultValue={Math.round(defaults.productionPlan)} suffix={v.units}
+              hint="Le volume réel sera borné par vos capacités." />
+          </div>
+        </Family>
+      )}
       {capacityFacts ? (
-        <div className="rounded-lg border border-white/10 bg-slate-950 px-4 py-3">
+        <div className="rounded-lg border border-white/10 bg-slate-950 px-1.5 py-2 sm:px-3.5 sm:py-2.5">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
             ⚙️ {v.capacityPanelTitle}
           </p>
           <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+            {capacityFacts.subscription ? (
+              <>
+                <span className="text-slate-400">Portefeuille d&apos;{v.units}</span>
+                <span className="text-right text-slate-200" data-testid="portefeuille-adherents">
+                  {capacityFacts.subscription.members.toLocaleString("fr-FR")} {v.units}
+                  <span className="ml-1 text-xs text-slate-400">
+                    (~{capacityFacts.subscription.expectedRetained.toLocaleString("fr-FR")} resteront à{" "}
+                    {Math.round(capacityFacts.subscription.baseChurnRate * 100)} % d&apos;attrition)
+                  </span>
+                </span>
+              </>
+            ) : null}
             <span className="text-slate-400">{v.capacityLabel}</span>
             <span className="text-right text-slate-200">
               {Math.round(capacityFacts.machineCapacity).toLocaleString("fr-FR")} {v.perRoundLabel}
@@ -470,7 +1116,7 @@ export function DecisionForm({
             <span className="text-slate-400">{v.laborLabel}</span>
             <span className="text-right text-slate-200">
               {Math.round(capacityFacts.laborCapacity).toLocaleString("fr-FR")} {v.perRoundLabel}
-              <span className="ml-1 text-xs text-slate-500">
+              <span className="ml-1 text-xs text-slate-400">
                 ({capacityFacts.headcount} pers. × prod. {Math.round(capacityFacts.productivity * 100)} %)
               </span>
             </span>
@@ -490,92 +1136,260 @@ export function DecisionForm({
             </span>
           </div>
           {capacityFacts.bottleneck === "labor" ? (
-            <p className="mt-2 text-[11px] text-amber-300/80">{v.laborBottleneckHint}</p>
+            <p className="mt-2 text-xs text-amber-300/80">{v.laborBottleneckHint}</p>
           ) : capacityFacts.bottleneck === "machine" ? (
-            <p className="mt-2 text-[11px] text-sky-300/80">{v.capacityBottleneckHint}</p>
+            <p className="mt-2 text-xs text-sky-300/80">{v.capacityBottleneckHint}</p>
           ) : null}
         </div>
       ) : null}
-      {suppliersOffer && suppliersOffer.length > 0 ? (
-        <fieldset className="rounded-lg border border-emerald-400/25 bg-emerald-950/20 p-4">
-          <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-emerald-300">
-            🏭 {v.supplierPanelLabel}
-          </legend>
-          <div className="space-y-2">
-            {suppliersOffer.map((s) => (
-              <label
-                key={s.code}
-                className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-3 py-2.5"
-              >
-                <input
-                  type="radio"
-                  name="supplierChoice"
-                  value={s.code}
-                  defaultChecked={(defaults.supplierChoice ?? suppliersOffer[0]?.code) === s.code}
-                  className="mt-0.5 h-4 w-4 accent-emerald-400"
-                />
-                <span>
-                  <span className="text-sm font-medium text-slate-200">
-                    {s.name} · {v.materialLabel.toLowerCase()} à{" "}
-                    {s.materialCostPerUnit.toLocaleString("fr-FR")} €/u
-                    {s.costMultiplier !== 1
-                      ? ` (${s.costMultiplier < 1 ? "" : "+"}${Math.round((s.costMultiplier - 1) * 100)} %)`
-                      : ""}
-                  </span>
-                  <span className="mt-0.5 block text-xs text-slate-400">{s.narrative}</span>
-                  <span className="mt-1 flex flex-wrap gap-3 text-[11px]">
-                    {s.qualityBonus !== 0 ? (
-                      <span className={s.qualityBonus > 0 ? "text-emerald-400" : "text-amber-400"}>
-                        Qualité {s.qualityBonus > 0 ? "+" : ""}{Math.round(s.qualityBonus * 100)} %
+      {(() => {
+        // Mono-produit : les fournisseurs du scénario, à choisir ici (radio),
+        // leur coût lu par rapport au fournisseur de référence. Gamme : la
+        // fiche de chaque façonnier, avec les références qu'il fournit et le
+        // prix d'achat de chacune chez lui — le choix se fait dans le tableau.
+        type Fiche = {
+          code: string;
+          name: string;
+          narrative: string;
+          qualityBonus: number;
+          paymentDelayDays: number;
+          supplyRiskProbability: number;
+          prix: { reference: string; achat: number; ecart: string }[];
+        };
+        const fiches: Fiche[] = [];
+        if (gamme) {
+          for (const p of gamme) {
+            const reference = p.suppliers?.[0];
+            for (const s of p.suppliers ?? []) {
+              const cle = `${s.code}·${s.name}`;
+              let fiche = fiches.find((f) => `${f.code}·${f.name}` === cle);
+              if (!fiche) {
+                fiche = { ...s, prix: [] };
+                fiches.push(fiche);
+              }
+              fiche.prix.push({ reference: p.name, achat: s.materialCostPerUnit, ecart: ecartFournisseur(s, reference) });
+            }
+          }
+        } else if (suppliersOffer && suppliersOffer.length > 0) {
+          const reference = suppliersOffer[0];
+          for (const s of suppliersOffer) {
+            fiches.push({ ...s, prix: [{ reference: v.unit, achat: s.materialCostPerUnit, ecart: ecartFournisseur(s, reference) }] });
+          }
+        }
+        if (fiches.length === 0) return null;
+        return (
+          <Family
+            legend={`🏭 ${v.supplierPanelLabel}`}
+            tone="border-emerald-400/25 bg-emerald-950/20"
+            legendClass="text-xs font-semibold uppercase tracking-wide text-emerald-300"
+          >
+            {gamme ? (
+              <p className="mb-2 text-xs leading-relaxed text-emerald-200/80">
+                Chaque référence a ses façonniers ; le choix se fait ligne par ligne dans le
+                tableau de vos ventes. Voici ce que chacun propose, et à quel prix d&apos;achat
+                pour chaque référence qu&apos;il fournit.
+              </p>
+            ) : null}
+            <div className="space-y-2">
+              {fiches.map((s) => (
+                <label
+                  key={`${s.code}·${s.name}`}
+                  className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-2.5 py-2"
+                >
+                  {gamme ? null : (
+                    <input
+                      type="radio"
+                      name="supplierChoice"
+                      value={s.code}
+                      defaultChecked={(defaults.supplierChoice ?? fiches[0]?.code) === s.code}
+                      className="mt-0.5 h-4 w-4 accent-emerald-400"
+                    />
+                  )}
+                  <span>
+                    <span className="text-sm font-medium text-slate-200">
+                      {s.name}
+                      {gamme
+                        ? ""
+                        : ` · ${v.materialLabel.toLowerCase()} à ${formatEuroCents(s.prix[0]!.achat)}/${v.unit} (${s.prix[0]!.ecart})`}
+                    </span>
+                    <span className="mt-0.5 block text-xs text-slate-400">{s.narrative}</span>
+                    {gamme ? (
+                      <span className="mt-1 block text-xs text-slate-300">
+                        {s.prix.map((x, i) => (
+                          <span key={x.reference}>
+                            {i > 0 ? " · " : ""}
+                            {x.reference} {formatEuroCents(x.achat)} ({x.ecart})
+                          </span>
+                        ))}
                       </span>
                     ) : null}
-                    <span className="text-slate-500">
-                      Délai fournisseur : {s.paymentDelayDays} j
-                    </span>
-                    {s.supplyRiskProbability > 0 ? (
-                      <span className="text-red-400">
-                        Risque de rupture : {Math.round(s.supplyRiskProbability * 100)} %/tour
+                    <span className="mt-1 flex flex-wrap gap-3 text-xs">
+                      {s.qualityBonus !== 0 ? (
+                        <span className={s.qualityBonus > 0 ? "text-emerald-400" : "text-amber-400"}>
+                          Qualité {s.qualityBonus > 0 ? "+" : "−"}{Math.abs(Math.round(s.qualityBonus * 100))} %
+                        </span>
+                      ) : null}
+                      <span className="text-slate-400">
+                        Délai de règlement : {s.paymentDelayDays === 0 ? "comptant" : `${s.paymentDelayDays} j`}
                       </span>
-                    ) : (
-                      <span className="text-emerald-400/60">Approvisionnement fiable</span>
-                    )}
+                      {s.supplyRiskProbability > 0 ? (
+                        <span className="text-red-400">
+                          Risque de rupture : {Math.round(s.supplyRiskProbability * 100)} %/tour
+                        </span>
+                      ) : (
+                        <span className="text-emerald-400/60">Approvisionnement fiable</span>
+                      )}
+                    </span>
                   </span>
-                </span>
-              </label>
-            ))}
+                </label>
+              ))}
+            </div>
+            <p className="mt-3 text-xs leading-relaxed text-slate-400">
+              Le prix d&apos;achat entre dans le coût variable : c&apos;est ce qui reste entre lui et
+              votre prix de vente qui fait la marge. Le bonus de qualité joue sur la qualité
+              perçue, le délai de règlement sur la trésorerie (BFR), le risque de rupture sur
+              ce que vous recevez. L&apos;assurance étendue couvre le litige fournisseur.
+            </p>
+          </Family>
+        );
+      })()}
+      </section>
+
+      {/* Budgéter : les quatre budgets du tour (marketing, qualité, entretien,
+          R&D) et la communication — ce que l'entreprise dépense ce tour pour
+          soutenir son offre. Un budget que le niveau n'ouvre pas part caché,
+          à sa valeur proposée, pour que la lecture côté serveur reste complète. */}
+      <section
+        data-etape={idx("budgets")}
+        hidden={courante !== idx("budgets")}
+        className="space-y-3"
+      >
+      <p className="text-sm leading-relaxed text-slate-400">
+        Ce que vous dépensez ce tour pour soutenir votre offre : faire venir les clients,
+        tenir la qualité, entretenir votre capacité{on.rd && rdOffer ? ", développer" : ""}
+        {communicationOffer ? ", et bâtir votre marque" : ""}. Chaque budget se paie le tour même, en charge.
+      </p>
+      {gamme ? null : (
+        // Les budgets du tour, au même endroit : marketing, qualité, maintenance
+        // et R&D.
+        <Family
+          legend={`💸 Les budgets du tour · ${["marketing", on.quality ? "qualité" : null, on.maintenance ? "maintenance" : null, rdMono ? "R&D" : null].filter(Boolean).join(", ")}`}
+          defaultOpen
+        >
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Field name="marketingBudget" label="Budget marketing" defaultValue={defaults.marketingBudget} suffix="€"
+              hint="Fait venir les clients ce tour-ci ; l'effet retombe vite si on cesse." />
+            {on.quality ? (
+              <Field name="qualityBudget" label="Budget qualité" defaultValue={defaults.qualityBudget} suffix="€"
+                hint="Prévention : moins de rebuts et de retours, une qualité perçue qui monte." />
+            ) : (
+              <input type="hidden" name="qualityBudget" value={defaults.qualityBudget} />
+            )}
+            {on.maintenance ? (
+              <Field name="maintenanceBudget" label="Budget maintenance" defaultValue={defaults.maintenanceBudget} suffix="€"
+                hint="Une maintenance insuffisante dégrade la disponibilité machine." />
+            ) : (
+              <input type="hidden" name="maintenanceBudget" value={defaults.maintenanceBudget} />
+            )}
+            {rdMono ? (
+              <Field
+                name="rdBudget"
+                label="Recherche et développement"
+                defaultValue={Math.round(defaults.rdBudget ?? 0)}
+                suffix="€"
+                hint="Élève le niveau technique du produit : une qualité perçue qui monte avec retard, et s'érode si la R&D cesse. Une charge du tour."
+              />
+            ) : null}
           </div>
-          <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
-            Le choix du fournisseur impacte votre coût variable, la qualité perçue de vos
-            produits, le délai de paiement fournisseur (BFR) et le risque de rupture de
-            chaîne. L&apos;assurance étendue couvre le litige fournisseur.
-          </p>
-        </fieldset>
-      ) : null}
-      <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
-        <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
-          📣 Vos budgets du tour
-        </legend>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field name="marketingBudget" label="Budget marketing" defaultValue={defaults.marketingBudget} suffix="€" />
-          {on.quality ? (
-            <Field name="qualityBudget" label="Budget qualité" defaultValue={defaults.qualityBudget} suffix="€" />
-          ) : (
-            <input type="hidden" name="qualityBudget" value={defaults.qualityBudget} />
-          )}
+        </Family>
+      )}
+      {gamme ? (
+        // En gamme, les quatre budgets du tour se décident au même endroit :
+        // le marketing, la qualité et la R&D référence par référence dans un
+        // tableau, puis l'entretien de la capacité, qui est de l'entreprise.
+        // La fenêtre des ventes ne porte ainsi que le prix, le volume et le
+        // façonnier. Quand le niveau n'ouvre pas la qualité ou l'entretien, le
+        // scalaire caché part d'ici.
+        <Family
+          legend={`💸 Les budgets du tour · ${["marketing", on.quality ? "qualité" : null, on.rd && !!rdOffer && gamme.some((p) => p.rd) ? "R&D" : null, on.maintenance ? "entretien" : null].filter(Boolean).join(", ")}`}
+          defaultOpen
+        >
+          <GammeBudgets
+            gamme={gamme}
+            defaults={defaults}
+            quality={on.quality}
+            rd={on.rd && !!rdOffer}
+            roundIndex={roundIndex}
+          />
+          {on.quality ? null : <input type="hidden" name="qualityBudget" value={defaults.qualityBudget} />}
           {on.maintenance ? (
-            <Field name="maintenanceBudget" label="Budget maintenance" defaultValue={defaults.maintenanceBudget} suffix="€"
-              hint="Une maintenance insuffisante dégrade la disponibilité machine." />
+            <div className="mt-3 grid grid-cols-1 gap-3 border-t border-white/5 pt-3 sm:grid-cols-2">
+              <Field
+                name="maintenanceBudget"
+                label={`Budget d'entretien · ${v.capacityLabel.toLowerCase()}`}
+                defaultValue={defaults.maintenanceBudget}
+                suffix="€"
+                hint={`Un entretien insuffisant dégrade la disponibilité de votre capacité (${v.capacityLabel.toLowerCase()}) : ce que vous pouvez offrir à la vente.`}
+              />
+            </div>
           ) : (
             <input type="hidden" name="maintenanceBudget" value={defaults.maintenanceBudget} />
           )}
-        </div>
-      </fieldset>
+        </Family>
+      ) : null}
+      {communicationOffer ? (
+        // La communication (levier `communication`) : le budget de MARQUE, en
+        // gamme seulement (les budgets par référence restent le marketing
+        // spécifique), et l'AXE tenu ce tour. L'axe est un choix d'entreprise :
+        // un seul, lisible, dont le formulaire dit à qui il parle.
+        <Family legend={gamme ? "📣 Communication · la marque et l'axe" : "📣 Communication · l'axe"} defaultOpen>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {gamme ? (
+              <Field
+                name="brandMarketingBudget"
+                label="Budget de marque"
+                defaultValue={Math.round(defaults.brandMarketingBudget ?? 0)}
+                suffix="€"
+                hint={`Bâtit la notoriété de la marque, pour toute la gamme, avec retard : elle vaut ${Math.round(communicationOffer.brandAwareness * 100)} % à l'ouverture, et s'use si vous cessez. Les budgets par référence, eux, agissent tout de suite.`}
+              />
+            ) : null}
+            <label className="block">
+              <span className="text-xs font-medium uppercase tracking-wide text-slate-400">Axe de communication</span>
+              <select
+                name="communicationAxis"
+                value={axe}
+                onChange={(e) => setAxe(e.currentTarget.value)}
+                className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+              >
+                <option value="">Aucun axe : le budget parle à tout le monde, sans porter nulle part</option>
+                {communicationOffer.axes.map((a) => (
+                  <option key={a.code} value={a.code}>
+                    {a.label}
+                  </option>
+                ))}
+              </select>
+              <span className="mt-1 block text-[13px] text-slate-400">
+                {axe
+                  ? COMMUNICATION_AXIS_LABELS[axe as keyof typeof COMMUNICATION_AXIS_LABELS].hint
+                  : "Le même budget rend davantage quand l'axe correspond à ce que la clientèle regarde, et dessert quand il ne lui parle pas."}
+                {communicationOffer.lastAxis && axe && axe !== communicationOffer.lastAxis
+                  ? " Changer d'axe use la notoriété acquise : une marque qui change de discours repart de plus bas."
+                  : ""}
+              </span>
+            </label>
+          </div>
+        </Family>
+      ) : null}
+      </section>
+
+      <section
+        data-etape={idx("equipe")}
+        hidden={courante !== idx("equipe")}
+        className="space-y-3"
+      >
       {on.hr ? (
-        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
-          <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
-            👥 Ressources humaines
-          </legend>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <Family legend="👥 Ressources humaines">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Field name="hire" label="Embauches" defaultValue={0} suffix="pers."
               hint="Arrivée au tour suivant, coût de recrutement immédiat." />
             <Field name="fire" label="Licenciements" defaultValue={0} suffix="pers."
@@ -585,8 +1399,30 @@ export function DecisionForm({
             <Field name="salaryPercent" label="Salaires (marché = 100)" defaultValue={Math.round((defaults.hr?.salaryIndex ?? 1) * 100)} suffix="%"
               hint="Sous-payer démotive et fait partir les salariés." />
           </div>
-        </fieldset>
+        </Family>
       ) : null}
+      {on.rse ? (
+        <Family legend="🌱 Engagement RSE">
+          <p className="mb-2 text-xs text-slate-400">
+            Ça coûte maintenant, ça rapporte plus tard : l&apos;effet met plusieurs
+            tours à se construire — et à retomber si vous cessez. Sur un horizon
+            court, ce peut être un pari perdant.
+          </p>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Field name="rseBudget" label="Budget RSE" defaultValue={0} suffix="€"
+              hint="Dépense d'exploitation : bâtit un capital-image qui relève lentement la demande (l'inverse du marketing)." />
+            <Field name="rseInvestment" label="Investissement process propre" defaultValue={0} suffix="€"
+              hint="Réduit durablement les rebuts, tour après tour." />
+          </div>
+        </Family>
+      ) : null}
+      </section>
+
+      <section
+        data-etape={idx("financer")}
+        hidden={courante !== idx("financer")}
+        className="space-y-3"
+      >
       {on.finance && debtSchedule && debtSchedule.outstanding > 0.5 ? (
         <p className="rounded-lg border border-amber-400/20 bg-amber-950/20 px-3 py-2 text-xs text-amber-200">
           🏦 Échéance d&apos;emprunt du tour :{" "}
@@ -596,12 +1432,9 @@ export function DecisionForm({
           tombent, que la caisse soit pleine ou vide.
         </p>
       ) : null}
-      <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
-        <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
-          💶 Financer · emprunt, capital, investissement
-        </legend>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {on.finance ? (
+      {on.finance ? (
+      <Family legend="💶 Financer · emprunt, capital, investissement">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <>
               <Field name="newLoan" label="Nouvel emprunt" defaultValue={0} suffix="€"
                 hint="À 5 %/an, amortissement constant sur la durée contractuelle : emprunter engage." />
@@ -627,23 +1460,10 @@ export function DecisionForm({
                 hint={`En service au tour suivant, amorti linéairement. Max ${Math.round(investmentOffer.maxPerRound).toLocaleString("fr-FR")} u par tour.`}
               />
             ) : null}
-              {on.dividend ? (
-                <Field
-                  name="dividend"
-                  label="Dividende versé aux associés"
-                  defaultValue={0}
-                  suffix="€"
-                  hint={
-                    reserves > 0
-                      ? `Réserves distribuables : ${formatEuro(reserves)}, les bénéfices des tours passés. Ce qui sort ne finance plus rien, et le versement se fait en trésorerie, pas en résultat : on peut être rentable sans pouvoir payer.`
-                      : "Rien à distribuer : les réserves se constituent des bénéfices des tours passés, et une perte doit d'abord être rattrapée."
-                  }
-                />
-              ) : null}
             </>
-          ) : null}
         </div>
-      </fieldset>
+      </Family>
+      ) : null}
       {on.investment && equipmentOffer ? (
         <>
           <EquipmentPanel
@@ -666,12 +1486,33 @@ export function DecisionForm({
           )} />
         </>
       ) : null}
+      </section>
+
+      <section
+        data-etape={idx("couverture")}
+        hidden={courante !== idx("couverture")}
+        className="space-y-3"
+      >
+      {on.dividend ? (
+        <Family legend="💰 Affectation du résultat · dividende">
+          <Field
+            name="dividend"
+            label="Dividende versé aux associés"
+            defaultValue={0}
+            suffix="€"
+            hint={
+              reserves > 0
+                ? `Réserves distribuables : ${formatEuro(reserves)}, les bénéfices des tours passés. Ce qui sort ne finance plus rien, et le versement se fait en trésorerie, pas en résultat : on peut être rentable sans pouvoir payer.`
+                : roundIndex <= 1
+                  ? "Rien à distribuer au premier tour : l'affectation du résultat s'ouvre à partir du tour 2, une fois le premier résultat connu, et seulement sur des bénéfices."
+                  : "Rien à distribuer : les réserves se constituent des bénéfices des tours passés, et une perte doit d'abord être rattrapée."
+            }
+          />
+        </Family>
+      ) : null}
       {on.finance && treasuryOffer ? (
-        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
-          <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
-            💶 Trésorerie · mobiliser le poste clients
-          </legend>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Family legend="💶 Trésorerie · mobiliser le poste clients">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Field
               name="discount"
               label={`Escompte (${(treasuryOffer.discountAnnualRate * 100).toLocaleString("fr-FR")} %/an)`}
@@ -688,7 +1529,7 @@ export function DecisionForm({
             />
           </div>
           {on.placement && treasuryOffer.placementAnnualRate !== null ? (
-            <div className="mt-4 border-t border-white/5 pt-4">
+            <div className="mt-3 border-t border-white/5 pt-3">
               <Field
                 name="placement"
                 label={`Placer le surplus (${(treasuryOffer.placementAnnualRate * 100).toLocaleString("fr-FR")} %/an)`}
@@ -696,7 +1537,7 @@ export function DecisionForm({
                 suffix="€"
                 hint="Bloqué jusqu'au tour suivant : cet argent ne paiera rien ce tour-ci."
               />
-              <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+              <p className="mt-2 text-xs leading-relaxed text-slate-400">
                 {treasuryOffer.maturedPlacement > 0.5
                   ? `${Math.round(treasuryOffer.maturedPlacement).toLocaleString("fr-FR")} € placés au tour précédent sont revenus en caisse, intérêts compris. `
                   : ""}
@@ -708,21 +1549,18 @@ export function DecisionForm({
               </p>
             </div>
           ) : null}
-          <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+          <p className="mt-3 text-xs leading-relaxed text-slate-400">
             Découvert autorisé jusqu&apos;à{" "}
             {Math.round(treasuryOffer.overdraftLimit).toLocaleString("fr-FR")} €. Au-delà, la
             banque cède vos créances d&apos;office, au tarif fort. Si vous ne gérez pas votre
             trésorerie, quelqu&apos;un la gérera pour vous.
           </p>
-        </fieldset>
+        </Family>
       ) : null}
       {on.insurance && insuranceFormulas && insuranceFormulas.length > 0 ? (
-        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
-          <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
-            🛡️ Assurance · choisissez votre couverture
-          </legend>
+        <Family legend="🛡️ Assurance · choisissez votre couverture">
           <div className="space-y-2">
-            <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-3 py-2.5">
+            <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-2.5 py-2">
               <input
                 type="radio"
                 name="insurance"
@@ -735,7 +1573,7 @@ export function DecisionForm({
             {insuranceFormulas.map((f) => (
               <label
                 key={f.code}
-                className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-3 py-2.5"
+                className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-2.5 py-2"
               >
                 <input
                   type="radio"
@@ -748,20 +1586,20 @@ export function DecisionForm({
                   <span className="text-sm font-medium text-slate-200">
                     {f.name} · {formatEuro(f.premium)}
                   </span>
-                  <span className="mt-0.5 block text-xs text-slate-500">
+                  <span className="mt-0.5 block text-xs text-slate-400">
                     Couvre : {f.coveredLabels.join(", ")}.
                   </span>
                 </span>
               </label>
             ))}
           </div>
-          <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+          <p className="mt-3 text-xs leading-relaxed text-slate-400">
             Un coût certain contre un risque incertain : plus la couverture est large, plus
             la prime pèse sur votre seuil de rentabilité.
           </p>
-        </fieldset>
+        </Family>
       ) : on.insurance && insuranceOffer ? (
-        <label className="flex items-start gap-3 rounded-lg border border-white/10 bg-slate-950 px-3 py-3">
+        <label className="flex items-start gap-3 rounded-lg border border-white/10 bg-slate-950 px-2.5 py-2">
           <input
             type="checkbox"
             name="insurance"
@@ -772,18 +1610,22 @@ export function DecisionForm({
             <span className="text-sm font-medium text-slate-200">
               🛡️ Assurance catastrophe · {formatEuro(insuranceOffer.premium)} ce tour
             </span>
-            <span className="mt-0.5 block text-xs text-slate-500">
+            <span className="mt-0.5 block text-xs text-slate-400">
               Couvre : {insuranceOffer.coveredLabels.join(", ")}. Un coût certain contre un
               risque incertain, à vous d&apos;arbitrer.
             </span>
           </span>
         </label>
       ) : null}
+      </section>
+
+      <section
+        data-etape={idx("prevoir")}
+        hidden={courante !== idx("prevoir")}
+        className="space-y-3"
+      >
       {studiesOffer ? (
-        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
-          <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
-            📊 Acheter de l&apos;information · livrée avec les résultats du tour
-          </legend>
+        <Family legend={"📊 Acheter de l'information · livrée avec les résultats du tour"}>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {(
               [
@@ -815,7 +1657,7 @@ export function DecisionForm({
             ).map((study) => (
               <label
                 key={study.name}
-                className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-3 py-2.5"
+                className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-2.5 py-2"
               >
                 <input
                   type="checkbox"
@@ -827,16 +1669,16 @@ export function DecisionForm({
                   <span className="text-sm font-medium text-slate-200">
                     {study.label} · {formatEuro(study.cost)}
                   </span>
-                  <span className="mt-0.5 block text-xs text-slate-500">{study.hint}</span>
+                  <span className="mt-0.5 block text-xs text-slate-400">{study.hint}</span>
                 </span>
               </label>
             ))}
           </div>
-          <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+          <p className="mt-3 text-xs leading-relaxed text-slate-400">
             L&apos;information a un prix, facturé en charges de structure : il se lit au seuil
             de rentabilité. Décider sans données coûte souvent plus cher.
           </p>
-        </fieldset>
+        </Family>
       ) : null}
       {/*
         Gardé sur `on.finance` SEUL, jamais sur `bankFile`. Une partie ouverte
@@ -846,12 +1688,13 @@ export function DecisionForm({
         depuis le premier tour. Le texte change, les champs restent.
       */}
       {on.finance ? (
-        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-4">
-          <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
-            {bankFile
+        <Family
+          legend={
+            bankFile
               ? "🏦 Votre plan de trésorerie · la pièce que lit la banque"
-              : "🔭 Votre prévision · facultative, sans effet sur le tour"}
-          </legend>
+              : "🔭 Votre prévision · facultative, sans effet sur le tour"
+          }
+        >
           {bankFile && bankFile.refusedLoan !== null ? (
             <p className="mb-3 rounded-md border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-xs leading-relaxed text-rose-200">
               Au tour précédent, votre demande de{" "}
@@ -859,7 +1702,7 @@ export function DecisionForm({
               trésorerie ne l&apos;accompagnait. La banque ne prête pas contre une intention.
             </p>
           ) : null}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <OptionalField
               name="expectedUnits"
               label={`${v.units.charAt(0).toUpperCase()}${v.units.slice(1)} que vous pensez vendre`}
@@ -881,7 +1724,7 @@ export function DecisionForm({
           </div>
           {bankFile ? (
             <>
-              <p className="mt-3 text-[11px] leading-relaxed text-slate-400">
+              <p className="mt-3 text-xs leading-relaxed text-slate-400">
                 Confiance de votre banque :{" "}
               <strong className="text-slate-200">{Math.round(bankFile.trust * 100)} %</strong>. Elle
               vous consent ce tour un découvert de{" "}
@@ -901,7 +1744,7 @@ export function DecisionForm({
                 ? ` Votre dernier plan s'est révélé juste à ${Math.round(bankFile.lastReliability * 100)} %.`
                 : ""}
             </p>
-            <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+            <p className="mt-2 text-xs leading-relaxed text-slate-400">
               Ce plan n&apos;est pas un exercice : sans la ligne de trésorerie, la banque
               n&apos;instruit aucune demande d&apos;emprunt. Et l&apos;écart entre ce que vous
               annoncez et ce qui sera constaté fixera, au tour suivant, le plafond de votre
@@ -909,52 +1752,137 @@ export function DecisionForm({
             </p>
             </>
           ) : (
-            <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+            <p className="mt-3 text-xs leading-relaxed text-slate-400">
               Annoncer avant de savoir, puis mesurer l&apos;écart : c&apos;est le seul moyen de
               savoir si vous avez compris ce marché ou si vous avez eu de la chance. L&apos;écart
               vous sera montré avec les résultats du tour. Cette partie a été ouverte avant le
               dossier bancaire : votre prévision n&apos;y change aucun calcul.
             </p>
           )}
-        </fieldset>
+        </Family>
       ) : null}
-      <fieldset className="rounded-lg border border-slate-700/60 px-4 pb-4 pt-3">
-        <legend className="px-1 text-xs font-medium text-slate-400">
-          En quelques mots (facultatif)
-        </legend>
+      <Family
+        legend="✍️ En quelques mots"
+        tone="border-slate-700/60"
+        legendClass="text-xs font-medium text-slate-400"
+      >
         <textarea
           name="justification"
           rows={2}
+          aria-label="Justification de vos décisions"
           placeholder="Pourquoi ces choix ce tour-ci ?"
           className="w-full resize-y rounded border border-slate-700 bg-slate-800/50 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:border-amber-400/50 focus:outline-none"
         />
-        <p className="mt-1 text-[11px] text-slate-500">
+        <p className="mt-1 text-xs text-slate-400">
           Notez ici la logique de vos décisions. L&apos;enseignant pourra la lire au débriefing.
         </p>
-      </fieldset>
+      </Family>
+      </section>
       {state.error ? (
-        <p className="rounded-lg border border-red-400/30 bg-red-950/40 px-3 py-2 text-sm text-red-300">
+        <p
+          role="alert"
+          aria-live="assertive"
+          className="rounded-lg border border-red-400/30 bg-red-950/40 px-3 py-2 text-sm text-red-300"
+        >
           {state.error}
         </p>
       ) : null}
-      <button
-        type="submit"
-        disabled={pending}
-        className="w-full rounded-lg bg-amber-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 disabled:cursor-wait disabled:opacity-60"
-      >
-        {pending
-          ? "Envoi en cours…"
-          : kind === "solo"
-            ? `Valider mes décisions et simuler · ${periodName}`
-            : alreadySubmitted
-              ? "Mettre à jour mes décisions validées"
-              : `Valider les décisions de l'équipe · ${periodName}`}
-      </button>
-      <p className="text-center text-xs text-slate-500">
-        {kind === "solo"
-          ? "Mode apprentissage : les résultats sont calculés immédiatement, à vous d'analyser."
-          : "Vos décisions restent modifiables jusqu'à la clôture du tour par l'enseignant."}
-      </p>
+      <GuardError message={guardError} />
+      {pending && kind === "solo" ? (
+        // Le tour se résout côté serveur puis redirige : entre les deux, on
+        // rend l'attente tangible — la machine tourne, étape après étape —
+        // plutôt qu'un bouton grisé « Envoi en cours… ».
+        <SimulationProgress periodName={periodName} />
+      ) : nonTouches ? (
+        // Pivots laissés aux valeurs proposées : la confirmation REMPLACE le
+        // pied de navigation au lieu de s'y ajouter. Sans ça, « Oui/Non » et
+        // « Valider » cohabitaient à l'écran (double boutonnage) ; ici une
+        // seule action est offerte à la fois.
+        <div role="alert" className="border-t border-orange-400/30 pt-3">
+          <p className="text-sm text-orange-100">
+            Vous validez avec les valeurs proposées pour :{" "}
+            <strong>{nonTouches.map((p) => p.label).join(", ")}</strong>. C&apos;est un choix ?
+          </p>
+          <div className="mt-3 flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={garderLesValeurs}
+              className="rounded-lg bg-orange-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-orange-300"
+            >
+              Oui, je garde ces valeurs
+            </button>
+            <button
+              type="button"
+              onClick={lesModifier}
+              className="rounded-lg border border-orange-400/50 px-4 py-2.5 text-sm font-semibold text-orange-200 transition hover:bg-orange-400/10"
+            >
+              Non, je les modifie
+            </button>
+          </div>
+        </div>
+      ) : (
+        // Pied de navigation de l'assistant : « Précédent »/« Suivant » d'une
+        // étape à l'autre, et « Valider » (envoi réel) à la dernière seulement.
+        // Le bouton d'avance est de type `button` : changer d'étape ne soumet
+        // rien, seul le « Valider » final déclenche la résolution du tour.
+        // Sur mobile, l'action principale se replie sur sa propre ligne (via
+        // `order` + `flex-wrap`), calée à droite par `ml-auto` : coincée entre
+        // « Précédent » et « Étape X/Y », elle rétrécissait et son libellé
+        // débordait. On garde un bouton à la TAILLE DE SON CONTENU plutôt qu'une
+        // barre pleine largeur, qui paraissait trop lourde sur téléphone. Sur
+        // grand écran, tout revient sur une seule rangée : Précédent · Étape ·
+        // action (poussée à droite par le `sm:mr-auto` du compteur).
+        <div className="flex flex-wrap items-center gap-3 border-t border-white/10 pt-3">
+          <button
+            type="button"
+            onClick={() => setEtape((e) => Math.max(0, Math.min(e, total - 1) - 1))}
+            disabled={courante === 0}
+            className="order-2 shrink-0 rounded-lg border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:text-slate-100 disabled:cursor-not-allowed disabled:opacity-30 sm:order-1"
+          >
+            ← Précédent
+          </button>
+          <span className="order-3 shrink-0 text-xs tabular-nums text-slate-400 sm:order-2 sm:mr-auto">
+            Étape {courante + 1} / {total}
+          </span>
+          {/* Deux boutons DISTINCTS (clés) et non un seul nœud dont le type
+              bascule : sans cela, React réutilisait le même <button> en passant
+              de « Suivant » (type=button) à « Valider » (type=submit) pendant le
+              clic, et le navigateur exécutait l'activation par défaut sur un
+              bouton devenu submit — le dernier « Suivant » envoyait le tour. */}
+          {derniere ? (
+            <button
+              key="valider"
+              type="submit"
+              disabled={pending || verrou != null}
+              className="order-1 ml-auto rounded-lg bg-amber-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60 sm:order-3 sm:ml-0"
+            >
+              {pending
+                ? "Envoi en cours…"
+                : kind === "solo"
+                  ? "Valider et simuler"
+                  : alreadySubmitted
+                    ? "Mettre à jour mes décisions validées"
+                    : "Valider les décisions de l'équipe"}
+            </button>
+          ) : (
+            <button
+              key="suivant"
+              type="button"
+              onClick={() => setEtape((e) => Math.min(total - 1, Math.min(e, total - 1) + 1))}
+              className="order-1 ml-auto rounded-lg bg-amber-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 sm:order-3 sm:ml-0"
+            >
+              Suivant →
+            </button>
+          )}
+        </div>
+      )}
+      {!(pending && kind === "solo") ? (
+        <p className="text-center text-xs text-slate-400">
+          {kind === "solo"
+            ? "Mode apprentissage : les résultats sont calculés immédiatement, à vous d'analyser."
+            : "Vos décisions restent modifiables jusqu'à la clôture du tour par l'enseignant."}
+        </p>
+      ) : null}
     </form>
   );
 }

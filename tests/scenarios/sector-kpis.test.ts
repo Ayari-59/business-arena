@@ -7,6 +7,7 @@ import {
   SERVICES_KPIS,
   computeSectorKpis,
   type SectorKpiContext,
+  ABONNEMENT_KPIS,
 } from "../../src/config/scenarios/sector-kpis";
 import { SCENARIOS, scenarioByCode } from "../../src/config/scenarios/registry";
 import type { CompanyRoundResult, SegmentSalesDetail } from "../../src/engine/types";
@@ -128,11 +129,11 @@ describe("indicateurs du commerce", () => {
 
   it("une rupture de stock fait chuter le taux de transformation", () => {
     const servi = ctx({
-      result: result({ segments: { fideles: segment({ demandForCompany: 400, sold: 400 }) } }),
+      result: result({ segments: { pull_fideles: segment({ demandForCompany: 400, sold: 400 }) } }),
     });
     const rupture = ctx({
       result: result({
-        segments: { fideles: segment({ demandForCompany: 400, sold: 250, lost: 150 }) },
+        segments: { pull_fideles: segment({ demandForCompany: 400, sold: 250, lost: 150 }) },
       }),
     });
     expect(valueOf(COMMERCE_KPIS, "transformation", servi)).toBeCloseTo(1, 9);
@@ -143,18 +144,18 @@ describe("indicateurs du commerce", () => {
     // la demande s'effondre de moitié mais le POTENTIEL aussi : personne n'est parti
     const saison = ctx({
       result: result({
-        segments: { fideles: segment({ potential: 500, demandForCompany: 150 }) },
+        segments: { pull_fideles: segment({ potential: 500, demandForCompany: 150 }) },
       }),
-      previousSegments: { fideles: segment({ potential: 1000, demandForCompany: 300 }) },
+      previousSegments: { pull_fideles: segment({ potential: 1000, demandForCompany: 300 }) },
     });
     expect(valueOf(COMMERCE_KPIS, "attrition", saison)).toBeCloseTo(0, 9);
 
     // ici le potentiel est stable et la part recule : c'est une vraie attrition
     const perte = ctx({
       result: result({
-        segments: { fideles: segment({ potential: 1000, demandForCompany: 240 }) },
+        segments: { pull_fideles: segment({ potential: 1000, demandForCompany: 240 }) },
       }),
-      previousSegments: { fideles: segment({ potential: 1000, demandForCompany: 300 }) },
+      previousSegments: { pull_fideles: segment({ potential: 1000, demandForCompany: 300 }) },
     });
     expect(valueOf(COMMERCE_KPIS, "attrition", perte)).toBeCloseTo(0.2, 9);
   });
@@ -162,9 +163,9 @@ describe("indicateurs du commerce", () => {
   it("gagner des clients n'affiche jamais une attrition négative", () => {
     const gain = ctx({
       result: result({
-        segments: { fideles: segment({ potential: 1000, demandForCompany: 400 }) },
+        segments: { pull_fideles: segment({ potential: 1000, demandForCompany: 400 }) },
       }),
-      previousSegments: { fideles: segment({ potential: 1000, demandForCompany: 300 }) },
+      previousSegments: { pull_fideles: segment({ potential: 1000, demandForCompany: 300 }) },
     });
     expect(valueOf(COMMERCE_KPIS, "attrition", gain)).toBe(0);
   });
@@ -256,5 +257,38 @@ describe("robustesse, tous secteurs", () => {
         expect(k.hint.length, `${d.code}/${k.key} : sans explication`).toBeGreaterThan(30);
       }
     }
+  });
+});
+
+describe("indicateurs par abonnement", () => {
+  const abonnement = ctx({
+    result: {
+      ...result({ revenue: 210_000, cogs: 30_000 }),
+      subscription: {
+        opening: 1600,
+        churnRate: 0.15,
+        churned: 240,
+        retained: 1360,
+        unserved: 0,
+        newMembers: 640,
+        closing: 2000,
+        occupancy: 1600 / 2200,
+        retainedRevenue: 142_800,
+      },
+    } as CompanyRoundResult,
+    totalUnits: 2000,
+    scenario: scenarioByCode("fitness").scenario,
+  });
+
+  it("l'attrition est celle du portefeuille, dès le premier tour", () => {
+    expect(valueOf(ABONNEMENT_KPIS, "attrition", abonnement)).toBeCloseTo(0.15, 9);
+  });
+
+  it("la valeur vie divise la marge par adhérent par l'attrition du portefeuille", () => {
+    expect(valueOf(ABONNEMENT_KPIS, "ltv", abonnement)).toBeCloseTo((210_000 - 30_000) / 2000 / 0.15, 6);
+  });
+
+  it("le revenu par adhérent compte les adhérents conservés", () => {
+    expect(valueOf(ABONNEMENT_KPIS, "revenu_par_adherent", abonnement)).toBeCloseTo(105, 9);
   });
 });

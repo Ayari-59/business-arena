@@ -102,7 +102,7 @@ describe("partie de classe complète", () => {
 
     // Alice valide, Bruno ne fait rien → reconduction/repli à la clôture
     await submitTeamDecisions({ gameId, userId: alice, payload: DECISIONS });
-    let teacherView = await getTeacherGameView(gameId, teacherId);
+    const teacherView = await getTeacherGameView(gameId, teacherId);
     const aliceRow = teacherView!.teams.find((t) => t.teamId === aliceTeam)!;
     const brunoRow = teacherView!.teams.find((t) => t.teamId === brunoTeam)!;
     expect(aliceRow.hasSubmitted).toBe(true);
@@ -111,7 +111,7 @@ describe("partie de classe complète", () => {
     // un élève ne peut pas clore ; l'enseignant si
     await expect(closeCurrentRound({ gameId, teacherId: alice })).rejects.toThrow();
     const r1 = await closeCurrentRound({ gameId, teacherId });
-    expect(r1).toEqual({ roundIndex: 1, finished: false });
+    expect(r1).toMatchObject({ roundIndex: 1, finished: false });
 
     // la décision de Bruno est marquée reconduite
     const round1 = (

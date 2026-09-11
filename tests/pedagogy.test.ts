@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { hintScoreMultiplier, nextUnlockableLevel } from "../src/pedagogy/hints";
 import { evaluateDiagnosis, evaluateQuiz } from "../src/pedagogy/evaluation";
 import { buildConsequenceContext, buildInterpretation, buildTriggerContext, CONSEQUENCE_METADATA, DETECTION_METADATA, INTERPRETATION_METADATA, detectSituations, overallDirection } from "../src/pedagogy/detection";
-import type { ConsequenceFact, InterpretationFact, TriggerFact } from "../src/pedagogy/detection";
+import type { InterpretationFact } from "../src/pedagogy/detection";
 import { updateMastery } from "../src/pedagogy/progress";
 import {
   playerStrength,

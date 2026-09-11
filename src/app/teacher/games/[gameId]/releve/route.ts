@@ -1,5 +1,6 @@
 import { getSession } from "@/lib/session";
 import { getGameGradeSheet } from "@/services/pedagogy.service";
+import { entitlementsForUser } from "@/services/entitlements.service";
 
 /**
  * Le relevé de notes en tableur, une ligne par élève.
@@ -29,15 +30,24 @@ const COLONNES = [
   "Rang",
   "Score composite",
   "Résultat cumulé €",
+  "Source des décisions (dernier tour)",
 ] as const;
 
 /** Une cellule de tableur : décimale à la française, guillemets échappés. */
 function cellule(valeur: string | number | null): string {
   if (valeur === null) return "";
-  const texte =
+  let texte =
     typeof valeur === "number"
       ? (Math.round(valeur * 100) / 100).toString().replace(".", ",")
       : valeur;
+  // Anti-injection de formule : une cellule TEXTE commençant par = + - @ (ou
+  // tabulation/retour chariot) est exécutée comme une formule par Excel /
+  // LibreOffice à l'ouverture. Le pseudo élève et le nom d'équipe sont libres —
+  // on neutralise en préfixant d'une apostrophe. On ne touche PAS aux nombres :
+  // un résultat négatif garde son « - » et reste un nombre.
+  if (typeof valeur === "string" && /^[=+\-@\t\r]/.test(texte)) {
+    texte = `'${texte}`;
+  }
   return /[";\n]/.test(texte) ? `"${texte.replace(/"/g, '""')}"` : texte;
 }
 
@@ -49,6 +59,15 @@ export async function GET(
 ) {
   const session = await getSession();
   if (!session) return new Response("Connexion requise.", { status: 401 });
+
+  // Palier gratuit : l'export du relevé est réservé à l'offre établissement.
+  const ent = await entitlementsForUser(session.userId);
+  if (!ent.gradebookExport) {
+    return new Response(
+      "L'export du relevé de notes est réservé à l'offre établissement.",
+      { status: 402 },
+    );
+  }
 
   const { gameId } = await params;
   const releve = await getGameGradeSheet(gameId, session.userId);
@@ -74,6 +93,7 @@ export async function GET(
           cellule(equipe.rank),
           cellule(equipe.bpi),
           cellule(equipe.cumulativeNetIncome === null ? null : Math.round(equipe.cumulativeNetIncome)),
+          cellule(equipe.lastDecisionSourceLabel),
         ].join(";"),
       );
     }

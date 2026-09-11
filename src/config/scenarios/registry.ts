@@ -1,10 +1,12 @@
 import type { BotProfile } from "../../engine/bots";
 import type { CompanyState, EngineScenarioConfig } from "../../engine/types";
+import { scoringWeightsV2 } from "../../scoring/bpi";
 import type { SituationDef } from "./situation-kit";
 import { SITUATION_LEARNING_MAP } from "@/config/pedagogy/situation-learning-map";
 import {
   ABONNEMENT_KPIS,
   COMMERCE_KPIS,
+  COMMERCE_MONO_KPIS,
   ECOMMERCE_KPIS,
   HOTELLERIE_KPIS,
   INDUSTRIE_KPIS,
@@ -16,16 +18,28 @@ import {
 } from "./sector-kpis";
 import { novaBots, novaCompany, novaScenario } from "./nova";
 import { NOVA_SITUATIONS } from "./nova/situations";
+import { novaGammeBots, novaGammeCompany, novaGammeScenario } from "./nova-gamme";
+import { NOVA_GAMME_SITUATIONS } from "./nova-gamme/situations";
 import { boutiqueBots, boutiqueCompany, boutiqueScenario } from "./boutique";
 import { BOUTIQUE_SITUATIONS } from "./boutique/situations";
+import { boutiqueMonoBots, boutiqueMonoCompany, boutiqueMonoScenario } from "./boutique-mono";
+import { BOUTIQUE_MONO_SITUATIONS } from "./boutique-mono/situations";
 import { hotelBots, hotelCompany, hotelScenario } from "./hotel";
 import { HOTEL_SITUATIONS } from "./hotel/situations";
+import { hotelGammeBots, hotelGammeCompany, hotelGammeScenario } from "./hotel-gamme";
+import { HOTEL_GAMME_SITUATIONS } from "./hotel-gamme/situations";
 import { bistrotBots, bistrotCompany, bistrotScenario } from "./bistrot";
 import { BISTROT_SITUATIONS } from "./bistrot/situations";
+import { bistrotGammeBots, bistrotGammeCompany, bistrotGammeScenario } from "./bistrot-gamme";
+import { BISTROT_GAMME_SITUATIONS } from "./bistrot-gamme/situations";
 import { conseilBots, conseilCompany, conseilScenario } from "./conseil";
 import { CONSEIL_SITUATIONS } from "./conseil/situations";
+import { conseilGammeBots, conseilGammeCompany, conseilGammeScenario } from "./conseil-gamme";
+import { CONSEIL_GAMME_SITUATIONS } from "./conseil-gamme/situations";
 import { ecommerceBots, ecommerceCompany, ecommerceScenario } from "./ecommerce";
 import { ECOMMERCE_SITUATIONS } from "./ecommerce/situations";
+import { ecommerceGammeBots, ecommerceGammeCompany, ecommerceGammeScenario } from "./ecommerce-gamme";
+import { ECOMMERCE_GAMME_SITUATIONS } from "./ecommerce-gamme/situations";
 import { fitnessBots, fitnessCompany, fitnessScenario } from "./fitness";
 import { FITNESS_SITUATIONS } from "./fitness/situations";
 import { batimentBots, batimentCompany, batimentScenario } from "./batiment";
@@ -139,12 +153,45 @@ export interface ScenarioVocabulary {
   otherVariableLabel: string;
   /** Le titre du panneau de choix du fournisseur (« Fournisseur de denrées »). */
   supplierPanelLabel: string;
+  /**
+   * L'unité dans laquelle le secteur compte le temps de travail : l'heure
+   * partout, sauf là où la journée est l'unité même de ce qu'on vend (un
+   * cabinet de conseil compte des jours-consultants, pas des heures).
+   * Absente : l'heure.
+   */
+  laborTimeUnit?: "heure" | "jour";
+}
+
+/** Les mots du temps de travail d'un secteur : « 720 h », « Heures par unité », ou leurs pendants en jours. */
+export function tempsDeTravail(v: Pick<ScenarioVocabulary, "laborTimeUnit">): {
+  abrege: string;
+  singulier: string;
+  pluriel: string;
+  Pluriel: string;
+  /** Le pronom qui reprend le pluriel : « tiennent-elles » pour les heures, « tiennent-ils » pour les jours. */
+  pronom: "elles" | "ils";
+} {
+  const jour = v.laborTimeUnit === "jour";
+  return jour
+    ? { abrege: "j", singulier: "jour", pluriel: "jours", Pluriel: "Jours", pronom: "ils" }
+    : { abrege: "h", singulier: "heure", pluriel: "heures", Pluriel: "Heures", pronom: "elles" };
 }
 
 export interface ScenarioDefinition {
   code: string;
   title: string;
   sector: Sector;
+  /**
+   * Le pictogramme du scénario, distinct de celui du secteur quand deux
+   * scénarios partagent un secteur : NOVA se joue en un produit ou en gamme,
+   * et une tuile « 🏭 Industrie » deux fois ne dit pas laquelle est laquelle.
+   * C'est l'emblème que la vitrine (`presentation.ts`) affiche aussi : une
+   * seule source, sinon la page des entreprises et la tuile de la partie
+   * solo montreraient deux images du même scénario.
+   */
+  icon: string;
+  /** Le nom court, pour une tuile ou une pastille (« NOVA · gamme »). */
+  shortName: string;
   /** Une phrase : ce que l'élève dirige. */
   tagline: string;
   /**
@@ -192,6 +239,8 @@ export const NOVA_DEFINITION: ScenarioDefinition = {
   code: novaScenario.code,
   title: "NOVA · Prenez les commandes",
   sector: "industrie",
+  icon: "🔊",
+  shortName: "NOVA",
   tagline: "Fabricant d'enceintes portables.",
   briefing:
     "Tout ce que vous vendez sort de votre atelier, dont la capacité est limitée. Produire plus que vous ne vendez immobilise votre argent en stock ; produire moins laisse repartir des clients. Tout se joue sur le prix et sur le volume que vous lancez.",
@@ -241,11 +290,130 @@ export const NOVA_DEFINITION: ScenarioDefinition = {
   kpis: INDUSTRIE_KPIS,
 };
 
+/**
+ * NOVA en trois références. Le NOVA d'origine reste tel quel (les ateliers
+ * STMG, l'instantané doré du moteur) ; celui-ci est un SECOND scénario, celui
+ * des ateliers de gestion, qui ajoute le mix au même atelier.
+ */
+export const NOVA_GAMME_DEFINITION: ScenarioDefinition = {
+  code: novaGammeScenario.code,
+  title: "NOVA · Composez la gamme",
+  sector: "industrie",
+  icon: "🎚️",
+  shortName: "NOVA · gamme",
+  tagline: "Fabricant d'enceintes portables : trois références, un atelier.",
+  briefing:
+    "Tout ce que vous vendez sort de votre atelier, dont la capacité est limitée, et vous y fabriquez des enceintes qui ne rapportent pas la même chose. La petite se vend par milliers pour quelques euros de marge, la grande se vendra par centaines pour beaucoup plus, mais elle n'est encore qu'un prototype : la développer se paie avant de rapporter. Quand les commandes dépassent ce que l'atelier peut sortir, la question n'est plus combien produire, mais quoi produire.",
+  context:
+    "L'ancien dirigeant est parti à la retraite le mois dernier. Il vous laisse un atelier en état, une équipe qui connaît les deux produits en vente, un prototype de grande enceinte dans les cartons, et un carnet de commandes vide : rien n'est signé pour le trimestre qui s'ouvre. La concurrence, elle, est installée depuis des années, l'une sur les prix bas de l'entrée de gamme, l'autre sur le haut de gamme des passionnés.",
+  dilemma: {
+    question:
+      "Deux enceintes en vente, un prototype à financer, un seul atelier. Que faites-vous de vos lignes et de votre caisse ce trimestre ?",
+    routes: [
+      {
+        label: "Remplir l'atelier de volume, sans toucher au prototype",
+        gain: "C'est la clientèle la plus nombreuse et la moins fidèle aux concurrents. Les lignes tournent à plein, chaque enceinte de plus ne coûte que ses composants, et la caisse ne finance rien d'incertain.",
+        risque: "La marge par enceinte est mince, ces clients partent au premier prix plus bas, et pendant ce temps un concurrent lance la grande enceinte et prend la clientèle qui paie cher.",
+      },
+      {
+        label: "Financer la grande enceinte dès maintenant",
+        gain: "Une marge plusieurs fois plus large sur chaque enceinte, auprès de passionnés et de studios qui reviennent d'un trimestre à l'autre, et l'avantage de celui qui arrive le premier sur leur marché.",
+        risque: "La recherche se paie ce trimestre, en charge et en caisse, pour une enceinte qui ne se vendra qu'au suivant. Il faut la financer, et cette clientèle reste bien plus petite que celle du volume.",
+      },
+    ],
+  },
+  playerTeamName: "NOVA",
+  vocabulary: {
+    unit: "enceinte",
+    units: "enceintes",
+    unitsGender: "f",
+    productionLabel: "Production",
+    productionPlanLabel: "Plan de production",
+    priceLabel: "Prix de vente",
+    leftoverLabel: "Stock",
+    capacityPanelTitle: "Capacité de production",
+    capacityLabel: "Capacité des lignes",
+    capacityBottleneckLabel: "Lignes de production",
+    capacityBottleneckHint:
+      "Vos lignes limitent la production, toutes références confondues : quand la somme des plans les dépasse, chacun est coupé au prorata. L'investissement capacitaire prend effet au tour suivant.",
+    laborLabel: "Capacité main-d'œuvre",
+    laborBottleneckHint:
+      "Votre main-d'œuvre limite la production : une Studio demande près de trois fois les heures d'une Go. Envisagez d'embaucher ou de former vos salariés.",
+    perRoundLabel: "enceintes/tour",
+    materialLabel: "Matières et composants",
+    otherVariableLabel: "Main-d'œuvre directe, énergie",
+    supplierPanelLabel: "Fournisseur de composants",
+  },
+  scenario: novaGammeScenario,
+  company: novaGammeCompany,
+  bots: novaGammeBots,
+  situations: NOVA_GAMME_SITUATIONS,
+  kpis: INDUSTRIE_KPIS,
+};
+
 export const BOUTIQUE_DEFINITION: ScenarioDefinition = {
   code: boutiqueScenario.code,
+  title: "MAILLE & CO · Habillez l'hiver",
+  sector: "commerce",
+  icon: "👗",
+  shortName: "MAILLE & CO",
+  tagline: "Marque de vêtements en maille : cinq références, une boutique.",
+  briefing:
+    "Vous ne fabriquez rien, vous faites tricoter pour revendre. Votre marge se joue entre le prix auquel vous achetez chaque pièce à vos façonniers et celui auquel vous la vendez, et elle n'est pas la même sur un bonnet et sur un pull mérinos. Ce que vous commandez dort en réserve, et vous l'avez payé bien avant qu'une cliente ne l'emporte.",
+  context:
+    "La marque tourne depuis des années et la clientèle du quartier la connaît. Votre prédécesseur commandait toujours les mêmes quantités des mêmes références aux mêmes façonniers, et la réserve déborde encore de pièces de la saison passée. Vous, vous devez commander la collection qui vient, référence par référence, sans savoir ce qui se vendra.",
+  dilemma: {
+    question:
+      "Vous achetez aujourd'hui ce que vous vendrez dans plusieurs semaines. Combien commandez-vous, et de quoi ?",
+    routes: [
+      {
+        label: "Commander large",
+        gain: "La réserve suit la demande, aucune cliente ne repart les mains vides, et le pic de fin d'année se passe sans rupture.",
+        risque: "Chaque pièce invendue reste payée et dort en réserve. Votre argent est immobilisé dans des cartons.",
+      },
+      {
+        label: "Commander serré",
+        gain: "Peu d'argent immobilisé, une réserve saine, et de la trésorerie disponible pour le reste.",
+        risque: "Une pièce qui manque est une vente perdue, et une cliente qui a trouvé ailleurs revient rarement.",
+      },
+    ],
+  },
+  playerTeamName: "MAILLE & CO",
+  vocabulary: {
+    unit: "article",
+    units: "articles",
+    unitsGender: "m",
+    productionLabel: "Approvisionnement",
+    productionPlanLabel: "Articles à mettre en rayon",
+    priceLabel: "Prix de vente",
+    leftoverLabel: "Stock en réserve",
+    capacityPanelTitle: "Capacité de traitement",
+    capacityLabel: "Réserve et linéaire",
+    capacityBottleneckLabel: "Réserve",
+    capacityBottleneckHint:
+      "Votre réserve et votre linéaire limitent ce que la boutique peut écouler, toutes références confondues : agrandir prend effet au tour suivant.",
+    laborLabel: "Capacité de l'équipe",
+    laborBottleneckHint:
+      "Votre équipe de vente limite le flux en boutique : envisagez d'embaucher ou de former vos vendeuses.",
+    perRoundLabel: "articles/tour",
+    materialLabel: "Achats de marchandises (façonniers)",
+    otherVariableLabel: "Sacs, commissions, logistique",
+    supplierPanelLabel: "Façonnier de la collection",
+  },
+  scenario: boutiqueScenario,
+  company: boutiqueCompany,
+  bots: boutiqueBots,
+  situations: BOUTIQUE_SITUATIONS,
+  kpis: COMMERCE_KPIS,
+};
+
+export const BOUTIQUE_MONO_DEFINITION: ScenarioDefinition = {
+  code: boutiqueMonoScenario.code,
   title: "MAILLE & CO · Tenez la boutique",
   sector: "commerce",
-  tagline: "Concept store de prêt-à-porter en centre-ville.",
+  icon: "🧣",
+  shortName: "MAILLE & CO · un article",
+  tagline: "Concept store de prêt-à-porter en centre-ville : un article de mode, une boutique.",
   briefing:
     "Vous ne fabriquez rien, vous achetez pour revendre. Votre marge se joue entièrement entre le prix auquel vous achetez et celui auquel vous vendez. Ce que vous commandez dort en réserve, et vous l'avez payé bien avant qu'une cliente l'emporte.",
   context:
@@ -287,17 +455,19 @@ export const BOUTIQUE_DEFINITION: ScenarioDefinition = {
     otherVariableLabel: "Sacs, commissions, logistique",
     supplierPanelLabel: "Fournisseur de la collection",
   },
-  scenario: boutiqueScenario,
-  company: boutiqueCompany,
-  bots: boutiqueBots,
-  situations: BOUTIQUE_SITUATIONS,
-  kpis: COMMERCE_KPIS,
+  scenario: boutiqueMonoScenario,
+  company: boutiqueMonoCompany,
+  bots: boutiqueMonoBots,
+  situations: BOUTIQUE_MONO_SITUATIONS,
+  kpis: COMMERCE_MONO_KPIS,
 };
 
 export const HOTEL_DEFINITION: ScenarioDefinition = {
   code: hotelScenario.code,
   title: "L'ESCALE · Remplissez l'hôtel",
   sector: "hotellerie",
+  icon: "🛎️",
+  shortName: "L'ESCALE",
   tagline: "Hôtel 3 étoiles de 60 chambres en ville moyenne.",
   briefing:
     "Une chambre vide ce soir est perdue : elle ne se vendra pas deux fois demain. Vos charges tombent que l'hôtel soit plein ou non. Vous jouez donc sur deux tableaux à la fois, le nombre de chambres occupées et le prix que vous arrivez à tenir.",
@@ -347,13 +517,70 @@ export const HOTEL_DEFINITION: ScenarioDefinition = {
   kpis: HOTELLERIE_KPIS,
 };
 
+export const HOTEL_GAMME_DEFINITION: ScenarioDefinition = {
+  code: hotelGammeScenario.code,
+  title: "L'ESCALE · Vendez chaque chambre",
+  sector: "hotellerie",
+  icon: "🏨",
+  shortName: "L'ESCALE · gamme",
+  tagline: "Hôtel 3 étoiles de 60 chambres : standard, supérieures et suites, un même bâtiment.",
+  briefing:
+    "Une chambre vide ce soir est perdue : elle ne se vendra pas deux fois demain. Vos charges tombent que l'hôtel soit plein ou non. Et vous ne vendez pas une nuitée mais trois chambres, chacune à son prix et à sa clientèle : le remplissage compte, le mix des chambres vendues compte autant.",
+  context:
+    "L'hôtel vient d'un exploitant qui affichait un seul prix moyen toute l'année, sans distinguer la suite de la chambre du fond. Les plateformes de réservation apportent des clients, mais prennent leur commission au passage. La saison qui s'ouvre ne remplira pas l'hôtel toute seule, et elle ne remplira pas les trois chambres de la même façon.",
+  dilemma: {
+    question: "Trois chambres, un bâtiment. Faut-il vendre beaucoup de standard à petit prix, ou tenir les supérieures et les suites à leur prix ?",
+    routes: [
+      {
+        label: "Remplir par la standard",
+        gain: "Des chambres occupées plutôt que vides, une clientèle nombreuse, un hôtel qui tourne.",
+        risque: "Le prix moyen descend, les équipes travaillent pour une marge mince, et la suite bradée un jour se vend mal le lendemain.",
+      },
+      {
+        label: "Tenir le haut de gamme",
+        gain: "Chaque nuitée vendue rapporte pleinement, et l'hôtel garde l'image qui fait venir ses clients d'affaires et ses grandes occasions.",
+        risque: "Des chambres restent vides alors que les charges tombent, et les suites ne se vendent pas toutes les nuits.",
+      },
+    ],
+  },
+  playerTeamName: "L'ESCALE",
+  vocabulary: {
+    unit: "nuitée",
+    units: "nuitées",
+    unitsGender: "f",
+    productionLabel: "Ouverture",
+    productionPlanLabel: "Nuitées mises en vente",
+    priceLabel: "Prix par nuitée",
+    leftoverLabel: "Nuitées perdues",
+    capacityPanelTitle: "Capacité d'accueil",
+    capacityLabel: "Chambres ouvertes",
+    capacityBottleneckLabel: "Chambres",
+    capacityBottleneckHint:
+      "Vos chambres limitent le remplissage, tous types confondus : rénover et rouvrir des chambres prend effet au tour suivant.",
+    laborLabel: "Capacité des équipes",
+    laborBottleneckHint:
+      "Vos équipes d'étage et de réception limitent le nombre de chambres exploitables, et une suite demande plus d'heures qu'une standard : envisagez d'embaucher ou de former.",
+    perRoundLabel: "nuitées/tour",
+    materialLabel: "Petit-déjeuner et linge",
+    otherVariableLabel: "Commissions, énergie, ménage",
+    supplierPanelLabel: "Prestataires du séjour",
+  },
+  scenario: hotelGammeScenario,
+  company: hotelGammeCompany,
+  bots: hotelGammeBots,
+  situations: HOTEL_GAMME_SITUATIONS,
+  kpis: HOTELLERIE_KPIS,
+};
+
 export const BISTROT_DEFINITION: ScenarioDefinition = {
   code: bistrotScenario.code,
   title: "LA TABLE D'AUGUSTIN · Tenez le service",
   sector: "restauration",
+  icon: "🍽️",
+  shortName: "LA TABLE D'AUGUSTIN",
   tagline: "Bistrot de 70 couverts, midi et soir.",
   briefing:
-    "Un couvert non servi est perdu, et ce que la cuisine a préparé sans le vendre part à la poubelle. Deux limites vous arrêtent en même temps : le nombre de places en salle et les heures de votre brigade. Prévoir trop coûte, prévoir trop peu aussi.",
+    "Un couvert non servi est perdu, et ce que la cuisine a préparé sans le vendre part à la poubelle. Deux limites vous arrêtent en même temps : ce que la salle et la cuisine peuvent servir, et les heures de votre brigade. Prévoir trop coûte, prévoir trop peu aussi.",
   context:
     "Le bistrot est connu du quartier : la salle se remplit le midi en semaine, et le soir le week-end. Chaque semaine, la cuisine commande des denrées qui ne se gardent pas. Ce qui est préparé et non servi est perdu le soir même.",
   dilemma: {
@@ -381,10 +608,10 @@ export const BISTROT_DEFINITION: ScenarioDefinition = {
     priceLabel: "Ticket moyen",
     leftoverLabel: "Denrées perdues",
     capacityPanelTitle: "Capacité de service",
-    capacityLabel: "Places en salle",
-    capacityBottleneckLabel: "Salle",
+    capacityLabel: "Capacité salle et cuisine",
+    capacityBottleneckLabel: "Salle et cuisine",
     capacityBottleneckHint:
-      "Votre salle limite le nombre de couverts : couvrir la terrasse prend effet au tour suivant.",
+      "Votre salle et votre cuisine limitent le nombre de couverts : la terrasse couverte et le matériel de cuisine prennent effet au tour suivant.",
     laborLabel: "Capacité brigade",
     laborBottleneckHint:
       "Votre brigade limite le service : des places libres ne servent à rien sans personnel pour les tenir. Embauchez ou formez.",
@@ -400,10 +627,47 @@ export const BISTROT_DEFINITION: ScenarioDefinition = {
   kpis: RESTAURATION_KPIS,
 };
 
+export const BISTROT_GAMME_DEFINITION: ScenarioDefinition = {
+  code: bistrotGammeScenario.code,
+  title: "LA TABLE D'AUGUSTIN · Composez la carte",
+  sector: "restauration",
+  icon: "🍷",
+  shortName: "LA TABLE D'AUGUSTIN · gamme",
+  tagline: "Bistrot de 70 couverts : la formule du midi, la carte du soir, les banquets, et un traiteur à bâtir.",
+  briefing:
+    "Un couvert non servi est perdu, et ce que la cuisine a préparé sans le vendre part à la poubelle. Vous ne vendez plus un couvert mais quatre offres, chacune à son prix, à sa clientèle et à son coût de denrées, avec la même cuisine et la même brigade : remplir compte, ce qu'on sert compte autant. L'activité traiteur, elle, reste à bâtir avant de rapporter.",
+  context:
+    "Le bistrot vient d'un chef qui affichait le même ticket à midi et le soir. Les bureaux du quartier veulent une formule rapide, les habitués du soir une carte, les entreprises des banquets réglés à un mois. Un projet traiteur dort dans un tiroir : il faut un véhicule frigorifique et un agrément avant le premier buffet.",
+  dilemma: {
+    question: "Une cuisine, une brigade, quatre cartes. Faut-il remplir le midi à petit prix, tenir la carte du soir, réserver des soirs aux banquets, ou financer le traiteur qui ne vendra rien ce trimestre ?",
+    routes: [
+      {
+        label: "Remplir par le midi",
+        gain: "Une salle pleine tous les jours, des clients réguliers qui paient comptant.",
+        risque: "Un ticket qui baisse, et une brigade occupée à servir vite ce qui rapporte le moins.",
+      },
+      {
+        label: "Tenir le soir, et bâtir le traiteur",
+        gain: "Le meilleur ticket du bistrot, des soirs entiers vendus d'un coup, et une activité qui ne connaît ni la taille de la salle ni les congés de la clientèle.",
+        risque: "Des soirs retirés à la carte, des banquets réglés à un mois, une salle vide à midi, et un budget engagé avant la première commande traiteur.",
+      },
+    ],
+  },
+  playerTeamName: "LA TABLE D'AUGUSTIN",
+  vocabulary: { ...BISTROT_DEFINITION.vocabulary },
+  scenario: bistrotGammeScenario,
+  company: bistrotGammeCompany,
+  bots: bistrotGammeBots,
+  situations: BISTROT_GAMME_SITUATIONS,
+  kpis: RESTAURATION_KPIS,
+};
+
 export const CONSEIL_DEFINITION: ScenarioDefinition = {
   code: conseilScenario.code,
   title: "ATLAS CONSEIL · Vendez le temps de vos équipes",
   sector: "services",
+  icon: "📊",
+  shortName: "ATLAS CONSEIL",
   tagline: "Cabinet de conseil et bureau d'études, 12 consultants.",
   briefing:
     "Ce que vous facturez, c'est du temps de travail. Une journée non vendue ne se rattrape jamais, et les salaires tombent que le carnet soit plein ou vide. Vos clients règlent à 45 jours : l'argent gagné met des semaines à arriver en caisse.",
@@ -439,6 +703,7 @@ export const CONSEIL_DEFINITION: ScenarioDefinition = {
     capacityBottleneckHint:
       "Vos locaux limitent la taille du cabinet, cas rare : la contrainte habituelle est l'effectif.",
     laborLabel: "Jours-consultants disponibles",
+    laborTimeUnit: "jour",
     laborBottleneckHint:
       "Vos consultants SONT la capacité du cabinet : elle ne s'achète pas, elle se recrute. Embaucher produit son effet au tour suivant.",
     perRoundLabel: "jours/tour",
@@ -454,10 +719,68 @@ export const CONSEIL_DEFINITION: ScenarioDefinition = {
 };
 
 
+export const CONSEIL_GAMME_DEFINITION: ScenarioDefinition = {
+  code: conseilGammeScenario.code,
+  title: "ATLAS CONSEIL · Composez l'offre",
+  sector: "services",
+  icon: "🧭",
+  shortName: "ATLAS CONSEIL · gamme",
+  tagline: "Cabinet de conseil, 12 consultants : l'audit, la transformation, et une pratique cyber à bâtir.",
+  briefing:
+    "Vous vendez du temps, et il ne se stocke pas : une journée non facturée est perdue. Vos consultants sont payés que le carnet soit plein ou vide. Et vous ne vendez pas une journée mais trois offres, chacune à son taux et à ses clients, avec les mêmes consultants : remplir les journées compte, ce qu'on y vend compte autant. La pratique cyber, elle, reste à bâtir avant de rapporter.",
+  context:
+    "Le cabinet vient d'un associé qui facturait toutes les missions au même taux, l'audit d'une PME comme la transformation d'un groupe. Les grands comptes paient à soixante jours, et le poste clients est presque tout le bilan. Un projet de pratique cyber dort dans un dossier : les DSI achètent toute l'année, mais il faut des méthodes et des certifications avant la première mission.",
+  dilemma: {
+    question: "Douze consultants, trois offres. Faut-il remplir le banc avec de l'audit au tarif PME, tenir la transformation au tarif des grands comptes, ou financer la pratique cyber qui ne vendra rien ce trimestre ?",
+    routes: [
+      {
+        label: "Remplir par l'audit",
+        gain: "Des consultants occupés, un carnet régulier, des PME qui règlent à trente jours.",
+        risque: "Un taux moyen qui descend, et des journées qui manqueront à la transformation quand les grands comptes appelleront.",
+      },
+      {
+        label: "Bâtir l'offre cyber",
+        gain: "Une offre au tarif le plus haut du cabinet, des clients qui achètent en été, et un cabinet qui ne dépend plus des congés des décideurs.",
+        risque: "Un budget de méthodes et de certifications engagé avant la première mission, en charge du tour, avec des salaires qui tombent pendant que l'offre se construit.",
+      },
+    ],
+  },
+  playerTeamName: "ATLAS CONSEIL",
+  vocabulary: {
+    unit: "jour-conseil",
+    units: "jours-conseil",
+    unitsGender: "m",
+    productionLabel: "Staffing",
+    productionPlanLabel: "Jours à staffer",
+    priceLabel: "Taux journalier",
+    leftoverLabel: "Jours non facturés",
+    capacityPanelTitle: "Capacité de staffing",
+    capacityLabel: "Capacité des locaux",
+    capacityBottleneckLabel: "Locaux",
+    capacityBottleneckHint:
+      "Vos locaux limitent la taille du cabinet, cas rare : la contrainte habituelle est l'effectif, partagé entre les trois offres.",
+    laborLabel: "Jours-consultants disponibles",
+    laborBottleneckHint:
+      "Vos consultants SONT la capacité du cabinet, pour les trois offres à la fois : elle ne s'achète pas, elle se recrute. Embaucher produit son effet au tour suivant.",
+    perRoundLabel: "jours/tour",
+    materialLabel: "Frais de mission",
+    otherVariableLabel: "Sous-traitance d'appoint",
+    supplierPanelLabel: "Renfort sur les missions",
+    laborTimeUnit: "jour",
+  },
+  scenario: conseilGammeScenario,
+  company: conseilGammeCompany,
+  bots: conseilGammeBots,
+  situations: CONSEIL_GAMME_SITUATIONS,
+  kpis: SERVICES_KPIS,
+};
+
 export const ECOMMERCE_DEFINITION: ScenarioDefinition = {
   code: ecommerceScenario.code,
   title: "PIXEL & CO · Achetez votre trafic",
   sector: "ecommerce",
+  icon: "📦",
+  shortName: "PIXEL & CO",
   tagline: "Pure player de décoration et petit mobilier.",
   briefing:
     "Ouvrir votre boutique ne coûte presque rien, c'est un site. Mais personne n'y arrive tout seul : chaque visiteur se paie en publicité. La question n'est donc pas de savoir si vous gagnez de l'argent sur une commande, mais si vous en gagnez assez pour rembourser ce que ce client vous a coûté.",
@@ -507,10 +830,47 @@ export const ECOMMERCE_DEFINITION: ScenarioDefinition = {
   kpis: ECOMMERCE_KPIS,
 };
 
+export const ECOMMERCE_GAMME_DEFINITION: ScenarioDefinition = {
+  code: ecommerceGammeScenario.code,
+  title: "PIXEL & CO · Composez le catalogue",
+  sector: "ecommerce",
+  icon: "🛋️",
+  shortName: "PIXEL & CO · gamme",
+  tagline: "Pure player de décoration : la déco, le petit mobilier, les luminaires, et une collection de créateurs à bâtir.",
+  briefing:
+    "Ouvrir votre boutique ne coûte presque rien, c'est un site. Mais personne n'y arrive tout seul : chaque visiteur se paie en publicité, et vous ne vendez plus une commande mais quatre rayons, chacun à son panier, à ses frais de port et à sa place de marché, avec le même entrepôt et le même budget. La question n'est donc pas de savoir si vous gagnez de l'argent sur une commande, mais sur laquelle, et si vous en gagnez assez pour rembourser ce que ce client vous a coûté. La collection de créateurs, elle, reste à bâtir avant de rapporter.",
+  context:
+    "Le site fonctionne, les fournisseurs sont en place, l'entrepôt prépare les commandes de trois rayons. Mais l'ancien propriétaire avait coupé la publicité pour économiser, le trafic s'est effondré avec elle, et le fauteuil qu'on expédie coûte plus cher à livrer que le coussin qu'on vend dix fois plus. Un projet de collection de créateurs dort dans un dossier : il faut des exclusivités et un shooting avant la première commande.",
+  dilemma: {
+    question: "Sur internet, chaque visiteur se paie, et chaque rayon ne rapporte pas la même chose. Où mettez-vous vos euros de publicité ?",
+    routes: [
+      {
+        label: "Pousser la décoration",
+        gain: "Le rayon qui tourne, des colis légers, une place de marché qui apporte du volume.",
+        risque: "Le plus petit panier du catalogue : la publicité y coûte presque autant qu'elle rapporte.",
+      },
+      {
+        label: "Miser sur le mobilier, et bâtir la capsule",
+        gain: "La marge par commande la plus haute, et une collection que personne d'autre ne vend.",
+        risque: "Des colis volumineux qui saturent l'entrepôt, une commission plus lourde sur les places de marché, et un budget engagé avant la première commande.",
+      },
+    ],
+  },
+  playerTeamName: "PIXEL & CO",
+  vocabulary: { ...ECOMMERCE_DEFINITION.vocabulary },
+  scenario: ecommerceGammeScenario,
+  company: ecommerceGammeCompany,
+  bots: ecommerceGammeBots,
+  situations: ECOMMERCE_GAMME_SITUATIONS,
+  kpis: ECOMMERCE_KPIS,
+};
+
 export const FITNESS_DEFINITION: ScenarioDefinition = {
   code: fitnessScenario.code,
   title: "VOLT FITNESS · Gardez vos adhérents",
   sector: "abonnement",
+  icon: "🏋️",
+  shortName: "VOLT FITNESS",
   tagline: "Salle de sport de 1 200 m² en périphérie.",
   briefing:
     "Vos adhérents paient un abonnement chaque trimestre. Vous ne les gagnez donc pas une fois, vous les gardez ou vous les perdez. Chaque départ n'enlève pas seulement un abonnement à ce trimestre, il l'enlève à tous les suivants.",
@@ -565,6 +925,8 @@ export const BATIMENT_DEFINITION: ScenarioDefinition = {
   code: batimentScenario.code,
   title: "MARTEL & FILS · Tenez les chantiers",
   sector: "batiment",
+  icon: "🏗️",
+  shortName: "MARTEL & FILS",
   tagline: "Entreprise de rénovation, quatorze compagnons.",
   briefing:
     "Vous achetez les matériaux, vous payez vos compagnons chaque mois, et vous facturez à la fin du chantier. Vos clients règlent ensuite quand leurs procédures le permettent. Entre la dépense et la recette, il se passe des mois, et c'est vous qui financez l'attente.",
@@ -619,6 +981,8 @@ export const TRANSPORT_DEFINITION: ScenarioDefinition = {
   code: transportScenario.code,
   title: "ROUTE & CIE · Remplissez les camions",
   sector: "transport",
+  icon: "🚚",
+  shortName: "ROUTE & CIE",
   tagline: "Transporteur routier régional, sept porteurs.",
   briefing:
     "Vos camions partent chaque matin, chargés ou non. Le gazole, les péages et le chauffeur se paient de la même façon dans les deux cas. Une place vide au départ est perdue pour toujours : tout le métier consiste à décider ce qu'on met dedans, et à quel prix, avant que la porte ne se ferme.",
@@ -671,17 +1035,127 @@ export const TRANSPORT_DEFINITION: ScenarioDefinition = {
 
 export const SCENARIOS: ScenarioDefinition[] = [
   NOVA_DEFINITION,
+  NOVA_GAMME_DEFINITION,
   BOUTIQUE_DEFINITION,
+  BOUTIQUE_MONO_DEFINITION,
   HOTEL_DEFINITION,
+  HOTEL_GAMME_DEFINITION,
   BISTROT_DEFINITION,
+  BISTROT_GAMME_DEFINITION,
   CONSEIL_DEFINITION,
+  CONSEIL_GAMME_DEFINITION,
   ECOMMERCE_DEFINITION,
+  ECOMMERCE_GAMME_DEFINITION,
   FITNESS_DEFINITION,
   BATIMENT_DEFINITION,
   TRANSPORT_DEFINITION,
 ];
 
 export const DEFAULT_SCENARIO_CODE = NOVA_DEFINITION.code;
+
+/**
+ * UNE FAMILLE : le même métier en un seul produit ou en gamme, selon le niveau.
+ *
+ * NOVA se joue en une enceinte ou en trois ; MAILLE & CO en un article ou en
+ * cinq. Proposer les deux variantes côte à côte demandait à l'enseignant un
+ * choix qu'il n'avait pas à faire : la gamme est un pas de plus, comme la
+ * qualité ou la trésorerie, et c'est le niveau de difficulté qui le franchit.
+ * Aux choix (partie solo, espace enseignant, page des entreprises), une
+ * famille se présente par sa TÊTE, une seule tuile ; à la création de la
+ * partie, le niveau décide de la variante réellement jouée.
+ */
+export interface ScenarioFamily {
+  /** Le code affiché dans les choix. */
+  head: string;
+  /** La variante en un seul produit, jouée sous `gammeFromLevel`. */
+  mono: string;
+  /** La variante en gamme, jouée à partir de `gammeFromLevel`. */
+  gamme: string;
+  gammeFromLevel: number;
+  /** Ce que chaque variante fait jouer, pour le dire à qui choisit (« une seule enceinte »). */
+  monoLabel: string;
+  gammeLabel: string;
+}
+
+export const SCENARIO_FAMILIES: readonly ScenarioFamily[] = [
+  {
+    head: NOVA_DEFINITION.code,
+    mono: NOVA_DEFINITION.code,
+    gamme: NOVA_GAMME_DEFINITION.code,
+    // Le niveau qui ouvre la R&D : la Studio se développe avant de se vendre.
+    gammeFromLevel: 4,
+    monoLabel: "une seule enceinte",
+    gammeLabel: "la gamme Go, One et Studio, la Studio à développer",
+  },
+  {
+    head: BOUTIQUE_DEFINITION.code,
+    mono: BOUTIQUE_MONO_DEFINITION.code,
+    gamme: BOUTIQUE_DEFINITION.code,
+    // Le niveau où la qualité et le fournisseur se décident référence par référence.
+    gammeFromLevel: 3,
+    monoLabel: "un seul article de mode",
+    gammeLabel: "la gamme de cinq références",
+  },
+  {
+    head: HOTEL_DEFINITION.code,
+    mono: HOTEL_DEFINITION.code,
+    gamme: HOTEL_GAMME_DEFINITION.code,
+    // Le niveau où l'on arbitre : trois prix, trois clientèles, un bâtiment.
+    gammeFromLevel: 4,
+    monoLabel: "une seule nuitée à prix moyen",
+    gammeLabel: "les trois chambres, standard, supérieure et suite",
+  },
+  {
+    head: CONSEIL_DEFINITION.code,
+    mono: CONSEIL_DEFINITION.code,
+    gamme: CONSEIL_GAMME_DEFINITION.code,
+    // Le niveau qui ouvre la R&D : la pratique cyber se bâtit avant de se vendre.
+    gammeFromLevel: 4,
+    monoLabel: "une seule journée à taux moyen",
+    gammeLabel: "les trois offres, audit, transformation et une pratique cyber à bâtir",
+  },
+  {
+    head: BISTROT_DEFINITION.code,
+    mono: BISTROT_DEFINITION.code,
+    gamme: BISTROT_GAMME_DEFINITION.code,
+    // Le niveau qui ouvre la R&D : l'activité traiteur se bâtit avant de se vendre.
+    gammeFromLevel: 4,
+    monoLabel: "un seul ticket moyen",
+    gammeLabel: "la formule du midi, la carte du soir, les banquets et un traiteur à bâtir",
+  },
+  {
+    head: ECOMMERCE_DEFINITION.code,
+    mono: ECOMMERCE_DEFINITION.code,
+    gamme: ECOMMERCE_GAMME_DEFINITION.code,
+    // Le niveau qui ouvre la R&D : la collection de créateurs se bâtit avant de se vendre.
+    gammeFromLevel: 4,
+    monoLabel: "une seule commande à panier moyen",
+    gammeLabel: "les quatre rayons, décoration, mobilier, luminaires et une collection de créateurs à bâtir",
+  },
+];
+
+/** La famille d'un code de scénario, s'il en a une (tête ou variante). */
+export function familyOf(code: string | undefined | null): ScenarioFamily | undefined {
+  if (!code) return undefined;
+  return SCENARIO_FAMILIES.find((f) => f.head === code || f.mono === code || f.gamme === code);
+}
+
+/**
+ * Le scénario réellement joué pour un code et un niveau : la variante de sa
+ * famille que le niveau appelle, ou le code lui-même hors famille (les sept
+ * autres secteurs, les scénarios publiés par un enseignant).
+ */
+export function scenarioCodeForLevel(code: string, level: number | undefined | null): string {
+  const family = familyOf(code);
+  if (!family) return code;
+  return (level ?? 1) >= family.gammeFromLevel ? family.gamme : family.mono;
+}
+
+/** Les scénarios proposés au choix : une tuile par famille, les variantes n'y figurent pas. */
+export const SCENARIO_CHOICES: ScenarioDefinition[] = SCENARIOS.filter((d) => {
+  const family = familyOf(d.code);
+  return !family || family.head === d.code;
+});
 
 const byCode = new Map(SCENARIOS.map((s) => [s.code, s]));
 
@@ -692,6 +1166,16 @@ const byCode = new Map(SCENARIOS.map((s) => [s.code, s]));
  */
 export function scenarioByCode(code: string | undefined | null): ScenarioDefinition {
   return (code ? byCode.get(code) : undefined) ?? NOVA_DEFINITION;
+}
+
+/**
+ * Un code correspond-il à l'un des secteurs INTÉGRÉS (résolus depuis le code) ?
+ * Sinon c'est un scénario enseignant, à charger depuis la base. Sert de garde à
+ * la résolution : `scenarioByCode` retombe silencieusement sur NOVA pour un code
+ * inconnu, ce qui masquerait un scénario base non hydraté.
+ */
+export function isBuiltInScenarioCode(code: string | undefined | null): boolean {
+  return code != null && byCode.has(code);
 }
 
 /** Toutes les situations, tous scénarios confondus (référentiel à semer). */
@@ -742,7 +1226,14 @@ export function economicDefaults(d: ScenarioDefinition): Record<string, string |
   const creditDelays = s.market.segments
     .map((seg) => seg.paymentDelayDays)
     .filter((v) => v > 0);
+  const bpi = scoringWeightsV2(s.scoring);
   return {
+    bpiEconomic: pct(bpi.economic),
+    bpiFinancial: pct(bpi.financial),
+    bpiCommercial: pct(bpi.commercial),
+    bpiProfitability: pct(bpi.profitability),
+    bpiPilotage: pct(bpi.pilotage),
+    bpiDecisionMastery: pct(bpi.decision_mastery),
     taxRate: pct(s.finance.taxRate),
     vatRate: pct(s.finance.vatRate ?? 0),
     customerPaymentDelayDays: num(creditDelays.length ? Math.max(...creditDelays) : 0),

@@ -32,7 +32,7 @@ export const ATELIER_GPME: AtelierDefinition = {
   pourquoi:
     "Dans une PME, personne n'a de service dédié : la même personne relance un client en retard le matin et prépare un recrutement l'après-midi, et les deux décisions se tiennent par la trésorerie. C'est ce lien-là qu'un dossier découpé par activité ne fait jamais sentir. Ici l'équipe décide de recruter au trimestre trois et se retrouve au trimestre quatre à devoir payer un salaire de plus avec des créances qui ne rentrent pas. Les activités du référentiel cessent d'être des chapitres séparés : ce sont les quatre faces d'une même décision.",
   reglages: {
-    scenarioCode: "conseil",
+    scenarioCode: "conseil-gamme",
     periodicite: "quarter",
     periodiciteLabel: "Un trimestre par tour",
     niveau: 4,
@@ -45,7 +45,7 @@ export const ATELIER_GPME: AtelierDefinition = {
     tours: 5,
     effectifParEquipe: "trois élèves",
     notes:
-      "ATLAS CONSEIL vend du temps, qui ne se stocke pas : une journée non vendue est perdue. Sa capacité ne s'achète pas, elle se recrute, avec le délai et le coût que cela suppose. Son bilan est presque entièrement fait de créances clients, ce qui rend le poste clients concret plutôt que théorique. Le niveau retenu ouvre le personnel, le financement et l'assurance, c'est-à-dire les trois leviers que le référentiel demande de savoir manier. Le monde variable est décoché pour que les écarts entre équipes viennent de leurs décisions.",
+      "ATLAS CONSEIL vend du temps, qui ne se stocke pas : une journée non vendue est perdue. Sa capacité ne s'achète pas, elle se recrute, avec le délai et le coût que cela suppose. Son bilan est presque entièrement fait de créances clients, ce qui rend le poste clients concret plutôt que théorique. Le cabinet se joue ici en trois offres, l'audit, la transformation et une pratique cyber à bâtir par la R&D avant de la vendre : le mix des journées vendues et l'investissement dans une offre neuve entrent dans les décisions. Le niveau retenu ouvre le personnel, le financement, l'assurance et la R&D, c'est-à-dire les leviers que le référentiel demande de savoir manier. Le monde variable est décoché pour que les écarts entre équipes viennent de leurs décisions.",
   },
   seances: [
     {

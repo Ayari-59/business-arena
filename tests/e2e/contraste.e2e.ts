@@ -17,7 +17,7 @@ import { THEMES, THEME_PAR_DEFAUT } from "../../src/config/themes";
  * pas pour objet de les corriger. Il garde une chose : qu'un thème ne dégrade
  * pas ce qui était lisible.
  */
-const PAGES = ["/", "/entreprises", "/concepts", "/ateliers"];
+const PAGES = ["/", "/jouer", "/entreprises", "/concepts", "/animations"];
 
 let navigateur: Browser;
 let page: Page;
@@ -46,6 +46,10 @@ beforeAll(async () => {
     // maintenant toute la navigation et ses phrases d'aide en petits corps.
     await aller(page, "/");
     await page.getByRole("button", { name: "Menu" }).click();
+    // Le plan est un accordéon : on déplie ses groupes pour que les phrases
+    // d'aide en petits corps soient réellement rendues, donc mesurées.
+    const groupes = page.locator('#plan-du-site button[aria-controls^="groupe-"]');
+    for (let i = 0; i < (await groupes.count()); i += 1) await groupes.nth(i).click();
     await page.locator("#plan-du-site a").first().waitFor({ state: "visible" });
     relever("menu", await mesurerContraste(page, theme.code));
     parTheme.set(theme.code, releve);
@@ -100,7 +104,7 @@ describe("lisibilité des thèmes", () => {
     // Celui-là est passé à 1,9 pour 1 sans que rien ne le signale.
     for (const theme of THEMES) {
       const ratio = [...parTheme.get(theme.code)!].find(([cle]) =>
-        cle.includes("Lancer une partie"),
+        cle.includes("Tester le simulateur"),
       );
       expect(ratio, `${theme.code} : bouton de lancement introuvable`).toBeDefined();
       expect(ratio![1], `${theme.code} : bouton de lancement à ${ratio![1]}`).toBeGreaterThanOrEqual(

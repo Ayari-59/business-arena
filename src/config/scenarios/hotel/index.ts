@@ -131,7 +131,7 @@ const rawHotel = {
     factoringFeeRate: 0.022,
     forcedFactoringFeeRate: 0.055,
     // 2 %/an : de quoi valoriser le surplus, jamais de quoi financer
-    // un découvert à 9 %. L'arbitrage doit rester perdant à l'envers.
+    // un découvert à 12 %. L'arbitrage doit rester perdant à l'envers.
     placementAnnualRate: 0.02,
   },
   // structure ≈ 186 000 €/tour : 158 000 décaissés (salaires des équipes,
@@ -260,7 +260,7 @@ const rawHotel = {
       code: "hotel_offer_congres",
       title: "Congrès régional de cardiologie",
       narrative:
-        "Le palais des congrès vous adresse les participants de son congrès d'automne. Facturation centralisée, règlement à l'échéance du contrat.",
+        "Le palais des congrès vous adresse les participants de son congrès d'automne : un bloc de nuitées à réserver sur ce trimestre, pris sur votre capacité et servi une fois votre clientèle habituelle installée. Facturation centralisée, réglée à l'échéance du contrat.",
       units: 900,
       price: 84,
       paymentDelayDays: 60,
@@ -269,7 +269,7 @@ const rawHotel = {
       code: "hotel_offer_tour_operateur",
       title: "Tour-opérateur · allotement",
       narrative:
-        "Un tour-opérateur bloque un allotement et le paie dès la réservation. Le prix est bas, l'encaissement immédiat et l'occupation garantie.",
+        "Un tour-opérateur bloque un allotement de nuitées sur ce trimestre, pris sur votre capacité et servi une fois votre clientèle habituelle installée, et le paie dès la réservation. Le prix est bas, l'encaissement immédiat et l'occupation garantie.",
       units: 1200,
       price: 61,
       paymentDelayDays: 0,
@@ -526,10 +526,11 @@ export function hotelCompany(
       fixedAssetsNet: 1450000,
       inventoryValue: 0,
       receivables: 62000,
-      cash: 88000,
+      cash: 64000,
       equity: 660000,
       financialDebt: 900000,
-      payables: 40000,
+      // 30 jours de blanchisserie et de petits-déjeuners : le délai des énoncés
+      payables: 16000,
       overdraft: 0,
     },
     lastMarketShare: {},

@@ -47,13 +47,19 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
     titre: "Découvrir",
     liens: [
       {
+        href: "/enseignants",
+        libelle: "Pour les enseignants",
+        aide: "Pourquoi la plateforme apprend à décider et pas à cliquer, ses ateliers clés en main et sa prise en main en classe.",
+        enTete: true,
+      },
+      {
         href: "/entreprises",
         libelle: "Entreprises",
         aide: "Les fiches des entreprises jouables : leur marché, leurs contraintes, ce qu'on y apprend.",
         enTete: true,
       },
       {
-        href: "/ateliers",
+        href: "/animations",
         libelle: "Ateliers",
         aide: "Des déroulés de séance prêts à animer, avec leurs livrables et leur grille d'évaluation.",
         enTete: true,
@@ -66,7 +72,7 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
       {
         href: "/fonctionnalites",
         libelle: "Fonctionnalités",
-        aide: "9 scénarios, 79 situations, 18 modèles : tout ce que la plateforme met entre les mains de vos étudiants.",
+        aide: "Les scénarios, les situations, les modèles d'analyse : tout ce que la plateforme met entre les mains de vos étudiants.",
       },
     ],
   },
@@ -91,6 +97,12 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
     code: "entrer",
     titre: "Entrer",
     liens: [
+      {
+        href: "/jouer",
+        libelle: "Jouer en solo",
+        aide: "Lancez une partie tout de suite : choisissez un secteur et un niveau, et pilotez l'entreprise seul contre des concurrents simulés.",
+        enTete: true,
+      },
       {
         href: "/join",
         libelle: "Rejoindre une partie",

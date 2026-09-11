@@ -51,6 +51,39 @@ export function computeProducedQuality(args: {
   return Math.max(0.1, base * overheat);
 }
 
+/**
+ * Taux de rebut interne (doc 02 §4.2) : les rebuts croissent quand la qualité
+ * produite baisse. La MAINTENANCE peut aussi jouer (facteur optionnel), de façon
+ * UNIDIRECTIONNELLE : sous le budget de maintenance de référence les rebuts
+ * augmentent (jusqu'à ×(1 + s)) ; au budget de référence ou au-dessus, aucun
+ * effet (facteur plafonné à 1 — pas de « récompense » à sur-entretenir). L'effet
+ * est totalement inactif si `maintenanceDefectSensitivity` vaut 0 ou est absent
+ * — les scénarios qui ne l'activent pas gardent leur comportement exact.
+ * Résultat borné à [0, 0.5].
+ */
+export function computeDefectRate(args: {
+  baseDefectRate: number;
+  producedQuality: number;
+  rseDefectReduction?: number;
+  maintenanceBudget?: number;
+  maintenanceReference?: number;
+  maintenanceDefectSensitivity?: number;
+}): number {
+  const rse = args.rseDefectReduction ?? 0;
+  const s = args.maintenanceDefectSensitivity ?? 0;
+  const ref = args.maintenanceReference ?? 0;
+  let maintenanceFactor = 1;
+  if (s > 0 && ref > 0) {
+    const ratio = (args.maintenanceBudget ?? 0) / ref;
+    // Unidirectionnel : sous-entretien (ratio < 1) → plus de rebuts, jusqu'à
+    // ×(1 + s). Au budget de référence ou au-dessus (ratio ≥ 1) → facteur 1,
+    // aucun bonus. Le max(0, …) plafonne l'effet à 1 vers le haut.
+    maintenanceFactor = 1 + s * Math.max(0, 1 - ratio);
+  }
+  const raw = args.baseDefectRate * (2 - args.producedQuality) * (1 - rse) * maintenanceFactor;
+  return Math.min(0.5, Math.max(0, raw));
+}
+
 export function updatePerceivedQuality(
   previous: number,
   produced: number,

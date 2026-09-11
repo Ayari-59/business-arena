@@ -23,6 +23,10 @@ export interface EffectiveModifiers {
   orderUnitPrice: number | undefined;
   /** Unités de commande sous-traitables au-delà du stock (additives). */
   orderSubcontractMax: number;
+  /** Charge exceptionnelle du tour (€, additive) — ex. amende RSE (Lot 2C.2). */
+  oneOffCharge: number;
+  /** Produit exceptionnel du tour (€, additif) — ex. éco-subvention RSE (Lot 2C.2). */
+  oneOffIncome: number;
 }
 
 export function drawEvents(
@@ -84,6 +88,8 @@ export function effectiveModifiers(
     extraOrderUnits: 0,
     orderUnitPrice: undefined,
     orderSubcontractMax: 0,
+    oneOffCharge: 0,
+    oneOffIncome: 0,
   };
   for (const event of events) {
     if (event.scope === "company" && event.companyId !== companyId) continue;
@@ -100,6 +106,8 @@ function apply(out: EffectiveModifiers, m: EventModifier): Record<string, number
   else if (m.target === "order") out.extraOrderUnits += m.value; // toujours additif (unités)
   else if (m.target === "order_price") out.orderUnitPrice = m.value; // prix imposé (absolu)
   else if (m.target === "order_subcontract") out.orderSubcontractMax += m.value;
+  else if (m.target === "financial_penalty") out.oneOffCharge += m.value; // charge exceptionnelle (€)
+  else if (m.target === "financial_aid") out.oneOffIncome += m.value; // produit exceptionnel (€)
   else if (m.target === "demand") {
     out.demandMultiplier["*"] = combine(out.demandMultiplier["*"] ?? 1);
   } else if (m.target.startsWith("demand:")) {

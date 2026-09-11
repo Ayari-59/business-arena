@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { authSecret } from "@/lib/auth-secret";
 
 /**
  * Identité invitée (v0.1, étape 6) : un visiteur reçoit un identifiant signé en
@@ -14,7 +15,7 @@ import { eq } from "drizzle-orm";
 const COOKIE = "ba_guest";
 
 function secret(): string {
-  return process.env.AUTH_SECRET ?? "dev-secret-change-me";
+  return authSecret();
 }
 
 function sign(id: string): string {

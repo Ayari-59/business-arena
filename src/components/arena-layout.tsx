@@ -65,7 +65,7 @@ export function ArenaLayout({
               className={`relative flex-1 px-3 py-3.5 text-sm font-medium transition-colors sm:flex-none sm:px-6 ${
                 current === tab.key
                   ? "text-white"
-                  : "text-slate-500 hover:text-slate-300"
+                  : "text-slate-400 hover:text-slate-300"
               }`}
             >
               <span className="mr-1.5 hidden sm:inline">{tab.icon}</span>

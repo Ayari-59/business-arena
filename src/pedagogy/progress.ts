@@ -5,6 +5,15 @@ import type { SkillAxis } from "../config/pedagogy/concepts";
  * pondérés ; le profil par axe agrège les concepts (§28).
  */
 
+/**
+ * Seuil de maîtrise (échelle 0..100) à partir duquel un prérequis est réputé
+ * acquis (doc 03 §6 ; V2 couche 2, chantier #1). Sert de policy au graphe de
+ * prérequis (`CONCEPT_PREREQUISITES`) : c'est le filtrage par niveau (#2) qui
+ * s'en servira pour ordonner et proposer les situations. Les situations
+ * détectées, elles, restent des moments réactifs non filtrés.
+ */
+export const PREREQUISITE_MASTERY_THRESHOLD = 60;
+
 /** Nouvelle maîtrise après une situation (moyenne mobile vers le score obtenu). */
 export function updateMastery(current: number, situationScore: number, weight: number): number {
   const target = situationScore * 100;

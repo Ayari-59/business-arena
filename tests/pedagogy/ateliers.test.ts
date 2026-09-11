@@ -6,7 +6,7 @@ import {
   REFERENTIELS,
   REFERENTIELS_NON_VERIFIES,
 } from "../../src/config/ateliers/referentiels";
-import { SCENARIOS, scenarioByCode } from "../../src/config/scenarios/registry";
+import { SCENARIOS, scenarioByCode, scenarioCodeForLevel } from "../../src/config/scenarios/registry";
 import { DIFFICULTY_PRESETS } from "../../src/config/difficulty";
 
 /**
@@ -19,6 +19,18 @@ import { DIFFICULTY_PRESETS } from "../../src/config/difficulty";
  * ici.
  */
 describe("ateliers professionnels", () => {
+  it("chaque atelier joue la variante que son niveau appelle", () => {
+    // NOVA et MAILLE & CO se jouent en un produit ou en gamme selon le
+    // niveau : la partie créée pour un atelier suit cette règle, et le dossier
+    // de l'élève doit décrire la même entreprise que celle qu'il dirigera.
+    for (const a of ATELIERS) {
+      expect(
+        scenarioCodeForLevel(a.reglages.scenarioCode, a.reglages.niveau),
+        `${a.code} : le niveau ${a.reglages.niveau} ne joue pas ${a.reglages.scenarioCode}`,
+      ).toBe(a.reglages.scenarioCode);
+    }
+  });
+
   it("les codes d'atelier sont uniques", () => {
     const codes = ATELIERS.map((a) => a.code);
     expect(new Set(codes).size).toBe(codes.length);
@@ -64,7 +76,7 @@ describe("ateliers professionnels", () => {
   it("la fiche ne déduit pas le nombre de tours du nombre de séances", () => {
     // La confusion d'origine, en une ligne de page : « une partie de {séances}
     // tours ». Elle était fausse sur quatre fiches sur cinq.
-    const page = readFileSync("src/app/ateliers/[code]/page.tsx", "utf-8")
+    const page = readFileSync("src/app/animations/[code]/page.tsx", "utf-8")
       .replace(/\{\/\*[\s\S]*?\*\/\}/g, "")
       .replace(/^\s*\/\/.*$/gm, "");
     expect(page, "la fiche compte les séances pour annoncer des tours").not.toMatch(
@@ -456,7 +468,7 @@ describe("ateliers professionnels", () => {
     // pour toutes les fiches sans qu'aucune donnée ne change : le défaut
     // d'origine, découvert le jour où une animation de découverte pour le
     // lycée est entrée au registre.
-    for (const chemin of ["src/app/ateliers/page.tsx", "src/app/ateliers/[code]/page.tsx"]) {
+    for (const chemin of ["src/app/animations/page.tsx", "src/app/animations/[code]/page.tsx"]) {
       const source = readFileSync(chemin, "utf-8")
         .replace(/\{\/\*[\s\S]*?\*\/\}/g, "")
         .replace(/\/\*[\s\S]*?\*\//g, "")
@@ -468,7 +480,7 @@ describe("ateliers professionnels", () => {
         /passeport professionnel/i,
       );
     }
-    const fiche = readFileSync("src/app/ateliers/[code]/page.tsx", "utf-8");
+    const fiche = readFileSync("src/app/animations/[code]/page.tsx", "utf-8");
     expect(fiche, "la fiche n'ouvre pas la nature de l'atelier").toContain("atelier.nature");
     expect(fiche, "la fiche n'ouvre pas le document de la trace").toContain("atelier.traceLabel");
   });
@@ -478,7 +490,7 @@ describe("ateliers professionnels", () => {
     // intitulé. Deux séances qui mobilisent le même thème l'écrivaient deux
     // fois, et une fiche dont les intitulés commencent tous par le niveau
     // affichait « Première, Première, Première ».
-    const fiche = readFileSync("src/app/ateliers/[code]/page.tsx", "utf-8");
+    const fiche = readFileSync("src/app/animations/[code]/page.tsx", "utf-8");
     expect(fiche, "le résumé des thèmes ne dédoublonne pas ce qu'il affiche").toMatch(
       /new Set\(processus\.map/,
     );
@@ -505,7 +517,7 @@ describe("ateliers professionnels", () => {
   it("les pages d'atelier n'écrivent aucun mot de référentiel en dur", () => {
     // Sans cette garde, une page peut retomber sur « processus » pour tous les
     // diplômes sans qu'aucune donnée ne change : le défaut d'origine.
-    for (const chemin of ["src/app/ateliers/page.tsx", "src/app/ateliers/[code]/page.tsx"]) {
+    for (const chemin of ["src/app/animations/page.tsx", "src/app/animations/[code]/page.tsx"]) {
       const source = readFileSync(chemin, "utf-8")
         .replace(/\{\/\*[\s\S]*?\*\/\}/g, "")
         .replace(/\/\*[\s\S]*?\*\//g, "")
@@ -514,7 +526,7 @@ describe("ateliers professionnels", () => {
         /Processus mobilisés/i,
       );
     }
-    const fiche = readFileSync("src/app/ateliers/[code]/page.tsx", "utf-8");
+    const fiche = readFileSync("src/app/animations/[code]/page.tsx", "utf-8");
     expect(fiche, "la fiche n'ouvre pas le mot du référentiel").toContain(
       "atelier.referentielLabel",
     );

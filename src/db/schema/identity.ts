@@ -23,8 +23,32 @@ export const users = pgTable("users", {
   avatar: text("avatar"),
   locale: text("locale").notNull().default("fr"),
   isPlatformAdmin: boolean("is_platform_admin").notNull().default(false),
+  /**
+   * Version de session : incrémentée par « Se déconnecter partout ». Un cookie
+   * signé pour une version antérieure est refusé, quel que soit son délai.
+   */
+  sessionVersion: integer("session_version").notNull().default(1),
   ...timestamps,
 });
+
+/**
+ * Échecs de connexion, pour limiter les tentatives.
+ *
+ * En base et non en mémoire : Vercel sert le site depuis plusieurs instances
+ * qui ne partagent rien, un compteur en mémoire se remettrait à zéro à chaque
+ * instance et à chaque déploiement. Une ligne par échec ; purgées à la
+ * première connexion réussie de l'e-mail ou de l'adresse.
+ */
+export const loginAttempts = pgTable(
+  "login_attempts",
+  {
+    id: id(),
+    email: text("email").notNull(),
+    ip: text("ip"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("login_attempts_email_idx").on(t.email), index("login_attempts_ip_idx").on(t.ip)],
+);
 
 export const organizations = pgTable("organizations", {
   id: id(),

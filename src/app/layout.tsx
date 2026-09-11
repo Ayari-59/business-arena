@@ -1,12 +1,42 @@
 import type { Metadata, Viewport } from "next";
+import { Fraunces, Inter_Tight } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
-import { CLE_THEME, THEMES, THEME_PAR_DEFAUT } from "@/config/themes";
+import { InstallPrompt } from "@/components/install-prompt";
 
+/**
+ * Les deux voix typographiques de la maison, auto-hébergées par next/font
+ * (aucune requête au chargement). Fraunces, un serif de caractère, ne sert
+ * qu'aux grands titres (règle h1 dans globals.css) ; Inter Tight, une
+ * grotesque nette et un peu resserrée, porte tout le reste. Chacune expose une
+ * variable CSS que le thème (@theme) branche sur --font-display et --font-sans,
+ * si bien qu'aucun composant n'a à nommer une police.
+ */
+const policeTitre = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-brand-display",
+  display: "swap",
+});
+const policeTexte = Inter_Tight({
+  subsets: ["latin"],
+  variable: "--font-brand-sans",
+  display: "swap",
+});
+import { CLE_THEME, THEMES, THEME_PAR_DEFAUT } from "@/config/themes";
+import { SITE_URL } from "@/config/site";
+import { DESCRIPTION_ACCUEIL, GABARIT_DE_TITRE, NOM_DU_SITE, TITRE_ACCUEIL } from "@/config/seo";
+
+/**
+ * Les métadonnées communes. Chaque page donne son titre propre, que le
+ * gabarit complète du nom du site ; la page d'accueil, elle, porte le titre
+ * entier. L'image de partage vient de opengraph-image.tsx, à côté.
+ */
 export const metadata: Metadata = {
-  title: "BUSINESS ARENA",
-  description:
-    "Simulation, apprentissage, aide à la décision et compétition en management",
+  metadataBase: new URL(SITE_URL),
+  title: { default: TITRE_ACCUEIL, template: GABARIT_DE_TITRE },
+  description: DESCRIPTION_ACCUEIL,
+  openGraph: { siteName: NOM_DU_SITE, locale: "fr_FR", type: "website", url: SITE_URL },
+  twitter: { card: "summary_large_image" },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -22,14 +52,18 @@ export const metadata: Metadata = {
   },
 };
 
+/**
+ * Le zoom reste libre : un élève malvoyant pince pour agrandir, et rien ne
+ * doit l'en empêcher (WCAG 1.4.4). L'installation en application (manifest,
+ * service worker) ne dépend pas de cette ligne.
+ */
 export const viewport: Viewport = {
   themeColor: "#d97706",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   // Le thème est relu et posé avant le premier affichage. Placé ici, en tête du
@@ -43,11 +77,24 @@ export default function RootLayout({
     `if(${codes}.indexOf(c)>-1)document.documentElement.dataset.theme=c}catch(e){}`;
 
   return (
-    <html lang="fr" data-theme={THEME_PAR_DEFAUT}>
+    <html
+      lang="fr"
+      data-theme={THEME_PAR_DEFAUT}
+      className={`${policeTitre.variable} ${policeTexte.variable}`}
+    >
       <body className="min-h-screen bg-slate-950 text-slate-100 antialiased">
         <script dangerouslySetInnerHTML={{ __html: amorce }} />
+        {/* Premier élément focusable : au clavier, on saute la navigation. */}
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-amber-400 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-slate-950"
+        >
+          Aller au contenu
+        </a>
         <SiteHeader />
         {children}
+        {/* Invite d'installation, sur mobile uniquement (fermable, mémorisée). */}
+        <InstallPrompt />
         <script
           dangerouslySetInnerHTML={{
             __html: `if("serviceWorker"in navigator)window.addEventListener("load",function(){navigator.serviceWorker.register("/sw.js")});window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();window.__bip=e;window.dispatchEvent(new Event("bip-ready"))})`,

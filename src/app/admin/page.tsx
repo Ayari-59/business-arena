@@ -4,16 +4,17 @@ import { getSession } from "@/lib/session";
 import { getPlatformOverview, getStaffContext } from "@/services/admin.service";
 import { DEMO_ACCOUNTS, isDemoSeeded } from "@/services/demo.service";
 import { formatEuro } from "@/lib/format";
+import { AI_MODELS } from "@/config/ai";
 import {
   createEstablishmentAction,
   deactivateAdminInviteAction,
-  deleteLicenceAction,
   newAdminInviteAction,
   seedDemoAction,
   setLicenceAction,
   updatePlatformConfigAction,
 } from "./actions";
 import { SubmitButton } from "@/components/submit-button";
+import { DeleteLicenceButton } from "@/components/delete-licence-button";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +42,7 @@ function LicenceField({
 }) {
   return (
     <label className="block">
-      <span className="text-[10px] uppercase tracking-wide text-slate-500">{label}</span>
+      <span className="text-xs uppercase tracking-wide text-slate-400">{label}</span>
       <input
         name={name}
         type={type}
@@ -62,13 +63,13 @@ export default async function AdminPage() {
   const demoSeeded = await isDemoSeeded();
 
   return (
-    <main className="mx-auto max-w-5xl space-y-8 p-6">
+    <main id="main" className="mx-auto max-w-5xl space-y-8 p-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Administration générale</p>
           <h1 className="text-2xl font-bold">Plateforme Business Arena</h1>
         </div>
-        <nav className="flex gap-4 text-xs text-slate-500">
+        <nav className="flex gap-4 text-xs text-slate-400">
           <Link href="/teacher" className="hover:text-slate-300">Espace enseignant</Link>
           <Link href="/" className="hover:text-slate-300">Landing</Link>
         </nav>
@@ -137,12 +138,95 @@ export default async function AdminPage() {
               placeholder="Ex : contact@votre-domaine.fr"
               className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
             />
-            <span className="mt-1 block text-xs text-slate-500">
-              Tant qu&apos;elle est vide, la page d&apos;orientation rend sa recommandation mais
-              n&apos;ouvre aucun courrier : mieux vaut pas de bouton qu&apos;un bouton qui
-              n&apos;écrit à personne.
+            <span className="mt-1 block text-xs text-slate-400">
+              Par défaut <strong className="text-slate-400">contact@business-arena.fr</strong>, pour
+              que la demande d&apos;information soit active sans réglage. Remplacez-la par la vôtre,
+              ou videz-la pour retirer le bouton d&apos;envoi : mieux vaut pas de bouton qu&apos;un
+              bouton qui n&apos;écrit à personne.
             </span>
           </label>
+
+          <fieldset className="rounded-xl border border-amber-400/25 bg-amber-950/10 p-4">
+            <legend className="px-2 text-xs font-semibold uppercase tracking-wide text-amber-300">
+              Palier gratuit (freemium)
+            </legend>
+            <p className="mb-3 text-xs text-slate-400">
+              Ce à quoi un compte <strong className="text-slate-300">sans licence active</strong> a droit.
+              Une licence en cours ouvre tout. <strong className="text-slate-300">Par défaut tout est ouvert</strong> :
+              resserrez ces réglages (ex. 3 tours, concours fermés) pour activer le freemium.
+            </p>
+            <label className="block">
+              <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                Tours jouables en gratuit (vide = illimité)
+              </span>
+              <input
+                name="freeMaxRounds"
+                type="number"
+                min={1}
+                max={24}
+                defaultValue={overview.config.freeTier.maxRounds ?? ""}
+                placeholder="Ex : 3"
+                className="mt-1 w-40 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+              />
+              <span className="mt-1 block text-xs text-slate-400">
+                La partie gratuite se termine à ce tour, même si le scénario en prévoit plus : c&apos;est le mur « ne va pas au bout ».
+              </span>
+            </label>
+            <div className="mt-3 space-y-2">
+              <label className="flex items-center gap-3 text-sm text-slate-300">
+                <input type="checkbox" name="freeCompetitions" defaultChecked={overview.config.freeTier.competitions} className="h-4 w-4 accent-amber-400" />
+                Concours autorisés en gratuit
+              </label>
+              <label className="flex items-center gap-3 text-sm text-slate-300">
+                <input type="checkbox" name="freeAi" defaultChecked={overview.config.freeTier.ai} className="h-4 w-4 accent-amber-400" />
+                Feedback IA autorisé en gratuit
+              </label>
+              <label className="flex items-center gap-3 text-sm text-slate-300">
+                <input type="checkbox" name="freeGradebookExport" defaultChecked={overview.config.freeTier.gradebookExport} className="h-4 w-4 accent-amber-400" />
+                Export du relevé de notes autorisé en gratuit
+              </label>
+            </div>
+          </fieldset>
+
+          <fieldset className="rounded-xl border border-sky-400/25 bg-sky-950/10 p-4">
+            <legend className="px-2 text-xs font-semibold uppercase tracking-wide text-sky-300">
+              Assistant IA
+            </legend>
+            <p className="mb-3 text-xs text-slate-400">
+              Surfaces d&apos;assistance par IA. <strong className="text-slate-300">Éteintes par défaut</strong> ;
+              elles restent inertes tant qu&apos;une clé <code className="text-slate-300">ANTHROPIC_API_KEY</code> n&apos;est pas
+              configurée côté serveur, et le mur « Feedback IA » du palier gratuit s&apos;applique aussi.
+            </p>
+            <div className="space-y-2">
+              <label className="flex items-center gap-3 text-sm text-slate-300">
+                <input type="checkbox" name="aiCoach" defaultChecked={overview.config.ai.coach} className="h-4 w-4 accent-sky-400" />
+                Coach de tour (élève, solo) — un retour après chaque tour
+              </label>
+              <label className="flex items-center gap-3 text-sm text-slate-300">
+                <input type="checkbox" name="aiTutor" defaultChecked={overview.config.ai.tutor} className="h-4 w-4 accent-sky-400" />
+                Tuteur conversationnel (élève) — répond aux questions en cours de partie
+              </label>
+              <label className="flex items-center gap-3 text-sm text-slate-300">
+                <input type="checkbox" name="aiTeacherReview" defaultChecked={overview.config.ai.teacherReview} className="h-4 w-4 accent-sky-400" />
+                Synthèse des justifications (enseignant) — aide au débriefing
+              </label>
+            </div>
+            <label className="mt-3 block">
+              <span className="text-xs font-medium uppercase tracking-wide text-slate-400">Modèle</span>
+              <select
+                name="aiModel"
+                defaultValue={overview.config.ai.model}
+                className="mt-1 block w-full max-w-sm rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-sky-400/60"
+              >
+                {AI_MODELS.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </fieldset>
+
           <SubmitButton
             pendingLabel="Enregistrement…"
             className="rounded-lg bg-amber-400 px-5 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300"
@@ -155,7 +239,7 @@ export default async function AdminPage() {
       {/* Monde démo */}
       <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
         <h2 className="text-sm font-semibold text-slate-200">Monde de démonstration</h2>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-slate-400">
           Un établissement complet pour présenter le produit : direction, enseignant, une
           partie de classe déjà jouée sur 3 tours (le tour 4, celui de la crise de trésorerie, est
           le prochain), vues pédagogiques alimentées, et un concours prêt à lancer.
@@ -171,7 +255,7 @@ export default async function AdminPage() {
                 Enseignant : {DEMO_ACCOUNTS.teacher.email} / {DEMO_ACCOUNTS.password}
               </li>
             </ul>
-            <p className="mt-2 text-xs text-slate-500">
+            <p className="mt-2 text-xs text-slate-400">
               Ces identifiants sont aussi affichés sur la page de connexion enseignant.
             </p>
           </div>
@@ -187,7 +271,7 @@ export default async function AdminPage() {
       {/* Nouvel établissement */}
       <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
         <h2 className="text-sm font-semibold text-slate-200">Déployer un nouvel établissement</h2>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-slate-400">
           Crée l&apos;établissement et génère un code d&apos;invitation administrateur : la
           personne qui s&apos;inscrit avec ce code devient admin de l&apos;établissement et
           peut à son tour inviter ses enseignants.
@@ -220,7 +304,7 @@ export default async function AdminPage() {
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-sm font-semibold text-slate-100">
                   {org.name}
-                  <span className="ml-2 rounded bg-slate-800 px-1.5 py-0.5 text-[10px] uppercase text-slate-500">
+                  <span className="ml-2 rounded bg-slate-800 px-1.5 py-0.5 text-xs uppercase text-slate-400">
                     {org.kind === "public" ? "grand public" : org.kind === "school" ? "établissement" : org.kind}
                   </span>
                 </p>
@@ -231,7 +315,7 @@ export default async function AdminPage() {
               </div>
               {org.kind !== "public" ? (
                 <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-                  <span className="text-slate-500">Codes admin :</span>
+                  <span className="text-slate-400">Codes admin :</span>
                   {org.adminInvites.length === 0 ? (
                     <span className="text-slate-600">aucun</span>
                   ) : (
@@ -249,7 +333,7 @@ export default async function AdminPage() {
                           <form
                             action={deactivateAdminInviteAction.bind(null, invite.id, org.organizationId)}
                           >
-                            <button className="text-slate-500 hover:text-red-400" title="Désactiver">
+                            <button className="text-slate-400 hover:text-red-400" title="Désactiver">
                               ✕
                             </button>
                           </form>
@@ -303,11 +387,7 @@ export default async function AdminPage() {
                           {l.amountCents !== null ? (
                             <span className="tabular-nums">{formatEuro(l.amountCents / 100)}</span>
                           ) : null}
-                          <form action={deleteLicenceAction.bind(null, l.id)}>
-                            <button className="text-slate-600 hover:text-red-400" title="Supprimer">
-                              ✕
-                            </button>
-                          </form>
+                          <DeleteLicenceButton licenceId={l.id} />
                         </li>
                       ))}
                     </ul>
@@ -327,7 +407,7 @@ export default async function AdminPage() {
                       Enregistrer la licence
                     </button>
                   </form>
-                  <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+                  <p className="mt-2 text-xs leading-relaxed text-slate-400">
                     Sans licence, l&apos;établissement reste ouvert : la limite n&apos;existe que
                     là où une vente l&apos;a définie. Une licence expirée ferme la création de
                     nouvelles parties et laisse se terminer les classes en cours.

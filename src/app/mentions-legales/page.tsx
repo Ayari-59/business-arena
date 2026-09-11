@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import { SiteLogo } from "@/components/site-logo";
 
 export const metadata: Metadata = {
-  title: "Mentions légales & données personnelles · BUSINESS ARENA",
+  alternates: { canonical: "/mentions-legales" },
+  title: "Mentions légales & données personnelles",
   description:
     "Éditeur, hébergement, cookies et protection des données : les élèves jouent sans compte, sans e-mail, sans traceur.",
 };
@@ -26,7 +27,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 export default function MentionsLegalesPage() {
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100">
+    <main id="main" className="min-h-screen bg-slate-950 text-slate-100">
       <nav className="mx-auto flex max-w-3xl items-center justify-between px-6 py-5">
         <Link href="/">
           <SiteLogo />
@@ -112,7 +113,7 @@ export default function MentionsLegalesPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
+                <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
                   <th className="pb-2 pr-3 font-medium">Qui</th>
                   <th className="pb-2 pr-3 font-medium">Données</th>
                   <th className="pb-2 pr-3 font-medium">Finalité</th>

@@ -53,6 +53,11 @@ export const scenarios = pgTable(
     roundsCount: integer("rounds_count").notNull(),
     baseDifficulty: integer("base_difficulty").notNull().default(1),
     config: jsonb("config").notNull(),
+    // Partie non-moteur d'un scénario ENSEIGNANT (habillage, vocabulaire, état
+    // initial, bots, situations, KPI) — de quoi reconstruire une
+    // `ScenarioDefinition` complète depuis la base. Null pour les 9 secteurs
+    // intégrés (résolus depuis le code, jamais hydratés depuis la base).
+    definition: jsonb("definition"),
     status: scenarioStatus("status").notNull().default("draft"),
     authorId: uuid("author_id").references(() => users.id, { onDelete: "set null" }),
     ...timestamps,

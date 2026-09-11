@@ -35,12 +35,12 @@ export function KpiCard({
       ? "text-emerald-400"
       : trend?.direction === "down"
         ? "text-red-400"
-        : "text-slate-500";
+        : "text-slate-400";
   const trendArrow =
     trend?.direction === "up" ? "↑" : trend?.direction === "down" ? "↓" : "→";
 
   return (
-    <div className={`relative overflow-hidden rounded-xl border ${border} bg-slate-900 p-4`}>
+    <div className={`relative overflow-hidden rounded-xl border ${border} bg-slate-900 p-1.5 sm:p-4`}>
       <div className={`absolute inset-y-0 left-0 w-1 ${stripe}`} />
       <p className="pl-2 text-xs uppercase tracking-wide text-slate-400">{label}</p>
       <div className="mt-1 flex items-baseline gap-2 pl-2">
@@ -54,7 +54,7 @@ export function KpiCard({
           <Sparkline data={sparklineData} />
         ) : null}
       </div>
-      {hint ? <p className="mt-1 pl-2 text-xs text-slate-500">{hint}</p> : null}
+      {hint ? <p className="mt-1 pl-2 text-xs text-slate-400">{hint}</p> : null}
     </div>
   );
 }

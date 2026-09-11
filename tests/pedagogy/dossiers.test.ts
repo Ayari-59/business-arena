@@ -9,6 +9,7 @@ import {
   dossierEnseignant,
   tableauDeBordCsv,
 } from "../../src/config/ateliers/dossiers";
+import { dossiersDeService } from "../../src/config/ateliers/services";
 
 /**
  * AUCUNE RÉPONSE NE PASSE DU CÔTÉ DE L'ÉLÈVE.
@@ -52,11 +53,22 @@ describe("les deux dossiers d'un atelier", () => {
     // vérifie ne verrait pas ce code se tromper.
     for (const a of ATELIERS) {
       const preset = DIFFICULTY_PRESETS.find((p) => p.level === a.reglages.niveau)!;
+      const config = scenarioByCode(a.reglages.scenarioCode).scenario;
+      // La marque et l'axe n'existent qu'avec un levier communication (la
+      // marque, en gamme seulement) : un secteur qui ne le déclare pas n'a
+      // pas ces cases à l'écran.
+      const offert = (champ: string) =>
+        champ === "brandMarketingBudget"
+          ? Boolean(config.communication) && Boolean(config.products)
+          : champ === "communicationAxis"
+            ? Boolean(config.communication)
+            : true;
       const ouverts = LEVIERS.filter(
         (l) =>
-          l.ouvertPar === "toujours" ||
-          l.ouvertPar === "secteur" ||
-          preset.decisions[l.ouvertPar] === true,
+          (l.ouvertPar === "toujours" ||
+            l.ouvertPar === "secteur" ||
+            preset.decisions[l.ouvertPar] === true) &&
+          offert(l.champ),
       ).map((l) => l.nom);
       const { decisions, resultats, tours } = dossierEleve(a).tableauDeBord;
 
@@ -141,12 +153,12 @@ describe("les deux dossiers d'un atelier", () => {
   it("les corrigés restent derrière la session, le dossier élève reste public", () => {
     // Le partage des deux pages est ce qui rend la séparation réelle : une
     // page de corrigés en accès libre annulerait tout le reste.
-    const corriges = readFileSync("src/app/teacher/ateliers/[code]/dossier/page.tsx", "utf-8");
+    const corriges = readFileSync("src/app/teacher/animations/[code]/dossier/page.tsx", "utf-8");
     expect(corriges, "la page des corrigés ne demande pas de session").toContain("getSession()");
     expect(corriges, "la page des corrigés ne renvoie pas au login").toContain(
       'redirect("/teacher/login")',
     );
-    const eleve = readFileSync("src/app/ateliers/[code]/dossier/page.tsx", "utf-8");
+    const eleve = readFileSync("src/app/animations/[code]/dossier/page.tsx", "utf-8");
     expect(eleve, "le dossier élève lit les corrigés").not.toContain("dossierEnseignant");
   });
 
@@ -209,5 +221,49 @@ describe("les deux dossiers d'un atelier", () => {
         }
       }
     }
+  });
+});
+
+describe("les dossiers de service savent la R&D et la communication", () => {
+  it("NOVA · gamme annonce la Studio à développer, la marque et l'axe ; un secteur sans levier n'en dit rien", () => {
+    const gea = ATELIERS.find((a) => a.code === "gea")!;
+    const services = dossierEleve(gea).services;
+    const par = (code: string) => services.find((s) => s.code === code)!;
+    const appro = par("approvisionnement");
+    expect(appro.lignes.find((l) => l.libelle === "À développer avant de vendre : NOVA Studio")!.valeur).toContain("25 000 €");
+    expect(appro.lignes.find((l) => l.libelle === "À développer avant de vendre : NOVA Studio")!.valeur).toContain("au plus tôt au tour 2");
+    expect(appro.lignes.some((l) => l.libelle.startsWith("À développer avant de vendre : NOVA Go"))).toBe(false);
+    const commercial = par("commercial");
+    expect(commercial.mission).toContain("l'axe de communication");
+    expect(commercial.lignes.find((l) => l.libelle === "Budget de marque de référence par tour")!.valeur).toContain("4 000 €");
+    expect(commercial.lignes.find((l) => l.libelle === "Axe de communication (un seul par tour)")!.valeur).toContain("×1,3");
+    expect(commercial.tableau!.entetes.at(-1)).toBe("Axe qui porte · axe qui dessert");
+    // Les lycéens comparent les prix : le prix porte, la qualité dessert. Les passionnés : l'inverse.
+    const ligne = (nom: string) => commercial.tableau!.lignes.find((l) => l[0]!.startsWith(nom))!.at(-1)!;
+    expect(ligne("Lycéens")).toMatch(/^prix · .*qualité/);
+    expect(ligne("Passionnés")).toMatch(/^qualité.* · prix$/);
+    const financier = par("financier");
+    expect(financier.lignes.find((l) => l.libelle === "R&D à financer avant de vendre NOVA Studio")!.valeur).toContain("25 000 €");
+    expect(financier.questions).toHaveLength(4);
+    // Le tableau de bord de l'équipe a les deux cases.
+    expect(dossierEleve(gea).tableauDeBord.decisions).toEqual(
+      expect.arrayContaining(["Budget de marque", "Axe de communication", "Recherche et développement"]),
+    );
+
+    const stmg = ATELIERS.find((a) => a.code === "stmg")!;
+    const texte = JSON.stringify(dossierEleve(stmg).services);
+    expect(texte).not.toContain("À développer");
+    expect(texte).not.toContain("Budget de marque");
+    expect(texte).not.toContain("Axe de communication");
+    expect(dossierEleve(stmg).tableauDeBord.decisions).not.toContain("Budget de marque");
+    expect(dossierEleve(stmg).tableauDeBord.decisions).not.toContain("Axe de communication");
+  });
+
+  it("un niveau qui ferme la R&D ne promet aucun développement", () => {
+    const nova = scenarioByCode("nova-gamme");
+    const texte = JSON.stringify(dossiersDeService(nova, 4, { sansRd: true }));
+    expect(texte).not.toContain("À développer");
+    expect(texte).not.toContain("R&D à financer");
+    expect(texte).toContain("Budget de marque");
   });
 });

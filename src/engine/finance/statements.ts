@@ -30,12 +30,32 @@ export interface FinanceInput {
   marketingCost: number;
   qualityCost: number;
   maintenanceCost: number;
+  /**
+   * Engagement RSE (Lot 2) : dépense d'exploitation du tour (budget + effort
+   * process propre). Traitée en tout point comme le marketing — retranchée de
+   * l'EBITDA, décaissée dans le tour — donc l'équilibre du bilan tient par
+   * construction. Absente = 0.
+   */
+  rseCost?: number;
+  /**
+   * Recherche et développement du tour (levier R&D) : même traitement que le
+   * marketing — retranchée de l'EBITDA, décaissée dans le tour. Absente = 0.
+   */
+  rdCost?: number;
   fixedCosts: number;
   depreciation: number;
   loanAnnualRate: number;
   overdraftAnnualRate: number;
   interestMultiplier: number; // événements (hausse des taux)
   taxRate: number;
+  /**
+   * Déficit fiscal reportable à l'ouverture (report en avant des pertes, doc
+   * 02). Les pertes des tours précédents s'imputent sur le bénéfice imposable
+   * de ce tour AVANT calcul de l'impôt. Absent = 0. Report intégral et illimité
+   * dans le temps : le plafond réel (1 M€ + 50 % au-delà) ne se déclenche jamais
+   * à l'échelle du jeu, l'omettre est donc exact ET plus simple.
+   */
+  openingTaxLossCarryforward?: number;
   /** Taux de TVA (0 = désactivée) — voir EngineScenarioConfig.finance.vatRate. */
   vatRate: number;
   newLoan: number;
@@ -52,6 +72,17 @@ export interface FinanceInput {
   investmentOutlay: number;
   /** Perte de cession d'équipement (VNC − produit de cession). */
   disposalLoss?: number;
+  /**
+   * Charge exceptionnelle du tour (Lot 2C.2) : amende RSE. Décaissée et
+   * retranchée du résultat avant impôt (comme une charge ordinaire côté bilan),
+   * donc l'équilibre tient par construction. Absente = 0.
+   */
+  exceptionalCharge?: number;
+  /**
+   * Produit exceptionnel du tour (Lot 2C.2) : éco-subvention RSE. Encaissé et
+   * ajouté au résultat avant impôt. Absent = 0.
+   */
+  exceptionalIncome?: number;
   /**
    * Gestion de trésorerie (optionnel) : mobilisation de créances demandée et
    * paramètres du scénario. Au-delà du plafond de découvert, un affacturage
@@ -79,6 +110,8 @@ export interface FinanceInput {
 export interface FinanceOutput {
   incomeStatement: IncomeStatement;
   closing: BalanceSheet;
+  /** Déficit fiscal reportable de clôture, à réinjecter au tour suivant. */
+  taxLossCarryforward: number;
   cashFlow: { opening: number; items: CashFlowItem[]; closing: number };
   treasury: {
     discounted: number;
@@ -133,11 +166,15 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
     const variableProductionCost = input.purchases + input.otherVariableCash;
     const commissionCost = input.commissionCost ?? 0;
     const grossMargin = input.revenue - input.cogs - commissionCost;
+    const rseCost = input.rseCost ?? 0;
+    const rdCost = input.rdCost ?? 0;
     const ebitda =
       grossMargin -
       input.marketingCost -
       input.qualityCost -
       input.maintenanceCost -
+      rseCost -
+      rdCost -
       input.fixedCosts;
     const depreciation = Math.min(input.depreciation, o.fixedAssetsNet);
     const disposalLoss = input.disposalLoss ?? 0;
@@ -148,8 +185,21 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
         periodFraction *
         input.interestMultiplier +
       financingCost;
-    const pretaxIncome = operatingIncome - interest + placementIncome;
-    const tax = input.taxRate * Math.max(0, pretaxIncome);
+    // Résultat exceptionnel (Lot 2C.2) : amende (charge) / éco-subvention
+    // (produit) des cartes RSE. Imputé avant l'impôt, décaissé/encaissé ce tour.
+    const exceptionalCharge = input.exceptionalCharge ?? 0;
+    const exceptionalIncome = input.exceptionalIncome ?? 0;
+    const pretaxIncome =
+      operatingIncome - interest + placementIncome - exceptionalCharge + exceptionalIncome;
+    // Report déficitaire : les pertes reportées s'imputent sur le bénéfice
+    // imposable avant l'impôt ; le stock diminue de ce qui est imputé et
+    // s'accroît de la perte du tour. `closing = max(0, ouverture − résultat)`
+    // couvre les deux cas d'un seul trait.
+    const openingLossCarryforward = input.openingTaxLossCarryforward ?? 0;
+    const taxLossUsed = Math.min(openingLossCarryforward, Math.max(0, pretaxIncome));
+    const taxableIncome = Math.max(0, pretaxIncome - openingLossCarryforward);
+    const closingLossCarryforward = Math.max(0, openingLossCarryforward - pretaxIncome);
+    const tax = input.taxRate * taxableIncome;
     const netIncome = pretaxIncome - tax;
 
     const incomeStatement: IncomeStatement = {
@@ -162,13 +212,18 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
       marketingCost: input.marketingCost,
       qualityCost: input.qualityCost,
       maintenanceCost: input.maintenanceCost,
+      ...(rseCost > 0 ? { engagementRse: rseCost } : {}),
+      ...(rdCost > 0 ? { rdCost } : {}),
       fixedCosts: input.fixedCosts,
       ebitda,
       depreciation,
       operatingIncome,
       interest,
       financialIncome: placementIncome,
+      ...(exceptionalCharge > 0 ? { exceptionalCharge } : {}),
+      ...(exceptionalIncome > 0 ? { exceptionalIncome } : {}),
       pretaxIncome,
+      ...(taxLossUsed > 0 ? { taxLossUsed } : {}),
       tax,
       netIncome,
     };
@@ -203,7 +258,13 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
       { label: "marketing", amount: -input.marketingCost },
       { label: "qualite", amount: -input.qualityCost },
       { label: "maintenance", amount: -input.maintenanceCost },
+      { label: "engagement_rse", amount: -rseCost },
+      // Ligne absente sans levier R&D : un flux à zéro ferait chercher un
+      // levier qui n'existe pas dans ce secteur.
+      ...(rdCost > 0 ? [{ label: "recherche_developpement", amount: -rdCost }] : []),
       { label: "interets", amount: -interest },
+      { label: "sanction_rse", amount: -exceptionalCharge },
+      { label: "subvention_rse", amount: exceptionalIncome },
       { label: "impot", amount: -tax },
       { label: "tva_decaissee", amount: -openingVat },
       { label: "investissement", amount: -input.investmentOutlay },
@@ -237,6 +298,7 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
     return {
       incomeStatement,
       closing,
+      taxLossCarryforward: closingLossCarryforward,
       cashFlow: { opening: openingNet, items, closing: closingNet },
       receivablesEnd,
       closingNet,
@@ -259,6 +321,7 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
   return {
     incomeStatement: pass.incomeStatement,
     closing: pass.closing,
+    taxLossCarryforward: pass.taxLossCarryforward,
     cashFlow: pass.cashFlow,
     treasury: {
       discounted,

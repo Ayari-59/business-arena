@@ -1,6 +1,6 @@
 import type { EventCardDef } from "../cards";
 
-/** Deck du scénario BOUTIQUE (commerce de détail) — voir cards.ts. */
+/** Deck du scénario BOUTIQUE (MAILLE & CO, commerce de détail en maille) — voir cards.ts. */
 export const BOUTIQUE_CARDS: EventCardDef[] = [
   {
     code: "boutique_travaux_voirie",
@@ -19,7 +19,7 @@ export const BOUTIQUE_CARDS: EventCardDef[] = [
     title: "Une influenceuse pousse la porte",
     flavor:
       "Elle filme trois minutes dans vos cabines. La vidéo dépasse le million de vues avant le dîner.",
-    effectLabel: "Demande des chalands de passage +30 % ce tour",
+    effectLabel: "Demande des passants +30 % ce tour, sur toutes les références",
     conceptHint:
       "Un pic ne profite qu'à celles qui ont du stock en réserve : l'anticipation vaut mieux que la chance.",
     category: "market",
@@ -30,7 +30,7 @@ export const BOUTIQUE_CARDS: EventCardDef[] = [
     code: "boutique_demarque",
     title: "Démarque inconnue",
     flavor:
-      "L'inventaire ne tombe pas juste. Entre le vol à l'étalage et les erreurs de caisse, 200 pièces se sont volatilisées.",
+      "L'inventaire ne tombe pas juste. Entre le vol à l'étalage et les erreurs de caisse, 200 pièces se sont volatilisées, des bonnets surtout.",
     effectLabel: "Coût d'achat effectif +9 % ce tour (une enseigne tirée au sort)",
     conceptHint:
       "La marchandise perdue est payée mais jamais vendue : elle s'ajoute au coût de ce que vous vendez.",
@@ -64,9 +64,9 @@ export const BOUTIQUE_CARDS: EventCardDef[] = [
   },
   {
     code: "boutique_coton",
-    title: "Flambée du coton",
+    title: "Flambée de la laine",
     flavor:
-      "Mauvaise récolte en Asie, fret en hausse : vos fournisseurs répercutent tout sur la prochaine collection.",
+      "La laine mérinos et le coton ont flambé, le fret aussi : vos façonniers répercutent tout sur la prochaine collection.",
     effectLabel: "Coût d'achat +18 % pendant 2 tours",
     conceptHint:
       "Le coefficient multiplicateur se comprime : répercuter sur le prix de vente, ou accepter de vendre moins cher que prévu ?",
@@ -91,7 +91,7 @@ export const BOUTIQUE_CARDS: EventCardDef[] = [
     title: "Fête des mères anticipée",
     flavor:
       "Les magazines ont lancé la saison trois semaines plus tôt. Vos clientes fidèles arrivent avec une liste.",
-    effectLabel: "Demande des clientes fidèles +22 % ce tour",
+    effectLabel: "Demande des clientes fidèles +22 % ce tour (pulls et cardigans)",
     conceptHint:
       "La fidélité se paie d'avance : les clientes qui reviennent sont celles qu'on a bien servies au tour précédent.",
     category: "market",
@@ -138,9 +138,9 @@ export const BOUTIQUE_CARDS: EventCardDef[] = [
     code: "boutique_commande_ce",
     title: "Commande d'un comité d'entreprise",
     flavor:
-      "Le CSE d'une usine voisine veut habiller ses 500 salariés pour l'arbre de Noël. Il signe aujourd'hui.",
+      "Le CSE d'une usine voisine veut offrir un pull à chacun de ses 500 salariés pour l'arbre de Noël. Il signe aujourd'hui.",
     effectLabel:
-      "+500 articles (échelle trimestre) vendus d'office ce tour, réglés comptant, dans la limite du stock",
+      "+500 pulls col rond (échelle trimestre) vendus d'office ce tour, réglés comptant, dans la limite du stock",
     conceptHint:
       "L'opportunité ne se saisit qu'avec de la marchandise en réserve : le stock a un coût, et parfois une valeur.",
     category: "market",

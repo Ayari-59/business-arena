@@ -16,6 +16,7 @@ import { id, timestamps } from "./_shared";
 import { classes, organizations, users } from "./identity";
 import { scenarios } from "./catalog";
 import { competitionStages } from "./competition";
+import type { EngineScenarioConfig, RoundDecisions } from "@/engine/types";
 
 export const gameMode = pgEnum("game_mode", ["learning", "competition", "contest"]);
 export const gameStatus = pgEnum("game_status", [
@@ -56,7 +57,7 @@ export const games = pgTable(
     scenarioId: uuid("scenario_id")
       .notNull()
       .references(() => scenarios.id, { onDelete: "restrict" }),
-    scenarioSnapshot: jsonb("scenario_snapshot").notNull(),
+    scenarioSnapshot: jsonb("scenario_snapshot").$type<EngineScenarioConfig>().notNull(),
     engineVersion: text("engine_version").notNull(),
     seed: bigint("seed", { mode: "number" }).notNull(),
     mode: gameMode("mode").notNull().default("learning"),
@@ -64,6 +65,11 @@ export const games = pgTable(
     status: gameStatus("status").notNull().default("draft"),
     currentRound: integer("current_round").notNull().default(0),
     roundDuration: interval("round_duration"), // null = pas de pression temporelle
+    // Fenêtre globale de jeu (planning). null = pas de fenêtre : la partie suit
+    // le pilotage manuel des tours. Le verrou par tour (rounds.opensAt/deadline)
+    // s'applique à l'intérieur de cette fenêtre.
+    opensAt: timestamp("opens_at", { withTimezone: true }),
+    closesAt: timestamp("closes_at", { withTimezone: true }),
     joinCode: text("join_code").unique(), // code d'invitation des joueurs (parties de classe)
     createdBy: uuid("created_by")
       .notNull()
@@ -123,6 +129,10 @@ export const rounds = pgTable(
     opensAt: timestamp("opens_at", { withTimezone: true }),
     deadline: timestamp("deadline", { withTimezone: true }),
     resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+    // Version de la formule BPI ayant scoré ce tour (1 = 7 dimensions historiques ;
+    // 2 = 6 dimensions, base zéro, ex æquo, finance en variation — V1-2). Les
+    // tours déjà scorés gardent leur version : on ne recalcule jamais un relevé.
+    bpiVersion: integer("bpi_version").notNull().default(1),
     ...timestamps,
   },
   (t) => [uniqueIndex("rounds_game_index_uq").on(t.gameId, t.index)],
@@ -139,9 +149,15 @@ export const decisions = pgTable(
     teamId: uuid("team_id")
       .notNull()
       .references(() => teams.id, { onDelete: "cascade" }),
-    payload: jsonb("payload").notNull(), // RoundDecisions, validé contre decision_options
+    payload: jsonb("payload").$type<RoundDecisions>().notNull(), // validé contre decision_options
     forecast: jsonb("forecast"), // prévisions du joueur → analyse des écarts
     justification: text("justification"),
+    /**
+     * D'où viennent les pivots (prix, volume) : { price, productionPlan } en
+     * 'default' | 'edited' | 'carried'. Null pour les tours antérieurs à cette
+     * colonne : inconnu, jamais recalculé.
+     */
+    decisionSource: jsonb("decision_source"),
     status: decisionStatus("status").notNull().default("draft"),
     validatedAt: timestamp("validated_at", { withTimezone: true }),
     validatedBy: uuid("validated_by").references(() => users.id, {

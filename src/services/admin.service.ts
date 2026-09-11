@@ -1,12 +1,14 @@
 import { randomInt } from "node:crypto";
+import { cache } from "react";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   getLicenceStatus,
-  listOrgLicences,
   type LicenceStatus,
   type OrgLicence,
 } from "@/services/licence.service";
+import { DEFAULT_FREE_TIER, type FreeTier } from "@/config/entitlements";
+import { DEFAULT_AI_CONFIG, type AiConfig } from "@/config/ai";
 import {
   competitions,
   games,
@@ -94,28 +96,56 @@ export interface PlatformConfig {
   /** Message d'annonce affiché sur la landing (vide = aucun). */
   announcement: string;
   /**
-   * Adresse à laquelle le formulaire d'orientation écrit. Vide, la page rend
-   * quand même sa recommandation : c'est l'envoi du message qui manque, et la
-   * page le dit plutôt que d'ouvrir un courrier sans destinataire.
+   * Adresse à laquelle le formulaire d'orientation écrit. Une adresse par
+   * défaut est fournie (voir DEFAULT_CONFIG) pour que la demande d'information
+   * soit active sans réglage : sans elle, le bouton disparaît et la page ne
+   * rend que sa recommandation. Un administrateur peut la remplacer, ou la
+   * vider pour retirer le bouton.
    */
   contactEmail: string;
+  /**
+   * Palier gratuit (freemium) : ce à quoi un compte SANS licence active a droit.
+   * Réglé ici, appliqué par entitlements.service. Voir config/entitlements.ts.
+   */
+  freeTier: FreeTier;
+  /**
+   * Assistant IA (facultatif) : quelles surfaces sont allumées et quel modèle.
+   * Réglé ici, appliqué par ai.service. Éteint par défaut — aucun coût sans
+   * réglage explicite, et une clé ANTHROPIC_API_KEY reste requise côté serveur.
+   */
+  ai: AiConfig;
 }
 
 const DEFAULT_CONFIG: PlatformConfig = {
   allowPublicPlay: true,
   allowSelfServiceTeachers: true,
   announcement: "",
-  contactEmail: "",
+  contactEmail: "contact@business-arena.fr",
+  freeTier: DEFAULT_FREE_TIER,
+  ai: DEFAULT_AI_CONFIG,
 };
 
-export async function getPlatformConfig(): Promise<PlatformConfig> {
+/**
+ * Configuration de la plateforme (bannière, adresse de contact, accès public).
+ * Quasi immuable et lue à chaque affichage des pages vitrine (accueil, /jouer,
+ * /orientation…). `cache()` la mémorise à l'échelle d'une requête : les
+ * multiples lectures d'un même rendu (page + panorama admin, etc.) ne touchent
+ * la base qu'une fois. La révalidation entre requêtes reste inutile ici — le
+ * réglage change rarement et une valeur d'un rendu au suivant n'a pas d'enjeu.
+ */
+export const getPlatformConfig = cache(async (): Promise<PlatformConfig> => {
   try {
     const row = (await db.select().from(platformSettings).where(eq(platformSettings.id, 1)))[0];
     return { ...DEFAULT_CONFIG, ...((row?.settings as Partial<PlatformConfig>) ?? {}) };
-  } catch {
-    return { ...DEFAULT_CONFIG };
+  } catch (e) {
+    // Panne base : on NE retombe PAS sur les défauts permissifs. Renvoyer
+    // allowPublicPlay/allowSelfServiceTeachers à true en cas d'incident
+    // OUVRIRAIT le jeu public et l'auto-inscription enseignant sans contrôle.
+    // Repli FERMÉ (et on journalise) : on préfère brider que d'ouvrir par erreur.
+    console.error("[getPlatformConfig] lecture de la config plateforme échouée :", e);
+    return { ...DEFAULT_CONFIG, allowPublicPlay: false, allowSelfServiceTeachers: false };
   }
-}
+});
 
 export async function updatePlatformConfig(
   adminId: string,

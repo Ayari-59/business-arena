@@ -21,6 +21,29 @@ export const roundDecisionsSchema = z.object({
   marketingBudget: z.coerce.number().min(0).max(200000),
   qualityBudget: z.coerce.number().min(0).max(200000),
   maintenanceBudget: z.coerce.number().min(0).max(100000),
+  // Gamme : décisions par produit (prix, plan, marketing, qualité,
+  // fournisseur). Mêmes bornes techniques que les scalaires ; absent en
+  // mono-produit.
+  products: z
+    .record(
+      z.string().min(1),
+      z.object({
+        price: z.coerce.number().min(1).max(PRIX_MAX),
+        productionPlan: z.coerce.number().min(0).max(50000),
+        marketingBudget: z.coerce.number().min(0).max(200000).optional(),
+        qualityBudget: z.coerce.number().min(0).max(200000).optional(),
+        supplierChoice: z.string().min(1).optional(),
+        rdBudget: z.coerce.number().min(0).max(500000).optional(),
+      }),
+    )
+    .optional(),
+  // R&D (scénarios avec levier `rd`) : le scalaire (mono-produit, ou somme
+  // des références en gamme). Absent partout ailleurs.
+  rdBudget: z.coerce.number().min(0).max(500000).optional(),
+  // Communication (scénarios avec levier `communication`) : le budget de
+  // marque (gamme) et l'axe tenu ce tour.
+  brandMarketingBudget: z.coerce.number().min(0).max(200000).optional(),
+  communicationAxis: z.enum(["prix", "qualite", "innovation", "image"]).optional(),
   insurance: z.union([z.boolean(), z.string()]).optional(),
   supplierChoice: z.string().optional(),
   acceptOrder: z.boolean().optional(),
@@ -64,6 +87,12 @@ export const roundDecisionsSchema = z.object({
       discount: z.coerce.number().min(0).max(1000000).optional(),
       factoring: z.coerce.number().min(0).max(1000000).optional(),
       placement: z.coerce.number().min(0).max(1000000).optional(),
+    })
+    .optional(),
+  rse: z
+    .object({
+      budget: z.coerce.number().min(0).max(500000).optional(),
+      investment: z.coerce.number().min(0).max(500000).optional(),
     })
     .optional(),
   forecast: z

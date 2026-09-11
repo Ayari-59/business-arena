@@ -1,4 +1,5 @@
 import { DIFFICULTY_PRESETS, type DifficultyPreset } from "./difficulty";
+import type { EngineScenarioConfig } from "../engine/types";
 
 /**
  * Les leviers de décision d'un tour.
@@ -15,8 +16,9 @@ import { DIFFICULTY_PRESETS, type DifficultyPreset } from "./difficulty";
  * mentirait sans que rien ne le signale.
  *
  * L'ordre de cette liste est celui du cycle d'exploitation, et c'est celui du
- * formulaire : on vend, on achète, on fait venir les clients, on paie ses
- * équipes, on finance, on se couvre, on s'informe, on prévoit.
+ * formulaire : on vend, on achète, on décide ses budgets (marketing, qualité,
+ * maintenance, R&D) puis sa communication, on paie ses équipes, on finance,
+ * on se couvre, on s'informe, on prévoit.
  */
 export interface LevierDeDecision {
   /** Le `name` du champ dans le formulaire de décision. */
@@ -28,6 +30,12 @@ export interface LevierDeDecision {
    * du scénario (les neuf en proposent, mais rien ne l'impose).
    */
   ouvertPar: keyof DifficultyPreset["decisions"] | "toujours" | "secteur";
+  /**
+   * Pour un levier « secteur » que seuls certains scénarios offrent : ce que
+   * le scénario doit déclarer pour que le levier existe à l'écran. Absent, le
+   * levier est compté pour tous les secteurs.
+   */
+  secteurSi?: (scenario: EngineScenarioConfig) => boolean;
 }
 
 export const LEVIERS: readonly LevierDeDecision[] = [
@@ -35,13 +43,25 @@ export const LEVIERS: readonly LevierDeDecision[] = [
   { champ: "price", nom: "Prix de vente", ouvertPar: "toujours" },
   { champ: "productionPlan", nom: "Volume du tour", ouvertPar: "toujours" },
   { champ: "supplierChoice", nom: "Choix du fournisseur", ouvertPar: "secteur" },
+  // Les quatre budgets du tour se décident au même endroit : marketing,
+  // qualité, maintenance, R&D. La communication (marque, axe) les suit.
   { champ: "marketingBudget", nom: "Budget marketing", ouvertPar: "toujours" },
   { champ: "qualityBudget", nom: "Budget qualité", ouvertPar: "quality" },
   { champ: "maintenanceBudget", nom: "Budget maintenance", ouvertPar: "maintenance" },
+  { champ: "rdBudget", nom: "Recherche et développement", ouvertPar: "rd" },
+  {
+    champ: "brandMarketingBudget",
+    nom: "Budget de marque",
+    ouvertPar: "secteur",
+    secteurSi: (s) => Boolean(s.communication) && Boolean(s.products),
+  },
+  { champ: "communicationAxis", nom: "Axe de communication", ouvertPar: "secteur", secteurSi: (s) => Boolean(s.communication) },
   { champ: "hire", nom: "Embauches", ouvertPar: "hr" },
   { champ: "fire", nom: "Départs", ouvertPar: "hr" },
   { champ: "trainingBudget", nom: "Budget formation", ouvertPar: "hr" },
   { champ: "salaryPercent", nom: "Niveau des salaires", ouvertPar: "hr" },
+  { champ: "rseBudget", nom: "Budget RSE", ouvertPar: "rse" },
+  { champ: "rseInvestment", nom: "Investissement RSE (process propre)", ouvertPar: "rse" },
   { champ: "newLoan", nom: "Nouvel emprunt", ouvertPar: "finance" },
   { champ: "loanRepayment", nom: "Remboursement d'emprunt", ouvertPar: "finance" },
   { champ: "capitalIncrease", nom: "Augmentation de capital", ouvertPar: "finance" },
@@ -65,16 +85,19 @@ export const LEVIERS: readonly LevierDeDecision[] = [
  * Les leviers « secteur » sont comptés : les neuf métiers proposent tous un
  * fournisseur, des études et une commande exceptionnelle. Les compter revient
  * donc à décrire ce qu'une équipe rencontre vraiment, et non un minimum
- * théorique que personne ne joue.
+ * théorique que personne ne joue. Ceux que seuls certains scénarios offrent
+ * (la marque, l'axe de communication) ne sont retenus que si le scénario
+ * donné les déclare ; sans scénario, ils sont comptés, comme l'étendue.
  */
-export function leviersDuNiveau(niveau: number): LevierDeDecision[] {
+export function leviersDuNiveau(niveau: number, scenario?: EngineScenarioConfig): LevierDeDecision[] {
   const preset = DIFFICULTY_PRESETS.find((p) => p.level === niveau);
   if (!preset) return [];
   return LEVIERS.filter(
     (l) =>
-      l.ouvertPar === "toujours" ||
-      l.ouvertPar === "secteur" ||
-      preset.decisions[l.ouvertPar] === true,
+      (l.ouvertPar === "toujours" ||
+        l.ouvertPar === "secteur" ||
+        preset.decisions[l.ouvertPar] === true) &&
+      (!scenario || !l.secteurSi || l.secteurSi(scenario)),
   );
 }
 

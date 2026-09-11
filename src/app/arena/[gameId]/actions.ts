@@ -1,15 +1,20 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { getGuestUserId } from "@/lib/guest";
 import { roundDecisionsSchema } from "@/services/decision-schema";
+import { readProductFields } from "@/config/decision-source";
+import { scalarsOfGamme } from "@/engine/gamme";
 import {
   getGameKind,
+  getGameVocabulary,
   nommerEquipe,
   resolveCurrentRound,
   submitTeamDecisions,
 } from "@/services/game.service";
-import { submitDiagnosis, submitQuiz, unlockHint } from "@/services/pedagogy.service";
+import { retakeSituation, submitDiagnosis, submitQuiz, unlockHint } from "@/services/pedagogy.service";
+import { manques, messageIncomplet } from "@/config/situation-rendu";
 
 export interface PlayRoundState {
   error: string | null;
@@ -24,19 +29,58 @@ export async function playRoundAction(
   const userId = await getGuestUserId();
   if (!userId) return { error: "Session expirée : relancez une partie depuis l'accueil." };
 
+  // GAMME : le formulaire envoie un prix, un plan, un marketing — et, selon le
+  // niveau et le scénario, une qualité et un fournisseur — PAR RÉFÉRENCE
+  // (`product.<code>.*`). Les scalaires historiques en sont dérivés ici — plan
+  // = somme, prix = moyenne pondérée, marketing et qualité = somme, fournisseur
+  // = celui de la référence au plan le plus fort —, du même calcul que le
+  // formulaire et que la proposition, pour que la comparaison des pivots reste
+  // juste. Mono-produit : les champs scalaires font foi.
+  const products = readProductFields(formData.entries());
+  const scalars = products ? scalarsOfGamme(products) : null;
+
+  // Le volume est un pivot : vide ou nul, ce n'est pas une décision, c'est une
+  // absence. Le schéma acceptait 0 sans un mot ; on le refuse ici, dans la
+  // langue du secteur.
+  const volumeBrut = String(formData.get("productionPlan") ?? "").trim().replace(",", ".");
+  const volume = scalars ? scalars.productionPlan : volumeBrut === "" ? NaN : Number(volumeBrut);
+  if (!Number.isFinite(volume) || volume < 1) {
+    const v = await getGameVocabulary(gameId);
+    return { error: `${v.productionPlanLabel} : le volume doit être ≥ 1 (en ${v.units}).` };
+  }
+
   const parsed = roundDecisionsSchema.safeParse({
-    price: formData.get("price"),
-    productionPlan: formData.get("productionPlan"),
-    marketingBudget: formData.get("marketingBudget"),
-    qualityBudget: formData.get("qualityBudget"),
+    price: scalars ? scalars.price : formData.get("price"),
+    productionPlan: scalars ? scalars.productionPlan : formData.get("productionPlan"),
+    marketingBudget: scalars ? scalars.marketingBudget : formData.get("marketingBudget"),
+    ...(products ? { products } : {}),
+    // Gamme : la qualité et le fournisseur se décident par référence quand le
+    // formulaire les y porte ; les scalaires en sont dérivés (somme, et
+    // fournisseur de la référence au plan le plus fort).
+    qualityBudget: scalars?.qualityBudget ?? formData.get("qualityBudget"),
     maintenanceBudget: formData.get("maintenanceBudget"),
+    // R&D : par référence en gamme (scalaire = somme), scalaire en mono ;
+    // absent quand le formulaire ne porte pas le levier.
+    ...(() => {
+      const rd = scalars?.rdBudget ?? formData.get("rdBudget");
+      return rd !== undefined && rd !== null && rd !== "" ? { rdBudget: rd } : {};
+    })(),
+    // Communication : marque et axe, absents quand le formulaire ne les porte pas.
+    ...(() => {
+      const brand = formData.get("brandMarketingBudget");
+      const axis = formData.get("communicationAxis");
+      return {
+        ...(brand !== null && brand !== "" ? { brandMarketingBudget: brand } : {}),
+        ...(typeof axis === "string" && axis !== "" ? { communicationAxis: axis } : {}),
+      };
+    })(),
     insurance: (() => {
       const raw = formData.get("insurance");
       if (raw === "on" || raw === "true") return true;
       if (typeof raw === "string" && raw.length > 0) return raw;
       return false;
     })(),
-    supplierChoice: formData.get("supplierChoice") || undefined,
+    supplierChoice: scalars?.supplierChoice ?? (formData.get("supplierChoice") || undefined),
     acceptOrder: formData.get("acceptOrder") === "on",
     studies: (() => {
       const picked = {
@@ -59,8 +103,21 @@ export async function playRoundAction(
       const hasMachine = formData.has("machineCapacityUnits");
       const buyRaw = formData.get("equipmentBuyJson");
       const sellRaw = formData.get("equipmentSellJson");
-      const equipBuy = buyRaw ? JSON.parse(String(buyRaw)) : undefined;
-      const equipSell = sellRaw ? JSON.parse(String(sellRaw)) : undefined;
+      // Champs cachés alimentés par l'îlot d'équipement : un formulaire forgé
+      // (ou une page périmée) peut envoyer un JSON invalide. On parse en sûreté
+      // — un contenu illisible devient « pas d'équipement » plutôt qu'un 500,
+      // et Zod valide ensuite la forme du tableau retenu.
+      const parseEquip = (raw: FormDataEntryValue | null): unknown[] | undefined => {
+        if (!raw) return undefined;
+        try {
+          const v = JSON.parse(String(raw));
+          return Array.isArray(v) ? v : undefined;
+        } catch {
+          return undefined;
+        }
+      };
+      const equipBuy = parseEquip(buyRaw);
+      const equipSell = parseEquip(sellRaw);
       const hasEquip = (equipBuy && equipBuy.length > 0) || (equipSell && equipSell.length > 0);
       if (!hasMachine && !hasEquip) return undefined;
       return {
@@ -100,14 +157,24 @@ export async function playRoundAction(
           placement: formData.get("placement") || 0,
         }
       : undefined,
+    // Engagement RSE (Lot 2) : ouvert dès Arbitrage ; les champs sont absents
+    // aux niveaux qui ne l'exposent pas.
+    rse:
+      formData.has("rseBudget") || formData.has("rseInvestment")
+        ? {
+            budget: formData.get("rseBudget") || 0,
+            investment: formData.get("rseInvestment") || 0,
+          }
+        : undefined,
   });
   if (!parsed.success) {
     return { error: "Décisions invalides : vérifiez les montants saisis." };
   }
 
+  let kind: Awaited<ReturnType<typeof getGameKind>>;
   try {
     const justification = String(formData.get("justification") ?? "").trim() || undefined;
-    const kind = await getGameKind(gameId);
+    kind = await getGameKind(gameId);
     if (kind === "solo") {
       await resolveCurrentRound({ gameId, userId, playerDecisions: parsed.data, justification });
     } else {
@@ -117,6 +184,16 @@ export async function playRoundAction(
     return { error: error instanceof Error ? error.message : "Erreur lors de la simulation." };
   }
   revalidatePath(`/arena/${gameId}`);
+  // En solo, valider a résolu le tour tout de suite. Plutôt que de jeter le
+  // joueur directement sur les résultats, on l'amène sur un écran intermédiaire
+  // « Tour simulé » (paramètre ?simule) qui marque l'étape et propose deux
+  // suites explicites : voir les résultats, ou passer au tour suivant — sans
+  // enchaîner sur un bouton « simuler » d'allure identique.
+  // En classe, on ne redirige pas : les résultats n'arriveront qu'à la clôture
+  // par l'enseignant. redirect() est hors du try (il lève NEXT_REDIRECT).
+  if (kind === "solo") {
+    redirect(`/arena/${gameId}?simule=1`);
+  }
   return { error: null };
 }
 
@@ -142,8 +219,16 @@ export async function unlockHintAction(
   return { error: null };
 }
 
-/** Enregistre le diagnostic du joueur (options + analyse libre). */
-export async function submitDiagnosisAction(
+/**
+ * Rend la situation d'un coup : diagnostic ET modèle, ou rien (vague 1, P6).
+ * Le formulaire grise son bouton tant qu'une moitié manque ; ici on refuse
+ * une soumission incomplète avec le même message, pour qu'un formulaire
+ * forgé ou une page périmée ne rende pas une demi-copie.
+ *
+ * `questions` (champ caché) liste les questions encore à répondre : vide
+ * quand le modèle n'est pas demandé, ou déjà validé avant cette version.
+ */
+export async function submitSituationAction(
   gameId: string,
   instanceId: string,
   _prev: PedagogyState,
@@ -151,10 +236,23 @@ export async function submitDiagnosisAction(
 ): Promise<PedagogyState> {
   const userId = await getGuestUserId();
   if (!userId) return { error: "Session expirée." };
-  const selected = formData.getAll("options").map(String);
+  const options = formData.getAll("options").map(String).filter(Boolean);
   const freeText = String(formData.get("freeText") ?? "");
+  const questions = String(formData.get("questions") ?? "")
+    .split(",")
+    .map((q) => q.trim())
+    .filter(Boolean);
+  const reponses: Record<string, string> = {};
+  for (const [key, value] of formData.entries()) {
+    if (key.startsWith("quiz_") && typeof value === "string" && value) {
+      reponses[key.slice("quiz_".length)] = value;
+    }
+  }
+  const m = manques({ options, questions, reponses });
+  if (m.length > 0) return { error: messageIncomplet(m) };
   try {
-    await submitDiagnosis({ instanceId, userId, selectedOptionIds: selected, freeText });
+    await submitDiagnosis({ instanceId, userId, selectedOptionIds: options, freeText });
+    if (questions.length > 0) await submitQuiz({ instanceId, userId, answers: reponses });
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Erreur." };
   }
@@ -162,8 +260,11 @@ export async function submitDiagnosisAction(
   return { error: null };
 }
 
-/** Enregistre les réponses au QCM de mobilisation des connaissances. */
-export async function submitQuizAction(
+/**
+ * Rattrapage d'une situation manquée (V1-6, politique retake50). Même forme que
+ * le rendu unique ; le service note à 50 % et refuse hors de la fenêtre.
+ */
+export async function retakeSituationAction(
   gameId: string,
   instanceId: string,
   _prev: PedagogyState,
@@ -171,16 +272,22 @@ export async function submitQuizAction(
 ): Promise<PedagogyState> {
   const userId = await getGuestUserId();
   if (!userId) return { error: "Session expirée." };
-  const answers: Record<string, string> = {};
+  const options = formData.getAll("options").map(String).filter(Boolean);
+  const freeText = String(formData.get("freeText") ?? "");
+  const questions = String(formData.get("questions") ?? "")
+    .split(",")
+    .map((q) => q.trim())
+    .filter(Boolean);
+  const reponses: Record<string, string> = {};
   for (const [key, value] of formData.entries()) {
     if (key.startsWith("quiz_") && typeof value === "string" && value) {
-      answers[key.slice("quiz_".length)] = value;
+      reponses[key.slice("quiz_".length)] = value;
     }
   }
-  if (Object.keys(answers).length === 0)
-    return { error: "Répondez aux questions avant de valider." };
+  const m = manques({ options, questions, reponses });
+  if (m.length > 0) return { error: messageIncomplet(m) };
   try {
-    await submitQuiz({ instanceId, userId, answers });
+    await retakeSituation({ instanceId, userId, selectedOptionIds: options, freeText, answers: reponses });
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Erreur." };
   }

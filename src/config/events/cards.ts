@@ -293,7 +293,64 @@ const NOVA_CARDS: EventCardDef[] = [
  * SES cartes : le filtre se fait sur les codes d'événements du scénario joué
  * (voir `cardsForEventCodes`), jamais sur cette liste globale.
  */
+/**
+ * Cartes RSE (Lot 2C) — transverses à tous les secteurs, tirées non par le
+ * scénario mais par le STANDING RSE de l'équipe (capital-image). Elles portent
+ * l'habillage ; l'effet (demande) est calculé par le moteur.
+ */
+const RSE_CARDS: EventCardDef[] = [
+  {
+    code: "rse_label",
+    title: "Label responsable obtenu",
+    flavor:
+      "Votre engagement dans la durée est reconnu : un label vient distinguer votre entreprise.",
+    effectLabel: "Attractivité renforcée pendant plusieurs tours",
+    conceptHint:
+      "Un capital de marque se construit lentement — l'engagement RSE d'hier soutient la demande d'aujourd'hui.",
+    category: "market",
+    emoji: "🏅",
+    scope: "team",
+  },
+  {
+    code: "rse_bad_buzz",
+    title: "Bad buzz",
+    flavor:
+      "Un engagement affiché mais tiède se retourne : une polémique entache votre image le temps d'un tour.",
+    effectLabel: "Demande en baisse ce tour",
+    conceptHint:
+      "On ne s'affiche pas responsable à moitié : un standing entre-deux expose plus qu'il ne protège.",
+    category: "market",
+    emoji: "📢",
+    scope: "team",
+  },
+  {
+    code: "rse_sanction",
+    title: "Contrôle et sanction",
+    flavor:
+      "Un contrôle épingle un engagement en trompe-l'œil : l'amende tombe, en charge exceptionnelle.",
+    effectLabel: "Amende — charge exceptionnelle ce tour",
+    conceptHint:
+      "Le risque RSE n'est pas que d'image : la réglementation a un coût, comptabilisé hors exploitation.",
+    category: "macro",
+    emoji: "⚖️",
+    scope: "team",
+  },
+  {
+    code: "rse_subvention",
+    title: "Éco-subvention",
+    flavor:
+      "Votre investissement dans un process plus propre est reconnu : une aide vient soutenir l'effort.",
+    effectLabel: "Aide — produit exceptionnel ce tour",
+    conceptHint:
+      "L'investissement responsable peut être cofinancé : une subvention améliore le résultat hors exploitation.",
+    category: "macro",
+    emoji: "💶",
+    scope: "team",
+  },
+];
+
 export const EVENT_CARDS: EventCardDef[] = [
+  ...RSE_CARDS,
   ...NOVA_CARDS,
   ...BOUTIQUE_CARDS,
   ...HOTEL_CARDS,

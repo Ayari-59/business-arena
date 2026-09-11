@@ -44,7 +44,7 @@ const CONTRACTS: FormContract[] = [
   {
     nom: "création d'un concours",
     action: { file: "src/app/teacher/actions.ts", fn: "createCompetitionAction" },
-    sources: ["src/app/teacher/page.tsx"],
+    sources: ["src/components/competition-create-form.tsx"],
   },
   {
     nom: "décisions du tour",
@@ -64,7 +64,9 @@ const CONTRACTS: FormContract[] = [
   {
     nom: "lancement d'une partie publique",
     action: { file: "src/app/actions.ts", fn: "startGameAction" },
-    sources: ["src/app/page.tsx"],
+    // Les champs vivent dans le composant client de config rapide, qui les
+    // envoie via des <input type="hidden"> ; la page /jouer ne fait que l'accueillir.
+    sources: ["src/app/jouer/page.tsx", "src/components/quick-config-form.tsx"],
   },
 ];
 

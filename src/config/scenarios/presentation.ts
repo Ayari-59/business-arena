@@ -99,6 +99,80 @@ export const EMBLEMES_SECTEUR: Record<Sector, string> = {
 };
 
 /**
+ * Deux scénarios peuvent partager un métier : NOVA existe en une référence
+ * (les ateliers STMG) et en trois (les ateliers de gestion). Sur la vitrine,
+ * chacun garde pourtant SA couleur, sans quoi deux vignettes voisines se
+ * confondraient. La couleur se lit donc par scénario, et retombe sur celle du
+ * métier quand le scénario n'en déclare pas ; l'emblème, lui, est porté par
+ * le scénario dans le registre (`icon`).
+ */
+const IDENTITES_SCENARIO: Record<string, { accent: AccentSecteur }> = {
+  "nova-gamme": {
+    accent: {
+      bord: "hover:border-teal-400/50",
+      halo: "bg-teal-400/10",
+      texte: "text-teal-300",
+      puce: "border-teal-400/30 bg-teal-950/30 text-teal-200",
+      barre: "bg-teal-400",
+    },
+  },
+  "hotel-gamme": {
+    accent: {
+      bord: "hover:border-fuchsia-400/50",
+      halo: "bg-fuchsia-400/10",
+      texte: "text-fuchsia-300",
+      puce: "border-fuchsia-400/30 bg-fuchsia-950/30 text-fuchsia-200",
+      barre: "bg-fuchsia-400",
+    },
+  },
+  "conseil-gamme": {
+    accent: {
+      bord: "hover:border-blue-400/50",
+      halo: "bg-blue-400/10",
+      texte: "text-blue-300",
+      puce: "border-blue-400/30 bg-blue-950/30 text-blue-200",
+      barre: "bg-blue-400",
+    },
+  },
+  "bistrot-gamme": {
+    accent: {
+      bord: "hover:border-purple-400/50",
+      halo: "bg-purple-400/10",
+      texte: "text-purple-300",
+      puce: "border-purple-400/30 bg-purple-950/30 text-purple-200",
+      barre: "bg-purple-400",
+    },
+  },
+  "ecommerce-gamme": {
+    accent: {
+      bord: "hover:border-yellow-400/50",
+      halo: "bg-yellow-400/10",
+      texte: "text-yellow-300",
+      puce: "border-yellow-400/30 bg-yellow-950/30 text-yellow-200",
+      barre: "bg-yellow-400",
+    },
+  },
+  "boutique-mono": {
+    accent: {
+      bord: "hover:border-pink-400/50",
+      halo: "bg-pink-400/10",
+      texte: "text-pink-300",
+      puce: "border-pink-400/30 bg-pink-950/30 text-pink-200",
+      barre: "bg-pink-400",
+    },
+  },
+};
+
+export function accentsDe(d: Pick<ScenarioDefinition, "code" | "sector">): AccentSecteur {
+  return IDENTITES_SCENARIO[d.code]?.accent ?? ACCENTS_SECTEUR[d.sector];
+}
+
+/** L'emblème d'un scénario : celui qu'il déclare, sinon celui de son métier. */
+export function emblemeDe(d: Pick<ScenarioDefinition, "sector"> & { icon?: string }): string {
+  return d.icon ?? EMBLEMES_SECTEUR[d.sector];
+}
+
+/**
  * Les titres du registre s'écrivent « NOVA · Prenez les commandes » : le nom
  * de l'entreprise, puis ce qu'on y fait. Les deux ne se lisent pas au même
  * endroit, d'où ces deux lectures.
@@ -131,26 +205,4 @@ export function surtitreDePartie(titreScenario: string, nomEquipe: string): stri
   const repete = nom.localeCompare(nomEquipe.trim(), "fr", { sensitivity: "base" }) === 0;
   const morceaux = repete ? [promesse] : [nom, promesse];
   return ["Business Arena", ...morceaux.filter((m): m is string => Boolean(m))].join(" · ");
-}
-
-/**
- * La vignette « toutes les fiches » ferme la grille des entreprises. Elle doit
- * FERMER une rangée, pas en ouvrir une : posée après un nombre d'entreprises
- * multiple du nombre de colonnes, elle resterait seule au début d'une rangée
- * vide, décalée à gauche sous trois rangées pleines.
- *
- * Elle occupe donc exactement les cases qui restent : une seule quand il en
- * reste une, la rangée entière quand la précédente est pleine. Le calcul suit
- * le nombre d'entreprises du registre, de sorte qu'une dixième entreprise ne
- * réintroduise pas le décalage.
- *
- * Les classes sont écrites en toutes lettres : Tailwind lit les sources, une
- * classe assemblée à l'exécution n'existe pas.
- */
-export function classesVignetteFinale(nombreDEntreprises: number): string {
-  const surDeuxColonnes = ["sm:col-span-2", "sm:col-span-1"][nombreDEntreprises % 2]!;
-  const surTroisColonnes = ["lg:col-span-3", "lg:col-span-2", "lg:col-span-1"][
-    nombreDEntreprises % 3
-  ]!;
-  return [surDeuxColonnes, surTroisColonnes].join(" ");
 }

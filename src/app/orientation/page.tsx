@@ -6,14 +6,17 @@ import { SCENARIOS } from "@/config/scenarios/registry";
 import { ATELIERS } from "@/config/ateliers";
 
 /**
- * La page lit l'adresse de contact dans la configuration de la plateforme,
- * donc dans la base : elle ne se pré-rend pas à la compilation, sans quoi
- * l'adresse serait figée au moment du déploiement.
+ * La page ne lit que la configuration de plateforme (rien par utilisateur, pas
+ * de searchParams) : comme la landing (#99), on la met en cache et on la
+ * régénère au plus toutes les 5 min (ISR) plutôt que de la rendre côté serveur
+ * — avec un hit base — à chaque visite. L'adresse de contact tolère 5 min de
+ * décalage.
  */
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export const metadata: Metadata = {
-  title: "Choisir sa simulation · Business Arena",
+  alternates: { canonical: "/orientation" },
+  title: "Choisir sa simulation",
   description:
     "Quatre questions pour trouver l'entreprise, le niveau et la durée qui conviennent à votre classe.",
 };
@@ -22,7 +25,7 @@ export default async function OrientationPage() {
   const config = await getPlatformConfig();
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-12">
+    <main id="main" className="mx-auto max-w-5xl px-6 py-12">
       <p className="text-xs uppercase tracking-[0.3em] text-amber-400">
         Business Arena · orientation
       </p>
@@ -48,7 +51,7 @@ export default async function OrientationPage() {
           les fiches des entreprises
         </Link>{" "}
         ou{" "}
-        <Link href="/ateliers" className="text-slate-400 underline-offset-4 hover:underline">
+        <Link href="/animations" className="text-slate-400 underline-offset-4 hover:underline">
           les ateliers publiés
         </Link>
         .

@@ -14,7 +14,7 @@ vi.mock("@/db", async () => {
 });
 
 import { db } from "@/db";
-import { games, rounds, users } from "@/db/schema";
+import { games, users } from "@/db/schema";
 import {
   createSoloGame,
   drawEventCardForNextRound,

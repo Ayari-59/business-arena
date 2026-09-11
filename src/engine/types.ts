@@ -19,6 +19,66 @@ export type SupplierCode = string;
 // Configuration de scénario (sous-ensemble consommé par le moteur v0.1)
 // ---------------------------------------------------------------------------
 
+/**
+ * Paramètres de l'engagement RSE (Lot 2). Grandeurs SANS dimension : la dépense
+ * est normalisée par l'échelle marketing du scénario (cf. engine/rse), donc ces
+ * réglages se transposent d'un secteur à l'autre. Absent du scénario →
+ * DEFAULT_RSE_CONFIG. Réglable par l'enseignant via economicOverrides.
+ */
+export interface RseEngineConfig {
+  /** Force de l'effet image → demande : facteur = 1 + sensibilité × capital-image. */
+  imageDemandSensitivity: number;
+  /** Inertie du capital-image (0..1), report d'un tour sur l'autre. Élevé = lent à monter ET à retomber. */
+  imageInertia: number;
+  /** Réduction maximale du taux de rebuts par le capital « process propre » (0..1). */
+  cleanDefectReductionMax: number;
+  /** Inertie du capital « process propre » (0..1). */
+  cleanInertia: number;
+  /**
+   * FINANCEMENT VERT (Lot 2B) : gain de confiance bancaire par unité de
+   * capital-image (borné à 1). Une entreprise engagée rassure sa banque —
+   * découvert plus large, taux plus doux. 0 = pas de financement vert.
+   */
+  financingTrustBonus: number;
+  /**
+   * CLIMAT SOCIAL (Lot 2B) : part du seuil d'attrition retirée à capital-image
+   * saturant (0..1). Un employeur engagé retient mieux : on démissionne moins
+   * vite quand le salaire glisse sous le marché. 0 = pas d'effet social.
+   */
+  socialAttritionRelief: number;
+  /**
+   * CARTES ÉVÉNEMENT RSE (Lot 2C). Le monde réagit au standing par des cartes à
+   * effet DEMANDE, tirées sur le capital-image d'OUVERTURE. Elles ne concernent
+   * que les entreprises qui ONT joué la RSE : un capital nul ne déclenche rien
+   * (ni label, ni bad buzz), ce qui laisse la RSE facultative aux niveaux qui ne
+   * l'ouvrent pas.
+   */
+  cards: {
+    /** Pas de carte RSE avant ce tour (l'horizon où un capital a pu se bâtir). */
+    minRound: number;
+    /** 🏅 Label : capital-image ≥ ce seuil → bonus de demande, plusieurs tours. */
+    labelImageThreshold: number;
+    /** Bonus de demande du label (0,15 = +15 %). */
+    labelDemandBonus: number;
+    /** Durée du label, en tours. */
+    labelDuration: number;
+    /** 📢 Bad buzz : risque quand 0 < capital-image < ce plafond (engagement tiède). */
+    badBuzzImageCeiling: number;
+    /** Probabilité de bad buzz par tour dans la zone tiède. */
+    badBuzzProbability: number;
+    /** Malus de demande du bad buzz (0,25 = −25 %), un tour. */
+    badBuzzDemandMalus: number;
+    /** 💶 Éco-subvention : capital « process propre » ≥ ce seuil → aide (Lot 2C.2). */
+    aidCleanThreshold: number;
+    /** Montant de l'éco-subvention, en MULTIPLE de l'échelle marketing du scénario. */
+    aidAmount: number;
+    /** ⚖️ Sanction : probabilité d'amende par tour dans la zone d'image tiède (Lot 2C.2). */
+    sanctionProbability: number;
+    /** Montant de l'amende, en MULTIPLE de l'échelle marketing du scénario. */
+    fineAmount: number;
+  };
+}
+
 export interface EngineScenarioConfig {
   code: string;
   version: string;
@@ -43,6 +103,19 @@ export interface EngineScenarioConfig {
     /** Heures de main-d'œuvre par unité produite. */
     hoursPerUnit: number;
   };
+  /**
+   * GAMME (optionnel) : plusieurs produits par entreprise. Chaque produit porte
+   * SON marché (« un marché par produit » : ses segments, sa saisonnalité, sa
+   * concurrence), et la gamme partage l'usine (capacité machine, main-d'œuvre)
+   * et la finance. Absent = mono-produit historique : `product` + `market`
+   * forment alors une gamme d'un seul produit (cf. engine/gamme.ts), au
+   * comportement STRICTEMENT identique. Quand présent (≥ 2 produits),
+   * `product` et `market` restent lus par les affichages mono mais le moteur
+   * ne simule que la gamme. Les codes de segments doivent être uniques sur
+   * toute la gamme : parts de marché et demandes potentielles sont indexées
+   * par code de segment.
+   */
+  products?: ProductDef[];
   production: {
     /** Effet du budget qualité : producedQuality = 1 + sens × ln(1 + budget/scale). */
     qualitySensitivity: number;
@@ -62,6 +135,12 @@ export interface EngineScenarioConfig {
     /** Effet marketing : 1 + sens(segment) × ln(1 + budget/scale). */
     scale: number;
   };
+  /**
+   * Engagement RSE (Lot 2). Absent → DEFAULT_RSE_CONFIG. Sans effet tant que
+   * l'équipe ne dépense pas : le capital reste à 0 et les facteurs à leur
+   * valeur neutre (rétro-compatible avec toute partie existante).
+   */
+  rse?: RseEngineConfig;
   finance: {
     /** Taux d'emprunt annuel. */
     loanAnnualRate: number;
@@ -157,6 +236,25 @@ export interface EngineScenarioConfig {
    */
   perishable?: boolean;
   /**
+   * Réglages des concurrents pilotés (optionnel). `premiumPriceRatio` : le
+   * supplément de prix du profil premium sur le prix de référence (défaut
+   * 1,3). Dans un marché où les clients comparent d'abord les prix (bâtiment,
+   * transport), 30 % de plus ferme le marché : le profil s'y joue plus près
+   * de la référence. Absent : comportement historique.
+   */
+  bots?: {
+    premiumPriceRatio?: number;
+  };
+  /**
+   * Modèle par ABONNEMENT (optionnel) : l'entreprise porte un portefeuille
+   * d'adhérents d'un tour à l'autre. Chaque tour, une part du portefeuille
+   * part (attrition) ; le reste est servi en priorité sur la capacité du tour
+   * et paie le prix de la première référence ; les nouveaux adhérents sont
+   * ceux que le marché apporte sur les places restantes. Absent : rien ne
+   * change, un scénario historique reste identique au bit près.
+   */
+  subscription?: SubscriptionConfig;
+  /**
    * Investissement capacitaire (optionnel — doc 02 §6.5) : acheter de la
    * capacité machine. Décaissement et immobilisation immédiats, mise en
    * service au tour SUIVANT, amortissement linéaire dès la mise en service.
@@ -198,6 +296,13 @@ export interface EngineScenarioConfig {
     baseDefectRate: number;
     /** Retours clients : ventes × sens × max(0, 1 − qualité perçue). */
     externalReturnSensitivity: number;
+    /**
+     * Sensibilité des rebuts à la MAINTENANCE (optionnel, unidirectionnel). 0 ou
+     * absent = aucun effet (comportement historique inchangé). Si > 0 : sous le
+     * budget de maintenance de référence les rebuts augmentent (jusqu'à ×(1 + s)) ;
+     * au budget de référence ou au-dessus, aucun effet (facteur plafonné à 1).
+     */
+    maintenanceDefectSensitivity?: number;
   };
   /**
    * Fournisseurs de matières premières (optionnel — doc 02 §5bis) : le joueur
@@ -280,6 +385,41 @@ export interface EngineScenarioConfig {
   /** Références du scoring BPI (doc 08 §1.1) — bornes min/cible par tour. */
   scoring: ScoringConfig;
   /** V2 : les bots utilisent les décisions financières, RH, investissement et trésorerie. Absent = false. */
+  /**
+   * Recherche et développement (levier R&D). Absent : aucun levier R&D, aucun
+   * champ ajouté nulle part. Présent : chaque référence (mono : le produit)
+   * peut recevoir un budget R&D qui, au-delà du coût de développement d'une
+   * référence à lancer, élève son NIVEAU TECHNIQUE — un bonus de qualité
+   * perçue à effet différé, qui s'érode quand la R&D cesse (la concurrence
+   * rattrape). Effet à rendements décroissants : techSensitivity ×
+   * ln(1 + R&D / techScale), plafonné à techMax, lissé par techInertia.
+   */
+  rd?: {
+    techScale: number;
+    techSensitivity: number;
+    techMax: number;
+    techInertia: number;
+  };
+  /**
+   * Communication (levier « marque et axe »). Absent : le marketing reste un
+   * budget unique, rien n'est ajouté nulle part. Présent : en gamme, le budget
+   * se scinde en un budget de MARQUE, qui bâtit une notoriété avec inertie au
+   * bénéfice de toute la gamme, et des budgets SPÉCIFIQUES par référence à
+   * effet immédiat ; et l'entreprise choisit un AXE de communication (prix,
+   * qualité, innovation, image). Le même budget rend `axisFit` fois plus
+   * quand l'axe correspond à ce que le segment regarde, `axisMisfit` fois
+   * quand il ne lui parle pas ; un axe prix sur un prix élevé n'est pas
+   * crédible ; changer d'axe use la notoriété acquise.
+   */
+  communication?: {
+    brandScale: number;
+    brandSensitivity: number;
+    brandMax: number;
+    brandInertia: number;
+    axisFit: number;
+    axisMisfit: number;
+    axisSwitchDecay: number;
+  };
   enrichedBots?: boolean;
 }
 
@@ -329,6 +469,12 @@ export interface OrderOfferDef {
   price: number;
   /** Délai de règlement en jours (0 = comptant). */
   paymentDelayDays: number;
+  /**
+   * En gamme, la référence sur laquelle porte la commande (code produit) :
+   * elle se sert sur SON stock, à SON coût variable. Absente : la première
+   * référence de la gamme (mono : le seul produit).
+   */
+  productCode?: string;
 }
 
 /**
@@ -432,6 +578,22 @@ export interface SegmentConfig {
    */
   commissionRate?: number;
   /**
+   * Porte marketing (e-commerce) : part de l'attraction que le segment garde
+   * SANS budget marketing, entre 0 et 1. Absente : tout (comportement
+   * historique, le marketing ne fait que multiplier). À 0,2, une offre sans
+   * publicité ne vaut qu'un cinquième de son attraction sur ce segment, et
+   * la porte s'ouvre avec le budget rapporté à l'échelle marketing du
+   * scénario : le trafic s'achète.
+   */
+  marketingGate?: number;
+  /**
+   * Adéquation explicite des axes de communication à ce segment (levier
+   * communication) : "fit" quand le segment y est réceptif, "misfit" quand
+   * l'axe ne lui parle pas. À défaut, elle se lit des ressorts du segment
+   * (élasticité pour le prix, sensibilité à la qualité, fidélité pour l'image).
+   */
+  axisAffinity?: Partial<Record<CommunicationAxis, "fit" | "misfit" | "neutral">>;
+  /**
    * Saisonnalité propre au segment (doc 02 §3.1 : Seasonality(s, t)) ;
    * à défaut, la saisonnalité globale du marché s'applique. Un coefficient 0
    * fait apparaître/disparaître le segment (ex. compte-clé à partir du tour 3).
@@ -439,6 +601,52 @@ export interface SegmentConfig {
   seasonality?: number[];
   /** Intensité concurrentielle γ du segment (défaut : market.competitionIntensity). */
   competitionIntensity?: number;
+}
+
+/**
+ * Marché propre à un produit de la gamme. Les segments sont obligatoires ;
+ * saisonnalité, attraction extérieure et intensité concurrentielle retombent
+ * sur celles du marché du scénario quand elles sont absentes.
+ */
+export interface ProductMarketConfig {
+  segments: SegmentConfig[];
+  seasonality?: number[];
+  outsideAttraction?: number;
+  competitionIntensity?: number;
+}
+
+/** Un produit de la gamme : ses coûts variables, sa main-d'œuvre, son marché. */
+/**
+ * Recherche et développement d'une référence (gamme). Une référence qui
+ * porte un `development` n'est PAS vendable à l'ouverture : il faut lui
+ * consacrer, cumulé sur un ou plusieurs tours, au moins `cost` de budget R&D ;
+ * elle est lancée au tour qui suit celui où le cumul atteint le coût, et
+ * jamais avant `availableFromRound`. Monter en gamme se paie avant de
+ * rapporter : c'est une décision de valeur actuelle nette grandeur nature.
+ */
+export interface ProductDevelopmentDef {
+  /** Budget R&D cumulé à engager avant le lancement. */
+  cost: number;
+  /** Tour de lancement au plus tôt (1 = dès l'ouverture, coût couvert). */
+  availableFromRound?: number;
+}
+
+export interface ProductDef {
+  code: ProductCode;
+  name: string;
+  materialCostPerUnit: number;
+  otherVariableCostPerUnit: number;
+  hoursPerUnit: number;
+  market: ProductMarketConfig;
+  /** La référence est à développer avant d'être vendue (voir ProductDevelopmentDef). */
+  development?: ProductDevelopmentDef;
+  /**
+   * Catalogue de fournisseurs PROPRE à la référence (le tricoteur du mérinos
+   * n'est pas celui des bonnets). Absent : la référence s'approvisionne dans
+   * `scenario.suppliers`. Le premier est le fournisseur de référence de la
+   * référence ; `costMultiplier` s'applique à SON coût matières.
+   */
+  suppliers?: SupplierDef[];
 }
 
 export interface EventDefinitionConfig {
@@ -460,7 +668,9 @@ export type ModifierTarget =
   | "interest_rate" // multiplie les taux d'intérêt du tour
   | "order" // commande ferme : unités vendues d'office (add), réglées comptant, dans la limite du stock
   | "order_price" // prix unitaire IMPOSÉ des unités de commande ferme du tour (valeur absolue)
-  | "order_subcontract"; // unités de la commande sous-traitables (add) — au coût scenario.subcontracting
+  | "order_subcontract" // unités de la commande sous-traitables (add) — au coût scenario.subcontracting
+  | "financial_penalty" // charge exceptionnelle du tour (€ absolus, add) — ex. amende RSE
+  | "financial_aid"; // produit exceptionnel du tour (€ absolus, add) — ex. éco-subvention RSE
 
 export interface EventModifier {
   target: ModifierTarget;
@@ -491,13 +701,80 @@ export interface BalanceSheet {
   vatLiability?: number;
 }
 
+/** Les axes de communication : ce que la marque met en avant. */
+export type CommunicationAxis = "prix" | "qualite" | "innovation" | "image";
+
+export interface ProductRdState {
+  /** Budget R&D cumulé sur la référence depuis l'ouverture. */
+  invested: number;
+  /** La référence est vendable (lancée, ou sans développement à faire). */
+  launched: boolean;
+  /** Tour à partir duquel la référence a été vendable (absent : pas encore). */
+  launchRound?: number;
+  /** Niveau technique acquis (bonus de qualité perçue, 0 = référence). */
+  techLevel: number;
+}
+
+/**
+ * Paramètres du modèle par abonnement (`EngineScenarioConfig.subscription`).
+ *
+ * Taux d'attrition du tour :
+ *   base × qualitéPerçue^(−sensibilitéQualité) × (prix ÷ prixRéférence)^(sensibilitéPrix)
+ *   + saturation × max(0, (occupation − seuil) ÷ (1 − seuil))
+ * borné à `maxChurnRate`. L'occupation est le portefeuille d'ouverture
+ * rapporté à la capacité du tour (la plus serrée de la surface et de
+ * l'encadrement) : sur-vendre dégrade l'expérience, donc la rétention.
+ */
+export interface SubscriptionConfig {
+  /** Part du portefeuille qui part chaque tour, à qualité et prix de référence, sans saturation (0..1). */
+  baseChurnRate: number;
+  /** Sensibilité de l'attrition à la qualité perçue (0 = aucune). */
+  qualityChurnSensitivity: number;
+  /** Sensibilité de l'attrition au prix rapporté à `refPrice` (0 = aucune). */
+  priceChurnSensitivity: number;
+  /** Prix de référence du modèle (celui que le portefeuille juge « normal »). */
+  refPrice: number;
+  /** Occupation (portefeuille ÷ capacité) au-delà de laquelle la saturation fait partir (0..1). */
+  crowdingThreshold: number;
+  /** Attrition supplémentaire à occupation totale (occupation = 1). */
+  crowdingChurn: number;
+  /** Plafond du taux d'attrition (défaut 0,6). */
+  maxChurnRate?: number;
+  /**
+   * Saisonnalité de l'attrition de base, par tour (1 = neutre) : l'été fait
+   * partir plus que janvier. Absente : le taux de base vaut toute l'année.
+   */
+  churnSeasonality?: number[];
+}
+
 export interface CompanyState {
   id: CompanyId;
   name: string;
   controller: "human" | "bot";
   botProfile?: string;
-  /** Qualité perçue courante (1 = référence). */
+  /** Qualité perçue courante (1 = référence). En gamme : moyenne pondérée des références. */
   perceivedQuality: number;
+  /**
+   * Gamme : qualité perçue de chaque référence, par code produit. Émis
+   * SEULEMENT en multi-produits ; absent, chaque référence part de
+   * `perceivedQuality`.
+   */
+  perceivedQualityByProduct?: Record<ProductCode, number>;
+  /**
+   * R&D par référence (scénarios avec bloc `rd`) : le cumul investi, le
+   * lancement (tour où la référence est devenue vendable) et le niveau
+   * technique acquis. Mono-produit : sous le code du produit unique. Absent
+   * tant que le scénario n'a pas de levier R&D — snapshot inchangé.
+   */
+  rdByProduct?: Record<ProductCode, ProductRdState>;
+  /**
+   * Notoriété de marque (levier communication) : bâtie par le budget de
+   * marque, avec inertie ; agit sur l'attraction de toute la gamme au tour
+   * SUIVANT. Absente sans levier — snapshot inchangé.
+   */
+  brandAwareness?: number;
+  /** Axe de communication tenu au tour précédent (levier communication). */
+  lastCommunicationAxis?: CommunicationAxis;
   /** Capacité machine totale (unités/tour à 100 % de disponibilité). */
   machineCapacity: number;
   /** Disponibilité machine courante (0..1). */
@@ -508,9 +785,20 @@ export interface CompanyState {
   productivity: number;
   /** Stock de produits finis : quantité et coût unitaire moyen pondéré. */
   finishedGoods: { quantity: number; unitCost: number };
+  /**
+   * Stocks par produit (scénarios à gamme). `finishedGoods` en reste
+   * l'agrégat (quantité totale, coût moyen pondéré) pour les lecteurs mono.
+   * Absent en mono-produit : l'instantané d'une partie existante ne change pas.
+   */
+  finishedGoodsByProduct?: Record<ProductCode, { quantity: number; unitCost: number }>;
   finance: BalanceSheet;
   /** Parts de marché du tour précédent, par segment (fidélité). */
   lastMarketShare: Record<SegmentCode, number>;
+  /**
+   * Portefeuille d'adhérents d'ouverture (scénarios par abonnement). Émis
+   * SEULEMENT avec `scenario.subscription` — snapshot inchangé sans le modèle.
+   */
+  members?: number;
   /**
    * Parc d'équipements typés (présent quand le scénario a `equipment`).
    * Chaque entrée est un lot de machines du même type acquises au même tour.
@@ -539,11 +827,59 @@ export interface CompanyState {
    */
   reserves?: number;
   /**
+   * Déficit fiscal reportable (report en avant des pertes). Distinct des
+   * `reserves` comptables : il s'alimente du résultat AVANT impôt négatif et
+   * s'impute sur les bénéfices imposables futurs avant calcul de l'IS. Part de
+   * zéro, jamais négatif. Absent = aucun déficit à reporter.
+   */
+  taxLossCarryforward?: number;
+  /**
    * Confiance de la banque (0..1), construite sur la fiabilité des plans de
    * trésorerie déposés aux tours passés. Absente = confiance pleine : une
    * entreprise qui n'a encore rien promis n'a rien à se faire pardonner.
    */
   bankTrust?: number;
+  /**
+   * Capital-image RSE (Lot 2) : stock lissé de l'engagement passé, qui relève
+   * l'attractivité au tour suivant. Absent = 0 (aucun engagement encore).
+   */
+  rseImageCapital?: number;
+  /**
+   * Capital « process propre » RSE (Lot 2) : réduit durablement le taux de
+   * rebuts. Absent = 0.
+   */
+  rseCleanCapital?: number;
+  /**
+   * Défaillance (cessation de paiements, V2 couche 2). Une entreprise passe
+   * `defaillant` après deux tours consécutifs de crise de trésorerie
+   * caractérisée (découvert au-delà du plafond, plus de créances à céder).
+   * Défaillante, elle est gelée (ne produit plus, ne dépense plus, n'emprunte
+   * plus) SAUF l'augmentation de capital : une recapitalisation qui la ramène
+   * sous le plafond la fait repasser `active`. Absent = active (rétro-compat).
+   */
+  status?: "active" | "defaillant";
+  /** Tours de crise consécutifs, pour le seuil de défaillance. Absent = 0. */
+  crisisStreak?: number;
+}
+
+/**
+ * Décisions propres à UN produit de la gamme. Le prix et le plan sont les
+ * pivots ; le marketing soutient la demande sur le marché du produit ; le
+ * budget qualité fait la qualité produite (et perçue) de la référence ; le
+ * fournisseur fixe son coût matières, son bonus de qualité, son délai de
+ * règlement et son risque de rupture. La maintenance, les RH, la finance
+ * restent des leviers d'entreprise (l'usine et la caisse sont communes).
+ */
+export interface ProductDecisions {
+  price: number;
+  productionPlan: number;
+  marketingBudget?: number;
+  /** Budget qualité de la référence (absent : part égale du scalaire). */
+  qualityBudget?: number;
+  /** Fournisseur de la référence (absent : le fournisseur scalaire). */
+  supplierChoice?: string;
+  /** Budget R&D de la référence (scénarios avec bloc `rd` ; absent : part égale du scalaire). */
+  rdBudget?: number;
 }
 
 export interface RoundDecisions {
@@ -552,6 +888,27 @@ export interface RoundDecisions {
   marketingBudget: number;
   qualityBudget: number;
   maintenanceBudget: number;
+  /**
+   * Budget R&D du tour (scénarios avec bloc `rd`). Mono-produit : la R&D du
+   * produit ; gamme : le scalaire dont chaque référence sans entrée reçoit une
+   * part égale. Charge décaissée du tour, ligne propre au compte de résultat.
+   */
+  rdBudget?: number;
+  /**
+   * Budget de MARQUE du tour (levier communication, gamme) : bâtit la
+   * notoriété au bénéfice de toute la gamme ; les budgets par référence
+   * restent le marketing spécifique. Charge du tour, dans la ligne marketing.
+   */
+  brandMarketingBudget?: number;
+  /** Axe de communication du tour (levier communication). Absent : neutre. */
+  communicationAxis?: CommunicationAxis;
+  /**
+   * Décisions par produit (scénarios à gamme). Absent en mono-produit, où les
+   * champs scalaires ci-dessus suffisent. En gamme, un produit sans entrée
+   * reçoit le prix scalaire et une part égale du plan et du marketing
+   * scalaires (cf. engine/gamme.ts : toGammeDecisions).
+   */
+  products?: Record<ProductCode, ProductDecisions>;
   /**
    * Assurance : `true` = formule unique (rétro-compatible) ; `string` =
    * code de la formule choisie ; `false`/absent = non assuré.
@@ -623,6 +980,17 @@ export interface RoundDecisions {
     placement?: number;
   };
   /**
+   * Engagement RSE (Lot 2) — le levier « payer maintenant, gagner plus tard ».
+   * `budget` : dépense d'exploitation du tour, bâtit le capital-image (demande
+   * différée). `investment` : effort « process propre », bâtit le capital de
+   * réduction durable des rebuts. Les DEUX sont des charges décaissées ce tour.
+   * Ouvert par le niveau de difficulté (decisions.rse), dès Arbitrage.
+   */
+  rse?: {
+    budget?: number;
+    investment?: number;
+  };
+  /**
    * Plan de trésorerie du joueur pour CE tour, déposé avec les décisions.
    * Quand le scénario ouvre un `finance.bank`, c'est la pièce du dossier
    * bancaire : sans elle la banque ne prête pas, et l'écart entre ce qui est
@@ -659,6 +1027,18 @@ export interface IncomeStatement {
   marketingCost: number;
   qualityCost: number;
   maintenanceCost: number;
+  /**
+   * Engagement RSE (Lot 2) : dépense d'exploitation du tour (budget + effort
+   * process propre), retranchée avant l'EBITDA comme le marketing. Absente si
+   * nulle — les parties sans RSE n'affichent pas la ligne.
+   */
+  engagementRse?: number;
+  /**
+   * Recherche et développement du tour (scénarios avec levier R&D) : une
+   * charge d'exploitation décaissée, retranchée avant l'EBITDA comme le
+   * marketing. Absente si nulle.
+   */
+  rdCost?: number;
   fixedCosts: number;
   ebitda: number;
   depreciation: number;
@@ -666,7 +1046,17 @@ export interface IncomeStatement {
   interest: number;
   /** Produits financiers du tour (intérêts du placement arrivé à terme). */
   financialIncome?: number;
+  /** Charge exceptionnelle du tour (ex. amende RSE, Lot 2C.2). Absente si nulle. */
+  exceptionalCharge?: number;
+  /** Produit exceptionnel du tour (ex. éco-subvention RSE, Lot 2C.2). Absent si nul. */
+  exceptionalIncome?: number;
   pretaxIncome: number;
+  /**
+   * Déficit reporté imputé sur le bénéfice de ce tour (report en avant des
+   * pertes). Présent seulement quand une perte antérieure a réduit l'impôt :
+   * le lecteur voit alors pourquoi l'IS est plus faible que `taxRate × résultat`.
+   */
+  taxLossUsed?: number;
   tax: number;
   netIncome: number;
 }
@@ -693,8 +1083,83 @@ export interface SegmentSalesDetail {
   commission: number;
 }
 
+/**
+ * Résultat d'UN produit de la gamme dans le tour (scénarios à gamme). Le
+ * compte de résultat, le bilan et les KPI restent ceux de l'entreprise ; ce
+ * bloc dit ce que chaque référence a produit, vendu et rapporté.
+ */
+export interface ProductRoundResult {
+  planned: number;
+  produced: number;
+  defectUnits: number;
+  unitVariableCost: number;
+  price: number;
+  marketingBudget: number;
+  /** Budget qualité consacré à la référence ce tour. */
+  qualityBudget: number;
+  /** Qualité produite de la référence ce tour (1 = référence). */
+  producedQuality: number;
+  /** Qualité perçue de la référence en fin de tour, après inertie. */
+  perceivedQuality: number;
+  /** Fournisseur de la référence ce tour (absent si le scénario n'en propose pas). */
+  supplier?: {
+    code: string;
+    name: string;
+    costMultiplier: number;
+    qualityBonus: number;
+    supplyDisruption: boolean;
+  };
+  /**
+   * R&D de la référence (scénarios avec bloc `rd`) : le budget du tour, l'état
+   * du développement en fin de tour et le niveau technique acquis.
+   */
+  rd?: {
+    budget: number;
+    techLevel: number;
+    /** Absent quand la référence n'a pas de développement à faire. */
+    development?: {
+      cost: number;
+      availableFromRound: number;
+      invested: number;
+      launched: boolean;
+      launchRound?: number;
+    };
+  };
+  /** Unités vendues sur le marché du produit (hors commandes fermes et exceptionnelle). */
+  sold: number;
+  lost: number;
+  /** Chiffre d'affaires du marché du produit, au prix pratiqué. */
+  revenue: number;
+  /** Stock de fin de tour du produit (CUMP). */
+  stock: { quantity: number; unitCost: number };
+  /** Codes des segments qui composent le marché du produit. */
+  segments: SegmentCode[];
+}
+
 export interface CompanyRoundResult {
   companyId: CompanyId;
+  /**
+   * R&D du tour en mono-produit (scénarios avec bloc `rd`) : budget engagé et
+   * niveau technique du produit en fin de tour. En gamme, voir `products[].rd`.
+   */
+  rd?: { budget: number; techLevel: number };
+  /**
+   * Communication du tour (levier communication) : l'axe tenu, le budget de
+   * marque, la notoriété en fin de tour et, par segment, l'adéquation de
+   * l'axe (1 = neutre, > 1 l'axe a porté, < 1 il a desservi).
+   */
+  communication?: {
+    axis: CommunicationAxis | null;
+    brandBudget: number;
+    brandAwareness: number;
+    fitBySegment: Record<SegmentCode, number>;
+  };
+  /**
+   * L'entreprise est en défaillance à l'issue de ce tour (cessation de
+   * paiements tenue deux tours). Sert au plancher de score et à l'affichage.
+   * Absent = active.
+   */
+  defaillant?: boolean;
   incomeStatement: IncomeStatement;
   balanceSheet: BalanceSheet;
   cashFlow: { opening: number; items: CashFlowItem[]; closing: number };
@@ -707,6 +1172,25 @@ export interface CompanyRoundResult {
     debtToEquity: number;
     assetTurnover: number;
   };
+  /**
+   * Abonnement (scénarios avec bloc `subscription`) : le portefeuille du tour.
+   * `retained` est servi en priorité sur la capacité ; `unserved` sont les
+   * adhérents restés sans place (perdus) ; `newMembers` viennent du marché ;
+   * `closing` = retained + newMembers ouvre le tour suivant.
+   */
+  subscription?: {
+    opening: number;
+    churnRate: number;
+    churned: number;
+    retained: number;
+    unserved: number;
+    newMembers: number;
+    closing: number;
+    /** Portefeuille d'ouverture ÷ capacité du tour. */
+    occupancy: number;
+    /** Chiffre d'affaires des adhérents conservés (au prix de la première référence). */
+    retainedRevenue: number;
+  };
   market: { bySegment: Record<SegmentCode, SegmentSalesDetail>; totalShare: number };
   production: {
     planned: number;
@@ -717,11 +1201,25 @@ export interface CompanyRoundResult {
     producedQuality: number;
   };
   breakeven: {
-    breakEvenUnits: number;
-    breakEvenRevenue: number;
-    safetyMargin: number;
-    safetyIndex: number;
+    /**
+     * Coût variable unitaire RÉEL du tour (matière ajustée du fournisseur choisi
+     * + autres coûts variables), tel qu'employé pour le seuil. Source de vérité
+     * des affichages « à l'unité », pour qu'ils ne divergent pas du seuil ni de
+     * la marge sur coût variable.
+     */
+    unitVariableCost: number;
+    // `null` quand la marge sur coût variable est nulle ou négative : le seuil
+    // de rentabilité n'existe pas (aucun volume ne le couvre).
+    breakEvenUnits: number | null;
+    breakEvenRevenue: number | null;
+    safetyMargin: number | null;
+    safetyIndex: number | null;
   };
+  /**
+   * Détail par produit (scénarios à gamme, ≥ 2 produits). Absent en
+   * mono-produit : le résultat sérialisé d'une partie existante ne change pas.
+   */
+  products?: Record<ProductCode, ProductRoundResult>;
   /**
    * Commandes fermes (événement « order ») : demandées, livrées du stock,
    * sous-traitées ; prix unitaire imposé le cas échéant (sinon prix propre).
@@ -745,6 +1243,8 @@ export interface CompanyRoundResult {
     revenue: number;
     paymentDelayDays: number;
     onCredit: number;
+    /** En gamme : la référence servie (absent en mono-produit). */
+    productCode?: string;
   };
   /** Investissement du tour : capacité achetée (en service à t+1) et montant. */
   investment?: {
@@ -762,6 +1262,30 @@ export interface CompanyRoundResult {
     externalFailure: number; // retours clients remboursés
     defectUnits: number;
     returnedUnits: number;
+  };
+  /**
+   * Engagement RSE du tour (Lot 2). Présent dès que l'équipe dépense OU porte
+   * déjà du capital. `imageFactor` et `defectReduction` sont les effets
+   * APPLIQUÉS ce tour, dérivés du capital d'OUVERTURE — l'effet est différé :
+   * la dépense du tour ne se lit dans le capital qu'à partir du tour suivant.
+   */
+  rse?: {
+    /** Dépense d'exploitation RSE décidée ce tour (bâtit le capital-image). */
+    budget: number;
+    /** Effort « process propre » décidé ce tour (bâtit le capital de propreté). */
+    investment: number;
+    /** Capital-image à la CLÔTURE (après intégration de la dépense du tour). */
+    imageCapital: number;
+    /** Capital « process propre » à la clôture. */
+    cleanCapital: number;
+    /** Facteur d'attractivité appliqué ce tour (≥ 1), issu du capital d'ouverture. */
+    imageFactor: number;
+    /** Réduction du taux de rebuts appliquée ce tour (0..1), issue du capital d'ouverture. */
+    defectReduction: number;
+    /** Financement vert (Lot 2B) : bonus de confiance bancaire appliqué (0..1). */
+    financingBonus: number;
+    /** Climat social (Lot 2B) : part du seuil d'attrition retirée ce tour (0..1). */
+    attritionRelief: number;
   };
   /** Assurance du tour : prime payée, formule choisie et événements neutralisés. */
   insurance?: { premium: number; formulaCode?: string; neutralizedEvents: string[] };
@@ -836,6 +1360,44 @@ export interface CompanyRoundResult {
     overdraftAnnualRate: number;
   };
   kpis: Record<string, number>;
+}
+
+/**
+ * Trace moteur persistée dans `round_results.engine_trace` : la matière du
+ * débriefing, jamais exposée brute. Un SEUL type partagé par l'écriture
+ * (round-resolution.service) et la lecture (game-view.service) : sans lui, les
+ * deux listes de champs vivaient chacune de leur côté et un oubli côté lecture
+ * désérialisait `undefined` en silence.
+ */
+export interface EngineTrace {
+  production: CompanyRoundResult["production"];
+  breakeven: CompanyRoundResult["breakeven"];
+  events: string[];
+  extraOrders?: CompanyRoundResult["extraOrders"] | null;
+  orderOffer?: CompanyRoundResult["orderOffer"] | null;
+  studies?: CompanyRoundResult["studies"] | null;
+  capital?: CompanyRoundResult["capital"] | null;
+  insurance?: CompanyRoundResult["insurance"] | null;
+  supplier?: CompanyRoundResult["supplier"] | null;
+  hr?: CompanyRoundResult["hr"] | null;
+  investment?: CompanyRoundResult["investment"] | null;
+  qualityCosts?: CompanyRoundResult["qualityCosts"] | null;
+  debt?: CompanyRoundResult["debt"] | null;
+  treasury?: CompanyRoundResult["treasury"] | null;
+  bank?: CompanyRoundResult["bank"] | null;
+  rse?: CompanyRoundResult["rse"] | null;
+  /**
+   * Gamme : le détail par produit du tour. Absent (ou null) en mono-produit et
+   * sur les lignes écrites avant la gamme ; sans lui, l'accordéon des périodes
+   * ne pourrait plus dire ce que chaque référence a vendu.
+   */
+  products?: CompanyRoundResult["products"] | null;
+  /** R&D en mono-produit (levier `rd`) : budget et niveau technique du tour. */
+  rd?: CompanyRoundResult["rd"] | null;
+  /** Communication (levier `communication`) : axe, marque, notoriété, adéquation par segment. */
+  communication?: CompanyRoundResult["communication"] | null;
+  /** Abonnement (bloc `subscription`) : le portefeuille d'adhérents du tour. */
+  subscription?: CompanyRoundResult["subscription"] | null;
 }
 
 export interface EventInstance {

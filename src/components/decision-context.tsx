@@ -30,19 +30,21 @@ export function DilemmaCard({
   footer?: string;
 }) {
   return (
-    <div className="rounded-lg border border-amber-400/25 bg-amber-950/10 p-4">
+    <div className="rounded-lg border border-amber-400/25 bg-amber-950/10 p-1.5 sm:p-4">
       <h3 className="text-xs font-semibold uppercase tracking-wide text-amber-400">{title}</h3>
       <p className="mt-2 text-sm font-medium text-slate-100">{question}</p>
       <div className={`mt-3 grid gap-3 ${routes.length > 2 ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
         {routes.map((route) => (
-          <div key={route.label} className="rounded-lg border border-white/10 bg-slate-950 p-3">
+          <div key={route.label} className="rounded-lg border border-white/10 bg-slate-950 p-1.5 sm:p-3">
             <p className="text-sm font-medium text-slate-200">{route.label}</p>
             <p className="mt-1.5 text-xs leading-relaxed text-emerald-300/90">
-              <span className="font-semibold">Ce que cela rapporte. </span>
+              <span className="sr-only">Ce que cela rapporte. </span>
+              <span aria-hidden className="font-semibold">+ </span>
               {route.gain}
             </p>
             <p className="mt-1.5 text-xs leading-relaxed text-red-300/80">
-              <span className="font-semibold">Ce que cela coûte. </span>
+              <span className="sr-only">Ce que cela coûte. </span>
+              <span aria-hidden className="font-semibold">− </span>
               {route.risque}
             </p>
           </div>
@@ -61,21 +63,24 @@ export function ParametersPanels({
   intro,
   vocabulary,
   capacityFacts,
+  gamme = null,
 }: {
   intro: GameView["intro"];
   vocabulary: GameView["vocabulary"];
   capacityFacts: GameView["capacityFacts"];
+  /** Gamme du scénario joué : les coûts se lisent alors référence par référence. */
+  gamme?: GameView["gamme"];
 }) {
   const showShare = intro.segments.some((s) => s.yourShare !== null);
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <div className="rounded-lg border border-white/5 bg-slate-950 p-4">
+      <div className="rounded-lg border border-white/5 bg-slate-950 p-1.5 sm:p-4">
         <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
           Votre entreprise
         </h3>
         <ul className="mt-2 space-y-1 text-sm text-slate-400">
           <li>
-            <span className="text-slate-500">{vocabulary.capacityLabel} : </span>
+            <span className="text-slate-400">{vocabulary.capacityLabel} : </span>
             <span className="text-slate-200">
               {formatUnits(intro.capacity)} {vocabulary.perRoundLabel}
             </span>
@@ -88,7 +93,7 @@ export function ParametersPanels({
           */}
           {capacityFacts && capacityFacts.bottleneck === "labor" ? (
             <li>
-              <span className="text-slate-500">{vocabulary.laborLabel} : </span>
+              <span className="text-slate-400">{vocabulary.laborLabel} : </span>
               <span className="text-amber-300">
                 {formatUnits(capacityFacts.laborCapacity)} {vocabulary.perRoundLabel}
               </span>
@@ -96,36 +101,101 @@ export function ParametersPanels({
             </li>
           ) : null}
           <li>
-            <span className="text-slate-500">Charges de structure : </span>
+            <span className="text-slate-400">Charges de structure : </span>
             <span className="text-slate-200">{formatEuro(intro.fixedCostsPerRound)} par tour</span>
             , que vous vendiez ou non
           </li>
+          {gamme ? (
+            <li>
+              <span className="text-slate-400">Coût variable : </span>
+              {gamme.map((p, i) => (
+                <span key={p.code}>
+                  {i > 0 ? " · " : ""}
+                  {p.name}{" "}
+                  <span className="text-slate-200">
+                    {formatEuro(p.materialCostPerUnit + p.otherVariableCostPerUnit)}
+                  </span>
+                </span>
+              ))}
+            </li>
+          ) : (
+            <li>
+              <span className="text-slate-400">Coût variable : </span>
+              <span className="text-slate-200">{formatEuro(intro.variableCostPerUnit)}</span> par{" "}
+              {vocabulary.unit} vendu
+            </li>
+          )}
           <li>
-            <span className="text-slate-500">Coût variable : </span>
-            <span className="text-slate-200">{formatEuro(intro.variableCostPerUnit)}</span> par{" "}
-            {vocabulary.unit} vendu
-          </li>
-          <li>
-            <span className="text-slate-500">Trésorerie d&apos;ouverture : </span>
+            <span className="text-slate-400">Trésorerie d&apos;ouverture : </span>
             <span className="text-slate-200">{formatEuro(intro.cash)}</span>
           </li>
           {intro.competitors.length > 0 ? (
             <li>
-              <span className="text-slate-500">Face à vous : </span>
+              <span className="text-slate-400">Face à vous : </span>
               <span className="text-slate-200">{intro.competitors.join(", ")}</span>
             </li>
           ) : null}
         </ul>
       </div>
 
-      <div className="rounded-lg border border-white/5 bg-slate-950 p-4">
+      <div className="rounded-lg border border-white/5 bg-slate-950 p-1.5 sm:p-4">
         <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
           Le marché en face de vous
         </h3>
-        <div className="mt-2 overflow-x-auto">
+
+        {/*
+          En portrait, un tableau à cinq colonnes force soit un défilement
+          horizontal, soit des noms de clientèle repliés sur trois lignes. Sur
+          petit écran on montre donc UNE CARTE PAR CLIENTÈLE (nom en tête, ses
+          chiffres en grille) ; le tableau reprend dès `sm`.
+        */}
+        <ul className="mt-3 space-y-2 sm:hidden">
+          {intro.segments.map((seg) => {
+            // Les noms portent souvent un qualificatif entre parenthèses
+            // (« Étudiants (sensibles au prix) »). Laissé d'un bloc, il s'enroule
+            // sur le petit écran, parenthèse ouverte en haut, fermée en bas. On
+            // le détache : nom en tête, qualificatif en sous-titre, sans
+            // parenthèses.
+            const m = seg.name.match(/^(.*?)\s*\(([^)]*)\)\s*$/);
+            const nom = m ? m[1] : seg.name;
+            const qualif = m ? m[2] : null;
+            return (
+              <li key={seg.name} className="rounded-lg border border-white/5 bg-slate-900/60 p-1.5 sm:p-3">
+                <p className="text-sm font-semibold text-slate-100">{nom}</p>
+                {qualif ? <p className="mt-0.5 text-xs text-slate-400">{qualif}</p> : null}
+                <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-2">
+                <div>
+                  <dt className="text-xs uppercase tracking-wide text-slate-400">Taille</dt>
+                  <dd className="tabular-nums text-slate-300">{formatUnits(seg.size)}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs uppercase tracking-wide text-slate-400">Prix usuel</dt>
+                  <dd className="tabular-nums text-slate-300">{formatEuro(seg.refPrice)}</dd>
+                </div>
+                {showShare ? (
+                  <div>
+                    <dt className="text-xs uppercase tracking-wide text-slate-400">Votre part</dt>
+                    <dd className="tabular-nums text-amber-300">
+                      {seg.yourShare === null ? "—" : formatPercent(seg.yourShare)}
+                    </dd>
+                  </div>
+                ) : null}
+                <div>
+                  <dt className="text-xs uppercase tracking-wide text-slate-400">Règlement</dt>
+                  <dd className="text-slate-400">
+                    {seg.paymentDelayDays > 0 ? `à ${seg.paymentDelayDays} j` : "comptant"}
+                  </dd>
+                </div>
+              </dl>
+            </li>
+            );
+          })}
+        </ul>
+
+        <div className="mt-2 hidden overflow-x-auto sm:block">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-[11px] uppercase tracking-wide text-slate-500">
+              <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
                 <th className="pb-1 pr-3 font-medium">Clientèle</th>
                 <th className="pb-1 pr-3 text-right font-medium">Taille</th>
                 <th className="pb-1 pr-3 text-right font-medium">Prix usuel</th>
@@ -156,9 +226,12 @@ export function ParametersPanels({
             </tbody>
           </table>
         </div>
-        <p className="mt-2 text-[11px] leading-relaxed text-slate-600">
+        <p className="mt-2 text-xs leading-relaxed text-slate-600">
           Le prix usuel est celui auquel cette clientèle a l&apos;habitude d&apos;acheter, pas une
-          consigne. Vous fixez UN prix pour tout le monde.
+          consigne.{" "}
+          {gamme
+            ? "Vous fixez UN prix par référence, pour toutes ses clientèles."
+            : "Vous fixez UN prix pour tout le monde."}
         </p>
       </div>
     </div>

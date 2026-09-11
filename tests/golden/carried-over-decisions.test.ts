@@ -1,5 +1,4 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { eq } from "drizzle-orm";
 
 /**
  * Test des décisions reconduites champ par champ.

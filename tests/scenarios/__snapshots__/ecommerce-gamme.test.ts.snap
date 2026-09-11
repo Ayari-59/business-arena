@@ -1,0 +1,316 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`PIXEL & CO · gamme — calibration > la partie de référence ne bouge pas sans qu'on le veuille 1`] = `
+{
+  "balanced": [
+    {
+      "resultat": -26126,
+      "tresorerie": -35000,
+      "vendu": {
+        "capsule": 0,
+        "decoration": 1172,
+        "luminaires": 638,
+        "mobilier": 667,
+      },
+    },
+    {
+      "resultat": 29221,
+      "tresorerie": 37174,
+      "vendu": {
+        "capsule": 496,
+        "decoration": 1395,
+        "luminaires": 761,
+        "mobilier": 790,
+      },
+    },
+    {
+      "resultat": 28756,
+      "tresorerie": 55262,
+      "vendu": {
+        "capsule": 807,
+        "decoration": 1453,
+        "luminaires": 827,
+        "mobilier": 742,
+      },
+    },
+    {
+      "resultat": 25199,
+      "tresorerie": 121981,
+      "vendu": {
+        "capsule": 532,
+        "decoration": 1515,
+        "luminaires": 890,
+        "mobilier": 824,
+      },
+    },
+    {
+      "resultat": 28865,
+      "tresorerie": 192709,
+      "vendu": {
+        "capsule": 583,
+        "decoration": 1665,
+        "luminaires": 878,
+        "mobilier": 903,
+      },
+    },
+    {
+      "resultat": 12493,
+      "tresorerie": 217608,
+      "vendu": {
+        "capsule": 606,
+        "decoration": 1733,
+        "luminaires": 913,
+        "mobilier": 939,
+      },
+    },
+  ],
+  "growth": [
+    {
+      "resultat": -44444,
+      "tresorerie": -35000,
+      "vendu": {
+        "capsule": 0,
+        "decoration": 1494,
+        "luminaires": 793,
+        "mobilier": 811,
+      },
+    },
+    {
+      "resultat": 22403,
+      "tresorerie": -1090,
+      "vendu": {
+        "capsule": 590,
+        "decoration": 1757,
+        "luminaires": 950,
+        "mobilier": 970,
+      },
+    },
+    {
+      "resultat": 31416,
+      "tresorerie": 9725,
+      "vendu": {
+        "capsule": 960,
+        "decoration": 1877,
+        "luminaires": 1056,
+        "mobilier": 920,
+      },
+    },
+    {
+      "resultat": 29338,
+      "tresorerie": 107159,
+      "vendu": {
+        "capsule": 754,
+        "decoration": 2183,
+        "luminaires": 1269,
+        "mobilier": 1165,
+      },
+    },
+    {
+      "resultat": 16276,
+      "tresorerie": 171459,
+      "vendu": {
+        "capsule": 696,
+        "decoration": 2025,
+        "luminaires": 1055,
+        "mobilier": 1077,
+      },
+    },
+    {
+      "resultat": 10646,
+      "tresorerie": 210004,
+      "vendu": {
+        "capsule": 862,
+        "decoration": 2510,
+        "luminaires": 1307,
+        "mobilier": 1334,
+      },
+    },
+  ],
+  "passive": [
+    {
+      "resultat": -5255,
+      "tresorerie": -35000,
+      "vendu": {
+        "capsule": 0,
+        "decoration": 782,
+        "luminaires": 484,
+        "mobilier": 527,
+      },
+    },
+    {
+      "resultat": -2576,
+      "tresorerie": -79939,
+      "vendu": {
+        "capsule": 0,
+        "decoration": 885,
+        "luminaires": 551,
+        "mobilier": 594,
+      },
+    },
+    {
+      "resultat": -6406,
+      "tresorerie": -134601,
+      "vendu": {
+        "capsule": 0,
+        "decoration": 902,
+        "luminaires": 585,
+        "mobilier": 538,
+      },
+    },
+    {
+      "resultat": 0,
+      "tresorerie": -183684,
+      "vendu": {
+        "capsule": 0,
+        "decoration": 0,
+        "luminaires": 0,
+        "mobilier": 0,
+      },
+    },
+    {
+      "resultat": 0,
+      "tresorerie": -183684,
+      "vendu": {
+        "capsule": 0,
+        "decoration": 0,
+        "luminaires": 0,
+        "mobilier": 0,
+      },
+    },
+    {
+      "resultat": 0,
+      "tresorerie": -183684,
+      "vendu": {
+        "capsule": 0,
+        "decoration": 0,
+        "luminaires": 0,
+        "mobilier": 0,
+      },
+    },
+  ],
+  "premium": [
+    {
+      "resultat": -67898,
+      "tresorerie": -111201,
+      "vendu": {
+        "capsule": 0,
+        "decoration": 442,
+        "luminaires": 237,
+        "mobilier": 267,
+      },
+    },
+    {
+      "resultat": -5947,
+      "tresorerie": -122656,
+      "vendu": {
+        "capsule": 445,
+        "decoration": 572,
+        "luminaires": 298,
+        "mobilier": 331,
+      },
+    },
+    {
+      "resultat": 0,
+      "tresorerie": -131708,
+      "vendu": {
+        "capsule": 0,
+        "decoration": 0,
+        "luminaires": 0,
+        "mobilier": 0,
+      },
+    },
+    {
+      "resultat": 0,
+      "tresorerie": -131708,
+      "vendu": {
+        "capsule": 0,
+        "decoration": 0,
+        "luminaires": 0,
+        "mobilier": 0,
+      },
+    },
+    {
+      "resultat": 0,
+      "tresorerie": -131708,
+      "vendu": {
+        "capsule": 0,
+        "decoration": 0,
+        "luminaires": 0,
+        "mobilier": 0,
+      },
+    },
+    {
+      "resultat": 0,
+      "tresorerie": -131708,
+      "vendu": {
+        "capsule": 0,
+        "decoration": 0,
+        "luminaires": 0,
+        "mobilier": 0,
+      },
+    },
+  ],
+  "price_aggressive": [
+    {
+      "resultat": 20047,
+      "tresorerie": 82849,
+      "vendu": {
+        "capsule": 0,
+        "decoration": 2485,
+        "luminaires": 1268,
+        "mobilier": 1227,
+      },
+    },
+    {
+      "resultat": 19334,
+      "tresorerie": 140291,
+      "vendu": {
+        "capsule": 0,
+        "decoration": 2906,
+        "luminaires": 1528,
+        "mobilier": 1219,
+      },
+    },
+    {
+      "resultat": 19971,
+      "tresorerie": 157929,
+      "vendu": {
+        "capsule": 0,
+        "decoration": 3019,
+        "luminaires": 1633,
+        "mobilier": 1333,
+      },
+    },
+    {
+      "resultat": -878,
+      "tresorerie": 156325,
+      "vendu": {
+        "capsule": 0,
+        "decoration": 2201,
+        "luminaires": 1265,
+        "mobilier": 1045,
+      },
+    },
+    {
+      "resultat": 4211,
+      "tresorerie": 175545,
+      "vendu": {
+        "capsule": 0,
+        "decoration": 2437,
+        "luminaires": 1257,
+        "mobilier": 1154,
+      },
+    },
+    {
+      "resultat": -17443,
+      "tresorerie": 178240,
+      "vendu": {
+        "capsule": 0,
+        "decoration": 2775,
+        "luminaires": 1431,
+        "mobilier": 1314,
+      },
+    },
+  ],
+}
+`;

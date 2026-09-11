@@ -133,19 +133,26 @@ const rawConseil = {
     factoringFeeRate: 0.025,
     forcedFactoringFeeRate: 0.06,
     // 2 %/an : de quoi valoriser le surplus, jamais de quoi financer
-    // un découvert à 9 %. L'arbitrage doit rester perdant à l'envers.
+    // un découvert à 13 %. L'arbitrage doit rester perdant à l'envers.
     placementAnnualRate: 0.02,
   },
   // structure ≈ 204 000 €/tour : 198 000 décaissés (151 200 € de salaires
   // chargés pour 12 consultants + 46 800 € de loyer, administratif et
   // licences) + 6 000 d'amortissements
   fixedCostsPerRound: 198000,
+  // Le « fournisseur » d'un cabinet, ce sont ses FRAIS DE MISSION : comment
+  // on va chez le client. Ils se décident par politique, et se lisent sur les
+  // 55 € de frais par jour, sur la qualité perçue (la présence se voit) et
+  // sur le délai de règlement des notes de frais. Une ancienne version y
+  // mettait des freelances et des experts de renom à 48 et 68 € la journée :
+  // une journée de consultant ne se paie pas ce prix-là, elle se paie en
+  // salaire, dans la structure.
   suppliers: [
     {
-      code: "integre",
-      name: "Tout en interne",
+      code: "standard",
+      name: "Déplacements standard",
       narrative:
-        "Les missions sont réalisées par vos seuls consultants. Coût maîtrisé, méthode homogène, mais aucune souplesse quand le carnet déborde.",
+        "Les consultants se déplacent chez le client aux réunions qui comptent et travaillent au cabinet le reste du temps. Des frais tenus, une présence suffisante.",
       costMultiplier: 1,
       qualityBonus: 0,
       paymentDelayDays: 30,
@@ -153,26 +160,26 @@ const rawConseil = {
       supplyRiskAvailabilityHit: 0.92,
     },
     {
-      code: "freelances",
-      name: "Réseau de freelances",
+      code: "distance",
+      name: "Missions à distance",
       narrative:
-        "Des indépendants absorbent les pics pour 12 % de moins, payés à 45 jours. Ils connaissent moins vos méthodes, et le client le sent parfois.",
-      costMultiplier: 0.88,
-      qualityBonus: -0.05,
-      paymentDelayDays: 45,
-      supplyRiskProbability: 0.12,
-      supplyRiskAvailabilityHit: 0.85,
+        "Visioconférence d'abord, déplacement seulement quand le client l'exige : 40 % de frais en moins. Les clients qui aiment voir leurs consultants le sentent, et un livrable se défend moins bien à l'écran.",
+      costMultiplier: 0.6,
+      qualityBonus: -0.06,
+      paymentDelayDays: 30,
+      supplyRiskProbability: 0.08,
+      supplyRiskAvailabilityHit: 0.9,
     },
     {
-      code: "experts",
-      name: "Experts de renom en cotraitance",
+      code: "presence",
+      name: "Présence renforcée chez le client",
       narrative:
-        "Des signatures reconnues cosignent vos livrables : 24 % plus cher, réglés à 15 jours. Elles ouvrent les portes des grands comptes.",
-      costMultiplier: 1.24,
-      qualityBonus: 0.12,
+        "Des consultants sur site plusieurs jours par semaine, hébergement compris : 35 % de frais en plus, remboursés vite. La proximité se paie et se voit : les grands comptes y sont sensibles.",
+      costMultiplier: 1.35,
+      qualityBonus: 0.08,
       paymentDelayDays: 15,
-      supplyRiskProbability: 0.05,
-      supplyRiskAvailabilityHit: 0.9,
+      supplyRiskProbability: 0.02,
+      supplyRiskAvailabilityHit: 0.95,
     },
   ],
   insurance: {
@@ -528,10 +535,11 @@ export function conseilCompany(
       fixedAssetsNet: 95000,
       inventoryValue: 0,
       receivables: 180000, // deux mois de CA immobilisés : le BFR du conseil
-      cash: 40000,
+      cash: 22000,
       equity: 205000,
       financialDebt: 70000,
-      payables: 40000,
+      // 30 jours de frais de mission : le délai des énoncés
+      payables: 22000,
       overdraft: 0,
     },
     lastMarketShare: {},

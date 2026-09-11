@@ -13,6 +13,7 @@ import {
 import { id, timestamps } from "./_shared";
 import { eventDefinitions } from "./catalog";
 import { games, rounds, teams } from "./game";
+import type { CompanyRoundResult, EngineTrace } from "@/engine/types";
 
 /** Résultats complets d'une équipe pour un tour + colonnes dénormalisées requêtables. */
 export const roundResults = pgTable(
@@ -25,11 +26,12 @@ export const roundResults = pgTable(
     teamId: uuid("team_id")
       .notNull()
       .references(() => teams.id, { onDelete: "cascade" }),
-    incomeStatement: jsonb("income_statement").notNull(),
-    balanceSheet: jsonb("balance_sheet").notNull(),
-    cashFlow: jsonb("cash_flow").notNull(),
-    marketDetail: jsonb("market_detail").notNull(),
-    engineTrace: jsonb("engine_trace").notNull(), // matière du débriefing, jamais exposée brute
+    incomeStatement: jsonb("income_statement").$type<CompanyRoundResult["incomeStatement"]>().notNull(),
+    balanceSheet: jsonb("balance_sheet").$type<CompanyRoundResult["balanceSheet"]>().notNull(),
+    cashFlow: jsonb("cash_flow").$type<CompanyRoundResult["cashFlow"]>().notNull(),
+    marketDetail: jsonb("market_detail").$type<CompanyRoundResult["market"]["bySegment"]>().notNull(),
+    // matière du débriefing, jamais exposée brute — type partagé écriture/lecture
+    engineTrace: jsonb("engine_trace").$type<EngineTrace>().notNull(),
     revenue: numeric("revenue", { precision: 14, scale: 2 }).notNull(),
     netIncome: numeric("net_income", { precision: 14, scale: 2 }).notNull(),
     cash: numeric("cash", { precision: 14, scale: 2 }).notNull(),

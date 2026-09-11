@@ -1,0 +1,106 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`VOLT FITNESS — calibration > instantané de la partie de référence 1`] = `
+[
+  {
+    "attrition": [
+      15,
+      15,
+      22.5,
+      15,
+      15,
+      15,
+    ],
+    "cumul": -46071,
+    "portefeuille": [
+      1320,
+      1297,
+      1201,
+      1251,
+      1228,
+      1204,
+    ],
+    "strategie": "passive",
+  },
+  {
+    "attrition": [
+      13.9,
+      24.2,
+      31.7,
+      17.9,
+      24.4,
+      24.5,
+    ],
+    "cumul": 89041,
+    "portefeuille": [
+      2200,
+      2200,
+      1791,
+      1980,
+      1980,
+      1936,
+    ],
+    "strategie": "price_aggressive",
+  },
+  {
+    "attrition": [
+      17.6,
+      16,
+      22.4,
+      14.4,
+      14.2,
+      17,
+    ],
+    "cumul": 228640,
+    "portefeuille": [
+      1696,
+      1651,
+      1413,
+      1488,
+      1730,
+      1717,
+    ],
+    "strategie": "premium",
+  },
+  {
+    "attrition": [
+      15,
+      24.6,
+      28.3,
+      15.2,
+      24,
+      24.1,
+    ],
+    "cumul": 190669,
+    "portefeuille": [
+      2200,
+      2091,
+      1722,
+      1980,
+      1980,
+      1936,
+    ],
+    "strategie": "balanced",
+  },
+  {
+    "attrition": [
+      14.5,
+      24.1,
+      30.9,
+      17.1,
+      23.7,
+      23.7,
+    ],
+    "cumul": 113192,
+    "portefeuille": [
+      2200,
+      2200,
+      1788,
+      1980,
+      1980,
+      1936,
+    ],
+    "strategie": "growth",
+  },
+]
+`;

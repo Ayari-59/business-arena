@@ -193,7 +193,14 @@ export function computeRoundScores(
     let bpi = 0;
     for (const dimension of BPI_DIMENSIONS) {
       const peers = raws.map((r) => r.raw[dimension]);
-      const score = 0.5 * raw[dimension] + 0.5 * peerPercentile(raw[dimension], peers);
+      // Une seule entreprise : pas de pairs à départager. `peerPercentile`
+      // renvoie alors 100, ce qui offrait +50 gratuits sur chaque dimension
+      // (0,5×raw + 50) et gonflait le BPI. Sans pair, la note est le seul
+      // benchmark (100 % raw), pas un rang inventé.
+      const score =
+        peers.length <= 1
+          ? raw[dimension]
+          : 0.5 * raw[dimension] + 0.5 * peerPercentile(raw[dimension], peers);
       normalized[dimension] = score;
       bpi += weightOf[dimension] * score;
     }
@@ -203,12 +210,19 @@ export function computeRoundScores(
 
 /**
  * BPI de partie (doc 08 §1.4) : moyenne des BPI de tours à poids croissants
- * (le tour T pèse T / Σ(1..T) — on juge la trajectoire, pas le départ).
+ * (le tour d'indice T pèse T — on juge la trajectoire, pas le départ).
+ *
+ * Le poids suit l'INDICE RÉEL du tour (1-based, tel que posé à la création de
+ * partie), pas la position dans la liste : un tour non scoré au milieu (équipe
+ * absente ce tour-là) ne décale plus le poids des tours suivants. Avant, la
+ * liste filtrée [tour 1, tour 3] pesait 1 puis 2 ; le tour 3 est désormais
+ * pesé 3 (Σ des indices présents au dénominateur).
  */
-export function gameBpi(roundBpis: number[]): number {
-  if (roundBpis.length === 0) return 0;
-  const totalWeight = (roundBpis.length * (roundBpis.length + 1)) / 2;
-  return roundBpis.reduce((sum, bpi, i) => sum + ((i + 1) / totalWeight) * bpi, 0);
+export function gameBpi(rounds: { index: number; bpi: number }[]): number {
+  if (rounds.length === 0) return 0;
+  const totalWeight = rounds.reduce((sum, r) => sum + r.index, 0);
+  if (totalWeight <= 0) return 0;
+  return rounds.reduce((sum, r) => sum + (r.index / totalWeight) * r.bpi, 0);
 }
 
 export function scoringWeights(config: ScoringConfig): Record<BpiDimension, number> {
@@ -221,4 +235,222 @@ export function scoringWeights(config: ScoringConfig): Record<BpiDimension, numb
     strategy: config.weights.strategy,
     decision_mastery: config.weights.decisionMastery,
   };
+}
+
+// ===========================================================================
+// BPI version 2 (V1-2) — module PUR
+// ===========================================================================
+//
+// Six dimensions au lieu de sept : « pilotage » fusionne stratégie et
+// opérationnel. Trois corrections par rapport à v1, motivées par l'audit :
+//
+//  - base ZÉRO pour la cohérence (plus de 60 offerts) : la cohérence ne prend
+//    de points que sur des décisions ÉDITÉES (V1-1) allant dans le sens du
+//    levier attendu du tour ;
+//  - maîtrise décisionnelle à 0 tant qu'aucune situation n'est rendue (plus de
+//    50 par défaut) ; une équipe silencieuse (décisions reconduites) est à 0
+//    en pilotage-cohérence et en maîtrise ;
+//  - performance financière calculée sur la VARIATION du résultat (pas le
+//    niveau absolu, gonflé par la trésorerie de départ), plancher à 20 dès que
+//    le résultat net est négatif.
+//
+// Les ex æquo partagent le même percentile (peerPercentile, méthode
+// fractionnaire) — inchangé depuis v1, verrouillé par un test.
+
+export type BpiV2Dimension =
+  | "economic"
+  | "financial"
+  | "commercial"
+  | "profitability"
+  | "pilotage"
+  | "decision_mastery";
+
+export const BPI_V2_DIMENSIONS: BpiV2Dimension[] = [
+  "economic",
+  "financial",
+  "commercial",
+  "profitability",
+  "pilotage",
+  "decision_mastery",
+];
+
+export const V2_DIMENSION_LABELS: Record<BpiV2Dimension, string> = {
+  economic: "Performance économique",
+  financial: "Performance financière",
+  commercial: "Performance commerciale",
+  profitability: "Rentabilité",
+  pilotage: "Pilotage",
+  decision_mastery: "Maîtrise décisionnelle",
+};
+
+/** Intitulés par nom de dimension (v1 et v2), pour un affichage qui ne connaît pas la version. */
+export const DIMENSION_LABEL_BY_NAME: Record<string, string> = {
+  economic: "Performance économique",
+  financial: "Performance financière",
+  commercial: "Performance commerciale",
+  operational: "Performance opérationnelle",
+  profitability: "Rentabilité",
+  strategy: "Qualité stratégique",
+  decision_mastery: "Maîtrise décisionnelle",
+  pilotage: "Pilotage",
+};
+
+/** Ordre d'affichage : v2 d'abord, puis les dimensions v1 qui ne subsistent que sur d'anciens tours. */
+export const DIMENSION_DISPLAY_ORDER: string[] = [
+  "economic",
+  "financial",
+  "commercial",
+  "profitability",
+  "pilotage",
+  "operational",
+  "strategy",
+  "decision_mastery",
+];
+
+export interface PedagogyInputsV2 {
+  /** Scores finaux 0..1 des situations rendues du tour (vide si aucune). */
+  situationScores: number[];
+  /** Décisions reconduites faute de saisie : cohérence et maîtrise à 0 ce tour. */
+  carried: boolean;
+  /**
+   * Cohérence 0..100 : part des leviers pivots attendus du tour qui ont été
+   * édités dans le bon sens. `null` quand le tour ne suggère aucun levier
+   * pivot mesurable (aucune situation, ou levier sur un champ non tracé).
+   */
+  coherence: number | null;
+  /** Résultat net du tour précédent (0 au tour 1), pour la variation financière. */
+  previousNetIncome: number;
+}
+
+/**
+ * Performance financière v2 : sur la variation du résultat net, normalisée par
+ * le chiffre d'affaires. Un résultat négatif est plafonné à 20 (une perte ne
+ * peut pas être une bonne note, quelle que soit la trésorerie de départ).
+ */
+export function financialV2Score(result: CompanyRoundResult, previousNetIncome: number): number {
+  const netIncome = result.incomeStatement.netIncome;
+  if (netIncome < 0) return 20;
+  const ca = result.incomeStatement.revenue;
+  const variation = netIncome - previousNetIncome;
+  const ratio = ca > 0 ? variation / ca : variation >= 0 ? 1 : -1;
+  return clamp01((Math.max(-1, Math.min(1, ratio)) + 1) / 2) * 100;
+}
+
+/** Notes brutes (versusBenchmark) des 6 dimensions v2 pour une entreprise. */
+export function rawDimensionScoresV2(args: {
+  scenario: EngineScenarioConfig;
+  result: CompanyRoundResult;
+  pedagogy: PedagogyInputsV2;
+}): Record<BpiV2Dimension, number> {
+  const { scenario, result, pedagogy } = args;
+  const b = scenario.scoring.benchmarks;
+  const segments = Object.values(result.market.bySegment);
+  const demand = segments.reduce((s, d) => s + d.demandForCompany, 0);
+  const sold = segments.reduce((s, d) => s + d.sold, 0);
+  const serviceRate = demand > 0 ? clamp01(sold / demand) : 1;
+
+  // Exécution opérationnelle : identique à la dimension « operational » de v1.
+  const operational =
+    0.6 * clamp01(result.production.utilizationRate / b.utilizationTarget) * 100 +
+    0.4 * serviceRate * 100;
+  // Cohérence des décisions : base 0, uniquement sur les leviers pivots édités
+  // dans le bon sens (calculée en amont). Reconduit ⇒ 0.
+  const coherence = pedagogy.carried ? 0 : (pedagogy.coherence ?? 0);
+
+  const situationAvg =
+    pedagogy.situationScores.length === 0
+      ? 0
+      : pedagogy.situationScores.reduce((a, c) => a + c, 0) / pedagogy.situationScores.length;
+
+  return {
+    economic: normalizeToBenchmark(result.incomeStatement.operatingIncome, b.operatingIncome),
+    // Faillite (V2 couche 2, #5) : une entreprise défaillante a, par définition,
+    // cessé de payer — sa performance financière est au plancher, quel que soit
+    // le reste du bilan. Les autres dimensions tombent d'elles-mêmes (gelée, elle
+    // ne vend ni ne produit).
+    financial: result.defaillant ? 0 : financialV2Score(result, pedagogy.previousNetIncome),
+    commercial:
+      0.5 * normalizeToBenchmark(result.incomeStatement.revenue, b.revenue) +
+      0.5 * clamp01(result.market.totalShare / b.marketShareTarget) * 100,
+    profitability: normalizeToBenchmark(result.ratios.returnOnEquity ?? 0, b.returnOnEquity),
+    // Pilotage = exécution opérationnelle + cohérence stratégique (fusion V1-2).
+    pilotage: 0.5 * operational + 0.5 * coherence,
+    // Maîtrise décisionnelle : 0 sans situation rendue ; 0 aussi si reconduit.
+    decision_mastery: pedagogy.carried ? 0 : situationAvg * 100,
+  };
+}
+
+export interface CompanyScoringInputV2 {
+  companyId: string;
+  result: CompanyRoundResult;
+  pedagogy: PedagogyInputsV2;
+}
+
+export interface RoundScoresV2 {
+  companyId: string;
+  raw: Record<BpiV2Dimension, number>;
+  normalized: Record<BpiV2Dimension, number>;
+  bpi: number;
+}
+
+/** Poids v2 : « pilotage » reçoit la somme des poids stratégie + opérationnel. */
+export function scoringWeightsV2(config: ScoringConfig): Record<BpiV2Dimension, number> {
+  return {
+    economic: config.weights.economic,
+    financial: config.weights.financial,
+    commercial: config.weights.commercial,
+    profitability: config.weights.profitability,
+    pilotage: config.weights.strategy + config.weights.operational,
+    decision_mastery: config.weights.decisionMastery,
+  };
+}
+
+/**
+ * Poids par NOM de dimension, v1 et v2 confondus : « pilotage » vaut stratégie
+ * + opérationnel. Sert au classement, qui somme les dimensions stockées pour
+ * chaque tour sans connaître sa version.
+ */
+export function scoringWeightsByName(config: ScoringConfig): Record<string, number> {
+  const w = config.weights;
+  return {
+    economic: w.economic,
+    financial: w.financial,
+    commercial: w.commercial,
+    operational: w.operational,
+    profitability: w.profitability,
+    strategy: w.strategy,
+    decision_mastery: w.decisionMastery,
+    pilotage: w.strategy + w.operational,
+  };
+}
+
+/** Scores v2 d'un tour pour toutes les entreprises (percentile sur le lot complet). */
+export function computeRoundScoresV2(
+  scenario: EngineScenarioConfig,
+  companies: CompanyScoringInputV2[],
+): RoundScoresV2[] {
+  const raws = companies.map((c) => ({
+    companyId: c.companyId,
+    raw: rawDimensionScoresV2({ scenario, result: c.result, pedagogy: c.pedagogy }),
+  }));
+  const weightOf = scoringWeightsV2(scenario.scoring);
+
+  return raws.map(({ companyId, raw }) => {
+    const normalized = {} as Record<BpiV2Dimension, number>;
+    let bpi = 0;
+    for (const dimension of BPI_V2_DIMENSIONS) {
+      const peers = raws.map((r) => r.raw[dimension]);
+      // Une seule entreprise : pas de pairs à départager. `peerPercentile`
+      // renvoie alors 100, ce qui offrait +50 gratuits sur chaque dimension
+      // (0,5×raw + 50) et gonflait le BPI. Sans pair, la note est le seul
+      // benchmark (100 % raw), pas un rang inventé.
+      const score =
+        peers.length <= 1
+          ? raw[dimension]
+          : 0.5 * raw[dimension] + 0.5 * peerPercentile(raw[dimension], peers);
+      normalized[dimension] = score;
+      bpi += weightOf[dimension] * score;
+    }
+    return { companyId, raw, normalized, bpi };
+  });
 }

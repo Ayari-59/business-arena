@@ -1,0 +1,286 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`L'ESCALE · gamme — calibration > la partie de référence ne bouge pas sans qu'on le veuille 1`] = `
+{
+  "balanced": [
+    {
+      "resultat": -23383,
+      "tresorerie": 18147,
+      "vendu": {
+        "chambre-standard": 1505,
+        "chambre-superieure": 1058,
+        "suite": 165,
+      },
+    },
+    {
+      "resultat": 34074,
+      "tresorerie": 42021,
+      "vendu": {
+        "chambre-standard": 2032,
+        "chambre-superieure": 870,
+        "suite": 150,
+      },
+    },
+    {
+      "resultat": -19560,
+      "tresorerie": 62450,
+      "vendu": {
+        "chambre-standard": 1344,
+        "chambre-superieure": 794,
+        "suite": 166,
+      },
+    },
+    {
+      "resultat": -28300,
+      "tresorerie": -7050,
+      "vendu": {
+        "chambre-standard": 1328,
+        "chambre-superieure": 754,
+        "suite": 158,
+      },
+    },
+    {
+      "resultat": 28480,
+      "tresorerie": -9657,
+      "vendu": {
+        "chambre-standard": 1830,
+        "chambre-superieure": 959,
+        "suite": 200,
+      },
+    },
+    {
+      "resultat": 42464,
+      "tresorerie": 29673,
+      "vendu": {
+        "chambre-standard": 1921,
+        "chambre-superieure": 1007,
+        "suite": 210,
+      },
+    },
+  ],
+  "growth": [
+    {
+      "resultat": -41406,
+      "tresorerie": 1660,
+      "vendu": {
+        "chambre-standard": 1694,
+        "chambre-superieure": 1112,
+        "suite": 176,
+      },
+    },
+    {
+      "resultat": 56947,
+      "tresorerie": 37912,
+      "vendu": {
+        "chambre-standard": 2508,
+        "chambre-superieure": 1088,
+        "suite": 192,
+      },
+    },
+    {
+      "resultat": 4310,
+      "tresorerie": 92274,
+      "vendu": {
+        "chambre-standard": 1974,
+        "chambre-superieure": 910,
+        "suite": 229,
+      },
+    },
+    {
+      "resultat": 34311,
+      "tresorerie": 59289,
+      "vendu": {
+        "chambre-standard": 2322,
+        "chambre-superieure": 1029,
+        "suite": 258,
+      },
+    },
+    {
+      "resultat": 59168,
+      "tresorerie": 91253,
+      "vendu": {
+        "chambre-standard": 2675,
+        "chambre-superieure": 1314,
+        "suite": 286,
+      },
+    },
+    {
+      "resultat": 143611,
+      "tresorerie": 212940,
+      "vendu": {
+        "chambre-standard": 3344,
+        "chambre-superieure": 1643,
+        "suite": 358,
+      },
+    },
+  ],
+  "passive": [
+    {
+      "resultat": 15472,
+      "tresorerie": 52025,
+      "vendu": {
+        "chambre-standard": 1441,
+        "chambre-superieure": 1042,
+        "suite": 164,
+      },
+    },
+    {
+      "resultat": 53380,
+      "tresorerie": 95806,
+      "vendu": {
+        "chambre-standard": 1884,
+        "chambre-superieure": 1064,
+        "suite": 199,
+      },
+    },
+    {
+      "resultat": 22694,
+      "tresorerie": 163791,
+      "vendu": {
+        "chambre-standard": 1899,
+        "chambre-superieure": 722,
+        "suite": 184,
+      },
+    },
+    {
+      "resultat": 21936,
+      "tresorerie": 132301,
+      "vendu": {
+        "chambre-standard": 1588,
+        "chambre-superieure": 1031,
+        "suite": 193,
+      },
+    },
+    {
+      "resultat": 35738,
+      "tresorerie": 147639,
+      "vendu": {
+        "chambre-standard": 1808,
+        "chambre-superieure": 1015,
+        "suite": 190,
+      },
+    },
+    {
+      "resultat": 42226,
+      "tresorerie": 190238,
+      "vendu": {
+        "chambre-standard": 1811,
+        "chambre-superieure": 999,
+        "suite": 187,
+      },
+    },
+  ],
+  "premium": [
+    {
+      "resultat": -77814,
+      "tresorerie": -25940,
+      "vendu": {
+        "chambre-standard": 830,
+        "chambre-superieure": 730,
+        "suite": 126,
+      },
+    },
+    {
+      "resultat": -16048,
+      "tresorerie": -53449,
+      "vendu": {
+        "chambre-standard": 1067,
+        "chambre-superieure": 571,
+        "suite": 110,
+      },
+    },
+    {
+      "resultat": -64621,
+      "tresorerie": -65546,
+      "vendu": {
+        "chambre-standard": 672,
+        "chambre-superieure": 515,
+        "suite": 115,
+      },
+    },
+    {
+      "resultat": -80042,
+      "tresorerie": -153028,
+      "vendu": {
+        "chambre-standard": 632,
+        "chambre-superieure": 466,
+        "suite": 104,
+      },
+    },
+    {
+      "resultat": 0,
+      "tresorerie": -160525,
+      "vendu": {
+        "chambre-standard": 0,
+        "chambre-superieure": 0,
+        "suite": 0,
+      },
+    },
+    {
+      "resultat": 0,
+      "tresorerie": -160525,
+      "vendu": {
+        "chambre-standard": 0,
+        "chambre-superieure": 0,
+        "suite": 0,
+      },
+    },
+  ],
+  "price_aggressive": [
+    {
+      "resultat": -17649,
+      "tresorerie": 23382,
+      "vendu": {
+        "chambre-standard": 1954,
+        "chambre-superieure": 1176,
+        "suite": 186,
+      },
+    },
+    {
+      "resultat": 50035,
+      "tresorerie": 59496,
+      "vendu": {
+        "chambre-standard": 2785,
+        "chambre-superieure": 1058,
+        "suite": 186,
+      },
+    },
+    {
+      "resultat": -1159,
+      "tresorerie": 106801,
+      "vendu": {
+        "chambre-standard": 2017,
+        "chambre-superieure": 890,
+        "suite": 225,
+      },
+    },
+    {
+      "resultat": 9192,
+      "tresorerie": 59811,
+      "vendu": {
+        "chambre-standard": 2183,
+        "chambre-superieure": 926,
+        "suite": 234,
+      },
+    },
+    {
+      "resultat": 42408,
+      "tresorerie": 72935,
+      "vendu": {
+        "chambre-standard": 2726,
+        "chambre-superieure": 1276,
+        "suite": 274,
+      },
+    },
+    {
+      "resultat": 98472,
+      "tresorerie": 158978,
+      "vendu": {
+        "chambre-standard": 3135,
+        "chambre-superieure": 1468,
+        "suite": 315,
+      },
+    },
+  ],
+}
+`;

@@ -36,9 +36,8 @@ export function applyScenarioVariability(
     growth: s.growth * between(0.8, 1.2),
   }));
   const seasonAmplitude = between(0.85, 1.15);
-  const seasonality = scenario.market.seasonality.map(
-    (c) => 1 + (c - 1) * seasonAmplitude,
-  );
+  const amplifie = (c: number) => 1 + (c - 1) * seasonAmplitude;
+  const seasonality = scenario.market.seasonality.map(amplifie);
   const marketingScale = scenario.marketing.scale * between(0.9, 1.1);
   const outsideAttraction = scenario.market.outsideAttraction * between(0.9, 1.1);
   const supplierDelay = Math.round(
@@ -53,6 +52,34 @@ export function applyScenarioVariability(
   const supplierCostFactor = between(0.95, 1.05);
   const supplierRiskFactor = between(0.8, 1.2);
 
+  // Gamme : les marchés des produits sont les seuls que le moteur simule. Ils
+  // reçoivent la même texture — tirages AJOUTÉS EN FIN de liste, un par
+  // segment de produit, pour ne déplacer aucun tirage mono-produit — et la
+  // même amplitude saisonnière, sans tirage supplémentaire.
+  const products = scenario.products?.map((p) => ({
+    ...p,
+    market: {
+      ...p.market,
+      segments: p.market.segments.map((s) => ({
+        ...s,
+        size: s.size * between(0.95, 1.05),
+        growth: s.growth * between(0.8, 1.2),
+      })),
+      ...(p.market.seasonality ? { seasonality: p.market.seasonality.map(amplifie) } : {}),
+    },
+    // Le catalogue propre d'une référence reçoit la même texture que celui
+    // du scénario (mêmes facteurs, aucun tirage supplémentaire).
+    ...(p.suppliers
+      ? {
+          suppliers: p.suppliers.map((s) => ({
+            ...s,
+            costMultiplier: s.costMultiplier * supplierCostFactor,
+            supplyRiskProbability: Math.min(0.3, s.supplyRiskProbability * supplierRiskFactor),
+          })),
+        }
+      : {}),
+  }));
+
   return {
     ...scenario,
     market: {
@@ -61,6 +88,7 @@ export function applyScenarioVariability(
       seasonality,
       outsideAttraction,
     },
+    ...(products ? { products } : {}),
     marketing: { scale: marketingScale },
     finance: {
       ...scenario.finance,

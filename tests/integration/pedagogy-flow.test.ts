@@ -82,33 +82,14 @@ describe("référentiels et instanciation", () => {
   });
 });
 
-describe("cadre analytique avant décision (A7)", () => {
-  it("les situations courantes portent des analyticalHints non vides", async () => {
+describe("points clés à examiner, servis après la réponse au modèle (A7, P8)", () => {
+  it("tant que le modèle n'est pas rendu, aucun point clé n'est soufflé", async () => {
+    // V1-7 (P8) : le cadre d'analyse n'apparaît qu'APRÈS la réponse au modèle,
+    // pour ne pas livrer la grille de lecture avant que l'élève ait tranché.
+    // Ici la situation du tour 1 n'a pas encore reçu de réponse.
     const { current } = await getTeamSituations(gameId, userId);
-    expect(current[0]!.analyticalHints.length).toBeGreaterThan(0);
-  });
-
-  it("seuls les modèles optimal et acceptable apparaissent, pas misleading ni irrelevant", async () => {
-    const { current } = await getTeamSituations(gameId, userId);
-    const codes = current[0]!.analyticalHints.map((h) => h.code);
-    expect(codes).toContain("breakeven_analysis");
-    expect(codes).toContain("marginal_analysis");
-    expect(codes).toContain("psych_pricing");
-    expect(codes).not.toContain("npv");
-  });
-
-  it("les hints sont triés alphabétiquement par nom", async () => {
-    const { current } = await getTeamSituations(gameId, userId);
-    const names = current[0]!.analyticalHints.map((h) => h.name);
-    expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, "fr")));
-  });
-
-  it("aucun hint ne contient de champ relevance ou credit", async () => {
-    const { current } = await getTeamSituations(gameId, userId);
-    for (const h of current[0]!.analyticalHints) {
-      expect(h).not.toHaveProperty("relevance");
-      expect(h).not.toHaveProperty("credit");
-    }
+    expect(current[0]!.quizAnswers).toBeNull();
+    expect(current[0]!.analyticalHints).toEqual([]);
   });
 });
 
@@ -179,6 +160,22 @@ describe("indices, diagnostic, QCM de connaissances", () => {
     const after = (await getTeamSituations(gameId, userId)).current[0]!;
     expect(after.status).toBe("answered");
     expect(after.quizAnswers).toEqual(answers);
+
+    // Le modèle rendu, les points clés à examiner apparaissent : seuls les
+    // modèles optimal et acceptable, triés par nom, chacun avec trois notions,
+    // sans fuite de la pertinence ni du crédit.
+    const codes = after.analyticalHints.map((h) => h.code);
+    expect(codes).toContain("breakeven_analysis");
+    expect(codes).toContain("marginal_analysis");
+    expect(codes).toContain("psych_pricing");
+    expect(codes).not.toContain("npv");
+    const names = after.analyticalHints.map((h) => h.name);
+    expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, "fr")));
+    for (const h of after.analyticalHints) {
+      expect(h.keyPoints.length, h.code).toBe(3);
+      expect(h).not.toHaveProperty("relevance");
+      expect(h).not.toHaveProperty("credit");
+    }
 
     // le QCM ne se rejoue pas
     await expect(submitQuiz({ instanceId, userId, answers })).rejects.toThrow();

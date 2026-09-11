@@ -1,4 +1,4 @@
-import { attachModelQuestions, hints, type DecisionLever, type SituationCategory, type SituationDef } from "../situation-kit";
+import { attachModelQuestions, hints, type SituationDef } from "../situation-kit";
 
 /**
  * Situations pédagogiques de LA TABLE D'AUGUSTIN (restauration).
@@ -79,7 +79,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
       "Les denrées suivent les couverts ; la brigade, le loyer et l'énergie de base tombent même une salle vide.",
       "Le ratio matières rapporte le coût des denrées au prix de vente : c'est le premier chiffre que regarde un restaurateur chaque semaine.",
       "Marge par couvert = 33 − 10 − 3 = 20 €. Charges de structure décaissées = 90 000 € par trimestre.",
-      "Seuil = 90 000 ÷ 20 = 4 500 couverts par trimestre, soit environ 50 par jour d'ouverture. En dessous, le service est déficitaire quelle que soit la qualité de la cuisine.",
+      "Seuil = 90 000 ÷ 20 = 4 500 couverts par trimestre, soit 70 par jour sur 64 jours d'ouverture : un service plein chaque jour. En dessous, le trimestre est déficitaire quelle que soit la qualité de la cuisine.",
     ]),
     trigger: { round: 1 },
     weight: 1,
@@ -87,7 +87,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
       {
         field: "productionPlan",
         direction: "review",
-        hint: "Le nombre de couverts à préparer dépend directement du seuil de rentabilité : en dessous de 50 par jour, chaque service est déficitaire.",
+        hint: "Le nombre de couverts à préparer dépend directement du seuil de rentabilité : en dessous de 70 par jour d'ouverture, le trimestre est déficitaire.",
       },
       {
         field: "price",
@@ -554,7 +554,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
     category: "decision_strategique",
     title: "Ce que vaut vraiment le bistrot",
     narrative:
-      "Votre associé veut sortir du capital et demande ce que vaut sa part. Le bistrot a dégagé un résultat correct sur l'année, mais il a fallu 260 000 € de capitaux propres pour le faire tourner. Le restaurant d'en face gagne un peu moins que vous, avec deux fois moins de capitaux engagés.",
+      "Votre associé veut sortir du capital et demande ce que vaut sa part. Le bistrot a dégagé un résultat correct sur l'année, mais il a fallu les capitaux propres que vous lisez au passif de votre bilan pour le faire tourner : une centaine de milliers d'euros. Le restaurant d'en face gagne un peu moins que vous, avec deux fois moins de capitaux engagés.",
     problem:
       "Lequel des deux établissements est le mieux géré, et sur quel critère tranchez-vous ?",
     diagnosticOptions: [
@@ -591,7 +591,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Deux dénominateurs, deux questions. « Combien me reste-t-il sur 100 € vendus ? » n'est pas « combien rapportent les 260 000 € que j'ai immobilisés ? ».",
+          "Deux dénominateurs, deux questions. « Combien me reste-t-il sur 100 € vendus ? » n'est pas « combien rapportent les capitaux que j'ai immobilisés, ceux du bilan ? ».",
       },
       {
         id: "bistrot_marge_securite",
@@ -641,7 +641,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
     category: "tresorerie_dormante",
     title: "La caisse fait le plein",
     narrative:
-      "Les clients paient au comptant et la caisse le montre : vous détenez plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an, et facture votre découvert 9 %. Vos fournisseurs, eux, seront réglés à vingt et un jours comme d'habitude.",
+      "Les clients paient au comptant et la caisse le montre : vous détenez plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an, et facture votre découvert 14 %. Vos fournisseurs, eux, seront réglés à vingt et un jours comme d'habitude.",
     problem:
       "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant ?",
     diagnosticOptions: [
@@ -671,14 +671,14 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
         id: "bistrot_detect_idle_cash_placement_exces",
         prompt: "Placer la totalité de sa trésorerie expose l'entreprise à…",
         options: [
-          { id: "a", label: "Ouvrir un découvert à 9 % tout en détenant un placement à 2 %" },
+          { id: "a", label: "Ouvrir un découvert à 14 % tout en détenant un placement à 2 %" },
           { id: "b", label: "Perdre le capital placé si le trimestre est mauvais" },
           { id: "c", label: "Un redressement fiscal sur les produits financiers" },
           { id: "d", label: "Une baisse mécanique de son chiffre d'affaires" },
         ],
         correctOptionId: "a",
         explain:
-          "Le placement est bloqué : il ne paie rien pendant le tour. Si les décaissements dépassent ce qui reste en caisse, la banque ouvre un découvert, et vous payez d'un côté quatre fois ce que vous gagnez de l'autre.",
+          "Le placement est bloqué : il ne paie rien pendant le tour. Si les décaissements dépassent ce qui reste en caisse, la banque ouvre un découvert, et vous payez d'un côté sept fois ce que vous gagnez de l'autre.",
       },
       {
         id: "bistrot_comptant_illusion",
@@ -706,7 +706,7 @@ export const BISTROT_SITUATIONS: SituationDef[] = [
       "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro.",
       "Attention : le placement est bloqué jusqu'au tour suivant. Il ne réglera rien de ce qui tombera d'ici là.",
       "Projetez les décaissements du trimestre : denrées, salaires de la brigade, loyer. Une partie de ce que vous voyez en caisse appartient déjà à vos fournisseurs.",
-      "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte quatre fois ce que le placement rapporte : l'erreur n'est pas symétrique.",
+      "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte sept fois ce que le placement rapporte : l'erreur n'est pas symétrique.",
     ]),
     trigger: { detect: "idle_cash" },
     weight: 0.8,

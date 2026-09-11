@@ -5,13 +5,35 @@ import {
   cardByCode,
   cardsForEventCodes,
 } from "../src/config/events/cards";
+import { RSE_CARD_CODES } from "../src/engine/rse";
 import { SCENARIOS } from "../src/config/scenarios/registry";
+
+// Les cartes RSE (Lot 2C) sont TRANSVERSES : déclenchées par le moteur sur le
+// standing de l'équipe, elles n'appartiennent à aucun scénario et n'ont pas
+// d'événement de scénario correspondant. On les tient donc à part de
+// l'invariant « une carte ⇔ un événement de scénario ».
+const RSE_CODES = new Set<string>(Object.values(RSE_CARD_CODES));
 
 describe("deck de cartes événements", () => {
   it("chaque événement de chaque scénario a sa carte, et réciproquement", () => {
-    const eventCodes = SCENARIOS.flatMap((d) => d.scenario.events.map((e) => e.code)).sort();
-    const cardCodes = EVENT_CARDS.map((c) => c.code).sort();
+    // Deux scénarios du même métier partagent le même deck : NOVA en une
+    // référence et NOVA en trois jouent les mêmes événements, sous les mêmes
+    // codes. Un code d'événement ne compte donc qu'une fois.
+    const eventCodes = [
+      ...new Set(SCENARIOS.flatMap((d) => d.scenario.events.map((e) => e.code))),
+    ].sort();
+    const cardCodes = EVENT_CARDS.map((c) => c.code)
+      .filter((c) => !RSE_CODES.has(c))
+      .sort();
     expect(cardCodes).toEqual(eventCodes);
+  });
+
+  it("les cartes RSE transverses existent et ciblent l'équipe", () => {
+    for (const code of RSE_CODES) {
+      const card = cardByCode.get(code);
+      expect(card, `carte RSE manquante : ${code}`).toBeDefined();
+      expect(card!.scope).toBe("team");
+    }
   });
 
   it("aucun code de carte n'est partagé entre deux secteurs", () => {

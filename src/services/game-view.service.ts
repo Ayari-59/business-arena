@@ -7,28 +7,31 @@ import {
   games,
   roundResults,
   rounds,
-  teams,
 } from "@/db/schema";
-import {
-  scenarioByCode,
-  type ScenarioVocabulary,
-} from "@/config/scenarios/registry";
+import type { ScenarioVocabulary } from "@/config/scenarios/registry";
+import { resolveScenarioDefinition } from "@/services/scenario-source.service";
 import { computeSectorKpis, type KpiFormat } from "@/config/scenarios/sector-kpis";
 import { presetFromProfile } from "@/config/difficulty";
 import { porteUnNomParDefaut } from "@/config/nom-equipe";
 import { cardByCode } from "@/config/events/cards";
-import { neutralDecisions } from "@/engine/bots";
-import { type BpiDimension } from "@/scoring/bpi";
+import { proposedDecisionsFor, startingDecisionsFor } from "@/services/decision-baseline";
 import { orderOfferForRound } from "@/engine/simulation";
+import { isMultiProduct, isProductAvailable, rdOpeningOf, suppliersOf, toGamme, offerProductIndex } from "@/engine/gamme";
+import { COMMUNICATION_AXES, COMMUNICATION_AXIS_LABELS } from "@/engine/market/communication";
 import { computeRatios } from "@/engine/finance/ratios";
 import { conditionsBancaires, confianceInitiale } from "@/engine/finance/bank";
 import { irr, npv, paybackPeriod } from "@/engine/investment";
 import { roundBriefing, type RoundBriefing } from "@/pedagogy/round-briefing";
+import { computeRseIndex, type RseIndex } from "@/scoring/rse";
+import { RSE_CARD_CODES } from "@/engine/rse";
+import { computeRseReport, type RseReport } from "@/scoring/rse-report";
+import { playWindowFor, playLockMessage } from "@/services/play-lock";
 import type {
   CompanyRoundResult,
   CompanyState,
   EngineScenarioConfig,
   RoundDecisions,
+  CommunicationAxis,
 } from "@/engine/types";
 import {
   findUserTeam,
@@ -56,6 +59,18 @@ export interface GameView {
   kind: GameKind;
   status: string;
   currentRound: number;
+  /**
+   * Verrou temporel du tour courant (planning). `playable` faux = hors fenêtre :
+   * l'écran passe en lecture seule et « Valider » est grisé. Dates en ISO.
+   * Sans fenêtre réglée, toujours ouvert (solo libre, ou classe non planifiée).
+   */
+  playLock: {
+    playable: boolean;
+    state: "before" | "open" | "after";
+    message: string | null;
+    opensAt: string | null;
+    closesAt: string | null;
+  };
   roundsCount: number;
   roundDays: number;
   playerTeamId: string;
@@ -72,6 +87,28 @@ export interface GameView {
     isMyTeam: boolean;
   }[];
   lastResult: CompanyRoundResult | null;
+  /**
+   * Tous les tours RÉSOLUS, du plus ancien au plus récent : de quoi rebâtir le
+   * tableau de bord complet de chaque période dans l'accordéon de l'arène, sans
+   * se limiter au dernier tour. Le dernier élément recoupe `lastResult`.
+   */
+  periods: {
+    round: number;
+    result: CompanyRoundResult;
+    events: string[];
+    decisions: RoundDecisions | null;
+    forecastReview: GameView["forecastReview"];
+    sectorKpis: GameView["sectorKpis"];
+    competitiveBenchmark: GameView["competitiveBenchmark"];
+    /** Indice RSE du tour (mesure indicative, sans effet sur la partie — Lot 1). */
+    rse: RseIndex;
+  }[];
+  /**
+   * Rapport extra-financier (Lot 3) : synthèse DPEF SIMPLIFIÉE et indicative sur
+   * tous les tours joués. `available` est faux quand l'équipe n'a jamais engagé
+   * la RSE — l'écran invite alors à l'ouvrir plutôt que d'afficher des zéros.
+   */
+  rseReport: RseReport;
   /**
    * La prévision du tour écoulé face au réalisé. Null si le joueur n'a rien
    * annoncé : on ne reproche pas une prévision qui n'a pas été faite.
@@ -127,9 +164,11 @@ export interface GameView {
     cumulativeNetIncome: number;
     rank: number;
     bpi: number;
+    /** Entreprise en cessation de paiements caractérisée (V2 couche 2, #5). */
+    defaillant: boolean;
   }[];
-  /** Moyennes 0-100 des 7 dimensions BPI de l'équipe du joueur (doc 08). */
-  playerDimensions: Partial<Record<BpiDimension, number>> | null;
+  /** Moyennes 0-100 des dimensions BPI de l'équipe du joueur (6 en v2, doc 08). */
+  playerDimensions: Partial<Record<string, number>> | null;
   lastDecisions: RoundDecisions | null;
   /**
    * Le point de départ du secteur, servi au tour 1 quand il n'y a encore rien
@@ -138,6 +177,11 @@ export interface GameView {
    * tout le monde.
    */
   startingDecisions: RoundDecisions;
+  /**
+   * Ce que le formulaire PROPOSE ce tour (tour précédent, sinon point de
+   * départ) : la référence pour dire si l'équipe a touché prix et volume.
+   */
+  proposedDecisions: RoundDecisions;
   /** Offre d'assurance du scénario (prime déjà à l'échelle de la périodicité). */
   insuranceOffer: { premium: number; coveredEventCodes: string[] } | null;
   /** Formules d'assurance (si le scénario en propose plusieurs). */
@@ -167,6 +211,17 @@ export interface GameView {
     hoursPerEmployee: number;
     productivity: number;
     hoursPerUnit: number;
+    /**
+     * Abonnement : le portefeuille d'ouverture et ce qu'il en restera au taux
+     * d'attrition de base — la place à prévoir avant tout nouveau venu.
+     * Absent hors modèle par abonnement.
+     */
+    subscription?: {
+      members: number;
+      expectedRetained: number;
+      baseChurnRate: number;
+      refPrice: number;
+    };
   } | null;
   /**
    * Vocabulaire du secteur joué : on ne vend pas des « unités » dans un hôtel
@@ -176,11 +231,89 @@ export interface GameView {
   vocabulary: ScenarioVocabulary;
   /** Le secteur joué, pour l'identité visuelle (icône, couleur). */
   sector: import("@/config/scenarios/registry").Sector;
+  /** Le pictogramme du scénario joué (NOVA en un produit et NOVA · gamme n'ont pas le même). */
+  scenarioIcon: string;
   /**
    * Noms des segments du snapshot joué, par code. Sans cela le tableau du
    * marché retomberait sur les codes bruts dès qu'on quitte NOVA.
    */
   segmentNames: Record<string, string>;
+  /**
+   * GAMME : les références du scénario joué, dans l'ordre du moteur, avec ce
+   * que le formulaire et les tableaux de bord doivent savoir de chacune —
+   * coûts, main-d'œuvre, prix de référence de sa clientèle dominante, ses
+   * segments, sa saison du tour à jouer et son stock à l'ouverture. `null` en
+   * mono-produit : l'arène reste alors celle d'un seul produit.
+   */
+  gamme: {
+    code: string;
+    name: string;
+    materialCostPerUnit: number;
+    otherVariableCostPerUnit: number;
+    hoursPerUnit: number;
+    refPrice: number;
+    segments: { code: string; name: string }[];
+    seasonCoef: number;
+    stock: number;
+    /**
+     * Les fournisseurs auxquels LA référence peut s'adresser (son catalogue
+     * propre, sinon celui du scénario), avec le prix d'achat de la référence
+     * chez chacun. `null` si le scénario n'en propose pas.
+     */
+    suppliers: {
+      code: string;
+      name: string;
+      narrative: string;
+      costMultiplier: number;
+      qualityBonus: number;
+      paymentDelayDays: number;
+      supplyRiskProbability: number;
+      materialCostPerUnit: number;
+    }[] | null;
+    /**
+     * R&D de la référence (scénarios avec levier `rd`) : son niveau technique
+     * acquis et, pour une référence à développer, où en est le développement
+     * et si elle est vendable au tour à jouer. `null` sans levier R&D.
+     */
+    rd: {
+      techLevel: number;
+      development: {
+        cost: number;
+        availableFromRound: number;
+        invested: number;
+        available: boolean;
+        launchRound: number | null;
+      } | null;
+    } | null;
+  }[] | null;
+  /**
+   * Le levier R&D du scénario (échelle du budget par tour), `null` sans
+   * levier. En mono-produit, c'est lui qui ouvre le champ R&D du formulaire.
+   */
+  rdOffer: { techScale: number } | null;
+  /**
+   * Le levier communication du scénario : les axes possibles (code, libellé,
+   * ce qu'il fait), l'échelle du budget de marque, la notoriété acquise à
+   * l'ouverture du tour et l'axe tenu au tour précédent. `null` sans levier.
+   */
+  communicationOffer: {
+    axes: { code: CommunicationAxis; label: string; hint: string }[];
+    brandScale: number;
+    brandAwareness: number;
+    lastAxis: CommunicationAxis | null;
+  } | null;
+  /**
+   * D'où l'équipe repart pour le tour à jouer : le stock de chaque référence
+   * (une seule en mono-produit, sous le code du produit) et les trois postes
+   * qui font le budget de trésorerie. Ce sont les chiffres d'ouverture du
+   * cockpit de prévision.
+   */
+  ouverture: {
+    stocks: Record<string, number>;
+    cash: number;
+    receivables: number;
+    payables: number;
+  };
   /**
    * Indicateurs du métier joué (RevPAR en hôtellerie, ratio matières en
    * restauration…), déjà calculés : l'arène ne fait que les mettre en forme.
@@ -242,6 +375,8 @@ export interface GameView {
     insurance: boolean;
     hr: boolean;
     investment: boolean;
+    rse: boolean;
+    rd: boolean;
     placement: boolean;
     dividend: boolean;
   };
@@ -315,6 +450,9 @@ export interface GameView {
     paymentDelayDays: number;
     unitVariableCost: number;
     refPrice: number;
+    /** En gamme : la référence sur laquelle porte la commande (null en mono-produit). */
+    productCode: string | null;
+    productName: string | null;
   } | null;
   /** Coûts unitaires du scénario (après surcharges éco) — analyse des coûts. */
   costFacts: { materialCostPerUnit: number; otherVariableCostPerUnit: number };
@@ -389,8 +527,8 @@ export interface StudyReports {
     costs: {
       unitVariableCost: number;
       unitMargin: number;
-      breakEvenUnits: number;
-      safetyMargin: number;
+      breakEvenUnits: number | null;
+      safetyMargin: number | null;
     };
     sector: { teams: number; avgRevenue: number; avgNetIncome: number; avgNetTreasury: number };
   };
@@ -417,11 +555,170 @@ export interface StudyReports {
   };
 }
 
+/**
+ * Ligne de résultat persistée : le type de la table fait foi (`$inferSelect`),
+ * plutôt qu'une interface miroir recopiée à la main qui divergeait du schéma
+ * sans avertissement. Les colonnes JSONB portent désormais leur type (voir
+ * `db/schema/results.ts`).
+ */
+type PersistedResultRow = typeof roundResults.$inferSelect;
+
+/**
+ * Reconstitue le résultat complet d'un tour à partir de sa ligne persistée et
+ * de sa trace moteur. Un seul endroit pour cette reconstruction : elle sert au
+ * dernier tour (affiché en direct) comme à chaque tour passé de l'accordéon.
+ */
+function reconstructResult(
+  row: PersistedResultRow,
+  taxRate: number,
+): { result: CompanyRoundResult; events: string[] } {
+  // `engineTrace` porte désormais le type `EngineTrace` (colonne typée) : plus
+  // de cast, plus de liste de champs recopiée en face de celle de l'écriture.
+  const trace = row.engineTrace;
+  const result: CompanyRoundResult = {
+    companyId: row.teamId,
+    incomeStatement: row.incomeStatement,
+    balanceSheet: row.balanceSheet,
+    cashFlow: row.cashFlow,
+    functionalBalance: {
+      frng: Number(row.frng),
+      bfr: Number(row.bfr),
+      netTreasury: Number(row.netTreasury),
+    },
+    ratios: computeRatios(row.incomeStatement, row.balanceSheet, taxRate),
+    market: {
+      bySegment: row.marketDetail,
+      totalShare: Number(row.marketShare),
+    },
+    production: trace.production,
+    breakeven: trace.breakeven,
+    extraOrders: trace.extraOrders ?? undefined,
+    orderOffer: trace.orderOffer ?? undefined,
+    studies: trace.studies ?? undefined,
+    capital: trace.capital ?? undefined,
+    insurance: trace.insurance ?? undefined,
+    supplier: trace.supplier ?? undefined,
+    hr: trace.hr ?? undefined,
+    investment: trace.investment ?? undefined,
+    qualityCosts: trace.qualityCosts ?? undefined,
+    debt: trace.debt ?? undefined,
+    treasury: trace.treasury ?? undefined,
+    bank: trace.bank ?? undefined,
+    rse: trace.rse ?? undefined,
+    kpis: {},
+    // Gamme : clé émise seulement quand la ligne la porte, pour que le résultat
+    // reconstruit d'une partie mono-produit garde exactement sa forme.
+    ...(trace.products ? { products: trace.products } : {}),
+    // R&D (mono) et communication : mêmes règles, clé émise seulement si portée.
+    ...(trace.rd ? { rd: trace.rd } : {}),
+    ...(trace.communication ? { communication: trace.communication } : {}),
+    ...(trace.subscription ? { subscription: trace.subscription } : {}),
+  };
+  return { result, events: trace.events ?? [] };
+}
+
+/** La prévision d'un tour face au réalisé (identique pour tout tour résolu). */
+function buildForecastReview(
+  round: number,
+  result: CompanyRoundResult,
+  forecast: RoundDecisions["forecast"] | null | undefined,
+): GameView["forecastReview"] {
+  if (!forecast) return null;
+  const sold =
+    Object.values(result.market.bySegment).reduce((sum, d) => sum + d.sold, 0) +
+    (result.extraOrders?.delivered ?? 0) +
+    (result.orderOffer?.delivered ?? 0) +
+    (result.subscription?.retained ?? 0);
+  const lines: NonNullable<GameView["forecastReview"]>["lines"] = [];
+  const push = (
+    label: string,
+    expected: number | undefined,
+    actual: number,
+    format: "units" | "euro",
+  ) => {
+    if (expected === undefined) return;
+    lines.push({
+      label,
+      forecast: expected,
+      actual,
+      relative: Math.abs(expected) > 0.5 ? (actual - expected) / Math.abs(expected) : null,
+      format,
+    });
+  };
+  push("Ventes", forecast.expectedUnits, sold, "units");
+  push("Trésorerie nette", forecast.expectedCash, result.functionalBalance.netTreasury, "euro");
+  return lines.length > 0 ? { round, lines } : null;
+}
+
+/** Indicateurs du métier d'un tour (l'attrition se lit sur le tour précédent). */
+function buildSectorKpis(
+  result: CompanyRoundResult,
+  previousSegments: CompanyRoundResult["market"]["bySegment"] | null,
+  snapshot: EngineScenarioConfig,
+  kpis: Parameters<typeof computeSectorKpis>[0],
+): GameView["sectorKpis"] {
+  const segmentUnits = Object.values(result.market.bySegment).reduce((sum, s) => sum + s.sold, 0);
+  const totalUnits =
+    segmentUnits +
+    (result.extraOrders?.delivered ?? 0) +
+    (result.orderOffer?.delivered ?? 0) +
+    (result.subscription?.retained ?? 0);
+  return computeSectorKpis(kpis, {
+    result,
+    previousSegments,
+    segmentUnits,
+    totalUnits,
+    roundDays: snapshot.roundDays,
+    scenario: snapshot,
+  });
+}
+
+/** Benchmark concurrentiel d'un tour (prix moyen, parts, indice de compétitivité). */
+function buildBenchmark(
+  rows: PersistedResultRow[],
+  teamRows: { id: string; name: string }[],
+  playerTeamId: string,
+): GameView["competitiveBenchmark"] {
+  if (rows.length === 0) return null;
+  const competitors = rows
+    .map((row) => {
+      const detail = row.marketDetail as Record<string, { sold?: number }> | null;
+      const units = detail
+        ? Object.values(detail).reduce((sum, d) => sum + (d.sold ?? 0), 0)
+        : 0;
+      return {
+        name: teamDisplayName(teamRows.find((t) => t.id === row.teamId)?.name ?? "?"),
+        isPlayer: row.teamId === playerTeamId,
+        avgPrice: units > 1 ? Number(row.revenue) / units : null,
+        marketShare: Number(row.marketShare),
+        revenue: Number(row.revenue),
+      };
+    })
+    .sort((a, b) => b.marketShare - a.marketShare);
+  const withPrice = competitors.filter((c) => c.avgPrice !== null);
+  const marketAvgPrice =
+    withPrice.length > 0
+      ? withPrice.reduce((s, c) => s + c.avgPrice!, 0) / withPrice.length
+      : 0;
+  const player = competitors.find((c) => c.isPlayer);
+  const competitivenessIndex =
+    player && marketAvgPrice > 0 && player.avgPrice !== null
+      ? marketAvgPrice / player.avgPrice
+      : 1;
+  return { competitors, marketAvgPrice, competitivenessIndex };
+}
+
 export async function getGameView(gameId: string, userId: string): Promise<GameView | null> {
   const game = (await db.select().from(games).where(eq(games.id, gameId)))[0];
   if (!game) return null;
   const { team: playerTeam, allTeams: teamRows } = await findUserTeam(gameId, userId);
   if (!playerTeam) return null;
+  const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+  // Le scénario réellement joué : intégré (registre) OU enseignant (base). Le
+  // registre synchrone retombe sur NOVA pour un code base — d'où la résolution
+  // par la source unique, ici, une fois, réutilisée dans toute la vue.
+  const scenarioDef = await resolveScenarioDefinition(snapshot.code);
+  const taxRate = snapshot.finance.taxRate;
 
   const gameRounds = await db
     .select()
@@ -478,62 +775,42 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
   if (lastRound) {
     const row = gameResults.find((r) => r.roundId === lastRound.id && r.teamId === playerTeam.id);
     if (row) {
-      const trace = row.engineTrace as {
-        production: CompanyRoundResult["production"];
-        breakeven: CompanyRoundResult["breakeven"];
-        events: string[];
-        extraOrders?: CompanyRoundResult["extraOrders"] | null;
-        orderOffer?: CompanyRoundResult["orderOffer"] | null;
-        studies?: CompanyRoundResult["studies"] | null;
-        capital?: CompanyRoundResult["capital"] | null;
-        insurance?: CompanyRoundResult["insurance"] | null;
-        supplier?: CompanyRoundResult["supplier"] | null;
-        hr?: CompanyRoundResult["hr"] | null;
-        investment?: CompanyRoundResult["investment"] | null;
-        qualityCosts?: CompanyRoundResult["qualityCosts"] | null;
-        debt?: CompanyRoundResult["debt"] | null;
-        treasury?: CompanyRoundResult["treasury"] | null;
-        bank?: CompanyRoundResult["bank"] | null;
-      };
-      lastResult = {
-        companyId: playerTeam.id,
-        incomeStatement: row.incomeStatement as CompanyRoundResult["incomeStatement"],
-        balanceSheet: row.balanceSheet as CompanyRoundResult["balanceSheet"],
-        cashFlow: row.cashFlow as CompanyRoundResult["cashFlow"],
-        functionalBalance: {
-          frng: Number(row.frng),
-          bfr: Number(row.bfr),
-          netTreasury: Number(row.netTreasury),
-        },
-        ratios: computeRatios(
-          row.incomeStatement as CompanyRoundResult["incomeStatement"],
-          row.balanceSheet as CompanyRoundResult["balanceSheet"],
-          (game.scenarioSnapshot as EngineScenarioConfig).finance.taxRate,
-        ),
-        market: {
-          bySegment: row.marketDetail as CompanyRoundResult["market"]["bySegment"],
-          totalShare: Number(row.marketShare),
-        },
-        production: trace.production,
-        breakeven: trace.breakeven,
-        extraOrders: trace.extraOrders ?? undefined,
-        orderOffer: trace.orderOffer ?? undefined,
-        studies: trace.studies ?? undefined,
-        capital: trace.capital ?? undefined,
-        insurance: trace.insurance ?? undefined,
-        supplier: trace.supplier ?? undefined,
-        hr: trace.hr ?? undefined,
-        investment: trace.investment ?? undefined,
-        qualityCosts: trace.qualityCosts ?? undefined,
-        debt: trace.debt ?? undefined,
-        treasury: trace.treasury ?? undefined,
-        bank: trace.bank ?? undefined,
-        kpis: {},
-      };
-      lastEvents = trace.events ?? [];
+      const rec = reconstructResult(row, taxRate);
+      lastResult = rec.result;
+      lastEvents = rec.events;
     }
     const decisionRow = playerDecisionRows.find((d) => d.roundId === lastRound.id);
-    if (decisionRow) lastDecisions = decisionRow.payload as RoundDecisions;
+    if (decisionRow) lastDecisions = decisionRow.payload;
+  }
+
+  // Tableau de bord complet de CHAQUE tour résolu (accordéon de l'arène) : on
+  // reconstitue le résultat, la prévision, les indicateurs métier et le
+  // benchmark tour par tour, sans se limiter au dernier.
+  const periods: GameView["periods"] = [];
+  for (let i = 0; i < resolved.length; i++) {
+    const rnd = resolved[i];
+    if (!rnd) continue;
+    const idx = roundIndexById.get(rnd.id)!;
+    const row = gameResults.find((g) => g.roundId === rnd.id && g.teamId === playerTeam.id);
+    if (!row) continue;
+    const { result, events } = reconstructResult(row, taxRate);
+    const dec = playerDecisionRows.find((d) => d.roundId === rnd.id)?.payload ?? null;
+    const prevRnd = resolved[i - 1];
+    const prevRow = prevRnd
+      ? gameResults.find((g) => g.roundId === prevRnd.id && g.teamId === playerTeam.id)
+      : undefined;
+    const prevSegments = prevRow?.marketDetail ?? null;
+    const rowsOfRound = gameResults.filter((g) => g.roundId === rnd.id);
+    periods.push({
+      round: idx,
+      result,
+      events,
+      decisions: dec,
+      forecastReview: buildForecastReview(idx, result, dec?.forecast),
+      sectorKpis: buildSectorKpis(result, prevSegments, snapshot, scenarioDef.kpis),
+      competitiveBenchmark: buildBenchmark(rowsOfRound, teamRows, playerTeam.id),
+      rse: computeRseIndex(result),
+    });
   }
 
   // Décisions déjà soumises pour le tour courant (mode classe : en attente de clôture)
@@ -569,13 +846,14 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         ),
         rank: r.rank,
         bpi: Number(r.bpi),
+        defaillant: Boolean((r.detail as { defaillant?: boolean })?.defaillant),
       };
     })
     .sort((a, b) => a.rank - b.rank);
   const playerRankingRow = rankingRows.find((r) => r.teamId === playerTeam.id);
   const playerDimensions =
-    ((playerRankingRow?.detail as { dimensions?: Partial<Record<BpiDimension, number>> })
-      ?.dimensions as Partial<Record<BpiDimension, number>> | undefined) ?? null;
+    ((playerRankingRow?.detail as { dimensions?: Partial<Record<string, number>> })
+      ?.dimensions as Partial<Record<string, number>> | undefined) ?? null;
 
   // Rapports des études achetées au dernier tour résolu (doc 02 §8bis) :
   // construits à la lecture depuis les résultats persistés — la facture est
@@ -584,8 +862,10 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     const purchased = lastResult?.studies?.purchased ?? [];
     if (!lastRound || !lastResult || purchased.length === 0) return null;
     const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
-    const cvu =
-      snapshot.product.materialCostPerUnit + snapshot.product.otherVariableCostPerUnit;
+    // Coût variable unitaire RÉEL du dernier tour (fournisseur choisi inclus),
+    // tel que le moteur l'a employé pour le seuil — et non le coût standard du
+    // scénario, qui divergerait dès qu'une équipe change de fournisseur.
+    const cvu = lastResult.breakeven.unitVariableCost;
     const lastRows = gameResults.filter((r) => r.roundId === lastRound.id);
     const reports: StudyReports = {
       round: lastRound.index,
@@ -595,7 +875,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     if (purchased.includes("market")) {
       const own = lastResult.market.bySegment;
       reports.market = {
-        segments: snapshot.market.segments.map((seg) => {
+        segments: toGamme(snapshot).flatMap((p) => p.market.segments).map((seg) => {
           const d = own[seg.code];
           return {
             name: seg.name,
@@ -630,7 +910,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     if (purchased.includes("price")) {
       reports.price = {
         yourPrice: lastDecisions?.price ?? 0,
-        segments: snapshot.market.segments.map((seg) => ({
+        segments: toGamme(snapshot).flatMap((p) => p.market.segments).map((seg) => ({
           name: seg.name,
           refPrice: seg.refPrice,
           elasticity: Math.round(seg.priceElasticity * 10) / 10,
@@ -700,6 +980,10 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         };
       }
       const offer = orderOfferForRound(snapshot, game.currentRound, game.seed);
+      // La marge de l'offre se calcule au coût variable de SA référence.
+      const offerGamme = toGamme(snapshot);
+      const offerCible = offerGamme[offerProductIndex(offerGamme, offer)]!;
+      const offerCvu = offerCible.materialCostPerUnit + offerCible.otherVariableCostPerUnit;
       reports.project = {
         investment,
         currentOffer: offer
@@ -707,7 +991,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
               title: offer.title,
               units: offer.units,
               price: offer.price,
-              margin: offer.units * (offer.price - cvu),
+              margin: offer.units * (offer.price - offerCvu),
               carryCost:
                 offer.units *
                 offer.price *
@@ -753,12 +1037,27 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     return { competitors, marketAvgPrice, competitivenessIndex };
   })();
 
+  const playWindow = await playWindowFor(
+    { opensAt: game.opensAt, closesAt: game.closesAt, competitionStageId: game.competitionStageId },
+    currentRoundRow
+      ? { opensAt: currentRoundRow.opensAt, deadline: currentRoundRow.deadline }
+      : null,
+  );
+  const playLock = {
+    playable: playWindow.playable,
+    state: playWindow.state,
+    message: playLockMessage(playWindow),
+    opensAt: playWindow.opensAt ? playWindow.opensAt.toISOString() : null,
+    closesAt: playWindow.closesAt ? playWindow.closesAt.toISOString() : null,
+  };
+
   const profile = game.difficultyProfile as { kind?: GameKind };
   return {
     gameId,
     kind: profile.kind ?? "solo",
     status: game.status,
     currentRound: game.currentRound,
+    playLock,
     roundsCount: (game.scenarioSnapshot as { roundsCount: number }).roundsCount,
     roundDays: (game.scenarioSnapshot as { roundDays: number }).roundDays,
     playerTeamId: playerTeam.id,
@@ -777,6 +1076,13 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       };
     }),
     lastResult,
+    periods,
+    // Rapport extra-financier (Lot 3) : synthèse indicative dérivée de tous les
+    // tours résolus. Lecture seule, comme l'indice RSE.
+    rseReport: computeRseReport(
+      periods.map((p) => ({ round: p.round, result: p.result, events: p.events, rse: p.rse })),
+      RSE_CARD_CODES,
+    ),
     forecastReview: (() => {
       if (!lastRound || !lastResult) return null;
       const round = roundIndexById.get(lastRound.id)!;
@@ -788,7 +1094,8 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       const sold =
         Object.values(lastResult.market.bySegment).reduce((sum, d) => sum + d.sold, 0) +
         (lastResult.extraOrders?.delivered ?? 0) +
-        (lastResult.orderOffer?.delivered ?? 0);
+        (lastResult.orderOffer?.delivered ?? 0) +
+        (lastResult.subscription?.retained ?? 0);
       const lines: {
         label: string;
         forecast: number;
@@ -824,10 +1131,12 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     })(),
     salesHistory: (() => {
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
-      const codes = snapshot.market.segments.map((seg) => seg.code);
+      // En gamme, l'historique couvre les clientèles de toutes les références.
+      const segments = toGamme(snapshot).flatMap((p) => p.market.segments);
+      const codes = segments.map((seg) => seg.code);
       return {
-        segments: snapshot.market.segments.map((seg) => seg.name),
-        commissions: snapshot.market.segments
+        segments: segments.map((seg) => seg.name),
+        commissions: segments
           .filter((seg) => (seg.commissionRate ?? 0) > 0)
           .map((seg) => ({ segment: seg.name, rate: seg.commissionRate! })),
         rounds: gameResults
@@ -865,7 +1174,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     roundBriefing: (() => {
       if (!lastResult) return null;
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
-      const definition = scenarioByCode(snapshot.code);
+      const definition = scenarioDef;
       const preset = presetFromProfile(game.difficultyProfile);
       return roundBriefing({
         result: lastResult,
@@ -885,40 +1194,21 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     ranking,
     playerDimensions,
     lastDecisions,
-    startingDecisions: (() => {
-      /**
-       * Le formulaire n'accepte pas n'importe quel nombre : ses champs
-       * avancent par pas de 1, le prix par pas de 0,1. Une valeur par défaut
-       * calculée, donc décimale, rend le tour ENTIÈREMENT insoumettable : le
-       * navigateur refuse la validation sans message visible, et l'élève clique
-       * sans que rien ne se passe. Un défaut proposé doit être soumettable tel
-       * quel.
-       */
-      const auPas = (d: RoundDecisions): RoundDecisions => ({
-        ...d,
-        price: Math.round(d.price * 10) / 10,
-        productionPlan: Math.round(d.productionPlan),
-        marketingBudget: Math.round(d.marketingBudget),
-        qualityBudget: Math.round(d.qualityBudget),
-        maintenanceBudget: Math.round(d.maintenanceBudget),
+    // Le point de départ et les valeurs proposées viennent du même calcul que
+    // celui du serveur (decision-baseline) : ce que le formulaire propose est
+    // exactement ce à quoi la validation sera comparée.
+    startingDecisions: startingDecisionsFor(
+      game.scenarioSnapshot as EngineScenarioConfig,
+      stateRow?.state as CompanyState | undefined,
+      game.currentRound,
+    ),
+    proposedDecisions: (() => {
+      return proposedDecisionsFor({
+        snapshot: game.scenarioSnapshot as EngineScenarioConfig,
+        state: stateRow?.state as CompanyState | undefined,
+        roundIndex: game.currentRound,
+        previousPayload: lastDecisions,
       });
-      const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
-      const state = stateRow?.state as CompanyState | undefined;
-      // Sans état persisté il n'y a pas de capacité à viser : on s'en tient
-      // alors au prix de référence du secteur, jamais à celui d'un autre.
-      if (!state) {
-        const main = [...snapshot.market.segments].sort((a, b) => b.size - a.size)[0];
-        return auPas({
-          price: main?.refPrice ?? 50,
-          productionPlan: 0,
-          marketingBudget: 0.5 * snapshot.marketing.scale,
-          qualityBudget: 0.5 * snapshot.production.qualityScale,
-          maintenanceBudget: snapshot.production.maintenanceReference,
-        });
-      }
-      return auPas(
-        neutralDecisions({ scenario: snapshot, state, roundIndex: game.currentRound }),
-      );
     })(),
     insuranceOffer: (() => {
       const offer = (
@@ -961,18 +1251,96 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         materialCostPerUnit: Math.round(snapshot.product.materialCostPerUnit * s.costMultiplier * 100) / 100,
       }));
     })(),
-    vocabulary: scenarioByCode(
-      (game.scenarioSnapshot as { code?: string } | null)?.code,
-    ).vocabulary,
-    sector: scenarioByCode(
-      (game.scenarioSnapshot as { code?: string } | null)?.code,
-    ).sector,
+    vocabulary: scenarioDef.vocabulary,
+    sector: scenarioDef.sector,
+    scenarioIcon: scenarioDef.icon,
+    // Tous les segments que le moteur simule : en gamme, ceux de chaque
+    // produit (le marché du scénario n'en est que le premier).
     segmentNames: Object.fromEntries(
-      (game.scenarioSnapshot as EngineScenarioConfig).market.segments.map((s) => [
-        s.code,
-        s.name,
-      ]),
+      toGamme(game.scenarioSnapshot as EngineScenarioConfig).flatMap((p) =>
+        p.market.segments.map((s) => [s.code, s.name] as const),
+      ),
     ),
+    ouverture: (() => {
+      const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+      const state = stateRow?.state as CompanyState | undefined;
+      const stocks: Record<string, number> = {};
+      for (const p of toGamme(snapshot)) {
+        stocks[p.code] = Math.round(
+          isMultiProduct(snapshot)
+            ? (state?.finishedGoodsByProduct?.[p.code]?.quantity ?? 0)
+            : (state?.finishedGoods.quantity ?? 0),
+        );
+      }
+      return {
+        stocks,
+        cash: Math.round(state?.finance.cash ?? 0),
+        receivables: Math.round(state?.finance.receivables ?? 0),
+        payables: Math.round(state?.finance.payables ?? 0),
+      };
+    })(),
+    gamme: (() => {
+      const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+      if (!isMultiProduct(snapshot)) return null;
+      const state = stateRow?.state as CompanyState | undefined;
+      const idx = game.currentRound - 1;
+      return toGamme(snapshot).map((p) => {
+        const main = [...p.market.segments].sort((a, b) => b.size - a.size)[0];
+        return {
+          code: p.code,
+          name: p.name,
+          materialCostPerUnit: p.materialCostPerUnit,
+          otherVariableCostPerUnit: p.otherVariableCostPerUnit,
+          hoursPerUnit: p.hoursPerUnit,
+          refPrice: main?.refPrice ?? 0,
+          segments: p.market.segments.map((s) => ({ code: s.code, name: s.name })),
+          seasonCoef: p.market.seasonality[idx] ?? 1,
+          stock: Math.round(state?.finishedGoodsByProduct?.[p.code]?.quantity ?? 0),
+          suppliers:
+            suppliersOf(p, snapshot)?.map((s) => ({
+              code: s.code,
+              name: s.name,
+              narrative: s.narrative,
+              costMultiplier: s.costMultiplier,
+              qualityBonus: s.qualityBonus,
+              paymentDelayDays: s.paymentDelayDays,
+              supplyRiskProbability: s.supplyRiskProbability,
+              materialCostPerUnit: Math.round(p.materialCostPerUnit * s.costMultiplier * 100) / 100,
+            })) ?? null,
+          rd: (() => {
+            const rd = rdOpeningOf(snapshot, state ?? {}, p.code);
+            if (!rd) return null;
+            return {
+              techLevel: rd.techLevel,
+              development: p.development
+                ? {
+                    cost: p.development.cost,
+                    availableFromRound: p.development.availableFromRound ?? 1,
+                    invested: rd.invested,
+                    available: isProductAvailable(p, rd, game.currentRound),
+                    launchRound: rd.launchRound ?? null,
+                  }
+                : null,
+            };
+          })(),
+        };
+      });
+    })(),
+    rdOffer: (() => {
+      const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+      return snapshot.rd ? { techScale: snapshot.rd.techScale } : null;
+    })(),
+    communicationOffer: (() => {
+      const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+      if (!snapshot.communication) return null;
+      const state = stateRow?.state as CompanyState | undefined;
+      return {
+        axes: COMMUNICATION_AXES.map((code) => ({ code, ...COMMUNICATION_AXIS_LABELS[code] })),
+        brandScale: snapshot.communication.brandScale,
+        brandAwareness: state?.brandAwareness ?? 0,
+        lastAxis: state?.lastCommunicationAxis ?? null,
+      };
+    })(),
     sectorKpis: (() => {
       if (!lastResult) return [];
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
@@ -986,7 +1354,8 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       const totalUnits =
         segmentUnits +
         (lastResult.extraOrders?.delivered ?? 0) +
-        (lastResult.orderOffer?.delivered ?? 0);
+        (lastResult.orderOffer?.delivered ?? 0) +
+        (lastResult.subscription?.retained ?? 0);
       // Segments du tour précédent : seule donnée nécessaire à l'attrition.
       const previousRound = resolved.at(-2);
       const previousRow = previousRound
@@ -994,7 +1363,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
             (r) => r.roundId === previousRound.id && r.teamId === playerTeam.id,
           )
         : undefined;
-      return computeSectorKpis(scenarioByCode(snapshot.code).kpis, {
+      return computeSectorKpis(scenarioDef.kpis, {
         result: lastResult,
         previousSegments:
           (previousRow?.marketDetail as CompanyRoundResult["market"]["bySegment"]) ?? null,
@@ -1006,7 +1375,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     })(),
     intro: (() => {
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
-      const definition = scenarioByCode(snapshot.code);
+      const definition = scenarioDef;
       const state = stateRow?.state as CompanyState | undefined;
       return {
         title: definition.title,
@@ -1020,13 +1389,15 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         variableCostPerUnit:
           snapshot.product.materialCostPerUnit + snapshot.product.otherVariableCostPerUnit,
         cash: Math.round(state?.finance.cash ?? 0),
-        segments: snapshot.market.segments.map((seg) => ({
-          name: seg.name,
-          size: Math.round(seg.size),
-          refPrice: seg.refPrice,
-          paymentDelayDays: seg.paymentDelayDays,
-          yourShare: lastResult?.market.bySegment[seg.code]?.share ?? null,
-        })),
+        segments: toGamme(snapshot)
+          .flatMap((p) => p.market.segments)
+          .map((seg) => ({
+            name: seg.name,
+            size: Math.round(seg.size),
+            refPrice: seg.refPrice,
+            paymentDelayDays: seg.paymentDelayDays,
+            yourShare: lastResult?.market.bySegment[seg.code]?.share ?? null,
+          })),
         competitors: teamRows
           .filter((t) => t.id !== playerTeam.id)
           .map((t) => teamDisplayName(t.name)),
@@ -1051,6 +1422,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         snapshot.product.hoursPerUnit;
       const bottleneck: "machine" | "labor" | "balanced" =
         mc < lc * 0.95 ? "machine" : lc < mc * 0.95 ? "labor" : "balanced";
+      const sub = snapshot.subscription;
       return {
         machineCapacity: Math.round(mc),
         laborCapacity: Math.round(lc),
@@ -1059,6 +1431,16 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         hoursPerEmployee: state.hoursPerEmployee,
         productivity: state.productivity,
         hoursPerUnit: snapshot.product.hoursPerUnit,
+        ...(sub
+          ? {
+              subscription: {
+                members: Math.round(state.members ?? 0),
+                expectedRetained: Math.round((state.members ?? 0) * (1 - sub.baseChurnRate)),
+                baseChurnRate: sub.baseChurnRate,
+                refPrice: sub.refPrice,
+              },
+            }
+          : {}),
       };
     })(),
     difficulty: (() => {
@@ -1205,6 +1587,10 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
       const offer = orderOfferForRound(snapshot, game.currentRound, game.seed);
       if (!offer) return null;
+      // La commande porte sur une référence : son coût variable et son prix
+      // usuel sont ceux de CETTE référence (mono : le produit du scénario).
+      const gamme = toGamme(snapshot);
+      const cible = gamme[offerProductIndex(gamme, offer)]!;
       return {
         code: offer.code,
         title: offer.title,
@@ -1212,15 +1598,29 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         units: offer.units,
         price: offer.price,
         paymentDelayDays: offer.paymentDelayDays,
-        unitVariableCost:
-          snapshot.product.materialCostPerUnit + snapshot.product.otherVariableCostPerUnit,
-        refPrice: snapshot.market.segments[0]?.refPrice ?? offer.price,
+        unitVariableCost: cible.materialCostPerUnit + cible.otherVariableCostPerUnit,
+        refPrice: cible.market.segments[0]?.refPrice ?? offer.price,
+        productCode: isMultiProduct(snapshot) ? cible.code : null,
+        productName: isMultiProduct(snapshot) ? cible.name : null,
       };
     })(),
     seasonNotes: (() => {
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
       const idx = game.currentRound - 1;
       const notes: { name: string; coef: number }[] = [];
+      if (isMultiProduct(snapshot)) {
+        // Chaque référence a sa saison : c'est elle que l'équipe doit lire.
+        for (const p of toGamme(snapshot)) {
+          const coef = p.market.seasonality[idx];
+          if (coef !== undefined && Math.abs(coef - 1) > 0.01)
+            notes.push({ name: p.name, coef });
+          for (const seg of p.market.segments) {
+            const c = seg.seasonality?.[idx];
+            if (c !== undefined && Math.abs(c - 1) > 0.01) notes.push({ name: seg.name, coef: c });
+          }
+        }
+        return notes;
+      }
       const global = snapshot.market.seasonality[idx];
       if (global !== undefined && Math.abs(global - 1) > 0.01)
         notes.push({ name: "Marché", coef: global });

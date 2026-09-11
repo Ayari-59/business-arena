@@ -1,5 +1,5 @@
 import { randomInt } from "node:crypto";
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   competitionEntries,
@@ -13,6 +13,7 @@ import {
 } from "@/db/schema";
 import { composeGroups, podium, qualifiers, type GroupStanding } from "@/competition";
 import { createGameCore } from "@/services/game-creation.service";
+import { entitlementsForOrg } from "@/services/entitlements.service";
 import { DEFAULT_QUIZ_MODE } from "@/config/difficulty";
 import type { Periodicity } from "@/config/scenarios/periodicity";
 
@@ -51,6 +52,13 @@ export async function createCompetition(args: {
   groupSize: number;
   advancePerGroup: number;
 }): Promise<{ competitionId: string; joinCode: string }> {
+  // Palier gratuit : le mode concours est réservé à l'offre établissement.
+  const ent = await entitlementsForOrg(args.organizationId);
+  if (!ent.competitions) {
+    throw new Error(
+      "Les concours sont réservés à l'offre établissement. Activez une licence pour les ouvrir.",
+    );
+  }
   const { getOrCreateNovaScenarioIdPublic } = await import("./game-creation.service");
   const scenarioId = await getOrCreateNovaScenarioIdPublic();
   const joinCode = makeCode();
@@ -76,13 +84,19 @@ export async function createCompetition(args: {
   return { competitionId: inserted[0]!.id, joinCode };
 }
 
-/** Inscription d'un joueur : crée l'équipe (team_label) ou la rejoint. */
+/**
+ * Inscription d'un joueur : crée l'équipe (team_label) ou la rejoint.
+ *
+ * Un joueur déjà inscrit n'est pas réinscrit ni déplacé : la réponse porte
+ * alors `alreadyMember`, le nom de son équipe, pour que la page le dise au
+ * lieu de rediriger en silence (vague 1, K4).
+ */
 export async function joinCompetition(args: {
   code: string;
   userId: string;
   teamLabel: string;
   pseudo?: string;
-}): Promise<{ competitionId: string } | { error: string }> {
+}): Promise<{ competitionId: string; alreadyMember?: string } | { error: string }> {
   const competition = (
     await db.select().from(competitions).where(eq(competitions.joinCode, args.code.trim().toUpperCase()))
   )[0];
@@ -98,7 +112,7 @@ export async function joinCompetition(args: {
     .from(competitionEntries)
     .where(eq(competitionEntries.competitionId, competition.id));
   const existing = entries.find((e) => e.memberUserIds.includes(args.userId));
-  if (existing) return { competitionId: competition.id };
+  if (existing) return { competitionId: competition.id, alreadyMember: existing.teamLabel };
 
   // Atomic join: UPDATE with array_append + WHERE guards
   const updated = await db
@@ -123,7 +137,7 @@ export async function joinCompetition(args: {
     const sameLabel = entries.find((e) => e.teamLabel.toLowerCase() === label.toLowerCase());
     if (sameLabel) {
       if (sameLabel.memberUserIds.includes(args.userId))
-        return { competitionId: competition.id };
+        return { competitionId: competition.id, alreadyMember: sameLabel.teamLabel };
       return { error: "Cette équipe est complète (6 joueurs max)." };
     }
     // New team — INSERT with capacity guard
@@ -265,10 +279,16 @@ export async function startQualification(args: {
 
 /** Classements d'une phase, par partie, exprimés en entries (labels d'équipe). */
 async function stageStandings(stageId: string): Promise<GroupStanding[][]> {
+  // Ordre STABLE, identique à celui de getCompetitionView : les classements
+  // sont ensuite associés aux cartes de partie PAR INDEX. Sans ORDER BY, deux
+  // requêtes non ordonnées peuvent renvoyer les lignes dans un ordre différent
+  // (surtout pendant des clôtures concurrentes) et le classement d'un groupe
+  // s'afficherait sous la carte d'un autre.
   const stageGames = await db
     .select()
     .from(games)
-    .where(eq(games.competitionStageId, stageId));
+    .where(eq(games.competitionStageId, stageId))
+    .orderBy(asc(games.id));
   if (stageGames.length === 0) return [];
   const gameIds = stageGames.map((g) => g.id);
   const allTeams = await db.select().from(teams).where(inArray(teams.gameId, gameIds));
@@ -407,6 +427,130 @@ export async function finishCompetition(args: {
   return { podium: ranking };
 }
 
+/**
+ * Fenêtre d'une étape de concours (planning) : les parties de cette étape ne
+ * sont jouables qu'entre `startsAt` et `endsAt`. Chaque borne peut être null.
+ * L'ouverture doit précéder la fermeture. Le verrou d'étape se combine à la
+ * fenêtre de chaque partie et de chaque tour (intersection des fenêtres).
+ */
+export async function setStageWindow(args: {
+  competitionId: string;
+  stageId: string;
+  organizerId: string;
+  startsAt: Date | null;
+  endsAt: Date | null;
+}): Promise<void> {
+  const competition = await loadOwnedCompetition(args.competitionId, args.organizerId);
+  if (args.startsAt && args.endsAt && args.startsAt.getTime() > args.endsAt.getTime()) {
+    throw new Error("L'ouverture doit précéder la fermeture.");
+  }
+  const result = await db
+    .update(competitionStages)
+    .set({ startsAt: args.startsAt, endsAt: args.endsAt })
+    .where(
+      and(
+        eq(competitionStages.id, args.stageId),
+        eq(competitionStages.competitionId, competition.id),
+      ),
+    )
+    .returning({ id: competitionStages.id });
+  if (result.length === 0) throw new Error("Étape introuvable");
+}
+
+/**
+ * Réglage de la page publique d'annonce par l'organisateur. Contrôle
+ * d'appartenance via organizerId ; les champs libres sont bornés côté appelant
+ * (action). `visible` bascule la page en ligne (true) ou en 404 (false).
+ */
+export async function setPublicPage(args: {
+  competitionId: string;
+  organizerId: string;
+  visible: boolean;
+  tagline: string | null;
+  description: string | null;
+  organizerLabel: string | null;
+  accent: string | null;
+}): Promise<void> {
+  const competition = await loadOwnedCompetition(args.competitionId, args.organizerId);
+  await db
+    .update(competitions)
+    .set({
+      publicVisible: args.visible,
+      tagline: args.tagline,
+      description: args.description,
+      organizerLabel: args.organizerLabel,
+      accent: args.accent,
+    })
+    .where(eq(competitions.id, competition.id));
+}
+
+export interface PublicCompetition {
+  name: string;
+  status: string;
+  joinCode: string;
+  tagline: string | null;
+  description: string | null;
+  organizerLabel: string | null;
+  accent: string | null;
+  /** Nombre d'équipes déjà inscrites. */
+  entriesCount: number;
+  /** Étapes datées (planning), pour le programme public. Dates en ISO ou null. */
+  stages: { kind: string; startsAt: string | null; endsAt: string | null }[];
+}
+
+/**
+ * La page publique d'un concours, par son code. Renvoie null si le concours
+ * n'existe pas ou n'a pas été publié (public_visible faux) : la page est alors
+ * un 404, jamais un aperçu du concours d'un autre. Ne renvoie rien
+ * d'identifiant sur l'organisateur ni sur les équipes — c'est une page ouverte.
+ */
+export async function getPublicCompetition(code: string): Promise<PublicCompetition | null> {
+  const competition = (
+    await db
+      .select()
+      .from(competitions)
+      .where(eq(competitions.joinCode, code.trim().toUpperCase()))
+  )[0];
+  if (!competition || !competition.publicVisible) return null;
+
+  const entries = await db
+    .select({ teamLabel: competitionEntries.teamLabel })
+    .from(competitionEntries)
+    .where(eq(competitionEntries.competitionId, competition.id));
+
+  const stages = (
+    await db
+      .select()
+      .from(competitionStages)
+      .where(eq(competitionStages.competitionId, competition.id))
+  ).sort((a, b) => a.index - b.index);
+
+  return {
+    name: competition.name,
+    status: competition.status,
+    joinCode: competition.joinCode,
+    tagline: competition.tagline,
+    description: competition.description,
+    organizerLabel: competition.organizerLabel,
+    accent: competition.accent,
+    entriesCount: entries.length,
+    stages: stages.map((s) => ({
+      kind: s.kind,
+      startsAt: s.startsAt ? s.startsAt.toISOString() : null,
+      endsAt: s.endsAt ? s.endsAt.toISOString() : null,
+    })),
+  };
+}
+
+/** Les codes des concours publiés (pour le plan du site). */
+export async function getPublicCompetitionCodes(): Promise<string[]> {
+  const rows = await db
+    .select({ joinCode: competitions.joinCode })
+    .from(competitions)
+    .where(eq(competitions.publicVisible, true));
+  return rows.map((r) => r.joinCode);
+}
+
 // ---------------------------------------------------------------------------
 // Lectures
 // ---------------------------------------------------------------------------
@@ -417,11 +561,17 @@ export interface CompetitionView {
   status: string;
   joinCode: string;
   organizerId: string;
+  /** Réglages fixés à la création : ce que l'organisateur doit pouvoir relire. */
+  rules: { periodicity: Periodicity; groupSize: number; advancePerGroup: number };
   entries: { teamLabel: string; members: number; status: string }[];
   stages: {
+    stageId: string;
     index: number;
     kind: string;
     status: string;
+    /** Fenêtre de l'étape (planning), en ISO ou null. */
+    startsAt: string | null;
+    endsAt: string | null;
     games: {
       gameId: string;
       status: string;
@@ -431,6 +581,14 @@ export interface CompetitionView {
     }[];
   }[];
   podium: string[] | null;
+  /** Réglages de la page publique d'annonce (pour préremplir le panneau prof). */
+  publicPage: {
+    visible: boolean;
+    tagline: string | null;
+    description: string | null;
+    organizerLabel: string | null;
+    accent: string | null;
+  };
 }
 
 export async function getCompetitionView(competitionId: string): Promise<CompetitionView | null> {
@@ -451,15 +609,21 @@ export async function getCompetitionView(competitionId: string): Promise<Competi
 
   const stageViews = [];
   for (const stage of stages) {
+    // Même ORDER BY que stageStandings : l'association standings[i] ↔ carte de
+    // partie se fait par index, les deux ordres doivent coïncider.
     const stageGames = await db
       .select()
       .from(games)
-      .where(eq(games.competitionStageId, stage.id));
+      .where(eq(games.competitionStageId, stage.id))
+      .orderBy(asc(games.id));
     const standings = await stageStandings(stage.id);
     stageViews.push({
+      stageId: stage.id,
       index: stage.index,
       kind: stage.kind,
       status: stage.status,
+      startsAt: stage.startsAt ? stage.startsAt.toISOString() : null,
+      endsAt: stage.endsAt ? stage.endsAt.toISOString() : null,
       games: stageGames.map((g, i) => ({
         gameId: g.id,
         status: g.status,
@@ -481,12 +645,18 @@ export async function getCompetitionView(competitionId: string): Promise<Competi
     }
   }
 
+  const rules = rulesOf(competition);
   return {
     competitionId,
     name: competition.name,
     status: competition.status,
     joinCode: competition.joinCode,
     organizerId: competition.organizerId,
+    rules: {
+      periodicity: rules.periodicity,
+      groupSize: rules.groupSize,
+      advancePerGroup: rules.advancePerGroup,
+    },
     entries: entries.map((e) => ({
       teamLabel: e.teamLabel,
       members: e.memberUserIds.length,
@@ -494,6 +664,13 @@ export async function getCompetitionView(competitionId: string): Promise<Competi
     })),
     stages: stageViews,
     podium: finalPodium,
+    publicPage: {
+      visible: competition.publicVisible,
+      tagline: competition.tagline,
+      description: competition.description,
+      organizerLabel: competition.organizerLabel,
+      accent: competition.accent,
+    },
   };
 }
 

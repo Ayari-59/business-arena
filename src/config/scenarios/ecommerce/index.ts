@@ -34,7 +34,7 @@ const rawEcommerce = {
       {
         code: "acquisition",
         name: "Nouveaux clients (trafic payant)",
-        size: 10800,
+        size: 10300,
         growth: 0.08,
         priceElasticity: -2.3,
         refPrice: 62,
@@ -45,6 +45,10 @@ const rawEcommerce = {
         ],
         // le trafic S'ACHÈTE : c'est le segment le plus sensible au budget
         marketingSensitivity: 1.25,
+        // sans publicité, ce segment ne vous voit presque pas : moins d'un
+        // tiers de l'attraction, et la porte s'ouvre avec le budget (le trafic
+        // s'achète)
+        marketingGate: 0.3,
         qualitySensitivity: 0.15,
         loyalty: 0.02,
         priceEffectBounds: { min: 0.15, max: 4 },
@@ -53,7 +57,7 @@ const rawEcommerce = {
       {
         code: "fideles",
         name: "Clients récurrents (base installée)",
-        size: 5760,
+        size: 7500,
         growth: 0.05,
         priceElasticity: -0.9,
         refPrice: 78,
@@ -120,6 +124,15 @@ const rawEcommerce = {
     availabilityDecay: 0.06,
   },
   // L'acquisition est le poste central du métier : l'échelle est haute.
+  // Non-qualité : 1 % de colis perdus ou abîmés en préparation (rebut), et
+  // des retours qui dépassent la normale dès que la qualité perçue baisse
+  // (photos, fiches, délais) : remboursés au prix, l'article ne revient pas
+  // en rayon. Le coût MOYEN des retours ordinaires (deux ports, une
+  // manutention) est déjà dans les 11 € de logistique par commande.
+  qualityCosts: {
+    baseDefectRate: 0.01,
+    externalReturnSensitivity: 0.3,
+  },
   marketing: { scale: 30000 },
   finance: {
     loanAnnualRate: 0.062,
@@ -142,12 +155,13 @@ const rawEcommerce = {
     factoringFeeRate: 0.03,
     forcedFactoringFeeRate: 0.07,
     // 2 %/an : de quoi valoriser le surplus, jamais de quoi financer
-    // un découvert à 9 %. L'arbitrage doit rester perdant à l'envers.
+    // un découvert à 14 %. L'arbitrage doit rester perdant à l'envers.
     placementAnnualRate: 0.02,
   },
-  // structure ≈ 53 000 €/tour : 48 000 décaissés (équipe, entrepôt, plateforme,
-  // abonnements logiciels) + 5 000 d'amortissements — HORS acquisition
-  fixedCostsPerRound: 48000,
+  // structure ≈ 57 000 €/tour : 52 000 décaissés (41 000 d'équipe, 11 000
+  // d'entrepôt, de plateforme et d'abonnements logiciels) + 5 000
+  // d'amortissements — HORS acquisition
+  fixedCostsPerRound: 52000,
   suppliers: [
     {
       code: "grossiste_ue",
@@ -294,7 +308,8 @@ const rawEcommerce = {
       narrative:
         "Un soldeur reprend la fin de collection, enlèvement et paiement comptant. Vous ne gagnez presque rien, mais l'entrepôt respire.",
       units: 1400,
-      price: 33,
+      // deux euros au-dessus du coût variable : « presque rien », pas une perte
+      price: 40,
       paymentDelayDays: 0,
     },
     {
@@ -523,7 +538,7 @@ export function ecommerceCompany(
     productivity: 1,
     finishedGoods: { quantity: 2000, unitCost: 27 },
     // Parc initial : 3 manuelles (15 000 €) + 1 convoyeur (10 000 €) + 1 automate (22 000 €) = 47 000 €
-    // (amorti à ~64 % → ~30 000 € de VNC)
+    // d'origine, dont il reste ~64 % en valeur nette → ~30 000 € de VNC
     fleet: [
       { typeCode: "preparation_manuelle", count: 3, acquiredRound: 0, bookValue: 8000 },
       { typeCode: "convoyeur_semi_auto", count: 1, acquiredRound: 0, bookValue: 7000 },
@@ -535,10 +550,11 @@ export function ecommerceCompany(
       fixedAssetsNet: 85000,
       inventoryValue: 54000, // 2 000 × 27 €
       receivables: 21000,
-      cash: 38000,
+      cash: 68000,
       equity: 78000,
       financialDebt: 90000,
-      payables: 30000,
+      // 45 jours sur ~121 000 € d'achats trimestriels (4 500 commandes × 27 €)
+      payables: 60000,
       overdraft: 0,
     },
     lastMarketShare: {},

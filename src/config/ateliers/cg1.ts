@@ -31,7 +31,7 @@ export const ATELIER_CG1: AtelierDefinition = {
   pourquoi:
     "En atelier professionnel, la difficulté n'est pas de faire calculer un seuil de rentabilité : c'est de faire comprendre à quoi il sert. Un dossier fournit les chiffres et demande la réponse. Ici les chiffres sont ceux que l'équipe a produits au tour précédent, personne ne connaît la réponse, et une décision prise sans le calcul se paie au tour suivant. Le compte de résultat, le bilan, la TVA à décaisser et le besoin en fonds de roulement ne sont plus des documents à recopier : ce sont les conséquences de ce que l'équipe a fait.",
   reglages: {
-    scenarioCode: "nova",
+    scenarioCode: "nova-gamme",
     periodicite: "quarter",
     periodiciteLabel: "Un trimestre par tour",
     niveau: 4,
@@ -44,7 +44,7 @@ export const ATELIER_CG1: AtelierDefinition = {
     tours: 6,
     effectifParEquipe: "trois élèves",
     notes:
-      "NOVA porte un stock, un coût de production et des délais de règlement : les trois matières de la première année. Le monde variable est décoché pour que toutes vos classes jouent la même économie et que vos corrigés restent valables d'une année sur l'autre. Deux concurrents pilotés par la machine suffisent à ce que le marché résiste.",
+      "NOVA se joue ici en trois références qui partagent le même atelier : un stock par enceinte, un coût de production par enceinte, et un seuil de rentabilité qui dépend du mix vendu. NOVA porte un stock, un coût de production et des délais de règlement : les trois matières de la première année. Le monde variable est décoché pour que toutes vos classes jouent la même économie et que vos corrigés restent valables d'une année sur l'autre. Deux concurrents pilotés par la machine suffisent à ce que le marché résiste.",
   },
   seances: [
     {

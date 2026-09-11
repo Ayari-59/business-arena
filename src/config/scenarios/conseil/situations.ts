@@ -1,4 +1,4 @@
-import { attachModelQuestions, hints, type DecisionLever, type SituationCategory, type SituationDef } from "../situation-kit";
+import { attachModelQuestions, hints, type SituationDef } from "../situation-kit";
 
 /**
  * Situations pédagogiques d'ATLAS CONSEIL (services intellectuels).
@@ -602,7 +602,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
         id: "conseil_risque_tarif",
         prompt: "Le vrai danger d'une mission acceptée bien en dessous du tarif est…",
         options: [
-          { id: "a", label: "Qu'elle devienne la référence du client pour les missions suivantes, et occupe des consultants indisponibles pour mieux payé" },
+          { id: "a", label: "Qu'elle devienne la référence du client pour les missions suivantes, et occupe des consultants indisponibles pour des missions mieux payées" },
           { id: "b", label: "Qu'elle fasse baisser mécaniquement les salaires" },
           { id: "c", label: "Qu'elle augmente les charges de structure du cabinet" },
           { id: "d", label: "Qu'elle soit interdite par la réglementation des marchés publics" },
@@ -738,7 +738,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
     category: "tresorerie_dormante",
     title: "Le compte se remplit, le carnet se vide",
     narrative:
-      "Les grosses factures de fin de mission sont rentrées d'un coup : le compte affiche plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an, et facture le découvert 9 %. Le carnet de commandes, lui, est plus creux qu'il ne l'a été depuis longtemps.",
+      "Les grosses factures de fin de mission sont rentrées d'un coup : le compte affiche plus d'un trimestre et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'au trimestre suivant, à 2 % l'an, et facture le découvert 13 %. Le carnet de commandes, lui, est plus creux qu'il ne l'a été depuis longtemps.",
     problem:
       "Cet argent qui dort, faut-il le placer, et jusqu'à quel montant ?",
     diagnosticOptions: [
@@ -768,14 +768,14 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
         id: "conseil_detect_idle_cash_placement_exces",
         prompt: "Placer la totalité de sa trésorerie expose l'entreprise à…",
         options: [
-          { id: "a", label: "Ouvrir un découvert à 9 % tout en détenant un placement à 2 %" },
+          { id: "a", label: "Ouvrir un découvert à 13 % tout en détenant un placement à 2 %" },
           { id: "b", label: "Perdre le capital placé si le trimestre est mauvais" },
           { id: "c", label: "Un redressement fiscal sur les produits financiers" },
           { id: "d", label: "Une baisse mécanique de son chiffre d'affaires" },
         ],
         correctOptionId: "a",
         explain:
-          "Le placement est bloqué : il ne paie rien pendant le tour. Si les décaissements dépassent ce qui reste en caisse, la banque ouvre un découvert, et vous payez d'un côté quatre fois ce que vous gagnez de l'autre.",
+          "Le placement est bloqué : il ne paie rien pendant le tour. Si les décaissements dépassent ce qui reste en caisse, la banque ouvre un découvert, et vous payez d'un côté six fois et demie ce que vous gagnez de l'autre.",
       },
       {
         id: "conseil_carnet_vide",
@@ -803,7 +803,7 @@ export const CONSEIL_SITUATIONS: SituationDef[] = [
       "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro.",
       "Attention : le placement est bloqué jusqu'au tour suivant. Il ne réglera rien de ce qui tombera d'ici là.",
       "Projetez le trimestre à venir avec le carnet TEL QU'IL EST : les salaires de vos consultants tomberont, les encaissements peut-être pas.",
-      "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte quatre fois ce que le placement rapporte : l'erreur n'est pas symétrique.",
+      "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte six fois et demie ce que le placement rapporte : l'erreur n'est pas symétrique.",
     ]),
     trigger: { detect: "idle_cash" },
     weight: 0.8,

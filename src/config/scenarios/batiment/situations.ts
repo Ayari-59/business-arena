@@ -1,4 +1,4 @@
-import { attachModelQuestions, hints, type DecisionLever, type SituationCategory, type SituationDef } from "../situation-kit";
+import { attachModelQuestions, hints, type SituationDef } from "../situation-kit";
 
 /**
  * Situations pédagogiques de MARTEL & FILS (bâtiment, rénovation).
@@ -56,16 +56,16 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
       {
         id: "seuil_m2",
         prompt:
-          "Avec 138 000 € de charges de structure décaissées par trimestre, à partir de quelle surface l'exercice devient-il bénéficiaire ?",
+          "Avec 168 000 € de charges de structure décaissées par trimestre, à partir de quelle surface l'exercice devient-il bénéficiaire ?",
         options: [
-          { id: "a", label: "Environ 810 m², soit un peu plus de la moitié de la capacité" },
+          { id: "a", label: "Environ 990 m², soit les deux tiers de la capacité" },
           { id: "b", label: "Environ 1 500 m², la capacité entière" },
           { id: "c", label: "Environ 360 m²" },
           { id: "d", label: "Environ 1 200 m², le rythme actuel" },
         ],
         correctOptionId: "a",
         explain:
-          "138 000 ÷ 170 ≈ 812 m². En dessous, chaque mètre carré manquant coûte 170 € de résultat ; au-dessus, il en rapporte autant.",
+          "168 000 ÷ 170 ≈ 988 m². En dessous, chaque mètre carré manquant coûte 170 € de résultat ; au-dessus, il en rapporte autant.",
       },
     ],
     modelRelevance: {
@@ -79,7 +79,7 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
       "Séparez ce qui suit la surface traitée de ce qui tombe quoi qu'il arrive.",
       "Les salaires des compagnons ne bougent pas d'un euro entre un trimestre chargé et un trimestre creux.",
       "Chaque mètre carré laisse 380 − 168 − 42 = 170 € pour la structure.",
-      "Seuil = 138 000 ÷ 170 ≈ 810 m². Comparez-le à votre capacité de 1 500 m².",
+      "Seuil = 168 000 ÷ 170 ≈ 990 m². Comparez-le à votre capacité de 1 500 m².",
       "Vous travaillez donc à 54 % de capacité rien que pour équilibrer. Tout ce qui est au-dessus part presque entièrement en résultat.",
     ]),
     trigger: { round: 1 },

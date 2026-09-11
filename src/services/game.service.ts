@@ -10,18 +10,26 @@ import {
   teams,
   users,
 } from "@/db/schema";
-import { scenarioByCode } from "@/config/scenarios/registry";
+import type { ScenarioVocabulary } from "@/config/scenarios/registry";
+import { resolveScenarioDefinition } from "@/services/scenario-source.service";
+import { lireSource, type DecisionSourceMap } from "@/config/decision-source";
 import {
   presetFromProfile,
   quizModeFromProfile,
   type QuizMode,
 } from "@/config/difficulty";
 import { validerNomEquipe } from "@/config/nom-equipe";
+import { PERSONALITY_LABELS, botPersonalityFromSeed } from "@/engine/bots";
+import {
+  missedSituationPolicyFromProfile,
+  type MissedSituationPolicy,
+} from "@/config/missed-situation";
 import {
   findUserTeam,
   readPendingEvents,
 } from "@/services/round-resolution.service";
 import { teamDisplayName } from "@/services/game-view.service";
+import { entitlementsForOrg } from "@/services/entitlements.service";
 
 // Re-exports depuis game-creation.service.ts pour compatibilité des consommateurs existants
 export {
@@ -124,6 +132,15 @@ export async function getGameKind(gameId: string): Promise<GameKind> {
   return ((game.difficultyProfile as { kind?: GameKind }).kind ?? "solo") as GameKind;
 }
 
+/** Le vocabulaire du secteur joué : c'est lui qui nomme prix et volume. */
+export async function getGameVocabulary(gameId: string): Promise<ScenarioVocabulary> {
+  const game = (await db.select().from(games).where(eq(games.id, gameId)))[0];
+  if (!game) throw new Error("Partie introuvable");
+  return (
+    await resolveScenarioDefinition((game.scenarioSnapshot as { code?: string } | null)?.code)
+  ).vocabulary;
+}
+
 // ---------------------------------------------------------------------------
 // Lecture : vues enseignant (§27)
 // ---------------------------------------------------------------------------
@@ -189,6 +206,61 @@ export async function setQuizMode(args: {
     .where(eq(games.id, args.gameId));
 }
 
+/**
+ * Fenêtre globale de jeu (planning) : la partie n'est jouable qu'entre ces deux
+ * instants. Chacun peut être null (pas de borne). L'ouverture doit précéder la
+ * fermeture. Le verrou par tour et l'étape de concours s'appliquent en plus.
+ */
+export async function setGameSchedule(args: {
+  gameId: string;
+  teacherId: string;
+  opensAt: Date | null;
+  closesAt: Date | null;
+}): Promise<void> {
+  const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
+  if (!game || game.createdBy !== args.teacherId) {
+    throw new Error("Partie introuvable");
+  }
+  if (args.opensAt && args.closesAt && args.opensAt.getTime() > args.closesAt.getTime()) {
+    throw new Error("L'ouverture doit précéder la fermeture.");
+  }
+  await db
+    .update(games)
+    .set({ opensAt: args.opensAt, closesAt: args.closesAt })
+    .where(eq(games.id, args.gameId));
+}
+
+/**
+ * Fenêtres par tour (planning fin) : chaque tour n'est jouable qu'entre son
+ * ouverture et son échéance. Chaque borne peut être null. Le verrou par tour se
+ * combine à la fenêtre globale de la partie et à celle de l'étape de concours :
+ * l'élève joue pendant l'intersection des fenêtres posées.
+ *
+ * On n'écrit que les tours cités (par leur index 1..N) et on ignore un index
+ * inconnu : la mise à jour est ciblée, un tour absent reste inchangé.
+ */
+export async function setRoundWindows(args: {
+  gameId: string;
+  teacherId: string;
+  windows: { index: number; opensAt: Date | null; deadline: Date | null }[];
+}): Promise<void> {
+  const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
+  if (!game || game.createdBy !== args.teacherId) {
+    throw new Error("Partie introuvable");
+  }
+  for (const w of args.windows) {
+    if (w.opensAt && w.deadline && w.opensAt.getTime() > w.deadline.getTime()) {
+      throw new Error(`Tour ${w.index} : l'ouverture doit précéder l'échéance.`);
+    }
+  }
+  for (const w of args.windows) {
+    await db
+      .update(rounds)
+      .set({ opensAt: w.opensAt, deadline: w.deadline })
+      .where(and(eq(rounds.gameId, args.gameId), eq(rounds.index, w.index)));
+  }
+}
+
 export interface TeacherGameView {
   gameId: string;
   joinCode: string | null;
@@ -199,12 +271,23 @@ export interface TeacherGameView {
   currentRound: number;
   roundsCount: number;
   roundDays: number;
+  /** Fenêtre globale de jeu (planning), en ISO ou null. */
+  opensAt: string | null;
+  closesAt: string | null;
+  /** Fenêtre de chaque tour (planning fin), triée par index. Dates en ISO ou null. */
+  rounds: { index: number; status: string; opensAt: string | null; deadline: string | null }[];
+  /** Freemium : la partie s'est arrêtée avant la fin du scénario, faute de licence. */
+  planCapped: boolean;
+  /** Freemium : l'export du relevé est-il ouvert (licence) ? Sinon on propose l'upsell. */
+  canExportGradebook: boolean;
   /** Secteur joué : titre du scénario et codes d'événements de SON deck. */
   scenarioCode: string;
   scenarioTitle: string;
   scenarioEventCodes: string[];
   /** Questions posées dans les situations de cette partie. */
   quizMode: QuizMode;
+  /** Politique des situations manquées (consultation seule / rattrapage 50 %). */
+  missedPolicy: MissedSituationPolicy;
   /**
    * Réglages figés à la création, que l'enseignant ne peut plus consulter
    * ailleurs : le niveau n'était lisible que côté élève, et la case du monde
@@ -216,12 +299,25 @@ export interface TeacherGameView {
     teamId: string;
     name: string;
     controller: "human" | "bot";
+    /** Personnalité du bot (réservée à l'enseignant) ; null pour une équipe humaine. */
+    botPersonality: string | null;
     playerNames: string[];
     hasSubmitted: boolean;
+    /** Source des pivots (prix, volume) des décisions validées ce tour ; null sans validation. */
+    decisionSource: DecisionSourceMap | null;
+    /** La justification écrite par l'équipe pour ce tour ; null si vide ou non validée. */
+    justification: string | null;
     lastNetIncome: number | null;
     lastNetTreasury: number | null;
   }[];
-  ranking: { name: string; cumulativeNetIncome: number; rank: number; bpi: number }[];
+  ranking: {
+    name: string;
+    cumulativeNetIncome: number;
+    rank: number;
+    bpi: number;
+    /** Entreprise en cessation de paiements caractérisée (V2 couche 2, #5). */
+    defaillant: boolean;
+  }[];
 }
 
 export async function getTeacherGameView(
@@ -253,7 +349,7 @@ export async function getTeacherGameView(
     : [];
 
   const rankingRows = await db.select().from(gameRankings).where(eq(gameRankings.gameId, gameId));
-  const snapshotDefinition = scenarioByCode(
+  const snapshotDefinition = await resolveScenarioDefinition(
     (game.scenarioSnapshot as { code?: string } | null)?.code,
   );
 
@@ -272,6 +368,20 @@ export async function getTeacherGameView(
     currentRound: game.currentRound,
     roundsCount: (game.scenarioSnapshot as { roundsCount: number }).roundsCount,
     roundDays: (game.scenarioSnapshot as { roundDays: number }).roundDays,
+    opensAt: game.opensAt ? game.opensAt.toISOString() : null,
+    closesAt: game.closesAt ? game.closesAt.toISOString() : null,
+    planCapped: Boolean(
+      (game.difficultyProfile as { planCapped?: boolean } | null)?.planCapped,
+    ),
+    canExportGradebook: (await entitlementsForOrg(game.organizationId)).gradebookExport,
+    rounds: [...gameRounds]
+      .sort((a, b) => a.index - b.index)
+      .map((r) => ({
+        index: r.index,
+        status: r.status,
+        opensAt: r.opensAt ? r.opensAt.toISOString() : null,
+        deadline: r.deadline ? r.deadline.toISOString() : null,
+      })),
     scenarioCode: snapshotDefinition.code,
     scenarioTitle: snapshotDefinition.title,
     // Le deck vient du SNAPSHOT, pas de la version courante du scénario :
@@ -280,6 +390,10 @@ export async function getTeacherGameView(
       (game.scenarioSnapshot as { events?: { code: string }[] }).events ?? []
     ).map((e) => e.code),
     quizMode: quizModeFromProfile(game.difficultyProfile),
+    missedPolicy: missedSituationPolicyFromProfile(
+      game.difficultyProfile,
+      (game.difficultyProfile as { kind?: string } | null)?.kind,
+    ),
     difficulty: (() => {
       const preset = presetFromProfile(game.difficultyProfile);
       return { level: preset.level, name: preset.name, hintMaxLevel: preset.hintMaxLevel };
@@ -292,10 +406,19 @@ export async function getTeacherGameView(
         teamId: t.id,
         name: teamDisplayName(t.name),
         controller: t.controller,
+        botPersonality:
+          t.controller === "bot"
+            ? PERSONALITY_LABELS[botPersonalityFromSeed(Number(game.seed), t.botProfile ?? "balanced")]
+            : null,
         playerNames: memberships.filter((m) => m.teamId === t.id).map((m) => m.name),
         hasSubmitted:
           t.controller === "bot" ||
           submitted.some((d) => d.teamId === t.id && d.status === "validated"),
+        decisionSource: lireSource(
+          submitted.find((d) => d.teamId === t.id && d.status === "validated")?.decisionSource,
+        ),
+        justification:
+          submitted.find((d) => d.teamId === t.id && d.status === "validated")?.justification ?? null,
         lastNetIncome: last ? Number(last.netIncome) : null,
         lastNetTreasury: last ? Number(last.netTreasury) : null,
       };
@@ -308,6 +431,7 @@ export async function getTeacherGameView(
         ),
         rank: r.rank,
         bpi: Number(r.bpi),
+        defaillant: Boolean((r.detail as { defaillant?: boolean })?.defaillant),
       }))
       .sort((a, b) => a.rank - b.rank),
   };

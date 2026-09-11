@@ -4,19 +4,37 @@ import { getSession } from "@/lib/session";
 import { getTeacherGames } from "@/services/game.service";
 import { getOrganizerCompetitions } from "@/services/competition.service";
 import { getStaffContext } from "@/services/admin.service";
-import { createClassGameAction, createCompetitionAction, logoutAction } from "./actions";
+import { createClassGameAction, logoutAction, logoutEverywhereAction } from "./actions";
 import { periodLabel } from "@/config/scenarios/periodicity";
+import { compter } from "@/lib/format";
 import { DEFAULT_QUIZ_MODE, DIFFICULTY_PRESETS, QUIZ_MODES } from "@/config/difficulty";
 import {
   DEFAULT_SCENARIO_CODE,
-  SCENARIOS,
+  SCENARIO_CHOICES,
+  familyOf,
   SECTOR_LABELS,
   economicDefaults,
 } from "@/config/scenarios/registry";
+import { listScenariosByAuthor } from "@/services/scenario-editor.service";
+import { resolveScenarioDefinition } from "@/services/scenario-source.service";
+import { CompetitionCreateForm } from "@/components/competition-create-form";
+import { GuardedForm } from "@/components/guarded-action";
 import { EconomicParams } from "@/components/economic-params";
 import { SubmitButton } from "@/components/submit-button";
+import { FormPendingProgress } from "@/components/long-action-progress";
+import { ATTENTES } from "@/config/cloture";
 
 export const dynamic = "force-dynamic";
+
+/**
+ * Un scénario à famille se joue en un produit ou en gamme selon le niveau
+ * choisi juste à côté : le libellé du choix le dit, pour que l'enseignant
+ * n'aille pas chercher une case « gamme » qui n'existe pas.
+ */
+function familleNote(code: string): string {
+  const famille = familyOf(code);
+  return famille ? ` (${famille.monoLabel} jusqu'au niveau ${famille.gammeFromLevel - 1}, la gamme dès le niveau ${famille.gammeFromLevel})` : "";
+}
 
 export default async function TeacherDashboard({
   searchParams,
@@ -31,14 +49,37 @@ export default async function TeacherDashboard({
   const staff = await getStaffContext(session.userId);
   const isOrgAdmin = staff?.organizations.some((o) => o.role === "org_admin") ?? false;
 
+  // Scénarios enseignants PUBLIÉS de ce prof : lançables comme un secteur
+  // intégré. Un brouillon reste privé à l'éditeur tant qu'il n'est pas publié.
+  const mesScenarios = await listScenariosByAuthor(session.userId);
+  const scenariosPublies = await Promise.all(
+    mesScenarios
+      .filter((s) => s.status === "published")
+      .map(async (s) => {
+        const def = await resolveScenarioDefinition(s.code);
+        return {
+          code: s.code,
+          label: `★ ${def.title}`,
+          unit: def.vocabulary.unit,
+          defaults: economicDefaults(def),
+        };
+      }),
+  );
+
   return (
-    <main className="mx-auto max-w-4xl space-y-8 p-6">
+    <main id="main" className="mx-auto max-w-4xl space-y-8 px-2 py-6 sm:p-6">
       <header className="flex items-end justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Espace enseignant</p>
           <h1 className="text-2xl font-bold">Mes parties</h1>
         </div>
         <div className="flex items-center gap-4">
+          <Link
+            href="/teacher/scenarios"
+            className="text-xs text-amber-300 underline-offset-4 hover:underline"
+          >
+            Mes scénarios
+          </Link>
           <Link
             href="/teacher/usage"
             className="text-xs text-amber-300 underline-offset-4 hover:underline"
@@ -56,8 +97,16 @@ export default async function TeacherDashboard({
             </Link>
           ) : null}
           <form action={logoutAction}>
-            <button className="text-xs text-slate-500 underline hover:text-slate-300">
+            <button className="text-xs text-slate-400 underline hover:text-slate-300">
               Se déconnecter
+            </button>
+          </form>
+          <form action={logoutEverywhereAction}>
+            <button
+              className="text-xs text-slate-400 underline hover:text-slate-300"
+              title="Ferme aussi les sessions ouvertes sur d'autres appareils"
+            >
+              Se déconnecter partout
             </button>
           </form>
         </div>
@@ -66,29 +115,37 @@ export default async function TeacherDashboard({
       {echec ? (
         <p
           role="alert"
-          className="rounded-xl border border-red-400/30 bg-red-950/30 px-4 py-3 text-sm text-red-200"
+          className="rounded-xl border border-red-400/30 bg-red-950/30 px-1.5 py-2.5 sm:px-4 sm:py-3 text-sm text-red-200"
         >
           La partie n&apos;a pas été créée. {echec}
         </p>
       ) : null}
 
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
+      <section className="rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-6">
         <h2 className="text-sm font-semibold text-slate-200">Créer une partie</h2>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-slate-400">
           Vous ne savez pas quels réglages prendre ?{" "}
-          <Link href="/ateliers" className="text-amber-300 underline-offset-4 hover:underline">
+          <Link href="/animations" className="text-amber-300 underline-offset-4 hover:underline">
             Les ateliers professionnels
           </Link>{" "}
           donnent un déroulé de plusieurs séances avec les réglages qui vont avec.
         </p>
-        <form action={createClassGameAction} className="mt-4 grid gap-4 sm:grid-cols-3">
+        <GuardedForm
+          action={createClassGameAction}
+          label="création de partie"
+          timeoutMs={30_000}
+          className="mt-4 grid gap-4 sm:grid-cols-3"
+        >
           <EconomicParams
-            scenarios={SCENARIOS.map((d) => ({
-              code: d.code,
-              label: `${SECTOR_LABELS[d.sector]} · ${d.title}`,
-              unit: d.vocabulary.unit,
-              defaults: economicDefaults(d),
-            }))}
+            scenarios={[
+              ...SCENARIO_CHOICES.map((d) => ({
+                code: d.code,
+                label: `${d.icon} ${SECTOR_LABELS[d.sector]} · ${d.title}${familleNote(d.code)}`,
+                unit: d.vocabulary.unit,
+                defaults: economicDefaults(d),
+              })),
+              ...scenariosPublies,
+            ]}
             defaultCode={DEFAULT_SCENARIO_CODE}
           />
 
@@ -150,10 +207,10 @@ export default async function TeacherDashboard({
                 </option>
               ))}
             </select>
-            <span className="mt-1 block text-xs text-slate-500">
+            <span className="mt-1 block text-xs text-slate-400">
               Une partie se raccourcit pour tenir dans un nombre de séances donné. Elle ne
               s&apos;allonge pas : les situations et les événements d&apos;un secteur sont écrits
-              pour un nombre de tours, au delà les équipes joueraient sans matière.
+              pour un nombre de tours, au-delà, les équipes joueraient sans matière.
             </span>
           </label>
           <label className="block sm:col-span-3">
@@ -184,7 +241,7 @@ export default async function TeacherDashboard({
               <span className="text-sm font-medium text-slate-200">
                 🌍 Monde variable · chaque partie diffère
               </span>
-              <span className="mt-0.5 block text-xs text-slate-500">
+              <span className="mt-0.5 block text-xs text-slate-400">
                 Croissance des segments, saisonnalité, événements et commandes exceptionnelles
                 varient d&apos;une partie à l&apos;autre (déterministe par partie : toutes vos
                 équipes jouent le même monde). Décochez pour le scénario classique, identique
@@ -209,88 +266,40 @@ export default async function TeacherDashboard({
                   />
                   <span>
                     <span className="text-sm font-medium text-slate-200">{m.name}</span>
-                    <span className="mt-0.5 block text-xs text-slate-500">{m.help}</span>
+                    <span className="mt-0.5 block text-xs text-slate-400">{m.help}</span>
                   </span>
                 </label>
               ))}
             </div>
-            <p className="mt-2 text-[11px] leading-relaxed text-slate-600">
+            <p className="mt-2 text-xs leading-relaxed text-slate-600">
               Le réglage se modifie ensuite à tout moment depuis la partie. Les situations déjà
               débriefées gardent le score obtenu sous l&apos;ancien réglage.
             </p>
           </fieldset>
 
+          <FormPendingProgress label={ATTENTES.creationPartie} className="sm:col-span-3" />
           <SubmitButton
             pendingLabel="Création de la partie et des équipes…"
             className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300 sm:col-span-3"
           >
             Créer la partie et obtenir le code d&apos;invitation
           </SubmitButton>
-        </form>
-        <p className="mt-2 text-xs text-slate-500">
+        </GuardedForm>
+        <p className="mt-2 text-xs text-slate-400">
           Le nombre total d&apos;entreprises (équipes + bots) est plafonné à 8. Les élèves
           rejoignent avec le code, répartis automatiquement dans les équipes. Le niveau règle
           les décisions ouvertes, le plafond d&apos;indices et la fréquence des événements.
         </p>
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-6">
+      <section className="rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-6">
         <h2 className="text-sm font-semibold text-slate-200">
           Organiser un concours · Business Arena Championship
         </h2>
-        <form action={createCompetitionAction} className="mt-4 grid gap-4 sm:grid-cols-2">
-          <label className="block sm:col-span-2">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Nom du concours
-            </span>
-            <input
-              name="name"
-              required
-              maxLength={80}
-              placeholder="Championnat BTS MCO 2026"
-              className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm"
-            />
-          </label>
-          <label className="block">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Équipes par groupe
-            </span>
-            <select name="groupSize" defaultValue={3} className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm">
-              {[2, 3, 4, 5, 6].map((n) => (
-                <option key={n} value={n}>{n} équipes par partie</option>
-              ))}
-            </select>
-          </label>
-          <label className="block">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Qualifiés par groupe
-            </span>
-            <select name="advancePerGroup" defaultValue={1} className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm">
-              {[1, 2, 3].map((n) => (
-                <option key={n} value={n}>{n} par groupe → finale</option>
-              ))}
-            </select>
-          </label>
-          <label className="block sm:col-span-2">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Périodicité
-            </span>
-            <select name="periodicity" defaultValue="quarter" className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm">
-              <option value="month">Un mois par tour</option>
-              <option value="quarter">Un trimestre par tour</option>
-              <option value="year">Une année par tour</option>
-            </select>
-          </label>
-          <SubmitButton
-            pendingLabel="Ouverture du concours…"
-            className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300 sm:col-span-2"
-          >
-            Créer le concours et ouvrir les inscriptions
-          </SubmitButton>
-        </form>
-        <p className="mt-2 text-xs text-slate-500">
+        <CompetitionCreateForm />
+        <p className="mt-2 text-xs text-slate-400">
           Les équipes s&apos;inscrivent avec le code sur /compete. Mode compétition :
-          décisions verrouillées après validation, indices limités (§25).
+          décisions verrouillées après validation, indices limités.
         </p>
         {competitions.length > 0 ? (
           <ul className="mt-4 space-y-2">
@@ -298,14 +307,14 @@ export default async function TeacherDashboard({
               <li key={c.competitionId}>
                 <Link
                   href={`/teacher/competitions/${c.competitionId}`}
-                  className="flex items-center justify-between rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-sm transition hover:border-amber-400/40"
+                  className="flex items-center justify-between rounded-xl border border-white/10 bg-slate-950 px-1.5 py-2.5 sm:px-4 sm:py-3 text-sm transition hover:border-amber-400/40"
                 >
                   <span>
                     <span className="font-mono text-amber-300">{c.joinCode}</span>
                     <span className="ml-3 text-slate-300">{c.name}</span>
                   </span>
                   <span className="text-slate-400">
-                    {c.entriesCount} équipes ·{" "}
+                    {compter(c.entriesCount, "équipe")} ·{" "}
                     {c.status === "registration"
                       ? "inscriptions"
                       : c.status === "running"
@@ -321,17 +330,17 @@ export default async function TeacherDashboard({
 
       <section className="space-y-3">
         {games.length === 0 ? (
-          <p className="text-sm text-slate-500">Aucune partie pour l&apos;instant.</p>
+          <p className="text-sm text-slate-400">Aucune partie pour l&apos;instant.</p>
         ) : (
           games.map((g) => (
             <Link
               key={g.gameId}
               href={`/teacher/games/${g.gameId}`}
-              className="flex items-center justify-between rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-sm transition hover:border-amber-400/40"
+              className="flex items-center justify-between rounded-xl border border-white/10 bg-slate-900 px-1.5 py-2.5 sm:px-4 sm:py-3 text-sm transition hover:border-amber-400/40"
             >
               <span>
                 <span className="font-mono text-amber-300">{g.joinCode}</span>
-                <span className="ml-3 text-slate-300">{g.teamsCount} équipes</span>
+                <span className="ml-3 text-slate-300">{compter(g.teamsCount, "équipe")}</span>
               </span>
               <span className="text-slate-400">
                 {g.status === "finished"

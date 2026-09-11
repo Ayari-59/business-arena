@@ -1,5 +1,7 @@
 import { z } from "zod";
 import type { EngineScenarioConfig } from "@/engine/types";
+import { mapGammeSegments } from "@/engine/gamme";
+import { DEFAULT_RSE_CONFIG } from "@/engine/rse";
 
 /**
  * Niveaux de difficulté (doc 08 §2, §20) : la difficulté n'est PAS un entier
@@ -29,6 +31,13 @@ export interface DifficultyPreset {
     /** Investissement capacitaire — doc 08 : dès ARBITRAGE. */
     investment: boolean;
     /**
+     * Engagement RSE (Lot 2) — le levier « payer maintenant, gagner plus tard ».
+     * Ouvert dès ARBITRAGE : c'est un arbitrage inter-temporel qui suppose déjà
+     * de savoir lire une marge et une trésorerie, et il ne prend son sens que
+     * sur un horizon assez long (≥ 5-6 tours).
+     */
+    rse: boolean;
+    /**
      * Placement du surplus de trésorerie. Réservé aux niveaux hauts : c'est
      * l'arbitrage inverse du découvert, et il ne se pose qu'à quelqu'un qui
      * sait déjà lire une trésorerie. Placer trop, c'est payer un découvert à
@@ -42,6 +51,13 @@ export interface DifficultyPreset {
      * indices, ce qui n'est pas ouvrir un cran.
      */
     dividend: boolean;
+    /**
+     * Recherche et développement : lancer une référence à développer, élever
+     * le niveau technique. Un investissement immatériel qui coûte maintenant
+     * et rapporte plus tard : ouvert avec l'investissement, au niveau
+     * Arbitrage. Fermé, les références à développer sont livrées prêtes.
+     */
+    rd: boolean;
   };
   /** Multiplicateur des probabilités d'événements aléatoires (les 0 restent 0). */
   eventProbabilityMultiplier: number;
@@ -54,7 +70,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     name: "Découverte",
     tagline: "Prix, production, marketing : l'essentiel, avec tous les indices.",
     hintMaxLevel: 5,
-    decisions: { quality: false, maintenance: false, finance: false, insurance: false, hr: false, investment: false, placement: false, dividend: false },
+    decisions: { quality: false, maintenance: false, finance: false, insurance: false, hr: false, investment: false, rse: false, placement: false, dividend: false, rd: false },
     eventProbabilityMultiplier: 0.5,
   },
   {
@@ -63,7 +79,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     name: "Gestion",
     tagline: "Qualité et maintenance entrent en jeu.",
     hintMaxLevel: 5,
-    decisions: { quality: true, maintenance: true, finance: false, insurance: false, hr: false, investment: false, placement: false, dividend: false },
+    decisions: { quality: true, maintenance: true, finance: false, insurance: false, hr: false, investment: false, rse: false, placement: false, dividend: false, rd: false },
     eventProbabilityMultiplier: 0.75,
   },
   {
@@ -72,7 +88,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     name: "Pilotage",
     tagline: "Financement et assurance : la trésorerie se pilote. Indices limités.",
     hintMaxLevel: 3,
-    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: false, investment: false, placement: false, dividend: false },
+    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: false, investment: false, rse: false, placement: false, dividend: false, rd: false },
     eventProbabilityMultiplier: 1,
   },
   {
@@ -81,7 +97,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     name: "Arbitrage",
     tagline: "Les aléas frappent plus souvent : anticipez.",
     hintMaxLevel: 3,
-    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: true, investment: true, placement: false, dividend: false },
+    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: true, investment: true, rse: true, placement: false, dividend: false, rd: true },
     eventProbabilityMultiplier: 1.25,
   },
   {
@@ -90,7 +106,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     name: "Stratégie",
     tagline: "Deux indices, pas un de plus, et un marché nerveux.",
     hintMaxLevel: 2,
-    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: true, investment: true, placement: true, dividend: false },
+    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: true, investment: true, rse: true, placement: true, dividend: false, rd: true },
     eventProbabilityMultiplier: 1.5,
   },
   {
@@ -100,7 +116,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     tagline:
       "Affectation du résultat, aucun indice, événements doublés : vous répondez aussi aux associés.",
     hintMaxLevel: 0,
-    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: true, investment: true, placement: true, dividend: true },
+    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: true, investment: true, rse: true, placement: true, dividend: true, rd: true },
     eventProbabilityMultiplier: 2,
   },
 ];
@@ -114,7 +130,7 @@ export const LEGACY_PRESET: DifficultyPreset = {
   name: "Pilotage",
   tagline: "",
   hintMaxLevel: 5,
-  decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: false, investment: false, placement: false, dividend: false },
+  decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: false, investment: false, rse: false, placement: false, dividend: false, rd: false },
   eventProbabilityMultiplier: 1,
 };
 
@@ -212,6 +228,14 @@ export const economicOverridesSchema = z.object({
   otherVariableCostPerUnit: z.number().min(0).max(500).optional(),
   /** Taux de rebuts de base (active les coûts de la non-qualité, 0-15 %). */
   baseDefectRate: z.number().min(0).max(0.15).optional(),
+  /**
+   * RSE (Lot 2) — force de l'effet image → demande. Facteur d'attractivité au
+   * point d'équilibre ≈ 1 + valeur × ln(1 + budget/échelle marketing). 0 = la
+   * RSE ne fait plus rien sur la demande (l'indice reste mesuré).
+   */
+  rseImageDemandSensitivity: z.number().min(0).max(2).optional(),
+  /** RSE (Lot 2) — réduction maximale du taux de rebuts par le « process propre » (0-90 %). */
+  rseCleanDefectReductionMax: z.number().min(0).max(0.9).optional(),
 });
 
 export type EconomicOverrides = z.infer<typeof economicOverridesSchema>;
@@ -248,28 +272,37 @@ export function applyEconomicOverrides(
 ): EngineScenarioConfig {
   if (!overrides || Object.values(overrides).every((v) => v === undefined)) return scenario;
   const treasury = scenario.treasury;
+  // Délai client : appliqué aux seuls segments qui font DÉJÀ crédit. Un
+  // particulier qui paie en caisse continue de payer en caisse — sans quoi
+  // le réglage effacerait la distinction que le scénario met en scène. En
+  // gamme, la règle vaut pour le marché de chaque produit.
+  const delai = overrides.customerPaymentDelayDays;
+  const avecDelais =
+    delai === undefined
+      ? scenario
+      : mapGammeSegments(scenario, (s) =>
+          s.paymentDelayDays > 0 ? { ...s, paymentDelayDays: delai } : s,
+        );
   return {
-    ...scenario,
-    market: {
-      ...scenario.market,
-      // Délai client : appliqué aux seuls segments qui font DÉJÀ crédit. Un
-      // particulier qui paie en caisse continue de payer en caisse — sans quoi
-      // le réglage effacerait la distinction que le scénario met en scène.
-      segments:
-        overrides.customerPaymentDelayDays === undefined
-          ? scenario.market.segments
-          : scenario.market.segments.map((s) =>
-              s.paymentDelayDays > 0
-                ? { ...s, paymentDelayDays: overrides.customerPaymentDelayDays! }
-                : s,
-            ),
-    },
+    ...avecDelais,
     product: {
       ...scenario.product,
       materialCostPerUnit: overrides.materialCostPerUnit ?? scenario.product.materialCostPerUnit,
       otherVariableCostPerUnit:
         overrides.otherVariableCostPerUnit ?? scenario.product.otherVariableCostPerUnit,
     },
+    // Gamme : la surcharge des coûts s'applique à CHAQUE produit. Clé émise
+    // seulement si le scénario en porte une (mono-produit inchangé).
+    ...(scenario.products
+      ? {
+          products: scenario.products.map((p) => ({
+            ...p,
+            materialCostPerUnit: overrides.materialCostPerUnit ?? p.materialCostPerUnit,
+            otherVariableCostPerUnit:
+              overrides.otherVariableCostPerUnit ?? p.otherVariableCostPerUnit,
+          })),
+        }
+      : {}),
     finance: {
       ...scenario.finance,
       taxRate: overrides.taxRate ?? scenario.finance.taxRate,
@@ -296,6 +329,23 @@ export function applyEconomicOverrides(
         }
       : {}),
     fixedCostsPerRound: overrides.fixedCostsPerRound ?? scenario.fixedCostsPerRound,
+    // RSE (Lot 2) : les réglages écrasent le bloc `rse` du scénario (créé à
+    // partir des défauts s'il est absent). Les grandeurs non fournies gardent
+    // leur valeur ; on ne touche qu'aux deux exposées à l'enseignant.
+    ...(overrides.rseImageDemandSensitivity !== undefined ||
+    overrides.rseCleanDefectReductionMax !== undefined
+      ? {
+          rse: {
+            ...(scenario.rse ?? DEFAULT_RSE_CONFIG),
+            imageDemandSensitivity:
+              overrides.rseImageDemandSensitivity ??
+              (scenario.rse ?? DEFAULT_RSE_CONFIG).imageDemandSensitivity,
+            cleanDefectReductionMax:
+              overrides.rseCleanDefectReductionMax ??
+              (scenario.rse ?? DEFAULT_RSE_CONFIG).cleanDefectReductionMax,
+          },
+        }
+      : {}),
     // Non-qualité : l'activer à la création crée le bloc qualityCosts
     // (sensibilité aux retours externes : donnée ci-dessous, pas du dur).
     ...(overrides.baseDefectRate !== undefined && overrides.baseDefectRate > 0
@@ -306,6 +356,109 @@ export function applyEconomicOverrides(
           },
         }
       : {}),
+  };
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * PONDÉRATIONS DU BPI, PARAMÉTRABLES PAR L'ENSEIGNANT (V2 couche 2, chantier #3).
+ *
+ * Hors moteur : le module de scoring (src/scoring/bpi.ts) reste pur et ignore
+ * ces réglages ; on ne fait que réécrire `scenario.scoring.weights` AVANT de
+ * figer le snapshot, exactement comme les paramètres économiques. Tout le
+ * scoring aval (tour et classement) lit alors les poids surchargés sans le
+ * savoir.
+ *
+ * L'enseignant pondère les SIX dimensions affichées du BPI v2. En interne, le
+ * scénario porte sept poids : « pilotage » y est la SOMME de `strategy` +
+ * `operational`, et le scoring v2 ne lit jamais que cette somme. On répartit
+ * donc « pilotage » entre les deux en conservant le ratio d'origine — neutre
+ * pour le calcul, et le schéma (somme = 1) reste satisfait.
+ * ──────────────────────────────────────────────────────────────────────────── */
+export const scoringWeightOverridesSchema = z.object({
+  economic: z.number().min(0).max(1).optional(),
+  financial: z.number().min(0).max(1).optional(),
+  commercial: z.number().min(0).max(1).optional(),
+  profitability: z.number().min(0).max(1).optional(),
+  pilotage: z.number().min(0).max(1).optional(),
+  decisionMastery: z.number().min(0).max(1).optional(),
+});
+
+export type ScoringWeightOverrides = z.infer<typeof scoringWeightOverridesSchema>;
+
+/** Les six dimensions pondérables du BPI v2, dans l'ordre d'affichage. */
+export const SCORING_WEIGHT_DIMENSIONS = [
+  "economic",
+  "financial",
+  "commercial",
+  "profitability",
+  "pilotage",
+  "decisionMastery",
+] as const;
+
+/** Validation champ par champ : une valeur hors bornes est ignorée. */
+export function sanitizeScoringWeightOverrides(
+  raw: ScoringWeightOverrides | undefined,
+): ScoringWeightOverrides {
+  if (!raw) return {};
+  const out: Record<string, unknown> = {};
+  for (const [key, fieldSchema] of Object.entries(scoringWeightOverridesSchema.shape)) {
+    const value = (raw as Record<string, unknown>)[key];
+    if (value === undefined) continue;
+    const parsed = (fieldSchema as z.ZodType).safeParse(value);
+    if (parsed.success && parsed.data !== undefined) out[key] = parsed.data;
+  }
+  return out as ScoringWeightOverrides;
+}
+
+/**
+ * Réécrit les pondérations du BPI depuis les réglages de l'enseignant. Les
+ * dimensions non fournies gardent la valeur du scénario. Le résultat est
+ * TOUJOURS renormalisé (somme = 1, exigée par le schéma de scoring) : les
+ * réglages expriment un poids RELATIF, jamais une valeur absolue. Une somme
+ * nulle (tout à zéro) est ignorée — retour au scénario.
+ */
+export function applyScoringWeightOverrides(
+  scenario: EngineScenarioConfig,
+  overrides: ScoringWeightOverrides | undefined,
+): EngineScenarioConfig {
+  if (!overrides || Object.values(overrides).every((v) => v === undefined)) return scenario;
+  const base = scenario.scoring.weights;
+  const basePilotage = base.strategy + base.operational;
+  const six = {
+    economic: overrides.economic ?? base.economic,
+    financial: overrides.financial ?? base.financial,
+    commercial: overrides.commercial ?? base.commercial,
+    profitability: overrides.profitability ?? base.profitability,
+    pilotage: overrides.pilotage ?? basePilotage,
+    decisionMastery: overrides.decisionMastery ?? base.decisionMastery,
+  };
+  const sum =
+    six.economic +
+    six.financial +
+    six.commercial +
+    six.profitability +
+    six.pilotage +
+    six.decisionMastery;
+  if (sum <= 0) return scenario;
+  const k = 1 / sum;
+  // Répartition stratégie / opérationnel : conserve le ratio d'origine (le
+  // scoring v2 n'en lit que la somme, via « pilotage »).
+  const stratShare = basePilotage > 0 ? base.strategy / basePilotage : 0.5;
+  const pilotageW = six.pilotage * k;
+  return {
+    ...scenario,
+    scoring: {
+      ...scenario.scoring,
+      weights: {
+        economic: six.economic * k,
+        financial: six.financial * k,
+        commercial: six.commercial * k,
+        profitability: six.profitability * k,
+        strategy: pilotageW * stratShare,
+        operational: pilotageW * (1 - stratShare),
+        decisionMastery: six.decisionMastery * k,
+      },
+    },
   };
 }
 

@@ -2,6 +2,71 @@
 @import "./theme-clair.css";
 
 /* ---------------------------------------------------------------------------
+ * Identité « Nuit & Laiton ».
+ *
+ * Deux voix typographiques — un serif de caractère pour les grands titres, une
+ * grotesque nette pour le reste — et un accent LAITON qui prend la place de
+ * l'amber par défaut de Tailwind. Comme les utilitaires lisent ces variables,
+ * l'accent change sur TOUT le site (boutons, liens actifs, halos, chiffres)
+ * sans qu'aucune page soit touchée. Le fond sombre vire au bleu nuit encré.
+ *
+ * Le thème clair (theme-clair.css) est GÉNÉRÉ et porte l'amber d'origine : on
+ * recouvre ici ses quelques pas de laiton, pour que l'accent reste cohérent
+ * d'un thème à l'autre sans avoir à régénérer le fichier.
+ * ------------------------------------------------------------------------- */
+@theme {
+  --font-sans:
+    var(--font-brand-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, sans-serif;
+  --font-display:
+    var(--font-brand-display), ui-serif, Georgia, "Times New Roman", serif;
+
+  /* Accent laiton (thème sombre) : l'amber devient un or patiné. */
+  --color-amber-200: #f0dca8;
+  --color-amber-300: #e7cd8b;
+  --color-amber-400: #d8b45c;
+  --color-amber-500: #c39a34;
+  --color-amber-600: #a67f22;
+  --color-amber-700: #86641a;
+  --color-amber-950: #241b06;
+
+  /* Bleu nuit encré : les deux surfaces les plus sombres se teintent de bleu. */
+  --color-slate-950: #070c1a;
+  --color-slate-900: #0e1526;
+}
+
+/* Les grands titres parlent avec le serif ; le corps reste en grotesque, et
+   un halo laiton fixe pose une profondeur discrète sous toute la page. */
+body {
+  font-family: var(--font-sans);
+  background-image: radial-gradient(
+    60rem 40rem at 50% -12rem,
+    color-mix(in oklab, var(--color-amber-500) 12%, transparent),
+    transparent 70%
+  );
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
+h1 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+/* Laiton du thème clair : pas sombres pour l'encre et les boutons, pas hauts
+   pour les fonds teintés — dans le sens inversé du thème clair généré. */
+[data-theme="clair"] {
+  --color-amber-200: #8a6a16;
+  --color-amber-300: #6b5312;
+  --color-amber-400: #5c470f;
+  --color-amber-500: #7a5f14;
+  --color-amber-600: #6b5312;
+  --color-amber-700: #5c470f;
+  --color-amber-950: #f6efdb;
+}
+
+/* ---------------------------------------------------------------------------
  * Les thèmes.
  *
  * Le site en propose deux, un sombre et un clair. Le sombre n'a pas de bloc :
@@ -27,6 +92,20 @@
 
 [data-theme="clair"] .logo-arena {
   background-image: url("/brand/logo-light.svg");
+}
+
+/* ---------------------------------------------------------------------------
+ * « ARENA » en pied de page : un ambre atténué à 70 % sur fond sombre, qui
+ * lisait à 5,2 pour 1. Le même voile sur fond clair tombait à 3,9 : sous le
+ * seuil AA, et le seul texte que le thème clair dégradait. Sur fond clair,
+ * l'ambre du thème (déjà un laiton sombre) s'écrit plein.
+ * ------------------------------------------------------------------------- */
+.accent-arena {
+  color: rgb(251 191 36 / 0.7);
+}
+
+[data-theme="clair"] .accent-arena {
+  color: var(--color-amber-400);
 }
 
 /* ---------------------------------------------------------------------------
@@ -64,6 +143,28 @@
   position: absolute;
   inset: 0;
   backface-visibility: hidden;
+}
+
+/* Barre de progression indéterminée des actions longues (clôture, création). */
+.barre-indeterminee {
+  animation: barre-indeterminee 1.4s ease-in-out infinite;
+}
+
+@keyframes barre-indeterminee {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .barre-indeterminee {
+    animation: none;
+    width: 100%;
+    opacity: 0.6;
+  }
 }
 
 .card-back {

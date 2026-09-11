@@ -4,11 +4,28 @@ import { getTeacherGameView } from "@/services/game.service";
 import { getGameGradeSheet, getTeacherPedagogyView } from "@/services/pedagogy.service";
 import { formatEuro } from "@/lib/format";
 import { periodLabel } from "@/config/scenarios/periodicity";
-import { closeRoundAction, setQuizModeAction } from "../../actions";
+import { setMissedPolicyAction, setQuizModeAction } from "../../actions";
 import { QUIZ_MODES } from "@/config/difficulty";
+import { estParDefaut } from "@/config/decision-source";
+import { MISSED_POLICY_LABELS, MISSED_POLICY_HELP } from "@/config/missed-situation";
 import { CardDeck } from "@/components/card-deck";
+import { CloseRoundForm } from "@/components/close-round-form";
 import { SubmitButton } from "@/components/submit-button";
+import { GuardedForm } from "@/components/guarded-action";
 import { RoundStatusPoller } from "@/components/round-status-poller";
+import { setGameScheduleAction, setRoundWindowsAction } from "../../actions";
+import { utcToParisLocalInput } from "@/lib/paris-time";
+import { JustificationsReview } from "@/components/justifications-review";
+import { entitlementsForUser } from "@/services/entitlements.service";
+import { resolveAiSurface } from "@/services/ai.service";
+
+/** Libellé court de l'état d'un tour, pour le tableau du planning fin. */
+const ROUND_STATUS_LABEL: Record<string, string> = {
+  pending: "à venir",
+  open: "en cours",
+  resolving: "en calcul",
+  resolved: "clos",
+};
 
 export const dynamic = "force-dynamic";
 
@@ -27,12 +44,16 @@ export default async function TeacherGamePage({
 
   const finished = view.status === "finished";
   const humanTeams = view.teams.filter((t) => t.controller === "human");
-  const allSubmitted = humanTeams.every((t) => t.hasSubmitted);
   const submittedCount = humanTeams.filter((t) => t.hasSubmitted).length;
-  const closeAction = closeRoundAction.bind(null, view.gameId);
+  const defaillantes = view.ranking.filter((row) => row.defaillant);
+
+  // Synthèse IA des justifications (facultative) : droit du compte + réglage
+  // admin + clé API.
+  const aiEnt = await entitlementsForUser(session.userId);
+  const aiReview = aiEnt.ai && (await resolveAiSurface("teacherReview")) !== null;
 
   return (
-    <main className="mx-auto max-w-4xl space-y-8 p-6">
+    <main id="main" className="mx-auto max-w-4xl space-y-4 px-2 py-6 sm:space-y-8 sm:p-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Pilotage de partie</p>
@@ -42,7 +63,7 @@ export default async function TeacherGamePage({
           <p className="mt-1 text-sm text-slate-400">
             Les élèves rejoignent sur <span className="font-mono">/join</span> avec ce code.
           </p>
-          <p className="mt-1 text-xs text-slate-500">{view.scenarioTitle}</p>
+          <p className="mt-1 text-xs text-slate-400">{view.scenarioTitle}</p>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2">
           <p className="rounded-full border border-white/10 px-4 py-1 text-sm text-slate-300">
@@ -63,6 +84,42 @@ export default async function TeacherGamePage({
         </div>
       </header>
 
+      {view.planCapped ? (
+        <section className="rounded-xl border border-amber-400/40 bg-amber-950/20 p-1.5 sm:p-4">
+          <h2 className="text-sm font-semibold text-amber-300">
+            🔒 Version gratuite — la partie s&apos;est arrêtée avant la fin
+          </h2>
+          <p className="mt-1 max-w-3xl text-xs text-amber-200/80">
+            Le palier gratuit s&apos;arrête au tour {view.currentRound} sur {view.roundsCount}.
+            Activez une licence établissement pour jouer le scénario jusqu&apos;au bout, ouvrir les
+            concours, l&apos;export du relevé et le feedback IA.
+          </p>
+        </section>
+      ) : null}
+
+      {defaillantes.length > 0 ? (
+        <section className="rounded-xl border border-red-400/40 bg-red-950/30 p-1.5 sm:p-4">
+          <h2 className="text-sm font-semibold text-red-300">
+            ⚠️ {defaillantes.length === 1 ? "Une entreprise défaillante" : `${defaillantes.length} entreprises défaillantes`}
+          </h2>
+          <p className="mt-1 text-xs text-red-200/80">
+            Deux tours consécutifs de cessation de paiements. L&apos;activité est gelée (ni
+            production, ni charges) et la note financière tombe à zéro. Seule une augmentation de
+            capital qui ramène le découvert sous le plafond fait repartir l&apos;entreprise.
+          </p>
+          <ul className="mt-2 flex flex-wrap gap-2">
+            {defaillantes.map((row) => (
+              <li
+                key={row.name}
+                className="rounded-full border border-red-400/40 bg-red-950/40 px-3 py-1 text-xs font-semibold text-red-200"
+              >
+                {row.name}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       {!finished && view.mode === "learning" ? (
         <CardDeck
           gameId={view.gameId}
@@ -76,11 +133,11 @@ export default async function TeacherGamePage({
       ) : null}
 
       {!finished ? (
-        <section className="rounded-xl border border-white/10 bg-slate-900 p-4">
+        <section className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
           <h2 className="text-sm font-semibold text-slate-200">
             📝 Questions posées dans les situations
           </h2>
-          <p className="mt-1 max-w-3xl text-xs text-slate-500">
+          <p className="mt-1 max-w-3xl text-xs text-slate-400">
             Le diagnostic est toujours posé : c&apos;est le cœur de la situation. Ce réglage ne
             porte que sur les questions qui le suivent. Les situations déjà débriefées gardent
             le score obtenu sous l&apos;ancien réglage.
@@ -89,7 +146,11 @@ export default async function TeacherGamePage({
             {QUIZ_MODES.map((m) => {
               const active = m.code === view.quizMode;
               return (
-                <form key={m.code} action={setQuizModeAction.bind(null, view.gameId)}>
+                <GuardedForm
+                  key={m.code}
+                  action={setQuizModeAction.bind(null, view.gameId)}
+                  label="questions posées"
+                >
                   <input type="hidden" name="mode" value={m.code} />
                   <SubmitButton
                     disabled={active}
@@ -107,23 +168,167 @@ export default async function TeacherGamePage({
                       {active ? "✓ " : ""}
                       {m.name}
                     </span>
-                    <span className="mt-1 block text-xs text-slate-500">{m.help}</span>
+                    <span className="mt-1 block text-xs text-slate-400">{m.help}</span>
                   </SubmitButton>
-                </form>
+                </GuardedForm>
               );
             })}
           </div>
         </section>
       ) : null}
 
-      <section className="rounded-xl border border-white/10 bg-slate-900 p-4">
+      {!finished ? (
+        <section className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
+          <h2 className="text-sm font-semibold text-slate-200">📚 Situations manquées</h2>
+          <p className="mt-1 max-w-3xl text-xs text-slate-400">
+            Une situation non rendue reste consultable par l&apos;élève dans l&apos;onglet Historique.
+            Vous choisissez si elle peut être rattrapée. Réglage appliqué aux tours à venir ; les
+            situations déjà rattrapées gardent leur score.
+          </p>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            {(["readonly", "retake50"] as const).map((p) => {
+              const active = p === view.missedPolicy;
+              return (
+                <GuardedForm
+                  key={p}
+                  action={setMissedPolicyAction.bind(null, view.gameId)}
+                  label="situations manquées"
+                >
+                  <input type="hidden" name="policy" value={p} />
+                  <SubmitButton
+                    disabled={active}
+                    className={`h-full w-full rounded-lg border px-3 py-3 text-left transition ${
+                      active
+                        ? "cursor-default border-amber-400/60 bg-amber-400/10"
+                        : "border-white/10 bg-slate-950 hover:border-amber-400/40"
+                    }`}
+                  >
+                    <span className={`text-sm font-medium ${active ? "text-amber-300" : "text-slate-200"}`}>
+                      {active ? "✓ " : ""}
+                      {MISSED_POLICY_LABELS[p]}
+                    </span>
+                    <span className="mt-1 block text-xs text-slate-400">{MISSED_POLICY_HELP[p]}</span>
+                  </SubmitButton>
+                </GuardedForm>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
+
+      {!finished ? (
+        <section className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
+          <h2 className="text-sm font-semibold text-slate-200">🗓️ Planning de la partie</h2>
+          <p className="mt-1 max-w-3xl text-xs text-slate-400">
+            Fenêtre pendant laquelle les élèves peuvent jouer (heure de Paris). En dehors,
+            l&apos;arène passe en lecture seule et « Valider » est grisé. Laissez un champ vide pour
+            ne pas poser de borne ; sans fenêtre, la partie suit le pilotage manuel des tours.
+          </p>
+          <GuardedForm
+            action={setGameScheduleAction.bind(null, view.gameId)}
+            label="planning de la partie"
+            className="mt-3"
+          >
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="block">
+                <span className="text-xs font-medium text-slate-300">Ouverture</span>
+                <input
+                  type="datetime-local"
+                  name="opensAt"
+                  defaultValue={utcToParisLocalInput(view.opensAt ? new Date(view.opensAt) : null)}
+                  className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-amber-400/50 focus:outline-none"
+                />
+              </label>
+              <label className="block">
+                <span className="text-xs font-medium text-slate-300">Fermeture</span>
+                <input
+                  type="datetime-local"
+                  name="closesAt"
+                  defaultValue={utcToParisLocalInput(view.closesAt ? new Date(view.closesAt) : null)}
+                  className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-amber-400/50 focus:outline-none"
+                />
+              </label>
+            </div>
+            <SubmitButton className="mt-3 rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-400">
+              Enregistrer le planning
+            </SubmitButton>
+          </GuardedForm>
+        </section>
+      ) : null}
+
+      {!finished ? (
+        <section className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
+          <h2 className="text-sm font-semibold text-slate-200">⏱️ Planning des tours</h2>
+          <p className="mt-1 max-w-3xl text-xs text-slate-400">
+            Ouverture et échéance de chaque tour (heure de Paris). Ces bornes s&apos;ajoutent à
+            la fenêtre globale : un tour n&apos;est jouable que pendant l&apos;intersection des
+            deux. Laissez un couple vide pour laisser le tour suivre le pilotage manuel.
+          </p>
+          <GuardedForm
+            action={setRoundWindowsAction.bind(null, view.gameId)}
+            label="planning des tours"
+            className="mt-3"
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
+                    <th className="pb-2 pr-3 font-medium">Tour</th>
+                    <th className="pb-2 pr-3 font-medium">Ouverture</th>
+                    <th className="pb-2 font-medium">Échéance</th>
+                  </tr>
+                </thead>
+                <tbody className="text-slate-300">
+                  {view.rounds.map((r) => (
+                    <tr key={r.index} className="border-t border-white/5">
+                      <td className="py-2 pr-3 align-middle whitespace-nowrap">
+                        <span className="font-semibold text-slate-200">Tour {r.index}</span>
+                        <span className="ml-2 rounded bg-slate-800 px-1.5 py-0.5 text-xs text-slate-400">
+                          {ROUND_STATUS_LABEL[r.status] ?? r.status}
+                        </span>
+                      </td>
+                      <td className="py-2 pr-3">
+                        <label className="block">
+                          <span className="sr-only">Ouverture du tour {r.index}</span>
+                          <input
+                            type="datetime-local"
+                            name={`opensAt-${r.index}`}
+                            defaultValue={utcToParisLocalInput(r.opensAt ? new Date(r.opensAt) : null)}
+                            className="w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-amber-400/50 focus:outline-none"
+                          />
+                        </label>
+                      </td>
+                      <td className="py-2">
+                        <label className="block">
+                          <span className="sr-only">Échéance du tour {r.index}</span>
+                          <input
+                            type="datetime-local"
+                            name={`deadline-${r.index}`}
+                            defaultValue={utcToParisLocalInput(r.deadline ? new Date(r.deadline) : null)}
+                            className="w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-amber-400/50 focus:outline-none"
+                          />
+                        </label>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <SubmitButton className="mt-3 rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-400">
+              Enregistrer le planning des tours
+            </SubmitButton>
+          </GuardedForm>
+        </section>
+      ) : null}
+
+      <section className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
         <h2 className="mb-3 text-sm font-semibold text-slate-200">
           Équipes · état des décisions du tour {view.currentRound}
         </h2>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
+              <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
                 <th className="pb-2 pr-3 font-medium">Équipe</th>
                 <th className="pb-2 pr-3 font-medium">Joueurs</th>
                 <th className="pb-2 pr-3 font-medium">Décisions</th>
@@ -137,8 +342,8 @@ export default async function TeacherGamePage({
                   <td className="py-2 pr-3">
                     {t.name}
                     {t.controller === "bot" ? (
-                      <span className="ml-2 rounded bg-slate-800 px-1.5 py-0.5 text-[10px] uppercase text-slate-500">
-                        bot
+                      <span className="ml-2 rounded bg-slate-800 px-1.5 py-0.5 text-xs uppercase text-slate-400">
+                        bot{t.botPersonality ? ` · ${t.botPersonality}` : ""}
                       </span>
                     ) : null}
                   </td>
@@ -149,7 +354,22 @@ export default async function TeacherGamePage({
                     {finished ? (
                       "—"
                     ) : t.hasSubmitted ? (
-                      <span className="text-emerald-400">validées</span>
+                      <>
+                        <span className="text-emerald-400">validées</span>
+                        {estParDefaut(t.decisionSource) ? (
+                          <span
+                            title="Prix et volume validés sans modification des valeurs proposées"
+                            className="ml-2 rounded bg-orange-950/60 px-1.5 py-0.5 text-xs text-orange-300"
+                          >
+                            par défaut
+                          </span>
+                        ) : null}
+                        {t.justification ? (
+                          <p className="mt-1 max-w-md text-xs italic leading-relaxed text-slate-400">
+                            « {t.justification} »
+                          </p>
+                        ) : null}
+                      </>
                     ) : (
                       <span className="text-amber-300">en attente</span>
                     )}
@@ -170,48 +390,73 @@ export default async function TeacherGamePage({
           </table>
         </div>
         {!finished ? (
-          <form action={closeAction} className="mt-4">
-            <SubmitButton
-              pendingLabel="Simulation du tour en cours…"
-              className="w-full rounded-lg bg-amber-400 px-4 py-3 text-sm font-semibold text-slate-950 hover:bg-amber-300"
-            >
-              Clore le tour {view.currentRound} et simuler
-              {allSubmitted ? "" : " (les équipes sans décisions reconduisent le tour précédent)"}
-            </SubmitButton>
-          </form>
+          <CloseRoundForm
+            gameId={view.gameId}
+            tour={view.currentRound}
+            validees={submittedCount}
+            total={humanTeams.length}
+          />
         ) : null}
+        <JustificationsReview gameId={gameId} available={aiReview} />
       </section>
 
       {pedagogy ? (
-        <section className="rounded-xl border border-white/10 bg-slate-900 p-4">
+        <section className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
           <h2 className="mb-3 text-sm font-semibold text-slate-200">Vue pédagogique</h2>
           <div className="grid gap-4 lg:grid-cols-3">
-            <div>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                Maîtrise des notions (de la plus fragile à la plus solide)
-              </h3>
-              {pedagogy.conceptMastery.length === 0 ? (
-                <p className="mt-2 text-xs text-slate-500">
-                  Disponible dès qu&apos;un tour avec situations aura été débriefé.
-                </p>
-              ) : (
-                <ul className="mt-2 space-y-1.5">
-                  {pedagogy.conceptMastery.slice(0, 8).map((c) => (
-                    <li key={c.code} className="text-sm">
-                      <div className="flex items-center justify-between text-slate-300">
-                        <span>{c.name}</span>
-                        <span className="tabular-nums text-slate-400">{Math.round(c.average)}</span>
-                      </div>
-                      <div className="mt-0.5 h-1.5 rounded-full bg-slate-950">
-                        <div
-                          className={`h-1.5 rounded-full ${c.average < 40 ? "bg-red-400" : c.average < 70 ? "bg-amber-400" : "bg-emerald-400"}`}
-                          style={{ width: `${Math.max(3, Math.min(100, c.average))}%` }}
-                        />
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  Notions exposées ce tour
+                </h3>
+                {pedagogy.conceptsExposed.length === 0 ? (
+                  <p className="mt-2 text-xs text-slate-400">Aucune situation ouverte ce tour.</p>
+                ) : (
+                  <ul className="mt-2 flex flex-wrap gap-1.5">
+                    {pedagogy.conceptsExposed.map((c) => (
+                      <li
+                        key={c.code}
+                        className="rounded-full border border-white/10 bg-slate-950 px-2.5 py-0.5 text-xs text-slate-300"
+                      >
+                        {c.name}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <div>
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  Maîtrise mesurée (de la plus fragile à la plus solide)
+                </h3>
+                {pedagogy.conceptMastery.length === 0 ? (
+                  <p className="mt-2 text-xs text-slate-400">
+                    Aucune situation rendue : rien n&apos;est mesuré pour l&apos;instant.
+                  </p>
+                ) : (
+                  <ul className="mt-2 space-y-1.5">
+                    {pedagogy.conceptMastery.slice(0, 8).map((c) => (
+                      <li key={c.code} className="text-sm">
+                        <div className="flex items-center justify-between text-slate-300">
+                          <span>
+                            {c.name}
+                            <span className="ml-1.5 text-xs text-slate-400">
+                              · {c.students} élève{c.students > 1 ? "s" : ""}
+                            </span>
+                          </span>
+                          <span className="tabular-nums text-slate-400">{Math.round(c.average)}</span>
+                        </div>
+                        {/* 0 = barre vide : un zéro mesuré se voit comme un zéro. */}
+                        <div className="mt-0.5 h-1.5 rounded-full bg-slate-950">
+                          <div
+                            className={`h-1.5 rounded-full ${c.average < 40 ? "bg-red-400" : c.average < 70 ? "bg-amber-400" : "bg-emerald-400"}`}
+                            style={{ width: `${Math.max(0, Math.min(100, c.average))}%` }}
+                          />
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
             <div>
               <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
@@ -244,7 +489,7 @@ export default async function TeacherGamePage({
                   </span>
                 </li>
               </ul>
-              <p className="mt-2 text-xs text-slate-500">
+              <p className="mt-2 text-xs text-slate-400">
                 {view.quizMode === "off"
                   ? "Aucune question n'est posée dans cette partie : ces chiffres portent sur les tours joués sous un autre réglage."
                   : view.quizMode === "model"
@@ -257,11 +502,11 @@ export default async function TeacherGamePage({
       ) : null}
 
       {releve && releve.teams.length > 0 ? (
-        <section className="rounded-xl border border-white/10 bg-slate-900 p-4">
+        <section className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
           <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-sm font-semibold text-slate-200">Relevé de notes</h2>
-              <p className="mt-1 max-w-2xl text-xs leading-relaxed text-slate-500">
+              <p className="mt-1 max-w-2xl text-xs leading-relaxed text-slate-400">
                 Deux mesures séparées, et non fondues en une : la note tirée des situations
                 rendues dit ce que l&apos;équipe a compris, le score composite dit ce que
                 l&apos;entreprise a fait. Une bonne analyse peut mener à un mauvais
@@ -269,17 +514,26 @@ export default async function TeacherGamePage({
                 situation non rendue est comptée à part, jamais moyennée à zéro.
               </p>
             </div>
-            <a
-              href={`/teacher/games/${view.gameId}/releve`}
-              className="shrink-0 rounded-lg border border-amber-400/40 px-4 py-2 text-xs font-semibold text-amber-300 hover:bg-amber-400/10"
-            >
-              ⬇ Tableur (une ligne par élève)
-            </a>
+            {view.canExportGradebook ? (
+              <a
+                href={`/teacher/games/${view.gameId}/releve`}
+                className="shrink-0 rounded-lg border border-amber-400/40 px-4 py-2 text-xs font-semibold text-amber-300 hover:bg-amber-400/10"
+              >
+                ⬇ Tableur (une ligne par élève)
+              </a>
+            ) : (
+              <span
+                className="shrink-0 rounded-lg border border-white/10 px-4 py-2 text-xs font-medium text-slate-400"
+                title="Réservé à l'offre établissement"
+              >
+                🔒 Export tableur · offre établissement
+              </span>
+            )}
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-[11px] uppercase tracking-wide text-slate-500">
+                <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
                   <th className="pb-2 pr-3 font-medium">Équipe</th>
                   <th className="pb-2 pr-3 font-medium">Élèves</th>
                   <th className="pb-2 pr-3 text-right font-medium">Rendues</th>
@@ -294,7 +548,7 @@ export default async function TeacherGamePage({
                 {releve.teams.map((equipe) => (
                   <tr key={equipe.teamId} className="border-t border-white/5">
                     <td className="py-2 pr-3">{equipe.name}</td>
-                    <td className="py-2 pr-3 text-xs text-slate-500">
+                    <td className="py-2 pr-3 text-xs text-slate-400">
                       {equipe.students.length > 0 ? equipe.students.join(", ") : "aucun élève"}
                     </td>
                     <td className="py-2 pr-3 text-right tabular-nums text-slate-400">
@@ -341,17 +595,17 @@ export default async function TeacherGamePage({
             </table>
           </div>
           {releve.roundsResolved === 0 ? (
-            <p className="mt-3 text-xs text-slate-500">
+            <p className="mt-3 text-xs text-slate-400">
               Aucun tour clôturé : le relevé se remplit à la première clôture.
             </p>
           ) : null}
         </section>
       ) : null}
 
-      <section className="rounded-xl border border-white/10 bg-slate-900 p-4">
+      <section className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
         <h2 className="mb-3 text-sm font-semibold text-slate-200">Classement</h2>
         {view.ranking.length === 0 ? (
-          <p className="text-sm text-slate-500">Disponible après le premier tour.</p>
+          <p className="text-sm text-slate-400">Disponible après le premier tour.</p>
         ) : (
           <ol className="space-y-2">
             {view.ranking.map((row) => (
@@ -360,12 +614,17 @@ export default async function TeacherGamePage({
                 className="flex items-center justify-between rounded-lg bg-slate-950 px-3 py-2 text-sm text-slate-300"
               >
                 <span>
-                  <span className="mr-2 text-slate-500">#{row.rank}</span>
+                  <span className="mr-2 text-slate-400">#{row.rank}</span>
                   {row.name}
+                  {row.defaillant ? (
+                    <span className="ml-2 rounded-full border border-red-400/40 bg-red-950/40 px-2 py-0.5 text-xs font-semibold text-red-300">
+                      ⚠️ Défaillante
+                    </span>
+                  ) : null}
                 </span>
                 <span className="tabular-nums">
                   <span className="font-semibold text-slate-100">BPI {row.bpi.toFixed(1)}</span>
-                  <span className="ml-2 text-xs text-slate-500">
+                  <span className="ml-2 text-xs text-slate-400">
                     {formatEuro(row.cumulativeNetIncome)} cumulés
                   </span>
                 </span>

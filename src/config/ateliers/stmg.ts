@@ -113,7 +113,7 @@ export const ATELIER_STMG: AtelierDefinition = {
     tours: 4,
     effectifParEquipe: "trois ou quatre élèves",
     notes:
-      "NOVA fabrique et vend des enceintes : on y achète de la matière, on produit, on stocke ce qui ne part pas, et on encaisse plus tard qu'on ne paie. C'est le cycle le plus court à comprendre et le seul où les trois notions du début, le coût, la marge et le stock, se voient dans la même page. Le niveau retenu n'ouvre que le prix, le volume et la communication : trois décisions se relisent, dix se subissent. La taxe sur la valeur ajoutée est laissée de côté en découverte, elle ferait porter la lecture du résultat sur une mécanique fiscale avant que le résultat lui même ne soit lu. Toutes les équipes affrontent le même marché, sans aléa : ce qui distingue deux résultats est alors une décision, et rien d'autre.",
+      "NOVA fabrique et vend des enceintes : on y achète de la matière, on produit, on stocke ce qui ne part pas, et on encaisse plus tard qu'on ne paie. C'est le cycle le plus court à comprendre et le seul où les trois notions du début, le coût, la marge et le stock, se voient dans la même page. Le niveau retenu n'ouvre que le prix, le volume et la communication : trois décisions se relisent, dix se subissent. La taxe sur la valeur ajoutée est laissée de côté en découverte, elle ferait porter la lecture du résultat sur une mécanique fiscale avant que le résultat lui-même ne soit lu. Toutes les équipes affrontent le même marché, sans aléa : ce qui distingue deux résultats est alors une décision, et rien d'autre.",
   },
   seances: [
     {
@@ -201,7 +201,7 @@ export const ATELIER_STMG: AtelierDefinition = {
         "invendus et stock",
       ],
       preparation:
-        "Relisez les grilles rendues à la première séance et repérez deux équipes aux stratégies opposées : une qui a vendu cher à peu de clients, une qui a vendu bas à beaucoup. Elles ouvriront le débriefing. Préparez au tableau un tableau vide à deux colonnes, charges qui suivent les ventes et charges qui ne les suivent pas, que la classe remplira elle même.",
+        "Relisez les grilles rendues à la première séance et repérez deux équipes aux stratégies opposées : une qui a vendu cher à peu de clients, une qui a vendu bas à beaucoup. Elles ouvriront le débriefing. Préparez au tableau un tableau vide à deux colonnes, charges qui suivent les ventes et charges qui ne les suivent pas, que la classe remplira elle-même.",
       deroule: [
         {
           minutes: 10,
@@ -217,7 +217,7 @@ export const ATELIER_STMG: AtelierDefinition = {
         },
         {
           minutes: 20,
-          titre: "Combien faut il vendre",
+          titre: "Combien faut-il vendre",
           detail:
             "Chaque équipe calcule sa marge sur une unité vendue, puis le nombre d'unités qui couvre ses charges du trimestre. Elle compare ce nombre à ce qu'elle a réellement vendu au premier trimestre.",
         },
@@ -371,7 +371,7 @@ export const ATELIER_STMG: AtelierDefinition = {
           minutes: 20,
           titre: "Bilan collectif",
           detail:
-            "Vous reprenez les décisions relevées et faites nommer par la classe les notions qu'elles mobilisent. En première, la liste obtenue est celle du programme de sciences de gestion, écrite par les élèves à partir de leur propre année. En terminale, vous prolongez vers la question des choix de l'organisation et de leurs effets au delà de son résultat.",
+            "Vous reprenez les décisions relevées et faites nommer par la classe les notions qu'elles mobilisent. En première, la liste obtenue est celle du programme de sciences de gestion, écrite par les élèves à partir de leur propre année. En terminale, vous prolongez vers la question des choix de l'organisation et de leurs effets au-delà de son résultat.",
         },
       ],
       livrable:
@@ -413,7 +413,7 @@ export const ATELIER_STMG: AtelierDefinition = {
   ],
   prolongements: [
     "Rejouer la même année avec le monde variable activé : la classe découvre qu'une bonne décision peut mal finir, ce qui ouvre la question du risque et donne tout son sens au pari de la troisième séance.",
-    "Basculer sur le concept store pour opposer, sur le même déroulé, une entreprise qui fabrique et une entreprise qui achète pour revendre.",
+    "Basculer sur la boutique de maille pour opposer, sur le même déroulé, une entreprise qui fabrique et une entreprise qui achète pour revendre.",
     "En terminale, prolonger jusqu'au sixième trimestre en montant d'un cran le niveau de jeu, ce qui ouvre les décisions de trésorerie que le programme de la spécialité gestion et finance mobilise, et fait vivre l'après pic.",
   ],
   faq: [
@@ -433,24 +433,24 @@ export const ATELIER_STMG: AtelierDefinition = {
         "Parce qu'une décision ne s'apprend qu'à condition de pouvoir en lire l'effet. Avec dix décisions simultanées, un élève de première ne sait pas laquelle a produit son résultat, et le tour suivant ne lui apprend rien. Le niveau de jeu s'élève à la création de la partie si votre classe a déjà de la bouteille, et le déroulé reste valable.",
     },
     {
-      question: "La même animation peut elle vraiment servir en première et en terminale ?",
+      question: "La même animation peut-elle vraiment servir en première et en terminale ?",
       reponse:
         "Le déroulé oui, les questions non. Chaque séance porte une question de débriefing différente selon le niveau : en première on nomme la marge, le seuil et la performance, en terminale on interroge l'organisation, ses acteurs et ses choix. C'est le débriefing qui fait le niveau, pas la difficulté du jeu.",
     },
     {
       question: "Combien d'élèves par équipe, et que faire d'une classe nombreuse ?",
       reponse:
-        "Trois ou quatre par équipe, ce qui couvre une classe entière avec le nombre d'équipes prévu par les réglages. Au delà, créez une seconde partie en parallèle plutôt que d'agrandir les équipes : à cinq, deux élèves regardent les autres jouer, et ce sont rarement ceux qu'on voudrait faire travailler.",
+        "Trois ou quatre par équipe, ce qui couvre une classe entière avec le nombre d'équipes prévu par les réglages. Au-delà, créez une seconde partie en parallèle plutôt que d'agrandir les équipes : à cinq, deux élèves regardent les autres jouer, et ce sont rarement ceux qu'on voudrait faire travailler.",
     },
     {
-      question: "Faut il noter cette animation ?",
+      question: "Faut-il noter cette animation ?",
       reponse:
         "Ce n'est pas obligatoire, et une découverte gagne souvent à ne pas l'être. Si vous notez, notez les fiches et l'oral, jamais le classement : une équipe qui a mal joué et qui l'analyse lucidement a plus appris qu'une équipe qui a gagné sans savoir pourquoi.",
     },
     {
       question: "Que faire si une équipe fait faillite dès le premier trimestre ?",
       reponse:
-        "Rien, et surtout pas la relancer. Sa situation est le meilleur support de la deuxième séance : elle a devant elle un compte de résultat qui explique très clairement pourquoi on ne vend pas à perte, et la classe entière comprend le seuil de rentabilité en le regardant. Prévenez simplement l'équipe qu'elle ne sera pas notée là dessus.",
+        "Rien, et surtout pas la relancer. Sa situation est le meilleur support de la deuxième séance : elle a devant elle un compte de résultat qui explique très clairement pourquoi on ne vend pas à perte, et la classe entière comprend le seuil de rentabilité en le regardant. Prévenez simplement l'équipe qu'elle ne sera pas notée là-dessus.",
     },
   ],
 };

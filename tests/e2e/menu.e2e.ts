@@ -43,6 +43,11 @@ describe("le menu du site", () => {
       expect(await bouton.isVisible(), `pas de bouton de menu sur ${largeur.nom}`).toBe(true);
       await bouton.click();
 
+      // Le plan est un accordéon : ses groupes s'ouvrent repliés. On les déplie
+      // tous, puis on vérifie que chaque page reste réellement joignable.
+      const groupes = page.locator('#plan-du-site button[aria-controls^="groupe-"]');
+      for (let i = 0; i < (await groupes.count()); i += 1) await groupes.nth(i).click();
+
       const invisibles: string[] = [];
       for (const lien of tousLesLiens()) {
         const cible = page.locator(`#plan-du-site a[href="${lien.href}"]`);
@@ -92,6 +97,9 @@ describe("le menu du site", () => {
   it("conduit à la page demandée, et se referme en arrivant", async () => {
     const lien = tousLesLiens().find((l) => l.href === "/notions")!;
     await page.getByRole("button", { name: "Menu" }).click();
+    // Déplier les groupes de l'accordéon pour atteindre le lien voulu.
+    const groupes = page.locator('#plan-du-site button[aria-controls^="groupe-"]');
+    for (let i = 0; i < (await groupes.count()); i += 1) await groupes.nth(i).click();
     await page.locator(`#plan-du-site a[href="${lien.href}"]`).click();
     await page.waitForURL(new RegExp(`${lien.href}$`), { timeout: 30_000 });
     await expect
@@ -101,10 +109,17 @@ describe("le menu du site", () => {
 
   it("signale la page où l'on se trouve", async () => {
     // Sans ce repère, le menu est une liste de départs sans point de départ.
+    // Le repère vit dans le menu (la navigation n'est plus dans la barre) : on
+    // l'ouvre et on déplie les groupes pour retrouver la page courante marquée.
     await page.setViewportSize(LARGEURS[1]!.taille);
     await aller(page, "/entreprises");
+    await page.getByRole("button", { name: "Menu" }).click();
+    const groupes = page.locator('#plan-du-site button[aria-controls^="groupe-"]');
+    for (let i = 0; i < (await groupes.count()); i += 1) await groupes.nth(i).click();
     await expect
-      .poll(() => page.locator('a[href="/entreprises"][aria-current="page"]').count())
+      .poll(() =>
+        page.locator('#plan-du-site a[href="/entreprises"][aria-current="page"]').count(),
+      )
       .toBeGreaterThan(0);
   });
 });

@@ -1,5 +1,5 @@
 import { randomInt } from "node:crypto";
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import {
   companyStates,
@@ -17,8 +17,12 @@ import {
   openSituationsForRound,
 } from "@/services/pedagogy.service";
 import { TEACHER_DRAWABLE_CODES, TEAM_CARD_CODES } from "@/config/events/cards";
-import { botDecisions, type BotProfile } from "@/engine/bots";
+import { botDecisions, botPersonalityFromSeed, soldByProduct, type BotProfile } from "@/engine/bots";
 import { carryOverDecisions, fallbackDecisions } from "@/services/decision.service";
+import { assertPlayable } from "@/services/play-lock";
+import { entitlementsForOrg } from "@/services/entitlements.service";
+import { proposedDecisionsFor } from "@/services/decision-baseline";
+import { SOURCE_RECONDUITE, decisionSourceOf } from "@/config/decision-source";
 import {
   persistRoundScores,
   readPedagogyInputs,
@@ -28,6 +32,7 @@ import { simulateRound } from "@/engine/simulation";
 import type {
   CompanyRoundResult,
   CompanyState,
+  EngineScenarioConfig,
   EventInstance,
   RoundDecisions,
 } from "@/engine/types";
@@ -103,6 +108,10 @@ export async function submitTeamDecisions(args: {
   )[0];
   if (!roundRow || roundRow.status !== "open") throw new Error("Ce tour n'est pas ouvert");
 
+  // Planning : verrou temporel (fenêtre partie / tour / étape de concours).
+  // Une partie sans fenêtre reste toujours jouable (exemption automatique).
+  await assertPlayable(game, roundRow);
+
   // §25 (mode compétition) : décisions verrouillées après validation
   if (game.mode === "competition") {
     const existing = (
@@ -117,6 +126,18 @@ export async function submitTeamDecisions(args: {
   }
 
   const justification = args.justification?.trim() || null;
+  // D'où viennent prix et volume : comparés à ce que le formulaire proposait
+  // pour ce tour, recalculé ici et non reçu du client.
+  const decisionSource = await sourceDesPivots({
+    gameId: args.gameId,
+    // Validé par la même porte que le reste du moteur (parseScenarioConfig)
+    // plutôt qu'un cast brut : cette lecture du snapshot était la seule à la
+    // contourner.
+    snapshot: parseScenarioConfig(game.scenarioSnapshot),
+    teamId: team.id,
+    roundIndex: game.currentRound,
+    payload: args.payload,
+  });
   await db
     .insert(decisions)
     .values({
@@ -124,6 +145,7 @@ export async function submitTeamDecisions(args: {
       teamId: team.id,
       payload: args.payload,
       justification,
+      decisionSource,
       status: "validated",
       validatedAt: new Date(),
       validatedBy: args.userId,
@@ -133,12 +155,60 @@ export async function submitTeamDecisions(args: {
       set: {
         payload: args.payload,
         justification,
+        decisionSource,
         status: "validated",
         validatedAt: new Date(),
         validatedBy: args.userId,
       },
     });
   return { roundIndex: game.currentRound };
+}
+
+/**
+ * La source des pivots d'une décision validée : ce que le formulaire proposait
+ * (décisions du tour précédent, sinon point de départ du secteur) face à ce
+ * qui a été validé. Le calcul est celui de decision-baseline, le même que
+ * pour l'affichage.
+ */
+async function sourceDesPivots(args: {
+  gameId: string;
+  snapshot: EngineScenarioConfig;
+  teamId: string;
+  roundIndex: number;
+  payload: RoundDecisions;
+}) {
+  const previousRound =
+    args.roundIndex > 1
+      ? (
+          await db
+            .select()
+            .from(rounds)
+            .where(and(eq(rounds.gameId, args.gameId), eq(rounds.index, args.roundIndex - 1)))
+        )[0]
+      : undefined;
+  const previous = previousRound
+    ? (
+        await db
+          .select()
+          .from(decisions)
+          .where(and(eq(decisions.roundId, previousRound.id), eq(decisions.teamId, args.teamId)))
+      )[0]
+    : undefined;
+  const stateRow = (
+    await db
+      .select()
+      .from(companyStates)
+      .where(eq(companyStates.teamId, args.teamId))
+      .orderBy(desc(companyStates.roundIndex))
+      .limit(1)
+  )[0];
+  const proposees = proposedDecisionsFor({
+    snapshot: args.snapshot,
+    state: stateRow?.state as CompanyState | undefined,
+    roundIndex: args.roundIndex,
+    previousPayload: previous?.payload as RoundDecisions | undefined,
+  });
+  return decisionSourceOf(args.payload, proposees);
 }
 
 /**
@@ -183,12 +253,22 @@ async function resolveGameRound(
           inArray(companyStates.teamId, teamRows.map((t) => t.id)),
         ),
       );
-    const states = stateRows.map((r) => r.state as CompanyState);
+    // Ordre STABLE des entreprises passées au moteur : `simulateRound` consomme
+    // `companies` dans l'ordre du tableau pour ses tirages seedés (événement
+    // ciblé, rupture d'approvisionnement). Les lignes SQL n'ont pas d'ordre
+    // garanti (pas d'ORDER BY) : à graine égale mais ordre de lignes différent
+    // (rejeu à froid, VACUUM), le moteur désignait une victime différente et la
+    // promesse « même graine ⇒ même résultat » (anti-triche) tombait. On trie
+    // par id — les décisions restant indexées par id, rien d'autre ne bouge.
+    const states = stateRows
+      .map((r) => r.state as CompanyState)
+      .sort((a, b) => a.id.localeCompare(b.id));
     if (states.length !== teamRows.length) throw new Error("États d'entreprises incomplets");
 
     // Décisions soumises pour ce tour + ventes et décisions du tour précédent
     const submitted = await db.select().from(decisions).where(eq(decisions.roundId, roundRow.id));
     const lastSold: Record<string, number> = {};
+    const lastSoldByProduct: Record<string, Record<string, number>> = {};
     const previousPayloads: Record<string, RoundDecisions> = {};
     if (roundIndex > 1) {
       const prevRound = (
@@ -203,9 +283,14 @@ async function resolveGameRound(
           .from(roundResults)
           .where(eq(roundResults.roundId, prevRound.id));
         for (const r of prevResults) {
-          lastSold[r.teamId] = sumSold(
-            (r.marketDetail ?? {}) as CompanyRoundResult["market"]["bySegment"],
-          );
+          const bySegment = (r.marketDetail ?? {}) as CompanyRoundResult["market"]["bySegment"];
+          // Abonnement : les adhérents conservés sont des ventes du tour ; sans
+          // eux, le bot planifierait pour ses seuls nouveaux venus et mettrait
+          // sa base dehors.
+          lastSold[r.teamId] = sumSold(bySegment) + (r.engineTrace?.subscription?.retained ?? 0);
+          // Gamme : les bots suivent leurs ventes référence par référence.
+          const parProduit = soldByProduct(scenario, bySegment);
+          if (parProduit) lastSoldByProduct[r.teamId] = parProduit;
         }
         const prevDecisions = await db
           .select()
@@ -215,17 +300,31 @@ async function resolveGameRound(
       }
     }
 
+    // Prix moyen des équipes humaines au tour précédent : ce à quoi les bots
+    // réagissent (V1-4). Undefined au tour 1 ou sans équipe humaine.
+    const prixHumainsPrecedents = teamRows
+      .filter((t) => t.controller === "human")
+      .map((t) => (previousPayloads[t.id] as RoundDecisions | undefined)?.price)
+      .filter((p): p is number => typeof p === "number" && p > 0);
+    const humanAvgPrice = prixHumainsPrecedents.length
+      ? prixHumainsPrecedents.reduce((a, c) => a + c, 0) / prixHumainsPrecedents.length
+      : undefined;
+
     const allDecisions: Record<string, RoundDecisions> = {};
     const carriedOver = new Set<string>();
     for (const team of teamRows) {
       const state = states.find((s) => s.id === team.id);
       if (!state) throw new Error(`État manquant pour ${team.name}`);
       if (team.controller === "bot") {
-        allDecisions[team.id] = botDecisions((team.botProfile ?? "balanced") as BotProfile, {
+        const botProfile = (team.botProfile ?? "balanced") as BotProfile;
+        allDecisions[team.id] = botDecisions(botProfile, {
           scenario,
           state,
           roundIndex,
           lastSoldUnits: lastSold[team.id],
+          lastSoldByProduct: lastSoldByProduct[team.id],
+          humanAvgPrice,
+          personality: botPersonalityFromSeed(Number(game.seed), botProfile),
         });
         continue;
       }
@@ -274,6 +373,25 @@ async function resolveGameRound(
         .filter((e) => e.scope === "market" || e.companyId === teamId)
         .map((e) => e.code);
 
+    // Valeurs proposées et source des pivots par équipe : calculées une fois,
+    // réutilisées pour la trace des décisions ET pour la cohérence du BPI v2.
+    const proposedByTeam: Record<string, RoundDecisions> = {};
+    const decisionSourceByTeam: Record<string, ReturnType<typeof decisionSourceOf>> = {};
+    for (const t of teamRows) {
+      const proposed = proposedDecisionsFor({
+        snapshot: scenario,
+        state: states.find((s) => s.id === t.id),
+        roundIndex,
+        previousPayload: previousPayloads[t.id],
+      });
+      proposedByTeam[t.id] = proposed;
+      // Reconduit : rien n'a été décidé. Sinon, la source se lit face à ce que
+      // le formulaire proposait.
+      decisionSourceByTeam[t.id] = carriedOver.has(t.id)
+        ? SOURCE_RECONDUITE
+        : decisionSourceOf(allDecisions[t.id]!, proposed);
+    }
+
     // Persistance (idempotente)
     await db
       .insert(decisions)
@@ -282,6 +400,9 @@ async function resolveGameRound(
           roundId: roundRow.id,
           teamId: t.id,
           payload: allDecisions[t.id]!,
+          // Une ligne déjà validée garde la source calculée à la validation
+          // (onConflict ne réécrit que le statut).
+          decisionSource: decisionSourceByTeam[t.id],
           status: carriedOver.has(t.id) ? ("carried_over" as const) : ("locked" as const),
           validatedAt: new Date(),
         })),
@@ -319,6 +440,11 @@ async function resolveGameRound(
               debt: r.debt ?? null,
               treasury: r.treasury ?? null,
               bank: r.bank ?? null,
+              rse: r.rse ?? null,
+              products: r.products ?? null,
+              rd: r.rd ?? null,
+              communication: r.communication ?? null,
+              subscription: r.subscription ?? null,
             },
             revenue: toMoney(r.incomeStatement.revenue),
             netIncome: toMoney(r.incomeStatement.netIncome),
@@ -351,7 +477,13 @@ async function resolveGameRound(
       .values(output.companies.map((state) => ({ teamId: state.id, roundIndex, state })))
       .onConflictDoNothing();
 
-    const finished = roundIndex >= scenario.roundsCount;
+    // Palier gratuit : la partie s'arrête au dernier tour ouvert par le plan,
+    // même si le scénario en prévoit davantage (« ne va pas au bout »). Une
+    // licence en cours lève la borne ; sans établissement (solo public), le
+    // palier gratuit s'applique aussi.
+    const ent = await entitlementsForOrg(game.organizationId);
+    const cappedByPlan = ent.maxRounds != null && roundIndex >= ent.maxRounds;
+    const finished = roundIndex >= scenario.roundsCount || cappedByPlan;
 
     // Post-traitement AVANT l'avancement d'état : si l'une de ces étapes
     // échoue, le round reste en « resolving » et le catch le remet à « open ».
@@ -360,10 +492,15 @@ async function resolveGameRound(
     const pedagogyByTeam = await readPedagogyInputs(roundRow.id);
     await persistRoundScores({
       roundId: roundRow.id,
+      roundIndex,
+      gameId,
       scenario,
       teamRows,
       results: output.results,
       allDecisions,
+      decisionSourceByTeam,
+      proposedByTeam,
+      carriedTeams: carriedOver,
       pedagogyByTeam,
     });
     await updateRankings(gameId, teamRows.map((t) => t.id));
@@ -393,6 +530,9 @@ async function resolveGameRound(
           activeEvents: output.events,
           pendingEvents: [],
           pendingEventCodes: undefined,
+          // Vrai seulement si la partie s'arrête AVANT la fin du scénario, du
+          // fait du palier gratuit : sert la bannière d'upsell côté prof.
+          planCapped: cappedByPlan && roundIndex < scenario.roundsCount,
         },
       })
       .where(eq(games.id, gameId));
@@ -506,14 +646,51 @@ export async function drawEventCardForNextRound(args: {
   return { eventCode, teamId: targetTeamId };
 }
 
-/** Mode classe : l'enseignant (créateur de la partie) clôt le tour courant. */
+/**
+ * Mode classe : l'enseignant (créateur de la partie) clôt le tour courant.
+ *
+ * `expectedRound` est le tour que l'enseignant a vu à l'écran. Un double
+ * envoi du même formulaire arrive après que le premier a fait avancer la
+ * partie : sans ce garde, il clorait le tour suivant. La clôture est alors
+ * idempotente : un tour déjà clos (ou en cours de résolution par une
+ * requête concurrente) est rendu tel quel, sans rien simuler.
+ */
 export async function closeCurrentRound(args: {
   gameId: string;
   teacherId: string;
-}): Promise<{ roundIndex: number; finished: boolean }> {
+  expectedRound?: number;
+}): Promise<{ roundIndex: number; finished: boolean; alreadyClosed: boolean }> {
   const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
   if (!game) throw new Error("Partie introuvable");
   if (game.createdBy !== args.teacherId)
     throw new Error("Seul l'enseignant qui a créé la partie peut clore un tour");
-  return resolveGameRound(args.gameId);
+  if (args.expectedRound !== undefined) {
+    const attendu = (
+      await db
+        .select({ status: rounds.status })
+        .from(rounds)
+        .where(and(eq(rounds.gameId, args.gameId), eq(rounds.index, args.expectedRound)))
+    )[0];
+    if (!attendu) throw new Error("Tour introuvable");
+    if (attendu.status !== "open" || game.currentRound !== args.expectedRound) {
+      return {
+        roundIndex: args.expectedRound,
+        finished: game.status === "finished",
+        alreadyClosed: true,
+      };
+    }
+  }
+  try {
+    return { ...(await resolveGameRound(args.gameId)), alreadyClosed: false };
+  } catch (error) {
+    // Deux clôtures concurrentes du même tour : la seconde n'a rien à faire.
+    if (
+      args.expectedRound !== undefined &&
+      error instanceof Error &&
+      error.message === "Ce tour est déjà en cours de résolution"
+    ) {
+      return { roundIndex: args.expectedRound, finished: false, alreadyClosed: true };
+    }
+    throw error;
+  }
 }

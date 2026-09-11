@@ -1,24 +1,43 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { clearSession, getSession, setSession } from "@/lib/session";
-import { loginTeacher, registerTeacher, getTeacherOrgId } from "@/services/auth.service";
+import {
+  bumpSessionVersion,
+  getTeacherOrgId,
+  loginTeacher,
+  registerTeacher,
+} from "@/services/auth.service";
 import {
   closeCurrentRound,
   createClassGame,
   drawEventCardForNextRound,
+  setGameSchedule,
   setQuizMode,
+  setRoundWindows,
 } from "@/services/game.service";
+import { parisLocalToUtc } from "@/lib/paris-time";
 import {
   createCompetition,
   finishCompetition,
+  setPublicPage,
+  setStageWindow,
   startFinal,
   startQualification,
 } from "@/services/competition.service";
-import { DEFAULT_SCENARIO_CODE, SCENARIOS } from "@/config/scenarios/registry";
+import { setMissedPolicy } from "@/services/pedagogy.service";
+import { DEFAULT_SCENARIO_CODE } from "@/config/scenarios/registry";
+import { canTeacherLaunchScenario } from "@/services/scenario-editor.service";
 import { DEFAULT_QUIZ_MODE } from "@/config/difficulty";
+import {
+  ACCENTS_CONCOURS,
+  DESCRIPTION_MAX,
+  ORGANIZER_LABEL_MAX,
+  TAGLINE_MAX,
+} from "@/config/concours-public";
 
 export interface FormState {
   error: string | null;
@@ -47,12 +66,28 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
   redirect("/teacher");
 }
 
+/** L'adresse d'origine telle que Vercel la transmet ; null hors proxy. */
+async function adresseOrigine(): Promise<string | null> {
+  const h = await headers();
+  // On veut l'IP la MOINS falsifiable. `x-real-ip` est posé par la plateforme
+  // et n'est pas contrôlé par le client. À défaut, on prend le DERNIER maillon
+  // de `x-forwarded-for` — celui ajouté par le proxy de confiance —, pas le
+  // premier, que le client peut préfixer à volonté (il suffisait sinon de faire
+  // tourner cette valeur pour échapper à la limitation par IP).
+  return (
+    h.get("x-real-ip") ||
+    h.get("x-forwarded-for")?.split(",").pop()?.trim() ||
+    null
+  );
+}
+
 export async function loginAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
-  const result = await loginTeacher({ email, password });
+  const result = await loginTeacher({ email, password, ip: await adresseOrigine() });
+  // Une action serveur ne porte pas de code HTTP : le 429 est le message.
   if ("error" in result) return { error: result.error };
-  await setSession(result.userId, "teacher");
+  await setSession(result.userId, "teacher", result.sessionVersion);
   redirect("/teacher");
 }
 
@@ -61,7 +96,13 @@ export async function logoutAction(): Promise<void> {
   redirect("/teacher/login");
 }
 
-const SCENARIO_CODES = SCENARIOS.map((s) => s.code) as [string, ...string[]];
+/** Ferme cette session et toutes les autres : les cookies antérieurs sont refusés. */
+export async function logoutEverywhereAction(): Promise<void> {
+  const session = await getSession();
+  if (session) await bumpSessionVersion(session.userId);
+  await clearSession();
+  redirect("/teacher/login");
+}
 
 const createGameSchema = z.object({
   periodicity: z.enum(["month", "quarter", "year"]).catch("quarter"),
@@ -71,8 +112,10 @@ const createGameSchema = z.object({
   // Tours joués : vide ou hors bornes = tous ceux du scénario. Le service
   // rabote de toute façon à ce que le secteur porte.
   roundsCount: z.coerce.number().int().min(1).max(24).optional().catch(undefined),
-  // Secteur joué : un code inconnu retombe sur le scénario par défaut.
-  scenarioCode: z.enum(SCENARIO_CODES).catch(DEFAULT_SCENARIO_CODE),
+  // Secteur joué : un secteur intégré OU un scénario enseignant. La
+  // vérification d'autorisation (propriété du scénario) se fait dans l'action ;
+  // un code non lançable retombe sur le scénario par défaut.
+  scenarioCode: z.string().min(1).catch(DEFAULT_SCENARIO_CODE),
   // Questions posées dans les situations (voir QUIZ_MODES).
   quizMode: z.enum(["full", "model", "off"]).catch(DEFAULT_QUIZ_MODE),
 });
@@ -134,12 +177,26 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
     depreciationPerRound: optionalNumber(formData.get("depreciationPerRound")),
     baseDefectRate: optionalRate(formData.get("baseDefectRate")),
   };
+  // Pondérations du BPI, saisies en % (poids relatifs, renormalisés côté service).
+  const scoringWeightOverrides = {
+    economic: optionalRate(formData.get("bpiEconomic")),
+    financial: optionalRate(formData.get("bpiFinancial")),
+    commercial: optionalRate(formData.get("bpiCommercial")),
+    profitability: optionalRate(formData.get("bpiProfitability")),
+    pilotage: optionalRate(formData.get("bpiPilotage")),
+    decisionMastery: optionalRate(formData.get("bpiDecisionMastery")),
+  };
   const organizationId = await getTeacherOrgId(session.userId);
   if (!organizationId) {
     echecCreation(
       "Votre compte n'est rattaché à aucun établissement, la partie n'a pas pu être créée.",
     );
   }
+  // Un secteur intégré ou l'un des scénarios de CE prof ; sinon on retombe sur
+  // le scénario par défaut plutôt que de lancer le brouillon d'un autre.
+  const scenarioCode = (await canTeacherLaunchScenario(parsed.scenarioCode, session.userId))
+    ? parsed.scenarioCode
+    : DEFAULT_SCENARIO_CODE;
   let gameId: string;
   try {
     ({ gameId } = await createClassGame({
@@ -150,8 +207,9 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
       botCount: parsed.botCount,
       level: parsed.level,
       economicOverrides,
+      scoringWeightOverrides,
       variableWorld: formData.get("variableWorld") === "on",
-      scenarioCode: parsed.scenarioCode,
+      scenarioCode,
       quizMode: parsed.quizMode,
       roundsCount: parsed.roundsCount,
     }));
@@ -173,36 +231,151 @@ export async function setQuizModeAction(gameId: string, formData: FormData): Pro
   revalidatePath(`/teacher/games/${gameId}`);
 }
 
-export async function closeRoundAction(gameId: string): Promise<void> {
+/**
+ * Règle la fenêtre globale de jeu (planning). Champs `opensAt`/`closesAt` en
+ * heure de Paris (datetime-local) ; un champ vide = pas de borne.
+ */
+export async function setGameScheduleAction(gameId: string, formData: FormData): Promise<void> {
   const session = await getSession();
   if (!session) redirect("/teacher/login");
-  await closeCurrentRound({ gameId, teacherId: session.userId });
+  const opensAt = parisLocalToUtc(String(formData.get("opensAt") ?? "") || null);
+  const closesAt = parisLocalToUtc(String(formData.get("closesAt") ?? "") || null);
+  await setGameSchedule({ gameId, teacherId: session.userId, opensAt, closesAt });
+  revalidatePath(`/teacher/games/${gameId}`);
+}
+
+/**
+ * Règle la fenêtre de chaque tour (planning fin). Le formulaire porte un couple
+ * de champs par tour, nommés `opensAt-<index>` / `deadline-<index>` en heure de
+ * Paris ; un champ vide = pas de borne. On lit tous les index présents.
+ */
+export async function setRoundWindowsAction(gameId: string, formData: FormData): Promise<void> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  const indexes = new Set<number>();
+  for (const key of formData.keys()) {
+    const m = /^(?:opensAt|deadline)-(\d+)$/.exec(key);
+    if (m) indexes.add(Number(m[1]));
+  }
+  const windows = [...indexes].map((index) => ({
+    index,
+    opensAt: parisLocalToUtc(String(formData.get(`opensAt-${index}`) ?? "") || null),
+    deadline: parisLocalToUtc(String(formData.get(`deadline-${index}`) ?? "") || null),
+  }));
+  await setRoundWindows({ gameId, teacherId: session.userId, windows });
+  revalidatePath(`/teacher/games/${gameId}`);
+}
+
+export interface CloseRoundState {
+  error: string | null;
+}
+
+/**
+ * Clôt le tour que l'enseignant a confirmé (champ `roundIndex`). Un double
+ * envoi retombe sur un tour déjà clos : le serveur ne simule rien de plus
+ * et la page se rafraîchit simplement.
+ */
+export async function closeRoundAction(
+  gameId: string,
+  _prev: CloseRoundState,
+  formData: FormData,
+): Promise<CloseRoundState> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  const brut = Number(formData.get("roundIndex"));
+  const expectedRound = Number.isInteger(brut) && brut > 0 ? brut : undefined;
+  try {
+    await closeCurrentRound({ gameId, teacherId: session.userId, expectedRound });
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "La clôture a échoué." };
+  }
+  revalidatePath(`/teacher/games/${gameId}`);
+  return { error: null };
+}
+
+/** Règle la politique des situations manquées (consultation seule / rattrapage 50 %). */
+export async function setMissedPolicyAction(gameId: string, formData: FormData): Promise<void> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  const policy = z
+    .enum(["readonly", "retake50"])
+    .catch("retake50")
+    .parse(formData.get("policy"));
+  await setMissedPolicy({ gameId, teacherId: session.userId, policy });
   revalidatePath(`/teacher/games/${gameId}`);
 }
 
 const createCompetitionSchema = z.object({
-  name: z.string().min(1).max(80).catch("Business Arena Championship"),
+  // Le nom est la seule saisie libre : vide, on le dit, on ne le remplace pas.
+  name: z
+    .string()
+    .trim()
+    .min(1, "Donnez un nom au concours.")
+    .max(80, "Nom du concours : 80 caractères maximum."),
   periodicity: z.enum(["month", "quarter", "year"]).catch("quarter"),
   groupSize: z.coerce.number().int().min(2).max(6).catch(3),
   advancePerGroup: z.coerce.number().int().min(1).max(4).catch(1),
 });
 
-export async function createCompetitionAction(formData: FormData): Promise<void> {
+/** Ce que l'enseignant avait saisi : rendu au formulaire quand la création échoue. */
+export interface CreateCompetitionValues {
+  name: string;
+  periodicity: string;
+  groupSize: string;
+  advancePerGroup: string;
+}
+
+export interface CreateCompetitionState {
+  error: string | null;
+  values: CreateCompetitionValues | null;
+}
+
+/**
+ * Crée un concours, ou dit pourquoi il n'a pas été créé.
+ *
+ * Constaté en production : une première soumission repartait sans un mot, le
+ * nom effacé, aucun concours dans la liste. L'action renvoyait vers la page de
+ * connexion sans organisation rattachée, et laissait toute autre erreur
+ * remonter sans la montrer. Elle répond maintenant toujours par un état : une
+ * erreur lisible et la saisie intacte, ou la redirection vers le concours.
+ */
+export async function createCompetitionAction(
+  _prev: CreateCompetitionState,
+  formData: FormData,
+): Promise<CreateCompetitionState> {
+  const values: CreateCompetitionValues = {
+    name: String(formData.get("name") ?? ""),
+    periodicity: String(formData.get("periodicity") ?? "quarter"),
+    groupSize: String(formData.get("groupSize") ?? "3"),
+    advancePerGroup: String(formData.get("advancePerGroup") ?? "1"),
+  };
   const session = await getSession();
-  if (!session) redirect("/teacher/login");
+  if (!session) return { error: "Session expirée : reconnectez-vous.", values };
+  const parsed = createCompetitionSchema.safeParse(values);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide.", values };
+  }
   const organizationId = await getTeacherOrgId(session.userId);
-  if (!organizationId) redirect("/teacher/login");
-  const parsed = createCompetitionSchema.parse({
-    name: formData.get("name"),
-    periodicity: formData.get("periodicity"),
-    groupSize: formData.get("groupSize"),
-    advancePerGroup: formData.get("advancePerGroup"),
-  });
-  const { competitionId } = await createCompetition({
-    organizerId: session.userId,
-    organizationId,
-    ...parsed,
-  });
+  if (!organizationId) {
+    return {
+      error: "Votre compte n'est rattaché à aucun établissement, le concours n'a pas pu être créé.",
+      values,
+    };
+  }
+  let competitionId: string;
+  try {
+    ({ competitionId } = await createCompetition({
+      organizerId: session.userId,
+      organizationId,
+      ...parsed.data,
+    }));
+  } catch (erreur) {
+    const detail = erreur instanceof Error && erreur.message ? ` (${erreur.message})` : "";
+    return {
+      error: `Le concours n'a pas pu être créé, votre saisie est conservée : réessayez${detail}.`,
+      values,
+    };
+  }
   redirect(`/teacher/competitions/${competitionId}`);
 }
 
@@ -247,6 +420,74 @@ export async function finishCompetitionAction(
   _formData: FormData,
 ): Promise<CompetitionActionState> {
   return runCompetitionAction(competitionId, finishCompetition);
+}
+
+/**
+ * Règle la fenêtre d'une étape de concours (qualification ou finale). Champs
+ * `startsAt`/`endsAt` en heure de Paris ; un champ vide = pas de borne. Le
+ * verrou d'étape se combine à la fenêtre de chaque partie et de chaque tour.
+ */
+export async function setStageWindowAction(
+  competitionId: string,
+  stageId: string,
+  _prev: CompetitionActionState,
+  formData: FormData,
+): Promise<CompetitionActionState> {
+  const session = await getSession();
+  if (!session) return { error: "Session expirée : reconnectez-vous." };
+  const startsAt = parisLocalToUtc(String(formData.get("startsAt") ?? "") || null);
+  const endsAt = parisLocalToUtc(String(formData.get("endsAt") ?? "") || null);
+  try {
+    await setStageWindow({
+      competitionId,
+      stageId,
+      organizerId: session.userId,
+      startsAt,
+      endsAt,
+    });
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Erreur." };
+  }
+  revalidatePath(`/teacher/competitions/${competitionId}`);
+  return { error: null };
+}
+
+const ACCENT_CLES = ACCENTS_CONCOURS.map((a) => a.cle);
+
+/** Un champ libre : trimé, borné, null si vide. */
+function champLibre(value: FormDataEntryValue | null, max: number): string | null {
+  const t = String(value ?? "").trim();
+  return t ? t.slice(0, max) : null;
+}
+
+/**
+ * Enregistre la page publique d'annonce d'un concours. Les champs libres sont
+ * bornés ; l'accent est validé contre la palette (une clé inconnue devient
+ * null → laiton par défaut). `visible` publie la page ou la remet en 404.
+ */
+export async function setCompetitionPublicPageAction(
+  competitionId: string,
+  _prev: CompetitionActionState,
+  formData: FormData,
+): Promise<CompetitionActionState> {
+  const session = await getSession();
+  if (!session) return { error: "Session expirée : reconnectez-vous." };
+  const accentBrut = String(formData.get("accent") ?? "");
+  try {
+    await setPublicPage({
+      competitionId,
+      organizerId: session.userId,
+      visible: formData.get("visible") === "on",
+      tagline: champLibre(formData.get("tagline"), TAGLINE_MAX),
+      description: champLibre(formData.get("description"), DESCRIPTION_MAX),
+      organizerLabel: champLibre(formData.get("organizerLabel"), ORGANIZER_LABEL_MAX),
+      accent: ACCENT_CLES.includes(accentBrut) ? accentBrut : null,
+    });
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Erreur." };
+  }
+  revalidatePath(`/teacher/competitions/${competitionId}`);
+  return { error: null };
 }
 
 export interface DrawCardState {

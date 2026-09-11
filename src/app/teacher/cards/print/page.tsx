@@ -63,7 +63,7 @@ function PrintCards() {
   const teamCards = deck.filter((c) => c.scope === "team");
 
   return (
-    <main className="print-page">
+    <main id="main" className="print-page">
       <style>{printStyles}</style>
 
       <header className="print-header no-print">

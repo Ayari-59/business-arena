@@ -424,7 +424,7 @@ export const CONCEPTS: ConceptDef[] = [
     domain: "profitability",
     axis: "analysis",
     definition:
-      "Ce que l'exploitation dégage avant les amortissements, les intérêts et l'impôt : le premier chiffre qui dise si l'activité elle même gagne de l'argent.",
+      "Ce que l'exploitation dégage avant les amortissements, les intérêts et l'impôt : le premier chiffre qui dise si l'activité elle-même gagne de l'argent.",
     intuition:
       "C'est le résultat débarrassé de trois choses qui ne viennent pas du métier : la façon dont l'entreprise a financé ses murs, la façon dont elle les amortit, et ce que le fisc lui prend. Deux boutiques identiques, dont l'une a emprunté et l'autre non, ont le même excédent brut et des résultats nets différents. C'est pour cela qu'on le regarde en premier quand on compare deux affaires.",
     method:
@@ -439,9 +439,9 @@ export const CONCEPTS: ConceptDef[] = [
     definition:
       "La part du prix d'une immobilisation que l'exercice supporte, parce qu'il s'en est servi.",
     intuition:
-      "Un agencement payé une fois sert plusieurs années. Le mettre entier dans les charges de l'année de l'achat écraserait ce résultat là et flatterait les suivants, alors que le magasin a travaillé pareil. On en étale donc le coût sur la durée d'usage. C'est une charge qui ne se décaisse pas : elle pèse sur le résultat sans rien sortir de la caisse, ce qui explique qu'une entreprise puisse afficher une perte sans manquer d'argent.",
+      "Un agencement payé une fois sert plusieurs années. Le mettre entier dans les charges de l'année de l'achat écraserait ce résultat-là et flatterait les suivants, alors que le magasin a travaillé pareil. On en étale donc le coût sur la durée d'usage. C'est une charge qui ne se décaisse pas : elle pèse sur le résultat sans rien sortir de la caisse, ce qui explique qu'une entreprise puisse afficher une perte sans manquer d'argent.",
     method:
-      "Divisez la valeur d'entrée du bien par le nombre d'exercices pendant lesquels il servira. Ce que le bilan appelle valeur nette est ce qui n'a pas encore été amorti. À ne pas confondre avec le tableau d'amortissement d'un emprunt : celui là parle du remboursement d'une dette, celui ci de l'usure d'un bien. Le mot est le même, la chose n'a aucun rapport.",
+      "Divisez la valeur d'entrée du bien par le nombre d'exercices pendant lesquels il servira. Ce que le bilan appelle valeur nette est ce qui n'a pas encore été amorti. À ne pas confondre avec le tableau d'amortissement d'un emprunt : celui-là parle du remboursement d'une dette, celui-ci de l'usure d'un bien. Le mot est le même, la chose n'a aucun rapport.",
     formula: "Dotation de l'exercice = valeur d'entrée / durée d'usage en exercices",
   },
   {
@@ -454,7 +454,7 @@ export const CONCEPTS: ConceptDef[] = [
     intuition:
       "Le coût variable dit ce que coûte la prochaine unité, le coût de revient ce que coûte une unité en moyenne. Les deux sont justes et ne répondent pas à la même question : le premier décide d'accepter une commande de plus, le second dit si le prix affiché tient sur l'année. Les confondre fait refuser des commandes rentables, ou vendre à perte en croyant gagner.",
     method:
-      "Ajoutez au coût variable d'une unité la part de structure qu'elle porte, c'est à dire les charges de structure du tour divisées par les unités vendues. Ce coût baisse donc quand le volume monte, sans qu'aucune charge n'ait bougé : c'est l'effet du partage et non une économie. Un coût de revient calculé sur un tour creux fait donc peur pour rien.",
+      "Ajoutez au coût variable d'une unité la part de structure qu'elle porte, c'est-à-dire les charges de structure du tour divisées par les unités vendues. Ce coût baisse donc quand le volume monte, sans qu'aucune charge n'ait bougé : c'est l'effet du partage et non une économie. Un coût de revient calculé sur un tour creux fait donc peur pour rien.",
     formula: "Coût de revient unitaire = coût variable unitaire + charges de structure / unités vendues",
   },
   {
@@ -473,3 +473,166 @@ export const CONCEPTS: ConceptDef[] = [
 ];
 
 export const conceptByCode = new Map(CONCEPTS.map((c) => [c.code, c]));
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * GRAPHE DES PRÉREQUIS (V2 couche 2, chantier #1).
+ *
+ * `A` figurant dans la liste de `B` se lit « avoir saisi A avant d'aborder B ».
+ * C'est un DAG : cinq racines de démarrage (listes vides), aucune boucle, et
+ * toute notion est atteignable depuis une racine. L'invariant est vérifié par
+ * tests/architecture/notions-dag.test.ts, qui échoue au moindre cycle, code
+ * inconnu, ou notion isolée.
+ *
+ * Portée : ce graphe et son seuil (PREREQUISITE_MASTERY_THRESHOLD) alimenteront
+ * le filtrage par niveau et l'ordonnancement des situations (chantier #2). Les
+ * situations DÉTECTÉES restent des moments réactifs, ouvertes sur leur seul
+ * déclencheur — on ne cache pas un atelier avancé (VAN/TRI) derrière une chaîne
+ * de maîtrise, sous peine de le rendre inatteignable en partie courte.
+ *
+ * Quatre arêtes ont été tranchées avec l'enseignant, contre la première ébauche :
+ *  - `frng` ancré sur `fixed_costs` (et non `depreciation`) : on comprend le
+ *    fonds de roulement comme « ressources durables − immobilisations » sans
+ *    maîtriser le mécanisme d'amortissement, qui n'en est qu'un raffinement.
+ *  - `bfr` ancré sur `stock` (et non `stock_rotation`) : le besoin en fonds de
+ *    roulement se comprend AVANT les ratios de rotation, qui expliquent ensuite
+ *    pourquoi il bouge. La rotation (KPI commercial) reste fille de `stock` : les
+ *    deux sont sœurs, pas parent-enfant — les lier sur-verrouillerait la rotation.
+ *  - `loan_schedule` conserve `net_treasury` : la fiche elle-même est écrite
+ *    autour du risque de trésorerie (« engager sa trésorerie future »,
+ *    « CAF < échéances = danger ») ; la détacher en ferait une racine ouverte
+ *    au grand débutant, à rebours du gating recherché.
+ *  - `ebitda_margin` placé en amont (marge & coût), avant le cycle
+ *    trésorerie / VAN : c'est un solde de marge d'exploitation, pas une notion
+ *    de gestion courante.
+ * ──────────────────────────────────────────────────────────────────────────── */
+export const CONCEPT_PREREQUISITES: Record<string, readonly string[]> = {
+  // Niveau 1 — Découverte : racines (démarrage débutant, aucun prérequis)
+  fixed_costs: [],
+  variable_costs: [],
+  demand_market_share: [],
+  capacity: [],
+  stock: [],
+
+  // Niveau 2 — Fondamentaux
+  revenue: ["demand_market_share"],
+  price_elasticity: ["demand_market_share"],
+  segmentation: ["demand_market_share"],
+  seasonality: ["demand_market_share"],
+  conversion_rate: ["demand_market_share"],
+  productivity: ["capacity"],
+  contribution_margin: ["revenue", "variable_costs"],
+
+  // Niveau 3 — Marge & coût
+  margin_rates: ["contribution_margin"],
+  breakeven: ["contribution_margin", "fixed_costs"],
+  full_unit_cost: ["fixed_costs", "variable_costs"],
+  depreciation: ["fixed_costs"],
+  psych_price: ["price_elasticity"],
+  markup_coefficient: ["margin_rates"],
+  stock_rotation: ["stock"],
+  assortment: ["segmentation"],
+  average_basket: ["revenue"],
+  ebitda_margin: ["contribution_margin", "fixed_costs"],
+
+  // Niveau 4 — Gestion courante
+  dead_point: ["breakeven"],
+  safety_margin: ["breakeven"],
+  markdown: ["stock_rotation", "margin_rates"],
+  frng: ["fixed_costs"],
+  bfr: ["stock"],
+  distribution_commission: ["margin_rates"],
+  sales_per_sqm: ["average_basket"],
+
+  // Niveau 5 — Analyse & trésorerie
+  net_treasury: ["frng", "bfr"],
+  receivables_financing: ["bfr"],
+  profitability_vs_return: ["margin_rates", "breakeven"],
+  loan_schedule: ["net_treasury"],
+
+  // Niveau 6 — Investissement
+  discounting: ["net_treasury", "profitability_vs_return"],
+  irr_payback: ["discounting"],
+};
+
+/** Prérequis d'une notion (codes), liste vide si racine ou notion inconnue. */
+export function prerequisitesOf(code: string): readonly string[] {
+  return CONCEPT_PREREQUISITES[code] ?? [];
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * NIVEAU PÉDAGOGIQUE D'UNE NOTION (V2 couche 2, chantier #2).
+ *
+ * Chaque notion est rangée dans l'un des six paliers du parcours — les mêmes
+ * six niveaux de difficulté que l'enseignant fixe à la création (1 Découverte …
+ * 6 Executive, cf. DIFFICULTY_PRESETS). C'est un recouvrement pédagogique
+ * cohérent avec le graphe : une notion n'est jamais d'un niveau inférieur à ses
+ * prérequis (invariant vérifié par notions-dag.test.ts).
+ *
+ * Sert au filtrage DOUX : on ordonne les situations d'un tour par niveau (les
+ * fondations d'abord) et on signale celles dont le niveau dépasse celui de la
+ * partie — sans jamais rien cacher.
+ * ──────────────────────────────────────────────────────────────────────────── */
+export type ConceptLevel = 1 | 2 | 3 | 4 | 5 | 6;
+
+export const CONCEPT_LEVEL: Record<string, ConceptLevel> = {
+  // 1 — Découverte
+  fixed_costs: 1,
+  variable_costs: 1,
+  demand_market_share: 1,
+  capacity: 1,
+  stock: 1,
+  // 2 — Fondamentaux
+  revenue: 2,
+  contribution_margin: 2,
+  price_elasticity: 2,
+  segmentation: 2,
+  seasonality: 2,
+  productivity: 2,
+  // 3 — Marge & coût
+  margin_rates: 3,
+  breakeven: 3,
+  full_unit_cost: 3,
+  depreciation: 3,
+  psych_price: 3,
+  markup_coefficient: 3,
+  stock_rotation: 3,
+  assortment: 3,
+  average_basket: 3,
+  conversion_rate: 3,
+  ebitda_margin: 3,
+  // 4 — Gestion courante
+  dead_point: 4,
+  safety_margin: 4,
+  markdown: 4,
+  frng: 4,
+  bfr: 4,
+  distribution_commission: 4,
+  sales_per_sqm: 4,
+  // 5 — Analyse & trésorerie
+  net_treasury: 5,
+  receivables_financing: 5,
+  profitability_vs_return: 5,
+  loan_schedule: 5,
+  // 6 — Investissement
+  discounting: 6,
+  irr_payback: 6,
+};
+
+/** Niveau d'une notion (1..6), défaut 1 si notion inconnue. */
+export function conceptLevel(code: string): ConceptLevel {
+  return CONCEPT_LEVEL[code] ?? 1;
+}
+
+/**
+ * Niveau d'une situation : celui de sa notion la plus avancée (une situation
+ * n'est abordable qu'une fois sa notion la plus exigeante à portée). Défaut 1
+ * si la situation ne porte aucune notion.
+ */
+export function situationLevel(conceptCodes: readonly string[]): ConceptLevel {
+  let max: ConceptLevel = 1;
+  for (const code of conceptCodes) {
+    const l = conceptLevel(code);
+    if (l > max) max = l;
+  }
+  return max;
+}

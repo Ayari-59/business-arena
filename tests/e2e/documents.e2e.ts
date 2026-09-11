@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Browser, Page } from "playwright-core";
-import { aller, ouvrirNavigateur } from "./helpers/browser";
+import { aller, BASE, ouvrirNavigateur } from "./helpers/browser";
 import { ATELIERS } from "../../src/config/ateliers";
 import { formulairesAtelier } from "../../src/config/ateliers/formulaires";
 import { dossierEnseignant } from "../../src/config/ateliers/dossiers";
@@ -34,7 +34,7 @@ afterAll(async () => {
 describe("les documents d'un atelier", () => {
   for (const atelier of ATELIERS) {
     it(`${atelier.code} : chaque rubrique demandée est sur la feuille`, async () => {
-      await aller(page, `/ateliers/${atelier.code}/formulaires`);
+      await aller(page, `/animations/${atelier.code}/formulaires`);
       // La page met les intitulés en capitales et les rubriques en majuscule
       // initiale : c'est de la typographie, elle ne change pas ce qui est
       // demandé. On compare donc ce qui est écrit, pas comment c'est dessiné.
@@ -56,6 +56,20 @@ describe("les documents d'un atelier", () => {
     }, 60_000);
   }
 
+  it("le cockpit de prévision se télécharge en classeur, pour chaque atelier", async () => {
+    // Le classeur se construit dans le registre et s'y vérifie ; ici on
+    // s'assure seulement qu'il ARRIVE : un fichier .xlsx, pas une page d'erreur.
+    for (const atelier of ATELIERS) {
+      const reponse = await page.request.get(`${BASE}/animations/${atelier.code}/cockpit`);
+      expect(reponse.status(), `${atelier.code} : cockpit indisponible`).toBe(200);
+      expect(reponse.headers()["content-type"]).toContain("spreadsheetml");
+      expect(reponse.headers()["content-disposition"]).toMatch(/\.xlsx"$/);
+      const corps = await reponse.body();
+      // Un .xlsx est une archive zip : elle commence par « PK ».
+      expect(corps.subarray(0, 2).toString("ascii")).toBe("PK");
+    }
+  }, 120_000);
+
   it("aucune feuille distribuée ne porte de corrigé", async () => {
     // La faute qu'on ne rattrape pas : elle ne se voit ni à la relecture ni à
     // l'impression, elle se voit en classe, quand toute la salle répond juste
@@ -63,7 +77,7 @@ describe("les documents d'un atelier", () => {
     for (const atelier of ATELIERS) {
       const prof = dossierEnseignant(atelier);
       for (const chemin of ["formulaires", "dossier"]) {
-        await aller(page, `/ateliers/${atelier.code}/${chemin}`);
+        await aller(page, `/animations/${atelier.code}/${chemin}`);
         const texte = await page.locator("main").innerText();
         for (const s of prof.situations) {
           for (const c of s.corriges) {
