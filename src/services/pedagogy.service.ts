@@ -1250,7 +1250,7 @@ export async function getTeacherUsageView(teacherId: string): Promise<TeacherUsa
       finishedGames: gameRows.filter((g) => g.status === "finished").length,
       // Les équipes pilotées par un bot ne sont pas des élèves : les compter
       // gonflerait le carnet d'un facteur qui ne dépend que du nombre de
-      // concurrents choisi à la création.
+      // concurrents choisy à la création.
       teams: teamRows.filter((t) => t.controller === "human").length,
       situationsDebriefed: instances.filter(
         (i) => i.status === "debriefed" && playedTeamIds.has(i.teamId),
@@ -1263,3 +1263,6 @@ export async function getTeacherUsageView(teacherId: string): Promise<TeacherUsa
     concepts: conceptStats,
   };
 }
+
+// Re-exports from modular services
+export { getGameGradeSheet, getStudentProgressView } from "@/services/pedagogy-reporting.service";

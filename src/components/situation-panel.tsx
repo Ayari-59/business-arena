@@ -119,7 +119,7 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
     setOptions((prec) => (coche ? [...new Set([...prec, id])] : prec.filter((o) => o !== id)));
 
   // Check if situation is blocked by learning prerequisites
-  if (!situation.isAccessible && situation.requiredLearningSteps.length > 0) {
+  if (!situation.isAccessible && situation.requiredLearningSteps && situation.requiredLearningSteps.length > 0) {
     return (
       <article className="rounded-xl border border-red-400/20 bg-slate-900 p-5">
         <header className="mb-3">
