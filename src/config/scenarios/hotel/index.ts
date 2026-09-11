@@ -62,6 +62,9 @@ const rawHotel = {
         minAcceptablePrice: 45,
         psychThresholds: [{ threshold: 100, penalty: 0.92 }],
         marketingSensitivity: 0.3,
+        // Sans publicité, la clientèle loisirs ne trouve pas l'hôtel : la porte
+        // marketing ne laisse passer que six dixièmes de l'attraction à budget nul.
+        marketingGate: 0.6,
         qualitySensitivity: 0.28,
         loyalty: 0.12,
         priceEffectBounds: { min: 0.25, max: 3.2 },
