@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { SCENARIOS, scenarioByCode } from "../../src/config/scenarios/registry";
+import { botDecisions, type BotProfile } from "../../src/engine/bots";
+import { runGame, soldUnits } from "../../src/engine/simulation/runGame";
+import type { CompanyRoundResult, CompanyState } from "../../src/engine/types";
 
 /**
  * Les énoncés citent des chiffres que le moteur applique. Quand les deux
@@ -88,5 +91,99 @@ describe("LA TABLE D'AUGUSTIN : les chiffres des énoncés sortent de la configu
     expect(d.vocabulary.capacityLabel).toBe("Capacité salle et cuisine");
     expect(d.vocabulary.capacityBottleneckLabel).toBe("Salle et cuisine");
     for (const type of s.equipment!.types) expect(type.name.toLowerCase()).toContain("cuisine");
+  });
+});
+
+describe("aucune offre de commande ne vend sous le coût variable sans le dire", () => {
+  for (const d of SCENARIOS) {
+    it(`${d.code}`, () => {
+      const p = d.scenario.product;
+      const variable = p.materialCostPerUnit + p.otherVariableCostPerUnit;
+      for (const o of d.scenario.orderOffers ?? []) {
+        expect(o.price, `${o.code} à ${o.price} € pour ${variable} € de coût variable`).toBeGreaterThanOrEqual(variable);
+      }
+    });
+  }
+});
+
+describe("PIXEL & CO : la thèse du scénario est ce que le moteur fait", () => {
+  const d = scenarioByCode("ecommerce");
+  const s = d.scenario;
+
+  it("sans publicité, le trafic payant ne vient presque pas : la porte marketing du segment est fermée aux deux tiers", () => {
+    const acquisition = s.market.segments.find((x) => x.code === "acquisition")!;
+    expect(acquisition.marketingGate).toBeDefined();
+    expect(acquisition.marketingGate!).toBeLessThanOrEqual(0.35);
+    for (const x of s.market.segments) if (x.code !== "acquisition") expect(x.marketingGate).toBeUndefined();
+  });
+
+  it("les retours de la situation du tour 3 existent dans le moteur et répondent à la qualité perçue", () => {
+    expect(s.qualityCosts).toBeDefined();
+    expect(s.qualityCosts!.externalReturnSensitivity).toBeGreaterThan(0);
+    const retours = d.situations.find((x) => x.code === "ecommerce_t3_retours")!;
+    expect(retours.narrative).toContain("11 € de logistique");
+  });
+
+  it("les dettes fournisseurs du bilan valent bien 45 jours d'achats", () => {
+    const c = d.company("t", "T", "human");
+    const achatsTrimestre = 4500 * s.product.materialCostPerUnit;
+    const attendu = (achatsTrimestre * s.finance.supplierPaymentDelayDays) / 90;
+    expect(Math.abs(c.finance.payables - attendu) / attendu).toBeLessThan(0.05);
+    // et le bilan reste équilibré
+    const f = c.finance;
+    expect(f.fixedAssetsNet + f.inventoryValue + f.receivables + f.cash).toBe(f.equity + f.financialDebt + f.payables);
+  });
+
+  it("le déstockage laisse « presque rien », pas une perte", () => {
+    const o = (s.orderOffers ?? []).find((x) => x.code === "ecom_offer_destockage")!;
+    const variable = s.product.materialCostPerUnit + s.product.otherVariableCostPerUnit;
+    expect(o.price - variable).toBeGreaterThan(0);
+    expect(o.price - variable).toBeLessThan(5);
+  });
+});
+
+describe("PIXEL & CO : la partie donne raison à la thèse", () => {
+  const STRATEGIES: BotProfile[] = ["passive", "price_aggressive", "premium", "balanced", "growth"];
+  const d = scenarioByCode("ecommerce");
+  function cumul(strategie: BotProfile): { cumul: number; mort: number } {
+    const companies: CompanyState[] = [
+      d.company("player", "PIXEL", "bot", strategie),
+      ...d.bots.slice(0, 2).map((b) => d.company(b.id, b.name, "bot", b.profile)),
+    ];
+    const run = runGame({
+      scenario: d.scenario,
+      initialCompanies: companies,
+      providers: Object.fromEntries(
+        companies.map((c) => [
+          c.id,
+          (ctx: { state: CompanyState; roundIndex: number; lastResult?: CompanyRoundResult }) =>
+            botDecisions(c.botProfile as BotProfile, {
+              scenario: d.scenario,
+              state: ctx.state,
+              roundIndex: ctx.roundIndex,
+              lastSoldUnits: ctx.lastResult ? soldUnits(ctx.lastResult) : undefined,
+            }),
+        ]),
+      ),
+      seed: 20260101,
+    });
+    const rs = run.rounds.map((r) => r.results["player"]!);
+    return {
+      cumul: rs.reduce((t, r) => t + r.incomeStatement.netIncome, 0),
+      mort: rs.findIndex((r) => soldUnits(r) === 0) + 1,
+    };
+  }
+  const resultats = Object.fromEntries(STRATEGIES.map((s) => [s, cumul(s)]));
+
+  it("celui qui n'achète pas son trafic ne gagne pas la partie : la passive finit derrière l'équilibrée et la croissance", () => {
+    expect(resultats["passive"]!.cumul).toBeLessThan(resultats["balanced"]!.cumul);
+    expect(resultats["passive"]!.cumul).toBeLessThan(resultats["growth"]!.cumul);
+    expect(resultats["passive"]!.cumul).toBeLessThan(0);
+  });
+
+  it("acheter son trafic paie : l'équilibrée et la croissance gagnent, et nul ne meurt au premier tour", () => {
+    expect(resultats["balanced"]!.cumul).toBeGreaterThan(0);
+    expect(resultats["growth"]!.cumul).toBeGreaterThan(0);
+    for (const s of STRATEGIES) expect(resultats[s]!.mort, s).not.toBe(1);
   });
 });

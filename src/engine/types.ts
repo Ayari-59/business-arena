@@ -553,6 +553,15 @@ export interface SegmentConfig {
    */
   commissionRate?: number;
   /**
+   * Porte marketing (e-commerce) : part de l'attraction que le segment garde
+   * SANS budget marketing, entre 0 et 1. Absente : tout (comportement
+   * historique, le marketing ne fait que multiplier). À 0,2, une offre sans
+   * publicité ne vaut qu'un cinquième de son attraction sur ce segment, et
+   * la porte s'ouvre avec le budget rapporté à l'échelle marketing du
+   * scénario : le trafic s'achète.
+   */
+  marketingGate?: number;
+  /**
    * Adéquation explicite des axes de communication à ce segment (levier
    * communication) : "fit" quand le segment y est réceptif, "misfit" quand
    * l'axe ne lui parle pas. À défaut, elle se lit des ressorts du segment

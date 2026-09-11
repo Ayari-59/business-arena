@@ -130,3 +130,27 @@ describe("allocation concurrentielle (doc 02 §3.3)", () => {
     }
   });
 });
+
+describe("porte marketing (e-commerce : le trafic s'achète)", () => {
+  it("sans porte, l'effet marketing est celui d'origine : neutre à budget nul", () => {
+    expect(marketingEffect(0, segment(), 10000)).toBe(1);
+    expect(marketingEffect(10000, segment(), 10000)).toBeCloseTo(1 + 0.2 * Math.log(2), 10);
+  });
+
+  it("avec une porte, un budget nul ne garde que la part de la porte, et la porte s'ouvre vite avec le budget", () => {
+    const s = segment({ marketingGate: 0.3 });
+    expect(marketingEffect(0, s, 10000)).toBeCloseTo(0.3, 10);
+    // à un sixième de l'échelle, la porte est ouverte aux deux tiers ; au tiers, en grand
+    const sixieme = marketingEffect(10000 / 6, s, 10000) / marketingEffect(10000 / 6, segment(), 10000);
+    const tiers = marketingEffect(10000 / 3, s, 10000) / marketingEffect(10000 / 3, segment(), 10000);
+    expect(sixieme).toBeGreaterThan(0.7);
+    expect(sixieme).toBeLessThan(0.8);
+    expect(tiers).toBeGreaterThan(0.9);
+    // à l'échelle, l'effet est celui d'origine à un pour cent près
+    expect(marketingEffect(10000, s, 10000) / marketingEffect(10000, segment(), 10000)).toBeGreaterThan(0.99);
+    // la porte ne fait jamais gagner : toujours au plus l'effet d'origine
+    for (const b of [0, 500, 3000, 10000, 50000]) {
+      expect(marketingEffect(b, s, 10000)).toBeLessThanOrEqual(marketingEffect(b, segment(), 10000));
+    }
+  });
+});

@@ -498,7 +498,7 @@ export const ECOMMERCE_SITUATIONS: SituationDef[] = [
     category: "contexte_marche",
     title: "Une commande sur huit revient",
     narrative:
-      "Le service client remonte un chiffre que personne ne regardait : 12 % des commandes sont retournées. Chaque retour, ce sont des frais de port dans les deux sens, un article à contrôler et à remettre en rayon, parfois invendable. La marge affichée sur une commande, elle, n'en tient aucun compte.",
+      "Le service client remonte un chiffre que personne ne regardait : 12 % des commandes sont retournées. Chaque retour, ce sont des frais de port dans les deux sens, un article à contrôler et à remettre en rayon, parfois invendable. Le coût moyen de ces retours ordinaires se cache dans vos 11 € de logistique par commande ; mais dès que la qualité perçue baisse (photos, fiches, délais), les retours dépassent la normale, sont remboursés, et l'article ne revient pas en rayon. La marge affichée sur une commande, elle, n'en tient aucun compte.",
     problem:
       "Que devient votre marge quand une commande sur huit revient, et où faut-il agir ?",
     diagnosticOptions: [

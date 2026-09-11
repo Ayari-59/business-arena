@@ -134,7 +134,7 @@ const rawFitness = {
     factoringFeeRate: 0.025,
     forcedFactoringFeeRate: 0.06,
     // 2 %/an : de quoi valoriser le surplus, jamais de quoi financer
-    // un découvert à 9 %. L'arbitrage doit rester perdant à l'envers.
+    // un découvert à 13 %. L'arbitrage doit rester perdant à l'envers.
     placementAnnualRate: 0.02,
   },
   // structure ≈ 94 000 €/tour : 78 000 décaissés (loyer du plateau, salaires
