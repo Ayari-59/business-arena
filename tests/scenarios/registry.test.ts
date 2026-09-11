@@ -582,9 +582,13 @@ describe("les familles de scénarios : un produit ou la gamme, selon le niveau",
     expect(scenarioCodeForLevel("bistrot", 3)).toBe("bistrot");
     expect(scenarioCodeForLevel("bistrot", 4)).toBe("bistrot-gamme");
     expect(codes).not.toContain("bistrot-gamme");
+    // PIXEL & CO : une commande à panier moyen jusqu'au niveau 3, les quatre rayons à partir du 4.
+    expect(scenarioCodeForLevel("ecommerce", 3)).toBe("ecommerce");
+    expect(scenarioCodeForLevel("ecommerce", 4)).toBe("ecommerce-gamme");
+    expect(codes).not.toContain("ecommerce-gamme");
     // Sans niveau : le plus simple. Hors famille : le code tel quel.
     expect(scenarioCodeForLevel("nova", undefined)).toBe("nova");
-    expect(scenarioCodeForLevel("ecommerce", 6)).toBe("ecommerce");
+    expect(scenarioCodeForLevel("fitness", 6)).toBe("fitness");
     expect(scenarioCodeForLevel("scenario-enseignant-inconnu", 6)).toBe("scenario-enseignant-inconnu");
     // Une famille ne peut ouvrir la gamme qu'à un niveau qui existe.
     for (const f of SCENARIO_FAMILIES) {
