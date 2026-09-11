@@ -166,6 +166,12 @@ export const engineScenarioConfigSchema = z.object({
   fixedCostsPerRound: z.number().nonnegative(),
   // Activité de service : la capacité non vendue est perdue, jamais stockée.
   perishable: z.boolean().optional(),
+  // Concurrents pilotés : le supplément de prix du premium, propre au métier.
+  bots: z
+    .object({
+      premiumPriceRatio: z.number().min(1).max(2).optional(),
+    })
+    .optional(),
   // Modèle par abonnement : le portefeuille n'existe que si le bloc est déclaré.
   subscription: z
     .object({

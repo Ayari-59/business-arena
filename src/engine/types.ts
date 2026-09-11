@@ -236,6 +236,16 @@ export interface EngineScenarioConfig {
    */
   perishable?: boolean;
   /**
+   * Réglages des concurrents pilotés (optionnel). `premiumPriceRatio` : le
+   * supplément de prix du profil premium sur le prix de référence (défaut
+   * 1,3). Dans un marché où les clients comparent d'abord les prix (bâtiment,
+   * transport), 30 % de plus ferme le marché : le profil s'y joue plus près
+   * de la référence. Absent : comportement historique.
+   */
+  bots?: {
+    premiumPriceRatio?: number;
+  };
+  /**
    * Modèle par ABONNEMENT (optionnel) : l'entreprise porte un portefeuille
    * d'adhérents d'un tour à l'autre. Chaque tour, une part du portefeuille
    * part (attrition) ; le reste est servi en priorité sur la capacité du tour

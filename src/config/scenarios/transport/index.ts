@@ -167,6 +167,9 @@ const rawTransport = {
   // première version inversait en chargeant la palette de 43 € de frais de
   // route, soit le coût d'un camion complet posé sur une seule palette.
   fixedCostsPerRound: 186000,
+  // Le transport se vend au tarif de la palette, et les chargeurs comparent :
+  // 30 % de plus vide les camions. Le premium se joue à +10 %.
+  bots: { premiumPriceRatio: 1.1 },
   suppliers: [
     {
       code: "carte_reseau",
