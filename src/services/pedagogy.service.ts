@@ -59,8 +59,6 @@ import { getCompletedStepsForUser, isSituationAccessible, markStepCompleted } fr
  * Ce fichier ne fait que ré-exporter leur API publique : les appelants qui
  * importent depuis @/services/pedagogy.service n'ont rien à changer.
  */
-
-<<<<<<< HEAD
 // ---------------------------------------------------------------------------
 // Seed idempotent des référentiels (appelé à la création de partie)
 // ---------------------------------------------------------------------------
