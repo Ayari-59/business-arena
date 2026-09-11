@@ -941,10 +941,10 @@ export function DecisionForm({
   // formulaire qu'on déroule, quelques écrans qu'on parcourt. Une étape sans
   // aucun contenu au niveau de difficulté courant est retirée ; l'index
   // d'affichage se calcule sur les étapes RÉELLEMENT visibles.
-  // Les quatre budgets du tour (marketing, qualité, maintenance, R&D) se
-  // décident au même endroit, dans une seule famille après les ventes : en
-  // mono-produit quatre champs, en gamme un tableau par référence puis
-  // l'entretien, qui est de l'entreprise. Il n'y a donc plus d'étape « Produire ».
+  // Les quatre budgets du tour (marketing, qualité, maintenance, R&D) et la
+  // communication ont leur étape, « Budgéter » : ce que l'entreprise dépense
+  // ce tour pour soutenir son offre. « Vendre » ne garde que le prix, le
+  // volume et l'approvisionnement. Il n'y a plus d'étape « Produire ».
   const equipeVisible = on.hr || on.rse;
   const financerVisible = on.finance || (on.investment && !!equipmentOffer);
   const couvertureVisible =
@@ -953,13 +953,15 @@ export function DecisionForm({
     (on.insurance && (!!insuranceOffer || (insuranceFormulas?.length ?? 0) > 0));
   const etapesVisibles = [
     "vendre",
+    "budgets",
     equipeVisible ? "equipe" : null,
     financerVisible ? "financer" : null,
     couvertureVisible ? "couverture" : null,
     "prevoir",
   ].filter((x): x is string => x !== null);
   const META: Record<string, { titre: string; icone: string }> = {
-    vendre: { titre: "Vendre, s'approvisionner & budgéter", icone: "🎯" },
+    vendre: { titre: "Vendre & s'approvisionner", icone: "🎯" },
+    budgets: { titre: "Budgéter", icone: "💸" },
     equipe: { titre: "Équipe & RSE", icone: "👥" },
     financer: { titre: "Financer & investir", icone: "💶" },
     couverture: { titre: "Trésorerie & couverture", icone: "🛡️" },
@@ -1233,10 +1235,25 @@ export function DecisionForm({
           </Family>
         );
       })()}
+      </section>
+
+      {/* Budgéter : les quatre budgets du tour (marketing, qualité, entretien,
+          R&D) et la communication — ce que l'entreprise dépense ce tour pour
+          soutenir son offre. Un budget que le niveau n'ouvre pas part caché,
+          à sa valeur proposée, pour que la lecture côté serveur reste complète. */}
+      <section
+        data-etape={idx("budgets")}
+        hidden={courante !== idx("budgets")}
+        className="space-y-3"
+      >
+      <p className="text-sm leading-relaxed text-slate-400">
+        Ce que vous dépensez ce tour pour soutenir votre offre : faire venir les clients,
+        tenir la qualité, entretenir votre capacité{on.rd && rdOffer ? ", développer" : ""}
+        {communicationOffer ? ", et bâtir votre marque" : ""}. Chaque budget se paie le tour même, en charge.
+      </p>
       {gamme ? null : (
         // Les budgets du tour, au même endroit : marketing, qualité, maintenance
-        // et R&D. Un budget que le niveau n'ouvre pas part caché, à sa valeur
-        // proposée, pour que la lecture côté serveur reste complète.
+        // et R&D.
         <Family
           legend={`💸 Les budgets du tour · ${["marketing", on.quality ? "qualité" : null, on.maintenance ? "maintenance" : null, rdMono ? "R&D" : null].filter(Boolean).join(", ")}`}
           defaultOpen

@@ -348,7 +348,7 @@ describe("le formulaire en gamme", () => {
     expect(html).toContain("marge");
   });
 
-  it("les budgets se décident au même endroit : en gamme, une seule famille avec le tableau par référence puis l'entretien, et la fenêtre des ventes ne porte que le prix, le volume et le façonnier", () => {
+  it("les budgets ont leur étape « Budgéter » : en gamme, une seule famille avec le tableau par référence puis l'entretien, et l'étape « Vendre » ne porte que le prix, le volume et le façonnier", () => {
     const niveau3 = rendu(gamme, { enabled: presetByLevel.get(3)!.decisions });
     expect(niveau3).not.toContain("Produire");
     expect(niveau3).toContain("Les budgets du tour · marketing, qualité, entretien");
@@ -356,21 +356,25 @@ describe("le formulaire en gamme", () => {
     expect(niveau3).toContain('name="maintenanceBudget"');
     expect(niveau3).not.toContain("Production · qualité");
     expect(niveau3).not.toContain("Entretien · réserve et linéaire");
-    // La fenêtre des ventes : prix, volume, façonnier — sans budget.
+    // L'étape « Vendre » (la première) : prix, volume, façonnier — sans budget.
     const ventes = niveau3.indexOf("Vos ventes · le prix et le volume de chaque référence");
     const finVentes = niveau3.indexOf("</details>", ventes);
+    const etapeBudgets = niveau3.indexOf('data-etape="1"');
+    const etapeSuivante = niveau3.indexOf('data-etape="2"');
     expect(ventes).toBeGreaterThan(0);
+    expect(finVentes).toBeLessThan(etapeBudgets);
     for (const champ of ["product.bonnet.price", "product.bonnet.productionPlan", "product.bonnet.supplierChoice"]) {
       const pos = niveau3.indexOf(`name="${champ}"`);
       expect(pos, champ).toBeGreaterThan(ventes);
       expect(pos, champ).toBeLessThan(finVentes);
     }
-    // Les quatre budgets : marketing et qualité par référence, puis l'entretien,
-    // contigus dans la même famille, dans la première étape.
+    // L'étape « Budgéter » (la deuxième) : marketing et qualité par référence,
+    // puis l'entretien, contigus dans la même famille, puis la communication.
+    expect(niveau3).toContain("Budgéter");
     const debut = niveau3.indexOf("Les budgets du tour");
     const fin = niveau3.indexOf("</details>", debut);
-    const etapeSuivante = niveau3.indexOf('data-etape="1"');
-    expect(debut).toBeGreaterThan(finVentes);
+    expect(debut).toBeGreaterThan(etapeBudgets);
+    expect(fin).toBeLessThan(etapeSuivante);
     for (const champ of ["product.bonnet.marketingBudget", "product.bonnet.qualityBudget", "maintenanceBudget"]) {
       const pos = niveau3.indexOf(`name="${champ}"`);
       expect(pos, champ).toBeGreaterThan(debut);
@@ -386,7 +390,7 @@ describe("le formulaire en gamme", () => {
     expect(niveau1).toContain('type="hidden" name="maintenanceBudget"');
   });
 
-  it("en mono-produit, marketing, qualité, maintenance et R&D forment une seule famille, dans la première étape", () => {
+  it("en mono-produit, marketing, qualité, maintenance et R&D forment une seule famille, dans l'étape « Budgéter »", () => {
     const html = rendu(null, { enabled: presetByLevel.get(4)!.decisions, rdOffer: { techScale: 10000 } });
     expect(html).not.toContain("Produire");
     expect(html).toContain("Les budgets du tour · marketing, qualité, maintenance, R&amp;D");
@@ -400,7 +404,10 @@ describe("le formulaire en gamme", () => {
       expect(p).toBeLessThan(fin);
     }
     expect([...positions].sort((a, b) => a - b)).toEqual(positions);
-    expect(positions[3]!).toBeLessThan(html.indexOf('data-etape="1"'));
+    expect(positions[0]!).toBeGreaterThan(html.indexOf('data-etape="1"'));
+    expect(positions[3]!).toBeLessThan(html.indexOf('data-etape="2"'));
+    // Et le prix reste dans la première étape, « Vendre ».
+    expect(html.indexOf('name="price"')).toBeLessThan(html.indexOf('data-etape="1"'));
     // Un niveau qui ne les ouvre pas : le titre ne les promet pas, les scalaires partent cachés.
     const niveau1 = rendu(null, { enabled: presetByLevel.get(1)!.decisions });
     expect(niveau1).toContain("Les budgets du tour · marketing<");
