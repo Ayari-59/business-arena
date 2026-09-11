@@ -17,7 +17,7 @@ const EXPECTED_TABLES = [
   "company_states",
   "round_results", "kpis", "event_occurrences",
   "situation_instances", "model_choices", "hint_usages",
-  "learning_progress", "player_skills",
+  "learning_progress", "player_skills", "completed_learning_steps", "learning_path_progression",
   "scores", "game_rankings",
   "competitions", "competition_stages", "competition_entries",
 ];
