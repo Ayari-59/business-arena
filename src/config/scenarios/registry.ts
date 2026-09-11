@@ -1,6 +1,7 @@
 import type { BotProfile } from "../../engine/bots";
 import type { CompanyState, EngineScenarioConfig } from "../../engine/types";
 import type { SituationDef } from "./situation-kit";
+import { SITUATION_LEARNING_MAP } from "@/config/pedagogy/situation-learning-map";
 import {
   ABONNEMENT_KPIS,
   COMMERCE_KPIS,
@@ -694,9 +695,36 @@ export function scenarioByCode(code: string | undefined | null): ScenarioDefinit
 }
 
 /** Toutes les situations, tous scénarios confondus (référentiel à semer). */
-export const ALL_SITUATIONS: SituationDef[] = SCENARIOS.flatMap((s) => s.situations);
+export const ALL_SITUATIONS: SituationDef[] = (() => {
+  const situations = SCENARIOS.flatMap((s) => s.situations);
+  // Appliquer les mappings d'apprentissage aux situations
+  applyLearningMappings(situations);
+  return situations;
+})();
 
 export const situationByCode = new Map(ALL_SITUATIONS.map((s) => [s.code, s]));
+
+/**
+ * Applique les mappings d'apprentissage aux situations.
+ * Modifie les situations en place pour ajouter requiredLearningSteps et grantedLearningSteps.
+ */
+function applyLearningMappings(situations: SituationDef[]): void {
+  const mappingByCode = new Map(
+    SITUATION_LEARNING_MAP.map((m) => [m.situationCode, m])
+  );
+
+  for (const situation of situations) {
+    const mapping = mappingByCode.get(situation.code);
+    if (mapping) {
+      if (mapping.requiredLearningSteps) {
+        situation.requiredLearningSteps = mapping.requiredLearningSteps;
+      }
+      if (mapping.grantedLearningSteps) {
+        situation.grantedLearningSteps = mapping.grantedLearningSteps;
+      }
+    }
+  }
+}
 
 /**
  * Valeurs économiques d'un scénario, mises en forme pour l'affichage en
