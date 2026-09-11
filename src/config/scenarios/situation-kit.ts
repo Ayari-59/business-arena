@@ -85,6 +85,8 @@ export interface SituationDef {
   decisionLevers: DecisionLever[];
   /** Étapes d'apprentissage obligatoires pour accéder à cette situation. */
   requiredLearningSteps?: string[];
+  /** Étapes d'apprentissage débloquées/complétées après débriefing de cette situation. */
+  grantedLearningSteps?: string[];
 }
 
 /** Coûts standard des 5 niveaux (doc 03 §4) : cumulés = 45 % de score restant. */

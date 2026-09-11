@@ -43,7 +43,7 @@ import { AXES, aggregateAxis, updateMastery } from "@/pedagogy/progress";
 import { adaptiveHintMultiplier, playerStrength } from "@/pedagogy/adaptivity";
 import { computeRawSituationScore } from "@/pedagogy/scoring";
 import type { CompanyRoundResult } from "@/engine/types";
-import { getCompletedStepsForUser, isSituationAccessible } from "@/services/learning-progress.service";
+import { getCompletedStepsForUser, isSituationAccessible, markStepCompleted } from "@/services/learning-progress.service";
 
 /**
  * Moteur pédagogique côté services (étapes 8-9, doc 03) : instancie les
@@ -578,7 +578,20 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
       })
       .where(eq(situationInstances.id, instance.id));
 
+    // Mark granted learning steps as completed for team members
+    const grantedSteps = def.grantedLearningSteps ?? [];
     const members = membersByTeam.get(instance.teamId) ?? [];
+    for (const member of members) {
+      for (const stepId of grantedSteps) {
+        try {
+          await markStepCompleted(member.userId, stepId);
+        } catch (error) {
+          // Silently skip if step doesn't exist or prerequisites aren't met
+          // (this allows situations to grant steps that don't exist yet without breaking)
+        }
+      }
+    }
+
     for (const member of members) {
       const memberSkills = (skillsByUser.get(member.userId) ?? []).map((s) => ({
         value: Number(s.value),
