@@ -158,9 +158,10 @@ const rawEcommerce = {
     // un découvert à 14 %. L'arbitrage doit rester perdant à l'envers.
     placementAnnualRate: 0.02,
   },
-  // structure ≈ 53 000 €/tour : 48 000 décaissés (équipe, entrepôt, plateforme,
-  // abonnements logiciels) + 5 000 d'amortissements — HORS acquisition
-  fixedCostsPerRound: 48000,
+  // structure ≈ 57 000 €/tour : 52 000 décaissés (41 000 d'équipe, 11 000
+  // d'entrepôt, de plateforme et d'abonnements logiciels) + 5 000
+  // d'amortissements — HORS acquisition
+  fixedCostsPerRound: 52000,
   suppliers: [
     {
       code: "grossiste_ue",

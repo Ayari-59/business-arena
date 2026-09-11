@@ -137,9 +137,10 @@ const rawBatiment = {
     forcedFactoringFeeRate: 0.075,
     placementAnnualRate: 0.02,
   },
-  // structure ≈ 152 000 €/tour : 138 000 décaissés (encadrement, dépôt,
-  // assurance décennale, véhicules, bureau) + 14 000 d'amortissements
-  fixedCostsPerRound: 138000,
+  // structure ≈ 182 000 €/tour : 168 000 décaissés (134 400 de compagnons et
+  // d'encadrement, 33 600 de dépôt, de véhicules, d'échafaudages, d'assurance
+  // décennale et de bureau) + 14 000 d'amortissements
+  fixedCostsPerRound: 168000,
   suppliers: [
     {
       code: "negoce_regional",

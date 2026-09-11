@@ -811,10 +811,13 @@ export function boutiqueCompany(
       fixedAssetsNet: 120000,
       inventoryValue: OPENING_VALUE, // 27 510 €
       receivables: 18000,
-      cash: 22000,
-      equity: 120000 + OPENING_VALUE + 18000 + 22000 - 70000 - 20000, // 97 510 €
+      // 45 jours d'achats chez le façonnier (~6 000 pièces à 26 € par
+      // trimestre) : c'est ce que le délai cité par les énoncés laisse au bilan.
+      // La trésorerie porte la contrepartie : ces dettes ont financé la caisse.
+      cash: 80000,
+      equity: 120000 + OPENING_VALUE + 18000 + 80000 - 70000 - 78000, // 97 510 €
       financialDebt: 70000,
-      payables: 20000,
+      payables: 78000,
       overdraft: 0,
     },
     lastMarketShare: {},

@@ -518,10 +518,11 @@ export function boutiqueMonoCompany(
       fixedAssetsNet: 120000,
       inventoryValue: 25800, // 1 200 × 21,50 €
       receivables: 18000,
-      cash: 22000,
+      // 45 jours d'achats chez le façonnier ; la trésorerie porte la contrepartie.
+      cash: 56000,
       equity: 95800,
       financialDebt: 70000,
-      payables: 20000,
+      payables: 54000,
       overdraft: 0,
     },
     lastMarketShare: {},

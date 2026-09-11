@@ -541,11 +541,11 @@ export function fitnessCompany(
       fixedAssetsNet: 640000,
       inventoryValue: 0,
       receivables: 24000, // uniquement les contrats entreprises
-      cash: 46000,
+      cash: 44500,
       equity: 285000,
       financialDebt: 420000,
       // un mois de consommables et d'entretien du parc, réglé à 30 jours
-      payables: 5000,
+      payables: 3500,
       overdraft: 0,
     },
     lastMarketShare: {},
