@@ -23,6 +23,7 @@ import { statutDesSituations } from "@/config/situation-rendu";
 import { AiAssistant } from "@/components/ai-assistant";
 import { entitlementsForUser } from "@/services/entitlements.service";
 import { resolveAiSurface } from "@/services/ai.service";
+import { InfoHint } from "@/components/info-hint";
 
 export const dynamic = "force-dynamic";
 
@@ -137,20 +138,23 @@ export default async function ArenaPage({
   const donneesSection = premierTour ? (
     <section className="space-y-4 rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4 text-slate-300">
       <div>
-        <h2 className="text-lg font-semibold text-slate-100">
+        <h2 className="text-lg font-semibold text-slate-100 flex items-center gap-2">
           {periodLabel(view.roundDays, 1)} · prise en main
+          <InfoHint
+            icon="📖"
+            hint={`Vous reprenez ${view.intro.company}, ${appositive(view.intro.tagline)}. ${view.intro.briefing}`}
+            variant="subtle"
+          />
         </h2>
-        <p className="mt-2 text-sm leading-relaxed">
-          Vous reprenez <strong>{view.intro.company}</strong>,{" "}
-          {appositive(view.intro.tagline)}. {view.intro.briefing}
-        </p>
       </div>
-      <div className="rounded-lg border border-white/5 bg-slate-950 p-1.5 sm:p-4">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-          Ce que vous trouvez en arrivant
-        </h3>
-        <p className="mt-2 text-sm leading-relaxed">{view.intro.context}</p>
-      </div>
+      {view.intro.context && (
+        <div className="rounded-lg border border-white/5 bg-slate-950 p-1.5 sm:p-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400 flex items-center gap-2">
+            Contexte
+            <InfoHint icon="?" hint={view.intro.context} variant="subtle" />
+          </h3>
+        </div>
+      )}
       <ParametersPanels
         intro={view.intro}
         vocabulary={view.vocabulary}
@@ -186,8 +190,13 @@ export default async function ArenaPage({
       ) : null}
       {view.announcedEventCards.length > 0 ? (
         <section className="rounded-xl border border-amber-400/30 bg-slate-900 p-1.5 sm:p-4">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-400">
-            ⚡ Votre enseignant a tiré une carte : elle s&apos;appliquera à ce tour
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-400 flex items-center gap-2">
+            ⚡ Carte annoncée
+            <InfoHint
+              icon="?"
+              hint="Votre enseignant a tiré une carte qui s'appliquera à ce tour. Adaptez vos décisions en conséquence."
+              variant="subtle"
+            />
           </p>
           <div className="grid gap-3 sm:grid-cols-2">
             {view.announcedEventCards.map((card, i) => (
@@ -207,9 +216,6 @@ export default async function ArenaPage({
               />
             ))}
           </div>
-          <p className="mt-2 text-xs text-slate-400">
-            Adaptez vos décisions en conséquence : c&apos;est tout l&apos;intérêt d&apos;être prévenu.
-          </p>
         </section>
       ) : null}
       {view.seasonNotes.length > 0 ? (
@@ -552,11 +558,15 @@ export default async function ArenaPage({
                   tour en cours
                 </span>
               </span>
-              <span className="text-xs text-slate-400">
-                {view.kind === "solo"
-                  ? "Trois temps : lisez la situation, analysez-la, puis rendez vos décisions et simulez."
-                  : "Trois temps : lisez la situation, analysez-la, puis rendez vos décisions ; les résultats arrivent à la clôture du tour."}
-              </span>
+              <InfoHint
+                icon="ℹ️"
+                hint={
+                  view.kind === "solo"
+                    ? "Lisez la situation, analysez-la, puis rendez vos décisions et simulez."
+                    : "Lisez la situation, analysez-la, puis rendez vos décisions. Les résultats arrivent à la clôture du tour."
+                }
+                variant="subtle"
+              />
             </div>
 
             {/* Le tour précédent vient de livrer ses résultats (solo : la
@@ -621,21 +631,20 @@ export default async function ArenaPage({
                     <section id="decisions">
                 {leviersIndice ? <div className="mb-4">{leviersIndice}</div> : null}
                 <div className="mb-4 border-b border-white/10 pb-3">
-                  <h2 className="text-sm font-semibold text-slate-200">
+                  <h2 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
                     Vos décisions · {periodLabel(view.roundDays, view.currentRound).toLowerCase()}
+                    <InfoHint
+                      icon="?"
+                      hint={`Une fois rendues et le tour clos, elles produiront les résultats de ce tour — et le tour suivant s'ouvrira. Utilisez le Cockpit de prévision (Excel) pour vérifier vos hypothèses, votre logistique et votre trésorerie avant de valider.`}
+                      variant="subtle"
+                    />
                   </h2>
-                  <p className="mt-1 text-xs text-slate-400">
-                    Une fois rendues et le tour clos, elles produiront les résultats de ce
-                    tour — et le tour suivant s&apos;ouvrira.{" "}
-                    <a
-                      href={`/arena/${view.gameId}/cockpit`}
-                      className="text-amber-300 underline-offset-4 hover:underline"
-                    >
-                      Cockpit de prévision (Excel)
-                    </a>
-                    {" "}: vos hypothèses, votre logistique et votre trésorerie, calculées avant de
-                    valider.
-                  </p>
+                  <a
+                    href={`/arena/${view.gameId}/cockpit`}
+                    className="mt-2 inline-flex items-center gap-1 text-xs text-amber-300 underline-offset-4 hover:underline"
+                  >
+                    📊 Cockpit de prévision
+                  </a>
                 </div>
                 <DecisionForm
                   gameId={view.gameId}
