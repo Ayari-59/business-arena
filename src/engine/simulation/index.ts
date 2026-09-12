@@ -1154,7 +1154,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const receivableRatio = revenue > 0 ? Math.min(1, creditRevenue / revenue) : 0;
     const vatRate = scenario.finance.vatRate ?? 0;
 
-    // Jalon B : Enregistrement des ventes (débit 411 / crédit 701, TVA débit 411 / crédit 4453)
+    // Jalon B : Enregistrement des ventes (débit 411 / crédit 701, TVA débit 411 / crédit 4457)
     if (multi && revenue > 0) {
       for (let k = 0; k < gamme.length; k++) {
         const productRevenue = productSegmentRevenue[k]!;
