@@ -106,8 +106,8 @@ export function VariancePanel({
 
       <p className="mt-2 text-xs leading-relaxed text-slate-400">
         Les écarts de coûts (matière et efficacité) pèsent directement sur le résultat. Le contexte
-        commercial par segment montre comment prix et volume ont joué : ces variances n'influent pas
-        aujourd'hui, mais elles éclairent le diagnostic.
+        commercial par segment montre comment prix et volume ont joué : ces variances n&apos;influent pas
+        aujourd&apos;hui, mais elles éclairent le diagnostic.
       </p>
     </div>
   );

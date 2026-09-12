@@ -27,13 +27,13 @@ export default async function TeacherLearningPage() {
       <main id="main" className="flex min-h-screen flex-col items-center justify-center gap-4 p-8 text-center">
         <h1 className="text-2xl font-bold">Authentification requise</h1>
         <p className="max-w-md text-sm text-slate-400">
-          Vous devez être connecté en tant qu'enseignant pour accéder à cette page.
+          Vous devez être connecté en tant qu&apos;enseignant pour accéder à cette page.
         </p>
         <Link
           href="/teacher/login"
           className="rounded-lg bg-amber-400 px-6 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300"
         >
-          Aller à l'espace enseignant
+          Aller à l&apos;espace enseignant
         </Link>
       </main>
     );
@@ -79,7 +79,7 @@ export default async function TeacherLearningPage() {
         <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Business Arena</p>
         <h1 className="mt-1 text-3xl font-bold">Progression pédagogique</h1>
         <p className="mt-2 text-sm text-slate-400">
-          Suivez la progression de vos élèves à travers les sentiers d'apprentissage.
+          Suivez la progression de vos élèves à travers les sentiers d&apos;apprentissage.
           Chaque étape complétée renforce leur maîtrise des notions métier.
         </p>
       </header>
@@ -91,7 +91,7 @@ export default async function TeacherLearningPage() {
           href="/teacher"
           className="text-sm text-slate-400 underline-offset-4 hover:underline"
         >
-          ← Retour à l'espace enseignant
+          ← Retour à l&apos;espace enseignant
         </Link>
         <span className="text-slate-600">·</span>
         <Link

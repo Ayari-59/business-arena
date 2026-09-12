@@ -20,7 +20,7 @@ describe("variance calculation", () => {
           lost: 100,
           revenue: 54000,
           commission: 0,
-        } as any,
+        },
       },
     });
 
@@ -55,7 +55,7 @@ describe("variance calculation", () => {
           lost: 100,
           revenue: 54000,
           commission: 0,
-        } as any,
+        },
       },
     });
 
@@ -88,7 +88,7 @@ describe("variance calculation", () => {
           lost: 100,
           revenue: 54000,
           commission: 0,
-        } as any,
+        },
       },
     });
 
@@ -115,7 +115,7 @@ describe("variance calculation", () => {
           lost: 100,
           revenue: 54000,
           commission: 0,
-        } as any,
+        },
         passionnes: {
           potential: 600,
           attraction: 1.0,
@@ -125,7 +125,7 @@ describe("variance calculation", () => {
           lost: 100,
           revenue: 30000,
           commission: 0,
-        } as any,
+        },
       },
     });
 
@@ -157,7 +157,7 @@ describe("variance calculation", () => {
           lost: 100,
           revenue: 54000,
           commission: 0,
-        } as any,
+        },
       },
     });
 

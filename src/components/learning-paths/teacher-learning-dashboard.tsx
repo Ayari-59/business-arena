@@ -24,7 +24,7 @@ export async function TeacherLearningDashboard({
       <div>
         <h2 className="text-lg font-semibold text-slate-50">Progression pédagogique</h2>
         <p className="mt-1 text-sm text-slate-400">
-          Suivi de la progression de vos équipes dans les sentiers d'apprentissage
+          Suivi de la progression de vos équipes dans les sentiers d&apos;apprentissage
         </p>
       </div>
 

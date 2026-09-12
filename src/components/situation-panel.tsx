@@ -133,7 +133,7 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
         <div className="rounded-lg border border-red-400/30 bg-red-950/30 px-4 py-3">
           <p className="text-sm font-semibold text-red-200">Accès limité</p>
           <p className="mt-1 text-xs text-red-300">
-            Cette situation nécessite de compléter des étapes d'apprentissage préalables. Consultez les sentiers pédagogiques pour progresser.
+            Cette situation nécessite de compléter des étapes d&apos;apprentissage préalables. Consultez les sentiers pédagogiques pour progresser.
           </p>
         </div>
       </article>

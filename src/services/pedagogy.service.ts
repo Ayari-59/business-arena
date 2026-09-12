@@ -510,7 +510,7 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
       production: (r.engineTrace as { production?: CompanyRoundResult["production"] })?.production ?? { utilizationRate: 0 },
     } as CompanyRoundResult);
   }
-  let beforeByTeam = new Map<string, CompanyRoundResult>();
+  const beforeByTeam = new Map<string, CompanyRoundResult>();
   if (roundIndex > 1) {
     const prevRoundRow = (
       await db
@@ -589,7 +589,7 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
       for (const stepId of grantedSteps) {
         try {
           await markStepCompleted(member.userId, stepId);
-        } catch (error) {
+        } catch {
           // Silently skip if step doesn't exist or prerequisites aren't met
           // (this allows situations to grant steps that don't exist yet without breaking)
         }
