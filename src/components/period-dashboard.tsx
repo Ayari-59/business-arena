@@ -780,7 +780,7 @@ export function PeriodDashboard({
           </div>
         ),
         comptabilite: r.accounting ? (
-          <PeriodAccounting accounting={r.accounting} />
+          <PeriodAccounting accounting={r.accounting as any} />
         ) : (
           <p className="text-slate-400 text-center py-8">
             Aucune donnée comptable disponible pour ce tour.

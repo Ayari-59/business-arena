@@ -148,6 +148,8 @@ export interface GameView {
     competitiveBenchmark: GameView["competitiveBenchmark"];
     /** Indice RSE du tour (mesure indicative, sans effet sur la partie — Lot 1). */
     rse: RseIndex;
+    /** Journal et grand livre du tour (exposé dans le tableau de bord comptabilité). */
+    accounting?: GameView["accounting"];
   }[];
   /**
    * Rapport extra-financier (Lot 3) : synthèse DPEF SIMPLIFIÉE et indicative sur
@@ -869,6 +871,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       sectorKpis: buildSectorKpis(result, prevSegments, snapshot, scenarioDef.kpis),
       competitiveBenchmark: buildBenchmark(rowsOfRound, teamRows, playerTeam.id),
       rse: computeRseIndex(result),
+      accounting: formatAccountingData(result.accounting),
     });
   }
 
