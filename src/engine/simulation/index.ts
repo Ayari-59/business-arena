@@ -1152,6 +1152,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       sumExact(productCredit.map((c, k) => c * w.gamme[k]!.price)) +
       offerRevenue * offerCreditShare;
     const receivableRatio = revenue > 0 ? Math.min(1, creditRevenue / revenue) : 0;
+    const vatRate = scenario.finance.vatRate ?? 0;
 
     // Jalon B : Enregistrement des ventes (débit 411 / crédit 701, TVA débit 411 / crédit 4453)
     if (multi && revenue > 0) {
@@ -1174,9 +1175,9 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
               unitPrice: w.gamme[k]!.price,
             },
           });
-          // TVA facturée si applicable (estimation 20%)
-          const vatAmount = productRevenue * 0.2;
-          if (vatAmount > 0) {
+          // TVA facturée si applicable
+          if (vatRate > 0) {
+            const saleVat = productRevenue * vatRate;
             journalByCompany.get(w.state.id)!.record({
               day: 1,
               label: `TVA facturée - ${gamme[k]!.name}`,
@@ -1185,7 +1186,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
               debitLabel: "Clients",
               creditAccount: "4453",
               creditLabel: "TVA facturée",
-              amount: vatAmount,
+              amount: saleVat,
               metadata: { productCode: gamme[k]!.code },
             });
           }
@@ -1219,7 +1220,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     );
     const purchases = sumExact(productPurchases);
 
-    // Jalon B : Enregistrement des achats (débit 601 / crédit 401)
+    // Jalon B : Enregistrement des achats (débit 601 / crédit 401) + TVA déductible (4452)
     if (multi && purchases > 0) {
       for (let k = 0; k < gamme.length; k++) {
         if (productPurchases[k]! > 0) {
@@ -1238,6 +1239,21 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
               unitPrice: gamme[k]!.materialCostPerUnit * w.materialMultipliers[k]!,
             },
           });
+          // TVA déductible sur achats (4452) si applicable
+          if (vatRate > 0) {
+            const purchaseVat = productPurchases[k]! * vatRate;
+            journalByCompany.get(w.state.id)!.record({
+              day: 1,
+              label: `TVA déductible - ${gamme[k]!.name}`,
+              category: "tax",
+              debitAccount: "4452",
+              debitLabel: "TVA déductible",
+              creditAccount: "401",
+              creditLabel: "Fournisseurs",
+              amount: purchaseVat,
+              metadata: { productCode: gamme[k]!.code },
+            });
+          }
         }
       }
     }
