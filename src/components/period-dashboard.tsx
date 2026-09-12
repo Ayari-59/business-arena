@@ -11,7 +11,6 @@ import { RatioGauges } from "@/components/ratio-gauges";
 import { SalesHistory } from "@/components/sales-history";
 import { CompetitiveBenchmark } from "@/components/competitive-benchmark";
 import { RseReportPanel } from "@/components/rse-report";
-import { VariancePanel } from "@/components/variance-panel";
 import { PeriodAccounting } from "@/components/period-accounting";
 import { DashboardTabs } from "@/components/dashboard-tabs";
 import type { KpiFormat } from "@/config/scenarios/sector-kpis";
