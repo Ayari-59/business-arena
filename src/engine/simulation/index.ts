@@ -10,6 +10,7 @@ import type {
   SimulationOutput,
 } from "../types";
 import { createRng, deriveRoundSeed } from "../random";
+import { JournalBuilder } from "../accounting/journal";
 import { axisFitFactor, brandFactor, updateBrandAwareness } from "../market/communication";
 import {
   isProductAvailable,
@@ -38,6 +39,7 @@ import { computeHr } from "../hr";
 import { subscriptionChurnRate } from "../subscription";
 import { unitVariableCost } from "../costs";
 import { computeBreakeven } from "../costs/breakeven";
+import { calculateVariances } from "../costs/variance";
 import { balanceGap, computeFinance } from "../finance/statements";
 import {
   DEFAULT_RSE_CONFIG,
@@ -233,6 +235,14 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
   // aux résultats : rien n'est émis en mono-produit.
   const gamme = toGamme(scenario);
   const multi = gamme.length > 1;
+
+  // Journal comptable (Jalon B du plan fondation comptable) : en gamme, on
+  // enregistre chaque flux (achat, vente, paie, amortissement, financement).
+  // En mono-produit, le journal reste vide (non émis dans le résultat).
+  const journalByCompany: Map<string, JournalBuilder> = new Map();
+  for (const company of input.companies) {
+    journalByCompany.set(company.id, new JournalBuilder());
+  }
 
   // 1. Événements : tirage + poursuite des événements actifs (doc 02 §7).
   const { active, drawn } = drawEvents(
@@ -1038,6 +1048,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const productSegmentUnits: number[] = gamme.map(() => 0);
     const productCredit: number[] = gamme.map(() => 0);
     const productLost: number[] = gamme.map(() => 0);
+    const productSegmentSales: Record<string, SegmentSalesDetail>[] = gamme.map(() => ({}));
     gamme.forEach((product, k) => {
       for (const segment of product.market.segments) {
         const detail = salesBySegment.get(segment.code)?.[i];
@@ -1049,6 +1060,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         productLost[k]! += detail.lost;
         productCredit[k]! +=
           detail.sold * Math.min(1, segment.paymentDelayDays / scenario.roundDays);
+        productSegmentSales[k]![segment.code] = detail;
       }
     });
     // Le premier produit de la gamme porte les commandes fermes d'événement et
@@ -1143,6 +1155,47 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       sumExact(productCredit.map((c, k) => c * w.gamme[k]!.price)) +
       offerRevenue * offerCreditShare;
     const receivableRatio = revenue > 0 ? Math.min(1, creditRevenue / revenue) : 0;
+    const vatRate = scenario.finance.vatRate ?? 0;
+
+    // Jalon B : Enregistrement des ventes (débit 411 / crédit 701, TVA débit 411 / crédit 44571)
+    if (multi && revenue > 0) {
+      for (let k = 0; k < gamme.length; k++) {
+        const productRevenue = productSegmentRevenue[k]!;
+        if (productRevenue > 0) {
+          // Vente HT : débit client (411) / crédit vente (701)
+          journalByCompany.get(w.state.id)!.record({
+            day: 1,
+            label: `Vente - ${gamme[k]!.name}`,
+            category: "sale",
+            debitAccount: "411",
+            debitLabel: "Clients",
+            creditAccount: "701",
+            creditLabel: "Ventes de produits finis",
+            amount: productRevenue,
+            metadata: {
+              productCode: gamme[k]!.code,
+              quantity: productSegmentUnits[k],
+              unitPrice: w.gamme[k]!.price,
+            },
+          });
+          // TVA facturée si applicable
+          if (vatRate > 0) {
+            const saleVat = productRevenue * vatRate;
+            journalByCompany.get(w.state.id)!.record({
+              day: 1,
+              label: `TVA collectée - ${gamme[k]!.name}`,
+              category: "tax",
+              debitAccount: "411",
+              debitLabel: "Clients",
+              creditAccount: "44571",
+              creditLabel: "TVA collectée",
+              amount: saleVat,
+              metadata: { productCode: gamme[k]!.code },
+            });
+          }
+        }
+      }
+    }
 
     const removals = w.productStocks.map((s, k) => removeFromStock(s, productSold[k]!));
     const cogsFromStock = sumExact(removals.map((r) => r.cost));
@@ -1169,6 +1222,49 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       (q, k) => q * gamme[k]!.materialCostPerUnit * w.materialMultipliers[k]!,
     );
     const purchases = sumExact(productPurchases);
+
+    // Jalon B : Enregistrement des achats (débit 601 + 4452 / crédit 401 montant TTC)
+    if (multi && purchases > 0) {
+      for (let k = 0; k < gamme.length; k++) {
+        if (productPurchases[k]! > 0) {
+          const purchaseHt = productPurchases[k]!;
+          const purchaseVat = vatRate > 0 ? purchaseHt * vatRate : 0;
+
+          // Enregistrement combiné : débit 601 + 44566 / crédit 401
+          // Achat HT
+          journalByCompany.get(w.state.id)!.record({
+            day: 1,
+            label: `Achat matière première - ${gamme[k]!.name}`,
+            category: "purchase",
+            debitAccount: "601",
+            debitLabel: "Achats de matières premières",
+            creditAccount: "401",
+            creditLabel: "Fournisseurs",
+            amount: purchaseHt,
+            metadata: {
+              productCode: gamme[k]!.code,
+              quantity: w.producedPerProduct[k],
+              unitPrice: gamme[k]!.materialCostPerUnit * w.materialMultipliers[k]!,
+            },
+          });
+          // TVA déductible si applicable
+          if (purchaseVat > 0) {
+            journalByCompany.get(w.state.id)!.record({
+              day: 1,
+              label: `TVA déductible - ${gamme[k]!.name}`,
+              category: "tax",
+              debitAccount: "44566",
+              debitLabel: "TVA déductible sur ABS",
+              creditAccount: "401",
+              creditLabel: "Fournisseurs",
+              amount: purchaseVat,
+              metadata: { productCode: gamme[k]!.code },
+            });
+          }
+        }
+      }
+    }
+
     // Délai de règlement fournisseur : celui du fournisseur (mono), ou la
     // moyenne des délais des fournisseurs de chaque référence pondérée par
     // ses achats (gamme).
@@ -1191,6 +1287,40 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     // Prime d'assurance et RH : charges de structure du tour.
     const insurancePremium = w.insured ? (w.chosenFormula?.premiumPerRound ?? 0) : 0;
     const hrCost = w.hr.cost;
+
+    // Jalon B : Enregistrement de la paie (débit 641, 645 / crédit 512)
+    if (multi && hrCost > 0 && w.state.headcount > 0) {
+      // Salaires bruts (641) : estimé 60% de la masse salariale
+      const grossSalaries = hrCost * 0.6;
+      if (grossSalaries > 0) {
+        journalByCompany.get(w.state.id)!.record({
+          day: 1,
+          label: "Salaires bruts",
+          category: "payroll",
+          debitAccount: "641",
+          debitLabel: "Salaires et traitements",
+          creditAccount: "512",
+          creditLabel: "Banque",
+          amount: grossSalaries,
+          metadata: { employeeCount: w.state.headcount },
+        });
+      }
+      // Cotisations sociales (645) : estimé 40% de la masse salariale
+      const socialContributions = hrCost * 0.4;
+      if (socialContributions > 0) {
+        journalByCompany.get(w.state.id)!.record({
+          day: 1,
+          label: "Cotisations sociales",
+          category: "payroll",
+          debitAccount: "645",
+          debitLabel: "Cotisations sociales patronales",
+          creditAccount: "512",
+          creditLabel: "Banque",
+          amount: socialContributions,
+          metadata: { employeeCount: w.state.headcount },
+        });
+      }
+    }
 
     // Études achetées (doc 02 §8bis) : l'information se paie — la facture est
     // une charge de structure, le rapport est délivré avec les résultats.
@@ -1344,6 +1474,50 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const gap = balanceGap(finance.closing);
     if (Math.abs(gap) > 0.01) {
       throw new Error(`Bilan déséquilibré (${gap.toFixed(4)} €) pour ${w.state.id}`);
+    }
+
+    // Jalon B : Enregistrement de la dépréciation (débit 681 / crédit 2185)
+    const depreciationAmount = finance.incomeStatement.depreciation;
+    if (multi && depreciationAmount > 0) {
+      journalByCompany.get(w.state.id)!.record({
+        day: 1,
+        label: "Amortissement des immobilisations",
+        category: "depreciation",
+        debitAccount: "681",
+        debitLabel: "Dotations aux amortissements - immobilisations corporelles",
+        creditAccount: "2185",
+        creditLabel: "Amortissements des installations, machines et outillage",
+        amount: depreciationAmount,
+      });
+    }
+
+    // Jalon B : Enregistrement des frais financiers (débit 661 / crédit 512)
+    const interest = finance.incomeStatement.interest;
+    if (multi && interest > 0) {
+      journalByCompany.get(w.state.id)!.record({
+        day: 1,
+        label: "Intérêts d'emprunts",
+        category: "financing",
+        debitAccount: "661",
+        debitLabel: "Charges d'intérêts",
+        creditAccount: "512",
+        creditLabel: "Banque",
+        amount: interest,
+      });
+    }
+
+    // Jalon B : Enregistrement des nouveaux emprunts (débit 512 / crédit 16)
+    if (multi && newLoan > 0) {
+      journalByCompany.get(w.state.id)!.record({
+        day: 1,
+        label: "Nouvel emprunt",
+        category: "financing",
+        debitAccount: "512",
+        debitLabel: "Banque",
+        creditAccount: "16",
+        creditLabel: "Emprunts et dettes assimilées",
+        amount: newLoan,
+      });
     }
 
     // Échéanciers du tour suivant : échéances prélevées, anticipé imputé
@@ -1569,6 +1743,19 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
                     (scenario.subscription && k === 0 ? retainedRevenue : 0),
                   stock: finalStocks[k]!,
                   segments: product.market.segments.map((s) => s.code),
+                  // Variance analysis: actual vs. standard costs/revenues (pilot NOVA, optional)
+                  ...((() => {
+                    const vars = calculateVariances({
+                      standardMaterialCost: product.materialCostPerUnit,
+                      standardOtherVariableCost: product.otherVariableCostPerUnit,
+                      actualMaterialMultiplier: w.productSuppliers[k]?.costMultiplier ?? 1,
+                      actualQuantityProduced: w.producedPerProduct[k]!,
+                      defectUnits: w.productDefectUnits[k]!,
+                      actualPrice: w.gamme[k]!.price,
+                      segmentSales: productSegmentSales[k]!,
+                    });
+                    return vars ? { variances: vars } : {};
+                  })()),
                 },
               ]),
             ),
@@ -1739,6 +1926,9 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         roe: ratios.returnOnEquity,
         roce: ratios.returnOnCapitalEmployed,
       },
+      // Journal comptable (Jalon B du plan fondation comptable) : présent
+      // SEULEMENT en multi-produits pour non-régression des snapshots mono.
+      ...(multi ? { accounting: journalByCompany.get(w.state.id)!.build() } : {}),
     };
 
     const lastMarketShare: Record<string, number> = {};

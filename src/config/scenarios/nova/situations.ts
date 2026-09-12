@@ -97,6 +97,72 @@ export const NOVA_SITUATIONS: SituationDef[] = [
     ],
   },
   {
+    code: "nova_t2_variance_decomposition",
+    category: "contexte_marche",
+    title: "Décomposer le surcoût",
+    narrative:
+      "Le premier tour est bouclé. Vos coûts de production affichent un écart avec le plan : les matières ont coûté plus cher que prévu, ou le rebut a monté plus que prévu, ou les deux.",
+    problem:
+      "Vos surcoûts viennent de où exactement, et comment envisager le tour prochain pour les maîtriser ?",
+    diagnosticOptions: [
+      { id: "price_multiplier", label: "Le fournisseur a appliqué un multiplicateur de coût matière différent du standard", correct: true },
+      { id: "defect_impact", label: "Le rebut (ou les défauts produits) a gonflé les heures de main-d'œuvre improductive", correct: true },
+      { id: "volume_excuse", label: "Un surcoût n'existe que si on a produit plus que prévu : augmenter le volume l'explique", correct: false },
+      { id: "always_higher", label: "Les coûts montent toujours, c'est normal en gestion", correct: false },
+    ],
+    quiz: [
+      {
+        id: "variance_price_def",
+        prompt:
+          "L'écart de prix matière se mesure comme…",
+        options: [
+          { id: "a", label: "(Coût réel − coût standard) × quantité produite" },
+          { id: "b", label: "(Coût réel − coût standard) × quantité vendue" },
+          { id: "c", label: "Coût réel ÷ coût standard" },
+          { id: "d", label: "Quantité produite × (prix réel − prix standard)" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "L'écart matière affecte la production réalisée, pas les ventes : on le calcule sur quantités produites, avec le multiplicateur appliqué par le fournisseur.",
+      },
+      {
+        id: "variance_efficiency_def",
+        prompt: "L'écart d'efficacité matière mesure…",
+        options: [
+          { id: "a", label: "Les heures supplémentaires dues au rebut ou à la rework, valorisées au coût standard" },
+          { id: "b", label: "La différence entre le prix réel et le coût de revient" },
+          { id: "c", label: "L'écart en volume entre ce qu'on a prévu et ce qu'on a vendu" },
+          { id: "d", label: "L'impact des seuils psychologiques sur la demande" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Chaque unité de rebut immobilise du temps et des ressources sans générer de vente : c'est un surcoût pur, mesurable en heures × taux standard.",
+      },
+    ],
+    modelRelevance: {
+      variance_decomposition: "optimal",
+      sensitivity_analysis: "acceptable",
+      budgeting: "acceptable",
+      psych_pricing: "misleading",
+      elasticity_analysis: "misleading",
+    },
+    conceptCodes: ["cost_variance", "material_price_variance", "efficiency_variance", "standard_costing"],
+    hints: hints([
+      "Comparez votre coût matière réel au standard (22 € par unité) : la différence × quantité produite = écart de prix.",
+      "Avez-vous produit du rebut, ou des défauts ? Chaque unité rebutée immobilise du temps sans vente : c'est l'écart d'efficacité.",
+      "L'écart d'efficacité en main-d'œuvre vaut : unités rebutées × coût standard (16 €).",
+      "Décomposer ces écarts n'est pas cosmétique : cela dit OÙ agir. Fournisseur ? Qualité de production ? Récréer le planning.",
+      "Écart total = (coût réel − 22) × unités + rebut × 22 pour matière, plus (rebut × 16) pour la main-d'œuvre. Levier : améliorer la qualité, ajuster la production au volume réaliste.",
+    ]),
+    trigger: { round: 2 },
+    weight: 0.9,
+    decisionLevers: [
+      { field: "qualityBudget", direction: "up", hint: "La qualité produit réduit le rebut et donc l'écart d'efficacité : un investissement qui paie en surcoût évité." },
+      { field: "productionPlan", direction: "review", hint: "Produire au-delà de ce qu'on peut vendre crée du stock et du rebut potentiel : l'ajuster au volume réaliste économise des surcoûts." },
+      { field: "price", direction: "review", hint: "Ajuster le prix au volume vendable réel limite la surproduction et réduit le gaspillage." },
+    ],
+  },
+  {
     code: "nova_t2_price_war",
     category: "contexte_marche",
     title: "Le prix fait la demande",
@@ -753,6 +819,8 @@ const MODEL_EXPLAIN: Record<string, string> = {
     "Le budget de trésorerie projette les décaissements du tour à venir : il est le seul à dire quelle part du solde peut être bloquée sans risquer le découvert. Le seuil de rentabilité, lui, ne parle jamais de trésorerie.",
   nova_t1_takeover:
     "Le seuil de rentabilité donne un objectif chiffré au premier trimestre : le volume de ventes qui couvre exactement les charges de structure.",
+  nova_t2_variance_decomposition:
+    "La décomposition des écarts de coûts (prix matière, efficacité) identifie précisément où le surcoût s'est produit : fournisseur, rebut, ou volume. Aucun autre outil ne le dit aussi clairement.",
   nova_t2_price_war:
     "L'analyse de l'élasticité (avec les seuils psychologiques) mesure la sensibilité de CHAQUE segment au prix, la clé quand ils réagissent différemment.",
   nova_t3_capacity:

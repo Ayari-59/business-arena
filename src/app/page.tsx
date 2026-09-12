@@ -7,6 +7,7 @@ import { DECISION_MODELS } from "@/config/pedagogy/models";
 import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
 import { LIENS_LEGAUX, NAVIGATION } from "@/config/navigation";
 import { DESCRIPTION_ACCUEIL, TITRE_ACCUEIL } from "@/config/seo";
+import { TrainingBanner } from "@/components/training-banner";
 
 // La landing ne lit que la configuration de plateforme (rien par utilisateur) :
 // on la met en cache et on la régénère au plus toutes les 5 min (ISR) plutôt
@@ -115,6 +116,8 @@ export default async function Home() {
           📣 {config.announcement}
         </div>
       ) : null}
+
+      <TrainingBanner />
 
       {/* ---------- Hero ---------- */}
       <section className="mx-auto grid max-w-6xl items-center gap-6 px-6 py-8 sm:gap-10 sm:py-14 lg:grid-cols-2 lg:py-20">

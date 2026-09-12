@@ -14,6 +14,102 @@ export type CompanyId = string;
 export type SegmentCode = string;
 export type ProductCode = string;
 export type SupplierCode = string;
+export type AccountCode = string;
+
+// ---------------------------------------------------------------------------
+// Comptabilité (Jalon A du plan fondation comptable)
+// ---------------------------------------------------------------------------
+
+/**
+ * Catégories d'opérations pour le journal comptable (points de logging).
+ * Utilisées pour filtre, analyse et livrable.
+ */
+export type AccountingCategory =
+  | "purchase"
+  | "sale"
+  | "payroll"
+  | "tax"
+  | "financing"
+  | "depreciation"
+  | "inventory"
+  | "cash"
+  | "other";
+
+/**
+ * Écriture comptable simple en parties doubles.
+ * Chaque opération du moteur (achat, vente, paie, etc.) produit une ou plusieurs
+ * écritures, indexées dans le journal du tour.
+ */
+export interface AccountingEntry {
+  /** Numéro unique du journal pour ce tour (séquentiel, débute à 1). */
+  entryId: number;
+
+  /** Date/jour du tour (entier, représentatif du moment). */
+  day: number;
+
+  /** Libellé libre : "Achat matière première", "Vente client X", "Paie", etc. */
+  label: string;
+
+  /** Catégorie métier, pour filtrage et analyse. */
+  category: AccountingCategory;
+
+  /** Compte débité (numéro comptable, ex: "601", "411", "681"). */
+  debitAccount: AccountCode;
+  debitLabel: string;
+
+  /** Compte crédité. */
+  creditAccount: AccountCode;
+  creditLabel: string;
+
+  /** Montant de l'écriture, en euros. */
+  amount: number;
+
+  /** Référence optionnelle : facture #123, chèque #456, etc. */
+  reference?: string;
+
+  /** Détail métier pour traçabilité (produit, segment, fournisseur, etc.). */
+  metadata?: {
+    productCode?: string;
+    segmentCode?: string;
+    supplierCode?: string;
+    employeeCount?: number;
+    quantity?: number;
+    unitPrice?: number;
+  };
+}
+
+/**
+ * Compte du grand livre (soldes cumulatifs pour un code comptable).
+ * Agrégé à partir des écritures du journal.
+ */
+export interface GeneralLedgerAccount {
+  accountCode: AccountCode;
+  accountLabel: string;
+
+  /** Solde d'ouverture du compte (début du tour). */
+  openingBalance: number;
+
+  /** Somme des montants au débit (débits). */
+  debits: number;
+
+  /** Somme des montants au crédit (crédits). */
+  credits: number;
+
+  /** Solde de clôture (opening + débits - crédits). */
+  closingBalance: number;
+}
+
+/**
+ * Journal et grand livre d'une période (tour).
+ * Reconstruit à partir des opérations du moteur lors de la simulation.
+ */
+export interface Ledger {
+  /** Journal comptable complet du tour (toutes les écritures). */
+  entries: AccountingEntry[];
+
+  /** Grand livre : soldes par compte comptable. */
+  accounts: Map<AccountCode, GeneralLedgerAccount>;
+}
 
 // ---------------------------------------------------------------------------
 // Configuration de scénario (sous-ensemble consommé par le moteur v0.1)
@@ -1132,6 +1228,29 @@ export interface ProductRoundResult {
   revenue: number;
   /** Stock de fin de tour du produit (CUMP). */
   stock: { quantity: number; unitCost: number };
+  /**
+   * Variance analysis (pilot on NOVA, optional — present only if variances tracked).
+   * Decomposes actual vs. standard costs and revenues to diagnose performance drivers.
+   * Absent in mono-product scenarios without pedagogy, or when all variances are zero.
+   */
+  variances?: {
+    // Cost variances (€), positive = unfavorable (cost overrun)
+    materialPriceVariance: number;
+    materialEfficiencyVariance: number;
+    laborRateVariance: number;
+    laborEfficiencyVariance: number;
+    totalCostVariance: number;
+    // Percentage of actual COGS for relative comparison
+    costVarianceRatio: number;
+    // Revenue variances by segment
+    revenueVarianceBySegment: Record<SegmentCode, {
+      priceVariance: number;  // positive = favorable
+      volumeVariance: number; // positive = favorable
+      totalVariance: number;
+    }>;
+    // Contribution margin variance: how pricing and volume combined beat/missed plan
+    contributionMarginVariance: number;
+  };
   /** Codes des segments qui composent le marché du produit. */
   segments: SegmentCode[];
 }
@@ -1359,6 +1478,12 @@ export interface CompanyRoundResult {
     /** Taux de découvert facturé ce tour, majoration comprise. */
     overdraftAnnualRate: number;
   };
+  /**
+   * Journal et grand livre du tour (Jalon A du plan comptabilité).
+   * Absent en mono-produit pour non-régression des snapshots existants.
+   * Présent en gamme (≥ 2 produits) où les opérations par référence sont détaillées.
+   */
+  accounting?: Ledger;
   kpis: Record<string, number>;
 }
 

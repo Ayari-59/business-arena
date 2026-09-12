@@ -325,9 +325,6 @@ function LienPrixFaconnier({
   );
 }
 
-const CELLULE_SAISIE =
-  "inline-flex items-center gap-1 rounded-lg border border-white/10 bg-slate-950 px-2 py-1.5 focus-within:border-amber-400/60";
-
 /** Une référence en développement ne se vend ni ne se produit : rien à saisir. */
 function enDeveloppement(p: NonNullable<GameView["gamme"]>[number]): boolean {
   const dev = p.rd?.development;
@@ -348,6 +345,9 @@ function EnDeveloppement() {
  * chaque référence. Les budgets (marketing, qualité, R&D) vivent dans le
  * tableau des budgets, avec l'entretien : la fenêtre des ventes ne porte que
  * ce qui fait le chiffre d'affaires et la marge.
+ *
+ * Mobile : layout de cartes par référence au lieu de tableau, pour éviter
+ * le scroll horizontal sur petit écran.
  */
 function GammeVentes({
   gamme,
@@ -359,6 +359,7 @@ function GammeVentes({
   vocabulary: ScenarioVocabulary;
 }) {
   const avecFournisseurs = gamme.some((p) => p.suppliers);
+  const [activeProduct, setActiveProduct] = useState(gamme[0]?.code ?? "");
   // Le prix saisi et le façonnier choisi de chaque référence, pour montrer la
   // marge en direct : les champs restent non contrôlés (le formulaire les
   // envoie), on ne fait que les écouter.
@@ -374,70 +375,83 @@ function GammeVentes({
       }),
     ),
   );
+
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
-            <th className="w-full pb-2 pr-3 font-medium">Référence</th>
-            <th className="pb-2 pr-3 font-medium">{v.priceLabel}</th>
-            <th className="pb-2 pr-3 font-medium">{v.productionPlanLabel}</th>
-            {avecFournisseurs ? <th className="pb-2 font-medium">Fournisseur</th> : null}
-          </tr>
-        </thead>
-        <tbody>
-          {gamme.map((p) => {
-            const own = defaults.products?.[p.code];
-            const price = own?.price ?? p.refPrice;
-            const plan = Math.round(own?.productionPlan ?? 0);
-            const suppliers = p.suppliers;
-            const reference = suppliers?.[0];
-            const choisi = suppliers?.find((s) => s.code === faconniers[p.code]) ?? reference;
-            const achat = choisi ? choisi.materialCostPerUnit : p.materialCostPerUnit;
-            // Une référence EN DÉVELOPPEMENT ne se vend ni ne se produit : la
-            // ligne le dit, et porte, cachés, des champs neutres pour que la
-            // lecture par référence reste complète.
-            if (enDeveloppement(p)) {
-              return (
-                <tr key={p.code} className="border-t border-white/5 align-middle">
-                  <td className="py-2 pr-3">
-                    <span className="text-sm font-medium text-slate-100">{p.name}</span>
-                    <EnDeveloppement />
-                    <span className="mt-0.5 block text-xs leading-snug text-slate-400">
-                      Rien à vendre tant qu&apos;elle n&apos;est pas bâtie : son financement se décide
-                      dans les budgets du tour, à la R&amp;D.
-                    </span>
-                    <input type="hidden" name={productFieldName(p.code, "price")} value={Math.round(price * 10) / 10} />
-                    <input type="hidden" name={productFieldName(p.code, "productionPlan")} value={0} />
-                    {suppliers && faconniers[p.code] ? (
-                      <input type="hidden" name={productFieldName(p.code, "supplierChoice")} value={faconniers[p.code]} />
-                    ) : null}
-                  </td>
-                  <td className="py-2 pr-3 text-center text-xs text-slate-500" colSpan={2 + (avecFournisseurs ? 1 : 0)}>
-                    —
-                  </td>
-                </tr>
-              );
-            }
+    <div className="space-y-3">
+      {/* Navigation par référence : tabs sur desktop, boutons empilés sur mobile */}
+      <div className="flex flex-wrap gap-2">
+        {gamme.map((p) => (
+          <button
+            key={p.code}
+            type="button"
+            onClick={() => setActiveProduct(p.code)}
+            className={`px-3 py-1.5 text-sm font-medium rounded-lg transition ${
+              activeProduct === p.code
+                ? "bg-amber-400/20 border border-amber-400/60 text-amber-200"
+                : "bg-slate-900 border border-white/5 text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            {p.name}
+          </button>
+        ))}
+      </div>
+
+      {/* Contenu par référence sélectionnée */}
+      {gamme
+        .filter((p) => p.code === activeProduct)
+        .map((p) => {
+          const own = defaults.products?.[p.code];
+          const price = own?.price ?? p.refPrice;
+          const plan = Math.round(own?.productionPlan ?? 0);
+          const suppliers = p.suppliers;
+          const reference = suppliers?.[0];
+          const choisi = suppliers?.find((s) => s.code === faconniers[p.code]) ?? reference;
+          const achat = choisi ? choisi.materialCostPerUnit : p.materialCostPerUnit;
+
+          if (enDeveloppement(p)) {
             return (
-              <tr key={p.code} className="border-t border-white/5 align-top">
-                <td className="py-2 pr-3">
-                  <span className="block text-sm font-medium text-slate-100">{p.name}</span>
-                  <span className="mt-0.5 block text-xs leading-snug text-slate-400">
-                    prix usuel {formatEuro(p.refPrice)} · {v.leftoverLabel.toLowerCase()}{" "}
-                    {formatUnits(p.stock)} {v.units}
-                    {Math.abs(p.seasonCoef - 1) > 0.01
-                      ? ` · saison ×${p.seasonCoef.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}`
-                      : ""}
-                  </span>
-                  <LienPrixFaconnier
-                    price={prix[p.code] ?? price}
-                    achat={achat}
-                    autres={p.otherVariableCostPerUnit}
-                  />
-                </td>
-                <td className="py-2 pr-3">
-                  <span className={CELLULE_SAISIE}>
+              <div key={p.code} className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 sm:px-3.5 sm:py-2.5 space-y-2">
+                <span className="text-sm font-medium text-slate-100">{p.name}</span>
+                <EnDeveloppement />
+                <span className="block text-xs leading-snug text-slate-400">
+                  Rien à vendre tant qu&apos;elle n&apos;est pas bâtie : son financement se décide
+                  dans les budgets du tour, à la R&amp;D.
+                </span>
+                <input type="hidden" name={productFieldName(p.code, "price")} value={Math.round(price * 10) / 10} />
+                <input type="hidden" name={productFieldName(p.code, "productionPlan")} value={0} />
+                {suppliers && faconniers[p.code] ? (
+                  <input type="hidden" name={productFieldName(p.code, "supplierChoice")} value={faconniers[p.code]} />
+                ) : null}
+              </div>
+            );
+          }
+
+          return (
+            <div key={p.code} className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 sm:px-3.5 sm:py-2.5 space-y-3">
+              {/* Info produit */}
+              <div className="space-y-1">
+                <span className="block text-sm font-medium text-slate-100">{p.name}</span>
+                <span className="block text-xs leading-snug text-slate-400">
+                  prix usuel {formatEuro(p.refPrice)} · {v.leftoverLabel.toLowerCase()}{" "}
+                  {formatUnits(p.stock)} {v.units}
+                  {Math.abs(p.seasonCoef - 1) > 0.01
+                    ? ` · saison ×${p.seasonCoef.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}`
+                    : ""}
+                </span>
+              </div>
+
+              {/* Marge en temps réel */}
+              <LienPrixFaconnier
+                price={prix[p.code] ?? price}
+                achat={achat}
+                autres={p.otherVariableCostPerUnit}
+              />
+
+              {/* Champs de saisie : prix et volume */}
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                <label className="block">
+                  <span className="text-xs font-medium uppercase tracking-wide text-slate-400">{v.priceLabel}</span>
+                  <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900 px-2 py-2 focus-within:border-amber-400/60">
                     <input
                       type="number"
                       name={productFieldName(p.code, "price")}
@@ -450,13 +464,14 @@ function GammeVentes({
                       step={0.1}
                       min={0}
                       required
-                      className="w-20 bg-transparent text-sm text-slate-100 outline-none"
+                      className="flex-1 bg-transparent text-sm text-slate-100 outline-none"
                     />
                     <span className="text-xs text-slate-400">€</span>
                   </span>
-                </td>
-                <td className="py-2 pr-3">
-                  <span className={CELLULE_SAISIE}>
+                </label>
+                <label className="block">
+                  <span className="text-xs font-medium uppercase tracking-wide text-slate-400">{v.productionPlanLabel}</span>
+                  <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900 px-2 py-2 focus-within:border-amber-400/60">
                     <input
                       type="number"
                       name={productFieldName(p.code, "productionPlan")}
@@ -465,43 +480,42 @@ function GammeVentes({
                       step={1}
                       min={0}
                       required
-                      className="w-20 bg-transparent text-sm text-slate-100 outline-none"
+                      className="flex-1 bg-transparent text-sm text-slate-100 outline-none"
                     />
                     <span className="text-xs text-slate-400">{v.units}</span>
                   </span>
-                </td>
-                {avecFournisseurs ? (
-                  <td className="py-2">
-                    {suppliers ? (
-                      <select
-                        name={productFieldName(p.code, "supplierChoice")}
-                        aria-label={`Fournisseur · ${p.name}`}
-                        defaultValue={faconniers[p.code]}
-                        onChange={(e) => {
-                          const code = e.currentTarget.value;
-                          setFaconniers((etat) => ({ ...etat, [p.code]: code }));
-                        }}
-                        className="w-full min-w-56 rounded-lg border border-white/10 bg-slate-950 px-2 py-1.5 text-sm text-slate-100 outline-none focus:border-amber-400/60"
-                      >
-                        {suppliers.map((s) => (
-                          <option key={s.code} value={s.code}>
-                            {s.name} · {formatEuroCents(s.materialCostPerUnit)}/u ({ecartFournisseur(s, reference)})
-                            {s.qualityBonus !== 0
-                              ? ` · qualité ${s.qualityBonus > 0 ? "+" : "−"}${Math.abs(Math.round(s.qualityBonus * 100))} %`
-                              : ""}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <span className="text-xs text-slate-400">—</span>
-                    )}
-                  </td>
-                ) : null}
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                </label>
+              </div>
+
+              {/* Fournisseur */}
+              {avecFournisseurs && suppliers ? (
+                <label className="block">
+                  <span className="text-xs font-medium uppercase tracking-wide text-slate-400">Fournisseur</span>
+                  <select
+                    name={productFieldName(p.code, "supplierChoice")}
+                    aria-label={`Fournisseur · ${p.name}`}
+                    defaultValue={faconniers[p.code]}
+                    onChange={(e) => {
+                      const code = e.currentTarget.value;
+                      setFaconniers((etat) => ({ ...etat, [p.code]: code }));
+                    }}
+                    className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-2 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+                  >
+                    {suppliers.map((s) => (
+                      <option key={s.code} value={s.code}>
+                        {s.name} · {formatEuroCents(s.materialCostPerUnit)}/u ({ecartFournisseur(s, reference)})
+                        {s.qualityBonus !== 0
+                          ? ` · qualité ${s.qualityBonus > 0 ? "+" : "−"}${Math.abs(Math.round(s.qualityBonus * 100))} %`
+                          : ""}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : null}
+            </div>
+          );
+        })}
+
       <p className="mt-2 text-xs leading-relaxed text-slate-400">
         Les références partagent la même réserve : si la somme des volumes dépasse votre
         capacité, toutes sont réduites dans la même proportion. Le prix se fixe référence
@@ -519,6 +533,8 @@ function GammeVentes({
  * chaque référence, une ligne par référence. Il vit dans la famille des
  * budgets du tour, avec l'entretien, pour que les quatre budgets se décident
  * au même endroit et que la fenêtre des ventes reste légère.
+ *
+ * Mobile : layout de cartes par référence au lieu de tableau.
  */
 function GammeBudgets({
   gamme,
@@ -537,73 +553,66 @@ function GammeBudgets({
 }) {
   const n = gamme.length;
   const avecRd = rd && gamme.some((p) => p.rd);
+  const [activeProduct, setActiveProduct] = useState(gamme[0]?.code ?? "");
+
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
-            <th className="w-full pb-2 pr-3 font-medium">Référence</th>
-            <th className="pb-2 pr-3 font-medium">Marketing</th>
-            {quality ? <th className="pb-2 pr-3 font-medium">Qualité</th> : null}
-            {avecRd ? <th className="pb-2 font-medium">R&amp;D</th> : null}
-          </tr>
-        </thead>
-        <tbody>
-          {gamme.map((p) => {
-            const own = defaults.products?.[p.code];
-            const marketing = Math.round(own?.marketingBudget ?? defaults.marketingBudget / n);
-            const qualite = Math.round(own?.qualityBudget ?? defaults.qualityBudget / n);
-            const rdDefaut = Math.round(own?.rdBudget ?? 0);
-            const dev = p.rd?.development;
-            const champRd = avecRd ? (
-              <td className="py-2">
-                <span className={CELLULE_SAISIE}>
-                  <input
-                    type="number"
-                    name={productFieldName(p.code, "rdBudget")}
-                    aria-label={`R&D · ${p.name}`}
-                    defaultValue={rdDefaut}
-                    step={1}
-                    min={0}
-                    required
-                    className="w-20 bg-transparent text-sm text-slate-100 outline-none"
-                  />
-                  <span className="text-xs text-slate-400">€</span>
-                </span>
-              </td>
-            ) : null;
-            // Une référence EN DÉVELOPPEMENT ne porte que sa R&D : ni marketing
-            // ni qualité (cachés, à zéro), et la ligne dit où en est son financement.
-            if (dev && !dev.available) {
-              const reste = Math.max(0, dev.cost - dev.invested);
-              const pret = reste <= 0;
-              return (
-                <tr key={p.code} className="border-t border-white/5 align-middle">
-                  <td className="py-2 pr-3">
-                    <span className="text-sm font-medium text-slate-100">{p.name}</span>
-                    <EnDeveloppement />
-                    <span className="mt-0.5 block text-xs leading-snug text-slate-400">
-                      {pret
-                        ? `Financée (${formatEuro(dev.invested)} engagés) : vendable dès le tour ${Math.max(dev.availableFromRound, roundIndex + 1)}.`
-                        : `${formatEuro(dev.invested)} engagés sur ${formatEuro(dev.cost)} : il reste ${formatEuro(reste)} à financer, puis elle se vend dès le tour suivant (au plus tôt le tour ${dev.availableFromRound}).`}
-                    </span>
-                    <input type="hidden" name={productFieldName(p.code, "marketingBudget")} value={0} />
-                    {quality ? <input type="hidden" name={productFieldName(p.code, "qualityBudget")} value={0} /> : null}
-                  </td>
-                  <td className="py-2 pr-3 text-center text-xs text-slate-500" colSpan={1 + (quality ? 1 : 0)}>
-                    —
-                  </td>
-                  {champRd}
-                </tr>
-              );
-            }
+    <div className="space-y-3">
+      {/* Navigation par référence */}
+      <div className="flex flex-wrap gap-2">
+        {gamme.map((p) => (
+          <button
+            key={p.code}
+            type="button"
+            onClick={() => setActiveProduct(p.code)}
+            className={`px-3 py-1.5 text-sm font-medium rounded-lg transition ${
+              activeProduct === p.code
+                ? "bg-amber-400/20 border border-amber-400/60 text-amber-200"
+                : "bg-slate-900 border border-white/5 text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            {p.name}
+          </button>
+        ))}
+      </div>
+
+      {/* Contenu par référence sélectionnée */}
+      {gamme
+        .filter((p) => p.code === activeProduct)
+        .map((p) => {
+          const own = defaults.products?.[p.code];
+          const marketing = Math.round(own?.marketingBudget ?? defaults.marketingBudget / n);
+          const qualite = Math.round(own?.qualityBudget ?? defaults.qualityBudget / n);
+          const rdDefaut = Math.round(own?.rdBudget ?? 0);
+          const dev = p.rd?.development;
+
+          // En développement
+          if (dev && !dev.available) {
+            const reste = Math.max(0, dev.cost - dev.invested);
+            const pret = reste <= 0;
             return (
-              <tr key={p.code} className="border-t border-white/5 align-middle">
-                <td className="py-2 pr-3">
-                  <span className="text-sm font-medium text-slate-100">{p.name}</span>
-                </td>
-                <td className="py-2 pr-3">
-                  <span className={CELLULE_SAISIE}>
+              <div key={p.code} className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 sm:px-3.5 sm:py-2.5 space-y-2">
+                <span className="text-sm font-medium text-slate-100">{p.name}</span>
+                <EnDeveloppement />
+                <span className="block text-xs leading-snug text-slate-400">
+                  {pret
+                    ? `Financée (${formatEuro(dev.invested)} engagés) : vendable dès le tour ${Math.max(dev.availableFromRound, roundIndex + 1)}.`
+                    : `${formatEuro(dev.invested)} engagés sur ${formatEuro(dev.cost)} : il reste ${formatEuro(reste)} à financer, puis elle se vend dès le tour suivant (au plus tôt le tour ${dev.availableFromRound}).`}
+                </span>
+                <input type="hidden" name={productFieldName(p.code, "marketingBudget")} value={0} />
+                {quality ? <input type="hidden" name={productFieldName(p.code, "qualityBudget")} value={0} /> : null}
+              </div>
+            );
+          }
+
+          return (
+            <div key={p.code} className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 sm:px-3.5 sm:py-2.5 space-y-3">
+              <span className="block text-sm font-medium text-slate-100">{p.name}</span>
+
+              {/* Budgets : affichés en colonne sur mobile, 2 cols sur sm+ */}
+              <div className={`grid ${quality ? "grid-cols-1" : avecRd ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"} gap-3`}>
+                <label className="block">
+                  <span className="text-xs font-medium uppercase tracking-wide text-slate-400">Marketing</span>
+                  <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900 px-2 py-2 focus-within:border-amber-400/60">
                     <input
                       type="number"
                       name={productFieldName(p.code, "marketingBudget")}
@@ -612,14 +621,16 @@ function GammeBudgets({
                       step={1}
                       min={0}
                       required
-                      className="w-20 bg-transparent text-sm text-slate-100 outline-none"
+                      className="flex-1 bg-transparent text-sm text-slate-100 outline-none"
                     />
                     <span className="text-xs text-slate-400">€</span>
                   </span>
-                </td>
+                </label>
+
                 {quality ? (
-                  <td className="py-2 pr-3">
-                    <span className={CELLULE_SAISIE}>
+                  <label className="block">
+                    <span className="text-xs font-medium uppercase tracking-wide text-slate-400">Qualité</span>
+                    <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900 px-2 py-2 focus-within:border-amber-400/60">
                       <input
                         type="number"
                         name={productFieldName(p.code, "qualityBudget")}
@@ -628,18 +639,36 @@ function GammeBudgets({
                         step={1}
                         min={0}
                         required
-                        className="w-20 bg-transparent text-sm text-slate-100 outline-none"
+                        className="flex-1 bg-transparent text-sm text-slate-100 outline-none"
                       />
                       <span className="text-xs text-slate-400">€</span>
                     </span>
-                  </td>
+                  </label>
                 ) : null}
-                {champRd}
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+
+                {avecRd ? (
+                  <label className="block">
+                    <span className="text-xs font-medium uppercase tracking-wide text-slate-400">R&D</span>
+                    <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900 px-2 py-2 focus-within:border-amber-400/60">
+                      <input
+                        type="number"
+                        name={productFieldName(p.code, "rdBudget")}
+                        aria-label={`R&D · ${p.name}`}
+                        defaultValue={rdDefaut}
+                        step={1}
+                        min={0}
+                        required
+                        className="flex-1 bg-transparent text-sm text-slate-100 outline-none"
+                      />
+                      <span className="text-xs text-slate-400">€</span>
+                    </span>
+                  </label>
+                ) : null}
+              </div>
+            </div>
+          );
+        })}
+
       <p className="mt-2 text-xs leading-relaxed text-slate-400">
         Chaque budget va à la référence qui le reçoit, et se paie le tour même. Le marketing
         soutient sa demande, et retombe vite si on cesse

@@ -84,6 +84,10 @@ export interface SituationDef {
   trigger: { round: number } | { detect: DetectCode };
   weight: number;
   decisionLevers: DecisionLever[];
+  /** Étapes d'apprentissage obligatoires pour accéder à cette situation. */
+  requiredLearningSteps?: string[];
+  /** Étapes d'apprentissage débloquées/complétées après débriefing de cette situation. */
+  grantedLearningSteps?: string[];
   /**
    * Vivier de distracteurs pour la question du modèle (codes de modèles).
    * Facultatif : à défaut, les distracteurs sont tirés de `modelRelevance`.

@@ -87,6 +87,11 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
         enTete: true,
       },
       {
+        href: "/training",
+        libelle: "Formation",
+        aide: "Tutoriels interactifs, cas d'étude et glossaire pour maîtriser Business Arena.",
+      },
+      {
         href: "/guide",
         libelle: "Guide",
         aide: "Comment on joue et comment on anime, réunis au même endroit.",
