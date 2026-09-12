@@ -123,7 +123,7 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
     return (
       <article className="rounded-xl border border-red-400/20 bg-slate-900 p-5">
         <header className="mb-3">
-          <p className="text-[11px] uppercase tracking-[0.25em] text-amber-400">
+          <p className="text-xs uppercase tracking-[0.25em] text-amber-400">
             {CATEGORY_LABELS[situation.category]}
           </p>
           <h3 className="mt-1 text-lg font-semibold text-slate-100">{situation.title}</h3>
