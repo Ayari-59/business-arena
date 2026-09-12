@@ -13,7 +13,8 @@ import {
   resolveCurrentRound,
   submitTeamDecisions,
 } from "@/services/game.service";
-import { retakeSituation, submitDiagnosis, submitQuiz, unlockHint } from "@/services/pedagogy.service";
+import { submitDiagnosis, submitQuiz, unlockHint } from "@/services/pedagogy.service";
+import { retakeSituation } from "@/services/debrief.service";
 import { manques, messageIncomplet } from "@/config/situation-rendu";
 
 export interface PlayRoundState {

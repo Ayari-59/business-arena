@@ -28,7 +28,7 @@ import {
   startFinal,
   startQualification,
 } from "@/services/competition.service";
-import { setMissedPolicy } from "@/services/pedagogy.service";
+import { setMissedPolicy } from "@/services/debrief.service";
 import { DEFAULT_SCENARIO_CODE } from "@/config/scenarios/registry";
 import { canTeacherLaunchScenario } from "@/services/scenario-editor.service";
 import { DEFAULT_QUIZ_MODE } from "@/config/difficulty";
