@@ -25,12 +25,12 @@ export const ATELIER_DCG: AtelierDefinition = {
   referentielLabel: "Unités d'enseignement",
   referentielAccord: "mobilisées",
   pitch:
-    "Cinq séances de trois heures. Chaque équipe dirige la même entreprise industrielle, construit ses budgets, analyse ses écarts, décide d'investir et de se financer, et rend un rapport financier qu'elle soutient devant un jury.",
+    "Six séances de trois heures. Chaque équipe dirige la même entreprise industrielle, construit ses budgets, analyse ses écarts jusqu'au coût de production, décide d'investir et de se financer, et rend un rapport financier qu'elle soutient devant un jury.",
   resume:
     "Quatre trimestres dans une entreprise industrielle, du diagnostic financier d'ouverture au rapport de gestion soutenu, budgets et écarts compris.",
   difficulte: 4,
   difficulteLabel: "Avancé",
-  format: "5 séances de 3 h",
+  format: "6 séances de 3 h",
   pourquoi:
     "Un sujet de finance d'entreprise donne les flux et demande la valeur actuelle nette. L'exercice est juste, et il laisse intacte la question qui compte : d'où viennent ces flux, et qui les a estimés. Ici l'équipe produit elle-même sa prévision, la dépose, puis découvre au trimestre suivant l'écart entre ce qu'elle avait annoncé et ce qui s'est produit. Elle apprend alors ce qu'aucune correction ne transmet : qu'un calcul d'investissement ne vaut que ce que valent les hypothèses de celui qui l'a fait, et que la banque, elle, regarde d'abord la fiabilité des plans précédents.",
   reglages: {
@@ -80,7 +80,7 @@ export const ATELIER_DCG: AtelierDefinition = {
           minutes: 15,
           titre: "Le cadre",
           detail:
-            "Vous annoncez la règle : cinq séances, quatre trimestres, une entreprise, un livrable par séance, et un rapport soutenu à la fin. Les équipes rejoignent la partie.",
+            "Vous annoncez la règle : six séances, quatre trimestres, une entreprise, un livrable par séance, et un rapport soutenu à la fin. Les équipes rejoignent la partie.",
         },
         {
           minutes: 45,
@@ -270,6 +270,73 @@ export const ATELIER_DCG: AtelierDefinition = {
     },
     {
       numero: 4,
+      titre: "Écart sur coût de production",
+      dureeMinutes: 180,
+      tourJoue: null,
+      processus: [
+        "UE11 · Contrôle de gestion",
+      ],
+      objectif:
+        "Confronter le coût de production réel d'un trimestre au coût préétabli, et décomposer l'écart total en écart sur charges directes (matières, main-d'œuvre) et écart sur charges indirectes, chacun ramené à ses sous-écarts.",
+      competences: [
+        "Je décompose l'écart sur matières en écart sur prix et écart sur quantité consommée.",
+        "Je décompose l'écart sur main-d'œuvre directe en écart sur taux et écart sur temps.",
+        "Je décompose l'écart sur charges indirectes en écart sur budget, écart sur activité et écart sur rendement.",
+        "Je vérifie que la somme des sous-écarts retombe sur l'écart total sur coût de production.",
+      ],
+      notions: [
+        "coût de production préétabli",
+        "écart sur charges directes",
+        "écart sur matières et sur main-d'œuvre",
+        "écart sur charges indirectes",
+        "budget flexible et imputation rationnelle",
+      ],
+      preparation:
+        "Aucun tour n'est joué : la séance travaille le dernier trimestre clôturé. Préparez, ou faites établir, la fiche de coût de production préétabli du produit, matière et main-d'œuvre par unité et budget des charges indirectes pour une activité normale. Préparez la trame de décomposition en sous-écarts, prix et quantité d'un côté, taux et temps de l'autre.",
+      deroule: [
+        {
+          minutes: 15,
+          titre: "Le coût préétabli",
+          detail:
+            "La classe pose la fiche de coût de production préétabli : matière et main-d'œuvre par unité produite, et le budget des charges indirectes pour une activité normale. C'est la référence.",
+        },
+        {
+          minutes: 40,
+          titre: "L'écart total",
+          detail:
+            "Chaque équipe rapproche le coût de production réel du trimestre clôturé du coût préétabli de sa production réelle, et isole l'écart total avant de l'ouvrir.",
+        },
+        {
+          minutes: 40,
+          titre: "Les charges directes",
+          detail:
+            "L'équipe décompose l'écart sur matières en écart sur prix et écart sur quantité consommée, puis l'écart sur main-d'œuvre en écart sur taux et écart sur temps. Le rebut piloté par la maintenance se lit ici, dans l'écart sur quantité.",
+        },
+        {
+          minutes: 45,
+          titre: "Les charges indirectes",
+          detail:
+            "L'équipe décompose l'écart sur charges indirectes en écart sur budget, écart sur activité et écart sur rendement, à partir du budget flexible et du coût d'une unité d'œuvre.",
+        },
+        {
+          minutes: 40,
+          titre: "Contrôle et lecture",
+          detail:
+            "La somme des sous-écarts est confrontée à l'écart total : le contrôle est la discipline de la séance. Chaque équipe nomme la cause de son plus gros sous-écart et dit si elle en est responsable.",
+        },
+      ],
+      livrable:
+        "La fiche d'écart sur coût de production : coût préétabli et coût réel de la production, écart sur matières décomposé en prix et quantité, écart sur main-d'œuvre décomposé en taux et temps, écart sur charges indirectes en budget activité et rendement, et le contrôle par la somme des sous-écarts.",
+      tracePasseport:
+        "J'ai décomposé l'écart sur coût de production en écarts sur charges directes et indirectes, et contrôlé le tout par la somme des sous-écarts.",
+      evaluation: [
+        "Chaque écart direct se décompose en ses deux sous-écarts, prix et quantité ou taux et temps.",
+        "L'écart sur charges indirectes distingue le budget, l'activité et le rendement.",
+        "La somme des sous-écarts retombe sur l'écart total, et le contrôle est montré.",
+      ],
+    },
+    {
+      numero: 5,
       titre: "Investir et financer",
       dureeMinutes: 180,
       tourJoue: 4,
@@ -342,7 +409,7 @@ export const ATELIER_DCG: AtelierDefinition = {
       ],
     },
     {
-      numero: 5,
+      numero: 6,
       titre: "Rapport de gestion et soutenance",
       dureeMinutes: 180,
       tourJoue: null,
