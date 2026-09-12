@@ -200,7 +200,7 @@ Carte d'aide contextuelle (info, actions, dismissible).
 <HelpCard
   title="Besoin d'aide ?"
   description="Vous pouvez aussi..."
-  actions={[{ label: "Voir le guide", onClick: () => {} }]}
+  actions={[{ label: "Voir le guide", href: "/guide" }]}
   dismissible
 />
 ```

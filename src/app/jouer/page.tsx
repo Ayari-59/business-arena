@@ -57,7 +57,7 @@ export default async function JouerPage({
             title="Nouveau dans le jeu ?"
             description="Découvrez nos tutoriels interactifs et cas d'étude pour maîtriser les décisions clés : prix, production, trésorerie."
             actions={[
-              { label: "Voir la formation", onClick: () => (window.location.href = "/training") },
+              { label: "Voir la formation", href: "/training" },
             ]}
             dismissible
           />

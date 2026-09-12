@@ -1,10 +1,16 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
+/**
+ * Une action est un lien, pas un gestionnaire de clic : la carte est appelée
+ * depuis des pages serveur (/jouer), et une fonction ne franchit pas la
+ * frontière serveur → client.
+ */
 interface Action {
   label: string;
-  onClick: () => void;
+  href: string;
 }
 
 interface HelpCardProps {
@@ -31,14 +37,14 @@ export function HelpCard({ title, description, actions, dismissible }: HelpCardP
           </p>
           {actions && actions.length > 0 && (
             <div className="flex gap-2 mt-3">
-              {actions.map((action, idx) => (
-                <button
-                  key={idx}
-                  onClick={action.onClick}
-                  className="text-xs px-3 py-1 rounded bg-blue-200 dark:bg-blue-800 text-blue-900 dark:text-blue-100 hover:bg-blue-300 dark:hover:bg-blue-700"
+              {actions.map((action) => (
+                <Link
+                  key={action.href}
+                  href={action.href}
+                  className="inline-block text-xs px-3 py-1 rounded bg-blue-200 dark:bg-blue-800 text-blue-900 dark:text-blue-100 hover:bg-blue-300 dark:hover:bg-blue-700"
                 >
                   {action.label}
-                </button>
+                </Link>
               ))}
             </div>
           )}
