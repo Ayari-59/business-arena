@@ -577,6 +577,10 @@ export interface SituationView {
    * l'élève (« au-dessus du niveau »), jamais cachée (filtrage doux, #2).
    */
   aboveGameLevel: boolean;
+  /** Étapes d'apprentissage requises pour accéder à cette situation. */
+  requiredLearningSteps: string[];
+  /** True si l'utilisateur a complété toutes les étapes requises. */
+  isAccessible: boolean;
   /** Rempli uniquement après débriefing. */
   debrief: {
     correctOptionIds: string[];
@@ -693,6 +697,8 @@ export function toView(
     rendered,
     missed,
     retaken,
+    requiredLearningSteps: def.requiredLearningSteps ?? [],
+    isAccessible: true,
     debrief: debriefed
       ? {
           correctOptionIds: def.diagnosticOptions.filter((o) => o.correct).map((o) => o.id),

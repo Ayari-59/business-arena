@@ -167,7 +167,7 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
   const scenarioId = await getOrCreateScenarioId(definition);
   // Référentiels concepts/modèles/situations (idempotent) + les situations
   // propres à un scénario enseignant, absentes du référentiel intégré.
-  await seedPedagogyReferentials(customSituationsOf(definition));
+  await seedPedagogyReferentials();
   const seed = randomInt(1, 2 ** 31);
   // Pipeline du snapshot (ADR-01 + ADR-10) : paramètres économiques modulés
   // (base trimestrielle) → périodicité → intensité d'événements du niveau.
