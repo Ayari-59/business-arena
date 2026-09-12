@@ -1154,7 +1154,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const receivableRatio = revenue > 0 ? Math.min(1, creditRevenue / revenue) : 0;
     const vatRate = scenario.finance.vatRate ?? 0;
 
-    // Jalon B : Enregistrement des ventes (débit 411 / crédit 701, TVA débit 411 / crédit 4457)
+    // Jalon B : Enregistrement des ventes (débit 411 / crédit 701, TVA débit 411 / crédit 44571)
     if (multi && revenue > 0) {
       for (let k = 0; k < gamme.length; k++) {
         const productRevenue = productSegmentRevenue[k]!;
@@ -1180,12 +1180,12 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
             const saleVat = productRevenue * vatRate;
             journalByCompany.get(w.state.id)!.record({
               day: 1,
-              label: `TVA facturée - ${gamme[k]!.name}`,
+              label: `TVA collectée - ${gamme[k]!.name}`,
               category: "tax",
               debitAccount: "411",
               debitLabel: "Clients",
-              creditAccount: "4457",
-              creditLabel: "TVA à payer",
+              creditAccount: "44571",
+              creditLabel: "TVA collectée",
               amount: saleVat,
               metadata: { productCode: gamme[k]!.code },
             });
@@ -1227,7 +1227,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
           const purchaseHt = productPurchases[k]!;
           const purchaseVat = vatRate > 0 ? purchaseHt * vatRate : 0;
 
-          // Enregistrement combiné : débit 601 + 4452 / crédit 401
+          // Enregistrement combiné : débit 601 + 44566 / crédit 401
           // Achat HT
           journalByCompany.get(w.state.id)!.record({
             day: 1,
@@ -1250,8 +1250,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
               day: 1,
               label: `TVA déductible - ${gamme[k]!.name}`,
               category: "tax",
-              debitAccount: "4452",
-              debitLabel: "TVA déductible",
+              debitAccount: "44566",
+              debitLabel: "TVA déductible sur ABS",
               creditAccount: "401",
               creditLabel: "Fournisseurs",
               amount: purchaseVat,
