@@ -12,6 +12,7 @@ import { SalesHistory } from "@/components/sales-history";
 import { CompetitiveBenchmark } from "@/components/competitive-benchmark";
 import { RseReportPanel } from "@/components/rse-report";
 import { VariancePanel } from "@/components/variance-panel";
+import { PeriodAccounting } from "@/components/period-accounting";
 import { DashboardTabs } from "@/components/dashboard-tabs";
 import type { KpiFormat } from "@/config/scenarios/sector-kpis";
 import type { GameView } from "@/services/game-view.service";
@@ -777,6 +778,17 @@ export function PeriodDashboard({
               />
             ) : null}
           </div>
+        ),
+        comptabilite: r.accounting ? (
+          <PeriodAccounting accounting={r.accounting} />
+        ) : (
+          <p className="text-slate-400 text-center py-8">
+            Aucune donnée comptable disponible pour ce tour.
+            <br />
+            <span className="text-sm">
+              (La comptabilité est enregistrée à partir d'une gamme multi-produits)
+            </span>
+          </p>
         ),
       }}
     </DashboardTabs>
