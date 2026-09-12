@@ -227,12 +227,26 @@ describe("registre des scénarios", () => {
     // tourne mal. Un élève en hôtellerie recevait moins qu'un élève à
     // l'atelier, sans que rien ne le laisse deviner.
     for (const d of SCENARIOS) {
-      const tours = d.situations
-        .map((s) => ("round" in s.trigger ? s.trigger.round : null))
-        .filter((r): r is number => r !== null)
-        .sort((a, b) => a - b);
+      // Ce qui est exigé est la COUVERTURE : aucun tour joué sans situation.
+      // Un tour peut en porter deux — les services instancient toutes les
+      // situations dont le tour correspond (situation-instance.service.ts,
+      // pedagogy.service.ts), et NOVA en profite pour doubler son tour 2 d'une
+      // analyse d'écarts. Une égalité stricte l'interdisait, ce que le bilan
+      // rappelé ci-dessus ne demandait pas.
+      const tours = new Set(
+        d.situations
+          .map((s) => ("round" in s.trigger ? s.trigger.round : null))
+          .filter((r): r is number => r !== null),
+      );
       const attendus = Array.from({ length: d.scenario.roundsCount }, (_, i) => i + 1);
-      expect(tours, `${d.code} : un tour joué sans situation scriptée`).toEqual(attendus);
+      const manquants = attendus.filter((r) => !tours.has(r));
+      expect(manquants, `${d.code} : tour joué sans situation scriptée`).toEqual([]);
+      // Et l'inverse, que l'égalité attrapait au passage : une situation posée
+      // sur un tour qui ne sera jamais joué ne se montrerait à personne.
+      const horsBornes = [...tours]
+        .filter((r) => r < 1 || r > d.scenario.roundsCount)
+        .sort((a, b) => a - b);
+      expect(horsBornes, `${d.code} : situation scriptée hors des tours joués`).toEqual([]);
     }
   });
 
