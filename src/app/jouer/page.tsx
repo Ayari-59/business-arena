@@ -7,6 +7,7 @@ import { etendueDesDecisions, leviersDuNiveau } from "@/config/decisions";
 import { DEFAULT_SCENARIO_CODE, SCENARIO_CHOICES, SECTOR_LABELS, familyOf } from "@/config/scenarios/registry";
 import { SubmitButton } from "@/components/submit-button";
 import { QuickConfigFields } from "@/components/quick-config-form";
+import { HelpCard } from "@/training/components/help-card";
 
 export const dynamic = "force-dynamic";
 
@@ -51,6 +52,17 @@ export default async function JouerPage({
       />
 
       <section className="mx-auto max-w-6xl px-6 py-8 sm:py-16">
+        <div className="mb-8">
+          <HelpCard
+            title="Nouveau dans le jeu ?"
+            description="Découvrez nos tutoriels interactifs et cas d'étude pour maîtriser les décisions clés : prix, production, trésorerie."
+            actions={[
+              { label: "Voir la formation", onClick: () => (window.location.href = "/training") },
+            ]}
+            dismissible
+          />
+        </div>
+
         {/*
           Colonnes centrées l'une sur l'autre : le texte est bien plus court que
           le formulaire, et les aligner par le haut laissait un vide sous lui.
