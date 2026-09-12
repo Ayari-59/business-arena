@@ -11,7 +11,6 @@ import { RatioGauges } from "@/components/ratio-gauges";
 import { SalesHistory } from "@/components/sales-history";
 import { CompetitiveBenchmark } from "@/components/competitive-benchmark";
 import { RseReportPanel } from "@/components/rse-report";
-import { VariancePanel } from "@/components/variance-panel";
 import { PeriodAccounting } from "@/components/period-accounting";
 import { DashboardTabs } from "@/components/dashboard-tabs";
 import type { KpiFormat } from "@/config/scenarios/sector-kpis";
@@ -596,14 +595,6 @@ export function PeriodDashboard({
                 </p>
               </div>
             ) : null}
-
-            {r.products ? (() => {
-              // Extract variances from the first product (mono-product scenario)
-              const productVariances = Object.values(r.products).find((p) => p?.variances)?.variances;
-              return productVariances ? (
-                <VariancePanel variances={productVariances} segmentNames={view.segmentNames} />
-              ) : null;
-            })() : null}
 
             {standing && view.studyReports ? <StudyReportsPanel reports={view.studyReports} /> : null}
           </div>

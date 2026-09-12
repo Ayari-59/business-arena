@@ -29,6 +29,12 @@ import {
   updateRankings,
 } from "@/services/scoring.service";
 import { simulateRound } from "@/engine/simulation";
+import {
+  enrichError,
+  logResolutionStep,
+  validateCompanyState,
+  validateRoundResult,
+} from "@/services/stabilization.service";
 import type {
   CompanyRoundResult,
   CompanyState,
@@ -94,19 +100,20 @@ export async function submitTeamDecisions(args: {
   payload: RoundDecisions;
   justification?: string;
 }): Promise<{ roundIndex: number }> {
-  const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
-  if (!game) throw new Error("Partie introuvable");
-  if (game.status !== "running") throw new Error("Cette partie est terminée");
-  const { team } = await findUserTeam(args.gameId, args.userId);
-  if (!team) throw new Error("Vous n'êtes pas membre de cette partie");
+  try {
+    const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
+    if (!game) throw new Error("Partie introuvable");
+    if (game.status !== "running") throw new Error("Cette partie est terminée");
+    const { team } = await findUserTeam(args.gameId, args.userId);
+    if (!team) throw new Error("Vous n'êtes pas membre de cette partie");
 
-  const roundRow = (
-    await db
-      .select()
-      .from(rounds)
-      .where(and(eq(rounds.gameId, args.gameId), eq(rounds.index, game.currentRound)))
-  )[0];
-  if (!roundRow || roundRow.status !== "open") throw new Error("Ce tour n'est pas ouvert");
+    const roundRow = (
+      await db
+        .select()
+        .from(rounds)
+        .where(and(eq(rounds.gameId, args.gameId), eq(rounds.index, game.currentRound)))
+    )[0];
+    if (!roundRow || roundRow.status !== "open") throw new Error("Ce tour n'est pas ouvert");
 
   // Planning : verrou temporel (fenêtre partie / tour / étape de concours).
   // Une partie sans fenêtre reste toujours jouable (exemption automatique).
@@ -161,7 +168,14 @@ export async function submitTeamDecisions(args: {
         validatedBy: args.userId,
       },
     });
-  return { roundIndex: game.currentRound };
+    return { roundIndex: game.currentRound };
+  } catch (error) {
+    throw enrichError(error, {
+      gameId: args.gameId,
+      roundIndex: 0,
+      teamId: undefined,
+    });
+  }
 }
 
 /**
@@ -241,6 +255,9 @@ async function resolveGameRound(
     .returning({ id: rounds.id });
   if (!locked[0]) throw new Error("Ce tour est déjà en cours de résolution");
 
+  // Contexte de résolution utilisé pour les validations et le logging
+  const context = { gameId, roundIndex };
+
   try {
     const scenario = parseScenarioConfig(game.scenarioSnapshot);
 
@@ -264,6 +281,23 @@ async function resolveGameRound(
       .map((r) => r.state as CompanyState)
       .sort((a, b) => a.id.localeCompare(b.id));
     if (states.length !== teamRows.length) throw new Error("États d'entreprises incomplets");
+
+    // Validation défensive : états cohérents avant simulation
+    for (const state of states) {
+      const validation = validateCompanyState(state, { ...context, teamId: state.id });
+      if (!validation.valid) {
+        const details = validation.errors.join("; ");
+        throw enrichError(
+          new Error(`État ${state.name} invalide: ${details}`),
+          { ...context, teamId: state.id },
+        );
+      }
+      if (validation.warnings.length > 0) {
+        logResolutionStep(context, `Avertissement état ${state.name}`, {
+          warnings: validation.warnings,
+        });
+      }
+    }
 
     // Décisions soumises pour ce tour + ventes et décisions du tour précédent
     const submitted = await db.select().from(decisions).where(eq(decisions.roundId, roundRow.id));
@@ -359,6 +393,10 @@ async function resolveGameRound(
         },
       ];
     });
+    logResolutionStep(context, "Simulation en cours", {
+      statesCount: states.length,
+      decisionsCount: Object.keys(allDecisions).length,
+    });
     const output = simulateRound({
       scenario,
       roundIndex,
@@ -367,6 +405,34 @@ async function resolveGameRound(
       activeEvents: [...activeEvents, ...injected],
       seed: game.seed,
     });
+
+    // Validation défensive : résultats cohérents post-simulation
+    for (const teamId of Object.keys(output.results)) {
+      const result = output.results[teamId];
+      if (!result) {
+        throw enrichError(new Error(`Résultat manquant pour équipe ${teamId}`), {
+          ...context,
+          teamId,
+        });
+      }
+      const validation = validateRoundResult(result, { ...context, teamId });
+      if (!validation.valid) {
+        const details = validation.errors.join("; ");
+        throw enrichError(
+          new Error(
+            `Résultat invalide pour équipe ${teamId}: ${details}\nRevenu: ${result.incomeStatement.revenue}, ` +
+            `Résultat net: ${result.incomeStatement.netIncome}`,
+          ),
+          { ...context, teamId },
+        );
+      }
+      if (validation.warnings.length > 0) {
+        logResolutionStep(context, `Avertissement résultat ${teamId}`, {
+          warnings: validation.warnings,
+        });
+      }
+    }
+
     /** Événements visibles par une équipe : portée marché + ceux qui la ciblent. */
     const roundEventCodesFor = (teamId: string): string[] =>
       [...injected, ...output.newEvents]
@@ -537,14 +603,23 @@ async function resolveGameRound(
       })
       .where(eq(games.id, gameId));
 
+    logResolutionStep(context, "Résolution réussie", {
+      roundIndex,
+      finished,
+      teamsCount: teamRows.length,
+    });
     return { roundIndex, finished };
   } catch (error) {
     // libère le verrou pour permettre une nouvelle tentative
+    logResolutionStep(context, "Erreur lors de la résolution", {
+      error: error instanceof Error ? error.message : String(error),
+      roundIndex,
+    });
     await db
       .update(rounds)
       .set({ status: "open" })
       .where(and(eq(rounds.id, roundRow.id), eq(rounds.status, "resolving")));
-    throw error;
+    throw enrichError(error, context);
   }
 }
 
