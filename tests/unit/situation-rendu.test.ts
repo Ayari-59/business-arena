@@ -92,6 +92,8 @@ function situation(partiel: Partial<SituationView> = {}): SituationView {
     rendered: false,
     missed: false,
     retaken: false,
+    requiredLearningSteps: [],
+    isAccessible: true,
     debrief: null,
     ...partiel,
   };
