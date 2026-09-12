@@ -23,6 +23,7 @@ import { statutDesSituations } from "@/config/situation-rendu";
 import { AiAssistant } from "@/components/ai-assistant";
 import { entitlementsForUser } from "@/services/entitlements.service";
 import { resolveAiSurface } from "@/services/ai.service";
+import { InfoHint } from "@/components/info-hint";
 
 export const dynamic = "force-dynamic";
 
@@ -92,9 +93,9 @@ export default async function ArenaPage({
         <h1 className="mt-3 text-3xl font-bold text-slate-50">
           {periodLabel(view.roundDays, tourJoue.round)} joué
         </h1>
-        <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-400">
-          Vos décisions sont enregistrées et le tour est résolu. Regardez ce
-          qu&apos;elles ont produit, ou enchaînez sur la suite.
+        <p className="mt-3 flex items-center gap-2 text-sm text-slate-400">
+          <span>Tour résolu</span>
+          <InfoHint icon="?" hint="Vos décisions sont enregistrées. Regardez leurs résultats, ou enchaînez sur la suite." variant="subtle" />
         </p>
         <div className="mt-8 flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
           <Link
@@ -237,10 +238,6 @@ export default async function ArenaPage({
         question={view.intro.dilemma.question}
         routes={view.intro.dilemma.routes}
       />
-      <p className="text-sm leading-relaxed text-slate-300">
-        Fixez votre {view.vocabulary.priceLabel.toLowerCase()}, votre volume et vos budgets,
-        puis observez.
-      </p>
     </>
   ) : view.roundBriefing ? (
     <DilemmaCard
@@ -294,8 +291,9 @@ export default async function ArenaPage({
     if (levers.length === 0) return null;
     return (
       <details className="rounded-lg border border-slate-700 bg-slate-800/40">
-        <summary className="cursor-pointer px-3 py-2 text-sm font-medium text-amber-300 hover:text-amber-200">
-          💡 Besoin d&apos;une piste ? Voir les leviers d&apos;action
+        <summary className="cursor-pointer px-3 py-2 text-sm font-medium text-amber-300 hover:text-amber-200 flex items-center gap-2">
+          💡 Leviers d&apos;action
+          <InfoHint icon="?" hint="Pistes pour ajuster votre stratégie" variant="subtle" />
         </summary>
         <ul className="space-y-1.5 px-3 pb-3 pt-1">
           {levers.map((l) => (
@@ -512,8 +510,9 @@ export default async function ArenaPage({
                   {{
                     situation: dr ? (
                       <section className="space-y-3">
-                        <p className="text-xs text-slate-400">
-                          La situation posée ce tour-là et sa correction.
+                        <p className="text-xs text-slate-400 flex items-center gap-2">
+                          <span>📋 Énoncé & correction</span>
+                          <InfoHint icon="?" hint="Relisez la situation et la réponse attendue" variant="subtle" />
                         </p>
                         {dr.situations.map((s) => (
                           <SituationDebrief
@@ -553,9 +552,11 @@ export default async function ArenaPage({
                 </span>
               </span>
               <span className="text-xs text-slate-400">
-                {view.kind === "solo"
-                  ? "Trois temps : lisez la situation, analysez-la, puis rendez vos décisions et simulez."
-                  : "Trois temps : lisez la situation, analysez-la, puis rendez vos décisions ; les résultats arrivent à la clôture du tour."}
+                <InfoHint
+                  icon="?"
+                  hint={view.kind === "solo" ? "📋 Situation → 🔍 Analyser → ✏️ Décider → 📊 Simuler" : "📋 Situation → 🔍 Analyser → ✏️ Décider"}
+                  variant="subtle"
+                />
               </span>
             </div>
 
@@ -624,17 +625,17 @@ export default async function ArenaPage({
                   <h2 className="text-sm font-semibold text-slate-200">
                     Vos décisions · {periodLabel(view.roundDays, view.currentRound).toLowerCase()}
                   </h2>
-                  <p className="mt-1 text-xs text-slate-400">
-                    Une fois rendues et le tour clos, elles produiront les résultats de ce
-                    tour — et le tour suivant s&apos;ouvrira.{" "}
-                    <a
-                      href={`/arena/${view.gameId}/cockpit`}
-                      className="text-amber-300 underline-offset-4 hover:underline"
-                    >
-                      Cockpit de prévision (Excel)
-                    </a>
-                    {" "}: vos hypothèses, votre logistique et votre trésorerie, calculées avant de
-                    valider.
+                  <p className="mt-1 flex items-center gap-2 text-xs text-slate-400">
+                    <span>
+                      <a
+                        href={`/arena/${view.gameId}/cockpit`}
+                        className="text-amber-300 underline-offset-4 hover:underline"
+                        title="Vos hypothèses, votre logistique et votre trésorerie, calculées avant de valider"
+                      >
+                        📊 Cockpit
+                      </a>
+                    </span>
+                    <InfoHint icon="?" hint="Validez pour produire les résultats et ouvrir le tour suivant." variant="subtle" />
                   </p>
                 </div>
                 <DecisionForm
