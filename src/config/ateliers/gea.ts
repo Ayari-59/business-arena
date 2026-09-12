@@ -3,7 +3,7 @@ import type { AtelierDefinition } from "./types";
 /**
  * ATELIER PROFESSIONNEL · BUT / DUT GEA.
  *
- * Cinq séances de trois heures sur NOVA, l'industriel, choisi pour sa gestion
+ * Six séances de trois heures sur NOVA, l'industriel, choisi pour sa gestion
  * généraliste : on y fabrique un produit, donc on y calcule un coût de revient,
  * on y lit un compte de résultat, on y suit une trésorerie que le besoin en
  * fonds de roulement met sous tension, et on y arbitre un investissement de
@@ -12,7 +12,7 @@ import type { AtelierDefinition } from "./types";
  *
  * Les quatre premières séances jouent un trimestre chacune et s'arrêtent sur la
  * montée en charge du quatrième, où un compte-clé fait basculer la demande. La
- * cinquième ne joue rien : elle établit le diagnostic financier et le présente.
+ * cinquième ne joue rien non plus : elle analyse les écarts sur coût de production, et la sixième établit le diagnostic financier et le présente.
  *
  * Le référentiel du BUT GEA n'a pas encore été confronté à son texte : le code
  * figure dans REFERENTIELS_NON_VERIFIES, et les blocs cités décrivent l'activité
@@ -28,12 +28,12 @@ export const ATELIER_GEA: AtelierDefinition = {
   referentielLabel: "Blocs de compétences",
   referentielAccord: "mobilisés",
   pitch:
-    "Cinq séances de trois heures. Chaque équipe gère le même industriel d'un trimestre à l'autre, calcule ses coûts de revient, lit ses documents de synthèse, tient sa trésorerie sous la tension du besoin en fonds de roulement, arbitre un investissement, et rend à chaque séance un document de gestion.",
+    "Six séances de trois heures. Chaque équipe gère le même industriel d'un trimestre à l'autre, calcule ses coûts de revient, analyse ses écarts sur coût de production, lit ses documents de synthèse, tient sa trésorerie sous la tension du besoin en fonds de roulement, arbitre un investissement, et rend à chaque séance un document de gestion.",
   resume:
     "Quatre trimestres à la tête d'un industriel, du coût de revient au diagnostic financier complet, avec la montée en charge d'un compte-clé comme épreuve.",
   difficulte: 3,
   difficulteLabel: "Pilotage",
-  format: "5 séances de 3 h",
+  format: "6 séances de 3 h",
   pourquoi:
     "Le coût de revient se calcule au tableau et s'oublie à la sortie, parce qu'un exercice donne les charges et demande le coût. Ici l'équipe fixe son volume de production et son prix, découvre au trimestre suivant sa marge réelle une fois les charges fixes absorbées, et voit sa trésorerie se tendre alors que son compte de résultat est bénéficiaire, parce que ses clients paient à soixante jours. Le besoin en fonds de roulement cesse d'être une formule : une équipe qui a vendu davantage sans financer son cycle se retrouve à court de caisse au meilleur de son activité, et son tableau de trésorerie le lui dit avant sa banque.",
   reglages: {
@@ -83,7 +83,7 @@ export const ATELIER_GEA: AtelierDefinition = {
           minutes: 15,
           titre: "Le cadre",
           detail:
-            "Vous annoncez la règle : cinq séances, quatre trimestres, une seule entreprise, et un document de gestion rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code.",
+            "Vous annoncez la règle : six séances, quatre trimestres, une seule entreprise, et un document de gestion rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code.",
         },
         {
           minutes: 35,
@@ -347,6 +347,72 @@ export const ATELIER_GEA: AtelierDefinition = {
     },
     {
       numero: 5,
+      titre: "Écart sur coût de production",
+      dureeMinutes: 180,
+      tourJoue: null,
+      processus: [
+        "Bloc 1 · Analyser les coûts et la rentabilité",
+      ],
+      objectif:
+        "Confronter le coût de production réel d'un trimestre au coût préétabli, et décomposer l'écart en écart sur matières, écart sur main-d'œuvre et écart sur charges indirectes.",
+      competences: [
+        "Je décompose l'écart sur matières en écart sur prix et écart sur quantité consommée.",
+        "Je décompose l'écart sur main-d'œuvre en écart sur taux et écart sur temps.",
+        "Je décompose l'écart sur charges indirectes en écart sur budget, écart sur activité et écart sur rendement.",
+        "Je vérifie que la somme des sous-écarts retombe sur l'écart total sur coût de production.",
+      ],
+      notions: [
+        "coût de production préétabli",
+        "écart sur matières et sur main-d'œuvre",
+        "écart sur charges indirectes",
+        "budget flexible et unité d'œuvre",
+      ],
+      preparation:
+        "Aucun tour n'est joué : la séance travaille un trimestre déjà clôturé. Préparez, ou faites établir, la fiche de coût de production préétabli, matière et main-d'œuvre par unité et budget des charges indirectes pour une activité normale, puis la trame de décomposition en sous-écarts, prix et quantité d'un côté, taux et temps de l'autre.",
+      deroule: [
+        {
+          minutes: 15,
+          titre: "Le coût préétabli",
+          detail:
+            "La classe pose la fiche de coût de production préétabli : matière et main-d'œuvre par unité produite, et le budget des charges indirectes pour une activité normale. C'est la référence.",
+        },
+        {
+          minutes: 40,
+          titre: "L'écart total",
+          detail:
+            "Chaque équipe rapproche le coût de production réel d'un trimestre clôturé du coût préétabli de sa production réelle, et isole l'écart total avant de l'ouvrir.",
+        },
+        {
+          minutes: 40,
+          titre: "Les charges directes",
+          detail:
+            "L'équipe décompose l'écart sur matières en écart sur prix et écart sur quantité consommée, puis l'écart sur main-d'œuvre en écart sur taux et écart sur temps.",
+        },
+        {
+          minutes: 45,
+          titre: "Les charges indirectes",
+          detail:
+            "L'équipe décompose l'écart sur charges indirectes en écart sur budget, écart sur activité et écart sur rendement, à partir du budget flexible et du coût de l'unité d'œuvre.",
+        },
+        {
+          minutes: 40,
+          titre: "Contrôle et lecture",
+          detail:
+            "La somme des sous-écarts est confrontée à l'écart total : le contrôle est la discipline de la séance. Chaque équipe nomme la cause de son plus gros sous-écart.",
+        },
+      ],
+      livrable:
+        "La fiche d'écart sur coût de production : coût préétabli et coût réel de la production, écart sur matières décomposé en prix et quantité, écart sur main-d'œuvre décomposé en taux et temps, écart sur charges indirectes en budget activité et rendement, et le contrôle par la somme des sous-écarts.",
+      tracePasseport:
+        "J'ai décomposé l'écart sur coût de production en écarts sur charges directes et indirectes, et contrôlé le tout par la somme des sous-écarts.",
+      evaluation: [
+        "Chaque écart direct se décompose en ses deux sous-écarts, prix et quantité ou taux et temps.",
+        "L'écart sur charges indirectes distingue le budget, l'activité et le rendement.",
+        "La somme des sous-écarts retombe sur l'écart total, et le contrôle est montré.",
+      ],
+    },
+    {
+      numero: 6,
       titre: "Établir le diagnostic financier",
       dureeMinutes: 180,
       tourJoue: null,
@@ -415,8 +481,8 @@ export const ATELIER_GEA: AtelierDefinition = {
   ],
   formats: [
     {
-      nom: "Cinq séances hebdomadaires",
-      quand: "Le format d'origine, sur cinq semaines consécutives.",
+      nom: "Six séances hebdomadaires",
+      quand: "Le format d'origine, sur six semaines consécutives.",
       comment:
         "Une séance par semaine, un trimestre par séance. La semaine qui sépare deux séances laisse aux équipes le temps de préparer leur livrable, et à vous celui de le lire.",
     },
@@ -434,7 +500,7 @@ export const ATELIER_GEA: AtelierDefinition = {
     },
   ],
   evaluationFinale: [
-    "Les cinq livrables intermédiaires, notés au fil des séances, pour la moitié de la note.",
+    "Les six livrables intermédiaires, notés au fil des séances, pour la moitié de la note.",
     "Le diagnostic financier de la dernière séance, pour un quart.",
     "La présentation orale et les réponses aux questions du jury, pour le dernier quart.",
     "Le classement du jeu n'entre pas dans la note : une équipe peut finir dernière et rendre le meilleur diagnostic.",
@@ -453,7 +519,7 @@ export const ATELIER_GEA: AtelierDefinition = {
     {
       question: "Pourquoi arrêter à quatre trimestres alors que le secteur en compte six ?",
       reponse:
-        "Parce que la montée en charge du compte-clé est le point culminant de ce secteur et que rien ne gagne à la dépasser dans un atelier de cinq séances. La partie reste ouverte : si votre progression le permet, les deux trimestres suivants se jouent en prolongement, avec le financement de la croissance comme fil.",
+        "Parce que la montée en charge du compte-clé est le point culminant de ce secteur et que rien ne gagne à la dépasser dans un atelier de six séances. La partie reste ouverte : si votre progression le permet, les deux trimestres suivants se jouent en prolongement, avec le financement de la croissance comme fil.",
     },
     {
       question: "Le référentiel du BUT GEA est-il repris au mot dans les intitulés de blocs ?",
