@@ -608,6 +608,29 @@ function GammeBudgets({
                     ? `Financée (${formatEuro(dev.invested)} engagés) : vendable dès le tour ${Math.max(dev.availableFromRound, roundIndex + 1)}.`
                     : `${formatEuro(dev.invested)} engagés sur ${formatEuro(dev.cost)} : il reste ${formatEuro(reste)} à financer, puis elle se vend dès le tour suivant (au plus tôt le tour ${dev.availableFromRound}).`}
                 </span>
+                {/*
+                  Le seul levier d'une référence à bâtir : son financement. Sans ce
+                  champ, l'énoncé promettait un financement « à la R&D » que le
+                  formulaire n'offrait pas — la porte de lancement ne s'ouvrait jamais.
+                */}
+                {avecRd ? (
+                  <label className="block">
+                    <span className="text-xs font-medium uppercase tracking-wide text-slate-400">R&amp;D</span>
+                    <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900 px-2 py-2 focus-within:border-amber-400/60">
+                      <input
+                        type="number"
+                        name={productFieldName(p.code, "rdBudget")}
+                        aria-label={`R&D · ${p.name}`}
+                        defaultValue={rdDefaut}
+                        step={1}
+                        min={0}
+                        required={p.code === activeProduct}
+                        className="flex-1 bg-transparent text-sm text-slate-100 outline-none"
+                      />
+                      <span className="text-xs text-slate-400">€</span>
+                    </span>
+                  </label>
+                ) : null}
                 <input type="hidden" name={productFieldName(p.code, "marketingBudget")} value={0} />
                 {quality ? <input type="hidden" name={productFieldName(p.code, "qualityBudget")} value={0} /> : null}
               </div>

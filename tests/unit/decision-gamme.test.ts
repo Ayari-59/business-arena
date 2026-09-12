@@ -14,6 +14,10 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("next/cache", () => ({ revalidatePath: () => undefined }));
 vi.mock("@/lib/guest", () => ({ getGuestUserId: async () => "invite-1" }));
+// `actions.ts` importe retakeSituation de debrief.service, qui charge `@/db` —
+// lequel jette à l'import sans DATABASE_URL. Le mock ferme la frontière de
+// service, pour que ce test reste unitaire sans base ni variable d'environnement.
+vi.mock("@/services/debrief.service", () => ({ retakeSituation: vi.fn() }));
 vi.mock("@/services/pedagogy.service", () => ({
   submitDiagnosis: vi.fn(),
   submitQuiz: vi.fn(),

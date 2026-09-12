@@ -111,6 +111,7 @@ export const CONCEPTS: ConceptDef[] = [
     definition: "Coût unitaire décidé à l'avance et tenu pour référence, auquel se comparera le coût réellement supporté.",
     intuition: "C'est le prix que vous vous étiez promis de payer. Sans cette promesse écrite, un dérapage ne se voit pas : tout coût passe pour « le » coût.",
     method: "Fixez le coût attendu par unité — matière, main-d'œuvre — avant de produire, puis mesurez toujours le réel contre lui.",
+    prerequisites: ["variable_costs"],
   },
   {
     code: "cost_variance",
@@ -565,6 +566,7 @@ export const CONCEPT_PREREQUISITES: Record<string, readonly string[]> = {
   contribution_margin: ["revenue", "variable_costs"],
 
   // Niveau 3 — Marge & coût
+  standard_costing: ["variable_costs"],
   margin_rates: ["contribution_margin"],
   breakeven: ["contribution_margin", "fixed_costs"],
   full_unit_cost: ["fixed_costs", "variable_costs"],
@@ -577,6 +579,7 @@ export const CONCEPT_PREREQUISITES: Record<string, readonly string[]> = {
   ebitda_margin: ["contribution_margin", "fixed_costs"],
 
   // Niveau 4 — Gestion courante
+  cost_variance: ["standard_costing"],
   dead_point: ["breakeven"],
   safety_margin: ["breakeven"],
   markdown: ["stock_rotation", "margin_rates"],
@@ -586,6 +589,8 @@ export const CONCEPT_PREREQUISITES: Record<string, readonly string[]> = {
   sales_per_sqm: ["average_basket"],
 
   // Niveau 5 — Analyse & trésorerie
+  material_price_variance: ["cost_variance"],
+  efficiency_variance: ["cost_variance"],
   net_treasury: ["frng", "bfr"],
   receivables_financing: ["bfr"],
   profitability_vs_return: ["margin_rates", "breakeven"],
@@ -637,12 +642,14 @@ export const CONCEPT_LEVEL: Record<string, ConceptLevel> = {
   depreciation: 3,
   psych_price: 3,
   markup_coefficient: 3,
+  standard_costing: 3,
   stock_rotation: 3,
   assortment: 3,
   average_basket: 3,
   conversion_rate: 3,
   ebitda_margin: 3,
   // 4 — Gestion courante
+  cost_variance: 4,
   dead_point: 4,
   safety_margin: 4,
   markdown: 4,
@@ -651,6 +658,8 @@ export const CONCEPT_LEVEL: Record<string, ConceptLevel> = {
   distribution_commission: 4,
   sales_per_sqm: 4,
   // 5 — Analyse & trésorerie
+  material_price_variance: 5,
+  efficiency_variance: 5,
   net_treasury: 5,
   receivables_financing: 5,
   profitability_vs_return: 5,

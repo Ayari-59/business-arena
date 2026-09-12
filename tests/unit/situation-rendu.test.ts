@@ -34,6 +34,10 @@ vi.mock("@/services/game.service", () => ({
   resolveCurrentRound: vi.fn(),
   submitTeamDecisions: vi.fn(),
 }));
+// `actions.ts` importe retakeSituation de debrief.service, qui charge `@/db` —
+// lequel jette à l'import sans DATABASE_URL. Le mock ferme la frontière de
+// service, pour que ce test reste unitaire sans base ni variable d'environnement.
+vi.mock("@/services/debrief.service", () => ({ retakeSituation: vi.fn() }));
 vi.mock("@/services/pedagogy.service", () => ({
   submitDiagnosis: vi.fn(async () => ({ score: 1 })),
   submitQuiz: vi.fn(async () => ({ score: 1 })),

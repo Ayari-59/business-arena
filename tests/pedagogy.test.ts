@@ -558,10 +558,15 @@ describe("cohérence des référentiels", () => {
       expect(DETECTION_METADATA[code as keyof typeof DETECTION_METADATA], `${s.code} → ${code}`).toBeDefined();
     }
   });
-  it("6 situations scriptées (une par tour) + 5 détectées", () => {
+  it("7 situations scriptées couvrant les six tours, dont deux au tour 2, + 5 détectées", () => {
     const scripted = NOVA_SITUATIONS.filter((s) => "round" in s.trigger);
     const detected = NOVA_SITUATIONS.filter((s) => "detect" in s.trigger);
-    expect(scripted.map((s) => (s.trigger as { round: number }).round).sort()).toEqual([1, 2, 3, 4, 5, 6]);
+    // Le tour 2 en porte deux : la guerre des prix et la décomposition des
+    // écarts. Les deux services instancient TOUTES les situations dont le tour
+    // correspond, donc les deux s'ouvrent — voir registry.test.ts, qui vérifie
+    // la couverture des tours sans en interdire deux sur le même.
+    const tours = scripted.map((s) => (s.trigger as { round: number }).round).sort((a, b) => a - b);
+    expect(tours).toEqual([1, 2, 2, 3, 4, 5, 6]);
     // quatre pannes, plus la trésorerie qui dort : la seule qui s'ouvre alors
     // que tout va bien
     expect(detected).toHaveLength(5);
