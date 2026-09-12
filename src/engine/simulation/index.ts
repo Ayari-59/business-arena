@@ -1184,8 +1184,8 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
               category: "tax",
               debitAccount: "411",
               debitLabel: "Clients",
-              creditAccount: "4453",
-              creditLabel: "TVA facturée",
+              creditAccount: "4457",
+              creditLabel: "TVA à payer",
               amount: saleVat,
               metadata: { productCode: gamme[k]!.code },
             });
@@ -1220,10 +1220,15 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     );
     const purchases = sumExact(productPurchases);
 
-    // Jalon B : Enregistrement des achats (débit 601 / crédit 401) + TVA déductible (4452)
+    // Jalon B : Enregistrement des achats (débit 601 + 4452 / crédit 401 montant TTC)
     if (multi && purchases > 0) {
       for (let k = 0; k < gamme.length; k++) {
         if (productPurchases[k]! > 0) {
+          const purchaseHt = productPurchases[k]!;
+          const purchaseVat = vatRate > 0 ? purchaseHt * vatRate : 0;
+
+          // Enregistrement combiné : débit 601 + 4452 / crédit 401
+          // Achat HT
           journalByCompany.get(w.state.id)!.record({
             day: 1,
             label: `Achat matière première - ${gamme[k]!.name}`,
@@ -1232,16 +1237,15 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
             debitLabel: "Achats de matières premières",
             creditAccount: "401",
             creditLabel: "Fournisseurs",
-            amount: productPurchases[k]!,
+            amount: purchaseHt,
             metadata: {
               productCode: gamme[k]!.code,
               quantity: w.producedPerProduct[k],
               unitPrice: gamme[k]!.materialCostPerUnit * w.materialMultipliers[k]!,
             },
           });
-          // TVA déductible sur achats (4452) si applicable
-          if (vatRate > 0) {
-            const purchaseVat = productPurchases[k]! * vatRate;
+          // TVA déductible si applicable
+          if (purchaseVat > 0) {
             journalByCompany.get(w.state.id)!.record({
               day: 1,
               label: `TVA déductible - ${gamme[k]!.name}`,
