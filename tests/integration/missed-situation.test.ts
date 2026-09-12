@@ -18,7 +18,8 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { getTeacherOrgId, registerTeacher } from "@/services/auth.service";
 import { closeCurrentRound, createClassGame, joinGameByCode } from "@/services/game.service";
-import { getTeamSituations, retakeSituation, setMissedPolicy } from "@/services/pedagogy.service";
+import { getTeamSituations } from "@/services/pedagogy.service";
+import { retakeSituation, setMissedPolicy } from "@/services/debrief.service";
 import { situationByCode } from "@/config/scenarios/registry";
 
 let teacherId: string;
