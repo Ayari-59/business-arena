@@ -396,9 +396,14 @@ function GammeVentes({
         ))}
       </div>
 
-      {/* Contenu par référence sélectionnée */}
+      {/*
+        Toutes les références restent montées, l'inactive seulement masquée :
+        les démonter retirait leurs champs du FormData, et la décision prise
+        sur un onglet quitté était perdue en silence. `required` ne vaut donc
+        que pour la carte visible — un champ requis masqué bloque l'envoi sans
+        rien afficher, le serveur validant de son côté.
+      */}
       {gamme
-        .filter((p) => p.code === activeProduct)
         .map((p) => {
           const own = defaults.products?.[p.code];
           const price = own?.price ?? p.refPrice;
@@ -410,7 +415,7 @@ function GammeVentes({
 
           if (enDeveloppement(p)) {
             return (
-              <div key={p.code} className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 sm:px-3.5 sm:py-2.5 space-y-2">
+              <div key={p.code} hidden={p.code !== activeProduct} className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 sm:px-3.5 sm:py-2.5 space-y-2">
                 <span className="text-sm font-medium text-slate-100">{p.name}</span>
                 <EnDeveloppement />
                 <span className="block text-xs leading-snug text-slate-400">
@@ -427,7 +432,7 @@ function GammeVentes({
           }
 
           return (
-            <div key={p.code} className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 sm:px-3.5 sm:py-2.5 space-y-3">
+            <div key={p.code} hidden={p.code !== activeProduct} className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 sm:px-3.5 sm:py-2.5 space-y-3">
               {/* Info produit */}
               <div className="space-y-1">
                 <span className="block text-sm font-medium text-slate-100">{p.name}</span>
@@ -463,7 +468,7 @@ function GammeVentes({
                       }}
                       step={0.1}
                       min={0}
-                      required
+                      required={p.code === activeProduct}
                       className="flex-1 bg-transparent text-sm text-slate-100 outline-none"
                     />
                     <span className="text-xs text-slate-400">€</span>
@@ -479,7 +484,7 @@ function GammeVentes({
                       defaultValue={plan}
                       step={1}
                       min={0}
-                      required
+                      required={p.code === activeProduct}
                       className="flex-1 bg-transparent text-sm text-slate-100 outline-none"
                     />
                     <span className="text-xs text-slate-400">{v.units}</span>
@@ -575,9 +580,14 @@ function GammeBudgets({
         ))}
       </div>
 
-      {/* Contenu par référence sélectionnée */}
+      {/*
+        Toutes les références restent montées, l'inactive seulement masquée :
+        les démonter retirait leurs champs du FormData, et la décision prise
+        sur un onglet quitté était perdue en silence. `required` ne vaut donc
+        que pour la carte visible — un champ requis masqué bloque l'envoi sans
+        rien afficher, le serveur validant de son côté.
+      */}
       {gamme
-        .filter((p) => p.code === activeProduct)
         .map((p) => {
           const own = defaults.products?.[p.code];
           const marketing = Math.round(own?.marketingBudget ?? defaults.marketingBudget / n);
@@ -590,7 +600,7 @@ function GammeBudgets({
             const reste = Math.max(0, dev.cost - dev.invested);
             const pret = reste <= 0;
             return (
-              <div key={p.code} className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 sm:px-3.5 sm:py-2.5 space-y-2">
+              <div key={p.code} hidden={p.code !== activeProduct} className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 sm:px-3.5 sm:py-2.5 space-y-2">
                 <span className="text-sm font-medium text-slate-100">{p.name}</span>
                 <EnDeveloppement />
                 <span className="block text-xs leading-snug text-slate-400">
@@ -605,7 +615,7 @@ function GammeBudgets({
           }
 
           return (
-            <div key={p.code} className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 sm:px-3.5 sm:py-2.5 space-y-3">
+            <div key={p.code} hidden={p.code !== activeProduct} className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 sm:px-3.5 sm:py-2.5 space-y-3">
               <span className="block text-sm font-medium text-slate-100">{p.name}</span>
 
               {/* Budgets : affichés en colonne sur mobile, 2 cols sur sm+ */}
@@ -620,7 +630,7 @@ function GammeBudgets({
                       defaultValue={marketing}
                       step={1}
                       min={0}
-                      required
+                      required={p.code === activeProduct}
                       className="flex-1 bg-transparent text-sm text-slate-100 outline-none"
                     />
                     <span className="text-xs text-slate-400">€</span>
@@ -638,7 +648,7 @@ function GammeBudgets({
                         defaultValue={qualite}
                         step={1}
                         min={0}
-                        required
+                        required={p.code === activeProduct}
                         className="flex-1 bg-transparent text-sm text-slate-100 outline-none"
                       />
                       <span className="text-xs text-slate-400">€</span>
@@ -657,7 +667,7 @@ function GammeBudgets({
                         defaultValue={rdDefaut}
                         step={1}
                         min={0}
-                        required
+                        required={p.code === activeProduct}
                         className="flex-1 bg-transparent text-sm text-slate-100 outline-none"
                       />
                       <span className="text-xs text-slate-400">€</span>
