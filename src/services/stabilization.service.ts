@@ -25,7 +25,6 @@ export interface ValidationResult {
  */
 export function validateRoundResult(
   result: CompanyRoundResult,
-  context: ValidationContext,
 ): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
@@ -43,48 +42,24 @@ export function validateRoundResult(
     }
   };
 
-  // Compte de résultat
+  // Compte de résultat - propriétés réelles
   checkNumber(result.incomeStatement.revenue, "incomeStatement.revenue");
   checkNumber(result.incomeStatement.cogs, "incomeStatement.cogs");
-  checkNumber(result.incomeStatement.grossProfit, "incomeStatement.grossProfit");
-  checkNumber(result.incomeStatement.opex, "incomeStatement.opex");
+  checkNumber(result.incomeStatement.grossMargin, "incomeStatement.grossMargin");
   checkNumber(result.incomeStatement.ebitda, "incomeStatement.ebitda");
   checkNumber(result.incomeStatement.netIncome, "incomeStatement.netIncome");
-  checkNumber(result.incomeStatement.roi, "incomeStatement.roi", true); // ROI peut être NaN
 
-  // Bilan
-  checkNumber(result.balanceSheet.assets, "balanceSheet.assets");
+  // Bilan - propriétés réelles
   checkNumber(result.balanceSheet.equity, "balanceSheet.equity");
-  checkNumber(result.balanceSheet.liabilities, "balanceSheet.liabilities");
-  checkNumber(result.balanceSheet.debt, "balanceSheet.debt");
   checkNumber(result.balanceSheet.cash, "balanceSheet.cash");
-
-  // Trésorerie
-  checkNumber(result.cashFlow.operations, "cashFlow.operations");
-  checkNumber(result.cashFlow.financing, "cashFlow.financing");
-  checkNumber(result.cashFlow.investment, "cashFlow.investment");
-  checkNumber(result.cashFlow.netChange, "cashFlow.netChange");
+  checkNumber(result.balanceSheet.financialDebt, "balanceSheet.financialDebt");
 
   // Marché
   if (result.market.bySegment) {
     for (const [segmentId, segment] of Object.entries(result.market.bySegment)) {
       checkNumber(segment.sold, `market.bySegment[${segmentId}].sold`);
-      checkNumber(segment.demand, `market.bySegment[${segmentId}].demand`);
-      if (segment.sold > segment.demand * 1.01) {
-        warnings.push(`market.bySegment[${segmentId}]: Ventes > demande (${segment.sold} > ${segment.demand})`);
-      }
+      checkNumber(segment.demandForCompany, `market.bySegment[${segmentId}].demandForCompany`);
     }
-  }
-
-  // Production
-  if (result.production) {
-    checkNumber(result.production.produced, "production.produced");
-    checkNumber(result.production.units, "production.units");
-  }
-
-  // Seuil de rentabilité
-  if (result.breakeven) {
-    checkNumber(result.breakeven.breakEven, "breakeven.breakEven", true); // Peut être Infinity
   }
 
   return { valid: errors.length === 0, errors, warnings };
@@ -94,7 +69,7 @@ export function validateRoundResult(
  * Valide qu'un état de compagnie n'est pas corrompue (cohérence trésorerie,
  * bilan). Contexte riche pour débogage.
  */
-export function validateCompanyState(state: CompanyState, context: ValidationContext): ValidationResult {
+export function validateCompanyState(state: CompanyState): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
 
@@ -102,18 +77,18 @@ export function validateCompanyState(state: CompanyState, context: ValidationCon
   if (!state.name) warnings.push("État sans nom");
 
   // Vérifications de cohérence financière
-  checkStateNumber(state.cash, "cash", errors);
-  checkStateNumber(state.equity, "equity", errors);
-  checkStateNumber(state.liabilities, "liabilities", errors);
+  const finance = state.finance;
+  checkStateNumber(finance.cash, "finance.cash", errors);
+  checkStateNumber(finance.equity, "finance.equity", errors);
 
   // Trésorerie < 0 : attention
-  if (typeof state.cash === "number" && state.cash < 0) {
-    warnings.push(`Trésorerie négative: ${state.cash}`);
+  if (typeof finance.cash === "number" && finance.cash < 0) {
+    warnings.push(`Trésorerie négative: ${finance.cash}`);
   }
 
   // Capitaux propres < 0 : alerte
-  if (typeof state.equity === "number" && state.equity < 0) {
-    warnings.push(`Capitaux propres négatifs: ${state.equity}`);
+  if (typeof finance.equity === "number" && finance.equity < 0) {
+    warnings.push(`Capitaux propres négatifs: ${finance.equity}`);
   }
 
   return { valid: errors.length === 0, errors, warnings };

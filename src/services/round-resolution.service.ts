@@ -284,7 +284,7 @@ async function resolveGameRound(
 
     // Validation défensive : états cohérents avant simulation
     for (const state of states) {
-      const validation = validateCompanyState(state, { ...context, teamId: state.id });
+      const validation = validateCompanyState(state);
       if (!validation.valid) {
         const details = validation.errors.join("; ");
         throw enrichError(
@@ -415,7 +415,7 @@ async function resolveGameRound(
           teamId,
         });
       }
-      const validation = validateRoundResult(result, { ...context, teamId });
+      const validation = validateRoundResult(result);
       if (!validation.valid) {
         const details = validation.errors.join("; ");
         throw enrichError(
