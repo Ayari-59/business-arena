@@ -17,7 +17,6 @@ import {
   type ScenarioDefinition,
 } from "@/config/scenarios/registry";
 import {
-  customSituationsOf,
   resolveScenarioDefinition,
 } from "@/services/scenario-source.service";
 import {

@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
 import { calculateVariances } from "@/engine/costs/variance";
-import type { SegmentCode } from "@/engine/types";
 
 describe("variance calculation", () => {
   it("calculates material price variance from supplier cost multiplier", () => {
@@ -131,12 +130,12 @@ describe("variance calculation", () => {
     });
 
     expect(result).not.toBeNull();
-    if (result) {
+    if (result && result.revenueVarianceBySegment) {
       expect(result.revenueVarianceBySegment.etudiants).toBeDefined();
       expect(result.revenueVarianceBySegment.passionnes).toBeDefined();
       // Revenue context structure should have priceVariance, volumeVariance, totalVariance
-      expect(result.revenueVarianceBySegment.etudiants.priceVariance).toBeDefined();
-      expect(result.revenueVarianceBySegment.etudiants.volumeVariance).toBeDefined();
+      expect(result.revenueVarianceBySegment.etudiants?.priceVariance).toBeDefined();
+      expect(result.revenueVarianceBySegment.etudiants?.volumeVariance).toBeDefined();
     }
   });
 

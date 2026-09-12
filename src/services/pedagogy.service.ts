@@ -3,7 +3,6 @@ import { db } from "@/db";
 import {
   concepts,
   decisionModels,
-  gameRankings,
   games,
   hintUsages,
   hints,
@@ -18,14 +17,12 @@ import {
   situationModels,
   situations,
   teams,
-  users,
 } from "@/db/schema";
 import { CONCEPTS, conceptByCode } from "@/config/pedagogy/concepts";
-import { DECISION_MODELS, modelByCode } from "@/config/pedagogy/models";
+import { DECISION_MODELS } from "@/config/pedagogy/models";
 import type { SituationDef } from "@/config/scenarios/nova/situations";
 import {
   MODEL_QUESTION_ID,
-  type DecisionLever,
   type QuizQuestionDef,
 } from "@/config/scenarios/situation-kit";
 import {
@@ -38,12 +35,12 @@ import { presetFromProfile, quizModeFromProfile, type QuizMode } from "@/config/
 import { hintScoreMultiplier, nextUnlockableLevel } from "@/pedagogy/hints";
 import { evaluateDiagnosis, evaluateQuiz } from "@/pedagogy/evaluation";
 import { buildConsequenceContext, buildInterpretation, buildTriggerContext, detectSituations } from "@/pedagogy/detection";
-import type { ConsequenceFact, InterpretationFact, TriggerFact } from "@/pedagogy/detection";
+import type { ConsequenceFact, InterpretationFact } from "@/pedagogy/detection";
 import { AXES, aggregateAxis, updateMastery } from "@/pedagogy/progress";
 import { adaptiveHintMultiplier, playerStrength } from "@/pedagogy/adaptivity";
 import { computeRawSituationScore } from "@/pedagogy/scoring";
 import type { CompanyRoundResult } from "@/engine/types";
-import { getCompletedStepsForUser, isSituationAccessible, markStepCompleted } from "@/services/learning-progress.service";
+import { markStepCompleted } from "@/services/learning-progress.service";
 /**
  * Moteur pédagogique côté services — barrel de compatibilité.
  *
@@ -668,34 +665,6 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
   }
 }
 
-/** Profil de compétences (§28) : agrège les maîtrises de concepts par axe. */
-async function recomputeSkills(userId: string): Promise<void> {
-  const progress = await db
-    .select({ mastery: learningProgress.mastery, conceptId: learningProgress.conceptId })
-    .from(learningProgress)
-    .where(eq(learningProgress.userId, userId));
-  if (progress.length === 0) return;
-  const conceptRows = await db.select().from(concepts);
-  const codeById = new Map(conceptRows.map((r) => [r.id, r.code]));
-  const byAxis = new Map<string, number[]>();
-  for (const p of progress) {
-    const def = conceptByCode.get(codeById.get(p.conceptId) ?? "");
-    if (!def) continue;
-    const list = byAxis.get(def.axis) ?? [];
-    list.push(Number(p.mastery));
-    byAxis.set(def.axis, list);
-  }
-  for (const axis of AXES) {
-    const masteries = byAxis.get(axis);
-    if (!masteries || masteries.length === 0) continue;
-    const value = aggregateAxis(masteries).toFixed(2);
-    await db
-      .insert(playerSkills)
-      .values({ userId, axis, value })
-      .onConflictDoUpdate({ target: [playerSkills.userId, playerSkills.axis], set: { value } });
-  }
-}
-
 // ---------------------------------------------------------------------------
 // Lectures : vue joueur et vue pédagogique enseignant (§27)
 // ---------------------------------------------------------------------------
@@ -709,17 +678,6 @@ function askedQuestions(def: SituationDef, mode: QuizMode): QuizQuestionDef[] {
   if (mode === "off") return [];
   if (mode === "model") return def.quiz.filter((q) => q.id === MODEL_QUESTION_ID);
   return def.quiz;
-}
-
-/** Modèle attendu d'une situation, pour le débriefing quand la question n'est pas posée. */
-function modelInsight(
-  def: SituationDef,
-): { prompt: string; answer: string; explain: string } | null {
-  const question = def.quiz.find((q) => q.id === MODEL_QUESTION_ID);
-  if (!question) return null;
-  const answer = question.options.find((o) => o.id === question.correctOptionId)?.label;
-  if (!answer) return null;
-  return { prompt: question.prompt, answer, explain: question.explain };
 }
 
 export interface AnalyticalHint {
