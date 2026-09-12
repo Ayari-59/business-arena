@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { SCENARIOS } from "../../src/config/scenarios/registry";
+import { botDecisions, soldByProduct, type BotProfile } from "../../src/engine/bots";
 import { toGamme } from "../../src/engine/gamme";
+import { runGame, soldUnits } from "../../src/engine/simulation/runGame";
+import type { CompanyRoundResult, CompanyState } from "../../src/engine/types";
 
 /**
  * LA CONFIGURATION DOIT RACONTER LE MÊME MÉTIER QUE LES ÉNONCÉS.
@@ -80,5 +83,67 @@ describe("bilan d'ouverture", () => {
       const passif = b.equity + b.financialDebt + b.payables + b.overdraft;
       expect(Math.abs(actif - passif), d.code).toBeLessThan(0.01);
     }
+  });
+});
+
+/**
+ * NE RIEN DÉCIDER NE DOIT PAS BATTRE L'ARBITRAGE.
+ *
+ * Le profil passif joue le prix de référence, six dixièmes de l'outil, ni
+ * publicité ni qualité. S'il finit devant l'équilibrée dans la partie de
+ * référence, le scénario récompense l'inaction : c'est ce que le diagnostic
+ * a trouvé dans quatre scénarios. Deux tiennent à la configuration et sont
+ * corrigés (porte marketing sur la clientèle loisirs de L'ESCALE, structure de
+ * MARTEL & FILS) ; deux tiennent aux bots eux-mêmes et restent des dettes
+ * nommées ici : chez MAILLE & CO l'équilibrée sous-planifie l'hiver (son
+ * anticipation saisonnière vise le creux qui suit le pic), à L'ESCALE · gamme
+ * le marketing se dilue entre les références. La liste des dettes doit rester
+ * exacte : un scénario qui n'y a plus sa place en sort.
+ */
+const PASSIVE_DEVANT_EQUILIBREE_CONNUS = ["boutique", "hotel-gamme"];
+
+function cumulDe(d: (typeof SCENARIOS)[number], strategie: BotProfile): number {
+  const companies: CompanyState[] = [
+    d.company("player", d.playerTeamName, "bot", strategie),
+    ...d.bots.slice(0, 2).map((b) => d.company(b.id, b.name, "bot", b.profile)),
+  ];
+  const run = runGame({
+    scenario: d.scenario,
+    initialCompanies: companies,
+    providers: Object.fromEntries(
+      companies.map((c) => [
+        c.id,
+        (ctx: { state: CompanyState; roundIndex: number; lastResult?: CompanyRoundResult }) =>
+          botDecisions(c.botProfile as BotProfile, {
+            scenario: d.scenario,
+            state: ctx.state,
+            roundIndex: ctx.roundIndex,
+            lastSoldUnits: ctx.lastResult ? soldUnits(ctx.lastResult) : undefined,
+            lastSoldByProduct: ctx.lastResult
+              ? soldByProduct(d.scenario, ctx.lastResult.market.bySegment)
+              : undefined,
+          }),
+      ]),
+    ),
+    seed: 20260101,
+  });
+  return run.rounds.reduce((t, r) => t + r.results["player"]!.incomeStatement.netIncome, 0);
+}
+
+describe("partie de référence", () => {
+  it("la passive ne dépasse pas l'équilibrée, sauf dettes nommées", () => {
+    const ecarts: string[] = [];
+    const dettesReglees: string[] = [];
+    for (const d of SCENARIOS) {
+      const passive = cumulDe(d, "passive");
+      const equilibree = cumulDe(d, "balanced");
+      const connue = PASSIVE_DEVANT_EQUILIBREE_CONNUS.includes(d.code);
+      if (passive > equilibree && !connue) {
+        ecarts.push(`${d.code} : passive ${Math.round(passive / 1000)} k€ devant l'équilibrée ${Math.round(equilibree / 1000)} k€`);
+      }
+      if (passive <= equilibree && connue) dettesReglees.push(d.code);
+    }
+    expect(ecarts, ecarts.join("\n")).toEqual([]);
+    expect(dettesReglees, `dettes réglées, à retirer de la liste : ${dettesReglees.join(", ")}`).toEqual([]);
   });
 });

@@ -25,6 +25,13 @@ import { hotelBots, hotelScenario } from "../hotel";
  * (35 % d'occupation), contre 2 140 en un seul prix moyen.
  */
 
+/** Une copie du segment sans sa porte marketing (voir `segments`). */
+function sansPorteMarketing<T extends { marketingGate?: number }>(segment: T): T {
+  const copie = { ...segment };
+  delete copie.marketingGate;
+  return copie;
+}
+
 const hotelSegments = hotelScenario.market.segments;
 const affaires = hotelSegments.find((s) => s.code === "affaires")!;
 const loisirs = hotelSegments.find((s) => s.code === "loisirs")!;
@@ -38,7 +45,9 @@ const groupes = hotelSegments.find((s) => s.code === "groupes")!;
  * bots.
  */
 const STANDARD_MARKET = {
-  segments: [{ ...loisirs, size: 3300 }, { ...groupes, size: 2500 }],
+  // En gamme, le marketing se répartit entre les références : la porte
+  // marketing des loisirs (mono) serait franchie par dilution, elle est levée.
+  segments: [{ ...sansPorteMarketing(loisirs), size: 3300 }, { ...groupes, size: 2500 }],
   seasonality: hotelScenario.market.seasonality,
   outsideAttraction: hotelScenario.market.outsideAttraction,
   competitionIntensity: hotelScenario.market.competitionIntensity,

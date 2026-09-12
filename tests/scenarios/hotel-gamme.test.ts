@@ -83,7 +83,11 @@ describe("L'ESCALE · gamme — la gamme", () => {
     expect(standard.hoursPerUnit).toBe(hotelScenario.product.hoursPerUnit);
     const segment = (code: string) => hotelScenario.market.segments.find((s) => s.code === code)!;
     const loisirs = standard.market.segments.find((s) => s.code === "loisirs")!;
-    expect({ ...loisirs, size: 0 }).toEqual({ ...segment("loisirs"), size: 0 });
+    // La gamme lève la porte marketing des loisirs (le marketing s'y répartit
+    // entre les références) : c'est la seule différence voulue avec l'hôtel.
+    expect({ ...loisirs, size: 0 }).toEqual({ ...segment("loisirs"), size: 0, marketingGate: undefined });
+    expect(loisirs.marketingGate).toBeUndefined();
+    expect(segment("loisirs").marketingGate).toBe(0.6);
     // La clientèle affaires prend la supérieure, aux mêmes ressorts, un plafond plus haut.
     const affaires = toGamme(hotelGammeScenario)[1]!.market.segments.find((s) => s.code === "affaires")!;
     expect(affaires.priceElasticity).toBe(segment("affaires").priceElasticity);
