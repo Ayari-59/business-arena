@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { GameView } from "@/services/game-view.service";
 import type { AccountingCategory } from "@/engine/types";
-import { formatEuro } from "@/lib/formats";
+import { formatEuro } from "@/lib/format";
 
 type AccountingData = NonNullable<GameView["accounting"]>;
 
