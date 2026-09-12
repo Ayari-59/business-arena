@@ -32,6 +32,10 @@ import type {
   EngineScenarioConfig,
   RoundDecisions,
   CommunicationAxis,
+  AccountingEntry,
+  GeneralLedgerAccount,
+  AccountingCategory,
+  AccountCode,
 } from "@/engine/types";
 import {
   findUserTeam,
@@ -48,6 +52,48 @@ import type { GameKind } from "@/services/game-creation.service";
  */
 export function teamDisplayName(name: string): string {
   return name.replace(/\s*\(vous\)\s*$/, "");
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Transforme un Ledger en format d'affichage avec vues synthétiques.
+ */
+function formatAccountingData(ledger?: {
+  entries: AccountingEntry[];
+  accounts: Map<AccountCode, GeneralLedgerAccount>;
+}): GameView["accounting"] {
+  if (!ledger) return undefined;
+
+  const byCategory: Record<AccountingCategory, AccountingEntry[]> = {
+    purchase: [],
+    sale: [],
+    payroll: [],
+    tax: [],
+    financing: [],
+    depreciation: [],
+    inventory: [],
+    cash: [],
+    other: [],
+  };
+
+  for (const entry of ledger.entries) {
+    byCategory[entry.category].push(entry);
+  }
+
+  const glByAccount: Record<AccountCode, GeneralLedgerAccount> = {};
+  for (const [code, account] of ledger.accounts) {
+    glByAccount[code] = account;
+  }
+
+  return {
+    journal: ledger.entries,
+    generalLedger: Array.from(ledger.accounts.values()),
+    byCategory,
+    glByAccount,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -483,6 +529,19 @@ export interface GameView {
     marketAvgPrice: number;
     competitivenessIndex: number;
   } | null;
+  /**
+   * Journal et grand livre du tour (Jalon C). Absent en mono-produit pour
+   * non-régression. Présent en gamme pour l'atelier comptabilité.
+   * Vues synthétiques : filtrage par catégorie et consultation par compte.
+   */
+  accounting?: {
+    journal: AccountingEntry[];
+    generalLedger: GeneralLedgerAccount[];
+    /** Écritures groupées par catégorie pour filtrage dans les ateliers. */
+    byCategory: Record<AccountingCategory, AccountingEntry[]>;
+    /** Comptes du grand livre indexés par code, pour recherche rapide. */
+    glByAccount: Record<AccountCode, GeneralLedgerAccount>;
+  };
 }
 
 /** Rapports d'études : des données riches et variées pour décider. */
@@ -1631,5 +1690,6 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       }
       return notes;
     })(),
+    accounting: formatAccountingData(lastResult?.accounting),
   };
 }
