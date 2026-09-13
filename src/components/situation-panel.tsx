@@ -11,6 +11,7 @@ import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import { estRendue, manques, messageIncomplet } from "@/config/situation-rendu";
 import type { SituationView } from "@/services/pedagogy.service";
 import type { SituationCategory } from "@/config/scenarios/situation-kit";
+import { Tiroir } from "@/components/tiroir";
 
 const CATEGORY_LABELS: Record<SituationCategory, string> = {
   prise_de_poste: "Prise de poste",
@@ -162,11 +163,12 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
       </header>
 
       {situation.triggerFacts && situation.triggerFacts.length > 0 ? (
-        <details className="mb-4 rounded-lg border border-slate-700/60 bg-slate-950/50">
-          <summary className="cursor-pointer px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-400 hover:text-slate-300 sm:px-4 sm:py-2.5">
-            Pourquoi cette situation ?
-          </summary>
-          <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 px-2 pb-2.5 pt-1 sm:px-4">
+        <div className="mb-4">
+        <Tiroir
+          titre="Pourquoi cette situation ?"
+          quoi={`${situation.triggerFacts.length} fait${situation.triggerFacts.length > 1 ? "s" : ""}`}
+        >
+          <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
             {situation.triggerFacts.map((fact, i) => (
               <div key={i} className="col-span-2 flex items-baseline justify-between gap-3">
                 <dt className="text-xs text-slate-400">{fact.label}</dt>
@@ -184,7 +186,8 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
               </div>
             ))}
           </dl>
-        </details>
+        </Tiroir>
+        </div>
       ) : null}
 
       {/* Pas d'étiquette de statut ici : le bouton de rendu grisé (et son

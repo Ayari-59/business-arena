@@ -732,7 +732,7 @@ function Family({
   legendClass?: string;
 }) {
   return (
-    <details open={defaultOpen} className={`group rounded-lg border ${tone}`}>
+    <details open={defaultOpen} className={`group rounded-lg border [&:not([open])]:border-dashed ${tone}`}>
       <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-1.5 py-2 sm:px-3.5 sm:py-2.5 [&::-webkit-details-marker]:hidden">
         <span className={legendClass}>{legend}</span>
         <span className="text-xs text-slate-400 transition-transform group-open:rotate-90">▸</span>

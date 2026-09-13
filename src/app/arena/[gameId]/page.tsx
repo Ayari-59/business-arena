@@ -19,6 +19,7 @@ import { RoundStatusBanner } from "@/components/round-status-banner";
 import { EventBanner } from "@/components/event-banner";
 import { GammeLigne } from "@/components/gamme-ligne";
 import { FaitsCles } from "@/components/faits-cles";
+import { Tiroir } from "@/components/tiroir";
 import { surtitreDePartie } from "@/config/scenarios/presentation";
 import { SECTOR_ICONS, SECTOR_COLORS, SECTOR_LABELS } from "@/config/scenarios/registry";
 import { statutDesSituations } from "@/config/situation-rendu";
@@ -155,12 +156,9 @@ export default async function ArenaPage({
         parti, depuis quand la concurrence est installée. Replié, il reste à un
         clic sans s'imposer avant la question à trancher.
       */}
-      <details className="rounded-lg border border-white/5 bg-slate-950">
-        <summary className="cursor-pointer px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-400 hover:text-slate-200">
-          Contexte
-        </summary>
-        <p className="px-3 pb-3 text-sm leading-relaxed">{view.intro.context}</p>
-      </details>
+      <Tiroir titre="Contexte">
+        <p className="text-sm leading-relaxed">{view.intro.context}</p>
+      </Tiroir>
       <ParametersPanels
         intro={view.intro}
         vocabulary={view.vocabulary}
@@ -293,11 +291,11 @@ export default async function ArenaPage({
     }));
     if (levers.length === 0) return null;
     return (
-      <details className="rounded-lg border border-slate-700 bg-slate-800/40">
-        <summary className="cursor-pointer px-3 py-2 text-sm font-medium text-amber-300 hover:text-amber-200">
-          💡 Leviers d&apos;action
-        </summary>
-        <ul className="space-y-1.5 px-3 pb-3 pt-1">
+      <Tiroir
+        titre="💡 Leviers d'action"
+        quoi={`${levers.length} levier${levers.length > 1 ? "s" : ""}`}
+      >
+        <ul className="space-y-1.5">
           {levers.map((l) => (
             <li key={l.field} className="flex gap-2 text-sm leading-snug text-slate-300">
               <span className="mt-px leading-none text-amber-400">{DIRECTION_ICONS[l.direction]}</span>
@@ -307,7 +305,7 @@ export default async function ArenaPage({
             </li>
           ))}
         </ul>
-      </details>
+      </Tiroir>
     );
   })();
 
@@ -322,7 +320,7 @@ export default async function ArenaPage({
           <details
             key={s.instanceId}
             open={i === 0}
-            className="group rounded-xl border border-white/10 bg-slate-950/40 [&[open]]:border-white/20"
+            className="group rounded-xl border border-white/10 bg-slate-950/40 [&:not([open])]:border-dashed [&[open]]:border-white/20"
           >
             <summary className="flex cursor-pointer items-center gap-2 px-4 py-3 text-sm font-semibold text-slate-100 sm:px-5">
               <span aria-hidden className="text-slate-400 transition-transform group-open:rotate-90">
@@ -471,7 +469,7 @@ export default async function ArenaPage({
               // la hauteur de l'en-tête collant pour que le titre reste visible.
               id={isLatest ? "dernier-resultat" : undefined}
               open={isLatest}
-              className={`group scroll-mt-24 rounded-xl border border-white/10 border-l-2 bg-slate-950/40 [&[open]]:border-white/20 ${
+              className={`group scroll-mt-24 rounded-xl border border-white/10 border-l-2 bg-slate-950/40 [&:not([open])]:border-dashed [&[open]]:border-white/20 ${
                 netIncome >= 0 ? "border-l-emerald-400/50" : "border-l-rose-400/50"
               }`}
             >

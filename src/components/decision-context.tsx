@@ -1,4 +1,5 @@
 import { formatEuro, formatPercent, formatUnits } from "@/lib/format";
+import { Tiroir } from "@/components/tiroir";
 import type { GameView } from "@/services/game.service";
 
 /**
@@ -226,11 +227,12 @@ export function ParametersPanels({
           cadrage : replié, il n'encombre pas l'écran de décision, et reste à un
           clic pour qui ajuste son prix segment par segment.
         */}
-        <details className="mt-3 rounded-lg border border-white/5 bg-slate-900/40">
-          <summary className="cursor-pointer px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-400 hover:text-slate-200">
-            Détail par clientèle
-          </summary>
-          <div className="px-3 pb-3">
+        <div className="mt-3">
+        <Tiroir
+          titre="Détail par clientèle"
+          quoi={`${intro.segments.length} clientèle${intro.segments.length > 1 ? "s" : ""}`}
+        >
+          <div>
             {/*
               En portrait, un tableau à cinq colonnes force soit un défilement
               horizontal, soit des noms de clientèle repliés sur trois lignes. Sur
@@ -333,7 +335,8 @@ export function ParametersPanels({
                 : "Vous fixez UN prix pour tout le monde."}
             </p>
           </div>
-        </details>
+        </Tiroir>
+        </div>
       </div>
     </div>
   );

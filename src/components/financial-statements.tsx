@@ -1,5 +1,6 @@
 import type { CompanyRoundResult } from "@/engine/types";
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
+import { Tiroir } from "@/components/tiroir";
 
 /**
  * Les comptes du tour, en clair et GRATUITS (doc 02 §7.3 : ce sont VOS
@@ -43,6 +44,12 @@ const CASH_LABELS: Record<string, string> = {
   remboursement_emprunt: "Remboursement d'emprunt",
 };
 
+/**
+ * Un état financier replié. Il avait son propre repli, signalé par le mot
+ * « déplier » flottant à droite ; il partage désormais le tiroir commun de
+ * l'arène — même chevron, même trait pointillé quand c'est fermé — pour qu'un
+ * élève reconnaisse un repli au même signe d'un bout à l'autre de la page.
+ */
 function Panel({
   title,
   defaultOpen,
@@ -53,16 +60,9 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <details
-      className="group rounded-xl border border-white/10 bg-slate-900"
-      open={defaultOpen}
-    >
-      <summary className="cursor-pointer select-none px-3 py-2.5 sm:px-4 sm:py-3 text-sm font-semibold text-slate-200 hover:text-amber-200">
-        {title}
-        <span className="float-right text-xs text-slate-400 group-open:hidden">déplier</span>
-      </summary>
-      <div className="border-t border-white/5 px-1.5 py-2 sm:px-4 sm:py-3">{children}</div>
-    </details>
+    <Tiroir titre={title} ouvert={defaultOpen}>
+      {children}
+    </Tiroir>
   );
 }
 

@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import { formatEuro, formatUnits } from "@/lib/format";
 import type { GameView } from "@/services/game.service";
+import { Tiroir } from "@/components/tiroir";
 
 /**
  * Historique des ventes, clientèle par clientèle et tour par tour.
@@ -27,13 +28,11 @@ export function SalesHistory({
   if (history.rounds.length === 0) return null;
 
   return (
-    <details className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
-      <summary className="cursor-pointer text-sm font-semibold text-slate-200">
-        📈 Historique de vos ventes ({history.rounds.length} tour
-        {history.rounds.length > 1 ? "s" : ""})
-      </summary>
-
-      <div className="mt-3 overflow-x-auto">
+    <Tiroir
+      titre="📈 Historique de vos ventes"
+      quoi={`${history.rounds.length} tour${history.rounds.length > 1 ? "s" : ""}`}
+    >
+      <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
@@ -125,6 +124,6 @@ export function SalesHistory({
           ))}
         </p>
       ) : null}
-    </details>
+    </Tiroir>
   );
 }
