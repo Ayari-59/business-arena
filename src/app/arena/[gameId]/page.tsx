@@ -17,6 +17,7 @@ import { SegmentedTabs } from "@/components/segmented-tabs";
 import { RoundStatusPoller } from "@/components/round-status-poller";
 import { RoundStatusBanner } from "@/components/round-status-banner";
 import { EventBanner } from "@/components/event-banner";
+import { GammeLigne } from "@/components/gamme-ligne";
 import { surtitreDePartie } from "@/config/scenarios/presentation";
 import { SECTOR_ICONS, SECTOR_COLORS, SECTOR_LABELS } from "@/config/scenarios/registry";
 import { statutDesSituations } from "@/config/situation-rendu";
@@ -25,11 +26,6 @@ import { entitlementsForUser } from "@/services/entitlements.service";
 import { resolveAiSurface } from "@/services/ai.service";
 
 export const dynamic = "force-dynamic";
-
-function appositive(tagline: string): string {
-  const trimmed = tagline.trim().replace(/\.$/, "");
-  return trimmed.charAt(0).toLowerCase() + trimmed.slice(1);
-}
 
 export default async function ArenaPage({
   params,
@@ -136,20 +132,26 @@ export default async function ArenaPage({
   const donneesSection = premierTour ? (
     <section className="space-y-4 rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4 text-slate-300">
       <div>
-        <h2 className="text-lg font-semibold text-slate-100">
-          {periodLabel(view.roundDays, 1)} · prise en main
-        </h2>
-        <p className="mt-2 text-sm leading-relaxed">
-          Vous reprenez <strong>{view.intro.company}</strong>,{" "}
-          {appositive(view.intro.tagline)}. {view.intro.briefing}
-        </p>
+        <h2 className="text-lg font-semibold text-slate-100">{view.intro.company}</h2>
+        <p className="text-sm text-slate-400">{view.intro.tagline}</p>
+        {view.gamme ? (
+          <div className="mt-3">
+            <GammeLigne gamme={view.gamme} />
+          </div>
+        ) : null}
+        <p className="mt-3 text-sm leading-relaxed">{view.intro.briefing}</p>
       </div>
-      <div className="rounded-lg border border-white/5 bg-slate-950 p-1.5 sm:p-4">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+      {/*
+        Le contexte n'oriente pas la décision du tour, il l'éclaire : qui est
+        parti, depuis quand la concurrence est installée. Replié, il reste à un
+        clic sans s'imposer avant la question à trancher.
+      */}
+      <details className="rounded-lg border border-white/5 bg-slate-950">
+        <summary className="cursor-pointer px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-400 hover:text-slate-200">
           Contexte
-        </h3>
-        <p className="mt-2 text-sm leading-relaxed">{view.intro.context}</p>
-      </div>
+        </summary>
+        <p className="px-3 pb-3 text-sm leading-relaxed">{view.intro.context}</p>
+      </details>
       <ParametersPanels
         intro={view.intro}
         vocabulary={view.vocabulary}
@@ -599,9 +601,14 @@ export default async function ArenaPage({
                   // « Analyser », et la saisie dans « Décider ».
                   situation: (
                     <div id="situation" className="space-y-6">
-                      {donneesSection}
-                      {alertesSection}
+                      {/*
+                        L'arbitrage d'abord : le joueur voit ce qu'on lui demande
+                        de trancher avant le décor qui l'entoure. Les données et
+                        le contexte suivent, à consulter au besoin.
+                      */}
                       {dilemmeSection}
+                      {alertesSection}
+                      {donneesSection}
                     </div>
                   ),
                   // « Analyser » : les QCM des situations en accordéon.

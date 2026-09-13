@@ -300,6 +300,11 @@ export interface GameView {
     otherVariableCostPerUnit: number;
     hoursPerUnit: number;
     refPrice: number;
+    /**
+     * Taille du marché de la référence (somme de ses segments). Sert à situer
+     * une référence dans la gamme — « fort volume » se déduit, ne s'écrit pas.
+     */
+    marketSize: number;
     segments: { code: string; name: string }[];
     seasonCoef: number;
     stock: number;
@@ -1355,6 +1360,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
           otherVariableCostPerUnit: p.otherVariableCostPerUnit,
           hoursPerUnit: p.hoursPerUnit,
           refPrice: main?.refPrice ?? 0,
+          marketSize: p.market.segments.reduce((t, s) => t + s.size, 0),
           segments: p.market.segments.map((s) => ({ code: s.code, name: s.name })),
           seasonCoef: p.market.seasonality[idx] ?? 1,
           stock: Math.round(state?.finishedGoodsByProduct?.[p.code]?.quantity ?? 0),
