@@ -59,7 +59,9 @@ const GAMME: ProductDef[] = [
   },
   {
     code: "transformation",
-    name: "Stratégie",
+    name: "Transformation et Stratégie",
+    // « Transformation et Stratégie » ne tient pas sur un bouton de téléphone.
+    shortName: "Stratégie",
     // des missions chez le client, loin, longtemps : plus de frais, plus d'experts d'appoint
     materialCostPerUnit: 70,
     otherVariableCostPerUnit: 45,

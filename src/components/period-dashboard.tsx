@@ -8,6 +8,7 @@ import { RevenueChart, TreasuryChart, MarketShareChart } from "@/components/char
 import { StudyReportsPanel } from "@/components/study-reports";
 import { FinancialStatements } from "@/components/financial-statements";
 import { RatioGauges } from "@/components/ratio-gauges";
+import { NomReference } from "@/components/nom-reference";
 import { SalesHistory } from "@/components/sales-history";
 import { CompetitiveBenchmark } from "@/components/competitive-benchmark";
 import { RseReportPanel } from "@/components/rse-report";
@@ -379,7 +380,7 @@ export function PeriodDashboard({
                         return (
                           <tr key={g.code} className="border-t border-white/5">
                             <td className="py-2 pr-2 text-slate-100">
-                              {g.name}
+                              <NomReference reference={g} />
                               {p.supplier?.supplyDisruption ? (
                                 <span className="ml-1 text-xs text-red-400" title="Rupture d'approvisionnement ce tour">
                                   ⚠︎ rupture

@@ -57,6 +57,8 @@ const supplierSchema = z.object({
 const productDefSchema = z.object({
   code: z.string().min(1),
   name: z.string().min(1),
+  /** Nom de repli sur écran étroit (voir ProductDef.shortName). */
+  shortName: z.string().min(1).optional(),
   materialCostPerUnit: z.number().nonnegative(),
   otherVariableCostPerUnit: z.number().nonnegative(),
   hoursPerUnit: z.number().positive(),

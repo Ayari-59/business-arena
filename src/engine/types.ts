@@ -730,6 +730,12 @@ export interface ProductDevelopmentDef {
 export interface ProductDef {
   code: ProductCode;
   name: string;
+  /**
+   * Le nom sur écran étroit, quand `name` ne tient pas sur un bouton de
+   * téléphone (« Transformation et Stratégie » → « Stratégie »). Absent :
+   * `name` est affiché partout. N'entre dans aucun calcul : c'est un libellé.
+   */
+  shortName?: string;
   materialCostPerUnit: number;
   otherVariableCostPerUnit: number;
   hoursPerUnit: number;

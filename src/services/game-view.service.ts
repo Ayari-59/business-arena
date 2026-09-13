@@ -308,6 +308,11 @@ export interface GameView {
   gamme: {
     code: string;
     name: string;
+    /**
+     * Le nom à afficher sur écran étroit quand `name` ne tient pas sur un
+     * bouton de téléphone. Absent : `name` est affiché partout.
+     */
+    shortName?: string;
     materialCostPerUnit: number;
     otherVariableCostPerUnit: number;
     hoursPerUnit: number;
@@ -1389,6 +1394,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         return {
           code: p.code,
           name: p.name,
+          ...(p.shortName ? { shortName: p.shortName } : {}),
           materialCostPerUnit: p.materialCostPerUnit,
           otherVariableCostPerUnit: p.otherVariableCostPerUnit,
           hoursPerUnit: p.hoursPerUnit,

@@ -18,6 +18,7 @@ import type { GameView } from "@/services/game-view.service";
 import { formatEuro, formatEuroCents, formatUnits } from "@/lib/format";
 import { COMMUNICATION_AXIS_LABELS } from "@/engine/market/communication";
 import { SimulationProgress } from "@/components/simulation-progress";
+import { NomReference } from "@/components/nom-reference";
 import {
   cleBrouillon,
   ecrireBrouillon,
@@ -445,7 +446,7 @@ function GammeVentes({
                 : "bg-slate-900 border border-white/5 text-slate-400 hover:text-slate-200"
             }`}
           >
-            {p.name}
+            <NomReference reference={p} />
           </button>
         ))}
       </div>
@@ -628,7 +629,7 @@ function GammeBudgets({
                 : "bg-slate-900 border border-white/5 text-slate-400 hover:text-slate-200"
             }`}
           >
-            {p.name}
+            <NomReference reference={p} />
           </button>
         ))}
       </div>

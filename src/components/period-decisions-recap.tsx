@@ -1,4 +1,5 @@
 import { formatEuro, formatUnits } from "@/lib/format";
+import { NomReference } from "@/components/nom-reference";
 import { COMMUNICATION_AXIS_LABELS } from "@/engine/market/communication";
 import type { RoundDecisions } from "@/engine/types";
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
@@ -23,7 +24,7 @@ export function PeriodDecisionsRecap({
   const d = decisions;
   const parProduit =
     gamme && d.products
-      ? gamme.map((p) => ({ name: p.name, own: d.products![p.code] })).filter((x) => x.own)
+      ? gamme.map((p) => ({ code: p.code, ref: p, own: d.products![p.code] })).filter((x) => x.own)
       : [];
   // Colonnes qualité et fournisseur : seulement si au moins une référence les porte.
   const avecQualite = parProduit.some((x) => x.own!.qualityBudget !== undefined);
@@ -121,9 +122,11 @@ export function PeriodDecisionsRecap({
               </tr>
             </thead>
             <tbody className="text-slate-300">
-              {parProduit.map(({ name, own }) => (
-                <tr key={name} className="border-t border-white/5">
-                  <td className="py-1.5 pr-3 text-slate-100">{name}</td>
+              {parProduit.map(({ code, ref, own }) => (
+                <tr key={code} className="border-t border-white/5">
+                  <td className="py-1.5 pr-3 text-slate-100">
+                    <NomReference reference={ref} />
+                  </td>
                   <td className="py-1.5 pr-3 text-right tabular-nums">{formatEuro(own!.price)}</td>
                   <td className="py-1.5 pr-3 text-right tabular-nums">
                     {formatUnits(own!.productionPlan)} {vocabulary.units}
