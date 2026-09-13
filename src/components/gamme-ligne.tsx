@@ -65,7 +65,7 @@ export function GammeLigne({ gamme }: { gamme: Gamme }) {
               className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${REPERES[i % REPERES.length]}`}
             />
             <span className="font-medium text-slate-100">{p.name}</span>
-            <span className="text-slate-400">— {qualificatifs.join(" · ")}</span>
+            <span className="text-slate-400">{`— ${qualificatifs.join(" · ")}`}</span>
           </li>
         );
       })}

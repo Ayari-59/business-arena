@@ -18,6 +18,7 @@ import { RoundStatusPoller } from "@/components/round-status-poller";
 import { RoundStatusBanner } from "@/components/round-status-banner";
 import { EventBanner } from "@/components/event-banner";
 import { GammeLigne } from "@/components/gamme-ligne";
+import { FaitsCles } from "@/components/faits-cles";
 import { surtitreDePartie } from "@/config/scenarios/presentation";
 import { SECTOR_ICONS, SECTOR_COLORS, SECTOR_LABELS } from "@/config/scenarios/registry";
 import { statutDesSituations } from "@/config/situation-rendu";
@@ -132,14 +133,22 @@ export default async function ArenaPage({
   const donneesSection = premierTour ? (
     <section className="space-y-4 rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4 text-slate-300">
       <div>
-        <h2 className="text-lg font-semibold text-slate-100">{view.intro.company}</h2>
+        <h2 className="text-xl font-bold text-slate-100">{view.intro.company}</h2>
         <p className="text-sm text-slate-400">{view.intro.tagline}</p>
+        <FaitsCles
+          capacityFacts={view.capacityFacts}
+          vocabulary={view.vocabulary}
+          gamme={view.gamme}
+        />
         {view.gamme ? (
           <div className="mt-3">
             <GammeLigne gamme={view.gamme} />
           </div>
         ) : null}
-        <p className="mt-3 text-sm leading-relaxed">{view.intro.briefing}</p>
+      </div>
+      <div>
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">Situation</h3>
+        <p className="mt-1 text-sm leading-relaxed">{view.intro.briefing}</p>
       </div>
       {/*
         Le contexte n'oriente pas la décision du tour, il l'éclaire : qui est
@@ -231,7 +240,7 @@ export default async function ArenaPage({
   const dilemmeSection = premierTour ? (
     <>
       <DilemmaCard
-        title="Votre premier arbitrage"
+        title="Votre décision"
         question={view.intro.dilemma.question}
         routes={view.intro.dilemma.routes}
       />
@@ -242,7 +251,7 @@ export default async function ArenaPage({
     </>
   ) : view.roundBriefing ? (
     <DilemmaCard
-      title="L'arbitrage de ce tour"
+      title="Votre décision"
       question={view.roundBriefing.question}
       routes={view.roundBriefing.routes}
     />
@@ -602,13 +611,14 @@ export default async function ArenaPage({
                   situation: (
                     <div id="situation" className="space-y-6">
                       {/*
-                        L'arbitrage d'abord : le joueur voit ce qu'on lui demande
-                        de trancher avant le décor qui l'entoure. Les données et
-                        le contexte suivent, à consulter au besoin.
+                        On arrive à la décision, on ne l'ouvre pas : d'abord où
+                        l'on est (identité, gamme, capacité, situation), puis ce
+                        qu'on demande de trancher. Décider avant de savoir n'a
+                        pas de sens.
                       */}
-                      {dilemmeSection}
-                      {alertesSection}
                       {donneesSection}
+                      {alertesSection}
+                      {dilemmeSection}
                     </div>
                   ),
                   // « Analyser » : les QCM des situations en accordéon.
