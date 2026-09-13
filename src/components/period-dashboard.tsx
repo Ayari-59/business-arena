@@ -15,6 +15,8 @@ import { DashboardTabs } from "@/components/dashboard-tabs";
 import type { KpiFormat } from "@/config/scenarios/sector-kpis";
 import type { GameView } from "@/services/game-view.service";
 import type { RseIndex, RsePillar } from "@/scoring/rse";
+import { HautsFaits } from "@/components/hauts-faits";
+import { hautsFaitsDuTour } from "@/scoring/hauts-faits";
 
 type Period = GameView["periods"][number];
 
@@ -119,6 +121,18 @@ export function PeriodDashboard({
   const history = view.history.filter((h) => h.round <= period.round);
   const treasuryTone = r.functionalBalance.netTreasury < 0 ? "critical" : "neutral";
 
+  // Ce que l'équipe a franchi À CE TOUR, lu dans les résultats déjà calculés :
+  // rien n'est stocké, rien ne pèse sur le score. Les tours suivants sont
+  // exclus, sinon le tableau de bord d'un tour ancien se nourrirait de l'avenir.
+  const faits = hautsFaitsDuTour(
+    view.periods.map((p) => ({
+      round: p.round,
+      resultat: p.result.incomeStatement.netIncome,
+      tresorerieNette: p.result.functionalBalance.netTreasury,
+    })),
+    period.round,
+  );
+
   function trend(
     current: number,
     key: "revenue" | "netIncome" | "netTreasury",
@@ -136,6 +150,7 @@ export function PeriodDashboard({
       {{
         synthese: (
           <div className="space-y-3">
+            <HautsFaits faits={faits} />
             <section aria-label="Indicateurs clés" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
               <KpiCard
                 label="Chiffre d'affaires"

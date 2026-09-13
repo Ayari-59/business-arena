@@ -20,6 +20,7 @@ import { EventBanner } from "@/components/event-banner";
 import { GammeLigne } from "@/components/gamme-ligne";
 import { FaitsCles } from "@/components/faits-cles";
 import { Tiroir } from "@/components/tiroir";
+import { FriseDesTours } from "@/components/frise-des-tours";
 import { surtitreDePartie } from "@/config/scenarios/presentation";
 import { SECTOR_ICONS, SECTOR_COLORS, SECTOR_LABELS } from "@/config/scenarios/registry";
 import { statutDesSituations } from "@/config/situation-rendu";
@@ -388,11 +389,15 @@ export default async function ArenaPage({
               </p>
             ) : null;
           })() : null}
-          <p className="rounded-full border border-white/10 px-4 py-1 text-sm text-slate-300">
-            {finished
-              ? "Partie terminée"
-              : `${periodLabel(view.roundDays, view.currentRound)} / ${view.roundsCount}`}
-          </p>
+          {/* La frise remplace la puce « Tour n / N » : le bandeau d'état
+              juste dessous porte déjà ce chiffre, et la frise dit en plus d'où
+              l'on vient — un segment par tour, vert ou rose selon son résultat. */}
+          <FriseDesTours
+            roundsCount={view.roundsCount}
+            currentRound={view.currentRound}
+            resultats={new Map(periods.map((p) => [p.round, p.result.incomeStatement.netIncome]))}
+            finished={finished}
+          />
         </div>
       </header>
 
@@ -434,12 +439,20 @@ export default async function ArenaPage({
           <p className="mt-2 text-sm text-slate-400">
             Résultat cumulé : {formatEuro(view.ranking.find((row) => row.isPlayer)?.cumulativeNetIncome ?? 0)}
           </p>
-          <Link
-            href="/"
-            className="mt-4 inline-block rounded-lg bg-amber-400 px-6 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300"
-          >
-            Rejouer
-          </Link>
+          <div className="mt-4 flex flex-wrap justify-center gap-3">
+            <Link
+              href={`/jouer?secteur=${encodeURIComponent(view.scenarioCode)}`}
+              className="inline-block rounded-lg bg-amber-400 px-6 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300"
+            >
+              Rejouer {view.intro.company}
+            </Link>
+            <Link
+              href="/jouer"
+              className="inline-block rounded-lg border border-white/15 px-6 py-2 text-sm font-semibold text-slate-200 hover:border-white/30 hover:bg-white/5"
+            >
+              Un autre métier
+            </Link>
+          </div>
         </section>
       ) : null}
 
@@ -541,10 +554,7 @@ export default async function ArenaPage({
           >
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-400/20 px-3 py-2.5 sm:px-4">
               <span className="flex items-center gap-2 text-sm font-semibold text-amber-200">
-                ✏️ {periodLabel(view.roundDays, view.currentRound)}
-                <span className="rounded-full border border-amber-400/40 bg-amber-400/10 px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-amber-300">
-                  tour en cours
-                </span>
+                ✏️ {periodLabel(view.roundDays, view.currentRound)} en cours
               </span>
               {view.kind === "solo" ? null : (
                 <span className="text-xs text-slate-400">Résultats à la clôture du tour.</span>

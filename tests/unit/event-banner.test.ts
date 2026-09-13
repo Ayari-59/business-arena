@@ -65,7 +65,9 @@ describe("place du bandeau dans l'arène", () => {
 
   it("le bandeau est rendu avant l'accordéon de périodes, pas dedans", () => {
     const bandeau = source.indexOf("<EventBanner");
-    const accordeon = source.indexOf("periods.map(");
+    // On vise l'OUVERTURE de l'accordéon, pas n'importe quel parcours de
+    // `periods` : l'en-tête en fait un aussi, pour la frise des tours.
+    const accordeon = source.indexOf("{periods.map((p) => {");
     expect(bandeau).toBeGreaterThan(-1);
     expect(accordeon).toBeGreaterThan(-1);
     expect(bandeau).toBeLessThan(accordeon);

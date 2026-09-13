@@ -278,6 +278,8 @@ export interface GameView {
    */
   vocabulary: ScenarioVocabulary;
   /** Le secteur joué, pour l'identité visuelle (icône, couleur). */
+  /** Code du scénario joué : « rejouer » doit pouvoir rouvrir le MÊME métier. */
+  scenarioCode: string;
   sector: import("@/config/scenarios/registry").Sector;
   /** Le pictogramme du scénario joué (NOVA en un produit et NOVA · gamme n'ont pas le même). */
   scenarioIcon: string;
@@ -1319,6 +1321,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       }));
     })(),
     vocabulary: scenarioDef.vocabulary,
+    scenarioCode: snapshot.code,
     sector: scenarioDef.sector,
     scenarioIcon: scenarioDef.icon,
     // Tous les segments que le moteur simule : en gamme, ceux de chaque
