@@ -237,18 +237,14 @@ export default async function ArenaPage({
   );
 
   // ARBITRAGE : la question qui cadre le tour.
+  // La phrase « Fixez votre prix, votre volume et vos budgets » a été retirée :
+  // les champs du formulaire, juste en dessous, portent déjà ces intitulés.
   const dilemmeSection = premierTour ? (
-    <>
-      <DilemmaCard
-        title="Votre décision"
-        question={view.intro.dilemma.question}
-        routes={view.intro.dilemma.routes}
-      />
-      <p className="text-sm leading-relaxed text-slate-300">
-        Fixez votre {view.vocabulary.priceLabel.toLowerCase()}, votre volume et vos budgets,
-        puis observez.
-      </p>
-    </>
+    <DilemmaCard
+      title="Votre décision"
+      question={view.intro.dilemma.question}
+      routes={view.intro.dilemma.routes}
+    />
   ) : view.roundBriefing ? (
     <DilemmaCard
       title="Votre décision"

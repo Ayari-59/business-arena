@@ -22,39 +22,59 @@ export function DilemmaCard({
   title,
   question,
   routes,
-  footer,
 }: {
   title: string;
   question: string;
   routes: readonly Route[];
-  footer?: string;
 }) {
   return (
-    <div className="rounded-lg border-2 border-amber-400/40 bg-amber-950/20 p-1.5 sm:p-4">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-amber-400">{title}</h3>
+    /*
+      Un liseré ambre à gauche suffit à désigner la zone de décision. La carte
+      entière teintée en ambre criait plus fort que la question qu'elle porte, et
+      passait devant les panneaux qui servent à y répondre.
+    */
+    <div className="rounded-lg border border-white/10 border-l-2 border-l-amber-400/70 bg-slate-900 p-1.5 sm:p-4">
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-amber-400/90">{title}</h3>
       {/* La question est le point d'arrivée de l'écran : elle se lit avant tout
           le reste de la carte. */}
-      <p className="mt-2 text-base font-semibold leading-snug text-slate-50">{question}</p>
-      <div className={`mt-3 grid gap-3 ${routes.length > 2 ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
+      <p className="mt-1.5 text-base font-semibold leading-snug text-slate-50">{question}</p>
+      <div className={`mt-3 grid gap-2 ${routes.length > 2 ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
         {routes.map((route) => (
           <div key={route.label} className="rounded-lg border border-white/10 bg-slate-950 p-1.5 sm:p-3">
-            <p className="text-sm font-medium text-slate-200">{route.label}</p>
-            <p className="mt-1.5 text-xs leading-relaxed text-emerald-300/90">
-              <span className="sr-only">Ce que cela rapporte. </span>
-              <span aria-hidden className="font-semibold">+ </span>
-              {route.gain}
+            <p className="text-sm font-medium text-slate-100">{route.label}</p>
+            {/*
+              La COULEUR EST DANS LA FLÈCHE, pas dans la phrase. Deux blocs de
+              texte, l'un vert l'autre rouge, se lisaient comme une alarme ; la
+              flèche dit le sens d'un coup d'œil et laisse la phrase lisible.
+              Elle ne dit pas seule : chaque ligne garde son intitulé pour les
+              lecteurs d'écran et pour qui ne distingue pas les deux teintes.
+            */}
+            <p className="mt-2 flex gap-1.5 text-xs leading-snug text-slate-400">
+              <span aria-hidden className="text-emerald-400">
+                ↗
+              </span>
+              <span>
+                <span className="sr-only">Ce que cela rapporte : </span>
+                {route.gain}
+              </span>
             </p>
-            <p className="mt-1.5 text-xs leading-relaxed text-red-300/80">
-              <span className="sr-only">Ce que cela coûte. </span>
-              <span aria-hidden className="font-semibold">− </span>
-              {route.risque}
+            <p className="mt-1 flex gap-1.5 text-xs leading-snug text-slate-400">
+              <span aria-hidden className="text-rose-400/80">
+                ↘
+              </span>
+              <span>
+                <span className="sr-only">Ce que cela coûte : </span>
+                {route.risque}
+              </span>
             </p>
           </div>
         ))}
       </div>
-      <p className="mt-3 text-xs leading-relaxed text-slate-400">
-        {footer ??
-          "Aucune de ces routes n'est la bonne réponse : elles se défendent toutes, et c'est vous qui tranchez. Le marché vous dira au tour suivant ce que votre choix valait."}
+      {/* Le message essentiel tient en une ligne : il n'y a pas de bonne
+          réponse à cocher. Le paragraphe qu'il remplace disait la même chose en
+          trois fois plus de mots. */}
+      <p className="mt-2.5 text-xs text-slate-500">
+        Aucune n&apos;est la bonne réponse — le marché tranchera au tour suivant.
       </p>
     </div>
   );
