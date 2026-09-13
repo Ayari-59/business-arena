@@ -87,8 +87,7 @@ function RseCard({ rse }: { rse: RseIndex }) {
         </div>
       ) : null}
       <p className="mt-3 text-xs leading-snug text-slate-500">
-        Mesure indicative : elle reflète vos décisions (fournisseur, rebuts, salaires,
-        formation, transparence) mais n&apos;influe pas encore sur la partie.
+        Mesure indicative : elle ne joue pas encore sur la partie.
       </p>
     </section>
   );
@@ -207,7 +206,7 @@ export function PeriodDashboard({
                 <p className="mt-2 text-xs text-slate-400">
                   {r.subscription.occupancy > 0.85
                     ? `Occupation ${formatPercent(r.subscription.occupancy)} : la salle sature, et la saturation se paie en départs.`
-                    : `Occupation ${formatPercent(r.subscription.occupancy)}. Chaque ${view.vocabulary.unit} conservé rapporte à nouveau sans rien coûter à recruter.`}
+                    : `Occupation ${formatPercent(r.subscription.occupancy)}. Un ${view.vocabulary.unit} conservé rapporte à nouveau, sans coût de recrutement.`}
                 </p>
               </section>
             ) : null}
@@ -279,19 +278,16 @@ export function PeriodDashboard({
                     ))}
                   </ol>
                   <p className="mt-3 text-xs text-slate-400">
-                    Le BPI (0-100) pondère 6 dimensions : économique 30 %, financière 20 %,
-                    commerciale 15 %, pilotage 20 %, rentabilité 10 %, maîtrise décisionnelle
-                    5 %. La performance financière suit la variation du résultat (une perte
-                    plafonne à 20) ; le pilotage ne récompense que les décisions vraiment
-                    prises. Les derniers tours pèsent plus lourd.
+                    BPI sur 100 : économique 30 %, financière 20 %, pilotage 20 %,
+                    commerciale 15 %, rentabilité 10 %, maîtrise décisionnelle 5 %. Les
+                    derniers tours pèsent plus lourd.
                   </p>
                 </div>
                 {view.playerDimensions ? <BpiPanel dimensions={view.playerDimensions} /> : null}
               </section>
             ) : (
               <p className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-xs text-slate-400">
-                Le classement BPI reflète la position actuelle : il se consulte sur le tour le
-                plus récent.
+                Le classement BPI se lit sur le tour le plus récent.
               </p>
             )}
           </div>
@@ -398,11 +394,9 @@ export function PeriodDashboard({
                   </table>
                 </div>
                 <p className="mt-2 text-xs leading-relaxed text-slate-400">
-                  La marge par unité est le prix moins le coût variable de la référence, au
-                  prix d&apos;achat de son fournisseur. Ce qu&apos;une référence rapporte, c&apos;est
-                  cette marge multipliée par ce qu&apos;elle vend : le mix décide autant que le
-                  volume. La qualité perçue (100 % = la référence du secteur) suit, avec
-                  inertie, le budget qualité et le fournisseur de chaque référence.
+                  Marge unitaire = prix − coût variable de la référence. Ce qu&apos;elle
+                  rapporte = cette marge × ce qu&apos;elle vend : le mix compte autant que le
+                  volume. Qualité perçue : 100 % = la référence du secteur.
                 </p>
               </section>
             ) : null}
@@ -506,8 +500,8 @@ export function PeriodDashboard({
                   {formatEuro(r.orderOffer.unitPrice)}/u, soit{" "}
                   {formatEuro(r.orderOffer.revenue)} de CA
                   {r.orderOffer.onCredit > 0.5
-                    ? `, dont ${formatEuro(r.orderOffer.onCredit)} en créances à ${r.orderOffer.paymentDelayDays} jours : votre BFR porte cette attente.`
-                    : ", réglé comptant : la caisse encaisse, la marge est mince."}
+                    ? `, dont ${formatEuro(r.orderOffer.onCredit)} en créances à ${r.orderOffer.paymentDelayDays} jours.`
+                    : ", réglé comptant."}
                   {r.orderOffer.delivered < 0.5
                     ? ` ${view.vocabulary.leftoverLabel} insuffisant : rien n'a pu être livré.`
                     : ""}
@@ -583,14 +577,12 @@ export function PeriodDashboard({
                     <strong className="text-slate-200">
                       {Math.round(r.bank.trustAfter * 100)} %
                     </strong>
-                    , ce qui fixe le découvert qu&apos;elle vous consentira au tour suivant, et
-                    son taux.
+                    , ce qui fixe son découvert et son taux au tour suivant.
                   </p>
                 ) : null}
                 <p className="mt-2 text-xs leading-relaxed text-slate-400">
-                  L&apos;écart vaut mieux que la prévision : il dit ce que vous n&apos;aviez pas
-                  vu. Un écart qui se répète dans le même sens n&apos;est pas de la malchance,
-                  c&apos;est un biais dans votre modèle.
+                  Un écart qui se répète dans le même sens n&apos;est pas de la malchance :
+                  c&apos;est un biais de votre modèle.
                 </p>
               </div>
             ) : null}
@@ -635,8 +627,7 @@ export function PeriodDashboard({
             {r.bank && r.bank.loanRequested > 0 && r.bank.loanGranted === 0 ? (
               <p className="rounded-lg border border-rose-400/30 bg-rose-950/30 px-3 py-2 text-xs text-rose-200">
                 🏦 Emprunt refusé : {formatEuro(r.bank.loanRequested)} demandés sans plan de
-                trésorerie à l&apos;appui. Une banque ne finance pas un besoin qu&apos;on ne
-                lui a pas chiffré. L&apos;argent n&apos;est jamais entré en caisse.
+                trésorerie. L&apos;argent n&apos;est jamais entré en caisse.
               </p>
             ) : null}
 
@@ -645,7 +636,6 @@ export function PeriodDashboard({
                 🤝 Apport plafonné : {formatEuro(r.capital.applied)} retenus sur{" "}
                 {formatEuro(r.capital.requested)} demandés. L&apos;enveloppe des associés
                 est {r.capital.remainingAfter < 0.5 ? "épuisée" : `réduite à ${formatEuro(r.capital.remainingAfter)}`}.
-                Le capital n&apos;est pas un robinet.
               </p>
             ) : null}
 
@@ -755,8 +745,8 @@ export function PeriodDashboard({
                 {r.insurance.neutralizedEvents.length > 0
                   ? `Sinistre couvert ce tour : ${r.insurance.neutralizedEvents
                       .map((c) => cardByCode.get(c)?.title ?? c)
-                      .join(", ")}. Effets neutralisés pour votre entreprise.`
-                  : "Aucun sinistre couvert ce tour : la prime était le prix de la sérénité."}
+                      .join(", ")}. Effets neutralisés.`
+                  : "Aucun sinistre couvert ce tour."}
               </p>
             ) : null}
 

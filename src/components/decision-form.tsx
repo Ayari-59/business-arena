@@ -522,11 +522,10 @@ function GammeVentes({
         })}
 
       <p className="mt-2 text-xs leading-relaxed text-slate-400">
-        Les références partagent la même réserve : si la somme des volumes dépasse votre
-        capacité, toutes sont réduites dans la même proportion. Le prix se fixe référence
-        par référence.
+        Capacité partagée : si la somme des volumes la dépasse, toutes les références sont
+        réduites dans la même proportion.
         {avecFournisseurs
-          ? " Chaque référence a ses façonniers et le prix d'achat est celui de la référence chez chacun : la marge affichée est le prix saisi moins ce coût d'achat et les autres frais variables, le coefficient est le prix divisé par le coût d'achat. Le bonus de qualité, le délai de règlement et le risque de rupture du façonnier ne touchent que la référence qu'il fournit."
+          ? " Le façonnier choisi ne vaut que pour sa référence : son coût d'achat, sa qualité, son délai, son risque de rupture."
           : ""}
       </p>
     </div>
@@ -703,12 +702,10 @@ function GammeBudgets({
         })}
 
       <p className="mt-2 text-xs leading-relaxed text-slate-400">
-        Chaque budget va à la référence qui le reçoit, et se paie le tour même. Le marketing
-        soutient sa demande, et retombe vite si on cesse
-        {quality ? " ; la qualité fait sa qualité perçue" : ""}
-        {avecRd
-          ? " ; la R&D la bâtit quand elle est à développer, puis élève son niveau technique, avec retard, et s'érode si elle cesse"
-          : ""}
+        Chaque budget va à sa référence et se paie le tour même. Marketing : effet immédiat,
+        qui retombe si on cesse
+        {quality ? " ; qualité : la qualité perçue" : ""}
+        {avecRd ? " ; R&D : le niveau technique, avec retard" : ""}
         .
       </p>
     </div>
@@ -1113,13 +1110,13 @@ export function DecisionForm({
               : "règlement comptant"}
             .{" "}
             {orderOffer.productName
-              ? `Elle porte sur la référence « ${orderOffer.productName} » et se sert sur son stock restant après le marché.`
+              ? `Sur « ${orderOffer.productName} », servie sur son stock restant après le marché.`
               : "Servie sur votre stock restant après le marché."}
           </p>
           <p className="mt-1 text-xs text-slate-400">
             {orderOffer.paymentDelayDays > 0
-              ? "Belle marge… mais ce chiffre d'affaires dormira en créances : votre BFR gonflera d'autant. Qui finance l'attente ?"
-              : "Du cash dès la livraison… mais une marge mince : comparez le prix à votre coût variable avant de signer."}
+              ? "Belle marge, mais encaissée plus tard : le BFR gonfle d'autant."
+              : "Cash immédiat, marge mince : comparez le prix à votre coût variable."}
           </p>
           <label className="mt-3 flex items-start gap-3">
             <input
@@ -1327,9 +1324,9 @@ export function DecisionForm({
         className="space-y-3"
       >
       <p className="text-sm leading-relaxed text-slate-400">
-        Ce que vous dépensez ce tour pour soutenir votre offre : faire venir les clients,
-        tenir la qualité, entretenir votre capacité{on.rd && rdOffer ? ", développer" : ""}
-        {communicationOffer ? ", et bâtir votre marque" : ""}. Chaque budget se paie le tour même, en charge.
+        Faire venir les clients, tenir la qualité, entretenir votre
+        capacité{on.rd && rdOffer ? ", développer" : ""}
+        {communicationOffer ? ", bâtir votre marque" : ""}. Chaque budget se paie le tour même.
       </p>
       {gamme ? null : (
         // Les budgets du tour, au même endroit : marketing, qualité, maintenance
@@ -1359,7 +1356,7 @@ export function DecisionForm({
                 label="Recherche et développement"
                 defaultValue={Math.round(defaults.rdBudget ?? 0)}
                 suffix="€"
-                hint="Élève le niveau technique du produit : une qualité perçue qui monte avec retard, et s'érode si la R&D cesse. Une charge du tour."
+                hint="Élève le niveau technique, avec retard ; s'érode si la R&D cesse."
               />
             ) : null}
           </div>
@@ -1391,7 +1388,7 @@ export function DecisionForm({
                 label={`Budget d'entretien · ${v.capacityLabel.toLowerCase()}`}
                 defaultValue={defaults.maintenanceBudget}
                 suffix="€"
-                hint={`Un entretien insuffisant dégrade la disponibilité de votre capacité (${v.capacityLabel.toLowerCase()}) : ce que vous pouvez offrir à la vente.`}
+                hint={`Trop peu d'entretien dégrade votre ${v.capacityLabel.toLowerCase()} disponible.`}
               />
             </div>
           ) : (
@@ -1412,7 +1409,7 @@ export function DecisionForm({
                 label="Budget de marque"
                 defaultValue={Math.round(defaults.brandMarketingBudget ?? 0)}
                 suffix="€"
-                hint={`Bâtit la notoriété de la marque, pour toute la gamme, avec retard : elle vaut ${Math.round(communicationOffer.brandAwareness * 100)} % à l'ouverture, et s'use si vous cessez. Les budgets par référence, eux, agissent tout de suite.`}
+                hint={`Notoriété de marque, toute la gamme, avec retard — ${Math.round(communicationOffer.brandAwareness * 100)} % à l'ouverture. Les budgets par référence agissent tout de suite.`}
               />
             ) : null}
             <label className="block">
@@ -1423,7 +1420,7 @@ export function DecisionForm({
                 onChange={(e) => setAxe(e.currentTarget.value)}
                 className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
               >
-                <option value="">Aucun axe : le budget parle à tout le monde, sans porter nulle part</option>
+                <option value="">Aucun axe : le budget parle à tout le monde</option>
                 {communicationOffer.axes.map((a) => (
                   <option key={a.code} value={a.code}>
                     {a.label}
@@ -1433,9 +1430,9 @@ export function DecisionForm({
               <span className="mt-1 block text-[13px] text-slate-400">
                 {axe
                   ? COMMUNICATION_AXIS_LABELS[axe as keyof typeof COMMUNICATION_AXIS_LABELS].hint
-                  : "Le même budget rend davantage quand l'axe correspond à ce que la clientèle regarde, et dessert quand il ne lui parle pas."}
+                  : "Bien choisi, l'axe rend le même budget plus efficace ; mal choisi, il dessert."}
                 {communicationOffer.lastAxis && axe && axe !== communicationOffer.lastAxis
-                  ? " Changer d'axe use la notoriété acquise : une marque qui change de discours repart de plus bas."
+                  ? " Changer d'axe use la notoriété acquise."
                   : ""}
               </span>
             </label>
@@ -1466,13 +1463,12 @@ export function DecisionForm({
       {on.rse ? (
         <Family legend="🌱 Engagement RSE">
           <p className="mb-2 text-xs text-slate-400">
-            Ça coûte maintenant, ça rapporte plus tard : l&apos;effet met plusieurs
-            tours à se construire — et à retomber si vous cessez. Sur un horizon
-            court, ce peut être un pari perdant.
+            Ça coûte maintenant, ça rapporte plus tard : l&apos;effet met plusieurs tours
+            à se construire, et à retomber si vous cessez.
           </p>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Field name="rseBudget" label="Budget RSE" defaultValue={0} suffix="€"
-              hint="Dépense d'exploitation : bâtit un capital-image qui relève lentement la demande (l'inverse du marketing)." />
+              hint="Capital-image : relève la demande lentement, à l'inverse du marketing." />
             <Field name="rseInvestment" label="Investissement process propre" defaultValue={0} suffix="€"
               hint="Réduit durablement les rebuts, tour après tour." />
           </div>
@@ -1499,7 +1495,7 @@ export function DecisionForm({
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <>
               <Field name="newLoan" label="Nouvel emprunt" defaultValue={0} suffix="€"
-                hint="À 5 %/an, amortissement constant sur la durée contractuelle : emprunter engage." />
+                hint="5 %/an, amortissement constant sur la durée du contrat." />
               <Field
                 name="loanRepayment"
                 label={debtSchedule ? "Remboursement anticipé" : "Remboursement d'emprunt"}
@@ -1510,7 +1506,7 @@ export function DecisionForm({
               <Field name="capitalIncrease" label="Augmentation de capital" defaultValue={0} suffix="€"
                 hint={
                   capitalAllowance
-                    ? `Apport des associés · enveloppe restante : ${Math.round(capitalAllowance.remaining).toLocaleString("fr-FR")} € sur ${Math.round(capitalAllowance.total).toLocaleString("fr-FR")} € pour toute la partie. Les associés ne suivent pas indéfiniment.`
+                    ? `Apport des associés · reste ${Math.round(capitalAllowance.remaining).toLocaleString("fr-FR")} € sur ${Math.round(capitalAllowance.total).toLocaleString("fr-FR")} € pour la partie.`
                     : "Apport des associés : trésorerie et capitaux propres, sans intérêts mais dilutif."
                 } />
             {on.investment && investmentOffer && !equipmentOffer ? (
@@ -1564,10 +1560,10 @@ export function DecisionForm({
             suffix="€"
             hint={
               reserves > 0
-                ? `Réserves distribuables : ${formatEuro(reserves)}, les bénéfices des tours passés. Ce qui sort ne finance plus rien, et le versement se fait en trésorerie, pas en résultat : on peut être rentable sans pouvoir payer.`
+                ? `Réserves distribuables : ${formatEuro(reserves)}. Le versement sort en trésorerie, pas en résultat.`
                 : roundIndex <= 1
-                  ? "Rien à distribuer au premier tour : l'affectation du résultat s'ouvre à partir du tour 2, une fois le premier résultat connu, et seulement sur des bénéfices."
-                  : "Rien à distribuer : les réserves se constituent des bénéfices des tours passés, et une perte doit d'abord être rattrapée."
+                  ? "Rien à distribuer : l'affectation s'ouvre à partir du tour 2."
+                  : "Rien à distribuer : une perte se rattrape d'abord."
             }
           />
         </Family>
@@ -1603,8 +1599,7 @@ export function DecisionForm({
                 {treasuryOffer.maturedPlacement > 0.5
                   ? `${Math.round(treasuryOffer.maturedPlacement).toLocaleString("fr-FR")} € placés au tour précédent sont revenus en caisse, intérêts compris. `
                   : ""}
-                L&apos;argent qui dort ne rapporte rien, mais l&apos;argent placé ne paie pas les
-                factures. Placez trop et vous financerez un découvert à{" "}
+                Placez trop et vous financerez un découvert à{" "}
                 {(treasuryOffer.discountAnnualRate * 100).toLocaleString("fr-FR")} % avec un
                 placement à{" "}
                 {(treasuryOffer.placementAnnualRate * 100).toLocaleString("fr-FR")} %.
@@ -1614,8 +1609,7 @@ export function DecisionForm({
           <p className="mt-3 text-xs leading-relaxed text-slate-400">
             Découvert autorisé jusqu&apos;à{" "}
             {Math.round(treasuryOffer.overdraftLimit).toLocaleString("fr-FR")} €. Au-delà, la
-            banque cède vos créances d&apos;office, au tarif fort. Si vous ne gérez pas votre
-            trésorerie, quelqu&apos;un la gérera pour vous.
+            banque cède vos créances d&apos;office, au tarif fort.
           </p>
         </Family>
       ) : null}
@@ -1630,7 +1624,7 @@ export function DecisionForm({
                 defaultChecked={!defaults.insurance}
                 className="mt-0.5 h-4 w-4 accent-amber-400"
               />
-              <span className="text-sm text-slate-400">Pas d&apos;assurance : pas de prime, tous les risques à votre charge.</span>
+              <span className="text-sm text-slate-400">Aucune : pas de prime, tous les risques pour vous.</span>
             </label>
             {insuranceFormulas.map((f) => (
               <label
@@ -1657,7 +1651,7 @@ export function DecisionForm({
           </div>
           <p className="mt-3 text-xs leading-relaxed text-slate-400">
             Un coût certain contre un risque incertain : plus la couverture est large, plus
-            la prime pèse sur votre seuil de rentabilité.
+            la prime pèse.
           </p>
         </Family>
       ) : on.insurance && insuranceOffer ? (
@@ -1759,9 +1753,8 @@ export function DecisionForm({
         >
           {bankFile && bankFile.refusedLoan !== null ? (
             <p className="mb-3 rounded-md border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-xs leading-relaxed text-rose-200">
-              Au tour précédent, votre demande de{" "}
-              {formatEuro(bankFile.refusedLoan)} n&apos;a pas été instruite : aucun plan de
-              trésorerie ne l&apos;accompagnait. La banque ne prête pas contre une intention.
+              Votre demande de {formatEuro(bankFile.refusedLoan)} n&apos;a pas été instruite au
+              tour précédent : aucun plan de trésorerie ne l&apos;accompagnait.
             </p>
           ) : null}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -1770,7 +1763,7 @@ export function DecisionForm({
               label={`${v.units.charAt(0).toUpperCase()}${v.units.slice(1)} que vous pensez vendre`}
               placeholder="ex. 4 200"
               suffix={v.units}
-              hint="Appuyez-vous sur l'historique de vos ventes, plus bas dans la page."
+              hint="Historique de vos ventes plus bas dans la page."
             />
             <OptionalField
               name="expectedCash"
@@ -1815,10 +1808,8 @@ export function DecisionForm({
             </>
           ) : (
             <p className="mt-3 text-xs leading-relaxed text-slate-400">
-              Annoncer avant de savoir, puis mesurer l&apos;écart : c&apos;est le seul moyen de
-              savoir si vous avez compris ce marché ou si vous avez eu de la chance. L&apos;écart
-              vous sera montré avec les résultats du tour. Cette partie a été ouverte avant le
-              dossier bancaire : votre prévision n&apos;y change aucun calcul.
+              L&apos;écart vous sera montré avec les résultats du tour. Cette partie a été
+              ouverte avant le dossier bancaire : votre prévision n&apos;y change aucun calcul.
             </p>
           )}
         </Family>
@@ -1836,7 +1827,7 @@ export function DecisionForm({
           className="w-full resize-y rounded border border-slate-700 bg-slate-800/50 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:border-amber-400/50 focus:outline-none"
         />
         <p className="mt-1 text-xs text-slate-400">
-          Notez ici la logique de vos décisions. L&apos;enseignant pourra la lire au débriefing.
+          L&apos;enseignant la lira au débriefing.
         </p>
       </Family>
       </section>

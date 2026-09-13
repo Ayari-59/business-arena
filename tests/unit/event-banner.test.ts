@@ -72,6 +72,12 @@ describe("place du bandeau dans l'arène", () => {
   });
 
   it("le bloc détaillé reste dans la période active", () => {
-    expect(source).toContain("a tiré une carte : elle s&apos;appliquera à ce tour");
+    // On vérifie que le bloc détaillé EXISTE, pas sa formulation : son titre ne
+    // répète plus le bandeau mot pour mot — c'était le doublon que le bandeau
+    // avait créé — et figer la phrase ici ferait échouer ce test sur une simple
+    // retouche de texte. Sa place, elle, ne se lit pas dans l'ordre du fichier :
+    // les sections sont déclarées en constantes avant d'être posées dans la page.
+    expect(source).toContain("<EventCard");
+    expect(source).toContain("announced");
   });
 });

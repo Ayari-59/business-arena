@@ -196,9 +196,7 @@ export default async function ArenaPage({
       ) : null}
       {view.announcedEventCards.length > 0 ? (
         <section className="rounded-xl border border-amber-400/30 bg-slate-900 p-1.5 sm:p-4">
-          <p className="mb-2 text-sm font-semibold text-amber-400">
-            ⚡ Votre enseignant a tiré une carte : elle s&apos;appliquera à ce tour
-          </p>
+          <p className="mb-2 text-sm font-semibold text-amber-400">⚡ La carte, en détail</p>
           <div className="grid gap-3 sm:grid-cols-2">
             {view.announcedEventCards.map((card, i) => (
               <EventCard
@@ -230,7 +228,6 @@ export default async function ArenaPage({
                 })`,
             )
             .join(" · ")}
-          {". "}Dimensionnez votre volume en conséquence.
         </section>
       ) : null}
     </>
@@ -434,7 +431,7 @@ export default async function ArenaPage({
           <h2 className="text-xl font-bold text-amber-300">
             {view.ranking.find((row) => row.isPlayer)?.rank === 1
               ? `🏆 Victoire ! ${view.playerTeamName} domine le marché.`
-              : "Partie terminée. Analysez votre trajectoire tour par tour ci-dessous."}
+              : "Partie terminée."}
           </h2>
           <p className="mt-2 text-sm text-slate-400">
             Résultat cumulé : {formatEuro(view.ranking.find((row) => row.isPlayer)?.cumulativeNetIncome ?? 0)}
@@ -474,15 +471,14 @@ export default async function ArenaPage({
               // la hauteur de l'en-tête collant pour que le titre reste visible.
               id={isLatest ? "dernier-resultat" : undefined}
               open={isLatest}
-              className="group scroll-mt-24 rounded-xl border border-white/10 bg-slate-950/40 [&[open]]:border-white/20"
+              className={`group scroll-mt-24 rounded-xl border border-white/10 border-l-2 bg-slate-950/40 [&[open]]:border-white/20 ${
+                netIncome >= 0 ? "border-l-emerald-400/50" : "border-l-rose-400/50"
+              }`}
             >
               <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-3 px-3 py-2.5 sm:px-4">
                 <span className="flex items-center gap-2 text-sm font-semibold text-slate-100">
                   <span className="text-slate-400 transition-transform group-open:rotate-90">▸</span>
                   📊 {periodLabel(view.roundDays, p.round)}
-                  <span className="rounded-full border border-sky-400/30 bg-sky-400/10 px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-sky-300">
-                    tour clos
-                  </span>
                   {isLatest && !finished ? (
                     <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-xs font-medium text-emerald-300">
                       résultats livrés

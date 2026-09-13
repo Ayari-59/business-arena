@@ -133,7 +133,7 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
         <div className="rounded-lg border border-red-400/30 bg-red-950/30 px-4 py-3">
           <p className="text-sm font-semibold text-red-200">Accès limité</p>
           <p className="mt-1 text-xs text-red-300">
-            Cette situation nécessite de compléter des étapes d&apos;apprentissage préalables. Consultez les sentiers pédagogiques pour progresser.
+            Des étapes d&apos;apprentissage restent à compléter dans les sentiers pédagogiques.
           </p>
         </div>
       </article>
@@ -194,7 +194,7 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
         {rendue ? (
           <section className="rounded-lg bg-slate-950 p-1.5 sm:p-4">
             <p className="text-sm text-emerald-300">
-              ✓ Analyse rendue — la correction sera révélée au débriefing du tour.
+              ✓ Analyse rendue — correction au débriefing.
             </p>
           </section>
         ) : (
@@ -247,7 +247,7 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
                 <p className="mt-1 text-xs text-slate-400">Comment analyser ce problème ?</p>
                 {quizDone ? (
                   <p className="mt-2 text-sm text-emerald-300">
-                    ✓ Réponse validée, la correction sera révélée au débriefing du tour.
+                    ✓ Réponse validée — correction au débriefing.
                   </p>
                 ) : (
                   <div className="mt-2 space-y-4">
@@ -298,7 +298,7 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
               </button>
               {!complet ? (
                 <p className="text-xs text-slate-400">
-                  Le rendu part complet ou pas du tout : diagnostic et modèle seront corrigés ensemble au débriefing.
+                  Complet ou rien : diagnostic et modèle partent ensemble.
                 </p>
               ) : null}
             </div>
@@ -390,7 +390,7 @@ export function SituationDebrief({
       {situation.missed ? (
         <p className="mb-3 rounded-lg border border-amber-400/20 bg-amber-950/10 px-3 py-2 text-sm text-slate-300">
           <span className="font-medium text-amber-200">Situation non rendue.</span> {situation.narrative}{" "}
-          {situation.problem} Le modèle attendu et la correction restent consultables ci-dessous.
+          {situation.problem} Modèle et correction ci-dessous.
         </p>
       ) : null}
       <div className="space-y-3 text-sm">

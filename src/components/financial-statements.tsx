@@ -242,7 +242,7 @@ export function FinancialStatements({
         </div>
         <p className="mt-2 text-xs text-slate-400">
           {placement > 0.5 && b.overdraft > 0.5
-            ? "Vous détenez un placement ET un découvert : vous payez le second bien plus cher que le premier ne rapporte. "
+            ? "Placement ET découvert : le second coûte bien plus que le premier ne rapporte. "
             : ""}
           Le bilan équilibre au centime, par construction. FRNG{" "}
           {euro(result.functionalBalance.frng)} − BFR {euro(result.functionalBalance.bfr)} ={" "}
@@ -310,8 +310,8 @@ export function FinancialStatements({
           </div>
         </div>
         <p className="mt-2 text-xs text-slate-400">
-          Les charges de structure tombent quoi qu&apos;il arrive : chaque unité vendue au-dessus
-          du coût variable les éponge : le seuil dit combien il en faut.
+          Chaque unité vendue au-dessus de son coût variable éponge les charges de
+          structure ; le seuil dit combien il en faut.
         </p>
       </Panel>
 
@@ -333,8 +333,7 @@ export function FinancialStatements({
           tone={result.cashFlow.closing >= 0 ? "good" : "bad"}
         />
         <p className="mt-2 text-xs text-slate-400">
-          Le résultat est une opinion, la trésorerie est un fait : ce tableau montre où
-          l&apos;argent est réellement entré et sorti.
+          Le résultat est une opinion, la trésorerie un fait.
         </p>
       </Panel>
     </section>
