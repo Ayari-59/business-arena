@@ -21,9 +21,18 @@
  * Lancement :  npm run verify:migrations
  * (lit DIRECT_URL, sinon DATABASE_URL — la même URL que drizzle.config.ts,
  *  donc bien la base que `drizzle-kit migrate` viserait.)
+ *
+ * Le PILOTE suit l'URL, selon la même règle que `src/db/index.ts` : une URL
+ * Neon passe par le pilote HTTP, toute autre URL Postgres par `pg`. Ce n'est
+ * pas cosmétique — `pg` ouvre une connexion Postgres sur le port 5432, que
+ * beaucoup de réseaux (proxys d'entreprise, conteneurs d'exécution à sortie
+ * restreinte) ne laissent pas passer : le script y restait muet jusqu'au
+ * délai d'attente. Le pilote HTTP de Neon, lui, ne fait que du HTTPS, et
+ * traverse ce qu'un navigateur traverse.
  */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { neon } from "@neondatabase/serverless";
 import { Client } from "pg";
 
 /** Le journal du dépôt : ce que drizzle-kit CROIT devoir appliquer. */
@@ -107,6 +116,31 @@ const REQUETES = {
          where t.typname = $1 and e.enumlabel = $2`,
 } as const;
 
+/** Une ligne de résultat, sans hypothèse sur ses colonnes. */
+type Ligne = Record<string, unknown>;
+
+/** Interroger la base en lecture, quel que soit le pilote dessous. */
+type Interroge = (texte: string, params?: unknown[]) => Promise<Ligne[]>;
+
+/**
+ * Ouvre la base avec le pilote qui convient à son URL, et rend de quoi
+ * l'interroger puis la refermer. Les deux pilotes répondent la même chose :
+ * un tableau de lignes, vide quand rien ne correspond.
+ */
+async function ouvrir(url: string): Promise<{ interroge: Interroge; fermer: () => Promise<void> }> {
+  if (/\.neon\.tech|neon\.build|localtest\.me/.test(url)) {
+    const sql = neon(url);
+    // `sql.query` prend le texte et ses paramètres $1, $2… et rend les lignes.
+    return { interroge: (texte, params = []) => sql.query(texte, params), fermer: async () => {} };
+  }
+  const client = new Client({ connectionString: url });
+  await client.connect();
+  return {
+    interroge: async (texte, params = []) => (await client.query(texte, params)).rows,
+    fermer: () => client.end(),
+  };
+}
+
 function decrire(o: Objet): string {
   switch (o.genre) {
     case "colonne":
@@ -120,16 +154,16 @@ function decrire(o: Objet): string {
   }
 }
 
-async function existe(c: Client, o: Objet): Promise<boolean> {
-  const r =
+async function existe(interroge: Interroge, o: Objet): Promise<boolean> {
+  const lignes =
     o.genre === "colonne"
-      ? await c.query(REQUETES.colonne, [o.table, o.nom])
+      ? await interroge(REQUETES.colonne, [o.table, o.nom])
       : o.genre === "table"
-        ? await c.query(REQUETES.table, [o.nom])
+        ? await interroge(REQUETES.table, [o.nom])
         : o.genre === "index"
-          ? await c.query(REQUETES.index, [o.nom])
-          : await c.query(REQUETES.enum, [o.type, o.nom]);
-  return r.rowCount !== null && r.rowCount > 0;
+          ? await interroge(REQUETES.index, [o.nom])
+          : await interroge(REQUETES.enum, [o.type, o.nom]);
+  return lignes.length > 0;
 }
 
 /** L'hôte d'une URL, sans les identifiants : on montre QUELLE base sans recopier un secret. */
@@ -140,6 +174,21 @@ function hoteDe(url: string | undefined): string | null {
   } catch {
     return "(URL illisible)";
   }
+}
+
+/**
+ * La base que désigne un hôte, le mode de connexion mis de côté.
+ *
+ * Chez Neon, une même base se joint par deux hôtes : l'endpoint direct
+ * `ep-xxx.région.neon.tech` et son pooler `ep-xxx-pooler.région.neon.tech`.
+ * Ce sont deux ROUTES vers la même base, pas deux bases — et c'est même la
+ * configuration recommandée, l'application passant par le pooler et les
+ * migrations par le direct. Comparer les hôtes tels quels faisait crier ce
+ * script sur une installation parfaitement saine ; on compare donc ce qui
+ * identifie la base, sans le suffixe de route.
+ */
+function baseDe(hote: string | null): string | null {
+  return hote ? hote.replace(/-pooler(?=\.)/, "") : hote;
 }
 
 async function main() {
@@ -158,7 +207,10 @@ async function main() {
   const hoteApp = hoteDe(urlApplication);
   console.log(`Base MIGRÉE par drizzle-kit (DIRECT_URL ?? DATABASE_URL) : ${hote}`);
   console.log(`Base LUE par l'application (DATABASE_URL)                : ${hoteApp ?? "(absente)"}`);
-  if (hoteApp && hoteApp !== hote) {
+  if (hoteApp && hoteApp !== hote && baseDe(hoteApp) === baseDe(hote)) {
+    console.log("  (les deux hôtes désignent la même base : l'un est le pooler de l'autre)");
+  }
+  if (hoteApp && baseDe(hoteApp) !== baseDe(hote)) {
     console.log("");
     console.log("⚠ LES DEUX DIFFÈRENT. Vos migrations ne vont pas là où l'application lit :");
     console.log("  `drizzle-kit migrate` annoncera « applied successfully » et la colonne");
@@ -167,25 +219,24 @@ async function main() {
   }
   console.log("\nLecture seule : aucune migration n'est jouée, rien n'est écrit.\n");
 
-  const client = new Client({ connectionString: url });
-  await client.connect();
+  const { interroge, fermer } = await ouvrir(url);
 
   try {
     // Ce que drizzle croit avoir appliqué.
-    const suivi = await client.query<{ n: string }>(
+    const suivi = await interroge(
       `select count(*)::text as n from information_schema.tables
        where table_schema = 'drizzle' and table_name = '__drizzle_migrations'`,
     );
-    if (suivi.rows[0]?.n === "0") {
+    if ((suivi[0] as { n?: string } | undefined)?.n === "0") {
       console.log("Table de suivi drizzle.__drizzle_migrations : ABSENTE.");
       console.log("  → aucune migration n'a jamais été jouée par drizzle-kit sur cette base.\n");
     } else {
-      const appliquees = await client.query<{ n: string; derniere: string | null }>(
+      const appliquees = await interroge(
         `select count(*)::text as n,
                 to_char(to_timestamp(max(created_at) / 1000), 'YYYY-MM-DD HH24:MI') as derniere
          from drizzle.__drizzle_migrations`,
       );
-      const l = appliquees.rows[0];
+      const l = appliquees[0] as { n?: string; derniere?: string | null } | undefined;
       console.log(
         `Table de suivi drizzle : ${l?.n} migration(s) enregistrée(s), la dernière le ${l?.derniere ?? "?"}.`,
       );
@@ -196,10 +247,10 @@ async function main() {
       // AVANT ce dernier est ignorée en silence, et la commande annonce quand
       // même « applied successfully ».
       const dernierJournal = JOURNAL[JOURNAL.length - 1];
-      const borne = await client.query<{ max: string | null }>(
+      const borne = await interroge(
         `select max(created_at)::text as max from drizzle.__drizzle_migrations`,
       );
-      const maxEnBase = Number(borne.rows[0]?.max ?? 0);
+      const maxEnBase = Number((borne[0] as { max?: string | null } | undefined)?.max ?? 0);
       if (dernierJournal && maxEnBase >= dernierJournal.when) {
         console.log("");
         console.log(`⚠ La dernière entrée du journal (${dernierJournal.tag}) est datée`);
@@ -216,7 +267,7 @@ async function main() {
       const manquants: string[] = [];
       let presents = 0;
       for (const o of m.ceQuElleCree) {
-        if (await existe(client, o)) presents += 1;
+        if (await existe(interroge, o)) presents += 1;
         else manquants.push(decrire(o));
       }
       bilan.push({ m, presents, total: m.ceQuElleCree.length, manquants });
@@ -272,7 +323,7 @@ async function main() {
     console.log("environnement, instance de test) n'aura jamais ces six migrations tant");
     console.log("qu'elles ne sont pas au journal.\n");
   } finally {
-    await client.end();
+    await fermer();
   }
 }
 
@@ -287,7 +338,9 @@ main().catch((e) => {
   console.error(`\nÉchec de la vérification : ${detail || "aucun détail — connexion refusée, réseau ou TLS ?"}`);
   if (err?.cause) console.error(`  cause : ${String(err.cause)}`);
   console.error("  Vérifiez DIRECT_URL (ou DATABASE_URL) et que la base accepte les");
-  console.error("  connexions depuis cette machine. Alternative sans Node :");
+  console.error("  connexions depuis cette machine. Sur une base NON Neon, le pilote `pg`");
+  console.error("  a besoin du port 5432 ouvert en sortie ; sur Neon, de l'hôte d'API en");
+  console.error("  HTTPS. Alternative sans Node :");
   console.error("  coller scripts/verifier-migrations.sql dans l'éditeur SQL de Neon.");
   process.exit(1);
 });
