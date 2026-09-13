@@ -95,7 +95,10 @@ function Chiffre({
 }) {
   return (
     <div>
-      <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
+      {/* Deux lignes réservées, comme dans le formulaire : « Trésorerie
+          d'ouverture » se replie là où « Prix usuels » tient sur une ligne, et
+          sans cette réserve les chiffres de la rangée ne s'alignaient plus. */}
+      <p className="min-h-8 text-xs uppercase leading-4 tracking-wide text-slate-500">{label}</p>
       <p
         className={`tabular-nums text-base font-semibold ${accent ? "text-amber-300" : "text-slate-100"}`}
       >

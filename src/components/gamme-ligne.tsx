@@ -59,13 +59,20 @@ export function GammeLigne({ gamme }: { gamme: Gamme }) {
               MOTS_MARGE[rang(taux(p), tousTaux)],
             ];
         return (
-          <li key={p.code} className="flex items-baseline gap-2 text-sm">
+          // Nom et qualificatifs coulent dans UN SEUL texte, pas deux blocs
+          // côte à côte : « Cardigan boutonné » passait à la ligne pendant que
+          // ses qualificatifs restaient sur la première, et la liste partait en
+          // escalier. Ici la ligne se replie comme une phrase, alignée sur la
+          // même marge gauche.
+          <li key={p.code} className="flex gap-2 text-sm">
             <span
               aria-hidden
-              className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${REPERES[i % REPERES.length]}`}
+              className={`mt-[0.45rem] h-2 w-2 shrink-0 rounded-full ${REPERES[i % REPERES.length]}`}
             />
-            <span className="font-medium text-slate-100">{p.name}</span>
-            <span className="text-slate-400">{`— ${qualificatifs.join(" · ")}`}</span>
+            <span className="min-w-0">
+              <span className="font-medium text-slate-100">{p.name}</span>{" "}
+              <span className="text-slate-400">{`— ${qualificatifs.join(" · ")}`}</span>
+            </span>
           </li>
         );
       })}

@@ -121,9 +121,9 @@ function EquipmentPanel({
                           [t.code]: Math.min(t.maxPerRound, Math.max(0, parseInt(e.target.value) || 0)),
                         }))
                       }
-                      className="w-full bg-transparent text-sm tabular-nums text-slate-100 outline-none"
+                      className="min-w-0 flex-1 bg-transparent text-sm tabular-nums text-slate-100 outline-none"
                     />
-                    <span className="text-xs text-slate-400">max {t.maxPerRound}</span>
+                    <span className="shrink-0 text-xs text-slate-400">max {t.maxPerRound}</span>
                   </span>
                   {buy > 0 ? (
                     <span className="mt-0.5 block text-xs text-emerald-300/80">
@@ -147,9 +147,9 @@ function EquipmentPanel({
                           [t.code]: Math.min(owned, Math.max(0, parseInt(e.target.value) || 0)),
                         }))
                       }
-                      className="w-full bg-transparent text-sm tabular-nums text-slate-100 outline-none"
+                      className="min-w-0 flex-1 bg-transparent text-sm tabular-nums text-slate-100 outline-none"
                     />
-                    <span className="text-xs text-slate-400">max {owned}</span>
+                    <span className="shrink-0 text-xs text-slate-400">max {owned}</span>
                   </span>
                   {sell > 0 ? (
                     <span className="mt-0.5 block text-xs text-red-300/80">
@@ -218,7 +218,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="text-xs font-medium uppercase tracking-wide text-slate-400">{label}</span>
+      <span className="block min-h-8 leading-4 text-xs font-medium uppercase tracking-wide text-slate-400">{label}</span>
       <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 focus-within:border-amber-400/60">
         <input
           type="number"
@@ -227,9 +227,9 @@ function Field({
           step={step}
           min={0}
           required
-          className="w-full bg-transparent text-sm text-slate-100 outline-none"
+          className="min-w-0 flex-1 bg-transparent text-sm text-slate-100 outline-none"
         />
-        <span className="text-xs text-slate-400">{suffix}</span>
+        <span className="shrink-0 text-xs text-slate-400">{suffix}</span>
       </span>
       {hint ? <span className="mt-1 block text-[13px] text-slate-400">{hint}</span> : null}
     </label>
@@ -252,16 +252,16 @@ function OptionalField({
 }) {
   return (
     <label className="block">
-      <span className="text-xs font-medium uppercase tracking-wide text-slate-400">{label}</span>
+      <span className="block min-h-8 leading-4 text-xs font-medium uppercase tracking-wide text-slate-400">{label}</span>
       <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 focus-within:border-amber-400/60">
         <input
           type="text"
           inputMode="decimal"
           name={name}
           placeholder={placeholder}
-          className="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500"
+          className="min-w-0 flex-1 bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500"
         />
-        <span className="text-xs text-slate-400">{suffix}</span>
+        <span className="shrink-0 text-xs text-slate-400">{suffix}</span>
       </span>
       {hint ? <span className="mt-1 block text-[13px] text-slate-400">{hint}</span> : null}
     </label>
@@ -455,7 +455,7 @@ function GammeVentes({
               {/* Champs de saisie : prix et volume */}
               <div className="grid grid-cols-2 gap-2 sm:gap-3">
                 <label className="block">
-                  <span className="text-xs font-medium uppercase tracking-wide text-slate-400">{v.priceLabel}</span>
+                  <span className="block min-h-8 leading-4 text-xs font-medium uppercase tracking-wide text-slate-400">{v.priceLabel}</span>
                   <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900 px-2 py-2 focus-within:border-amber-400/60">
                     <input
                       type="number"
@@ -469,13 +469,13 @@ function GammeVentes({
                       step={0.1}
                       min={0}
                       required={p.code === activeProduct}
-                      className="flex-1 bg-transparent text-sm text-slate-100 outline-none"
+                      className="min-w-0 flex-1 bg-transparent text-sm text-slate-100 outline-none"
                     />
-                    <span className="text-xs text-slate-400">€</span>
+                    <span className="shrink-0 text-xs text-slate-400">€</span>
                   </span>
                 </label>
                 <label className="block">
-                  <span className="text-xs font-medium uppercase tracking-wide text-slate-400">{v.productionPlanLabel}</span>
+                  <span className="block min-h-8 leading-4 text-xs font-medium uppercase tracking-wide text-slate-400">{v.productionPlanLabel}</span>
                   <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900 px-2 py-2 focus-within:border-amber-400/60">
                     <input
                       type="number"
@@ -485,9 +485,9 @@ function GammeVentes({
                       step={1}
                       min={0}
                       required={p.code === activeProduct}
-                      className="flex-1 bg-transparent text-sm text-slate-100 outline-none"
+                      className="min-w-0 flex-1 bg-transparent text-sm text-slate-100 outline-none"
                     />
-                    <span className="text-xs text-slate-400">{v.units}</span>
+                    <span className="shrink-0 text-xs text-slate-400">{v.units}</span>
                   </span>
                 </label>
               </div>
@@ -495,7 +495,7 @@ function GammeVentes({
               {/* Fournisseur */}
               {avecFournisseurs && suppliers ? (
                 <label className="block">
-                  <span className="text-xs font-medium uppercase tracking-wide text-slate-400">Fournisseur</span>
+                  <span className="block min-h-8 leading-4 text-xs font-medium uppercase tracking-wide text-slate-400">Fournisseur</span>
                   <select
                     name={productFieldName(p.code, "supplierChoice")}
                     aria-label={`Fournisseur · ${p.name}`}
@@ -614,7 +614,7 @@ function GammeBudgets({
                 */}
                 {avecRd ? (
                   <label className="block">
-                    <span className="text-xs font-medium uppercase tracking-wide text-slate-400">R&amp;D</span>
+                    <span className="block min-h-8 leading-4 text-xs font-medium uppercase tracking-wide text-slate-400">R&amp;D</span>
                     <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900 px-2 py-2 focus-within:border-amber-400/60">
                       <input
                         type="number"
@@ -624,9 +624,9 @@ function GammeBudgets({
                         step={1}
                         min={0}
                         required={p.code === activeProduct}
-                        className="flex-1 bg-transparent text-sm text-slate-100 outline-none"
+                        className="min-w-0 flex-1 bg-transparent text-sm text-slate-100 outline-none"
                       />
-                      <span className="text-xs text-slate-400">€</span>
+                      <span className="shrink-0 text-xs text-slate-400">€</span>
                     </span>
                   </label>
                 ) : null}
@@ -643,7 +643,7 @@ function GammeBudgets({
               {/* Budgets : affichés en colonne sur mobile, 2 cols sur sm+ */}
               <div className={`grid ${quality ? "grid-cols-1" : avecRd ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"} gap-3`}>
                 <label className="block">
-                  <span className="text-xs font-medium uppercase tracking-wide text-slate-400">Marketing</span>
+                  <span className="block min-h-8 leading-4 text-xs font-medium uppercase tracking-wide text-slate-400">Marketing</span>
                   <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900 px-2 py-2 focus-within:border-amber-400/60">
                     <input
                       type="number"
@@ -653,15 +653,15 @@ function GammeBudgets({
                       step={1}
                       min={0}
                       required={p.code === activeProduct}
-                      className="flex-1 bg-transparent text-sm text-slate-100 outline-none"
+                      className="min-w-0 flex-1 bg-transparent text-sm text-slate-100 outline-none"
                     />
-                    <span className="text-xs text-slate-400">€</span>
+                    <span className="shrink-0 text-xs text-slate-400">€</span>
                   </span>
                 </label>
 
                 {quality ? (
                   <label className="block">
-                    <span className="text-xs font-medium uppercase tracking-wide text-slate-400">Qualité</span>
+                    <span className="block min-h-8 leading-4 text-xs font-medium uppercase tracking-wide text-slate-400">Qualité</span>
                     <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900 px-2 py-2 focus-within:border-amber-400/60">
                       <input
                         type="number"
@@ -671,16 +671,16 @@ function GammeBudgets({
                         step={1}
                         min={0}
                         required={p.code === activeProduct}
-                        className="flex-1 bg-transparent text-sm text-slate-100 outline-none"
+                        className="min-w-0 flex-1 bg-transparent text-sm text-slate-100 outline-none"
                       />
-                      <span className="text-xs text-slate-400">€</span>
+                      <span className="shrink-0 text-xs text-slate-400">€</span>
                     </span>
                   </label>
                 ) : null}
 
                 {avecRd ? (
                   <label className="block">
-                    <span className="text-xs font-medium uppercase tracking-wide text-slate-400">R&D</span>
+                    <span className="block min-h-8 leading-4 text-xs font-medium uppercase tracking-wide text-slate-400">R&D</span>
                     <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900 px-2 py-2 focus-within:border-amber-400/60">
                       <input
                         type="number"
@@ -690,9 +690,9 @@ function GammeBudgets({
                         step={1}
                         min={0}
                         required={p.code === activeProduct}
-                        className="flex-1 bg-transparent text-sm text-slate-100 outline-none"
+                        className="min-w-0 flex-1 bg-transparent text-sm text-slate-100 outline-none"
                       />
-                      <span className="text-xs text-slate-400">€</span>
+                      <span className="shrink-0 text-xs text-slate-400">€</span>
                     </span>
                   </label>
                 ) : null}
@@ -1413,7 +1413,7 @@ export function DecisionForm({
               />
             ) : null}
             <label className="block">
-              <span className="text-xs font-medium uppercase tracking-wide text-slate-400">Axe de communication</span>
+              <span className="block min-h-8 leading-4 text-xs font-medium uppercase tracking-wide text-slate-400">Axe de communication</span>
               <select
                 name="communicationAxis"
                 value={axe}
