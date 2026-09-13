@@ -54,6 +54,26 @@ h1 {
   letter-spacing: -0.015em;
 }
 
+/* ---------------------------------------------------------------------------
+ * Le focus clavier, partout.
+ *
+ * Les champs se signalaient déjà — leur bordure passe au laiton — mais les
+ * BOUTONS, les liens et les onglets n'avaient rien : au clavier, on ne savait
+ * plus où l'on était. Les composants posent `outline-none` en une trentaine
+ * d'endroits pour maîtriser leur propre style de focus ; cette règle vit HORS
+ * de toute couche (`@layer`), et l'emporte donc sur ces utilitaires quelle que
+ * soit leur spécificité.
+ *
+ * `:focus-visible` et non `:focus` : le navigateur ne l'applique qu'au focus
+ * clavier ou d'assistance, jamais à un clic de souris — un anneau qui
+ * apparaîtrait à chaque clic serait du bruit.
+ * ------------------------------------------------------------------------- */
+:focus-visible {
+  outline: 2px solid var(--color-amber-400);
+  outline-offset: 2px;
+}
+
+
 /* Laiton du thème clair : pas sombres pour l'encre et les boutons, pas hauts
    pour les fonds teintés — dans le sens inversé du thème clair généré. */
 [data-theme="clair"] {

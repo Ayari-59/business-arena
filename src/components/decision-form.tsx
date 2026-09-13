@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { playRoundAction, type PlayRoundState } from "@/app/arena/[gameId]/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import {
@@ -18,8 +18,62 @@ import type { GameView } from "@/services/game-view.service";
 import { formatEuro, formatEuroCents, formatUnits } from "@/lib/format";
 import { COMMUNICATION_AXIS_LABELS } from "@/engine/market/communication";
 import { SimulationProgress } from "@/components/simulation-progress";
+import {
+  cleBrouillon,
+  ecrireBrouillon,
+  effacerBrouillon,
+  effacerBrouillonsAnterieurs,
+  lireBrouillon,
+  type Brouillon,
+} from "@/lib/brouillon-decisions";
 
 const initialState: PlayRoundState = { error: null };
+
+type ChampSaisi = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+
+/**
+ * Repose une valeur dans un champ, de façon que React la voie.
+ *
+ * React garde une copie de la valeur de chaque champ pour filtrer les
+ * événements qu'il juge redondants : écrire `champ.value` puis émettre un
+ * événement ne déclencherait donc RIEN. On passe par le setter natif du
+ * prototype, qui met à jour le champ et cette copie, avant d'émettre.
+ * Sans quoi la marge en temps réel, le façonnier choisi et l'axe de
+ * communication resteraient sur leur valeur d'origine après restauration.
+ */
+function poserValeur(champ: ChampSaisi, valeur: string): void {
+  const setter = Object.getOwnPropertyDescriptor(
+    Object.getPrototypeOf(champ) as object,
+    "value",
+  )?.set;
+  if (setter) setter.call(champ, valeur);
+  else champ.value = valeur;
+  champ.dispatchEvent(new Event("input", { bubbles: true }));
+  // Un `<select>` écoute `change`, pas `input`.
+  if (champ instanceof HTMLSelectElement) {
+    champ.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+}
+
+/** Relit les quantités du parc machines depuis leur champ caché en JSON. */
+function quantitesDepuisJson(json: string | undefined): Record<string, number> {
+  if (!json) return {};
+  try {
+    const lu: unknown = JSON.parse(json);
+    if (!Array.isArray(lu)) return {};
+    const q: Record<string, number> = {};
+    for (const ligne of lu) {
+      if (typeof ligne !== "object" || ligne === null) continue;
+      const { typeCode, quantity } = ligne as { typeCode?: unknown; quantity?: unknown };
+      if (typeof typeCode === "string" && typeof quantity === "number" && quantity > 0) {
+        q[typeCode] = quantity;
+      }
+    }
+    return q;
+  } catch {
+    return {};
+  }
+}
 
 function EquipmentPanel({
   offer,
@@ -1037,11 +1091,84 @@ export function DecisionForm({
   const courante = Math.min(etape, total - 1);
   const derniere = courante === total - 1;
 
+  // ── BROUILLON LOCAL ──────────────────────────────────────────────────────
+  // Six étapes, des dizaines de champs, et rien n'était gardé tant qu'on
+  // n'avait pas validé : un onglet fermé ou un appel en plein cours, et le tour
+  // entier était à ressaisir. On sauve à chaque frappe, dans le navigateur.
+  const cle = cleBrouillon(gameId, roundIndex);
+  const brouillonRestaure = useRef(false);
+
+  const sauverBrouillon = () => {
+    const form = formRef.current;
+    if (!form || alreadySubmitted) return;
+    const b: Brouillon = {};
+    for (const [nom, valeur] of new FormData(form).entries()) {
+      if (typeof valeur === "string") b[nom] = valeur;
+    }
+    ecrireBrouillon(cle, b);
+  };
+
+  // La restauration se fait APRÈS le montage, jamais pendant le rendu : le
+  // serveur ne voit pas `localStorage`, et lire le stockage au rendu ferait
+  // diverger le HTML hydraté de celui du serveur.
+  useEffect(() => {
+    if (brouillonRestaure.current) return;
+    brouillonRestaure.current = true;
+    // Un tour joué ne se rejoue pas : son brouillon n'a plus d'objet.
+    effacerBrouillonsAnterieurs(gameId, cle);
+    if (alreadySubmitted) {
+      effacerBrouillon(cle);
+      return;
+    }
+    const b = lireBrouillon(cle);
+    const form = formRef.current;
+    if (!b || !form) return;
+
+    for (const champ of Array.from(form.elements)) {
+      if (
+        !(champ instanceof HTMLInputElement) &&
+        !(champ instanceof HTMLSelectElement) &&
+        !(champ instanceof HTMLTextAreaElement)
+      ) {
+        continue;
+      }
+      const nom = champ.name;
+      if (!nom) continue;
+      // Les champs cachés sont recalculés par React à chaque rendu : y écrire
+      // ne servirait à rien. Ceux qui portent un état — le parc machines — sont
+      // remis plus bas, par leur état.
+      if (champ instanceof HTMLInputElement && champ.type === "hidden") continue;
+      if (champ instanceof HTMLInputElement && champ.type === "checkbox") {
+        // Une case décochée ne figure pas dans un envoi : son absence du
+        // brouillon veut dire « décochée », pas « inconnue ».
+        champ.checked = Object.prototype.hasOwnProperty.call(b, nom);
+        continue;
+      }
+      if (champ instanceof HTMLInputElement && champ.type === "radio") {
+        champ.checked = b[nom] === champ.value;
+        continue;
+      }
+      const valeur = b[nom];
+      if (valeur !== undefined && valeur !== champ.value) poserValeur(champ, valeur);
+    }
+
+    // Le parc machines ne passe pas par des champs nommés : ses quantités
+    // vivent dans un état React et ressortent en JSON caché. On les relit là.
+    setEquipBuyQty(quantitesDepuisJson(b.equipmentBuyJson));
+    setEquipSellQty(quantitesDepuisJson(b.equipmentSellJson));
+  }, [cle, gameId, alreadySubmitted, formRef]);
+
+  // Le tour est parti : le filet n'a plus lieu d'être.
+  useEffect(() => {
+    if (alreadySubmitted) effacerBrouillon(cle);
+  }, [alreadySubmitted, cle]);
+
   return (
     <form
       ref={formRef}
       action={formAction}
       onSubmit={verifierPivots}
+      onChange={sauverBrouillon}
       onInvalidCapture={revelerFamilleInvalide}
       className="space-y-3"
     >
