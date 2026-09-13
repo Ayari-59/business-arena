@@ -404,6 +404,91 @@ function EnDeveloppement() {
  * Mobile : layout de cartes par référence au lieu de tableau, pour éviter
  * le scroll horizontal sur petit écran.
  */
+/**
+ * Une suite de faits courts — « 34,56 €/u · qualité −6 % · règlement 30 j ».
+ *
+ * Écrite en phrase continue, elle se coupait au milieu d'un fait : le lecteur
+ * recollait « jours non facturés 0 » d'une ligne et « jours-conseil » de la
+ * suivante. Ici chaque fait est insécable et porte SON séparateur, de sorte que
+ * le point médian termine une ligne au lieu d'en commencer une.
+ */
+function Faits({ faits, className = "" }: { faits: string[]; className?: string }) {
+  return (
+    <span className={`flex flex-wrap gap-x-1.5 gap-y-0.5 text-xs leading-snug text-slate-400 ${className}`}>
+      {faits.map((fait, i) => (
+        <span key={fait} className="whitespace-nowrap">
+          {fait}
+          {i < faits.length - 1 ? (
+            <span aria-hidden className="text-slate-600"> ·</span>
+          ) : null}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/**
+ * Un fait de capacité : son intitulé, son chiffre, et ce qui l'explique.
+ * L'intitulé au-dessus du chiffre — c'est la seule disposition qui tienne
+ * quand l'un et l'autre sont longs et que l'écran fait 390 px.
+ */
+function FaitCapacite({
+  label,
+  valeur,
+  note,
+  couleur = "text-slate-200",
+  testId,
+}: {
+  label: string;
+  valeur: string;
+  note?: string;
+  couleur?: string;
+  testId?: string;
+}) {
+  return (
+    <div>
+      <dt className="text-xs uppercase leading-4 tracking-wide text-slate-500">{label}</dt>
+      <dd className={`text-sm font-medium tabular-nums ${couleur}`} data-testid={testId}>
+        {valeur}
+      </dd>
+      {note ? <dd className="text-xs leading-snug text-slate-400">{note}</dd> : null}
+    </div>
+  );
+}
+
+/**
+ * Ce que le fournisseur choisi entraîne : son prix d'achat, sa qualité, son
+ * délai de règlement, son risque de rupture.
+ *
+ * Ces quatre faits vivaient dans le libellé de l'<option>, que le système rend
+ * à sa façon — sur Android, trois lignes par option dans un pavé blanc. Ici la
+ * page les met en page elle-même, et les deux derniers (délai, rupture), qui
+ * n'étaient nulle part à l'écran alors que le texte les annonce, se voient
+ * enfin.
+ */
+function FaitsFournisseur({
+  fournisseur: f,
+}: {
+  fournisseur: {
+    materialCostPerUnit: number;
+    qualityBonus: number;
+    paymentDelayDays: number;
+    supplyRiskProbability: number;
+  };
+}) {
+  const faits = [`${formatEuroCents(f.materialCostPerUnit)}/u`];
+  if (f.qualityBonus !== 0) {
+    faits.push(
+      `qualité ${f.qualityBonus > 0 ? "+" : "−"}${Math.abs(Math.round(f.qualityBonus * 100))} %`,
+    );
+  }
+  faits.push(f.paymentDelayDays > 0 ? `règlement ${f.paymentDelayDays} j` : "règlement comptant");
+  if (f.supplyRiskProbability > 0) {
+    faits.push(`rupture ${Math.round(f.supplyRiskProbability * 100)} %`);
+  }
+  return <Faits faits={faits} className="mt-1" />;
+}
+
 function GammeVentes({
   gamme,
   defaults,
@@ -491,13 +576,15 @@ function GammeVentes({
               {/* Info produit */}
               <div className="space-y-1">
                 <span className="block text-sm font-medium text-slate-100">{p.name}</span>
-                <span className="block text-xs leading-snug text-slate-400">
-                  prix usuel {formatEuro(p.refPrice)} · {v.leftoverLabel.toLowerCase()}{" "}
-                  {formatUnits(p.stock)} {v.units}
-                  {Math.abs(p.seasonCoef - 1) > 0.01
-                    ? ` · saison ×${p.seasonCoef.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}`
-                    : ""}
-                </span>
+                <Faits
+                  faits={[
+                    `prix usuel ${formatEuro(p.refPrice)}`,
+                    `${v.leftoverLabel.toLowerCase()} ${formatUnits(p.stock)} ${v.units}`,
+                    ...(Math.abs(p.seasonCoef - 1) > 0.01
+                      ? [`saison ×${p.seasonCoef.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}`]
+                      : []),
+                  ]}
+                />
               </div>
 
               {/* Marge en temps réel */}
@@ -563,13 +650,13 @@ function GammeVentes({
                   >
                     {suppliers.map((s) => (
                       <option key={s.code} value={s.code}>
-                        {s.name} · {formatEuroCents(s.materialCostPerUnit)}/u ({ecartFournisseur(s, reference)})
-                        {s.qualityBonus !== 0
-                          ? ` · qualité ${s.qualityBonus > 0 ? "+" : "−"}${Math.abs(Math.round(s.qualityBonus * 100))} %`
-                          : ""}
+                        {s.name} · {ecartFournisseur(s, reference) === "coût de référence"
+                          ? "référence"
+                          : ecartFournisseur(s, reference)}
                       </option>
                     ))}
                   </select>
+                  {choisi ? <FaitsFournisseur fournisseur={choisi} /> : null}
                 </label>
               ) : null}
             </div>
@@ -1283,45 +1370,50 @@ export function DecisionForm({
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
             ⚙️ {v.capacityPanelTitle}
           </p>
-          <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+          {/*
+            Deux colonnes à parts égales sur téléphone donnaient une grille
+            illisible : « Jours-consultants disponibles » se coupait à gauche
+            pendant que « 720 jours/tour (12 pers. × prod. 100 %) » se coupait à
+            droite, l'un et l'autre alignés à contre-sens. L'intitulé passe donc
+            AU-DESSUS de son chiffre, et la grille ne se rétablit qu'une fois la
+            place venue.
+          */}
+          <dl className="mt-2 grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">
             {capacityFacts.subscription ? (
-              <>
-                <span className="text-slate-400">Portefeuille d&apos;{v.units}</span>
-                <span className="text-right text-slate-200" data-testid="portefeuille-adherents">
-                  {capacityFacts.subscription.members.toLocaleString("fr-FR")} {v.units}
-                  <span className="ml-1 text-xs text-slate-400">
-                    (~{capacityFacts.subscription.expectedRetained.toLocaleString("fr-FR")} resteront à{" "}
-                    {Math.round(capacityFacts.subscription.baseChurnRate * 100)} % d&apos;attrition)
-                  </span>
-                </span>
-              </>
+              <FaitCapacite
+                label={`Portefeuille d'${v.units}`}
+                valeur={`${capacityFacts.subscription.members.toLocaleString("fr-FR")} ${v.units}`}
+                note={`~${capacityFacts.subscription.expectedRetained.toLocaleString("fr-FR")} resteront à ${Math.round(capacityFacts.subscription.baseChurnRate * 100)} % d'attrition`}
+                testId="portefeuille-adherents"
+              />
             ) : null}
-            <span className="text-slate-400">{v.capacityLabel}</span>
-            <span className="text-right text-slate-200">
-              {Math.round(capacityFacts.machineCapacity).toLocaleString("fr-FR")} {v.perRoundLabel}
-            </span>
-            <span className="text-slate-400">{v.laborLabel}</span>
-            <span className="text-right text-slate-200">
-              {Math.round(capacityFacts.laborCapacity).toLocaleString("fr-FR")} {v.perRoundLabel}
-              <span className="ml-1 text-xs text-slate-400">
-                ({capacityFacts.headcount} pers. × prod. {Math.round(capacityFacts.productivity * 100)} %)
-              </span>
-            </span>
-            <span className="text-slate-400">Goulot</span>
-            <span className={`text-right font-medium ${
-              capacityFacts.bottleneck === "labor"
-                ? "text-amber-400"
-                : capacityFacts.bottleneck === "machine"
-                  ? "text-sky-400"
-                  : "text-emerald-400"
-            }`}>
-              {capacityFacts.bottleneck === "labor"
-                ? v.laborLabel
-                : capacityFacts.bottleneck === "machine"
-                  ? v.capacityBottleneckLabel
-                  : "Équilibré"}
-            </span>
-          </div>
+            <FaitCapacite
+              label={v.capacityLabel}
+              valeur={`${Math.round(capacityFacts.machineCapacity).toLocaleString("fr-FR")} ${v.perRoundLabel}`}
+            />
+            <FaitCapacite
+              label={v.laborLabel}
+              valeur={`${Math.round(capacityFacts.laborCapacity).toLocaleString("fr-FR")} ${v.perRoundLabel}`}
+              note={`${capacityFacts.headcount} pers. × prod. ${Math.round(capacityFacts.productivity * 100)} %`}
+            />
+            <FaitCapacite
+              label="Goulot"
+              valeur={
+                capacityFacts.bottleneck === "labor"
+                  ? v.laborLabel
+                  : capacityFacts.bottleneck === "machine"
+                    ? v.capacityBottleneckLabel
+                    : "Équilibré"
+              }
+              couleur={
+                capacityFacts.bottleneck === "labor"
+                  ? "text-amber-400"
+                  : capacityFacts.bottleneck === "machine"
+                    ? "text-sky-400"
+                    : "text-emerald-400"
+              }
+            />
+          </dl>
           {capacityFacts.bottleneck === "labor" ? (
             <p className="mt-2 text-xs text-amber-300/80">{v.laborBottleneckHint}</p>
           ) : capacityFacts.bottleneck === "machine" ? (
