@@ -60,8 +60,8 @@ export function GammeLigne({ gamme }: { gamme: Gamme }) {
             ];
         return (
           // Nom et qualificatifs coulent dans UN SEUL texte, pas deux blocs
-          // côte à côte : « Cardigan boutonné » passait à la ligne pendant que
-          // ses qualificatifs restaient sur la première, et la liste partait en
+          // côte à côte : un nom un peu long passait à la ligne pendant que ses
+          // qualificatifs restaient sur la première, et la liste partait en
           // escalier. Ici la ligne se replie comme une phrase, alignée sur la
           // même marge gauche.
           <li key={p.code} className="flex gap-2 text-sm">

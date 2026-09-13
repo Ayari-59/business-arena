@@ -94,9 +94,9 @@ describe("le cockpit de prévision", () => {
     const logistique = spec.feuilles[1]!;
     const sections = logistique.lignes.filter((l) => l[0]?.style === "section").map((l) => l[0]!.v);
     expect(sections).toEqual([
-      "PULL COL ROND",
-      "CARDIGAN BOUTONNÉ",
-      "PULL MÉRINOS PREMIUM",
+      "COL ROND",
+      "CARDIGAN",
+      "MÉRINOS",
       "ÉCHARPE",
       "BONNET",
       "TOUTES RÉFÉRENCES",
@@ -340,14 +340,14 @@ describe("les dossiers de service", () => {
     const mco = ATELIERS.find((a) => a.code === "mco")!;
     const gamme = dossierEleve(mco).gamme;
     expect(gamme.map((g) => g.nom)).toEqual([
-      "Pull col rond",
-      "Cardigan boutonné",
-      "Pull mérinos premium",
+      "Col rond",
+      "Cardigan",
+      "Mérinos",
       "Écharpe",
       "Bonnet",
     ]);
     expect(gamme.find((g) => g.nom === "Bonnet")!.stockOuverture).toBe(250);
-    expect(gamme.find((g) => g.nom === "Pull mérinos premium")!.margeUsuelle).toBeGreaterThan(
+    expect(gamme.find((g) => g.nom === "Mérinos")!.margeUsuelle).toBeGreaterThan(
       gamme.find((g) => g.nom === "Bonnet")!.margeUsuelle * 3,
     );
     const stmg = ATELIERS.find((a) => a.code === "stmg")!;

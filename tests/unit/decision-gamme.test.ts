@@ -304,7 +304,7 @@ describe("le formulaire en gamme", () => {
     expect(html).not.toContain('name="marketingBudget"');
     // Les valeurs proposées de chaque référence sont bien celles du produit.
     expect(html).toContain('name="product.pull-merinos.price" value="129"');
-    expect(html).toContain('aria-label="Prix de vente · Pull mérinos premium"');
+    expect(html).toContain('aria-label="Prix de vente · Mérinos"');
   });
 
   it("au niveau 1, sans qualité, ne propose pas de budget qualité par référence", () => {

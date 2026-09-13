@@ -212,7 +212,7 @@ const FACONNIERS_ACCESSOIRES: SupplierDef[] = [FACONNIER_REFERENCE, TRICOTEUR_AC
 const GAMME: ProductDef[] = [
   {
     code: "pull-col-rond",
-    name: "Pull col rond",
+    name: "Col rond",
     // coût d'achat au façonnier : le nerf du commerce (coefficient ≈ 2,4)
     materialCostPerUnit: 25,
     // sacs, cintres, commissions carte bancaire, logistique retour
@@ -223,7 +223,7 @@ const GAMME: ProductDef[] = [
   },
   {
     code: "cardigan",
-    name: "Cardigan boutonné",
+    name: "Cardigan",
     materialCostPerUnit: 34,
     otherVariableCostPerUnit: 4,
     hoursPerUnit: 0.15,
@@ -245,7 +245,7 @@ const GAMME: ProductDef[] = [
   },
   {
     code: "pull-merinos",
-    name: "Pull mérinos premium",
+    name: "Mérinos",
     materialCostPerUnit: 56,
     otherVariableCostPerUnit: 5,
     hoursPerUnit: 0.2,
