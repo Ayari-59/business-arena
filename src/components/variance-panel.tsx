@@ -22,7 +22,7 @@ export function VariancePanel({
   const totalFavorable = variances.totalCostVariance <= 0;
 
   return (
-    <div className="rounded-lg border border-amber-400/25 bg-amber-950/20 px-1.5 py-3 sm:p-4">
+    <div className="rounded-lg border border-amber-400/25 bg-amber-950/20 px-3 py-3 sm:p-4">
       <h3 className="text-xs font-semibold uppercase tracking-wide text-amber-300">
         📊 Décomposition des écarts de coûts
       </h3>

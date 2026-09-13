@@ -54,7 +54,7 @@ export function Tiroir({
         ) : null}
         <span className="ml-auto text-xs text-slate-500 group-open:hidden">déplier</span>
       </summary>
-      <div className="border-t border-white/10 px-1.5 pb-2.5 pt-2 sm:px-3.5 sm:pb-3.5">{children}</div>
+      <div className="border-t border-white/10 px-3 pb-2.5 pt-2 sm:px-3.5 sm:pb-3.5">{children}</div>
     </details>
   );
 }

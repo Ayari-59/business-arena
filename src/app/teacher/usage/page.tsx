@@ -58,14 +58,14 @@ export default async function UsagePage() {
 
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         {totals.map((t) => (
-          <div key={t.label} className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
+          <div key={t.label} className="rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-5">
             <p className="text-2xl font-bold tabular-nums text-amber-400">{t.value}</p>
             <p className="mt-1 text-xs leading-tight text-slate-400">{t.label}</p>
           </div>
         ))}
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-6">
+      <section className="rounded-2xl border border-white/10 bg-slate-900 p-4 sm:p-7">
         <h2 className="text-sm font-semibold text-slate-200">
           Les situations qui résistent
         </h2>
@@ -138,7 +138,7 @@ export default async function UsagePage() {
       </section>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <section className="rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-6">
+        <section className="rounded-2xl border border-white/10 bg-slate-900 p-4 sm:p-7">
           <h2 className="text-sm font-semibold text-slate-200">Jusqu&apos;où vont les indices</h2>
           <p className="mt-1 text-xs leading-relaxed text-slate-400">
             Les cinq niveaux vont de l&apos;observation à la méthode détaillée. Beaucoup de
@@ -168,7 +168,7 @@ export default async function UsagePage() {
           )}
         </section>
 
-        <section className="rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-6">
+        <section className="rounded-2xl border border-white/10 bg-slate-900 p-4 sm:p-7">
           <h2 className="text-sm font-semibold text-slate-200">Secteurs joués</h2>
           <p className="mt-1 text-xs leading-relaxed text-slate-400">
             Un secteur jamais joué n&apos;est pas forcément mauvais : il est peut-être
@@ -193,7 +193,7 @@ export default async function UsagePage() {
         </section>
       </div>
 
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-6">
+      <section className="rounded-2xl border border-white/10 bg-slate-900 p-4 sm:p-7">
         <h2 className="text-sm font-semibold text-slate-200">
           Notions les moins ancrées, toutes classes confondues
         </h2>

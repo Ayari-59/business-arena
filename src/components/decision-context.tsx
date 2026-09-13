@@ -34,14 +34,14 @@ export function DilemmaCard({
       entière teintée en ambre criait plus fort que la question qu'elle porte, et
       passait devant les panneaux qui servent à y répondre.
     */
-    <div className="rounded-lg border border-white/10 border-l-2 border-l-amber-400/70 bg-slate-900 p-1.5 sm:p-4">
+    <div className="rounded-lg border border-white/10 border-l-2 border-l-amber-400/70 bg-slate-900 p-3 sm:p-5">
       <h3 className="text-xs font-semibold uppercase tracking-wide text-amber-400/90">{title}</h3>
       {/* La question est le point d'arrivée de l'écran : elle se lit avant tout
           le reste de la carte. */}
       <p className="mt-1.5 text-base font-semibold leading-snug text-slate-50">{question}</p>
       <div className={`mt-3 grid gap-2 ${routes.length > 2 ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
         {routes.map((route) => (
-          <div key={route.label} className="rounded-lg border border-white/10 bg-slate-950 p-1.5 sm:p-3">
+          <div key={route.label} className="rounded-lg border border-white/10 bg-slate-950 p-3 sm:p-4">
             <p className="text-sm font-medium text-slate-100">{route.label}</p>
             {/*
               La COULEUR EST DANS LA FLÈCHE, pas dans la phrase. Deux blocs de
@@ -138,7 +138,7 @@ export function ParametersPanels({
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <div className="rounded-lg border border-white/5 bg-slate-950 p-1.5 sm:p-4">
+      <div className="rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5">
         <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
           Votre entreprise
         </h3>
@@ -190,7 +190,7 @@ export function ParametersPanels({
         ) : null}
       </div>
 
-      <div className="rounded-lg border border-white/5 bg-slate-950 p-1.5 sm:p-4">
+      <div className="rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5">
         <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
           Le marché en face de vous
         </h3>
@@ -255,7 +255,7 @@ export function ParametersPanels({
                 return (
                   <li
                     key={seg.name}
-                    className="rounded-lg border border-white/5 bg-slate-900/60 p-1.5 sm:p-3"
+                    className="rounded-lg border border-white/5 bg-slate-900/60 p-3 sm:p-4"
                   >
                     <p className="text-sm font-semibold text-slate-100">{nom}</p>
                     {qualif ? <p className="mt-0.5 text-xs text-slate-400">{qualif}</p> : null}

@@ -60,7 +60,7 @@ export default async function TeacherCompetitionPage({
         <CompetitionControl competitionId={competitionId} action="finish" />
       ) : null}
       {view.status === "running" && !qualificationDone && qualification ? (
-        <p className="rounded-lg border border-white/10 bg-slate-900 px-1.5 py-2.5 sm:px-4 sm:py-3 text-sm text-slate-400">
+        <p className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2.5 sm:px-4 sm:py-3 text-sm text-slate-400">
           Pilotez chaque partie (clôture des tours) via les liens « Piloter » ci-dessous.
           Règles du mode compétition : décisions verrouillées après validation, indices
           limités aux niveaux 1 à 3.
@@ -68,7 +68,7 @@ export default async function TeacherCompetitionPage({
       ) : null}
 
       {view.status !== "finished" && view.stages.length > 0 ? (
-        <section className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
+        <section className="rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-5">
           <h2 className="text-sm font-semibold text-slate-200">🗓️ Planning des étapes</h2>
           <p className="mt-1 max-w-3xl text-xs text-slate-400">
             Fenêtre pendant laquelle les équipes peuvent jouer les parties de chaque étape (heure
@@ -91,7 +91,7 @@ export default async function TeacherCompetitionPage({
         </section>
       ) : null}
 
-      <section className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
+      <section className="rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-5">
         <h2 className="text-sm font-semibold text-slate-200">🌐 Page publique d&apos;annonce</h2>
         <p className="mt-1 max-w-3xl text-xs text-slate-400">
           Une page ouverte pour annoncer l&apos;événement, avec un bouton d&apos;inscription et des

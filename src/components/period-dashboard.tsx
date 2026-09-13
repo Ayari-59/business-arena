@@ -48,7 +48,7 @@ function RseCard({ rse }: { rse: RseIndex }) {
   return (
     <section
       aria-label="Indice RSE du tour"
-      className="rounded-xl border border-emerald-400/20 bg-slate-900 p-1.5 sm:p-4"
+      className="rounded-xl border border-emerald-400/20 bg-slate-900 p-3 sm:p-5"
     >
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="text-sm font-semibold text-slate-200">🌱 Indice RSE</h2>
@@ -236,14 +236,14 @@ export function PeriodDashboard({
 
             {history.length > 0 ? (
               <section className="grid gap-3 lg:grid-cols-3">
-                <div className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4 lg:col-span-2">
+                <div className="rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-5 lg:col-span-2">
                   <RevenueChart history={history} roundsCount={view.roundsCount} />
                 </div>
                 <div className="space-y-3">
-                  <div className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
+                  <div className="rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-5">
                     <TreasuryChart history={history} roundsCount={view.roundsCount} />
                   </div>
-                  <div className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
+                  <div className="rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-5">
                     <MarketShareChart
                       segments={Object.entries(r.market.bySegment)
                         .filter(([, d]) => d.potential > 0)
@@ -261,7 +261,7 @@ export function PeriodDashboard({
               // Le rideau est tiré : la vue ne contient pas le classement, elle
               // ne le cache pas. On dit qui l'ouvrira, pour que l'attente ait
               // un sens — et on rappelle ce qui, lui, ne dépend de personne.
-              <section className="rounded-xl border border-dashed border-amber-400/30 bg-slate-900 p-1.5 sm:p-4">
+              <section className="rounded-xl border border-dashed border-amber-400/30 bg-slate-900 p-3 sm:p-5">
                 <h2 className="text-sm font-semibold text-slate-200">
                   Classement · Business Performance Index
                 </h2>
@@ -274,7 +274,7 @@ export function PeriodDashboard({
 
             {standing && view.ranking.length > 0 ? (
               <section className="grid gap-3 lg:grid-cols-2">
-                <div className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
+                <div className="rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-5">
                   <h2 className="mb-2 text-sm font-semibold text-slate-200">
                     Classement · Business Performance Index
                   </h2>
@@ -544,7 +544,7 @@ export function PeriodDashboard({
             ) : null}
 
             {period.forecastReview ? (
-              <div className="rounded-lg border border-sky-400/25 bg-sky-950/20 px-1.5 py-3 sm:p-4">
+              <div className="rounded-lg border border-sky-400/25 bg-sky-950/20 px-3 py-3 sm:p-4">
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-sky-300">
                   🏦 Votre plan face au réalisé
                 </h3>

@@ -96,3 +96,32 @@ describe("tailles de texte", () => {
     for (const aide of aides) expect(aide).toContain("text-[13px]");
   });
 });
+
+/**
+ * L'ESPACE EST UNE QUALITÉ, PAS UN RESTE.
+ *
+ * Quatre-vingt-une cartes portaient `p-1.5` — SIX pixels de padding sur
+ * téléphone. C'était un arbitrage assumé (gagner de la largeur utile) qui avait
+ * gagné partout, y compris là où rien ne l'imposait : le texte touchait la
+ * bordure et l'écran donnait l'impression d'un brouillon.
+ *
+ * Le plancher est maintenant de 12 px (`p-3`, `px-3`) pour tout ce qui CONTIENT
+ * quelque chose. Les pastilles gardent leur compacité : `px-1.5 py-0.5` est une
+ * étiquette, pas un contenant, et l'élargir la déformerait.
+ */
+describe("respiration des cartes", () => {
+  const FICHIERS = fichiers(SRC, [".tsx"]);
+
+  it("aucun conteneur ne descend sous 12 px de padding", () => {
+    const fautifs: string[] = [];
+    for (const f of FICHIERS) {
+      const source = readFileSync(f, "utf8");
+      // `p-1.5` ou `px-1.5` suivi d'un padding vertical d'au moins 2 (py-2, py-3…)
+      // : c'est un contenant. `px-1.5 py-0.5` ne correspond pas.
+      for (const m of source.match(/\bp-1\.5\b(?!\s*sm:p-1)|px-1\.5 (?:py|pb|pt)-(?:[1-9]|1\.5)/g) ?? []) {
+        fautifs.push(`${f} : ${m}`);
+      }
+    }
+    expect(fautifs, `cartes trop serrées :\n${fautifs.join("\n")}`).toEqual([]);
+  });
+});

@@ -34,7 +34,7 @@ const TREND_LABEL: Record<RseReport["carbon"]["trend"], { text: string; classNam
 function Pillar({ title, items }: { title: string; items: RseReportIndicator[] }) {
   if (items.length === 0) return null;
   return (
-    <div className="rounded-lg border border-white/10 bg-slate-950 p-1.5 sm:p-3">
+    <div className="rounded-lg border border-white/10 bg-slate-950 p-3 sm:p-4">
       <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">{title}</h3>
       <dl className="space-y-1.5">
         {items.map((i) => (
@@ -59,7 +59,7 @@ export function RseReportPanel({ report }: { report: RseReport }) {
   return (
     <section
       aria-label="Rapport extra-financier"
-      className="rounded-xl border border-emerald-400/20 bg-slate-900 p-1.5 sm:p-4"
+      className="rounded-xl border border-emerald-400/20 bg-slate-900 p-3 sm:p-5"
     >
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="text-sm font-semibold text-slate-200">🌍 Rapport extra-financier</h2>
@@ -86,7 +86,7 @@ export function RseReportPanel({ report }: { report: RseReport }) {
         </div>
       ) : null}
 
-      <div className="mt-3 rounded-lg border border-emerald-400/10 bg-slate-950 p-1.5 sm:p-3">
+      <div className="mt-3 rounded-lg border border-emerald-400/10 bg-slate-950 p-3 sm:p-4">
         <div className="flex items-baseline justify-between gap-3">
           <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
             Empreinte carbone (indice indicatif)

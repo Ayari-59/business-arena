@@ -94,7 +94,7 @@ export default async function DossierEnseignantPage({
           return (
             <article
               key={situation.code}
-              className="break-inside-avoid rounded-xl border border-white/10 p-1.5 sm:p-5 print:border-black/20"
+              className="break-inside-avoid rounded-xl border border-white/10 p-4 sm:p-6 print:border-black/20"
             >
               <p className="text-xs font-semibold uppercase tracking-wider text-amber-400 print:text-black">
                 {quand}
