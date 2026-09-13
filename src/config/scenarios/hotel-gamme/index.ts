@@ -48,6 +48,9 @@ const GAMME: ProductDef[] = [
   {
     code: "chambre-standard",
     name: "Chambre standard",
+    // Sur téléphone, « Chambre » est commun aux deux premières références : seul
+    // ce qui les distingue mérite la place du bouton.
+    shortName: "Standard",
     // la nuitée de l'hôtel d'origine : petit-déjeuner et linge, commission et ménage
     materialCostPerUnit: 12,
     otherVariableCostPerUnit: 9,
@@ -57,6 +60,7 @@ const GAMME: ProductDef[] = [
   {
     code: "chambre-superieure",
     name: "Chambre supérieure",
+    shortName: "Supérieure",
     // literie, accueil et produits d'accueil au-dessus : 4 € de plus, un peu plus de ménage
     materialCostPerUnit: 15,
     otherVariableCostPerUnit: 11,

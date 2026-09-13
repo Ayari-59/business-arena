@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { NomReference } from "@/components/nom-reference";
 import { toGamme } from "@/engine/gamme";
 import { conseilGammeScenario } from "@/config/scenarios/conseil-gamme";
+import { hotelGammeScenario } from "@/config/scenarios/hotel-gamme";
 import { SCENARIOS } from "@/config/scenarios/registry";
 import { parseScenarioConfig } from "@/config/scenarios/schema";
 
@@ -46,6 +47,20 @@ describe("NomReference", () => {
     expect(strategie.shortName).toBe("Stratégie");
     // Les deux autres offres tiennent d'elles-mêmes : pas de nom court.
     expect(gamme.filter((p) => p.shortName).map((p) => p.code)).toEqual(["transformation"]);
+  });
+
+  it("L'ESCALE · gamme abrège les deux chambres, pas la Suite", () => {
+    // « Chambre standard » et « Chambre supérieure » partagent leur premier mot :
+    // sur un bouton de téléphone, seul ce qui les distingue a de la valeur. La
+    // Suite tient d'elle-même et ne déclare rien.
+    const gamme = toGamme(hotelGammeScenario);
+    const court = Object.fromEntries(gamme.map((p) => [p.code, p.shortName]));
+    expect(court).toEqual({
+      "chambre-standard": "Standard",
+      "chambre-superieure": "Supérieure",
+      suite: undefined,
+    });
+    expect(gamme.map((p) => p.name)).toEqual(["Chambre standard", "Chambre supérieure", "Suite"]);
   });
 
   it("un nom court est toujours plus court que le nom, dans tous les scénarios", () => {
