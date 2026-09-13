@@ -329,6 +329,26 @@ describe("le formulaire en gamme", () => {
     expect(html).toContain('<option value="grossiste" selected="">');
   });
 
+  it("le panneau des façonniers s'ouvre là où il porte la décision, et se replie sinon", () => {
+    // EN GAMME, il ne porte RIEN : le façonnier se choisit ligne par ligne dans
+    // le tableau des ventes, et le panneau n'est qu'un catalogue de fiches
+    // dépliées au-dessus des champs à remplir. Il arrive donc fermé, et son
+    // titre annonce ce qu'il cache.
+    const enGamme = rendu(gamme, { enabled: presetByLevel.get(3)!.decisions, suppliersOffer });
+    // `<details>` SANS `open` : le panneau est replié.
+    expect(enGamme).toMatch(/<details class="[^"]*"><summary[^>]*><span[^>]*>🏭/);
+    // Son titre annonce ce qu'il cache. Le compte est celui des façonniers de
+    // la GAMME (chaque référence a son catalogue, fusionnés par façonnier), pas
+    // celui du scénario mono : le figer ici mentirait.
+    expect(enGamme).toMatch(/🏭[^<]* · \d+ fiches?</);
+
+    // EN MONO-PRODUIT, le choix EST dans ce panneau (les boutons radio) :
+    // le replier cacherait une décision du tour.
+    const enMono = rendu(null, { enabled: presetByLevel.get(3)!.decisions, suppliersOffer });
+    expect(enMono).toMatch(/<details open="" class="[^"]*"><summary[^>]*><span[^>]*>🏭/);
+    expect(enMono).toContain('name="supplierChoice"');
+  });
+
   it("chaque référence propose SON catalogue, au prix d'achat de la référence, l'écart lu par rapport à son référent", () => {
     const html = rendu(gamme, { enabled: presetByLevel.get(3)!.decisions });
     // Le mérinos a une filature, pas de déstockeur ; les accessoires ont un

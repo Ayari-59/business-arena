@@ -1365,7 +1365,18 @@ export function DecisionForm({
         if (fiches.length === 0) return null;
         return (
           <Family
-            legend={`🏭 ${v.supplierPanelLabel}`}
+            // EN GAMME, CE PANNEAU NE PORTE AUCUNE DÉCISION : le façonnier se
+            // choisit ligne par ligne dans le tableau des ventes, et ceci n'est
+            // qu'un catalogue — autant de fiches que de façonniers, dépliées
+            // au-dessus des champs qu'on vient remplir. Il s'ouvre à la demande.
+            // En mono-produit, au contraire, le choix EST ici (les boutons
+            // radio) : le replier cacherait une décision du tour.
+            defaultOpen={!gamme}
+            legend={
+              gamme
+                ? `🏭 ${v.supplierPanelLabel} · ${fiches.length} fiche${fiches.length > 1 ? "s" : ""}`
+                : `🏭 ${v.supplierPanelLabel}`
+            }
             tone="border-emerald-400/25 bg-emerald-950/20"
             legendClass="text-xs font-semibold uppercase tracking-wide text-emerald-300"
           >
