@@ -12,7 +12,7 @@ import { addSituationAction } from "../../../actions";
 export const dynamic = "force-dynamic";
 
 const champ =
-  "mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60";
+  "mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60";
 const titre = "text-xs font-medium uppercase tracking-wide text-slate-400";
 
 const CAT_LABEL: Record<string, string> = {
@@ -122,7 +122,7 @@ export default async function NewSituationPage({
           <textarea name="problem" rows={2} className={champ} />
         </label>
 
-        <fieldset className="space-y-3 rounded-lg border border-white/10 bg-slate-950 p-3 sm:p-5">
+        <fieldset className="space-y-3 rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-amber-400/80">
             Diagnostic · cochez la bonne réponse
           </legend>
@@ -138,7 +138,7 @@ export default async function NewSituationPage({
           ))}
         </fieldset>
 
-        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-3 sm:p-5">
+        <fieldset className="rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-amber-400/80">
             Modèles d&apos;analyse · au moins un « optimal »
           </legend>
@@ -163,7 +163,7 @@ export default async function NewSituationPage({
           <textarea name="modelExplain" rows={3} className={champ} />
         </label>
 
-        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-3 sm:p-5">
+        <fieldset className="rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-amber-400/80">
             Notions travaillées · au moins une
           </legend>
@@ -184,7 +184,7 @@ export default async function NewSituationPage({
           </div>
         </fieldset>
 
-        <fieldset className="space-y-3 rounded-lg border border-white/10 bg-slate-950 p-3 sm:p-5">
+        <fieldset className="space-y-3 rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-amber-400/80">
             Indices (coût croissant)
           </legend>
@@ -196,7 +196,7 @@ export default async function NewSituationPage({
           ))}
         </fieldset>
 
-        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-3 sm:p-5">
+        <fieldset className="rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-amber-400/80">
             Déclenchement
           </legend>

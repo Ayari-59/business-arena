@@ -101,7 +101,7 @@ export function EconomicParams({
           name="scenarioCode"
           value={code}
           onChange={(e) => setCode(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm"
+          className="mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm"
         >
           {scenarios.map((s) => (
             <option key={s.code} value={s.code}>
@@ -116,7 +116,7 @@ export function EconomicParams({
         </span>
       </label>
 
-      <details className="rounded-lg border border-white/10 bg-slate-950 p-3 sm:p-5 sm:col-span-3">
+      <details className="rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5 sm:col-span-3">
         <summary className="cursor-pointer text-xs font-medium uppercase tracking-wide text-slate-400">
           ⚙️ Paramètres économiques (avancé) · laissez vide pour les valeurs du scénario
         </summary>
@@ -166,7 +166,7 @@ export function EconomicParams({
         ))}
       </details>
 
-      <details className="rounded-lg border border-white/10 bg-slate-950 p-3 sm:p-5 sm:col-span-3">
+      <details className="rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5 sm:col-span-3">
         <summary className="cursor-pointer text-xs font-medium uppercase tracking-wide text-slate-400">
           📊 Pondérations du BPI (avancé) · laissez vide pour les poids du scénario
         </summary>

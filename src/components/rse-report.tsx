@@ -34,7 +34,7 @@ const TREND_LABEL: Record<RseReport["carbon"]["trend"], { text: string; classNam
 function Pillar({ title, items }: { title: string; items: RseReportIndicator[] }) {
   if (items.length === 0) return null;
   return (
-    <div className="rounded-lg border border-white/10 bg-slate-950 p-3 sm:p-4">
+    <div className="rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-4">
       <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">{title}</h3>
       <dl className="space-y-1.5">
         {items.map((i) => (

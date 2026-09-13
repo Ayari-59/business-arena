@@ -41,7 +41,7 @@ export function JustificationsReview({
       </button>
       {error ? <p className="mt-2 text-sm text-red-300">{error}</p> : null}
       {text ? (
-        <p className="mt-3 whitespace-pre-wrap rounded-lg border border-white/10 bg-slate-950/60 p-3 text-sm leading-relaxed text-slate-200">
+        <p className="mt-3 whitespace-pre-wrap rounded-lg border border-white/5 bg-slate-950/60 p-3 text-sm leading-relaxed text-slate-200">
           {text}
         </p>
       ) : null}

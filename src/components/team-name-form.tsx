@@ -44,7 +44,7 @@ export function TeamNameForm({ gameId, nomActuel }: { gameId: string; nomActuel:
             required
             maxLength={NOM_EQUIPE_MAX}
             placeholder="Le nom de votre entreprise"
-            className="w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+            className="w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
           />
         </label>
         <button

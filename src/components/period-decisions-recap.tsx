@@ -150,7 +150,7 @@ export function PeriodDecisionsRecap({
       ) : null}
       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {core.map((row) => (
-          <div key={row.label} className="rounded-lg border border-white/10 bg-slate-950 px-3 py-2.5">
+          <div key={row.label} className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2.5">
             <dt className="text-xs uppercase tracking-wide text-slate-400">{row.label}</dt>
             <dd className="mt-0.5 text-base font-semibold tabular-nums text-slate-100">{row.value}</dd>
           </div>

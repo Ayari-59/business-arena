@@ -61,7 +61,7 @@ function Coach({ gameId }: { gameId: string }) {
       </button>
       {error ? <p className="mt-2 text-sm text-red-300">{error}</p> : null}
       {text ? (
-        <p className="mt-3 whitespace-pre-wrap rounded-lg border border-white/10 bg-slate-950/60 p-3 text-sm leading-relaxed text-slate-200">
+        <p className="mt-3 whitespace-pre-wrap rounded-lg border border-white/5 bg-slate-950/60 p-3 text-sm leading-relaxed text-slate-200">
           {text}
         </p>
       ) : null}
@@ -105,7 +105,7 @@ function Tutor({ gameId }: { gameId: string }) {
               className={
                 m.role === "user"
                   ? "ml-auto max-w-[85%] rounded-lg bg-sky-400/15 px-3 py-2 text-sm text-sky-50"
-                  : "mr-auto max-w-[85%] whitespace-pre-wrap rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-sm leading-relaxed text-slate-200"
+                  : "mr-auto max-w-[85%] whitespace-pre-wrap rounded-lg border border-white/5 bg-slate-950/60 px-3 py-2 text-sm leading-relaxed text-slate-200"
               }
             >
               {m.content}
@@ -126,7 +126,7 @@ function Tutor({ gameId }: { gameId: string }) {
             }
           }}
           placeholder="Ex : pourquoi ma trésorerie a baissé ce tour ?"
-          className="min-w-0 flex-1 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-sky-400/60"
+          className="min-w-0 flex-1 rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-sky-400/60"
         />
         <button
           type="button"

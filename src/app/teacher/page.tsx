@@ -156,7 +156,7 @@ export default async function TeacherDashboard({
             <select
               name="humanTeamsCount"
               defaultValue={4}
-              className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm"
             >
               {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
                 <option key={n} value={n}>{n} équipe{n > 1 ? "s" : ""}</option>
@@ -170,7 +170,7 @@ export default async function TeacherDashboard({
             <select
               name="botCount"
               defaultValue={1}
-              className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm"
             >
               {[0, 1, 2, 3, 4].map((n) => (
                 <option key={n} value={n}>{n} bot{n > 1 ? "s" : ""}</option>
@@ -184,7 +184,7 @@ export default async function TeacherDashboard({
             <select
               name="periodicity"
               defaultValue="quarter"
-              className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm"
             >
               <option value="month">Un mois par tour</option>
               <option value="quarter">Un trimestre par tour</option>
@@ -198,7 +198,7 @@ export default async function TeacherDashboard({
             <select
               name="roundsCount"
               defaultValue=""
-              className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm"
             >
               <option value="">Toute la partie</option>
               {[3, 4, 5].map((n) => (
@@ -220,7 +220,7 @@ export default async function TeacherDashboard({
             <select
               name="level"
               defaultValue={3}
-              className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm"
             >
               {DIFFICULTY_PRESETS.map((p) => (
                 <option key={p.level} value={p.level}>
@@ -230,7 +230,7 @@ export default async function TeacherDashboard({
             </select>
           </label>
 
-          <label className="flex items-start gap-3 rounded-lg border border-white/10 bg-slate-950 px-3 py-3 sm:col-span-3">
+          <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-950 px-3 py-3 sm:col-span-3">
             <input
               type="checkbox"
               name="variableWorld"
@@ -250,7 +250,7 @@ export default async function TeacherDashboard({
             </span>
           </label>
 
-          <fieldset className="rounded-lg border border-white/10 bg-slate-950 px-3 py-3 sm:col-span-3">
+          <fieldset className="rounded-lg border border-white/5 bg-slate-950 px-3 py-3 sm:col-span-3">
             <legend className="px-1 text-xs font-medium uppercase tracking-wide text-slate-400">
               📝 Questions posées dans les situations
             </legend>
@@ -336,7 +336,7 @@ export default async function TeacherDashboard({
             <Link
               key={g.gameId}
               href={`/teacher/games/${g.gameId}`}
-              className="flex items-center justify-between rounded-xl border border-white/10 bg-slate-900 px-3 py-2.5 sm:px-4 sm:py-3 text-sm transition hover:border-amber-400/40"
+              className="flex items-center justify-between carte px-3 py-2.5 sm:px-4 sm:py-3 text-sm transition hover:border-amber-400/40"
             >
               <span>
                 <span className="font-mono text-amber-300">{g.joinCode}</span>

@@ -138,7 +138,7 @@ export default async function TeacherGamePage({
       ) : null}
 
       {!finished ? (
-        <section className="rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-5">
+        <section className="carte p-3 sm:p-5">
           <h2 className="text-sm font-semibold text-slate-200">
             📝 Questions posées dans les situations
           </h2>
@@ -183,7 +183,7 @@ export default async function TeacherGamePage({
       ) : null}
 
       {!finished ? (
-        <section className="rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-5">
+        <section className="carte p-3 sm:p-5">
           <h2 className="text-sm font-semibold text-slate-200">📚 Situations manquées</h2>
           <p className="mt-1 max-w-3xl text-xs text-slate-400">
             Une situation non rendue reste consultable par l&apos;élève dans l&apos;onglet Historique.
@@ -222,7 +222,7 @@ export default async function TeacherGamePage({
       ) : null}
 
       {!finished ? (
-        <section className="rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-5">
+        <section className="carte p-3 sm:p-5">
           <h2 className="text-sm font-semibold text-slate-200">🗓️ Planning de la partie</h2>
           <p className="mt-1 max-w-3xl text-xs text-slate-400">
             Fenêtre pendant laquelle les élèves peuvent jouer (heure de Paris). En dehors,
@@ -241,7 +241,7 @@ export default async function TeacherGamePage({
                   type="datetime-local"
                   name="opensAt"
                   defaultValue={utcToParisLocalInput(view.opensAt ? new Date(view.opensAt) : null)}
-                  className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-amber-400/50 focus:outline-none"
+                  className="mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-amber-400/50 focus:outline-none"
                 />
               </label>
               <label className="block">
@@ -250,7 +250,7 @@ export default async function TeacherGamePage({
                   type="datetime-local"
                   name="closesAt"
                   defaultValue={utcToParisLocalInput(view.closesAt ? new Date(view.closesAt) : null)}
-                  className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-amber-400/50 focus:outline-none"
+                  className="mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-amber-400/50 focus:outline-none"
                 />
               </label>
             </div>
@@ -262,7 +262,7 @@ export default async function TeacherGamePage({
       ) : null}
 
       {!finished ? (
-        <section className="rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-5">
+        <section className="carte p-3 sm:p-5">
           <h2 className="text-sm font-semibold text-slate-200">⏱️ Planning des tours</h2>
           <p className="mt-1 max-w-3xl text-xs text-slate-400">
             Ouverture et échéance de chaque tour (heure de Paris). Ces bornes s&apos;ajoutent à
@@ -299,7 +299,7 @@ export default async function TeacherGamePage({
                             type="datetime-local"
                             name={`opensAt-${r.index}`}
                             defaultValue={utcToParisLocalInput(r.opensAt ? new Date(r.opensAt) : null)}
-                            className="w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-amber-400/50 focus:outline-none"
+                            className="w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-amber-400/50 focus:outline-none"
                           />
                         </label>
                       </td>
@@ -310,7 +310,7 @@ export default async function TeacherGamePage({
                             type="datetime-local"
                             name={`deadline-${r.index}`}
                             defaultValue={utcToParisLocalInput(r.deadline ? new Date(r.deadline) : null)}
-                            className="w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-amber-400/50 focus:outline-none"
+                            className="w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-amber-400/50 focus:outline-none"
                           />
                         </label>
                       </td>
@@ -326,7 +326,7 @@ export default async function TeacherGamePage({
         </section>
       ) : null}
 
-      <section className="rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-5">
+      <section className="carte p-3 sm:p-5">
         <h2 className="mb-3 text-sm font-semibold text-slate-200">
           Équipes · état des décisions du tour {view.currentRound}
         </h2>
@@ -406,7 +406,7 @@ export default async function TeacherGamePage({
       </section>
 
       {pedagogy ? (
-        <section className="rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-5">
+        <section className="carte p-3 sm:p-5">
           <h2 className="mb-3 text-sm font-semibold text-slate-200">Vue pédagogique</h2>
           <div className="grid gap-4 lg:grid-cols-3">
             <div className="space-y-4">
@@ -507,7 +507,7 @@ export default async function TeacherGamePage({
       ) : null}
 
       {releve && releve.teams.length > 0 ? (
-        <section className="rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-5">
+        <section className="carte p-3 sm:p-5">
           <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-sm font-semibold text-slate-200">Relevé de notes</h2>
@@ -607,7 +607,7 @@ export default async function TeacherGamePage({
         </section>
       ) : null}
 
-      <section className="rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-5">
+      <section className="carte p-3 sm:p-5">
         <h2 className="text-sm font-semibold text-slate-200">Classement</h2>
         {/*
           LE RIDEAU. Le classement ci-dessous est le vôtre : les élèves ne le

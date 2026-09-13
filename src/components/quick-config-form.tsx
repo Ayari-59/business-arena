@@ -88,7 +88,7 @@ export function QuickConfigFields({
 
   const label = "text-xs font-medium uppercase tracking-wide text-slate-400";
   const tile =
-    "cursor-pointer rounded-lg border border-white/10 bg-slate-950 px-2 py-2.5 text-center text-slate-100 transition hover:border-white/25";
+    "cursor-pointer rounded-lg border border-white/5 bg-slate-950 px-2 py-2.5 text-center text-slate-100 transition hover:border-white/25";
   const tileOn = "border-amber-400/70 bg-amber-400/10 text-slate-100 ring-1 ring-amber-400/30";
 
   return (
@@ -248,7 +248,7 @@ export function QuickConfigFields({
       </div>
 
       {/* Récap vivant */}
-      <p className="mt-4 rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2.5 text-[13px] text-slate-300">
+      <p className="mt-4 rounded-lg border border-white/5 bg-slate-950/60 px-3 py-2.5 text-[13px] text-slate-300">
         Vous lancez :{" "}
         <span className="font-semibold text-slate-100">
           {sec?.icon} {sec?.label}

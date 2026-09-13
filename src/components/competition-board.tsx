@@ -37,7 +37,7 @@ export function CompetitionBoard({
         </section>
       ) : null}
 
-      <section className="rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-5">
+      <section className="carte p-3 sm:p-5">
         <h2 className="mb-3 text-sm font-semibold text-slate-200">
           Équipes inscrites ({view.entries.length})
         </h2>
@@ -63,7 +63,7 @@ export function CompetitionBoard({
       </section>
 
       {view.stages.map((stage) => (
-        <section key={stage.index} className="rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-5">
+        <section key={stage.index} className="carte p-3 sm:p-5">
           <h2 className="mb-3 text-sm font-semibold text-slate-200">
             {STAGE_LABELS[stage.kind] ?? stage.kind}
             <span className="ml-2 text-xs font-normal text-slate-400">

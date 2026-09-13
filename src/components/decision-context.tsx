@@ -41,7 +41,7 @@ export function DilemmaCard({
       <p className="mt-1.5 text-base font-semibold leading-snug text-slate-50">{question}</p>
       <div className={`mt-3 grid gap-2 ${routes.length > 2 ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
         {routes.map((route) => (
-          <div key={route.label} className="rounded-lg border border-white/10 bg-slate-950 p-3 sm:p-4">
+          <div key={route.label} className="rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-4">
             <p className="text-sm font-medium text-slate-100">{route.label}</p>
             {/*
               La COULEUR EST DANS LA FLÈCHE, pas dans la phrase. Deux blocs de

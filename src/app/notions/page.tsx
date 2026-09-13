@@ -45,7 +45,7 @@ export default function ConceptsPage() {
               <details
                 key={c.code}
                 id={c.code}
-                className="group rounded-xl border border-white/10 bg-slate-900 open:border-amber-400/30"
+                className="group carte open:border-amber-400/30"
               >
                 <summary className="cursor-pointer list-none px-4 py-3">
                   <span className="text-sm font-semibold text-slate-100">{c.name}</span>

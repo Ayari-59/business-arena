@@ -51,7 +51,7 @@ export default async function ProfilePage() {
         </Link>
       </header>
 
-      <section className="rounded-xl border border-white/10 bg-slate-900 p-5">
+      <section className="carte p-5">
         <h2 className="mb-3 text-sm font-semibold text-slate-200">Compétences par axe (§28)</h2>
         {profile.skills.length === 0 ? (
           <p className="text-sm text-slate-400">
@@ -74,7 +74,7 @@ export default async function ProfilePage() {
         )}
       </section>
 
-      <section className="rounded-xl border border-white/10 bg-slate-900 p-5">
+      <section className="carte p-5">
         <h2 className="mb-3 text-sm font-semibold text-slate-200">Maîtrise des notions</h2>
         {profile.concepts.length === 0 ? (
           <p className="text-sm text-slate-400">Les notions rencontrées en jeu apparaîtront ici.</p>
@@ -97,7 +97,7 @@ export default async function ProfilePage() {
         )}
       </section>
 
-      <section className="rounded-xl border border-white/10 bg-slate-900 p-5">
+      <section className="carte p-5">
         <h2 className="mb-3 text-sm font-semibold text-slate-200">Mes parties</h2>
         {profile.games.length === 0 ? (
           <p className="text-sm text-slate-400">Aucune partie jouée sur ce navigateur.</p>

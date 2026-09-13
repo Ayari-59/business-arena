@@ -133,7 +133,7 @@ export default async function ArenaPage({
   // DONNÉES : ce avec quoi on entre dans le tour — l'entreprise (au 1er tour),
   // les paramètres du secteur et la capacité de production.
   const donneesSection = premierTour ? (
-    <section className="space-y-4 rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-5 text-slate-300">
+    <section className="space-y-4 carte p-3 sm:p-5 text-slate-300">
       <div>
         <h2 className="text-xl font-bold text-slate-100">{view.intro.company}</h2>
         <p className="text-sm text-slate-400">{view.intro.tagline}</p>
@@ -186,7 +186,7 @@ export default async function ArenaPage({
   const alertesSection = (
     <>
       {view.roundBriefing ? (
-        <section className="space-y-2 rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-5 text-slate-300">
+        <section className="space-y-2 carte p-3 sm:p-5 text-slate-300">
           <h2 className="text-lg font-semibold text-slate-100">
             {periodLabel(view.roundDays, view.currentRound)} · où vous en êtes
           </h2>
@@ -351,7 +351,7 @@ export default async function ArenaPage({
     ) : null;
 
   return (
-    <main id="main" className="mx-auto max-w-5xl px-4 pt-6 pb-16 sm:px-6">
+    <main id="main" className="mx-auto max-w-5xl space-y-6 px-4 pt-6 pb-16 sm:space-y-8 sm:px-6">
       {/* ── Header ── */}
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -413,7 +413,7 @@ export default async function ArenaPage({
       </header>
 
       {/* ── Status banner ── */}
-      <div className="mt-6">
+      <div>
         <RoundStatusBanner
           currentRound={view.currentRound}
           roundsCount={view.roundsCount}
@@ -427,21 +427,21 @@ export default async function ArenaPage({
 
       {/* ── Cartes annoncées : visibles quelle que soit la période dépliée ── */}
       {!finished && view.announcedEventCards.length > 0 ? (
-        <div className="mt-4">
+        <div>
           <EventBanner cards={view.announcedEventCards} />
         </div>
       ) : null}
 
       {/* ── Team naming ── */}
       {view.peutSeNommer ? (
-        <div className="mt-6">
+        <div>
           <TeamNameForm gameId={gameId} nomActuel={view.playerTeamName} />
         </div>
       ) : null}
 
       {/* ── Victory / End screen ── */}
       {finished ? (
-        <section className="mt-6 rounded-xl border border-amber-400/30 bg-slate-900 p-6 text-center">
+        <section className="carte border-amber-400/30 p-6 text-center">
           <h2 className="text-xl font-bold text-amber-300">
             {view.ranking.find((row) => row.isPlayer)?.rank === 1
               ? `🏆 Victoire ! ${view.playerTeamName} domine le marché.`
@@ -475,7 +475,7 @@ export default async function ArenaPage({
           trésorerie) et se rouvre sur son tableau de bord complet + son
           débriefing. Le tour en cours est la période active, toujours ouverte.
           ══════════════════════════════════════════════════════════════════ */}
-      <div className="mt-4 space-y-2">
+      <div className="space-y-3">
         {periods.length > 0 ? (
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
             {finished ? "Vos tours" : "Tours passés"}

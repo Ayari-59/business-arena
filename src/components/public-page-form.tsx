@@ -41,7 +41,7 @@ export function PublicPageForm({
   });
 
   const champ =
-    "mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60";
+    "mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60";
 
   return (
     <form ref={formRef} action={formAction} className="space-y-3">

@@ -10,7 +10,7 @@ import { updateSituationAction } from "../../../actions";
 export const dynamic = "force-dynamic";
 
 const champ =
-  "mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60";
+  "mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60";
 const titre = "text-xs font-medium uppercase tracking-wide text-slate-400";
 
 export default async function SituationEditorPage({
@@ -88,7 +88,7 @@ export default async function SituationEditorPage({
           <textarea name="problem" defaultValue={situation.problem} rows={2} className={champ} />
         </label>
 
-        <fieldset className="space-y-3 rounded-lg border border-white/10 bg-slate-950 p-3 sm:p-5">
+        <fieldset className="space-y-3 rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-amber-400/80">
             Options de diagnostic
           </legend>
@@ -107,7 +107,7 @@ export default async function SituationEditorPage({
           ))}
         </fieldset>
 
-        <fieldset className="space-y-3 rounded-lg border border-white/10 bg-slate-950 p-3 sm:p-5">
+        <fieldset className="space-y-3 rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-amber-400/80">
             Indices (coût croissant)
           </legend>

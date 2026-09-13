@@ -103,7 +103,7 @@ export default function FonctionnalitesPage() {
           {SCENARIO_CHOICES.map((s) => (
             <div
               key={s.code}
-              className="flex items-center gap-3 rounded-xl border border-white/10 bg-slate-900 px-4 py-3"
+              className="flex items-center gap-3 carte px-4 py-3"
             >
               <span className="text-2xl">{s.icon}</span>
               <div className="min-w-0">
@@ -124,7 +124,7 @@ export default function FonctionnalitesPage() {
           {PILLARS.map((p) => (
             <div
               key={p.title}
-              className="rounded-xl border border-white/10 bg-slate-900 p-5"
+              className="carte p-5"
             >
               <p className="text-2xl">{p.icon}</p>
               <h3 className="mt-3 text-sm font-semibold text-slate-100">{p.title}</h3>

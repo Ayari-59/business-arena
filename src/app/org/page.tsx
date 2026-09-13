@@ -91,7 +91,7 @@ export default async function OrgAdminPage() {
             ["Concours", dashboard.stats.competitions],
           ] as const
         ).map(([label, value]) => (
-          <div key={label} className="rounded-xl border border-white/10 bg-slate-900 p-4">
+          <div key={label} className="carte p-4">
             <p className="text-xs uppercase tracking-wide text-slate-400">{label}</p>
             <p className="mt-1 text-2xl font-semibold text-slate-50">{value}</p>
           </div>
@@ -214,7 +214,7 @@ export default async function OrgAdminPage() {
               name="name"
               defaultValue={dashboard.name}
               maxLength={80}
-              className="flex-1 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+              className="flex-1 rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
             />
             <button className="rounded-lg border border-white/15 px-4 py-2 text-sm text-slate-300 hover:border-amber-400/40">
               Renommer

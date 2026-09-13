@@ -102,7 +102,7 @@ export function CardDeck({
               name="teamId"
               value={target}
               onChange={(e) => setTarget(e.target.value)}
-              className="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+              className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
             >
               <option value="" disabled={marketFull}>
                 🌍 Toute la classe (carte marché){marketFull ? " · max atteint" : ""}
@@ -148,7 +148,7 @@ export function CardDeck({
               name="eventCode"
               defaultValue=""
               key={isTeamDraw ? "team" : "market"}
-              className="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+              className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
             >
               <option value="">Carte au hasard</option>
               {drawable.map((c) => (

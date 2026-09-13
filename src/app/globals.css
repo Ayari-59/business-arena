@@ -35,6 +35,54 @@
   --color-slate-900: #0e1526;
 }
 
+/* ---------------------------------------------------------------------------
+ * LA CARTE.
+ *
+ * Les conteneurs de premier niveau étaient des aplats bordés : un trait, une
+ * couleur, rien d'autre. Posés les uns sous les autres, ils donnaient une page
+ * plate, où rien ne disait ce qui portait quoi.
+ *
+ * Trois traits, et un seul endroit pour les changer :
+ *   · une LUMIÈRE qui vient du haut — un voile blanc de 4 %, éteint sur les
+ *     premiers 55 % de la hauteur. C'est ce qui fait qu'une carte a une face
+ *     plutôt qu'une surface ;
+ *   · une OMBRE en deux temps : un liseré net d'un pixel qui la décolle du
+ *     fond, et un halo large et très diffus qui lui donne son poids ;
+ *   · le RAYON et la BORDURE de la convention déjà en place (xl + slate-900
+ *     pour ce qui contient, lg + slate-950 pour ce qui est contenu).
+ *
+ * L'ombre passe par une variable : sur fond clair, la même valeur serait une
+ * salissure — il lui faut moins d'opacité et une teinte encrée, pas du noir.
+ * ------------------------------------------------------------------------- */
+:root {
+  --ombre-carte:
+    0 1px 2px rgb(0 0 0 / 0.3),
+    0 10px 28px -14px rgb(0 0 0 / 0.5);
+}
+
+@utility carte {
+  border-radius: var(--radius-xl);
+  border: 1px solid color-mix(in oklab, white 10%, transparent);
+  background-color: var(--color-slate-900);
+  background-image: linear-gradient(
+    to bottom,
+    color-mix(in oklab, white 4%, transparent),
+    transparent 55%
+  );
+  box-shadow: var(--ombre-carte);
+}
+
+/* À l'impression, une carte redevient plate : le voile et l'ombre ne sont que
+   des artifices d'écran, et sur papier ils coûtent de l'encre pour un gris
+   sale. Cette règle vit HORS de toute couche : elle l'emporte sur les
+   utilitaires `print:` quel que soit leur ordre de génération. */
+@media print {
+  .carte {
+    background-image: none;
+    box-shadow: none;
+  }
+}
+
 /* Les grands titres parlent avec le serif ; le corps reste en grotesque, et
    un halo laiton fixe pose une profondeur discrète sous toute la page. */
 body {
@@ -77,6 +125,11 @@ h1 {
 /* Laiton du thème clair : pas sombres pour l'encre et les boutons, pas hauts
    pour les fonds teintés — dans le sens inversé du thème clair généré. */
 [data-theme="clair"] {
+  /* Sur fond clair, l'ombre du thème sombre serait une salissure : moins
+     d'opacité, et une teinte encrée plutôt que du noir pur. */
+  --ombre-carte:
+    0 1px 2px rgb(15 23 42 / 0.06),
+    0 10px 28px -16px rgb(15 23 42 / 0.18);
   --color-amber-200: #8a6a16;
   --color-amber-300: #6b5312;
   --color-amber-400: #5c470f;

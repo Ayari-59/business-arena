@@ -85,7 +85,7 @@ export default async function TeacherScenariosPage({
             {mine.map((s) => (
               <li
                 key={s.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/10 bg-slate-950 px-3 py-2.5 sm:px-4 sm:py-3"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/5 bg-slate-950 px-3 py-2.5 sm:px-4 sm:py-3"
               >
                 <div className="min-w-0">
                   <p className="flex items-center gap-2 text-sm font-medium text-slate-100">
@@ -166,7 +166,7 @@ export default async function TeacherScenariosPage({
             {shared.map((s) => (
               <li
                 key={s.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/10 bg-slate-950 px-3 py-2.5 sm:px-4 sm:py-3"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/5 bg-slate-950 px-3 py-2.5 sm:px-4 sm:py-3"
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-slate-100">{s.title}</p>
@@ -202,7 +202,7 @@ export default async function TeacherScenariosPage({
             type="text"
             name="title"
             placeholder="Titre (facultatif)"
-            className="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+            className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100"
           />
           <input
             type="file"
@@ -226,7 +226,7 @@ export default async function TeacherScenariosPage({
           {SCENARIOS.map((d) => (
             <li
               key={d.code}
-              className="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-slate-950 px-3 py-2.5 sm:px-4 sm:py-3"
+              className="flex items-center justify-between gap-3 rounded-lg border border-white/5 bg-slate-950 px-3 py-2.5 sm:px-4 sm:py-3"
             >
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium text-slate-100">{d.title}</p>

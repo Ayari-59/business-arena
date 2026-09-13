@@ -276,7 +276,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
             {atelier.formats.map((f) => (
               <div
                 key={f.nom}
-                className="break-inside-avoid rounded-xl border border-white/10 bg-slate-900 p-4 print:border-black/20 print:bg-transparent"
+                className="break-inside-avoid carte p-4 print:border-black/20 print:bg-transparent"
               >
                 <h3 className="text-sm font-semibold text-slate-100 print:text-black">{f.nom}</h3>
                 <p className="mt-1 text-xs text-amber-300/80 print:text-black">{f.quand}</p>
@@ -305,7 +305,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
                 >
                   {s.numero}
                 </span>
-                <article className="rounded-xl border border-white/10 bg-slate-900 p-5 print:border-black/20 print:bg-transparent">
+                <article className="carte p-5 print:border-black/20 print:bg-transparent">
                   <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                     <h3 className="text-xl font-bold text-slate-50 print:text-black">{s.titre}</h3>
                     <span className="text-xs text-slate-400">

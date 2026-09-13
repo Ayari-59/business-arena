@@ -142,7 +142,7 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
   }
 
   return (
-    <article className="rounded-xl border border-white/10 bg-slate-900 p-4 sm:p-6">
+    <article className="carte p-4 sm:p-6">
       <header className="mb-3">
         <div className="flex items-center gap-2">
           <p className="text-xs uppercase tracking-[0.25em] text-amber-400">
@@ -368,7 +368,7 @@ export function SituationDebrief({
   const answers = situation.quizAnswers ?? {};
   const scoreSur100 = Math.round(debrief.finalScore * 100);
   return (
-    <article className="rounded-xl border border-white/10 bg-slate-900 p-4 sm:p-6">
+    <article className="carte p-4 sm:p-6">
       <header className="mb-3 flex items-start justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.25em] text-slate-400">Débriefing</p>

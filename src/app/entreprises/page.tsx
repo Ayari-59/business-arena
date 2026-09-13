@@ -63,7 +63,7 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
         {famille ? (
           // Le même métier en un produit ou en gamme : c'est le niveau de
           // difficulté qui décide, et la fiche le dit avant qu'on ne choisisse.
-          <p className="mt-3 rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-sm leading-relaxed text-slate-300">
+          <p className="mt-3 rounded-lg border border-white/5 bg-slate-950/60 px-3 py-2 text-sm leading-relaxed text-slate-300">
             Jusqu&apos;au niveau {famille.gammeFromLevel - 1}, {famille.monoLabel} ; à partir du niveau{" "}
             {famille.gammeFromLevel}, {famille.gammeLabel}.
           </p>

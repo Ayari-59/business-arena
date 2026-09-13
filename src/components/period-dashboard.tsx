@@ -185,7 +185,7 @@ export function PeriodDashboard({
             {r.subscription ? (
               <section
                 data-testid="portefeuille-tour"
-                className="rounded-xl border border-white/10 bg-slate-900 px-3 py-3 text-sm"
+                className="carte px-3 py-3 text-sm"
               >
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                   🔁 Portefeuille d&apos;{view.vocabulary.units}
@@ -236,14 +236,14 @@ export function PeriodDashboard({
 
             {history.length > 0 ? (
               <section className="grid gap-3 lg:grid-cols-3">
-                <div className="rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-5 lg:col-span-2">
+                <div className="carte p-3 sm:p-5 lg:col-span-2">
                   <RevenueChart history={history} roundsCount={view.roundsCount} />
                 </div>
                 <div className="space-y-3">
-                  <div className="rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-5">
+                  <div className="carte p-3 sm:p-5">
                     <TreasuryChart history={history} roundsCount={view.roundsCount} />
                   </div>
-                  <div className="rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-5">
+                  <div className="carte p-3 sm:p-5">
                     <MarketShareChart
                       segments={Object.entries(r.market.bySegment)
                         .filter(([, d]) => d.potential > 0)
@@ -274,7 +274,7 @@ export function PeriodDashboard({
 
             {standing && view.ranking.length > 0 ? (
               <section className="grid gap-3 lg:grid-cols-2">
-                <div className="rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-5">
+                <div className="carte p-3 sm:p-5">
                   <h2 className="mb-2 text-sm font-semibold text-slate-200">
                     Classement · Business Performance Index
                   </h2>
@@ -334,7 +334,7 @@ export function PeriodDashboard({
                   {period.sectorKpis.map((k) => (
                     <div
                       key={k.key}
-                      className="rounded-lg border border-white/10 bg-slate-950 px-2.5 py-2"
+                      className="rounded-lg border border-white/5 bg-slate-950 px-2.5 py-2"
                     >
                       <p className="text-xs uppercase tracking-wide text-slate-400">{k.label}</p>
                       <p className="mt-0.5 text-lg font-semibold tabular-nums text-slate-100">
@@ -537,7 +537,7 @@ export function PeriodDashboard({
                     : ""}
                 </p>
               ) : (
-                <p className="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-xs text-slate-400">
+                <p className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-xs text-slate-400">
                   📦 {r.orderOffer.title} : commande déclinée. Un choix aussi.
                 </p>
               )
@@ -670,7 +670,7 @@ export function PeriodDashboard({
             ) : null}
 
             {r.debt && (r.debt.mandatoryRepayment > 0.5 || r.debt.newLoan > 0.5 || r.debt.earlyRepayment > 0.5) ? (
-              <p className="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-xs text-slate-300">
+              <p className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-xs text-slate-300">
                 🏦 Dette : échéance de {formatEuro(r.debt.mandatoryRepayment)} prélevée
                 {r.debt.earlyRepayment > 0.5
                   ? ` + ${formatEuro(r.debt.earlyRepayment)} d'anticipé`

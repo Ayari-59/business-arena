@@ -123,7 +123,7 @@ export default function EnseignantsPage() {
         </h2>
         <div className="grid gap-5 sm:grid-cols-2">
           {PEDAGOGIE.map((p) => (
-            <div key={p.title} className="rounded-xl border border-white/10 bg-slate-900 p-5">
+            <div key={p.title} className="carte p-5">
               <p className="text-2xl">{p.icon}</p>
               <h3 className="mt-3 text-sm font-semibold text-slate-100">{p.title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-slate-400">{p.text}</p>
@@ -146,7 +146,7 @@ export default function EnseignantsPage() {
             <Link
               key={a.code}
               href={`/animations/${a.code}`}
-              className="group flex flex-col rounded-xl border border-white/10 bg-slate-900 p-4 transition hover:border-amber-400/40"
+              className="group flex flex-col carte p-4 transition hover:border-amber-400/40"
             >
               <div className="flex items-baseline justify-between gap-3">
                 <span className="rounded-full border border-amber-400/20 bg-amber-400/5 px-2 py-0.5 text-xs font-semibold text-amber-300">
@@ -177,7 +177,7 @@ export default function EnseignantsPage() {
         <h2 className="mb-8 text-center text-2xl font-bold text-slate-50">En classe, concrètement</h2>
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {CLASSE.map((c) => (
-            <div key={c.title} className="rounded-xl border border-white/10 bg-slate-900 p-5">
+            <div key={c.title} className="carte p-5">
               <p className="text-2xl">{c.icon}</p>
               <h3 className="mt-3 text-sm font-semibold text-slate-100">{c.title}</h3>
               <p className="mt-2 text-xs leading-relaxed text-slate-400">{c.text}</p>
@@ -193,7 +193,7 @@ export default function EnseignantsPage() {
         </h2>
         <ol className="grid gap-4 sm:grid-cols-2">
           {ETAPES.map((e) => (
-            <li key={e.n} className="flex gap-4 rounded-xl border border-white/10 bg-slate-900 p-5">
+            <li key={e.n} className="flex gap-4 carte p-5">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-500 text-sm font-bold text-slate-950">
                 {e.n}
               </span>

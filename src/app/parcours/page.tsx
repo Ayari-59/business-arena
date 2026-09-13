@@ -122,7 +122,7 @@ export default function ParcoursPage() {
             </div>
 
             {p.limite ? (
-              <p className="mt-4 rounded-lg border border-white/10 bg-slate-950 px-4 py-3 text-xs leading-relaxed text-slate-400">
+              <p className="mt-4 rounded-lg border border-white/5 bg-slate-950 px-4 py-3 text-xs leading-relaxed text-slate-400">
                 ⚖️ Limite assumée : {p.limite}
               </p>
             ) : null}

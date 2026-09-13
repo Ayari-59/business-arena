@@ -68,7 +68,7 @@ export default async function TeacherCompetitionPage({
       ) : null}
 
       {view.status !== "finished" && view.stages.length > 0 ? (
-        <section className="rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-5">
+        <section className="carte p-3 sm:p-5">
           <h2 className="text-sm font-semibold text-slate-200">🗓️ Planning des étapes</h2>
           <p className="mt-1 max-w-3xl text-xs text-slate-400">
             Fenêtre pendant laquelle les équipes peuvent jouer les parties de chaque étape (heure
@@ -91,7 +91,7 @@ export default async function TeacherCompetitionPage({
         </section>
       ) : null}
 
-      <section className="rounded-xl border border-white/10 bg-slate-900 p-3 sm:p-5">
+      <section className="carte p-3 sm:p-5">
         <h2 className="text-sm font-semibold text-slate-200">🌐 Page publique d&apos;annonce</h2>
         <p className="mt-1 max-w-3xl text-xs text-slate-400">
           Une page ouverte pour annoncer l&apos;événement, avec un bouton d&apos;inscription et des

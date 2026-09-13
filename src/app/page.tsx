@@ -74,7 +74,7 @@ const RENVOIS: {
 
 function MiniKpi({ label, value, tone }: { label: string; value: string; tone?: "good" | "bad" }) {
   return (
-    <div className="rounded-lg border border-white/10 bg-slate-950/80 px-3 py-2">
+    <div className="rounded-lg border border-white/5 bg-slate-950/80 px-3 py-2">
       <p className="text-xs uppercase tracking-wide text-slate-400">{label}</p>
       <p
         className={`text-sm font-semibold ${

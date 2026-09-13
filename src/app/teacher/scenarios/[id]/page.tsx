@@ -13,7 +13,7 @@ import { deleteSituationAction, updateEconomicsAction, updateNarrativeAction } f
 export const dynamic = "force-dynamic";
 
 const champ =
-  "mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60";
+  "mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60";
 const etiquette = "block";
 const titre = "text-xs font-medium uppercase tracking-wide text-slate-400";
 
@@ -206,7 +206,7 @@ export default async function ScenarioEditorPage({
           <span className={titre}>Contexte d&apos;arrivée</span>
           <textarea name="context" defaultValue={def.context} rows={3} className={champ} />
         </label>
-        <fieldset className="space-y-4 rounded-lg border border-white/10 bg-slate-950 p-3 sm:p-5">
+        <fieldset className="space-y-4 rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-amber-400/80">
             Premier arbitrage
           </legend>
@@ -251,7 +251,7 @@ export default async function ScenarioEditorPage({
         <input type="hidden" name="scenarioId" value={id} />
 
         {ECO_GROUPS.map((group) => (
-          <fieldset key={group.title} className="rounded-lg border border-white/10 bg-slate-950 p-3 sm:p-5">
+          <fieldset key={group.title} className="rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5">
             <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-amber-400/80">
               {group.title}
             </legend>
@@ -275,7 +275,7 @@ export default async function ScenarioEditorPage({
           </fieldset>
         ))}
 
-        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-3 sm:p-5">
+        <fieldset className="rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-amber-400/80">
             Pondérations du BPI · poids relatifs (renormalisés)
           </legend>
@@ -298,7 +298,7 @@ export default async function ScenarioEditorPage({
           </div>
         </fieldset>
 
-        <fieldset className="rounded-lg border border-white/10 bg-slate-950 p-3 sm:p-5">
+        <fieldset className="rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-amber-400/80">
             Marché
           </legend>
@@ -377,7 +377,7 @@ export default async function ScenarioEditorPage({
               return (
                 <li
                   key={s.code}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/10 bg-slate-950 px-3 py-2.5 sm:px-4 sm:py-3"
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/5 bg-slate-950 px-3 py-2.5 sm:px-4 sm:py-3"
                 >
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-slate-100">{s.title}</p>

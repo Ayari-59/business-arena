@@ -273,7 +273,7 @@ function Field({
   return (
     <label className="block">
       <span className="block min-h-8 leading-4 text-xs font-medium uppercase tracking-wide text-slate-400">{label}</span>
-      <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 focus-within:border-amber-400/60">
+      <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/5 bg-slate-950 px-3 py-2 focus-within:border-amber-400/60">
         <input
           type="number"
           name={name}
@@ -307,7 +307,7 @@ function OptionalField({
   return (
     <label className="block">
       <span className="block min-h-8 leading-4 text-xs font-medium uppercase tracking-wide text-slate-400">{label}</span>
-      <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 focus-within:border-amber-400/60">
+      <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/5 bg-slate-950 px-3 py-2 focus-within:border-amber-400/60">
         <input
           type="text"
           inputMode="decimal"
@@ -1278,7 +1278,7 @@ export function DecisionForm({
         </Family>
       )}
       {capacityFacts ? (
-        <div className="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 sm:px-3.5 sm:py-2.5">
+        <div className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 sm:px-3.5 sm:py-2.5">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
             ⚙️ {v.capacityPanelTitle}
           </p>
@@ -1556,7 +1556,7 @@ export function DecisionForm({
                 name="communicationAxis"
                 value={axe}
                 onChange={(e) => setAxe(e.currentTarget.value)}
-                className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+                className="mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
               >
                 <option value="">Aucun axe : le budget parle à tout le monde</option>
                 {communicationOffer.axes.map((a) => (
@@ -1793,7 +1793,7 @@ export function DecisionForm({
           </p>
         </Family>
       ) : on.insurance && insuranceOffer ? (
-        <label className="flex items-start gap-3 rounded-lg border border-white/10 bg-slate-950 px-2.5 py-2">
+        <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-950 px-2.5 py-2">
           <input
             type="checkbox"
             name="insurance"
