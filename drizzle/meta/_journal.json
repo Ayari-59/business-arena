@@ -103,8 +103,50 @@
     {
       "idx": 14,
       "version": "7",
-      "when": 1789299178285,
+      "when": 1789333492323,
       "tag": "0019_reveal_classement",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1789333492324,
+      "tag": "0013_decision_source",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1789333492325,
+      "tag": "0014_login_hardening",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1789333492326,
+      "tag": "0015_bpi_v2",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1789333492327,
+      "tag": "0016_scenario_definition",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1789333492328,
+      "tag": "0017_previous_lester",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1789333492329,
+      "tag": "0018_public_competition_page",
       "breakpoints": true
     }
   ]

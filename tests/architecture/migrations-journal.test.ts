@@ -54,6 +54,78 @@ describe("journal des migrations", () => {
     }
   });
 
+  /**
+   * UNE MIGRATION DOIT POUVOIR ÊTRE REJOUÉE.
+   *
+   * Le corollaire de la règle précédente. Six migrations sont restées hors du
+   * journal pendant des semaines ; pour les y remettre sans connaître l'état
+   * exact de la production, il a fallu qu'elles soient rejouables — sinon
+   * `ADD COLUMN` tombait sur « column already exists », et comme drizzle joue
+   * TOUTES les migrations en retard dans UNE SEULE transaction, un seul échec
+   * annulait le déploiement entier.
+   *
+   * Les quatorze premières échappent à la règle : elles sont enregistrées en
+   * base depuis longtemps, leur horodatage est sous le dernier enregistré,
+   * drizzle ne les rejouera jamais. Les réécrire ne servirait à rien et
+   * changerait leur empreinte. Toute migration AJOUTÉE ensuite, elle, doit être
+   * rejouable — et n'ayant pas à figurer dans cette liste, elle y est soumise
+   * d'office.
+   *
+   * Note : `CREATE TYPE` n'accepte pas IF NOT EXISTS en PostgreSQL ; un nouveau
+   * type d'énumération demande un bloc DO. La règle ne porte donc que sur ce
+   * qui peut le recevoir.
+   */
+  const ANCIENNES = new Set([
+    "0000_lethal_post",
+    "0001_lucky_pete_wisdom",
+    "0002_friendly_thaddeus_ross",
+    "0003_useful_triton",
+    "0004_greedy_maverick",
+    "0005_cooing_wild_pack",
+    "0006_competition_entries_label_ci",
+    "0007_competition_join_code",
+    "0008_games_priority_indexes",
+    "0009_secondary_indexes",
+    "0010_trigger_context",
+    "0011_consequence_context",
+    "0012_interpretation_context",
+    "0013_add_learning_steps_tables",
+  ]);
+
+  it("toute migration postérieure est rejouable (IF NOT EXISTS)", () => {
+    const REGLES: { quoi: string; motif: RegExp }[] = [
+      { quoi: "ADD COLUMN", motif: /ADD COLUMN\s+(?!IF NOT EXISTS)/gi },
+      { quoi: "ADD VALUE", motif: /ADD VALUE\s+(?!IF NOT EXISTS)/gi },
+      { quoi: "CREATE TABLE", motif: /CREATE\s+TABLE\s+(?!IF NOT EXISTS)/gi },
+      { quoi: "CREATE INDEX", motif: /CREATE\s+(?:UNIQUE\s+)?INDEX\s+(?!IF NOT EXISTS)/gi },
+    ];
+    const fautifs: string[] = [];
+    for (const e of journal.entries) {
+      if (ANCIENNES.has(e.tag)) continue;
+      // Les commentaires d'abord, sinon la prose est analysée comme du SQL :
+      // 0019 explique « contrairement à 0017 et 0018 qui font un ADD COLUMN
+      // nu », et cette phrase se dénonçait elle-même.
+      const sql = readFileSync(`${DRIZZLE_DIR}/${e.tag}.sql`, "utf8")
+        .split("\n")
+        .filter((l) => !l.trimStart().startsWith("--"))
+        .join("\n");
+      for (const { quoi, motif } of REGLES) {
+        const n = sql.match(motif)?.length ?? 0;
+        if (n > 0) fautifs.push(`${e.tag} : ${n} « ${quoi} » sans IF NOT EXISTS`);
+      }
+    }
+    expect(fautifs, fautifs.join(" · ")).toEqual([]);
+  });
+
+  it("la liste des anciennes ne désigne que des migrations qui existent", () => {
+    // Sans quoi un tag mal orthographié exempterait une migration réelle en
+    // silence, et la règle ci-dessus ne porterait plus sur elle.
+    const tags = new Set(journal.entries.map((e) => e.tag));
+    for (const ancienne of ANCIENNES) {
+      expect(tags.has(ancienne), `${ancienne} n'est pas au journal`).toBe(true);
+    }
+  });
+
   it("aucun fichier SQL orphelin (présent sur disque mais absent du journal)", () => {
     const tags = new Set(journal.entries.map((e) => e.tag));
     const orphelins = readdirSync(DRIZZLE_DIR)
