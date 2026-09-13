@@ -44,7 +44,7 @@ const AUDIT_MARKET = {
 const GAMME: ProductDef[] = [
   {
     code: "audit",
-    name: "Audit et conformité",
+    name: "Audit",
     // la journée du cabinet d'origine : frais de mission et sous-traitance d'appoint
     materialCostPerUnit: 55,
     otherVariableCostPerUnit: 35,
@@ -53,7 +53,7 @@ const GAMME: ProductDef[] = [
   },
   {
     code: "transformation",
-    name: "Transformation et stratégie",
+    name: "Transformation",
     // des missions chez le client, loin, longtemps : plus de frais, plus d'experts d'appoint
     materialCostPerUnit: 70,
     otherVariableCostPerUnit: 45,
@@ -85,7 +85,7 @@ const GAMME: ProductDef[] = [
   },
   {
     code: "cyber",
-    name: "Cybersécurité et conformité numérique",
+    name: "Cybersécurité",
     materialCostPerUnit: 60,
     otherVariableCostPerUnit: 40,
     hoursPerUnit: 1,
