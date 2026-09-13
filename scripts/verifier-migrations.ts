@@ -22,7 +22,14 @@
  * (lit DIRECT_URL, sinon DATABASE_URL — la même URL que drizzle.config.ts,
  *  donc bien la base que `drizzle-kit migrate` viserait.)
  */
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { Client } from "pg";
+
+/** Le journal du dépôt : ce que drizzle-kit CROIT devoir appliquer. */
+const JOURNAL: { idx: number; when: number; tag: string }[] = JSON.parse(
+  readFileSync(join(process.cwd(), "drizzle", "meta", "_journal.json"), "utf8"),
+).entries;
 
 type Objet =
   | { genre: "colonne"; table: string; nom: string }
@@ -125,22 +132,40 @@ async function existe(c: Client, o: Objet): Promise<boolean> {
   return r.rowCount !== null && r.rowCount > 0;
 }
 
+/** L'hôte d'une URL, sans les identifiants : on montre QUELLE base sans recopier un secret. */
+function hoteDe(url: string | undefined): string | null {
+  if (!url) return null;
+  try {
+    return new URL(url).host;
+  } catch {
+    return "(URL illisible)";
+  }
+}
+
 async function main() {
-  const url = process.env.DIRECT_URL ?? process.env.DATABASE_URL;
+  // DEUX URL, ET C'EST LE PIÈGE. `drizzle.config.ts` migre DIRECT_URL ?? DATABASE_URL ;
+  // l'application, elle, lit DATABASE_URL seul. Quand les deux pointent des
+  // bases différentes, `drizzle-kit migrate` réussit — sur l'autre base — et
+  // l'application tombe sur une colonne absente. C'est arrivé.
+  const urlMigrations = process.env.DIRECT_URL ?? process.env.DATABASE_URL;
+  const urlApplication = process.env.DATABASE_URL;
+  const url = urlMigrations;
   if (!url) {
     console.error("DIRECT_URL ou DATABASE_URL manquant (voir .env.example).");
     process.exit(1);
   }
-  // L'hôte, sans les identifiants : on montre QUELLE base est interrogée sans
-  // recopier un secret dans un terminal ou un rapport.
-  let hote = "(URL illisible)";
-  try {
-    hote = new URL(url).host;
-  } catch {
-    /* URL non standard : on n'affiche rien plutôt que de risquer une fuite */
+  const hote = hoteDe(urlMigrations) ?? "(inconnu)";
+  const hoteApp = hoteDe(urlApplication);
+  console.log(`Base MIGRÉE par drizzle-kit (DIRECT_URL ?? DATABASE_URL) : ${hote}`);
+  console.log(`Base LUE par l'application (DATABASE_URL)                : ${hoteApp ?? "(absente)"}`);
+  if (hoteApp && hoteApp !== hote) {
+    console.log("");
+    console.log("⚠ LES DEUX DIFFÈRENT. Vos migrations ne vont pas là où l'application lit :");
+    console.log("  `drizzle-kit migrate` annoncera « applied successfully » et la colonne");
+    console.log("  manquera quand même en production. Faites pointer DIRECT_URL sur la même");
+    console.log("  base que DATABASE_URL, ou supprimez DIRECT_URL.");
   }
-  console.log(`Base interrogée : ${hote}`);
-  console.log("Lecture seule : aucune migration n'est jouée, rien n'est écrit.\n");
+  console.log("\nLecture seule : aucune migration n'est jouée, rien n'est écrit.\n");
 
   const client = new Client({ connectionString: url });
   await client.connect();
@@ -164,7 +189,25 @@ async function main() {
       console.log(
         `Table de suivi drizzle : ${l?.n} migration(s) enregistrée(s), la dernière le ${l?.derniere ?? "?"}.`,
       );
-      console.log("  (le journal du dépôt en compte 14 : 0000 à 0012, plus 0013_add_learning_steps_tables)\n");
+      console.log(`  (le journal du dépôt en compte ${JOURNAL.length})`);
+
+      // LE SECOND PIÈGE. `drizzle-kit migrate` ne rejoue que les entrées dont
+      // l'horodatage dépasse le dernier enregistré. Une entrée du journal datée
+      // AVANT ce dernier est ignorée en silence, et la commande annonce quand
+      // même « applied successfully ».
+      const dernierJournal = JOURNAL[JOURNAL.length - 1];
+      const borne = await client.query<{ max: string | null }>(
+        `select max(created_at)::text as max from drizzle.__drizzle_migrations`,
+      );
+      const maxEnBase = Number(borne.rows[0]?.max ?? 0);
+      if (dernierJournal && maxEnBase >= dernierJournal.when) {
+        console.log("");
+        console.log(`⚠ La dernière entrée du journal (${dernierJournal.tag}) est datée`);
+        console.log(`  ${new Date(dernierJournal.when).toISOString()}, or la table de suivi est déjà`);
+        console.log(`  à ${new Date(maxEnBase).toISOString()}. drizzle-kit la considère appliquée et`);
+        console.log("  ne la jouera JAMAIS. Il faut la rejouer à la main, ou redater l'entrée.");
+      }
+      console.log("");
     }
 
     const bilan: { m: Migration; presents: number; total: number; manquants: string[] }[] = [];

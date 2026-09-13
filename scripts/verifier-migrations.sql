@@ -1,4 +1,21 @@
 -- ════════════════════════════════════════════════════════════════════════════
+-- AVANT TOUT : SUR QUELLE BASE ÊTES-VOUS ?
+--
+-- Constaté en production le 13/09/2026 : `drizzle-kit migrate` a annoncé
+-- « migrations applied successfully » et la colonne manquait quand même. Deux
+-- causes possibles, toutes deux silencieuses :
+--
+--   1. DEUX BASES. drizzle.config.ts migre DIRECT_URL ?? DATABASE_URL ;
+--      l'application lit DATABASE_URL seul. S'ils diffèrent, les migrations
+--      partent ailleurs. Comparez les deux variables dans Vercel.
+--   2. UNE ENTRÉE TROP ANCIENNE. drizzle-kit ne rejoue que les entrées du
+--      journal dont l'horodatage dépasse le dernier enregistré en base. Une
+--      entrée datée avant est ignorée sans un mot (bloc 3, plus bas).
+--
+-- Ce fichier s'exécute sur LA base où vous le collez : vérifiez que c'est bien
+-- celle que lit l'application.
+--
+-- ════════════════════════════════════════════════════════════════════════════
 -- Que contient VRAIMENT la base, face aux six migrations absentes du journal ?
 --
 -- À coller dans l'éditeur SQL de Neon. STRICTEMENT EN LECTURE : que des SELECT
