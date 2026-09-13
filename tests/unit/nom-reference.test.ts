@@ -6,7 +6,6 @@ import { describe, expect, it } from "vitest";
 import { NomReference } from "@/components/nom-reference";
 import { toGamme } from "@/engine/gamme";
 import { conseilGammeScenario } from "@/config/scenarios/conseil-gamme";
-import { hotelGammeScenario } from "@/config/scenarios/hotel-gamme";
 import { SCENARIOS } from "@/config/scenarios/registry";
 import { parseScenarioConfig } from "@/config/scenarios/schema";
 
@@ -40,27 +39,37 @@ describe("NomReference", () => {
     expect(html).toContain('class="hidden sm:inline">Transformation et Stratégie<');
   });
 
-  it("ATLAS CONSEIL · gamme vend « Transformation et Stratégie », abrégée en « Stratégie »", () => {
-    const gamme = toGamme(conseilGammeScenario);
-    const strategie = gamme.find((p) => p.code === "transformation")!;
-    expect(strategie.name).toBe("Transformation et Stratégie");
-    expect(strategie.shortName).toBe("Stratégie");
-    // Les deux autres offres tiennent d'elles-mêmes : pas de nom court.
-    expect(gamme.filter((p) => p.shortName).map((p) => p.code)).toEqual(["transformation"]);
-  });
-
-  it("L'ESCALE · gamme abrège les deux chambres, pas la Suite", () => {
-    // « Chambre standard » et « Chambre supérieure » partagent leur premier mot :
-    // sur un bouton de téléphone, seul ce qui les distingue a de la valeur. La
-    // Suite tient d'elle-même et ne déclare rien.
-    const gamme = toGamme(hotelGammeScenario);
-    const court = Object.fromEntries(gamme.map((p) => [p.code, p.shortName]));
-    expect(court).toEqual({
-      "chambre-standard": "Standard",
-      "chambre-superieure": "Supérieure",
-      suite: undefined,
+  it("l'inventaire des noms courts : qui abrège quoi, et pourquoi", () => {
+    // La liste EXHAUSTIVE des références qui déclarent un nom court, sur les 15
+    // scénarios. Elle tient ici plutôt qu'éparpillée : ajouter un nom court
+    // sans le déclarer ici fait rougir ce test, ce qui est exactement le
+    // moment de se demander si le mot choisi est le bon.
+    //
+    //  · ATLAS CONSEIL : « Transformation et Stratégie » est le nom du métier,
+    //    entier, et ne tient pas sur un bouton.
+    //  · L'ESCALE : les deux chambres partagent leur premier mot ; seul ce qui
+    //    les distingue mérite la place. La Suite tient d'elle-même.
+    //  · LE COMPTOIR : le mot qui identifie le service suffit ; le reste du nom
+    //    dit à qui on vend, ce que la carte de la référence redit en dessous.
+    //  · PIXEL & CO : la tête de rayon suffit à choisir l'onglet.
+    const inventaire: Record<string, Record<string, string>> = {};
+    for (const s of SCENARIOS) {
+      const courts = toGamme(s.scenario).filter((p) => p.shortName);
+      if (courts.length === 0) continue;
+      inventaire[s.code] = Object.fromEntries(courts.map((p) => [p.name, p.shortName!]));
+    }
+    expect(inventaire).toEqual({
+      "conseil-gamme": { "Transformation et Stratégie": "Stratégie" },
+      "hotel-gamme": { "Chambre standard": "Standard", "Chambre supérieure": "Supérieure" },
+      "bistrot-gamme": {
+        "Banquets et repas d'entreprise": "Banquets",
+        "Traiteur · buffets livrés": "Traiteur",
+      },
+      "ecommerce-gamme": {
+        "Décoration et textile": "Décoration",
+        "Collection de créateurs": "Créateurs",
+      },
     });
-    expect(gamme.map((p) => p.name)).toEqual(["Chambre standard", "Chambre supérieure", "Suite"]);
   });
 
   it("un nom court est toujours plus court que le nom, dans tous les scénarios", () => {

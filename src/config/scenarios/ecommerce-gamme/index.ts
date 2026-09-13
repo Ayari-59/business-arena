@@ -101,6 +101,8 @@ const GAMME: ProductDef[] = [
   {
     code: "decoration",
     name: "Décoration et textile",
+    // Sur téléphone, la tête de rayon suffit à choisir l'onglet.
+    shortName: "Décoration",
     // petits colis : la marchandise et un port léger
     materialCostPerUnit: 18,
     otherVariableCostPerUnit: 9,
@@ -150,6 +152,7 @@ const GAMME: ProductDef[] = [
   {
     code: "capsule",
     name: "Collection de créateurs",
+    shortName: "Créateurs",
     // expédiée par les ateliers, sans stock à porter : un port et un emballage soignés
     materialCostPerUnit: 38,
     otherVariableCostPerUnit: 10,
