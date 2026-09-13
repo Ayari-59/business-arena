@@ -17,6 +17,7 @@
     "db:studio": "drizzle-kit studio",
     "calibrate": "tsx scripts/calibrate.ts",
     "seed:demo": "tsx --env-file=.env scripts/seed-demo.ts",
+    "verify:migrations": "tsx --env-file=.env scripts/verifier-migrations.ts",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "test:coverage": "vitest run --coverage"
   },
