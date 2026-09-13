@@ -133,6 +133,12 @@ export const rounds = pgTable(
     // 2 = 6 dimensions, base zéro, ex æquo, finance en variation — V1-2). Les
     // tours déjà scorés gardent leur version : on ne recalcule jamais un relevé.
     bpiVersion: integer("bpi_version").notNull().default(1),
+    // Quand l'animateur a révélé le classement de ce tour. NULL = pas encore.
+    // En classe et en concours, c'est lui qui ouvre le rideau : sans cela, la
+    // classe lisait le classement sur son téléphone avant qu'il ne le projette,
+    // et son moment n'existait pas. En solo, il n'y a personne pour révéler :
+    // la vue considère le classement toujours ouvert, sans rien écrire ici.
+    rankingRevealedAt: timestamp("ranking_revealed_at", { withTimezone: true }),
     ...timestamps,
   },
   (t) => [uniqueIndex("rounds_game_index_uq").on(t.gameId, t.index)],

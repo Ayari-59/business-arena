@@ -7,10 +7,12 @@ import {
   learningProgress,
   playerSkills,
   players,
+  rounds,
   teams,
   users,
 } from "@/db/schema";
 import { conceptByCode, type SkillAxis } from "@/config/pedagogy/concepts";
+import { classementOuvert } from "@/config/rideau-classement";
 
 /**
  * Profil joueur (étape 11, §28) : compétences par axe, maîtrise des concepts,
@@ -52,7 +54,7 @@ export async function getPlayerProfile(userId: string): Promise<PlayerProfile | 
     ? await db.select().from(teams).where(inArray(teams.id, memberships.map((m) => m.teamId)))
     : [];
   const teamIds = teamRows.map((t) => t.id);
-  const [gameRows, rankingRows] = await Promise.all([
+  const [gameRows, rankingRows, roundRows] = await Promise.all([
     teamRows.length
       ? db
           .select()
@@ -66,7 +68,26 @@ export async function getPlayerProfile(userId: string): Promise<PlayerProfile | 
           inArray(gameRankings.teamId, teamIds),
         ))
       : Promise.resolve([]),
+    // Le rideau sur le classement se tire AUSSI ici. « Mes parties » affichait
+    // « BPI 54 · #3 » pour une partie de classe dont l'enseignant n'avait rien
+    // révélé : il suffisait d'ouvrir son profil pour lire son rang.
+    teamRows.length
+      ? db
+          .select()
+          .from(rounds)
+          .where(inArray(rounds.gameId, teamRows.map((t) => t.gameId)))
+      : Promise.resolve([]),
   ]);
+
+  /** Révélation du dernier tour CLOS de chaque partie. */
+  const revelationParPartie = new Map<string, Date | null>();
+  for (const r of roundRows) {
+    if (r.status !== "resolved") continue;
+    const connu = roundRows
+      .filter((x) => x.gameId === r.gameId && x.status === "resolved")
+      .sort((a3, b3) => b3.index - a3.index)[0];
+    if (connu) revelationParPartie.set(r.gameId, connu.rankingRevealedAt);
+  }
 
   return {
     displayName: user.displayName,
@@ -93,7 +114,14 @@ export async function getPlayerProfile(userId: string): Promise<PlayerProfile | 
         roundDays: snapshot.roundDays,
         currentRound: g.currentRound,
         roundsCount: snapshot.roundsCount,
-        rank: ranking?.rank ?? null,
+        // Le BPI est à l'équipe : il dit sa progression, pas sa place. Le RANG
+        // attend que l'animateur ouvre le rideau.
+        rank: classementOuvert({
+          kind: (g.difficultyProfile as { kind?: string }).kind,
+          revelationDuDernierTourClos: revelationParPartie.get(g.id),
+        })
+          ? (ranking?.rank ?? null)
+          : null,
         bpi: ranking ? Number(ranking.bpi) : null,
         createdAt: g.createdAt,
       };

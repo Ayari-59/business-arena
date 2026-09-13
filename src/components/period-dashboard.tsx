@@ -257,7 +257,22 @@ export function PeriodDashboard({
               </section>
             ) : null}
 
-            {standing ? (
+            {standing && view.ranking.length === 0 && view.classement.parLAnimateur ? (
+              // Le rideau est tiré : la vue ne contient pas le classement, elle
+              // ne le cache pas. On dit qui l'ouvrira, pour que l'attente ait
+              // un sens — et on rappelle ce qui, lui, ne dépend de personne.
+              <section className="rounded-xl border border-dashed border-amber-400/30 bg-slate-900 p-1.5 sm:p-4">
+                <h2 className="text-sm font-semibold text-slate-200">
+                  Classement · Business Performance Index
+                </h2>
+                <p className="mt-1 text-sm text-slate-400">
+                  🎬 Votre enseignant le révélera. En attendant, vos résultats et votre indice
+                  de performance sont là : c&apos;est votre progression, pas votre place.
+                </p>
+              </section>
+            ) : null}
+
+            {standing && view.ranking.length > 0 ? (
               <section className="grid gap-3 lg:grid-cols-2">
                 <div className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
                   <h2 className="mb-2 text-sm font-semibold text-slate-200">

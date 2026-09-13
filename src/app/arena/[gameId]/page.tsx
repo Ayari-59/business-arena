@@ -381,13 +381,24 @@ export default async function ArenaPage({
           >
             Niveau {view.difficulty.level} · {view.difficulty.name}
           </p>
-          {latestRound !== null && view.ranking.length > 1 ? (() => {
+          {/* Le BPI mesure la progression de l'équipe, le rang sa place parmi
+              les autres. Le premier lui appartient et s'affiche toujours ; le
+              second attend que l'animateur ouvre le rideau. */}
+          {latestRound !== null && view.playerBpi !== null ? (() => {
             const me = view.ranking.find((row) => row.isPlayer);
-            return me ? (
-              <p className="rounded-full border border-amber-400/30 bg-amber-400/5 px-3 py-1 text-xs tabular-nums text-amber-300" title="Votre position au classement BPI">
-                #{me.rank}/{view.ranking.length} · BPI {me.bpi.toFixed(0)}
+            return (
+              <p
+                className="rounded-full border border-amber-400/30 bg-amber-400/5 px-3 py-1 text-xs tabular-nums text-amber-300"
+                title={
+                  me
+                    ? "Votre position au classement BPI"
+                    : "Votre indice de performance. Le classement sera révélé par votre enseignant."
+                }
+              >
+                {me ? `#${me.rank}/${view.ranking.length} · ` : ""}BPI{" "}
+                {view.playerBpi.toFixed(0)}
               </p>
-            ) : null;
+            );
           })() : null}
           {/* La frise remplace la puce « Tour n / N » : le bandeau d'état
               juste dessous porte déjà ce chiffre, et la frise dit en plus d'où
@@ -434,7 +445,9 @@ export default async function ArenaPage({
           <h2 className="text-xl font-bold text-amber-300">
             {view.ranking.find((row) => row.isPlayer)?.rank === 1
               ? `🏆 Victoire ! ${view.playerTeamName} domine le marché.`
-              : "Partie terminée."}
+              : view.classement.parLAnimateur && !view.classement.revele
+                ? "Partie terminée. Le classement final sera révélé par votre enseignant."
+                : "Partie terminée."}
           </h2>
           <p className="mt-2 text-sm text-slate-400">
             Résultat cumulé : {formatEuro(view.ranking.find((row) => row.isPlayer)?.cumulativeNetIncome ?? 0)}

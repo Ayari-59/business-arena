@@ -99,6 +99,13 @@
       "when": 1789134987183,
       "tag": "0013_add_learning_steps_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1789299178285,
+      "tag": "0019_reveal_classement",
+      "breakpoints": true
     }
   ]
 }

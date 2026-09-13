@@ -207,6 +207,43 @@ export async function setQuizMode(args: {
 }
 
 /**
+ * Lève le rideau sur le classement d'un tour résolu — ou le referme.
+ *
+ * En classe et en concours, c'est l'animateur qui révèle : sans cela, la classe
+ * lisait le classement sur son téléphone avant même qu'il ne le projette. Tour
+ * par tour, pour que chaque clôture redevienne un moment.
+ *
+ * On ne révèle qu'un tour RÉSOLU : un tour en cours n'a pas de classement, et
+ * l'ouvrir d'avance ne montrerait que celui du tour précédent, sous un mauvais
+ * numéro.
+ */
+export async function setRankingRevealed(args: {
+  gameId: string;
+  teacherId: string;
+  roundIndex: number;
+  revealed: boolean;
+}): Promise<void> {
+  const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
+  if (!game || game.createdBy !== args.teacherId) {
+    throw new Error("Partie introuvable");
+  }
+  const round = (
+    await db
+      .select()
+      .from(rounds)
+      .where(and(eq(rounds.gameId, args.gameId), eq(rounds.index, args.roundIndex)))
+  )[0];
+  if (!round) throw new Error("Tour introuvable");
+  if (round.status !== "resolved") {
+    throw new Error("Le classement d'un tour qui n'est pas clos n'existe pas encore.");
+  }
+  await db
+    .update(rounds)
+    .set({ rankingRevealedAt: args.revealed ? new Date() : null })
+    .where(eq(rounds.id, round.id));
+}
+
+/**
  * Fenêtre globale de jeu (planning) : la partie n'est jouable qu'entre ces deux
  * instants. Chacun peut être null (pas de borne). L'ouverture doit précéder la
  * fermeture. Le verrou par tour et l'étape de concours s'appliquent en plus.
@@ -275,7 +312,14 @@ export interface TeacherGameView {
   opensAt: string | null;
   closesAt: string | null;
   /** Fenêtre de chaque tour (planning fin), triée par index. Dates en ISO ou null. */
-  rounds: { index: number; status: string; opensAt: string | null; deadline: string | null }[];
+  rounds: {
+    index: number;
+    status: string;
+    opensAt: string | null;
+    deadline: string | null;
+    /** Le classement de ce tour a-t-il été révélé aux élèves ? */
+    rankingRevealed: boolean;
+  }[];
   /** Freemium : la partie s'est arrêtée avant la fin du scénario, faute de licence. */
   planCapped: boolean;
   /** Freemium : l'export du relevé est-il ouvert (licence) ? Sinon on propose l'upsell. */
@@ -381,6 +425,7 @@ export async function getTeacherGameView(
         status: r.status,
         opensAt: r.opensAt ? r.opensAt.toISOString() : null,
         deadline: r.deadline ? r.deadline.toISOString() : null,
+        rankingRevealed: r.rankingRevealedAt != null,
       })),
     scenarioCode: snapshotDefinition.code,
     scenarioTitle: snapshotDefinition.title,

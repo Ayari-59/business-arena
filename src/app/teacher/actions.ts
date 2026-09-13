@@ -17,6 +17,7 @@ import {
   drawEventCardForNextRound,
   setGameSchedule,
   setQuizMode,
+  setRankingRevealed,
   setRoundWindows,
 } from "@/services/game.service";
 import { parisLocalToUtc } from "@/lib/paris-time";
@@ -228,6 +229,24 @@ export async function setQuizModeAction(gameId: string, formData: FormData): Pro
     .catch(DEFAULT_QUIZ_MODE)
     .parse(formData.get("mode"));
   await setQuizMode({ gameId, teacherId: session.userId, mode });
+  revalidatePath(`/teacher/games/${gameId}`);
+}
+
+/**
+ * Lève le rideau sur le classement d'un tour, ou le referme.
+ *
+ * C'est l'animateur qui révèle : le bouton vit sur SA page, l'élève n'a rien à
+ * cliquer. Refermer sert au tour suivant — chaque clôture est un moment.
+ */
+export async function setRankingRevealedAction(
+  gameId: string,
+  formData: FormData,
+): Promise<void> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  const roundIndex = z.coerce.number().int().positive().parse(formData.get("roundIndex"));
+  const revealed = formData.get("revealed") === "1";
+  await setRankingRevealed({ gameId, teacherId: session.userId, roundIndex, revealed });
   revalidatePath(`/teacher/games/${gameId}`);
 }
 

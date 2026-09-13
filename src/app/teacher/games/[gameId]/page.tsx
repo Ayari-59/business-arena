@@ -13,7 +13,7 @@ import { CloseRoundForm } from "@/components/close-round-form";
 import { SubmitButton } from "@/components/submit-button";
 import { GuardedForm } from "@/components/guarded-action";
 import { RoundStatusPoller } from "@/components/round-status-poller";
-import { setGameScheduleAction, setRoundWindowsAction } from "../../actions";
+import { setGameScheduleAction, setRankingRevealedAction, setRoundWindowsAction } from "../../actions";
 import { utcToParisLocalInput } from "@/lib/paris-time";
 import { JustificationsReview } from "@/components/justifications-review";
 import { entitlementsForUser } from "@/services/entitlements.service";
@@ -46,6 +46,11 @@ export default async function TeacherGamePage({
   const humanTeams = view.teams.filter((t) => t.controller === "human");
   const submittedCount = humanTeams.filter((t) => t.hasSubmitted).length;
   const defaillantes = view.ranking.filter((row) => row.defaillant);
+  // Le tour dont le classement se révèle : le dernier clos. Les précédents sont
+  // derrière nous, celui en cours n'a pas encore de classement.
+  const dernierTourClos = [...view.rounds]
+    .filter((r) => r.status === "resolved")
+    .sort((a3, b3) => b3.index - a3.index)[0];
 
   // Synthèse IA des justifications (facultative) : droit du compte + réglage
   // admin + clé API.
@@ -603,7 +608,43 @@ export default async function TeacherGamePage({
       ) : null}
 
       <section className="rounded-xl border border-white/10 bg-slate-900 p-1.5 sm:p-4">
-        <h2 className="mb-3 text-sm font-semibold text-slate-200">Classement</h2>
+        <h2 className="text-sm font-semibold text-slate-200">Classement</h2>
+        {/*
+          LE RIDEAU. Le classement ci-dessous est le vôtre : les élèves ne le
+          voient pas tant que vous ne l'avez pas révélé. Tour par tour — refermé
+          à chaque nouvelle clôture, pour que chacune reste un moment.
+          Ils gardent pendant ce temps leurs propres chiffres et leur BPI : c'est
+          leur progression, pas leur place.
+        */}
+        {dernierTourClos ? (
+          <div className="mb-3 mt-2 flex flex-wrap items-center gap-3 rounded-lg border border-amber-400/25 bg-amber-950/10 px-3 py-2">
+            <span className="text-xs text-slate-300">
+              {dernierTourClos.rankingRevealed
+                ? `🎬 Classement du ${periodLabel(view.roundDays, dernierTourClos.index)} révélé aux élèves.`
+                : `🎬 Les élèves ne voient pas encore le classement du ${periodLabel(view.roundDays, dernierTourClos.index)}.`}
+            </span>
+            <GuardedForm
+              action={setRankingRevealedAction.bind(null, view.gameId)}
+              label="révélation du classement"
+            >
+              <input type="hidden" name="roundIndex" value={dernierTourClos.index} />
+              <input
+                type="hidden"
+                name="revealed"
+                value={dernierTourClos.rankingRevealed ? "0" : "1"}
+              />
+              <SubmitButton
+                className={`rounded-lg px-4 py-1.5 text-xs font-semibold transition ${
+                  dernierTourClos.rankingRevealed
+                    ? "border border-white/15 text-slate-300 hover:border-white/30"
+                    : "bg-amber-400 text-slate-950 hover:bg-amber-300"
+                }`}
+              >
+                {dernierTourClos.rankingRevealed ? "Masquer" : "Révéler le classement"}
+              </SubmitButton>
+            </GuardedForm>
+          </div>
+        ) : null}
         {view.ranking.length === 0 ? (
           <p className="text-sm text-slate-400">Disponible après le premier tour.</p>
         ) : (

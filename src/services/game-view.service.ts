@@ -41,6 +41,7 @@ import {
   findUserTeam,
   readPendingEvents,
 } from "@/services/round-resolution.service";
+import { classementOuvert } from "@/config/rideau-classement";
 import type { GameKind } from "@/services/game-creation.service";
 
 /**
@@ -206,6 +207,11 @@ export interface GameView {
   roundBriefing: RoundBriefing | null;
   lastEvents: string[];
   history: { round: number; revenue: number; netIncome: number; netTreasury: number }[];
+  /**
+   * Le classement, UNIQUEMENT s'il a été révélé. Vide sinon : en classe et en
+   * concours, c'est l'animateur qui ouvre le rideau, et la vue ne porte pas ce
+   * qu'il n'a pas encore montré.
+   */
   ranking: {
     name: string;
     isPlayer: boolean;
@@ -215,6 +221,10 @@ export interface GameView {
     /** Entreprise en cessation de paiements caractérisée (V2 couche 2, #5). */
     defaillant: boolean;
   }[];
+  /** L'état du rideau : révélé ? et y a-t-il quelqu'un pour le lever ? */
+  classement: { revele: boolean; parLAnimateur: boolean };
+  /** Le BPI de l'équipe, révélé ou non : il mesure sa progression, pas sa place. */
+  playerBpi: number | null;
   /** Moyennes 0-100 des dimensions BPI de l'équipe du joueur (6 en v2, doc 08). */
   playerDimensions: Partial<Record<string, number>> | null;
   lastDecisions: RoundDecisions | null;
@@ -920,6 +930,25 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     })
     .sort((a, b) => a.rank - b.rank);
   const playerRankingRow = rankingRows.find((r) => r.teamId === playerTeam.id);
+
+  // ── LE RIDEAU SUR LE CLASSEMENT ─────────────────────────────────────────
+  // En classe et en concours, c'est l'animateur qui révèle. Tant qu'il ne l'a
+  // pas fait, la vue de l'élève NE CONTIENT PAS le classement : on ne le cache
+  // pas à l'affichage, on ne l'envoie pas. Le cockpit Excel et l'assistant IA
+  // lisent cette même vue, et sont donc muets eux aussi — sans quoi le rideau
+  // se contournerait en exportant un tableur ou en posant la question.
+  //
+  // En solo, personne n'est là pour ouvrir : le classement face aux bots est la
+  // boucle de retour du jeu, il reste immédiat.
+  const kindDeLaPartie = (game.difficultyProfile as { kind?: GameKind }).kind ?? "solo";
+  const dernierResolu = resolved.slice().sort((a2, b2) => b2.index - a2.index)[0];
+  const classementRevele = classementOuvert({
+    kind: kindDeLaPartie,
+    revelationDuDernierTourClos: dernierResolu?.rankingRevealedAt,
+  });
+  // Le BPI de l'équipe reste sien, révélé ou non : il mesure sa progression,
+  // pas sa place. C'est le RANG qui fait l'événement, donc le rang qu'on garde.
+  const playerBpi = playerRankingRow ? Number(playerRankingRow.bpi) : null;
   const playerDimensions =
     ((playerRankingRow?.detail as { dimensions?: Partial<Record<string, number>> })
       ?.dimensions as Partial<Record<string, number>> | undefined) ?? null;
@@ -1120,10 +1149,9 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     closesAt: playWindow.closesAt ? playWindow.closesAt.toISOString() : null,
   };
 
-  const profile = game.difficultyProfile as { kind?: GameKind };
   return {
     gameId,
-    kind: profile.kind ?? "solo",
+    kind: kindDeLaPartie,
     status: game.status,
     currentRound: game.currentRound,
     playLock,
@@ -1260,7 +1288,9 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     })(),
     lastEvents,
     history,
-    ranking,
+    ranking: classementRevele ? ranking : [],
+    classement: { revele: classementRevele, parLAnimateur: kindDeLaPartie !== "solo" },
+    playerBpi,
     playerDimensions,
     lastDecisions,
     // Le point de départ et les valeurs proposées viennent du même calcul que
