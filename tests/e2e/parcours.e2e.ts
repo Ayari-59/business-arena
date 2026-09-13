@@ -115,7 +115,7 @@ describe("parcours enseignant et élève", () => {
     expect(vu).not.toContain("enceinte");
     // les trois offres du cabinet, pas un tarif unique
     expect(vu).toContain("Audit");
-    expect(vu).toContain("Transformation");
+    expect(vu).toContain("Stratégie");
 
     // le point de départ vient du secteur : la journée d'audit, pas 59 €
     const prix = await eleve.inputValue(PRIX_AUDIT);

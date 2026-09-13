@@ -45,7 +45,7 @@ export const ATELIER_GPME: AtelierDefinition = {
     tours: 5,
     effectifParEquipe: "trois élèves",
     notes:
-      "ATLAS CONSEIL vend du temps, qui ne se stocke pas : une journée non vendue est perdue. Sa capacité ne s'achète pas, elle se recrute, avec le délai et le coût que cela suppose. Son bilan est presque entièrement fait de créances clients, ce qui rend le poste clients concret plutôt que théorique. Le cabinet se joue ici en trois offres, l'audit, la transformation et une pratique cyber à bâtir par la R&D avant de la vendre : le mix des journées vendues et l'investissement dans une offre neuve entrent dans les décisions. Le niveau retenu ouvre le personnel, le financement, l'assurance et la R&D, c'est-à-dire les leviers que le référentiel demande de savoir manier. Le monde variable est décoché pour que les écarts entre équipes viennent de leurs décisions.",
+      "ATLAS CONSEIL vend du temps, qui ne se stocke pas : une journée non vendue est perdue. Sa capacité ne s'achète pas, elle se recrute, avec le délai et le coût que cela suppose. Son bilan est presque entièrement fait de créances clients, ce qui rend le poste clients concret plutôt que théorique. Le cabinet se joue ici en trois offres, l'audit, la stratégie et une pratique de cyber-sécurité à bâtir par la R&D avant de la vendre : le mix des journées vendues et l'investissement dans une offre neuve entrent dans les décisions. Le niveau retenu ouvre le personnel, le financement, l'assurance et la R&D, c'est-à-dire les leviers que le référentiel demande de savoir manier. Le monde variable est décoché pour que les écarts entre équipes viennent de leurs décisions.",
   },
   seances: [
     {
