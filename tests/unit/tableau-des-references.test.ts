@@ -171,6 +171,45 @@ describe("TableauDesReferences", () => {
     expect(html).toContain("rupture");
   });
 
+  it("une référence à bâtir n'affiche ni prix, ni marge, ni qualité", () => {
+    const gamme = [
+      reference("go", "Go", { rd: { techLevel: 0, development: null } }),
+      reference("studio", "Studio", { rd: { techLevel: 0, development: { cost: 25000, availableFromRound: 2, invested: 12000, available: false, launchRound: null } } }),
+    ] as unknown as Gamme;
+    const html = rendu(gamme, {
+      // Le Go vend et garde ses chiffres…
+      go: produit({ price: 129, unitVariableCost: 70, perceivedQuality: 0.97, rd: { budget: 0, techLevel: 0 } }),
+      // …la Studio, elle, n'a rien produit ni vendu : le moteur force son plan
+      // à zéro. Son prix vient du champ caché du formulaire, pas d'un choix.
+      studio: produit({
+        price: 129,
+        unitVariableCost: 70,
+        produced: 0,
+        sold: 0,
+        lost: 0,
+        revenue: 0,
+        perceivedQuality: 1,
+        stock: { quantity: 0, unitCost: 0 },
+        rd: {
+          budget: 12000,
+          techLevel: 0,
+          development: { cost: 25000, availableFromRound: 2, invested: 12000, launched: false },
+        },
+      }),
+    });
+    // LE POINT : 59 € de marge annoncés sur une vente qui n'a pas eu lieu.
+    // Les deux références ont le même prix et le même coût variable, donc la
+    // même marge : si la Studio l'affichait aussi, le chiffre sortirait quatre
+    // fois (carte + tableau, deux lignes) au lieu de deux. Le Go, lui, la
+    // garde — la règle ne vaut que pour la ligne à bâtir.
+    expect(html.match(/59\s€/g)?.length).toBe(2);
+    expect(html).toContain("en développement");
+    // Les volumes valent bien zéro, et le disent : c'est l'information du tour,
+    // et le budget de R&D engagé reste lisible — c'est là qu'est passé l'argent.
+    expect(html).toMatch(/0\s€/);
+    expect(html).toMatch(/12\s000\s€/);
+  });
+
   it("« lancée ce tour » ne se dit que le tour du lancement", () => {
     const gamme = [reference("studio", "Studio", { rd: { techLevel: 0.1, development: null } })] as unknown as Gamme;
     const dev = { cost: 20000, availableFromRound: 2, invested: 20000, launched: true, launchRound: 2 };

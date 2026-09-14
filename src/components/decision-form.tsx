@@ -386,6 +386,74 @@ function enDeveloppement(p: NonNullable<GameView["gamme"]>[number]): boolean {
   return !!dev && !dev.available;
 }
 
+/**
+ * CE QU'UNE RÉFÉRENCE À BÂTIR RAPPORTERAIT, UNE FOIS BÂTIE.
+ *
+ * Financer un développement, c'est avancer une somme contre une marge future :
+ * sans les deux chiffres côte à côte, l'arbitrage se fait à l'aveugle. Le
+ * tableau de bord, lui, ne dit plus rien de la marge d'une référence à bâtir —
+ * il rend compte de ventes qui n'ont pas eu lieu. C'est ici, au moment de
+ * décider, que le repère a sa place.
+ *
+ * Le prix retenu est celui de la clientèle dominante de la référence : c'est
+ * aussi celui que le formulaire enverra tant qu'il n'y a pas de champ Prix à
+ * remplir. Le nombre d'unités à vendre est le seuil brut — marge unitaire
+ * contre coût de développement —, sans les charges de structure : une borne
+ * BASSE, et c'est ainsi qu'il est nommé.
+ */
+function MargeVisee({
+  refPrice,
+  achat,
+  autres,
+  coutDeveloppement,
+  units,
+}: {
+  refPrice: number;
+  achat: number;
+  autres: number;
+  coutDeveloppement: number;
+  units: string;
+}) {
+  const cvu = achat + autres;
+  const marge = refPrice - cvu;
+  const seuil = marge > 0 ? Math.ceil(coutDeveloppement / marge) : null;
+  return (
+    <div className="rounded-lg border border-white/5 bg-slate-900 px-2.5 py-2">
+      <p className="text-xs uppercase leading-4 tracking-wide text-slate-500">
+        Une fois bâtie
+      </p>
+      {/*
+        Chaque fait porte SON séparateur et reste insécable, comme dans
+        `Faits` : sur 390 px, « marge visée » se détachait de son chiffre et le
+        montant vert atterrissait seul sur la ligne suivante.
+      */}
+      <p className="mt-1 flex flex-wrap gap-x-1.5 gap-y-0.5 text-xs leading-snug">
+        <span className="whitespace-nowrap">
+          <span className="text-slate-400">prix usuel </span>
+          <span className="text-slate-200">{formatEuro(refPrice)}</span>
+          <span aria-hidden className="text-slate-600"> ·</span>
+        </span>
+        <span className="whitespace-nowrap">
+          <span className="text-slate-400">coût variable </span>
+          <span className="text-slate-200">{formatEuroCents(cvu)}</span>
+          <span aria-hidden className="text-slate-600"> ·</span>
+        </span>
+        <span className="whitespace-nowrap">
+          <span className="text-slate-400">marge visée </span>
+          <span className={marge < 0 ? "font-medium text-red-400" : "font-medium text-emerald-300"}>
+            {formatEuroCents(marge)}
+          </span>
+        </span>
+      </p>
+      <p className="mt-1 text-xs leading-snug text-slate-400">
+        {seuil !== null
+          ? `${formatEuro(coutDeveloppement)} de développement : ${formatUnits(seuil)} ${units} à vendre pour les rembourser, au moins — les charges de structure courent en plus.`
+          : `${formatEuro(coutDeveloppement)} de développement, et une marge nulle au prix usuel : à ce coût variable, elle ne les remboursera jamais.`}
+      </p>
+    </div>
+  );
+}
+
 /** La pastille d'une référence en développement, à côté de son nom. */
 function EnDeveloppement() {
   return (
@@ -562,6 +630,15 @@ function GammeVentes({
                   Rien à vendre tant qu&apos;elle n&apos;est pas bâtie : son financement se décide
                   dans les budgets du tour, à la R&amp;D.
                 </span>
+                {p.rd?.development ? (
+                  <MargeVisee
+                    refPrice={p.refPrice}
+                    achat={achat}
+                    autres={p.otherVariableCostPerUnit}
+                    coutDeveloppement={p.rd.development.cost}
+                    units={v.units}
+                  />
+                ) : null}
                 <input type="hidden" name={productFieldName(p.code, "price")} value={Math.round(price * 10) / 10} />
                 <input type="hidden" name={productFieldName(p.code, "productionPlan")} value={0} />
                 {suppliers && faconniers[p.code] ? (

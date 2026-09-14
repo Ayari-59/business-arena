@@ -27,6 +27,16 @@ import type { CompanyRoundResult } from "@/engine/types";
  *     cellules alimentent les deux formes — elles sont calculées une fois, plus
  *     bas, et rendues deux fois.
  *
+ *  3. UNE RÉFÉRENCE À BÂTIR AFFICHAIT UNE MARGE. Tant qu'elle n'est pas
+ *     lancée, le moteur force son plan à zéro : elle ne produit rien, ne vend
+ *     rien, ne rapporte rien. Mais elle garde un prix — celui que le
+ *     formulaire envoie en champ caché, faute d'en demander un — et une
+ *     structure de coût, donc la colonne Marge/u annonçait « 59 € » sur une
+ *     vente qui n'a pas eu lieu, à un prix que personne n'a choisi. Prix,
+ *     marge et qualité perçue passent à « — » sur ces lignes-là ; les volumes,
+ *     eux, valent bien zéro et le disent. La marge visée d'une référence à
+ *     bâtir se lit dans le formulaire de décision, là où elle sert à décider.
+ *
  * Ce qui ne disparaît jamais : une rupture d'approvisionnement reste signalée
  * sur le nom de la référence, même quand la colonne Fournisseur est masquée.
  * C'est elle qui explique le volume manqué de la ligne.
@@ -43,6 +53,20 @@ const rdVide = (p: Produit | undefined) =>
   (p?.rd?.budget ?? 0) === 0 && (p?.rd?.techLevel ?? 0) === 0;
 
 /**
+ * Une référence encore à bâtir : son développement n'est pas lancé.
+ *
+ * Le moteur force son plan à zéro — elle ne produit rien, ne vend rien, ne
+ * rapporte rien. Mais elle garde un prix (celui que le formulaire envoie en
+ * champ caché, faute d'en demander un) et une structure de coût, donc la marge
+ * unitaire s'affichait quand même : un chiffre sur une vente qui n'a pas eu
+ * lieu, calculé sur un prix que personne n'a choisi.
+ */
+const enDeveloppement = (p: Produit) => {
+  const dev = p.rd?.development;
+  return dev ? !dev.launched : false;
+};
+
+/**
  * Les mesures d'une référence, dans l'ordre de lecture. Le CA n'y figure pas :
  * c'est le résultat de la ligne, il est traité à part dans les deux rendus (à
  * droite dans le tableau, en tête de carte sur téléphone).
@@ -54,8 +78,12 @@ function cellulesDe(
   avecFournisseur: boolean,
 ): Cellule[] {
   const marge = p.price - p.unitVariableCost;
+  // Une référence à bâtir n'a ni prix pratiqué, ni marge réalisée, ni qualité
+  // jugée par un client : ces trois-là ne se disent pas. Les volumes, eux,
+  // valent bien zéro et le disent — c'est l'information du tour.
+  const aBatir = enDeveloppement(p);
   const cellules: Cellule[] = [
-    { cle: "prix", entete: "Prix", valeur: formatEuro(p.price), classe: "" },
+    { cle: "prix", entete: "Prix", valeur: aBatir ? "—" : formatEuro(p.price), classe: "" },
     { cle: "rayon", entete: "En rayon", valeur: formatUnits(p.produced), classe: "" },
     { cle: "vendu", entete: "Vendu", valeur: formatUnits(p.sold), classe: "" },
     {
@@ -67,8 +95,8 @@ function cellulesDe(
     {
       cle: "marge",
       entete: "Marge/u",
-      valeur: formatEuro(marge),
-      classe: marge < 0 ? "text-red-400" : "",
+      valeur: aBatir ? "—" : formatEuro(marge),
+      classe: !aBatir && marge < 0 ? "text-red-400" : "",
     },
     {
       cle: "reste",
@@ -80,7 +108,9 @@ function cellulesDe(
       cle: "qualite",
       entete: "Qualité",
       valeur:
-        p.perceivedQuality !== undefined ? `${Math.round(p.perceivedQuality * 100)} %` : "—",
+        aBatir || p.perceivedQuality === undefined
+          ? "—"
+          : `${Math.round(p.perceivedQuality * 100)} %`,
       classe: "",
     },
   ];
@@ -116,7 +146,6 @@ function NomEtIncidents({
   tour: number;
 }) {
   const dev = produit.rd?.development;
-  const enDeveloppement = dev ? !dev.launched : false;
   return (
     <>
       <NomReference reference={reference} />
@@ -128,7 +157,7 @@ function NomEtIncidents({
           ⚠︎ rupture
         </span>
       ) : null}
-      {enDeveloppement ? (
+      {enDeveloppement(produit) ? (
         <span
           className="ml-1 whitespace-nowrap text-xs text-amber-300"
           title="Référence en développement : pas encore vendable"
