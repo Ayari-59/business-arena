@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { getTeacherGameView } from "@/services/game.service";
@@ -69,6 +70,15 @@ export default async function TeacherGamePage({
             Les élèves rejoignent sur <span className="font-mono">/join</span> avec ce code.
           </p>
           <p className="mt-1 text-xs text-slate-400">{view.scenarioTitle}</p>
+          {/* Le classement dit qui gagne ; l'observation dit si la classe joue
+              encore et ce qu'un tour lui coûte. Deux questions distinctes, deux
+              écrans. */}
+          <Link
+            href={`/teacher/games/${gameId}/observation`}
+            className="mt-2 inline-block text-xs text-amber-300 underline-offset-4 hover:underline"
+          >
+            Observation de séance →
+          </Link>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2">
           <p className="rounded-full border border-white/10 px-4 py-1 text-sm text-slate-300">
