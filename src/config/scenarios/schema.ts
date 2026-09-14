@@ -146,6 +146,7 @@ export const engineScenarioConfigSchema = z.object({
     maxCapitalIncreaseTotal: z.number().positive().optional(),
     maxDebtToEquity: z.number().positive().optional(),
     crisisRoundsBeforeFailure: z.number().int().positive().optional(),
+    rescueFinancingRequired: z.boolean().optional(),
     /**
      * Dossier bancaire. Ce schéma est la frontière que traverse le snapshot
      * d'une partie : une clé qu'il ignore est SILENCIEUSEMENT retirée, et la

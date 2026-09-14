@@ -130,6 +130,7 @@ export async function updateEconomicsAction(formData: FormData): Promise<void> {
     // Défaillance et sortie de crise : des nombres, pas des taux.
     maxDebtToEquity: optionalNumber(formData, "maxDebtToEquity"),
     crisisRoundsBeforeFailure: optionalNumber(formData, "crisisRoundsBeforeFailure"),
+    rescueFinancingRequired: optionalNumber(formData, "rescueFinancingRequired"),
     fixedCostsPerRound: optionalNumber(formData, "fixedCostsPerRound"),
     materialCostPerUnit: optionalNumber(formData, "materialCostPerUnit"),
     otherVariableCostPerUnit: optionalNumber(formData, "otherVariableCostPerUnit"),

@@ -16,6 +16,11 @@ import type { RoundDecisions } from "@/engine/types";
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
 import type { GameView } from "@/services/game-view.service";
 import { formatEuro, formatEuroCents, formatUnits } from "@/lib/format";
+import {
+  messageSauvetage,
+  verdictSauvetage,
+  type ExigenceSauvetage,
+} from "@/services/sauvetage";
 import { COMMUNICATION_AXIS_LABELS } from "@/engine/market/communication";
 import { SimulationProgress } from "@/components/simulation-progress";
 import { NomReference } from "@/components/nom-reference";
@@ -263,6 +268,7 @@ function Field({
   step = 1,
   suffix,
   hint,
+  onValueChange,
 }: {
   name: string;
   label: string;
@@ -270,6 +276,8 @@ function Field({
   step?: number;
   suffix: string;
   hint?: string;
+  /** Remonte la valeur saisie, pour les champs qu'une règle doit suivre en direct. */
+  onValueChange?: (valeur: number) => void;
 }) {
   return (
     <label className="block">
@@ -282,6 +290,14 @@ function Field({
           step={step}
           min={0}
           required
+          onChange={
+            onValueChange
+              ? (e) => {
+                  const v = Number(e.currentTarget.value.replace(",", "."));
+                  onValueChange(Number.isFinite(v) ? v : 0);
+                }
+              : undefined
+          }
           className="min-w-0 flex-1 bg-transparent text-sm text-slate-100 outline-none"
         />
         <span className="shrink-0 text-xs text-slate-400">{suffix}</span>
@@ -877,6 +893,7 @@ export function DecisionForm({
   capacityFacts,
   vocabulary,
   verrou,
+  sauvetage,
   gamme = null,
   rdOffer = null,
   communicationOffer = null,
@@ -896,6 +913,12 @@ export function DecisionForm({
    * « Valider » est grisé ; le serveur refuse de toute façon.
    */
   verrou?: string | null;
+  /**
+   * Financement de sauvetage exigé après un tour clos en cessation de
+   * paiements. `null` hors crise, ou quand l'enseignant a préféré
+   * l'avertissement au verrou.
+   */
+  sauvetage?: ExigenceSauvetage | null;
   defaults: RoundDecisions;
   /**
    * Les valeurs PROPOSÉES pour ce tour (tour précédent, sinon point de départ
@@ -1110,6 +1133,16 @@ export function DecisionForm({
   const rdMono = on.rd && !!rdOffer && !gamme;
   // L'axe de communication tenu : écouté pour dire à qui il parle.
   const [axe, setAxe] = useState<string>(defaults.communicationAxis ?? "");
+  // LES DEUX LEVIERS DU SAUVETAGE, SUIVIS EN DIRECT. Le bouton de validation
+  // doit se débloquer à la saisie, pas après un aller-retour serveur : une
+  // équipe en crise a déjà assez à comprendre sans découvrir son erreur après
+  // l'envoi.
+  const [renfort, setRenfort] = useState({
+    emprunt: Math.max(0, defaults.finance?.newLoan ?? 0),
+    apport: Math.max(0, defaults.finance?.capitalIncrease ?? 0),
+  });
+  const verdict = sauvetage ? verdictSauvetage(sauvetage, renfort) : { suffisant: true as const };
+  const blocageSauvetage = messageSauvetage(verdict, formatEuro);
 
   // Vocabulaire du secteur : c'est lui qui parle à l'élève, pas le moteur.
   const v = vocabulary;
@@ -1238,6 +1271,25 @@ export function DecisionForm({
           className="flex items-center gap-2 rounded-lg border border-amber-400/30 bg-amber-400/5 px-3 py-2 text-sm text-amber-200"
         >
           <span aria-hidden>🔒</span> {verrou}
+        </p>
+      ) : null}
+      {/*
+        LE FINANCEMENT DE SAUVETAGE. Visible à toutes les étapes, comme le
+        verrou de planning : le bouton « Valider » est grisé au bas de chacune
+        d'elles, et un bouton grisé sans sa raison sous les yeux est une
+        impasse. Le message dit le montant qui reste à réunir et s'efface de
+        lui-même dès que le compte y est.
+      */}
+      {blocageSauvetage ? (
+        <p
+          role="status"
+          className="flex items-start gap-2 rounded-lg border border-red-400/30 bg-red-950/30 px-3 py-2 text-sm leading-relaxed text-red-200"
+        >
+          <span aria-hidden className="mt-0.5">🚨</span>
+          <span>
+            <strong className="font-semibold">Financement de sauvetage exigé.</strong>{" "}
+            {blocageSauvetage}
+          </span>
         </p>
       ) : null}
       {/* Barre d'étapes : où j'en suis, saut direct possible. Les libellés se
@@ -1696,6 +1748,7 @@ export function DecisionForm({
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <>
               <Field name="newLoan" label="Nouvel emprunt" defaultValue={0} suffix="€"
+                onValueChange={(v) => setRenfort((r) => ({ ...r, emprunt: v }))}
                 hint={
                   loanCapacity
                     ? `5 %/an. La banque prête jusqu'à ${loanCapacity.ratio} × vos capitaux propres : il vous reste ${Math.round(loanCapacity.remaining).toLocaleString("fr-FR")} €.`
@@ -1709,6 +1762,7 @@ export function DecisionForm({
                 hint={debtSchedule ? "Facultatif, en plus de l'échéance obligatoire." : undefined}
               />
               <Field name="capitalIncrease" label="Augmentation de capital" defaultValue={0} suffix="€"
+                onValueChange={(v) => setRenfort((r) => ({ ...r, apport: v }))}
                 hint={
                   capitalAllowance
                     ? `Apport des associés · reste ${Math.round(capitalAllowance.remaining).toLocaleString("fr-FR")} € sur ${Math.round(capitalAllowance.total).toLocaleString("fr-FR")} € pour la partie.`
@@ -2054,7 +2108,7 @@ export function DecisionForm({
             <button
               key="valider"
               type="submit"
-              disabled={pending || verrou != null}
+              disabled={pending || verrou != null || blocageSauvetage != null}
               className="order-1 ml-auto rounded-lg bg-amber-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60 sm:order-3 sm:ml-0"
             >
               {pending

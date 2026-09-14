@@ -27,6 +27,11 @@ import type { SituationView } from "@/services/pedagogy.service";
  */
 
 vi.mock("next/cache", () => ({ revalidatePath: () => undefined }));
+// Le financement de sauvetage est vérifié côté serveur : l'action lit la vue
+// pour savoir si l'équipe est en crise. C'est une frontière de service de
+// plus, et `@/db` jette à l'import sans DATABASE_URL — une vue nulle vaut
+// « pas de crise », ce qui laisse passer les décisions de ces tests.
+vi.mock("@/services/game-view.service", () => ({ getGameView: vi.fn(async () => null) }));
 vi.mock("@/lib/guest", () => ({ getGuestUserId: vi.fn(async () => "invite-1") }));
 vi.mock("@/services/game.service", () => ({
   getGameKind: vi.fn(),

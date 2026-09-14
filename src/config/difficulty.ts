@@ -227,6 +227,12 @@ export const economicOverridesSchema = z.object({
    * séances.
    */
   crisisRoundsBeforeFailure: z.number().int().min(1).max(10).optional(),
+  /**
+   * Le financement de sauvetage est-il un verrou ou un avertissement ? Saisi
+   * comme 1 (obligatoire) ou 0 (simple alerte) : le panneau ne pose que des
+   * champs numériques, et une case à cocher y serait le seul cas particulier.
+   */
+  rescueFinancingRequired: z.number().min(0).max(1).optional(),
   /** Dotations aux amortissements par trimestre (€). */
   depreciationPerRound: z.number().min(0).max(500_000).optional(),
   /** Part maximale du poste clients mobilisable à l'escompte (0-1). */
@@ -329,6 +335,10 @@ export function applyEconomicOverrides(
       maxDebtToEquity: overrides.maxDebtToEquity ?? scenario.finance.maxDebtToEquity,
       crisisRoundsBeforeFailure:
         overrides.crisisRoundsBeforeFailure ?? scenario.finance.crisisRoundsBeforeFailure,
+      rescueFinancingRequired:
+        overrides.rescueFinancingRequired === undefined
+          ? scenario.finance.rescueFinancingRequired
+          : overrides.rescueFinancingRequired === 1,
       depreciationPerRound:
         overrides.depreciationPerRound ?? scenario.finance.depreciationPerRound,
     },

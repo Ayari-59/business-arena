@@ -119,6 +119,18 @@ describe("la crise remonte jusqu'à l'élève", () => {
     );
   });
 
+  it("le tour suivant une crise exige un financement de sauvetage", async () => {
+    // LE POINT : le tour ne peut plus se jouer comme si de rien n'était. La
+    // vue porte l'exigence ET les deux leviers qui y répondent, pour que
+    // l'écran puisse dire combien il manque au lieu de griser un bouton.
+    const vue = (await getGameView(gameId, eleve))!;
+    expect(vue.alerteTresorerie!.financementObligatoire).toBe(true);
+    expect(vue.alerteTresorerie!.manque).toBeGreaterThan(0);
+    // La capacité d'endettement est calculée : c'est elle qui dira, le jour où
+    // elle tombe à zéro, que les leviers sont épuisés.
+    expect(vue.loanCapacity).not.toBeNull();
+  });
+
   it("le second tour de crise gèle l'entreprise, et l'alerte le dit", async () => {
     const vue = await jouer(RUINEUSE);
     const alerte = vue.alerteTresorerie!;

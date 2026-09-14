@@ -752,6 +752,15 @@ export default async function ArenaPage({
                   rdOffer={view.rdOffer}
                   communicationOffer={view.communicationOffer}
                   verrou={view.playLock.playable ? null : (view.playLock.message ?? "Ce tour n'est pas encore ouvert.")}
+                  sauvetage={
+                    view.alerteTresorerie?.crise && view.alerteTresorerie.financementObligatoire
+                      ? {
+                          manque: view.alerteTresorerie.manque,
+                          capaciteEmprunt: view.loanCapacity?.remaining ?? null,
+                          enveloppeApport: view.capitalAllowance?.remaining ?? null,
+                        }
+                      : null
+                  }
                 />
               </section>
                   ),

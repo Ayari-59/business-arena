@@ -28,6 +28,7 @@ const alerte = (over: Partial<Alerte> = {}): Alerte => ({
   tresorerieNette: -76000,
   plafondDecouvert: 30000,
   manque: 46000,
+  financementObligatoire: true,
   ...over,
 });
 

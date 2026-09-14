@@ -293,6 +293,18 @@ export interface EngineScenarioConfig {
      */
     crisisRoundsBeforeFailure?: number;
     /**
+     * FINANCEMENT DE SAUVETAGE OBLIGATOIRE. Après un tour clos en cessation de
+     * paiements, l'équipe ne peut valider le suivant qu'en réunissant de quoi
+     * repasser sous le plafond de découvert (emprunt + apport des associés).
+     *
+     * Absent = obligatoire. C'est le comportement voulu par défaut : sans lui,
+     * une équipe traverse sa crise sans jamais avoir à trancher, et découvre
+     * la faillite au tour d'après. Une séance peut vouloir l'avertissement
+     * sans le verrou — un cours d'une heure où personne ne doit rester bloqué
+     * la main levée : l'enseignant le désactive alors dans son espace.
+     */
+    rescueFinancingRequired?: boolean;
+    /**
      * DOSSIER BANCAIRE (optionnel). Présent : le plan de trésorerie déposé
      * avec les décisions cesse d'être un exercice sans suite et devient la
      * pièce que lit la banque.

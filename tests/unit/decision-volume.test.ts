@@ -13,6 +13,11 @@ import { describe, expect, it, vi } from "vitest";
  */
 
 vi.mock("next/cache", () => ({ revalidatePath: () => undefined }));
+// Le financement de sauvetage est vérifié côté serveur : l'action lit la vue
+// pour savoir si l'équipe est en crise. C'est une frontière de service de
+// plus, et `@/db` jette à l'import sans DATABASE_URL — une vue nulle vaut
+// « pas de crise », ce qui laisse passer les décisions de ces tests.
+vi.mock("@/services/game-view.service", () => ({ getGameView: vi.fn(async () => null) }));
 vi.mock("@/lib/guest", () => ({ getGuestUserId: async () => "invite-1" }));
 // `actions.ts` importe retakeSituation de debrief.service, qui charge `@/db` —
 // lequel jette à l'import sans DATABASE_URL. Le mock ferme la frontière de
@@ -88,5 +93,76 @@ describe("le formulaire prévient avant d'envoyer des valeurs proposées", () =>
     // « Oui » envoie vraiment ; « Non » ramène au premier champ non touché.
     expect(source).toContain("requestSubmit()");
     expect(source).toContain(".focus()");
+  });
+});
+
+/**
+ * LE VERROU DE SAUVETAGE TIENT AUSSI CÔTÉ SERVEUR.
+ *
+ * L'écran grise « Valider » et dit ce qui manque. Mais un formulaire PÉRIMÉ —
+ * l'élève avait sa page ouverte avant la clôture qui l'a mis en crise — ou
+ * forgé passerait outre : le grisage est un confort, pas une garantie. La
+ * règle est la même des deux côtés (`verdictSauvetage`), et c'est le serveur
+ * qui a le dernier mot.
+ */
+describe("financement de sauvetage : le serveur refuse ce que l'écran grisait", () => {
+  const DECISIONS = {
+    price: "59",
+    productionPlan: "4000",
+    marketingBudget: "8000",
+    qualityBudget: "0",
+    maintenanceBudget: "0",
+  };
+
+  /** Une équipe en crise : il lui manque 46 000 € pour repasser sous le plafond. */
+  const enCrise = {
+    alerteTresorerie: {
+      crise: true,
+      defaillante: false,
+      toursConsecutifs: 1,
+      toursAvantDefaillance: 2,
+      tresorerieNette: -76000,
+      plafondDecouvert: 30000,
+      manque: 46000,
+      financementObligatoire: true,
+    },
+    loanCapacity: { remaining: 70000, ratio: 2, equity: 75000, debt: 80000 },
+    capitalAllowance: { total: 100000, remaining: 100000 },
+  };
+
+  it("sans financement, la décision est refusée et le montant est dit", async () => {
+    const { getGameView } = await import("@/services/game-view.service");
+    vi.mocked(getGameView).mockResolvedValueOnce(enCrise as never);
+    const res = await playRoundAction("partie", { error: null }, formulaire(DECISIONS));
+    expect(res.error).toMatch(/46\s000\s€/);
+    expect(res.error).toContain("Empruntez");
+  });
+
+  it("avec de quoi couvrir, elle passe", async () => {
+    const { getGameView } = await import("@/services/game-view.service");
+    vi.mocked(getGameView).mockResolvedValueOnce(enCrise as never);
+    const res = await playRoundAction("partie", { error: null }, formulaire({ ...DECISIONS, newLoan: "46000" }));
+    expect(res.error).toBeNull();
+  });
+
+  it("emprunt et apport se cumulent, comme à l'écran", async () => {
+    const { getGameView } = await import("@/services/game-view.service");
+    vi.mocked(getGameView).mockResolvedValueOnce(enCrise as never);
+    const res = await playRoundAction(
+      "partie",
+      { error: null },
+      formulaire({ ...DECISIONS, newLoan: "20000", capitalIncrease: "26000" }),
+    );
+    expect(res.error).toBeNull();
+  });
+
+  it("l'enseignant ayant choisi l'avertissement, rien n'est bloqué", async () => {
+    const { getGameView } = await import("@/services/game-view.service");
+    vi.mocked(getGameView).mockResolvedValueOnce({
+      ...enCrise,
+      alerteTresorerie: { ...enCrise.alerteTresorerie, financementObligatoire: false },
+    } as never);
+    const res = await playRoundAction("partie", { error: null }, formulaire(DECISIONS));
+    expect(res.error).toBeNull();
   });
 });

@@ -6,6 +6,9 @@ import { getGuestUserId } from "@/lib/guest";
 import { roundDecisionsSchema } from "@/services/decision-schema";
 import { readProductFields } from "@/config/decision-source";
 import { scalarsOfGamme } from "@/engine/gamme";
+import { formatEuro } from "@/lib/format";
+import { messageSauvetage, verdictSauvetage } from "@/services/sauvetage";
+import { getGameView } from "@/services/game-view.service";
 import {
   getGameKind,
   getGameVocabulary,
@@ -170,6 +173,29 @@ export async function playRoundAction(
   });
   if (!parsed.success) {
     return { error: "Décisions invalides : vérifiez les montants saisis." };
+  }
+
+  // LE FINANCEMENT DE SAUVETAGE, VÉRIFIÉ CÔTÉ SERVEUR. L'écran grise déjà le
+  // bouton, mais un formulaire périmé — l'élève avait la page ouverte avant la
+  // clôture qui l'a mis en crise — ou forgé passerait outre. La règle est la
+  // même des deux côtés (`verdictSauvetage`), pour que l'écran n'autorise
+  // jamais ce que le serveur refuse.
+  const vue = await getGameView(gameId, userId);
+  const alerte = vue?.alerteTresorerie;
+  if (alerte?.crise && alerte.financementObligatoire) {
+    const verdict = verdictSauvetage(
+      {
+        manque: alerte.manque,
+        capaciteEmprunt: vue!.loanCapacity?.remaining ?? null,
+        enveloppeApport: vue!.capitalAllowance?.remaining ?? null,
+      },
+      {
+        emprunt: parsed.data.finance?.newLoan ?? 0,
+        apport: parsed.data.finance?.capitalIncrease ?? 0,
+      },
+    );
+    const message = messageSauvetage(verdict, formatEuro);
+    if (message) return { error: message };
   }
 
   let kind: Awaited<ReturnType<typeof getGameKind>>;

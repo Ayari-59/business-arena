@@ -564,6 +564,12 @@ export interface GameView {
      * trouver. Zéro quand la trésorerie y est déjà.
      */
     manque: number;
+    /**
+     * Le tour ne peut pas être validé sans réunir `manque` en emprunt et en
+     * apport. `false` : l'équipe est avertie et reste libre de couler — c'est
+     * le réglage d'une séance courte, où personne ne doit rester bloqué.
+     */
+    financementObligatoire: boolean;
   } | null;
   /** Catalogue d'études du scénario (prix à l'échelle de la périodicité). */
   studiesOffer: {
@@ -1736,6 +1742,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         tresorerieNette: tresorerie,
         plafondDecouvert: plafond,
         manque: Math.max(0, -tresorerie - plafond),
+        financementObligatoire: snapshot.finance.rescueFinancingRequired ?? true,
       };
     })(),
     loanCapacity: (() => {

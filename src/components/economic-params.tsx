@@ -61,10 +61,11 @@ const GROUPS: { title: string; note?: string; fields: Field[] }[] = [
   },
   {
     title: "Défaillance et sortie de crise",
-    note: "Une entreprise est en cessation de paiements quand son découvert dépasse le plafond ET qu'il ne lui reste plus de créances à céder. Ces deux réglages disent à quelle vitesse elle y arrive et combien de temps elle a pour s'en sortir : la capacité d'endettement décide quand la banque cesse de prêter, et le nombre de tours décide quand la partie est perdue. Le compteur retombe à zéro dès qu'un tour repasse sous le plafond — une recapitalisation dégèle l'entreprise.",
+    note: "Une entreprise est en cessation de paiements quand son découvert dépasse le plafond ET qu'il ne lui reste plus de créances à céder. Ces deux réglages disent à quelle vitesse elle y arrive et combien de temps elle a pour s'en sortir : la capacité d'endettement décide quand la banque cesse de prêter, et le nombre de tours décide quand la partie est perdue. Le compteur retombe à zéro dès qu'un tour repasse sous le plafond — une recapitalisation dégèle l'entreprise. Le financement de sauvetage obligatoire empêche de valider le tour suivant une crise sans avoir réuni de quoi repasser sous le découvert autorisé ; à 0, l'équipe n'est qu'avertie et reste libre de couler.",
     fields: [
       { name: "maxDebtToEquity", label: "Emprunt max. / capitaux propres", suffix: "×" },
       { name: "crisisRoundsBeforeFailure", label: "Tours en crise avant défaillance", suffix: "tours" },
+      { name: "rescueFinancingRequired", label: "Financement de sauvetage obligatoire", suffix: "1 = oui" },
     ],
   },
   {

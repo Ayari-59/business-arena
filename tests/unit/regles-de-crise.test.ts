@@ -83,3 +83,49 @@ describe("règles de crise réglables par l'enseignant", () => {
     expect(relu.finance.crisisRoundsBeforeFailure).toBe(3);
   });
 });
+
+/**
+ * LE VERROU DE SAUVETAGE EST UN RÉGLAGE, PAS UNE FATALITÉ.
+ *
+ * Obligatoire par défaut : sans lui, une équipe traverse sa crise sans jamais
+ * avoir à trancher et découvre la faillite au tour d'après. Mais un cours d'une
+ * heure ne peut pas se permettre une équipe bloquée la main levée —
+ * l'enseignant y préférera l'avertissement.
+ *
+ * Il est saisi comme 1 ou 0 : le panneau des paramètres économiques ne pose que
+ * des champs numériques, et une case à cocher y serait le seul cas particulier.
+ */
+describe("le financement de sauvetage, réglable", () => {
+  it("obligatoire quand le scénario ne dit rien", () => {
+    expect(scenarioByCode("nova")!.scenario.finance.rescueFinancingRequired).toBeUndefined();
+    expect(economicDefaults(scenarioByCode("nova")!).rescueFinancingRequired).toBe("1");
+  });
+
+  it("0 le désactive, 1 le rétablit", () => {
+    const base = scenarioByCode("nova")!.scenario;
+    const sans = applyEconomicOverrides(base, sanitizeEconomicOverrides({ rescueFinancingRequired: 0 }));
+    expect(sans.finance.rescueFinancingRequired).toBe(false);
+    const avec = applyEconomicOverrides(base, sanitizeEconomicOverrides({ rescueFinancingRequired: 1 }));
+    expect(avec.finance.rescueFinancingRequired).toBe(true);
+  });
+
+  it("le réglage traverse le parse du snapshot", () => {
+    // La frontière où une clé non déclarée disparaît en silence : le verrou
+    // resterait alors actif alors que l'enseignant l'a retiré.
+    const brut = JSON.parse(
+      JSON.stringify(
+        applyEconomicOverrides(
+          scenarioByCode("nova")!.scenario,
+          sanitizeEconomicOverrides({ rescueFinancingRequired: 0 }),
+        ),
+      ),
+    );
+    expect(parseScenarioConfig(brut).finance.rescueFinancingRequired).toBe(false);
+  });
+
+  it("le panneau et les deux actions le portent", () => {
+    expect(PANNEAU).toContain('name: "rescueFinancingRequired"');
+    expect(ACTION_PARTIE).toContain("rescueFinancingRequired");
+    expect(ACTION_SCENARIO).toContain("rescueFinancingRequired");
+  });
+});

@@ -1245,6 +1245,8 @@ export function economicDefaults(d: ScenarioDefinition): Record<string, string |
     maxDebtToEquity: num(s.finance.maxDebtToEquity),
     // Deux tours : la règle du moteur quand le scénario ne dit rien.
     crisisRoundsBeforeFailure: num(s.finance.crisisRoundsBeforeFailure ?? 2),
+    // Obligatoire quand le scénario ne dit rien : c'est la règle du moteur.
+    rescueFinancingRequired: num((s.finance.rescueFinancingRequired ?? true) ? 1 : 0),
     discountMaxShare: pct(s.treasury?.discountMaxShare),
     factoringFeeRate: pct(s.treasury?.factoringFeeRate),
     fixedCostsPerRound: num(s.fixedCostsPerRound),
