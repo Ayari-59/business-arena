@@ -615,16 +615,19 @@ function GammeReference({
                     onChange={(e) =>
                       setFaconniers((etat) => ({ ...etat, [p.code]: e.currentTarget.value }))
                     }
-                    className="w-full rounded-lg border border-white/10 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+                    className="w-full rounded-lg border border-white/10 bg-slate-900 px-2 py-1.5 text-[13px] text-slate-100 outline-none focus:border-amber-400/60"
                   >
-                    {suppliers.map((s) => (
-                      <option key={s.code} value={s.code}>
-                        {s.name} ·{" "}
-                        {ecartFournisseur(s, reference) === "coût de référence"
-                          ? "référence"
-                          : ecartFournisseur(s, reference)}
-                      </option>
-                    ))}
+                    {suppliers.map((s) => {
+                      // Le nom seul pour le façonnier de référence, l'écart
+                      // collé au nom pour les autres : dans une colonne de
+                      // matrice, « · coût de référence » ne tenait pas.
+                      const ecart = ecartFournisseur(s, reference);
+                      return (
+                        <option key={s.code} value={s.code}>
+                          {ecart === "coût de référence" ? s.name : `${s.name} ${ecart}`}
+                        </option>
+                      );
+                    })}
                   </select>
                   {choisi ? <FaitsFournisseur fournisseur={choisi} /> : null}
                 </>
