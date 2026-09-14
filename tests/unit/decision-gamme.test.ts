@@ -432,6 +432,23 @@ describe("le formulaire en gamme", () => {
     expect(niveau1).toContain('type="hidden" name="maintenanceBudget"');
   });
 
+  it("les onglets sont une concession au téléphone : sur grand écran, toutes les références s'affichent", () => {
+    // N'en montrer qu'une à la fois est indispensable sur 390 px de large, et
+    // un handicap ailleurs : la gamme se joue en comparant un prix à un autre,
+    // une marge à une autre. Le basculement est en CSS, donc juste dès le
+    // premier rendu, sans attendre le navigateur.
+    const html = rendu(gamme, { enabled: presetByLevel.get(3)!.decisions });
+    // La barre d'onglets disparaît là où il n'y a plus rien à sélectionner.
+    expect(html).toContain("flex flex-wrap gap-2 lg:hidden");
+    // Les cartes passent sur deux colonnes, et celles qui étaient masquées
+    // reviennent.
+    expect(html).toContain("grid grid-cols-1 gap-3 lg:grid-cols-2");
+    const cartes = [...html.matchAll(/class="(hidden )?lg:block rounded-lg border border-white\/5/g)];
+    expect(cartes).toHaveLength(gamme.length);
+    // Une seule est visible sans media query : la première.
+    expect(cartes.filter((m) => m[1] === undefined)).toHaveLength(1);
+  });
+
   it("en mono-produit, marketing, qualité, maintenance et R&D forment une seule famille, dans l'étape « Budgéter »", () => {
     const html = rendu(null, { enabled: presetByLevel.get(4)!.decisions, rdOffer: { techScale: 10000 } });
     expect(html).not.toContain("Produire");

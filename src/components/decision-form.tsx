@@ -492,11 +492,24 @@ function FaitsFournisseur({
  * « Budgéter » que les budgets de L'ENTREPRISE : l'entretien de la capacité et
  * la marque, qui ne se rattachent à aucune référence.
  *
+ * LES ONGLETS SONT UNE CONCESSION AU TÉLÉPHONE, PAS UNE MISE EN SCÈNE. Sur un
+ * écran de 390 px, cinq références l'une sous l'autre font un rouleau qu'on ne
+ * peut pas parcourir ; il faut bien n'en montrer qu'une. Mais sur un écran
+ * large, la place existe : les références s'affichent TOUTES, côte à côte, et
+ * la barre d'onglets disparaît. C'est même là que le jeu se joue vraiment —
+ * arbitrer un prix contre un autre, répartir une capacité partagée, comparer
+ * cinq marges — et le faire de mémoire, en cliquant d'un onglet à l'autre,
+ * était un handicap qu'aucune ergonomie ne justifiait.
+ *
+ * Le basculement est en CSS (`lg:`), donc juste dès le premier rendu, sans
+ * attendre le navigateur. Une seule chose a besoin de savoir où l'on est : le
+ * `required` des champs — il vaut pour la carte active sur téléphone, et pour
+ * toutes sur grand écran. D'où le `matchMedia`, qui part de « téléphone » et
+ * ne peut donc jamais exiger un champ que personne ne voit.
+ *
  * Toutes les références restent montées, l'inactive seulement masquée : les
  * démonter retirait leurs champs du FormData, et la décision prise sur un
- * onglet quitté était perdue en silence. `required` ne vaut donc que pour la
- * carte visible — un champ requis masqué bloque l'envoi sans rien afficher, le
- * serveur validant de son côté.
+ * onglet quitté était perdue en silence.
  */
 function GammeReference({
   gamme,
@@ -519,6 +532,20 @@ function GammeReference({
   const avecFournisseurs = gamme.some((p) => p.suppliers);
   const avecRd = rd && gamme.some((p) => p.rd);
   const [activeProduct, setActiveProduct] = useState(gamme[0]?.code ?? "");
+  // Où sommes-nous ? La mise en page, elle, n'a pas besoin de le demander : le
+  // CSS s'en charge. Seul le `required` doit le savoir — exiger un champ qu'on
+  // ne voit pas bloque l'envoi sans rien afficher, et le point de départ est
+  // donc « téléphone », le cas où une seule carte est visible.
+  const [surGrandEcran, setSurGrandEcran] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const suivre = () => setSurGrandEcran(mq.matches);
+    suivre();
+    mq.addEventListener("change", suivre);
+    return () => mq.removeEventListener("change", suivre);
+  }, []);
+  /** Cette carte est-elle sous les yeux ? Toutes le sont sur grand écran. */
+  const visible = (code: string) => surGrandEcran || code === activeProduct;
   // Le prix saisi et le façonnier choisi de chaque référence, pour montrer la
   // marge en direct : les champs restent non contrôlés (le formulaire les
   // envoie), on ne fait que les écouter.
@@ -554,7 +581,7 @@ function GammeReference({
           defaultValue={valeur}
           step={1}
           min={0}
-          required={p.code === activeProduct}
+          required={visible(p.code)}
           className="min-w-0 flex-1 bg-transparent text-sm text-slate-100 outline-none"
         />
         <span className="shrink-0 text-xs text-slate-400">€</span>
@@ -564,8 +591,9 @@ function GammeReference({
 
   return (
     <div className="space-y-3">
-      {/* Navigation par référence : tabs sur desktop, boutons empilés sur mobile */}
-      <div className="flex flex-wrap gap-2">
+      {/* La barre d'onglets n'existe que là où il faut choisir : sur grand écran,
+          toutes les références sont montrées, il n'y a plus rien à sélectionner. */}
+      <div className="flex flex-wrap gap-2 lg:hidden">
         {gamme.map((p) => (
           <button
             key={p.code}
@@ -582,6 +610,10 @@ function GammeReference({
         ))}
       </div>
 
+      {/* UNE COLONNE SUR TÉLÉPHONE (une seule carte visible à la fois), DEUX
+          AU-DELÀ : c'est là que la gamme se compare, un prix contre un autre,
+          une marge contre une autre, sans rien tenir de mémoire. */}
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
       {gamme
         .map((p) => {
           const own = defaults.products?.[p.code];
@@ -606,8 +638,7 @@ function GammeReference({
             return (
               <div
                 key={p.code}
-                hidden={p.code !== activeProduct}
-                className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 sm:px-3.5 sm:py-2.5 space-y-2"
+                className={`${p.code === activeProduct ? "" : "hidden "}lg:block rounded-lg border border-white/5 bg-slate-950 px-3 py-2 sm:px-3.5 sm:py-2.5 space-y-2`}
               >
                 <span className="block text-sm font-medium text-slate-100">{p.name}</span>
                 <EnDeveloppement />
@@ -633,8 +664,7 @@ function GammeReference({
           return (
             <div
               key={p.code}
-              hidden={p.code !== activeProduct}
-              className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 sm:px-3.5 sm:py-2.5 space-y-3"
+              className={`${p.code === activeProduct ? "" : "hidden "}lg:block rounded-lg border border-white/5 bg-slate-950 px-3 py-2 sm:px-3.5 sm:py-2.5 space-y-3`}
             >
               {/* Info produit */}
               <div className="space-y-1">
@@ -673,7 +703,7 @@ function GammeReference({
                       }}
                       step={0.1}
                       min={0}
-                      required={p.code === activeProduct}
+                      required={visible(p.code)}
                       className="min-w-0 flex-1 bg-transparent text-sm text-slate-100 outline-none"
                     />
                     <span className="shrink-0 text-xs text-slate-400">€</span>
@@ -689,7 +719,7 @@ function GammeReference({
                       defaultValue={plan}
                       step={1}
                       min={0}
-                      required={p.code === activeProduct}
+                      required={visible(p.code)}
                       className="min-w-0 flex-1 bg-transparent text-sm text-slate-100 outline-none"
                     />
                     <span className="shrink-0 text-xs text-slate-400">{v.units}</span>
@@ -739,6 +769,7 @@ function GammeReference({
             </div>
           );
         })}
+      </div>
 
       <p className="mt-2 text-xs leading-relaxed text-slate-400">
         Capacité partagée : si la somme des volumes la dépasse, toutes les références sont
