@@ -1,5 +1,6 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { MIGRATIONS_HISTORIQUES } from "../helpers/migrations";
 
 /**
  * LES MIGRATIONS S'APPLIQUENT DANS L'ORDRE, ET DRIZZLE LES CHOISIT PAR
@@ -64,33 +65,26 @@ describe("journal des migrations", () => {
    * TOUTES les migrations en retard dans UNE SEULE transaction, un seul échec
    * annulait le déploiement entier.
    *
-   * Les quatorze premières échappent à la règle : elles sont enregistrées en
-   * base depuis longtemps, leur horodatage est sous le dernier enregistré,
-   * drizzle ne les rejouera jamais. Les réécrire ne servirait à rien et
-   * changerait leur empreinte. Toute migration AJOUTÉE ensuite, elle, doit être
-   * rejouable — et n'ayant pas à figurer dans cette liste, elle y est soumise
-   * d'office.
+   * Les migrations de l'historique en sont exemptées ; la liste et la raison
+   * vivent dans tests/helpers/migrations.ts, que le test d'intégration lit
+   * aussi.
    *
-   * Note : `CREATE TYPE` n'accepte pas IF NOT EXISTS en PostgreSQL ; un nouveau
-   * type d'énumération demande un bloc DO. La règle ne porte donc que sur ce
-   * qui peut le recevoir.
+   * Ce test-ci ne lit que la FORME du SQL — c'est une heuristique, et elle
+   * s'est déjà trompée (elle cherchait ses motifs jusque dans les
+   * commentaires). La preuve, elle, est faite par l'exécution, dans
+   * tests/integration/migrations-rejouables.test.ts : les fichiers y sont
+   * réellement rejoués sur un Postgres embarqué. Celui-ci sert de garde-fou
+   * rapide et de message d'erreur lisible.
+   *
+   * Deux notes de PostgreSQL, qui expliquent la forme des règles :
+   *  · `CREATE TYPE` n'accepte pas IF NOT EXISTS ; un nouveau type
+   *    d'énumération demande un bloc DO. La règle ne porte donc que sur ce qui
+   *    peut le recevoir.
+   *  · `ADD CONSTRAINT` non plus. La seule façon de le rendre rejouable est de
+   *    l'envelopper dans un bloc DO qui rattrape `duplicate_object` — c'est ce
+   *    que drizzle générait lui-même dans ses versions précédentes.
    */
-  const ANCIENNES = new Set([
-    "0000_lethal_post",
-    "0001_lucky_pete_wisdom",
-    "0002_friendly_thaddeus_ross",
-    "0003_useful_triton",
-    "0004_greedy_maverick",
-    "0005_cooing_wild_pack",
-    "0006_competition_entries_label_ci",
-    "0007_competition_join_code",
-    "0008_games_priority_indexes",
-    "0009_secondary_indexes",
-    "0010_trigger_context",
-    "0011_consequence_context",
-    "0012_interpretation_context",
-    "0013_add_learning_steps_tables",
-  ]);
+  const ANCIENNES = MIGRATIONS_HISTORIQUES;
 
   it("toute migration postérieure est rejouable (IF NOT EXISTS)", () => {
     const REGLES: { quoi: string; motif: RegExp }[] = [
@@ -112,6 +106,16 @@ describe("journal des migrations", () => {
       for (const { quoi, motif } of REGLES) {
         const n = sql.match(motif)?.length ?? 0;
         if (n > 0) fautifs.push(`${e.tag} : ${n} « ${quoi} » sans IF NOT EXISTS`);
+      }
+      // ADD CONSTRAINT ne prend pas IF NOT EXISTS : chacun doit avoir son
+      // bloc DO qui rattrape `duplicate_object`. On compte les deux plutôt que
+      // d'essayer de reconnaître l'imbrication à l'expression régulière.
+      const contraintes = sql.match(/ADD CONSTRAINT/gi)?.length ?? 0;
+      const rattrapages = sql.match(/duplicate_object/gi)?.length ?? 0;
+      if (contraintes > rattrapages) {
+        fautifs.push(
+          `${e.tag} : ${contraintes - rattrapages} « ADD CONSTRAINT » sans bloc DO`,
+        );
       }
     }
     expect(fautifs, fautifs.join(" · ")).toEqual([]);

@@ -96,57 +96,57 @@
     {
       "idx": 13,
       "version": "7",
-      "when": 1789134987183,
-      "tag": "0013_add_learning_steps_tables",
+      "when": 1788912000000,
+      "tag": "0013_decision_source",
       "breakpoints": true
     },
     {
       "idx": 14,
       "version": "7",
-      "when": 1789333492323,
-      "tag": "0019_reveal_classement",
+      "when": 1788998400000,
+      "tag": "0014_login_hardening",
       "breakpoints": true
     },
     {
       "idx": 15,
       "version": "7",
-      "when": 1789333492324,
-      "tag": "0013_decision_source",
+      "when": 1789084800000,
+      "tag": "0015_bpi_v2",
       "breakpoints": true
     },
     {
       "idx": 16,
       "version": "7",
-      "when": 1789333492325,
-      "tag": "0014_login_hardening",
+      "when": 1789171200000,
+      "tag": "0016_scenario_definition",
       "breakpoints": true
     },
     {
       "idx": 17,
       "version": "7",
-      "when": 1789333492326,
-      "tag": "0015_bpi_v2",
+      "when": 1789257600000,
+      "tag": "0017_previous_lester",
       "breakpoints": true
     },
     {
       "idx": 18,
       "version": "7",
-      "when": 1789333492327,
-      "tag": "0016_scenario_definition",
+      "when": 1789344000000,
+      "tag": "0018_public_competition_page",
       "breakpoints": true
     },
     {
       "idx": 19,
       "version": "7",
-      "when": 1789333492328,
-      "tag": "0017_previous_lester",
+      "when": 1789367757434,
+      "tag": "0013_add_learning_steps_tables",
       "breakpoints": true
     },
     {
       "idx": 20,
       "version": "7",
-      "when": 1789333492329,
-      "tag": "0018_public_competition_page",
+      "when": 1789367757435,
+      "tag": "0019_reveal_classement",
       "breakpoints": true
     }
   ]
