@@ -27,15 +27,17 @@ import type { CompanyRoundResult } from "@/engine/types";
  *     cellules alimentent les deux formes — elles sont calculées une fois, plus
  *     bas, et rendues deux fois.
  *
- *  3. UNE RÉFÉRENCE À BÂTIR AFFICHAIT UNE MARGE. Tant qu'elle n'est pas
- *     lancée, le moteur force son plan à zéro : elle ne produit rien, ne vend
- *     rien, ne rapporte rien. Mais elle garde un prix — celui que le
- *     formulaire envoie en champ caché, faute d'en demander un — et une
- *     structure de coût, donc la colonne Marge/u annonçait « 59 € » sur une
- *     vente qui n'a pas eu lieu, à un prix que personne n'a choisi. Prix,
- *     marge et qualité perçue passent à « — » sur ces lignes-là ; les volumes,
- *     eux, valent bien zéro et le disent. La marge visée d'une référence à
- *     bâtir se lit dans le formulaire de décision, là où elle sert à décider.
+ *  3. UNE RÉFÉRENCE À BÂTIR N'A PAS DE LIGNE. Tant qu'elle n'est pas lancée,
+ *     le moteur force son plan à zéro : elle ne produit rien, ne vend rien,
+ *     ne rapporte rien. Elle garde pourtant un prix — celui que le formulaire
+ *     envoie en champ caché, faute d'en demander un — et une structure de
+ *     coût, si bien que la colonne Marge/u annonçait « 59 € » sur une vente
+ *     qui n'a pas eu lieu, à un prix que personne n'a choisi. Mettre des
+ *     tirets à la place aurait gardé une ligne entière pour dire zéro
+ *     partout : elle ne s'affiche plus du tout. Ce tableau rend compte du
+ *     tour écoulé ; ce qui n'y a pas participé n'y figure pas. Le
+ *     financement engagé se lit là où il est une charge — le compte de
+ *     résultat et le récapitulatif des décisions.
  *
  * Ce qui ne disparaît jamais : une rupture d'approvisionnement reste signalée
  * sur le nom de la référence, même quand la colonne Fournisseur est masquée.
@@ -56,10 +58,9 @@ const rdVide = (p: Produit | undefined) =>
  * Une référence encore à bâtir : son développement n'est pas lancé.
  *
  * Le moteur force son plan à zéro — elle ne produit rien, ne vend rien, ne
- * rapporte rien. Mais elle garde un prix (celui que le formulaire envoie en
- * champ caché, faute d'en demander un) et une structure de coût, donc la marge
- * unitaire s'affichait quand même : un chiffre sur une vente qui n'a pas eu
- * lieu, calculé sur un prix que personne n'a choisi.
+ * rapporte rien. Elle n'a donc rien à dire d'un tour écoulé, et sa ligne est
+ * écartée avant tout le reste : les colonnes conditionnelles se décident sur
+ * les références qui ONT joué, pas sur celle qui attend.
  */
 const enDeveloppement = (p: Produit) => {
   const dev = p.rd?.development;
@@ -78,12 +79,8 @@ function cellulesDe(
   avecFournisseur: boolean,
 ): Cellule[] {
   const marge = p.price - p.unitVariableCost;
-  // Une référence à bâtir n'a ni prix pratiqué, ni marge réalisée, ni qualité
-  // jugée par un client : ces trois-là ne se disent pas. Les volumes, eux,
-  // valent bien zéro et le disent — c'est l'information du tour.
-  const aBatir = enDeveloppement(p);
   const cellules: Cellule[] = [
-    { cle: "prix", entete: "Prix", valeur: aBatir ? "—" : formatEuro(p.price), classe: "" },
+    { cle: "prix", entete: "Prix", valeur: formatEuro(p.price), classe: "" },
     { cle: "rayon", entete: "En rayon", valeur: formatUnits(p.produced), classe: "" },
     { cle: "vendu", entete: "Vendu", valeur: formatUnits(p.sold), classe: "" },
     {
@@ -95,8 +92,8 @@ function cellulesDe(
     {
       cle: "marge",
       entete: "Marge/u",
-      valeur: aBatir ? "—" : formatEuro(marge),
-      classe: !aBatir && marge < 0 ? "text-red-400" : "",
+      valeur: formatEuro(marge),
+      classe: marge < 0 ? "text-red-400" : "",
     },
     {
       cle: "reste",
@@ -108,9 +105,7 @@ function cellulesDe(
       cle: "qualite",
       entete: "Qualité",
       valeur:
-        aBatir || p.perceivedQuality === undefined
-          ? "—"
-          : `${Math.round(p.perceivedQuality * 100)} %`,
+        p.perceivedQuality !== undefined ? `${Math.round(p.perceivedQuality * 100)} %` : "—",
       classe: "",
     },
   ];
@@ -157,14 +152,7 @@ function NomEtIncidents({
           ⚠︎ rupture
         </span>
       ) : null}
-      {enDeveloppement(produit) ? (
-        <span
-          className="ml-1 whitespace-nowrap text-xs text-amber-300"
-          title="Référence en développement : pas encore vendable"
-        >
-          🔬 en développement · {Math.round((100 * dev!.invested) / Math.max(1, dev!.cost))} %
-        </span>
-      ) : dev && dev.launchRound === tour ? (
+      {dev && dev.launchRound === tour ? (
         <span className="ml-1 whitespace-nowrap text-xs text-emerald-300">🚀 lancée ce tour</span>
       ) : null}
     </>
@@ -184,9 +172,17 @@ export function TableauDesReferences({
   /** Le mot du secteur pour ce qui reste sur les bras : « Stock », « Invendus »… */
   leftoverLabel: string;
 }) {
+  // Les références qui ont joué le tour. Celle qui est encore à bâtir n'a pas
+  // de ligne : elle n'afficherait que des zéros et un prix que personne n'a
+  // choisi.
   const lignes = gamme
     .map((g) => ({ g, p: produits[g.code] }))
-    .filter((x): x is { g: (typeof gamme)[number]; p: Produit } => Boolean(x.p));
+    .filter((x): x is { g: (typeof gamme)[number]; p: Produit } => Boolean(x.p))
+    .filter(({ p }) => !enDeveloppement(p));
+
+  // Aucune référence vendable : un titre au-dessus d'un tableau vide serait
+  // une promesse non tenue.
+  if (lignes.length === 0) return null;
 
   // La R&D n'a rien à montrer si personne n'a investi et qu'aucun niveau n'est
   // acquis : la colonne afficherait « 0 € · +0 % » autant de fois qu'il y a de

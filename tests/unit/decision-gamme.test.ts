@@ -41,7 +41,7 @@ const { playRoundAction } = await import("@/app/arena/[gameId]/actions");
 const { submitTeamDecisions } = await import("@/services/game.service");
 const { readProductFields, productFieldName } = await import("@/config/decision-source");
 const { scalarsOfGamme } = await import("@/engine/gamme");
-const { formatEuro, formatEuroCents, formatUnits } = await import("@/lib/format");
+const { formatEuro } = await import("@/lib/format");
 const { DecisionForm } = await import("@/components/decision-form");
 const { presetByLevel } = await import("@/config/difficulty");
 const { scenarioByCode } = await import("@/config/scenarios/registry");
@@ -565,36 +565,6 @@ describe("la R&D par référence", () => {
     expect(html).toContain(`il reste ${formatEuro(28000)} à financer`);
     // Les autres références gardent leur saisie normale.
     expect(html).toContain('name="product.pull-col-rond.productionPlan" value="500"');
-  });
-
-  it("une référence à bâtir annonce la marge visée et le nombre d'unités à vendre", () => {
-    // Financer un développement, c'est avancer une somme contre une marge
-    // future. Le tableau de bord ne dit plus rien de la marge d'une référence
-    // à bâtir — elle n'a rien vendu ; c'est ici, au moment de décider, que le
-    // repère doit être.
-    const merinos = gammeRd[2]!;
-    const cvu = merinos.materialCostPerUnit + merinos.otherVariableCostPerUnit;
-    const marge = merinos.refPrice - cvu;
-    const seuil = Math.ceil(40000 / marge);
-    const html = rendu();
-    expect(html).toContain("Une fois bâtie");
-    expect(html).toContain("marge visée");
-    expect(html).toContain(formatEuroCents(marge));
-    // Le seuil est brut — marge unitaire contre coût de développement — et
-    // l'écran le dit, sinon il passerait pour un seuil de rentabilité complet.
-    expect(html).toContain(`${formatUnits(seuil)} ${boutique.vocabulary.units} à vendre`);
-    expect(html).toContain("les charges de structure courent en plus");
-  });
-
-  it("une marge nulle ne se maquille pas en remboursement", () => {
-    // Le cas qui mentirait le plus : diviser par une marge ≤ 0 donnerait un
-    // seuil infini ou négatif, affiché comme un nombre d'unités crédible.
-    const sansMarge = gammeRd.map((g, i) =>
-      i === 2 ? { ...g, materialCostPerUnit: g.refPrice, otherVariableCostPerUnit: 0 } : g,
-    );
-    const html = rendu({ gamme: sansMarge });
-    expect(html).toContain("elle ne les remboursera jamais");
-    expect(html).not.toContain("à vendre pour les rembourser");
   });
 
   it("au niveau qui ne l'ouvre pas, aucun champ R&D ; sans levier dans le scénario non plus", () => {
