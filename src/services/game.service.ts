@@ -28,6 +28,10 @@ import {
   findUserTeam,
   readPendingEvents,
 } from "@/services/round-resolution.service";
+import {
+  demandesDeLaPartie,
+  type DemandeAInstruire,
+} from "@/services/subvention.service";
 import { teamDisplayName } from "@/services/game-view.service";
 import { entitlementsForOrg } from "@/services/entitlements.service";
 
@@ -362,6 +366,14 @@ export interface TeacherGameView {
     /** Entreprise en cessation de paiements caractérisée (V2 couche 2, #5). */
     defaillant: boolean;
   }[];
+  /**
+   * LES DEMANDES DE SUBVENTION EXCEPTIONNELLE, à instruire ou déjà tranchées.
+   *
+   * Une équipe au pied du mur — plus d'emprunt possible, plus d'apport — n'a
+   * plus qu'un geste : déposer un dossier. C'est ici qu'il arrive, et nulle
+   * part ailleurs : l'animateur est le seul à pouvoir l'accorder.
+   */
+  aidRequests: (DemandeAInstruire & { teamName: string })[];
 }
 
 export async function getTeacherGameView(
@@ -393,6 +405,7 @@ export async function getTeacherGameView(
     : [];
 
   const rankingRows = await db.select().from(gameRankings).where(eq(gameRankings.gameId, gameId));
+  const demandes = await demandesDeLaPartie(gameId);
   const snapshotDefinition = await resolveScenarioDefinition(
     (game.scenarioSnapshot as { code?: string } | null)?.code,
   );
@@ -479,5 +492,12 @@ export async function getTeacherGameView(
         defaillant: Boolean((r.detail as { defaillant?: boolean })?.defaillant),
       }))
       .sort((a, b) => a.rank - b.rank),
+    // Le service des subventions ne connaît que des identifiants d'équipe : la
+    // mise en forme des noms appartient à cette vue, et la lui emprunter de
+    // là-bas ferait un cycle d'imports.
+    aidRequests: demandes.map((d) => ({
+      ...d,
+      teamName: teamDisplayName(teamRows.find((t) => t.id === d.teamId)?.name ?? "?"),
+    })),
   };
 }

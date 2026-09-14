@@ -29,6 +29,7 @@ import {
   updateRankings,
 } from "@/services/scoring.service";
 import { simulateRound } from "@/engine/simulation";
+import { subventionsAccordees } from "@/services/subvention.service";
 import {
   enrichError,
   logResolutionStep,
@@ -393,6 +394,11 @@ async function resolveGameRound(
         },
       ];
     });
+    // Les subventions exceptionnelles que l'animateur a ACCORDÉES pour ce tour.
+    // Elles ne viennent d'aucune décision d'équipe et d'aucun tirage : c'est un
+    // geste humain, pris dans son espace, que le moteur se contente
+    // d'encaisser. Vide dans l'immense majorité des tours.
+    const subventions = await subventionsAccordees(gameId, roundIndex);
     logResolutionStep(context, "Simulation en cours", {
       statesCount: states.length,
       decisionsCount: Object.keys(allDecisions).length,
@@ -404,6 +410,7 @@ async function resolveGameRound(
       decisions: allDecisions,
       activeEvents: [...activeEvents, ...injected],
       seed: game.seed,
+      ...(Object.keys(subventions).length > 0 ? { rescueSubsidies: subventions } : {}),
     });
 
     // Validation défensive : résultats cohérents post-simulation

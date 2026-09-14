@@ -148,6 +148,13 @@
       "when": 1789367757435,
       "tag": "0019_reveal_classement",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1789367757436,
+      "tag": "0020_subvention_exceptionnelle",
+      "breakpoints": true
     }
   ]
 }

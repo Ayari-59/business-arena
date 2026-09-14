@@ -1205,6 +1205,13 @@ export interface IncomeStatement {
   exceptionalCharge?: number;
   /** Produit exceptionnel du tour (ex. éco-subvention RSE, Lot 2C.2). Absent si nul. */
   exceptionalIncome?: number;
+  /**
+   * Subvention exceptionnelle accordée par l'animateur à une équipe en
+   * cessation de paiements. Produit exceptionnel comme les précédents, mais
+   * sur sa PROPRE ligne : la confondre avec l'éco-subvention RSE ferait lire
+   * un geste de sauvetage comme une récompense écologique. Absente si nulle.
+   */
+  rescueSubsidy?: number;
   pretaxIncome: number;
   /**
    * Déficit reporté imputé sur le bénéfice de ce tour (report en avant des
@@ -1606,6 +1613,18 @@ export interface SimulationInput {
   activeEvents: EventInstance[];
   /** Graine de la partie ; le tirage du tour dérive de (seed, roundIndex). */
   seed: number;
+  /**
+   * SUBVENTIONS EXCEPTIONNELLES ACCORDÉES POUR CE TOUR, par entreprise.
+   *
+   * Elles ne viennent ni du scénario ni du hasard : une équipe en cessation de
+   * paiements dont l'emprunt et l'apport des associés sont épuisés dépose un
+   * dossier, et l'animateur l'accorde ou non. Le moteur n'a donc rien à
+   * décider ici — il encaisse ce qui a été accordé, en produit exceptionnel.
+   *
+   * Absentes (le cas de toutes les parties qui se passent bien) : rien n'est
+   * émis, ni au compte de résultat ni au tableau de flux.
+   */
+  rescueSubsidies?: Record<CompanyId, number>;
 }
 
 export interface SimulationOutput {

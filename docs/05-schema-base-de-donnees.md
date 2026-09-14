@@ -19,7 +19,7 @@ IDENTITÉ        users, organizations, organization_members, classes, class_memb
 CATALOGUE       scenarios, concepts, decision_models, decision_model_concepts,
 (référentiels)  situations, situation_models, situation_concepts, hints,
                 event_definitions, decision_options
-PARTIE          games, teams, players, rounds, decisions
+PARTIE          games, teams, players, rounds, decisions, aid_requests
 ÉTAT SIMULÉ     markets, market_segments, products, production_units, employees,
                 suppliers, customers, inventory, financial_accounts, transactions
 RÉSULTATS       round_results, kpis, event_occurrences
@@ -70,6 +70,7 @@ Correspondance avec la liste imposée (§30) : `events` → `event_definitions` 
 | `players` | team_id FK, user_id FK, role enum(`captain`,`member`) | PK (team_id, user_id) ; **unique (user_id, game_id)** via contrainte (un joueur, une équipe par partie — vue matérialisée d'appui ou trigger) |
 | `rounds` | id, game_id FK, index int, status enum(`pending`,`open`,`resolving`,`resolved`), opens_at, deadline, resolved_at | **unique (game_id, index)** ; le verrou de résolution = update conditionnel sur status (cron idempotent) |
 | `decisions` | id, round_id FK, team_id FK, payload **jsonb** (validé contre `decision_options`), forecast jsonb (prévisions du joueur → analyse d'écarts), justification text, status enum(`draft`,`validated`,`locked`,`carried_over`), validated_at, validated_by FK→users | **unique (round_id, team_id)** ; append-only logique : jamais de UPDATE après `locked` (trigger de garde) |
+| `aid_requests` | id, game_id FK, team_id FK, round_index int, amount numeric(14,2), reason text, status enum(`pending`,`granted`,`refused`), granted_amount numeric(14,2), decision_note text, decided_by FK→users, decided_at | **unique (team_id, round_index)** ; demande de subvention exceptionnelle déposée par une équipe en cessation de paiements dont l'emprunt ET l'apport des associés sont épuisés. L'animateur seul tranche ; accordée, elle est encaissée en produit exceptionnel à la résolution du tour `round_index`. |
 
 ## 5. État simulé (par partie/équipe)
 

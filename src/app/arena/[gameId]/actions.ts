@@ -7,7 +7,14 @@ import { roundDecisionsSchema } from "@/services/decision-schema";
 import { readProductFields } from "@/config/decision-source";
 import { scalarsOfGamme } from "@/engine/gamme";
 import { formatEuro } from "@/lib/format";
-import { messageSauvetage, verdictSauvetage } from "@/services/sauvetage";
+import {
+  bloqueLaValidation,
+  messageSauvetage,
+  resteApresLeviers,
+  verdictAuMaximum,
+  verdictSauvetage,
+} from "@/services/sauvetage";
+import { deposerDemande } from "@/services/subvention.service";
 import { getGameView } from "@/services/game-view.service";
 import {
   getGameKind,
@@ -181,21 +188,14 @@ export async function playRoundAction(
   // même des deux côtés (`verdictSauvetage`), pour que l'écran n'autorise
   // jamais ce que le serveur refuse.
   const vue = await getGameView(gameId, userId);
-  const alerte = vue?.alerteTresorerie;
-  if (alerte?.crise && alerte.financementObligatoire) {
-    const verdict = verdictSauvetage(
-      {
-        manque: alerte.manque,
-        capaciteEmprunt: vue!.loanCapacity?.remaining ?? null,
-        enveloppeApport: vue!.capitalAllowance?.remaining ?? null,
-      },
-      {
-        emprunt: parsed.data.finance?.newLoan ?? 0,
-        apport: parsed.data.finance?.capitalIncrease ?? 0,
-      },
-    );
-    const message = messageSauvetage(verdict, formatEuro);
-    if (message) return { error: message };
+  if (vue?.exigenceSauvetage) {
+    const verdict = verdictSauvetage(vue.exigenceSauvetage, {
+      emprunt: parsed.data.finance?.newLoan ?? 0,
+      apport: parsed.data.finance?.capitalIncrease ?? 0,
+    });
+    if (bloqueLaValidation(verdict)) {
+      return { error: messageSauvetage(verdict, formatEuro) ?? "Financement de sauvetage exigé." };
+    }
   }
 
   let kind: Awaited<ReturnType<typeof getGameKind>>;
@@ -338,6 +338,69 @@ export async function nommerEquipeAction(
     await nommerEquipe({ gameId, userId, nom: String(formData.get("nom") ?? "") });
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Le nom n'a pas pu être enregistré." };
+  }
+  revalidatePath(`/arena/${gameId}`);
+  return { error: null };
+}
+
+export interface DemandeSubventionState {
+  error: string | null;
+}
+
+/**
+ * L'équipe dépose sa demande de subvention exceptionnelle.
+ *
+ * La garde qui compte est ici : on ne dépose un dossier QUE si le mur est
+ * réel — en crise, financement de sauvetage exigé, et emprunt et apport
+ * insuffisants même utilisés jusqu'au bout. Sans cela, ce serait un bouton
+ * « demander de l'argent » ouvert à toute équipe qui trouve son tour difficile,
+ * et l'animateur croulerait sous des dossiers sans objet.
+ */
+export async function demanderSubventionAction(
+  gameId: string,
+  _previous: DemandeSubventionState,
+  formData: FormData,
+): Promise<DemandeSubventionState> {
+  const userId = await getGuestUserId();
+  if (!userId) return { error: "Session expirée : rejoignez la partie à nouveau." };
+
+  const vue = await getGameView(gameId, userId);
+  const exigence = vue?.exigenceSauvetage;
+  if (!vue || !exigence) {
+    return { error: "Aucun financement de sauvetage n'est exigé de votre équipe." };
+  }
+  if (exigence.avecAnimateur === false) {
+    return { error: "En partie solo, il n'y a pas d'animateur à solliciter." };
+  }
+  if (verdictAuMaximum(exigence).issue !== "leviers_epuises") {
+    return {
+      error:
+        "Votre emprunt et l'apport de vos associés peuvent encore couvrir ce qui manque : " +
+        "utilisez-les avant de demander une aide.",
+    };
+  }
+
+  const plafond = resteApresLeviers(exigence);
+  const montant = Number(String(formData.get("montant") ?? "").replace(",", "."));
+  if (!Number.isFinite(montant) || montant <= 0) {
+    return { error: "Indiquez le montant que vous demandez." };
+  }
+  // On ne demande pas plus que ce qui manque : le dossier porte sur un trou
+  // précis, pas sur un confort de trésorerie.
+  if (montant > plafond + 1) {
+    return { error: `Vous ne pouvez pas demander plus que ce qui manque (${formatEuro(plafond)}).` };
+  }
+
+  try {
+    await deposerDemande({
+      gameId,
+      teamId: vue.playerTeamId,
+      roundIndex: vue.currentRound,
+      montant,
+      motif: String(formData.get("motif") ?? ""),
+    });
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "La demande n'a pas pu être déposée." };
   }
   revalidatePath(`/arena/${gameId}`);
   return { error: null };

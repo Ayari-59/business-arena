@@ -31,6 +31,7 @@ const CASH_LABELS: Record<string, string> = {
   recherche_developpement: "Recherche et développement",
   sanction_rse: "Sanction RSE (amende)",
   subvention_rse: "Éco-subvention RSE",
+  subvention_exceptionnelle: "Subvention exceptionnelle (sauvetage)",
   interets: "Charges financières",
   placement_arrive_a_terme: "Placement arrivé à terme",
   produits_financiers: "Produits financiers (placement)",
@@ -188,6 +189,13 @@ export function FinancialStatements({
         ) : null}
         {(cr.exceptionalIncome ?? 0) > 0.5 ? (
           <Row label="+ Éco-subvention RSE (exceptionnel)" value={euro(cr.exceptionalIncome ?? 0)} indent />
+        ) : null}
+        {(cr.rescueSubsidy ?? 0) > 0.5 ? (
+          <Row
+            label="+ Subvention exceptionnelle (sauvetage)"
+            value={euro(cr.rescueSubsidy ?? 0)}
+            indent
+          />
         ) : null}
         {(cr.taxLossUsed ?? 0) > 0.5 ? (
           <Row

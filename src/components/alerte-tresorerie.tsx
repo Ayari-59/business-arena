@@ -1,5 +1,7 @@
 import { formatEuro } from "@/lib/format";
 import type { GameView } from "@/services/game-view.service";
+import { DemandeSubvention } from "@/components/demande-subvention";
+import { resteApresLeviers, verdictAuMaximum } from "@/services/sauvetage";
 
 /**
  * L'ALERTE QU'UNE ÉQUIPE EN CESSATION DE PAIEMENTS NE VOYAIT PAS.
@@ -30,11 +32,22 @@ import type { GameView } from "@/services/game-view.service";
  * pour l'entreprise déjà gelée, où il ne reste qu'une chose à faire.
  */
 export function AlerteTresorerie({
+  gameId,
   alerte,
+  exigence,
+  demande,
 }: {
+  gameId: string;
   alerte: NonNullable<GameView["alerteTresorerie"]>;
+  /** Ce qu'il faut réunir pour valider le tour ; `null` si rien n'est exigé. */
+  exigence?: GameView["exigenceSauvetage"];
+  /** La demande de subvention déjà déposée pour ce tour, s'il y en a une. */
+  demande?: GameView["demandeSubvention"];
 }) {
   const restants = Math.max(0, alerte.toursAvantDefaillance - alerte.toursConsecutifs);
+  const recours = (
+    <Recours gameId={gameId} exigence={exigence ?? null} demande={demande ?? null} />
+  );
 
   if (alerte.defaillante) {
     return (
@@ -57,6 +70,7 @@ export function AlerteTresorerie({
           <strong className="tabular-nums">{formatEuro(-alerte.plafondDecouvert)}</strong>.
           Il manque <strong className="tabular-nums">{formatEuro(alerte.manque)}</strong>.
         </p>
+        {recours}
       </section>
     );
   }
@@ -85,6 +99,76 @@ export function AlerteTresorerie({
           : `Encore ${restants} tours dans cet état et votre entreprise sera à l'arrêt.`}{" "}
         Emprunt, apport des associés, cession d&apos;un actif : il faut décider ce tour-ci.
       </p>
+      {recours}
     </section>
   );
+}
+
+/**
+ * LE DERNIER RECOURS, ET SON ÉTAT.
+ *
+ * Il ne s'affiche que là où il a un sens. Tant que l'équipe peut encore
+ * emprunter ou faire appel à ses associés, rien ici : la porte de l'aide
+ * exceptionnelle ne s'ouvre pas à qui n'a pas d'abord poussé les siennes.
+ * Ensuite, trois états — le formulaire, l'attente, la réponse —, et un
+ * quatrième cas, la partie solo, où il n'y a simplement personne à solliciter :
+ * le dire est plus honnête qu'un formulaire sans destinataire.
+ */
+function Recours({
+  gameId,
+  exigence,
+  demande,
+}: {
+  gameId: string;
+  exigence: GameView["exigenceSauvetage"];
+  demande: GameView["demandeSubvention"];
+}) {
+  if (demande) {
+    if (demande.statut === "pending") {
+      return (
+        <p className="mt-3 rounded-lg border border-white/5 bg-slate-950/60 px-3 py-2 text-sm leading-relaxed text-slate-300">
+          <span aria-hidden className="mr-1.5">📨</span>
+          Demande de subvention de{" "}
+          <strong className="tabular-nums text-slate-100">{formatEuro(demande.montant)}</strong>{" "}
+          déposée : votre animateur doit encore l&apos;instruire. Vous pouvez valider votre tour
+          sans attendre sa réponse.
+        </p>
+      );
+    }
+    if (demande.statut === "granted") {
+      return (
+        <p className="mt-3 rounded-lg border border-emerald-400/30 bg-emerald-950/20 px-3 py-2 text-sm leading-relaxed text-emerald-100/90">
+          <span aria-hidden className="mr-1.5">✅</span>
+          Subvention de{" "}
+          <strong className="tabular-nums text-emerald-200">
+            {formatEuro(demande.montantAccorde ?? 0)}
+          </strong>{" "}
+          accordée : elle sera encaissée à la clôture de ce tour.
+          {demande.note ? ` « ${demande.note} »` : ""}
+        </p>
+      );
+    }
+    return (
+      <p className="mt-3 rounded-lg border border-white/5 bg-slate-950/60 px-3 py-2 text-sm leading-relaxed text-slate-300">
+        <span aria-hidden className="mr-1.5">🚫</span>
+        Votre demande de subvention a été refusée.
+        {demande.note ? ` « ${demande.note} »` : ""} Il faudra faire sans.
+      </p>
+    );
+  }
+
+  if (!exigence) return null;
+  const verdict = verdictAuMaximum(exigence);
+  if (verdict.issue === "leviers_epuises") {
+    return <DemandeSubvention gameId={gameId} manque={resteApresLeviers(exigence)} />;
+  }
+  if (verdict.issue === "sans_recours") {
+    return (
+      <p className="mt-3 rounded-lg border border-white/5 bg-slate-950/60 px-3 py-2 text-sm leading-relaxed text-slate-300">
+        Emprunt et apport des associés réunis ne couvrent pas ce qui manque, et une partie solo
+        n&apos;a pas d&apos;animateur à solliciter : votre tour se joue sans filet.
+      </p>
+    );
+  }
+  return null;
 }

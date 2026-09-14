@@ -9,6 +9,7 @@ import { setMissedPolicyAction, setQuizModeAction } from "../../actions";
 import { QUIZ_MODES } from "@/config/difficulty";
 import { estParDefaut } from "@/config/decision-source";
 import { MISSED_POLICY_LABELS, MISSED_POLICY_HELP } from "@/config/missed-situation";
+import { SubventionsPanel } from "@/components/subventions-panel";
 import { CardDeck } from "@/components/card-deck";
 import { CloseRoundForm } from "@/components/close-round-form";
 import { SubmitButton } from "@/components/submit-button";
@@ -134,6 +135,11 @@ export default async function TeacherGamePage({
           </ul>
         </section>
       ) : null}
+
+      {/* Les demandes de subvention : rien à l'écran tant qu'aucune équipe n'a
+          touché le mur, puis le seul geste du jeu qui appartienne à l'animateur
+          et à personne d'autre. */}
+      <SubventionsPanel gameId={view.gameId} demandes={view.aidRequests} />
 
       {!finished && view.mode === "learning" ? (
         <CardDeck

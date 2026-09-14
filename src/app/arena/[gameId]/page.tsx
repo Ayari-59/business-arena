@@ -421,7 +421,12 @@ export default async function ArenaPage({
           classement, seul endroit où la défaillance se disait jusqu'ici. */}
       {view.alerteTresorerie ? (
         <div>
-          <AlerteTresorerie alerte={view.alerteTresorerie} />
+          <AlerteTresorerie
+            gameId={view.gameId}
+            alerte={view.alerteTresorerie}
+            exigence={view.exigenceSauvetage}
+            demande={view.demandeSubvention}
+          />
         </div>
       ) : null}
 
@@ -752,15 +757,7 @@ export default async function ArenaPage({
                   rdOffer={view.rdOffer}
                   communicationOffer={view.communicationOffer}
                   verrou={view.playLock.playable ? null : (view.playLock.message ?? "Ce tour n'est pas encore ouvert.")}
-                  sauvetage={
-                    view.alerteTresorerie?.crise && view.alerteTresorerie.financementObligatoire
-                      ? {
-                          manque: view.alerteTresorerie.manque,
-                          capaciteEmprunt: view.loanCapacity?.remaining ?? null,
-                          enveloppeApport: view.capitalAllowance?.remaining ?? null,
-                        }
-                      : null
-                  }
+                  sauvetage={view.exigenceSauvetage}
                 />
               </section>
                   ),

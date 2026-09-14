@@ -26,6 +26,8 @@ import { computeRseIndex, type RseIndex } from "@/scoring/rse";
 import { RSE_CARD_CODES } from "@/engine/rse";
 import { computeRseReport, type RseReport } from "@/scoring/rse-report";
 import { playWindowFor, playLockMessage } from "@/services/play-lock";
+import { demandeDuTour, type DemandeDeSubvention } from "@/services/subvention.service";
+import type { ExigenceSauvetage } from "@/services/sauvetage";
 import type {
   CompanyRoundResult,
   CompanyState,
@@ -533,6 +535,21 @@ export interface GameView {
    * anomalie : c'est le mur, et c'est ce qui ouvre la subvention.
    */
   loanCapacity: { remaining: number; ratio: number; equity: number; debt: number } | null;
+  /**
+   * La demande de subvention exceptionnelle déposée par l'équipe pour le tour
+   * en cours, s'il y en a une — avec la réponse de l'animateur quand il a
+   * tranché. `null` hors crise : on ne dépose pas de dossier quand tout va bien.
+   */
+  demandeSubvention: DemandeDeSubvention | null;
+  /**
+   * CE QU'IL FAUT RÉUNIR POUR VALIDER LE TOUR, calculé une seule fois.
+   *
+   * L'écran grise le bouton avec, l'action serveur refuse la décision avec, et
+   * le bandeau de crise dit avec ce qu'il reste à faire. `null` quand aucun
+   * financement de sauvetage n'est exigé — hors crise, ou quand l'animateur a
+   * réglé l'exigence à zéro.
+   */
+  exigenceSauvetage: ExigenceSauvetage | null;
   /**
    * L'ÉTAT DE TRÉSORERIE DE L'ÉQUIPE, HORS CLASSEMENT.
    *
@@ -1228,6 +1245,77 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     };
   })();
 
+  const alerteView = (() => {
+    const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+    // Pas de bloc `treasury` : le scénario ne modélise aucune cessation de
+    // paiements dure, il n'y a rien à alerter.
+    if (!snapshot.treasury || !lastResult) return null;
+    const streak = (currentState as { crisisStreak?: number } | undefined)?.crisisStreak ?? 0;
+    const defaillante =
+      (currentState as { status?: string } | undefined)?.status === "defaillant";
+    const crise = Boolean(lastResult.treasury?.crisis);
+    if (!crise && !defaillante) return null;
+    // Le plafond du tour À JOUER : c'est celui sous lequel il faut repasser.
+    const plafond = bankFileView?.overdraftLimit ?? snapshot.finance.overdraftLimit;
+    const tresorerie = lastResult.functionalBalance.netTreasury;
+    return {
+      crise,
+      defaillante,
+      toursConsecutifs: streak,
+      toursAvantDefaillance: snapshot.finance.crisisRoundsBeforeFailure ?? 2,
+      tresorerieNette: tresorerie,
+      plafondDecouvert: plafond,
+      manque: Math.max(0, -tresorerie - plafond),
+      financementObligatoire: snapshot.finance.rescueFinancingRequired ?? true,
+    };
+  })();
+
+  const loanCapacityView = (() => {
+    const ratio = (game.scenarioSnapshot as EngineScenarioConfig).finance.maxDebtToEquity;
+    if (ratio === undefined) return null;
+    // Les capitaux propres et la dette d'OUVERTURE du tour à jouer : ce sont
+    // ceux que la banque lit quand elle instruit la demande.
+    const finance = currentState?.finance;
+    const equity = finance?.equity ?? 0;
+    const debt = finance?.financialDebt ?? 0;
+    return { remaining: Math.max(0, ratio * equity - debt), ratio, equity, debt };
+  })();
+
+  const capitalAllowanceView = (() => {
+    const cap = (game.scenarioSnapshot as EngineScenarioConfig).finance.maxCapitalIncreaseTotal;
+    if (cap === undefined) return null;
+    const raised = (currentState as { capitalRaised?: number } | undefined)?.capitalRaised ?? 0;
+    return { total: cap, remaining: Math.max(0, cap - raised) };
+  })();
+
+  // LA DEMANDE DE SUBVENTION DU TOUR EN COURS, et l'exigence de sauvetage
+  // calculée UNE FOIS pour tout le monde.
+  //
+  // L'écran grise le bouton avec, l'action serveur refuse la décision avec, et
+  // le bandeau de crise dit avec ce qu'il reste à faire. Les recalculer chacun
+  // de son côté, à partir de trois champs épars, c'est se donner rendez-vous
+  // pour diverger : l'élève lirait un seuil et le serveur en appliquerait un
+  // autre.
+  const demandeSubvention = alerteView?.crise
+    ? await demandeDuTour(playerTeam.id, game.currentRound)
+    : null;
+  const exigenceSauvetage =
+    alerteView?.crise && alerteView.financementObligatoire
+      ? {
+          manque: alerteView.manque,
+          capaciteEmprunt: loanCapacityView?.remaining ?? null,
+          enveloppeApport: capitalAllowanceView?.remaining ?? null,
+          subventionAccordee:
+            demandeSubvention?.statut === "granted"
+              ? (demandeSubvention.montantAccorde ?? 0)
+              : 0,
+          demandeDeposee: demandeSubvention !== null,
+          // En solo, personne n'instruira quoi que ce soit : le verrou se lève
+          // de lui-même plutôt que d'ouvrir un formulaire sans destinataire.
+          avecAnimateur: kindDeLaPartie !== "solo",
+        }
+      : null;
+
   return {
     gameId,
     kind: kindDeLaPartie,
@@ -1720,47 +1808,11 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
           }
         : null;
     })(),
-    alerteTresorerie: (() => {
-      const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
-      // Pas de bloc `treasury` : le scénario ne modélise aucune cessation de
-      // paiements dure, il n'y a rien à alerter.
-      if (!snapshot.treasury || !lastResult) return null;
-      const streak =
-        (currentState as { crisisStreak?: number } | undefined)?.crisisStreak ?? 0;
-      const defaillante =
-        (currentState as { status?: string } | undefined)?.status === "defaillant";
-      const crise = Boolean(lastResult.treasury?.crisis);
-      if (!crise && !defaillante) return null;
-      // Le plafond du tour À JOUER : c'est celui sous lequel il faut repasser.
-      const plafond = bankFileView?.overdraftLimit ?? snapshot.finance.overdraftLimit;
-      const tresorerie = lastResult.functionalBalance.netTreasury;
-      return {
-        crise,
-        defaillante,
-        toursConsecutifs: streak,
-        toursAvantDefaillance: snapshot.finance.crisisRoundsBeforeFailure ?? 2,
-        tresorerieNette: tresorerie,
-        plafondDecouvert: plafond,
-        manque: Math.max(0, -tresorerie - plafond),
-        financementObligatoire: snapshot.finance.rescueFinancingRequired ?? true,
-      };
-    })(),
-    loanCapacity: (() => {
-      const ratio = (game.scenarioSnapshot as EngineScenarioConfig).finance.maxDebtToEquity;
-      if (ratio === undefined) return null;
-      // Les capitaux propres et la dette d'OUVERTURE du tour à jouer : ce sont
-      // ceux que la banque lit quand elle instruit la demande.
-      const finance = currentState?.finance;
-      const equity = finance?.equity ?? 0;
-      const debt = finance?.financialDebt ?? 0;
-      return { remaining: Math.max(0, ratio * equity - debt), ratio, equity, debt };
-    })(),
-    capitalAllowance: (() => {
-      const cap = (game.scenarioSnapshot as EngineScenarioConfig).finance.maxCapitalIncreaseTotal;
-      if (cap === undefined) return null;
-      const raised = (currentState as { capitalRaised?: number } | undefined)?.capitalRaised ?? 0;
-      return { total: cap, remaining: Math.max(0, cap - raised) };
-    })(),
+    alerteTresorerie: alerteView,
+    loanCapacity: loanCapacityView,
+    capitalAllowance: capitalAllowanceView,
+    demandeSubvention,
+    exigenceSauvetage,
     costFacts: (() => {
       const product = (game.scenarioSnapshot as EngineScenarioConfig).product;
       return {

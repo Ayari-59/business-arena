@@ -84,6 +84,10 @@ const SANS_FICHE: string[] = [
   "+ Produits financiers (placement)",
   "− Sanction RSE (exceptionnel)",
   "+ Éco-subvention RSE (exceptionnel)",
+  // La subvention de sauvetage : l'équipe l'a demandée elle-même et
+  // l'animateur la lui a accordée. Elle n'enseigne aucune méthode — c'est un
+  // événement de la partie, dont l'élève connaît déjà l'histoire.
+  "+ Subvention exceptionnelle (sauvetage)",
   "= RÉSULTAT NET",
   "= Résultat d'exploitation",
   "Production stockée (± Δ stock)",

@@ -84,6 +84,13 @@ export interface FinanceInput {
    */
   exceptionalIncome?: number;
   /**
+   * Subvention exceptionnelle accordée par l'animateur (financement de
+   * sauvetage). Encaissée et ajoutée au résultat avant impôt, exactement comme
+   * l'éco-subvention — mais sur sa propre ligne, au compte de résultat comme au
+   * tableau de flux, parce qu'elle ne raconte pas la même histoire. Absente = 0.
+   */
+  rescueSubsidy?: number;
+  /**
    * Gestion de trésorerie (optionnel) : mobilisation de créances demandée et
    * paramètres du scénario. Au-delà du plafond de découvert, un affacturage
    * FORCÉ au taux punitif ramène le solde dans les clous (deux passes,
@@ -189,8 +196,17 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
     // (produit) des cartes RSE. Imputé avant l'impôt, décaissé/encaissé ce tour.
     const exceptionalCharge = input.exceptionalCharge ?? 0;
     const exceptionalIncome = input.exceptionalIncome ?? 0;
+    // Le sauvetage accordé par l'animateur : un produit exceptionnel de plus,
+    // encaissé dans le tour. Il entre au résultat avant impôt comme les autres,
+    // donc l'équilibre du bilan tient par construction.
+    const rescueSubsidy = input.rescueSubsidy ?? 0;
     const pretaxIncome =
-      operatingIncome - interest + placementIncome - exceptionalCharge + exceptionalIncome;
+      operatingIncome -
+      interest +
+      placementIncome -
+      exceptionalCharge +
+      exceptionalIncome +
+      rescueSubsidy;
     // Report déficitaire : les pertes reportées s'imputent sur le bénéfice
     // imposable avant l'impôt ; le stock diminue de ce qui est imputé et
     // s'accroît de la perte du tour. `closing = max(0, ouverture − résultat)`
@@ -222,6 +238,7 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
       financialIncome: placementIncome,
       ...(exceptionalCharge > 0 ? { exceptionalCharge } : {}),
       ...(exceptionalIncome > 0 ? { exceptionalIncome } : {}),
+      ...(rescueSubsidy > 0 ? { rescueSubsidy } : {}),
       pretaxIncome,
       ...(taxLossUsed > 0 ? { taxLossUsed } : {}),
       tax,
@@ -265,6 +282,7 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
       { label: "interets", amount: -interest },
       { label: "sanction_rse", amount: -exceptionalCharge },
       { label: "subvention_rse", amount: exceptionalIncome },
+      { label: "subvention_exceptionnelle", amount: rescueSubsidy },
       { label: "impot", amount: -tax },
       { label: "tva_decaissee", amount: -openingVat },
       { label: "investissement", amount: -input.investmentOutlay },

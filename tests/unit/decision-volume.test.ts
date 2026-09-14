@@ -12,6 +12,10 @@ import { describe, expect, it, vi } from "vitest";
  * avant d'envoyer des valeurs proposées non touchées.
  */
 
+// Les actions serveur touchent désormais le service des subventions, qui
+// charge `@/db` — lequel jette à l'import sans DATABASE_URL. Fermer cette
+// frontière garde ce test unitaire : aucune requête n'est faite ici.
+vi.mock("@/db", () => ({ db: {} }));
 vi.mock("next/cache", () => ({ revalidatePath: () => undefined }));
 // Le financement de sauvetage est vérifié côté serveur : l'action lit la vue
 // pour savoir si l'équipe est en crise. C'est une frontière de service de
@@ -114,20 +118,17 @@ describe("financement de sauvetage : le serveur refuse ce que l'écran grisait",
     maintenanceBudget: "0",
   };
 
-  /** Une équipe en crise : il lui manque 46 000 € pour repasser sous le plafond. */
+  /**
+   * Une équipe en crise : il lui manque 46 000 € pour repasser sous le
+   * plafond. La vue porte l'exigence TOUTE FAITE — l'écran et le serveur
+   * lisent le même objet, et ne peuvent donc pas diverger.
+   */
   const enCrise = {
-    alerteTresorerie: {
-      crise: true,
-      defaillante: false,
-      toursConsecutifs: 1,
-      toursAvantDefaillance: 2,
-      tresorerieNette: -76000,
-      plafondDecouvert: 30000,
+    exigenceSauvetage: {
       manque: 46000,
-      financementObligatoire: true,
+      capaciteEmprunt: 70000,
+      enveloppeApport: 100000,
     },
-    loanCapacity: { remaining: 70000, ratio: 2, equity: 75000, debt: 80000 },
-    capitalAllowance: { total: 100000, remaining: 100000 },
   };
 
   it("sans financement, la décision est refusée et le montant est dit", async () => {
@@ -156,12 +157,38 @@ describe("financement de sauvetage : le serveur refuse ce que l'écran grisait",
     expect(res.error).toBeNull();
   });
 
-  it("l'enseignant ayant choisi l'avertissement, rien n'est bloqué", async () => {
+  it("au pied du mur, il renvoie vers la subvention plutôt que vers l'emprunt", async () => {
+    // Dire « empruntez » à une équipe dont la banque ne prête plus serait une
+    // impasse : le message doit nommer la seule porte qui reste.
     const { getGameView } = await import("@/services/game-view.service");
     vi.mocked(getGameView).mockResolvedValueOnce({
-      ...enCrise,
-      alerteTresorerie: { ...enCrise.alerteTresorerie, financementObligatoire: false },
+      exigenceSauvetage: { manque: 200000, capaciteEmprunt: 0, enveloppeApport: 0 },
     } as never);
+    const res = await playRoundAction("partie", { error: null }, formulaire(DECISIONS));
+    expect(res.error).toContain("subvention");
+  });
+
+  it("la demande déposée lève le verrou côté serveur aussi", async () => {
+    // Sans quoi l'écran laisserait valider et le serveur refuserait : la pire
+    // des situations, l'élève ne comprenant ni pourquoi ni quoi changer.
+    const { getGameView } = await import("@/services/game-view.service");
+    vi.mocked(getGameView).mockResolvedValueOnce({
+      exigenceSauvetage: {
+        manque: 200000,
+        capaciteEmprunt: 0,
+        enveloppeApport: 0,
+        demandeDeposee: true,
+      },
+    } as never);
+    const res = await playRoundAction("partie", { error: null }, formulaire(DECISIONS));
+    expect(res.error).toBeNull();
+  });
+
+  it("l'enseignant ayant choisi l'avertissement, rien n'est bloqué", async () => {
+    // À zéro, la vue ne construit aucune exigence : l'équipe est avertie et
+    // reste libre de couler.
+    const { getGameView } = await import("@/services/game-view.service");
+    vi.mocked(getGameView).mockResolvedValueOnce({ exigenceSauvetage: null } as never);
     const res = await playRoundAction("partie", { error: null }, formulaire(DECISIONS));
     expect(res.error).toBeNull();
   });

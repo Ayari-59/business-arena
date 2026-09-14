@@ -1429,6 +1429,10 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     // les capitaux propres (cash ET dette baissent) mais on le suspend aussi,
     // une entreprise à l'arrêt ne décaissant plus rien.
     const gelee = w.state.status === "defaillant";
+    // Ce que l'animateur a accordé à CETTE entreprise pour CE tour, en réponse
+    // à sa demande de subvention exceptionnelle. Zéro dans l'immense majorité
+    // des cas — et alors rien n'est émis nulle part.
+    const subventionSauvetage = Math.max(0, input.rescueSubsidies?.[w.state.id] ?? 0);
     const finance = computeFinance({
       opening: w.state.finance,
       roundDays: scenario.roundDays,
@@ -1450,6 +1454,12 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       // Cartes RSE à effet trésorerie (Lot 2C.2) : amende / éco-subvention.
       exceptionalCharge: gelee ? 0 : w.mods.oneOffCharge,
       exceptionalIncome: gelee ? 0 : w.mods.oneOffIncome,
+      // LA SUBVENTION DE SAUVETAGE, ELLE, TRAVERSE LE GEL. Une entreprise
+      // défaillante ne dépense plus rien — mais c'est justement à elle que
+      // l'animateur accorde une aide, et la lui refuser ici la condamnerait
+      // à rester à l'arrêt pour toujours. Comme l'emprunt et l'apport en
+      // capital, l'argent entre quel que soit l'état de l'entreprise.
+      ...(subventionSauvetage > 0 ? { rescueSubsidy: subventionSauvetage } : {}),
       fixedCosts: gelee ? 0 : scenario.fixedCostsPerRound + insurancePremium + hrCost + studiesCost,
       // amortissements : base du scénario + investissements en service
       // (y compris celui mis en service ce tour) OU amortissement du parc typé
@@ -1521,6 +1531,21 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
         creditAccount: "512",
         creditLabel: "Banque",
         amount: interest,
+      });
+    }
+
+    // Jalon B : la subvention de sauvetage (débit 512 / crédit 771). Produit
+    // exceptionnel : elle n'a rien d'une subvention d'exploitation récurrente.
+    if (multi && subventionSauvetage > 0) {
+      journalByCompany.get(w.state.id)!.record({
+        day: 1,
+        label: "Subvention exceptionnelle",
+        category: "financing",
+        debitAccount: "512",
+        debitLabel: "Banque",
+        creditAccount: "771",
+        creditLabel: "Produits exceptionnels sur opérations de gestion",
+        amount: subventionSauvetage,
       });
     }
 

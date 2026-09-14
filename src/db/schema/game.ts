@@ -4,6 +4,7 @@ import {
   integer,
   interval,
   jsonb,
+  numeric,
   pgEnum,
   pgTable,
   primaryKey,
@@ -172,4 +173,69 @@ export const decisions = pgTable(
     ...timestamps,
   },
   (t) => [uniqueIndex("decisions_round_team_uq").on(t.roundId, t.teamId)],
+);
+
+/**
+ * Le statut d'une demande de subvention exceptionnelle. `pending` tant que
+ * l'animateur ne l'a pas instruite ; ensuite, sa réponse, qui ne se reprend pas.
+ */
+export const aidRequestStatus = pgEnum("aid_request_status", [
+  "pending",
+  "granted",
+  "refused",
+]);
+
+/**
+ * LA DEMANDE DE SUBVENTION EXCEPTIONNELLE — le dernier recours d'une équipe
+ * en cessation de paiements.
+ *
+ * Le tour qui suit une crise exige un financement de sauvetage : de quoi
+ * repasser sous le plafond de découvert. Deux leviers y répondent, l'emprunt
+ * et l'apport des associés. Quand les DEUX sont épuisés — la banque ne prête
+ * plus, l'enveloppe des associés est vide — l'équipe n'a plus rien à décider
+ * et se trouve bloquée sans issue. C'est ce mur qui ouvre cette table.
+ *
+ * L'équipe dépose alors une demande : un montant, un motif. Elle n'est pas une
+ * décision de jeu, elle ne s'auto-accorde pas — c'est l'animateur qui tranche,
+ * depuis son espace, comme le ferait une collectivité ou un actionnaire de
+ * dernière heure. Accordée, la subvention est encaissée à la clôture du tour
+ * demandé, en produit exceptionnel. Refusée, elle laisse l'équipe face aux
+ * conséquences : c'est aussi une leçon.
+ *
+ * Une seule demande par équipe et par tour (index unique) : on ne dépose pas
+ * trois dossiers pour le même trou.
+ */
+export const aidRequests = pgTable(
+  "aid_requests",
+  {
+    id: id(),
+    gameId: uuid("game_id")
+      .notNull()
+      .references(() => games.id, { onDelete: "cascade" }),
+    teamId: uuid("team_id")
+      .notNull()
+      .references(() => teams.id, { onDelete: "cascade" }),
+    /** Le tour PENDANT lequel la demande est déposée — celui qu'elle sauve. */
+    roundIndex: integer("round_index").notNull(),
+    /** Montant demandé, en euros. */
+    amount: numeric("amount", { precision: 14, scale: 2 }).notNull(),
+    /** Ce que l'équipe écrit pour justifier sa demande. */
+    reason: text("reason").notNull(),
+    status: aidRequestStatus("status").notNull().default("pending"),
+    /**
+     * Montant réellement accordé. L'animateur peut accorder moins que demandé —
+     * une aide partielle est un arbitrage pédagogique, pas une erreur. NULL
+     * tant que la demande n'est pas instruite, et après un refus.
+     */
+    grantedAmount: numeric("granted_amount", { precision: 14, scale: 2 }),
+    /** Le mot de l'animateur à l'équipe : pourquoi oui, pourquoi non. */
+    decisionNote: text("decision_note"),
+    decidedBy: uuid("decided_by").references(() => users.id, { onDelete: "set null" }),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex("aid_requests_team_round_uq").on(t.teamId, t.roundIndex),
+    index("aid_requests_game_status_idx").on(t.gameId, t.status),
+  ],
 );

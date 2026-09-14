@@ -17,9 +17,11 @@ import type { ScenarioVocabulary } from "@/config/scenarios/registry";
 import type { GameView } from "@/services/game-view.service";
 import { formatEuro, formatEuroCents, formatUnits } from "@/lib/format";
 import {
+  bloqueLaValidation,
   messageSauvetage,
   verdictSauvetage,
   type ExigenceSauvetage,
+  type VerdictSauvetage,
 } from "@/services/sauvetage";
 import { COMMUNICATION_AXIS_LABELS } from "@/engine/market/communication";
 import { SimulationProgress } from "@/components/simulation-progress";
@@ -1058,8 +1060,14 @@ export function DecisionForm({
     emprunt: Math.max(0, defaults.finance?.newLoan ?? 0),
     apport: Math.max(0, defaults.finance?.capitalIncrease ?? 0),
   });
-  const verdict = sauvetage ? verdictSauvetage(sauvetage, renfort) : { suffisant: true as const };
+  const verdict: VerdictSauvetage = sauvetage
+    ? verdictSauvetage(sauvetage, renfort)
+    : { issue: "suffisant" };
   const blocageSauvetage = messageSauvetage(verdict, formatEuro);
+  // Le verrou et le message ne disent pas la même chose : une demande de
+  // subvention déposée lève le verrou sans rien réunir de plus, et n'a donc
+  // aucun message de blocage à afficher.
+  const validationBloquee = bloqueLaValidation(verdict);
 
   // Vocabulaire du secteur : c'est lui qui parle à l'élève, pas le moteur.
   const v = vocabulary;
@@ -2041,7 +2049,7 @@ export function DecisionForm({
             <button
               key="valider"
               type="submit"
-              disabled={pending || verrou != null || blocageSauvetage != null}
+              disabled={pending || verrou != null || validationBloquee}
               className="order-1 ml-auto rounded-lg bg-amber-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60 sm:order-3 sm:ml-0"
             >
               {pending

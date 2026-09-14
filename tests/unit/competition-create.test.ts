@@ -22,6 +22,10 @@ vi.mock("next/navigation", () => ({
     throw new Error(`${REDIRECTION}${url}`);
   },
 }));
+// Les actions serveur touchent désormais le service des subventions, qui
+// charge `@/db` — lequel jette à l'import sans DATABASE_URL. Fermer cette
+// frontière garde ce test unitaire : aucune requête n'est faite ici.
+vi.mock("@/db", () => ({ db: {} }));
 vi.mock("next/cache", () => ({ revalidatePath: () => undefined }));
 vi.mock("@/lib/session", () => ({
   getSession: vi.fn(),

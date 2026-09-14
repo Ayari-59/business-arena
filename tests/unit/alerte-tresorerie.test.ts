@@ -1,8 +1,16 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
-import { AlerteTresorerie } from "@/components/alerte-tresorerie";
-import type { GameView } from "@/services/game-view.service";
+import { describe, expect, it, vi } from "vitest";
+
+// Le bandeau porte désormais le formulaire de demande de subvention, qui est
+// lié à une action serveur — laquelle traverse `@/db`, dont l'import jette sans
+// DATABASE_URL. Fermer cette frontière suffit : aucune requête n'est faite ici,
+// on ne rend que du HTML.
+vi.mock("@/db", () => ({ db: {} }));
+vi.mock("next/cache", () => ({ revalidatePath: () => undefined }));
+
+const { AlerteTresorerie } = await import("@/components/alerte-tresorerie");
+type GameView = import("@/services/game-view.service").GameView;
 
 /**
  * UNE ÉQUIPE GELÉE NE VOYAIT RIEN.
@@ -32,7 +40,19 @@ const alerte = (over: Partial<Alerte> = {}): Alerte => ({
   ...over,
 });
 
-const rendu = (a: Alerte) => renderToStaticMarkup(createElement(AlerteTresorerie, { alerte: a }));
+type Props = Parameters<typeof AlerteTresorerie>[0];
+const rendu = (a: Alerte, extra: Partial<Props> = {}) =>
+  renderToStaticMarkup(
+    createElement(AlerteTresorerie, { gameId: "partie-test", alerte: a, ...extra }),
+  );
+
+/** Une exigence de sauvetage : par défaut, le mur (les deux leviers épuisés). */
+const exigence = (over: Partial<NonNullable<Props["exigence"]>> = {}) => ({
+  manque: 46000,
+  capaciteEmprunt: 10000,
+  enveloppeApport: 6000,
+  ...over,
+});
 
 describe("AlerteTresorerie", () => {
   it("en crise, elle dit ce qui manque et ce qui arrive si rien ne change", () => {
@@ -64,5 +84,79 @@ describe("AlerteTresorerie", () => {
     // Un bandeau que seule la couleur signale n'existe pas pour tout le monde.
     expect(rendu(alerte())).toContain('role="alert"');
     expect(rendu(alerte({ defaillante: true }))).toContain('role="alert"');
+  });
+
+  it("au pied du mur, elle ouvre la demande de subvention et chiffre ce qui manquerait", () => {
+    // LE CAS QUI FAISAIT L'IMPASSE : emprunt et apport utilisés à fond, et le
+    // compte n'y est toujours pas. L'équipe ne pouvait ni jouer ni renoncer.
+    const html = rendu(alerte(), { exigence: exigence() });
+    expect(html).toContain("Demande de subvention exceptionnelle");
+    // 46 000 − 10 000 − 6 000 : ce que l'aide aurait à couvrir, proposé et plafonné.
+    expect(html).toMatch(/30\s000\s€/);
+    expect(html).toContain('name="montant"');
+    expect(html).toContain('name="motif"');
+  });
+
+  it("tant qu'il reste un levier, aucune demande n'est proposée", () => {
+    // La porte de l'aide exceptionnelle ne s'ouvre pas à qui n'a pas d'abord
+    // poussé les siennes.
+    const html = rendu(alerte(), {
+      exigence: exigence({ capaciteEmprunt: 60000, enveloppeApport: 0 }),
+    });
+    expect(html).not.toContain("Demande de subvention exceptionnelle");
+  });
+
+  it("en solo, elle le dit plutôt que d'ouvrir un formulaire sans destinataire", () => {
+    const html = rendu(alerte(), { exigence: exigence({ avecAnimateur: false }) });
+    expect(html).not.toContain('name="montant"');
+    expect(html).toContain("sans filet");
+  });
+
+  it("une fois la demande déposée, elle en donne l'état plutôt que le formulaire", () => {
+    const attente = rendu(alerte(), {
+      exigence: exigence(),
+      demande: {
+        id: "d1",
+        roundIndex: 3,
+        montant: 30000,
+        motif: "Écouler le stock invendu.",
+        statut: "pending",
+        montantAccorde: null,
+        note: null,
+      },
+    });
+    expect(attente).not.toContain('name="montant"');
+    expect(attente).toContain("doit encore l&#x27;instruire");
+
+    const accordee = rendu(alerte(), {
+      exigence: exigence(),
+      demande: {
+        id: "d1",
+        roundIndex: 3,
+        montant: 30000,
+        motif: "Écouler le stock invendu.",
+        statut: "granted",
+        montantAccorde: 25000,
+        note: "Accordé une fois, pas deux.",
+      },
+    });
+    expect(accordee).toMatch(/25\s000\s€/);
+    expect(accordee).toContain("encaissée à la clôture");
+    expect(accordee).toContain("Accordé une fois, pas deux.");
+
+    const refusee = rendu(alerte(), {
+      exigence: exigence(),
+      demande: {
+        id: "d1",
+        roundIndex: 3,
+        montant: 30000,
+        motif: "Écouler le stock invendu.",
+        statut: "refused",
+        montantAccorde: null,
+        note: null,
+      },
+    });
+    expect(refusee).toContain("refusée");
+    expect(refusee).not.toContain('name="montant"');
   });
 });

@@ -39,6 +39,7 @@ import {
   ORGANIZER_LABEL_MAX,
   TAGLINE_MAX,
 } from "@/config/concours-public";
+import { trancherDemande } from "@/services/subvention.service";
 
 export interface FormState {
   error: string | null;
@@ -541,4 +542,41 @@ export async function drawCardAction(
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Erreur.", drawnCode: null };
   }
+}
+
+export interface TrancherSubventionState {
+  error: string | null;
+}
+
+/**
+ * L'animateur accorde ou refuse une subvention exceptionnelle.
+ *
+ * Le montant est modifiable : accorder la moitié de ce qui est demandé est un
+ * arbitrage légitime — « je vous sors de l'eau, pas plus ». Le mot laissé à
+ * l'équipe compte autant que la somme : c'est lui qui fait de la réponse une
+ * décision motivée plutôt qu'un jet de dés.
+ */
+export async function trancherSubventionAction(
+  gameId: string,
+  _prev: TrancherSubventionState,
+  formData: FormData,
+): Promise<TrancherSubventionState> {
+  const session = await getSession();
+  if (!session) return { error: "Session expirée." };
+  const requestId = String(formData.get("requestId") ?? "");
+  const accord = formData.get("accord") === "1";
+  const brut = Number(String(formData.get("montant") ?? "").replace(",", "."));
+  try {
+    await trancherDemande({
+      requestId,
+      teacherId: session.userId,
+      accord,
+      montant: Number.isFinite(brut) && brut > 0 ? brut : undefined,
+      note: String(formData.get("note") ?? ""),
+    });
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "La demande n'a pas pu être tranchée." };
+  }
+  revalidatePath(`/teacher/games/${gameId}`);
+  return { error: null };
 }

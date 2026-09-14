@@ -26,6 +26,10 @@ import type { SituationView } from "@/services/pedagogy.service";
  * en tête de l'onglet Situation comme dans le bandeau d'en-tête.
  */
 
+// Les actions serveur touchent désormais le service des subventions, qui
+// charge `@/db` — lequel jette à l'import sans DATABASE_URL. Fermer cette
+// frontière garde ce test unitaire : aucune requête n'est faite ici.
+vi.mock("@/db", () => ({ db: {} }));
 vi.mock("next/cache", () => ({ revalidatePath: () => undefined }));
 // Le financement de sauvetage est vérifié côté serveur : l'action lit la vue
 // pour savoir si l'équipe est en crise. C'est une frontière de service de
