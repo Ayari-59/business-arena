@@ -293,12 +293,13 @@ describe("la carte de situation : un seul bouton, grisé tant qu'une moitié man
 });
 
 /**
- * LE BANDEAU NE PARLE PLUS QUAND C'EST À L'ÉLÈVE DE JOUER.
+ * LE BANDEAU N'EMMÈNE PLUS AUX CHAMPS DE SAISIE.
  *
- * Il portait là un raccourci « Prendre mes décisions → » qui sautait par-dessus
+ * Il portait un raccourci « Prendre mes décisions → » qui sautait par-dessus
  * l'étape Analyser : posé tout en haut, avant même le contexte, il invitait à
- * trancher avant de savoir. Le tour en cours a déjà sa carte plus bas, avec ses
- * onglets dans l'ordre — Situation, Analyser, Décider.
+ * trancher avant d'avoir lu. Le bandeau reste — il situe le tour et annonce aux
+ * lecteurs d'écran ce qui change sans action de l'élève —, mais le chemin vers
+ * la saisie passe par les onglets, dans leur ordre.
  */
 describe("le bandeau d'en-tête", () => {
   function bandeau(situations: ReturnType<typeof statutDesSituations>, pendingDecisions = false): string {
@@ -315,9 +316,13 @@ describe("le bandeau d'en-tête", () => {
     );
   }
 
-  it("quand les décisions sont attendues, il ne s'affiche pas du tout", () => {
+  it("quand les décisions sont attendues, il situe le tour sans y mener", () => {
     const html = bandeau(statutDesSituations([situation()]));
-    expect(html).toBe("");
+    expect(html).toContain("À vous de jouer");
+    expect(html).toContain("2"); // le numéro du tour
+    // On n'affiche pas « Situation incomplète » : le bouton grisé le dit déjà.
+    expect(html).not.toContain("statut-situation");
+    expect(html).not.toContain("Situation incomplète");
   });
 
   it("et surtout, plus de raccourci qui saute par-dessus Analyser", () => {
@@ -345,10 +350,11 @@ describe("le bandeau d'en-tête", () => {
     expect(bandeau(rendue, true)).toContain("Décisions enregistrées");
   });
 
-  it("les deux autres états gardent leur région live", () => {
-    // Ce que le retrait coûte est borné : en attente de clôture et partie
-    // terminée, le bandeau continue d'annoncer le changement aux lecteurs
-    // d'écran, puisqu'il survient sans action de l'élève.
+  it("tous les états gardent la région live", () => {
+    // Le tour se clôt et la page se rafraîchit sans que l'élève ne fasse rien :
+    // ce bandeau est le seul indice du changement, un lecteur d'écran doit
+    // l'annoncer. Retirer le bouton ne devait pas coûter cela.
+    expect(bandeau(null, false)).toContain('role="status"');
     expect(bandeau(null, true)).toContain('role="status"');
     expect(
       renderToStaticMarkup(
