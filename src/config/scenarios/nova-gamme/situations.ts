@@ -265,7 +265,15 @@ export const NOVA_GAMME_SITUATIONS: SituationDef[] = [
       "Une analyse FRNG / BFR décomposerait votre trésorerie et montrerait où elle est partie, référence par référence.",
       "Calculez le FRNG (ressources stables − immobilisations), puis le BFR (stocks + créances − fournisseurs) : TN = FRNG − BFR. Leviers : mobiliser les créances, emprunter, ou vendre plus au comptant.",
     ]),
-    trigger: { round: 4 },
+    trigger: {
+      round: 4,
+      // L'énoncé affirme un résultat POSITIF avec la caisse dans le rouge.
+      // Sans cette condition, il s'ouvrait à une équipe qui venait de perdre
+      // 108 000 € et lui racontait un trimestre record : un énoncé que les
+      // chiffres démentent n'enseigne pas le paradoxe, il apprend à ne pas
+      // lire ses résultats.
+      requires: "profitable_illiquid",
+    },
     weight: 1.5,
     decisionLevers: [
       { field: "price", direction: "review", hint: "Le prix détermine le volume vendu, et le volume vendu à crédit devient des créances : plus de ventes à CampusTech, plus d'argent qui attend." },

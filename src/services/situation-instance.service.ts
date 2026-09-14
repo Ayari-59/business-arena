@@ -53,7 +53,23 @@ export async function openSituationsForRound(
     (s) => "round" in s.trigger && s.trigger.round === roundIndex,
   );
   for (const team of humanTeams) {
+    const result = previousResults?.[team.id];
+    const detected = result
+      ? new Set(
+          detectSituations(result, {
+            placement: presetFromProfile(gameRow?.difficultyProfile).decisions.placement,
+          }),
+        )
+      : new Set<ReturnType<typeof detectSituations>[number]>();
+
     for (const s of scripted) {
+      // LA CONDITION QUE L'ÉNONCÉ SUPPOSE. « Le paradoxe du succès » raconte un
+      // trimestre record avec la caisse dans le rouge : ouvert à une équipe qui
+      // vient de perdre 108 000 €, il n'enseigne pas le paradoxe, il apprend à
+      // ne pas lire ses résultats. Sans condition déclarée, rien ne change —
+      // la situation s'ouvre au tour dit, comme avant.
+      const condition = "round" in s.trigger ? s.trigger.requires : undefined;
+      if (condition && !detected.has(condition)) continue;
       const situationId = situationIdByCode.get(s.code);
       if (situationId)
         values.push({
@@ -62,16 +78,11 @@ export async function openSituationsForRound(
           situationId,
           origin: "scripted",
           status: "open",
+          ...(condition && result ? { triggerContext: buildTriggerContext(condition, result) } : {}),
           openedAt: new Date(),
         });
     }
-    const result = previousResults?.[team.id];
     if (result) {
-      const detected = new Set(
-        detectSituations(result, {
-          placement: presetFromProfile(gameRow?.difficultyProfile).decisions.placement,
-        }),
-      );
       // Résolution par le déclencheur porté par la situation, pas par une
       // convention de nommage : chaque scénario nomme ses situations librement.
       for (const s of definition.situations) {

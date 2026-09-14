@@ -275,7 +275,15 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
       "Besoin en fonds de roulement = créances + en-cours − dettes fournisseurs.",
       "Trésorerie nette = fonds de roulement − besoin. Votre besoin a grossi avec l'activité, le fonds de roulement n'a pas suivi.",
     ]),
-    trigger: { round: 3 },
+    trigger: {
+      round: 3,
+      // L'énoncé affirme un résultat POSITIF avec la caisse dans le rouge.
+      // Sans cette condition, il s'ouvrait à une équipe qui venait de perdre
+      // 108 000 € et lui racontait un trimestre record : un énoncé que les
+      // chiffres démentent n'enseigne pas le paradoxe, il apprend à ne pas
+      // lire ses résultats.
+      requires: "profitable_illiquid",
+    },
     weight: 1.2,
     decisionLevers: [
       {

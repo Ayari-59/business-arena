@@ -81,7 +81,21 @@ export interface SituationDef {
   modelRelevance: Record<string, ModelRelevance>; // par code de modèle ; note la question du modèle (§7)
   conceptCodes: string[];
   hints: SituationHintDef[];
-  trigger: { round: number } | { detect: DetectCode };
+  /**
+   * QUAND LA SITUATION S'OUVRE.
+   *
+   *  · `{ round }` — au tour dit, pour l'enseignant qui construit une
+   *    progression. Mais un tour donné ne garantit rien de ce qui s'y est
+   *    passé : `requires` pose alors la condition que l'énoncé suppose.
+   *  · `{ detect }` — dès que les résultats présentent le cas.
+   *
+   * `requires` répare une faute qui s'est vue en classe : « Le paradoxe du
+   * succès » — trimestre record, caisse dans le rouge — s'ouvrait au tour 4
+   * quelles que soient les performances, et racontait un record à une équipe
+   * qui venait de perdre 108 000 €. Un énoncé que les chiffres démentent
+   * n'enseigne pas le paradoxe : il apprend à ne pas lire ses résultats.
+   */
+  trigger: { round: number; requires?: DetectCode } | { detect: DetectCode };
   weight: number;
   decisionLevers: DecisionLever[];
   /** Étapes d'apprentissage obligatoires pour accéder à cette situation. */

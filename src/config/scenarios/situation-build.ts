@@ -49,7 +49,7 @@ export interface NewSituationInput {
   conceptCodes: string[];
   hints: [string, string, string, string, string];
   modelExplain: string;
-  trigger: { round: number } | { detect: DetectCode };
+  trigger: { round: number; requires?: DetectCode } | { detect: DetectCode };
   weight: number;
 }
 
@@ -115,7 +115,14 @@ export function buildSituation(input: NewSituationInput, code: string): Situatio
     if (!Number.isInteger(input.trigger.round) || input.trigger.round < 1) {
       throw new Error("Tour de déclenchement invalide");
     }
-    trigger = { round: input.trigger.round };
+    // La condition que l'énoncé suppose. Un code inconnu est refusé ici
+    // plutôt qu'ignoré en silence : une condition muette rouvrirait la porte
+    // qu'elle est censée fermer.
+    const requiert = input.trigger.requires;
+    if (requiert !== undefined && !DETECT_CODES.includes(requiert)) {
+      throw new Error("Condition de déclenchement inconnue");
+    }
+    trigger = { round: input.trigger.round, ...(requiert ? { requires: requiert } : {}) };
   } else {
     if (!DETECT_CODES.includes(input.trigger.detect)) {
       throw new Error("Déclencheur de détection inconnu");
