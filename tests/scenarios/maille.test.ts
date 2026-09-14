@@ -4,7 +4,11 @@ import { isMultiProduct, toGamme } from "../../src/engine/gamme";
 import { runGame, soldUnits, type GameRunResult } from "../../src/engine/simulation/runGame";
 import { boutiqueBots, boutiqueCompany, boutiqueScenario } from "../../src/config/scenarios/boutique";
 import { tourDuPic } from "../../src/config/scenarios/rounds";
-import { axisAffinity, updateBrandAwareness } from "../../src/engine/market/communication";
+import {
+  axesProposables,
+  axisAffinity,
+  updateBrandAwareness,
+} from "../../src/engine/market/communication";
 import type { CommunicationAxis, CompanyRoundResult, CompanyState } from "../../src/engine/types";
 
 /**
@@ -282,15 +286,19 @@ describe("MAILLE & CO — la communication", () => {
     ).toBe("misfit");
   });
 
-  it("l'innovation n'a rien à montrer dans une boutique de maille", () => {
-    // MAILLE & CO n'a ni R&D ni lancement : l'axe innovation sonne creux pour
-    // TOUTES les clientèles. Ce n'est pas un oubli, c'est le secteur — et
-    // l'énoncé du levier le dit (« à condition d'avoir quelque chose de neuf »).
+  it("l'innovation n'a rien à montrer ici, donc on ne la propose pas", () => {
+    // MAILLE & CO n'a ni R&D ni lancement : l'axe innovation sonnerait creux
+    // pour TOUTES les clientèles, à tous les tours. Ce n'est pas un oubli,
+    // c'est le secteur.
     for (const s of segments) {
       expect(
         axisAffinity("innovation", s, { price: s.refPrice, techLevel: 0, freshlyLaunched: false }),
       ).toBe("misfit");
     }
+    // Donc la boutique ne l'offre pas : un choix qui ne peut que coûter n'est
+    // pas un arbitrage, c'est un piège.
+    expect(axesProposables(boutiqueScenario)).not.toContain("innovation");
+    expect(axesProposables(boutiqueScenario)).toEqual(["prix", "qualite", "image"]);
   });
 
   it("la notoriété se bâtit avec retard et s'use quand on change de discours", () => {

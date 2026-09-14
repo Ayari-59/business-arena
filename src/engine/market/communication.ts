@@ -38,6 +38,23 @@ export const COMMUNICATION_AXIS_LABELS: Record<CommunicationAxis, { label: strin
   },
 };
 
+/**
+ * LES AXES QU'UN SECTEUR PEUT HONNÊTEMENT PROPOSER.
+ *
+ * L'axe innovation ne vaut que s'il y a quelque chose de neuf à montrer — une
+ * référence qu'on vient de lancer, un niveau technique qu'on a fait monter.
+ * Sans levier R&D, un secteur n'a jamais ni l'un ni l'autre : l'axe y est un
+ * misfit sur TOUTES les clientèles, à tous les tours, sans échappatoire. Le
+ * proposer quand même, c'est offrir un choix qui ne peut que coûter — un piège,
+ * pas un arbitrage.
+ *
+ * Les trois autres axes sont toujours jouables : chacun porte une clientèle et
+ * en dessert une autre, ce qui est précisément la décision qu'on demande.
+ */
+export function axesProposables(scenario: Pick<EngineScenarioConfig, "rd">): CommunicationAxis[] {
+  return COMMUNICATION_AXES.filter((axe) => axe !== "innovation" || Boolean(scenario.rd));
+}
+
 export interface AxisContext {
   /** Prix pratiqué sur le segment (crédibilité de l'axe prix). */
   price: number;

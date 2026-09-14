@@ -17,7 +17,7 @@ import { cardByCode } from "@/config/events/cards";
 import { proposedDecisionsFor, startingDecisionsFor } from "@/services/decision-baseline";
 import { orderOfferForRound } from "@/engine/simulation";
 import { isMultiProduct, isProductAvailable, rdOpeningOf, suppliersOf, toGamme, offerProductIndex } from "@/engine/gamme";
-import { COMMUNICATION_AXES, COMMUNICATION_AXIS_LABELS } from "@/engine/market/communication";
+import { COMMUNICATION_AXIS_LABELS, axesProposables } from "@/engine/market/communication";
 import { computeRatios } from "@/engine/finance/ratios";
 import { conditionsBancaires, confianceInitiale } from "@/engine/finance/bank";
 import { irr, npv, paybackPeriod } from "@/engine/investment";
@@ -1604,7 +1604,13 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       if (!snapshot.communication) return null;
       const state = stateRow?.state as CompanyState | undefined;
       return {
-        axes: COMMUNICATION_AXES.map((code) => ({ code, ...COMMUNICATION_AXIS_LABELS[code] })),
+        // Pas tous les axes : celui de l'innovation n'est proposé que là où le
+        // secteur a de quoi le tenir (un levier R&D). Ailleurs il ne pourrait
+        // que desservir, et un choix qui ne peut que coûter n'est pas un choix.
+        axes: axesProposables(snapshot).map((code) => ({
+          code,
+          ...COMMUNICATION_AXIS_LABELS[code],
+        })),
         brandScale: snapshot.communication.brandScale,
         brandAwareness: state?.brandAwareness ?? 0,
         lastAxis: state?.lastCommunicationAxis ?? null,

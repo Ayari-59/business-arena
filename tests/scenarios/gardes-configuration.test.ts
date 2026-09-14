@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { SCENARIOS } from "../../src/config/scenarios/registry";
 import { toGamme } from "../../src/engine/gamme";
+import { axesProposables, axisAffinity } from "../../src/engine/market/communication";
 
 /**
  * LA CONFIGURATION DOIT RACONTER LE MÊME MÉTIER QUE LES ÉNONCÉS.
@@ -79,6 +80,59 @@ describe("bilan d'ouverture", () => {
       const actif = b.fixedAssetsNet + b.inventoryValue + b.receivables + b.cash;
       const passif = b.equity + b.financialDebt + b.payables + b.overdraft;
       expect(Math.abs(actif - passif), d.code).toBeLessThan(0.01);
+    }
+  });
+});
+
+/**
+ * UN AXE DE COMMUNICATION QU'ON NE PEUT PAS TENIR N'EST PAS UN CHOIX.
+ *
+ * L'axe innovation ne parle que s'il y a du neuf à montrer : une référence
+ * qu'on vient de lancer, un niveau technique qu'on a fait monter. Sans levier
+ * R&D, un secteur n'a jamais ni l'un ni l'autre — l'axe y dessert TOUTES les
+ * clientèles, à tous les tours, sans échappatoire. Deux secteurs étaient dans
+ * ce cas (MAILLE & CO, L'ESCALE · gamme) et le proposaient quand même.
+ *
+ * La règle : un secteur ne propose un axe que s'il peut le tenir.
+ */
+describe("les axes de communication proposés se tiennent", () => {
+  const avecCommunication = Object.values(SCENARIOS).filter((s) => s.scenario.communication);
+
+  it("au moins un secteur ouvre le levier (sans quoi la garde ne garde rien)", () => {
+    expect(avecCommunication.length).toBeGreaterThan(0);
+  });
+
+  it("l'innovation n'est proposée que là où la R&D existe", () => {
+    for (const { scenario } of avecCommunication) {
+      const axes = axesProposables(scenario);
+      expect(axes.includes("innovation"), scenario.code).toBe(Boolean(scenario.rd));
+      // Les trois autres restent toujours offerts : chacun porte une clientèle
+      // et en dessert une autre, ce qui est la décision qu'on demande.
+      for (const axe of ["prix", "qualite", "image"] as const) {
+        expect(axes, scenario.code).toContain(axe);
+      }
+    }
+  });
+
+  it("aucun axe proposé ne dessert toutes les clientèles du secteur", () => {
+    // La formulation générale de la règle : si un axe est misfit partout, à
+    // prix usuel et sans nouveauté, il ne peut que coûter — il n'a rien à faire
+    // dans la liste.
+    for (const { scenario } of avecCommunication) {
+      const segments = toGamme(scenario).flatMap((p) => p.market.segments);
+      for (const axe of axesProposables(scenario)) {
+        const partout = segments.every(
+          (s) =>
+            axisAffinity(axe, s, { price: s.refPrice, techLevel: 0, freshlyLaunched: false }) ===
+            "misfit",
+        );
+        // L'innovation reste misfit au tour 1 même avec un levier R&D — elle
+        // devient tenable dès que le niveau technique monte ou qu'une
+        // référence est lancée, ce qui est justement le pari qu'elle propose.
+        if (axe !== "innovation") {
+          expect(partout, `${scenario.code} · ${axe}`).toBe(false);
+        }
+      }
     }
   });
 });
