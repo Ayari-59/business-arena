@@ -8,7 +8,7 @@ import { RevenueChart, TreasuryChart, MarketShareChart } from "@/components/char
 import { StudyReportsPanel } from "@/components/study-reports";
 import { FinancialStatements } from "@/components/financial-statements";
 import { RatioGauges } from "@/components/ratio-gauges";
-import { NomReference } from "@/components/nom-reference";
+import { TableauDesReferences } from "@/components/tableau-des-references";
 import { SalesHistory } from "@/components/sales-history";
 import { CompetitiveBenchmark } from "@/components/competitive-benchmark";
 import { RseReportPanel } from "@/components/rse-report";
@@ -349,87 +349,12 @@ export function PeriodDashboard({
             ) : null}
 
             {r.products && view.gamme ? (
-              <section aria-label="Vos références">
-                <h3 className="mb-2 text-sm font-semibold text-slate-200">
-                  Vos références sur le tour écoulé
-                </h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
-                        <th className="pb-2 pr-2 font-medium">Référence</th>
-                        <th className="pb-2 pr-2 text-right font-medium">Prix</th>
-                        <th className="pb-2 pr-2 text-right font-medium">Mis en rayon</th>
-                        <th className="pb-2 pr-2 text-right font-medium">Vendu</th>
-                        <th className="pb-2 pr-2 text-right font-medium">Manqué</th>
-                        <th className="pb-2 pr-2 text-right font-medium">CA</th>
-                        <th className="pb-2 pr-2 text-right font-medium">Marge / u</th>
-                        <th className="pb-2 pr-2 text-right font-medium">{view.vocabulary.leftoverLabel}</th>
-                        <th className="pb-2 pr-2 text-right font-medium">Qualité perçue</th>
-                        {view.gamme.some((g) => g.rd) ? <th className="pb-2 pr-2 text-right font-medium">R&amp;D</th> : null}
-                        {view.gamme.some((g) => g.suppliers) ? <th className="pb-2 font-medium">Fournisseur</th> : null}
-                      </tr>
-                    </thead>
-                    <tbody className="text-slate-300">
-                      {view.gamme.map((g) => {
-                        const p = r.products![g.code];
-                        if (!p) return null;
-                        const marge = p.price - p.unitVariableCost;
-                        const dev = p.rd?.development;
-                        const enDeveloppement = dev ? !dev.launched : false;
-                        return (
-                          <tr key={g.code} className="border-t border-white/5">
-                            <td className="py-2 pr-2 text-slate-100">
-                              <NomReference reference={g} />
-                              {p.supplier?.supplyDisruption ? (
-                                <span className="ml-1 text-xs text-red-400" title="Rupture d'approvisionnement ce tour">
-                                  ⚠︎ rupture
-                                </span>
-                              ) : null}
-                              {enDeveloppement ? (
-                                <span className="ml-1 text-xs text-amber-300" title="Référence en développement : pas encore vendable">
-                                  🔬 en développement · {Math.round((100 * dev!.invested) / Math.max(1, dev!.cost))} %
-                                </span>
-                              ) : dev && dev.launchRound === period.round ? (
-                                <span className="ml-1 text-xs text-emerald-300">🚀 lancée ce tour</span>
-                              ) : null}
-                            </td>
-                            <td className="py-2 pr-2 text-right tabular-nums">{formatEuro(p.price)}</td>
-                            <td className="py-2 pr-2 text-right tabular-nums">{formatUnits(p.produced)}</td>
-                            <td className="py-2 pr-2 text-right tabular-nums">{formatUnits(p.sold)}</td>
-                            <td className={`py-2 pr-2 text-right tabular-nums ${p.lost > 1 ? "text-red-400" : ""}`}>
-                              {formatUnits(p.lost)}
-                            </td>
-                            <td className="py-2 pr-2 text-right tabular-nums">{formatEuro(p.revenue)}</td>
-                            <td className={`py-2 pr-2 text-right tabular-nums ${marge < 0 ? "text-red-400" : ""}`}>
-                              {formatEuro(marge)}
-                            </td>
-                            <td className="py-2 pr-2 text-right tabular-nums">{formatUnits(p.stock.quantity)}</td>
-                            <td className="py-2 pr-2 text-right tabular-nums">
-                              {p.perceivedQuality !== undefined
-                                ? `${Math.round(p.perceivedQuality * 100)} %`
-                                : "—"}
-                            </td>
-                            {view.gamme!.some((x) => x.rd) ? (
-                              <td className="py-2 pr-2 text-right tabular-nums" title="Budget R&D du tour · niveau technique acquis">
-                                {p.rd ? `${formatEuro(p.rd.budget)} · +${Math.round(p.rd.techLevel * 100)} %` : "—"}
-                              </td>
-                            ) : null}
-                            {view.gamme!.some((x) => x.suppliers) ? (
-                              <td className="py-2 text-slate-300">{p.supplier?.name ?? "—"}</td>
-                            ) : null}
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-                <p className="mt-2 text-xs leading-relaxed text-slate-400">
-                  Marge unitaire = prix − coût variable de la référence. Ce qu&apos;elle
-                  rapporte = cette marge × ce qu&apos;elle vend : le mix compte autant que le
-                  volume. Qualité perçue : 100 % = la référence du secteur.
-                </p>
-              </section>
+              <TableauDesReferences
+                gamme={view.gamme}
+                produits={r.products}
+                tour={period.round}
+                leftoverLabel={view.vocabulary.leftoverLabel}
+              />
             ) : null}
 
             <section>

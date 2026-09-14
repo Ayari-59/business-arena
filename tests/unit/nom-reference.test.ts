@@ -92,10 +92,21 @@ describe("NomReference", () => {
   it("tous les affichages par référence passent par le composant", () => {
     // Un `{p.name}` oublié dans un bouton, et le débordement revient sur
     // l'écran qu'on vient de corriger.
+    // Le tableau de bord d'un tour ne nomme plus les références lui-même : il
+    // délègue à `tableau-des-references.tsx`, qui rend une carte par référence
+    // sous 640 px et le tableau au-dessus. La règle vaut là où le nom est
+    // écrit, donc là.
     const racine = join(import.meta.dirname, "..", "..", "src", "components");
-    for (const fichier of ["decision-form.tsx", "period-dashboard.tsx", "period-decisions-recap.tsx"]) {
+    for (const fichier of [
+      "decision-form.tsx",
+      "tableau-des-references.tsx",
+      "period-decisions-recap.tsx",
+    ]) {
       const src = readFileSync(join(racine, fichier), "utf8");
       expect(src, fichier).toContain("NomReference");
     }
+    // Et le tableau de bord ne doit pas se remettre à l'écrire en direct.
+    const dashboard = readFileSync(join(racine, "period-dashboard.tsx"), "utf8");
+    expect(dashboard).not.toMatch(/\{\s*g\.name\s*\}/);
   });
 });
