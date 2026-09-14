@@ -27,6 +27,9 @@ const segmentSchema = z.object({
   priceEffectBounds: z
     .object({ min: z.number().nonnegative(), max: z.number().positive() })
     .refine((b) => b.min < b.max, "bornes d'effet prix incohérentes"),
+  // Prix de rupture, en multiple du prix usuel. > 1 : sous 1, la clientèle
+  // décrocherait au prix de référence, ce qui n'a pas de sens.
+  walkAwayPriceRatio: z.number().gt(1).optional(),
   paymentDelayDays: z.number().int().nonnegative(),
   // Une commission de 100 % ne serait plus un canal de vente : la borne haute
   // est stricte, et un scénario qui la franchit ne se charge pas.

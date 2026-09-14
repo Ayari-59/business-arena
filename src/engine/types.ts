@@ -678,6 +678,21 @@ export interface SegmentConfig {
   loyalty: number;
   /** Bornes de l'effet prix (documentées scénario, doc 02 §3.2). */
   priceEffectBounds: { min: number; max: number };
+  /**
+   * PRIX DE RUPTURE, en multiple du prix usuel du segment : au-delà, la
+   * clientèle n'achète plus, quelle que soit son élasticité.
+   *
+   * Sans cette borne, une élasticité faible — les passionnés à −0,7 — laissait
+   * un cinquième de l'attraction à DIX FOIS le prix usuel, et le plancher
+   * `priceEffectBounds.min` la remontait encore. Multiplier ses prix par dix
+   * devenait la stratégie la plus rentable du jeu.
+   *
+   * Le décrochage est progressif entre `rupture − 1` et `rupture` : à 3 (le
+   * défaut), rien ne change jusqu'à deux fois le prix usuel, puis l'attraction
+   * s'éteint linéairement jusqu'à zéro. Un scénario peut resserrer cette borne
+   * pour une clientèle très sensible, ou l'écarter pour un produit de luxe.
+   */
+  walkAwayPriceRatio?: number;
   /** Délai de paiement clients en jours (0 = comptant). */
   paymentDelayDays: number;
   /**

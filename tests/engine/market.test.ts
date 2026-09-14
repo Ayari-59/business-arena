@@ -78,10 +78,67 @@ describe("effet prix et élasticité (doc 02 §3.2, §11)", () => {
     // 20 € : élasticité seule donnerait (0.2)^-2 = 25, la méfiance divise par 2
     expect(priceEffect(20, s)).toBeCloseTo(25 * 0.5, 6);
   });
-  it("reste borné par les bornes du scénario", () => {
+  it("reste borné par les bornes du scénario, dans la plage où l'on achète encore", () => {
     const s = segment({ psychThresholds: [] });
     expect(priceEffect(1, s)).toBe(5); // borne max
-    expect(priceEffect(10000, s)).toBe(0.1); // borne min
+    // Le plancher joue tant que le prix reste dans la plage où l'on achète
+    // encore. Il faut un plancher haut pour l'y voir : à 0,1 et une élasticité
+    // de −2, il ne mordrait qu'au-delà de trois fois le prix usuel, c'est-à-dire
+    // là où plus personne n'achète — c'était exactement le défaut.
+    const plancherHaut = segment({ psychThresholds: [], priceEffectBounds: { min: 0.5, max: 5 } });
+    expect(priceEffect(180, plancherHaut)).toBeCloseTo(0.5, 9); // 1,8^-2 = 0,309 relevé à 0,5
+  });
+
+  /**
+   * LE PRIX DE RUPTURE.
+   *
+   * Deux gardes se retournaient contre le jeu au-dessus d'un certain prix. Le
+   * plancher `priceEffectBounds.min` RELÈVE l'attraction au lieu de la laisser
+   * tomber : à dix fois le prix usuel, l'effet brut valait 0,006 chez les
+   * étudiants de NOVA et le plancher le remontait à 0,15. Et une élasticité
+   * faible — les passionnés à −0,7 — laissait de toute façon un cinquième de
+   * l'attraction au même prix.
+   *
+   * Multiplier ses prix par dix vendait donc encore 918 unités et rapportait
+   * 296 000 € là où le prix juste en perdait 17 500 : la stratégie la plus
+   * rentable du jeu, et elle n'enseignait rien.
+   */
+  describe("prix de rupture", () => {
+    it("au-delà du prix de rupture, la clientèle n'achète plus du tout", () => {
+      const s = segment({ psychThresholds: [] });
+      expect(priceEffect(300, s)).toBe(0); // 3 × le prix usuel : le défaut
+      expect(priceEffect(1000, s)).toBe(0);
+      expect(priceEffect(10000, s)).toBe(0);
+    });
+
+    it("le décrochage est progressif, pas un mur", () => {
+      const s = segment({ psychThresholds: [] });
+      // Rien ne bouge jusqu'à deux fois le prix usuel : c'est ce qui rend la
+      // règle sans effet sur une partie normale.
+      const aDeux = priceEffect(200, s);
+      expect(aDeux).toBeGreaterThan(0);
+      // Puis l'attraction s'éteint en descendant, sans saut.
+      expect(priceEffect(250, s)).toBeLessThan(aDeux);
+      expect(priceEffect(250, s)).toBeGreaterThan(priceEffect(280, s));
+      expect(priceEffect(280, s)).toBeGreaterThan(0);
+    });
+
+    it("une élasticité faible ne protège plus d'un prix absurde", () => {
+      // LE CAS QUI FAISAIT LE DÉFAUT : un segment peu sensible au prix gardait
+      // son attraction quel que soit le montant demandé.
+      const rigide = segment({ priceElasticity: -0.7, psychThresholds: [] });
+      expect(priceEffect(1000, rigide)).toBe(0);
+    });
+
+    it("un scénario peut resserrer ou écarter la borne", () => {
+      // Une clientèle qui décroche vite, et un produit de luxe qui supporte
+      // cinq fois son prix usuel avant que personne n'en veuille.
+      const fragile = segment({ psychThresholds: [], walkAwayPriceRatio: 1.5 });
+      expect(priceEffect(150, fragile)).toBe(0);
+      const luxe = segment({ psychThresholds: [], walkAwayPriceRatio: 5 });
+      expect(priceEffect(300, luxe)).toBeGreaterThan(0);
+      expect(priceEffect(500, luxe)).toBe(0);
+    });
   });
 });
 

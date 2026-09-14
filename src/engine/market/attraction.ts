@@ -1,13 +1,51 @@
 import type { SegmentConfig } from "../types";
 
+/** Prix de rupture par défaut : trois fois le prix usuel du segment. */
+const RUPTURE_PAR_DEFAUT = 3;
+
+/**
+ * Ce qui reste de l'attraction quand le prix s'envole : 1 tant qu'on est sous
+ * le début du décrochage, 0 au prix de rupture, et une pente entre les deux.
+ *
+ * Le décrochage commence une unité de ratio avant la rupture — à 3 (le
+ * défaut), rien ne bouge jusqu'à DEUX fois le prix usuel. C'est ce qui rend le
+ * correctif sans effet sur une partie normale : aucune équipe raisonnable, ni
+ * aucun bot, ne va au-delà.
+ */
+function extinction(ratio: number, rupture: number): number {
+  const debut = Math.max(1, rupture - 1);
+  if (ratio <= debut) return 1;
+  if (ratio >= rupture) return 0;
+  return (rupture - ratio) / (rupture - debut);
+}
+
 /**
  * Effet prix (doc 02 §3.2) : élasticité autour du prix de référence du segment,
  * pénalités psychologiques au franchissement de seuils, méfiance sous le prix
  * plancher d'acceptabilité. Borné par les bornes documentées du scénario.
+ *
+ * ET UNE CLIENTÈLE QUI FINIT PAR PARTIR. Les deux gardes précédentes se
+ * retournaient contre le jeu au-dessus d'un certain prix :
+ *
+ *  - `priceEffectBounds.min` RELÈVE l'attraction au lieu de la laisser
+ *    tomber. À dix fois le prix usuel, l'effet brut valait 0,006 chez les
+ *    étudiants de NOVA ; le plancher le remontait à 0,15.
+ *  - une élasticité faible — les passionnés à −0,7 — laissait de toute façon
+ *    un cinquième de l'attraction au même prix, plancher ou pas.
+ *
+ * Résultat : multiplier ses prix par dix vendait encore 918 unités et
+ * rapportait 296 000 € là où le prix juste en perdait 17 500. C'était la
+ * stratégie la plus rentable du jeu, et elle n'enseignait rien.
+ *
+ * Le prix de rupture ferme cette porte comme le ferait un vrai marché :
+ * au-delà, on n'achète plus, quelle que soit son élasticité. L'extinction
+ * s'applique APRÈS les bornes, sans quoi le plancher relèverait ce qu'elle
+ * vient d'éteindre.
  */
 export function priceEffect(price: number, segment: SegmentConfig): number {
   if (price <= 0) return 0;
-  let effect = Math.pow(price / segment.refPrice, segment.priceElasticity);
+  const ratio = price / segment.refPrice;
+  let effect = Math.pow(ratio, segment.priceElasticity);
   for (const { threshold, penalty } of segment.psychThresholds) {
     if (price > threshold) effect *= penalty;
   }
@@ -16,7 +54,8 @@ export function priceEffect(price: number, segment: SegmentConfig): number {
     effect *= Math.max(0, price / segment.minAcceptablePrice);
   }
   const { min, max } = segment.priceEffectBounds;
-  return Math.min(max, Math.max(min, effect));
+  const borne = Math.min(max, Math.max(min, effect));
+  return borne * extinction(ratio, segment.walkAwayPriceRatio ?? RUPTURE_PAR_DEFAUT);
 }
 
 /** Effet marketing à rendements décroissants (doc 02 §3.2). */
