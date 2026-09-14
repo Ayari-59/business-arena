@@ -464,7 +464,12 @@ export default async function ArenaPage({
           trésorerie) et se rouvre sur son tableau de bord complet + son
           débriefing. Le tour en cours est la période active, toujours ouverte.
           ══════════════════════════════════════════════════════════════════ */}
-      <div className="space-y-3">
+      {/*
+        space-y-4 et non 3 : l'écart ENTRE deux tours doit dépasser l'écart
+        interne d'une carte (py-3), sans quoi l'œil ne sait plus où finit un
+        tour et où commence le suivant.
+      */}
+      <div className="space-y-4">
         {periods.length > 0 ? (
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
             {finished ? "Vos tours" : "Tours passés"}
@@ -484,28 +489,67 @@ export default async function ArenaPage({
               // la hauteur de l'en-tête collant pour que le titre reste visible.
               id={isLatest ? "dernier-resultat" : undefined}
               open={isLatest}
-              className={`group scroll-mt-24 rounded-xl border border-white/10 border-l-2 bg-slate-950/40 [&:not([open])]:border-dashed [&[open]]:border-white/20 ${
-                netIncome >= 0 ? "border-l-emerald-400/50" : "border-l-rose-400/50"
+              // bg-slate-900/60 et non slate-950/40 : sur le fond de page, une
+              // carte à 40 % de slate-950 n'était qu'un contour. Quatre contours
+              // à la file se lisaient comme une grille, pas comme quatre tours.
+              className={`group scroll-mt-24 rounded-xl border border-white/10 border-l-2 bg-slate-900/60 [&:not([open])]:border-dashed [&[open]]:border-white/20 ${
+                netIncome >= 0 ? "border-l-emerald-400/60" : "border-l-rose-400/60"
               }`}
             >
-              <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-3 px-3 py-2.5 sm:px-4">
-                <span className="flex items-center gap-2 text-sm font-semibold text-slate-100">
-                  <span className="text-slate-400 transition-transform group-open:rotate-90">▸</span>
-                  📊 {periodLabel(view.roundDays, p.round)}
-                  {isLatest && !finished ? (
-                    <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-xs font-medium text-emerald-300">
-                      résultats livrés
-                    </span>
-                  ) : null}
+              {/*
+                LE NUMÉRO FAIT LA SÉPARATION. Il était noyé derrière un 📊
+                répété — l'œil tombait sur une icône identique d'un tour à
+                l'autre au lieu de trouver 1, 2, 3. En pastille à gauche, les
+                numéros font colonne et donnent une colonne vertébrale à la
+                liste ; leur couleur dit du même coup si le tour a été gagné ou
+                perdu, sans ajouter un signal de plus.
+              */}
+              <summary className="flex cursor-pointer list-none items-center gap-3 px-3 py-3 sm:px-4 [&::-webkit-details-marker]:hidden">
+                <span
+                  aria-hidden
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold tabular-nums ${
+                    netIncome >= 0
+                      ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-300"
+                      : "border-rose-400/40 bg-rose-400/10 text-rose-300"
+                  }`}
+                >
+                  {p.round}
                 </span>
-                <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tabular-nums text-slate-400">
-                  <span>CA {formatEuro(p.result.incomeStatement.revenue)}</span>
-                  <span className={netIncome >= 0 ? "text-emerald-300" : "text-red-300"}>
-                    Résultat {formatEuro(netIncome)}
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold text-slate-100">
+                    {periodLabel(view.roundDays, p.round)}
+                    {isLatest && !finished ? (
+                      <span className="ml-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-xs font-medium text-emerald-300">
+                        résultats livrés
+                      </span>
+                    ) : null}
                   </span>
-                  <span className={netTreasury >= 0 ? "text-slate-300" : "text-red-300"}>
-                    Tréso {formatEuro(netTreasury)}
+                  {/* Les trois chiffres du tour, chacun insécable : la ligne se
+                      replie ENTRE deux chiffres, jamais au milieu d'un montant. */}
+                  <span className="mt-0.5 flex flex-wrap gap-x-1.5 gap-y-0.5 text-xs tabular-nums text-slate-400">
+                    <span className="whitespace-nowrap">
+                      CA {formatEuro(p.result.incomeStatement.revenue)}
+                      <span aria-hidden className="text-slate-600"> ·</span>
+                    </span>
+                    <span
+                      className={`whitespace-nowrap ${netIncome >= 0 ? "text-emerald-300" : "text-rose-300"}`}
+                    >
+                      {netIncome >= 0 ? "+" : ""}
+                      {formatEuro(netIncome)}
+                      <span aria-hidden className="text-slate-600"> ·</span>
+                    </span>
+                    <span
+                      className={`whitespace-nowrap ${netTreasury >= 0 ? "text-slate-400" : "text-rose-300"}`}
+                    >
+                      tréso {formatEuro(netTreasury)}
+                    </span>
                   </span>
+                </span>
+                <span
+                  aria-hidden
+                  className="shrink-0 text-xs text-amber-400/80 transition-transform group-open:rotate-90"
+                >
+                  ▸
                 </span>
               </summary>
               <div className="border-t border-white/10 px-2 py-2.5 sm:p-4">
