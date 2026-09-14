@@ -377,9 +377,11 @@ describe("le formulaire en gamme", () => {
     // La fiche du façonnier dit le délai de règlement, pas un « délai fournisseur ».
     expect(html).toContain("Délai de règlement");
     expect(html).not.toContain("Délai fournisseur");
-    // Et le lien avec le prix : achat, coût variable, marge et coefficient.
-    expect(html).toContain("coef.");
-    expect(html).toContain("marge");
+    // Et le lien avec le prix, désormais en LIGNES de la matrice : ce que la
+    // référence coûte, ce qu'il en reste au prix saisi, et le coefficient.
+    expect(html).toContain("Coût variable");
+    expect(html).toContain("Marge unitaire");
+    expect(html).toContain("Coefficient");
   });
 
   it("tout ce qui concerne une référence est dans SON onglet ; « Budgéter » ne garde que les budgets de l'entreprise", () => {
@@ -432,21 +434,36 @@ describe("le formulaire en gamme", () => {
     expect(niveau1).toContain('type="hidden" name="maintenanceBudget"');
   });
 
-  it("les onglets sont une concession au téléphone : sur grand écran, toutes les références s'affichent", () => {
-    // N'en montrer qu'une à la fois est indispensable sur 390 px de large, et
-    // un handicap ailleurs : la gamme se joue en comparant un prix à un autre,
-    // une marge à une autre. Le basculement est en CSS, donc juste dès le
-    // premier rendu, sans attendre le navigateur.
+  it("la gamme est une matrice : les intitulés en ligne, les références en colonne", () => {
+    // Les mêmes six ou sept décisions, répétées référence par référence : la
+    // gamme est un tableau et l'a toujours été. En cartes, on redisait sept
+    // fois les mêmes intitulés et on comparait de mémoire.
     const html = rendu(gamme, { enabled: presetByLevel.get(3)!.decisions });
-    // La barre d'onglets disparaît là où il n'y a plus rien à sélectionner.
+    // UN intitulé par décision, pas un par référence.
+    expect(html.match(/Marketing</g) ?? []).toHaveLength(1);
+    // Une colonne par référence, en en-tête.
+    for (const p of gamme) {
+      expect(html).toContain(`>${p.name}<`);
+    }
+    // Chaque ligne pose la même question à toute la gamme.
+    for (const p of gamme) {
+      expect(html).toContain(`name="product.${p.code}.price"`);
+      expect(html).toContain(`name="product.${p.code}.marketingBudget"`);
+    }
+  });
+
+  it("sur téléphone, la barre d'onglets choisit la colonne visible", () => {
+    // Une seule colonne tient sur 390 px. Ce sont les MÊMES cellules, masquées
+    // en CSS : aucun champ démonté, aucun nom de champ en double, et rien qui
+    // change de forme au chargement.
+    const html = rendu(gamme, { enabled: presetByLevel.get(3)!.decisions });
     expect(html).toContain("flex flex-wrap gap-2 lg:hidden");
-    // Les cartes passent sur deux colonnes, et celles qui étaient masquées
-    // reviennent.
-    expect(html).toContain("grid grid-cols-1 gap-3 lg:grid-cols-2");
-    const cartes = [...html.matchAll(/class="(hidden )?lg:block rounded-lg border border-white\/5/g)];
-    expect(cartes).toHaveLength(gamme.length);
-    // Une seule est visible sans media query : la première.
-    expect(cartes.filter((m) => m[1] === undefined)).toHaveLength(1);
+    // Les colonnes autres que l'active portent `hidden`, levé dès `lg`.
+    const cellules = [...html.matchAll(/class="(hidden )?lg:table-cell/g)];
+    expect(cellules.length).toBeGreaterThan(gamme.length);
+    // Sur chaque ligne, une seule colonne est visible sans media query.
+    const visibles = cellules.filter((m) => m[1] === undefined).length;
+    expect(visibles * gamme.length).toBe(cellules.length);
   });
 
   it("en mono-produit, marketing, qualité, maintenance et R&D forment une seule famille, dans l'étape « Budgéter »", () => {

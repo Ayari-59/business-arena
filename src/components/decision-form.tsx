@@ -328,44 +328,6 @@ export function ecartFournisseur(
   return pct === 0 ? "coût de référence" : `${pct > 0 ? "+" : "−"}${Math.abs(pct)} %`;
 }
 
-/**
- * Le lien entre le façonnier et le prix : ce que la référence coûte à
- * l'achat chez le façonnier choisi, ce qu'elle coûte en tout (coût variable),
- * ce qu'il en reste au prix saisi (marge unitaire) et le coefficient
- * multiplicateur (prix / coût d'achat), la règle de pouce du commerce.
- */
-function LienPrixFaconnier({
-  price,
-  achat,
-  autres,
-}: {
-  price: number;
-  achat: number;
-  autres: number;
-}) {
-  const cvu = achat + autres;
-  const marge = price - cvu;
-  const coefficient = achat > 0 ? price / achat : 0;
-  return (
-    <span className="mt-1 block text-xs leading-snug">
-      <span className="text-slate-400">achat </span>
-      <span className="text-slate-200">{formatEuroCents(achat)}</span>
-      <span className="text-slate-400"> · coût variable </span>
-      <span className="text-slate-200">{formatEuroCents(cvu)}</span>
-      <span className="text-slate-400"> · marge </span>
-      <span className={marge < 0 ? "font-medium text-red-400" : "font-medium text-emerald-300"}>
-        {formatEuroCents(marge)}
-      </span>
-      {coefficient > 0 ? (
-        <span className="text-slate-400">
-          {" "}
-          · coef. {coefficient.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}
-        </span>
-      ) : null}
-    </span>
-  );
-}
-
 /** Une référence en développement ne se vend ni ne se produit : rien à saisir. */
 function enDeveloppement(p: NonNullable<GameView["gamme"]>[number]): boolean {
   const dev = p.rd?.development;
@@ -476,40 +438,38 @@ function FaitsFournisseur({
 }
 
 /**
- * UNE RÉFÉRENCE, UN ONGLET, TOUTES SES DÉCISIONS.
+ * LA GAMME EN MATRICE : LES INTITULÉS EN LIGNE, LES RÉFÉRENCES EN COLONNE.
  *
- * Le formulaire en gamme avait deux jeux d'onglets : un dans « Vendre » pour
- * le prix, le volume et le façonnier, un autre dans « Budgéter » pour le
- * marketing, la qualité et la R&D. Décider d'UNE référence demandait donc de
- * changer d'étape puis de retrouver le bon onglet — et de tenir de tête, entre
- * les deux, le prix qu'on venait de saisir alors que c'est précisément lui qui
- * commande le budget qu'on va mettre derrière.
+ * Le formulaire en gamme avait deux jeux d'onglets — un pour le prix, le
+ * volume et le façonnier, un autre pour le marketing, la qualité et la R&D —
+ * puis un seul, puis cinq cartes côte à côte. Chaque étape rapprochait ce qui
+ * se décide ensemble ; celle-ci va au bout.
  *
- * Ici les deux jeux n'en font qu'un : on choisit une référence, et tout ce qui
- * la concerne est sous les yeux, dans l'ordre où on en décide — ce qu'elle
- * coûte et ce qu'elle rapporte, à quel prix et en quel volume, chez quel
- * façonnier, puis ce qu'on dépense pour la soutenir. Ne restent dans
- * « Budgéter » que les budgets de L'ENTREPRISE : l'entretien de la capacité et
- * la marque, qui ne se rattachent à aucune référence.
+ * Car la gamme est un TABLEAU, et l'avait toujours été : les mêmes six ou sept
+ * décisions, répétées référence par référence. Les servir en cartes, c'était
+ * redire sept fois les mêmes intitulés et obliger à comparer de mémoire. En
+ * matrice, chaque ligne est une question posée à toute la gamme d'un coup —
+ * « à quel prix ? », « combien ? », « combien de marketing ? » — et la réponse
+ * se lit en travers. C'est ainsi que se fait l'arbitrage : un prix contre un
+ * autre, une marge contre une autre, une capacité partagée à répartir.
  *
- * LES ONGLETS SONT UNE CONCESSION AU TÉLÉPHONE, PAS UNE MISE EN SCÈNE. Sur un
- * écran de 390 px, cinq références l'une sous l'autre font un rouleau qu'on ne
- * peut pas parcourir ; il faut bien n'en montrer qu'une. Mais sur un écran
- * large, la place existe : les références s'affichent TOUTES, côte à côte, et
- * la barre d'onglets disparaît. C'est même là que le jeu se joue vraiment —
- * arbitrer un prix contre un autre, répartir une capacité partagée, comparer
- * cinq marges — et le faire de mémoire, en cliquant d'un onglet à l'autre,
- * était un handicap qu'aucune ergonomie ne justifiait.
+ * Les lignes suivent la chaîne du raisonnement, et non l'ordre du schéma de
+ * données : chez qui j'achète → ce que ça me coûte → à quel prix je vends →
+ * ce qu'il m'en reste → combien j'en fais → ce que je dépense pour le vendre.
+ * Les lignes DÉDUITES (coût variable, marge, coefficient) se recalculent à la
+ * frappe : le prix saisi et le façonnier choisi sont écoutés, les champs
+ * restant non contrôlés pour que le formulaire les envoie tels quels.
  *
- * Le basculement est en CSS (`lg:`), donc juste dès le premier rendu, sans
- * attendre le navigateur. Une seule chose a besoin de savoir où l'on est : le
- * `required` des champs — il vaut pour la carte active sur téléphone, et pour
- * toutes sur grand écran. D'où le `matchMedia`, qui part de « téléphone » et
- * ne peut donc jamais exiger un champ que personne ne voit.
+ * SUR TÉLÉPHONE, une seule colonne tient. La barre d'onglets ne disparaît donc
+ * pas : elle choisit la colonne visible, et la matrice se lit comme une fiche
+ * — intitulé à gauche, valeur à droite. C'est le MÊME tableau, avec des
+ * colonnes masquées en CSS : aucun champ n'est démonté, aucun nom de champ
+ * n'est en double, et rien ne change de forme au chargement.
  *
- * Toutes les références restent montées, l'inactive seulement masquée : les
- * démonter retirait leurs champs du FormData, et la décision prise sur un
- * onglet quitté était perdue en silence.
+ * Une seule chose a besoin de savoir où l'on est : le `required` des champs —
+ * il vaut pour la colonne active sur téléphone, et pour toutes sur grand
+ * écran. D'où le `matchMedia`, qui part de « téléphone » et ne peut donc
+ * jamais exiger un champ que personne ne voit.
  */
 function GammeReference({
   gamme,
@@ -531,11 +491,12 @@ function GammeReference({
   const n = gamme.length;
   const avecFournisseurs = gamme.some((p) => p.suppliers);
   const avecRd = rd && gamme.some((p) => p.rd);
+  const avecSaison = gamme.some((p) => Math.abs(p.seasonCoef - 1) > 0.01);
   const [activeProduct, setActiveProduct] = useState(gamme[0]?.code ?? "");
   // Où sommes-nous ? La mise en page, elle, n'a pas besoin de le demander : le
   // CSS s'en charge. Seul le `required` doit le savoir — exiger un champ qu'on
   // ne voit pas bloque l'envoi sans rien afficher, et le point de départ est
-  // donc « téléphone », le cas où une seule carte est visible.
+  // donc « téléphone », le cas où une seule colonne est visible.
   const [surGrandEcran, setSurGrandEcran] = useState(false);
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 1024px)");
@@ -544,11 +505,12 @@ function GammeReference({
     mq.addEventListener("change", suivre);
     return () => mq.removeEventListener("change", suivre);
   }, []);
-  /** Cette carte est-elle sous les yeux ? Toutes le sont sur grand écran. */
+  /** Cette colonne est-elle sous les yeux ? Toutes le sont sur grand écran. */
   const visible = (code: string) => surGrandEcran || code === activeProduct;
-  // Le prix saisi et le façonnier choisi de chaque référence, pour montrer la
-  // marge en direct : les champs restent non contrôlés (le formulaire les
-  // envoie), on ne fait que les écouter.
+  /** Masquée en CSS tant qu'on n'a pas la place — jamais démontée. */
+  const colonne = (code: string) =>
+    `${code === activeProduct ? "" : "hidden "}lg:table-cell overflow-hidden px-2 py-1.5 align-top`;
+
   const [prix, setPrix] = useState<Record<string, number>>(() =>
     Object.fromEntries(gamme.map((p) => [p.code, defaults.products?.[p.code]?.price ?? p.refPrice])),
   );
@@ -562,37 +524,259 @@ function GammeReference({
     ),
   );
 
-  /** Un champ chiffré d'une référence — même habillage pour les trois budgets. */
-  const budget = (
-    p: NonNullable<GameView["gamme"]>[number],
-    champ: "marketingBudget" | "qualityBudget" | "rdBudget",
+  type Reference = NonNullable<GameView["gamme"]>[number];
+  const faconnierDe = (p: Reference) =>
+    p.suppliers?.find((s) => s.code === faconniers[p.code]) ?? p.suppliers?.[0];
+  const achatDe = (p: Reference) => faconnierDe(p)?.materialCostPerUnit ?? p.materialCostPerUnit;
+  const cvuDe = (p: Reference) => achatDe(p) + p.otherVariableCostPerUnit;
+  const prixDe = (p: Reference) => prix[p.code] ?? p.refPrice;
+
+  /** Une cellule sans objet : la référence n'est pas encore vendable. */
+  const rien = <span className="text-slate-600">—</span>;
+
+  /** Un champ chiffré, dans sa cellule. */
+  const champ = (
+    p: Reference,
+    nom: "price" | "productionPlan" | "marketingBudget" | "qualityBudget" | "rdBudget",
     label: string,
     valeur: number,
+    suffixe: string,
+    pas = 1,
+    onChange?: (v: number) => void,
   ) => (
-    <label className="block">
-      <span className="block min-h-8 leading-4 text-xs font-medium uppercase tracking-wide text-slate-400">
-        {label}
-      </span>
-      <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900 px-2 py-2 focus-within:border-amber-400/60">
-        <input
-          type="number"
-          name={productFieldName(p.code, champ)}
-          aria-label={`${label} · ${p.name}`}
-          defaultValue={valeur}
-          step={1}
-          min={0}
-          required={visible(p.code)}
-          className="min-w-0 flex-1 bg-transparent text-sm text-slate-100 outline-none"
-        />
-        <span className="shrink-0 text-xs text-slate-400">€</span>
-      </span>
-    </label>
+    <span className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-slate-900 px-2 py-1.5 focus-within:border-amber-400/60">
+      <input
+        type="number"
+        name={productFieldName(p.code, nom)}
+        aria-label={`${label} · ${p.name}`}
+        defaultValue={valeur}
+        onChange={onChange ? (e) => onChange(Number(e.currentTarget.value.replace(",", "."))) : undefined}
+        step={pas}
+        min={0}
+        required={visible(p.code)}
+        className="min-w-0 flex-1 bg-transparent text-sm tabular-nums text-slate-100 outline-none"
+      />
+      <span className="shrink-0 text-xs text-slate-400">{suffixe}</span>
+    </span>
   );
+
+  /**
+   * Les lignes de la matrice, dans l'ordre du raisonnement. Une ligne absente
+   * (pas de façonnier dans ce secteur, pas de qualité à ce niveau) n'est pas
+   * une ligne vide : elle n'existe pas.
+   */
+  const lignes: { cle: string; label: string; deduite?: boolean; cellule: (p: Reference) => ReactNode }[] = [
+    {
+      cle: "refPrice",
+      label: "Prix usuel",
+      deduite: true,
+      cellule: (p) => <span className="tabular-nums">{formatEuro(p.refPrice)}</span>,
+    },
+    {
+      cle: "stock",
+      label: v.leftoverLabel,
+      deduite: true,
+      cellule: (p) => (
+        <span className="tabular-nums">
+          {formatUnits(p.stock)} {v.units}
+        </span>
+      ),
+    },
+    ...(avecSaison
+      ? [
+          {
+            cle: "saison",
+            label: "Saison",
+            deduite: true,
+            cellule: (p: Reference) => (
+              <span className="tabular-nums">
+                ×{p.seasonCoef.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}
+              </span>
+            ),
+          },
+        ]
+      : []),
+    ...(avecFournisseurs
+      ? [
+          {
+            cle: "supplierChoice",
+            label: "Fournisseur",
+            cellule: (p: Reference) => {
+              const suppliers = p.suppliers;
+              if (!suppliers) return rien;
+              const reference = suppliers[0];
+              const choisi = faconnierDe(p);
+              return (
+                <>
+                  <select
+                    name={productFieldName(p.code, "supplierChoice")}
+                    aria-label={`Fournisseur · ${p.name}`}
+                    defaultValue={faconniers[p.code]}
+                    onChange={(e) =>
+                      setFaconniers((etat) => ({ ...etat, [p.code]: e.currentTarget.value }))
+                    }
+                    className="w-full rounded-lg border border-white/10 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+                  >
+                    {suppliers.map((s) => (
+                      <option key={s.code} value={s.code}>
+                        {s.name} ·{" "}
+                        {ecartFournisseur(s, reference) === "coût de référence"
+                          ? "référence"
+                          : ecartFournisseur(s, reference)}
+                      </option>
+                    ))}
+                  </select>
+                  {choisi ? <FaitsFournisseur fournisseur={choisi} /> : null}
+                </>
+              );
+            },
+          },
+        ]
+      : []),
+    {
+      cle: "cvu",
+      label: "Coût variable",
+      deduite: true,
+      cellule: (p) => <span className="tabular-nums">{formatEuroCents(cvuDe(p))}</span>,
+    },
+    {
+      cle: "price",
+      label: v.priceLabel,
+      cellule: (p) =>
+        enDeveloppement(p) ? (
+          <>
+            {rien}
+            <input
+              type="hidden"
+              name={productFieldName(p.code, "price")}
+              value={Math.round((defaults.products?.[p.code]?.price ?? p.refPrice) * 10) / 10}
+            />
+          </>
+        ) : (
+          champ(
+            p,
+            "price",
+            v.priceLabel,
+            Math.round((defaults.products?.[p.code]?.price ?? p.refPrice) * 10) / 10,
+            "€",
+            0.1,
+            (saisi) => setPrix((etat) => ({ ...etat, [p.code]: Number.isFinite(saisi) ? saisi : 0 })),
+          )
+        ),
+    },
+    {
+      cle: "marge",
+      label: "Marge unitaire",
+      deduite: true,
+      cellule: (p) => {
+        if (enDeveloppement(p)) return rien;
+        const marge = prixDe(p) - cvuDe(p);
+        return (
+          <span
+            className={`tabular-nums font-medium ${marge < 0 ? "text-red-400" : "text-emerald-300"}`}
+          >
+            {formatEuroCents(marge)}
+          </span>
+        );
+      },
+    },
+    {
+      cle: "coef",
+      label: "Coefficient",
+      deduite: true,
+      cellule: (p) => {
+        const achat = achatDe(p);
+        if (enDeveloppement(p) || achat <= 0) return rien;
+        return (
+          <span className="tabular-nums">
+            ×{(prixDe(p) / achat).toLocaleString("fr-FR", { maximumFractionDigits: 2 })}
+          </span>
+        );
+      },
+    },
+    {
+      cle: "productionPlan",
+      label: v.productionPlanLabel,
+      cellule: (p) =>
+        enDeveloppement(p) ? (
+          <>
+            {rien}
+            <input type="hidden" name={productFieldName(p.code, "productionPlan")} value={0} />
+          </>
+        ) : (
+          champ(
+            p,
+            "productionPlan",
+            v.productionPlanLabel,
+            Math.round(defaults.products?.[p.code]?.productionPlan ?? 0),
+            v.units,
+          )
+        ),
+    },
+    {
+      cle: "marketingBudget",
+      label: "Marketing",
+      cellule: (p) =>
+        enDeveloppement(p) ? (
+          <>
+            {rien}
+            <input type="hidden" name={productFieldName(p.code, "marketingBudget")} value={0} />
+          </>
+        ) : (
+          champ(
+            p,
+            "marketingBudget",
+            "Marketing",
+            Math.round(defaults.products?.[p.code]?.marketingBudget ?? defaults.marketingBudget / n),
+            "€",
+          )
+        ),
+    },
+    ...(quality
+      ? [
+          {
+            cle: "qualityBudget",
+            label: "Qualité",
+            cellule: (p: Reference) =>
+              enDeveloppement(p) ? (
+                <>
+                  {rien}
+                  <input type="hidden" name={productFieldName(p.code, "qualityBudget")} value={0} />
+                </>
+              ) : (
+                champ(
+                  p,
+                  "qualityBudget",
+                  "Qualité",
+                  Math.round(defaults.products?.[p.code]?.qualityBudget ?? defaults.qualityBudget / n),
+                  "€",
+                )
+              ),
+          },
+        ]
+      : []),
+    ...(avecRd
+      ? [
+          {
+            cle: "rdBudget",
+            label: "R&D",
+            cellule: (p: Reference) =>
+              champ(p, "rdBudget", "R&D", Math.round(defaults.products?.[p.code]?.rdBudget ?? 0), "€"),
+          },
+        ]
+      : []),
+  ];
+
+  /** Ce qu'il reste à financer sur une référence encore à bâtir, dit en clair. */
+  const chantiers = gamme.flatMap((p) => {
+    const dev = p.rd?.development;
+    return dev && !dev.available ? [{ p, dev }] : [];
+  });
 
   return (
     <div className="space-y-3">
-      {/* La barre d'onglets n'existe que là où il faut choisir : sur grand écran,
-          toutes les références sont montrées, il n'y a plus rien à sélectionner. */}
+      {/* Sur téléphone, une seule colonne tient : ces boutons choisissent
+          laquelle. Au-delà, elles sont toutes là et il n'y a rien à choisir. */}
       <div className="flex flex-wrap gap-2 lg:hidden">
         {gamme.map((p) => (
           <button
@@ -610,168 +794,69 @@ function GammeReference({
         ))}
       </div>
 
-      {/* UNE COLONNE SUR TÉLÉPHONE (une seule carte visible à la fois), DEUX
-          AU-DELÀ : c'est là que la gamme se compare, un prix contre un autre,
-          une marge contre une autre, sans rien tenir de mémoire. */}
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-      {gamme
-        .map((p) => {
-          const own = defaults.products?.[p.code];
-          const price = own?.price ?? p.refPrice;
-          const plan = Math.round(own?.productionPlan ?? 0);
-          const marketing = Math.round(own?.marketingBudget ?? defaults.marketingBudget / n);
-          const qualite = Math.round(own?.qualityBudget ?? defaults.qualityBudget / n);
-          const rdDefaut = Math.round(own?.rdBudget ?? 0);
-          const suppliers = p.suppliers;
-          const reference = suppliers?.[0];
-          const choisi = suppliers?.find((s) => s.code === faconniers[p.code]) ?? reference;
-          const achat = choisi ? choisi.materialCostPerUnit : p.materialCostPerUnit;
-          const dev = p.rd?.development;
-
-          // LA RÉFÉRENCE ENCORE À BÂTIR n'a qu'un levier : son financement. Il
-          // est ici, dans SON onglet — auparavant l'onglet des ventes renvoyait
-          // vers « les budgets du tour, à la R&D », une autre étape et un autre
-          // jeu d'onglets, et la porte de lancement ne s'ouvrait jamais.
-          if (enDeveloppement(p)) {
-            const reste = dev ? Math.max(0, dev.cost - dev.invested) : 0;
-            const pret = reste <= 0;
-            return (
-              <div
-                key={p.code}
-                className={`${p.code === activeProduct ? "" : "hidden "}lg:block rounded-lg border border-white/5 bg-slate-950 px-3 py-2 sm:px-3.5 sm:py-2.5 space-y-2`}
-              >
-                <span className="block text-sm font-medium text-slate-100">{p.name}</span>
-                <EnDeveloppement />
-                <span className="block text-xs leading-snug text-slate-400">
-                  {dev
-                    ? pret
-                      ? `Financée (${formatEuro(dev.invested)} engagés) : vendable dès le tour ${Math.max(dev.availableFromRound, roundIndex + 1)}.`
-                      : `${formatEuro(dev.invested)} engagés sur ${formatEuro(dev.cost)} : il reste ${formatEuro(reste)} à financer, puis elle se vend dès le tour suivant (au plus tôt le tour ${dev.availableFromRound}).`
-                    : "Rien à vendre tant qu'elle n'est pas bâtie."}
-                </span>
-                {avecRd ? budget(p, "rdBudget", "R&D", rdDefaut) : null}
-                <input type="hidden" name={productFieldName(p.code, "price")} value={Math.round(price * 10) / 10} />
-                <input type="hidden" name={productFieldName(p.code, "productionPlan")} value={0} />
-                {suppliers && faconniers[p.code] ? (
-                  <input type="hidden" name={productFieldName(p.code, "supplierChoice")} value={faconniers[p.code]} />
-                ) : null}
-                <input type="hidden" name={productFieldName(p.code, "marketingBudget")} value={0} />
-                {quality ? <input type="hidden" name={productFieldName(p.code, "qualityBudget")} value={0} /> : null}
-              </div>
-            );
-          }
-
-          return (
-            <div
-              key={p.code}
-              className={`${p.code === activeProduct ? "" : "hidden "}lg:block rounded-lg border border-white/5 bg-slate-950 px-3 py-2 sm:px-3.5 sm:py-2.5 space-y-3`}
-            >
-              {/* Info produit */}
-              <div className="space-y-1">
-                <span className="block text-sm font-medium text-slate-100">{p.name}</span>
-                <Faits
-                  faits={[
-                    `prix usuel ${formatEuro(p.refPrice)}`,
-                    `${v.leftoverLabel.toLowerCase()} ${formatUnits(p.stock)} ${v.units}`,
-                    ...(Math.abs(p.seasonCoef - 1) > 0.01
-                      ? [`saison ×${p.seasonCoef.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}`]
-                      : []),
-                  ]}
-                />
-              </div>
-
-              {/* Marge en temps réel */}
-              <LienPrixFaconnier
-                price={prix[p.code] ?? price}
-                achat={achat}
-                autres={p.otherVariableCostPerUnit}
-              />
-
-              {/* Champs de saisie : prix et volume */}
-              <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                <label className="block">
-                  <span className="block min-h-8 leading-4 text-xs font-medium uppercase tracking-wide text-slate-400">{v.priceLabel}</span>
-                  <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900 px-2 py-2 focus-within:border-amber-400/60">
-                    <input
-                      type="number"
-                      name={productFieldName(p.code, "price")}
-                      aria-label={`${v.priceLabel} · ${p.name}`}
-                      defaultValue={Math.round(price * 10) / 10}
-                      onChange={(e) => {
-                        const saisi = Number(e.currentTarget.value.replace(",", "."));
-                        setPrix((etat) => ({ ...etat, [p.code]: Number.isFinite(saisi) ? saisi : 0 }));
-                      }}
-                      step={0.1}
-                      min={0}
-                      required={visible(p.code)}
-                      className="min-w-0 flex-1 bg-transparent text-sm text-slate-100 outline-none"
-                    />
-                    <span className="shrink-0 text-xs text-slate-400">€</span>
-                  </span>
-                </label>
-                <label className="block">
-                  <span className="block min-h-8 leading-4 text-xs font-medium uppercase tracking-wide text-slate-400">{v.productionPlanLabel}</span>
-                  <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900 px-2 py-2 focus-within:border-amber-400/60">
-                    <input
-                      type="number"
-                      name={productFieldName(p.code, "productionPlan")}
-                      aria-label={`${v.productionPlanLabel} · ${p.name}`}
-                      defaultValue={plan}
-                      step={1}
-                      min={0}
-                      required={visible(p.code)}
-                      className="min-w-0 flex-1 bg-transparent text-sm text-slate-100 outline-none"
-                    />
-                    <span className="shrink-0 text-xs text-slate-400">{v.units}</span>
-                  </span>
-                </label>
-              </div>
-
-              {/* Fournisseur */}
-              {avecFournisseurs && suppliers ? (
-                <label className="block">
-                  <span className="block min-h-8 leading-4 text-xs font-medium uppercase tracking-wide text-slate-400">Fournisseur</span>
-                  <select
-                    name={productFieldName(p.code, "supplierChoice")}
-                    aria-label={`Fournisseur · ${p.name}`}
-                    defaultValue={faconniers[p.code]}
-                    onChange={(e) => {
-                      const code = e.currentTarget.value;
-                      setFaconniers((etat) => ({ ...etat, [p.code]: code }));
-                    }}
-                    className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-2 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+      <div className="overflow-x-auto">
+        {/* `table-fixed` : les colonnes se partagent la largeur également, au
+            lieu de la réclamer selon leur contenu. Sans lui, la liste
+            déroulante des façonniers — dont la largeur minimale est celle de
+            son option la plus longue — poussait la dernière référence hors du
+            cadre. Les colonnes masquées ne réservent rien : sur téléphone, il
+            ne reste que l'intitulé et la référence choisie. */}
+        <table className="w-full table-fixed border-collapse text-sm">
+          <caption className="sr-only">
+            Vos décisions, référence par référence : les intitulés en ligne, les références en
+            colonne.
+          </caption>
+          <thead>
+            <tr className="border-b border-white/10">
+              <td className="w-[38%] lg:w-[15%]" />
+              {gamme.map((p) => (
+                <th
+                  key={p.code}
+                  scope="col"
+                  className={`${colonne(p.code)} text-left text-sm font-medium text-slate-100`}
+                >
+                  <NomReference reference={p} />
+                  {enDeveloppement(p) ? <EnDeveloppement /> : null}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {lignes.map((l) => (
+              <tr key={l.cle} className="border-b border-white/5 last:border-0">
+                <th
+                  scope="row"
+                  className="py-1.5 pr-2 text-left align-top text-xs font-medium uppercase leading-4 tracking-wide text-slate-400"
+                >
+                  {l.label}
+                </th>
+                {gamme.map((p) => (
+                  <td
+                    key={p.code}
+                    className={`${colonne(p.code)} ${l.deduite ? "text-xs text-slate-300" : ""}`}
                   >
-                    {suppliers.map((s) => (
-                      <option key={s.code} value={s.code}>
-                        {s.name} · {ecartFournisseur(s, reference) === "coût de référence"
-                          ? "référence"
-                          : ecartFournisseur(s, reference)}
-                      </option>
-                    ))}
-                  </select>
-                  {choisi ? <FaitsFournisseur fournisseur={choisi} /> : null}
-                </label>
-              ) : null}
-
-              {/* Ce qu'on dépense pour SOUTENIR cette référence, sous le prix
-                  et le volume qu'ils servent : le marketing la fait venir, la
-                  qualité la tient, la R&D la fait monter en niveau. */}
-              <div className="border-t border-white/5 pt-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                  Budgets de cette référence
-                </p>
-                <div className={`mt-2 grid grid-cols-1 gap-3 ${quality || avecRd ? "sm:grid-cols-2" : ""}`}>
-                  {budget(p, "marketingBudget", "Marketing", marketing)}
-                  {quality ? budget(p, "qualityBudget", "Qualité", qualite) : null}
-                  {avecRd ? budget(p, "rdBudget", "R&D", rdDefaut) : null}
-                </div>
-              </div>
-            </div>
-          );
-        })}
+                    {l.cellule(p)}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
-      <p className="mt-2 text-xs leading-relaxed text-slate-400">
+      {chantiers.map(({ p, dev }) => {
+        const reste = Math.max(0, dev.cost - dev.invested);
+        return (
+          <p key={p.code} className="text-xs leading-relaxed text-amber-200/80">
+            <strong className="font-medium">{p.name}</strong> —{" "}
+            {reste <= 0
+              ? `financée (${formatEuro(dev.invested)} engagés) : vendable dès le tour ${Math.max(dev.availableFromRound, roundIndex + 1)}.`
+              : `${formatEuro(dev.invested)} engagés sur ${formatEuro(dev.cost)} : il reste ${formatEuro(reste)} à financer, puis elle se vend dès le tour suivant (au plus tôt le tour ${dev.availableFromRound}).`}
+          </p>
+        );
+      })}
+
+      <p className="text-xs leading-relaxed text-slate-400">
         Capacité partagée : si la somme des volumes la dépasse, toutes les références sont
         réduites dans la même proportion.
         {avecFournisseurs
