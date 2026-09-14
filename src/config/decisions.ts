@@ -43,8 +43,9 @@ export const LEVIERS: readonly LevierDeDecision[] = [
   { champ: "price", nom: "Prix de vente", ouvertPar: "toujours" },
   { champ: "productionPlan", nom: "Volume du tour", ouvertPar: "toujours" },
   { champ: "supplierChoice", nom: "Choix du fournisseur", ouvertPar: "secteur" },
-  // Les quatre budgets du tour se décident au même endroit : marketing,
-  // qualité, maintenance, R&D. La communication (marque, axe) les suit.
+  // Les budgets du tour : marketing, qualité, maintenance, R&D. En gamme, les
+  // trois premiers se décident dans l'onglet de CHAQUE référence, avec son prix
+  // et son volume ; l'entretien et la marque restent à l'entreprise.
   { champ: "marketingBudget", nom: "Budget marketing", ouvertPar: "toujours" },
   { champ: "qualityBudget", nom: "Budget qualité", ouvertPar: "quality" },
   { champ: "maintenanceBudget", nom: "Budget maintenance", ouvertPar: "maintenance" },

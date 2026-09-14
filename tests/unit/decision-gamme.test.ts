@@ -378,44 +378,52 @@ describe("le formulaire en gamme", () => {
     expect(html).toContain("marge");
   });
 
-  it("les budgets ont leur étape « Budgéter » : en gamme, une seule famille avec le tableau par référence puis l'entretien, et l'étape « Vendre » ne porte que le prix, le volume et le façonnier", () => {
+  it("tout ce qui concerne une référence est dans SON onglet ; « Budgéter » ne garde que les budgets de l'entreprise", () => {
+    // LA RÈGLE : une référence se joue seule, dans son onglet — donc son prix,
+    // son volume, son façonnier ET les budgets qui la soutiennent y sont
+    // ensemble. Séparés sur deux étapes, le prix et le budget marketing d'une
+    // même référence se décidaient loin l'un de l'autre, alors que l'un
+    // commande l'autre. Ne reste dans « Budgéter » que ce qui est de
+    // L'ENTREPRISE et qu'aucune référence ne porte : l'entretien, la marque.
     const niveau3 = rendu(gamme, { enabled: presetByLevel.get(3)!.decisions });
     expect(niveau3).not.toContain("Produire");
-    expect(niveau3).toContain("Les budgets du tour · marketing, qualité, entretien");
+    expect(niveau3).toContain("Vos références · tout ce qui se décide pour chacune");
+    expect(niveau3).toContain("Les budgets de l&#x27;entreprise · entretien");
     expect(niveau3).toContain("Budget d&#x27;entretien · réserve et linéaire");
-    expect(niveau3).toContain('name="maintenanceBudget"');
-    expect(niveau3).not.toContain("Production · qualité");
-    expect(niveau3).not.toContain("Entretien · réserve et linéaire");
-    // L'étape « Vendre » (la première) : prix, volume, façonnier — sans budget.
-    const ventes = niveau3.indexOf("Vos ventes · le prix et le volume de chaque référence");
-    const finVentes = niveau3.indexOf("</details>", ventes);
+
+    // La première étape porte les SIX décisions du bonnet, sans exception.
+    const references = niveau3.indexOf("Vos références · tout ce qui se décide pour chacune");
+    const finReferences = niveau3.indexOf("</details>", references);
     const etapeBudgets = niveau3.indexOf('data-etape="1"');
     const etapeSuivante = niveau3.indexOf('data-etape="2"');
-    expect(ventes).toBeGreaterThan(0);
-    expect(finVentes).toBeLessThan(etapeBudgets);
-    for (const champ of ["product.bonnet.price", "product.bonnet.productionPlan", "product.bonnet.supplierChoice"]) {
+    expect(references).toBeGreaterThan(0);
+    expect(finReferences).toBeLessThan(etapeBudgets);
+    for (const champ of [
+      "product.bonnet.price",
+      "product.bonnet.productionPlan",
+      "product.bonnet.supplierChoice",
+      "product.bonnet.marketingBudget",
+      "product.bonnet.qualityBudget",
+    ]) {
       const pos = niveau3.indexOf(`name="${champ}"`);
-      expect(pos, champ).toBeGreaterThan(ventes);
-      expect(pos, champ).toBeLessThan(finVentes);
+      expect(pos, champ).toBeGreaterThan(references);
+      expect(pos, champ).toBeLessThan(finReferences);
     }
-    // L'étape « Budgéter » (la deuxième) : marketing et qualité par référence,
-    // puis l'entretien, contigus dans la même famille, puis la communication.
-    expect(niveau3).toContain("Budgéter");
-    const debut = niveau3.indexOf("Les budgets du tour");
-    const fin = niveau3.indexOf("</details>", debut);
-    expect(debut).toBeGreaterThan(etapeBudgets);
-    expect(fin).toBeLessThan(etapeSuivante);
-    for (const champ of ["product.bonnet.marketingBudget", "product.bonnet.qualityBudget", "maintenanceBudget"]) {
-      const pos = niveau3.indexOf(`name="${champ}"`);
-      expect(pos, champ).toBeGreaterThan(debut);
-      expect(pos, champ).toBeLessThan(fin);
-    }
-    const etapeEntretien = niveau3.indexOf('name="maintenanceBudget"');
-    expect(etapeEntretien).toBeGreaterThan(niveau3.indexOf('name="product.bonnet.qualityBudget"'));
-    expect(etapeEntretien).toBeLessThan(etapeSuivante);
-    // Niveau 1 : ni qualité ni entretien ouverts, les scalaires cachés partent quand même.
+
+    // Et la deuxième ne porte QUE l'entretien : plus un seul champ par
+    // référence n'a le droit d'y traîner.
+    const entretien = niveau3.indexOf('name="maintenanceBudget"');
+    expect(entretien).toBeGreaterThan(etapeBudgets);
+    expect(entretien).toBeLessThan(etapeSuivante);
+    expect(niveau3.slice(etapeBudgets, etapeSuivante)).not.toContain('name="product.');
+
+    // Niveau 1 : ni qualité ni entretien, et aucune marque à bâtir — l'étape
+    // « Budgéter » n'a plus rien à montrer et disparaît de la barre. Sa
+    // section reste dans le DOM : les scalaires cachés partent quand même,
+    // sans quoi le serveur lirait des budgets nuls.
     const niveau1 = rendu(gamme);
     expect(niveau1).not.toContain("Produire");
+    expect(niveau1).not.toContain("Budgéter");
     expect(niveau1).toContain('type="hidden" name="qualityBudget"');
     expect(niveau1).toContain('type="hidden" name="maintenanceBudget"');
   });

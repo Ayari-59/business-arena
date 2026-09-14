@@ -473,16 +473,49 @@ function FaitsFournisseur({
   return <Faits faits={faits} className="mt-1" />;
 }
 
-function GammeVentes({
+/**
+ * UNE RÉFÉRENCE, UN ONGLET, TOUTES SES DÉCISIONS.
+ *
+ * Le formulaire en gamme avait deux jeux d'onglets : un dans « Vendre » pour
+ * le prix, le volume et le façonnier, un autre dans « Budgéter » pour le
+ * marketing, la qualité et la R&D. Décider d'UNE référence demandait donc de
+ * changer d'étape puis de retrouver le bon onglet — et de tenir de tête, entre
+ * les deux, le prix qu'on venait de saisir alors que c'est précisément lui qui
+ * commande le budget qu'on va mettre derrière.
+ *
+ * Ici les deux jeux n'en font qu'un : on choisit une référence, et tout ce qui
+ * la concerne est sous les yeux, dans l'ordre où on en décide — ce qu'elle
+ * coûte et ce qu'elle rapporte, à quel prix et en quel volume, chez quel
+ * façonnier, puis ce qu'on dépense pour la soutenir. Ne restent dans
+ * « Budgéter » que les budgets de L'ENTREPRISE : l'entretien de la capacité et
+ * la marque, qui ne se rattachent à aucune référence.
+ *
+ * Toutes les références restent montées, l'inactive seulement masquée : les
+ * démonter retirait leurs champs du FormData, et la décision prise sur un
+ * onglet quitté était perdue en silence. `required` ne vaut donc que pour la
+ * carte visible — un champ requis masqué bloque l'envoi sans rien afficher, le
+ * serveur validant de son côté.
+ */
+function GammeReference({
   gamme,
   defaults,
   vocabulary: v,
+  quality,
+  rd,
+  roundIndex,
 }: {
   gamme: NonNullable<GameView["gamme"]>;
   defaults: RoundDecisions;
   vocabulary: ScenarioVocabulary;
+  /** Le budget qualité est-il ouvert à ce niveau ? */
+  quality: boolean;
+  /** La R&D est-elle ouverte (niveau ET scénario) ? */
+  rd: boolean;
+  roundIndex: number;
 }) {
+  const n = gamme.length;
   const avecFournisseurs = gamme.some((p) => p.suppliers);
+  const avecRd = rd && gamme.some((p) => p.rd);
   const [activeProduct, setActiveProduct] = useState(gamme[0]?.code ?? "");
   // Le prix saisi et le façonnier choisi de chaque référence, pour montrer la
   // marge en direct : les champs restent non contrôlés (le formulaire les
@@ -498,6 +531,33 @@ function GammeVentes({
         return [p.code, valide];
       }),
     ),
+  );
+
+  /** Un champ chiffré d'une référence — même habillage pour les trois budgets. */
+  const budget = (
+    p: NonNullable<GameView["gamme"]>[number],
+    champ: "marketingBudget" | "qualityBudget" | "rdBudget",
+    label: string,
+    valeur: number,
+  ) => (
+    <label className="block">
+      <span className="block min-h-8 leading-4 text-xs font-medium uppercase tracking-wide text-slate-400">
+        {label}
+      </span>
+      <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900 px-2 py-2 focus-within:border-amber-400/60">
+        <input
+          type="number"
+          name={productFieldName(p.code, champ)}
+          aria-label={`${label} · ${p.name}`}
+          defaultValue={valeur}
+          step={1}
+          min={0}
+          required={p.code === activeProduct}
+          className="min-w-0 flex-1 bg-transparent text-sm text-slate-100 outline-none"
+        />
+        <span className="shrink-0 text-xs text-slate-400">€</span>
+      </span>
+    </label>
   );
 
   return (
@@ -520,43 +580,60 @@ function GammeVentes({
         ))}
       </div>
 
-      {/*
-        Toutes les références restent montées, l'inactive seulement masquée :
-        les démonter retirait leurs champs du FormData, et la décision prise
-        sur un onglet quitté était perdue en silence. `required` ne vaut donc
-        que pour la carte visible — un champ requis masqué bloque l'envoi sans
-        rien afficher, le serveur validant de son côté.
-      */}
       {gamme
         .map((p) => {
           const own = defaults.products?.[p.code];
           const price = own?.price ?? p.refPrice;
           const plan = Math.round(own?.productionPlan ?? 0);
+          const marketing = Math.round(own?.marketingBudget ?? defaults.marketingBudget / n);
+          const qualite = Math.round(own?.qualityBudget ?? defaults.qualityBudget / n);
+          const rdDefaut = Math.round(own?.rdBudget ?? 0);
           const suppliers = p.suppliers;
           const reference = suppliers?.[0];
           const choisi = suppliers?.find((s) => s.code === faconniers[p.code]) ?? reference;
           const achat = choisi ? choisi.materialCostPerUnit : p.materialCostPerUnit;
+          const dev = p.rd?.development;
 
+          // LA RÉFÉRENCE ENCORE À BÂTIR n'a qu'un levier : son financement. Il
+          // est ici, dans SON onglet — auparavant l'onglet des ventes renvoyait
+          // vers « les budgets du tour, à la R&D », une autre étape et un autre
+          // jeu d'onglets, et la porte de lancement ne s'ouvrait jamais.
           if (enDeveloppement(p)) {
+            const reste = dev ? Math.max(0, dev.cost - dev.invested) : 0;
+            const pret = reste <= 0;
             return (
-              <div key={p.code} hidden={p.code !== activeProduct} className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 sm:px-3.5 sm:py-2.5 space-y-2">
-                <span className="text-sm font-medium text-slate-100">{p.name}</span>
+              <div
+                key={p.code}
+                hidden={p.code !== activeProduct}
+                className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 sm:px-3.5 sm:py-2.5 space-y-2"
+              >
+                <span className="block text-sm font-medium text-slate-100">{p.name}</span>
                 <EnDeveloppement />
                 <span className="block text-xs leading-snug text-slate-400">
-                  Rien à vendre tant qu&apos;elle n&apos;est pas bâtie : son financement se décide
-                  dans les budgets du tour, à la R&amp;D.
+                  {dev
+                    ? pret
+                      ? `Financée (${formatEuro(dev.invested)} engagés) : vendable dès le tour ${Math.max(dev.availableFromRound, roundIndex + 1)}.`
+                      : `${formatEuro(dev.invested)} engagés sur ${formatEuro(dev.cost)} : il reste ${formatEuro(reste)} à financer, puis elle se vend dès le tour suivant (au plus tôt le tour ${dev.availableFromRound}).`
+                    : "Rien à vendre tant qu'elle n'est pas bâtie."}
                 </span>
+                {avecRd ? budget(p, "rdBudget", "R&D", rdDefaut) : null}
                 <input type="hidden" name={productFieldName(p.code, "price")} value={Math.round(price * 10) / 10} />
                 <input type="hidden" name={productFieldName(p.code, "productionPlan")} value={0} />
                 {suppliers && faconniers[p.code] ? (
                   <input type="hidden" name={productFieldName(p.code, "supplierChoice")} value={faconniers[p.code]} />
                 ) : null}
+                <input type="hidden" name={productFieldName(p.code, "marketingBudget")} value={0} />
+                {quality ? <input type="hidden" name={productFieldName(p.code, "qualityBudget")} value={0} /> : null}
               </div>
             );
           }
 
           return (
-            <div key={p.code} hidden={p.code !== activeProduct} className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 sm:px-3.5 sm:py-2.5 space-y-3">
+            <div
+              key={p.code}
+              hidden={p.code !== activeProduct}
+              className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 sm:px-3.5 sm:py-2.5 space-y-3"
+            >
               {/* Info produit */}
               <div className="space-y-1">
                 <span className="block text-sm font-medium text-slate-100">{p.name}</span>
@@ -643,6 +720,20 @@ function GammeVentes({
                   {choisi ? <FaitsFournisseur fournisseur={choisi} /> : null}
                 </label>
               ) : null}
+
+              {/* Ce qu'on dépense pour SOUTENIR cette référence, sous le prix
+                  et le volume qu'ils servent : le marketing la fait venir, la
+                  qualité la tient, la R&D la fait monter en niveau. */}
+              <div className="border-t border-white/5 pt-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  Budgets de cette référence
+                </p>
+                <div className={`mt-2 grid grid-cols-1 gap-3 ${quality || avecRd ? "sm:grid-cols-2" : ""}`}>
+                  {budget(p, "marketingBudget", "Marketing", marketing)}
+                  {quality ? budget(p, "qualityBudget", "Qualité", qualite) : null}
+                  {avecRd ? budget(p, "rdBudget", "R&D", rdDefaut) : null}
+                </div>
+              </div>
             </div>
           );
         })}
@@ -654,185 +745,11 @@ function GammeVentes({
           ? " Le façonnier choisi ne vaut que pour sa référence : son coût d'achat, sa qualité, son délai, son risque de rupture."
           : ""}
       </p>
-    </div>
-  );
-}
-
-/**
- * Le tableau des BUDGETS de la gamme : le marketing, la qualité et la R&D de
- * chaque référence, une ligne par référence. Il vit dans la famille des
- * budgets du tour, avec l'entretien, pour que les quatre budgets se décident
- * au même endroit et que la fenêtre des ventes reste légère.
- *
- * Mobile : layout de cartes par référence au lieu de tableau.
- */
-function GammeBudgets({
-  gamme,
-  defaults,
-  quality,
-  rd,
-  roundIndex,
-}: {
-  gamme: NonNullable<GameView["gamme"]>;
-  defaults: RoundDecisions;
-  /** Le budget qualité est-il ouvert à ce niveau ? */
-  quality: boolean;
-  /** La R&D est-elle ouverte (niveau ET scénario) ? */
-  rd: boolean;
-  roundIndex: number;
-}) {
-  const n = gamme.length;
-  const avecRd = rd && gamme.some((p) => p.rd);
-  const [activeProduct, setActiveProduct] = useState(gamme[0]?.code ?? "");
-
-  return (
-    <div className="space-y-3">
-      {/* Navigation par référence */}
-      <div className="flex flex-wrap gap-2">
-        {gamme.map((p) => (
-          <button
-            key={p.code}
-            type="button"
-            onClick={() => setActiveProduct(p.code)}
-            className={`px-3 py-1.5 text-sm font-medium rounded-lg transition ${
-              activeProduct === p.code
-                ? "bg-amber-400/20 border border-amber-400/60 text-amber-200"
-                : "bg-slate-900 border border-white/5 text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            <NomReference reference={p} />
-          </button>
-        ))}
-      </div>
-
-      {/*
-        Toutes les références restent montées, l'inactive seulement masquée :
-        les démonter retirait leurs champs du FormData, et la décision prise
-        sur un onglet quitté était perdue en silence. `required` ne vaut donc
-        que pour la carte visible — un champ requis masqué bloque l'envoi sans
-        rien afficher, le serveur validant de son côté.
-      */}
-      {gamme
-        .map((p) => {
-          const own = defaults.products?.[p.code];
-          const marketing = Math.round(own?.marketingBudget ?? defaults.marketingBudget / n);
-          const qualite = Math.round(own?.qualityBudget ?? defaults.qualityBudget / n);
-          const rdDefaut = Math.round(own?.rdBudget ?? 0);
-          const dev = p.rd?.development;
-
-          // En développement
-          if (dev && !dev.available) {
-            const reste = Math.max(0, dev.cost - dev.invested);
-            const pret = reste <= 0;
-            return (
-              <div key={p.code} hidden={p.code !== activeProduct} className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 sm:px-3.5 sm:py-2.5 space-y-2">
-                <span className="text-sm font-medium text-slate-100">{p.name}</span>
-                <EnDeveloppement />
-                <span className="block text-xs leading-snug text-slate-400">
-                  {pret
-                    ? `Financée (${formatEuro(dev.invested)} engagés) : vendable dès le tour ${Math.max(dev.availableFromRound, roundIndex + 1)}.`
-                    : `${formatEuro(dev.invested)} engagés sur ${formatEuro(dev.cost)} : il reste ${formatEuro(reste)} à financer, puis elle se vend dès le tour suivant (au plus tôt le tour ${dev.availableFromRound}).`}
-                </span>
-                {/*
-                  Le seul levier d'une référence à bâtir : son financement. Sans ce
-                  champ, l'énoncé promettait un financement « à la R&D » que le
-                  formulaire n'offrait pas — la porte de lancement ne s'ouvrait jamais.
-                */}
-                {avecRd ? (
-                  <label className="block">
-                    <span className="block min-h-8 leading-4 text-xs font-medium uppercase tracking-wide text-slate-400">R&amp;D</span>
-                    <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900 px-2 py-2 focus-within:border-amber-400/60">
-                      <input
-                        type="number"
-                        name={productFieldName(p.code, "rdBudget")}
-                        aria-label={`R&D · ${p.name}`}
-                        defaultValue={rdDefaut}
-                        step={1}
-                        min={0}
-                        required={p.code === activeProduct}
-                        className="min-w-0 flex-1 bg-transparent text-sm text-slate-100 outline-none"
-                      />
-                      <span className="shrink-0 text-xs text-slate-400">€</span>
-                    </span>
-                  </label>
-                ) : null}
-                <input type="hidden" name={productFieldName(p.code, "marketingBudget")} value={0} />
-                {quality ? <input type="hidden" name={productFieldName(p.code, "qualityBudget")} value={0} /> : null}
-              </div>
-            );
-          }
-
-          return (
-            <div key={p.code} hidden={p.code !== activeProduct} className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 sm:px-3.5 sm:py-2.5 space-y-3">
-              <span className="block text-sm font-medium text-slate-100">{p.name}</span>
-
-              {/* Budgets : affichés en colonne sur mobile, 2 cols sur sm+ */}
-              <div className={`grid ${quality ? "grid-cols-1" : avecRd ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"} gap-3`}>
-                <label className="block">
-                  <span className="block min-h-8 leading-4 text-xs font-medium uppercase tracking-wide text-slate-400">Marketing</span>
-                  <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900 px-2 py-2 focus-within:border-amber-400/60">
-                    <input
-                      type="number"
-                      name={productFieldName(p.code, "marketingBudget")}
-                      aria-label={`Marketing · ${p.name}`}
-                      defaultValue={marketing}
-                      step={1}
-                      min={0}
-                      required={p.code === activeProduct}
-                      className="min-w-0 flex-1 bg-transparent text-sm text-slate-100 outline-none"
-                    />
-                    <span className="shrink-0 text-xs text-slate-400">€</span>
-                  </span>
-                </label>
-
-                {quality ? (
-                  <label className="block">
-                    <span className="block min-h-8 leading-4 text-xs font-medium uppercase tracking-wide text-slate-400">Qualité</span>
-                    <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900 px-2 py-2 focus-within:border-amber-400/60">
-                      <input
-                        type="number"
-                        name={productFieldName(p.code, "qualityBudget")}
-                        aria-label={`Qualité · ${p.name}`}
-                        defaultValue={qualite}
-                        step={1}
-                        min={0}
-                        required={p.code === activeProduct}
-                        className="min-w-0 flex-1 bg-transparent text-sm text-slate-100 outline-none"
-                      />
-                      <span className="shrink-0 text-xs text-slate-400">€</span>
-                    </span>
-                  </label>
-                ) : null}
-
-                {avecRd ? (
-                  <label className="block">
-                    <span className="block min-h-8 leading-4 text-xs font-medium uppercase tracking-wide text-slate-400">R&D</span>
-                    <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900 px-2 py-2 focus-within:border-amber-400/60">
-                      <input
-                        type="number"
-                        name={productFieldName(p.code, "rdBudget")}
-                        aria-label={`R&D · ${p.name}`}
-                        defaultValue={rdDefaut}
-                        step={1}
-                        min={0}
-                        required={p.code === activeProduct}
-                        className="min-w-0 flex-1 bg-transparent text-sm text-slate-100 outline-none"
-                      />
-                      <span className="shrink-0 text-xs text-slate-400">€</span>
-                    </span>
-                  </label>
-                ) : null}
-              </div>
-            </div>
-          );
-        })}
-
-      <p className="mt-2 text-xs leading-relaxed text-slate-400">
+      <p className="text-xs leading-relaxed text-slate-400">
         Chaque budget va à sa référence et se paie le tour même. Marketing : effet immédiat,
         qui retombe si on cesse
         {quality ? " ; qualité : la qualité perçue" : ""}
-        {avecRd ? " ; R&D : le niveau technique, avec retard" : ""}
-        .
+        {avecRd ? " ; R&D : le niveau technique, avec retard" : ""}.
       </p>
     </div>
   );
@@ -1155,6 +1072,11 @@ export function DecisionForm({
   // communication ont leur étape, « Budgéter » : ce que l'entreprise dépense
   // ce tour pour soutenir son offre. « Vendre » ne garde que le prix, le
   // volume et l'approvisionnement. Il n'y a plus d'étape « Produire ».
+  // EN GAMME, « Budgéter » ne garde que les budgets d'entreprise : l'entretien
+  // et la marque. Sans l'un ni l'autre, l'étape n'a plus rien à montrer — elle
+  // disparaît donc de la barre. Sa section reste dans le DOM, masquée : les
+  // scalaires cachés qu'elle porte (qualité, entretien) continuent de partir.
+  const budgetsVisible = !gamme || on.maintenance || !!communicationOffer;
   const equipeVisible = on.hr || on.rse;
   const financerVisible = on.finance || (on.investment && !!equipmentOffer);
   const couvertureVisible =
@@ -1163,14 +1085,17 @@ export function DecisionForm({
     (on.insurance && (!!insuranceOffer || (insuranceFormulas?.length ?? 0) > 0));
   const etapesVisibles = [
     "vendre",
-    "budgets",
+    budgetsVisible ? "budgets" : null,
     equipeVisible ? "equipe" : null,
     financerVisible ? "financer" : null,
     couvertureVisible ? "couverture" : null,
     "prevoir",
   ].filter((x): x is string => x !== null);
   const META: Record<string, { titre: string; icone: string }> = {
-    vendre: { titre: "Vendre & s'approvisionner", icone: "🎯" },
+    // En gamme, la première étape ne se limite plus à vendre : elle porte TOUT
+    // ce qui se décide sur une référence, budgets compris. L'appeler « Vendre »
+    // ferait chercher ailleurs des champs qui sont là.
+    vendre: { titre: gamme ? "Vos références" : "Vendre & s'approvisionner", icone: "🎯" },
     budgets: { titre: "Budgéter", icone: "💸" },
     equipe: { titre: "Équipe & RSE", icone: "👥" },
     financer: { titre: "Financer & investir", icone: "💶" },
@@ -1369,8 +1294,19 @@ export function DecisionForm({
         </Family>
       ) : null}
       {gamme ? (
-        <Family legend="🎯 Vos ventes · le prix et le volume de chaque référence" defaultOpen>
-          <GammeVentes gamme={gamme} defaults={defaults} vocabulary={v} />
+        // TOUT CE QUI SE DÉCIDE POUR UNE RÉFÉRENCE EST DANS SON ONGLET : prix,
+        // volume, façonnier, puis les budgets qui la soutiennent. Séparés, le
+        // prix et le budget marketing d'une même référence se décidaient sur
+        // deux étapes, alors que l'un commande l'autre.
+        <Family legend="🎯 Vos références · tout ce qui se décide pour chacune" defaultOpen>
+          <GammeReference
+            gamme={gamme}
+            defaults={defaults}
+            vocabulary={v}
+            quality={on.quality}
+            rd={on.rd && !!rdOffer}
+            roundIndex={roundIndex}
+          />
         </Family>
       ) : null}
       {gamme ? (
@@ -1616,26 +1552,23 @@ export function DecisionForm({
         </Family>
       )}
       {gamme ? (
-        // En gamme, les quatre budgets du tour se décident au même endroit :
-        // le marketing, la qualité et la R&D référence par référence dans un
-        // tableau, puis l'entretien de la capacité, qui est de l'entreprise.
-        // La fenêtre des ventes ne porte ainsi que le prix, le volume et le
-        // façonnier. Quand le niveau n'ouvre pas la qualité ou l'entretien, le
-        // scalaire caché part d'ici.
+        // EN GAMME, IL NE RESTE ICI QUE LES BUDGETS DE L'ENTREPRISE : l'entretien
+        // de la capacité, qu'aucune référence ne porte à elle seule (et, plus
+        // bas, la marque). Le marketing, la qualité et la R&D de chaque
+        // référence se décident dans SON onglet, avec son prix et son volume.
+        // Les scalaires que le niveau n'ouvre pas partent cachés d'ici : le
+        // serveur ne dérive rien des références pour eux.
         <Family
-          legend={`💸 Les budgets du tour · ${["marketing", on.quality ? "qualité" : null, on.rd && !!rdOffer && gamme.some((p) => p.rd) ? "R&D" : null, on.maintenance ? "entretien" : null].filter(Boolean).join(", ")}`}
+          legend={`💸 Les budgets de l'entreprise · ${[on.maintenance ? "entretien" : null, communicationOffer ? "marque" : null].filter(Boolean).join(", ")}`}
           defaultOpen
         >
-          <GammeBudgets
-            gamme={gamme}
-            defaults={defaults}
-            quality={on.quality}
-            rd={on.rd && !!rdOffer}
-            roundIndex={roundIndex}
-          />
+          <p className="text-xs leading-relaxed text-slate-400">
+            Le marketing, la qualité et la R&D de chaque référence se décident dans son
+            onglet, à l&apos;étape précédente.
+          </p>
           {on.quality ? null : <input type="hidden" name="qualityBudget" value={defaults.qualityBudget} />}
           {on.maintenance ? (
-            <div className="mt-3 grid grid-cols-1 gap-3 border-t border-white/5 pt-3 sm:grid-cols-2">
+            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Field
                 name="maintenanceBudget"
                 label={`Budget d'entretien · ${v.capacityLabel.toLowerCase()}`}
