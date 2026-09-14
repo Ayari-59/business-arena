@@ -162,10 +162,7 @@ export default function AteliersPage() {
             d&apos;évaluer. Si un rapprochement vous paraît discutable, écrivez-nous, c&apos;est
             exactement le retour dont nous avons besoin.
           </p>
-          <p>
-            La plateforme est en version bêta et ces ateliers évoluent avec elle. Ils sont
-            librement utilisables en classe.
-          </p>
+          <p>Ces ateliers évoluent avec la plateforme. Ils sont librement utilisables en classe.</p>
         </div>
       </section>
     </main>

@@ -292,7 +292,15 @@ describe("la carte de situation : un seul bouton, grisé tant qu'une moitié man
   });
 });
 
-describe("le bandeau d'en-tête reprend le statut à côté de « À vous de jouer »", () => {
+/**
+ * LE BANDEAU NE PARLE PLUS QUAND C'EST À L'ÉLÈVE DE JOUER.
+ *
+ * Il portait là un raccourci « Prendre mes décisions → » qui sautait par-dessus
+ * l'étape Analyser : posé tout en haut, avant même le contexte, il invitait à
+ * trancher avant de savoir. Le tour en cours a déjà sa carte plus bas, avec ses
+ * onglets dans l'ordre — Situation, Analyser, Décider.
+ */
+describe("le bandeau d'en-tête", () => {
   function bandeau(situations: ReturnType<typeof statutDesSituations>, pendingDecisions = false): string {
     return renderToStaticMarkup(
       createElement(RoundStatusBanner, {
@@ -307,13 +315,25 @@ describe("le bandeau d'en-tête reprend le statut à côté de « À vous de jou
     );
   }
 
-  it("incomplète : plus d'étiquette de statut, seul l'appel à décider demeure", () => {
+  it("quand les décisions sont attendues, il ne s'affiche pas du tout", () => {
     const html = bandeau(statutDesSituations([situation()]));
-    expect(html).toContain("À vous de jouer");
-    // On n'affiche plus « Situation incomplète » : le bouton grisé le dit déjà.
-    expect(html).not.toContain("statut-situation");
-    expect(html).not.toContain("Situation incomplète");
-    expect(html).toContain('href="#decisions"');
+    expect(html).toBe("");
+  });
+
+  it("et surtout, plus de raccourci qui saute par-dessus Analyser", () => {
+    // La faute à empêcher : remettre ici une porte vers la saisie. Quel que
+    // soit l'état des situations du tour, ce bandeau ne mène pas aux champs.
+    for (const situations of [
+      null,
+      statutDesSituations([situation()]),
+      statutDesSituations([
+        situation({ diagnosis: { selected: ["a"], freeText: "" }, quizAnswers: { model_choice: "m1" } }),
+      ]),
+    ]) {
+      for (const pending of [false, true]) {
+        expect(bandeau(situations, pending)).not.toContain('href="#decisions"');
+      }
+    }
   });
 
   it("le bandeau ne montre plus de statut de situation, même une fois rendue", () => {
@@ -325,8 +345,23 @@ describe("le bandeau d'en-tête reprend le statut à côté de « À vous de jou
     expect(bandeau(rendue, true)).toContain("Décisions enregistrées");
   });
 
-  it("aucune situation ce tour : rien de plus dans le bandeau", () => {
-    const html = bandeau(null);
-    expect(html).not.toContain("statut-situation");
+  it("les deux autres états gardent leur région live", () => {
+    // Ce que le retrait coûte est borné : en attente de clôture et partie
+    // terminée, le bandeau continue d'annoncer le changement aux lecteurs
+    // d'écran, puisqu'il survient sans action de l'élève.
+    expect(bandeau(null, true)).toContain('role="status"');
+    expect(
+      renderToStaticMarkup(
+        createElement(RoundStatusBanner, {
+          currentRound: 6,
+          roundsCount: 6,
+          roundDays: 30,
+          pendingDecisions: false,
+          kind: "class",
+          finished: true,
+          situations: null,
+        }),
+      ),
+    ).toContain("Partie terminée");
   });
 });

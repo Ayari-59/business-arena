@@ -24,6 +24,18 @@ interface Props {
  * changement est ce bandeau. Un lecteur d'écran doit donc l'annoncer. On garde
  * une seule `<section>` dont on ne change que le contenu (et la teinte) selon
  * l'état, pour que la région live persiste d'un rendu à l'autre.
+ *
+ * IL NE DIT PLUS RIEN QUAND C'EST À L'ÉLÈVE DE JOUER. Il portait là un raccourci
+ * « Prendre mes décisions → » qui sautait par-dessus l'étape Analyser : posé
+ * tout en haut, avant même le contexte, il invitait à trancher avant de savoir.
+ * Or la boucle qu'on enseigne est de lire d'abord. Le tour en cours a déjà sa
+ * carte plus bas, avec son numéro et ses onglets dans l'ordre — le bandeau n'y
+ * ajoutait qu'une porte dérobée.
+ *
+ * Ce que cela coûte, et qui est assumé : la transition « décisions
+ * enregistrées » → « nouveau tour ouvert », qui survient sans action de l'élève
+ * quand l'enseignant clôt, n'est plus annoncée par cette région. Les deux
+ * autres états — en attente de clôture, partie terminée — la gardent.
  */
 export function RoundStatusBanner({
   currentRound,
@@ -63,30 +75,10 @@ export function RoundStatusBanner({
       </>
     );
   } else {
-    body = (
-      <>
-        <p className="text-xs font-semibold uppercase tracking-widest text-amber-400">
-          {periodLabel(roundDays, currentRound)} / {roundsCount}
-        </p>
-        {/* Passage de période : quand un nouveau tour s'ouvre, on le dit
-            franchement — sinon l'élève voit une nouvelle période active sans
-            comprendre que la précédente vient d'être close. */}
-        {currentRound > 1 ? (
-          <p className="mt-2 rounded-lg border border-sky-400/30 bg-sky-400/10 px-3 py-1.5 text-xs text-sky-200">
-            ↪ Nouveau tour : le {periodLabel(roundDays, currentRound - 1)} est clos (ses résultats
-            sont dépliés juste au-dessus). Vous entamez le {periodLabel(roundDays, currentRound)}.
-          </p>
-        ) : null}
-        <p className="mt-2 text-sm font-medium text-amber-200">À vous de jouer</p>
-        <p className="mt-1 text-sm text-slate-400">Vos décisions pour ce tour sont attendues.</p>
-        <a
-          href="#decisions"
-          className="mt-3 inline-block rounded-lg bg-amber-400 px-5 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300"
-        >
-          Prendre mes décisions →
-        </a>
-      </>
-    );
+    // C'est à l'élève de jouer : rien à dire ici. Le tour en cours a sa carte
+    // plus bas, avec son numéro et ses onglets dans l'ordre — Situation, puis
+    // Analyser, puis Décider.
+    return null;
   }
 
   return (
