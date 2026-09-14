@@ -533,6 +533,38 @@ export interface GameView {
    * anomalie : c'est le mur, et c'est ce qui ouvre la subvention.
    */
   loanCapacity: { remaining: number; ratio: number; equity: number; debt: number } | null;
+  /**
+   * L'ÉTAT DE TRÉSORERIE DE L'ÉQUIPE, HORS CLASSEMENT.
+   *
+   * La cessation de paiements n'était dite qu'à deux endroits : une ligne dans
+   * l'onglet Finance d'une carte de tour, et le statut « défaillante » dans le
+   * classement — que l'animateur révèle quand il veut. Une équipe gelée
+   * pouvait donc ne rien voir du tout, et continuer à remplir un formulaire
+   * que le moteur ignorait.
+   *
+   * Cet état-là ne dépend d'aucun rideau : il est à l'équipe, il la regarde.
+   * `null` quand le scénario ne modélise pas la crise (pas de bloc `treasury`)
+   * ou quand aucun tour n'est encore clos.
+   */
+  alerteTresorerie: {
+    /** Le dernier tour clos s'est achevé en cessation de paiements. */
+    crise: boolean;
+    /** L'entreprise est gelée : le nombre de tours de crise a été atteint. */
+    defaillante: boolean;
+    /** Tours de crise consécutifs à ce jour. */
+    toursConsecutifs: number;
+    /** Combien il en faut pour que la défaillance soit prononcée. */
+    toursAvantDefaillance: number;
+    /** Trésorerie nette à la clôture du dernier tour (négative en découvert). */
+    tresorerieNette: number;
+    /** Le découvert consenti pour le tour à jouer. */
+    plafondDecouvert: number;
+    /**
+     * Ce qui manque pour repasser sous le plafond — le montant qu'il faut
+     * trouver. Zéro quand la trésorerie y est déjà.
+     */
+    manque: number;
+  } | null;
   /** Catalogue d'études du scénario (prix à l'échelle de la périodicité). */
   studiesOffer: {
     marketCost: number;
@@ -1164,6 +1196,32 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     closesAt: playWindow.closesAt ? playWindow.closesAt.toISOString() : null,
   };
 
+  // LE DOSSIER BANCAIRE, CALCULÉ UNE FOIS. L'alerte de trésorerie a besoin du
+  // MÊME plafond de découvert que celui annoncé au formulaire : deux calculs
+  // séparés finiraient par diverger, et l'écran dirait à l'élève de repasser
+  // sous un seuil qui n'est pas celui que la banque applique.
+  const bankFileView = (() => {
+    const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+    const bank = snapshot.finance.bank;
+    if (!bank) return null;
+    const trust = confianceInitiale((currentState ?? {}) as CompanyState);
+    const conditions = conditionsBancaires(
+      trust,
+      {
+        overdraftLimit: snapshot.finance.overdraftLimit,
+        overdraftAnnualRate: snapshot.finance.overdraftAnnualRate,
+      },
+      bank,
+    );
+    return {
+      trust,
+      overdraftLimit: conditions.overdraftLimit,
+      fullOverdraftLimit: snapshot.finance.overdraftLimit,
+      overdraftAnnualRate: conditions.overdraftAnnualRate,
+      lastReliability: lastResult?.bank?.reliability ?? null,
+    };
+  })();
+
   return {
     gameId,
     kind: kindDeLaPartie,
@@ -1626,28 +1684,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       const nextMandatory = loans.reduce((s, l) => s + Math.min(l.perRound, l.remaining), 0);
       return { nextMandatory, outstanding };
     })(),
-    bankFile: (() => {
-      const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
-      const bank = snapshot.finance.bank;
-      if (!bank) return null;
-      const trust = confianceInitiale((currentState ?? {}) as CompanyState);
-      const conditions = conditionsBancaires(
-        trust,
-        {
-          overdraftLimit: snapshot.finance.overdraftLimit,
-          overdraftAnnualRate: snapshot.finance.overdraftAnnualRate,
-        },
-        bank,
-      );
-      const dernier = lastResult?.bank ?? null;
-      return {
-        trust,
-        overdraftLimit: conditions.overdraftLimit,
-        fullOverdraftLimit: snapshot.finance.overdraftLimit,
-        overdraftAnnualRate: conditions.overdraftAnnualRate,
-        lastReliability: dernier?.reliability ?? null,
-      };
-    })(),
+    bankFile: bankFileView,
     treasuryOffer: (() => {
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
       return snapshot.treasury
@@ -1676,6 +1713,30 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
             })(),
           }
         : null;
+    })(),
+    alerteTresorerie: (() => {
+      const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+      // Pas de bloc `treasury` : le scénario ne modélise aucune cessation de
+      // paiements dure, il n'y a rien à alerter.
+      if (!snapshot.treasury || !lastResult) return null;
+      const streak =
+        (currentState as { crisisStreak?: number } | undefined)?.crisisStreak ?? 0;
+      const defaillante =
+        (currentState as { status?: string } | undefined)?.status === "defaillant";
+      const crise = Boolean(lastResult.treasury?.crisis);
+      if (!crise && !defaillante) return null;
+      // Le plafond du tour À JOUER : c'est celui sous lequel il faut repasser.
+      const plafond = bankFileView?.overdraftLimit ?? snapshot.finance.overdraftLimit;
+      const tresorerie = lastResult.functionalBalance.netTreasury;
+      return {
+        crise,
+        defaillante,
+        toursConsecutifs: streak,
+        toursAvantDefaillance: snapshot.finance.crisisRoundsBeforeFailure ?? 2,
+        tresorerieNette: tresorerie,
+        plafondDecouvert: plafond,
+        manque: Math.max(0, -tresorerie - plafond),
+      };
     })(),
     loanCapacity: (() => {
       const ratio = (game.scenarioSnapshot as EngineScenarioConfig).finance.maxDebtToEquity;

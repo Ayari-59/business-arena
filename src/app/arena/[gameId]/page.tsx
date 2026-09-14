@@ -6,6 +6,7 @@ import { getGameView } from "@/services/game.service";
 import { getTeamSituations } from "@/services/pedagogy.service";
 import { SituationCard, SituationDebrief } from "@/components/situation-panel";
 import { SaisonDuTour } from "@/components/saison-du-tour";
+import { AlerteTresorerie } from "@/components/alerte-tresorerie";
 import { PassageAuTour } from "@/components/passage-au-tour";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { EventCard } from "@/components/event-card";
@@ -414,6 +415,15 @@ export default async function ArenaPage({
           situations={statutSituations}
         />
       </div>
+
+      {/* ── Crise de trésorerie : avant tout le reste, et sans rideau ──
+          Cet état appartient à l'équipe : il ne dépend pas de la révélation du
+          classement, seul endroit où la défaillance se disait jusqu'ici. */}
+      {view.alerteTresorerie ? (
+        <div>
+          <AlerteTresorerie alerte={view.alerteTresorerie} />
+        </div>
+      ) : null}
 
       {/* ── Cartes annoncées : visibles quelle que soit la période dépliée ── */}
       {!finished && view.announcedEventCards.length > 0 ? (
