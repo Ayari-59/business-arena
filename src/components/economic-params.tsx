@@ -60,6 +60,14 @@ const GROUPS: { title: string; note?: string; fields: Field[] }[] = [
     ],
   },
   {
+    title: "Défaillance et sortie de crise",
+    note: "Une entreprise est en cessation de paiements quand son découvert dépasse le plafond ET qu'il ne lui reste plus de créances à céder. Ces deux réglages disent à quelle vitesse elle y arrive et combien de temps elle a pour s'en sortir : la capacité d'endettement décide quand la banque cesse de prêter, et le nombre de tours décide quand la partie est perdue. Le compteur retombe à zéro dès qu'un tour repasse sous le plafond — une recapitalisation dégèle l'entreprise.",
+    fields: [
+      { name: "maxDebtToEquity", label: "Emprunt max. / capitaux propres", suffix: "×" },
+      { name: "crisisRoundsBeforeFailure", label: "Tours en crise avant défaillance", suffix: "tours" },
+    ],
+  },
+  {
     title: "Coûts et structure",
     fields: [
       { name: "fixedCostsPerRound", label: "Charges de structure / tour", suffix: "€" },

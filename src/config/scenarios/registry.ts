@@ -1242,6 +1242,9 @@ export function economicDefaults(d: ScenarioDefinition): Record<string, string |
     loanDurationRounds: num(s.finance.loanDurationRounds),
     overdraftAnnualRate: pct(s.finance.overdraftAnnualRate),
     overdraftLimit: num(s.finance.overdraftLimit),
+    maxDebtToEquity: num(s.finance.maxDebtToEquity),
+    // Deux tours : la règle du moteur quand le scénario ne dit rien.
+    crisisRoundsBeforeFailure: num(s.finance.crisisRoundsBeforeFailure ?? 2),
     discountMaxShare: pct(s.treasury?.discountMaxShare),
     factoringFeeRate: pct(s.treasury?.factoringFeeRate),
     fixedCostsPerRound: num(s.fixedCostsPerRound),

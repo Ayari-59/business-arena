@@ -214,6 +214,19 @@ export const economicOverridesSchema = z.object({
   overdraftLimit: z.number().min(0).max(5_000_000).optional(),
   /** Durée d'amortissement d'un nouvel emprunt, en tours. */
   loanDurationRounds: z.number().int().min(1).max(60).optional(),
+  /**
+   * Capacité d'endettement : la banque ne prête pas au-delà de ce multiple
+   * des capitaux propres. Bas, elle coupe le crédit tôt et la crise arrive
+   * vite ; haut, l'équipe peut s'enfoncer longtemps avant de trouver le mur.
+   */
+  maxDebtToEquity: z.number().min(0).max(20).optional(),
+  /**
+   * Tours de cessation de paiements CONSÉCUTIFS avant la défaillance. 1 : la
+   * sanction tombe au premier tour dans le rouge, pour une séance courte.
+   * 4 : le temps de redresser, pour un atelier qui court sur plusieurs
+   * séances.
+   */
+  crisisRoundsBeforeFailure: z.number().int().min(1).max(10).optional(),
   /** Dotations aux amortissements par trimestre (€). */
   depreciationPerRound: z.number().min(0).max(500_000).optional(),
   /** Part maximale du poste clients mobilisable à l'escompte (0-1). */
@@ -313,6 +326,9 @@ export function applyEconomicOverrides(
       supplierPaymentDelayDays:
         overrides.supplierPaymentDelayDays ?? scenario.finance.supplierPaymentDelayDays,
       loanDurationRounds: overrides.loanDurationRounds ?? scenario.finance.loanDurationRounds,
+      maxDebtToEquity: overrides.maxDebtToEquity ?? scenario.finance.maxDebtToEquity,
+      crisisRoundsBeforeFailure:
+        overrides.crisisRoundsBeforeFailure ?? scenario.finance.crisisRoundsBeforeFailure,
       depreciationPerRound:
         overrides.depreciationPerRound ?? scenario.finance.depreciationPerRound,
     },

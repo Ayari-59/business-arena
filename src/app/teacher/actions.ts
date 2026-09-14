@@ -171,6 +171,10 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
     overdraftLimit: optionalNumber(formData.get("overdraftLimit")),
     discountMaxShare: optionalRate(formData.get("discountMaxShare")),
     factoringFeeRate: optionalRate(formData.get("factoringFeeRate")),
+    // Défaillance et sortie de crise : un multiple, pas un taux — pas de
+    // division par cent ici, « 2 » veut dire deux fois les capitaux propres.
+    maxDebtToEquity: optionalNumber(formData.get("maxDebtToEquity")),
+    crisisRoundsBeforeFailure: optionalNumber(formData.get("crisisRoundsBeforeFailure")),
     // Coûts et structure
     fixedCostsPerRound: optionalNumber(formData.get("fixedCostsPerRound")),
     materialCostPerUnit: optionalNumber(formData.get("materialCostPerUnit")),

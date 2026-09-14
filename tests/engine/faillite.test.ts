@@ -128,8 +128,13 @@ const base = (): RoundDecisions => ({
   maintenanceBudget: 5000,
 });
 
-const tour = (roundIndex: number, companies: CompanyState[], dec: RoundDecisions): SimulationInput => ({
-  scenario: scenario(),
+const tour = (
+  roundIndex: number,
+  companies: CompanyState[],
+  dec: RoundDecisions,
+  config: EngineScenarioConfig = scenario(),
+): SimulationInput => ({
+  scenario: config,
   roundIndex,
   companies,
   decisions: { a: dec },
@@ -225,5 +230,48 @@ describe("faillite", () => {
       pedagogy: { situationScores: [], carried: false, coherence: null, previousNetIncome: 0 },
     });
     expect(scores.financial).toBe(0);
+  });
+});
+
+/**
+ * COMBIEN DE TOURS AVANT LA FAILLITE : UNE RÈGLE DE JEU, PAS UNE LOI.
+ *
+ * Deux tours consécutifs étaient écrits en dur. Une heure de cours en BTS ne
+ * se joue pas comme un atelier de quatre séances : l'enseignant fixe la durée
+ * dans son espace, et le moteur la lit dans le snapshot de la partie.
+ */
+describe("durée avant défaillance, réglée par l'enseignant", () => {
+  const avecTours = (n: number): EngineScenarioConfig => {
+    const s = scenario();
+    return { ...s, finance: { ...s.finance, crisisRoundsBeforeFailure: n } };
+  };
+
+  it("à un tour, la sanction tombe dès la première crise", () => {
+    const config = avecTours(1);
+    const r1 = simulateRound(tour(1, [company()], base(), config));
+    expect(r1.results["a"]!.treasury!.crisis).toBe(true);
+    expect(r1.results["a"]!.defaillant).toBe(true);
+    expect(societeA(r1).status).toBe("defaillant");
+  });
+
+  it("à quatre tours, l'équipe garde le temps de redresser", () => {
+    const config = avecTours(4);
+    let etat = [company()];
+    for (let i = 1; i <= 3; i += 1) {
+      const out = simulateRound(tour(i, etat, base(), config));
+      expect(out.results["a"]!.defaillant, `tour ${i}`).toBeUndefined();
+      etat = out.companies;
+    }
+    // Le quatrième tour de crise, lui, la déclare.
+    const r4 = simulateRound(tour(4, etat, base(), config));
+    expect(r4.results["a"]!.defaillant).toBe(true);
+    expect(societeA(r4).crisisStreak).toBe(4);
+  });
+
+  it("sans réglage, la règle historique de deux tours s'applique", () => {
+    const r1 = simulateRound(tour(1, [company()], base()));
+    const r2 = simulateRound(tour(2, r1.companies, base()));
+    expect(r1.results["a"]!.defaillant).toBeUndefined();
+    expect(r2.results["a"]!.defaillant).toBe(true);
   });
 });

@@ -127,6 +127,9 @@ export async function updateEconomicsAction(formData: FormData): Promise<void> {
     overdraftLimit: optionalNumber(formData, "overdraftLimit"),
     discountMaxShare: optionalRate(formData, "discountMaxShare"),
     factoringFeeRate: optionalRate(formData, "factoringFeeRate"),
+    // Défaillance et sortie de crise : des nombres, pas des taux.
+    maxDebtToEquity: optionalNumber(formData, "maxDebtToEquity"),
+    crisisRoundsBeforeFailure: optionalNumber(formData, "crisisRoundsBeforeFailure"),
     fixedCostsPerRound: optionalNumber(formData, "fixedCostsPerRound"),
     materialCostPerUnit: optionalNumber(formData, "materialCostPerUnit"),
     otherVariableCostPerUnit: optionalNumber(formData, "otherVariableCostPerUnit"),
