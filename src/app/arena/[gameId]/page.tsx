@@ -6,6 +6,7 @@ import { getGameView } from "@/services/game.service";
 import { getTeamSituations } from "@/services/pedagogy.service";
 import { SituationCard, SituationDebrief } from "@/components/situation-panel";
 import { SaisonDuTour } from "@/components/saison-du-tour";
+import { PassageAuTour } from "@/components/passage-au-tour";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { EventCard } from "@/components/event-card";
 import { cardByCode } from "@/config/events/cards";
@@ -629,6 +630,22 @@ export default async function ArenaPage({
             ) : null}
 
             <div className="px-2 py-2.5 sm:p-4">
+              {/*
+                UNE ÉTAPE ENTRE LES RÉSULTATS ET LA SAISIE SUIVANTE. Tant que
+                l'élève n'a pas dit qu'il passait au tour suivant, le formulaire
+                reste replié : les résultats du tour clos, juste au-dessus, ont
+                alors l'écran pour eux. C'est une étape, pas un verrou — voir
+                `PassageAuTour`. Au premier tour, `labelPrecedent` vaut null et
+                le contenu s'affiche directement : il n'y a rien à lire avant.
+              */}
+              <PassageAuTour
+                gameId={gameId}
+                tour={view.currentRound}
+                labelTour={periodLabel(view.roundDays, view.currentRound)}
+                labelPrecedent={
+                  latestRound !== null ? periodLabel(view.roundDays, latestRound) : null
+                }
+              >
               {/* Le tour en cours porte les mêmes onglets que les tours clos, dès
                   le premier tour : Situation (à lire), Décisions (à rendre) et
                   Résultats — ce dernier vide tant que le tour n'est pas clos.
@@ -729,6 +746,7 @@ export default async function ArenaPage({
                   ),
                 }}
               </SegmentedTabs>
+              </PassageAuTour>
             </div>
           </section>
         ) : null}

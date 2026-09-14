@@ -40,6 +40,14 @@ const PRIX_AUDIT = 'input[name="product.audit.price"]';
  * « Décisions » qui n'existe plus : il attendait un écran que personne ne voit.
  */
 async function ouvrirDecisions(page: Page): Promise<void> {
+  // Une étape précède la saisie dès qu'un tour a livré ses résultats : le tour
+  // suivant reste replié tant que l'élève n'a pas dit qu'il y passait, pour que
+  // les résultats aient l'écran pour eux. Absente au premier tour — d'où le
+  // test de visibilité plutôt qu'un clic inconditionnel.
+  const passer = page.getByRole("button", { name: /Passer au tour/i }).first();
+  if (await passer.isVisible().catch(() => false)) {
+    await passer.click();
+  }
   const raccourci = page.getByRole("button", { name: /Prendre mes décisions/ }).first();
   if (await raccourci.isVisible().catch(() => false)) {
     await raccourci.click();
