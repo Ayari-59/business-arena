@@ -282,7 +282,7 @@ export const ATELIER_DCG: AtelierDefinition = {
       competences: [
         "J'évalue un projet d'investissement à partir des flux qu'il génère et non de son coût seul.",
         "Je compare des modes de financement sur leur coût et sur ce qu'ils font à la structure du bilan.",
-        "Je construis un plan de trésorerie qui engage, et j'assume l'écart qu'il produira.",
+        "Je construis un plan de trésorerie, et j'assume l'écart entre ce que j'avais prévu et ce que le trimestre a donné.",
       ],
       notions: [
         "flux de trésorerie d'un projet",
@@ -292,7 +292,7 @@ export const ATELIER_DCG: AtelierDefinition = {
         "plan de trésorerie",
       ],
       preparation:
-        "Vérifiez que le niveau de la partie ouvre bien l'investissement et le placement, sans quoi la séance perd son support. Rappelez aux équipes que la banque du jeu tient compte de la fiabilité de leurs plans précédents : c'est le moment où cette mécanique prend son sens.",
+        "Vérifiez que le niveau de la partie ouvre bien l'investissement et le placement, sans quoi la séance perd son support. Rappelez aux équipes que la banque du jeu ne prête pas au-delà de deux fois les capitaux propres : c'est cette limite, et non la qualité de leurs prévisions, qui décidera de ce qu'elles pourront financer.",
       deroule: [
         {
           minutes: 15,
@@ -316,23 +316,23 @@ export const ATELIER_DCG: AtelierDefinition = {
           minutes: 30,
           titre: "Plan de trésorerie et décisions",
           detail:
-            "L'équipe dépose son plan avec ses décisions. C'est la pièce que regarde la banque du jeu, et un plan absent ferme l'accès à l'emprunt.",
+            "L'équipe construit son plan dans le cockpit, puis prend ses décisions du trimestre. Le plan n'est pas déposé dans le jeu : il sert à voir venir le point de tension, et c'est le rapport entre dette et capitaux propres qui bornera l'emprunt.",
         },
         {
           minutes: 20,
           titre: "Clôture et résultats",
           detail:
-            "Vous clôturez le dernier trimestre joué. Les conditions bancaires obtenues par chaque équipe reflètent la fiabilité de ses plans passés.",
+            "Vous clôturez le dernier trimestre joué. Chaque équipe lit ce que la banque lui a réellement consenti, et le compare à ce que son plan annonçait.",
         },
         {
           minutes: 35,
           titre: "Débriefing",
           detail:
-            "On compare les projets financés et ceux qui ne l'ont pas été, et surtout les conditions obtenues. Une équipe qui a systématiquement surestimé ses prévisions le paie ici, et la leçon est difficile à faire passer autrement.",
+            "On compare les projets financés et ceux qui ne l'ont pas été, et surtout par quoi. L'équipe qui a tout financé par emprunt bute sur le plafond de la banque quand la suivante, qui a renforcé ses capitaux propres, peut encore emprunter : l'effet de levier a ses deux faces, et la leçon est difficile à faire passer autrement.",
         },
       ],
       livrable:
-        "Le dossier d'investissement : l'évaluation du projet par ses flux avec hypothèses écrites, la comparaison des modes de financement, le plan de trésorerie déposé, et les conditions bancaires obtenues avec leur explication.",
+        "Le dossier d'investissement : l'évaluation du projet par ses flux avec hypothèses écrites, la comparaison des modes de financement, le plan de trésorerie du cockpit, et les conditions bancaires obtenues avec leur explication.",
       tracePasseport:
         "J'ai évalué un projet d'investissement par ses flux, comparé des modes de financement et défendu un plan de trésorerie devant un prêteur.",
       evaluation: [

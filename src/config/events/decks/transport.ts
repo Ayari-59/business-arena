@@ -138,10 +138,10 @@ export const TRANSPORT_CARDS: EventCardDef[] = [
     code: "transport_banque_conciliante",
     title: "La banque vous suit",
     flavor:
-      "Votre plan de trésorerie a convaincu : les conditions du découvert sont revues à la baisse.",
+      "Vos comptes ont convaincu : une dette qui reste sous vos capitaux propres, des règlements clients qui rentrent. Les conditions du découvert sont revues à la baisse.",
     effectLabel: "Taux d'intérêt ×0,7 pendant 2 tours (une entreprise)",
     conceptHint:
-      "Un dossier chiffré et daté vaut mieux qu'une bonne relation : la banque prête contre un plan.",
+      "La banque ne prête pas contre une promesse, elle lit vos comptes : c'est le rapport entre votre dette et vos capitaux propres qui décide de ce qu'elle consent.",
     category: "macro",
     emoji: "🤝",
     scope: "team",

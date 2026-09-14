@@ -400,10 +400,13 @@ const rawBoutique = {
     loanAnnualRate: 0.052,
     overdraftAnnualRate: 0.13,
     overdraftLimit: 25000,
-    // Le plan de trésorerie déposé avec les décisions est la pièce que lit
-    // la banque : sans lui, pas d'emprunt, et la fiabilité des plans passés
-    // fixe le plafond de découvert consenti et son taux. Un prévisionnel qui
-    // ne change rien n'apprend pas à en faire un.
+    // Les conditions du découvert : plafond consenti et taux. Elles suivent une
+    // CONFIANCE que l'arène ne fait plus bouger — elle la nourrissait de l'écart
+    // entre le plan de trésorerie déposé à chaque tour et le réalisé, et ce plan
+    // a été retiré du formulaire (le moteur sait toujours juger un plan arrivé
+    // par une autre voie : voir `fiabiliteDuPlan`). Ce bloc fixe donc, en l'état,
+    // les conditions de pleine confiance. Ce qui borne vraiment l'emprunt, c'est
+    // `maxDebtToEquity`.
     bank: { memory: 0.6, maxOverdraftSpread: 0.05, minOverdraftShare: 0.4 },
     taxRate: 0.25,
     // le commerce paie ses façonniers à 45 jours (usage de la profession)

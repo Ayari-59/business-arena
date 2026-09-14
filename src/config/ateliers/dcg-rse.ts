@@ -78,7 +78,7 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
       deroule: [
         { minutes: 20, titre: "Consignes et cadrage", detail: "Présentation de l'entreprise, des trois piliers et de la règle du jeu : la RSE coûte maintenant, rapporte plus tard." },
         { minutes: 40, titre: "Diagnostic RSE d'ouverture", detail: "Chaque équipe lit l'indice et ses piliers, repère le pilier le plus faible et formule une priorité." },
-        { minutes: 45, titre: "Premières décisions", detail: "L'équipe fixe son budget d'engagement et ses décisions courantes, puis dépose son plan pour le trimestre." },
+        { minutes: 45, titre: "Premières décisions", detail: "L'équipe fixe son budget d'engagement et ses décisions courantes, puis valide son tour." },
         { minutes: 45, titre: "Clôture et lecture des résultats", detail: "Le tour est clos ; l'équipe lit l'effet du budget sur sa marge et note que la demande n'a pas encore bougé." },
         { minutes: 30, titre: "Note de diagnostic", detail: "Rédaction de la note à deux pages : état des lieux ESG et priorité retenue, argumentée." },
       ],
@@ -116,7 +116,7 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
       deroule: [
         { minutes: 20, titre: "Retour sur le tour précédent", detail: "Lecture collective : qui a engagé, qui a vu sa demande bouger, et pourquoi le retour se fait attendre." },
         { minutes: 30, titre: "Le capital qui se construit", detail: "Explication du capital d'image : un stock lissé qui monte lentement et retombe si on cesse d'entretenir." },
-        { minutes: 50, titre: "Décisions du trimestre", detail: "L'équipe arbitre entre marketing et engagement RSE selon l'horizon restant, puis dépose son plan." },
+        { minutes: 50, titre: "Décisions du trimestre", detail: "L'équipe arbitre entre marketing et engagement RSE selon l'horizon restant, puis valide son tour." },
         { minutes: 45, titre: "Clôture et analyse", detail: "Le tour est clos ; l'équipe mesure le premier effet de l'image sur sa part et le compare à celui du marketing." },
         { minutes: 35, titre: "Fiche d'analyse", detail: "Rédaction d'une fiche opposant les deux leviers sur le rythme et la persistance de leur effet." },
       ],
@@ -192,7 +192,7 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
       deroule: [
         { minutes: 20, titre: "Retour sur les conditions obtenues", detail: "Lecture : à engagement comparable, qui a obtenu un découvert plus large ou un taux plus doux." },
         { minutes: 30, titre: "Le standing change les conditions", detail: "Explication : l'image rassure la banque, et un employeur engagé perd moins de salariés quand le salaire glisse." },
-        { minutes: 50, titre: "Décisions du trimestre", detail: "L'équipe cale son financement et sa politique d'effectif en tenant compte de ces retours, puis dépose son plan." },
+        { minutes: 50, titre: "Décisions du trimestre", detail: "L'équipe cale son financement et sa politique d'effectif en tenant compte de ces retours, puis valide son tour." },
         { minutes: 45, titre: "Clôture et analyse", detail: "Le tour est clos ; l'équipe lit l'effet du standing sur ses charges financières et ses départs." },
         { minutes: 35, titre: "Note financière et sociale", detail: "Rédaction d'une note reliant le standing RSE aux conditions bancaires et à la rétention du personnel." },
       ],
@@ -230,7 +230,7 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
       deroule: [
         { minutes: 20, titre: "Les parties prenantes réagissent", detail: "Présentation des cartes : label, éco-subvention, bad buzz, sanction, et de ce qui les déclenche." },
         { minutes: 30, titre: "Où en est mon standing", detail: "Chaque équipe situe son capital et estime le risque ou la récompense qu'elle encourt au dernier tour." },
-        { minutes: 50, titre: "Décisions du dernier tour", detail: "L'équipe arbitre une dernière fois entre rendement immédiat et risque de réputation, puis dépose son plan." },
+        { minutes: 50, titre: "Décisions du dernier tour", detail: "L'équipe arbitre une dernière fois entre rendement immédiat et risque de réputation, puis valide son tour." },
         { minutes: 45, titre: "Clôture et cartes tirées", detail: "Le tour est clos ; les cartes tombent, et chaque équipe lit l'effet sur sa demande ou sa trésorerie." },
         { minutes: 35, titre: "Fiche de risque", detail: "Rédaction d'une fiche qui relie le standing atteint aux cartes rencontrées et à leur effet chiffré." },
       ],

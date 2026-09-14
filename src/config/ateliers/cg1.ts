@@ -204,7 +204,7 @@ export const ATELIER_CG1: AtelierDefinition = {
         "P5 · Analyse et prévision de l'activité",
       ],
       objectif:
-        "Construire un plan de trésorerie, s'en servir pour demander un financement, puis mesurer l'écart avec le réalisé.",
+        "Construire un plan de trésorerie dans le cockpit, en déduire un besoin de financement chiffré et daté, puis mesurer l'écart avec le réalisé.",
       competences: [
         "Je distingue une charge d'un décaissement, et un produit d'un encaissement.",
         "Je construis un plan de trésorerie à partir de décisions prévues et de délais de règlement.",

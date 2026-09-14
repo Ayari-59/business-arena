@@ -138,10 +138,10 @@ export const BATIMENT_CARDS: EventCardDef[] = [
     code: "batiment_banque_conciliante",
     title: "La banque vous suit",
     flavor:
-      "Votre plan de trésorerie a convaincu : le découvert est renégocié à des conditions inespérées.",
+      "Bilans en main, votre banquier voit une dette que vos capitaux propres couvrent largement. Le découvert est renégocié à des conditions inespérées.",
     effectLabel: "Taux d'intérêt ×0,7 pendant 2 tours (une entreprise)",
     conceptHint:
-      "Un dossier chiffré et daté vaut mieux qu'une bonne relation : la banque prête contre un plan.",
+      "Ce sont les capitaux propres qui portent la dette : tant qu'ils la couvrent, la banque suit. C'est exactement la limite qu'elle vous applique quand vous empruntez.",
     category: "macro",
     emoji: "🤝",
     scope: "team",

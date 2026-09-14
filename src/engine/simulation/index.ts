@@ -1346,11 +1346,15 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const earlyRepayment = scheduled
       ? Math.min(requestedRepayment, Math.max(0, w.state.finance.financialDebt - mandatoryRepayment))
       : Math.min(requestedRepayment, w.state.finance.financialDebt);
-    // DOSSIER BANCAIRE (scénarios portant un finance.bank). Le plan de
-    // trésorerie déposé avec les décisions est la pièce que lit la banque :
-    // sans lui, la demande d'emprunt n'est pas instruite. Et la fiabilité des
-    // plans passés, résumée dans la confiance, fixe le plafond de découvert
-    // consenti ce tour et le taux auquel il est facturé.
+    // DOSSIER BANCAIRE (scénarios portant un finance.bank) : la confiance fixe
+    // le plafond de découvert consenti ce tour et son taux.
+    //
+    // ATTENTION EN L'ÉTAT : cette confiance ne bouge plus. Elle se nourrissait
+    // de l'écart entre le plan de trésorerie déposé et le réalisé ; le plan a
+    // quitté le formulaire, `fiabiliteDuPlan` rend donc `null` et
+    // `confianceSuivante` renvoie la confiance inchangée — soit la pleine
+    // confiance, pour toujours. Conséquence à connaître : le bonus de
+    // financement vert ci-dessous, borné à 1, ne peut plus rien relever.
     const bank = scenario.finance.bank;
     const confianceAvant = confianceInitiale(w.state);
     // FINANCEMENT VERT (Lot 2B) : le capital-image RSE relève la confiance

@@ -305,14 +305,18 @@ export interface EngineScenarioConfig {
      */
     rescueFinancingRequired?: boolean;
     /**
-     * DOSSIER BANCAIRE (optionnel). Présent : le plan de trésorerie déposé
-     * avec les décisions cesse d'être un exercice sans suite et devient la
-     * pièce que lit la banque.
+     * DOSSIER BANCAIRE (optionnel). Présent : le plafond de découvert consenti
+     * et son taux suivent une CONFIANCE (0..1) au lieu d'être fixes.
      *
-     *  1. pas de plan, pas d'emprunt : une demande non appuyée est refusée ;
-     *  2. l'écart entre le plan et le réalisé nourrit une CONFIANCE (0..1),
-     *     qui fixe au tour suivant le plafond de découvert consenti et le
-     *     taux auquel ce découvert est facturé.
+     * CETTE CONFIANCE NE BOUGE PLUS DANS L'ARÈNE. Elle se nourrissait de
+     * l'écart entre le plan de trésorerie déposé à chaque tour et le réalisé ;
+     * ce plan a été retiré du formulaire — deux champs à remplir de tête dont
+     * l'un interdisait d'emprunter. Faute de plan à juger, `fiabiliteDuPlan`
+     * rend `null` et la confiance reste où elle est : le bloc rend donc les
+     * conditions de pleine confiance. Le moteur GARDE la mécanique entière,
+     * pour un plan qui arriverait par une autre voie (atelier, import).
+     *
+     * Ce qui borne l'emprunt aujourd'hui, c'est `maxDebtToEquity`.
      *
      * Le découvert est un concours révocable : la banque peut le réduire et
      * le renchérir quand elle veut, ce qui n'est pas vrai d'un emprunt déjà
