@@ -172,29 +172,36 @@ const plan = (expectedCash: number, expectedUnits?: number): RoundDecisions => (
 });
 
 describe("dossier bancaire", () => {
-  it("sans plan de trésorerie, la banque n'accorde pas l'emprunt", () => {
+  it("la banque instruit la demande, avec ou sans plan de trésorerie", () => {
+    // L'ARÈNE NE DEMANDE PLUS DE PLAN. Le verrou d'origine — pas de plan, pas
+    // de prêt — aurait interdit d'emprunter à tout le monde une fois le champ
+    // retiré du formulaire. L'emprunt entre donc en caisse dans les deux cas,
+    // et le bilan le dit, pas seulement le récit.
     const sans = jouer({ decisions: { ...base(), finance: { newLoan: 60000 } } });
     const avec = jouer({ decisions: plan(0) });
 
     expect(sans.res.bank!.loanRequested).toBe(60000);
-    expect(sans.res.bank!.loanGranted).toBe(0);
+    expect(sans.res.bank!.loanGranted).toBe(60000);
     expect(sans.res.bank!.planFiled).toBe(false);
-    // et l'argent n'est jamais entré : le bilan le dit, pas seulement le récit
+    expect(avec.res.bank!.loanGranted).toBe(60000);
+    // Le même emprunt des deux côtés : la dette financière de clôture aussi.
     expect(avec.res.balanceSheet.financialDebt - sans.res.balanceSheet.financialDebt).toBeCloseTo(
-      60000,
+      0,
       6,
     );
-    expect(avec.res.bank!.loanGranted).toBe(60000);
   });
 
   it("annoncer des ventes n'est pas présenter un plan de financement", () => {
-    // C'est la ligne de TRÉSORERIE que la banque exige : elle prête contre un
-    // besoin daté, pas contre une espérance de chiffre d'affaires.
+    // C'est la ligne de TRÉSORERIE qui fait le plan : elle seule est jugeable
+    // contre un besoin daté. Le moteur garde cette distinction — un plan
+    // déposé par une autre voie qu'un formulaire reste jugé —, elle ne
+    // commande simplement plus l'octroi du prêt.
     const res = jouer({
       decisions: { ...base(), finance: { newLoan: 60000 }, forecast: { expectedUnits: 4200 } },
     }).res;
     expect(res.bank!.planFiled).toBe(false);
-    expect(res.bank!.loanGranted).toBe(0);
+    expect(res.bank!.reliability).not.toBeNull();
+    expect(res.bank!.loanGranted).toBe(60000);
   });
 
   it("une partie ouverte avant le dossier bancaire garde son emprunt", () => {
@@ -276,5 +283,87 @@ describe("dossier bancaire", () => {
     expect(grille.res.treasury!.financingCost).toBeGreaterThan(
       fiable.res.treasury!.financingCost,
     );
+  });
+});
+
+/**
+ * LA BANQUE N'EST PAS UN PUITS.
+ *
+ * Rien ne bornait l'emprunt : une équipe en découvert profond pouvait demander
+ * cent mille euros de plus chaque tour et les obtenir, ce qui retirait toute
+ * conséquence à la cessation de paiements — on ne coule pas quand le crédit
+ * est infini.
+ *
+ * La règle est celle d'un vrai dossier : la dette financière ne dépasse pas
+ * `maxDebtToEquity` fois les capitaux propres. Elle a la propriété qu'on
+ * cherche — elle se resserre d'elle-même à mesure que l'entreprise perd de
+ * l'argent, donc celle qui va mal touche le mur au moment précis où elle
+ * voudrait s'endetter davantage.
+ */
+describe("capacité d'endettement", () => {
+  // Capitaux propres 75 000, dette 80 000 : à 2×, la capacité restante est
+  // 2 × 75 000 − 80 000 = 70 000 €.
+  // `loanDurationRounds` : sans échéancier déclaré, le moteur n'émet pas de
+  // bloc `debt`, et c'est lui qui porte ce que la banque a refusé.
+  const avecPlafond = () =>
+    scenario({
+      finance: { ...scenario().finance, maxDebtToEquity: 2, loanDurationRounds: 8 },
+    });
+
+  it("la banque sert la demande tant qu'elle tient sous le plafond", () => {
+    const res = jouer({
+      scenario: avecPlafond(),
+      decisions: { ...base(), finance: { newLoan: 50000 } },
+    }).res;
+    expect(res.debt!.newLoan).toBe(50000);
+    // Rien n'a été refusé : le champ n'existe pas.
+    expect(res.debt!.loanRefused).toBeUndefined();
+  });
+
+  it("au-delà, elle coupe à la capacité et dit de combien", () => {
+    const res = jouer({
+      scenario: avecPlafond(),
+      decisions: { ...base(), finance: { newLoan: 120000 } },
+    }).res;
+    expect(res.debt!.newLoan).toBeCloseTo(70000, 6);
+    expect(res.debt!.loanRefused).toBeCloseTo(50000, 6);
+    // Et l'argent refusé n'est jamais entré : la dette de clôture le dit.
+    expect(res.balanceSheet.financialDebt).toBeLessThan(80000 + 120000);
+  });
+
+  it("capitaux propres à zéro : plus un euro", () => {
+    // LE CAS QUI COMPTE. Une entreprise dont les capitaux propres sont
+    // effacés ne trouve plus un prêteur : c'est là que la subvention devient
+    // le seul recours, et c'est ce que la règle doit produire.
+    const res = jouer({
+      scenario: avecPlafond(),
+      state: {
+        finance: {
+          // Actif 120 000 = passif 120 000, capitaux propres effacés.
+          fixedAssetsNet: 120000,
+          inventoryValue: 0,
+          receivables: 0,
+          cash: 0,
+          equity: 0,
+          financialDebt: 80000,
+          payables: 0,
+          overdraft: 40000,
+        },
+      },
+      decisions: { ...base(), finance: { newLoan: 60000 } },
+    }).res;
+    expect(res.debt!.newLoan).toBe(0);
+    expect(res.debt!.loanRefused).toBeCloseTo(60000, 6);
+  });
+
+  it("sans plafond déclaré, la demande passe en entier", () => {
+    // Rétro-compatibilité : un scénario qui ne déclare pas la règle garde son
+    // comportement, et son instantané doré avec.
+    const res = jouer({
+      scenario: scenario({ finance: { ...scenario().finance, loanDurationRounds: 8 } }),
+      decisions: { ...base(), finance: { newLoan: 120000 } },
+    }).res;
+    expect(res.debt!.newLoan).toBe(120000);
+    expect(res.debt!.loanRefused).toBeUndefined();
   });
 });

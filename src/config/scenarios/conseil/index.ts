@@ -123,6 +123,8 @@ const rawConseil = {
     supplierPaymentDelayDays: 30,
     loanDurationRounds: 20,
     maxCapitalIncreaseTotal: 150000,
+    // La banque ne prête pas au-delà de deux fois les capitaux propres.
+    maxDebtToEquity: 2,
     // cabinet asset-light : très peu d'amortissements
     depreciationPerRound: 6000,
   },

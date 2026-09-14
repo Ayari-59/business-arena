@@ -106,6 +106,8 @@ const rawNova = {
     // les associés suivent jusqu'à 100 000 € sur la partie — pas au-delà :
     // l'apport illimité fausserait le jeu de trésorerie
     maxCapitalIncreaseTotal: 100000,
+    // La banque ne prête pas au-delà de deux fois les capitaux propres.
+    maxDebtToEquity: 2,
     depreciationPerRound: 5000,
   },
   // structure totale ≈ 96 000 €/tour : 91 000 décaissés + 5 000 d'amortissements

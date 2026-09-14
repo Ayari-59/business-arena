@@ -291,38 +291,6 @@ function Field({
   );
 }
 
-/** Champ FACULTATIF : vide veut dire « pas de prévision », jamais zéro. */
-function OptionalField({
-  name,
-  label,
-  placeholder,
-  suffix,
-  hint,
-}: {
-  name: string;
-  label: string;
-  placeholder: string;
-  suffix: string;
-  hint?: string;
-}) {
-  return (
-    <label className="block">
-      <span className="block min-h-8 leading-4 text-xs font-medium uppercase tracking-wide text-slate-400">{label}</span>
-      <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/5 bg-slate-950 px-3 py-2 focus-within:border-amber-400/60">
-        <input
-          type="text"
-          inputMode="decimal"
-          name={name}
-          placeholder={placeholder}
-          className="min-w-0 flex-1 bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500"
-        />
-        <span className="shrink-0 text-xs text-slate-400">{suffix}</span>
-      </span>
-      {hint ? <span className="mt-1 block text-[13px] text-slate-400">{hint}</span> : null}
-    </label>
-  );
-}
-
 /**
  * GAMME : un prix, un volume, un marketing — et, quand le niveau et le
  * scénario les ouvrent, un budget qualité et un fournisseur — PAR RÉFÉRENCE.
@@ -902,6 +870,7 @@ export function DecisionForm({
   orderOffer,
   studiesOffer,
   capitalAllowance,
+  loanCapacity,
   insuranceFormulas,
   suppliersOffer,
   equipmentOffer,
@@ -975,7 +944,6 @@ export function DecisionForm({
     overdraftLimit: number;
     fullOverdraftLimit: number;
     overdraftAnnualRate: number;
-    refusedLoan: number | null;
     lastReliability: number | null;
   } | null;
   /** Commande exceptionnelle proposée pour CE tour (rotation du pool). */
@@ -998,6 +966,8 @@ export function DecisionForm({
   } | null;
   /** Enveloppe d'augmentation de capital restante (null = illimitée). */
   capitalAllowance?: { total: number; remaining: number } | null;
+  /** Ce que la banque peut encore prêter : `null` sans plafond déclaré. */
+  loanCapacity?: { remaining: number; ratio: number; equity: number; debt: number } | null;
   /** Formules d'assurance (si le scénario en propose plusieurs — remplace le toggle simple). */
   insuranceFormulas?: {
     code: string;
@@ -1726,7 +1696,11 @@ export function DecisionForm({
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <>
               <Field name="newLoan" label="Nouvel emprunt" defaultValue={0} suffix="€"
-                hint="5 %/an, amortissement constant sur la durée du contrat." />
+                hint={
+                  loanCapacity
+                    ? `5 %/an. La banque prête jusqu'à ${loanCapacity.ratio} × vos capitaux propres : il vous reste ${Math.round(loanCapacity.remaining).toLocaleString("fr-FR")} €.`
+                    : "5 %/an, amortissement constant sur la durée du contrat."
+                } />
               <Field
                 name="loanRepayment"
                 label={debtSchedule ? "Remboursement anticipé" : "Remboursement d'emprunt"}
@@ -1751,6 +1725,27 @@ export function DecisionForm({
             ) : null}
             </>
         </div>
+        {/*
+          LE DÉCOUVERT EST UN FAIT DE LA DÉCISION, PAS UNE NOTE DE BAS DE PAGE.
+          Il vivait dans le panneau du plan de trésorerie, parti avec lui. Or
+          c'est le chiffre qui dit jusqu'où la caisse peut descendre avant que
+          la banque force la cession des créances : il a sa place là où l'on
+          décide d'emprunter.
+        */}
+        {bankFile ? (
+          <p className="mt-3 text-xs leading-relaxed text-slate-400">
+            Découvert autorisé{" "}
+            <strong className="text-slate-200">{formatEuro(bankFile.overdraftLimit)}</strong>, à{" "}
+            <strong className="text-slate-200">
+              {(bankFile.overdraftAnnualRate * 100).toLocaleString("fr-FR", {
+                maximumFractionDigits: 1,
+              })}{" "}
+              %
+            </strong>{" "}
+            l&apos;an. Au-delà, la banque cède vos créances à votre place, et
+            vous le paie cher.
+          </p>
+        ) : null}
       </Family>
       ) : null}
       {on.investment && equipmentOffer ? (
@@ -1965,84 +1960,6 @@ export function DecisionForm({
             L&apos;information a un prix, facturé en charges de structure : il se lit au seuil
             de rentabilité. Décider sans données coûte souvent plus cher.
           </p>
-        </Family>
-      ) : null}
-      {/*
-        Gardé sur `on.finance` SEUL, jamais sur `bankFile`. Une partie ouverte
-        avant le dossier bancaire n'a pas de bloc `bank` dans son snapshot,
-        donc pas de `bankFile` : la conditionner dessus faisait disparaître les
-        deux champs en cours de partie, à des élèves qui les remplissaient
-        depuis le premier tour. Le texte change, les champs restent.
-      */}
-      {on.finance ? (
-        <Family
-          legend={
-            bankFile
-              ? "🏦 Votre plan de trésorerie · la pièce que lit la banque"
-              : "🔭 Votre prévision · facultative, sans effet sur le tour"
-          }
-        >
-          {bankFile && bankFile.refusedLoan !== null ? (
-            <p className="mb-3 rounded-md border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-xs leading-relaxed text-rose-200">
-              Votre demande de {formatEuro(bankFile.refusedLoan)} n&apos;a pas été instruite au
-              tour précédent : aucun plan de trésorerie ne l&apos;accompagnait.
-            </p>
-          ) : null}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <OptionalField
-              name="expectedUnits"
-              label={`${v.units.charAt(0).toUpperCase()}${v.units.slice(1)} que vous pensez vendre`}
-              placeholder="ex. 4 200"
-              suffix={v.units}
-              hint="Historique de vos ventes plus bas dans la page."
-            />
-            <OptionalField
-              name="expectedCash"
-              label="Trésorerie nette en fin de tour"
-              placeholder="ex. 18 000"
-              suffix="€"
-              hint={
-                bankFile
-                  ? "Ce que vous pensez avoir en caisse une fois tout payé. Sans cette ligne, pas d'emprunt."
-                  : "Ce que vous pensez avoir en caisse une fois tout payé."
-              }
-            />
-          </div>
-          {bankFile ? (
-            <>
-              <p className="mt-3 text-xs leading-relaxed text-slate-400">
-                Confiance de votre banque :{" "}
-              <strong className="text-slate-200">{Math.round(bankFile.trust * 100)} %</strong>. Elle
-              vous consent ce tour un découvert de{" "}
-              <strong className="text-slate-200">{formatEuro(bankFile.overdraftLimit)}</strong>
-              {bankFile.overdraftLimit < bankFile.fullOverdraftLimit - 0.5
-                ? ` au lieu de ${formatEuro(bankFile.fullOverdraftLimit)}`
-                : ""}
-              , à{" "}
-              <strong className="text-slate-200">
-                {(bankFile.overdraftAnnualRate * 100).toLocaleString("fr-FR", {
-                  maximumFractionDigits: 1,
-                })}{" "}
-                %
-              </strong>{" "}
-              l&apos;an.
-              {bankFile.lastReliability !== null
-                ? ` Votre dernier plan s'est révélé juste à ${Math.round(bankFile.lastReliability * 100)} %.`
-                : ""}
-            </p>
-            <p className="mt-2 text-xs leading-relaxed text-slate-400">
-              Ce plan n&apos;est pas un exercice : sans la ligne de trésorerie, la banque
-              n&apos;instruit aucune demande d&apos;emprunt. Et l&apos;écart entre ce que vous
-              annoncez et ce qui sera constaté fixera, au tour suivant, le plafond de votre
-              découvert et son taux. Annoncer large pour se couvrir se paie autant que se tromper.
-            </p>
-            </>
-          ) : (
-            <p className="mt-3 text-xs leading-relaxed text-slate-400">
-              L&apos;écart vous sera montré avec les résultats du tour. Cette partie a été
-              ouverte avant le dossier bancaire : votre prévision n&apos;y change aucun calcul.
-            </p>
-          )}
         </Family>
       ) : null}
       <Family

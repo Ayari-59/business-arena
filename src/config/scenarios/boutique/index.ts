@@ -375,6 +375,8 @@ const rawBoutique = {
     supplierPaymentDelayDays: 45,
     loanDurationRounds: 20,
     maxCapitalIncreaseTotal: 80000,
+    // La banque ne prête pas au-delà de deux fois les capitaux propres.
+    maxDebtToEquity: 2,
     depreciationPerRound: 4500,
   },
   treasury: {

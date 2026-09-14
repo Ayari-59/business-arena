@@ -148,6 +148,8 @@ const rawTransport = {
     supplierPaymentDelayDays: 15,
     loanDurationRounds: 24,
     maxCapitalIncreaseTotal: 250000,
+    // La banque ne prête pas au-delà de deux fois les capitaux propres.
+    maxDebtToEquity: 2,
     // la flotte s'amortit vite, et cela se voit
     depreciationPerRound: 26000,
   },

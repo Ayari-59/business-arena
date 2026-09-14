@@ -142,6 +142,8 @@ const rawFitness = {
     supplierPaymentDelayDays: 30,
     loanDurationRounds: 28,
     maxCapitalIncreaseTotal: 180000,
+    // La banque ne prête pas au-delà de deux fois les capitaux propres.
+    maxDebtToEquity: 2,
     // le parc de machines pèse lourd et se renouvelle
     depreciationPerRound: 16000,
   },

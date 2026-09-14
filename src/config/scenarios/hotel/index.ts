@@ -123,6 +123,8 @@ const rawHotel = {
     supplierPaymentDelayDays: 30,
     loanDurationRounds: 40, // crédit immobilier : 10 ans
     maxCapitalIncreaseTotal: 250000,
+    // La banque ne prête pas au-delà de deux fois les capitaux propres.
+    maxDebtToEquity: 2,
     depreciationPerRound: 28000, // les murs et l'agencement pèsent lourd
   },
   treasury: {

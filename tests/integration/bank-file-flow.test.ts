@@ -81,10 +81,14 @@ describe("dossier bancaire, de la saisie au bilan", () => {
     expect(vue.bankFile).not.toBeNull();
     expect(vue.bankFile!.trust).toBe(1);
     expect(vue.bankFile!.overdraftLimit).toBeCloseTo(vue.bankFile!.fullOverdraftLimit, 6);
-    expect(vue.bankFile!.refusedLoan).toBeNull();
   });
 
-  it("un emprunt demandé sans plan de trésorerie n'entre jamais en caisse", async () => {
+  it("un emprunt demandé sans plan de trésorerie est instruit quand même", async () => {
+    // L'ARÈNE NE DEMANDE PLUS DE PLAN DE TRÉSORERIE. Remplir un prévisionnel
+    // avant chaque tour tenait de l'exercice scolaire plus que du jeu, et le
+    // verrou qui en découlait — pas de plan, pas d'emprunt — aurait interdit
+    // d'emprunter à tout le monde une fois le champ retiré. La banque instruit
+    // désormais toute demande.
     await submitTeamDecisions({
       gameId,
       userId: eleve,
@@ -94,12 +98,15 @@ describe("dossier bancaire, de la saisie au bilan", () => {
 
     const vue = (await getGameView(gameId, eleve))!;
     expect(vue.lastResult!.bank!.loanRequested).toBe(EMPRUNT);
-    expect(vue.lastResult!.bank!.loanGranted).toBe(0);
-    // et l'élève l'apprend au tour suivant, dans le panneau où il rédige
-    expect(vue.bankFile!.refusedLoan).toBe(EMPRUNT);
+    expect(vue.lastResult!.bank!.loanGranted).toBe(EMPRUNT);
+    expect(vue.lastResult!.bank!.planFiled).toBe(false);
+    // Sans plan à juger, la confiance reste où elle est : la ligne de crédit
+    // du tour suivant ne bouge pas.
+    expect(vue.bankFile!.trust).toBe(1);
+    expect(vue.bankFile!.overdraftLimit).toBeCloseTo(vue.bankFile!.fullOverdraftLimit, 6);
   });
 
-  it("le même emprunt, appuyé d'un plan, est accordé", async () => {
+  it("un plan déposé par une autre voie reste jugé : le moteur en garde la capacité", async () => {
     const avant = (await getGameView(gameId, eleve))!;
     const detteAvant = avant.lastResult!.balanceSheet.financialDebt;
 
@@ -119,7 +126,6 @@ describe("dossier bancaire, de la saisie au bilan", () => {
     expect(apres.lastResult!.bank!.loanGranted).toBe(EMPRUNT);
     // la dette financière monte de l'emprunt, échéance du tour déduite
     expect(apres.lastResult!.balanceSheet.financialDebt).toBeGreaterThan(detteAvant);
-    expect(apres.bankFile!.refusedLoan).toBeNull();
   });
 
   it("un plan démenti par les faits resserre la ligne de crédit du tour suivant", async () => {

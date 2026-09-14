@@ -127,6 +127,8 @@ const rawBatiment = {
     supplierPaymentDelayDays: 45,
     loanDurationRounds: 24,
     maxCapitalIncreaseTotal: 200000,
+    // La banque ne prête pas au-delà de deux fois les capitaux propres.
+    maxDebtToEquity: 2,
     depreciationPerRound: 14000,
   },
   treasury: {

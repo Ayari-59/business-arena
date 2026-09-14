@@ -75,8 +75,6 @@ export const LEVIERS: readonly LevierDeDecision[] = [
   { champ: "studyPrice", nom: "Étude des prix", ouvertPar: "secteur" },
   { champ: "studyFinance", nom: "Étude financière", ouvertPar: "secteur" },
   { champ: "studyProject", nom: "Étude de projet", ouvertPar: "secteur" },
-  { champ: "expectedUnits", nom: "Ventes prévues", ouvertPar: "finance" },
-  { champ: "expectedCash", nom: "Trésorerie prévue", ouvertPar: "finance" },
 ];
 
 /**

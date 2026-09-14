@@ -147,6 +147,8 @@ const rawEcommerce = {
     supplierPaymentDelayDays: 45,
     loanDurationRounds: 16,
     maxCapitalIncreaseTotal: 200000,
+    // La banque ne prête pas au-delà de deux fois les capitaux propres.
+    maxDebtToEquity: 2,
     depreciationPerRound: 5000,
   },
   treasury: {

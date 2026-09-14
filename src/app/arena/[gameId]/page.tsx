@@ -733,6 +733,7 @@ export default async function ArenaPage({
                   orderOffer={view.orderOffer}
                   studiesOffer={view.studiesOffer}
                   capitalAllowance={view.capitalAllowance}
+                  loanCapacity={view.loanCapacity}
                   insuranceFormulas={view.insuranceFormulas}
                   suppliersOffer={view.suppliersOffer}
                   equipmentOffer={view.equipmentOffer}

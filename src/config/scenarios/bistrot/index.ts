@@ -133,6 +133,8 @@ const rawBistrot = {
     supplierPaymentDelayDays: 21,
     loanDurationRounds: 24,
     maxCapitalIncreaseTotal: 90000,
+    // La banque ne prête pas au-delà de deux fois les capitaux propres.
+    maxDebtToEquity: 2,
     depreciationPerRound: 6000,
   },
   treasury: {

@@ -272,6 +272,27 @@ export interface EngineScenarioConfig {
      */
     maxCapitalIncreaseTotal?: number;
     /**
+     * PLAFOND D'ENDETTEMENT, en multiple des capitaux propres d'ouverture.
+     * La banque ne prête pas au-delà : dette financière après emprunt ≤
+     * `maxDebtToEquity` × capitaux propres. C'est la règle que lit un
+     * banquier, et elle a la propriété qu'on cherche ici — elle se resserre
+     * d'elle-même à mesure que l'entreprise perd de l'argent, donc celle qui
+     * va mal touche le mur au moment où elle voudrait s'endetter davantage.
+     *
+     * Capitaux propres nuls ou négatifs : capacité nulle, plus un euro.
+     * Absent = pas de plafond (comportement historique).
+     */
+    maxDebtToEquity?: number;
+    /**
+     * Nombre de tours de cessation de paiements CONSÉCUTIFS avant la
+     * défaillance. Un seul tour est une alerte, pas une faillite : une
+     * mauvaise passe se rattrape, et c'est la leçon. Absent = 2, la règle
+     * historique. L'enseignant le règle dans son espace : 1 pour une séance
+     * courte où la sanction doit tomber vite, 3 ou 4 pour laisser le temps de
+     * redresser.
+     */
+    crisisRoundsBeforeFailure?: number;
+    /**
      * DOSSIER BANCAIRE (optionnel). Présent : le plan de trésorerie déposé
      * avec les décisions cesse d'être un exercice sans suite et devient la
      * pièce que lit la banque.
@@ -1433,6 +1454,12 @@ export interface CompanyRoundResult {
     newLoan: number;
     outstanding: number;
     nextMandatory: number;
+    /**
+     * Emprunt demandé ce tour, quand la banque n'a pas tout accordé : la
+     * différence avec `newLoan` est ce que la capacité d'endettement a refusé.
+     * Absent quand la demande a été servie en entier — rien à expliquer.
+     */
+    loanRefused?: number;
   };
   /** Trésorerie du tour : mobilisations de créances et coûts financiers. */
   treasury?: {

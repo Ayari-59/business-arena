@@ -92,7 +92,10 @@ describe("tailles de texte", () => {
   it("les textes d'aide sous les champs de décision sont à 13 px", () => {
     const form = readFileSync(join(SRC, "components", "decision-form.tsx"), "utf8");
     const aides = form.match(/\{hint \? <span className="[^"]*">\{hint\}<\/span> : null\}/g) ?? [];
-    expect(aides.length).toBeGreaterThanOrEqual(2);
+    // Il y en avait deux tant que le plan de trésorerie avait son champ
+    // facultatif ; il ne reste que celui des champs de décision. Ce qui
+    // compte est qu'aucun ne descende sous 13 px, pas combien il y en a.
+    expect(aides.length).toBeGreaterThanOrEqual(1);
     for (const aide of aides) expect(aide).toContain("text-[13px]");
   });
 });

@@ -491,8 +491,6 @@ export interface GameView {
     fullOverdraftLimit: number;
     /** Taux de découvert applicable au tour à jouer. */
     overdraftAnnualRate: number;
-    /** Emprunt demandé et refusé au tour précédent faute de plan. */
-    refusedLoan: number | null;
     /** Fiabilité du dernier plan déposé (0..1) ; null si aucun. */
     lastReliability: number | null;
   } | null;
@@ -528,6 +526,13 @@ export interface GameView {
   costFacts: { materialCostPerUnit: number; otherVariableCostPerUnit: number };
   /** Enveloppe d'augmentation de capital des associés (null = illimitée). */
   capitalAllowance: { total: number; remaining: number } | null;
+  /**
+   * Ce que la banque peut encore prêter au tour à jouer : la dette financière
+   * ne dépasse pas `maxDebtToEquity` fois les capitaux propres. `null` quand
+   * le scénario ne déclare aucun plafond. Une capacité à zéro n'est pas une
+   * anomalie : c'est le mur, et c'est ce qui ouvre la subvention.
+   */
+  loanCapacity: { remaining: number; ratio: number; equity: number; debt: number } | null;
   /** Catalogue d'études du scénario (prix à l'échelle de la périodicité). */
   studiesOffer: {
     marketCost: number;
@@ -915,7 +920,12 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       .limit(1)
   )[0];
   const currentState = stateRow?.state as
-    | { loans?: { remaining: number; perRound: number }[]; bankTrust?: number }
+    | {
+        loans?: { remaining: number; perRound: number }[];
+        bankTrust?: number;
+        /** Le bilan d'ouverture du tour à jouer : ce que la banque lit. */
+        finance?: { equity: number; financialDebt: number };
+      }
     | undefined;
 
   const rankingRows = await db.select().from(gameRankings).where(eq(gameRankings.gameId, gameId));
@@ -1635,10 +1645,6 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         overdraftLimit: conditions.overdraftLimit,
         fullOverdraftLimit: snapshot.finance.overdraftLimit,
         overdraftAnnualRate: conditions.overdraftAnnualRate,
-        refusedLoan:
-          dernier && dernier.loanRequested > 0 && dernier.loanGranted === 0
-            ? dernier.loanRequested
-            : null,
         lastReliability: dernier?.reliability ?? null,
       };
     })(),
@@ -1670,6 +1676,16 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
             })(),
           }
         : null;
+    })(),
+    loanCapacity: (() => {
+      const ratio = (game.scenarioSnapshot as EngineScenarioConfig).finance.maxDebtToEquity;
+      if (ratio === undefined) return null;
+      // Les capitaux propres et la dette d'OUVERTURE du tour à jouer : ce sont
+      // ceux que la banque lit quand elle instruit la demande.
+      const finance = currentState?.finance;
+      const equity = finance?.equity ?? 0;
+      const debt = finance?.financialDebt ?? 0;
+      return { remaining: Math.max(0, ratio * equity - debt), ratio, equity, debt };
     })(),
     capitalAllowance: (() => {
       const cap = (game.scenarioSnapshot as EngineScenarioConfig).finance.maxCapitalIncreaseTotal;

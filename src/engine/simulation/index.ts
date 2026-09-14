@@ -1377,7 +1377,25 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
           overdraftAnnualRate: scenario.finance.overdraftAnnualRate,
         };
     const loanRequested = Math.max(0, w.decisions.finance?.newLoan ?? 0);
-    const newLoan = bank && !planFourni ? 0 : loanRequested;
+    // L'EMPRUNT N'EST PLUS CONDITIONNÉ À UN PLAN DE TRÉSORERIE. L'arène ne
+    // demande plus ce plan — remplir un prévisionnel avant chaque tour tenait
+    // de l'exercice scolaire plus que du jeu. La banque garde sa mémoire (le
+    // moteur sait toujours juger un plan déposé par une autre voie), mais elle
+    // instruit désormais toute demande : sans plan à juger, la confiance reste
+    // où elle est, donc le plafond et le taux du découvert aussi.
+    //
+    // LA BANQUE N'EST PAS UN PUITS. Elle prête tant que la dette financière
+    // reste sous `maxDebtToEquity` fois les capitaux propres — la règle d'un
+    // vrai dossier de crédit, et celle qui se resserre toute seule quand
+    // l'entreprise perd de l'argent : celle qui va mal touche le mur au moment
+    // où elle voudrait emprunter davantage. Capitaux propres à zéro ou
+    // négatifs : plus un euro. Sans plafond déclaré : comportement historique.
+    const ratioMax = scenario.finance.maxDebtToEquity;
+    const loanCeiling =
+      ratioMax === undefined
+        ? Infinity
+        : Math.max(0, ratioMax * w.state.finance.equity - w.state.finance.financialDebt);
+    const newLoan = Math.min(loanRequested, loanCeiling);
 
     // Augmentation de capital : bornée par l'enveloppe TOTALE des associés
     // (scenario.finance.maxCapitalIncreaseTotal) — un apport illimité
@@ -1554,7 +1572,12 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     // recapitalisation, par exemple), ce qui dégèle l'entreprise.
     const enCessationDePaiements = finance.treasury.crisis;
     const crisisStreak = enCessationDePaiements ? (w.state.crisisStreak ?? 0) + 1 : 0;
-    const statut: "active" | "defaillant" = crisisStreak >= 2 ? "defaillant" : "active";
+    // Combien de tours de suite avant la défaillance : deux par défaut, mais
+    // c'est une règle de jeu, pas une loi. L'enseignant la fixe dans son
+    // espace selon la durée de sa séance.
+    const toursAvantDefaillance = scenario.finance.crisisRoundsBeforeFailure ?? 2;
+    const statut: "active" | "defaillant" =
+      crisisStreak >= toursAvantDefaillance ? "defaillant" : "active";
 
     const functionalBalance = computeFunctionalBalance(finance.closing);
     // Le plan de CE tour n'est jugeable qu'une fois le tour joué : sa
@@ -1818,6 +1841,12 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
               newLoan,
               outstanding: finance.closing.financialDebt,
               nextMandatory,
+              // Émis SEULEMENT quand la banque a coupé la demande : un champ à
+              // zéro sur toutes les parties normales alourdirait le résultat
+              // sérialisé et changerait les instantanés dorés pour rien.
+              ...(loanRequested - newLoan > 0.005
+                ? { loanRefused: loanRequested - newLoan }
+                : {}),
             },
           }
         : {}),
