@@ -4,7 +4,8 @@ import { isMultiProduct, toGamme } from "../../src/engine/gamme";
 import { runGame, soldUnits, type GameRunResult } from "../../src/engine/simulation/runGame";
 import { boutiqueBots, boutiqueCompany, boutiqueScenario } from "../../src/config/scenarios/boutique";
 import { tourDuPic } from "../../src/config/scenarios/rounds";
-import type { CompanyRoundResult, CompanyState } from "../../src/engine/types";
+import { axisAffinity, updateBrandAwareness } from "../../src/engine/market/communication";
+import type { CommunicationAxis, CompanyRoundResult, CompanyState } from "../../src/engine/types";
 
 /**
  * MAILLE & CO — le premier secteur à GAMME du jeu. Cinq références en maille,
@@ -208,5 +209,100 @@ describe("MAILLE & CO — instantané doré", () => {
     expect(resume).toMatchSnapshot();
     // Déterminisme : la même partie rejouée est identique au bit près.
     expect(JSON.stringify(partie("balanced"))).toBe(JSON.stringify(run));
+  });
+});
+
+/**
+ * LA MARQUE ET L'AXE, SUR LES TROIS CLIENTÈLES DE LA BOUTIQUE.
+ *
+ * Le levier ne vaut que par l'arbitrage qu'il pose : MAILLE & CO a UN discours
+ * pour TROIS clientèles qui ne veulent pas entendre la même chose. Les passants
+ * comparent les étiquettes, les clientes fidèles regardent la qualité, les
+ * comités d'entreprise achètent une maison de confiance. Choisir l'axe, c'est
+ * choisir à qui l'on parle — et à qui l'on cesse de parler.
+ *
+ * Cette table n'est écrite nulle part dans le scénario : le moteur la déduit de
+ * l'élasticité, de la sensibilité qualité et de la fidélité de chaque segment.
+ * C'est voulu — une table à la main mentirait le jour où l'enseignant change un
+ * de ces trois réglages. Ce test fige donc le RÉSULTAT de cette déduction, qui
+ * est la promesse pédagogique du levier.
+ */
+describe("MAILLE & CO — la communication", () => {
+  const cfg = boutiqueScenario.communication!;
+  const segments = toGamme(boutiqueScenario).flatMap((p) => p.market.segments);
+  const segment = (code: string) => {
+    const s = segments.find((x) => x.code === code);
+    if (!s) throw new Error(`segment ${code} introuvable`);
+    return s;
+  };
+  /** L'axe jugé au prix usuel du segment, sans nouveauté à montrer. */
+  const affinite = (axe: CommunicationAxis, code: string) =>
+    axisAffinity(axe, segment(code), {
+      price: segment(code).refPrice,
+      techLevel: 0,
+      freshlyLaunched: false,
+    });
+
+  it("le scénario ouvre bien le levier", () => {
+    expect(cfg).toBeDefined();
+    expect(cfg.brandScale).toBeGreaterThan(0);
+    // La marque met du temps à se faire dans une boutique de quartier : plus
+    // d'inertie que dans les secteurs où l'on se fait connaître vite.
+    expect(cfg.brandInertia).toBeGreaterThanOrEqual(0.5);
+  });
+
+  it("chaque axe porte une clientèle et en dessert une autre", () => {
+    // Le prix parle aux passants (élasticité −2,1) et rebute les fidèles
+    // (−0,9), qui n'achètent pas au moins-disant.
+    expect(affinite("prix", "pull_passage")).toBe("fit");
+    expect(affinite("prix", "pull_fideles")).toBe("misfit");
+    expect(affinite("prix", "pull_ce")).toBe("neutral");
+
+    // La qualité, l'inverse exactement.
+    expect(affinite("qualite", "pull_fideles")).toBe("fit");
+    expect(affinite("qualite", "pull_passage")).toBe("misfit");
+
+    // L'image porte ceux qui reviennent — fidèles et comités d'entreprise —
+    // et laisse froids ceux qui passent.
+    expect(affinite("image", "pull_fideles")).toBe("fit");
+    expect(affinite("image", "pull_ce")).toBe("fit");
+    expect(affinite("image", "pull_passage")).toBe("misfit");
+  });
+
+  it("promettre le prix en vendant cher n'est jamais crédible", () => {
+    // Le garde-fou du moteur : au-delà de +10 % sur le prix usuel, l'axe prix
+    // dessert même la clientèle qui compare les étiquettes.
+    const passants = segment("pull_passage");
+    expect(
+      axisAffinity("prix", passants, {
+        price: passants.refPrice * 1.3,
+        techLevel: 0,
+        freshlyLaunched: false,
+      }),
+    ).toBe("misfit");
+  });
+
+  it("l'innovation n'a rien à montrer dans une boutique de maille", () => {
+    // MAILLE & CO n'a ni R&D ni lancement : l'axe innovation sonne creux pour
+    // TOUTES les clientèles. Ce n'est pas un oubli, c'est le secteur — et
+    // l'énoncé du levier le dit (« à condition d'avoir quelque chose de neuf »).
+    for (const s of segments) {
+      expect(
+        axisAffinity("innovation", s, { price: s.refPrice, techLevel: 0, freshlyLaunched: false }),
+      ).toBe("misfit");
+    }
+  });
+
+  it("la notoriété se bâtit avec retard et s'use quand on change de discours", () => {
+    const apresUnTour = updateBrandAwareness(0, 9000, false, cfg);
+    expect(apresUnTour).toBeGreaterThan(0);
+    // Deux tours du même budget valent mieux qu'un : la marque est un stock.
+    expect(updateBrandAwareness(apresUnTour, 9000, false, cfg)).toBeGreaterThan(apresUnTour);
+    // Changer d'axe use l'acquis.
+    expect(updateBrandAwareness(apresUnTour, 9000, true, cfg)).toBeLessThan(
+      updateBrandAwareness(apresUnTour, 9000, false, cfg),
+    );
+    // Cesser de payer la fait retomber.
+    expect(updateBrandAwareness(apresUnTour, 0, false, cfg)).toBeLessThan(apresUnTour);
   });
 });

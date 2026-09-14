@@ -361,6 +361,41 @@ const rawBoutique = {
     availabilityDecay: 0.05,
   },
   marketing: { scale: 9000 },
+  /**
+   * LA MARQUE ET L'AXE (levier `communication`).
+   *
+   * MAILLE & CO a cinq références, trois clientèles et un seul discours : ce
+   * qu'il dit vaut pour toute la boutique. D'où deux leviers distincts du
+   * marketing par référence, qui lui, fait venir sur UN article ce tour-ci :
+   *
+   *  · le BUDGET DE MARQUE bâtit une notoriété qui profite à toute la gamme,
+   *    avec retard, et qui s'use si l'on cesse — l'enseigne de quartier se
+   *    construit sur des années, pas sur un trimestre. D'où une inertie plus
+   *    forte (0,55) que dans les secteurs où l'on se fait connaître vite ;
+   *  · l'AXE décide à qui ce budget parle. Et les trois clientèles de la
+   *    boutique ne veulent pas entendre la même chose : les passants comparent
+   *    les étiquettes, les clientes fidèles regardent la qualité, les comités
+   *    d'entreprise achètent une maison de confiance. Un axe bien choisi rend
+   *    le même euro plus efficace ; mal choisi, il dessert.
+   *
+   * Aucune affinité n'est écrite segment par segment : celles que le moteur
+   * déduit de l'élasticité, de la sensibilité qualité et de la fidélité disent
+   * déjà exactement cela, et une table écrite à la main mentirait le jour où
+   * l'enseignant change un de ces trois réglages.
+   *
+   * L'échelle du budget de marque (7 000 €) est un peu sous celle du marketing
+   * par référence (9 000 €) : la marque coûte moins cher à faire bouger, mais
+   * elle met un tour à porter et se plafonne vite.
+   */
+  communication: {
+    brandScale: 7000,
+    brandSensitivity: 0.18,
+    brandMax: 0.25,
+    brandInertia: 0.55,
+    axisFit: 1.3,
+    axisMisfit: 0.7,
+    axisSwitchDecay: 0.6,
+  },
   finance: {
     loanAnnualRate: 0.052,
     overdraftAnnualRate: 0.13,
