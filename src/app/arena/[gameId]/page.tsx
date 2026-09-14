@@ -5,6 +5,7 @@ import { formatEuro } from "@/lib/format";
 import { getGameView } from "@/services/game.service";
 import { getTeamSituations } from "@/services/pedagogy.service";
 import { SituationCard, SituationDebrief } from "@/components/situation-panel";
+import { SaisonDuTour } from "@/components/saison-du-tour";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { EventCard } from "@/components/event-card";
 import { cardByCode } from "@/config/events/cards";
@@ -216,19 +217,7 @@ export default async function ArenaPage({
           </div>
         </section>
       ) : null}
-      {view.seasonNotes.length > 0 ? (
-        <section className="rounded-xl border border-sky-400/20 bg-slate-900 px-3 py-2.5 sm:px-4 sm:py-3 text-sm text-sky-200">
-          🌤️ Saison du tour :{" "}
-          {view.seasonNotes
-            .map(
-              (n) =>
-                `${n.name} ×${n.coef.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} (${
-                  n.coef > 1 ? "haute saison" : "basse saison"
-                })`,
-            )
-            .join(" · ")}
-        </section>
-      ) : null}
+      <SaisonDuTour notes={view.seasonNotes} />
     </>
   );
 
