@@ -40,19 +40,27 @@ export function Tiroir({
       <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 [&::-webkit-details-marker]:hidden">
         <span
           aria-hidden
-          className="text-xs text-amber-400/80 transition-transform group-open:rotate-90"
+          className="shrink-0 text-xs text-amber-400/80 transition-transform group-open:rotate-90"
         >
           ▸
         </span>
-        <span className="text-xs font-semibold uppercase tracking-wide text-slate-300">
+        <span className="min-w-0 text-xs font-semibold uppercase tracking-wide text-slate-300">
           {titre}
         </span>
+        {/*
+          Le compte, en texte simple. Il a porté une pastille — bordure, fond,
+          coins ronds — et elle mentait deux fois : elle avait l'air d'un bouton
+          posé au milieu d'un en-tête déjà cliquable, et son texte se coupait en
+          deux sur un téléphone (« 3 » sur une ligne, « clientèles » sur la
+          suivante), en écrasant le titre au passage. L'information mérite d'être
+          là ; la fausse commande, non.
+        */}
         {quoi ? (
-          <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-xs text-slate-400">
-            {quoi}
-          </span>
+          <span className="shrink-0 whitespace-nowrap text-xs text-slate-400">{quoi}</span>
         ) : null}
-        <span className="ml-auto text-xs text-slate-500 group-open:hidden">déplier</span>
+        <span className="ml-auto shrink-0 pl-2 text-xs text-slate-500 group-open:hidden">
+          déplier
+        </span>
       </summary>
       <div className="border-t border-white/10 px-3 pb-2.5 pt-2 sm:px-3.5 sm:pb-3.5">{children}</div>
     </details>

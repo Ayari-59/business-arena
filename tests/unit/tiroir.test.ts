@@ -44,9 +44,16 @@ describe("Tiroir", () => {
     expect(html).toContain("[&amp;::-webkit-details-marker]:hidden");
   });
 
-  it("sans `quoi`, aucune pastille vide", () => {
-    const html = rendu({ titre: "Contexte", children: "…" });
+  it("le compte est du texte, jamais une pastille qui ressemble à un bouton", () => {
+    // Il en a porté une — bordure, fond, coins ronds — au milieu d'un en-tête
+    // qui est DÉJÀ la zone cliquable du tiroir. Elle promettait une commande
+    // qui n'existait pas, et son texte se coupait en deux sur un téléphone.
+    const html = rendu({ titre: "Détail par clientèle", quoi: "3 clientèles", children: "…" });
+    expect(html).toContain("3 clientèles");
+    expect(html).not.toContain("rounded-full");
     expect(html).not.toContain("bg-white/5");
+    // Et il reste entier quelle que soit la largeur.
+    expect(html).toContain("whitespace-nowrap");
   });
 
   it("`ouvert` déplie à l'affichage", () => {
