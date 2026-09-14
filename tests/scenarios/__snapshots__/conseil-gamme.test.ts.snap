@@ -5,7 +5,7 @@ exports[`ATLAS CONSEIL · gamme — calibration > la partie de référence ne bo
   "balanced": [
     {
       "resultat": 16423,
-      "tresorerie": 28736,
+      "tresorerie": 29035,
       "vendu": {
         "audit": 322,
         "cyber": 0,
@@ -14,7 +14,7 @@ exports[`ATLAS CONSEIL · gamme — calibration > la partie de référence ne bo
     },
     {
       "resultat": -8927,
-      "tresorerie": 65309,
+      "tresorerie": 64863,
       "vendu": {
         "audit": 191,
         "cyber": 73,
@@ -22,46 +22,46 @@ exports[`ATLAS CONSEIL · gamme — calibration > la partie de référence ne bo
       },
     },
     {
-      "resultat": 51271,
-      "tresorerie": 76924,
+      "resultat": 53246,
+      "tresorerie": 76799,
       "vendu": {
         "audit": 237,
         "cyber": 96,
-        "transformation": 174,
+        "transformation": 178,
       },
     },
     {
-      "resultat": 55555,
-      "tresorerie": 125598,
+      "resultat": 57228,
+      "tresorerie": 126991,
       "vendu": {
         "audit": 228,
         "cyber": 106,
-        "transformation": 175,
+        "transformation": 178,
       },
     },
     {
-      "resultat": 79101,
-      "tresorerie": 179623,
+      "resultat": 80942,
+      "tresorerie": 182644,
       "vendu": {
         "audit": 262,
         "cyber": 111,
-        "transformation": 192,
+        "transformation": 196,
       },
     },
     {
-      "resultat": 93731,
-      "tresorerie": 266816,
+      "resultat": 95680,
+      "tresorerie": 271672,
       "vendu": {
         "audit": 275,
         "cyber": 116,
-        "transformation": 202,
+        "transformation": 206,
       },
     },
   ],
   "growth": [
     {
       "resultat": 33157,
-      "tresorerie": 25441,
+      "tresorerie": 25767,
       "vendu": {
         "audit": 383,
         "cyber": 0,
@@ -70,7 +70,7 @@ exports[`ATLAS CONSEIL · gamme — calibration > la partie de référence ne bo
     },
     {
       "resultat": 30029,
-      "tresorerie": 85695,
+      "tresorerie": 85277,
       "vendu": {
         "audit": 271,
         "cyber": 87,
@@ -78,46 +78,46 @@ exports[`ATLAS CONSEIL · gamme — calibration > la partie de référence ne bo
       },
     },
     {
-      "resultat": 60649,
-      "tresorerie": 124667,
+      "resultat": 62870,
+      "tresorerie": 124721,
       "vendu": {
         "audit": 289,
         "cyber": 100,
-        "transformation": 210,
+        "transformation": 214,
       },
     },
     {
-      "resultat": 115600,
-      "tresorerie": 197232,
+      "resultat": 117819,
+      "tresorerie": 198982,
       "vendu": {
         "audit": 330,
         "cyber": 131,
-        "transformation": 250,
+        "transformation": 255,
       },
     },
     {
-      "resultat": 117399,
-      "tresorerie": 304188,
+      "resultat": 117661,
+      "tresorerie": 307772,
       "vendu": {
-        "audit": 345,
-        "cyber": 125,
-        "transformation": 250,
+        "audit": 343,
+        "cyber": 124,
+        "transformation": 253,
       },
     },
     {
-      "resultat": 120080,
-      "tresorerie": 427737,
+      "resultat": 120345,
+      "tresorerie": 431569,
       "vendu": {
-        "audit": 345,
-        "cyber": 125,
-        "transformation": 250,
+        "audit": 343,
+        "cyber": 124,
+        "transformation": 253,
       },
     },
   ],
   "passive": [
     {
       "resultat": 22748,
-      "tresorerie": 57438,
+      "tresorerie": 57714,
       "vendu": {
         "audit": 258,
         "cyber": 0,
@@ -126,7 +126,7 @@ exports[`ATLAS CONSEIL · gamme — calibration > la partie de référence ne bo
     },
     {
       "resultat": 22790,
-      "tresorerie": 85103,
+      "tresorerie": 85403,
       "vendu": {
         "audit": 258,
         "cyber": 0,
@@ -134,17 +134,17 @@ exports[`ATLAS CONSEIL · gamme — calibration > la partie de référence ne bo
       },
     },
     {
-      "resultat": -9710,
-      "tresorerie": 99945,
+      "resultat": -7269,
+      "tresorerie": 101166,
       "vendu": {
         "audit": 210,
         "cyber": 0,
-        "transformation": 157,
+        "transformation": 160,
       },
     },
     {
-      "resultat": 23721,
-      "tresorerie": 103134,
+      "resultat": 23111,
+      "tresorerie": 105293,
       "vendu": {
         "audit": 258,
         "cyber": 0,
@@ -153,7 +153,7 @@ exports[`ATLAS CONSEIL · gamme — calibration > la partie de référence ne bo
     },
     {
       "resultat": 21337,
-      "tresorerie": 118563,
+      "tresorerie": 120738,
       "vendu": {
         "audit": 258,
         "cyber": 0,
@@ -162,7 +162,7 @@ exports[`ATLAS CONSEIL · gamme — calibration > la partie de référence ne bo
     },
     {
       "resultat": 22961,
-      "tresorerie": 143437,
+      "tresorerie": 145613,
       "vendu": {
         "audit": 258,
         "cyber": 0,
@@ -173,7 +173,7 @@ exports[`ATLAS CONSEIL · gamme — calibration > la partie de référence ne bo
   "premium": [
     {
       "resultat": 41623,
-      "tresorerie": 22709,
+      "tresorerie": 21410,
       "vendu": {
         "audit": 265,
         "cyber": 0,
@@ -182,7 +182,7 @@ exports[`ATLAS CONSEIL · gamme — calibration > la partie de référence ne bo
     },
     {
       "resultat": 6944,
-      "tresorerie": 87216,
+      "tresorerie": 87295,
       "vendu": {
         "audit": 150,
         "cyber": 70,
@@ -190,46 +190,46 @@ exports[`ATLAS CONSEIL · gamme — calibration > la partie de référence ne bo
       },
     },
     {
-      "resultat": 21297,
-      "tresorerie": 97989,
+      "resultat": 15168,
+      "tresorerie": 96753,
       "vendu": {
         "audit": 127,
         "cyber": 92,
-        "transformation": 128,
+        "transformation": 120,
       },
     },
     {
-      "resultat": 25809,
-      "tresorerie": 121322,
+      "resultat": 20654,
+      "tresorerie": 114744,
       "vendu": {
         "audit": 116,
         "cyber": 96,
-        "transformation": 122,
+        "transformation": 115,
       },
     },
     {
-      "resultat": 35024,
-      "tresorerie": 143944,
+      "resultat": 29624,
+      "tresorerie": 132145,
       "vendu": {
         "audit": 127,
         "cyber": 96,
-        "transformation": 128,
+        "transformation": 120,
       },
     },
     {
-      "resultat": 36372,
-      "tresorerie": 182923,
+      "resultat": 30938,
+      "tresorerie": 165677,
       "vendu": {
         "audit": 127,
         "cyber": 96,
-        "transformation": 128,
+        "transformation": 120,
       },
     },
   ],
   "price_aggressive": [
     {
       "resultat": 29485,
-      "tresorerie": 50820,
+      "tresorerie": 51090,
       "vendu": {
         "audit": 353,
         "cyber": 0,
@@ -238,7 +238,7 @@ exports[`ATLAS CONSEIL · gamme — calibration > la partie de référence ne bo
     },
     {
       "resultat": -54399,
-      "tresorerie": 57468,
+      "tresorerie": 57654,
       "vendu": {
         "audit": 229,
         "cyber": 0,
@@ -246,39 +246,39 @@ exports[`ATLAS CONSEIL · gamme — calibration > la partie de référence ne bo
       },
     },
     {
-      "resultat": 8018,
-      "tresorerie": 30256,
+      "resultat": 10717,
+      "tresorerie": 31600,
       "vendu": {
         "audit": 311,
         "cyber": 0,
-        "transformation": 193,
+        "transformation": 197,
       },
     },
     {
-      "resultat": 29301,
-      "tresorerie": 46647,
+      "resultat": 31744,
+      "tresorerie": 50425,
       "vendu": {
         "audit": 326,
         "cyber": 0,
-        "transformation": 212,
+        "transformation": 216,
       },
     },
     {
-      "resultat": 70030,
-      "tresorerie": 75134,
+      "resultat": 70951,
+      "tresorerie": 79582,
       "vendu": {
         "audit": 411,
         "cyber": 0,
-        "transformation": 256,
+        "transformation": 261,
       },
     },
     {
-      "resultat": 86937,
-      "tresorerie": 149721,
+      "resultat": 87375,
+      "tresorerie": 156024,
       "vendu": {
-        "audit": 444,
+        "audit": 441,
         "cyber": 0,
-        "transformation": 276,
+        "transformation": 279,
       },
     },
   ],

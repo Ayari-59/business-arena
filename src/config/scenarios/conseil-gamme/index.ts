@@ -78,6 +78,11 @@ const GAMME: ProductDef[] = [
           refPrice: 690,
           minAcceptablePrice: 420,
           psychThresholds: [{ threshold: 750, penalty: 0.9 }],
+          // Une clientèle de cabinet négocie : au-delà du double du tarif usuel,
+          // elle va voir ailleurs. Sans cette borne resserrée, des élasticités
+          // molles (−0,8 à −1,3) laissaient encore 504 k€ de résultat en
+          // doublant les prix — le secteur le plus clément du jeu.
+          walkAwayPriceRatio: 2,
           marketingSensitivity: 0.15,
           qualitySensitivity: 0.45,
           loyalty: 0.35,
@@ -112,6 +117,11 @@ const GAMME: ProductDef[] = [
           refPrice: 850,
           minAcceptablePrice: 520,
           psychThresholds: [{ threshold: 900, penalty: 0.92 }],
+          // Une clientèle de cabinet négocie : au-delà du double du tarif usuel,
+          // elle va voir ailleurs. Sans cette borne resserrée, des élasticités
+          // molles (−0,8 à −1,3) laissaient encore 504 k€ de résultat en
+          // doublant les prix — le secteur le plus clément du jeu.
+          walkAwayPriceRatio: 2,
           marketingSensitivity: 0.12,
           qualitySensitivity: 0.55,
           loyalty: 0.4,
@@ -129,6 +139,11 @@ const GAMME: ProductDef[] = [
           refPrice: 720,
           minAcceptablePrice: 450,
           psychThresholds: [{ threshold: 750, penalty: 0.9 }],
+          // Une clientèle de cabinet négocie : au-delà du double du tarif usuel,
+          // elle va voir ailleurs. Sans cette borne resserrée, des élasticités
+          // molles (−0,8 à −1,3) laissaient encore 504 k€ de résultat en
+          // doublant les prix — le secteur le plus clément du jeu.
+          walkAwayPriceRatio: 2,
           marketingSensitivity: 0.1,
           qualitySensitivity: 0.35,
           loyalty: 0.3,

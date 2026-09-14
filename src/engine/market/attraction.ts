@@ -7,13 +7,18 @@ const RUPTURE_PAR_DEFAUT = 3;
  * Ce qui reste de l'attraction quand le prix s'envole : 1 tant qu'on est sous
  * le début du décrochage, 0 au prix de rupture, et une pente entre les deux.
  *
- * Le décrochage commence une unité de ratio avant la rupture — à 3 (le
- * défaut), rien ne bouge jusqu'à DEUX fois le prix usuel. C'est ce qui rend le
- * correctif sans effet sur une partie normale : aucune équipe raisonnable, ni
- * aucun bot, ne va au-delà.
+ * Le décrochage occupe le DERNIER TIERS de la plage — il commence aux deux
+ * tiers du prix de rupture. À 3 (le défaut) rien ne bouge jusqu'à deux fois le
+ * prix usuel, ce qui met le correctif hors de portée d'une partie normale.
+ *
+ * La proportion compte plus qu'elle n'en a l'air : un écart FIXE avant la
+ * rupture ferait commencer le décrochage au prix de référence lui-même dès
+ * qu'un scénario resserre sa borne à 2, et pénaliserait alors un prix
+ * parfaitement raisonnable. Rapporté à la borne, le décrochage reste toujours
+ * au-delà du prix usuel, quelle que soit la sévérité choisie.
  */
 function extinction(ratio: number, rupture: number): number {
-  const debut = Math.max(1, rupture - 1);
+  const debut = Math.max(1, (rupture * 2) / 3);
   if (ratio <= debut) return 1;
   if (ratio >= rupture) return 0;
   return (rupture - ratio) / (rupture - debut);

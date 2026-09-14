@@ -687,10 +687,15 @@ export interface SegmentConfig {
    * `priceEffectBounds.min` la remontait encore. Multiplier ses prix par dix
    * devenait la stratégie la plus rentable du jeu.
    *
-   * Le décrochage est progressif entre `rupture − 1` et `rupture` : à 3 (le
-   * défaut), rien ne change jusqu'à deux fois le prix usuel, puis l'attraction
-   * s'éteint linéairement jusqu'à zéro. Un scénario peut resserrer cette borne
-   * pour une clientèle très sensible, ou l'écarter pour un produit de luxe.
+   * Le décrochage occupe le DERNIER TIERS de la plage : il commence aux deux
+   * tiers de la borne et l'attraction s'éteint linéairement jusqu'à zéro. À 3
+   * (le défaut), rien ne change jusqu'à deux fois le prix usuel. La proportion
+   * compte : un écart fixe avant la borne ferait commencer le décrochage AU
+   * PRIX DE RÉFÉRENCE dès qu'un scénario resserre à 2, et pénaliserait alors
+   * un prix parfaitement raisonnable.
+   *
+   * Un scénario resserre cette borne pour une clientèle qui négocie, ou
+   * l'écarte pour un produit de luxe.
    */
   walkAwayPriceRatio?: number;
   /** Délai de paiement clients en jours (0 = comptant). */
