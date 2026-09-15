@@ -14,6 +14,7 @@ import { ALL_SITUATIONS } from "../src/config/scenarios/registry";
 import { CONCEPTS, conceptByCode } from "../src/config/pedagogy/concepts";
 import { DECISION_MODELS, modelByCode } from "../src/config/pedagogy/models";
 import type { CompanyRoundResult } from "../src/engine/types";
+import { formatPercent, formatUnits } from "../src/lib/format";
 
 describe("système d'indices (doc 03 §4)", () => {
   const hintDefs = situationByCode.get("nova_t4_paradox")!.hints;
@@ -220,18 +221,49 @@ describe("métadonnées de détection (A1 — causalité visible)", () => {
     expect(facts[0]!.direction).toBe("negative");
   });
 
-  it("stockout : unités vendues et demande perdue", () => {
+  it("stockout : la demande adressée, les ventes et la demande perdue", () => {
     const facts = buildTriggerContext("stockout", base);
-    expect(facts).toHaveLength(2);
-    expect(facts[0]!.label).toContain("vendues");
-    expect(facts[1]!.label).toContain("non servie");
+    expect(facts.map((f) => f.label)).toEqual([
+      "Demande qui vous était adressée",
+      "Unités vendues",
+      "Demande non servie",
+    ]);
+    expect(facts[2]!.direction).toBe("negative");
   });
 
-  it("capacity_saturated : taux d'utilisation et demande perdue", () => {
+  it("stockout : la zone de chalandise, clientèle par clientèle", () => {
+    // « Une part importante de la demande n'a pas pu être servie » ne disait
+    // ni combien de clients il y avait, ni lesquels sont repartis. Les faits
+    // nomment les clientèles, et ne détaillent que celles qui ont perdu.
+    const deux = {
+      ...base,
+      market: {
+        bySegment: {
+          pros: { potential: 3000, demandForCompany: 1200, sold: 400, lost: 800 },
+          etud: { potential: 5000, demandForCompany: 900, sold: 900, lost: 0 },
+        },
+      },
+    } as unknown as CompanyRoundResult;
+    const facts = buildTriggerContext("stockout", deux, { pros: "Pros", etud: "Étudiants" });
+    expect(facts.map((f) => f.label)).toEqual([
+      "Demande du marché, toutes clientèles",
+      "Demande qui vous était adressée",
+      "Unités vendues",
+      "Demande non servie",
+      "dont Pros",
+    ]);
+    expect(facts[0]!.value).toBe(formatUnits(8000));
+    expect(facts[1]!.value).toBe(formatUnits(2100));
+    expect(facts[3]!.value).toContain(formatPercent(800 / 2100));
+    expect(facts[4]!.value).toBe(`${formatUnits(800)} sur ${formatUnits(1200)} repartis sans acheter`);
+    // Sans dictionnaire, le code sert de nom plutôt que de taire la clientèle.
+    expect(buildTriggerContext("stockout", deux).at(-1)!.label).toBe("dont pros");
+  });
+
+  it("capacity_saturated : taux d'utilisation, puis la demande perdue et d'où elle venait", () => {
     const facts = buildTriggerContext("capacity_saturated", base);
-    expect(facts).toHaveLength(2);
     expect(facts[0]!.label).toContain("utilisation");
-    expect(facts[1]!.label).toContain("non servie");
+    expect(facts.at(-1)!.label).toContain("non servie");
   });
 
   it("idle_cash : trésorerie, charges, ratio", () => {

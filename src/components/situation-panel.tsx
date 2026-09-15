@@ -165,9 +165,16 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
 
       {situation.triggerFacts && situation.triggerFacts.length > 0 ? (
         <div className="mb-4">
+        {/*
+          Ouvert d'office quand la situation a été DÉTECTÉE : les chiffres
+          sont la raison même de la carte — la demande qui s'adressait à
+          l'équipe et celle qui est repartie. Repliés, l'élève lisait « une
+          part importante de la demande » sans jamais voir combien.
+        */}
         <Tiroir
           titre="Pourquoi cette situation ?"
           quoi={`${situation.triggerFacts.length} fait${situation.triggerFacts.length > 1 ? "s" : ""}`}
+          ouvert={situation.origin === "detected"}
         >
           <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
             {situation.triggerFacts.map((fact, i) => (
