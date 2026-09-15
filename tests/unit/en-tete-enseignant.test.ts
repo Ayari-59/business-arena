@@ -50,7 +50,7 @@ describe("l'en-tête enseignant", () => {
   });
 
   it("une rubrique dit le mot et, s'il y a lieu, le compte", () => {
-    const html = renderToStaticMarkup(createElement(Rubrique, { note: "1 partie" }, "Mes parties"));
+    const html = renderToStaticMarkup(createElement(Rubrique, { note: "1 partie", children: "Mes parties" }));
     expect(html).toContain("Mes parties");
     expect(html).toContain("1 partie");
   });

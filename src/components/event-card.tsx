@@ -69,7 +69,7 @@ export function EventCard({
           className={`card-face card-front rounded-xl border-2 bg-slate-900 p-2 ${category.className.split(" ")[0]} ${
             highlight ? "ring-2 ring-sky-400/70" : ""
           }`}
-          style={{ borderColor: `${category.accent}66` }}
+          style={{ "--enseigne": category.accent } as React.CSSProperties}
         >
           {/*
             `min-h-full` et non `h-full` : la hauteur est un plancher, pas un

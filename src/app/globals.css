@@ -233,6 +233,16 @@ h1 {
   min-height: max(100%, 20rem);
   display: flex;
   flex-direction: column;
+  /*
+   * Le liseré porte la couleur de l'enseigne (`--enseigne`, posée par la
+   * carte). Sur fond nuit, un voile à 40 % suffit ; sur fond clair, le même
+   * voile s'efface dans le blanc — on l'assombrit d'un peu d'encre.
+   */
+  border-color: color-mix(in oklab, var(--enseigne, #d8b45c) 40%, transparent);
+}
+
+[data-theme="clair"] .card-front {
+  border-color: color-mix(in oklab, var(--enseigne, #d8b45c) 65%, #1e293b);
 }
 
 .card-front > * {
@@ -287,6 +297,18 @@ h1 {
       transparent 2px 12px
     ),
     radial-gradient(circle at 50% 50%, #0f172a 0%, #060b18 70%);
+}
+
+/*
+ * Le dos d'une carte est un OBJET, pas une surface du site : il reste de nuit
+ * sur fond clair, comme le dos d'un vrai jeu garde sa couleur sur une table
+ * blanche. Mais le thème clair assombrit l'ambre pour qu'il lise sur du blanc,
+ * et sur ce dos de nuit la marque et le mot « Arena » s'éteignaient. Ici,
+ * l'ambre reprend son laiton de nuit.
+ */
+[data-theme="clair"] .card-back-face {
+  --color-amber-400: #d8b45c;
+  --color-amber-300: #e7cd8b;
 }
 
 @media (prefers-reduced-motion: reduce) {

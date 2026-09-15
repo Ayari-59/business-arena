@@ -1,6 +1,12 @@
 import type { CompanyRoundResult } from "@/engine/types";
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
 import { Tiroir } from "@/components/tiroir";
+import {
+  lectureDeLaTresorerie,
+  lectureDuBilan,
+  lectureDuResultat,
+  type Lecture,
+} from "@/components/lecture-des-comptes";
 
 /**
  * Les comptes du tour, en clair et GRATUITS (doc 02 §7.3 : ce sont VOS
@@ -64,6 +70,28 @@ function Panel({
     <Tiroir titre={title} ouvert={defaultOpen}>
       {children}
     </Tiroir>
+  );
+}
+
+/**
+ * La ligne de lecture en tête d'un état : la même voix que la banque dans le
+ * tableau de bord, le ton porté par la couleur ET par le mot (un lecteur
+ * d'écran n'a pas la couleur).
+ */
+function LigneDeLecture({ lecture }: { lecture: Lecture }) {
+  const teinte =
+    lecture.ton === "mauvais"
+      ? "border-orange-400/40 bg-orange-950/30 text-orange-200"
+      : lecture.ton === "bon"
+        ? "border-teal-400/30 bg-teal-950/30 text-teal-200"
+        : "border-white/10 bg-slate-950 text-slate-300";
+  return (
+    <p className={`mb-2 rounded-lg border px-3 py-2 text-xs leading-relaxed ${teinte}`}>
+      <span className="sr-only">
+        {lecture.ton === "mauvais" ? "Point de vigilance. " : lecture.ton === "bon" ? "Lecture favorable. " : ""}
+      </span>
+      🧭 {lecture.texte}
+    </p>
   );
 }
 
@@ -146,6 +174,7 @@ export function FinancialStatements({
       </p>
 
       <Panel title="Compte de résultat" defaultOpen>
+        <LigneDeLecture lecture={lectureDuResultat(cr)} />
         <Row label="Chiffre d'affaires" value={euro(cr.revenue)} />
         {Math.abs(cr.productionStocked) > 0.5 ? (
           <Row label="Production stockée (± Δ stock)" value={euro(cr.productionStocked)} indent />
@@ -214,6 +243,7 @@ export function FinancialStatements({
       </Panel>
 
       <Panel title="Bilan">
+        <LigneDeLecture lecture={lectureDuBilan(b, result.functionalBalance)} />
         <div className="grid gap-2 sm:grid-cols-2">
           <div>
             <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
@@ -324,6 +354,7 @@ export function FinancialStatements({
       </Panel>
 
       <Panel title="Budget de trésorerie">
+        <LigneDeLecture lecture={lectureDeLaTresorerie(result.cashFlow, CASH_LABELS)} />
         <Row label="Trésorerie d'ouverture" value={euro(result.cashFlow.opening)} strong />
         {result.cashFlow.items.map((item) => (
           <Row
