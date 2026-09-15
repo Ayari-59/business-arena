@@ -104,7 +104,7 @@ function RseCard({ rse }: { rse: RseIndex }) {
  * non plus par le seul dernier tour — c'est ce qui permet à chaque période de
  * l'accordéon de rouvrir son propre tableau de bord.
  *
- * `standing` : n'affiche le classement (BPI), les rapports d'études payées et
+ * `standing` : n'affiche le classement (IPG), les rapports d'études payées et
  * l'historique des ventes que pour le tour le plus récent — ce sont des vues
  * cumulées/de position, qui n'ont de sens qu'« à aujourd'hui » et feraient
  * double emploi répétées sur chaque tour passé.
@@ -284,7 +284,7 @@ export function PeriodDashboard({
               // un sens — et on rappelle ce qui, lui, ne dépend de personne.
               <section className="rounded-xl border border-dashed border-amber-400/30 bg-slate-900 p-3 sm:p-5">
                 <h2 className="text-sm font-semibold text-slate-200">
-                  Classement · Business Performance Index
+                  Classement · Indice de performance globale
                 </h2>
                 <p className="mt-1 text-sm text-slate-400">
                   🎬 Votre enseignant le révélera. En attendant, vos résultats et votre indice
@@ -297,7 +297,7 @@ export function PeriodDashboard({
               <section className="grid gap-3 lg:grid-cols-2">
                 <div className="carte p-3 sm:p-5">
                   <h2 className="mb-2 text-sm font-semibold text-slate-200">
-                    Classement · Business Performance Index
+                    Classement · Indice de performance globale
                   </h2>
                   <ol className="space-y-2">
                     {view.ranking.map((row) => (
@@ -329,7 +329,7 @@ export function PeriodDashboard({
                     ))}
                   </ol>
                   <p className="mt-3 text-xs text-slate-400">
-                    BPI sur 100 : économique 30 %, financière 20 %, pilotage 20 %,
+                    IPG sur 100 : économique 30 %, financière 20 %, pilotage 20 %,
                     commerciale 15 %, rentabilité 10 %, maîtrise décisionnelle 5 %. Les
                     derniers tours pèsent plus lourd.
                   </p>
@@ -338,7 +338,7 @@ export function PeriodDashboard({
               </section>
             ) : (
               <p className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-xs text-slate-400">
-                Le classement BPI se lit sur le tour le plus récent.
+                Le classement IPG se lit sur le tour le plus récent.
               </p>
             )}
           </div>

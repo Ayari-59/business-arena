@@ -58,7 +58,7 @@ describe("le rideau se tire partout où le rang se lit", () => {
   });
 
   it("« mes parties », dans le profil, applique la même règle", () => {
-    // C'était la fuite : le profil affichait « BPI 54 · #3 » pour une partie de
+    // C'était la fuite : le profil affichait « IPG 54 · #3 » pour une partie de
     // classe dont l'enseignant n'avait rien révélé.
     const s = lire(join("src", "services", "profile.service.ts"));
     expect(s).toContain("classementOuvert({");

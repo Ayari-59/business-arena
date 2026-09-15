@@ -135,7 +135,7 @@ describe("partie de classe complète", () => {
 
     // LE RIDEAU. En classe, c'est l'enseignant qui révèle le classement : tant
     // qu'il ne l'a pas fait, la vue de l'élève NE LE CONTIENT PAS — on ne le
-    // masque pas à l'affichage, on ne l'envoie pas. Son BPI, lui, reste sien :
+    // masque pas à l'affichage, on ne l'envoie pas. Son IPG, lui, reste sien :
     // il mesure sa progression, pas sa place.
     expect(view!.ranking).toHaveLength(0);
     expect(view!.classement).toEqual({ revele: false, parLAnimateur: true });

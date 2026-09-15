@@ -28,12 +28,12 @@ const PILLARS = [
   {
     icon: "📊",
     title: "Tableau de bord en temps réel",
-    text: "KPI avec tendances, graphiques d'évolution CA/résultat/trésorerie, parts de marché par segment, classement BPI multidimensionnel. Trois onglets : Synthèse, Marché, Finance.",
+    text: "KPI avec tendances, graphiques d'évolution CA/résultat/trésorerie, parts de marché par segment, classement IPG multidimensionnel. Trois onglets : Synthèse, Marché, Finance.",
   },
   {
     icon: "💡",
     title: "Indices progressifs",
-    text: "Cinq niveaux d'aide : observation, question, notion, modèle, méthode. Chaque indice consommé coûte des points au BPI. L'autonomie est récompensée, le blocage n'existe pas.",
+    text: "Cinq niveaux d'aide : observation, question, notion, modèle, méthode. Chaque indice consommé coûte des points à l'IPG. L'autonomie est récompensée, le blocage n'existe pas.",
   },
   {
     icon: "🏫",

@@ -80,12 +80,12 @@ const GROUPS: { title: string; note?: string; fields: Field[] }[] = [
   },
 ];
 
-/** Les six dimensions du BPI v2, pondérables par l'enseignant (saisie en %). */
+/** Les six dimensions de l'IPG v2, pondérables par l'enseignant (saisie en %). */
 const BPI_FIELDS: { name: string; label: string; hint: string }[] = [
   { name: "bpiEconomic", label: "Performance économique", hint: "Résultat d'exploitation vs benchmark" },
   { name: "bpiFinancial", label: "Performance financière", hint: "Variation du résultat net, plancher si perte" },
   { name: "bpiCommercial", label: "Performance commerciale", hint: "Chiffre d'affaires et part de marché" },
-  { name: "bpiProfitability", label: "Rentabilité", hint: "Rentabilité des capitaux propres" },
+  { name: "bpiProfitability", label: "Responsabilité sociétale", hint: "Indice RSE du tour : environnement, social, gouvernance" },
   { name: "bpiPilotage", label: "Pilotage", hint: "Exécution opérationnelle et cohérence des décisions" },
   { name: "bpiDecisionMastery", label: "Maîtrise décisionnelle", hint: "Scores des situations rendues" },
 ];
@@ -177,11 +177,11 @@ export function EconomicParams({
 
       <details className="rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5 sm:col-span-3">
         <summary className="cursor-pointer text-xs font-medium uppercase tracking-wide text-slate-400">
-          📊 Pondérations du BPI (avancé) · laissez vide pour les poids du scénario
+          📊 Pondérations de l&apos;IPG (avancé) · laissez vide pour les poids du scénario
         </summary>
 
         <p className="mt-3 text-xs leading-relaxed text-slate-400">
-          Le BPI est la moyenne pondérée de six dimensions. Les valeurs en filigrane sont celles de{" "}
+          L&apos;IPG est la moyenne pondérée de six dimensions. Les valeurs en filigrane sont celles de{" "}
           <strong className="text-slate-400">{selected.label}</strong>. Ce sont des poids{" "}
           <strong className="text-slate-400">relatifs</strong> : inutile de tomber juste à 100 %, ils
           sont renormalisés. Une dimension laissée vide garde le poids du scénario.

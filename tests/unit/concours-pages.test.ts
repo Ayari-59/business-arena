@@ -73,7 +73,7 @@ describe("le déroulé d'un concours", () => {
     expect(d.etapes.map((e) => e.etat)).toEqual(["courante", "a_venir", "a_venir", "a_venir"]);
     expect(d.etapes[0]!.detail).toBe("4 équipes inscrites avec le code R4KT7B.");
     expect(d.etapes[1]!.detail).toBe(
-      "Des groupes de 3 équipes tirés au sort, 1 qualifié par groupe au score BPI.",
+      "Des groupes de 3 équipes tirés au sort, 1 qualifié par groupe au score IPG.",
     );
     const enQualif = derouleConcours(
       concours({ status: "running", stages: [{ kind: "qualification", games: [{}, {}] }] }),

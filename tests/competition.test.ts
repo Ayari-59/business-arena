@@ -41,7 +41,7 @@ describe("qualification (doc 04 §3)", () => {
   it("complément par les meilleurs restants jusqu'à la cible", () => {
     expect(qualifiers(groups, 1, 3)).toEqual(["a1", "b2", "a2"]); // a2 (60) meilleur second
   });
-  it("départage à BPI égal : dimension financière puis trésorerie (doc 04)", () => {
+  it("départage à IPG égal : dimension financière puis trésorerie (doc 04)", () => {
     const tied = [[standing("x", 60, 80, 0), standing("y", 60, 70, 999999)]];
     expect(qualifiers(tied, 1)).toEqual(["x"]);
     const tied2 = [[standing("x", 60, 70, 100), standing("y", 60, 70, 200)]];

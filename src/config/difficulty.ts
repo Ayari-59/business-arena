@@ -386,7 +386,7 @@ export function applyEconomicOverrides(
 }
 
 /* ────────────────────────────────────────────────────────────────────────────
- * PONDÉRATIONS DU BPI, PARAMÉTRABLES PAR L'ENSEIGNANT (V2 couche 2, chantier #3).
+ * PONDÉRATIONS DU IPG, PARAMÉTRABLES PAR L'ENSEIGNANT (V2 couche 2, chantier #3).
  *
  * Hors moteur : le module de scoring (src/scoring/bpi.ts) reste pur et ignore
  * ces réglages ; on ne fait que réécrire `scenario.scoring.weights` AVANT de
@@ -394,7 +394,7 @@ export function applyEconomicOverrides(
  * scoring aval (tour et classement) lit alors les poids surchargés sans le
  * savoir.
  *
- * L'enseignant pondère les SIX dimensions affichées du BPI v2. En interne, le
+ * L'enseignant pondère les SIX dimensions affichées de l'IPG v2. En interne, le
  * scénario porte sept poids : « pilotage » y est la SOMME de `strategy` +
  * `operational`, et le scoring v2 ne lit jamais que cette somme. On répartit
  * donc « pilotage » entre les deux en conservant le ratio d'origine — neutre
@@ -411,7 +411,7 @@ export const scoringWeightOverridesSchema = z.object({
 
 export type ScoringWeightOverrides = z.infer<typeof scoringWeightOverridesSchema>;
 
-/** Les six dimensions pondérables du BPI v2, dans l'ordre d'affichage. */
+/** Les six dimensions pondérables de l'IPG v2, dans l'ordre d'affichage. */
 export const SCORING_WEIGHT_DIMENSIONS = [
   "economic",
   "financial",
@@ -437,7 +437,7 @@ export function sanitizeScoringWeightOverrides(
 }
 
 /**
- * Réécrit les pondérations du BPI depuis les réglages de l'enseignant. Les
+ * Réécrit les pondérations de l'IPG depuis les réglages de l'enseignant. Les
  * dimensions non fournies gardent la valeur du scénario. Le résultat est
  * TOUJOURS renormalisé (somme = 1, exigée par le schéma de scoring) : les
  * réglages expriment un poids RELATIF, jamais une valeur absolue. Une somme

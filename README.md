@@ -112,16 +112,16 @@ définir dans le projet Vercel les variables `DATABASE_URL`, `DIRECT_URL`, `AUTH
 8. ✅ Étape 8 — moteur pédagogique (situations scriptées et détectées,
    diagnostic, choix du modèle d'analyse, débriefing, progression).
 9. ✅ Étape 9 — système d'indices à 5 niveaux (séquentiels, coûtés, tracés).
-10. ✅ Étape 10 — scoring BPI : 7 dimensions pondérées (30/20/15/10/10/10/5),
+10. ✅ Étape 10 — scoring IPG (indice de performance globale, ex-BPI) : 6 dimensions pondérées, dont la RSE,
     normalisation bornes + rang parmi les pairs, tours à poids croissants,
     départage financier ; classement et décomposition affichés partout.
 11. ✅ Étape 11 — profil joueur `/profile` : compétences par axe, maîtrise des
-    concepts, historique des parties avec rang et BPI.
+    concepts, historique des parties avec rang et IPG.
 12. Étape 12 — IA coach (API LLM) : à venir (frontière réservée, doc 01 §7).
 13. ✅ Étape 13 — moteur de concours « Business Arena Championship » :
     inscriptions par code, groupes tirés au sort (seedé, auditable), parties
     en mode compétition (décisions verrouillées, indices limités — §25),
-    qualification au BPI, finale, podium.
+    qualification à l'IPG, finale, podium.
 
 ## Ce qui se vend : la licence d'établissement
 

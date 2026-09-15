@@ -117,7 +117,7 @@ export default async function ProfilePage() {
                     </span>
                   </span>
                   <span className="tabular-nums text-slate-400">
-                    {g.bpi !== null ? `BPI ${g.bpi.toFixed(1)}` : "—"}
+                    {g.bpi !== null ? `IPG ${g.bpi.toFixed(1)}` : "—"}
                     {g.rank !== null ? ` · #${g.rank}` : ""}
                   </span>
                 </Link>

@@ -1231,7 +1231,7 @@ export function economicDefaults(d: ScenarioDefinition): Record<string, string |
     bpiEconomic: pct(bpi.economic),
     bpiFinancial: pct(bpi.financial),
     bpiCommercial: pct(bpi.commercial),
-    bpiProfitability: pct(bpi.profitability),
+    bpiProfitability: pct(bpi.rse),
     bpiPilotage: pct(bpi.pilotage),
     bpiDecisionMastery: pct(bpi.decision_mastery),
     taxRate: pct(s.finance.taxRate),

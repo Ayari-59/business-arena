@@ -101,7 +101,7 @@ export function CompetitionBoard({
                           <span className="mr-2 text-slate-400">#{rank + 1}</span>
                           {s.entryId}
                         </span>
-                        <span className="tabular-nums text-slate-400">BPI {s.bpi.toFixed(1)}</span>
+                        <span className="tabular-nums text-slate-400">IPG {s.bpi.toFixed(1)}</span>
                       </li>
                     ))}
                   </ol>

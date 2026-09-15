@@ -6,7 +6,7 @@
  * aux autres ; le profil de compétences mesure les notions, mais vit hors de la
  * partie. Entre les deux, personne ne félicitait un redressement.
  *
- * Ce qu'ils ne sont pas. Ni points, ni monnaie, ni influence sur le BPI ni sur
+ * Ce qu'ils ne sont pas. Ni points, ni monnaie, ni influence sur l'IPG ni sur
  * le moteur : ce sont des CONSTATS, lus dans les résultats déjà calculés. Rien
  * de nouveau n'est stocké, aucune table n'est créée, et les retirer un jour ne
  * changerait pas une partie d'un euro.

@@ -85,7 +85,7 @@ export async function submitQuiz(args: {
 /**
  * Rattrapage d'une situation manquée (V1-6, politique `retake50`). Une reprise
  * unique, avant la clôture suivante, notée à la moitié du score. Le tour clos
- * n'est PAS recalculé (son BPI reste figé) : le rattrapage vaut pour la Mémoire
+ * n'est PAS recalculé (son IPG reste figé) : le rattrapage vaut pour la Mémoire
  * et l'apprentissage, pas rétroactivement pour le classement.
  */
 export async function retakeSituation(args: {

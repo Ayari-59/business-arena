@@ -18,12 +18,14 @@ export const scoreDimension = pgEnum("score_dimension", [
   "profitability",
   "strategy",
   "decision_mastery",
-  // V1-2 : « pilotage » fusionne stratégie et opérationnel (BPI v2). Les valeurs
+  // V1-2 : « pilotage » fusionne stratégie et opérationnel (IPG v2). Les valeurs
   // historiques restent pour relire les tours scorés en v1.
   "pilotage",
+  // IPG (version 3) : la responsabilité sociétale remplace la rentabilité.
+  "rse",
 ]);
 
-/** Scores par dimension du BPI, par tour (doc 08 §1). */
+/** Scores par dimension de l'IPG, par tour (doc 08 §1). */
 export const scores = pgTable(
   "scores",
   {

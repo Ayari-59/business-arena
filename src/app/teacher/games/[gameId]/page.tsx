@@ -301,7 +301,7 @@ export default async function TeacherGamePage({
           LE RIDEAU. Le classement ci-dessous est le vôtre : les élèves ne le
           voient pas tant que vous ne l'avez pas révélé. Tour par tour — refermé
           à chaque nouvelle clôture, pour que chacune reste un moment.
-          Ils gardent pendant ce temps leurs propres chiffres et leur BPI : c'est
+          Ils gardent pendant ce temps leurs propres chiffres et leur IPG : c'est
           leur progression, pas leur place.
         */}
         {dernierTourClos ? (
@@ -352,7 +352,7 @@ export default async function TeacherGamePage({
                   ) : null}
                 </span>
                 <span className="tabular-nums">
-                  <span className="font-semibold text-slate-100">BPI {row.bpi.toFixed(1)}</span>
+                  <span className="font-semibold text-slate-100">IPG {row.bpi.toFixed(1)}</span>
                   <span className="ml-2 text-xs text-slate-400">
                     {formatEuro(row.cumulativeNetIncome)} cumulés
                   </span>

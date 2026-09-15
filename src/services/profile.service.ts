@@ -69,7 +69,7 @@ export async function getPlayerProfile(userId: string): Promise<PlayerProfile | 
         ))
       : Promise.resolve([]),
     // Le rideau sur le classement se tire AUSSI ici. « Mes parties » affichait
-    // « BPI 54 · #3 » pour une partie de classe dont l'enseignant n'avait rien
+    // « IPG 54 · #3 » pour une partie de classe dont l'enseignant n'avait rien
     // révélé : il suffisait d'ouvrir son profil pour lire son rang.
     teamRows.length
       ? db
@@ -114,7 +114,7 @@ export async function getPlayerProfile(userId: string): Promise<PlayerProfile | 
         roundDays: snapshot.roundDays,
         currentRound: g.currentRound,
         roundsCount: snapshot.roundsCount,
-        // Le BPI est à l'équipe : il dit sa progression, pas sa place. Le RANG
+        // L'IPG est à l'équipe : il dit sa progression, pas sa place. Le RANG
         // attend que l'animateur ouvre le rideau.
         rank: classementOuvert({
           kind: (g.difficultyProfile as { kind?: string }).kind,

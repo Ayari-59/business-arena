@@ -190,7 +190,7 @@ describe("GameView NOVA — après résolution du tour 1", () => {
     expect(view!.salesHistory.rounds[0]!.sold).toBeGreaterThan(0);
   });
 
-  it("ranking mis à jour avec revenus et BPI", async () => {
+  it("ranking mis à jour avec revenus et IPG", async () => {
     const view = await getGameView(gameId, userId);
     for (const row of view!.ranking) {
       expect(row.rank).toBeGreaterThanOrEqual(1);

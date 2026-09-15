@@ -5,7 +5,7 @@ import type { ProductCode, ProductDecisions, RoundDecisions } from "@/engine/typ
  *
  * Constaté en production : prix et volume sont requis et pré-remplis avec les
  * valeurs neutres du secteur ; une équipe validait sans y toucher et rien ne
- * la distinguait d'une équipe qui avait décidé. Le BPI récompensait le clic.
+ * la distinguait d'une équipe qui avait décidé. L'IPG récompensait le clic.
  *
  * Deux champs PIVOTS par secteur : le prix, et le volume (plan de production,
  * chambres ouvertes, jours de conseil vendus…). Les clés moteur sont les mêmes

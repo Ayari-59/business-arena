@@ -1,6 +1,6 @@
 import { DIMENSION_DISPLAY_ORDER, DIMENSION_LABEL_BY_NAME } from "@/scoring/bpi";
 
-/** Décomposition du BPI de l'équipe : une barre 0-100 par dimension jouée (moyenne des tours). */
+/** Décomposition de l'IPG de l'équipe : une barre 0-100 par dimension jouée (moyenne des tours). */
 export function BpiPanel({
   dimensions,
 }: {

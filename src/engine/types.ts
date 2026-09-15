@@ -516,7 +516,7 @@ export interface EngineScenarioConfig {
   };
   events: EventDefinitionConfig[];
   scriptedEvents: { round: number; eventCode: string; companyIndex?: number }[];
-  /** Références du scoring BPI (doc 08 §1.1) — bornes min/cible par tour. */
+  /** Références du scoring IPG (doc 08 §1.1) — bornes min/cible par tour. */
   scoring: ScoringConfig;
   /** V2 : les bots utilisent les décisions financières, RH, investissement et trésorerie. Absent = false. */
   /**

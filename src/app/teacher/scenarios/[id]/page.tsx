@@ -59,7 +59,7 @@ const BPI_FIELDS: { name: string; label: string }[] = [
   { name: "bpiEconomic", label: "Éco." },
   { name: "bpiFinancial", label: "Financière" },
   { name: "bpiCommercial", label: "Commerciale" },
-  { name: "bpiProfitability", label: "Rentabilité" },
+  { name: "bpiProfitability", label: "Responsabilité sociétale" },
   { name: "bpiPilotage", label: "Pilotage" },
   { name: "bpiDecisionMastery", label: "Maîtrise déc." },
 ];
@@ -235,7 +235,7 @@ export default async function ScenarioEditorPage({
         <SubmitButton>Enregistrer l&apos;habillage</SubmitButton>
       </GuardedForm>
 
-      {/* Paramètres moteur (économie, BPI, marché). */}
+      {/* Paramètres moteur (économie, IPG, marché). */}
       <GuardedForm
         action={updateEconomicsAction}
         label="enregistrement des paramètres moteur"
@@ -277,7 +277,7 @@ export default async function ScenarioEditorPage({
 
         <fieldset className="rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-amber-400/80">
-            Pondérations du BPI · poids relatifs (renormalisés)
+            Pondérations de l&apos;IPG · poids relatifs (renormalisés)
           </legend>
           <div className="grid gap-3 sm:grid-cols-3">
             {BPI_FIELDS.map((f) => (

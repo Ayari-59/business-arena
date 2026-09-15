@@ -119,7 +119,7 @@ export function coherencePivots(args: {
 }
 
 // ---------------------------------------------------------------------------
-// Persistance des scores BPI du tour
+// Persistance des scores IPG du tour
 // ---------------------------------------------------------------------------
 
 export async function persistRoundScores(args: {
@@ -179,13 +179,14 @@ export async function persistRoundScores(args: {
     )
     .onConflictDoNothing();
 
-  // Ce tour est désormais scoré en v2 : le classement lira ses dimensions
-  // (dont « pilotage ») avec les poids v2, sans toucher aux tours v1.
-  await db.update(rounds).set({ bpiVersion: 2 }).where(eq(rounds.id, args.roundId));
+  // Ce tour est scoré en version 3 (IPG : la RSE remplace la rentabilité) :
+  // le classement lira ses dimensions par leur nom, sans toucher aux tours
+  // scorés avant.
+  await db.update(rounds).set({ bpiVersion: 3 }).where(eq(rounds.id, args.roundId));
 }
 
 // ---------------------------------------------------------------------------
-// Classement au BPI
+// Classement à l'IPG
 // ---------------------------------------------------------------------------
 
 export async function updateRankings(gameId: string, teamIds: string[]): Promise<void> {

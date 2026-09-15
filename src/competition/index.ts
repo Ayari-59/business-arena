@@ -41,7 +41,7 @@ const compareStandings = (a: GroupStanding, b: GroupStanding) =>
 
 /**
  * Qualifiés pour la phase suivante : les `advancePerGroup` premiers de chaque
- * groupe, puis complément éventuel par les meilleurs BPI restants (« meilleurs
+ * groupe, puis complément éventuel par les meilleurs IPG restants (« meilleurs
  * seconds ») jusqu'à `targetCount` si fourni.
  */
 export function qualifiers(

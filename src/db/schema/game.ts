@@ -130,7 +130,7 @@ export const rounds = pgTable(
     opensAt: timestamp("opens_at", { withTimezone: true }),
     deadline: timestamp("deadline", { withTimezone: true }),
     resolvedAt: timestamp("resolved_at", { withTimezone: true }),
-    // Version de la formule BPI ayant scoré ce tour (1 = 7 dimensions historiques ;
+    // Version de la formule IPG ayant scoré ce tour (1 = 7 dimensions historiques ;
     // 2 = 6 dimensions, base zéro, ex æquo, finance en variation — V1-2). Les
     // tours déjà scorés gardent leur version : on ne recalcule jamais un relevé.
     bpiVersion: integer("bpi_version").notNull().default(1),

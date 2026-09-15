@@ -464,7 +464,7 @@ async function resolveGameRound(
         .map((e) => e.code);
 
     // Valeurs proposées et source des pivots par équipe : calculées une fois,
-    // réutilisées pour la trace des décisions ET pour la cohérence du BPI v2.
+    // réutilisées pour la trace des décisions ET pour la cohérence de l'IPG v2.
     const proposedByTeam: Record<string, RoundDecisions> = {};
     const decisionSourceByTeam: Record<string, ReturnType<typeof decisionSourceOf>> = {};
     for (const t of teamRows) {

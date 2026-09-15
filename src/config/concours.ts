@@ -56,9 +56,9 @@ export function derouleConcours(c: ConcoursPourDeroule): DerouleConcours {
     Qualifications: `${groupes} de ${c.rules.groupSize} équipes tirés au sort, ${pluriel(
       c.rules.advancePerGroup,
       "qualifié",
-    )} par groupe au score BPI.`,
+    )} par groupe au score IPG.`,
     Finale: "Une partie entre les qualifiés, mêmes règles de compétition.",
-    Podium: "Classement BPI de la finale : or, argent, bronze.",
+    Podium: "Classement IPG de la finale : or, argent, bronze.",
   };
   return {
     courante,
@@ -80,6 +80,6 @@ export const EXPLICATIONS_CONCOURS = [
   "Un concours est un championnat entre équipes, organisé par un enseignant sur Business Arena.",
   "Vous vous inscrivez avec le code à 6 caractères qu'il vous a donné, et le nom de votre équipe (2 à 6 joueurs).",
   "Les équipes sont tirées au sort dans des groupes ; chaque groupe joue une partie complète en mode compétition.",
-  "Les meilleures équipes de chaque groupe au score BPI se qualifient pour la finale.",
+  "Les meilleures équipes de chaque groupe au score IPG se qualifient pour la finale.",
   "En mode compétition, les décisions validées sont verrouillées et les indices sont limités.",
 ] as const;

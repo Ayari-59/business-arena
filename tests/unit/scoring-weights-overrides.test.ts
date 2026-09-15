@@ -8,7 +8,7 @@ import { scoringWeightsV2 } from "@/scoring/bpi";
 import { scenarioByCode } from "@/config/scenarios/registry";
 
 /**
- * BPI paramétrable par l'enseignant (V2 couche 2, #3).
+ * IPG paramétrable par l'enseignant (V2 couche 2, #3).
  *
  * Le réglage vit HORS moteur : il ne fait que réécrire `scoring.weights` du
  * scénario. Ce qui doit tenir : le résultat reste un scénario valide (poids

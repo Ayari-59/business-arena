@@ -184,7 +184,7 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
     depreciationPerRound: optionalNumber(formData.get("depreciationPerRound")),
     baseDefectRate: optionalRate(formData.get("baseDefectRate")),
   };
-  // Pondérations du BPI, saisies en % (poids relatifs, renormalisés côté service).
+  // Pondérations de l'IPG, saisies en % (poids relatifs, renormalisés côté service).
   const scoringWeightOverrides = {
     economic: optionalRate(formData.get("bpiEconomic")),
     financial: optionalRate(formData.get("bpiFinancial")),

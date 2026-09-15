@@ -4,9 +4,20 @@ import type {
   RoundDecisions,
   ScoringConfig,
 } from "../engine/types";
+import { computeRseIndex } from "./rse";
 
 /**
- * Business Performance Index (doc 08 §1) — module PUR.
+ * L'INDICE, tel qu'on le nomme à l'écran. Le code, la base et les
+ * identifiants gardent « bpi » (l'historique) ; l'élève et l'enseignant
+ * lisent « IPG », l'indice de performance globale.
+ */
+export const INDICE = {
+  sigle: "IPG",
+  nom: "Indice de performance globale",
+} as const;
+
+/**
+ * Indice de performance globale (doc 08 §1) — module PUR.
  * 7 dimensions notées 0-100 : pour chaque dimension, la note finale est
  * 0,5 × versusBenchmark (bornes du scénario) + 0,5 × versusPairs (rang
  * percentile parmi les entreprises de la partie). Le score n'est jamais le
@@ -195,7 +206,7 @@ export function computeRoundScores(
       const peers = raws.map((r) => r.raw[dimension]);
       // Une seule entreprise : pas de pairs à départager. `peerPercentile`
       // renvoie alors 100, ce qui offrait +50 gratuits sur chaque dimension
-      // (0,5×raw + 50) et gonflait le BPI. Sans pair, la note est le seul
+      // (0,5×raw + 50) et gonflait l'IPG. Sans pair, la note est le seul
       // benchmark (100 % raw), pas un rang inventé.
       const score =
         peers.length <= 1
@@ -209,7 +220,7 @@ export function computeRoundScores(
 }
 
 /**
- * BPI de partie (doc 08 §1.4) : moyenne des BPI de tours à poids croissants
+ * IPG de partie (doc 08 §1.4) : moyenne des IPG de tours à poids croissants
  * (le tour d'indice T pèse T — on juge la trajectoire, pas le départ).
  *
  * Le poids suit l'INDICE RÉEL du tour (1-based, tel que posé à la création de
@@ -238,7 +249,7 @@ export function scoringWeights(config: ScoringConfig): Record<BpiDimension, numb
 }
 
 // ===========================================================================
-// BPI version 2 (V1-2) — module PUR
+// IPG version 2 (V1-2) — module PUR
 // ===========================================================================
 //
 // Six dimensions au lieu de sept : « pilotage » fusionne stratégie et
@@ -257,11 +268,23 @@ export function scoringWeights(config: ScoringConfig): Record<BpiDimension, numb
 // Les ex æquo partagent le même percentile (peerPercentile, méthode
 // fractionnaire) — inchangé depuis v1, verrouillé par un test.
 
+//
+// IPG (version 3) : la RSE ENTRE DANS L'INDICE, à la place de la rentabilité.
+// « Rentabilité » (ROE) faisait doublon avec « performance économique »
+// (résultat d'exploitation) et « performance financière » (variation du
+// résultat net) : trois lectures du même bénéfice, aucune de l'empreinte.
+// L'indice RSE du tour (environnement, social, gouvernance), jusqu'ici une
+// simple prise de conscience, prend son créneau et son poids. Le ROE reste
+// lisible dans les ratios du tableau de bord ; il ne pèse plus deux fois.
+//
+// Les tours déjà scorés gardent leur dimension « profitability » : le
+// classement somme chaque tour avec les dimensions qu'il a stockées.
+
 export type BpiV2Dimension =
   | "economic"
   | "financial"
   | "commercial"
-  | "profitability"
+  | "rse"
   | "pilotage"
   | "decision_mastery";
 
@@ -269,7 +292,7 @@ export const BPI_V2_DIMENSIONS: BpiV2Dimension[] = [
   "economic",
   "financial",
   "commercial",
-  "profitability",
+  "rse",
   "pilotage",
   "decision_mastery",
 ];
@@ -278,7 +301,7 @@ export const V2_DIMENSION_LABELS: Record<BpiV2Dimension, string> = {
   economic: "Performance économique",
   financial: "Performance financière",
   commercial: "Performance commerciale",
-  profitability: "Rentabilité",
+  rse: "Responsabilité sociétale",
   pilotage: "Pilotage",
   decision_mastery: "Maîtrise décisionnelle",
 };
@@ -290,18 +313,20 @@ export const DIMENSION_LABEL_BY_NAME: Record<string, string> = {
   commercial: "Performance commerciale",
   operational: "Performance opérationnelle",
   profitability: "Rentabilité",
+  rse: "Responsabilité sociétale",
   strategy: "Qualité stratégique",
   decision_mastery: "Maîtrise décisionnelle",
   pilotage: "Pilotage",
 };
 
-/** Ordre d'affichage : v2 d'abord, puis les dimensions v1 qui ne subsistent que sur d'anciens tours. */
+/** Ordre d'affichage : l'indice courant d'abord, puis les dimensions qui ne subsistent que sur d'anciens tours. */
 export const DIMENSION_DISPLAY_ORDER: string[] = [
   "economic",
   "financial",
   "commercial",
-  "profitability",
+  "rse",
   "pilotage",
+  "profitability",
   "operational",
   "strategy",
   "decision_mastery",
@@ -372,7 +397,10 @@ export function rawDimensionScoresV2(args: {
     commercial:
       0.5 * normalizeToBenchmark(result.incomeStatement.revenue, b.revenue) +
       0.5 * clamp01(result.market.totalShare / b.marketShareTarget) * 100,
-    profitability: normalizeToBenchmark(result.ratios.returnOnEquity ?? 0, b.returnOnEquity),
+    // Responsabilité sociétale : l'indice RSE du tour, 0-100 (50 = neutre),
+    // lu sur le résultat persisté. Une entreprise défaillante a cessé
+    // d'exister économiquement : sa RSE ne peut pas la sauver au classement.
+    rse: result.defaillant ? 0 : computeRseIndex(result).score,
     // Pilotage = exécution opérationnelle + cohérence stratégique (fusion V1-2).
     pilotage: 0.5 * operational + 0.5 * coherence,
     // Maîtrise décisionnelle : 0 sans situation rendue ; 0 aussi si reconduit.
@@ -393,13 +421,18 @@ export interface RoundScoresV2 {
   bpi: number;
 }
 
-/** Poids v2 : « pilotage » reçoit la somme des poids stratégie + opérationnel. */
+/**
+ * Poids de l'indice : « pilotage » reçoit la somme des poids stratégie +
+ * opérationnel ; « rse » reprend le créneau `profitability` de la
+ * configuration (le nom du champ est historique : les instantanés de
+ * scénario des parties en cours le portent, on ne les réécrit pas).
+ */
 export function scoringWeightsV2(config: ScoringConfig): Record<BpiV2Dimension, number> {
   return {
     economic: config.weights.economic,
     financial: config.weights.financial,
     commercial: config.weights.commercial,
-    profitability: config.weights.profitability,
+    rse: config.weights.profitability,
     pilotage: config.weights.strategy + config.weights.operational,
     decision_mastery: config.weights.decisionMastery,
   };
@@ -418,6 +451,7 @@ export function scoringWeightsByName(config: ScoringConfig): Record<string, numb
     commercial: w.commercial,
     operational: w.operational,
     profitability: w.profitability,
+    rse: w.profitability,
     strategy: w.strategy,
     decision_mastery: w.decisionMastery,
     pilotage: w.strategy + w.operational,
@@ -442,7 +476,7 @@ export function computeRoundScoresV2(
       const peers = raws.map((r) => r.raw[dimension]);
       // Une seule entreprise : pas de pairs à départager. `peerPercentile`
       // renvoie alors 100, ce qui offrait +50 gratuits sur chaque dimension
-      // (0,5×raw + 50) et gonflait le BPI. Sans pair, la note est le seul
+      // (0,5×raw + 50) et gonflait l'IPG. Sans pair, la note est le seul
       // benchmark (100 % raw), pas un rang inventé.
       const score =
         peers.length <= 1

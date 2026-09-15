@@ -633,7 +633,7 @@ const rawNova = {
     maxHeadcount: 10,
   },
   scriptedEvents: [{ round: 5, eventCode: "raw_material_spike" }],
-  // Scoring BPI (doc 08 §1) : pondérations imposées, bornes calibrées sur les
+  // Scoring IPG (doc 08 §1) : pondérations imposées, bornes calibrées sur les
   // trajectoires de référence (snapshot doré) — min → 0 point, cible → 100.
   scoring: {
     weights: {

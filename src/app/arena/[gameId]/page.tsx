@@ -375,7 +375,7 @@ export default async function ArenaPage({
           >
             Niveau {view.difficulty.level} · {view.difficulty.name}
           </p>
-          {/* Le BPI mesure la progression de l'équipe, le rang sa place parmi
+          {/* L'IPG mesure la progression de l'équipe, le rang sa place parmi
               les autres. Le premier lui appartient et s'affiche toujours ; le
               second attend que l'animateur ouvre le rideau. */}
           {latestRound !== null && view.playerBpi !== null ? (() => {
@@ -385,11 +385,11 @@ export default async function ArenaPage({
                 className="rounded-full border border-amber-400/30 bg-amber-400/5 px-3 py-1 text-xs tabular-nums text-amber-300"
                 title={
                   me
-                    ? "Votre position au classement BPI"
+                    ? "Votre position au classement IPG"
                     : "Votre indice de performance. Le classement sera révélé par votre enseignant."
                 }
               >
-                {me ? `#${me.rank}/${view.ranking.length} · ` : ""}BPI{" "}
+                {me ? `#${me.rank}/${view.ranking.length} · ` : ""}IPG{" "}
                 {view.playerBpi.toFixed(0)}
               </p>
             );

@@ -250,9 +250,9 @@ export interface GameView {
   }[];
   /** L'état du rideau : révélé ? et y a-t-il quelqu'un pour le lever ? */
   classement: { revele: boolean; parLAnimateur: boolean };
-  /** Le BPI de l'équipe, révélé ou non : il mesure sa progression, pas sa place. */
+  /** L'IPG de l'équipe, révélé ou non : il mesure sa progression, pas sa place. */
   playerBpi: number | null;
-  /** Moyennes 0-100 des dimensions BPI de l'équipe du joueur (6 en v2, doc 08). */
+  /** Moyennes 0-100 des dimensions IPG de l'équipe du joueur (6 en v2, doc 08). */
   playerDimensions: Partial<Record<string, number>> | null;
   lastDecisions: RoundDecisions | null;
   /**
@@ -1041,7 +1041,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     kind: kindDeLaPartie,
     revelationDuDernierTourClos: dernierResolu?.rankingRevealedAt,
   });
-  // Le BPI de l'équipe reste sien, révélé ou non : il mesure sa progression,
+  // L'IPG de l'équipe reste sien, révélé ou non : il mesure sa progression,
   // pas sa place. C'est le RANG qui fait l'événement, donc le rang qu'on garde.
   const playerBpi = playerRankingRow ? Number(playerRankingRow.bpi) : null;
   const playerDimensions =

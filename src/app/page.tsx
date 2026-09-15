@@ -68,7 +68,7 @@ const RENVOIS: {
     icon: "🏆",
     title: "Business Arena Championship",
     href: "/compete",
-    aide: "Groupes tirés au sort, décisions verrouillées, qualification au BPI, finale et podium.",
+    aide: "Groupes tirés au sort, décisions verrouillées, qualification à l'IPG, finale et podium.",
   },
 ];
 
@@ -200,7 +200,7 @@ export default async function Home() {
               </div>
             </div>
             <div className="mt-3 flex items-center justify-between rounded-lg bg-slate-950 px-3 py-2 text-xs text-slate-400">
-              <span>Classement BPI</span>
+              <span>Classement IPG</span>
               <span>
                 <span className="text-amber-300">#2 NOVA 58,3</span>
                 <span className="ml-2 text-slate-600">#1 Auris 61,8</span>
@@ -220,7 +220,7 @@ export default async function Home() {
             ],
             [`${CONCEPTS.length} fiches notions`, "du CA au FRNG/BFR"],
             [`${DECISION_MODELS.length} modèles`, "d'aide à la décision"],
-            ["6 dimensions", "de performance (BPI)"],
+            ["6 dimensions", "de performance (IPG)"],
           ].map(([big, small]) => (
             <div key={big}>
               <p className="text-2xl font-bold text-amber-400">{big}</p>

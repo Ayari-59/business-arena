@@ -1,14 +1,15 @@
 import type { CompanyRoundResult } from "@/engine/types";
 
 /**
- * INDICE RSE — LOT 1 : UNE MESURE, PAS ENCORE UN LEVIER.
+ * INDICE RSE : UNE MESURE, ET UNE DIMENSION DE L'INDICE GLOBAL.
  *
  * Cet indice LIT le résultat d'un tour et en dérive une lecture
- * environnement / social / gouvernance (ESG). Il n'influe sur RIEN : ni le
- * marché, ni les événements, ni le classement, ni le BPI. C'est une prise de
- * conscience — l'élève VOIT l'empreinte RSE des décisions qu'il a déjà prises
- * (fournisseur, rebuts, salaires, formation, transparence du plan). Les effets
- * de jeu (image, risque, financement) viendront au Lot 2.
+ * environnement / social / gouvernance (ESG). Il n'influe pas sur le jeu
+ * lui-même (ni le marché, ni les événements) ; mais il PÈSE dans l'IPG,
+ * l'indice de performance globale, à la place de la rentabilité, qui y
+ * faisait doublon. L'élève voit l'empreinte RSE des décisions qu'il a déjà
+ * prises (fournisseur, rebuts, salaires, formation, transparence du plan), et
+ * cette empreinte compte au classement.
  *
  * Conséquence de ce choix : le module est PUR et se calcule à la lecture, à
  * partir du seul résultat persisté. Aucun champ moteur, aucune migration.

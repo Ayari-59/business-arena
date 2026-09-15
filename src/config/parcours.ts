@@ -57,7 +57,7 @@ export const PARCOURS: readonly Parcours[] = [
         referentiel: "Création de valeur et performance",
         notions: "chiffre d'affaires, coûts, marge, seuil de rentabilité, performance commerciale",
         enJeu:
-          "Tours 1-2 : fixer un prix face à SoundBox, lire son premier compte de résultat, découvrir le seuil dans la situation dédiée, puis suivre sa part de marché et son BPI.",
+          "Tours 1-2 : fixer un prix face à SoundBox, lire son premier compte de résultat, découvrir le seuil dans la situation dédiée, puis suivre sa part de marché et son IPG.",
         fit: "coeur",
       },
       {
@@ -214,7 +214,7 @@ export const PARCOURS: readonly Parcours[] = [
         referentiel: "P6 · Analyse de la situation financière",
         notions: "bilan fonctionnel, FRNG, BFR, trésorerie nette, ratios",
         enJeu:
-          "L'invariant affiché partout : TN = FRNG − BFR. La crise du tour 4 le rend inoubliable, le débriefing le formalise, le BPI le note sur la durée.",
+          "L'invariant affiché partout : TN = FRNG − BFR. La crise du tour 4 le rend inoubliable, le débriefing le formalise, l'IPG le note sur la durée.",
         fit: "coeur",
       },
       {

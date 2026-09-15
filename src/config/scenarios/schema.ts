@@ -309,7 +309,7 @@ export const engineScenarioConfigSchema = z.object({
       })
       .refine(
         (w) => Math.abs(Object.values(w).reduce((a, b) => a + b, 0) - 1) < 1e-6,
-        "les pondérations du BPI doivent sommer à 1",
+        "les pondérations de l'IPG doivent sommer à 1",
       ),
     benchmarks: z.object({
       operatingIncome: z.object({ min: z.number(), target: z.number() }),

@@ -23,7 +23,7 @@ import type { RoundDecisions } from "@/engine/types";
  * Monde démo : un établissement complet et VIVANT pour présenter le produit —
  * direction, enseignant, partie de classe jouée sur 3 tours (avec diagnostics,
  * choix de modèles et indices pour une équipe : les vues pédagogiques et le
- * BPI ont des données), concours prêt à lancer. Idempotent : ne recrée rien
+ * IPG ont des données), concours prêt à lancer. Idempotent : ne recrée rien
  * si le compte direction existe déjà.
  *
  * L'admin GÉNÉRAL n'a volontairement pas de compte démo : ce rôle contrôle

@@ -1,12 +1,15 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   BPI_V2_DIMENSIONS,
+  INDICE,
   computeRoundScoresV2,
   financialV2Score,
   peerPercentile,
+  scoringWeightsByName,
   scoringWeightsV2,
   type PedagogyInputsV2,
 } from "../src/scoring/bpi";
+import { computeRseIndex } from "../src/scoring/rse";
 import { novaScenario } from "../src/config/scenarios/nova";
 import type { CompanyRoundResult } from "../src/engine/types";
 
@@ -16,7 +19,7 @@ vi.mock("@/db", () => ({ db: {} }));
 const { coherencePivots } = await import("../src/services/scoring.service");
 
 /**
- * BPI v2 (V1-2) : base zéro, ex æquo au même percentile, finance en variation,
+ * IPG v2 (V1-2) : base zéro, ex æquo au même percentile, finance en variation,
  * une équipe silencieuse ne peut pas primer. On rejoue notamment le scénario du
  * diagnostic (4 équipes identiques au T1) pour verrouiller l'égalité.
  */
@@ -183,9 +186,9 @@ describe("scores v2 d'un tour", () => {
     expect(edite!.bpi - vide!.bpi).toBeGreaterThanOrEqual(10);
   });
 
-  it("scénario du diagnostic : 4 équipes identiques au T1 ont le même BPI", () => {
+  it("scénario du diagnostic : 4 équipes identiques au T1 ont le même IPG", () => {
     // 1 « valide vide » (coherence 0) + 3 silencieuses (carried) : décisions et
-    // résultats identiques, aucune situation rendue → même BPI (± 0,5).
+    // résultats identiques, aucune situation rendue → même IPG (± 0,5).
     const humaines = computeRoundScoresV2(novaScenario, [
       { companyId: "vide", result: fakeResult({ netIncome: -2060 }), pedagogy: ped({ coherence: 0 }) },
       { companyId: "s1", result: fakeResult({ netIncome: -2060 }), pedagogy: ped({ carried: true, coherence: 0 }) },
@@ -208,5 +211,55 @@ describe("poids v2", () => {
     );
     const total = Object.values(w).reduce((a, c) => a + c, 0);
     expect(total).toBeCloseTo(1, 6);
+  });
+});
+
+/**
+ * IPG : LA RSE PÈSE, LA RENTABILITÉ NE PÈSE PLUS DEUX FOIS.
+ *
+ * La dimension « rentabilité » (ROE) faisait doublon avec la performance
+ * économique et la performance financière : trois lectures du même bénéfice.
+ * L'indice RSE du tour prend son créneau et son poids. Les anciens tours
+ * gardent leur dimension au classement, avec le même poids.
+ */
+describe("IPG : la responsabilité sociétale dans l'indice", () => {
+  it("« rse » remplace « profitability » parmi les dimensions", () => {
+    expect(BPI_V2_DIMENSIONS).toContain("rse");
+    expect(BPI_V2_DIMENSIONS).not.toContain("profitability");
+    expect(BPI_V2_DIMENSIONS).toHaveLength(6);
+  });
+
+  it("la dimension vaut l'indice RSE du tour, lu sur le résultat", () => {
+    const result = fakeResult({});
+    const [s] = computeRoundScoresV2(novaScenario, [
+      { companyId: "a", result, pedagogy: ped() },
+    ]);
+    expect(s!.raw.rse).toBeCloseTo(computeRseIndex(result).score, 6);
+    // le ROE n'y change rien : il n'est plus une dimension
+    const [t] = computeRoundScoresV2(novaScenario, [
+      { companyId: "a", result: fakeResult({ roe: 0.5 }), pedagogy: ped() },
+    ]);
+    expect(t!.raw.rse).toBeCloseTo(s!.raw.rse, 6);
+  });
+
+  it("une entreprise défaillante est à 0 en RSE : elle ne peut pas s'y rattraper", () => {
+    const result = { ...fakeResult({}), defaillant: true } as CompanyRoundResult;
+    const [s] = computeRoundScoresV2(novaScenario, [
+      { companyId: "a", result, pedagogy: ped() },
+    ]);
+    expect(s!.raw.rse).toBe(0);
+  });
+
+  it("le poids de la RSE est le créneau « profitability » de la configuration ; les anciens tours gardent le leur", () => {
+    const w = scoringWeightsV2(novaScenario.scoring);
+    expect(w.rse).toBe(novaScenario.scoring.weights.profitability);
+    expect("profitability" in w).toBe(false);
+    const parNom = scoringWeightsByName(novaScenario.scoring);
+    expect(parNom.rse).toBe(parNom.profitability);
+  });
+
+  it("l'indice se nomme IPG, indice de performance globale", () => {
+    expect(INDICE.sigle).toBe("IPG");
+    expect(INDICE.nom).toBe("Indice de performance globale");
   });
 });

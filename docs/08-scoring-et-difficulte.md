@@ -1,6 +1,18 @@
-# 08 — Scoring (Business Performance Index) et niveaux de difficulté
+# 08 — Scoring (Indice de performance globale) et niveaux de difficulté
 
 Couvre les points 13 et 14 de la mission n°37 (§20–§21).
+
+> **Version 3 (IPG).** L'indice se nomme désormais **IPG, indice de performance
+> globale** (le code et la base gardent l'identifiant historique `bpi`). Six
+> dimensions : économique, financière, commerciale, **responsabilité sociétale**,
+> pilotage, maîtrise décisionnelle. La responsabilité sociétale (indice RSE du
+> tour, `src/scoring/rse.ts`) a pris le créneau et le poids de la rentabilité
+> (ROE), qui faisait doublon avec la performance économique et la performance
+> financière. Le champ de configuration `weights.profitability` conserve son nom
+> (les instantanés de scénario des parties en cours le portent) et alimente la
+> dimension `rse`. Les tours scorés avant gardent leur dimension `profitability`
+> au classement, avec le même poids. Le reste de ce document décrit les versions
+> antérieures, dont la mécanique (benchmark + pairs, poids croissants) est inchangée.
 
 ---
 

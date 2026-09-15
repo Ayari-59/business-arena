@@ -106,7 +106,7 @@ export async function updateNarrativeAction(formData: FormData): Promise<void> {
   redirect(`/teacher/scenarios/${id}?ok=1`);
 }
 
-/** Enregistre les paramètres moteur (économie, BPI, marché) d'un brouillon. */
+/** Enregistre les paramètres moteur (économie, IPG, marché) d'un brouillon. */
 export async function updateEconomicsAction(formData: FormData): Promise<void> {
   const session = await getSession();
   if (!session) redirect("/teacher/login");

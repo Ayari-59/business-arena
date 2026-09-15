@@ -17,7 +17,7 @@ const SECTIONS = [
   { id: "enseignants", label: "🧑‍🏫 Côté enseignants" },
   { id: "concours", label: "🏆 Les concours" },
   { id: "cartes", label: "🃏 Les cartes" },
-  { id: "bpi", label: "📊 Le score BPI" },
+  { id: "bpi", label: "📊 Le score IPG" },
   { id: "etablissements", label: "🏛️ Établissements" },
   { id: "faq", label: "❓ Questions fréquentes" },
 ];
@@ -226,14 +226,14 @@ export default function GuidePage() {
             </Step>
             <Step n={5} title="Clôturez le tour">
               Un clic : la simulation calcule tous les résultats, le débriefing pédagogique se
-              génère, le classement BPI se met à jour, le tour suivant s&apos;ouvre. Votre vue
+              génère, le classement IPG se met à jour, le tour suivant s&apos;ouvre. Votre vue
               pédagogique agrège diagnostics, résultats des QCM, indices consommés et maîtrise
               des notions par équipe.
             </Step>
             <Step n={6} title="Finissez l'année en championnat">
               Créez un concours : inscriptions par code, groupes tirés au sort (tirage seedé,
               auditable), parties en mode compétition : décisions verrouillées après validation,
-              indices limités au niveau 3, aucun tirage manuel de cartes. Qualification au BPI,
+              indices limités au niveau 3, aucun tirage manuel de cartes. Qualification à l&apos;IPG,
               finale, podium. Le déroulé complet est{" "}
               <a href="#concours" className="text-amber-300 underline-offset-4 hover:underline">
                 décrit ci-dessous
@@ -267,12 +267,12 @@ export default function GuidePage() {
             </Step>
             <Step n={3} title="Finale">
               Quand toutes les parties de qualification sont terminées, les meilleures équipes de
-              chaque groupe au <Link href="#bpi" className="text-amber-300 underline-offset-4 hover:underline">score BPI</Link>{" "}
+              chaque groupe au <Link href="#bpi" className="text-amber-300 underline-offset-4 hover:underline">score IPG</Link>{" "}
               se qualifient. Elles jouent une seule partie, aux mêmes règles.
             </Step>
             <Step n={4} title="Podium">
               À la fin de la finale, l&apos;enseignant proclame le podium : or, argent, bronze au
-              classement BPI. Les équipes le voient sur leur page du concours.
+              classement IPG. Les équipes le voient sur leur page du concours.
             </Step>
           </ol>
         </Section>
@@ -315,8 +315,8 @@ export default function GuidePage() {
 
         <Section
           id="bpi"
-          title="📊 Le Business Performance Index"
-          intro="Le classement ne récompense pas que le profit : le BPI (0-100) pondère 6 dimensions."
+          title="📊 L'Indice de performance globale"
+          intro="Le classement ne récompense pas que le profit : l'IPG (0-100) pondère 6 dimensions."
         >
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -333,7 +333,7 @@ export default function GuidePage() {
                   ["Financière", "20 %", "variation du résultat net (une perte plafonne à 20)"],
                   ["Commerciale", "15 %", "part de marché, service de la demande"],
                   ["Pilotage", "20 %", "exécution (capacités, ruptures) et cohérence des décisions prises"],
-                  ["Rentabilité", "10 %", "rentabilité des capitaux (ROE)"],
+                  ["Responsabilité sociétale", "10 %", "indice RSE du tour (environnement, social, gouvernance)"],
                   ["Maîtrise décisionnelle", "5 %", "situations rendues : bon diagnostic et bon modèle"],
                 ].map(([d, w, m]) => (
                   <tr key={d} className="border-t border-white/5">

@@ -127,7 +127,7 @@ export interface CreateGameArgs {
   level?: number;
   /** Paramètres économiques modulés à la création (base trimestrielle). */
   economicOverrides?: EconomicOverrides;
-  /** Pondérations du BPI ajustées par l'enseignant (six dimensions, doc 08). */
+  /** Pondérations de l'IPG ajustées par l'enseignant (six dimensions, doc 08). */
   scoringWeightOverrides?: ScoringWeightOverrides;
   /** Monde variable (doc 02 §9bis) : variante du scénario dérivée de la graine. */
   variableWorld?: boolean;

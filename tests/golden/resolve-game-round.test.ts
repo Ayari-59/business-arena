@@ -135,7 +135,7 @@ describe("B — échec pendant le post-traitement → verrou libéré, état ré
 });
 
 describe("C — ordre pedagogy → scoring", () => {
-  it("le scoring BPI est calculé après le débriefing pédagogique", async () => {
+  it("le scoring IPG est calculé après le débriefing pédagogique", async () => {
     const gameId = await createSoloGame(userId, "quarter", 2);
     await resolveCurrentRound({ gameId, userId, playerDecisions: DECISIONS });
 
@@ -148,7 +148,7 @@ describe("C — ordre pedagogy → scoring", () => {
       .from(scores)
       .where(eq(scores.roundId, resolvedRound.id));
 
-    // 6 dimensions BPI v2 × 2 équipes = 12 scores
+    // 6 dimensions IPG v2 × 2 équipes = 12 scores
     expect(scoreRows.length).toBe(12);
     for (const row of scoreRows) {
       expect(Number(row.normalized)).toBeGreaterThanOrEqual(0);
