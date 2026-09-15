@@ -254,9 +254,26 @@ h1 {
   transform: rotateY(180deg);
 }
 
-/* Le dos seul, pour une pioche posée sur la table (pas de retournement). */
+/*
+ * Le dos de carte : un fond de nuit et un motif de chevrons en laiton, assez
+ * discret pour ne pas concurrencer la marque, assez présent pour qu'une pioche
+ * face cachée se lise comme un paquet et non comme un rectangle vide.
+ */
 .card-back-face {
-  background: linear-gradient(135deg, #0f172a, #020617);
+  padding: 6px;
+  background-color: #060b18;
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      rgba(251, 191, 36, 0.09) 0 2px,
+      transparent 2px 12px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      rgba(251, 191, 36, 0.09) 0 2px,
+      transparent 2px 12px
+    ),
+    radial-gradient(circle at 50% 50%, #0f172a 0%, #060b18 70%);
 }
 
 @media (prefers-reduced-motion: reduce) {

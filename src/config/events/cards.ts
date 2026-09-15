@@ -27,12 +27,42 @@ export interface EventCardDef {
   scope: "market" | "team";
 }
 
-export const CARD_CATEGORIES: Record<CardCategory, { label: string; className: string }> = {
-  market: { label: "Marché", className: "border-sky-400/40 text-sky-300" },
-  competition: { label: "Concurrence", className: "border-fuchsia-400/40 text-fuchsia-300" },
-  internal: { label: "Interne", className: "border-amber-400/40 text-amber-300" },
-  macro: { label: "Macro-économie", className: "border-emerald-400/40 text-emerald-300" },
+/**
+ * Les quatre ENSEIGNES du jeu. Une carte à jouer se reconnaît à son enseigne
+ * avant qu'on lise son titre : ♦ le marché (ce qui se vend), ♠ la concurrence
+ * (ce qui s'oppose), ♣ l'interne (ce qui se passe dans les murs), ♥ la
+ * macro-économie (ce qui vient de loin). L'enseigne tient dans l'index de
+ * coin, comme sur un jeu de 52, et la couleur la redouble pour qui ne lit pas
+ * les symboles.
+ */
+export const CARD_CATEGORIES: Record<
+  CardCategory,
+  { label: string; glyph: string; className: string; accent: string }
+> = {
+  market: { label: "Marché", glyph: "♦", className: "border-sky-400/40 text-sky-300", accent: "#38bdf8" },
+  competition: {
+    label: "Concurrence",
+    glyph: "♠",
+    className: "border-fuchsia-400/40 text-fuchsia-300",
+    accent: "#e879f9",
+  },
+  internal: { label: "Interne", glyph: "♣", className: "border-amber-400/40 text-amber-300", accent: "#fbbf24" },
+  macro: {
+    label: "Macro-économie",
+    glyph: "♥",
+    className: "border-emerald-400/40 text-emerald-300",
+    accent: "#34d399",
+  },
 };
+
+/**
+ * Combien de tours la carte pèse : lu dans l'effet (« pendant 2 tours »),
+ * un tour sinon. C'est ce que dessinent les pastilles de durée.
+ */
+export function dureeDeLaCarte(card: Pick<EventCardDef, "effectLabel">): number {
+  const m = card.effectLabel.match(/pendant (\d+) tours?/i);
+  return m ? Number(m[1]) : 1;
+}
 
 /** Deck du scénario NOVA (industrie). */
 const NOVA_CARDS: EventCardDef[] = [
@@ -363,6 +393,35 @@ export const EVENT_CARDS: EventCardDef[] = [
 ];
 
 export const cardByCode = new Map(EVENT_CARDS.map((c) => [c.code, c]));
+
+/**
+ * LES DECKS, NOMMÉS. Un jeu de cartes se numérote : « 7 / 25 » dit à l'élève
+ * qu'il tient une carte parmi vingt-cinq, et à l'enseignant laquelle manque
+ * dans son paquet imprimé. Le numéro est la position de la carte dans le deck
+ * de son secteur ; les cartes RSE, transverses, forment leur propre paquet.
+ */
+export const DECKS: { code: string; name: string; cards: EventCardDef[] }[] = [
+  { code: "rse", name: "RSE", cards: RSE_CARDS },
+  { code: "nova", name: "NOVA", cards: NOVA_CARDS },
+  { code: "boutique", name: "MAILLE & CO", cards: BOUTIQUE_CARDS },
+  { code: "hotel", name: "L'ESCALE", cards: HOTEL_CARDS },
+  { code: "bistrot", name: "LA TABLE D'AUGUSTIN", cards: BISTROT_CARDS },
+  { code: "conseil", name: "ATLAS CONSEIL", cards: CONSEIL_CARDS },
+  { code: "ecommerce", name: "PIXEL & CO", cards: ECOMMERCE_CARDS },
+  { code: "fitness", name: "VOLT FITNESS", cards: FITNESS_CARDS },
+  { code: "batiment", name: "MARTEL & FILS", cards: BATIMENT_CARDS },
+  { code: "transport", name: "ROUTE & CIE", cards: TRANSPORT_CARDS },
+];
+
+const positions = new Map<string, { deck: string; index: number; total: number }>();
+for (const deck of DECKS) {
+  deck.cards.forEach((c, i) => positions.set(c.code, { deck: deck.name, index: i + 1, total: deck.cards.length }));
+}
+
+/** « NOVA · 7 / 25 » : le deck de la carte et sa place dedans. */
+export function cardPosition(code: string): { deck: string; index: number; total: number } | null {
+  return positions.get(code) ?? null;
+}
 
 /** Cartes « équipe » : ciblent une seule entreprise (tirage par équipe). */
 export const TEAM_CARD_CODES = EVENT_CARDS.filter((c) => c.scope === "team").map((c) => c.code);

@@ -2,7 +2,13 @@
 
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { CARD_CATEGORIES, cardsForEventCodes, type EventCardDef } from "@/config/events/cards";
+import {
+  CARD_CATEGORIES,
+  cardPosition,
+  cardsForEventCodes,
+  dureeDeLaCarte,
+  type EventCardDef,
+} from "@/config/events/cards";
 import { scenarioByCode } from "@/config/scenarios/registry";
 import { BrandMark } from "@/components/brand-mark";
 
@@ -21,32 +27,61 @@ const PRINT_ACCENTS: Record<EventCardDef["category"], string> = {
 };
 
 function PrintCard({ card, deck }: { card: EventCardDef; deck: "market" | "team" }) {
+  const category = CARD_CATEGORIES[card.category];
   const accent = PRINT_ACCENTS[card.category];
   const backColor = deck === "market" ? "#b45309" : "#1d4ed8";
+  const position = cardPosition(card.code);
+  const numero = position ? String(position.index).padStart(2, "0") : "—";
+  const duree = dureeDeLaCarte(card);
+  const index = (
+    <span className="print-index" style={{ color: accent }}>
+      {category.glyph}
+      <span className="print-index-num">{numero}</span>
+    </span>
+  );
   return (
     <div className="print-pair">
-      {/* dos : la marque en blanc sur la couleur du paquet */}
+      {/* dos : le motif et la marque sur la couleur du paquet */}
       <div className="print-half print-back" style={{ background: backColor }}>
-        <BrandMark className="print-back-mark" />
-        <span className="print-back-brand">
-          BUSINESS <strong>ARENA</strong>
-        </span>
-        <span className="print-back-deck">
-          {deck === "market" ? "Carte marché · toute la classe" : "Carte équipe · tirage ciblé"}
-        </span>
-      </div>
-      {/* face */}
-      <div className="print-half print-front" style={{ borderTopColor: accent }}>
-        <div className="print-front-head">
-          <span className="print-emoji">{card.emoji}</span>
-          <span className="print-category" style={{ color: accent, borderColor: accent }}>
-            {CARD_CATEGORIES[card.category].label}
+        <div className="print-back-frame">
+          <BrandMark className="print-back-mark" />
+          <span className="print-back-brand">
+            BUSINESS <strong>ARENA</strong>
+          </span>
+          {position ? <span className="print-back-deck-name">{position.deck}</span> : null}
+          <span className="print-back-deck">
+            {deck === "market" ? "Carte marché · toute la classe" : "Carte équipe · tirage ciblé"}
           </span>
         </div>
-        <h3 className="print-title">{card.title}</h3>
-        <p className="print-flavor">{card.flavor}</p>
-        <p className="print-effect">⚡ {card.effectLabel}</p>
-        <p className="print-hint">💡 {card.conceptHint}</p>
+      </div>
+      {/* face */}
+      <div className="print-half print-front" style={{ borderColor: accent }}>
+        <div className="print-front-frame">
+          <div className="print-front-head">
+            {index}
+            <span className="print-category" style={{ color: accent, borderColor: accent }}>
+              {category.glyph} {category.label}
+            </span>
+          </div>
+          <div className="print-medallion" style={{ borderColor: accent }}>
+            <span className="print-emoji">{card.emoji}</span>
+          </div>
+          <h3 className="print-title">{card.title}</h3>
+          <p className="print-flavor">{card.flavor}</p>
+          <div className="print-effect">
+            <span>⚡ {card.effectLabel}</span>
+            <span className="print-pips" title={`${duree} tour${duree > 1 ? "s" : ""}`}>
+              {"●".repeat(duree)}
+            </span>
+          </div>
+          <p className="print-hint">💡 {card.conceptHint}</p>
+          <div className="print-foot">
+            <span className="print-deck-mark">
+              {position ? `${position.deck} · ${position.index} / ${position.total}` : "Business Arena"}
+            </span>
+            <span className="print-index-mirror">{index}</span>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -72,6 +107,14 @@ function PrintCards() {
             Business Arena · Animation de classe · {definition.title}
           </p>
           <h1>🃏 Deck physique à imprimer</h1>
+          <p className="print-legend">
+            {(["market", "competition", "internal", "macro"] as const).map((c) => (
+              <span key={c} style={{ color: PRINT_ACCENTS[c] }}>
+                {CARD_CATEGORIES[c].glyph} {CARD_CATEGORIES[c].label}
+              </span>
+            ))}
+            <span className="print-legend-pips">● un tour · ●● deux tours</span>
+          </p>
           <p className="print-help">
             Imprimez en A4 (couleur de préférence), découpez chaque carte sur les{" "}
             <strong>traits pleins</strong>, puis pliez sur le <strong>trait pointillé</strong> :
@@ -176,51 +219,118 @@ const printStyles = `
     background: #fff;
   }
   .print-half { width: 63mm; height: 88mm; box-sizing: border-box; overflow: hidden; }
+  .print-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    margin: 6px 0 0;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .print-legend-pips { color: #64748b; font-weight: 400; letter-spacing: 0.1em; }
   .print-back {
+    display: flex;
+    padding: 4mm;
+    color: #fff;
+    border-right: 1.5px dashed rgba(255, 255, 255, 0.85);
+    background-image:
+      repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.12) 0 0.5mm, transparent 0.5mm 3mm),
+      repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.12) 0 0.5mm, transparent 0.5mm 3mm);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .print-back-frame {
+    flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    color: #fff;
-    border-right: 1.5px dashed rgba(255, 255, 255, 0.85);
-    print-color-adjust: exact;
-    -webkit-print-color-adjust: exact;
+    gap: 5px;
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    border-radius: 3mm;
+    text-align: center;
   }
-  .print-back-mark { width: 22mm; height: 22mm; color: #fff; }
-  .print-back-brand { font-size: 11px; font-weight: 300; letter-spacing: 0.25em; margin-top: 2mm; }
+  .print-back-mark { width: 20mm; height: 20mm; color: #fff; }
+  .print-back-brand { font-size: 12px; font-weight: 300; letter-spacing: 0.25em; margin-top: 2mm; }
   .print-back-brand strong { font-weight: 800; }
-  .print-back-deck { font-size: 9px; opacity: 0.85; }
+  .print-back-deck-name { font-size: 12px; letter-spacing: 0.2em; opacity: 0.9; }
+  .print-back-deck { font-size: 12px; opacity: 0.8; }
   .print-front {
     display: flex;
-    flex-direction: column;
-    padding: 5mm;
-    border-top: 3mm solid;
+    padding: 2.5mm;
+    border: 1.2mm solid;
+    border-left-width: 0;
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
   }
-  .print-front-head { display: flex; align-items: flex-start; justify-content: space-between; }
-  .print-emoji { font-size: 26px; }
+  .print-front-frame {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: 2.5mm;
+    border: 0.3mm solid #cbd5e1;
+    border-radius: 2.5mm;
+  }
+  .print-front-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 2mm; }
+  .print-index { font-family: ui-serif, Georgia, serif; font-size: 16px; font-weight: 700; line-height: 1; }
+  .print-index-num { font-size: 12px; margin-left: 1px; font-variant-numeric: tabular-nums; }
+  .print-index-mirror { display: inline-block; transform: rotate(180deg); }
+  .print-medallion {
+    align-self: center;
+    margin-top: 1.5mm;
+    width: 13mm;
+    height: 13mm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0.4mm solid;
+    border-radius: 50%;
+    background: #f8fafc;
+  }
+  .print-emoji { font-size: 22px; line-height: 1; }
   .print-category {
-    font-size: 8px;
+    font-size: 12px;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
     border: 1px solid;
     border-radius: 999px;
-    padding: 2px 7px;
+    padding: 1px 6px;
     font-weight: 600;
+    white-space: nowrap;
   }
-  .print-title { margin: 3mm 0 0; font-size: 13px; font-weight: 700; }
-  .print-flavor { margin: 1.5mm 0 0; font-size: 10px; font-style: italic; color: #475569; line-height: 1.4; }
-  .print-effect { margin-top: auto; padding-top: 2mm; font-size: 10.5px; font-weight: 700; }
+  .print-title { margin: 2mm 0 0; font-family: ui-serif, Georgia, serif; font-size: 14px; font-weight: 700; text-align: center; line-height: 1.15; }
+  .print-flavor { margin: 1.2mm 0 0; font-size: 12px; font-style: italic; color: #475569; line-height: 1.3; text-align: center; }
+  .print-effect {
+    margin-top: auto;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 2mm;
+    padding: 1.5mm 2mm;
+    border: 0.3mm solid #cbd5e1;
+    border-radius: 1.5mm;
+    background: #f1f5f9;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+  .print-pips { flex-shrink: 0; letter-spacing: 0.1em; color: #475569; font-weight: 400; }
   .print-hint {
-    margin: 1.5mm 0 0;
-    padding-top: 1.5mm;
-    border-top: 1px solid #e2e8f0;
-    font-size: 9px;
+    margin: 1.2mm 0 0;
+    font-size: 12px;
     color: #64748b;
-    line-height: 1.35;
+    line-height: 1.25;
   }
+  .print-foot {
+    margin-top: 1.2mm;
+    padding-top: 1mm;
+    border-top: 0.3mm solid #e2e8f0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+  .print-deck-mark { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: #94a3b8; }
   @media print {
     @page { size: A4 portrait; margin: 8mm; }
     .no-print { display: none !important; }
