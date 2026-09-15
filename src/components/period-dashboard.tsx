@@ -2,6 +2,7 @@ import { formatEuro, formatPercent, formatUnits } from "@/lib/format";
 import { COMMUNICATION_AXIS_LABELS } from "@/engine/market/communication";
 import { KpiCard } from "@/components/kpi-card";
 import { lectureBancaire } from "@/components/lecture-bancaire";
+import { ligneTresorerie } from "@/components/ligne-tresorerie";
 import { EventCard } from "@/components/event-card";
 import { cardByCode } from "@/config/events/cards";
 import { BpiPanel } from "@/components/bpi-panel";
@@ -608,27 +609,7 @@ export function PeriodDashboard({
                       : "border-teal-400/30 bg-teal-950/30 text-teal-300"
                 }`}
               >
-                💶 Trésorerie :
-                {r.treasury.discounted > 0.5
-                  ? ` escompte ${formatEuro(r.treasury.discounted)} ·`
-                  : ""}
-                {r.treasury.factored > 0.5
-                  ? ` affacturage ${formatEuro(r.treasury.factored)} ·`
-                  : ""}
-                {r.treasury.forcedFactored > 0.5
-                  ? ` ⚠️ affacturage FORCÉ par la banque ${formatEuro(r.treasury.forcedFactored)} (découvert au-delà du plafond) ·`
-                  : ""}
-                {" coût financier "}
-                {formatEuro(r.treasury.financingCost)}
-                {r.treasury.matured > 0.5
-                  ? ` · placement arrivé à terme ${formatEuro(r.treasury.matured)} (+${formatEuro(r.treasury.placementIncome)} d'intérêts)`
-                  : ""}
-                {r.treasury.placed > 0.5
-                  ? ` · ${formatEuro(r.treasury.placed)} placés jusqu'au tour suivant`
-                  : ""}
-                {r.treasury.crisis
-                  ? ". 🚨 CRISE DE TRÉSORERIE : plafond dépassé et plus de créances à céder."
-                  : ""}
+                {ligneTresorerie(r.treasury)}
               </p>
             ) : null}
 
