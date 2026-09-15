@@ -9,6 +9,14 @@ import type { AtelierDefinition } from "./types";
  * rentabilité, ils calculent LEUR seuil, celui de l'entreprise qu'ils ont mal
  * pilotée la semaine précédente.
  *
+ * C'est un atelier de PREMIÈRE année, et il en a le périmètre : une seule
+ * enceinte à produire et à vendre (la gamme attend la seconde année), un
+ * niveau de jeu qui ouvre le financement sans ouvrir le recrutement ni
+ * l'investissement, et des séances qui restent dans les processus de première
+ * année — opérations commerciales, TVA, stocks, seuil, budget de trésorerie.
+ * Le bilan fonctionnel et le financement du poste clients par le calcul
+ * viennent en seconde année, avec la gamme.
+ *
  * Chaque séance produit un livrable et une phrase de passeport professionnel.
  * Un jeu d'entreprise sans trace écrite ne s'évalue pas.
  */
@@ -24,18 +32,18 @@ export const ATELIER_CG1: AtelierDefinition = {
   pitch:
     "Six séances de trois heures. Chaque équipe dirige la même entreprise du premier au dernier tour, décide, subit ses décisions, et produit à chaque séance un document professionnel qui s'évalue.",
   resume:
-    "Une partie de six trimestres étalée sur six séances, du diagnostic d'ouverture à la soutenance du rapport de gestion.",
+    "Une partie de six trimestres étalée sur six séances, du diagnostic d'ouverture à la note de gestion, sur une seule enceinte et avec les seuls outils de première année.",
   difficulte: 2,
   difficulteLabel: "Initiation",
   format: "6 séances de 3 h",
   pourquoi:
-    "En atelier professionnel, la difficulté n'est pas de faire calculer un seuil de rentabilité : c'est de faire comprendre à quoi il sert. Un dossier fournit les chiffres et demande la réponse. Ici les chiffres sont ceux que l'équipe a produits au tour précédent, personne ne connaît la réponse, et une décision prise sans le calcul se paie au tour suivant. Le compte de résultat, le bilan, la TVA à décaisser et le besoin en fonds de roulement ne sont plus des documents à recopier : ce sont les conséquences de ce que l'équipe a fait.",
+    "En atelier professionnel, la difficulté n'est pas de faire calculer un seuil de rentabilité : c'est de faire comprendre à quoi il sert. Un dossier fournit les chiffres et demande la réponse. Ici les chiffres sont ceux que l'équipe a produits au tour précédent, personne ne connaît la réponse, et une décision prise sans le calcul se paie au tour suivant. Le compte de résultat, le stock, la TVA à décaisser et la caisse ne sont plus des documents à recopier : ce sont les conséquences de ce que l'équipe a fait. Et parce que c'est une première année, une seule chose nouvelle par séance, sur une seule enceinte.",
   reglages: {
-    scenarioCode: "nova-gamme",
+    scenarioCode: "nova",
     periodicite: "quarter",
     periodiciteLabel: "Un trimestre par tour",
-    niveau: 4,
-    niveauNom: "Arbitrage",
+    niveau: 3,
+    niveauNom: "Pilotage",
     equipes: 6,
     bots: 2,
     tva: true,
@@ -44,7 +52,7 @@ export const ATELIER_CG1: AtelierDefinition = {
     tours: 6,
     effectifParEquipe: "trois élèves",
     notes:
-      "NOVA se joue ici en trois références qui partagent le même atelier : un stock par enceinte, un coût de production par enceinte, et un seuil de rentabilité qui dépend du mix vendu. NOVA porte un stock, un coût de production et des délais de règlement : les trois matières de la première année. Le monde variable est décoché pour que toutes vos classes jouent la même économie et que vos corrigés restent valables d'une année sur l'autre. Deux concurrents pilotés par la machine suffisent à ce que le marché résiste.",
+      "NOVA se joue ici en une seule enceinte : un stock, un coût de production, un seuil de rentabilité qui ne dépend pas d'un mix. La gamme de trois références, et le seuil qui bouge avec le mix, attendent la seconde année. Le niveau Pilotage ouvre l'emprunt, l'apport des associés et la mobilisation des créances, ce qu'il faut pour les séances 3 et 5, sans ouvrir le recrutement ni l'investissement, qui n'ont pas leur place en première année. La TVA est activée pour la séance 5. Le monde variable est décoché pour que toutes vos classes jouent la même économie et que vos corrigés restent valables d'une année sur l'autre. Deux concurrents pilotés par la machine suffisent à ce que le marché résiste.",
   },
   seances: [
     {
@@ -54,7 +62,7 @@ export const ATELIER_CG1: AtelierDefinition = {
       tourJoue: 1,
       processus: [
         "P1 · Contrôle et traitement comptable des opérations commerciales",
-        "P7 · Fiabilisation de l'information et système d'information comptable",
+        "P7 · Fiabilisation de l'information et système d'information comptable (SIC)",
       ],
       objectif:
         "Lire les documents de synthèse d'une entreprise inconnue et en tirer un diagnostic, avant de décider quoi que ce soit.",
@@ -63,15 +71,9 @@ export const ATELIER_CG1: AtelierDefinition = {
         "Je repère la contrainte qui limite l'activité, et je la distingue d'un simple manque de moyens.",
         "Je formule un diagnostic écrit, hiérarchisé, sans recopier les documents.",
       ],
-      notions: [
-        "actif et passif",
-        "capitaux propres",
-        "dettes financières",
-        "capacité de production",
-        "charges fixes et charges variables",
-      ],
+      notions: ["actif et passif", "capitaux propres", "dettes financières", "charges fixes et charges variables"],
       preparation:
-        "Créez la partie avec les réglages ci-dessus et notez le code d'invitation. Constituez les équipes à l'avance : trois élèves par équipe, un rôle par élève (direction, production, finances), rôles tournants d'une séance à l'autre. Imprimez la fiche de diagnostic vierge.",
+        "Créez la partie avec ces réglages : NOVA (une seule enceinte), un trimestre par tour, niveau 3 · Pilotage, six tours, six équipes, deux concurrents machine, TVA activée, monde variable décoché, questions de connaissances activées. Notez le code d'invitation. Constituez les équipes à l'avance : trois élèves par équipe, un rôle par élève (direction, production, finances), rôles tournants d'une séance à l'autre. Imprimez la fiche de diagnostic vierge.",
       deroule: [
         {
           minutes: 15,
@@ -95,7 +97,7 @@ export const ATELIER_CG1: AtelierDefinition = {
           minutes: 45,
           titre: "Le premier arbitrage",
           detail:
-            "L'arène pose au tour 1 un arbitrage à deux issues, chacune avec ce qu'elle rapporte et ce qu'elle coûte. L'équipe tranche, motive son choix en trois lignes, puis saisit ses décisions.",
+            "L'arène pose au tour 1 un arbitrage à deux issues, chacune avec ce qu'elle rapporte et ce qu'elle coûte. L'équipe tranche, motive son choix en trois lignes, puis saisit ses décisions : un prix, un volume à produire, un budget de marketing.",
         },
         {
           minutes: 20,
@@ -141,10 +143,9 @@ export const ATELIER_CG1: AtelierDefinition = {
         "taux de marge sur coût variable",
         "seuil de rentabilité",
         "marge de sécurité",
-        "point mort",
       ],
       preparation:
-        "Rien à créer : la partie continue. Préparez au tableau le compte de résultat du tour 1 d'une équipe volontaire, il servira d'exemple commun.",
+        "Rien à créer : la partie continue. Préparez au tableau le compte de résultat du tour 1 d'une équipe volontaire, il servira d'exemple commun. Le panneau du seuil de l'arène restera fermé jusqu'au calcul à la main.",
       deroule: [
         {
           minutes: 20,
@@ -156,7 +157,7 @@ export const ATELIER_CG1: AtelierDefinition = {
           minutes: 40,
           titre: "Le tri des charges",
           detail:
-            "Sur le compte de résultat du tour 1, chaque équipe classe ses charges : celles qui suivent le volume, celles qui tombent quoi qu'il arrive. Le marketing et la qualité posent la vraie question, et il faut la trancher.",
+            "Sur le compte de résultat du tour 1, chaque équipe classe ses charges : celles qui suivent le volume, celles qui tombent quoi qu'il arrive. Le marketing pose la vraie question, et il faut la trancher.",
         },
         {
           minutes: 30,
@@ -180,7 +181,7 @@ export const ATELIER_CG1: AtelierDefinition = {
           minutes: 35,
           titre: "Clôture et débriefing",
           detail:
-            "Vous clôturez. On compare le volume visé et le volume vendu, et on cherche pourquoi ils diffèrent : le prix a fait fuir des clients, ou la capacité n'a pas suivi.",
+            "Vous clôturez. On compare le volume visé et le volume vendu, et on cherche pourquoi ils diffèrent : le prix a fait fuir des clients, ou le stock n'a pas suivi.",
         },
       ],
       livrable:
@@ -188,7 +189,7 @@ export const ATELIER_CG1: AtelierDefinition = {
       tracePasseport:
         "J'ai calculé le seuil de rentabilité d'une entreprise à partir de son compte de résultat, et je m'en suis servi pour fixer un prix de vente.",
       evaluation: [
-        "Le tri des charges est justifié, y compris pour les budgets discrétionnaires.",
+        "Le tri des charges est justifié, y compris pour le budget de marketing.",
         "Les calculs sont exacts et les unités sont écrites.",
         "Le seuil est interprété : l'élève dit ce qu'il faut vendre, pas seulement le chiffre.",
         "Le prix retenu est cohérent avec le seuil annoncé.",
@@ -196,7 +197,7 @@ export const ATELIER_CG1: AtelierDefinition = {
     },
     {
       numero: 3,
-      titre: "Le plan de trésorerie et la banque",
+      titre: "Vendre n'est pas encaisser",
       dureeMinutes: 180,
       tourJoue: 3,
       processus: [
@@ -204,22 +205,22 @@ export const ATELIER_CG1: AtelierDefinition = {
         "P5 · Analyse et prévision de l'activité",
       ],
       objectif:
-        "Construire un plan de trésorerie dans le cockpit, en déduire un besoin de financement chiffré et daté, puis mesurer l'écart avec le réalisé.",
+        "Construire le budget de trésorerie du trimestre dans le cockpit, en déduire un besoin de financement chiffré et daté, puis mesurer l'écart avec le réalisé.",
       competences: [
         "Je distingue une charge d'un décaissement, et un produit d'un encaissement.",
-        "Je construis un plan de trésorerie à partir de décisions prévues et de délais de règlement.",
+        "Je construis un budget de trésorerie à partir de décisions prévues et de délais de règlement.",
         "Je présente un besoin de financement chiffré et daté.",
         "Je mesure l'écart entre ma prévision et le réalisé, et j'en cherche la cause.",
       ],
       notions: [
         "encaissements et décaissements",
         "délais de règlement clients et fournisseurs",
-        "plan de trésorerie",
+        "budget de trésorerie",
         "découvert autorisé",
         "emprunt",
       ],
       preparation:
-        "Distribuez le modèle de plan de trésorerie sur tableur, colonnes vides. Vérifiez que la partie tourne au niveau Arbitrage : c'est lui qui ouvre le financement, donc le panneau bancaire.",
+        "Le cockpit de l'équipe (à télécharger depuis la page de la partie) porte une feuille de prévision du résultat et de la trésorerie, qui se recalcule à chaque hypothèse : c'est elle que les équipes renseignent, ligne à ligne, avant de saisir leurs décisions. Vérifiez que la partie tourne au niveau Pilotage : c'est lui qui ouvre l'emprunt et l'apport des associés.",
       deroule: [
         {
           minutes: 20,
@@ -229,21 +230,21 @@ export const ATELIER_CG1: AtelierDefinition = {
         },
         {
           minutes: 45,
-          titre: "Le plan, sur tableur",
+          titre: "Le budget, sur tableur",
           detail:
-            "Chaque équipe prévoit ses encaissements et ses décaissements du trimestre à venir, à partir de ses décisions et des délais du scénario. Le solde de fin de trimestre est la ligne qui compte.",
+            "Chaque équipe prévoit ses encaissements et ses décaissements du trimestre à venir, à partir de ses décisions et des délais du scénario : les clients paient à soixante jours, les fournisseurs se règlent plus tôt. Le solde de fin de trimestre est la ligne qui compte.",
         },
         {
           minutes: 25,
-          titre: "Déposer le dossier",
+          titre: "Le besoin, chiffré et daté",
           detail:
-            "Le plan se dépose dans l'arène avec les décisions. Sans lui, la banque n'instruit aucune demande d'emprunt : les équipes qui l'oublient s'en apercevront au tour suivant, et c'est une leçon qu'aucun cours ne remplace.",
+            "Chaque équipe écrit en une ligne ce qui lui manque, quand, et pourquoi. Une équipe le lit à voix haute. Un besoin qu'on ne sait pas dater n'est pas un besoin, c'est une inquiétude.",
         },
         {
           minutes: 30,
           titre: "Décider le tour 3",
           detail:
-            "Emprunter, augmenter le capital, mobiliser des créances ou ne rien faire : l'équipe choisit, et le montant demandé doit correspondre au besoin que son plan démontre.",
+            "Emprunter, faire appel aux associés, ou ne rien faire : l'équipe choisit, et le montant demandé doit correspondre au besoin que son budget démontre. La banque prête dans la limite de ce que les capitaux propres autorisent, et elle lit à chaque clôture comment la trésorerie a été tenue.",
         },
         {
           minutes: 20,
@@ -255,43 +256,45 @@ export const ATELIER_CG1: AtelierDefinition = {
           minutes: 40,
           titre: "L'écart",
           detail:
-            "Chaque équipe reprend son plan et écrit, ligne par ligne, d'où vient l'écart. Un écart qui se répète dans le même sens n'est pas de la malchance, c'est une erreur de méthode.",
+            "Chaque équipe reprend son budget et écrit, ligne par ligne, d'où vient l'écart. Un écart qui se répète dans le même sens n'est pas de la malchance, c'est une erreur de méthode.",
         },
       ],
       livrable:
-        "Le plan de trésorerie du trimestre sur tableur, et la note d'écart qui l'accompagne : pour chaque ligne, le prévu, le réalisé, l'écart et sa cause.",
+        "Le budget de trésorerie du trimestre dans le cockpit, et la note d'écart qui l'accompagne : pour chaque ligne, le prévu, le réalisé, l'écart et sa cause.",
       tracePasseport:
-        "J'ai établi un plan de trésorerie, je m'en suis servi pour justifier une demande de financement, et j'ai analysé les écarts avec le réalisé.",
+        "J'ai établi un budget de trésorerie, je m'en suis servi pour justifier une demande de financement, et j'ai analysé les écarts avec le réalisé.",
       evaluation: [
         "Les décaissements sont datés selon les délais réels, pas au moment de la charge.",
-        "Le besoin de financement demandé correspond à celui que le plan démontre.",
+        "Le besoin de financement demandé correspond à celui que le budget démontre.",
         "Les causes d'écart sont cherchées dans les décisions, pas mises sur le compte du hasard.",
         "Le tableur est lisible par quelqu'un qui ne l'a pas construit.",
       ],
     },
     {
       numero: 4,
-      titre: "Gagner de l'argent et ne plus en avoir",
+      titre: "Produire, stocker, encaisser",
       dureeMinutes: 180,
       tourJoue: 4,
-      processus: ["P6 · Analyse de la situation financière"],
+      processus: [
+        "P2 · Contrôle et production de l'information financière",
+        "P1 · Contrôle et traitement comptable des opérations commerciales",
+      ],
       objectif:
-        "Construire un bilan fonctionnel et expliquer, avec lui, comment une entreprise rentable se retrouve sans trésorerie.",
+        "Évaluer le stock au coût unitaire moyen pondéré, lire la variation de stock au compte de résultat, et expliquer pourquoi un trimestre bénéficiaire peut laisser la caisse à découvert.",
       competences: [
-        "Je reclasse un bilan comptable en bilan fonctionnel.",
-        "Je calcule un fonds de roulement net global, un besoin en fonds de roulement et une trésorerie nette.",
-        "J'établis la relation entre les trois, et je m'en sers pour expliquer une situation.",
-        "Je propose des actions qui agissent sur le besoin en fonds de roulement.",
+        "Je calcule un coût unitaire moyen pondéré à partir du stock initial et des entrées du trimestre.",
+        "Je lis la production stockée au compte de résultat et je dis ce qu'elle est : un produit qui n'a rien encaissé.",
+        "Je retrouve, poste par poste, où est passé l'argent d'un trimestre bénéficiaire : stock, créances, TVA à décaisser.",
+        "Je propose une action qui libère de la trésorerie et je dis ce qu'elle coûte.",
       ],
       notions: [
-        "bilan fonctionnel",
-        "fonds de roulement net global",
-        "besoin en fonds de roulement",
-        "trésorerie nette",
-        "stocks et créances",
+        "coût unitaire moyen pondéré",
+        "variation de stock et production stockée",
+        "créances clients",
+        "résultat et trésorerie",
       ],
       preparation:
-        "C'est le tour où l'activité s'emballe. Rien à régler : le scénario s'en charge. Préparez la trame du bilan fonctionnel au tableau.",
+        "C'est le tour où l'activité s'emballe : le chiffre d'affaires monte, le résultat suit, la caisse descend. Rien à régler : le scénario s'en charge. Préparez au tableau une fiche de stock vierge (stock initial, entrées, sorties, stock final) et le petit tableau « où est passé l'argent » à trois lignes.",
       deroule: [
         {
           minutes: 20,
@@ -300,44 +303,45 @@ export const ATELIER_CG1: AtelierDefinition = {
             "Le chiffre d'affaires monte, le résultat suit, et la trésorerie descend. Vous laissez les équipes buter dessus une bonne dizaine de minutes avant d'ouvrir la séance.",
         },
         {
-          minutes: 45,
-          titre: "Le bilan fonctionnel",
+          minutes: 40,
+          titre: "Le stock, ce qu'il vaut",
           detail:
-            "Chaque équipe reclasse son propre bilan : emplois stables, ressources stables, actif et passif circulants, trésorerie. Puis calcule le fonds de roulement, le besoin et la trésorerie nette.",
+            "Chaque équipe remplit sa fiche de stock avec ses propres chiffres : stock initial au coût du tour précédent, entrées au coût de production du trimestre, sorties au coût unitaire moyen pondéré. Puis elle compare son stock final au montant du bilan. L'égalité tombe juste, ce qui n'arrive jamais dans un exercice inventé.",
         },
         {
-          minutes: 25,
-          titre: "La relation",
+          minutes: 30,
+          titre: "La production stockée",
           detail:
-            "Trésorerie nette égale fonds de roulement moins besoin en fonds de roulement. Ils vérifient sur leurs propres chiffres, et l'égalité tombe juste, ce qui n'arrive jamais dans un exercice inventé.",
+            "Au compte de résultat, la production stockée est un produit. Mais elle n'a rien encaissé : c'est de la marchandise dans la réserve, valorisée au coût. Les équipes qui ont produit plus qu'elles n'ont vendu voient leur résultat tenu par un produit qui n'est pas une vente.",
+        },
+        {
+          minutes: 40,
+          titre: "Où est passé l'argent",
+          detail:
+            "Trois lignes : ce que le stock a absorbé, ce que les créances clients ont absorbé, ce que la TVA à décaisser a retenu. La somme explique l'écart entre le résultat et la caisse, à l'euro près. Pas de bilan fonctionnel : il viendra en seconde année, quand le vocabulaire sera là.",
         },
         {
           minutes: 30,
           titre: "Décider le tour 4",
           detail:
-            "Comment desserrer l'étau : vendre moins cher pour vider le stock, mobiliser les créances, emprunter, ralentir. Chaque solution a son prix, et l'équipe doit dire lequel elle accepte de payer.",
+            "Comment desserrer l'étau : produire moins pour vider le stock, vendre moins cher, mobiliser les créances, emprunter. Chaque solution a son prix, et l'équipe doit dire lequel elle accepte de payer.",
         },
         {
           minutes: 20,
           titre: "Clôture",
-          detail: "Vous clôturez. Les équipes qui n'ont rien fait découvrent l'affacturage forcé.",
-        },
-        {
-          minutes: 40,
-          titre: "Formalisation",
           detail:
-            "Vous formalisez au tableau ce qu'ils viennent de vivre. La crise de trésorerie de croissance a un nom, et ils ne l'oublieront plus.",
+            "Vous clôturez. Les équipes qui n'ont rien fait découvrent l'affacturage forcé : la banque a cédé leurs créances à leur place, et le leur a fait payer.",
         },
       ],
       livrable:
-        "Le bilan fonctionnel de l'entreprise au tour 4, les trois agrégats calculés, et une note d'une page qui explique le paradoxe et propose deux actions chiffrées.",
+        "La fiche de stock du trimestre au coût unitaire moyen pondéré, rapprochée du bilan, et le tableau « où est passé l'argent » qui explique l'écart entre le résultat et la caisse, avec une action chiffrée pour le tour suivant.",
       tracePasseport:
-        "J'ai construit un bilan fonctionnel, calculé le fonds de roulement, le besoin en fonds de roulement et la trésorerie nette, et j'ai expliqué une crise de trésorerie à partir de ces agrégats.",
+        "J'ai évalué un stock au coût unitaire moyen pondéré, rapproché la production stockée du compte de résultat, et expliqué pourquoi un trimestre bénéficiaire avait laissé la trésorerie à découvert.",
       evaluation: [
-        "Le reclassement est complet et les masses s'équilibrent.",
-        "La relation entre les trois agrégats est vérifiée sur les chiffres de l'équipe.",
-        "L'explication porte sur le besoin en fonds de roulement et pas sur le résultat.",
-        "Les actions proposées sont chiffrées et leur contrepartie est nommée.",
+        "Le coût unitaire moyen pondéré est exact et le stock final se retrouve au bilan.",
+        "La production stockée est expliquée comme un produit sans encaissement, pas comme une vente.",
+        "Le tableau « où est passé l'argent » boucle : ses trois lignes expliquent l'écart.",
+        "L'action proposée est chiffrée et sa contrepartie est nommée.",
       ],
     },
     {
@@ -350,22 +354,21 @@ export const ATELIER_CG1: AtelierDefinition = {
         "P1 · Contrôle et traitement comptable des opérations commerciales",
       ],
       objectif:
-        "Comprendre le poids de la TVA et des délais de règlement dans la trésorerie, et comparer le coût de deux façons de mobiliser des créances.",
+        "Comprendre le poids de la TVA et des délais de règlement dans la trésorerie, et calculer ce que coûte de mobiliser une créance avant son terme.",
       competences: [
         "Je calcule une TVA collectée, une TVA déductible et une TVA à décaisser.",
         "J'explique pourquoi une taxe neutre pour le résultat pèse sur la trésorerie.",
-        "Je calcule le coût réel d'un escompte et celui d'un affacturage, et je les compare.",
-        "Je choisis un moyen de financement du poste clients et je justifie mon choix par le calcul.",
+        "Je calcule le coût d'un escompte et celui d'un affacturage sur mes propres créances, au prorata du trimestre.",
+        "Je choisis de mobiliser ou non mes créances, et je justifie mon choix par le calcul.",
       ],
       notions: [
         "TVA collectée, déductible, à décaisser",
         "flux toutes taxes comprises et résultat hors taxes",
         "escompte",
         "affacturage",
-        "coût du financement à court terme",
       ],
       preparation:
-        "Vérifiez que la TVA est bien activée dans les paramètres économiques de la partie. Préparez deux créances chiffrées au tableau pour l'exercice de comparaison.",
+        "Vérifiez que la TVA est bien activée dans les paramètres économiques de la partie. Reprenez le tableau « où est passé l'argent » de la séance 4 : sa troisième ligne est le sujet du jour. Préparez une créance chiffrée au tableau pour l'exercice de comparaison.",
       deroule: [
         {
           minutes: 30,
@@ -375,9 +378,9 @@ export const ATELIER_CG1: AtelierDefinition = {
         },
         {
           minutes: 30,
-          titre: "Son poids dans le besoin",
+          titre: "Son poids dans la caisse",
           detail:
-            "Ils reprennent le besoin en fonds de roulement du tour 4 et isolent la part qui vient de la TVA. Une taxe qui ne coûte rien peut immobiliser beaucoup.",
+            "Ils reprennent la troisième ligne du tableau de la séance 4 et la refont pour le tour 5 : combien la TVA, neutre pour le résultat, a retenu dans la caisse ce trimestre. Une taxe qui ne coûte rien peut immobiliser beaucoup.",
         },
         {
           minutes: 40,
@@ -389,7 +392,7 @@ export const ATELIER_CG1: AtelierDefinition = {
           minutes: 30,
           titre: "Décider le tour 5",
           detail:
-            "L'équipe applique sa conclusion et saisit ses décisions, plan de trésorerie mis à jour.",
+            "L'équipe applique sa conclusion et saisit ses décisions, budget de trésorerie mis à jour dans le cockpit.",
         },
         {
           minutes: 20,
@@ -405,9 +408,9 @@ export const ATELIER_CG1: AtelierDefinition = {
         },
       ],
       livrable:
-        "Le calcul de la TVA à décaisser du trimestre, la part de TVA dans le besoin en fonds de roulement, et le tableau comparatif escompte contre affacturage avec la décision retenue.",
+        "Le calcul de la TVA à décaisser du trimestre, son poids dans la caisse, et le tableau comparatif escompte contre affacturage avec la décision retenue.",
       tracePasseport:
-        "J'ai calculé une TVA à décaisser, mesuré son poids dans le besoin en fonds de roulement, et comparé par le calcul deux modes de financement du poste clients.",
+        "J'ai calculé une TVA à décaisser, mesuré son poids dans la trésorerie, et comparé par le calcul deux façons de mobiliser une créance.",
       evaluation: [
         "La TVA à décaisser est exacte et son mécanisme est expliqué en une phrase juste.",
         "La distinction entre neutralité pour le résultat et poids pour la trésorerie est établie.",
@@ -422,26 +425,23 @@ export const ATELIER_CG1: AtelierDefinition = {
       tourJoue: 6,
       processus: [
         "P5 · Analyse et prévision de l'activité",
-        "P6 · Analyse de la situation financière",
-        "P7 · Fiabilisation de l'information et système d'information comptable",
+        "P7 · Fiabilisation de l'information et système d'information comptable (SIC)",
       ],
       objectif:
-        "Produire un rapport de gestion sur six trimestres à partir de données exportées, et le soutenir devant un jury.",
+        "Produire une note de gestion de deux pages sur six trimestres à partir du relevé exporté, et la présenter en cinq minutes.",
       competences: [
         "J'exporte des données de gestion et je les contrôle avant de les utiliser.",
         "Je construis une série sur plusieurs périodes et j'en tire une évolution.",
-        "Je rédige un rapport de gestion qui explique des résultats plutôt que de les décrire.",
-        "Je soutiens une analyse à l'oral et je réponds à une objection chiffrée.",
+        "Je rédige une note de gestion qui explique des résultats plutôt que de les décrire.",
+        "Je présente une analyse à l'oral et je réponds à une question chiffrée.",
       ],
       notions: [
         "évolution en valeur et en pourcentage",
-        "ratios de rentabilité",
-        "structure financière",
         "contrôle de cohérence",
-        "rapport de gestion",
+        "note de gestion",
       ],
       preparation:
-        "Depuis la page de la partie, exportez le relevé au format tableur : il contient les six tours de chaque équipe. Distribuez la trame du rapport et la grille d'oral. Prévoyez un jury, même symbolique.",
+        "Depuis la page de la partie, exportez le relevé au format tableur : il contient les six tours de chaque équipe. Distribuez la trame de la note (deux pages, trois parties) et la grille d'oral. Prévoyez un jury, même symbolique.",
       deroule: [
         {
           minutes: 20,
@@ -456,16 +456,16 @@ export const ATELIER_CG1: AtelierDefinition = {
             "Chaque équipe reçoit le relevé exporté et vérifie sa cohérence : les six tours sont là, les totaux se recoupent, aucune ligne ne manque. Un tableau qu'on n'a pas contrôlé ne se commente pas.",
         },
         {
-          minutes: 50,
-          titre: "Le rapport",
+          minutes: 60,
+          titre: "La note",
           detail:
-            "Quatre pages : l'entreprise et sa contrainte, l'évolution de l'activité, la situation financière, les décisions qui ont pesé, et ce qu'ils feraient autrement. Les graphiques viennent du relevé. La séance en pose la structure et les deux tiers du texte ; l'écriture se termine hors classe.",
+            "Deux pages, trois parties : ce que l'entreprise a vendu et gagné, tour par tour ; ce qui s'est passé dans la caisse ; la décision qu'ils regrettent et ce qu'ils feraient autrement. Un graphique, issu du relevé. La séance en pose la structure et l'essentiel du texte ; la mise au propre se termine hors classe.",
         },
         {
-          minutes: 70,
-          titre: "Soutenances",
+          minutes: 60,
+          titre: "Présentations",
           detail:
-            "Dix minutes par équipe, sept de présentation et trois de questions. Une question obligatoire du jury : montrez-nous le trimestre où vous avez perdu le contrôle, et dites pourquoi.",
+            "Sept minutes par équipe : cinq de présentation, deux de questions. Une question obligatoire du jury : montrez-nous le trimestre où la caisse a décroché, et dites pourquoi.",
         },
         {
           minutes: 20,
@@ -475,13 +475,13 @@ export const ATELIER_CG1: AtelierDefinition = {
         },
       ],
       livrable:
-        "Le rapport de gestion de quatre pages, ses annexes chiffrées issues du relevé exporté, et la soutenance de dix minutes.",
+        "La note de gestion de deux pages, son graphique issu du relevé exporté, et la présentation de cinq minutes.",
       tracePasseport:
-        "J'ai produit et soutenu un rapport de gestion sur six périodes à partir de données exportées et contrôlées.",
+        "J'ai produit et présenté une note de gestion sur six périodes à partir de données exportées et contrôlées.",
       evaluation: [
-        "Les données du rapport se retrouvent dans le relevé, sans écart.",
-        "Le rapport explique les résultats au lieu de les paraphraser.",
-        "Les graphiques servent la démonstration et portent leurs unités.",
+        "Les données de la note se retrouvent dans le relevé, sans écart.",
+        "La note explique les résultats au lieu de les paraphraser.",
+        "Le graphique sert la démonstration et porte ses unités.",
         "À l'oral, l'équipe assume ses décisions et répond avec des chiffres.",
       ],
     },
@@ -497,18 +497,18 @@ export const ATELIER_CG1: AtelierDefinition = {
       nom: "Semaine bloquée",
       quand: "Cinq jours, six demi-journées de trois heures",
       comment:
-        "Les six séances tiennent dans la semaine, à raison d'une le matin et une l'après-midi les trois premiers jours, puis les livrables et la soutenance. Prévoyez une demi-journée de plus pour le rapport : quatre pages ne s'écrivent pas entre deux tours.",
+        "Les six séances tiennent dans la semaine, à raison d'une le matin et une l'après-midi les trois premiers jours, puis les livrables et les présentations. Prévoyez une demi-journée de plus pour la note : deux pages ne s'écrivent pas entre deux tours.",
     },
     {
       nom: "Fil rouge sur l'année",
       quand: "Six séances réparties sur les deux premiers trimestres",
       comment:
-        "Une séance toutes les trois ou quatre semaines, placée juste après le cours qui donne l'outil. Le seuil de rentabilité vient d'être vu, la séance 2 le fait servir. C'est le montage qui ancre le mieux, et celui qui demande le plus de discipline : la partie reste ouverte des mois.",
+        "Une séance toutes les trois ou quatre semaines, placée juste après le cours qui donne l'outil. Le seuil de rentabilité vient d'être vu, la séance 2 le fait servir ; la TVA vient d'être vue, la séance 5 la fait peser. C'est le montage qui ancre le mieux, et celui qui demande le plus de discipline : la partie reste ouverte des mois.",
     },
   ],
   evaluationFinale: [
     "Six livrables d'équipe, un par séance, notés sur les critères annoncés au début de chaque séance.",
-    "Le rapport de gestion et sa soutenance, qui pèsent le plus lourd parce qu'ils rassemblent tout.",
+    "La note de gestion et sa présentation, qui pèsent le plus lourd parce qu'elles rassemblent tout.",
     "La note pédagogique que la plateforme calcule pour chaque équipe : diagnostics justes, modèles d'analyse bien choisis, questions de connaissances, indices consommés. Elle éclaire le travail de raisonnement, que les livrables ne montrent pas toujours.",
     "Le classement final ne compte pas dans la note. Une équipe peut bien raisonner et mal finir : c'est la vie des entreprises, ce ne doit pas être celle des élèves.",
   ],
@@ -519,9 +519,14 @@ export const ATELIER_CG1: AtelierDefinition = {
         "Non, mais il faut avoir joué une partie solo une fois, environ quarante minutes, pour savoir où sont les écrans. L'atelier ne vous demande jamais de décider à la place des équipes : votre travail est de clôturer les tours et d'animer les débriefings.",
     },
     {
+      question: "Pourquoi une seule enceinte, et pas la gamme ?",
+      reponse:
+        "Parce qu'en première année le seuil de rentabilité doit d'abord se comprendre sur un produit : une marge, un volume, un point où l'on ne perd plus. Avec trois références, le seuil dépend du mix vendu, et c'est une autre leçon. La gamme, avec le niveau Arbitrage qui l'ouvre, est le prolongement naturel en seconde année.",
+    },
+    {
       question: "Que se passe-t-il si une équipe fait faillite en cours de route ?",
       reponse:
-        "Rien ne s'arrête. Une entreprise en découvert au-delà du plafond voit ses créances cédées d'office, elle continue de jouer, et elle a beaucoup à raconter en séance 4. Une équipe qui se plante donne souvent le meilleur rapport de gestion, à condition que vous le disiez dès la première séance.",
+        "Rien ne s'arrête. Une entreprise en découvert au-delà du plafond voit ses créances cédées d'office, elle continue de jouer, et elle a beaucoup à raconter en séance 4. Une équipe qui se plante donne souvent la meilleure note de gestion, à condition que vous le disiez dès la première séance.",
     },
     {
       question: "Combien d'élèves par équipe ?",
@@ -536,17 +541,17 @@ export const ATELIER_CG1: AtelierDefinition = {
     {
       question: "Faut-il des ordinateurs pour tout le monde ?",
       reponse:
-        "Un poste par équipe suffit pour jouer. Le tableur du plan de trésorerie de la séance 3 et le rapport de la séance 6 demandent en revanche de quoi travailler à plusieurs, en salle informatique ou sur les portables des élèves.",
+        "Un poste par équipe suffit pour jouer. Le cockpit de la séance 3 et la note de la séance 6 demandent en revanche de quoi travailler à plusieurs, en salle informatique ou sur les portables des élèves.",
     },
     {
       question: "Peut-on changer de secteur d'entreprise ?",
       reponse:
-        "Oui, tous les secteurs se jouent avec le même déroulé. NOVA est recommandé parce qu'il porte un stock, un coût de production et des délais de règlement, les trois matières de la première année. Un secteur sans stock, comme la restauration ou l'hôtellerie, rend la séance 4 plus difficile et la séance 2 plus subtile.",
+        "Oui, tous les secteurs se jouent avec le même déroulé. NOVA est recommandé parce qu'il porte un stock, un coût de production et des délais de règlement, les trois matières de la première année. Un secteur sans stock, comme la restauration ou l'hôtellerie, retire à la séance 4 son objet.",
     },
   ],
   prolongements: [
     "Rejouer le même atelier sur LA TABLE D'AUGUSTIN, où rien ne se stocke : les élèves découvrent que la moitié de leurs réflexes venaient du stock et pas de la gestion.",
-    "Ouvrir le niveau Stratégie en seconde année pour ajouter le placement de trésorerie, puis le niveau Executive pour l'affectation du résultat.",
+    "En seconde année, passer NOVA en gamme avec le niveau Arbitrage : trois références, un seuil qui dépend du mix, le bilan fonctionnel et le financement du poste clients par le calcul.",
     "Prolonger la séance 5 vers le calcul et le décaissement de l'impôt sur les sociétés, modulable dans les paramètres économiques de la partie.",
     "Monter un concours entre classes à partir de la même partie, avec groupes tirés au sort et décisions verrouillées.",
   ],

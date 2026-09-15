@@ -42,7 +42,12 @@ export interface AtelierSeance {
   deroule: AtelierPhase[];
   /** Ce que l'équipe rend à la fin de la séance. */
   livrable: string;
-  /** La phrase à verser au passeport professionnel. */
+  /**
+   * La phrase à verser au document de trace de la spécialité : passeport
+   * professionnel en BTS CG, fiches d'activités en MCO, fiches descriptives en
+   * NDRC, dossier professionnel en GPME, portfolio en DCG… Le nom exact est
+   * `traceLabel`, sur l'atelier ; le champ garde son nom historique.
+   */
   tracePasseport: string;
   /** Les critères sur lesquels le livrable est regardé. */
   evaluation: string[];

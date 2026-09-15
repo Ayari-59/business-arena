@@ -20,7 +20,7 @@ export const ATELIER_NDRC: AtelierDefinition = {
   diplome: "BTS Négociation et digitalisation de la relation client",
   annee: "Première année",
   nature: "Atelier professionnel",
-  traceLabel: "passeport professionnel",
+  traceLabel: "fiches descriptives d'activités",
   referentielLabel: "Blocs de compétences",
   referentielAccord: "mobilisés",
   pitch:
@@ -468,7 +468,7 @@ export const ATELIER_NDRC: AtelierDefinition = {
           minutes: 25,
           titre: "Bilan de l'atelier",
           detail:
-            "Vous rendez le classement final, puis vous le mettez de côté : ce qui se note est le tableau de bord et la soutenance. Chaque élève rédige ses phrases de passeport professionnel.",
+            "Vous rendez le classement final, puis vous le mettez de côté : ce qui se note est le tableau de bord et la soutenance. Chaque élève rédige les phrases qui iront dans ses fiches descriptives d'activités.",
         },
       ],
       livrable:

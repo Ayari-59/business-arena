@@ -19,7 +19,7 @@ export const ATELIER_GPME: AtelierDefinition = {
   diplome: "BTS Gestion de la PME",
   annee: "Deuxième année",
   nature: "Atelier professionnel",
-  traceLabel: "passeport professionnel",
+  traceLabel: "dossier professionnel",
   referentielLabel: "Blocs de compétences",
   referentielAccord: "mobilisés",
   pitch:
@@ -467,7 +467,7 @@ export const ATELIER_GPME: AtelierDefinition = {
           minutes: 25,
           titre: "Bilan de l'atelier",
           detail:
-            "Vous rendez le classement puis vous l'écartez : ce qui se note est le rapport et sa présentation. Chaque élève rédige ses phrases de passeport professionnel.",
+            "Vous rendez le classement puis vous l'écartez : ce qui se note est le rapport et sa présentation. Chaque élève rédige les phrases qui iront dans son dossier professionnel.",
         },
       ],
       livrable:

@@ -21,7 +21,7 @@ export const ATELIER_MCO: AtelierDefinition = {
   diplome: "BTS Management commercial opérationnel",
   annee: "Première année",
   nature: "Atelier professionnel",
-  traceLabel: "passeport professionnel",
+  traceLabel: "fiches d'activités professionnelles",
   referentielLabel: "Blocs de compétences",
   referentielAccord: "mobilisés",
   pitch:
@@ -396,7 +396,7 @@ export const ATELIER_MCO: AtelierDefinition = {
           minutes: 25,
           titre: "Bilan de l'atelier",
           detail:
-            "Vous rendez le classement final, puis vous le mettez de côté : ce qui se note est le tableau de bord et la soutenance. Chaque élève écrit les trois phrases de son passeport professionnel.",
+            "Vous rendez le classement final, puis vous le mettez de côté : ce qui se note est le tableau de bord et la soutenance. Chaque élève écrit les trois phrases qui iront dans ses fiches d'activités professionnelles.",
         },
       ],
       livrable:

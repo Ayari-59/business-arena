@@ -25,7 +25,7 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
   diplome: "DCG",
   annee: "Deuxième ou troisième année",
   nature: "Atelier professionnel",
-  traceLabel: "passeport professionnel",
+  traceLabel: "portfolio de compétences",
   referentielLabel: "Unités d'enseignement",
   referentielAccord: "mobilisées",
   pitch:
@@ -306,7 +306,7 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
     "La déclaration extra-financière consolide fidèlement les cinq trimestres et se lit sans le produit sous les yeux.",
     "L'équipe distingue partout la mesure de l'engagement qui l'a produite, et n'attribue pas à la RSE ce qui revient au marché.",
     "La soutenance assume les arbitrages, y compris ceux qui n'ont pas payé sur l'horizon de la partie.",
-    "Les traces de passeport des six séances forment un parcours cohérent, du diagnostic à la reddition.",
+    "Les traces de portfolio des six séances forment un parcours cohérent, du diagnostic à la reddition.",
   ],
   prolongements: [
     "Rejouer une partie avec un horizon plus long pour voir si des arbitrages RSE perdants sur cinq tours deviennent gagnants sur huit.",

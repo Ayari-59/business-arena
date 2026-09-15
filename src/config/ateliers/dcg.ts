@@ -21,7 +21,7 @@ export const ATELIER_DCG: AtelierDefinition = {
   diplome: "DCG",
   annee: "Deuxième ou troisième année",
   nature: "Atelier professionnel",
-  traceLabel: "passeport professionnel",
+  traceLabel: "portfolio de compétences",
   referentielLabel: "Unités d'enseignement",
   referentielAccord: "mobilisées",
   pitch:
@@ -395,7 +395,7 @@ export const ATELIER_DCG: AtelierDefinition = {
           minutes: 20,
           titre: "Bilan de l'atelier",
           detail:
-            "Vous rendez le classement puis vous l'écartez : la note vient du rapport et de la soutenance. Chaque candidat rédige ses phrases de passeport professionnel.",
+            "Vous rendez le classement puis vous l'écartez : la note vient du rapport et de la soutenance. Chaque candidat rédige les phrases de son portfolio de compétences.",
         },
       ],
       livrable:

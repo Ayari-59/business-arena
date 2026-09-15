@@ -40,7 +40,7 @@ const PEDAGOGIE = [
   {
     icon: "📓",
     title: "Rien ne se joue sans laisser d'écrit",
-    text: "Chaque séance d'atelier produit une trace à verser au passeport professionnel, un livrable et une grille de correction. Un business game qui ne laisse que des souvenirs ne remplit pas un dossier.",
+    text: "Chaque séance d'atelier produit une trace à verser au document de la spécialité (passeport professionnel en BTS CG, fiches d'activités, portfolio), un livrable et une grille de correction. Un business game qui ne laisse que des souvenirs ne remplit pas un dossier.",
   },
 ];
 
