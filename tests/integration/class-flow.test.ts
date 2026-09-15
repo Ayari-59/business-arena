@@ -167,6 +167,12 @@ describe("partie de classe complète", () => {
     }
 
     const summaries = await getTeacherGames(teacherId);
-    expect(summaries.some((s) => s.gameId === gameId && s.status === "finished")).toBe(true);
+    const resume = summaries.find((s) => s.gameId === gameId);
+    expect(resume?.status).toBe("finished");
+    // La liste des parties a un visage : le secteur joué, son icône, son titre.
+    expect(resume?.scenarioCode).toBe("nova");
+    expect(resume?.sector).toBe("industrie");
+    expect(resume?.scenarioIcon).toBeTruthy();
+    expect(resume?.scenarioTitle).toContain("NOVA");
   });
 });

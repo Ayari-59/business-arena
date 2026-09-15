@@ -10,7 +10,7 @@ import {
   teams,
   users,
 } from "@/db/schema";
-import type { ScenarioVocabulary } from "@/config/scenarios/registry";
+import type { ScenarioVocabulary, Sector } from "@/config/scenarios/registry";
 import { resolveScenarioDefinition } from "@/services/scenario-source.service";
 import { lireSource, type DecisionSourceMap } from "@/config/decision-source";
 import {
@@ -158,6 +158,11 @@ export interface TeacherGameSummary {
   roundDays: number;
   teamsCount: number;
   createdAt: Date;
+  /** Le secteur joué, pour que la liste des parties ait un visage. */
+  scenarioCode: string;
+  scenarioTitle: string;
+  scenarioIcon: string;
+  sector: Sector;
 }
 
 export async function getTeacherGames(teacherId: string): Promise<TeacherGameSummary[]> {
@@ -177,16 +182,27 @@ export async function getTeacherGames(teacherId: string): Promise<TeacherGameSum
     .where(and(inArray(teams.gameId, gameIds), eq(teams.controller, "human")));
   const countByGame = new Map<string, number>();
   for (const t of allTeams) countByGame.set(t.gameId, (countByGame.get(t.gameId) ?? 0) + 1);
-  return classGames.map((g) => ({
-    gameId: g.id,
-    joinCode: g.joinCode,
-    status: g.status,
-    currentRound: g.currentRound,
-    roundsCount: (g.scenarioSnapshot as { roundsCount: number }).roundsCount,
-    roundDays: (g.scenarioSnapshot as { roundDays: number }).roundDays,
-    teamsCount: countByGame.get(g.id) ?? 0,
-    createdAt: g.createdAt,
-  }));
+  return Promise.all(
+    classGames.map(async (g) => {
+      const def = await resolveScenarioDefinition(
+        (g.scenarioSnapshot as { code?: string } | null)?.code,
+      );
+      return {
+        gameId: g.id,
+        joinCode: g.joinCode,
+        status: g.status,
+        currentRound: g.currentRound,
+        roundsCount: (g.scenarioSnapshot as { roundsCount: number }).roundsCount,
+        roundDays: (g.scenarioSnapshot as { roundDays: number }).roundDays,
+        teamsCount: countByGame.get(g.id) ?? 0,
+        createdAt: g.createdAt,
+        scenarioCode: def.code,
+        scenarioTitle: def.title,
+        scenarioIcon: def.icon,
+        sector: def.sector,
+      };
+    }),
+  );
 }
 
 /**
@@ -331,6 +347,8 @@ export interface TeacherGameView {
   /** Secteur joué : titre du scénario et codes d'événements de SON deck. */
   scenarioCode: string;
   scenarioTitle: string;
+  scenarioIcon: string;
+  sector: Sector;
   scenarioEventCodes: string[];
   /** Questions posées dans les situations de cette partie. */
   quizMode: QuizMode;
@@ -442,6 +460,8 @@ export async function getTeacherGameView(
       })),
     scenarioCode: snapshotDefinition.code,
     scenarioTitle: snapshotDefinition.title,
+    scenarioIcon: snapshotDefinition.icon,
+    sector: snapshotDefinition.sector,
     // Le deck vient du SNAPSHOT, pas de la version courante du scénario :
     // une partie lancée joue les règles avec lesquelles elle a commencé.
     scenarioEventCodes: (

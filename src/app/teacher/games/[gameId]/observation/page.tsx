@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { getObservationSeance, type ObservationTour } from "@/services/observation.service";
 import { Tiroir } from "@/components/tiroir";
+import { EnTeteEnseignant } from "@/components/en-tete-enseignant";
 
 export const dynamic = "force-dynamic";
 
@@ -92,34 +93,27 @@ export default async function ObservationPage({
 
   return (
     <main id="main" className="mx-auto max-w-4xl space-y-8 px-4 pt-6 pb-16 sm:p-6">
-      <header>
-        <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Espace enseignant</p>
-        <h1 className="mt-1 text-2xl font-bold">Observation de séance</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-          Pas le classement : ce que la séance a réellement produit. Combien d&apos;équipes
-          jouent encore, combien décident vraiment, et ce qu&apos;un tour leur coûte en
-          minutes.
-        </p>
-        <p className="mt-3 flex flex-wrap gap-x-2 gap-y-0.5 text-xs text-slate-400">
-          <span className="whitespace-nowrap">
-            {seance.scenario}
-            <span aria-hidden className="text-slate-600"> ·</span>
-          </span>
-          <span className="whitespace-nowrap">
-            {seance.classe ?? "sans classe"}
-            <span aria-hidden className="text-slate-600"> ·</span>
-          </span>
-          <span className="whitespace-nowrap">
-            {equipes} équipe{equipes > 1 ? "s" : ""}
-          </span>
-        </p>
-        <Link
-          href={`/teacher/games/${gameId}`}
-          className="mt-3 inline-block text-xs text-slate-400 underline-offset-4 hover:underline"
-        >
-          ← Retour à la partie
-        </Link>
-      </header>
+      <EnTeteEnseignant
+        surtitre="Observation de séance"
+        titre={seance.scenario}
+        description="Pas le classement : ce que la séance a réellement produit. Combien d'équipes jouent encore, combien décident vraiment, et ce qu'un tour leur coûte en minutes."
+        droite={
+          <>
+            <p className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300">
+              {seance.classe ?? "sans classe"}
+            </p>
+            <p className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300">
+              {equipes} équipe{equipes > 1 ? "s" : ""}
+            </p>
+            <Link
+              href={`/teacher/games/${gameId}`}
+              className="rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-xs text-amber-300 transition hover:bg-amber-400/20"
+            >
+              ← Retour à la partie
+            </Link>
+          </>
+        }
+      />
 
       {clos.length === 0 ? (
         <p className="rounded-lg border border-white/5 bg-slate-950 px-3 py-4 text-sm text-slate-400">

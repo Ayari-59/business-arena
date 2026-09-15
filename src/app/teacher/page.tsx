@@ -12,6 +12,7 @@ import {
   DEFAULT_SCENARIO_CODE,
   SCENARIO_CHOICES,
   familyOf,
+  SECTOR_COLORS,
   SECTOR_LABELS,
   economicDefaults,
 } from "@/config/scenarios/registry";
@@ -22,6 +23,9 @@ import { GuardedForm } from "@/components/guarded-action";
 import { EconomicParams } from "@/components/economic-params";
 import { SubmitButton } from "@/components/submit-button";
 import { FormPendingProgress } from "@/components/long-action-progress";
+import { EnTeteEnseignant, Rubrique } from "@/components/en-tete-enseignant";
+import { Tiroir } from "@/components/tiroir";
+import { FriseDesTours } from "@/components/frise-des-tours";
 import { ATTENTES } from "@/config/cloture";
 
 export const dynamic = "force-dynamic";
@@ -68,49 +72,28 @@ export default async function TeacherDashboard({
 
   return (
     <main id="main" className="mx-auto max-w-4xl space-y-8 px-2 py-6 sm:p-6">
-      <header className="flex items-end justify-between">
-        <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Espace enseignant</p>
-          <h1 className="text-2xl font-bold">Mes parties</h1>
-        </div>
-        <div className="flex items-center gap-4">
-          <Link
-            href="/teacher/scenarios"
-            className="text-xs text-amber-300 underline-offset-4 hover:underline"
-          >
-            Mes scénarios
-          </Link>
-          <Link
-            href="/teacher/usage"
-            className="text-xs text-amber-300 underline-offset-4 hover:underline"
-          >
-            Carnet d&apos;usage
-          </Link>
-          {isOrgAdmin ? (
-            <Link href="/org" className="text-xs text-amber-300 underline-offset-4 hover:underline">
-              Mon établissement
-            </Link>
-          ) : null}
-          {staff?.isPlatformAdmin ? (
-            <Link href="/admin" className="text-xs text-amber-300 underline-offset-4 hover:underline">
-              Administration
-            </Link>
-          ) : null}
-          <form action={logoutAction}>
-            <button className="text-xs text-slate-400 underline hover:text-slate-300">
-              Se déconnecter
-            </button>
-          </form>
-          <form action={logoutEverywhereAction}>
-            <button
-              className="text-xs text-slate-400 underline hover:text-slate-300"
-              title="Ferme aussi les sessions ouvertes sur d'autres appareils"
-            >
-              Se déconnecter partout
-            </button>
-          </form>
-        </div>
-      </header>
+      <EnTeteEnseignant
+        titre="Mes parties"
+        actif="parties"
+        liens={{ etablissement: isOrgAdmin, administration: staff?.isPlatformAdmin ?? false }}
+        compte={
+          <>
+            <form action={logoutAction}>
+              <button className="text-xs text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline">
+                Se déconnecter
+              </button>
+            </form>
+            <form action={logoutEverywhereAction}>
+              <button
+                className="text-xs text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline"
+                title="Ferme aussi les sessions ouvertes sur d'autres appareils"
+              >
+                Se déconnecter partout
+              </button>
+            </form>
+          </>
+        }
+      />
 
       {echec ? (
         <p
@@ -121,8 +104,73 @@ export default async function TeacherDashboard({
         </p>
       ) : null}
 
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-4 sm:p-7">
-        <h2 className="text-sm font-semibold text-slate-200">Créer une partie</h2>
+      {/*
+        LES PARTIES D'ABORD. On vient ici pour retrouver sa classe, pas pour
+        remplir un formulaire : la liste ouvre la page, la création suit. Chaque
+        partie a le visage de son secteur (la tuile de l'arène), son code, et sa
+        frise des tours.
+      */}
+      <Rubrique note={games.length > 0 ? compter(games.length, "partie") : undefined}>
+        Mes parties
+      </Rubrique>
+      {games.length === 0 ? (
+        <p className="rounded-lg border border-dashed border-white/15 px-4 py-5 text-center text-sm text-slate-400">
+          Aucune partie pour l&apos;instant. Créez la première ci-dessous : vous obtiendrez un
+          code d&apos;invitation à donner à vos élèves.
+        </p>
+      ) : (
+        <ul className="grid gap-3 sm:grid-cols-2">
+          {games.map((g) => {
+            const finished = g.status === "finished";
+            const joues = new Map<number, null>();
+            for (let n = 1; n < (finished ? g.roundsCount + 1 : g.currentRound); n++) joues.set(n, null);
+            return (
+              <li key={g.gameId}>
+                <Link
+                  href={`/teacher/games/${g.gameId}`}
+                  className="carte flex h-full items-center gap-3 px-3 py-3 transition hover:border-amber-400/40 sm:px-4"
+                >
+                  <span
+                    aria-hidden
+                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-xl ${SECTOR_COLORS[g.sector].bg}`}
+                  >
+                    {g.scenarioIcon}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold text-slate-100">
+                      {g.scenarioTitle}
+                    </span>
+                    <span className="mt-0.5 block text-xs text-slate-400">
+                      {compter(g.teamsCount, "équipe")} ·{" "}
+                      {finished
+                        ? "partie terminée"
+                        : `${periodLabel(g.roundDays, g.currentRound)} sur ${g.roundsCount}`}
+                    </span>
+                    <span className="mt-1.5 block">
+                      <FriseDesTours
+                        roundsCount={g.roundsCount}
+                        currentRound={g.currentRound}
+                        resultats={joues}
+                        finished={finished}
+                      />
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-right">
+                    <span className="block text-xs uppercase tracking-wide text-slate-400">Code</span>
+                    <span className="block font-mono text-base font-semibold text-amber-300">
+                      {g.joinCode}
+                    </span>
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      <Rubrique>Créer une partie</Rubrique>
+      <section className="carte p-4 sm:p-7">
+        <h2 className="text-sm font-semibold text-slate-200">Nouvelle partie de classe</h2>
         <p className="mt-1 text-xs text-slate-400">
           Vous ne savez pas quels réglages prendre ?{" "}
           <Link href="/animations" className="text-amber-300 underline-offset-4 hover:underline">
@@ -292,22 +340,17 @@ export default async function TeacherDashboard({
         </p>
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-4 sm:p-7">
-        <h2 className="text-sm font-semibold text-slate-200">
-          Organiser un concours · Business Arena Championship
-        </h2>
-        <CompetitionCreateForm />
-        <p className="mt-2 text-xs text-slate-400">
-          Les équipes s&apos;inscrivent avec le code sur /compete. Mode compétition :
-          décisions verrouillées après validation, indices limités.
-        </p>
+      <Rubrique note={competitions.length > 0 ? compter(competitions.length, "concours") : undefined}>
+        Concours
+      </Rubrique>
+      <section className="carte p-4 sm:p-7">
         {competitions.length > 0 ? (
-          <ul className="mt-4 space-y-2">
+          <ul className="mb-4 space-y-2">
             {competitions.map((c) => (
               <li key={c.competitionId}>
                 <Link
                   href={`/teacher/competitions/${c.competitionId}`}
-                  className="flex items-center justify-between rounded-xl border border-white/10 bg-slate-950 px-3 py-2.5 sm:px-4 sm:py-3 text-sm transition hover:border-amber-400/40"
+                  className="flex items-center justify-between rounded-lg border border-white/5 bg-slate-950 px-3 py-2.5 text-sm transition hover:border-amber-400/40 sm:px-4 sm:py-3"
                 >
                   <span>
                     <span className="font-mono text-amber-300">{c.joinCode}</span>
@@ -326,30 +369,20 @@ export default async function TeacherDashboard({
             ))}
           </ul>
         ) : null}
-      </section>
-
-      <section className="space-y-3">
-        {games.length === 0 ? (
-          <p className="text-sm text-slate-400">Aucune partie pour l&apos;instant.</p>
-        ) : (
-          games.map((g) => (
-            <Link
-              key={g.gameId}
-              href={`/teacher/games/${g.gameId}`}
-              className="flex items-center justify-between carte px-3 py-2.5 sm:px-4 sm:py-3 text-sm transition hover:border-amber-400/40"
-            >
-              <span>
-                <span className="font-mono text-amber-300">{g.joinCode}</span>
-                <span className="ml-3 text-slate-300">{compter(g.teamsCount, "équipe")}</span>
-              </span>
-              <span className="text-slate-400">
-                {g.status === "finished"
-                  ? "Terminée"
-                  : `${periodLabel(g.roundDays, g.currentRound)} / ${g.roundsCount}`}
-              </span>
-            </Link>
-          ))
-        )}
+        {/*
+          Le concours est l'usage rare : son formulaire attend dans un tiroir,
+          ouvert seulement pour qui n'a encore ni partie ni concours.
+        */}
+        <Tiroir
+          titre="Organiser un concours · Business Arena Championship"
+          ouvert={competitions.length === 0 && games.length === 0}
+        >
+          <CompetitionCreateForm />
+          <p className="mt-2 text-xs text-slate-400">
+            Les équipes s&apos;inscrivent avec le code sur /compete. Mode compétition :
+            décisions verrouillées après validation, indices limités.
+          </p>
+        </Tiroir>
       </section>
     </main>
   );

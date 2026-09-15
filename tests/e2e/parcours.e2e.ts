@@ -102,7 +102,7 @@ describe("parcours enseignant et élève", () => {
 
     // Le code se lit dans le DOM, pas au filtre sur le texte : l'alphabet des
     // codes est celui des majuscules, et « PARTIE » y ressemble à s'y méprendre.
-    codeInvitation = (await prof.locator("h1 span.font-mono").innerText()).trim();
+    codeInvitation = (await prof.locator("#code-invitation").innerText()).trim();
     expect(codeInvitation, "code d'invitation illisible").toMatch(/^[A-Z2-9]{6}$/);
   });
 
@@ -257,7 +257,7 @@ describe("parcours enseignant et élève", () => {
     await prof.getByRole("button", { name: /Créer la partie/ }).click();
     await prof.waitForURL(/\/teacher\/games\//, { timeout: 30_000 });
     expect(await texte(prof)).toContain("Niveau 6");
-    const code = (await prof.locator("h1 span.font-mono").innerText()).trim();
+    const code = (await prof.locator("#code-invitation").innerText()).trim();
 
     const executive = await (await navigateur.newContext()).newPage();
     await aller(executive, "/join");

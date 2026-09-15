@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
+import { EnTeteEnseignant } from "@/components/en-tete-enseignant";
 import { getTeacherUsageView } from "@/services/pedagogy.service";
 
 export const dynamic = "force-dynamic";
@@ -40,21 +40,11 @@ export default async function UsagePage() {
 
   return (
     <main id="main" className="mx-auto max-w-4xl space-y-8 px-2 py-6 sm:p-6">
-      <header>
-        <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Espace enseignant</p>
-        <h1 className="mt-1 text-2xl font-bold">Carnet d&apos;usage</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-          Ce que toutes vos parties disent ensemble, et qu&apos;aucune ne dit seule. Une
-          situation ratée par une classe est un accident ; ratée par cinq, c&apos;est
-          l&apos;énoncé qu&apos;il faut revoir.
-        </p>
-        <Link
-          href="/teacher"
-          className="mt-3 inline-block text-xs text-slate-400 underline-offset-4 hover:underline"
-        >
-          ← Retour à mes parties
-        </Link>
-      </header>
+      <EnTeteEnseignant
+        titre="Carnet d'usage"
+        actif="usage"
+        description="Ce que toutes vos parties disent ensemble, et qu'aucune ne dit seule. Une situation ratée par une classe est un accident ; ratée par cinq, c'est l'énoncé qu'il faut revoir."
+      />
 
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         {totals.map((t) => (

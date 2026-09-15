@@ -8,6 +8,7 @@ import { CompetitionSettings, CompetitionSteps } from "@/components/competition-
 import { StageSchedule } from "@/components/stage-schedule";
 import { PublicPageForm } from "@/components/public-page-form";
 import { SITE_URL } from "@/config/site";
+import { EnTeteEnseignant } from "@/components/en-tete-enseignant";
 
 export const dynamic = "force-dynamic";
 
@@ -30,20 +31,33 @@ export default async function TeacherCompetitionPage({
 
   return (
     <main id="main" className="mx-auto max-w-4xl space-y-6 px-2 py-6 sm:p-6">
-      <Link
-        href="/teacher"
-        className="inline-block text-sm text-slate-400 underline-offset-4 hover:text-amber-300 hover:underline"
-      >
-        ← Mes parties et concours
-      </Link>
-      <header>
-        <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Concours</p>
-        <h1 className="text-2xl font-bold">{view.name}</h1>
-        <p className="mt-1 text-sm text-slate-400">
-          Code d&apos;inscription : <span className="font-mono text-amber-300">{view.joinCode}</span>
-          {" · "}les équipes s&apos;inscrivent sur <span className="font-mono">/compete</span>.
-        </p>
-      </header>
+      <EnTeteEnseignant
+        surtitre="Concours"
+        titre={view.name}
+        tuile={
+          <span
+            aria-hidden
+            className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-400/10 text-2xl"
+          >
+            🏆
+          </span>
+        }
+        description={
+          <>
+            Code d&apos;inscription :{" "}
+            <span className="font-mono text-amber-300">{view.joinCode}</span>
+            {" · "}les équipes s&apos;inscrivent sur <span className="font-mono">/compete</span>.
+          </>
+        }
+        droite={
+          <Link
+            href="/teacher"
+            className="rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-xs text-amber-300 transition hover:bg-amber-400/20"
+          >
+            ← Mes parties et concours
+          </Link>
+        }
+      />
 
       <div className="grid gap-4 lg:grid-cols-2">
         <CompetitionSettings rules={view.rules} joinCode={view.joinCode} />

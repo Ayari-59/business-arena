@@ -2,7 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { listScenariosByAuthor, listSharedScenarios } from "@/services/scenario-editor.service";
-import { SCENARIOS, SECTOR_LABELS } from "@/config/scenarios/registry";
+import { SCENARIOS, SECTOR_COLORS, SECTOR_LABELS } from "@/config/scenarios/registry";
+import { EnTeteEnseignant } from "@/components/en-tete-enseignant";
 import { ConfirmForm, GuardedForm } from "@/components/guarded-action";
 import {
   deleteScenarioAction,
@@ -51,19 +52,11 @@ export default async function TeacherScenariosPage({
 
   return (
     <main id="main" className="mx-auto max-w-4xl space-y-8 px-2 py-6 sm:p-6">
-      <header className="flex items-end justify-between">
-        <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Espace enseignant</p>
-          <h1 className="text-2xl font-bold">Mes scénarios</h1>
-          <p className="mt-1 text-sm text-slate-400">
-            Partez d&apos;un secteur calibré, reformulez-le à votre main, réutilisez-le d&apos;une
-            classe à l&apos;autre.
-          </p>
-        </div>
-        <Link href="/teacher" className="text-xs text-amber-300 underline-offset-4 hover:underline">
-          ← Mes parties
-        </Link>
-      </header>
+      <EnTeteEnseignant
+        titre="Mes scénarios"
+        actif="scenarios"
+        description="Partez d'un secteur calibré, reformulez-le à votre main, réutilisez-le d'une classe à l'autre."
+      />
 
       {echec ? (
         <p
@@ -74,7 +67,7 @@ export default async function TeacherScenariosPage({
         </p>
       ) : null}
 
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-4 sm:p-7">
+      <section className="carte p-4 sm:p-7">
         <h2 className="text-sm font-semibold text-slate-200">Mes scénarios</h2>
         {mine.length === 0 ? (
           <p className="mt-3 text-sm text-slate-400">
@@ -150,7 +143,7 @@ export default async function TeacherScenariosPage({
         </p>
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-4 sm:p-7">
+      <section className="carte p-4 sm:p-7">
         <h2 className="text-sm font-semibold text-slate-200">Scénarios partagés</h2>
         <p className="mt-1 text-xs text-slate-400">
           Publiés par d&apos;autres enseignants. Dupliquez-en un pour en obtenir votre propre copie
@@ -187,7 +180,7 @@ export default async function TeacherScenariosPage({
         )}
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-4 sm:p-7">
+      <section className="carte p-4 sm:p-7">
         <h2 className="text-sm font-semibold text-slate-200">Importer un scénario</h2>
         <p className="mt-1 text-xs text-slate-400">
           Depuis un fichier JSON exporté (d&apos;un autre espace, d&apos;un collègue). Il devient un
@@ -216,7 +209,7 @@ export default async function TeacherScenariosPage({
         </GuardedForm>
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-slate-900 p-4 sm:p-7">
+      <section className="carte p-4 sm:p-7">
         <h2 className="text-sm font-semibold text-slate-200">Partir d&apos;un secteur</h2>
         <p className="mt-1 text-xs text-slate-400">
           Chaque secteur est calibré et jouable. La copie hérite de ses règles ; vous en changez
@@ -226,9 +219,15 @@ export default async function TeacherScenariosPage({
           {SCENARIOS.map((d) => (
             <li
               key={d.code}
-              className="flex items-center justify-between gap-3 rounded-lg border border-white/5 bg-slate-950 px-3 py-2.5 sm:px-4 sm:py-3"
+              className="flex items-center gap-3 rounded-lg border border-white/5 bg-slate-950 px-3 py-2.5 sm:px-4 sm:py-3"
             >
-              <div className="min-w-0">
+              <span
+                aria-hidden
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg ${SECTOR_COLORS[d.sector].bg}`}
+              >
+                {d.icon}
+              </span>
+              <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-slate-100">{d.title}</p>
                 <p className="text-xs text-slate-400">{SECTOR_LABELS[d.sector]}</p>
               </div>

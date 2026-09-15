@@ -22,8 +22,12 @@ export function FriseDesTours({
 }: {
   roundsCount: number;
   currentRound: number;
-  /** Résultat net de chaque tour clos, par numéro de tour. */
-  resultats: ReadonlyMap<number, number>;
+  /**
+   * Résultat net de chaque tour clos, par numéro de tour. `null` : le tour est
+   * joué mais la frise ne porte pas de signe (côté enseignant, il n'y a pas
+   * UN résultat mais un par équipe) : le segment est plein, sans couleur.
+   */
+  resultats: ReadonlyMap<number, number | null>;
   finished: boolean;
 }) {
   if (roundsCount < 2) return null;
@@ -44,9 +48,11 @@ export function FriseDesTours({
         const enCours = !finished && n === currentRound;
         const teinte =
           resultat !== undefined
-            ? resultat >= 0
-              ? "bg-emerald-400/70"
-              : "bg-rose-400/70"
+            ? resultat === null
+              ? "bg-slate-300/70"
+              : resultat >= 0
+                ? "bg-emerald-400/70"
+                : "bg-rose-400/70"
             : enCours
               ? "bg-amber-400"
               : "bg-white/10";
@@ -57,7 +63,9 @@ export function FriseDesTours({
             // la distingue pas, et rien du tout au survol d'un tour à venir.
             title={
               resultat !== undefined
-                ? `Tour ${n} · résultat ${resultat >= 0 ? "positif" : "négatif"}`
+                ? resultat === null
+                  ? `Tour ${n} · joué`
+                  : `Tour ${n} · résultat ${resultat >= 0 ? "positif" : "négatif"}`
                 : enCours
                   ? `Tour ${n} · en cours`
                   : `Tour ${n} · à venir`

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { getSession } from "@/lib/session";
+import { EnTeteEnseignant } from "@/components/en-tete-enseignant";
 import { getStaffContext } from "@/services/admin.service";
 import { games } from "@/db/schema/game";
 import { classes } from "@/db/schema/identity";
@@ -74,26 +75,16 @@ export default async function TeacherLearningPage() {
   }
 
   return (
-    <main id="main" className="mx-auto max-w-5xl space-y-8 p-6">
-      <header>
-        <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Business Arena</p>
-        <h1 className="mt-1 text-3xl font-bold">Progression pédagogique</h1>
-        <p className="mt-2 text-sm text-slate-400">
-          Suivez la progression de vos élèves à travers les sentiers d&apos;apprentissage.
-          Chaque étape complétée renforce leur maîtrise des notions métier.
-        </p>
-      </header>
+    <main id="main" className="mx-auto max-w-5xl space-y-8 px-2 py-6 sm:p-6">
+      <EnTeteEnseignant
+        titre="Progression pédagogique"
+        actif="apprentissages"
+        description="Suivez la progression de vos élèves à travers les sentiers d'apprentissage. Chaque étape complétée renforce leur maîtrise des notions métier."
+      />
 
       <TeacherLearningDashboard teamsProgress={teamsProgress} />
 
-      <div className="flex gap-3 justify-center pt-6 border-t border-slate-700">
-        <Link
-          href="/teacher"
-          className="text-sm text-slate-400 underline-offset-4 hover:underline"
-        >
-          ← Retour à l&apos;espace enseignant
-        </Link>
-        <span className="text-slate-600">·</span>
+      <div className="flex justify-center border-t border-white/10 pt-6">
         <Link
           href="/learning"
           className="text-sm text-slate-400 underline-offset-4 hover:underline"
