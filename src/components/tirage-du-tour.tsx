@@ -9,10 +9,12 @@ import { BrandMark } from "@/components/brand-mark";
  *
  * Le moteur tire les cartes d'un tour à sa clôture ; en solo, le joueur les
  * découvrait dans ses résultats, après avoir décidé. Le tirage étant
- * déterministe (voir `peekEventDraw`), on le lui présente à l'OUVERTURE du
- * tour : une pioche face cachée, un geste pour retourner, et les cartes qui
- * pèseront sur le trimestre sous les yeux avant de fixer le prix. C'est ce
- * qui fait d'un aléa subi un événement joué.
+ * déterministe (voir `peekEventDraw`), on le lui présente ENTRE L'ANALYSE ET
+ * LA DÉCISION : la situation lue, les situations analysées, une pioche face
+ * cachée attend à l'entrée de « Décider » — un geste pour retourner, et les
+ * cartes qui pèseront sur le trimestre tombent sur une décision déjà
+ * réfléchie, qu'il faut reprendre. C'est ce qui fait d'un aléa subi un
+ * événement joué.
  *
  * Le retournement est mémorisé sur l'appareil : revenir sur la page ne
  * rejoue pas la scène, les cartes restent face visible.

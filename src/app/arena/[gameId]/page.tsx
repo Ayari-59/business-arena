@@ -156,20 +156,6 @@ export default async function ArenaPage({
   // (dès le 2ᵉ tour), les cartes événements annoncées, la saison.
   const alertesSection = (
     <>
-      {/*
-        LE TIRAGE, VÉCU. En solo, personne ne joue de carte à la main : c'est
-        le moteur qui tire, et le joueur ne le voyait qu'après coup. Le tirage
-        étant déterministe, on le retourne ici, à l'ouverture du tour, avant la
-        moindre décision. En classe, c'est l'enseignant qui tient la pioche.
-      */}
-      {view.kind === "solo" && !finished ? (
-        <TirageDuTour
-          gameId={gameId}
-          round={view.currentRound}
-          periodeLabel={periodLabel(view.roundDays, view.currentRound).toLowerCase()}
-          cartes={view.upcomingDraw}
-        />
-      ) : null}
       {view.roundBriefing ? (
         <section className="space-y-2 carte p-3 sm:p-5 text-slate-300">
           <h2 className="text-lg font-semibold text-slate-100">
@@ -722,6 +708,25 @@ export default async function ArenaPage({
                   // au plus près des champs qu'elle désigne, puis la saisie.
                   decisions: (
                     <section id="decisions">
+                {/*
+                  LE TIRAGE, VÉCU — entre l'analyse et la décision. En solo,
+                  personne ne joue de carte à la main : c'est le moteur qui
+                  tire, et le joueur ne le voyait qu'après coup. Le tirage
+                  étant déterministe, on le retourne ici, une fois la situation
+                  lue et analysée, juste avant de fixer le prix : la carte
+                  tombe sur une décision déjà réfléchie, et l'oblige à la
+                  reprendre. En classe, c'est l'enseignant qui tient la pioche.
+                */}
+                {view.kind === "solo" && !finished ? (
+                  <div className="mb-4">
+                    <TirageDuTour
+                      gameId={gameId}
+                      round={view.currentRound}
+                      periodeLabel={periodLabel(view.roundDays, view.currentRound).toLowerCase()}
+                      cartes={view.upcomingDraw}
+                    />
+                  </div>
+                ) : null}
                 {leviersIndice ? <div className="mb-4">{leviersIndice}</div> : null}
                 <div className="mb-4 border-b border-white/10 pb-3">
                   <h2 className="text-sm font-semibold text-slate-200">
