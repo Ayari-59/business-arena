@@ -26,6 +26,7 @@ export const SITUATION_CATEGORIES: SituationCategory[] = [
   "contexte_marche",
   "decision_strategique",
   "alerte_comptable",
+  "alerte_operationnelle",
   "tresorerie_dormante",
 ];
 

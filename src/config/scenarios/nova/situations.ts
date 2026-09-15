@@ -551,7 +551,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
   },
   {
     code: "detect_stockout",
-    category: "alerte_comptable",
+    category: "alerte_operationnelle",
     title: "Des clients repartis sans acheter",
     narrative:
       "Au tour écoulé, une part importante de la demande qui vous était adressée n'a pas pu être servie : votre stock était vide.",
@@ -672,7 +672,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
   },
   {
     code: "detect_capacity_saturated",
-    category: "alerte_comptable",
+    category: "alerte_operationnelle",
     title: "L'atelier au taquet",
     narrative:
       "Vos machines ont tourné à plein régime, et pourtant des clients sont repartis les mains vides. Votre équipementier propose 2 000 unités de capacité trimestrielle supplémentaire pour 40 000 €, amortis sur 16 trimestres. Un sous-traitant, lui, facture 52 € l'unité finie. Chaque enceinte vendue 59 € dégage environ 21 € de marge sur coût variable.",

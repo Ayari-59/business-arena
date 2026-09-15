@@ -20,6 +20,7 @@ const CAT_LABEL: Record<string, string> = {
   contexte_marche: "Contexte de marché",
   decision_strategique: "Décision stratégique",
   alerte_comptable: "Alerte comptable",
+  alerte_operationnelle: "Alerte opérationnelle",
   tresorerie_dormante: "Trésorerie dormante",
 };
 const DETECT_LABEL: Record<string, string> = {

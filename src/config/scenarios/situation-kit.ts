@@ -25,11 +25,22 @@ export interface DecisionLever {
   hint: string;
 }
 
+/**
+ * L'intitulé que l'élève lit au-dessus de la situation. Il dit ce qu'elle
+ * EST, pas d'où elle vient : deux alertes se lisent toutes deux dans les
+ * chiffres du tour, mais « des clients repartis sans acheter » n'est pas une
+ * alerte comptable, c'est l'atelier ou le stock qui n'ont pas suivi.
+ *  · alerte_comptable : le résultat ou la trésorerie (sous le seuil,
+ *    bénéficiaire à découvert) ;
+ *  · alerte_operationnelle : l'outil de production, le stock, les équipes
+ *    (rupture, capacité saturée, banc, heures de pointe).
+ */
 export type SituationCategory =
   | "prise_de_poste"
   | "contexte_marche"
   | "decision_strategique"
   | "alerte_comptable"
+  | "alerte_operationnelle"
   | "tresorerie_dormante";
 
 export type DetectCode =

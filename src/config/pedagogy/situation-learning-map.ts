@@ -9,6 +9,7 @@
  * - "contexte_marche" : requiert core + market, débloque market steps
  * - "decision_strategique" : requiert finance + strategy, débloque strategy steps
  * - "alerte_comptable" : requiert finance, renforce finance mastery
+ * - "alerte_operationnelle" : rupture, capacité, équipes — production et stock
  * - "tresorerie_dormante" : requiert finance_03+, débloque finance_04
  */
 

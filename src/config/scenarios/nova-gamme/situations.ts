@@ -476,7 +476,7 @@ export const NOVA_GAMME_SITUATIONS: SituationDef[] = [
   },
   {
     code: "novag_detect_stockout",
-    category: "alerte_comptable",
+    category: "alerte_operationnelle",
     title: "Une référence manque, une autre dort",
     narrative:
       "Des clients sont repartis sans l'enceinte qu'ils voulaient : votre stock de cette référence était vide. Pendant ce temps, une autre référence dort en réserve. L'atelier n'a pas manqué de capacité, il a produit le mauvais mix.",
@@ -601,7 +601,7 @@ export const NOVA_GAMME_SITUATIONS: SituationDef[] = [
   },
   {
     code: "novag_detect_capacity_saturated",
-    category: "alerte_comptable",
+    category: "alerte_operationnelle",
     title: "L'atelier est plein, sur toute la gamme",
     narrative:
       "Vos lignes tournent à plein et la demande dépasse encore : des clients sont repartis sur les trois références. Deux issues : agrandir l'atelier, ce qui coûte aujourd'hui et rapporte demain, ou réserver la capacité existante aux références qui rapportent le plus.",

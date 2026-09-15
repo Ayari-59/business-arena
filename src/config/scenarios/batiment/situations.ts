@@ -703,7 +703,7 @@ export const BATIMENT_SITUATIONS: SituationDef[] = [
   },
   {
     code: "batiment_detect_capacite",
-    category: "alerte_comptable",
+    category: "alerte_operationnelle",
     title: "Les équipes ne suivent plus",
     narrative:
       "Vos compagnons enchaînent sans temps mort et vous refusez des chantiers chaque semaine. Le matériel, lui, tourne à plein : deux équipes attendent parfois le même échafaudage. La demande est là, la capacité ne l'est plus.",
