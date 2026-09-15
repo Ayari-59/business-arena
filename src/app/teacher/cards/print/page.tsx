@@ -17,10 +17,14 @@ import { EventCardBack, EventCardFace } from "@/components/event-card";
  * d'impression recto-verso. Deux paquets : cartes MARCHÉ (toute la classe) et
  * cartes ÉQUIPE (tirage par équipe entre les tours).
  *
- * LA MÊME CARTE QU'À L'ÉCRAN. La face et le dos sont ceux de l'arène, rendus
- * par les mêmes composants : ce que l'enseignant tire en classe est, au
- * pixel près, ce que l'élève verra dans sa partie. Le papier ajoute seulement
- * le ruban du paquet au dos, et la carte libre en fin de paquet.
+ * LA MÊME CARTE QU'À L'ÉCRAN, EN ÉDITION ÉCONOME. La face et le dos sont ceux
+ * de l'arène, rendus par les mêmes composants : même anatomie, même texte,
+ * mêmes enseignes. Mais le papier n'est pas un écran : une carte de nuit
+ * encre toute la feuille. La page se place donc sous le thème clair, dont les
+ * jetons inversent toutes les couleurs — face blanche à l'encre sombre, dos
+ * clair aux chevrons et à la marque de nuit — sans qu'aucun composant ne
+ * change. Le papier ajoute seulement le ruban du paquet au dos, et la carte
+ * libre en fin de paquet.
  */
 
 type Paquet = "market" | "team";
@@ -116,7 +120,7 @@ function PrintCards() {
   const nbFeuilles = Math.ceil((marketCards.length + 1) / 4) + Math.ceil((teamCards.length + 1) / 4);
 
   return (
-    <main id="main" className="print-page">
+    <main id="main" className="print-page" data-theme="clair">
       <style>{printStyles}</style>
 
       <header className="print-header no-print">
@@ -137,8 +141,9 @@ function PrintCards() {
             </span>
           </p>
           <p className="print-help">
-            Les cartes sont celles de l&apos;écran, dos de nuit compris : imprimez en{" "}
-            <strong>A4 paysage</strong>, en couleur, quatre cartes par feuille. Découpez chaque
+            Les cartes sont celles de l&apos;écran, en édition économe (face blanche, dos clair) :
+            imprimez en <strong>A4 paysage</strong>, en couleur de préférence, quatre cartes par
+            feuille. Découpez chaque
             carte sur les <strong>traits pleins</strong>, puis pliez sur le{" "}
             <strong>trait pointillé</strong> : le dos et la face se retrouvent dos à dos, sans
             impression recto-verso. Faites tirer une carte <strong>marché</strong> à la classe
@@ -182,31 +187,22 @@ const printStyles = `
     font-family: ui-sans-serif, system-ui, sans-serif;
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
-    /*
-     * LA CARTE EST DE NUIT, QUEL QUE SOIT LE THÈME. Les composants de carte
-     * lisent les couleurs du thème ; sur le thème clair, la face deviendrait
-     * blanche et le laiton s'assombrirait. On leur redonne ici, et seulement
-     * ici, les valeurs de la nuit : le deck imprimé est le même pour tous.
-     */
-    --color-white: #fff;
-    --color-slate-50: #f8fafc;
-    --color-slate-100: #f1f5f9;
-    --color-slate-300: #cbd5e1;
-    --color-slate-400: #94a3b8;
-    --color-slate-500: #62748e;
-    --color-slate-900: #0e1526;
-    --color-slate-950: #070c1a;
-    --color-amber-300: #e7cd8b;
-    --color-amber-400: #d8b45c;
-    --color-sky-300: #7dd3fc;
-    --color-sky-400: #38bdf8;
-    --color-emerald-300: #6ee7b7;
-    --color-emerald-400: #34d399;
-    --color-fuchsia-300: #f0abfc;
-    --color-fuchsia-400: #e879f9;
   }
-  .print-page .card-front {
-    border-color: color-mix(in oklab, var(--enseigne, #d8b45c) 40%, transparent);
+  /*
+   * LE DOS, INVERSÉ. À l'écran il est de nuit aux chevrons de laiton ; sur
+   * papier, papier clair aux chevrons d'encre, la marque et le nom du deck en
+   * laiton sombre (le thème clair s'en charge). Même motif, encre divisée
+   * par dix.
+   */
+  .print-page .card-back-face {
+    /* la marque et le nom du deck en laiton sombre, lisibles sur le clair */
+    --color-amber-400: #86641a;
+    --color-amber-300: #a67f22;
+    background-color: #f8fafc;
+    background-image:
+      repeating-linear-gradient(45deg, rgba(7, 12, 26, 0.10) 0 0.5mm, transparent 0.5mm 3mm),
+      repeating-linear-gradient(-45deg, rgba(7, 12, 26, 0.10) 0 0.5mm, transparent 0.5mm 3mm),
+      radial-gradient(circle at 50% 50%, #ffffff 0%, #f1f5f9 70%);
   }
   .print-header {
     display: flex;
@@ -272,10 +268,10 @@ const printStyles = `
     height: 88mm;
     border: 1px solid #0f172a;
     break-inside: avoid;
-    background: #070c1a;
+    background: #fff;
   }
   .print-half { width: 63mm; height: 88mm; box-sizing: border-box; overflow: hidden; }
-  .print-back { border-right: 1.5px dashed rgba(216, 180, 92, 0.85); }
+  .print-back { border-right: 1.5px dashed rgba(15, 23, 42, 0.6); }
   /*
    * La face de l'écran est dessinée pour 300 px de large ; la carte de poche
    * en fait 238. On la réduit d'un cinquième : même dessin, mêmes proportions.
