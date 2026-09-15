@@ -227,12 +227,14 @@ const printStyles = `
   }
   .print-header {
     display: flex;
+    flex-wrap: wrap;
     align-items: flex-start;
     justify-content: space-between;
     gap: 16px;
     max-width: 1000px;
     margin: 0 auto 24px;
   }
+  .print-header > div { flex: 1 1 420px; min-width: 0; }
   .print-kicker {
     font-size: 11px;
     letter-spacing: 0.3em;
@@ -242,6 +244,17 @@ const printStyles = `
   }
   .print-header h1 { margin: 0; font-size: 24px; }
   .print-help { font-size: 13px; color: #475569; max-width: 640px; line-height: 1.5; }
+  /*
+   * Les paires sont en millimètres réels (elles doivent tomber juste sur le
+   * papier) : 126 mm, c'est plus large qu'un téléphone. À l'écran seulement,
+   * une fenêtre étroite les voit réduites ; à défaut, la feuille défile sur
+   * elle-même sans emporter la page.
+   */
+  .print-sheet { overflow-x: auto; }
+  @media (max-width: 640px) {
+    .print-pair { zoom: 0.72; }
+    .print-page { padding: 16px; }
+  }
   .print-button {
     flex-shrink: 0;
     border: none;
@@ -425,7 +438,8 @@ const printStyles = `
     @page { size: A4 landscape; margin: 8mm; }
     .no-print { display: none !important; }
     .print-page { background: #fff; padding: 0; min-height: 0; }
-    .print-sheet { margin: 0; max-width: none; grid-template-columns: repeat(2, 126mm); }
+    .print-sheet { margin: 0; max-width: none; overflow: visible; grid-template-columns: repeat(2, 126mm); }
+    .print-pair { zoom: 1; }
     .print-sheet:last-child { break-after: auto; }
     .print-break { break-before: page; }
   }
