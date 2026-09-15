@@ -59,7 +59,9 @@ import {
   confianceServie,
   confianceSuivante,
   fiabiliteDuPlan,
+  jugementDeLaBanque,
   planDepose,
+  tenueDeTresorerie,
 } from "../finance/bank";
 import {
   demandMultiplierFor,
@@ -1349,11 +1351,10 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     // DOSSIER BANCAIRE (scénarios portant un finance.bank) : la confiance fixe
     // le plafond de découvert consenti ce tour et son taux.
     //
-    // La confiance ACQUISE ne bouge plus : elle se nourrissait de l'écart entre
-    // le plan de trésorerie déposé et le réalisé, et le plan a quitté le
-    // formulaire (`fiabiliteDuPlan` rend `null`, `confianceSuivante` renvoie la
-    // confiance inchangée). Ce qui la fait bouger aujourd'hui, c'est la prime
-    // verte ci-dessous, qui la porte au-dessus du plein.
+    // La confiance ACQUISE se lit dans la tenue de la trésorerie des tours
+    // passés (voir `finance/bank.ts`) : un tour clos en crise ou en affacturage
+    // forcé l'a fait descendre, des tours sains l'ont regagnée. Elle se met à
+    // jour en clôture, plus bas, une fois le tour joué.
     const bank = scenario.finance.bank;
     const confianceAvant = confianceInitiale(w.state);
     // FINANCEMENT VERT (Lot 2B) : le standing RSE porte la confiance AU-DESSUS
@@ -1384,10 +1385,9 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     const loanRequested = Math.max(0, w.decisions.finance?.newLoan ?? 0);
     // L'EMPRUNT N'EST PLUS CONDITIONNÉ À UN PLAN DE TRÉSORERIE. L'arène ne
     // demande plus ce plan — remplir un prévisionnel avant chaque tour tenait
-    // de l'exercice scolaire plus que du jeu. La banque garde sa mémoire (le
-    // moteur sait toujours juger un plan déposé par une autre voie), mais elle
-    // instruit désormais toute demande : sans plan à juger, la confiance reste
-    // où elle est, donc le plafond et le taux du découvert aussi.
+    // de l'exercice scolaire plus que du jeu. La banque instruit désormais
+    // toute demande ; ce qu'elle juge, c'est la trésorerie réalisée (le moteur
+    // sait toujours juger un plan déposé par une autre voie).
     //
     // LA BANQUE N'EST PAS UN PUITS. Elle prête tant que la dette financière
     // reste sous `maxDebtToEquity` fois les capitaux propres — la règle d'un
@@ -1610,9 +1610,11 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
       crisisStreak >= toursAvantDefaillance ? "defaillant" : "active";
 
     const functionalBalance = computeFunctionalBalance(finance.closing);
-    // Le plan de CE tour n'est jugeable qu'une fois le tour joué : sa
-    // fiabilité fixe les conditions du tour SUIVANT, jamais celles du tour en
-    // cours, qui ont été consenties sur la foi des tours passés.
+    // CE tour n'est jugeable qu'une fois joué : ce que la banque en retient
+    // fixe les conditions du tour SUIVANT, jamais celles du tour en cours, qui
+    // ont été consenties sur la foi des tours passés. Elle lit la tenue de la
+    // trésorerie (crise, affacturage forcé, ou rien de tout cela) et, si un
+    // plan est arrivé par une autre voie que le formulaire, sa fiabilité.
     const fiabilite = bank
       ? fiabiliteDuPlan({
           expectedUnits: w.decisions.forecast?.expectedUnits,
@@ -1622,8 +1624,9 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
           cashScale: scenario.fixedCostsPerRound,
         })
       : null;
+    const tenue = tenueDeTresorerie(finance.treasury);
     const confianceApres = bank
-      ? confianceSuivante(confianceAvant, fiabilite, bank)
+      ? confianceSuivante(confianceAvant, jugementDeLaBanque({ tenue, fiabilite }), bank)
       : confianceAvant;
     const ratios = computeRatios(
       finance.incomeStatement,
@@ -1957,6 +1960,7 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
             bank: {
               trustBefore: confianceAvant,
               trustAfter: confianceApres,
+              treasuryConduct: tenue,
               reliability: fiabilite,
               planFiled: planFourni,
               loanRequested,

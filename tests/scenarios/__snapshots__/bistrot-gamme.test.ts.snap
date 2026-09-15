@@ -230,8 +230,8 @@ exports[`LA TABLE D'AUGUSTIN · gamme — calibration > la partie de référence
       },
     },
     {
-      "resultat": -1138,
-      "tresorerie": -20000,
+      "resultat": -1255,
+      "tresorerie": -18800,
       "vendu": {
         "banquets": 522,
         "carte-soir": 2091,
@@ -240,8 +240,8 @@ exports[`LA TABLE D'AUGUSTIN · gamme — calibration > la partie de référence
       },
     },
     {
-      "resultat": -513,
-      "tresorerie": -20000,
+      "resultat": -659,
+      "tresorerie": -18080,
       "vendu": {
         "banquets": 513,
         "carte-soir": 2063,

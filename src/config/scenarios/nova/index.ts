@@ -95,12 +95,11 @@ const rawNova = {
     overdraftAnnualRate: 0.12,
     overdraftLimit: 30000,
     // Les conditions du découvert : plafond consenti et taux. Elles suivent une
-    // CONFIANCE que l'arène ne fait plus bouger — elle la nourrissait de l'écart
-    // entre le plan de trésorerie déposé à chaque tour et le réalisé, et ce plan
-    // a été retiré du formulaire (le moteur sait toujours juger un plan arrivé
-    // par une autre voie : voir `fiabiliteDuPlan`). Ce bloc fixe donc, en l'état,
-    // les conditions de pleine confiance. Ce qui borne vraiment l'emprunt, c'est
-    // `maxDebtToEquity`.
+    // CONFIANCE que la banque lit dans la tenue de la trésorerie : un tour clos
+    // en crise ou en affacturage forcé la fait descendre (d'un pas borné, jamais
+    // sous un plancher), des tours sains la regagnent — voir `finance/bank.ts`.
+    // Ce bloc fixe les conditions de pleine confiance. Ce qui borne vraiment
+    // l'emprunt, c'est `maxDebtToEquity`.
     bank: { memory: 0.6, maxOverdraftSpread: 0.05, minOverdraftShare: 0.4 },
     taxRate: 0.25,
     supplierPaymentDelayDays: 22,

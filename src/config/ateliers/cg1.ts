@@ -249,7 +249,7 @@ export const ATELIER_CG1: AtelierDefinition = {
           minutes: 20,
           titre: "Clôture",
           detail:
-            "Vous clôturez. Le verdict de la banque apparaît : plan jugé juste à tant pour cent, confiance en hausse ou en baisse, découvert consenti pour le trimestre suivant.",
+            "Vous clôturez. Le verdict de la banque apparaît : trésorerie tenue ou non, confiance en hausse ou en baisse, découvert consenti pour le trimestre suivant.",
         },
         {
           minutes: 40,

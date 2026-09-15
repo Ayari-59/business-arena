@@ -14,8 +14,8 @@ exports[`PIXEL & CO · gamme — calibration > la partie de référence ne bouge
       },
     },
     {
-      "resultat": 29221,
-      "tresorerie": 37174,
+      "resultat": 29188,
+      "tresorerie": 37141,
       "vendu": {
         "capsule": 496,
         "decoration": 1395,
@@ -25,7 +25,7 @@ exports[`PIXEL & CO · gamme — calibration > la partie de référence ne bouge
     },
     {
       "resultat": 28756,
-      "tresorerie": 55262,
+      "tresorerie": 55229,
       "vendu": {
         "capsule": 807,
         "decoration": 1453,
@@ -35,7 +35,7 @@ exports[`PIXEL & CO · gamme — calibration > la partie de référence ne bouge
     },
     {
       "resultat": 25199,
-      "tresorerie": 121981,
+      "tresorerie": 121948,
       "vendu": {
         "capsule": 532,
         "decoration": 1515,
@@ -45,7 +45,7 @@ exports[`PIXEL & CO · gamme — calibration > la partie de référence ne bouge
     },
     {
       "resultat": 28865,
-      "tresorerie": 192709,
+      "tresorerie": 192676,
       "vendu": {
         "capsule": 583,
         "decoration": 1665,
@@ -55,7 +55,7 @@ exports[`PIXEL & CO · gamme — calibration > la partie de référence ne bouge
     },
     {
       "resultat": 12493,
-      "tresorerie": 217608,
+      "tresorerie": 217575,
       "vendu": {
         "capsule": 606,
         "decoration": 1733,
@@ -76,8 +76,8 @@ exports[`PIXEL & CO · gamme — calibration > la partie de référence ne bouge
       },
     },
     {
-      "resultat": 22403,
-      "tresorerie": -1090,
+      "resultat": 22359,
+      "tresorerie": -1134,
       "vendu": {
         "capsule": 590,
         "decoration": 1757,
@@ -86,8 +86,8 @@ exports[`PIXEL & CO · gamme — calibration > la partie de référence ne bouge
       },
     },
     {
-      "resultat": 31416,
-      "tresorerie": 9725,
+      "resultat": 31425,
+      "tresorerie": 9691,
       "vendu": {
         "capsule": 960,
         "decoration": 1877,
@@ -97,7 +97,7 @@ exports[`PIXEL & CO · gamme — calibration > la partie de référence ne bouge
     },
     {
       "resultat": 29338,
-      "tresorerie": 107159,
+      "tresorerie": 107124,
       "vendu": {
         "capsule": 754,
         "decoration": 2183,
@@ -107,7 +107,7 @@ exports[`PIXEL & CO · gamme — calibration > la partie de référence ne bouge
     },
     {
       "resultat": 16276,
-      "tresorerie": 171459,
+      "tresorerie": 171424,
       "vendu": {
         "capsule": 696,
         "decoration": 2025,
@@ -117,7 +117,7 @@ exports[`PIXEL & CO · gamme — calibration > la partie de référence ne bouge
     },
     {
       "resultat": 10646,
-      "tresorerie": 210004,
+      "tresorerie": 209969,
       "vendu": {
         "capsule": 862,
         "decoration": 2510,
@@ -138,8 +138,8 @@ exports[`PIXEL & CO · gamme — calibration > la partie de référence ne bouge
       },
     },
     {
-      "resultat": -2576,
-      "tresorerie": -79939,
+      "resultat": -2620,
+      "tresorerie": -79983,
       "vendu": {
         "capsule": 0,
         "decoration": 885,
@@ -148,8 +148,8 @@ exports[`PIXEL & CO · gamme — calibration > la partie de référence ne bouge
       },
     },
     {
-      "resultat": -6406,
-      "tresorerie": -134601,
+      "resultat": -6658,
+      "tresorerie": -134896,
       "vendu": {
         "capsule": 0,
         "decoration": 902,
@@ -159,7 +159,7 @@ exports[`PIXEL & CO · gamme — calibration > la partie de référence ne bouge
     },
     {
       "resultat": 0,
-      "tresorerie": -183684,
+      "tresorerie": -183979,
       "vendu": {
         "capsule": 0,
         "decoration": 0,
@@ -169,7 +169,7 @@ exports[`PIXEL & CO · gamme — calibration > la partie de référence ne bouge
     },
     {
       "resultat": 0,
-      "tresorerie": -183684,
+      "tresorerie": -183979,
       "vendu": {
         "capsule": 0,
         "decoration": 0,
@@ -179,7 +179,7 @@ exports[`PIXEL & CO · gamme — calibration > la partie de référence ne bouge
     },
     {
       "resultat": 0,
-      "tresorerie": -183684,
+      "tresorerie": -183979,
       "vendu": {
         "capsule": 0,
         "decoration": 0,
@@ -200,8 +200,8 @@ exports[`PIXEL & CO · gamme — calibration > la partie de référence ne bouge
       },
     },
     {
-      "resultat": -5947,
-      "tresorerie": -122656,
+      "resultat": -6156,
+      "tresorerie": -122865,
       "vendu": {
         "capsule": 445,
         "decoration": 572,
@@ -211,7 +211,7 @@ exports[`PIXEL & CO · gamme — calibration > la partie de référence ne bouge
     },
     {
       "resultat": 0,
-      "tresorerie": -131708,
+      "tresorerie": -131917,
       "vendu": {
         "capsule": 0,
         "decoration": 0,
@@ -221,7 +221,7 @@ exports[`PIXEL & CO · gamme — calibration > la partie de référence ne bouge
     },
     {
       "resultat": 0,
-      "tresorerie": -131708,
+      "tresorerie": -131917,
       "vendu": {
         "capsule": 0,
         "decoration": 0,
@@ -231,7 +231,7 @@ exports[`PIXEL & CO · gamme — calibration > la partie de référence ne bouge
     },
     {
       "resultat": 0,
-      "tresorerie": -131708,
+      "tresorerie": -131917,
       "vendu": {
         "capsule": 0,
         "decoration": 0,
@@ -241,7 +241,7 @@ exports[`PIXEL & CO · gamme — calibration > la partie de référence ne bouge
     },
     {
       "resultat": 0,
-      "tresorerie": -131708,
+      "tresorerie": -131917,
       "vendu": {
         "capsule": 0,
         "decoration": 0,

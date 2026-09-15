@@ -9,20 +9,38 @@ import type { CompanyState, EngineScenarioConfig } from "../types";
  * découvert est un concours révocable, la banque peut le réduire et le
  * renchérir ; un prêt en cours, non.
  *
- * DEUX SOURCES, ET UNE SEULE VIT AUJOURD'HUI.
+ * CE QUE LA BANQUE LIT : LA TENUE DE LA TRÉSORERIE.
  *
- *  · La fiabilité des plans de trésorerie passés fait DESCENDRE la confiance
- *    sous le plein. Cette voie est en sommeil : l'arène ne demande plus de
- *    plan, `fiabiliteDuPlan` rend donc `null` et la confiance ne bouge pas. Le
- *    moteur garde la mécanique entière pour un plan arrivé autrement.
- *  · Le standing RSE la fait MONTER AU-DESSUS du plein — la prime verte.
+ * La confiance se nourrissait autrefois de l'écart entre un plan de trésorerie
+ * déposé et le réalisé. L'arène ne demande plus ce plan, et la confiance
+ * s'était figée au plein : une équipe pouvait finir trois tours en cessation
+ * de paiements sans que sa banque en retienne rien. C'est l'inverse de ce que
+ * les cartes du jeu promettent — « la confiance bancaire se gagne sur des
+ * trimestres de gestion saine » — et de ce qu'une banque fait.
  *
- * C'est pourquoi la confiance n'est pas bornée à 1. Elle l'était, et la prime
- * verte s'en trouvait entièrement écrasée : personne ne descendant plus sous
- * le plein, il n'y avait plus rien à regagner. Une entreprise sans engagement
- * obtient donc le plafond nominal du scénario ; un standing RSE établi obtient
- * mieux. C'est le sens du financement vert, et ce que l'atelier DCG-RSE
- * demande de constater.
+ * Elle lit donc maintenant ce que l'équipe a fait de son cash, tour après
+ * tour : un tour clos en crise de trésorerie ou passé par l'affacturage forcé
+ * la fait DESCENDRE sous le plein, des tours sains la REGAGNENT. Le plan, s'il
+ * arrive par une autre voie, reste jugé (`fiabiliteDuPlan`) ; c'est alors le
+ * pire des deux jugements qui compte.
+ *
+ * TROIS GARDE-FOUS, PARCE QUE LA SANCTION EST UNE SPIRALE. Un plafond plus bas
+ * rapproche l'affacturage forcé, qui rabaisse la confiance, qui rabaisse le
+ * plafond. Sans frein, une équipe serait punie d'être en difficulté, et
+ * renfoncée par la punition — précisément le cul-de-sac que la chaîne de
+ * sauvetage (apport, emprunt, subvention) a été construite pour supprimer.
+ *  · la baisse est BORNÉE par tour (`BAISSE_MAX_PAR_TOUR`) : pas de chute
+ *    brutale sur un seul mauvais trimestre ;
+ *  · elle s'arrête à un PLANCHER (`CONFIANCE_PLANCHER`) : la banque se méfie,
+ *    elle ne ferme pas ;
+ *  · elle REMONTE dès que les tours redeviennent sains, sinon une erreur du
+ *    tour 2 pèserait encore au tour 8.
+ *
+ * Au-dessus du plein, le standing RSE ajoute une prime verte (`confianceServie`).
+ * C'est pourquoi la confiance n'est pas bornée à 1 : une entreprise sans
+ * engagement obtient le plafond nominal du scénario, un standing établi obtient
+ * mieux. C'est le sens du financement vert, et ce que l'atelier DCG-RSE demande
+ * de constater.
  */
 
 const CONFIANCE_PLEINE = 1;
@@ -34,6 +52,18 @@ const CONFIANCE_PLEINE = 1;
  * appelant ne puisse transformer le découvert en ligne de crédit illimitée.
  */
 const CONFIANCE_MAX = 1.25;
+
+/**
+ * Sous quoi la confiance acquise ne descend jamais par la seule tenue de la
+ * trésorerie. À 0,5 et avec les réglages usuels (part minimale 0,4), la
+ * banque consent encore 70 % du plafond nominal : elle serre, elle ne coupe
+ * pas. Une confiance déjà plus basse (héritée, forgée) n'est pas relevée —
+ * elle cesse simplement de baisser.
+ */
+export const CONFIANCE_PLANCHER = 0.5;
+
+/** Le plus grand pas de baisse en un tour, quel que soit le jugement. */
+export const BAISSE_MAX_PAR_TOUR = 0.15;
 
 function borne(x: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, x));
@@ -81,16 +111,45 @@ export function fiabiliteDuPlan(input: {
 }
 
 /**
+ * Ce que la banque lit dans la trésorerie du tour, entre 0 (cessation de
+ * paiements) et 1 (tenue). L'affacturage forcé est entre les deux : la banque
+ * a dû intervenir, mais son intervention a suffi.
+ */
+export function tenueDeTresorerie(treasury: { crisis: boolean; forcedFactored: number }): number {
+  if (treasury.crisis) return 0;
+  if (treasury.forcedFactored > 0) return 0.75;
+  return 1;
+}
+
+/**
+ * Le jugement du tour : la tenue de la trésorerie, et, si un plan a été
+ * déposé, sa fiabilité — le pire des deux. Une trésorerie tenue n'excuse pas
+ * un plan délirant, un plan juste n'excuse pas une cessation de paiements.
+ */
+export function jugementDeLaBanque(input: { tenue: number; fiabilite: number | null }): number {
+  return input.fiabilite === null ? input.tenue : Math.min(input.tenue, input.fiabilite);
+}
+
+/**
  * Confiance du tour suivant. Lissage exponentiel : la banque a de la mémoire,
  * un bon trimestre n'efface pas trois mauvais, et un mauvais ne condamne pas.
+ * `null` : rien à juger, la confiance reste où elle est.
+ *
+ * Les garde-fous s'appliquent ici, et non à une source en particulier : c'est
+ * la banque qui est freinée, quel que soit ce qu'elle a lu. Trajectoire
+ * usuelle (mémoire 0,6) d'une équipe qui enchaîne les crises :
+ * 1 → 0,85 → 0,70 → 0,55 → 0,50, puis plancher. Et qui se redresse :
+ * 0,50 → 0,70 → 0,82 → 0,89 → …, sans jamais dépasser le plein.
  */
 export function confianceSuivante(
   avant: number,
-  fiabilite: number | null,
+  jugement: number | null,
   bank: NonNullable<EngineScenarioConfig["finance"]["bank"]>,
 ): number {
-  if (fiabilite === null) return avant;
-  return borne(bank.memory * avant + (1 - bank.memory) * fiabilite, 0, 1);
+  if (jugement === null) return avant;
+  const cible = bank.memory * avant + (1 - bank.memory) * jugement;
+  const plusBas = Math.max(Math.min(avant, CONFIANCE_PLANCHER), avant - BAISSE_MAX_PAR_TOUR);
+  return borne(cible, plusBas, CONFIANCE_PLEINE);
 }
 
 /**

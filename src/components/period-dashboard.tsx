@@ -1,6 +1,7 @@
 import { formatEuro, formatPercent, formatUnits } from "@/lib/format";
 import { COMMUNICATION_AXIS_LABELS } from "@/engine/market/communication";
 import { KpiCard } from "@/components/kpi-card";
+import { lectureBancaire } from "@/components/lecture-bancaire";
 import { EventCard } from "@/components/event-card";
 import { cardByCode } from "@/config/events/cards";
 import { BpiPanel } from "@/components/bpi-panel";
@@ -523,19 +524,6 @@ export function PeriodDashboard({
                     </tbody>
                   </table>
                 </div>
-                {r.bank && r.bank.reliability !== null ? (
-                  <p className="mt-2 text-xs leading-relaxed text-slate-400">
-                    Votre banque a lu cet écart. Plan jugé juste à{" "}
-                    <strong className="text-slate-200">
-                      {Math.round(r.bank.reliability * 100)} %
-                    </strong>{" "}
-                    : sa confiance passe de {Math.round(r.bank.trustBefore * 100)} % à{" "}
-                    <strong className="text-slate-200">
-                      {Math.round(r.bank.trustAfter * 100)} %
-                    </strong>
-                    , ce qui fixe son découvert et son taux au tour suivant.
-                  </p>
-                ) : null}
                 <p className="mt-2 text-xs leading-relaxed text-slate-400">
                   Un écart qui se répète dans le même sens n&apos;est pas de la malchance :
                   c&apos;est un biais de votre modèle.
@@ -643,6 +631,21 @@ export function PeriodDashboard({
                   : ""}
               </p>
             ) : null}
+
+            {(() => {
+              const lecture = lectureBancaire(r.bank);
+              return lecture ? (
+                <p
+                  className={`rounded-lg border px-3 py-2 text-xs ${
+                    lecture.ton === "baisse"
+                      ? "border-orange-400/40 bg-orange-950/30 text-orange-200"
+                      : "border-teal-400/30 bg-teal-950/30 text-teal-200"
+                  }`}
+                >
+                  🏦 {lecture.texte}
+                </p>
+              ) : null;
+            })()}
 
             {r.investment ? (
               <div className="rounded-lg border border-amber-400/30 bg-amber-950/20 px-3 py-2 text-xs text-amber-200">

@@ -199,8 +199,8 @@ exports[`L'ESCALE · gamme — calibration > la partie de référence ne bouge p
       },
     },
     {
-      "resultat": -80042,
-      "tresorerie": -153028,
+      "resultat": -80165,
+      "tresorerie": -153151,
       "vendu": {
         "chambre-standard": 632,
         "chambre-superieure": 466,
@@ -209,7 +209,7 @@ exports[`L'ESCALE · gamme — calibration > la partie de référence ne bouge p
     },
     {
       "resultat": 0,
-      "tresorerie": -160525,
+      "tresorerie": -160648,
       "vendu": {
         "chambre-standard": 0,
         "chambre-superieure": 0,
@@ -218,7 +218,7 @@ exports[`L'ESCALE · gamme — calibration > la partie de référence ne bouge p
     },
     {
       "resultat": 0,
-      "tresorerie": -160525,
+      "tresorerie": -160648,
       "vendu": {
         "chambre-standard": 0,
         "chambre-superieure": 0,

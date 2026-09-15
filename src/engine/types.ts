@@ -308,14 +308,14 @@ export interface EngineScenarioConfig {
      * DOSSIER BANCAIRE (optionnel). Présent : le plafond de découvert consenti
      * et son taux suivent une CONFIANCE (0..1) au lieu d'être fixes.
      *
-     * DEUX SOURCES, DONT UNE EN SOMMEIL. La confiance descendait sous le plein
-     * quand les plans de trésorerie déposés s'écartaient du réalisé ; ce plan a
-     * été retiré du formulaire, `fiabiliteDuPlan` rend donc `null` et cette
-     * voie-là ne bouge plus (le moteur GARDE la mécanique entière, pour un plan
-     * qui arriverait autrement). Ce qui la fait bouger aujourd'hui, c'est le
-     * standing RSE, qui la porte AU-DESSUS du plein : le plafond du scénario
-     * est ce qu'obtient une entreprise sans engagement, un standing établi
-     * obtient mieux — voir `confianceServie`.
+     * La confiance se lit dans la TENUE DE LA TRÉSORERIE : un tour clos en
+     * crise ou passé par l'affacturage forcé la fait descendre sous le plein
+     * — d'un pas borné, jamais sous un plancher —, des tours sains la
+     * regagnent (voir `finance/bank.ts`). Un plan de trésorerie arrivé par une
+     * autre voie que le formulaire reste jugé (`fiabiliteDuPlan`). Le standing
+     * RSE, lui, la porte AU-DESSUS du plein : le plafond du scénario est ce
+     * qu'obtient une entreprise sans engagement, un standing établi obtient
+     * mieux — voir `confianceServie`.
      *
      * Ce qui borne l'emprunt aujourd'hui, c'est `maxDebtToEquity`.
      *
@@ -1541,8 +1541,14 @@ export interface CompanyRoundResult {
   bank?: {
     /** Confiance à l'ouverture, celle qui a fixé les conditions de CE tour. */
     trustBefore: number;
-    /** Confiance après lecture de l'écart entre le plan et le réalisé. */
+    /** Confiance après lecture du tour : tenue de la trésorerie, et plan s'il y en a un. */
     trustAfter: number;
+    /**
+     * Ce que la banque a lu dans la trésorerie du tour : 1 tenue, 0,75
+     * affacturage forcé, 0 crise caractérisée. Absent des tours joués avant
+     * que la banque ne lise la tenue (les résultats persistés d'alors).
+     */
+    treasuryConduct?: number;
     /** Fiabilité du plan de ce tour (0..1) ; null : aucun plan déposé. */
     reliability: number | null;
     /** Un plan de trésorerie accompagnait-il les décisions du tour ? */
