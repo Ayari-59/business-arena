@@ -4,7 +4,7 @@ import { games, hintUsages, players, rounds, situationInstances, situations, tea
 import { situationByCode } from "@/config/scenarios/registry";
 import { resolveScenarioDefinition } from "@/services/scenario-source.service";
 import { presetFromProfile } from "@/config/difficulty";
-import { buildTriggerContext, detectSituations, nomsDesSegments } from "@/pedagogy/detection";
+import { buildTriggerContext, detectSituations, nomsDuMarche } from "@/pedagogy/detection";
 import type { CompanyRoundResult } from "@/engine/types";
 
 /**
@@ -47,9 +47,9 @@ export async function openSituationsForRound(
   const gameRow = (await db.select().from(games).where(eq(games.id, gameId)))[0];
   const snapshotCode = (gameRow?.scenarioSnapshot as { code?: string } | null)?.code;
   const definition = await resolveScenarioDefinition(snapshotCode);
-  // Les faits nomment les clientèles ; le snapshot est la partie telle qu'elle
-  // est jouée, réglages de l'enseignant compris.
-  const noms = nomsDesSegments(
+  // Les faits nomment les clientèles et les références ; le snapshot est la
+  // partie telle qu'elle est jouée, réglages de l'enseignant compris.
+  const noms = nomsDuMarche(
     (gameRow?.scenarioSnapshot as Pick<typeof definition.scenario, "market" | "products"> | null) ??
       definition.scenario,
   );

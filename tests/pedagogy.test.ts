@@ -244,7 +244,7 @@ describe("métadonnées de détection (A1 — causalité visible)", () => {
         },
       },
     } as unknown as CompanyRoundResult;
-    const facts = buildTriggerContext("stockout", deux, { pros: "Pros", etud: "Étudiants" });
+    const facts = buildTriggerContext("stockout", deux, { clienteles: { pros: "Pros", etud: "Étudiants" }, references: {} });
     expect(facts.map((f) => f.label)).toEqual([
       "Demande du marché, toutes clientèles",
       "Demande qui vous était adressée",
@@ -258,6 +258,31 @@ describe("métadonnées de détection (A1 — causalité visible)", () => {
     expect(facts[4]!.value).toBe(`${formatUnits(800)} sur ${formatUnits(1200)} repartis sans acheter`);
     // Sans dictionnaire, le code sert de nom plutôt que de taire la clientèle.
     expect(buildTriggerContext("stockout", deux).at(-1)!.label).toBe("dont pros");
+  });
+
+  it("stockout en gamme : la référence qui manque et celle qui dort, sur une ligne chacune", () => {
+    // Chaque référence a son marché : le détail par clientèle redirait le
+    // détail par référence en plus long. Ce que l'élève doit lire, c'est de
+    // QUOI il manquait et ce qui reste en réserve — et rien sur une
+    // référence pas encore vendable.
+    const gamme = {
+      ...base,
+      market: { bySegment: { lyc: { potential: 3000, demandForCompany: 1100, sold: 300, lost: 800 }, aud: { potential: 3400, demandForCompany: 900, sold: 900, lost: 0 } } },
+      products: {
+        go: { sold: 300, lost: 800, stock: { quantity: 0, unitCost: 20 } },
+        one: { sold: 900, lost: 0, stock: { quantity: 3100, unitCost: 38 } },
+        studio: { sold: 0, lost: 0, stock: { quantity: 0, unitCost: 0 } },
+      },
+    } as unknown as CompanyRoundResult;
+    const facts = buildTriggerContext("stockout", gamme, {
+      clienteles: { lyc: "Lycéens", aud: "Audiophiles" },
+      references: { go: "NOVA Go", one: "NOVA One", studio: "NOVA Studio" },
+    });
+    expect(facts.slice(4)).toEqual([
+      { label: "NOVA Go", value: `${formatUnits(800)} sur ${formatUnits(1100)} repartis sans acheter · ${formatUnits(0)} en stock`, direction: "negative" },
+      { label: "NOVA One", value: `rien de manqué · ${formatUnits(3100)} en stock`, direction: "neutral" },
+    ]);
+    expect(facts.map((f) => f.label)).not.toContain("dont Lycéens");
   });
 
   it("capacity_saturated : taux d'utilisation, puis la demande perdue et d'où elle venait", () => {

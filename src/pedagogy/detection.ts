@@ -66,23 +66,32 @@ export interface TriggerFact {
 }
 
 /**
- * Les noms des clientèles, code par code. Le résultat d'un tour ne connaît que
- * des codes ; l'élève, lui, lit « Pros » ou « Étudiants ». Sans ce dictionnaire
- * les faits restent des totaux, et une rupture ne dit pas QUI est reparti.
+ * Les noms des clientèles et des références, code par code. Le résultat d'un
+ * tour ne connaît que des codes ; l'élève, lui, lit « Pros » ou « NOVA Go ».
+ * Sans ce dictionnaire les faits restent des totaux, et une rupture ne dit ni
+ * QUI est reparti ni de QUOI il manquait.
  */
-export type NomsDesSegments = Record<string, string>;
+export interface NomsDuMarche {
+  clienteles: Record<string, string>;
+  references: Record<string, string>;
+}
 
-export function nomsDesSegments(
+const SANS_NOMS: NomsDuMarche = { clienteles: {}, references: {} };
+
+export function nomsDuMarche(
   scenario: Pick<EngineScenarioConfig, "market" | "products">,
-): NomsDesSegments {
-  const noms: NomsDesSegments = {};
-  for (const s of scenario.market.segments) noms[s.code] = s.name;
-  for (const p of scenario.products ?? []) for (const s of p.market.segments) noms[s.code] = s.name;
+): NomsDuMarche {
+  const noms: NomsDuMarche = { clienteles: {}, references: {} };
+  for (const s of scenario.market.segments) noms.clienteles[s.code] = s.name;
+  for (const p of scenario.products ?? []) {
+    noms.references[p.code] = p.name;
+    for (const s of p.market.segments) noms.clienteles[s.code] = s.name;
+  }
   return noms;
 }
 
 interface DetectionMeta {
-  buildFacts(result: CompanyRoundResult, noms?: NomsDesSegments): TriggerFact[];
+  buildFacts(result: CompanyRoundResult, noms?: NomsDuMarche): TriggerFact[];
 }
 
 function marketTotals(result: CompanyRoundResult): {
@@ -105,11 +114,16 @@ function marketTotals(result: CompanyRoundResult): {
  * LA DEMANDE PERDUE, ET D'OÙ ELLE VENAIT. « Une part importante de la demande
  * n'a pas pu être servie » ne dit ni combien de clients il y avait sur le
  * marché, ni combien étaient venus à vous, ni lesquels sont repartis. Ces
- * quatre lignes le disent, et une par clientèle quand il y en a plusieurs :
+ * quatre lignes le disent, puis une par clientèle quand il y en a plusieurs :
  * c'est la zone de chalandise que l'élève doit avoir sous les yeux pour
  * dimensionner son prochain plan de production.
+ *
+ * En gamme, le détail se fait par RÉFÉRENCE et non par clientèle : chaque
+ * référence a son marché, et la question n'est pas « qui est reparti » mais
+ * « de quoi manquait-il, et qu'est-ce qui dort » — la référence en rupture
+ * et celle qui reste en stock se lisent sur la même ligne.
  */
-function faitsDeDemandePerdue(r: CompanyRoundResult, noms: NomsDesSegments): TriggerFact[] {
+function faitsDeDemandePerdue(r: CompanyRoundResult, noms: NomsDuMarche): TriggerFact[] {
   const t = marketTotals(r);
   const faits: TriggerFact[] = [];
   if (t.potential > 0)
@@ -123,11 +137,25 @@ function faitsDeDemandePerdue(r: CompanyRoundResult, noms: NomsDesSegments): Tri
       direction: "negative",
     },
   );
+  if (r.products) {
+    for (const [code, p] of Object.entries(r.products)) {
+      if (p.sold + p.lost < 0.5 && p.stock.quantity < 0.5) continue; // référence non vendable ce tour
+      const manque = p.lost > 0.5;
+      faits.push({
+        label: `${noms.references[code] ?? code}`,
+        value: manque
+          ? `${formatUnits(p.lost)} sur ${formatUnits(p.sold + p.lost)} repartis sans acheter · ${formatUnits(p.stock.quantity)} en stock`
+          : `rien de manqué · ${formatUnits(p.stock.quantity)} en stock`,
+        direction: manque ? "negative" : "neutral",
+      });
+    }
+    return faits;
+  }
   const parClientele = Object.entries(r.market.bySegment).filter(([, d]) => d.lost > 0.5);
   if (Object.keys(r.market.bySegment).length > 1)
     for (const [code, d] of parClientele)
       faits.push({
-        label: `dont ${noms[code] ?? code}`,
+        label: `dont ${noms.clienteles[code] ?? code}`,
         value: `${formatUnits(d.lost)} sur ${formatUnits(d.demandForCompany ?? d.sold + d.lost)} repartis sans acheter`,
         direction: "negative",
       });
@@ -151,12 +179,12 @@ export const DETECTION_METADATA: Record<DetectCode, DetectionMeta> = {
     },
   },
   stockout: {
-    buildFacts(r, noms = {}) {
+    buildFacts(r, noms = SANS_NOMS) {
       return faitsDeDemandePerdue(r, noms);
     },
   },
   capacity_saturated: {
-    buildFacts(r, noms = {}) {
+    buildFacts(r, noms = SANS_NOMS) {
       return [
         { label: "Taux d'utilisation", value: formatPercent(r.production.utilizationRate), direction: "neutral" },
         ...faitsDeDemandePerdue(r, noms),
@@ -180,7 +208,7 @@ export const DETECTION_METADATA: Record<DetectCode, DetectionMeta> = {
 export function buildTriggerContext(
   code: DetectCode,
   result: CompanyRoundResult,
-  noms: NomsDesSegments = {},
+  noms: NomsDuMarche = SANS_NOMS,
 ): TriggerFact[] {
   return DETECTION_METADATA[code].buildFacts(result, noms);
 }
