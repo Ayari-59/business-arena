@@ -193,4 +193,64 @@ export const TRANSPORT_CARDS: EventCardDef[] = [
     emoji: "🏭",
     scope: "team",
   },
+  {
+    code: "transport_concurrent_est",
+    title: "Un transporteur de l'Est s'installe",
+    flavor:
+      "Des camions immatriculés à l'étranger, des tarifs vingt pour cent en dessous sur la bourse de fret.",
+    effectLabel: "Demande de l'affrètement −20 % pendant 2 tours",
+    conceptHint:
+      "Sur la bourse, seul le prix compte : c'est le segment le plus exposé, et celui qu'on ne peut pas défendre par la qualité.",
+    category: "competition",
+    emoji: "🚛",
+    scope: "market",
+  },
+  {
+    code: "transport_distribution_internalise",
+    title: "La grande distribution reprend ses flux en propre",
+    flavor:
+      "La centrale rachète des camions et embauche. Vos tournées régulières se réduisent.",
+    effectLabel: "Demande de la grande distribution −15 % pendant 2 tours",
+    conceptHint:
+      "Un client qui pèse un tiers du chiffre est un risque : le jour où il internalise, la flotte roule à vide.",
+    category: "competition",
+    emoji: "🏬",
+    scope: "market",
+  },
+  {
+    code: "transport_contrat_cadre",
+    title: "Un contrat-cadre signé",
+    flavor:
+      "Un industriel vous confie l'ensemble de ses flux régionaux pour deux ans.",
+    effectLabel: "Demande des industriels de votre entreprise +20 % pendant 2 tours",
+    conceptHint:
+      "Un contrat-cadre lisse l'activité et sécurise la trésorerie : c'est ce qu'une banque aime lire.",
+    category: "market",
+    emoji: "📜",
+    scope: "team",
+  },
+  {
+    code: "transport_controle_routier",
+    title: "Contrôle routier : immobilisations",
+    flavor:
+      "Trois camions immobilisés pour des pneus usés. Les tournées se réorganisent dans l'urgence.",
+    effectLabel: "Disponibilité de la flotte −15 % ce tour",
+    conceptHint:
+      "La maintenance qu'on n'a pas faite finit par se faire, au moment choisi par quelqu'un d'autre.",
+    category: "internal",
+    emoji: "👮",
+    scope: "team",
+  },
+  {
+    code: "transport_peages",
+    title: "Les péages augmentent",
+    flavor:
+      "Six pour cent sur l'ensemble du réseau autoroutier au premier janvier.",
+    effectLabel: "Coût variable par tournée +6 % pendant 2 tours",
+    conceptHint:
+      "Un coût variable qui monte se répercute sur le tarif, ou se paie sur la marge : la seule question est de savoir dans quel délai.",
+    category: "macro",
+    emoji: "🛣️",
+    scope: "market",
+  },
 ];

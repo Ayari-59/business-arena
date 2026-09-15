@@ -34,8 +34,8 @@ exports[`LA TABLE D'AUGUSTIN · gamme — calibration > la partie de référence
       },
     },
     {
-      "resultat": -11229,
-      "tresorerie": 28026,
+      "resultat": -5292,
+      "tresorerie": 32577,
       "vendu": {
         "banquets": 601,
         "carte-soir": 2802,
@@ -44,8 +44,8 @@ exports[`LA TABLE D'AUGUSTIN · gamme — calibration > la partie de référence
       },
     },
     {
-      "resultat": 23202,
-      "tresorerie": 47454,
+      "resultat": 26047,
+      "tresorerie": 54889,
       "vendu": {
         "banquets": 825,
         "carte-soir": 3375,
@@ -54,13 +54,13 @@ exports[`LA TABLE D'AUGUSTIN · gamme — calibration > la partie de référence
       },
     },
     {
-      "resultat": 27664,
-      "tresorerie": 73731,
+      "resultat": 11712,
+      "tresorerie": 66840,
       "vendu": {
-        "banquets": 850,
-        "carte-soir": 3484,
-        "formule-midi": 2148,
-        "traiteur": 790,
+        "banquets": 723,
+        "carte-soir": 2962,
+        "formule-midi": 1826,
+        "traiteur": 672,
       },
     },
   ],
@@ -96,33 +96,33 @@ exports[`LA TABLE D'AUGUSTIN · gamme — calibration > la partie de référence
       },
     },
     {
-      "resultat": 2223,
-      "tresorerie": 71281,
+      "resultat": 9276,
+      "tresorerie": 76515,
       "vendu": {
-        "banquets": 955,
-        "carte-soir": 3508,
-        "formule-midi": 2810,
-        "traiteur": 677,
+        "banquets": 965,
+        "carte-soir": 3545,
+        "formule-midi": 2840,
+        "traiteur": 684,
       },
     },
     {
-      "resultat": 18100,
-      "tresorerie": 84267,
+      "resultat": 35016,
+      "tresorerie": 106784,
       "vendu": {
-        "banquets": 1092,
-        "carte-soir": 3517,
-        "formule-midi": 2668,
-        "traiteur": 672,
-      },
-    },
-    {
-      "resultat": 34620,
-      "tresorerie": 117451,
-      "vendu": {
-        "banquets": 1212,
-        "carte-soir": 3910,
+        "banquets": 1213,
+        "carte-soir": 3908,
         "formule-midi": 2964,
-        "traiteur": 745,
+        "traiteur": 746,
+      },
+    },
+    {
+      "resultat": -1622,
+      "tresorerie": 105076,
+      "vendu": {
+        "banquets": 848,
+        "carte-soir": 2737,
+        "formule-midi": 2075,
+        "traiteur": 522,
       },
     },
   ],
@@ -158,8 +158,8 @@ exports[`LA TABLE D'AUGUSTIN · gamme — calibration > la partie de référence
       },
     },
     {
-      "resultat": -13908,
-      "tresorerie": 12397,
+      "resultat": -8834,
+      "tresorerie": 16287,
       "vendu": {
         "banquets": 1128,
         "carte-soir": 2151,
@@ -168,8 +168,8 @@ exports[`LA TABLE D'AUGUSTIN · gamme — calibration > la partie de référence
       },
     },
     {
-      "resultat": -2386,
-      "tresorerie": 7631,
+      "resultat": 1630,
+      "tresorerie": 15784,
       "vendu": {
         "banquets": 1108,
         "carte-soir": 2111,
@@ -178,12 +178,12 @@ exports[`LA TABLE D'AUGUSTIN · gamme — calibration > la partie de référence
       },
     },
     {
-      "resultat": -783,
-      "tresorerie": 5981,
+      "resultat": -9953,
+      "tresorerie": 5676,
       "vendu": {
-        "banquets": 1087,
-        "carte-soir": 2072,
-        "formule-midi": 1664,
+        "banquets": 978,
+        "carte-soir": 1864,
+        "formule-midi": 1498,
         "traiteur": 0,
       },
     },
@@ -220,7 +220,7 @@ exports[`LA TABLE D'AUGUSTIN · gamme — calibration > la partie de référence
       },
     },
     {
-      "resultat": -25903,
+      "resultat": -22063,
       "tresorerie": -20000,
       "vendu": {
         "banquets": 398,
@@ -230,7 +230,7 @@ exports[`LA TABLE D'AUGUSTIN · gamme — calibration > la partie de référence
       },
     },
     {
-      "resultat": -1255,
+      "resultat": 2619,
       "tresorerie": -18800,
       "vendu": {
         "banquets": 522,
@@ -240,13 +240,13 @@ exports[`LA TABLE D'AUGUSTIN · gamme — calibration > la partie de référence
       },
     },
     {
-      "resultat": -659,
-      "tresorerie": -18080,
+      "resultat": -11827,
+      "tresorerie": -19579,
       "vendu": {
-        "banquets": 513,
-        "carte-soir": 2063,
-        "formule-midi": 778,
-        "traiteur": 637,
+        "banquets": 462,
+        "carte-soir": 1857,
+        "formule-midi": 700,
+        "traiteur": 573,
       },
     },
   ],
@@ -282,8 +282,8 @@ exports[`LA TABLE D'AUGUSTIN · gamme — calibration > la partie de référence
       },
     },
     {
-      "resultat": -14424,
-      "tresorerie": 30599,
+      "resultat": -7258,
+      "tresorerie": 36093,
       "vendu": {
         "banquets": 928,
         "carte-soir": 3413,
@@ -292,22 +292,22 @@ exports[`LA TABLE D'AUGUSTIN · gamme — calibration > la partie de référence
       },
     },
     {
-      "resultat": 16895,
-      "tresorerie": 44053,
-      "vendu": {
-        "banquets": 1190,
-        "carte-soir": 3827,
-        "formule-midi": 2913,
-        "traiteur": 0,
-      },
-    },
-    {
-      "resultat": 28571,
-      "tresorerie": 72334,
+      "resultat": 30790,
+      "tresorerie": 64714,
       "vendu": {
         "banquets": 1322,
         "carte-soir": 4253,
         "formule-midi": 3236,
+        "traiteur": 0,
+      },
+    },
+    {
+      "resultat": -4518,
+      "tresorerie": 56957,
+      "vendu": {
+        "banquets": 925,
+        "carte-soir": 2977,
+        "formule-midi": 2265,
         "traiteur": 0,
       },
     },

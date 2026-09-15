@@ -79,7 +79,10 @@ const GAMME: ProductDef[] = [
         {
           code: "escapades",
           name: "Escapades en couple (week-ends, sensibles au confort)",
-          size: 700,
+          // 800 et non 700 : c'est ce qui laisse à une stratégie de croissance (volume
+          // et marketing) de quoi battre l'inertie sur six trimestres, garde tenue
+          // par le test de calibration. À 700, elle perdait de trois pour cent.
+          size: 800,
           growth: 0.05,
           priceElasticity: -1.4,
           refPrice: 112,

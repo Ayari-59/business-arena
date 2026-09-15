@@ -473,6 +473,41 @@ const rawConseil = {
       duration: 1,
       modifiers: [{ target: "availability", op: "mul", value: 1.12 }],
     },
+    {
+      code: "conseil_plateforme_freelance",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand:pme", op: "mul", value: 0.8 }],
+    },
+    {
+      code: "conseil_grand_cabinet_public",
+      scope: "market",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "demand:public", op: "mul", value: 0.75 }],
+    },
+    {
+      code: "conseil_partenariat_editeur",
+      scope: "company",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand", op: "mul", value: 1.12 }],
+    },
+    {
+      code: "conseil_debauchage",
+      scope: "company",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "availability", op: "mul", value: 0.85 }],
+    },
+    {
+      code: "conseil_plan_relance",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand:pme", op: "mul", value: 1.3 }],
+    },
   ],
   // Une réglementation nouvelle au tour 4 ouvre un marché : encore faut-il
   // avoir les consultants disponibles pour le prendre.

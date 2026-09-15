@@ -487,6 +487,41 @@ const rawEcommerce = {
       duration: 1,
       modifiers: [{ target: "availability", op: "mul", value: 1.12 }],
     },
+    {
+      code: "ecom_geant_promo",
+      scope: "market",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "demand:acquisition", op: "mul", value: 0.75 }],
+    },
+    {
+      code: "ecom_livraison_gratuite",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand", op: "mul", value: 0.9 }],
+    },
+    {
+      code: "ecom_avis_cinq_etoiles",
+      scope: "company",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand:fideles", op: "mul", value: 1.2 }],
+    },
+    {
+      code: "ecom_panne_paiement",
+      scope: "company",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "availability", op: "mul", value: 0.7 }],
+    },
+    {
+      code: "ecom_taxe_colis",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "material_cost", op: "mul", value: 1.08 }],
+    },
   ],
   // Les frais de port explosent au dernier tour. Ils tombaient au tour 5, où
   // le BTS NDRC place sa séance de négociation avec les places de marché :

@@ -56,7 +56,15 @@ export function drawEvents(
   }
 
   // 2. Tirages probabilistes (ordre stable = ordre du scénario, PRNG seedé).
+  //
+  // Un événement à probabilité NULLE ne consomme aucun tirage : ce sont les
+  // cartes réservées à la main de l'enseignant, que le moteur ne tire jamais.
+  // Leur dépenser un nombre aléatoire liait le hasard de la partie au nombre
+  // de cartes du deck — ajouter une carte d'animation déplaçait la demande de
+  // tous les tours suivants, dans tous les secteurs. Le deck peut grandir
+  // sans que le jeu change.
   for (const def of scenario.events) {
+    if (def.probability <= 0) continue;
     if (activeCodes.has(def.code) || drawn.some((d) => d.code === def.code)) continue;
     if (def.minRound !== undefined && roundIndex < def.minRound) continue;
     if (rng.next() >= def.probability) continue;

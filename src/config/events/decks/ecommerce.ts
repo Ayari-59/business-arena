@@ -206,4 +206,64 @@ export const ECOMMERCE_CARDS: EventCardDef[] = [
     emoji: "🏭",
     scope: "team",
   },
+  {
+    code: "ecom_geant_promo",
+    title: "Le géant de la vente en ligne lance ses jours promo",
+    flavor:
+      "Quarante-huit heures de remises massives. Votre publicité coûte le même prix et convertit deux fois moins.",
+    effectLabel: "Demande des nouveaux clients −25 % ce tour",
+    conceptHint:
+      "Un coût d'acquisition qui double le temps d'une promo concurrente : il vaut parfois mieux couper que suivre.",
+    category: "competition",
+    emoji: "🏷️",
+    scope: "market",
+  },
+  {
+    code: "ecom_livraison_gratuite",
+    title: "Un concurrent passe à la livraison gratuite",
+    flavor:
+      "Sans minimum de commande. Les paniers de vingt euros vous quittent d'abord.",
+    effectLabel: "Demande globale −10 % pendant 2 tours",
+    conceptHint:
+      "La livraison gratuite n'est pas gratuite : quelqu'un la paie, et ce n'est pas toujours le client.",
+    category: "competition",
+    emoji: "📦",
+    scope: "market",
+  },
+  {
+    code: "ecom_avis_cinq_etoiles",
+    title: "Une vague d'avis cinq étoiles",
+    flavor:
+      "Votre nouveau service après-vente fait parler de lui. Les clients reviennent, et ramènent leurs amis.",
+    effectLabel: "Demande des clients récurrents de votre boutique +20 % pendant 2 tours",
+    conceptHint:
+      "Un client fidèle coûte dix fois moins qu'un client acquis : la rétention est la publicité la moins chère.",
+    category: "market",
+    emoji: "⭐",
+    scope: "team",
+  },
+  {
+    code: "ecom_panne_paiement",
+    title: "Le prestataire de paiement tombe",
+    flavor:
+      "Trois jours sans pouvoir encaisser une carte. Les paniers se remplissent et s'abandonnent à la caisse.",
+    effectLabel: "Commandes servies −30 % ce tour",
+    conceptHint:
+      "Une boutique en ligne dépend de prestataires qu'elle ne contrôle pas : le risque opérationnel se contractualise.",
+    category: "internal",
+    emoji: "💳",
+    scope: "team",
+  },
+  {
+    code: "ecom_taxe_colis",
+    title: "Nouvelle taxe sur les colis importés",
+    flavor:
+      "Chaque colis venu d'Asie supporte désormais des droits et des frais de dédouanement.",
+    effectLabel: "Coût d'achat +8 % pendant 2 tours",
+    conceptHint:
+      "Une taxe sur les achats est un coût variable : elle remonte le seuil, et la question est de la répercuter ou non.",
+    category: "macro",
+    emoji: "🛃",
+    scope: "market",
+  },
 ];

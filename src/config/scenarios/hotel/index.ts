@@ -466,6 +466,41 @@ const rawHotel = {
       duration: 1,
       modifiers: [{ target: "availability", op: "mul", value: 1.12 }],
     },
+    {
+      code: "hotel_nouvel_hotel",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand", op: "mul", value: 0.85 }],
+    },
+    {
+      code: "hotel_locations_particuliers",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand:loisirs", op: "mul", value: 0.8 }],
+    },
+    {
+      code: "hotel_congres",
+      scope: "market",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "demand:affaires", op: "mul", value: 1.35 }],
+    },
+    {
+      code: "hotel_chef_reconnu",
+      scope: "company",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand", op: "mul", value: 1.1 }],
+    },
+    {
+      code: "hotel_legionelle",
+      scope: "company",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "availability", op: "mul", value: 0.6 }],
+    },
   ],
   // L'énergie flambe au tour 4 : la facture explose juste après la saison
   // haute, quand on croyait l'exercice sauvé.

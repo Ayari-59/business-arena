@@ -206,4 +206,64 @@ export const BISTROT_CARDS: EventCardDef[] = [
     emoji: "🏭",
     scope: "team",
   },
+  {
+    code: "bistrot_food_truck",
+    title: "Un food truck s'installe sur la place",
+    flavor:
+      "Burgers à huit euros, servis en quatre minutes, à cinquante mètres de votre terrasse. Les bureaux ont trouvé leur cantine.",
+    effectLabel: "Demande des déjeuners d'affaires −18 % pendant 2 tours",
+    conceptHint:
+      "La formule du midi vend du temps autant que de la cuisine : c'est là que le concurrent frappe.",
+    category: "competition",
+    emoji: "🚚",
+    scope: "market",
+  },
+  {
+    code: "bistrot_concurrent_etoile",
+    title: "Le restaurant voisin décroche une étoile",
+    flavor:
+      "Tout le quartier veut y avoir dîné. Vos habitués du soir font l'infidèle, au moins une fois.",
+    effectLabel: "Demande de la clientèle locale du soir −15 % pendant 2 tours",
+    conceptHint:
+      "On ne se bat pas sur le terrain d'un concurrent mieux armé : la fidélité se construit sur ce qu'il n'offre pas.",
+    category: "competition",
+    emoji: "⭐",
+    scope: "market",
+  },
+  {
+    code: "bistrot_marche_hebdo",
+    title: "Le marché hebdomadaire déménage devant chez vous",
+    flavor:
+      "Le samedi matin, quatre-vingts étals et leurs clients passent devant votre porte.",
+    effectLabel: "Demande globale +12 % pendant 2 tours",
+    conceptHint:
+      "Le passage est une ressource gratuite : ce qu'on en tire dépend de la capacité à servir vite.",
+    category: "market",
+    emoji: "🧺",
+    scope: "market",
+  },
+  {
+    code: "bistrot_chef_absent",
+    title: "Le chef est absent",
+    flavor:
+      "Une jambe cassée, six semaines d'arrêt. Le second assure, la carte se réduit, le service ralentit.",
+    effectLabel: "Couverts servis −20 % ce tour",
+    conceptHint:
+      "Une entreprise qui tient sur une personne a une capacité fragile : le remplacement se prépare avant l'accident.",
+    category: "internal",
+    emoji: "🩼",
+    scope: "team",
+  },
+  {
+    code: "bistrot_critique_elogieuse",
+    title: "Une critique élogieuse",
+    flavor:
+      "Un blogueur suivi par toute la ville a aimé votre blanquette. Le téléphone n'arrête plus.",
+    effectLabel: "Demande de votre bistrot +10 % pendant 2 tours",
+    conceptHint:
+      "La réputation se gagne assiette par assiette et se perd en un service : la qualité est un investissement.",
+    category: "market",
+    emoji: "📝",
+    scope: "team",
+  },
 ];

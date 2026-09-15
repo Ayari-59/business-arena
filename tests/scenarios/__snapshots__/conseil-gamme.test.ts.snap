@@ -31,8 +31,8 @@ exports[`ATLAS CONSEIL · gamme — calibration > la partie de référence ne bo
       },
     },
     {
-      "resultat": 57228,
-      "tresorerie": 126991,
+      "resultat": 59107,
+      "tresorerie": 128035,
       "vendu": {
         "audit": 228,
         "cyber": 106,
@@ -40,8 +40,8 @@ exports[`ATLAS CONSEIL · gamme — calibration > la partie de référence ne bo
       },
     },
     {
-      "resultat": 80942,
-      "tresorerie": 182644,
+      "resultat": 83026,
+      "tresorerie": 185681,
       "vendu": {
         "audit": 262,
         "cyber": 111,
@@ -49,12 +49,12 @@ exports[`ATLAS CONSEIL · gamme — calibration > la partie de référence ne bo
       },
     },
     {
-      "resultat": 95680,
-      "tresorerie": 271672,
+      "resultat": 74493,
+      "tresorerie": 272851,
       "vendu": {
-        "audit": 275,
-        "cyber": 116,
-        "transformation": 206,
+        "audit": 253,
+        "cyber": 107,
+        "transformation": 189,
       },
     },
   ],
@@ -87,8 +87,8 @@ exports[`ATLAS CONSEIL · gamme — calibration > la partie de référence ne bo
       },
     },
     {
-      "resultat": 117819,
-      "tresorerie": 198982,
+      "resultat": 120450,
+      "tresorerie": 200444,
       "vendu": {
         "audit": 330,
         "cyber": 131,
@@ -96,8 +96,8 @@ exports[`ATLAS CONSEIL · gamme — calibration > la partie de référence ne bo
       },
     },
     {
-      "resultat": 117661,
-      "tresorerie": 307772,
+      "resultat": 120302,
+      "tresorerie": 311870,
       "vendu": {
         "audit": 343,
         "cyber": 124,
@@ -105,12 +105,12 @@ exports[`ATLAS CONSEIL · gamme — calibration > la partie de référence ne bo
       },
     },
     {
-      "resultat": 120345,
-      "tresorerie": 431569,
+      "resultat": 96481,
+      "tresorerie": 433990,
       "vendu": {
-        "audit": 343,
-        "cyber": 124,
-        "transformation": 253,
+        "audit": 315,
+        "cyber": 114,
+        "transformation": 233,
       },
     },
   ],
@@ -143,8 +143,8 @@ exports[`ATLAS CONSEIL · gamme — calibration > la partie de référence ne bo
       },
     },
     {
-      "resultat": 23111,
-      "tresorerie": 105293,
+      "resultat": 24693,
+      "tresorerie": 106172,
       "vendu": {
         "audit": 258,
         "cyber": 0,
@@ -152,8 +152,8 @@ exports[`ATLAS CONSEIL · gamme — calibration > la partie de référence ne bo
       },
     },
     {
-      "resultat": 21337,
-      "tresorerie": 120738,
+      "resultat": 22918,
+      "tresorerie": 123198,
       "vendu": {
         "audit": 258,
         "cyber": 0,
@@ -161,12 +161,12 @@ exports[`ATLAS CONSEIL · gamme — calibration > la partie de référence ne bo
       },
     },
     {
-      "resultat": 22961,
-      "tresorerie": 145613,
+      "resultat": 8747,
+      "tresorerie": 147802,
       "vendu": {
-        "audit": 258,
+        "audit": 238,
         "cyber": 0,
-        "transformation": 174,
+        "transformation": 160,
       },
     },
   ],
@@ -199,8 +199,8 @@ exports[`ATLAS CONSEIL · gamme — calibration > la partie de référence ne bo
       },
     },
     {
-      "resultat": 20654,
-      "tresorerie": 114744,
+      "resultat": 21866,
+      "tresorerie": 115418,
       "vendu": {
         "audit": 116,
         "cyber": 96,
@@ -208,8 +208,8 @@ exports[`ATLAS CONSEIL · gamme — calibration > la partie de référence ne bo
       },
     },
     {
-      "resultat": 29624,
-      "tresorerie": 132145,
+      "resultat": 30895,
+      "tresorerie": 134063,
       "vendu": {
         "audit": 127,
         "cyber": 96,
@@ -217,12 +217,12 @@ exports[`ATLAS CONSEIL · gamme — calibration > la partie de référence ne bo
       },
     },
     {
-      "resultat": 30938,
-      "tresorerie": 165677,
+      "resultat": 13779,
+      "tresorerie": 165115,
       "vendu": {
-        "audit": 127,
-        "cyber": 96,
-        "transformation": 120,
+        "audit": 117,
+        "cyber": 88,
+        "transformation": 111,
       },
     },
   ],
@@ -255,8 +255,8 @@ exports[`ATLAS CONSEIL · gamme — calibration > la partie de référence ne bo
       },
     },
     {
-      "resultat": 31744,
-      "tresorerie": 50425,
+      "resultat": 34392,
+      "tresorerie": 52191,
       "vendu": {
         "audit": 326,
         "cyber": 0,
@@ -264,8 +264,8 @@ exports[`ATLAS CONSEIL · gamme — calibration > la partie de référence ne bo
       },
     },
     {
-      "resultat": 70951,
-      "tresorerie": 79582,
+      "resultat": 72741,
+      "tresorerie": 82931,
       "vendu": {
         "audit": 411,
         "cyber": 0,
@@ -273,12 +273,12 @@ exports[`ATLAS CONSEIL · gamme — calibration > la partie de référence ne bo
       },
     },
     {
-      "resultat": 87375,
-      "tresorerie": 156024,
+      "resultat": 67146,
+      "tresorerie": 159202,
       "vendu": {
-        "audit": 441,
+        "audit": 405,
         "cyber": 0,
-        "transformation": 279,
+        "transformation": 257,
       },
     },
   ],

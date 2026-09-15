@@ -467,6 +467,41 @@ const rawBatiment = {
       duration: 1,
       modifiers: [{ target: "availability", op: "mul", value: 1.12 }],
     },
+    {
+      code: "batiment_artisan_low_cost",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand:particuliers", op: "mul", value: 0.82 }],
+    },
+    {
+      code: "batiment_major_petits_marches",
+      scope: "market",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "demand:marches_publics", op: "mul", value: 0.75 }],
+    },
+    {
+      code: "batiment_bouche_a_oreille",
+      scope: "company",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand:syndics", op: "mul", value: 1.25 }],
+    },
+    {
+      code: "batiment_conducteur_absent",
+      scope: "company",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "availability", op: "mul", value: 0.85 }],
+    },
+    {
+      code: "batiment_norme_thermique",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "material_cost", op: "mul", value: 1.1 }],
+    },
   ],
   // Le crédit immobilier se resserre au tour 4 : les particuliers reportent
   // leurs travaux au moment même où la saison devrait repartir.

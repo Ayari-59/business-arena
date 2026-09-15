@@ -3,6 +3,7 @@
 import { useSyncExternalStore } from "react";
 import { EventCard } from "@/components/event-card";
 import { BrandMark } from "@/components/brand-mark";
+import { cardByCode } from "@/config/events/cards";
 
 /**
  * LE TIRAGE DU TOUR, VÉCU.
@@ -16,8 +17,10 @@ import { BrandMark } from "@/components/brand-mark";
  * réfléchie, qu'il faut reprendre. C'est ce qui fait d'un aléa subi un
  * événement joué.
  *
- * Le retournement est mémorisé sur l'appareil : revenir sur la page ne
- * rejoue pas la scène, les cartes restent face visible.
+ * Une fois lue, on en prend note et la carte S'EFFACE : elle a dit ce qu'elle
+ * avait à dire, la décision reprend toute la place. Il en reste une ligne, et
+ * de quoi la revoir. L'appareil retient où en est le joueur (retourné, noté) :
+ * revenir sur la page ne rejoue pas la scène.
  */
 export interface CarteTiree {
   code: string;
@@ -42,16 +45,18 @@ const memoire = {
     abonnes.add(cb);
     return () => abonnes.delete(cb);
   },
-  lire(cle: string): boolean {
+  /** "" jamais retourné · "1" retourné · "2" noté (replié). */
+  lire(cle: string): "" | "1" | "2" {
     try {
-      return window.localStorage.getItem(cle) === "1";
+      const v = window.localStorage.getItem(cle);
+      return v === "1" || v === "2" ? v : "";
     } catch {
-      return false;
+      return "";
     }
   },
-  retenir(cle: string) {
+  retenir(cle: string, etat: "1" | "2") {
     try {
-      window.localStorage.setItem(cle, "1");
+      window.localStorage.setItem(cle, etat);
     } catch {
       // stockage indisponible : la scène se rejouera, ce n'est pas grave
     }
@@ -65,6 +70,7 @@ export function TirageDuTour({
   periodeLabel,
   cartes,
   revele: reveleInitial = false,
+  note: noteInitial = false,
 }: {
   gameId: string;
   round: number;
@@ -74,15 +80,47 @@ export function TirageDuTour({
   cartes: readonly CarteTiree[];
   /** Face visible d'emblée (tests, aperçus). */
   revele?: boolean;
+  /** Déjà notée et repliée d'emblée (tests, aperçus). */
+  note?: boolean;
 }) {
   const cle = cleMemoire(gameId, round);
   const retenu = useSyncExternalStore(
     memoire.subscribe,
     () => memoire.lire(cle),
-    () => false,
+    () => "" as const,
   );
-  const revele = reveleInitial || retenu;
-  const retourner = () => memoire.retenir(cle);
+  const note = noteInitial || retenu === "2";
+  const revele = reveleInitial || note || retenu === "1";
+  const retourner = () => memoire.retenir(cle, "1");
+  const prendreNote = () => memoire.retenir(cle, "2");
+  const revoir = () => memoire.retenir(cle, "1");
+
+  // Notée : une ligne, et de quoi revoir. La carte a dit ce qu'elle avait à dire.
+  if (note) {
+    return (
+      <section aria-label={`Le tirage du ${periodeLabel}`} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs text-slate-400">
+        <span>
+          🃏 Tirage du {periodeLabel} :{" "}
+          {cartes.length > 0 ? (
+            <span className="text-slate-300">
+              {cartes.map((c) => cardByCode.get(c.code)?.title ?? c.code).join(" · ")}
+            </span>
+          ) : (
+            "aucune carte"
+          )}
+        </span>
+        {cartes.length > 0 ? (
+          <button
+            type="button"
+            onClick={revoir}
+            className="text-amber-300 underline-offset-4 hover:underline"
+          >
+            Revoir
+          </button>
+        ) : null}
+      </section>
+    );
+  }
 
   return (
     <section
@@ -127,25 +165,36 @@ export function TirageDuTour({
             Retourner les cartes
           </button>
         </div>
-      ) : cartes.length > 0 ? (
-        <div className="mt-4 grid gap-3 sm:grid-cols-2" aria-live="polite">
-          {cartes.map((c, i) => (
-            <EventCard
-              key={`${c.code}-${c.teamId ?? "market"}`}
-              code={c.code}
-              delayMs={i * 500}
-              targetLabel={c.teamId ? "🎯 Votre entreprise" : "Tout le marché"}
-              highlight={c.isMyTeam}
-            />
-          ))}
-        </div>
       ) : (
-        <p
-          className="mt-4 rounded-lg border border-white/5 bg-slate-950 px-4 py-3 text-center text-sm text-slate-300"
-          aria-live="polite"
-        >
-          🃏 Aucune carte ce tour.
-        </p>
+        <div aria-live="polite">
+          {cartes.length > 0 ? (
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {cartes.map((c, i) => (
+                <EventCard
+                  key={`${c.code}-${c.teamId ?? "market"}`}
+                  code={c.code}
+                  delayMs={i * 500}
+                  targetLabel={c.teamId ? "🎯 Votre entreprise" : "Tout le marché"}
+                  highlight={c.isMyTeam}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="mt-4 rounded-lg border border-white/5 bg-slate-950 px-4 py-3 text-center text-sm text-slate-300">
+              🃏 Aucune carte ce tour.
+            </p>
+          )}
+          {/* Lue, la carte s'efface : on en prend note, la décision reprend la place. */}
+          <div className="mt-4 flex justify-center">
+            <button
+              type="button"
+              onClick={prendreNote}
+              className="rounded-lg border border-white/15 px-5 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-white/30 hover:bg-white/5"
+            >
+              J&apos;ai pris note
+            </button>
+          </div>
+        </div>
       )}
     </section>
   );

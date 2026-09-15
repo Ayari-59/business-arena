@@ -206,4 +206,64 @@ export const FITNESS_CARDS: EventCardDef[] = [
     emoji: "🏭",
     scope: "team",
   },
+  {
+    code: "fitness_chaine_nationale",
+    title: "Une chaîne nationale ouvre un club premium",
+    flavor:
+      "Piscine, sauna, deux mille mètres carrés, à vingt euros de plus par mois. Vos réguliers vont visiter.",
+    effectLabel: "Demande des pratiquants réguliers −15 % pendant 2 tours",
+    conceptHint:
+      "Le concurrent premium ne prend que ceux qui en ont les moyens : reste à savoir s'il vous en laisse assez.",
+    category: "competition",
+    emoji: "🏊",
+    scope: "market",
+  },
+  {
+    code: "fitness_appli_gratuite",
+    title: "Une appli de sport à la maison fait fureur",
+    flavor:
+      "Séances gratuites, coach virtuel, pas de déplacement. Les bonnes résolutions se prennent sur le canapé.",
+    effectLabel: "Demande des bonnes résolutions −20 % pendant 2 tours",
+    conceptHint:
+      "Le concurrent le plus dangereux n'est pas toujours une salle : c'est celui qui remplace le besoin.",
+    category: "competition",
+    emoji: "📱",
+    scope: "market",
+  },
+  {
+    code: "fitness_mutuelle",
+    title: "Une mutuelle rembourse l'abonnement",
+    flavor:
+      "La première mutuelle de la région prend en charge la moitié de l'abonnement de ses adhérents.",
+    effectLabel: "Demande des entreprises +30 % pendant 2 tours",
+    conceptHint:
+      "Quand un tiers paie, le prix cesse d'être le frein : c'est la capacité d'accueil qui le devient.",
+    category: "market",
+    emoji: "🩺",
+    scope: "market",
+  },
+  {
+    code: "fitness_coach_depart",
+    title: "Le coach vedette part chez le concurrent",
+    flavor:
+      "Ses cours affichaient complet. Une partie de ses élèves le suit de l'autre côté de la rue.",
+    effectLabel: "Demande de votre salle −10 % pendant 2 tours",
+    conceptHint:
+      "Une salle qui dépend d'une personne dépend de ses choix : la fidélité doit aller à l'enseigne, pas au coach.",
+    category: "competition",
+    emoji: "🏃",
+    scope: "team",
+  },
+  {
+    code: "fitness_portes_ouvertes",
+    title: "Portes ouvertes réussies",
+    flavor:
+      "Un week-end d'essais gratuits, deux cents visiteurs, et une file à l'accueil le lundi.",
+    effectLabel: "Demande de votre salle +12 % ce tour",
+    conceptHint:
+      "Un essai gratuit coûte une séance et rapporte un abonnement : c'est le coût d'acquisition le plus lisible.",
+    category: "market",
+    emoji: "🎟️",
+    scope: "team",
+  },
 ];

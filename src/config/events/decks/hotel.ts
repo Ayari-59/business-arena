@@ -206,4 +206,64 @@ export const HOTEL_CARDS: EventCardDef[] = [
     emoji: "🏭",
     scope: "team",
   },
+  {
+    code: "hotel_nouvel_hotel",
+    title: "Un hôtel de chaîne ouvre à deux rues",
+    flavor:
+      "Cent vingt chambres neuves, petit-déjeuner compris, tarif de lancement. Les avis en ligne s'enthousiasment.",
+    effectLabel: "Demande globale −15 % pendant 2 tours",
+    conceptHint:
+      "Une capacité nouvelle sur un marché stable se prend sur les voisins : le taux d'occupation d'équilibre remonte.",
+    category: "competition",
+    emoji: "🏨",
+    scope: "market",
+  },
+  {
+    code: "hotel_locations_particuliers",
+    title: "Les locations entre particuliers cassent les prix",
+    flavor:
+      "Le quartier compte désormais plus d'appartements en location courte que de chambres d'hôtel.",
+    effectLabel: "Demande du tourisme loisirs −20 % pendant 2 tours",
+    conceptHint:
+      "Le segment le plus sensible au prix est le premier à partir : la clientèle affaires, elle, achète autre chose qu'un lit.",
+    category: "competition",
+    emoji: "🔑",
+    scope: "market",
+  },
+  {
+    code: "hotel_congres",
+    title: "Congrès médical",
+    flavor:
+      "Trois mille congressistes pendant quatre jours, et la ville n'a pas assez de chambres.",
+    effectLabel: "Demande de la clientèle affaires +35 % ce tour",
+    conceptHint:
+      "Quand la demande dépasse la capacité, la question n'est plus de remplir mais à quel prix.",
+    category: "market",
+    emoji: "🩺",
+    scope: "market",
+  },
+  {
+    code: "hotel_chef_reconnu",
+    title: "Un chef reconnu reprend le restaurant",
+    flavor:
+      "Le restaurant de l'hôtel fait parler de lui. On réserve une chambre pour dîner.",
+    effectLabel: "Demande de votre hôtel +10 % pendant 2 tours",
+    conceptHint:
+      "Une activité annexe peut tirer l'activité principale : la marge se lit sur l'ensemble, pas service par service.",
+    category: "internal",
+    emoji: "👨‍🍳",
+    scope: "team",
+  },
+  {
+    code: "hotel_legionelle",
+    title: "Alerte légionelle",
+    flavor:
+      "Un contrôle sanitaire impose la fermeture d'un étage entier pour désinfection du réseau d'eau.",
+    effectLabel: "Chambres disponibles −40 % ce tour",
+    conceptHint:
+      "Une chambre fermée coûte ses charges fixes sans rien rapporter : la disponibilité est la première ressource d'un hôtel.",
+    category: "internal",
+    emoji: "🧪",
+    scope: "team",
+  },
 ];

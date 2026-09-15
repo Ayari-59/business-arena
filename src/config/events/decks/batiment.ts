@@ -193,4 +193,64 @@ export const BATIMENT_CARDS: EventCardDef[] = [
     emoji: "🏭",
     scope: "team",
   },
+  {
+    code: "batiment_artisan_low_cost",
+    title: "Un artisan casse les prix sur les devis particuliers",
+    flavor:
+      "Vingt pour cent en dessous de vos devis, sans décennale sérieuse. Les particuliers ne lisent pas les assurances.",
+    effectLabel: "Demande des particuliers −18 % pendant 2 tours",
+    conceptHint:
+      "Un devis moins cher cache souvent une charge en moins : la vôtre se paie, et c'est ce qu'il faut savoir expliquer.",
+    category: "competition",
+    emoji: "🔨",
+    scope: "market",
+  },
+  {
+    code: "batiment_major_petits_marches",
+    title: "Une major répond aux petits marchés publics",
+    flavor:
+      "Faute de grands chantiers, un groupe national soumissionne sur les lots que vous aviez l'habitude de remporter.",
+    effectLabel: "Demande des marchés publics −25 % ce tour",
+    conceptHint:
+      "Sur appel d'offres, la taille rassure l'acheteur : la réponse d'une PME est la réactivité et la proximité.",
+    category: "competition",
+    emoji: "🏢",
+    scope: "market",
+  },
+  {
+    code: "batiment_bouche_a_oreille",
+    title: "Le bouche-à-oreille des syndics",
+    flavor:
+      "Un chantier livré sans réserve, et trois syndics de la même ville vous appellent pour leurs ravalements.",
+    effectLabel: "Demande des syndics de votre entreprise +25 % pendant 2 tours",
+    conceptHint:
+      "Un chantier bien fini est un commercial gratuit : la qualité se rentabilise sur le suivant.",
+    category: "market",
+    emoji: "🗣️",
+    scope: "team",
+  },
+  {
+    code: "batiment_conducteur_absent",
+    title: "Le conducteur de travaux en arrêt",
+    flavor:
+      "Six semaines sans lui. Les équipes attendent des réponses, les chantiers se chevauchent.",
+    effectLabel: "Capacité des équipes −15 % pendant 2 tours",
+    conceptHint:
+      "La capacité d'une entreprise de bâtiment, c'est aussi celui qui organise : un goulot invisible sur le planning.",
+    category: "internal",
+    emoji: "🩹",
+    scope: "team",
+  },
+  {
+    code: "batiment_norme_thermique",
+    title: "Nouvelle norme thermique",
+    flavor:
+      "Isolants plus épais, menuiseries certifiées : les matériaux conformes coûtent plus cher, et ils sont obligatoires.",
+    effectLabel: "Coût des matériaux +10 % pendant 2 tours",
+    conceptHint:
+      "Une norme relève le coût variable de tous les concurrents à la fois : celui qui la répercute le premier perd des devis, le dernier perd de la marge.",
+    category: "macro",
+    emoji: "📐",
+    scope: "market",
+  },
 ];

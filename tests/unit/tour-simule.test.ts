@@ -35,6 +35,19 @@ describe("la pioche du tour", () => {
     expect(html).not.toContain("Retourner les cartes");
   });
 
+  it("lue, la carte s'efface : une ligne, et de quoi la revoir", () => {
+    const html = renderToStaticMarkup(createElement(TirageDuTour, { ...base, cartes, note: true }));
+    expect(html).toContain("Tirage du trimestre 3");
+    expect(html).toContain("Conjoncture morose · Panne machine");
+    expect(html).toContain("Revoir");
+    // le récit, l'effet et la mini-leçon ne reviennent qu'en revoyant
+    expect(html).not.toContain("La consommation des ménages");
+    expect(html).not.toContain("Retourner les cartes");
+    // et avant de noter, le geste pour noter est là
+    const ouverte = renderToStaticMarkup(createElement(TirageDuTour, { ...base, cartes, revele: true }));
+    expect(ouverte).toContain("pris note");
+  });
+
   it("un tour sans carte le dit, au lieu de laisser croire que le tirage n'existe pas", () => {
     const html = renderToStaticMarkup(createElement(TirageDuTour, { ...base, cartes: [], revele: true }));
     expect(html).toContain("Aucune carte ce tour");

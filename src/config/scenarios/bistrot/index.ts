@@ -484,6 +484,41 @@ const rawBistrot = {
       duration: 1,
       modifiers: [{ target: "availability", op: "mul", value: 1.12 }],
     },
+    {
+      code: "bistrot_food_truck",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand:midi_affaires", op: "mul", value: 0.82 }],
+    },
+    {
+      code: "bistrot_concurrent_etoile",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand:soir_locaux", op: "mul", value: 0.85 }],
+    },
+    {
+      code: "bistrot_marche_hebdo",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand", op: "mul", value: 1.12 }],
+    },
+    {
+      code: "bistrot_chef_absent",
+      scope: "company",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "availability", op: "mul", value: 0.8 }],
+    },
+    {
+      code: "bistrot_critique_elogieuse",
+      scope: "company",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand", op: "mul", value: 1.1 }],
+    },
   ],
   // Le beurre, la viande et l'énergie flambent au tour 3 : le ratio matières
   // dérape en plein creux d'août, quand la salle est déjà vide.

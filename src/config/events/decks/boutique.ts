@@ -194,4 +194,64 @@ export const BOUTIQUE_CARDS: EventCardDef[] = [
     emoji: "🏭",
     scope: "team",
   },
+  {
+    code: "boutique_fast_fashion",
+    title: "Une enseigne de fast fashion ouvre en face",
+    flavor:
+      "Vitrine immense, nouveautés chaque semaine, prix d'appel. La rue change de rythme.",
+    effectLabel: "Demande globale −14 % pendant 2 tours",
+    conceptHint:
+      "Face à un concurrent qui joue le volume, on ne gagne pas au prix : on gagne sur ce qu'il ne fait pas.",
+    category: "competition",
+    emoji: "🏬",
+    scope: "market",
+  },
+  {
+    code: "boutique_soldes_concurrent",
+    title: "Le concurrent solde en avance",
+    flavor:
+      "La boutique voisine lance ses ventes privées deux semaines avant tout le monde. Les passants y entrent d'abord.",
+    effectLabel: "Demande des passants −20 % ce tour",
+    conceptHint:
+      "Les clientes fidèles restent, les passants suivent l'affiche : votre chiffre dépend de la part de chacun.",
+    category: "competition",
+    emoji: "🏷️",
+    scope: "market",
+  },
+  {
+    code: "boutique_vendeuse_star",
+    title: "Une vendeuse qui fait la différence",
+    flavor:
+      "Votre nouvelle recrue connaît chaque cliente par son prénom. Le panier moyen grimpe sans que personne ne baisse un prix.",
+    effectLabel: "Demande de votre boutique +8 % pendant 2 tours",
+    conceptHint:
+      "La relation client est un actif qui ne figure à aucun bilan, et qui pèse sur le chiffre d'affaires.",
+    category: "internal",
+    emoji: "🌟",
+    scope: "team",
+  },
+  {
+    code: "boutique_greve_transporteur",
+    title: "Grève chez le transporteur",
+    flavor:
+      "Vos colis du façonnier restent à quai une semaine. Les rayons se vident sans qu'une seule vente n'ait manqué.",
+    effectLabel: "Mise en rayon −15 % ce tour",
+    conceptHint:
+      "La rupture ne vient pas toujours de la demande : la chaîne d'approvisionnement a ses propres pannes.",
+    category: "internal",
+    emoji: "🚚",
+    scope: "team",
+  },
+  {
+    code: "boutique_marche_noel",
+    title: "Le marché de Noël s'installe devant la boutique",
+    flavor:
+      "Chalets, vin chaud, et dix mille passants de plus chaque week-end pendant trois semaines.",
+    effectLabel: "Demande globale +20 % ce tour",
+    conceptHint:
+      "Un pic de passage ne se sert qu'avec du stock : c'est au trimestre d'avant qu'il se prépare.",
+    category: "market",
+    emoji: "🎄",
+    scope: "market",
+  },
 ];

@@ -316,6 +316,66 @@ const NOVA_CARDS: EventCardDef[] = [
     emoji: "🏭",
     scope: "team",
   },
+  {
+    code: "nova_price_war",
+    title: "Guerre des prix",
+    flavor:
+      "SoundBox annonce −15 % sur toute sa gamme, et le fait savoir à grand renfort d'affiches. Les clients comparent.",
+    effectLabel: "Demande globale −12 % pendant 2 tours",
+    conceptHint:
+      "S'aligner coûte de la marge, tenir coûte du volume : chiffrez les deux avant de choisir, ne suivez pas par réflexe.",
+    category: "competition",
+    emoji: "🥊",
+    scope: "market",
+  },
+  {
+    code: "nova_counterfeit",
+    title: "Contrefaçons en ligne",
+    flavor:
+      "Des copies de vos enceintes, moitié prix, inondent les places de marché. Les étudiants ne font pas toujours la différence.",
+    effectLabel: "Demande des Étudiants −20 % ce tour",
+    conceptHint:
+      "Un segment sensible au prix se détourne vite : ce que vaut votre marque se mesure au moment où on la copie.",
+    category: "competition",
+    emoji: "🏴‍☠️",
+    scope: "market",
+  },
+  {
+    code: "nova_campus_tender",
+    title: "Appel d'offres CampusTech",
+    flavor:
+      "La chaîne CampusTech renouvelle ses rayons et cherche un fournisseur pour la rentrée.",
+    effectLabel: "Demande du canal CampusTech +30 % ce tour",
+    conceptHint:
+      "Un canal partenaire prélève sa commission : le volume est là, la marge par unité, moins.",
+    category: "market",
+    emoji: "📑",
+    scope: "market",
+  },
+  {
+    code: "nova_engineer_leaves",
+    title: "Départ de l'ingénieur son",
+    flavor:
+      "Votre ingénieur acoustique rejoint Auris. La ligne tourne, mais les réglages prennent deux fois plus de temps.",
+    effectLabel: "Disponibilité machine −10 % pendant 2 tours",
+    conceptHint:
+      "Une compétence clé est une capacité : quand elle part, l'atelier produit moins sans qu'aucune machine ne tombe.",
+    category: "internal",
+    emoji: "🚪",
+    scope: "team",
+  },
+  {
+    code: "nova_press_award",
+    title: "Prix de la presse audio",
+    flavor:
+      "Un magazine spécialisé vous décerne son coup de cœur de l'année. Les revendeurs rappellent.",
+    effectLabel: "Demande de votre entreprise +10 % pendant 2 tours",
+    conceptHint:
+      "La qualité perçue se paie d'avance et se récolte plus tard : c'est le rendement différé du budget qualité.",
+    category: "market",
+    emoji: "🏆",
+    scope: "team",
+  },
 ];
 
 /**

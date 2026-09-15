@@ -206,4 +206,64 @@ export const CONSEIL_CARDS: EventCardDef[] = [
     emoji: "🏭",
     scope: "team",
   },
+  {
+    code: "conseil_plateforme_freelance",
+    title: "Une plateforme de freelances casse les prix",
+    flavor:
+      "Des consultants indépendants, facturés à la journée, sans structure. Les PME comparent le tarif, pas la méthode.",
+    effectLabel: "Demande des PME régionales −20 % pendant 2 tours",
+    conceptHint:
+      "Face à un prix plus bas, on vend autre chose que du temps : la garantie, la continuité, l'équipe.",
+    category: "competition",
+    emoji: "💻",
+    scope: "market",
+  },
+  {
+    code: "conseil_grand_cabinet_public",
+    title: "Un grand cabinet répond aux appels d'offres publics",
+    flavor:
+      "Une équipe nationale se positionne sur les marchés régionaux, avec des références que vous n'avez pas.",
+    effectLabel: "Demande des marchés publics −25 % ce tour",
+    conceptHint:
+      "Sur un marché à appel d'offres, la référence pèse plus que le prix : c'est un actif qui se construit mission après mission.",
+    category: "competition",
+    emoji: "🏛️",
+    scope: "market",
+  },
+  {
+    code: "conseil_partenariat_editeur",
+    title: "Partenariat avec un éditeur de logiciel",
+    flavor:
+      "L'éditeur régional recommande votre cabinet à chacun de ses nouveaux clients pour le déploiement.",
+    effectLabel: "Demande de votre cabinet +12 % pendant 2 tours",
+    conceptHint:
+      "Un canal d'apport d'affaires vaut un commercial : il coûte une commission ou une exclusivité, jamais rien.",
+    category: "market",
+    emoji: "🤝",
+    scope: "team",
+  },
+  {
+    code: "conseil_debauchage",
+    title: "Un concurrent débauche deux consultants",
+    flavor:
+      "Deux seniors partent avec leurs dossiers en tête. Les missions en cours ralentissent, les recrutements prennent des mois.",
+    effectLabel: "Capacité de production −15 % pendant 2 tours",
+    conceptHint:
+      "Dans les services, la capacité est humaine : elle part le vendredi soir, et la concurrence le sait.",
+    category: "competition",
+    emoji: "🎣",
+    scope: "team",
+  },
+  {
+    code: "conseil_plan_relance",
+    title: "Plan de relance",
+    flavor:
+      "L'État finance à moitié les missions de conseil aux PME pendant six mois. Les demandes affluent.",
+    effectLabel: "Demande des PME régionales +30 % pendant 2 tours",
+    conceptHint:
+      "Une subvention crée de la demande ; elle ne crée pas de consultants : la contrainte se déplace vers la capacité.",
+    category: "macro",
+    emoji: "🏗️",
+    scope: "market",
+  },
 ];

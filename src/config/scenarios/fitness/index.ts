@@ -481,6 +481,41 @@ const rawFitness = {
       duration: 1,
       modifiers: [{ target: "availability", op: "mul", value: 1.12 }],
     },
+    {
+      code: "fitness_chaine_nationale",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand:reguliers", op: "mul", value: 0.85 }],
+    },
+    {
+      code: "fitness_appli_gratuite",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand:resolutions", op: "mul", value: 0.8 }],
+    },
+    {
+      code: "fitness_mutuelle",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand:entreprises", op: "mul", value: 1.3 }],
+    },
+    {
+      code: "fitness_coach_depart",
+      scope: "company",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand", op: "mul", value: 0.9 }],
+    },
+    {
+      code: "fitness_portes_ouvertes",
+      scope: "company",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "demand", op: "mul", value: 1.12 }],
+    },
   ],
   // L'énergie flambe au tour 3, en plein creux d'été : les charges montent
   // quand la salle est vide. Le pire moment, comme toujours.

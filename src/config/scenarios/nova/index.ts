@@ -327,6 +327,41 @@ const rawNova = {
       duration: 1,
       modifiers: [{ target: "availability", op: "mul", value: 1.12 }],
     },
+    {
+      code: "nova_price_war",
+      scope: "market",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand", op: "mul", value: 0.88 }],
+    },
+    {
+      code: "nova_counterfeit",
+      scope: "market",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "demand:etudiants", op: "mul", value: 0.8 }],
+    },
+    {
+      code: "nova_campus_tender",
+      scope: "market",
+      probability: 0,
+      duration: 1,
+      modifiers: [{ target: "demand:campustech", op: "mul", value: 1.3 }],
+    },
+    {
+      code: "nova_engineer_leaves",
+      scope: "company",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "availability", op: "mul", value: 0.9 }],
+    },
+    {
+      code: "nova_press_award",
+      scope: "company",
+      probability: 0,
+      duration: 2,
+      modifiers: [{ target: "demand", op: "mul", value: 1.1 }],
+    },
   ],
   // Fournisseurs (doc 02 §5bis) : 3 fournisseurs avec des profils distincts.
   // Le standard est le référent (coût = 22 €, délai = 22 j, pas de risque).
