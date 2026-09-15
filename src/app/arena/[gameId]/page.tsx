@@ -121,7 +121,7 @@ export default async function ArenaPage({
       </div>
       <div>
         <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">Situation</h3>
-        <p className="mt-1 max-w-prose text-sm leading-relaxed">{view.intro.briefing}</p>
+        <p className="mt-1 text-sm leading-relaxed">{view.intro.briefing}</p>
       </div>
       {/*
         Le contexte n'oriente pas la décision du tour, il l'éclaire : qui est
@@ -129,7 +129,7 @@ export default async function ArenaPage({
         clic sans s'imposer avant la question à trancher.
       */}
       <Tiroir titre="Contexte">
-        <p className="max-w-prose text-sm leading-relaxed">{view.intro.context}</p>
+        <p className="text-sm leading-relaxed">{view.intro.context}</p>
       </Tiroir>
       <ParametersPanels
         intro={view.intro}
@@ -161,7 +161,7 @@ export default async function ArenaPage({
           <h2 className="text-lg font-semibold text-slate-100">
             {periodLabel(view.roundDays, view.currentRound)} · où vous en êtes
           </h2>
-          <p className="max-w-prose text-sm leading-relaxed">{view.roundBriefing.headline}</p>
+          <p className="text-sm leading-relaxed">{view.roundBriefing.headline}</p>
         </section>
       ) : null}
       {view.announcedEventCards.length > 0 ? (
