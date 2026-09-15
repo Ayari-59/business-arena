@@ -12,9 +12,12 @@ import {
   seedDemoAction,
   setLicenceAction,
   updatePlatformConfigAction,
+  marquerDemandeOrientationTraiteeAction,
 } from "./actions";
 import { SubmitButton } from "@/components/submit-button";
 import { DeleteLicenceButton } from "@/components/delete-licence-button";
+import { GuardedForm } from "@/components/guarded-action";
+import { listerDemandesOrientation } from "@/services/orientation-request.service";
 
 export const dynamic = "force-dynamic";
 
@@ -61,6 +64,8 @@ export default async function AdminPage() {
   if (!context?.isPlatformAdmin) redirect("/teacher");
   const overview = await getPlatformOverview(session.userId);
   const demoSeeded = await isDemoSeeded();
+  const demandes = await listerDemandesOrientation(50);
+  const aRepondre = demandes.filter((d) => d.status === "new");
 
   return (
     <main id="main" className="mx-auto max-w-5xl space-y-8 p-6">
@@ -291,6 +296,86 @@ export default async function AdminPage() {
             Créer + code admin
           </SubmitButton>
         </form>
+      </section>
+
+      {/*
+        DEMANDES DE SIMULATION. Ce que les enseignants écrivent depuis la page
+        d'orientation : la demande est ici quoi qu'il arrive, le courriel de
+        notification n'étant qu'une commodité (l'indicateur le dit). On répond
+        par sa propre messagerie ; « Traitée » retire la demande de la pile.
+      */}
+      <section className="carte p-6">
+        <h2 className="text-sm font-semibold text-slate-200">
+          Demandes de simulation
+          {aRepondre.length > 0 ? (
+            <span className="ml-2 rounded-full border border-amber-400/40 bg-amber-400/10 px-2 py-0.5 text-xs text-amber-300">
+              {aRepondre.length} à répondre
+            </span>
+          ) : null}
+        </h2>
+        <p className="mt-1 text-xs text-slate-400">
+          Envoyées depuis /orientation. Répondez depuis votre messagerie à l&apos;adresse
+          indiquée, puis marquez la demande traitée.
+        </p>
+        {demandes.length === 0 ? (
+          <p className="mt-3 text-sm text-slate-400">Aucune demande pour l&apos;instant.</p>
+        ) : (
+          <ul className="mt-3 space-y-3">
+            {demandes.map((d) => (
+              <li
+                key={d.id}
+                className={`rounded-xl bg-slate-950 p-4 ${d.status === "handled" ? "opacity-60" : ""}`}
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-slate-100">
+                      {d.name} · <span className="font-normal text-slate-300">{d.school}</span>
+                    </p>
+                    <p className="mt-0.5 text-xs text-slate-400">
+                      <a href={`mailto:${d.email}`} className="text-amber-300 underline-offset-4 hover:underline">
+                        {d.email}
+                      </a>
+                      {" · "}
+                      {d.createdAt.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
+                      {" · "}
+                      {d.mailSent ? "courriel de notification envoyé" : "notification non envoyée (clé d'envoi absente ou refusée)"}
+                    </p>
+                  </div>
+                  {d.status === "handled" ? (
+                    <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-400">
+                      ✓ traitée
+                    </span>
+                  ) : (
+                    <GuardedForm action={marquerDemandeOrientationTraiteeAction} label="demande traitée">
+                      <input type="hidden" name="id" value={d.id} />
+                      <SubmitButton className="rounded-lg border border-amber-400/40 px-3 py-1 text-xs font-semibold text-amber-300 hover:bg-amber-400/10">
+                        Traitée
+                      </SubmitButton>
+                    </GuardedForm>
+                  )}
+                </div>
+                <dl className="mt-2 grid gap-x-4 gap-y-1 text-xs text-slate-300 sm:grid-cols-[auto_1fr]">
+                  <dt className="text-slate-400">Classe</dt>
+                  <dd>
+                    {d.diplomeLibelle} · {d.semestreLibelle.toLowerCase()} · {d.objectifLibelle}
+                  </dd>
+                  <dt className="text-slate-400">Conseillé</dt>
+                  <dd>
+                    {d.recommandation.scenarioTitre} · niveau {d.recommandation.niveau} ·{" "}
+                    {d.recommandation.tours} tours
+                    {d.recommandation.atelierCode ? ` · atelier ${d.recommandation.atelierCode}` : ""}
+                  </dd>
+                  {d.message ? (
+                    <>
+                      <dt className="text-slate-400">Contexte</dt>
+                      <dd className="whitespace-pre-line italic text-slate-300">« {d.message} »</dd>
+                    </>
+                  ) : null}
+                </dl>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       {/* Établissements */}

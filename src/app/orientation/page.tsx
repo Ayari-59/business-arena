@@ -1,16 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getPlatformConfig } from "@/services/admin.service";
 import { OrientationForm } from "@/components/orientation-form";
 import { SCENARIOS } from "@/config/scenarios/registry";
 import { ATELIERS } from "@/config/ateliers";
 
 /**
- * La page ne lit que la configuration de plateforme (rien par utilisateur, pas
- * de searchParams) : comme la landing (#99), on la met en cache et on la
- * régénère au plus toutes les 5 min (ISR) plutôt que de la rendre côté serveur
- * — avec un hit base — à chaque visite. L'adresse de contact tolère 5 min de
- * décalage.
+ * La page ne lit rien par utilisateur (pas de searchParams, pas de session) :
+ * comme la landing (#99), on la met en cache et on la régénère au plus toutes
+ * les 5 min (ISR). L'envoi de la demande passe par une action serveur, qui
+ * lit l'adresse de contact au moment de l'envoi.
  */
 export const revalidate = 300;
 
@@ -21,9 +19,7 @@ export const metadata: Metadata = {
     "Quatre questions pour trouver l'entreprise, le niveau et la durée qui conviennent à votre classe.",
 };
 
-export default async function OrientationPage() {
-  const config = await getPlatformConfig();
-
+export default function OrientationPage() {
   return (
     <main id="main" className="mx-auto max-w-5xl px-6 py-12">
       <p className="text-xs uppercase tracking-[0.3em] text-amber-400">
@@ -40,7 +36,7 @@ export default async function OrientationPage() {
       </p>
 
       <div className="mt-10">
-        <OrientationForm contactEmail={config.contactEmail} />
+        <OrientationForm />
       </div>
 
       <p className="mt-10 text-xs leading-relaxed text-slate-600">

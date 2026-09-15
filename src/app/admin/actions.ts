@@ -114,3 +114,13 @@ export async function deleteLicenceAction(licenceId: string): Promise<void> {
   await deleteOrgLicence(licenceId);
   revalidatePath("/admin");
 }
+
+/** Une demande de simulation prise en charge : elle quitte la pile « à répondre ». */
+export async function marquerDemandeOrientationTraiteeAction(formData: FormData): Promise<void> {
+  const adminId = await requireAdminSession();
+  const id = String(formData.get("id") ?? "").trim();
+  if (!id) return;
+  const { marquerDemandeTraitee } = await import("@/services/orientation-request.service");
+  await marquerDemandeTraitee(id, adminId);
+  revalidatePath("/admin");
+}

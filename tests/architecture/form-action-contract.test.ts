@@ -37,6 +37,11 @@ interface FormContract {
 
 const CONTRACTS: FormContract[] = [
   {
+    nom: "demande de simulation (/orientation)",
+    action: { file: "src/app/orientation/actions.ts", fn: "envoyerDemandeOrientationAction" },
+    sources: ["src/components/orientation-form.tsx"],
+  },
+  {
     nom: "création d'une partie de classe",
     action: { file: "src/app/teacher/actions.ts", fn: "createClassGameAction" },
     sources: ["src/app/teacher/page.tsx", "src/components/economic-params.tsx"],

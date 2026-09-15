@@ -24,6 +24,7 @@ const COMPOSANTS_GARDES = [
   "src/components/close-round-form.tsx", // clôture du tour (confirmée)
   "src/components/stage-schedule.tsx", // fenêtre d'une étape de concours
   "src/components/public-page-form.tsx", // page publique d'annonce du concours
+  "src/components/orientation-form.tsx", // demande de simulation (/orientation)
 ];
 
 /** Pages serveur : GuardedForm autour des actions sans état. */
