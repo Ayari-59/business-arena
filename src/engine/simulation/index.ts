@@ -47,7 +47,6 @@ import {
   updateRseCapital,
   imageAttractionFactor,
   cleanDefectReduction,
-  financingTrustBonus,
   socialAttritionRelief,
   evaluateRseCards,
   RSE_CARD_CODES,
@@ -57,6 +56,7 @@ import { computeRatios } from "../finance/ratios";
 import {
   conditionsBancaires,
   confianceInitiale,
+  confianceServie,
   confianceSuivante,
   fiabiliteDuPlan,
   planDepose,
@@ -1349,23 +1349,24 @@ export function simulateRound(input: SimulationInput): SimulationOutput {
     // DOSSIER BANCAIRE (scénarios portant un finance.bank) : la confiance fixe
     // le plafond de découvert consenti ce tour et son taux.
     //
-    // ATTENTION EN L'ÉTAT : cette confiance ne bouge plus. Elle se nourrissait
-    // de l'écart entre le plan de trésorerie déposé et le réalisé ; le plan a
-    // quitté le formulaire, `fiabiliteDuPlan` rend donc `null` et
-    // `confianceSuivante` renvoie la confiance inchangée — soit la pleine
-    // confiance, pour toujours. Conséquence à connaître : le bonus de
-    // financement vert ci-dessous, borné à 1, ne peut plus rien relever.
+    // La confiance ACQUISE ne bouge plus : elle se nourrissait de l'écart entre
+    // le plan de trésorerie déposé et le réalisé, et le plan a quitté le
+    // formulaire (`fiabiliteDuPlan` rend `null`, `confianceSuivante` renvoie la
+    // confiance inchangée). Ce qui la fait bouger aujourd'hui, c'est la prime
+    // verte ci-dessous, qui la porte au-dessus du plein.
     const bank = scenario.finance.bank;
     const confianceAvant = confianceInitiale(w.state);
-    // FINANCEMENT VERT (Lot 2B) : le capital-image RSE relève la confiance
-    // servie à la banque (borné à 1) — découvert plus large, taux plus doux.
-    // Effet DIFFÉRÉ (capital d'ouverture) : un engagement d'aujourd'hui
-    // n'améliore les conditions qu'aux tours suivants.
-    const rseFinancingBonus = financingTrustBonus(
-      w.state.rseImageCapital ?? 0,
-      (scenario.rse ?? DEFAULT_RSE_CONFIG).financingTrustBonus,
-    );
-    const confianceGreen = Math.min(1, confianceAvant + rseFinancingBonus);
+    // FINANCEMENT VERT (Lot 2B) : le standing RSE porte la confiance AU-DESSUS
+    // du plein — découvert plus large, taux plus doux. Effet DIFFÉRÉ (capital
+    // d'ouverture) : un engagement d'aujourd'hui n'améliore les conditions
+    // qu'aux tours suivants.
+    //
+    // La prime était autrefois écrasée par un `Math.min(1, …)`. Le plafond
+    // avait un sens quand les plans de trésorerie faisaient descendre la
+    // confiance : la prime servait à la regagner. Le plan retiré, plus personne
+    // ne descendait, et la récompense ne pouvait plus rien relever.
+    const confianceGreen = confianceServie(w.state, scenario);
+    const rseFinancingBonus = confianceGreen - confianceAvant;
     const planFourni = planDepose(w.decisions.forecast);
     const conditions = bank
       ? conditionsBancaires(

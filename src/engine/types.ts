@@ -308,13 +308,14 @@ export interface EngineScenarioConfig {
      * DOSSIER BANCAIRE (optionnel). Présent : le plafond de découvert consenti
      * et son taux suivent une CONFIANCE (0..1) au lieu d'être fixes.
      *
-     * CETTE CONFIANCE NE BOUGE PLUS DANS L'ARÈNE. Elle se nourrissait de
-     * l'écart entre le plan de trésorerie déposé à chaque tour et le réalisé ;
-     * ce plan a été retiré du formulaire — deux champs à remplir de tête dont
-     * l'un interdisait d'emprunter. Faute de plan à juger, `fiabiliteDuPlan`
-     * rend `null` et la confiance reste où elle est : le bloc rend donc les
-     * conditions de pleine confiance. Le moteur GARDE la mécanique entière,
-     * pour un plan qui arriverait par une autre voie (atelier, import).
+     * DEUX SOURCES, DONT UNE EN SOMMEIL. La confiance descendait sous le plein
+     * quand les plans de trésorerie déposés s'écartaient du réalisé ; ce plan a
+     * été retiré du formulaire, `fiabiliteDuPlan` rend donc `null` et cette
+     * voie-là ne bouge plus (le moteur GARDE la mécanique entière, pour un plan
+     * qui arriverait autrement). Ce qui la fait bouger aujourd'hui, c'est le
+     * standing RSE, qui la porte AU-DESSUS du plein : le plafond du scénario
+     * est ce qu'obtient une entreprise sans engagement, un standing établi
+     * obtient mieux — voir `confianceServie`.
      *
      * Ce qui borne l'emprunt aujourd'hui, c'est `maxDebtToEquity`.
      *

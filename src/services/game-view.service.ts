@@ -19,7 +19,7 @@ import { orderOfferForRound } from "@/engine/simulation";
 import { isMultiProduct, isProductAvailable, rdOpeningOf, suppliersOf, toGamme, offerProductIndex } from "@/engine/gamme";
 import { COMMUNICATION_AXIS_LABELS, axesProposables } from "@/engine/market/communication";
 import { computeRatios } from "@/engine/finance/ratios";
-import { conditionsBancaires, confianceInitiale } from "@/engine/finance/bank";
+import { conditionsBancaires, confianceServie } from "@/engine/finance/bank";
 import { irr, npv, paybackPeriod } from "@/engine/investment";
 import { roundBriefing, type RoundBriefing } from "@/pedagogy/round-briefing";
 import { computeRseIndex, type RseIndex } from "@/scoring/rse";
@@ -1227,7 +1227,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
     const bank = snapshot.finance.bank;
     if (!bank) return null;
-    const trust = confianceInitiale((currentState ?? {}) as CompanyState);
+    const trust = confianceServie((currentState ?? {}) as CompanyState, snapshot);
     const conditions = conditionsBancaires(
       trust,
       {
@@ -1803,7 +1803,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
               const bank = snapshot.finance.bank;
               if (!bank) return snapshot.finance.overdraftLimit;
               return conditionsBancaires(
-                confianceInitiale((currentState ?? {}) as CompanyState),
+                confianceServie((currentState ?? {}) as CompanyState, snapshot),
                 {
                   overdraftLimit: snapshot.finance.overdraftLimit,
                   overdraftAnnualRate: snapshot.finance.overdraftAnnualRate,

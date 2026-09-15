@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { simulateRound } from "../../src/engine/simulation";
+import { conditionsBancaires, confianceServie } from "../../src/engine/finance/bank";
 import type {
   CompanyState,
   EngineScenarioConfig,
@@ -365,5 +366,74 @@ describe("capacité d'endettement", () => {
     }).res;
     expect(res.debt!.newLoan).toBe(120000);
     expect(res.debt!.loanRefused).toBeUndefined();
+  });
+});
+
+/**
+ * LE FINANCEMENT VERT (Lot 2B) : un standing RSE établi détend les conditions.
+ *
+ * Il ne le faisait plus. La prime était ajoutée à la confiance puis rognée par
+ * un `Math.min(1, …)` : le plafond avait un sens tant que les plans de
+ * trésorerie faisaient DESCENDRE la confiance — la prime servait alors à la
+ * regagner. Le plan retiré du formulaire, plus personne ne descendait sous le
+ * plein, et la récompense n'avait plus rien à relever. Une équipe qui
+ * s'engageait obtenait exactement le découvert de celle qui ne faisait rien.
+ *
+ * L'atelier DCG-RSE a pourtant une séance entière — « Financement vert et
+ * climat social » — dont le livrable est une note reliant le standing RSE aux
+ * conditions bancaires. Elle portait sur un lien inexistant.
+ *
+ * La confiance n'est donc plus bornée à 1 : le plafond nominal du scénario est
+ * ce qu'obtient une entreprise SANS engagement, et le standing porte au-dessus.
+ */
+describe("financement vert", () => {
+  const avecBanque = scenario();
+  const base = {
+    overdraftLimit: avecBanque.finance.overdraftLimit,
+    overdraftAnnualRate: avecBanque.finance.overdraftAnnualRate,
+  };
+  const bank = avecBanque.finance.bank!;
+
+  it("sans engagement, les conditions sont exactement celles du scénario", () => {
+    // La garde qui protège tous les énoncés : le plafond annoncé par un
+    // scénario est celui qu'on obtient quand on ne fait rien de particulier.
+    const c = conditionsBancaires(confianceServie({}, avecBanque), base, bank);
+    expect(c.overdraftLimit).toBeCloseTo(base.overdraftLimit, 6);
+    expect(c.overdraftAnnualRate).toBeCloseTo(base.overdraftAnnualRate, 6);
+  });
+
+  it("un standing établi élargit le découvert et allège son taux", () => {
+    const servie = confianceServie({ rseImageCapital: 50 }, avecBanque);
+    expect(servie).toBeGreaterThan(1);
+    const c = conditionsBancaires(servie, base, bank);
+    expect(c.overdraftLimit).toBeGreaterThan(base.overdraftLimit);
+    expect(c.overdraftAnnualRate).toBeLessThan(base.overdraftAnnualRate);
+  });
+
+  it("l'effet est progressif : un capital mûr vaut mieux qu'un capital jeune", () => {
+    const jeune = conditionsBancaires(confianceServie({ rseImageCapital: 1 }, avecBanque), base, bank);
+    const mur = conditionsBancaires(confianceServie({ rseImageCapital: 50 }, avecBanque), base, bank);
+    expect(mur.overdraftLimit).toBeGreaterThan(jeune.overdraftLimit);
+    expect(jeune.overdraftLimit).toBeGreaterThan(base.overdraftLimit);
+  });
+
+  it("la prime est bornée : le découvert ne devient pas une ligne de crédit", () => {
+    // Un capital-image délirant ne doit pas doubler le découvert. La borne
+    // vient du coefficient RSE (asymptote) ET d'un garde-fou dur dans la
+    // fonction, pour qu'aucun appelant ne puisse la contourner.
+    const enorme = conditionsBancaires(confianceServie({ rseImageCapital: 1e9 }, avecBanque), base, bank);
+    expect(enorme.overdraftLimit).toBeLessThan(base.overdraftLimit * 1.2);
+    expect(enorme.overdraftAnnualRate).toBeGreaterThan(0);
+    // Et même une confiance forgée hors de toute prime reste bornée.
+    const force = conditionsBancaires(99, base, bank);
+    expect(force.overdraftLimit).toBeLessThan(base.overdraftLimit * 1.25);
+  });
+
+  it("un plan peu fiable fait toujours DESCENDRE la confiance sous le plein", () => {
+    // La voie en sommeil reste entière : elle sert encore aux ateliers qui
+    // déposeraient un plan par une autre porte.
+    const basse = conditionsBancaires(confianceServie({ bankTrust: 0.3 }, avecBanque), base, bank);
+    expect(basse.overdraftLimit).toBeLessThan(base.overdraftLimit);
+    expect(basse.overdraftAnnualRate).toBeGreaterThan(base.overdraftAnnualRate);
   });
 });
