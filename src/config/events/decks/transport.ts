@@ -151,7 +151,7 @@ export const TRANSPORT_CARDS: EventCardDef[] = [
     title: "Un lot de dernière minute",
     flavor:
       "Un chargeur appelle à seize heures : son transporteur habituel s'est décommandé pour demain matin.",
-    effectLabel: "Commande ferme de 1 400 palettes ce tour (une entreprise tirée au sort)",
+    effectLabel: "Commande ferme de 900 palettes ce tour (une entreprise tirée au sort)",
     conceptHint:
       "Une commande ferme se sert sur la capacité restante : elle n'a de valeur que si les camions sont libres.",
     category: "market",

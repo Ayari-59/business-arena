@@ -4,6 +4,7 @@ import {
   TEACHER_DRAWABLE_CODES,
   cardByCode,
   cardsForEventCodes,
+  dureeDeLaCarte,
 } from "../src/config/events/cards";
 import { RSE_CARD_CODES } from "../src/engine/rse";
 import { SCENARIOS } from "../src/config/scenarios/registry";
@@ -84,3 +85,55 @@ describe("deck de cartes événements", () => {
     }
   });
 });
+
+/**
+ * CE QUE LA CARTE ANNONCE, LE MOTEUR LE FAIT.
+ *
+ * Le texte de l'effet est écrit à la main ; les modificateurs du moteur sont
+ * dans le scénario. Rien ne les reliait : une carte pouvait annoncer +20 % là
+ * où le moteur appliquait ×1,15, ou « 1 400 palettes » là où il en ajoutait
+ * 900 (constaté sur ROUTE & CIE). Cette garde lit le texte de chaque carte et
+ * le confronte à la définition de l'événement :
+ *   · la durée (« pendant 2 tours », sinon un tour) est celle du moteur ;
+ *   · le pourcentage annoncé (+20 %, −10 %, ×1,5) est l'un des multiplicateurs ;
+ *   · la quantité d'une commande ferme est celle ajoutée par le moteur.
+ * Une carte sans chiffre lisible échoue aussi : l'élève doit pouvoir calculer.
+ */
+describe("la carte dit ce que le moteur fait", () => {
+  const lire = (label: string) => {
+    const pct = label.match(/([+−-])\s?(\d+(?:[.,]\d+)?)\s?%/);
+    if (pct) return { genre: "pct" as const, valeur: (pct[1] === "+" ? 1 : -1) * Number(pct[2]!.replace(",", ".")) };
+    const mul = label.match(/×\s?(\d+(?:[.,]\d+)?)/);
+    if (mul) return { genre: "pct" as const, valeur: Math.round((Number(mul[1]!.replace(",", ".")) - 1) * 100) };
+    // « Commande ferme de 900 palettes » ou « +600 unités (échelle trimestre) » :
+    // une quantité absolue, celle que le moteur ajoute (base trimestre).
+    const commande =
+      label.match(/[Cc]ommande ferme de (\d[\d\s\u202f\u00a0]*)/) ??
+      label.match(/^\+\s?(\d[\d\s\u202f\u00a0]*)\s[^%]/);
+    if (commande) return { genre: "commande" as const, valeur: Number(commande[1]!.replace(/[\s\u202f\u00a0]/g, "")) };
+    return null;
+  };
+
+  const evenements = new Map<string, { code: string; duration: number; modifiers: { target: string; op: string; value: number }[] }>();
+  for (const d of SCENARIOS) for (const ev of d.scenario.events) if (!evenements.has(ev.code)) evenements.set(ev.code, ev);
+
+  for (const [code, ev] of evenements) {
+    const card = cardByCode.get(code);
+    if (!card) continue; // couvert par « chaque événement a sa carte »
+    it(`${code} : durée et effet annoncés = ceux du moteur`, () => {
+      expect(dureeDeLaCarte(card), "durée").toBe(ev.duration);
+      const annonce = lire(card.effectLabel);
+      expect(annonce, `chiffre lisible dans « ${card.effectLabel} »`).not.toBeNull();
+      if (annonce!.genre === "pct") {
+        const multiplicateurs = ev.modifiers.filter((m) => m.op === "mul").map((m) => Math.round((m.value - 1) * 100));
+        expect(multiplicateurs, "un multiplicateur").not.toHaveLength(0);
+        expect(multiplicateurs, `« ${card.effectLabel} » vs ${JSON.stringify(ev.modifiers)}`).toContain(annonce!.valeur);
+      } else {
+        const commande = ev.modifiers.find((m) => m.target === "order" && m.op === "add");
+        expect(commande, "une commande ferme dans le moteur").toBeDefined();
+        expect(commande!.value, `« ${card.effectLabel} »`).toBe(annonce!.valeur);
+      }
+    });
+  }
+});
+
