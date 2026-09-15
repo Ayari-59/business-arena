@@ -6,7 +6,7 @@ import { BrandMark } from "@/components/brand-mark";
  * L'animation de retournement est du pur théâtre CSS — le tirage réel est
  * fait par le PRNG seedé du moteur (ou annoncé par l'enseignant).
  *
- * ANATOMIE D'UNE CARTE À JOUER. Le format 5:7 d'un jeu de poche, un double
+ * ANATOMIE D'UNE CARTE À JOUER. La silhouette haute d'un jeu de poche, un double
  * cadre (le liseré de l'enseigne, puis le filet intérieur), l'index de coin
  * en haut à gauche et son miroir en bas à droite — enseigne et numéro —, le
  * médaillon au centre, le titre en romain, le récit en italique, l'effet dans
@@ -66,15 +66,16 @@ export function EventCard({
         </div>
         {/* face de la carte */}
         <div
-          className={`card-face card-front aspect-[5/7] rounded-xl border-2 bg-slate-900 p-2 ${category.className.split(" ")[0]} ${
+          className={`card-face card-front rounded-xl border-2 bg-slate-900 p-2 ${category.className.split(" ")[0]} ${
             highlight ? "ring-2 ring-sky-400/70" : ""
           }`}
           style={{ borderColor: `${category.accent}66` }}
         >
           {/*
-            `min-h-full` et non `h-full` : le 5:7 est un plancher, pas un plafond.
-            Une carte étroite au récit long grandit avec son contenu au lieu
-            d'en laisser déborder la mini-leçon hors du cadre.
+            `min-h-full` et non `h-full` : la hauteur est un plancher, pas un
+            plafond. Une carte étroite au récit long grandit avec son contenu
+            au lieu d'en laisser déborder la mini-leçon hors du cadre ; en
+            rangée, toutes prennent la hauteur de la plus haute (globals.css).
           */}
           <div className="flex min-h-full flex-col rounded-lg border border-white/10 p-3">
             {/* index de coin et enseigne */}

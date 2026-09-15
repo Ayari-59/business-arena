@@ -222,8 +222,21 @@ h1 {
   backface-visibility: hidden;
 }
 
+/*
+ * Et la face prend toute la hauteur que la grille lui donne : dans une rangée,
+ * la carte au récit court s'aligne sur la plus haute. Une main de cartes de
+ * tailles inégales ne se lit pas comme une main.
+ */
 .card-front {
   position: relative;
+  /* seule, une carte garde une hauteur de carte ; en rangée, celle de la plus haute */
+  min-height: max(100%, 20rem);
+  display: flex;
+  flex-direction: column;
+}
+
+.card-front > * {
+  flex: 1;
 }
 
 /* Barre de progression indéterminée des actions longues (clôture, création). */
