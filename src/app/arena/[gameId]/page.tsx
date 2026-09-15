@@ -19,7 +19,9 @@ import { PeriodDecisionsRecap } from "@/components/period-decisions-recap";
 import { SegmentedTabs } from "@/components/segmented-tabs";
 import { RoundStatusPoller } from "@/components/round-status-poller";
 import { RoundStatusBanner } from "@/components/round-status-banner";
-import { EventBanner } from "@/components/event-banner";
+import { EventBanner, cartesQuiMeConcernent } from "@/components/event-banner";
+import { TourSimule } from "@/components/tour-simule";
+import { TirageDuTour } from "@/components/tirage-du-tour";
 import { GammeLigne } from "@/components/gamme-ligne";
 import { FaitsCles } from "@/components/faits-cles";
 import { Tiroir } from "@/components/tiroir";
@@ -79,49 +81,15 @@ export default async function ArenaPage({
   const tourJoue = periods.at(-1) ?? null;
   if (simule != null && view.kind === "solo" && tourJoue !== null) {
     return (
-      <main
-        id="main"
-        className="mx-auto flex min-h-[70vh] max-w-xl flex-col items-center justify-center px-6 py-12 text-center"
-      >
-        <span
-          className={`flex h-16 w-16 items-center justify-center rounded-2xl text-3xl ${SECTOR_COLORS[view.sector].bg}`}
-        >
-          {view.scenarioIcon}
-        </span>
-        <p className="mt-6 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.3em] text-amber-300">
-          <span aria-hidden>✓</span> Tour simulé
-        </p>
-        <h1 className="mt-3 text-3xl font-bold text-slate-50">
-          {periodLabel(view.roundDays, tourJoue.round)} joué
-        </h1>
-        <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-400">
-          Vos décisions sont enregistrées.
-        </p>
-        <div className="mt-8 flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
-          <Link
-            href={`/arena/${gameId}#dernier-resultat`}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-6 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400"
-          >
-            <span aria-hidden>📊</span> Voir les résultats
-          </Link>
-          {finished ? (
-            <Link
-              href={`/arena/${gameId}`}
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-amber-400/40 px-6 py-3 text-sm font-semibold text-amber-300 transition hover:border-amber-400 hover:bg-amber-400/10"
-            >
-              <span aria-hidden>🏁</span> Bilan de la partie
-            </Link>
-          ) : (
-            <Link
-              href={`/arena/${gameId}#tour-en-cours`}
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-white/30 hover:bg-white/5"
-            >
-              Passer au {periodLabel(view.roundDays, view.currentRound)}
-              <span aria-hidden>→</span>
-            </Link>
-          )}
-        </div>
-      </main>
+      <TourSimule
+        gameId={gameId}
+        round={tourJoue.round}
+        currentRound={view.currentRound}
+        roundDays={view.roundDays}
+        finished={finished}
+        sector={view.sector}
+        scenarioIcon={view.scenarioIcon}
+      />
     );
   }
 
@@ -188,6 +156,20 @@ export default async function ArenaPage({
   // (dès le 2ᵉ tour), les cartes événements annoncées, la saison.
   const alertesSection = (
     <>
+      {/*
+        LE TIRAGE, VÉCU. En solo, personne ne joue de carte à la main : c'est
+        le moteur qui tire, et le joueur ne le voyait qu'après coup. Le tirage
+        étant déterministe, on le retourne ici, à l'ouverture du tour, avant la
+        moindre décision. En classe, c'est l'enseignant qui tient la pioche.
+      */}
+      {view.kind === "solo" && !finished ? (
+        <TirageDuTour
+          gameId={gameId}
+          round={view.currentRound}
+          periodeLabel={periodLabel(view.roundDays, view.currentRound).toLowerCase()}
+          cartes={view.upcomingDraw}
+        />
+      ) : null}
       {view.roundBriefing ? (
         <section className="space-y-2 carte p-3 sm:p-5 text-slate-300">
           <h2 className="text-lg font-semibold text-slate-100">
@@ -219,6 +201,41 @@ export default async function ArenaPage({
           </div>
         </section>
       ) : null}
+      {(() => {
+        // CE QUI PÈSE ENCORE : une carte de deux tours tirée au tour précédent
+        // s'applique à celui-ci. L'équipe décide en le sachant, pas en le
+        // découvrant aux résultats.
+        const encore = cartesQuiMeConcernent(view.activeEventCards).map((c) => ({
+          ...c,
+          roundsLeft: view.activeEventCards.find(
+            (a) => a.code === c.code && a.teamId === c.teamId,
+          )!.roundsLeft,
+        }));
+        return encore.length > 0 ? (
+          <section className="carte p-3 sm:p-5">
+            <p className="mb-2 text-sm font-semibold text-amber-400">
+              ⏳ Encore en jeu ce tour
+            </p>
+            <p className="mb-3 text-xs text-slate-400">
+              {encore.length > 1 ? "Ces cartes ont été tirées" : "Cette carte a été tirée"} à un tour
+              précédent et {encore.length > 1 ? "pèsent" : "pèse"} toujours sur celui-ci.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {encore.map((card, i) => (
+                <EventCard
+                  key={`${card.code}-${card.teamId ?? "market"}`}
+                  code={card.code}
+                  delayMs={i * 450}
+                  targetLabel={`${card.teamId ? "🎯 Votre équipe" : "Tout le marché"} · encore ${
+                    card.roundsLeft > 1 ? `${card.roundsLeft} tours` : "ce tour"
+                  }`}
+                  highlight={card.isMyTeam}
+                />
+              ))}
+            </div>
+          </section>
+        ) : null;
+      })()}
       <SaisonDuTour notes={view.seasonNotes} />
     </>
   );

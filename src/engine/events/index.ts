@@ -4,7 +4,7 @@ import type {
   EventInstance,
   EventModifier,
 } from "../types";
-import type { SeededRng } from "../random";
+import { createRng, deriveRoundSeed, type SeededRng } from "../random";
 
 /**
  * Moteur d'événements (doc 02 §7) : tirage seedé + application de
@@ -32,7 +32,8 @@ export interface EffectiveModifiers {
 export function drawEvents(
   scenario: EngineScenarioConfig,
   roundIndex: number,
-  companies: CompanyState[],
+  /** Seul l'identifiant sert : désigner l'entreprise qu'une carte ciblée frappe. */
+  companies: ReadonlyArray<Pick<CompanyState, "id">>,
   activeEvents: EventInstance[],
   rng: SeededRng,
 ): { active: EventInstance[]; drawn: EventInstance[] } {
@@ -127,4 +128,33 @@ export function tickEvents(events: EventInstance[]): EventInstance[] {
   return events
     .map((e) => ({ ...e, roundsLeft: e.roundsLeft - 1 }))
     .filter((e) => e.roundsLeft > 0);
+}
+
+/**
+ * LE TIRAGE, LU D'AVANCE.
+ *
+ * Le moteur tire les cartes d'un tour à sa clôture, avec le PRNG du tour —
+ * le joueur découvrait donc l'événement dans ses résultats, après avoir
+ * décidé, sans jamais le vivre. Or ce tirage est DÉTERMINISTE : même graine,
+ * même tour, mêmes entreprises (triées par identifiant), mêmes événements
+ * actifs ⇒ mêmes cartes. On peut donc le montrer à l'OUVERTURE du tour, face
+ * cachée puis retournées, et laisser l'équipe décider en le sachant : c'est
+ * le tour de table d'un vrai jeu de cartes.
+ *
+ * Cette fonction refait exactement ce que `simulateRound` fera : même graine
+ * dérivée, même PRNG neuf, mêmes arguments, et le tirage est la première
+ * chose que le moteur consomme. Elle ne modifie rien. Si un appelant lui
+ * passe d'autres événements actifs que ceux de la clôture (une carte injectée
+ * entre-temps), l'aperçu diverge : c'est à lui de lui donner ce que la
+ * clôture verra.
+ */
+export function peekEventDraw(input: {
+  scenario: EngineScenarioConfig;
+  roundIndex: number;
+  companies: ReadonlyArray<Pick<CompanyState, "id">>;
+  activeEvents: EventInstance[];
+  seed: number;
+}): EventInstance[] {
+  const rng = createRng(deriveRoundSeed(input.seed, input.roundIndex));
+  return drawEvents(input.scenario, input.roundIndex, input.companies, input.activeEvents, rng).drawn;
 }

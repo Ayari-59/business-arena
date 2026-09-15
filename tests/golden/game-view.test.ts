@@ -108,6 +108,7 @@ describe("GameView NOVA — tour initial (round 1, aucune résolution)", () => {
     const gameId = await createSoloGame(userId, "quarter", 2);
     const view = await getGameView(gameId, userId);
     expect(view!.announcedEventCards).toHaveLength(0);
+    expect(view!.activeEventCards).toHaveLength(0);
   });
 
   it("difficulty et vocabulary sont présents", async () => {

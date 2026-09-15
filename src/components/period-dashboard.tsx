@@ -154,6 +154,24 @@ export function PeriodDashboard({
         synthese: (
           <div className="space-y-3">
             <HautsFaits faits={faits} />
+            {/*
+              LE TIRAGE D'ABORD. Les cartes tombées sur l'équipe ce tour
+              expliquent une part des chiffres qui suivent ; reléguées au fond
+              de l'onglet Marché, elles n'étaient jamais vues en solo, où
+              personne ne les annonce.
+            */}
+            {period.events.length > 0 ? (
+              <section aria-label="Cartes tirées ce tour">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-400">
+                  🃏 Cartes tirées ce tour
+                </p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {period.events.map((code, i) => (
+                    <EventCard key={code} code={code} delayMs={i * 450} />
+                  ))}
+                </div>
+              </section>
+            ) : null}
             <section aria-label="Indicateurs clés" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
               <KpiCard
                 label="Chiffre d'affaires"
@@ -420,19 +438,6 @@ export function PeriodDashboard({
 
             {period.competitiveBenchmark ? (
               <CompetitiveBenchmark benchmark={period.competitiveBenchmark} />
-            ) : null}
-
-            {period.events.length > 0 ? (
-              <section>
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-400">
-                  Cartes tirées ce tour
-                </p>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {period.events.map((code, i) => (
-                    <EventCard key={code} code={code} delayMs={i * 450} />
-                  ))}
-                </div>
-              </section>
             ) : null}
 
             {r.extraOrders ? (

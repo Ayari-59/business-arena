@@ -155,6 +155,9 @@ describe("tirage manuel de cartes (mode apprentissage)", () => {
     expect(view!.lastEvents).toContain("supplier_discount");
     expect(view!.lastEvents).toContain("viral_campaign");
     expect(view!.lastEvents).toContain("local_supplier_deal");
+    // Trois cartes d'un tour : rien ne pèse encore sur le tour suivant. Une
+    // carte de deux tours y figurerait, avec ce qu'il lui reste à courir.
+    expect(view!.activeEventCards).toEqual([]);
     expect(view!.announcedEventCards).toEqual([]); // purgées
 
     // effet cumulé pour l'équipe ciblée : matières ×0,9 (marché) ×0,92 (équipe)

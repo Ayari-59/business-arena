@@ -212,10 +212,18 @@ h1 {
   }
 }
 
+/*
+ * La FACE est dans le flux, le DOS par-dessus en absolu : c'est le contenu de
+ * la face qui donne sa hauteur à la carte. Les deux faces en absolu laissaient
+ * la scène à sa hauteur minimale, et une carte au récit un peu long débordait
+ * de son cadre — la mini-leçon coupée sous la bordure.
+ */
 .card-face {
-  position: absolute;
-  inset: 0;
   backface-visibility: hidden;
+}
+
+.card-front {
+  position: relative;
 }
 
 /* Barre de progression indéterminée des actions longues (clôture, création). */
@@ -241,7 +249,14 @@ h1 {
 }
 
 .card-back {
+  position: absolute;
+  inset: 0;
   transform: rotateY(180deg);
+}
+
+/* Le dos seul, pour une pioche posée sur la table (pas de retournement). */
+.card-back-face {
+  background: linear-gradient(135deg, #0f172a, #020617);
 }
 
 @media (prefers-reduced-motion: reduce) {

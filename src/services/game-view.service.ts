@@ -14,6 +14,9 @@ import { computeSectorKpis, type KpiFormat } from "@/config/scenarios/sector-kpi
 import { presetFromProfile } from "@/config/difficulty";
 import { porteUnNomParDefaut } from "@/config/nom-equipe";
 import { cardByCode } from "@/config/events/cards";
+import type { EventInstance } from "@/engine/types";
+import { peekEventDraw } from "@/engine/events";
+import { activeEventsOf, injectedEvents } from "@/services/round-resolution.service";
 import { proposedDecisionsFor, startingDecisionsFor } from "@/services/decision-baseline";
 import { orderOfferForRound } from "@/engine/simulation";
 import { isMultiProduct, isProductAvailable, rdOpeningOf, suppliersOf, toGamme, offerProductIndex } from "@/engine/gamme";
@@ -135,6 +138,28 @@ export interface GameView {
     teamName: string | null;
     isMyTeam: boolean;
   }[];
+  /**
+   * Cartes ENCORE EN JEU pour le tour à jouer : tirées à un tour précédent,
+   * par le moteur ou par l'enseignant, et pas encore éteintes — un événement
+   * de deux tours pèse sur les décisions du second. Sans elles, l'équipe
+   * décidait sans savoir que la conjoncture morose courait toujours.
+   */
+  activeEventCards: {
+    code: string;
+    teamId: string | null;
+    teamName: string | null;
+    isMyTeam: boolean;
+    /** Tours pendant lesquels la carte pèse encore, celui-ci compris. */
+    roundsLeft: number;
+  }[];
+  /**
+   * LE TIRAGE DU TOUR À JOUER, lu d'avance : les cartes que le moteur tirera
+   * à la clôture, exactement (même graine, même tour, mêmes entreprises).
+   * Vide une fois la partie finie. Ne porte que ce qui concerne l'équipe qui
+   * lit : les cartes marché et celles qui la ciblent. Les cartes RSE, tirées
+   * sur le standing de chaque entreprise, restent découvertes aux résultats.
+   */
+  upcomingDraw: { code: string; teamId: string | null; isMyTeam: boolean }[];
   lastResult: CompanyRoundResult | null;
   /**
    * Tous les tours RÉSOLUS, du plus ancien au plus récent : de quoi rebâtir le
@@ -1339,6 +1364,53 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         isMyTeam: card.teamId === playerTeam.id,
       };
     }),
+    activeEventCards: (() => {
+      const actifs = (game.difficultyProfile as { activeEvents?: EventInstance[] }).activeEvents;
+      return (Array.isArray(actifs) ? actifs : [])
+        .filter((e) => e.roundsLeft > 0)
+        .map((e) => {
+          const teamId = e.scope === "company" ? (e.companyId ?? null) : null;
+          return {
+            code: e.code,
+            teamId,
+            teamName: teamId ? (teamRows.find((t) => t.id === teamId)?.name ?? null) : null,
+            isMyTeam: teamId === playerTeam.id,
+            roundsLeft: e.roundsLeft,
+          };
+        });
+    })(),
+    upcomingDraw: await (async () => {
+      if (game.status === "finished") return [];
+      const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+      // Les entreprises telles que la clôture les passera au moteur : les
+      // états du tour précédent, triés par identifiant (round-resolution).
+      const etats = await db
+        .select({ teamId: companyStates.teamId })
+        .from(companyStates)
+        .where(
+          and(
+            eq(companyStates.roundIndex, game.currentRound - 1),
+            inArray(companyStates.teamId, teamRows.map((t) => t.id)),
+          ),
+        );
+      const companies = etats.map((r) => ({ id: r.teamId })).sort((a, b) => a.id.localeCompare(b.id));
+      if (companies.length !== teamRows.length) return [];
+      const actifs = activeEventsOf(game.difficultyProfile);
+      const tirees = peekEventDraw({
+        scenario: snapshot,
+        roundIndex: game.currentRound,
+        companies,
+        activeEvents: [...actifs, ...injectedEvents(snapshot, readPendingEvents(game.difficultyProfile), actifs)],
+        seed: game.seed,
+      });
+      return tirees
+        .filter((e) => e.scope === "market" || e.companyId === playerTeam.id)
+        .map((e) => ({
+          code: e.code,
+          teamId: e.scope === "company" ? (e.companyId ?? null) : null,
+          isMyTeam: e.scope === "company" && e.companyId === playerTeam.id,
+        }));
+    })(),
     lastResult,
     periods,
     // Rapport extra-financier (Lot 3) : synthèse indicative dérivée de tous les

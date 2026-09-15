@@ -73,6 +73,39 @@ export function readPendingEvents(profile: unknown): PendingEventCard[] {
   return [];
 }
 
+/** Les événements encore actifs, tels que la clôture précédente les a laissés. */
+export function activeEventsOf(profile: unknown): EventInstance[] {
+  const p = profile as { activeEvents?: EventInstance[] };
+  return Array.isArray(p.activeEvents) ? p.activeEvents : [];
+}
+
+/**
+ * Les cartes jouées par l'enseignant pour le tour, prêtes pour le moteur. Une
+ * seule fonction, parce que la clôture ET l'aperçu du tirage doivent voir
+ * exactement la même liste : c'est elle qui décale le tirage seedé.
+ */
+export function injectedEvents(
+  scenario: EngineScenarioConfig,
+  pendingCards: readonly PendingEventCard[],
+  activeEvents: readonly EventInstance[],
+): EventInstance[] {
+  return pendingCards.flatMap((card) => {
+    const def = scenario.events.find((e) => e.code === card.code);
+    if (!def) return [];
+    if (activeEvents.some((e) => e.code === card.code && e.companyId === (card.teamId ?? undefined)))
+      return [];
+    return [
+      {
+        code: def.code,
+        scope: card.teamId ? ("company" as const) : ("market" as const),
+        companyId: card.teamId ?? undefined,
+        roundsLeft: def.duration,
+        modifiers: def.modifiers,
+      },
+    ];
+  });
+}
+
 const toMoney = (v: number) => (Math.round(v * 100) / 100).toString();
 
 function sumSold(bySegment: CompanyRoundResult["market"]["bySegment"]): number {
@@ -375,25 +408,9 @@ async function resolveGameRound(
       }
     }
 
-    const profile = game.difficultyProfile as { activeEvents?: EventInstance[] };
-    const activeEvents = Array.isArray(profile.activeEvents) ? profile.activeEvents : [];
+    const activeEvents = activeEventsOf(game.difficultyProfile);
     // Cartes jouées par l'enseignant : marché (toute la classe) ou ciblées
-    const pendingCards = readPendingEvents(game.difficultyProfile);
-    const injected: EventInstance[] = pendingCards.flatMap((card) => {
-      const def = scenario.events.find((e) => e.code === card.code);
-      if (!def) return [];
-      if (activeEvents.some((e) => e.code === card.code && e.companyId === (card.teamId ?? undefined)))
-        return [];
-      return [
-        {
-          code: def.code,
-          scope: card.teamId ? ("company" as const) : ("market" as const),
-          companyId: card.teamId ?? undefined,
-          roundsLeft: def.duration,
-          modifiers: def.modifiers,
-        },
-      ];
-    });
+    const injected = injectedEvents(scenario, readPendingEvents(game.difficultyProfile), activeEvents);
     // Les subventions exceptionnelles que l'animateur a ACCORDÉES pour ce tour.
     // Elles ne viennent d'aucune décision d'équipe et d'aucun tirage : c'est un
     // geste humain, pris dans son espace, que le moteur se contente
