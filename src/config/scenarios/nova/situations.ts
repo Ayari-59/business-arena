@@ -675,7 +675,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
     category: "alerte_operationnelle",
     title: "L'atelier au taquet",
     narrative:
-      "Vos machines ont tourné à plein régime, et pourtant des clients sont repartis les mains vides. Votre équipementier propose 2 000 unités de capacité trimestrielle supplémentaire pour 40 000 €, amortis sur 16 trimestres. Un sous-traitant, lui, facture 52 € l'unité finie. Chaque enceinte vendue 59 € dégage environ 21 € de marge sur coût variable.",
+      "Vos machines ont tourné à plein régime, et pourtant des clients sont repartis les mains vides. Votre équipementier propose 2 000 unités de capacité trimestrielle supplémentaire pour 40 000 €, amortis sur 16 trimestres. Un sous-traitant, lui, facture 52 € l'unité finie. Au prix usuel du marché, 59 €, une enceinte dégage environ 21 € de marge sur coût variable (38 € de coût variable) ; à votre prix, refaites le calcul.",
     problem:
       "Investir, sous-traiter, ou laisser filer la demande : sur quel CALCUL fondez-vous la réponse, plutôt que sur l'intuition ?",
     diagnosticOptions: [
@@ -725,7 +725,7 @@ export const NOVA_SITUATIONS: SituationDef[] = [
       "L'investissement coûte aujourd'hui ; ses gains tombent sur plusieurs tours. Comment comparer des euros d'aujourd'hui et des euros de demain ?",
       "Un euro dans un an vaut moins qu'un euro aujourd'hui : c'est l'actualisation, et votre taux d'emprunt donne le taux de référence.",
       "La VAN actualise les flux futurs et les compare au capital investi ; le TRI est le taux qui l'annule ; les coûts pertinents comparent investir et sous-traiter.",
-      "VAN ≈ −40 000 + Σ (unités supplémentaires vendues × 21 €) / (1 + 1,25 %)^t sur 16 trimestres. VAN > 0 ⇒ investissez ; sinon comparez à la sous-traitance : 59 − 52 = 7 € de marge par unité sous-traitée, sans immobiliser un euro.",
+      "VAN ≈ −40 000 + Σ (unités supplémentaires vendues × marge unitaire) / (1 + 1,25 %)^t sur 16 trimestres — la marge, c'est votre prix moins 38 € (21 € au prix usuel de 59 €). VAN > 0 ⇒ investissez ; sinon comparez à la sous-traitance : votre prix moins 52 € par unité sous-traitée (7 € à 59 €), sans immobiliser un euro.",
     ]),
     trigger: { detect: "capacity_saturated" },
     weight: 1,
