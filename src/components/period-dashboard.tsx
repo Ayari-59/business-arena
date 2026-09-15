@@ -92,7 +92,7 @@ function RseCard({ rse }: { rse: RseIndex }) {
         </div>
       ) : null}
       <p className="mt-3 text-xs leading-snug text-slate-500">
-        Mesure indicative : elle ne joue pas encore sur la partie.
+        Elle pèse dans l&apos;IPG (10 % par défaut) ; elle ne joue pas sur le marché.
       </p>
     </section>
   );
@@ -330,8 +330,8 @@ export function PeriodDashboard({
                   </ol>
                   <p className="mt-3 text-xs text-slate-400">
                     IPG sur 100 : économique 30 %, financière 20 %, pilotage 20 %,
-                    commerciale 15 %, rentabilité 10 %, maîtrise décisionnelle 5 %. Les
-                    derniers tours pèsent plus lourd.
+                    commerciale 15 %, responsabilité sociétale 10 %, maîtrise décisionnelle
+                    5 %. Les derniers tours pèsent plus lourd.
                   </p>
                 </div>
                 {view.playerDimensions ? <BpiPanel dimensions={view.playerDimensions} /> : null}
