@@ -125,18 +125,18 @@ export function CardDeck({
               disabled={pending || (target === "" && marketFull)}
               className={`group relative h-24 w-16 rounded-lg border shadow-lg transition hover:-translate-y-1 disabled:opacity-60 ${
                 isTeamDraw
-                  ? "border-sky-400/40 bg-gradient-to-br from-slate-800 to-sky-950"
-                  : "border-amber-400/40 bg-gradient-to-br from-slate-800 to-slate-950"
+                  ? "border-amber-400/40 bg-gradient-to-br from-slate-800 to-slate-950"
+                  : "border-sky-400/40 bg-gradient-to-br from-slate-800 to-sky-950"
               }`}
               title={isTeamDraw ? "Tirer une carte équipe au hasard" : "Tirer une carte marché au hasard"}
             >
               <span className="absolute inset-0 flex flex-col items-center justify-center gap-1.5">
                 <BrandMark
-                  className={`h-7 w-7 ${isTeamDraw ? "text-sky-400/80" : "text-amber-400/80"}`}
+                  className={`h-7 w-7 ${isTeamDraw ? "text-amber-400/80" : "text-sky-400/80"}`}
                 />
                 <span
                   className={`text-xs font-bold uppercase tracking-widest ${
-                    isTeamDraw ? "text-sky-400/80" : "text-amber-400/70"
+                    isTeamDraw ? "text-amber-400/70" : "text-sky-400/80"
                   }`}
                 >
                   {isTeamDraw ? "Équipe" : "Marché"}

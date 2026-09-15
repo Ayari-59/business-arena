@@ -6,44 +6,35 @@ import {
   CARD_CATEGORIES,
   cardPosition,
   cardsForEventCodes,
-  dureeDeLaCarte,
   type EventCardDef,
 } from "@/config/events/cards";
 import { scenarioByCode } from "@/config/scenarios/registry";
-import { BrandMark } from "@/components/brand-mark";
+import { EventCardBack, EventCardFace } from "@/components/event-card";
 
 /**
- * Deck physique imprimable (A4) : chaque carte est une paire dos + face à
- * découper sur les traits pleins puis plier sur le trait pointillé — pas
- * besoin d'impression recto-verso. Deux paquets : cartes MARCHÉ (toute la
- * classe) et cartes ÉQUIPE (tirage par équipe entre les tours).
+ * Deck physique imprimable : chaque carte est une paire dos + face à découper
+ * sur les traits pleins puis plier sur le trait pointillé — pas besoin
+ * d'impression recto-verso. Deux paquets : cartes MARCHÉ (toute la classe) et
+ * cartes ÉQUIPE (tirage par équipe entre les tours).
+ *
+ * LA MÊME CARTE QU'À L'ÉCRAN. La face et le dos sont ceux de l'arène, rendus
+ * par les mêmes composants : ce que l'enseignant tire en classe est, au
+ * pixel près, ce que l'élève verra dans sa partie. Le papier ajoute seulement
+ * le ruban du paquet au dos, et la carte libre en fin de paquet.
  */
 
-const PRINT_ACCENTS: Record<EventCardDef["category"], string> = {
-  market: "#3987e5",
-  competition: "#a855f7",
-  internal: "#d97706",
-  macro: "#059669",
-};
+type Paquet = "market" | "team";
 
-/**
- * Le dos, comme à l'écran : la nuit, les chevrons de laiton, la marque. Le
- * paquet (marché ou équipe) se lit à son ruban, en laiton ou en ciel, pour
- * qu'une pioche face cachée se trie du premier coup d'œil.
- */
-function PrintBack({ deck, deckName }: { deck: "market" | "team"; deckName: string | null }) {
+function PrintPair({ card, deck }: { card: EventCardDef; deck: Paquet }) {
+  const position = cardPosition(card.code);
   return (
-    <div className="print-half print-back">
-      <div className="print-back-frame">
-        <BrandMark className="print-back-mark" />
-        <span className="print-back-brand">
-          BUSINESS <strong>ARENA</strong>
-        </span>
-        {deckName ? <span className="print-back-deck-name">{deckName}</span> : null}
+    <div className="print-pair">
+      <div className="print-half print-back">
+        <EventCardBack deckName={position?.deck} ruban={deck} className="h-full" />
       </div>
-      <span className={`print-back-ribbon ${deck === "market" ? "print-ribbon-market" : "print-ribbon-team"}`}>
-        {deck === "market" ? "Marché · toute la classe" : "Équipe · tirage ciblé"}
-      </span>
+      <div className="print-half print-front">
+        <EventCardFace code={card.code} />
+      </div>
     </div>
   );
 }
@@ -53,77 +44,41 @@ function PrintBack({ deck, deckName }: { deck: "market" | "team"; deckName: stri
  * visite d'inspection, un client qui ne paie pas) et le joue comme les
  * autres, en saisissant l'effet le plus proche dans le deck numérique.
  */
-function PrintBlankCard({ deck, deckName }: { deck: "market" | "team"; deckName: string | null }) {
+function PrintBlankPair({ deck, deckName }: { deck: Paquet; deckName: string | null }) {
   return (
     <div className="print-pair">
-      <PrintBack deck={deck} deckName={deckName} />
-      <div className="print-half print-front print-front-blank">
-        <div className="print-front-frame">
-          <div className="print-front-head">
-            <span className="print-index">★</span>
-            <span className="print-category">★ Carte libre</span>
-          </div>
-          <div className="print-medallion">
-            <span className="print-emoji">✍️</span>
-          </div>
-          <p className="print-blank-label">Titre</p>
-          <div className="print-blank-line" />
-          <p className="print-blank-label">Ce qui arrive</p>
-          <div className="print-blank-line" />
-          <div className="print-blank-line" />
-          <p className="print-blank-label">Effet joué dans le deck numérique</p>
-          <div className="print-blank-line" />
-          <div className="print-foot">
-            <span className="print-deck-mark">{deckName ?? "Business Arena"} · carte libre</span>
-            <span className="print-index-mirror"><span className="print-index">★</span></span>
-          </div>
-        </div>
+      <div className="print-half print-back">
+        <EventCardBack deckName={deckName} ruban={deck} className="h-full" />
       </div>
-    </div>
-  );
-}
-
-function PrintCard({ card, deck }: { card: EventCardDef; deck: "market" | "team" }) {
-  const category = CARD_CATEGORIES[card.category];
-  const accent = PRINT_ACCENTS[card.category];
-  const position = cardPosition(card.code);
-  const numero = position ? String(position.index).padStart(2, "0") : "—";
-  const duree = dureeDeLaCarte(card);
-  const index = (
-    <span className="print-index" style={{ color: accent }}>
-      {category.glyph}
-      <span className="print-index-num">{numero}</span>
-    </span>
-  );
-  return (
-    <div className="print-pair">
-      <PrintBack deck={deck} deckName={position?.deck ?? null} />
-      {/* face */}
-      <div className="print-half print-front" style={{ borderColor: accent }}>
-        <div className="print-front-frame">
-          <div className="print-front-head">
-            {index}
-            <span className="print-category" style={{ color: accent, borderColor: accent }}>
-              {category.glyph} {category.label}
-            </span>
-          </div>
-          <div className="print-medallion" style={{ borderColor: accent }}>
-            <span className="print-emoji">{card.emoji}</span>
-          </div>
-          <h3 className="print-title">{card.title}</h3>
-          <p className="print-flavor">{card.flavor}</p>
-          <div className="print-effect">
-            <span>⚡ {card.effectLabel}</span>
-            <span className="print-pips" title={`${duree} tour${duree > 1 ? "s" : ""}`}>
-              {"●".repeat(duree)}
-            </span>
-          </div>
-          <p className="print-hint">💡 {card.conceptHint}</p>
-          <div className="print-foot">
-            <span className="print-deck-mark">
-              {position ? `${position.deck} · ${position.index} / ${position.total}` : "Business Arena"}
-            </span>
-            <span className="print-index-mirror">{index}</span>
+      <div className="print-half print-front">
+        <div className="card-front rounded-xl border-2 border-slate-500/50 bg-slate-900 p-2">
+          <div className="flex min-h-full flex-col rounded-lg border border-white/10 p-3">
+            <div className="flex items-start justify-between gap-2">
+              <span className="font-display text-base font-semibold leading-none text-slate-400">★</span>
+              <span className="whitespace-nowrap rounded-full border border-slate-500/50 px-2 py-0.5 text-xs uppercase tracking-wide text-slate-300">
+                ★ Carte libre
+              </span>
+            </div>
+            <div className="mt-2 flex items-center justify-center">
+              <span className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-950 text-3xl ring-1 ring-white/10" aria-hidden>
+                ✍️
+              </span>
+            </div>
+            <p className="mt-3 text-xs uppercase tracking-wide text-slate-500">Titre</p>
+            <div className="h-6 border-b border-white/20" />
+            <p className="mt-2 text-xs uppercase tracking-wide text-slate-500">Ce qui arrive</p>
+            <div className="h-6 border-b border-white/20" />
+            <div className="h-6 border-b border-white/20" />
+            <p className="mt-2 text-xs uppercase tracking-wide text-slate-500">Effet joué dans le deck numérique</p>
+            <div className="h-6 border-b border-white/20" />
+            <div className="mt-auto flex items-end justify-between border-t border-white/5 pt-1.5">
+              <span className="text-xs uppercase tracking-[0.15em] text-slate-500">
+                {deckName ?? "Business Arena"} · carte libre
+              </span>
+              <span className="rotate-180 font-display text-base font-semibold leading-none text-slate-400" aria-hidden>
+                ★
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -132,7 +87,7 @@ function PrintCard({ card, deck }: { card: EventCardDef; deck: "market" | "team"
 }
 
 function PrintCards() {
-  // Un deck par secteur : imprimer les 77 cartes de la plateforme n'aurait
+  // Un deck par secteur : imprimer les cartes de toute la plateforme n'aurait
   // aucun sens en classe. Le secteur se choisit dans l'URL (?scenario=hotel),
   // le lien du tableau de bord enseignant le renseigne déjà.
   const params = useSearchParams();
@@ -145,11 +100,11 @@ function PrintCards() {
   // Quatre paires par feuille A4 paysage (deux par deux), la feuille est
   // l'unité de saut de page : aucune carte coupée par le bord. Une carte
   // libre ferme chaque paquet.
-  const feuilles = (cards: EventCardDef[], scope: "market" | "team") => {
+  const feuilles = (cards: EventCardDef[], scope: Paquet) => {
     const paires: React.ReactNode[] = cards.map((card) => (
-      <PrintCard key={card.code} card={card} deck={scope} />
+      <PrintPair key={card.code} card={card} deck={scope} />
     ));
-    paires.push(<PrintBlankCard key={`${scope}-libre`} deck={scope} deckName={deckName} />);
+    paires.push(<PrintBlankPair key={`${scope}-libre`} deck={scope} deckName={deckName} />);
     const out: React.ReactNode[][] = [];
     for (let i = 0; i < paires.length; i += 4) out.push(paires.slice(i, i + 4));
     return out.map((feuille, i) => (
@@ -158,6 +113,7 @@ function PrintCards() {
       </div>
     ));
   };
+  const nbFeuilles = Math.ceil((marketCards.length + 1) / 4) + Math.ceil((teamCards.length + 1) / 4);
 
   return (
     <main id="main" className="print-page">
@@ -171,24 +127,24 @@ function PrintCards() {
           <h1>🃏 Deck physique à imprimer</h1>
           <p className="print-legend">
             {(["market", "competition", "internal", "macro"] as const).map((c) => (
-              <span key={c} style={{ color: PRINT_ACCENTS[c] }}>
+              <span key={c} style={{ color: CARD_CATEGORIES[c].accent }}>
                 {CARD_CATEGORIES[c].glyph} {CARD_CATEGORIES[c].label}
               </span>
             ))}
             <span className="print-legend-pips">● un tour · ●● deux tours</span>
             <span className="print-legend-pips">
-              {marketCards.length + teamCards.length} cartes · {Math.ceil((marketCards.length + 1) / 4) + Math.ceil((teamCards.length + 1) / 4)} feuilles
+              {marketCards.length + teamCards.length} cartes · {nbFeuilles} feuilles
             </span>
           </p>
           <p className="print-help">
-            Imprimez en <strong>A4 paysage</strong> (couleur de préférence, quatre cartes par
-            feuille), découpez chaque carte sur les <strong>traits pleins</strong>, puis pliez
-            sur le <strong>trait pointillé</strong> :
-            le dos et la face se retrouvent dos à dos, sans impression recto-verso. Faites tirer
-            une carte <strong>marché</strong> à la classe entre deux tours, ou une carte{" "}
-            <strong>équipe</strong> à chaque équipe lors d&apos;un événement spécial, puis
-            saisissez la carte tirée dans le deck numérique de la partie pour qu&apos;elle
-            s&apos;applique à la simulation.
+            Les cartes sont celles de l&apos;écran, dos de nuit compris : imprimez en{" "}
+            <strong>A4 paysage</strong>, en couleur, quatre cartes par feuille. Découpez chaque
+            carte sur les <strong>traits pleins</strong>, puis pliez sur le{" "}
+            <strong>trait pointillé</strong> : le dos et la face se retrouvent dos à dos, sans
+            impression recto-verso. Faites tirer une carte <strong>marché</strong> à la classe
+            entre deux tours, ou une carte <strong>équipe</strong> à chaque équipe lors d&apos;un
+            événement spécial, puis saisissez la carte tirée dans le deck numérique de la partie
+            pour qu&apos;elle s&apos;applique à la simulation.
           </p>
         </div>
         <button type="button" className="print-button" onClick={() => window.print()}>
@@ -224,6 +180,33 @@ const printStyles = `
     min-height: 100vh;
     padding: 24px;
     font-family: ui-sans-serif, system-ui, sans-serif;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+    /*
+     * LA CARTE EST DE NUIT, QUEL QUE SOIT LE THÈME. Les composants de carte
+     * lisent les couleurs du thème ; sur le thème clair, la face deviendrait
+     * blanche et le laiton s'assombrirait. On leur redonne ici, et seulement
+     * ici, les valeurs de la nuit : le deck imprimé est le même pour tous.
+     */
+    --color-white: #fff;
+    --color-slate-50: #f8fafc;
+    --color-slate-100: #f1f5f9;
+    --color-slate-300: #cbd5e1;
+    --color-slate-400: #94a3b8;
+    --color-slate-500: #62748e;
+    --color-slate-900: #0e1526;
+    --color-slate-950: #070c1a;
+    --color-amber-300: #e7cd8b;
+    --color-amber-400: #d8b45c;
+    --color-sky-300: #7dd3fc;
+    --color-sky-400: #38bdf8;
+    --color-emerald-300: #6ee7b7;
+    --color-emerald-400: #34d399;
+    --color-fuchsia-300: #f0abfc;
+    --color-fuchsia-400: #e879f9;
+  }
+  .print-page .card-front {
+    border-color: color-mix(in oklab, var(--enseigne, #d8b45c) 40%, transparent);
   }
   .print-header {
     display: flex;
@@ -244,17 +227,6 @@ const printStyles = `
   }
   .print-header h1 { margin: 0; font-size: 24px; }
   .print-help { font-size: 13px; color: #475569; max-width: 640px; line-height: 1.5; }
-  /*
-   * Les paires sont en millimètres réels (elles doivent tomber juste sur le
-   * papier) : 126 mm, c'est plus large qu'un téléphone. À l'écran seulement,
-   * une fenêtre étroite les voit réduites ; à défaut, la feuille défile sur
-   * elle-même sans emporter la page.
-   */
-  .print-sheet { overflow-x: auto; }
-  @media (max-width: 640px) {
-    .print-pair { zoom: 0.72; }
-    .print-page { padding: 16px; }
-  }
   .print-button {
     flex-shrink: 0;
     border: none;
@@ -273,26 +245,6 @@ const printStyles = `
     font-size: 16px;
     color: #0f172a;
   }
-  /* une feuille = quatre paires, deux par deux ; c'est elle qui saute de page */
-  .print-sheet {
-    max-width: 1000px;
-    margin: 0 auto 8mm;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, 126mm);
-    gap: 6mm;
-    justify-content: start;
-    break-after: page;
-  }
-  /* une paire = dos + face, pli au milieu */
-  .print-pair {
-    display: flex;
-    width: 126mm;
-    height: 88mm;
-    border: 1px solid #0f172a;
-    break-inside: avoid;
-    background: #fff;
-  }
-  .print-half { width: 63mm; height: 88mm; box-sizing: border-box; overflow: hidden; }
   .print-legend {
     display: flex;
     flex-wrap: wrap;
@@ -302,138 +254,48 @@ const printStyles = `
     font-weight: 600;
   }
   .print-legend-pips { color: #64748b; font-weight: 400; letter-spacing: 0.1em; }
-  /* le dos de nuit et ses chevrons de laiton, le même qu'à l'écran */
-  .print-back {
-    position: relative;
+  /* une feuille = quatre paires, deux par deux ; c'est elle qui saute de page */
+  .print-sheet {
+    max-width: 1000px;
+    margin: 0 auto 8mm;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, 126mm);
+    gap: 6mm;
+    justify-content: start;
+    break-after: page;
+    overflow-x: auto;
+  }
+  /* une paire = dos + face, pli au milieu ; le trait plein est le trait de coupe */
+  .print-pair {
     display: flex;
-    padding: 4mm;
-    color: #d8b45c;
-    border-right: 1.5px dashed rgba(216, 180, 92, 0.85);
-    background-color: #060b18;
-    background-image:
-      repeating-linear-gradient(45deg, rgba(216, 180, 92, 0.18) 0 0.5mm, transparent 0.5mm 3mm),
-      repeating-linear-gradient(-45deg, rgba(216, 180, 92, 0.18) 0 0.5mm, transparent 0.5mm 3mm),
-      radial-gradient(circle at 50% 50%, #0f172a 0%, #060b18 70%);
-    print-color-adjust: exact;
-    -webkit-print-color-adjust: exact;
+    width: 126mm;
+    height: 88mm;
+    border: 1px solid #0f172a;
+    break-inside: avoid;
+    background: #070c1a;
   }
-  .print-back-frame {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    padding-bottom: 6mm;
-    border: 0.4mm solid rgba(216, 180, 92, 0.6);
-    border-radius: 3mm;
-    text-align: center;
+  .print-half { width: 63mm; height: 88mm; box-sizing: border-box; overflow: hidden; }
+  .print-back { border-right: 1.5px dashed rgba(216, 180, 92, 0.85); }
+  /*
+   * La face de l'écran est dessinée pour 300 px de large ; la carte de poche
+   * en fait 238. On la réduit d'un cinquième : même dessin, mêmes proportions.
+   */
+  .print-front .card-front, .print-back .card-back-face {
+    height: 100%;
+    min-height: 0;
+    border-radius: 0;
   }
-  .print-back-mark { width: 20mm; height: 20mm; color: #d8b45c; }
-  .print-back-brand { font-size: 12px; font-weight: 300; letter-spacing: 0.25em; margin-top: 2mm; }
-  .print-back-brand strong { font-weight: 800; }
-  .print-back-deck-name { font-size: 12px; letter-spacing: 0.2em; opacity: 0.85; }
-  /* le ruban du paquet : laiton pour le marché, ciel pour l'équipe */
-  .print-back-ribbon {
-    position: absolute;
-    left: 4mm;
-    right: 4mm;
-    bottom: 6mm;
-    padding: 1mm 0;
-    border-radius: 1mm;
-    text-align: center;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: #060b18;
-    print-color-adjust: exact;
-    -webkit-print-color-adjust: exact;
+  .print-front { zoom: 0.8; width: 78.75mm; height: 110mm; }
+  /*
+   * Les paires sont en millimètres réels (elles doivent tomber juste sur le
+   * papier) : 126 mm, c'est plus large qu'un téléphone. À l'écran seulement,
+   * une fenêtre étroite les voit réduites ; à défaut, la feuille défile sur
+   * elle-même sans emporter la page.
+   */
+  @media (max-width: 640px) {
+    .print-pair { zoom: 0.72; }
+    .print-page { padding: 16px; }
   }
-  .print-ribbon-market { background: #d8b45c; }
-  .print-ribbon-team { background: #7dd3fc; }
-  .print-front {
-    display: flex;
-    padding: 2.5mm;
-    border: 1.2mm solid;
-    border-left-width: 0;
-    print-color-adjust: exact;
-    -webkit-print-color-adjust: exact;
-  }
-  .print-front-frame {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    padding: 2.5mm;
-    border: 0.3mm solid #cbd5e1;
-    border-radius: 2.5mm;
-  }
-  .print-front-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 2mm; }
-  .print-index { font-family: ui-serif, Georgia, serif; font-size: 16px; font-weight: 700; line-height: 1; }
-  .print-index-num { font-size: 12px; margin-left: 1px; font-variant-numeric: tabular-nums; }
-  .print-index-mirror { display: inline-block; transform: rotate(180deg); }
-  .print-medallion {
-    align-self: center;
-    margin-top: 1.5mm;
-    width: 13mm;
-    height: 13mm;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 0.4mm solid;
-    border-radius: 50%;
-    background: #f8fafc;
-  }
-  .print-emoji { font-size: 22px; line-height: 1; }
-  .print-category {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    border: 1px solid;
-    border-radius: 999px;
-    padding: 1px 6px;
-    font-weight: 600;
-    white-space: nowrap;
-  }
-  .print-title { margin: 2mm 0 0; font-family: ui-serif, Georgia, serif; font-size: 14px; font-weight: 700; text-align: center; line-height: 1.15; }
-  .print-flavor { margin: 1.2mm 0 0; font-size: 12px; font-style: italic; color: #475569; line-height: 1.3; text-align: center; }
-  .print-effect {
-    margin-top: auto;
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 2mm;
-    padding: 1.5mm 2mm;
-    border: 0.3mm solid #cbd5e1;
-    border-radius: 1.5mm;
-    background: #f1f5f9;
-    font-size: 12px;
-    font-weight: 700;
-    line-height: 1.25;
-  }
-  .print-pips { flex-shrink: 0; letter-spacing: 0.1em; color: #475569; font-weight: 400; }
-  .print-hint {
-    margin: 1.2mm 0 0;
-    font-size: 12px;
-    color: #64748b;
-    line-height: 1.25;
-  }
-  .print-foot {
-    margin-top: 1.2mm;
-    padding-top: 1mm;
-    border-top: 0.3mm solid #e2e8f0;
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-  }
-  .print-deck-mark { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: #94a3b8; }
-  /* la carte libre : des lignes à remplir */
-  .print-front-blank { border-color: #64748b; }
-  .print-front-blank .print-index, .print-front-blank .print-category { color: #64748b; border-color: #64748b; }
-  .print-front-blank .print-medallion { border-color: #64748b; }
-  .print-blank-label { margin: 2mm 0 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; }
-  .print-blank-line { height: 5.5mm; border-bottom: 0.3mm solid #cbd5e1; }
   @media print {
     @page { size: A4 landscape; margin: 8mm; }
     .no-print { display: none !important; }
