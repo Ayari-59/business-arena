@@ -345,7 +345,7 @@ export default async function ArenaPage({
     ) : null;
 
   return (
-    <main id="main" className="mx-auto max-w-5xl space-y-6 px-4 pt-6 pb-16 sm:space-y-8 sm:px-6">
+    <main id="main" className="mx-auto max-w-[1400px] space-y-6 px-4 pt-6 pb-16 sm:space-y-8 sm:px-6">
       {/* ── Header ── */}
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex items-center gap-3">
