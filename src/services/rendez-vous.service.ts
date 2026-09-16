@@ -10,6 +10,7 @@ import {
 } from "@/config/rendez-vous";
 import {
   creneauxDisponibles,
+  jourDeParis,
   libelleCreneau,
   parJour,
   type Creneau,
@@ -46,6 +47,8 @@ const dependances = async (d: Dependances) => ({
 
 export interface CreneauxProposes {
   jours: JourDeCreneaux[];
+  /** La période couverte, en dates civiles de Paris : le calendrier se dessine dessus. */
+  periode: { debut: string; fin: string };
   /** D'où vient l'occupation : l'agenda Google, ou seulement nos réservations. */
   source: "google" | "local";
   detail?: string;
@@ -85,7 +88,11 @@ async function calculer(
 
 export async function creneauxProposes(now: Date = new Date(), deps: Dependances = {}): Promise<CreneauxProposes> {
   const { creneaux, source, detail } = await calculer(now, deps);
-  return { jours: parJour(creneaux), source, ...(detail ? { detail } : {}) };
+  const periode = {
+    debut: jourDeParis(now).date,
+    fin: jourDeParis(new Date(now.getTime() + HORIZON_JOURS * 86_400_000)).date,
+  };
+  return { jours: parJour(creneaux), periode, source, ...(detail ? { detail } : {}) };
 }
 
 export interface DemandeRendezVous {

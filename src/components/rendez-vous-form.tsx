@@ -10,23 +10,68 @@ import { GuardError, useGuardedAction } from "@/components/guarded-action";
 /**
  * Le formulaire de rendez-vous téléphonique.
  *
- * À gauche, les créneaux : un jour, puis une heure. Ils viennent de la page,
- * qui les a calculés sur l'agenda ; le formulaire ne fait que les montrer et
- * retenir celui qu'on choisit, dans un champ caché que l'action relit. À
- * droite, qui appeler et à quel numéro. Une fois réservé, le créneau se dit
- * en toutes lettres et le bouton s'efface : on ne réserve pas deux fois par
- * un double clic.
+ * À gauche, un calendrier : les semaines en lignes, du lundi au dimanche,
+ * sur la période que la page couvre, sans rien à faire défiler. Les jours qui
+ * ont des créneaux sont les seuls cliquables ; rien n'est choisi d'avance,
+ * c'est à la personne de désigner son jour, puis son heure. Le créneau retenu
+ * va dans un champ caché que l'action relit. À droite, qui appeler et à quel
+ * numéro. Une fois réservé, le créneau se dit en toutes lettres et le bouton
+ * s'efface : on ne réserve pas deux fois par un double clic.
  */
 const ETAT_INITIAL: RendezVousFormState = { error: null, ok: null, values: null };
 
-const jourCourt = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", weekday: "short" });
-const numeroDuJour = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", day: "numeric" });
+const ENTETES = ["L", "M", "M", "J", "V", "S", "D"];
+const nomDuMois = new Intl.DateTimeFormat("fr-FR", { timeZone: "UTC", month: "long", year: "numeric" });
+const moisCourt = new Intl.DateTimeFormat("fr-FR", { timeZone: "UTC", month: "short" });
+
+/** Une date civile « 2026-09-18 » lue à midi UTC : l'arithmétique de jours y est sûre. */
+const aMidi = (date: string) => new Date(`${date}T12:00:00Z`);
+const plusJours = (date: string, n: number) =>
+  new Date(aMidi(date).getTime() + n * 86_400_000).toISOString().slice(0, 10);
+/** Le lundi de la semaine d'une date (dimanche = 0 → six jours en arrière). */
+const lundiDe = (date: string) => plusJours(date, -((aMidi(date).getUTCDay() + 6) % 7));
+
+interface Case {
+  date: string;
+  numero: number;
+  premierDuMois: boolean;
+  /** Hors période : avant aujourd'hui ou après l'horizon. */
+  horsPeriode: boolean;
+}
+
+/** Les cases du calendrier, semaines complètes, du lundi qui précède la période au dimanche qui la suit. */
+function casesDuCalendrier(periode: { debut: string; fin: string }): Case[] {
+  const cases: Case[] = [];
+  const debut = lundiDe(periode.debut);
+  const fin = plusJours(lundiDe(periode.fin), 6);
+  for (let d = debut; d <= fin; d = plusJours(d, 1)) {
+    const date = aMidi(d);
+    cases.push({
+      date: d,
+      numero: date.getUTCDate(),
+      premierDuMois: date.getUTCDate() === 1,
+      horsPeriode: d < periode.debut || d > periode.fin,
+    });
+  }
+  return cases;
+}
+
+/** « septembre 2026 », ou « septembre – octobre 2026 » quand la période en chevauche deux. */
+function titreDuCalendrier(periode: { debut: string; fin: string }): string {
+  const a = aMidi(periode.debut);
+  const b = aMidi(periode.fin);
+  if (a.getUTCMonth() === b.getUTCMonth()) return nomDuMois.format(a);
+  const moisA = new Intl.DateTimeFormat("fr-FR", { timeZone: "UTC", month: "long" }).format(a);
+  return `${moisA} – ${nomDuMois.format(b)}`;
+}
 
 export function RendezVousForm({
   jours,
+  periode,
   initial = ETAT_INITIAL,
 }: {
   jours: JourDeCreneaux[];
+  periode: { debut: string; fin: string };
   initial?: RendezVousFormState;
 }) {
   const { state, formAction, pending, formRef, guardError } = useGuardedAction(
@@ -35,13 +80,12 @@ export function RendezVousForm({
     { label: "rendez-vous téléphonique" },
   );
   const v = state.values;
-  const jourDuCreneau = (iso: string | undefined) =>
-    jours.find((j) => j.creneaux.some((c) => c.iso === iso))?.date ?? jours[0]?.date ?? null;
-  const [jour, setJour] = useState<string | null>(jourDuCreneau(v?.creneau));
-  const [creneau, setCreneau] = useState<string | null>(
-    v?.creneau && jours.some((j) => j.creneaux.some((c) => c.iso === v.creneau)) ? v.creneau : null,
-  );
-  const jourChoisi = jours.find((j) => j.date === jour) ?? null;
+  const parDate = new Map(jours.map((j) => [j.date, j]));
+  // Rien n'est choisi d'avance ; seule une saisie rejouée après un échec l'est.
+  const rejoue = v?.creneau && jours.find((j) => j.creneaux.some((c) => c.iso === v.creneau));
+  const [jour, setJour] = useState<string | null>(rejoue ? rejoue.date : null);
+  const [creneau, setCreneau] = useState<string | null>(rejoue ? v!.creneau! : null);
+  const jourChoisi = jour ? (parDate.get(jour) ?? null) : null;
   const heureChoisie = jourChoisi?.creneaux.find((c) => c.iso === creneau)?.heure ?? null;
 
   const champ =
@@ -70,7 +114,7 @@ export function RendezVousForm({
   }
 
   return (
-    <form ref={formRef} action={formAction} className="grid gap-6 lg:grid-cols-[1.15fr_1fr] lg:items-start">
+    <form ref={formRef} action={formAction} className="grid gap-6 lg:grid-cols-[1fr_1fr] lg:items-start">
       <input type="hidden" name="creneau" value={creneau ?? ""} />
 
       <div className="carte min-w-0 space-y-5 p-6">
@@ -85,30 +129,50 @@ export function RendezVousForm({
         ) : (
           <>
             <fieldset className="min-w-0">
-              <legend className={etiquette}>Le jour</legend>
-              <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
-                {jours.map((j) => {
-                  const actif = j.date === jour;
-                  const date = new Date(`${j.date}T12:00:00Z`);
+              <div className="flex items-baseline justify-between gap-3">
+                <legend className={etiquette}>Le jour</legend>
+                <span className="text-sm capitalize text-slate-300">{titreDuCalendrier(periode)}</span>
+              </div>
+              <div className="mt-3 grid grid-cols-7 gap-1 text-center" role="grid" aria-label="Calendrier des créneaux">
+                {ENTETES.map((h, i) => (
+                  <span key={i} className="text-xs font-medium text-slate-500" aria-hidden="true">
+                    {h}
+                  </span>
+                ))}
+                {casesDuCalendrier(periode).map((c) => {
+                  const j = c.horsPeriode ? undefined : parDate.get(c.date);
+                  const actif = c.date === jour;
+                  const etiquetteJour = c.premierDuMois ? `${c.numero} ${moisCourt.format(aMidi(c.date))}` : String(c.numero);
+                  if (!j) {
+                    return (
+                      <span
+                        key={c.date}
+                        className={`flex h-10 items-center justify-center rounded-lg text-sm tabular-nums ${
+                          c.horsPeriode ? "text-slate-700" : "text-slate-600 line-through decoration-slate-700"
+                        }`}
+                        aria-hidden="true"
+                      >
+                        {etiquetteJour}
+                      </span>
+                    );
+                  }
                   return (
                     <button
-                      key={j.date}
+                      key={c.date}
                       type="button"
                       onClick={() => {
-                        setJour(j.date);
+                        setJour(c.date);
                         setCreneau(null);
                       }}
                       aria-pressed={actif}
                       aria-label={`${j.libelle}, ${j.creneaux.length} créneaux`}
-                      className={`flex min-w-[4.25rem] shrink-0 flex-col items-center rounded-xl border px-2 py-2 transition ${
+                      className={`flex h-10 items-center justify-center rounded-lg border text-sm font-semibold tabular-nums transition ${
                         actif
-                          ? "border-amber-400/60 bg-amber-950/20 text-slate-100"
-                          : "border-white/10 bg-slate-950 text-slate-400 hover:border-white/25"
+                          ? "border-amber-400/70 bg-amber-950/30 text-amber-100"
+                          : "border-white/10 bg-slate-950 text-slate-100 hover:border-amber-400/40"
                       }`}
                     >
-                      <span className="text-xs uppercase tracking-wide">{jourCourt.format(date)}</span>
-                      <span className="text-xl font-semibold tabular-nums">{numeroDuJour.format(date)}</span>
-                      <span className="text-xs text-slate-500">{j.creneaux.length} libres</span>
+                      {etiquetteJour}
                     </button>
                   );
                 })}
@@ -139,7 +203,9 @@ export function RendezVousForm({
                   })}
                 </div>
               </fieldset>
-            ) : null}
+            ) : (
+              <p className="text-sm text-slate-400">Choisissez un jour : ses heures libres s&apos;affichent ici.</p>
+            )}
 
             <p className="border-t border-white/10 pt-3 text-xs leading-relaxed text-slate-500">
               Heure de Paris. Un appel dure {DUREE_MINUTES} minutes ; les créneaux se règlent sur

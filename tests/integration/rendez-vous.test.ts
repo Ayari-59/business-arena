@@ -58,6 +58,7 @@ describe("rendez-vous téléphonique, sans agenda", () => {
   it("propose des créneaux ; une réservation retire le sien ; le même créneau se refuse ensuite", async () => {
     const avant = await creneauxProposes(now, sansAgenda);
     expect(avant.source).toBe("local");
+    expect(avant.periode).toEqual({ debut: "2026-09-16", fin: "2026-10-07" });
     const premier = avant.jours[0]!.creneaux[0]!;
 
     const rdv = await reserverRendezVous(demande(new Date(premier.iso)), now, sansAgenda);

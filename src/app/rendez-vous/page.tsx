@@ -35,7 +35,7 @@ const ETAPES = [
 ];
 
 export default async function RendezVousPage() {
-  const { jours, source } = await creneauxProposes();
+  const { jours, periode, source } = await creneauxProposes();
   if (source === "local") {
     // Visible dans les journaux de l'hébergeur, pas pour le visiteur.
     console.warn("[rendez-vous] agenda non consulté, plages ouvertes seules");
@@ -62,7 +62,7 @@ export default async function RendezVousPage() {
       </ol>
 
       <div className="mt-10">
-        <RendezVousForm jours={jours} />
+        <RendezVousForm jours={jours} periode={periode} />
       </div>
 
       <p className="mt-10 text-xs leading-relaxed text-slate-600">
