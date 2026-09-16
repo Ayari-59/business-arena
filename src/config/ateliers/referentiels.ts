@@ -41,6 +41,18 @@ export interface Referentiel {
   entrees: readonly string[];
 }
 
+const REFERENTIEL_NDRC: Referentiel = {
+  label: "Blocs de compétences",
+  accord: "mobilisés",
+  source:
+    "Référentiel du BTS Négociation et digitalisation de la relation client. Lu sur le texte.",
+  entrees: [
+    "Bloc 1 · Relation client et négociation-vente",
+    "Bloc 2 · Relation client à distance et digitalisation",
+    "Bloc 3 · Relation client et animation de réseaux",
+  ],
+};
+
 export const REFERENTIELS: Record<string, Referentiel> = {
   mco: {
     label: "Blocs de compétences",
@@ -54,17 +66,9 @@ export const REFERENTIELS: Record<string, Referentiel> = {
       "Bloc 4 · Manager l'équipe commerciale",
     ],
   },
-  ndrc: {
-    label: "Blocs de compétences",
-    accord: "mobilisés",
-    source:
-      "Référentiel du BTS Négociation et digitalisation de la relation client. Lu sur le texte.",
-    entrees: [
-      "Bloc 1 · Relation client et négociation-vente",
-      "Bloc 2 · Relation client à distance et digitalisation",
-      "Bloc 3 · Relation client et animation de réseaux",
-    ],
-  },
+  ndrc: REFERENTIEL_NDRC,
+  // L'atelier de deuxième année du même diplôme se confronte au même texte.
+  fitness: REFERENTIEL_NDRC,
   cg1: {
     label: "Processus",
     accord: "mobilisés",
@@ -139,12 +143,13 @@ export const REFERENTIELS: Record<string, Referentiel> = {
 /**
  * Les diplômes dont la liste n'a pas encore été confrontée à son texte.
  *
- * Le BTS MHR et le BUT GEA y figurent : leurs animations sont publiées, mais
- * leurs blocs n'ont pas encore été relus sur le texte, et cela doit se voir
+ * Le BTS MHR, sur ses deux ateliers, et le BUT GEA y figurent : leurs
+ * animations sont publiées, mais leurs blocs n'ont pas encore été relus sur le
+ * texte, et cela doit se voir
  * plutôt que de se confondre avec les diplômes dont le référentiel a été lu. Ce
  * n'est pas un état définitif : le jour où l'on ouvre le texte de l'un, il
  * rejoint REFERENTIELS et sort d'ici. C'est précisément à cela que sert cette
  * liste. (Les animations transversales, découverte et approfondissement, ne
  * s'adossent à aucun diplôme : elles n'ont donc rien à faire ici.)
  */
-export const REFERENTIELS_NON_VERIFIES = ["mhr", "gea"] as const;
+export const REFERENTIELS_NON_VERIFIES = ["mhr", "bistrot", "gea"] as const;

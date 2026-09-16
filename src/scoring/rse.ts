@@ -114,20 +114,20 @@ function social(r: CompanyRoundResult, notes: string[]): RsePillar {
  * GOUVERNANCE : transparence (un plan de trésorerie accompagne-t-il les
  * décisions ?), fiabilité de ce plan, et prudence financière (une crise de
  * trésorerie caractérisée est un défaut de pilotage).
+ *
+ * Le dépôt du plan est un bonus, jamais un malus : le formulaire de décision
+ * ne propose plus ce panneau, une équipe ne peut donc pas être pénalisée pour
+ * ne pas l'avoir rempli. Sans plan, le pilier n'est évalué que par la prudence
+ * financière.
  */
 function governance(r: CompanyRoundResult, notes: string[]): RsePillar {
   let score = 50;
   let evaluated = false;
 
-  if (r.bank) {
+  if (r.bank?.planFiled) {
     evaluated = true;
-    if (r.bank.planFiled) {
-      score += 15;
-      if (r.bank.reliability !== null) score += clamp(r.bank.reliability * 20, 0, 20);
-    } else {
-      score -= 10;
-      notes.push("Plan de trésorerie non déposé");
-    }
+    score += 15;
+    if (r.bank.reliability !== null) score += clamp(r.bank.reliability * 20, 0, 20);
   }
 
   if (r.treasury?.crisis) {

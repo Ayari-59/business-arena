@@ -1,9 +1,11 @@
 import { ATELIER_AVANCE } from "./avance";
+import { ATELIER_BISTROT } from "./bistrot";
 import { ATELIER_CG1 } from "./cg1";
 import { ATELIER_MCO } from "./mco";
 import { ATELIER_DCG } from "./dcg";
 import { ATELIER_DCG_RSE } from "./dcg-rse";
 import { ATELIER_DEBUTANT } from "./debutant";
+import { ATELIER_FITNESS } from "./fitness";
 import { ATELIER_GEA } from "./gea";
 import { ATELIER_GPME } from "./gpme";
 import { ATELIER_MHR } from "./mhr";
@@ -27,8 +29,10 @@ export const ATELIERS: readonly AtelierDefinition[] = [
   ATELIER_CG1,
   ATELIER_MCO,
   ATELIER_NDRC,
+  ATELIER_FITNESS,
   ATELIER_GPME,
   ATELIER_MHR,
+  ATELIER_BISTROT,
   ATELIER_GEA,
   ATELIER_DCG,
   ATELIER_DCG_RSE,

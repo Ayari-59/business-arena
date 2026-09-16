@@ -192,12 +192,82 @@ export const ATELIER_DCG: AtelierDefinition = {
     },
     {
       numero: 3,
-      titre: "Budget et analyse des écarts",
+      titre: "Investir et financer",
       dureeMinutes: 180,
       tourJoue: 3,
+      processus: ["UE6 · Finance d'entreprise", "UE11 · Contrôle de gestion"],
+      objectif:
+        "Décider d'un investissement de capacité, choisir son financement, et construire le budget du trimestre qui s'ouvre avec l'investissement dedans : ses effets arrivent au trimestre suivant, et c'est là qu'on les mesurera.",
+      competences: [
+        "J'évalue un projet d'investissement à partir des flux qu'il génère et non de son coût seul.",
+        "Je compare des modes de financement sur leur coût et sur ce qu'ils font à la structure du bilan.",
+        "Je construis un plan de trésorerie et un budget de trimestre dont j'écris les hypothèses avant de connaître le réel.",
+      ],
+      notions: [
+        "flux de trésorerie d'un projet",
+        "capacité d'autofinancement",
+        "structure de financement",
+        "effet de levier financier",
+        "plan de trésorerie",
+      ],
+      preparation:
+        "Vérifiez que le niveau de la partie ouvre bien l'investissement et le placement, sans quoi la séance perd son support. Rappelez aux équipes que la banque du jeu ne prête pas au-delà de deux fois les capitaux propres : c'est cette limite, et non la qualité de leurs prévisions, qui décidera de ce qu'elles pourront financer. Le jeu vend une étude de projet à 1 200 € qui donne la VAN et le TRI de l'investissement envisagé : faites-la acheter par au moins une équipe. L'apport en capital est plafonné à 100 000 € sur la partie, et l'emprunt par le rapport entre dettes et capitaux propres. Une capacité achetée ce trimestre n'entre en service qu'au suivant : dites-le avant que les équipes ne décident, sinon elles chercheront l'effet au mauvais endroit.",
+      deroule: [
+        {
+          minutes: 15,
+          titre: "Retour sur le trimestre",
+          detail:
+            "Chaque équipe confronte la prévision de résultat déposée à la séance précédente et le réel obtenu, en une phrase, sans décomposer encore.",
+        },
+        {
+          minutes: 45,
+          titre: "Le projet",
+          detail:
+            "L'équipe évalue l'investissement de capacité par les flux qu'il génère, en écrivant ses hypothèses de volume et de prix. Le coût d'acquisition ne suffit jamais à décider, et les flux commencent au trimestre suivant, pas à celui-ci.",
+        },
+        {
+          minutes: 35,
+          titre: "Comment le financer",
+          detail:
+            "L'équipe compare l'autofinancement, l'emprunt et le renforcement des capitaux, sur leur coût et sur ce qu'ils font au bilan. L'effet de levier se discute ici avec des chiffres, pas en principe.",
+        },
+        {
+          minutes: 30,
+          titre: "Plan de trésorerie, budget et décisions",
+          detail:
+            "L'équipe construit son plan dans le cockpit, écrit le budget du trimestre qui s'ouvre avec ses hypothèses de volume, de prix et de coûts, puis prend ses décisions. Le plan n'est pas déposé dans le jeu : il sert à voir venir le point de tension, et c'est le rapport entre dette et capitaux propres qui bornera l'emprunt. Le budget, lui, sera confronté au réel à la séance suivante.",
+        },
+        {
+          minutes: 20,
+          titre: "Clôture et résultats",
+          detail:
+            "Vous clôturez. Chaque équipe lit ce que la banque lui a réellement consenti, et le compare à ce que son plan annonçait. La capacité achetée n'apparaît pas encore dans les volumes : elle entre en service au trimestre suivant.",
+        },
+        {
+          minutes: 35,
+          titre: "Débriefing",
+          detail:
+            "On compare les projets financés et ceux qui ne l'ont pas été, et surtout par quoi. L'équipe qui a tout financé par emprunt bute sur le plafond de la banque quand la suivante, qui a renforcé ses capitaux propres, peut encore emprunter : l'effet de levier a ses deux faces, et la leçon est difficile à faire passer autrement.",
+        },
+      ],
+      livrable:
+        "Le dossier d'investissement : l'évaluation du projet par ses flux avec hypothèses écrites, la comparaison des modes de financement, le plan de trésorerie du cockpit, le budget du trimestre qui s'ouvre, et les conditions bancaires obtenues avec leur explication.",
+      tracePasseport:
+        "J'ai évalué un projet d'investissement par ses flux, comparé des modes de financement et défendu un plan de trésorerie devant un prêteur.",
+      evaluation: [
+        "Le projet est évalué par ses flux, jamais par son seul coût d'acquisition.",
+        "Les modes de financement sont comparés sur le coût et sur la structure du bilan.",
+        "Les conditions bancaires obtenues sont expliquées par la tenue de la trésorerie des trimestres précédents, pas subies.",
+      ],
+    },
+    {
+      numero: 4,
+      titre: "Budget et analyse des écarts",
+      dureeMinutes: 180,
+      tourJoue: 4,
       processus: ["UE11 · Contrôle de gestion"],
       objectif:
-        "Construire un budget du trimestre, puis décomposer l'écart constaté entre ce qui relève du prix, du volume et des coûts.",
+        "Décomposer l'écart constaté entre le budget construit à la séance précédente et le réel, entre ce qui relève du prix, du volume et des coûts, puis budgéter le dernier trimestre avec la capacité nouvelle dedans.",
       competences: [
         "Je construis un budget de trimestre à partir des exercices écoulés et d'hypothèses que je nomme.",
         "Je décompose un écart global en écart sur prix, sur volume et sur coûts.",
@@ -211,13 +281,13 @@ export const ATELIER_DCG: AtelierDefinition = {
         "hypothèse budgétaire",
       ],
       preparation:
-        "C'est la séance centrale de l'atelier et la plus exigeante. Préparez la trame de décomposition des écarts et prévoyez d'y consacrer tout le temps annoncé. Les équipes auront besoin de leur prévision écrite à la séance précédente : vérifiez qu'elles l'ont conservée.",
+        "C'est la séance centrale de l'atelier et la plus exigeante. Préparez la trame de décomposition des écarts et prévoyez d'y consacrer tout le temps annoncé. Les équipes auront besoin du budget écrit à la séance précédente : vérifiez qu'elles l'ont conservé. C'est aussi le trimestre où la capacité achetée entre en service : l'écart sur volume portera sa marque, et une équipe qui l'a budgétée au prix de l'ancien outil se trompera d'explication.",
       deroule: [
         {
           minutes: 15,
           titre: "Prévision contre réel",
           detail:
-            "Chaque équipe affiche l'écart brut entre la prévision déposée au trimestre précédent et le résultat obtenu. Personne ne commente encore.",
+            "Chaque équipe affiche l'écart brut entre le budget construit à la séance précédente et le résultat obtenu. Personne ne commente encore.",
         },
         {
           minutes: 50,
@@ -233,15 +303,15 @@ export const ATELIER_DCG: AtelierDefinition = {
         },
         {
           minutes: 30,
-          titre: "Budget du trimestre suivant et décisions",
+          titre: "Budget du dernier trimestre et décisions",
           detail:
-            "L'équipe construit le budget du trimestre qui s'ouvre, en écrivant ses hypothèses, puis saisit ses décisions.",
+            "L'équipe construit le budget du trimestre qui s'ouvre, en écrivant ses hypothèses, la capacité nouvelle comprise, puis saisit ses décisions.",
         },
         {
           minutes: 20,
           titre: "Clôture et résultats",
           detail:
-            "Vous clôturez. Le budget qui vient d'être construit sera confronté au réel à la séance suivante.",
+            "Vous clôturez le dernier trimestre joué. Le budget qui vient d'être construit est confronté au réel séance tenante, et l'investissement décidé à la séance précédente livre enfin ses volumes : c'est cet écart-là que le rapport de gestion devra expliquer.",
         },
         {
           minutes: 35,
@@ -251,83 +321,13 @@ export const ATELIER_DCG: AtelierDefinition = {
         },
       ],
       livrable:
-        "Le dossier budgétaire : le budget du trimestre écoulé avec ses hypothèses, la décomposition de l'écart en trois composantes vérifiée par leur somme, l'imputation de chacune, et le budget du trimestre suivant.",
+        "Le dossier budgétaire : le budget du trimestre écoulé avec ses hypothèses, la décomposition de l'écart en trois composantes vérifiée par leur somme, l'imputation de chacune, et le budget du dernier trimestre avec la capacité nouvelle.",
       tracePasseport:
         "J'ai décomposé l'écart entre un budget que j'avais construit et le réel, en distinguant ce qui relevait de mes décisions de ce qui relevait du marché.",
       evaluation: [
         "La somme des trois écarts retombe sur l'écart global, et le contrôle est montré.",
         "Les hypothèses du budget sont écrites avant la clôture, donc opposables.",
         "L'imputation entre décision et marché est argumentée, pas commode.",
-      ],
-    },
-    {
-      numero: 4,
-      titre: "Investir et financer",
-      dureeMinutes: 180,
-      tourJoue: 4,
-      processus: ["UE6 · Finance d'entreprise", "UE11 · Contrôle de gestion"],
-      objectif:
-        "Décider d'un investissement de capacité, choisir son financement, et déposer devant la banque un plan que les écarts des trimestres précédents rendent crédible ou non.",
-      competences: [
-        "J'évalue un projet d'investissement à partir des flux qu'il génère et non de son coût seul.",
-        "Je compare des modes de financement sur leur coût et sur ce qu'ils font à la structure du bilan.",
-        "Je construis un plan de trésorerie, et j'assume l'écart entre ce que j'avais prévu et ce que le trimestre a donné.",
-      ],
-      notions: [
-        "flux de trésorerie d'un projet",
-        "capacité d'autofinancement",
-        "structure de financement",
-        "effet de levier financier",
-        "plan de trésorerie",
-      ],
-      preparation:
-        "Vérifiez que le niveau de la partie ouvre bien l'investissement et le placement, sans quoi la séance perd son support. Rappelez aux équipes que la banque du jeu ne prête pas au-delà de deux fois les capitaux propres : c'est cette limite, et non la qualité de leurs prévisions, qui décidera de ce qu'elles pourront financer. Le jeu vend une étude de projet à 1 200 € qui donne la VAN et le TRI de l'investissement envisagé : faites-la acheter par au moins une équipe. L'apport en capital est plafonné à 100 000 € sur la partie, et l'emprunt par le rapport entre dettes et capitaux propres.",
-      deroule: [
-        {
-          minutes: 15,
-          titre: "L'écart du trimestre",
-          detail:
-            "Chaque équipe confronte le budget construit à la séance précédente et le réel, sans refaire la décomposition complète.",
-        },
-        {
-          minutes: 45,
-          titre: "Le projet",
-          detail:
-            "L'équipe évalue l'investissement de capacité par les flux qu'il génère, en écrivant ses hypothèses de volume et de prix. Le coût d'acquisition ne suffit jamais à décider.",
-        },
-        {
-          minutes: 35,
-          titre: "Comment le financer",
-          detail:
-            "L'équipe compare l'autofinancement, l'emprunt et le renforcement des capitaux, sur leur coût et sur ce qu'ils font au bilan. L'effet de levier se discute ici avec des chiffres, pas en principe.",
-        },
-        {
-          minutes: 30,
-          titre: "Plan de trésorerie et décisions",
-          detail:
-            "L'équipe construit son plan dans le cockpit, puis prend ses décisions du trimestre. Le plan n'est pas déposé dans le jeu : il sert à voir venir le point de tension, et c'est le rapport entre dette et capitaux propres qui bornera l'emprunt.",
-        },
-        {
-          minutes: 20,
-          titre: "Clôture et résultats",
-          detail:
-            "Vous clôturez le dernier trimestre joué. Chaque équipe lit ce que la banque lui a réellement consenti, et le compare à ce que son plan annonçait.",
-        },
-        {
-          minutes: 35,
-          titre: "Débriefing",
-          detail:
-            "On compare les projets financés et ceux qui ne l'ont pas été, et surtout par quoi. L'équipe qui a tout financé par emprunt bute sur le plafond de la banque quand la suivante, qui a renforcé ses capitaux propres, peut encore emprunter : l'effet de levier a ses deux faces, et la leçon est difficile à faire passer autrement.",
-        },
-      ],
-      livrable:
-        "Le dossier d'investissement : l'évaluation du projet par ses flux avec hypothèses écrites, la comparaison des modes de financement, le plan de trésorerie du cockpit, et les conditions bancaires obtenues avec leur explication.",
-      tracePasseport:
-        "J'ai évalué un projet d'investissement par ses flux, comparé des modes de financement et défendu un plan de trésorerie devant un prêteur.",
-      evaluation: [
-        "Le projet est évalué par ses flux, jamais par son seul coût d'acquisition.",
-        "Les modes de financement sont comparés sur le coût et sur la structure du bilan.",
-        "Les conditions bancaires obtenues sont expliquées par la tenue de la trésorerie des trimestres précédents, pas subies.",
       ],
     },
     {

@@ -166,9 +166,8 @@ export default function EnseignantsPage() {
         </div>
         <p className="mx-auto mt-6 max-w-2xl text-center text-xs leading-relaxed text-slate-500">
           Chaque atelier cite les unités ou blocs de son référentiel avec la provenance de la
-          liste. Deux d&apos;entre eux ({REFERENTIELS_NON_VERIFIES.length} référentiels : BTS MHR et
-          BUT GEA) restent à confronter à leur texte officiel, et l&apos;indiquent plutôt que de le
-          taire.
+          liste. {REFERENTIELS_NON_VERIFIES.length} d&apos;entre eux (BTS MHR et BUT GEA) restent à
+          confronter à leur texte officiel, et l&apos;indiquent plutôt que de le taire.
         </p>
       </section>
 

@@ -209,11 +209,11 @@ export const ATELIER_MHR: AtelierDefinition = {
         "Bloc 3 · Gérer l'offre commerciale et la relation client",
       ],
       objectif:
-        "Tirer le meilleur de la saison où la demande dépasse la capacité : monter les tarifs sans faire fuir, choisir les clientèles à servir en priorité.",
+        "Tirer le meilleur d'une saison qui change la nature de la demande plus que son volume : les touristes de loisirs doublent, la clientèle affaires se retire à moitié et les groupes disparaissent. Fixer le tarif pour une clientèle qui n'a ni la même sensibilité au prix ni le même délai de règlement que celle des trimestres joués.",
       competences: [
-        "J'anticipe un afflux de demande à partir de la saisonnalité et de mes trimestres précédents.",
-        "Je fixe un tarif de haute saison qui capte la demande sans la casser.",
-        "J'arbitre entre des clientèles quand la capacité ne permet pas de toutes les accueillir.",
+        "J'anticipe une bascule de clientèles à partir de la saisonnalité de chaque segment et de mes trimestres précédents.",
+        "Je fixe un tarif de haute saison adapté à la clientèle qui domine, sans transposer celui qui convenait à la clientèle d'avant.",
+        "Je relie le mix de clientèles du trimestre à son encaissement : qui paie comptant, qui paie à trente ou quarante-cinq jours.",
       ],
       notions: [
         "saisonnalité de la demande",
@@ -223,25 +223,25 @@ export const ATELIER_MHR: AtelierDefinition = {
         "revenu par chambre disponible",
       ],
       preparation:
-        "C'est la séance qui décide de l'exercice : prévoyez d'y consacrer la totalité du temps annoncé. Préparez la fiche de plan de saison, où l'équipe écrira son tarif et sa clientèle prioritaire AVANT de connaître le résultat.",
+        "C'est la séance qui décide de l'exercice : prévoyez d'y consacrer la totalité du temps annoncé. Préparez la fiche de plan de saison, où l'équipe écrira son tarif et sa clientèle attendue AVANT de connaître le résultat. Relisez les coefficients de saison du scénario : au troisième trimestre, les loisirs sont à deux fois leur niveau, les affaires à la moitié, les groupes presque à rien, et la demande totale ne dépasse la capacité que de peu. Les loisirs sont la clientèle la plus sensible au prix de l'hôtel, et ils règlent comptant : la caisse se remplit ce trimestre, puis les affaires et les groupes reviennent au suivant en payant à trente et quarante-cinq jours.",
       deroule: [
         {
           minutes: 15,
           titre: "Ce que dit la saison",
           detail:
-            "Vous rappelez sans donner de chiffre que le trimestre qui s'ouvre n'est pas un trimestre ordinaire. Les équipes retrouvent seules l'ampleur de l'afflux dans les informations du jeu.",
+            "Vous rappelez sans donner de chiffre que le trimestre qui s'ouvre n'est pas un trimestre ordinaire, et que ce ne sont pas les mêmes clients qui frappent à la porte. Les équipes retrouvent seules, dans les informations du jeu, qui vient et qui ne vient plus.",
         },
         {
           minutes: 40,
           titre: "Plan de haute saison",
           detail:
-            "Chaque équipe construit son plan à partir de ses trimestres joués et du coefficient de saison : le tarif qu'elle affichera, et la clientèle qu'elle servira en premier si les chambres manquent. Rien n'est saisi à ce stade.",
+            "Chaque équipe construit son plan à partir de ses trimestres joués et des coefficients de saison de chaque clientèle : le mix attendu, le tarif qu'elle affichera pour une clientèle de loisirs plus sensible au prix que celle des affaires, et ce que ce mix change à ses encaissements. Rien n'est saisi à ce stade.",
         },
         {
           minutes: 30,
           titre: "Les deux erreurs de saison",
           detail:
-            "L'équipe chiffre les deux fautes possibles : un tarif trop bas qui remplit sans profiter de la rareté, un tarif trop haut qui laisse des chambres vides un trimestre où tout se vend. Puis elle choisit de quel côté elle prend le risque. La commande exceptionnelle, quand elle tombe, est le seul vrai arbitrage entre clientèles : un allotement de tour-opérateur payé comptant à bas prix, ou un congrès mieux payé mais réglé à soixante jours.",
+            "L'équipe chiffre les deux fautes possibles : reconduire le tarif qui convenait aux affaires, que les touristes ne paieront pas, ou brader pour remplir alors que la demande couvre déjà presque la capacité. Puis elle choisit de quel côté elle prend le risque. La commande exceptionnelle, quand elle tombe, est le vrai arbitrage entre clientèles : un allotement de tour-opérateur payé comptant à bas prix, ou un congrès mieux payé mais réglé à soixante jours.",
         },
         {
           minutes: 30,
@@ -253,23 +253,23 @@ export const ATELIER_MHR: AtelierDefinition = {
           minutes: 20,
           titre: "Clôture et résultats",
           detail:
-            "Vous clôturez le trimestre de la haute saison. Les écarts entre équipes sont ici les plus larges de tout l'atelier.",
+            "Vous clôturez le trimestre de la haute saison. Les écarts entre équipes sont ici les plus larges de tout l'atelier, et la caisse de chacune reflète une clientèle qui a payé comptant.",
         },
         {
           minutes: 45,
           titre: "Débriefing",
           detail:
-            "Chaque équipe compare son plan et son résultat. La question finale : celle qui a le plus rempli est-elle celle qui a le mieux valorisé sa saison.",
+            "Chaque équipe compare son plan et son résultat. La question finale : celle qui a le plus rempli est-elle celle qui a le mieux valorisé sa saison, et que reste-t-il en caisse pour aborder le trimestre où les affaires reviennent en payant à trente jours.",
         },
       ],
       livrable:
-        "La fiche de plan de saison : le tarif de haute saison et son raisonnement, la clientèle servie en priorité, les deux erreurs chiffrées, le risque choisi, et l'écart constaté après clôture.",
+        "La fiche de plan de saison : le mix de clientèles attendu, le tarif de haute saison et son raisonnement, les deux erreurs chiffrées, le risque choisi, l'encaissement attendu du trimestre, et l'écart constaté après clôture.",
       tracePasseport:
-        "J'ai bâti un plan de haute saison en arbitrant entre des clientèles sous contrainte de capacité, puis analysé mon écart au résultat.",
+        "J'ai bâti un plan de haute saison pour une clientèle qui changeait de nature, en tarifant pour elle et non pour celle des trimestres joués, puis analysé mon écart au résultat.",
       evaluation: [
-        "Le plan est construit sur les trimestres joués, pas sur une intuition.",
+        "Le plan est construit sur les trimestres joués et les coefficients de saison de chaque clientèle, pas sur une intuition.",
         "Les deux erreurs de saison sont chiffrées, pas seulement décrites.",
-        "L'arbitrage entre clientèles est justifié par la capacité, pas par la préférence.",
+        "Le tarif est justifié par la clientèle qui domine le trimestre, pas par celle d'avant.",
       ],
     },
     {
@@ -314,7 +314,7 @@ export const ATELIER_MHR: AtelierDefinition = {
           minutes: 30,
           titre: "Couvrir le besoin",
           detail:
-            "L'équipe décide comment elle passe le creux : tarif d'appel pour capter la clientèle disponible, couverture du découvert, arbitrage des dépenses non essentielles. Chaque option porte son coût.",
+            "L'équipe décide comment elle passe le creux : tarif d'appel pour capter la clientèle disponible, couverture du découvert, arbitrage des dépenses non essentielles. L'assurance se décide ici aussi : la multirisque hôtelière à 2 200 € le trimestre ne couvre que le dégât des eaux, la formule avec perte d'exploitation à 5 000 € y ajoute la panne de chaudière, qui retire un cinquième des chambres pour un trimestre. Chaque option porte son coût, et un sinistre non couvert dans un trimestre creux est la faute la plus chère de l'atelier.",
         },
         {
           minutes: 30,

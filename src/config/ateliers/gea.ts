@@ -63,11 +63,11 @@ export const ATELIER_GEA: AtelierDefinition = {
         "Bloc 2 · Établir et lire les documents de synthèse",
       ],
       objectif:
-        "Reconstituer le coût de revient d'un produit à partir des charges de l'entreprise, en distinguer les charges fixes des variables, et en tirer une marge.",
+        "Reconstituer le coût de revient de chaque enceinte de la gamme à partir des charges de l'entreprise, en distinguer les charges fixes des variables, et en tirer une marge par référence, puis un seuil de rentabilité qui dépend du mix vendu.",
       competences: [
         "Je distingue les charges fixes des charges variables dans les comptes d'une entreprise.",
-        "Je calcule un coût de revient unitaire et la marge qu'un prix de vente en dégage.",
-        "Je détermine le volume de production qui absorbe les charges fixes du trimestre.",
+        "Je calcule un coût de revient unitaire par référence et la marge qu'un prix de vente en dégage.",
+        "Je détermine le volume de production qui absorbe les charges fixes du trimestre, au mix que je prévois de vendre.",
       ],
       notions: [
         "charges fixes et charges variables",
@@ -77,7 +77,7 @@ export const ATELIER_GEA: AtelierDefinition = {
         "compte de résultat",
       ],
       preparation:
-        "Créez la partie avec les réglages ci-dessus et notez le code d'invitation. Constituez les équipes de trois : une responsable des coûts, une de la production, une du suivi. Imprimez la fiche de coût de revient vierge, une par équipe. Prévoyez que cette première séance se passe sans aucune correction de votre part.",
+        "Créez la partie avec les réglages ci-dessus et notez le code d'invitation. Constituez les équipes de trois : une responsable des coûts, une de la production, une du suivi. Imprimez la fiche de coût de revient vierge, une par équipe, avec une colonne par enceinte : la Go de poche, la One qui a fait la marque, et la Studio, qui n'existe qu'en prototype et demande 25 000 € de recherche avant de se vendre, au plus tôt au deuxième trimestre. Les coûts variables vont du simple au plus du triple d'une référence à l'autre, et la marge unitaire de la Studio vaut près de quatre fois celle de la Go : c'est ce que la fiche doit faire apparaître. Prévoyez que cette première séance se passe sans aucune correction de votre part.",
       deroule: [
         {
           minutes: 15,
@@ -89,19 +89,19 @@ export const ATELIER_GEA: AtelierDefinition = {
           minutes: 35,
           titre: "Lire les charges",
           detail:
-            "Chaque équipe relève ce que l'entreprise dépense pour produire, ce qui reste dû, et ce que coûte un trimestre d'activité que la chaîne tourne ou non.",
+            "Chaque équipe relève ce que l'entreprise dépense pour produire chaque enceinte, ce qui reste dû, et ce que coûte un trimestre d'activité que la chaîne tourne ou non. Les charges fixes sont communes aux références : personne ne les ventile encore.",
         },
         {
           minutes: 35,
           titre: "Du coût à la marge",
           detail:
-            "L'équipe calcule son coût de revient unitaire, sa marge sur coût variable, puis le volume à produire pour couvrir ses charges fixes. Vous circulez sans corriger : une équipe qui oublie une charge dans son coût le découvrira dans son résultat.",
+            "L'équipe calcule le coût de revient unitaire et la marge sur coût variable de chaque enceinte, puis le volume à produire pour couvrir ses charges fixes au mix qu'elle prévoit : la même structure s'absorbe avec bien moins de Studio que de Go. Vous circulez sans corriger : une équipe qui oublie une charge dans son coût le découvrira dans son résultat.",
         },
         {
           minutes: 35,
           titre: "Premier arbitrage et décisions",
           detail:
-            "L'arène pose au premier trimestre un arbitrage à deux issues, chacune avec ce qu'elle rapporte et ce qu'elle coûte. L'équipe tranche, motive son choix en trois lignes, puis saisit son volume et son prix.",
+            "L'arène pose au premier trimestre un arbitrage à deux issues, chacune avec ce qu'elle rapporte et ce qu'elle coûte. S'y ajoute la question de la Studio : engager sa recherche maintenant, pour une enceinte qui ne rapportera rien avant d'être en vente, ou attendre. L'équipe tranche, motive son choix en trois lignes, puis saisit un volume et un prix par référence.",
         },
         {
           minutes: 20,
@@ -113,17 +113,17 @@ export const ATELIER_GEA: AtelierDefinition = {
           minutes: 40,
           titre: "Débriefing",
           detail:
-            "Deux équipes présentent leur coût de revient et le confrontent à leur résultat réel. Vous ne dites pas qui a raison : vous affichez les deux comptes de résultat côte à côte.",
+            "Deux équipes présentent leurs coûts de revient par enceinte et les confrontent à leur résultat réel. Vous ne dites pas qui a raison : vous affichez les deux comptes de résultat côte à côte, et vous faites remarquer qu'à chiffre d'affaires égal, le mix vendu a fait la différence.",
         },
       ],
       livrable:
-        "La fiche de coût de revient, une page : charges fixes et variables séparées, coût de revient unitaire, marge sur coût variable, volume au seuil, et le positionnement retenu avec sa justification.",
+        "La fiche de coût de revient, une page : charges fixes et variables séparées, coût de revient unitaire et marge sur coût variable par enceinte, volume au seuil au mix prévu, la décision prise sur la recherche de la Studio, et le positionnement retenu avec sa justification.",
       tracePasseport:
-        "J'ai tiré la marge et le seuil de rentabilité d'une entreprise du coût de revient que j'avais reconstitué.",
+        "J'ai tiré la marge de chaque référence et le seuil de rentabilité d'une entreprise des coûts de revient que j'avais reconstitués.",
       evaluation: [
         "Les charges fixes et variables sont séparées, et pas mélangées.",
         "Le seuil est exprimé en volume à produire, pas seulement en euros.",
-        "La marge annoncée découle du coût de revient calculé, pas d'une estimation.",
+        "La marge annoncée découle du coût de revient calculé, référence par référence, pas d'une estimation.",
       ],
     },
     {
@@ -201,7 +201,7 @@ export const ATELIER_GEA: AtelierDefinition = {
     },
     {
       numero: 3,
-      titre: "Arbitrer un investissement de capacité",
+      titre: "Produire quoi, quand l'atelier est plein",
       dureeMinutes: 180,
       tourJoue: 3,
       processus: [
@@ -209,21 +209,21 @@ export const ATELIER_GEA: AtelierDefinition = {
         "Bloc 4 · Décider et rendre compte",
       ],
       objectif:
-        "Décider s'il faut investir pour augmenter la capacité avant la montée en charge annoncée, en pesant le coût de l'investissement contre le manque à gagner d'une capacité saturée.",
+        "Quand les plans de production additionnés dépassent ce que l'atelier peut sortir, choisir la référence à produire en priorité par sa marge rapportée à la capacité qu'elle consomme, puis décider s'il faut investir dans une ligne, en sachant qu'elle ne produira qu'au trimestre suivant.",
       competences: [
+        "Je classe les références d'une gamme par leur marge rapportée à l'unité de capacité qu'elles consomment quand cette capacité manque.",
         "J'évalue le manque à gagner d'une capacité de production saturée face à une demande qui monte.",
-        "Je compare le coût d'un investissement à la marge supplémentaire qu'il rend possible.",
-        "Je décide d'un investissement en assumant l'incertitude qui l'entoure.",
+        "Je compare le coût d'une ligne de production à la marge supplémentaire qu'elle rend possible, en tenant compte du trimestre de retard avant sa mise en service.",
       ],
       notions: [
         "capacité de production",
         "goulot d'étranglement",
+        "facteur rare et marge par unité de capacité",
         "investissement et amortissement",
-        "coût d'une capacité saturée",
         "retour sur investissement",
       ],
       preparation:
-        "Relisez la capacité de l'entreprise et la demande à venir décrites dans le scénario, pour animer le débat sans le trancher. Préparez au tableau une grille à deux colonnes, investir ou tenir la capacité, que les équipes rempliront en séance.",
+        "Relisez la capacité de l'entreprise et la demande à venir décrites dans le scénario, pour animer le débat sans le trancher. Au troisième trimestre, la demande dépasse ce que l'atelier produit : quand les plans par référence additionnés dépassent la capacité, le jeu les coupe tous dans la même proportion, et des clients repartent sans Studio comme sans Go. Le classement des références se fait par marge rapportée à la capacité consommée, et non par prix ni par volume : sur un atelier compté en enceintes, la Studio rapporte près de quatre fois plus qu'une Go pour la même place. Les lignes s'achètent typées, manuelle, semi-automatique ou automatisée, de 15 000 à 55 000 € pour 1 000 à 2 500 enceintes de capacité, et n'entrent en service qu'au trimestre suivant : une ligne achetée ce trimestre ne sauvera pas ce trimestre. Préparez au tableau une grille à trois colonnes, servir d'abord, investir, tenir, que les équipes rempliront en séance.",
       deroule: [
         {
           minutes: 20,
@@ -233,42 +233,42 @@ export const ATELIER_GEA: AtelierDefinition = {
         },
         {
           minutes: 40,
-          titre: "Ce que coûte une capacité saturée",
+          titre: "Le facteur rare",
           detail:
-            "Les équipes chiffrent la demande qui monte et la comparent à leur capacité actuelle. La part qu'elles ne pourront pas produire porte une marge perdue, qu'elles calculent.",
+            "Les équipes chiffrent la demande de chaque référence et la comparent à leur capacité actuelle. Elles classent les enceintes par marge rapportée à la place qu'elles prennent sur les lignes, servent la première jusqu'à épuiser sa demande, puis la suivante, et calculent la marge perdue sur ce qui reste. Une équipe qui laisse le jeu couper ses plans en proportion perd sur la Studio ce qu'elle garde sur la Go.",
         },
         {
           minutes: 30,
           titre: "Investir ou tenir",
           detail:
-            "Chaque équipe remplit la grille : le coût de l'investissement, la capacité qu'il ajoute, la marge qu'il rend possible, et le risque qu'il fasse défaut. Personne ne conclut à sa place.",
+            "Chaque équipe remplit la grille : le coût de la ligne, la capacité qu'elle ajoute, la marge qu'elle rendra possible à partir du trimestre suivant, et le risque qu'elle fasse défaut si la demande retombe. Personne ne conclut à sa place.",
         },
         {
           minutes: 30,
           titre: "Décisions du trimestre",
           detail:
-            "L'équipe arrête son investissement, son volume et son prix, et inscrit la marge supplémentaire qu'elle attend de sa décision.",
+            "L'équipe arrête ses volumes par référence dans l'ordre de son classement, ses prix, et son investissement, puis inscrit la marge qu'elle attend de sa décision et le trimestre où elle l'attend.",
         },
         {
           minutes: 20,
           titre: "Clôture et résultats",
           detail:
-            "Vous clôturez le trimestre. L'effet de l'investissement, sur la capacité comme sur la trésorerie, apparaît dans les résultats de chaque équipe.",
+            "Vous clôturez le trimestre. L'effet du classement des références apparaît dans les résultats de chaque équipe. Celui de l'investissement ne se lit encore que sur la trésorerie : la capacité, elle, arrive au trimestre suivant.",
         },
         {
           minutes: 40,
           titre: "Débriefing",
           detail:
-            "On compare les équipes qui ont investi et celles qui ont attendu. La question qui reste ouverte : le bon moment d'investir se juge-t-il avant ou après le pic.",
+            "On compare les équipes qui ont servi la Studio d'abord et celles qui ont laissé couper leurs plans, puis celles qui ont investi et celles qui ont attendu. La question qui reste ouverte : le bon moment d'investir se juge-t-il avant ou après le pic, sachant que la ligne arrive un trimestre après la décision.",
         },
       ],
       livrable:
-        "La note d'investissement, une page : la demande attendue face à la capacité, la marge perdue d'une saturation, le coût de l'investissement, la décision retenue, et la marge supplémentaire attendue.",
+        "La note de capacité, une page : la demande attendue par référence face à la capacité, le classement des enceintes par marge rapportée à la capacité, la marge perdue d'une saturation, le coût de la ligne envisagée, la décision retenue, et la marge supplémentaire attendue au trimestre suivant.",
       tracePasseport:
-        "J'ai arbitré un investissement de capacité en pesant son coût contre la marge d'une demande que je n'aurais pas pu produire autrement.",
+        "J'ai choisi quoi produire quand l'atelier manquait de capacité, en classant les références par marge rapportée à la place qu'elles prenaient, avant d'arbitrer une ligne nouvelle.",
       evaluation: [
-        "Le manque à gagner d'une capacité saturée est chiffré, pas seulement évoqué.",
-        "Le coût de l'investissement est comparé à la marge qu'il rend possible.",
+        "Les références sont classées par marge rapportée à la capacité, pas par prix ni par volume.",
+        "Le coût de la ligne est comparé à la marge qu'elle rend possible, au trimestre où elle la rend possible.",
         "La décision assume un risque, nommé plutôt que passé sous silence.",
       ],
     },

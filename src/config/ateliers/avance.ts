@@ -127,80 +127,80 @@ export const ATELIER_AVANCE: AtelierDefinition = {
     },
     {
       numero: 2,
-      titre: "Financer le besoin en fonds de roulement",
+      titre: "Le camion qui rentre à vide",
       dureeMinutes: 180,
       tourJoue: 2,
       processus: [
-        "Volet 3 · Piloter la trésorerie et le financement",
         "Volet 1 · Analyser les coûts et la rentabilité",
+        "Volet 2 · Construire une stratégie commerciale",
       ],
       objectif:
-        "Mesurer comment les délais de règlement des contrats creusent le besoin en fonds de roulement, et décider d'un financement du cycle sans étrangler la trésorerie.",
+        "Décider s'il faut charger, sur les retours à vide, des lots de la bourse de fret payés sous le coût de revient complet : distinguer le coût déjà engagé du coût que la décision ajoute, et fixer le prix plancher d'une capacité qui se perd si elle ne roule pas.",
       competences: [
-        "Je relie le besoin en fonds de roulement d'un transporteur aux délais de règlement de ses clients.",
-        "Je construis un plan de trésorerie et j'y repère le point de tension du trimestre.",
-        "Je choisis un financement de court terme en pesant son coût contre le risque de rupture.",
+        "Je distingue, dans le coût de revient complet d'une palette, ce qui est engagé de toute façon de ce que la décision ajoute.",
+        "Je calcule la marge qu'un lot payé sous le coût complet laisse tout de même, et je la compare à celle d'un retour à vide.",
+        "Je fixe un prix plancher qui tient compte du risque commercial d'habituer le marché à un tarif bas.",
       ],
       notions: [
-        "besoin en fonds de roulement",
-        "délai de règlement client",
-        "plan de trésorerie",
-        "financement court terme",
-        "coût du découvert",
+        "coût de revient complet et coût marginal",
+        "marge sur coût variable",
+        "capacité périssable",
+        "prix plancher",
+        "coût d'opportunité",
       ],
       preparation:
-        "Rouvrez la fiche notion sur le besoin en fonds de roulement. Préparez un tableau où chaque équipe inscrira, avant la clôture, le solde de trésorerie qu'elle prévoit et le financement qu'elle mobilise.",
+        "Relisez la situation du deuxième trimestre : les porteurs rentrent à vide trois fois sur quatre, la bourse propose des lots à 52 € la palette quand le prix moyen est de 74 € et le coût complet proche de 54 €. Le coût de route d'une palette, carburant et péages, tourne autour de 25 € : c'est le seul chiffre que la décision ajoute, le reste est payé que le camion roule ou non. Préparez au tableau un compte à deux colonnes, retour à vide et retour chargé à 52 €, que les équipes rempliront. Le monde variable est activé : un aléa peut faire mentir le trimestre, et c'est déjà l'objet de l'exercice.",
       deroule: [
         {
           minutes: 20,
           titre: "Retour sur le premier trimestre",
           detail:
-            "Chaque équipe relit son résultat et l'aléa qu'elle a subi ou évité. Vous notez qui a gagné en résultat mais perdu en trésorerie.",
+            "Chaque équipe relit son résultat, son taux de remplissage et l'aléa qu'elle a subi ou évité. Vous notez qui a gagné en résultat mais dont les camions rentrent vides.",
         },
         {
           minutes: 40,
-          titre: "Le cycle qui avance de l'argent",
+          titre: "Ce que coûte un retour à vide",
           detail:
-            "Les équipes reconstituent leur cycle : elles paient carburant, péages et salaires avant d'encaisser des contrats réglés à long délai. Plus les contrats pèsent, plus le besoin en fonds de roulement gonfle.",
+            "Les équipes remplissent le compte à deux colonnes. Le chauffeur est payé et le camion s'amortit dans les deux cas : un lot à 52 € laisse 27 € de plus qu'un retour à vide, alors que le coût complet dit qu'on vend à perte. La séance tient dans cette contradiction, et l'équipe doit dire laquelle des deux lectures sert la décision.",
         },
         {
           minutes: 30,
-          titre: "Financer sans étrangler",
+          titre: "Le prix plancher",
           detail:
-            "Chaque équipe projette son solde de trésorerie et décide comment elle couvre le creux : financement court terme, arbitrage du mix vers du fret payé plus vite, ou report d'une dépense. Chaque option porte son coût.",
+            "Chaque équipe fixe le tarif au-dessous duquel elle refuse un lot de retour, et écrit pourquoi ce n'est ni le coût complet ni le coût de route : un marché habitué à 52 € finira par le demander sur l'aller. Le prix plancher est une décision commerciale autant qu'un calcul.",
         },
         {
           minutes: 35,
           titre: "Décisions du trimestre",
           detail:
-            "L'équipe arrête son mix, son prix et son financement, et écrit le solde qu'elle attend. Cette prévision sera relue au tour suivant.",
+            "L'équipe arrête son mix entre contrats industriels, distribution et bourse, son prix, et le volume qu'elle vise, puis écrit le taux de remplissage qu'elle attend. Cette prévision sera relue au tour suivant.",
         },
         {
           minutes: 20,
           titre: "Clôture et résultats",
           detail:
-            "Vous clôturez le trimestre. Le solde de trésorerie réalisé apparaît à côté du solde prévu, et le coût du financement se lit dans le résultat.",
+            "Vous clôturez le trimestre. Le taux de remplissage et le prix moyen à la palette apparaissent côte à côte, et une équipe qui a chargé ses retours lit ce que cela a fait à son prix moyen comme à son résultat.",
         },
         {
           minutes: 35,
           titre: "Débriefing",
           detail:
-            "On compare une équipe qui a couru après sa trésorerie et une équipe qui l'a anticipée. La question qui reste ouverte : le confort de trésorerie se paie-t-il en marge.",
+            "On compare une équipe qui a chargé la bourse et une équipe qui a tenu son prix. La question qui reste ouverte : le prix moyen le plus élevé est-il le résultat le plus élevé.",
         },
       ],
       livrable:
-        "Le plan de trésorerie du trimestre : besoin en fonds de roulement estimé, solde prévu, financement retenu avec son coût, et l'écart au solde réalisé après clôture.",
+        "La note de coût marginal : le coût complet d'une palette décomposé entre engagé et ajouté, la marge d'un retour chargé face au retour à vide, le prix plancher retenu avec sa justification commerciale, et l'écart entre le remplissage prévu et le remplissage réalisé.",
       tracePasseport:
-        "J'ai financé le besoin en fonds de roulement d'un transporteur en pesant le coût du financement court terme contre le risque de rupture de trésorerie.",
+        "J'ai fixé le prix plancher d'un lot de retour en séparant le coût que la décision ajoutait du coût déjà engagé.",
       evaluation: [
-        "Le besoin en fonds de roulement est relié aux délais de règlement des contrats.",
-        "Le financement retenu est chiffré avec son coût, pas seulement cité.",
-        "Le point de tension du trimestre est repéré avant la clôture.",
+        "Le coût complet est décomposé entre ce qui est engagé et ce que la décision ajoute.",
+        "Le prix plancher est justifié par le risque commercial, pas seulement par un calcul de marge.",
+        "La capacité perdue d'un retour à vide est chiffrée comme un coût d'opportunité.",
       ],
     },
     {
       numero: 3,
-      titre: "Agrandir la flotte ou refuser du fret",
+      titre: "Le gazole prend dix-huit pour cent",
       dureeMinutes: 180,
       tourJoue: 3,
       processus: [
@@ -208,145 +208,145 @@ export const ATELIER_AVANCE: AtelierDefinition = {
         "Volet 4 · Décider en avenir incertain",
       ],
       objectif:
-        "Décider s'il faut acheter un véhicule, fourgon, porteur ou semi-remorque, ou refuser le fret que la flotte ne peut pas prendre, en pesant l'engagement d'un actif lourd contre la marge perdue.",
+        "Répercuter une hausse du gazole clientèle par clientèle selon sa sensibilité au prix, et préparer le pic du trimestre suivant : un véhicule acheté et un conducteur embauché ce trimestre ne servent qu'au suivant.",
       competences: [
-        "Je compare le coût complet d'un véhicule acheté à la marge du fret qu'il permettrait de prendre.",
-        "J'évalue le risque d'un investissement lourd face à une demande incertaine.",
-        "Je décide d'un investissement de flotte en assumant l'engagement qu'il représente.",
+        "Je mesure ce qu'une hausse du carburant fait à la marge d'une palette et au poids du carburant dans le prix.",
+        "Je répercute une hausse de coût différemment selon la sensibilité au prix de chaque clientèle.",
+        "Je dimensionne un véhicule et un recrutement pour un pic que je ne verrai qu'au trimestre suivant.",
       ],
       notions: [
+        "sensibilité au prix des clientèles",
+        "répercussion d'une hausse de coût",
         "investissement et amortissement",
-        "coût de possession d'un actif",
-        "fret refusé et manque à gagner",
         "capacité et flexibilité",
-        "engagement irréversible",
+        "délai de mise en service",
       ],
       preparation:
-        "Relisez la capacité de la flotte et la demande à venir. Préparez au tableau une grille à deux colonnes, acheter un véhicule ou refuser du fret, que les équipes rempliront. Le scénario fait bondir le gazole de 18 % ce trimestre : annoncez-le en ouverture, il pèse sur le coût de chaque véhicule ajouté. Rappelez que le monde variable peut faire mentir la prévision, et que c'est justement l'objet du choix.",
+        "Le scénario fait bondir le gazole de 18 % ce trimestre : annoncez-le en ouverture, il pèse sur chaque palette roulée. Les industriels sous contrat sont peu sensibles au prix, la grande distribution l'est beaucoup, la bourse de fret l'est plus encore : la hausse ne se répercute pas pareil sur les trois. Relisez la saisonnalité : le quatrième trimestre est le pic de l'année, surtout pour la distribution. Les véhicules s'achètent typés, fourgon à 45 000 € pour 1 000 palettes, porteur à 95 000 € pour 2 000, semi-remorque à 165 000 € pour 3 000, et entrent en service au trimestre suivant. Les conducteurs embauchés, 2 800 € par recrutement, arrivent eux aussi au trimestre suivant, dans la limite de dix-huit salariés. Préparez une grille à trois colonnes, répercuter, absorber, préparer le pic, que les équipes rempliront.",
       deroule: [
         {
           minutes: 20,
           titre: "Relecture des prévisions",
           detail:
-            "Chaque équipe confronte son solde prévu à son solde réel, et dit où en est sa trésorerie avant d'engager un investissement lourd.",
+            "Chaque équipe confronte le remplissage prévu à celui obtenu, et lit le poids du carburant dans son prix avant la hausse.",
         },
         {
           minutes: 40,
-          titre: "Acheter ou refuser",
+          titre: "Répercuter ou absorber",
           detail:
-            "Les équipes comparent le coût complet d'un véhicule acheté, amortissement et entretien compris, à la marge du fret qu'elles refusent faute de capacité. L'un engage, l'autre manque à gagner.",
+            "Les équipes chiffrent ce que la hausse retire à la marge d'une palette, puis décident clientèle par clientèle : répercuter aux industriels qui suivront, moins à la distribution qui partirait, presque rien à la bourse qui n'attend que cela. Une hausse uniforme est la réponse facile, et la séance est faite pour la refuser.",
         },
         {
           minutes: 30,
-          titre: "Décider en avenir incertain",
+          titre: "Préparer un pic qu'on ne voit pas encore",
           detail:
-            "Chaque équipe remplit la grille et tranche : elle achète, refuse du fret, ou achète moins qu'il ne faudrait, en écrivant à quelle condition son choix reste bon si la demande déçoit.",
+            "Chaque équipe remplit la troisième colonne : le véhicule qu'elle achète et les conducteurs qu'elle embauche pour un trimestre qui n'est pas celui-ci. Elle écrit à quelle condition son choix reste bon si le pic déçoit, parce que le monde variable peut le faire.",
         },
         {
           minutes: 30,
           titre: "Décisions du trimestre",
           detail:
-            "L'équipe arrête son investissement, son mix et son prix, et inscrit la marge supplémentaire qu'elle attend de sa capacité.",
+            "L'équipe arrête ses prix par clientèle, son mix, son investissement et son recrutement, et inscrit la capacité qu'elle attend au trimestre suivant.",
         },
         {
           minutes: 20,
           titre: "Clôture et résultats",
           detail:
-            "Vous clôturez le trimestre. L'effet de l'investissement, sur la capacité comme sur la trésorerie, apparaît dans les résultats, et le monde variable a parfois tranché à la place des équipes.",
+            "Vous clôturez le trimestre. La répercussion se lit tout de suite dans le prix moyen et les volumes par clientèle. Le véhicule et les conducteurs, eux, ne se lisent encore que dans la trésorerie : la capacité arrive au trimestre suivant.",
         },
         {
           minutes: 40,
           titre: "Débriefing",
           detail:
-            "On compare les équipes qui ont investi et celles qui ont refusé du fret, y compris celles qu'un aléa a punies d'un bon choix. La question qui reste ouverte : un bon choix qui finit mal était-il un mauvais choix.",
+            "On compare une équipe qui a répercuté uniformément et une équipe qui a modulé par clientèle, puis celles qui ont préparé le pic et celles qui attendent de le voir. La question qui reste ouverte : peut-on décider d'une capacité pour une demande qu'on ne connaît pas encore.",
         },
       ],
       livrable:
-        "La note d'investissement : le coût complet d'un véhicule acheté face au fret refusé, la décision retenue, la condition qui la rend bonne, et la marge supplémentaire attendue.",
+        "La note de répercussion : l'effet de la hausse sur la marge d'une palette, la répercussion retenue par clientèle avec sa justification par la sensibilité au prix, le véhicule et le recrutement décidés pour le pic, et la condition qui les rend bons si la demande déçoit.",
       tracePasseport:
-        "J'ai arbitré entre agrandir une flotte et refuser du fret, en pesant l'engagement d'un actif lourd contre l'incertitude de la demande.",
+        "J'ai répercuté une hausse de coût clientèle par clientèle selon leur sensibilité au prix, en préparant une capacité pour un trimestre que je ne voyais pas encore.",
       evaluation: [
-        "Le coût complet de possession est comparé à la marge du fret refusé.",
-        "La décision énonce la condition à laquelle elle reste bonne si la demande déçoit.",
-        "L'engagement irréversible de l'investissement est assumé, pas minimisé.",
+        "La répercussion diffère par clientèle et se justifie par la sensibilité au prix de chacune.",
+        "Le véhicule et le recrutement sont décidés pour le trimestre suivant, en le disant.",
+        "La décision énonce la condition à laquelle elle reste bonne si le pic déçoit.",
       ],
     },
     {
       numero: 4,
-      titre: "Absorber le pic : capacité et recrutement",
+      titre: "Le grand compte qui paie à soixante jours, en plein pic",
       dureeMinutes: 180,
       tourJoue: 4,
       processus: [
-        "Volet 2 · Construire une stratégie commerciale",
         "Volet 3 · Piloter la trésorerie et le financement",
+        "Volet 2 · Construire une stratégie commerciale",
       ],
       objectif:
-        "Servir le trimestre où la demande culmine sans casser la qualité de service, en dimensionnant la capacité et le recrutement des conducteurs qu'elle exige.",
+        "Traverser le trimestre de pointe sans que la trésorerie se rompe : un client industriel pèse près du tiers du trafic et règle à soixante jours quand le gazole se paie à quinze jours et les chauffeurs à la fin du mois. Servir plus, c'est avancer plus.",
       competences: [
-        "J'anticipe un pic de demande à partir de la saisonnalité et de mes trimestres précédents.",
-        "Je dimensionne un recrutement de conducteurs face à une capacité que la flotte seule ne couvre pas.",
-        "Je tiens ensemble la qualité de service, la marge et la trésorerie d'un trimestre de pointe.",
+        "Je relie le besoin en fonds de roulement d'un transporteur aux délais de règlement de ses clientèles et de ses fournisseurs.",
+        "Je construis un plan de trésorerie de trimestre de pointe et j'y repère le point de tension.",
+        "Je compare l'escompte et l'affacturage sur leur coût, et je mesure le risque d'un chiffre d'affaires concentré sur un client.",
       ],
       notions: [
-        "pic de demande et saturation",
-        "recrutement et masse salariale",
-        "qualité de service et fidélité des industriels",
-        "arbitrage entre contrats et fret",
-        "tension de trésorerie de croissance",
+        "besoin en fonds de roulement",
+        "délai de règlement client",
+        "escompte et affacturage",
+        "concentration du chiffre d'affaires",
+        "plan de trésorerie",
       ],
       preparation:
-        "C'est la séance qui décide de l'exercice : prévoyez d'y consacrer tout le temps annoncé. Préparez la fiche de plan de pointe, où l'équipe écrira sa capacité cible, son recrutement et son solde de trésorerie attendus AVANT de connaître le résultat.",
+        "C'est la séance qui décide de l'exercice : prévoyez d'y consacrer tout le temps annoncé. La demande culmine ce trimestre, la distribution plus encore que le reste, et les équipes qui ont préparé leur capacité au trimestre précédent la reçoivent maintenant. Relisez la situation du quatrième trimestre : bénéficiaire, et pourtant à découvert, parce que l'entreprise encaisse à soixante jours ce qu'elle décaisse à quinze et trente. Préparez la fiche de plan de pointe, où l'équipe écrira son solde de trésorerie attendu, le financement de ses créances et les contrats qu'elle sert en priorité AVANT de connaître le résultat. Les délais des clientèles sont dans le jeu : industriels à soixante jours, distribution à quarante-cinq, bourse comptant.",
       deroule: [
         {
           minutes: 15,
           titre: "Ce que dit le trimestre",
           detail:
-            "Vous rappelez sans chiffre que la demande va culminer. Les équipes retrouvent seules l'ampleur du pic dans les informations du jeu, et mesurent l'écart avec leur capacité.",
+            "Vous rappelez sans chiffre que la demande va culminer. Les équipes retrouvent seules l'ampleur du pic dans les informations du jeu, mesurent l'écart avec la capacité qu'elles ont reçue, et lisent leur délai de règlement client moyen.",
         },
         {
           minutes: 40,
-          titre: "Plan de pointe",
+          titre: "Le cycle qui avance de l'argent",
           detail:
-            "Chaque équipe construit son plan : la capacité qu'elle vise, le recrutement de conducteurs qu'elle engage, les contrats qu'elle honore en priorité si tout ne peut pas être servi. Rien n'est saisi à ce stade.",
+            "Chaque équipe reconstitue son cycle du trimestre : le gazole à quinze jours, les chauffeurs à la fin du mois, les industriels à soixante jours. Elle projette son solde de trésorerie et découvre que servir plus de palettes creuse le découvert avant de remplir la caisse.",
         },
         {
           minutes: 30,
-          titre: "Le coût de mal servir",
+          titre: "Financer les créances, choisir les clients",
           detail:
-            "L'équipe chiffre les deux fautes : refuser du chargement rentable faute de capacité, ou promettre plus qu'elle ne peut tenir et perdre la fidélité d'industriels mal servis. Puis elle choisit son risque.",
+            "L'équipe compare l'escompte et l'affacturage sur leur coût, décide de la part des créances qu'elle mobilise, et choisit les contrats qu'elle honore en priorité si la capacité ne suffit pas : la bourse payée comptant soulage la caisse, l'industriel à soixante jours la creuse mais reste fidèle. Elle chiffre aussi ce que lui coûterait de perdre son grand compte.",
         },
         {
           minutes: 30,
           titre: "Décisions du trimestre",
           detail:
-            "Saisie de la capacité, du recrutement, du mix et du prix. Le plan écrit reste sur la table, visible.",
+            "Saisie du mix, des prix, de la mobilisation des créances et de la couverture du découvert. La fiche de plan de pointe reste sur la table, visible.",
         },
         {
           minutes: 20,
           titre: "Clôture et résultats",
           detail:
-            "Vous clôturez le trimestre de pointe. Les écarts entre équipes sont les plus larges de l'atelier, et le monde variable a corsé la note pour certaines.",
+            "Vous clôturez le trimestre de pointe. Le solde de trésorerie réalisé apparaît à côté du solde prévu, le coût du financement dans le résultat, et le monde variable a corsé la note pour certaines.",
         },
         {
           minutes: 45,
           titre: "Débriefing",
           detail:
-            "Chaque équipe compare son plan et son résultat. La question finale : celle qui a le plus roulé est-elle celle qui a le mieux servi et le mieux gagné.",
+            "Chaque équipe compare son plan et son résultat. Celle qui a le plus roulé a-t-elle le mieux gagné, et celle qui a le mieux gagné a-t-elle encore de la caisse : les deux questions n'ont pas la même réponse, et c'est le cours.",
         },
       ],
       livrable:
-        "La fiche de plan de pointe : la capacité et le recrutement retenus, les contrats servis en priorité, les deux fautes chiffrées, le risque choisi, et l'écart constaté après clôture.",
+        "La fiche de plan de pointe : le besoin en fonds de roulement du trimestre reconstitué à partir des délais, le solde de trésorerie prévu, le financement des créances retenu avec son coût, les contrats servis en priorité, et l'écart au solde réalisé après clôture.",
       tracePasseport:
-        "J'ai dimensionné la capacité et le recrutement d'un transporteur pour absorber un pic de demande, en arbitrant entre le chargement refusé et le client mal servi.",
+        "J'ai financé le besoin en fonds de roulement d'un trimestre de pointe en mobilisant des créances à soixante jours, après avoir chiffré ce que servir davantage coûtait en trésorerie.",
       evaluation: [
-        "Le recrutement est dimensionné sur l'écart entre la demande et la capacité de la flotte.",
-        "Les deux fautes, refuser et mal tenir, sont chiffrées.",
-        "La priorité donnée aux contrats est justifiée par leur marge et leur régularité.",
+        "Le besoin en fonds de roulement est reconstitué à partir des délais de règlement, clients et fournisseurs.",
+        "L'escompte et l'affacturage sont comparés sur leur coût, et la part mobilisée est justifiée.",
+        "La priorité donnée aux contrats tient compte du délai de règlement et pas seulement de la marge.",
       ],
     },
     {
       numero: 5,
-      titre: "Placer les excédents de trésorerie et gérer l'aléa",
+      titre: "Renouveler la flotte ou la réparer",
       dureeMinutes: 180,
       tourJoue: 5,
       processus: [
@@ -354,67 +354,67 @@ export const ATELIER_AVANCE: AtelierDefinition = {
         "Volet 4 · Décider en avenir incertain",
       ],
       objectif:
-        "Employer les excédents de trésorerie dégagés par le pic plutôt que de les laisser dormir, tout en gardant la réserve qu'exige un monde où le trimestre suivant peut décevoir.",
+        "Décider par la valeur actuelle nette si trois porteurs usés se remplacent ou se réparent, en ne comptant que les flux que la décision change, puis employer les excédents dégagés par le pic sans se priver de la réserve qu'impose un monde variable.",
       competences: [
-        "Je décide d'un placement des excédents de trésorerie en gardant une réserve de sécurité.",
-        "Je mesure ce que coûte une trésorerie qui dort face à ce que risque une trésorerie trop engagée.",
-        "J'ajuste ma stratégie de clientèles après un aléa qui a défait une prévision.",
+        "Je retiens, dans un projet de renouvellement, les seuls flux que la décision change : entretien évité, carburant économisé, revente des anciens véhicules.",
+        "Je ramène des flux étalés sur plusieurs années à leur valeur d'aujourd'hui, et je décide sur leur somme.",
+        "Je décide d'un placement des excédents de trésorerie en gardant une réserve de sécurité chiffrée.",
       ],
       notions: [
-        "excédent de trésorerie",
+        "flux de trésorerie différentiels",
+        "valeur actuelle nette et actualisation",
+        "valeur de revente",
         "placement et rendement",
         "réserve de sécurité",
-        "gestion du risque",
-        "révision de stratégie",
       ],
       preparation:
-        "Projetez les soldes de trésorerie de la pointe. Préparez au tableau la question de la séance : que faire d'un excédent quand le trimestre suivant est incertain. Prévoyez que certaines équipes sortent du pic à sec, et adaptez leur travail à la couverture plutôt qu'au placement.",
+        "Relisez la situation du cinquième trimestre : trois porteurs dont l'entretien coûte 21 000 € par trimestre et grimpe, à remplacer pour 315 000 € financés sur six ans, contre un entretien retombant à 5 500 € et neuf pour cent de gazole en moins. Dans le jeu, la décision se prend en revendant des porteurs et en en achetant, et le placement des excédents rapporte deux pour cent l'an. Préparez au tableau un tableau de flux vierge, année par année, où les équipes n'inscriront que ce que la décision change. Prévoyez que certaines équipes sortent du pic à sec, et adaptez leur travail à la couverture plutôt qu'au placement.",
       deroule: [
         {
           minutes: 20,
           titre: "Après la pointe",
           detail:
-            "Chaque équipe fait le point de sa trésorerie après le pic : certaines débordent d'excédents, d'autres pansent un aléa. Le travail de la séance n'est pas le même pour toutes, et c'est voulu.",
+            "Chaque équipe fait le point de sa trésorerie après le pic : certaines débordent d'excédents, d'autres pansent un aléa ou un découvert de croissance. Le travail de la séance n'est pas le même pour toutes, et c'est voulu.",
         },
         {
           minutes: 40,
-          titre: "Une trésorerie qui dort ne rapporte rien",
+          titre: "Les flux que la décision change",
           detail:
-            "Les équipes en excédent chiffrent ce que leur trésorerie inactive laisse perdre, et ce qu'un placement rapporterait, sans oublier la réserve qu'un monde variable impose de garder.",
+            "Les équipes remplissent le tableau : l'entretien évité, le gazole économisé, la revente des anciens porteurs, et le prix des nouveaux. L'amortissement n'y entre pas, ce n'est pas un flux. Puis elles actualisent et lisent le signe de la somme. Une équipe qui compare le coût d'achat aux économies d'un seul trimestre conclut à l'envers.",
         },
         {
           minutes: 30,
-          titre: "Réviser la stratégie",
+          titre: "Une trésorerie qui dort ne rapporte rien",
           detail:
-            "Chaque équipe relit sa trajectoire et décide si son mix de clientèles tient encore. Un aléa a pu montrer qu'un contrat trop lourd fragilise : c'est le moment de corriger.",
+            "Les équipes en excédent chiffrent ce que leur trésorerie inactive laisse perdre, ce qu'un placement rapporterait, et la réserve qu'un monde variable impose de garder devant un dernier trimestre incertain. Les autres chiffrent le coût de leur couverture.",
         },
         {
           minutes: 30,
           titre: "Décisions du trimestre",
           detail:
-            "Saisie du placement ou de la couverture selon la situation, du mix révisé et du prix. Chaque équipe écrit ce qu'elle attend de son choix.",
+            "Saisie de la revente et de l'achat de véhicules, du placement ou de la couverture selon la situation, du mix et du prix. Chaque équipe écrit ce qu'elle attend de son choix.",
         },
         {
           minutes: 20,
           titre: "Clôture et résultats",
           detail:
-            "Vous clôturez l'avant-dernier trimestre. Le rendement d'un placement, ou le coût d'une couverture, apparaît dans le résultat de chaque équipe.",
+            "Vous clôturez le dernier trimestre joué. Le rendement d'un placement, ou le coût d'une couverture, apparaît dans le résultat de chaque équipe, et les véhicules revendus ont quitté le bilan.",
         },
         {
           minutes: 40,
           titre: "Débriefing",
           detail:
-            "On compare une équipe qui a fait travailler son excédent et une équipe qui l'a laissé dormir, sans oublier celle qu'un aléa a rattrapée. La question qui reste ouverte : jusqu'où placer quand demain est incertain.",
+            "On compare une équipe qui a renouvelé et une équipe qui a réparé, puis une équipe qui a fait travailler son excédent et une équipe qui l'a laissé dormir, sans oublier celle qu'un aléa a rattrapée. La question qui reste ouverte : jusqu'où engager quand demain est incertain.",
         },
       ],
       livrable:
-        "La note de gestion des excédents : le montant disponible, la réserve gardée, le placement ou la couverture retenue avec son effet attendu, et la révision de stratégie qui l'accompagne.",
+        "La note de renouvellement : le tableau des flux différentiels année par année, la valeur actuelle nette et la décision qu'elle fonde, le montant d'excédent disponible, la réserve gardée, et le placement ou la couverture retenue avec son effet attendu.",
       tracePasseport:
-        "J'ai employé les excédents de trésorerie d'une entreprise en gardant une réserve pour l'aléa.",
+        "J'ai décidé du renouvellement d'une flotte par la valeur actuelle nette des seuls flux que la décision changeait.",
       evaluation: [
-        "Le placement laisse une réserve justifiée par l'incertitude du trimestre suivant.",
-        "Le coût d'une trésorerie qui dort est comparé au rendement d'un placement.",
-        "La révision de stratégie répond à un fait de la partie, pas à une lubie.",
+        "Seuls les flux que la décision change entrent dans le tableau, et l'amortissement n'y est pas.",
+        "Les flux sont actualisés et la décision se fonde sur leur somme, pas sur un seul trimestre.",
+        "Le placement laisse une réserve justifiée par l'incertitude du dernier trimestre.",
       ],
     },
     {
@@ -533,7 +533,7 @@ export const ATELIER_AVANCE: AtelierDefinition = {
       question:
         "Cinq trimestres et six séances font un atelier long, peut-on le raccourcir ?",
       reponse:
-        "Oui, en retirant la cinquième séance et en créant la partie sur quatre tours : le placement des excédents se traite alors au début de la séance de diagnostic, devenue cinquième. Vous perdez la respiration entre engager et employer la trésorerie, mais l'atelier tient alors en cinq séances. Ne descendez pas en dessous : le pic de la quatrième a besoin de trois trimestres joués derrière lui.",
+        "Oui, en retirant la cinquième séance et en créant la partie sur quatre tours : le renouvellement de la flotte et le placement des excédents se traitent alors au début de la séance de diagnostic, devenue cinquième, sur l'énoncé plutôt que dans le jeu. Vous perdez la respiration entre engager et employer la trésorerie, mais l'atelier tient alors en cinq séances. Ne descendez pas en dessous : le pic de la quatrième a besoin de trois trimestres joués derrière lui.",
     },
     {
       question:
