@@ -91,6 +91,16 @@ export async function envoyerDemandeOrientationAction(
     const { sujet, texte } = texteDuCourriel(demande, depot.recommandation);
     const envoi = await envoyerCourriel({ a: config.contactEmail, sujet, texte, repondreA: d.email });
     if (envoi.envoye) await marquerCourrielEnvoye(depot.id);
+    // Une ligne dans les journaux de l'hébergeur : c'est là qu'on lit si la
+    // notification part, sans avoir à ouvrir l'administration. Ni l'adresse
+    // de l'enseignant ni le message n'y figurent.
+    console.info(
+      `[orientation] demande ${depot.id} enregistrée · courriel ${
+        envoi.envoye ? "envoyé" : `non envoyé (${envoi.raison}${envoi.detail ? ` : ${envoi.detail}` : ""})`
+      }`,
+    );
+  } else {
+    console.info(`[orientation] demande ${depot.id} enregistrée · aucune adresse de contact configurée`);
   }
   return { error: null, ok: { email: d.email }, values: null };
 }
