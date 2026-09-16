@@ -16,13 +16,8 @@ import {
   type Intervalle,
   type JourDeCreneaux,
 } from "@/lib/creneaux";
-import {
-  configurationGoogle,
-  creerEvenement,
-  periodesOccupees,
-  supprimerEvenement,
-  type ConfigGoogle,
-} from "@/lib/google-agenda";
+import { creerEvenement, periodesOccupees, supprimerEvenement, type ConfigGoogle } from "@/lib/google-agenda";
+import { configurationGoogleEffective } from "@/services/agenda-google.service";
 
 /**
  * LES RENDEZ-VOUS TÉLÉPHONIQUES.
@@ -44,8 +39,8 @@ export interface Dependances {
   poster?: typeof fetch;
 }
 
-const dependances = (d: Dependances) => ({
-  agenda: d.agenda === undefined ? configurationGoogle() : d.agenda,
+const dependances = async (d: Dependances) => ({
+  agenda: d.agenda === undefined ? await configurationGoogleEffective() : d.agenda,
   poster: d.poster ?? fetch,
 });
 
@@ -68,7 +63,7 @@ async function calculer(
   now: Date,
   deps: Dependances,
 ): Promise<{ creneaux: Creneau[]; source: "google" | "local"; detail?: string }> {
-  const { agenda, poster } = dependances(deps);
+  const { agenda, poster } = await dependances(deps);
   const fenetre = { debut: now, fin: new Date(now.getTime() + (HORIZON_JOURS + 1) * 86_400_000) };
   const [google, reserves] = await Promise.all([
     periodesOccupees(agenda, fenetre, poster),
@@ -165,7 +160,7 @@ export async function reserverRendezVous(
     throw e;
   }
 
-  const { agenda, poster } = dependances(deps);
+  const { agenda, poster } = await dependances(deps);
   const pose = await creerEvenement(
     agenda,
     {
@@ -255,7 +250,7 @@ export async function annulerRendezVous(
     .where(and(eq(phoneAppointments.id, id), eq(phoneAppointments.status, "confirmed")))
     .returning({ eventId: phoneAppointments.calendarEventId });
   if (!ligne?.eventId) return { retireDeLAgenda: false };
-  const { agenda, poster } = dependances(deps);
+  const { agenda, poster } = await dependances(deps);
   const retrait = await supprimerEvenement(agenda, ligne.eventId, poster);
   return { retireDeLAgenda: retrait.ok };
 }

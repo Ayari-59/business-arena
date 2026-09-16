@@ -14,12 +14,15 @@ import {
   updatePlatformConfigAction,
   marquerDemandeOrientationTraiteeAction,
   annulerRendezVousAction,
+  deconnecterAgendaAction,
 } from "./actions";
 import { SubmitButton } from "@/components/submit-button";
 import { DeleteLicenceButton } from "@/components/delete-licence-button";
 import { GuardedForm } from "@/components/guarded-action";
 import { listerDemandesOrientation } from "@/services/orientation-request.service";
 import { listerRendezVous } from "@/services/rendez-vous.service";
+import { etatAgenda } from "@/services/agenda-google.service";
+import { SITE_URL } from "@/config/site";
 
 export const dynamic = "force-dynamic";
 
@@ -59,7 +62,22 @@ function LicenceField({
   );
 }
 
-export default async function AdminPage() {
+/** Ce que le retour de Google laisse dans l'adresse, traduit pour l'écran. */
+const RETOURS_AGENDA: Record<string, { ton: "bon" | "mauvais"; texte: string }> = {
+  connecte: { ton: "bon", texte: "Agenda connecté : la page de rendez-vous lit désormais vos disponibilités." },
+  refuse: { ton: "mauvais", texte: "Connexion refusée sur l'écran Google : rien n'a changé." },
+  etat_invalide: { ton: "mauvais", texte: "Retour inattendu (lien expiré ou ouvert dans un autre navigateur) : recommencez depuis ce bouton." },
+  jeton_absent: { ton: "mauvais", texte: "Google n'a pas fourni de jeton durable. Retirez l'accès sur myaccount.google.com/permissions, puis recommencez." },
+  client_non_configure: { ton: "mauvais", texte: "GOOGLE_CLIENT_ID et GOOGLE_CLIENT_SECRET manquent dans l'hébergement." },
+  echec: { ton: "mauvais", texte: "L'échange avec Google a échoué ; le détail est dans les journaux de l'hébergeur." },
+};
+
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ agenda?: string }>;
+}) {
+  const { agenda: retourAgenda } = await searchParams;
   const session = await getSession();
   if (!session) redirect("/teacher/login");
   const context = await getStaffContext(session.userId);
@@ -69,6 +87,8 @@ export default async function AdminPage() {
   const demandes = await listerDemandesOrientation(50);
   const aRepondre = demandes.filter((d) => d.status === "new");
   const rendezVous = await listerRendezVous(30);
+  const agenda = await etatAgenda();
+  const messageAgenda = retourAgenda ? RETOURS_AGENDA[retourAgenda] : undefined;
   const aVenir = rendezVous.filter((r) => r.aVenir);
 
   return (
@@ -398,10 +418,69 @@ export default async function AdminPage() {
           ) : null}
         </h2>
         <p className="mt-1 text-xs text-slate-400">
-          Pris depuis /rendez-vous. Les créneaux proposés se règlent sur l&apos;agenda Google
-          configuré dans l&apos;hébergement ; les plages ouvertes se règlent dans le code
-          (config/rendez-vous).
+          Pris depuis /rendez-vous, sur les créneaux que l&apos;agenda Google connecté ci-dessous
+          laisse libres ; les plages ouvertes se règlent dans le code (config/rendez-vous).
         </p>
+
+        {/*
+          L'AGENDA GOOGLE. Deux valeurs dans l'hébergement (le client OAuth),
+          puis un clic ici : le consentement se donne dans le navigateur, le
+          jeton revient chiffré en base. Rien à copier à la main.
+        */}
+        <div id="agenda-google" className="mt-4 rounded-xl bg-slate-950 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-slate-100">Agenda Google</p>
+              <p className="mt-0.5 text-xs text-slate-400">
+                {agenda.connexion?.source === "base"
+                  ? `Connecté : ${agenda.connexion.compte}, depuis le ${agenda.connexion.depuis.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}.`
+                  : agenda.connexion?.source === "environnement"
+                    ? "Connecté par un jeton posé dans l'hébergement (GOOGLE_REFRESH_TOKEN)."
+                    : agenda.clientConfigure
+                      ? "Non connecté : la page propose les plages ouvertes sans lire l'agenda."
+                      : "Le client OAuth n'est pas configuré : posez GOOGLE_CLIENT_ID et GOOGLE_CLIENT_SECRET dans l'hébergement, puis revenez ici."}
+              </p>
+            </div>
+            {agenda.connexion?.source === "base" ? (
+              <GuardedForm action={deconnecterAgendaAction} label="déconnexion de l'agenda">
+                <SubmitButton className="rounded-lg border border-white/15 px-3 py-1 text-xs font-semibold text-slate-300 hover:border-white/30">
+                  Déconnecter
+                </SubmitButton>
+              </GuardedForm>
+            ) : agenda.connexion ? null : (
+              <a
+                href="/api/google/connect"
+                aria-disabled={!agenda.clientConfigure}
+                className={`rounded-lg px-4 py-2 text-sm font-semibold ${
+                  agenda.clientConfigure
+                    ? "bg-amber-400 text-slate-950 hover:bg-amber-300"
+                    : "pointer-events-none border border-white/10 text-slate-500"
+                }`}
+              >
+                Connecter mon agenda Google
+              </a>
+            )}
+          </div>
+          {messageAgenda ? (
+            <p
+              role={messageAgenda.ton === "bon" ? "status" : "alert"}
+              className={`mt-3 rounded-lg border px-3 py-2 text-xs ${
+                messageAgenda.ton === "bon"
+                  ? "border-teal-400/30 bg-teal-950/30 text-teal-200"
+                  : "border-red-400/30 bg-red-950/40 text-red-300"
+              }`}
+            >
+              {messageAgenda.texte}
+            </p>
+          ) : null}
+          {!agenda.connexion ? (
+            <p className="mt-3 text-xs leading-relaxed text-slate-500">
+              Dans la console Google, le client OAuth doit être de type « Application Web » avec,
+              en URI de redirection autorisée, exactement :{" "}
+              <code className="rounded bg-slate-900 px-1 py-0.5 text-slate-300">{SITE_URL}/api/google/callback</code>
+            </p>
+          ) : null}
+        </div>
         {rendezVous.length === 0 ? (
           <p className="mt-3 text-sm text-slate-400">Aucun rendez-vous pour l&apos;instant.</p>
         ) : (

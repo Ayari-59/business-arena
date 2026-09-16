@@ -134,3 +134,11 @@ export async function annulerRendezVousAction(formData: FormData): Promise<void>
   console.info(`[rendez-vous] ${id} annulé · agenda ${r.retireDeLAgenda ? "mis à jour" : "non mis à jour"}`);
   revalidatePath("/admin");
 }
+
+export async function deconnecterAgendaAction(): Promise<void> {
+  await requireAdminSession();
+  const { deconnecterAgenda } = await import("@/services/agenda-google.service");
+  await deconnecterAgenda();
+  console.info("[agenda] agenda Google déconnecté");
+  revalidatePath("/admin");
+}

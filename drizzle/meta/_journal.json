@@ -176,6 +176,13 @@
       "when": 1789367757439,
       "tag": "0023_rendez_vous",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1789367757440,
+      "tag": "0024_integrations",
+      "breakpoints": true
     }
   ]
 }

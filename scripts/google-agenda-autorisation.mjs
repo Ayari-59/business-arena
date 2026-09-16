@@ -2,6 +2,11 @@
 /**
  * AUTORISER LA PLATEFORME À LIRE ET ÉCRIRE VOTRE AGENDA GOOGLE — une fois.
  *
+ * CHEMIN SECONDAIRE. Le chemin simple est le bouton « Connecter mon agenda
+ * Google » de l'administration (/admin), qui ne demande que l'ID et le secret
+ * du client dans l'hébergement. Ce script sert si l'on préfère poser le jeton
+ * soi-même dans l'environnement (GOOGLE_REFRESH_TOKEN), qui l'emporte alors.
+ *
  * La page /rendez-vous propose les créneaux que votre agenda laisse libres et
  * y pose les rendez-vous pris. Pour cela, l'hébergement a besoin de trois
  * valeurs : l'identifiant et le secret d'un client OAuth (créés dans la
