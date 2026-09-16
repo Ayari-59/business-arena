@@ -28,9 +28,17 @@ import { GuardError, useGuardedAction } from "@/components/guarded-action";
  * formulaire recueille donc qui écrit et d'où, avec le profil de la classe ;
  * la demande est enregistrée, et l'adresse de contact prévenue.
  */
-const ETAT_INITIAL: OrientationFormState = { error: null, ok: null, values: null };
+const ETAT_INITIAL: OrientationFormState = {
+  error: null,
+  ok: null,
+  values: null,
+};
 
-export function OrientationForm({ initial = ETAT_INITIAL }: { initial?: OrientationFormState }) {
+export function OrientationForm({
+  initial = ETAT_INITIAL,
+}: {
+  initial?: OrientationFormState;
+}) {
   const diplomes = diplomesProposes();
   const { state, formAction, pending, formRef, guardError } = useGuardedAction(
     envoyerDemandeOrientationAction,
@@ -38,31 +46,49 @@ export function OrientationForm({ initial = ETAT_INITIAL }: { initial?: Orientat
     { label: "demande de simulation" },
   );
   const v = state.values;
-  const [diplome, setDiplome] = useState(v?.diplome ?? diplomes[0]!.code);
-  const [semestre, setSemestre] = useState<Semestre>(v?.semestre === "s2" ? "s2" : "s1");
-  const [objectif, setObjectif] = useState(v?.objectif ?? OBJECTIFS[0]!.code);
+  // Rien n'est choisi d'avance : la recommandation ne s'écrit qu'une fois les
+  // trois questions répondues, et seule une saisie rejouée après un échec
+  // revient remplie.
+  const [diplome, setDiplome] = useState(v?.diplome ?? "");
+  const [semestre, setSemestre] = useState<Semestre | null>(
+    v?.semestre === "s1" || v?.semestre === "s2" ? v.semestre : null,
+  );
+  const [objectif, setObjectif] = useState(v?.objectif ?? "");
+  const complet = diplome !== "" && semestre !== null && objectif !== "";
 
   const reco = useMemo(
-    () => recommander({ diplome, semestre, objectif }),
-    [diplome, semestre, objectif],
+    () =>
+      complet ? recommander({ diplome, semestre: semestre!, objectif }) : null,
+    [complet, diplome, semestre, objectif],
   );
-  const periodiciteLabel = PERIODICITY_LABELS[reco.periodicite].singular.toLowerCase();
+  const periodiciteLabel = reco
+    ? PERIODICITY_LABELS[reco.periodicite].singular.toLowerCase()
+    : "";
 
   const champ =
     "mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60";
-  const etiquette = "text-xs font-medium uppercase tracking-wide text-slate-400";
+  const etiquette =
+    "text-xs font-medium uppercase tracking-wide text-slate-400";
 
   return (
-    <form ref={formRef} action={formAction} className="grid gap-6 lg:grid-cols-[1fr_1fr] lg:items-start">
+    <form
+      ref={formRef}
+      action={formAction}
+      className="grid gap-6 lg:grid-cols-[1fr_1fr] lg:items-start"
+    >
       <div className="carte space-y-4 p-6">
         <label className="block">
           <span className={etiquette}>Le diplôme préparé</span>
           <select
             name="diplome"
             value={diplome}
+            required
             onChange={(e) => setDiplome(e.target.value)}
             className={champ}
           >
+            <option value="" disabled>
+              Choisir un diplôme…
+            </option>
             {diplomes.map((d) => (
               <option key={d.code} value={d.code}>
                 {d.libelle}
@@ -72,13 +98,23 @@ export function OrientationForm({ initial = ETAT_INITIAL }: { initial?: Orientat
         </label>
 
         <fieldset>
-          <legend className={etiquette}>Où vous en êtes dans l&apos;année</legend>
-          <input type="hidden" name="semestre" value={semestre} />
+          <legend className={etiquette}>
+            Où vous en êtes dans l&apos;année
+          </legend>
+          <input type="hidden" name="semestre" value={semestre ?? ""} />
           <div className="mt-2 grid grid-cols-2 gap-2">
             {(
               [
-                ["s1", "Premier semestre", "La classe découvre l'outil et la matière"],
-                ["s2", "Second semestre", "Les bases sont posées, on peut ouvrir"],
+                [
+                  "s1",
+                  "Premier semestre",
+                  "La classe découvre l'outil et la matière",
+                ],
+                [
+                  "s2",
+                  "Second semestre",
+                  "Les bases sont posées, on peut ouvrir",
+                ],
               ] as const
             ).map(([code, titre, aide]) => (
               <button
@@ -106,9 +142,13 @@ export function OrientationForm({ initial = ETAT_INITIAL }: { initial?: Orientat
           <select
             name="objectif"
             value={objectif}
+            required
             onChange={(e) => setObjectif(e.target.value)}
             className={champ}
           >
+            <option value="" disabled>
+              Choisir un objectif…
+            </option>
             {OBJECTIFS.map((o) => (
               <option key={o.code} value={o.code}>
                 {o.libelle}
@@ -128,8 +168,8 @@ export function OrientationForm({ initial = ETAT_INITIAL }: { initial?: Orientat
             className={champ}
           />
           <span className="mt-1 block text-xs text-slate-400">
-            Facultatif. C&apos;est ce champ qui nous permet de répondre autre chose que la
-            recommandation automatique.
+            Facultatif. C&apos;est ce champ qui nous permet de répondre autre
+            chose que la recommandation automatique.
           </span>
         </label>
 
@@ -177,7 +217,12 @@ export function OrientationForm({ initial = ETAT_INITIAL }: { initial?: Orientat
           {/* piège à robots : invisible, doit rester vide */}
           <label className="hidden" aria-hidden="true">
             Site web
-            <input name="site" tabIndex={-1} autoComplete="off" defaultValue="" />
+            <input
+              name="site"
+              tabIndex={-1}
+              autoComplete="off"
+              defaultValue=""
+            />
           </label>
         </div>
       </div>
@@ -186,45 +231,57 @@ export function OrientationForm({ initial = ETAT_INITIAL }: { initial?: Orientat
         <p className="text-xs font-semibold uppercase tracking-wide text-amber-300">
           Ce que nous vous conseillons
         </p>
-        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
-          <dt className="text-slate-400">Entreprise</dt>
-          <dd className="font-medium text-slate-100">{reco.scenarioTitre}</dd>
-          <dt className="text-slate-400">Niveau</dt>
-          <dd className="font-medium text-slate-100">
-            {reco.niveau} · {reco.niveauNom}
-          </dd>
-          <dt className="text-slate-400">Durée</dt>
-          <dd className="font-medium text-slate-100">
-            {reco.tours} tours, un {periodiciteLabel} par tour
-          </dd>
-          <dt className="text-slate-400">Atelier</dt>
-          <dd className="font-medium text-slate-100">
-            {reco.atelierCode ? (
-              <Link
-                href={`/animations/${reco.atelierCode}`}
-                className="text-amber-300 underline-offset-4 hover:underline"
-              >
-                Voir le déroulé prêt à animer
-              </Link>
-            ) : (
-              "Aucun atelier publié pour ce diplôme"
-            )}
-          </dd>
-        </dl>
+        {reco ? (
+          <>
+            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
+              <dt className="text-slate-400">Entreprise</dt>
+              <dd className="font-medium text-slate-100">
+                {reco.scenarioTitre}
+              </dd>
+              <dt className="text-slate-400">Niveau</dt>
+              <dd className="font-medium text-slate-100">
+                {reco.niveau} · {reco.niveauNom}
+              </dd>
+              <dt className="text-slate-400">Durée</dt>
+              <dd className="font-medium text-slate-100">
+                {reco.tours} tours, un {periodiciteLabel} par tour
+              </dd>
+              <dt className="text-slate-400">Atelier</dt>
+              <dd className="font-medium text-slate-100">
+                {reco.atelierCode ? (
+                  <Link
+                    href={`/animations/${reco.atelierCode}`}
+                    className="text-amber-300 underline-offset-4 hover:underline"
+                  >
+                    Voir le déroulé prêt à animer
+                  </Link>
+                ) : (
+                  "Aucun atelier publié pour ce diplôme"
+                )}
+              </dd>
+            </dl>
 
-        <ul className="space-y-2 border-t border-white/10 pt-4 text-sm leading-relaxed text-slate-300">
-          {reco.pourquoi.map((raison) => (
-            <li key={raison}>· {raison}</li>
-          ))}
-        </ul>
+            <ul className="space-y-2 border-t border-white/10 pt-4 text-sm leading-relaxed text-slate-300">
+              {reco.pourquoi.map((raison) => (
+                <li key={raison}>· {raison}</li>
+              ))}
+            </ul>
+          </>
+        ) : (
+          <p className="text-sm leading-relaxed text-slate-400">
+            Répondez aux trois questions : le diplôme, le moment de
+            l&apos;année, ce que vous voulez faire travailler. La recommandation
+            s&apos;écrit ici, avec ses raisons.
+          </p>
+        )}
 
         {state.ok ? (
           <p
             role="status"
             className="rounded-lg border border-teal-400/30 bg-teal-950/30 px-3 py-2 text-sm text-teal-200"
           >
-            ✓ Demande envoyée. Nous vous répondons à {state.ok.email}, avec ce profil et cette
-            recommandation sous les yeux.
+            ✓ Demande envoyée. Nous vous répondons à {state.ok.email}, avec ce
+            profil et cette recommandation sous les yeux.
           </p>
         ) : null}
         {state.error ? (
@@ -238,16 +295,18 @@ export function OrientationForm({ initial = ETAT_INITIAL }: { initial?: Orientat
         {guardError ? <GuardError message={guardError} /> : null}
 
         <div className="flex flex-wrap gap-3 pt-2">
-          <Link
-            href={`/entreprises#${reco.scenarioCode}`}
-            className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-white/30"
-          >
-            La fiche de cette entreprise
-          </Link>
+          {reco ? (
+            <Link
+              href={`/entreprises#${reco.scenarioCode}`}
+              className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-white/30"
+            >
+              La fiche de cette entreprise
+            </Link>
+          ) : null}
           {!state.ok ? (
             <button
               type="submit"
-              disabled={pending}
+              disabled={pending || !complet}
               className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-400 disabled:opacity-60"
             >
               {pending ? "Envoi…" : "Nous écrire avec ce profil"}

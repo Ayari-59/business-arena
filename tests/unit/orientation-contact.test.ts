@@ -28,6 +28,31 @@ describe("orientation : le formulaire recueille la demande", () => {
     expect(html).toContain("Ce que nous vous conseillons");
   });
 
+  it("rien n'est choisi d'avance : la recommandation attend les trois réponses, le bouton aussi", () => {
+    expect(html).toContain("Choisir un diplôme…");
+    expect(html).toContain("Choisir un objectif…");
+    expect(html).toContain('name="semestre" value=""');
+    expect(html).not.toContain('aria-pressed="true"');
+    expect(html).toContain("Répondez aux trois questions");
+    expect(html).not.toContain("La fiche de cette entreprise");
+    expect(html).toMatch(/<button type="submit" disabled=""/);
+  });
+
+  it("une saisie rejouée revient avec sa recommandation", () => {
+    const rejoue = renderToStaticMarkup(
+      createElement(OrientationForm, {
+        initial: {
+          error: "E-mail invalide",
+          ok: null,
+          values: { nom: "M", etablissement: "L", email: "x", diplome: "cg1", semestre: "s2", objectif: "tresorerie", message: "" },
+        },
+      }),
+    );
+    expect(rejoue).toContain('aria-pressed="true"');
+    expect(rejoue).toContain("La fiche de cette entreprise");
+    expect(rejoue).not.toContain("Répondez aux trois questions");
+  });
+
   it("recueille l'identité et le profil, sous des noms de champs lus par l'action", () => {
     for (const champ of ["nom", "etablissement", "email", "diplome", "semestre", "objectif", "message"]) {
       expect(html, champ).toContain(`name="${champ}"`);
