@@ -38,6 +38,9 @@ export function SiteHeader() {
   // l'action principale et trois en-têtes. On déplie ce qu'on veut.
   const [groupesOuverts, setGroupesOuverts] = useState<Set<string>>(new Set());
   const cadre = useRef<HTMLElement>(null);
+  // Dans l'arène, la page est plus large (1 400 px) : la barre s'aligne sur
+  // ses bords, sinon le logo et le menu flottent en retrait sur grand écran.
+  const largeur = chemin?.startsWith("/arena/") ? "max-w-[1400px]" : "max-w-6xl";
 
   const basculerGroupe = (code: string) =>
     setGroupesOuverts((etat) => {
@@ -84,7 +87,7 @@ export function SiteHeader() {
           le voit depuis un ordinateur de bureau. */}
       <nav
         aria-label="Navigation principale"
-        className="relative z-40 mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-3.5 sm:px-6"
+        className={`relative z-40 mx-auto flex ${largeur} flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-3.5 sm:px-6`}
       >
         <div className="flex items-center gap-2.5">
           <Link href="/" aria-label="Accueil">
