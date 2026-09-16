@@ -42,9 +42,12 @@ export const CONCEPTS: ConceptDef[] = [
     name: "Demande et part de marché",
     domain: "market",
     axis: "marketing",
-    definition: "La demande est la quantité que le marché veut acheter ; votre part de marché est la fraction que vous en captez.",
-    intuition: "Le gâteau (la demande) et votre part du gâteau sont deux choses différentes : le gâteau peut grossir pendant que votre part rétrécit.",
-    method: "Comparez l'évolution de la demande totale du segment et celle de vos ventes : si le marché croît plus vite que vous, vous perdez du terrain.",
+    definition:
+      "La demande est la quantité que le marché veut acheter ; votre part de marché est la fraction que vous en captez.",
+    intuition:
+      "Le gâteau (la demande) et votre part du gâteau sont deux choses différentes : le gâteau peut grossir pendant que votre part rétrécit.",
+    method:
+      "Comparez l'évolution de la demande totale du segment et celle de vos ventes : si le marché croît plus vite que vous, vous perdez du terrain.",
     formula: "Part de marché = vos ventes / demande totale du marché",
   },
   {
@@ -53,8 +56,10 @@ export const CONCEPTS: ConceptDef[] = [
     domain: "market",
     axis: "marketing",
     definition: "Sensibilité de la demande à une variation de prix.",
-    intuition: "Baisser le prix de 10 % peut faire gagner 25 % de clients (segment élastique)… ou presque rien (segment rigide). Tous les clients ne réagissent pas pareil.",
-    method: "Testez de petites variations de prix et observez la variation des ventes segment par segment.",
+    intuition:
+      "Baisser le prix de 10 % peut faire gagner 25 % de clients (segment élastique)… ou presque rien (segment rigide). Tous les clients ne réagissent pas pareil.",
+    method:
+      "Testez de petites variations de prix et observez la variation des ventes segment par segment.",
     formula: "e = (ΔQ/Q) / (ΔP/P), avec e < −1 : demande élastique",
   },
   {
@@ -62,18 +67,24 @@ export const CONCEPTS: ConceptDef[] = [
     name: "Prix psychologique",
     domain: "market",
     axis: "marketing",
-    definition: "Seuils de prix perçus par les clients : 59,90 € n'est pas 60 €.",
-    intuition: "La perception du prix n'est pas linéaire : franchir un seuil symbolique fait décrocher la demande plus que l'écart ne le justifie. Un prix trop bas peut aussi inquiéter.",
-    method: "Repérez les seuils (50 €, 60 €, 100 €…) et positionnez-vous juste en dessous quand la marge le permet.",
+    definition:
+      "Seuils de prix perçus par les clients : 59,90 € n'est pas 60 €.",
+    intuition:
+      "La perception du prix n'est pas linéaire : franchir un seuil symbolique fait décrocher la demande plus que l'écart ne le justifie. Un prix trop bas peut aussi inquiéter.",
+    method:
+      "Repérez les seuils (50 €, 60 €, 100 €…) et positionnez-vous juste en dessous quand la marge le permet.",
   },
   {
     code: "seasonality",
     name: "Saisonnalité",
     domain: "market",
     axis: "analysis",
-    definition: "Variations régulières de la demande selon la période (fêtes, rentrée…).",
-    intuition: "Si le pic de demande arrive au tour 4, c'est au tour 3 qu'il faut produire : après, il est trop tard.",
-    method: "Lisez les coefficients saisonniers, anticipez la production et les stocks un tour avant le pic.",
+    definition:
+      "Variations régulières de la demande selon la période (fêtes, rentrée…).",
+    intuition:
+      "Si le pic de demande arrive au tour 4, c'est au tour 3 qu'il faut produire : après, il est trop tard.",
+    method:
+      "Lisez les coefficients saisonniers, anticipez la production et les stocks un tour avant le pic.",
   },
   {
     code: "revenue",
@@ -81,8 +92,10 @@ export const CONCEPTS: ConceptDef[] = [
     domain: "commercial",
     axis: "marketing",
     definition: "Total des ventes valorisées au prix de vente.",
-    intuition: "Le CA peut monter alors que la rentabilité baisse : vendre plus en gagnant moins par unité n'est pas toujours un progrès.",
-    method: "Décomposez toujours une variation de CA en effet prix et effet volume.",
+    intuition:
+      "Le CA peut monter alors que la rentabilité baisse : vendre plus en gagnant moins par unité n'est pas toujours un progrès.",
+    method:
+      "Décomposez toujours une variation de CA en effet prix et effet volume.",
     formula: "CA = prix × quantités vendues",
   },
   {
@@ -90,8 +103,10 @@ export const CONCEPTS: ConceptDef[] = [
     name: "Segmentation",
     domain: "commercial",
     axis: "marketing",
-    definition: "Découpage du marché en groupes de clients aux comportements homogènes.",
-    intuition: "Un étudiant et un passionné n'achètent pas la même chose au même prix : un seul prix pour tous, c'est un compromis qui déçoit tout le monde.",
+    definition:
+      "Découpage du marché en groupes de clients aux comportements homogènes.",
+    intuition:
+      "Un étudiant et un passionné n'achètent pas la même chose au même prix : un seul prix pour tous, c'est un compromis qui déçoit tout le monde.",
     method: "Analysez vos ventes segment par segment, jamais en masse globale.",
   },
   {
@@ -99,8 +114,10 @@ export const CONCEPTS: ConceptDef[] = [
     name: "Coûts fixes",
     domain: "costs",
     axis: "finance",
-    definition: "Charges indépendantes du volume produit (loyer, salaires de structure, amortissements).",
-    intuition: "Que vous vendiez 0 ou 5 000 enceintes, le loyer tombe. C'est un tapis roulant : il faut vendre assez chaque période juste pour le payer.",
+    definition:
+      "Charges indépendantes du volume produit (loyer, salaires de structure, amortissements).",
+    intuition:
+      "Que vous vendiez 0 ou 5 000 enceintes, le loyer tombe. C'est un tapis roulant : il faut vendre assez chaque période juste pour le payer.",
     method: "Isolez les charges qui ne bougent pas quand le volume bouge.",
   },
   {
@@ -108,9 +125,12 @@ export const CONCEPTS: ConceptDef[] = [
     name: "Coût standard",
     domain: "costs",
     axis: "finance",
-    definition: "Coût unitaire décidé à l'avance et tenu pour référence, auquel se comparera le coût réellement supporté.",
-    intuition: "C'est le prix que vous vous étiez promis de payer. Sans cette promesse écrite, un dérapage ne se voit pas : tout coût passe pour « le » coût.",
-    method: "Fixez le coût attendu par unité — matière, main-d'œuvre — avant de produire, puis mesurez toujours le réel contre lui.",
+    definition:
+      "Coût unitaire décidé à l'avance et tenu pour référence, auquel se comparera le coût réellement supporté.",
+    intuition:
+      "C'est le prix que vous vous étiez promis de payer. Sans cette promesse écrite, un dérapage ne se voit pas : tout coût passe pour « le » coût.",
+    method:
+      "Fixez le coût attendu par unité — matière, main-d'œuvre — avant de produire, puis mesurez toujours le réel contre lui.",
     prerequisites: ["variable_costs"],
   },
   {
@@ -118,9 +138,12 @@ export const CONCEPTS: ConceptDef[] = [
     name: "Écart de coût",
     domain: "costs",
     axis: "analysis",
-    definition: "Différence entre le coût réellement supporté et le coût standard, à production égale.",
-    intuition: "Savoir qu'on a payé trop cher ne sert à rien ; savoir de combien, et sur quoi, dit où agir.",
-    method: "Calculez le réel moins le standard sur la production réalisée, puis décomposez l'écart avant de conclure.",
+    definition:
+      "Différence entre le coût réellement supporté et le coût standard, à production égale.",
+    intuition:
+      "Savoir qu'on a payé trop cher ne sert à rien ; savoir de combien, et sur quoi, dit où agir.",
+    method:
+      "Calculez le réel moins le standard sur la production réalisée, puis décomposez l'écart avant de conclure.",
     formula: "Écart de coût = coût réel − coût standard, à production réalisée",
     prerequisites: ["standard_costing"],
   },
@@ -129,10 +152,14 @@ export const CONCEPTS: ConceptDef[] = [
     name: "Écart de prix matière",
     domain: "costs",
     axis: "analysis",
-    definition: "Part de l'écart de coût qui vient du prix payé à la matière, et non des quantités consommées.",
-    intuition: "Le fournisseur a changé son tarif : à quantité identique, la facture monte. Ce n'est pas l'atelier qui est en cause, c'est l'achat.",
-    method: "Mesurez l'écart de prix unitaire, puis multipliez-le par les quantités produites — jamais par les quantités vendues.",
-    formula: "Écart de prix matière = (coût réel unitaire − coût standard unitaire) × quantité produite",
+    definition:
+      "Part de l'écart de coût qui vient du prix payé à la matière, et non des quantités consommées.",
+    intuition:
+      "Le fournisseur a changé son tarif : à quantité identique, la facture monte. Ce n'est pas l'atelier qui est en cause, c'est l'achat.",
+    method:
+      "Mesurez l'écart de prix unitaire, puis multipliez-le par les quantités produites — jamais par les quantités vendues.",
+    formula:
+      "Écart de prix matière = (coût réel unitaire − coût standard unitaire) × quantité produite",
     prerequisites: ["cost_variance"],
   },
   {
@@ -140,9 +167,12 @@ export const CONCEPTS: ConceptDef[] = [
     name: "Écart d'efficacité",
     domain: "costs",
     axis: "production",
-    definition: "Part de l'écart de coût qui vient des quantités consommées en trop, rebut et reprises comprises.",
-    intuition: "Chaque pièce rebutée a mangé de la matière et du temps sans jamais être vendue : c'est un surcoût pur, et il se corrige à l'atelier, pas chez le fournisseur.",
-    method: "Comptez les unités perdues ou reprises, et valorisez-les au coût standard.",
+    definition:
+      "Part de l'écart de coût qui vient des quantités consommées en trop, rebut et reprises comprises.",
+    intuition:
+      "Chaque pièce rebutée a mangé de la matière et du temps sans jamais être vendue : c'est un surcoût pur, et il se corrige à l'atelier, pas chez le fournisseur.",
+    method:
+      "Comptez les unités perdues ou reprises, et valorisez-les au coût standard.",
     formula: "Écart d'efficacité = unités rebutées × coût standard unitaire",
     prerequisites: ["cost_variance"],
   },
@@ -151,18 +181,24 @@ export const CONCEPTS: ConceptDef[] = [
     name: "Coûts variables",
     domain: "costs",
     axis: "finance",
-    definition: "Charges proportionnelles au volume (matières, main-d'œuvre directe, énergie).",
-    intuition: "Chaque unité produite « emporte » son coût : produire plus coûte plus, produire moins soulage immédiatement.",
-    method: "Calculez le coût variable unitaire : c'est le plancher absolu de votre prix de vente durable.",
+    definition:
+      "Charges proportionnelles au volume (matières, main-d'œuvre directe, énergie).",
+    intuition:
+      "Chaque unité produite « emporte » son coût : produire plus coûte plus, produire moins soulage immédiatement.",
+    method:
+      "Calculez le coût variable unitaire : c'est le plancher absolu de votre prix de vente durable.",
   },
   {
     code: "contribution_margin",
     name: "Marge sur coût variable",
     domain: "margins",
     axis: "finance",
-    definition: "Ce que chaque unité vendue laisse pour couvrir les coûts fixes, puis dégager un profit.",
-    intuition: "À 59 € avec 38 € de coût variable, chaque enceinte « contribue » pour 21 € : les 4 571 premières paient la structure, les suivantes font le bénéfice.",
-    method: "MCV unitaire = prix − coût variable unitaire ; MCV totale = MCV unitaire × volume.",
+    definition:
+      "Ce que chaque unité vendue laisse pour couvrir les coûts fixes, puis dégager un profit.",
+    intuition:
+      "À 59 € avec 38 € de coût variable, chaque enceinte « contribue » pour 21 € : les 4 571 premières paient la structure, les suivantes font le bénéfice.",
+    method:
+      "MCV unitaire = prix − coût variable unitaire ; MCV totale = MCV unitaire × volume.",
     formula: "MCV = CA − coûts variables ; taux de MCV = MCV / CA",
   },
   {
@@ -170,9 +206,12 @@ export const CONCEPTS: ConceptDef[] = [
     name: "Taux de marge et taux de marque",
     domain: "margins",
     axis: "finance",
-    definition: "Deux façons d'exprimer la même marge : rapportée au coût (marge) ou au prix (marque).",
-    intuition: "Une marge de 21 € sur 38 € de coût, c'est 55 % de taux de marge mais 36 % de taux de marque : attention à qui parle de quoi.",
-    method: "Précisez toujours le dénominateur avant de comparer des « pourcentages de marge ».",
+    definition:
+      "Deux façons d'exprimer la même marge : rapportée au coût (marge) ou au prix (marque).",
+    intuition:
+      "Une marge de 21 € sur 38 € de coût, c'est 55 % de taux de marge mais 36 % de taux de marque : attention à qui parle de quoi.",
+    method:
+      "Précisez toujours le dénominateur avant de comparer des « pourcentages de marge ».",
     formula: "Taux de marge = marge/coût ; taux de marque = marge/prix",
   },
   {
@@ -180,18 +219,23 @@ export const CONCEPTS: ConceptDef[] = [
     name: "Seuil de rentabilité",
     domain: "thresholds",
     axis: "finance",
-    definition: "Niveau d'activité à partir duquel l'entreprise ne perd plus d'argent.",
-    intuition: "C'est la ligne de flottaison : en dessous, chaque période creuse la perte ; au-dessus, chaque vente supplémentaire devient du bénéfice net de coûts variables.",
+    definition:
+      "Niveau d'activité à partir duquel l'entreprise ne perd plus d'argent.",
+    intuition:
+      "C'est la ligne de flottaison : en dessous, chaque période creuse la perte ; au-dessus, chaque vente supplémentaire devient du bénéfice net de coûts variables.",
     method: "Divisez les coûts fixes par la marge sur coût variable unitaire.",
-    formula: "SR (volume) = coûts fixes / MCV unitaire ; SR (valeur) = coûts fixes / taux de MCV",
+    formula:
+      "SR (volume) = coûts fixes / MCV unitaire ; SR (valeur) = coûts fixes / taux de MCV",
   },
   {
     code: "dead_point",
     name: "Point mort",
     domain: "thresholds",
     axis: "finance",
-    definition: "Date à laquelle le seuil de rentabilité est atteint dans la période.",
-    intuition: "« À partir du 20 novembre, on travaille pour nous » : le point mort traduit le seuil en jours de calendrier.",
+    definition:
+      "Date à laquelle le seuil de rentabilité est atteint dans la période.",
+    intuition:
+      "« À partir du 20 novembre, on travaille pour nous » : le point mort traduit le seuil en jours de calendrier.",
     method: "Point mort = (SR en valeur / CA) × durée de la période.",
   },
   {
@@ -199,9 +243,12 @@ export const CONCEPTS: ConceptDef[] = [
     name: "Marge de sécurité",
     domain: "thresholds",
     axis: "risk",
-    definition: "Ce que le CA peut perdre avant de repasser sous le seuil de rentabilité.",
-    intuition: "C'est votre coussin : une marge de sécurité de 8 % signifie qu'une baisse de 8 % des ventes vous met dans le rouge.",
-    method: "Marge de sécurité = CA − seuil de rentabilité ; indice = marge / CA.",
+    definition:
+      "Ce que le CA peut perdre avant de repasser sous le seuil de rentabilité.",
+    intuition:
+      "C'est votre coussin : une marge de sécurité de 8 % signifie qu'une baisse de 8 % des ventes vous met dans le rouge.",
+    method:
+      "Marge de sécurité = CA − seuil de rentabilité ; indice = marge / CA.",
   },
   {
     code: "capacity",
@@ -209,35 +256,46 @@ export const CONCEPTS: ConceptDef[] = [
     domain: "production",
     axis: "production",
     definition: "Volume maximal productible et proportion réellement utilisée.",
-    intuition: "On ne vend pas ce qu'on n'a pas produit : une demande record ne sert à rien si l'atelier plafonne. Et une usine à 40 % paie des fixes pour rien.",
-    method: "Comparez plan de production, capacité machine × disponibilité, et capacité main-d'œuvre : la plus petite gagne.",
+    intuition:
+      "On ne vend pas ce qu'on n'a pas produit : une demande record ne sert à rien si l'atelier plafonne. Et une usine à 40 % paie des fixes pour rien.",
+    method:
+      "Comparez plan de production, capacité machine × disponibilité, et capacité main-d'œuvre : la plus petite gagne.",
   },
   {
     code: "stock",
     name: "Stocks et rupture",
     domain: "production",
     axis: "production",
-    definition: "Réserve de produits entre production et vente ; la rupture est une vente perdue.",
-    intuition: "Le stock coûte (il immobilise de l'argent), la rupture coûte plus (client perdu, image dégradée) : tout l'art est entre les deux.",
-    method: "Surveillez les ventes manquées par segment et constituez du stock avant les pics saisonniers.",
+    definition:
+      "Réserve de produits entre production et vente ; la rupture est une vente perdue.",
+    intuition:
+      "Le stock coûte (il immobilise de l'argent), la rupture coûte plus (client perdu, image dégradée) : tout l'art est entre les deux.",
+    method:
+      "Surveillez les ventes manquées par segment et constituez du stock avant les pics saisonniers.",
   },
   {
     code: "productivity",
     name: "Productivité",
     domain: "production",
     axis: "production",
-    definition: "Production obtenue par unité de ressource (heure de travail, machine).",
-    intuition: "Deux ateliers identiques peuvent produire différemment : maintenance, organisation et climat social font la différence.",
-    method: "Suivez unités/heure et disponibilité machine ; une maintenance négligée se paie en pannes.",
+    definition:
+      "Production obtenue par unité de ressource (heure de travail, machine).",
+    intuition:
+      "Deux ateliers identiques peuvent produire différemment : maintenance, organisation et climat social font la différence.",
+    method:
+      "Suivez unités/heure et disponibilité machine ; une maintenance négligée se paie en pannes.",
   },
   {
     code: "frng",
     name: "FRNG (fonds de roulement)",
     domain: "finance",
     axis: "finance",
-    definition: "Excédent des ressources stables sur les emplois stables, disponible pour financer le cycle d'exploitation.",
-    intuition: "Ce que les capitaux longs (capital + emprunts) laissent une fois les machines et locaux payés : la réserve qui finance le quotidien.",
-    method: "FRNG = (capitaux propres + dettes financières) − actif immobilisé net.",
+    definition:
+      "Excédent des ressources stables sur les emplois stables, disponible pour financer le cycle d'exploitation.",
+    intuition:
+      "Ce que les capitaux longs (capital + emprunts) laissent une fois les machines et locaux payés : la réserve qui finance le quotidien.",
+    method:
+      "FRNG = (capitaux propres + dettes financières) − actif immobilisé net.",
     formula: "FRNG = ressources stables − emplois stables",
   },
   {
@@ -245,9 +303,12 @@ export const CONCEPTS: ConceptDef[] = [
     name: "BFR (besoin en fonds de roulement)",
     domain: "finance",
     axis: "finance",
-    definition: "Argent immobilisé par le cycle d'exploitation : stocks + créances clients − dettes fournisseurs.",
-    intuition: "Entre le moment où vous payez vos fournisseurs et celui où vos clients vous paient, quelqu'un doit avancer l'argent : c'est vous. Plus vous grandissez, plus l'avance grossit.",
-    method: "BFR = stocks + créances clients − dettes fournisseurs. Leviers : délais clients, délais fournisseurs, niveau de stock.",
+    definition:
+      "Argent immobilisé par le cycle d'exploitation : stocks + créances clients − dettes fournisseurs.",
+    intuition:
+      "Entre le moment où vous payez vos fournisseurs et celui où vos clients vous paient, quelqu'un doit avancer l'argent : c'est vous. Plus vous grandissez, plus l'avance grossit.",
+    method:
+      "BFR = stocks + créances clients − dettes fournisseurs. Leviers : délais clients, délais fournisseurs, niveau de stock.",
     formula: "BFR = stocks + créances − dettes d'exploitation",
   },
   {
@@ -255,19 +316,26 @@ export const CONCEPTS: ConceptDef[] = [
     name: "Trésorerie nette",
     domain: "finance",
     axis: "finance",
-    definition: "Ce qui reste du FRNG une fois le BFR financé : le solde disponible en banque.",
-    intuition: "On peut être bénéficiaire et à découvert : le résultat est une opinion, la trésorerie est un fait. C'est elle qui fait vivre ou mourir l'entreprise.",
-    method: "TN = FRNG − BFR. Si TN < 0 : augmenter le FRNG (capital, emprunt long) ou réduire le BFR (délais, stocks).",
-    formula: "Trésorerie nette = FRNG − BFR = disponibilités − concours bancaires",
+    definition:
+      "Ce qui reste du FRNG une fois le BFR financé : le solde disponible en banque.",
+    intuition:
+      "On peut être bénéficiaire et à découvert : le résultat est une opinion, la trésorerie est un fait. C'est elle qui fait vivre ou mourir l'entreprise.",
+    method:
+      "TN = FRNG − BFR. Si TN < 0 : augmenter le FRNG (capital, emprunt long) ou réduire le BFR (délais, stocks).",
+    formula:
+      "Trésorerie nette = FRNG − BFR = disponibilités − concours bancaires",
   },
   {
     code: "profitability_vs_return",
     name: "Profitabilité vs rentabilité",
     domain: "profitability",
     axis: "analysis",
-    definition: "La profitabilité rapporte le résultat au CA ; la rentabilité le rapporte aux capitaux engagés.",
-    intuition: "Gagner 20 000 € est « bien » ? Cela dépend : avec 100 000 € investis c'est excellent, avec 2 millions c'est médiocre. Le montant seul ne dit rien.",
-    method: "Profitabilité = résultat/CA ; rentabilité économique = résultat d'exploitation net d'IS / capitaux engagés ; rentabilité financière = résultat net / capitaux propres.",
+    definition:
+      "La profitabilité rapporte le résultat au CA ; la rentabilité le rapporte aux capitaux engagés.",
+    intuition:
+      "Gagner 20 000 € est « bien » ? Cela dépend : avec 100 000 € investis c'est excellent, avec 2 millions c'est médiocre. Le montant seul ne dit rien.",
+    method:
+      "Profitabilité = résultat/CA ; rentabilité économique = résultat d'exploitation net d'IS / capitaux engagés ; rentabilité financière = résultat net / capitaux propres.",
   },
   {
     code: "discounting",
@@ -306,7 +374,8 @@ export const CONCEPTS: ConceptDef[] = [
       "Les échéances tombent que la caisse soit pleine ou vide : emprunter, c'est engager sa trésorerie FUTURE. La question n'est pas « puis-je emprunter ? » mais « mes flux futurs paieront-ils les échéances ? ».",
     method:
       "Rapprochez votre capacité d'autofinancement des annuités : CAF < échéances = danger, quel que soit le résultat affiché.",
-    formula: "Amortissement constant : échéance t = capital/durée + restant dû × taux",
+    formula:
+      "Amortissement constant : échéance t = capital/durée + restant dû × taux",
   },
   {
     code: "receivables_financing",
@@ -319,7 +388,8 @@ export const CONCEPTS: ConceptDef[] = [
       "Vos clients vous doivent de l'argent : cette richesse dort dans le BFR. La banque ou le factor peuvent l'avancer, moins cher que le découvert mais jamais gratuit. Un besoin PONCTUEL se couvre en mobilisant des créances ; un besoin STRUCTUREL exige de la ressource stable.",
     method:
       "Comparez les coûts : agios d'escompte (taux × durée restante) vs commission d'affacturage vs agios de découvert, et gardez l'emprunt ou le capital pour les besoins durables.",
-    formula: "Coût d'escompte = montant × taux × durée/360 ; coût d'affacturage = montant × commission",
+    formula:
+      "Coût d'escompte = montant × taux × durée/360 ; coût d'affacturage = montant × commission",
   },
 
   /* ─────────────────────────────────────────────────────────────────────────
@@ -409,7 +479,8 @@ export const CONCEPTS: ConceptDef[] = [
     name: "Taux de transformation",
     domain: "commercial",
     axis: "marketing",
-    definition: "La part des visiteurs entrés dans le point de vente qui en repartent avec un achat.",
+    definition:
+      "La part des visiteurs entrés dans le point de vente qui en repartent avec un achat.",
     intuition:
       "La vitrine et la communication font entrer ; l'accueil, l'assortiment et la disponibilité font acheter. Un trafic qui monte pendant que le taux baisse est le signe qu'on a promis en vitrine ce qu'on ne tient pas en rayon.",
     method:
@@ -439,7 +510,8 @@ export const CONCEPTS: ConceptDef[] = [
       "La surface est la ressource rare d'un point de vente : elle est louée à l'année, elle ne s'agrandit pas, et chaque rayon doit payer la place qu'il occupe. C'est l'équivalent, pour une boutique, de ce que le taux d'occupation est pour un hôtel.",
     method:
       "Rapportez d'abord le chiffre d'affaires à la surface, puis la marge à la même surface, et comparez les rayons entre eux. C'est la seconde comparaison qui décide : un rayon qui fait du volume à faible marge peut occuper la meilleure place pour rien.",
-    formula: "Rendement = chiffre d'affaires de la période / surface de vente en mètres carrés",
+    formula:
+      "Rendement = chiffre d'affaires de la période / surface de vente en mètres carrés",
   },
 
   /* ────────────────────────────────────────────────────────────────────────
@@ -472,7 +544,8 @@ export const CONCEPTS: ConceptDef[] = [
       "C'est le résultat débarrassé de trois choses qui ne viennent pas du métier : la façon dont l'entreprise a financé ses murs, la façon dont elle les amortit, et ce que le fisc lui prend. Deux boutiques identiques, dont l'une a emprunté et l'autre non, ont le même excédent brut et des résultats nets différents. C'est pour cela qu'on le regarde en premier quand on compare deux affaires.",
     method:
       "Partez de la marge sur coût variable, retranchez les charges de structure et les budgets engagés dans le tour. Ce qui reste est l'excédent brut. Retranchez ensuite les dotations aux amortissements et vous obtenez le résultat d'exploitation, le solde suivant : l'écart entre les deux est exactement ce que l'usure des biens a coûté.",
-    formula: "EBE = marge sur coût variable − charges de structure − budgets du tour",
+    formula:
+      "EBE = marge sur coût variable − charges de structure − budgets du tour",
   },
   {
     code: "depreciation",
@@ -485,7 +558,8 @@ export const CONCEPTS: ConceptDef[] = [
       "Un agencement payé une fois sert plusieurs années. Le mettre entier dans les charges de l'année de l'achat écraserait ce résultat-là et flatterait les suivants, alors que le magasin a travaillé pareil. On en étale donc le coût sur la durée d'usage. C'est une charge qui ne se décaisse pas : elle pèse sur le résultat sans rien sortir de la caisse, ce qui explique qu'une entreprise puisse afficher une perte sans manquer d'argent.",
     method:
       "Divisez la valeur d'entrée du bien par le nombre d'exercices pendant lesquels il servira. Ce que le bilan appelle valeur nette est ce qui n'a pas encore été amorti. À ne pas confondre avec le tableau d'amortissement d'un emprunt : celui-là parle du remboursement d'une dette, celui-ci de l'usure d'un bien. Le mot est le même, la chose n'a aucun rapport.",
-    formula: "Dotation de l'exercice = valeur d'entrée / durée d'usage en exercices",
+    formula:
+      "Dotation de l'exercice = valeur d'entrée / durée d'usage en exercices",
   },
   {
     code: "full_unit_cost",
@@ -498,7 +572,8 @@ export const CONCEPTS: ConceptDef[] = [
       "Le coût variable dit ce que coûte la prochaine unité, le coût de revient ce que coûte une unité en moyenne. Les deux sont justes et ne répondent pas à la même question : le premier décide d'accepter une commande de plus, le second dit si le prix affiché tient sur l'année. Les confondre fait refuser des commandes rentables, ou vendre à perte en croyant gagner.",
     method:
       "Ajoutez au coût variable d'une unité la part de structure qu'elle porte, c'est-à-dire les charges de structure du tour divisées par les unités vendues. Ce coût baisse donc quand le volume monte, sans qu'aucune charge n'ait bougé : c'est l'effet du partage et non une économie. Un coût de revient calculé sur un tour creux fait donc peur pour rien.",
-    formula: "Coût de revient unitaire = coût variable unitaire + charges de structure / unités vendues",
+    formula:
+      "Coût de revient unitaire = coût variable unitaire + charges de structure / unités vendues",
   },
   {
     code: "distribution_commission",
@@ -511,7 +586,179 @@ export const CONCEPTS: ConceptDef[] = [
       "Une place de marché, un apporteur d'affaires, une centrale : le client paie le prix affiché, l'entreprise n'en encaisse qu'une partie. La commission ne se voit ni sur l'étiquette ni sur la facture du client, uniquement dans les comptes. C'est ce qui la rend facile à oublier quand on compare un canal à un autre, et c'est une charge, jamais une remise : une remise se négocie avec le client et se voit, une commission se négocie avec le partenaire et ne se voit pas.",
     method:
       "Appliquez le taux au chiffre d'affaires du canal, jamais à la marge. Retranchez le montant obtenu de la marge d'une vente en direct : l'écart est ce que le canal coûte par commande. Comparez ensuite les canaux par la marge qu'ils apportent et non par le nombre de commandes, car un canal commissionné pèse toujours moins dans la marge que dans les ventes.",
-    formula: "Commission = taux × prix de vente ; marge après commission = prix − coût variable − commission",
+    formula:
+      "Commission = taux × prix de vente ; marge après commission = prix − coût variable − commission",
+  },
+  /* ── Notions mobilisées par les ateliers, sans fiche jusqu'ici ── */
+  {
+    code: "customer_acquisition_cost",
+    name: "Coût d'acquisition client (CAC)",
+    domain: "commercial",
+    axis: "marketing",
+    definition:
+      "Ce que coûte, en publicité et en trafic acheté, chaque nouveau client réellement gagné.",
+    intuition:
+      "Un budget de 12 000 € qui amène 400 nouveaux clients coûte 30 € le client : si la marge d'une première commande est de 18 €, le client ne devient rentable qu'en revenant. Diviser par toutes les commandes, fidèles compris, cache ce fait.",
+    method:
+      "Divisez le budget d'acquisition du tour par le nombre de commandes des nouveaux clients, puis comparez à la marge par commande : le rapport dit combien de commandes il faut pour amortir la conquête.",
+    formula: "CAC = budget d'acquisition / nouveaux clients gagnés",
+  },
+  {
+    code: "payment_terms",
+    name: "Délais de règlement et poste clients",
+    domain: "finance",
+    axis: "finance",
+    definition:
+      "Le temps qui sépare une vente de son encaissement, et l'argent qui dort chez les clients pendant ce temps.",
+    intuition:
+      "Vendre à un compte-clé payé à quatre-vingts jours, c'est lui prêter le prix de la vente pendant presque un trimestre : le résultat monte tout de suite, la caisse attend.",
+    method:
+      "Relevez le délai de chaque clientèle, calculez les créances en fin de période (ventes × délai / durée de la période) et demandez-vous qui finance cet encours : le découvert, l'escompte ou l'affacturage.",
+    formula:
+      "Créances ≈ chiffre d'affaires × délai moyen / durée de la période",
+  },
+  {
+    code: "cash_budget",
+    name: "Budget de trésorerie",
+    domain: "finance",
+    axis: "finance",
+    definition:
+      "La prévision, période par période, des encaissements et des décaissements, et du solde qui en résulte.",
+    intuition:
+      "Le compte de résultat dit si l'on gagne de l'argent, le budget de trésorerie dit si l'on en aura le jour où il faut payer. Les deux peuvent dire l'inverse le même trimestre.",
+    method:
+      "Partez de la caisse d'ouverture, ajoutez les encaissements attendus selon les délais des clients, retirez les décaissements selon les délais des fournisseurs, de la paie et de l'État, et lisez le solde de fin : s'il est négatif, il faut le couvrir avant qu'il n'arrive.",
+    formula: "Solde de fin = solde de début + encaissements − décaissements",
+  },
+  {
+    code: "dashboard",
+    name: "Tableau de bord et indicateurs",
+    domain: "profitability",
+    axis: "analysis",
+    definition:
+      "Une page qui rassemble les quelques chiffres qui expliquent la marche de l'entreprise, période après période.",
+    intuition:
+      "Un tableau de bord n'est pas un relevé : trente chiffres ne se lisent pas, quatre bien choisis se lisent en dix secondes. Le bon indicateur est celui dont la variation explique le résultat.",
+    method:
+      "Choisissez au plus quatre indicateurs, un par question que se pose la direction (vend-on, gagne-t-on, encaisse-t-on, tient-on la capacité), donnez-leur une cible, et relisez-les côte à côte d'une période à l'autre.",
+  },
+  {
+    code: "weighted_average_cost",
+    name: "Coût unitaire moyen pondéré (CUMP)",
+    domain: "costs",
+    axis: "finance",
+    definition:
+      "La valeur d'une unité en stock, calculée comme la moyenne des coûts d'entrée pondérée par les quantités.",
+    intuition:
+      "Quand on a acheté 1 000 pièces à 10 € puis 500 à 13 €, chaque pièce du stock vaut 11 € : ni 10, ni 13. C'est à ce coût que sortent les ventes et que le stock figure au bilan.",
+    method:
+      "Après chaque entrée, recalculez le coût moyen : (valeur du stock + valeur de l'entrée) / (quantité en stock + quantité entrée). Les sorties se valorisent à ce coût jusqu'à l'entrée suivante.",
+    formula:
+      "CUMP = (stock initial en valeur + entrées en valeur) / (stock initial en quantité + entrées en quantité)",
+  },
+  {
+    code: "vat_payable",
+    name: "TVA à décaisser",
+    domain: "finance",
+    axis: "finance",
+    definition:
+      "La taxe collectée sur les ventes, moins celle payée sur les achats, que l'entreprise reverse à l'État.",
+    intuition:
+      "La TVA ne passe pas par le compte de résultat, qui est hors taxes, mais elle passe par la caisse : on l'encaisse avec les ventes et on la reverse plus tard, ce qui gonfle la trésorerie un temps, puis la vide d'un coup.",
+    method:
+      "TVA collectée sur les ventes toutes taxes moins TVA déductible sur les achats : le solde est à décaisser à l'échéance suivante. Placez ce décaissement dans le budget de trésorerie, jamais dans le résultat.",
+    formula: "TVA à décaisser = TVA collectée − TVA déductible",
+  },
+  {
+    code: "occupancy_revpar",
+    name: "Taux d'occupation, prix moyen et RevPAR",
+    domain: "commercial",
+    axis: "marketing",
+    definition:
+      "Les trois chiffres d'un hôtel : la part des chambres vendues, le prix moyen d'une chambre vendue, et le revenu par chambre disponible qui les combine.",
+    intuition:
+      "Remplir à bas prix ou vendre cher à moitié vide peuvent donner le même revenu par chambre disponible : c'est lui qui tranche, pas le taux d'occupation seul ni le prix seul. Une nuitée invendue est perdue, rien ne la rattrape le lendemain.",
+    method:
+      "Taux d'occupation = chambres vendues / chambres disponibles ; prix moyen = chiffre d'affaires hébergement / chambres vendues ; RevPAR = leur produit. Suivez les trois par saison, pas en moyenne annuelle.",
+    formula: "RevPAR = taux d'occupation × prix moyen chambre",
+  },
+  {
+    code: "operating_leverage",
+    name: "Levier opérationnel",
+    domain: "thresholds",
+    axis: "risk",
+    definition:
+      "La sensibilité du résultat à une variation de l'activité, d'autant plus forte que les charges fixes pèsent lourd.",
+    intuition:
+      "Deux entreprises au même résultat ne portent pas le même risque : celle dont les charges sont surtout fixes voit son résultat s'envoler quand les ventes montent, et s'effondrer quand elles baissent de peu.",
+    method:
+      "Divisez la marge sur coût variable par le résultat : le chiffre obtenu dit de combien de pour cent le résultat bouge quand les ventes bougent d'un pour cent. Plus il est haut, plus l'entreprise est proche de son seuil.",
+    formula:
+      "Levier opérationnel = marge sur coût variable / résultat d'exploitation",
+  },
+  {
+    code: "csr_index",
+    name: "RSE et indice extra-financier",
+    domain: "profitability",
+    axis: "strategy",
+    definition:
+      "La mesure de ce que l'entreprise fait de son empreinte environnementale, sociale et de gouvernance, à côté de ses comptes.",
+    intuition:
+      "Un engagement RSE se paie dans le trimestre et rapporte, s'il rapporte, plus tard : sur l'image, sur la fidélité des clients et des salariés, sur les conditions de la banque. C'est un arbitrage entre aujourd'hui et demain, pas une dépense de communication.",
+    method:
+      "Lisez les trois piliers séparément, reliez chaque décision de gestion à celui qu'elle touche, et suivez l'indice sur plusieurs périodes : une hausse d'un trimestre ne dit rien, une trajectoire dit tout.",
+  },
+  {
+    code: "brand_capital",
+    name: "Capital d'image et effet différé",
+    domain: "market",
+    axis: "marketing",
+    definition:
+      "La réputation accumulée par les dépenses passées, qui soutient la demande et s'use si on cesse de l'entretenir.",
+    intuition:
+      "Une campagne agit vite et s'oublie vite ; une image se construit lentement et dure. Arrêter d'y investir ne se voit pas tout de suite, ce qui est précisément le piège.",
+    method:
+      "Distinguez, dans vos dépenses, ce qui agit dans la période de ce qui se capitalise ; pour la seconde catégorie, raisonnez sur l'horizon qui reste à jouer, car un capital bâti au dernier tour ne rapportera jamais.",
+  },
+  {
+    code: "volume_price_variance",
+    name: "Écarts sur volume et sur prix",
+    domain: "costs",
+    axis: "analysis",
+    definition:
+      "La décomposition de l'écart entre un chiffre prévu et un chiffre réalisé en une part due aux quantités et une part due aux prix.",
+    intuition:
+      "Un chiffre d'affaires inférieur de 10 % à la prévision peut venir d'un marché plus petit que prévu ou d'un prix cédé trop bas : la décomposition dit lequel, et donc qui doit corriger quoi.",
+    method:
+      "Écart sur volume = (quantité réelle − quantité prévue) × prix prévu ; écart sur prix = (prix réel − prix prévu) × quantité réelle. Vérifiez que les deux se somment à l'écart total avant de les commenter.",
+    formula: "Écart total = écart sur volume + écart sur prix",
+  },
+  {
+    code: "income_statement",
+    name: "Compte de résultat",
+    domain: "costs",
+    axis: "analysis",
+    definition:
+      "Le document qui oppose, sur une période, les produits aux charges pour dire ce que l'entreprise a gagné ou perdu.",
+    intuition:
+      "Le compte de résultat raconte la période : ce qu'on a vendu, ce que cela a coûté, ce qui reste. Il ne dit rien de la caisse, qui peut être vide le jour d'un beau résultat.",
+    method:
+      "Lisez-le du haut vers le bas : chiffre d'affaires, charges variables, marge, charges fixes, résultat. À chaque ligne, demandez quelle décision l'a fait bouger par rapport à la période précédente.",
+    formula: "Résultat = produits − charges",
+  },
+  {
+    code: "balance_sheet",
+    name: "Bilan et bilan fonctionnel",
+    domain: "finance",
+    axis: "finance",
+    definition:
+      "La photographie de ce que l'entreprise possède et de ce qu'elle doit à une date donnée, relue par cycles dans le bilan fonctionnel.",
+    intuition:
+      "Le bilan répond à une autre question que le compte de résultat : non pas combien on a gagné, mais avec quoi on tourne et qui a financé. Le lire par cycles, investissement, exploitation, trésorerie, fait apparaître le fonds de roulement et le besoin qu'il doit couvrir.",
+    method:
+      "Regroupez l'actif et le passif par cycle : les emplois stables face aux ressources stables donnent le fonds de roulement ; les stocks et créances face aux dettes d'exploitation donnent le besoin ; la différence est la trésorerie nette.",
+    formula:
+      "Trésorerie nette = fonds de roulement − besoin en fonds de roulement",
   },
 ];
 
@@ -599,6 +846,21 @@ export const CONCEPT_PREREQUISITES: Record<string, readonly string[]> = {
   // Niveau 6 — Investissement
   discounting: ["net_treasury", "profitability_vs_return"],
   irr_payback: ["discounting"],
+
+  // Notions mobilisées par les ateliers
+  income_statement: ["revenue", "fixed_costs", "variable_costs"],
+  dashboard: ["revenue", "fixed_costs"],
+  customer_acquisition_cost: ["demand_market_share", "contribution_margin"],
+  weighted_average_cost: ["stock", "variable_costs"],
+  occupancy_revpar: ["capacity", "revenue"],
+  payment_terms: ["bfr"],
+  vat_payable: ["revenue"],
+  csr_index: ["contribution_margin"],
+  brand_capital: ["demand_market_share"],
+  balance_sheet: ["frng", "bfr"],
+  cash_budget: ["net_treasury"],
+  operating_leverage: ["breakeven"],
+  volume_price_variance: ["cost_variance", "revenue"],
 };
 
 /** Prérequis d'une notion (codes), liste vide si racine ou notion inconnue. */
@@ -667,6 +929,20 @@ export const CONCEPT_LEVEL: Record<string, ConceptLevel> = {
   // 6 — Investissement
   discounting: 6,
   irr_payback: 6,
+  // Notions mobilisées par les ateliers
+  income_statement: 2,
+  dashboard: 2,
+  customer_acquisition_cost: 3,
+  weighted_average_cost: 3,
+  occupancy_revpar: 3,
+  payment_terms: 4,
+  vat_payable: 4,
+  csr_index: 4,
+  brand_capital: 4,
+  balance_sheet: 4,
+  cash_budget: 5,
+  operating_leverage: 5,
+  volume_price_variance: 5,
 };
 
 /** Niveau d'une notion (1..6), défaut 1 si notion inconnue. */

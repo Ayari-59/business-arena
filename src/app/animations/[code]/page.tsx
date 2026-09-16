@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { NotionsMobilisees } from "@/components/notions-mobilisees";
 import { notFound } from "next/navigation";
 import { ATELIERS, atelierByCode, dureeTotaleHeures } from "@/config/ateliers";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
@@ -346,7 +347,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
                         Notions mobilisées
                       </h4>
                       <p className="mt-1.5 text-sm text-slate-400 print:text-black">
-                        {s.notions.join(", ")}.
+                        <NotionsMobilisees notions={s.notions} />
                       </p>
                     </div>
                   </div>

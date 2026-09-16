@@ -1,5 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { DIFFICULTES } from "../../src/config/ateliers/types";
+import { ficheDeNotion } from "../../src/config/ateliers/notions";
 import { ATELIERS, dureeTotaleHeures } from "../../src/config/ateliers";
 import { THEMES_STMG } from "../../src/config/ateliers/stmg";
 import {
@@ -466,6 +468,43 @@ describe("ateliers professionnels", () => {
       ].join("\n");
       for (const { motif, raison } of INTERDITS) {
         expect(prose, `${a.code} : ${raison} (« ${prose.match(motif)?.[0] ?? ""} »)`).not.toMatch(motif);
+      }
+    }
+  });
+
+  it("chaque fiche lit l'exigence sur la même échelle", () => {
+    // Le même chiffre portait des mots différents d'une fiche à l'autre : 1
+    // était « Initiation » ici et « Découverte » là, 3 « Approfondissement »
+    // ou « Pilotage ». Un enseignant qui compare deux fiches doit lire une
+    // seule échelle.
+    for (const a of ATELIERS) {
+      expect(a.difficulteLabel, `${a.code} : exigence ${a.difficulte}`).toBe(DIFFICULTES[a.difficulte]);
+    }
+  });
+
+  it("chaque trace est un acte, pas deux", () => {
+    // Un passeport professionnel attend une ligne par acte : « J'ai calculé un
+    // seuil ». Une trace « J'ai fait ceci, et j'ai fait cela » se coche à
+    // moitié et ne se retrouve dans aucune compétence. Le complément reste
+    // libre (« en pesant… », « puis analysé… ») ; un second « j'ai » non.
+    for (const a of ATELIERS) {
+      for (const s of a.seances) {
+        expect(s.tracePasseport, `${a.code}/séance ${s.numero} : « ${s.tracePasseport} »`).not.toMatch(
+          /(, | et )j['’](ai|en ai)\b|, je m['’]en\b/,
+        );
+      }
+    }
+  });
+
+  it("chaque séance mobilise au moins une notion qui a sa fiche", () => {
+    // Les notions s'affichaient en texte mort : l'élève qui butait sur l'une
+    // d'elles n'avait aucune porte à pousser. Le lien se fait par le sens
+    // (config/ateliers/notions) ; une séance dont aucune notion n'est couverte
+    // est une séance que le site n'aide pas à préparer.
+    for (const a of ATELIERS) {
+      for (const s of a.seances) {
+        const liees = s.notions.filter((n) => ficheDeNotion(n) !== null);
+        expect(liees.length, `${a.code}/séance ${s.numero} : ${s.notions.join(", ")}`).toBeGreaterThan(0);
       }
     }
   });

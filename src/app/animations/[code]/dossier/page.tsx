@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { NotionsMobilisees } from "@/components/notions-mobilisees";
 import { notFound } from "next/navigation";
 import { atelierByCode } from "@/config/ateliers";
 import { dossierEleve } from "@/config/ateliers/dossiers";
@@ -240,7 +241,7 @@ export default async function DossierElevePage({
               </ul>
 
               <p className="mt-4 text-xs leading-relaxed text-slate-400 print:text-black">
-                Notions à mobiliser : {s.notions.join(", ")}.
+                Notions à mobiliser : <NotionsMobilisees notions={s.notions} />
               </p>
               <p className="mt-2 border-t border-white/10 pt-2 text-xs italic leading-relaxed text-slate-400 print:border-black/20 print:text-black">
                 À verser à votre {dossier.entete.traceLabel} : « {s.trace} »

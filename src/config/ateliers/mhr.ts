@@ -32,7 +32,7 @@ export const ATELIER_MHR: AtelierDefinition = {
   resume:
     "Quatre trimestres à la tête d'un hôtel, du calcul du prix moyen et du taux d'occupation au tableau de bord de direction, avec la haute saison comme épreuve.",
   difficulte: 3,
-  difficulteLabel: "Pilotage",
+  difficulteLabel: "Approfondissement",
   format: "5 séances de 3 h",
   pourquoi:
     "Le taux d'occupation et le prix moyen se récitent en une heure et ne se comprennent qu'en les subissant. Ici l'équipe fixe son tarif, découvre au trimestre suivant combien de chambres sont restées vides à ce prix, et voit son revenu par chambre disponible monter ou tomber selon qu'elle a rempli ou tenu ses prix. La saisonnalité cesse d'être un chapitre : un hôtel qui a bradé ses nuitées en basse saison n'a plus de trésorerie pour affronter la haute, et une équipe qui a gardé ses tarifs sur un trimestre creux voit ses concurrents remplir pendant que ses étages restent éteints. La perte sèche de la nuitée invendue, que rien ne rattrape le lendemain, fait le reste de la leçon.",
@@ -119,7 +119,7 @@ export const ATELIER_MHR: AtelierDefinition = {
       livrable:
         "La fiche de positionnement de l'hôtel, une page : prix moyen visé, taux d'occupation attendu, charges de structure du trimestre, remplissage au seuil, et le positionnement retenu avec sa justification.",
       tracePasseport:
-        "J'ai calculé le prix moyen, le taux d'occupation et le seuil d'un hôtel, et j'ai justifié un positionnement à partir de ces calculs.",
+        "J'ai justifié le positionnement tarifaire d'un hôtel par le calcul de son prix moyen, de son taux d'occupation et de son seuil.",
       evaluation: [
         "Le taux d'occupation et le revenu par chambre disponible sont distingués, et pas confondus.",
         "Le seuil est exprimé en remplissage à atteindre, pas seulement en euros.",
@@ -192,7 +192,7 @@ export const ATELIER_MHR: AtelierDefinition = {
       livrable:
         "La note tarifaire, une page : la grille des deux politiques, le tarif retenu, la clientèle visée, ce que l'équipe en attend chiffré, et le risque qu'elle accepte de prendre.",
       tracePasseport:
-        "J'ai arbitré une politique tarifaire entre remplissage et marge, et j'en ai chiffré l'effet avant de décider.",
+        "J'ai arbitré une politique tarifaire entre remplissage et marge, après en avoir chiffré l'effet.",
       evaluation: [
         "L'effet de la baisse de tarif est calculé sur la marge, pas sur le chiffre d'affaires.",
         "La clientèle visée est nommée, et son rapport au prix est expliqué.",
@@ -241,7 +241,7 @@ export const ATELIER_MHR: AtelierDefinition = {
           minutes: 30,
           titre: "Les deux erreurs de saison",
           detail:
-            "L'équipe chiffre les deux fautes possibles : un tarif trop bas qui remplit sans profiter de la rareté, un tarif trop haut qui laisse des chambres vides un trimestre où tout se vend. Puis elle choisit de quel côté elle prend le risque.",
+            "L'équipe chiffre les deux fautes possibles : un tarif trop bas qui remplit sans profiter de la rareté, un tarif trop haut qui laisse des chambres vides un trimestre où tout se vend. Puis elle choisit de quel côté elle prend le risque. La commande exceptionnelle, quand elle tombe, est le seul vrai arbitrage entre clientèles : un allotement de tour-opérateur payé comptant à bas prix, ou un congrès mieux payé mais réglé à soixante jours.",
         },
         {
           minutes: 30,
@@ -265,7 +265,7 @@ export const ATELIER_MHR: AtelierDefinition = {
       livrable:
         "La fiche de plan de saison : le tarif de haute saison et son raisonnement, la clientèle servie en priorité, les deux erreurs chiffrées, le risque choisi, et l'écart constaté après clôture.",
       tracePasseport:
-        "J'ai bâti un plan de haute saison, arbitré entre des clientèles sous contrainte de capacité, et analysé mon écart au résultat.",
+        "J'ai bâti un plan de haute saison en arbitrant entre des clientèles sous contrainte de capacité, puis analysé mon écart au résultat.",
       evaluation: [
         "Le plan est construit sur les trimestres joués, pas sur une intuition.",
         "Les deux erreurs de saison sont chiffrées, pas seulement décrites.",
@@ -293,7 +293,7 @@ export const ATELIER_MHR: AtelierDefinition = {
         "charges fixes et point mort saisonnier",
         "besoin en fonds de roulement",
         "découvert et coût du financement court terme",
-        "assurance des risques d'exploitation",
+        "tarif d'appel et clientèle disponible",
       ],
       preparation:
         "Rouvrez la fiche notion sur la trésorerie, que les équipes auront à mobiliser. Au quatrième trimestre, le scénario fait bondir le coût de l'énergie de 22 % pour deux trimestres : annoncez-le avant la prévision, sinon l'écart sera imputé à la prévision et non au choc. Préparez un tableau vierge où chaque équipe inscrira, avant la clôture, le solde de trésorerie qu'elle prévoit à la fin du trimestre.",
@@ -338,7 +338,7 @@ export const ATELIER_MHR: AtelierDefinition = {
       livrable:
         "Le plan de trésorerie du trimestre : encaissements attendus, charges fixes, solde prévu, couverture retenue avec son coût, et l'écart au solde réalisé après clôture.",
       tracePasseport:
-        "J'ai construit un plan de trésorerie de trimestre, décidé d'une couverture du besoin, et analysé l'écart entre le solde prévu et le solde réalisé.",
+        "J'ai décidé d'une couverture du besoin de trésorerie à partir d'un plan de trimestre, puis analysé l'écart entre le solde prévu et le solde réalisé.",
       evaluation: [
         "Le solde prévu est construit sur des encaissements et des charges, pas sur une impression.",
         "L'effet des charges fixes sur un trimestre creux est nommé, pas seulement mentionné.",
@@ -393,7 +393,7 @@ export const ATELIER_MHR: AtelierDefinition = {
           minutes: 75,
           titre: "Passage des équipes",
           detail:
-            "Chaque équipe présente son tableau de bord puis répond aux questions du jury, formé de vous et de deux élèves d'une autre équipe qui posent au moins une question chacun.",
+            "Huit minutes de présentation et quatre minutes de questions par équipe. Chaque équipe présente son tableau de bord puis répond aux questions du jury, formé de vous et de deux élèves d'une autre équipe qui posent au moins une question chacun.",
         },
         {
           minutes: 25,
@@ -403,7 +403,7 @@ export const ATELIER_MHR: AtelierDefinition = {
         },
       ],
       livrable:
-        "Le tableau de bord de direction des quatre trimestres, une page, quatre indicateurs justifiés, plus la présentation orale qui l'accompagne.",
+        "Le tableau de bord de direction des quatre trimestres : une page, quatre indicateurs justifiés, la saison la mieux et la moins bien gérée avec leurs raisons, et la présentation orale de huit minutes qui l'accompagne.",
       tracePasseport:
         "J'ai construit le tableau de bord de direction d'un hôtel sur quatre trimestres et je l'ai présenté oralement devant un jury.",
       evaluation: [
@@ -446,22 +446,26 @@ export const ATELIER_MHR: AtelierDefinition = {
   ],
   faq: [
     {
-      question: "Faut-il avoir traité le revenu par chambre disponible avant la première séance ?",
+      question:
+        "Faut-il avoir traité le revenu par chambre disponible avant la première séance ?",
       reponse:
         "Non, et il vaut même mieux ne pas l'avoir fait. La première séance amène les équipes à en avoir besoin avant de le nommer : elles calculent un prix moyen et un taux d'occupation parce qu'elles doivent fixer un tarif, pas parce que le cours l'a demandé. Vous formalisez ensuite, sur leurs propres chiffres.",
     },
     {
-      question: "Pourquoi arrêter à quatre trimestres alors que le secteur en compte six ?",
+      question:
+        "Pourquoi arrêter à quatre trimestres alors que le secteur en compte six ?",
       reponse:
         "Parce que la haute saison est le point culminant de ce secteur et que rien ne gagne à la dépasser dans un atelier de cinq séances. La partie est créée sur quatre tours et s'arrête là. Si votre progression le permet, créez-la sur six tours dès le départ et gardez les deux derniers pour deux séances de prolongement, avec le financement d'une rénovation comme fil.",
     },
     {
-      question: "Le niveau retenu n'ouvre ni le recrutement ni l'investissement, est-ce voulu ?",
+      question:
+        "Le niveau retenu n'ouvre ni le recrutement ni l'investissement, est-ce voulu ?",
       reponse:
         "Oui. La direction opérationnelle d'un hôtel en première année se joue sur le tarif, le remplissage et la trésorerie. Ouvrir la structure ajouterait des décisions que les équipes prendraient au hasard, et qui brouilleraient la lecture de leurs résultats. En deuxième année, vous pouvez monter d'un niveau : l'hôtel passe alors en trois catégories de chambres, avec le recrutement et l'investissement ouverts.",
     },
     {
-      question: "Le référentiel du BTS MHR est-il repris au mot dans les intitulés de blocs ?",
+      question:
+        "Le référentiel du BTS MHR est-il repris au mot dans les intitulés de blocs ?",
       reponse:
         "Pas encore. Les blocs cités décrivent l'activité de management de façon fidèle mais n'ont pas été confrontés au texte de l'arrêté : le diplôme figure pour cette raison dans la liste des référentiels non vérifiés. Relisez-les avec votre référentiel sous les yeux et ajustez les intitulés avant un usage certificatif.",
     },
@@ -469,6 +473,11 @@ export const ATELIER_MHR: AtelierDefinition = {
       question: "Peut-on conduire cet atelier avec des équipes de deux ?",
       reponse:
         "Oui, en fusionnant les rôles de la tarification et du remplissage. En dessous de trois élèves, le débat contradictoire de la deuxième séance perd de sa force, alors prévoyez d'y faire travailler deux équipes ensemble sur cette séance-là uniquement.",
+    },
+    {
+      question: "Quel lien avec les épreuves du BTS ?",
+      reponse:
+        "Le référentiel du BTS MHR n'a pas encore été confronté à cette fiche, et les épreuves diffèrent selon l'option : rapprochez chaque livrable de l'épreuve de votre option avant de l'annoncer aux étudiants. Le tableau de bord de direction et sa soutenance sont, dans toutes les options, un entraînement à rendre compte d'une exploitation.",
     },
   ],
 };

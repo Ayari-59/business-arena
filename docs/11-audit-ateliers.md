@@ -93,6 +93,8 @@ Scénarios sans atelier : hotel-gamme, bistrot, bistrot-gamme, conseil, ecommerc
 
 Lot 1 livré le 16 septembre 2026 (commit « fix(ateliers): lot 1 de l'audit ») : les constats 1 à 7 sont corrigés dans les fiches, avec deux gardes nouvelles dans `tests/pedagogy/ateliers.test.ts` (comptage des livrables intermédiaires, promesses que le produit ne tient pas).
 
+Lot 2 livré le 16 septembre 2026 (commit « feat(ateliers): lot 2 de l'audit ») : échelle d'exigence unique, épreuves nommées, treize fiches notions nouvelles et notions reliées aux fiches sur les pages d'atelier, oraux chiffrés, traces à un acte, livrables nommés, compléments STMG, CG1, DCG, DCG-RSE, GPME, MHR, avec trois gardes nouvelles (échelle, traces, notions couvertes). Restent au lot 3 : l'assurance de MHR sans phase, la situation « 18 % de commission » de l'hôtel que le moteur ne modélise pas, et les points lourds de la section 5.
+
 1. **Lot 1, erreurs de fait** (une demi-journée) : constats 1 à 7, `traceLabel` NDRC, GPME « activités », effectif DCG, kilomètre/sous-traitance/pénalités en transport, S1 et S5 de DCG-RSE, rebuts à activer. Avec une garde pour le comptage des livrables et une pour « la partie reste ouverte ».
 2. **Lot 2, cohérence** (une journée) : échelle de difficulté, épreuves nommées, événements scriptés dans les préparations, oraux chiffrés, FAQ sur les niveaux, traces à un acte, notions reliées aux fiches.
 3. **Lot 3, réécritures** : GEA, Avancé, S3 de MHR, S3-S4 de DCG, puis les deux ateliers manquants.

@@ -115,7 +115,7 @@ export const ATELIER_NDRC: AtelierDefinition = {
       livrable:
         "La fiche des trois canaux, une page : pour chacun, qui est la clientèle, comment elle arrive, ce qu'elle coûte à atteindre, ce qu'elle rapporte, et le canal retenu ce trimestre avec sa justification.",
       tracePasseport:
-        "J'ai analysé les canaux d'acquisition d'une entreprise de vente à distance et j'ai proposé un plan d'action commercial chiffré.",
+        "J'ai proposé un plan d'action commercial chiffré à partir de l'analyse des canaux d'acquisition d'une entreprise de vente à distance.",
       evaluation: [
         "Les trois canaux sont distingués par ce qui les fait fonctionner, pas seulement nommés.",
         "Le prélèvement des marketplaces est identifié comme une charge, pas comme une remise.",
@@ -261,7 +261,7 @@ export const ATELIER_NDRC: AtelierDefinition = {
       livrable:
         "La fiche de politique de service : le coût d'un retour, le coût total du trimestre, le niveau de service retenu, son budget, et l'effet attendu sur la clientèle qui revient.",
       tracePasseport:
-        "J'ai chiffré le coût du service après-vente d'une entreprise de vente à distance et j'ai proposé une politique de service argumentée.",
+        "J'ai proposé une politique de service argumentée à partir du coût chiffré du service après-vente d'une entreprise de vente à distance.",
       evaluation: [
         "Le coût d'un retour est rapporté à la marge de la commande, pas à son prix.",
         "L'effet attendu sur la fidélité est annoncé avant la clôture.",
@@ -389,7 +389,7 @@ export const ATELIER_NDRC: AtelierDefinition = {
           minutes: 30,
           titre: "Jeu de rôle",
           detail:
-            "Deux équipes s'affrontent, l'une jouant l'entreprise, l'autre le partenaire, cinq minutes chacune, puis on inverse. La simulation ne joue pas cet entretien : c'est la classe qui le joue.",
+            "Les équipes se mettent par deux, trois duos en parallèle : l'une joue l'entreprise, l'autre le partenaire, cinq minutes, puis on inverse ; vous circulez d'un duo à l'autre. La simulation ne joue pas cet entretien : c'est la classe qui le joue.",
         },
         {
           minutes: 35,
@@ -407,7 +407,7 @@ export const ATELIER_NDRC: AtelierDefinition = {
       livrable:
         "Le dossier partenaire : la marge après commission comparée à la marge en direct, la part du chiffre d'affaires dépendant du canal, la trame d'argumentaire remplie, et les trois arguments retenus.",
       tracePasseport:
-        "J'ai évalué la rentabilité d'un canal de distribution partenaire et j'ai préparé les arguments d'une négociation commerciale.",
+        "J'ai préparé les arguments d'une négociation commerciale à partir de la rentabilité d'un canal de distribution partenaire.",
       evaluation: [
         "La commission est traitée comme une charge qui réduit la marge, pas comme une remise sur le prix.",
         "La dépendance au canal est exprimée en part du chiffre d'affaires.",
@@ -472,7 +472,7 @@ export const ATELIER_NDRC: AtelierDefinition = {
         },
       ],
       livrable:
-        "Le tableau de bord commercial des cinq trimestres, une page, quatre indicateurs justifiés, plus la présentation orale de sept minutes qui l'accompagne.",
+        "Le tableau de bord commercial des cinq trimestres : une page, quatre indicateurs justifiés, la clientèle la plus rentable et ce qui l'a rendue telle, et la présentation orale de sept minutes qui l'accompagne.",
       tracePasseport:
         "J'ai construit le tableau de bord commercial d'une entreprise de vente à distance sur cinq trimestres et je l'ai présenté devant un jury.",
       evaluation: [
@@ -497,7 +497,8 @@ export const ATELIER_NDRC: AtelierDefinition = {
     },
     {
       nom: "Fil rouge de l'année",
-      quand: "Quand l'atelier accompagne le bloc de relation client à distance.",
+      quand:
+        "Quand l'atelier accompagne le bloc de relation client à distance.",
       comment:
         "Une séance par mois, chaque séance précédée du point de cours qu'elle mobilise. La partie reste ouverte entre deux séances, ce qui permet de faire préparer les décisions hors classe.",
     },
@@ -520,12 +521,14 @@ export const ATELIER_NDRC: AtelierDefinition = {
         "Non, et il faut le dire avant de se lancer. Elle joue ce qui se décide autour de l'entretien : ce qu'il coûte d'aller chercher un client, ce qu'il rapporte de le garder, ce que laisse une commande passée par un partenaire. Le face à face lui-même reste un jeu de rôle de classe, et la cinquième séance en prévoit un, adossé à des chiffres que les équipes ont produits.",
     },
     {
-      question: "Pourquoi le commerce en ligne plutôt qu'un secteur avec des commerciaux ?",
+      question:
+        "Pourquoi le commerce en ligne plutôt qu'un secteur avec des commerciaux ?",
       reponse:
         "Parce que c'est le seul secteur où le coût d'acquisition d'un client est visible et mesurable par l'élève lui-même. Ailleurs, il est noyé dans les charges de structure. Ici l'équipe engage un budget, compte les clients venus, et divise : le concept central du diplôme devient un calcul qu'elle a fait sur ses propres chiffres.",
     },
     {
-      question: "Le niveau retenu ferme les décisions de structure, est-ce un manque ?",
+      question:
+        "Le niveau retenu ferme les décisions de structure, est-ce un manque ?",
       reponse:
         "C'est un choix. Un atelier de première année en NDRC porte sur la clientèle, pas sur le haut de bilan, et ouvrir des décisions que les équipes prendraient au hasard brouillerait la lecture de leurs marges. Si vous conduisez l'atelier en deuxième année, montez d'un niveau : les décisions de financement s'ajoutent sans rien changer au déroulé.",
     },
@@ -538,6 +541,11 @@ export const ATELIER_NDRC: AtelierDefinition = {
       question: "Six séances de trois heures, est-ce compressible ?",
       reponse:
         "Oui, en retirant la cinquième séance et en créant la partie sur quatre tours : la soutenance devient la cinquième séance, et la commission des marketplaces se traite au débriefing de la quatrième. Ne compressez pas la séance du pic : c'est celle où les équipes découvrent qu'un trafic acheté sans capacité de préparation ne sert à rien, et elle a besoin de son temps de débriefing.",
+    },
+    {
+      question: "Quelles épreuves du BTS cet atelier prépare-t-il ?",
+      reponse:
+        "E4, relation client et négociation-vente, épreuve orale sur fiches descriptives, pour la négociation avec le partenaire de la cinquième séance ; E5, relation client à distance et digitalisation, épreuve écrite, pour le coût d'acquisition et la politique de service ; E6, relation client et animation de réseaux, pour le tableau de bord de la dernière séance. Vérifiez les intitulés sur le référentiel en vigueur.",
     },
   ],
 };

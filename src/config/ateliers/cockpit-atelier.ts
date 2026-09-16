@@ -17,6 +17,9 @@ export function cockpitAtelier(atelier: AtelierDefinition): ClasseurSpec {
     scenario,
     tours: Array.from({ length: atelier.reglages.tours }, (_, i) => i + 1),
     concurrents: atelier.reglages.equipes + atelier.reglages.bots,
-    sansRd: !(DIFFICULTY_PRESETS.find((p) => p.level === atelier.reglages.niveau)?.decisions.rd ?? false),
+    sansRd: !(
+      DIFFICULTY_PRESETS.find((p) => p.level === atelier.reglages.niveau)
+        ?.decisions.rd ?? false
+    ),
   });
 }

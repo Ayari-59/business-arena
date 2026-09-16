@@ -142,7 +142,9 @@ export function dossierEleve(atelier: AtelierDefinition): DossierEleve {
   const scenario = scenarioByCode(atelier.reglages.scenarioCode);
   // Un niveau qui n'ouvre pas la R&D joue les références livrées prêtes : le
   // dossier ne doit pas annoncer un développement que la partie n'aura pas.
-  const rdOuverte = DIFFICULTY_PRESETS.find((p) => p.level === atelier.reglages.niveau)?.decisions.rd ?? false;
+  const rdOuverte =
+    DIFFICULTY_PRESETS.find((p) => p.level === atelier.reglages.niveau)
+      ?.decisions.rd ?? false;
   return {
     entete: {
       titre: atelier.titre,
@@ -180,10 +182,19 @@ export function dossierEleve(atelier: AtelierDefinition): DossierEleve {
     })),
     evaluationFinale: [...atelier.evaluationFinale],
     gamme: referencesDuDossier(scenario, atelier.reglages.tours),
-    services: dossiersDeService(scenario, atelier.reglages.tours, { sansRd: !rdOuverte }),
+    services: dossiersDeService(scenario, atelier.reglages.tours, {
+      sansRd: !rdOuverte,
+    }),
     tableauDeBord: {
-      decisions: leviersDuNiveau(atelier.reglages.niveau, scenario.scenario).map((l) => l.nom),
-      resultats: [...RESULTATS_COMMUNS, ...scenario.kpis.map((k) => k.label), "Place au classement"],
+      decisions: leviersDuNiveau(
+        atelier.reglages.niveau,
+        scenario.scenario,
+      ).map((l) => l.nom),
+      resultats: [
+        ...RESULTATS_COMMUNS,
+        ...scenario.kpis.map((k) => k.label),
+        "Place au classement",
+      ],
       tours: Array.from({ length: atelier.reglages.tours }, (_, i) => i + 1),
     },
   };
@@ -198,12 +209,15 @@ export function dossierEleve(atelier: AtelierDefinition): DossierEleve {
  * n'aura pas lieu. Celles qui se déclenchent sur un état de l'entreprise
  * peuvent tomber n'importe quand, ou jamais.
  */
-export function dossierEnseignant(atelier: AtelierDefinition): DossierEnseignant {
+export function dossierEnseignant(
+  atelier: AtelierDefinition,
+): DossierEnseignant {
   const scenario = scenarioByCode(atelier.reglages.scenarioCode);
   const retenues = scenario.situations.filter(
     (s) => !("round" in s.trigger) || s.trigger.round <= atelier.reglages.tours,
   );
-  const rang = (s: SituationDef) => ("round" in s.trigger ? s.trigger.round : 99);
+  const rang = (s: SituationDef) =>
+    "round" in s.trigger ? s.trigger.round : 99;
 
   return {
     atelier,
@@ -216,11 +230,16 @@ export function dossierEnseignant(atelier: AtelierDefinition): DossierEnseignant
           "round" in situation.trigger
             ? `Tour ${situation.trigger.round}`
             : "Quand l'entreprise en arrive là",
-        attendus: situation.diagnosticOptions.filter((o) => o.correct).map((o) => o.label),
-        leurres: situation.diagnosticOptions.filter((o) => !o.correct).map((o) => o.label),
+        attendus: situation.diagnosticOptions
+          .filter((o) => o.correct)
+          .map((o) => o.label),
+        leurres: situation.diagnosticOptions
+          .filter((o) => !o.correct)
+          .map((o) => o.label),
         corriges: situation.quiz.map((q) => ({
           question: q.prompt,
-          reponse: q.options.find((o) => o.id === q.correctOptionId)?.label ?? "",
+          reponse:
+            q.options.find((o) => o.id === q.correctOptionId)?.label ?? "",
           explication: q.explain,
         })),
       })),
@@ -319,5 +338,7 @@ export function tableauDeBordCsv(atelier: AtelierDefinition): string {
   }
 
   // Signature d'octets en tête : c'est elle qui fait lire les accents à Excel.
-  return "\ufeff" + lignes.map((l) => l.map(cellule).join(";")).join("\r\n") + "\r\n";
+  return (
+    "\ufeff" + lignes.map((l) => l.map(cellule).join(";")).join("\r\n") + "\r\n"
+  );
 }

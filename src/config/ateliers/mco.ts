@@ -116,7 +116,7 @@ export const ATELIER_MCO: AtelierDefinition = {
       livrable:
         "La fiche de marge du magasin, une page : prix d'achat, prix de vente, coefficient, taux de marque, charges de structure du trimestre, seuil en articles, et le positionnement retenu avec sa justification.",
       tracePasseport:
-        "J'ai calculé la marge et le seuil de rentabilité d'un point de vente, et j'ai justifié un positionnement à partir de ces calculs.",
+        "J'ai justifié le positionnement d'un point de vente par le calcul de sa marge et de son seuil de rentabilité.",
       evaluation: [
         "Le taux de marque et le taux de marge sont distingués, et pas confondus.",
         "Le seuil est exprimé en articles à vendre, pas seulement en euros.",
@@ -189,7 +189,7 @@ export const ATELIER_MCO: AtelierDefinition = {
       livrable:
         "La note d'approvisionnement, une page : la grille comparative des trois circuits, le circuit retenu, ce que l'équipe en attend chiffré, et le risque qu'elle accepte de prendre.",
       tracePasseport:
-        "J'ai comparé des offres fournisseurs sur le prix, le délai de règlement et l'image, et j'ai argumenté un choix d'approvisionnement.",
+        "J'ai argumenté un choix d'approvisionnement en comparant des offres fournisseurs sur le prix, le délai de règlement et l'image.",
       evaluation: [
         "Les trois circuits sont comparés sur au moins trois critères, dont un non financier.",
         "L'effet du délai de règlement sur la trésorerie est nommé, pas seulement mentionné.",
@@ -262,7 +262,7 @@ export const ATELIER_MCO: AtelierDefinition = {
       livrable:
         "La fiche d'opération commerciale : la cible, le mécanisme, l'effet attendu sur la marge unitaire, le volume à atteindre pour la compenser, et le résultat constaté après clôture.",
       tracePasseport:
-        "J'ai construit une opération commerciale, j'en ai chiffré l'effet sur la marge avant de la lancer, et j'ai mesuré son résultat.",
+        "J'ai construit une opération commerciale dont j'ai chiffré l'effet sur la marge avant de la lancer, puis mesuré le résultat.",
       evaluation: [
         "Le volume de compensation est calculé sur la marge unitaire, pas sur le chiffre d'affaires.",
         "La cible de l'opération est une clientèle du magasin, nommée.",
@@ -335,7 +335,7 @@ export const ATELIER_MCO: AtelierDefinition = {
       livrable:
         "La fiche de prévision saisonnière : le volume attendu et son raisonnement, le coût estimé d'une rupture, le coût estimé d'un surstock, le risque choisi, et l'écart constaté après clôture.",
       tracePasseport:
-        "J'ai prévu les ventes d'une forte saison, j'ai dimensionné un approvisionnement en connaissant les deux risques, et j'ai analysé mon écart.",
+        "J'ai dimensionné l'approvisionnement d'une forte saison à partir d'une prévision de ventes, en connaissant les deux risques, puis analysé mon écart.",
       evaluation: [
         "La prévision est construite sur les trimestres joués, pas sur une intuition.",
         "Les deux risques sont chiffrés, pas seulement décrits.",
@@ -400,7 +400,7 @@ export const ATELIER_MCO: AtelierDefinition = {
         },
       ],
       livrable:
-        "Le tableau de bord commercial des quatre trimestres, une page, quatre indicateurs justifiés, plus la présentation orale de huit minutes qui l'accompagne.",
+        "Le tableau de bord commercial des quatre trimestres : une page, quatre indicateurs justifiés, l'erreur de gestion assumée et ce qui serait fait autrement, et la présentation orale de huit minutes qui l'accompagne.",
       tracePasseport:
         "J'ai construit le tableau de bord commercial d'un point de vente sur quatre trimestres et je l'ai présenté oralement devant un jury.",
       evaluation: [
@@ -443,17 +443,20 @@ export const ATELIER_MCO: AtelierDefinition = {
   ],
   faq: [
     {
-      question: "Faut-il avoir traité le coefficient multiplicateur avant la première séance ?",
+      question:
+        "Faut-il avoir traité le coefficient multiplicateur avant la première séance ?",
       reponse:
         "Non, et c'est même préférable de ne pas l'avoir fait. La première séance amène les équipes à en avoir besoin avant de le nommer : elles calculent une marge parce qu'elles doivent fixer un prix, pas parce que le cours l'a demandé. Vous formalisez ensuite, sur leurs propres chiffres.",
     },
     {
-      question: "Pourquoi arrêter à quatre trimestres alors que la partie en compte six ?",
+      question:
+        "Pourquoi arrêter à quatre trimestres alors que la partie en compte six ?",
       reponse:
         "Parce que le trimestre des fêtes est le point culminant de ce secteur et que rien ne gagne à le dépasser dans un atelier de cinq séances. La partie est créée sur quatre tours et s'arrête là. Si votre progression le permet, créez-la sur six tours dès le départ et gardez les deux derniers pour deux séances de prolongement, avec le financement du développement comme fil.",
     },
     {
-      question: "Le niveau de jeu retenu n'ouvre ni le recrutement ni l'investissement, est-ce voulu ?",
+      question:
+        "Le niveau de jeu retenu n'ouvre ni le recrutement ni l'investissement, est-ce voulu ?",
       reponse:
         "Oui. La gestion opérationnelle d'un point de vente en première année se joue sur l'offre, le prix et le stock. Ouvrir la structure ajouterait des décisions que les équipes prendraient au hasard, et qui brouilleraient la lecture de leurs marges. Vous pouvez monter d'un niveau en deuxième année.",
     },
@@ -466,6 +469,11 @@ export const ATELIER_MCO: AtelierDefinition = {
       question: "Comment noter une équipe qui a fait faillite ?",
       reponse:
         "Exactement comme les autres, sur ses livrables. Une équipe qui a mal géré et qui l'analyse lucidement rend un meilleur tableau de bord qu'une équipe qui a gagné sans savoir pourquoi, et c'est cette lucidité que le référentiel demande.",
+    },
+    {
+      question: "Quelles épreuves du BTS cet atelier prépare-t-il ?",
+      reponse:
+        "E4, développement de la relation client et vente conseil, et E5, animation et dynamisation de l'offre commerciale, s'appuient sur les fiches d'activités professionnelles que chaque séance nourrit. E6, gestion opérationnelle, est une épreuve écrite où le calcul de marge, de seuil et de prévision saisonnière de cet atelier se retrouve tel quel. Vérifiez les intitulés sur le référentiel en vigueur.",
     },
   ],
 };

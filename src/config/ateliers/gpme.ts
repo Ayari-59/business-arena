@@ -114,7 +114,7 @@ export const ATELIER_GPME: AtelierDefinition = {
       livrable:
         "La note de diagnostic d'entrée, une page pour le dirigeant : ce que vend le cabinet, ce qui le limite, où se trouve son argent, et le choix retenu au premier arbitrage avec sa justification.",
       tracePasseport:
-        "J'ai établi le diagnostic d'entrée d'une PME de services à partir de ses documents de synthèse et j'ai justifié une première décision de gestion.",
+        "J'ai justifié une première décision de gestion par le diagnostic d'entrée d'une PME de services, établi à partir de ses documents de synthèse.",
       evaluation: [
         "La note tient sur une page et hiérarchise, au lieu de tout énumérer.",
         "La ressource limitante est nommée en jours vendables, pas en euros.",
@@ -163,7 +163,7 @@ export const ATELIER_GPME: AtelierDefinition = {
           minutes: 35,
           titre: "Quatre solutions, quatre coûts",
           detail:
-            "L'équipe compare attendre, relancer, escompter et céder la créance, et chiffre ce que chacune coûte. La gratuité apparente de la relance se discute : elle coûte du temps et parfois un client.",
+            "L'équipe compare attendre, relancer, escompter et céder la créance, et chiffre ce que chacune coûte. Le panneau des frais de mission, trois politiques réglées à trente, trente et quinze jours, est la seule relation fournisseurs du cabinet : faites-le lire, il joue sur la même caisse. La gratuité apparente de la relance se discute : elle coûte du temps et parfois un client.",
         },
         {
           minutes: 35,
@@ -524,19 +524,27 @@ export const ATELIER_GPME: AtelierDefinition = {
         "Chacune tient une séance entière et se retrouve dans le rapport final. La relation fournisseurs est en revanche moins servie que la relation clients, parce que le cabinet achète peu : si ce point est évalué dans votre établissement, la séance sur les renforts extérieurs est l'endroit où l'accrocher.",
     },
     {
-      question: "Le niveau retenu ouvre beaucoup de décisions, n'est-ce pas trop ?",
+      question:
+        "Le niveau retenu ouvre beaucoup de décisions, n'est-ce pas trop ?",
       reponse:
         "Il ouvre le personnel, le financement, l'assurance, l'investissement, la R&D et l'engagement RSE : les trois premiers sont les leviers que les blocs du référentiel demandent de savoir manier, les autres se règlent sans y toucher. En retirer un rendrait une séance sans support. En deuxième année, c'est le bon niveau ; en première année, descendez d'un cran : la partie passe alors sur le cabinet à offre unique, sans R&D ni investissement, et remplacez la séance de recrutement par une seconde séance sur le poste clients.",
     },
     {
-      question: "Comment traiter la séance des risques si aucun sinistre ne tombe ?",
+      question:
+        "Comment traiter la séance des risques si aucun sinistre ne tombe ?",
       reponse:
         "C'est le meilleur cas de figure pour la leçon. Une équipe qui s'est assurée et n'a rien subi a payé pour rien, et pourtant elle a bien décidé. C'est précisément la distinction entre une bonne décision et un bon résultat, et le débriefing est écrit pour l'installer à ce moment-là.",
     },
     {
-      question: "Peut-on utiliser cet atelier en préparation de l'épreuve professionnelle ?",
+      question:
+        "Peut-on utiliser cet atelier en préparation de l'épreuve professionnelle ?",
       reponse:
         "Les livrables ont été conçus pour cela : une note d'une page par séance, un rapport d'activité et une présentation orale avec questions. Ils ne remplacent pas les situations vécues en stage, qui restent la matière de l'épreuve, mais ils donnent aux élèves l'entraînement à l'écrit court et à l'oral argumenté qui leur manque le plus souvent.",
+    },
+    {
+      question: "Quelles épreuves du BTS cet atelier prépare-t-il ?",
+      reponse:
+        "E4, gérer la relation avec les clients et les fournisseurs de la PME, épreuve orale, pour le poste clients de la deuxième séance ; E5, épreuve écrite sur les risques et le personnel, pour la cartographie des risques et le recrutement ; E6, soutenir le fonctionnement et le développement de la PME, dossier et soutenance, pour le rapport de la dernière séance. Vérifiez les intitulés sur le référentiel en vigueur.",
     },
   ],
 };

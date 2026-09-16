@@ -410,7 +410,7 @@ export const ATELIER_AVANCE: AtelierDefinition = {
       livrable:
         "La note de gestion des excédents : le montant disponible, la réserve gardée, le placement ou la couverture retenue avec son effet attendu, et la révision de stratégie qui l'accompagne.",
       tracePasseport:
-        "J'ai employé les excédents de trésorerie d'une entreprise tout en gardant une réserve, et j'ai révisé une stratégie de clientèles après un aléa.",
+        "J'ai employé les excédents de trésorerie d'une entreprise en gardant une réserve pour l'aléa.",
       evaluation: [
         "Le placement laisse une réserve justifiée par l'incertitude du trimestre suivant.",
         "Le coût d'une trésorerie qui dort est comparé au rendement d'un placement.",
@@ -465,7 +465,7 @@ export const ATELIER_AVANCE: AtelierDefinition = {
           minutes: 75,
           titre: "Passage des équipes",
           detail:
-            "Chaque équipe présente son diagnostic puis affronte les questions du jury, formé de vous et de deux élèves d'une autre équipe qui contestent au moins un arbitrage chacun.",
+            "Huit minutes de présentation et quatre minutes de questions par équipe. Chaque équipe présente son diagnostic puis affronte les questions du jury, formé de vous et de deux élèves d'une autre équipe qui contestent au moins un arbitrage chacun.",
         },
         {
           minutes: 25,
@@ -475,7 +475,7 @@ export const ATELIER_AVANCE: AtelierDefinition = {
         },
       ],
       livrable:
-        "Le diagnostic stratégique des cinq trimestres, une page, quatre indicateurs justifiés dont un de résistance au risque, plus la présentation orale qui le défend.",
+        "Le diagnostic stratégique des cinq trimestres : une page, quatre indicateurs justifiés dont un de résistance au risque, l'aléa qui a le plus pesé et la réponse qui lui a été apportée, et la présentation orale de huit minutes qui le défend.",
       tracePasseport:
         "J'ai bâti le diagnostic stratégique d'une entreprise sur cinq trimestres et je l'ai défendu oralement devant un jury qui contestait mes arbitrages.",
       evaluation: [
@@ -500,7 +500,8 @@ export const ATELIER_AVANCE: AtelierDefinition = {
     },
     {
       nom: "Fil rouge de projet",
-      quand: "Quand l'atelier porte un projet tutoré ou une étude de cas filée.",
+      quand:
+        "Quand l'atelier porte un projet tutoré ou une étude de cas filée.",
       comment:
         "Une séance toutes les deux semaines, chacune préparée par un travail personnel remis en amont. La partie reste ouverte entre deux séances, et le diagnostic final s'enrichit du temps long.",
     },
@@ -523,22 +524,26 @@ export const ATELIER_AVANCE: AtelierDefinition = {
         "Oui, franchement. Cet atelier suppose que les notions de marge, de seuil, de besoin en fonds de roulement et d'investissement soient déjà acquises : il ne les enseigne pas une à une, il apprend à les tenir ensemble sous incertitude. Une équipe qui découvre le coût de revient ici serait submergée. Passez d'abord par un atelier de section de technicien ou par l'animation de découverte.",
     },
     {
-      question: "Pourquoi activer le monde variable, qui introduit de la chance ?",
+      question:
+        "Pourquoi activer le monde variable, qui introduit de la chance ?",
       reponse:
         "Parce qu'à ce niveau, la chance est précisément l'objet. Une gestion qui ne réussit qu'en univers certain n'a rien appris du métier réel, où un aléa défait la meilleure prévision. Le monde variable oblige à décider en gardant des réserves, à préférer la robustesse à l'optimum, et à assumer qu'un bon choix puisse mal finir. C'est ce que la sixième séance demande de défendre.",
     },
     {
-      question: "Cinq trimestres et six séances font un atelier long, peut-on le raccourcir ?",
+      question:
+        "Cinq trimestres et six séances font un atelier long, peut-on le raccourcir ?",
       reponse:
         "Oui, en retirant la cinquième séance et en créant la partie sur quatre tours : le placement des excédents se traite alors au début de la séance de diagnostic, devenue cinquième. Vous perdez la respiration entre engager et employer la trésorerie, mais l'atelier tient alors en cinq séances. Ne descendez pas en dessous : le pic de la quatrième a besoin de trois trimestres joués derrière lui.",
     },
     {
-      question: "Le niveau ouvre tous les leviers, n'est-ce pas trop de décisions à la fois ?",
+      question:
+        "Le niveau ouvre tous les leviers, n'est-ce pas trop de décisions à la fois ?",
       reponse:
         "C'est justement l'exercice. Aux niveaux précédents, chaque atelier isole un levier ; ici l'enjeu est de les tenir ensemble, parce que la réalité ne les sépare jamais. Le déroulé aide en donnant à chaque séance un arbitrage dominant, mais il n'interdit pas aux équipes d'agir sur le reste. Une équipe qui se disperse le paiera, et cette leçon vaut d'être vécue.",
     },
     {
-      question: "Comment noter une équipe qu'un aléa a punie malgré de bonnes décisions ?",
+      question:
+        "Comment noter une équipe qu'un aléa a punie malgré de bonnes décisions ?",
       reponse:
         "Sur ses décisions et sa lucidité, jamais sur son résultat. Une équipe qui a bien raisonné, gardé ses réserves, et qu'un aléa a tout de même rattrapée doit être mieux notée qu'une équipe qui a gagné par chance sans savoir pourquoi. Le diagnostic final est fait pour ça : il révèle qui a compris sa trajectoire, aléa compris.",
     },

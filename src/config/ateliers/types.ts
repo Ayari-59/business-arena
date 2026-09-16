@@ -91,7 +91,7 @@ export interface AtelierDefinition {
   pitch: string;
   /** Résumé d'une ligne, pour la carte du tableau récapitulatif. */
   resume: string;
-  /** Exigence, de 1 (initiation) à 4 (avancé), et son mot. */
+  /** Exigence, de 1 à 4, et son mot : celui de DIFFICULTES, jamais un autre. */
   difficulte: 1 | 2 | 3 | 4;
   difficulteLabel: string;
   /** Durée telle qu'elle s'annonce à un enseignant (« 6 séances de 4 h »). */
@@ -141,3 +141,18 @@ export interface AtelierDefinition {
   /** Les questions que pose un enseignant avant de se lancer, et leurs réponses. */
   faq: { question: string; reponse: string }[];
 }
+
+/**
+ * L'échelle d'exigence, écrite une fois.
+ *
+ * Le même chiffre portait des mots différents d'une fiche à l'autre : 1 était
+ * « Initiation » ici et « Découverte » là, 3 était « Approfondissement » ou
+ * « Pilotage ». Un enseignant qui compare les fiches doit lire la même
+ * échelle ; une garde vérifie que chacune l'emploie.
+ */
+export const DIFFICULTES: Record<AtelierDefinition["difficulte"], string> = {
+  1: "Découverte",
+  2: "Initiation",
+  3: "Approfondissement",
+  4: "Avancé",
+};

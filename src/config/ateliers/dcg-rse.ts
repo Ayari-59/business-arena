@@ -59,7 +59,10 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
       titre: "Agir, puis mesurer : le premier indice RSE",
       dureeMinutes: 180,
       tourJoue: 1,
-      processus: ["UE7 · Management des organisations", "UE11 · Contrôle de gestion"],
+      processus: [
+        "UE7 · Management des organisations",
+        "UE11 · Contrôle de gestion",
+      ],
       objectif:
         "Engager un premier budget en sachant qu'il pèse sur le résultat du trimestre, puis lire l'indice RSE que la clôture calcule, ses trois piliers, et situer sa marge de manœuvre.",
       competences: [
@@ -76,11 +79,36 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
       preparation:
         "Créez la partie avec les réglages ci-dessus et notez le code d'invitation. Constituez des équipes de trois élèves. Activez le taux de rebuts (5 %) dans les paramètres économiques à la création : la troisième séance lit la non-qualité, qui n'existe pas sans ce réglage. Préparez une trame de note de diagnostic RSE en deux pages, et annoncez d'emblée que l'engagement se paie dans le trimestre alors que son retour, s'il vient, se lira plus tard. L'indice n'existe qu'à la clôture : le tour se joue d'abord, la lecture vient ensuite. Le pilier gouvernance part avec un retrait tant qu'aucun plan de trésorerie n'accompagne les décisions, ce que l'arène ne propose pas : dites-le, pour que les équipes n'y cherchent pas leur erreur.",
       deroule: [
-        { minutes: 20, titre: "Consignes et cadrage", detail: "Présentation de l'entreprise, des trois piliers et de la règle du jeu : la RSE coûte maintenant, rapporte plus tard." },
-        { minutes: 45, titre: "Premières décisions", detail: "L'équipe fixe son budget d'engagement et ses décisions courantes, à partir de ce que la règle dit des trois piliers, puis valide son tour." },
-        { minutes: 45, titre: "Clôture et lecture des résultats", detail: "Le tour est clos ; l'équipe lit l'effet du budget sur sa marge et note que la demande n'a pas encore bougé." },
-        { minutes: 40, titre: "Le premier indice", detail: "Chaque équipe lit l'indice que la clôture vient de calculer et ses trois piliers, repère le pilier le plus faible et formule une priorité." },
-        { minutes: 30, titre: "Note de diagnostic", detail: "Rédaction de la note à deux pages : état des lieux ESG et priorité retenue, argumentée." },
+        {
+          minutes: 20,
+          titre: "Consignes et cadrage",
+          detail:
+            "Présentation de l'entreprise, des trois piliers et de la règle du jeu : la RSE coûte maintenant, rapporte plus tard.",
+        },
+        {
+          minutes: 45,
+          titre: "Premières décisions",
+          detail:
+            "L'équipe fixe son budget d'engagement et ses décisions courantes, à partir de ce que la règle dit des trois piliers, puis valide son tour.",
+        },
+        {
+          minutes: 45,
+          titre: "Clôture et lecture des résultats",
+          detail:
+            "Le tour est clos ; l'équipe lit l'effet du budget sur sa marge et note que la demande n'a pas encore bougé.",
+        },
+        {
+          minutes: 40,
+          titre: "Le premier indice",
+          detail:
+            "Chaque équipe lit l'indice que la clôture vient de calculer et ses trois piliers, repère le pilier le plus faible et formule une priorité.",
+        },
+        {
+          minutes: 30,
+          titre: "Note de diagnostic",
+          detail:
+            "Rédaction de la note à deux pages : état des lieux ESG et priorité retenue, argumentée.",
+        },
       ],
       livrable:
         "Une note de diagnostic RSE de deux pages : lecture de l'indice et des trois piliers, priorité retenue et premier engagement chiffré, justifié face à la marge.",
@@ -97,7 +125,10 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
       titre: "L'arbitrage inter-temporel : le capital d'image",
       dureeMinutes: 180,
       tourJoue: 2,
-      processus: ["UE7 · Management des organisations", "UE6 · Finance d'entreprise"],
+      processus: [
+        "UE7 · Management des organisations",
+        "UE6 · Finance d'entreprise",
+      ],
       objectif:
         "Comprendre qu'un engagement soutenu bâtit un capital d'image qui relève la demande aux tours suivants, là où le budget de communication agit plus vite et s'use de moitié à chaque tour.",
       competences: [
@@ -112,18 +143,43 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
         "horizon de décision",
       ],
       preparation:
-        "Relevez pour chaque équipe l'engagement du tour précédent et l'évolution de sa part de marché. Préparez au tableau la comparaison entre l'effet de la communication, rapide et qui s'use, et celui de l'image, lent et qui dure.",
+        "Relevez pour chaque équipe l'engagement du tour précédent et l'évolution de sa part de marché. Préparez au tableau la comparaison entre l'effet de la communication, rapide et qui s'use, et celui de l'image, lent et qui dure. Ordres de grandeur pour cadrer : le label demande un capital d'image mûr, soit environ 15 000 € d'engagement par trimestre dès le premier ; l'éco-subvention et l'amende valent 12 000 € ; les cartes tombent dès le troisième trimestre.",
       deroule: [
-        { minutes: 20, titre: "Retour sur le tour précédent", detail: "Lecture collective : qui a engagé, qui a vu sa demande bouger, et pourquoi le retour se fait attendre." },
-        { minutes: 30, titre: "Le capital qui se construit", detail: "Explication du capital d'image : un stock lissé qui monte lentement et retombe si on cesse d'entretenir." },
-        { minutes: 50, titre: "Décisions du trimestre", detail: "L'équipe arbitre entre marketing et engagement RSE selon l'horizon restant, puis valide son tour." },
-        { minutes: 45, titre: "Clôture et analyse", detail: "Le tour est clos ; l'équipe mesure le premier effet de l'image sur sa part et le compare à celui du marketing." },
-        { minutes: 35, titre: "Fiche d'analyse", detail: "Rédaction d'une fiche opposant les deux leviers sur le rythme et la persistance de leur effet." },
+        {
+          minutes: 20,
+          titre: "Retour sur le tour précédent",
+          detail:
+            "Lecture collective : qui a engagé, qui a vu sa demande bouger, et pourquoi le retour se fait attendre.",
+        },
+        {
+          minutes: 30,
+          titre: "Le capital qui se construit",
+          detail:
+            "Explication du capital d'image : un stock lissé qui monte lentement et retombe si on cesse d'entretenir.",
+        },
+        {
+          minutes: 50,
+          titre: "Décisions du trimestre",
+          detail:
+            "L'équipe arbitre entre marketing et engagement RSE selon l'horizon restant, puis valide son tour.",
+        },
+        {
+          minutes: 45,
+          titre: "Clôture et analyse",
+          detail:
+            "Le tour est clos ; l'équipe mesure le premier effet de l'image sur sa part et le compare à celui du marketing.",
+        },
+        {
+          minutes: 35,
+          titre: "Fiche d'analyse",
+          detail:
+            "Rédaction d'une fiche opposant les deux leviers sur le rythme et la persistance de leur effet.",
+        },
       ],
       livrable:
-        "Une fiche d'analyse qui oppose marketing et engagement RSE sur deux critères, la vitesse de l'effet et sa persistance, chiffres de la partie à l'appui.",
+        "Une fiche d'analyse : la communication et l'engagement RSE opposés sur deux critères, la vitesse de l'effet et sa persistance, chiffres de la partie à l'appui.",
       tracePasseport:
-        "J'ai distingué une dépense à effet immédiat d'un engagement qui se capitalise, et j'ai arbitré selon l'horizon.",
+        "J'ai arbitré entre une dépense à effet immédiat et un engagement qui se capitalise, selon l'horizon restant.",
       evaluation: [
         "La distinction entre effet immédiat et effet différé est juste.",
         "L'analyse s'appuie sur les chiffres réels de la partie.",
@@ -135,7 +191,10 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
       titre: "Sourcing responsable et investissement propre",
       dureeMinutes: 180,
       tourJoue: 3,
-      processus: ["UE11 · Contrôle de gestion", "UE7 · Management des organisations"],
+      processus: [
+        "UE11 · Contrôle de gestion",
+        "UE7 · Management des organisations",
+      ],
       objectif:
         "Piloter l'empreinte par le choix du fournisseur et l'investissement dans un process propre, et lire l'effet durable de cet investissement sur les rebuts.",
       competences: [
@@ -152,16 +211,41 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
       preparation:
         "Vérifiez que le taux de rebuts est activé sur la partie : sans lui, il n'y a pas de non-qualité à lire. Préparez le tableau comparatif des fournisseurs du scénario, coût et qualité. Présentez en ouverture les quatre cartes RSE, label, éco-subvention, bad buzz, sanction : elles peuvent tomber dès la clôture de ce trimestre. Rappelez que l'investissement propre se paie dans le trimestre mais que sa baisse de rebuts se prolonge sur les suivants.",
       deroule: [
-        { minutes: 20, titre: "Le coût caché de la non-qualité", detail: "Rappel : un rebut est payé en matières et en main-d'œuvre mais invendable ; le réduire libère de la marge." },
-        { minutes: 30, titre: "Comparaison des fournisseurs", detail: "Les équipes confrontent coût, qualité et empreinte, et choisissent en connaissance de cause." },
-        { minutes: 50, titre: "Décisions du trimestre", detail: "Arbitrage entre fournisseur et investissement propre, puis dépôt du plan." },
-        { minutes: 45, titre: "Clôture et lecture des rebuts", detail: "Le tour est clos ; l'équipe lit la baisse des rebuts et la relie à son investissement." },
-        { minutes: 35, titre: "Fiche de pilotage", detail: "Rédaction d'une fiche reliant les décisions de sourcing et d'investissement à l'empreinte et à la marge." },
+        {
+          minutes: 20,
+          titre: "Le coût caché de la non-qualité",
+          detail:
+            "Rappel : un rebut est payé en matières et en main-d'œuvre mais invendable ; le réduire libère de la marge.",
+        },
+        {
+          minutes: 30,
+          titre: "Comparaison des fournisseurs",
+          detail:
+            "Les équipes confrontent coût, qualité et empreinte, et choisissent en connaissance de cause.",
+        },
+        {
+          minutes: 50,
+          titre: "Décisions du trimestre",
+          detail:
+            "Arbitrage entre fournisseur et investissement propre, puis dépôt du plan.",
+        },
+        {
+          minutes: 45,
+          titre: "Clôture et lecture des rebuts",
+          detail:
+            "Le tour est clos ; l'équipe lit la baisse des rebuts et la relie à son investissement.",
+        },
+        {
+          minutes: 35,
+          titre: "Fiche de pilotage",
+          detail:
+            "Rédaction d'une fiche reliant les décisions de sourcing et d'investissement à l'empreinte et à la marge.",
+        },
       ],
       livrable:
         "Une fiche de pilotage de l'empreinte : le choix de fournisseur et l'investissement propre du trimestre, leur coût, et leur effet lu sur le taux de rebuts et la marge.",
       tracePasseport:
-        "J'ai piloté l'empreinte d'une entreprise par son sourcing et un investissement propre, et j'en ai mesuré l'effet durable.",
+        "J'ai piloté l'empreinte d'une entreprise par son sourcing et un investissement propre, en mesurant leur effet durable.",
       evaluation: [
         "Le choix de fournisseur pèse le coût et la qualité, et dit ce que le rapport en déduit pour l'empreinte.",
         "L'investissement propre est justifié par son effet durable, pas par principe.",
@@ -173,7 +257,10 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
       titre: "Financement vert et climat social",
       dureeMinutes: 180,
       tourJoue: 4,
-      processus: ["UE6 · Finance d'entreprise", "UE7 · Management des organisations"],
+      processus: [
+        "UE6 · Finance d'entreprise",
+        "UE7 · Management des organisations",
+      ],
       objectif:
         "Constater qu'un standing RSE établi détend les conditions bancaires et retient les salariés, et intégrer ces retours dans le pilotage financier et social.",
       competences: [
@@ -190,11 +277,36 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
       preparation:
         "Relevez pour chaque équipe les conditions de découvert obtenues et les mouvements d'effectif des tours passés. Préparez la lecture du lien entre standing RSE, banque et rétention du personnel.",
       deroule: [
-        { minutes: 20, titre: "Retour sur les conditions obtenues", detail: "Lecture : à engagement comparable, qui a obtenu un découvert plus large ou un taux plus doux." },
-        { minutes: 30, titre: "Le standing change les conditions", detail: "Explication : l'image rassure la banque, et un employeur engagé perd moins de salariés quand le salaire glisse." },
-        { minutes: 50, titre: "Décisions du trimestre", detail: "L'équipe cale son financement et sa politique d'effectif en tenant compte de ces retours, puis valide son tour." },
-        { minutes: 45, titre: "Clôture et analyse", detail: "Le tour est clos ; l'équipe lit l'effet du standing sur ses charges financières et ses départs." },
-        { minutes: 35, titre: "Note financière et sociale", detail: "Rédaction d'une note reliant le standing RSE aux conditions bancaires et à la rétention du personnel." },
+        {
+          minutes: 20,
+          titre: "Retour sur les conditions obtenues",
+          detail:
+            "Lecture : à engagement comparable, qui a obtenu un découvert plus large ou un taux plus doux.",
+        },
+        {
+          minutes: 30,
+          titre: "Le standing change les conditions",
+          detail:
+            "Explication : l'image rassure la banque, et un employeur engagé perd moins de salariés quand le salaire glisse.",
+        },
+        {
+          minutes: 50,
+          titre: "Décisions du trimestre",
+          detail:
+            "L'équipe cale son financement et sa politique d'effectif en tenant compte de ces retours, puis valide son tour.",
+        },
+        {
+          minutes: 45,
+          titre: "Clôture et analyse",
+          detail:
+            "Le tour est clos ; l'équipe lit l'effet du standing sur ses charges financières et ses départs.",
+        },
+        {
+          minutes: 35,
+          titre: "Note financière et sociale",
+          detail:
+            "Rédaction d'une note reliant le standing RSE aux conditions bancaires et à la rétention du personnel.",
+        },
       ],
       livrable:
         "Une note financière et sociale : le lien entre le standing RSE et les conditions de financement obtenues, l'effet sur le climat social et les départs évités, et l'intégration de ces retours dans le plan du trimestre.",
@@ -228,11 +340,36 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
       preparation:
         "Les cartes RSE tombent dès le troisième trimestre : relevez, pour chaque équipe, celles déjà tirées et leur effet. Rappelez qu'un engagement tiède, ni nul ni mûr, est le plus exposé, et qu'un capital nul ne déclenche rien.",
       deroule: [
-        { minutes: 20, titre: "Les parties prenantes ont réagi", detail: "Relecture des cartes tombées depuis le troisième trimestre : label, éco-subvention, bad buzz, sanction, et ce qui les a déclenchées chez chaque équipe." },
-        { minutes: 30, titre: "Où en est mon standing", detail: "Chaque équipe situe son capital et estime le risque ou la récompense qu'elle encourt au dernier tour." },
-        { minutes: 50, titre: "Décisions du dernier tour", detail: "L'équipe arbitre une dernière fois entre rendement immédiat et risque de réputation, puis valide son tour." },
-        { minutes: 45, titre: "Clôture et cartes tirées", detail: "Le tour est clos ; de nouvelles cartes peuvent tomber, et chaque équipe lit l'effet sur sa demande ou sa trésorerie." },
-        { minutes: 35, titre: "Fiche de risque", detail: "Rédaction d'une fiche qui relie le standing atteint aux cartes rencontrées et à leur effet chiffré." },
+        {
+          minutes: 20,
+          titre: "Les parties prenantes ont réagi",
+          detail:
+            "Relecture des cartes tombées depuis le troisième trimestre : label, éco-subvention, bad buzz, sanction, et ce qui les a déclenchées chez chaque équipe.",
+        },
+        {
+          minutes: 30,
+          titre: "Où en est mon standing",
+          detail:
+            "Chaque équipe situe son capital et estime le risque ou la récompense qu'elle encourt au dernier tour.",
+        },
+        {
+          minutes: 50,
+          titre: "Décisions du dernier tour",
+          detail:
+            "L'équipe arbitre une dernière fois entre rendement immédiat et risque de réputation, puis valide son tour.",
+        },
+        {
+          minutes: 45,
+          titre: "Clôture et cartes tirées",
+          detail:
+            "Le tour est clos ; de nouvelles cartes peuvent tomber, et chaque équipe lit l'effet sur sa demande ou sa trésorerie.",
+        },
+        {
+          minutes: 35,
+          titre: "Fiche de risque",
+          detail:
+            "Rédaction d'une fiche qui relie le standing atteint aux cartes rencontrées et à leur effet chiffré.",
+        },
       ],
       livrable:
         "Une fiche de risque extra-financier : le standing atteint, les cartes rencontrées, et leur effet chiffré sur la demande ou la trésorerie, avec ce que l'équipe aurait pu faire autrement.",
@@ -249,7 +386,10 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
       titre: "Rendre compte : la déclaration de performance extra-financière",
       dureeMinutes: 180,
       tourJoue: null,
-      processus: ["UE11 · Contrôle de gestion", "UE13 · Communication professionnelle"],
+      processus: [
+        "UE11 · Contrôle de gestion",
+        "UE13 · Communication professionnelle",
+      ],
       objectif:
         "Consolider les cinq trimestres en une déclaration de performance extra-financière simplifiée, et la soutenir devant un jury en assumant les arbitrages faits.",
       competences: [
@@ -264,15 +404,35 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
         "reddition de comptes",
       ],
       preparation:
-        "Préparez la grille de soutenance et rappelez que la synthèse extra-financière du produit est indicative et non normée : elle sert de support, l'analyse reste le travail de l'équipe. Prévoyez l'ordre de passage des équipes.",
+        "Préparez la grille de soutenance et rappelez que la synthèse extra-financière du produit est indicative et non normée : elle sert de support, l'analyse reste le travail de l'équipe. Prévoyez l'ordre de passage des équipes. Une équipe qui n'a jamais engagé la RSE n'a pas de synthèse extra-financière dans le produit : elle rédige sa déclaration sur ses seuls comptes, et soutient ce choix.",
       deroule: [
-        { minutes: 20, titre: "Cadre de la reddition", detail: "Rappel de ce qu'est une déclaration extra-financière et de ce que le jury attend : des faits, une trajectoire, des arbitrages assumés." },
-        { minutes: 70, titre: "Rédaction de la déclaration", detail: "Les équipes consolident leur trajectoire ESG, leur empreinte et leurs faits marquants en une synthèse argumentée." },
-        { minutes: 70, titre: "Soutenances devant le jury", detail: "Chaque équipe présente sa déclaration et répond aux questions ; le jury sonde les arbitrages, y compris ceux qui n'ont pas payé." },
-        { minutes: 20, titre: "Bilan collectif", detail: "Retour transversal : ce que la RSE a coûté, ce qu'elle a rapporté, et à quel horizon, d'une équipe à l'autre." },
+        {
+          minutes: 20,
+          titre: "Cadre de la reddition",
+          detail:
+            "Rappel de ce qu'est une déclaration extra-financière et de ce que le jury attend : des faits, une trajectoire, des arbitrages assumés.",
+        },
+        {
+          minutes: 70,
+          titre: "Rédaction de la déclaration",
+          detail:
+            "Les équipes consolident leur trajectoire ESG, leur empreinte et leurs faits marquants en une synthèse argumentée.",
+        },
+        {
+          minutes: 70,
+          titre: "Soutenances devant le jury",
+          detail:
+            "Dix minutes de présentation et quatre minutes de questions par équipe. Chaque équipe présente sa déclaration et répond aux questions ; le jury sonde les arbitrages, y compris ceux qui n'ont pas payé.",
+        },
+        {
+          minutes: 20,
+          titre: "Bilan collectif",
+          detail:
+            "Retour transversal : ce que la RSE a coûté, ce qu'elle a rapporté, et à quel horizon, d'une équipe à l'autre.",
+        },
       ],
       livrable:
-        "Une déclaration de performance extra-financière de quatre pages, consolidant la trajectoire ESG, l'empreinte et les faits marquants des cinq trimestres, soutenue devant un jury.",
+        "Une déclaration de performance extra-financière : quatre pages, la trajectoire ESG consolidée, l'empreinte et les faits marquants des cinq trimestres, et la soutenance devant un jury.",
       tracePasseport:
         "J'ai rédigé et soutenu une déclaration de performance extra-financière consolidant cinq trimestres d'engagement RSE.",
       evaluation: [
@@ -303,10 +463,10 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
     },
   ],
   evaluationFinale: [
-    "La déclaration extra-financière consolide fidèlement les cinq trimestres et se lit sans le produit sous les yeux.",
-    "L'équipe distingue partout la mesure de l'engagement qui l'a produite, et n'attribue pas à la RSE ce qui revient au marché.",
-    "La soutenance assume les arbitrages, y compris ceux qui n'ont pas payé sur l'horizon de la partie.",
-    "Les traces de portfolio des six séances forment un parcours cohérent, du diagnostic à la reddition.",
+    "Les fiches intermédiaires, une par séance jouée, pour un tiers de la note.",
+    "La déclaration extra-financière, pour un tiers : elle consolide fidèlement les cinq trimestres, se lit sans le produit sous les yeux, et distingue partout la mesure de l'engagement qui l'a produite.",
+    "La soutenance, pour le dernier tiers : elle assume les arbitrages, y compris ceux qui n'ont pas payé sur l'horizon de la partie.",
+    "Les traces de portfolio des six séances forment un parcours cohérent, du diagnostic à la reddition ; le classement du jeu n'entre pas dans la note.",
   ],
   prolongements: [
     "Rejouer une partie avec un horizon plus long pour voir si des arbitrages RSE perdants sur cinq tours deviennent gagnants sur huit.",

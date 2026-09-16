@@ -62,7 +62,6 @@ export const ATELIER_CG1: AtelierDefinition = {
       tourJoue: 1,
       processus: [
         "P1 · Contrôle et traitement comptable des opérations commerciales",
-        "P7 · Fiabilisation de l'information et système d'information comptable (SIC)",
       ],
       objectif:
         "Lire les documents de synthèse d'une entreprise inconnue et en tirer un diagnostic, avant de décider quoi que ce soit.",
@@ -71,7 +70,12 @@ export const ATELIER_CG1: AtelierDefinition = {
         "Je repère la contrainte qui limite l'activité, et je la distingue d'un simple manque de moyens.",
         "Je formule un diagnostic écrit, hiérarchisé, sans recopier les documents.",
       ],
-      notions: ["actif et passif", "capitaux propres", "dettes financières", "charges fixes et charges variables"],
+      notions: [
+        "actif et passif",
+        "capitaux propres",
+        "dettes financières",
+        "charges fixes et charges variables",
+      ],
       preparation:
         "Créez la partie avec ces réglages : NOVA (une seule enceinte), un trimestre par tour, niveau 3 · Pilotage, six tours, six équipes, deux concurrents machine, TVA activée, monde variable décoché, questions de connaissances activées. Notez le code d'invitation. Constituez les équipes à l'avance : trois élèves par équipe, un rôle par élève (direction, production, finances), rôles tournants d'une séance à l'autre. Imprimez la fiche de diagnostic vierge.",
       deroule: [
@@ -115,7 +119,7 @@ export const ATELIER_CG1: AtelierDefinition = {
       livrable:
         "La fiche de diagnostic d'ouverture, une page : ce que l'entreprise possède, ce qu'elle doit, ce qu'elle sait faire, la contrainte qui la limite, et le choix retenu au premier arbitrage avec sa justification.",
       tracePasseport:
-        "J'ai analysé la situation d'une entreprise à partir de ses documents de synthèse, et j'ai justifié une décision de gestion à partir de ce diagnostic.",
+        "J'ai justifié une décision de gestion par l'analyse des documents de synthèse d'une entreprise.",
       evaluation: [
         "Les montants cités sont exacts et proviennent bien des documents.",
         "Les constats sont hiérarchisés : le plus déterminant vient en premier.",
@@ -187,7 +191,7 @@ export const ATELIER_CG1: AtelierDefinition = {
       livrable:
         "La feuille de calcul du seuil : tri des charges justifié, marge sur coût variable, seuil en volume et en valeur, marge de sécurité, et le prix retenu pour le tour 2 avec le volume qu'il faut atteindre.",
       tracePasseport:
-        "J'ai calculé le seuil de rentabilité d'une entreprise à partir de son compte de résultat, et je m'en suis servi pour fixer un prix de vente.",
+        "J'ai fixé un prix de vente à partir du seuil de rentabilité calculé sur le compte de résultat de mon entreprise.",
       evaluation: [
         "Le tri des charges est justifié, y compris pour le budget de marketing.",
         "Les calculs sont exacts et les unités sont écrites.",
@@ -201,8 +205,8 @@ export const ATELIER_CG1: AtelierDefinition = {
       dureeMinutes: 180,
       tourJoue: 3,
       processus: [
-        "P1 · Contrôle et traitement comptable des opérations commerciales",
         "P5 · Analyse et prévision de l'activité",
+        "P6 · Analyse de la situation financière",
       ],
       objectif:
         "Construire le budget de trésorerie du trimestre dans le cockpit, en déduire un besoin de financement chiffré et daté, puis mesurer l'écart avec le réalisé.",
@@ -262,7 +266,7 @@ export const ATELIER_CG1: AtelierDefinition = {
       livrable:
         "Le budget de trésorerie du trimestre dans le cockpit, et la note d'écart qui l'accompagne : pour chaque ligne, le prévu, le réalisé, l'écart et sa cause.",
       tracePasseport:
-        "J'ai établi un budget de trésorerie, je m'en suis servi pour justifier une demande de financement, et j'ai analysé les écarts avec le réalisé.",
+        "J'ai justifié une demande de financement par un budget de trésorerie que j'ai établi puis confronté au réalisé.",
       evaluation: [
         "Les décaissements sont datés selon les délais réels, pas au moment de la charge.",
         "Le besoin de financement demandé correspond à celui que le budget démontre.",
@@ -277,7 +281,7 @@ export const ATELIER_CG1: AtelierDefinition = {
       tourJoue: 4,
       processus: [
         "P2 · Contrôle et production de l'information financière",
-        "P1 · Contrôle et traitement comptable des opérations commerciales",
+        "P6 · Analyse de la situation financière",
       ],
       objectif:
         "Évaluer le stock au coût unitaire moyen pondéré, lire la variation de stock au compte de résultat, et expliquer pourquoi un trimestre bénéficiaire peut laisser la caisse à découvert.",
@@ -334,9 +338,9 @@ export const ATELIER_CG1: AtelierDefinition = {
         },
       ],
       livrable:
-        "La fiche de stock du trimestre au coût unitaire moyen pondéré, rapprochée du bilan, et le tableau « où est passé l'argent » qui explique l'écart entre le résultat et la caisse, avec une action chiffrée pour le tour suivant.",
+        "La fiche de stock et le tableau « où est passé l'argent » : le stock du trimestre au coût unitaire moyen pondéré, son rapprochement avec le bilan, l'écart entre le résultat et la caisse expliqué ligne à ligne, et une action chiffrée pour le tour suivant.",
       tracePasseport:
-        "J'ai évalué un stock au coût unitaire moyen pondéré, rapproché la production stockée du compte de résultat, et expliqué pourquoi un trimestre bénéficiaire avait laissé la trésorerie à découvert.",
+        "J'ai expliqué pourquoi un trimestre bénéficiaire a laissé la trésorerie à découvert, à partir d'un stock évalué au coût unitaire moyen pondéré et rapproché du compte de résultat.",
       evaluation: [
         "Le coût unitaire moyen pondéré est exact et le stock final se retrouve au bilan.",
         "La production stockée est expliquée comme un produit sans encaissement, pas comme une vente.",
@@ -408,9 +412,9 @@ export const ATELIER_CG1: AtelierDefinition = {
         },
       ],
       livrable:
-        "Le calcul de la TVA à décaisser du trimestre, son poids dans la caisse, et le tableau comparatif escompte contre affacturage avec la décision retenue.",
+        "La note de TVA et de financement : la TVA à décaisser du trimestre, son poids dans la caisse, le tableau comparatif escompte contre affacturage, et la décision retenue.",
       tracePasseport:
-        "J'ai calculé une TVA à décaisser, mesuré son poids dans la trésorerie, et comparé par le calcul deux façons de mobiliser une créance.",
+        "J'ai comparé par le calcul deux façons de mobiliser une créance, après avoir mesuré le poids de la TVA à décaisser dans la trésorerie.",
       evaluation: [
         "La TVA à décaisser est exacte et son mécanisme est expliqué en une phrase juste.",
         "La distinction entre neutralité pour le résultat et poids pour la trésorerie est établie.",
@@ -475,7 +479,7 @@ export const ATELIER_CG1: AtelierDefinition = {
         },
       ],
       livrable:
-        "La note de gestion de deux pages, son graphique issu du relevé exporté, et la présentation de cinq minutes.",
+        "La note de gestion : deux pages, le diagnostic des six trimestres, le graphique issu du relevé exporté, et la présentation de cinq minutes.",
       tracePasseport:
         "J'ai produit et présenté une note de gestion sur six périodes à partir de données exportées et contrôlées.",
       evaluation: [
@@ -524,7 +528,8 @@ export const ATELIER_CG1: AtelierDefinition = {
         "Parce qu'en première année le seuil de rentabilité doit d'abord se comprendre sur un produit : une marge, un volume, un point où l'on ne perd plus. Avec trois références, le seuil dépend du mix vendu, et c'est une autre leçon. La gamme, avec le niveau Arbitrage qui l'ouvre, est le prolongement naturel en seconde année.",
     },
     {
-      question: "Que se passe-t-il si une équipe fait faillite en cours de route ?",
+      question:
+        "Que se passe-t-il si une équipe fait faillite en cours de route ?",
       reponse:
         "Rien ne s'arrête. Une entreprise en découvert au-delà du plafond voit ses créances cédées d'office, elle continue de jouer, et elle a beaucoup à raconter en séance 4. Une équipe qui se plante donne souvent la meilleure note de gestion, à condition que vous le disiez dès la première séance.",
     },
@@ -547,6 +552,11 @@ export const ATELIER_CG1: AtelierDefinition = {
       question: "Peut-on changer de secteur d'entreprise ?",
       reponse:
         "Oui, tous les secteurs se jouent avec le même déroulé. NOVA est recommandé parce qu'il porte un stock, un coût de production et des délais de règlement, les trois matières de la première année. Un secteur sans stock, comme la restauration ou l'hôtellerie, retire à la séance 4 son objet.",
+    },
+    {
+      question: "Quelles épreuves du BTS cet atelier prépare-t-il ?",
+      reponse:
+        "L'épreuve E5, situations de contrôle de gestion et d'analyse financière, pour le seuil, le budget de trésorerie et les écarts ; l'épreuve E4, traitement et contrôle des opérations comptables, fiscales et sociales, pour la TVA et les stocks ; et l'épreuve E6, parcours de professionnalisation, dont le passeport professionnel que chaque séance nourrit est la pièce centrale. Vérifiez les intitulés sur le référentiel en vigueur dans votre académie.",
     },
   ],
   prolongements: [

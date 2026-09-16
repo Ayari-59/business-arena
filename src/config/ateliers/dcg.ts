@@ -55,10 +55,7 @@ export const ATELIER_DCG: AtelierDefinition = {
       titre: "Diagnostic financier d'ouverture",
       dureeMinutes: 180,
       tourJoue: 1,
-      processus: [
-        "UE6 · Finance d'entreprise",
-        "UE11 · Contrôle de gestion",
-      ],
+      processus: ["UE6 · Finance d'entreprise", "UE11 · Contrôle de gestion"],
       objectif:
         "Établir le diagnostic financier d'une entreprise inconnue par le bilan fonctionnel et les soldes intermédiaires, et en tirer la contrainte à traiter en premier.",
       competences: [
@@ -116,7 +113,7 @@ export const ATELIER_DCG: AtelierDefinition = {
       livrable:
         "La note de diagnostic financier, deux pages : bilan fonctionnel reconstruit, soldes intermédiaires commentés, hiérarchie des problèmes financiers, et la décision du trimestre justifiée par ce diagnostic.",
       tracePasseport:
-        "J'ai établi le diagnostic financier d'une entreprise par le bilan fonctionnel et les soldes intermédiaires, et j'en ai tiré une décision de gestion.",
+        "J'ai tiré une décision de gestion du diagnostic financier d'une entreprise, établi par le bilan fonctionnel et les soldes intermédiaires.",
       evaluation: [
         "L'équilibre entre fonds de roulement, besoin en fonds de roulement et trésorerie est vérifié, pas seulement affiché.",
         "Les soldes intermédiaires servent à expliquer le résultat, ils ne sont pas récités.",
@@ -128,10 +125,7 @@ export const ATELIER_DCG: AtelierDefinition = {
       titre: "Coûts, seuil et levier",
       dureeMinutes: 180,
       tourJoue: 2,
-      processus: [
-        "UE11 · Contrôle de gestion",
-        "UE6 · Finance d'entreprise",
-      ],
+      processus: ["UE11 · Contrôle de gestion", "UE6 · Finance d'entreprise"],
       objectif:
         "Séparer les charges selon leur variabilité, en tirer le seuil de rentabilité et le levier opérationnel, et mesurer ce que ce levier fait au risque de l'entreprise.",
       competences: [
@@ -189,7 +183,7 @@ export const ATELIER_DCG: AtelierDefinition = {
       livrable:
         "Le dossier de coûts : la ventilation des charges avec la justification des cas limites, le seuil de rentabilité, la marge de sécurité, le levier opérationnel et son interprétation en risque.",
       tracePasseport:
-        "J'ai ventilé les charges d'une entreprise selon leur variabilité et j'ai interprété son levier opérationnel en termes de risque.",
+        "J'ai interprété le levier opérationnel d'une entreprise en termes de risque, après avoir ventilé ses charges selon leur variabilité.",
       evaluation: [
         "Les cas limites de ventilation sont argumentés, pas tranchés au hasard.",
         "La marge de sécurité est exprimée et commentée, pas seulement calculée.",
@@ -201,9 +195,7 @@ export const ATELIER_DCG: AtelierDefinition = {
       titre: "Budget et analyse des écarts",
       dureeMinutes: 180,
       tourJoue: 3,
-      processus: [
-        "UE11 · Contrôle de gestion",
-      ],
+      processus: ["UE11 · Contrôle de gestion"],
       objectif:
         "Construire un budget du trimestre, puis décomposer l'écart constaté entre ce qui relève du prix, du volume et des coûts.",
       competences: [
@@ -219,7 +211,7 @@ export const ATELIER_DCG: AtelierDefinition = {
         "hypothèse budgétaire",
       ],
       preparation:
-        "C'est la séance centrale de l'atelier et la plus exigeante. Préparez la trame de décomposition des écarts et prévoyez d'y consacrer tout le temps annoncé. Les équipes auront besoin de leur prévision déposée à la séance précédente : vérifiez qu'elles l'ont conservée.",
+        "C'est la séance centrale de l'atelier et la plus exigeante. Préparez la trame de décomposition des écarts et prévoyez d'y consacrer tout le temps annoncé. Les équipes auront besoin de leur prévision écrite à la séance précédente : vérifiez qu'elles l'ont conservée.",
       deroule: [
         {
           minutes: 15,
@@ -261,7 +253,7 @@ export const ATELIER_DCG: AtelierDefinition = {
       livrable:
         "Le dossier budgétaire : le budget du trimestre écoulé avec ses hypothèses, la décomposition de l'écart en trois composantes vérifiée par leur somme, l'imputation de chacune, et le budget du trimestre suivant.",
       tracePasseport:
-        "J'ai construit un budget, décomposé l'écart entre le budget et le réel, et distingué ce qui relevait de mes décisions de ce qui relevait du marché.",
+        "J'ai décomposé l'écart entre un budget que j'avais construit et le réel, en distinguant ce qui relevait de mes décisions de ce qui relevait du marché.",
       evaluation: [
         "La somme des trois écarts retombe sur l'écart global, et le contrôle est montré.",
         "Les hypothèses du budget sont écrites avant la clôture, donc opposables.",
@@ -273,10 +265,7 @@ export const ATELIER_DCG: AtelierDefinition = {
       titre: "Investir et financer",
       dureeMinutes: 180,
       tourJoue: 4,
-      processus: [
-        "UE6 · Finance d'entreprise",
-        "UE11 · Contrôle de gestion",
-      ],
+      processus: ["UE6 · Finance d'entreprise", "UE11 · Contrôle de gestion"],
       objectif:
         "Décider d'un investissement de capacité, choisir son financement, et déposer devant la banque un plan que les écarts des trimestres précédents rendent crédible ou non.",
       competences: [
@@ -292,7 +281,7 @@ export const ATELIER_DCG: AtelierDefinition = {
         "plan de trésorerie",
       ],
       preparation:
-        "Vérifiez que le niveau de la partie ouvre bien l'investissement et le placement, sans quoi la séance perd son support. Rappelez aux équipes que la banque du jeu ne prête pas au-delà de deux fois les capitaux propres : c'est cette limite, et non la qualité de leurs prévisions, qui décidera de ce qu'elles pourront financer.",
+        "Vérifiez que le niveau de la partie ouvre bien l'investissement et le placement, sans quoi la séance perd son support. Rappelez aux équipes que la banque du jeu ne prête pas au-delà de deux fois les capitaux propres : c'est cette limite, et non la qualité de leurs prévisions, qui décidera de ce qu'elles pourront financer. Le jeu vend une étude de projet à 1 200 € qui donne la VAN et le TRI de l'investissement envisagé : faites-la acheter par au moins une équipe. L'apport en capital est plafonné à 100 000 € sur la partie, et l'emprunt par le rapport entre dettes et capitaux propres.",
       deroule: [
         {
           minutes: 15,
@@ -349,6 +338,7 @@ export const ATELIER_DCG: AtelierDefinition = {
       processus: [
         "UE6 · Finance d'entreprise",
         "UE11 · Contrôle de gestion",
+        "UE13 · Communication professionnelle",
       ],
       objectif:
         "Produire le rapport de gestion des quatre trimestres et le soutenir devant un jury qui interroge les hypothèses autant que les résultats.",
@@ -424,7 +414,8 @@ export const ATELIER_DCG: AtelierDefinition = {
     },
     {
       nom: "Fil rouge sur deux unités",
-      quand: "Quand l'atelier accompagne la finance d'entreprise et le contrôle de gestion.",
+      quand:
+        "Quand l'atelier accompagne la finance d'entreprise et le contrôle de gestion.",
       comment:
         "Une séance après chaque chapitre correspondant, les séances de coûts et d'écarts avec le contrôle de gestion, celles de diagnostic et d'investissement avec la finance d'entreprise.",
     },
@@ -442,7 +433,8 @@ export const ATELIER_DCG: AtelierDefinition = {
   ],
   faq: [
     {
-      question: "Pourquoi activer le monde variable alors que les ateliers de BTS le désactivent ?",
+      question:
+        "Pourquoi activer le monde variable alors que les ateliers de BTS le désactivent ?",
       reponse:
         "Parce que la distinction entre une bonne décision et un bon résultat est ici un objectif, et non un obstacle. Un candidat au DCG doit pouvoir défendre une décision qui a mal tourné, et l'analyse des écarts n'a de sens que s'il existe une part que les décisions n'expliquent pas. Le revers est que vos corrigés ne sont pas transposables d'une classe à l'autre : c'est le prix à payer, et il est assumé.",
     },
@@ -452,19 +444,22 @@ export const ATELIER_DCG: AtelierDefinition = {
         "C'est un choix. La finance d'entreprise et le contrôle de gestion sont les deux unités que la simulation sert réellement, et nous préférons deux unités bien couvertes à une liste qui donnerait le change. Le management et le droit des sociétés se rattachent au déroulé par des prolongements, pas par les séances elles-mêmes.",
     },
     {
-      question: "Le niveau de jeu est le plus élevé de la plateforme après le niveau exécutif, est-ce tenable ?",
+      question:
+        "Le niveau de jeu est le plus élevé de la plateforme après le niveau exécutif, est-ce tenable ?",
       reponse:
         "Il l'est pour des candidats qui savent déjà lire un bilan, ce qui est le cas au DCG. Il ne le serait pas en première année de BTS, où le nombre de décisions simultanées noierait les équipes. Le niveau se fixe à la création et ne change plus en cours de partie : si votre groupe est hétérogène, créez la partie au niveau Arbitrage, qui garde l'investissement et le financement mais retire le placement.",
     },
     {
-      question: "La séance d'analyse des écarts tient-elle vraiment en trois heures ?",
+      question:
+        "La séance d'analyse des écarts tient-elle vraiment en trois heures ?",
       reponse:
         "Elle le peut, à condition que la décomposition ait été préparée en amont sur un cas court. C'est la séance la plus exigeante de l'atelier et la seule qu'il ne faut pas raccourcir : si vous devez gagner du temps, prenez-le sur la séance de coûts, dont une partie peut être traitée en travail personnel.",
     },
     {
-      question: "Peut-on utiliser cet atelier pour préparer l'épreuve orale du diplôme ?",
+      question:
+        "Peut-on utiliser cet atelier pour préparer l'épreuve orale du diplôme ?",
       reponse:
-        "La dernière séance est construite pour cela : rapport écrit court, soutenance chronométrée, questions portant sur les méthodes. Ce qu'elle ne remplace pas, c'est l'expérience professionnelle attendue par l'épreuve. Elle donne en revanche un entraînement à l'exercice le plus redouté, défendre ses propres chiffres devant quelqu'un qui les interroge.",
+        "La dernière séance est construite pour l'UE13, communication professionnelle : rapport écrit court, soutenance chronométrée, questions portant sur les méthodes. Ce qu'elle ne remplace pas, c'est l'expérience professionnelle attendue par l'épreuve. Elle donne en revanche un entraînement à l'exercice le plus redouté, défendre ses propres chiffres devant quelqu'un qui les interroge.",
     },
   ],
 };

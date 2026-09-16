@@ -32,7 +32,7 @@ export const ATELIER_GEA: AtelierDefinition = {
   resume:
     "Quatre trimestres à la tête d'un industriel, du coût de revient au diagnostic financier complet, avec la montée en charge d'un compte-clé comme épreuve.",
   difficulte: 3,
-  difficulteLabel: "Pilotage",
+  difficulteLabel: "Approfondissement",
   format: "5 séances de 3 h",
   pourquoi:
     "Le coût de revient se calcule au tableau et s'oublie à la sortie, parce qu'un exercice donne les charges et demande le coût. Ici l'équipe fixe son volume de production et son prix, découvre au trimestre suivant sa marge réelle une fois les charges fixes absorbées, et voit sa trésorerie se tendre alors que son compte de résultat est bénéficiaire, parce que ses clients paient à soixante jours. Le besoin en fonds de roulement cesse d'être une formule : une équipe qui a vendu davantage sans financer son cycle se retrouve à court de caisse au meilleur de son activité, et son tableau de trésorerie le lui dit avant sa banque.",
@@ -119,7 +119,7 @@ export const ATELIER_GEA: AtelierDefinition = {
       livrable:
         "La fiche de coût de revient, une page : charges fixes et variables séparées, coût de revient unitaire, marge sur coût variable, volume au seuil, et le positionnement retenu avec sa justification.",
       tracePasseport:
-        "J'ai reconstitué le coût de revient d'un produit et j'en ai tiré la marge et le seuil de rentabilité de l'entreprise.",
+        "J'ai tiré la marge et le seuil de rentabilité d'une entreprise du coût de revient que j'avais reconstitué.",
       evaluation: [
         "Les charges fixes et variables sont séparées, et pas mélangées.",
         "Le seuil est exprimé en volume à produire, pas seulement en euros.",
@@ -192,7 +192,7 @@ export const ATELIER_GEA: AtelierDefinition = {
       livrable:
         "Le plan de trésorerie du trimestre : encaissements et décaissements, solde prévu, besoin en fonds de roulement estimé, et l'écart au solde réalisé après clôture.",
       tracePasseport:
-        "J'ai construit un plan de trésorerie, mesuré le besoin en fonds de roulement d'une entreprise, et expliqué l'écart entre son résultat et sa caisse.",
+        "J'ai expliqué l'écart entre le résultat et la caisse d'une entreprise par un plan de trésorerie et la mesure de son besoin en fonds de roulement.",
       evaluation: [
         "Le besoin en fonds de roulement est nommé et relié au délai de règlement.",
         "Le solde prévu est construit sur des flux, pas sur le résultat comptable.",
@@ -338,7 +338,7 @@ export const ATELIER_GEA: AtelierDefinition = {
       livrable:
         "La fiche de plan de charge : le volume attendu et son raisonnement, la marge attendue, le besoin en fonds de roulement de la croissance, la couverture retenue, et l'écart constaté après clôture.",
       tracePasseport:
-        "J'ai piloté une montée en charge en tenant ensemble la production, la marge et la trésorerie, et j'ai analysé mon écart au résultat.",
+        "J'ai piloté une montée en charge en tenant ensemble la production, la marge et la trésorerie, puis analysé mon écart au résultat.",
       evaluation: [
         "Le plan est construit sur les trimestres joués, pas sur une intuition.",
         "L'effet de la croissance sur le besoin en fonds de roulement est chiffré.",
@@ -393,7 +393,7 @@ export const ATELIER_GEA: AtelierDefinition = {
           minutes: 75,
           titre: "Passage des équipes",
           detail:
-            "Chaque équipe présente son diagnostic puis répond aux questions du jury, formé de vous et de deux élèves d'une autre équipe qui posent au moins une question chacun.",
+            "Huit minutes de présentation et quatre minutes de questions par équipe. Chaque équipe présente son diagnostic puis répond aux questions du jury, formé de vous et de deux élèves d'une autre équipe qui posent au moins une question chacun.",
         },
         {
           minutes: 25,
@@ -403,7 +403,7 @@ export const ATELIER_GEA: AtelierDefinition = {
         },
       ],
       livrable:
-        "Le diagnostic financier des quatre trimestres, une page, quatre indicateurs justifiés reliant activité, rentabilité et trésorerie, plus la présentation orale qui l'accompagne.",
+        "Le diagnostic financier des quatre trimestres : une page, quatre indicateurs justifiés reliant activité, rentabilité et trésorerie, la décision qui a le plus pesé et son effet chiffré, et la présentation orale de huit minutes qui l'accompagne.",
       tracePasseport:
         "J'ai établi le diagnostic financier d'une entreprise sur quatre trimestres et je l'ai présenté oralement devant un jury.",
       evaluation: [
@@ -422,13 +422,15 @@ export const ATELIER_GEA: AtelierDefinition = {
     },
     {
       nom: "Semaine de ressources ou de projet",
-      quand: "En semaine banalisée de situation d'apprentissage et d'évaluation.",
+      quand:
+        "En semaine banalisée de situation d'apprentissage et d'évaluation.",
       comment:
         "Une séance par jour du lundi au vendredi. Le rythme est plus tendu et le débriefing plus court, mais la mémoire des trimestres est meilleure, et la présentation du vendredi gagne en tenue.",
     },
     {
       nom: "Fil rouge du semestre",
-      quand: "Quand l'atelier accompagne le cours de comptabilité de gestion ou de finance.",
+      quand:
+        "Quand l'atelier accompagne le cours de comptabilité de gestion ou de finance.",
       comment:
         "Une séance toutes les trois semaines, chaque séance étant précédée du point de cours qu'elle mobilise. La partie reste ouverte entre deux séances, ce qui permet de faire préparer les décisions à la maison.",
     },
@@ -446,22 +448,26 @@ export const ATELIER_GEA: AtelierDefinition = {
   ],
   faq: [
     {
-      question: "Faut-il avoir traité le coût de revient avant la première séance ?",
+      question:
+        "Faut-il avoir traité le coût de revient avant la première séance ?",
       reponse:
         "Non, et il vaut même mieux ne pas l'avoir fait. La première séance amène les équipes à en avoir besoin avant de le nommer : elles calculent un coût parce qu'elles doivent fixer un prix et un volume, pas parce que le cours l'a demandé. Vous formalisez ensuite, sur leurs propres chiffres.",
     },
     {
-      question: "Pourquoi arrêter à quatre trimestres alors que le secteur en compte six ?",
+      question:
+        "Pourquoi arrêter à quatre trimestres alors que le secteur en compte six ?",
       reponse:
         "Parce que la montée en charge du compte-clé est le point culminant de ce secteur et que rien ne gagne à la dépasser dans un atelier de cinq séances. La partie est créée sur quatre tours et s'arrête là. Si votre progression le permet, créez-la sur six tours dès le départ et gardez les deux derniers pour deux séances de prolongement.",
     },
     {
-      question: "Le référentiel du BUT GEA est-il repris au mot dans les intitulés de blocs ?",
+      question:
+        "Le référentiel du BUT GEA est-il repris au mot dans les intitulés de blocs ?",
       reponse:
         "Pas encore. Les blocs cités décrivent l'activité de gestion de façon fidèle mais n'ont pas été confrontés au programme national : le diplôme figure pour cette raison dans la liste des référentiels non vérifiés. Relisez-les avec votre référentiel de compétences sous les yeux et ajustez les intitulés avant un usage certificatif.",
     },
     {
-      question: "Le niveau retenu ouvre l'investissement et le recrutement, est-ce trop pour une première année ?",
+      question:
+        "Le niveau retenu ouvre l'investissement et le recrutement, est-ce trop pour une première année ?",
       reponse:
         "Non, à condition de tenir l'atelier sur le fil proposé. Le déroulé concentre chaque séance sur une décision structurante, et les autres leviers restent des réglages secondaires que les équipes ajustent sans qu'ils portent la note. C'est justement ce qui distingue la gestion généraliste du GEA d'un atelier centré sur un seul métier.",
     },
@@ -469,6 +475,11 @@ export const ATELIER_GEA: AtelierDefinition = {
       question: "Peut-on conduire cet atelier avec des équipes de deux ?",
       reponse:
         "Oui, en fusionnant les rôles des coûts et de la production. En dessous de trois élèves, le débat de la troisième séance sur l'investissement perd de sa force, alors prévoyez d'y faire travailler deux équipes ensemble sur cette séance-là uniquement.",
+    },
+    {
+      question: "Quel lien avec l'évaluation du BUT ?",
+      reponse:
+        "Le BUT s'évalue par des situations d'apprentissage et d'évaluation, les SAÉ, et par un portfolio : chaque séance fournit une trace datée à y verser, et le diagnostic final peut tenir lieu de livrable de SAÉ. Les intitulés exacts dépendent de votre parcours ; le référentiel n'a pas encore été confronté à cette fiche, vérifiez-les avant de l'annoncer.",
     },
   ],
 };
