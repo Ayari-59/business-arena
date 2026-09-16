@@ -65,6 +65,11 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
         enTete: true,
       },
       {
+        href: "/rendez-vous",
+        libelle: "Prendre rendez-vous",
+        aide: "Trente minutes au téléphone pour parler de votre classe : les créneaux proposés sont ceux que l'agenda laisse libres.",
+      },
+      {
         href: "/parcours",
         libelle: "Parcours",
         aide: "Ce que traverse une classe, de la première décision au dernier bilan.",

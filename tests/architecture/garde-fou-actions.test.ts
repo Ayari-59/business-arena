@@ -25,6 +25,7 @@ const COMPOSANTS_GARDES = [
   "src/components/stage-schedule.tsx", // fenêtre d'une étape de concours
   "src/components/public-page-form.tsx", // page publique d'annonce du concours
   "src/components/orientation-form.tsx", // demande de simulation (/orientation)
+  "src/components/rendez-vous-form.tsx", // rendez-vous téléphonique (/rendez-vous)
 ];
 
 /** Pages serveur : GuardedForm autour des actions sans état. */

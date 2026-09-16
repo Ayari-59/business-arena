@@ -13,11 +13,13 @@ import {
   setLicenceAction,
   updatePlatformConfigAction,
   marquerDemandeOrientationTraiteeAction,
+  annulerRendezVousAction,
 } from "./actions";
 import { SubmitButton } from "@/components/submit-button";
 import { DeleteLicenceButton } from "@/components/delete-licence-button";
 import { GuardedForm } from "@/components/guarded-action";
 import { listerDemandesOrientation } from "@/services/orientation-request.service";
+import { listerRendezVous } from "@/services/rendez-vous.service";
 
 export const dynamic = "force-dynamic";
 
@@ -66,6 +68,8 @@ export default async function AdminPage() {
   const demoSeeded = await isDemoSeeded();
   const demandes = await listerDemandesOrientation(50);
   const aRepondre = demandes.filter((d) => d.status === "new");
+  const rendezVous = await listerRendezVous(30);
+  const aVenir = rendezVous.filter((r) => r.aVenir);
 
   return (
     <main id="main" className="mx-auto max-w-5xl space-y-8 p-6">
@@ -372,6 +376,87 @@ export default async function AdminPage() {
                     </>
                   ) : null}
                 </dl>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {/*
+        RENDEZ-VOUS TÉLÉPHONIQUES. Réservés depuis /rendez-vous sur les créneaux
+        que l'agenda Google laisse libres. La réservation est ici quoi qu'il
+        arrive ; l'indicateur dit si elle a aussi été posée dans l'agenda.
+        Annuler libère le créneau et retire l'événement de l'agenda.
+      */}
+      <section className="carte p-6">
+        <h2 className="text-sm font-semibold text-slate-200">
+          Rendez-vous téléphoniques
+          {aVenir.length > 0 ? (
+            <span className="ml-2 rounded-full border border-amber-400/40 bg-amber-400/10 px-2 py-0.5 text-xs text-amber-300">
+              {aVenir.length} à venir
+            </span>
+          ) : null}
+        </h2>
+        <p className="mt-1 text-xs text-slate-400">
+          Pris depuis /rendez-vous. Les créneaux proposés se règlent sur l&apos;agenda Google
+          configuré dans l&apos;hébergement ; les plages ouvertes se règlent dans le code
+          (config/rendez-vous).
+        </p>
+        {rendezVous.length === 0 ? (
+          <p className="mt-3 text-sm text-slate-400">Aucun rendez-vous pour l&apos;instant.</p>
+        ) : (
+          <ul className="mt-3 space-y-3">
+            {rendezVous.map((r) => (
+              <li
+                key={r.id}
+                className={`rounded-xl bg-slate-950 p-4 ${r.aVenir ? "" : "opacity-60"}`}
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-slate-100">
+                      {r.libelle}
+                      {r.status === "cancelled" ? (
+                        <span className="ml-2 text-xs font-normal text-slate-400">annulé</span>
+                      ) : null}
+                    </p>
+                    <p className="mt-0.5 text-xs text-slate-300">
+                      {r.name} · {r.school} ·{" "}
+                      <a href={`tel:${r.phone.replace(/\s/g, "")}`} className="text-amber-300 underline-offset-4 hover:underline">
+                        {r.phone}
+                      </a>
+                      {" · "}
+                      <a href={`mailto:${r.email}`} className="text-amber-300 underline-offset-4 hover:underline">
+                        {r.email}
+                      </a>
+                    </p>
+                    <p className="mt-0.5 text-xs text-slate-400">
+                      {r.dansAgenda ? (
+                        r.calendarLink ? (
+                          <a href={r.calendarLink} className="underline-offset-4 hover:underline" target="_blank" rel="noreferrer">
+                            dans l&apos;agenda Google
+                          </a>
+                        ) : (
+                          "dans l'agenda Google"
+                        )
+                      ) : (
+                        "non posé dans l'agenda (agenda non configuré ou injoignable)"
+                      )}
+                      {" · "}
+                      {r.mailSent ? "confirmation envoyée" : "confirmation non envoyée"}
+                    </p>
+                  </div>
+                  {r.aVenir ? (
+                    <GuardedForm action={annulerRendezVousAction} label="annulation du rendez-vous">
+                      <input type="hidden" name="id" value={r.id} />
+                      <SubmitButton className="rounded-lg border border-red-400/40 px-3 py-1 text-xs font-semibold text-red-300 hover:bg-red-400/10">
+                        Annuler
+                      </SubmitButton>
+                    </GuardedForm>
+                  ) : null}
+                </div>
+                {r.message ? (
+                  <p className="mt-2 whitespace-pre-line text-xs italic text-slate-300">« {r.message} »</p>
+                ) : null}
               </li>
             ))}
           </ul>

@@ -124,3 +124,13 @@ export async function marquerDemandeOrientationTraiteeAction(formData: FormData)
   await marquerDemandeTraitee(id, adminId);
   revalidatePath("/admin");
 }
+
+export async function annulerRendezVousAction(formData: FormData): Promise<void> {
+  const adminId = await requireAdminSession();
+  const id = String(formData.get("id") ?? "").trim();
+  if (!id) return;
+  const { annulerRendezVous } = await import("@/services/rendez-vous.service");
+  const r = await annulerRendezVous(id, adminId);
+  console.info(`[rendez-vous] ${id} annulé · agenda ${r.retireDeLAgenda ? "mis à jour" : "non mis à jour"}`);
+  revalidatePath("/admin");
+}

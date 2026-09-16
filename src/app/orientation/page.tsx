@@ -40,7 +40,11 @@ export default function OrientationPage() {
       </div>
 
       <p className="mt-10 text-xs leading-relaxed text-slate-600">
-        Rien n&apos;est figé : le secteur, le niveau, la durée et la périodicité se changent à
+        Vous préférez en parler de vive voix ?{" "}
+        <Link href="/rendez-vous" className="text-slate-400 underline-offset-4 hover:underline">
+          Prenez un rendez-vous téléphonique
+        </Link>
+        . Rien n&apos;est figé : le secteur, le niveau, la durée et la périodicité se changent à
         la création de la partie, et une partie qui ne convient pas se relance en trente
         secondes. Voir{" "}
         <Link href="/entreprises" className="text-slate-400 underline-offset-4 hover:underline">

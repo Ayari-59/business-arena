@@ -42,6 +42,11 @@ const CONTRACTS: FormContract[] = [
     sources: ["src/components/orientation-form.tsx"],
   },
   {
+    nom: "rendez-vous téléphonique (/rendez-vous)",
+    action: { file: "src/app/rendez-vous/actions.ts", fn: "reserverRendezVousAction" },
+    sources: ["src/components/rendez-vous-form.tsx"],
+  },
+  {
     nom: "création d'une partie de classe",
     action: { file: "src/app/teacher/actions.ts", fn: "createClassGameAction" },
     sources: ["src/app/teacher/page.tsx", "src/components/economic-params.tsx"],

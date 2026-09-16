@@ -11,7 +11,7 @@ const EXPECTED_TABLES = [
   "scenarios", "concepts", "decision_models", "decision_model_concepts",
   "situations", "situation_models", "situation_concepts", "hints",
   "event_definitions", "decision_options",
-  "games", "teams", "players", "rounds", "decisions", "aid_requests", "orientation_requests",
+  "games", "teams", "players", "rounds", "decisions", "aid_requests", "orientation_requests", "phone_appointments",
   "markets", "market_segments", "products", "production_units", "employees",
   "suppliers", "customers", "inventory", "financial_accounts", "transactions",
   "company_states",
