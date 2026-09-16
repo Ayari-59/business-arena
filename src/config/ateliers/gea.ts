@@ -50,7 +50,7 @@ export const ATELIER_GEA: AtelierDefinition = {
     tours: 4,
     effectifParEquipe: "trois élèves",
     notes:
-      "NOVA se joue ici en trois références, qui se disputent le même atelier : le coût de revient et la marge se calculent enceinte par enceinte, et le mix devient une décision. NOVA porte un coût de production, des charges fixes qui pèsent tant que le volume ne les absorbe pas, des délais de règlement qui creusent le besoin en fonds de roulement, et un compte-clé qui fait bondir la demande au quatrième trimestre. Le niveau retenu ouvre la trésorerie, l'assurance, le recrutement et l'investissement : la gestion généraliste demande de voir l'entreprise entière, du coût de revient au financement de sa croissance. Le monde variable est décoché pour que toutes vos classes travaillent le même exercice.",
+      "NOVA se joue ici en trois références, qui se disputent le même atelier : le coût de revient et la marge se calculent enceinte par enceinte, et le mix devient une décision. NOVA porte un coût de production, des charges fixes qui pèsent tant que le volume ne les absorbe pas, des délais de règlement qui creusent le besoin en fonds de roulement, et un compte-clé qui fait bondir la demande au quatrième trimestre. Le niveau retenu ouvre la trésorerie, l'assurance, le recrutement, l'investissement, la R&D de la troisième enceinte et l'engagement RSE : la gestion généraliste demande de voir l'entreprise entière, du coût de revient au financement de sa croissance. Le monde variable est décoché pour que toutes vos classes travaillent le même exercice.",
   },
   seances: [
     {
@@ -162,7 +162,7 @@ export const ATELIER_GEA: AtelierDefinition = {
           minutes: 40,
           titre: "Où passe l'argent",
           detail:
-            "Les équipes reconstituent leur cycle : elles paient leurs charges avant d'encaisser leurs ventes, réglées à soixante jours. Le décalage porte un nom, et chacune le retrouve dans son propre bilan.",
+            "Les équipes reconstituent leur cycle : elles paient leurs charges avant d'encaisser leurs ventes, comptant auprès des étudiants et des passionnés, à soixante jours auprès de la grande distribution, à quatre-vingts jours auprès du compte-clé quand il arrive. Le décalage porte un nom, et chacune le retrouve dans son propre bilan.",
         },
         {
           minutes: 30,
@@ -434,7 +434,7 @@ export const ATELIER_GEA: AtelierDefinition = {
     },
   ],
   evaluationFinale: [
-    "Les cinq livrables intermédiaires, notés au fil des séances, pour la moitié de la note.",
+    "Les quatre livrables intermédiaires, notés au fil des séances, pour la moitié de la note.",
     "Le diagnostic financier de la dernière séance, pour un quart.",
     "La présentation orale et les réponses aux questions du jury, pour le dernier quart.",
     "Le classement du jeu n'entre pas dans la note : une équipe peut finir dernière et rendre le meilleur diagnostic.",
@@ -442,7 +442,7 @@ export const ATELIER_GEA: AtelierDefinition = {
   prolongements: [
     "Rejouer les mêmes quatre trimestres avec le monde variable activé : les équipes découvrent qu'une bonne décision peut mal finir, ce qui est le vrai métier.",
     "Basculer sur un secteur de services pour opposer, sur le même déroulé, une entreprise qui porte des stocks et une entreprise qui n'en porte pas.",
-    "Prolonger jusqu'aux deux derniers trimestres du secteur, consacrés au financement de la croissance et au calcul d'une rentabilité des capitaux investis.",
+    "Créer la partie sur six tours et consacrer deux séances de plus aux deux derniers trimestres : la hausse des matières et la rentabilité des capitaux investis.",
   ],
   faq: [
     {
@@ -453,7 +453,7 @@ export const ATELIER_GEA: AtelierDefinition = {
     {
       question: "Pourquoi arrêter à quatre trimestres alors que le secteur en compte six ?",
       reponse:
-        "Parce que la montée en charge du compte-clé est le point culminant de ce secteur et que rien ne gagne à la dépasser dans un atelier de cinq séances. La partie reste ouverte : si votre progression le permet, les deux trimestres suivants se jouent en prolongement, avec le financement de la croissance comme fil.",
+        "Parce que la montée en charge du compte-clé est le point culminant de ce secteur et que rien ne gagne à la dépasser dans un atelier de cinq séances. La partie est créée sur quatre tours et s'arrête là. Si votre progression le permet, créez-la sur six tours dès le départ et gardez les deux derniers pour deux séances de prolongement.",
     },
     {
       question: "Le référentiel du BUT GEA est-il repris au mot dans les intitulés de blocs ?",

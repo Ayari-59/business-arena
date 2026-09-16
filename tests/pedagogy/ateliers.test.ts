@@ -419,6 +419,57 @@ describe("ateliers professionnels", () => {
     }
   });
 
+  it("l'évaluation finale compte les livrables intermédiaires juste", () => {
+    // Quatre fiches annonçaient « cinq livrables intermédiaires » pour quatre
+    // séances jouées, puis comptaient le livrable de la dernière séance une
+    // seconde fois à la ligne suivante : la note s'annonçait sur des
+    // documents qui n'existaient pas. Le nombre écrit est le nombre de
+    // séances qui jouent un tour, et rien d'autre.
+    const NOMBRES: Record<string, number> = {
+      deux: 2, trois: 3, quatre: 4, cinq: 5, six: 6, sept: 7, huit: 8,
+    };
+    for (const a of ATELIERS) {
+      const joues = a.seances.filter((s) => s.tourJoue !== null).length;
+      for (const ligne of a.evaluationFinale) {
+        const m = ligne.match(/^Les (\w+) (?:livrables|notes|dossiers) intermédiaires/i);
+        if (!m) continue;
+        expect(
+          NOMBRES[m[1]!.toLowerCase()],
+          `${a.code} : « ${ligne} » pour ${joues} séances jouées`,
+        ).toBe(joues);
+      }
+    }
+  });
+
+  it("aucune fiche ne promet ce que le produit ne fait pas", () => {
+    // Trois promesses ont vécu dans les fiches sans qu'aucun réglage ne les
+    // tienne. « La partie reste ouverte, les tours suivants se jouent en
+    // prolongement » : le nombre de tours se fixe à la création et rien ne le
+    // prolonge. « Sans aléa » : le monde variable ne coupe que la texture des
+    // paramètres, les événements restent tirés à tous les niveaux. « Descendez
+    // d'un niveau puis remontez » : le niveau ne change plus une fois la partie
+    // créée. Une fiche qui les écrit envoie l'enseignant chercher un bouton qui
+    // n'existe pas.
+    const INTERDITS: { motif: RegExp; raison: string }[] = [
+      { motif: /se jouent en prolongement/i, raison: "une partie ne se prolonge pas au delà de ses tours" },
+      { motif: /partie reste ouverte\s*:/i, raison: "une partie ne se prolonge pas au delà de ses tours" },
+      { motif: /sans aléa/i, raison: "le monde variable ne coupe pas les événements" },
+      { motif: /remontez pour/i, raison: "le niveau ne change pas en cours de partie" },
+    ];
+    for (const a of ATELIERS) {
+      const prose = [
+        a.pitch, a.resume, a.pourquoi, a.reglages.notes,
+        ...a.seances.flatMap((s) => [s.objectif, s.preparation, s.livrable, ...s.deroule.map((p) => p.detail)]),
+        ...a.formats.flatMap((f) => [f.quand, f.comment]),
+        ...a.evaluationFinale, ...a.prolongements,
+        ...a.faq.flatMap((f) => [f.question, f.reponse]),
+      ].join("\n");
+      for (const { motif, raison } of INTERDITS) {
+        expect(prose, `${a.code} : ${raison} (« ${prose.match(motif)?.[0] ?? ""} »)`).not.toMatch(motif);
+      }
+    }
+  });
+
   it("chaque atelier emploie le mot par lequel son référentiel découpe le métier", () => {
     // Le BTS CG a des processus, le BTS MCO des blocs de compétences, le BTS
     // GPME des activités, le DCG des unités d'enseignement. Écrire « processus »

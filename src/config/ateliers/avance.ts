@@ -7,15 +7,15 @@ import type { AtelierDefinition } from "./types";
  * arbitrages : deux clientèles qui s'opposent, des contrats industriels
  * réguliers mais exigeants et une bourse de fret qui remplit les retours, des
  * délais de règlement qui creusent le besoin en fonds de roulement, une flotte
- * que l'on peut posséder ou sous-traiter, et un pic de demande qui met la
+ * que l'on agrandit véhicule par véhicule, et un pic de demande qui met la
  * capacité sous tension. Le niveau ouvre tous les leviers de gestion, et le
  * monde variable est activé : ici une bonne décision peut mal finir, ce qui est
  * le vrai métier.
  *
  * Cinq trimestres joués, un pic au quatrième, puis une sixième séance qui bâtit
  * le diagnostic stratégique et le défend. Cet atelier suppose des équipes déjà
- * rodées à la gestion : il n'apprend pas les notions, il apprend à les tenir
- * ensemble sous incertitude.
+ * rodées à la gestion : il revient sur les notions en les tenant ensemble sous
+ * incertitude, plutôt que de les apprendre une à une.
  */
 export const ATELIER_AVANCE: AtelierDefinition = {
   code: "avance",
@@ -27,7 +27,7 @@ export const ATELIER_AVANCE: AtelierDefinition = {
   referentielLabel: "Compétences de gestion",
   referentielAccord: "mobilisées",
   pitch:
-    "Six séances de trois heures. Chaque équipe dirige la même entreprise de transport sur cinq trimestres, arbitre entre contrats industriels et bourse de fret, finance un besoin en fonds de roulement qui s'emballe, investit ou sous-traite sa flotte, place ses excédents, et affronte un monde variable où l'aléa a le dernier mot. Un diagnostic stratégique clôt le tout.",
+    "Six séances de trois heures. Chaque équipe dirige la même entreprise de transport sur cinq trimestres, arbitre entre contrats industriels et bourse de fret, finance un besoin en fonds de roulement qui s'emballe, agrandit ou renouvelle sa flotte, place ses excédents, et affronte un monde variable où l'aléa a le dernier mot. Un diagnostic stratégique clôt le tout.",
   resume:
     "Cinq trimestres à la tête d'un transporteur, du mix de clientèles au diagnostic stratégique, sous un monde variable où l'aléa fait partie du jeu.",
   difficulte: 4,
@@ -54,7 +54,7 @@ export const ATELIER_AVANCE: AtelierDefinition = {
   seances: [
     {
       numero: 1,
-      titre: "Lire la rentabilité au kilomètre",
+      titre: "Lire la rentabilité à la palette",
       dureeMinutes: 180,
       tourJoue: 1,
       processus: [
@@ -62,21 +62,21 @@ export const ATELIER_AVANCE: AtelierDefinition = {
         "Volet 2 · Construire une stratégie commerciale",
       ],
       objectif:
-        "Reconstituer le coût de revient d'un kilomètre parcouru et la marge de chaque clientèle, pour décider d'un premier mix entre contrats et fret.",
+        "Reconstituer le coût de revient d'une palette transportée et la marge de chaque clientèle, pour décider d'un premier mix entre contrats et fret.",
       competences: [
-        "Je calcule un coût de revient au kilomètre à partir des charges d'un transporteur.",
+        "Je calcule un coût de revient à la palette à partir des charges d'un transporteur.",
         "Je compare la marge d'un contrat industriel à celle d'un chargement de la bourse de fret.",
         "Je décide d'un premier équilibre entre une clientèle régulière et une clientèle volatile.",
       ],
       notions: [
-        "coût de revient kilométrique",
+        "coût de revient à la palette",
         "taux de remplissage des retours",
         "marge par clientèle",
         "mix de clientèles",
         "charges fixes d'une flotte",
       ],
       preparation:
-        "Créez la partie avec les réglages ci-dessus et notez le code d'invitation. Constituez des équipes de quatre, une par domaine : coûts, commercial, flotte, finance. Imprimez la fiche de coût kilométrique vierge. Prévenez que le monde variable est actif : une décision juste pourra mal tourner, et ce ne sera pas une erreur.",
+        "Créez la partie avec les réglages ci-dessus et notez le code d'invitation. Constituez des équipes de quatre, une par domaine : coûts, commercial, flotte, finance. Imprimez la fiche de coût à la palette vierge. Prévenez que le monde variable est actif : une décision juste pourra mal tourner, et ce ne sera pas une erreur.",
       deroule: [
         {
           minutes: 15,
@@ -86,9 +86,9 @@ export const ATELIER_AVANCE: AtelierDefinition = {
         },
         {
           minutes: 35,
-          titre: "Le coût d'un kilomètre",
+          titre: "Le coût d'une palette",
           detail:
-            "Chaque équipe reconstitue ce que coûte un kilomètre parcouru, charges de flotte comprises, qu'un camion roule chargé ou revienne à vide.",
+            "Chaque équipe reconstitue ce que coûte une palette transportée, charges de flotte comprises, en tenant compte des retours à vide qui ne rapportent rien.",
         },
         {
           minutes: 35,
@@ -112,15 +112,15 @@ export const ATELIER_AVANCE: AtelierDefinition = {
           minutes: 40,
           titre: "Débriefing",
           detail:
-            "Deux équipes présentent leur coût kilométrique et leur mix, et les confrontent à leur résultat. Vous affichez les deux comptes de résultat côte à côte.",
+            "Deux équipes présentent leur coût à la palette et leur mix, et les confrontent à leur résultat. Vous affichez les deux comptes de résultat côte à côte.",
         },
       ],
       livrable:
-        "La fiche de rentabilité, une page : le coût de revient au kilomètre, la marge de chaque clientèle, le mix retenu entre contrats et fret, et sa justification chiffrée.",
+        "La fiche de rentabilité, une page : le coût de revient à la palette, la marge de chaque clientèle, le mix retenu entre contrats et fret, et sa justification chiffrée.",
       tracePasseport:
-        "J'ai calculé la rentabilité au kilomètre d'un transporteur et arbitré un mix entre une clientèle régulière et une clientèle volatile.",
+        "J'ai calculé la rentabilité à la palette d'un transporteur et arbitré un mix entre une clientèle régulière et une clientèle volatile.",
       evaluation: [
-        "Le coût kilométrique intègre les charges de flotte, pas seulement le carburant.",
+        "Le coût à la palette intègre les charges de flotte, pas seulement le carburant.",
         "La marge de chaque clientèle est calculée, pas estimée.",
         "Le mix retenu est justifié par les marges, pas par une préférence.",
       ],
@@ -200,7 +200,7 @@ export const ATELIER_AVANCE: AtelierDefinition = {
     },
     {
       numero: 3,
-      titre: "Investir dans la flotte ou sous-traiter",
+      titre: "Agrandir la flotte ou refuser du fret",
       dureeMinutes: 180,
       tourJoue: 3,
       processus: [
@@ -208,21 +208,21 @@ export const ATELIER_AVANCE: AtelierDefinition = {
         "Volet 4 · Décider en avenir incertain",
       ],
       objectif:
-        "Décider s'il faut investir dans des camions ou sous-traiter la capacité manquante, en pesant l'engagement d'un actif lourd contre la souplesse d'une charge variable.",
+        "Décider s'il faut acheter un véhicule, fourgon, porteur ou semi-remorque, ou refuser le fret que la flotte ne peut pas prendre, en pesant l'engagement d'un actif lourd contre la marge perdue.",
       competences: [
-        "Je compare le coût complet d'un camion possédé à celui d'une capacité sous-traitée.",
+        "Je compare le coût complet d'un véhicule acheté à la marge du fret qu'il permettrait de prendre.",
         "J'évalue le risque d'un investissement lourd face à une demande incertaine.",
         "Je décide d'un investissement de flotte en assumant l'engagement qu'il représente.",
       ],
       notions: [
         "investissement et amortissement",
         "coût de possession d'un actif",
-        "sous-traitance et charge variable",
+        "fret refusé et manque à gagner",
         "capacité et flexibilité",
         "engagement irréversible",
       ],
       preparation:
-        "Relisez la capacité de la flotte et la demande à venir. Préparez au tableau une grille à deux colonnes, posséder ou sous-traiter, que les équipes rempliront. Rappelez que le monde variable peut faire mentir la prévision, et que c'est justement l'objet du choix.",
+        "Relisez la capacité de la flotte et la demande à venir. Préparez au tableau une grille à deux colonnes, acheter un véhicule ou refuser du fret, que les équipes rempliront. Le scénario fait bondir le gazole de 18 % ce trimestre : annoncez-le en ouverture, il pèse sur le coût de chaque véhicule ajouté. Rappelez que le monde variable peut faire mentir la prévision, et que c'est justement l'objet du choix.",
       deroule: [
         {
           minutes: 20,
@@ -232,15 +232,15 @@ export const ATELIER_AVANCE: AtelierDefinition = {
         },
         {
           minutes: 40,
-          titre: "Posséder ou louer la capacité",
+          titre: "Acheter ou refuser",
           detail:
-            "Les équipes comparent le coût complet d'un camion acheté, amortissement et entretien compris, à celui d'une capacité sous-traitée au coup par coup. L'un engage, l'autre coûte plus cher à l'unité.",
+            "Les équipes comparent le coût complet d'un véhicule acheté, amortissement et entretien compris, à la marge du fret qu'elles refusent faute de capacité. L'un engage, l'autre manque à gagner.",
         },
         {
           minutes: 30,
           titre: "Décider en avenir incertain",
           detail:
-            "Chaque équipe remplit la grille et tranche : elle investit, sous-traite, ou combine les deux, en écrivant à quelle condition son choix reste bon si la demande déçoit.",
+            "Chaque équipe remplit la grille et tranche : elle achète, refuse du fret, ou achète moins qu'il ne faudrait, en écrivant à quelle condition son choix reste bon si la demande déçoit.",
         },
         {
           minutes: 30,
@@ -258,15 +258,15 @@ export const ATELIER_AVANCE: AtelierDefinition = {
           minutes: 40,
           titre: "Débriefing",
           detail:
-            "On compare les équipes qui ont investi et celles qui ont sous-traité, y compris celles qu'un aléa a punies d'un bon choix. La question qui reste ouverte : un bon choix qui finit mal était-il un mauvais choix.",
+            "On compare les équipes qui ont investi et celles qui ont refusé du fret, y compris celles qu'un aléa a punies d'un bon choix. La question qui reste ouverte : un bon choix qui finit mal était-il un mauvais choix.",
         },
       ],
       livrable:
-        "La note d'investissement : le coût complet d'un camion possédé face à la sous-traitance, la décision retenue, la condition qui la rend bonne, et la marge supplémentaire attendue.",
+        "La note d'investissement : le coût complet d'un véhicule acheté face au fret refusé, la décision retenue, la condition qui la rend bonne, et la marge supplémentaire attendue.",
       tracePasseport:
-        "J'ai arbitré entre investir dans une flotte et sous-traiter la capacité, en pesant l'engagement d'un actif lourd contre l'incertitude de la demande.",
+        "J'ai arbitré entre agrandir une flotte et refuser du fret, en pesant l'engagement d'un actif lourd contre l'incertitude de la demande.",
       evaluation: [
-        "Le coût complet de possession est comparé au coût de la sous-traitance.",
+        "Le coût complet de possession est comparé à la marge du fret refusé.",
         "La décision énonce la condition à laquelle elle reste bonne si la demande déçoit.",
         "L'engagement irréversible de l'investissement est assumé, pas minimisé.",
       ],
@@ -290,7 +290,7 @@ export const ATELIER_AVANCE: AtelierDefinition = {
       notions: [
         "pic de demande et saturation",
         "recrutement et masse salariale",
-        "qualité de service et pénalités de retard",
+        "qualité de service et fidélité des industriels",
         "arbitrage entre contrats et fret",
         "tension de trésorerie de croissance",
       ],
@@ -313,7 +313,7 @@ export const ATELIER_AVANCE: AtelierDefinition = {
           minutes: 30,
           titre: "Le coût de mal servir",
           detail:
-            "L'équipe chiffre les deux fautes : refuser du chargement rentable faute de capacité, ou promettre plus qu'elle ne peut tenir et payer des pénalités de retard. Puis elle choisit son risque.",
+            "L'équipe chiffre les deux fautes : refuser du chargement rentable faute de capacité, ou promettre plus qu'elle ne peut tenir et perdre la fidélité d'industriels mal servis. Puis elle choisit son risque.",
         },
         {
           minutes: 30,
@@ -337,7 +337,7 @@ export const ATELIER_AVANCE: AtelierDefinition = {
       livrable:
         "La fiche de plan de pointe : la capacité et le recrutement retenus, les contrats servis en priorité, les deux fautes chiffrées, le risque choisi, et l'écart constaté après clôture.",
       tracePasseport:
-        "J'ai dimensionné la capacité et le recrutement d'un transporteur pour absorber un pic de demande, en arbitrant entre le chargement refusé et le retard pénalisé.",
+        "J'ai dimensionné la capacité et le recrutement d'un transporteur pour absorber un pic de demande, en arbitrant entre le chargement refusé et le client mal servi.",
       evaluation: [
         "Le recrutement est dimensionné sur l'écart entre la demande et la capacité de la flotte.",
         "Les deux fautes, refuser et mal tenir, sont chiffrées.",
@@ -506,7 +506,7 @@ export const ATELIER_AVANCE: AtelierDefinition = {
     },
   ],
   evaluationFinale: [
-    "Les six livrables intermédiaires, notés au fil des séances, pour la moitié de la note.",
+    "Les cinq livrables intermédiaires, notés au fil des séances, pour la moitié de la note.",
     "Le diagnostic stratégique de la dernière séance, pour un quart.",
     "La soutenance et la défense des arbitrages devant le jury, pour le dernier quart.",
     "Le classement du jeu n'entre pas dans la note : sous monde variable, une équipe bien pilotée peut finir derrière un aléa, et son diagnostic vaut mieux que sa place.",
@@ -520,7 +520,7 @@ export const ATELIER_AVANCE: AtelierDefinition = {
     {
       question: "Faut-il avoir fait un atelier de gestion avant celui-ci ?",
       reponse:
-        "Oui, franchement. Cet atelier suppose que les notions de marge, de seuil, de besoin en fonds de roulement et d'investissement soient déjà acquises : il n'apprend pas à les calculer, il apprend à les tenir ensemble sous incertitude. Une équipe qui découvre le coût de revient ici serait submergée. Passez d'abord par un atelier de section de technicien ou par l'animation de découverte.",
+        "Oui, franchement. Cet atelier suppose que les notions de marge, de seuil, de besoin en fonds de roulement et d'investissement soient déjà acquises : il ne les enseigne pas une à une, il apprend à les tenir ensemble sous incertitude. Une équipe qui découvre le coût de revient ici serait submergée. Passez d'abord par un atelier de section de technicien ou par l'animation de découverte.",
     },
     {
       question: "Pourquoi activer le monde variable, qui introduit de la chance ?",
@@ -530,7 +530,7 @@ export const ATELIER_AVANCE: AtelierDefinition = {
     {
       question: "Cinq trimestres et six séances font un atelier long, peut-on le raccourcir ?",
       reponse:
-        "Oui, en fusionnant les séances trois et cinq, celle de l'investissement et celle du placement, en une seule séance d'arbitrages financiers. Vous perdez la respiration entre engager et employer la trésorerie, mais l'atelier tient alors en cinq séances. Ne descendez pas en dessous : le pic de la quatrième a besoin de trois trimestres joués derrière lui.",
+        "Oui, en retirant la cinquième séance et en créant la partie sur quatre tours : le placement des excédents se traite alors au début de la séance de diagnostic, devenue cinquième. Vous perdez la respiration entre engager et employer la trésorerie, mais l'atelier tient alors en cinq séances. Ne descendez pas en dessous : le pic de la quatrième a besoin de trois trimestres joués derrière lui.",
     },
     {
       question: "Le niveau ouvre tous les leviers, n'est-ce pas trop de décisions à la fois ?",

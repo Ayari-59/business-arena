@@ -232,7 +232,7 @@ export const ATELIER_CG1: AtelierDefinition = {
           minutes: 45,
           titre: "Le budget, sur tableur",
           detail:
-            "Chaque équipe prévoit ses encaissements et ses décaissements du trimestre à venir, à partir de ses décisions et des délais du scénario : les clients paient à soixante jours, les fournisseurs se règlent plus tôt. Le solde de fin de trimestre est la ligne qui compte.",
+            "Chaque équipe prévoit ses encaissements et ses décaissements du trimestre à venir, à partir de ses décisions et des délais du scénario : les particuliers paient comptant, le compte-clé à quatre-vingts jours quand il arrive au troisième trimestre, l'export à quatre-vingt-dix ; les fournisseurs se règlent selon le contrat retenu. Le solde de fin de trimestre est la ligne qui compte.",
         },
         {
           minutes: 25,
@@ -368,7 +368,7 @@ export const ATELIER_CG1: AtelierDefinition = {
         "affacturage",
       ],
       preparation:
-        "Vérifiez que la TVA est bien activée dans les paramètres économiques de la partie. Reprenez le tableau « où est passé l'argent » de la séance 4 : sa troisième ligne est le sujet du jour. Préparez une créance chiffrée au tableau pour l'exercice de comparaison.",
+        "Vérifiez que la TVA est bien activée dans les paramètres économiques de la partie. Au cinquième trimestre, le scénario fait bondir le coût des matières de 20 % pour deux trimestres : annoncez-le en ouverture, la lecture du financement se fera sur un compte de résultat que ce choc a déplacé. Reprenez le tableau « où est passé l'argent » de la séance 4 : sa troisième ligne est le sujet du jour. Préparez une créance chiffrée au tableau pour l'exercice de comparaison.",
       deroule: [
         {
           minutes: 30,

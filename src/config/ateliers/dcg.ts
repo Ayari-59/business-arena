@@ -32,7 +32,7 @@ export const ATELIER_DCG: AtelierDefinition = {
   difficulteLabel: "Avancé",
   format: "5 séances de 3 h",
   pourquoi:
-    "Un sujet de finance d'entreprise donne les flux et demande la valeur actuelle nette. L'exercice est juste, et il laisse intacte la question qui compte : d'où viennent ces flux, et qui les a estimés. Ici l'équipe produit elle-même sa prévision, la dépose, puis découvre au trimestre suivant l'écart entre ce qu'elle avait annoncé et ce qui s'est produit. Elle apprend alors ce qu'aucune correction ne transmet : qu'un calcul d'investissement ne vaut que ce que valent les hypothèses de celui qui l'a fait, et que la banque, elle, regarde d'abord la fiabilité des plans précédents.",
+    "Un sujet de finance d'entreprise donne les flux et demande la valeur actuelle nette. L'exercice est juste, et il laisse intacte la question qui compte : d'où viennent ces flux, et qui les a estimés. Ici l'équipe produit elle-même sa prévision, la dépose, puis découvre au trimestre suivant l'écart entre ce qu'elle avait annoncé et ce qui s'est produit. Elle apprend alors ce qu'aucune correction ne transmet : qu'un calcul d'investissement ne vaut que ce que valent les hypothèses de celui qui l'a fait, et que la banque, elle, regarde d'abord la façon dont la trésorerie a été tenue : une crise ou un affacturage forcé lui font perdre confiance, et le découvert se resserre.",
   reglages: {
     scenarioCode: "nova-gamme",
     periodicite: "quarter",
@@ -74,7 +74,7 @@ export const ATELIER_DCG: AtelierDefinition = {
         "soldes intermédiaires de gestion",
       ],
       preparation:
-        "Créez la partie avec les réglages ci-dessus et notez le code d'invitation. Constituez des équipes de trois ou quatre. Préparez la trame de note de diagnostic en deux pages maximum, et annoncez dès la première séance que le monde variable est activé, ce qui change la façon dont les résultats se lisent.",
+        "Créez la partie avec les réglages ci-dessus et notez le code d'invitation. Constituez des équipes de trois. Préparez la trame de note de diagnostic en deux pages maximum, et annoncez dès la première séance que le monde variable est activé, ce qui change la façon dont les résultats se lisent.",
       deroule: [
         {
           minutes: 15,
@@ -338,7 +338,7 @@ export const ATELIER_DCG: AtelierDefinition = {
       evaluation: [
         "Le projet est évalué par ses flux, jamais par son seul coût d'acquisition.",
         "Les modes de financement sont comparés sur le coût et sur la structure du bilan.",
-        "Les conditions bancaires obtenues sont expliquées par l'historique de fiabilité, pas subies.",
+        "Les conditions bancaires obtenues sont expliquées par la tenue de la trésorerie des trimestres précédents, pas subies.",
       ],
     },
     {
@@ -437,7 +437,7 @@ export const ATELIER_DCG: AtelierDefinition = {
   ],
   prolongements: [
     "Rejouer les mêmes trimestres avec le monde variable désactivé, pour isoler l'effet des seules décisions et mesurer ce que le hasard avait pris ou donné.",
-    "Prolonger sur les deux derniers trimestres en confiant à chaque équipe la trésorerie excédentaire à placer, ce que le niveau retenu autorise.",
+    "Créer la partie sur six tours et confier, sur les deux derniers, la trésorerie excédentaire à placer, ce que le niveau retenu autorise.",
     "Faire rejouer la partie par une autre promotion sur la même graine, et comparer les décisions prises aux mêmes moments.",
   ],
   faq: [
@@ -454,7 +454,7 @@ export const ATELIER_DCG: AtelierDefinition = {
     {
       question: "Le niveau de jeu est le plus élevé de la plateforme après le niveau exécutif, est-ce tenable ?",
       reponse:
-        "Il l'est pour des candidats qui savent déjà lire un bilan, ce qui est le cas au DCG. Il ne le serait pas en première année de BTS, où le nombre de décisions simultanées noierait les équipes. Si votre groupe est hétérogène, descendez d'un niveau pour les deux premières séances et remontez pour celle de l'investissement.",
+        "Il l'est pour des candidats qui savent déjà lire un bilan, ce qui est le cas au DCG. Il ne le serait pas en première année de BTS, où le nombre de décisions simultanées noierait les équipes. Le niveau se fixe à la création et ne change plus en cours de partie : si votre groupe est hétérogène, créez la partie au niveau Arbitrage, qui garde l'investissement et le financement mais retire le placement.",
     },
     {
       question: "La séance d'analyse des écarts tient-elle vraiment en trois heures ?",

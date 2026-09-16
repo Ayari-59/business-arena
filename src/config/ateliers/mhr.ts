@@ -296,7 +296,7 @@ export const ATELIER_MHR: AtelierDefinition = {
         "assurance des risques d'exploitation",
       ],
       preparation:
-        "Rouvrez la fiche notion sur la trésorerie, que les équipes auront à mobiliser. Préparez un tableau vierge où chaque équipe inscrira, avant la clôture, le solde de trésorerie qu'elle prévoit à la fin du trimestre.",
+        "Rouvrez la fiche notion sur la trésorerie, que les équipes auront à mobiliser. Au quatrième trimestre, le scénario fait bondir le coût de l'énergie de 22 % pour deux trimestres : annoncez-le avant la prévision, sinon l'écart sera imputé à la prévision et non au choc. Préparez un tableau vierge où chaque équipe inscrira, avant la clôture, le solde de trésorerie qu'elle prévoit à la fin du trimestre.",
       deroule: [
         {
           minutes: 20,
@@ -434,7 +434,7 @@ export const ATELIER_MHR: AtelierDefinition = {
     },
   ],
   evaluationFinale: [
-    "Les cinq livrables intermédiaires, notés au fil des séances, pour la moitié de la note.",
+    "Les quatre livrables intermédiaires, notés au fil des séances, pour la moitié de la note.",
     "Le tableau de bord de direction de la dernière séance, pour un quart.",
     "La présentation orale et les réponses aux questions du jury, pour le dernier quart.",
     "Le classement du jeu n'entre pas dans la note : une équipe peut finir dernière et rendre le meilleur tableau de bord.",
@@ -453,12 +453,12 @@ export const ATELIER_MHR: AtelierDefinition = {
     {
       question: "Pourquoi arrêter à quatre trimestres alors que le secteur en compte six ?",
       reponse:
-        "Parce que la haute saison est le point culminant de ce secteur et que rien ne gagne à la dépasser dans un atelier de cinq séances. La partie reste ouverte : si votre progression le permet, les deux trimestres suivants se jouent en prolongement, avec le financement d'une rénovation comme fil.",
+        "Parce que la haute saison est le point culminant de ce secteur et que rien ne gagne à la dépasser dans un atelier de cinq séances. La partie est créée sur quatre tours et s'arrête là. Si votre progression le permet, créez-la sur six tours dès le départ et gardez les deux derniers pour deux séances de prolongement, avec le financement d'une rénovation comme fil.",
     },
     {
       question: "Le niveau retenu n'ouvre ni le recrutement ni l'investissement, est-ce voulu ?",
       reponse:
-        "Oui. La direction opérationnelle d'un hôtel en première année se joue sur le tarif, le remplissage et la trésorerie. Ouvrir la structure ajouterait des décisions que les équipes prendraient au hasard, et qui brouilleraient la lecture de leurs résultats. Vous pouvez monter d'un niveau en deuxième année.",
+        "Oui. La direction opérationnelle d'un hôtel en première année se joue sur le tarif, le remplissage et la trésorerie. Ouvrir la structure ajouterait des décisions que les équipes prendraient au hasard, et qui brouilleraient la lecture de leurs résultats. En deuxième année, vous pouvez monter d'un niveau : l'hôtel passe alors en trois catégories de chambres, avec le recrutement et l'investissement ouverts.",
     },
     {
       question: "Le référentiel du BTS MHR est-il repris au mot dans les intitulés de blocs ?",

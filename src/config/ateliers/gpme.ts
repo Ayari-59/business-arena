@@ -8,7 +8,7 @@ import type { AtelierDefinition } from "./types";
  * qui décide de tout, presque aucun actif immobilisé et un poste clients qui
  * pèse plus lourd que tout le reste du bilan.
  *
- * Les quatre activités du référentiel y trouvent chacune leur séance : la
+ * Les quatre blocs du référentiel y trouvent chacun leur séance : la
  * relation clients et fournisseurs par les délais de règlement, les risques par
  * la dépendance à un donneur d'ordres, le personnel par le recrutement d'un
  * consultant, le développement par la décision de croître ou non.
@@ -30,7 +30,7 @@ export const ATELIER_GPME: AtelierDefinition = {
   difficulteLabel: "Approfondissement",
   format: "6 séances de 3 h",
   pourquoi:
-    "Dans une PME, personne n'a de service dédié : la même personne relance un client en retard le matin et prépare un recrutement l'après-midi, et les deux décisions se tiennent par la trésorerie. C'est ce lien-là qu'un dossier découpé par activité ne fait jamais sentir. Ici l'équipe décide de recruter au trimestre trois et se retrouve au trimestre quatre à devoir payer un salaire de plus avec des créances qui ne rentrent pas. Les activités du référentiel cessent d'être des chapitres séparés : ce sont les quatre faces d'une même décision.",
+    "Dans une PME, personne n'a de service dédié : la même personne relance un client en retard le matin et prépare un recrutement l'après-midi, et les deux décisions se tiennent par la trésorerie. C'est ce lien-là qu'un dossier découpé par bloc ne fait jamais sentir. Ici l'équipe décide de recruter au trimestre trois et se retrouve au trimestre quatre à devoir payer un salaire de plus avec des créances qui ne rentrent pas. Les blocs du référentiel cessent d'être des chapitres séparés : ce sont les quatre faces d'une même décision.",
   reglages: {
     scenarioCode: "conseil-gamme",
     periodicite: "quarter",
@@ -45,7 +45,7 @@ export const ATELIER_GPME: AtelierDefinition = {
     tours: 5,
     effectifParEquipe: "trois élèves",
     notes:
-      "ATLAS CONSEIL vend du temps, qui ne se stocke pas : une journée non vendue est perdue. Sa capacité ne s'achète pas, elle se recrute, avec le délai et le coût que cela suppose. Son bilan est presque entièrement fait de créances clients, ce qui rend le poste clients concret plutôt que théorique. Le cabinet se joue ici en trois offres, l'audit, la stratégie et une pratique de cyber-sécurité à bâtir par la R&D avant de la vendre : le mix des journées vendues et l'investissement dans une offre neuve entrent dans les décisions. Le niveau retenu ouvre le personnel, le financement, l'assurance et la R&D, c'est-à-dire les leviers que le référentiel demande de savoir manier. Le monde variable est décoché pour que les écarts entre équipes viennent de leurs décisions.",
+      "ATLAS CONSEIL vend du temps, qui ne se stocke pas : une journée non vendue est perdue. Sa capacité ne s'achète pas, elle se recrute, avec le délai et le coût que cela suppose. Son bilan est presque entièrement fait de créances clients, ce qui rend le poste clients concret plutôt que théorique. Le cabinet se joue ici en trois offres, l'audit, la stratégie et une pratique de cyber-sécurité à bâtir par la R&D avant de la vendre : le mix des journées vendues et l'investissement dans une offre neuve entrent dans les décisions. Le niveau retenu ouvre le personnel, le financement, l'assurance et la R&D, c'est-à-dire les leviers que le référentiel demande de savoir manier. Le monde variable est décoché : toutes vos classes jouent le même marché. Les aléas du niveau Arbitrage restent fréquents, et c'est voulu : la troisième séance en fait sa leçon.",
   },
   seances: [
     {
@@ -291,7 +291,7 @@ export const ATELIER_GPME: AtelierDefinition = {
         "délai de montée en compétence",
       ],
       preparation:
-        "Vérifiez que le niveau de la partie ouvre bien les décisions de personnel, sans quoi la séance n'a pas de support. Préparez la fiche de décision d'embauche, avec la ligne de calcul du nombre de journées à vendre laissée vide.",
+        "Vérifiez que le niveau de la partie ouvre bien les décisions de personnel, sans quoi la séance n'a pas de support. Au quatrième trimestre, le scénario fait tomber un décret qui ouvre le marché de l'audit aux petites structures : lisez-le avec la classe en ouverture de séance, c'est lui qui pose la question du recrutement. Préparez la fiche de décision d'embauche, avec la ligne de calcul du nombre de journées à vendre laissée vide.",
       deroule: [
         {
           minutes: 20,
@@ -476,7 +476,7 @@ export const ATELIER_GPME: AtelierDefinition = {
         "J'ai rédigé le rapport d'activité d'une PME sur cinq trimestres et je l'ai présenté oralement avec des préconisations chiffrées.",
       evaluation: [
         "Le tableau tient sur une page et se lit sans commentaire.",
-        "Les préconisations sont chiffrées et rattachées à une activité du référentiel.",
+        "Les préconisations sont chiffrées et rattachées à un bloc du référentiel.",
         "L'oral assume au moins une erreur de gestion et dit ce qui serait fait autrement.",
       ],
     },
@@ -496,9 +496,9 @@ export const ATELIER_GPME: AtelierDefinition = {
     },
     {
       nom: "Fil rouge sur l'année",
-      quand: "Quand l'atelier accompagne les quatre activités du référentiel.",
+      quand: "Quand l'atelier accompagne les quatre blocs du référentiel.",
       comment:
-        "Une séance par période, dans l'ordre des activités traitées en cours. La partie reste ouverte entre deux séances, ce qui permet de faire préparer les décisions hors classe.",
+        "Une séance par période, dans l'ordre des blocs traités en cours. La partie reste ouverte entre deux séances, ce qui permet de faire préparer les décisions hors classe.",
     },
   ],
   evaluationFinale: [
@@ -519,14 +519,14 @@ export const ATELIER_GPME: AtelierDefinition = {
         "Sur ce que le référentiel demande, oui : un dirigeant qui décide de tout, une douzaine de salariés, aucun service support, et une trésorerie qui dépend entièrement des délais de règlement. Ce qu'il n'a pas, c'est un stock. Si vous tenez à travailler le stock et les approvisionnements, conduisez le même déroulé sur le secteur du bâtiment, qui porte des chantiers en cours.",
     },
     {
-      question: "Les quatre activités sont-elles réellement couvertes ?",
+      question: "Les quatre blocs sont-ils réellement couverts ?",
       reponse:
         "Chacune tient une séance entière et se retrouve dans le rapport final. La relation fournisseurs est en revanche moins servie que la relation clients, parce que le cabinet achète peu : si ce point est évalué dans votre établissement, la séance sur les renforts extérieurs est l'endroit où l'accrocher.",
     },
     {
       question: "Le niveau retenu ouvre beaucoup de décisions, n'est-ce pas trop ?",
       reponse:
-        "Il ouvre le personnel, le financement et l'assurance, qui sont exactement les trois leviers des activités du référentiel. En retirer un rendrait une séance sans support. En deuxième année, c'est le bon niveau ; en première année, descendez d'un cran et remplacez la séance de recrutement par une seconde séance sur le poste clients.",
+        "Il ouvre le personnel, le financement, l'assurance, l'investissement, la R&D et l'engagement RSE : les trois premiers sont les leviers que les blocs du référentiel demandent de savoir manier, les autres se règlent sans y toucher. En retirer un rendrait une séance sans support. En deuxième année, c'est le bon niveau ; en première année, descendez d'un cran : la partie passe alors sur le cabinet à offre unique, sans R&D ni investissement, et remplacez la séance de recrutement par une seconde séance sur le poste clients.",
     },
     {
       question: "Comment traiter la séance des risques si aucun sinistre ne tombe ?",

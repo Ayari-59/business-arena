@@ -29,9 +29,10 @@ import type { AtelierDefinition } from "./types";
  * panneau de dix décisions les prendrait au hasard, et le tour suivant ne lui
  * apprendrait rien puisqu'il ne saurait pas laquelle a agi.
  *
- * Le monde variable est décoché. En découverte, un aléa fait perdre une équipe
- * qui avait raison, et la classe en retient que le jeu est injuste au lieu d'en
- * retenir un raisonnement.
+ * Le monde variable est décoché : toutes les parties jouent le même marché.
+ * Les aléas du niveau Découverte restent possibles, deux fois moins fréquents
+ * qu'au niveau de pilotage : une équipe qui en subit un doit pouvoir le lire
+ * dans le journal du tour, pas en conclure que le jeu est injuste.
  *
  * Les tours ne sont pas commentés par le professeur avant que la classe ne les
  * ait lus. Une animation de découverte se juge à ce que les élèves disent au
@@ -113,7 +114,7 @@ export const ATELIER_STMG: AtelierDefinition = {
     tours: 4,
     effectifParEquipe: "trois ou quatre élèves",
     notes:
-      "NOVA fabrique et vend des enceintes : on y achète de la matière, on produit, on stocke ce qui ne part pas, et on encaisse plus tard qu'on ne paie. C'est le cycle le plus court à comprendre et le seul où les trois notions du début, le coût, la marge et le stock, se voient dans la même page. Le niveau retenu n'ouvre que le prix, le volume et la communication : trois décisions se relisent, dix se subissent. La taxe sur la valeur ajoutée est laissée de côté en découverte, elle ferait porter la lecture du résultat sur une mécanique fiscale avant que le résultat lui-même ne soit lu. Toutes les équipes affrontent le même marché, sans aléa : ce qui distingue deux résultats est alors une décision, et rien d'autre.",
+      "NOVA fabrique et vend des enceintes : on y achète de la matière, on produit, on stocke ce qui ne part pas, et on encaisse plus tard qu'on ne paie. C'est le cycle le plus court à comprendre et le seul où les trois notions du début, le coût, la marge et le stock, se voient dans la même page. Le niveau retenu n'ouvre que le prix, le volume et la communication : trois décisions se relisent, dix se subissent. La taxe sur la valeur ajoutée est laissée de côté en découverte, elle ferait porter la lecture du résultat sur une mécanique fiscale avant que le résultat lui-même ne soit lu. Toutes les équipes affrontent le même marché, et les aléas du niveau Découverte sont deux fois moins fréquents qu'ailleurs : ce qui distingue deux résultats est presque toujours une décision, et un événement, quand il tombe, se lit dans le journal du tour.",
   },
   seances: [
     {
@@ -347,7 +348,7 @@ export const ATELIER_STMG: AtelierDefinition = {
           minutes: 15,
           titre: "La décision du pic",
           detail:
-            "La grosse commande annoncée est là, et le marché a presque doublé. Les équipes décident vite : le prix, la communication, et ce qu'elles sortent de leur stock. Vous ne commentez rien.",
+            "La grosse commande annoncée est là, et le marché a presque doublé. Les équipes décident vite : le prix, la communication, et combien elles produisent en plus du stock déjà constitué. Vous ne commentez rien.",
         },
         {
           minutes: 5,
@@ -393,7 +394,7 @@ export const ATELIER_STMG: AtelierDefinition = {
         "Une séance par semaine, un trimestre par séance, un mois en tout. La semaine qui sépare deux séances laisse le temps de traiter en cours la notion que la séance a fait apparaître, ce qui est tout l'intérêt de l'ordre retenu. Elle laisse aussi les équipes réfléchir au pari de la troisième séance avant de le jouer.",
     },
     {
-      nom: "Demi-journée banalisée",
+      nom: "Journée banalisée",
       quand: "Journée d'intégration, semaine de la spécialité, portes ouvertes.",
       comment:
         "Les quatre séances s'enchaînent avec une pause après la deuxième. Le rythme est plus tendu et le bilan collectif plus court, mais la mémoire des trimestres est meilleure et la classe voit l'année entière dans la même journée, pic compris.",
@@ -414,7 +415,7 @@ export const ATELIER_STMG: AtelierDefinition = {
   prolongements: [
     "Rejouer la même année avec le monde variable activé : la classe découvre qu'une bonne décision peut mal finir, ce qui ouvre la question du risque et donne tout son sens au pari de la troisième séance.",
     "Basculer sur la boutique de maille pour opposer, sur le même déroulé, une entreprise qui fabrique et une entreprise qui achète pour revendre.",
-    "En terminale, prolonger jusqu'au sixième trimestre en montant d'un cran le niveau de jeu, ce qui ouvre les décisions de trésorerie que le programme de la spécialité gestion et finance mobilise, et fait vivre l'après pic.",
+    "En terminale, prolonger jusqu'au sixième trimestre en montant au niveau Pilotage, deux crans plus haut, ce qui ouvre les décisions de trésorerie que le programme de la spécialité gestion et finance mobilise, et fait vivre l'après pic.",
   ],
   faq: [
     {

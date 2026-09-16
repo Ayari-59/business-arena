@@ -51,17 +51,17 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
     tours: 5,
     effectifParEquipe: "trois élèves",
     notes:
-      "NOVA se joue ici en trois références, chacune avec son catalogue de fournisseurs et son budget qualité : le choix responsable se fait ligne par ligne, et son coût se lit sur la marge de chaque enceinte. NOVA porte un cycle d'exploitation complet, des fournisseurs, de la non-qualité et une capacité qui s'investit : de quoi rendre la RSE tangible plutôt que déclarative. Le niveau Stratégie ouvre le financement, l'investissement et l'engagement RSE, c'est-à-dire les leviers de l'atelier. Le monde variable est activé : à ce niveau, distinguer une bonne décision d'un bon résultat fait partie de ce qui s'évalue, et la RSE en est l'illustration la plus nette, puisqu'un engagement juste peut ne pas payer sur cinq tours. La cinquième séance joue le dernier tour ; la sixième ne joue rien et sert à rendre compte.",
+      "NOVA se joue ici en trois références, chacune avec son catalogue de fournisseurs et son budget qualité : le choix responsable se fait ligne par ligne, et son coût se lit sur la marge de chaque enceinte. NOVA porte un cycle d'exploitation complet, des fournisseurs, de la non-qualité si vous l'activez à la création (taux de rebuts, 5 % conseillé) et une capacité qui s'investit : de quoi rendre la RSE tangible plutôt que déclarative. Le niveau Stratégie ouvre le financement, l'investissement et l'engagement RSE, c'est-à-dire les leviers de l'atelier. Le monde variable est activé : à ce niveau, distinguer une bonne décision d'un bon résultat fait partie de ce qui s'évalue, et la RSE en est l'illustration la plus nette, puisqu'un engagement juste peut ne pas payer sur cinq tours. La cinquième séance joue le dernier tour ; la sixième ne joue rien et sert à rendre compte.",
   },
   seances: [
     {
       numero: 1,
-      titre: "Mesurer avant d'agir : diagnostic RSE d'ouverture",
+      titre: "Agir, puis mesurer : le premier indice RSE",
       dureeMinutes: 180,
       tourJoue: 1,
       processus: ["UE7 · Management des organisations", "UE11 · Contrôle de gestion"],
       objectif:
-        "Lire l'indice RSE d'une entreprise et ses trois piliers, situer sa marge de manœuvre, et engager un premier budget en sachant qu'il pèse sur le résultat du trimestre.",
+        "Engager un premier budget en sachant qu'il pèse sur le résultat du trimestre, puis lire l'indice RSE que la clôture calcule, ses trois piliers, et situer sa marge de manœuvre.",
       competences: [
         "Je lis un indice extra-financier et j'explique ce que mesure chacun de ses trois piliers.",
         "Je relie une décision de gestion à son empreinte environnementale, sociale ou de gouvernance.",
@@ -74,12 +74,12 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
         "arbitrage coût immédiat et bénéfice différé",
       ],
       preparation:
-        "Créez la partie avec les réglages ci-dessus et notez le code d'invitation. Constituez des équipes de trois élèves. Préparez une trame de note de diagnostic RSE en deux pages, et annoncez d'emblée que l'engagement se paie dans le trimestre alors que son retour, s'il vient, se lira plus tard.",
+        "Créez la partie avec les réglages ci-dessus et notez le code d'invitation. Constituez des équipes de trois élèves. Activez le taux de rebuts (5 %) dans les paramètres économiques à la création : la troisième séance lit la non-qualité, qui n'existe pas sans ce réglage. Préparez une trame de note de diagnostic RSE en deux pages, et annoncez d'emblée que l'engagement se paie dans le trimestre alors que son retour, s'il vient, se lira plus tard. L'indice n'existe qu'à la clôture : le tour se joue d'abord, la lecture vient ensuite. Le pilier gouvernance part avec un retrait tant qu'aucun plan de trésorerie n'accompagne les décisions, ce que l'arène ne propose pas : dites-le, pour que les équipes n'y cherchent pas leur erreur.",
       deroule: [
         { minutes: 20, titre: "Consignes et cadrage", detail: "Présentation de l'entreprise, des trois piliers et de la règle du jeu : la RSE coûte maintenant, rapporte plus tard." },
-        { minutes: 40, titre: "Diagnostic RSE d'ouverture", detail: "Chaque équipe lit l'indice et ses piliers, repère le pilier le plus faible et formule une priorité." },
-        { minutes: 45, titre: "Premières décisions", detail: "L'équipe fixe son budget d'engagement et ses décisions courantes, puis valide son tour." },
+        { minutes: 45, titre: "Premières décisions", detail: "L'équipe fixe son budget d'engagement et ses décisions courantes, à partir de ce que la règle dit des trois piliers, puis valide son tour." },
         { minutes: 45, titre: "Clôture et lecture des résultats", detail: "Le tour est clos ; l'équipe lit l'effet du budget sur sa marge et note que la demande n'a pas encore bougé." },
+        { minutes: 40, titre: "Le premier indice", detail: "Chaque équipe lit l'indice que la clôture vient de calculer et ses trois piliers, repère le pilier le plus faible et formule une priorité." },
         { minutes: 30, titre: "Note de diagnostic", detail: "Rédaction de la note à deux pages : état des lieux ESG et priorité retenue, argumentée." },
       ],
       livrable:
@@ -99,7 +99,7 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
       tourJoue: 2,
       processus: ["UE7 · Management des organisations", "UE6 · Finance d'entreprise"],
       objectif:
-        "Comprendre qu'un engagement soutenu bâtit un capital d'image qui relève la demande aux tours suivants, à l'inverse d'un budget marketing qui agit vite et s'éteint vite.",
+        "Comprendre qu'un engagement soutenu bâtit un capital d'image qui relève la demande aux tours suivants, là où le budget de communication agit plus vite et s'use de moitié à chaque tour.",
       competences: [
         "Je distingue une dépense qui agit dans le trimestre d'un engagement qui se capitalise dans la durée.",
         "Je lis l'effet différé d'un capital d'image sur la part de marché.",
@@ -112,7 +112,7 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
         "horizon de décision",
       ],
       preparation:
-        "Relevez pour chaque équipe l'engagement du tour précédent et l'évolution de sa part de marché. Préparez au tableau la comparaison entre l'effet du marketing, immédiat, et celui de l'image, lent.",
+        "Relevez pour chaque équipe l'engagement du tour précédent et l'évolution de sa part de marché. Préparez au tableau la comparaison entre l'effet de la communication, rapide et qui s'use, et celui de l'image, lent et qui dure.",
       deroule: [
         { minutes: 20, titre: "Retour sur le tour précédent", detail: "Lecture collective : qui a engagé, qui a vu sa demande bouger, et pourquoi le retour se fait attendre." },
         { minutes: 30, titre: "Le capital qui se construit", detail: "Explication du capital d'image : un stock lissé qui monte lentement et retombe si on cesse d'entretenir." },
@@ -139,7 +139,7 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
       objectif:
         "Piloter l'empreinte par le choix du fournisseur et l'investissement dans un process propre, et lire l'effet durable de cet investissement sur les rebuts.",
       competences: [
-        "Je choisis un fournisseur en pesant son coût, sa qualité et l'empreinte qu'il porte.",
+        "Je choisis un fournisseur en pesant son coût, sa qualité et l'empreinte que le rapport lui attribue d'après ces deux critères.",
         "Je décide d'un investissement propre en comparant son décaissement immédiat à la baisse durable des rebuts.",
         "Je suis l'évolution du taux de rebuts et je l'impute aux décisions qui l'ont fait bouger.",
       ],
@@ -150,7 +150,7 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
         "intensité de l'empreinte",
       ],
       preparation:
-        "Préparez le tableau comparatif des fournisseurs du scénario, coût et qualité. Rappelez que l'investissement propre se paie dans le trimestre mais que sa baisse de rebuts se prolonge sur les suivants.",
+        "Vérifiez que le taux de rebuts est activé sur la partie : sans lui, il n'y a pas de non-qualité à lire. Préparez le tableau comparatif des fournisseurs du scénario, coût et qualité. Présentez en ouverture les quatre cartes RSE, label, éco-subvention, bad buzz, sanction : elles peuvent tomber dès la clôture de ce trimestre. Rappelez que l'investissement propre se paie dans le trimestre mais que sa baisse de rebuts se prolonge sur les suivants.",
       deroule: [
         { minutes: 20, titre: "Le coût caché de la non-qualité", detail: "Rappel : un rebut est payé en matières et en main-d'œuvre mais invendable ; le réduire libère de la marge." },
         { minutes: 30, titre: "Comparaison des fournisseurs", detail: "Les équipes confrontent coût, qualité et empreinte, et choisissent en connaissance de cause." },
@@ -163,7 +163,7 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
       tracePasseport:
         "J'ai piloté l'empreinte d'une entreprise par son sourcing et un investissement propre, et j'en ai mesuré l'effet durable.",
       evaluation: [
-        "Le choix de fournisseur pèse les trois critères sans en oublier.",
+        "Le choix de fournisseur pèse le coût et la qualité, et dit ce que le rapport en déduit pour l'empreinte.",
         "L'investissement propre est justifié par son effet durable, pas par principe.",
         "L'effet sur les rebuts est chiffré et correctement imputé.",
       ],
@@ -211,9 +211,9 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
       titre: "Le monde réagit : label, réputation et sanction",
       dureeMinutes: 180,
       tourJoue: 5,
-      processus: ["UE7 · Management des organisations", "UE5 · Économie contemporaine"],
+      processus: ["UE7 · Management des organisations"],
       objectif:
-        "Affronter les cartes qui matérialisent la réaction des parties prenantes, du label qui récompense un engagement mûr au bad buzz et à la sanction qui frappent un engagement tiède.",
+        "Relire les cartes qui matérialisent, depuis le troisième trimestre, la réaction des parties prenantes, du label qui récompense un engagement mûr au bad buzz et à la sanction qui frappent un engagement tiède, et décider le dernier tour en connaissance de cause.",
       competences: [
         "J'anticipe une réaction des parties prenantes à partir du standing RSE atteint.",
         "Je distingue un risque de réputation d'un risque financier et j'estime la portée de chacun.",
@@ -226,12 +226,12 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
         "asymétrie du risque et du rendement",
       ],
       preparation:
-        "Préparez la présentation des quatre cartes RSE et de leurs déclencheurs. Rappelez qu'un engagement tiède, ni nul ni mûr, est le plus exposé, et qu'un capital nul ne déclenche rien.",
+        "Les cartes RSE tombent dès le troisième trimestre : relevez, pour chaque équipe, celles déjà tirées et leur effet. Rappelez qu'un engagement tiède, ni nul ni mûr, est le plus exposé, et qu'un capital nul ne déclenche rien.",
       deroule: [
-        { minutes: 20, titre: "Les parties prenantes réagissent", detail: "Présentation des cartes : label, éco-subvention, bad buzz, sanction, et de ce qui les déclenche." },
+        { minutes: 20, titre: "Les parties prenantes ont réagi", detail: "Relecture des cartes tombées depuis le troisième trimestre : label, éco-subvention, bad buzz, sanction, et ce qui les a déclenchées chez chaque équipe." },
         { minutes: 30, titre: "Où en est mon standing", detail: "Chaque équipe situe son capital et estime le risque ou la récompense qu'elle encourt au dernier tour." },
         { minutes: 50, titre: "Décisions du dernier tour", detail: "L'équipe arbitre une dernière fois entre rendement immédiat et risque de réputation, puis valide son tour." },
-        { minutes: 45, titre: "Clôture et cartes tirées", detail: "Le tour est clos ; les cartes tombent, et chaque équipe lit l'effet sur sa demande ou sa trésorerie." },
+        { minutes: 45, titre: "Clôture et cartes tirées", detail: "Le tour est clos ; de nouvelles cartes peuvent tomber, et chaque équipe lit l'effet sur sa demande ou sa trésorerie." },
         { minutes: 35, titre: "Fiche de risque", detail: "Rédaction d'une fiche qui relie le standing atteint aux cartes rencontrées et à leur effet chiffré." },
       ],
       livrable:

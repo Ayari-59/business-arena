@@ -431,7 +431,7 @@ export const ATELIER_MCO: AtelierDefinition = {
     },
   ],
   evaluationFinale: [
-    "Les cinq livrables intermédiaires, notés au fil des séances, pour la moitié de la note.",
+    "Les quatre livrables intermédiaires, notés au fil des séances, pour la moitié de la note.",
     "Le tableau de bord commercial de la dernière séance, pour un quart.",
     "La soutenance orale et les réponses aux questions du jury, pour le dernier quart.",
     "Le classement du jeu n'entre pas dans la note : une équipe peut finir dernière et rendre le meilleur tableau de bord.",
@@ -450,7 +450,7 @@ export const ATELIER_MCO: AtelierDefinition = {
     {
       question: "Pourquoi arrêter à quatre trimestres alors que la partie en compte six ?",
       reponse:
-        "Parce que le trimestre des fêtes est le point culminant de ce secteur et que rien ne gagne à le dépasser dans un atelier de cinq séances. La partie reste ouverte : si votre progression le permet, les deux trimestres suivants se jouent en prolongement, avec le financement du développement comme fil.",
+        "Parce que le trimestre des fêtes est le point culminant de ce secteur et que rien ne gagne à le dépasser dans un atelier de cinq séances. La partie est créée sur quatre tours et s'arrête là. Si votre progression le permet, créez-la sur six tours dès le départ et gardez les deux derniers pour deux séances de prolongement, avec le financement du développement comme fil.",
     },
     {
       question: "Le niveau de jeu retenu n'ouvre ni le recrutement ni l'investissement, est-ce voulu ?",

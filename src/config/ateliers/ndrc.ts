@@ -20,11 +20,11 @@ export const ATELIER_NDRC: AtelierDefinition = {
   diplome: "BTS Négociation et digitalisation de la relation client",
   annee: "Première année",
   nature: "Atelier professionnel",
-  traceLabel: "fiches descriptives d'activités",
+  traceLabel: "dossier de fiches descriptives d'activités",
   referentielLabel: "Blocs de compétences",
   referentielAccord: "mobilisés",
   pitch:
-    "Six séances de trois heures. Chaque équipe pilote la même boutique en ligne, achète son trafic, garde ou perd ses clients, négocie sa place sur les marketplaces, et découvre à chaque trimestre ce que sa clientèle lui a réellement rapporté.",
+    "Six séances de trois heures. Chaque équipe pilote la même boutique en ligne, achète son trafic, garde ou perd ses clients, mesure ce que les marketplaces lui laissent, et découvre à chaque trimestre ce que sa clientèle lui a réellement rapporté.",
   resume:
     "Cinq trimestres dans un pure player, du premier euro d'acquisition au tableau de bord de la performance commerciale.",
   difficulte: 2,
@@ -46,7 +46,7 @@ export const ATELIER_NDRC: AtelierDefinition = {
     tours: 5,
     effectifParEquipe: "trois élèves",
     notes:
-      "PIXEL & CO oppose trois clientèles qui ne se pilotent pas de la même façon : le trafic payant, qu'il faut acheter à chaque fois, la base installée, qui revient si on la soigne, et les marketplaces, qui apportent du volume contre une commission. Le niveau retenu laisse les décisions commerciales ouvertes et ferme les décisions de structure : un atelier de première année n'a pas à faire arbitrer un emprunt. Le monde variable est décoché pour que les écarts entre équipes viennent de leurs choix.",
+      "PIXEL & CO oppose trois clientèles qui ne se pilotent pas de la même façon : le trafic payant, qu'il faut acheter à chaque fois, la base installée, qui revient si on la soigne, et les marketplaces, qui apportent du volume contre une commission. Le niveau retenu laisse les décisions commerciales ouvertes et ferme les décisions de structure : un atelier de première année n'a pas à faire arbitrer un emprunt. Le monde variable est décoché : toutes vos classes jouent le même marché. Les aléas restent possibles, atténués au niveau retenu, et se lisent dans le journal du tour.",
   },
   seances: [
     {
@@ -182,7 +182,7 @@ export const ATELIER_NDRC: AtelierDefinition = {
           minutes: 30,
           titre: "Débriefing",
           detail:
-            "On confronte le calcul fait à la main et l'indicateur affiché. Les écarts se discutent : ils viennent presque toujours d'un budget oublié ou d'une clientèle comptée deux fois.",
+            "On confronte le calcul fait à la main et l'indicateur affiché. Les écarts se discutent : ils viennent presque toujours d'un budget oublié ou d'un diviseur trop large : les commandes des fidèles et des marketplaces ne se comptent pas.",
         },
       ],
       livrable:
@@ -190,7 +190,7 @@ export const ATELIER_NDRC: AtelierDefinition = {
       tracePasseport:
         "J'ai calculé le coût d'acquisition d'un client et je l'ai confronté à la marge dégagée pour arbitrer entre conquête et fidélisation.",
       evaluation: [
-        "Le coût d'acquisition est calculé sur les clients réellement venus, pas sur les commandes.",
+        "Le coût d'acquisition est calculé sur les seules commandes des nouveaux clients, pas sur toutes les commandes.",
         "La comparaison se fait avec la marge, jamais avec le prix de vente.",
         "L'arbitrage entre conquête et fidélisation est tranché, pas renvoyé dos à dos.",
       ],
@@ -243,7 +243,7 @@ export const ATELIER_NDRC: AtelierDefinition = {
           minutes: 35,
           titre: "Décisions du trimestre",
           detail:
-            "Saisie des décisions. Le budget de service se défend devant l'équipe comme devant une direction.",
+            "Saisie des décisions. Le budget de service se défend devant l'équipe comme devant une direction. Un mot sur le trimestre suivant : la capacité de préparation est bornée et le pic arrive ; le stock qui servira les fêtes se constitue dès maintenant.",
         },
         {
           minutes: 20,
@@ -282,13 +282,13 @@ export const ATELIER_NDRC: AtelierDefinition = {
       competences: [
         "J'anticipe un volume de commandes à partir des trimestres joués et de la saison.",
         "Je vérifie que ma capacité de préparation suit le trafic que j'achète.",
-        "Je dimensionne un budget d'acquisition pour un moment où il coûte plus cher.",
+        "Je dimensionne un budget d'acquisition et le stock qui va avec, pour le trimestre où chaque commande manquée coûte le plus.",
       ],
       notions: [
         "saisonnalité",
         "capacité de préparation",
         "rupture de stock",
-        "enchère publicitaire",
+        "stock d'anticipation",
         "taux de service",
       ],
       preparation:
@@ -537,7 +537,7 @@ export const ATELIER_NDRC: AtelierDefinition = {
     {
       question: "Six séances de trois heures, est-ce compressible ?",
       reponse:
-        "Oui, en fusionnant la troisième et la cinquième séance, ce qui donne cinq séances mais laisse tomber la politique de service. Ne compressez pas la séance du pic : c'est celle où les équipes découvrent qu'un trafic acheté sans capacité de préparation ne sert à rien, et elle a besoin de son temps de débriefing.",
+        "Oui, en retirant la cinquième séance et en créant la partie sur quatre tours : la soutenance devient la cinquième séance, et la commission des marketplaces se traite au débriefing de la quatrième. Ne compressez pas la séance du pic : c'est celle où les équipes découvrent qu'un trafic acheté sans capacité de préparation ne sert à rien, et elle a besoin de son temps de débriefing.",
     },
   ],
 };
