@@ -431,7 +431,7 @@ export const ATELIER_MCO2: AtelierDefinition = {
       tourJoue: 6,
       processus: [
         "Bloc 3 · Assurer la gestion opérationnelle",
-        "Bloc 4 · Manager l'équipe commerciale",
+        "Bloc 2 · Animer et dynamiser l'offre commerciale",
       ],
       objectif:
         "Jouer le dernier mois, puis construire le tableau de bord des six mois et le présenter comme on rend compte à la direction d'un réseau.",

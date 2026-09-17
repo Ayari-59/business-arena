@@ -7,6 +7,7 @@ import { THEMES_STMG } from "../../src/config/ateliers/stmg";
 import {
   REFERENTIELS,
   REFERENTIELS_NON_VERIFIES,
+  referentielDeCitation,
 } from "../../src/config/ateliers/referentiels";
 import {
   DEFAULT_SCENARIO_CODE,
@@ -246,6 +247,45 @@ describe("ateliers professionnels", () => {
     // sous silence, et un même code ne peut pas être des deux côtés.
     for (const code of REFERENTIELS_NON_VERIFIES) {
       expect(REFERENTIELS[code], `${code} : à la fois vérifié et déclaré non vérifié`).toBeUndefined();
+    }
+  });
+
+  it("une fiche qui mobilise plusieurs diplômes est vérifiée intitulé par intitulé", () => {
+    // Une immersion de campus cite quatre référentiels dans la même séance :
+    // aucune clé unique ne peut la couvrir, et elle échappait donc à toute
+    // vérification. Chaque intitulé y nomme son diplôme en préfixe, et c'est ce
+    // préfixe qui rend la garde possible.
+    const segments = (entree: string) =>
+      entree
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .split("·")
+        .map((m) => m.replace(/[^a-z0-9]+/g, " ").trim())
+        .filter((m) => m.length >= 10 && !/^[a-z]{0,7} ?\d+$/.test(m));
+
+    for (const a of ATELIERS) {
+      // Les fiches qui ont leur propre référentiel sont déjà couvertes.
+      if (REFERENTIELS[a.code]) continue;
+      const inventees: string[] = [];
+      let prefixees = 0;
+      for (const cite of new Set(a.seances.flatMap((s) => s.processus))) {
+        const source = referentielDeCitation(cite);
+        if (!source) continue;
+        prefixees += 1;
+        const officiels = source.referentiel.entrees.flatMap(segments);
+        const cites = segments(cite);
+        if (!cites.some((c) => officiels.some((o) => o.includes(c) || c.includes(o))))
+          inventees.push(`${cite} (cherché dans ${source.code})`);
+      }
+      expect(
+        inventees,
+        `${a.code} : intitulés introuvables dans le texte du diplôme qu'ils nomment :\n${inventees.join("\n")}`,
+      ).toEqual([]);
+      // Une fiche multi-diplômes qui cesserait de préfixer ses intitulés
+      // redeviendrait invérifiable sans que rien ne le signale.
+      if (a.reglages.concours)
+        expect(prefixees, `${a.code} : aucun intitulé ne nomme son diplôme`).toBeGreaterThan(0);
     }
   });
 

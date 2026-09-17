@@ -53,19 +53,45 @@ const REFERENTIEL_NDRC: Referentiel = {
   ],
 };
 
-export const REFERENTIELS: Record<string, Referentiel> = {
-  mco: {
-    label: "Blocs de compétences",
-    accord: "mobilisés",
-    source:
-      "Arrêté du 8 juillet 2024 modifiant l'arrêté du 15 octobre 2018, BTS Management commercial opérationnel. Lu sur le texte.",
-    entrees: [
-      "Bloc 1 · Développer la relation client et assurer la vente conseil",
-      "Bloc 2 · Animer et dynamiser l'offre commerciale",
-      "Bloc 3 · Assurer la gestion opérationnelle",
-      "Bloc 4 · Manager l'équipe commerciale",
+const REFERENTIEL_MCO: Referentiel = {
+  label: "Blocs de compétences",
+  accord: "mobilisés",
+  source:
+    "Arrêté du 8 juillet 2024 modifiant l'arrêté du 15 octobre 2018, BTS Management commercial opérationnel. Lu sur le texte.",
+  entrees: [
+    "Bloc 1 · Développer la relation client et assurer la vente conseil",
+    "Bloc 2 · Animer et dynamiser l'offre commerciale",
+    "Bloc 3 · Assurer la gestion opérationnelle",
+    "Bloc 4 · Manager l'équipe commerciale",
+  ],
+};
+
+const REFERENTIEL_DCG: Referentiel = {
+  label: "Unités d'enseignement",
+  accord: "mobilisées",
+  source:
+    "Annexe 1, programme des unités d'enseignement du diplôme de comptabilité et de gestion. Lu sur le texte. Il s'agit du programme réformé, celui qui porte la durabilité et l'intelligence artificielle dans plusieurs unités.",
+  entrees: [
+      "UE1 · Fondamentaux du droit",
+      "UE2 · Droit des affaires",
+      "UE3 · Droit social",
+      "UE4 · Droit fiscal",
+      "UE5 · Économie contemporaine",
+      "UE6 · Finance d'entreprise",
+      "UE7 · Management des organisations",
+      "UE8 · Système d'information de gestion",
+      "UE9 · Comptabilité",
+      "UE10 · Comptabilité approfondie",
+      "UE11 · Contrôle de gestion",
+      "UE12 · Anglais des affaires",
+      "UE13 · Communication professionnelle",
     ],
-  },
+};
+
+export const REFERENTIELS: Record<string, Referentiel> = {
+  mco: REFERENTIEL_MCO,
+  // Le même diplôme, une année plus tard : même texte, même garde.
+  mco2: REFERENTIEL_MCO,
   ndrc: REFERENTIEL_NDRC,
   // L'atelier de deuxième année du même diplôme se confronte au même texte.
   fitness: REFERENTIEL_NDRC,
@@ -84,27 +110,9 @@ export const REFERENTIELS: Record<string, Referentiel> = {
       "P7 · Fiabilisation de l'information et système d'information comptable (SIC)",
     ],
   },
-  dcg: {
-    label: "Unités d'enseignement",
-    accord: "mobilisées",
-    source:
-      "Annexe 1, programme des unités d'enseignement du diplôme de comptabilité et de gestion. Lu sur le texte. Il s'agit du programme réformé, celui qui porte la durabilité et l'intelligence artificielle dans plusieurs unités.",
-    entrees: [
-      "UE1 · Fondamentaux du droit",
-      "UE2 · Droit des affaires",
-      "UE3 · Droit social",
-      "UE4 · Droit fiscal",
-      "UE5 · Économie contemporaine",
-      "UE6 · Finance d'entreprise",
-      "UE7 · Management des organisations",
-      "UE8 · Système d'information de gestion",
-      "UE9 · Comptabilité",
-      "UE10 · Comptabilité approfondie",
-      "UE11 · Contrôle de gestion",
-      "UE12 · Anglais des affaires",
-      "UE13 · Communication professionnelle",
-    ],
-  },
+  dcg: REFERENTIEL_DCG,
+  // L'atelier RSE se joue sur le même diplôme : il relève du même texte.
+  "dcg-rse": REFERENTIEL_DCG,
   stmg: {
     label: "Thèmes du programme",
     accord: "mobilisés",
@@ -153,3 +161,37 @@ export const REFERENTIELS: Record<string, Referentiel> = {
  * s'adossent à aucun diplôme : elles n'ont donc rien à faire ici.)
  */
 export const REFERENTIELS_NON_VERIFIES = ["mhr", "bistrot", "gea"] as const;
+
+/**
+ * LES FICHES QUI CITENT PLUSIEURS DIPLÔMES.
+ *
+ * Une immersion de campus réunit quatre filières et cite donc quatre
+ * référentiels dans la même séance. Aucune clé unique ne peut la couvrir, et
+ * elle échappait par là même à toute vérification : ses douze intitulés
+ * étaient exacts, mais rien ne le garantissait pour la suite.
+ *
+ * Ces fiches préfixent chaque intitulé du diplôme dont il vient, « BTS CG P5 ·
+ * Analyse et prévision de l'activité ». Le préfixe devient donc la clé, et la
+ * garde retrouve le texte à confronter. L'ordre compte : le préfixe le plus
+ * long gagne, sans quoi « BTS CG » attraperait ce qui commence par « BTS ».
+ */
+const PREFIXES_DE_DIPLOME: readonly [string, string][] = [
+  ["BTS CG", "cg1"],
+  ["BTS MCO", "mco"],
+  ["BTS NDRC", "ndrc"],
+  ["BTS GPME", "gpme"],
+  ["DCG", "dcg"],
+  ["STMG", "stmg"],
+];
+
+/** Le référentiel d'un intitulé préfixé, et ce qu'il reste à comparer. */
+export function referentielDeCitation(
+  entree: string,
+): { code: string; referentiel: Referentiel } | null {
+  const trouve = [...PREFIXES_DE_DIPLOME]
+    .sort((a, b) => b[0].length - a[0].length)
+    .find(([prefixe]) => entree.startsWith(`${prefixe} `));
+  if (!trouve) return null;
+  const referentiel = REFERENTIELS[trouve[1]];
+  return referentiel ? { code: trouve[1], referentiel } : null;
+}
