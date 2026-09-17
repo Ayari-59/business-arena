@@ -41,11 +41,12 @@ export interface GroupeDeMenu {
 }
 
 /**
- * L'entrée principale, tenue à part.
+ * L'entrée principale.
  *
  * C'est la seule page qui répond à la question que se pose un enseignant qui
- * arrive : par où commencer. Noyée dans une rangée de liens, elle se lisait
- * comme les autres.
+ * arrive : par où commencer. Elle ouvre le premier groupe du plan, celui de
+ * l'orientation et du contact, qui est le seul à s'afficher déplié quand le
+ * menu s'ouvre.
  */
 export const ACTION_PRINCIPALE: LienDeMenu = {
   href: "/orientation",
@@ -53,7 +54,22 @@ export const ACTION_PRINCIPALE: LienDeMenu = {
   aide: "Quatre questions, et le réglage qui convient à votre classe s'écrit à mesure, avec ses raisons.",
 };
 
+/** Le groupe qui s'affiche déplié à l'ouverture du menu. */
+export const GROUPE_OUVERT = "orientation";
+
 export const NAVIGATION: readonly GroupeDeMenu[] = [
+  {
+    code: GROUPE_OUVERT,
+    titre: "Orientation et contact",
+    liens: [
+      ACTION_PRINCIPALE,
+      {
+        href: "/rendez-vous",
+        libelle: "Prendre rendez-vous",
+        aide: "Trente minutes au téléphone pour parler de votre classe : les créneaux proposés sont ceux que l'agenda laisse libres.",
+      },
+    ],
+  },
   {
     code: "enseignants",
     titre: "Enseignants",
@@ -81,11 +97,6 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
         libelle: "Espace enseignant",
         aide: "Créer une partie, suivre les équipes, clôturer les tours et relire le carnet d'usage.",
         acces: "enseignant",
-      },
-      {
-        href: "/rendez-vous",
-        libelle: "Prendre rendez-vous",
-        aide: "Trente minutes au téléphone pour parler de votre classe : les créneaux proposés sont ceux que l'agenda laisse libres.",
       },
     ],
   },
@@ -148,9 +159,9 @@ export const LIENS_LEGAUX: readonly LienDeMenu[] = [
   },
 ];
 
-/** Tous les liens du plan, groupes confondus, action principale comprise. */
+/** Tous les liens du plan, groupes confondus, mentions légales comprises. */
 export function tousLesLiens(): LienDeMenu[] {
-  return [ACTION_PRINCIPALE, ...NAVIGATION.flatMap((g) => g.liens), ...LIENS_LEGAUX];
+  return [...NAVIGATION.flatMap((g) => g.liens), ...LIENS_LEGAUX];
 }
 
 /**

@@ -8,6 +8,7 @@ import { ThemeSwitcher } from "@/components/theme-switcher";
 import { SiteLogo } from "@/components/site-logo";
 import {
   ACTION_PRINCIPALE,
+  GROUPE_OUVERT,
   LIENS_LEGAUX,
   liensDAcces,
   liensDeTete,
@@ -41,9 +42,12 @@ import {
 export function SiteHeader() {
   const chemin = usePathname();
   const [ouvert, setOuvert] = useState(false);
-  // Les groupes du plan sont repliés : à l'ouverture, le menu tient sur
-  // l'action principale et trois en-têtes. On déplie ce qu'on veut.
-  const [groupesOuverts, setGroupesOuverts] = useState<Set<string>>(new Set());
+  // Les groupes du plan sont repliés, sauf le premier, orientation et contact,
+  // qui porte l'action principale : à l'ouverture, le menu tient sur ses deux
+  // entrées et trois en-têtes. On déplie ce qu'on veut.
+  const [groupesOuverts, setGroupesOuverts] = useState<Set<string>>(
+    () => new Set([GROUPE_OUVERT]),
+  );
   const cadre = useRef<HTMLElement>(null);
   // Dans l'arène, la page est plus large (1 400 px) : la barre s'aligne sur
   // ses bords, sinon le logo et le menu flottent en retrait sur grand écran.
@@ -63,7 +67,7 @@ export function SiteHeader() {
   useEffect(() => setOuvert(false), [chemin]);
   // Menu refermé : on replie les groupes, pour rouvrir sur un plan court.
   useEffect(() => {
-    if (!ouvert) setGroupesOuverts(new Set());
+    if (!ouvert) setGroupesOuverts(new Set([GROUPE_OUVERT]));
   }, [ouvert]);
   useEffect(() => {
     if (!ouvert) return;
@@ -184,25 +188,7 @@ export function SiteHeader() {
             dans son propre cadre : sans cela, les dernières entrées ne
             s'atteignent qu'en faisant défiler la page DERRIÈRE le menu. */}
         <div className="max-h-[calc(100dvh-4.5rem)] overflow-y-auto rounded-2xl border border-white/10 bg-slate-900 p-4 shadow-2xl">
-          {/* L'action principale est une ligne, comme les en-têtes de groupe :
-              le menu ouvert est une liste homogène. L'ambre et la flèche la
-              distinguent (aller directement), le chevron distingue les groupes
-              (déplier). */}
-          <Link
-            href={ACTION_PRINCIPALE.href}
-            title={ACTION_PRINCIPALE.aide}
-            aria-current={estCourant(ACTION_PRINCIPALE.href) ? "page" : undefined}
-            className="flex items-center justify-between rounded-lg border border-amber-400/40 bg-amber-950/20 px-3 py-2 transition hover:border-amber-400"
-          >
-            <span className="text-sm font-semibold text-amber-300">
-              {ACTION_PRINCIPALE.libelle}
-            </span>
-            <span aria-hidden className="text-amber-300">
-              →
-            </span>
-          </Link>
-
-          <div className="mt-3 space-y-1 border-t border-white/10 pt-3">
+          <div className="space-y-1">
             {NAVIGATION.map((groupe) => {
               const ouvertGroupe = groupesOuverts.has(groupe.code);
               return (
@@ -272,13 +258,24 @@ export function SiteHeader() {
  * phrase qui évite d'ouvrir les trois pour trouver la bonne.
  */
 function Entree({ lien, courant }: { lien: LienDeMenu; courant: boolean }) {
+  // L'action principale garde sa couleur : c'est la seule entrée du plan qui
+  // dit par où commencer, et elle doit se voir sans se lire.
+  const principale = lien.href === ACTION_PRINCIPALE.href;
   return (
     <Link
       href={lien.href}
       aria-current={courant ? "page" : undefined}
-      className={`block rounded-lg px-3 py-2 transition hover:bg-white/5 ${courant ? "bg-white/5" : ""}`}
+      className={`block rounded-lg px-3 py-2 transition ${
+        principale
+          ? "border border-amber-400/40 bg-amber-950/20 hover:border-amber-400"
+          : `hover:bg-white/5 ${courant ? "bg-white/5" : ""}`
+      }`}
     >
-      <span className="block text-sm font-medium text-slate-100">{lien.libelle}</span>
+      <span
+        className={`block text-sm font-medium ${principale ? "text-amber-300" : "text-slate-100"}`}
+      >
+        {lien.libelle}
+      </span>
       <span className="mt-0.5 block text-xs leading-relaxed text-slate-400">{lien.aide}</span>
     </Link>
   );
