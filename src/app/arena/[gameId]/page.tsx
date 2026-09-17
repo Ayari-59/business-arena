@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getGuestUserId } from "@/lib/guest";
-import { formatEuro } from "@/lib/format";
+import { compter, formatEuro } from "@/lib/format";
 import { getGameView } from "@/services/game.service";
 import { getTeamSituations } from "@/services/pedagogy.service";
 import { SituationCard, SituationDebrief } from "@/components/situation-panel";
@@ -13,6 +13,7 @@ import { EventCard } from "@/components/event-card";
 import { cardByCode } from "@/config/events/cards";
 import { DecisionForm } from "@/components/decision-form";
 import { TeamNameForm } from "@/components/team-name-form";
+import { ChoixEquipe } from "@/components/choix-equipe";
 import { DilemmaCard, ParametersPanels } from "@/components/decision-context";
 import { PeriodDashboard } from "@/components/period-dashboard";
 import { PeriodDecisionsRecap } from "@/components/period-decisions-recap";
@@ -445,6 +446,38 @@ export default async function ArenaPage({
         <div>
           <TeamNameForm gameId={gameId} nomActuel={view.playerTeamName} />
         </div>
+      ) : null}
+
+      {/*
+        ── Composition des équipes ──
+        Le code d'invitation range dans l'équipe la moins remplie : l'élève
+        arrivé avec son groupe se retrouve seul ailleurs, et celui qui revient
+        d'un autre poste — cookie d'invité perdu — est réaffecté au hasard sans
+        qu'aucun message ne le prévienne. Ouvert au premier tour, replié
+        ensuite : passé la clôture, il ne reste qu'à lire qui est où et à le
+        signaler à l'enseignant.
+      */}
+      {!finished && view.equipesDeLaClasse.length > 1 ? (
+        view.peutChoisirSonEquipe ? (
+          <ChoixEquipe
+            gameId={gameId}
+            equipes={view.equipesDeLaClasse}
+            monEquipeId={view.playerTeamId}
+            ouvert
+          />
+        ) : (
+          <Tiroir
+            titre="👥 Composition des équipes"
+            quoi={compter(view.equipesDeLaClasse.length, "équipe")}
+          >
+            <ChoixEquipe
+              gameId={gameId}
+              equipes={view.equipesDeLaClasse}
+              monEquipeId={view.playerTeamId}
+              ouvert={false}
+            />
+          </Tiroir>
+        )
       ) : null}
 
       {/* ── Victory / End screen ── */}

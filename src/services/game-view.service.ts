@@ -12,7 +12,12 @@ import type { ScenarioVocabulary } from "@/config/scenarios/registry";
 import { resolveScenarioDefinition } from "@/services/scenario-source.service";
 import { computeSectorKpis, type KpiFormat } from "@/config/scenarios/sector-kpis";
 import { presetFromProfile } from "@/config/difficulty";
-import { porteUnNomParDefaut } from "@/config/nom-equipe";
+import { porteUnNomParDefaut, teamDisplayName } from "@/config/nom-equipe";
+import {
+  compositionDesEquipes,
+  peutChoisirSonEquipe,
+  type EquipeEtSesMembres,
+} from "@/services/affectation.service";
 import { cardByCode } from "@/config/events/cards";
 import type { EventInstance } from "@/engine/types";
 import { peekEventDraw } from "@/engine/events";
@@ -49,16 +54,8 @@ import {
 import { classementOuvert } from "@/config/rideau-classement";
 import type { GameKind } from "@/services/game-creation.service";
 
-/**
- * Nom d'équipe affiché. Les parties solo créées avant ce nettoyage portent le
- * suffixe « (vous) » dans le nom stocké : il servait à repérer le joueur, ce
- * que le surlignage de sa ligne fait déjà. On le retire à l'affichage plutôt
- * que par une migration, pour que les parties en cours en soient debarrassées
- * elles aussi.
- */
-export function teamDisplayName(name: string): string {
-  return name.replace(/\s*\(vous\)\s*$/, "");
-}
+/** Réexport : le nom affiché se calcule dans la config des noms d'équipe. */
+export { teamDisplayName };
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -128,6 +125,13 @@ export interface GameView {
   playerTeamId: string;
   playerTeamName: string;
   peutSeNommer: boolean;
+  /**
+   * Les équipes de la classe et qui s'y trouve, pour l'élève rangé d'office
+   * dans la mauvaise. Vide en solo : il n'y a personne à rejoindre.
+   */
+  equipesDeLaClasse: EquipeEtSesMembres[];
+  /** L'élève peut encore changer d'équipe lui-même (partie de classe, tour 1). */
+  peutChoisirSonEquipe: boolean;
   /** Décisions déjà validées par l'équipe pour le tour courant (mode classe). */
   pendingDecisions: RoundDecisions | null;
   /** Cartes événement annoncées par l'enseignant pour le tour courant. */
@@ -1036,6 +1040,10 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
   // En solo, personne n'est là pour ouvrir : le classement face aux bots est la
   // boucle de retour du jeu, il reste immédiat.
   const kindDeLaPartie = (game.difficultyProfile as { kind?: GameKind }).kind ?? "solo";
+  // La composition des équipes ne concerne que la classe : en solo, les autres
+  // entreprises sont des bots, et il n'y a personne à rejoindre.
+  const equipesDeLaClasse =
+    kindDeLaPartie === "solo" ? [] : await compositionDesEquipes(gameId);
   const dernierResolu = resolved.slice().sort((a2, b2) => b2.index - a2.index)[0];
   const classementRevele = classementOuvert({
     kind: kindDeLaPartie,
@@ -1354,6 +1362,8 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     // L'équipe peut encore se nommer tant qu'elle porte son numéro et que le
     // premier tour n'est pas clos.
     peutSeNommer: porteUnNomParDefaut(playerTeam.name) && game.currentRound === 1,
+    equipesDeLaClasse,
+    peutChoisirSonEquipe: kindDeLaPartie !== "solo" && peutChoisirSonEquipe(game),
     pendingDecisions,
     announcedEventCards: readPendingEvents(game.difficultyProfile).map((card) => {
       const target = card.teamId ? teamRows.find((t) => t.id === card.teamId) : undefined;

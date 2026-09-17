@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { getTeacherGameView } from "@/services/game.service";
+import { compositionDesEquipes } from "@/services/affectation.service";
 import { getGameGradeSheet, getTeacherPedagogyView } from "@/services/pedagogy.service";
 import { compter, formatEuro } from "@/lib/format";
 import { periodLabel } from "@/config/scenarios/periodicity";
@@ -9,6 +10,7 @@ import { setMissedPolicyAction, setQuizModeAction } from "../../actions";
 import { QUIZ_MODES } from "@/config/difficulty";
 import { estParDefaut } from "@/config/decision-source";
 import { MISSED_POLICY_LABELS, MISSED_POLICY_HELP } from "@/config/missed-situation";
+import { CompositionEquipes } from "@/components/composition-equipes";
 import { SubventionsPanel } from "@/components/subventions-panel";
 import { CardDeck } from "@/components/card-deck";
 import { CloseRoundForm } from "@/components/close-round-form";
@@ -47,6 +49,9 @@ export default async function TeacherGamePage({
   if (!view) notFound();
   const pedagogy = await getTeacherPedagogyView(gameId, session.userId);
   const releve = await getGameGradeSheet(gameId, session.userId);
+  // Qui joue dans quelle équipe : le seul écran d'où l'on répare une
+  // affectation, et le seul recours d'un élève revenu d'un autre poste.
+  const composition = await compositionDesEquipes(gameId);
 
   const finished = view.status === "finished";
   const humanTeams = view.teams.filter((t) => t.controller === "human");
@@ -275,6 +280,21 @@ export default async function TeacherGamePage({
         ) : null}
         <JustificationsReview gameId={gameId} available={aiReview} />
       </section>
+
+      <Tiroir
+        titre="👥 Composition des équipes"
+        quoi={compter(
+          composition.reduce((total, e) => total + e.membres.length, 0),
+          "élève inscrit",
+          "élèves inscrits",
+        )}
+      >
+        <CompositionEquipes
+          gameId={gameId}
+          equipes={composition}
+          premierTour={view.currentRound === 1}
+        />
+      </Tiroir>
 
       {animer ? <Rubrique>Animer</Rubrique> : null}
       {/* Les demandes de subvention : rien à l'écran tant qu'aucune équipe n'a

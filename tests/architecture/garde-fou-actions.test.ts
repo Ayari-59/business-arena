@@ -19,6 +19,8 @@ const COMPOSANTS_GARDES = [
   "src/components/decision-form.tsx", // décisions du tour
   "src/components/situation-panel.tsx", // diagnostic, modèle, indices
   "src/components/team-name-form.tsx", // nom d'entreprise
+  "src/components/choix-equipe.tsx", // l'élève rejoint l'équipe de ses camarades
+  "src/components/composition-equipes.tsx", // l'enseignant affecte un élève à une équipe
   "src/components/join-form.tsx", // /join
   "src/components/competition-join-form.tsx", // /compete
   "src/components/close-round-form.tsx", // clôture du tour (confirmée)

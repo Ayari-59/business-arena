@@ -14,6 +14,7 @@ import {
   verdictAuMaximum,
   verdictSauvetage,
 } from "@/services/sauvetage";
+import { choisirSonEquipe } from "@/services/affectation.service";
 import { deposerDemande } from "@/services/subvention.service";
 import { getGameView } from "@/services/game-view.service";
 import {
@@ -401,6 +402,36 @@ export async function demanderSubventionAction(
     });
   } catch (error) {
     return { error: error instanceof Error ? error.message : "La demande n'a pas pu être déposée." };
+  }
+  revalidatePath(`/arena/${gameId}`);
+  return { error: null };
+}
+
+export interface ChoixEquipeState {
+  error: string | null;
+}
+
+/**
+ * L'élève rejoint l'équipe de ses camarades, au premier tour.
+ *
+ * Le code d'invitation range dans l'équipe la moins remplie : correct pour
+ * ouvrir la séance, faux dès que la classe a ses propres groupes.
+ */
+export async function choisirMonEquipeAction(
+  gameId: string,
+  _previous: ChoixEquipeState,
+  formData: FormData,
+): Promise<ChoixEquipeState> {
+  const userId = await getGuestUserId();
+  if (!userId) return { error: "Session expirée : rejoignez la partie à nouveau." };
+  const teamId = String(formData.get("teamId") ?? "");
+  if (!teamId) return { error: "Choisissez une équipe." };
+  try {
+    await choisirSonEquipe({ gameId, userId, teamId });
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Le changement d'équipe a échoué.",
+    };
   }
   revalidatePath(`/arena/${gameId}`);
   return { error: null };

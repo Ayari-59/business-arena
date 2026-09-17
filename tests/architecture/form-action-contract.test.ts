@@ -72,6 +72,16 @@ const CONTRACTS: FormContract[] = [
     sources: ["src/components/card-deck.tsx"],
   },
   {
+    nom: "affectation d'un élève à une équipe (enseignant)",
+    action: { file: "src/app/teacher/actions.ts", fn: "affecterEleveAction" },
+    sources: ["src/components/composition-equipes.tsx"],
+  },
+  {
+    nom: "changement d'équipe (élève)",
+    action: { file: "src/app/arena/[gameId]/actions.ts", fn: "choisirMonEquipeAction" },
+    sources: ["src/components/choix-equipe.tsx"],
+  },
+  {
     nom: "lancement d'une partie publique",
     action: { file: "src/app/actions.ts", fn: "startGameAction" },
     // Les champs vivent dans le composant client de config rapide, qui les

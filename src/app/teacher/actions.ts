@@ -40,6 +40,7 @@ import {
   TAGLINE_MAX,
 } from "@/config/concours-public";
 import { trancherDemande } from "@/services/subvention.service";
+import { affecterEleve } from "@/services/affectation.service";
 
 export interface FormState {
   error: string | null;
@@ -579,4 +580,48 @@ export async function trancherSubventionAction(
   }
   revalidatePath(`/teacher/games/${gameId}`);
   return { error: null };
+}
+
+export interface AffectationState {
+  error: string | null;
+  message: string | null;
+}
+
+/**
+ * L'enseignant range un élève dans la bonne équipe.
+ *
+ * Le seul recours quand un élève revient d'un autre poste : son cookie
+ * d'invité perdu, il a été affecté au hasard et ne peut plus se déplacer
+ * lui-même une fois le premier tour clos.
+ */
+export async function affecterEleveAction(
+  gameId: string,
+  _prev: AffectationState,
+  formData: FormData,
+): Promise<AffectationState> {
+  const session = await getSession();
+  if (!session) return { error: "Session expirée.", message: null };
+  const eleveId = String(formData.get("eleveId") ?? "");
+  const teamId = String(formData.get("teamId") ?? "");
+  const nomDeLEleve = String(formData.get("nomDeLEleve") ?? "").trim();
+  if (!eleveId || !teamId) return { error: "Choisissez une équipe.", message: null };
+  let nomDeLEquipe: string;
+  try {
+    ({ nomDeLEquipe } = await affecterEleve({
+      gameId,
+      teacherId: session.userId,
+      eleveId,
+      teamId,
+    }));
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "L'élève n'a pas pu être déplacé.",
+      message: null,
+    };
+  }
+  revalidatePath(`/teacher/games/${gameId}`);
+  return {
+    error: null,
+    message: `${nomDeLEleve || "L'élève"} rejoint ${nomDeLEquipe}.`,
+  };
 }
