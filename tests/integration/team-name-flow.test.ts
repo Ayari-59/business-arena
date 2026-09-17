@@ -83,8 +83,17 @@ describe("l'équipe se donne un nom", () => {
     await nommerEquipe({ gameId, userId: alice, nom: "  Fromagerie   du Pont " });
     const vue = (await getGameView(gameId, alice))!;
     expect(vue.playerTeamName).toBe("Fromagerie du Pont");
-    // Le panneau disparaît : l'équipe n'est plus anonyme.
-    expect(vue.peutSeNommer).toBe(false);
+    // Le panneau RESTE ouvert : le nom adopté à la hâte se corrige tant que le
+    // premier tour n'est pas clos. Il se fermait ici, et la coquille partait
+    // pour six trimestres.
+    expect(vue.peutSeNommer).toBe(true);
+  });
+
+  it("la coquille se corrige tant que le premier tour n'est pas clos", async () => {
+    await nommerEquipe({ gameId, userId: alice, nom: "Fromagerie du Pon" });
+    expect((await getGameView(gameId, alice))!.playerTeamName).toBe("Fromagerie du Pon");
+    await nommerEquipe({ gameId, userId: alice, nom: "Fromagerie du Pont" });
+    expect((await getGameView(gameId, alice))!.playerTeamName).toBe("Fromagerie du Pont");
   });
 
   it("une autre équipe ne peut pas prendre le même nom", async () => {

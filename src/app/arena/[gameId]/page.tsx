@@ -14,6 +14,7 @@ import { cardByCode } from "@/config/events/cards";
 import { DecisionForm } from "@/components/decision-form";
 import { TeamNameForm } from "@/components/team-name-form";
 import { ChoixEquipe } from "@/components/choix-equipe";
+import { porteUnNomParDefaut } from "@/config/nom-equipe";
 import { DilemmaCard, ParametersPanels } from "@/components/decision-context";
 import { PeriodDashboard } from "@/components/period-dashboard";
 import { PeriodDecisionsRecap } from "@/components/period-decisions-recap";
@@ -444,7 +445,11 @@ export default async function ArenaPage({
       {/* ── Team naming ── */}
       {view.peutSeNommer ? (
         <div>
-          <TeamNameForm gameId={gameId} nomActuel={view.playerTeamName} />
+          <TeamNameForm
+            gameId={gameId}
+            nomActuel={view.playerTeamName}
+            dejaNommee={!porteUnNomParDefaut(view.playerTeamName)}
+          />
         </div>
       ) : null}
 

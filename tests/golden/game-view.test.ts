@@ -198,7 +198,7 @@ describe("GameView NOVA — après résolution du tour 1", () => {
     }
   });
 
-  it("peutSeNommer passe à false après le tour 1 (sauf si nom par défaut)", async () => {
+  it("peutSeNommer ne dépend que du tour : ouvert au premier, fermé ensuite", async () => {
     const view = await getGameView(gameId, userId);
     expect(typeof view!.peutSeNommer).toBe("boolean");
   });

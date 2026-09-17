@@ -7,16 +7,28 @@ import { GuardError, useGuardedAction } from "@/components/guarded-action";
 const initial: NomEquipeState = { error: null };
 
 /**
- * L'équipe se donne un nom d'entreprise.
+ * L'équipe se donne un nom d'entreprise, et le corrige tant qu'il est temps.
  *
- * Le panneau n'apparaît qu'au premier tour et tant que l'équipe porte encore
- * son numéro : après la première clôture, le nom se fige, parce qu'un
- * classement qui change d'intitulé en cours de partie devient illisible.
+ * Le panneau reste ouvert pendant tout le premier tour, y compris une fois un
+ * nom adopté. Il se fermait auparavant dès le premier enregistrement, et une
+ * coquille tapée à la hâte suivait l'équipe jusqu'au relevé de notes sans que
+ * personne puisse la reprendre. Après la clôture du premier tour, le nom se
+ * fige pour de bon : un classement qui change d'intitulé en cours de partie
+ * devient illisible.
  *
  * Le champ est libre plutôt que choisi dans une liste : nommer son entreprise
  * est le premier acte de gestion de l'équipe, et une liste le lui retirerait.
  */
-export function TeamNameForm({ gameId, nomActuel }: { gameId: string; nomActuel: string }) {
+export function TeamNameForm({
+  gameId,
+  nomActuel,
+  dejaNommee,
+}: {
+  gameId: string;
+  nomActuel: string;
+  /** L'équipe a déjà adopté un nom : on propose de le corriger, pas d'en choisir un. */
+  dejaNommee: boolean;
+}) {
   const action = nommerEquipeAction.bind(null, gameId);
   const { state, formAction, pending, formRef, guardError } = useGuardedAction(action, initial, {
     label: "nom d'entreprise",
@@ -29,12 +41,23 @@ export function TeamNameForm({ gameId, nomActuel }: { gameId: string; nomActuel:
       className="rounded-xl border border-amber-400/30 bg-amber-950/10 p-3 sm:p-5"
     >
       <p className="text-xs font-semibold uppercase tracking-wide text-amber-300">
-        ✍️ Nommez votre entreprise
+        ✍️ {dejaNommee ? "Corrigez le nom de votre entreprise" : "Nommez votre entreprise"}
       </p>
       <p className="mt-1.5 text-sm leading-relaxed text-slate-300">
-        Votre équipe s&apos;appelle « {nomActuel} » pour l&apos;instant. Donnez-lui le nom
-        sous lequel elle affrontera les autres : c&apos;est celui qui suivra vos résultats
-        jusqu&apos;au classement final. Il se fige à la clôture du premier tour.
+        {dejaNommee ? (
+          <>
+            Votre équipe s&apos;appelle « {nomActuel} ». Une faute de frappe ? Reprenez-la
+            maintenant : ce nom suivra vos résultats jusqu&apos;au classement final, et il
+            se fige à la clôture du premier tour.
+          </>
+        ) : (
+          <>
+            Votre équipe s&apos;appelle « {nomActuel} » pour l&apos;instant. Donnez-lui le
+            nom sous lequel elle affrontera les autres : c&apos;est celui qui suivra vos
+            résultats jusqu&apos;au classement final. Il se fige à la clôture du premier
+            tour.
+          </>
+        )}
       </p>
       <div className="mt-3 flex flex-wrap items-end gap-3">
         <label className="min-w-[220px] flex-1">
@@ -43,6 +66,7 @@ export function TeamNameForm({ gameId, nomActuel }: { gameId: string; nomActuel:
             name="nom"
             required
             maxLength={NOM_EQUIPE_MAX}
+            defaultValue={dejaNommee ? nomActuel : ""}
             placeholder="Le nom de votre entreprise"
             className="w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
           />
@@ -62,7 +86,7 @@ export function TeamNameForm({ gameId, nomActuel }: { gameId: string; nomActuel:
               Enregistrement
             </span>
           ) : (
-            "Adopter ce nom"
+            <>{dejaNommee ? "Corriger le nom" : "Adopter ce nom"}</>
           )}
         </button>
       </div>

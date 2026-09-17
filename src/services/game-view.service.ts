@@ -12,7 +12,7 @@ import type { ScenarioVocabulary } from "@/config/scenarios/registry";
 import { resolveScenarioDefinition } from "@/services/scenario-source.service";
 import { computeSectorKpis, type KpiFormat } from "@/config/scenarios/sector-kpis";
 import { presetFromProfile } from "@/config/difficulty";
-import { porteUnNomParDefaut, teamDisplayName } from "@/config/nom-equipe";
+import { teamDisplayName } from "@/config/nom-equipe";
 import {
   compositionDesEquipes,
   peutChoisirSonEquipe,
@@ -1359,9 +1359,13 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     roundDays: (game.scenarioSnapshot as { roundDays: number }).roundDays,
     playerTeamId: playerTeam.id,
     playerTeamName: teamDisplayName(playerTeam.name),
-    // L'équipe peut encore se nommer tant qu'elle porte son numéro et que le
-    // premier tour n'est pas clos.
-    peutSeNommer: porteUnNomParDefaut(playerTeam.name) && game.currentRound === 1,
+    // L'équipe se nomme, et se RENOMME, tant que le premier tour n'est pas
+    // clos. Le panneau ne disparaissait auparavant qu'au premier nom adopté :
+    // une coquille tapée à la hâte — « Les Enteprises du Nrd » — restait au
+    // classement et sur le relevé de notes pendant six trimestres, sans que
+    // personne, élève ou enseignant, puisse la corriger. Le service, lui,
+    // autorisait déjà le changement : c'était l'écran qui se fermait trop tôt.
+    peutSeNommer: game.currentRound === 1,
     equipesDeLaClasse,
     peutChoisirSonEquipe: kindDeLaPartie !== "solo" && peutChoisirSonEquipe(game),
     pendingDecisions,

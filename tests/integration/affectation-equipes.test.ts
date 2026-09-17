@@ -129,6 +129,30 @@ describe("l'élève choisit son équipe au premier tour", () => {
   });
 });
 
+describe("l'élève qui revient", () => {
+  it("son pseudo corrigé s'enregistre, et il ne crée pas une seconde appartenance", async () => {
+    const { gameId, joinCode } = await createClassGame({
+      teacherId,
+      organizationId: orgId,
+      periodicity: "quarter",
+      humanTeamsCount: 2,
+      botCount: 0,
+    });
+    const paul = await eleve("paul");
+    await joinGameByCode({ code: joinCode, userId: paul, pseudo: "Pual" });
+    const equipe = await equipeDe(paul);
+
+    // Il revient, retape le code et corrige son prénom. Sa saisie était
+    // jusqu'ici avalée en silence : le retour anticipé du joueur déjà inscrit
+    // passait avant l'écriture du pseudo.
+    await joinGameByCode({ code: joinCode, userId: paul, pseudo: "Paul" });
+    expect((await db.select().from(users).where(eq(users.id, paul)))[0]!.displayName).toBe("Paul");
+    expect(await db.select().from(players).where(eq(players.userId, paul))).toHaveLength(1);
+    expect(await equipeDe(paul)).toBe(equipe);
+    expect(gameId).toBeTruthy();
+  });
+});
+
 describe("l'enseignant affecte les élèves", () => {
   it("compose ses équipes, et seulement les siennes", async () => {
     const { gameId, joinCode } = await createClassGame({

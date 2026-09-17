@@ -83,6 +83,15 @@ export async function joinGameByCode(args: {
     .select()
     .from(players)
     .where(inArray(players.teamId, teamRows.map((t) => t.id)));
+
+  // Le pseudo s'enregistre AVANT le retour anticipé du joueur déjà inscrit.
+  // Il ne s'écrivait qu'à la première adhésion : l'élève qui revenait et
+  // corrigeait son prénom — champ obligatoire du formulaire, qu'il remplit
+  // donc à chaque fois — voyait sa saisie disparaître en silence, et
+  // l'enseignant gardait à l'écran le nom de la première fois.
+  if (args.pseudo?.trim()) {
+    await db.update(users).set({ displayName: args.pseudo.trim() }).where(eq(users.id, args.userId));
+  }
   if (memberships.some((m) => m.userId === args.userId)) return { gameId: game.id };
 
   const counts = new Map(teamRows.map((t) => [t.id, 0]));
@@ -90,9 +99,6 @@ export async function joinGameByCode(args: {
   const target = [...counts.entries()].sort((a, b) => a[1] - b[1])[0]![0];
 
   await db.insert(players).values({ teamId: target, userId: args.userId, role: "member" });
-  if (args.pseudo?.trim()) {
-    await db.update(users).set({ displayName: args.pseudo.trim() }).where(eq(users.id, args.userId));
-  }
   return { gameId: game.id };
 }
 
