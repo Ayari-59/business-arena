@@ -33,6 +33,14 @@ import {
  * grand écran, le jour où l'on en ajoutera une. L'orientation n'a plus son
  * bouton dédié dans la barre ; elle reste en tête de ce plan.
  *
+ * LA LISIBILITÉ PASSE AVANT LE VERRE TEINTÉ. La barre a vécu à 55 % d'opacité
+ * et le panneau à 85 % : sur un fond clair, sur une image, sur un tableau
+ * dense, le texte du menu devenait illisible par endroits, et seulement par
+ * endroits — le pire des défauts, celui qu'on ne reproduit pas à volonté. La
+ * barre reste donc translucide mais franchement opaque, et le panneau est
+ * plein : une carte de menu se lit par-dessus n'importe quoi. Le flou et le
+ * voile de lumière suffisent à la décoller du fond.
+ *
  * Les liens à plat sont ceux de l'enseignant qui découvre : présentation,
  * ateliers, entreprises. Les fiches notions n'y sont plus, elles sont une
  * ressource, pas une vitrine. À droite, deux boutons, un par public : l'espace
@@ -90,7 +98,7 @@ export function SiteHeader() {
   return (
     <header
       ref={cadre}
-      className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/70 backdrop-blur-md supports-[backdrop-filter]:bg-slate-950/55 print:static print:bg-transparent print:hidden"
+      className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/97 backdrop-blur-md supports-[backdrop-filter]:bg-slate-950/92 print:static print:bg-transparent print:hidden"
     >
       {/* Un filet de laiton posé sur le bord bas de la barre, éteint aux deux
           extrémités. C'est le même geste que le liseré d'une carte : ce qui
@@ -226,7 +234,7 @@ export function SiteHeader() {
             dans son propre cadre : sans cela, les dernières entrées ne
             s'atteignent qu'en faisant défiler la page DERRIÈRE le menu. */}
         <div
-          className={`carte relative max-h-[calc(100dvh-4.5rem)] overflow-y-auto rounded-2xl p-4 supports-[backdrop-filter]:bg-slate-900/85 supports-[backdrop-filter]:backdrop-blur-xl ${
+          className={`carte relative max-h-[calc(100dvh-4.5rem)] overflow-y-auto rounded-2xl p-4 ${
             ouvert ? "motion-safe:animate-plan-ouvre" : ""
           }`}
         >
