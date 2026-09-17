@@ -1,5 +1,6 @@
 import { ATELIER_AVANCE } from "./avance";
 import { ATELIER_BISTROT } from "./bistrot";
+import { ATELIER_CAMPUS } from "./campus";
 import { ATELIER_CG1 } from "./cg1";
 import { ATELIER_MCO } from "./mco";
 import { ATELIER_DCG } from "./dcg";
@@ -20,8 +21,9 @@ export type { AtelierDefinition, AtelierPhase, AtelierSeance } from "./types";
  * L'ordre du registre suit la progression : l'animation de découverte ouverte à
  * toutes les filières d'abord, puis le lycée, puis les ateliers de section de
  * technicien et le BUT, puis l'expertise comptable, et enfin l'atelier
- * d'approfondissement transversal. Un enseignant ne doit pas faire défiler dix
- * fiches avant de trouver la sienne.
+ * d'approfondissement transversal, puis le tournoi qui fait jouer tout un
+ * campus. Un enseignant ne doit pas parcourir la moitié du registre avant de
+ * trouver la sienne.
  */
 export const ATELIERS: readonly AtelierDefinition[] = [
   ATELIER_DEBUTANT,
@@ -37,6 +39,7 @@ export const ATELIERS: readonly AtelierDefinition[] = [
   ATELIER_DCG,
   ATELIER_DCG_RSE,
   ATELIER_AVANCE,
+  ATELIER_CAMPUS,
 ];
 
 export const atelierByCode = new Map(ATELIERS.map((a) => [a.code, a]));
