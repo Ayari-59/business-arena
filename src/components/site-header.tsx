@@ -9,6 +9,7 @@ import { SiteLogo } from "@/components/site-logo";
 import {
   ACTION_PRINCIPALE,
   LIENS_LEGAUX,
+  liensDAcces,
   liensDeTete,
   NAVIGATION,
   type LienDeMenu,
@@ -30,6 +31,12 @@ import {
  * garantit qu'aucune page ne redevienne inatteignable, sur téléphone comme sur
  * grand écran, le jour où l'on en ajoutera une. L'orientation n'a plus son
  * bouton dédié dans la barre ; elle reste en tête de ce plan.
+ *
+ * Les liens à plat sont ceux de l'enseignant qui découvre : présentation,
+ * ateliers, entreprises. Les fiches notions n'y sont plus, elles sont une
+ * ressource, pas une vitrine. À droite, deux boutons, un par public : l'espace
+ * enseignant et le code d'une partie, pour que ni l'un ni l'autre n'ait à
+ * ouvrir le menu.
  */
 export function SiteHeader() {
   const chemin = usePathname();
@@ -118,6 +125,26 @@ export function SiteHeader() {
               </li>
             ))}
           </ul>
+
+          {/* Les deux portes d'entrée, une par public. L'enseignant en ambre,
+              comme l'action principale du plan ; l'élève en clair. */}
+          <div className="hidden items-center gap-1.5 lg:flex">
+            {liensDAcces().map((lien) => (
+              <Link
+                key={lien.href}
+                href={lien.href}
+                title={lien.aide}
+                aria-current={estCourant(lien.href) ? "page" : undefined}
+                className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
+                  lien.acces === "enseignant"
+                    ? "border-amber-400/40 text-amber-200 hover:border-amber-400 hover:bg-amber-400/10"
+                    : "border-white/15 text-slate-200 hover:border-white/40 hover:bg-white/5"
+                }`}
+              >
+                {lien.libelle}
+              </Link>
+            ))}
+          </div>
 
           <button
             type="button"

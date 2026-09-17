@@ -11,6 +11,12 @@
  * impossible qu'une page soit atteignable d'un côté et introuvable de l'autre.
  * Les groupes ne sont pas décoratifs : ils disent à qui la page s'adresse, ce
  * qu'aucune rangée de mots alignés ne pouvait faire.
+ *
+ * Les groupes portent le nom du public, pas d'un verbe. « Découvrir »,
+ * « Comprendre », « Entrer » obligeaient un élève muni d'un code à deviner que
+ * « Rejoindre une partie » vivait sous « Entrer », et un enseignant que les
+ * ateliers vivaient sous « Découvrir ». Enseignants, Élèves, Ressources :
+ * chacun sait où regarder.
  */
 
 export interface LienDeMenu {
@@ -20,6 +26,12 @@ export interface LienDeMenu {
   aide: string;
   /** Les rares liens qui restent visibles hors du menu, sur grand écran. */
   enTete?: true;
+  /**
+   * Les deux portes d'entrée, l'une par public, posées en boutons à droite de
+   * la barre sur grand écran : un enseignant cherche son espace, un élève
+   * cherche où taper son code. Ni l'un ni l'autre n'a à ouvrir le menu.
+   */
+  acces?: "enseignant" | "eleve";
 }
 
 export interface GroupeDeMenu {
@@ -43,19 +55,13 @@ export const ACTION_PRINCIPALE: LienDeMenu = {
 
 export const NAVIGATION: readonly GroupeDeMenu[] = [
   {
-    code: "decouvrir",
-    titre: "Découvrir",
+    code: "enseignants",
+    titre: "Enseignants",
     liens: [
       {
         href: "/enseignants",
         libelle: "Pour les enseignants",
         aide: "Pourquoi la plateforme apprend à décider et pas à cliquer, ses ateliers clés en main et sa prise en main en classe.",
-        enTete: true,
-      },
-      {
-        href: "/entreprises",
-        libelle: "Entreprises",
-        aide: "Les fiches des entreprises jouables : leur marché, leurs contraintes, ce qu'on y apprend.",
         enTete: true,
       },
       {
@@ -65,9 +71,59 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
         enTete: true,
       },
       {
+        href: "/entreprises",
+        libelle: "Entreprises",
+        aide: "Les fiches des entreprises jouables : leur marché, leurs contraintes, ce qu'on y apprend.",
+        enTete: true,
+      },
+      {
+        href: "/teacher/login",
+        libelle: "Espace enseignant",
+        aide: "Créer une partie, suivre les équipes, clôturer les tours et relire le carnet d'usage.",
+        acces: "enseignant",
+      },
+      {
         href: "/rendez-vous",
         libelle: "Prendre rendez-vous",
         aide: "Trente minutes au téléphone pour parler de votre classe : les créneaux proposés sont ceux que l'agenda laisse libres.",
+      },
+    ],
+  },
+  {
+    code: "eleves",
+    titre: "Élèves",
+    liens: [
+      {
+        href: "/join",
+        libelle: "Rejoindre une partie",
+        aide: "Votre enseignant vous a donné un code : c'est ici qu'il s'utilise.",
+        acces: "eleve",
+      },
+      {
+        href: "/jouer",
+        libelle: "Jouer en solo",
+        aide: "Lancez une partie tout de suite : choisissez un secteur et un niveau, et pilotez l'entreprise seul contre des concurrents simulés.",
+      },
+      {
+        href: "/compete",
+        libelle: "Concours",
+        aide: "Les concours entre classes, leurs épreuves et leurs classements.",
+      },
+    ],
+  },
+  {
+    code: "ressources",
+    titre: "Ressources",
+    liens: [
+      {
+        href: "/guide",
+        libelle: "Guide",
+        aide: "Comment on joue et comment on anime, réunis au même endroit.",
+      },
+      {
+        href: "/notions",
+        libelle: "Fiches notions",
+        aide: "Les notions mobilisées par le jeu, expliquées et reliées à ce que montre le tableau de bord.",
       },
       {
         href: "/parcours",
@@ -78,50 +134,6 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
         href: "/fonctionnalites",
         libelle: "Fonctionnalités",
         aide: "Les scénarios, les situations, les modèles d'analyse : tout ce que la plateforme met entre les mains de vos étudiants.",
-      },
-    ],
-  },
-  {
-    code: "comprendre",
-    titre: "Comprendre",
-    liens: [
-      {
-        href: "/notions",
-        libelle: "Fiches notions",
-        aide: "Les notions mobilisées par le jeu, expliquées et reliées à ce que montre le tableau de bord.",
-        enTete: true,
-      },
-      {
-        href: "/guide",
-        libelle: "Guide",
-        aide: "Comment on joue et comment on anime, réunis au même endroit.",
-      },
-    ],
-  },
-  {
-    code: "entrer",
-    titre: "Entrer",
-    liens: [
-      {
-        href: "/jouer",
-        libelle: "Jouer en solo",
-        aide: "Lancez une partie tout de suite : choisissez un secteur et un niveau, et pilotez l'entreprise seul contre des concurrents simulés.",
-        enTete: true,
-      },
-      {
-        href: "/join",
-        libelle: "Rejoindre une partie",
-        aide: "Votre enseignant vous a donné un code : c'est ici qu'il s'utilise.",
-      },
-      {
-        href: "/teacher/login",
-        libelle: "Espace enseignant",
-        aide: "Créer une partie, suivre les équipes, clôturer les tours et relire le carnet d'usage.",
-      },
-      {
-        href: "/compete",
-        libelle: "Concours",
-        aide: "Les concours entre classes, leurs épreuves et leurs classements.",
       },
     ],
   },
@@ -149,4 +161,9 @@ export function tousLesLiens(): LienDeMenu[] {
  */
 export function liensDeTete(): LienDeMenu[] {
   return NAVIGATION.flatMap((g) => g.liens).filter((l) => l.enTete);
+}
+
+/** Les portes d'entrée par public, en boutons à droite de la barre. */
+export function liensDAcces(): LienDeMenu[] {
+  return NAVIGATION.flatMap((g) => g.liens).filter((l) => l.acces);
 }

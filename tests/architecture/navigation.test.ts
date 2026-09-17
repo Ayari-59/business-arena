@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   ACTION_PRINCIPALE,
   NAVIGATION,
+  liensDAcces,
   liensDeTete,
   tousLesLiens,
 } from "../../src/config/navigation";
@@ -60,8 +61,12 @@ describe("plan du site", () => {
     // principale n'en fait pas partie puisqu'elle est tenue à part.
     const total = NAVIGATION.flatMap((g) => g.liens).length;
     expect(liensDeTete().length).toBeGreaterThan(0);
-    expect(liensDeTete().length).toBeLessThan(total / 2 + 1);
+    expect(liensDeTete().length + liensDAcces().length).toBeLessThan(total / 2 + 1);
     expect(liensDeTete().some((l) => l.href === ACTION_PRINCIPALE.href)).toBe(false);
+    // Une porte d'entrée par public, et un lien n'est pas à la fois à plat et
+    // en bouton.
+    expect(liensDAcces().map((l) => l.acces).sort()).toEqual(["eleve", "enseignant"]);
+    expect(liensDAcces().some((l) => l.enTete)).toBe(false);
   });
 
   it("le menu et le pied de page lisent le registre au lieu de l'écrire", () => {
