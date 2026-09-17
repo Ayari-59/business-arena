@@ -67,6 +67,7 @@ export const ATELIER_CAMPUS: AtelierDefinition = {
     quizMode: "Modèle d'analyse seul",
     tours: 6,
     effectifParEquipe: "un élève par filière, donc cinq élèves",
+    concours: true,
     notes:
       "Un seul concours pour tout le campus, avec des équipes mêlées : c'est ce qui rend le tirage aléatoire des groupes acceptable, puisque toutes les équipes portent la même composition. Le mode concours fixe ensuite presque tout, et ce qui suit se lit comme une donnée, pas comme un réglage. Le scénario est NOVA, le fabricant d'enceintes portables, imposé. Le niveau appliqué est Pilotage : prix, volume, communication, qualité, entretien, trésorerie et assurance sont ouverts ; le recrutement, l'équipement de l'atelier et l'emploi des excédents restent fermés. Ce nombre réduit de décisions est ce qui permet à une première technologique de tenir un poste sans être noyée. Les indices sont ramenés au troisième palier, plus bas qu'en classe, et une décision validée ne se reprend plus. Aucun concurrent simulé n'entre dans une partie de concours. Réglez des groupes de quatre équipes et un qualifié par groupe : la finale ne dépasse jamais huit équipes. Ouvrez une fenêtre d'étape couvrant les deux journées, et non chaque heure, pour qu'une équipe en retard ne bloque pas les autres.",
   },

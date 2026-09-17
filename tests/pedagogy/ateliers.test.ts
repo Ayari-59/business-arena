@@ -8,8 +8,13 @@ import {
   REFERENTIELS,
   REFERENTIELS_NON_VERIFIES,
 } from "../../src/config/ateliers/referentiels";
-import { SCENARIOS, scenarioByCode, scenarioCodeForLevel } from "../../src/config/scenarios/registry";
-import { DIFFICULTY_PRESETS } from "../../src/config/difficulty";
+import {
+  DEFAULT_SCENARIO_CODE,
+  SCENARIOS,
+  scenarioByCode,
+  scenarioCodeForLevel,
+} from "../../src/config/scenarios/registry";
+import { DIFFICULTY_PRESETS, LEGACY_PRESET } from "../../src/config/difficulty";
 
 /**
  * Garde-fous des ateliers professionnels.
@@ -318,6 +323,33 @@ describe("ateliers professionnels", () => {
       ).toBeLessThanOrEqual(8);
       expect(a.reglages.bots, a.code).toBeGreaterThanOrEqual(0);
       expect(a.reglages.bots, a.code).toBeLessThanOrEqual(4);
+    }
+  });
+
+  it("un atelier joué en concours annonce ce que le concours impose", () => {
+    // Un championnat ne se règle pas comme une partie de classe. Le produit y
+    // impose le secteur par défaut, applique le préréglage de repli faute de
+    // niveau transmis, joue tous les tours du scénario et ne crée aucun
+    // concurrent simulé. Une fiche qui annoncerait autre chose enverrait
+    // l'organisateur régler ce qui ne se règle pas, et il ne s'en apercevrait
+    // qu'une fois son concours créé, devant les classes réunies.
+    for (const a of ATELIERS.filter((x) => x.reglages.concours)) {
+      expect(a.reglages.scenarioCode, `${a.code} : le concours impose le secteur par défaut`).toBe(
+        DEFAULT_SCENARIO_CODE,
+      );
+      expect(a.reglages.niveau, `${a.code} : le concours applique le préréglage de repli`).toBe(
+        LEGACY_PRESET.level,
+      );
+      expect(a.reglages.niveauNom, `${a.code} : le nom du niveau imposé`).toBe(LEGACY_PRESET.name);
+      expect(a.reglages.bots, `${a.code} : un concours ne crée aucun concurrent simulé`).toBe(0);
+      expect(
+        a.reglages.tours,
+        `${a.code} : un concours joue tous les tours du scénario, sans raccourci`,
+      ).toBe(scenarioByCode(a.reglages.scenarioCode).scenario.roundsCount);
+      expect(
+        a.reglages.mondeVariable,
+        `${a.code} : un concours ne passe pas le monde variable`,
+      ).toBe(false);
     }
   });
 

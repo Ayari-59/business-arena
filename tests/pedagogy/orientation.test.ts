@@ -129,6 +129,23 @@ describe("orientation", () => {
     for (const demande of COMBINAISONS) {
       const o = OBJECTIFS.find((x) => x.code === demande.objectif)!;
       const r = recommander(demande);
+      const atelier = ATELIERS.find((a) => a.code === demande.diplome);
+      // Un championnat ne se règle pas : le produit y impose le secteur et le
+      // niveau, et la recommandation le dit plutôt que d'afficher un plancher
+      // qu'elle ne pourrait pas tenir. Rien n'échappe pour autant au contrôle :
+      // on vérifie ici que ce sont bien les valeurs imposées qui sortent.
+      if (atelier?.reglages.concours) {
+        expect(r.scenarioCode, `${atelier.code} : secteur autre que celui du concours`).toBe(
+          atelier.reglages.scenarioCode,
+        );
+        expect(r.niveau, `${atelier.code} : niveau autre que celui du concours`).toBe(
+          atelier.reglages.niveau,
+        );
+        expect(r.tours, `${atelier.code} : durée autre que celle du concours`).toBe(
+          atelier.reglages.tours,
+        );
+        continue;
+      }
       expect(
         r.niveau,
         `${demande.diplome}/${demande.semestre}/${o.code} : niveau ${r.niveau} sous le minimum ${o.niveauMinimum}`,

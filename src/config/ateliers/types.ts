@@ -125,6 +125,17 @@ export interface AtelierDefinition {
      * autre.
      */
     effectifParEquipe: string;
+    /**
+     * Cette fiche se joue en mode CONCOURS, et non en partie de classe.
+     *
+     * Ce n'est pas une nuance d'affichage : un championnat ne se règle pas. Le
+     * produit y impose le secteur, le niveau, la durée et l'absence de
+     * concurrent simulé, quels que soient le vœu de l'enseignant et le moment
+     * de l'année. L'orientation le lit pour cesser de proposer un réglage que
+     * l'organisateur ne pourra pas appliquer, et une garde vérifie que la fiche
+     * annonce bien ce que le concours impose.
+     */
+    concours?: true;
     notes: string;
   };
   seances: AtelierSeance[];

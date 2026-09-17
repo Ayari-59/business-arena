@@ -1,4 +1,4 @@
-import { ATELIERS } from "./ateliers";
+import { ATELIERS, type AtelierDefinition } from "./ateliers";
 import { DIFFICULTY_PRESETS } from "./difficulty";
 import { SCENARIOS, scenarioByCode, scenarioCodeForLevel } from "./scenarios/registry";
 import { tourDuPic } from "./scenarios/rounds";
@@ -90,6 +90,14 @@ export const OBJECTIFS: readonly Objectif[] = [
       "Le bâtiment porte des chantiers en cours et des aléas de chantier : les risques y ont un montant, ce qui permet de les arbitrer plutôt que de les qualifier.",
   },
   {
+    code: "immersion_campus",
+    libelle: "Faire travailler plusieurs filières ensemble",
+    secteur: "nova",
+    niveauMinimum: 3,
+    raison:
+      "NOVA porte assez de décisions pour occuper cinq postes de direction sans en noyer aucun, et c'est l'entreprise sur laquelle un championnat se joue : c'est le terrain d'une immersion qui mêle les niveaux.",
+  },
+  {
     code: "diagnostic_financier",
     libelle: "Le diagnostic financier complet",
     secteur: "nova-gamme",
@@ -128,6 +136,32 @@ export function diplomesProposes(): { code: string; libelle: string }[] {
 }
 
 /**
+ * Le réglage d'un atelier joué en concours : celui que le produit impose.
+ *
+ * Il se lit de la fiche, et la fiche est tenue par une garde de dire ce que le
+ * championnat applique vraiment. L'objectif et le semestre n'y changent rien,
+ * et c'est la première chose que la recommandation doit dire.
+ */
+function reglageDeConcours(atelier: AtelierDefinition): Recommandation {
+  const scenario = scenarioByCode(atelier.reglages.scenarioCode);
+  const preset = DIFFICULTY_PRESETS.find((p) => p.level === atelier.reglages.niveau)!;
+  return {
+    scenarioCode: atelier.reglages.scenarioCode,
+    scenarioTitre: scenario.title,
+    niveau: atelier.reglages.niveau,
+    niveauNom: preset.name,
+    tours: atelier.reglages.tours,
+    periodicite: atelier.reglages.periodicite,
+    atelierCode: atelier.code,
+    pourquoi: [
+      "Cet atelier se joue en mode concours, et un championnat ne se règle pas comme une partie de classe : le secteur, le niveau et la durée sont imposés par le produit, quels que soient votre objectif et votre semestre.",
+      `Les équipes jouent donc ${scenario.title} au niveau ${preset.name}, sur ${atelier.reglages.tours} tours, sans concurrent simulé, avec les indices plafonnés et les décisions verrouillées une fois validées.`,
+      `L'atelier « ${atelier.titre} » est écrit pour ces contraintes : ${atelier.format}, avec ses livrables et sa grille d'évaluation.`,
+    ],
+  };
+}
+
+/**
  * Le réglage recommandé, et pourquoi.
  *
  * L'ordre des règles compte : l'atelier du diplôme donne la base, l'objectif
@@ -138,6 +172,11 @@ export function diplomesProposes(): { code: string; libelle: string }[] {
 export function recommander(demande: Demande): Recommandation {
   const atelier = ATELIERS.find((a) => a.code === demande.diplome) ?? null;
   const objectif = OBJECTIFS.find((o) => o.code === demande.objectif) ?? OBJECTIFS[0]!;
+  // Un atelier de CONCOURS coupe court : rien de ce qui suit ne s'applique,
+  // puisque le produit impose le secteur, le niveau et la durée d'un
+  // championnat. Répondre autre chose enverrait l'organisateur régler ce qui ne
+  // se règle pas, et il ne s'en apercevrait qu'en créant son concours.
+  if (atelier?.reglages.concours) return reglageDeConcours(atelier);
   const pourquoi: string[] = [];
 
   // 1. Le secteur : celui de l'objectif, qui est le plus parlant, sauf si

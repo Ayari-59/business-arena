@@ -28,6 +28,16 @@ function Etoiles({ n }: { n: number }) {
   );
 }
 
+/**
+ * Les fiches qui ne se conduisent PAS dans une classe.
+ *
+ * Une immersion de campus se joue en championnat, avec des équipes qui mêlent
+ * les filières et des réglages que le produit impose. Noyée dans le tableau,
+ * elle se lisait comme un atelier de classe de plus, et un enseignant seul
+ * l'aurait ouverte en croyant pouvoir la conduire dans son cours.
+ */
+const IMMERSIONS = ATELIERS.filter((a) => a.reglages.concours);
+
 export default function AteliersPage() {
   return (
     <main id="main" className="relative overflow-hidden">
@@ -51,7 +61,8 @@ export default function AteliersPage() {
           jeu d&apos;entreprise à une progression. Chaque fiche donne le déroulé minuté séance
           par séance, les réglages de la partie, ce que les équipes rendent, la trace écrite que
           chaque séance laisse et les critères d&apos;évaluation. Chacune dit à quel niveau elle
-          s&apos;adresse, du lycée à l&apos;expertise comptable.
+          s&apos;adresse, du lycée à l&apos;expertise comptable, et l&apos;une d&apos;elles les
+          réunit tous dans la même équipe.
         </p>
 
         <h2 className="mt-12 text-xl font-bold text-slate-100">À qui ils s&apos;adressent</h2>
@@ -62,6 +73,32 @@ export default function AteliersPage() {
           d&apos;évaluation. Tout y est modifiable, à commencer par le secteur de
           l&apos;entreprise et le niveau de difficulté.
         </p>
+
+        {IMMERSIONS.map((a) => (
+          <div
+            key={a.code}
+            className="mt-6 rounded-2xl border border-amber-400/25 bg-amber-950/10 p-5"
+          >
+            <p className="text-xs font-semibold uppercase tracking-wide text-amber-300">
+              Une fiche à part · {a.nature}
+            </p>
+            <h3 className="mt-2 text-lg font-bold text-slate-50">{a.titre}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-slate-300">
+              Celle-ci ne se conduit pas dans une classe. Elle réunit {a.diplome} en équipes qui
+              mêlent les niveaux, un élève par filière et un poste de direction chacun, sur{" "}
+              {a.format} en mode concours. Les réglages n&apos;y sont pas les vôtres : un
+              championnat impose son entreprise, son niveau et sa durée, et la fiche est écrite
+              pour ces contraintes. Elle demande donc un organisateur et l&apos;accord des
+              équipes pédagogiques, pas un créneau.
+            </p>
+            <Link
+              href={`/animations/${a.code}`}
+              className="mt-3 inline-block text-sm font-semibold text-amber-300 underline-offset-4 hover:underline"
+            >
+              Voir le déroulé de l&apos;immersion →
+            </Link>
+          </div>
+        ))}
 
         <h2 className="mt-12 text-xl font-bold text-slate-100">Les ateliers disponibles</h2>
         <div className="mt-4 overflow-x-auto rounded-xl border border-white/10">
@@ -154,8 +191,9 @@ export default function AteliersPage() {
           </p>
           <p>
             Chaque diplôme découpe le métier avec ses propres mots, processus pour le BTS CG,
-            blocs de compétences pour le BTS MCO, activités pour le BTS GPME, unités
-            d&apos;enseignement pour le DCG, et chaque fiche emploie ceux de son référentiel. Le
+            blocs de compétences pour les BTS MCO, NDRC et GPME, thèmes de programme au lycée,
+            unités d&apos;enseignement pour le DCG, et chaque fiche emploie ceux de son
+            référentiel. Le
             rapprochement entre une séance et l&apos;un d&apos;eux est en revanche une
             PROPOSITION, pas une lecture officielle du référentiel : à vous de l&apos;ajuster à
             la progression de votre établissement et aux compétences que votre équipe a décidé
