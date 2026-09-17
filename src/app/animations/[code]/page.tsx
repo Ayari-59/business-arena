@@ -268,7 +268,12 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
                       ] as const)
                     : ([["Équipes", `${atelier.reglages.equipes} équipes d'élèves`]] as const)),
                   ["Concurrents", `${atelier.reglages.bots} pilotés par la machine`],
-                  ["TVA", atelier.reglages.tva ? "activée à 20 %" : "désactivée"],
+                  // Le taux se règle dans les paramètres économiques de la
+                  // partie, et il n'est pas le même partout : vingt pour cent
+                  // dans le commerce de détail, dix dans la restauration sur
+                  // place. La page ne l'invente donc plus, les notes de chaque
+                  // fiche le disent.
+                  ["TVA", atelier.reglages.tva ? "activée" : "désactivée"],
                   ["Monde variable", atelier.reglages.mondeVariable ? "activé" : "décoché"],
                   ["Questions", atelier.reglages.quizMode],
                 ] as const
