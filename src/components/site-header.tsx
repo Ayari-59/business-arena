@@ -92,6 +92,13 @@ export function SiteHeader() {
       ref={cadre}
       className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/70 backdrop-blur-md supports-[backdrop-filter]:bg-slate-950/55 print:static print:bg-transparent print:hidden"
     >
+      {/* Un filet de laiton posé sur le bord bas de la barre, éteint aux deux
+          extrémités. C'est le même geste que le liseré d'une carte : ce qui
+          sépare deux surfaces se voit, mais ne se remarque pas. */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-amber-400/35 to-transparent print:hidden"
+      />
       {/* La rangée a le droit de passer à la ligne. Sans cela, un bouton qui
           apparaît (l'invite d'installation ne se montre que sur certains
           appareils) pousse la fin de la barre hors de l'écran, et personne ne
@@ -118,20 +125,33 @@ export function SiteHeader() {
                   href={lien.href}
                   title={lien.aide}
                   aria-current={estCourant(lien.href) ? "page" : undefined}
-                  className={`block rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+                  className={`group relative block px-3 py-1.5 text-sm font-medium transition-colors ${
                     estCourant(lien.href)
-                      ? "bg-amber-400/10 text-amber-200 ring-1 ring-inset ring-amber-400/20"
-                      : "text-slate-300 hover:bg-white/5 hover:text-white"
+                      ? "text-amber-200"
+                      : "text-slate-300 hover:text-white"
                   }`}
                 >
                   {lien.libelle}
+                  {/* La page courante porte un trait de laiton plein ; les
+                      autres le font naître du centre au survol. Une pastille
+                      pleine alourdissait une barre qui en compte trois. */}
+                  <span
+                    aria-hidden
+                    className={`absolute inset-x-3 bottom-0.5 h-px origin-center bg-amber-400/70 transition-transform duration-200 motion-reduce:transition-none ${
+                      estCourant(lien.href)
+                        ? "scale-x-100"
+                        : "scale-x-0 group-hover:scale-x-100"
+                    }`}
+                  />
                 </Link>
               </li>
             ))}
           </ul>
 
           {/* Les deux portes d'entrée, une par public. L'enseignant en ambre,
-              comme l'action principale du plan ; l'élève en clair. */}
+              comme l'action principale du plan ; l'élève en clair. Un filet les
+              sépare de ce qui ne fait qu'informer. */}
+          <span aria-hidden className="mx-1 hidden h-5 w-px bg-white/10 lg:block" />
           <div className="hidden items-center gap-1.5 lg:flex">
             {liensDAcces().map((lien) => (
               <Link
@@ -139,10 +159,10 @@ export function SiteHeader() {
                 href={lien.href}
                 title={lien.aide}
                 aria-current={estCourant(lien.href) ? "page" : undefined}
-                className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
+                className={`rounded-lg border px-3 py-1.5 text-sm font-medium shadow-sm transition duration-200 hover:-translate-y-px motion-reduce:transform-none motion-reduce:transition-none ${
                   lien.acces === "enseignant"
-                    ? "border-amber-400/40 text-amber-200 hover:border-amber-400 hover:bg-amber-400/10"
-                    : "border-white/15 text-slate-200 hover:border-white/40 hover:bg-white/5"
+                    ? "border-amber-400/45 bg-gradient-to-b from-amber-400/15 to-amber-400/5 text-amber-200 shadow-amber-950/40 hover:border-amber-400 hover:from-amber-400/25 hover:to-amber-400/10"
+                    : "border-white/15 bg-gradient-to-b from-white/8 to-transparent text-slate-200 hover:border-white/35 hover:from-white/12"
                 }`}
               >
                 {lien.libelle}
@@ -155,12 +175,30 @@ export function SiteHeader() {
             onClick={() => setOuvert((v) => !v)}
             aria-expanded={ouvert}
             aria-controls="plan-du-site"
-            className="flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900 px-2.5 py-1.5 text-xs text-slate-300 transition hover:border-white/25 hover:text-slate-100"
+            className={`flex items-center gap-2 rounded-lg border bg-slate-900 px-2.5 py-1.5 text-xs transition duration-200 motion-reduce:transition-none ${
+              ouvert
+                ? "border-amber-400/45 text-amber-200"
+                : "border-white/10 text-slate-300 hover:border-amber-400/35 hover:text-slate-100"
+            }`}
           >
-            <span aria-hidden className="flex flex-col gap-[3px]">
-              <span className="block h-px w-3.5 bg-current" />
-              <span className="block h-px w-3.5 bg-current" />
-              <span className="block h-px w-3.5 bg-current" />
+            {/* Trois filets qui se croisent quand le plan s'ouvre : le bouton
+                dit alors qu'il referme, sans changer de mot. */}
+            <span aria-hidden className="relative block h-[9px] w-3.5">
+              <span
+                className={`absolute left-0 block h-px w-3.5 bg-current transition-transform duration-200 motion-reduce:transition-none ${
+                  ouvert ? "top-1/2 rotate-45" : "top-0"
+                }`}
+              />
+              <span
+                className={`absolute left-0 top-1/2 block h-px w-3.5 bg-current transition-opacity duration-200 motion-reduce:transition-none ${
+                  ouvert ? "opacity-0" : "opacity-100"
+                }`}
+              />
+              <span
+                className={`absolute left-0 block h-px w-3.5 bg-current transition-transform duration-200 motion-reduce:transition-none ${
+                  ouvert ? "top-1/2 -rotate-45" : "top-full"
+                }`}
+              />
             </span>
             Menu
           </button>
@@ -187,7 +225,18 @@ export function SiteHeader() {
         {/* Le plan est plus haut qu'un écran de téléphone. Il défile donc
             dans son propre cadre : sans cela, les dernières entrées ne
             s'atteignent qu'en faisant défiler la page DERRIÈRE le menu. */}
-        <div className="max-h-[calc(100dvh-4.5rem)] overflow-y-auto rounded-2xl border border-white/10 bg-slate-900 p-4 shadow-2xl">
+        <div
+          className={`carte relative max-h-[calc(100dvh-4.5rem)] overflow-y-auto rounded-2xl p-4 supports-[backdrop-filter]:bg-slate-900/85 supports-[backdrop-filter]:backdrop-blur-xl ${
+            ouvert ? "motion-safe:animate-plan-ouvre" : ""
+          }`}
+        >
+          {/* Le même filet que sous la barre, posé sur l'arête haute du
+              panneau : les deux surfaces se répondent au lieu de se
+              superposer. */}
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-amber-400/55 to-transparent"
+          />
           <div className="space-y-1">
             {NAVIGATION.map((groupe) => {
               const ouvertGroupe = groupesOuverts.has(groupe.code);
@@ -198,17 +247,39 @@ export function SiteHeader() {
                     onClick={() => basculerGroupe(groupe.code)}
                     aria-expanded={ouvertGroupe}
                     aria-controls={`groupe-${groupe.code}`}
-                    className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left transition hover:bg-white/5"
+                    className="group flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition hover:bg-white/5"
                   >
-                    <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                    <span
+                      className={`shrink-0 text-xs font-semibold uppercase tracking-[0.2em] transition-colors ${
+                        ouvertGroupe
+                          ? "text-amber-300/90"
+                          : "text-slate-400 group-hover:text-slate-200"
+                      }`}
+                    >
                       {groupe.titre}
                     </span>
+                    {/* Le filet occupe ce que le titre laisse : c'est ce qui
+                        distingue une rubrique d'un lien, sans l'écrire. */}
                     <span
                       aria-hidden
-                      className={`text-slate-400 transition-transform ${ouvertGroupe ? "rotate-180" : ""}`}
+                      className={`h-px flex-1 transition-colors ${ouvertGroupe ? "bg-amber-400/25" : "bg-white/10"}`}
+                    />
+                    <svg
+                      aria-hidden
+                      viewBox="0 0 10 6"
+                      className={`h-1.5 w-2.5 shrink-0 transition-transform duration-200 motion-reduce:transition-none ${
+                        ouvertGroupe ? "rotate-180 text-amber-300/90" : "text-slate-400"
+                      }`}
                     >
-                      ⌄
-                    </span>
+                      <path
+                        d="M1 1l4 4 4-4"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
                   </button>
                   {ouvertGroupe ? (
                     <div id={`groupe-${groupe.code}`} className="mt-0.5 space-y-0.5 pb-1">
@@ -224,8 +295,11 @@ export function SiteHeader() {
 
           {/* Réglages : ce qui était éparpillé dans la barre, réuni et nommé. */}
           <div className="mt-3 border-t border-white/10 pt-3">
-            <p className="px-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-              Réglages
+            <p className="flex items-center gap-3 px-3">
+              <span className="shrink-0 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                Réglages
+              </span>
+              <span aria-hidden className="h-px flex-1 bg-white/10" />
             </p>
             <div className="mt-1.5 flex items-center justify-between gap-3 px-3">
               <span className="text-sm text-slate-300">Apparence</span>
@@ -265,16 +339,28 @@ function Entree({ lien, courant }: { lien: LienDeMenu; courant: boolean }) {
     <Link
       href={lien.href}
       aria-current={courant ? "page" : undefined}
-      className={`block rounded-lg px-3 py-2 transition ${
+      className={`group block rounded-lg px-3 py-2 transition duration-200 motion-reduce:transition-none ${
         principale
-          ? "border border-amber-400/40 bg-amber-950/20 hover:border-amber-400"
-          : `hover:bg-white/5 ${courant ? "bg-white/5" : ""}`
+          ? "border border-amber-400/40 bg-gradient-to-b from-amber-400/12 to-amber-950/20 shadow-[0_6px_20px_-12px] shadow-amber-400/60 hover:border-amber-400 hover:from-amber-400/20"
+          : `border-l-2 hover:bg-white/5 ${
+              courant ? "border-amber-400/70 bg-white/5" : "border-transparent hover:border-amber-400/50"
+            }`
       }`}
     >
       <span
-        className={`block text-sm font-medium ${principale ? "text-amber-300" : "text-slate-100"}`}
+        className={`flex items-center justify-between gap-3 text-sm font-medium ${principale ? "text-amber-300" : "text-slate-100"}`}
       >
         {lien.libelle}
+        {/* La flèche de l'entrée principale avance d'un cheveu au survol :
+            c'est le seul mouvement du plan, et il dit où l'on va. */}
+        {principale ? (
+          <span
+            aria-hidden
+            className="translate-x-0 text-amber-300 transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transform-none motion-reduce:transition-none"
+          >
+            →
+          </span>
+        ) : null}
       </span>
       <span className="mt-0.5 block text-xs leading-relaxed text-slate-400">{lien.aide}</span>
     </Link>

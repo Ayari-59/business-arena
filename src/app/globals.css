@@ -21,6 +21,8 @@
   --font-display:
     var(--font-brand-display), ui-serif, Georgia, "Times New Roman", serif;
 
+  --animate-plan-ouvre: plan-ouvre 0.18s ease-out;
+
   /* Accent laiton (thème sombre) : l'amber devient un or patiné. */
   --color-amber-200: #f0dca8;
   --color-amber-300: #e7cd8b;
@@ -33,6 +35,25 @@
   /* Bleu nuit encré : les deux surfaces les plus sombres se teintent de bleu. */
   --color-slate-950: #070c1a;
   --color-slate-900: #0e1526;
+}
+
+/* ---------------------------------------------------------------------------
+ * L'OUVERTURE DU PLAN DU SITE.
+ *
+ * Un panneau qui apparaît d'un coup se lit comme un défaut d'affichage. Il
+ * descend donc de six pixels en se révélant, le temps d'un battement de cils :
+ * assez pour que l'œil suive, trop court pour qu'on attende. `motion-safe`
+ * dans le composant : qui a demandé moins d'animation n'en reçoit aucune.
+ * ------------------------------------------------------------------------- */
+@keyframes plan-ouvre {
+  from {
+    opacity: 0;
+    transform: translateY(-0.375rem) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* ---------------------------------------------------------------------------
