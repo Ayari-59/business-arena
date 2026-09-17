@@ -15,6 +15,7 @@ import {
   scenarioCodeForLevel,
 } from "../../src/config/scenarios/registry";
 import { DIFFICULTY_PRESETS, LEGACY_PRESET } from "../../src/config/difficulty";
+import { formatDuTournoi, LIMITES_CONCOURS } from "../../src/config/concours";
 
 /**
  * Garde-fous des ateliers professionnels.
@@ -350,6 +351,39 @@ describe("ateliers professionnels", () => {
         a.reglages.mondeVariable,
         `${a.code} : un concours ne passe pas le monde variable`,
       ).toBe(false);
+    }
+  });
+
+  it("un tournoi annonce le format que son tirage produira", () => {
+    // Le piège : le nombre de groupes est le QUOTIENT ENTIER du nombre
+    // d'équipes par la taille visée, et la finale est plafonnée. Une fiche qui
+    // écrit ses groupes et ses finalistes à la main se trompe devant tout un
+    // campus. Elle déclare donc les trois nombres qui se règlent, et le reste
+    // se calcule du tirage réel.
+    for (const a of ATELIERS.filter((x) => x.reglages.concours)) {
+      const t = a.reglages.tournoi;
+      expect(t, `${a.code} : une fiche de concours sans configuration de tournoi`).toBeDefined();
+      expect(
+        t!.equipes,
+        `${a.code} : en dessous de deux équipes, le produit refuse les qualifications`,
+      ).toBeGreaterThanOrEqual(LIMITES_CONCOURS.equipesMin);
+      expect(t!.tailleGroupe).toBeGreaterThanOrEqual(LIMITES_CONCOURS.tailleGroupe.min);
+      expect(t!.tailleGroupe).toBeLessThanOrEqual(LIMITES_CONCOURS.tailleGroupe.max);
+      expect(t!.qualifiesParGroupe).toBeGreaterThanOrEqual(
+        LIMITES_CONCOURS.qualifiesParGroupe.min,
+      );
+      expect(t!.qualifiesParGroupe).toBeLessThanOrEqual(LIMITES_CONCOURS.qualifiesParGroupe.max);
+      // Le déroulé décrit une partie de qualification : le nombre d'équipes
+      // qu'il annonce est celui d'un groupe RÉEL, pas la taille visée.
+      const format = formatDuTournoi(t!);
+      expect(
+        a.reglages.equipes,
+        `${a.code} : ${a.reglages.equipes} équipes annoncées pour des groupes de ${format.equipesParGroupe.join(", ")}`,
+      ).toBe(Math.max(...format.equipesParGroupe));
+      expect(
+        format.finalistes,
+        `${a.code} : une finale doit réunir au moins deux équipes`,
+      ).toBeGreaterThanOrEqual(2);
     }
   });
 

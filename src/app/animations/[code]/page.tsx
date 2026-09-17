@@ -4,6 +4,7 @@ import { NotionsMobilisees } from "@/components/notions-mobilisees";
 import { notFound } from "next/navigation";
 import { ATELIERS, atelierByCode, dureeTotaleHeures } from "@/config/ateliers";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
+import { formatDuTournoi, libelleFormatTournoi } from "@/config/concours";
 import { scenarioByCode, SECTOR_LABELS } from "@/config/scenarios/registry";
 import { PrintButton } from "@/components/print-button";
 
@@ -78,6 +79,11 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
 
   const scenario = scenarioByCode(atelier.reglages.scenarioCode);
   const niveau = DIFFICULTY_PRESETS.find((p) => p.level === atelier.reglages.niveau);
+  // Une fiche de concours annonce un TOURNOI, pas une partie de classe : ses
+  // groupes et ses finalistes se calculent du tirage réel plutôt que de
+  // s'écrire à la main.
+  const tournoi = atelier.reglages.tournoi;
+  const format = tournoi ? formatDuTournoi(tournoi) : null;
   // Tri naturel : un tri de chaînes place « UE11 » avant « UE6 », et le ferait
   // aussi pour un dixième processus face au deuxième.
   // Le nombre de tours ne se déduit pas du nombre de séances : la dernière rend
@@ -230,7 +236,14 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
           </div>
         </Section>
 
-        <Section id="partie" titre="La partie à créer, une fois pour tout l'atelier">
+        <Section
+          id="partie"
+          titre={
+            tournoi
+              ? "Le tournoi à créer, une fois pour tout le campus"
+              : "La partie à créer, une fois pour tout l'atelier"
+          }
+        >
           <div className="mt-3 break-inside-avoid rounded-xl border border-amber-400/25 bg-amber-950/10 p-5 print:border-black/30 print:bg-transparent">
             <dl className="grid gap-2 text-sm sm:grid-cols-2">
               {(
@@ -241,7 +254,19 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
                     "Niveau",
                     `${atelier.reglages.niveau} · ${atelier.reglages.niveauNom}${niveau ? ` : ${niveau.tagline}` : ""}`,
                   ],
-                  ["Équipes", `${atelier.reglages.equipes} équipes d'élèves`],
+                  ...(tournoi
+                    ? ([
+                        ["Équipes inscrites", `${tournoi.equipes} sur l'ensemble du campus`],
+                        [
+                          "Groupes",
+                          `${tournoi.tailleGroupe} par groupe à la création, ${libelleFormatTournoi(tournoi).toLowerCase()}`,
+                        ],
+                        [
+                          "Qualifiés",
+                          `${tournoi.qualifiesParGroupe} par groupe, soit ${format!.finalistes} en finale`,
+                        ],
+                      ] as const)
+                    : ([["Équipes", `${atelier.reglages.equipes} équipes d'élèves`]] as const)),
                   ["Concurrents", `${atelier.reglages.bots} pilotés par la machine`],
                   ["TVA", atelier.reglages.tva ? "activée à 20 %" : "désactivée"],
                   ["Monde variable", atelier.reglages.mondeVariable ? "activé" : "décoché"],
@@ -263,7 +288,9 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
               href="/teacher"
               className="mt-4 inline-block rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400 print:hidden"
             >
-              Créer la partie dans mon espace enseignant
+              {tournoi
+                ? "Organiser le concours dans mon espace enseignant"
+                : "Créer la partie dans mon espace enseignant"}
             </Link>
           </div>
         </Section>

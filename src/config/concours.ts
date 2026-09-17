@@ -83,3 +83,84 @@ export const EXPLICATIONS_CONCOURS = [
   "Les meilleures équipes de chaque groupe au score IPG se qualifient pour la finale.",
   "En mode compétition, les décisions validées sont verrouillées et les indices sont limités.",
 ] as const;
+
+/**
+ * LA CONFIGURATION D'UN TOURNOI.
+ *
+ * Un championnat ne se règle pas comme une partie de classe. Ce qui le décrit,
+ * ce n'est pas « six équipes et deux concurrents simulés », c'est le nombre
+ * d'équipes inscrites, la taille visée des groupes, le nombre de qualifiés par
+ * groupe, et ce que ces trois nombres donnent une fois passés dans le tirage.
+ *
+ * Or le tirage ne fait pas ce qu'on croit. Le nombre de groupes est le
+ * QUOTIENT ENTIER du nombre d'équipes par la taille visée, et les équipes sont
+ * ensuite réparties à tour de rôle : quinze équipes en groupes de quatre ne
+ * font pas quatre groupes, elles en font trois, de cinq. Et la finale est
+ * plafonnée. Une fiche qui annonce « cinq finalistes » sans faire ce calcul se
+ * trompe devant tout un campus, et personne ne s'en aperçoit avant le jour J.
+ *
+ * Ces fonctions reproduisent donc, à la ligne près, ce que le produit exécute
+ * (`composeGroups` et `qualifiers`), pour que les fiches et les pages annoncent
+ * le tournoi qui aura lieu.
+ */
+export const LIMITES_CONCOURS = {
+  /** Taille de groupe acceptée à la création. */
+  tailleGroupe: { min: 2, max: 6 },
+  /** Qualifiés par groupe acceptés à la création. */
+  qualifiesParGroupe: { min: 1, max: 4 },
+  /** La finale ne dépasse jamais ce nombre d'équipes. */
+  finalistesMax: 8,
+  /** En dessous, il n'y a pas de tournoi : le produit refuse les qualifications. */
+  equipesMin: 2,
+} as const;
+
+export interface ConfigurationTournoi {
+  /** Équipes inscrites au concours. */
+  equipes: number;
+  /** Taille de groupe VISÉE à la création. */
+  tailleGroupe: number;
+  /** Qualifiés par groupe à la création. */
+  qualifiesParGroupe: number;
+}
+
+export interface FormatDuTournoi {
+  /** Groupes réellement tirés. */
+  groupes: number;
+  /** Équipes par groupe après répartition, de la plus petite à la plus grande. */
+  equipesParGroupe: number[];
+  /** Équipes qui joueront la finale. */
+  finalistes: number;
+  /** Vrai quand le plafond de la finale a rogné le nombre de qualifiés. */
+  plafonnee: boolean;
+}
+
+/** Ce que le tirage et la qualification donneront vraiment, sans le jouer. */
+export function formatDuTournoi(config: ConfigurationTournoi): FormatDuTournoi {
+  const equipes = Math.max(0, Math.trunc(config.equipes));
+  const taille = Math.max(LIMITES_CONCOURS.tailleGroupe.min, Math.trunc(config.tailleGroupe));
+  const groupes = equipes === 0 ? 0 : Math.max(1, Math.floor(equipes / taille));
+  // Répartition à tour de rôle : les premiers groupes reçoivent une équipe de
+  // plus quand la division ne tombe pas juste.
+  const base = groupes === 0 ? 0 : Math.floor(equipes / groupes);
+  const reste = groupes === 0 ? 0 : equipes % groupes;
+  const equipesParGroupe = Array.from({ length: groupes }, (_, i) => base + (i < reste ? 1 : 0));
+  const vises = groupes * Math.trunc(config.qualifiesParGroupe);
+  const finalistes =
+    groupes === 0 ? 0 : Math.min(LIMITES_CONCOURS.finalistesMax, Math.max(2, vises));
+  return {
+    groupes,
+    equipesParGroupe,
+    finalistes,
+    plafonnee: vises > LIMITES_CONCOURS.finalistesMax,
+  };
+}
+
+/** « 3 groupes de 5 équipes, 6 finalistes » : le format en une ligne. */
+export function libelleFormatTournoi(config: ConfigurationTournoi): string {
+  const f = formatDuTournoi(config);
+  if (f.groupes === 0) return "Aucune équipe inscrite.";
+  const tailles = [...new Set(f.equipesParGroupe)].sort((a, b) => a - b);
+  const taille = tailles.length === 1 ? `${tailles[0]}` : `${tailles[0]} à ${tailles[tailles.length - 1]}`;
+  const plafond = f.plafonnee ? ", la finale étant plafonnée" : "";
+  return `${pluriel(f.groupes, "groupe")} de ${taille} équipes, ${pluriel(f.finalistes, "finaliste")}${plafond}.`;
+}

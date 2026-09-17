@@ -136,6 +136,24 @@ export interface AtelierDefinition {
      * annonce bien ce que le concours impose.
      */
     concours?: true;
+    /**
+     * La configuration du TOURNOI, quand la fiche se joue en concours.
+     *
+     * Les réglages voisins décrivent une partie de classe et ne disent rien
+     * d'un championnat : ce qui le décrit, c'est le nombre d'équipes attendues
+     * sur le campus, la taille visée des groupes et le nombre de qualifiés par
+     * groupe. Le nombre de groupes et celui des finalistes ne s'écrivent pas à
+     * la main, ils se calculent du tirage réel (`formatDuTournoi`), parce que
+     * le produit divise par quotient entier et plafonne sa finale.
+     */
+    tournoi?: {
+      /** Équipes attendues sur l'ensemble du campus. */
+      equipes: number;
+      /** Taille de groupe à régler à la création du concours. */
+      tailleGroupe: number;
+      /** Qualifiés par groupe à régler à la création du concours. */
+      qualifiesParGroupe: number;
+    };
     notes: string;
   };
   seances: AtelierSeance[];

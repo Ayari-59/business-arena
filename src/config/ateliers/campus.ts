@@ -60,7 +60,7 @@ export const ATELIER_CAMPUS: AtelierDefinition = {
     periodiciteLabel: "Un trimestre par tour",
     niveau: 3,
     niveauNom: "Pilotage",
-    equipes: 4,
+    equipes: 5,
     bots: 0,
     tva: false,
     mondeVariable: false,
@@ -68,8 +68,9 @@ export const ATELIER_CAMPUS: AtelierDefinition = {
     tours: 6,
     effectifParEquipe: "un élève par filière, donc cinq élèves",
     concours: true,
+    tournoi: { equipes: 15, tailleGroupe: 5, qualifiesParGroupe: 2 },
     notes:
-      "Un seul concours pour tout le campus, avec des équipes mêlées : c'est ce qui rend le tirage aléatoire des groupes acceptable, puisque toutes les équipes portent la même composition. Le mode concours fixe ensuite presque tout, et ce qui suit se lit comme une donnée, pas comme un réglage. Le scénario est NOVA, le fabricant d'enceintes portables, imposé. Le niveau appliqué est Pilotage : prix, volume, communication, qualité, entretien, trésorerie et assurance sont ouverts ; le recrutement, l'équipement de l'atelier et l'emploi des excédents restent fermés. Ce nombre réduit de décisions est ce qui permet à une première technologique de tenir un poste sans être noyée. Les indices sont ramenés au troisième palier, plus bas qu'en classe, et une décision validée ne se reprend plus. Aucun concurrent simulé n'entre dans une partie de concours. Réglez des groupes de quatre équipes et un qualifié par groupe : la finale ne dépasse jamais huit équipes. Ouvrez une fenêtre d'étape couvrant les deux journées, et non chaque heure, pour qu'une équipe en retard ne bloque pas les autres.",
+      "Un seul concours pour tout le campus, avec des équipes mêlées : c'est ce qui rend le tirage aléatoire des groupes acceptable, puisque toutes les équipes portent la même composition. Le mode concours fixe ensuite presque tout, et ce qui suit se lit comme une donnée, pas comme un réglage. Le scénario est NOVA, le fabricant d'enceintes portables, imposé. Le niveau appliqué est Pilotage : prix, volume, communication, qualité, entretien, trésorerie et assurance sont ouverts ; le recrutement, l'équipement de l'atelier et l'emploi des excédents restent fermés. Ce nombre réduit de décisions est ce qui permet à une première technologique de tenir un poste sans être noyée. Les indices sont ramenés au troisième palier, plus bas qu'en classe, et une décision validée ne se reprend plus. Aucun concurrent simulé n'entre dans une partie de concours. La configuration du tournoi est celle d'un campus de quinze équipes, soit soixante-quinze élèves : des groupes de cinq et deux qualifiés par groupe, ce qui donne trois groupes de cinq et une finale à six. Le tirage divise par quotient entier, alors vérifiez votre propre format avant d'annoncer quoi que ce soit : quinze équipes en groupes de quatre ne font pas quatre groupes mais trois, de cinq. Avec dix équipes, gardez des groupes de cinq et deux qualifiés, ce qui donne deux groupes et quatre finalistes ; avec douze, des groupes de quatre et deux qualifiés donnent trois groupes et six finalistes. La finale ne dépasse jamais huit équipes, quel que soit le réglage. Ouvrez une fenêtre d'étape couvrant les deux journées, et non chaque heure, pour qu'une équipe en retard ne bloque pas les autres.",
   },
   seances: [
     {
@@ -633,7 +634,7 @@ export const ATELIER_CAMPUS: AtelierDefinition = {
     {
       question: "Combien d'équipes peut-on inscrire, et combien iront en finale ?",
       reponse:
-        "Le nombre d'équipes inscrites n'est pas borné : le produit tire autant de groupes que nécessaire, de deux à six équipes chacun selon votre réglage. La finale, elle, est plafonnée à huit équipes, et le nombre de qualifiés par groupe se règle de un à quatre. Pour un campus de vingt équipes mêlées, des groupes de quatre et un qualifié par groupe donnent cinq finalistes : c'est le réglage le plus lisible.",
+        "Le nombre d'équipes inscrites n'est pas borné, mais le tirage réserve une surprise : le nombre de groupes est le quotient entier du nombre d'équipes par la taille visée, et les équipes sont ensuite réparties à tour de rôle. Quinze équipes en groupes de quatre ne font donc pas quatre groupes mais trois, de cinq. La configuration retenue ici, quinze équipes en groupes de cinq avec deux qualifiés par groupe, donne trois groupes et une finale à six. La finale est plafonnée à huit équipes en toutes circonstances.",
     },
     {
       question: "Que font les équipes éliminées pendant la finale ?",
