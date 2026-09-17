@@ -279,6 +279,9 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
           (t.botProfile ?? undefined) as BotProfile | undefined,
         ),
         args.periodicity,
+        // Quand l'unité vendue est une période, la capacité d'accueil est un
+        // stock de places et ne suit pas la durée du tour.
+        { abonnement: definition.scenario.subscription !== undefined },
       ),
     })),
   );
