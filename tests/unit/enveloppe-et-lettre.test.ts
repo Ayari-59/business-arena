@@ -99,6 +99,30 @@ describe("la grille d'une distribution", () => {
     }
   });
 
+  it("tous les courriers d'une distribution ont la même hauteur", () => {
+    /*
+     * Une grille règle chaque rangée sur son propre contenu. À deux courriers
+     * tout allait bien — une seule rangée —, mais au troisième la seconde
+     * rangée prenait sa propre hauteur : mesuré au navigateur 471, 471, puis
+     * 453 px. Les colonnes cessaient de se répondre, et une distribution se
+     * lisait comme des cartes dépareillées.
+     *
+     * `auto-rows-fr` aligne toutes les rangées sur la plus haute. Ce test ne
+     * mesure rien — vitest n'a pas de navigateur —, il tient la déclaration
+     * qui l'a corrigé, et le commentaire dit ce qui a été mesuré.
+     */
+    for (const n of [2, 3, 4, 6]) {
+      expect(
+        grilleDeCourriers(n),
+        `à ${n} courriers, les rangées doivent partager la même hauteur`,
+      ).toContain("auto-rows-fr");
+    }
+    // Seul, il n'a personne à côté de qui s'aligner ; en colonne unique non
+    // plus, d'où le préfixe `sm:` sur la règle.
+    expect(grilleDeCourriers(1)).not.toContain("auto-rows-fr");
+    expect(grilleDeCourriers(2)).toContain("sm:auto-rows-fr");
+  });
+
   it("aucun écran ne redessine la grille dans son coin", () => {
     const sources = [
       "src/components/courrier-du-tour.tsx",

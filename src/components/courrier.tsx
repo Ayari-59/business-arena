@@ -488,9 +488,25 @@ export function Message({
  * vide : l'œil cherche le second, qui n'existe pas. Seul, il se centre et
  * prend la largeur d'une lettre — il devient ce qu'il est, la pièce du jour,
  * et non la première d'une paire.
+ *
+ * TOUS LES COURRIERS D'UNE DISTRIBUTION ONT LA MÊME HAUTEUR, `auto-rows-fr`.
+ *
+ * Une grille règle chaque rangée sur son propre contenu : à deux, les deux
+ * plis s'alignaient déjà (une seule rangée), mais au troisième la seconde
+ * rangée prenait sa propre hauteur — mesuré 471, 471, puis 453 px. Les
+ * colonnes cessaient de se répondre et la distribution se lisait comme des
+ * cartes dépareillées au lieu d'une pile.
+ *
+ * `auto-rows-fr` donne à toutes les rangées la même piste, réglée sur la plus
+ * haute : quatre courriers forment un carré, pas un escalier. Seulement à
+ * partir de `sm`, là où la grille a deux colonnes — en colonne unique, sur
+ * téléphone, personne n'est côte à côte et imposer la hauteur du plus long à
+ * tous ne ferait qu'allonger le défilement.
  */
 export function grilleDeCourriers(nombre: number): string {
-  return nombre <= 1 ? "grid gap-3 sm:mx-auto sm:max-w-md" : "grid gap-3 sm:grid-cols-2";
+  return nombre <= 1
+    ? "grid gap-3 sm:mx-auto sm:max-w-md"
+    : "grid gap-3 sm:auto-rows-fr sm:grid-cols-2";
 }
 
 /** Le pli distribué : l'enveloppe, puis la lettre qui en sort. */
