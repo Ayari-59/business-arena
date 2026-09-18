@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { CourrierRecommande, Enveloppe, Lettre } from "@/components/courrier";
+import { CourrierRecommande, Enveloppe } from "@/components/courrier";
 import { courrierParCode } from "@/config/courriers/registre";
 import { courrierDeRoutine } from "@/config/courriers/routine";
 
@@ -144,15 +144,16 @@ export function CourrierDuTour({
 
       {!ouvert ? (
         <div className="mt-4 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-          {/* la pile de plis, cachetés */}
-          <div className="relative h-36 w-56" aria-hidden>
+          {/* la pile de plis, cachetés, posée en éventail */}
+          <div className="relative h-40 w-60 shrink-0" aria-hidden>
             {[0, 1, 2].map((i) => (
-              <Enveloppe
+              <span
                 key={i}
                 className="absolute inset-0"
-                destinataire="L'entreprise"
-                liasse={null}
-              />
+                style={{ transform: `rotate(${(i - 1) * 3}deg) translateY(${i * -4}px)` }}
+              >
+                <Enveloppe className="h-full" destinataire="L'entreprise" liasse={null} />
+              </span>
             ))}
           </div>
           <button
@@ -165,9 +166,14 @@ export function CourrierDuTour({
         </div>
       ) : (
         <div aria-live="polite">
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {/*
+            Le courrier de routine s'ouvre comme les autres : c'est le geste
+            qui compte, et il doit être le même que le trimestre soit calme
+            ou non. Seul en scène, il occupe une colonne et pas deux.
+          */}
+          <div className={`mt-4 grid gap-3 ${vide ? "sm:max-w-md" : "sm:grid-cols-2"}`}>
             {vide ? (
-              <Lettre code={routine.code} destinataire="L'entreprise" />
+              <CourrierRecommande code={routine.code} destinataire="L'entreprise" />
             ) : (
               plis.map((p, i) => (
                 <CourrierRecommande

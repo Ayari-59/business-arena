@@ -125,7 +125,7 @@ export function DistributionCourrier({
               name="eventCode"
               value=""
               disabled={pending || (destinataire === "" && marchePlein)}
-              className="group relative h-24 w-36 rounded-lg transition hover:-translate-y-1 disabled:opacity-60"
+              className="group relative h-32 w-48 shrink-0 rounded-lg transition hover:-translate-y-1 disabled:opacity-60"
               title={
                 adresse
                   ? "Prendre un pli au hasard dans la liasse des entreprises"

@@ -66,7 +66,7 @@ export function Enveloppe({
   const reference = code ? referenceDuCourrier(code) : null;
 
   return (
-    <div className={`papier enveloppe relative rounded-lg p-3 ${className}`}>
+    <div className={`papier enveloppe rounded-lg p-3 ${className}`}>
       <div className="relative flex h-full min-h-full flex-col">
         {/* tranche gauche : recommandé en rouge, note de service en ardoise */}
         {bande ? (
@@ -82,7 +82,7 @@ export function Enveloppe({
           {/* expéditeur et cachet, en haut à gauche */}
           <span className="min-w-0">
             <span className="douce block text-xs font-semibold uppercase leading-snug tracking-wide">
-              {c ? c.expediteur : "Business Arena"}
+              {c ? c.expediteur : "Courrier à ouvrir"}
             </span>
             {nature ? (
               <span

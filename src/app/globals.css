@@ -210,26 +210,46 @@ h1 {
  * en absolu puis s'efface vers le bas. animationDelay inline = la distribution
  * arrive pli par pli, comme un facteur qui pose le courrier.
  * ------------------------------------------------------------------------- */
+/*
+ * La scène est une COLONNE FLEXIBLE, et non une boîte à hauteur relative :
+ * dans une rangée, la lettre au corps court doit descendre aussi bas que la
+ * plus longue. Avec des pourcentages, les deux ne tombaient pas tout à fait
+ * juste — une trentaine de pixels d'écart, assez pour que la rangée se voie.
+ */
 .pli-scene {
   perspective: 1200px;
   min-height: 220px;
+  display: flex;
+  flex-direction: column;
 }
 
 .pli-ouverture {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
   min-height: 220px;
 }
 
+/*
+ * Le retard est posé en ligne sur `.pli-ouverture`, qui n'anime rien : ce sont
+ * ses deux enfants qui s'animent, et `inherit` va chercher la valeur chez le
+ * parent. Sans ce mot-là, toute une distribution s'ouvrirait d'un bloc — le
+ * facteur poserait les six plis d'un seul geste.
+ */
 .pli-ouverture > .enveloppe {
   position: absolute;
   inset: 0;
   z-index: 2;
   transform-origin: 50% 100%;
   animation: pli-sortie 1s cubic-bezier(0.4, 0.2, 0.2, 1) forwards;
+  animation-delay: inherit;
 }
 
 .pli-ouverture > .lettre {
+  flex: 1;
   animation: pli-entree 1s cubic-bezier(0.4, 0.2, 0.2, 1) forwards;
+  animation-delay: inherit;
 }
 
 @keyframes pli-sortie {
@@ -352,6 +372,14 @@ h1 {
  * L'ENVELOPPE : le même papier que la lettre, plus le rabat et les marques.
  */
 .enveloppe {
+  /*
+   * Positionnée ici, et non par un utilitaire sur le composant : le rabat est
+   * en absolu et lui demande un ancrage, mais l'appelant doit pouvoir la
+   * placer lui-même (la pile de l'arène, l'ouverture d'un pli). Une classe
+   * `relative` écrite dans le composant gagnait contre le `absolute` de
+   * l'appelant, et la pile se dépliait en colonne hors de sa carte.
+   */
+  position: relative;
   overflow: hidden;
 }
 
