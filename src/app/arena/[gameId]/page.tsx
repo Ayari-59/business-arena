@@ -657,22 +657,40 @@ export default async function ArenaPage({
             className="scroll-mt-24 rounded-xl border border-amber-400/30 bg-slate-950/40"
           >
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-400/20 px-3 py-2.5 sm:px-4">
-              <span className="flex items-center gap-2 text-sm font-semibold text-amber-200">
-                ✏️ {periodLabel(view.roundDays, view.currentRound)} en cours
-              </span>
-              {/* LA SEULE CHOSE QUE LE BANDEAU DISAIT SEUL. « Décisions
-                  enregistrées » se lisait tout en haut de la page ; le reste du
-                  bandeau étant redite, l'état revient ici, sur l'en-tête du tour
-                  qu'il qualifie. Le formulaire, plus bas, le dit aussi (« Mettre
-                  à jour mes décisions validées »), mais il faut avoir ouvert
-                  l'onglet Décider pour le voir. */}
-              {view.kind === "solo" ? null : view.pendingDecisions !== null ? (
-                <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-0.5 text-xs font-medium text-emerald-300">
-                  ✓ Décisions enregistrées · en attente de la clôture
+              {/* LE RANG SUR LE TOTAL. « Tour 2 » seul ne dit pas s'il en reste
+                  six ou un : la frise le montre en segments, elle ne le chiffre
+                  pas, et c'est le bandeau retiré qui portait ce « / N ». Il est
+                  ici, sur le tour qu'il compte. */}
+              <span className="flex items-baseline gap-1.5 text-sm font-semibold text-amber-200">
+                <span aria-hidden>✏️</span>
+                {periodLabel(view.roundDays, view.currentRound)}
+                <span className="text-xs font-normal tabular-nums text-amber-200/70">
+                  / {view.roundsCount}
                 </span>
-              ) : (
-                <span className="text-xs text-slate-400">Résultats à la clôture du tour.</span>
-              )}
+              </span>
+              <span className="ml-auto flex flex-wrap items-center justify-end gap-2">
+                {/* LA SEULE CHOSE QUE LE BANDEAU DISAIT SEUL. « Décisions
+                    enregistrées » se lisait tout en haut de la page ; le reste
+                    du bandeau étant redite, l'état revient ici, sur l'en-tête du
+                    tour qu'il qualifie. Le formulaire, plus bas, le dit aussi
+                    (« Mettre à jour mes décisions validées »), mais il faut
+                    avoir ouvert l'onglet Décider pour le voir. */}
+                {view.kind === "solo" ? null : view.pendingDecisions !== null ? (
+                  <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-0.5 text-xs font-medium text-emerald-300">
+                    ✓ Décisions enregistrées · en attente de la clôture
+                  </span>
+                ) : (
+                  <span className="text-xs text-slate-400">Résultats à la clôture du tour.</span>
+                )}
+                {/* « en cours » quitte le titre pour l'autre bout de la ligne :
+                    collé au libellé, il allongeait la seule chose qu'on lit en
+                    diagonale (le numéro du tour) ; en pastille à droite, il
+                    qualifie la ligne comme « résultats livrés » qualifie celle
+                    d'un tour clos. Même place, même forme, sens inverse. */}
+                <span className="rounded-full border border-amber-400/30 bg-amber-400/10 px-2.5 py-0.5 text-xs font-medium text-amber-200">
+                  en cours
+                </span>
+              </span>
             </div>
 
             {/* Le tour précédent vient de livrer ses résultats (solo : la
