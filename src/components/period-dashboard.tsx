@@ -3,8 +3,8 @@ import { COMMUNICATION_AXIS_LABELS } from "@/engine/market/communication";
 import { KpiCard } from "@/components/kpi-card";
 import { lectureBancaire } from "@/components/lecture-bancaire";
 import { ligneTresorerie } from "@/components/ligne-tresorerie";
-import { EventCard } from "@/components/event-card";
-import { cardByCode } from "@/config/events/cards";
+import { CourrierRecommande } from "@/components/courrier";
+import { courrierParCode } from "@/config/courriers/registre";
 import { BpiPanel } from "@/components/bpi-panel";
 import { RevenueChart, TreasuryChart, MarketShareChart } from "@/components/charts";
 import { StudyReportsPanel } from "@/components/study-reports";
@@ -155,19 +155,19 @@ export function PeriodDashboard({
           <div className="space-y-3">
             <HautsFaits faits={faits} />
             {/*
-              LE TIRAGE D'ABORD. Les cartes tombées sur l'équipe ce tour
-              expliquent une part des chiffres qui suivent ; reléguées au fond
-              de l'onglet Marché, elles n'étaient jamais vues en solo, où
+              LE COURRIER D'ABORD. Les lettres reçues par l'entreprise ce
+              tour expliquent une part des chiffres qui suivent ; reléguées au
+              fond de l'onglet Marché, elles n'étaient jamais lues en solo, où
               personne ne les annonce.
             */}
             {period.events.length > 0 ? (
-              <section aria-label="Cartes tirées ce tour">
+              <section aria-label="Courrier reçu ce tour">
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-400">
-                  🃏 Cartes tirées ce tour
+                  📬 Le courrier de ce tour
                 </p>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {period.events.map((code, i) => (
-                    <EventCard key={code} code={code} delayMs={i * 450} />
+                    <CourrierRecommande key={code} code={code} delayMs={i * 450} />
                   ))}
                 </div>
               </section>
@@ -689,7 +689,7 @@ export function PeriodDashboard({
                 🛡️ Assurance souscrite ({formatEuro(r.insurance.premium)}).{" "}
                 {r.insurance.neutralizedEvents.length > 0
                   ? `Sinistre couvert ce tour : ${r.insurance.neutralizedEvents
-                      .map((c) => cardByCode.get(c)?.title ?? c)
+                      .map((c) => courrierParCode.get(c)?.objet ?? c)
                       .join(", ")}. Effets neutralisés.`
                   : "Aucun sinistre couvert ce tour."}
               </p>

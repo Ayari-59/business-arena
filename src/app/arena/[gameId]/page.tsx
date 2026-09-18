@@ -9,8 +9,8 @@ import { SaisonDuTour } from "@/components/saison-du-tour";
 import { AlerteTresorerie } from "@/components/alerte-tresorerie";
 import { PassageAuTour } from "@/components/passage-au-tour";
 import { periodLabel } from "@/config/scenarios/periodicity";
-import { EventCard } from "@/components/event-card";
-import { cardByCode } from "@/config/events/cards";
+import { CourrierRecommande } from "@/components/courrier";
+import { courrierParCode } from "@/config/courriers/registre";
 import { DecisionForm } from "@/components/decision-form";
 import { TeamNameForm } from "@/components/team-name-form";
 import { ChoixEquipe } from "@/components/choix-equipe";
@@ -21,9 +21,9 @@ import { PeriodDecisionsRecap } from "@/components/period-decisions-recap";
 import { SegmentedTabs } from "@/components/segmented-tabs";
 import { RoundStatusPoller } from "@/components/round-status-poller";
 import { RoundStatusBanner } from "@/components/round-status-banner";
-import { EventBanner, cartesQuiMeConcernent } from "@/components/event-banner";
+import { BandeauCourriers, courriersQuiMeConcernent } from "@/components/bandeau-courriers";
 import { TourSimule } from "@/components/tour-simule";
-import { TirageDuTour } from "@/components/tirage-du-tour";
+import { CourrierDuTour } from "@/components/courrier-du-tour";
 import { GammeLigne } from "@/components/gamme-ligne";
 import { FaitsCles } from "@/components/faits-cles";
 import { Tiroir } from "@/components/tiroir";
@@ -155,7 +155,7 @@ export default async function ArenaPage({
   );
 
   // MARCHÉ & ALERTES : ce qui a bougé et ce qu'on vous signale — où vous en êtes
-  // (dès le 2ᵉ tour), les cartes événements annoncées, la saison.
+  // (dès le 2ᵉ tour), le courrier distribué, la saison.
   const alertesSection = (
     <>
       {view.roundBriefing ? (
@@ -166,58 +166,58 @@ export default async function ArenaPage({
           <p className="text-sm leading-relaxed">{view.roundBriefing.headline}</p>
         </section>
       ) : null}
-      {view.announcedEventCards.length > 0 ? (
+      {view.courriersAnnonces.length > 0 ? (
         <section className="rounded-xl border border-amber-400/30 bg-slate-900 p-3 sm:p-5">
-          <p className="mb-2 text-sm font-semibold text-amber-400">⚡ La carte, en détail</p>
+          <p className="mb-2 text-sm font-semibold text-amber-400">📬 Le courrier, en détail</p>
           <div className="grid gap-3 sm:grid-cols-2">
-            {view.announcedEventCards.map((card, i) => (
-              <EventCard
-                key={`${card.code}-${card.teamId ?? "market"}`}
-                code={card.code}
+            {view.courriersAnnonces.map((courrier, i) => (
+              <CourrierRecommande
+                key={`${courrier.code}-${courrier.teamId ?? "market"}`}
+                code={courrier.code}
                 delayMs={i * 450}
-                announced
-                targetLabel={
-                  card.teamId
-                    ? card.isMyTeam
-                      ? "🎯 Votre équipe"
-                      : `→ ${card.teamName ?? "Une autre équipe"}`
-                    : "Toute la classe"
+                annonce
+                destinataire={
+                  courrier.teamId
+                    ? courrier.isMyTeam
+                      ? "🎯 Votre entreprise"
+                      : `→ ${courrier.teamName ?? "Une autre entreprise"}`
+                    : "Tout le marché"
                 }
-                highlight={card.isMyTeam}
+                surligne={courrier.isMyTeam}
               />
             ))}
           </div>
         </section>
       ) : null}
       {(() => {
-        // CE QUI PÈSE ENCORE : une carte de deux tours tirée au tour précédent
-        // s'applique à celui-ci. L'équipe décide en le sachant, pas en le
-        // découvrant aux résultats.
-        const encore = cartesQuiMeConcernent(view.activeEventCards).map((c) => ({
+        // CE QUI PÈSE ENCORE : une lettre qui vaut deux trimestres, reçue au
+        // tour précédent, s'applique à celui-ci. L'équipe décide en le
+        // sachant, pas en le découvrant aux résultats.
+        const encore = courriersQuiMeConcernent(view.courriersEnCours).map((c) => ({
           ...c,
-          roundsLeft: view.activeEventCards.find(
+          roundsLeft: view.courriersEnCours.find(
             (a) => a.code === c.code && a.teamId === c.teamId,
           )!.roundsLeft,
         }));
         return encore.length > 0 ? (
           <section className="carte p-3 sm:p-5">
             <p className="mb-2 text-sm font-semibold text-amber-400">
-              ⏳ Encore en jeu ce tour
+              ⏳ Encore en vigueur ce tour
             </p>
             <p className="mb-3 text-xs text-slate-400">
-              {encore.length > 1 ? "Ces cartes ont été tirées" : "Cette carte a été tirée"} à un tour
+              {encore.length > 1 ? "Ces courriers sont arrivés" : "Ce courrier est arrivé"} à un tour
               précédent et {encore.length > 1 ? "pèsent" : "pèse"} toujours sur celui-ci.
             </p>
             <div className="grid gap-3 sm:grid-cols-2">
-              {encore.map((card, i) => (
-                <EventCard
-                  key={`${card.code}-${card.teamId ?? "market"}`}
-                  code={card.code}
+              {encore.map((courrier, i) => (
+                <CourrierRecommande
+                  key={`${courrier.code}-${courrier.teamId ?? "market"}`}
+                  code={courrier.code}
                   delayMs={i * 450}
-                  targetLabel={`${card.teamId ? "🎯 Votre équipe" : "Tout le marché"} · encore ${
-                    card.roundsLeft > 1 ? `${card.roundsLeft} tours` : "ce tour"
-                  }`}
-                  highlight={card.isMyTeam}
+                  destinataire={`${
+                    courrier.teamId ? "🎯 Votre entreprise" : "Tout le marché"
+                  } · encore ${courrier.roundsLeft > 1 ? `${courrier.roundsLeft} tours` : "ce tour"}`}
+                  surligne={courrier.isMyTeam}
                 />
               ))}
             </div>
@@ -436,9 +436,9 @@ export default async function ArenaPage({
       ) : null}
 
       {/* ── Cartes annoncées : visibles quelle que soit la période dépliée ── */}
-      {!finished && view.announcedEventCards.length > 0 ? (
+      {!finished && view.courriersAnnonces.length > 0 ? (
         <div>
-          <EventBanner cards={view.announcedEventCards} />
+          <BandeauCourriers courriers={view.courriersAnnonces} />
         </div>
       ) : null}
 
@@ -757,11 +757,11 @@ export default async function ArenaPage({
                 */}
                 {view.kind === "solo" && !finished ? (
                   <div className="mb-4">
-                    <TirageDuTour
+                    <CourrierDuTour
                       gameId={gameId}
                       round={view.currentRound}
                       periodeLabel={periodLabel(view.roundDays, view.currentRound).toLowerCase()}
-                      cartes={view.upcomingDraw}
+                      plis={view.upcomingDraw}
                     />
                   </div>
                 ) : null}
@@ -794,7 +794,7 @@ export default async function ArenaPage({
                       ? {
                           premium: view.insuranceOffer.premium,
                           coveredLabels: view.insuranceOffer.coveredEventCodes.map(
-                            (c) => cardByCode.get(c)?.title ?? c,
+                            (c) => courrierParCode.get(c)?.objet ?? c,
                           ),
                         }
                       : null

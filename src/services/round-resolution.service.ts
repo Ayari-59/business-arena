@@ -16,7 +16,10 @@ import {
   debriefRound,
   openSituationsForRound,
 } from "@/services/pedagogy.service";
-import { TEACHER_DRAWABLE_CODES, TEAM_CARD_CODES } from "@/config/events/cards";
+import {
+  COURRIERS_ENTREPRISE_CODES,
+  COURRIERS_MARCHE_CODES,
+} from "@/config/courriers/registre";
 import { botDecisions, botPersonalityFromSeed, soldByProduct, type BotProfile } from "@/engine/bots";
 import { carryOverDecisions, fallbackDecisions } from "@/services/decision.service";
 import { assertPlayable } from "@/services/play-lock";
@@ -50,22 +53,22 @@ import type {
  * Ce module isole le pipeline de résolution (verrou optimiste, simulation,
  * persistance, scoring, pédagogie) et les fonctions qui en dépendent
  * directement : soumission de décisions, clôture par l'enseignant, tirage
- * de cartes événement.
+ * du courrier de l'entreprise.
  *
  * Le driver HTTP Neon n'offre pas de transactions : la résolution est
  * idempotente via un verrou optimiste sur rounds.status (open → resolving),
  * et re-tentable — chaque écriture est un upsert ou une insertion idempotente.
  */
 
-/** Carte jouée par l'enseignant, en attente d'application à la clôture. */
-export interface PendingEventCard {
+/** Courrier distribué par l'enseignant, en attente d'application à la clôture. */
+export interface CourrierAnnonce {
   code: string;
   /** null = toute la classe (portée marché) ; sinon l'équipe ciblée. */
   teamId: string | null;
 }
 
-export function readPendingEvents(profile: unknown): PendingEventCard[] {
-  const p = profile as { pendingEvents?: PendingEventCard[]; pendingEventCodes?: string[] };
+export function readPendingEvents(profile: unknown): CourrierAnnonce[] {
+  const p = profile as { pendingEvents?: CourrierAnnonce[]; pendingEventCodes?: string[] };
   if (Array.isArray(p.pendingEvents)) return p.pendingEvents;
   // rétro-compatibilité : ancien format (codes marché uniquement)
   if (Array.isArray(p.pendingEventCodes))
@@ -80,16 +83,17 @@ export function activeEventsOf(profile: unknown): EventInstance[] {
 }
 
 /**
- * Les cartes jouées par l'enseignant pour le tour, prêtes pour le moteur. Une
- * seule fonction, parce que la clôture ET l'aperçu du tirage doivent voir
- * exactement la même liste : c'est elle qui décale le tirage seedé.
+ * Les courriers distribués par l'enseignant pour le tour, prêts pour le
+ * moteur. Une seule fonction, parce que la clôture ET l'aperçu de la
+ * distribution doivent voir exactement la même liste : c'est elle qui décale
+ * le tirage seedé.
  */
 export function injectedEvents(
   scenario: EngineScenarioConfig,
-  pendingCards: readonly PendingEventCard[],
+  courriers: readonly CourrierAnnonce[],
   activeEvents: readonly EventInstance[],
 ): EventInstance[] {
-  return pendingCards.flatMap((card) => {
+  return courriers.flatMap((card) => {
     const def = scenario.events.find((e) => e.code === card.code);
     if (!def) return [];
     if (activeEvents.some((e) => e.code === card.code && e.companyId === (card.teamId ?? undefined)))
@@ -664,22 +668,23 @@ export async function resolveCurrentRound(args: {
 }
 
 /**
- * Tirage manuel d'une carte événement par l'enseignant (animation de classe).
+ * Distribution d'un courrier par l'enseignant (animation de classe).
+ *
  * Mode apprentissage uniquement : en compétition, seul le tirage seedé fait
- * foi (équité). La carte est ANNONCÉE aux joueurs et appliquée à la clôture
- * du tour courant. Cartes de portée marché uniquement (équité du tirage manuel).
+ * foi (équité). Le courrier est ANNONCÉ aux joueurs et appliqué à la clôture
+ * du tour courant.
  */
-export async function drawEventCardForNextRound(args: {
+export async function distribuerUnCourrier(args: {
   gameId: string;
   teacherId: string;
   eventCode?: string;
-  /** Carte « équipe » : l'équipe ciblée (tirage physique par équipe en classe). */
+  /** Courrier adressé à UNE entreprise (distribution ciblée en classe). */
   teamId?: string;
 }): Promise<{ eventCode: string; teamId: string | null }> {
   const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
   if (!game) throw new Error("Partie introuvable");
   if (game.createdBy !== args.teacherId)
-    throw new Error("Seul l'enseignant qui a créé la partie peut tirer une carte");
+    throw new Error("Seul l'enseignant qui a créé la partie peut distribuer un courrier");
   if (game.status !== "running") throw new Error("Cette partie est terminée");
   if (game.mode !== "learning")
     throw new Error("Mode compétition : seul le tirage aléatoire seedé fait foi (équité)");
@@ -698,18 +703,18 @@ export async function drawEventCardForNextRound(args: {
 
   const scenario = parseScenarioConfig(game.scenarioSnapshot);
   const scenarioCodes = new Set(scenario.events.map((e) => e.code));
-  // deck marché (toute la classe) ou deck équipe (carte ciblée)
-  const pool = (targetTeamId ? TEAM_CARD_CODES : TEACHER_DRAWABLE_CODES).filter((code) =>
+  // liasse du marché (toute la classe) ou liasse des entreprises (pli adressé)
+  const pool = (targetTeamId ? COURRIERS_ENTREPRISE_CODES : COURRIERS_MARCHE_CODES).filter((code) =>
     scenarioCodes.has(code),
   );
-  if (pool.length === 0) throw new Error("Aucune carte tirable dans ce scénario");
+  if (pool.length === 0) throw new Error("Aucun courrier distribuable dans ce scénario");
 
   const pending = readPendingEvents(game.difficultyProfile);
-  if (pending.length >= 4) throw new Error("Quatre cartes sont déjà en jeu pour ce tour");
+  if (pending.length >= 4) throw new Error("Quatre courriers sont déjà distribués pour ce tour");
   if (targetTeamId && pending.filter((p) => p.teamId === targetTeamId).length >= 1)
-    throw new Error("Cette équipe a déjà une carte en jeu ce tour");
+    throw new Error("Cette équipe a déjà reçu un courrier ce tour");
   if (!targetTeamId && pending.filter((p) => p.teamId === null).length >= 2)
-    throw new Error("Deux cartes « toute la classe » sont déjà en jeu pour ce tour");
+    throw new Error("Deux courriers « tout le marché » sont déjà distribués pour ce tour");
 
   const activeEvents = (game.difficultyProfile as { activeEvents?: EventInstance[] })
     ?.activeEvents;
@@ -721,12 +726,12 @@ export async function drawEventCardForNextRound(args: {
       !activeCodes.has(c) &&
       !pending.some((p) => p.code === c && p.teamId === targetTeamId),
   );
-  if (candidates.length === 0) throw new Error("Toutes les cartes de ce deck sont déjà en jeu");
+  if (candidates.length === 0) throw new Error("Toute la liasse est déjà distribuée");
 
   let eventCode: string;
   if (args.eventCode) {
     if (!candidates.includes(args.eventCode))
-      throw new Error("Cette carte n'est pas tirable actuellement");
+      throw new Error("Ce courrier n'est pas distribuable actuellement");
     eventCode = args.eventCode;
   } else {
     eventCode = candidates[randomInt(candidates.length)]!;

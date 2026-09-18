@@ -67,9 +67,9 @@ const CONTRACTS: FormContract[] = [
     sources: ["src/app/teacher/games/[gameId]/page.tsx"],
   },
   {
-    nom: "tirage d'une carte événement",
-    action: { file: "src/app/teacher/actions.ts", fn: "drawCardAction" },
-    sources: ["src/components/card-deck.tsx"],
+    nom: "distribution d'un courrier",
+    action: { file: "src/app/teacher/actions.ts", fn: "distribuerCourrierAction" },
+    sources: ["src/components/distribution-courrier.tsx"],
   },
   {
     nom: "affectation d'un élève à une équipe (enseignant)",

@@ -203,70 +203,87 @@ h1 {
 }
 
 /* ---------------------------------------------------------------------------
- * Cartes événement : retournement 3D à l'apparition (pur théâtre CSS — le
- * tirage réel est fait par le moteur seedé). animationDelay inline = cascade.
+ * LE COURRIER : une enveloppe qu'on ouvre, une lettre qui sort.
+ *
+ * L'ancienne carte se retournait sur elle-même ; un pli, lui, s'ouvre. La
+ * lettre est dans le flux et donne sa hauteur au bloc, l'enveloppe la couvre
+ * en absolu puis s'efface vers le bas. animationDelay inline = la distribution
+ * arrive pli par pli, comme un facteur qui pose le courrier.
  * ------------------------------------------------------------------------- */
-.card-flip-scene {
-  perspective: 1000px;
+.pli-scene {
+  perspective: 1200px;
   min-height: 220px;
 }
 
-.card-flip {
+.pli-ouverture {
   position: relative;
-  width: 100%;
-  height: 100%;
   min-height: 220px;
-  transform-style: preserve-3d;
-  transform: rotateY(180deg);
-  animation: card-flip-reveal 0.9s cubic-bezier(0.4, 0.2, 0.2, 1) forwards;
 }
 
-@keyframes card-flip-reveal {
+.pli-ouverture > .enveloppe {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  transform-origin: 50% 100%;
+  animation: pli-sortie 1s cubic-bezier(0.4, 0.2, 0.2, 1) forwards;
+}
+
+.pli-ouverture > .lettre {
+  animation: pli-entree 1s cubic-bezier(0.4, 0.2, 0.2, 1) forwards;
+}
+
+@keyframes pli-sortie {
   0% {
-    transform: rotateY(180deg) scale(0.92);
+    opacity: 1;
+    transform: translateY(0) rotateX(0deg);
   }
-  60% {
-    transform: rotateY(0deg) scale(1.03);
+  40% {
+    opacity: 1;
+    transform: translateY(3%) rotateX(0deg);
   }
   100% {
-    transform: rotateY(0deg) scale(1);
+    opacity: 0;
+    transform: translateY(34%) rotateX(38deg);
+  }
+}
+
+@keyframes pli-entree {
+  0% {
+    opacity: 0;
+    transform: translateY(12%) scale(0.97);
+  }
+  45% {
+    opacity: 0.15;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
 /*
- * La FACE est dans le flux, le DOS par-dessus en absolu : c'est le contenu de
- * la face qui donne sa hauteur à la carte. Les deux faces en absolu laissaient
- * la scène à sa hauteur minimale, et une carte au récit un peu long débordait
- * de son cadre — la mini-leçon coupée sous la bordure.
+ * LA LETTRE prend toute la hauteur que la grille lui donne : dans une rangée,
+ * le courrier au corps court s'aligne sur le plus long. Une pile de lettres de
+ * tailles inégales ne se lit pas comme une pile.
  */
-.card-face {
-  backface-visibility: hidden;
-}
-
-/*
- * Et la face prend toute la hauteur que la grille lui donne : dans une rangée,
- * la carte au récit court s'aligne sur la plus haute. Une main de cartes de
- * tailles inégales ne se lit pas comme une main.
- */
-.card-front {
+.lettre {
   position: relative;
-  /* seule, une carte garde une hauteur de carte ; en rangée, celle de la plus haute */
   min-height: max(100%, 20rem);
   display: flex;
   flex-direction: column;
   /*
-   * Le liseré porte la couleur de l'enseigne (`--enseigne`, posée par la
-   * carte). Sur fond nuit, un voile à 40 % suffit ; sur fond clair, le même
-   * voile s'efface dans le blanc — on l'assombrit d'un peu d'encre.
+   * Le liseré porte la couleur de la nature du courrier (`--cachet`, posée par
+   * la lettre). Sur fond nuit, un voile à 40 % suffit ; sur fond clair, le
+   * même voile s'efface dans le blanc — on l'assombrit d'un peu d'encre.
    */
-  border-color: color-mix(in oklab, var(--enseigne, #d8b45c) 40%, transparent);
+  border-color: color-mix(in oklab, var(--cachet, #d8b45c) 40%, transparent);
 }
 
-[data-theme="clair"] .card-front {
-  border-color: color-mix(in oklab, var(--enseigne, #d8b45c) 65%, #1e293b);
+[data-theme="clair"] .lettre {
+  border-color: color-mix(in oklab, var(--cachet, #d8b45c) 65%, #1e293b);
 }
 
-.card-front > * {
+.lettre > * {
   flex: 1;
 }
 
@@ -292,49 +309,69 @@ h1 {
   }
 }
 
-.card-back {
-  position: absolute;
-  inset: 0;
-  transform: rotateY(180deg);
-}
-
 /*
- * Le dos de carte : un fond de nuit et un motif de chevrons en laiton, assez
- * discret pour ne pas concurrencer la marque, assez présent pour qu'une pioche
- * face cachée se lise comme un paquet et non comme un rectangle vide.
+ * L'ENVELOPPE est un OBJET, pas une surface du site : papier ivoire et encre
+ * sombre dans les deux thèmes, comme une enveloppe posée sur un bureau reste
+ * blanche quelle que soit la couleur du bureau. Elle s'imprime donc telle
+ * quelle, sans inversion.
  */
-.card-back-face {
-  padding: 6px;
-  background-color: #060b18;
+.enveloppe {
+  --encre: #1f2937;
+  --papier: #f3ede1;
+  color: var(--encre);
+  background-color: var(--papier);
   background-image:
-    repeating-linear-gradient(
-      45deg,
-      rgba(251, 191, 36, 0.09) 0 2px,
-      transparent 2px 12px
-    ),
-    repeating-linear-gradient(
-      -45deg,
-      rgba(251, 191, 36, 0.09) 0 2px,
-      transparent 2px 12px
-    ),
-    radial-gradient(circle at 50% 50%, #0f172a 0%, #060b18 70%);
+    linear-gradient(120deg, rgba(0, 0, 0, 0.05) 0%, transparent 35%),
+    radial-gradient(circle at 80% 15%, rgba(0, 0, 0, 0.05) 0%, transparent 45%);
+  border: 1px solid rgba(31, 41, 55, 0.45);
+  overflow: hidden;
 }
 
 /*
- * Le dos d'une carte est un OBJET, pas une surface du site : il reste de nuit
- * sur fond clair, comme le dos d'un vrai jeu garde sa couleur sur une table
- * blanche. Mais le thème clair assombrit l'ambre pour qu'il lise sur du blanc,
- * et sur ce dos de nuit la marque et le mot « Arena » s'éteignaient. Ici,
- * l'ambre reprend son laiton de nuit.
+ * LE RABAT : le triangle du dos, vu par transparence sur le devant. C'est lui
+ * qui fait lire un rectangle comme une enveloppe, avant même qu'on lise un
+ * mot. Deux traits, pas de dessin.
  */
-[data-theme="clair"] .card-back-face {
-  --color-amber-400: #d8b45c;
-  --color-amber-300: #e7cd8b;
+.enveloppe::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 46%;
+  background: linear-gradient(to bottom, rgba(31, 41, 55, 0.07), rgba(31, 41, 55, 0.02));
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  pointer-events: none;
+}
+
+/*
+ * La bande rouge du recommandé, sur la tranche gauche. Le texte se lit de bas
+ * en haut, comme sur une vraie liasse : c'est le sens de lecture d'une tranche
+ * d'enveloppe posée à plat.
+ */
+.enveloppe-recommande {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  letter-spacing: 0.18em;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* Le timbre : un rectangle à bord dentelé, obtenu au masque radial. */
+.enveloppe-timbre {
+  background:
+    radial-gradient(circle at 50% 0, transparent 0 2px, #fff 2px) 0 0 / 8px 8px repeat-x,
+    radial-gradient(circle at 50% 100%, transparent 0 2px, #fff 2px) 0 100% / 8px 8px repeat-x,
+    radial-gradient(circle at 0 50%, transparent 0 2px, #fff 2px) 0 0 / 8px 8px repeat-y,
+    radial-gradient(circle at 100% 50%, transparent 0 2px, #fff 2px) 100% 0 / 8px 8px repeat-y,
+    #fff;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .card-flip {
+  .pli-ouverture > .enveloppe {
+    display: none;
+  }
+  .pli-ouverture > .lettre {
     animation: none;
-    transform: rotateY(0deg);
+    opacity: 1;
+    transform: none;
   }
 }

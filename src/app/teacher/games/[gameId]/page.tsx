@@ -12,7 +12,7 @@ import { estParDefaut } from "@/config/decision-source";
 import { MISSED_POLICY_LABELS, MISSED_POLICY_HELP } from "@/config/missed-situation";
 import { CompositionEquipes } from "@/components/composition-equipes";
 import { SubventionsPanel } from "@/components/subventions-panel";
-import { CardDeck } from "@/components/card-deck";
+import { DistributionCourrier } from "@/components/distribution-courrier";
 import { CloseRoundForm } from "@/components/close-round-form";
 import { SubmitButton } from "@/components/submit-button";
 import { GuardedForm } from "@/components/guarded-action";
@@ -303,9 +303,9 @@ export default async function TeacherGamePage({
       <SubventionsPanel gameId={view.gameId} demandes={view.aidRequests} />
 
       {!finished && view.mode === "learning" ? (
-        <CardDeck
+        <DistributionCourrier
           gameId={view.gameId}
-          pendingEvents={view.pendingEvents}
+          courriersEnAttente={view.pendingEvents}
           teams={view.teams
             .filter((t) => t.controller === "human")
             .map((t) => ({ teamId: t.teamId, name: t.name }))}

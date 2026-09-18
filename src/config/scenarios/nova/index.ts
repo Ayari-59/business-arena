@@ -114,9 +114,9 @@ const rawNova = {
   },
   // structure totale ≈ 96 000 €/tour : 91 000 décaissés + 5 000 d'amortissements
   fixedCostsPerRound: 91000,
-  // Le deck d'événements (§19) : chaque entrée est une CARTE (habillage dans
-  // src/config/events/cards.ts). Probabilités faibles : 1 à 2 cartes par
-  // partie en moyenne, en plus des cartes scriptées.
+  // La liasse d'événements (§19) : chaque entrée est un COURRIER (habillage
+  // dans src/config/courriers/). Probabilités faibles : 1 à 2 courriers par
+  // partie en moyenne, en plus des courriers scriptés.
   events: [
     {
       code: "raw_material_spike",

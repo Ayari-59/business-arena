@@ -2,56 +2,77 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { TourSimule } from "@/components/tour-simule";
-import { TirageDuTour } from "@/components/tirage-du-tour";
+import { CourrierDuTour } from "@/components/courrier-du-tour";
 
 /**
- * VIVRE LE TIRAGE. En solo, le moteur tire à la clôture et le joueur ne
- * découvrait ses cartes qu'aux résultats. Le tirage étant lu d'avance, il se
- * retourne à l'ouverture du tour : pioche face cachée, un geste, les cartes.
+ * VIVRE LE COURRIER. En solo, le moteur tire à la clôture et le joueur ne
+ * découvrait les événements qu'aux résultats. Le tirage étant lu d'avance, le
+ * courrier s'ouvre à l'entrée du tour : l'enveloppe cachetée, un geste, la
+ * lettre. Et le facteur passe même quand rien ne tombe.
  */
-describe("la pioche du tour", () => {
+describe("le courrier du tour", () => {
   const base = { gameId: "g", round: 3, periodeLabel: "trimestre 3" };
-  const cartes = [
+  const plis = [
     { code: "economic_downturn", teamId: null, isMyTeam: false },
     { code: "machine_breakdown", teamId: "moi", isMyTeam: true },
   ];
 
-  it("commence face cachée, avec le geste pour retourner", () => {
-    const html = renderToStaticMarkup(createElement(TirageDuTour, { ...base, cartes }));
-    expect(html).toContain("Retourner les cartes");
-    expect(html).toContain("Le sort du tour est scellé");
-    // rien du tirage ne fuit avant le geste
-    expect(html).not.toContain("Conjoncture morose");
-    expect(html).not.toContain("Panne machine");
+  it("arrive cacheté, avec le geste pour ouvrir", () => {
+    const html = renderToStaticMarkup(createElement(CourrierDuTour, { ...base, plis }));
+    expect(html).toContain("Ouvrir le courrier");
+    expect(html).toContain("Le facteur est passé");
+    // rien du contenu ne fuit avant le geste
+    expect(html).not.toContain("recul de la consommation");
+    expect(html).not.toContain("Arrêt de la ligne principale");
   });
 
-  it("retournée, elle montre les cartes et dit sur qui elles tombent", () => {
-    const html = renderToStaticMarkup(createElement(TirageDuTour, { ...base, cartes, revele: true }));
-    expect(html).toContain("2 cartes pèsent sur ce tour");
-    expect(html).toContain("Conjoncture morose");
+  it("ouvert, il montre les lettres, leur expéditeur et leur destinataire", () => {
+    const html = renderToStaticMarkup(createElement(CourrierDuTour, { ...base, plis, ouvert: true }));
+    expect(html).toContain("2 courriers pèsent sur ce tour");
+    expect(html).toContain("Observatoire régional de la consommation");
+    expect(html).toContain("recul de la consommation des ménages");
     expect(html).toContain("Tout le marché");
-    expect(html).toContain("Panne machine");
+    expect(html).toContain("Arrêt de la ligne principale");
     expect(html).toContain("Votre entreprise");
-    expect(html).not.toContain("Retourner les cartes");
+    expect(html).not.toContain("Ouvrir le courrier");
   });
 
-  it("lue, la carte s'efface : une ligne, et de quoi la revoir", () => {
-    const html = renderToStaticMarkup(createElement(TirageDuTour, { ...base, cartes, note: true }));
-    expect(html).toContain("Tirage du trimestre 3");
-    expect(html).toContain("Conjoncture morose · Panne machine");
-    expect(html).toContain("Revoir");
-    // le récit, l'effet et la mini-leçon ne reviennent qu'en revoyant
-    expect(html).not.toContain("La consommation des ménages");
-    expect(html).not.toContain("Retourner les cartes");
-    // et avant de noter, le geste pour noter est là
-    const ouverte = renderToStaticMarkup(createElement(TirageDuTour, { ...base, cartes, revele: true }));
+  it("classé, il tient en une ligne, et se relit", () => {
+    const html = renderToStaticMarkup(createElement(CourrierDuTour, { ...base, plis, classe: true }));
+    expect(html).toContain("Courrier du trimestre 3");
+    expect(html).toContain("recul de la consommation des ménages");
+    expect(html).toContain("Relire");
+    // le corps, l'effet et la leçon ne reviennent qu'en relisant
+    expect(html).not.toContain("Le pouvoir d&#x27;achat recule");
+    expect(html).not.toContain("Ouvrir le courrier");
+    // et avant de classer, le geste pour classer est là
+    const ouverte = renderToStaticMarkup(
+      createElement(CourrierDuTour, { ...base, plis, ouvert: true }),
+    );
     expect(ouverte).toContain("pris note");
   });
 
-  it("un tour sans carte le dit, au lieu de laisser croire que le tirage n'existe pas", () => {
-    const html = renderToStaticMarkup(createElement(TirageDuTour, { ...base, cartes: [], revele: true }));
-    expect(html).toContain("Aucune carte ce tour");
-    expect(html).toContain("le marché tourne sans surprise");
+  it("une enveloppe n'est jamais vide : un trimestre calme apporte un courrier de routine", () => {
+    const html = renderToStaticMarkup(
+      createElement(CourrierDuTour, { ...base, plis: [], ouvert: true }),
+    );
+    expect(html).not.toContain("Aucune carte");
+    expect(html).toContain("Rien qui engage ce trimestre");
+    // une vraie lettre, avec un expéditeur, un objet et aucun effet
+    expect(html).toContain("Objet :");
+    expect(html).toContain("Aucun effet sur ce trimestre");
+    expect(html).toContain("Courrier de routine");
+  });
+
+  it("le courrier de routine ne change pas d'un rendu à l'autre", () => {
+    const a = renderToStaticMarkup(createElement(CourrierDuTour, { ...base, plis: [], ouvert: true }));
+    const b = renderToStaticMarkup(createElement(CourrierDuTour, { ...base, plis: [], ouvert: true }));
+    expect(a).toBe(b);
+    // mais il change d'un tour à l'autre
+    const autre = renderToStaticMarkup(
+      createElement(CourrierDuTour, { ...base, round: 4, plis: [], ouvert: true }),
+    );
+    expect(autre).not.toBe(a);
   });
 });
 

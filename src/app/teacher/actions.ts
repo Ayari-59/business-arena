@@ -14,7 +14,7 @@ import {
 import {
   closeCurrentRound,
   createClassGame,
-  drawEventCardForNextRound,
+  distribuerUnCourrier,
   setGameSchedule,
   setQuizMode,
   setRankingRevealed,
@@ -516,32 +516,32 @@ export async function setCompetitionPublicPageAction(
   return { error: null };
 }
 
-export interface DrawCardState {
+export interface DistributionState {
   error: string | null;
-  drawnCode: string | null;
+  codeDistribue: string | null;
 }
 
-/** Tirage d'une carte événement (animation de classe, mode apprentissage). */
-export async function drawCardAction(
+/** Distribution d'un courrier (animation de classe, mode apprentissage). */
+export async function distribuerCourrierAction(
   gameId: string,
-  _prev: DrawCardState,
+  _prev: DistributionState,
   formData: FormData,
-): Promise<DrawCardState> {
+): Promise<DistributionState> {
   const session = await getSession();
-  if (!session) return { error: "Session expirée.", drawnCode: null };
+  if (!session) return { error: "Session expirée.", codeDistribue: null };
   const eventCode = String(formData.get("eventCode") ?? "").trim() || undefined;
   const teamId = String(formData.get("teamId") ?? "").trim() || undefined;
   try {
-    const { eventCode: drawn } = await drawEventCardForNextRound({
+    const { eventCode: distribue } = await distribuerUnCourrier({
       gameId,
       teacherId: session.userId,
       eventCode,
       teamId,
     });
     revalidatePath(`/teacher/games/${gameId}`);
-    return { error: null, drawnCode: drawn };
+    return { error: null, codeDistribue: distribue };
   } catch (error) {
-    return { error: error instanceof Error ? error.message : "Erreur.", drawnCode: null };
+    return { error: error instanceof Error ? error.message : "Erreur.", codeDistribue: null };
   }
 }
 

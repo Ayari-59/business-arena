@@ -2,8 +2,8 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import { eq } from "drizzle-orm";
 
 /**
- * Tirage manuel de cartes (animation de classe) sur Postgres embarqué :
- * cartes marché (toute la classe) et cartes équipe (ciblées) — annoncées,
+ * Distribution manuelle du courrier (animation de classe) sur Postgres
+ * embarqué : courriers de marché (toute la classe) et plis adressés — annoncés,
  * appliquées à la clôture (l'effet ciblé ne touche QUE l'équipe visée),
  * puis purgées. Interdit en mode compétition.
  */
@@ -19,7 +19,7 @@ import { registerTeacher, getTeacherOrgId } from "@/services/auth.service";
 import {
   closeCurrentRound,
   createClassGame,
-  drawEventCardForNextRound,
+  distribuerUnCourrier,
   getGameView,
   getTeacherGameView,
   joinGameByCode,
@@ -74,12 +74,12 @@ beforeAll(async () => {
   botTeamId = view!.teams.find((t) => t.controller === "bot")!.teamId;
 });
 
-describe("tirage manuel de cartes (mode apprentissage)", () => {
-  it("carte marché : jouée par l'enseignant, annoncée à toute la classe", async () => {
+describe("distribution manuelle du courrier (mode apprentissage)", () => {
+  it("courrier de marché : distribué par l'enseignant, annoncé à toute la classe", async () => {
     await expect(
-      drawEventCardForNextRound({ gameId, teacherId: studentId }),
+      distribuerUnCourrier({ gameId, teacherId: studentId }),
     ).rejects.toThrow(); // seul l'enseignant tire
-    const { eventCode, teamId } = await drawEventCardForNextRound({
+    const { eventCode, teamId } = await distribuerUnCourrier({
       gameId,
       teacherId,
       eventCode: "supplier_discount",
@@ -92,22 +92,22 @@ describe("tirage manuel de cartes (mode apprentissage)", () => {
       { code: "supplier_discount", teamId: null, teamName: null },
     ]);
     const playerView = await getGameView(gameId, studentId);
-    expect(playerView!.announcedEventCards).toEqual([
+    expect(playerView!.courriersAnnonces).toEqual([
       { code: "supplier_discount", teamId: null, teamName: null, isMyTeam: false },
     ]);
   });
 
-  it("carte équipe : ciblée sur une équipe humaine, signalée à son destinataire", async () => {
-    // pas de carte équipe sur un bot
+  it("pli adressé : envoyé à une équipe humaine, signalé à son destinataire", async () => {
+    // pas de pli adressé à un bot
     await expect(
-      drawEventCardForNextRound({ gameId, teacherId, teamId: botTeamId }),
+      distribuerUnCourrier({ gameId, teacherId, teamId: botTeamId }),
     ).rejects.toThrow(/introuvable/);
-    // une carte marché ne peut pas venir du deck équipe et inversement
+    // un courrier de marché ne peut pas venir de la liasse des entreprises et inversement
     await expect(
-      drawEventCardForNextRound({ gameId, teacherId, eventCode: "team_overtime" }),
-    ).rejects.toThrow(/tirable/);
+      distribuerUnCourrier({ gameId, teacherId, eventCode: "team_overtime" }),
+    ).rejects.toThrow(/distribuable/);
 
-    const { eventCode, teamId } = await drawEventCardForNextRound({
+    const { eventCode, teamId } = await distribuerUnCourrier({
       gameId,
       teacherId,
       eventCode: "local_supplier_deal",
@@ -125,25 +125,25 @@ describe("tirage manuel de cartes (mode apprentissage)", () => {
     expect(teacherView!.pendingEvents[1]!.teamName).toBeTruthy();
 
     const playerView = await getGameView(gameId, studentId);
-    const targeted = playerView!.announcedEventCards.find((c) => c.code === "local_supplier_deal");
+    const targeted = playerView!.courriersAnnonces.find((c) => c.code === "local_supplier_deal");
     expect(targeted).toMatchObject({ teamId: studentTeamId, isMyTeam: true });
   });
 
-  it("plafonds : 1 carte équipe par équipe, 2 cartes marché, pas de doublon", async () => {
-    // l'équipe a déjà sa carte
+  it("plafonds : 1 pli par entreprise, 2 courriers de marché, pas de doublon", async () => {
+    // l'entreprise a déjà reçu son pli
     await expect(
-      drawEventCardForNextRound({ gameId, teacherId, teamId: studentTeamId }),
-    ).rejects.toThrow(/déjà une carte/);
-    // pas deux fois la même carte marché
+      distribuerUnCourrier({ gameId, teacherId, teamId: studentTeamId }),
+    ).rejects.toThrow(/déjà reçu un courrier/);
+    // pas deux fois le même courrier de marché
     await expect(
-      drawEventCardForNextRound({ gameId, teacherId, eventCode: "supplier_discount" }),
-    ).rejects.toThrow(/tirable/);
-    // seconde carte marché OK…
-    await drawEventCardForNextRound({ gameId, teacherId, eventCode: "viral_campaign" });
+      distribuerUnCourrier({ gameId, teacherId, eventCode: "supplier_discount" }),
+    ).rejects.toThrow(/distribuable/);
+    // second courrier de marché OK…
+    await distribuerUnCourrier({ gameId, teacherId, eventCode: "viral_campaign" });
     // …mais pas une troisième
     await expect(
-      drawEventCardForNextRound({ gameId, teacherId, eventCode: "rate_cut" }),
-    ).rejects.toThrow(/toute la classe/i);
+      distribuerUnCourrier({ gameId, teacherId, eventCode: "rate_cut" }),
+    ).rejects.toThrow(/tout le marché/i);
   });
 
   it("à la clôture : l'effet ciblé ne touche QUE l'équipe visée, puis purge", async () => {
@@ -151,14 +151,14 @@ describe("tirage manuel de cartes (mode apprentissage)", () => {
     await closeCurrentRound({ gameId, teacherId });
 
     const view = await getGameView(gameId, studentId);
-    // visibilité côté équipe ciblée : les 2 cartes marché + SA carte équipe
+    // visibilité côté entreprise destinataire : les 2 courriers de marché + SON pli
     expect(view!.lastEvents).toContain("supplier_discount");
     expect(view!.lastEvents).toContain("viral_campaign");
     expect(view!.lastEvents).toContain("local_supplier_deal");
-    // Trois cartes d'un tour : rien ne pèse encore sur le tour suivant. Une
-    // carte de deux tours y figurerait, avec ce qu'il lui reste à courir.
-    expect(view!.activeEventCards).toEqual([]);
-    expect(view!.announcedEventCards).toEqual([]); // purgées
+    // Trois courriers d'un tour : rien ne pèse encore sur le tour suivant. Une
+    // lettre qui vaut deux trimestres y figurerait, avec ce qu'il lui reste à courir.
+    expect(view!.courriersEnCours).toEqual([]);
+    expect(view!.courriersAnnonces).toEqual([]); // purgées
 
     // effet cumulé pour l'équipe ciblée : matières ×0,9 (marché) ×0,92 (équipe)
     const produced = view!.lastResult!.production.produced;
@@ -167,7 +167,7 @@ describe("tirage manuel de cartes (mode apprentissage)", () => {
       4,
     );
 
-    // le bot, lui, n'a que l'effet marché (×0,9) et ne voit pas la carte équipe
+    // le bot, lui, n'a que l'effet marché (×0,9) et ne reçoit pas le pli adressé
     const round1 = (await db.select().from(rounds).where(eq(rounds.gameId, gameId))).find(
       (r) => r.index === 1,
     )!;
@@ -203,7 +203,7 @@ describe("tirage manuel de cartes (mode apprentissage)", () => {
     await startQualification({ competitionId: competition.competitionId, organizerId: teacherId });
     const competitionGame = (await db.select().from(games)).find((g) => g.mode === "competition")!;
     await expect(
-      drawEventCardForNextRound({ gameId: competitionGame.id, teacherId }),
+      distribuerUnCourrier({ gameId: competitionGame.id, teacherId }),
     ).rejects.toThrow(/compétition/);
   });
 });

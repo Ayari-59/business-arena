@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { SCENARIOS } from "../../src/config/scenarios/registry";
 import type { SituationDef } from "../../src/config/scenarios/situation-kit";
-import { EVENT_CARDS } from "../../src/config/events/cards";
+import { COURRIERS } from "../../src/config/courriers/registre";
 
 /**
  * CE QUE LE JEU RACONTE DOIT ÊTRE CE QUE LE JEU FAIT.
@@ -104,9 +104,9 @@ describe("rien ne promet un plan de trésorerie que l'arène ne demande plus", (
   const fautes = (nom: string, texte: string) =>
     PROMESSES.filter((r) => r.test(texte)).map((r) => `${nom} : ${r}`);
 
-  it("aucune carte événement ne félicite l'élève pour un plan qu'il n'a pas déposé", () => {
-    const fautifs = EVENT_CARDS.flatMap((c) =>
-      fautes(c.code, [c.title, c.flavor, c.effectLabel, c.conceptHint].join(" ")),
+  it("aucun courrier ne félicite l'élève pour un plan qu'il n'a pas déposé", () => {
+    const fautifs = COURRIERS.flatMap((c) =>
+      fautes(c.code, [c.expediteur, c.objet, c.corps, c.effet, c.enJeu].join(" ")),
     );
     expect(fautifs, fautifs.join("\n")).toEqual([]);
   });

@@ -41,7 +41,7 @@ vi.mock("@/services/competition.service", () => ({
 vi.mock("@/services/game.service", () => ({
   closeCurrentRound: vi.fn(),
   createClassGame: vi.fn(),
-  drawEventCardForNextRound: vi.fn(),
+  distribuerUnCourrier: vi.fn(),
   setQuizMode: vi.fn(),
 }));
 // `teacher/actions.ts` importe setMissedPolicy de debrief.service, qui charge

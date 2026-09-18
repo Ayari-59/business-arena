@@ -52,7 +52,7 @@ export const DEFAULT_RSE_CONFIG: RseEngineConfig = {
   },
 };
 
-/** Codes des cartes événement RSE (Lot 2C / 2C.2), reliés à leur habillage. */
+/** Codes des courriers RSE (Lot 2C / 2C.2), reliés à leur habillage. */
 export const RSE_CARD_CODES = {
   label: "rse_label",
   badBuzz: "rse_bad_buzz",

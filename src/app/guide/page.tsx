@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/guide" },
   title: "Guide de prise en main",
   description:
-    "Démarrer en 2 minutes : lancer une partie, rejoindre une classe, animer un tour, tirer les cartes événements et lire ses résultats.",
+    "Démarrer en 2 minutes : lancer une partie, rejoindre une classe, animer un tour, distribuer le courrier et lire ses résultats.",
 };
 
 /** Guide de prise en main : statique, sans base de données — toujours disponible. */
@@ -16,7 +16,7 @@ const SECTIONS = [
   { id: "eleves", label: "🎮 Côté élèves" },
   { id: "enseignants", label: "🧑‍🏫 Côté enseignants" },
   { id: "concours", label: "🏆 Les concours" },
-  { id: "cartes", label: "🃏 Les cartes" },
+  { id: "courrier", label: "📬 Le courrier" },
   { id: "bpi", label: "📊 Le score IPG" },
   { id: "etablissements", label: "🏛️ Établissements" },
   { id: "faq", label: "❓ Questions fréquentes" },
@@ -219,10 +219,10 @@ export default function GuidePage() {
               silencieuse n&apos;est jamais bloquante : à la clôture, ses dernières décisions
               sont reconduites.
             </Step>
-            <Step n={4} title="Pimentez avec une carte événement (mode apprentissage)">
-              Tirez une carte au hasard ou jouez-en une choisie, pour toute la classe ou contre
-              une seule équipe. La carte est annoncée à tous et s&apos;applique à la clôture.
-              Voir la section suivante pour le deck physique.
+            <Step n={4} title="Distribuez le courrier (mode apprentissage)">
+              Prenez un pli au hasard ou choisissez-en un, pour tout le marché ou pour une seule
+              entreprise. Le courrier est annoncé à tous et s&apos;applique à la clôture. Voir la
+              section suivante pour la liasse à imprimer.
             </Step>
             <Step n={5} title="Clôturez le tour">
               Un clic : la simulation calcule tous les résultats, le débriefing pédagogique se
@@ -233,7 +233,7 @@ export default function GuidePage() {
             <Step n={6} title="Finissez l'année en championnat">
               Créez un concours : inscriptions par code, groupes tirés au sort (tirage seedé,
               auditable), parties en mode compétition : décisions verrouillées après validation,
-              indices limités au niveau 3, aucun tirage manuel de cartes. Qualification à l&apos;IPG,
+              indices limités au niveau 3, aucune distribution manuelle de courrier. Qualification à l&apos;IPG,
               finale, podium. Le déroulé complet est{" "}
               <a href="#concours" className="text-amber-300 underline-offset-4 hover:underline">
                 décrit ci-dessous
@@ -261,9 +261,9 @@ export default function GuidePage() {
               L&apos;enseignant clôt les inscriptions : les équipes sont tirées au sort dans des
               groupes de la taille choisie (tirage seedé, rejouable pour audit). Chaque groupe
               joue une partie complète en <strong className="text-slate-200">mode compétition</strong> :
-              décisions verrouillées après validation, indices limités aux niveaux 1 à 3, aucun
-              tirage manuel de cartes. L&apos;enseignant clôt les tours de chaque partie depuis son
-              pilotage habituel.
+              décisions verrouillées après validation, indices limités aux niveaux 1 à 3, aucune
+              distribution manuelle de courrier. L&apos;enseignant clôt les tours de chaque partie
+              depuis son pilotage habituel.
             </Step>
             <Step n={3} title="Finale">
               Quand toutes les parties de qualification sont terminées, les meilleures équipes de
@@ -278,38 +278,39 @@ export default function GuidePage() {
         </Section>
 
         <Section
-          id="cartes"
-          title="🃏 Les cartes événements"
-          intro="L'habillage théâtral du moteur : chaque carte est un événement économique réel de la simulation."
+          id="courrier"
+          title="📬 Le courrier de l'entreprise"
+          intro="L'habillage du moteur : chaque courrier est un événement économique réel de la simulation, avec l'expéditeur qui l'envoie."
         >
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-xl border border-amber-400/20 bg-slate-950 p-5">
-              <p className="text-sm font-semibold text-amber-300">🌍 Cartes marché</p>
+              <p className="text-sm font-semibold text-amber-300">🌍 Courrier de marché</p>
               <p className="mt-2 text-sm leading-relaxed text-slate-400">
-                Frappent toute la classe : flambée des matières, buzz, conjoncture, taux,
-                catastrophe naturelle… Maximum 2 par tour.
+                Adressé à toute la classe : revalorisation tarifaire du fournisseur, note de
+                conjoncture, révision des taux par la banque, arrêté de catastrophe naturelle…
+                Maximum 2 par tour.
               </p>
             </div>
             <div className="rounded-xl border border-sky-400/20 bg-slate-950 p-5">
-              <p className="text-sm font-semibold text-sky-300">🎯 Cartes équipe</p>
+              <p className="text-sm font-semibold text-sky-300">🎯 Pli adressé</p>
               <p className="mt-2 text-sm leading-relaxed text-slate-400">
-                Ciblent une seule entreprise : panne, cyberattaque, commande exceptionnelle,
-                banquier compréhensif… Une carte par équipe et par tour.
+                Adressé à une seule entreprise : rapport de panne, incident de sécurité, commande
+                ferme, mise en demeure de la banque… Un pli par entreprise et par tour.
               </p>
             </div>
           </div>
           <p className="mt-4 text-sm leading-relaxed text-slate-400">
-            Pour un vrai tirage en classe,{" "}
+            Pour une vraie distribution en classe,{" "}
             <Link
-              href="/teacher/cards/print"
+              href="/teacher/courriers/print"
               className="text-amber-300 underline-offset-4 hover:underline"
             >
-              imprimez le deck physique
+              imprimez la liasse
             </Link>{" "}
-            (A4, dos et face à plier, sans recto-verso) : faites tirer la carte à la main, puis
-            saisissez-la dans le deck numérique pour qu&apos;elle s&apos;applique à la
-            simulation. Certaines cartes se couvrent par l&apos;assurance. Vos élèves
-            découvriront l&apos;arbitrage tout seuls.
+            (A4, enveloppe et lettre à plier, sans recto-verso) : faites ouvrir l&apos;enveloppe
+            à l&apos;équipe, puis saisissez le courrier dans l&apos;application pour qu&apos;il
+            s&apos;applique à la simulation. Certains sinistres se couvrent par l&apos;assurance.
+            Vos élèves découvriront l&apos;arbitrage tout seuls.
           </p>
         </Section>
 
@@ -391,8 +392,8 @@ export default function GuidePage() {
                 "Jamais. Ils ne coûtent que des points pédagogiques sur la situation concernée. L'économie de la simulation reste rigoureusement équitable.",
               ],
               [
-                "Le tirage de cartes est-il équitable en concours ?",
-                "En mode compétition, le tirage manuel est désactivé : seuls les événements tirés par le générateur aléatoire seedé (auditable, identique pour un même scénario) font foi.",
+                "La distribution du courrier est-elle équitable en concours ?",
+                "En mode compétition, la distribution manuelle est désactivée : seuls les événements tirés par le générateur aléatoire seedé (auditable, identique pour un même scénario) font foi.",
               ],
               [
                 "Puis-je changer la durée d'un tour ?",

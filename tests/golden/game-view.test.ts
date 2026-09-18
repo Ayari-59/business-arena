@@ -104,11 +104,11 @@ describe("GameView NOVA — tour initial (round 1, aucune résolution)", () => {
     expect(view!.pendingDecisions).toBeNull();
   });
 
-  it("announcedEventCards est vide au tour 1", async () => {
+  it("courriersAnnonces est vide au tour 1", async () => {
     const gameId = await createSoloGame(userId, "quarter", 2);
     const view = await getGameView(gameId, userId);
-    expect(view!.announcedEventCards).toHaveLength(0);
-    expect(view!.activeEventCards).toHaveLength(0);
+    expect(view!.courriersAnnonces).toHaveLength(0);
+    expect(view!.courriersEnCours).toHaveLength(0);
   });
 
   it("difficulty et vocabulary sont présents", async () => {

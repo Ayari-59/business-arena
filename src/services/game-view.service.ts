@@ -18,7 +18,7 @@ import {
   peutChoisirSonEquipe,
   type EquipeEtSesMembres,
 } from "@/services/affectation.service";
-import { cardByCode } from "@/config/events/cards";
+import { courrierParCode } from "@/config/courriers/registre";
 import type { EventInstance } from "@/engine/types";
 import { peekEventDraw } from "@/engine/events";
 import { activeEventsOf, injectedEvents } from "@/services/round-resolution.service";
@@ -134,34 +134,36 @@ export interface GameView {
   peutChoisirSonEquipe: boolean;
   /** Décisions déjà validées par l'équipe pour le tour courant (mode classe). */
   pendingDecisions: RoundDecisions | null;
-  /** Cartes événement annoncées par l'enseignant pour le tour courant. */
-  announcedEventCards: {
+  /** Courriers distribués par l'enseignant pour le tour courant. */
+  courriersAnnonces: {
     code: string;
-    /** null = carte marché (toute la classe) ; sinon l'équipe ciblée. */
+    /** null = courrier de marché (toute la classe) ; sinon l'entreprise destinataire. */
     teamId: string | null;
     teamName: string | null;
     isMyTeam: boolean;
   }[];
   /**
-   * Cartes ENCORE EN JEU pour le tour à jouer : tirées à un tour précédent,
-   * par le moteur ou par l'enseignant, et pas encore éteintes — un événement
-   * de deux tours pèse sur les décisions du second. Sans elles, l'équipe
-   * décidait sans savoir que la conjoncture morose courait toujours.
+   * Courriers ENCORE EN VIGUEUR pour le tour à jouer : reçus à un tour
+   * précédent, du moteur ou de l'enseignant, et pas encore éteints — une
+   * lettre qui vaut deux trimestres pèse sur les décisions du second. Sans
+   * elles, l'équipe décidait sans savoir que la conjoncture morose courait
+   * toujours.
    */
-  activeEventCards: {
+  courriersEnCours: {
     code: string;
     teamId: string | null;
     teamName: string | null;
     isMyTeam: boolean;
-    /** Tours pendant lesquels la carte pèse encore, celui-ci compris. */
+    /** Tours pendant lesquels le courrier pèse encore, celui-ci compris. */
     roundsLeft: number;
   }[];
   /**
-   * LE TIRAGE DU TOUR À JOUER, lu d'avance : les cartes que le moteur tirera
+   * LE COURRIER DU TOUR À JOUER, lu d'avance : les plis que le moteur tirera
    * à la clôture, exactement (même graine, même tour, mêmes entreprises).
    * Vide une fois la partie finie. Ne porte que ce qui concerne l'équipe qui
-   * lit : les cartes marché et celles qui la ciblent. Les cartes RSE, tirées
-   * sur le standing de chaque entreprise, restent découvertes aux résultats.
+   * lit : les courriers de marché et ceux qui lui sont adressés. Les courriers
+   * RSE, appelés par le standing de chaque entreprise, restent découverts aux
+   * résultats.
    */
   upcomingDraw: { code: string; teamId: string | null; isMyTeam: boolean }[];
   lastResult: CompanyRoundResult | null;
@@ -1375,7 +1377,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     equipesDeLaClasse,
     peutChoisirSonEquipe: kindDeLaPartie !== "solo" && peutChoisirSonEquipe(game),
     pendingDecisions,
-    announcedEventCards: readPendingEvents(game.difficultyProfile).map((card) => {
+    courriersAnnonces: readPendingEvents(game.difficultyProfile).map((card) => {
       const target = card.teamId ? teamRows.find((t) => t.id === card.teamId) : undefined;
       return {
         code: card.code,
@@ -1384,7 +1386,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         isMyTeam: card.teamId === playerTeam.id,
       };
     }),
-    activeEventCards: (() => {
+    courriersEnCours: (() => {
       const actifs = (game.difficultyProfile as { activeEvents?: EventInstance[] }).activeEvents;
       return (Array.isArray(actifs) ? actifs : [])
         .filter((e) => e.roundsLeft > 0)
@@ -1582,12 +1584,12 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
       const formulas = snapshot.insurance?.formulas;
       if (!formulas || formulas.length === 0) return null;
-      // Le libellé français du deck de cartes, et non la clé technique : c'est
+      // L'objet du courrier en français, et non la clé technique : c'est
       // le seul endroit de l'écran de décision où l'élève lisait « natural
       // disaster, cold wave ». Les mêmes événements lui seront montrés sous
       // leur nom de carte quand ils tomberont.
       const eventLabels = (codes: string[]) =>
-        codes.map((c) => cardByCode.get(c)?.title ?? c.replace(/_/g, " "));
+        codes.map((c) => courrierParCode.get(c)?.objet ?? c.replace(/_/g, " "));
       return formulas.map((f) => ({
         code: f.code,
         name: f.name,

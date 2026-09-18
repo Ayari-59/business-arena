@@ -14,7 +14,7 @@ import { describe, expect, it } from "vitest";
 /** Composants client : le hook, une ref sur le <form>, le message. */
 const COMPOSANTS_GARDES = [
   "src/components/competition-create-form.tsx", // création de concours
-  "src/components/card-deck.tsx", // tirage de carte
+  "src/components/distribution-courrier.tsx", // distribution du courrier
   "src/components/competition-controls.tsx", // inscriptions, groupes, finale
   "src/components/decision-form.tsx", // décisions du tour
   "src/components/situation-panel.tsx", // diagnostic, modèle, indices

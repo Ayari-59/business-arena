@@ -50,10 +50,10 @@ import type { GameKind } from "@/services/game-creation.service";
 // Re-exports depuis round-resolution.service.ts pour compatibilité des consommateurs existants
 export {
   closeCurrentRound,
-  drawEventCardForNextRound,
+  distribuerUnCourrier,
   resolveCurrentRound,
   submitTeamDecisions,
-  type PendingEventCard,
+  type CourrierAnnonce,
 } from "@/services/round-resolution.service";
 
 // Re-exports depuis game-view.service.ts pour compatibilité des consommateurs existants
@@ -358,7 +358,7 @@ export interface TeacherGameView {
   planCapped: boolean;
   /** Freemium : l'export du relevé est-il ouvert (licence) ? Sinon on propose l'upsell. */
   canExportGradebook: boolean;
-  /** Secteur joué : titre du scénario et codes d'événements de SON deck. */
+  /** Secteur joué : titre du scénario et codes d'événements de SA liasse. */
   scenarioCode: string;
   scenarioTitle: string;
   scenarioIcon: string;
@@ -476,7 +476,7 @@ export async function getTeacherGameView(
     scenarioTitle: snapshotDefinition.title,
     scenarioIcon: snapshotDefinition.icon,
     sector: snapshotDefinition.sector,
-    // Le deck vient du SNAPSHOT, pas de la version courante du scénario :
+    // La liasse vient du SNAPSHOT, pas de la version courante du scénario :
     // une partie lancée joue les règles avec lesquelles elle a commencé.
     scenarioEventCodes: (
       (game.scenarioSnapshot as { events?: { code: string }[] }).events ?? []

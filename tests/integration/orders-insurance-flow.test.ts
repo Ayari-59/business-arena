@@ -19,7 +19,7 @@ import { registerTeacher, getTeacherOrgId } from "@/services/auth.service";
 import {
   closeCurrentRound,
   createClassGame,
-  drawEventCardForNextRound,
+  distribuerUnCourrier,
   getGameView,
   getTeacherGameView,
   joinGameByCode,
@@ -85,8 +85,8 @@ describe("commande exceptionnelle + assurance catastrophe (bout en bout)", () =>
   });
 
   it("catastrophe (marché) + commande ferme (équipe) : effets différenciés", async () => {
-    await drawEventCardForNextRound({ gameId, teacherId, eventCode: "natural_disaster" });
-    await drawEventCardForNextRound({
+    await distribuerUnCourrier({ gameId, teacherId, eventCode: "natural_disaster" });
+    await distribuerUnCourrier({
       gameId,
       teacherId,
       eventCode: "big_order",
