@@ -262,6 +262,50 @@ h1 {
 }
 
 /*
+ * LE PAPIER, commun à l'enveloppe et à la lettre.
+ *
+ * Une enveloppe et la lettre qu'elle contient sont le même papier : il fallait
+ * que l'écran le dise. Elles partagent donc l'ivoire, l'encre, le filet et
+ * l'ombre portée, et ne diffèrent que par ce qui les distingue vraiment — les
+ * marques postales d'un côté, le texte de l'autre.
+ *
+ * Le papier est un OBJET, pas une surface du site : ses couleurs sont écrites
+ * en dur et ne suivent pas le thème, comme une lettre posée sur un bureau
+ * reste blanche quelle que soit la couleur du bureau. Aucun utilitaire de
+ * couleur Tailwind à l'intérieur, donc : le thème clair les inverserait tous.
+ */
+.papier {
+  --encre: #1f2937;
+  --encre-douce: #45505f;
+  --encre-tenue: #6b7280;
+  --papier: #f3ede1;
+  --papier-creux: #e7dfd0;
+  color: var(--encre);
+  background-color: var(--papier);
+  background-image:
+    linear-gradient(120deg, rgba(0, 0, 0, 0.045) 0%, transparent 35%),
+    radial-gradient(circle at 80% 15%, rgba(0, 0, 0, 0.045) 0%, transparent 45%);
+  border: 1px solid rgba(31, 41, 55, 0.45);
+  box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.75);
+}
+
+.papier .douce {
+  color: var(--encre-douce);
+}
+
+.papier .tenue {
+  color: var(--encre-tenue);
+}
+
+.papier .creux {
+  background-color: var(--papier-creux);
+}
+
+.papier .filet {
+  border-color: rgba(31, 41, 55, 0.22);
+}
+
+/*
  * LA LETTRE prend toute la hauteur que la grille lui donne : dans une rangée,
  * le courrier au corps court s'aligne sur le plus long. Une pile de lettres de
  * tailles inégales ne se lit pas comme une pile.
@@ -271,20 +315,15 @@ h1 {
   min-height: max(100%, 20rem);
   display: flex;
   flex-direction: column;
-  /*
-   * Le liseré porte la couleur de la nature du courrier (`--cachet`, posée par
-   * la lettre). Sur fond nuit, un voile à 40 % suffit ; sur fond clair, le
-   * même voile s'efface dans le blanc — on l'assombrit d'un peu d'encre.
-   */
-  border-color: color-mix(in oklab, var(--cachet, #d8b45c) 40%, transparent);
 }
 
-[data-theme="clair"] .lettre {
-  border-color: color-mix(in oklab, var(--cachet, #d8b45c) 65%, #1e293b);
-}
-
-.lettre > * {
-  flex: 1;
+/* Le filet de tête, dans l'encre de la nature : l'en-tête de la maison. */
+.lettre::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: var(--cachet, #b45309);
 }
 
 /* Barre de progression indéterminée des actions longues (clôture, création). */
@@ -310,20 +349,9 @@ h1 {
 }
 
 /*
- * L'ENVELOPPE est un OBJET, pas une surface du site : papier ivoire et encre
- * sombre dans les deux thèmes, comme une enveloppe posée sur un bureau reste
- * blanche quelle que soit la couleur du bureau. Elle s'imprime donc telle
- * quelle, sans inversion.
+ * L'ENVELOPPE : le même papier que la lettre, plus le rabat et les marques.
  */
 .enveloppe {
-  --encre: #1f2937;
-  --papier: #f3ede1;
-  color: var(--encre);
-  background-color: var(--papier);
-  background-image:
-    linear-gradient(120deg, rgba(0, 0, 0, 0.05) 0%, transparent 35%),
-    radial-gradient(circle at 80% 15%, rgba(0, 0, 0, 0.05) 0%, transparent 45%);
-  border: 1px solid rgba(31, 41, 55, 0.45);
   overflow: hidden;
 }
 
@@ -343,11 +371,11 @@ h1 {
 }
 
 /*
- * La bande rouge du recommandé, sur la tranche gauche. Le texte se lit de bas
- * en haut, comme sur une vraie liasse : c'est le sens de lecture d'une tranche
- * d'enveloppe posée à plat.
+ * La bande de tranche, à gauche : rouge pour le recommandé, ardoise pour la
+ * note de service. Le texte se lit de bas en haut, comme sur une vraie liasse
+ * — c'est le sens de lecture d'une tranche d'enveloppe posée à plat.
  */
-.enveloppe-recommande {
+.enveloppe-bande {
   writing-mode: vertical-rl;
   transform: rotate(180deg);
   letter-spacing: 0.18em;
@@ -363,6 +391,19 @@ h1 {
     radial-gradient(circle at 0 50%, transparent 0 2px, #fff 2px) 0 0 / 8px 8px repeat-y,
     radial-gradient(circle at 100% 50%, transparent 0 2px, #fff 2px) 100% 0 / 8px 8px repeat-y,
     #fff;
+}
+
+/*
+ * La pochette interne : pas de timbre, pas de cachet, mais la grille de
+ * circulation des vraies enveloppes navette — les cases où l'on raye le
+ * destinataire précédent avant d'écrire le suivant.
+ */
+.enveloppe-circulation {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0 13px,
+    rgba(31, 41, 55, 0.28) 13px 14px
+  );
 }
 
 @media (prefers-reduced-motion: reduce) {

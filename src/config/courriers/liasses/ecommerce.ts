@@ -35,7 +35,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
     enJeu:
       "Un retour coûte deux transports et une remise en stock, pour zéro chiffre d'affaires : c'est de la marge pure qui part.",
     nature: "internal",
-    pli: "simple",
+    pli: "interne",
     emoji: "📦",
     scope: "team",
   },

@@ -20,7 +20,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
     enJeu:
       "Ces adhérents-là remplissent la salle et repartent au printemps : les inscrire coûte, les garder rapporte.",
     nature: "market",
-    pli: "simple",
+    pli: "interne",
     emoji: "🎯",
     scope: "market",
   },
@@ -63,7 +63,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
     enJeu:
       "Dans un modèle par abonnement, ce qui retient vaut plus que ce qui attire : un régulier paie tous les trimestres.",
     nature: "market",
-    pli: "simple",
+    pli: "interne",
     emoji: "🏋️",
     scope: "market",
   },
@@ -320,7 +320,7 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
     effet: "Demande de votre salle +12 % ce tour",
     enJeu: "Un essai gratuit coûte une séance et rapporte un abonnement : c'est le coût d'acquisition le plus lisible.",
     nature: "market",
-    pli: "simple",
+    pli: "interne",
     emoji: "🎟️",
     scope: "team",
   },

@@ -280,7 +280,7 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
     effet: "Demande de votre boutique +8 % pendant 2 tours",
     enJeu: "La relation client est un actif qui ne figure à aucun bilan, et qui pèse sur le chiffre d'affaires.",
     nature: "internal",
-    pli: "simple",
+    pli: "interne",
     emoji: "🌟",
     scope: "team",
   },

@@ -308,7 +308,7 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
     effet: "Capacité de production −15 % pendant 2 tours",
     enJeu: "Dans les services, la capacité est humaine : elle part le vendredi soir, et la concurrence le sait.",
     nature: "competition",
-    pli: "simple",
+    pli: "interne",
     emoji: "🎣",
     scope: "team",
   },

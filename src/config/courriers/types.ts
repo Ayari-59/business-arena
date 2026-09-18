@@ -35,8 +35,14 @@ export type NatureDuCourrier = "market" | "competition" | "internal" | "macro";
  * résiliation. Le reste arrive au courrier ordinaire. Tout traiter en
  * recommandé banaliserait justement ce qui doit alerter — et un article de
  * presse élogieux n'arrive pas avec un accusé de réception.
+ *
+ * La note de service, elle, n'est jamais passée par la poste : elle circule
+ * dans les murs, dans une pochette interne qui ne porte ni timbre ni cachet.
+ * Son enveloppe le dit du premier coup d'œil, et c'est une information : ce
+ * qui vient de l'intérieur ne s'oppose pas à l'entreprise, il la renseigne.
+ * Une démission reste un recommandé — elle fait courir un préavis.
  */
-export type TypeDePli = "recommande" | "simple";
+export type TypeDePli = "recommande" | "simple" | "interne";
 
 export interface CourrierDef {
   /** Le code de l'événement du moteur. Ne change jamais. */
@@ -65,34 +71,46 @@ export interface CourrierDef {
  * ce qui vient des clients et du marché, ce qui vient des concurrents, ce qui
  * naît dans les murs, ce qui tombe de plus haut que l'entreprise. La couleur
  * double la mention pour qui trie vite.
+ *
+ * Deux couleurs par nature : `accent`, franche, pour les fonds de nuit de
+ * l'application, et `encre`, plus sombre, pour le papier — de l'ambre clair
+ * sur de l'ivoire ne se lit pas.
  */
 export const NATURES: Record<
   NatureDuCourrier,
-  { label: string; mention: string; className: string; accent: string }
+  { label: string; mention: string; className: string; accent: string; encre: string }
 > = {
   market: {
     label: "Marché",
     mention: "CLIENTS ET MARCHÉ",
     className: "border-sky-400/40 text-sky-300",
     accent: "#38bdf8",
+    encre: "#0369a1",
   },
   competition: {
     label: "Concurrence",
     mention: "CONCURRENCE",
     className: "border-fuchsia-400/40 text-fuchsia-300",
     accent: "#e879f9",
+    encre: "#a21caf",
   },
   internal: {
-    label: "Interne",
+    // « Interne » seul se confondait avec la note de service, qui circule en
+    // interne : ici, c'est le SUJET du courrier qui est interne, pas son
+    // circuit. Une mise en demeure de la banque parle bien de la vie interne
+    // de l'entreprise, et elle arrive par la poste.
+    label: "Vie interne",
     mention: "VIE DE L'ENTREPRISE",
     className: "border-amber-400/40 text-amber-300",
     accent: "#fbbf24",
+    encre: "#b45309",
   },
   macro: {
     label: "Macro-économie",
     mention: "ENVIRONNEMENT ÉCONOMIQUE",
     className: "border-emerald-400/40 text-emerald-300",
     accent: "#34d399",
+    encre: "#047857",
   },
 };
 
@@ -100,6 +118,14 @@ export const NATURES: Record<
 export const MENTION_DU_PLI: Record<TypeDePli, string> = {
   recommande: "Lettre recommandée avec accusé de réception",
   simple: "Pli simple",
+  interne: "Note de service — diffusion interne",
+};
+
+/** La bande de tranche : sa mention et sa couleur, ou rien pour un pli simple. */
+export const BANDE_DU_PLI: Record<TypeDePli, { mention: string; classe: string } | null> = {
+  recommande: { mention: "Recommandé A.R.", classe: "bg-red-700 text-white" },
+  simple: null,
+  interne: { mention: "Diffusion interne", classe: "bg-slate-700 text-white" },
 };
 
 /**

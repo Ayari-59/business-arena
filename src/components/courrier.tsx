@@ -1,4 +1,10 @@
-import { MENTION_DU_PLI, NATURES, dureeDuCourrier, type CourrierDef } from "@/config/courriers/types";
+import {
+  BANDE_DU_PLI,
+  MENTION_DU_PLI,
+  NATURES,
+  dureeDuCourrier,
+  type CourrierDef,
+} from "@/config/courriers/types";
 import { courrierParCode, positionDuCourrier, referenceDuCourrier } from "@/config/courriers/registre";
 import { COURRIERS_DE_ROUTINE, estUnCourrierDeRoutine } from "@/config/courriers/routine";
 import { BrandMark } from "@/components/brand-mark";
@@ -9,15 +15,18 @@ import { BrandMark } from "@/components/brand-mark";
  * L'animation d'ouverture est du pur théâtre CSS — le tirage réel est fait par
  * le PRNG seedé du moteur, ou décidé par l'enseignant.
  *
- * ANATOMIE D'UN PLI. L'enveloppe porte ce qu'on lit avant d'ouvrir : le rabat,
- * le timbre, le cachet de la poste, l'expéditeur en haut à gauche, le
- * destinataire dans la fenêtre, la bande rouge du recommandé sur la tranche.
- * La lettre porte ce qu'on lit après : l'en-tête de l'expéditeur, la mention
- * du pli, la référence, l'objet, le corps, la signature — puis, en pied, ce
- * que l'entreprise doit en faire.
+ * LE MÊME PAPIER DES DEUX CÔTÉS. L'enveloppe et sa lettre partagent l'ivoire,
+ * l'encre, le filet et l'ombre (classe `papier`, globals.css) : ce qui sort de
+ * l'enveloppe doit être de la même matière que l'enveloppe. Elles ne diffèrent
+ * que par ce qui les distingue vraiment — les marques postales d'un côté, le
+ * texte de l'autre — et se répondent sur trois repères posés au même endroit :
+ * l'expéditeur en haut à gauche, la référence en bas à droite, la liasse en
+ * bas à gauche.
  *
- * Ces conventions-là, plus que la couleur, font qu'on tient un courrier et
- * non un encart.
+ * TROIS PLIS. Le recommandé porte sa bande rouge sur la tranche, le pli simple
+ * n'a rien, la note de service circule dans une pochette interne : ni timbre
+ * ni cachet, mais la grille de circulation des enveloppes navette. Un chef
+ * d'atelier n'affranchit pas son rapport.
  */
 
 /**
@@ -46,67 +55,80 @@ export function Enveloppe({
   code?: string;
   /** La liasse imprimée en pied d'enveloppe. */
   liasse?: string | null;
-  /** À qui le pli est adressé : « Toute la classe », « Équipe 3 ». */
+  /** À qui le pli est adressé : « Tout le marché », « Équipe 3 ». */
   destinataire?: string;
   className?: string;
 }) {
   const c = code ? courrier(code) : undefined;
   const nature = c ? NATURES[c.nature] : null;
-  const recommande = c?.pli !== "simple";
+  const interne = c?.pli === "interne";
+  const bande = c ? BANDE_DU_PLI[c.pli] : null;
   const reference = code ? referenceDuCourrier(code) : null;
 
   return (
-    <div className={`enveloppe rounded-lg p-3 ${className}`}>
+    <div className={`papier enveloppe relative rounded-lg p-3 ${className}`}>
       <div className="relative flex h-full min-h-full flex-col">
-        {/* tranche gauche : la bande du recommandé */}
-        {recommande ? (
-          <span className="enveloppe-recommande absolute inset-y-0 left-0 w-5 rounded-sm bg-red-700 py-2 text-center text-xs font-bold uppercase text-white">
-            Recommandé A.R.
+        {/* tranche gauche : recommandé en rouge, note de service en ardoise */}
+        {bande ? (
+          <span
+            className="enveloppe-bande absolute inset-y-0 left-0 w-5 rounded-sm py-2 text-center text-xs font-bold uppercase text-white"
+            style={{ backgroundColor: c!.pli === "recommande" ? "#b91c1c" : "#475569" }}
+          >
+            {bande.mention}
           </span>
         ) : null}
 
-        <div className={`flex items-start justify-between gap-2 ${recommande ? "pl-7" : ""}`}>
-          {/* expéditeur et cachet de la poste, en haut à gauche */}
+        <div className={`flex items-start justify-between gap-2 ${bande ? "pl-7" : ""}`}>
+          {/* expéditeur et cachet, en haut à gauche */}
           <span className="min-w-0">
-            <span className="block text-xs font-semibold uppercase leading-snug tracking-wide opacity-70">
+            <span className="douce block text-xs font-semibold uppercase leading-snug tracking-wide">
               {c ? c.expediteur : "Business Arena"}
             </span>
             {nature ? (
               <span
                 className="mt-1 inline-block -rotate-2 rounded-sm border border-dashed px-1.5 py-0.5 text-xs font-bold uppercase leading-none tracking-wide"
-                style={{ borderColor: nature.accent, color: nature.accent }}
+                style={{ borderColor: nature.encre, color: nature.encre }}
               >
-                {nature.mention}
+                {interne ? "Note de service" : nature.mention}
               </span>
             ) : null}
           </span>
-          {/* le timbre */}
-          <span
-            className="enveloppe-timbre flex h-10 w-9 shrink-0 items-center justify-center rounded-[2px] text-lg"
-            aria-hidden
-          >
-            {c ? c.emoji : "✉️"}
-          </span>
+          {/*
+            Le timbre, sauf pour la note de service : une enveloppe navette
+            n'est jamais affranchie, et c'est à cela qu'on la reconnaît de loin.
+          */}
+          {interne ? null : (
+            <span
+              className="enveloppe-timbre flex h-10 w-9 shrink-0 items-center justify-center rounded-[2px] text-lg"
+              aria-hidden
+            >
+              {c ? c.emoji : "✉️"}
+            </span>
+          )}
         </div>
 
+        {/* la grille de circulation, propre à la pochette interne */}
+        {interne ? (
+          <div className={`mt-2 ${bande ? "pl-7" : ""}`}>
+            <span className="tenue block text-xs uppercase tracking-widest">Circulation</span>
+            <span className="enveloppe-circulation mt-1 block h-7 w-full max-w-[11rem]" aria-hidden />
+          </div>
+        ) : null}
+
         {/* la fenêtre du destinataire */}
-        <div className={`mt-auto ${recommande ? "pl-7" : ""}`}>
-          <span className="inline-block rounded-sm border border-dashed border-current/30 bg-white/60 px-2.5 py-1.5 text-xs leading-relaxed">
-            <span className="block text-xs uppercase tracking-widest opacity-50">
-              Destinataire
-            </span>
+        <div className={`mt-auto ${bande ? "pl-7" : ""}`}>
+          <span className="creux filet inline-block rounded-sm border border-dashed px-2.5 py-1.5 text-xs leading-relaxed">
+            <span className="tenue block text-xs uppercase tracking-widest">Destinataire</span>
             {destinataire ?? "L'entreprise"}
           </span>
         </div>
 
-        <div className={`mt-2 flex items-end justify-between gap-2 ${recommande ? "pl-7" : ""}`}>
-          <span className="flex items-center gap-1.5 text-xs uppercase tracking-[0.15em] opacity-50">
+        <div className={`mt-2 flex items-end justify-between gap-2 ${bande ? "pl-7" : ""}`}>
+          <span className="tenue flex items-center gap-1.5 text-xs uppercase tracking-[0.15em]">
             <BrandMark className="h-3.5 w-3.5" />
             {liasse ?? "Business Arena"}
           </span>
-          {reference ? (
-            <span className="text-xs tabular-nums opacity-50">{reference}</span>
-          ) : null}
+          {reference ? <span className="tenue text-xs tabular-nums">{reference}</span> : null}
         </div>
       </div>
     </div>
@@ -119,7 +141,8 @@ export function Enveloppe({
  * La formule d'appel et la politesse sont DESSINÉES, pas stockées : les
  * répéter dans deux cents textes serait deux cents occasions de les écrire
  * différemment. Ne reste dans la donnée que ce qui varie — qui écrit, à quel
- * sujet, pour dire quoi.
+ * sujet, pour dire quoi. Une note de service, elle, n'en porte aucune : on
+ * n'écrit pas « Madame, Monsieur » à son propre atelier.
  */
 export function Lettre({
   code,
@@ -141,13 +164,19 @@ export function Lettre({
   const reference = referenceDuCourrier(code);
   const duree = dureeDuCourrier(c);
   const routine = estUnCourrierDeRoutine(code);
+  const interne = c.pli === "interne";
 
   return (
     <div
-      className={`lettre rounded-lg border-2 bg-slate-900 p-2 ${nature.className.split(" ")[0]} ${
-        surligne ? "ring-2 ring-sky-400/70" : ""
-      }`}
-      style={{ "--cachet": nature.accent } as React.CSSProperties}
+      className="papier lettre rounded-lg p-3"
+      style={
+        {
+          "--cachet": nature.encre,
+          // Le liseré du destinataire est écrit en dur : sur du papier, un
+          // jeton de thème s'inverserait avec le site.
+          ...(surligne ? { boxShadow: "0 0 0 2px #0369a1" } : {}),
+        } as React.CSSProperties
+      }
     >
       {/*
         `min-h-full` et non `h-full` : la hauteur est un plancher, pas un
@@ -155,66 +184,66 @@ export function Lettre({
         d'en laisser déborder la signature ; en rangée, toutes prennent la
         hauteur de la plus haute (globals.css).
       */}
-      <div className="flex min-h-full flex-col rounded-md border border-white/10 p-3">
+      <div className="flex min-h-full flex-col">
         {/* en-tête : qui écrit, et sous quelle forme */}
         <div className="flex items-start justify-between gap-2">
-          <span className="min-w-0 font-display text-xs font-semibold uppercase leading-snug tracking-wide text-slate-200">
+          <span className="min-w-0 font-display text-xs font-semibold uppercase leading-snug tracking-wide">
             {c.expediteur}
           </span>
           <span
-            className={`shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-xs uppercase tracking-wide ${nature.className}`}
+            className="shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-xs uppercase tracking-wide"
+            style={{ borderColor: nature.encre, color: nature.encre }}
           >
             {annonce ? "annoncé" : nature.label}
           </span>
         </div>
-        <div className="mt-1.5 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-white/10 pb-2 text-xs text-slate-500">
-          <span className={c.pli === "recommande" ? "font-semibold text-red-300" : ""}>
+        <div className="filet mt-1.5 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b pb-2 text-xs">
+          <span
+            className={c.pli === "simple" ? "tenue" : "font-semibold"}
+            style={c.pli === "recommande" ? { color: "#b91c1c" } : undefined}
+          >
             {MENTION_DU_PLI[c.pli]}
           </span>
-          {reference ? <span className="tabular-nums">Nos réf. : {reference}</span> : null}
+          {reference ? <span className="tenue tabular-nums">Nos réf. : {reference}</span> : null}
         </div>
 
         {destinataire ? (
           <span
             className={`mt-2.5 inline-flex w-fit rounded-full border px-2 py-0.5 text-xs font-semibold ${
-              surligne
-                ? "border-sky-400/60 bg-sky-400/10 text-sky-300"
-                : "border-white/10 bg-white/5 text-slate-400"
+              surligne ? "" : "filet creux tenue"
             }`}
+            style={surligne ? { borderColor: "#0369a1", color: "#0369a1" } : undefined}
           >
             {destinataire}
           </span>
         ) : null}
 
-        <p className="mt-2.5 text-sm font-semibold leading-snug text-slate-50">
-          <span className="text-slate-400">Objet : </span>
+        <p className="mt-2.5 text-sm font-semibold leading-snug">
+          <span className="tenue">Objet : </span>
           {c.objet}
         </p>
 
-        <p className="mt-2.5 text-xs italic text-slate-400">Madame, Monsieur,</p>
-        <p className="mt-1 text-xs leading-relaxed text-slate-300">{c.corps}</p>
-        <p className="mt-2 text-right text-xs italic leading-snug text-slate-400">
-          Veuillez agréer nos salutations distinguées.
-          <span className="mt-0.5 block not-italic text-slate-300">{c.signataire}</span>
+        {interne ? null : <p className="douce mt-2.5 text-xs italic">Madame, Monsieur,</p>}
+        <p className={`douce ${interne ? "mt-2.5" : "mt-1"} text-xs leading-relaxed`}>{c.corps}</p>
+        <p className="douce mt-2 text-right text-xs italic leading-snug">
+          {interne ? null : (
+            <>
+              Veuillez agréer nos salutations distinguées.
+              <br />
+            </>
+          )}
+          <span className="not-italic">{c.signataire}</span>
         </p>
 
         {/* ce que l'entreprise doit en faire, et ses pastilles de durée */}
-        <div
-          className={`mt-auto rounded-lg border px-3 py-2 ${
-            routine ? "border-white/5 bg-slate-950/60" : "border-white/5 bg-slate-950"
-          }`}
-        >
+        <div className="creux filet mt-auto rounded-lg border px-3 py-2">
           <div className="flex items-start justify-between gap-2">
-            <p
-              className={`text-xs font-semibold leading-snug ${
-                routine ? "text-slate-400" : "text-slate-100"
-              }`}
-            >
+            <p className={`text-xs font-semibold leading-snug ${routine ? "douce" : ""}`}>
               {routine ? "🗂️" : "⚡"} {c.effet}
             </p>
             {routine ? null : (
               <span
-                className="mt-0.5 shrink-0 text-xs tracking-widest text-slate-400"
+                className="tenue mt-0.5 shrink-0 text-xs tracking-widest"
                 aria-label={`${duree} tour${duree > 1 ? "s" : ""}`}
                 title={`${duree} tour${duree > 1 ? "s" : ""}`}
               >
@@ -223,10 +252,10 @@ export function Lettre({
             )}
           </div>
         </div>
-        <p className="mt-2 text-xs leading-snug text-slate-400">💡 {c.enJeu}</p>
+        <p className="douce mt-2 text-xs leading-snug">💡 {c.enJeu}</p>
 
-        <div className="mt-2 flex items-end justify-between border-t border-white/5 pt-1.5">
-          <span className="text-xs uppercase tracking-[0.15em] text-slate-500">
+        <div className="filet mt-2 flex items-end justify-between border-t pt-1.5">
+          <span className="tenue text-xs uppercase tracking-[0.15em]">
             {position
               ? `${position.liasse} · ${position.index} / ${position.total}`
               : "Courrier de routine"}
@@ -251,7 +280,7 @@ export function CourrierRecommande({
   code: string;
   delayMs?: number;
   annonce?: boolean;
-  /** Destinataire affiché : « Toute la classe » ou « → Équipe 3 ». */
+  /** Destinataire affiché : « Tout le marché » ou « → Équipe 3 ». */
   destinataire?: string;
   surligne?: boolean;
 }) {

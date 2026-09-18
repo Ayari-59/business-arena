@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { LIASSES, COURRIERS, positionDuCourrier, referenceDuCourrier } from "@/config/courriers/registre";
-import { MENTION_DU_PLI, NATURES, dureeDuCourrier } from "@/config/courriers/types";
+import { BANDE_DU_PLI, MENTION_DU_PLI, NATURES, dureeDuCourrier } from "@/config/courriers/types";
 import { COURRIERS_DE_ROUTINE, courrierDeRoutine, estUnCourrierDeRoutine } from "@/config/courriers/routine";
 
 /**
@@ -19,9 +19,27 @@ describe("l'habillage du courrier", () => {
     }
   });
 
-  it("les deux plis se distinguent par leur mention", () => {
+  it("les trois plis se distinguent par leur mention", () => {
     expect(MENTION_DU_PLI.recommande).toMatch(/recommandée/i);
     expect(MENTION_DU_PLI.simple).not.toMatch(/recommandée/i);
+    expect(MENTION_DU_PLI.interne).toMatch(/interne/i);
+    // Seul le pli simple n'a pas de bande de tranche.
+    expect(BANDE_DU_PLI.simple).toBeNull();
+    expect(BANDE_DU_PLI.recommande?.mention).toMatch(/recommandé/i);
+    expect(BANDE_DU_PLI.interne?.mention).toMatch(/interne/i);
+  });
+
+  it("une note de service n'est jamais affranchie, et ne vient jamais du dehors", () => {
+    const notes = COURRIERS.filter((c) => c.pli === "interne");
+    expect(notes.length).toBeGreaterThanOrEqual(8);
+    for (const c of notes) {
+      // L'expéditeur est dans les murs : c'est ce qui justifie la pochette.
+      expect(c.expediteur, c.code).toMatch(/^Note interne/);
+    }
+    // Et réciproquement : aucune note interne ne part par la poste.
+    for (const c of COURRIERS) {
+      if (/^Note interne/.test(c.expediteur)) expect(c.pli, c.code).toBe("interne");
+    }
   });
 
   it("chaque courrier a sa place dans une liasse nommée, et une seule", () => {

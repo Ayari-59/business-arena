@@ -34,7 +34,7 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
     effet: "Disponibilité de la flotte −14 % pendant 2 tours",
     enJeu: "Un camion sans chauffeur ne roule pas : la contrainte n'est pas toujours celle qu'on amortit.",
     nature: "market",
-    pli: "simple",
+    pli: "interne",
     emoji: "🧑‍✈️",
     scope: "market",
   },

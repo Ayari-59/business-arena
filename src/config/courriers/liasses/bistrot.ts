@@ -20,7 +20,7 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
     effet: "Demande du soir +30 % ce tour",
     enJeu: "Refuser du monde faute de places ou de brigade, c'est transformer un succès en clients perdus.",
     nature: "market",
-    pli: "simple",
+    pli: "interne",
     emoji: "📸",
     scope: "market",
   },
