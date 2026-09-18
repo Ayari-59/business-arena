@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
@@ -5,7 +7,7 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("@/db", () => ({ db: {} }));
 vi.mock("next/headers", () => ({ headers: vi.fn(), cookies: vi.fn() }));
 
-import { Enveloppe, Lettre } from "@/components/courrier";
+import { Enveloppe, Lettre, grilleDeCourriers } from "@/components/courrier";
 import { courrierParCode } from "@/config/courriers/registre";
 
 /**
@@ -74,5 +76,41 @@ describe("les trois plis se reconnaissent avant d'être lus", () => {
     expect(l).not.toContain("Veuillez agréer");
     expect(l).toContain("Le chef d&#x27;atelier");
     expect(l).toContain("Note de service — diffusion interne");
+  });
+});
+
+/**
+ * UN COURRIER SEUL SE CENTRE.
+ *
+ * Rangé à gauche d'une grille à deux colonnes, il laissait la moitié de la
+ * carte vide et l'œil cherchait le second. Toutes les distributions de
+ * l'application passent par la même règle : l'arène, le tour, le tableau de
+ * bord et le panneau de l'enseignant.
+ */
+describe("la grille d'une distribution", () => {
+  it("un courrier seul se centre, deux ou plus se rangent en colonnes", () => {
+    for (const n of [0, 1]) {
+      expect(grilleDeCourriers(n)).toContain("mx-auto");
+      expect(grilleDeCourriers(n)).not.toContain("grid-cols-2");
+    }
+    for (const n of [2, 3, 4]) {
+      expect(grilleDeCourriers(n)).toContain("grid-cols-2");
+      expect(grilleDeCourriers(n)).not.toContain("mx-auto");
+    }
+  });
+
+  it("aucun écran ne redessine la grille dans son coin", () => {
+    const sources = [
+      "src/components/courrier-du-tour.tsx",
+      "src/components/distribution-courrier.tsx",
+      "src/components/period-dashboard.tsx",
+      "src/app/arena/[gameId]/page.tsx",
+    ];
+    for (const f of sources) {
+      const source = readFileSync(join(process.cwd(), f), "utf8");
+      const grilles = source.match(/grid gap-3 sm:grid-cols-2/g) ?? [];
+      expect(grilles, `${f} : grille de courriers écrite à la main`).toEqual([]);
+      expect(source).toContain("grilleDeCourriers(");
+    }
   });
 });

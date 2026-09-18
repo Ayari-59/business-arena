@@ -269,6 +269,19 @@ export function Lettre({
   );
 }
 
+/**
+ * LA GRILLE D'UNE DISTRIBUTION.
+ *
+ * À deux colonnes dès qu'il y a deux plis. Mais un courrier seul dans une
+ * grille à deux colonnes se range à gauche et laisse la moitié de la carte
+ * vide : l'œil cherche le second, qui n'existe pas. Seul, il se centre et
+ * prend la largeur d'une lettre — il devient ce qu'il est, la pièce du jour,
+ * et non la première d'une paire.
+ */
+export function grilleDeCourriers(nombre: number): string {
+  return nombre <= 1 ? "grid gap-3 sm:mx-auto sm:max-w-md" : "grid gap-3 sm:grid-cols-2";
+}
+
 /** Le pli distribué : l'enveloppe, puis la lettre qui en sort. */
 export function CourrierRecommande({
   code,

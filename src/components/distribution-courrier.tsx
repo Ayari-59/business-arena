@@ -4,7 +4,7 @@ import { useState } from "react";
 import { distribuerCourrierAction, type DistributionState } from "@/app/teacher/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import { courriersPourCodes } from "@/config/courriers/registre";
-import { CourrierRecommande, Enveloppe } from "@/components/courrier";
+import { CourrierRecommande, Enveloppe, grilleDeCourriers } from "@/components/courrier";
 
 const initial: DistributionState = { error: null, codeDistribue: null };
 
@@ -79,7 +79,7 @@ export function DistributionCourrier({
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-400">
             Courriers distribués ce tour
           </p>
-          <div className="grid gap-3 sm:grid-cols-2 lg:max-w-xl">
+          <div className={`${grilleDeCourriers(courriersEnAttente.length)} lg:max-w-xl`}>
             {courriersEnAttente.map((courrier, i) => (
               <CourrierRecommande
                 key={`${courrier.code}-${courrier.teamId ?? "market"}`}

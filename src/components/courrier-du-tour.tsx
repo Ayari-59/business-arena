@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { CourrierRecommande, Enveloppe } from "@/components/courrier";
+import { CourrierRecommande, Enveloppe, grilleDeCourriers } from "@/components/courrier";
 import { courrierParCode } from "@/config/courriers/registre";
 import { courrierDeRoutine } from "@/config/courriers/routine";
 
@@ -169,9 +169,9 @@ export function CourrierDuTour({
           {/*
             Le courrier de routine s'ouvre comme les autres : c'est le geste
             qui compte, et il doit être le même que le trimestre soit calme
-            ou non. Seul en scène, il occupe une colonne et pas deux.
+            ou non.
           */}
-          <div className={`mt-4 grid gap-3 ${vide ? "sm:max-w-md" : "sm:grid-cols-2"}`}>
+          <div className={`mt-4 ${grilleDeCourriers(vide ? 1 : plis.length)}`}>
             {vide ? (
               <CourrierRecommande code={routine.code} destinataire="L'entreprise" />
             ) : (

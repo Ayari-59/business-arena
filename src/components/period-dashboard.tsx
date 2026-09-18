@@ -3,7 +3,7 @@ import { COMMUNICATION_AXIS_LABELS } from "@/engine/market/communication";
 import { KpiCard } from "@/components/kpi-card";
 import { lectureBancaire } from "@/components/lecture-bancaire";
 import { ligneTresorerie } from "@/components/ligne-tresorerie";
-import { CourrierRecommande } from "@/components/courrier";
+import { CourrierRecommande, grilleDeCourriers } from "@/components/courrier";
 import { courrierParCode } from "@/config/courriers/registre";
 import { BpiPanel } from "@/components/bpi-panel";
 import { RevenueChart, TreasuryChart, MarketShareChart } from "@/components/charts";
@@ -165,7 +165,7 @@ export function PeriodDashboard({
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-400">
                   📬 Le courrier de ce tour
                 </p>
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className={grilleDeCourriers(period.events.length)}>
                   {period.events.map((code, i) => (
                     <CourrierRecommande key={code} code={code} delayMs={i * 450} />
                   ))}

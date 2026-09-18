@@ -9,7 +9,7 @@ import { SaisonDuTour } from "@/components/saison-du-tour";
 import { AlerteTresorerie } from "@/components/alerte-tresorerie";
 import { PassageAuTour } from "@/components/passage-au-tour";
 import { periodLabel } from "@/config/scenarios/periodicity";
-import { CourrierRecommande } from "@/components/courrier";
+import { CourrierRecommande, grilleDeCourriers } from "@/components/courrier";
 import { courrierParCode } from "@/config/courriers/registre";
 import { DecisionForm } from "@/components/decision-form";
 import { TeamNameForm } from "@/components/team-name-form";
@@ -169,7 +169,7 @@ export default async function ArenaPage({
       {view.courriersAnnonces.length > 0 ? (
         <section className="rounded-xl border border-amber-400/30 bg-slate-900 p-3 sm:p-5">
           <p className="mb-2 text-sm font-semibold text-amber-400">📬 Le courrier, en détail</p>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className={grilleDeCourriers(view.courriersAnnonces.length)}>
             {view.courriersAnnonces.map((courrier, i) => (
               <CourrierRecommande
                 key={`${courrier.code}-${courrier.teamId ?? "market"}`}
@@ -208,7 +208,7 @@ export default async function ArenaPage({
               {encore.length > 1 ? "Ces courriers sont arrivés" : "Ce courrier est arrivé"} à un tour
               précédent et {encore.length > 1 ? "pèsent" : "pèse"} toujours sur celui-ci.
             </p>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className={grilleDeCourriers(encore.length)}>
               {encore.map((courrier, i) => (
                 <CourrierRecommande
                   key={`${courrier.code}-${courrier.teamId ?? "market"}`}
