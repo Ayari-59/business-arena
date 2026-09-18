@@ -98,6 +98,36 @@ describe("le pli dit l'enjeu", () => {
     ).toEqual([]);
   });
 
+  it("aucun canal n'avale le courrier", () => {
+    /*
+     * LA RÈGLE QUI TIENT LES TROIS AUTRES. Le corpus a connu deux
+     * aplatissements en sens inverse : d'abord un courrier sur deux en
+     * recommandé, puis, une fois celui-ci corrigé, quatre sur cinq en pli
+     * simple. Dans les deux cas le canal cessait d'informer, faute de
+     * contraste — et c'est le canal qui dit si la chose engage.
+     *
+     * Le plafond ne prétend pas dire la bonne répartition, seulement empêcher
+     * qu'un canal redevienne le fourre-tout des autres.
+     */
+    const parCanal = new Map<string, number>();
+    for (const c of COURRIERS) parCanal.set(c.pli, (parCanal.get(c.pli) ?? 0) + 1);
+    const trop = [...parCanal.entries()]
+      .filter(([, n]) => n / COURRIERS.length > 0.7)
+      .map(([pli, n]) => `${pli} : ${n} / ${COURRIERS.length}`);
+    expect(trop, "un canal a avalé le courrier :\n" + trop.join("\n")).toEqual([]);
+  });
+
+  it("les quatre canaux servent tous", () => {
+    // Un canal qu'aucun courrier n'emprunte est un canal mort : il coûte du
+    // code et du dessin sans rien enseigner.
+    for (const pli of ["recommande", "simple", "interne", "email"]) {
+      expect(
+        COURRIERS.some((c) => c.pli === pli),
+        `aucun courrier ne part en « ${pli} »`,
+      ).toBe(true);
+    }
+  });
+
   it("aucun courrier interne ne part en recommandé", () => {
     // Une note de service ne s'envoie pas avec accusé de réception à sa propre
     // maison. Les démissions, elles, sont écrites comme des lettres externes.
