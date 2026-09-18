@@ -20,7 +20,7 @@ export const RSE_COURRIERS: CourrierDef[] = [
     enJeu:
       "Un capital de marque se construit lentement — l'engagement RSE d'hier soutient la demande d'aujourd'hui.",
     nature: "market",
-    pli: "recommande",
+    pli: "simple",
     emoji: "🏅",
     scope: "team",
   },
@@ -65,7 +65,7 @@ export const RSE_COURRIERS: CourrierDef[] = [
     enJeu:
       "L'investissement responsable peut être cofinancé : une subvention améliore le résultat hors exploitation.",
     nature: "macro",
-    pli: "recommande",
+    pli: "simple",
     emoji: "💶",
     scope: "team",
   },
