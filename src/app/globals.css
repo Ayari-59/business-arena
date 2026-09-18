@@ -242,6 +242,15 @@ h1 {
   inset: 0;
   z-index: 2;
   transform-origin: 50% 100%;
+  /*
+   * ET QUI NE PREND AUCUN CLIC. L'enveloppe finit sa course à `opacity: 0`,
+   * mais une opacité nulle ne retire rien à la surface cliquable : translatée
+   * d'un tiers de sa hauteur vers le bas, elle débordait sous la lettre et
+   * recouvrait « J'ai pris note ». Sur téléphone, où la lettre occupe toute la
+   * largeur, le bouton était tout simplement inatteignable. Elle est
+   * décorative : rien en elle ne se clique, jamais.
+   */
+  pointer-events: none;
   animation: pli-sortie 1s cubic-bezier(0.4, 0.2, 0.2, 1) forwards;
   animation-delay: inherit;
 }

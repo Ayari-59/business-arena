@@ -4,6 +4,7 @@ import { useSyncExternalStore } from "react";
 import { CourrierRecommande, Enveloppe, grilleDeCourriers } from "@/components/courrier";
 import { courrierParCode } from "@/config/courriers/registre";
 import { courrierDeRoutine } from "@/config/courriers/routine";
+import { creerMemoireDeLecture } from "@/components/memoire-de-lecture";
 
 /**
  * LE COURRIER DU TRIMESTRE, VÉCU.
@@ -38,35 +39,12 @@ function cleMemoire(gameId: string, round: number): string {
 }
 
 /**
- * La mémoire de l'ouverture, lue comme une source externe : le serveur rend
- * toujours l'enveloppe cachetée (il ne connaît pas l'appareil), le client lit
- * l'appareil à l'hydratation, et le geste prévient les abonnés. Pas de
- * setState dans un effet, pas de désaccord serveur/client.
+ * La mémoire de l'ouverture : "" jamais ouvert · "1" ouvert · "2" classé.
+ * Elle survit à un stockage refusé (voir `memoire-de-lecture`), sans quoi les
+ * deux boutons de cette scène ne feraient rien du tout sur un appareil en
+ * navigation privée.
  */
-const abonnes = new Set<() => void>();
-const memoire = {
-  subscribe(cb: () => void) {
-    abonnes.add(cb);
-    return () => abonnes.delete(cb);
-  },
-  /** "" jamais ouvert · "1" ouvert · "2" classé (replié). */
-  lire(cle: string): "" | "1" | "2" {
-    try {
-      const v = window.localStorage.getItem(cle);
-      return v === "1" || v === "2" ? v : "";
-    } catch {
-      return "";
-    }
-  },
-  retenir(cle: string, etat: "1" | "2") {
-    try {
-      window.localStorage.setItem(cle, etat);
-    } catch {
-      // stockage indisponible : la scène se rejouera, ce n'est pas grave
-    }
-    for (const cb of abonnes) cb();
-  },
-};
+const memoire = creerMemoireDeLecture(["1", "2"] as const);
 
 export function CourrierDuTour({
   gameId,
