@@ -20,7 +20,7 @@ import { PeriodDashboard } from "@/components/period-dashboard";
 import { PeriodDecisionsRecap } from "@/components/period-decisions-recap";
 import { SegmentedTabs } from "@/components/segmented-tabs";
 import { RoundStatusPoller } from "@/components/round-status-poller";
-import { RoundStatusBanner } from "@/components/round-status-banner";
+import { AnnonceDuTour } from "@/components/annonce-du-tour";
 import { BandeauCourriers, courriersQuiMeConcernent } from "@/components/bandeau-courriers";
 import { TourSimule } from "@/components/tour-simule";
 import { CourrierDuTour } from "@/components/courrier-du-tour";
@@ -408,18 +408,19 @@ export default async function ArenaPage({
         </div>
       </header>
 
-      {/* ── Status banner ── */}
-      <div>
-        <RoundStatusBanner
-          currentRound={view.currentRound}
-          roundsCount={view.roundsCount}
-          roundDays={view.roundDays}
-          pendingDecisions={view.pendingDecisions !== null}
-          kind={view.kind}
-          finished={finished}
-          situations={statutSituations}
-        />
-      </div>
+      {/* ── L'état du tour, pour qui n'a pas l'écran ──
+          Le bandeau qui s'affichait ici disait ce que la frise, les onglets et
+          le lien du tour clos disent déjà ; il ne reste que sa région live, qui
+          annonce à la voix la clôture d'un tour survenue sans action de
+          l'élève. Sans surface : `sr-only`. */}
+      <AnnonceDuTour
+        currentRound={view.currentRound}
+        roundsCount={view.roundsCount}
+        roundDays={view.roundDays}
+        pendingDecisions={view.pendingDecisions !== null}
+        kind={view.kind}
+        finished={finished}
+      />
 
       {/* ── Crise de trésorerie : avant tout le reste, et sans rideau ──
           Cet état appartient à l'équipe : il ne dépend pas de la révélation du
@@ -659,7 +660,17 @@ export default async function ArenaPage({
               <span className="flex items-center gap-2 text-sm font-semibold text-amber-200">
                 ✏️ {periodLabel(view.roundDays, view.currentRound)} en cours
               </span>
-              {view.kind === "solo" ? null : (
+              {/* LA SEULE CHOSE QUE LE BANDEAU DISAIT SEUL. « Décisions
+                  enregistrées » se lisait tout en haut de la page ; le reste du
+                  bandeau étant redite, l'état revient ici, sur l'en-tête du tour
+                  qu'il qualifie. Le formulaire, plus bas, le dit aussi (« Mettre
+                  à jour mes décisions validées »), mais il faut avoir ouvert
+                  l'onglet Décider pour le voir. */}
+              {view.kind === "solo" ? null : view.pendingDecisions !== null ? (
+                <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-0.5 text-xs font-medium text-emerald-300">
+                  ✓ Décisions enregistrées · en attente de la clôture
+                </span>
+              ) : (
                 <span className="text-xs text-slate-400">Résultats à la clôture du tour.</span>
               )}
             </div>

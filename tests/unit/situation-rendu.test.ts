@@ -13,7 +13,7 @@ import {
   messageIncomplet,
   statutDesSituations,
 } from "@/config/situation-rendu";
-import { RoundStatusBanner } from "@/components/round-status-banner";
+import { AnnonceDuTour } from "@/components/annonce-du-tour";
 import type { SituationView } from "@/services/pedagogy.service";
 
 /**
@@ -23,7 +23,7 @@ import type { SituationView } from "@/services/pedagogy.service";
  * « Valider mes réponses » de l'autre, et des équipes débriefées sur une
  * moitié de copie. Un seul bouton, grisé tant qu'une moitié manque, un
  * refus serveur identique pour un formulaire forgé, et le statut lisible
- * en tête de l'onglet Situation comme dans le bandeau d'en-tête.
+ * en tête de l'onglet Situation.
  */
 
 // Les actions serveur touchent désormais le service des subventions, qui
@@ -302,81 +302,83 @@ describe("la carte de situation : un seul bouton, grisé tant qu'une moitié man
 });
 
 /**
- * LE BANDEAU N'EMMÈNE PLUS AUX CHAMPS DE SAISIE.
+ * LE BANDEAU D'ÉTAT A DISPARU, SA VOIX EST RESTÉE.
  *
- * Il portait un raccourci « Prendre mes décisions → » qui sautait par-dessus
- * l'étape Analyser : posé tout en haut, avant même le contexte, il invitait à
- * trancher avant d'avoir lu. Le bandeau reste — il situe le tour et annonce aux
- * lecteurs d'écran ce qui change sans action de l'élève —, mais le chemin vers
- * la saisie passe par les onglets, dans leur ordre.
+ * Un encadré occupait le haut de l'arène pour dire le numéro du tour (que
+ * porte la frise), « à vous de jouer » (que portent les onglets et le bouton
+ * de validation) et la clôture du tour précédent (que porte le lien vert du
+ * tour en cours). Trois redites en cinq lignes, avant la moindre donnée.
+ *
+ * Ce qu'il faut sauver en le retirant : en classe, le tour se clôt et la page
+ * se rafraîchit toute seule. À l'écran la nouvelle période se voit ; à la voix,
+ * rien ne l'annonce si la région live disparaît avec l'encadré. D'où
+ * `AnnonceDuTour` : une phrase, `role="status"`, `sr-only`.
  */
-describe("le bandeau d'en-tête", () => {
-  function bandeau(situations: ReturnType<typeof statutDesSituations>, pendingDecisions = false): string {
+describe("l'annonce du tour", () => {
+  function annonce(
+    etat: Partial<{
+      currentRound: number;
+      pendingDecisions: boolean;
+      kind: "solo" | "class";
+      finished: boolean;
+    }> = {},
+  ): string {
     return renderToStaticMarkup(
-      createElement(RoundStatusBanner, {
+      createElement(AnnonceDuTour, {
         currentRound: 2,
         roundsCount: 6,
         roundDays: 30,
-        pendingDecisions,
+        pendingDecisions: false,
         kind: "class",
         finished: false,
-        situations,
+        ...etat,
       }),
     );
   }
 
-  it("quand les décisions sont attendues, il situe le tour sans y mener", () => {
-    const html = bandeau(statutDesSituations([situation()]));
-    expect(html).toContain("À vous de jouer");
-    expect(html).toContain("2"); // le numéro du tour
-    // On n'affiche pas « Situation incomplète » : le bouton grisé le dit déjà.
-    expect(html).not.toContain("statut-situation");
-    expect(html).not.toContain("Situation incomplète");
-  });
-
-  it("et surtout, plus de raccourci qui saute par-dessus Analyser", () => {
-    // La faute à empêcher : remettre ici une porte vers la saisie. Quel que
-    // soit l'état des situations du tour, ce bandeau ne mène pas aux champs.
-    for (const situations of [
-      null,
-      statutDesSituations([situation()]),
-      statutDesSituations([
-        situation({ diagnosis: { selected: ["a"], freeText: "" }, quizAnswers: { model_choice: "m1" } }),
-      ]),
+  it("tous les états gardent la région live", () => {
+    // Le tour se clôt et la page se rafraîchit sans que l'élève ne fasse rien :
+    // un lecteur d'écran doit l'annoncer. Retirer le bandeau ne devait pas
+    // coûter cela.
+    for (const etat of [
+      {},
+      { pendingDecisions: true },
+      { finished: true },
+      { kind: "solo" as const },
     ]) {
-      for (const pending of [false, true]) {
-        expect(bandeau(situations, pending)).not.toContain('href="#decisions"');
-      }
+      expect(annonce(etat)).toContain('role="status"');
+      expect(annonce(etat)).toContain('aria-live="polite"');
     }
   });
 
-  it("le bandeau ne montre plus de statut de situation, même une fois rendue", () => {
-    const rendue = statutDesSituations([
-      situation({ diagnosis: { selected: ["a"], freeText: "" }, quizAnswers: { model_choice: "m1" } }),
-    ]);
-    expect(bandeau(rendue)).not.toContain("statut-situation");
-    expect(bandeau(rendue, true)).not.toContain("statut-situation");
-    expect(bandeau(rendue, true)).toContain("Décisions enregistrées");
+  it("elle ne se voit pas : aucune surface, aucun encadré", () => {
+    // La faute à empêcher : remettre un bandeau derrière ce composant. Il est
+    // une voix, pas une boîte.
+    const html = annonce();
+    expect(html).toContain('class="sr-only"');
+    expect(html).not.toContain("rounded");
+    expect(html).not.toContain("border-");
   });
 
-  it("tous les états gardent la région live", () => {
-    // Le tour se clôt et la page se rafraîchit sans que l'élève ne fasse rien :
-    // ce bandeau est le seul indice du changement, un lecteur d'écran doit
-    // l'annoncer. Retirer le bouton ne devait pas coûter cela.
-    expect(bandeau(null, false)).toContain('role="status"');
-    expect(bandeau(null, true)).toContain('role="status"');
-    expect(
-      renderToStaticMarkup(
-        createElement(RoundStatusBanner, {
-          currentRound: 6,
-          roundsCount: 6,
-          roundDays: 30,
-          pendingDecisions: false,
-          kind: "class",
-          finished: true,
-          situations: null,
-        }),
-      ),
-    ).toContain("Partie terminée");
+  it("chaque état dit ce qu'il est", () => {
+    expect(annonce()).toContain("À vous de jouer");
+    expect(annonce()).toContain("Tour 2 sur 6");
+    expect(annonce({ pendingDecisions: true })).toContain("Décisions enregistrées");
+    expect(annonce({ pendingDecisions: true })).toContain("clôture du tour par l&#x27;enseignant");
+    expect(annonce({ pendingDecisions: true, kind: "solo" })).toContain("résolution en cours");
+    expect(annonce({ finished: true })).toContain("Partie terminée");
+  });
+
+  it("au deuxième tour elle situe le tour clos ; au premier, elle n'invente rien", () => {
+    expect(annonce({ currentRound: 2 })).toContain("est clos");
+    expect(annonce({ currentRound: 1 })).not.toContain("est clos");
+  });
+
+  it("et surtout, plus de raccourci qui saute par-dessus Analyser", () => {
+    // La faute d'origine : une porte vers la saisie posée tout en haut, avant
+    // le contexte, qui invitait à trancher avant d'avoir lu.
+    for (const etat of [{}, { pendingDecisions: true }, { finished: true }]) {
+      expect(annonce(etat)).not.toContain('href="#decisions"');
+    }
   });
 });
