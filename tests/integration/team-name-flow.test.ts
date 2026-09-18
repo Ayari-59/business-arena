@@ -21,6 +21,7 @@ import { getTeacherOrgId, registerTeacher } from "@/services/auth.service";
 import {
   closeCurrentRound,
   createClassGame,
+  createSoloGame,
   getGameView,
   joinGameByCode,
   nommerEquipe,
@@ -106,6 +107,16 @@ describe("l'équipe se donne un nom", () => {
     await expect(
       nommerEquipe({ gameId, userId: etranger, nom: "Les Pirates" }),
     ).rejects.toThrow(/membre/);
+  });
+
+  it("en solo, rien à nommer : l'entreprise est celle du scénario", async () => {
+    const solo = await createSoloGame(alice, "quarter", 2);
+    const vue = (await getGameView(solo, alice))!;
+    expect(vue.peutSeNommer).toBe(false);
+    // Et la garde tient côté serveur, pas seulement à l'écran.
+    await expect(nommerEquipe({ gameId: solo, userId: alice, nom: "Ma Boîte" })).rejects.toThrow(
+      /solo/,
+    );
   });
 
   it("le nom se fige à la clôture du premier tour", async () => {

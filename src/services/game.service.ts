@@ -107,6 +107,9 @@ export async function joinGameByCode(args: {
  *
  * Après, le nom se fige : un classement qui change d'intitulé en cours de
  * partie devient illisible, pour la classe comme pour le relevé de notes.
+ *
+ * En partie solo, jamais : le joueur reprend une entreprise qui existe déjà,
+ * avec son nom et son secteur.
  */
 export async function nommerEquipe(args: {
   gameId: string;
@@ -115,6 +118,11 @@ export async function nommerEquipe(args: {
 }): Promise<{ nom: string }> {
   const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
   if (!game) throw new Error("Partie introuvable");
+  // En solo, l'entreprise est celle du scénario : elle a son nom, son secteur
+  // et son histoire, et c'est la mise en situation elle-même.
+  if (((game.difficultyProfile as { kind?: GameKind } | null)?.kind ?? "solo") === "solo") {
+    throw new Error("En solo, l'entreprise garde le nom du scénario.");
+  }
   if (game.currentRound > 1) {
     throw new Error("Le nom se fige après le premier tour : celui-ci est déjà clos.");
   }

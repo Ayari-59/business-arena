@@ -1365,7 +1365,13 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     // classement et sur le relevé de notes pendant six trimestres, sans que
     // personne, élève ou enseignant, puisse la corriger. Le service, lui,
     // autorisait déjà le changement : c'était l'écran qui se fermait trop tôt.
-    peutSeNommer: game.currentRound === 1,
+    //
+    // Jamais en solo. Le joueur seul reprend une entreprise qui existe, porte
+    // un nom, une histoire et un secteur — NOVA, L'ESCALE, MAILLE & CO —, et
+    // ce nom est la moitié de la mise en situation. Lui proposer de le changer
+    // ouvrirait un écran de plus avant la première décision, pour renommer ce
+    // que le scénario vient de planter.
+    peutSeNommer: kindDeLaPartie !== "solo" && game.currentRound === 1,
     equipesDeLaClasse,
     peutChoisirSonEquipe: kindDeLaPartie !== "solo" && peutChoisirSonEquipe(game),
     pendingDecisions,

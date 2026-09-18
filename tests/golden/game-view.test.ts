@@ -198,8 +198,10 @@ describe("GameView NOVA — après résolution du tour 1", () => {
     }
   });
 
-  it("peutSeNommer ne dépend que du tour : ouvert au premier, fermé ensuite", async () => {
+  it("en solo, aucun panneau de nommage : l'entreprise est celle du scénario", async () => {
     const view = await getGameView(gameId, userId);
-    expect(typeof view!.peutSeNommer).toBe("boolean");
+    expect(view!.peutSeNommer).toBe(false);
+    expect(view!.equipesDeLaClasse).toEqual([]);
+    expect(view!.peutChoisirSonEquipe).toBe(false);
   });
 });
