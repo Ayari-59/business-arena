@@ -150,7 +150,7 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
     effet: "Capacité commerciale −25 % ce tour (un établissement ciblé)",
     enJeu: "Dépendre d'un outil unique, c'est lui confier son chiffre d'affaires : la formule tous risques le couvre.",
     nature: "internal",
-    pli: "simple",
+    pli: "email",
     emoji: "🔒",
     scope: "team",
   },

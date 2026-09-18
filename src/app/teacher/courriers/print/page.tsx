@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { NATURES, type CourrierDef } from "@/config/courriers/types";
 import { courriersPourCodes, positionDuCourrier } from "@/config/courriers/registre";
 import { scenarioByCode } from "@/config/scenarios/registry";
-import { Enveloppe, Lettre } from "@/components/courrier";
+import { Courriel, Enveloppe, Lettre, Message } from "@/components/courrier";
 
 /**
  * LA LIASSE À IMPRIMER : chaque courrier est un pli — l'enveloppe d'un côté,
@@ -30,18 +30,36 @@ type Liasse = "market" | "team";
 
 function PliImprime({ courrier, liasse }: { courrier: CourrierDef; liasse: Liasse }) {
   const position = positionDuCourrier(courrier.code);
+  const destinataire = liasse === "market" ? "Tout le marché" : "Une entreprise";
+  /*
+   * LE COURRIEL S'IMPRIME AUSSI, et sur le même gabarit : au dos la ligne de
+   * boîte de réception, au recto le message. L'enseignant découpe, plie et
+   * distribue exactement comme un pli — ce qui change, c'est ce que l'élève
+   * tient : une impression d'écran et non une lettre. Le blanc froid du
+   * courriel tombe juste sur le fond blanc de la feuille, sans règle
+   * d'impression particulière.
+   */
+  const parCourriel = courrier.pli === "email";
   return (
     <div className="print-pair">
       <div className="print-half print-back">
-        <Enveloppe
-          code={courrier.code}
-          liasse={position?.liasse}
-          destinataire={liasse === "market" ? "Tout le marché" : "Une entreprise"}
-          className="h-full"
-        />
+        {parCourriel ? (
+          <Courriel code={courrier.code} destinataire={destinataire} className="h-full" />
+        ) : (
+          <Enveloppe
+            code={courrier.code}
+            liasse={position?.liasse}
+            destinataire={destinataire}
+            className="h-full"
+          />
+        )}
       </div>
       <div className="print-half print-front">
-        <Lettre code={courrier.code} />
+        {parCourriel ? (
+          <Message code={courrier.code} destinataire={destinataire} />
+        ) : (
+          <Lettre code={courrier.code} />
+        )}
       </div>
     </div>
   );
@@ -282,7 +300,8 @@ const printStyles = `
    * pli (138 × 92 mm, quatre par A4 paysage) est calé sur cette hauteur-là :
    * une lettre a besoin de plus de place qu'une carte à jouer.
    */
-  .print-front .lettre, .print-back .enveloppe {
+  .print-front .lettre, .print-back .enveloppe,
+  .print-front .message, .print-back .courriel {
     height: 100%;
     min-height: 0;
     border-radius: 0;

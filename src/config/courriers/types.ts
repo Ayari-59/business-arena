@@ -41,8 +41,19 @@ export type NatureDuCourrier = "market" | "competition" | "internal" | "macro";
  * Son enveloppe le dit du premier coup d'œil, et c'est une information : ce
  * qui vient de l'intérieur ne s'oppose pas à l'entreprise, il la renseigne.
  * Une démission reste un recommandé — elle fait courir un préavis.
+ *
+ * LE COURRIEL, enfin, pour ce qui ne peut pas attendre la poste : une panne
+ * qu'on signale le matin même, un dépôt bloqué, un service interrompu. Aucun
+ * prestataire n'affranchit une lettre pour annoncer que son serveur est
+ * tombé ; il écrit, tout de suite, et cela se voit à la forme du message.
+ *
+ * Et c'est une leçon, pas un décor : un courriel ne prouve rien. Il n'a ni
+ * accusé de réception ni date certaine, là où le recommandé fait courir un
+ * délai opposable. « Je vous l'avais dit par mail » ne pèse rien face à une
+ * mise en demeure — d'où la garde, dans `pli-des-courriers.test.ts`, qui
+ * interdit qu'une mise en demeure parte par courriel.
  */
-export type TypeDePli = "recommande" | "simple" | "interne";
+export type TypeDePli = "recommande" | "simple" | "interne" | "email";
 
 export interface CourrierDef {
   /** Le code de l'événement du moteur. Ne change jamais. */
@@ -119,6 +130,8 @@ export const MENTION_DU_PLI: Record<TypeDePli, string> = {
   recommande: "Lettre recommandée avec accusé de réception",
   simple: "Pli simple",
   interne: "Note de service — diffusion interne",
+  // Ce que le courriel NE porte pas est précisément ce qu'il faut lire.
+  email: "Courriel — sans accusé de réception",
 };
 
 /** La bande de tranche : sa mention et sa couleur, ou rien pour un pli simple. */
@@ -126,6 +139,8 @@ export const BANDE_DU_PLI: Record<TypeDePli, { mention: string; classe: string }
   recommande: { mention: "Recommandé A.R.", classe: "bg-red-700 text-white" },
   simple: null,
   interne: { mention: "Diffusion interne", classe: "bg-slate-700 text-white" },
+  // Pas de tranche : un courriel n'a pas d'enveloppe sur laquelle l'imprimer.
+  email: null,
 };
 
 /**

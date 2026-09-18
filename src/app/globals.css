@@ -237,7 +237,8 @@ h1 {
  * parent. Sans ce mot-là, toute une distribution s'ouvrirait d'un bloc — le
  * facteur poserait les six plis d'un seul geste.
  */
-.pli-ouverture > .enveloppe {
+.pli-ouverture > .enveloppe,
+.pli-ouverture > .courriel {
   position: absolute;
   inset: 0;
   z-index: 2;
@@ -255,7 +256,8 @@ h1 {
   animation-delay: inherit;
 }
 
-.pli-ouverture > .lettre {
+.pli-ouverture > .lettre,
+.pli-ouverture > .message {
   flex: 1;
   animation: pli-entree 1s cubic-bezier(0.4, 0.2, 0.2, 1) forwards;
   animation-delay: inherit;
@@ -332,6 +334,82 @@ h1 {
 
 .papier .filet {
   border-color: rgba(31, 41, 55, 0.22);
+}
+
+/*
+ * L'ÉCRAN, matière du courriel — et tout l'enjeu est qu'il ne soit PAS du
+ * papier.
+ *
+ * Réutiliser `.papier` aurait donné une lettre déguisée : même ivoire, même
+ * ombre, et le canal cesserait de se voir, alors que c'est lui qui porte la
+ * leçon. Le courriel a donc sa propre matière, et elle s'oppose au papier sur
+ * ce qui se remarque sans se lire :
+ *
+ *   · un blanc FROID contre l'ivoire chaud — deux lumières, pas deux teintes ;
+ *   · pas de grain, pas de rabat, pas de timbre : une surface plate ;
+ *   · des angles courts là où la lettre en a de généreux ;
+ *   · un en-tête à étiquettes (De, À, Objet) au lieu d'une formule d'appel.
+ *
+ * Comme le papier, c'est un OBJET et non une surface du site : ses couleurs
+ * sont écrites en dur, sans aucun utilitaire Tailwind à l'intérieur, sinon le
+ * thème clair les inverserait. Le blanc froid a une seconde vertu : la liasse
+ * de l'enseignant s'imprime sur fond blanc, et un courriel imprimé y reste ce
+ * qu'il est — une impression d'écran, pas une lettre.
+ */
+.ecran {
+  --encre: #0f172a;
+  --encre-douce: #334155;
+  --encre-tenue: #64748b;
+  --ecran: #fbfcfd;
+  --ecran-creux: #eef2f7;
+  --ecran-filet: rgba(15, 23, 42, 0.14);
+  color: var(--encre);
+  background-color: var(--ecran);
+  border: 1px solid rgba(15, 23, 42, 0.3);
+  box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.75);
+}
+
+.ecran .douce {
+  color: var(--encre-douce);
+}
+
+.ecran .tenue {
+  color: var(--encre-tenue);
+}
+
+.ecran .creux {
+  background-color: var(--ecran-creux);
+}
+
+.ecran .filet {
+  border-color: var(--ecran-filet);
+}
+
+/* Le message ouvert se comporte comme la lettre : il tient la hauteur de la
+   rangée, pour que deux courriers côte à côte s'alignent quel qu'en soit le
+   canal. */
+.message {
+  position: relative;
+  min-height: max(100%, 20rem);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Le courriel fermé, lui, est une ligne de boîte de réception : c'est
+   l'appelant qui le place, comme l'enveloppe. */
+.courriel {
+  position: relative;
+  overflow: hidden;
+}
+
+/*
+ * LA PASTILLE DU NON-LU. Un point plein, le seul de l'objet : c'est ce qui
+ * fait lire une ligne comme un message qu'on n'a pas encore ouvert, avant même
+ * d'en lire l'expéditeur.
+ */
+.courriel-point {
+  background: #0369a1;
+  box-shadow: 0 0 0 3px rgba(3, 105, 161, 0.16);
 }
 
 /*
@@ -444,10 +522,12 @@ h1 {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pli-ouverture > .enveloppe {
+  .pli-ouverture > .enveloppe,
+  .pli-ouverture > .courriel {
     display: none;
   }
-  .pli-ouverture > .lettre {
+  .pli-ouverture > .lettre,
+  .pli-ouverture > .message {
     animation: none;
     opacity: 1;
     transform: none;

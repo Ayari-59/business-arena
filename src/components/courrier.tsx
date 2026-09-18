@@ -27,6 +27,14 @@ import { BrandMark } from "@/components/brand-mark";
  * n'a rien, la note de service circule dans une pochette interne : ni timbre
  * ni cachet, mais la grille de circulation des enveloppes navette. Un chef
  * d'atelier n'affranchit pas son rapport.
+ *
+ * ET UN QUATRIÈME CANAL QUI N'EST PAS DU PAPIER. Le courriel a ses propres
+ * objets — `Courriel` pour la ligne fermée, `Message` pour le message ouvert —
+ * parce qu'une panne de serveur ne s'annonce pas par la poste. Ils occupent
+ * exactement la place de l'enveloppe et de la lettre dans la scène
+ * d'ouverture, mais dans l'autre matière (`.ecran`, globals.css) : blanc
+ * froid, pas de rabat, pas de timbre, un en-tête à étiquettes. Le canal doit
+ * se voir avant d'être lu — c'est lui qui dit si la chose engage.
  */
 
 /**
@@ -270,6 +278,209 @@ export function Lettre({
 }
 
 /**
+ * LE COURRIEL FERMÉ : une ligne de boîte de réception.
+ *
+ * Il joue le rôle de l'enveloppe — l'objet qu'on voit avant d'ouvrir — mais il
+ * ne lui ressemble en rien, et c'est voulu : on reconnaît un message non lu à
+ * son point plein et à son expéditeur en gras, pas à un rabat et à un timbre.
+ * Il porte l'heure plutôt qu'un cachet, parce qu'un courriel arrive dans la
+ * journée quand une lettre arrive dans la semaine.
+ */
+export function Courriel({
+  code,
+  destinataire,
+  className = "",
+}: {
+  code?: string;
+  destinataire?: string;
+  className?: string;
+}) {
+  const c = code ? courrier(code) : undefined;
+  const nature = c ? NATURES[c.nature] : null;
+  const reference = code ? referenceDuCourrier(code) : null;
+
+  return (
+    <div className={`ecran courriel rounded-md p-3 ${className}`}>
+      <div className="flex h-full min-h-full flex-col">
+        <div className="creux filet -mx-3 -mt-3 mb-3 flex items-center justify-between gap-2 border-b px-3 py-1.5">
+          <span className="tenue text-xs font-semibold uppercase tracking-[0.15em]">
+            Boîte de réception
+          </span>
+          <span className="tenue text-xs tabular-nums">1 non lu</span>
+        </div>
+
+        <div className="flex items-start gap-2.5">
+          <span aria-hidden className="courriel-point mt-1.5 h-2 w-2 shrink-0 rounded-full" />
+          <span className="min-w-0 flex-1">
+            <span className="block text-xs font-bold leading-snug">
+              {c ? c.expediteur : "Message à ouvrir"}
+            </span>
+            {c ? (
+              <span className="douce mt-1 block text-xs leading-snug">{c.objet}</span>
+            ) : null}
+          </span>
+          {c ? (
+            <span aria-hidden className="shrink-0 text-lg leading-none">
+              {c.emoji}
+            </span>
+          ) : null}
+        </div>
+
+        {/* Le destinataire en clair sous l'objet, et non dans une fenêtre
+            encadrée : une boîte de réception n'a pas de fenêtre d'enveloppe. */}
+        <span className="tenue mt-1.5 block pl-[1.125rem] text-xs leading-snug">
+          À {destinataire ?? "L'entreprise"}
+        </span>
+
+        {nature ? (
+          <span
+            className="mt-2.5 inline-flex w-fit border-l-2 pl-1.5 text-xs font-semibold uppercase leading-none tracking-wide"
+            style={{ borderColor: nature.encre, color: nature.encre }}
+          >
+            {nature.mention}
+          </span>
+        ) : null}
+
+        {/*
+          LES MESSAGES DÉJÀ LUS, en dessous : deux lignes éteintes, sans texte.
+          L'objet fermé prend la hauteur de son voisin ouvert (`h-full` dans la
+          scène), et sans elles cette hauteur était un grand vide au milieu de
+          la carte. Une boîte de réception qui ne contient qu'un seul message
+          n'existe pas ; ces deux lignes disent que celui du jour arrive dans
+          une pile, ce qui est le propre du canal.
+        */}
+        <div aria-hidden className="mt-auto space-y-2 pt-3 opacity-40">
+          {[0, 1].map((i) => (
+            <div key={i} className="flex items-center gap-2.5">
+              <span className="filet h-2 w-2 shrink-0 rounded-full border" />
+              <span className="creux h-1.5 flex-1 rounded-full" style={{ maxWidth: `${88 - i * 22}%` }} />
+            </div>
+          ))}
+        </div>
+
+        <div className="filet mt-2 flex items-end justify-between gap-2 border-t pt-1.5">
+          <span className="tenue flex items-center gap-1.5 text-xs uppercase tracking-[0.15em]">
+            <BrandMark className="h-3.5 w-3.5" />
+            Messagerie
+          </span>
+          {reference ? <span className="tenue text-xs tabular-nums">{reference}</span> : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * LE MESSAGE OUVERT.
+ *
+ * Même contenu qu'une lettre, autres usages : pas de « Madame, Monsieur », pas
+ * de « Veuillez agréer » — on n'écrit pas ainsi un message qu'on envoie dans
+ * l'heure. À la place, l'en-tête à étiquettes qui fait reconnaître un courriel
+ * de loin, et une mention qui est la vraie leçon du canal : il ne prouve rien.
+ */
+export function Message({
+  code,
+  annonce = false,
+  destinataire,
+  surligne = false,
+}: {
+  code: string;
+  annonce?: boolean;
+  destinataire?: string;
+  surligne?: boolean;
+}) {
+  const c = courrier(code);
+  if (!c) return null;
+  const nature = NATURES[c.nature];
+  const position = positionDuCourrier(code);
+  const reference = referenceDuCourrier(code);
+  const duree = dureeDuCourrier(c);
+  const routine = estUnCourrierDeRoutine(code);
+
+  return (
+    <div
+      className="ecran message rounded-md"
+      style={surligne ? { boxShadow: "0 0 0 2px #0369a1" } : undefined}
+    >
+      {/* L'en-tête à étiquettes : De, À, Objet. C'est lui qui fait le courriel,
+          bien plus que la couleur du fond. */}
+      <div className="creux filet border-b px-3 py-2">
+        <div className="flex items-start justify-between gap-2">
+          <span className="tenue text-xs font-semibold uppercase tracking-[0.15em]">Message</span>
+          <span
+            className="shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-xs uppercase tracking-wide"
+            style={{ borderColor: nature.encre, color: nature.encre }}
+          >
+            {annonce ? "annoncé" : nature.label}
+          </span>
+        </div>
+        <dl className="mt-1.5 grid grid-cols-[2.5rem_1fr] gap-x-2 gap-y-1 text-xs leading-snug">
+          <dt className="tenue uppercase tracking-widest">De</dt>
+          <dd className="min-w-0 font-semibold">{c.expediteur}</dd>
+          <dt className="tenue uppercase tracking-widest">À</dt>
+          <dd
+            className={`min-w-0 ${surligne ? "font-semibold" : "douce"}`}
+            style={surligne ? { color: "#0369a1" } : undefined}
+          >
+            {destinataire ?? "L'entreprise"}
+          </dd>
+          <dt className="tenue uppercase tracking-widest">Objet</dt>
+          <dd className="min-w-0 font-semibold">{c.objet}</dd>
+        </dl>
+      </div>
+
+      {/*
+        `flex-1` SANS `min-h-full` : le message a un en-tête frère, là où la
+        lettre n'en a pas. Une hauteur minimale de 100 % posée ici s'ajoutait à
+        celle de l'en-tête, et le total dépassait le pli — à l'impression,
+        l'effet du courrier et la leçon tombaient sous le bord et
+        disparaissaient. `flex-1` remplit ce qui reste, ce qui est exactement
+        ce qu'on veut.
+      */}
+      <div className="flex flex-1 flex-col px-3 pb-3 pt-2.5">
+        <p className="douce text-xs italic">Bonjour,</p>
+        <p className="douce mt-1 text-xs leading-relaxed">{c.corps}</p>
+        <p className="douce mt-2 text-xs italic leading-snug">
+          Cordialement,
+          <br />
+          <span className="not-italic">{c.signataire}</span>
+        </p>
+
+        {/* La mention du canal, en clair : ce qu'un courriel ne fait pas. */}
+        <p className="tenue filet mt-2 border-t pt-1.5 text-xs">{MENTION_DU_PLI[c.pli]}</p>
+
+        <div className="creux filet mt-auto rounded-md border px-3 py-2">
+          <div className="flex items-start justify-between gap-2">
+            <p className={`text-xs font-semibold leading-snug ${routine ? "douce" : ""}`}>
+              {routine ? "🗂️" : "⚡"} {c.effet}
+            </p>
+            {routine ? null : (
+              <span
+                className="tenue mt-0.5 shrink-0 text-xs tracking-widest"
+                aria-label={`${duree} tour${duree > 1 ? "s" : ""}`}
+                title={`${duree} tour${duree > 1 ? "s" : ""}`}
+              >
+                {"●".repeat(duree)}
+              </span>
+            )}
+          </div>
+        </div>
+        <p className="douce mt-2 text-xs leading-snug">💡 {c.enJeu}</p>
+
+        <div className="filet mt-2 flex items-end justify-between border-t pt-1.5">
+          <span className="tenue text-xs uppercase tracking-[0.15em]">
+            {position
+              ? `${position.liasse} · ${position.index} / ${position.total}`
+              : "Courrier de routine"}
+          </span>
+          {reference ? <span className="tenue text-xs tabular-nums">{reference}</span> : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
  * LA GRILLE D'UNE DISTRIBUTION.
  *
  * À deux colonnes dès qu'il y a deux plis. Mais un courrier seul dans une
@@ -306,17 +517,28 @@ export function CourrierRecommande({
     );
   }
   const position = positionDuCourrier(code);
+  // Le canal décide des deux objets, et de rien d'autre : la scène, le retard
+  // d'ouverture et la place dans la grille sont les mêmes pour tous.
+  const parCourriel = c.pli === "email";
 
   return (
     <div className="pli-scene" style={{ animationDelay: `${delayMs}ms` }}>
       <div className="pli-ouverture" style={{ animationDelay: `${delayMs}ms` }}>
-        <Enveloppe
-          code={code}
-          liasse={position?.liasse}
-          destinataire={destinataire}
-          className="h-full"
-        />
-        <Lettre code={code} annonce={annonce} destinataire={destinataire} surligne={surligne} />
+        {parCourriel ? (
+          <Courriel code={code} destinataire={destinataire} className="h-full" />
+        ) : (
+          <Enveloppe
+            code={code}
+            liasse={position?.liasse}
+            destinataire={destinataire}
+            className="h-full"
+          />
+        )}
+        {parCourriel ? (
+          <Message code={code} annonce={annonce} destinataire={destinataire} surligne={surligne} />
+        ) : (
+          <Lettre code={code} annonce={annonce} destinataire={destinataire} surligne={surligne} />
+        )}
       </div>
     </div>
   );

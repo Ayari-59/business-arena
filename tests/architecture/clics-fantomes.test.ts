@@ -64,11 +64,17 @@ describe("aucune surface invisible ne mange les clics", () => {
     }
   });
 
-  it("l'enveloppe du courrier est bien l'une d'elles", () => {
+  it("les deux objets fermés du courrier en sont", () => {
     // La garde générale ne sert à rien si elle ne couvre pas le cas qui l'a
-    // fait écrire : on le nomme.
+    // fait écrire : on le nomme. Ils sont deux depuis que le courriel est un
+    // canal — l'enveloppe et la ligne de boîte de réception s'effacent de la
+    // même façon, donc ne doivent pas plus l'une que l'autre rester cliquables.
     expect(animationsQuiSeffacent(CSS)).toContain("pli-sortie");
-    const regles = reglesQuiJouent(CSS, "pli-sortie");
-    expect(regles.map((r) => r.selecteur)).toContain(".pli-ouverture > .enveloppe");
+    const selecteurs = reglesQuiJouent(CSS, "pli-sortie")
+      .map((r) => r.selecteur)
+      .join(" ");
+    for (const objet of [".pli-ouverture > .enveloppe", ".pli-ouverture > .courriel"]) {
+      expect(selecteurs, `${objet} ne joue pas pli-sortie`).toContain(objet);
+    }
   });
 });

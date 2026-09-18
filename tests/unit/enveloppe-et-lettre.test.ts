@@ -7,7 +7,7 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("@/db", () => ({ db: {} }));
 vi.mock("next/headers", () => ({ headers: vi.fn(), cookies: vi.fn() }));
 
-import { Enveloppe, Lettre, grilleDeCourriers } from "@/components/courrier";
+import { Courriel, Enveloppe, Lettre, Message, grilleDeCourriers } from "@/components/courrier";
 import { courrierParCode } from "@/config/courriers/registre";
 
 /**
@@ -112,5 +112,67 @@ describe("la grille d'une distribution", () => {
       expect(grilles, `${f} : grille de courriers écrite à la main`).toEqual([]);
       expect(source).toContain("grilleDeCourriers(");
     }
+  });
+});
+
+/**
+ * LE COURRIEL N'EST PAS DU PAPIER, et c'est tout l'enjeu.
+ *
+ * Le piège de ce quatrième canal était de le poser sur `.papier` : on aurait
+ * eu une lettre déguisée, et le canal — qui porte la leçon, puisque c'est lui
+ * qui dit si la chose engage — aurait cessé de se voir. Ces tests tiennent la
+ * séparation des deux matières et la parité de leurs repères.
+ */
+const courriel = (code: string) =>
+  renderToStaticMarkup(createElement(Courriel, { code, destinataire: "L'entreprise" }));
+const message = (code: string) =>
+  renderToStaticMarkup(createElement(Message, { code, destinataire: "L'entreprise" }));
+
+describe("le courriel, autre matière", () => {
+  const code = "ecom_panne_paiement";
+
+  it("il porte l'écran, jamais le papier", () => {
+    for (const html of [courriel(code), message(code)]) {
+      expect(html).toContain("ecran");
+      expect(html, "un courriel posé sur le papier redevient une lettre").not.toContain("papier");
+    }
+  });
+
+  it("il garde les repères du pli : expéditeur et référence", () => {
+    // Même règle d'harmonie que l'enveloppe et sa lettre : on doit reconnaître
+    // le même courrier fermé et ouvert.
+    const expediteur = courrierParCode.get(code)!.expediteur;
+    for (const html of [courriel(code), message(code)]) {
+      expect(html).toContain(expediteur);
+      expect(html).toContain("PIXELCO-21/22");
+    }
+  });
+
+  it("aucune marque postale : ni timbre, ni rabat, ni bande de tranche", () => {
+    const html = courriel(code);
+    for (const marque of ["enveloppe-timbre", "enveloppe-bande", "enveloppe-circulation"]) {
+      expect(html, `${marque} n'a rien à faire sur un courriel`).not.toContain(marque);
+    }
+  });
+
+  it("le message dit ce que le canal ne prouve pas", () => {
+    // La leçon du courriel tient dans cette mention : pas d'accusé de
+    // réception, donc rien d'opposable. C'est ce qui le sépare du recommandé.
+    expect(message(code)).toContain("sans accusé de réception");
+  });
+
+  it("il n'emprunte ni la formule d'appel ni la politesse de la lettre", () => {
+    const html = message(code);
+    expect(html).not.toContain("Madame, Monsieur");
+    expect(html).not.toContain("Veuillez agréer");
+    expect(html).toContain("Bonjour");
+  });
+
+  it("aucun utilitaire de couleur du site ne traverse l'écran non plus", () => {
+    // Même raison que pour le papier : le thème clair inverse la palette, et
+    // un courriel est un objet, pas une surface du site.
+    const html = courriel(code) + message(code);
+    const fautifs = [...html.matchAll(/\b(?:text|bg|border)-(?:slate|amber|emerald|sky|rose|fuchsia)-\d{2,3}\b/g)];
+    expect(fautifs.map((m) => m[0])).toEqual([]);
   });
 });

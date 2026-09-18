@@ -49,7 +49,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
     effet: "Capacité d'expédition −20 % ce tour",
     enJeu: "Vous avez encaissé, mais vous n'avez pas livré : la promesse de délai fait partie du produit.",
     nature: "macro",
-    pli: "simple",
+    pli: "email",
     emoji: "🚚",
     scope: "market",
   },
@@ -305,7 +305,7 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
     enJeu:
       "Une boutique en ligne dépend de prestataires qu'elle ne contrôle pas : le risque opérationnel se contractualise.",
     nature: "internal",
-    pli: "simple",
+    pli: "email",
     emoji: "💳",
     scope: "team",
   },

@@ -78,6 +78,26 @@ describe("le pli dit l'enjeu", () => {
     expect(part, `${recommandes.length} recommandés sur ${COURRIERS.length}`).toBeLessThan(0.25);
   });
 
+  it("rien de ce qui engage ne part par courriel", () => {
+    // La règle inverse de la première, et c'est la leçon du canal : un
+    // courriel n'a ni accusé de réception ni date certaine. Une mise en
+    // demeure, un procès-verbal ou une sanction envoyés par message ne
+    // vaudraient rien — les écrire ainsi enseignerait le contraire du vrai.
+    const ENGAGEMENTS_FORTS = [
+      "mise en demeure", "mettons en demeure", "met en demeure",
+      "proces-verbal", "sanction", "amende", "demission", "resiliation",
+    ];
+    const fautifs = COURRIERS.filter(
+      (c) =>
+        c.pli === "email" &&
+        ENGAGEMENTS_FORTS.some((m) => sansAccent(`${c.objet} ${c.corps}`).includes(m)),
+    ).map((c) => `${c.code} — « ${c.objet} »`);
+    expect(
+      fautifs,
+      "Ces courriels engagent : ils doivent partir en recommandé.\n" + fautifs.join("\n"),
+    ).toEqual([]);
+  });
+
   it("aucun courrier interne ne part en recommandé", () => {
     // Une note de service ne s'envoie pas avec accusé de réception à sa propre
     // maison. Les démissions, elles, sont écrites comme des lettres externes.
