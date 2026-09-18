@@ -675,9 +675,18 @@ export default async function ArenaPage({
                     tour qu'il qualifie. Le formulaire, plus bas, le dit aussi
                     (« Mettre à jour mes décisions validées »), mais il faut
                     avoir ouvert l'onglet Décider pour le voir. */}
+                {/* EN TEXTE, PAS EN PASTILLE. Cet état portait un liseré vert
+                    et un fond vert ; posé à côté de la pastille « en cours »,
+                    devenue verte elle aussi, on lisait deux jumelles dont
+                    aucune ne ressortait. Le vert de la ligne appartient
+                    désormais à « en cours » ; il n'en reste ici que la coche,
+                    qui suffit à dire que c'est fait. */}
                 {view.kind === "solo" ? null : view.pendingDecisions !== null ? (
-                  <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-0.5 text-xs font-medium text-emerald-300">
-                    ✓ Décisions enregistrées · en attente de la clôture
+                  <span className="text-xs text-slate-300">
+                    <span aria-hidden className="text-emerald-400">
+                      ✓
+                    </span>{" "}
+                    Décisions enregistrées · en attente de la clôture
                   </span>
                 ) : (
                   <span className="text-xs text-slate-400">Résultats à la clôture du tour.</span>
@@ -686,8 +695,18 @@ export default async function ArenaPage({
                     collé au libellé, il allongeait la seule chose qu'on lit en
                     diagonale (le numéro du tour) ; en pastille à droite, il
                     qualifie la ligne comme « résultats livrés » qualifie celle
-                    d'un tour clos. Même place, même forme, sens inverse. */}
-                <span className="rounded-full border border-amber-400/30 bg-amber-400/10 px-2.5 py-0.5 text-xs font-medium text-amber-200">
+                    d'un tour clos. Même place, même forme, sens inverse.
+
+                    VERT ET LUMINEUX, avec sa diode. En ambre, il se fondait
+                    dans le cadre ambre de la section : une pastille de la
+                    couleur de son contenant ne se voit pas. Le vert le détache,
+                    et le point allumé dit « ça tourne » — c'est le seul endroit
+                    de la ligne qui parle du présent. */}
+                <span className="flex items-center gap-1.5 rounded-full border border-emerald-400/50 bg-emerald-400/15 px-2.5 py-0.5 text-xs font-semibold text-emerald-200">
+                  <span
+                    aria-hidden
+                    className="h-1.5 w-1.5 rounded-full bg-emerald-300 shadow-[0_0_6px_1px] shadow-emerald-400/70"
+                  />
                   en cours
                 </span>
               </span>
