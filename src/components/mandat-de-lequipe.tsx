@@ -14,10 +14,17 @@ import { lettreDeMission } from "@/config/courriers/mission";
  * l'entreprise, les alertes, la situation du tour. Quatre blocs de texte
  * empilés, et on ne lit plus le premier.
  *
- * Un mandat se lit une fois et se range. Lu, il ne laisse qu'une ligne et de
- * quoi le rouvrir ; la place revient à ce qu'il faut décider. C'est le même
- * geste que le courrier du tour, et volontairement le même mot : « J'ai pris
- * note ».
+ * IL ARRIVE PLIÉ. Première version : la lettre dépliée, un bouton pour la
+ * ranger. Mieux que rien, mais le premier écran portait quand même trois
+ * textes d'un coup, et c'est deux de trop — on n'en lisait plus aucun. Le
+ * mandat se présente donc comme UNE LIGNE, qui nomme ce qu'on vous confie et
+ * propose de lire. Qui veut le détail l'ouvre ; qui veut décider n'a pas à le
+ * traverser.
+ *
+ * Ce n'est pas une mise au placard : la ligne porte l'objet du mandat, donc
+ * elle répond déjà à « qui m'a demandé de décider », qui était toute la raison
+ * d'être de cette lettre. Le reste est l'argumentaire, et l'argumentaire attend
+ * qu'on le demande.
  *
  * L'APPAREIL S'EN SOUVIENT, par la mémoire de lecture — vive d'abord, stockage
  * ensuite —, si bien qu'un rafraîchissement ne remet pas le mur de texte, et
@@ -28,9 +35,11 @@ function cleMemoire(gameId: string): string {
 }
 
 /**
- * "" jamais rangé · "1" rouvert · "2" rangé. Le même vocabulaire que le
- * courrier du tour — et « rouvrir » est un état à part entière, pas un retour
- * au néant : la mémoire retient ce qui a été fait, jamais ce qui a été défait.
+ * "" jamais touché · "1" ouvert · "2" replié après lecture.
+ *
+ * LE DÉFAUT EST PLIÉ : sans geste de l'élève, on en reste à la ligne. Les deux
+ * états retenus sont donc deux gestes, jamais un retour au néant — la mémoire
+ * garde ce qui a été fait, pas ce qui a été défait.
  */
 const memoire = creerMemoireDeLecture(["1", "2"] as const);
 
@@ -38,15 +47,15 @@ export function MandatDeLEquipe({
   gameId,
   niveau,
   equipe,
-  range: rangeInitial = false,
+  ouvert: ouvertInitial = false,
 }: {
   gameId: string;
   /** Le niveau de difficulté : c'est lui qui choisit le mandat. */
   niveau: number;
   /** Le nom de l'équipe, porté par la lettre comme destinataire. */
   equipe: string;
-  /** Déjà rangé d'emblée (tests, aperçus). */
-  range?: boolean;
+  /** Déjà déplié d'emblée (tests, aperçus). */
+  ouvert?: boolean;
 }) {
   const cle = cleMemoire(gameId);
   const retenu = useSyncExternalStore(
@@ -54,11 +63,12 @@ export function MandatDeLEquipe({
     () => memoire.lire(cle),
     () => "" as const,
   );
-  const range = rangeInitial || retenu === "2";
+  const ouvert = ouvertInitial || retenu === "1";
   const mandat = lettreDeMission(niveau);
 
-  // Rangé : une ligne, et de quoi rouvrir. Le mandat a dit ce qu'il avait à dire.
-  if (range) {
+  // Plié : une ligne, l'objet du mandat, et de quoi l'ouvrir. C'est l'état
+  // d'arrivée, et celui où l'on revient une fois la lettre lue.
+  if (!ouvert) {
     return (
       <section
         aria-label="Votre mandat"
@@ -72,7 +82,7 @@ export function MandatDeLEquipe({
           onClick={() => memoire.retenir(cle, "1")}
           className="text-amber-300 underline-offset-4 hover:underline"
         >
-          Relire
+          {retenu === "2" ? "Relire" : "Lire"}
         </button>
       </section>
     );

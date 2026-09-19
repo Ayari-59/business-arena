@@ -96,30 +96,51 @@ describe("un mandat se lit une fois et se range", () => {
    * le contexte de l'entreprise, les alertes, la situation. Quatre blocs de
    * texte empilés, et on ne lit plus le premier. Lu, il ne laisse qu'une ligne.
    */
-  const mandat = (range: boolean) =>
+  const mandat = (ouvert: boolean) =>
     renderToStaticMarkup(
       createElement(MandatDeLEquipe, {
         gameId: "partie-1",
         niveau: 3,
         equipe: "ÉQUIPE MARTIN",
-        range,
+        ouvert,
       }),
     );
 
   it("ouvert, il porte la lettre du niveau et de quoi en prendre note", () => {
-    const html = mandat(false);
+    const html = mandat(true);
     expect(html).toContain("Votre mandat — direction, production et finances");
     expect(html).toContain("J&#x27;ai pris note");
   });
 
-  it("rangé, il ne reste qu'une ligne et de quoi relire", () => {
-    const html = mandat(true);
+  it("à l'arrivée, il n'est qu'une ligne : le premier écran en porte déjà trois", () => {
+    const html = mandat(false);
+    expect(html).toContain("Lire");
     expect(html).toContain("Votre mandat — direction, production et finances");
     // L'objet porte déjà « Votre mandat » : le préfixer le répétait mot pour mot.
     expect(html).not.toContain("Votre mandat : Votre mandat");
-    expect(html).toContain("Relire");
-    // La lettre elle-même a disparu : c'est tout l'objet du rangement.
+    // « Lire » et non « Relire » : à l'arrivée, rien n'a encore été lu.
+    expect(html).not.toContain("Relire");
+    /*
+     * ET SURTOUT PAS LA LETTRE. C'est tout l'objet de l'état plié : le premier
+     * écran de la partie porte déjà la situation de l'entreprise et son
+     * contexte. Un troisième texte déplié, et on n'en lit plus aucun.
+     */
     expect(html).not.toContain("Nous vous confions la conduite de la maison");
     expect(html).not.toContain("J&#x27;ai pris note");
+  });
+});
+
+describe("le mandat tient en deux phrases", () => {
+  it("aucun ne dépasse deux phrases ni 260 caractères", () => {
+    /*
+     * Les premières versions faisaient cinq lignes chacune. Or ce mandat
+     * s'ouvre sur l'écran le plus chargé de la partie : un texte long de plus,
+     * et les trois se neutralisent. Un mandat se retient parce qu'il est court.
+     */
+    for (const c of LETTRES_DE_MISSION) {
+      const phrases = c.corps.split(/[.!?]\s/).filter(Boolean);
+      expect(phrases.length, `${c.code} fait ${phrases.length} phrases`).toBeLessThanOrEqual(2);
+      expect(c.corps.length, `${c.code} fait ${c.corps.length} caractères`).toBeLessThanOrEqual(260);
+    }
   });
 });

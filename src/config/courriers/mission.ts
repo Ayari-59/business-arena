@@ -24,6 +24,12 @@ import type { CourrierDef } from "./types";
  * champ précis — un scénario sans flotte n'a pas d'investissement en
  * machines —, seulement le domaine de responsabilité, qui est vrai partout.
  *
+ * DEUX PHRASES, PAS CINQ. Les premières versions faisaient cinq lignes
+ * chacune. Or ce mandat s'ouvre sur l'écran le plus chargé de la partie, où la
+ * situation de l'entreprise et son contexte attendent déjà : un texte de plus,
+ * long, et on ne lit plus aucun des trois. Un mandat se retient parce qu'il est
+ * court.
+ *
  * Elle circule en pochette interne : un mandat vient de l'intérieur de la
  * maison, il ne s'affranchit pas. Et elle ne change aucun compte : ces six
  * textes ne correspondent à aucun événement du moteur, comme les courriers de
@@ -41,7 +47,7 @@ export const LETTRES_DE_MISSION: CourrierDef[] = [
     expediteur: EXPEDITEUR,
     objet: "Votre mandat — direction de l'entreprise",
     corps:
-      "Nous vous confions la conduite de la maison à compter de ce tour. Votre mandat porte sur ce qui fait vivre une entreprise au jour le jour : le prix auquel vous vendez, le volume que vous engagez, et ce que vous dépensez pour vous faire connaître. Le reste — les financements, les couvertures, les effectifs — demeure de notre ressort pour cette fois. Rendez-nous compte à chaque clôture.",
+      "Nous vous confions la conduite de la maison à compter de ce tour. Vous décidez du prix auquel vous vendez, du volume que vous engagez et de ce que vous dépensez pour vous faire connaître ; le reste demeure de notre ressort.",
     signataire: SIGNATURE,
     effet: EFFET,
     enJeu:
@@ -56,7 +62,7 @@ export const LETTRES_DE_MISSION: CourrierDef[] = [
     expediteur: EXPEDITEUR,
     objet: "Votre mandat — direction et moyens de production",
     corps:
-      "Nous vous confions la conduite de la maison à compter de ce tour. Outre le prix, le volume et la communication, vous avez désormais la main sur ce que nous mettons dans le produit et sur l'entretien de l'outil : la qualité se budgète, la maintenance aussi. Ce sont deux dépenses qui ne se voient pas ce tour-ci et qui se paient au suivant. Rendez-nous compte à chaque clôture.",
+      "Nous vous confions la conduite de la maison, prix et volume compris. S'y ajoute ce que vous mettez dans le produit : la qualité se budgète, la maintenance aussi, et ces deux dépenses-là se paient au tour suivant.",
     signataire: SIGNATURE,
     effet: EFFET,
     enJeu:
@@ -71,7 +77,7 @@ export const LETTRES_DE_MISSION: CourrierDef[] = [
     expediteur: EXPEDITEUR,
     objet: "Votre mandat — direction, production et finances",
     corps:
-      "Nous vous confions la conduite de la maison à compter de ce tour. Vous tenez l'offre et l'outil, et nous y ajoutons les finances : c'est vous qui décidez désormais comment l'entreprise se finance et comment elle se couvre contre les coups durs. Notre banque et notre assureur s'adresseront directement à vous. Rendez-nous compte à chaque clôture.",
+      "Vous tenez l'offre et l'outil ; nous y ajoutons les finances. C'est vous qui décidez comment l'entreprise se finance et comment elle se couvre contre les coups durs : notre banque et notre assureur s'adresseront à vous.",
     signataire: SIGNATURE,
     effet: EFFET,
     enJeu:
@@ -86,7 +92,7 @@ export const LETTRES_DE_MISSION: CourrierDef[] = [
     expediteur: EXPEDITEUR,
     objet: "Votre mandat — direction générale",
     corps:
-      "Nous vous confions la direction générale de la maison à compter de ce tour. Tout ce qui l'engage relève de vous : l'offre, l'outil, les finances, mais aussi les femmes et les hommes que nous employons, les investissements qui nous porteront demain et les engagements que nous prenons vis-à-vis de notre environnement. Attendez-vous à des tours agités. Rendez-nous compte à chaque clôture.",
+      "Nous vous confions la direction générale : tout ce qui engage la maison relève de vous. Les femmes et les hommes que nous employons, les investissements qui nous porteront demain et nos engagements environnementaux y compris.",
     signataire: SIGNATURE,
     effet: EFFET,
     enJeu:
@@ -101,7 +107,7 @@ export const LETTRES_DE_MISSION: CourrierDef[] = [
     expediteur: EXPEDITEUR,
     objet: "Votre mandat — direction générale et gestion de trésorerie",
     corps:
-      "Nous vous confions la direction générale de la maison à compter de ce tour, y compris l'emploi de nos excédents : une trésorerie qui dort ne rapporte rien, une trésorerie placée ne se dépense plus. L'arbitrage vous revient. Le marché que vous trouverez est nerveux et nous vous laisserons peu d'indications. Rendez-nous compte à chaque clôture.",
+      "Nous vous confions la direction générale, y compris l'emploi de nos excédents. Une trésorerie qui dort ne rapporte rien, une trésorerie placée ne se dépense plus : l'arbitrage vous revient.",
     signataire: SIGNATURE,
     effet: EFFET,
     enJeu:
@@ -116,7 +122,7 @@ export const LETTRES_DE_MISSION: CourrierDef[] = [
     expediteur: EXPEDITEUR,
     objet: "Votre mandat — direction générale et affectation du résultat",
     corps:
-      "Nous vous confions la direction générale de la maison à compter de ce tour, et cette fois vous nous répondrez aussi sur nos parts : c'est vous qui proposerez ce qui nous est distribué et ce qui reste dans l'entreprise pour l'armer. Vous ne recevrez aucune indication de notre part. Nous jugerons sur les comptes. Rendez-nous compte à chaque clôture.",
+      "Nous vous confions la direction générale, et vous nous répondrez aussi sur nos parts. C'est vous qui proposerez ce qui nous est distribué et ce qui reste en réserve pour armer l'entreprise ; nous jugerons sur les comptes.",
     signataire: SIGNATURE,
     effet: EFFET,
     enJeu:
