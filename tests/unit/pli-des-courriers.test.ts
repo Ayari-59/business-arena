@@ -1,5 +1,21 @@
 import { describe, expect, it } from "vitest";
 import { COURRIERS } from "@/config/courriers/registre";
+import { COURRIERS_DE_ROUTINE } from "@/config/courriers/routine";
+import { LETTRES_DE_MISSION } from "@/config/courriers/mission";
+import { COURRIERS_EN_RETOUR } from "@/config/courriers/reponses";
+
+/**
+ * TOUT CE QUI S'ÉCRIT, registre ou non. Trois piles vivent hors du registre —
+ * la routine, les mandats, les réponses aux décisions — parce qu'elles ne se
+ * tirent jamais. Mais un recommandé y engage autant qu'ailleurs : la règle du
+ * canal vaut pour toute lettre, pas seulement pour celles qu'on pioche.
+ */
+const TOUT_LE_COURRIER = [
+  ...COURRIERS,
+  ...COURRIERS_DE_ROUTINE,
+  ...LETTRES_DE_MISSION,
+  ...COURRIERS_EN_RETOUR,
+];
 
 /**
  * LE RECOMMANDÉ DOIT RESTER RARE, ET DIRE CE QU'IL ENGAGE.
@@ -57,7 +73,7 @@ function engage(texte: string): boolean {
 }
 
 describe("le pli dit l'enjeu", () => {
-  const recommandes = COURRIERS.filter((c) => c.pli === "recommande");
+  const recommandes = TOUT_LE_COURRIER.filter((c) => c.pli === "recommande");
 
   it("chaque recommandé énonce ce qu'il engage", () => {
     const muets = recommandes
@@ -87,7 +103,7 @@ describe("le pli dit l'enjeu", () => {
       "mise en demeure", "mettons en demeure", "met en demeure",
       "proces-verbal", "sanction", "amende", "demission", "resiliation",
     ];
-    const fautifs = COURRIERS.filter(
+    const fautifs = TOUT_LE_COURRIER.filter(
       (c) =>
         c.pli === "email" &&
         ENGAGEMENTS_FORTS.some((m) => sansAccent(`${c.objet} ${c.corps}`).includes(m)),
@@ -131,7 +147,7 @@ describe("le pli dit l'enjeu", () => {
   it("aucun courrier interne ne part en recommandé", () => {
     // Une note de service ne s'envoie pas avec accusé de réception à sa propre
     // maison. Les démissions, elles, sont écrites comme des lettres externes.
-    const fautifs = COURRIERS.filter(
+    const fautifs = TOUT_LE_COURRIER.filter(
       (c) => c.pli === "recommande" && c.expediteur.startsWith("Note interne"),
     ).map((c) => c.code);
     expect(fautifs).toEqual([]);

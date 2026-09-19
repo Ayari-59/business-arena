@@ -42,12 +42,13 @@ describe("la liasse se choisit sur la page", () => {
     }
     // Un secteur et sa variante « gamme » jouent le même courrier : une seule
     // entrée, sinon l'enseignant choisit entre deux liasses identiques.
-    // Neuf secteurs, plus les deux piles qui n'en dépendent pas : les courriers
-    // de routine et les lettres de mission.
+    // Neuf secteurs, plus les trois piles qui n'en dépendent pas : la routine,
+    // les mandats et les réponses aux décisions.
     const options = html.match(/<option /g) ?? [];
-    expect(options.length, "neuf secteurs et deux piles hors secteur").toBe(11);
+    expect(options.length, "neuf secteurs et trois piles hors secteur").toBe(12);
     expect(html).toContain("Courriers de routine");
     expect(html).toContain("Lettres de mission");
+    expect(html).toContain("Courriers en retour");
   });
 
   it("sans paramètre, la page reste utilisable : le sélecteur est là", async () => {

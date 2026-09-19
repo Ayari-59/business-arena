@@ -11,6 +11,7 @@ import { PassageAuTour } from "@/components/passage-au-tour";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { CourrierRecommande, grilleDeCourriers } from "@/components/courrier";
 import { lettreDeMission } from "@/config/courriers/mission";
+import { reponsesAuxDecisions } from "@/config/courriers/reponses";
 import { courrierParCode } from "@/config/courriers/registre";
 import { DecisionForm } from "@/components/decision-form";
 import { TeamNameForm } from "@/components/team-name-form";
@@ -252,6 +253,18 @@ export default async function ArenaPage({
   // repliée par défaut et révélée à la demande. Les « points clés » ont été
   // retirés (redondants avec la situation et ses indices progressifs). Volume
   // réduit à une ligne par levier — le champ, le sens, la piste la plus utile.
+  /*
+   * Les réponses au dernier tour clos : on compare ses décisions à celles du
+   * tour d'avant, parce qu'une coupe ne se lit que par rapport à ce qui
+   * précède. Fonction pure, éprouvée règle par règle dans
+   * `courriers-en-retour.test.ts` ; la page n'en fait que l'affichage.
+   */
+  const reponses = (() => {
+    const dernier = periods[periods.length - 1];
+    if (!dernier) return [];
+    return reponsesAuxDecisions(dernier.decisions, periods[periods.length - 2]?.decisions ?? null);
+  })();
+
   const leviersIndice = (() => {
     const FIELD_LABELS: Record<string, string> = {
       price: "Prix de vente",
@@ -791,6 +804,41 @@ export default async function ArenaPage({
 
                         Une seule fois, au tour 1 : un mandat ne se répète pas.
                       */}
+                      {/*
+                        CE QU'ON VOUS RÉPOND. Le courrier ne descendait que dans
+                        un sens : le monde écrivait, l'équipe répondait par des
+                        chiffres, et personne ne lui répondait jamais. On
+                        licenciait sans qu'aucun avocat n'écrive, on doublait un
+                        prix sans qu'aucun client ne s'en plaigne.
+
+                        Ces lettres répondent aux décisions du tour qui vient
+                        d'être clos, et elles ne touchent aucun compte : la
+                        conséquence chiffrée, le moteur l'a déjà calculée. Elles
+                        disent qui la subit, ce qu'un tableau de résultats ne
+                        dira jamais.
+                      */}
+                      {reponses.length > 0 ? (
+                        <section className="carte p-3 sm:p-5">
+                          <p className="mb-2 text-sm font-semibold text-amber-400">
+                            ↩️ En retour de vos décisions
+                          </p>
+                          <p className="mb-3 text-xs text-slate-400">
+                            {reponses.length > 1 ? "Ces courriers répondent" : "Ce courrier répond"}{" "}
+                            à ce que vous avez décidé au{" "}
+                            {periodLabel(view.roundDays, latestRound ?? 1).toLowerCase()}.
+                          </p>
+                          <div className={grilleDeCourriers(reponses.length)}>
+                            {reponses.map((c, i) => (
+                              <CourrierRecommande
+                                key={c.code}
+                                code={c.code}
+                                delayMs={i * 450}
+                                destinataire={view.playerTeamName}
+                              />
+                            ))}
+                          </div>
+                        </section>
+                      ) : null}
                       {view.currentRound === 1 ? (
                         <div className={grilleDeCourriers(1)}>
                           <CourrierRecommande

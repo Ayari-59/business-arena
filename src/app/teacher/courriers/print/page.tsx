@@ -6,6 +6,7 @@ import { NATURES, type CourrierDef } from "@/config/courriers/types";
 import { courriersPourCodes, positionDuCourrier } from "@/config/courriers/registre";
 import { COURRIERS_DE_ROUTINE } from "@/config/courriers/routine";
 import { LETTRES_DE_MISSION } from "@/config/courriers/mission";
+import { COURRIERS_EN_RETOUR } from "@/config/courriers/reponses";
 import { SCENARIOS, scenarioByCode } from "@/config/scenarios/registry";
 import { Courriel, Enveloppe, Lettre, Message } from "@/components/courrier";
 
@@ -33,6 +34,7 @@ type Liasse = "market" | "team";
 /** Les deux piles qui ne dépendent d'aucun secteur, demandées par l'URL. */
 const ROUTINE = "routine";
 const MISSION = "mission";
+const RETOUR = "retour";
 
 /**
  * Ce que chaque pile hors secteur contient et comment elle s'annonce. Elles
@@ -51,6 +53,11 @@ const PILES_HORS_SECTEUR: Record<string, { titre: string; nom: string; courriers
       titre: "Lettres de mission · une par niveau",
       nom: "Lettre de mission",
       courriers: LETTRES_DE_MISSION,
+    },
+    [RETOUR]: {
+      titre: "Courriers en retour · réponses aux décisions",
+      nom: "Courrier en retour",
+      courriers: COURRIERS_EN_RETOUR,
     },
   };
 
@@ -291,6 +298,9 @@ function LiasseAImprimer() {
               <option value={MISSION}>
                 Lettres de mission · {LETTRES_DE_MISSION.length} plis · une par niveau
               </option>
+              <option value={RETOUR}>
+                Courriers en retour · {COURRIERS_EN_RETOUR.length} plis · réponses aux décisions
+              </option>
             </select>
           </p>
           <p className="print-legend">
@@ -311,7 +321,14 @@ function LiasseAImprimer() {
             <strong>trait pointillé</strong> : l&apos;enveloppe et la lettre se retrouvent dos à
             dos, sans impression recto-verso — l&apos;élève tient une enveloppe qu&apos;il
             retourne pour lire.{" "}
-            {choix === MISSION ? (
+            {choix === RETOUR ? (
+              <>
+                Chacun répond à une décision : un licenciement, une hausse de prix, un entretien
+                non budgété. Lisez le récapitulatif des décisions d&apos;une équipe à la clôture,
+                et donnez-lui la lettre qui lui revient. Aucun compte n&apos;en dépend — la
+                conséquence chiffrée, la simulation l&apos;a déjà appliquée.
+              </>
+            ) : choix === MISSION ? (
               <>
                 Une lettre par niveau de difficulté : ne distribuez que celle de votre partie,
                 au premier tour, avant la première décision. Elle dit à l&apos;équipe ce que
@@ -354,7 +371,9 @@ function LiasseAImprimer() {
             {avecVierge ? " + 1 lettre vierge" : ""}
           </h2>
           <p className="print-help no-print">
-            {choix === MISSION
+            {choix === RETOUR
+              ? "Une pile par entreprise : la même décision revient d'un tour à l'autre, et d'une partie à l'autre. L'application les remet d'elle-même dans l'arène ; cette pile sert la séance sur papier."
+              : choix === MISSION
               ? "Un exemplaire par équipe, du seul niveau que vous avez choisi. Les cinq autres lettres ne serviront pas à cette partie : elles sont imprimées ensemble pour que la pile tienne en deux feuilles."
               : routine
                 ? "Un courrier de routine se donne le tour où rien ne tombe : le facteur passe quand même, et trier ce qui ne compte pas est une compétence de gestion. Imprimez-en une pile par entreprise, ils resservent d'une partie à l'autre."

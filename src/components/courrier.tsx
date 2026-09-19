@@ -8,6 +8,7 @@ import {
 import { courrierParCode, positionDuCourrier, referenceDuCourrier } from "@/config/courriers/registre";
 import { COURRIERS_DE_ROUTINE, estUnCourrierDeRoutine } from "@/config/courriers/routine";
 import { LETTRES_DE_MISSION, estUneLettreDeMission } from "@/config/courriers/mission";
+import { COURRIERS_EN_RETOUR, estUnCourrierEnRetour } from "@/config/courriers/reponses";
 import { BrandMark } from "@/components/brand-mark";
 
 /**
@@ -46,9 +47,16 @@ import { BrandMark } from "@/components/brand-mark";
 const routineParCode = new Map(COURRIERS_DE_ROUTINE.map((c) => [c.code, c]));
 /** Les mandats ne sont pas au registre non plus : ils ne se tirent jamais. */
 const missionParCode = new Map(LETTRES_DE_MISSION.map((c) => [c.code, c]));
+/** Les réponses non plus : elles ne se tirent pas, elles se méritent. */
+const retourParCode = new Map(COURRIERS_EN_RETOUR.map((c) => [c.code, c]));
 
 function courrier(code: string): CourrierDef | undefined {
-  return courrierParCode.get(code) ?? routineParCode.get(code) ?? missionParCode.get(code);
+  return (
+    courrierParCode.get(code) ??
+    routineParCode.get(code) ??
+    missionParCode.get(code) ??
+    retourParCode.get(code)
+  );
 }
 
 /**
@@ -60,7 +68,9 @@ function courrier(code: string): CourrierDef | undefined {
 function pileDuCourrier(code: string): string {
   const position = positionDuCourrier(code);
   if (position) return `${position.liasse} · ${position.index} / ${position.total}`;
-  return estUneLettreDeMission(code) ? "Lettre de mission" : "Courrier de routine";
+  if (estUneLettreDeMission(code)) return "Lettre de mission";
+  if (estUnCourrierEnRetour(code)) return "Courrier en retour";
+  return "Courrier de routine";
 }
 
 /**
@@ -187,11 +197,13 @@ export function Lettre({
   const duree = dureeDuCourrier(c);
   /*
    * SANS EFFET SUR LES COMPTES : l'éclair et les pastilles de durée promettent
-   * une conséquence mécanique. Les courriers de routine n'en ont pas, et le
-   * mandat des associés non plus — il dit qui confie quoi. Leur donner
+   * une conséquence mécanique. Les courriers de routine n'en ont pas, le
+   * mandat des associés non plus, et les réponses aux décisions pas davantage
+   * — le moteur a déjà chiffré la conséquence, elles la nomment — il dit qui confie quoi. Leur donner
    * « ⚡ ... ● » aurait fait chercher aux élèves un effet qui n'arrive jamais.
    */
-  const sansEffet = estUnCourrierDeRoutine(code) || estUneLettreDeMission(code);
+  const sansEffet =
+    estUnCourrierDeRoutine(code) || estUneLettreDeMission(code) || estUnCourrierEnRetour(code);
   const interne = c.pli === "interne";
 
   return (
@@ -414,11 +426,13 @@ export function Message({
   const duree = dureeDuCourrier(c);
   /*
    * SANS EFFET SUR LES COMPTES : l'éclair et les pastilles de durée promettent
-   * une conséquence mécanique. Les courriers de routine n'en ont pas, et le
-   * mandat des associés non plus — il dit qui confie quoi. Leur donner
+   * une conséquence mécanique. Les courriers de routine n'en ont pas, le
+   * mandat des associés non plus, et les réponses aux décisions pas davantage
+   * — le moteur a déjà chiffré la conséquence, elles la nomment — il dit qui confie quoi. Leur donner
    * « ⚡ ... ● » aurait fait chercher aux élèves un effet qui n'arrive jamais.
    */
-  const sansEffet = estUnCourrierDeRoutine(code) || estUneLettreDeMission(code);
+  const sansEffet =
+    estUnCourrierDeRoutine(code) || estUneLettreDeMission(code) || estUnCourrierEnRetour(code);
 
   return (
     <div
