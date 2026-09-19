@@ -247,17 +247,17 @@ export const NOVA_DEFINITION: ScenarioDefinition = {
   context:
     "L'atelier est en état et l'équipe connaît le produit, mais le carnet de commandes est vide : rien n'est signé pour le trimestre. La concurrence est installée, l'une sur les prix bas, l'autre sur le haut de gamme.",
   dilemma: {
-    question: "Deux clientèles, deux niveaux de prix, un seul atelier. Laquelle visez-vous ce trimestre ?",
+    question: "Deux clientèles, deux niveaux de prix, un seul atelier. Laquelle visez-vous ?",
     routes: [
       {
         label: "Viser le volume, au prix des étudiants",
-        gain: "C'est la clientèle la plus nombreuse. L'atelier tourne à plein régime, et chaque enceinte de plus ne coûte que ses matières.",
-        risque: "La marge par enceinte est mince, et ce sont les clients les plus prompts à partir chez le moins cher.",
+        gain: "La clientèle la plus nombreuse, et l'atelier qui tourne à plein régime.",
+        risque: "Une marge mince, sur les clients les plus prompts à partir ailleurs.",
       },
       {
         label: "Viser la valeur, au prix des passionnés",
-        gain: "Une marge nettement plus large sur chaque enceinte, auprès de clients qui reviennent d'un trimestre à l'autre.",
-        risque: "Cette clientèle est bien plus petite. L'atelier tournera au ralenti, et les charges de structure tomberont quand même.",
+        gain: "Une marge bien plus large, auprès de clients qui reviennent.",
+        risque: "Une clientèle bien plus petite : l'atelier au ralenti, les charges quand même.",
       },
     ],
   },
@@ -307,18 +307,17 @@ export const NOVA_GAMME_DEFINITION: ScenarioDefinition = {
   context:
     "L'équipe connaît les deux produits en vente, un prototype de grande enceinte dort dans les cartons, et le carnet est vide. La concurrence tient l'entrée de gamme sur les prix, et le haut de gamme sur les passionnés.",
   dilemma: {
-    question:
-      "Deux enceintes en vente, un prototype à financer, un seul atelier. Que faites-vous de vos lignes et de votre caisse ce trimestre ?",
+    question: "Deux enceintes en vente, un prototype à financer, un seul atelier. Vous faites quoi de votre caisse ?",
     routes: [
       {
         label: "Remplir l'atelier de volume, sans toucher au prototype",
-        gain: "C'est la clientèle la plus nombreuse et la moins fidèle aux concurrents. Les lignes tournent à plein, chaque enceinte de plus ne coûte que ses composants, et la caisse ne finance rien d'incertain.",
-        risque: "La marge par enceinte est mince, ces clients partent au premier prix plus bas, et pendant ce temps un concurrent lance la grande enceinte et prend la clientèle qui paie cher.",
+        gain: "Les lignes tournent à plein, et la caisse ne finance rien d'incertain.",
+        risque: "Marge mince, clients volatils, et un concurrent qui lance la grande enceinte.",
       },
       {
         label: "Financer la grande enceinte dès maintenant",
-        gain: "Une marge plusieurs fois plus large sur chaque enceinte, auprès de passionnés et de studios qui reviennent d'un trimestre à l'autre, et l'avantage de celui qui arrive le premier sur leur marché.",
-        risque: "La recherche se paie ce trimestre, en charge et en caisse, pour une enceinte qui ne se vendra qu'au suivant. Il faut la financer, et cette clientèle reste bien plus petite que celle du volume.",
+        gain: "Une marge plusieurs fois plus large, et l'avantage du premier arrivé.",
+        risque: "La recherche se paie ce trimestre ; l'enceinte ne se vendra qu'au suivant.",
       },
     ],
   },
@@ -363,18 +362,17 @@ export const BOUTIQUE_DEFINITION: ScenarioDefinition = {
   context:
     "La clientèle du quartier connaît la marque. La réserve déborde de pièces de la saison passée, commandées toujours à l'identique, et la collection qui vient reste à choisir référence par référence.",
   dilemma: {
-    question:
-      "Vous achetez aujourd'hui ce que vous vendrez dans plusieurs semaines. Combien commandez-vous, et de quoi ?",
+    question: "Vous achetez aujourd'hui ce que vous vendrez dans des semaines. Combien, et de quoi ?",
     routes: [
       {
         label: "Commander large",
-        gain: "La réserve suit la demande, aucune cliente ne repart les mains vides, et le pic de fin d'année se passe sans rupture.",
-        risque: "Chaque pièce invendue reste payée et dort en réserve. Votre argent est immobilisé dans des cartons.",
+        gain: "La réserve suit la demande, et aucune cliente ne repart les mains vides.",
+        risque: "Chaque pièce invendue est déjà payée : votre argent dort dans des cartons.",
       },
       {
         label: "Commander serré",
-        gain: "Peu d'argent immobilisé, une réserve saine, et de la trésorerie disponible pour le reste.",
-        risque: "Une pièce qui manque est une vente perdue, et une cliente qui a trouvé ailleurs revient rarement.",
+        gain: "Peu d'argent immobilisé, et de la trésorerie disponible pour le reste.",
+        risque: "Une pièce qui manque est une vente perdue, et la cliente trouve ailleurs.",
       },
     ],
   },
@@ -419,17 +417,17 @@ export const BOUTIQUE_MONO_DEFINITION: ScenarioDefinition = {
   context:
     "La clientèle du quartier connaît la boutique. La réserve déborde de pièces de la saison passée, commandées toujours aux mêmes fournisseurs, et la saison qui vient reste à commander à l'aveugle.",
   dilemma: {
-    question: "Vous achetez aujourd'hui ce que vous vendrez dans plusieurs semaines. Combien commandez-vous ?",
+    question: "Vous achetez aujourd'hui ce que vous vendrez dans des semaines. Combien commandez-vous ?",
     routes: [
       {
         label: "Commander large",
-        gain: "La réserve suit la demande, aucune cliente ne repart les mains vides, et le pic de fin d'année se passe sans rupture.",
-        risque: "Chaque pièce invendue reste payée et dort en réserve. Votre argent est immobilisé dans des cartons.",
+        gain: "La réserve suit la demande, et aucune cliente ne repart les mains vides.",
+        risque: "Chaque pièce invendue est déjà payée : votre argent dort dans des cartons.",
       },
       {
         label: "Commander serré",
-        gain: "Peu d'argent immobilisé, une réserve saine, et de la trésorerie disponible pour le reste.",
-        risque: "Une pièce qui manque est une vente perdue, et une cliente qui a trouvé ailleurs revient rarement.",
+        gain: "Peu d'argent immobilisé, et de la trésorerie disponible pour le reste.",
+        risque: "Une pièce qui manque est une vente perdue, et la cliente trouve ailleurs.",
       },
     ],
   },
@@ -474,17 +472,17 @@ export const HOTEL_DEFINITION: ScenarioDefinition = {
   context:
     "Le même tarif était affiché toute l'année, sans regarder si les chambres se remplissaient. Les plateformes de réservation apportent des clients et prennent leur commission au passage.",
   dilemma: {
-    question: "Une chambre vide ce soir ne rapportera jamais rien. Jusqu'où baissez-vous pour la remplir ?",
+    question: "Une chambre vide ce soir ne rapportera jamais rien. Jusqu'où baissez-vous ?",
     routes: [
       {
         label: "Baisser le tarif pour remplir",
-        gain: "Des chambres occupées plutôt que vides. Une nuit vendue à petit prix rapporte toujours plus qu'une nuit invendue.",
-        risque: "Vos habitués voient le tarif baisser et attendront la prochaine promotion. Un prix moyen, cela descend vite et cela remonte lentement.",
+        gain: "Une nuit vendue à petit prix rapporte toujours plus qu'une nuit vide.",
+        risque: "Vos habitués attendront la promotion suivante, et le prix moyen remonte mal.",
       },
       {
         label: "Tenir le tarif affiché",
-        gain: "Chaque nuit vendue rapporte pleinement, et l'hôtel garde le positionnement qui fait venir sa clientèle.",
-        risque: "Des chambres restent vides alors que les charges tombent, que l'hôtel soit plein ou non.",
+        gain: "Chaque nuit vendue rapporte pleinement, et le positionnement tient.",
+        risque: "Des chambres restent vides, et les charges tombent quand même.",
       },
     ],
   },
@@ -529,17 +527,17 @@ export const HOTEL_GAMME_DEFINITION: ScenarioDefinition = {
   context:
     "Un seul prix moyen était affiché toute l'année, sans distinguer la suite de la chambre du fond. Les plateformes apportent des clients et prennent leur commission au passage.",
   dilemma: {
-    question: "Trois chambres, un bâtiment. Faut-il vendre beaucoup de standard à petit prix, ou tenir les supérieures et les suites à leur prix ?",
+    question: "Trois chambres, un bâtiment. Remplir par la standard, ou tenir les suites à leur prix ?",
     routes: [
       {
         label: "Remplir par la standard",
-        gain: "Des chambres occupées plutôt que vides, une clientèle nombreuse, un hôtel qui tourne.",
-        risque: "Le prix moyen descend, les équipes travaillent pour une marge mince, et la suite bradée un jour se vend mal le lendemain.",
+        gain: "Des chambres occupées plutôt que vides, et un hôtel qui tourne.",
+        risque: "Le prix moyen descend, et une suite bradée un jour se vend mal ensuite.",
       },
       {
         label: "Tenir le haut de gamme",
-        gain: "Chaque nuitée vendue rapporte pleinement, et l'hôtel garde l'image qui fait venir ses clients d'affaires et ses grandes occasions.",
-        risque: "Des chambres restent vides alors que les charges tombent, et les suites ne se vendent pas toutes les nuits.",
+        gain: "Chaque nuitée rapporte pleinement, et l'image des grandes occasions tient.",
+        risque: "Des chambres restent vides, et les charges tombent quand même.",
       },
     ],
   },
@@ -584,17 +582,17 @@ export const BISTROT_DEFINITION: ScenarioDefinition = {
   context:
     "Le bistrot est connu du quartier : plein le midi en semaine, le soir le week-end. Les denrées commandées chaque semaine ne se gardent pas.",
   dilemma: {
-    question: "La cuisine prépare avant de savoir combien de clients viendront. Vous tablez sur quelle affluence ?",
+    question: "La cuisine prépare avant de savoir qui viendra. Vous tablez sur quelle affluence ?",
     routes: [
       {
         label: "Préparer large",
-        gain: "Aucun client renvoyé, aucun plat retiré de la carte en plein service, une salle qui tourne jusqu'au bout.",
-        risque: "Ce qui n'est pas servi part à la poubelle, et vous l'avez déjà payé.",
+        gain: "Aucun client renvoyé, aucun plat retiré de la carte en plein service.",
+        risque: "Ce qui n'est pas servi part à la poubelle, et c'est déjà payé.",
       },
       {
         label: "Préparer juste",
-        gain: "Presque aucune perte, et un coût des denrées qui reste sous contrôle.",
-        risque: "Un soir d'affluence, vous refusez du monde, et la salle aurait pu être pleine.",
+        gain: "Presque aucune perte, et un coût des denrées sous contrôle.",
+        risque: "Un soir d'affluence, vous refusez du monde à la porte.",
       },
     ],
   },
@@ -639,17 +637,17 @@ export const BISTROT_GAMME_DEFINITION: ScenarioDefinition = {
   context:
     "Le même ticket était affiché à midi et le soir, alors que les bureaux veulent une formule rapide, les habitués une carte et les entreprises des banquets réglés à un mois. Un projet traiteur dort dans un tiroir.",
   dilemma: {
-    question: "Une cuisine, une brigade, quatre cartes. Faut-il remplir le midi à petit prix, tenir la carte du soir, réserver des soirs aux banquets, ou financer le traiteur qui ne vendra rien ce trimestre ?",
+    question: "Une cuisine, une brigade, quatre cartes. Vous remplissez le midi, ou vous bâtissez le traiteur ?",
     routes: [
       {
         label: "Remplir par le midi",
-        gain: "Une salle pleine tous les jours, des clients réguliers qui paient comptant.",
-        risque: "Un ticket qui baisse, et une brigade occupée à servir vite ce qui rapporte le moins.",
+        gain: "Une salle pleine tous les jours, et des clients qui paient comptant.",
+        risque: "Un ticket qui baisse, et une brigade prise par ce qui rapporte le moins.",
       },
       {
         label: "Tenir le soir, et bâtir le traiteur",
-        gain: "Le meilleur ticket du bistrot, des soirs entiers vendus d'un coup, et une activité qui ne connaît ni la taille de la salle ni les congés de la clientèle.",
-        risque: "Des soirs retirés à la carte, des banquets réglés à un mois, une salle vide à midi, et un budget engagé avant la première commande traiteur.",
+        gain: "Le meilleur ticket du bistrot, et des soirs entiers vendus d'un coup.",
+        risque: "Des banquets réglés à un mois, et un budget engagé avant la première commande.",
       },
     ],
   },
@@ -674,16 +672,16 @@ export const CONSEIL_DEFINITION: ScenarioDefinition = {
   context:
     "Le cabinet a bonne réputation, mais son fondateur est parti en emportant la moitié des missions. Les clients règlent des semaines après la fin de la mission.",
   dilemma: {
-    question: "Vos consultants sont payés qu'ils facturent ou non. À quel tarif vendez-vous leurs journées ?",
+    question: "Vos consultants sont payés qu'ils facturent ou non. À quel tarif les vendez-vous ?",
     routes: [
       {
         label: "Baisser le tarif pour remplir le planning",
-        gain: "Des consultants en mission plutôt qu'au bureau, un carnet rempli, et de la trésorerie qui rentre.",
-        risque: "Un tarif bradé se renégocie difficilement l'année suivante, et la marge par journée finit par ne plus couvrir les salaires.",
+        gain: "Des consultants en mission plutôt qu'au bureau, et de l'argent qui rentre.",
+        risque: "Un tarif bradé se renégocie mal, et la marge finit sous le coût des salaires.",
       },
       {
         label: "Tenir le tarif",
-        gain: "Chaque journée vendue couvre largement le salaire de celui qui la réalise.",
+        gain: "Chaque journée vendue couvre largement le salaire de qui la réalise.",
         risque: "Des journées restent invendues, et les salaires tombent quand même.",
       },
     ],
@@ -731,17 +729,17 @@ export const CONSEIL_GAMME_DEFINITION: ScenarioDefinition = {
   context:
     "Toutes les missions étaient facturées au même taux, l'audit d'une PME comme la stratégie d'un groupe, et les grands comptes paient à soixante jours. Une pratique cyber-sécurité reste à bâtir.",
   dilemma: {
-    question: "Douze consultants, trois offres. Faut-il remplir le banc avec de l'audit au tarif PME, tenir la stratégie au tarif des grands comptes, ou financer la cyber-sécurité qui ne vendra rien ce trimestre ?",
+    question: "Douze consultants, trois offres. Vous remplissez le banc avec de l'audit, ou vous bâtissez la cyber ?",
     routes: [
       {
         label: "Remplir par l'audit",
-        gain: "Des consultants occupés, un carnet régulier, des PME qui règlent à trente jours.",
-        risque: "Un taux moyen qui descend, et des journées qui manqueront à la stratégie quand les grands comptes appelleront.",
+        gain: "Des consultants occupés, et des PME qui règlent à trente jours.",
+        risque: "Un taux moyen qui descend, et des journées qui manqueront à la stratégie.",
       },
       {
         label: "Bâtir la cyber-sécurité",
-        gain: "Une offre au tarif le plus haut du cabinet, des clients qui achètent en été, et un cabinet qui ne dépend plus des congés des décideurs.",
-        risque: "Un budget de méthodes et de certifications engagé avant la première mission, en charge du tour, avec des salaires qui tombent pendant que l'offre se construit.",
+        gain: "Le tarif le plus haut du cabinet, sur des clients qui achètent en été.",
+        risque: "Un budget engagé avant la première mission, et des salaires qui tombent.",
       },
     ],
   },
@@ -787,17 +785,17 @@ export const ECOMMERCE_DEFINITION: ScenarioDefinition = {
   context:
     "Le site fonctionne, les fournisseurs sont en place, l'entrepôt prépare les commandes. Mais la publicité a été coupée pour économiser, et le trafic s'est effondré avec elle.",
   dilemma: {
-    question: "Sur internet, chaque visiteur se paie. Combien investissez-vous pour aller chercher des clients ?",
+    question: "Sur internet, chaque visiteur se paie. Combien mettez-vous pour en faire venir ?",
     routes: [
       {
         label: "Ouvrir grand le budget d'acquisition",
-        gain: "Le trafic monte, les commandes suivent, et la boutique existe enfin face aux gros vendeurs.",
-        risque: "La publicité se paie tout de suite. Si ce que rapporte une commande ne couvre pas ce que ce client a coûté, vous vendez à perte sans le voir.",
+        gain: "Le trafic monte, les commandes suivent, et la boutique existe enfin.",
+        risque: "Une commande qui rapporte moins que son client n'a coûté, c'est vendre à perte.",
       },
       {
         label: "Rester prudent sur la publicité",
-        gain: "Aucune dépense hasardeuse, et chaque commande encaissée rapporte pleinement.",
-        risque: "Sans trafic, il n'y a pas de commandes du tout : l'entrepôt et les charges tournent à vide.",
+        gain: "Aucune dépense hasardeuse, et chaque commande rapporte pleinement.",
+        risque: "Sans trafic, pas de commandes : l'entrepôt et les charges tournent à vide.",
       },
     ],
   },
@@ -842,17 +840,17 @@ export const ECOMMERCE_GAMME_DEFINITION: ScenarioDefinition = {
   context:
     "Le site tourne sur trois rayons, mais la publicité a été coupée, le trafic s'est effondré, et le fauteuil expédié coûte plus cher à livrer que le coussin vendu dix fois plus. Une collection de créateurs reste à bâtir.",
   dilemma: {
-    question: "Sur internet, chaque visiteur se paie, et chaque rayon ne rapporte pas la même chose. Où mettez-vous vos euros de publicité ?",
+    question: "Chaque visiteur se paie, et les rayons ne rapportent pas pareil. Où mettez-vous vos euros ?",
     routes: [
       {
         label: "Pousser la décoration",
-        gain: "Le rayon qui tourne, des colis légers, une place de marché qui apporte du volume.",
-        risque: "Le plus petit panier du catalogue : la publicité y coûte presque autant qu'elle rapporte.",
+        gain: "Le rayon qui tourne, des colis légers, du volume par la place de marché.",
+        risque: "Le plus petit panier du catalogue : la publicité y mange la marge.",
       },
       {
         label: "Miser sur le mobilier, et bâtir la capsule",
-        gain: "La marge par commande la plus haute, et une collection que personne d'autre ne vend.",
-        risque: "Des colis volumineux qui saturent l'entrepôt, une commission plus lourde sur les places de marché, et un budget engagé avant la première commande.",
+        gain: "La marge par commande la plus haute, sur une collection unique.",
+        risque: "Des colis encombrants, une commission plus lourde, un budget engagé d'avance.",
       },
     ],
   },
@@ -881,13 +879,13 @@ export const FITNESS_DEFINITION: ScenarioDefinition = {
     routes: [
       {
         label: "Recruter",
-        gain: "Des inscriptions immédiates, de la trésorerie qui rentre tout de suite, une salle qui se remplit vite.",
-        risque: "Un adhérent qui s'en va au bout d'un trimestre a coûté plus cher à recruter qu'il n'a rapporté. Et il faudra recommencer au trimestre suivant.",
+        gain: "Des inscriptions immédiates, et de la trésorerie qui rentre tout de suite.",
+        risque: "Un adhérent parti au bout d'un trimestre a coûté plus qu'il n'a rapporté.",
       },
       {
         label: "Fidéliser",
-        gain: "Un adhérent gardé rapporte à chaque trimestre sans rien coûter de plus. C'est l'effort le plus rentable de ce métier.",
-        risque: "L'encadrement et l'entretien se paient maintenant, alors que le bénéfice ne se verra que dans plusieurs trimestres.",
+        gain: "Un adhérent gardé rapporte chaque trimestre sans rien coûter de plus.",
+        risque: "L'encadrement se paie maintenant ; le bénéfice ne se voit que bien plus tard.",
       },
     ],
   },
@@ -934,17 +932,17 @@ export const BATIMENT_DEFINITION: ScenarioDefinition = {
     "La réputation de la maison ouvre les portes. Mais le carnet se remplit au coup par coup, des chantiers commencés n'ont pas été facturés, et le compte en banque ne ressemble en rien au dernier résultat.",
   dilemma: {
     question:
-      "Les particuliers paient vite mais comparent tout ; les marchés publics offrent du volume et paient très tard. Où allez-vous chercher vos chantiers ce trimestre ?",
+      "Les particuliers paient vite mais comparent tout ; les marchés publics paient très tard. Où allez-vous ?",
     routes: [
       {
         label: "Les particuliers, qui règlent à la réception",
-        gain: "L'argent rentre vite, l'acompte finance les matériaux, et le bouche-à-oreille d'un quartier vaut toutes les publicités.",
-        risque: "Ils demandent trois devis, négocient chaque ligne, et un chantier gagné aujourd'hui ne dit rien de celui du trimestre prochain.",
+        gain: "L'argent rentre vite, et le bouche-à-oreille vaut toutes les publicités.",
+        risque: "Trois devis, chaque ligne négociée, et rien de signé pour le trimestre suivant.",
       },
       {
         label: "Les marchés publics, qui remplissent le planning",
-        gain: "Des surfaces importantes, des équipes occupées plusieurs mois d'affilée, et un donneur d'ordre qui ne fait jamais faillite.",
-        risque: "Le prix est tiré au plus bas, le mandatement arrive des mois après la réception, et une retenue de garantie dort encore un an de plus.",
+        gain: "Des équipes occupées des mois, pour un client qui ne fait jamais faillite.",
+        risque: "Le prix est tiré au plus bas, et le mandatement arrive des mois après.",
       },
     ],
   },
@@ -990,17 +988,17 @@ export const TRANSPORT_DEFINITION: ScenarioDefinition = {
     "Les clients industriels connaissent la maison depuis trente ans, et l'on y a toujours cru qu'un camion plein était un camion rentable. Mais la flotte vieillit et le carburant décide du résultat.",
   dilemma: {
     question:
-      "Les industriels sous contrat paient bien mais exigent une ponctualité sans faille ; la bourse de fret remplit les retours au prix du jour. Sur quoi bâtissez-vous votre trimestre ?",
+      "Les industriels paient bien mais n'excusent aucun retard ; la bourse remplit les retours au prix du jour. Sur quoi bâtissez-vous ?",
     routes: [
       {
         label: "Les contrats industriels, réguliers et exigeants",
-        gain: "Un trafic prévisible, des tarifs qui tiennent, et des clients qui restent des années tant que les livraisons arrivent à l'heure.",
-        risque: "La moindre défaillance se paie en pénalités, et ils règlent avec les délais des grandes maisons, pendant que le gazole se paie presque comptant.",
+        gain: "Un trafic prévisible, des tarifs qui tiennent, des clients qui restent.",
+        risque: "La moindre défaillance se paie en pénalités, et ils règlent bien plus tard.",
       },
       {
         label: "La bourse de fret, qui remplit les retours",
-        gain: "De quoi charger des camions qui rentreraient vides, encaissé sous quarante-huit heures, sans engagement d'aucune sorte.",
-        risque: "Le prix se refait chaque matin, la fidélité n'existe pas, et une entreprise qui vit de la bourse ne couvre plus ses charges de structure.",
+        gain: "De quoi charger des camions qui rentreraient vides, encaissé en deux jours.",
+        risque: "Le prix se refait chaque matin, et ne couvre plus les charges de structure.",
       },
     ],
   },

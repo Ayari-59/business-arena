@@ -243,8 +243,17 @@ describe("contexte des tours suivants", () => {
       expect(b.question.trim().endsWith("?"), b.code).toBe(true);
       expect(b.routes.length, b.code).toBeGreaterThanOrEqual(1);
       for (const route of b.routes) {
-        expect(route.gain.length, `${b.code} / ${route.label}`).toBeGreaterThan(60);
-        expect(route.risque.length, `${b.code} / ${route.label}`).toBeGreaterThan(60);
+        // Les deux faces sont obligatoires, et chacune tient en UNE phrase :
+        // la carte de décision se lit d'un coup d'œil, elle n'explique pas.
+        for (const [face, texte] of [
+          ["gain", route.gain],
+          ["risque", route.risque],
+        ] as const) {
+          const ou = `${b.code} / ${route.label} / ${face}`;
+          expect(texte.length, ou).toBeGreaterThan(45);
+          expect(texte.length, ou).toBeLessThanOrEqual(90);
+          expect(texte.split(/[.!?]\s/).filter(Boolean).length, ou).toBe(1);
+        }
       }
     }
   });

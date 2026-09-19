@@ -72,14 +72,25 @@ describe("registre des scénarios", () => {
     for (const d of SCENARIOS) {
       expect(d.context.length, d.code).toBeGreaterThan(120);
       expect(d.dilemma.question.trim().endsWith("?"), d.code).toBe(true);
+      // La question tient sur une ligne d'écran : au-delà, elle n'est plus
+      // lue, elle est survolée. Les plus longues faisaient 198 caractères.
+      expect(d.dilemma.question.length, d.code).toBeLessThanOrEqual(130);
       // Deux routes : une « décision » à une seule issue n'en est pas une.
       expect(d.dilemma.routes.length, d.code).toBe(2);
       for (const route of d.dilemma.routes) {
         expect(route.label.length, d.code).toBeGreaterThan(5);
-        // Un choix sans contrepartie chiffrable n'apprend rien : les deux
-        // faces sont obligatoires.
-        expect(route.gain.length, `${d.code} / ${route.label}`).toBeGreaterThan(60);
-        expect(route.risque.length, `${d.code} / ${route.label}`).toBeGreaterThan(60);
+        // Un choix sans contrepartie n'apprend rien : les deux faces sont
+        // obligatoires. Mais une face, c'est UNE phrase — le plafond tient
+        // la carte à sa taille, le développement appartient à la situation.
+        for (const [face, texte] of [
+          ["gain", route.gain],
+          ["risque", route.risque],
+        ] as const) {
+          const ou = `${d.code} / ${route.label} / ${face}`;
+          expect(texte.length, ou).toBeGreaterThan(45);
+          expect(texte.length, ou).toBeLessThanOrEqual(85);
+          expect(texte.split(/[.!?]\s/).filter(Boolean).length, ou).toBe(1);
+        }
       }
       // Les deux routes doivent être distinctes, pas une reformulation.
       const [a, b] = d.dilemma.routes;

@@ -102,9 +102,9 @@ export function roundBriefing(input: BriefingInput): RoundBriefing {
     if (enabled.finance && input.hasTreasuryTools) {
       routes.push({
         label: "Mobiliser le poste clients",
-        gain: "Les créances rentrent tout de suite au lieu d'attendre leur échéance. La caisse se remplit sans rien vendre de plus.",
+        gain: "Les créances rentrent tout de suite, sans rien vendre de plus.",
         risque:
-          "L'escompte et l'affacturage se paient. Une partie de la marge du tour part en frais financiers, et le problème revient au tour suivant s'il vient d'ailleurs.",
+          "L'escompte se paie en frais financiers, et le problème revient s'il vient d'ailleurs.",
       });
     }
     routes.push({
@@ -113,16 +113,16 @@ export function roundBriefing(input: BriefingInput): RoundBriefing {
       // moitié de la phrase ne vaut que pour les secteurs à stock. Elle disait
       // sinon « le nuitées perdues déjà là qui s'écoule ».
       gain: perishable
-        ? `Moins de ${v.units} ${accord(v, "lancé")}, c'est moins d'argent sorti d'avance pour une demande qui n'est pas venue.`
-        : `Moins de ${v.units} ${accord(v, "lancé")}, c'est moins d'argent immobilisé d'avance, et ce que vous avez déjà en réserve qui s'écoule.`,
+        ? `Moins de ${v.units} ${accord(v, "lancé")}, c'est moins d'argent sorti d'avance.`
+        : `Moins de ${v.units} ${accord(v, "lancé")}, et la réserve déjà payée qui s'écoule.`,
       risque:
-        "Les charges de structure ne baissent pas, elles. Moins de volume, c'est moins de marge pour les couvrir, et le trou peut se creuser.",
+        "Les charges de structure ne baissent pas, elles : le trou peut se creuser.",
     });
     routes.push({
       label: "Aller chercher du financement",
-      gain: "Un apport ou un emprunt règle la question du tour et laisse l'activité intacte.",
+      gain: "La question du tour est réglée, et l'activité reste intacte.",
       risque:
-        "L'emprunt se rembourse par échéances qui tombent que la caisse soit pleine ou vide, et les associés ne suivent pas indéfiniment.",
+        "Les échéances tombent que la caisse soit pleine ou vide.",
     });
     return {
       code: "treasury_crisis",
@@ -142,24 +142,24 @@ export function roundBriefing(input: BriefingInput): RoundBriefing {
     if (enabled.investment && input.hasInvestmentOffer) {
       routes.push({
         label: "Acheter de la capacité",
-        gain: "Vous servirez la demande que vous refusez aujourd'hui, et cela vaut pour tous les tours qui restent.",
+        gain: "Vous servirez la demande refusée, et pour tous les tours qui restent.",
         risque:
-          "Cela se paie maintenant et n'entre en service qu'au tour suivant. Les amortissements, eux, tomberont ensuite à chaque tour, demande ou pas.",
+          "Payé maintenant, en service au tour suivant, amorti à chaque tour ensuite.",
       });
     }
     if (enabled.hr) {
       routes.push({
         label: "Renforcer l'équipe",
-        gain: "Une embauche ou de la formation lève le plafond humain, souvent plus vite qu'un investissement.",
+        gain: "Une embauche lève le plafond humain, souvent plus vite qu'une machine.",
         risque:
-          "Le recrutement coûte tout de suite et le renfort n'arrive qu'au tour suivant. Un salaire, une fois embauché, tombe chaque tour.",
+          "Le renfort n'arrive qu'au tour suivant, et le salaire tombe ensuite chaque tour.",
       });
     }
     routes.push({
       label: `Monter votre ${v.priceLabel.toLowerCase()}`,
-      gain: "Refuser des clients est le signe que votre prix est trop bas. La même capacité rapporte alors davantage, sans rien investir.",
+      gain: "Refuser des clients dit que le prix est trop bas : la capacité rapporte plus.",
       risque:
-        "Les clientèles sensibles au prix partent chez le concurrent, et toutes ne reviennent pas au tour suivant.",
+        "Les clientèles sensibles au prix partent, et ne reviennent pas toutes.",
     });
     return {
       code: "demand_refused",
@@ -187,15 +187,15 @@ export function roundBriefing(input: BriefingInput): RoundBriefing {
       routes: [
         {
           label: `Baisser votre ${v.priceLabel.toLowerCase()}`,
-          gain: "La demande remonte, l'invendu s'écoule, et l'argent immobilisé redevient de la trésorerie.",
+          gain: "L'invendu s'écoule, et l'argent immobilisé redevient de la trésorerie.",
           risque:
-            "Chaque euro de moins est un euro de marge en moins sur TOUTES les ventes, pas seulement sur celles que vous rattrapez.",
+            "Un euro de moins, c'est un euro de marge en moins sur TOUTES les ventes.",
         },
         {
           label: `Réduire votre ${v.productionPlanLabel.toLowerCase()}`,
-          gain: "Vous cessez d'avancer de l'argent pour des ventes qui n'arrivent pas, et vous écoulez ce qui est déjà là.",
+          gain: "Vous cessez d'avancer de l'argent pour des ventes qui n'arrivent pas.",
           risque:
-            "Si la demande repart, vous n'aurez rien à servir, et une vente manquée ne se rattrape pas au tour suivant.",
+            "Si la demande repart, vous n'aurez rien à servir, et elle ne revient pas.",
         },
       ],
     };
@@ -210,15 +210,15 @@ export function roundBriefing(input: BriefingInput): RoundBriefing {
       routes: [
         {
           label: "Chercher le volume",
-          gain: `Chaque ${v.unit} de plus n'ajoute que son coût variable : tout le reste de son prix va couvrir la structure.`,
+          gain: `Chaque ${v.unit} de plus n'ajoute que son coût variable : le reste couvre la structure.`,
           risque:
-            "Il faut baisser le prix pour l'obtenir, ce qui réduit précisément ce que chaque vente rapporte. Le volume gagné doit compenser la marge perdue.",
+            "Il faut baisser le prix : le volume gagné doit compenser la marge perdue.",
         },
         {
           label: "Chercher la marge",
-          gain: "Un prix plus élevé fait rentrer davantage sur chaque vente, sans rien produire de plus.",
+          gain: "Chaque vente rapporte davantage, sans rien produire de plus.",
           risque:
-            "Les clientèles sensibles au prix s'en vont, et un volume qui s'effondre laisse la structure encore plus découverte.",
+            "Les clientèles sensibles au prix s'en vont, et la structure reste à couvrir.",
         },
       ],
     };
@@ -233,15 +233,15 @@ export function roundBriefing(input: BriefingInput): RoundBriefing {
     routes: [
       {
         label: "Pousser l'avantage",
-        gain: "Prix agressif et budgets ouverts prennent de la part de marché pendant que vous en avez les moyens. La part gagnée se garde en partie d'un tour à l'autre.",
+        gain: "Prix agressif et budgets ouverts prennent de la part de marché, qui se garde.",
         risque:
-          "Cela se paie tout de suite, et la trésorerie encaisse plus tard que le compte de résultat. Une croissance rapide vide la caisse avant d'avoir rapporté.",
+          "La trésorerie encaisse plus tard que le résultat : la caisse se vide d'abord.",
       },
       {
         label: "Consolider",
-        gain: "Marge tenue et trésorerie qui se reconstitue : vous serez en état d'encaisser un coup dur ou de saisir une occasion.",
+        gain: "Marge tenue et caisse qui se reconstitue : de quoi encaisser un coup dur.",
         risque:
-          "Pendant ce temps, vos concurrents prennent la part de marché que vous laissez, et elle se reprend plus cher qu'elle ne se garde.",
+          "Vos concurrents prennent la part que vous laissez, et elle se reprend cher.",
       },
     ],
   };
