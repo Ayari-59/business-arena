@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { NATURES, type CourrierDef } from "@/config/courriers/types";
 import { courriersPourCodes, positionDuCourrier } from "@/config/courriers/registre";
 import { COURRIERS_DE_ROUTINE } from "@/config/courriers/routine";
+import { LETTRES_DE_MISSION } from "@/config/courriers/mission";
 import { SCENARIOS, scenarioByCode } from "@/config/scenarios/registry";
 import { Courriel, Enveloppe, Lettre, Message } from "@/components/courrier";
 
@@ -29,8 +30,29 @@ import { Courriel, Enveloppe, Lettre, Message } from "@/components/courrier";
 
 type Liasse = "market" | "team";
 
-/** La valeur d'URL qui demande la liasse de routine plutôt qu'un secteur. */
+/** Les deux piles qui ne dépendent d'aucun secteur, demandées par l'URL. */
 const ROUTINE = "routine";
+const MISSION = "mission";
+
+/**
+ * Ce que chaque pile hors secteur contient et comment elle s'annonce. Elles
+ * partagent le même gabarit que les liasses de secteur — même pli, même
+ * découpe — mais ni l'une ni l'autre ne se distribue au hasard : l'une comble
+ * les tours calmes, l'autre ouvre la partie.
+ */
+const PILES_HORS_SECTEUR: Record<string, { titre: string; nom: string; courriers: CourrierDef[] }> =
+  {
+    [ROUTINE]: {
+      titre: "Courriers de routine · toutes parties",
+      nom: "Courriers de routine",
+      courriers: COURRIERS_DE_ROUTINE,
+    },
+    [MISSION]: {
+      titre: "Lettres de mission · une par niveau",
+      nom: "Lettre de mission",
+      courriers: LETTRES_DE_MISSION,
+    },
+  };
 
 /**
  * LE CATALOGUE DES LIASSES.
@@ -171,20 +193,23 @@ function LiasseAImprimer() {
    * liasse imprimée — et en séance papier, l'enseignant n'avait rien à donner
    * les tours calmes, ce qui vide de son sens la règle même du facteur.
    * Ils s'impriment une fois pour toutes et resservent dans toutes les parties.
+   *
+   * LES LETTRES DE MISSION sont l'autre pile hors secteur : six mandats, un par
+   * niveau de difficulté, dont l'enseignant ne distribue que celui de sa
+   * partie, au premier tour. Elles n'ont pas non plus d'événement derrière
+   * elles — elles disent qui confie quoi, et rien de plus.
    */
+  const pile = PILES_HORS_SECTEUR[choix];
   const routine = choix === ROUTINE;
   const definition = scenarioByCode(choix);
-  const courriers = routine
-    ? COURRIERS_DE_ROUTINE
-    : courriersPourCodes(definition.scenario.events.map((e) => e.code));
+  const courriers =
+    pile?.courriers ?? courriersPourCodes(definition.scenario.events.map((e) => e.code));
   const duMarche = courriers.filter((c) => c.scope === "market");
   const adresses = courriers.filter((c) => c.scope === "team");
-  const nomDeLaLiasse = routine
-    ? "Courriers de routine"
-    : courriers[0]
-      ? (positionDuCourrier(courriers[0].code)?.liasse ?? null)
-      : null;
-  const titre = routine ? "Courriers de routine · toutes parties" : definition.title;
+  const nomDeLaLiasse =
+    pile?.nom ??
+    (courriers[0] ? (positionDuCourrier(courriers[0].code)?.liasse ?? null) : null);
+  const titre = pile?.titre ?? definition.title;
 
   /*
    * TROIS PLIS PAR FEUILLE A4, EN PORTRAIT.
@@ -204,7 +229,7 @@ function LiasseAImprimer() {
    * s'écrit pas : ces six-là ne s'inventent pas, ils se classent.
    */
   const PLIS_PAR_FEUILLE = 3;
-  const avecVierge = !routine;
+  const avecVierge = !pile;
   const feuilles = (liste: CourrierDef[], liasse: Liasse) => {
     const plis: React.ReactNode[] = liste.map((courrier) => (
       <PliImprime
@@ -263,6 +288,9 @@ function LiasseAImprimer() {
               <option value={ROUTINE}>
                 Courriers de routine · {COURRIERS_DE_ROUTINE.length} plis · toutes parties
               </option>
+              <option value={MISSION}>
+                Lettres de mission · {LETTRES_DE_MISSION.length} plis · une par niveau
+              </option>
             </select>
           </p>
           <p className="print-legend">
@@ -283,7 +311,13 @@ function LiasseAImprimer() {
             <strong>trait pointillé</strong> : l&apos;enveloppe et la lettre se retrouvent dos à
             dos, sans impression recto-verso — l&apos;élève tient une enveloppe qu&apos;il
             retourne pour lire.{" "}
-            {routine ? (
+            {choix === MISSION ? (
+              <>
+                Une lettre par niveau de difficulté : ne distribuez que celle de votre partie,
+                au premier tour, avant la première décision. Elle dit à l&apos;équipe ce que
+                vous lui confiez, et rien d&apos;autre — aucun compte n&apos;en dépend.
+              </>
+            ) : routine ? (
               <>
                 Ces six-là ne se saisissent nulle part et ne changent aucun compte : ils se
                 donnent les tours où rien ne tombe, pour qu&apos;une enveloppe ne soit jamais
@@ -320,9 +354,11 @@ function LiasseAImprimer() {
             {avecVierge ? " + 1 lettre vierge" : ""}
           </h2>
           <p className="print-help no-print">
-            {routine
-              ? "Un courrier de routine se donne le tour où rien ne tombe : le facteur passe quand même, et trier ce qui ne compte pas est une compétence de gestion. Imprimez-en une pile par entreprise, ils resservent d'une partie à l'autre."
-              : "Astuce : imprimez cette page en plusieurs exemplaires pour constituer une pile par entreprise."}
+            {choix === MISSION
+              ? "Un exemplaire par équipe, du seul niveau que vous avez choisi. Les cinq autres lettres ne serviront pas à cette partie : elles sont imprimées ensemble pour que la pile tienne en deux feuilles."
+              : routine
+                ? "Un courrier de routine se donne le tour où rien ne tombe : le facteur passe quand même, et trier ce qui ne compte pas est une compétence de gestion. Imprimez-en une pile par entreprise, ils resservent d'une partie à l'autre."
+                : "Astuce : imprimez cette page en plusieurs exemplaires pour constituer une pile par entreprise."}
           </p>
           {feuilles(adresses, "team")}
         </section>

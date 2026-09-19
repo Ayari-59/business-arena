@@ -7,6 +7,7 @@ import {
 } from "@/config/courriers/types";
 import { courrierParCode, positionDuCourrier, referenceDuCourrier } from "@/config/courriers/registre";
 import { COURRIERS_DE_ROUTINE, estUnCourrierDeRoutine } from "@/config/courriers/routine";
+import { LETTRES_DE_MISSION, estUneLettreDeMission } from "@/config/courriers/mission";
 import { BrandMark } from "@/components/brand-mark";
 
 /**
@@ -43,9 +44,23 @@ import { BrandMark } from "@/components/brand-mark";
  * mais ils se lisent et s'impriment comme les autres.
  */
 const routineParCode = new Map(COURRIERS_DE_ROUTINE.map((c) => [c.code, c]));
+/** Les mandats ne sont pas au registre non plus : ils ne se tirent jamais. */
+const missionParCode = new Map(LETTRES_DE_MISSION.map((c) => [c.code, c]));
 
 function courrier(code: string): CourrierDef | undefined {
-  return courrierParCode.get(code) ?? routineParCode.get(code);
+  return courrierParCode.get(code) ?? routineParCode.get(code) ?? missionParCode.get(code);
+}
+
+/**
+ * D'où vient ce courrier, pour le pied de page. Les liasses numérotent leurs
+ * plis (« NOVA · 7 / 30 ») ; les deux piles hors registre se nomment. Le pied
+ * disait « Courrier de routine » pour tout ce qui n'était pas numéroté, ce qui
+ * aurait fait passer un mandat des associés pour un relevé bancaire.
+ */
+function pileDuCourrier(code: string): string {
+  const position = positionDuCourrier(code);
+  if (position) return `${position.liasse} · ${position.index} / ${position.total}`;
+  return estUneLettreDeMission(code) ? "Lettre de mission" : "Courrier de routine";
 }
 
 /**
@@ -168,10 +183,15 @@ export function Lettre({
   const c = courrier(code);
   if (!c) return null;
   const nature = NATURES[c.nature];
-  const position = positionDuCourrier(code);
   const reference = referenceDuCourrier(code);
   const duree = dureeDuCourrier(c);
-  const routine = estUnCourrierDeRoutine(code);
+  /*
+   * SANS EFFET SUR LES COMPTES : l'éclair et les pastilles de durée promettent
+   * une conséquence mécanique. Les courriers de routine n'en ont pas, et le
+   * mandat des associés non plus — il dit qui confie quoi. Leur donner
+   * « ⚡ ... ● » aurait fait chercher aux élèves un effet qui n'arrive jamais.
+   */
+  const sansEffet = estUnCourrierDeRoutine(code) || estUneLettreDeMission(code);
   const interne = c.pli === "interne";
 
   return (
@@ -246,10 +266,10 @@ export function Lettre({
         {/* ce que l'entreprise doit en faire, et ses pastilles de durée */}
         <div className="creux filet mt-auto rounded-lg border px-3 py-2">
           <div className="flex items-start justify-between gap-2">
-            <p className={`text-xs font-semibold leading-snug ${routine ? "douce" : ""}`}>
-              {routine ? "🗂️" : "⚡"} {c.effet}
+            <p className={`text-xs font-semibold leading-snug ${sansEffet ? "douce" : ""}`}>
+              {sansEffet ? "🗂️" : "⚡"} {c.effet}
             </p>
-            {routine ? null : (
+            {sansEffet ? null : (
               <span
                 className="tenue mt-0.5 shrink-0 text-xs tracking-widest"
                 aria-label={`${duree} tour${duree > 1 ? "s" : ""}`}
@@ -264,9 +284,7 @@ export function Lettre({
 
         <div className="filet mt-2 flex items-end justify-between border-t pt-1.5">
           <span className="tenue text-xs uppercase tracking-[0.15em]">
-            {position
-              ? `${position.liasse} · ${position.index} / ${position.total}`
-              : "Courrier de routine"}
+            {pileDuCourrier(code)}
           </span>
           <span className="text-base" aria-hidden>
             {c.emoji}
@@ -392,10 +410,15 @@ export function Message({
   const c = courrier(code);
   if (!c) return null;
   const nature = NATURES[c.nature];
-  const position = positionDuCourrier(code);
   const reference = referenceDuCourrier(code);
   const duree = dureeDuCourrier(c);
-  const routine = estUnCourrierDeRoutine(code);
+  /*
+   * SANS EFFET SUR LES COMPTES : l'éclair et les pastilles de durée promettent
+   * une conséquence mécanique. Les courriers de routine n'en ont pas, et le
+   * mandat des associés non plus — il dit qui confie quoi. Leur donner
+   * « ⚡ ... ● » aurait fait chercher aux élèves un effet qui n'arrive jamais.
+   */
+  const sansEffet = estUnCourrierDeRoutine(code) || estUneLettreDeMission(code);
 
   return (
     <div
@@ -451,10 +474,10 @@ export function Message({
 
         <div className="creux filet mt-auto rounded-md border px-3 py-2">
           <div className="flex items-start justify-between gap-2">
-            <p className={`text-xs font-semibold leading-snug ${routine ? "douce" : ""}`}>
-              {routine ? "🗂️" : "⚡"} {c.effet}
+            <p className={`text-xs font-semibold leading-snug ${sansEffet ? "douce" : ""}`}>
+              {sansEffet ? "🗂️" : "⚡"} {c.effet}
             </p>
-            {routine ? null : (
+            {sansEffet ? null : (
               <span
                 className="tenue mt-0.5 shrink-0 text-xs tracking-widest"
                 aria-label={`${duree} tour${duree > 1 ? "s" : ""}`}
@@ -469,9 +492,7 @@ export function Message({
 
         <div className="filet mt-2 flex items-end justify-between border-t pt-1.5">
           <span className="tenue text-xs uppercase tracking-[0.15em]">
-            {position
-              ? `${position.liasse} · ${position.index} / ${position.total}`
-              : "Courrier de routine"}
+            {pileDuCourrier(code)}
           </span>
           {reference ? <span className="tenue text-xs tabular-nums">{reference}</span> : null}
         </div>

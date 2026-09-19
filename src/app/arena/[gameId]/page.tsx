@@ -10,6 +10,7 @@ import { AlerteTresorerie } from "@/components/alerte-tresorerie";
 import { PassageAuTour } from "@/components/passage-au-tour";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { CourrierRecommande, grilleDeCourriers } from "@/components/courrier";
+import { lettreDeMission } from "@/config/courriers/mission";
 import { courrierParCode } from "@/config/courriers/registre";
 import { DecisionForm } from "@/components/decision-form";
 import { TeamNameForm } from "@/components/team-name-form";
@@ -777,6 +778,27 @@ export default async function ArenaPage({
                   // « Analyser », et la saisie dans « Décider ».
                   situation: (
                     <div id="situation" className="space-y-6">
+                      {/*
+                        LE MANDAT, AU PREMIER TOUR, AVANT TOUT LE RESTE.
+
+                        Les leviers du niveau sont tous ouverts dès le premier
+                        écran de décision, et aucun n'avait été réclamé par
+                        personne : on remplissait des champs qui étaient là
+                        parce qu'ils étaient là. Cette note des associés dit qui
+                        confie quoi, et elle nomme les domaines dans les termes
+                        mêmes des étapes du formulaire — l'élève lit « vous avez
+                        la main sur le financement », puis retrouve l'onglet.
+
+                        Une seule fois, au tour 1 : un mandat ne se répète pas.
+                      */}
+                      {view.currentRound === 1 ? (
+                        <div className={grilleDeCourriers(1)}>
+                          <CourrierRecommande
+                            code={lettreDeMission(view.difficulty.level).code}
+                            destinataire={view.playerTeamName}
+                          />
+                        </div>
+                      ) : null}
                       {/*
                         On arrive à la décision, on ne l'ouvre pas : d'abord où
                         l'on est (identité, gamme, capacité, situation), puis ce
