@@ -78,18 +78,22 @@ export function MandatDeLEquipe({
     );
   }
 
+  /*
+   * PAS DE CARTE AUTOUR DE LA LETTRE.
+   *
+   * La première version encadrait le mandat d'une carte titrée « 📜 Votre
+   * mandat · Ce que les associés vous confient ». Mais la lettre porte déjà son
+   * propre en-tête — « Note interne · Les associés », « Objet : Votre mandat » —
+   * et sa propre matière : c'était un bloc dans un bloc, un titre sur un titre,
+   * et un pavé de plus sur l'écran d'ouverture, là où trois textes se suivent
+   * déjà (le mandat, la situation de l'entreprise, son contexte).
+   *
+   * La lettre se suffit. Il ne reste autour d'elle que le geste qui la range.
+   */
   return (
-    <section aria-label="Votre mandat" className="carte p-3 sm:p-5">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-sm font-semibold text-amber-400">📜 Votre mandat</h2>
-        <p className="text-xs text-slate-400">
-          Ce que les associés vous confient pour cette partie.
-        </p>
-      </div>
-      <div className={`mt-4 ${grilleDeCourriers(1)}`}>
-        <CourrierRecommande code={mandat.code} destinataire={equipe} />
-      </div>
-      <div className="mt-4 flex justify-center">
+    <section aria-label="Votre mandat" className={grilleDeCourriers(1)}>
+      <CourrierRecommande code={mandat.code} destinataire={equipe} />
+      <div className="flex justify-center">
         <button
           type="button"
           onClick={() => memoire.retenir(cle, "2")}
