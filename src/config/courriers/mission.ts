@@ -77,7 +77,7 @@ export const LETTRES_DE_MISSION: CourrierDef[] = [
     expediteur: EXPEDITEUR,
     objet: "Votre mandat — direction, production et finances",
     corps:
-      "Vous tenez l'offre et l'outil ; nous y ajoutons les finances. C'est vous qui décidez comment l'entreprise se finance et comment elle se couvre contre les coups durs : notre banque et notre assureur s'adresseront à vous.",
+      "Nous vous confions l'offre, l'outil et désormais les finances : c'est vous qui décidez comment l'entreprise se finance et comment elle se couvre contre les coups durs. Notre banque et notre assureur s'adresseront à vous.",
     signataire: SIGNATURE,
     effet: EFFET,
     enJeu:

@@ -243,9 +243,9 @@ export const NOVA_DEFINITION: ScenarioDefinition = {
   shortName: "NOVA",
   tagline: "Fabricant d'enceintes portables.",
   briefing:
-    "Tout ce que vous vendez sort de votre atelier, dont la capacité est limitée. Produire plus que vous ne vendez immobilise votre argent en stock ; produire moins laisse repartir des clients.",
+    "Tout ce que vous vendez sort d'un atelier à capacité limitée. Produire trop immobilise votre argent en stock, produire trop peu laisse repartir des clients.",
   context:
-    "L'ancien dirigeant est parti à la retraite le mois dernier. Il vous laisse un atelier en état, une équipe qui connaît le produit, et un carnet de commandes vide : rien n'est signé pour le trimestre qui s'ouvre. La concurrence, elle, est installée depuis des années, l'une sur les prix bas, l'autre sur le haut de gamme.",
+    "L'atelier est en état et l'équipe connaît le produit, mais le carnet de commandes est vide : rien n'est signé pour le trimestre. La concurrence est installée, l'une sur les prix bas, l'autre sur le haut de gamme.",
   dilemma: {
     question: "Deux clientèles, deux niveaux de prix, un seul atelier. Laquelle visez-vous ce trimestre ?",
     routes: [
@@ -303,9 +303,9 @@ export const NOVA_GAMME_DEFINITION: ScenarioDefinition = {
   shortName: "NOVA · gamme",
   tagline: "Fabricant d'enceintes portables : trois références, un atelier.",
   briefing:
-    "Votre atelier a une capacité limitée, et vos enceintes n'y rapportent pas la même chose. La petite se vend par milliers pour quelques euros de marge, la grande par centaines pour beaucoup plus, mais elle n'est encore qu'un prototype : la développer se paie avant de rapporter. Quand les commandes dépassent ce que l'atelier peut sortir, la question n'est plus combien produire, mais quoi produire.",
+    "Votre atelier a une capacité limitée, et vos enceintes n'y rapportent pas la même chose. Quand les commandes dépassent ce qu'il peut sortir, la question n'est plus combien produire, mais quoi produire.",
   context:
-    "L'ancien dirigeant est parti à la retraite le mois dernier. Il vous laisse un atelier en état, une équipe qui connaît les deux produits en vente, un prototype de grande enceinte dans les cartons, et un carnet de commandes vide : rien n'est signé pour le trimestre qui s'ouvre. La concurrence, elle, est installée depuis des années, l'une sur les prix bas de l'entrée de gamme, l'autre sur le haut de gamme des passionnés.",
+    "L'équipe connaît les deux produits en vente, un prototype de grande enceinte dort dans les cartons, et le carnet est vide. La concurrence tient l'entrée de gamme sur les prix, et le haut de gamme sur les passionnés.",
   dilemma: {
     question:
       "Deux enceintes en vente, un prototype à financer, un seul atelier. Que faites-vous de vos lignes et de votre caisse ce trimestre ?",
@@ -359,9 +359,9 @@ export const BOUTIQUE_DEFINITION: ScenarioDefinition = {
   shortName: "MAILLE & CO",
   tagline: "Marque de vêtements en maille : cinq références, une boutique.",
   briefing:
-    "Vous ne fabriquez rien, vous faites tricoter pour revendre. Votre marge se joue entre le prix d'achat de chaque pièce et son prix de vente, et elle n'est pas la même sur un bonnet et sur un pull mérinos. Ce que vous commandez dort en réserve, payé bien avant qu'une cliente ne l'emporte.",
+    "Vous ne fabriquez rien, vous faites tricoter pour revendre. Votre marge se joue entre le prix d'achat d'une pièce et son prix de vente, et elle diffère du bonnet au pull mérinos.",
   context:
-    "La marque tourne depuis des années et la clientèle du quartier la connaît. Votre prédécesseur commandait toujours les mêmes quantités des mêmes références aux mêmes façonniers, et la réserve déborde encore de pièces de la saison passée. Vous, vous devez commander la collection qui vient, référence par référence, sans savoir ce qui se vendra.",
+    "La clientèle du quartier connaît la marque. La réserve déborde de pièces de la saison passée, commandées toujours à l'identique, et la collection qui vient reste à choisir référence par référence.",
   dilemma: {
     question:
       "Vous achetez aujourd'hui ce que vous vendrez dans plusieurs semaines. Combien commandez-vous, et de quoi ?",
@@ -415,9 +415,9 @@ export const BOUTIQUE_MONO_DEFINITION: ScenarioDefinition = {
   shortName: "MAILLE & CO · un article",
   tagline: "Concept store de prêt-à-porter en centre-ville : un article de mode, une boutique.",
   briefing:
-    "Vous ne fabriquez rien, vous achetez pour revendre. Votre marge se joue entièrement entre le prix auquel vous achetez et celui auquel vous vendez. Ce que vous commandez dort en réserve, et vous l'avez payé bien avant qu'une cliente l'emporte.",
+    "Vous ne fabriquez rien, vous achetez pour revendre : votre marge se joue entre le prix d'achat et le prix de vente. Ce que vous commandez dort en réserve, payé bien avant d'être emporté.",
   context:
-    "La boutique tourne depuis des années et la clientèle du quartier la connaît. Votre prédécesseur commandait toujours la même chose aux mêmes fournisseurs, et la réserve déborde encore de pièces de la saison passée. Vous, vous devez commander la saison qui vient sans savoir ce qui se vendra.",
+    "La clientèle du quartier connaît la boutique. La réserve déborde de pièces de la saison passée, commandées toujours aux mêmes fournisseurs, et la saison qui vient reste à commander à l'aveugle.",
   dilemma: {
     question: "Vous achetez aujourd'hui ce que vous vendrez dans plusieurs semaines. Combien commandez-vous ?",
     routes: [
@@ -472,7 +472,7 @@ export const HOTEL_DEFINITION: ScenarioDefinition = {
   briefing:
     "Une chambre vide ce soir est perdue : elle ne se vendra pas deux fois demain. Vos charges tombent que l'hôtel soit plein ou non.",
   context:
-    "L'hôtel vient d'un exploitant qui affichait le même tarif toute l'année, sans jamais regarder si les chambres se remplissaient. Les plateformes de réservation apportent des clients, mais prennent leur commission au passage. La saison qui s'ouvre ne remplira pas l'hôtel toute seule.",
+    "Le même tarif était affiché toute l'année, sans regarder si les chambres se remplissaient. Les plateformes de réservation apportent des clients et prennent leur commission au passage.",
   dilemma: {
     question: "Une chambre vide ce soir ne rapportera jamais rien. Jusqu'où baissez-vous pour la remplir ?",
     routes: [
@@ -525,9 +525,9 @@ export const HOTEL_GAMME_DEFINITION: ScenarioDefinition = {
   shortName: "L'ESCALE · gamme",
   tagline: "Hôtel 3 étoiles de 60 chambres : standard, supérieures et suites, un même bâtiment.",
   briefing:
-    "Une chambre vide ce soir est perdue : elle ne se vendra pas deux fois demain, et vos charges tombent que l'hôtel soit plein ou non. Vous vendez trois chambres, chacune à son prix et à sa clientèle : le remplissage compte, le mix compte autant.",
+    "Une chambre vide ce soir est perdue, et vos charges tombent que l'hôtel soit plein ou non. Vous vendez trois chambres, chacune à son prix : le remplissage compte, le mix compte autant.",
   context:
-    "L'hôtel vient d'un exploitant qui affichait un seul prix moyen toute l'année, sans distinguer la suite de la chambre du fond. Les plateformes de réservation apportent des clients, mais prennent leur commission au passage. La saison qui s'ouvre ne remplira pas l'hôtel toute seule, et elle ne remplira pas les trois chambres de la même façon.",
+    "Un seul prix moyen était affiché toute l'année, sans distinguer la suite de la chambre du fond. Les plateformes apportent des clients et prennent leur commission au passage.",
   dilemma: {
     question: "Trois chambres, un bâtiment. Faut-il vendre beaucoup de standard à petit prix, ou tenir les supérieures et les suites à leur prix ?",
     routes: [
@@ -580,9 +580,9 @@ export const BISTROT_DEFINITION: ScenarioDefinition = {
   shortName: "LA TABLE D'AUGUSTIN",
   tagline: "Bistrot de 70 couverts, midi et soir.",
   briefing:
-    "Un couvert non servi est perdu, et ce que la cuisine a préparé sans le vendre part à la poubelle. Deux limites vous arrêtent en même temps : ce que la salle et la cuisine peuvent servir, et les heures de votre brigade.",
+    "Un couvert non servi est perdu, et ce que la cuisine a préparé sans le vendre part à la poubelle. Deux limites vous arrêtent : ce que la salle peut servir, et les heures de votre brigade.",
   context:
-    "Le bistrot est connu du quartier : la salle se remplit le midi en semaine, et le soir le week-end. Chaque semaine, la cuisine commande des denrées qui ne se gardent pas. Ce qui est préparé et non servi est perdu le soir même.",
+    "Le bistrot est connu du quartier : plein le midi en semaine, le soir le week-end. Les denrées commandées chaque semaine ne se gardent pas.",
   dilemma: {
     question: "La cuisine prépare avant de savoir combien de clients viendront. Vous tablez sur quelle affluence ?",
     routes: [
@@ -635,9 +635,9 @@ export const BISTROT_GAMME_DEFINITION: ScenarioDefinition = {
   shortName: "LA TABLE D'AUGUSTIN · gamme",
   tagline: "Bistrot de 70 couverts : la formule du midi, la carte du soir, les banquets, et un traiteur à bâtir.",
   briefing:
-    "Un couvert non servi est perdu, et ce que la cuisine a préparé sans le vendre part à la poubelle. Vous vendez quatre offres, chacune à son prix, à sa clientèle et à son coût de denrées, avec la même cuisine et la même brigade. L'activité traiteur reste à bâtir avant de rapporter.",
+    "Un couvert non servi est perdu, et ce que la cuisine a préparé sans le vendre part à la poubelle. Vous vendez quatre offres, chacune à son prix et à son coût de denrées, avec une seule cuisine.",
   context:
-    "Le bistrot vient d'un chef qui affichait le même ticket à midi et le soir. Les bureaux du quartier veulent une formule rapide, les habitués du soir une carte, les entreprises des banquets réglés à un mois. Un projet traiteur dort dans un tiroir : il faut un véhicule frigorifique et un agrément avant le premier buffet.",
+    "Le même ticket était affiché à midi et le soir, alors que les bureaux veulent une formule rapide, les habitués une carte et les entreprises des banquets réglés à un mois. Un projet traiteur dort dans un tiroir.",
   dilemma: {
     question: "Une cuisine, une brigade, quatre cartes. Faut-il remplir le midi à petit prix, tenir la carte du soir, réserver des soirs aux banquets, ou financer le traiteur qui ne vendra rien ce trimestre ?",
     routes: [
@@ -670,9 +670,9 @@ export const CONSEIL_DEFINITION: ScenarioDefinition = {
   shortName: "ATLAS CONSEIL",
   tagline: "Cabinet de conseil et bureau d'études, 12 consultants.",
   briefing:
-    "Ce que vous facturez, c'est du temps de travail. Une journée non vendue ne se rattrape jamais, et les salaires tombent que le carnet soit plein ou vide. Vos clients règlent à 45 jours : l'argent gagné met des semaines à arriver en caisse.",
+    "Ce que vous facturez, c'est du temps : une journée non vendue ne se rattrape jamais, et les salaires tombent que le carnet soit plein ou vide. Vos clients règlent à 45 jours.",
   context:
-    "Le cabinet a bonne réputation, mais son fondateur est parti en emportant la moitié des missions. Vos consultants sont salariés : ils sont payés que le carnet soit plein ou vide. Les clients, eux, règlent leurs factures des semaines après la fin de la mission.",
+    "Le cabinet a bonne réputation, mais son fondateur est parti en emportant la moitié des missions. Les clients règlent des semaines après la fin de la mission.",
   dilemma: {
     question: "Vos consultants sont payés qu'ils facturent ou non. À quel tarif vendez-vous leurs journées ?",
     routes: [
@@ -727,9 +727,9 @@ export const CONSEIL_GAMME_DEFINITION: ScenarioDefinition = {
   shortName: "ATLAS CONSEIL · gamme",
   tagline: "Cabinet de conseil, 12 consultants : l'audit, la stratégie, et une pratique cyber-sécurité à bâtir.",
   briefing:
-    "Vous vendez du temps, et il ne se stocke pas : une journée non facturée est perdue, et vos consultants sont payés que le carnet soit plein ou vide. Vous vendez trois offres, chacune à son taux et à ses clients, avec les mêmes consultants : remplir les journées compte, ce qu'on y vend compte autant. La cyber-sécurité reste à bâtir avant de rapporter.",
+    "Une journée non facturée est perdue, et vos consultants sont payés que le carnet soit plein ou vide. Vous vendez trois offres à des taux différents, avec les mêmes équipes : ce qu'on vend compte autant que le remplissage.",
   context:
-    "Le cabinet vient d'un associé qui facturait toutes les missions au même taux, l'audit d'une PME comme la stratégie d'un groupe. Les grands comptes paient à soixante jours, et le poste clients est presque tout le bilan. Un projet de pratique cyber-sécurité dort dans un dossier : les DSI achètent toute l'année, mais il faut des méthodes et des certifications avant la première mission.",
+    "Toutes les missions étaient facturées au même taux, l'audit d'une PME comme la stratégie d'un groupe, et les grands comptes paient à soixante jours. Une pratique cyber-sécurité reste à bâtir.",
   dilemma: {
     question: "Douze consultants, trois offres. Faut-il remplir le banc avec de l'audit au tarif PME, tenir la stratégie au tarif des grands comptes, ou financer la cyber-sécurité qui ne vendra rien ce trimestre ?",
     routes: [
@@ -783,9 +783,9 @@ export const ECOMMERCE_DEFINITION: ScenarioDefinition = {
   shortName: "PIXEL & CO",
   tagline: "Pure player de décoration et petit mobilier.",
   briefing:
-    "Ouvrir votre boutique ne coûte presque rien, c'est un site. Mais personne n'y arrive tout seul : chaque visiteur se paie en publicité. La question n'est donc pas de savoir si vous gagnez de l'argent sur une commande, mais si vous en gagnez assez pour rembourser ce que ce client vous a coûté.",
+    "Ouvrir une boutique en ligne ne coûte presque rien, mais chaque visiteur se paie en publicité. La question n'est pas de gagner sur une commande, mais assez pour rembourser ce que ce client a coûté.",
   context:
-    "Le site fonctionne, les fournisseurs sont en place, l'entrepôt prépare les commandes. Mais l'ancien propriétaire avait coupé la publicité pour économiser, et le trafic s'est effondré avec elle. Sur internet, personne ne passe devant votre vitrine par hasard.",
+    "Le site fonctionne, les fournisseurs sont en place, l'entrepôt prépare les commandes. Mais la publicité a été coupée pour économiser, et le trafic s'est effondré avec elle.",
   dilemma: {
     question: "Sur internet, chaque visiteur se paie. Combien investissez-vous pour aller chercher des clients ?",
     routes: [
@@ -838,9 +838,9 @@ export const ECOMMERCE_GAMME_DEFINITION: ScenarioDefinition = {
   shortName: "PIXEL & CO · gamme",
   tagline: "Pure player de décoration : la déco, le petit mobilier, les luminaires, et une collection de créateurs à bâtir.",
   briefing:
-    "Ouvrir votre boutique ne coûte presque rien, c'est un site, mais chaque visiteur se paie en publicité. Vous vendez quatre rayons, chacun à ses frais de port et à sa place de marché : la question n'est pas de savoir si vous gagnez de l'argent sur une commande, mais sur laquelle, et assez pour rembourser ce que ce client vous a coûté. La collection de créateurs reste à bâtir avant de rapporter.",
+    "Chaque visiteur se paie en publicité. Vous vendez quatre rayons, chacun à ses frais de port et à sa place de marché : la question n'est pas de gagner sur une commande, mais sur laquelle.",
   context:
-    "Le site fonctionne, les fournisseurs sont en place, l'entrepôt prépare les commandes de trois rayons. Mais l'ancien propriétaire avait coupé la publicité pour économiser, le trafic s'est effondré avec elle, et le fauteuil qu'on expédie coûte plus cher à livrer que le coussin qu'on vend dix fois plus. Un projet de collection de créateurs dort dans un dossier : il faut des exclusivités et un shooting avant la première commande.",
+    "Le site tourne sur trois rayons, mais la publicité a été coupée, le trafic s'est effondré, et le fauteuil expédié coûte plus cher à livrer que le coussin vendu dix fois plus. Une collection de créateurs reste à bâtir.",
   dilemma: {
     question: "Sur internet, chaque visiteur se paie, et chaque rayon ne rapporte pas la même chose. Où mettez-vous vos euros de publicité ?",
     routes: [
@@ -873,9 +873,9 @@ export const FITNESS_DEFINITION: ScenarioDefinition = {
   shortName: "VOLT FITNESS",
   tagline: "Salle de sport de 1 200 m² en périphérie.",
   briefing:
-    "Vos adhérents paient un abonnement chaque trimestre. Vous ne les gagnez donc pas une fois, vous les gardez ou vous les perdez. Chaque départ n'enlève pas seulement un abonnement à ce trimestre, il l'enlève à tous les suivants.",
+    "Vos adhérents paient un abonnement chaque trimestre : vous ne les gagnez pas une fois, vous les gardez ou vous les perdez. Chaque départ vous enlève tous les trimestres suivants.",
   context:
-    "La salle est bien équipée et le quartier est en croissance. Mais votre prédécesseur la remplissait en janvier sans se soucier de la suite, et beaucoup d'adhérents ne renouvelaient pas. Les charges, elles, tombent tous les mois de l'année.",
+    "La salle est bien équipée et le quartier est en croissance. Mais elle se remplissait en janvier sans se soucier de la suite, et beaucoup d'adhérents ne renouvelaient pas.",
   dilemma: {
     question: "Aller chercher de nouveaux adhérents, ou garder ceux que vous avez ?",
     routes: [
@@ -929,9 +929,9 @@ export const BATIMENT_DEFINITION: ScenarioDefinition = {
   shortName: "MARTEL & FILS",
   tagline: "Entreprise de rénovation, quatorze compagnons.",
   briefing:
-    "Vous achetez les matériaux, vous payez vos compagnons chaque mois, et vous facturez à la fin du chantier. Vos clients règlent ensuite quand leurs procédures le permettent. Entre la dépense et la recette, il se passe des mois, et c'est vous qui financez l'attente.",
+    "Vous achetez les matériaux, vous payez vos compagnons chaque mois, et vous facturez à la fin du chantier. Entre la dépense et la recette il se passe des mois, et c'est vous qui financez l'attente.",
   context:
-    "Votre père vous laisse l'entreprise et une réputation qui ouvre les portes. Il vous laisse aussi un carnet de commandes qui se remplit au coup par coup, des chantiers commencés dont personne n'a encore vu la facture, et un compte en banque qui ne ressemble en rien au résultat du dernier exercice.",
+    "La réputation de la maison ouvre les portes. Mais le carnet se remplit au coup par coup, des chantiers commencés n'ont pas été facturés, et le compte en banque ne ressemble en rien au dernier résultat.",
   dilemma: {
     question:
       "Les particuliers paient vite mais comparent tout ; les marchés publics offrent du volume et paient très tard. Où allez-vous chercher vos chantiers ce trimestre ?",
@@ -985,9 +985,9 @@ export const TRANSPORT_DEFINITION: ScenarioDefinition = {
   shortName: "ROUTE & CIE",
   tagline: "Transporteur routier régional, sept porteurs.",
   briefing:
-    "Vos camions partent chaque matin, chargés ou non. Le gazole, les péages et le chauffeur se paient de la même façon dans les deux cas. Une place vide au départ est perdue pour toujours.",
+    "Vos camions partent chaque matin, chargés ou non, et le gazole, les péages et le chauffeur se paient de la même façon dans les deux cas. Une place vide au départ est perdue pour toujours.",
   context:
-    "L'entreprise familiale tourne depuis trente ans et ses clients industriels la connaissent. Mais la flotte vieillit, les chauffeurs se font rares, et le prix du carburant décide désormais du résultat sans que personne ici n'ait son mot à dire. Le fondateur partait du principe qu'un camion plein était un camion rentable.",
+    "Les clients industriels connaissent la maison depuis trente ans, et l'on y a toujours cru qu'un camion plein était un camion rentable. Mais la flotte vieillit et le carburant décide du résultat.",
   dilemma: {
     question:
       "Les industriels sous contrat paient bien mais exigent une ponctualité sans faille ; la bourse de fret remplit les retours au prix du jour. Sur quoi bâtissez-vous votre trimestre ?",
