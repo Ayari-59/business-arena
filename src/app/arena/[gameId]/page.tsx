@@ -231,17 +231,21 @@ export default async function ArenaPage({
   );
 
   // ARBITRAGE : la question qui cadre le tour.
+  // Le titre dit « Votre arbitrage », pas « Votre décision » : la décision,
+  // c'est le formulaire juste en dessous, et l'élève en rend une à chaque
+  // tour. Ce qui se joue ici est le choix ENTRE deux routes qui se valent —
+  // le mot du métier, et celui que la carte met en scène.
   // La phrase « Fixez votre prix, votre volume et vos budgets » a été retirée :
   // les champs du formulaire, juste en dessous, portent déjà ces intitulés.
   const dilemmeSection = premierTour ? (
     <DilemmaCard
-      title="Votre décision"
+      title="Votre arbitrage"
       question={view.intro.dilemma.question}
       routes={view.intro.dilemma.routes}
     />
   ) : view.roundBriefing ? (
     <DilemmaCard
-      title="Votre décision"
+      title="Votre arbitrage"
       question={view.roundBriefing.question}
       routes={view.roundBriefing.routes}
     />
