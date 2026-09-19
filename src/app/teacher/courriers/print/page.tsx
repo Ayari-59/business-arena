@@ -1,10 +1,11 @@
 "use client";
 
 import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { NATURES, type CourrierDef } from "@/config/courriers/types";
 import { courriersPourCodes, positionDuCourrier } from "@/config/courriers/registre";
-import { scenarioByCode } from "@/config/scenarios/registry";
+import { COURRIERS_DE_ROUTINE } from "@/config/courriers/routine";
+import { SCENARIOS, scenarioByCode } from "@/config/scenarios/registry";
 import { Courriel, Enveloppe, Lettre, Message } from "@/components/courrier";
 
 /**
@@ -28,7 +29,43 @@ import { Courriel, Enveloppe, Lettre, Message } from "@/components/courrier";
 
 type Liasse = "market" | "team";
 
-function PliImprime({ courrier, liasse }: { courrier: CourrierDef; liasse: Liasse }) {
+/** La valeur d'URL qui demande la liasse de routine plutôt qu'un secteur. */
+const ROUTINE = "routine";
+
+/**
+ * LE CATALOGUE DES LIASSES.
+ *
+ * Quinze scénarios, mais pas quinze liasses : un secteur et sa variante
+ * « gamme » jouent le même courrier. On garde donc UN scénario par liasse, et
+ * c'est le nom de l'entreprise qui nomme l'entrée — un enseignant cherche
+ * « L'ESCALE », pas « hotel-gamme ».
+ *
+ * Calculé à l'import, sur des données statiques : la liste ne change pas d'un
+ * rendu à l'autre.
+ */
+const LIASSES_AU_CHOIX: { code: string; nom: string; plis: number }[] = (() => {
+  const vues = new Set<string>();
+  const out: { code: string; nom: string; plis: number }[] = [];
+  for (const definition of SCENARIOS) {
+    const courriers = courriersPourCodes(definition.scenario.events.map((e) => e.code));
+    const nom = courriers[0] ? positionDuCourrier(courriers[0].code)?.liasse : null;
+    if (!nom || vues.has(nom)) continue;
+    vues.add(nom);
+    out.push({ code: definition.code, nom, plis: courriers.length });
+  }
+  return out;
+})();
+
+function PliImprime({
+  courrier,
+  liasse,
+  nomDeLaLiasse,
+}: {
+  courrier: CourrierDef;
+  liasse: Liasse;
+  /** Nom imprimé en pied d'enveloppe quand le courrier n'est pas au registre. */
+  nomDeLaLiasse?: string | null;
+}) {
   const position = positionDuCourrier(courrier.code);
   const destinataire = liasse === "market" ? "Tout le marché" : "Une entreprise";
   /*
@@ -48,7 +85,7 @@ function PliImprime({ courrier, liasse }: { courrier: CourrierDef; liasse: Liass
         ) : (
           <Enveloppe
             code={courrier.code}
-            liasse={position?.liasse}
+            liasse={position?.liasse ?? nomDeLaLiasse}
             destinataire={destinataire}
             className="h-full"
           />
@@ -118,27 +155,56 @@ function PliVierge({ liasse, nomDeLaLiasse }: { liasse: Liasse; nomDeLaLiasse: s
 
 function LiasseAImprimer() {
   // Une liasse par secteur : imprimer le courrier de toute la plateforme
-  // n'aurait aucun sens en classe. Le secteur se choisit dans l'URL
-  // (?scenario=hotel), le lien du tableau de bord enseignant le renseigne déjà.
+  // n'aurait aucun sens en classe. La liasse se choisit dans l'URL
+  // (?scenario=hotel), que le lien de la page de partie renseigne déjà — et,
+  // depuis le sélecteur ci-dessous, pour qui arrive ici par le guide, sans
+  // partie ouverte et sans rien à recopier dans la barre d'adresse.
   const params = useSearchParams();
-  const definition = scenarioByCode(params.get("scenario"));
-  const courriers = courriersPourCodes(definition.scenario.events.map((e) => e.code));
+  const router = useRouter();
+  const choix = params.get("scenario") ?? LIASSES_AU_CHOIX[0]?.code ?? "";
+  /*
+   * LA LIASSE DE ROUTINE, à part.
+   *
+   * Les six courriers de routine ne sont attachés à aucun scénario : ils ne
+   * sont jamais tirés, ils comblent les tours où rien ne tombe, pour qu'une
+   * enveloppe ne soit jamais vide. Ils n'apparaissaient donc dans aucune
+   * liasse imprimée — et en séance papier, l'enseignant n'avait rien à donner
+   * les tours calmes, ce qui vide de son sens la règle même du facteur.
+   * Ils s'impriment une fois pour toutes et resservent dans toutes les parties.
+   */
+  const routine = choix === ROUTINE;
+  const definition = scenarioByCode(choix);
+  const courriers = routine
+    ? COURRIERS_DE_ROUTINE
+    : courriersPourCodes(definition.scenario.events.map((e) => e.code));
   const duMarche = courriers.filter((c) => c.scope === "market");
   const adresses = courriers.filter((c) => c.scope === "team");
-  const nomDeLaLiasse = courriers[0]
-    ? (positionDuCourrier(courriers[0].code)?.liasse ?? null)
-    : null;
+  const nomDeLaLiasse = routine
+    ? "Courriers de routine"
+    : courriers[0]
+      ? (positionDuCourrier(courriers[0].code)?.liasse ?? null)
+      : null;
+  const titre = routine ? "Courriers de routine · toutes parties" : definition.title;
 
   // Quatre plis par feuille A4 paysage (deux par deux), la feuille est
   // l'unité de saut de page : aucun pli coupé par le bord. Une lettre vierge
-  // ferme chaque liasse.
+  // ferme chaque liasse de secteur — pas la routine, qui ne s'écrit pas : ces
+  // six-là ne s'inventent pas, ils se classent.
+  const avecVierge = !routine;
   const feuilles = (liste: CourrierDef[], liasse: Liasse) => {
     const plis: React.ReactNode[] = liste.map((courrier) => (
-      <PliImprime key={courrier.code} courrier={courrier} liasse={liasse} />
+      <PliImprime
+        key={courrier.code}
+        courrier={courrier}
+        liasse={liasse}
+        nomDeLaLiasse={nomDeLaLiasse}
+      />
     ));
-    plis.push(
-      <PliVierge key={`${liasse}-vierge`} liasse={liasse} nomDeLaLiasse={nomDeLaLiasse} />,
-    );
+    if (avecVierge) {
+      plis.push(
+        <PliVierge key={`${liasse}-vierge`} liasse={liasse} nomDeLaLiasse={nomDeLaLiasse} />,
+      );
+    }
     const out: React.ReactNode[][] = [];
     for (let i = 0; i < plis.length; i += 4) out.push(plis.slice(i, i + 4));
     return out.map((feuille, i) => (
@@ -147,7 +213,10 @@ function LiasseAImprimer() {
       </div>
     ));
   };
-  const nbFeuilles = Math.ceil((duMarche.length + 1) / 4) + Math.ceil((adresses.length + 1) / 4);
+  // Une section vide ne s'imprime pas : la routine n'a aucun courrier de
+  // marché, et une feuille ne portant qu'une lettre vierge n'apprend rien.
+  const compte = (n: number) => (n === 0 ? 0 : Math.ceil((n + (avecVierge ? 1 : 0)) / 4));
+  const nbFeuilles = compte(duMarche.length) + compte(adresses.length);
 
   return (
     <main id="main" className="print-page" data-theme="clair">
@@ -155,10 +224,31 @@ function LiasseAImprimer() {
 
       <header className="print-header no-print">
         <div>
-          <p className="print-kicker">
-            Business Arena · Animation de classe · {definition.title}
-          </p>
+          <p className="print-kicker">Business Arena · Animation de classe · {titre}</p>
           <h1>📬 Liasse de courrier à imprimer</h1>
+          {/*
+            LE CHOIX DE LA LIASSE, SUR LA PAGE.
+            Il ne vivait que dans l'adresse. Le lien de la page de partie la
+            renseignait, mais celui du guide non : on tombait sur la première
+            liasse venue sans pouvoir en changer autrement qu'en éditant l'URL.
+          */}
+          <p className="print-picker no-print">
+            <label htmlFor="liasse">Liasse à imprimer</label>
+            <select
+              id="liasse"
+              value={choix}
+              onChange={(e) => router.replace(`/teacher/courriers/print?scenario=${e.target.value}`)}
+            >
+              {LIASSES_AU_CHOIX.map((l) => (
+                <option key={l.code} value={l.code}>
+                  {l.nom} · {l.plis} plis
+                </option>
+              ))}
+              <option value={ROUTINE}>
+                Courriers de routine · {COURRIERS_DE_ROUTINE.length} plis · toutes parties
+              </option>
+            </select>
+          </p>
           <p className="print-legend">
             {(["market", "competition", "internal", "macro"] as const).map((n) => (
               <span key={n} style={{ color: NATURES[n].accent }}>
@@ -176,9 +266,20 @@ function LiasseAImprimer() {
             Découpez chaque pli sur les <strong>traits pleins</strong>, puis pliez sur le{" "}
             <strong>trait pointillé</strong> : l&apos;enveloppe et la lettre se retrouvent dos à
             dos, sans impression recto-verso — l&apos;élève tient une enveloppe qu&apos;il
-            retourne pour lire. Distribuez un courrier <strong>de marché</strong> à toute la
-            classe entre deux tours, ou un <strong>pli adressé</strong> à une entreprise, puis
-            saisissez-le dans l&apos;application pour qu&apos;il s&apos;applique à la simulation.
+            retourne pour lire.{" "}
+            {routine ? (
+              <>
+                Ces six-là ne se saisissent nulle part et ne changent aucun compte : ils se
+                donnent les tours où rien ne tombe, pour qu&apos;une enveloppe ne soit jamais
+                vide.
+              </>
+            ) : (
+              <>
+                Distribuez un courrier <strong>de marché</strong> à toute la classe entre deux
+                tours, ou un <strong>pli adressé</strong> à une entreprise, puis saisissez-le
+                dans l&apos;application pour qu&apos;il s&apos;applique à la simulation.
+              </>
+            )}
           </p>
         </div>
         <button type="button" className="print-button" onClick={() => window.print()}>
@@ -186,23 +287,30 @@ function LiasseAImprimer() {
         </button>
       </header>
 
-      <section>
-        <h2 className="print-liasse-title no-print">
-          🌍 Courrier de marché · {duMarche.length} plis (toute la classe) + 1 lettre vierge
-        </h2>
-        {feuilles(duMarche, "market")}
-      </section>
+      {duMarche.length > 0 ? (
+        <section>
+          <h2 className="print-liasse-title no-print">
+            🌍 Courrier de marché · {duMarche.length} plis (toute la classe)
+            {avecVierge ? " + 1 lettre vierge" : ""}
+          </h2>
+          {feuilles(duMarche, "market")}
+        </section>
+      ) : null}
 
-      <section className="print-break">
-        <h2 className="print-liasse-title no-print">
-          🎯 Plis adressés · {adresses.length} plis (une entreprise à la fois) + 1 lettre vierge
-        </h2>
-        <p className="print-help no-print">
-          Astuce : imprimez cette page en plusieurs exemplaires pour constituer une pile par
-          entreprise.
-        </p>
-        {feuilles(adresses, "team")}
-      </section>
+      {adresses.length > 0 ? (
+        <section className={duMarche.length > 0 ? "print-break" : undefined}>
+          <h2 className="print-liasse-title no-print">
+            🎯 Plis adressés · {adresses.length} plis (une entreprise à la fois)
+            {avecVierge ? " + 1 lettre vierge" : ""}
+          </h2>
+          <p className="print-help no-print">
+            {routine
+              ? "Un courrier de routine se donne le tour où rien ne tombe : le facteur passe quand même, et trier ce qui ne compte pas est une compétence de gestion. Imprimez-en une pile par entreprise, ils resservent d'une partie à l'autre."
+              : "Astuce : imprimez cette page en plusieurs exemplaires pour constituer une pile par entreprise."}
+          </p>
+          {feuilles(adresses, "team")}
+        </section>
+      ) : null}
     </main>
   );
 }
@@ -271,6 +379,23 @@ const printStyles = `
     font-weight: 600;
   }
   .print-legend-pips { color: #64748b; font-weight: 400; letter-spacing: 0.1em; }
+  .print-picker {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 10px 0 0;
+    font-size: 13px;
+    color: #334155;
+  }
+  .print-picker select {
+    border: 1px solid #94a3b8;
+    border-radius: 6px;
+    background: #fff;
+    padding: 6px 10px;
+    font-size: 13px;
+    color: #0f172a;
+  }
   /* une feuille = quatre plis, deux par deux ; c'est elle qui saute de page */
   .print-sheet {
     max-width: 1100px;
