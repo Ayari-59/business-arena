@@ -1,5 +1,5 @@
 import { formatEuro, formatPercent, formatUnits } from "@/lib/format";
-import { Fleche } from "@/components/fleche";
+import { Signe } from "@/components/signe";
 import { Tiroir } from "@/components/tiroir";
 import type { GameView } from "@/services/game.service";
 
@@ -52,14 +52,14 @@ export function DilemmaCard({
               lecteurs d'écran et pour qui ne distingue pas les deux teintes.
             */}
             <p className="mt-2 flex gap-1.5 text-xs leading-snug text-slate-400">
-              <Fleche sens="hausse" className="mt-0.5 text-emerald-400" />
+              <Signe sens="gain" className="mt-0.5 text-emerald-400" />
               <span>
                 <span className="sr-only">Ce que cela rapporte : </span>
                 {route.gain}
               </span>
             </p>
             <p className="mt-1 flex gap-1.5 text-xs leading-snug text-slate-400">
-              <Fleche sens="baisse" className="mt-0.5 text-rose-400/80" />
+              <Signe sens="cout" className="mt-0.5 text-rose-400/80" />
               <span>
                 <span className="sr-only">Ce que cela coûte : </span>
                 {route.risque}

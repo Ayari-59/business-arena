@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Fleche } from "@/components/fleche";
+import { Signe } from "@/components/signe";
 import { NotionsMobilisees } from "@/components/notions-mobilisees";
 import { notFound } from "next/navigation";
 import { atelierByCode } from "@/config/ateliers";
@@ -182,10 +182,10 @@ export default async function DossierElevePage({
             >
               <p className="font-medium text-slate-100 print:text-black">{route.label}</p>
               <p className="mt-1 text-slate-400 print:text-black">
-                <Fleche sens="hausse" /> {route.gain}
+                <Signe sens="gain" /> {route.gain}
               </p>
               <p className="text-slate-400 print:text-black">
-                <Fleche sens="baisse" /> {route.risque}
+                <Signe sens="cout" /> {route.risque}
               </p>
             </li>
           ))}
