@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Fleche } from "@/components/fleche";
 import Link from "next/link";
 import { SCENARIO_CHOICES, SECTOR_LABELS, familyOf, type ScenarioDefinition } from "@/config/scenarios/registry";
 import {
@@ -101,8 +102,12 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
             {d.dilemma.routes.map((r) => (
               <div key={r.label} className="rounded-lg border border-white/5 bg-slate-900/70 p-3">
                 <p className={`text-xs font-semibold ${a.texte}`}>{r.label}</p>
-                <p className="mt-1.5 text-xs leading-relaxed text-emerald-300/80">↗ {r.gain}</p>
-                <p className="mt-1.5 text-xs leading-relaxed text-rose-300/80">↘ {r.risque}</p>
+                <p className="mt-1.5 text-xs leading-relaxed text-emerald-300/80">
+                  <Fleche sens="hausse" /> {r.gain}
+                </p>
+                <p className="mt-1.5 text-xs leading-relaxed text-rose-300/80">
+                  <Fleche sens="baisse" /> {r.risque}
+                </p>
               </div>
             ))}
           </div>
