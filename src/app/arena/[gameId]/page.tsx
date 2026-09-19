@@ -10,7 +10,7 @@ import { AlerteTresorerie } from "@/components/alerte-tresorerie";
 import { PassageAuTour } from "@/components/passage-au-tour";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { CourrierRecommande, grilleDeCourriers } from "@/components/courrier";
-import { lettreDeMission } from "@/config/courriers/mission";
+import { MandatDeLEquipe } from "@/components/mandat-de-lequipe";
 import { reponsesAuxDecisions } from "@/config/courriers/reponses";
 import { courrierParCode } from "@/config/courriers/registre";
 import { DecisionForm } from "@/components/decision-form";
@@ -803,6 +803,9 @@ export default async function ArenaPage({
                         la main sur le financement », puis retrouve l'onglet.
 
                         Une seule fois, au tour 1 : un mandat ne se répète pas.
+                        Et il se range une fois lu — il arrive là où l'élève a
+                        déjà le plus à lire, et quatre blocs empilés font qu'on
+                        ne lit plus le premier.
                       */}
                       {/*
                         CE QU'ON VOUS RÉPOND. Le courrier ne descendait que dans
@@ -840,12 +843,11 @@ export default async function ArenaPage({
                         </section>
                       ) : null}
                       {view.currentRound === 1 ? (
-                        <div className={grilleDeCourriers(1)}>
-                          <CourrierRecommande
-                            code={lettreDeMission(view.difficulty.level).code}
-                            destinataire={view.playerTeamName}
-                          />
-                        </div>
+                        <MandatDeLEquipe
+                          gameId={gameId}
+                          niveau={view.difficulty.level}
+                          equipe={view.playerTeamName}
+                        />
                       ) : null}
                       {/*
                         On arrive à la décision, on ne l'ouvre pas : d'abord où

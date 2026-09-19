@@ -6,6 +6,7 @@ vi.mock("@/db", () => ({ db: {} }));
 vi.mock("next/headers", () => ({ headers: vi.fn(), cookies: vi.fn() }));
 
 import { CourrierRecommande } from "@/components/courrier";
+import { MandatDeLEquipe } from "@/components/mandat-de-lequipe";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
 import { LETTRES_DE_MISSION, lettreDeMission } from "@/config/courriers/mission";
 
@@ -86,5 +87,39 @@ describe("un mandat n'est pas un événement", () => {
     // pied disait « Courrier de routine » pour tout ce qui n'était pas numéroté.
     expect(lettre("mission_niveau_1")).toContain("Lettre de mission");
     expect(lettre("mission_niveau_1")).not.toContain("Courrier de routine");
+  });
+});
+
+describe("un mandat se lit une fois et se range", () => {
+  /*
+   * Il arrive au premier tour, exactement là où l'élève a déjà le plus à lire :
+   * le contexte de l'entreprise, les alertes, la situation. Quatre blocs de
+   * texte empilés, et on ne lit plus le premier. Lu, il ne laisse qu'une ligne.
+   */
+  const mandat = (range: boolean) =>
+    renderToStaticMarkup(
+      createElement(MandatDeLEquipe, {
+        gameId: "partie-1",
+        niveau: 3,
+        equipe: "ÉQUIPE MARTIN",
+        range,
+      }),
+    );
+
+  it("ouvert, il porte la lettre du niveau et de quoi en prendre note", () => {
+    const html = mandat(false);
+    expect(html).toContain("Votre mandat — direction, production et finances");
+    expect(html).toContain("J&#x27;ai pris note");
+  });
+
+  it("rangé, il ne reste qu'une ligne et de quoi relire", () => {
+    const html = mandat(true);
+    expect(html).toContain("Votre mandat — direction, production et finances");
+    // L'objet porte déjà « Votre mandat » : le préfixer le répétait mot pour mot.
+    expect(html).not.toContain("Votre mandat : Votre mandat");
+    expect(html).toContain("Relire");
+    // La lettre elle-même a disparu : c'est tout l'objet du rangement.
+    expect(html).not.toContain("Nous vous confions la conduite de la maison");
+    expect(html).not.toContain("J&#x27;ai pris note");
   });
 });
