@@ -53,6 +53,49 @@ describe("la liasse se choisit sur la page", () => {
   });
 });
 
+describe("le format de la feuille", () => {
+  /** Le nombre de plis de chaque feuille, dans l'ordre. */
+  function plisParFeuille(html: string): number[] {
+    return html
+      .split('class="print-sheet"')
+      .slice(1)
+      .map((morceau) => (morceau.match(/class="print-pair"/g) ?? []).length);
+  }
+
+  it("A4 portrait : l'enseignant n'a pas à tourner la feuille", async () => {
+    /*
+     * La liasse s'imprimait en paysage. Le format était juste au millimètre,
+     * mais il demandait de penser à changer l'orientation : une imprimante de
+     * salle des profs sort du portrait par défaut, et un paysage imprimé en
+     * portrait rogne la moitié des plis.
+     */
+    const html = await page("scenario=hotel");
+    expect(html).toContain("A4 portrait");
+    expect(html).not.toContain("A4 landscape");
+  });
+
+  it("trois plis par feuille, jamais quatre", async () => {
+    // Un pli de 138 mm ne tient qu'une fois sur les 198 mm utiles d'une A4
+    // portrait : ils s'empilent par trois. Vérifié au navigateur, le PDF sort
+    // exactement une page par feuille — aucune ne déborde.
+    for (const q of ["scenario=hotel", "scenario=routine", "scenario=nova"]) {
+      const compte = plisParFeuille(await page(q));
+      expect(compte.length, `${q} n'a produit aucune feuille`).toBeGreaterThan(0);
+      for (const n of compte) {
+        expect(n, `une feuille porte ${n} plis : ${q}`).toBeLessThanOrEqual(3);
+      }
+    }
+  });
+
+  it("le pli garde sa taille : c'est la lettre qui devait rester lisible", async () => {
+    // La tentation, en portrait, était d'en remettre quatre en les rétrécissant.
+    // Chaque moitié serait tombée à 47 mm, et le texte avec.
+    const html = await page("scenario=hotel");
+    expect(html).toContain("width: 138mm");
+    expect(html).toContain("height: 92mm");
+  });
+});
+
 describe("la liasse de routine", () => {
   it("s'imprime, et elle est seule à le faire sans scénario", async () => {
     const html = await page("scenario=routine");

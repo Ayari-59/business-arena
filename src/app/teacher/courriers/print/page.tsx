@@ -186,10 +186,24 @@ function LiasseAImprimer() {
       : null;
   const titre = routine ? "Courriers de routine · toutes parties" : definition.title;
 
-  // Quatre plis par feuille A4 paysage (deux par deux), la feuille est
-  // l'unité de saut de page : aucun pli coupé par le bord. Une lettre vierge
-  // ferme chaque liasse de secteur — pas la routine, qui ne s'écrit pas : ces
-  // six-là ne s'inventent pas, ils se classent.
+  /*
+   * TROIS PLIS PAR FEUILLE A4, EN PORTRAIT.
+   *
+   * La liasse s'imprimait en paysage, quatre plis en carré. Le format était
+   * juste au millimètre, mais il demandait à l'enseignant de penser à tourner
+   * la feuille : une imprimante de salle des profs sort du portrait par
+   * défaut, et un paysage imprimé en portrait rogne la moitié des plis.
+   *
+   * En portrait, un pli de 138 mm de large tient seul sur la largeur utile
+   * (198 mm) : les plis s'empilent par trois au lieu de quatre. Le pli garde
+   * exactement sa taille, donc la lettre reste lisible — c'était la condition.
+   * Le prix est une feuille de plus par liasse : L'ESCALE passe de 7 à 9.
+   *
+   * La feuille reste l'unité de saut de page : aucun pli coupé par le bord.
+   * Une lettre vierge ferme chaque liasse de secteur — pas la routine, qui ne
+   * s'écrit pas : ces six-là ne s'inventent pas, ils se classent.
+   */
+  const PLIS_PAR_FEUILLE = 3;
   const avecVierge = !routine;
   const feuilles = (liste: CourrierDef[], liasse: Liasse) => {
     const plis: React.ReactNode[] = liste.map((courrier) => (
@@ -206,7 +220,8 @@ function LiasseAImprimer() {
       );
     }
     const out: React.ReactNode[][] = [];
-    for (let i = 0; i < plis.length; i += 4) out.push(plis.slice(i, i + 4));
+    for (let i = 0; i < plis.length; i += PLIS_PAR_FEUILLE)
+      out.push(plis.slice(i, i + PLIS_PAR_FEUILLE));
     return out.map((feuille, i) => (
       <div key={i} className="print-sheet">
         {feuille}
@@ -215,7 +230,8 @@ function LiasseAImprimer() {
   };
   // Une section vide ne s'imprime pas : la routine n'a aucun courrier de
   // marché, et une feuille ne portant qu'une lettre vierge n'apprend rien.
-  const compte = (n: number) => (n === 0 ? 0 : Math.ceil((n + (avecVierge ? 1 : 0)) / 4));
+  const compte = (n: number) =>
+    n === 0 ? 0 : Math.ceil((n + (avecVierge ? 1 : 0)) / PLIS_PAR_FEUILLE);
   const nbFeuilles = compte(duMarche.length) + compte(adresses.length);
 
   return (
@@ -262,7 +278,7 @@ function LiasseAImprimer() {
           </p>
           <p className="print-help">
             Les courriers sont ceux de l&apos;écran, en édition économe : imprimez en{" "}
-            <strong>A4 paysage</strong>, en couleur de préférence, quatre plis par feuille.
+            <strong>A4</strong>, en portrait, en couleur de préférence, trois plis par feuille.
             Découpez chaque pli sur les <strong>traits pleins</strong>, puis pliez sur le{" "}
             <strong>trait pointillé</strong> : l&apos;enveloppe et la lettre se retrouvent dos à
             dos, sans impression recto-verso — l&apos;élève tient une enveloppe qu&apos;il
@@ -396,16 +412,27 @@ const printStyles = `
     font-size: 13px;
     color: #0f172a;
   }
-  /* une feuille = quatre plis, deux par deux ; c'est elle qui saute de page */
+  /*
+   * une feuille = trois plis empilés ; c'est elle qui saute de page.
+   * Une seule colonne À L'ÉCRAN AUSSI : cette page est un aperçu avant
+   * impression, elle doit montrer la feuille qui sortira. Rangés deux par deux
+   * sur l'écran et un par un sur le papier, on ne saurait plus où couper.
+   */
   .print-sheet {
-    max-width: 1100px;
+    max-width: 138mm;
     margin: 0 auto 8mm;
     display: grid;
-    grid-template-columns: repeat(auto-fit, 138mm);
-    gap: 4mm;
-    justify-content: start;
+    grid-template-columns: 138mm;
+    /*
+     * 3 mm et non 4 : trois plis de 92 mm et deux gouttières font 282 mm, sur
+     * les 285 utiles. À 4 mm il ne restait qu'un millimètre, et une imprimante
+     * qui s'arroge deux millimètres de plus renvoyait le troisième pli sur la
+     * feuille suivante. La gouttière n'est pas une marge de coupe : chaque pli
+     * porte son propre trait.
+     */
+    gap: 3mm;
+    justify-content: center;
     break-after: page;
-    overflow-x: auto;
   }
   /* un pli = enveloppe + lettre, pliure au milieu ; le trait plein est le trait de coupe */
   .print-pair {
@@ -422,7 +449,7 @@ const printStyles = `
    * La lettre de l'écran est dessinée pour 300 px de large ; la moitié de pli
    * en fait 261. On la réduit d'un quart : même dessin, mêmes proportions, et
    * la signature, l'effet et la leçon tombent au-dessus du bord. Le format du
-   * pli (138 × 92 mm, quatre par A4 paysage) est calé sur cette hauteur-là :
+   * pli (138 × 92 mm, trois par A4 portrait) est calé sur cette hauteur-là :
    * une lettre a besoin de plus de place qu'une carte à jouer.
    */
   .print-front .lettre, .print-back .enveloppe,
@@ -443,10 +470,16 @@ const printStyles = `
     .print-page { padding: 16px; }
   }
   @media print {
-    @page { size: A4 landscape; margin: 8mm; }
+    /*
+     * 6 mm de marge et non 8 : trois plis de 92 mm plus deux gouttières de
+     * 3 mm font 282 mm, et la hauteur utile d'une A4 à 8 mm n'en offre que
+     * 281. À 6 mm elle en offre 285, et la troisième ligne ne bascule pas
+     * sur la feuille suivante.
+     */
+    @page { size: A4 portrait; margin: 6mm; }
     .no-print { display: none !important; }
     .print-page { background: #fff; padding: 0; min-height: 0; }
-    .print-sheet { margin: 0; max-width: none; overflow: visible; grid-template-columns: repeat(2, 138mm); }
+    .print-sheet { margin: 0; grid-template-columns: 138mm; }
     .print-pair { zoom: 1; }
     .print-sheet:last-child { break-after: auto; }
     .print-break { break-before: page; }
