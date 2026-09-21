@@ -173,6 +173,12 @@ export default async function TeacherGamePage({
               📽️ Projeter pour la classe →
             </Link>
             <Link
+              href={`/teacher/games/${gameId}/fiches`}
+              className="text-xs text-amber-300 underline-offset-4 hover:underline"
+            >
+              🖨️ Fiches à imprimer →
+            </Link>
+            <Link
               href={`/teacher/games/${gameId}/observation`}
               className="text-xs text-amber-300 underline-offset-4 hover:underline"
             >
