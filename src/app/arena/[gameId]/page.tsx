@@ -4,6 +4,8 @@ import { getGuestUserId } from "@/lib/guest";
 import { compter, formatEuro } from "@/lib/format";
 import { getGameView } from "@/services/game.service";
 import { getTeamSituations } from "@/services/pedagogy.service";
+import { IndicesDeLaPartie } from "@/components/indices-de-la-partie";
+import { maitriseDeLaPartie } from "@/pedagogy/maitrise-de-la-partie";
 import { SituationCard, SituationDebrief } from "@/components/situation-panel";
 import { SaisonDuTour } from "@/components/saison-du-tour";
 import { AlerteTresorerie } from "@/components/alerte-tresorerie";
@@ -74,6 +76,14 @@ export default async function ArenaPage({
     situations.debriefedByRound.map((dr) => [dr.roundIndex, dr]),
   );
   const mostRecentDebriefedRound = situations.debriefedByRound[0]?.roundIndex ?? null;
+
+  // CE QUE L'ÉQUIPE A COMPRIS, à côté de ce que l'entreprise a fait. Calculé
+  // sur les situations déjà débriefées de la partie ; une situation non rendue
+  // n'y entre pas, parce qu'un silence n'est pas un zéro tant que l'enseignant
+  // n'en a pas décidé ainsi.
+  const maitrise = maitriseDeLaPartie(
+    situations.debriefedByRound.flatMap((dr) => dr.situations),
+  );
   const hasActivePeriod = !finished;
 
   // ── Écran intermédiaire « Tour simulé » (solo, après une validation) ──
@@ -407,25 +417,17 @@ export default async function ArenaPage({
           >
             Niveau {view.difficulty.level} · {view.difficulty.name}
           </p>
-          {/* L'IPG mesure la progression de l'équipe, le rang sa place parmi
-              les autres. Le premier lui appartient et s'affiche toujours ; le
-              second attend que l'animateur ouvre le rideau. */}
-          {latestRound !== null && view.playerBpi !== null ? (() => {
-            const me = view.ranking.find((row) => row.isPlayer);
-            return (
-              <p
-                className="rounded-full border border-amber-400/30 bg-amber-400/5 px-3 py-1 text-xs tabular-nums text-amber-300"
-                title={
-                  me
-                    ? "Votre position au classement IPG"
-                    : "Votre indice de performance. Le classement sera révélé par votre enseignant."
-                }
-              >
-                {me ? `#${me.rank}/${view.ranking.length} · ` : ""}IPG{" "}
-                {view.playerBpi.toFixed(0)}
-              </p>
-            );
-          })() : null}
+          {/*
+            DEUX INDICES, JAMAIS FONDUS. Ce que l'entreprise a fait d'un côté,
+            ce que l'équipe a compris de l'autre. Le rang, lui, attend que
+            l'animateur ouvre le rideau.
+          */}
+          <IndicesDeLaPartie
+            ipg={latestRound !== null ? view.playerBpi : null}
+            rang={view.ranking.find((row) => row.isPlayer)?.rank ?? null}
+            total={view.ranking.length}
+            maitrise={maitrise}
+          />
           {/* La frise remplace la puce « Tour n / N » : le bandeau d'état
               juste dessous porte déjà ce chiffre, et la frise dit en plus d'où
               l'on vient — un segment par tour, vert ou rose selon son résultat. */}
