@@ -143,12 +143,24 @@ export default async function TeacherGamePage({
           </p>
           {/* Le classement dit qui gagne ; l'observation dit si la classe joue
               encore et ce qu'un tour lui coûte. Deux questions, deux écrans. */}
-          <Link
-            href={`/teacher/games/${gameId}/observation`}
-            className="mt-1 inline-block text-xs text-amber-300 underline-offset-4 hover:underline"
-          >
-            Observation de séance →
-          </Link>
+          <span className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
+            {/* Et la projection dit à la CLASSE où elle en est : le code, les
+                validations, le classement, écrits assez grand pour le fond de
+                la salle. C'est le premier lien, parce que c'est celui qu'on
+                ouvre en branchant le vidéoprojecteur. */}
+            <Link
+              href={`/teacher/games/${gameId}/projection`}
+              className="text-xs text-amber-300 underline-offset-4 hover:underline"
+            >
+              📽️ Projeter pour la classe →
+            </Link>
+            <Link
+              href={`/teacher/games/${gameId}/observation`}
+              className="text-xs text-amber-300 underline-offset-4 hover:underline"
+            >
+              Observation de séance →
+            </Link>
+          </span>
         </div>
       </section>
 
