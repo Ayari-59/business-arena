@@ -1,6 +1,5 @@
 import { formatEuro, formatPercent, formatUnits } from "@/lib/format";
 import { COMMUNICATION_AXIS_LABELS } from "@/engine/market/communication";
-import { EcartsDeCouts } from "@/components/ecarts-de-couts";
 import { KpiCard } from "@/components/kpi-card";
 import { lectureBancaire } from "@/components/lecture-bancaire";
 import { ligneTresorerie } from "@/components/ligne-tresorerie";
@@ -537,15 +536,6 @@ export function PeriodDashboard({
                 </p>
               </div>
             ) : null}
-
-            {/*
-              L'ÉCART GLOBAL, PUIS D'OÙ IL VIENT. Le tableau ci-dessus dit
-              qu'on a dépensé plus que prévu ; celui-ci dit si c'est le
-              fournisseur ou les rebuts. Les deux se lisent l'un après
-              l'autre, et le second ne s'affiche que là où le moteur suit les
-              écarts, c'est-à-dire sur les scénarios à gamme.
-            */}
-            <EcartsDeCouts gamme={view.gamme} produits={r.products} />
 
             {standing && view.studyReports ? <StudyReportsPanel reports={view.studyReports} /> : null}
           </div>
