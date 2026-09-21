@@ -38,6 +38,21 @@ export const DEMO_ACCOUNTS = {
 
 const DEMO_ORG_NAME = "Lycée Démo Business Arena";
 
+/**
+ * LA GRAINE DU MONDE DÉMO.
+ *
+ * Toutes les parties réelles tirent leur graine au hasard, et c'est ce qu'on
+ * veut. Celle-ci est fixe pour une seule raison : un monde démo recréé demain
+ * doit être le même qu'aujourd'hui — mêmes tirages d'événements, mêmes bots,
+ * mêmes résultats aux trois tours joués. Sans cela, une prise vidéo ratée ne
+ * se refait pas, et une capture d'écran de documentation vieillit au premier
+ * reseed. La valeur n'a aucune propriété particulière ; seule sa fixité compte.
+ */
+const GRAINE_DEMO = 20_250_921;
+
+/** Le secteur du monde démo, nommé plutôt que laissé au défaut. */
+const SCENARIO_DEMO = "nova";
+
 const STUDENTS = [
   { email: "lea@demo.business-arena.fr", name: "Léa (démo)" },
   { email: "hugo@demo.business-arena.fr", name: "Hugo (démo)" },
@@ -142,6 +157,14 @@ export async function seedDemoWorld(): Promise<DemoWorld> {
     periodicity: "quarter",
     humanTeamsCount: 3,
     botCount: 1,
+    // Tout ce qui pourrait varier est figé : la graine, donc les tirages
+    // d'événements et les bots ; le monde, donc la conjoncture ; le secteur,
+    // pour que le monde démo ne suive pas un changement de scénario par
+    // défaut. Un monde recréé après une prise ratée est le même monde, et la
+    // prise se refait mot pour mot.
+    seed: GRAINE_DEMO,
+    variableWorld: false,
+    scenarioCode: SCENARIO_DEMO,
   });
   for (const [i, studentId] of studentIds.entries()) {
     await joinGameByCode({ code: joinCode, userId: studentId, pseudo: STUDENTS[i]!.name });

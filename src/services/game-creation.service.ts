@@ -141,6 +141,14 @@ export interface CreateGameArgs {
   scenarioCode?: string;
   /** Questions posées dans les situations : tout, le modèle seul, ou rien. */
   quizMode?: QuizMode;
+  /**
+   * GRAINE IMPOSÉE. Absente, elle est tirée au hasard — c'est le cas de toutes
+   * les parties réelles, et il ne doit pas changer. Le monde de démonstration,
+   * lui, la fixe : deux mondes créés à deux jours d'intervalle donnent alors
+   * les mêmes tirages, les mêmes bots et les mêmes résultats, et une prise
+   * vidéo ratée se refait à l'identique.
+   */
+  seed?: number;
 }
 
 export interface CreatedGame {
@@ -168,7 +176,7 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
   // propres à un scénario enseignant, absentes du référentiel intégré : sans
   // elles, l'instanciation du tour ne retrouve pas leur id et l'élève n'a rien.
   await seedPedagogyReferentials(definition.situations);
-  const seed = randomInt(1, 2 ** 31);
+  const seed = args.seed ?? randomInt(1, 2 ** 31);
   // Pipeline du snapshot (ADR-01 + ADR-10) : paramètres économiques modulés
   // (base trimestrielle) → périodicité → intensité d'événements du niveau.
   const preset = args.level
@@ -351,6 +359,8 @@ export async function createClassGame(args: {
   quizMode?: QuizMode;
   /** Tours joués. Absent = tous ceux du scénario ; jamais plus. */
   roundsCount?: number;
+  /** Graine imposée (monde de démonstration) ; absente = tirage au hasard. */
+  seed?: number;
 }): Promise<{ gameId: string; joinCode: string }> {
   // La licence se vérifie ici, à l'OUVERTURE d'une partie, et nulle part
   // ailleurs : une classe commencée se termine, quoi qu'il advienne du
@@ -375,6 +385,7 @@ export async function createClassGame(args: {
     scenarioCode: args.scenarioCode,
     quizMode: args.quizMode,
     roundsCount: args.roundsCount,
+    seed: args.seed,
   });
   return { gameId, joinCode };
 }
