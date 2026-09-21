@@ -126,25 +126,27 @@ export interface SituationDef {
  * COÛTS DES 5 NIVEAUX D'INDICE (doc 03 §4).
  *
  * Chaque niveau coûte sa part du score de la situation, et les parts
- * s'ADDITIONNENT : le bouton annonce « −8 % » et c'est exactement ce que le
- * niveau retire. Les cinq ensemble laissent 45 % — le barème que la
- * documentation a toujours annoncé.
+ * s'ADDITIONNENT : le bouton annonce « −4 % » et c'est exactement ce que le
+ * niveau retire. Les cinq ensemble laissent 80 %.
  *
- * Le barème précédent — 5, 10, 20, 35, 55 — ne le tenait pas. Additionné, il
- * valait 125 % et butait sur le plancher : l'élève qui ouvrait tout gardait
- * 20 %, pas 45. Surtout, il tombait d'une falaise entre le troisième et le
- * quatrième indice, 65 % puis 30 %, c'est-à-dire qu'il punissait le plus fort
- * exactement au moment où l'élève avoue qu'il ne s'en sort pas. Or celui qui
- * a besoin du quatrième indice est celui pour qui la situation est difficile,
- * et on ne lui apprend rien en lui retirant les deux tiers de sa note.
+ * CE QUE CE PLANCHER PROTÈGE. Le score d'une situation devient une note sur
+ * 20 dans le relevé de l'enseignant, et la maîtrise par notion converge vers
+ * lui. Deux barèmes successifs l'ont oublié : celui d'origine — 5, 10, 20, 35,
+ * 55 — valait 125 % une fois additionné et butait sur le plancher à 20 %, soit
+ * 4/20 ; son remplaçant, à 45 %, donnait 9/20 à un élève qui, après avoir tout
+ * ouvert, cochait le bon diagnostic et répondait juste à tout. Compris,
+ * démontré, et noté sous la moyenne. Pire, la maîtrise plafonnait alors sous
+ * le seuil de prérequis de 60 : le barème ne coûtait pas des points, il
+ * fermait la progression.
  *
- * La progression monte donc doucement : 5, 8, 10, 14, 18. Chercher seul reste
- * payant, demander de l'aide reste possible, et le plancher de 0,2 redevient
- * ce qu'il aurait dû rester — un filet, pas une règle.
+ * À 80 %, l'élève assisté rend 16/20 et l'élève autonome 20/20. L'écart dit
+ * encore que chercher seul vaut mieux, sans que demander de l'aide disqualifie.
+ * C'est un choix d'auteur, et il a son revers : à 2 %, le premier indice ne
+ * coûte plus rien, et l'incitation à chercher d'abord devient surtout morale.
  *
- * Score restant : 95 %, 87 %, 77 %, 63 %, 45 %.
+ * Score restant : 98 %, 95 %, 91 %, 86 %, 80 %.
  */
-const HINT_COSTS = [0.05, 0.08, 0.1, 0.14, 0.18] as const;
+const HINT_COSTS = [0.02, 0.03, 0.04, 0.05, 0.06] as const;
 
 export const hints = (
   texts: [string, string, string, string, string],

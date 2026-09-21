@@ -78,7 +78,7 @@ describe("référentiels et instanciation", () => {
     expect(current[0]!.code).toBe("nova_t1_takeover");
     expect(current[0]!.problem).not.toMatch(/calculez/i); // question ouverte (§3)
     expect(current[0]!.unlockedHints).toHaveLength(0);
-    expect(current[0]!.nextHint).toEqual({ level: 1, costRatio: 0.05 });
+    expect(current[0]!.nextHint).toEqual({ level: 1, costRatio: 0.02 });
   });
 });
 
@@ -196,8 +196,8 @@ describe("débriefing et progression", () => {
     expect(d.debrief!.quizScore).toBeCloseTo(2 / 3, 9);
     expect(d.debrief!.quizCorrection.length).toBe(d.quizQuestions.length);
     expect(d.debrief!.quizCorrection.every((c) => c.explain.length > 0)).toBe(true);
-    // score final : (0,5×1 + 0,5×2/3) × coût de 2 indices (5 % + 8 % → 0,87)
-    expect(d.debrief!.finalScore).toBeCloseTo((0.5 + 0.5 * (2 / 3)) * 0.87, 6);
+    // score final : (0,5×1 + 0,5×2/3) × coût de 2 indices (2 % + 3 % → 0,95)
+    expect(d.debrief!.finalScore).toBeCloseTo((0.5 + 0.5 * (2 / 3)) * 0.95, 6);
 
     // la situation scriptée du tour 2 est ouverte
     expect(current.some((s) => s.code === "nova_t2_price_war")).toBe(true);

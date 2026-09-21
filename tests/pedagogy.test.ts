@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { hintScoreMultiplier, nextUnlockableLevel } from "../src/pedagogy/hints";
+import { PREREQUISITE_MASTERY_THRESHOLD } from "../src/pedagogy/progress";
 import { evaluateDiagnosis, evaluateQuiz } from "../src/pedagogy/evaluation";
 import { buildConsequenceContext, buildInterpretation, buildTriggerContext, CONSEQUENCE_METADATA, DETECTION_METADATA, INTERPRETATION_METADATA, detectSituations, overallDirection } from "../src/pedagogy/detection";
 import type { InterpretationFact } from "../src/pedagogy/detection";
@@ -26,18 +27,24 @@ describe("système d'indices (doc 03 §4)", () => {
     expect(() => nextUnlockableLevel([2])).toThrow(); // séquence corrompue
   });
 
-  it("le barème laisse 95, 87, 77, 63 puis 45 % du score", () => {
-    // Le barème annoncé par la documentation depuis toujours : les cinq
-    // indices ouverts laissent 45 %. L'ancien — 5, 10, 20, 35, 55 — valait
-    // 125 % une fois additionné, butait sur le plancher à 20 %, et tombait
-    // d'une falaise entre le 3ᵉ et le 4ᵉ indice, c'est-à-dire qu'il punissait
-    // le plus fort l'élève qui avoue ne pas s'en sortir.
+  it("le barème laisse 98, 95, 91, 86 puis 80 % du score", () => {
     expect(hintScoreMultiplier([], hintDefs)).toBe(1);
-    expect(hintScoreMultiplier([1], hintDefs)).toBeCloseTo(0.95, 9);
-    expect(hintScoreMultiplier([1, 2], hintDefs)).toBeCloseTo(0.87, 9);
-    expect(hintScoreMultiplier([1, 2, 3], hintDefs)).toBeCloseTo(0.77, 9);
-    expect(hintScoreMultiplier([1, 2, 3, 4], hintDefs)).toBeCloseTo(0.63, 9);
-    expect(hintScoreMultiplier([1, 2, 3, 4, 5], hintDefs)).toBeCloseTo(0.45, 9);
+    expect(hintScoreMultiplier([1], hintDefs)).toBeCloseTo(0.98, 9);
+    expect(hintScoreMultiplier([1, 2], hintDefs)).toBeCloseTo(0.95, 9);
+    expect(hintScoreMultiplier([1, 2, 3], hintDefs)).toBeCloseTo(0.91, 9);
+    expect(hintScoreMultiplier([1, 2, 3, 4], hintDefs)).toBeCloseTo(0.86, 9);
+    expect(hintScoreMultiplier([1, 2, 3, 4, 5], hintDefs)).toBeCloseTo(0.8, 9);
+  });
+
+  it("demander de l'aide ne fait jamais passer sous la moyenne", () => {
+    // Le score d'une situation devient une note sur 20 dans le relevé, et la
+    // maîtrise par notion converge vers lui. Deux barèmes l'ont oublié : celui
+    // d'origine rendait 4/20 à qui ouvrait tout, son remplaçant 9/20. Un élève
+    // qui, après s'être fait aider, coche le bon diagnostic et répond juste à
+    // tout doit rester au-dessus de la moyenne ET du seuil de maîtrise de 60.
+    const restant = hintScoreMultiplier([1, 2, 3, 4, 5], hintDefs);
+    expect(restant * 20).toBeGreaterThanOrEqual(10);
+    expect(restant * 100).toBeGreaterThan(PREREQUISITE_MASTERY_THRESHOLD);
   });
 
   it("aucune marche ne coûte plus du double de la précédente", () => {
@@ -681,11 +688,11 @@ describe("difficulté adaptive (§28 bis)", () => {
   it("le plancher de 0.2 reste en vigueur pour tous les niveaux", () => {
     const allLevels = [1, 2, 3, 4, 5];
     expect(adaptiveHintMultiplier(allLevels, hintDefs, 0)).toBeGreaterThanOrEqual(0.2);
-    // Au plein tarif, les cinq indices laissent 45 % : le filet ne sert plus.
-    expect(adaptiveHintMultiplier(allLevels, hintDefs, 100)).toBeCloseTo(0.45, 9);
-    // Et l'élève le plus faible, qui a ouvert les cinq, garde plus de la
-    // moitié de son score — l'aide coûte, elle ne condamne pas.
-    expect(adaptiveHintMultiplier(allLevels, hintDefs, 0)).toBeCloseTo(0.725, 9);
+    // Au plein tarif, les cinq indices laissent 80 % : le filet ne sert plus.
+    expect(adaptiveHintMultiplier(allLevels, hintDefs, 100)).toBeCloseTo(0.8, 9);
+    // Et l'élève le plus faible, qui a ouvert les cinq, garde 90 % : l'aide
+    // coûte, elle ne condamne pas.
+    expect(adaptiveHintMultiplier(allLevels, hintDefs, 0)).toBeCloseTo(0.9, 9);
   });
 
   it("sans indices débloqués, le discount n'a aucun effet", () => {

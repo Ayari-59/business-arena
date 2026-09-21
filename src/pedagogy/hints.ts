@@ -5,7 +5,7 @@ import type { SituationHintDef } from "../config/scenarios/nova/situations";
  * coûts s'additionnent sur le score pédagogique de la situation — jamais sur
  * les résultats économiques.
  *
- * Le barème vit dans `situation-kit` (HINT_COSTS) et laisse 45 % du score
+ * Le barème vit dans `situation-kit` (HINT_COSTS) et laisse 80 % du score
  * quand les cinq indices sont ouverts. Le plancher ci-dessous n'est donc plus
  * atteint par le barème standard : il ne protège plus que d'un scénario sur
  * mesure dont les coûts dépasseraient 80 %.
