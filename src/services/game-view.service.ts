@@ -177,6 +177,13 @@ export interface GameView {
     result: CompanyRoundResult;
     events: string[];
     decisions: RoundDecisions | null;
+    /**
+     * Ce que l'équipe a écrit pour justifier ses choix AVANT de connaître le
+     * résultat. Réaffiché au tour suivant, à côté du constat : la
+     * confrontation entre ce qu'on avait prévu et ce qui est arrivé est ce
+     * qui s'apprend, et elle se perdait faute d'être rendue.
+     */
+    justification: string | null;
     forecastReview: GameView["forecastReview"];
     sectorKpis: GameView["sectorKpis"];
     competitiveBenchmark: GameView["competitiveBenchmark"];
@@ -968,7 +975,8 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     const row = gameResults.find((g) => g.roundId === rnd.id && g.teamId === playerTeam.id);
     if (!row) continue;
     const { result, events } = reconstructResult(row, taxRate);
-    const dec = playerDecisionRows.find((d) => d.roundId === rnd.id)?.payload ?? null;
+    const decisionRowOfRound = playerDecisionRows.find((d) => d.roundId === rnd.id);
+    const dec = decisionRowOfRound?.payload ?? null;
     const prevRnd = resolved[i - 1];
     const prevRow = prevRnd
       ? gameResults.find((g) => g.roundId === prevRnd.id && g.teamId === playerTeam.id)
@@ -980,6 +988,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       result,
       events,
       decisions: dec,
+      justification: decisionRowOfRound?.justification ?? null,
       forecastReview: buildForecastReview(idx, result, dec?.forecast),
       sectorKpis: buildSectorKpis(result, prevSegments, snapshot, scenarioDef.kpis),
       competitiveBenchmark: buildBenchmark(rowsOfRound, teamRows, playerTeam.id),

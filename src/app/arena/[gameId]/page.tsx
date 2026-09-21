@@ -23,6 +23,7 @@ import { PeriodDecisionsRecap } from "@/components/period-decisions-recap";
 import { SegmentedTabs } from "@/components/segmented-tabs";
 import { RoundStatusPoller } from "@/components/round-status-poller";
 import { AnnonceDuTour } from "@/components/annonce-du-tour";
+import { NoteDuTourPrecedent } from "@/components/note-du-tour-precedent";
 import { BandeauCourriers, courriersQuiMeConcernent } from "@/components/bandeau-courriers";
 import { TourSimule } from "@/components/tour-simule";
 import { CourrierDuTour } from "@/components/courrier-du-tour";
@@ -166,6 +167,17 @@ export default async function ArenaPage({
             {periodLabel(view.roundDays, view.currentRound)} · où vous en êtes
           </h2>
           <p className="text-sm leading-relaxed">{view.roundBriefing.headline}</p>
+          {/*
+            LE CONSTAT ET LA NOTE VONT ENSEMBLE. Le constat dit ce qui est
+            arrivé ; la note dit ce que l'équipe avait prévu en validant. Les
+            séparer, c'était garder la prévision pour le seul enseignant, et
+            priver l'élève de la seule comparaison qui lui apprenne quelque
+            chose sur son propre raisonnement.
+          */}
+          <NoteDuTourPrecedent
+            texte={periods.at(-1)?.justification ?? null}
+            periode={periodLabel(view.roundDays, Math.max(1, view.currentRound - 1))}
+          />
         </section>
       ) : null}
       {view.courriersAnnonces.length > 0 ? (

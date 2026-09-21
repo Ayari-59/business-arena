@@ -13,6 +13,7 @@ import {
 } from "@/config/decision-source";
 import { scalarsOfGamme } from "@/engine/gamme";
 import type { RoundDecisions } from "@/engine/types";
+import { LONGUEUR_MINIMALE_JUSTIFICATION } from "@/config/justification";
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
 import type { GameView } from "@/services/game-view.service";
 import { formatEuro, formatEuroCents, formatUnits } from "@/lib/format";
@@ -1238,6 +1239,8 @@ export function DecisionForm({
   // Six étapes, des dizaines de champs, et rien n'était gardé tant qu'on
   // n'avait pas validé : un onglet fermé ou un appel en plein cours, et le tour
   // entier était à ressaisir. On sauve à chaque frappe, dans le navigateur.
+  // La note d'avant n'est exigée qu'au premier tour (voir config/justification).
+  const premierTour = roundIndex === 1;
   const cle = cleBrouillon(gameId, roundIndex);
   const brouillonRestaure = useRef(false);
 
@@ -2076,20 +2079,36 @@ export function DecisionForm({
           </p>
         </Family>
       ) : null}
+      {/*
+        LA NOTE D'AVANT. Écrire ce qu'on attend de ses choix AVANT de connaître
+        le résultat est la seule façon de mesurer son propre raisonnement : au
+        tour suivant, la note revient à côté du constat, et l'écart se lit.
+        Elle est exigée au PREMIER TOUR, où personne n'a encore d'habitude à
+        reconduire, puis laissée libre : une note arrachée chaque tour devient
+        une formalité qu'on expédie, et une formalité n'apprend rien.
+      */}
       <Family
-        legend="✍️ En quelques mots"
+        legend={premierTour ? "✍️ En quelques mots · demandé" : "✍️ En quelques mots"}
         tone="border-slate-700/60"
         legendClass="text-xs font-medium text-slate-400"
       >
         <textarea
           name="justification"
           rows={2}
+          required={premierTour}
+          minLength={premierTour ? LONGUEUR_MINIMALE_JUSTIFICATION : undefined}
           aria-label="Justification de vos décisions"
-          placeholder="Pourquoi ces choix ce tour-ci ?"
+          placeholder={
+            premierTour
+              ? "Qu'attendez-vous de ces choix ? Une phrase suffit."
+              : "Pourquoi ces choix ce tour-ci ?"
+          }
           className="w-full resize-y rounded border border-slate-700 bg-slate-800/50 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:border-amber-400/50 focus:outline-none"
         />
         <p className="mt-1 text-xs text-slate-400">
-          L&apos;enseignant la lira au débriefing.
+          {premierTour
+            ? "Une phrase, avant de savoir : elle vous reviendra au prochain tour, en face du résultat."
+            : "Elle vous reviendra au prochain tour, en face du résultat. L'enseignant la lira au débriefing."}
         </p>
       </Family>
       </section>
