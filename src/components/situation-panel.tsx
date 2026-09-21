@@ -20,6 +20,7 @@ const CATEGORY_LABELS: Record<SituationCategory, string> = {
   alerte_comptable: "Alerte comptable",
   alerte_operationnelle: "Alerte opérationnelle",
   tresorerie_dormante: "Trésorerie dormante",
+  reussite: "Ce qui a marché",
 };
 
 const initial: PedagogyState = { error: null };

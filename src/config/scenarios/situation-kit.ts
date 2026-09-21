@@ -41,7 +41,15 @@ export type SituationCategory =
   | "decision_strategique"
   | "alerte_comptable"
   | "alerte_operationnelle"
-  | "tresorerie_dormante";
+  | "tresorerie_dormante"
+  /**
+   * CE QUI A MARCHÉ. Quatre des cinq déclencheurs d'origine signalaient un
+   * problème : une équipe qui pilotait bien traversait la partie sans presque
+   * rien déclencher, et ne savait donc pas POURQUOI elle gagnait — la
+   * meilleure façon de ne pas savoir reproduire. Une réussite s'analyse comme
+   * une alerte, avec le même diagnostic et les mêmes questions.
+   */
+  | "reussite";
 
 export type DetectCode =
   | "profitable_illiquid"
@@ -54,7 +62,21 @@ export type DetectCode =
    * pose. Il suppose que le niveau ouvre le placement, sans quoi la situation
    * poserait un arbitrage que le joueur ne peut pas trancher.
    */
-  | "idle_cash";
+  | "idle_cash"
+  /**
+   * SERVI SANS GÂCHER : l'outil a tourné haut, presque rien n'a été refusé,
+   * presque rien n'est resté sur les bras. Le plan collait à la demande, ce
+   * qui est le geste le plus difficile du métier et ne se voit dans aucun
+   * compte — ni la rupture évitée, ni l'invendu qui n'existe pas.
+   */
+  | "served_without_waste"
+  /**
+   * LE REDRESSEMENT : le tour précédent était sous le seuil, à découvert ou
+   * en trésorerie négative ; celui-ci ne l'est plus. Le seul déclencheur qui
+   * regarde DEUX tours, parce qu'un redressement n'existe pas dans un
+   * instantané.
+   */
+  | "recovered";
 
 export interface SituationHintDef {
   level: 1 | 2 | 3 | 4 | 5;

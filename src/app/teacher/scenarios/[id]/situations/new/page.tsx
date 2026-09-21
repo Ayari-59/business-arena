@@ -22,6 +22,7 @@ const CAT_LABEL: Record<string, string> = {
   alerte_comptable: "Alerte comptable",
   alerte_operationnelle: "Alerte opérationnelle",
   tresorerie_dormante: "Trésorerie dormante",
+  reussite: "Ce qui a marché",
 };
 const DETECT_LABEL: Record<string, string> = {
   profitable_illiquid: "Rentable mais à court de trésorerie",

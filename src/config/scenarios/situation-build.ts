@@ -28,6 +28,7 @@ export const SITUATION_CATEGORIES: SituationCategory[] = [
   "alerte_comptable",
   "alerte_operationnelle",
   "tresorerie_dormante",
+  "reussite",
 ];
 
 export const DETECT_CODES: DetectCode[] = [
@@ -36,6 +37,8 @@ export const DETECT_CODES: DetectCode[] = [
   "below_breakeven",
   "capacity_saturated",
   "idle_cash",
+  "served_without_waste",
+  "recovered",
 ];
 
 export interface NewSituationInput {

@@ -124,6 +124,83 @@ describe("détection de situations (doc 03 §1.1)", () => {
     expect(detectSituations(stockout)).toContain("stockout");
     expect(detectSituations(base)).not.toContain("stockout");
   });
+  /**
+   * CE QUI A MARCHÉ. Quatre des cinq règles d'origine signalaient une panne :
+   * une équipe qui pilotait bien traversait la partie sans presque rien
+   * déclencher, et n'apprenait donc jamais pourquoi elle gagnait.
+   */
+  const bienServi = {
+    incomeStatement: { netIncome: 10000 },
+    functionalBalance: { netTreasury: 8000 },
+    market: { bySegment: { s: { sold: 1000, lost: 20 } } },
+    production: { utilizationRate: 0.9, produced: 1010 },
+  } as unknown as CompanyRoundResult;
+
+  it("servi sans gâcher : l'outil tourne haut, presque rien de refusé ni d'invendu", () => {
+    expect(detectSituations(bienServi)).toContain("served_without_waste");
+  });
+
+  it("un atelier à plein qui refuse du monde n'est pas un plan juste", () => {
+    const refuse = {
+      ...bienServi,
+      market: { bySegment: { s: { sold: 1000, lost: 200 } } },
+    } as unknown as CompanyRoundResult;
+    expect(detectSituations(refuse)).not.toContain("served_without_waste");
+  });
+
+  it("un stock qui gonfle non plus, même si tout a été vendu de ce qui était demandé", () => {
+    const invendu = {
+      ...bienServi,
+      production: { utilizationRate: 0.9, produced: 1200 },
+    } as unknown as CompanyRoundResult;
+    expect(detectSituations(invendu)).not.toContain("served_without_waste");
+  });
+
+  it("un outil au ralenti ne mérite pas la mention, même sans rupture ni invendu", () => {
+    const ralenti = {
+      ...bienServi,
+      production: { utilizationRate: 0.4, produced: 1010 },
+    } as unknown as CompanyRoundResult;
+    expect(detectSituations(ralenti)).not.toContain("served_without_waste");
+  });
+
+  it("le redressement demande de savoir d'où l'on vient", () => {
+    const sain = { netIncome: 5000, netTreasury: 3000 };
+    const trou = { netIncome: -12000, netTreasury: -4000 };
+    // Sans le tour d'avant, aucun redressement ne peut se lire.
+    expect(detectSituations(bienServi)).not.toContain("recovered");
+    expect(detectSituations(bienServi, {}, sain)).not.toContain("recovered");
+    expect(detectSituations(bienServi, {}, trou)).toContain("recovered");
+  });
+
+  it("sortir d'une perte compte, y rester non", () => {
+    const perte = {
+      ...bienServi,
+      incomeStatement: { netIncome: -3000 },
+    } as unknown as CompanyRoundResult;
+    const trou = { netIncome: -12000, netTreasury: -4000 };
+    expect(detectSituations(perte, {}, trou)).not.toContain("recovered");
+  });
+
+  it("une trésorerie nette redevenue positive suffit, même après un tour bénéficiaire", () => {
+    // Le paradoxe du succès pris par l'autre bout : on pouvait gagner de
+    // l'argent ET être à sec. En sortir est un redressement.
+    const sorti = detectSituations(bienServi, {}, { netIncome: 9000, netTreasury: -2000 });
+    expect(sorti).toContain("recovered");
+  });
+
+  it("une réussite et une panne peuvent s'ouvrir au même tour", () => {
+    // Bien produire ne suffit pas à gagner de l'argent : les deux leçons
+    // valent, et rien n'oblige à n'en retenir qu'une.
+    const justeMaisDeficitaire = {
+      ...bienServi,
+      incomeStatement: { netIncome: -2000 },
+    } as unknown as CompanyRoundResult;
+    const codes = detectSituations(justeMaisDeficitaire);
+    expect(codes).toContain("served_without_waste");
+    expect(codes).toContain("below_breakeven");
+  });
+
   it("atelier saturé : machine à plein ET demande perdue ⇒ la question d'investir", () => {
     const saturated = {
       ...base,
@@ -645,7 +722,7 @@ describe("cohérence des référentiels", () => {
       expect(DETECTION_METADATA[code as keyof typeof DETECTION_METADATA], `${s.code} → ${code}`).toBeDefined();
     }
   });
-  it("7 situations scriptées couvrant les six tours, dont deux au tour 2, + 5 détectées", () => {
+  it("7 situations scriptées couvrant les six tours, dont deux au tour 2, + 7 détectées", () => {
     const scripted = NOVA_SITUATIONS.filter((s) => "round" in s.trigger);
     const detected = NOVA_SITUATIONS.filter((s) => "detect" in s.trigger);
     // Le tour 2 en porte deux : la guerre des prix et la décomposition des
@@ -654,9 +731,16 @@ describe("cohérence des référentiels", () => {
     // la couverture des tours sans en interdire deux sur le même.
     const tours = scripted.map((s) => (s.trigger as { round: number }).round).sort((a, b) => a - b);
     expect(tours).toEqual([1, 2, 2, 3, 4, 5, 6]);
-    // quatre pannes, plus la trésorerie qui dort : la seule qui s'ouvre alors
-    // que tout va bien
-    expect(detected).toHaveLength(5);
+    // Quatre pannes, la trésorerie qui dort, et DEUX RÉUSSITES : le trimestre
+    // où le plan collait à la demande, et le redressement. Sans elles, une
+    // équipe qui pilotait bien ne déclenchait presque rien et n'apprenait
+    // jamais pourquoi elle gagnait.
+    expect(detected).toHaveLength(7);
+    const reussites = detected.filter((s) => s.category === "reussite");
+    expect(reussites.map((s) => (s.trigger as { detect: string }).detect).sort()).toEqual([
+      "recovered",
+      "served_without_waste",
+    ]);
   });
 });
 

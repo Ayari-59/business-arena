@@ -813,6 +813,180 @@ export const NOVA_SITUATIONS: SituationDef[] = [
       { field: "productionPlan", direction: "review", hint: "Le plan de production détermine les décaissements du tour : projetez-les avant de décider combien placer." },
     ],
   },
+  // -------------------------------------------------------------------------
+  // CE QUI A MARCHÉ. Les situations ci-dessus signalent toutes un problème :
+  // une équipe qui pilotait bien traversait la partie sans presque rien
+  // déclencher, et n'apprenait donc jamais pourquoi elle gagnait. Les deux
+  // suivantes s'ouvrent sur une réussite, avec le même diagnostic, les mêmes
+  // questions et le même barème d'indices qu'une alerte. On ne félicite pas :
+  // on demande ce qui l'a produit, parce que c'est cela qui se reproduit.
+  // -------------------------------------------------------------------------
+  {
+    code: "detect_served_without_waste",
+    category: "reussite",
+    title: "Le trimestre où tout est parti",
+    narrative:
+      "L'atelier a tourné haut, vous n'avez presque rien refusé, et il ne reste presque rien en stock. Ce trimestre-là, votre plan collait à la demande. Ni la vente que vous n'avez pas manquée, ni l'enceinte que vous n'avez pas fabriquée pour rien n'apparaissent dans vos comptes : c'est la seule performance du métier qui ne se lit nulle part au compte de résultat.",
+    problem:
+      "Qu'est-ce qui a produit cet ajustement, et qu'est-ce qui vous dirait qu'il se reproduira ?",
+    diagnosticOptions: [
+      {
+        id: "plan_sur_demande",
+        label: "Le plan a été dimensionné sur la demande attendue, et non sur ce que l'atelier savait produire",
+        correct: true,
+      },
+      {
+        id: "invendu_invisible",
+        label: "L'invendu évité ne se voit dans aucun compte : il ne coûte que le jour où il existe",
+        correct: true,
+      },
+      {
+        id: "rupture_invisible",
+        label: "La vente refusée ne laisse aucune trace comptable non plus : elle ne se mesure qu'en volumes",
+        correct: true,
+      },
+      {
+        id: "atelier_plein",
+        label: "Le mérite revient à l'atelier : il a tourné à son maximum",
+        correct: false,
+      },
+      {
+        id: "preuve_de_methode",
+        label: "Un trimestre ajusté prouve à lui seul que la méthode de prévision est bonne",
+        correct: false,
+      },
+    ],
+    quiz: [
+      {
+        id: "nova_ajustement_lecture",
+        prompt: "Où lit-on qu'un plan de production a été bien dimensionné ?",
+        options: [
+          { id: "a", label: "Dans les volumes : demande refusée et invendu, rapportés aux ventes" },
+          { id: "b", label: "Dans le résultat net du trimestre" },
+          { id: "c", label: "Dans le taux d'utilisation de la machine, à lui seul" },
+          { id: "d", label: "Dans la marge sur coût variable" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Un atelier à 100 % peut refuser la moitié du marché, et un résultat net flatteur peut cacher un stock qui gonfle. Seuls les deux volumes — ce qui est reparti sans acheter, ce qui est resté — disent si le plan collait à la demande.",
+      },
+      {
+        id: "nova_cout_invendu",
+        prompt: "Une enceinte produite et non vendue ce trimestre…",
+        options: [
+          { id: "a", label: "Reste en stock à son coût de production : l'argent est sorti, la charge attend la vente" },
+          { id: "b", label: "Est passée en charge du trimestre, comme les autres" },
+          { id: "c", label: "Ne coûte rien tant qu'elle n'est pas soldée" },
+          { id: "d", label: "Diminue le résultat à hauteur de son prix de vente" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "C'est le piège du stock : la trésorerie est déjà partie en matières et en main-d'œuvre, mais le compte de résultat attend la vente pour enregistrer la charge. Un trimestre peut donc paraître bon tout en ayant immobilisé votre caisse.",
+      },
+    ],
+    modelRelevance: {
+      budgeting: "optimal",
+      capacity_analysis: "acceptable",
+      breakeven_analysis: "misleading",
+      elasticity_analysis: "irrelevant",
+    },
+    conceptCodes: ["capacity", "stock", "demand_market_share", "dashboard"],
+    hints: hints([
+      "Reprenez les deux volumes du tour : combien de clients sont repartis sans acheter, combien d'enceintes sont restées.",
+      "Rapportez chacun à vos ventes. Sous quelques pour cent, l'écart n'est plus du hasard.",
+      "Demandez-vous ce que vous aviez prévu AVANT le tour : la demande attendue, ou la capacité disponible ? Les deux ne donnent pas le même plan.",
+      "Un ajustement réussi tient à trois choses : la prévision de demande, le prix qui l'oriente, et la saison. Laquelle a joué ce trimestre ?",
+      "La question n'est pas d'avoir eu raison, mais de savoir sur quoi. Notez la règle que vous avez suivie : au prochain tour, elle se vérifiera ou non.",
+    ]),
+    trigger: { detect: "served_without_waste" },
+    weight: 0.8,
+    decisionLevers: [
+      { field: "productionPlan", direction: "review", hint: "Vous avez trouvé un plan juste : notez sur quoi vous l'avez calé, et vérifiez que la règle tient au tour suivant." },
+    ],
+  },
+  {
+    code: "detect_recovered",
+    category: "reussite",
+    title: "La tête hors de l'eau",
+    narrative:
+      "Le trimestre précédent s'est terminé dans le rouge, en perte ou en trésorerie négative. Celui-ci, non. L'entreprise est repassée du bon côté, et c'est le moment le plus fragile de la partie : rien ne dit encore si vous avez corrigé la cause ou si le marché vous a fait une fleur.",
+    problem:
+      "Qu'est-ce qui a produit ce redressement, et qu'est-ce qui vous dirait qu'il tiendra au trimestre suivant ?",
+    diagnosticOptions: [
+      {
+        id: "levier_identifie",
+        label: "Tant que le levier qui a joué n'est pas identifié, le redressement ne se pilote pas : il se constate",
+        correct: true,
+      },
+      {
+        id: "resultat_et_treso",
+        label: "Résultat et trésorerie se redressent par des chemins différents : l'un par la marge, l'autre par les encaissements",
+        correct: true,
+      },
+      {
+        id: "cause_externe",
+        label: "Une saison favorable ou un concurrent en difficulté peuvent produire le même résultat sans qu'on y soit pour rien",
+        correct: true,
+      },
+      {
+        id: "crise_finie",
+        label: "Un trimestre positif referme la crise : les décisions d'urgence peuvent être abandonnées",
+        correct: false,
+      },
+      {
+        id: "benefice_egale_cash",
+        label: "Puisque le résultat est redevenu positif, la trésorerie suivra mécaniquement",
+        correct: false,
+      },
+    ],
+    quiz: [
+      {
+        id: "nova_redressement_lecture",
+        prompt: "Un résultat net redevenu positif garantit-il une trésorerie positive ?",
+        options: [
+          { id: "a", label: "Non : les délais de règlement et le stock décalent l'encaissement du bénéfice" },
+          { id: "b", label: "Oui : le bénéfice se retrouve toujours en caisse à la clôture" },
+          { id: "c", label: "Oui, sauf en cas d'emprunt en cours" },
+          { id: "d", label: "Non, uniquement si l'entreprise a distribué un dividende" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "C'est le paradoxe du succès, pris par l'autre bout : on peut gagner de l'argent et manquer de liquidités, parce que le client paie à soixante jours et que le stock a déjà été payé. Le redressement du résultat et celui de la trésorerie sont deux chantiers.",
+      },
+      {
+        id: "nova_redressement_durable",
+        prompt: "Qu'est-ce qui distingue une correction durable d'une embellie de circonstance ?",
+        options: [
+          { id: "a", label: "Le fait de pouvoir nommer le levier actionné et de le retrouver dans les chiffres" },
+          { id: "b", label: "L'ampleur du redressement : plus il est fort, plus il est durable" },
+          { id: "c", label: "Le nombre de décisions modifiées au cours du trimestre" },
+          { id: "d", label: "Le retour du résultat au-dessus du seuil de rentabilité" },
+        ],
+        correctOptionId: "a",
+        explain:
+          "Un redressement dont on ne sait pas ce qui l'a produit ne se reproduit que par chance. Nommer le levier — prix, volume, charges, financement — et vérifier qu'il se lit dans les comptes, c'est la différence entre piloter et subir.",
+      },
+    ],
+    modelRelevance: {
+      cvp_analysis: "optimal",
+      cash_budget: "acceptable",
+      frng_bfr_analysis: "acceptable",
+      psych_pricing: "irrelevant",
+    },
+    conceptCodes: ["net_treasury", "breakeven", "contribution_margin", "income_statement", "cash_budget"],
+    hints: hints([
+      "Mettez côte à côte les deux trimestres : résultat net et trésorerie nette. Lequel des deux s'est redressé, et de combien ?",
+      "Un résultat se redresse par la marge ou par les charges ; une trésorerie, par les encaissements ou par un financement. Ce ne sont pas les mêmes leviers.",
+      "Reprenez vos décisions du trimestre : prix, volume, budgets, emprunt. Laquelle a changé par rapport au précédent ?",
+      "Vérifiez que l'effet se lit bien là où il devrait : une hausse de prix se voit dans la marge unitaire, un emprunt dans la trésorerie et nulle part ailleurs.",
+      "Si aucune de vos décisions n'explique l'écart, c'est le marché qui a travaillé pour vous : saison, concurrent, événement. Alors la prudence reste de mise au trimestre suivant.",
+    ]),
+    trigger: { detect: "recovered" },
+    weight: 1,
+    decisionLevers: [
+      { field: "price", direction: "review", hint: "Avant de relâcher l'effort, vérifiez que le levier qui vous a sortis du rouge est bien celui que vous croyez." },
+    ],
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -823,6 +997,10 @@ export const NOVA_SITUATIONS: SituationDef[] = [
 // ---------------------------------------------------------------------------
 
 const MODEL_EXPLAIN: Record<string, string> = {
+  detect_served_without_waste:
+    "Le budget prévisionnel est le seul outil qui parte de la DEMANDE attendue pour en déduire un plan : c'est exactement ce qui a produit l'ajustement. L'analyse de capacité dit ce que l'atelier peut faire, ce qui est utile mais ne dimensionne rien ; le seuil de rentabilité, lui, ignore la question.",
+  detect_recovered:
+    "L'analyse coût-volume-profit relie les trois leviers qui peuvent avoir produit le redressement — prix, volume, charges — et dit lequel a joué. Le budget de trésorerie et l'analyse FRNG / BFR complètent utilement si c'est la caisse qui s'est redressée, pas le résultat.",
   detect_idle_cash:
     "Le budget de trésorerie projette les décaissements du tour à venir : il est le seul à dire quelle part du solde peut être bloquée sans risquer le découvert. Le seuil de rentabilité, lui, ne parle jamais de trésorerie.",
   nova_t1_takeover:

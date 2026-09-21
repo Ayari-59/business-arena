@@ -6,6 +6,28 @@ import { formatEuro, formatPercent, formatUnits } from "../lib/format";
  * Détection de situations (doc 03 §1.1) : des règles observent les résultats
  * d'un tour et déclenchent les situations correspondantes pour le tour suivant.
  */
+/**
+ * CE QU'IL FAUT SAVOIR DU TOUR D'AVANT, et rien de plus.
+ *
+ * Le redressement ne demande que deux chiffres, et ce sont deux COLONNES de
+ * la table des résultats : les réclamer sous forme de `CompanyRoundResult`
+ * entier obligerait l'appelant à reconstruire tout un tour depuis sa trace,
+ * pour en lire deux nombres.
+ */
+export interface TourPrecedent {
+  netIncome: number;
+  netTreasury: number;
+}
+
+/**
+ * Le tour était-il en difficulté ? Une perte OU une trésorerie nette négative
+ * — c'est-à-dire le découvert, que le modèle ouvre exactement quand la
+ * trésorerie nette passe sous zéro.
+ */
+function enDifficulte(t: TourPrecedent): boolean {
+  return t.netIncome < 0 || t.netTreasury < 0;
+}
+
 export function detectSituations(
   result: CompanyRoundResult,
   /**
@@ -14,6 +36,11 @@ export function detectSituations(
    * réponse n'est nulle part dans le formulaire.
    */
   enabled: { placement?: boolean } = {},
+  /**
+   * Le tour D'AVANT celui qu'on observe, quand il existe. Un redressement ne
+   * se lit pas dans un instantané : il faut savoir d'où l'on vient.
+   */
+  precedent?: TourPrecedent | null,
 ): DetectCode[] {
   const detected: DetectCode[] = [];
   const { netIncome } = result.incomeStatement;
@@ -44,6 +71,45 @@ export function detectSituations(
     result.balanceSheet.cash > 1.5 * result.incomeStatement.fixedCosts
   ) {
     detected.push("idle_cash");
+  }
+
+  // -------------------------------------------------------------------------
+  // CE QUI A MARCHÉ. Quatre des cinq règles ci-dessus signalent un problème :
+  // une équipe qui pilote bien traversait la partie sans presque rien
+  // déclencher, et n'apprenait donc jamais pourquoi elle gagnait. Les deux
+  // règles suivantes ouvrent une situation sur une réussite, avec le même
+  // diagnostic et les mêmes questions qu'une alerte.
+  //
+  // Elles restent RARES par construction : servir presque toute la demande
+  // sans rien laisser sur les bras demande un plan juste, et un redressement
+  // suppose d'être sorti d'un trou. Une félicitation distribuée à chaque tour
+  // ne vaudrait rien.
+  // -------------------------------------------------------------------------
+
+  // SERVI SANS GÂCHER : l'outil a tourné haut, presque rien n'a été refusé,
+  // presque rien n'est resté. Le seuil est relatif au volume de l'équipe, comme
+  // toutes les règles d'ici : un hôtel et un transporteur ne se comparent pas.
+  const invendu = Math.max(0, result.production.produced - sold);
+  if (
+    sold > 0 &&
+    result.production.utilizationRate >= 0.85 &&
+    lost <= 0.03 * sold &&
+    invendu <= 0.03 * sold
+  ) {
+    detected.push("served_without_waste");
+  }
+
+  // LE REDRESSEMENT : on venait d'un tour sous le seuil, à découvert ou en
+  // trésorerie négative, et on n'y est plus.
+  if (
+    precedent &&
+    enDifficulte(precedent) &&
+    !enDifficulte({
+      netIncome: result.incomeStatement.netIncome,
+      netTreasury: result.functionalBalance.netTreasury,
+    })
+  ) {
+    detected.push("recovered");
   }
 
   return detected;
@@ -191,6 +257,47 @@ export const DETECTION_METADATA: Record<DetectCode, DetectionMeta> = {
       ];
     },
   },
+  served_without_waste: {
+    buildFacts(r) {
+      const t = marketTotals(r);
+      const invendu = Math.max(0, r.production.produced - t.sold);
+      return [
+        {
+          label: "Taux d'utilisation",
+          value: formatPercent(r.production.utilizationRate),
+          direction: "positive",
+        },
+        { label: "Unités vendues", value: formatUnits(t.sold), direction: "positive" },
+        {
+          label: "Demande non servie",
+          value: `${formatUnits(t.lost)} (${formatPercent(t.lost / Math.max(1, t.sold))} des ventes)`,
+          direction: "positive",
+        },
+        {
+          label: "Resté sur les bras",
+          value: `${formatUnits(invendu)} (${formatPercent(invendu / Math.max(1, t.sold))} des ventes)`,
+          direction: "positive",
+        },
+      ];
+    },
+  },
+  recovered: {
+    buildFacts(r) {
+      return [
+        { label: "Résultat net", value: formatEuro(r.incomeStatement.netIncome), direction: "positive" },
+        {
+          label: "Trésorerie nette",
+          value: formatEuro(r.functionalBalance.netTreasury),
+          direction: "positive",
+        },
+        {
+          label: "Découvert",
+          value: r.balanceSheet.overdraft > 0.5 ? formatEuro(r.balanceSheet.overdraft) : "aucun",
+          direction: "positive",
+        },
+      ];
+    },
+  },
   idle_cash: {
     buildFacts(r) {
       const cash = r.balanceSheet.cash;
@@ -263,6 +370,64 @@ function deltaUnits(before: number, after: number): { delta: string; direction: 
 }
 
 export const CONSEQUENCE_METADATA: Record<DetectCode, ConsequenceMeta> = {
+  served_without_waste: {
+    buildFacts(before, after) {
+      const t = (r: CompanyRoundResult) => {
+        const seg = Object.values(r.market.bySegment);
+        const sold = seg.reduce((x, d) => x + d.sold, 0);
+        return { sold, lost: seg.reduce((x, d) => x + d.lost, 0), invendu: Math.max(0, r.production.produced - sold) };
+      };
+      const b = t(before);
+      const a = t(after);
+      const util = deltaPercent(before.production.utilizationRate, after.production.utilizationRate);
+      return [
+        {
+          label: "Taux d'utilisation",
+          before: formatPercent(before.production.utilizationRate),
+          after: formatPercent(after.production.utilizationRate),
+          delta: util.delta,
+          direction: util.direction,
+        },
+        {
+          label: "Demande non servie",
+          before: formatUnits(b.lost),
+          after: formatUnits(a.lost),
+          delta: deltaUnits(b.lost, a.lost).delta,
+          // Polarité inversée : moins de demande refusée est une amélioration.
+          direction: a.lost < b.lost ? "positive" : a.lost > b.lost ? "negative" : "neutral",
+        },
+        {
+          label: "Resté sur les bras",
+          before: formatUnits(b.invendu),
+          after: formatUnits(a.invendu),
+          delta: deltaUnits(b.invendu, a.invendu).delta,
+          direction: a.invendu < b.invendu ? "positive" : a.invendu > b.invendu ? "negative" : "neutral",
+        },
+      ];
+    },
+  },
+  recovered: {
+    buildFacts(before, after) {
+      const res = deltaEuro(before.incomeStatement.netIncome, after.incomeStatement.netIncome);
+      const treso = deltaEuro(before.functionalBalance.netTreasury, after.functionalBalance.netTreasury);
+      return [
+        {
+          label: "Résultat net",
+          before: formatEuro(before.incomeStatement.netIncome),
+          after: formatEuro(after.incomeStatement.netIncome),
+          delta: res.delta,
+          direction: res.direction,
+        },
+        {
+          label: "Trésorerie nette",
+          before: formatEuro(before.functionalBalance.netTreasury),
+          after: formatEuro(after.functionalBalance.netTreasury),
+          delta: treso.delta,
+          direction: treso.direction,
+        },
+      ];
+    },
+  },
   profitable_illiquid: {
     buildFacts(before, after) {
       const ni = deltaEuro(before.incomeStatement.netIncome, after.incomeStatement.netIncome);
@@ -438,6 +603,46 @@ export function overallDirection(facts: ConsequenceFact[]): OverallDirection {
 }
 
 export const INTERPRETATION_METADATA: Record<DetectCode, InterpretationMeta> = {
+  served_without_waste: {
+    buildInterpretation(direction) {
+      return {
+        mechanism:
+          "Servir presque toute la demande sans rien laisser sur les bras suppose un plan " +
+          "dimensionné sur la demande attendue, et non sur la capacité disponible. Ni la " +
+          "rupture évitée ni l'invendu qui n'existe pas n'apparaissent au compte de résultat : " +
+          "ce geste ne se voit que dans les volumes.",
+        explanation:
+          direction === "positive"
+            ? "L'ajustement s'est maintenu ou amélioré au tour suivant : ce n'était pas un coup de chance."
+            : direction === "negative"
+              ? "L'ajustement ne s'est pas reproduit au tour suivant. Un plan juste une fois ne dit pas encore une méthode."
+              : "L'ajustement est resté comparable d'un tour à l'autre.",
+        takeaway:
+          "Un plan juste se construit sur la demande attendue, pas sur ce que l'outil sait " +
+          "produire. Reproduire ce résultat demande de savoir CE QUI l'a produit : la prévision, " +
+          "le prix, ou la saison.",
+      };
+    },
+  },
+  recovered: {
+    buildInterpretation(direction) {
+      return {
+        mechanism:
+          "Sortir d'une perte ou d'un découvert suppose d'avoir agi sur ce qui l'avait causé : " +
+          "le volume, le prix, les charges ou le financement. Le redressement se lit dans " +
+          "l'écart entre deux tours, jamais dans un seul.",
+        explanation:
+          direction === "positive"
+            ? "Le redressement s'est confirmé au tour suivant : la correction tient."
+            : direction === "negative"
+              ? "Les indicateurs sont repartis dans l'autre sens : le redressement n'était pas encore consolidé."
+              : "La situation est restée comparable au tour suivant.",
+        takeaway:
+          "Un redressement ne vaut que s'il se reproduit. Identifier le levier qui a joué est " +
+          "ce qui sépare une correction d'une embellie.",
+      };
+    },
+  },
   profitable_illiquid: {
     buildInterpretation(direction) {
       return {
