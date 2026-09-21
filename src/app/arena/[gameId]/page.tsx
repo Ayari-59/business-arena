@@ -32,6 +32,7 @@ import { FaitsCles } from "@/components/faits-cles";
 import { Tiroir } from "@/components/tiroir";
 import { FriseDesTours } from "@/components/frise-des-tours";
 import { IdentiteDeLAppareil } from "@/components/identite-de-lappareil";
+import { EcheanceDuTour } from "@/components/echeance-du-tour";
 import { surtitreDePartie } from "@/config/scenarios/presentation";
 import { SECTOR_ICONS, SECTOR_COLORS, SECTOR_LABELS } from "@/config/scenarios/registry";
 import { statutDesSituations } from "@/config/situation-rendu";
@@ -430,6 +431,12 @@ export default async function ArenaPage({
           {/* La frise remplace la puce « Tour n / N » : le bandeau d'état
               juste dessous porte déjà ce chiffre, et la frise dit en plus d'où
               l'on vient — un segment par tour, vert ou rose selon son résultat. */}
+          {/* L'heure de fermeture du tour, quand l'enseignant en a posé une.
+              Elle était calculée, appliquée, et jamais montrée tant que c'était
+              jouable : on découvrait l'échéance en étant refusé. */}
+          {!finished && view.playLock.playable && view.playLock.closesAt ? (
+            <EcheanceDuTour closesAt={view.playLock.closesAt} compact />
+          ) : null}
           <FriseDesTours
             roundsCount={view.roundsCount}
             currentRound={view.currentRound}
@@ -966,6 +973,7 @@ export default async function ArenaPage({
                   rdOffer={view.rdOffer}
                   communicationOffer={view.communicationOffer}
                   verrou={view.playLock.playable ? null : (view.playLock.message ?? "Ce tour n'est pas encore ouvert.")}
+                  echeance={view.playLock.closesAt}
                   sauvetage={view.exigenceSauvetage}
                 />
               </section>

@@ -25,6 +25,7 @@ import {
   type VerdictSauvetage,
 } from "@/services/sauvetage";
 import { COMMUNICATION_AXIS_LABELS } from "@/engine/market/communication";
+import { EcheanceDuTour } from "@/components/echeance-du-tour";
 import { SimulationProgress } from "@/components/simulation-progress";
 import { NomReference } from "@/components/nom-reference";
 import {
@@ -932,6 +933,7 @@ export function DecisionForm({
   capacityFacts,
   vocabulary,
   verrou,
+  echeance = null,
   sauvetage,
   gamme = null,
   rdOffer = null,
@@ -952,6 +954,12 @@ export function DecisionForm({
    * « Valider » est grisé ; le serveur refuse de toute façon.
    */
   verrou?: string | null;
+  /**
+   * Échéance du tour (ISO) quand l'enseignant en a posé une. Le verrou dit
+   * qu'il est trop tard ; ceci le dit AVANT, ce qui est toute la différence
+   * entre un tour validé et vingt minutes de saisie refusées.
+   */
+  echeance?: string | null;
   /**
    * Financement de sauvetage exigé après un tour clos en cessation de
    * paiements. `null` hors crise, ou quand l'enseignant a préféré
@@ -2166,48 +2174,53 @@ export function DecisionForm({
         // barre pleine largeur, qui paraissait trop lourde sur téléphone. Sur
         // grand écran, tout revient sur une seule rangée : Précédent · Étape ·
         // action (poussée à droite par le `sm:mr-auto` du compteur).
-        <div className="flex flex-wrap items-center gap-3 border-t border-white/10 pt-3">
-          <button
-            type="button"
-            onClick={() => setEtape((e) => Math.max(0, Math.min(e, total - 1) - 1))}
-            disabled={courante === 0}
-            className="order-2 shrink-0 rounded-lg border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:text-slate-100 disabled:cursor-not-allowed disabled:opacity-30 sm:order-1"
-          >
-            ← Précédent
-          </button>
-          <span className="order-3 shrink-0 text-xs tabular-nums text-slate-400 sm:order-2 sm:mr-auto">
-            Étape {courante + 1} / {total}
-          </span>
-          {/* Deux boutons DISTINCTS (clés) et non un seul nœud dont le type
-              bascule : sans cela, React réutilisait le même <button> en passant
-              de « Suivant » (type=button) à « Valider » (type=submit) pendant le
-              clic, et le navigateur exécutait l'activation par défaut sur un
-              bouton devenu submit — le dernier « Suivant » envoyait le tour. */}
-          {derniere ? (
+        <div className="space-y-3 border-t border-white/10 pt-3">
+          {/* L'échéance se rappelle ici, contre le bouton : c'est le moment où
+              savoir qu'il reste huit minutes change quelque chose. */}
+          {echeance && !verrou ? <EcheanceDuTour closesAt={echeance} /> : null}
+          <div className="flex flex-wrap items-center gap-3">
             <button
-              key="valider"
-              type="submit"
-              disabled={pending || verrou != null || validationBloquee}
-              className="order-1 ml-auto rounded-lg bg-amber-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60 sm:order-3 sm:ml-0"
-            >
-              {pending
-                ? "Envoi en cours…"
-                : kind === "solo"
-                  ? "Valider et simuler"
-                  : alreadySubmitted
-                    ? "Mettre à jour mes décisions validées"
-                    : "Valider les décisions de l'équipe"}
-            </button>
-          ) : (
-            <button
-              key="suivant"
               type="button"
-              onClick={() => setEtape((e) => Math.min(total - 1, Math.min(e, total - 1) + 1))}
-              className="order-1 ml-auto rounded-lg bg-amber-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 sm:order-3 sm:ml-0"
+              onClick={() => setEtape((e) => Math.max(0, Math.min(e, total - 1) - 1))}
+              disabled={courante === 0}
+              className="order-2 shrink-0 rounded-lg border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:text-slate-100 disabled:cursor-not-allowed disabled:opacity-30 sm:order-1"
             >
-              Suivant →
+              ← Précédent
             </button>
-          )}
+            <span className="order-3 shrink-0 text-xs tabular-nums text-slate-400 sm:order-2 sm:mr-auto">
+              Étape {courante + 1} / {total}
+            </span>
+            {/* Deux boutons DISTINCTS (clés) et non un seul nœud dont le type
+                bascule : sans cela, React réutilisait le même <button> en passant
+                de « Suivant » (type=button) à « Valider » (type=submit) pendant le
+                clic, et le navigateur exécutait l'activation par défaut sur un
+                bouton devenu submit — le dernier « Suivant » envoyait le tour. */}
+            {derniere ? (
+              <button
+                key="valider"
+                type="submit"
+                disabled={pending || verrou != null || validationBloquee}
+                className="order-1 ml-auto rounded-lg bg-amber-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60 sm:order-3 sm:ml-0"
+              >
+                {pending
+                  ? "Envoi en cours…"
+                  : kind === "solo"
+                    ? "Valider et simuler"
+                    : alreadySubmitted
+                      ? "Mettre à jour mes décisions validées"
+                      : "Valider les décisions de l'équipe"}
+              </button>
+            ) : (
+              <button
+                key="suivant"
+                type="button"
+                onClick={() => setEtape((e) => Math.min(total - 1, Math.min(e, total - 1) + 1))}
+                className="order-1 ml-auto rounded-lg bg-amber-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 sm:order-3 sm:ml-0"
+              >
+                Suivant →
+              </button>
+            )}
+          </div>
         </div>
       )}
       {!(pending && kind === "solo") ? (
