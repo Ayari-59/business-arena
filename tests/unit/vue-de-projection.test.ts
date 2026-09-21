@@ -144,8 +144,12 @@ describe("branchée à la séance", () => {
 
   it("le pilotage y mène, en premier lien du ticket", () => {
     const pilotage = lire("src/app/teacher/games/[gameId]/page.tsx");
-    expect(pilotage).toContain("/projection");
     expect(pilotage).toContain("Projeter pour la classe");
-    expect(pilotage.indexOf("/projection")).toBeLessThan(pilotage.indexOf("/observation"));
+    // DANS LE TICKET, et non dans le fichier : un import qui cite
+    // `/observation` en tête de page faisait échouer une comparaison de
+    // positions faite sur la source entière.
+    const ticket = pilotage.slice(pilotage.indexOf('aria-label="Code d\'invitation"'));
+    expect(ticket.indexOf("/projection")).toBeGreaterThan(-1);
+    expect(ticket.indexOf("/projection")).toBeLessThan(ticket.indexOf("/observation"));
   });
 });

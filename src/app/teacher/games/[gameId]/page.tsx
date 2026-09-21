@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { mentionDeValidation } from "@/config/validation-du-tour";
+import { dureeDuTour } from "@/config/duree-du-tour";
+import { DureeDuTourAffichee } from "@/components/duree-du-tour";
+import { getObservationSeance } from "@/services/observation.service";
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { getTeacherGameView } from "@/services/game.service";
@@ -76,6 +79,21 @@ export default async function TeacherGamePage({
     view.rounds.filter((r) => r.status === "resolved").map((r) => [r.index, null]),
   );
   const animer = (!finished && view.mode === "learning") || view.aidRequests.length > 0;
+
+  // COMBIEN DE TEMPS CE TOUR VA PRENDRE. L'estimation se calcule sur ce que la
+  // partie demande vraiment (texte à lire, champs ouverts, situation) ; la
+  // mesure, quand elle existe, vient du dernier tour clos de cette partie et
+  // lui passe devant. Le repère de départ d'un tour est la clôture du
+  // précédent, donc la mesure existe dès le deuxième tour clos, planning ou
+  // non.
+  const dureeEstimee = dureeDuTour({
+    ...view.chargeDuTour,
+    premierTour: view.currentRound === 1,
+  });
+  const observation = await getObservationSeance(gameId, session.userId);
+  const tourMesure = [...(observation?.tours ?? [])]
+    .filter((t) => t.clos && t.minutesMedianes !== null)
+    .sort((a4, b4) => b4.index - a4.index)[0];
 
   return (
     <main id="main" className="mx-auto max-w-4xl space-y-4 px-2 py-6 sm:space-y-6 sm:p-6">
@@ -210,7 +228,9 @@ export default async function TeacherGamePage({
         note={
           finished
             ? `${view.roundsCount} tours joués`
-            : `${periodLabel(view.roundDays, view.currentRound)} · ${submittedCount}/${humanTeams.length} ${humanTeams.length > 1 ? "équipes ont validé" : "équipe a validé"}`
+            : `${periodLabel(view.roundDays, view.currentRound)} · ${submittedCount}/${humanTeams.length} ${humanTeams.length > 1 ? "équipes ont validé" : "équipe a validé"} · ${
+                tourMesure ? `≈ ${tourMesure.minutesMedianes} min (mesuré)` : `≈ ${dureeEstimee.minutes} min (estimé)`
+              }`
         }
       >
         {finished ? "Fin de partie" : "Ce tour"}
@@ -734,6 +754,17 @@ export default async function TeacherGamePage({
             la fenêtre globale : un tour n&apos;est jouable que pendant l&apos;intersection des
             deux. Laissez un couple vide pour laisser le tour suivre le pilotage manuel.
           </p>
+          {/* Le seul écran où l'on décide combien de temps on laisse : le
+              chiffre doit être là, pas dans la tête de celui qui tape. */}
+          <div className="mt-3 max-w-3xl">
+            <DureeDuTourAffichee
+              estimation={dureeEstimee}
+              mesure={tourMesure?.minutesMedianes ?? null}
+              libelleTourMesure={
+                tourMesure ? periodLabel(view.roundDays, tourMesure.index) : null
+              }
+            />
+          </div>
           <GuardedForm
             action={setRoundWindowsAction.bind(null, view.gameId)}
             label="planning des tours"

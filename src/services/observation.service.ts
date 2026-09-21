@@ -105,7 +105,7 @@ export async function getObservationSeance(
     ? ((await db.select().from(classes).where(eq(classes.id, game.classId)))[0]?.name ?? null)
     : null;
 
-  const lignes: ObservationTour[] = tours.map((tour) => {
+  const lignes: ObservationTour[] = tours.map((tour, rang) => {
     const duTour = toutes.filter((d) => d.roundId === tour.id && idsHumaines.has(d.teamId));
     // DEUX STATUTS POUR UNE MÊME CHOSE. Une équipe qui valide passe en
     // `validated` ; à la clôture du tour, sa ligne devient `locked`. Ne compter
@@ -115,9 +115,17 @@ export async function getObservationSeance(
     const validees = duTour.filter((d) => d.status === "validated" || d.status === "locked");
     const sources = validees.map((d) => lireSource(d.decisionSource));
 
+    // QUAND LE TOUR S'EST OUVERT. `opensAt` n'est écrit que par le planning
+    // de l'enseignant, et la plupart des séances se pilotent à la main : la
+    // mesure du temps ne se déclenchait donc presque jamais. La clôture du
+    // tour PRÉCÉDENT est le moment où celui-ci est devenu jouable — c'est le
+    // même repère, et il existe toujours. Le premier tour reste sans repère
+    // fiable hors planning : la partie peut avoir été créée la veille.
+    const ouverture = tour.opensAt ?? tours[rang - 1]?.resolvedAt ?? null;
+
     const minutes = validees
-      .filter((d) => d.validatedAt && tour.opensAt)
-      .map((d) => (d.validatedAt!.getTime() - tour.opensAt!.getTime()) / 60000)
+      .filter((d) => d.validatedAt && ouverture)
+      .map((d) => (d.validatedAt!.getTime() - ouverture!.getTime()) / 60000)
       // Une valeur négative n'a pas de sens (fenêtre déplacée après coup) et
       // fausserait la médiane : on l'écarte plutôt que de la ramener à zéro.
       .filter((m) => m >= 0);

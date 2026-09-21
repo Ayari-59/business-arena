@@ -19,6 +19,7 @@ import {
   type QuizMode,
 } from "@/config/difficulty";
 import { pseudoAffichable } from "@/config/invite";
+import { champsOuverts, signesDeCadrage, signesDeSituation } from "@/config/duree-du-tour";
 import { validerNomEquipe } from "@/config/nom-equipe";
 import { PERSONALITY_LABELS, botPersonalityFromSeed } from "@/engine/bots";
 import {
@@ -376,6 +377,18 @@ export interface TeacherGameView {
    */
   difficulty: { level: number; name: string; hintMaxLevel: number };
   variableWorld: boolean;
+  /**
+   * De quoi estimer le temps qu'un tour demande aux élèves, avant la première
+   * séance : le volume de texte à lire, les champs que le niveau ouvre, et si
+   * les questions de connaissances sont posées. Le modèle vit dans
+   * `config/duree-du-tour` ; ici on ne fournit que les faits.
+   */
+  chargeDuTour: {
+    signesDeCadrage: number;
+    signesDeSituation: number;
+    champs: number;
+    avecQuiz: boolean;
+  };
   teams: {
     teamId: string;
     name: string;
@@ -451,6 +464,17 @@ export async function getTeacherGameView(
     (game.scenarioSnapshot as { code?: string } | null)?.code,
   );
 
+  // Ce que ce tour demande à l'élève, en faits bruts : le modèle de durée en
+  // tire des minutes. Le scénario est déjà résolu ici (intégré ou enseignant),
+  // et le niveau dit quels leviers sont ouverts.
+  const presetDuJeu = presetFromProfile(game.difficultyProfile);
+  const chargeDuTour = {
+    signesDeCadrage: signesDeCadrage(snapshotDefinition),
+    signesDeSituation: signesDeSituation(snapshotDefinition.situations, game.currentRound),
+    champs: champsOuverts(presetDuJeu.decisions),
+    avecQuiz: quizModeFromProfile(game.difficultyProfile) !== "off",
+  };
+
   return {
     gameId,
     joinCode: game.joinCode,
@@ -501,6 +525,7 @@ export async function getTeacherGameView(
     })(),
     variableWorld:
       (game.difficultyProfile as { variableWorld?: boolean } | null)?.variableWorld === true,
+    chargeDuTour,
     teams: teamRows.map((t) => {
       const last = lastResults.find((r) => r.teamId === t.id);
       return {
