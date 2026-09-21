@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { mentionDeValidation } from "@/config/validation-du-tour";
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { getTeacherGameView } from "@/services/game.service";
@@ -244,6 +245,15 @@ export default async function TeacherGamePage({
                           >
                             par défaut
                           </span>
+                        ) : null}
+                        {/* Par qui, et à quelle heure. La table le notait déjà
+                            à chaque envoi ; personne ne le lisait. L'enseignant
+                            qui voit un élève inactif sait maintenant si son
+                            équipe a validé sans lui. */}
+                        {t.validation ? (
+                          <p className="mt-1 text-xs text-slate-400">
+                            {mentionDeValidation(t.validation.nom, new Date(t.validation.quand))}
+                          </p>
                         ) : null}
                         {t.justification ? (
                           <p className="mt-1 max-w-md text-xs italic leading-relaxed text-slate-400">

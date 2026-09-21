@@ -141,6 +141,13 @@ export interface GameView {
   peutChoisirSonEquipe: boolean;
   /** Décisions déjà validées par l'équipe pour le tour courant (mode classe). */
   pendingDecisions: RoundDecisions | null;
+  /**
+   * Qui, dans l'équipe, a validé ces décisions, et à quelle heure. Une équipe
+   * est faite de trois ou quatre élèves sur trois ou quatre écrans : sans
+   * cette ligne, chacun croit être seul à décider et écrase la saisie du
+   * camarade sans le savoir. Null tant que rien n'est validé.
+   */
+  pendingDecisionsPar: { nom: string | null; quand: string } | null;
   /** Courriers distribués par l'enseignant pour le tour courant. */
   courriersAnnonces: {
     code: string;
@@ -1006,10 +1013,16 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
 
   // Décisions déjà soumises pour le tour courant (mode classe : en attente de clôture)
   let pendingDecisions: RoundDecisions | null = null;
+  // La ligne elle-même est gardée : elle porte qui a validé et quand, relus
+  // plus bas, une fois la composition des équipes chargée.
+  let pendingDecisionRow: (typeof playerDecisionRows)[number] | null = null;
   const currentRoundRow = gameRounds.find((r) => r.index === game.currentRound);
   if (currentRoundRow && currentRoundRow.status === "open") {
     const row = playerDecisionRows.find((d) => d.roundId === currentRoundRow.id);
-    if (row && row.status === "validated") pendingDecisions = row.payload as RoundDecisions;
+    if (row && row.status === "validated") {
+      pendingDecisions = row.payload as RoundDecisions;
+      pendingDecisionRow = row;
+    }
   }
 
   // dernier état persisté de l'équipe (échéanciers d'emprunts pour l'affichage)
@@ -1064,6 +1077,21 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     kindDeLaPartie === "solo" ? [] : await compositionDesEquipes(gameId);
   // Le prénom porté par l'appareil. Il se lit dans la composition déjà
   // chargée : aucune requête de plus pour une ligne d'en-tête.
+  // Qui, dans l'équipe, a validé le tour courant. Une équipe est faite de
+  // trois ou quatre élèves sur autant d'écrans : sans cette ligne, chacun
+  // croit être seul à décider. En solo, l'équipe se résume au joueur et la
+  // mention n'apprendrait rien.
+  const pendingDecisionsPar: GameView["pendingDecisionsPar"] =
+    pendingDecisionRow?.validatedAt && kindDeLaPartie !== "solo"
+      ? {
+          nom: pseudoAffichable(
+            equipesDeLaClasse
+              .flatMap((e) => e.membres)
+              .find((m) => m.userId === pendingDecisionRow!.validatedBy)?.nom,
+          ),
+          quand: pendingDecisionRow.validatedAt.toISOString(),
+        }
+      : null;
   const playerPseudo = pseudoAffichable(
     equipesDeLaClasse.flatMap((e) => e.membres).find((m) => m.userId === userId)?.nom,
   );
@@ -1399,6 +1427,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     equipesDeLaClasse,
     peutChoisirSonEquipe: kindDeLaPartie !== "solo" && peutChoisirSonEquipe(game),
     pendingDecisions,
+    pendingDecisionsPar,
     courriersAnnonces: readPendingEvents(game.difficultyProfile).map((card) => {
       const target = card.teamId ? teamRows.find((t) => t.id === card.teamId) : undefined;
       return {

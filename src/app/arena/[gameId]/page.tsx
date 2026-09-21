@@ -33,6 +33,7 @@ import { Tiroir } from "@/components/tiroir";
 import { FriseDesTours } from "@/components/frise-des-tours";
 import { IdentiteDeLAppareil } from "@/components/identite-de-lappareil";
 import { EcheanceDuTour } from "@/components/echeance-du-tour";
+import { mentionDeValidation } from "@/config/validation-du-tour";
 import { surtitreDePartie } from "@/config/scenarios/presentation";
 import { SECTOR_ICONS, SECTOR_COLORS, SECTOR_LABELS } from "@/config/scenarios/registry";
 import { statutDesSituations } from "@/config/situation-rendu";
@@ -926,6 +927,25 @@ export default async function ArenaPage({
                   <h2 className="text-sm font-semibold text-slate-200">
                     Vos décisions · {periodLabel(view.roundDays, view.currentRound).toLowerCase()}
                   </h2>
+                  {/* Une équipe, c'est trois ou quatre élèves sur autant
+                      d'écrans. Sans cette ligne, chacun croit être seul à
+                      décider et écrase la saisie d'un camarade sans le savoir :
+                      l'heure et le prénom étaient déjà en base, relus nulle
+                      part. */}
+                  {view.pendingDecisionsPar ? (
+                    <p className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-emerald-300">
+                      <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 font-semibold">
+                        ✓{" "}
+                        {mentionDeValidation(
+                          view.pendingDecisionsPar.nom,
+                          new Date(view.pendingDecisionsPar.quand),
+                        )}
+                      </span>
+                      <span className="text-slate-400">
+                        Modifiable jusqu&apos;à la clôture : votre envoi remplacera le sien.
+                      </span>
+                    </p>
+                  ) : null}
                   <p className="mt-1 text-xs text-slate-400">
                     <a
                       href={`/arena/${view.gameId}/cockpit`}

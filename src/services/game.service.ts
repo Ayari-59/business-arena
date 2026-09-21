@@ -18,6 +18,7 @@ import {
   quizModeFromProfile,
   type QuizMode,
 } from "@/config/difficulty";
+import { pseudoAffichable } from "@/config/invite";
 import { validerNomEquipe } from "@/config/nom-equipe";
 import { PERSONALITY_LABELS, botPersonalityFromSeed } from "@/engine/bots";
 import {
@@ -387,6 +388,14 @@ export interface TeacherGameView {
     decisionSource: DecisionSourceMap | null;
     /** La justification écrite par l'équipe pour ce tour ; null si vide ou non validée. */
     justification: string | null;
+    /**
+     * Qui, dans l'équipe, a validé ce tour et à quelle heure. La table le
+     * notait déjà à chaque envoi, sans que ces colonnes soient relues : le
+     * tableau affichait « ✓ validées » sans dire par qui, et l'enseignant qui
+     * voit un élève inactif ne pouvait pas savoir si son équipe avait envoyé
+     * sans lui. Null pour un bot ou tant que rien n'est validé.
+     */
+    validation: { nom: string | null; quand: string } | null;
     lastNetIncome: number | null;
     lastNetTreasury: number | null;
   }[];
@@ -420,7 +429,7 @@ export async function getTeacherGameView(
   const currentRoundRow = gameRounds.find((r) => r.index === game.currentRound);
 
   const memberships = await db
-    .select({ teamId: players.teamId, name: users.displayName })
+    .select({ teamId: players.teamId, userId: players.userId, name: users.displayName })
     .from(players)
     .innerJoin(users, eq(users.id, players.userId))
     .where(inArray(players.teamId, teamRows.map((t) => t.id)));
@@ -511,6 +520,15 @@ export async function getTeacherGameView(
         ),
         justification:
           submitted.find((d) => d.teamId === t.id && d.status === "validated")?.justification ?? null,
+        validation: (() => {
+          if (t.controller === "bot") return null;
+          const d = submitted.find((x) => x.teamId === t.id && x.status === "validated");
+          if (!d?.validatedAt) return null;
+          return {
+            nom: pseudoAffichable(memberships.find((m) => m.userId === d.validatedBy)?.name),
+            quand: d.validatedAt.toISOString(),
+          };
+        })(),
         lastNetIncome: last ? Number(last.netIncome) : null,
         lastNetTreasury: last ? Number(last.netTreasury) : null,
       };
