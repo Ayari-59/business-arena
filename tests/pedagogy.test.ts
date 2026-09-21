@@ -26,11 +26,34 @@ describe("système d'indices (doc 03 §4)", () => {
     expect(() => nextUnlockableLevel([2])).toThrow(); // séquence corrompue
   });
 
-  it("coûts cumulés : 5 %, 15 %, 35 %, 70 %... plancher à 20 % de score restant", () => {
+  it("le barème laisse 95, 87, 77, 63 puis 45 % du score", () => {
+    // Le barème annoncé par la documentation depuis toujours : les cinq
+    // indices ouverts laissent 45 %. L'ancien — 5, 10, 20, 35, 55 — valait
+    // 125 % une fois additionné, butait sur le plancher à 20 %, et tombait
+    // d'une falaise entre le 3ᵉ et le 4ᵉ indice, c'est-à-dire qu'il punissait
+    // le plus fort l'élève qui avoue ne pas s'en sortir.
     expect(hintScoreMultiplier([], hintDefs)).toBe(1);
     expect(hintScoreMultiplier([1], hintDefs)).toBeCloseTo(0.95, 9);
-    expect(hintScoreMultiplier([1, 2, 3], hintDefs)).toBeCloseTo(0.65, 9);
-    expect(hintScoreMultiplier([1, 2, 3, 4, 5], hintDefs)).toBeCloseTo(0.2, 9); // plancher
+    expect(hintScoreMultiplier([1, 2], hintDefs)).toBeCloseTo(0.87, 9);
+    expect(hintScoreMultiplier([1, 2, 3], hintDefs)).toBeCloseTo(0.77, 9);
+    expect(hintScoreMultiplier([1, 2, 3, 4], hintDefs)).toBeCloseTo(0.63, 9);
+    expect(hintScoreMultiplier([1, 2, 3, 4, 5], hintDefs)).toBeCloseTo(0.45, 9);
+  });
+
+  it("aucune marche ne coûte plus du double de la précédente", () => {
+    // La falaise se mesure : elle est dans l'écart entre deux marches, pas
+    // dans le total. Le garde interdit qu'elle revienne par un réglage.
+    const restants = [0, 1, 2, 3, 4, 5].map((n) =>
+      hintScoreMultiplier([1, 2, 3, 4, 5].slice(0, n), hintDefs),
+    );
+    const marches = restants.slice(1).map((r, i) => restants[i]! - r);
+    for (let i = 1; i < marches.length; i++) {
+      expect(marches[i]!, `marche ${i + 1}`).toBeLessThanOrEqual(2 * marches[i - 1]!);
+    }
+  });
+
+  it("le plancher n'est plus atteint : c'est un filet, pas une règle", () => {
+    expect(hintScoreMultiplier([1, 2, 3, 4, 5], hintDefs)).toBeGreaterThan(0.2);
   });
 
 });
@@ -658,7 +681,11 @@ describe("difficulté adaptive (§28 bis)", () => {
   it("le plancher de 0.2 reste en vigueur pour tous les niveaux", () => {
     const allLevels = [1, 2, 3, 4, 5];
     expect(adaptiveHintMultiplier(allLevels, hintDefs, 0)).toBeGreaterThanOrEqual(0.2);
-    expect(adaptiveHintMultiplier(allLevels, hintDefs, 100)).toBeCloseTo(0.2, 9);
+    // Au plein tarif, les cinq indices laissent 45 % : le filet ne sert plus.
+    expect(adaptiveHintMultiplier(allLevels, hintDefs, 100)).toBeCloseTo(0.45, 9);
+    // Et l'élève le plus faible, qui a ouvert les cinq, garde plus de la
+    // moitié de son score — l'aide coûte, elle ne condamne pas.
+    expect(adaptiveHintMultiplier(allLevels, hintDefs, 0)).toBeCloseTo(0.725, 9);
   });
 
   it("sans indices débloqués, le discount n'a aucun effet", () => {

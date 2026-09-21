@@ -122,8 +122,29 @@ export interface SituationDef {
   distractorPool?: string[];
 }
 
-/** Coûts standard des 5 niveaux (doc 03 §4) : cumulés = 45 % de score restant. */
-const HINT_COSTS = [0.05, 0.1, 0.2, 0.35, 0.55] as const;
+/**
+ * COÛTS DES 5 NIVEAUX D'INDICE (doc 03 §4).
+ *
+ * Chaque niveau coûte sa part du score de la situation, et les parts
+ * s'ADDITIONNENT : le bouton annonce « −8 % » et c'est exactement ce que le
+ * niveau retire. Les cinq ensemble laissent 45 % — le barème que la
+ * documentation a toujours annoncé.
+ *
+ * Le barème précédent — 5, 10, 20, 35, 55 — ne le tenait pas. Additionné, il
+ * valait 125 % et butait sur le plancher : l'élève qui ouvrait tout gardait
+ * 20 %, pas 45. Surtout, il tombait d'une falaise entre le troisième et le
+ * quatrième indice, 65 % puis 30 %, c'est-à-dire qu'il punissait le plus fort
+ * exactement au moment où l'élève avoue qu'il ne s'en sort pas. Or celui qui
+ * a besoin du quatrième indice est celui pour qui la situation est difficile,
+ * et on ne lui apprend rien en lui retirant les deux tiers de sa note.
+ *
+ * La progression monte donc doucement : 5, 8, 10, 14, 18. Chercher seul reste
+ * payant, demander de l'aide reste possible, et le plancher de 0,2 redevient
+ * ce qu'il aurait dû rester — un filet, pas une règle.
+ *
+ * Score restant : 95 %, 87 %, 77 %, 63 %, 45 %.
+ */
+const HINT_COSTS = [0.05, 0.08, 0.1, 0.14, 0.18] as const;
 
 export const hints = (
   texts: [string, string, string, string, string],

@@ -22,7 +22,20 @@ const ecart = (over: Partial<Parameters<typeof calculateVariances>[0]> = {}) =>
     actualQuantityProduced: 1_000,
     defectUnits: 50,
     actualPrice: 59,
-    segmentSales: { etudiants: { sold: 800, lost: 200 } },
+    // Le détail d'un segment porte six champs ; seuls `sold` et `lost`
+    // comptent ici, les autres sont du remplissage neutre.
+    segmentSales: {
+      etudiants: {
+        potential: 1_000,
+        attraction: 1,
+        share: 0.8,
+        demandForCompany: 1_000,
+        sold: 800,
+        lost: 200,
+        revenue: 47_200,
+        commission: 0,
+      },
+    },
     ...over,
   })!;
 

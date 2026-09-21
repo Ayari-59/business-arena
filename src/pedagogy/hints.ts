@@ -1,9 +1,14 @@
 import type { SituationHintDef } from "../config/scenarios/nova/situations";
 
 /**
- * Machine à indices (doc 03 §4) : 5 niveaux STRICTEMENT séquentiels, coûts
- * cumulés appliqués au score pédagogique de la situation — jamais aux
- * résultats économiques.
+ * Machine à indices (doc 03 §4) : 5 niveaux STRICTEMENT séquentiels, dont les
+ * coûts s'additionnent sur le score pédagogique de la situation — jamais sur
+ * les résultats économiques.
+ *
+ * Le barème vit dans `situation-kit` (HINT_COSTS) et laisse 45 % du score
+ * quand les cinq indices sont ouverts. Le plancher ci-dessous n'est donc plus
+ * atteint par le barème standard : il ne protège plus que d'un scénario sur
+ * mesure dont les coûts dépasseraient 80 %.
  */
 
 /** Le prochain niveau déblocable (null si tout est débloqué). */
@@ -16,7 +21,7 @@ export function nextUnlockableLevel(unlockedLevels: number[]): 1 | 2 | 3 | 4 | 5
   return max >= 5 ? null : ((max + 1) as 1 | 2 | 3 | 4 | 5);
 }
 
-/** Multiplicateur de score restant après indices (1 − Σ coûts), plancher 0,2. */
+/** Multiplicateur de score restant après indices (1 − Σ coûts), filet à 0,2. */
 export function hintScoreMultiplier(
   unlockedLevels: number[],
   hintDefs: SituationHintDef[],
