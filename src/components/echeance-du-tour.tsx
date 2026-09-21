@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { echeanceDuTour, dateLisible, type Echeance } from "@/config/echeance";
+import { echeanceDuTour, dateLisible, heureLisible, type Echeance } from "@/config/echeance";
 
 /**
  * L'HEURE À LAQUELLE LE TOUR FERME.
@@ -54,9 +54,13 @@ export function EcheanceDuTour({
     : "border-white/10 text-slate-400";
 
   if (compact) {
+    // L'heure seule, pas la date entière : une pastille d'en-tête qui affiche
+    // « Ferme lundi 21 septembre à 23:29 » occupe toute la largeur d'un
+    // téléphone. La date complète reste dans l'infobulle, et le bandeau du
+    // formulaire la porte en toutes lettres.
     return (
       <p className={`rounded-full border px-3 py-1 text-xs ${teinte}`} title={`Ce tour ferme ${absolu}`}>
-        <span aria-hidden>⏳</span> {restant ? `Ferme ${restant}` : `Ferme ${absolu}`}
+        <span aria-hidden>⏳</span> {restant ? `Ferme ${restant}` : `Ferme à ${heureLisible(quand)}`}
       </p>
     );
   }

@@ -29,6 +29,10 @@ describe("ce qu'on dit d'une échéance", () => {
     expect(e.absolu).toContain("à 14:30");
   });
 
+  it("n'écrit qu'un seul « à » : le formateur combiné en mettait déjà un", () => {
+    expect(echeanceDuTour(A(30), MAINTENANT).absolu).not.toContain("à à");
+  });
+
   it("annonce le temps restant tant qu'il compte", () => {
     expect(echeanceDuTour(A(12), MAINTENANT).restant).toBe("dans 12 minutes");
     expect(echeanceDuTour(A(90), MAINTENANT).restant).toBe("dans 1 h 30");
@@ -68,6 +72,17 @@ describe("le rendu serveur ne promet que ce qui ne bouge pas", () => {
 
   it("dit ce qu'il faut faire, pas seulement l'heure", () => {
     expect(html).toContain("Validez avant");
+  });
+
+  it("la pastille d'en-tête ne porte que l'heure, pas la date entière", () => {
+    const pastille = renderToStaticMarkup(
+      createElement(EcheanceDuTour, { closesAt: A(30).toISOString(), compact: true }),
+    );
+    expect(pastille).toContain("Ferme à 14:30");
+    // « Ferme lundi 21 septembre à 14:30 » tient toute la largeur d'un
+    // téléphone ; la date complète reste dans l'infobulle.
+    expect(pastille).not.toMatch(/>[^<]*septembre/);
+    expect(pastille).toContain('title="Ce tour ferme');
   });
 
   it("une date illisible n'affiche rien plutôt qu'un « Invalid Date »", () => {

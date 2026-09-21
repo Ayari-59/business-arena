@@ -29,18 +29,31 @@ export interface Echeance {
   depassee: boolean;
 }
 
-const DATE_FR = new Intl.DateTimeFormat("fr-FR", {
+// Deux formateurs plutôt qu'un seul : selon la version d'ICU, un format
+// combiné insère lui-même un « à » devant l'heure. Ajouter le nôtre par-dessus
+// donnait « lundi 21 septembre à à 23:29 » — vu à l'écran avant de l'écrire ici.
+// En les séparant, le joint nous appartient et ne dépend d'aucune version.
+const JOUR_FR = new Intl.DateTimeFormat("fr-FR", {
   timeZone: "Europe/Paris",
   weekday: "long",
   day: "numeric",
   month: "long",
+});
+
+const HEURE_FR = new Intl.DateTimeFormat("fr-FR", {
+  timeZone: "Europe/Paris",
   hour: "2-digit",
   minute: "2-digit",
 });
 
-/** « mardi 21 septembre à 15:40 » : le « à » que le formateur ne met pas. */
+/** « 15:40 ». Seule information de la pastille d'en-tête, où la place manque. */
+export function heureLisible(quand: Date): string {
+  return HEURE_FR.format(quand);
+}
+
+/** « lundi 21 septembre à 15:40 ». */
 export function dateLisible(quand: Date): string {
-  return DATE_FR.format(quand).replace(/\s+(\d{2}:\d{2})$/, " à $1");
+  return `${JOUR_FR.format(quand)} à ${heureLisible(quand)}`;
 }
 
 /** Le temps restant en toutes lettres, arrondi à la minute supérieure. */
