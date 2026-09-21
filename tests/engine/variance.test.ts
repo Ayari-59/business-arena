@@ -1,8 +1,10 @@
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { calculateVariances } from "@/engine/costs/variance";
 
-describe("variance calculation", () => {
-  it("calculates material price variance from supplier cost multiplier", () => {
+describe("écarts sur coûts", () => {
+  it("le fournisseur choisi se lit en écart sur prix des matières", () => {
     const result = calculateVariances({
       standardMaterialCost: 22,
       standardOtherVariableCost: 16,
@@ -28,16 +30,15 @@ describe("variance calculation", () => {
     if (result) {
       // Material price variance = (22 * 1.1 - 22) * 1000 = 2.2 * 1000 = 2200
       expect(result.materialPriceVariance).toBeCloseTo(2200, 0);
-      // No efficiency variance (no defects)
-      expect(result.materialEfficiencyVariance).toBeCloseTo(0, 0);
-      // No labor rate variance (MVP: labor costs fixed per scenario)
-      expect(result.laborRateVariance).toBeCloseTo(0, 0);
+      // Aucun rebut : pas d'écart sur quantité, ni matière ni autres charges.
+      expect(result.materialQuantityVariance).toBeCloseTo(0, 0);
+      expect(result.otherVariableQuantityVariance).toBeCloseTo(0, 0);
       // Total = only material price variance
       expect(result.totalCostVariance).toBeCloseTo(2200, 0);
     }
   });
 
-  it("calculates efficiency variance from defect units", () => {
+  it("le rebut se lit en écart sur quantité, matières et autres charges", () => {
     const result = calculateVariances({
       standardMaterialCost: 22,
       standardOtherVariableCost: 16,
@@ -62,9 +63,9 @@ describe("variance calculation", () => {
     expect(result).not.toBeNull();
     if (result) {
       // Material efficiency variance = 50 * 22 = 1100
-      expect(result.materialEfficiencyVariance).toBeCloseTo(1100, 0);
+      expect(result.materialQuantityVariance).toBeCloseTo(1100, 0);
       // Labor efficiency variance = 50 * 16 = 800
-      expect(result.laborEfficiencyVariance).toBeCloseTo(800, 0);
+      expect(result.otherVariableQuantityVariance).toBeCloseTo(800, 0);
       // Total cost variance = 1100 + 800 = 1900
       expect(result.totalCostVariance).toBeCloseTo(1900, 0);
     }
@@ -171,5 +172,60 @@ describe("variance calculation", () => {
       // = 1.1*1000 + 440 + 0.8*1000 + 320 = 2660
       expect(result.totalCostVariance).toBeGreaterThan(0);
     }
+  });
+});
+
+/**
+ * LE VOCABULAIRE, VERROUILLÉ.
+ *
+ * Les écarts portaient deux noms faux. « Efficiency » pour les matières :
+ * en coûts standard, l'écart de rendement se dit de la main-d'œuvre et de ses
+ * heures ; pour une matière, c'est un écart sur QUANTITÉ. Et « labor » pour
+ * un calcul qui porte sur `otherVariableCostPerUnit`, c'est-à-dire les autres
+ * charges variables, main-d'œuvre directe ET énergie confondues : le nommer
+ * main-d'œuvre laissait croire à un écart de masse salariale, qui n'existe
+ * pas ici. Ces gardes empêchent les deux de revenir.
+ */
+describe("le vocabulaire des écarts", () => {
+  const source = readFileSync(join(process.cwd(), "src/engine/costs/variance.ts"), "utf8");
+  const types = readFileSync(join(process.cwd(), "src/engine/types.ts"), "utf8");
+
+  it("aucun écart ne s'appelle « efficiency » ni « labor »", () => {
+    for (const fautif of [
+      "materialEfficiencyVariance",
+      "laborEfficiencyVariance",
+      "laborRateVariance",
+    ]) {
+      // Le commentaire du module explique la correction : on ne cherche que
+      // les emplois réels, hors prose.
+      const emplois = source
+        .split("\n")
+        .filter((l) => l.includes(fautif) && !l.trimStart().startsWith("*"));
+      expect(emplois, `${fautif} : ${emplois.join(" | ")}`).toEqual([]);
+      expect(types).not.toContain(fautif);
+    }
+  });
+
+  it("les noms retenus sont ceux du contrôle de gestion", () => {
+    for (const juste of [
+      "materialPriceVariance",
+      "materialQuantityVariance",
+      "otherVariableQuantityVariance",
+    ]) {
+      expect(source).toContain(juste);
+      expect(types).toContain(juste);
+    }
+  });
+
+  it("le second poste est nommé pour ce qu'il est : les autres charges variables", () => {
+    // La fiche notion de l'élève dit « écart sur prix » et « écart sur
+    // volume » ; le moteur doit parler la même langue qu'elle.
+    expect(types).toContain("AUTRES CHARGES VARIABLES");
+    expect(types).toMatch(/salaires sont une charge de structure/);
+  });
+
+  it("le bloc « revenus » reste signalé pour ce qu'il n'est pas", () => {
+    expect(source).toContain("N'EST PAS UN ÉCART");
+    expect(types).toContain("N'EST PAS UN ÉCART");
   });
 });

@@ -1300,26 +1300,38 @@ export interface ProductRoundResult {
   /** Stock de fin de tour du produit (CUMP). */
   stock: { quantity: number; unitCost: number };
   /**
-   * Variance analysis (pilot on NOVA, optional — present only if variances tracked).
-   * Decomposes actual vs. standard costs and revenues to diagnose performance drivers.
-   * Absent in mono-product scenarios without pedagogy, or when all variances are zero.
+   * ÉCARTS SUR COÛTS du tour, référence par référence (voir
+   * `engine/costs/variance`). Absents en mono-produit, où le moteur ne les
+   * suit pas, et absents aussi quand tout écart est négligeable.
+   *
+   * Le vocabulaire est celui du contrôle de gestion : écart sur PRIX pour
+   * l'achat des matières, écart sur QUANTITÉ pour ce qui part au rebut. Le
+   * second poste n'est pas la main-d'œuvre mais les AUTRES CHARGES VARIABLES
+   * (MOD, énergie, divers) : les salaires sont une charge de structure et
+   * leur écart se calcule ailleurs.
    */
   variances?: {
-    // Cost variances (€), positive = unfavorable (cost overrun)
+    /** Écart sur prix des matières (€), positif = défavorable. */
     materialPriceVariance: number;
-    materialEfficiencyVariance: number;
-    laborRateVariance: number;
-    laborEfficiencyVariance: number;
+    /** Écart sur quantité de matières : le rebut, valorisé au standard. */
+    materialQuantityVariance: number;
+    /** Écart sur quantité des autres charges variables, même rebut. */
+    otherVariableQuantityVariance: number;
     totalCostVariance: number;
-    // Percentage of actual COGS for relative comparison
+    /** Part de l'écart total dans le coût de revient réel du tour. */
     costVarianceRatio: number;
-    // Revenue variances by segment
+    /**
+     * CE BLOC N'EST PAS UN ÉCART : `priceVariance` vaut le chiffre d'affaires
+     * réalisé et `volumeVariance` les unités non vendues, comptées en unités.
+     * Un vrai écart sur chiffre d'affaires suppose un budget de ventes, qui
+     * n'existe pas encore. Rien ne doit en être affiché d'ici là.
+     */
     revenueVarianceBySegment: Record<SegmentCode, {
-      priceVariance: number;  // positive = favorable
-      volumeVariance: number; // positive = favorable
+      priceVariance: number;
+      volumeVariance: number;
       totalVariance: number;
     }>;
-    // Contribution margin variance: how pricing and volume combined beat/missed plan
+    /** Somme des deux précédents : à ne pas lire comme un écart sur marge. */
     contributionMarginVariance: number;
   };
   /** Codes des segments qui composent le marché du produit. */

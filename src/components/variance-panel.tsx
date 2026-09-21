@@ -14,9 +14,12 @@ export function VariancePanel({
   segmentNames: Record<string, string>;
 }) {
   const cvVar = [
-    { label: "Écart de prix matière", value: variances.materialPriceVariance },
-    { label: "Écart d'efficacité matière", value: variances.materialEfficiencyVariance },
-    { label: "Écart d'efficacité main-d'œuvre", value: variances.laborEfficiencyVariance },
+    { label: "Écart sur prix des matières", value: variances.materialPriceVariance },
+    { label: "Écart sur quantité · matières", value: variances.materialQuantityVariance },
+    {
+      label: "Écart sur quantité · autres charges variables",
+      value: variances.otherVariableQuantityVariance,
+    },
   ];
 
   const totalFavorable = variances.totalCostVariance <= 0;
