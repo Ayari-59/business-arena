@@ -31,6 +31,7 @@ import { GammeLigne } from "@/components/gamme-ligne";
 import { FaitsCles } from "@/components/faits-cles";
 import { Tiroir } from "@/components/tiroir";
 import { FriseDesTours } from "@/components/frise-des-tours";
+import { IdentiteDeLAppareil } from "@/components/identite-de-lappareil";
 import { surtitreDePartie } from "@/config/scenarios/presentation";
 import { SECTOR_ICONS, SECTOR_COLORS, SECTOR_LABELS } from "@/config/scenarios/registry";
 import { statutDesSituations } from "@/config/situation-rendu";
@@ -437,6 +438,18 @@ export default async function ArenaPage({
           />
         </div>
       </header>
+
+      {/* Sous quel nom on décide, et la sortie à côté. En salle informatique le
+          poste passe d'une classe à l'autre : sans ce rappel, un élève joue
+          sous l'identité du précédent sans jamais l'apprendre. Jamais en solo :
+          personne d'autre ne s'assied devant cet écran-là. */}
+      {view.kind !== "solo" && view.playerPseudo ? (
+        <IdentiteDeLAppareil
+          pseudo={view.playerPseudo}
+          equipe={view.playerTeamName}
+          variante="arene"
+        />
+      ) : null}
 
       {/* ── L'état du tour, pour qui n'a pas l'écran ──
           Le bandeau qui s'affichait ici disait ce que la frise, les onglets et

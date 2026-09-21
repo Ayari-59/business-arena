@@ -52,6 +52,7 @@ import {
   readPendingEvents,
 } from "@/services/round-resolution.service";
 import { classementOuvert } from "@/config/rideau-classement";
+import { pseudoAffichable } from "@/config/invite";
 import type { GameKind } from "@/services/game-creation.service";
 
 /** Réexport : le nom affiché se calcule dans la config des noms d'équipe. */
@@ -124,6 +125,12 @@ export interface GameView {
   roundDays: number;
   playerTeamId: string;
   playerTeamName: string;
+  /**
+   * Le prénom sous lequel joue CET appareil, pour que l'élève voie sous quelle
+   * identité il décide. Null en solo (personne d'autre ne s'assied devant) et
+   * tant que l'élève n'a pas donné de pseudo.
+   */
+  playerPseudo: string | null;
   peutSeNommer: boolean;
   /**
    * Les équipes de la classe et qui s'y trouve, pour l'élève rangé d'office
@@ -1055,6 +1062,11 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
   // entreprises sont des bots, et il n'y a personne à rejoindre.
   const equipesDeLaClasse =
     kindDeLaPartie === "solo" ? [] : await compositionDesEquipes(gameId);
+  // Le prénom porté par l'appareil. Il se lit dans la composition déjà
+  // chargée : aucune requête de plus pour une ligne d'en-tête.
+  const playerPseudo = pseudoAffichable(
+    equipesDeLaClasse.flatMap((e) => e.membres).find((m) => m.userId === userId)?.nom,
+  );
   const dernierResolu = resolved.slice().sort((a2, b2) => b2.index - a2.index)[0];
   const classementRevele = classementOuvert({
     kind: kindDeLaPartie,
@@ -1370,6 +1382,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     roundDays: (game.scenarioSnapshot as { roundDays: number }).roundDays,
     playerTeamId: playerTeam.id,
     playerTeamName: teamDisplayName(playerTeam.name),
+    playerPseudo,
     // L'équipe se nomme, et se RENOMME, tant que le premier tour n'est pas
     // clos. Le panneau ne disparaissait auparavant qu'au premier nom adopté :
     // une coquille tapée à la hâte — « Les Enteprises du Nrd » — restait au

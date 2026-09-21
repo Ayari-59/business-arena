@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { JoinForm } from "@/components/join-form";
+import { IdentiteDeLAppareil } from "@/components/identite-de-lappareil";
+import { getGuestDisplayName } from "@/lib/guest";
 
 /** Page d'entrée par code : un titre pour l'onglet, rien pour les moteurs. */
 export const metadata: Metadata = {
@@ -8,7 +10,10 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function JoinPage() {
+export default async function JoinPage() {
+  // Le prénom déjà porté par cet appareil, s'il en porte un : c'est ICI, avant
+  // la saisie, que l'avertissement sert encore à quelque chose.
+  const occupant = await getGuestDisplayName();
   return (
     <main id="main" className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
       <div className="text-center">
@@ -19,6 +24,7 @@ export default function JoinPage() {
           à une équipe.
         </p>
       </div>
+      {occupant ? <IdentiteDeLAppareil pseudo={occupant} variante="entree" /> : null}
       <JoinForm />
       <Link href="/guide" className="text-xs text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline">
         Première fois ? Consultez le guide de prise en main
