@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { playRoundAction, type PlayRoundState } from "@/app/arena/[gameId]/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
+import { sansMolette } from "@/components/sans-molette";
 import {
   pivotFieldsFor,
   pivotsNonTouches,
@@ -176,6 +177,7 @@ function EquipmentPanel({
                   <span className="mt-0.5 flex items-center gap-1.5 rounded border border-white/10 bg-slate-950 px-2 py-1 focus-within:border-emerald-400/60">
                     <input
                       type="number"
+                      onWheel={sansMolette}
                       min={0}
                       max={t.maxPerRound}
                       value={buy}
@@ -202,6 +204,7 @@ function EquipmentPanel({
                   <span className="mt-0.5 flex items-center gap-1.5 rounded border border-white/10 bg-slate-950 px-2 py-1 focus-within:border-red-400/60">
                     <input
                       type="number"
+                      onWheel={sansMolette}
                       min={0}
                       max={owned}
                       value={sell}
@@ -289,6 +292,7 @@ function Field({
       <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/5 bg-slate-950 px-3 py-2 focus-within:border-amber-400/60">
         <input
           type="number"
+          onWheel={sansMolette}
           name={name}
           defaultValue={defaultValue}
           step={step}
@@ -549,6 +553,7 @@ function GammeReference({
     <span className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-slate-900 px-2 py-1.5 focus-within:border-amber-400/60">
       <input
         type="number"
+        onWheel={sansMolette}
         name={productFieldName(p.code, nom)}
         aria-label={`${label} · ${p.name}`}
         defaultValue={valeur}

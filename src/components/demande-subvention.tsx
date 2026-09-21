@@ -5,6 +5,7 @@ import {
   type DemandeSubventionState,
 } from "@/app/arena/[gameId]/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
+import { sansMolette } from "@/components/sans-molette";
 import { formatEuro } from "@/lib/format";
 
 const initial: DemandeSubventionState = { error: null };
@@ -63,6 +64,7 @@ export function DemandeSubvention({
           <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900 px-2 py-2 focus-within:border-red-400/60">
             <input
               type="number"
+              onWheel={sansMolette}
               name="montant"
               required
               step={1}
