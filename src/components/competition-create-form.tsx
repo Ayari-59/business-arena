@@ -51,26 +51,37 @@ export function CompetitionCreateForm({
           className={champ}
         />
       </label>
+      {/*
+        DEUX NIVEAUX, DEUX MOTS. Une ÉQUIPE réunit des élèves et se qualifie
+        d'un bloc ; une POULE réunit des équipes qui jouent une même partie.
+        Les libellés disaient « groupe », qui s'entend comme un groupe
+        d'élèves : « deux qualifiés par groupe » se lisait alors comme si une
+        équipe pouvait partir en finale amputée de la moitié des siens.
+      */}
       <label className="block">
-        <span className={etiquette}>Équipes par groupe</span>
+        <span className={etiquette}>Équipes par poule de qualification</span>
         <select name="groupSize" defaultValue={v?.groupSize ?? "3"} className={champ}>
           {[2, 3, 4, 5, 6].map((n) => (
             <option key={n} value={n}>
-              {n} équipes par partie
+              {n} équipes s&apos;affrontent dans une poule
             </option>
           ))}
         </select>
       </label>
       <label className="block">
-        <span className={etiquette}>Qualifiés par groupe</span>
+        <span className={etiquette}>Équipes qualifiées par poule</span>
         <select name="advancePerGroup" defaultValue={v?.advancePerGroup ?? "1"} className={champ}>
           {[1, 2, 3].map((n) => (
             <option key={n} value={n}>
-              {n} par groupe → finale
+              {n === 1 ? "La première de chaque poule" : `Les ${n} premières de chaque poule`}
             </option>
           ))}
         </select>
       </label>
+      <p className="text-xs leading-relaxed text-slate-400 sm:col-span-2">
+        Une poule est un ensemble d&apos;équipes qui jouent la même partie de qualification. Une
+        équipe qualifiée part en finale entière, avec tous ses membres.
+      </p>
       <label className="block sm:col-span-2">
         <span className={etiquette}>Périodicité</span>
         <select name="periodicity" defaultValue={v?.periodicity ?? "quarter"} className={champ}>

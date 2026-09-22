@@ -35,9 +35,20 @@ export interface ConcoursPourDeroule {
   rules: { groupSize: number; advancePerGroup: number };
 }
 
-function pluriel(n: number, mot: string): string {
-  return `${n} ${mot}${n > 1 ? "s" : ""}`;
+function pluriel(n: number, mot: string, pluriels?: string): string {
+  return `${n} ${n > 1 ? (pluriels ?? `${mot}s`) : mot}`;
 }
+
+/**
+ * POULE, ET NON GROUPE.
+ *
+ * Un concours empile deux niveaux de regroupement : l'ÉQUIPE, qui réunit des
+ * élèves et se qualifie d'un bloc, et l'ensemble d'équipes qui joue une même
+ * partie de qualification. Appeler le second « groupe » le faisait entendre
+ * comme un groupe d'ÉLÈVES, et « deux qualifiés par groupe » se lisait alors
+ * comme si une équipe pouvait partir en finale amputée de la moitié des siens.
+ * « Poule » ne désigne que des équipes, et c'est le mot du tournoi.
+ */
 
 /** Étape courante : inscriptions → qualifications → finale → podium. */
 export function etapeCourante(c: Pick<ConcoursPourDeroule, "status" | "stages">): number {
@@ -49,14 +60,15 @@ export function etapeCourante(c: Pick<ConcoursPourDeroule, "status" | "stages">)
 export function derouleConcours(c: ConcoursPourDeroule): DerouleConcours {
   const courante = etapeCourante(c);
   const qualif = c.stages.find((s) => s.kind === "qualification");
-  const groupes = qualif ? pluriel(qualif.games.length, "groupe") : "Des groupes";
+  const poules = qualif ? pluriel(qualif.games.length, "poule") : "Des poules";
   const n = c.entries.length;
   const details: Record<EtapeConcours, string> = {
     Inscriptions: `${n} équipe${n > 1 ? "s" : ""} inscrite${n > 1 ? "s" : ""} avec le code ${c.joinCode}.`,
-    Qualifications: `${groupes} de ${c.rules.groupSize} équipes tirés au sort, ${pluriel(
+    Qualifications: `${poules} de ${c.rules.groupSize} équipes tirées au sort, ${pluriel(
       c.rules.advancePerGroup,
-      "qualifié",
-    )} par groupe au score IPG.`,
+      "équipe qualifiée",
+      "équipes qualifiées",
+    )} par poule au score IPG.`,
     Finale: "Une partie entre les qualifiés, mêmes règles de compétition.",
     Podium: "Classement IPG de la finale : or, argent, bronze.",
   };
@@ -79,8 +91,8 @@ export function messageDejaInscrit(teamLabel: string): string {
 export const EXPLICATIONS_CONCOURS = [
   "Un concours est un championnat entre équipes, organisé par un enseignant sur Business Arena.",
   "Vous vous inscrivez avec le code à 6 caractères qu'il vous a donné, et le nom de votre équipe (2 à 6 joueurs).",
-  "Les équipes sont tirées au sort dans des groupes ; chaque groupe joue une partie complète en mode compétition.",
-  "Les meilleures équipes de chaque groupe au score IPG se qualifient pour la finale.",
+  "Les équipes sont tirées au sort dans des poules ; chaque poule joue une partie complète en mode compétition.",
+  "Les meilleures équipes de chaque poule au score IPG se qualifient pour la finale, avec tous leurs membres.",
   "En mode compétition, les décisions validées sont verrouillées et les indices sont limités.",
 ] as const;
 
@@ -155,12 +167,12 @@ export function formatDuTournoi(config: ConfigurationTournoi): FormatDuTournoi {
   };
 }
 
-/** « 3 groupes de 5 équipes, 6 finalistes » : le format en une ligne. */
+/** « 3 poules de 5 équipes, 6 équipes finalistes » : le format en une ligne. */
 export function libelleFormatTournoi(config: ConfigurationTournoi): string {
   const f = formatDuTournoi(config);
   if (f.groupes === 0) return "Aucune équipe inscrite.";
   const tailles = [...new Set(f.equipesParGroupe)].sort((a, b) => a - b);
   const taille = tailles.length === 1 ? `${tailles[0]}` : `${tailles[0]} à ${tailles[tailles.length - 1]}`;
   const plafond = f.plafonnee ? ", la finale étant plafonnée" : "";
-  return `${pluriel(f.groupes, "groupe")} de ${taille} équipes, ${pluriel(f.finalistes, "finaliste")}${plafond}.`;
+  return `${pluriel(f.groupes, "poule")} de ${taille} équipes, ${pluriel(f.finalistes, "équipe finaliste", "équipes finalistes")}${plafond}.`;
 }

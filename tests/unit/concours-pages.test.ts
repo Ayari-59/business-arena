@@ -73,13 +73,13 @@ describe("le déroulé d'un concours", () => {
     expect(d.etapes.map((e) => e.etat)).toEqual(["courante", "a_venir", "a_venir", "a_venir"]);
     expect(d.etapes[0]!.detail).toBe("4 équipes inscrites avec le code R4KT7B.");
     expect(d.etapes[1]!.detail).toBe(
-      "Des groupes de 3 équipes tirés au sort, 1 qualifié par groupe au score IPG.",
+      "Des poules de 3 équipes tirées au sort, 1 équipe qualifiée par poule au score IPG.",
     );
     const enQualif = derouleConcours(
       concours({ status: "running", stages: [{ kind: "qualification", games: [{}, {}] }] }),
     );
     expect(enQualif.etapes.map((e) => e.etat)).toEqual(["passee", "courante", "a_venir", "a_venir"]);
-    expect(enQualif.etapes[1]!.detail).toMatch(/^2 groupes de 3 équipes/);
+    expect(enQualif.etapes[1]!.detail).toMatch(/^2 poules de 3 équipes/);
   });
 });
 
@@ -92,7 +92,7 @@ describe("la page enseignant du concours", () => {
     expect(html).toContain("R4KT7B");
     expect(html).toContain("Un trimestre par tour");
     expect(html).toContain("3 équipes par partie de qualification");
-    expect(html).toContain("1 par groupe → finale");
+    expect(html).toContain("La première équipe de chaque poule");
   });
 
   it("le bloc Déroulé met l'étape en cours en avant", () => {

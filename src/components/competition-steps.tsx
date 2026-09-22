@@ -12,8 +12,13 @@ export function CompetitionSettings({
   const lignes: [string, string][] = [
     ["Code d'inscription", joinCode],
     ["Périodicité", PERIODICITE_LABELS[rules.periodicity]],
-    ["Équipes par groupe", `${rules.groupSize} équipes par partie de qualification`],
-    ["Qualifiés par groupe", `${rules.advancePerGroup} par groupe → finale`],
+    ["Équipes par poule", `${rules.groupSize} équipes par partie de qualification`],
+    [
+      "Qualifiées pour la finale",
+      rules.advancePerGroup === 1
+        ? "La première équipe de chaque poule"
+        : `Les ${rules.advancePerGroup} premières équipes de chaque poule`,
+    ],
     ["Règles de compétition", "Décisions verrouillées après validation, indices limités aux niveaux 1 à 3, aucun tirage manuel de cartes."],
   ];
   return (

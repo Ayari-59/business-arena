@@ -75,7 +75,7 @@ describe("format d'un tournoi", () => {
     expect(f.equipesParGroupe).toEqual([5, 5, 5]);
     expect(f.finalistes).toBe(6);
     expect(libelleFormatTournoi({ equipes: 15, tailleGroupe: 4, qualifiesParGroupe: 2 })).toBe(
-      "3 groupes de 5 équipes, 6 finalistes.",
+      "3 poules de 5 équipes, 6 équipes finalistes.",
     );
   });
 
