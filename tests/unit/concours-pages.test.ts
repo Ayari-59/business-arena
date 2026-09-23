@@ -105,7 +105,8 @@ describe("la page enseignant du concours", () => {
     expect(html.match(/<li /g)?.length).toBe(4);
     expect(html.match(/aria-current="step"/g)?.length).toBe(1);
     expect(html).toMatch(/aria-current="step"[^>]*data-etat="courante"[^>]*>.*?Qualifications · en cours/);
-    expect(html).toContain("✓ Inscriptions");
+    // L'étape franchie porte sa coche, la suivante son rang.
+    expect(html).toMatch(/data-etat="passee"[^>]*>.*?✓.*?Inscriptions/);
   });
 
   it("la page porte les deux blocs et le lien de retour", () => {

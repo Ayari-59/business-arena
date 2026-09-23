@@ -42,7 +42,17 @@ export function nomDeLaPhase(stage: { kind: string; format?: unknown }, rang: nu
 }
 
 export interface DerouleConcours {
-  etapes: { nom: string; detail: string; etat: "passee" | "courante" | "a_venir" }[];
+  etapes: {
+    nom: string;
+    detail: string;
+    etat: "passee" | "courante" | "a_venir";
+    /**
+     * Ce qui se passe à cette étape, en deux mots. L'étape courante disait
+     * « en cours », y compris le PODIUM d'un concours terminé : un classement
+     * proclamé n'est pas un travail en cours.
+     */
+    mention: string | null;
+  }[];
   /** Indice de l'étape en cours dans `etapes`. */
   courante: number;
 }
@@ -150,11 +160,13 @@ export function derouleConcours(c: ConcoursPourDeroule): DerouleConcours {
     { nom: DERNIERE_ETAPE, detail: "Classement IPG de la finale : or, argent, bronze." },
   ];
 
+  const clos = c.status === "finished";
   return {
     courante,
     etapes: etapes.map((e, i) => ({
       ...e,
       etat: i < courante ? "passee" : i === courante ? "courante" : "a_venir",
+      mention: i !== courante ? null : clos ? "proclamé" : "en cours",
     })),
   };
 }

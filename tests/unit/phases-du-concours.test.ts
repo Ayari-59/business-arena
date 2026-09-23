@@ -202,3 +202,21 @@ describe("le contrôle « nouvelle phase »", () => {
     expect(html).toContain('disabled=""');
   });
 });
+
+describe("la mention de l'étape en cours", () => {
+  it("dit « en cours » tant que le concours tourne, « proclamé » une fois clos", () => {
+    const stages = [
+      phase("qualification", 4, { teamsPerGame: 2, advanceCount: 1 }),
+      phase("final", 1, { teamsPerGame: 2, advanceCount: 1 }, "running"),
+    ];
+    const enCours = derouleConcours(concours(stages, "running"));
+    expect(enCours.etapes[enCours.courante]!.mention).toBe("en cours");
+    expect(enCours.etapes.filter((e) => e.mention !== null)).toHaveLength(1);
+
+    // Un podium proclamé n'est pas un travail en cours : c'est un résultat.
+    const clos = derouleConcours(concours(stages, "finished"));
+    const derniere = clos.etapes[clos.courante]!;
+    expect(derniere.nom).toBe("Podium");
+    expect(derniere.mention).toBe("proclamé");
+  });
+});

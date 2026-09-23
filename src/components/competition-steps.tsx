@@ -40,7 +40,16 @@ export function CompetitionSettings({
   );
 }
 
-/** Bloc « Déroulé » : les quatre étapes, l'étape en cours mise en avant. */
+/**
+ * Bloc « Déroulé » : une ligne par étape, celle en cours mise en avant.
+ *
+ * Il était disposé en QUATRE COLONNES, parce qu'un concours avait exactement
+ * quatre étapes. Un tournoi à trois phases en a cinq : la cinquième tombait
+ * seule sur une deuxième ligne, et les quatre premières se serraient déjà dans
+ * une carte de demi-largeur au point de couper les mots. Une liste verticale
+ * n'a pas ce défaut, se lit à n'importe quelle largeur, et laisse le détail de
+ * chaque étape respirer.
+ */
 export function CompetitionSteps({ concours }: { concours: ConcoursPourDeroule }) {
   const deroule = derouleConcours(concours);
   return (
@@ -48,13 +57,13 @@ export function CompetitionSteps({ concours }: { concours: ConcoursPourDeroule }
       <h2 id="deroule-titre" className="mb-3 text-sm font-semibold text-slate-200">
         Déroulé
       </h2>
-      <ol className="grid gap-2 sm:grid-cols-4">
+      <ol className="space-y-1.5">
         {deroule.etapes.map((etape, i) => (
           <li
             key={etape.nom}
             aria-current={etape.etat === "courante" ? "step" : undefined}
             data-etat={etape.etat}
-            className={`rounded-lg border px-3 py-2 ${
+            className={`flex gap-3 rounded-lg border px-3 py-2 ${
               etape.etat === "courante"
                 ? "border-amber-400/60 bg-amber-400/10"
                 : etape.etat === "passee"
@@ -62,16 +71,27 @@ export function CompetitionSteps({ concours }: { concours: ConcoursPourDeroule }
                   : "border-white/10 bg-slate-950"
             }`}
           >
-            <p
-              className={`text-sm font-medium ${
-                etape.etat === "courante" ? "text-amber-300" : "text-slate-200"
+            <span
+              aria-hidden
+              className={`mt-0.5 w-4 shrink-0 text-center text-sm font-medium ${
+                etape.etat === "courante" ? "text-amber-300" : "text-slate-400"
               }`}
             >
-              {etape.etat === "passee" ? "✓ " : `${i + 1}. `}
-              {etape.nom}
-              {etape.etat === "courante" ? " · en cours" : ""}
-            </p>
-            <p className="mt-1 text-xs text-slate-400">{etape.detail}</p>
+              {etape.etat === "passee" ? "✓" : i + 1}
+            </span>
+            <span className="min-w-0">
+              <span
+                className={`block text-sm font-medium ${
+                  etape.etat === "courante" ? "text-amber-300" : "text-slate-200"
+                }`}
+              >
+                {etape.nom}
+                {etape.mention ? ` · ${etape.mention}` : ""}
+              </span>
+              <span className="mt-0.5 block text-xs leading-relaxed text-slate-400">
+                {etape.detail}
+              </span>
+            </span>
           </li>
         ))}
       </ol>

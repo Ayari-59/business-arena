@@ -1,13 +1,6 @@
 import Link from "next/link";
 import type { CompetitionView } from "@/services/competition.service";
-
-const STAGE_LABELS: Record<string, string> = {
-  qualification: "Qualifications",
-  groups: "Phase de groupes",
-  knockout: "Élimination directe",
-  semifinal: "Demi-finales",
-  final: "Finale",
-};
+import { nomDeLaPhase } from "@/config/concours";
 
 const STATUS_LABELS: Record<string, string> = {
   registration: "Inscriptions ouvertes",
@@ -65,7 +58,7 @@ export function CompetitionBoard({
       {view.stages.map((stage) => (
         <section key={stage.index} className="carte p-3 sm:p-5">
           <h2 className="mb-3 text-sm font-semibold text-slate-200">
-            {STAGE_LABELS[stage.kind] ?? stage.kind}
+            {nomDeLaPhase(stage, stage.index)}
             <span className="ml-2 text-xs font-normal text-slate-400">
               {stage.status === "finished" ? "terminée" : "en cours"}
             </span>
@@ -75,7 +68,7 @@ export function CompetitionBoard({
               <div key={game.gameId} className="rounded-lg bg-slate-950 p-3">
                 <div className="flex items-center justify-between text-xs text-slate-400">
                   <span>
-                    {stage.kind === "final" ? "Finale" : `Groupe ${String.fromCharCode(65 + i)}`}
+                    {stage.kind === "final" ? "Finale" : `Poule ${String.fromCharCode(65 + i)}`}
                     {" · "}
                     {game.status === "finished"
                       ? "terminé"
