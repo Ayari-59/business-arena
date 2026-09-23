@@ -26,6 +26,17 @@
 const JOURS_DANS_L_ANNEE = 360;
 
 export interface EcheancierEmprunt {
+  /**
+   * CE QUE LA BANQUE ACCORDE, et non ce qui a été demandé.
+   *
+   * Le moteur borne la demande au plafond SANS RIEN DIRE
+   * (`newLoan = min(demandé, plafond)`). Chiffrer le montant demandé
+   * annoncerait donc une échéance et des intérêts que personne ne paiera : le
+   * seul chiffrage utile est celui du montant réellement prêté.
+   */
+  montantAccorde: number;
+  /** La demande a-t-elle été rabotée ? L'écran doit le dire, pas le taire. */
+  plafonne: boolean;
   /** Capital remboursé à chaque tour, échéance obligatoire. */
   echeanceParTour: number;
   /** Intérêts cumulés sur toute la durée du contrat. */
@@ -49,8 +60,12 @@ export function echeancierEmprunt(args: {
   dureeEnTours: number;
   tauxAnnuel: number;
   joursDuTour: number;
+  /** Ce que la banque peut encore prêter. Absent = aucun plafond déclaré. */
+  plafond?: number | null;
 }): EcheancierEmprunt {
-  const montant = Math.max(0, args.montant);
+  const demande = Math.max(0, args.montant);
+  const plafond = args.plafond ?? null;
+  const montant = plafond === null ? demande : Math.min(demande, Math.max(0, plafond));
   const tours = Math.max(1, Math.trunc(args.dureeEnTours));
   const fractionDAnnee = args.joursDuTour / JOURS_DANS_L_ANNEE;
   const echeanceParTour = montant / tours;
@@ -65,6 +80,8 @@ export function echeancierEmprunt(args: {
   }
 
   return {
+    montantAccorde: montant,
+    plafonne: montant < demande - 0.005,
     echeanceParTour,
     interets,
     totalARembourser: montant + interets,
@@ -79,7 +96,15 @@ export interface CoutDeMobilisation {
   net: number;
 }
 
-/** Escompte : des agios au prorata de la durée du tour. */
+/**
+ * Escompte : des agios au prorata de la durée du tour.
+ *
+ * SON PLAFOND N'EST PAS CONNU À LA SAISIE. Le moteur le calcule sur le poste
+ * clients DU TOUR — une part des ventes que l'élève est précisément en train
+ * de décider. Aucun chiffre exact ne peut donc être annoncé ici, et en inventer
+ * un serait pire que se taire : l'écran énonce la règle, et le montant qui la
+ * dépasse ne sera simplement pas escompté.
+ */
 export function coutDeLEscompte(args: {
   montant: number;
   tauxAnnuel: number;

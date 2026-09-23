@@ -285,7 +285,11 @@ function EquipmentPanel({
  * Rien ne s'affiche tant que le montant est nul : un encadré de zéros à côté
  * d'un champ vide est un meuble, pas une information.
  */
-function Chiffrage({ lignes }: { lignes: { label: string; valeur: string; fort?: boolean }[] }) {
+function Chiffrage({
+  lignes,
+}: {
+  lignes: { label: string; valeur: string; fort?: boolean; alerte?: boolean }[];
+}) {
   if (lignes.length === 0) return null;
   return (
     <dl
@@ -294,10 +298,14 @@ function Chiffrage({ lignes }: { lignes: { label: string; valeur: string; fort?:
     >
       {lignes.map((ligne) => (
         <div key={ligne.label} className="contents">
-          <dt className="text-slate-400">{ligne.label}</dt>
+          <dt className={ligne.alerte ? "text-rose-300" : "text-slate-400"}>{ligne.label}</dt>
           <dd
             className={`text-right tabular-nums sm:text-left ${
-              ligne.fort ? "font-semibold text-amber-200" : "text-slate-200"
+              ligne.alerte
+                ? "font-semibold text-rose-300"
+                : ligne.fort
+                  ? "font-semibold text-amber-200"
+                  : "text-slate-200"
             }`}
           >
             {ligne.valeur}
@@ -313,6 +321,7 @@ function Field({
   label,
   defaultValue,
   step = 1,
+  max,
   suffix,
   hint,
   onValueChange,
@@ -321,6 +330,8 @@ function Field({
   label: string;
   defaultValue: number;
   step?: number;
+  /** Plafond opposable : le navigateur refuse d'envoyer au-delà. */
+  max?: number;
   suffix: string;
   hint?: string;
   /** Remonte la valeur saisie, pour les champs qu'une règle doit suivre en direct. */
@@ -333,6 +344,7 @@ function Field({
         <input
           type="number"
           onWheel={sansMolette}
+          {...(max !== undefined ? { max } : {})}
           name={name}
           defaultValue={defaultValue}
           step={step}
@@ -1259,8 +1271,21 @@ export function DecisionForm({
             dureeEnTours: financeOffer.loanDurationRounds,
             tauxAnnuel: financeOffer.loanAnnualRate,
             joursDuTour: financeOffer.roundDays,
+            plafond: loanCapacity?.remaining ?? null,
           });
           return [
+            // LE MOTEUR RABOTE EN SILENCE : chiffrer la demande annoncerait une
+            // échéance que personne ne paiera. On chiffre ce qui sera prêté, et
+            // on dit que la demande a été ramenée au plafond.
+            ...(e.plafonne
+              ? [
+                  {
+                    label: "Au-delà du plafond",
+                    valeur: `la banque prêtera ${formatEuro(e.montantAccorde)}`,
+                    alerte: true,
+                  },
+                ]
+              : []),
             { label: `Échéance, sur ${e.tours} tours`, valeur: `${formatEuro(e.echeanceParTour)} par tour` },
             { label: "Intérêts", valeur: formatEuro(e.interets) },
             { label: "Total à rembourser", valeur: formatEuro(e.totalARembourser), fort: true },
@@ -1278,6 +1303,12 @@ export function DecisionForm({
           return [
             { label: "Agios", valeur: formatEuro(c.cout) },
             { label: "En caisse", valeur: formatEuro(c.net), fort: true },
+            // Le plafond se calcule sur les ventes DU TOUR, que l'élève est en
+            // train de décider : aucun chiffre exact ne peut être annoncé ici.
+            {
+              label: "Plafond",
+              valeur: `${Math.round(treasuryOffer.discountMaxShare * 100)} % du poste clients du tour ; le surplus ne sera pas escompté`,
+            },
           ];
         })()
       : [];
@@ -1931,6 +1962,7 @@ export function DecisionForm({
             <>
               <div>
                 <Field name="newLoan" label="Nouvel emprunt" defaultValue={0} suffix="€"
+                  max={loanCapacity ? Math.floor(loanCapacity.remaining) : undefined}
                   onValueChange={(v) => setRenfort((r) => ({ ...r, emprunt: v }))}
                   hint={
                     // LE TAUX VIENT DU SCÉNARIO. Il était écrit « 5 %/an » en

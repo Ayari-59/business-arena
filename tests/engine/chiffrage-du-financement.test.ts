@@ -28,6 +28,7 @@ import type {
 const TAUX_EMPRUNT = 0.06;
 const JOURS_DU_TOUR = 90;
 const DUREE_EN_TOURS = 4;
+const RATIO_MAX = 1;
 
 const scenario = (): EngineScenarioConfig => ({
   code: "test",
@@ -73,6 +74,8 @@ const scenario = (): EngineScenarioConfig => ({
     supplierPaymentDelayDays: 30,
     depreciationPerRound: 3000,
     loanDurationRounds: DUREE_EN_TOURS,
+    // La banque ne prête pas au-delà d'une fois les capitaux propres.
+    maxDebtToEquity: RATIO_MAX,
   },
   treasury: {
     discountAnnualRate: 0.06,
@@ -221,6 +224,79 @@ describe("l'emprunt chiffré avant de valider", () => {
     expect(
       echeancierEmprunt({ montant: 1000, dureeEnTours: 0, tauxAnnuel: 0.06, joursDuTour: 90 }).tours,
     ).toBe(1);
+  });
+});
+
+describe("le plafond d'emprunt, annoncé et non subi", () => {
+  /**
+   * LE MOTEUR RABOTE EN SILENCE (`newLoan = min(demandé, plafond)`). Chiffrer
+   * la demande annoncerait donc une échéance que personne ne paiera : l'écran
+   * doit chiffrer ce qui sera PRÊTÉ, et dire que la demande a été ramenée.
+   */
+  const plafond = () => {
+    const c = company("avec");
+    return RATIO_MAX * c.finance.equity - c.finance.financialDebt;
+  };
+
+  it("une demande au-delà du plafond est ramenée, et l'écran le dit", () => {
+    const demande = plafond() * 2;
+    const annonce = echeancierEmprunt({
+      montant: demande,
+      dureeEnTours: DUREE_EN_TOURS,
+      tauxAnnuel: TAUX_EMPRUNT,
+      joursDuTour: JOURS_DU_TOUR,
+      plafond: plafond(),
+    });
+    expect(annonce.plafonne).toBe(true);
+    expect(annonce.montantAccorde).toBeCloseTo(plafond(), 6);
+
+    // Et c'est bien ce que le moteur prête.
+    const out = simulateRound({
+      ...input(),
+      decisions: { avec: { ...base(), finance: { newLoan: demande } }, sans: base() },
+    });
+    expect(out.results["avec"]!.debt!.newLoan).toBeCloseTo(annonce.montantAccorde, 4);
+  });
+
+  it("l'échéance annoncée est celle du montant accordé, pas du montant demandé", () => {
+    const demande = plafond() * 2;
+    const annonce = echeancierEmprunt({
+      montant: demande,
+      dureeEnTours: DUREE_EN_TOURS,
+      tauxAnnuel: TAUX_EMPRUNT,
+      joursDuTour: JOURS_DU_TOUR,
+      plafond: plafond(),
+    });
+    // L'échéance du montant DEMANDÉ aurait été deux fois trop grande.
+    expect(annonce.echeanceParTour).toBeCloseTo(plafond() / DUREE_EN_TOURS, 6);
+
+    let etat = input();
+    const prelevees: number[] = [];
+    for (let tour = 1; tour <= DUREE_EN_TOURS + 1; tour++) {
+      const out = simulateRound({
+        ...etat,
+        roundIndex: tour,
+        decisions: {
+          avec: tour === 1 ? { ...base(), finance: { newLoan: demande } } : base(),
+          sans: base(),
+        },
+      });
+      if (tour > 1) prelevees.push(out.results["avec"]!.debt!.mandatoryRepayment);
+      etat = { ...etat, companies: out.companies };
+    }
+    for (const p of prelevees) expect(p).toBeCloseTo(annonce.echeanceParTour, 4);
+  });
+
+  it("sous le plafond, rien n'est raboté", () => {
+    const annonce = echeancierEmprunt({
+      montant: 10000,
+      dureeEnTours: DUREE_EN_TOURS,
+      tauxAnnuel: TAUX_EMPRUNT,
+      joursDuTour: JOURS_DU_TOUR,
+      plafond: plafond(),
+    });
+    expect(annonce.plafonne).toBe(false);
+    expect(annonce.montantAccorde).toBe(10000);
   });
 });
 

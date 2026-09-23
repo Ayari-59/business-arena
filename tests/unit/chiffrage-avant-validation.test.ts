@@ -60,6 +60,47 @@ describe("le calcul", () => {
   });
 });
 
+describe("le plafond", () => {
+  it("le chiffrage porte sur le montant accordé, pas sur celui demandé", () => {
+    const e = echeancierEmprunt({
+      montant: 200000,
+      dureeEnTours: 4,
+      tauxAnnuel: 0.05,
+      joursDuTour: 90,
+      plafond: 80000,
+    });
+    expect(e.plafonne).toBe(true);
+    expect(e.montantAccorde).toBe(80000);
+    expect(e.echeanceParTour).toBe(20000);
+    // Les intérêts aussi : ceux des 200 000 demandés n'existeront jamais.
+    expect(e.interets).toBeCloseTo(2500, 6);
+  });
+
+  it("sans plafond déclaré, la demande passe entière", () => {
+    const e = echeancierEmprunt({
+      montant: 200000,
+      dureeEnTours: 4,
+      tauxAnnuel: 0.05,
+      joursDuTour: 90,
+    });
+    expect(e.plafonne).toBe(false);
+    expect(e.montantAccorde).toBe(200000);
+  });
+
+  it("un plafond épuisé ne prête plus rien", () => {
+    const e = echeancierEmprunt({
+      montant: 50000,
+      dureeEnTours: 4,
+      tauxAnnuel: 0.05,
+      joursDuTour: 90,
+      plafond: 0,
+    });
+    expect(e.montantAccorde).toBe(0);
+    expect(e.totalARembourser).toBe(0);
+    expect(e.plafonne).toBe(true);
+  });
+});
+
 describe("le branchement à l'écran", () => {
   const formulaire = lire("src/components/decision-form.tsx");
 
@@ -77,6 +118,17 @@ describe("le branchement à l'écran", () => {
     expect(formulaire).toContain("renfort.emprunt > 0");
     expect(formulaire).toContain("mobilisation.escompte > 0");
     expect(formulaire).toContain("mobilisation.affacturage > 0");
+  });
+
+  it("le plafond d'emprunt est opposé au champ ET au chiffrage", () => {
+    // Le moteur rabote en silence : l'écran doit refuser la saisie au-delà, et
+    // chiffrer ce qui sera réellement prêté.
+    expect(formulaire).toContain("max={loanCapacity ? Math.floor(loanCapacity.remaining) : undefined}");
+    expect(formulaire).toContain("plafond: loanCapacity?.remaining ?? null");
+    expect(formulaire).toContain("Au-delà du plafond");
+    // L'escompte, lui, ne peut PAS annoncer de chiffre : son plafond se calcule
+    // sur les ventes du tour, que l'élève est en train de décider.
+    expect(formulaire).toContain("du poste clients du tour");
   });
 
   it("le taux affiché vient du scénario, et non d'une constante", () => {
