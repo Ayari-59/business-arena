@@ -98,6 +98,18 @@ export default function EnseignantsPage() {
             Voir les ateliers
           </Link>
         </div>
+        {/*
+          Le manuel se lit SANS COMPTE. Qui veut savoir comment l'outil évalue
+          avant d'y exposer une classe doit pouvoir le lire tout de suite : un
+          enseignant qui hésite, un collègue à qui l'on envoie un lien, un corps
+          d'inspection à qui on l'a présenté.
+        */}
+        <p className="mt-4 text-sm text-slate-400">
+          <Link href="/manuel" className="text-amber-300 underline-offset-4 hover:underline">
+            Lire le manuel de l&apos;enseignant
+          </Link>{" "}
+          · sans compte : ce que mesure l&apos;indice IPG, les niveaux, les barèmes.
+        </p>
       </section>
 
       {/* Hero numbers */}

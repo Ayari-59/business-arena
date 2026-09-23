@@ -22,6 +22,7 @@ export const PAGES_PUBLIQUES = [
   "/fonctionnalites",
   "/notions",
   "/guide",
+  "/manuel",
   "/orientation",
   "/rendez-vous",
   "/mentions-legales",

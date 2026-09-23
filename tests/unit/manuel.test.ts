@@ -141,8 +141,8 @@ describe("il n'envoie pas chercher ce qui n'existe pas", () => {
     }
   });
 
-  it("la page lit les registres plutôt que de recopier", () => {
-    const page = lire("src/app/teacher/manuel/page.tsx");
+  it("le rendu lit les registres plutôt que de recopier", () => {
+    const rendu = lire("src/components/manuel-imprimable.tsx");
     for (const source of [
       "SCENARIOS.map",
       "DIFFICULTY_PRESETS.map",
@@ -150,14 +150,47 @@ describe("il n'envoie pas chercher ce qui n'existe pas", () => {
       "QUIZ_MODES.map",
       "champsOuverts",
     ]) {
-      expect(page, source).toContain(source);
+      expect(rendu, source).toContain(source);
     }
   });
 
-  it("elle s'imprime, et l'espace enseignant y mène", () => {
-    const page = lire("src/app/teacher/manuel/page.tsx");
-    expect(page).toContain('data-theme="clair"');
-    expect(page).toContain("@page { size: A4 portrait");
+  it("il s'imprime, et l'espace enseignant y mène", () => {
+    const rendu = lire("src/components/manuel-imprimable.tsx");
+    expect(rendu).toContain('data-theme="clair"');
+    expect(rendu).toContain("@page { size: A4 portrait");
     expect(lire("src/components/en-tete-enseignant.tsx")).toContain("/teacher/manuel");
+  });
+
+  /**
+   * LE MANUEL SE LIT SANS COMPTE.
+   *
+   * Il était derrière la connexion : pour savoir comment l'application évalue,
+   * il fallait d'abord s'inscrire. Ces gardes tiennent la porte ouverte, et
+   * vérifient que les deux adresses servent bien LE MÊME texte.
+   */
+  describe("la version publique", () => {
+    it("ne demande aucune session, et part du même rendu", () => {
+      const publique = lire("src/app/manuel/page.tsx");
+      expect(publique).toContain("ManuelImprimable");
+      expect(publique, "aucune garde de session").not.toMatch(/getSession|redirect\(/);
+      // La page enseignante partage le même rendu : un seul texte, deux portes.
+      expect(lire("src/app/teacher/manuel/page.tsx")).toContain("ManuelImprimable");
+    });
+
+    it("est référencée, et elle seule : pas deux fois le même texte", () => {
+      const publique = lire("src/app/manuel/page.tsx");
+      expect(publique).toContain('canonical: "/manuel"');
+      expect(publique).toContain("description:");
+      expect(publique, "la publique s'indexe").not.toContain("index: false");
+      // La version enseignante reste hors index pour ne pas la dupliquer.
+      expect(lire("src/app/teacher/manuel/page.tsx")).toContain("index: false");
+      expect(lire("src/app/sitemap.ts")).toContain('"/manuel"');
+    });
+
+    it("se trouve depuis la page des enseignants, sans connaître l'adresse", () => {
+      const enseignants = lire("src/app/enseignants/page.tsx");
+      expect(enseignants).toContain('href="/manuel"');
+      expect(enseignants).toContain("sans compte");
+    });
   });
 });
