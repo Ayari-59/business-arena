@@ -5,6 +5,12 @@ import { playRoundAction, type PlayRoundState } from "@/app/arena/[gameId]/actio
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import { sansMolette } from "@/components/sans-molette";
 import {
+  coutDeLAffacturage,
+  coutDeLEscompte,
+  echeancierEmprunt,
+  totalDesEtudes,
+} from "@/config/cout-du-financement";
+import {
   pivotFieldsFor,
   pivotsNonTouches,
   productFieldName,
@@ -265,6 +271,40 @@ function EquipmentPanel({
         perte de cession, un coût bien réel que le résultat encaisse.
       </p>
     </Family>
+  );
+}
+
+/**
+ * CE QUE LA DÉCISION VA COÛTER, SOUS LE CHAMP QUI LA PORTE.
+ *
+ * Un taux annoncé n'apprend rien : l'élève saisit un montant et ne rencontre
+ * jamais le chiffre qui l'intéresse. Ces lignes se recalculent à la frappe, et
+ * les nombres qu'elles montrent sont exactement ceux que le moteur appliquera
+ * (voir `config/cout-du-financement`, et le test qui compare les deux).
+ *
+ * Rien ne s'affiche tant que le montant est nul : un encadré de zéros à côté
+ * d'un champ vide est un meuble, pas une information.
+ */
+function Chiffrage({ lignes }: { lignes: { label: string; valeur: string; fort?: boolean }[] }) {
+  if (lignes.length === 0) return null;
+  return (
+    <dl
+      role="status"
+      className="mt-2 grid gap-x-4 gap-y-1 rounded-lg border border-white/5 bg-slate-950/60 px-3 py-2 text-xs sm:grid-cols-[auto_1fr]"
+    >
+      {lignes.map((ligne) => (
+        <div key={ligne.label} className="contents">
+          <dt className="text-slate-400">{ligne.label}</dt>
+          <dd
+            className={`text-right tabular-nums sm:text-left ${
+              ligne.fort ? "font-semibold text-amber-200" : "text-slate-200"
+            }`}
+          >
+            {ligne.valeur}
+          </dd>
+        </div>
+      ))}
+    </dl>
   );
 }
 
@@ -932,6 +972,7 @@ export function DecisionForm({
   studiesOffer,
   capitalAllowance,
   loanCapacity,
+  financeOffer,
   insuranceFormulas,
   suppliersOffer,
   equipmentOffer,
@@ -1043,6 +1084,12 @@ export function DecisionForm({
   capitalAllowance?: { total: number; remaining: number } | null;
   /** Ce que la banque peut encore prêter : `null` sans plafond déclaré. */
   loanCapacity?: { remaining: number; ratio: number; equity: number; debt: number } | null;
+  /** Conditions du crédit, pour chiffrer l'emprunt avant la validation. */
+  financeOffer?: {
+    loanAnnualRate: number;
+    loanDurationRounds: number | null;
+    roundDays: number;
+  } | null;
   /** Formules d'assurance (si le scénario en propose plusieurs — remplace le toggle simple). */
   insuranceFormulas?: {
     code: string;
@@ -1193,6 +1240,65 @@ export function DecisionForm({
     emprunt: Math.max(0, defaults.finance?.newLoan ?? 0),
     apport: Math.max(0, defaults.finance?.capitalIncrease ?? 0),
   });
+  // Les montants que le chiffrage suit à la frappe. L'emprunt est déjà suivi
+  // par `renfort` (garde-fou du sauvetage) : on ne le double pas.
+  const [mobilisation, setMobilisation] = useState({ escompte: 0, affacturage: 0 });
+  const [etudesCochees, setEtudesCochees] = useState<Record<string, number>>({});
+
+  // ── LE CHIFFRAGE, RECALCULÉ À CHAQUE FRAPPE ────────────────────────────
+  // Les nombres montrés sont ceux du moteur : le module est calé dessus, et un
+  // test d'intégration compare les deux sur une vraie simulation.
+  const tauxEmprunt = financeOffer
+    ? `${(financeOffer.loanAnnualRate * 100).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %/an`
+    : "Taux du scénario";
+  const chiffrageEmprunt =
+    financeOffer && financeOffer.loanDurationRounds && renfort.emprunt > 0
+      ? (() => {
+          const e = echeancierEmprunt({
+            montant: renfort.emprunt,
+            dureeEnTours: financeOffer.loanDurationRounds,
+            tauxAnnuel: financeOffer.loanAnnualRate,
+            joursDuTour: financeOffer.roundDays,
+          });
+          return [
+            { label: `Échéance, sur ${e.tours} tours`, valeur: `${formatEuro(e.echeanceParTour)} par tour` },
+            { label: "Intérêts", valeur: formatEuro(e.interets) },
+            { label: "Total à rembourser", valeur: formatEuro(e.totalARembourser), fort: true },
+          ];
+        })()
+      : [];
+  const chiffrageEscompte =
+    treasuryOffer && financeOffer && mobilisation.escompte > 0
+      ? (() => {
+          const c = coutDeLEscompte({
+            montant: mobilisation.escompte,
+            tauxAnnuel: treasuryOffer.discountAnnualRate,
+            joursDuTour: financeOffer.roundDays,
+          });
+          return [
+            { label: "Agios", valeur: formatEuro(c.cout) },
+            { label: "En caisse", valeur: formatEuro(c.net), fort: true },
+          ];
+        })()
+      : [];
+  const chiffrageAffacturage =
+    treasuryOffer && mobilisation.affacturage > 0
+      ? (() => {
+          const c = coutDeLAffacturage({
+            montant: mobilisation.affacturage,
+            commission: treasuryOffer.factoringFeeRate,
+          });
+          return [
+            { label: "Commission", valeur: formatEuro(c.cout) },
+            { label: "En caisse", valeur: formatEuro(c.net), fort: true },
+          ];
+        })()
+      : [];
+
+  const prixCoches = Object.values(etudesCochees);
+  const totalEtudes = totalDesEtudes(prixCoches);
+  const nombreDEtudes = `${prixCoches.length} étude${prixCoches.length > 1 ? "s" : ""}`;
+
   const verdict: VerdictSauvetage = sauvetage
     ? verdictSauvetage(sauvetage, renfort)
     : { issue: "suffisant" };
@@ -1823,13 +1929,20 @@ export function DecisionForm({
       <Family legend="💶 Financer · emprunt, capital, investissement">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <>
-              <Field name="newLoan" label="Nouvel emprunt" defaultValue={0} suffix="€"
-                onValueChange={(v) => setRenfort((r) => ({ ...r, emprunt: v }))}
-                hint={
-                  loanCapacity
-                    ? `5 %/an. La banque prête jusqu'à ${loanCapacity.ratio} × vos capitaux propres : il vous reste ${Math.round(loanCapacity.remaining).toLocaleString("fr-FR")} €.`
-                    : "5 %/an, amortissement constant sur la durée du contrat."
-                } />
+              <div>
+                <Field name="newLoan" label="Nouvel emprunt" defaultValue={0} suffix="€"
+                  onValueChange={(v) => setRenfort((r) => ({ ...r, emprunt: v }))}
+                  hint={
+                    // LE TAUX VIENT DU SCÉNARIO. Il était écrit « 5 %/an » en
+                    // dur : un scénario qui prête à 6 % annonçait 5 %.
+                    `${tauxEmprunt}. ${
+                      loanCapacity
+                        ? `La banque prête jusqu'à ${loanCapacity.ratio} × vos capitaux propres : il vous reste ${Math.round(loanCapacity.remaining).toLocaleString("fr-FR")} €.`
+                        : "Amortissement constant sur la durée du contrat."
+                    }`
+                  } />
+                <Chiffrage lignes={chiffrageEmprunt} />
+              </div>
               <Field
                 name="loanRepayment"
                 label={debtSchedule ? "Remboursement anticipé" : "Remboursement d'emprunt"}
@@ -1927,20 +2040,28 @@ export function DecisionForm({
       {on.finance && treasuryOffer ? (
         <Family legend="💶 Trésorerie · mobiliser le poste clients">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Field
-              name="discount"
-              label={`Escompte (${(treasuryOffer.discountAnnualRate * 100).toLocaleString("fr-FR")} %/an)`}
-              defaultValue={0}
-              suffix="€"
-              hint={`Avance sur créances, plafonnée à ${Math.round(treasuryOffer.discountMaxShare * 100)} % du poste clients, le moins cher.`}
-            />
-            <Field
-              name="factoring"
-              label={`Affacturage (${(treasuryOffer.factoringFeeRate * 100).toLocaleString("fr-FR")} % du montant)`}
-              defaultValue={0}
-              suffix="€"
-              hint="Cession de créances, sans plafond : plus cher, immédiat."
-            />
+            <div>
+              <Field
+                name="discount"
+                label={`Escompte (${(treasuryOffer.discountAnnualRate * 100).toLocaleString("fr-FR")} %/an)`}
+                defaultValue={0}
+                suffix="€"
+                onValueChange={(v) => setMobilisation((m) => ({ ...m, escompte: v }))}
+                hint={`Avance sur créances, plafonnée à ${Math.round(treasuryOffer.discountMaxShare * 100)} % du poste clients, le moins cher.`}
+              />
+              <Chiffrage lignes={chiffrageEscompte} />
+            </div>
+            <div>
+              <Field
+                name="factoring"
+                label={`Affacturage (${(treasuryOffer.factoringFeeRate * 100).toLocaleString("fr-FR")} % du montant)`}
+                defaultValue={0}
+                suffix="€"
+                onValueChange={(v) => setMobilisation((m) => ({ ...m, affacturage: v }))}
+                hint="Cession de créances, sans plafond : plus cher, immédiat."
+              />
+              <Chiffrage lignes={chiffrageAffacturage} />
+            </div>
           </div>
           {on.placement && treasuryOffer.placementAnnualRate !== null ? (
             <div className="mt-3 border-t border-white/5 pt-3">
@@ -2075,6 +2196,14 @@ export function DecisionForm({
                   type="checkbox"
                   name={study.name}
                   defaultChecked={false}
+                  onChange={(e) =>
+                    setEtudesCochees((cochees) => {
+                      const suite = { ...cochees };
+                      if (e.target.checked) suite[study.name] = study.cost;
+                      else delete suite[study.name];
+                      return suite;
+                    })
+                  }
                   className="mt-0.5 h-4 w-4 accent-amber-400"
                 />
                 <span>
@@ -2086,6 +2215,25 @@ export function DecisionForm({
               </label>
             ))}
           </div>
+          {/*
+            LE CUMUL, PENDANT QU'ON COCHE. Quatre prix affichés à côté de
+            quatre cases ne font pas une addition : l'élève coche trois études
+            et découvre la facture au tour suivant, dans les charges de
+            structure. Le total se voit maintenant au moment du choix.
+          */}
+          <Chiffrage
+            lignes={
+              totalEtudes > 0
+                ? [
+                    {
+                      label: `Coût total des études (${nombreDEtudes})`,
+                      valeur: formatEuro(totalEtudes),
+                      fort: true,
+                    },
+                  ]
+                : []
+            }
+          />
           <p className="mt-3 text-xs leading-relaxed text-slate-400">
             L&apos;information a un prix, facturé en charges de structure : il se lit au seuil
             de rentabilité. Décider sans données coûte souvent plus cher.

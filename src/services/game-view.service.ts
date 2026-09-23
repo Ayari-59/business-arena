@@ -593,6 +593,21 @@ export interface GameView {
    */
   loanCapacity: { remaining: number; ratio: number; equity: number; debt: number } | null;
   /**
+   * LES CONDITIONS DU CRÉDIT, POUR LES CHIFFRER À L'ÉCRAN.
+   *
+   * Le formulaire annonçait « 5 %/an » en dur, alors que le taux vient du
+   * scénario : les deux pouvaient diverger sans que rien ne le signale. Ces
+   * trois nombres suffisent à calculer l'échéance et les intérêts que l'élève
+   * verra avant de valider (voir `config/cout-du-financement`).
+   */
+  financeOffer: {
+    loanAnnualRate: number;
+    /** Durée du contrat, en tours. `null` = remboursement libre (historique). */
+    loanDurationRounds: number | null;
+    /** Durée d'un tour en jours : le prorata des intérêts en dépend. */
+    roundDays: number;
+  } | null;
+  /**
    * La demande de subvention exceptionnelle déposée par l'équipe pour le tour
    * en cours, s'il y en a une — avec la réponse de l'animateur quand il a
    * tranché. `null` hors crise : on ne dépose pas de dossier quand tout va bien.
@@ -1970,6 +1985,11 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     })(),
     alerteTresorerie: alerteView,
     loanCapacity: loanCapacityView,
+    financeOffer: {
+      loanAnnualRate: snapshot.finance.loanAnnualRate,
+      loanDurationRounds: snapshot.finance.loanDurationRounds ?? null,
+      roundDays: snapshot.roundDays,
+    },
     capitalAllowance: capitalAllowanceView,
     demandeSubvention,
     exigenceSauvetage,
