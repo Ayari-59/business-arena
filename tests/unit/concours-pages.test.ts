@@ -91,8 +91,14 @@ describe("la page enseignant du concours", () => {
     expect(html).toContain("Réglages");
     expect(html).toContain("R4KT7B");
     expect(html).toContain("Un trimestre par tour");
-    expect(html).toContain("3 équipes par partie de qualification");
+    // Ces réglages sont ceux de la QUALIFICATION : une phase intermédiaire a
+    // les siens, et ses premières de poule ne vont pas en finale mais au tour
+    // suivant. Le bloc ne doit donc rien promettre sur la finale.
+    expect(html).toContain("Poules de qualification");
+    expect(html).toContain("3 équipes par poule");
+    expect(html).toContain("Qualifiées par poule");
     expect(html).toContain("La première équipe de chaque poule");
+    expect(html).not.toContain("pour la finale");
   });
 
   it("le bloc Déroulé met l'étape en cours en avant", () => {

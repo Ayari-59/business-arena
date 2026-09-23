@@ -12,9 +12,14 @@ export function CompetitionSettings({
   const lignes: [string, string][] = [
     ["Code d'inscription", joinCode],
     ["Périodicité", PERIODICITE_LABELS[rules.periodicity]],
-    ["Équipes par poule", `${rules.groupSize} équipes par partie de qualification`],
+    // CES RÉGLAGES SONT CEUX DE LA QUALIFICATION, et le titre doit le dire.
+    // « Qualifiées pour la finale » était juste tant qu'un concours n'avait
+    // que deux phases ; dans un tournoi à quatre, les premières de poule vont
+    // aux quarts, pas en finale — et chaque phase intermédiaire porte ses
+    // propres réglages, choisis au moment où on la lance.
+    ["Poules de qualification", `${rules.groupSize} équipes par poule`],
     [
-      "Qualifiées pour la finale",
+      "Qualifiées par poule",
       rules.advancePerGroup === 1
         ? "La première équipe de chaque poule"
         : `Les ${rules.advancePerGroup} premières équipes de chaque poule`,
