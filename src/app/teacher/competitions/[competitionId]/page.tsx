@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { getCompetitionView } from "@/services/competition.service";
 import { CompetitionBoard } from "@/components/competition-board";
-import { CompetitionControl } from "@/components/competition-controls";
+import { CompetitionControl, NouvellePhase } from "@/components/competition-controls";
 import { CompetitionSettings, CompetitionSteps } from "@/components/competition-steps";
 import { StageSchedule } from "@/components/stage-schedule";
 import { PublicPageForm } from "@/components/public-page-form";
@@ -23,11 +23,20 @@ export default async function TeacherCompetitionPage({
   const view = await getCompetitionView(competitionId);
   if (!view || view.organizerId !== session.userId) notFound();
 
-  const qualification = view.stages.find((s) => s.kind === "qualification");
-  const finalStage = view.stages.find((s) => s.kind === "final");
-  const qualificationDone =
-    qualification !== undefined && qualification.games.every((g) => g.status === "finished");
-  const finalDone = finalStage !== undefined && finalStage.games.every((g) => g.status === "finished");
+  // LA PHASE EN COURS, QUELLE QU'ELLE SOIT. Le concours n'a plus deux phases
+  // nommées mais autant que l'organisateur en lance : on raisonne donc sur
+  // celle qui tourne, et non sur « la qualification » et « la finale ».
+  const phase = view.stages.find((s) => s.status === "running") ?? null;
+  const phaseTerminee =
+    phase !== null && phase.games.length > 0 && phase.games.every((g) => g.status === "finished");
+  const finale = phase?.kind === "final" ? phase : null;
+
+  // Combien d'équipes sortiront de la phase en cours : une poule envoie en
+  // moyenne autant d'équipes que son format l'annonce. C'est la matière de la
+  // phase suivante, et ce que l'aperçu doit chiffrer.
+  const survivantes = phase
+    ? phase.games.length * Math.max(1, phase.format.advanceCount ?? 1)
+    : 0;
 
   return (
     <main id="main" className="mx-auto max-w-4xl space-y-6 px-2 py-6 sm:p-6">
@@ -67,13 +76,21 @@ export default async function TeacherCompetitionPage({
       {view.status === "registration" ? (
         <CompetitionControl competitionId={competitionId} action="qualification" />
       ) : null}
-      {view.status === "running" && qualification && qualificationDone && !finalStage ? (
-        <CompetitionControl competitionId={competitionId} action="final" />
+      {view.status === "running" && phaseTerminee && !finale ? (
+        <div className="space-y-4">
+          <NouvellePhase
+            competitionId={competitionId}
+            equipesEnLice={survivantes}
+            taillePouleParDefaut={view.rules.groupSize}
+            qualifieesParDefaut={view.rules.advancePerGroup}
+          />
+          <CompetitionControl competitionId={competitionId} action="final" />
+        </div>
       ) : null}
-      {view.status === "running" && finalStage && finalDone ? (
+      {view.status === "running" && finale && phaseTerminee ? (
         <CompetitionControl competitionId={competitionId} action="finish" />
       ) : null}
-      {view.status === "running" && !qualificationDone && qualification ? (
+      {view.status === "running" && phase && !phaseTerminee ? (
         <p className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2.5 sm:px-4 sm:py-3 text-sm text-slate-400">
           Pilotez chaque partie (clôture des tours) via les liens « Piloter » ci-dessous.
           Règles du mode compétition : décisions verrouillées après validation, indices

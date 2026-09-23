@@ -12,6 +12,7 @@ import {
   users,
 } from "@/db/schema";
 import { composeGroups, podium, qualifiers, type GroupStanding } from "@/competition";
+import { apercuDePhase, LIMITES_CONCOURS } from "@/config/concours";
 import { createGameCore } from "@/services/game-creation.service";
 import { entitlementsForOrg } from "@/services/entitlements.service";
 import { DEFAULT_QUIZ_MODE } from "@/config/difficulty";
@@ -314,38 +315,167 @@ async function stageStandings(stageId: string): Promise<GroupStanding[][]> {
   });
 }
 
-/** Lance la finale : qualifie les meilleurs de chaque groupe (doc 04 §3). */
+/**
+ * LA PHASE QUI SE TERMINE, ET CE QU'ELLE QUALIFIE.
+ *
+ * Un concours n'a plus deux phases mais autant que l'organisateur en lance :
+ * des poules, puis d'autres poules s'il le veut, puis la finale. Tout ce qui
+ * enchaîne passe donc par ici — la phase en cours, quel que soit son type, et
+ * les équipes qui en sortent.
+ *
+ * Le nombre de qualifiées se lit sur le FORMAT DE LA PHASE et non sur les
+ * règles du concours : chaque phase porte le sien depuis sa création, et c'est
+ * ce qui permet de qualifier deux équipes par poule en demi-finale après n'en
+ * avoir qualifié qu'une en préliminaire.
+ */
+async function phaseQuiSeTermine(competitionId: string): Promise<{
+  stage: typeof competitionStages.$inferSelect;
+  standings: GroupStanding[][];
+  qualifieesParPoule: number;
+}> {
+  const stages = await db
+    .select()
+    .from(competitionStages)
+    .where(eq(competitionStages.competitionId, competitionId));
+  const stage = stages.find((s) => s.status === "running");
+  if (!stage) throw new Error("Aucune phase en cours");
+
+  const stageGames = await db.select().from(games).where(eq(games.competitionStageId, stage.id));
+  if (stageGames.length === 0 || stageGames.some((g) => g.status !== "finished"))
+    throw new Error("Toutes les parties de cette phase doivent être terminées");
+
+  const format = (stage.format ?? {}) as { advanceCount?: number };
+  return {
+    stage,
+    standings: await stageStandings(stage.id),
+    qualifieesParPoule: Math.max(1, format.advanceCount ?? 1),
+  };
+}
+
+/**
+ * Clôt la phase qui s'achève : elle passe en terminée, les qualifiées restent
+ * actives, les autres sont éliminées. Un même geste après chaque phase, pour
+ * que le statut d'une équipe dise toujours si elle joue encore.
+ */
+async function cloreLaPhase(
+  competitionId: string,
+  stageId: string,
+  survivantes: string[],
+): Promise<void> {
+  await db
+    .update(competitionStages)
+    .set({ status: "finished" })
+    .where(eq(competitionStages.id, stageId));
+  const entries = await db
+    .select()
+    .from(competitionEntries)
+    .where(eq(competitionEntries.competitionId, competitionId));
+  for (const entry of entries) {
+    await db
+      .update(competitionEntries)
+      .set({ status: survivantes.includes(entry.teamLabel) ? "active" : "eliminated" })
+      .where(
+        and(
+          eq(competitionEntries.competitionId, competitionId),
+          eq(competitionEntries.teamLabel, entry.teamLabel),
+        ),
+      );
+  }
+}
+
+/**
+ * UNE PHASE INTERMÉDIAIRE DE POULES (demi-finales, tour 2…).
+ *
+ * Les qualifiées de la phase en cours sont retirées au sort dans de nouvelles
+ * poules. La graine du tirage est celle du concours DÉCALÉE PAR L'INDEX de la
+ * phase : sans ce décalage, deux phases successives mélangeraient la même
+ * liste dans le même ordre, et les équipes se retrouveraient ensemble deux
+ * fois de suite sans que rien ne l'explique.
+ *
+ * Le nom saisi par l'organisateur vit dans le format de la phase, en jsonb :
+ * aucune colonne à ajouter, et l'affichage sait dire « Demi-finales » plutôt
+ * que « Phase 2 ».
+ */
+export async function startIntermediateStage(args: {
+  competitionId: string;
+  organizerId: string;
+  groupSize: number;
+  advancePerGroup: number;
+  nom?: string;
+}): Promise<{ groups: number; survivors: string[] }> {
+  const competition = await loadOwnedCompetition(args.competitionId, args.organizerId);
+  const rules = rulesOf(competition);
+  const { stage, standings, qualifieesParPoule } = await phaseQuiSeTermine(competition.id);
+  if (stage.kind === "final") throw new Error("La finale ne se prolonge pas : clôturez le concours");
+
+  const survivantes = qualifiers(standings, qualifieesParPoule);
+  const taille = Math.min(
+    Math.max(args.groupSize, LIMITES_CONCOURS.tailleGroupe.min),
+    LIMITES_CONCOURS.tailleGroupe.max,
+  );
+  const qualifiees = Math.min(
+    Math.max(args.advancePerGroup, LIMITES_CONCOURS.qualifiesParGroupe.min),
+    LIMITES_CONCOURS.qualifiesParGroupe.max,
+  );
+  // Le même aperçu que celui montré à l'organisateur avant de confirmer : ce
+  // qui est refusé à l'écran doit l'être ici, et pour la même raison.
+  const apercu = apercuDePhase(survivantes.length, taille, qualifiees);
+  if (!apercu.possible) throw new Error(apercu.empechement!);
+
+  const index = stage.index + 1;
+  const nouvelle = await db
+    .insert(competitionStages)
+    .values({
+      competitionId: competition.id,
+      index,
+      kind: "semifinal",
+      format: { teamsPerGame: taille, advanceCount: qualifiees, nom: args.nom?.trim() || null },
+      status: "running",
+    })
+    .returning({ id: competitionStages.id });
+
+  const entries = await db
+    .select()
+    .from(competitionEntries)
+    .where(eq(competitionEntries.competitionId, competition.id));
+  const membersByLabel = new Map(entries.map((e) => [e.teamLabel, e.memberUserIds]));
+  const poules = composeGroups(survivantes, taille, rules.seed + index);
+  for (const poule of poules) {
+    await createStageGame({
+      competition,
+      stageId: nouvelle[0]!.id,
+      rules,
+      entryLabels: poule,
+      membersByLabel,
+    });
+  }
+
+  await cloreLaPhase(competition.id, stage.id, survivantes);
+  return { groups: poules.length, survivors: survivantes };
+}
+
+/** Lance la finale : qualifie les meilleures de la phase en cours (doc 04 §3). */
 export async function startFinal(args: {
   competitionId: string;
   organizerId: string;
 }): Promise<{ finalists: string[] }> {
   const competition = await loadOwnedCompetition(args.competitionId, args.organizerId);
   const rules = rulesOf(competition);
-  const stages = await db
-    .select()
-    .from(competitionStages)
-    .where(eq(competitionStages.competitionId, competition.id));
-  const qualification = stages.find((s) => s.kind === "qualification");
-  if (!qualification || qualification.status !== "running")
-    throw new Error("Aucune phase de qualification en cours");
+  const { stage, standings, qualifieesParPoule } = await phaseQuiSeTermine(competition.id);
+  if (stage.kind === "final") throw new Error("La finale est déjà lancée");
 
-  const stageGames = await db
-    .select()
-    .from(games)
-    .where(eq(games.competitionStageId, qualification.id));
-  if (stageGames.some((g) => g.status !== "finished"))
-    throw new Error("Toutes les parties de qualification doivent être terminées");
-
-  const standings = await stageStandings(qualification.id);
-  const targetCount = Math.min(8, Math.max(2, standings.length * rules.advancePerGroup));
-  const finalists = qualifiers(standings, rules.advancePerGroup, targetCount);
+  const targetCount = Math.min(
+    LIMITES_CONCOURS.finalistesMax,
+    Math.max(2, standings.length * qualifieesParPoule),
+  );
+  const finalists = qualifiers(standings, qualifieesParPoule, targetCount);
   if (finalists.length < 2) throw new Error("Pas assez de qualifiés pour une finale");
 
   const finalStage = await db
     .insert(competitionStages)
     .values({
       competitionId: competition.id,
-      index: 2,
+      index: stage.index + 1,
       kind: "final",
       format: { teamsPerGame: finalists.length, advanceCount: 1 },
       status: "running",
@@ -365,21 +495,7 @@ export async function startFinal(args: {
     membersByLabel,
   });
 
-  await db
-    .update(competitionStages)
-    .set({ status: "finished" })
-    .where(eq(competitionStages.id, qualification.id));
-  for (const entry of entries) {
-    await db
-      .update(competitionEntries)
-      .set({ status: finalists.includes(entry.teamLabel) ? "active" : "eliminated" })
-      .where(
-        and(
-          eq(competitionEntries.competitionId, competition.id),
-          eq(competitionEntries.teamLabel, entry.teamLabel),
-        ),
-      );
-  }
+  await cloreLaPhase(competition.id, stage.id, finalists);
   return { finalists };
 }
 
@@ -405,6 +521,9 @@ export async function finishCompetition(args: {
   const standings = await stageStandings(finalStage.id);
   const ranking = podium(standings[0] ?? []);
   const winner = ranking[0];
+  // La finale se clôt comme les autres phases : plus personne n'est « en
+  // lice » dans un concours terminé. Le vainqueur reçoit ensuite son statut.
+  await cloreLaPhase(competition.id, finalStage.id, []);
   if (winner) {
     await db
       .update(competitionEntries)
@@ -416,10 +535,6 @@ export async function finishCompetition(args: {
         ),
       );
   }
-  await db
-    .update(competitionStages)
-    .set({ status: "finished" })
-    .where(eq(competitionStages.id, finalStage.id));
   await db
     .update(competitions)
     .set({ status: "finished" })
@@ -569,6 +684,12 @@ export interface CompetitionView {
     index: number;
     kind: string;
     status: string;
+    /**
+     * Le format figé à la création de la phase : taille des poules, équipes
+     * qualifiées, et le nom que l'organisateur lui a donné. C'est lui, et non
+     * les règles du concours, qui décrit une phase intermédiaire.
+     */
+    format: { teamsPerGame?: number; advanceCount?: number; nom?: string | null };
     /** Fenêtre de l'étape (planning), en ISO ou null. */
     startsAt: string | null;
     endsAt: string | null;
@@ -622,6 +743,7 @@ export async function getCompetitionView(competitionId: string): Promise<Competi
       index: stage.index,
       kind: stage.kind,
       status: stage.status,
+      format: (stage.format ?? {}) as { teamsPerGame?: number; advanceCount?: number; nom?: string | null },
       startsAt: stage.startsAt ? stage.startsAt.toISOString() : null,
       endsAt: stage.endsAt ? stage.endsAt.toISOString() : null,
       games: stageGames.map((g, i) => ({

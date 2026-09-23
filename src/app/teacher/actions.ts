@@ -27,6 +27,7 @@ import {
   setPublicPage,
   setStageWindow,
   startFinal,
+  startIntermediateStage,
   startQualification,
 } from "@/services/competition.service";
 import { setMissedPolicy } from "@/services/debrief.service";
@@ -438,6 +439,34 @@ export async function startFinalAction(
   _formData: FormData,
 ): Promise<CompetitionActionState> {
   return runCompetitionAction(competitionId, startFinal);
+}
+
+/**
+ * Une phase intermédiaire de poules (demi-finales, tour 2…). Contrairement aux
+ * autres gestes de concours, celui-ci porte des réglages : la taille des
+ * poules, le nombre d'équipes qualifiées, et le nom de la phase. Ils sont lus
+ * du formulaire et bornés par le service.
+ */
+export async function startIntermediateStageAction(
+  competitionId: string,
+  _prev: CompetitionActionState,
+  formData: FormData,
+): Promise<CompetitionActionState> {
+  const session = await getSession();
+  if (!session) return { error: "Session expirée : reconnectez-vous." };
+  try {
+    await startIntermediateStage({
+      competitionId,
+      organizerId: session.userId,
+      groupSize: Number(formData.get("groupSize") ?? 3),
+      advancePerGroup: Number(formData.get("advancePerGroup") ?? 1),
+      nom: String(formData.get("nom") ?? ""),
+    });
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Erreur." };
+  }
+  revalidatePath(`/teacher/competitions/${competitionId}`);
+  return { error: null };
 }
 
 export async function finishCompetitionAction(

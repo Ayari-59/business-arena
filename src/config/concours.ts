@@ -15,14 +15,35 @@ export const PERIODICITE_LABELS: Record<Periodicity, string> = {
   year: "Une année par tour",
 };
 
-/** Les quatre étapes d'un concours, dans l'ordre. */
-export const ETAPES_CONCOURS = ["Inscriptions", "Qualifications", "Finale", "Podium"] as const;
+/**
+ * LE DÉROULÉ N'A PLUS QUATRE ÉTAPES.
+ *
+ * Un concours allait de deux phases : des poules, puis la finale. Un tournoi
+ * de campus en demande trois — préliminaires, demi-finales, finale —, et la
+ * table des phases savait déjà les porter (elle a un index et un type
+ * `semifinal`) ; c'est le déroulé affiché qui était figé à quatre entrées.
+ *
+ * Il se construit donc maintenant des phases RÉELLEMENT créées : les
+ * inscriptions, une entrée par phase jouée ou en cours, puis le podium. Une
+ * phase intermédiaire porte le nom que l'organisateur lui a donné en la
+ * lançant, parce que lui seul sait, au moment où il la crée, s'il l'appelle
+ * « demi-finales » ou « tour 2 ».
+ */
+export const PREMIERE_ETAPE = "Inscriptions";
+export const DERNIERE_ETAPE = "Podium";
 
-export type EtapeConcours = (typeof ETAPES_CONCOURS)[number];
+/** Le nom d'affichage d'une phase, selon son type et ce que l'organisateur a saisi. */
+export function nomDeLaPhase(stage: { kind: string; format?: unknown }, rang: number): string {
+  const saisi = (stage.format as { nom?: unknown } | null | undefined)?.nom;
+  if (typeof saisi === "string" && saisi.trim()) return saisi.trim();
+  if (stage.kind === "qualification") return "Qualifications";
+  if (stage.kind === "final") return "Finale";
+  return `Phase ${rang}`;
+}
 
 export interface DerouleConcours {
-  etapes: { nom: EtapeConcours; detail: string; etat: "passee" | "courante" | "a_venir" }[];
-  /** Indice (0–3) de l'étape en cours. */
+  etapes: { nom: string; detail: string; etat: "passee" | "courante" | "a_venir" }[];
+  /** Indice de l'étape en cours dans `etapes`. */
   courante: number;
 }
 
@@ -31,7 +52,7 @@ export interface ConcoursPourDeroule {
   status: string;
   joinCode: string;
   entries: unknown[];
-  stages: { kind: string; games: unknown[] }[];
+  stages: { kind: string; status?: string; format?: unknown; games: unknown[] }[];
   rules: { groupSize: number; advancePerGroup: number };
 }
 
@@ -50,33 +71,89 @@ function pluriel(n: number, mot: string, pluriels?: string): string {
  * « Poule » ne désigne que des équipes, et c'est le mot du tournoi.
  */
 
-/** Étape courante : inscriptions → qualifications → finale → podium. */
+/**
+ * LES ÉTAPES AFFICHÉES : le passé réel, et l'avenir connu.
+ *
+ * Tant qu'aucune phase n'est tirée, on montre le plan par défaut — des
+ * qualifications, puis la finale —, parce qu'un organisateur qui ouvre les
+ * inscriptions doit voir où il va. Dès qu'une phase existe, ce sont les vraies
+ * phases qui s'affichent, avec le nom qu'il leur a donné. La FINALE est
+ * toujours annoncée tant qu'elle n'a pas été lancée : un concours s'y termine
+ * quel que soit le nombre de tours qu'on met à l'atteindre.
+ */
+function phasesAffichees(c: Pick<ConcoursPourDeroule, "stages">): {
+  phases: ConcoursPourDeroule["stages"];
+  finaleAVenir: boolean;
+} {
+  return {
+    phases: c.stages,
+    finaleAVenir: !c.stages.some((s) => s.kind === "final"),
+  };
+}
+
+/**
+ * Étape courante : 0 = inscriptions, puis une par phase créée, puis le podium.
+ * Une partie qui tourne est à sa dernière phase créée ; un concours clos est
+ * au podium, quel que soit le nombre de phases qu'il a fallu pour y arriver.
+ */
 export function etapeCourante(c: Pick<ConcoursPourDeroule, "status" | "stages">): number {
-  if (c.status === "finished") return 3;
-  if (c.status !== "running") return 0;
-  return c.stages.some((s) => s.kind === "final") ? 2 : 1;
+  if (c.status !== "finished" && c.status !== "running") return 0;
+  const { phases, finaleAVenir } = phasesAffichees(c);
+  const jouees = Math.max(1, phases.length);
+  if (c.status === "running") return jouees;
+  // Clos : le podium est la dernière entrée de la liste.
+  return 1 + jouees + (finaleAVenir ? 1 : 0);
+}
+
+/** Ce qu'une phase déjà créée a fait : ses poules, ou sa partie unique. */
+function detailDeLaPhase(
+  stage: ConcoursPourDeroule["stages"][number],
+  regles: ConcoursPourDeroule["rules"],
+): string {
+  if (stage.kind === "final") {
+    return "Une partie entre les qualifiées, mêmes règles de compétition.";
+  }
+  const format = (stage.format as { teamsPerGame?: number; advanceCount?: number } | null) ?? {};
+  const taille = format.teamsPerGame ?? regles.groupSize;
+  const qualifiees = format.advanceCount ?? regles.advancePerGroup;
+  return `${pluriel(stage.games.length, "poule")} de ${taille} équipes tirées au sort, ${pluriel(
+    qualifiees,
+    "équipe qualifiée",
+    "équipes qualifiées",
+  )} par poule au score IPG.`;
 }
 
 export function derouleConcours(c: ConcoursPourDeroule): DerouleConcours {
   const courante = etapeCourante(c);
-  const qualif = c.stages.find((s) => s.kind === "qualification");
-  const poules = qualif ? pluriel(qualif.games.length, "poule") : "Des poules";
   const n = c.entries.length;
-  const details: Record<EtapeConcours, string> = {
-    Inscriptions: `${n} équipe${n > 1 ? "s" : ""} inscrite${n > 1 ? "s" : ""} avec le code ${c.joinCode}.`,
-    Qualifications: `${poules} de ${c.rules.groupSize} équipes tirées au sort, ${pluriel(
-      c.rules.advancePerGroup,
-      "équipe qualifiée",
-      "équipes qualifiées",
-    )} par poule au score IPG.`,
-    Finale: "Une partie entre les qualifiés, mêmes règles de compétition.",
-    Podium: "Classement IPG de la finale : or, argent, bronze.",
-  };
+  const { phases, finaleAVenir } = phasesAffichees(c);
+  const qualificationsPrevues = `Des poules de ${c.rules.groupSize} équipes tirées au sort, ${pluriel(
+    c.rules.advancePerGroup,
+    "équipe qualifiée",
+    "équipes qualifiées",
+  )} par poule au score IPG.`;
+
+  const jouees =
+    phases.length > 0
+      ? phases.map((s, i) => ({ nom: nomDeLaPhase(s, i + 1), detail: detailDeLaPhase(s, c.rules) }))
+      : [{ nom: "Qualifications", detail: qualificationsPrevues }];
+
+  const etapes = [
+    {
+      nom: PREMIERE_ETAPE,
+      detail: `${n} équipe${n > 1 ? "s" : ""} inscrite${n > 1 ? "s" : ""} avec le code ${c.joinCode}.`,
+    },
+    ...jouees,
+    ...(finaleAVenir
+      ? [{ nom: "Finale", detail: "Une partie entre les qualifiées, mêmes règles de compétition." }]
+      : []),
+    { nom: DERNIERE_ETAPE, detail: "Classement IPG de la finale : or, argent, bronze." },
+  ];
+
   return {
     courante,
-    etapes: ETAPES_CONCOURS.map((nom, i) => ({
-      nom,
-      detail: details[nom],
+    etapes: etapes.map((e, i) => ({
+      ...e,
       etat: i < courante ? "passee" : i === courante ? "courante" : "a_venir",
     })),
   };
@@ -175,4 +252,74 @@ export function libelleFormatTournoi(config: ConfigurationTournoi): string {
   const taille = tailles.length === 1 ? `${tailles[0]}` : `${tailles[0]} à ${tailles[tailles.length - 1]}`;
   const plafond = f.plafonnee ? ", la finale étant plafonnée" : "";
   return `${pluriel(f.groupes, "poule")} de ${taille} équipes, ${pluriel(f.finalistes, "équipe finaliste", "équipes finalistes")}${plafond}.`;
+}
+
+/**
+ * UNE PHASE INTERMÉDIAIRE, AVANT DE LA LANCER.
+ *
+ * L'organisateur choisit la taille des poules et le nombre d'équipes qui en
+ * sortent ; il doit voir ce que cela donne AVANT de confirmer, parce que le
+ * tirage est irréversible et que le nombre de poules n'est pas celui qu'on
+ * croit (c'est le quotient entier, et le reste se redistribue).
+ *
+ * Deux empêchements, et chacun dit quoi faire à la place :
+ *  · moins de deux poules possibles — il ne reste plus assez d'équipes, c'est
+ *    une finale qu'il faut lancer ;
+ *  · autant de qualifiées que d'équipes dans la plus petite poule — la phase
+ *    ne trancherait rien, tout le monde passerait.
+ *
+ * Il n'y en a pas de troisième : deux poules qui qualifient chacune au moins
+ * une équipe laissent toujours de quoi faire une finale.
+ */
+export interface ApercuDePhase {
+  poules: number;
+  /** Équipes par poule après répartition, de la plus petite à la plus grande. */
+  equipesParPoule: number[];
+  /** Équipes encore en lice après cette phase. */
+  survivantes: number;
+  possible: boolean;
+  /** Ce qui empêche cette phase, en une phrase. Null quand elle est possible. */
+  empechement: string | null;
+}
+
+export function apercuDePhase(
+  equipes: number,
+  taillePoule: number,
+  qualifieesParPoule: number,
+): ApercuDePhase {
+  const n = Math.max(0, Math.trunc(equipes));
+  const taille = Math.max(LIMITES_CONCOURS.tailleGroupe.min, Math.trunc(taillePoule));
+  const qualifiees = Math.max(1, Math.trunc(qualifieesParPoule));
+  const poules = n === 0 ? 0 : Math.max(1, Math.floor(n / taille));
+  const base = poules === 0 ? 0 : Math.floor(n / poules);
+  const reste = poules === 0 ? 0 : n % poules;
+  // Même répartition à tour de rôle que le tirage : les premières poules
+  // reçoivent une équipe de plus quand la division ne tombe pas juste.
+  const equipesParPoule = Array.from({ length: poules }, (_, i) => base + (i < reste ? 1 : 0)).sort(
+    (a, b) => a - b,
+  );
+  const plusPetite = equipesParPoule[0] ?? 0;
+  const survivantes = poules * Math.min(qualifiees, plusPetite || qualifiees);
+
+  let empechement: string | null = null;
+  if (poules < 2) {
+    empechement = `Il reste ${n} équipes : trop peu pour former deux poules de ${taille}. Lancez la finale.`;
+  } else if (qualifiees >= plusPetite) {
+    empechement = `Une poule n'aura que ${plusPetite} équipes : en qualifier ${qualifiees} ne trancherait rien.`;
+  }
+
+  return { poules, equipesParPoule, survivantes, possible: empechement === null, empechement };
+}
+
+/** « 2 poules de 4 équipes, 4 équipes en lice après cette phase. » */
+export function libelleApercuDePhase(a: ApercuDePhase): string {
+  if (!a.possible) return a.empechement!;
+  const tailles = [...new Set(a.equipesParPoule)];
+  const taille =
+    tailles.length === 1 ? `${tailles[0]}` : `${tailles[0]} à ${tailles[tailles.length - 1]}`;
+  return `${pluriel(a.poules, "poule")} de ${taille} équipes, ${pluriel(
+    a.survivantes,
+    "équipe encore en lice",
+    "équipes encore en lice",
+  )} après cette phase.`;
 }

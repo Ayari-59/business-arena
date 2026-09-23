@@ -53,6 +53,31 @@ Inscriptions ──< competition_entries (équipe, organisation, statut)
 - Ce design garantit qu'organiser un championnat national = de l'orchestration de parties
   existantes, **zéro modification du moteur économique**.
 
+### 3.1 Phases intermédiaires (implémenté)
+
+L'arbre ci-dessus n'était parcouru qu'en deux temps : des poules de qualification, puis la
+finale. Un tournoi de campus en demande davantage — préliminaires, demi-finales, finale —,
+et rien dans la table ne l'interdisait : elle porte déjà un `index` et un type `semifinal`.
+
+- `startIntermediateStage({ groupSize, advancePerGroup, nom })` clôt la phase en cours,
+  qualifie ses meilleures équipes et les retire au sort dans de nouvelles **poules**. Le
+  geste est répétable : on empile autant de phases que l'organisateur en lance, jusqu'à ce
+  qu'il appelle `startFinal`.
+- Le **nom** saisi (« Demi-finales », « Tour 2 ») vit dans le `format` jsonb de la phase :
+  aucune colonne à ajouter, et l'affichage sait nommer une phase autrement que « Phase 2 ».
+- La graine du tirage est celle du concours **décalée par l'index** de la phase. Sans ce
+  décalage, deux phases successives mélangeraient la même liste dans le même ordre et les
+  mêmes équipes se retrouveraient ensemble sans que rien ne l'explique.
+- Avant de confirmer, l'organisateur voit l'**aperçu** de la phase (`apercuDePhase`) :
+  nombre de poules, taille réelle après redistribution du reste, équipes encore en lice.
+  Deux empêchements le bloquent, et chacun dit quoi faire à la place — moins de deux poules
+  possibles (c'est une finale qu'il faut lancer), et autant de qualifiées que d'équipes
+  dans la plus petite poule (la phase ne trancherait rien).
+- Chaque phase se clôt du même geste, finale comprise : les qualifiées restent `active`,
+  les autres passent `eliminated`. Dans un concours terminé, plus personne n'est en lice.
+- Le déroulé affiché suit les phases réellement créées, et non plus quatre étapes figées :
+  inscriptions, une entrée par phase, la finale tant qu'elle n'est pas lancée, le podium.
+
 ## 4. Rôles et cycle de vie
 
 - `organizer` (rôle sur le concours) : crée les phases, fixe le calendrier, publie les
