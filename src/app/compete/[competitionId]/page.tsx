@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getGuestUserId } from "@/lib/guest";
-import { getPlayerCompetition } from "@/services/competition.service";
+import { codeDeRepriseDe, getPlayerCompetition } from "@/services/competition.service";
 import { CompetitionBoard } from "@/components/competition-board";
+import { CarteDuCodeDeReprise } from "@/components/carte-du-code-de-reprise";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,7 @@ export default async function PlayerCompetitionPage({
   const data = await getPlayerCompetition(competitionId, userId);
   if (!data) notFound();
   const { view, myGameId, myTeamLabel } = data;
+  const codeDeReprise = await codeDeRepriseDe(competitionId, userId);
 
   return (
     <main id="main" className="mx-auto max-w-4xl space-y-6 p-6">
@@ -43,6 +45,7 @@ export default async function PlayerCompetitionPage({
           </p>
         ) : null}
       </header>
+      {codeDeReprise ? <CarteDuCodeDeReprise code={codeDeReprise} /> : null}
       <CompetitionBoard view={view} gameLinkBase={null} />
     </main>
   );

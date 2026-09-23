@@ -1,18 +1,28 @@
 import { randomInt } from "node:crypto";
-import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   competitionEntries,
+  competitionMembers,
   competitionStages,
   competitions,
   gameRankings,
   games,
+  loginAttempts,
   players,
   teams,
   users,
 } from "@/db/schema";
 import { composeGroups, podium, qualifiers, type GroupStanding } from "@/competition";
 import { apercuDePhase, LIMITES_CONCOURS } from "@/config/concours";
+import {
+  ALPHABET_REPRISE,
+  codeDeReprisePlausible,
+  FENETRE_REPRISE_MS,
+  LONGUEUR_CODE_REPRISE,
+  MAX_ECHECS_REPRISE,
+  normaliserCodeDeReprise,
+} from "@/config/reprise";
 import { createGameCore } from "@/services/game-creation.service";
 import { entitlementsForOrg } from "@/services/entitlements.service";
 import { DEFAULT_QUIZ_MODE } from "@/config/difficulty";
@@ -97,7 +107,10 @@ export async function joinCompetition(args: {
   userId: string;
   teamLabel: string;
   pseudo?: string;
-}): Promise<{ competitionId: string; alreadyMember?: string } | { error: string }> {
+}): Promise<
+  | { competitionId: string; alreadyMember?: string; codeDeReprise?: string }
+  | { error: string }
+> {
   const competition = (
     await db.select().from(competitions).where(eq(competitions.joinCode, args.code.trim().toUpperCase()))
   )[0];
@@ -131,8 +144,13 @@ export async function joinCompetition(args: {
     )
     .returning({ teamLabel: competitionEntries.teamLabel });
 
+  // LE NOM CANONIQUE DE L'ÉQUIPE, ET NON CELUI QUI VIENT D'ÊTRE TAPÉ.
+  // « les requins » rejoint bien « Les Requins », mais c'est le nom de
+  // l'équipe qu'il faut retenir : sinon le membre garde la casse de sa propre
+  // saisie, et l'organisateur lit deux équipes là où il n'y en a qu'une.
+  let libelleCanonique = label;
   if (updated.length > 0) {
-    // Successfully joined existing team
+    libelleCanonique = updated[0]!.teamLabel;
   } else {
     // Determine why UPDATE returned 0 rows
     const sameLabel = entries.find((e) => e.teamLabel.toLowerCase() === label.toLowerCase());
@@ -171,6 +189,7 @@ export async function joinCompetition(args: {
           .returning({ teamLabel: competitionEntries.teamLabel });
         if (retried.length === 0)
           return { error: "Cette équipe est complète (6 joueurs max)." };
+        libelleCanonique = retried[0]!.teamLabel;
       } else {
         throw err;
       }
@@ -179,7 +198,174 @@ export async function joinCompetition(args: {
   if (args.pseudo?.trim()) {
     await db.update(users).set({ displayName: args.pseudo.trim() }).where(eq(users.id, args.userId));
   }
-  return { competitionId: competition.id };
+  const codeDeReprise = await attribuerCodeDeReprise(
+    competition.id,
+    args.userId,
+    libelleCanonique,
+  );
+  return { competitionId: competition.id, codeDeReprise };
+}
+
+/**
+ * LE CODE PERSONNEL D'UN MEMBRE, POSÉ UNE FOIS POUR TOUTES.
+ *
+ * Il est tiré au sort dans l'alphabet des codes lisibles. La collision est
+ * improbable (mille milliards de combinaisons) mais l'index l'interdit, donc
+ * on retente plutôt que de laisser l'inscription échouer sur un coup de dé.
+ *
+ * Un membre qui a déjà son code le garde : ce serait le pire moment pour le
+ * changer, puisqu'il l'a justement noté.
+ */
+async function attribuerCodeDeReprise(
+  competitionId: string,
+  userId: string,
+  teamLabel: string,
+): Promise<string> {
+  const existant = await db
+    .select()
+    .from(competitionMembers)
+    .where(
+      and(
+        eq(competitionMembers.competitionId, competitionId),
+        eq(competitionMembers.userId, userId),
+      ),
+    );
+  if (existant[0]) return existant[0].recoveryCode;
+
+  for (let essai = 0; essai < 8; essai++) {
+    const code = Array.from(
+      { length: LONGUEUR_CODE_REPRISE },
+      () => ALPHABET_REPRISE[randomInt(ALPHABET_REPRISE.length)],
+    ).join("");
+    const pose = await db
+      .insert(competitionMembers)
+      .values({ competitionId, userId, teamLabel, recoveryCode: code })
+      .onConflictDoNothing()
+      .returning({ recoveryCode: competitionMembers.recoveryCode });
+    if (pose[0]) return pose[0].recoveryCode;
+    // Conflit : soit le code était pris, soit le membre existe déjà.
+    const relu = await db
+      .select()
+      .from(competitionMembers)
+      .where(
+        and(
+          eq(competitionMembers.competitionId, competitionId),
+          eq(competitionMembers.userId, userId),
+        ),
+      );
+    if (relu[0]) return relu[0].recoveryCode;
+  }
+  throw new Error("Impossible d'attribuer un code de reprise");
+}
+
+/** Le code personnel d'un membre, pour le lui réafficher ou le relire. */
+export async function codeDeRepriseDe(
+  competitionId: string,
+  userId: string,
+): Promise<string | null> {
+  const rows = await db
+    .select()
+    .from(competitionMembers)
+    .where(
+      and(
+        eq(competitionMembers.competitionId, competitionId),
+        eq(competitionMembers.userId, userId),
+      ),
+    );
+  return rows[0]?.recoveryCode ?? null;
+}
+
+/** Les codes de tout un concours : la liste que l'organisateur relit à un élève. */
+export async function codesDeRepriseDuConcours(
+  competitionId: string,
+  organizerId: string,
+): Promise<{ teamLabel: string; pseudo: string; code: string }[]> {
+  await loadOwnedCompetition(competitionId, organizerId);
+  const rows = await db
+    .select({
+      teamLabel: competitionMembers.teamLabel,
+      code: competitionMembers.recoveryCode,
+      pseudo: users.displayName,
+    })
+    .from(competitionMembers)
+    .innerJoin(users, eq(users.id, competitionMembers.userId))
+    .where(eq(competitionMembers.competitionId, competitionId));
+  return rows
+    .map((r) => ({ teamLabel: r.teamLabel, pseudo: r.pseudo ?? "", code: r.code }))
+    .sort((a, b) => a.teamLabel.localeCompare(b.teamLabel) || a.pseudo.localeCompare(b.pseudo));
+}
+
+/**
+ * REPRENDRE SON IDENTITÉ AVEC SON CODE.
+ *
+ * Rend l'identité du membre à qui ce code appartient. Le message d'échec est
+ * le même pour un code mal formé et pour un code inconnu : dire « ce code
+ * n'existe pas » plutôt que « ce code est faux » apprendrait à un curieux
+ * lesquels existent.
+ *
+ * Les tentatives sont comptées par adresse dans la table des échecs de
+ * connexion, en base et non en mémoire, parce que l'application est servie
+ * depuis plusieurs instances qui ne partagent rien.
+ */
+export const MARQUEUR_REPRISE = "reprise-de-concours";
+
+export async function reprendreSonIdentite(args: {
+  code: string;
+  ip?: string | null;
+  now?: number;
+}): Promise<
+  | { userId: string; competitionId: string; teamLabel: string }
+  | { error: string }
+> {
+  const CODE_REFUSE = "Code de reprise inconnu. Vérifiez-le auprès de votre enseignant.";
+  const ip = args.ip?.trim() || null;
+  const now = args.now ?? Date.now();
+  const depuis = new Date(now - FENETRE_REPRISE_MS);
+
+  const echecs = ip
+    ? await db
+        .select()
+        .from(loginAttempts)
+        .where(
+          and(
+            eq(loginAttempts.email, MARQUEUR_REPRISE),
+            eq(loginAttempts.ip, ip),
+            gt(loginAttempts.createdAt, depuis),
+          ),
+        )
+    : [];
+  if (echecs.length >= MAX_ECHECS_REPRISE) {
+    const plusAncien = Math.min(...echecs.map((e) => e.createdAt.getTime()));
+    const minutes = Math.max(1, Math.ceil((plusAncien + FENETRE_REPRISE_MS - now) / 60_000));
+    return { error: `Trop de tentatives, réessayez dans ${minutes} minute${minutes > 1 ? "s" : ""}.` };
+  }
+
+  const echec = async () => {
+    await db
+      .insert(loginAttempts)
+      .values({ email: MARQUEUR_REPRISE, ip, createdAt: new Date(now) });
+    return { error: CODE_REFUSE };
+  };
+
+  // Un code mal formé ne peut pas être le bon : même message, même compteur.
+  if (!codeDeReprisePlausible(args.code)) return echec();
+  const rows = await db
+    .select()
+    .from(competitionMembers)
+    .where(eq(competitionMembers.recoveryCode, normaliserCodeDeReprise(args.code)));
+  const membre = rows[0];
+  if (!membre) return echec();
+
+  // Succès : le compteur de cette adresse repart de zéro.
+  if (ip)
+    await db
+      .delete(loginAttempts)
+      .where(and(eq(loginAttempts.email, MARQUEUR_REPRISE), eq(loginAttempts.ip, ip)));
+  return {
+    userId: membre.userId,
+    competitionId: membre.competitionId,
+    teamLabel: membre.teamLabel,
+  };
 }
 
 // ---------------------------------------------------------------------------

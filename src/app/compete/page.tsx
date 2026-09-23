@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CompetitionJoinForm } from "@/components/competition-join-form";
+import { CompetitionRecoveryForm } from "@/components/competition-recovery-form";
 import { EXPLICATIONS_CONCOURS } from "@/config/concours";
 
 /** Page d'entrée par code : un titre pour l'onglet, rien pour les moteurs. */
@@ -48,6 +49,17 @@ export default async function CompetePage({
         </p>
       </section>
       <CompetitionJoinForm defaultCode={defaultCode} />
+      <section
+        aria-labelledby="reprise-titre"
+        className="w-full max-w-sm rounded-2xl border border-white/10 bg-slate-900/60 p-5"
+      >
+        <h2 id="reprise-titre" className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+          Déjà inscrit, sur un autre appareil ?
+        </h2>
+        <div className="mt-3">
+          <CompetitionRecoveryForm />
+        </div>
+      </section>
     </main>
   );
 }

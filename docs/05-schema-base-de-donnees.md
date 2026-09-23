@@ -26,7 +26,7 @@ RÉSULTATS       round_results, kpis, event_occurrences
 PÉDAGOGIE       situation_instances, model_choices, hint_usages,
                 learning_progress, player_skills
 SCORING         scores, game_rankings
-COMPÉTITION     competitions, competition_stages, competition_entries
+COMPÉTITION     competitions, competition_stages, competition_entries, competition_members
 ```
 
 Correspondance avec la liste imposée (§30) : `events` → `event_definitions` (catalogue) +
@@ -117,6 +117,7 @@ résolution de chaque tour (transaction unique).
 | `competitions` | id, organization_id FK null (null = nationale), name, status enum(`draft`,`registration`,`running`,`finished`), scenario_id FK, rules jsonb, organizer_id FK |
 | `competition_stages` | id, competition_id FK, index int, kind enum(`qualification`,`groups`,`knockout`,`semifinal`,`final`), format jsonb (teamsPerGame, advanceCount, tieBreakers), status — **unique (competition_id, index)** |
 | `competition_entries` | competition_id FK, team_label text, member_user_ids uuid[], organization_id FK, seed_rank int, status enum(`registered`,`active`,`eliminated`,`winner`) — PK (competition_id, team_label) |
+| `competition_members` | competition_id FK, user_id FK, team_label text, recovery_code text UNIQUE — PK (competition_id, user_id). Le code personnel qui rend son identité à un joueur depuis un autre appareil (doc 04 §3.0) |
 
 ## 9. Relations — diagramme d'ensemble
 
@@ -139,7 +140,7 @@ scenarios ──────┘  │                       └──< players >�
    │                                        └──< hint_usages >────┴──< hints
    │  concepts ──< situation_concepts, decision_model_concepts
    │  users ──< learning_progress >── concepts ;  users ──< player_skills
-   └── competitions ──< competition_stages ──< games ;  competitions ──< competition_entries
+   └── competitions ──< competition_stages ──< games ;  competitions ──< competition_entries, competition_members
 teams ──< products, production_units, employees, inventory, financial_accounts, transactions
 ```
 

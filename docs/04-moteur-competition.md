@@ -53,6 +53,30 @@ Inscriptions ──< competition_entries (équipe, organisation, statut)
 - Ce design garantit qu'organiser un championnat national = de l'orchestration de parties
   existantes, **zéro modification du moteur économique**.
 
+### 3.0 Le code de reprise d'un joueur (implémenté)
+
+Un élève de concours n'a ni compte ni mot de passe : il est reconnu par un cookie invité
+signé, donc par SON NAVIGATEUR. Changer de poste, vider ses cookies ou passer du PC de la
+salle au téléphone suffisait à le rendre méconnaissable — et, une fois les inscriptions
+closes, à l'exclure de son propre tournoi, sans aucun recours.
+
+- `competition_members (competition_id, user_id, team_label, recovery_code)` : un code
+  personnel par membre, tiré à l'inscription dans l'alphabet des codes lisibles (ni I, ni
+  L, ni O, ni 0, ni 1), huit signes, unique pour toute la base — il se saisit donc seul,
+  sans le code du concours.
+- `reprendreSonIdentite({ code, ip })` rend l'identité de son propriétaire ; l'appareil la
+  reçoit par `setGuestCookie`. Le message d'échec est le même pour un code mal formé et
+  pour un code inconnu, et les tentatives sont comptées par adresse dans `login_attempts`
+  sous le marqueur `reprise-de-concours`, distinct de la connexion enseignante.
+- Le code est stocké EN CLAIR, à dessein : le chemin de secours réel d'une salle de classe
+  est l'enseignant, qui doit pouvoir le relire à l'élève qui l'a perdu. Il est donc visible
+  par son propriétaire (sur sa page de concours) et par l'organisateur (liste repliée, avec
+  la mise en garde de ne pas la projeter). Il ne donne accès qu'à ce joueur, dans ce
+  concours.
+- Le code appartient au JOUEUR et non à l'équipe : deux coéquipiers n'ont pas le même,
+  sinon l'un jouerait pour l'autre. Se réinscrire ne le change pas, puisque c'est celui
+  que l'élève a noté.
+
 ### 3.1 Phases intermédiaires (implémenté)
 
 L'arbre ci-dessus n'était parcouru qu'en deux temps : des poules de qualification, puis la

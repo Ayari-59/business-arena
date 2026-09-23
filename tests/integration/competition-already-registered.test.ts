@@ -45,10 +45,13 @@ beforeAll(async () => {
 describe("inscription répétée", () => {
   it("la première inscription crée l'équipe, la seconde la retrouve", async () => {
     const premiere = await joinCompetition({ code: joinCode, userId: eleve, teamLabel: "Alpha" });
-    expect(premiere).toEqual({ competitionId });
+    // L'inscription rend aussi le code de reprise personnel du joueur.
+    expect(premiere).toMatchObject({ competitionId });
+    expect("codeDeReprise" in premiere && premiere.codeDeReprise).toHaveLength(8);
 
     // Même code, même nom.
     const meme = await joinCompetition({ code: joinCode, userId: eleve, teamLabel: "Alpha" });
+    // Déjà inscrit : on le lui dit, sans lui repasser de code.
     expect(meme).toEqual({ competitionId, alreadyMember: "Alpha" });
 
     // Même code, autre nom : on ne change pas d'équipe en douce.

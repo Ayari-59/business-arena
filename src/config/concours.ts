@@ -183,6 +183,9 @@ export const EXPLICATIONS_CONCOURS = [
   "Les équipes sont tirées au sort dans des poules ; chaque poule joue une partie complète en mode compétition.",
   "Les meilleures équipes de chaque poule au score IPG se qualifient pour la finale, avec tous leurs membres.",
   "En mode compétition, les décisions validées sont verrouillées et les indices sont limités.",
+  // L'élève doit savoir AVANT de s'inscrire qu'un code l'attend et qu'il est à
+  // noter : découvrir son existence le jour où on l'a perdu ne sert à rien.
+  "À l'inscription, vous recevez un code de reprise personnel : notez-le, il vous rend votre équipe depuis n'importe quel appareil.",
 ] as const;
 
 /**

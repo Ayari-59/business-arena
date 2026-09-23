@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
-import { getCompetitionView } from "@/services/competition.service";
+import { codesDeRepriseDuConcours, getCompetitionView } from "@/services/competition.service";
 import { CompetitionBoard } from "@/components/competition-board";
+import { CodesDeReprise } from "@/components/codes-de-reprise";
 import { CompetitionControl, NouvellePhase } from "@/components/competition-controls";
 import { CompetitionSettings, CompetitionSteps } from "@/components/competition-steps";
 import { StageSchedule } from "@/components/stage-schedule";
@@ -22,6 +23,7 @@ export default async function TeacherCompetitionPage({
   const { competitionId } = await params;
   const view = await getCompetitionView(competitionId);
   if (!view || view.organizerId !== session.userId) notFound();
+  const codes = await codesDeRepriseDuConcours(competitionId, session.userId);
 
   // LA PHASE EN COURS, QUELLE QU'ELLE SOIT. Le concours n'a plus deux phases
   // nommées mais autant que l'organisateur en lance : on raisonne donc sur
@@ -143,6 +145,7 @@ export default async function TeacherCompetitionPage({
         </div>
       </section>
 
+      <CodesDeReprise codes={codes} />
       <CompetitionBoard view={view} gameLinkBase="/teacher/games" />
     </main>
   );

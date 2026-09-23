@@ -125,8 +125,8 @@ describe("la page enseignant du concours", () => {
 });
 
 describe("/compete explique le concours", () => {
-  it("cinq lignes et un lien vers le guide", async () => {
-    expect(EXPLICATIONS_CONCOURS).toHaveLength(5);
+  it("six lignes et un lien vers le guide", async () => {
+    expect(EXPLICATIONS_CONCOURS).toHaveLength(6);
     // Composant serveur asynchrone : on le résout (searchParams vide) avant de
     // rendre l'élément obtenu.
     const element = await CompetePage({ searchParams: Promise.resolve({}) });
@@ -135,6 +135,10 @@ describe("/compete explique le concours", () => {
       expect(html).toContain(ligne.replace(/'/g, "&#x27;"));
     }
     expect(html).toContain('href="/guide#concours"');
+    // Le code de reprise est annoncé avant l'inscription, et repris en bas de
+    // page pour l'élève qui arrive d'un autre appareil.
+    expect(html).toContain("code de reprise");
+    expect(html).toContain("Retrouver mon équipe");
     // Le formulaire reste là, sous les explications.
     expect(html.indexOf("Un concours, c&#x27;est quoi ?")).toBeLessThan(html.indexOf('name="code"'));
   });

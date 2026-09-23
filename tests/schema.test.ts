@@ -19,7 +19,7 @@ const EXPECTED_TABLES = [
   "situation_instances", "model_choices", "hint_usages",
   "learning_progress", "player_skills", "completed_learning_steps", "learning_path_progression",
   "scores", "game_rankings",
-  "competitions", "competition_stages", "competition_entries",
+  "competitions", "competition_stages", "competition_entries", "competition_members",
 ];
 
 describe("schéma de base de données", () => {

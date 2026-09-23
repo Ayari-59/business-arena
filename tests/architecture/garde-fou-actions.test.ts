@@ -23,6 +23,7 @@ const COMPOSANTS_GARDES = [
   "src/components/composition-equipes.tsx", // l'enseignant affecte un élève à une équipe
   "src/components/join-form.tsx", // /join
   "src/components/competition-join-form.tsx", // /compete
+  "src/components/competition-recovery-form.tsx", // reprise d'une équipe par code
   "src/components/close-round-form.tsx", // clôture du tour (confirmée)
   "src/components/stage-schedule.tsx", // fenêtre d'une étape de concours
   "src/components/public-page-form.tsx", // page publique d'annonce du concours

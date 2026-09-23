@@ -65,6 +65,29 @@ export async function getGuestUserId(): Promise<string | null> {
 }
 
 /**
+ * DONNER À CET APPAREIL UNE IDENTITÉ QUI EXISTE DÉJÀ.
+ *
+ * Un élève de concours qui change de poste, vide ses cookies ou passe au
+ * téléphone n'est plus reconnu : le cookie invité est la seule mémoire de qui
+ * il est. Son code de reprise le rend à lui-même, et c'est ici que l'appareil
+ * reçoit son identité retrouvée plutôt qu'une nouvelle.
+ *
+ * La fonction ne vérifie RIEN : l'appelant doit avoir établi que ce joueur est
+ * bien celui qui demande. Aujourd'hui, seul le service de concours l'appelle,
+ * après avoir reconnu un code de reprise.
+ */
+export async function setGuestCookie(userId: string): Promise<void> {
+  const store = await cookies();
+  store.set(COOKIE, `${userId}.${sign(userId)}`, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 60 * 60 * 24 * 365,
+    path: "/",
+  });
+}
+
+/**
  * LIBÉRER L'APPAREIL.
  *
  * Le cookie invité dure un an. En salle informatique, le poste passe d'une
