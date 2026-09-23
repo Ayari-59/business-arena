@@ -532,6 +532,7 @@ export default async function ArenaPage({
               equipes={view.equipesDeLaClasse}
               monEquipeId={view.playerTeamId}
               ouvert={false}
+              concours={view.estUnConcours}
             />
           </Tiroir>
         )

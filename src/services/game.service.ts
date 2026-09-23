@@ -128,6 +128,19 @@ export async function nommerEquipe(args: {
   if (game.currentRound > 1) {
     throw new Error("Le nom se fige après le premier tour : celui-ci est déjà clos.");
   }
+  // EN CONCOURS, LE NOM N'APPARTIENT PAS À L'ÉQUIPE MAIS AU TOURNOI.
+  //
+  // Le nom de l'équipe est celui de son inscription, et c'est LUI qui relie la
+  // partie au concours : le classement d'une phase porte `teams.name`, et
+  // qualifier compare ce nom au libellé de l'inscription. Un élève qui
+  // renommait son équipe au premier tour la rendait donc introuvable au moment
+  // de qualifier — éliminée alors qu'elle avait gagné —, et la phase suivante
+  // se créait sans un seul joueur.
+  if (game.mode === "competition") {
+    throw new Error(
+      "En concours, l'équipe garde le nom de son inscription : il la suit jusqu'au podium.",
+    );
+  }
   const { team, allTeams } = await findUserTeam(args.gameId, args.userId);
   if (!team) throw new Error("Vous n'êtes pas membre de cette partie");
 

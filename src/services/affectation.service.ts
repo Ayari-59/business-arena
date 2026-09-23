@@ -130,9 +130,19 @@ export async function affecterEleve(args: {
   return deplacer({ gameId: args.gameId, eleveId: args.eleveId, teamId: args.teamId });
 }
 
-/** L'élève peut encore choisir son équipe : partie de classe, premier tour en cours. */
-export function peutChoisirSonEquipe(game: { status: string; currentRound: number }): boolean {
-  return game.status === "running" && game.currentRound === 1;
+/**
+ * L'élève peut encore choisir son équipe : partie de classe, premier tour.
+ *
+ * JAMAIS EN CONCOURS. Là, l'équipe vient de l'inscription et elle se qualifie
+ * d'un bloc : proposer de la quitter, c'est proposer de passer chez l'adversaire
+ * en pleine poule, et laisser l'inscription et la partie se contredire.
+ */
+export function peutChoisirSonEquipe(game: {
+  status: string;
+  currentRound: number;
+  mode?: string | null;
+}): boolean {
+  return game.status === "running" && game.currentRound === 1 && game.mode !== "competition";
 }
 
 /**
@@ -149,6 +159,9 @@ export async function choisirSonEquipe(args: {
 }): Promise<{ nomDeLEquipe: string }> {
   const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
   if (!game) throw new Error("Partie introuvable.");
+  if (game.mode === "competition") {
+    throw new Error("En concours, votre équipe est celle de votre inscription.");
+  }
   if (!peutChoisirSonEquipe(game)) {
     throw new Error(
       "Le premier tour est clos : demandez à votre enseignant de vous rattacher à votre équipe.",

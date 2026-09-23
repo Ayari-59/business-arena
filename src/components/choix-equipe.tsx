@@ -31,11 +31,14 @@ export function ChoixEquipe({
   equipes,
   monEquipeId,
   ouvert,
+  concours = false,
 }: {
   gameId: string;
   equipes: Equipe[];
   monEquipeId: string;
   ouvert: boolean;
+  /** Partie de concours : l'appartenance vient de l'inscription, pas du hasard. */
+  concours?: boolean;
 }) {
   // Une seule équipe humaine : il n'y a rien à choisir.
   if (equipes.length < 2) return null;
@@ -48,9 +51,11 @@ export function ChoixEquipe({
         Composition des équipes
       </h2>
       <p className="mt-1 text-xs leading-relaxed text-slate-400">
-        {ouvert
-          ? "Vous avez été placé automatiquement dans l'équipe la moins remplie. Si vos camarades jouent ailleurs, rejoignez-les avant la clôture du premier tour."
-          : "Le premier tour est clos : l'appartenance est figée. Si vous n'êtes pas dans la bonne équipe, demandez à votre enseignant de vous déplacer."}
+        {concours
+          ? "En concours, votre équipe est celle de votre inscription : elle se qualifie d'un bloc et ne change pas en cours de tournoi."
+          : ouvert
+            ? "Vous avez été placé automatiquement dans l'équipe la moins remplie. Si vos camarades jouent ailleurs, rejoignez-les avant la clôture du premier tour."
+            : "Le premier tour est clos : l'appartenance est figée. Si vous n'êtes pas dans la bonne équipe, demandez à votre enseignant de vous déplacer."}
       </p>
 
       <ul className="mt-3 space-y-2">

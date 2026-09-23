@@ -139,6 +139,11 @@ export interface GameView {
   equipesDeLaClasse: EquipeEtSesMembres[];
   /** L'élève peut encore changer d'équipe lui-même (partie de classe, tour 1). */
   peutChoisirSonEquipe: boolean;
+  /**
+   * Partie de concours : l'équipe vient de l'inscription et ne bouge plus.
+   * L'écran le dit à sa façon, qui n'est pas celle d'un tour clos.
+   */
+  estUnConcours: boolean;
   /** Décisions déjà validées par l'équipe pour le tour courant (mode classe). */
   pendingDecisions: RoundDecisions | null;
   /**
@@ -1423,9 +1428,13 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     // ce nom est la moitié de la mise en situation. Lui proposer de le changer
     // ouvrirait un écran de plus avant la première décision, pour renommer ce
     // que le scénario vient de planter.
-    peutSeNommer: kindDeLaPartie !== "solo" && game.currentRound === 1,
+    // En concours, ni renommage ni changement d'équipe : le nom vient de
+    // l'inscription et c'est lui qui relie la partie au tournoi (game.service).
+    peutSeNommer:
+      kindDeLaPartie !== "solo" && game.currentRound === 1 && game.mode !== "competition",
     equipesDeLaClasse,
     peutChoisirSonEquipe: kindDeLaPartie !== "solo" && peutChoisirSonEquipe(game),
+    estUnConcours: game.mode === "competition",
     pendingDecisions,
     pendingDecisionsPar,
     courriersAnnonces: readPendingEvents(game.difficultyProfile).map((card) => {

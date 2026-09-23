@@ -77,6 +77,25 @@ closes, à l'exclure de son propre tournoi, sans aucun recours.
   sinon l'un jouerait pour l'autre. Se réinscrire ne le change pas, puisque c'est celui
   que l'élève a noté.
 
+### 3.0 bis L'équipe de concours est figée
+
+Constaté en jouant une vraie finale : l'arène d'une partie de concours
+proposait à un finaliste de REJOINDRE L'ÉQUIPE ADVERSE, et de renommer la
+sienne. Les deux gestes viennent de la partie de classe, où le code
+d'invitation range au hasard et où l'élève doit pouvoir se corriger au premier
+tour (`peutChoisirSonEquipe`, `nommerEquipe`). Ni l'un ni l'autre ne regardait
+le mode de la partie.
+
+Le second était destructeur : le classement d'une phase porte `teams.name`
+(`stageStandings`), et `cloreLaPhase` compare ce nom au `team_label` de
+l'inscription. Une équipe renommée devenait introuvable au moment de qualifier
+— éliminée alors qu'elle avait gagné — et la phase suivante se créait sans un
+seul joueur, `membersByLabel` étant clé sur l'ancien libellé.
+
+Les deux gestes sont donc refusés en mode `competition`, côté service et non
+seulement à l'écran, et le panneau des équipes n'y est plus qu'une lecture qui
+dit pourquoi : l'équipe est celle de l'inscription, elle se qualifie d'un bloc.
+
 ### 3.1 Phases intermédiaires (implémenté)
 
 L'arbre ci-dessus n'était parcouru qu'en deux temps : des poules de qualification, puis la
