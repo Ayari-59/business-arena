@@ -47,6 +47,23 @@ describe("les champs numériques", () => {
     expect(fautes, `champs numériques sans garde :\n${fautes.join("\n")}`).toEqual([]);
   });
 
+  it("les curseurs aussi", () => {
+    // Firefox change la valeur d'un `<input type="range">` à la molette SANS
+    // qu'il ait le focus : passer au-dessus d'un curseur d'emprunt en faisant
+    // défiler la page suffirait à emprunter. Même garde, même raison.
+    const fautes: string[] = [];
+    for (const f of fichiers(SRC)) {
+      if (DISPENSES.some((d) => f.includes(d))) continue;
+      const source = readFileSync(f, "utf8");
+      const champs = source.match(/type="range"/g) ?? [];
+      const gardes = source.match(/type="range"\n\s*onWheel=\{sansMolette\}/g) ?? [];
+      if (champs.length !== gardes.length) {
+        fautes.push(`${f.slice(SRC.length)} : ${champs.length} curseurs, ${gardes.length} gardés`);
+      }
+    }
+    expect(fautes, `curseurs sans garde :\n${fautes.join("\n")}`).toEqual([]);
+  });
+
   it("la garde retire le focus, elle n'annule pas l'événement", () => {
     // React attache ses écouteurs de molette en mode passif : preventDefault()
     // n'y ferait rien, et une garde qui ne garde pas est pire que rien.

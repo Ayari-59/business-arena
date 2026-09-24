@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { sansMolette } from "@/components/sans-molette";
 
 /**
  * Les champs de la configuration rapide, en version tactile : cartes de secteur,
@@ -138,6 +139,7 @@ export function QuickConfigFields({
       </p>
       <input
         type="range"
+        onWheel={sansMolette}
         min={minLevel}
         max={maxLevel}
         step={1}

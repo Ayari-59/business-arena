@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { playRoundAction, type PlayRoundState } from "@/app/arena/[gameId]/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import { sansMolette } from "@/components/sans-molette";
@@ -325,6 +325,7 @@ function Field({
   suffix,
   hint,
   onValueChange,
+  inputRef,
 }: {
   name: string;
   label: string;
@@ -336,6 +337,8 @@ function Field({
   hint?: string;
   /** Remonte la valeur saisie, pour les champs qu'une règle doit suivre en direct. */
   onValueChange?: (valeur: number) => void;
+  /** Donne la main sur la saisie : le curseur écrit dedans, elle reste la source. */
+  inputRef?: RefObject<HTMLInputElement | null>;
 }) {
   return (
     <label className="block">
@@ -345,6 +348,7 @@ function Field({
           type="number"
           onWheel={sansMolette}
           {...(max !== undefined ? { max } : {})}
+          ref={inputRef}
           name={name}
           defaultValue={defaultValue}
           step={step}
@@ -364,6 +368,119 @@ function Field({
       </span>
       {hint ? <span className="mt-1 block text-[13px] text-slate-400">{hint}</span> : null}
     </label>
+  );
+}
+
+/**
+ * LE PAS D'UN CURSEUR SE LIT SANS COMPTER : 1, 2 ou 5 fois une puissance de dix.
+ * Un plafond de 312 000 € se règle par 5 000, jamais par 3 124.
+ */
+export function pasDuCurseur(plafond: number): number {
+  const brut = plafond / 100;
+  if (!(brut > 0)) return 1;
+  const puissance = Math.pow(10, Math.floor(Math.log10(brut)));
+  for (const multiple of [1, 2, 5]) {
+    if (brut <= multiple * puissance) return multiple * puissance;
+  }
+  return 10 * puissance;
+}
+
+/**
+ * OÙ LE CURSEUR S'ARRÊTE : sur un cran rond, sauf tout en haut.
+ *
+ * Arrondir au pas laisserait le dernier cran sous le plafond — 310 000 quand
+ * la banque en prête 312 453 —, et le « ce que la banque prête encore » écrit
+ * sous le curseur serait faux d'un cran. Le bout du curseur vaut donc le
+ * plafond EXACT.
+ */
+export function cranDuCurseur(brut: number, maximum: number, pas: number): number {
+  if (!(maximum > 0)) return 0;
+  if (brut >= maximum - pas / 2) return maximum;
+  return Math.min(Math.max(0, Math.round(brut / pas) * pas), maximum);
+}
+
+/**
+ * UN PLAFOND QUI TIENT, PLUTÔT QU'UN PLAFOND QUI PRÉVIENT.
+ *
+ * Quatre décisions ont un plafond connu avant la validation, et que le moteur
+ * applique EN SILENCE : l'emprunt (ratio × capitaux propres − dette), l'apport
+ * (l'enveloppe des associés), le remboursement anticipé (la dette restante) et
+ * le dividende (les réserves). Taper au-delà ne déclenche rien : la décision
+ * part entière, `Math.min` la rabote, et l'élève découvre l'écart au tour
+ * suivant sans savoir d'où il vient.
+ *
+ * Le curseur ne va pas au-delà. Le plafond devient une borne qu'on sent sous le
+ * doigt, pas un avertissement après coup. La saisie reste à côté : une décision
+ * de gestion se prend au chiffre près, et un curseur seul ne donne pas 312 000
+ * pile. C'est elle qui porte la valeur et le `name` ; le curseur ne fait que
+ * l'écrire, par le même chemin que le brouillon à la restauration.
+ */
+function ChampPlafonne({
+  name,
+  label,
+  plafond,
+  suffix,
+  hint,
+  legendePlafond,
+  defaultValue = 0,
+  onValueChange,
+}: {
+  name: string;
+  label: string;
+  /** Le maximum que le moteur retiendra. Au-delà, il rabote sans le dire. */
+  plafond: number;
+  suffix: string;
+  hint?: string;
+  /** Ce que vaut le bout du curseur, en toutes lettres. */
+  legendePlafond: string;
+  defaultValue?: number;
+  onValueChange?: (valeur: number) => void;
+}) {
+  const champ = useRef<HTMLInputElement | null>(null);
+  const [valeur, setValeur] = useState(defaultValue);
+  const maximum = Math.max(0, Math.floor(plafond));
+  const pas = pasDuCurseur(maximum);
+
+  return (
+    <div>
+      <Field
+        name={name}
+        label={label}
+        defaultValue={defaultValue}
+        max={maximum}
+        suffix={suffix}
+        hint={hint}
+        inputRef={champ}
+        onValueChange={(v) => {
+          setValeur(v);
+          onValueChange?.(v);
+        }}
+      />
+      {maximum > 0 ? (
+        <>
+          <input
+            type="range"
+            onWheel={sansMolette}
+            aria-label={`${label} : curseur`}
+            min={0}
+            max={maximum}
+            step="any"
+            value={Math.min(Math.max(valeur, 0), maximum)}
+            onChange={(e) => {
+              const cran = cranDuCurseur(Number(e.currentTarget.value), maximum, pas);
+              if (champ.current) poserValeur(champ.current, String(cran));
+            }}
+            className="mt-2 h-5 w-full cursor-pointer accent-amber-400"
+          />
+          <span className="flex justify-between gap-2 text-xs text-slate-400">
+            <span>0 {suffix}</span>
+            <span className="text-right tabular-nums">
+              {maximum.toLocaleString("fr-FR")} {suffix} · {legendePlafond}
+            </span>
+          </span>
+        </>
+      ) : null}
+    </div>
   );
 }
 
@@ -1961,18 +2078,26 @@ export function DecisionForm({
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <>
               <div>
-                <Field name="newLoan" label="Nouvel emprunt" defaultValue={0} suffix="€"
-                  max={loanCapacity ? Math.floor(loanCapacity.remaining) : undefined}
-                  onValueChange={(v) => setRenfort((r) => ({ ...r, emprunt: v }))}
-                  hint={
-                    // LE TAUX VIENT DU SCÉNARIO. Il était écrit « 5 %/an » en
-                    // dur : un scénario qui prête à 6 % annonçait 5 %.
-                    `${tauxEmprunt}. ${
-                      loanCapacity
-                        ? `La banque prête jusqu'à ${loanCapacity.ratio} × vos capitaux propres : il vous reste ${Math.round(loanCapacity.remaining).toLocaleString("fr-FR")} €.`
-                        : "Amortissement constant sur la durée du contrat."
-                    }`
-                  } />
+                {/*
+                  LE TAUX VIENT DU SCÉNARIO. Il était écrit « 5 %/an » en dur :
+                  un scénario qui prête à 6 % annonçait 5 %.
+                  Le plafond, lui, ne s'annonce plus : il borne le curseur.
+                */}
+                {loanCapacity ? (
+                  <ChampPlafonne
+                    name="newLoan"
+                    label="Nouvel emprunt"
+                    plafond={loanCapacity.remaining}
+                    suffix="€"
+                    legendePlafond="ce que la banque prête encore"
+                    onValueChange={(v) => setRenfort((r) => ({ ...r, emprunt: v }))}
+                    hint={`${tauxEmprunt}. La banque prête jusqu'à ${loanCapacity.ratio} × vos capitaux propres.`}
+                  />
+                ) : (
+                  <Field name="newLoan" label="Nouvel emprunt" defaultValue={0} suffix="€"
+                    onValueChange={(v) => setRenfort((r) => ({ ...r, emprunt: v }))}
+                    hint={`${tauxEmprunt}. Amortissement constant sur la durée du contrat.`} />
+                )}
                 <Chiffrage lignes={chiffrageEmprunt} />
               </div>
               <Field
@@ -1982,13 +2107,21 @@ export function DecisionForm({
                 suffix="€"
                 hint={debtSchedule ? "Facultatif, en plus de l'échéance obligatoire." : undefined}
               />
-              <Field name="capitalIncrease" label="Augmentation de capital" defaultValue={0} suffix="€"
-                onValueChange={(v) => setRenfort((r) => ({ ...r, apport: v }))}
-                hint={
-                  capitalAllowance
-                    ? `Apport des associés · reste ${Math.round(capitalAllowance.remaining).toLocaleString("fr-FR")} € sur ${Math.round(capitalAllowance.total).toLocaleString("fr-FR")} € pour la partie.`
-                    : "Apport des associés : trésorerie et capitaux propres, sans intérêts mais dilutif."
-                } />
+              {capitalAllowance ? (
+                <ChampPlafonne
+                  name="capitalIncrease"
+                  label="Augmentation de capital"
+                  plafond={capitalAllowance.remaining}
+                  suffix="€"
+                  legendePlafond="reste de l'enveloppe"
+                  onValueChange={(v) => setRenfort((r) => ({ ...r, apport: v }))}
+                  hint={`Apport des associés · enveloppe de ${Math.round(capitalAllowance.total).toLocaleString("fr-FR")} € pour la partie.`}
+                />
+              ) : (
+                <Field name="capitalIncrease" label="Augmentation de capital" defaultValue={0} suffix="€"
+                  onValueChange={(v) => setRenfort((r) => ({ ...r, apport: v }))}
+                  hint="Apport des associés : trésorerie et capitaux propres, sans intérêts mais dilutif." />
+              )}
             {on.investment && investmentOffer && !equipmentOffer ? (
               <Field
                 name="machineCapacityUnits"
@@ -2054,14 +2187,15 @@ export function DecisionForm({
       >
       {on.dividend ? (
         <Family legend="💰 Affectation du résultat · dividende">
-          <Field
+          <ChampPlafonne
             name="dividend"
             label="Dividende versé aux associés"
-            defaultValue={0}
+            plafond={reserves}
             suffix="€"
+            legendePlafond="toutes les réserves"
             hint={
               reserves > 0
-                ? `Réserves distribuables : ${formatEuro(reserves)}. Le versement sort en trésorerie, pas en résultat.`
+                ? "Les réserves sont les bénéfices non distribués des tours passés. Le versement sort en trésorerie, pas en résultat."
                 : roundIndex <= 1
                   ? "Rien à distribuer : l'affectation s'ouvre à partir du tour 2."
                   : "Rien à distribuer : une perte se rattrape d'abord."

@@ -122,8 +122,9 @@ describe("le branchement à l'écran", () => {
 
   it("le plafond d'emprunt est opposé au champ ET au chiffrage", () => {
     // Le moteur rabote en silence : l'écran doit refuser la saisie au-delà, et
-    // chiffrer ce qui sera réellement prêté.
-    expect(formulaire).toContain("max={loanCapacity ? Math.floor(loanCapacity.remaining) : undefined}");
+    // chiffrer ce qui sera réellement prêté. Le champ est devenu un curseur
+    // borné — c'est lui qui porte le plafond, et il le passe à la saisie.
+    expect(formulaire).toContain("plafond={loanCapacity.remaining}");
     expect(formulaire).toContain("plafond: loanCapacity?.remaining ?? null");
     expect(formulaire).toContain("Au-delà du plafond");
     // L'escompte, lui, ne peut PAS annoncer de chiffre : son plafond se calcule

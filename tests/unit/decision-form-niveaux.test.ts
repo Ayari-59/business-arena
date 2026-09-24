@@ -88,7 +88,10 @@ describe("encadrés du formulaire de décisions selon le niveau", () => {
 
   it("niveau 6, avec des réserves : le montant distribuable est affiché", () => {
     const html = rendu(6, 3, { distributableReserves: 12_000 });
-    expect(html).toContain("Réserves distribuables");
+    // Le montant ne se lit plus dans une phrase : il borne le curseur, et
+    // s'écrit au bout — c'est le même chiffre, devenu une limite.
+    expect(html).toContain(`${(12_000).toLocaleString("fr-FR")} € · toutes les réserves`);
+    expect(html).toContain('max="12000"');
     expect(html).not.toContain(OUVERTURE_T2);
   });
 });
