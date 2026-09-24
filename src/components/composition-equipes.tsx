@@ -118,7 +118,7 @@ function LigneDEleve({
         <select
           name="teamId"
           defaultValue={equipeActuelle}
-          className="max-w-[160px] rounded-lg border border-white/5 bg-slate-950 px-2 py-1.5 text-xs text-slate-100 outline-none focus:border-amber-400/60"
+          className="max-w-[160px] champ px-2 py-1.5 text-xs text-slate-100 outline-none"
         >
           {equipes.map((e) => (
             <option key={e.teamId} value={e.teamId}>

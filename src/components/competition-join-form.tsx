@@ -37,7 +37,7 @@ export function CompetitionJoinForm({
           autoCapitalize="characters"
           autoComplete="off"
           placeholder="EX : R4KT7B"
-          className="mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-center font-mono text-lg uppercase tracking-[0.3em] text-amber-300 outline-none focus:border-amber-400/60"
+          className="mt-1 w-full champ px-3 py-2 text-center font-mono text-lg uppercase tracking-[0.3em] text-amber-300 outline-none"
         />
       </label>
       <label className="block">
@@ -49,7 +49,7 @@ export function CompetitionJoinForm({
           required
           maxLength={40}
           placeholder="Les Requins du BFR"
-          className="mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+          className="mt-1 w-full champ px-3 py-2 text-sm text-slate-100 outline-none"
         />
       </label>
       <label className="block">
@@ -60,7 +60,7 @@ export function CompetitionJoinForm({
           name="pseudo"
           required
           maxLength={40}
-          className="mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+          className="mt-1 w-full champ px-3 py-2 text-sm text-slate-100 outline-none"
         />
       </label>
       {state.error ? (

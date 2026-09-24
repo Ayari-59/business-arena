@@ -56,7 +56,7 @@ function LicenceField({
         type={type}
         placeholder={placeholder}
         required={required}
-        className="mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-2 py-1.5 text-xs text-slate-100 outline-none focus:border-amber-400/60"
+        className="mt-1 w-full champ px-2 py-1.5 text-xs text-slate-100 outline-none"
       />
     </label>
   );
@@ -152,7 +152,7 @@ export default async function AdminPage({
               defaultValue={overview.config.announcement}
               maxLength={200}
               placeholder="Ex : maintenance dimanche 8h-9h, finale du championnat le 12 juin…"
-              className="mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+              className="mt-1 w-full champ px-3 py-2 text-sm text-slate-100 outline-none"
             />
           </label>
           <label className="block">
@@ -165,7 +165,7 @@ export default async function AdminPage({
               defaultValue={overview.config.contactEmail}
               maxLength={120}
               placeholder="Ex : contact@votre-domaine.fr"
-              className="mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+              className="mt-1 w-full champ px-3 py-2 text-sm text-slate-100 outline-none"
             />
             <span className="mt-1 block text-xs text-slate-400">
               Par défaut <strong className="text-slate-400">contact@business-arena.fr</strong>, pour
@@ -195,7 +195,7 @@ export default async function AdminPage({
                 max={24}
                 defaultValue={overview.config.freeTier.maxRounds ?? ""}
                 placeholder="Ex : 3"
-                className="mt-1 w-40 rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+                className="mt-1 w-40 champ px-3 py-2 text-sm text-slate-100 outline-none"
               />
               <span className="mt-1 block text-xs text-slate-400">
                 La partie gratuite se termine à ce tour, même si le scénario en prévoit plus : c&apos;est le mur « ne va pas au bout ».
@@ -245,7 +245,7 @@ export default async function AdminPage({
               <select
                 name="aiModel"
                 defaultValue={overview.config.ai.model}
-                className="mt-1 block w-full max-w-sm rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-sky-400/60"
+                className="mt-1 block w-full max-w-sm champ px-3 py-2 text-sm text-slate-100 outline-none [--focus-champ:var(--color-sky-400)]"
               >
                 {AI_MODELS.map((m) => (
                   <option key={m.id} value={m.id}>
@@ -311,7 +311,7 @@ export default async function AdminPage({
             required
             maxLength={80}
             placeholder="Lycée Jean-Monnet, IUT GEA Lille…"
-            className="min-w-64 flex-1 rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+            className="min-w-64 flex-1 champ px-3 py-2 text-sm text-slate-100 outline-none"
           />
           <SubmitButton
             pendingLabel="Création…"

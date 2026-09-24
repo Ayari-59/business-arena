@@ -10,7 +10,7 @@ import { updateSituationAction } from "../../../actions";
 export const dynamic = "force-dynamic";
 
 const champ =
-  "mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60";
+  "mt-1 w-full champ px-3 py-2 text-sm text-slate-100 outline-none";
 const titre = "text-xs font-medium uppercase tracking-wide text-slate-400";
 
 export default async function SituationEditorPage({

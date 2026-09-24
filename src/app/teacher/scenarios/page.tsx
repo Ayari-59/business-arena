@@ -195,7 +195,7 @@ export default async function TeacherScenariosPage({
             type="text"
             name="title"
             placeholder="Titre (facultatif)"
-            className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+            className="champ px-3 py-2 text-sm text-slate-100"
           />
           <input
             type="file"

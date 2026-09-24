@@ -119,7 +119,7 @@ function Instruction({ gameId, demande }: { gameId: string; demande: Demande }) 
           <span className="block text-xs font-medium uppercase tracking-wide text-slate-400">
             Montant accordé
           </span>
-          <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/5 bg-slate-950 px-2 py-2 focus-within:border-amber-400/60">
+          <span className="mt-1 flex items-center gap-2 champ px-2 py-2">
             <input
               type="number"
               onWheel={sansMolette}
@@ -142,7 +142,7 @@ function Instruction({ gameId, demande }: { gameId: string; demande: Demande }) 
             name="note"
             maxLength={1000}
             placeholder="Ex. : accordé une fois, pas deux."
-            className="mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-2 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+            className="mt-1 w-full champ px-2 py-2 text-sm text-slate-100 outline-none"
           />
         </label>
       </div>

@@ -214,7 +214,7 @@ export default async function OrgAdminPage() {
               name="name"
               defaultValue={dashboard.name}
               maxLength={80}
-              className="flex-1 rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+              className="flex-1 champ px-3 py-2 text-sm text-slate-100 outline-none"
             />
             <button className="rounded-lg border border-white/15 px-4 py-2 text-sm text-slate-300 hover:border-amber-400/40">
               Renommer

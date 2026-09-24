@@ -204,7 +204,7 @@ export default async function TeacherDashboard({
             <select
               name="humanTeamsCount"
               defaultValue={4}
-              className="mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm"
+              className="mt-1 w-full champ px-3 py-2 text-sm"
             >
               {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
                 <option key={n} value={n}>{n} équipe{n > 1 ? "s" : ""}</option>
@@ -218,7 +218,7 @@ export default async function TeacherDashboard({
             <select
               name="botCount"
               defaultValue={1}
-              className="mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm"
+              className="mt-1 w-full champ px-3 py-2 text-sm"
             >
               {[0, 1, 2, 3, 4].map((n) => (
                 <option key={n} value={n}>{n} bot{n > 1 ? "s" : ""}</option>
@@ -232,7 +232,7 @@ export default async function TeacherDashboard({
             <select
               name="periodicity"
               defaultValue="quarter"
-              className="mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm"
+              className="mt-1 w-full champ px-3 py-2 text-sm"
             >
               <option value="month">Un mois par tour</option>
               <option value="quarter">Un trimestre par tour</option>
@@ -246,7 +246,7 @@ export default async function TeacherDashboard({
             <select
               name="roundsCount"
               defaultValue=""
-              className="mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm"
+              className="mt-1 w-full champ px-3 py-2 text-sm"
             >
               <option value="">Toute la partie</option>
               {[3, 4, 5].map((n) => (
@@ -268,7 +268,7 @@ export default async function TeacherDashboard({
             <select
               name="level"
               defaultValue={3}
-              className="mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm"
+              className="mt-1 w-full champ px-3 py-2 text-sm"
             >
               {DIFFICULTY_PRESETS.map((p) => (
                 <option key={p.level} value={p.level}>

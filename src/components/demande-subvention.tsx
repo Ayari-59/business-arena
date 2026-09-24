@@ -61,7 +61,7 @@ export function DemandeSubvention({
           <span className="block text-xs font-medium uppercase tracking-wide text-slate-400">
             Montant demandé
           </span>
-          <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900 px-2 py-2 focus-within:border-red-400/60">
+          <span className="mt-1 flex items-center gap-2 champ px-2 py-2 [--focus-champ:var(--color-red-400)]">
             <input
               type="number"
               onWheel={sansMolette}
@@ -87,7 +87,7 @@ export function DemandeSubvention({
             maxLength={1000}
             rows={3}
             placeholder="Ex. : tenir un tour de plus pour écouler le stock invendu et revenir à l'équilibre."
-            className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-2 py-2 text-sm text-slate-100 outline-none focus:border-red-400/60"
+            className="mt-1 w-full champ px-2 py-2 text-sm text-slate-100 outline-none [--focus-champ:var(--color-red-400)]"
           />
         </label>
       </div>

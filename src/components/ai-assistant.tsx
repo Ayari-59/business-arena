@@ -126,7 +126,7 @@ function Tutor({ gameId }: { gameId: string }) {
             }
           }}
           placeholder="Ex : pourquoi ma trésorerie a baissé ce tour ?"
-          className="min-w-0 flex-1 rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-sky-400/60"
+          className="min-w-0 flex-1 champ px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500 [--focus-champ:var(--color-sky-400)]"
         />
         <button
           type="button"

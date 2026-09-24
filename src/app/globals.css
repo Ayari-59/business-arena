@@ -79,6 +79,7 @@
   --ombre-carte:
     0 1px 2px rgb(0 0 0 / 0.3),
     0 10px 28px -14px rgb(0 0 0 / 0.5);
+  --creux-champ: inset 0 1px 2px rgb(0 0 0 / 0.25);
 }
 
 @utility carte {
@@ -93,6 +94,47 @@
   box-shadow: var(--ombre-carte);
 }
 
+/* ---------------------------------------------------------------------------
+ * LE CHAMP DE SAISIE.
+ *
+ * La hiérarchie des surfaces n'en connaissait que deux : ce qui CONTIENT
+ * (`carte`) et ce qui est CONTENU (rayon lg, slate-950, bordure à 5 %). Les
+ * champs de saisie avaient pris la seconde — ils étaient donc du contenu, avec
+ * exactement le fond du bloc qui les portait et un trait à 5 % de blanc. Un
+ * champ de saisie n'est pas un bloc de texte : c'est un endroit où l'on écrit,
+ * et il doit se voir AVANT qu'on y touche.
+ *
+ * Le motif était écrit quarante-quatre fois à la main, à l'identique, dont
+ * huit fois en constante locale nommée `champ`. Il est ici, une fois.
+ *
+ * Trois traits :
+ *   · un TRAIT franc — slate-500, qui tient le 3:1 du contraste non textuel
+ *     (WCAG 1.4.11) aussi bien sur slate-900 que sur slate-950 ;
+ *   · un FOND décalé de deux crans — slate-800 : plus clair que la carte sur
+ *     fond sombre, plus gris qu'elle sur fond clair. L'échelle du thème clair
+ *     étant renversée, la même classe donne le bon écart des deux côtés ;
+ *   · un CREUX d'un pixel, pour que le champ s'enfonce au lieu de flotter.
+ *
+ * Le laiton du focus vit ici aussi, pour les deux formes que prend un champ :
+ * le contrôle nu (`:focus`) et le contrôle glissé dans une enveloppe qui porte
+ * l'unité et le suffixe (`:focus-within`).
+ * ------------------------------------------------------------------------- */
+@utility champ {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-slate-500);
+  background-color: var(--color-slate-800);
+  box-shadow: var(--creux-champ);
+
+  /* Le laiton passe par une variable, pour qu'un champ qui a une raison d'en
+     changer — la demande de subvention, en crise, se signale en rouge — le
+     dise sur place au lieu de rejouer la bordure et de se battre avec
+     l'utilitaire dans la cascade. */
+  &:focus,
+  &:focus-within {
+    border-color: var(--focus-champ, var(--color-amber-400));
+  }
+}
+
 /* À l'impression, une carte redevient plate : le voile et l'ombre ne sont que
    des artifices d'écran, et sur papier ils coûtent de l'encre pour un gris
    sale. Cette règle vit HORS de toute couche : elle l'emporte sur les
@@ -100,6 +142,11 @@
 @media print {
   .carte {
     background-image: none;
+    box-shadow: none;
+  }
+  /* Sur papier, le creux d'un champ n'est qu'un gris sale ; son trait, lui,
+     reste : c'est ce qui dit où écrire à la main. */
+  .champ {
     box-shadow: none;
   }
 }
@@ -151,6 +198,7 @@ h1 {
   --ombre-carte:
     0 1px 2px rgb(15 23 42 / 0.06),
     0 10px 28px -16px rgb(15 23 42 / 0.18);
+  --creux-champ: inset 0 1px 2px rgb(15 23 42 / 0.05);
   --color-amber-200: #8a6a16;
   --color-amber-300: #6b5312;
   --color-amber-400: #5c470f;

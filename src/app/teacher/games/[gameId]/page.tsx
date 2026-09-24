@@ -734,7 +734,7 @@ export default async function TeacherGamePage({
                   type="datetime-local"
                   name="opensAt"
                   defaultValue={utcToParisLocalInput(view.opensAt ? new Date(view.opensAt) : null)}
-                  className="mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-amber-400/50 focus:outline-none"
+                  className="mt-1 w-full champ px-3 py-2 text-sm text-slate-100 focus:outline-none"
                 />
               </label>
               <label className="block">
@@ -743,7 +743,7 @@ export default async function TeacherGamePage({
                   type="datetime-local"
                   name="closesAt"
                   defaultValue={utcToParisLocalInput(view.closesAt ? new Date(view.closesAt) : null)}
-                  className="mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-amber-400/50 focus:outline-none"
+                  className="mt-1 w-full champ px-3 py-2 text-sm text-slate-100 focus:outline-none"
                 />
               </label>
             </div>
@@ -801,7 +801,7 @@ export default async function TeacherGamePage({
                             type="datetime-local"
                             name={`opensAt-${r.index}`}
                             defaultValue={utcToParisLocalInput(r.opensAt ? new Date(r.opensAt) : null)}
-                            className="w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-amber-400/50 focus:outline-none"
+                            className="w-full champ px-3 py-2 text-sm text-slate-100 focus:outline-none"
                           />
                         </label>
                       </td>
@@ -812,7 +812,7 @@ export default async function TeacherGamePage({
                             type="datetime-local"
                             name={`deadline-${r.index}`}
                             defaultValue={utcToParisLocalInput(r.deadline ? new Date(r.deadline) : null)}
-                            className="w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-amber-400/50 focus:outline-none"
+                            className="w-full champ px-3 py-2 text-sm text-slate-100 focus:outline-none"
                           />
                         </label>
                       </td>

@@ -246,7 +246,7 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
                 onChange={(e) => setFreeText(e.target.value)}
                 aria-label="Votre analyse écrite du problème"
                 placeholder="Votre analyse du problème en quelques mots…"
-                className="mt-2 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+                className="mt-2 w-full champ px-3 py-2 text-sm text-slate-100 outline-none"
               />
             </section>
 
@@ -605,7 +605,7 @@ function SituationRetake({ gameId, situation }: { gameId: string; situation: Sit
           onChange={(e) => setFreeText(e.target.value)}
           aria-label="Votre analyse écrite du problème"
           placeholder="Votre analyse du problème en quelques mots…"
-          className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-sky-400/60"
+          className="mt-1 w-full champ px-3 py-2 text-sm text-slate-100 outline-none [--focus-champ:var(--color-sky-400)]"
         />
       </div>
       {questions.map((question) => (

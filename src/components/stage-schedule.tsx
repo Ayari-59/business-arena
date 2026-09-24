@@ -54,7 +54,7 @@ export function StageSchedule({
             type="datetime-local"
             name="startsAt"
             defaultValue={utcToParisLocalInput(startsAt ? new Date(startsAt) : null)}
-            className="mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-amber-400/50 focus:outline-none"
+            className="mt-1 w-full champ px-3 py-2 text-sm text-slate-100 focus:outline-none"
           />
         </label>
         <label className="block">
@@ -63,7 +63,7 @@ export function StageSchedule({
             type="datetime-local"
             name="endsAt"
             defaultValue={utcToParisLocalInput(endsAt ? new Date(endsAt) : null)}
-            className="mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-amber-400/50 focus:outline-none"
+            className="mt-1 w-full champ px-3 py-2 text-sm text-slate-100 focus:outline-none"
           />
         </label>
       </div>

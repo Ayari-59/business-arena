@@ -110,7 +110,7 @@ export function EconomicParams({
           name="scenarioCode"
           value={code}
           onChange={(e) => setCode(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm"
+          className="mt-1 w-full champ px-3 py-2 text-sm"
         >
           {scenarios.map((s) => (
             <option key={s.code} value={s.code}>
@@ -151,7 +151,7 @@ export function EconomicParams({
                 return (
                   <label key={field.name} className="block">
                     <span className="text-xs text-slate-400">{field.label}</span>
-                    <span className="mt-1 flex items-center gap-1.5 rounded-lg border border-white/10 bg-slate-900 px-2.5 py-1.5 focus-within:border-amber-400/60">
+                    <span className="mt-1 flex items-center gap-1.5 champ px-2.5 py-1.5">
                       <input
                         type="text"
                         inputMode="decimal"
@@ -191,7 +191,7 @@ export function EconomicParams({
           {BPI_FIELDS.map((field) => (
             <label key={field.name} className="block">
               <span className="text-xs text-slate-400">{field.label}</span>
-              <span className="mt-1 flex items-center gap-1.5 rounded-lg border border-white/10 bg-slate-900 px-2.5 py-1.5 focus-within:border-amber-400/60">
+              <span className="mt-1 flex items-center gap-1.5 champ px-2.5 py-1.5">
                 <input
                   type="text"
                   inputMode="decimal"

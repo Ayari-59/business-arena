@@ -13,7 +13,7 @@ import { deleteSituationAction, updateEconomicsAction, updateNarrativeAction } f
 export const dynamic = "force-dynamic";
 
 const champ =
-  "mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60";
+  "mt-1 w-full champ px-3 py-2 text-sm text-slate-100 outline-none";
 const etiquette = "block";
 const titre = "text-xs font-medium uppercase tracking-wide text-slate-400";
 
@@ -259,7 +259,7 @@ export default async function ScenarioEditorPage({
               {group.fields.map((f) => (
                 <label key={f.name} className="block">
                   <span className="text-xs text-slate-400">{f.label}</span>
-                  <span className="mt-1 flex items-center gap-1.5 rounded-lg border border-white/10 bg-slate-900 px-2.5 py-1.5 focus-within:border-amber-400/60">
+                  <span className="mt-1 flex items-center gap-1.5 champ px-2.5 py-1.5">
                     <input
                       type="text"
                       inputMode="decimal"
@@ -283,7 +283,7 @@ export default async function ScenarioEditorPage({
             {BPI_FIELDS.map((f) => (
               <label key={f.name} className="block">
                 <span className="text-xs text-slate-400">{f.label}</span>
-                <span className="mt-1 flex items-center gap-1.5 rounded-lg border border-white/10 bg-slate-900 px-2.5 py-1.5 focus-within:border-amber-400/60">
+                <span className="mt-1 flex items-center gap-1.5 champ px-2.5 py-1.5">
                   <input
                     type="text"
                     inputMode="decimal"

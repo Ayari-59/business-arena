@@ -73,6 +73,79 @@ describe("personne ne redessine une carte à la main", () => {
   });
 });
 
+/**
+ * LE CHAMP DE SAISIE SE VOIT AVANT QU'ON Y TOUCHE.
+ *
+ * Les champs portaient la surface du CONTENU — rayon lg, slate-950, bordure à
+ * 5 % de blanc. Sur un bloc lui-même en slate-950, cela donnait un champ de la
+ * couleur exacte de ce qui le porte, cerné d'un trait à 5 % : invisible. Et le
+ * thème clair renversant l'échelle, `border-white/5` y était du blanc sur du
+ * blanc — le même défaut, en pire.
+ *
+ * Le motif était écrit quarante-quatre fois à la main. Il vit maintenant dans
+ * `@utility champ`, et ces gardes empêchent qu'il se réécrive à côté.
+ */
+describe("le champ, défini une fois", () => {
+  it("porte ses trois traits : trait franc, fond décalé, creux", () => {
+    const bloc = css.slice(css.indexOf("@utility champ"), css.indexOf("\n}", css.indexOf("@utility champ")));
+    expect(bloc).toContain("var(--color-slate-500)");
+    expect(bloc).toContain("var(--color-slate-800)");
+    expect(bloc).toContain("var(--creux-champ)");
+  });
+
+  it("son creux est propre à chaque thème", () => {
+    expect(css).toMatch(/:root\s*\{[^}]*--creux-champ:/);
+    expect(css).toMatch(/\[data-theme="clair"\]\s*\{[^}]*--creux-champ:/);
+  });
+
+  it("le laiton du focus passe par une variable, pour que l'exception se dise sur place", () => {
+    const bloc = css.slice(css.indexOf("@utility champ"), css.indexOf("\n}", css.indexOf("@utility champ")));
+    expect(bloc).toContain("var(--focus-champ, var(--color-amber-400))");
+  });
+});
+
+describe("personne ne redessine un champ à la main", () => {
+  const TSX = fichiers(SRC, ".tsx");
+
+  it("aucune bordure de focus n'est rejouée à côté de l'utilitaire", () => {
+    // Une bordure de focus écrite en classe utilitaire se bat avec celle de
+    // `champ` dans la cascade, et qui gagne dépend de l'ordre de génération.
+    // Une exception se déclare par `[--focus-champ:…]`, pas par une bordure.
+    const fautifs = TSX.filter((f) =>
+      /focus(-within)?:border-(amber|red|sky|emerald|rose)/.test(readFileSync(f, "utf8")),
+    );
+    expect(fautifs, `à passer en [--focus-champ:…] :\n${fautifs.join("\n")}`).toEqual([]);
+  });
+
+  it("aucun contrôle ne porte la surface d'un bloc de contenu", () => {
+    // Un `outline-none` dit qu'on maîtrise le focus d'un contrôle : c'est la
+    // signature d'un champ. Avec un fond de bloc, c'est un champ invisible.
+    const fautifs: string[] = [];
+    for (const f of TSX) {
+      for (const m of readFileSync(f, "utf8").matchAll(/className="([^"]*)"/g)) {
+        const cls = m[1]!;
+        if (!cls.includes("outline-none")) continue;
+        if (/bg-slate-9[0-9]0/.test(cls)) fautifs.push(`${f.slice(SRC.length)} : ${cls.slice(0, 70)}`);
+      }
+    }
+    expect(fautifs, `à remplacer par \`champ\` :\n${fautifs.join("\n")}`).toEqual([]);
+  });
+
+  it("aucune enveloppe de champ ne dessine sa propre bordure", () => {
+    // `focus-within` sur une enveloppe : elle tient un contrôle, donc c'est un
+    // champ, et sa surface vient de `champ`.
+    const fautifs: string[] = [];
+    for (const f of TSX) {
+      for (const m of readFileSync(f, "utf8").matchAll(/className="([^"]*)"/g)) {
+        const cls = m[1]!;
+        if (!cls.includes("focus-within:")) continue;
+        if (cls.includes("border-white/")) fautifs.push(`${f.slice(SRC.length)} : ${cls.slice(0, 70)}`);
+      }
+    }
+    expect(fautifs, `à remplacer par \`champ\` :\n${fautifs.join("\n")}`).toEqual([]);
+  });
+});
+
 describe("le rythme vertical de l'arène est déclaré une fois", () => {
   const page = readFileSync(join(SRC, "app", "arena", "[gameId]", "page.tsx"), "utf8");
 

@@ -12,7 +12,7 @@ import { addSituationAction } from "../../../actions";
 export const dynamic = "force-dynamic";
 
 const champ =
-  "mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60";
+  "mt-1 w-full champ px-3 py-2 text-sm text-slate-100 outline-none";
 const titre = "text-xs font-medium uppercase tracking-wide text-slate-400";
 
 const CAT_LABEL: Record<string, string> = {
@@ -148,7 +148,7 @@ export default async function NewSituationPage({
             {DECISION_MODELS.map((m) => (
               <label key={m.code} className="flex items-center justify-between gap-3">
                 <span className="text-sm text-slate-300">{m.name}</span>
-                <select name={`model_${m.code}`} defaultValue="" className="rounded-lg border border-white/10 bg-slate-900 px-2 py-1 text-xs text-slate-100">
+                <select name={`model_${m.code}`} defaultValue="" className="champ px-2 py-1 text-xs text-slate-100">
                   {REL_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value}>
                       {o.label}

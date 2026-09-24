@@ -104,7 +104,7 @@ export function DistributionCourrier({
               name="teamId"
               value={destinataire}
               onChange={(e) => setDestinataire(e.target.value)}
-              className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+              className="champ px-3 py-2 text-sm text-slate-100 outline-none"
             >
               <option value="" disabled={marchePlein}>
                 🌍 Tout le marché (toute la classe){marchePlein ? " · maximum atteint" : ""}
@@ -143,7 +143,7 @@ export function DistributionCourrier({
               name="eventCode"
               defaultValue=""
               key={adresse ? "team" : "market"}
-              className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+              className="champ px-3 py-2 text-sm text-slate-100 outline-none"
             >
               <option value="">Courrier au hasard</option>
               {distribuables.map((c) => (

@@ -180,7 +180,7 @@ function EquipmentPanel({
                   <span className="text-xs font-medium uppercase tracking-wide text-emerald-400">
                     Acheter
                   </span>
-                  <span className="mt-0.5 flex items-center gap-1.5 rounded border border-white/10 bg-slate-950 px-2 py-1 focus-within:border-emerald-400/60">
+                  <span className="mt-0.5 flex items-center gap-1.5 champ px-2 py-1 [--focus-champ:var(--color-emerald-400)]">
                     <input
                       type="number"
                       onWheel={sansMolette}
@@ -207,7 +207,7 @@ function EquipmentPanel({
                   <span className="text-xs font-medium uppercase tracking-wide text-red-400">
                     Vendre
                   </span>
-                  <span className="mt-0.5 flex items-center gap-1.5 rounded border border-white/10 bg-slate-950 px-2 py-1 focus-within:border-red-400/60">
+                  <span className="mt-0.5 flex items-center gap-1.5 champ px-2 py-1 [--focus-champ:var(--color-red-400)]">
                     <input
                       type="number"
                       onWheel={sansMolette}
@@ -343,7 +343,7 @@ function Field({
   return (
     <label className="block">
       <span className="block min-h-8 leading-4 text-xs font-medium uppercase tracking-wide text-slate-400">{label}</span>
-      <span className="mt-1 flex items-center gap-2 rounded-lg border border-white/5 bg-slate-950 px-3 py-2 focus-within:border-amber-400/60">
+      <span className="mt-1 flex items-center gap-2 champ px-3 py-2">
         <input
           type="number"
           onWheel={sansMolette}
@@ -719,7 +719,7 @@ function GammeReference({
     pas = 1,
     onChange?: (v: number) => void,
   ) => (
-    <span className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-slate-900 px-2 py-1.5 focus-within:border-amber-400/60">
+    <span className="flex items-center gap-1.5 champ px-2 py-1.5">
       <input
         type="number"
         onWheel={sansMolette}
@@ -791,7 +791,7 @@ function GammeReference({
                     onChange={(e) =>
                       setFaconniers((etat) => ({ ...etat, [p.code]: e.currentTarget.value }))
                     }
-                    className="w-full rounded-lg border border-white/10 bg-slate-900 px-2 py-1.5 text-[13px] text-slate-100 outline-none focus:border-amber-400/60"
+                    className="w-full champ px-2 py-1.5 text-[13px] text-slate-100 outline-none"
                   >
                     {suppliers.map((s) => {
                       // Le nom seul pour le façonnier de référence, l'écart
@@ -2001,7 +2001,7 @@ export function DecisionForm({
                 name="communicationAxis"
                 value={axe}
                 onChange={(e) => setAxe(e.currentTarget.value)}
-                className="mt-1 w-full rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-400/60"
+                className="mt-1 w-full champ px-3 py-2 text-sm text-slate-100 outline-none"
               >
                 <option value="">Aucun axe : le budget parle à tout le monde</option>
                 {communicationOffer.axes.map((a) => (
@@ -2430,7 +2430,7 @@ export function DecisionForm({
               ? "Qu'attendez-vous de ces choix ? Une phrase suffit."
               : "Pourquoi ces choix ce tour-ci ?"
           }
-          className="w-full resize-y rounded border border-slate-700 bg-slate-800/50 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:border-amber-400/50 focus:outline-none"
+          className="w-full resize-y champ px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none"
         />
         <p className="mt-1 text-xs text-slate-400">
           {premierTour
