@@ -850,6 +850,14 @@ export default async function TeacherGamePage({
       ) : null}
 
       {/*
+        LES TROIS GESTES QUI TOUCHENT À LA PARTIE ELLE-MÊME S'ANNONCENT, au
+        lieu de se perdre au bas d'une page qui compte huit tiroirs. « Régler »
+        plus haut change comment la partie se joue ; ici, on range, on
+        recommence, on supprime.
+      */}
+      <Rubrique note="rangement, remise à zéro, suppression">Gérer cette partie</Rubrique>
+
+      {/*
         LE RANGEMENT EST LE DERNIER GESTE DE LA PAGE, et c'est sa place : on ne
         range pas une partie au milieu de ses réglages. Il vaut AUSSI pour une
         partie en cours — c'est même le cas du ménage de fin d'année, où l'on

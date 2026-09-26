@@ -5,6 +5,7 @@ import { getTeacherGames } from "@/services/game.service";
 import { getOrganizerCompetitions } from "@/services/competition.service";
 import { getStaffContext } from "@/services/admin.service";
 import {
+  archiverPartieAction,
   createClassGameAction,
   desarchiverPartieAction,
   logoutAction,
@@ -136,10 +137,13 @@ export default async function TeacherDashboard({
             const joues = new Map<number, null>();
             for (let n = 1; n < (finished ? g.roundsCount + 1 : g.currentRound); n++) joues.set(n, null);
             return (
-              <li key={g.gameId}>
+              <li
+                key={g.gameId}
+                className="carte flex h-full items-center gap-3 px-3 py-3 transition hover:border-amber-400/40 sm:px-4"
+              >
                 <Link
                   href={`/teacher/games/${g.gameId}`}
-                  className="carte flex h-full items-center gap-3 px-3 py-3 transition hover:border-amber-400/40 sm:px-4"
+                  className="flex min-w-0 flex-1 items-center gap-3"
                 >
                   <span
                     aria-hidden
@@ -173,6 +177,27 @@ export default async function TeacherDashboard({
                     </span>
                   </span>
                 </Link>
+                {/*
+                  RANGER SE FAIT DEPUIS LA LISTE, parce que c'est en la
+                  regardant qu'on s'aperçoit qu'elle est trop longue. Le geste
+                  vivait au bas de la page d'une partie, vingt tiroirs plus
+                  loin : il y était introuvable au moment où l'on en a besoin.
+                  Un clic suffit, sans confirmation : le geste est réversible,
+                  et la partie réapparaît juste en dessous, dans « Parties
+                  rangées », avec son bouton pour la ressortir.
+                */}
+                <GuardedForm
+                  action={archiverPartieAction.bind(null, g.gameId)}
+                  label="rangement de la partie"
+                  className="shrink-0"
+                >
+                  <SubmitButton
+                    pendingLabel="Rangement…"
+                    className="rounded-lg border border-white/10 px-2.5 py-2 text-xs font-medium text-slate-400 transition hover:border-amber-400/40 hover:text-amber-200"
+                  >
+                    Ranger
+                  </SubmitButton>
+                </GuardedForm>
               </li>
             );
           })}
