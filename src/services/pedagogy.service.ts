@@ -35,7 +35,6 @@ import { AXES, aggregateAxis, updateMastery } from "@/pedagogy/progress";
 import { adaptiveHintMultiplier, playerStrength } from "@/pedagogy/adaptivity";
 import { computeRawSituationScore } from "@/pedagogy/scoring";
 import type { CompanyRoundResult } from "@/engine/types";
-import { markStepCompleted } from "@/services/learning-progress.service";
 /**
  * Moteur pédagogique côté services — barrel de compatibilité.
  *
@@ -436,19 +435,7 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
       })
       .where(eq(situationInstances.id, instance.id));
 
-    // Mark granted learning steps as completed for team members
-    const grantedSteps = def.grantedLearningSteps ?? [];
     const members = membersByTeam.get(instance.teamId) ?? [];
-    for (const member of members) {
-      for (const stepId of grantedSteps) {
-        try {
-          await markStepCompleted(member.userId, stepId);
-        } catch {
-          // Silently skip if step doesn't exist or prerequisites aren't met
-          // (this allows situations to grant steps that don't exist yet without breaking)
-        }
-      }
-    }
 
     // Only track learning progress if the team submitted a diagnosis (V1-5: measure only)
     const diagnosisSubmitted = (instance.diagnosis as { selected?: string[] } | null)?.selected !== undefined;

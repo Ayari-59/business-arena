@@ -80,6 +80,10 @@ beforeAll(async () => {
     periodicity: "quarter",
     humanTeamsCount: 1,
     botCount: 1,
+    // GRAINE FIXE. Sans elle, les situations ouvertes changent d'une exécution
+    // à l'autre, et le recouvrement entre les deux tours avec : la garde
+    // passait ou échouait au hasard. Une garde intermittente ne garde rien.
+    seed: 7,
   });
   gameId = partie.gameId;
   const [u] = await db

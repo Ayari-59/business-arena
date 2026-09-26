@@ -135,7 +135,22 @@ export const playerSkills = pgTable(
   (t) => [primaryKey({ columns: [t.userId, t.axis] })],
 );
 
-/** Étapes d'apprentissage complétées par un utilisateur. */
+/**
+ * DEUX TABLES DORMANTES, ET VIDES DEPUIS TOUJOURS.
+ *
+ * Elles servaient un verrouillage par étapes d'apprentissage qui n'a jamais
+ * fonctionné : les situations délivraient des étapes nommées `core_01`,
+ * `market_02`, quand le référentiel des sentiers les nommait
+ * `LP-pricing-1-intro`. Aucune correspondance, sur aucune des vingt-cinq. Le
+ * seul écrivain, `markStepCompleted`, levait donc à chaque appel, et un
+ * `catch` vide avalait l'erreur. Pas une ligne n'a jamais été écrite ici.
+ *
+ * Le code a été retiré ; les tables restent. Les supprimer serait une porte à
+ * sens unique sur une base de production, pour un gain nul — elles sont vides
+ * et ne coûtent rien. Si une progression est un jour reconçue, elle partira
+ * d'une conception, pas de ce squelette, et décidera elle-même de son
+ * stockage.
+ */
 export const completedLearningSteps = pgTable(
   "completed_learning_steps",
   {

@@ -121,28 +121,6 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
   const basculerOption = (id: string, coche: boolean) =>
     setOptions((prec) => (coche ? [...new Set([...prec, id])] : prec.filter((o) => o !== id)));
 
-  // Check if situation is blocked by learning prerequisites
-  if (!situation.isAccessible && situation.requiredLearningSteps && situation.requiredLearningSteps.length > 0) {
-    return (
-      <article className="rounded-xl border border-red-400/20 bg-slate-900 p-5">
-        <header className="mb-3">
-          <p className="text-xs uppercase tracking-[0.25em] text-amber-400">
-            {CATEGORY_LABELS[situation.category]}
-          </p>
-          <h3 className="mt-1 text-lg font-semibold text-slate-100">{situation.title}</h3>
-          <p className="mt-2 text-sm leading-relaxed text-slate-300">{situation.narrative}</p>
-          <p className="mt-2 text-sm font-medium text-amber-200">{situation.problem}</p>
-        </header>
-        <div className="rounded-lg border border-red-400/30 bg-red-950/30 px-4 py-3">
-          <p className="text-sm font-semibold text-red-200">Accès limité</p>
-          <p className="mt-1 text-xs text-red-300">
-            Des étapes d&apos;apprentissage restent à compléter dans les sentiers pédagogiques.
-          </p>
-        </div>
-      </article>
-    );
-  }
-
   return (
     <article className="carte p-4 sm:p-6">
       <header className="mb-3">

@@ -64,45 +64,75 @@ ordre de grandeur juste, et fini.
 
 ---
 
-## 2. Le verrouillage pédagogique ne verrouille rien
+## 2. Le verrouillage pédagogique — RETIRÉ
 
-**Gravité : haute.** Une fonctionnalité entière, câblée, visible dans le tableau
-de bord enseignant, et inerte.
+**Le diagnostic de la première rédaction était incomplet, et le constat est en
+réalité plus simple et plus grave.** J'avais écrit « 39 des 56 entrées de la
+carte désignent une situation qui n'existe plus », ce qui laissait croire à une
+carte autrefois juste, devenue obsolète. La vérification complète dit autre
+chose : **les deux moitiés du dispositif n'ont jamais partagé de vocabulaire.**
 
-- `src/services/debrief.service.ts:701` pose `isAccessible: true` **en dur**.
-  C'est le seul endroit qui produit ce champ.
-- `src/components/situation-panel.tsx:125` teste `!situation.isAccessible` :
-  branche **inatteignable**.
-- `SITUATION_LEARNING_MAP` compte 56 entrées, dont **39 désignent une situation
-  qui n'existe plus** (`nova_t1_reprise`, `hotel_t2_overbooking`,
-  `transport_t3_renouvellement`…). Elles ne font donc rien, silencieusement.
-- Résultat sur les 137 situations : 13 portent un prérequis, soit 9,5 %. Et la
-  répartition est incohérente — `boutique` 8 sur 9, `boutique-mono` (son jumeau)
-  0 ; `hotel` 2, `hotel-gamme` 0 ; NOVA, le scénario par défaut, 0.
-- Pire, si le verrou était réactivé tel quel : **13 situations seraient
-  définitivement inaccessibles**, car elles exigent une étape que leur propre
-  scénario ne délivre jamais.
+Trois pièces devaient s'emboîter :
 
-| Situation bloquée | Étape exigée, jamais délivrée |
+| Pièce | Ce qu'elle contenait |
 |---|---|
-| Le trimestre s'est terminé dans le rouge (boutique) | `finance_02` |
-| Rentable, et pourtant à découvert (boutique) | `finance_03` |
-| Sous le taux d'occupation d'équilibre (hotel) | `finance_02` |
-| Le service ne couvre plus ses frais (bistrot) | `finance_02` |
-| Sous le seuil (fitness) | `finance_02` |
-| …et 8 autres | |
+| `learning-paths.ts` | 6 sentiers, 25 étapes, nommées `LP-pricing-1-intro`, `LP-cash-flow-2-bfr`… |
+| `situation-learning-map.ts` | 56 entrées liant une situation à des étapes nommées `core_01`, `market_02`, `finance_04`… |
+| `isAccessible` | le verrou lui-même |
 
-Ce sont exactement les situations de **détection** : celles qui s'ouvrent quand
-l'élève est en difficulté, c'est-à-dire au moment où elles servent.
+**Aucune correspondance entre les deux nomenclatures, sur aucune des 25
+étapes.** La chaîne se terminait donc ainsi, à chaque débriefing :
 
-**Deux issues, pas trois.** Soit le verrou est assumé : il faut alors réparer la
-carte et garantir qu'aucune étape exigée n'est orpheline. Soit il est abandonné :
-il faut alors retirer `isAccessible`, la carte et la branche morte, et cesser de
-montrer à l'enseignant une progression qui ne commande rien.
+```
+markStepCompleted(élève, "core_01")
+  → getLearningStep("core_01") → introuvable
+  → throw new Error("Step core_01 not found")
+  → } catch { }          ← avalé, sans une trace
+```
 
----
+Le `catch` vide portait ce commentaire : « Silently skip if step doesn't exist ».
+Écrit pour tolérer une étape manquante, il tolérait qu'aucune n'existe.
 
-## 3. 370 lignes mortes qui dupliquent le chemin vivant
+Conséquences mesurées :
+
+- la table `completed_learning_steps` n'a **jamais** reçu une ligne, sur aucun
+  scénario, pour aucun élève ;
+- le score affiché valant `étapes complétées ÷ 25`, l'onglet **« Progression »
+  de la barre enseignant affichait 0 % pour toutes les équipes, toujours** ;
+- 39 des 56 entrées de la carte désignaient en plus une situation supprimée ;
+- `isAccessible` était de toute façon écrit en dur à `true`, rendant la branche
+  de `situation-panel.tsx` inatteignable.
+
+Ce n'était donc pas une régression : c'était un chantier interrompu, jamais
+fonctionnel sur aucune version.
+
+**Décision : retiré.** Réparer n'aurait pas été corriger 39 lignes mais
+concevoir la progression — quelles étapes, délivrées par quoi, dans quel
+ordre, pour 137 situations et 15 scénarios. Un travail de didacticien. Et il
+aurait fallu d'abord trancher une question de fond : les situations que la
+carte verrouillait sont celles de **détection**, qui s'ouvrent quand l'élève va
+mal, c'est-à-dire au moment où elles servent. Les lui fermer, c'est lui refuser
+l'explication de ce qui vient de lui arriver.
+
+Ont disparu : `learning-progress.service.ts`, `learning-paths.ts`,
+`situation-learning-map.ts`, la page `/teacher/learning` et son tableau de
+bord, l'onglet « Progression », les deux champs sur `SituationDef`, les deux
+sur `SituationView`, et la branche morte de l'écran élève.
+
+**N'a pas disparu, et c'est l'essentiel : la maîtrise des notions.** Mesurée au
+diagnostic, écrite dans `learning_progress`, visible dans la vue pédagogique.
+Celle-là fonctionne, et elle est intacte.
+
+Les deux tables `completed_learning_steps` et `learning_path_progression`
+restent en base, vides : les supprimer serait une porte à sens unique sur une
+base de production, pour un gain nul. Le schéma le dit sur place.
+
+*Si une progression est un jour reconçue, la piste à retenir est l'inverse du
+verrou : non pas fermer une situation, mais signaler à l'élève ce qui lui
+manque pour la comprendre, avec le lien vers la fiche notion. Même intention
+pédagogique, sans jamais fermer une porte au moment où elle sert.*
+
+## 3. 370 lignes mortes qui dupliquent le chemin vivant — CORRIGÉ
 
 **Gravité : haute** (risque de correction à moitié appliquée).
 
@@ -135,7 +165,7 @@ garder les quatre helpers, corriger l'en-tête.
 
 ---
 
-## 4. Contraste : 111 textes sous le seuil AA
+## 4. Contraste : 111 textes sous le seuil AA — CORRIGÉ
 
 **Gravité : moyenne.** Mesuré sur l'échelle Tailwind réellement employée.
 
@@ -158,7 +188,7 @@ garde de plus.
 
 ---
 
-## 5. N+1 dans le chemin de clôture du tour
+## 5. N+1 dans le chemin de clôture du tour — CORRIGÉ
 
 **Gravité : moyenne.** `src/services/pedagogy.service.ts:485`
 
@@ -177,7 +207,7 @@ Même motif, moins critique car hors chemin chaud : `competition.service.ts:921`
 
 ---
 
-## 6. Endpoints publics sans limite, qui écrivent en base
+## 6. Endpoints publics sans limite, qui écrivent en base — CORRIGÉ
 
 **Gravité : moyenne.** Trois actions serveur non authentifiées créent des lignes
 avant toute validation :
@@ -199,7 +229,7 @@ suffit de l'appliquer, et de ne créer l'invité qu'**après** validation du cod
 
 ---
 
-## 7. Le test de jouabilité joue une configuration qui n'existe pas
+## 7. Le test de jouabilité joue une configuration qui n'existe pas — CORRIGÉ
 
 **Gravité : moyenne** (le test rassure à tort).
 
@@ -267,12 +297,19 @@ entreprises. Un élève qui ne change rien est un cas de classe très fréquent 
 
 ---
 
-## Ordre suggéré
+## Où en est l'audit
 
-1. §2 — trancher le verrouillage pédagogique (réparer ou retirer). C'est le seul
-   constat qui touche à ce que l'élève voit.
-2. §3 — supprimer les 370 lignes mortes, avant qu'une correction se perde dedans.
-3. §6 et §5 — limite de débit, puis le N+1 de la clôture.
-4. §4 — le contraste, avec la garde qui va avec.
-5. §7 — réparer le test de jouabilité, qui est aujourd'hui un filet troué.
-6. §8 — au fil de l'eau.
+| § | Constat | État |
+|---|---|---|
+| 1 | Capacité main-d'œuvre infinie en base | corrigé |
+| 2 | Verrouillage pédagogique inerte | **retiré** |
+| 3 | 370 lignes mortes dupliquant le chemin vivant | corrigé |
+| 4 | Contraste sous le seuil AA (111 textes, + l'encre du courrier) | corrigé, avec garde |
+| 5 | N+1 à la clôture du tour | corrigé, avec garde |
+| 6 | Endpoints publics sans limite | corrigé, avec garde |
+| 7 | Test de jouabilité hors sujet | corrigé, l'assertion mord |
+| 8 | Constats mineurs | **à faire** |
+
+Il reste le §8, et deux chantiers hors audit : eslint dans la CI (le plus
+rentable des trois lignes à écrire), et la répétition générale scriptée d'une
+séance complète — l'application n'a toujours jamais rencontré d'élèves.

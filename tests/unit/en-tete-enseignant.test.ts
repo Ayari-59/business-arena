@@ -18,10 +18,14 @@ describe("l'en-tête enseignant", () => {
     expect(html).toContain("Espace enseignant");
     expect(html).toContain("Mes scénarios");
     expect(html).toMatch(/aria-current="page"[^>]*>Mes scénarios/);
-    for (const lien of ["Mes parties", "Carnet d&#x27;usage", "Progression"]) expect(html).toContain(lien);
+    for (const lien of ["Mes parties", "Carnet d&#x27;usage"]) expect(html).toContain(lien);
     // pas d'établissement ni d'administration sans le droit
     expect(html).not.toContain("Mon établissement");
     expect(html).not.toContain("Administration");
+    // L'onglet « Progression » a été retiré : il affichait 0 % pour toutes les
+    // équipes, toujours, faute d'étape d'apprentissage que quoi que ce soit
+    // pût délivrer. Cette ligne empêche qu'il revienne par mégarde.
+    expect(html).not.toContain("Progression");
   });
 
   it("montre l'établissement et l'administration à qui y a droit", () => {

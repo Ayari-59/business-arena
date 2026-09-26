@@ -20,7 +20,6 @@ const NAVIGATION: ReadonlyArray<{ code: PageEnseignant; href: string; label: str
   { code: "parties", href: "/teacher", label: "Mes parties" },
   { code: "scenarios", href: "/teacher/scenarios", label: "Mes scénarios" },
   { code: "usage", href: "/teacher/usage", label: "Carnet d'usage" },
-  { code: "apprentissages", href: "/teacher/learning", label: "Progression" },
   // Le manuel est un document, pas un écran de pilotage : il reste dans la
   // barre parce qu'on le cherche justement quand on ne sait plus où chercher.
   { code: "manuel", href: "/teacher/manuel", label: "Manuel" },
