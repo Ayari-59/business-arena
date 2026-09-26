@@ -45,7 +45,10 @@ import { markStepCompleted } from "@/services/learning-progress.service";
  *   - situation-instance.service  : ouverture / chargement des situations
  *   - hints.service               : plafond et déblocage des indices
  *   - diagnosis.service           : diagnostic + score F1
- *   - debrief.service             : QCM, rattrapage, débriefing, vue (toView)
+ *   - debrief.service             : rattrapage, politique de rattrapage, vue
+ *                                   (toView). Le QCM et le débriefing sont
+ *                                   ICI : la copie qu'en portait ce service-là
+ *                                   n'était importée par personne.
  *   - pedagogy-reporting.service  : vues lecture élève / enseignant
  *
  * Ce fichier ne fait que ré-exporter leur API publique : les appelants qui

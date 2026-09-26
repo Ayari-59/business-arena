@@ -1,18 +1,6 @@
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import {
-  concepts,
-  games,
-  hintUsages,
-  learningProgress,
-  modelChoices,
-  players,
-  playerSkills,
-  roundResults,
-  rounds,
-  situationInstances,
-  situations,
-} from "@/db/schema";
+import { games, rounds, situationInstances } from "@/db/schema";
 import { conceptByCode, situationLevel } from "@/config/pedagogy/concepts";
 import { modelByCode } from "@/config/pedagogy/models";
 import type { SituationDef } from "@/config/scenarios/nova/situations";
@@ -22,65 +10,33 @@ import {
   type DecisionLever,
   type QuizQuestionDef,
 } from "@/config/scenarios/situation-kit";
-import { situationByCode } from "@/config/scenarios/registry";
 import { presetFromProfile, quizModeFromProfile, type QuizMode } from "@/config/difficulty";
 import { evaluateDiagnosis, evaluateQuiz } from "@/pedagogy/evaluation";
-import { hintScoreMultiplier, nextUnlockableLevel } from "@/pedagogy/hints";
-import { buildConsequenceContext, buildInterpretation } from "@/pedagogy/detection";
+import { nextUnlockableLevel } from "@/pedagogy/hints";
 import type { ConsequenceFact, InterpretationFact, TriggerFact } from "@/pedagogy/detection";
-import { AXES, aggregateAxis, updateMastery } from "@/pedagogy/progress";
-import { adaptiveHintMultiplier, playerStrength } from "@/pedagogy/adaptivity";
 import { computeRawSituationScore } from "@/pedagogy/scoring";
 import {
   RETAKE_MULTIPLIER,
   missedSituationPolicyFromProfile,
   type MissedSituationPolicy,
 } from "@/config/missed-situation";
-import type { CompanyRoundResult } from "@/engine/types";
 import { loadInstanceForUser } from "./situation-instance.service";
 
 /**
- * Interactions joueur (QCM, rattrapage), débriefing d'un tour et construction
- * de la vue d'une situation. Extrait de pedagogy.service.ts (refactoring V2,
- * étape 9). `toView`, `askedQuestions` et `modelCtxOf` sont exportés car la
- * couche lecture (pedagogy-reporting.service) s'en sert.
+ * Rattrapage d'une situation manquée, politique de rattrapage de la partie, et
+ * construction de la vue d'une situation.
+ *
+ * CE FICHIER A PORTÉ DEUX FOIS LE MÊME CODE. Il exportait aussi `submitQuiz`
+ * et `debriefRound`, copies à 49 % identiques de celles de pedagogy.service —
+ * dont un bloc de 95 lignes à l'identique. Personne ne les importait : le
+ * chemin vivant passe par pedagogy.service (`arena/actions.ts` pour le QCM,
+ * `round-resolution.service` pour le débriefing). Trois cent soixante-dix
+ * lignes qui ressemblaient au code vivant sans l'être : une correction faite
+ * sur la mauvaise copie ne se serait vue nulle part, et rien ne l'aurait dit.
+ *
+ * `toView`, `askedQuestions` et `modelCtxOf` restent exportés : la couche
+ * lecture (pedagogy-reporting.service) s'en sert.
  */
-
-/**
- * Enregistre les réponses au QCM de mobilisation des connaissances (2-3
- * questions par situation). Le score est calculé immédiatement mais la
- * correction n'est révélée qu'au débriefing du tour.
- */
-export async function submitQuiz(args: {
-  instanceId: string;
-  userId: string;
-  answers: Record<string, string>;
-}): Promise<{ score: number }> {
-  const { instance, def, game } = await loadInstanceForUser(args.instanceId, args.userId);
-  if (instance.status === "debriefed") throw new Error("Cette situation est déjà débriefée");
-  if (instance.quiz) throw new Error("Le QCM de cette situation est déjà validé");
-  // L'enseignant a retiré les QCM de cette partie : le formulaire n'est plus
-  // servi, et une soumission forgée ne doit pas non plus être acceptée.
-  const asked = askedQuestions(def, quizModeFromProfile(game?.difficultyProfile), modelCtxOf(game));
-  if (asked.length === 0) {
-    throw new Error("Les QCM sont désactivés pour cette partie");
-  }
-  const validIds = new Set(asked.map((q) => q.id));
-  const answers: Record<string, string> = {};
-  for (const [questionId, optionId] of Object.entries(args.answers)) {
-    if (validIds.has(questionId)) answers[questionId] = optionId;
-  }
-  const score = evaluateQuiz(answers, asked);
-  await db
-    .update(situationInstances)
-    .set({
-      quiz: { answers, score },
-      status: "answered",
-      answeredAt: new Date(),
-    })
-    .where(eq(situationInstances.id, args.instanceId));
-  return { score };
-}
 
 /**
  * Rattrapage d'une situation manquée (V1-6, politique `retake50`). Une reprise
@@ -153,327 +109,6 @@ export async function setMissedPolicy(args: {
     .update(games)
     .set({ difficultyProfile: { ...profile, missedSituationPolicy: args.policy } })
     .where(eq(games.id, args.gameId));
-}
-
-// ---------------------------------------------------------------------------
-// Débriefing d'un tour + progression (doc 03 §5-§6)
-// ---------------------------------------------------------------------------
-
-export async function debriefRound(gameId: string, roundIndex: number): Promise<void> {
-  const roundRow = (
-    await db
-      .select()
-      .from(rounds)
-      .where(and(eq(rounds.gameId, gameId), eq(rounds.index, roundIndex)))
-  )[0];
-  if (!roundRow) return;
-  const instances = await db
-    .select()
-    .from(situationInstances)
-    .where(eq(situationInstances.roundId, roundRow.id));
-  if (instances.length === 0) return;
-
-  const situationRows = await db.select().from(situations);
-  const codeById = new Map(situationRows.map((r) => [r.id, r.code]));
-  const conceptRows = await db.select().from(concepts);
-  const conceptIdByCode = new Map(conceptRows.map((r) => [r.code, r.id]));
-  const gameRow = (await db.select().from(games).where(eq(games.id, gameId)))[0];
-  const quizMode = quizModeFromProfile(gameRow?.difficultyProfile);
-
-  const toDebrief = instances.filter((i) => i.status !== "debriefed");
-  if (toDebrief.length === 0) return;
-
-  const instanceIds = toDebrief.map((i) => i.id);
-  const teamIds = [...new Set(toDebrief.map((i) => i.teamId))];
-
-  const allUsages = await db
-    .select()
-    .from(hintUsages)
-    .where(inArray(hintUsages.situationInstanceId, instanceIds));
-  const levelsByInstance = new Map<string, number[]>();
-  for (const u of allUsages) {
-    const list = levelsByInstance.get(u.situationInstanceId) ?? [];
-    list.push(u.level);
-    levelsByInstance.set(u.situationInstanceId, list);
-  }
-
-  const allMembers = await db
-    .select()
-    .from(players)
-    .where(inArray(players.teamId, teamIds));
-  const membersByTeam = new Map<string, (typeof allMembers)[number][]>();
-  for (const m of allMembers) {
-    const list = membersByTeam.get(m.teamId) ?? [];
-    list.push(m);
-    membersByTeam.set(m.teamId, list);
-  }
-
-  const allUserIds = [...new Set(allMembers.map((m) => m.userId))];
-  const allSkills = allUserIds.length
-    ? await db.select().from(playerSkills).where(inArray(playerSkills.userId, allUserIds))
-    : [];
-  const skillsByUser = new Map<string, { value: string }[]>();
-  for (const s of allSkills) {
-    const list = skillsByUser.get(s.userId) ?? [];
-    list.push(s);
-    skillsByUser.set(s.userId, list);
-  }
-
-  const allRelevantConceptIds: string[] = [];
-  for (const inst of toDebrief) {
-    const def = situationByCode.get(codeById.get(inst.situationId) ?? "");
-    if (!def) continue;
-    for (const code of def.conceptCodes) {
-      const cid = conceptIdByCode.get(code);
-      if (cid) allRelevantConceptIds.push(cid);
-    }
-  }
-  const uniqueConceptIds = [...new Set(allRelevantConceptIds)];
-  const allProgress =
-    allUserIds.length && uniqueConceptIds.length
-      ? await db
-          .select()
-          .from(learningProgress)
-          .where(
-            and(
-              inArray(learningProgress.userId, allUserIds),
-              inArray(learningProgress.conceptId, uniqueConceptIds),
-            ),
-          )
-      : [];
-  const progressMap = new Map<string, { mastery: string; evidenceCount: number }>();
-  for (const p of allProgress) {
-    progressMap.set(`${p.userId}:${p.conceptId}`, {
-      mastery: p.mastery,
-      evidenceCount: p.evidenceCount,
-    });
-  }
-  // Le pilote neon-http facture chaque requête comme un aller-retour HTTPS.
-  // Plutôt qu'un upsert par (membre × concept) au fil de la boucle — des
-  // centaines pour une classe — on accumule l'état FINAL de chaque clé en
-  // mémoire (progressMap porte déjà l'accumulation) et on écrit tout d'un
-  // seul upsert multi-lignes après la boucle.
-  const progressUpserts = new Map<
-    string,
-    { userId: string; conceptId: string; mastery: string; evidenceCount: number }
-  >();
-
-  const fallbackChoiceIds = toDebrief
-    .filter((inst) => {
-      const def = situationByCode.get(codeById.get(inst.situationId) ?? "");
-      if (!def) return false;
-      const hasQuiz = askedQuestions(def, quizMode).length > 0;
-      if (!hasQuiz) return false;
-      return (inst.quiz as { score?: number } | null)?.score == null;
-    })
-    .map((i) => i.id);
-  const choiceRows = fallbackChoiceIds.length
-    ? await db
-        .select()
-        .from(modelChoices)
-        .where(inArray(modelChoices.situationInstanceId, fallbackChoiceIds))
-    : [];
-  const choiceByInstance = new Map(choiceRows.map((c) => [c.situationInstanceId, c]));
-
-  // A2 — Conséquences pédagogiques : charger les résultats avant/après pour
-  // construire le snapshot d'évolution des indicateurs au débriefing.
-  const afterResults = await db
-    .select()
-    .from(roundResults)
-    .where(eq(roundResults.roundId, roundRow.id));
-  const afterByTeam = new Map<string, CompanyRoundResult>();
-  for (const r of afterResults) {
-    afterByTeam.set(r.teamId, {
-      incomeStatement: r.incomeStatement,
-      balanceSheet: r.balanceSheet,
-      functionalBalance: { frng: Number(r.frng), bfr: Number(r.bfr), netTreasury: Number(r.netTreasury) },
-      market: { bySegment: r.marketDetail as CompanyRoundResult["market"]["bySegment"], totalShare: Number(r.marketShare) },
-      production: (r.engineTrace as { production?: CompanyRoundResult["production"] })?.production ?? { utilizationRate: 0 },
-    } as CompanyRoundResult);
-  }
-  const beforeByTeam = new Map<string, CompanyRoundResult>();
-  if (roundIndex > 1) {
-    const prevRoundRow = (
-      await db
-        .select()
-        .from(rounds)
-        .where(and(eq(rounds.gameId, gameId), eq(rounds.index, roundIndex - 1)))
-    )[0];
-    if (prevRoundRow) {
-      const beforeResults = await db
-        .select()
-        .from(roundResults)
-        .where(eq(roundResults.roundId, prevRoundRow.id));
-      for (const r of beforeResults) {
-        beforeByTeam.set(r.teamId, {
-          incomeStatement: r.incomeStatement,
-          balanceSheet: r.balanceSheet,
-          functionalBalance: { frng: Number(r.frng), bfr: Number(r.bfr), netTreasury: Number(r.netTreasury) },
-          market: { bySegment: r.marketDetail as CompanyRoundResult["market"]["bySegment"], totalShare: Number(r.marketShare) },
-          production: (r.engineTrace as { production?: CompanyRoundResult["production"] })?.production ?? { utilizationRate: 0 },
-        } as CompanyRoundResult);
-      }
-    }
-  }
-
-  for (const instance of toDebrief) {
-    const def = situationByCode.get(codeById.get(instance.situationId) ?? "");
-    if (!def) continue;
-
-    const levels = levelsByInstance.get(instance.id) ?? [];
-    const diagScore =
-      ((instance.diagnosis as { score?: number } | null)?.score as number | undefined) ?? 0;
-    const hasQuizQuestions = askedQuestions(def, quizMode).length > 0;
-    let quizScore: number | null = null;
-    if (hasQuizQuestions) {
-      quizScore = (instance.quiz as { score?: number } | null)?.score ?? null;
-      if (quizScore === null) {
-        const choice = choiceByInstance.get(instance.id);
-        quizScore = choice ? Number(choice.modelScore ?? 0) : 0;
-      }
-    }
-    const raw = computeRawSituationScore({ diagnosisScore: diagScore, quizScore, hasQuizQuestions });
-    const baseMultiplier = hintScoreMultiplier(levels, def.hints);
-    const teamScore = raw * baseMultiplier;
-
-    // A2 — snapshot conséquences pour les situations détectées
-    let consequenceContext: ConsequenceFact[] | null = null;
-    // A3 — interprétation pédagogique contextuelle
-    let interpretationContext: InterpretationFact | null = null;
-    if (instance.origin === "detected" && "detect" in def.trigger) {
-      const before = beforeByTeam.get(instance.teamId);
-      const after = afterByTeam.get(instance.teamId);
-      if (before && after) {
-        consequenceContext = buildConsequenceContext(def.trigger.detect, before, after);
-        interpretationContext = buildInterpretation(def.trigger.detect, consequenceContext);
-      }
-    }
-
-    await db
-      .update(situationInstances)
-      .set({
-        status: "debriefed",
-        diagnosis: {
-          ...((instance.diagnosis as object) ?? {}),
-          finalScore: teamScore,
-          hintLevelsUsed: levels,
-        },
-        ...(consequenceContext !== null ? { consequenceContext } : {}),
-        ...(interpretationContext !== null ? { interpretationContext } : {}),
-      })
-      .where(eq(situationInstances.id, instance.id));
-
-    // Une ligne de progression ne se crée que s'il y a eu une réponse. Une
-    // situation non rendue n'est pas une mesure à zéro, c'est une absence :
-    // la vue enseignant affichait « 2 » puis « 1 » de maîtrise sans qu'aucun
-    // élève ait rien saisi.
-    const repondu =
-      typeof (instance.diagnosis as { score?: unknown } | null)?.score === "number" ||
-      typeof (instance.quiz as { score?: unknown } | null)?.score === "number" ||
-      choiceByInstance.has(instance.id);
-    const members = repondu ? (membersByTeam.get(instance.teamId) ?? []) : [];
-    for (const member of members) {
-      const memberSkills = (skillsByUser.get(member.userId) ?? []).map((s) => ({
-        value: Number(s.value),
-      }));
-      const strength = playerStrength(memberSkills);
-      const memberMultiplier = adaptiveHintMultiplier(levels, def.hints, strength);
-      const score = raw * memberMultiplier;
-
-      for (const conceptCode of def.conceptCodes) {
-        const conceptId = conceptIdByCode.get(conceptCode);
-        if (!conceptId) continue;
-        const key = `${member.userId}:${conceptId}`;
-        const current = progressMap.get(key);
-        const mastery = updateMastery(Number(current?.mastery ?? 0), score, def.weight);
-        const evidenceCount = (current?.evidenceCount ?? 0) + 1;
-        // Accumulation en mémoire : plusieurs situations d'un même tour peuvent
-        // toucher le même concept pour le même élève ; progressMap porte la
-        // valeur courante, progressUpserts garde l'état FINAL à écrire.
-        progressMap.set(key, { mastery: mastery.toFixed(2), evidenceCount });
-        progressUpserts.set(key, {
-          userId: member.userId,
-          conceptId,
-          mastery: mastery.toFixed(2),
-          evidenceCount,
-        });
-      }
-    }
-  }
-
-  // Écriture groupée de la progression : un seul upsert multi-lignes au lieu
-  // d'un par (membre × concept). Sur conflit, chaque ligne applique sa propre
-  // valeur via `excluded`.
-  if (progressUpserts.size > 0) {
-    await db
-      .insert(learningProgress)
-      .values(
-        [...progressUpserts.values()].map((r) => ({
-          userId: r.userId,
-          conceptId: r.conceptId,
-          mastery: r.mastery,
-          evidenceCount: r.evidenceCount,
-          lastEventAt: new Date(),
-        })),
-      )
-      .onConflictDoUpdate({
-        target: [learningProgress.userId, learningProgress.conceptId],
-        set: {
-          mastery: sql`excluded.mastery`,
-          evidenceCount: sql`excluded.evidence_count`,
-          lastEventAt: sql`excluded.last_event_at`,
-        },
-      });
-  }
-
-  // Recalcul des compétences par axe pour tous les élèves touchés. On lit toute
-  // leur progression en UNE requête (au lieu d'un select par élève) puis on
-  // écrit tous les axes d'un seul upsert multi-lignes.
-  const codeByConceptId = new Map(conceptRows.map((r) => [r.id, r.code]));
-  const allProgressByUser =
-    allUserIds.length > 0
-      ? await db
-          .select({
-            userId: learningProgress.userId,
-            mastery: learningProgress.mastery,
-            conceptId: learningProgress.conceptId,
-          })
-          .from(learningProgress)
-          .where(inArray(learningProgress.userId, allUserIds))
-      : [];
-  const progressByUser = new Map<string, { mastery: string; conceptId: string }[]>();
-  for (const p of allProgressByUser) {
-    const list = progressByUser.get(p.userId) ?? [];
-    list.push({ mastery: p.mastery, conceptId: p.conceptId });
-    progressByUser.set(p.userId, list);
-  }
-  const skillRows: (typeof playerSkills.$inferInsert)[] = [];
-  for (const userId of allUserIds) {
-    const progress = progressByUser.get(userId) ?? [];
-    if (progress.length === 0) continue;
-    const byAxis = new Map<string, number[]>();
-    for (const p of progress) {
-      const def = conceptByCode.get(codeByConceptId.get(p.conceptId) ?? "");
-      if (!def) continue;
-      const list = byAxis.get(def.axis) ?? [];
-      list.push(Number(p.mastery));
-      byAxis.set(def.axis, list);
-    }
-    for (const axis of AXES) {
-      const masteries = byAxis.get(axis);
-      if (!masteries || masteries.length === 0) continue;
-      skillRows.push({ userId, axis, value: aggregateAxis(masteries).toFixed(2) });
-    }
-  }
-  if (skillRows.length > 0) {
-    await db
-      .insert(playerSkills)
-      .values(skillRows)
-      .onConflictDoUpdate({
-        target: [playerSkills.userId, playerSkills.axis],
-        set: { value: sql`excluded.value` },
-      });
-  }
 }
 
 // ---------------------------------------------------------------------------
