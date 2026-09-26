@@ -264,9 +264,9 @@ entreprises. Un élève qui ne change rien est un cas de classe très fréquent 
 
 ## 8. Constats mineurs
 
-- **eslint n'est pas dans la CI.** `package.json` a `"lint": "eslint ."`, mais
-  `.github/workflows/ci.yml` n'enchaîne que `typecheck`, `test` et `build`. Les
-  14 avertissements actuels ne bloquent rien, et une future erreur non plus.
+- ~~**eslint n'est pas dans la CI.**~~ **CORRIGÉ.** L'étape `Lint` passe
+  désormais avant les tests. Zéro erreur aujourd'hui, quatorze avertissements
+  antérieurs qui ne bloquent pas.
 - **14 notions orphelines sur 52** (27 %) : `ebitda_margin`, `depreciation`,
   `full_unit_cost`, `distribution_commission`, `customer_acquisition_cost`,
   `payment_terms`, `weighted_average_cost`, `vat_payable`, `occupancy_revpar`,
@@ -274,19 +274,50 @@ entreprises. Un élève qui ne change rien est un cas de classe très fréquent 
   `balance_sheet`. Aucune situation ne les mobilise : elles existent en fiche, et
   la maîtrise ne peut jamais s'en mesurer. Les 20 modèles de décision, eux, sont
   tous cités au moins une fois.
-- **Le salaire du transport est hors échelle.** 12 400 €/tour de 90 jours, soit
-  **49 600 €/an chargé**, quasiment celui du conseil (50 400 €). Un conducteur
-  routier coûte plutôt 36 000 à 38 000 € chargés. Environ 9 500 €/trimestre
-  remettrait le secteur dans son échelle.
+- ~~**Le salaire du transport est hors échelle.**~~ **CONSTAT RETIRÉ, il était
+  faux.** Je l'avais bâti sur une comparaison qui ne tient pas : « 49 600 €/an
+  chargé, quasiment celui du conseil (50 400 €) ». Or `conseil` déclare
+  `hoursPerEmployee: 60` là où les autres secteurs déclarent 455 : ses heures
+  sont des heures FACTURABLES, pas des heures de présence. Comparer les deux
+  totaux annuels revenait à comparer deux nombres qui ne mesurent pas la même
+  chose.
+
+  La bonne comparaison est le coût horaire chargé, et elle raconte autre
+  chose :
+
+  | Secteur | €/tour | h/tour | €/heure chargée |
+  |---|---|---|---|
+  | transport | 12 400 | 455 | 27,3 |
+  | bâtiment | 9 600 | 455 | 21,1 |
+  | hôtel | 8 600 | 455 | 18,9 |
+  | e-commerce | 8 200 | 455 | 18,0 |
+  | boutique, bistrot | 7 200 | 455 | 15,8 |
+  | NOVA | 8 000 | 540 | 14,8 |
+
+  27,3 €/heure chargée pour un conducteur routier est défendable dès qu'on
+  compte les frais de route, qui sont un coût réel de l'employeur. Et la valeur
+  avait été relevée **volontairement**, avec sa raison écrite dans le code :
+  « 49 600 € par an et par chauffeur, charges comprises : le coût réel d'un
+  conducteur routier, et non les 35 200 € que portait la première version. »
+
+  Rien n'est modifié. Reste, pour l'œil de l'auteur et non comme un défaut :
+  le transport est 30 % au-dessus du bâtiment pour des qualifications voisines.
+  C'est un arbitrage de calibration, pas une erreur.
 - **Deux vulnérabilités modérées** en dépendance de production : `exceljs` →
   `uuid` (absence de contrôle de bornes quand un `buf` est fourni). L'exposition
   réelle est faible — les classeurs sont générés côté serveur à partir de
   données du jeu, jamais d'entrée utilisateur — mais le correctif impose un
   changement majeur d'`exceljs`.
 - **`revenueVarianceBySegment` n'est pas un écart sur chiffre d'affaires**, et
-  le code le dit lui-même (`engine/costs/variance.ts:32`). Le panneau
-  `variance-panel.tsx:73` l'affiche quand même. Tant que le vrai calcul n'est pas
-  écrit, l'afficher enseigne une notion fausse.
+  le code le dit lui-même (`engine/costs/variance.ts`). **CORRIGÉ, avec une
+  rectification du constat :** j'avais écrit que le panneau « l'affiche quand
+  même », laissant croire qu'un élève le voyait. C'est faux — `VariancePanel`
+  n'est importé par aucune page, personne ne l'a jamais vu. Le moteur calcule
+  pourtant ces écarts à chaque tour et pour chaque référence, et rien ne les
+  lit. Les deux chiffres faux sont retirés du panneau et une garde empêche
+  qu'ils y reviennent ; les écarts de COÛTS, qui sont justes, y restent seuls.
+  Deux décisions en suspens : brancher ce panneau, ou cesser de calculer ce que
+  personne ne lit.
 - **Deux mécanismes pour la même redirection** : `/ateliers → /animations` passe
   par `next.config.ts`, `/concepts → /notions` par une page qui appelle
   `permanentRedirect`. La première est traitée avant tout rendu ; la seconde
