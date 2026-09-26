@@ -188,6 +188,41 @@ describe("contraste de l'encre sur fond sombre", () => {
     }
   });
 
+  /**
+   * LE COURRIER EST UN OBJET, PAS UNE SURFACE DU SITE.
+   *
+   * L'enveloppe et la lettre écrivent leurs couleurs en dur dans globals.css,
+   * parce qu'un utilitaire Tailwind y serait renversé par le thème clair. La
+   * garde des classes ne les voit donc pas — et c'est une mesure dans le
+   * navigateur qui a trouvé « Destinataire » à 3,65:1 sur le fond creusé de la
+   * fenêtre d'adresse. Ces couleurs-là se vérifient ici, à la source.
+   */
+  const OBJETS_DE_PAPIER = [
+    { nom: "papier", fonds: ["--papier", "--papier-creux"] },
+    { nom: "ecran", fonds: ["--ecran", "--ecran-creux"] },
+  ] as const;
+
+  it("les encres du courrier tiennent le seuil, y compris sur leur fond creusé", () => {
+    const valeur = (bloc: string, nom: string): string => {
+      const m = new RegExp(`${nom}:\\s*(#[0-9a-f]{6})`, "i").exec(bloc);
+      if (!m) throw new Error(`${nom} introuvable`);
+      return m[1]!;
+    };
+    const css = readFileSync(join(SRC, "app", "globals.css"), "utf8");
+    const fautes: string[] = [];
+    for (const { nom, fonds } of OBJETS_DE_PAPIER) {
+      const debut = css.indexOf(`.${nom} {`);
+      const bloc = css.slice(debut, css.indexOf("}", debut));
+      for (const encre of ["--encre", "--encre-douce", "--encre-tenue"]) {
+        for (const fond of fonds) {
+          const r = contraste(valeur(bloc, encre), valeur(bloc, fond));
+          if (r < 4.5) fautes.push(`.${nom} : ${encre} sur ${fond} → ${r.toFixed(2)}:1`);
+        }
+      }
+    }
+    expect(fautes, `sous 4,5:1 :\n${fautes.join("\n")}`).toEqual([]);
+  });
+
   it("aucune encre sous le plancher sur une page à fond sombre", () => {
     const fautifs: string[] = [];
     for (const f of fichiers(SRC, [".tsx"])) {

@@ -353,10 +353,18 @@ h1 {
  * reste blanche quelle que soit la couleur du bureau. Aucun utilitaire de
  * couleur Tailwind à l'intérieur, donc : le thème clair les inverserait tous.
  */
+/*
+ * L'ENCRE TÉNUE A ÉTÉ ASSOMBRIE. Mesuré dans le navigateur : les petites
+ * capitales de l'enveloppe — « Destinataire », « Circulation » — tombaient à
+ * 3,65:1 sur le fond creusé de la fenêtre d'adresse, sous le seuil AA. La
+ * garde des classes utilitaires ne pouvait pas le voir : ces couleurs sont
+ * écrites en dur ici, parce que l'enveloppe est un OBJET et non une surface
+ * du site (le thème clair inverserait un utilitaire Tailwind).
+ */
 .papier {
   --encre: #1f2937;
   --encre-douce: #45505f;
-  --encre-tenue: #6b7280;
+  --encre-tenue: #585f6b;
   --papier: #f3ede1;
   --papier-creux: #e7dfd0;
   color: var(--encre);
@@ -407,7 +415,7 @@ h1 {
 .ecran {
   --encre: #0f172a;
   --encre-douce: #334155;
-  --encre-tenue: #64748b;
+  --encre-tenue: #576070;
   --ecran: #fbfcfd;
   --ecran-creux: #eef2f7;
   --ecran-filet: rgba(15, 23, 42, 0.14);
