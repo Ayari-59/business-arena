@@ -4,7 +4,12 @@ import { getSession } from "@/lib/session";
 import { getTeacherGames } from "@/services/game.service";
 import { getOrganizerCompetitions } from "@/services/competition.service";
 import { getStaffContext } from "@/services/admin.service";
-import { createClassGameAction, logoutAction, logoutEverywhereAction } from "./actions";
+import {
+  createClassGameAction,
+  desarchiverPartieAction,
+  logoutAction,
+  logoutEverywhereAction,
+} from "./actions";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { compter } from "@/lib/format";
 import { DEFAULT_QUIZ_MODE, DIFFICULTY_PRESETS, QUIZ_MODES } from "@/config/difficulty";
@@ -49,6 +54,12 @@ export default async function TeacherDashboard({
   const session = await getSession();
   if (!session) redirect("/teacher/login");
   const games = await getTeacherGames(session.userId);
+  // Les parties rangées ne sont pas dans la liste : elles attendent en bas, et
+  // se ressortent d'un clic. `getTeacherGames` rend TOUT quand on le lui
+  // demande, d'où le filtre ici plutôt qu'un second aller-retour.
+  const rangees = (await getTeacherGames(session.userId, true)).filter(
+    (g) => g.archivedAt !== null,
+  );
   const competitions = await getOrganizerCompetitions(session.userId);
   const staff = await getStaffContext(session.userId);
   const isOrgAdmin = staff?.organizations.some((o) => o.role === "org_admin") ?? false;
@@ -373,6 +384,56 @@ export default async function TeacherDashboard({
           Le concours est l'usage rare : son formulaire attend dans un tiroir,
           ouvert seulement pour qui n'a encore ni partie ni concours.
         */}
+        {/*
+          LES PARTIES RANGÉES ATTENDENT ICI, et nulle part ailleurs. Le tiroir
+          n'existe que s'il y en a : un enseignant qui n'a jamais rangé ne voit
+          pas une rubrique vide lui rappeler qu'il pourrait.
+        */}
+        {rangees.length > 0 ? (
+          <Tiroir titre="📦 Parties rangées" quoi={compter(rangees.length, "partie")}>
+            <p className="mt-1 text-sm text-slate-300">
+              Elles ne sont plus jouables et leur code n&apos;ouvre plus rien. Rien n&apos;a
+              été supprimé : ressortez-en une et elle reprend exactement où elle en était.
+            </p>
+            <ul className="mt-3 grid gap-2">
+              {rangees.map((g) => (
+                <li
+                  key={g.gameId}
+                  className="flex flex-wrap items-center gap-3 rounded-lg border border-white/10 px-3 py-2"
+                >
+                  <span aria-hidden className="text-lg">
+                    {g.scenarioIcon}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <Link
+                      href={`/teacher/games/${g.gameId}`}
+                      className="block truncate text-sm font-medium text-slate-100 underline-offset-4 hover:underline"
+                    >
+                      {g.scenarioTitle}
+                    </Link>
+                    <span className="mt-0.5 block text-xs text-slate-400">
+                      {compter(g.teamsCount, "équipe")} · tour {g.currentRound} / {g.roundsCount} ·
+                      rangée le{" "}
+                      {g.archivedAt?.toLocaleDateString("fr-FR", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </span>
+                  </span>
+                  <GuardedForm
+                    action={desarchiverPartieAction.bind(null, g.gameId)}
+                    label="sortie de rangement"
+                  >
+                    <SubmitButton className="rounded-lg border border-white/15 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-amber-400/40 hover:text-amber-200">
+                      Ressortir
+                    </SubmitButton>
+                  </GuardedForm>
+                </li>
+              ))}
+            </ul>
+          </Tiroir>
+        ) : null}
         <Tiroir
           titre="Organiser un concours · Business Arena Championship"
           ouvert={competitions.length === 0 && games.length === 0}

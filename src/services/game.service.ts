@@ -12,6 +12,7 @@ import {
 } from "@/db/schema";
 import type { ScenarioVocabulary, Sector } from "@/config/scenarios/registry";
 import { resolveScenarioDefinition } from "@/services/scenario-source.service";
+import { estArchivee, PARTIE_ARCHIVEE } from "@/services/archivage";
 import { lireSource, type DecisionSourceMap } from "@/config/decision-source";
 import {
   presetFromProfile,
@@ -81,7 +82,8 @@ export async function refusDeRejoindre(code: string): Promise<string | null> {
     await db.select().from(games).where(eq(games.joinCode, code.trim().toUpperCase()))
   )[0];
   if (!game) return "Code de partie inconnu.";
-  if (game.status === "finished" || game.status === "archived") return "Cette partie est terminée.";
+  if (estArchivee(game)) return PARTIE_ARCHIVEE;
+  if (game.status === "finished") return "Cette partie est terminée.";
   return null;
 }
 
@@ -94,8 +96,8 @@ export async function joinGameByCode(args: {
     await db.select().from(games).where(eq(games.joinCode, args.code.trim().toUpperCase()))
   )[0];
   if (!game) return { error: "Code de partie inconnu." };
-  if (game.status === "finished" || game.status === "archived")
-    return { error: "Cette partie est terminée." };
+  if (estArchivee(game)) return { error: PARTIE_ARCHIVEE };
+  if (game.status === "finished") return { error: "Cette partie est terminée." };
 
   const teamRows = await db
     .select()
@@ -209,6 +211,8 @@ export interface TeacherGameSummary {
   roundDays: number;
   teamsCount: number;
   createdAt: Date;
+  /** Rangée le… — absente tant que la partie est à sa place dans la liste. */
+  archivedAt: Date | null;
   /** Le secteur joué, pour que la liste des parties ait un visage. */
   scenarioCode: string;
   scenarioTitle: string;
@@ -216,14 +220,20 @@ export interface TeacherGameSummary {
   sector: Sector;
 }
 
-export async function getTeacherGames(teacherId: string): Promise<TeacherGameSummary[]> {
+export async function getTeacherGames(
+  teacherId: string,
+  /** Par défaut la liste ne montre que les parties à leur place. */
+  inclureArchivees = false,
+): Promise<TeacherGameSummary[]> {
   const rows = await db
     .select()
     .from(games)
     .where(eq(games.createdBy, teacherId))
     .orderBy(desc(games.createdAt));
   const classGames = rows.filter(
-    (g) => (g.difficultyProfile as { kind?: string }).kind === "class",
+    (g) =>
+      (g.difficultyProfile as { kind?: string }).kind === "class" &&
+      (inclureArchivees || g.archivedAt === null),
   );
   if (classGames.length === 0) return [];
   const gameIds = classGames.map((g) => g.id);
@@ -247,6 +257,7 @@ export async function getTeacherGames(teacherId: string): Promise<TeacherGameSum
         roundDays: (g.scenarioSnapshot as { roundDays: number }).roundDays,
         teamsCount: countByGame.get(g.id) ?? 0,
         createdAt: g.createdAt,
+        archivedAt: g.archivedAt,
         scenarioCode: def.code,
         scenarioTitle: def.title,
         scenarioIcon: def.icon,
@@ -275,6 +286,39 @@ export async function setQuizMode(args: {
     .update(games)
     .set({ difficultyProfile: { ...profile, quizMode: args.mode } })
     .where(eq(games.id, args.gameId));
+}
+
+/**
+ * RANGER UNE PARTIE, ET LA RESSORTIR.
+ *
+ * En fin d'année, la liste d'un enseignant porte toutes les parties de
+ * l'année, dont beaucoup jamais closes : on ne clôt pas la dernière séance de
+ * juin, on part en vacances. Archiver les sort de la liste, empêche d'y entrer
+ * et d'y jouer, et ne détruit rien.
+ *
+ * UNE PARTIE EN COURS S'ARCHIVE AUSSI, délibérément : c'est précisément le cas
+ * du ménage de fin d'année. Le risque est tenu par la réversibilité — le geste
+ * se défait, et la partie retrouve exactement l'état qu'elle avait, puisque
+ * son statut n'a pas bougé.
+ */
+export async function archiverPartie(args: {
+  gameId: string;
+  teacherId: string;
+}): Promise<void> {
+  const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
+  if (!game || game.createdBy !== args.teacherId) throw new Error("Partie introuvable");
+  if (game.archivedAt) return;
+  await db.update(games).set({ archivedAt: new Date() }).where(eq(games.id, args.gameId));
+}
+
+/** Ressort une partie rangée. Elle retrouve l'état exact qu'elle avait. */
+export async function desarchiverPartie(args: {
+  gameId: string;
+  teacherId: string;
+}): Promise<void> {
+  const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
+  if (!game || game.createdBy !== args.teacherId) throw new Error("Partie introuvable");
+  await db.update(games).set({ archivedAt: null }).where(eq(games.id, args.gameId));
 }
 
 /**

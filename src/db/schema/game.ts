@@ -84,6 +84,20 @@ export const games = pgTable(
      * enseignant identifié, qui n'ont rien à plafonner.
      */
     creatorIp: text("creator_ip"),
+    /**
+     * RANGÉE, PAS TERMINÉE. Une partie archivée sort des listes, ne se rejoint
+     * plus et ne se joue plus ; tout y reste, et le geste se défait.
+     *
+     * Le statut porte le CYCLE DE VIE (en cours, terminée) ; l'archivage est
+     * une autre question, celle du rangement. Les mélanger obligerait à deviner
+     * quel statut rendre au désarchivage, et ferait perdre l'information : une
+     * partie de juin jamais close doit redevenir « en cours » si on la
+     * ressort, pas « terminée ». Une date à part, donc, orthogonale au statut.
+     *
+     * L'énumération garde sa valeur « archived », qui n'a jamais été écrite par
+     * personne ; `estArchivee` accepte les deux, par prudence.
+     */
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
     ...timestamps,
   },
   (t) => [
@@ -94,6 +108,9 @@ export const games = pgTable(
     // Le plafond se lit « combien de parties depuis cette adresse depuis une
     // heure » : c'est cet index qui rend la question gratuite.
     index("games_creator_ip_idx").on(t.creatorIp, t.createdAt),
+    // La liste de l'enseignant demande « mes parties non archivées » à chaque
+    // affichage : c'est cet index qui rend la question gratuite.
+    index("games_created_by_archived_idx").on(t.createdBy, t.archivedAt),
   ],
 );
 

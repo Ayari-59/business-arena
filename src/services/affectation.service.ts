@@ -2,6 +2,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { games, players, teams, users } from "@/db/schema";
 import { teamDisplayName } from "@/config/nom-equipe";
+import { estArchivee, PARTIE_ARCHIVEE } from "@/services/archivage";
 
 /**
  * QUI JOUE DANS QUELLE ÉQUIPE.
@@ -126,7 +127,7 @@ export async function affecterEleve(args: {
   const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
   if (!game) throw new Error("Partie introuvable.");
   if (game.createdBy !== args.teacherId) throw new Error("Cette partie n'est pas la vôtre.");
-  if (game.status === "archived") throw new Error("Cette partie est archivée.");
+  if (estArchivee(game)) throw new Error(PARTIE_ARCHIVEE);
   return deplacer({ gameId: args.gameId, eleveId: args.eleveId, teamId: args.teamId });
 }
 
@@ -141,8 +142,15 @@ export function peutChoisirSonEquipe(game: {
   status: string;
   currentRound: number;
   mode?: string | null;
+  /** Une partie rangée ne se joue plus : on n'y change pas d'équipe non plus. */
+  archivedAt?: Date | null;
 }): boolean {
-  return game.status === "running" && game.currentRound === 1 && game.mode !== "competition";
+  return (
+    !estArchivee({ ...game, archivedAt: game.archivedAt ?? null }) &&
+    game.status === "running" &&
+    game.currentRound === 1 &&
+    game.mode !== "competition"
+  );
 }
 
 /**

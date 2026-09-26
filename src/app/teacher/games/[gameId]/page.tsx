@@ -21,7 +21,12 @@ import { CloseRoundForm } from "@/components/close-round-form";
 import { SubmitButton } from "@/components/submit-button";
 import { GuardedForm } from "@/components/guarded-action";
 import { RoundStatusPoller } from "@/components/round-status-poller";
-import { setGameScheduleAction, setRankingRevealedAction, setRoundWindowsAction } from "../../actions";
+import {
+  archiverPartieAction,
+  setGameScheduleAction,
+  setRankingRevealedAction,
+  setRoundWindowsAction,
+} from "../../actions";
 import { utcToParisLocalInput } from "@/lib/paris-time";
 import { JustificationsReview } from "@/components/justifications-review";
 import { EnTeteEnseignant, Rubrique } from "@/components/en-tete-enseignant";
@@ -830,6 +835,38 @@ export default async function TeacherGamePage({
           </section>
         </>
       ) : null}
+
+      {/*
+        LE RANGEMENT EST LE DERNIER GESTE DE LA PAGE, et c'est sa place : on ne
+        range pas une partie au milieu de ses réglages. Il vaut AUSSI pour une
+        partie en cours — c'est même le cas du ménage de fin d'année, où l'on
+        n'a jamais clos la séance de juin. Le risque est tenu par la
+        réversibilité : la partie garde son statut et se ressort d'un clic
+        depuis le tableau de bord.
+      */}
+      <Tiroir titre="📦 Ranger cette partie" quoi="réversible">
+        <p className="mt-1 max-w-3xl text-sm leading-relaxed text-slate-300">
+          Une partie rangée sort de votre liste et n&apos;est plus jouable : le code
+          n&apos;ouvre plus rien, les élèves déjà inscrits ne peuvent plus rendre de
+          décisions. <strong>Rien n&apos;est supprimé</strong> : les équipes, les tours joués,
+          les résultats et les traces restent intacts.
+        </p>
+        <p className="mt-2 max-w-3xl text-xs text-slate-400">
+          {finished
+            ? "Cette partie est terminée : la ranger ne change rien pour personne."
+            : "Cette partie est EN COURS. La ranger interrompt le jeu pour vos élèves, jusqu'à ce que vous la ressortiez."}{" "}
+          Vous la retrouverez en bas du tableau de bord, dans « Parties rangées ».
+        </p>
+        <GuardedForm
+          action={archiverPartieAction.bind(null, view.gameId)}
+          label="rangement de la partie"
+          className="mt-3"
+        >
+          <SubmitButton className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-amber-400/40 hover:text-amber-200">
+            Ranger cette partie
+          </SubmitButton>
+        </GuardedForm>
+      </Tiroir>
 
       {!finished ? (
         <RoundStatusPoller

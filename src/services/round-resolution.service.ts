@@ -33,6 +33,7 @@ import {
 } from "@/services/scoring.service";
 import { simulateRound } from "@/engine/simulation";
 import { subventionsAccordees } from "@/services/subvention.service";
+import { estArchivee, PARTIE_ARCHIVEE } from "@/services/archivage";
 import {
   enrichError,
   logResolutionStep,
@@ -141,6 +142,7 @@ export async function submitTeamDecisions(args: {
   try {
     const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
     if (!game) throw new Error("Partie introuvable");
+    if (estArchivee(game)) throw new Error(PARTIE_ARCHIVEE);
     if (game.status !== "running") throw new Error("Cette partie est terminée");
     const { team } = await findUserTeam(args.gameId, args.userId);
     if (!team) throw new Error("Vous n'êtes pas membre de cette partie");
@@ -273,6 +275,7 @@ async function resolveGameRound(
 ): Promise<{ roundIndex: number; finished: boolean }> {
   const game = (await db.select().from(games).where(eq(games.id, gameId)))[0];
   if (!game) throw new Error("Partie introuvable");
+  if (estArchivee(game)) throw new Error(PARTIE_ARCHIVEE);
   if (game.status !== "running") throw new Error("Cette partie est terminée");
   const roundIndex = game.currentRound;
 
@@ -685,6 +688,7 @@ export async function distribuerUnCourrier(args: {
   if (!game) throw new Error("Partie introuvable");
   if (game.createdBy !== args.teacherId)
     throw new Error("Seul l'enseignant qui a créé la partie peut distribuer un courrier");
+  if (estArchivee(game)) throw new Error(PARTIE_ARCHIVEE);
   if (game.status !== "running") throw new Error("Cette partie est terminée");
   if (game.mode !== "learning")
     throw new Error("Mode compétition : seul le tirage aléatoire seedé fait foi (équité)");

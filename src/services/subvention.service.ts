@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { aidRequests, games, rounds, teams } from "@/db/schema";
+import { estArchivee, PARTIE_ARCHIVEE } from "@/services/archivage";
 
 /**
  * LA SUBVENTION EXCEPTIONNELLE : l'écrit d'une équipe, la réponse d'un humain.
@@ -96,6 +97,7 @@ export async function deposerDemande(args: {
 }): Promise<DemandeDeSubvention> {
   const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
   if (!game) throw new Error("Partie introuvable");
+  if (estArchivee(game)) throw new Error(PARTIE_ARCHIVEE);
   if (game.status !== "running") throw new Error("Cette partie est terminée");
   if (args.roundIndex !== game.currentRound) {
     throw new Error("Ce tour n'est plus celui qui se joue.");

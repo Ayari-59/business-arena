@@ -12,8 +12,10 @@ import {
   registerTeacher,
 } from "@/services/auth.service";
 import {
+  archiverPartie,
   closeCurrentRound,
   createClassGame,
+  desarchiverPartie,
   distribuerUnCourrier,
   setGameSchedule,
   setQuizMode,
@@ -355,6 +357,29 @@ export interface CreateCompetitionValues {
 export interface CreateCompetitionState {
   error: string | null;
   values: CreateCompetitionValues | null;
+}
+
+/**
+ * RANGER UNE PARTIE, ET LA RESSORTIR.
+ *
+ * En fin d'année, la liste porte toutes les parties de l'année, dont beaucoup
+ * jamais closes : on ne clôt pas la dernière séance de juin, on part en
+ * vacances. Archiver les sort de la liste, ferme la porte aux élèves, et ne
+ * détruit rien. Le geste se défait depuis le tableau de bord.
+ */
+export async function archiverPartieAction(gameId: string): Promise<void> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  await archiverPartie({ gameId, teacherId: session.userId });
+  revalidatePath("/teacher");
+  redirect("/teacher");
+}
+
+export async function desarchiverPartieAction(gameId: string): Promise<void> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  await desarchiverPartie({ gameId, teacherId: session.userId });
+  revalidatePath("/teacher");
 }
 
 /**
