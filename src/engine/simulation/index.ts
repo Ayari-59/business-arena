@@ -184,8 +184,19 @@ function allocateProduction(args: {
   const produced = perProduct.reduce((a, b) => a + b, 0);
   // Capacité main-d'œuvre exprimée en unités AU MIX PLANIFIÉ (heures moyennes
   // pondérées par plan) — comparable à la capacité machine, en unités.
-  const laborCapacity =
-    hoursNeeded > 0 && totalPlan > 0 ? laborHours / (hoursNeeded / totalPlan) : Infinity;
+  //
+  // SANS PLAN, PAS DE MIX — mais pas une capacité infinie pour autant. Le
+  // calcul valait `Infinity` quand rien n'était planifié, ce qui arrive à
+  // chaque tour d'une entreprise défaillante (production gelée) comme à
+  // l'élève qui met zéro partout. Or ce nombre part en base dans
+  // `engineTrace`, en jsonb : `JSON.stringify(Infinity)` vaut `null`, et la
+  // colonne promettait un nombre. À défaut de mix, on mesure la capacité sur
+  // les heures MOYENNES de la gamme : c'est ce que l'atelier sortirait en
+  // fabriquant de tout à parts égales, un ordre de grandeur juste et fini.
+  const heuresMoyennes =
+    args.gamme.reduce((s, p) => s + p.hoursPerUnit, 0) / Math.max(1, args.gamme.length);
+  const heuresParUnite = hoursNeeded > 0 && totalPlan > 0 ? hoursNeeded / totalPlan : heuresMoyennes;
+  const laborCapacity = heuresParUnite > 0 ? laborHours / heuresParUnite : 0;
   return {
     perProduct,
     produced,
