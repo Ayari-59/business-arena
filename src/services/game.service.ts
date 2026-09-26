@@ -44,6 +44,7 @@ export {
   createSoloGame,
   createClassGame,
   reinitialiserPartie,
+  supprimerPartie,
   getOrCreateNovaScenarioIdPublic,
   type CreatedGame,
   type CreateGameArgs,

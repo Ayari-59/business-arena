@@ -23,3 +23,15 @@ export const PARTIE_ARCHIVEE = "Cette partie a été archivée par l'enseignant.
 export function estArchivee(game: { archivedAt: Date | null; status: string }): boolean {
   return game.archivedAt !== null || game.status === "archived";
 }
+
+/**
+ * Pourquoi l'on refuse de supprimer. On ne supprime qu'une partie vierge :
+ * au-delà, l'archivage rend le même service sans emporter du travail d'élève,
+ * et le refus doit le DIRE, sinon l'enseignant cherche un bouton qui n'existe
+ * pas.
+ */
+export const PARTIE_DEJA_JOUEE =
+  "Cette partie a déjà été jouée : elle ne se supprime pas. Rangez-la plutôt, rien ne sera perdu.";
+
+export const PARTIE_AVEC_ELEVES =
+  "Des élèves sont inscrits dans cette partie : elle ne se supprime pas. Rangez-la plutôt.";

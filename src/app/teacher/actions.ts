@@ -22,6 +22,7 @@ import {
   setQuizMode,
   setRankingRevealed,
   setRoundWindows,
+  supprimerPartie,
 } from "@/services/game.service";
 import { parisLocalToUtc } from "@/lib/paris-time";
 import {
@@ -45,6 +46,7 @@ import {
 } from "@/config/concours-public";
 import { trancherDemande } from "@/services/subvention.service";
 import { affecterEleve } from "@/services/affectation.service";
+import { PARTIE_AVEC_ELEVES, PARTIE_DEJA_JOUEE } from "@/services/archivage";
 
 export interface FormState {
   error: string | null;
@@ -396,13 +398,44 @@ export async function reinitialiserPartieAction(
 ): Promise<void> {
   const session = await getSession();
   if (!session) redirect("/teacher/login");
-  const confirmation = String(formData.get("confirmation") ?? "").trim().toUpperCase();
+  // Le nom du champ est PROPRE À CE GESTE : les deux confirmations vivent sur
+  // la même page, et deux champs de même nom sont un piège pour qui relit.
+  const confirmation = String(formData.get("confirmationRemiseAZero") ?? "").trim().toUpperCase();
   if (confirmation !== "RECOMMENCER") {
     redirect(`/teacher/games/${gameId}?recommencer=mot`);
   }
   await reinitialiserPartie({ gameId, teacherId: session.userId });
   revalidatePath(`/teacher/games/${gameId}`);
   redirect(`/teacher/games/${gameId}?recommencer=fait`);
+}
+
+/**
+ * SUPPRIMER UNE PARTIE VIERGE.
+ *
+ * Le service refuse tout ce qui a servi ; l'écran doit alors DIRE pourquoi, et
+ * proposer le rangement, sinon l'enseignant cherche un bouton qui n'existe pas.
+ * Le refus revient donc sur la page, en toutes lettres.
+ */
+export async function supprimerPartieAction(
+  gameId: string,
+  formData: FormData,
+): Promise<void> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  const confirmation = String(formData.get("confirmationSuppression") ?? "").trim().toUpperCase();
+  if (confirmation !== "SUPPRIMER") {
+    redirect(`/teacher/games/${gameId}?supprimer=mot`);
+  }
+  try {
+    await supprimerPartie({ gameId, teacherId: session.userId });
+  } catch (e) {
+    if (e instanceof Error && (e.message === PARTIE_DEJA_JOUEE || e.message === PARTIE_AVEC_ELEVES)) {
+      redirect(`/teacher/games/${gameId}?supprimer=${e.message === PARTIE_DEJA_JOUEE ? "jouee" : "eleves"}`);
+    }
+    throw e;
+  }
+  revalidatePath("/teacher");
+  redirect("/teacher");
 }
 
 /**

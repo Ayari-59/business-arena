@@ -24,6 +24,7 @@ import { RoundStatusPoller } from "@/components/round-status-poller";
 import {
   archiverPartieAction,
   reinitialiserPartieAction,
+  supprimerPartieAction,
   setGameScheduleAction,
   setRankingRevealedAction,
   setRoundWindowsAction,
@@ -52,12 +53,12 @@ export default async function TeacherGamePage({
   searchParams,
 }: {
   params: Promise<{ gameId: string }>;
-  searchParams: Promise<{ recommencer?: string }>;
+  searchParams: Promise<{ recommencer?: string; supprimer?: string }>;
 }) {
   const session = await getSession();
   if (!session) redirect("/teacher/login");
   const { gameId } = await params;
-  const { recommencer } = await searchParams;
+  const { recommencer, supprimer } = await searchParams;
   const view = await getTeacherGameView(gameId, session.userId);
   if (!view) notFound();
   const pedagogy = await getTeacherPedagogyView(gameId, session.userId);
@@ -70,6 +71,14 @@ export default async function TeacherGamePage({
   const humanTeams = view.teams.filter((t) => t.controller === "human");
   const submittedCount = humanTeams.filter((t) => t.hasSubmitted).length;
   const defaillantes = view.ranking.filter((row) => row.defaillant);
+  // Une partie VIERGE : jamais jouée, personne dedans. C'est la seule qu'on
+  // puisse supprimer, et c'est aussi la seule à qui proposer le bouton — le
+  // service refuse les autres, mais un bouton qu'on ne peut pas cliquer avec
+  // succès est une invitation à se cogner.
+  const vierge =
+    view.currentRound <= 1 &&
+    submittedCount === 0 &&
+    composition.every((e) => e.membres.length === 0);
   // Le tour dont le classement se révèle : le dernier clos. Les précédents sont
   // derrière nous, celui en cours n'a pas encore de classement.
   const dernierTourClos = [...view.rounds]
@@ -916,7 +925,7 @@ export default async function TeacherGamePage({
               Recopiez RECOMMENCER pour confirmer
             </span>
             <input
-              name="confirmation"
+              name="confirmationRemiseAZero"
               autoComplete="off"
               placeholder="RECOMMENCER"
               className="mt-1 w-56 champ px-3 py-2 text-sm text-slate-100 outline-none"
@@ -927,6 +936,60 @@ export default async function TeacherGamePage({
           </SubmitButton>
         </GuardedForm>
       </Tiroir>
+
+      {/*
+        LA SUPPRESSION N'EXISTE QUE POUR UNE PARTIE VIERGE : une créée en
+        double, un essai de réglage, une erreur de secteur. Au-delà, ranger
+        rend le même service sans emporter du travail d'élève, et c'est ce que
+        dit le tiroir plutôt que d'offrir un bouton qui refuserait.
+      */}
+      {vierge ? (
+        <Tiroir titre="🗑️ Supprimer cette partie" quoi="définitif">
+          {supprimer === "mot" ? (
+            <p
+              role="status"
+              className="mt-1 rounded-lg border border-amber-400/30 bg-amber-950/30 px-3 py-2 text-sm text-amber-200"
+            >
+              Rien n&apos;a été fait : le mot recopié ne correspondait pas.
+            </p>
+          ) : null}
+          {supprimer === "jouee" || supprimer === "eleves" ? (
+            <p
+              role="status"
+              className="mt-1 rounded-lg border border-amber-400/30 bg-amber-950/30 px-3 py-2 text-sm text-amber-200"
+            >
+              {supprimer === "jouee"
+                ? "Cette partie a été jouée entre-temps : elle ne se supprime plus. Rangez-la, rien ne sera perdu."
+                : "Un élève vient de s'inscrire : la partie ne se supprime plus. Rangez-la, rien ne sera perdu."}
+            </p>
+          ) : null}
+          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-300">
+            Cette partie n&apos;a jamais servi : aucun tour joué, aucun élève inscrit. La
+            supprimer l&apos;efface <strong>définitivement</strong>, avec ses équipes et son
+            code. Il n&apos;y a rien à perdre, et rien à récupérer.
+          </p>
+          <GuardedForm
+            action={supprimerPartieAction.bind(null, view.gameId)}
+            label="suppression de la partie"
+            className="mt-3 flex flex-wrap items-end gap-3"
+          >
+            <label className="block">
+              <span className="block text-xs font-medium uppercase tracking-wide text-slate-400">
+                Recopiez SUPPRIMER pour confirmer
+              </span>
+              <input
+                name="confirmationSuppression"
+                autoComplete="off"
+                placeholder="SUPPRIMER"
+                className="mt-1 w-56 champ px-3 py-2 text-sm text-slate-100 outline-none"
+              />
+            </label>
+            <SubmitButton className="rounded-lg border border-red-400/30 px-4 py-2 text-sm font-medium text-red-200 transition hover:border-red-400/60 hover:text-red-100">
+              Supprimer définitivement
+            </SubmitButton>
+          </GuardedForm>
+        </Tiroir>
+      ) : null}
 
       {!finished ? (
         <RoundStatusPoller

@@ -4,6 +4,7 @@ import { db } from "@/db";
 import {
   aidRequests,
   companyStates,
+  decisions,
   eventOccurrences,
   financialAccounts,
   gameRankings,
@@ -52,6 +53,7 @@ import { getPlatformConfig } from "@/services/admin.service";
 import { assertCanCreateGame } from "@/services/licence.service";
 import { type BotProfile } from "@/engine/bots";
 import { ENGINE_VERSION } from "@/engine/simulation";
+import { PARTIE_AVEC_ELEVES, PARTIE_DEJA_JOUEE } from "@/services/archivage";
 
 // ---------------------------------------------------------------------------
 // Helpers internes
@@ -445,6 +447,55 @@ export async function reinitialiserPartie(args: {
     periodicity,
     roundsCount: snapshot.roundsCount,
   });
+}
+
+/**
+ * SUPPRIMER UNE PARTIE — ET SEULEMENT UNE QUI N'A JAMAIS SERVI.
+ *
+ * Techniquement, effacer une partie est simple : les neuf clés étrangères qui
+ * pointent vers elle sont toutes en cascade, rien ne resterait orphelin.
+ * Humainement, c'est le geste le plus dangereux de l'application, parce qu'il
+ * emporte du travail d'élève et ne se défait pas.
+ *
+ * D'où la borne : on ne supprime qu'une partie VIERGE, c'est-à-dire au premier
+ * tour, sans aucune décision rendue et sans aucun élève inscrit. Une partie
+ * créée en double, un essai de réglage, une erreur de secteur : celles-là ne
+ * méritent pas d'encombrer une liste pour l'éternité. Au-delà, l'archivage
+ * rend le même service sans le risque, et c'est ce que dit le refus.
+ *
+ * Les bots ne comptent pas comme des inscrits : une partie fraîche en a
+ * toujours, et ils ne sont le travail de personne.
+ */
+export async function supprimerPartie(args: {
+  gameId: string;
+  teacherId: string;
+}): Promise<void> {
+  const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
+  if (!game || game.createdBy !== args.teacherId) throw new Error("Partie introuvable");
+  if (game.currentRound > 1) {
+    throw new Error(PARTIE_DEJA_JOUEE);
+  }
+
+  const idsEquipes = (
+    await db.select({ id: teams.id }).from(teams).where(eq(teams.gameId, args.gameId))
+  ).map((t) => t.id);
+  if (idsEquipes.length > 0) {
+    const [rendues] = await db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(decisions)
+      .where(inArray(decisions.teamId, idsEquipes));
+    if ((rendues?.n ?? 0) > 0) throw new Error(PARTIE_DEJA_JOUEE);
+    const [inscrits] = await db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(players)
+      .where(inArray(players.teamId, idsEquipes));
+    if ((inscrits?.n ?? 0) > 0) throw new Error(PARTIE_AVEC_ELEVES);
+  }
+
+  // Les cascades font le reste : équipes, tours, décisions, résultats,
+  // situations, scores, états. Voir le schéma — aucune contrainte `restrict`
+  // ne se trouve sur le chemin d'une partie vers ses enfants.
+  await db.delete(games).where(eq(games.id, args.gameId));
 }
 
 /** Partie solo : le joueur contre N−1 bots du pool (§27 : nombre configurable). */
