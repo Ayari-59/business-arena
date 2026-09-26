@@ -128,7 +128,7 @@ export default function AteliersPage() {
                   </td>
                   <td className="px-4 py-3 text-slate-400">
                     {a.format}
-                    <span className="block text-xs text-slate-600">
+                    <span className="block text-xs text-slate-400">
                       {dureeTotaleHeures(a)} h au total
                     </span>
                   </td>
@@ -160,12 +160,12 @@ export default function AteliersPage() {
                   ["Séances", `${a.seances.length}`],
                 ].map(([k, v]) => (
                   <div key={k} className="flex gap-4">
-                    <dt className="w-20 shrink-0 uppercase tracking-wide text-slate-600">{k}</dt>
+                    <dt className="w-20 shrink-0 uppercase tracking-wide text-slate-400">{k}</dt>
                     <dd className="text-slate-300">{v}</dd>
                   </div>
                 ))}
                 <div className="flex gap-4">
-                  <dt className="w-20 shrink-0 uppercase tracking-wide text-slate-600">Exigence</dt>
+                  <dt className="w-20 shrink-0 uppercase tracking-wide text-slate-400">Exigence</dt>
                   <dd>
                     <Etoiles n={a.difficulte} />
                   </dd>

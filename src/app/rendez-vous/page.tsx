@@ -65,7 +65,7 @@ export default async function RendezVousPage() {
         <RendezVousForm jours={jours} periode={periode} />
       </div>
 
-      <p className="mt-10 text-xs leading-relaxed text-slate-600">
+      <p className="mt-10 text-xs leading-relaxed text-slate-400">
         Vous préférez écrire ? La{" "}
         <Link href="/orientation" className="text-slate-400 underline-offset-4 hover:underline">
           page d&apos;orientation

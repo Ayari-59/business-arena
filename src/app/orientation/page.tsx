@@ -39,7 +39,7 @@ export default function OrientationPage() {
         <OrientationForm />
       </div>
 
-      <p className="mt-10 text-xs leading-relaxed text-slate-600">
+      <p className="mt-10 text-xs leading-relaxed text-slate-400">
         Vous préférez en parler de vive voix ?{" "}
         <Link href="/rendez-vous" className="text-slate-400 underline-offset-4 hover:underline">
           Prenez un rendez-vous téléphonique

@@ -128,3 +128,78 @@ describe("respiration des cartes", () => {
     expect(fautifs, `cartes trop serrées :\n${fautifs.join("\n")}`).toEqual([]);
   });
 });
+
+/**
+ * LE CONTRASTE SE CALCULE, IL NE SE SUPPOSE PAS.
+ *
+ * Mesuré sur l'échelle réellement employée : `text-slate-500` donnait 3,75:1
+ * sur une carte et 4,24:1 sur un bloc, `text-slate-600` 2,36:1 — c'est-à-dire
+ * sous le seuil non textuel. Quatre-vingt-six textes étaient dans ce cas :
+ * étiquettes de chiffrage, mentions de l'assistant, libellés d'étapes à venir.
+ * En classe, sur un vidéoprojecteur en fin de journée ou sur un téléphone près
+ * d'une fenêtre, ces textes n'existent pas.
+ *
+ * `text-slate-400` tient 6,96:1 sur slate-900 et 7,87:1 sur slate-950 : c'est
+ * le plancher de l'encre secondaire sur fond sombre.
+ *
+ * LES PAGES À FOND CLAIR SONT UNE AUTRE AFFAIRE. Le manuel, les fiches
+ * imprimables et les animations posent `data-theme="clair"` et `bg-white` :
+ * l'échelle y est renversée, `text-slate-600` y est du gris foncé sur blanc,
+ * et l'y remplacer par slate-400 ferait exactement le défaut qu'on corrige.
+ * Ces fichiers sont donc nommés, un par un, plutôt que devinés.
+ */
+describe("contraste de l'encre sur fond sombre", () => {
+  /** Luminance relative d'une couleur sRGB (WCAG 2.1, §relative luminance). */
+  function luminance(hex: string): number {
+    const canal = (c: number) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+    const [r, g, b] = [1, 3, 5].map((i) => canal(parseInt(hex.slice(i, i + 2), 16) / 255));
+    return 0.2126 * r! + 0.7152 * g! + 0.0722 * b!;
+  }
+  function contraste(a: string, b: string): number {
+    const [x, y] = [luminance(a), luminance(b)].sort((p, q) => q - p);
+    return (x! + 0.05) / (y! + 0.05);
+  }
+
+  const SLATE = {
+    400: "#94a3b8",
+    500: "#64748b",
+    600: "#475569",
+    900: "#0f172a", // la carte
+    950: "#020617", // le bloc intérieur
+  } as const;
+
+  /** Les pages qui imposent un fond clair : l'échelle y est renversée. */
+  const FOND_CLAIR = [
+    "/components/manuel-imprimable.tsx",
+    "/training/components/glossary-panel.tsx",
+    "/training/components/tutorial-overlay.tsx",
+    "/app/teacher/courriers/print/page.tsx",
+    "/app/teacher/games/[gameId]/fiches/page.tsx",
+    "/app/animations/[code]/page.tsx",
+  ];
+
+  it("le plancher retenu tient le seuil AA, celui qu'on a retiré ne le tenait pas", () => {
+    // La garde mesure ce qu'elle exige : si un jour la palette bouge, c'est ce
+    // test qui le dira, pas une lecture à l'œil.
+    for (const fond of [SLATE[900], SLATE[950]]) {
+      expect(contraste(SLATE[400], fond)).toBeGreaterThanOrEqual(4.5);
+      expect(contraste(SLATE[500], fond)).toBeLessThan(4.5);
+      expect(contraste(SLATE[600], fond)).toBeLessThan(3);
+    }
+  });
+
+  it("aucune encre sous le plancher sur une page à fond sombre", () => {
+    const fautifs: string[] = [];
+    for (const f of fichiers(SRC, [".tsx"])) {
+      const court = f.slice(SRC.length);
+      if (FOND_CLAIR.includes(court)) continue;
+      for (const m of readFileSync(f, "utf8").match(/\btext-slate-[56]00\b/g) ?? []) {
+        fautifs.push(`${court} : ${m}`);
+      }
+    }
+    expect(
+      fautifs,
+      `sous 4,5:1 sur fond sombre, à passer en text-slate-400 :\n${fautifs.join("\n")}`,
+    ).toEqual([]);
+  });
+});

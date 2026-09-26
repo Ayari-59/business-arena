@@ -319,7 +319,7 @@ export default async function TeacherDashboard({
                 </label>
               ))}
             </div>
-            <p className="mt-2 text-xs leading-relaxed text-slate-600">
+            <p className="mt-2 text-xs leading-relaxed text-slate-400">
               Le réglage se modifie ensuite à tout moment depuis la partie. Les situations déjà
               débriefées gardent le score obtenu sous l&apos;ancien réglage.
             </p>

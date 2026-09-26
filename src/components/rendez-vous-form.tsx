@@ -135,7 +135,7 @@ export function RendezVousForm({
               </div>
               <div className="mt-3 grid grid-cols-7 gap-1 text-center" role="grid" aria-label="Calendrier des créneaux">
                 {ENTETES.map((h, i) => (
-                  <span key={i} className="text-xs font-medium text-slate-500" aria-hidden="true">
+                  <span key={i} className="text-xs font-medium text-slate-400" aria-hidden="true">
                     {h}
                   </span>
                 ))}
@@ -148,7 +148,7 @@ export function RendezVousForm({
                       <span
                         key={c.date}
                         className={`flex h-10 items-center justify-center rounded-lg text-sm tabular-nums ${
-                          c.horsPeriode ? "text-slate-700" : "text-slate-600 line-through decoration-slate-700"
+                          c.horsPeriode ? "text-slate-700" : "text-slate-400 line-through decoration-slate-700"
                         }`}
                         aria-hidden="true"
                       >
@@ -207,7 +207,7 @@ export function RendezVousForm({
               <p className="text-sm text-slate-400">Choisissez un jour : ses heures libres s&apos;affichent ici.</p>
             )}
 
-            <p className="border-t border-white/10 pt-3 text-xs leading-relaxed text-slate-500">
+            <p className="border-t border-white/10 pt-3 text-xs leading-relaxed text-slate-400">
               Heure de Paris. Un appel dure {DUREE_MINUTES} minutes ; les créneaux se règlent sur
               l&apos;agenda de la personne qui vous appelle, ce qui y est occupé n&apos;est pas proposé.
             </p>
@@ -302,7 +302,7 @@ export function RendezVousForm({
           >
             {pending ? "Réservation…" : "Réserver ce créneau"}
           </button>
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-slate-400">
             Vos coordonnées ne servent qu&apos;à cet appel.
           </span>
         </div>

@@ -56,7 +56,7 @@ export function CompositionEquipes({
           <li key={equipe.teamId}>
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-300">
               {equipe.nom}{" "}
-              <span className="font-normal normal-case tracking-normal text-slate-500">
+              <span className="font-normal normal-case tracking-normal text-slate-400">
                 ·{" "}
                 {equipe.membres.length === 0
                   ? "aucun élève"

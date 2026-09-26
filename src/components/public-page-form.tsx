@@ -57,7 +57,7 @@ export function PublicPageForm({
 
       <label className="block">
         <span className="text-xs font-medium text-slate-300">
-          Accroche <span className="text-slate-500">(une phrase, {TAGLINE_MAX} car. max)</span>
+          Accroche <span className="text-slate-400">(une phrase, {TAGLINE_MAX} car. max)</span>
         </span>
         <input
           type="text"
@@ -83,7 +83,7 @@ export function PublicPageForm({
 
       <label className="block">
         <span className="text-xs font-medium text-slate-300">
-          Présentation <span className="text-slate-500">(affichée sous « À propos »)</span>
+          Présentation <span className="text-slate-400">(affichée sous « À propos »)</span>
         </span>
         <textarea
           name="description"
@@ -124,7 +124,7 @@ export function PublicPageForm({
           Prévisualiser / ouvrir la page →
         </a>
       </div>
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-slate-400">
         Adresse publique : <span className="font-mono text-slate-400">{publicUrl}</span>
       </p>
 

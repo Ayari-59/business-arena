@@ -178,7 +178,7 @@ export default async function FormulairesPage({
               </ul>
             </div>
 
-            <p className="mt-4 text-xs uppercase tracking-wider text-slate-600 print:text-black">
+            <p className="mt-4 text-xs uppercase tracking-wider text-slate-400 print:text-black">
               {atelier.titre} · {scenario.title}
             </p>
           </section>

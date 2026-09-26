@@ -45,7 +45,7 @@ export function JustificationsReview({
           {text}
         </p>
       ) : null}
-      <p className="mt-2 text-xs text-slate-500">
+      <p className="mt-2 text-xs text-slate-400">
         Générée par une IA à partir des justifications du tour : à relire, une aide au débriefing.
       </p>
     </div>

@@ -158,7 +158,7 @@ export function EconomicParams({
                         name={field.name}
                         placeholder={unavailable ? "non proposé" : (fallback ?? "")}
                         disabled={unavailable}
-                        className="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500 disabled:cursor-not-allowed"
+                        className="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed"
                       />
                       <span className="whitespace-nowrap text-xs text-slate-400">
                         {field.suffix === "unit" ? `€/${selected.unit}` : field.suffix}
@@ -169,7 +169,7 @@ export function EconomicParams({
               })}
             </div>
             {group.note ? (
-              <p className="mt-2 text-xs leading-relaxed text-slate-600">{group.note}</p>
+              <p className="mt-2 text-xs leading-relaxed text-slate-400">{group.note}</p>
             ) : null}
           </section>
         ))}
@@ -197,11 +197,11 @@ export function EconomicParams({
                   inputMode="decimal"
                   name={field.name}
                   placeholder={selected.defaults[field.name] ?? ""}
-                  className="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500"
+                  className="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-400"
                 />
                 <span className="whitespace-nowrap text-xs text-slate-400">%</span>
               </span>
-              <span className="mt-1 block text-xs text-slate-600">{field.hint}</span>
+              <span className="mt-1 block text-xs text-slate-400">{field.hint}</span>
             </label>
           ))}
         </div>

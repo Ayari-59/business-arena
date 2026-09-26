@@ -28,7 +28,7 @@ export function AiAssistant({
       </div>
       {coach ? <Coach gameId={gameId} /> : null}
       {tutor ? <Tutor gameId={gameId} /> : null}
-      <p className="mt-3 text-xs text-slate-500">
+      <p className="mt-3 text-xs text-slate-400">
         Réponses générées par une IA : à vérifier, elles peuvent se tromper.
       </p>
     </section>
@@ -111,7 +111,7 @@ function Tutor({ gameId }: { gameId: string }) {
               {m.content}
             </div>
           ))}
-          {pending ? <p className="text-xs text-slate-500">L&apos;IA réfléchit…</p> : null}
+          {pending ? <p className="text-xs text-slate-400">L&apos;IA réfléchit…</p> : null}
         </div>
       ) : null}
       {error ? <p className="mt-2 text-sm text-red-300">{error}</p> : null}
@@ -126,7 +126,7 @@ function Tutor({ gameId }: { gameId: string }) {
             }
           }}
           placeholder="Ex : pourquoi ma trésorerie a baissé ce tour ?"
-          className="min-w-0 flex-1 champ px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500 [--focus-champ:var(--color-sky-400)]"
+          className="min-w-0 flex-1 champ px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-400 [--focus-champ:var(--color-sky-400)]"
         />
         <button
           type="button"

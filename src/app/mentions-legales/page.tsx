@@ -202,7 +202,7 @@ export default function MentionsLegalesPage() {
           </p>
         </Section>
 
-        <p className="text-center text-xs text-slate-600">
+        <p className="text-center text-xs text-slate-400">
           Dernière mise à jour : août 2026 ·{" "}
           <Link href="/" className="underline-offset-4 hover:text-slate-400 hover:underline">
             business-arena.fr

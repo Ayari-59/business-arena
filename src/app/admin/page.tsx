@@ -454,7 +454,7 @@ export default async function AdminPage({
                 className={`rounded-lg px-4 py-2 text-sm font-semibold ${
                   agenda.clientConfigure
                     ? "bg-amber-400 text-slate-950 hover:bg-amber-300"
-                    : "pointer-events-none border border-white/10 text-slate-500"
+                    : "pointer-events-none border border-white/10 text-slate-400"
                 }`}
               >
                 Connecter mon agenda Google
@@ -474,7 +474,7 @@ export default async function AdminPage({
             </p>
           ) : null}
           {!agenda.connexion ? (
-            <p className="mt-3 text-xs leading-relaxed text-slate-500">
+            <p className="mt-3 text-xs leading-relaxed text-slate-400">
               Dans la console Google, le client OAuth doit être de type « Application Web » avec,
               en URI de redirection autorisée, exactement :{" "}
               <code className="rounded bg-slate-900 px-1 py-0.5 text-slate-300">{SITE_URL}/api/google/callback</code>
@@ -566,7 +566,7 @@ export default async function AdminPage({
                 <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
                   <span className="text-slate-400">Codes admin :</span>
                   {org.adminInvites.length === 0 ? (
-                    <span className="text-slate-600">aucun</span>
+                    <span className="text-slate-400">aucun</span>
                   ) : (
                     org.adminInvites.map((invite) => (
                       <span
@@ -574,7 +574,7 @@ export default async function AdminPage({
                         className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 font-mono ${
                           invite.active
                             ? "border-amber-400/40 text-amber-300"
-                            : "border-white/10 text-slate-600 line-through"
+                            : "border-white/10 text-slate-400 line-through"
                         }`}
                       >
                         {invite.code}

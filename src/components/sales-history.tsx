@@ -49,7 +49,7 @@ export function SalesHistory({
               <th className="pb-1 pr-3 text-right font-medium">Total vendu</th>
               <th className="pb-1 text-right font-medium">Manquées</th>
             </tr>
-            <tr className="text-left text-xs text-slate-600">
+            <tr className="text-left text-xs text-slate-400">
               <th className="pb-1 pr-3" />
               <th className="pb-1 pr-3" />
               {history.segments.map((name) => (

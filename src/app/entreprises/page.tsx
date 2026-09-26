@@ -53,7 +53,7 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
           >
             {SECTOR_LABELS[d.sector]}
           </span>
-          <span className="text-xs uppercase tracking-wider text-slate-600">
+          <span className="text-xs uppercase tracking-wider text-slate-400">
             {d.situations.length} situations · {d.bots.length} concurrents
           </span>
         </div>
@@ -80,21 +80,21 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
             ["Le goulot", `${v.capacityBottleneckLabel.toLowerCase()} ou équipe`],
           ].map(([label, valeur]) => (
             <div key={label} className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2">
-              <dt className="text-xs uppercase tracking-wide text-slate-600">{label}</dt>
+              <dt className="text-xs uppercase tracking-wide text-slate-400">{label}</dt>
               <dd className="mt-0.5 text-sm text-slate-200">{valeur}</dd>
             </div>
           ))}
         </dl>
 
         <div className="mt-5 rounded-xl border border-white/5 bg-slate-950/60 p-4">
-          <p className="text-xs uppercase tracking-[0.25em] text-slate-600">
+          <p className="text-xs uppercase tracking-[0.25em] text-slate-400">
             Ce que vous trouvez en arrivant
           </p>
           <p className="mt-2 text-sm leading-relaxed text-slate-300">{d.context}</p>
         </div>
 
         <div className="mt-4 rounded-xl border border-white/10 bg-slate-950 p-4">
-          <p className="text-xs uppercase tracking-[0.25em] text-slate-600">
+          <p className="text-xs uppercase tracking-[0.25em] text-slate-400">
             Le premier arbitrage
           </p>
           <p className="mt-2 text-sm font-medium text-slate-100">{d.dilemma.question}</p>
@@ -114,7 +114,7 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
         </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-1.5">
-          <span className="text-xs uppercase tracking-wide text-slate-600">
+          <span className="text-xs uppercase tracking-wide text-slate-400">
             Ses indicateurs
           </span>
           {d.kpis.slice(0, 5).map((k) => (
@@ -135,7 +135,7 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
           >
             Diriger {nomSeul(d)}
           </Link>
-          <span className="text-xs text-slate-600">
+          <span className="text-xs text-slate-400">
             Vous jouez {d.playerTeamName}, face à {d.bots.length} concurrents
           </span>
         </div>
@@ -236,7 +236,7 @@ export default function EntreprisesPage() {
               </tbody>
             </table>
           </div>
-          <p className="mt-4 text-xs leading-relaxed text-slate-600">
+          <p className="mt-4 text-xs leading-relaxed text-slate-400">
             Les activités périssables ne stockent rien : la capacité non vendue est perdue au
             passage du tour. C&apos;est la différence qui sépare un hôtelier d&apos;un
             industriel, et elle change tout le raisonnement sur le prix.

@@ -74,14 +74,14 @@ export function SimulationProgress({ periodName }: { periodName: string }) {
                     ? "bg-emerald-400 text-slate-950"
                     : courant
                       ? "border border-amber-400 text-amber-300 motion-safe:animate-pulse"
-                      : "border border-white/10 text-slate-600"
+                      : "border border-white/10 text-slate-400"
                 }`}
               >
                 {fait ? "✓" : ""}
               </span>
               <span
                 className={
-                  fait ? "text-slate-400" : courant ? "text-slate-100" : "text-slate-600"
+                  fait ? "text-slate-400" : courant ? "text-slate-100" : "text-slate-400"
                 }
               >
                 {libelle}

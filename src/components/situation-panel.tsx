@@ -495,7 +495,7 @@ export function SituationDebrief({
                   <span className="text-xs text-slate-400">{fact.label}</span>
                   <span className="flex items-baseline gap-2 text-sm">
                     <span className="text-slate-400">{fact.before}</span>
-                    <span className="text-slate-600">→</span>
+                    <span className="text-slate-400">→</span>
                     <span className="text-slate-200">{fact.after}</span>
                     <span
                       className={`text-xs font-medium ${

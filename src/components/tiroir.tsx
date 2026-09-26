@@ -58,7 +58,7 @@ export function Tiroir({
         {quoi ? (
           <span className="shrink-0 whitespace-nowrap text-xs text-slate-400">{quoi}</span>
         ) : null}
-        <span className="ml-auto shrink-0 pl-2 text-xs text-slate-500 group-open:hidden">
+        <span className="ml-auto shrink-0 pl-2 text-xs text-slate-400 group-open:hidden">
           déplier
         </span>
       </summary>

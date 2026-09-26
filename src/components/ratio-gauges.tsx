@@ -44,7 +44,7 @@ function GaugeBar({ ratio }: { ratio: RatioDef }) {
           style={{ width: `${Math.min(100, fillPct)}%` }}
         />
       </div>
-      <p className="text-xs leading-snug text-slate-600">{ratio.hint}</p>
+      <p className="text-xs leading-snug text-slate-400">{ratio.hint}</p>
     </div>
   );
 }

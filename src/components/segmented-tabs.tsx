@@ -167,7 +167,7 @@ export function SegmentedTabs({
                   </span>
                 </button>
                 {index < visible.length - 1 ? (
-                  <span aria-hidden className="shrink-0 text-slate-600">
+                  <span aria-hidden className="shrink-0 text-slate-400">
                     →
                   </span>
                 ) : null}

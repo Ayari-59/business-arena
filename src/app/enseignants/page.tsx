@@ -164,19 +164,19 @@ export default function EnseignantsPage() {
                 <span className="rounded-full border border-amber-400/20 bg-amber-400/5 px-2 py-0.5 text-xs font-semibold text-amber-300">
                   {a.diplome}
                 </span>
-                <span className="text-xs text-slate-500">{a.format}</span>
+                <span className="text-xs text-slate-400">{a.format}</span>
               </div>
               <h3 className="mt-3 text-sm font-semibold text-slate-100 group-hover:text-amber-200">
                 {a.titre}
               </h3>
               <p className="mt-1 text-xs leading-relaxed text-slate-400">{a.resume}</p>
-              <p className="mt-3 text-xs text-slate-500">
+              <p className="mt-3 text-xs text-slate-400">
                 {a.nature} · {a.difficulteLabel}
               </p>
             </Link>
           ))}
         </div>
-        <p className="mx-auto mt-6 max-w-2xl text-center text-xs leading-relaxed text-slate-500">
+        <p className="mx-auto mt-6 max-w-2xl text-center text-xs leading-relaxed text-slate-400">
           Chaque atelier cite les unités ou blocs de son référentiel avec la provenance de la
           liste. {REFERENTIELS_NON_VERIFIES.length} d&apos;entre eux (BTS MHR et BUT GEA) restent à
           confronter à leur texte officiel, et l&apos;indiquent plutôt que de le taire.

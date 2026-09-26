@@ -71,7 +71,7 @@ export function DilemmaCard({
       {/* Le message essentiel tient en une ligne : il n'y a pas de bonne
           réponse à cocher. Le paragraphe qu'il remplace disait la même chose en
           trois fois plus de mots. */}
-      <p className="mt-2.5 text-xs text-slate-500">
+      <p className="mt-2.5 text-xs text-slate-400">
         Aucune n&apos;est la bonne réponse — le marché tranchera au tour suivant.
       </p>
     </div>
@@ -95,13 +95,13 @@ function Chiffre({
       {/* Deux lignes réservées, comme dans le formulaire : « Trésorerie
           d'ouverture » se replie là où « Prix usuels » tient sur une ligne, et
           sans cette réserve les chiffres de la rangée ne s'alignaient plus. */}
-      <p className="min-h-8 text-xs uppercase leading-4 tracking-wide text-slate-500">{label}</p>
+      <p className="min-h-8 text-xs uppercase leading-4 tracking-wide text-slate-400">{label}</p>
       <p
         className={`tabular-nums text-base font-semibold ${accent ? "text-amber-300" : "text-slate-100"}`}
       >
         {valeur}
       </p>
-      {note ? <p className="text-xs leading-snug text-slate-500">{note}</p> : null}
+      {note ? <p className="text-xs leading-snug text-slate-400">{note}</p> : null}
     </div>
   );
 }
@@ -167,7 +167,7 @@ export function ParametersPanels({
         {/* Une gamme a un coût variable par référence : un seul chiffre mentirait. */}
         {gamme ? (
           <p className="mt-3 text-xs leading-relaxed text-slate-400">
-            <span className="text-slate-500">Coût variable : </span>
+            <span className="text-slate-400">Coût variable : </span>
             {gamme.map((p, i) => (
               <span key={p.code}>
                 {i > 0 ? " · " : ""}
@@ -181,7 +181,7 @@ export function ParametersPanels({
         ) : null}
         {intro.competitors.length > 0 ? (
           <p className="mt-2 text-xs text-slate-400">
-            <span className="text-slate-500">Face à vous : </span>
+            <span className="text-slate-400">Face à vous : </span>
             <span className="text-slate-300">{intro.competitors.join(", ")}</span>
           </p>
         ) : null}
@@ -327,7 +327,7 @@ export function ParametersPanels({
                 </tbody>
               </table>
             </div>
-            <p className="mt-2 text-xs leading-relaxed text-slate-500">
+            <p className="mt-2 text-xs leading-relaxed text-slate-400">
               Le prix usuel est celui auquel cette clientèle a l&apos;habitude d&apos;acheter, pas
               une consigne.{" "}
               {gamme

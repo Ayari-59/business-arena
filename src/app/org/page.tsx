@@ -112,7 +112,7 @@ export default async function OrgAdminPage() {
               className={`inline-flex items-center gap-2 rounded-full border px-4 py-1.5 font-mono ${
                 invite.active
                   ? "border-amber-400/40 text-amber-300"
-                  : "border-white/10 text-slate-600 line-through"
+                  : "border-white/10 text-slate-400 line-through"
               }`}
             >
               {invite.code}

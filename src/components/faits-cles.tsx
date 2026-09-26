@@ -44,7 +44,7 @@ export function FaitsCles({
       {faits.map((f, i) => (
         <span key={f} className="flex items-center gap-2">
           {i > 0 ? (
-            <span aria-hidden className="text-slate-600">
+            <span aria-hidden className="text-slate-400">
               ·
             </span>
           ) : null}

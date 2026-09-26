@@ -159,7 +159,7 @@ export default async function Home() {
               Je suis enseignant
             </Link>
           </div>
-          <p className="mt-3 text-xs text-slate-600">
+          <p className="mt-3 text-xs text-slate-400">
             Sans compte, sans installation. Vos parties restent liées à ce navigateur.
           </p>
         </div>
@@ -203,7 +203,7 @@ export default async function Home() {
               <span>Classement IPG</span>
               <span>
                 <span className="text-amber-300">#2 NOVA 58,3</span>
-                <span className="ml-2 text-slate-600">#1 Auris 61,8</span>
+                <span className="ml-2 text-slate-400">#1 Auris 61,8</span>
               </span>
             </div>
           </div>
@@ -262,7 +262,7 @@ export default async function Home() {
 
       {/* ---------- Footer ---------- */}
       <footer className="border-t border-white/5">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-8 text-xs text-slate-600">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-8 text-xs text-slate-400">
           <p>
             BUSINESS <span className="accent-arena">ARENA</span> · simulation
             d&apos;entreprise, apprentissage de la décision.

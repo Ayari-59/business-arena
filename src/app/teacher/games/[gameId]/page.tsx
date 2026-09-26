@@ -587,7 +587,7 @@ export default async function TeacherGamePage({
                     </td>
                     <td
                       className={`py-2 pr-3 text-right tabular-nums ${
-                        equipe.unanswered > 0 ? "text-slate-300" : "text-slate-600"
+                        equipe.unanswered > 0 ? "text-slate-300" : "text-slate-400"
                       }`}
                     >
                       {equipe.unanswered > 0 ? equipe.unanswered : "—"}
@@ -605,7 +605,7 @@ export default async function TeacherGamePage({
                     <td
                       className={`py-2 pr-3 text-right font-semibold tabular-nums ${
                         equipe.note === null
-                          ? "text-slate-600"
+                          ? "text-slate-400"
                           : equipe.note < 8
                             ? "text-red-300"
                             : equipe.note < 13

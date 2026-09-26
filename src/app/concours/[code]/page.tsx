@@ -176,7 +176,7 @@ export default async function ConcoursPublicPage({
           <ShareButtons url={url} title={concours.name} accent={accent.doux} />
         </section>
 
-        <footer className="border-t border-white/10 pt-6 text-sm text-slate-500">
+        <footer className="border-t border-white/10 pt-6 text-sm text-slate-400">
           Organisé sur{" "}
           <Link href="/" className="underline-offset-4 hover:underline" style={{ color: accent.doux }}>
             Business Arena

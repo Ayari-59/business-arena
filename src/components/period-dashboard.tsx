@@ -73,7 +73,7 @@ function RseCard({ rse }: { rse: RseIndex }) {
                 />
               </span>
               <span className="w-16 shrink-0 text-right tabular-nums text-slate-300">
-                {p.evaluated ? p.score : <span className="text-slate-500">non évalué</span>}
+                {p.evaluated ? p.score : <span className="text-slate-400">non évalué</span>}
               </span>
             </div>
           );
@@ -91,7 +91,7 @@ function RseCard({ rse }: { rse: RseIndex }) {
           ))}
         </div>
       ) : null}
-      <p className="mt-3 text-xs leading-snug text-slate-500">
+      <p className="mt-3 text-xs leading-snug text-slate-400">
         Elle pèse dans l&apos;IPG (10 % par défaut) ; elle ne joue pas sur le marché.
       </p>
     </section>
@@ -424,7 +424,7 @@ export function PeriodDashboard({
                                 ) : fit < 1 ? (
                                   <span className="text-red-400">✗ dessert</span>
                                 ) : (
-                                  <span className="text-slate-500">· neutre</span>
+                                  <span className="text-slate-400">· neutre</span>
                                 );
                               })()}
                             </td>

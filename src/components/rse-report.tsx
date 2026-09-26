@@ -41,7 +41,7 @@ function Pillar({ title, items }: { title: string; items: RseReportIndicator[] }
           <div key={i.label} className="flex items-baseline justify-between gap-3 text-xs">
             <dt className="text-slate-400">
               {i.label}
-              {i.hint ? <span className="text-slate-600"> · {i.hint}</span> : null}
+              {i.hint ? <span className="text-slate-400"> · {i.hint}</span> : null}
             </dt>
             <dd className="shrink-0 tabular-nums font-semibold text-slate-200">
               {formatIndicator(i)}
@@ -68,7 +68,7 @@ export function RseReportPanel({ report }: { report: RseReport }) {
           <span className="text-xs text-slate-400"> / 100</span>
         </span>
       </div>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-slate-400">
         Synthèse sur {report.roundsCovered} tour{report.roundsCovered > 1 ? "s" : ""} · engagement RSE
         cumulé {formatEuro(report.engagementTotal)}
       </p>
@@ -98,19 +98,19 @@ export function RseReportPanel({ report }: { report: RseReport }) {
             <p className="tabular-nums text-base font-semibold text-slate-100">
               {Math.round(report.carbon.totalPoints).toLocaleString("fr-FR")}
             </p>
-            <p className="text-xs text-slate-500">points cumulés</p>
+            <p className="text-xs text-slate-400">points cumulés</p>
           </div>
           <div>
             <p className="tabular-nums text-base font-semibold text-slate-100">
               {report.carbon.perUnit.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}
             </p>
-            <p className="text-xs text-slate-500">points / unité</p>
+            <p className="text-xs text-slate-400">points / unité</p>
           </div>
           <div>
             <p className="tabular-nums text-base font-semibold text-emerald-300">
               {formatPercent(report.carbon.avoidedShare)}
             </p>
-            <p className="text-xs text-slate-500">évité (process propre)</p>
+            <p className="text-xs text-slate-400">évité (process propre)</p>
           </div>
         </div>
       </div>
@@ -121,7 +121,7 @@ export function RseReportPanel({ report }: { report: RseReport }) {
         <Pillar title="Gouvernance" items={report.pillars.governance} />
       </div>
 
-      <p className="mt-3 text-xs leading-snug text-slate-500">
+      <p className="mt-3 text-xs leading-snug text-slate-400">
         Synthèse <strong>indicative et simplifiée</strong>, à visée pédagogique : elle s&apos;inspire
         d&apos;une déclaration de performance extra-financière sans en suivre une norme officielle.
         L&apos;empreinte carbone est un <strong>proxy</strong> (points, non des tCO₂e).

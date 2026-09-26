@@ -48,7 +48,7 @@ export function TrainingGallery({
                 </h3>
               </div>
             </div>
-            <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">
+            <p className="text-xs text-slate-400 mb-3">
               {module.description}
             </p>
             <div className="flex items-center gap-2 justify-between">
@@ -59,7 +59,7 @@ export function TrainingGallery({
               >
                 {difficultyLabels[module.difficulty]}
               </span>
-              <span className="text-xs text-slate-500 dark:text-slate-400">
+              <span className="text-xs text-slate-400">
                 {module.estimatedTime}m
               </span>
             </div>

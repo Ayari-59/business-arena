@@ -98,7 +98,7 @@ export default async function UsagePage() {
                     </td>
                     <td
                       className={`py-2 pr-3 text-right tabular-nums ${
-                        s.unanswered > 0 ? "text-slate-300" : "text-slate-600"
+                        s.unanswered > 0 ? "text-slate-300" : "text-slate-400"
                       }`}
                     >
                       {s.unanswered > 0 ? s.unanswered : "—"}
@@ -106,7 +106,7 @@ export default async function UsagePage() {
                     <td
                       className={`py-2 pr-3 text-right font-medium tabular-nums ${
                         s.averageScore === null
-                          ? "text-slate-600"
+                          ? "text-slate-400"
                           : s.averageScore < 0.4
                             ? "text-red-300"
                             : s.averageScore < 0.65
@@ -207,7 +207,7 @@ export default async function UsagePage() {
                 <span className="text-slate-300">{c.name}</span>
                 <span className="tabular-nums text-slate-400">
                   {Math.round(c.average)}
-                  <span className="ml-2 text-xs text-slate-600">
+                  <span className="ml-2 text-xs text-slate-400">
                     {c.students} élève{c.students > 1 ? "s" : ""}
                   </span>
                 </span>

@@ -223,7 +223,7 @@ export function VueDeProjection({
                 est une suite de décimales sans unité : le sigle IPG n'apparaît
                 nulle part ailleurs sur le mur. */}
             {classement.length > 0 && classementRevele ? (
-              <p className="text-[clamp(0.9rem,1.8vw,1.5rem)] text-slate-500">
+              <p className="text-[clamp(0.9rem,1.8vw,1.5rem)] text-slate-400">
                 Indice de performance globale (IPG)
               </p>
             ) : null}
@@ -253,7 +253,7 @@ export function VueDeProjection({
                     className="flex items-center justify-between gap-4 rounded-xl border border-white/5 bg-slate-950 px-[clamp(0.8rem,2vw,2rem)] py-[clamp(0.4rem,1.2vh,1rem)]"
                   >
                     <span className="flex min-w-0 items-baseline gap-[clamp(0.5rem,1.5vw,1.5rem)] text-[clamp(1.2rem,3.4vw,2.8rem)] font-semibold text-slate-100">
-                      <span className="shrink-0 tabular-nums text-slate-500">#{row.rang}</span>
+                      <span className="shrink-0 tabular-nums text-slate-400">#{row.rang}</span>
                       <span className="truncate">{row.nom}</span>
                       {row.defaillant ? (
                         <span

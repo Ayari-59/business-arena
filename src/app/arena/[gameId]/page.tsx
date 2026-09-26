@@ -639,14 +639,14 @@ export default async function ArenaPage({
                   <span className="mt-0.5 flex flex-wrap gap-x-1.5 gap-y-0.5 text-xs tabular-nums text-slate-400">
                     <span className="whitespace-nowrap">
                       CA {formatEuro(p.result.incomeStatement.revenue)}
-                      <span aria-hidden className="text-slate-600"> ·</span>
+                      <span aria-hidden className="text-slate-400"> ·</span>
                     </span>
                     <span
                       className={`whitespace-nowrap ${netIncome >= 0 ? "text-emerald-300" : "text-rose-300"}`}
                     >
                       {netIncome >= 0 ? "+" : ""}
                       {formatEuro(netIncome)}
-                      <span aria-hidden className="text-slate-600"> ·</span>
+                      <span aria-hidden className="text-slate-400"> ·</span>
                     </span>
                     <span
                       className={`whitespace-nowrap ${netTreasury >= 0 ? "text-slate-400" : "text-rose-300"}`}

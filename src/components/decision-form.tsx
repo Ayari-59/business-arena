@@ -542,7 +542,7 @@ function Faits({ faits, className = "" }: { faits: string[]; className?: string 
         <span key={fait} className="whitespace-nowrap">
           {fait}
           {i < faits.length - 1 ? (
-            <span aria-hidden className="text-slate-600"> ·</span>
+            <span aria-hidden className="text-slate-400"> ·</span>
           ) : null}
         </span>
       ))}
@@ -570,7 +570,7 @@ function FaitCapacite({
 }) {
   return (
     <div>
-      <dt className="text-xs uppercase leading-4 tracking-wide text-slate-500">{label}</dt>
+      <dt className="text-xs uppercase leading-4 tracking-wide text-slate-400">{label}</dt>
       <dd className={`text-sm font-medium tabular-nums ${couleur}`} data-testid={testId}>
         {valeur}
       </dd>
@@ -707,7 +707,7 @@ function GammeReference({
   const prixDe = (p: Reference) => prix[p.code] ?? p.refPrice;
 
   /** Une cellule sans objet : la référence n'est pas encore vendable. */
-  const rien = <span className="text-slate-600">—</span>;
+  const rien = <span className="text-slate-400">—</span>;
 
   /** Un champ chiffré, dans sa cellule. */
   const champ = (
@@ -2430,7 +2430,7 @@ export function DecisionForm({
               ? "Qu'attendez-vous de ces choix ? Une phrase suffit."
               : "Pourquoi ces choix ce tour-ci ?"
           }
-          className="w-full resize-y champ px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none"
+          className="w-full resize-y champ px-3 py-2 text-sm text-slate-200 placeholder:text-slate-400 focus:outline-none"
         />
         <p className="mt-1 text-xs text-slate-400">
           {premierTour

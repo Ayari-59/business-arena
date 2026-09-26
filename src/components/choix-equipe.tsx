@@ -72,7 +72,7 @@ export function ChoixEquipe({
       </ul>
 
       {mienne ? (
-        <p className="mt-3 text-xs text-slate-500">
+        <p className="mt-3 text-xs text-slate-400">
           Vous jouez actuellement dans {mienne.nom}.
         </p>
       ) : null}

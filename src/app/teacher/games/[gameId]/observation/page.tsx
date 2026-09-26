@@ -39,7 +39,7 @@ function Tuile({
 }) {
   return (
     <div className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2.5">
-      <p className="text-xs uppercase leading-4 tracking-wide text-slate-500">{label}</p>
+      <p className="text-xs uppercase leading-4 tracking-wide text-slate-400">{label}</p>
       <p className={`mt-0.5 text-2xl font-semibold tabular-nums ${couleur}`}>{valeur}</p>
       <p className="mt-0.5 text-xs leading-snug text-slate-400">{note}</p>
     </div>
@@ -163,7 +163,7 @@ export default async function ObservationPage({
               ))}
             </div>
             {tours.some((t) => !t.clos) ? (
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-400">
                 Les barres pâles sont des tours non clos : ils reçoivent encore des
                 décisions.
               </p>
@@ -192,7 +192,7 @@ export default async function ObservationPage({
                     <tr key={t.index} className="border-t border-white/5">
                       <td className="whitespace-nowrap py-1.5 pr-3 text-slate-100">
                         {t.index}
-                        {t.clos ? "" : <span className="ml-1 text-xs text-slate-500">en cours</span>}
+                        {t.clos ? "" : <span className="ml-1 text-xs text-slate-400">en cours</span>}
                       </td>
                       <td className="py-1.5 pr-3 text-right tabular-nums">{t.validees}</td>
                       <td
