@@ -2,17 +2,35 @@ import { formatEuro, formatPercent } from "@/lib/format";
 import type { VarianceOutput } from "@/engine/costs/variance";
 
 /**
- * Variance Analysis Panel: Displays cost and revenue variance decomposition.
- * Cost variances (price/efficiency) are the core; revenue context shows segment impact.
- * Only shown when variances are non-negligible (engine filters at < 1€).
+ * LES ÉCARTS DE COÛTS, ET RIEN D'AUTRE.
+ *
+ * Ce panneau affichait aussi deux chiffres que le moteur lui-même désavoue
+ * (voir `engine/costs/variance.ts`) :
+ *
+ *   · « Variance prix/volume » par segment, libellée en euros, valait en
+ *     réalité le chiffre d'affaires réalisé PLUS les unités invendues. Des
+ *     euros additionnés à des unités, présentés comme des euros ;
+ *   · « Impact sur la marge de contribution », en vert ou en rouge selon son
+ *     signe, que le moteur décrit comme « à ne pas lire comme un écart sur
+ *     marge » — c'était donc un verdict sur la marge qui n'en était pas un.
+ *
+ * Le commentaire du moteur était formel : « Rien ne doit en être affiché tant
+ * que c'est le cas. » Un vrai écart sur chiffre d'affaires suppose un budget
+ * de ventes, qui n'existe pas. Tant qu'il n'existe pas, ne rien montrer vaut
+ * mieux que montrer faux : un élève de gestion à qui l'on présente une
+ * addition d'euros et d'unités sous le nom d'« écart » apprend une notion
+ * fausse, et il l'apprend avec l'autorité de l'écran.
+ *
+ * Le calcul reste dans le moteur, avec ses mises en garde, pour le jour où il
+ * sera juste.
+ *
+ * ET CE PANNEAU N'EST MONTÉ NULLE PART. Aucune page ne l'importe : le moteur
+ * calcule ces écarts à chaque tour et pour chaque référence, personne ne les
+ * lit. Il est gardé parce que les écarts de COÛTS, eux, sont justes et
+ * méritent d'être branchés un jour ; il est nettoyé pour que ce jour-là il ne
+ * remette pas les deux chiffres faux à l'écran.
  */
-export function VariancePanel({
-  variances,
-  segmentNames,
-}: {
-  variances: VarianceOutput;
-  segmentNames: Record<string, string>;
-}) {
+export function VariancePanel({ variances }: { variances: VarianceOutput }) {
   const cvVar = [
     { label: "Écart sur prix des matières", value: variances.materialPriceVariance },
     { label: "Écart sur quantité · matières", value: variances.materialQuantityVariance },
@@ -69,48 +87,9 @@ export function VariancePanel({
         </div>
       </div>
 
-      {/* Revenue Variance by Segment */}
-      {Object.keys(variances.revenueVarianceBySegment).length > 0 && (
-        <div className="mt-3 space-y-1">
-          <p className="text-xs text-slate-400">Contexte commercial par segment</p>
-          <div className="space-y-1 rounded-md bg-slate-950/50 p-2">
-            {Object.entries(variances.revenueVarianceBySegment).map(([code, data]) => (
-              <div key={code} className="border-t border-white/10 pt-1 first:border-0 first:pt-0">
-                <div className="flex items-center justify-between text-xs font-medium text-slate-200">
-                  <span>{segmentNames[code] ?? code}</span>
-                </div>
-                <div className="mt-0.5 flex items-center justify-between text-xs text-slate-400">
-                  <span>Variance prix/volume</span>
-                  <span className="tabular-nums">
-                    {data.totalVariance >= 0 ? "+" : ""}
-                    {formatEuro(data.totalVariance)}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Contribution Margin Variance */}
-      <div className="mt-3 rounded-md bg-slate-800/30 p-2">
-        <div className="flex items-center justify-between text-xs">
-          <span className="text-slate-300">Impact sur la marge de contribution</span>
-          <span
-            className={`tabular-nums font-semibold ${
-              variances.contributionMarginVariance >= 0 ? "text-emerald-400" : "text-red-400"
-            }`}
-          >
-            {variances.contributionMarginVariance >= 0 ? "+" : ""}
-            {formatEuro(variances.contributionMarginVariance)}
-          </span>
-        </div>
-      </div>
-
       <p className="mt-2 text-xs leading-relaxed text-slate-400">
-        Les écarts de coûts (matière et efficacité) pèsent directement sur le résultat. Le contexte
-        commercial par segment montre comment prix et volume ont joué : ces variances n&apos;influent pas
-        aujourd&apos;hui, mais elles éclairent le diagnostic.
+        Les écarts de coûts, matière et efficacité, pèsent directement sur le résultat : ce sont
+        les seuls que ce panneau mesure.
       </p>
     </div>
   );

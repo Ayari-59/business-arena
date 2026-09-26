@@ -160,3 +160,43 @@ describe("le rythme vertical de l'arène est déclaré une fois", () => {
     expect(main).not.toMatch(/<div className="mt-\d">\s*\n\s*<(?:Round|Event|Team)/);
   });
 });
+
+/**
+ * LES DEUX CHIFFRES QUE LE MOTEUR DÉSAVOUE NE S'AFFICHENT NULLE PART.
+ *
+ * `engine/costs/variance.ts` porte cette mise en garde, en toutes lettres :
+ * « CE BLOC N'EST PAS UN ÉCART, malgré son nom. […] Rien ne doit en être
+ * affiché tant que c'est le cas. » `priceVariance` vaut le chiffre d'affaires
+ * réalisé, `volumeVariance` les unités INVENDUES, et leur somme additionne
+ * donc des euros à des unités. `contributionMarginVariance` est décrit comme
+ * « à ne pas lire comme un écart sur marge ».
+ *
+ * Le panneau les affichait pourtant, libellés en euros et colorés en vert ou
+ * en rouge. Il n'était monté nulle part, donc aucun élève ne les a vus — mais
+ * le jour où quelqu'un branchera ce panneau, il ne doit pas les ramener avec.
+ * Une notion fausse apprise avec l'autorité de l'écran coûte plus cher que
+ * pas de panneau du tout.
+ */
+describe("ce que le moteur désavoue ne s'affiche pas", () => {
+  const INTERDITS = ["contributionMarginVariance", "revenueVarianceBySegment"];
+
+  it("la mise en garde est toujours écrite là où le calcul se fait", () => {
+    const moteur = readFileSync(join(SRC, "engine", "costs", "variance.ts"), "utf8");
+    expect(moteur).toContain("CE BLOC N'EST PAS UN ÉCART");
+    expect(moteur).toContain("Rien ne doit en être affiché");
+  });
+
+  it("aucun composant ni aucune page ne les lit", () => {
+    const fautifs: string[] = [];
+    for (const f of fichiers(SRC, ".tsx")) {
+      const source = readFileSync(f, "utf8");
+      for (const nom of INTERDITS) {
+        if (source.includes(nom)) fautifs.push(`${f.slice(SRC.length)} : ${nom}`);
+      }
+    }
+    expect(
+      fautifs,
+      `chiffres désavoués par le moteur, remis à l'écran :\n${fautifs.join("\n")}`,
+    ).toEqual([]);
+  });
+});
