@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { getOrCreateGuestUserId, setGuestCookie } from "@/lib/guest";
-import { joinCompetition, reprendreSonIdentite } from "@/services/competition.service";
+import { joinCompetition, refusDeSInscrire, reprendreSonIdentite } from "@/services/competition.service";
 
 /**
  * L'adresse d'origine, pour compter les tentatives de reprise. Celle ajoutée
@@ -50,6 +50,9 @@ export async function joinCompetitionAction(
   const teamLabel = String(formData.get("teamLabel") ?? "").trim();
   const pseudo = String(formData.get("pseudo") ?? "").trim();
   if (code.length < 4) return { error: "Saisissez le code du concours.", dejaInscrit: null };
+  // Le code d'abord, l'invité ensuite : voir /join/actions.ts.
+  const refus = await refusDeSInscrire(code);
+  if (refus) return { error: refus, dejaInscrit: null };
   const userId = await getOrCreateGuestUserId();
   const result = await joinCompetition({ code, userId, teamLabel, pseudo });
   if ("error" in result) return { error: result.error, dejaInscrit: null };

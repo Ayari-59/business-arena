@@ -75,6 +75,15 @@ export const games = pgTable(
     createdBy: uuid("created_by")
       .notNull()
       .references(() => users.id, { onDelete: "restrict" }),
+    /**
+     * L'adresse d'origine de la création, pour les seules parties nées d'un
+     * formulaire public. Elle ne sert qu'à compter : `/jouer` crée une partie
+     * entière — snapshot de scénario compris — à chaque envoi, sans qu'aucune
+     * session soit exigée. Sans ce compteur, une boucle crée autant de parties
+     * qu'elle fait de requêtes. Nulle pour les parties créées par un
+     * enseignant identifié, qui n'ont rien à plafonner.
+     */
+    creatorIp: text("creator_ip"),
     ...timestamps,
   },
   (t) => [
@@ -82,6 +91,9 @@ export const games = pgTable(
     index("games_status_idx").on(t.status),
     index("games_created_by_idx").on(t.createdBy),
     index("games_competition_stage_idx").on(t.competitionStageId),
+    // Le plafond se lit « combien de parties depuis cette adresse depuis une
+    // heure » : c'est cet index qui rend la question gratuite.
+    index("games_creator_ip_idx").on(t.creatorIp, t.createdAt),
   ],
 );
 

@@ -30,6 +30,9 @@ vi.mock("@/lib/guest", () => ({
 }));
 vi.mock("@/services/competition.service", () => ({
   joinCompetition: vi.fn(),
+  // L'action demande d'abord si le code ouvre quelque chose, AVANT de créer
+  // l'invité : ici il ouvre toujours, ces cas-là testent la suite.
+  refusDeSInscrire: vi.fn(async () => null),
 }));
 
 const { joinCompetition } = await import("@/services/competition.service");

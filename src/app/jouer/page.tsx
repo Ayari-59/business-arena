@@ -31,13 +31,13 @@ export const metadata: Metadata = {
 export default async function JouerPage({
   searchParams,
 }: {
-  searchParams: Promise<{ secteur?: string }>;
+  searchParams: Promise<{ secteur?: string; trop?: string }>;
 }) {
   const config = await getPlatformConfig();
   const decisions = etendueDesDecisions();
   // Les fiches d'entreprise renvoient ici avec leur métier en poche : le
   // sélecteur doit s'ouvrir dessus, sinon le clic n'a servi à rien.
-  const { secteur } = await searchParams;
+  const { secteur, trop } = await searchParams;
   const scenarioChoisi = SCENARIO_CHOICES.some((s) => s.code === secteur)
     ? secteur!
     : DEFAULT_SCENARIO_CODE;
@@ -92,6 +92,17 @@ export default async function JouerPage({
             </div>
           </div>
 
+          {trop ? (
+            <p
+              role="status"
+              className="mb-4 rounded-2xl border border-amber-400/30 bg-amber-950/30 p-4 text-sm text-amber-200"
+            >
+              Trop de parties lancées depuis cette connexion dans la dernière heure.
+              Réessayez tout à l&apos;heure. Si vous êtes en classe, les élèves n&apos;ont
+              pas besoin de passer par ici : donnez-leur le code de la partie, ils
+              entrent par <strong>/join</strong> et ne créent rien.
+            </p>
+          ) : null}
           {!config.allowPublicPlay ? (
             <div className="rounded-2xl border border-white/10 bg-slate-900 p-6 text-sm text-slate-400">
               Les parties publiques sont momentanément désactivées. Élèves : utilisez le code

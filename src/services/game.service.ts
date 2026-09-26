@@ -63,6 +63,28 @@ export { getGameView, teamDisplayName } from "@/services/game-view.service";
 export type { GameView, StudyReports } from "@/services/game-view.service";
 
 /** Rejoindre une partie de classe par code : affectation à l'équipe la moins remplie. */
+/**
+ * POURQUOI CE CODE NE PERMET PAS D'ENTRER, s'il y a une raison.
+ *
+ * `joinGameByCode` répond déjà, mais il exige un `userId` — et l'action créait
+ * donc un utilisateur invité AVANT de savoir si le code existe. Un code faux
+ * laissait une ligne dans `users` ; une boucle en laissait autant qu'elle
+ * faisait de requêtes. Le refus se prononce maintenant d'abord, sur une simple
+ * lecture, et rien n'est créé tant que la partie n'est pas trouvée.
+ *
+ * Rend le message de refus, ou `null` si le code ouvre bien une partie.
+ * `joinGameByCode` refait le contrôle : deux appels séparés, l'état peut
+ * changer entre les deux, et c'est lui qui fait autorité.
+ */
+export async function refusDeRejoindre(code: string): Promise<string | null> {
+  const game = (
+    await db.select().from(games).where(eq(games.joinCode, code.trim().toUpperCase()))
+  )[0];
+  if (!game) return "Code de partie inconnu.";
+  if (game.status === "finished" || game.status === "archived") return "Cette partie est terminée.";
+  return null;
+}
+
 export async function joinGameByCode(args: {
   code: string;
   userId: string;

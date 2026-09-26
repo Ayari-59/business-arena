@@ -1,5 +1,5 @@
 import { randomInt } from "node:crypto";
-import { and, eq } from "drizzle-orm";
+import { and, eq, gt, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   companyStates,
@@ -112,6 +112,29 @@ function makeJoinCode(): string {
 
 export type GameKind = "solo" | "class";
 
+/**
+ * PLAFOND DES PARTIES PUBLIQUES, PAR ADRESSE ET PAR HEURE.
+ *
+ * `/jouer` n'exige aucune session : chaque envoi du formulaire crée une partie
+ * entière — partie, équipes, états d'ouverture, snapshot du scénario en jsonb.
+ * Une boucle y créait donc autant de parties qu'elle faisait de requêtes. Ce
+ * n'est pas une faille d'autorisation, c'est une amplification d'écriture.
+ *
+ * Dix par heure laisse tranquille l'usage réel — un enseignant qui essaie
+ * plusieurs configurations avant sa séance, une classe entière derrière le même
+ * routeur d'établissement en fait davantage, mais celle-là passe par /join et
+ * ne crée rien. Le motif est celui qui garde déjà /orientation et /rendez-vous.
+ */
+export const PLAFOND_PARTIES_PAR_IP_PAR_HEURE = 10;
+
+/** Ce que l'appelant reçoit quand le plafond est atteint. */
+export class TropDePartiesError extends Error {
+  constructor() {
+    super("Trop de parties lancées depuis cette connexion : réessayez dans une heure.");
+    this.name = "TropDePartiesError";
+  }
+}
+
 export interface CreateGameArgs {
   organizationId: string;
   createdBy: string;
@@ -137,6 +160,12 @@ export interface CreateGameArgs {
    * sans situation ni événement écrits pour eux.
    */
   roundsCount?: number;
+  /**
+   * L'adresse d'origine, pour les seules parties nées d'un formulaire public.
+   * Elle ne sert qu'à compter (voir `PLAFOND_PARTIES_PAR_IP_PAR_HEURE`) ;
+   * absente pour une partie créée par un enseignant identifié.
+   */
+  creatorIp?: string | null;
   /** Secteur joué (registre des scénarios) — absent = NOVA. */
   scenarioCode?: string;
   /** Questions posées dans les situations : tout, le modèle seul, ou rien. */
@@ -241,6 +270,7 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
       currentRound: 1,
       joinCode: args.joinCode,
       createdBy: args.createdBy,
+      creatorIp: args.creatorIp ?? null,
     })
     .returning({ id: games.id });
   if (!game) throw new Error("Création de partie impossible");
@@ -311,10 +341,24 @@ export async function createSoloGame(
   variableWorld = false,
   scenarioCode?: string,
   roundsCount?: number,
+  /** Adresse d'origine : le plafond se compte dessus. Absente = pas de compte. */
+  creatorIp?: string | null,
 ): Promise<string> {
   const config = await getPlatformConfig();
   if (!config.allowPublicPlay) {
     throw new Error("Les parties publiques sont désactivées par l'administrateur.");
+  }
+  if (creatorIp) {
+    const [compte] = await db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(games)
+      .where(
+        and(
+          eq(games.creatorIp, creatorIp),
+          gt(games.createdAt, new Date(Date.now() - 60 * 60 * 1000)),
+        ),
+      );
+    if ((compte?.n ?? 0) >= PLAFOND_PARTIES_PAR_IP_PAR_HEURE) throw new TropDePartiesError();
   }
   const definition = await resolveScenarioDefinition(
     scenarioCode ? scenarioCodeForLevel(scenarioCode, level) : scenarioCode,
@@ -333,6 +377,7 @@ export async function createSoloGame(
     scenarioCode,
     roundsCount,
     quizMode: "model",
+    creatorIp,
   });
   const humanTeam = (
     await db

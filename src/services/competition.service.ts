@@ -102,6 +102,22 @@ export async function createCompetition(args: {
  * alors `alreadyMember`, le nom de son équipe, pour que la page le dise au
  * lieu de rediriger en silence (vague 1, K4).
  */
+/**
+ * POURQUOI CE CODE DE CONCOURS NE PERMET PAS DE S'INSCRIRE, s'il y a une raison.
+ *
+ * Même motif que `refusDeRejoindre` : l'action créait un utilisateur invité
+ * avant de savoir si le concours existe. Le refus se prononce d'abord, sur une
+ * lecture seule. `joinCompetition` refait le contrôle et fait autorité.
+ */
+export async function refusDeSInscrire(code: string): Promise<string | null> {
+  const competition = (
+    await db.select().from(competitions).where(eq(competitions.joinCode, code.trim().toUpperCase()))
+  )[0];
+  if (!competition) return "Code de concours inconnu.";
+  if (competition.status !== "registration") return "Les inscriptions de ce concours sont closes.";
+  return null;
+}
+
 export async function joinCompetition(args: {
   code: string;
   userId: string;
