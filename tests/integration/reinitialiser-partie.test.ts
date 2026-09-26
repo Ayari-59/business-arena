@@ -170,7 +170,11 @@ describe("après la remise à zéro", () => {
       .from(rounds)
       .where(eq(rounds.gameId, gameId))
       .orderBy(rounds.index);
-    expect(tours.length).toBeGreaterThan(1);
+    // Autant de tours que l'instantané du scénario en annonce, ni plus ni
+    // moins : c'est ici que se prouve ce que le garde-fou de source suppose.
+    const [g] = await db.select().from(games).where(eq(games.id, gameId));
+    const attendus = (g!.scenarioSnapshot as { roundsCount: number }).roundsCount;
+    expect(tours.length).toBe(attendus);
     expect(tours[0]).toMatchObject({ index: 1, status: "open" });
     expect(tours.slice(1).every((t) => t.status === "pending")).toBe(true);
   });

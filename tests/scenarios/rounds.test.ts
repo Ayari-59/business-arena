@@ -53,8 +53,18 @@ describe("durée d'une partie", () => {
       "applyRoundsCount",
     );
     expect(bloc, "la durée ne vient pas des arguments de création").toContain("args.roundsCount");
-    // Et la partie crée bien autant de tours que l'instantané en annonce.
-    expect(service).toContain("length: scenarioSnapshot.roundsCount");
+    // Et la partie crée bien autant de tours que l'instantané en annonce. Le
+    // bloc qui les pose est partagé avec la remise à zéro (`poserLEtatDeDepart`)
+    // : on vérifie donc les deux bouts, ce qu'on lui passe et ce qu'il en fait.
+    expect(service, "l'instantané ne donne pas sa durée à l'état de départ").toContain(
+      "roundsCount: scenarioSnapshot.roundsCount",
+    );
+    expect(service, "l'état de départ ne pose pas autant de tours qu'on lui en donne").toContain(
+      "length: args.roundsCount",
+    );
+    // La preuve par le comportement, elle, est dans
+    // tests/integration/reinitialiser-partie.test.ts, qui compte les tours en
+    // base après une remise à zéro.
   });
 
   it("l'enseignant peut régler la durée à la création", () => {
