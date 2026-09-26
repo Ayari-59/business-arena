@@ -1,4 +1,4 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   concepts,
@@ -321,6 +321,15 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
       evidenceCount: p.evidenceCount,
     });
   }
+  /**
+   * Ce qui aura bougé à la fin, une ligne par paire (élève, notion). Indexée
+   * par la même clé que `progressMap` : le dédoublonnage vient de la structure,
+   * pas d'une passe de nettoyage qu'on pourrait oublier.
+   */
+  const aEcrire = new Map<
+    string,
+    { userId: string; conceptId: string; mastery: string; evidenceCount: number }
+  >();
 
   const fallbackChoiceIds = toDebrief
     .filter((inst) => {
@@ -460,53 +469,98 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
         const current = progressMap.get(key);
         const mastery = updateMastery(Number(current?.mastery ?? 0), score, def.weight);
         const evidenceCount = (current?.evidenceCount ?? 0) + 1;
-        await db
-          .insert(learningProgress)
-          .values({
-            userId: member.userId,
-            conceptId,
-            mastery: mastery.toFixed(2),
-            evidenceCount: 1,
-            lastEventAt: new Date(),
-          })
-          .onConflictDoUpdate({
-            target: [learningProgress.userId, learningProgress.conceptId],
-            set: {
-              mastery: mastery.toFixed(2),
-              evidenceCount,
-              lastEventAt: new Date(),
-            },
-          });
+        // On ne va PAS en base ici : `progressMap` porte déjà l'état courant,
+        // et la même paire (élève, notion) revient d'une situation à l'autre
+        // dans le même appel. On la tient à jour en mémoire, on note qu'elle
+        // a bougé, et tout part en une écriture après la boucle.
         progressMap.set(key, { mastery: mastery.toFixed(2), evidenceCount });
+        aEcrire.set(key, { userId: member.userId, conceptId, mastery: mastery.toFixed(2), evidenceCount });
       }
     }
   }
 
-  // Recompute skills once for all affected users
+  // LA PROGRESSION DE TOUT LE MONDE, EN UNE ÉCRITURE.
+  //
+  // C'était un upsert par notion, par élève et par situation : une classe de
+  // trente sur neuf situations à trois notions, c'étaient huit cents
+  // allers-retours en série pendant que l'enseignant attend la clôture du
+  // tour. La carte `aEcrire` est indexée par paire (élève, notion) : elle
+  // dédoublonne d'elle-même, ce qui n'est pas un détail — un lot qui porterait
+  // deux fois la même clé ferait échouer l'upsert (« ON CONFLICT DO UPDATE
+  // command cannot affect row a second time »).
+  if (aEcrire.size > 0) {
+    const maintenant = new Date();
+    await db
+      .insert(learningProgress)
+      .values(
+        [...aEcrire.values()].map((l) => ({
+          userId: l.userId,
+          conceptId: l.conceptId,
+          mastery: l.mastery,
+          evidenceCount: l.evidenceCount,
+          lastEventAt: maintenant,
+        })),
+      )
+      .onConflictDoUpdate({
+        target: [learningProgress.userId, learningProgress.conceptId],
+        set: {
+          mastery: sql`excluded.mastery`,
+          evidenceCount: sql`excluded.evidence_count`,
+          lastEventAt: sql`excluded.last_event_at`,
+        },
+      });
+  }
+
+  // LES COMPÉTENCES DE TOUT LE MONDE, EN DEUX REQUÊTES.
+  //
+  // Ce bloc était une boucle sur les élèves : une lecture de progression
+  // CHACUN, puis une écriture par axe et par élève. Une classe de trente,
+  // c'était trente allers-retours de lecture et cent quatre-vingts d'écriture,
+  // en série, dans le chemin que l'enseignant déclenche en cliquant « clore le
+  // tour », debout devant sa classe. Le travail était juste ; c'est le nombre
+  // d'allers-retours qui faisait paraître l'application lente.
+  //
+  // Une lecture pour tout le monde, un regroupement en mémoire, une écriture
+  // groupée. `excluded.value` est la valeur de la ligne qu'on tentait
+  // d'insérer : c'est ainsi qu'un upsert par lot met à jour chaque ligne avec
+  // SA valeur, et non toutes avec la dernière.
   const codeByConceptId = new Map(conceptRows.map((r) => [r.id, r.code]));
-  for (const userId of allUserIds) {
-    const progress = await db
-      .select({ mastery: learningProgress.mastery, conceptId: learningProgress.conceptId })
-      .from(learningProgress)
-      .where(eq(learningProgress.userId, userId));
-    if (progress.length === 0) continue;
-    const byAxis = new Map<string, number[]>();
-    for (const p of progress) {
-      const def = conceptByCode.get(codeByConceptId.get(p.conceptId) ?? "");
-      if (!def) continue;
-      const list = byAxis.get(def.axis) ?? [];
-      list.push(Number(p.mastery));
-      byAxis.set(def.axis, list);
-    }
-    for (const axis of AXES) {
-      const masteries = byAxis.get(axis);
-      if (!masteries || masteries.length === 0) continue;
-      const value = aggregateAxis(masteries).toFixed(2);
-      await db
-        .insert(playerSkills)
-        .values({ userId, axis, value })
-        .onConflictDoUpdate({ target: [playerSkills.userId, playerSkills.axis], set: { value } });
-    }
+  const progressions = allUserIds.length
+    ? await db
+        .select({
+          userId: learningProgress.userId,
+          mastery: learningProgress.mastery,
+          conceptId: learningProgress.conceptId,
+        })
+        .from(learningProgress)
+        .where(inArray(learningProgress.userId, allUserIds))
+    : [];
+
+  const parEleve = new Map<string, Map<string, number[]>>();
+  for (const p of progressions) {
+    const def = conceptByCode.get(codeByConceptId.get(p.conceptId) ?? "");
+    if (!def) continue;
+    const axes = parEleve.get(p.userId) ?? new Map<string, number[]>();
+    axes.set(def.axis, [...(axes.get(def.axis) ?? []), Number(p.mastery)]);
+    parEleve.set(p.userId, axes);
+  }
+
+  const lignes = [...parEleve].flatMap(([userId, axes]) =>
+    AXES.flatMap((axis) => {
+      const masteries = axes.get(axis);
+      return masteries && masteries.length > 0
+        ? [{ userId, axis, value: aggregateAxis(masteries).toFixed(2) }]
+        : [];
+    }),
+  );
+  if (lignes.length > 0) {
+    await db
+      .insert(playerSkills)
+      .values(lignes)
+      .onConflictDoUpdate({
+        target: [playerSkills.userId, playerSkills.axis],
+        set: { value: sql`excluded.value` },
+      });
   }
 }
 
