@@ -23,6 +23,7 @@ import { GuardedForm } from "@/components/guarded-action";
 import { RoundStatusPoller } from "@/components/round-status-poller";
 import {
   archiverPartieAction,
+  reinitialiserPartieAction,
   setGameScheduleAction,
   setRankingRevealedAction,
   setRoundWindowsAction,
@@ -48,12 +49,15 @@ export const dynamic = "force-dynamic";
 
 export default async function TeacherGamePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ gameId: string }>;
+  searchParams: Promise<{ recommencer?: string }>;
 }) {
   const session = await getSession();
   if (!session) redirect("/teacher/login");
   const { gameId } = await params;
+  const { recommencer } = await searchParams;
   const view = await getTeacherGameView(gameId, session.userId);
   if (!view) notFound();
   const pedagogy = await getTeacherPedagogyView(gameId, session.userId);
@@ -864,6 +868,62 @@ export default async function TeacherGamePage({
         >
           <SubmitButton className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-amber-400/40 hover:text-amber-200">
             Ranger cette partie
+          </SubmitButton>
+        </GuardedForm>
+      </Tiroir>
+
+      {/*
+        RECOMMENCER EST LE SEUL GESTE DE CETTE PAGE QUI NE SE DÉFAIT PAS. Il
+        vient après le rangement, et derrière un mot à recopier : un bouton de
+        plus sur une page qui en compte vingt finirait par être cliqué de
+        travers, un soir de fin de séance.
+      */}
+      <Tiroir titre="↺ Recommencer cette partie" quoi="définitif">
+        {recommencer === "fait" ? (
+          <p
+            role="status"
+            className="mt-1 rounded-lg border border-emerald-400/30 bg-emerald-950/30 px-3 py-2 text-sm text-emerald-200"
+          >
+            C&apos;est fait : la partie est repartie au tour 1, avec les mêmes équipes et le
+            même code.
+          </p>
+        ) : null}
+        {recommencer === "mot" ? (
+          <p
+            role="status"
+            className="mt-1 rounded-lg border border-amber-400/30 bg-amber-950/30 px-3 py-2 text-sm text-amber-200"
+          >
+            Rien n&apos;a été fait : le mot recopié ne correspondait pas.
+          </p>
+        ) : null}
+        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-300">
+          La partie repart au <strong>tour 1</strong>. Vos équipes et vos élèves restent en
+          place, le code ne change pas : personne n&apos;a à se réinscrire.
+        </p>
+        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
+          Tout ce qui a été joué disparaît, et <strong>ne se récupère pas</strong> : décisions,
+          résultats, classements, situations ouvertes avec leurs indices et leurs réponses.
+          Ce que vos élèves ont appris, lui, reste : la maîtrise des notions appartient à
+          l&apos;élève, pas à la partie.
+        </p>
+        <GuardedForm
+          action={reinitialiserPartieAction.bind(null, view.gameId)}
+          label="remise à zéro de la partie"
+          className="mt-3 flex flex-wrap items-end gap-3"
+        >
+          <label className="block">
+            <span className="block text-xs font-medium uppercase tracking-wide text-slate-400">
+              Recopiez RECOMMENCER pour confirmer
+            </span>
+            <input
+              name="confirmation"
+              autoComplete="off"
+              placeholder="RECOMMENCER"
+              className="mt-1 w-56 champ px-3 py-2 text-sm text-slate-100 outline-none"
+            />
+          </label>
+          <SubmitButton className="rounded-lg border border-red-400/30 px-4 py-2 text-sm font-medium text-red-200 transition hover:border-red-400/60 hover:text-red-100">
+            Recommencer la partie
           </SubmitButton>
         </GuardedForm>
       </Tiroir>

@@ -17,6 +17,7 @@ import {
   createClassGame,
   desarchiverPartie,
   distribuerUnCourrier,
+  reinitialiserPartie,
   setGameSchedule,
   setQuizMode,
   setRankingRevealed,
@@ -380,6 +381,28 @@ export async function desarchiverPartieAction(gameId: string): Promise<void> {
   if (!session) redirect("/teacher/login");
   await desarchiverPartie({ gameId, teacherId: session.userId });
   revalidatePath("/teacher");
+}
+
+/**
+ * RECOMMENCER LA MÊME PARTIE, AVEC LES MÊMES ÉLÈVES.
+ *
+ * Le geste efface tout ce qui a été joué et ne se défait pas : la
+ * confirmation se fait en recopiant le mot, comme pour les gestes qu'on ne
+ * veut pas voir partir d'un clic de trop.
+ */
+export async function reinitialiserPartieAction(
+  gameId: string,
+  formData: FormData,
+): Promise<void> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  const confirmation = String(formData.get("confirmation") ?? "").trim().toUpperCase();
+  if (confirmation !== "RECOMMENCER") {
+    redirect(`/teacher/games/${gameId}?recommencer=mot`);
+  }
+  await reinitialiserPartie({ gameId, teacherId: session.userId });
+  revalidatePath(`/teacher/games/${gameId}`);
+  redirect(`/teacher/games/${gameId}?recommencer=fait`);
 }
 
 /**

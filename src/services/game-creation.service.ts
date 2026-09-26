@@ -1,14 +1,22 @@
 import { randomInt } from "node:crypto";
-import { and, eq, gt, sql } from "drizzle-orm";
+import { and, eq, gt, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
+  aidRequests,
   companyStates,
+  eventOccurrences,
+  financialAccounts,
+  gameRankings,
   games,
+  markets,
   organizations,
   players,
+  productionUnits,
+  products,
   rounds,
   scenarios,
   teams,
+  transactions,
 } from "@/db/schema";
 import {
   DEFAULT_SCENARIO_CODE,
@@ -195,6 +203,52 @@ export async function getOrCreateNovaScenarioIdPublic(): Promise<string> {
 }
 
 /** Cœur commun de création : partie + équipes + tours + états initiaux. */
+/**
+ * L'ÉTAT DE DÉPART D'UNE PARTIE : ses tours, l'état d'ouverture de chaque
+ * équipe, et les situations du tour 1.
+ *
+ * Partagé par la CRÉATION et la RÉINITIALISATION, et c'est tout l'intérêt :
+ * « recommencer » doit être exactement « repartir de zéro », et non une
+ * reconstitution écrite une seconde fois qui dériverait au premier changement
+ * de la première.
+ */
+async function poserLEtatDeDepart(args: {
+  gameId: string;
+  equipes: { id: string; name: string; controller: string; botProfile: string | null }[];
+  definition: ScenarioDefinition;
+  periodicity: Periodicity;
+  roundsCount: number;
+}): Promise<void> {
+  await db.insert(rounds).values(
+    Array.from({ length: args.roundsCount }, (_, i) => ({
+      gameId: args.gameId,
+      index: i + 1,
+      status: i === 0 ? ("open" as const) : ("pending" as const),
+    })),
+  );
+
+  await db.insert(companyStates).values(
+    args.equipes.map((t) => ({
+      teamId: t.id,
+      roundIndex: 0,
+      state: applyPeriodicityToCompany(
+        args.definition.company(
+          t.id,
+          t.name,
+          t.controller === "human" ? "human" : "bot",
+          (t.botProfile ?? undefined) as BotProfile | undefined,
+        ),
+        args.periodicity,
+        // Quand l'unité vendue est une période, la capacité d'accueil est un
+        // stock de places et ne suit pas la durée du tour.
+        { abonnement: args.definition.scenario.subscription !== undefined },
+      ),
+    })),
+  );
+
+  await openSituationsForRound(args.gameId, 1); // situations scriptées du tour 1 (doc 03)
+}
+
 export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame> {
   // Un scénario à famille (NOVA, MAILLE & CO) se joue en un produit ou en
   // gamme selon le niveau : c'est ici que le code choisi devient le code joué.
@@ -297,39 +351,100 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
       botProfile: teams.botProfile,
     });
 
-  await db.insert(rounds).values(
-    Array.from({ length: scenarioSnapshot.roundsCount }, (_, i) => ({
-      gameId: game.id,
-      index: i + 1,
-      status: i === 0 ? ("open" as const) : ("pending" as const),
-    })),
-  );
-
-  await db.insert(companyStates).values(
-    teamRows.map((t) => ({
-      teamId: t.id,
-      roundIndex: 0,
-      state: applyPeriodicityToCompany(
-        definition.company(
-          t.id,
-          t.name,
-          t.controller === "human" ? "human" : "bot",
-          (t.botProfile ?? undefined) as BotProfile | undefined,
-        ),
-        args.periodicity,
-        // Quand l'unité vendue est une période, la capacité d'accueil est un
-        // stock de places et ne suit pas la durée du tour.
-        { abonnement: definition.scenario.subscription !== undefined },
-      ),
-    })),
-  );
-
-  await openSituationsForRound(game.id, 1); // situations scriptées du tour 1 (doc 03)
+  await poserLEtatDeDepart({
+    gameId: game.id,
+    equipes: teamRows,
+    definition,
+    periodicity: args.periodicity,
+    roundsCount: scenarioSnapshot.roundsCount,
+  });
 
   return {
     gameId: game.id,
     teams: teamRows.map((t) => ({ id: t.id, name: t.name, controller: t.controller })),
   };
+}
+
+/**
+ * RECOMMENCER LA MÊME PARTIE, AVEC LES MÊMES ÉLÈVES.
+ *
+ * Une séance d'essai qui a mal tourné, un tour clos par erreur, une classe qui
+ * veut rejouer : sans ce geste, il fallait recréer une partie et refaire entrer
+ * trente élèves un par un avec un nouveau code.
+ *
+ * CE QUI RESTE : la partie elle-même — son code, son scénario, sa graine, ses
+ * réglages —, ses équipes, et les élèves dans leurs équipes. Personne n'a à se
+ * réinscrire.
+ *
+ * CE QUI PART : tout ce qui est « avoir joué ». Les tours, et par cascade les
+ * décisions, les résultats, les indicateurs, les scores, les situations
+ * ouvertes avec leurs indices et leurs choix de modèle. Puis le classement, les
+ * demandes de subvention, et l'état financier de chaque équipe.
+ *
+ * CE QU'ON NE TOUCHE PAS, ET C'EST VOULU : la maîtrise des notions et les
+ * compétences de l'élève. Ces lignes appartiennent à l'ÉLÈVE et non à la
+ * partie — `learning_progress` ne porte qu'un utilisateur et une notion, sans
+ * mention de la partie qui l'a nourrie. Les effacer ici détruirait ce que le
+ * même élève a appris dans une AUTRE partie. Recommencer une séance n'efface
+ * pas ce qu'on a compris.
+ *
+ * L'état de départ est reposé par la fonction que la création elle-même
+ * utilise : le résultat est une partie neuve, pas une imitation.
+ */
+export async function reinitialiserPartie(args: {
+  gameId: string;
+  teacherId: string;
+}): Promise<void> {
+  const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
+  if (!game || game.createdBy !== args.teacherId) throw new Error("Partie introuvable");
+
+  const snapshot = game.scenarioSnapshot as { code?: string; roundsCount: number };
+  const definition = await resolveScenarioDefinition(snapshot.code);
+  const periodicity = ((game.difficultyProfile as { periodicity?: Periodicity } | null)
+    ?.periodicity ?? "quarter") as Periodicity;
+
+  const equipes = await db
+    .select({
+      id: teams.id,
+      name: teams.name,
+      controller: teams.controller,
+      botProfile: teams.botProfile,
+    })
+    .from(teams)
+    .where(eq(teams.gameId, args.gameId));
+  const idsEquipes = equipes.map((t) => t.id);
+
+  // Les tours emportent avec eux, par cascade : décisions, indicateurs,
+  // résultats, scores, instances de situations — et sous celles-ci les indices
+  // consommés et les choix de modèle.
+  await db.delete(rounds).where(eq(rounds.gameId, args.gameId));
+  await db.delete(gameRankings).where(eq(gameRankings.gameId, args.gameId));
+  await db.delete(aidRequests).where(eq(aidRequests.gameId, args.gameId));
+  // Ces cinq tables dorment aujourd'hui : rien ne les écrit. On les vide quand
+  // même, parce qu'une réinitialisation qui oublie une table est une
+  // réinitialisation qui ment — le jour où elles s'éveilleront, elle tiendra.
+  await db.delete(eventOccurrences).where(eq(eventOccurrences.gameId, args.gameId));
+  await db.delete(markets).where(eq(markets.gameId, args.gameId));
+  if (idsEquipes.length > 0) {
+    await db.delete(companyStates).where(inArray(companyStates.teamId, idsEquipes));
+    await db.delete(financialAccounts).where(inArray(financialAccounts.teamId, idsEquipes));
+    await db.delete(transactions).where(inArray(transactions.teamId, idsEquipes));
+    await db.delete(productionUnits).where(inArray(productionUnits.teamId, idsEquipes));
+    await db.delete(products).where(inArray(products.teamId, idsEquipes));
+  }
+
+  await db
+    .update(games)
+    .set({ currentRound: 1, status: "running" })
+    .where(eq(games.id, args.gameId));
+
+  await poserLEtatDeDepart({
+    gameId: args.gameId,
+    equipes,
+    definition,
+    periodicity,
+    roundsCount: snapshot.roundsCount,
+  });
 }
 
 /** Partie solo : le joueur contre N−1 bots du pool (§27 : nombre configurable). */

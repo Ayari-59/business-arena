@@ -43,6 +43,7 @@ export {
   createGameCore,
   createSoloGame,
   createClassGame,
+  reinitialiserPartie,
   getOrCreateNovaScenarioIdPublic,
   type CreatedGame,
   type CreateGameArgs,
