@@ -31,6 +31,17 @@ export const metadata: Metadata = {
  * Même gabarit d'impression que la liasse de courriers : thème clair, chrome
  * d'écran en `no-print`, A4 portrait. Une fiche par tirage — on imprime celle
  * de l'élève en trente exemplaires et celle de l'enseignant en un.
+ *
+ * LES COULEURS S'ÉCRIVENT À L'ENVERS, ET C'EST VOULU. Le thème clair ne pose
+ * pas des couleurs claires : il RENVERSE l'échelle entière (voir
+ * theme-clair.css). Sous lui, `slate-900` vaut 96,8 % de clarté et `bg-white`
+ * vaut #000. Une page écrite avec les couleurs qu'on voudrait voir — fond
+ * blanc, encre slate-900 — sort donc à l'envers, et c'est ce qui est arrivé
+ * ici : les titres s'imprimaient à L* 96 sur papier blanc, c'est-à-dire pas du
+ * tout. L'encre se prend donc dans le BAS de l'échelle (slate-100 à
+ * slate-600) et le papier dans le HAUT (slate-900, slate-950), au palier qui
+ * porte la clarté voulue. `tests/architecture/pages-de-papier.test.ts` tient
+ * la règle, seuils lus dans le thème lui-même.
  */
 
 const styles = `
@@ -109,13 +120,13 @@ export default async function FichesPage({
   const etapes = pourLEleve ? etapesEleve(faits) : etapesEnseignant(faits);
 
   return (
-    <main id="main" data-theme="clair" className="min-h-screen bg-white text-slate-900">
+    <main id="main" data-theme="clair" className="min-h-screen bg-slate-950 text-slate-100">
       <style>{styles}</style>
 
       <header className="no-print mx-auto flex max-w-[190mm] flex-wrap items-center gap-3 px-4 pt-5 text-sm">
         <Link
           href={`/teacher/games/${gameId}`}
-          className="rounded-lg border border-slate-300 px-3 py-2 text-slate-600 transition hover:text-slate-900"
+          className="rounded-lg border border-slate-700 px-3 py-2 text-slate-500 transition hover:text-slate-100"
         >
           ← Pilotage
         </Link>
@@ -123,7 +134,7 @@ export default async function FichesPage({
           href={`/teacher/games/${gameId}/fiches`}
           aria-current={pourLEleve ? "page" : undefined}
           className={`rounded-lg border px-3 py-2 font-medium transition ${
-            pourLEleve ? "border-amber-500 bg-amber-50 text-amber-900" : "border-slate-300 text-slate-600"
+            pourLEleve ? "border-amber-500 bg-amber-950 text-amber-700" : "border-slate-700 text-slate-500"
           }`}
         >
           Fiche élève
@@ -132,12 +143,12 @@ export default async function FichesPage({
           href={`/teacher/games/${gameId}/fiches?fiche=enseignant`}
           aria-current={pourLEleve ? undefined : "page"}
           className={`rounded-lg border px-3 py-2 font-medium transition ${
-            pourLEleve ? "border-slate-300 text-slate-600" : "border-amber-500 bg-amber-50 text-amber-900"
+            pourLEleve ? "border-slate-700 text-slate-500" : "border-amber-500 bg-amber-950 text-amber-700"
           }`}
         >
           Fiche enseignant
         </Link>
-        <p className="ml-auto text-xs text-slate-500">
+        <p className="ml-auto text-xs text-slate-600">
           Imprimez (Ctrl+P) ou enregistrez en PDF. Une page.
         </p>
       </header>
@@ -147,10 +158,10 @@ export default async function FichesPage({
           Business Arena · {view.scenarioTitle} · Niveau {view.difficulty.level} ·{" "}
           {faits.niveau.nom}
         </p>
-        <h1 className="text-slate-900">
+        <h1 className="text-slate-100">
           {pourLEleve ? "Votre première partie, pas à pas" : "Animer la séance, dans l'ordre"}
         </h1>
-        <p className="chapeau text-slate-600">
+        <p className="chapeau text-slate-500">
           {pourLEleve
             ? `${view.roundsCount} tours à jouer. À chaque tour : une situation à lire, un diagnostic, des décisions. La simulation répond, et vous recommencez avec ce que vous avez appris.`
             : `${view.roundsCount} tours, ${faits.equipes} ${faits.equipes > 1 ? "équipes" : "équipe"}, ${faits.champs} décisions ouvertes. Cette fiche dit ce qu'on fait et depuis quel écran ; les réglages, eux, vivent dans la page de partie avec leur aide.`}
@@ -162,17 +173,17 @@ export default async function FichesPage({
         {view.joinCode ? (
           <div
             className={`mt-4 flex items-center gap-4 rounded-lg border px-4 py-3 ${
-              pourLEleve ? "border-amber-400 bg-amber-50" : "border-slate-300"
+              pourLEleve ? "border-amber-400 bg-amber-950" : "border-slate-700"
             }`}
           >
             <p className="flex flex-1 flex-wrap items-baseline gap-x-4 gap-y-1">
-              <span className="text-xs uppercase tracking-widest text-slate-500">
+              <span className="text-xs uppercase tracking-widest text-slate-600">
                 Code d&apos;invitation
               </span>
-              <span className={`code ${pourLEleve ? "text-amber-800" : "text-slate-900"}`}>
+              <span className={`code ${pourLEleve ? "text-amber-700" : "text-slate-100"}`}>
                 {view.joinCode}
               </span>
-              <span className="text-sm text-slate-600">{faits.adresse}</span>
+              <span className="text-sm text-slate-500">{faits.adresse}</span>
             </p>
             {/* LE QR SUR LA FICHE ÉLÈVE SEULEMENT. Elle est tirée en trente
                 exemplaires et passe de main en main : chaque élève a le sien
@@ -192,13 +203,13 @@ export default async function FichesPage({
         <ol>
           {etapes.map((e) => (
             <li key={e.titre}>
-              <h2 className="text-slate-900">{e.titre}</h2>
-              <p className="text-slate-700">{e.texte}</p>
+              <h2 className="text-slate-100">{e.titre}</h2>
+              <p className="text-slate-400">{e.texte}</p>
             </li>
           ))}
         </ol>
 
-        <div className="encadre rounded-lg border border-slate-300 bg-slate-50 text-slate-700">
+        <div className="encadre rounded-lg border border-slate-700 bg-slate-900 text-slate-400">
           {pourLEleve ? (
             <>
               <strong>Ce qui compte à la fin.</strong> L&apos;IPG, indice de performance
@@ -216,7 +227,7 @@ export default async function FichesPage({
           )}
         </div>
 
-        <p className="mt-4 text-xs text-slate-400">
+        <p className="mt-4 text-xs text-slate-600">
           {faits.adresse.replace("/join", "")} · Fiche générée pour la partie {view.joinCode ?? gameId}
         </p>
       </article>

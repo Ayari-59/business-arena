@@ -36,20 +36,20 @@ const styles = `
 
 function BlocRendu({ bloc }: { bloc: Bloc }) {
   if (bloc.type === "texte") {
-    return <p className="bloc text-slate-700">{bloc.texte}</p>;
+    return <p className="bloc text-slate-400">{bloc.texte}</p>;
   }
   if (bloc.type === "encadre") {
     return (
-      <div className="encadre rounded-lg border border-slate-300 bg-slate-50 text-slate-700">
-        <span className="encadre-titre text-slate-900">{bloc.titre}</span> {bloc.texte}
+      <div className="encadre rounded-lg border border-slate-700 bg-slate-900 text-slate-400">
+        <span className="encadre-titre text-slate-100">{bloc.titre}</span> {bloc.texte}
       </div>
     );
   }
   if (bloc.type === "liste") {
     return (
       <>
-        {bloc.titre ? <p className="bloc-titre text-slate-500">{bloc.titre}</p> : null}
-        <ul className="text-slate-700">
+        {bloc.titre ? <p className="bloc-titre text-slate-600">{bloc.titre}</p> : null}
+        <ul className="text-slate-400">
           {(bloc.items ?? []).map((item) => (
             <li key={item}>{item}</li>
           ))}
@@ -59,20 +59,20 @@ function BlocRendu({ bloc }: { bloc: Bloc }) {
   }
   return (
     <>
-      <p className="bloc-titre text-slate-500">{bloc.titre}</p>
+      <p className="bloc-titre text-slate-600">{bloc.titre}</p>
       <table>
         <thead>
-          <tr className="border-b border-slate-300 text-slate-500">
+          <tr className="border-b border-slate-700 text-slate-600">
             {(bloc.colonnes ?? []).map((c) => (
               <th key={c}>{c}</th>
             ))}
           </tr>
         </thead>
-        <tbody className="text-slate-700">
+        <tbody className="text-slate-400">
           {(bloc.lignes ?? []).map((ligne) => (
-            <tr key={ligne.join("|")} className="border-b border-slate-200">
+            <tr key={ligne.join("|")} className="border-b border-slate-800">
               {ligne.map((cellule, i) => (
-                <td key={i} className={i === 0 ? "font-medium text-slate-900" : undefined}>
+                <td key={i} className={i === 0 ? "font-medium text-slate-100" : undefined}>
                   {cellule}
                 </td>
               ))}
@@ -92,6 +92,17 @@ function BlocRendu({ bloc }: { bloc: Bloc }) {
  * /teacher/manuel pour l'enseignant connecté, qui y arrive par sa navigation.
  * Le texte, lui, est le même : un manuel qui diffère selon la porte d'entrée
  * n'est plus un manuel.
+ *
+ * LES COULEURS S'ÉCRIVENT À L'ENVERS, ET C'EST VOULU. Le thème clair ne pose
+ * pas des couleurs claires : il RENVERSE l'échelle entière (voir
+ * theme-clair.css). Sous lui, `slate-900` vaut 96,8 % de clarté et `bg-white`
+ * vaut #000. Une page écrite avec les couleurs qu'on voudrait voir — fond
+ * blanc, encre slate-900 — sort donc à l'envers, et c'est ce qui est arrivé
+ * ici : les titres s'imprimaient à L* 96 sur papier blanc, c'est-à-dire pas du
+ * tout. L'encre se prend donc dans le BAS de l'échelle (slate-100 à
+ * slate-600) et le papier dans le HAUT (slate-900, slate-950), au palier qui
+ * porte la clarté voulue. `tests/architecture/pages-de-papier.test.ts` tient
+ * la règle, seuils lus dans le thème lui-même.
  */
 export async function ManuelImprimable({
   retour,
@@ -139,23 +150,23 @@ export async function ManuelImprimable({
   const chapitres = manuel(faits);
 
   return (
-    <main id="main" data-theme="clair" className="min-h-screen bg-white text-slate-900">
+    <main id="main" data-theme="clair" className="min-h-screen bg-slate-950 text-slate-100">
       <style>{styles}</style>
 
       <header className="no-print mx-auto flex max-w-[180mm] flex-wrap items-center gap-3 px-4 pt-5 text-sm">
         <Link
           href={retour.href}
-          className="rounded-lg border border-slate-300 px-3 py-2 text-slate-600 transition hover:text-slate-900"
+          className="rounded-lg border border-slate-700 px-3 py-2 text-slate-500 transition hover:text-slate-100"
         >
           ← {retour.label}
         </Link>
         <Link
           href="/guide"
-          className="rounded-lg border border-slate-300 px-3 py-2 text-slate-600 transition hover:text-slate-900"
+          className="rounded-lg border border-slate-700 px-3 py-2 text-slate-500 transition hover:text-slate-100"
         >
           Guide en ligne
         </Link>
-        <p className="ml-auto text-xs text-slate-500">
+        <p className="ml-auto text-xs text-slate-600">
           Imprimez (Ctrl+P) ou enregistrez en PDF.
         </p>
       </header>
@@ -163,7 +174,7 @@ export async function ManuelImprimable({
       <article className="manuel">
         <p className="kicker text-amber-700">Business Arena</p>
         <h1>Manuel de l&apos;enseignant</h1>
-        <p className="chapeau-doc text-slate-600">
+        <p className="chapeau-doc text-slate-500">
           Tout ce qu&apos;il faut savoir avant la première séance, et le recours quand
           quelque chose se passe mal. Les listes, les niveaux, les poids de l&apos;indice et
           les barèmes de ce manuel sont lus de l&apos;application au moment où vous
@@ -171,7 +182,7 @@ export async function ManuelImprimable({
         </p>
 
         <nav className="sommaire" aria-label="Sommaire">
-          <ol className="text-slate-700">
+          <ol className="text-slate-400">
             {chapitres.map((c, i) => (
               <li key={c.id}>
                 {i + 1}. {c.titre}
@@ -182,17 +193,17 @@ export async function ManuelImprimable({
 
         {chapitres.map((c, i) => (
           <section key={c.id}>
-            <h2 className="text-slate-900">
+            <h2 className="text-slate-100">
               {i + 1}. {c.titre}
             </h2>
-            <p className="chapeau text-slate-500">{c.chapeau}</p>
+            <p className="chapeau text-slate-600">{c.chapeau}</p>
             {c.blocs.map((bloc, j) => (
               <BlocRendu key={j} bloc={bloc} />
             ))}
           </section>
         ))}
 
-        <p className="mt-8 text-xs text-slate-400">
+        <p className="mt-8 text-xs text-slate-600">
           {faits.adresse.replace("/join", "")} · Manuel généré le{" "}
           {new Date().toLocaleDateString("fr-FR", { dateStyle: "long" })}
         </p>
