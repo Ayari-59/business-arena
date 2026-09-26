@@ -46,7 +46,11 @@ const styles = `
   .fiche li { counter-increment: pas; display: grid; grid-template-columns: 9mm 1fr; gap: 3mm; padding: 2.6mm 0; break-inside: avoid; }
   .fiche li::before { content: counter(pas); font-weight: 700; font-size: 12pt; text-align: center; line-height: 1.4; }
   .fiche li h2 { font-size: 11pt; margin: 0 0 1mm; }
-  .fiche li p { font-size: 9.5pt; line-height: 1.45; margin: 0; }
+  /* Le texte de l'étape SOUS son titre, pas sous son numéro. Trois éléments
+     dans une grille à deux colonnes — le numéro, le titre, le texte —, et le
+     placement automatique renvoyait le troisième à la ligne suivante, dans la
+     colonne de 9 mm : un mot par ligne sur toute la fiche. */
+  .fiche li p { grid-column: 2; font-size: 9.5pt; line-height: 1.45; margin: 0; }
   .fiche .encadre { margin-top: 6mm; padding: 3mm 4mm; font-size: 9pt; line-height: 1.5; break-inside: avoid; }
   @media print {
     @page { size: A4 portrait; margin: 0; }
