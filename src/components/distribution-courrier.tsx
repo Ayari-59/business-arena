@@ -99,12 +99,19 @@ export function DistributionCourrier({
             <label htmlFor="courrier-destinataire" className="text-xs font-semibold text-slate-400">
               Destinataire
             </label>
+            {/*
+              `min-w-0 flex-1` : un menu déroulant prend la largeur de sa plus
+              LONGUE option, et refuse de rétrécir tant qu'on ne le lui permet
+              pas. Mesuré à 360 px : celui des courriers faisait 448 px et
+              emportait toute la page en défilement horizontal. Contraint, il
+              tient sa ligne et le navigateur coupe ce qui dépasse.
+            */}
             <select
               id="courrier-destinataire"
               name="teamId"
               value={destinataire}
               onChange={(e) => setDestinataire(e.target.value)}
-              className="champ px-3 py-2 text-sm text-slate-100 outline-none"
+              className="min-w-0 flex-1 champ px-3 py-2 text-sm text-slate-100 outline-none"
             >
               <option value="" disabled={marchePlein}>
                 🌍 Tout le marché (toute la classe){marchePlein ? " · maximum atteint" : ""}
@@ -143,7 +150,7 @@ export function DistributionCourrier({
               name="eventCode"
               defaultValue=""
               key={adresse ? "team" : "market"}
-              className="champ px-3 py-2 text-sm text-slate-100 outline-none"
+              className="min-w-0 flex-1 champ px-3 py-2 text-sm text-slate-100 outline-none"
             >
               <option value="">Courrier au hasard</option>
               {distribuables.map((c) => (

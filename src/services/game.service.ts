@@ -218,6 +218,8 @@ export interface TeacherGameSummary {
   /** Le secteur joué, pour que la liste des parties ait un visage. */
   scenarioCode: string;
   scenarioTitle: string;
+  /** Le nom court (« NOVA · gamme ») : sur téléphone, le titre entier ne tient pas. */
+  scenarioShortName: string;
   scenarioIcon: string;
   sector: Sector;
 }
@@ -262,6 +264,7 @@ export async function getTeacherGames(
         archivedAt: g.archivedAt,
         scenarioCode: def.code,
         scenarioTitle: def.title,
+        scenarioShortName: def.shortName,
         scenarioIcon: def.icon,
         sector: def.sector,
       };

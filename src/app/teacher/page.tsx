@@ -137,9 +137,20 @@ export default async function TeacherDashboard({
             const joues = new Map<number, null>();
             for (let n = 1; n < (finished ? g.roundsCount + 1 : g.currentRound); n++) joues.set(n, null);
             return (
+              /*
+                `min-w-0` N'EST PAS UN DÉTAIL ICI. Une carte est un élément de
+                grille, et un élément de grille vaut `min-width: auto` par
+                défaut : il refuse de descendre sous la largeur minimale de son
+                contenu. Sur un téléphone de 390 px, la carte se figeait à 417
+                et toute la page partait en défilement horizontal.
+                Mesuré : masquer le code, la frise, le bouton ou l'icône n'y
+                changeait rien — c'est bien la règle de grille, et non la
+                longueur d'un texte. Avec `min-w-0`, la carte rétrécit et le
+                titre se coupe, ce qu'il sait déjà faire (`truncate`).
+              */
               <li
                 key={g.gameId}
-                className="carte flex h-full items-center gap-3 px-3 py-3 transition hover:border-amber-400/40 sm:px-4"
+                className="carte flex h-full min-w-0 items-center gap-3 px-3 py-3 transition hover:border-amber-400/40 sm:px-4"
               >
                 <Link
                   href={`/teacher/games/${g.gameId}`}
@@ -152,8 +163,22 @@ export default async function TeacherDashboard({
                     {g.scenarioIcon}
                   </span>
                   <span className="min-w-0 flex-1">
+                    {/*
+                      LE NOM COURT, ET NON LE TITRE. « NOVA · Prenez les
+                      commandes » est un titre de vitrine ; sur une liste de
+                      SES parties, ce qu'on cherche est le secteur, et le nom
+                      court le dit en distinguant « NOVA » de « NOVA · gamme ».
+                      C'est d'ailleurs son emploi déclaré au registre : « pour
+                      une tuile ou une pastille ».
+                      Mesuré, et c'est ce qui a tranché : à 1280 px une carte
+                      fait 418 px et la colonne du titre 187 ; le titre entier
+                      en demande 194. Il manquait SEPT pixels, pris par le
+                      bouton « Ranger » que cette carte porte désormais. Plutôt
+                      qu'un seuil de largeur qui coupe presque partout, le nom
+                      court tient toujours.
+                    */}
                     <span className="block truncate text-sm font-semibold text-slate-100">
-                      {g.scenarioTitle}
+                      {g.scenarioShortName}
                     </span>
                     <span className="mt-0.5 block text-xs text-slate-400">
                       {compter(g.teamsCount, "équipe")} ·{" "}
