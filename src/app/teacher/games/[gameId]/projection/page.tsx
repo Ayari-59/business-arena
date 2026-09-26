@@ -6,6 +6,8 @@ import { compositionDesEquipes } from "@/services/affectation.service";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { SITE_URL } from "@/config/site";
 import { RoundStatusPoller } from "@/components/round-status-poller";
+import { CodeQr } from "@/components/code-qr";
+import { urlDeJonction } from "@/lib/qr";
 import { VueDeProjection, type Panneau } from "@/components/vue-de-projection";
 
 export const dynamic = "force-dynamic";
@@ -93,6 +95,15 @@ export default async function ProjectionPage({
       <VueDeProjection
         defaut={defaut}
         joinCode={view.joinCode}
+        qr={
+          view.joinCode ? (
+            <CodeQr
+              valeur={urlDeJonction(view.joinCode)}
+              description={`QR code d'entrée dans la partie, code ${view.joinCode}`}
+              className="h-[clamp(7rem,26vh,16rem)] w-[clamp(7rem,26vh,16rem)]"
+            />
+          ) : null
+        }
         adresse={`${SITE_URL.replace(/^https?:\/\//, "")}/join`}
         elevesConnectes={elevesConnectes}
         equipes={equipes}

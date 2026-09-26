@@ -18,6 +18,7 @@
     "calibrate": "tsx scripts/calibrate.ts",
     "seed:demo": "tsx --env-file=.env scripts/seed-demo.ts",
     "verify:migrations": "tsx --env-file=.env scripts/verifier-migrations.ts",
+    "verify:qr": "tsx scripts/verifier-qr.ts",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "test:coverage": "vitest run --coverage"
   },
@@ -30,6 +31,7 @@
     "exceljs": "^4.4.0",
     "next": "^16.3.5",
     "pg": "^8.23.0",
+    "qrcode-generator": "^2.0.4",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "zod": "^4.4.3"

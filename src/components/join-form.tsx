@@ -5,7 +5,14 @@ import { GuardError, useGuardedAction } from "@/components/guarded-action";
 
 const initial: JoinState = { error: null };
 
-export function JoinForm() {
+/**
+ * Le code peut arriver tout seul : `/join?code=…`, c'est-à-dire un QR scanné
+ * (voir `src/lib/qr.ts`). Quand c'est le cas le champ est déjà rempli et le
+ * curseur va droit au prénom — l'élève n'a plus qu'une chose à écrire, et le
+ * code ne peut plus être mal recopié. Le champ reste modifiable : un QR photo-
+ * graphié de travers, un code changé entre-temps, et l'élève corrige.
+ */
+export function JoinForm({ codeInitial = null }: { codeInitial?: string | null }) {
   const { state, formAction, pending, formRef, guardError } = useGuardedAction(
     joinGameAction,
     initial,
@@ -24,6 +31,7 @@ export function JoinForm() {
         <input
           name="code"
           required
+          defaultValue={codeInitial ?? undefined}
           autoCapitalize="characters"
           autoComplete="off"
           placeholder="EX : K7M2PR"
@@ -37,6 +45,7 @@ export function JoinForm() {
         <input
           name="pseudo"
           required
+          autoFocus={codeInitial !== null}
           maxLength={40}
           className="mt-1 w-full champ px-3 py-2 text-sm text-slate-100 outline-none"
         />

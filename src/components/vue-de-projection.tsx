@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { echeanceDuTour, dateLisible, type Echeance } from "@/config/echeance";
 
@@ -88,6 +88,7 @@ function Decompte({ closesAt }: { closesAt: string }) {
 export function VueDeProjection({
   defaut,
   joinCode,
+  qr,
   adresse,
   elevesConnectes,
   equipes,
@@ -102,6 +103,12 @@ export function VueDeProjection({
   /** Le panneau d'ouverture, choisi d'après l'état de la partie. */
   defaut: Panneau;
   joinCode: string | null;
+  /**
+   * Le QR de la partie, déjà dessiné. Il arrive tout fait parce qu'il se
+   * calcule sur le serveur : cette vue est un composant client, y appeler le
+   * dessin enverrait la bibliothèque dans le navigateur pour rien.
+   */
+  qr: ReactNode;
   /** L'adresse à recopier au tableau, en toutes lettres. */
   adresse: string;
   elevesConnectes: number;
@@ -158,9 +165,24 @@ export function VueDeProjection({
           <>
             <Surtitre>Rejoindre la partie</Surtitre>
             {joinCode ? (
-              <p className="font-mono text-[clamp(3rem,17vw,11rem)] font-bold leading-none tracking-[0.12em] text-amber-300">
-                {joinCode}
-              </p>
+              /* DEUX CHEMINS, CÔTE À CÔTE ET DE MÊME RANG. À gauche le code,
+                 pour qui tape ; à droite le QR, pour qui vise avec son
+                 téléphone et n'a plus qu'à écrire son prénom. Aucun des deux
+                 n'est un repli de l'autre : c'est l'appareil de l'élève qui
+                 décide, et il décide sans qu'on lui explique. */
+              <div className="flex flex-col items-center gap-[clamp(0.75rem,3vw,3rem)] sm:flex-row sm:justify-center">
+                <p className="font-mono text-[clamp(3rem,13vw,9rem)] font-bold leading-none tracking-[0.12em] text-amber-300">
+                  {joinCode}
+                </p>
+                {qr ? (
+                  <span className="flex shrink-0 flex-col items-center gap-[clamp(0.25rem,1vh,0.75rem)]">
+                    {qr}
+                    <span className="text-[clamp(0.8rem,1.4vw,1.2rem)] uppercase tracking-[0.2em] text-slate-400">
+                      ou scannez
+                    </span>
+                  </span>
+                ) : null}
+              </div>
             ) : (
               <p className="text-[clamp(1.5rem,4vw,3rem)] text-slate-400">
                 Cette partie n&apos;a pas de code d&apos;invitation.

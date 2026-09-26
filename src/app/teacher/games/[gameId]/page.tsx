@@ -37,6 +37,8 @@ import { FriseDesTours } from "@/components/frise-des-tours";
 import { SECTOR_COLORS, SECTOR_LABELS } from "@/config/scenarios/registry";
 import { entitlementsForUser } from "@/services/entitlements.service";
 import { resolveAiSurface } from "@/services/ai.service";
+import { CodeQr } from "@/components/code-qr";
+import { urlDeJonction } from "@/lib/qr";
 
 /** Libellé court de l'état d'un tour, pour le tableau du planning fin. */
 const ROUND_STATUS_LABEL: Record<string, string> = {
@@ -163,14 +165,28 @@ export default async function TeacherGamePage({
         aria-label="Code d'invitation"
         className="carte flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-dashed border-amber-400/40 px-4 py-4 sm:px-6"
       >
-        <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Code d&apos;invitation</p>
-          <p
-            id="code-invitation"
-            className="mt-1 font-mono text-3xl font-bold tracking-[0.2em] text-amber-300"
-          >
-            {view.joinCode}
-          </p>
+        {/* LE CODE ET SON QR, ENSEMBLE. Le QR encode la même entrée que le
+            code — `/join?code=…` — mais la remplit d'avance : l'élève qui
+            vise avec son téléphone n'a plus que son prénom à écrire. Ici il
+            est petit : l'enseignant ne le scanne pas, il le montre, et c'est
+            la page de projection qui l'affiche pour la salle. */}
+        <div className="flex items-center gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Code d&apos;invitation</p>
+            <p
+              id="code-invitation"
+              className="mt-1 font-mono text-3xl font-bold tracking-[0.2em] text-amber-300"
+            >
+              {view.joinCode}
+            </p>
+          </div>
+          {view.joinCode ? (
+            <CodeQr
+              valeur={urlDeJonction(view.joinCode)}
+              description={`QR code d'entrée dans la partie, code ${view.joinCode}`}
+              className="h-20 w-20 shrink-0 rounded"
+            />
+          ) : null}
         </div>
         <div className="text-sm text-slate-300">
           <p>

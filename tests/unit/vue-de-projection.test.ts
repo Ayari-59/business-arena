@@ -4,6 +4,8 @@ import { join } from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createElement } from "react";
 import { VueDeProjection, type Panneau } from "@/components/vue-de-projection";
+import { CodeQr } from "@/components/code-qr";
+import { urlDeJonction } from "@/lib/qr";
 
 /**
  * CE QUE LA CLASSE VOIT AU MUR.
@@ -28,6 +30,10 @@ const CLASSEMENT = [
 
 const base: Omit<Parameters<typeof VueDeProjection>[0], "defaut"> = {
   joinCode: "K7M2PR",
+  qr: createElement(CodeQr, {
+    valeur: urlDeJonction("K7M2PR"),
+    description: "QR code d'entrée dans la partie, code K7M2PR",
+  }),
   adresse: "www.business-arena.fr/join",
   elevesConnectes: 9,
   equipes: EQUIPES,
@@ -50,6 +56,10 @@ describe("un panneau à la fois", () => {
     expect(html).toContain("www.business-arena.fr/join");
     expect(html).toContain("9 élèves connectés");
     expect(html).not.toContain("Les Fourmis");
+    // Les deux chemins d'entrée sont au mur : le code pour qui tape, le QR
+    // pour qui vise. Le QR est un dessin, on le reconnaît à son tracé.
+    expect(html).toContain("ou scannez");
+    expect(html).toMatch(/<path d="M\d/);
   });
 
   it("le tour montre le compte, l'accord, et les noms", () => {
@@ -116,7 +126,19 @@ describe("écrit pour le fond de la salle", () => {
   });
 
   it("le code d'invitation est le plus gros caractère de la page", () => {
-    expect(source).toContain("text-[clamp(3rem,17vw,11rem)]");
+    // Le QR a pris la moitié droite du panneau d'entrée, le code a donc
+    // rétréci pour tenir à côté de lui. Ce qui doit rester vrai n'est pas une
+    // valeur mais un rang : aucun autre texte de la vue ne doit grandir plus
+    // vite que le code, sans quoi la classe lirait d'abord autre chose.
+    const bornes = [...source.matchAll(/text-\[clamp\([^,]+,\s*([\d.]+)vw/g)].map((m) =>
+      Number(m[1]),
+    );
+    const codeVw = Number(
+      /font-mono text-\[clamp\([^,]+,\s*([\d.]+)vw/.exec(source)?.[1] ?? "0",
+    );
+    expect(codeVw).toBeGreaterThanOrEqual(12);
+    expect(Math.max(...bornes)).toBe(codeVw);
+    expect(bornes.filter((b) => b === codeVw)).toHaveLength(1);
   });
 });
 

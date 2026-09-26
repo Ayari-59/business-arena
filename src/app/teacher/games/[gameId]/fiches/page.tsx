@@ -9,6 +9,8 @@ import { SITE_URL } from "@/config/site";
 import { dureeDuTour } from "@/config/duree-du-tour";
 import { etapesEleve, etapesEnseignant, type FaitsDeLaPartie } from "@/config/fiches";
 import { scenarioByCode } from "@/config/scenarios/registry";
+import { CodeQr } from "@/components/code-qr";
+import { urlDeJonction } from "@/lib/qr";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +39,9 @@ const styles = `
   .fiche .kicker { font-size: 8.5pt; letter-spacing: .18em; text-transform: uppercase; margin: 0 0 4px; }
   .fiche .chapeau { font-size: 10pt; line-height: 1.5; margin: 6px 0 0; }
   .fiche .code { font-family: ui-monospace, monospace; font-size: 26pt; font-weight: 700; letter-spacing: .12em; }
+  /* Le QR sur papier : 24 mm de côté, soit la taille qu'un téléphone lit sans
+     hésiter à vingt centimètres, et qui tient dans le bandeau du code. */
+  .fiche .qr { width: 24mm; height: 24mm; }
   .fiche ol { margin: 10px 0 0; padding: 0; list-style: none; counter-reset: pas; }
   .fiche li { counter-increment: pas; display: grid; grid-template-columns: 9mm 1fr; gap: 3mm; padding: 2.6mm 0; break-inside: avoid; }
   .fiche li::before { content: counter(pas); font-weight: 700; font-size: 12pt; text-align: center; line-height: 1.4; }
@@ -151,19 +156,33 @@ export default async function FichesPage({
             de savoir quoi que ce soit d'autre. Sur la fiche enseignant il est
             là aussi, plus discret, pour l'écrire au tableau. */}
         {view.joinCode ? (
-          <p
-            className={`mt-4 flex flex-wrap items-baseline gap-x-4 gap-y-1 rounded-lg border px-4 py-3 ${
+          <div
+            className={`mt-4 flex items-center gap-4 rounded-lg border px-4 py-3 ${
               pourLEleve ? "border-amber-400 bg-amber-50" : "border-slate-300"
             }`}
           >
-            <span className="text-xs uppercase tracking-widest text-slate-500">
-              Code d&apos;invitation
-            </span>
-            <span className={`code ${pourLEleve ? "text-amber-800" : "text-slate-900"}`}>
-              {view.joinCode}
-            </span>
-            <span className="text-sm text-slate-600">{faits.adresse}</span>
-          </p>
+            <p className="flex flex-1 flex-wrap items-baseline gap-x-4 gap-y-1">
+              <span className="text-xs uppercase tracking-widest text-slate-500">
+                Code d&apos;invitation
+              </span>
+              <span className={`code ${pourLEleve ? "text-amber-800" : "text-slate-900"}`}>
+                {view.joinCode}
+              </span>
+              <span className="text-sm text-slate-600">{faits.adresse}</span>
+            </p>
+            {/* LE QR SUR LA FICHE ÉLÈVE SEULEMENT. Elle est tirée en trente
+                exemplaires et passe de main en main : chaque élève a le sien
+                sous les yeux, le vise, et son code est déjà rempli. Sur la
+                fiche enseignant le code sert à l'écrire au tableau — un QR
+                qu'une seule personne tient n'aide personne. */}
+            {pourLEleve ? (
+              <CodeQr
+                valeur={urlDeJonction(view.joinCode)}
+                description={`QR code d'entrée dans la partie, code ${view.joinCode}`}
+                className="qr shrink-0"
+              />
+            ) : null}
+          </div>
         ) : null}
 
         <ol>
