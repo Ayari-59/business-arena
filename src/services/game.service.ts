@@ -89,10 +89,57 @@ export async function refusDeRejoindre(code: string): Promise<string | null> {
   return null;
 }
 
+/**
+ * LES ÉQUIPES DANS UN ORDRE QUI NE BOUGE PAS.
+ *
+ * Le QR d'une table doit désigner LA MÊME équipe toute la séance. L'ordre
+ * d'affichage ne peut pas servir à cela : il est alphabétique, et les élèves
+ * renomment leur équipe au premier tour — une étiquette imprimée le matin
+ * aurait désigné la voisine l'après-midi. Le nom ne peut pas servir non plus,
+ * pour la même raison.
+ *
+ * Reste l'ordre de création, que rien ne change : ni le renommage, ni la
+ * remise à zéro, qui réutilise les mêmes lignes. Le rang qui en sort n'est pas
+ * montré à l'enseignant — l'étiquette porte le NOM de l'équipe —, c'est une
+ * poignée, et elle tient.
+ *
+ * Les équipes pilotées par un bot n'en reçoivent pas : personne ne s'assoit à
+ * leur table.
+ */
+export interface EquipeNumerotee {
+  /** Le rang dans l'ordre de création, à partir de 1. */
+  rang: number;
+  teamId: string;
+  nom: string;
+}
+
+export async function equipesNumerotees(gameId: string): Promise<EquipeNumerotee[]> {
+  const rows = await db.select().from(teams).where(eq(teams.gameId, gameId));
+  return rows
+    .filter((t) => t.controller === "human")
+    .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime() || a.id.localeCompare(b.id))
+    .map((t, i) => ({ rang: i + 1, teamId: t.id, nom: t.name }));
+}
+
+/**
+ * Le nom de l'équipe que désigne un QR de table, pour le confirmer à l'élève
+ * avant qu'il entre son prénom. Rien n'est révélé de plus que ce que porte
+ * déjà le carton qu'il a sous les yeux.
+ */
+export async function equipeDuCarton(code: string, rang: number): Promise<string | null> {
+  const game = (
+    await db.select().from(games).where(eq(games.joinCode, code.trim().toUpperCase()))
+  )[0];
+  if (!game) return null;
+  return (await equipesNumerotees(game.id)).find((e) => e.rang === rang)?.nom ?? null;
+}
+
 export async function joinGameByCode(args: {
   code: string;
   userId: string;
   pseudo?: string;
+  /** Le rang d'équipe porté par un QR de table, s'il y en avait un. */
+  equipe?: number | null;
 }): Promise<{ gameId: string } | { error: string }> {
   const game = (
     await db.select().from(games).where(eq(games.joinCode, args.code.trim().toUpperCase()))
@@ -122,9 +169,23 @@ export async function joinGameByCode(args: {
   }
   if (memberships.some((m) => m.userId === args.userId)) return { gameId: game.id };
 
+  // LA TABLE D'ABORD, LE REMPLISSAGE ENSUITE. Quand l'élève a scanné le carton
+  // d'une table, il a choisi son équipe en s'asseyant : on ne la lui reprend
+  // pas pour équilibrer les effectifs. Un rang qui ne désigne rien — carton
+  // d'une autre partie, adresse tapée de travers — retombe sur l'affectation
+  // automatique, qui reste le comportement par défaut.
+  //
+  // Ce n'est vrai qu'à la PREMIÈRE entrée : plus haut, l'élève déjà inscrit
+  // repart avec son équipe. Rescanner un autre carton en cours de partie ne
+  // déplace personne ; le changement d'équipe a son geste à lui, au premier
+  // tour, et c'est l'élève qui le fait sciemment.
+  const demandee = args.equipe
+    ? (await equipesNumerotees(game.id)).find((e) => e.rang === args.equipe)?.teamId
+    : undefined;
   const counts = new Map(teamRows.map((t) => [t.id, 0]));
   for (const m of memberships) counts.set(m.teamId, (counts.get(m.teamId) ?? 0) + 1);
-  const target = [...counts.entries()].sort((a, b) => a[1] - b[1])[0]![0];
+  const target =
+    demandee ?? [...counts.entries()].sort((a, b) => a[1] - b[1])[0]![0];
 
   await db.insert(players).values({ teamId: target, userId: args.userId, role: "member" });
   return { gameId: game.id };

@@ -168,13 +168,23 @@ describe("contraste de l'encre sur fond sombre", () => {
     950: "#020617", // le bloc intérieur
   } as const;
 
-  /** Les pages qui imposent un fond clair : l'échelle y est renversée. */
+  /**
+   * Les pages qui imposent un fond clair : l'échelle y est renversée, et
+   * slate-500 y est une encre sombre sur du papier, pas un gris pâle.
+   *
+   * Elles ne se recopient plus : une page de papier se reconnaît au thème
+   * qu'elle POSE, et la liste écrite à la main oubliait la suivante — les
+   * cartons de table sont arrivés et se sont fait refuser une encre pourtant
+   * juste. Restent nommées celles qui ne posent pas le thème mais le
+   * REÇOIVENT, rendues à l'intérieur d'un parent qui l'a posé : rien dans leur
+   * source ne peut les trahir.
+   */
   const FOND_CLAIR = [
-    "/components/manuel-imprimable.tsx",
+    ...fichiers(SRC, [".tsx"])
+      .filter((f) => readFileSync(f, "utf8").includes('data-theme="clair"'))
+      .map((f) => f.slice(SRC.length)),
     "/training/components/glossary-panel.tsx",
     "/training/components/tutorial-overlay.tsx",
-    "/app/teacher/courriers/print/page.tsx",
-    "/app/teacher/games/[gameId]/fiches/page.tsx",
     "/app/animations/[code]/page.tsx",
   ];
 

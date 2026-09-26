@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { clearGuestCookie, getOrCreateGuestUserId } from "@/lib/guest";
 import { joinGameByCode, refusDeRejoindre } from "@/services/game.service";
+import { normaliserRangDEquipe } from "@/lib/code-de-partie";
 
 export interface JoinState {
   error: string | null;
@@ -11,6 +12,9 @@ export interface JoinState {
 export async function joinGameAction(_prev: JoinState, formData: FormData): Promise<JoinState> {
   const code = String(formData.get("code") ?? "").trim();
   const pseudo = String(formData.get("pseudo") ?? "").trim();
+  // Le carton de table, s'il y en avait un : un rang d'équipe que le champ
+  // caché du formulaire a transporté depuis l'adresse scannée.
+  const equipe = normaliserRangDEquipe(String(formData.get("equipe") ?? ""));
   if (code.length < 4) return { error: "Saisissez le code donné par votre enseignant." };
   // LE CODE D'ABORD, L'INVITÉ ENSUITE. `getOrCreateGuestUserId` insère dans
   // `users` dès qu'aucun cookie valide n'est présent : le faire avant de
@@ -18,7 +22,7 @@ export async function joinGameAction(_prev: JoinState, formData: FormData): Prom
   const refus = await refusDeRejoindre(code);
   if (refus) return { error: refus };
   const userId = await getOrCreateGuestUserId();
-  const result = await joinGameByCode({ code, userId, pseudo });
+  const result = await joinGameByCode({ code, userId, pseudo, equipe });
   if ("error" in result) return { error: result.error };
   redirect(`/arena/${result.gameId}`);
 }

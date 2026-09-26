@@ -28,3 +28,21 @@ export function normaliserCodeDePartie(brut: string | undefined | null): string 
   const candidat = brut.trim().toUpperCase();
   return new RegExp(`^[A-Z0-9]{${LONGUEUR_CODE}}$`).test(candidat) ? candidat : null;
 }
+
+/**
+ * LE RANG D'ÉQUIPE REÇU PAR L'ADRESSE. Même principe que le code : ce qui
+ * n'est pas exactement un rang n'en devient pas un. Un paramètre absent,
+ * négatif, décimal, énorme ou écrit en lettres ne provoque pas d'erreur — il
+ * disparaît, et l'élève est affecté automatiquement comme avant le QR.
+ *
+ * Le plafond n'est pas une règle métier : le service, lui, vérifie que le rang
+ * désigne une équipe réelle de CETTE partie. Il évite seulement de promener un
+ * entier absurde jusqu'à la base.
+ */
+export const RANG_EQUIPE_MAX = 99;
+
+export function normaliserRangDEquipe(brut: string | undefined | null): number | null {
+  if (!brut || !/^\d{1,2}$/.test(brut.trim())) return null;
+  const rang = Number(brut.trim());
+  return rang >= 1 && rang <= RANG_EQUIPE_MAX ? rang : null;
+}

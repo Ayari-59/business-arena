@@ -33,12 +33,17 @@ import { SITE_URL } from "@/config/site";
 export const MARGE_QR = 4;
 
 /**
- * L'adresse qu'encode le QR d'une partie : l'écran d'entrée, code déjà porté
- * par l'URL. C'est la seule construction de cette adresse dans le code — le QR
- * et le lien écrit doivent mener au même endroit.
+ * L'adresse qu'encode un QR : l'écran d'entrée, code déjà porté par l'URL.
+ * C'est la seule construction de cette adresse dans le code — le QR et le lien
+ * écrit doivent mener au même endroit.
+ *
+ * Avec un rang d'équipe, c'est le carton d'une table : l'élève qui le scanne
+ * entre dans CETTE équipe, sans passer par l'affectation automatique. Le rang
+ * est une poignée, pas un numéro à montrer (voir `equipesNumerotees`).
  */
-export function urlDeJonction(code: string): string {
-  return `${SITE_URL}/join?code=${encodeURIComponent(code.trim().toUpperCase())}`;
+export function urlDeJonction(code: string, rangDEquipe?: number): string {
+  const base = `${SITE_URL}/join?code=${encodeURIComponent(code.trim().toUpperCase())}`;
+  return rangDEquipe === undefined ? base : `${base}&equipe=${rangDEquipe}`;
 }
 
 export interface DessinQr {

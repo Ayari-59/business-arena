@@ -24,7 +24,7 @@
  */
 
 import { createRequire } from "node:module";
-import { MARGE_QR, dessinerQr, type DessinQr } from "../src/lib/qr";
+import { MARGE_QR, dessinerQr, urlDeJonction, type DessinQr } from "../src/lib/qr";
 
 const require = createRequire(import.meta.url);
 type Decodeur = (d: Uint8ClampedArray, l: number, h: number) => { data: string } | null;
@@ -56,17 +56,22 @@ function pixels({ cote, chemin }: DessinQr, echelle = 8) {
   return { data, cotePx };
 }
 
-const CODES = ["CBZAAT", "K7M2PR", "234567", "ZZZZZZ", "A2B3C4"];
+/** Les deux formes : le QR de la partie, et le carton d'une table. */
+const ADRESSES = [
+  ...["CBZAAT", "K7M2PR", "234567", "ZZZZZZ", "A2B3C4"].map((c) => [c, undefined] as const),
+  ...([1, 4, 12, 99] as const).map((r) => ["75SJ2N", r] as const),
+];
 let echecs = 0;
-for (const code of CODES) {
-  const url = `https://www.business-arena.fr/join?code=${code}`;
+for (const [code, rang] of ADRESSES) {
+  const url = urlDeJonction(code, rang);
   const dessin = dessinerQr(url);
   const { data, cotePx } = pixels(dessin);
   const lu = jsQR(data, cotePx, cotePx);
   const ok = lu?.data === url;
   if (!ok) echecs += 1;
+  const quoi = rang === undefined ? `partie ${code}` : `table ${rang} de ${code}`;
   console.log(
-    `${ok ? "OK" : "KO"}  ${code}  ${dessin.cote}×${dessin.cote} modules ` +
+    `${ok ? "OK" : "KO"}  ${quoi.padEnd(20)} ${dessin.cote}×${dessin.cote} modules ` +
       `(zone de silence ${MARGE_QR})  lu : ${lu ? JSON.stringify(lu.data) : "rien"}`,
   );
 }

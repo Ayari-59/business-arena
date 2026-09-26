@@ -4,7 +4,11 @@ import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createElement } from "react";
 import { dessinerQr, urlDeJonction, MARGE_QR } from "@/lib/qr";
-import { normaliserCodeDePartie } from "@/lib/code-de-partie";
+import {
+  RANG_EQUIPE_MAX,
+  normaliserCodeDePartie,
+  normaliserRangDEquipe,
+} from "@/lib/code-de-partie";
 import { CodeQr } from "@/components/code-qr";
 
 /**
@@ -98,6 +102,32 @@ describe("l'adresse encodée", () => {
     const code = "K7M2PR";
     const parametre = new URL(urlDeJonction(code)).searchParams.get("code");
     expect(normaliserCodeDePartie(parametre)).toBe(code);
+  });
+});
+
+describe("l'adresse d'un carton de table", () => {
+  it("porte l'équipe en plus du code", () => {
+    expect(urlDeJonction("CBZAAT", 3)).toBe(
+      "https://www.business-arena.fr/join?code=CBZAAT&equipe=3",
+    );
+  });
+
+  it("ne la porte pas quand il n'y en a pas : c'est le QR de la partie", () => {
+    expect(urlDeJonction("CBZAAT")).not.toContain("equipe");
+  });
+
+  it("fait l'aller-retour : ce qui est encodé est ce qui sera lu", () => {
+    const url = new URL(urlDeJonction("CBZAAT", 12));
+    expect(normaliserCodeDePartie(url.searchParams.get("code"))).toBe("CBZAAT");
+    expect(normaliserRangDEquipe(url.searchParams.get("equipe"))).toBe(12);
+  });
+
+  it("le rang refuse tout ce qui n'est pas un rang, sans lever d'erreur", () => {
+    expect(normaliserRangDEquipe("1")).toBe(1);
+    expect(normaliserRangDEquipe(` ${RANG_EQUIPE_MAX} `)).toBe(RANG_EQUIPE_MAX);
+    for (const brut of [undefined, null, "", "0", "-1", "1.5", "100", "1e3", "un", "3;4", " "]) {
+      expect(normaliserRangDEquipe(brut), JSON.stringify(brut)).toBeNull();
+    }
   });
 });
 
@@ -213,6 +243,15 @@ describe("le chemin complet, du QR au champ", () => {
     // Le prénom est alors la seule chose qui reste à écrire : on y va tout de
     // suite. Sans code pré-rempli, rien n'est mis au premier plan.
     expect(form).toContain("autoFocus={codeInitial !== null}");
+  });
+
+  it("les cartons de table donnent à chaque équipe son adresse à elle", () => {
+    const page = lire("src/app/teacher/games/[gameId]/cartons/page.tsx");
+    expect(page).toContain("urlDeJonction(view.joinCode!, e.rang)");
+    expect(page).toContain("equipesNumerotees");
+    // L'enseignant pose les cartons en lisant les NOMS : l'affichage suit les
+    // noms, le rang ne sert qu'à l'adresse.
+    expect(page).toContain("a.nom.localeCompare");
   });
 
   it("les trois écrans qui portent le code portent aussi le QR", () => {

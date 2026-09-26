@@ -11,8 +11,20 @@ const initial: JoinState = { error: null };
  * curseur va droit au prénom — l'élève n'a plus qu'une chose à écrire, et le
  * code ne peut plus être mal recopié. Le champ reste modifiable : un QR photo-
  * graphié de travers, un code changé entre-temps, et l'élève corrige.
+ *
+ * Le carton d'une TABLE porte en plus une équipe. Elle ne se saisit pas et ne
+ * s'affiche pas en champ : elle voyage cachée, et c'est le bandeau au-dessus
+ * du formulaire qui la nomme, pour que l'élève voie où il s'assoit avant de
+ * valider. Modifier le code à la main garde l'équipe d'un autre carton, mais
+ * le service ne la retient que si elle existe dans la partie visée.
  */
-export function JoinForm({ codeInitial = null }: { codeInitial?: string | null }) {
+export function JoinForm({
+  codeInitial = null,
+  equipeInitiale = null,
+}: {
+  codeInitial?: string | null;
+  equipeInitiale?: number | null;
+}) {
   const { state, formAction, pending, formRef, guardError } = useGuardedAction(
     joinGameAction,
     initial,
@@ -24,6 +36,9 @@ export function JoinForm({ codeInitial = null }: { codeInitial?: string | null }
       action={formAction}
       className="w-full max-w-sm space-y-4 rounded-2xl border border-white/10 bg-slate-900 p-6"
     >
+      {equipeInitiale !== null ? (
+        <input type="hidden" name="equipe" value={equipeInitiale} />
+      ) : null}
       <label className="block">
         <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
           Code de la partie

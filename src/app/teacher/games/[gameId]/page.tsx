@@ -212,6 +212,16 @@ export default async function TeacherGamePage({
             >
               🖨️ Fiches à imprimer →
             </Link>
+            {/* Les cartons décident des équipes par la PLACE : un par table,
+                l'élève s'assoit, scanne, et l'équipe est celle de sa table.
+                C'est l'autre façon de composer les équipes, sans rien
+                annoncer ni répartir à la main. */}
+            <Link
+              href={`/teacher/games/${gameId}/cartons`}
+              className="text-xs text-amber-300 underline-offset-4 hover:underline"
+            >
+              🏷️ Cartons de table →
+            </Link>
             <Link
               href={`/teacher/games/${gameId}/observation`}
               className="text-xs text-amber-300 underline-offset-4 hover:underline"
