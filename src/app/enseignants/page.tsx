@@ -5,6 +5,8 @@ import { REFERENTIELS_NON_VERIFIES } from "@/config/ateliers/referentiels";
 import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
 import { ApercuArene, ApercuPilotage, ApercuProjection } from "@/components/apercus";
 import { DemoDuTour } from "@/components/demo-du-tour";
+import { PreuvesDusageBande } from "@/components/preuves-dusage";
+import { preuvesDusage } from "@/services/preuves-dusage.service";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/enseignants" },
@@ -67,7 +69,9 @@ const CONFIANCE = [
   { label: "Référentiels lus sur le texte", desc: "Chaque atelier cite sa provenance ; ce qui n'a pas été vérifié le dit" },
 ];
 
-export default function EnseignantsPage() {
+export default async function EnseignantsPage() {
+  // Comptés dans la base, jamais rédigés — et tus tant qu'ils ne prouvent rien.
+  const preuves = await preuvesDusage();
   return (
     <main id="main" className="relative overflow-hidden">
       <div
@@ -276,7 +280,17 @@ export default function EnseignantsPage() {
         haut : un quart de mètre de défilement pour ce qui tient sur une
         rangée. Le fait reste, la carte part.
       */}
-      <section className="mx-auto max-w-3xl px-6 pb-16">
+      {/*
+        CE QUI S'EST JOUÉ, AVANT CE QU'ON PROMET. Les pastilles qui suivent sont
+        des engagements — sans compte élève, rien à installer ; elles disent ce
+        que le produit fait. Les totaux, eux, disent ce qu'il a déjà servi, et
+        c'est la seule chose de cette page qu'un lecteur n'a pas à croire sur
+        parole. Ils ne s'affichent qu'au-dessus d'un plancher : un compteur
+        famélique prouverait l'inverse.
+      */}
+      <PreuvesDusageBande preuves={preuves} />
+
+      <section className="mx-auto max-w-3xl px-6 pb-16 pt-16">
         <ul className="flex flex-wrap justify-center gap-2">
           {CONFIANCE.map((d) => (
             <li
