@@ -129,6 +129,55 @@
   }
 }
 
+/*
+ * LA RÉVÉLATION DU RÉSULTAT : trois temps, trois délais.
+ *
+ * Le tour se clôt et l'écran se rafraîchit seul : le moment le plus attendu de
+ * la séance arrivait sans qu'aucun pixel ne le dise. Les enfants du bloc
+ * entrent donc l'un après l'autre — le tour, le chiffre, où il s'est joué —
+ * pour que l'œil les prenne dans cet ordre au lieu de tout recevoir à plat.
+ *
+ * L'animation ne fait apparaître que ce qui est DÉJÀ dans la page : elle finit
+ * à `opacity: 1`, rien ne reste invisible par-dessus le reste, et un lecteur
+ * d'écran lit les trois temps sans attendre. Un dixième de seconde de retard
+ * n'est pas une condition d'accès à l'information.
+ */
+@keyframes revelation-entree {
+  from {
+    opacity: 0;
+    transform: translateY(0.375rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.revelation > * {
+  animation: revelation-entree 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+/* Le chiffre après le titre du tour, la cause après le chiffre, la place en
+   dernier : les délais sont les temps de la phrase qu'on prononcerait. */
+.revelation > *:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.revelation > *:nth-child(3) {
+  animation-delay: 0.7s;
+}
+
+.revelation > *:nth-child(n + 4) {
+  animation-delay: 1s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Le bloc entier, d'un coup : le même contenu, sans un mouvement. */
+  .revelation > * {
+    animation: none;
+  }
+}
+
 @keyframes plan-ouvre {
   from {
     opacity: 0;

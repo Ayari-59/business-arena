@@ -19,6 +19,8 @@ import type { KpiFormat } from "@/config/scenarios/sector-kpis";
 import type { GameView } from "@/services/game-view.service";
 import type { RseIndex, RsePillar } from "@/scoring/rse";
 import { HautsFaits } from "@/components/hauts-faits";
+import { RevelationDuTour } from "@/components/revelation-du-tour";
+import { periodLabel } from "@/config/scenarios/periodicity";
 import { hautsFaitsDuTour } from "@/scoring/hauts-faits";
 
 type Period = GameView["periods"][number];
@@ -148,11 +150,34 @@ export function PeriodDashboard({
     return { direction: dir, label: formatPercent(Math.abs(pct)) };
   }
 
+  // Le tour d'avant, pour dire d'où vient l'écart de résultat. Le tour 1 n'en a
+  // pas : le verdict porte alors sur le niveau, pas sur la variation.
+  const precedent =
+    view.periods.find((p) => p.round === period.round - 1)?.result.incomeStatement ?? null;
+  const moi = view.ranking.find((row) => row.isPlayer);
+
   return (
     <DashboardTabs>
       {{
         synthese: (
           <div className="space-y-3">
+            {/*
+              LE VERDICT D'ABORD, LES TABLEAUX ENSUITE. C'est l'onglet ouvert
+              par défaut quand un tour se déplie : le premier écran doit
+              répondre à « alors, ça a marché ? », que quatre cartes
+              d'indicateurs laissaient calculer au lecteur. Les tableaux ne sont
+              pas le verdict, ils en sont la preuve — et on ne cherche pas une
+              preuve avant de savoir ce qu'on vérifie. Seul le tour le plus
+              récent se met en scène : une animation qui rejoue au dépliement
+              d'un vieux tour devient un tic.
+            */}
+            <RevelationDuTour
+              periode={periodLabel(view.roundDays, period.round)}
+              tour={r.incomeStatement}
+              precedent={precedent}
+              nouveau={standing}
+              rang={standing && moi ? { place: moi.rank, sur: view.ranking.length } : undefined}
+            />
             <HautsFaits faits={faits} />
             {/*
               LE COURRIER D'ABORD. Les lettres reçues par l'entreprise ce
