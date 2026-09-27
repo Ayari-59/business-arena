@@ -1056,7 +1056,8 @@ export default async function ArenaPage({
           />
         ) : (
           <Tiroir
-            titre="👥 Composition des équipes"
+            icone="equipes"
+            titre="Composition des équipes"
             quoi={compter(view.equipesDeLaClasse.length, "équipe")}
           >
             <ChoixEquipe

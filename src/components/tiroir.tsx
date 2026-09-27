@@ -1,3 +1,5 @@
+import { Icone, type NomDIcone } from "@/components/icone";
+
 /**
  * Un tiroir : un titre, ce qu'il cache, et son contenu replié.
  *
@@ -22,11 +24,18 @@
  */
 export function Tiroir({
   titre,
+  icone,
   quoi,
   ouvert = false,
   children,
 }: {
   titre: string;
+  /**
+   * Le repère du tiroir, dessiné. Les titres portaient un emoji, que le
+   * système dessine à sa façon : différent d'un appareil à l'autre, en
+   * couleurs étrangères au site, et brouillé au vidéoprojecteur.
+   */
+  icone?: NomDIcone;
   /** Ce qui attend derrière, en un mot compté : « 5 clientèles », « 3 tours ». */
   quoi?: string;
   ouvert?: boolean;
@@ -44,6 +53,7 @@ export function Tiroir({
         >
           ▸
         </span>
+        {icone ? <Icone nom={icone} className="h-4 w-4 shrink-0 text-amber-400/80" /> : null}
         <span className="min-w-0 text-xs font-semibold uppercase tracking-wide text-slate-300">
           {titre}
         </span>

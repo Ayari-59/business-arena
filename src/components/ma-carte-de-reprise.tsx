@@ -29,7 +29,7 @@ export function MaCarteDeReprise({
   code: string;
 }) {
   return (
-    <Tiroir titre="🔑 Mon code de reprise" quoi="pour changer d'appareil">
+    <Tiroir icone="cle" titre="Mon code de reprise" quoi="pour changer d'appareil">
       <div className="flex flex-wrap items-start gap-4 px-3 pb-3">
         <div className="min-w-0 flex-1">
           <p className="font-mono text-2xl tracking-[0.2em] text-amber-200">

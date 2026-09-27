@@ -46,13 +46,40 @@ function Tuile({
   );
 }
 
-/** La participation d'un tour, en barre : le décrochage se voit, il ne se lit pas. */
-function Barre({ tour, equipes }: { tour: ObservationTour; equipes: number }) {
+/**
+ * UN TOUR, DEUX MESURES : qui a joué, et ce que ça leur a coûté.
+ *
+ * La participation seule ne dit pas pourquoi une classe décroche. Le temps
+ * médian d'un tour le dit souvent : un tour qui passe de sept à vingt minutes
+ * perd des équipes au tour suivant, et cette minute-là était la seule qui
+ * manquait sur cet écran — elle n'existait qu'en moyenne, dans une tuile.
+ *
+ * DEUX MESURES, DEUX PISTES, JAMAIS UNE ÉCHELLE COMMUNE. Des équipes et des
+ * minutes ne se superposent pas : chaque piste a la sienne, la participation
+ * sur l'effectif de la classe, la durée sur le tour le plus long. Les deux
+ * portent leur chiffre en clair à droite, donc la couleur ne dit rien à elle
+ * seule, et la légende les nomme.
+ */
+function Barre({
+  tour,
+  equipes,
+  minutesMax,
+}: {
+  tour: ObservationTour;
+  equipes: number;
+  /** La durée du tour le plus long : l'échelle de la seconde piste. */
+  minutesMax: number | null;
+}) {
   const pct = part(tour.validees, equipes);
+  const minutes = tour.minutesMedianes;
+  const pctMinutes =
+    minutes === null || minutesMax === null || minutesMax === 0
+      ? null
+      : Math.max(4, Math.round((100 * minutes) / minutesMax));
   return (
-    <div className="flex items-center gap-3">
-      <span className="w-14 shrink-0 text-xs tabular-nums text-slate-400">Tour {tour.index}</span>
-      <span className="h-2.5 min-w-0 flex-1 overflow-hidden rounded-full bg-white/5">
+    <div className="grid grid-cols-[3.5rem_minmax(0,1fr)_4rem] items-center gap-x-3 gap-y-1">
+      <span className="row-span-2 text-xs tabular-nums text-slate-400">Tour {tour.index}</span>
+      <span className="h-2.5 min-w-0 overflow-hidden rounded-full bg-white/5">
         {/* Un tour encore ouvert reçoit des décisions : sa barre est pâle, elle
             n'est pas finie. Un point médian en bout de ligne ne se voyait pas. */}
         <span
@@ -60,8 +87,19 @@ function Barre({ tour, equipes }: { tour: ObservationTour; equipes: number }) {
           style={{ width: `${pct}%` }}
         />
       </span>
-      <span className="w-16 shrink-0 text-right text-xs tabular-nums text-slate-300">
+      <span className="text-right text-xs tabular-nums text-slate-300">
         {tour.validees}/{equipes}
+      </span>
+      <span className="h-1.5 min-w-0 overflow-hidden rounded-full bg-white/5">
+        {pctMinutes !== null ? (
+          <span
+            className="block h-full rounded-full bg-cyan-400/60"
+            style={{ width: `${pctMinutes}%` }}
+          />
+        ) : null}
+      </span>
+      <span className="text-right text-xs tabular-nums text-slate-400">
+        {minutes === null ? "—" : `${minutes} min`}
       </span>
     </div>
   );
@@ -90,6 +128,10 @@ export default async function ObservationPage({
 
   const minutes = clos.map((t) => t.minutesMedianes).filter((m): m is number => m !== null);
   const minutesTypiques = minutes.length ? Math.round(minutes.reduce((a, b) => a + b, 0) / minutes.length) : null;
+  // L'échelle de la piste des durées : le tour le plus long de la séance. Un
+  // tour de vingt minutes après trois tours de sept se voit alors tout de
+  // suite, ce qu'une moyenne dans une tuile ne montrait pas.
+  const minutesMax = minutes.length ? Math.max(...minutes) : null;
 
   return (
     <main id="main" className="mx-auto max-w-4xl space-y-8 px-4 pt-6 pb-16 sm:p-6">
@@ -155,11 +197,23 @@ export default async function ObservationPage({
 
           <section className="space-y-3">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-              Participation, tour par tour
+              Participation et durée, tour par tour
             </h2>
-            <div className="space-y-1.5">
+            {/* La légende nomme les deux pistes : deux mesures dans un même
+                bloc ne se distinguent pas par leur seule couleur. */}
+            <p className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">
+              <span className="flex items-center gap-1.5">
+                <span aria-hidden className="h-2.5 w-4 rounded-full bg-amber-400/70" />
+                équipes ayant validé
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span aria-hidden className="h-1.5 w-4 rounded-full bg-cyan-400/60" />
+                minutes médianes du tour
+              </span>
+            </p>
+            <div className="space-y-2.5">
               {tours.map((t) => (
-                <Barre key={t.index} tour={t} equipes={equipes} />
+                <Barre key={t.index} tour={t} equipes={equipes} minutesMax={minutesMax} />
               ))}
             </div>
             {tours.some((t) => !t.clos) ? (

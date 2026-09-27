@@ -21,6 +21,7 @@ import { CloseRoundForm } from "@/components/close-round-form";
 import { SubmitButton } from "@/components/submit-button";
 import { GuardedForm } from "@/components/guarded-action";
 import { RoundStatusPoller } from "@/components/round-status-poller";
+import { Icone } from "@/components/icone";
 import {
   archiverPartieAction,
   creerLesCodesManquantsAction,
@@ -215,13 +216,13 @@ export default async function TeacherGamePage({
               href={`/teacher/games/${gameId}/projection`}
               className="text-xs text-amber-300 underline-offset-4 hover:underline"
             >
-              📽️ Projeter pour la classe →
+              <Icone nom="projeter" /> Projeter pour la classe →
             </Link>
             <Link
               href={`/teacher/games/${gameId}/fiches`}
               className="text-xs text-amber-300 underline-offset-4 hover:underline"
             >
-              🖨️ Fiches à imprimer →
+              <Icone nom="imprimer" /> Fiches à imprimer →
             </Link>
             {/* Les cartons décident des équipes par la PLACE : un par table,
                 l'élève s'assoit, scanne, et l'équipe est celle de sa table.
@@ -231,7 +232,7 @@ export default async function TeacherGamePage({
               href={`/teacher/games/${gameId}/cartons`}
               className="text-xs text-amber-300 underline-offset-4 hover:underline"
             >
-              🏷️ Cartons de table →
+              <Icone nom="carton" /> Cartons de table →
             </Link>
             <Link
               href={`/teacher/games/${gameId}/observation`}
@@ -385,7 +386,8 @@ export default async function TeacherGamePage({
       </section>
 
       <Tiroir
-        titre="👥 Composition des équipes"
+        icone="equipes"
+        titre="Composition des équipes"
         quoi={compter(
           composition.reduce((total, e) => total + e.membres.length, 0),
           "élève inscrit",
@@ -431,7 +433,7 @@ export default async function TeacherGamePage({
               className="rounded-lg border border-amber-400/40 px-3 py-1.5 text-xs font-medium text-amber-200 hover:bg-amber-400/10"
               pendingLabel="Création…"
             >
-              🔑 Donner sa clé aux {compter(sansCode.length, "élève")} qui n&apos;en ont pas
+              <Icone nom="cle" /> Donner sa clé aux {compter(sansCode.length, "élève")} qui n&apos;en ont pas
             </SubmitButton>
           </GuardedForm>
         ) : null}
@@ -713,7 +715,8 @@ export default async function TeacherGamePage({
           <Rubrique note="réglages à toucher une fois">Régler</Rubrique>
           <section className="carte space-y-2 p-3 sm:p-5">
       {!finished ? (
-        <Tiroir titre="📝 Questions posées dans les situations" quoi={QUIZ_MODES.find((m) => m.code === view.quizMode)?.name}>
+        <Tiroir icone="questions"
+        titre="Questions posées dans les situations" quoi={QUIZ_MODES.find((m) => m.code === view.quizMode)?.name}>
           <p className="mt-1 max-w-3xl text-xs text-slate-400">
             Le diagnostic est toujours posé : c&apos;est le cœur de la situation. Ce réglage ne
             porte que sur les questions qui le suivent. Les situations déjà débriefées gardent
@@ -754,7 +757,8 @@ export default async function TeacherGamePage({
         </Tiroir>
       ) : null}
       {!finished ? (
-        <Tiroir titre="📚 Situations manquées" quoi={MISSED_POLICY_LABELS[view.missedPolicy]}>
+        <Tiroir icone="questions"
+        titre="Situations manquées" quoi={MISSED_POLICY_LABELS[view.missedPolicy]}>
           <p className="mt-1 max-w-3xl text-xs text-slate-400">
             Une situation non rendue reste consultable par l&apos;élève dans l&apos;onglet Historique.
             Vous choisissez si elle peut être rattrapée. Réglage appliqué aux tours à venir ; les
@@ -791,7 +795,8 @@ export default async function TeacherGamePage({
         </Tiroir>
       ) : null}
       {!finished ? (
-        <Tiroir titre="🗓️ Planning de la partie" quoi={view.opensAt || view.closesAt ? "fenêtre posée" : "sans borne"}>
+        <Tiroir icone="planning"
+        titre="Planning de la partie" quoi={view.opensAt || view.closesAt ? "fenêtre posée" : "sans borne"}>
           <p className="mt-1 max-w-3xl text-xs text-slate-400">
             Fenêtre pendant laquelle les élèves peuvent jouer (heure de Paris). En dehors,
             l&apos;arène passe en lecture seule et « Valider » est grisé. Laissez un champ vide pour
@@ -829,7 +834,8 @@ export default async function TeacherGamePage({
         </Tiroir>
       ) : null}
       {!finished ? (
-        <Tiroir titre="⏱️ Planning des tours" quoi={toursBornes > 0 ? compter(toursBornes, "tour borné") : "aucune borne"}>
+        <Tiroir icone="duree"
+        titre="Planning des tours" quoi={toursBornes > 0 ? compter(toursBornes, "tour borné") : "aucune borne"}>
           <p className="mt-1 max-w-3xl text-xs text-slate-400">
             Ouverture et échéance de chaque tour (heure de Paris). Ces bornes s&apos;ajoutent à
             la fenêtre globale : un tour n&apos;est jouable que pendant l&apos;intersection des
@@ -922,7 +928,8 @@ export default async function TeacherGamePage({
         champ vide. Personne d'autre ne le voit : ni les élèves, ni le
         classement, ni le relevé de notes.
       */}
-      <Tiroir titre="✎ Nommer cette partie" quoi={view.label ?? "sans nom"}>
+      <Tiroir icone="nommer"
+        titre="Nommer cette partie" quoi={view.label ?? "sans nom"}>
         <GuardedForm
           action={nommerLaPartieAction.bind(null, gameId)}
           label="nom de la partie"
@@ -958,7 +965,8 @@ export default async function TeacherGamePage({
         réversibilité : la partie garde son statut et se ressort d'un clic
         depuis le tableau de bord.
       */}
-      <Tiroir titre="📦 Ranger cette partie" quoi="réversible">
+      <Tiroir icone="ranger"
+        titre="Ranger cette partie" quoi="réversible">
         <p className="mt-1 max-w-3xl text-sm leading-relaxed text-slate-300">
           Une partie rangée sort de votre liste et n&apos;est plus jouable : le code
           n&apos;ouvre plus rien, les élèves déjà inscrits ne peuvent plus rendre de
@@ -988,7 +996,8 @@ export default async function TeacherGamePage({
         plus sur une page qui en compte vingt finirait par être cliqué de
         travers, un soir de fin de séance.
       */}
-      <Tiroir titre="↺ Recommencer cette partie" quoi="définitif">
+      <Tiroir icone="recommencer"
+        titre="Recommencer cette partie" quoi="définitif">
         {recommencer === "fait" ? (
           <p
             role="status"
@@ -1045,7 +1054,8 @@ export default async function TeacherGamePage({
         dit le tiroir plutôt que d'offrir un bouton qui refuserait.
       */}
       {vierge ? (
-        <Tiroir titre="🗑️ Supprimer cette partie" quoi="définitif">
+        <Tiroir icone="supprimer"
+        titre="Supprimer cette partie" quoi="définitif">
           {supprimer === "mot" ? (
             <p
               role="status"

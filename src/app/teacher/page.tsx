@@ -499,7 +499,8 @@ export default async function TeacherDashboard({
           pas une rubrique vide lui rappeler qu'il pourrait.
         */}
         {rangees.length > 0 ? (
-          <Tiroir titre="📦 Parties rangées" quoi={compter(rangees.length, "partie")}>
+          <Tiroir icone="ranger"
+            titre="Parties rangées" quoi={compter(rangees.length, "partie")}>
             <p className="mt-1 text-sm text-slate-300">
               Elles ne sont plus jouables et leur code n&apos;ouvre plus rien. Rien n&apos;a
               été supprimé : ressortez-en une et elle reprend exactement où elle en était.
