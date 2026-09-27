@@ -45,6 +45,90 @@
  * assez pour que l'œil suive, trop court pour qu'on attende. `motion-safe`
  * dans le composant : qui a demandé moins d'animation n'en reçoit aucune.
  * ------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------
+ * LA BOUCLE DU TOUR, SUR LA PAGE DE PRÉSENTATION.
+ *
+ * Trois panneaux — la situation, la décision, le résultat — qui se relaient
+ * dans le même cadre, douze secondes en tout. C'est la seule chose qu'un texte
+ * n'arrive pas à faire passer : que jouer un tour, c'est lire, trancher, et
+ * subir le chiffre.
+ *
+ * Chaque panneau paraît un tiers du temps, avec un fondu court aux deux bouts
+ * pour que l'œil suive le relais sans le voir claquer. Les délais décalent les
+ * trois sur la même durée.
+ *
+ * QUI A DEMANDÉ MOINS D'ANIMATION N'EN REÇOIT AUCUNE : la règle plus bas coupe
+ * la boucle et le composant montre alors les trois panneaux à la file, ce qui
+ * dit la même chose sans rien bouger.
+ * ------------------------------------------------------------------------- */
+@keyframes tour-relais {
+  0%,
+  2% {
+    opacity: 0;
+    transform: translateY(0.5rem);
+    pointer-events: none;
+  }
+  6%,
+  30% {
+    opacity: 1;
+    transform: none;
+    /* Le panneau qu'on lit est le seul à prendre les clics et la sélection. */
+    pointer-events: auto;
+  }
+  34%,
+  100% {
+    opacity: 0;
+    transform: translateY(-0.25rem);
+    pointer-events: none;
+  }
+}
+
+/* La pastille du panneau courant, allumée pendant son tiers. */
+@keyframes tour-pastille {
+  0%,
+  3% {
+    opacity: 0.25;
+  }
+  6%,
+  30% {
+    opacity: 1;
+  }
+  34%,
+  100% {
+    opacity: 0.25;
+  }
+}
+
+/*
+ * LES TROIS PANNEAUX SE RELAIENT, ET AUCUN NE VOLE LES CLICS.
+ *
+ * Ils occupent le même cadre : à tout instant deux sont transparents, et une
+ * opacité nulle ne retire rien à la surface cliquable — c'est le défaut qui
+ * avait rendu « J'ai pris note » inatteignable sur téléphone. Le repos est
+ * donc `pointer-events: none`, et l'image clé rend les clics au seul panneau
+ * qu'on est en train de lire. Le décalage, lui, reste posé panneau par
+ * panneau depuis le composant : c'est ce qui les met en file.
+ */
+.tour-panneau {
+  animation: tour-relais 12s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.tour-pastille {
+  animation: tour-pastille 12s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Plus de relais : les panneaux se suivent, immobiles et lisibles. */
+  .tour-panneau,
+  .tour-pastille {
+    animation: none;
+  }
+  .tour-panneau {
+    pointer-events: auto;
+  }
+}
+
 @keyframes plan-ouvre {
   from {
     opacity: 0;
