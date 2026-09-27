@@ -7,6 +7,12 @@ import { getOrCreateGuestUserId } from "@/lib/guest";
 import { createSoloGame } from "@/services/game.service";
 import { TropDePartiesError } from "@/services/game-creation.service";
 import { DEFAULT_SCENARIO_CODE, SCENARIOS } from "@/config/scenarios/registry";
+import {
+  jouerUnTourDessai,
+  leconsDeLessai,
+  type LeconDessai,
+  type TourDessai,
+} from "@/pedagogy/tour-dessai";
 
 const periodicitySchema = z.enum(["month", "quarter", "year"]).catch("quarter");
 const companiesSchema = z.coerce.number().int().min(2).max(8).catch(3);
@@ -48,4 +54,33 @@ export async function startGameAction(formData: FormData): Promise<void> {
     throw e;
   }
   redirect(`/arena/${gameId}`);
+}
+
+/**
+ * L'ESSAI DE LA PAGE D'ACCUEIL : un tour joué, rien d'enregistré.
+ *
+ * Pas d'invité créé, pas de partie, pas une ligne en base — la page d'accueil
+ * est la plus visitée du site et cette action est ouverte à tous. Elle ne fait
+ * qu'appeler une fonction pure du moteur et rendre ses chiffres, ce qui la
+ * rend inintéressante à marteler : aucune écriture, aucun état, un coût de
+ * calcul de l'ordre de la milliseconde.
+ *
+ * Les deux saisies sont bornées côté serveur (`jouerUnTourDessai`), pas
+ * seulement par les curseurs : un `min`/`max` de formulaire ne vaut que pour
+ * qui passe par le formulaire.
+ */
+export interface EssaiState {
+  tour: TourDessai | null;
+  lecons: LeconDessai[];
+}
+
+export async function jouerUnTourDessaiAction(
+  _prev: EssaiState,
+  formData: FormData,
+): Promise<EssaiState> {
+  const tour = jouerUnTourDessai({
+    prix: formData.get("prix"),
+    production: formData.get("production"),
+  });
+  return { tour, lecons: leconsDeLessai(tour) };
 }

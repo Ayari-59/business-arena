@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { TourDessai } from "@/components/tour-dessai";
 import Link from "next/link";
 import { getPlatformConfig } from "@/services/admin.service";
 import { etendueDesDecisions } from "@/config/decisions";
@@ -72,21 +73,6 @@ const RENVOIS: {
   },
 ];
 
-function MiniKpi({ label, value, tone }: { label: string; value: string; tone?: "good" | "bad" }) {
-  return (
-    <div className="rounded-lg border border-white/5 bg-slate-950/80 px-3 py-2">
-      <p className="text-xs uppercase tracking-wide text-slate-400">{label}</p>
-      <p
-        className={`text-sm font-semibold ${
-          tone === "good" ? "text-emerald-400" : tone === "bad" ? "text-red-400" : "text-slate-100"
-        }`}
-      >
-        {value}
-      </p>
-    </div>
-  );
-}
-
 /**
  * La page d'accueil porte le titre entier du site (pas de gabarit) : c'est
  * elle qu'un lien partagé ou un moteur de recherche présentent.
@@ -140,11 +126,17 @@ export default async function Home() {
             découvrez les modèles de gestion qui font les bonnes décisions.
           </p>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+            {/*
+              « TESTER LE SIMULATEUR » N'A PLUS DE SENS ICI : le simulateur est
+              à droite, et il se teste sans quitter la page. Ce bouton ouvre
+              maintenant ce que l'essai ne donne pas — la partie entière, ses
+              six tours et toutes ses décisions.
+            */}
             <Link
               href="/jouer"
               className="rounded-lg bg-amber-500 px-6 py-3 text-center text-sm font-semibold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400"
             >
-              Tester le simulateur
+              Commencer une partie
             </Link>
             <Link
               href="/entreprises"
@@ -164,50 +156,15 @@ export default async function Home() {
           </p>
         </div>
 
-        {/* aperçu du cockpit (illustration statique du jeu) */}
-        <div className="relative">
-          <div className="rounded-2xl border border-white/10 bg-slate-900/90 p-4 shadow-2xl shadow-amber-400/5">
-            <div className="flex items-center justify-between border-b border-white/5 pb-3">
-              <p className="text-xs font-semibold text-slate-300">NOVA · Tour 4 / 6</p>
-              <span className="rounded-full border border-red-400/40 bg-red-950/40 px-2 py-0.5 text-xs text-red-300">
-                ⚠ trésorerie sous tension
-              </span>
-            </div>
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <MiniKpi label="Chiffre d'affaires" value="346 920 €" tone="good" />
-              <MiniKpi label="Résultat net" value="+10 110 €" tone="good" />
-              <MiniKpi label="Trésorerie nette" value="−758 €" tone="bad" />
-              <MiniKpi label="BFR" value="84 805 €" />
-            </div>
-            <div className="mt-3 rounded-lg border border-amber-400/20 bg-amber-950/20 p-3">
-              <p className="text-xs uppercase tracking-[0.25em] text-amber-400">
-                Alerte comptable
-              </p>
-              <p className="mt-1 text-sm font-medium text-slate-200">
-                Votre entreprise gagne de l&apos;argent mais n&apos;en a plus en caisse.
-                Identifiez les causes possibles.
-              </p>
-              <div className="mt-2 flex flex-wrap gap-1.5 text-xs">
-                <span className="rounded-full bg-slate-950 px-2.5 py-1 text-slate-400">
-                  Diagnostic
-                </span>
-                <span className="rounded-full bg-slate-950 px-2.5 py-1 text-slate-400">
-                  Connaissances
-                </span>
-                <span className="rounded-full border border-amber-400/40 px-2.5 py-1 text-amber-300">
-                  💡 Indice 1 (−5 %)
-                </span>
-              </div>
-            </div>
-            <div className="mt-3 flex items-center justify-between rounded-lg bg-slate-950 px-3 py-2 text-xs text-slate-400">
-              <span>Classement IPG</span>
-              <span>
-                <span className="text-amber-300">#2 NOVA 58,3</span>
-                <span className="ml-2 text-slate-400">#1 Auris 61,8</span>
-              </span>
-            </div>
-          </div>
-        </div>
+        {/*
+          UN TOUR JOUABLE, À LA PLACE D'UN COCKPIT DESSINÉ. Cette colonne
+          montrait une capture inventée — « chiffre d'affaires 346 920 € »,
+          « #2 NOVA 58,3 » —, c'est-à-dire qu'elle promettait une simulation
+          sans en faire tourner une. Le visiteur devait créer une partie pour
+          savoir de quoi il s'agissait. Deux curseurs et le vrai moteur le lui
+          disent en cinq secondes, sans compte et sans rien enregistrer.
+        */}
+        <TourDessai />
       </section>
 
       {/* ---------- Bande chiffres ---------- */}

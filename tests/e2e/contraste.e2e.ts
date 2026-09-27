@@ -103,8 +103,13 @@ describe("lisibilité des thèmes", () => {
   it("le bouton qui lance une partie reste lisible sur chaque thème", () => {
     // Celui-là est passé à 1,9 pour 1 sans que rien ne le signale.
     for (const theme of THEMES) {
-      const ratio = [...parTheme.get(theme.code)!].find(([cle]) =>
-        cle.includes("Tester le simulateur"),
+      // Deux libellés depuis que l'accueil porte un tour jouable : il y ouvre
+      // la partie entière (« Commencer une partie »), les autres pages
+      // renvoient encore vers le simulateur. C'est le même bouton, la même
+      // teinte, et c'est lui qu'on veut lisible partout.
+      const ratio = [...parTheme.get(theme.code)!].find(
+        ([cle]) =>
+          cle.includes("Commencer une partie") || cle.includes("Tester le simulateur"),
       );
       expect(ratio, `${theme.code} : bouton de lancement introuvable`).toBeDefined();
       expect(ratio![1], `${theme.code} : bouton de lancement à ${ratio![1]}`).toBeGreaterThanOrEqual(
