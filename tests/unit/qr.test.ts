@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createElement } from "react";
-import { dessinerQr, urlDeJonction, MARGE_QR } from "@/lib/qr";
+import { dessinerQr, urlDeJonction, urlDeReprise, MARGE_QR } from "@/lib/qr";
 import {
   RANG_EQUIPE_MAX,
   normaliserCodeDePartie,
@@ -127,6 +127,41 @@ describe("l'adresse d'un carton de table", () => {
     expect(normaliserRangDEquipe(` ${RANG_EQUIPE_MAX} `)).toBe(RANG_EQUIPE_MAX);
     for (const brut of [undefined, null, "", "0", "-1", "1.5", "100", "1e3", "un", "3;4", " "]) {
       expect(normaliserRangDEquipe(brut), JSON.stringify(brut)).toBeNull();
+    }
+  });
+});
+
+describe("le QR personnel, qui est une clé et non une affiche", () => {
+  it("mène à l'écran de reprise, code compris", () => {
+    expect(urlDeReprise("K7PD5M2X")).toBe(
+      "https://www.business-arena.fr/reprendre?code=K7PD5M2X",
+    );
+  });
+
+  it("ne passe pas par l'entrée par code : elle, c'est une porte ouverte", () => {
+    // Un paramètre de plus sur /join aurait mêlé le code que l'on projette au
+    // mur et celui qui ouvre l'identité de son porteur. Deux natures, deux
+    // écrans : celui de la reprise vérifie et compte les tentatives avant de
+    // rendre quoi que ce soit.
+    expect(urlDeReprise("K7PD5M2X")).not.toContain("/join");
+    const page = readFileSync(join(process.cwd(), "src/app/reprendre/page.tsx"), "utf8");
+    expect(page).toContain("codeDeReprisePlausible");
+    // La page ne lit RIEN en base sur le simple paramètre d'adresse : elle
+    // dirait, sans rien compter, quels codes existent.
+    expect(page).not.toContain("reprendreSaPlace(");
+    expect(page).not.toContain("@/db");
+  });
+
+  it("ne s'imprime jamais avec les affiches", () => {
+    // Les trois écrans publics portent le QR de la partie ; aucun ne doit
+    // porter celui d'un joueur. Qui le lit joue à la place de son propriétaire.
+    for (const chemin of [
+      "src/app/teacher/games/[gameId]/projection/page.tsx",
+      "src/app/teacher/games/[gameId]/fiches/page.tsx",
+      "src/app/teacher/games/[gameId]/cartons/page.tsx",
+    ]) {
+      const source = readFileSync(join(process.cwd(), chemin), "utf8");
+      expect(source, chemin).not.toContain("urlDeReprise");
     }
   });
 });

@@ -29,12 +29,13 @@ const COMPOSANTS_GARDES = [
   "src/components/public-page-form.tsx", // page publique d'annonce du concours
   "src/components/orientation-form.tsx", // demande de simulation (/orientation)
   "src/components/rendez-vous-form.tsx", // rendez-vous téléphonique (/rendez-vous)
+  "src/components/formulaire-de-reprise.tsx", // reprise de sa place (/reprendre)
 ];
 
 /** Pages serveur : GuardedForm autour des actions sans état. */
 const PAGES_GARDEES: { file: string; formulaires: number }[] = [
   { file: "src/app/teacher/page.tsx", formulaires: 3 }, // création de partie, rangement depuis la liste, sortie de rangement
-  { file: "src/app/teacher/games/[gameId]/page.tsx", formulaires: 8 }, // questions posées, situations manquées, planning de la partie, planning des tours, révélation du classement, rangement, remise à zéro, suppression (clôture via CloseRoundForm client)
+  { file: "src/app/teacher/games/[gameId]/page.tsx", formulaires: 9 }, // questions posées, situations manquées, planning de la partie, planning des tours, révélation du classement, codes de reprise manquants, rangement, remise à zéro, suppression (clôture via CloseRoundForm client)
 ];
 
 describe("composants client gardés", () => {

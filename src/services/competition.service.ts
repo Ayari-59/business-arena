@@ -1,5 +1,5 @@
 import { randomInt } from "node:crypto";
-import { and, asc, desc, eq, gt, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   competitionEntries,
@@ -8,7 +8,6 @@ import {
   competitions,
   gameRankings,
   games,
-  loginAttempts,
   players,
   teams,
   users,
@@ -18,11 +17,10 @@ import { apercuDePhase, LIMITES_CONCOURS } from "@/config/concours";
 import {
   ALPHABET_REPRISE,
   codeDeReprisePlausible,
-  FENETRE_REPRISE_MS,
   LONGUEUR_CODE_REPRISE,
-  MAX_ECHECS_REPRISE,
   normaliserCodeDeReprise,
 } from "@/config/reprise";
+import { garderLesTentatives } from "@/services/reprise.service";
 import { createGameCore } from "@/services/game-creation.service";
 import { entitlementsForOrg } from "@/services/entitlements.service";
 import { DEFAULT_QUIZ_MODE } from "@/config/difficulty";
@@ -334,32 +332,18 @@ export async function reprendreSonIdentite(args: {
   | { error: string }
 > {
   const CODE_REFUSE = "Code de reprise inconnu. Vérifiez-le auprès de votre enseignant.";
-  const ip = args.ip?.trim() || null;
-  const now = args.now ?? Date.now();
-  const depuis = new Date(now - FENETRE_REPRISE_MS);
-
-  const echecs = ip
-    ? await db
-        .select()
-        .from(loginAttempts)
-        .where(
-          and(
-            eq(loginAttempts.email, MARQUEUR_REPRISE),
-            eq(loginAttempts.ip, ip),
-            gt(loginAttempts.createdAt, depuis),
-          ),
-        )
-    : [];
-  if (echecs.length >= MAX_ECHECS_REPRISE) {
-    const plusAncien = Math.min(...echecs.map((e) => e.createdAt.getTime()));
-    const minutes = Math.max(1, Math.ceil((plusAncien + FENETRE_REPRISE_MS - now) / 60_000));
-    return { error: `Trop de tentatives, réessayez dans ${minutes} minute${minutes > 1 ? "s" : ""}.` };
-  }
+  // La garde est la même que celle de la classe, et elle n'est écrite qu'une
+  // fois (reprise.service) : deux comptages des tentatives auraient fini par
+  // diverger, et c'est la moitié oubliée qui aurait laissé deviner un code.
+  const garde = await garderLesTentatives({
+    marqueur: MARQUEUR_REPRISE,
+    ip: args.ip,
+    now: args.now,
+  });
+  if (garde.refus) return { error: garde.refus };
 
   const echec = async () => {
-    await db
-      .insert(loginAttempts)
-      .values({ email: MARQUEUR_REPRISE, ip, createdAt: new Date(now) });
+    await garde.echec();
     return { error: CODE_REFUSE };
   };
 
@@ -373,10 +357,7 @@ export async function reprendreSonIdentite(args: {
   if (!membre) return echec();
 
   // Succès : le compteur de cette adresse repart de zéro.
-  if (ip)
-    await db
-      .delete(loginAttempts)
-      .where(and(eq(loginAttempts.email, MARQUEUR_REPRISE), eq(loginAttempts.ip, ip)));
+  await garde.succes();
   return {
     userId: membre.userId,
     competitionId: membre.competitionId,

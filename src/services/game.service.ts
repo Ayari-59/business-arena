@@ -14,6 +14,7 @@ import type { ScenarioVocabulary, Sector } from "@/config/scenarios/registry";
 import { resolveScenarioDefinition } from "@/services/scenario-source.service";
 import { estArchivee, PARTIE_ARCHIVEE } from "@/services/archivage";
 import { choisirSonEquipe, peutChoisirSonEquipe } from "@/services/affectation.service";
+import { attribuerCodeDeReprise } from "@/services/reprise.service";
 import { lireSource, type DecisionSourceMap } from "@/config/decision-source";
 import {
   presetFromProfile,
@@ -244,6 +245,10 @@ export async function joinGameByCode(args: {
     if (demandee && demandee !== dejaLa.teamId && peutChoisirSonEquipe(game)) {
       await choisirSonEquipe({ gameId: game.id, userId: args.userId, teamId: demandee });
     }
+    // Le code de reprise aussi à ce passage-ci : les élèves entrés avant que
+    // le code existe n'en ont pas, et c'est leur prochaine entrée qui le leur
+    // donne, sans qu'ils aient rien à demander.
+    await attribuerCodeDeReprise(game.id, args.userId);
     return { gameId: game.id };
   }
 
@@ -256,6 +261,11 @@ export async function joinGameByCode(args: {
     demandee ?? [...counts.entries()].sort((a, b) => a[1] - b[1])[0]![0];
 
   await db.insert(players).values({ teamId: target, userId: args.userId, role: "member" });
+  // SON CODE DÈS SON ENTRÉE. Le donner plus tard, à sa demande, laisserait
+  // sans filet celui qui n'a jamais ouvert le tiroir — c'est-à-dire justement
+  // celui qui perdra son appareil sans s'y être préparé. La liste de
+  // l'enseignant est alors complète, et c'est elle le vrai recours.
+  await attribuerCodeDeReprise(game.id, args.userId);
   return { gameId: game.id };
 }
 

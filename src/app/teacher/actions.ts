@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { clearSession, getSession, setSession } from "@/lib/session";
+import { creerLesCodesManquants } from "@/services/reprise.service";
 import {
   bumpSessionVersion,
   getTeacherOrgId,
@@ -376,6 +377,21 @@ export async function archiverPartieAction(gameId: string): Promise<void> {
   await archiverPartie({ gameId, teacherId: session.userId });
   revalidatePath("/teacher");
   redirect("/teacher");
+}
+
+/**
+ * DONNER SA CLÉ À QUI N'EN A PAS ENCORE.
+ *
+ * Les élèves entrés avant que le code de reprise existe n'en ont pas, et leur
+ * prochaine entrée par code leur en donnerait une — sauf qu'ils n'entreront
+ * plus, justement parce qu'ils sont déjà dans la partie. Un clic comble le
+ * trou, et ne touche pas aux codes déjà notés par les autres.
+ */
+export async function creerLesCodesManquantsAction(gameId: string): Promise<void> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  await creerLesCodesManquants(gameId, session.userId);
+  revalidatePath(`/teacher/games/${gameId}`);
 }
 
 export async function desarchiverPartieAction(gameId: string): Promise<void> {

@@ -12,10 +12,18 @@ import { formaterCodeDeReprise } from "@/config/reprise";
  */
 export function CodesDeReprise({
   codes,
+  children,
 }: {
   codes: { teamLabel: string; pseudo: string; code: string }[];
+  /**
+   * De quoi agir depuis le panneau, s'il y a lieu. En classe, le bouton qui
+   * donne sa clé à qui n'en a pas encore : les élèves entrés avant que le code
+   * existe n'entreront plus par le code, justement parce qu'ils sont déjà
+   * dedans. Le concours ne passe rien : chaque inscription crée la sienne.
+   */
+  children?: React.ReactNode;
 }) {
-  if (codes.length === 0) return null;
+  if (codes.length === 0 && !children) return null;
   return (
     <details className="carte p-3 sm:p-5">
       <summary className="cursor-pointer text-sm font-semibold text-slate-200">
@@ -26,6 +34,7 @@ export function CodesDeReprise({
         même après la clôture des inscriptions. Relisez-le à qui l&apos;a perdu. Ne le projetez
         pas devant la classe : celui qui le lit peut jouer à la place de son propriétaire.
       </p>
+      {children ? <div className="mt-3">{children}</div> : null}
       <ul className="mt-3 space-y-1.5">
         {codes.map((c) => (
           <li

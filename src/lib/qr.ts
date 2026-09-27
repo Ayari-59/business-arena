@@ -78,3 +78,16 @@ export function dessinerQr(texte: string, marge: number = MARGE_QR): DessinQr {
   }
   return { cote: n + marge * 2, chemin: morceaux.join("") };
 }
+
+/**
+ * L'adresse du QR PERSONNEL d'un élève : sa place, rendue à lui-même.
+ *
+ * Elle n'est pas de la même nature que les deux autres. `urlDeJonction` mène à
+ * une porte ouverte — le code de la partie s'affiche au mur. Celle-ci porte une
+ * CLÉ : qui la lit entre dans l'identité de son propriétaire. D'où un écran
+ * séparé, qui vérifie et compte les tentatives avant de rendre quoi que ce
+ * soit, plutôt qu'un paramètre de plus sur l'entrée par code.
+ */
+export function urlDeReprise(code: string): string {
+  return `${SITE_URL}/reprendre?code=${encodeURIComponent(code.trim().toUpperCase())}`;
+}

@@ -147,6 +147,39 @@ export const players = pgTable(
   (t) => [primaryKey({ columns: [t.teamId, t.userId] }), index("players_user_id_idx").on(t.userId)],
 );
 
+/**
+ * LE CODE DE REPRISE D'UN JOUEUR, DANS UNE PARTIE DE CLASSE.
+ *
+ * L'élève est reconnu par son cookie invité, donc par son navigateur. Il
+ * change de poste, vide ses cookies, passe au téléphone : l'application ne le
+ * reconnaît plus et le range dans une équipe quelconque, sans message et sans
+ * retour possible. Le concours avait déjà son remède ; la classe, non.
+ *
+ * Une table à part, et non une colonne de `players`, parce que le code
+ * appartient au couple (partie, élève) et non à son équipe : changer d'équipe
+ * supprime et réinsère la ligne `players`, ce qui aurait effacé ou changé un
+ * code que l'élève venait justement de noter.
+ */
+export const gameRecoveries = pgTable(
+  "game_recoveries",
+  {
+    gameId: uuid("game_id")
+      .notNull()
+      .references(() => games.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    recoveryCode: text("recovery_code").notNull(),
+    ...timestamps,
+  },
+  (t) => [
+    primaryKey({ columns: [t.gameId, t.userId] }),
+    // Le code se saisit seul, sans le code de la partie : il est donc unique
+    // pour toute la base, et non seulement dans sa partie.
+    uniqueIndex("game_recoveries_code_uq").on(t.recoveryCode),
+  ],
+);
+
 export const rounds = pgTable(
   "rounds",
   {

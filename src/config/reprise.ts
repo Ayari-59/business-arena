@@ -50,3 +50,13 @@ export function codeDeReprisePlausible(saisi: string): boolean {
 export const AIDE_CODE_DE_REPRISE =
   "Notez ce code : il vous rend votre équipe depuis n'importe quel appareil, " +
   "même après la clôture des inscriptions. Votre enseignant peut vous le relire.";
+
+/**
+ * La même chose en classe, où il n'y a pas d'inscriptions à clore. Ce qui fait
+ * perdre son identité à un élève, là, c'est de changer de poste ou de
+ * navigateur — et c'est cela qu'il faut nommer pour qu'il comprenne à quoi
+ * sert ce code AVANT d'en avoir besoin.
+ */
+export const AIDE_CODE_DE_REPRISE_CLASSE =
+  "Notez ce code : il vous rend votre équipe et tout ce que vous y avez fait, " +
+  "depuis n'importe quel appareil. Votre enseignant peut vous le relire.";

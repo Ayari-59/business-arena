@@ -23,6 +23,7 @@ import { GuardedForm } from "@/components/guarded-action";
 import { RoundStatusPoller } from "@/components/round-status-poller";
 import {
   archiverPartieAction,
+  creerLesCodesManquantsAction,
   reinitialiserPartieAction,
   supprimerPartieAction,
   setGameScheduleAction,
@@ -33,6 +34,8 @@ import { utcToParisLocalInput } from "@/lib/paris-time";
 import { JustificationsReview } from "@/components/justifications-review";
 import { EnTeteEnseignant, Rubrique } from "@/components/en-tete-enseignant";
 import { Tiroir } from "@/components/tiroir";
+import { CodesDeReprise } from "@/components/codes-de-reprise";
+import { codesDeRepriseDeLaPartie, joueursSansCode } from "@/services/reprise.service";
 import { FriseDesTours } from "@/components/frise-des-tours";
 import { SECTOR_COLORS, SECTOR_LABELS } from "@/config/scenarios/registry";
 import { entitlementsForUser } from "@/services/entitlements.service";
@@ -64,6 +67,12 @@ export default async function TeacherGamePage({
   const view = await getTeacherGameView(gameId, session.userId);
   if (!view) notFound();
   const pedagogy = await getTeacherPedagogyView(gameId, session.userId);
+  // Les clés personnelles des élèves : à relire à qui a changé de poste et
+  // perdu la sienne. La liste est vide tant que personne n'a rejoint.
+  const codesDeReprise = await codesDeRepriseDeLaPartie(gameId, session.userId);
+  // Les élèves entrés avant que le code existe : ils n'entreront plus par le
+  // code, justement parce qu'ils sont déjà dans la partie.
+  const sansCode = await joueursSansCode(gameId, session.userId);
   const releve = await getGameGradeSheet(gameId, session.userId);
   // Qui joue dans quelle équipe : le seul écran d'où l'on répare une
   // affectation, et le seul recours d'un élève revenu d'un autre poste.
@@ -405,6 +414,26 @@ export default async function TeacherGamePage({
           scenarioCode={view.scenarioCode}
         />
       ) : null}
+
+      {/* LE RECOURS RÉEL D'UNE SALLE DE CLASSE, C'EST VOUS. L'élève qui a
+          changé de poste ET perdu son code vient vous le demander ; sans cette
+          liste, personne au monde ne pourrait le lui rendre. Repliée, parce que
+          ce sont des clés personnelles et que cet écran finit projeté. */}
+      <CodesDeReprise codes={codesDeReprise}>
+        {sansCode.length > 0 ? (
+          <GuardedForm
+            action={creerLesCodesManquantsAction.bind(null, gameId)}
+            label="création des codes de reprise manquants"
+          >
+            <SubmitButton
+              className="rounded-lg border border-amber-400/40 px-3 py-1.5 text-xs font-medium text-amber-200 hover:bg-amber-400/10"
+              pendingLabel="Création…"
+            >
+              🔑 Donner sa clé aux {compter(sansCode.length, "élève")} qui n&apos;en ont pas
+            </SubmitButton>
+          </GuardedForm>
+        ) : null}
+      </CodesDeReprise>
 
       <Rubrique>Lire</Rubrique>
       <section className="carte p-3 sm:p-5">

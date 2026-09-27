@@ -32,6 +32,8 @@ import { FaitsCles } from "@/components/faits-cles";
 import { Tiroir } from "@/components/tiroir";
 import { FriseDesTours } from "@/components/frise-des-tours";
 import { IdentiteDeLAppareil } from "@/components/identite-de-lappareil";
+import { MaCarteDeReprise } from "@/components/ma-carte-de-reprise";
+import { codeDeRepriseDuJoueur } from "@/services/reprise.service";
 import { EcheanceDuTour } from "@/components/echeance-du-tour";
 import { mentionDeValidation } from "@/config/validation-du-tour";
 import { surtitreDePartie } from "@/config/scenarios/presentation";
@@ -55,6 +57,9 @@ export default async function ArenaPage({
   if (!userId) notFound();
   const view = await getGameView(gameId, userId);
   if (!view) notFound();
+  // Le code personnel, s'il en a un. En solo, personne à retrouver : la
+  // partie n'appartient qu'à cet appareil et il n'y a pas d'équipe à rendre.
+  const codeDeReprise = view.kind === "solo" ? null : await codeDeRepriseDuJoueur(gameId, userId);
   const situations = await getTeamSituations(gameId, userId);
   const statutSituations = statutDesSituations(situations.current);
 
@@ -458,6 +463,11 @@ export default async function ArenaPage({
           variante="arene"
         />
       ) : null}
+
+      {/* SA CLÉ, À CÔTÉ DE SON NOM. C'est le même sujet — qui joue sur cet
+          appareil — et c'est ici, tant qu'il est encore reconnu, qu'il peut
+          noter de quoi se faire reconnaître ailleurs. */}
+      {codeDeReprise ? <MaCarteDeReprise gameId={gameId} code={codeDeReprise} /> : null}
 
       {/* ── L'état du tour, pour qui n'a pas l'écran ──
           Le bandeau qui s'affichait ici disait ce que la frise, les onglets et
