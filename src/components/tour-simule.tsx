@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { SECTOR_COLORS, type Sector } from "@/config/scenarios/registry";
+import { PictoSecteur } from "@/components/picto-secteur";
 
 /**
  * L'ÉCRAN « TOUR SIMULÉ » (solo, juste après une validation).
@@ -18,7 +19,6 @@ export function TourSimule({
   roundDays,
   finished,
   sector,
-  scenarioIcon,
 }: {
   gameId: string;
   /** Le tour qui vient d'être joué. */
@@ -28,7 +28,6 @@ export function TourSimule({
   roundDays: number;
   finished: boolean;
   sector: Sector;
-  scenarioIcon: string;
 }) {
   return (
     <main
@@ -36,9 +35,9 @@ export function TourSimule({
       className="mx-auto flex min-h-[70vh] max-w-2xl flex-col items-center justify-center px-6 py-12 text-center"
     >
       <span
-        className={`flex h-16 w-16 items-center justify-center rounded-2xl text-3xl ${SECTOR_COLORS[sector].bg}`}
+        className={`flex h-16 w-16 items-center justify-center rounded-2xl ${SECTOR_COLORS[sector].bg} ${SECTOR_COLORS[sector].accent}`}
       >
-        {scenarioIcon}
+        <PictoSecteur secteur={sector} className="h-9 w-9" />
       </span>
       <p className="mt-6 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.3em] text-amber-300">
         <span aria-hidden>✓</span> Tour simulé

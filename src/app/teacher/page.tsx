@@ -31,6 +31,7 @@ import { SubmitButton } from "@/components/submit-button";
 import { FormPendingProgress } from "@/components/long-action-progress";
 import { EnTeteEnseignant, Rubrique } from "@/components/en-tete-enseignant";
 import { Tiroir } from "@/components/tiroir";
+import { PictoSecteur } from "@/components/picto-secteur";
 import { FriseDesTours } from "@/components/frise-des-tours";
 import { ATTENTES } from "@/config/cloture";
 
@@ -186,10 +187,9 @@ export default async function TeacherDashboard({
                   className="flex min-w-0 flex-1 items-center gap-3"
                 >
                   <span
-                    aria-hidden
-                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-xl ${SECTOR_COLORS[g.sector].bg}`}
+                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${SECTOR_COLORS[g.sector].bg} ${SECTOR_COLORS[g.sector].accent}`}
                   >
-                    {g.scenarioIcon}
+                    <PictoSecteur secteur={g.sector} className="h-6 w-6" />
                   </span>
                   <span className="min-w-0 flex-1">
                     {/*
@@ -510,8 +510,8 @@ export default async function TeacherDashboard({
                   key={g.gameId}
                   className="flex flex-wrap items-center gap-3 rounded-lg border border-white/10 px-3 py-2"
                 >
-                  <span aria-hidden className="text-lg">
-                    {g.scenarioIcon}
+                  <span className={SECTOR_COLORS[g.sector].accent}>
+                    <PictoSecteur secteur={g.sector} className="h-5 w-5" />
                   </span>
                   <span className="min-w-0 flex-1">
                     <Link

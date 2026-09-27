@@ -37,7 +37,8 @@ import { codeDeRepriseDuJoueur } from "@/services/reprise.service";
 import { EcheanceDuTour } from "@/components/echeance-du-tour";
 import { mentionDeValidation } from "@/config/validation-du-tour";
 import { surtitreDePartie } from "@/config/scenarios/presentation";
-import { SECTOR_ICONS, SECTOR_COLORS, SECTOR_LABELS } from "@/config/scenarios/registry";
+import { SECTOR_COLORS, SECTOR_LABELS } from "@/config/scenarios/registry";
+import { PictoSecteur } from "@/components/picto-secteur";
 import { statutDesSituations } from "@/config/situation-rendu";
 import { AiAssistant } from "@/components/ai-assistant";
 import { entitlementsForUser } from "@/services/entitlements.service";
@@ -101,7 +102,6 @@ export default async function ArenaPage({
         roundDays={view.roundDays}
         finished={finished}
         sector={view.sector}
-        scenarioIcon={view.scenarioIcon}
       />
     );
   }
@@ -389,8 +389,14 @@ export default async function ArenaPage({
       {/* ── Header ── */}
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex items-center gap-3">
-          <span className={`flex h-12 w-12 items-center justify-center rounded-xl text-2xl ${SECTOR_COLORS[view.sector].bg}`}>
-            {view.scenarioIcon}
+          {/* LE VISAGE DU SECTEUR. L'emoji du système laissait la tuile
+              différente sur chaque appareil et illisible au vidéoprojecteur.
+              Le pictogramme prend l'accent de son secteur : neuf formes, neuf
+              couleurs, et une partie se reconnaît d'un coup d'œil. */}
+          <span
+            className={`flex h-12 w-12 items-center justify-center rounded-xl ${SECTOR_COLORS[view.sector].bg} ${SECTOR_COLORS[view.sector].accent}`}
+          >
+            <PictoSecteur secteur={view.sector} className="h-7 w-7" />
           </span>
           <div>
             <p className={`text-xs uppercase tracking-[0.3em] ${SECTOR_COLORS[view.sector].accent}`}>
@@ -417,8 +423,11 @@ export default async function ArenaPage({
               <span aria-hidden>👤</span> {view.playerPseudo}
             </a>
           ) : null}
-          <p className={`rounded-full border border-white/10 px-3 py-1 text-xs ${SECTOR_COLORS[view.sector].accent}`}>
-            {SECTOR_ICONS[view.sector]} {SECTOR_LABELS[view.sector]}
+          <p
+            className={`flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1 text-xs ${SECTOR_COLORS[view.sector].accent}`}
+          >
+            <PictoSecteur secteur={view.sector} className="h-3.5 w-3.5" />
+            {SECTOR_LABELS[view.sector]}
           </p>
           <p
             className="rounded-full border border-amber-400/30 px-3 py-1 text-xs text-amber-300"
