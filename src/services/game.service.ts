@@ -13,6 +13,7 @@ import {
 import type { ScenarioVocabulary, Sector } from "@/config/scenarios/registry";
 import { resolveScenarioDefinition } from "@/services/scenario-source.service";
 import { estArchivee, PARTIE_ARCHIVEE } from "@/services/archivage";
+import { choisirSonEquipe, peutChoisirSonEquipe } from "@/services/affectation.service";
 import { lireSource, type DecisionSourceMap } from "@/config/decision-source";
 import {
   presetFromProfile,
@@ -122,16 +123,60 @@ export async function equipesNumerotees(gameId: string): Promise<EquipeNumerotee
 }
 
 /**
- * Le nom de l'équipe que désigne un QR de table, pour le confirmer à l'élève
- * avant qu'il entre son prénom. Rien n'est révélé de plus que ce que porte
- * déjà le carton qu'il a sous les yeux.
+ * CE QUE LE CARTON VA RÉELLEMENT FAIRE, pour le dire à l'élève avant qu'il
+ * entre son prénom.
+ *
+ * L'écran annonçait d'abord le nom de l'équipe désignée, sans plus. Vérifié
+ * dans un navigateur sur une partie au quatrième tour, cela donnait « Vous
+ * rejoignez l'équipe Équipe 2 » à un élève qui restait dans son Équipe 3 : le
+ * carton ne déplace plus personne une fois le premier tour clos. L'écran
+ * mentait, et le service avait raison.
+ *
+ * Cette fonction répond donc pour CET appareil, en suivant exactement les
+ * règles de l'entrée : rien si le carton ne désigne rien ici, sinon le nom de
+ * l'équipe, celui de l'équipe déjà occupée s'il y en a une, et si le carton a
+ * encore le pouvoir de déplacer.
  */
-export async function equipeDuCarton(code: string, rang: number): Promise<string | null> {
+export interface PromesseDuCarton {
+  /** L'équipe que désigne le carton. */
+  equipe: string;
+  /** L'équipe où l'appareil se trouve déjà dans cette partie, s'il y en a une. */
+  sienne: string | null;
+  /** Le carton mènera-t-il vraiment à `equipe` ? */
+  deplacera: boolean;
+}
+
+export async function promesseDuCarton(args: {
+  code: string;
+  rang: number;
+  userId: string | null;
+}): Promise<PromesseDuCarton | null> {
   const game = (
-    await db.select().from(games).where(eq(games.joinCode, code.trim().toUpperCase()))
+    await db.select().from(games).where(eq(games.joinCode, args.code.trim().toUpperCase()))
   )[0];
-  if (!game) return null;
-  return (await equipesNumerotees(game.id)).find((e) => e.rang === rang)?.nom ?? null;
+  // En concours, l'équipe vient de l'inscription et le carton n'y peut rien.
+  if (!game || game.mode === "competition") return null;
+  const equipes = await equipesNumerotees(game.id);
+  const visee = equipes.find((e) => e.rang === args.rang);
+  if (!visee) return null;
+  if (!args.userId) return { equipe: visee.nom, sienne: null, deplacera: true };
+
+  const siennes = await db
+    .select({ teamId: players.teamId })
+    .from(players)
+    .where(
+      and(
+        inArray(players.teamId, equipes.map((e) => e.teamId)),
+        eq(players.userId, args.userId),
+      ),
+    );
+  const sienne = equipes.find((e) => e.teamId === siennes[0]?.teamId) ?? null;
+  if (!sienne) return { equipe: visee.nom, sienne: null, deplacera: true };
+  return {
+    equipe: visee.nom,
+    sienne: sienne.nom,
+    deplacera: sienne.teamId === visee.teamId || peutChoisirSonEquipe(game),
+  };
 }
 
 export async function joinGameByCode(args: {
@@ -167,21 +212,44 @@ export async function joinGameByCode(args: {
   if (args.pseudo?.trim()) {
     await db.update(users).set({ displayName: args.pseudo.trim() }).where(eq(users.id, args.userId));
   }
-  if (memberships.some((m) => m.userId === args.userId)) return { gameId: game.id };
+  // L'ÉQUIPE DEMANDÉE PAR LE CARTON DE TABLE, si elle existe dans CETTE
+  // partie. Un rang qui ne désigne rien — carton d'une autre partie, adresse
+  // tapée de travers — ne provoque rien : on retombe sur l'affectation
+  // automatique, comportement d'avant le QR.
+  //
+  // JAMAIS EN CONCOURS. Là, l'équipe vient de l'inscription et elle se
+  // qualifie d'un bloc : un carton qui la choisirait laisserait l'inscription
+  // et la partie se contredire, exactement ce que `choisirSonEquipe` refuse
+  // déjà à l'élève.
+  const demandee =
+    args.equipe && game.mode !== "competition"
+      ? (await equipesNumerotees(game.id)).find((e) => e.rang === args.equipe)?.teamId
+      : undefined;
+
+  const dejaLa = memberships.find((m) => m.userId === args.userId);
+  if (dejaLa) {
+    // LE CARTON DÉPLACE ENCORE, AU PREMIER TOUR SEULEMENT.
+    //
+    // L'élève qui a d'abord scanné le QR de la partie a été réparti d'office,
+    // puis s'est assis à une table : scanner le carton doit le rejoindre. Sans
+    // cela l'ordre des deux scans décidait de son équipe, sans que rien ne le
+    // dise.
+    //
+    // La permission n'est pas une nouvelle règle : c'est EXACTEMENT celle du
+    // geste « rejoindre mes camarades » que l'élève a déjà dans l'arène —
+    // partie de classe en cours, premier tour, hors concours. Passé ce tour,
+    // les décisions et les résultats appartiennent à l'équipe, et un scan ne
+    // déménage plus personne : le carton est alors sans effet, l'élève entre
+    // comme avant, et c'est l'enseignant qui rattache.
+    if (demandee && demandee !== dejaLa.teamId && peutChoisirSonEquipe(game)) {
+      await choisirSonEquipe({ gameId: game.id, userId: args.userId, teamId: demandee });
+    }
+    return { gameId: game.id };
+  }
 
   // LA TABLE D'ABORD, LE REMPLISSAGE ENSUITE. Quand l'élève a scanné le carton
   // d'une table, il a choisi son équipe en s'asseyant : on ne la lui reprend
-  // pas pour équilibrer les effectifs. Un rang qui ne désigne rien — carton
-  // d'une autre partie, adresse tapée de travers — retombe sur l'affectation
-  // automatique, qui reste le comportement par défaut.
-  //
-  // Ce n'est vrai qu'à la PREMIÈRE entrée : plus haut, l'élève déjà inscrit
-  // repart avec son équipe. Rescanner un autre carton en cours de partie ne
-  // déplace personne ; le changement d'équipe a son geste à lui, au premier
-  // tour, et c'est l'élève qui le fait sciemment.
-  const demandee = args.equipe
-    ? (await equipesNumerotees(game.id)).find((e) => e.rang === args.equipe)?.teamId
-    : undefined;
+  // pas pour équilibrer les effectifs.
   const counts = new Map(teamRows.map((t) => [t.id, 0]));
   for (const m of memberships) counts.set(m.teamId, (counts.get(m.teamId) ?? 0) + 1);
   const target =

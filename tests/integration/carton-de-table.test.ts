@@ -20,7 +20,12 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
  * · CE QUI NE DÉSIGNE RIEN NE CASSE RIEN : on retombe sur l'affectation
  *   automatique, comportement d'avant le QR.
  *
- * · RESCANNER NE DÉPLACE PERSONNE. Le changement d'équipe a son geste à lui.
+ * · L'ORDRE DES DEUX SCANS NE DÉCIDE PAS DE L'ÉQUIPE. L'élève qui a d'abord
+ *   scanné le QR de la partie a été réparti d'office ; scanner ensuite le
+ *   carton de sa table doit le rejoindre. Mais au PREMIER TOUR seulement, sous
+ *   exactement la permission du geste « rejoindre mes camarades » qu'il a déjà
+ *   dans l'arène : passé ce tour, les décisions appartiennent à l'équipe, et
+ *   un scan ne déménage plus personne.
  */
 
 vi.mock("@/db", async () => {
@@ -28,21 +33,32 @@ vi.mock("@/db", async () => {
   return { db: await createTestDb() };
 });
 
+import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { users } from "@/db/schema";
+import { games, users } from "@/db/schema";
 import { getTeacherOrgId, registerTeacher } from "@/services/auth.service";
 import {
   createClassGame,
-  equipeDuCarton,
+  promesseDuCarton,
   equipesNumerotees,
   joinGameByCode,
   nommerEquipe,
+  resolveCurrentRound,
 } from "@/services/game.service";
 import { compositionDesEquipes } from "@/services/affectation.service";
 
 let prof: string;
 let gameId: string;
 let joinCode: string;
+
+/** De quoi clore un tour : l'élève valide, la partie résout. */
+const DECISIONS = {
+  price: 59,
+  productionPlan: 1000,
+  marketingBudget: 3000,
+  qualityBudget: 0,
+  maintenanceBudget: 0,
+};
 
 /** Un élève tout neuf : c'est un appareil qui arrive, pas un compte. */
 let suivant = 0;
@@ -100,9 +116,10 @@ describe("le rang d'équipe", () => {
 
   it("nomme l'équipe d'un carton, et refuse ce qui ne désigne rien", async () => {
     const [premiere] = await equipesNumerotees(gameId);
-    expect(await equipeDuCarton(joinCode, premiere!.rang)).toBe(premiere!.nom);
-    expect(await equipeDuCarton(joinCode, 99)).toBeNull();
-    expect(await equipeDuCarton("ZZZZZZ", 1)).toBeNull();
+    const vu = await promesseDuCarton({ code: joinCode, rang: premiere!.rang, userId: null });
+    expect(vu).toEqual({ equipe: premiere!.nom, sienne: null, deplacera: true });
+    expect(await promesseDuCarton({ code: joinCode, rang: 99, userId: null })).toBeNull();
+    expect(await promesseDuCarton({ code: "ZZZZZZ", rang: 1, userId: null })).toBeNull();
   });
 });
 
@@ -125,17 +142,72 @@ describe("l'élève qui scanne le carton de sa table", () => {
     expect(composition.find((e) => e.nom === visee.nom)!.membres).toHaveLength(4);
   });
 
-  it("garde son équipe s'il rescanne le carton d'une autre table", async () => {
+  it("rejoint la table de ses camarades même s'il était déjà entré", async () => {
     const equipes = await equipesNumerotees(gameId);
+    // Premier scan : celui de la PARTIE, sans carton. L'application répartit.
     const eleveId = await eleve("Elias");
-    await joinGameByCode({ code: joinCode, userId: eleveId, equipe: equipes[0]!.rang });
-    expect(await equipeDe(eleveId)).toBe(equipes[0]!.nom);
+    await joinGameByCode({ code: joinCode, userId: eleveId });
+    const dOffice = await equipeDe(eleveId);
+    expect(dOffice).not.toBeNull();
 
-    // Deuxième passage avec un autre carton : rien ne bouge. Déplacer
-    // quelqu'un en cours de partie sur un simple scan lui ferait perdre son
-    // équipe sans qu'il l'ait demandé.
-    await joinGameByCode({ code: joinCode, userId: eleveId, equipe: equipes[3]!.rang });
-    expect(await equipeDe(eleveId)).toBe(equipes[0]!.nom);
+    // Puis il s'assoit et scanne le carton de sa table. Sans ce déplacement,
+    // c'est l'ORDRE des deux scans qui aurait décidé de son équipe.
+    const table = equipes.find((e) => e.nom !== dOffice)!;
+    await joinGameByCode({ code: joinCode, userId: eleveId, equipe: table.rang });
+    expect(await equipeDe(eleveId)).toBe(table.nom);
+
+    // Et il n'est pas resté dans les deux : on déplace, on ne duplique pas.
+    const composition = await compositionDesEquipes(gameId);
+    expect(
+      composition.filter((e) => e.membres.some((m) => m.userId === eleveId)),
+    ).toHaveLength(1);
+  });
+
+  it("n'est pas déplacé par un carton une fois le premier tour clos", async () => {
+    // Une partie à part : celle du reste du fichier doit rester au tour 1.
+    const partie = await createClassGame({
+      teacherId: prof,
+      organizationId: (await getTeacherOrgId(prof))!,
+      periodicity: "quarter",
+      humanTeamsCount: 3,
+      botCount: 0,
+      seed: 7,
+    });
+    const equipes = await equipesNumerotees(partie.gameId);
+    const eleveId = await eleve("Jonas");
+    await joinGameByCode({ code: partie.joinCode, userId: eleveId, equipe: equipes[0]!.rang });
+
+    await resolveCurrentRound({
+      gameId: partie.gameId,
+      userId: eleveId,
+      playerDecisions: DECISIONS,
+    });
+
+    // Le carton d'une autre table ne le déménage plus : ses décisions et ses
+    // résultats appartiennent désormais à son équipe. Il entre quand même.
+    const r = await joinGameByCode({
+      code: partie.joinCode,
+      userId: eleveId,
+      equipe: equipes[2]!.rang,
+    });
+    expect(r).not.toHaveProperty("error");
+    const composition = await compositionDesEquipes(partie.gameId);
+    const sienne = composition.find((e) => e.membres.some((m) => m.userId === eleveId));
+    expect(sienne!.teamId).toBe(equipes[0]!.teamId);
+
+    // ET L'ÉCRAN NE PROMET PAS LE CONTRAIRE. Il annonçait « Vous rejoignez
+    // l'équipe X » à un élève qui restait dans la sienne : trouvé dans le
+    // navigateur sur une partie au quatrième tour.
+    const promesse = await promesseDuCarton({
+      code: partie.joinCode,
+      rang: equipes[2]!.rang,
+      userId: eleveId,
+    });
+    expect(promesse).toEqual({
+      equipe: equipes[2]!.nom,
+      sienne: equipes[0]!.nom,
+      deplacera: false,
+    });
   });
 
   it("est réparti automatiquement si le rang ne désigne rien", async () => {
@@ -176,5 +248,47 @@ describe("le renommage, qui aurait tout cassé", () => {
       e.membres.some((m) => m.userId === apresRenommage),
     );
     expect(equipeReelle!.teamId).toBe(cible.teamId);
+  });
+});
+
+describe("le concours, où la table ne décide pas", () => {
+  it("ignore le carton : l'équipe vient de l'inscription", async () => {
+    // Une partie de classe dont on bascule le MODE : c'est le seul élément qui
+    // entre dans la règle, et monter un tournoi entier pour l'éprouver
+    // n'apprendrait rien de plus sur elle.
+    const partie = await createClassGame({
+      teacherId: prof,
+      organizationId: (await getTeacherOrgId(prof))!,
+      periodicity: "quarter",
+      humanTeamsCount: 3,
+      botCount: 0,
+      seed: 7,
+    });
+    const equipes = await equipesNumerotees(partie.gameId);
+    // On remplit d'abord la table visée, tant que la partie est encore une
+    // partie de classe : sans cela l'affectation automatique pourrait tomber
+    // dessus par hasard, et le test ne prouverait rien.
+    for (const nom of ["Lina", "Malik"]) {
+      await joinGameByCode({
+        code: partie.joinCode,
+        userId: await eleve(nom),
+        equipe: equipes[2]!.rang,
+      });
+    }
+    await db.update(games).set({ mode: "competition" }).where(eq(games.id, partie.gameId));
+
+    // L'écran d'entrée n'annonce rien : promettre une table que l'entrée ne
+    // donnera pas serait pire que de ne rien dire.
+    expect(
+      await promesseDuCarton({ code: partie.joinCode, rang: equipes[2]!.rang, userId: null }),
+    ).toBeNull();
+
+    // Et l'entrée elle-même retombe sur l'affectation automatique : la
+    // première équipe, vide comme les autres, et non celle du carton.
+    const eleveId = await eleve("Kenza");
+    await joinGameByCode({ code: partie.joinCode, userId: eleveId, equipe: equipes[2]!.rang });
+    const composition = await compositionDesEquipes(partie.gameId);
+    const sienne = composition.find((e) => e.membres.some((m) => m.userId === eleveId));
+    expect(sienne!.teamId).not.toBe(equipes[2]!.teamId);
   });
 });

@@ -94,11 +94,22 @@ export default async function CartonsPage({
         </Link>
         <p className="ml-auto max-w-[95mm] text-xs text-slate-600">
           Imprimez (Ctrl+P), découpez, posez un carton par table. L&apos;élève qui le scanne
-          entre dans l&apos;équipe de sa table.
+          entre dans l&apos;équipe de sa table — même s&apos;il était déjà entré par le code,
+          tant que le premier tour n&apos;est pas clos.
         </p>
       </header>
 
-      {equipes.length === 0 || !view.joinCode ? (
+      {view.mode === "competition" ? (
+        /* EN CONCOURS, LA TABLE NE DÉCIDE PAS. L'équipe vient de l'inscription
+           et se qualifie d'un bloc : un carton qui la choisirait laisserait
+           l'inscription et la partie se contredire. Le service le refuse, donc
+           on n'imprime pas des cartons qui n'auraient aucun effet. */
+        <p className="mx-auto max-w-[190mm] px-4 py-10 text-sm text-slate-400">
+          En concours, chaque équipe vient de son inscription : elle ne se choisit pas en
+          s&apos;asseyant. Donnez le code de la partie, les élèves retrouvent l&apos;équipe
+          sous laquelle ils sont inscrits.
+        </p>
+      ) : equipes.length === 0 || !view.joinCode ? (
         <p className="mx-auto max-w-[190mm] px-4 py-10 text-sm text-slate-400">
           Cette partie n&apos;a pas d&apos;équipe humaine à qui donner une table.
         </p>

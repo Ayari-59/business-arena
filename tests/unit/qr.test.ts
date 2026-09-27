@@ -237,6 +237,17 @@ describe("le chemin complet, du QR au champ", () => {
     expect(page).toContain("codeInitial={codeInitial}");
   });
 
+  it("elle n'annonce une équipe que si l'entrée la donnera vraiment", () => {
+    const page = lire("src/app/join/page.tsx");
+    // Le cookie d'invité est LU, jamais créé : afficher un écran ne doit pas
+    // inscrire un utilisateur.
+    expect(page).toContain("getGuestUserId()");
+    expect(page).not.toContain("getOrCreateGuestUserId");
+    // Et c'est le service qui décide, pas la page.
+    expect(page).toContain("carton?.deplacera");
+    expect(page).toContain("equipeInitiale={carton?.deplacera ? rang : null}");
+  });
+
   it("le champ est rempli d'avance et le curseur va au prénom", () => {
     const form = lire("src/components/join-form.tsx");
     expect(form).toContain("defaultValue={codeInitial ?? undefined}");
