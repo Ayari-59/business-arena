@@ -72,6 +72,13 @@ export const games = pgTable(
     opensAt: timestamp("opens_at", { withTimezone: true }),
     closesAt: timestamp("closes_at", { withTimezone: true }),
     joinCode: text("join_code").unique(), // code d'invitation des joueurs (parties de classe)
+    // LE NOM QUE L'ENSEIGNANT DONNE À SA PARTIE.
+    //
+    // La liste affichait six fois « NOVA », avec la même icône et la même
+    // allure : rien ne disait laquelle était celle de la seconde 3. Le nom est
+    // facultatif — une partie sans nom garde celui de son scénario — et ne sert
+    // qu'à la retrouver : ni les élèves ni le classement ne le voient.
+    label: text("label"),
     createdBy: uuid("created_by")
       .notNull()
       .references(() => users.id, { onDelete: "restrict" }),

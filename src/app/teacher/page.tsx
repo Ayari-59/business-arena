@@ -12,7 +12,7 @@ import {
   logoutEverywhereAction,
 } from "./actions";
 import { periodLabel } from "@/config/scenarios/periodicity";
-import { compter } from "@/lib/format";
+import { compter, jourDeCreation } from "@/lib/format";
 import { DEFAULT_QUIZ_MODE, DIFFICULTY_PRESETS, QUIZ_MODES } from "@/config/difficulty";
 import {
   DEFAULT_SCENARIO_CODE,
@@ -55,6 +55,8 @@ export default async function TeacherDashboard({
   const session = await getSession();
   if (!session) redirect("/teacher/login");
   const games = await getTeacherGames(session.userId);
+  // Ce qui appelle un geste : une partie dont toutes les équipes ont rendu.
+  const aClore = games.filter((g) => g.aClore);
   // Les parties rangées ne sont pas dans la liste : elles attendent en bas, et
   // se ressortent d'un clic. `getTeacherGames` rend TOUT quand on le lui
   // demande, d'où le filtre ici plutôt qu'un second aller-retour.
@@ -125,6 +127,33 @@ export default async function TeacherDashboard({
       <Rubrique note={games.length > 0 ? compter(games.length, "partie") : undefined}>
         Mes parties
       </Rubrique>
+      {/*
+        LA PROCHAINE ACTION, AVANT LA LISTE.
+        Le compte des parties ne dit pas quoi faire. Ce qui appelle un geste,
+        c'est une partie dont toutes les équipes ont rendu : elle attend une
+        clôture, et cela ne se lisait qu'en ouvrant chaque partie une à une.
+        La ligne n'apparaît que s'il y a quelque chose à faire — une ligne qui
+        dit « rien à faire » est une ligne de plus à lire chaque fois.
+      */}
+      {aClore.length > 0 ? (
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-amber-400/35 bg-amber-400/5 px-3 py-2 text-sm text-amber-200">
+          <span aria-hidden>⏳</span>
+          <span>
+            {aClore.length === 1
+              ? "Une partie attend sa clôture :"
+              : `${aClore.length} parties attendent leur clôture :`}
+          </span>
+          {aClore.map((g) => (
+            <Link
+              key={g.gameId}
+              href={`/teacher/games/${g.gameId}`}
+              className="font-semibold underline-offset-4 hover:underline"
+            >
+              {g.label ?? g.scenarioShortName}
+            </Link>
+          ))}
+        </p>
+      ) : null}
       {games.length === 0 ? (
         <p className="rounded-lg border border-dashed border-white/15 px-4 py-5 text-center text-sm text-slate-400">
           Aucune partie pour l&apos;instant. Créez la première ci-dessous : vous obtiendrez un
@@ -177,14 +206,44 @@ export default async function TeacherDashboard({
                       qu'un seuil de largeur qui coupe presque partout, le nom
                       court tient toujours.
                     */}
-                    <span className="block truncate text-sm font-semibold text-slate-100">
-                      {g.scenarioShortName}
+                    {/*
+                      LE NOM QUE VOUS AVEZ DONNÉ, S'IL Y EN A UN. Six parties
+                      s'appelaient « NOVA », avec la même icône et la même
+                      allure : rien ne disait laquelle était celle de la
+                      seconde 3. Le scénario passe alors en sous-titre, où il
+                      reste lisible sans occuper la ligne qui distingue.
+                    */}
+                    <span className="flex min-w-0 items-center gap-2">
+                      <span className="block truncate text-sm font-semibold text-slate-100">
+                        {g.label ?? g.scenarioShortName}
+                      </span>
+                      {/* L'ÉTAT, EN UN MOT ET EN COULEUR. « Toutes les équipes
+                          ont rendu » est la seule chose qui appelle un geste,
+                          et elle ne se lisait qu'en ouvrant la partie. */}
+                      {finished ? (
+                        <span className="shrink-0 rounded-full border border-white/10 px-2 py-0.5 text-[0.7rem] text-slate-400">
+                          terminée
+                        </span>
+                      ) : g.aClore ? (
+                        <span className="shrink-0 rounded-full border border-amber-400/50 bg-amber-400/10 px-2 py-0.5 text-[0.7rem] font-medium text-amber-200">
+                          tour à clore
+                        </span>
+                      ) : null}
                     </span>
-                    <span className="mt-0.5 block text-xs text-slate-400">
-                      {compter(g.teamsCount, "équipe")} ·{" "}
+                    {/* La ligne de détail a le droit de passer à la ligne : à
+                        1280 px la colonne fait 187 px, et « NOVA · 3 équipes ·
+                        18 élèves · tour 4 sur 6 · samedi » en demande le
+                        double. Coupée, elle perdait la date, qui est
+                        justement ce qui distingue deux parties du même nom. */}
+                    <span className="mt-0.5 block text-xs leading-snug text-slate-400">
+                      {g.label ? `${g.scenarioShortName} · ` : ""}
+                      {compter(g.teamsCount, "équipe")}
+                      {g.elevesCount > 0 ? ` · ${compter(g.elevesCount, "élève")}` : ""} ·{" "}
                       {finished
                         ? "partie terminée"
                         : `${periodLabel(g.roundDays, g.currentRound)} sur ${g.roundsCount}`}
+                      {" · "}
+                      {jourDeCreation(g.createdAt)}
                     </span>
                     <span className="mt-1.5 block">
                       <FriseDesTours

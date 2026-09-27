@@ -24,6 +24,7 @@ import { RoundStatusPoller } from "@/components/round-status-poller";
 import {
   archiverPartieAction,
   creerLesCodesManquantsAction,
+  nommerLaPartieAction,
   reinitialiserPartieAction,
   supprimerPartieAction,
   setGameScheduleAction,
@@ -34,6 +35,7 @@ import { utcToParisLocalInput } from "@/lib/paris-time";
 import { JustificationsReview } from "@/components/justifications-review";
 import { EnTeteEnseignant, Rubrique } from "@/components/en-tete-enseignant";
 import { Tiroir } from "@/components/tiroir";
+import { NOM_PARTIE_MAX } from "@/services/game.service";
 import { CodesDeReprise } from "@/components/codes-de-reprise";
 import { codesDeRepriseDeLaPartie, joueursSansCode } from "@/services/reprise.service";
 import { FriseDesTours } from "@/components/frise-des-tours";
@@ -910,7 +912,43 @@ export default async function TeacherGamePage({
         plus haut change comment la partie se joue ; ici, on range, on
         recommence, on supprime.
       */}
-      <Rubrique note="rangement, remise à zéro, suppression">Gérer cette partie</Rubrique>
+      <Rubrique note="nom, rangement, remise à zéro, suppression">Gérer cette partie</Rubrique>
+
+      {/*
+        NOMMER LA PARTIE, POUR LA RETROUVER.
+        Six parties du même scénario s'appelaient toutes « NOVA » dans la
+        liste : le nom de la classe est la seule chose qui les distingue. Il
+        est facultatif, se change à tout moment, et s'efface en validant un
+        champ vide. Personne d'autre ne le voit : ni les élèves, ni le
+        classement, ni le relevé de notes.
+      */}
+      <Tiroir titre="✎ Nommer cette partie" quoi={view.label ?? "sans nom"}>
+        <GuardedForm
+          action={nommerLaPartieAction.bind(null, gameId)}
+          label="nom de la partie"
+          className="flex flex-wrap items-end gap-2 px-3 pb-3"
+        >
+          <label className="min-w-0 flex-1">
+            <span className="block text-xs text-slate-400">
+              Le nom sous lequel vous la retrouverez, par exemple « Seconde 3 » ou « BTS MCO
+              groupe B ». Videz le champ pour revenir au nom du scénario.
+            </span>
+            <input
+              name="nom"
+              defaultValue={view.label ?? ""}
+              maxLength={NOM_PARTIE_MAX}
+              className="mt-1 w-full champ px-3 py-2 text-sm text-slate-100 outline-none"
+              placeholder={view.scenarioTitle}
+            />
+          </label>
+          <SubmitButton
+            pendingLabel="Enregistrement…"
+            className="rounded-lg border border-white/15 px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-amber-400/40 hover:text-amber-200"
+          >
+            Enregistrer
+          </SubmitButton>
+        </GuardedForm>
+      </Tiroir>
 
       {/*
         LE RANGEMENT EST LE DERNIER GESTE DE LA PAGE, et c'est sa place : on ne

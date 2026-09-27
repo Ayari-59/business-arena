@@ -351,6 +351,18 @@ export interface TeacherGameSummary {
   roundsCount: number;
   roundDays: number;
   teamsCount: number;
+  /** Le nom donné par l'enseignant, s'il en a donné un. */
+  label: string | null;
+  /** Combien d'élèves sont entrés : une partie vide se reconnaît de loin. */
+  elevesCount: number;
+  /**
+   * Toutes les équipes humaines ont rendu leurs décisions du tour courant.
+   *
+   * C'est la seule chose qui appelle un geste de l'enseignant, et elle ne se
+   * lisait qu'en ouvrant la partie. Fausse quand la partie est finie : il n'y
+   * a plus rien à clore.
+   */
+  aClore: boolean;
   createdAt: Date;
   /** Rangée le… — absente tant que la partie est à sa place dans la liste. */
   archivedAt: Date | null;
@@ -361,6 +373,34 @@ export interface TeacherGameSummary {
   scenarioShortName: string;
   scenarioIcon: string;
   sector: Sector;
+}
+
+/** La longueur d'un nom de partie : une ligne de liste, pas une phrase. */
+export const NOM_PARTIE_MAX = 60;
+
+/**
+ * NOMMER SA PARTIE, POUR LA RETROUVER.
+ *
+ * La liste affichait six fois « NOVA » : le nom de la classe est la seule
+ * chose qui distingue deux parties du même scénario. Il est facultatif, se
+ * change à tout moment, et s'efface en validant un champ vide — une partie
+ * sans nom reprend celui de son scénario.
+ *
+ * Personne d'autre ne le voit : ni les élèves, ni le classement, ni le relevé.
+ * C'est une étiquette sur un dossier, pas un titre.
+ */
+export async function nommerLaPartie(args: {
+  gameId: string;
+  teacherId: string;
+  nom: string;
+}): Promise<void> {
+  const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
+  if (!game || game.createdBy !== args.teacherId) throw new Error("Partie introuvable");
+  const propre = args.nom.trim().slice(0, NOM_PARTIE_MAX);
+  await db
+    .update(games)
+    .set({ label: propre.length > 0 ? propre : null })
+    .where(eq(games.id, args.gameId));
 }
 
 export async function getTeacherGames(
@@ -381,11 +421,57 @@ export async function getTeacherGames(
   if (classGames.length === 0) return [];
   const gameIds = classGames.map((g) => g.id);
   const allTeams = await db
-    .select({ gameId: teams.gameId })
+    .select({ gameId: teams.gameId, teamId: teams.id })
     .from(teams)
     .where(and(inArray(teams.gameId, gameIds), eq(teams.controller, "human")));
   const countByGame = new Map<string, number>();
   for (const t of allTeams) countByGame.set(t.gameId, (countByGame.get(t.gameId) ?? 0) + 1);
+
+  // COMBIEN D'ÉLÈVES, ET QUI A RENDU. Trois requêtes groupées pour toute la
+  // liste, et non trois par partie : la page en affiche autant qu'il y a de
+  // classes dans l'année.
+  const teamIds = allTeams.map((t) => t.teamId);
+  const partieDeLEquipe = new Map(allTeams.map((t) => [t.teamId, t.gameId]));
+  const inscrits =
+    teamIds.length > 0
+      ? await db
+          .select({ teamId: players.teamId })
+          .from(players)
+          .where(inArray(players.teamId, teamIds))
+      : [];
+  const elevesParPartie = new Map<string, number>();
+  for (const p of inscrits) {
+    const g = partieDeLEquipe.get(p.teamId);
+    if (g) elevesParPartie.set(g, (elevesParPartie.get(g) ?? 0) + 1);
+  }
+
+  const toursCourants = await db
+    .select({ id: rounds.id, gameId: rounds.gameId, index: rounds.index })
+    .from(rounds)
+    .where(inArray(rounds.gameId, gameIds));
+  const tourCourantDe = new Map<string, string>();
+  for (const g of classGames) {
+    const r = toursCourants.find((t) => t.gameId === g.id && t.index === g.currentRound);
+    if (r) tourCourantDe.set(g.id, r.id);
+  }
+  const roundIds = [...tourCourantDe.values()];
+  const rendues =
+    roundIds.length > 0
+      ? await db
+          .select({ roundId: decisions.roundId, teamId: decisions.teamId })
+          .from(decisions)
+          .where(
+            and(
+              inArray(decisions.roundId, roundIds),
+              inArray(decisions.status, ["validated", "locked"]),
+            ),
+          )
+      : [];
+  const renduesParPartie = new Map<string, number>();
+  for (const d of rendues) {
+    const g = partieDeLEquipe.get(d.teamId);
+    if (g) renduesParPartie.set(g, (renduesParPartie.get(g) ?? 0) + 1);
+  }
   return Promise.all(
     classGames.map(async (g) => {
       const def = await resolveScenarioDefinition(
@@ -399,6 +485,12 @@ export async function getTeacherGames(
         roundsCount: (g.scenarioSnapshot as { roundsCount: number }).roundsCount,
         roundDays: (g.scenarioSnapshot as { roundDays: number }).roundDays,
         teamsCount: countByGame.get(g.id) ?? 0,
+        label: g.label,
+        elevesCount: elevesParPartie.get(g.id) ?? 0,
+        aClore:
+          g.status === "running" &&
+          (countByGame.get(g.id) ?? 0) > 0 &&
+          (renduesParPartie.get(g.id) ?? 0) >= (countByGame.get(g.id) ?? 0),
         createdAt: g.createdAt,
         archivedAt: g.archivedAt,
         scenarioCode: def.code,
@@ -560,6 +652,8 @@ export async function setRoundWindows(args: {
 export interface TeacherGameView {
   gameId: string;
   joinCode: string | null;
+  /** Le nom donné par l'enseignant à cette partie, s'il en a donné un. */
+  label: string | null;
   status: string;
   mode: "learning" | "competition" | "contest";
   /** Cartes annoncées pour le prochain tour (teamId null = toute la classe). */
@@ -701,6 +795,7 @@ export async function getTeacherGameView(
   return {
     gameId,
     joinCode: game.joinCode,
+    label: game.label,
     status: game.status,
     mode: game.mode,
     pendingEvents: readPendingEvents(game.difficultyProfile).map((card) => ({

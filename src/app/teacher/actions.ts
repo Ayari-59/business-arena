@@ -18,6 +18,7 @@ import {
   createClassGame,
   desarchiverPartie,
   distribuerUnCourrier,
+  nommerLaPartie,
   reinitialiserPartie,
   setGameSchedule,
   setQuizMode,
@@ -377,6 +378,25 @@ export async function archiverPartieAction(gameId: string): Promise<void> {
   await archiverPartie({ gameId, teacherId: session.userId });
   revalidatePath("/teacher");
   redirect("/teacher");
+}
+
+/**
+ * NOMMER UNE PARTIE, POUR LA RETROUVER DANS LA LISTE.
+ *
+ * Un champ vide efface le nom : la partie reprend celui de son scénario. Le
+ * geste se refait autant de fois qu'on veut, et personne d'autre que
+ * l'enseignant ne voit ce nom.
+ */
+export async function nommerLaPartieAction(gameId: string, formData: FormData): Promise<void> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  await nommerLaPartie({
+    gameId,
+    teacherId: session.userId,
+    nom: String(formData.get("nom") ?? ""),
+  });
+  revalidatePath(`/teacher/games/${gameId}`);
+  revalidatePath("/teacher");
 }
 
 /**
