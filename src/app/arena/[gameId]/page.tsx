@@ -399,13 +399,24 @@ export default async function ArenaPage({
             <h1 className="text-2xl font-bold text-slate-50">{view.playerTeamName}</h1>
           </div>
         </div>
+        {/* LE BANDEAU DE JEU. Il ne porte plus que l'état de la partie : qui
+            joue, dans quel secteur, à quel niveau, où en est la frise, quel
+            IPG, et l'heure de fermeture. « Mon profil » et « Fiches notions »
+            sont de la navigation, pas du jeu : ils sont descendus avec le reste
+            de ce qui n'est pas le jeu, et restent dans le plan du site. */}
         <div className="flex flex-wrap items-center gap-2">
-          <Link href="/profile" className="text-xs text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline">
-            Mon profil
-          </Link>
-          <Link href="/notions" className="text-xs text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline">
-            Fiches notions
-          </Link>
+          {/* Sous quel nom on décide. En salle informatique le poste passe
+              d'une classe à l'autre : sans ce rappel, un élève joue sous
+              l'identité du précédent sans jamais l'apprendre. Il mène au bloc
+              qui permet de libérer l'appareil. */}
+          {view.kind !== "solo" && view.playerPseudo ? (
+            <a
+              href="#mon-profil"
+              className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300 transition hover:border-white/25 hover:text-slate-100"
+            >
+              <span aria-hidden>👤</span> {view.playerPseudo}
+            </a>
+          ) : null}
           <p className={`rounded-full border border-white/10 px-3 py-1 text-xs ${SECTOR_COLORS[view.sector].accent}`}>
             {SECTOR_ICONS[view.sector]} {SECTOR_LABELS[view.sector]}
           </p>
@@ -451,23 +462,6 @@ export default async function ArenaPage({
           />
         </div>
       </header>
-
-      {/* Sous quel nom on décide, et la sortie à côté. En salle informatique le
-          poste passe d'une classe à l'autre : sans ce rappel, un élève joue
-          sous l'identité du précédent sans jamais l'apprendre. Jamais en solo :
-          personne d'autre ne s'assied devant cet écran-là. */}
-      {view.kind !== "solo" && view.playerPseudo ? (
-        <IdentiteDeLAppareil
-          pseudo={view.playerPseudo}
-          equipe={view.playerTeamName}
-          variante="arene"
-        />
-      ) : null}
-
-      {/* SA CLÉ, À CÔTÉ DE SON NOM. C'est le même sujet — qui joue sur cet
-          appareil — et c'est ici, tant qu'il est encore reconnu, qu'il peut
-          noter de quoi se faire reconnaître ailleurs. */}
-      {codeDeReprise ? <MaCarteDeReprise gameId={gameId} code={codeDeReprise} /> : null}
 
       {/* ── L'état du tour, pour qui n'a pas l'écran ──
           Le bandeau qui s'affichait ici disait ce que la frise, les onglets et
@@ -515,38 +509,6 @@ export default async function ArenaPage({
         </div>
       ) : null}
 
-      {/*
-        ── Composition des équipes ──
-        Le code d'invitation range dans l'équipe la moins remplie : l'élève
-        arrivé avec son groupe se retrouve seul ailleurs, et celui qui revient
-        d'un autre poste — cookie d'invité perdu — est réaffecté au hasard sans
-        qu'aucun message ne le prévienne. Ouvert au premier tour, replié
-        ensuite : passé la clôture, il ne reste qu'à lire qui est où et à le
-        signaler à l'enseignant.
-      */}
-      {!finished && view.equipesDeLaClasse.length > 1 ? (
-        view.peutChoisirSonEquipe ? (
-          <ChoixEquipe
-            gameId={gameId}
-            equipes={view.equipesDeLaClasse}
-            monEquipeId={view.playerTeamId}
-            ouvert
-          />
-        ) : (
-          <Tiroir
-            titre="👥 Composition des équipes"
-            quoi={compter(view.equipesDeLaClasse.length, "équipe")}
-          >
-            <ChoixEquipe
-              gameId={gameId}
-              equipes={view.equipesDeLaClasse}
-              monEquipeId={view.playerTeamId}
-              ouvert={false}
-              concours={view.estUnConcours}
-            />
-          </Tiroir>
-        )
-      ) : null}
 
       {/* ── Victory / End screen ── */}
       {finished ? (
@@ -589,129 +551,20 @@ export default async function ArenaPage({
         interne d'une carte (py-3), sans quoi l'œil ne sait plus où finit un
         tour et où commence le suivant.
       */}
+      {/*
+        LE TOUR À JOUER EN PREMIER.
+
+        La frise des tours clos ouvrait cette section, et commençait au tour
+        1 : mesuré dans le navigateur, un élève qui ouvrait sa partie sur
+        téléphone voyait 461 px d'administration puis le tour 1, et devait
+        descendre une page de 2 718 px pour atteindre le tour qu'il avait à
+        jouer. Il arrive maintenant dessus.
+
+        Les tours clos gardent leur place juste dessous, le dernier ouvert :
+        on lit ses résultats avant de décider, et c'est le lien en tête du
+        tour en cours qui y mène.
+      */}
       <div className="space-y-4">
-        {periods.length > 0 ? (
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-            {finished ? "Vos tours" : "Tours passés"}
-          </p>
-        ) : null}
-
-        {periods.map((p) => {
-          const isLatest = p.round === latestRound;
-          const dr = debriefByRound.get(p.round);
-          const netIncome = p.result.incomeStatement.netIncome;
-          const netTreasury = p.result.functionalBalance.netTreasury;
-          return (
-            <details
-              key={p.round}
-              // Cible du retour après une validation en solo : la période la plus
-              // récente, déjà ouverte sur son onglet Résultats. scroll-mt dégage
-              // la hauteur de l'en-tête collant pour que le titre reste visible.
-              id={isLatest ? "dernier-resultat" : undefined}
-              open={isLatest}
-              // bg-slate-900/60 et non slate-950/40 : sur le fond de page, une
-              // carte à 40 % de slate-950 n'était qu'un contour. Quatre contours
-              // à la file se lisaient comme une grille, pas comme quatre tours.
-              className={`group scroll-mt-24 rounded-xl border border-white/10 border-l-2 bg-slate-900/60 [&:not([open])]:border-dashed [&[open]]:border-white/20 ${
-                netIncome >= 0 ? "border-l-emerald-400/60" : "border-l-rose-400/60"
-              }`}
-            >
-              {/*
-                LE NUMÉRO FAIT LA SÉPARATION. Il était noyé derrière un 📊
-                répété — l'œil tombait sur une icône identique d'un tour à
-                l'autre au lieu de trouver 1, 2, 3. En pastille à gauche, les
-                numéros font colonne et donnent une colonne vertébrale à la
-                liste ; leur couleur dit du même coup si le tour a été gagné ou
-                perdu, sans ajouter un signal de plus.
-              */}
-              <summary className="flex cursor-pointer list-none items-center gap-3 px-3 py-3 sm:px-4 [&::-webkit-details-marker]:hidden">
-                <span
-                  aria-hidden
-                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold tabular-nums ${
-                    netIncome >= 0
-                      ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-300"
-                      : "border-rose-400/40 bg-rose-400/10 text-rose-300"
-                  }`}
-                >
-                  {p.round}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-semibold text-slate-100">
-                    {periodLabel(view.roundDays, p.round)}
-                    {isLatest && !finished ? (
-                      <span className="ml-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-xs font-medium text-emerald-300">
-                        résultats livrés
-                      </span>
-                    ) : null}
-                  </span>
-                  {/* Les trois chiffres du tour, chacun insécable : la ligne se
-                      replie ENTRE deux chiffres, jamais au milieu d'un montant. */}
-                  <span className="mt-0.5 flex flex-wrap gap-x-1.5 gap-y-0.5 text-xs tabular-nums text-slate-400">
-                    <span className="whitespace-nowrap">
-                      CA {formatEuro(p.result.incomeStatement.revenue)}
-                      <span aria-hidden className="text-slate-400"> ·</span>
-                    </span>
-                    <span
-                      className={`whitespace-nowrap ${netIncome >= 0 ? "text-emerald-300" : "text-rose-300"}`}
-                    >
-                      {netIncome >= 0 ? "+" : ""}
-                      {formatEuro(netIncome)}
-                      <span aria-hidden className="text-slate-400"> ·</span>
-                    </span>
-                    <span
-                      className={`whitespace-nowrap ${netTreasury >= 0 ? "text-slate-400" : "text-rose-300"}`}
-                    >
-                      tréso {formatEuro(netTreasury)}
-                    </span>
-                  </span>
-                </span>
-                <span
-                  aria-hidden
-                  className="shrink-0 text-xs text-amber-400/80 transition-transform group-open:rotate-90"
-                >
-                  ▸
-                </span>
-              </summary>
-              <div className="border-t border-white/10 px-2 py-2.5 sm:p-4">
-                {/* Les trois facettes d'une période close : ce qu'on a analysé
-                    (Situation + correction), ce qu'on a décidé, ce qui en est
-                    ressorti. Les onglets ne s'opposent pas à l'accordéon — il
-                    situe la période, ils en montrent une face à la fois. */}
-                <SegmentedTabs
-                  defaultKey={isLatest ? "resultats" : "situation"}
-                  tabs={[
-                    { key: "situation", label: "Situation", icon: "📋" },
-                    { key: "decisions", label: "Décisions", icon: "✏️" },
-                    { key: "resultats", label: "Résultats", icon: "📊" },
-                  ]}
-                >
-                  {{
-                    situation: dr ? (
-                      <section className="space-y-3">
-                        {dr.situations.map((s) => (
-                          <SituationDebrief
-                            key={s.instanceId}
-                            situation={s}
-                            gameId={view.gameId}
-                            retakeable={
-                              situations.missedPolicy === "retake50" &&
-                              p.round === mostRecentDebriefedRound
-                            }
-                          />
-                        ))}
-                      </section>
-                    ) : null,
-                    decisions: p.decisions ? (
-                      <PeriodDecisionsRecap decisions={p.decisions} vocabulary={view.vocabulary} gamme={view.gamme} />
-                    ) : null,
-                    resultats: <PeriodDashboard view={view} period={p} standing={isLatest} />,
-                  }}
-                </SegmentedTabs>
-              </div>
-            </details>
-          );
-        })}
-
         {/* ── Période active : le tour en cours, ouvert ── */}
         {hasActivePeriod ? (
           <section
@@ -778,7 +631,7 @@ export default async function ArenaPage({
                 simulation ; classe : la clôture par l'enseignant) : on met
                 « voir les résultats » en tête du tour suivant, pour ne pas
                 enchaîner sur une nouvelle saisie sans être passé par ses
-                résultats. Le lien remonte à la période close, ouverte sur ses
+                résultats. Le lien descend vers la période close, ouverte sur ses
                 résultats (#dernier-resultat). */}
             {latestRound !== null ? (
               <a
@@ -789,8 +642,11 @@ export default async function ArenaPage({
                   <span aria-hidden>📊</span>
                   {periodLabel(view.roundDays, latestRound)} {view.kind === "solo" ? "simulé" : "clos"} — voir les résultats
                 </span>
+                {/* La flèche descend : les tours clos sont passés SOUS le
+                    tour en cours, pour que l'élève ouvre sa partie sur ce
+                    qu'il a à faire. */}
                 <span aria-hidden className="text-emerald-300">
-                  ↑
+                  ↓
                 </span>
               </a>
             ) : null}
@@ -1016,6 +872,196 @@ export default async function ArenaPage({
             </div>
           </section>
         ) : null}
+
+        {periods.length > 0 ? (
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+            {finished ? "Vos tours" : "Tours passés"}
+          </p>
+        ) : null}
+        {periods.map((p) => {
+          const isLatest = p.round === latestRound;
+          const dr = debriefByRound.get(p.round);
+          const netIncome = p.result.incomeStatement.netIncome;
+          const netTreasury = p.result.functionalBalance.netTreasury;
+          return (
+            <details
+              key={p.round}
+              // Cible du retour après une validation en solo : la période la plus
+              // récente, déjà ouverte sur son onglet Résultats. scroll-mt dégage
+              // la hauteur de l'en-tête collant pour que le titre reste visible.
+              id={isLatest ? "dernier-resultat" : undefined}
+              open={isLatest}
+              // bg-slate-900/60 et non slate-950/40 : sur le fond de page, une
+              // carte à 40 % de slate-950 n'était qu'un contour. Quatre contours
+              // à la file se lisaient comme une grille, pas comme quatre tours.
+              className={`group scroll-mt-24 rounded-xl border border-white/10 border-l-2 bg-slate-900/60 [&:not([open])]:border-dashed [&[open]]:border-white/20 ${
+                netIncome >= 0 ? "border-l-emerald-400/60" : "border-l-rose-400/60"
+              }`}
+            >
+              {/*
+                LE NUMÉRO FAIT LA SÉPARATION. Il était noyé derrière un 📊
+                répété — l'œil tombait sur une icône identique d'un tour à
+                l'autre au lieu de trouver 1, 2, 3. En pastille à gauche, les
+                numéros font colonne et donnent une colonne vertébrale à la
+                liste ; leur couleur dit du même coup si le tour a été gagné ou
+                perdu, sans ajouter un signal de plus.
+              */}
+              <summary className="flex cursor-pointer list-none items-center gap-3 px-3 py-3 sm:px-4 [&::-webkit-details-marker]:hidden">
+                <span
+                  aria-hidden
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold tabular-nums ${
+                    netIncome >= 0
+                      ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-300"
+                      : "border-rose-400/40 bg-rose-400/10 text-rose-300"
+                  }`}
+                >
+                  {p.round}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold text-slate-100">
+                    {periodLabel(view.roundDays, p.round)}
+                    {isLatest && !finished ? (
+                      <span className="ml-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-xs font-medium text-emerald-300">
+                        résultats livrés
+                      </span>
+                    ) : null}
+                  </span>
+                  {/* Les trois chiffres du tour, chacun insécable : la ligne se
+                      replie ENTRE deux chiffres, jamais au milieu d'un montant. */}
+                  <span className="mt-0.5 flex flex-wrap gap-x-1.5 gap-y-0.5 text-xs tabular-nums text-slate-400">
+                    <span className="whitespace-nowrap">
+                      CA {formatEuro(p.result.incomeStatement.revenue)}
+                      <span aria-hidden className="text-slate-400"> ·</span>
+                    </span>
+                    <span
+                      className={`whitespace-nowrap ${netIncome >= 0 ? "text-emerald-300" : "text-rose-300"}`}
+                    >
+                      {netIncome >= 0 ? "+" : ""}
+                      {formatEuro(netIncome)}
+                      <span aria-hidden className="text-slate-400"> ·</span>
+                    </span>
+                    <span
+                      className={`whitespace-nowrap ${netTreasury >= 0 ? "text-slate-400" : "text-rose-300"}`}
+                    >
+                      tréso {formatEuro(netTreasury)}
+                    </span>
+                  </span>
+                </span>
+                <span
+                  aria-hidden
+                  className="shrink-0 text-xs text-amber-400/80 transition-transform group-open:rotate-90"
+                >
+                  ▸
+                </span>
+              </summary>
+              <div className="border-t border-white/10 px-2 py-2.5 sm:p-4">
+                {/* Les trois facettes d'une période close : ce qu'on a analysé
+                    (Situation + correction), ce qu'on a décidé, ce qui en est
+                    ressorti. Les onglets ne s'opposent pas à l'accordéon — il
+                    situe la période, ils en montrent une face à la fois. */}
+                <SegmentedTabs
+                  defaultKey={isLatest ? "resultats" : "situation"}
+                  tabs={[
+                    { key: "situation", label: "Situation", icon: "📋" },
+                    { key: "decisions", label: "Décisions", icon: "✏️" },
+                    { key: "resultats", label: "Résultats", icon: "📊" },
+                  ]}
+                >
+                  {{
+                    situation: dr ? (
+                      <section className="space-y-3">
+                        {dr.situations.map((s) => (
+                          <SituationDebrief
+                            key={s.instanceId}
+                            situation={s}
+                            gameId={view.gameId}
+                            retakeable={
+                              situations.missedPolicy === "retake50" &&
+                              p.round === mostRecentDebriefedRound
+                            }
+                          />
+                        ))}
+                      </section>
+                    ) : null,
+                    decisions: p.decisions ? (
+                      <PeriodDecisionsRecap decisions={p.decisions} vocabulary={view.vocabulary} gamme={view.gamme} />
+                    ) : null,
+                    resultats: <PeriodDashboard view={view} period={p} standing={isLatest} />,
+                  }}
+                </SegmentedTabs>
+              </div>
+            </details>
+          );
+        })}
+      </div>
+
+      {/*
+        ── CE QUI N'EST PAS LE JEU ──
+
+        L'identité, la clé de reprise et la composition des équipes ouvraient
+        la page : 461 px d'administration avant la première ligne de jeu, sur
+        un écran de téléphone qui en fait 844. Elles sont vraies et utiles,
+        mais elles ne sont pas ce que l'élève vient faire. Elles vivent donc
+        sous le tour, dans l'ordre où l'on en a besoin.
+
+        Le nom reste visible en permanence : le bandeau de jeu le porte, en
+        haut. C'était le seul rôle que l'encadré remplissait mieux qu'une
+        ligne — prévenir qu'on joue sous l'identité du poste précédent.
+      */}
+      {/*
+        ── Composition des équipes ──
+        Le code d'invitation range dans l'équipe la moins remplie : l'élève
+        arrivé avec son groupe se retrouve seul ailleurs, et celui qui revient
+        d'un autre poste — cookie d'invité perdu — est réaffecté au hasard sans
+        qu'aucun message ne le prévienne. Ouvert au premier tour, replié
+        ensuite : passé la clôture, il ne reste qu'à lire qui est où et à le
+        signaler à l'enseignant.
+      */}
+      {!finished && view.equipesDeLaClasse.length > 1 ? (
+        view.peutChoisirSonEquipe ? (
+          <ChoixEquipe
+            gameId={gameId}
+            equipes={view.equipesDeLaClasse}
+            monEquipeId={view.playerTeamId}
+            ouvert
+          />
+        ) : (
+          <Tiroir
+            titre="👥 Composition des équipes"
+            quoi={compter(view.equipesDeLaClasse.length, "équipe")}
+          >
+            <ChoixEquipe
+              gameId={gameId}
+              equipes={view.equipesDeLaClasse}
+              monEquipeId={view.playerTeamId}
+              ouvert={false}
+              concours={view.estUnConcours}
+            />
+          </Tiroir>
+        )
+      ) : null}
+
+      <div id="mon-profil" className="scroll-mt-24 space-y-4">
+        {view.kind !== "solo" && view.playerPseudo ? (
+          <IdentiteDeLAppareil
+            pseudo={view.playerPseudo}
+            equipe={view.playerTeamName}
+            variante="arene"
+          />
+        ) : null}
+
+        {codeDeReprise ? <MaCarteDeReprise gameId={gameId} code={codeDeReprise} /> : null}
+
+        {/* Les deux liens retirés du bandeau de jeu : ils restent à portée,
+            là où l'élève regarde son profil. */}
+        <p className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">
+          <Link href="/profile" className="underline-offset-4 hover:text-slate-300 hover:underline">
+            Mon profil et ma progression
+          </Link>
+          <Link href="/notions" className="underline-offset-4 hover:text-slate-300 hover:underline">
+            Fiches notions
+          </Link>
+        </p>
       </div>
 
       {/* ── Assistant IA (coach de tour + tuteur) ── */}

@@ -59,7 +59,8 @@ export function SiteHeader() {
   const cadre = useRef<HTMLElement>(null);
   // Dans l'arène, la page est plus large (1 400 px) : la barre s'aligne sur
   // ses bords, sinon le logo et le menu flottent en retrait sur grand écran.
-  const largeur = chemin?.startsWith("/arena/") ? "max-w-[1400px]" : "max-w-6xl";
+  const enJeu = chemin?.startsWith("/arena/") ?? false;
+  const largeur = enJeu ? "max-w-[1400px]" : "max-w-6xl";
 
   const basculerGroupe = (code: string) =>
     setGroupesOuverts((etat) => {
@@ -125,7 +126,15 @@ export function SiteHeader() {
             direct. Sous lg, ils se replient dans le panneau « Menu », qui reste
             le plan COMPLET à toutes les largeurs (le thème et l'installation y
             vivent aussi, pour ne pas empiler des contrôles hétéroclites). */}
+        {/* EN PARTIE, LA VITRINE S'EFFACE.
+            L'élève jouait avec « Pour les enseignants · Ateliers · Entreprises
+            · Espace enseignant » au-dessus de la tête : quatre sorties qui ne
+            le concernent pas, sur l'écran où il doit décider. Dans l'arène, la
+            barre ne garde que le logo et le plan complet — celui-ci reste, il
+            est la garantie qu'aucune page ne devienne inatteignable. L'état de
+            la partie, lui, est porté par le bandeau de jeu de la page. */}
         <div className="flex items-center justify-end gap-1.5">
+          {enJeu ? null : (
           <ul className="hidden items-center gap-0.5 lg:flex">
             {liensDeTete().map((lien) => (
               <li key={lien.href}>
@@ -155,11 +164,15 @@ export function SiteHeader() {
               </li>
             ))}
           </ul>
+          )}
 
           {/* Les deux portes d'entrée, une par public. L'enseignant en ambre,
               comme l'action principale du plan ; l'élève en clair. Un filet les
               sépare de ce qui ne fait qu'informer. */}
-          <span aria-hidden className="mx-1 hidden h-5 w-px bg-white/10 lg:block" />
+          {enJeu ? null : (
+            <span aria-hidden className="mx-1 hidden h-5 w-px bg-white/10 lg:block" />
+          )}
+          {enJeu ? null : (
           <div className="hidden items-center gap-1.5 lg:flex">
             {liensDAcces().map((lien) => (
               <Link
@@ -177,6 +190,7 @@ export function SiteHeader() {
               </Link>
             ))}
           </div>
+          )}
 
           <button
             type="button"

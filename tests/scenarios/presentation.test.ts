@@ -103,6 +103,15 @@ describe("le surtitre de l'écran de jeu", () => {
     }
   });
 
+  it("ne redit pas la marque, que la barre porte déjà", () => {
+    // « BUSINESS ARENA · NOVA · PRENEZ LES COMMANDES » passait sur deux lignes
+    // en capitales espacées sur un téléphone, pour dire une fois de plus où
+    // l'on est : le logo est dans la barre, juste au-dessus.
+    for (const d of SCENARIOS) {
+      expect(surtitreDePartie(d.title, "Équipe 3")).not.toContain("Business Arena");
+    }
+  });
+
   it("l'écran de jeu ne recompose pas le surtitre à la main", () => {
     const page = readFileSync("src/app/arena/[gameId]/page.tsx", "utf-8");
     expect(page, "le surtitre est assemblé dans la page").not.toContain("Business Arena · {view");

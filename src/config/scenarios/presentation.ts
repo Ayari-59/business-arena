@@ -204,5 +204,9 @@ export function surtitreDePartie(titreScenario: string, nomEquipe: string): stri
   const { nom, promesse } = couperTitre(titreScenario);
   const repete = nom.localeCompare(nomEquipe.trim(), "fr", { sensitivity: "base" }) === 0;
   const morceaux = repete ? [promesse] : [nom, promesse];
-  return ["Business Arena", ...morceaux.filter((m): m is string => Boolean(m))].join(" · ");
+  // LA MARQUE N'EST PAS DANS LE SURTITRE DU JEU. Le logo est juste au-dessus,
+  // dans la barre : « BUSINESS ARENA · NOVA · PRENEZ LES COMMANDES » repassait
+  // sur deux lignes en capitales espacées sur un téléphone, pour dire une fois
+  // de plus où l'on est. Le surtitre nomme la partie, et rien d'autre.
+  return morceaux.filter((m): m is string => Boolean(m)).join(" · ");
 }
