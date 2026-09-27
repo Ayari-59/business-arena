@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ALL_SITUATIONS, SCENARIO_CHOICES, SECTOR_LABELS } from "@/config/scenarios/registry";
 import { DECISION_MODELS } from "@/config/pedagogy/models";
+import { ApercuArene } from "@/components/apercus";
 
 export const metadata = {
   alternates: { canonical: "/fonctionnalites" },
@@ -18,32 +19,32 @@ const PILLARS = [
   {
     icon: "⚙️",
     title: "Moteur économique déterministe",
-    text: "Demande par segments, élasticité-prix, prix psychologiques, capacité de production, stocks, FRNG, BFR, trésorerie : chaque chiffre est calculé, aucun n'est inventé. 727 tests automatisés vérifient le moteur.",
+    text: "Demande par segments, élasticité-prix, capacité, stocks, FRNG, BFR, trésorerie : chaque chiffre est calculé, aucun n'est inventé, et le moteur est tenu par sa suite de tests.",
   },
   {
     icon: "🎯",
     title: "Apprentissage par la situation",
-    text: "Chaque tour déclenche une situation de gestion tirée du contexte réel de l'entreprise. L'étudiant doit identifier le modèle pertinent avant de décider. Le débriefing relie le résultat au raisonnement.",
+    text: "Chaque tour déclenche une situation tirée du contexte de l'entreprise : l'étudiant identifie le modèle pertinent avant de décider, et le débriefing relie le résultat au raisonnement.",
   },
   {
     icon: "📊",
     title: "Tableau de bord en temps réel",
-    text: "KPI avec tendances, graphiques d'évolution CA/résultat/trésorerie, parts de marché par segment, classement IPG multidimensionnel. Trois onglets : Synthèse, Marché, Finance.",
+    text: "Tendances, évolution du CA, du résultat et de la trésorerie, parts de marché par segment, classement IPG. Trois onglets : Synthèse, Marché, Finance.",
   },
   {
     icon: "💡",
     title: "Indices progressifs",
-    text: "Cinq niveaux d'aide : observation, question, notion, modèle, méthode. Chaque indice consommé coûte des points à l'IPG. L'autonomie est récompensée, le blocage n'existe pas.",
+    text: "Cinq niveaux d'aide, d'une observation à une méthode. Chaque indice coûte des points : l'autonomie est récompensée, le blocage n'existe pas.",
   },
   {
     icon: "🏫",
     title: "Conçu pour la classe",
-    text: "Créez une partie en 30 secondes. Les équipes rejoignent par code, valident leurs décisions, vous clôturez les tours. La vue pédagogique montre qui maîtrise chaque notion et qui bluffe.",
+    text: "Une partie en 30 secondes, les équipes rejoignent par code, vous clôturez les tours. La vue pédagogique montre qui maîtrise chaque notion et qui bluffe.",
   },
   {
     icon: "🏆",
     title: "Business Arena Championship",
-    text: "Concours inter-classes avec groupes tirés au sort, décisions verrouillées, indices limités, qualification au score composite. Le concours de gestion, prêt à l'emploi.",
+    text: "Groupes tirés au sort, décisions verrouillées, indices limités, qualification au score composite : le concours de gestion, prêt à l'emploi.",
   },
 ];
 
@@ -51,7 +52,7 @@ const DIFFERENTIATORS = [
   { label: "Sans compte", desc: "Aucune inscription requise pour les étudiants" },
   { label: "Sans installation", desc: "Fonctionne dans le navigateur, sur tout appareil" },
   { label: "Essai gratuit", desc: "Découvrez tous les scénarios et fonctionnalités sans engagement" },
-  { label: "Testé", desc: "727 tests automatisés, moteur déterministe vérifié" },
+  { label: "Testé", desc: "Moteur déterministe, tenu par sa suite de tests" },
 ];
 
 export default function FonctionnalitesPage() {
@@ -63,6 +64,18 @@ export default function FonctionnalitesPage() {
       />
 
       {/* Hero */}
+      {/*
+        MONTRER, PUIS ÉNUMÉRER.
+        Quinze cartes de fonctionnalités et zéro image : on lisait une liste de
+        promesses sans jamais voir l'outil. L'écran de l'élève passe devant la
+        liste — un repère suffit, la galerie est sur « Pour les enseignants ».
+      */}
+      <section className="mx-auto max-w-4xl px-6 pb-12">
+        <div className="mx-auto max-w-sm">
+          <ApercuArene />
+        </div>
+      </section>
+
       <section className="mx-auto max-w-5xl px-6 pb-12 pt-16 text-center">
         <p className="text-xs uppercase tracking-[0.3em] text-amber-400">
           Plateforme de simulation de gestion

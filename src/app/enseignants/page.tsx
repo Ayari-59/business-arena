@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ATELIERS, dureeTotaleHeures } from "@/config/ateliers";
 import { REFERENTIELS_NON_VERIFIES } from "@/config/ateliers/referentiels";
 import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
+import { ApercuArene, ApercuPilotage, ApercuProjection } from "@/components/apercus";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/enseignants" },
@@ -25,37 +26,37 @@ const PEDAGOGIE = [
   {
     icon: "🎯",
     title: "On mesure une décision, pas un clic",
-    text: "Les valeurs sont pré-remplies, mais le score distingue l'équipe qui a changé un chiffre de celle qui a validé sans réfléchir. Décider, c'est prendre position, pas cliquer sur « suivant ».",
+    text: "Les valeurs sont pré-remplies, mais le score distingue l'équipe qui a changé un chiffre de celle qui a validé sans réfléchir.",
   },
   {
     icon: "🧭",
     title: "Le modèle avant la réponse",
-    text: "Chaque tour pose une situation de gestion tirée du contexte de l'entreprise. L'élève doit identifier le bon cadre d'analyse avant de trancher, comme en épreuve professionnelle.",
+    text: "Chaque tour pose une situation tirée du contexte de l'entreprise : l'élève identifie le cadre d'analyse avant de trancher, comme en épreuve.",
   },
   {
     icon: "🔁",
     title: "Le débriefing relie résultat et raisonnement",
-    text: "Le tableau de bord ne donne pas qu'un classement : il montre pourquoi une décision a produit son résultat, et le monde variable apprend à distinguer un bon choix d'un simple coup de chance.",
+    text: "Le tableau de bord montre pourquoi une décision a produit son résultat, et le monde variable distingue un bon choix d'un coup de chance.",
   },
   {
     icon: "📓",
     title: "Rien ne se joue sans laisser d'écrit",
-    text: "Chaque séance d'atelier produit une trace à verser au document de la spécialité (passeport professionnel en BTS CG, fiches d'activités, portfolio), un livrable et une grille de correction. Un business game qui ne laisse que des souvenirs ne remplit pas un dossier.",
+    text: "Chaque séance produit un livrable et sa grille, à verser au dossier de l'élève. Un business game qui ne laisse que des souvenirs ne remplit pas un dossier.",
   },
 ];
 
 const CLASSE = [
-  { icon: "⏱️", title: "Une partie en 30 secondes", text: "Choisissez un secteur, un niveau, le nombre d'équipes. Les élèves rejoignent par un code, sans compte ni installation." },
-  { icon: "👀", title: "La vue pédagogique", text: "Vous voyez qui maîtrise chaque notion et qui valide au hasard, équipe par équipe, avant même le débriefing." },
-  { icon: "🎚️", title: "Six niveaux paramétrables", text: "De « Découverte » à « Executive » : vous ouvrez les leviers un à un, et réglez la difficulté sans toucher au moteur." },
-  { icon: "🏆", title: "Le concours prêt à l'emploi", text: "Groupes tirés au sort, décisions verrouillées, indices limités, classement composite : un concours inter-classes clé en main." },
+  { icon: "⏱️", title: "Une partie en 30 secondes", text: "Un secteur, un niveau, un nombre d'équipes. Les élèves rejoignent par un code." },
+  { icon: "👀", title: "La vue pédagogique", text: "Qui maîtrise chaque notion et qui valide au hasard, équipe par équipe, avant le débriefing." },
+  { icon: "🎚️", title: "Six niveaux paramétrables", text: "De « Découverte » à « Executive » : les leviers s'ouvrent un à un, sans toucher au moteur." },
+  { icon: "🏆", title: "Le concours prêt à l'emploi", text: "Groupes tirés au sort, indices limités, classement composite : un inter-classes clé en main." },
 ];
 
 const ETAPES = [
-  { n: "1", title: "Choisir la simulation", text: "Quatre questions sur votre classe et votre objectif, et le réglage qui convient s'écrit à mesure, avec ses raisons." },
-  { n: "2", title: "Créer la partie", text: "Depuis l'espace enseignant, la partie se crée et vous obtenez un code d'invitation à projeter." },
-  { n: "3", title: "Faire jouer", text: "Les équipes rendent leurs décisions, vous clôturez le tour, les résultats tombent et la situation suivante s'ouvre." },
-  { n: "4", title: "Débriefer et évaluer", text: "Le tableau de bord et la vue pédagogique nourrissent le débriefing ; les traces alimentent le dossier de chaque élève." },
+  { n: "1", title: "Choisir la simulation", text: "Quatre questions sur votre classe, et le réglage qui convient s'écrit à mesure." },
+  { n: "2", title: "Créer la partie", text: "La partie se crée, et vous obtenez un code à projeter." },
+  { n: "3", title: "Faire jouer", text: "Les équipes rendent, vous clôturez, les résultats tombent, la situation suivante s'ouvre." },
+  { n: "4", title: "Débriefer et évaluer", text: "Le tableau de bord nourrit le débriefing ; les traces alimentent le dossier." },
 ];
 
 const CONFIANCE = [
@@ -128,6 +129,24 @@ export default function EnseignantsPage() {
         </div>
       </section>
 
+      {/*
+        MONTRER AVANT D'EXPLIQUER.
+        Cette page expliquait l'outil en 1 294 mots et quatre mètres de
+        défilement sans jamais le montrer : mesurée, elle ne portait aucune
+        image. L'enseignant qui hésite ne cherche pas une explication de plus,
+        il cherche à voir les trois écrans qu'il aura sous les yeux.
+      */}
+      <section aria-labelledby="ecrans" className="mx-auto max-w-5xl px-6 pb-16">
+        <h2 id="ecrans" className="mb-8 text-center text-2xl font-bold text-slate-50">
+          Trois écrans, et c&apos;est tout
+        </h2>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <ApercuArene />
+          <ApercuProjection />
+          <ApercuPilotage className="sm:col-span-2 lg:col-span-1" />
+        </div>
+      </section>
+
       {/* Pédagogie */}
       <section className="mx-auto max-w-5xl px-6 pb-16">
         <h2 className="mb-8 text-center text-2xl font-bold text-slate-50">
@@ -153,8 +172,14 @@ export default function EnseignantsPage() {
           {ATELIERS.length} déroulés prêts à animer, {HEURES_TOTALES} heures de séance au total,
           chacun adossé à son référentiel et livré avec ses livrables et sa grille d&apos;évaluation.
         </p>
+        {/*
+          QUINZE ATELIERS DÉTAILLÉS SUR UNE PAGE DE PRÉSENTATION.
+          Le catalogue complet a sa page, /animations, et c'est là qu'on
+          choisit : ici, quatre suffisent à montrer de quoi il s'agit, et le
+          lien mène au reste. Un mètre et demi de défilement en moins.
+        */}
         <div className="grid gap-3 sm:grid-cols-2">
-          {ATELIERS.map((a) => (
+          {ATELIERS.slice(0, 4).map((a) => (
             <Link
               key={a.code}
               href={`/animations/${a.code}`}
@@ -176,6 +201,14 @@ export default function EnseignantsPage() {
             </Link>
           ))}
         </div>
+        <p className="mt-6 text-center">
+          <Link
+            href="/animations"
+            className="inline-block rounded-lg border border-amber-400/40 px-5 py-2.5 text-sm font-semibold text-amber-200 transition hover:bg-amber-400/10"
+          >
+            Voir les {ATELIERS.length} ateliers →
+          </Link>
+        </p>
         <p className="mx-auto mt-6 max-w-2xl text-center text-xs leading-relaxed text-slate-400">
           Chaque atelier cite les unités ou blocs de son référentiel avec la provenance de la
           liste. {REFERENTIELS_NON_VERIFIES.length} d&apos;entre eux (BTS MHR et BUT GEA) restent à
@@ -217,19 +250,25 @@ export default function EnseignantsPage() {
         </ol>
       </section>
 
-      {/* Confiance */}
+      {/*
+        QUATRE CARTES POUR QUATRE MENTIONS.
+        Elles disaient chacune un fait d'une ligne dans une carte de 90 px de
+        haut : un quart de mètre de défilement pour ce qui tient sur une
+        rangée. Le fait reste, la carte part.
+      */}
       <section className="mx-auto max-w-3xl px-6 pb-16">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <ul className="flex flex-wrap justify-center gap-2">
           {CONFIANCE.map((d) => (
-            <div
+            <li
               key={d.label}
-              className="rounded-xl border border-emerald-400/20 bg-emerald-950/20 px-4 py-4 text-center"
+              title={d.desc}
+              className="rounded-full border border-emerald-400/25 bg-emerald-950/20 px-4 py-1.5 text-sm text-emerald-300"
             >
-              <p className="text-sm font-semibold text-emerald-400">{d.label}</p>
-              <p className="mt-1 text-xs text-slate-400">{d.desc}</p>
-            </div>
+              <span aria-hidden>✓</span> {d.label}
+              <span className="sr-only"> : {d.desc}</span>
+            </li>
           ))}
-        </div>
+        </ul>
       </section>
 
       {/* CTA */}

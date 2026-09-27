@@ -41,17 +41,40 @@ function Section({
   title,
   intro,
   children,
+  ouvert = false,
 }: {
   id: string;
   title: string;
   intro?: string;
   children: React.ReactNode;
+  /** La section s'ouvre d'elle-même : réservé à celle qu'on vient lire. */
+  ouvert?: boolean;
 }) {
   return (
     <section id={id} className="scroll-mt-24 rounded-2xl border border-white/10 bg-slate-900 p-6 sm:p-8">
       <h2 className="text-xl font-bold text-slate-50">{title}</h2>
       {intro ? <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">{intro}</p> : null}
-      <div className="mt-5">{children}</div>
+      {/*
+        NEUF SECTIONS DÉPLIÉES FONT CINQ MÈTRES ET DEMI.
+        Mesuré : 1 782 mots, 5 480 px de défilement, et aucune image pour se
+        repérer. Le titre et son chapeau restent visibles — c'est la couche
+        qu'on parcourt, et celle où l'ancre du sommaire dépose le lecteur ;
+        le détail s'ouvre d'un clic. « Démarrer en 2 minutes » reste ouverte :
+        c'est ce qu'on vient chercher.
+      */}
+      <details open={ouvert} className="group mt-4">
+        <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium text-amber-300 [&::-webkit-details-marker]:hidden">
+          <span
+            aria-hidden
+            className="inline-block transition-transform group-open:rotate-90 motion-reduce:transition-none"
+          >
+            ▸
+          </span>
+          <span className="group-open:sr-only">Lire cette section</span>
+          <span className="sr-only group-open:not-sr-only">Replier</span>
+        </summary>
+        <div className="mt-5">{children}</div>
+      </details>
     </section>
   );
 }
@@ -108,6 +131,7 @@ export default function GuidePage() {
 
       <div className="mx-auto max-w-4xl space-y-6 px-6 py-8">
         <Section
+          ouvert
           id="demarrer"
           title="⚡ Démarrer en 2 minutes"
           intro="Deux portes d'entrée selon qui vous êtes."
