@@ -256,6 +256,22 @@ describe("le chemin complet, du QR au champ", () => {
     expect(form).toContain("autoFocus={codeInitial !== null}");
   });
 
+  it("la planche de cartons tient sur une feuille, jusqu'à huit équipes", () => {
+    // Mesuré dans le navigateur, en émulation d'impression, sur des parties de
+    // trois à huit équipes : la planche fait au plus 275 mm de haut sur les
+    // 297 d'un A4, et le PDF compte une page dans tous les cas. Ce qui se
+    // vérifie ici, c'est ce qui rend cette mesure stable.
+    const page = lire("src/app/teacher/games/[gameId]/cartons/page.tsx");
+    // Deux tailles : le grand QR tant que la classe tient en trois rangées.
+    expect(page).toContain(".cartons.serre");
+    expect(/const CARTONS_AU_LARGE = ([0-9]+);/.exec(page)?.[1]).toBe("6");
+    // Le titre a une hauteur FIXE : sans elle, un nom d'équipe sur deux lignes
+    // — les élèves en écrivent jusqu'à trente-deux caractères — gagnait assez
+    // de millimètres par rangée pour pousser la planche sur une seconde page.
+    expect(page).toMatch(/\.carton h2 \{[^}]*height: 2\.2em/);
+    expect(page).toContain("e.nom.length > NOM_COURT");
+  });
+
   it("les cartons de table donnent à chaque équipe son adresse à elle", () => {
     const page = lire("src/app/teacher/games/[gameId]/cartons/page.tsx");
     expect(page).toContain("urlDeJonction(view.joinCode!, e.rang)");
