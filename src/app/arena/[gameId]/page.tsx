@@ -33,6 +33,7 @@ import { Tiroir } from "@/components/tiroir";
 import { FriseDesTours } from "@/components/frise-des-tours";
 import { IdentiteDeLAppareil } from "@/components/identite-de-lappareil";
 import { MaCarteDeReprise } from "@/components/ma-carte-de-reprise";
+import { TableauDeBord } from "@/components/tableau-de-bord";
 import { codeDeRepriseDuJoueur } from "@/services/reprise.service";
 import { EcheanceDuTour } from "@/components/echeance-du-tour";
 import { mentionDeValidation } from "@/config/validation-du-tour";
@@ -560,6 +561,25 @@ export default async function ArenaPage({
         interne d'une carte (py-3), sans quoi l'œil ne sait plus où finit un
         tour et où commence le suivant.
       */}
+      {/*
+        OÙ EN EST L'ENTREPRISE, AVANT LE TOUR QU'ON JOUE.
+        Les chiffres existaient, un tour à la fois : pour savoir si la
+        trésorerie se redressait ou s'enfonçait, il fallait déplier trois tours
+        et comparer de tête. Trois tuiles le disent d'un coup, juste au-dessus
+        du tour à jouer — c'est le contexte de la décision, pas une décoration,
+        et il ne s'affiche qu'à partir du deuxième tour, quand il y a une
+        courbe à montrer.
+      */}
+      <TableauDeBord
+        tours={periods.map((p) => ({
+          round: p.round,
+          libelle: periodLabel(view.roundDays, p.round),
+          ca: p.result.incomeStatement.revenue,
+          resultat: p.result.incomeStatement.netIncome,
+          tresorerie: p.result.functionalBalance.netTreasury,
+        }))}
+      />
+
       {/*
         LE TOUR À JOUER EN PREMIER.
 
