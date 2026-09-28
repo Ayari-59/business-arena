@@ -35,7 +35,7 @@ import { IdentiteDeLAppareil } from "@/components/identite-de-lappareil";
 import { MaCarteDeReprise } from "@/components/ma-carte-de-reprise";
 import { TableauDeBord } from "@/components/tableau-de-bord";
 import { VosReussites } from "@/components/vos-reussites";
-import { reussitesDeLaPartie } from "@/scoring/reussites";
+import { reussitesDeLaPartie, lireLeTour } from "@/scoring/reussites";
 import { codeDeRepriseDuJoueur } from "@/services/reprise.service";
 import { EcheanceDuTour } from "@/components/echeance-du-tour";
 import { mentionDeValidation } from "@/config/validation-du-tour";
@@ -1085,11 +1085,7 @@ export default async function ArenaPage({
         {periods.length > 0 ? (
           <VosReussites
             cases={reussitesDeLaPartie(
-              periods.map((p) => ({
-                round: p.round,
-                resultat: p.result.incomeStatement.netIncome,
-                tresorerieNette: p.result.functionalBalance.netTreasury,
-              })),
+              periods.map((p) => lireLeTour(p.round, p.result, p.forecastReview)),
             )}
             nommerLeTour={(round) => periodLabel(view.roundDays, round)}
           />

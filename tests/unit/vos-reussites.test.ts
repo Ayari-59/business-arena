@@ -42,10 +42,11 @@ describe("les réussites de la partie", () => {
     // personne n'emploie en cours de gestion. Le titre est la seule chose que
     // l'élève lit avant de comprendre ce que la liste contient : il est donc
     // tenu ici, et non laissé à la première réécriture venue.
-    const html = rendu(reussitesDeLaPartie(tours([1, 500, 100])));
+    const cases = reussitesDeLaPartie(tours([1, 500, 100]));
+    const html = rendu(cases);
     expect(html).toContain("Vos réussites");
     expect(html).not.toContain("hauts faits");
-    expect(html).toContain(`1 sur ${CATALOGUE.length}`);
+    expect(html).toContain(`1 sur ${cases.length}`);
   });
 
   it("garde le tour où chaque réussite a été franchie", () => {
@@ -74,14 +75,14 @@ describe("les réussites de la partie", () => {
   });
 
   it("dit l'état par la forme autant que par la couleur", () => {
-    const t = tours([1, -500, -200], [2, 300, 100]);
-    const html = rendu(reussitesDeLaPartie(t));
+    const cases = reussitesDeLaPartie(tours([1, -500, -200], [2, 300, 100]));
+    const html = rendu(cases);
     expect(html).toContain("★"); // franchi
     expect(html).toContain("☆"); // à viser
     expect(html).toContain("border-dashed"); // à viser, sans la couleur
     expect(html).toContain("à viser");
     expect(html).toContain("Trimestre 2");
-    expect(html).toContain(`2 sur ${CATALOGUE.length}`);
+    expect(html).toContain(`2 sur ${cases.length}`);
   });
 
   it("ne tient qu'un seul jeu de libellés", () => {
@@ -97,12 +98,34 @@ describe("les réussites de la partie", () => {
       [6, 400, 400],
     );
     const cases = reussitesDeLaPartie(t);
-    expect(cases.every((c) => c.round !== null)).toBe(true);
+    // Cette suite franchit les quatre réussites du compte de résultat et de la
+    // trésorerie ; les autres demandent des chiffres de marché, absents ici.
+    expect(cases.filter((c) => c.round !== null).length).toBeGreaterThanOrEqual(4);
     for (const round of [2, 4, 6]) {
       for (const f of reussitesFranchies(t, round)) {
         expect(CATALOGUE).toContain(f);
       }
     }
+  });
+
+  it("ne promet que ce que la partie peut offrir", () => {
+    // « Pari tenu » demande une prévision, « Le marché vous suit » une part de
+    // marché : tous les niveaux ne les ouvrent pas. Une case à viser qu'aucune
+    // décision ne permet d'atteindre serait une promesse creuse.
+    const sansMarche = reussitesDeLaPartie(tours([1, 100, 500], [2, 200, 600]));
+    const codes = (cs: ReturnType<typeof reussitesDeLaPartie>) =>
+      cs.map((c) => c.reussite.code);
+    expect(codes(sansMarche)).not.toContain("pari_tenu");
+    expect(codes(sansMarche)).not.toContain("part_gagnee");
+    // Les réussites qui ne tiennent que sur le résultat restent, elles.
+    expect(codes(sansMarche)).toContain("premier_benefice");
+
+    const avecMarche = reussitesDeLaPartie([
+      { round: 1, resultat: 100, tresorerieNette: 500, partDeMarche: 0.2, ventesPrevues: 100, ventes: 98 },
+      { round: 2, resultat: 200, tresorerieNette: 600, partDeMarche: 0.22, ventesPrevues: 100, ventes: 101 },
+    ]);
+    expect(codes(avecMarche)).toContain("pari_tenu");
+    expect(codes(avecMarche)).toContain("part_gagnee");
   });
 
   it("est posée dans l'arène, en tête du profil", () => {

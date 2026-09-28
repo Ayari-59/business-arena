@@ -21,7 +21,7 @@ import type { RseIndex, RsePillar } from "@/scoring/rse";
 import { ReussitesDuTour } from "@/components/reussites-du-tour";
 import { RevelationDuTour } from "@/components/revelation-du-tour";
 import { periodLabel } from "@/config/scenarios/periodicity";
-import { reussitesFranchies } from "@/scoring/reussites";
+import { reussitesFranchies, lireLeTour } from "@/scoring/reussites";
 
 type Period = GameView["periods"][number];
 
@@ -130,11 +130,7 @@ export function PeriodDashboard({
   // rien n'est stocké, rien ne pèse sur le score. Les tours suivants sont
   // exclus, sinon le tableau de bord d'un tour ancien se nourrirait de l'avenir.
   const franchies = reussitesFranchies(
-    view.periods.map((p) => ({
-      round: p.round,
-      resultat: p.result.incomeStatement.netIncome,
-      tresorerieNette: p.result.functionalBalance.netTreasury,
-    })),
+    view.periods.map((p) => lireLeTour(p.round, p.result, p.forecastReview)),
     period.round,
   );
 
