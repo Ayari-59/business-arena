@@ -147,6 +147,15 @@ export interface GameView {
   /** Décisions déjà validées par l'équipe pour le tour courant (mode classe). */
   pendingDecisions: RoundDecisions | null;
   /**
+   * OÙ EN EST LA CLASSE sur le tour en cours : combien d'équipes ont rendu, sur
+   * combien. Une fois ses décisions validées, l'équipe attendait la clôture
+   * devant une ligne grise, alors que toute la classe attendait la même chose :
+   * le temps mort était collectif sans que personne ne le voie. Null en solo,
+   * hors tour ouvert, ou quand il n'y a qu'une équipe humaine — il n'y a alors
+   * personne à attendre.
+   */
+  soumissions: { validees: number; total: number } | null;
+  /**
    * Qui, dans l'équipe, a validé ces décisions, et à quelle heure. Une équipe
    * est faite de trois ou quatre élèves sur trois ou quatre écrans : sans
    * cette ligne, chacun croit être seul à décider et écrase la saisie du
@@ -1117,6 +1126,24 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
   // trois ou quatre élèves sur autant d'écrans : sans cette ligne, chacun
   // croit être seul à décider. En solo, l'équipe se résume au joueur et la
   // mention n'apprendrait rien.
+  const soumissions: GameView["soumissions"] = await (async () => {
+    if (kindDeLaPartie === "solo" || !currentRoundRow || currentRoundRow.status !== "open") {
+      return null;
+    }
+    const humaines = teamRows.filter((t) => t.controller === "human");
+    if (humaines.length < 2) return null;
+    const rendues = await db
+      .select({ teamId: decisions.teamId, status: decisions.status })
+      .from(decisions)
+      .where(eq(decisions.roundId, currentRoundRow.id));
+    return {
+      validees: humaines.filter((t) =>
+        rendues.some((d) => d.teamId === t.id && d.status === "validated"),
+      ).length,
+      total: humaines.length,
+    };
+  })();
+
   const pendingDecisionsPar: GameView["pendingDecisionsPar"] =
     pendingDecisionRow?.validatedAt && kindDeLaPartie !== "solo"
       ? {
@@ -1467,6 +1494,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     peutChoisirSonEquipe: kindDeLaPartie !== "solo" && peutChoisirSonEquipe(game),
     estUnConcours: game.mode === "competition",
     pendingDecisions,
+    soumissions,
     pendingDecisionsPar,
     courriersAnnonces: readPendingEvents(game.difficultyProfile).map((card) => {
       const target = card.teamId ? teamRows.find((t) => t.id === card.teamId) : undefined;

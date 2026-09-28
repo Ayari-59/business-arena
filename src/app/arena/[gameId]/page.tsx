@@ -22,6 +22,7 @@ import { PeriodDashboard } from "@/components/period-dashboard";
 import { PeriodDecisionsRecap } from "@/components/period-decisions-recap";
 import { SegmentedTabs } from "@/components/segmented-tabs";
 import { RoundStatusPoller } from "@/components/round-status-poller";
+import { QuiARendu } from "@/components/qui-a-rendu";
 import { AnnonceDuTour } from "@/components/annonce-du-tour";
 import { NoteDuTourPrecedent } from "@/components/note-du-tour-precedent";
 import { BandeauCourriers, courriersQuiMeConcernent } from "@/components/bandeau-courriers";
@@ -705,6 +706,22 @@ export default async function ArenaPage({
               </span>
             </div>
 
+            {/*
+              OÙ EN EST LA CLASSE. La ligne d'état dit où en est VOTRE équipe ;
+              celle-ci dit où en est la classe, et transforme l'attente de la
+              clôture en attente commune. Elle ne nomme personne : ce serait une
+              comparaison permanente entre équipes, que le dépôt refuse ailleurs
+              en laissant l'enseignant maître du classement.
+            */}
+            {view.soumissions ? (
+              <div className="border-b border-white/10 px-3 py-2 sm:px-4">
+                <QuiARendu
+                  validees={view.soumissions.validees}
+                  total={view.soumissions.total}
+                />
+              </div>
+            ) : null}
+
             {/* Le tour précédent vient de livrer ses résultats (solo : la
                 simulation ; classe : la clôture par l'enseignant) : on met
                 « voir les résultats » en tête du tour suivant, pour ne pas
@@ -1168,7 +1185,13 @@ export default async function ArenaPage({
           gameId={view.gameId}
           currentRound={view.currentRound}
           roundStatus="open"
+          // « submissions » est l'endpoint de l'ENSEIGNANT : il exige d'être le
+          // créateur de la partie, et un élève y recevrait 403 en silence. Celui
+          // de l'élève rend désormais le même compte, qui bouge sans que le tour
+          // change — sans quoi la ligne « 3 équipes sur 6 » resterait figée
+          // pendant tout le temps où elle sert.
           endpoint="round-status"
+          submittedCount={view.soumissions?.validees}
         />
       ) : null}
     </main>

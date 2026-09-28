@@ -63,8 +63,11 @@ export function RoundStatusPoller({
 
           if (data.currentRound !== prev.currentRound) changed = true;
           if (data.roundStatus !== prev.roundStatus) changed = true;
+          // Le compte des équipes qui ont rendu vient des DEUX endpoints : le
+          // tableau de l'enseignant s'en sert pour savoir qui il attend, et
+          // l'arène pour dire à l'élève où en est la classe. Dans les deux cas
+          // il bouge sans que le tour change.
           if (
-            endpoint === "submissions" &&
             typeof data.submittedCount === "number" &&
             data.submittedCount !== prev.submittedCount
           ) {
