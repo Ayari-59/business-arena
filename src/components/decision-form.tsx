@@ -23,6 +23,7 @@ import { scalarsOfGamme } from "@/engine/gamme";
 import type { RoundDecisions } from "@/engine/types";
 import { LONGUEUR_MINIMALE_JUSTIFICATION } from "@/config/justification";
 import { proprietesDeValidite } from "@/config/validation-native";
+import { aideDuBudgetEntretien } from "@/config/entretien";
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
 import type { GameView } from "@/services/game-view.service";
 import { formatEuro, formatEuroCents, formatUnits } from "@/lib/format";
@@ -1259,6 +1260,12 @@ export function DecisionForm({
   /** Capacité de production : goulots et levier RH. */
   capacityFacts?: {
     machineCapacity: number;
+    /** Disponibilité machine (0..1) : ce que l'entretien commande. */
+    availability: number;
+    /** Capacité machine réellement disponible : nominale × disponibilité. */
+    availableMachineCapacity: number;
+    /** Le budget d'entretien sous lequel la disponibilité se dégrade. */
+    maintenanceReference: number;
     laborCapacity: number;
     bottleneck: "machine" | "labor" | "balanced";
     headcount: number;
@@ -1271,6 +1278,9 @@ export function DecisionForm({
     };
   } | null;
 }) {
+  // L'aide du champ d'entretien : le seuil du métier, puis l'état de l'atelier.
+  const aideEntretien = aideDuBudgetEntretien(capacityFacts);
+
   const action = playRoundAction.bind(null, gameId);
   const { state, formAction, pending, formRef, guardError } = useGuardedAction(
     action,
@@ -1744,9 +1754,21 @@ export function DecisionForm({
                 testId="portefeuille-adherents"
               />
             ) : null}
+            {/*
+              LA CAPACITÉ ANNONCÉE EST CELLE QU'ON A, PAS CELLE D'UN ATELIER
+              NEUF. Le moteur produit sous `machineCapacity × availability` : à
+              82 % de disponibilité, annoncer la capacité nominale promettait un
+              plafond inatteignable, sans dire pourquoi. La note ne paraît qu'en
+              dessous de 100 % — à l'ouverture, il n'y a rien à expliquer.
+            */}
             <FaitCapacite
               label={v.capacityLabel}
-              valeur={`${Math.round(capacityFacts.machineCapacity).toLocaleString("fr-FR")} ${v.perRoundLabel}`}
+              valeur={`${Math.round(capacityFacts.availableMachineCapacity).toLocaleString("fr-FR")} ${v.perRoundLabel}`}
+              note={
+                capacityFacts.availability < 0.995
+                  ? `${Math.round(capacityFacts.availability * 100)} % de disponibilité, sur ${Math.round(capacityFacts.machineCapacity).toLocaleString("fr-FR")} à l'état neuf`
+                  : undefined
+              }
             />
             <FaitCapacite
               label={v.laborLabel}
@@ -1934,7 +1956,7 @@ export function DecisionForm({
             )}
             {on.maintenance ? (
               <Field name="maintenanceBudget" label="Budget maintenance" defaultValue={defaults.maintenanceBudget} suffix="€"
-                hint="Une maintenance insuffisante dégrade la disponibilité machine." />
+                hint={aideEntretien} />
             ) : (
               <input type="hidden" name="maintenanceBudget" value={defaults.maintenanceBudget} />
             )}
@@ -1973,7 +1995,7 @@ export function DecisionForm({
                 label={`Budget d'entretien · ${v.capacityLabel.toLowerCase()}`}
                 defaultValue={defaults.maintenanceBudget}
                 suffix="€"
-                hint={`Trop peu d'entretien dégrade votre ${v.capacityLabel.toLowerCase()} disponible.`}
+                hint={aideEntretien}
               />
             </div>
           ) : (

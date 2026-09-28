@@ -132,6 +132,20 @@ export function ParametersPanels({
   // locaux sans dire que l'effectif plafonne bien plus bas induirait l'élève en
   // erreur dès le volume qu'il saisit.
   const mainDoeuvreLimite = capacityFacts?.bottleneck === "labor";
+  /*
+   * ET LE PLAFOND ANNONCÉ N'EST PAS CELUI D'UN ATELIER NEUF. Le moteur produit
+   * sous `machineCapacity × availability`, et la disponibilité s'use dès que
+   * l'entretien passe sous le budget de référence. Le panneau annonçait la
+   * capacité nominale : une équipe descendue à 82 % lisait un plafond qu'elle
+   * ne pouvait plus atteindre, sans que rien ne le dise. C'est le même défaut
+   * que celui du goulot de main-d'œuvre, sur l'autre plafond.
+   *
+   * On multiplie `intro.capacity`, qui est la capacité EN SERVICE, et non celle
+   * du panneau de décision, qui compte aussi l'équipement commandé et pas
+   * encore livré : la note dirait sinon disponible ce qui n'est pas là.
+   */
+  const disponibilite = capacityFacts?.availability ?? 1;
+  const usee = disponibilite < 0.995;
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
@@ -142,13 +156,19 @@ export function ParametersPanels({
         <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
           <Chiffre
             label={vocabulary.capacityLabel}
-            valeur={`${formatUnits(mainDoeuvreLimite && capacityFacts ? capacityFacts.laborCapacity : intro.capacity)}`}
+            valeur={`${formatUnits(
+              mainDoeuvreLimite && capacityFacts
+                ? capacityFacts.laborCapacity
+                : intro.capacity * disponibilite,
+            )}`}
             note={
               mainDoeuvreLimite
                 ? `${vocabulary.laborLabel} : la vraie limite`
-                : vocabulary.perRoundLabel
+                : usee
+                  ? `${Math.round(disponibilite * 100)} % de disponibilité, sur ${formatUnits(intro.capacity)} à l'état neuf`
+                  : vocabulary.perRoundLabel
             }
-            accent={mainDoeuvreLimite}
+            accent={mainDoeuvreLimite || usee}
           />
           <Chiffre
             label="Charges de structure"

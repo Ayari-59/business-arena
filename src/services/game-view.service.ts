@@ -321,7 +321,23 @@ export interface GameView {
   }[] | null;
   /** Capacité de production : machine, main-d'œuvre et goulot. */
   capacityFacts: {
+    /** Capacité machine NOMINALE : ce que l'outil rend à 100 % de disponibilité. */
     machineCapacity: number;
+    /**
+     * Disponibilité machine courante (0..1). Le moteur en multiplie la capacité
+     * (`production/index.ts` : `machineCapacity × availability`), donc c'est
+     * elle qui dit ce que l'atelier rend VRAIMENT ce tour. Elle se dégrade sous
+     * le budget d'entretien de référence et se rétablit au-dessus.
+     */
+    availability: number;
+    /** Capacité machine réellement disponible : nominale × disponibilité. */
+    availableMachineCapacity: number;
+    /**
+     * Le budget d'entretien qui sépare l'usure du rétablissement, pour ce tour
+     * et ce métier. Le classeur du cockpit le donnait déjà aux élèves ; l'écran
+     * de décision le taisait, et leur demandait donc un montant sans échelle.
+     */
+    maintenanceReference: number;
     laborCapacity: number;
     bottleneck: "machine" | "labor" | "balanced";
     headcount: number;
@@ -1864,11 +1880,20 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       }
       const lc = (state.headcount * state.hoursPerEmployee * state.productivity) /
         snapshot.product.hoursPerUnit;
+      // LE GOULOT SE COMPARE À CE QUE L'ATELIER REND, PAS À CE QU'IL RENDRAIT
+      // NEUF. Le moteur produit sous `machineCapacity × availability` ; une
+      // équipe descendue à 80 % de disponibilité était annoncée « équilibrée »
+      // alors que la machine l'arrêtait déjà.
+      const dispo = state.availability ?? 1;
+      const mcDispo = mc * dispo;
       const bottleneck: "machine" | "labor" | "balanced" =
-        mc < lc * 0.95 ? "machine" : lc < mc * 0.95 ? "labor" : "balanced";
+        mcDispo < lc * 0.95 ? "machine" : lc < mcDispo * 0.95 ? "labor" : "balanced";
       const sub = snapshot.subscription;
       return {
         machineCapacity: Math.round(mc),
+        availability: dispo,
+        availableMachineCapacity: Math.round(mcDispo),
+        maintenanceReference: snapshot.production.maintenanceReference,
         laborCapacity: Math.round(lc),
         bottleneck,
         headcount: state.headcount,
