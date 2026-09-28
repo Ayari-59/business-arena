@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, ne, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   concepts,
@@ -127,4 +127,48 @@ export async function getPlayerProfile(userId: string): Promise<PlayerProfile | 
       };
     }),
   };
+}
+
+/**
+ * LE RECORD PERSONNEL : rejouer ne se comparait à rien.
+ *
+ * L'écran de fin propose « Rejouer NOVA », mais la deuxième partie ne savait
+ * pas qu'il y en avait eu une première. Or les parties passées sont déjà là,
+ * avec leur IPG — la mesure que le dépôt s'est donnée, et la seule qui se
+ * compare d'une partie à l'autre : un résultat cumulé dépend du nombre de
+ * tours et du niveau, l'IPG est ramené à cent.
+ *
+ * TROIS BORNES, et elles font tout le sens de ce chiffre :
+ *  · le MÊME métier, parce qu'un hôtel et un atelier ne se comparent pas ;
+ *  · les parties SOLO, parce qu'en classe l'IPG est révélé par l'enseignant et
+ *    qu'un record ne doit pas contourner cette décision ;
+ *  · soi-même, jamais les autres. C'est la seule comparaison que le dépôt
+ *    s'autorise en continu.
+ */
+export async function recordPersonnel(args: {
+  userId: string;
+  /** Le code du scénario joué, tel que le snapshot le porte. */
+  scenarioCode: string;
+  /** La partie en cours, exclue du record : elle est le candidat, pas le tenant. */
+  saufPartie: string;
+}): Promise<{ bpi: number; quand: Date } | null> {
+  const lignes = await db
+    .select({ bpi: gameRankings.bpi, quand: games.createdAt })
+    .from(gameRankings)
+    .innerJoin(teams, eq(teams.id, gameRankings.teamId))
+    .innerJoin(players, eq(players.teamId, teams.id))
+    .innerJoin(games, eq(games.id, gameRankings.gameId))
+    .where(
+      and(
+        eq(players.userId, args.userId),
+        eq(games.status, "finished"),
+        sql`${games.scenarioSnapshot}->>'code' = ${args.scenarioCode}`,
+        sql`${games.difficultyProfile}->>'kind' = 'solo'`,
+        ne(games.id, args.saufPartie),
+      ),
+    );
+  if (lignes.length === 0) return null;
+  return lignes
+    .map((l) => ({ bpi: Number(l.bpi), quand: l.quand }))
+    .reduce((meilleur, l) => (l.bpi > meilleur.bpi ? l : meilleur));
 }

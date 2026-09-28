@@ -24,6 +24,7 @@ export function BilanDePartie({
   reussites,
   place,
   motDeClassement,
+  record = null,
   children,
 }: {
   /** « 🏆 Victoire ! … » ou « Partie terminée » : la phrase de tête. */
@@ -35,6 +36,13 @@ export function BilanDePartie({
   place: { rang: number; total: number } | null;
   /** Ce qu'on dit quand le classement n'est pas encore révélé. */
   motDeClassement: string | null;
+  /**
+   * L'IPG de cette partie et le meilleur des parties passées sur le même
+   * métier, en solo. Rejouer ne se comparait à rien : le bouton « Rejouer »
+   * existait, mais la deuxième partie ne savait pas qu'il y en avait eu une
+   * première. Absent en classe, où l'IPG appartient à l'enseignant.
+   */
+  record?: { monIpg: number; meilleur: number | null } | null;
   /** Les actions : rejouer, changer de métier. */
   children?: ReactNode;
 }) {
@@ -96,6 +104,40 @@ export function BilanDePartie({
           {reussites.acquises} sur {reussites.total}
           {reussites.derniere ? `, la dernière étant « ${reussites.derniere} »` : null}.
         </p>
+        {/*
+          LE RECORD NE COMPARE QU'À SOI. C'est la seule comparaison continue que
+          le dépôt s'autorise : le classement entre équipes reste la décision de
+          l'enseignant.
+        */}
+        {record ? (
+          <p className="text-base leading-relaxed text-slate-300">
+            <span className="font-semibold text-amber-300">
+              {record.meilleur === null
+                ? "Votre première sur ce métier : "
+                : record.monIpg > record.meilleur
+                  ? "Nouveau record : "
+                  : "Votre record tient : "}
+            </span>
+            {record.meilleur === null ? (
+              <>
+                IPG <span className="tabular-nums">{Math.round(record.monIpg)}</span>. C&apos;est
+                votre référence à battre au prochain essai.
+              </>
+            ) : record.monIpg > record.meilleur ? (
+              <>
+                IPG <span className="tabular-nums">{Math.round(record.monIpg)}</span>, contre{" "}
+                <span className="tabular-nums">{Math.round(record.meilleur)}</span> à votre
+                meilleure partie précédente.
+              </>
+            ) : (
+              <>
+                votre meilleure partie sur ce métier reste à IPG{" "}
+                <span className="tabular-nums">{Math.round(record.meilleur)}</span> ; celle-ci
+                finit à <span className="tabular-nums">{Math.round(record.monIpg)}</span>.
+              </>
+            )}
+          </p>
+        ) : null}
         {place ? (
           <p className="text-base leading-relaxed text-slate-300">
             <span className="font-semibold text-amber-300">Votre place : </span>

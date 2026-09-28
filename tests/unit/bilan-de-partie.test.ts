@@ -105,6 +105,37 @@ describe("l'écran de fin", () => {
     expect(html).toContain("1 sur 10.");
   });
 
+  it("le record ne compare qu'à soi, et sait qu'il vient d'être battu", () => {
+    const avec = (record: { monIpg: number; meilleur: number | null }) =>
+      rendu({
+        titre: "Partie terminée.",
+        bilan,
+        reussites: { acquises: 4, total: 10, derniere: null },
+        place: null,
+        motDeClassement: null,
+        record,
+      });
+    expect(avec({ monIpg: 71, meilleur: 64 })).toContain("Nouveau record");
+    expect(avec({ monIpg: 61, meilleur: 64 })).toContain("Votre record tient");
+    // Première partie sur ce métier : il n'y a rien à battre, seulement une
+    // référence à poser.
+    const premiere = avec({ monIpg: 62, meilleur: null });
+    expect(premiere).toContain("Votre première sur ce métier");
+    expect(premiere).toContain("référence à battre");
+  });
+
+  it("sans record fourni (partie de classe), l'écran n'en parle pas", () => {
+    const html = rendu({
+      titre: "Partie terminée.",
+      bilan,
+      reussites: { acquises: 4, total: 10, derniere: null },
+      place: null,
+      motDeClassement: null,
+    });
+    expect(html).not.toContain("record");
+    expect(html).not.toContain("IPG");
+  });
+
   it("la première place se dit « 1re », pas « 1e »", () => {
     const html = rendu({
       titre: "🏆 Victoire ! Volt domine le marché.",

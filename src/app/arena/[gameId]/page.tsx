@@ -39,6 +39,7 @@ import { BilanDePartie } from "@/components/bilan-de-partie";
 import { bilanDeLaPartie } from "@/pedagogy/bilan-de-partie";
 import { VosReussites } from "@/components/vos-reussites";
 import { reussitesDeLaPartie, lireLeTour } from "@/scoring/reussites";
+import { recordPersonnel } from "@/services/profile.service";
 import { codeDeRepriseDuJoueur } from "@/services/reprise.service";
 import { EcheanceDuTour } from "@/components/echeance-du-tour";
 import { mentionDeValidation } from "@/config/validation-du-tour";
@@ -69,6 +70,16 @@ export default async function ArenaPage({
   // partie n'appartient qu'à cet appareil et il n'y a pas d'équipe à rendre.
   const codeDeReprise = view.kind === "solo" ? null : await codeDeRepriseDuJoueur(gameId, userId);
   const situations = await getTeamSituations(gameId, userId);
+  // Le record personnel : seulement à la fin d'une partie solo, où l'IPG est
+  // déjà à l'écran. En classe, il appartient à l'enseignant de le révéler.
+  const recordPrecedent =
+    view.status === "finished" && view.kind === "solo" && view.playerBpi !== null
+      ? await recordPersonnel({
+          userId,
+          scenarioCode: view.scenarioCode,
+          saufPartie: gameId,
+        })
+      : null;
   const statutSituations = statutDesSituations(situations.current);
 
   // Assistant IA (facultatif) : coach de tour (solo) et tuteur. Disponibles
@@ -581,6 +592,11 @@ export default async function ArenaPage({
                   classementOuvert
                     ? null
                     : "Le classement final sera révélé par votre enseignant."
+                }
+                record={
+                  view.kind === "solo" && view.playerBpi !== null
+                    ? { monIpg: view.playerBpi, meilleur: recordPrecedent?.bpi ?? null }
+                    : null
                 }
               >
                 <Link
