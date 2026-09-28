@@ -25,7 +25,7 @@ export function CompetitiveBenchmark({
             {(playerIdx * 100).toFixed(0)}
           </p>
         </div>
-        <p className="text-xs leading-snug text-slate-400">
+        <p className="text-sm leading-snug text-slate-400">
           {playerIdx >= 1.05
             ? "Votre prix est inférieur au marché : vous captez de la demande, mais marquez-vous assez ?"
             : playerIdx < 0.95
@@ -79,7 +79,7 @@ export function CompetitiveBenchmark({
         </table>
       </div>
 
-      <p className="mt-2 text-xs leading-relaxed text-slate-400">
+      <p className="mt-2 text-sm leading-relaxed text-slate-400">
         L&apos;indice de compétitivité-prix compare votre prix au marché : au-dessus de
         100, vous êtes moins cher ; en dessous, plus cher. Le prix n&apos;est qu&apos;un levier
         parmi d&apos;autres : marketing, qualité et stock font le reste.

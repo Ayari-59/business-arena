@@ -35,10 +35,10 @@ export function MaCarteDeReprise({
           <p className="font-mono text-2xl tracking-[0.2em] text-amber-200">
             {formaterCodeDeReprise(code)}
           </p>
-          <p className="mt-1.5 max-w-prose text-xs leading-relaxed text-slate-300">
+          <p className="mt-1.5 max-w-prose text-sm leading-relaxed text-slate-300">
             {AIDE_CODE_DE_REPRISE_CLASSE}
           </p>
-          <p className="mt-1.5 max-w-prose text-xs leading-relaxed text-slate-400">
+          <p className="mt-1.5 max-w-prose text-sm leading-relaxed text-slate-400">
             Gardez-le pour vous : qui le lit peut jouer à votre place. Si quelqu&apos;un
             l&apos;a vu, prenez-en un autre — l&apos;ancien cesse aussitôt de fonctionner.
           </p>

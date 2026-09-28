@@ -441,7 +441,7 @@ export function SituationDebrief({
                         <span className="text-emerald-300"> · le plus juste : {correctLabel}</span>
                       ) : null}
                     </p>
-                    <p className="mt-1 text-xs text-slate-400">{correction.explain}</p>
+                    <p className="mt-1 text-sm leading-relaxed text-slate-400">{correction.explain}</p>
                   </li>
                 );
               })}
@@ -456,7 +456,7 @@ export function SituationDebrief({
             <div className="mt-1 rounded-lg border border-white/5 bg-slate-950 px-3 py-2">
               <p className="text-slate-300">{debrief.modelInsight.prompt}</p>
               <p className="mt-1 text-emerald-300">{debrief.modelInsight.answer}</p>
-              <p className="mt-1 text-xs text-slate-400">{debrief.modelInsight.explain}</p>
+              <p className="mt-1 text-sm leading-relaxed text-slate-400">{debrief.modelInsight.explain}</p>
             </div>
           </div>
         ) : null}

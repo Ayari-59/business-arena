@@ -79,7 +79,7 @@ export function CompetitionCreateForm({
           ))}
         </select>
       </label>
-      <p className="text-xs leading-relaxed text-slate-400 sm:col-span-2">
+      <p className="text-sm leading-relaxed text-slate-400 sm:col-span-2">
         Une poule est un ensemble d&apos;équipes qui jouent la même partie de qualification. Une
         équipe qualifiée part en finale entière, avec tous ses membres.
       </p>

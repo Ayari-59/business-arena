@@ -29,7 +29,7 @@ export function CodesDeReprise({
       <summary className="cursor-pointer text-sm font-semibold text-slate-200">
         Codes de reprise des joueurs ({codes.length})
       </summary>
-      <p className="mt-2 text-xs leading-relaxed text-slate-400">
+      <p className="mt-2 text-sm leading-relaxed text-slate-400">
         Le code personnel de chaque joueur : il lui rend son équipe depuis un autre appareil,
         même après la clôture des inscriptions. Relisez-le à qui l&apos;a perdu. Ne le projetez
         pas devant la classe : celui qui le lit peut jouer à la place de son propriétaire.

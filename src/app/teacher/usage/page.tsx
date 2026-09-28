@@ -59,7 +59,7 @@ export default async function UsagePage() {
         <h2 className="text-sm font-semibold text-slate-200">
           Les situations qui résistent
         </h2>
-        <p className="mt-1 max-w-2xl text-xs leading-relaxed text-slate-400">
+        <p className="mt-1 max-w-2xl text-sm leading-relaxed text-slate-400">
           Classées par score moyen croissant : les plus difficiles en tête. Le score comprend le
           malus d&apos;indices, ce qui explique qu&apos;une situation très aidée descende. Le
           compte est en équipes, celui des notions plus bas en élèves. Deux silences ne
@@ -130,7 +130,7 @@ export default async function UsagePage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="rounded-2xl border border-white/10 bg-slate-900 p-4 sm:p-7">
           <h2 className="text-sm font-semibold text-slate-200">Jusqu&apos;où vont les indices</h2>
-          <p className="mt-1 text-xs leading-relaxed text-slate-400">
+          <p className="mt-1 text-sm leading-relaxed text-slate-400">
             Les cinq niveaux vont de l&apos;observation à la méthode détaillée. Beaucoup de
             niveaux 4 et 5 signalent une marche trop haute, pas des élèves paresseux.
           </p>
@@ -160,7 +160,7 @@ export default async function UsagePage() {
 
         <section className="rounded-2xl border border-white/10 bg-slate-900 p-4 sm:p-7">
           <h2 className="text-sm font-semibold text-slate-200">Secteurs joués</h2>
-          <p className="mt-1 text-xs leading-relaxed text-slate-400">
+          <p className="mt-1 text-sm leading-relaxed text-slate-400">
             Un secteur jamais joué n&apos;est pas forcément mauvais : il est peut-être
             simplement invisible au moment de créer la partie.
           </p>
@@ -187,7 +187,7 @@ export default async function UsagePage() {
         <h2 className="text-sm font-semibold text-slate-200">
           Notions les moins ancrées, toutes classes confondues
         </h2>
-        <p className="mt-1 max-w-2xl text-xs leading-relaxed text-slate-400">
+        <p className="mt-1 max-w-2xl text-sm leading-relaxed text-slate-400">
           Maîtrise moyenne de vos élèves, sur 100. C&apos;est ici que se lisent les notions à
           reprendre en cours plutôt que dans le jeu.
         </p>

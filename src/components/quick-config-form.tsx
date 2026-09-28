@@ -125,7 +125,7 @@ export function QuickConfigFields({
           );
         })}
       </div>
-      <p className="mt-2 text-xs leading-snug text-slate-400">{sec?.tagline}</p>
+      <p className="mt-2 text-sm leading-snug text-slate-400">{sec?.tagline}</p>
 
       {/* 2 · Niveau */}
       <div className="mt-5 flex items-baseline justify-between gap-3">

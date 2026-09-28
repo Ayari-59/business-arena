@@ -384,7 +384,7 @@ function Entree({ lien, courant }: { lien: LienDeMenu; courant: boolean }) {
           </span>
         ) : null}
       </span>
-      <span className="mt-0.5 block text-xs leading-relaxed text-slate-400">{lien.aide}</span>
+      <span className="mt-0.5 block text-sm leading-relaxed text-slate-400">{lien.aide}</span>
     </Link>
   );
 }

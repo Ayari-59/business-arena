@@ -121,7 +121,7 @@ export function RseReportPanel({ report }: { report: RseReport }) {
         <Pillar title="Gouvernance" items={report.pillars.governance} />
       </div>
 
-      <p className="mt-3 text-xs leading-snug text-slate-400">
+      <p className="mt-3 text-sm leading-snug text-slate-400">
         Synthèse <strong>indicative et simplifiée</strong>, à visée pédagogique : elle s&apos;inspire
         d&apos;une déclaration de performance extra-financière sans en suivre une norme officielle.
         L&apos;empreinte carbone est un <strong>proxy</strong> (points, non des tCO₂e).

@@ -475,7 +475,7 @@ export default async function AdminPage({
             </p>
           ) : null}
           {!agenda.connexion ? (
-            <p className="mt-3 text-xs leading-relaxed text-slate-400">
+            <p className="mt-3 text-sm leading-relaxed text-slate-400">
               Dans la console Google, le client OAuth doit être de type « Application Web » avec,
               en URI de redirection autorisée, exactement :{" "}
               <code className="rounded bg-slate-900 px-1 py-0.5 text-slate-300">{SITE_URL}/api/google/callback</code>
@@ -657,7 +657,7 @@ export default async function AdminPage({
                       Enregistrer la licence
                     </button>
                   </form>
-                  <p className="mt-2 text-xs leading-relaxed text-slate-400">
+                  <p className="mt-2 text-sm leading-relaxed text-slate-400">
                     Sans licence, l&apos;établissement reste ouvert : la limite n&apos;existe que
                     là où une vente l&apos;a définie. Une licence expirée ferme la création de
                     nouvelles parties et laisse se terminer les classes en cours.

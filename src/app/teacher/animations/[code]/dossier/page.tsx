@@ -132,7 +132,7 @@ export default async function DossierEnseignantPage({
                   <div key={c.question} className="border-t border-white/10 pt-3 print:border-black/20">
                     <p className="text-sm font-medium text-slate-200 print:text-black">{c.question}</p>
                     <p className="mt-1 text-sm text-emerald-300 print:text-black">→ {c.reponse}</p>
-                    <p className="mt-1 text-xs leading-relaxed text-slate-400 print:text-black">
+                    <p className="mt-1 text-sm leading-relaxed text-slate-400 print:text-black">
                       {c.explication}
                     </p>
                   </div>

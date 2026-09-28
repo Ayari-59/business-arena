@@ -208,7 +208,7 @@ export function RendezVousForm({
               <p className="text-sm text-slate-400">Choisissez un jour : ses heures libres s&apos;affichent ici.</p>
             )}
 
-            <p className="border-t border-white/10 pt-3 text-xs leading-relaxed text-slate-400">
+            <p className="border-t border-white/10 pt-3 text-sm leading-relaxed text-slate-400">
               Heure de Paris. Un appel dure {DUREE_MINUTES} minutes ; les créneaux se règlent sur
               l&apos;agenda de la personne qui vous appelle, ce qui y est occupé n&apos;est pas proposé.
             </p>

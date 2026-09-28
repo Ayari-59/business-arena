@@ -93,7 +93,7 @@ export function CompetitionSteps({ concours }: { concours: ConcoursPourDeroule }
                 {etape.nom}
                 {etape.mention ? ` · ${etape.mention}` : ""}
               </span>
-              <span className="mt-0.5 block text-xs leading-relaxed text-slate-400">
+              <span className="mt-0.5 block text-sm leading-relaxed text-slate-400">
                 {etape.detail}
               </span>
             </span>

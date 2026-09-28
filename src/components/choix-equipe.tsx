@@ -50,7 +50,7 @@ export function ChoixEquipe({
         <span aria-hidden className="mr-1.5">👥</span>
         Composition des équipes
       </h2>
-      <p className="mt-1 text-xs leading-relaxed text-slate-400">
+      <p className="mt-1 text-sm leading-relaxed text-slate-400">
         {concours
           ? "En concours, votre équipe est celle de votre inscription : elle se qualifie d'un bloc et ne change pas en cours de tournoi."
           : ouvert
@@ -115,7 +115,7 @@ function LigneDEquipe({
             </span>
           ) : null}
         </p>
-        <p className="mt-0.5 text-xs leading-relaxed text-slate-400">
+        <p className="mt-0.5 text-sm leading-relaxed text-slate-400">
           {equipe.membres.length > 0
             ? equipe.membres.map((m) => m.nom).join(", ")
             : "personne pour l'instant"}

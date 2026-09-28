@@ -284,7 +284,7 @@ export function TableauDesReferences({
         </table>
       </div>
 
-      <p className="mt-2 text-xs leading-relaxed text-slate-400">
+      <p className="mt-2 text-sm leading-relaxed text-slate-400">
         Marge/u = prix − coût variable. Ce qu&apos;une référence rapporte = marge × volume
         vendu : le mix compte autant que le volume. Qualité 100 % = la référence du secteur.
       </p>

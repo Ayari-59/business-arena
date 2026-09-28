@@ -35,7 +35,7 @@ export function CompositionEquipes({
 
   return (
     <div>
-      <p className="text-xs leading-relaxed text-slate-400">
+      <p className="text-sm leading-relaxed text-slate-400">
         {inscrits === 0
           ? "Aucun élève n'a encore rejoint la partie. Le code d'invitation les répartit automatiquement dans l'équipe la moins remplie ; vous pourrez les déplacer ici."
           : "Le code d'invitation répartit les élèves dans l'équipe la moins remplie. Déplacez-les ici pour retrouver vos groupes, ou pour rattraper un élève revenu d'un autre poste : sans son cookie, il a été affecté au hasard."}
@@ -44,7 +44,7 @@ export function CompositionEquipes({
         // Dit une fois, et seulement quand c'est vrai : le relevé de notes lit
         // l'appartenance courante, donc un élève déplacé au tour 4 emporte le
         // résultat économique de sa nouvelle équipe pour toute la partie.
-        <p className="mt-2 rounded-lg border border-amber-400/30 bg-amber-950/10 px-3 py-2 text-xs leading-relaxed text-amber-200">
+        <p className="mt-2 rounded-lg border border-amber-400/30 bg-amber-950/10 px-3 py-2 text-sm leading-relaxed text-amber-200">
           Des tours sont déjà joués : le relevé de notes suit l&apos;équipe actuelle de
           chaque élève. Un élève déplacé maintenant recevra le résultat économique de
           sa nouvelle équipe pour toute la partie.

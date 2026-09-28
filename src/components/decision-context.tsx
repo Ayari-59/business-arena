@@ -51,14 +51,14 @@ export function DilemmaCard({
               Elle ne dit pas seule : chaque ligne garde son intitulé pour les
               lecteurs d'écran et pour qui ne distingue pas les deux teintes.
             */}
-            <p className="mt-2 flex gap-1.5 text-xs leading-snug text-slate-400">
+            <p className="mt-2 flex gap-1.5 text-sm leading-snug text-slate-400">
               <Signe sens="gain" className="mt-0.5 text-emerald-400" />
               <span>
                 <span className="sr-only">Ce que cela rapporte : </span>
                 {route.gain}
               </span>
             </p>
-            <p className="mt-1 flex gap-1.5 text-xs leading-snug text-slate-400">
+            <p className="mt-1 flex gap-1.5 text-sm leading-snug text-slate-400">
               <Signe sens="cout" className="mt-0.5 text-rose-400/80" />
               <span>
                 <span className="sr-only">Ce que cela coûte : </span>
@@ -101,7 +101,7 @@ function Chiffre({
       >
         {valeur}
       </p>
-      {note ? <p className="text-xs leading-snug text-slate-400">{note}</p> : null}
+      {note ? <p className="text-sm leading-snug text-slate-400">{note}</p> : null}
     </div>
   );
 }
@@ -166,7 +166,7 @@ export function ParametersPanels({
         </div>
         {/* Une gamme a un coût variable par référence : un seul chiffre mentirait. */}
         {gamme ? (
-          <p className="mt-3 text-xs leading-relaxed text-slate-400">
+          <p className="mt-3 text-sm leading-relaxed text-slate-400">
             <span className="text-slate-400">Coût variable : </span>
             {gamme.map((p, i) => (
               <span key={p.code}>
@@ -327,7 +327,7 @@ export function ParametersPanels({
                 </tbody>
               </table>
             </div>
-            <p className="mt-2 text-xs leading-relaxed text-slate-400">
+            <p className="mt-2 text-sm leading-relaxed text-slate-400">
               Le prix usuel est celui auquel cette clientèle a l&apos;habitude d&apos;acheter, pas
               une consigne.{" "}
               {gamme

@@ -845,7 +845,7 @@ export default async function ArenaPage({
                       </span>
                     </p>
                   ) : null}
-                  <p className="mt-1 text-xs text-slate-400">
+                  <p className="mt-1 text-sm leading-relaxed text-slate-400">
                     <a
                       href={`/arena/${view.gameId}/cockpit`}
                       className="text-amber-300 underline-offset-4 hover:underline"

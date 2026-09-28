@@ -53,7 +53,7 @@ export function IdentiteDeLAppareil({
           : "border-white/10"
       }`}
     >
-      <p className={`text-xs leading-relaxed ${avertissement ? "text-amber-200" : "text-slate-400"}`}>
+      <p className={`text-sm leading-relaxed ${avertissement ? "text-amber-200" : "text-slate-400"}`}>
         <span aria-hidden>👤</span>{" "}
         {avertissement ? "Cet appareil est déjà utilisé par " : "Vous jouez sous le nom de "}
         <strong className={avertissement ? "font-semibold" : "font-semibold text-slate-200"}>
@@ -65,7 +65,7 @@ export function IdentiteDeLAppareil({
 
       {confirmation ? (
         <form ref={formRef} action={formAction} className="mt-2 space-y-2">
-          <p className="text-xs leading-relaxed text-slate-300">
+          <p className="text-sm leading-relaxed text-slate-300">
             L&apos;appareil redeviendra neutre et vous reviendrez à l&apos;entrée par code. Les
             décisions déjà validées restent à l&apos;équipe : rien n&apos;est perdu.
           </p>

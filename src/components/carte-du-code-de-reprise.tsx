@@ -25,7 +25,7 @@ export function CarteDuCodeDeReprise({ code }: { code: string }) {
       >
         {formaterCodeDeReprise(code)}
       </p>
-      <p className="mt-1.5 text-xs leading-relaxed text-slate-300">{AIDE_CODE_DE_REPRISE}</p>
+      <p className="mt-1.5 text-sm leading-relaxed text-slate-300">{AIDE_CODE_DE_REPRISE}</p>
     </section>
   );
 }

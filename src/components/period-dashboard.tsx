@@ -93,7 +93,7 @@ function RseCard({ rse }: { rse: RseIndex }) {
           ))}
         </div>
       ) : null}
-      <p className="mt-3 text-xs leading-snug text-slate-400">
+      <p className="mt-3 text-sm leading-snug text-slate-400">
         Elle pèse dans l&apos;IPG (10 % par défaut) ; elle ne joue pas sur le marché.
       </p>
     </section>
@@ -386,7 +386,7 @@ export function PeriodDashboard({
                       <p className="mt-0.5 text-lg font-semibold tabular-nums text-slate-100">
                         {formatKpi(k.value, k.format)}
                       </p>
-                      <p className="mt-1 text-xs leading-snug text-slate-400">{k.hint}</p>
+                      <p className="mt-1 text-sm leading-snug text-slate-400">{k.hint}</p>
                     </div>
                   ))}
                 </div>
@@ -555,7 +555,7 @@ export function PeriodDashboard({
                     </tbody>
                   </table>
                 </div>
-                <p className="mt-2 text-xs leading-relaxed text-slate-400">
+                <p className="mt-2 text-sm leading-relaxed text-slate-400">
                   Un écart qui se répète dans le même sens n&apos;est pas de la malchance :
                   c&apos;est un biais de votre modèle.
                 </p>

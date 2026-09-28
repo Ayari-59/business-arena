@@ -266,7 +266,7 @@ function EquipmentPanel({
           </div>
         </div>
       ) : null}
-      <p className="mt-3 text-xs leading-relaxed text-slate-400">
+      <p className="mt-3 text-sm leading-relaxed text-slate-400">
         Les machines achetées entrent en service au tour suivant. La revente se fait à la
         valeur de marché (VNC × ratio de revente) : vendre en dessous de la VNC génère une
         perte de cession, un coût bien réel que le résultat encaisse.
@@ -575,7 +575,7 @@ function FaitCapacite({
       <dd className={`text-sm font-medium tabular-nums ${couleur}`} data-testid={testId}>
         {valeur}
       </dd>
-      {note ? <dd className="text-xs leading-snug text-slate-400">{note}</dd> : null}
+      {note ? <dd className="text-sm leading-snug text-slate-400">{note}</dd> : null}
     </div>
   );
 }
@@ -1027,7 +1027,7 @@ function GammeReference({
       {chantiers.map(({ p, dev }) => {
         const reste = Math.max(0, dev.cost - dev.invested);
         return (
-          <p key={p.code} className="text-xs leading-relaxed text-amber-200/80">
+          <p key={p.code} className="text-sm leading-relaxed text-amber-200/80">
             <strong className="font-medium">{p.name}</strong> —{" "}
             {reste <= 0
               ? `financée (${formatEuro(dev.invested)} engagés) : vendable dès le tour ${Math.max(dev.availableFromRound, roundIndex + 1)}.`
@@ -1036,14 +1036,14 @@ function GammeReference({
         );
       })}
 
-      <p className="text-xs leading-relaxed text-slate-400">
+      <p className="text-sm leading-relaxed text-slate-400">
         Capacité partagée : si la somme des volumes la dépasse, toutes les références sont
         réduites dans la même proportion.
         {avecFournisseurs
           ? " Le façonnier choisi ne vaut que pour sa référence : son coût d'achat, sa qualité, son délai, son risque de rupture."
           : ""}
       </p>
-      <p className="text-xs leading-relaxed text-slate-400">
+      <p className="text-sm leading-relaxed text-slate-400">
         Chaque budget va à sa référence et se paie le tour même. Marketing : effet immédiat,
         qui retombe si on cesse
         {quality ? " ; qualité : la qualité perçue" : ""}
@@ -1673,7 +1673,7 @@ export function DecisionForm({
               ? `Sur « ${orderOffer.productName} », servie sur son stock restant après le marché.`
               : "Servie sur votre stock restant après le marché."}
           </p>
-          <p className="mt-1 text-xs text-slate-400">
+          <p className="mt-1 text-sm leading-relaxed text-slate-400">
             {orderOffer.paymentDelayDays > 0
               ? "Belle marge, mais encaissée plus tard : le BFR gonfle d'autant."
               : "Cash immédiat, marge mince : comparez le prix à votre coût variable."}
@@ -1830,7 +1830,7 @@ export function DecisionForm({
             legendClass="text-xs font-semibold uppercase tracking-wide text-emerald-300"
           >
             {gamme ? (
-              <p className="mb-2 text-xs leading-relaxed text-emerald-200/80">
+              <p className="mb-2 text-sm leading-relaxed text-emerald-200/80">
                 Chaque référence a ses façonniers ; le choix se fait ligne par ligne dans le
                 tableau de vos ventes. Voici ce que chacun propose, et à quel prix d&apos;achat
                 pour chaque référence qu&apos;il fournit.
@@ -1890,7 +1890,7 @@ export function DecisionForm({
                 </label>
               ))}
             </div>
-            <p className="mt-3 text-xs leading-relaxed text-slate-400">
+            <p className="mt-3 text-sm leading-relaxed text-slate-400">
               Le prix d&apos;achat entre dans le coût variable : c&apos;est ce qui reste entre lui et
               votre prix de vente qui fait la marge. Le bonus de qualité joue sur la qualité
               perçue, le délai de règlement sur la trésorerie (BFR), le risque de rupture sur
@@ -1960,7 +1960,7 @@ export function DecisionForm({
           legend={`💸 Les budgets de l'entreprise · ${[on.maintenance ? "entretien" : null, communicationOffer ? "marque" : null].filter(Boolean).join(", ")}`}
           defaultOpen
         >
-          <p className="text-xs leading-relaxed text-slate-400">
+          <p className="text-sm leading-relaxed text-slate-400">
             Le marketing, la qualité et la R&D de chaque référence se décident dans son
             onglet, à l&apos;étape précédente.
           </p>
@@ -2142,7 +2142,7 @@ export function DecisionForm({
           décide d'emprunter.
         */}
         {bankFile ? (
-          <p className="mt-3 text-xs leading-relaxed text-slate-400">
+          <p className="mt-3 text-sm leading-relaxed text-slate-400">
             Découvert autorisé{" "}
             <strong className="text-slate-200">{formatEuro(bankFile.overdraftLimit)}</strong>, à{" "}
             <strong className="text-slate-200">
@@ -2239,7 +2239,7 @@ export function DecisionForm({
                 suffix="€"
                 hint="Bloqué jusqu'au tour suivant : cet argent ne paiera rien ce tour-ci."
               />
-              <p className="mt-2 text-xs leading-relaxed text-slate-400">
+              <p className="mt-2 text-sm leading-relaxed text-slate-400">
                 {treasuryOffer.maturedPlacement > 0.5
                   ? `${Math.round(treasuryOffer.maturedPlacement).toLocaleString("fr-FR")} € placés au tour précédent sont revenus en caisse, intérêts compris. `
                   : ""}
@@ -2250,7 +2250,7 @@ export function DecisionForm({
               </p>
             </div>
           ) : null}
-          <p className="mt-3 text-xs leading-relaxed text-slate-400">
+          <p className="mt-3 text-sm leading-relaxed text-slate-400">
             Découvert autorisé jusqu&apos;à{" "}
             {Math.round(treasuryOffer.overdraftLimit).toLocaleString("fr-FR")} €. Au-delà, la
             banque cède vos créances d&apos;office, au tarif fort.
@@ -2293,7 +2293,7 @@ export function DecisionForm({
               </label>
             ))}
           </div>
-          <p className="mt-3 text-xs leading-relaxed text-slate-400">
+          <p className="mt-3 text-sm leading-relaxed text-slate-400">
             Un coût certain contre un risque incertain : plus la couverture est large, plus
             la prime pèse.
           </p>
@@ -2401,7 +2401,7 @@ export function DecisionForm({
                 : []
             }
           />
-          <p className="mt-3 text-xs leading-relaxed text-slate-400">
+          <p className="mt-3 text-sm leading-relaxed text-slate-400">
             L&apos;information a un prix, facturé en charges de structure : il se lit au seuil
             de rentabilité. Décider sans données coûte souvent plus cher.
           </p>
@@ -2433,7 +2433,7 @@ export function DecisionForm({
           }
           className="w-full resize-y champ px-3 py-2 text-sm text-slate-200 placeholder:text-slate-400 focus:outline-none"
         />
-        <p className="mt-1 text-xs text-slate-400">
+        <p className="mt-1 text-sm leading-relaxed text-slate-400">
           {premierTour
             ? "Une phrase, avant de savoir : elle vous reviendra au prochain tour, en face du résultat."
             : "Elle vous reviendra au prochain tour, en face du résultat. L'enseignant la lira au débriefing."}

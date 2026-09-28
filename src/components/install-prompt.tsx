@@ -121,7 +121,7 @@ export function InstallPrompt() {
             <p className="text-sm font-semibold text-slate-100">
               Installer Business Arena
             </p>
-            <p className="mt-0.5 text-xs leading-relaxed text-slate-400">
+            <p className="mt-0.5 text-sm leading-relaxed text-slate-400">
               {isIos
                 ? "Ajoutez l'app à votre écran d'accueil : elle s'ouvre en plein écran, sans barre de navigateur."
                 : "Un accès direct depuis l'écran d'accueil, en plein écran, comme une vraie app."}

@@ -155,7 +155,7 @@ export function NouvellePhase({
         <h2 className="text-sm font-semibold text-slate-200">
           Ajouter une phase avant la finale
         </h2>
-        <p className="mt-1 text-xs leading-relaxed text-slate-400">
+        <p className="mt-1 text-sm leading-relaxed text-slate-400">
           Les {equipesEnLice} équipes qui sortent de la phase en cours sont retirées au sort dans
           de nouvelles poules. Sans cette phase, elles iraient directement en finale.
         </p>

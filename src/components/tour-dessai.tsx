@@ -125,7 +125,7 @@ export function TourDessai() {
               {state.lecons.map((l) => (
                 <li
                   key={l.texte}
-                  className={`rounded-lg border px-3 py-2 text-xs leading-relaxed ${
+                  className={`rounded-lg border px-3 py-2 text-sm leading-relaxed ${
                     l.ton === "bon"
                       ? "border-emerald-400/25 bg-emerald-950/20 text-emerald-100"
                       : l.ton === "mauvais"
@@ -199,7 +199,7 @@ function Curseur({
           className="mt-1.5 w-full accent-amber-400"
         />
       </label>
-      <p className="mt-1 text-xs text-slate-400">{aide}</p>
+      <p className="mt-1 text-sm leading-relaxed text-slate-400">{aide}</p>
     </div>
   );
 }

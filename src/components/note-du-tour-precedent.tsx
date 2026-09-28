@@ -37,7 +37,7 @@ export function NoteDuTourPrecedent({
       <blockquote className="mt-1 whitespace-pre-line text-sm italic leading-relaxed text-slate-200">
         {note}
       </blockquote>
-      <p className="mt-1.5 text-xs leading-relaxed text-slate-400">
+      <p className="mt-1.5 text-sm leading-relaxed text-slate-400">
         Comparez avec ce qui s&apos;est passé : là où votre raisonnement tenait, gardez-le ; là où
         il s&apos;est trompé, cherchez pourquoi avant de décider ce tour-ci.
       </p>

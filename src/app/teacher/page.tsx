@@ -236,7 +236,7 @@ export default async function TeacherDashboard({
                         18 élèves · tour 4 sur 6 · samedi » en demande le
                         double. Coupée, elle perdait la date, qui est
                         justement ce qui distingue deux parties du même nom. */}
-                    <span className="mt-0.5 block text-xs leading-snug text-slate-400">
+                    <span className="mt-0.5 block text-sm leading-snug text-slate-400">
                       {g.label ? `${g.scenarioShortName} · ` : ""}
                       {compter(g.teamsCount, "équipe")}
                       {g.elevesCount > 0 ? ` · ${compter(g.elevesCount, "élève")}` : ""} ·{" "}
@@ -440,7 +440,7 @@ export default async function TeacherDashboard({
                 </label>
               ))}
             </div>
-            <p className="mt-2 text-xs leading-relaxed text-slate-400">
+            <p className="mt-2 text-sm leading-relaxed text-slate-400">
               Le réglage se modifie ensuite à tout moment depuis la partie. Les situations déjà
               débriefées gardent le score obtenu sous l&apos;ancien réglage.
             </p>

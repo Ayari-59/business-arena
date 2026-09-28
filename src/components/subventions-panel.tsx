@@ -46,7 +46,7 @@ export function SubventionsPanel({
         <span aria-hidden className="mr-1.5">🆘</span>
         Demandes de subvention exceptionnelle
       </h2>
-      <p className="mt-1 text-xs leading-relaxed text-slate-400">
+      <p className="mt-1 text-sm leading-relaxed text-slate-400">
         Une équipe ne dépose un dossier que lorsqu&apos;elle est au pied du mur : sa banque a
         cessé de prêter et l&apos;enveloppe de ses associés est vide. À vous de décider si son
         histoire vaut une aide — en totalité, en partie, ou pas du tout.
@@ -65,7 +65,7 @@ export function SubventionsPanel({
       {tranchees.length > 0 ? (
         <ul className="mt-3 space-y-1.5 border-t border-white/5 pt-3">
           {tranchees.map((d) => (
-            <li key={d.id} className="text-xs leading-relaxed text-slate-400">
+            <li key={d.id} className="text-sm leading-relaxed text-slate-400">
               <span className="font-medium text-slate-300">{d.teamName}</span> · tour{" "}
               {d.roundIndex} ·{" "}
               {d.statut === "granted" ? (
@@ -108,7 +108,7 @@ function Instruction({ gameId, demande }: { gameId: string; demande: Demande }) 
         // Accorder après la clôture ne ferait rien entrer nulle part : la
         // subvention s'encaisse à la résolution du tour demandé. Le dire vaut
         // mieux que laisser cliquer dans le vide.
-        <p className="mt-2 text-xs leading-relaxed text-rose-300">
+        <p className="mt-2 text-sm leading-relaxed text-rose-300">
           Le tour {demande.roundIndex} est déjà clos : la subvention n&apos;y serait plus
           encaissée. Vous pouvez encore refuser, pour que l&apos;équipe ait sa réponse.
         </p>

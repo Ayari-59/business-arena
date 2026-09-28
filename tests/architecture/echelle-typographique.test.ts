@@ -46,8 +46,26 @@ function fichiers(racine: string): string[] {
 }
 
 /** Un paragraphe dont l'auteur a aéré l'interligne, et qu'il a laissé en 12 px. */
-const PROSE_TROP_PETITE =
-  /<(?:p|li|dd|blockquote)\b[^>]*className="[^"]*(?:text-xs[^"]*leading-(?:relaxed|snug)|leading-(?:relaxed|snug)[^"]*text-xs)[^"]*"/g;
+const PROSE_TROP_PETITE = new RegExp(
+  // La classe peut être écrite entre guillemets ou assemblée dans un gabarit :
+  // le corps des lettres du jeu est dans le second cas, et échappait à la
+  // garde pour cette seule raison. Un `<span>` compte aussi, quand il est posé
+  // en bloc : c'est un paragraphe déguisé.
+  '<(?:p|li|dd|blockquote|span)\\b[^>]*className=(?:"[^"]*|\\{`[^`]*)' +
+    '(?:text-xs[^"`]*leading-(?:relaxed|snug)|leading-(?:relaxed|snug)[^"`]*text-xs)',
+  "g",
+);
+
+/**
+ * Deux exceptions, et elles ne sont pas des aménagements : un intitulé en
+ * CAPITALES n'est pas une phrase, et un `<span>` qui n'est pas en bloc est un
+ * morceau de ligne, pas un paragraphe. Les deux gardent 12 px.
+ */
+function estUnParagraphe(balise: string): boolean {
+  if (/\buppercase\b/.test(balise)) return false;
+  if (/^<span\b/.test(balise) && !/\bblock\b/.test(balise)) return false;
+  return true;
+}
 
 const ZONES: { nom: string; racines: string[]; plafond: number }[] = [
   {
@@ -59,8 +77,8 @@ const ZONES: { nom: string; racines: string[]; plafond: number }[] = [
     ],
     plafond: 0,
   },
-  { nom: "arène et composants", racines: ["app/arena", "components"], plafond: 58 },
-  { nom: "espace enseignant", racines: ["app/teacher", "app/admin", "app/org"], plafond: 11 },
+  { nom: "arène et composants", racines: ["app/arena", "components"], plafond: 0 },
+  { nom: "espace enseignant", racines: ["app/teacher", "app/admin", "app/org"], plafond: 0 },
 ];
 
 describe("l'échelle typographique", () => {
@@ -71,6 +89,7 @@ describe("l'échelle typographique", () => {
         for (const f of fichiers(join(SRC, racine))) {
           const source = readFileSync(f, "utf8");
           for (const m of source.matchAll(PROSE_TROP_PETITE)) {
+            if (!estUnParagraphe(m[0])) continue;
             fautes.push(`${f.slice(SRC.length)} : ${m[0].slice(0, 96)}`);
           }
         }
@@ -82,9 +101,10 @@ describe("l'échelle typographique", () => {
     });
   }
 
-  it("le plafond des pages publiques est à zéro, et il y reste", () => {
-    // La zone que j'ai pu regarder à l'écran est la seule où l'on peut exiger
-    // zéro : c'est ce qui distingue une garde d'un vœu.
-    expect(ZONES.find((z) => z.nom === "pages publiques")!.plafond).toBe(0);
+  it("plus aucune zone ne tolère un paragraphe aéré en 12 px", () => {
+    // Les trois zones sont à zéro : l'arène et l'espace enseignant ont été
+    // regardés à l'écran, sur une base locale montée pour l'occasion, et plus
+    // seulement lus dans les sources.
+    for (const zone of ZONES) expect(zone.plafond, zone.nom).toBe(0);
   });
 });

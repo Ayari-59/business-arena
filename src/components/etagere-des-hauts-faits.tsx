@@ -75,7 +75,7 @@ export function EtagereDesHautsFaits({
                   </span>
                 )}
               </p>
-              <p className="mt-1 text-xs leading-relaxed text-slate-400">
+              <p className="mt-1 text-sm leading-relaxed text-slate-400">
                 {acquise ? fait.detail : fait.viser}
               </p>
             </li>

@@ -66,7 +66,7 @@ export function DistributionCourrier({
           🖨️ Imprimer la liasse
         </a>
       </div>
-      <p className="mt-1 text-xs text-slate-400">
+      <p className="mt-1 text-sm leading-relaxed text-slate-400">
         Courriers de <strong className="text-slate-300">marché</strong> pour toute la classe, plis{" "}
         <strong className="text-slate-300">adressés</strong> pour une seule entreprise. Annoncés aux
         équipes, appliqués à la clôture du tour. Vous pouvez aussi faire ouvrir les enveloppes

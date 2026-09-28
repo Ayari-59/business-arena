@@ -45,7 +45,7 @@ export function PreuvesDusageBande({ preuves }: { preuves: PreuvesDusage | null 
               <dd className="m-0">
                 <p className="font-display text-3xl tabular-nums text-amber-400">{c.valeur}</p>
                 <p className="mt-1 text-sm font-medium text-slate-200">{c.quoi}</p>
-                <p className="mt-0.5 text-xs leading-snug text-slate-400">{c.aide}</p>
+                <p className="mt-0.5 text-sm leading-snug text-slate-400">{c.aide}</p>
               </dd>
             </div>
           ))}

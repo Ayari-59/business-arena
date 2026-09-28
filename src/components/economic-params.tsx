@@ -130,7 +130,7 @@ export function EconomicParams({
           ⚙️ Paramètres économiques (avancé) · laissez vide pour les valeurs du scénario
         </summary>
 
-        <p className="mt-3 text-xs leading-relaxed text-slate-400">
+        <p className="mt-3 text-sm leading-relaxed text-slate-400">
           Les valeurs en filigrane sont celles de{" "}
           <strong className="text-slate-400">{selected.label}</strong>. Montants en base
           trimestrielle, redimensionnés selon la périodicité choisie. Une valeur hors bornes est
@@ -169,7 +169,7 @@ export function EconomicParams({
               })}
             </div>
             {group.note ? (
-              <p className="mt-2 text-xs leading-relaxed text-slate-400">{group.note}</p>
+              <p className="mt-2 text-sm leading-relaxed text-slate-400">{group.note}</p>
             ) : null}
           </section>
         ))}
@@ -180,7 +180,7 @@ export function EconomicParams({
           📊 Pondérations de l&apos;IPG (avancé) · laissez vide pour les poids du scénario
         </summary>
 
-        <p className="mt-3 text-xs leading-relaxed text-slate-400">
+        <p className="mt-3 text-sm leading-relaxed text-slate-400">
           L&apos;IPG est la moyenne pondérée de six dimensions. Les valeurs en filigrane sont celles de{" "}
           <strong className="text-slate-400">{selected.label}</strong>. Ce sont des poids{" "}
           <strong className="text-slate-400">relatifs</strong> : inutile de tomber juste à 100 %, ils

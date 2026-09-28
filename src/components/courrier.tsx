@@ -114,7 +114,7 @@ export function Enveloppe({
         <div className={`flex items-start justify-between gap-2 ${bande ? "pl-7" : ""}`}>
           {/* expéditeur et cachet, en haut à gauche */}
           <span className="min-w-0">
-            <span className="douce block text-xs font-semibold uppercase leading-snug tracking-wide">
+            <span className="douce block text-sm font-semibold uppercase leading-snug tracking-wide">
               {c ? c.expediteur : "Courrier à ouvrir"}
             </span>
             {nature ? (
@@ -150,7 +150,7 @@ export function Enveloppe({
 
         {/* la fenêtre du destinataire */}
         <div className={`mt-auto ${bande ? "pl-7" : ""}`}>
-          <span className="creux filet inline-block rounded-sm border border-dashed px-2.5 py-1.5 text-xs leading-relaxed">
+          <span className="creux filet inline-block rounded-sm border border-dashed px-2.5 py-1.5 text-sm leading-relaxed">
             <span className="tenue block text-xs uppercase tracking-widest">Destinataire</span>
             {destinataire ?? "L'entreprise"}
           </span>
@@ -264,8 +264,8 @@ export function Lettre({
         </p>
 
         {interne ? null : <p className="douce mt-2.5 text-xs italic">Madame, Monsieur,</p>}
-        <p className={`douce ${interne ? "mt-2.5" : "mt-1"} text-xs leading-relaxed`}>{c.corps}</p>
-        <p className="douce mt-2 text-right text-xs italic leading-snug">
+        <p className={`douce ${interne ? "mt-2.5" : "mt-1"} text-sm leading-relaxed`}>{c.corps}</p>
+        <p className="douce mt-2 text-right text-sm italic leading-snug">
           {interne ? null : (
             <>
               Veuillez agréer nos salutations distinguées.
@@ -278,7 +278,7 @@ export function Lettre({
         {/* ce que l'entreprise doit en faire, et ses pastilles de durée */}
         <div className="creux filet mt-auto rounded-lg border px-3 py-2">
           <div className="flex items-start justify-between gap-2">
-            <p className={`text-xs font-semibold leading-snug ${sansEffet ? "douce" : ""}`}>
+            <p className={`text-sm font-semibold leading-snug ${sansEffet ? "douce" : ""}`}>
               {sansEffet ? "🗂️" : "⚡"} {c.effet}
             </p>
             {sansEffet ? null : (
@@ -292,7 +292,7 @@ export function Lettre({
             )}
           </div>
         </div>
-        <p className="douce mt-2 text-xs leading-snug">💡 {c.enJeu}</p>
+        <p className="douce mt-2 text-sm leading-snug">💡 {c.enJeu}</p>
 
         <div className="filet mt-2 flex items-end justify-between border-t pt-1.5">
           <span className="tenue text-xs uppercase tracking-[0.15em]">
@@ -342,11 +342,11 @@ export function Courriel({
         <div className="flex items-start gap-2.5">
           <span aria-hidden className="courriel-point mt-1.5 h-2 w-2 shrink-0 rounded-full" />
           <span className="min-w-0 flex-1">
-            <span className="block text-xs font-bold leading-snug">
+            <span className="block text-sm font-bold leading-snug">
               {c ? c.expediteur : "Message à ouvrir"}
             </span>
             {c ? (
-              <span className="douce mt-1 block text-xs leading-snug">{c.objet}</span>
+              <span className="douce mt-1 block text-sm leading-snug">{c.objet}</span>
             ) : null}
           </span>
           {c ? (
@@ -358,7 +358,7 @@ export function Courriel({
 
         {/* Le destinataire en clair sous l'objet, et non dans une fenêtre
             encadrée : une boîte de réception n'a pas de fenêtre d'enveloppe. */}
-        <span className="tenue mt-1.5 block pl-[1.125rem] text-xs leading-snug">
+        <span className="tenue mt-1.5 block pl-[1.125rem] text-sm leading-snug">
           À {destinataire ?? "L'entreprise"}
         </span>
 
@@ -476,8 +476,8 @@ export function Message({
       */}
       <div className="flex flex-1 flex-col px-3 pb-3 pt-2.5">
         <p className="douce text-xs italic">Bonjour,</p>
-        <p className="douce mt-1 text-xs leading-relaxed">{c.corps}</p>
-        <p className="douce mt-2 text-xs italic leading-snug">
+        <p className="douce mt-1 text-sm leading-relaxed">{c.corps}</p>
+        <p className="douce mt-2 text-sm italic leading-snug">
           Cordialement,
           <br />
           <span className="not-italic">{c.signataire}</span>
@@ -488,7 +488,7 @@ export function Message({
 
         <div className="creux filet mt-auto rounded-md border px-3 py-2">
           <div className="flex items-start justify-between gap-2">
-            <p className={`text-xs font-semibold leading-snug ${sansEffet ? "douce" : ""}`}>
+            <p className={`text-sm font-semibold leading-snug ${sansEffet ? "douce" : ""}`}>
               {sansEffet ? "🗂️" : "⚡"} {c.effet}
             </p>
             {sansEffet ? null : (
@@ -502,7 +502,7 @@ export function Message({
             )}
           </div>
         </div>
-        <p className="douce mt-2 text-xs leading-snug">💡 {c.enJeu}</p>
+        <p className="douce mt-2 text-sm leading-snug">💡 {c.enJeu}</p>
 
         <div className="filet mt-2 flex items-end justify-between border-t pt-1.5">
           <span className="tenue text-xs uppercase tracking-[0.15em]">

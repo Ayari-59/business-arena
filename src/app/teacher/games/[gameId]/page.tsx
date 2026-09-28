@@ -351,7 +351,7 @@ export default async function TeacherGamePage({
                           </p>
                         ) : null}
                         {t.justification ? (
-                          <p className="mt-1 max-w-md text-xs italic leading-relaxed text-slate-400">
+                          <p className="mt-1 max-w-md text-sm italic leading-relaxed text-slate-400">
                             « {t.justification} »
                           </p>
                         ) : null}
@@ -615,7 +615,7 @@ export default async function TeacherGamePage({
           <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-sm font-semibold text-slate-200">Relevé de notes</h2>
-              <p className="mt-1 max-w-2xl text-xs leading-relaxed text-slate-400">
+              <p className="mt-1 max-w-2xl text-sm leading-relaxed text-slate-400">
                 Deux mesures séparées, et non fondues en une : la note tirée des situations
                 rendues dit ce que l&apos;équipe a compris, le score composite dit ce que
                 l&apos;entreprise a fait. Une bonne analyse peut mener à un mauvais

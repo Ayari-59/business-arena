@@ -87,7 +87,7 @@ export function VariancePanel({ variances }: { variances: VarianceOutput }) {
         </div>
       </div>
 
-      <p className="mt-2 text-xs leading-relaxed text-slate-400">
+      <p className="mt-2 text-sm leading-relaxed text-slate-400">
         Les écarts de coûts, matière et efficacité, pèsent directement sur le résultat : ce sont
         les seuls que ce panneau mesure.
       </p>

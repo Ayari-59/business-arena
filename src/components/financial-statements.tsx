@@ -86,7 +86,7 @@ function LigneDeLecture({ lecture }: { lecture: Lecture }) {
         ? "border-teal-400/30 bg-teal-950/30 text-teal-200"
         : "border-white/10 bg-slate-950 text-slate-300";
   return (
-    <p className={`mb-2 rounded-lg border px-3 py-2 text-xs leading-relaxed ${teinte}`}>
+    <p className={`mb-2 rounded-lg border px-3 py-2 text-sm leading-relaxed ${teinte}`}>
       <span className="sr-only">
         {lecture.ton === "mauvais" ? "Point de vigilance. " : lecture.ton === "bon" ? "Lecture favorable. " : ""}
       </span>
