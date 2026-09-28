@@ -152,7 +152,7 @@ export default async function Home() {
               Je suis enseignant
             </Link>
           </div>
-          <p className="mt-3 text-xs text-slate-400">
+          <p className="mt-3 text-sm text-slate-400">
             Sans compte, sans installation. Vos parties restent liées à ce navigateur.
           </p>
         </div>
@@ -212,7 +212,7 @@ export default async function Home() {
                   →
                 </span>
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-400">{r.aide}</p>
+              <p className="mt-2 text-base leading-relaxed text-slate-400">{r.aide}</p>
             </Link>
           ))}
         </div>

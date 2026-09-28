@@ -53,7 +53,7 @@ function Section({
   return (
     <section id={id} className="scroll-mt-24 rounded-2xl border border-white/10 bg-slate-900 p-6 sm:p-8">
       <h2 className="text-xl font-bold text-slate-50">{title}</h2>
-      {intro ? <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">{intro}</p> : null}
+      {intro ? <p className="mt-2 max-w-2xl text-base leading-relaxed text-slate-400">{intro}</p> : null}
       {/*
         NEUF SECTIONS DÉPLIÉES FONT CINQ MÈTRES ET DEMI.
         Mesuré : 1 782 mots, 5 480 px de défilement, et aucune image pour se
@@ -124,7 +124,7 @@ export default function GuidePage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-xl border border-white/10 bg-slate-950 p-5">
               <p className="text-sm font-semibold text-amber-300">Je veux essayer, tout de suite</p>
-              <p className="mt-2 text-sm leading-relaxed text-slate-400">
+              <p className="mt-2 text-base leading-relaxed text-slate-400">
                 Depuis la page <Link href="/jouer" className="text-amber-300 underline-offset-4 hover:underline">Jouer</Link>,
                 choisissez votre secteur (atelier, boutique, hôtel, restaurant, cabinet de
                 conseil, boutique en ligne ou salle de sport), la périodicité et le nombre de
@@ -136,7 +136,7 @@ export default function GuidePage() {
             </div>
             <div className="rounded-xl border border-white/10 bg-slate-950 p-5">
               <p className="text-sm font-semibold text-amber-300">Je suis élève, j&apos;ai un code</p>
-              <p className="mt-2 text-sm leading-relaxed text-slate-400">
+              <p className="mt-2 text-base leading-relaxed text-slate-400">
                 Rendez-vous sur <Link href="/join" className="text-amber-300 underline-offset-4 hover:underline">/join</Link>,
                 saisissez le code à 6 caractères donné par votre enseignant et un pseudo :
                 vous rejoignez l&apos;équipe de votre classe. Pas de mot de passe à retenir.
@@ -294,7 +294,7 @@ export default function GuidePage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-xl border border-amber-400/20 bg-slate-950 p-5">
               <p className="text-sm font-semibold text-amber-300">🌍 Courrier de marché</p>
-              <p className="mt-2 text-sm leading-relaxed text-slate-400">
+              <p className="mt-2 text-base leading-relaxed text-slate-400">
                 Adressé à toute la classe : revalorisation tarifaire du fournisseur, note de
                 conjoncture, révision des taux par la banque, arrêté de catastrophe naturelle…
                 Maximum 2 par tour.
@@ -302,13 +302,13 @@ export default function GuidePage() {
             </div>
             <div className="rounded-xl border border-sky-400/20 bg-slate-950 p-5">
               <p className="text-sm font-semibold text-sky-300">🎯 Pli adressé</p>
-              <p className="mt-2 text-sm leading-relaxed text-slate-400">
+              <p className="mt-2 text-base leading-relaxed text-slate-400">
                 Adressé à une seule entreprise : rapport de panne, incident de sécurité, commande
                 ferme, mise en demeure de la banque… Un pli par entreprise et par tour.
               </p>
             </div>
           </div>
-          <p className="mt-4 text-sm leading-relaxed text-slate-400">
+          <p className="mt-4 text-base leading-relaxed text-slate-400">
             Pour une vraie distribution en classe,{" "}
             <Link
               href="/teacher/courriers/print"
@@ -355,7 +355,7 @@ export default function GuidePage() {
               </tbody>
             </table>
           </div>
-          <p className="mt-4 text-sm leading-relaxed text-slate-400">
+          <p className="mt-4 text-base leading-relaxed text-slate-400">
             Les derniers tours pèsent plus lourd : un mauvais départ se rattrape. La décomposition
             complète est visible par chaque équipe : le score explique, il ne sanctionne pas.
           </p>
@@ -419,7 +419,7 @@ export default function GuidePage() {
             ].map(([q, a]) => (
               <div key={q}>
                 <dt className="text-sm font-semibold text-slate-100">{q}</dt>
-                <dd className="mt-1 text-sm leading-relaxed text-slate-400">{a}</dd>
+                <dd className="mt-1 text-base leading-relaxed text-slate-400">{a}</dd>
               </div>
             ))}
           </dl>
@@ -427,7 +427,7 @@ export default function GuidePage() {
 
         <section className="rounded-2xl border border-amber-400/30 bg-slate-900 p-8 text-center">
           <h2 className="text-xl font-bold text-slate-50">Prêt à entrer dans l&apos;arène ?</h2>
-          <p className="mx-auto mt-2 max-w-md text-sm text-slate-400">
+          <p className="mx-auto mt-2 max-w-md text-base text-slate-400">
             Lancez une partie solo pour vous faire la main, ou créez votre première partie de
             classe. Six tours suffisent pour que le BFR devienne inoubliable.
           </p>

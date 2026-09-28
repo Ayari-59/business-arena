@@ -42,7 +42,7 @@ export default async function ReprendrePage({
       <div className="text-center">
         <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Business Arena</p>
         <h1 className="mt-2 text-3xl font-bold">Reprendre ma place</h1>
-        <p className="mt-2 max-w-md text-sm text-slate-400">
+        <p className="mt-2 max-w-md text-base text-slate-400">
           {codeInitial
             ? "Votre code est déjà rempli : validez, et vous retrouvez votre équipe avec tout ce que vous y avez fait."
             : "Entrez le code personnel noté au début de la partie. Il vous rend votre équipe et tout ce que vous y avez fait, depuis n'importe quel appareil."}
@@ -53,7 +53,7 @@ export default async function ReprendrePage({
           l'autre, et le précédent n'a pas toujours libéré. */}
       {occupant ? <IdentiteDeLAppareil pseudo={occupant} variante="entree" /> : null}
       <FormulaireDeReprise codeInitial={codeInitial} />
-      <p className="max-w-sm text-center text-xs leading-relaxed text-slate-400">
+      <p className="max-w-sm text-center text-sm leading-relaxed text-slate-400">
         Code perdu ? Votre enseignant peut vous le relire : il a la liste des codes de la
         partie.
       </p>

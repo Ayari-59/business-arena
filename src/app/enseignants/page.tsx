@@ -111,7 +111,7 @@ export default async function EnseignantsPage() {
           enseignant qui hésite, un collègue à qui l'on envoie un lien, un corps
           d'inspection à qui on l'a présenté.
         */}
-        <p className="mt-4 text-sm text-slate-400">
+        <p className="mt-4 text-base text-slate-400">
           <Link href="/manuel" className="text-amber-300 underline-offset-4 hover:underline">
             Lire le manuel de l&apos;enseignant
           </Link>{" "}
@@ -129,7 +129,7 @@ export default async function EnseignantsPage() {
             >
               <p className="text-5xl font-bold tabular-nums text-amber-400">{s.value}</p>
               <p className="mt-2 text-sm font-semibold text-slate-200">{s.label}</p>
-              <p className="mt-2 text-xs leading-relaxed text-slate-400">{s.detail}</p>
+              <p className="mt-2 text-sm leading-relaxed text-slate-400">{s.detail}</p>
             </div>
           ))}
         </div>
@@ -166,7 +166,7 @@ export default async function EnseignantsPage() {
         <h2 id="boucle" className="mb-2 text-center text-2xl font-bold text-slate-50">
           Un tour, de bout en bout
         </h2>
-        <p className="mx-auto mb-8 max-w-2xl text-center text-sm text-slate-400">
+        <p className="mx-auto mb-8 max-w-2xl text-center text-base text-slate-400">
           C&apos;est cette boucle que vos élèves répètent six fois dans une partie.
         </p>
         <DemoDuTour />
@@ -182,7 +182,7 @@ export default async function EnseignantsPage() {
             <div key={p.title} className="carte p-5">
               <p className="text-2xl">{p.icon}</p>
               <h3 className="mt-3 text-sm font-semibold text-slate-100">{p.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-400">{p.text}</p>
+              <p className="mt-2 text-base leading-relaxed text-slate-400">{p.text}</p>
             </div>
           ))}
         </div>
@@ -193,7 +193,7 @@ export default async function EnseignantsPage() {
         <h2 className="mb-2 text-center text-2xl font-bold text-slate-50">
           Des ateliers clés en main, par diplôme
         </h2>
-        <p className="mx-auto mb-8 max-w-2xl text-center text-sm text-slate-400">
+        <p className="mx-auto mb-8 max-w-2xl text-center text-base text-slate-400">
           {ATELIERS.length} déroulés prêts à animer, {HEURES_TOTALES} heures de séance au total,
           chacun adossé à son référentiel et livré avec ses livrables et sa grille d&apos;évaluation.
         </p>
@@ -219,7 +219,7 @@ export default async function EnseignantsPage() {
               <h3 className="mt-3 text-sm font-semibold text-slate-100 group-hover:text-amber-200">
                 {a.titre}
               </h3>
-              <p className="mt-1 text-xs leading-relaxed text-slate-400">{a.resume}</p>
+              <p className="mt-1 text-base leading-relaxed text-slate-400">{a.resume}</p>
               <p className="mt-3 text-xs text-slate-400">
                 {a.nature} · {a.difficulteLabel}
               </p>
@@ -234,7 +234,7 @@ export default async function EnseignantsPage() {
             Voir les {ATELIERS.length} ateliers →
           </Link>
         </p>
-        <p className="mx-auto mt-6 max-w-2xl text-center text-xs leading-relaxed text-slate-400">
+        <p className="mx-auto mt-6 max-w-2xl text-center text-sm leading-relaxed text-slate-400">
           Chaque atelier cite les unités ou blocs de son référentiel avec la provenance de la
           liste. {REFERENTIELS_NON_VERIFIES.length} d&apos;entre eux (BTS MHR et BUT GEA) restent à
           confronter à leur texte officiel, et l&apos;indiquent plutôt que de le taire.
@@ -249,7 +249,7 @@ export default async function EnseignantsPage() {
             <div key={c.title} className="carte p-5">
               <p className="text-2xl">{c.icon}</p>
               <h3 className="mt-3 text-sm font-semibold text-slate-100">{c.title}</h3>
-              <p className="mt-2 text-xs leading-relaxed text-slate-400">{c.text}</p>
+              <p className="mt-2 text-sm leading-relaxed text-slate-400">{c.text}</p>
             </div>
           ))}
         </div>
@@ -268,7 +268,7 @@ export default async function EnseignantsPage() {
               </span>
               <div>
                 <h3 className="text-sm font-semibold text-slate-100">{e.title}</h3>
-                <p className="mt-1 text-xs leading-relaxed text-slate-400">{e.text}</p>
+                <p className="mt-1 text-base leading-relaxed text-slate-400">{e.text}</p>
               </div>
             </li>
           ))}
@@ -309,7 +309,7 @@ export default async function EnseignantsPage() {
       {/* CTA */}
       <section className="mx-auto max-w-3xl px-6 pb-20 text-center">
         <h2 className="text-2xl font-bold text-slate-50">Prêt à faire jouer votre classe ?</h2>
-        <p className="mt-3 text-sm text-slate-400">
+        <p className="mt-3 text-base text-slate-400">
           Commencez par le réglage qui vous convient, ou ouvrez directement votre espace.
         </p>
         <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">

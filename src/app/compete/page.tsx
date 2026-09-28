@@ -22,7 +22,7 @@ export default async function CompetePage({
       <div className="text-center">
         <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Business Arena</p>
         <h1 className="mt-2 text-3xl font-bold">Rejoindre un concours</h1>
-        <p className="mt-2 max-w-md text-sm text-slate-400">
+        <p className="mt-2 max-w-md text-base text-slate-400">
           Entrez le code du concours et le nom de votre équipe. Rejoignez une équipe
           existante en saisissant exactement son nom.
         </p>

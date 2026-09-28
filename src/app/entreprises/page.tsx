@@ -61,11 +61,11 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
 
         <h2 className="mt-3 text-2xl font-bold tracking-tight text-slate-50">{nomSeul(d)}</h2>
         <p className={`text-sm font-medium ${a.texte}`}>{promesse(d) ?? d.tagline}</p>
-        <p className="mt-3 text-sm leading-relaxed text-slate-400">{d.briefing}</p>
+        <p className="mt-3 text-base leading-relaxed text-slate-400">{d.briefing}</p>
         {famille ? (
           // Le même métier en un produit ou en gamme : c'est le niveau de
           // difficulté qui décide, et la fiche le dit avant qu'on ne choisisse.
-          <p className="mt-3 rounded-lg border border-white/5 bg-slate-950/60 px-3 py-2 text-sm leading-relaxed text-slate-300">
+          <p className="mt-3 rounded-lg border border-white/5 bg-slate-950/60 px-3 py-2 text-base leading-relaxed text-slate-300">
             Jusqu&apos;au niveau {famille.gammeFromLevel - 1}, {famille.monoLabel} ; à partir du niveau{" "}
             {famille.gammeFromLevel}, {famille.gammeLabel}.
           </p>
@@ -91,7 +91,7 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
           <p className="text-xs uppercase tracking-[0.25em] text-slate-400">
             Ce que vous trouvez en arrivant
           </p>
-          <p className="mt-2 text-sm leading-relaxed text-slate-300">{d.context}</p>
+          <p className="mt-2 text-base leading-relaxed text-slate-300">{d.context}</p>
         </div>
 
         <div className="mt-4 rounded-xl border border-white/10 bg-slate-950 p-4">
@@ -103,10 +103,10 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
             {d.dilemma.routes.map((r) => (
               <div key={r.label} className="rounded-lg border border-white/5 bg-slate-900/70 p-3">
                 <p className={`text-xs font-semibold ${a.texte}`}>{r.label}</p>
-                <p className="mt-1.5 text-xs leading-relaxed text-emerald-300/80">
+                <p className="mt-1.5 text-sm leading-relaxed text-emerald-300/80">
                   <Signe sens="gain" /> {r.gain}
                 </p>
-                <p className="mt-1.5 text-xs leading-relaxed text-rose-300/80">
+                <p className="mt-1.5 text-sm leading-relaxed text-rose-300/80">
                   <Signe sens="cout" /> {r.risque}
                 </p>
               </div>
@@ -193,7 +193,7 @@ export default function EntreprisesPage() {
       <section className="border-y border-white/5 bg-slate-900/40">
         <div className="mx-auto max-w-6xl px-6 py-14">
           <h2 className="text-2xl font-bold text-slate-50">Ce qui change d&apos;un métier à l&apos;autre</h2>
-          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-400">
+          <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-400">
             Même moteur, mêmes états financiers, mêmes six tours. Ce sont les quatre colonnes
             ci-dessous qui font qu&apos;une décision juste dans un métier est une faute dans un
             autre.
@@ -237,7 +237,7 @@ export default function EntreprisesPage() {
               </tbody>
             </table>
           </div>
-          <p className="mt-4 text-xs leading-relaxed text-slate-400">
+          <p className="mt-4 text-base leading-relaxed text-slate-400">
             Les activités périssables ne stockent rien : la capacité non vendue est perdue au
             passage du tour. C&apos;est la différence qui sépare un hôtelier d&apos;un
             industriel, et elle change tout le raisonnement sur le prix.
@@ -247,7 +247,7 @@ export default function EntreprisesPage() {
 
       <section className="mx-auto max-w-6xl px-6 py-16 text-center">
         <h2 className="text-2xl font-bold text-slate-50">Choisissez votre métier</h2>
-        <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-400">
+        <p className="mx-auto mt-3 max-w-xl text-base leading-relaxed text-slate-400">
           Six tours, des concurrents qui ne vous feront aucun cadeau, et une situation à traiter
           à chaque tour. Sans compte, sans installation.
         </p>

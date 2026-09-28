@@ -66,7 +66,7 @@ export default function AteliersPage() {
         </p>
 
         <h2 className="mt-12 text-xl font-bold text-slate-100">À qui ils s&apos;adressent</h2>
-        <p className="mt-3 text-sm leading-relaxed text-slate-400">
+        <p className="mt-3 text-base leading-relaxed text-slate-400">
           Aux enseignants qui cherchent un point de départ structuré plutôt qu&apos;un jeu à
           apprivoiser seuls. Ils ne remplacent pas votre projet pédagogique : ils en proposent une
           trame, que vous adapterez à votre volume horaire, à vos co-animateurs et à votre grille
@@ -83,7 +83,7 @@ export default function AteliersPage() {
               Une fiche à part · {a.nature}
             </p>
             <h3 className="mt-2 text-lg font-bold text-slate-50">{a.titre}</h3>
-            <p className="mt-2 text-sm leading-relaxed text-slate-300">
+            <p className="mt-2 text-base leading-relaxed text-slate-300">
               Celle-ci ne se conduit pas dans une classe. Elle réunit {a.diplome} en équipes qui
               mêlent les niveaux, un élève par filière et un poste de direction chacun, sur{" "}
               {a.format} en mode concours. Les réglages n&apos;y sont pas les vôtres : un
@@ -152,7 +152,7 @@ export default function AteliersPage() {
                 {a.nature} · {a.diplome}
               </p>
               <h3 className="mt-2 text-lg font-bold text-slate-50">{a.titre}</h3>
-              <p className="mt-2 text-sm italic leading-relaxed text-slate-400">{a.resume}</p>
+              <p className="mt-2 text-base italic leading-relaxed text-slate-400">{a.resume}</p>
               <dl className="mt-4 space-y-1 text-xs">
                 {[
                   ["Entreprise", scenarioByCode(a.reglages.scenarioCode).playerTeamName],

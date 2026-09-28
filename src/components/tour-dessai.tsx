@@ -57,7 +57,7 @@ export function TourDessai() {
         <p className="text-xs text-slate-400">Sans compte, rien n&apos;est enregistré</p>
       </div>
 
-      <p className="mt-3 text-sm leading-relaxed text-slate-300">
+      <p className="mt-3 text-base leading-relaxed text-slate-300">
         Vous dirigez l&apos;atelier. Fixez votre prix et ce que vous produisez : le marché
         répondra.
       </p>
@@ -149,7 +149,7 @@ export function TourDessai() {
             </p>
           </>
         ) : (
-          <p className="text-xs leading-relaxed text-slate-400">
+          <p className="text-base leading-relaxed text-slate-400">
             Le moteur est celui de la classe : mêmes décisions, mêmes comptes. Vos chiffres
             s&apos;afficheront ici.
           </p>

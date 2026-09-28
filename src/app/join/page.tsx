@@ -40,7 +40,7 @@ export default async function JoinPage({
       <div className="text-center">
         <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Business Arena</p>
         <h1 className="mt-2 text-3xl font-bold">Rejoindre une partie</h1>
-        <p className="mt-2 max-w-md text-sm text-slate-400">
+        <p className="mt-2 max-w-md text-base text-slate-400">
           {carton?.deplacera
             ? "Le code est déjà rempli : entrez votre prénom pour rejoindre votre équipe."
             : carton
@@ -63,7 +63,7 @@ export default async function JoinPage({
           <span className="font-semibold text-amber-100">{carton.equipe}</span>
         </p>
       ) : carton ? (
-        <p className="max-w-sm rounded-xl border border-slate-500/40 bg-slate-900 px-4 py-3 text-center text-sm text-slate-300">
+        <p className="max-w-sm rounded-xl border border-slate-500/40 bg-slate-900 px-4 py-3 text-center text-base text-slate-300">
           Le premier tour est clos : vous restez dans l&apos;équipe{" "}
           <span className="font-semibold text-slate-100">{carton.sienne}</span>. Demandez à
           votre enseignant s&apos;il faut vous rattacher ailleurs.

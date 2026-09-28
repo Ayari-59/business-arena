@@ -92,7 +92,7 @@ export function DemoDuTour({ className = "" }: { className?: string }) {
             >
               <p className={`text-xs uppercase tracking-[0.2em] ${p.accent}`}>{p.etape}</p>
               <p className="mt-2 font-display text-xl leading-tight text-slate-50">{p.titre}</p>
-              <p className="mt-2 max-w-prose text-sm leading-relaxed text-slate-400">{p.corps}</p>
+              <p className="mt-2 max-w-prose text-base leading-relaxed text-slate-400">{p.corps}</p>
               <dl className="mt-4 grid gap-px overflow-hidden rounded-lg border border-white/5 bg-white/5 sm:grid-cols-3">
                 {p.lignes.map(([libelle, valeur]) => (
                   <div key={libelle} className="bg-slate-950 px-3 py-2">

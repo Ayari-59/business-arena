@@ -269,7 +269,7 @@ export function OrientationForm({
             </ul>
           </>
         ) : (
-          <p className="text-sm leading-relaxed text-slate-400">
+          <p className="text-base leading-relaxed text-slate-400">
             Répondez aux trois questions : le diplôme, le moment de
             l&apos;année, ce que vous voulez faire travailler. La recommandation
             s&apos;écrit ici, avec ses raisons.

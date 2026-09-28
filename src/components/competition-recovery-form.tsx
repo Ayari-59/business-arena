@@ -42,7 +42,7 @@ export function CompetitionRecoveryForm({
           className="mt-1 w-full champ px-3 py-2 text-center font-mono text-lg uppercase tracking-[0.2em] text-amber-300 outline-none"
         />
       </label>
-      <p className="text-xs leading-relaxed text-slate-400">
+      <p className="text-base leading-relaxed text-slate-400">
         Reçu à votre inscription. Il vous rend votre équipe depuis n&apos;importe quel appareil,
         même une fois les inscriptions closes. Votre enseignant peut vous le relire.
       </p>

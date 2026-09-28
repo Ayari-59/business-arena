@@ -27,7 +27,7 @@ export default function ConceptsPage() {
       <header>
         <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Business Arena</p>
         <h1 className="mt-1 text-2xl font-bold">Fiches notions</h1>
-        <p className="mt-2 text-sm text-slate-400">
+        <p className="mt-2 text-base text-slate-400">
           Les notions de gestion communes à tous les secteurs du jeu, de l&apos;atelier au
           chantier. Trois niveaux de lecture : l&apos;intuition, la méthode, la formule.
         </p>

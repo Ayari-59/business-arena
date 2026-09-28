@@ -65,7 +65,7 @@ export default async function JouerPage({
             <h1 className="mt-3 text-3xl font-bold leading-tight tracking-tight text-slate-50 sm:text-4xl">
               Lancez votre première partie
             </h1>
-            <p className="mt-4 max-w-lg text-sm leading-relaxed text-slate-400">
+            <p className="mt-4 max-w-lg text-base leading-relaxed text-slate-400">
               Choisissez l&apos;un des {SCENARIO_CHOICES.length} métiers, puis menez votre entreprise
               face à des concurrents qui ne vous feront aucun cadeau. De {decisions.minimum} à{" "}
               {decisions.maximum} décisions par tour selon le niveau : prix, volumes, marketing,
@@ -96,7 +96,7 @@ export default async function JouerPage({
           {trop ? (
             <p
               role="status"
-              className="mb-4 rounded-2xl border border-amber-400/30 bg-amber-950/30 p-4 text-sm text-amber-200"
+              className="mb-4 rounded-2xl border border-amber-400/30 bg-amber-950/30 p-4 text-base text-amber-200"
             >
               Trop de parties lancées depuis cette connexion dans la dernière heure.
               Réessayez tout à l&apos;heure. Si vous êtes en classe, les élèves n&apos;ont

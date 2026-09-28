@@ -102,7 +102,7 @@ export default function FonctionnalitesPage() {
             >
               <p className="text-5xl font-bold tabular-nums text-amber-400">{s.value}</p>
               <p className="mt-2 text-sm font-semibold text-slate-200">{s.label}</p>
-              <p className="mt-2 text-xs leading-relaxed text-slate-400">{s.detail}</p>
+              <p className="mt-2 text-sm leading-relaxed text-slate-400">{s.detail}</p>
             </div>
           ))}
         </div>
@@ -142,7 +142,7 @@ export default function FonctionnalitesPage() {
             >
               <p className="text-2xl">{p.icon}</p>
               <h3 className="mt-3 text-sm font-semibold text-slate-100">{p.title}</h3>
-              <p className="mt-2 text-xs leading-relaxed text-slate-400">{p.text}</p>
+              <p className="mt-2 text-sm leading-relaxed text-slate-400">{p.text}</p>
             </div>
           ))}
         </div>
@@ -153,7 +153,7 @@ export default function FonctionnalitesPage() {
         <h2 className="mb-2 text-center text-2xl font-bold text-slate-50">
           {DECISION_MODELS.length} modèles d&apos;analyse
         </h2>
-        <p className="mx-auto mb-8 max-w-xl text-center text-sm text-slate-400">
+        <p className="mx-auto mb-8 max-w-xl text-center text-base text-slate-400">
           Chaque situation mobilise un ou plusieurs de ces modèles. L&apos;étudiant
           doit identifier le bon cadre avant de trancher.
         </p>
@@ -166,7 +166,11 @@ export default function FonctionnalitesPage() {
               <span className="mt-0.5 text-xs text-amber-400">●</span>
               <div className="min-w-0">
                 <p className="text-sm font-medium text-slate-200">{m.name}</p>
-                <p className="text-xs text-slate-400">{m.description}</p>
+                {/* La description d'un modèle est une phrase, pas une
+                    étiquette : elle se lit en 14 px comme le reste de la prose
+                    de second plan. Le secteur au-dessus, lui, est une
+                    étiquette, et reste en 12. */}
+                <p className="text-sm leading-relaxed text-slate-400">{m.description}</p>
               </div>
             </div>
           ))}

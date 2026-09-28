@@ -160,7 +160,7 @@ export default async function DossierElevePage({
             </tbody>
           </table>
         </div>
-        <p className="mt-2 text-xs leading-relaxed text-slate-400 print:text-black">
+        <p className="mt-2 text-sm leading-relaxed text-slate-400 print:text-black">
           Le prix usuel est celui que la clientèle principale a l&apos;habitude de payer, pas une
           consigne. La marge usuelle est ce qu&apos;il reste, à ce prix, une fois payés le coût
           d&apos;achat et les frais variables : c&apos;est elle qui couvre les charges de structure.
@@ -245,10 +245,10 @@ export default async function DossierElevePage({
                 ))}
               </ul>
 
-              <p className="mt-4 text-xs leading-relaxed text-slate-400 print:text-black">
+              <p className="mt-4 text-sm leading-relaxed text-slate-400 print:text-black">
                 Notions à mobiliser : <NotionsMobilisees notions={s.notions} />
               </p>
-              <p className="mt-2 border-t border-white/10 pt-2 text-xs italic leading-relaxed text-slate-400 print:border-black/20 print:text-black">
+              <p className="mt-2 border-t border-white/10 pt-2 text-sm italic leading-relaxed text-slate-400 print:border-black/20 print:text-black">
                 À verser à votre {dossier.entete.traceLabel} : « {s.trace} »
               </p>
             </article>

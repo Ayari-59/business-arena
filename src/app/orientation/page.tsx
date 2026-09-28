@@ -26,7 +26,7 @@ export default function OrientationPage() {
         Business Arena · orientation
       </p>
       <h1 className="mt-2 text-3xl font-bold text-slate-50">Quelle simulation pour votre classe</h1>
-      <p className="mt-4 max-w-2xl text-sm leading-relaxed text-slate-400">
+      <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-400">
         {SCENARIOS.length} entreprises, six niveaux de difficulté, une durée réglable et{" "}
         {ATELIERS.length} ateliers prêts à animer : cela fait beaucoup de combinaisons, et le
         mauvais réglage ne se voit qu&apos;en séance trois. Répondez à quatre questions, la
@@ -39,7 +39,7 @@ export default function OrientationPage() {
         <OrientationForm />
       </div>
 
-      <p className="mt-10 text-xs leading-relaxed text-slate-400">
+      <p className="mt-10 text-sm leading-relaxed text-slate-400">
         Vous préférez en parler de vive voix ?{" "}
         <Link href="/rendez-vous" className="text-slate-400 underline-offset-4 hover:underline">
           Prenez un rendez-vous téléphonique

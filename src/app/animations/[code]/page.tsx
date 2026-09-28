@@ -287,7 +287,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
                 </div>
               ))}
             </dl>
-            <p className="mt-3 text-xs leading-relaxed text-slate-400 print:text-black">
+            <p className="mt-3 text-sm leading-relaxed text-slate-400 print:text-black">
               {atelier.reglages.notes}
             </p>
             <Link
@@ -314,7 +314,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
               >
                 <h3 className="text-sm font-semibold text-slate-100 print:text-black">{f.nom}</h3>
                 <p className="mt-1 text-xs text-amber-300/80 print:text-black">{f.quand}</p>
-                <p className="mt-2 text-xs leading-relaxed text-slate-400 print:text-black">
+                <p className="mt-2 text-sm leading-relaxed text-slate-400 print:text-black">
                   {f.comment}
                 </p>
               </div>
@@ -499,7 +499,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
           </div>
         </Section>
 
-        <p className="mt-10 text-xs leading-relaxed text-slate-600 print:text-black">
+        <p className="mt-10 text-sm leading-relaxed text-slate-600 print:text-black">
           {atelier.referentielLabel} {atelier.referentielAccord} sont nommés comme le
           référentiel du diplôme les nomme. Le rapprochement entre une séance et l&apos;un
           d&apos;eux est une proposition, à ajuster à la progression de votre établissement et

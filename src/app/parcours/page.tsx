@@ -64,7 +64,7 @@ export default function ParcoursPage() {
             <h2 className="mt-2 text-2xl font-bold text-slate-50">
               {p.emoji} {p.name}
             </h2>
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-400">{p.pitch}</p>
+            <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-400">{p.pitch}</p>
 
             <div className="mt-5 rounded-xl border border-amber-400/20 bg-slate-950 p-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-amber-400">
@@ -75,7 +75,7 @@ export default function ParcoursPage() {
                 {p.recommended.periodicityLabel} · TVA{" "}
                 {p.recommended.vat ? "activée (20 %)" : "désactivée"}
               </p>
-              <p className="mt-1 text-xs leading-relaxed text-slate-400">{p.recommended.notes}</p>
+              <p className="mt-1 text-base leading-relaxed text-slate-400">{p.recommended.notes}</p>
             </div>
 
             <div className="mt-5 overflow-x-auto">
@@ -110,7 +110,7 @@ export default function ParcoursPage() {
             </div>
 
             {p.limite ? (
-              <p className="mt-4 rounded-lg border border-white/5 bg-slate-950 px-4 py-3 text-xs leading-relaxed text-slate-400">
+              <p className="mt-4 rounded-lg border border-white/5 bg-slate-950 px-4 py-3 text-sm leading-relaxed text-slate-400">
                 ⚖️ Limite assumée : {p.limite}
               </p>
             ) : null}
@@ -121,7 +121,7 @@ export default function ParcoursPage() {
           <h2 className="text-xl font-bold text-slate-50">
             Votre diplôme n&apos;est pas dans la liste ?
           </h2>
-          <p className="mx-auto mt-2 max-w-md text-sm text-slate-400">
+          <p className="mx-auto mt-2 max-w-md text-base text-slate-400">
             BUT GEA, DCG, bachelors… les mêmes mécaniques servent d&apos;autres référentiels :
             écrivez-nous, le parcours s&apos;ajoute en quelques jours.
           </p>

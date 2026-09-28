@@ -120,7 +120,7 @@ export function RendezVousForm({
 
       <div className="carte min-w-0 space-y-5 p-6">
         {jours.length === 0 ? (
-          <p className="text-sm leading-relaxed text-slate-400">
+          <p className="text-base leading-relaxed text-slate-400">
             Aucun créneau libre dans les trois prochaines semaines. Écrivez-nous depuis la{" "}
             <Link href="/orientation" className="text-amber-300 underline-offset-4 hover:underline">
               page d&apos;orientation
