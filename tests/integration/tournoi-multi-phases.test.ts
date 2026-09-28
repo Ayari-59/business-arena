@@ -118,7 +118,7 @@ describe("préliminaires, demi-finales, finale", () => {
     const { groups } = await startQualification({ competitionId, organizerId });
     expect(groups).toBe(4);
     await jouerLaPhase();
-  }), DELAI_PHASE;
+  }, DELAI_PHASE);
 
   it("la phase intermédiaire retire au sort les quatre qualifiées", async () => {
     const avant = await getCompetitionView(competitionId);
@@ -150,7 +150,7 @@ describe("préliminaires, demi-finales, finale", () => {
     expect(demi.status).toBe("running");
     expect(demi.games).toHaveLength(2);
     await jouerLaPhase();
-  }), DELAI_PHASE;
+  }, DELAI_PHASE);
 
   it("la finale n'oppose que les deux rescapées des demi-finales", async () => {
     const avant = await getCompetitionView(competitionId);
@@ -169,7 +169,7 @@ describe("préliminaires, demi-finales, finale", () => {
     expect(finale.index).toBe(3);
     expect(view!.stages[1]!.status).toBe("finished");
     await jouerLaPhase();
-  }), DELAI_PHASE;
+  }, DELAI_PHASE);
 
   it("une quatrième phase est refusée : la finale ne se prolonge pas", async () => {
     await expect(
