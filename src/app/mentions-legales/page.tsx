@@ -1,6 +1,5 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { SiteLogo } from "@/components/site-logo";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/mentions-legales" },
@@ -28,19 +27,13 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export default function MentionsLegalesPage() {
   return (
     <main id="main" className="min-h-screen bg-slate-950 text-slate-100">
-      <nav className="mx-auto flex max-w-3xl items-center justify-between px-6 py-5">
-        <Link href="/">
-          <SiteLogo />
-        </Link>
-        <Link
-          href="/"
-          className="rounded-lg border border-white/15 px-4 py-2 text-sm text-slate-300 transition hover:border-amber-400/40 hover:text-amber-300"
-        >
-          Retour au site
-        </Link>
-      </nav>
-
-      <header className="mx-auto max-w-3xl px-6 pb-4 pt-8">
+      {/*
+        PAS DE DEUXIÈME BARRE DE NAVIGATION. Cette page portait la sienne, logo
+        compris, sous l'en-tête du site : deux logos l'un sur l'autre, et un
+        « Retour au site » qui doublait le logo de l'en-tête, lequel ramène déjà
+        à l'accueil.
+      */}
+      <header className="mx-auto max-w-3xl px-6 pb-4 pt-10">
         <p className="text-xs uppercase tracking-[0.3em] text-amber-400">
           Mentions légales & données personnelles
         </p>

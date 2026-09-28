@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { PARCOURS } from "@/config/parcours";
-import { SiteLogo } from "@/components/site-logo";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/parcours" },
@@ -21,27 +20,15 @@ const FIT_BADGE: Record<string, { label: string; className: string }> = {
 export default function ParcoursPage() {
   return (
     <main id="main" className="min-h-screen bg-slate-950 text-slate-100">
-      <nav className="mx-auto flex max-w-4xl items-center justify-between px-6 py-5">
-        <Link href="/">
-          <SiteLogo />
-        </Link>
-        <div className="flex items-center gap-5 text-sm text-slate-400">
-          <Link href="/guide" className="hover:text-slate-200">
-            Guide
-          </Link>
-          <Link href="/teacher/login" className="hover:text-slate-200">
-            Enseignants
-          </Link>
-          <Link
-            href="/jouer"
-            className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-300"
-          >
-            Jouer
-          </Link>
-        </div>
-      </nav>
-
-      <header className="mx-auto max-w-4xl px-6 pb-4 pt-8">
+      {/*
+        PAS DE DEUXIÈME BARRE DE NAVIGATION. Cette page portait la sienne, avec
+        son logo et ses liens, sous l'en-tête du site : sur un téléphone, les
+        deux logos se superposaient, « Parcours » se collait au second, et le
+        bouton « Jouer » sortait de l'écran (débord mesuré de 79 px à 390, 149 à
+        320). Les liens qu'elle portait sont tous dans le plan du site, que
+        l'en-tête ouvre déjà.
+      */}
+      <header className="mx-auto max-w-4xl px-6 pb-4 pt-10">
         <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Parcours par diplôme</p>
         <h1 className="mt-3 text-3xl font-bold leading-tight text-slate-50 sm:text-4xl">
           Votre référentiel, vécu dans l&apos;arène
