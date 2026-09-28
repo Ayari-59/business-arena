@@ -23,6 +23,11 @@ import { scalarsOfGamme } from "@/engine/gamme";
 import type { RoundDecisions } from "@/engine/types";
 import { LONGUEUR_MINIMALE_JUSTIFICATION } from "@/config/justification";
 import { proprietesDeValidite } from "@/config/validation-native";
+import {
+  EngagementDuTour,
+  lireLEngagement,
+  type Engagement,
+} from "@/components/engagement-du-tour";
 import { aideDuBudgetEntretien } from "@/config/entretien";
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
 import type { GameView } from "@/services/game-view.service";
@@ -1335,7 +1340,7 @@ export function DecisionForm({
     // et le focus reste sans effet (l'élève ne verrait rien se passer).
     const section = champ?.closest("[data-etape]") as HTMLElement | null;
     const i = Number(section?.dataset.etape);
-    if (!Number.isNaN(i)) setEtape(i);
+    if (!Number.isNaN(i)) allerALEtape(i);
     requestAnimationFrame(() => champ?.focus());
   };
   const [equipBuyQty, setEquipBuyQty] = useState<Record<string, number>>({});
@@ -1344,6 +1349,38 @@ export function DecisionForm({
   // inactives restent MONTÉES (attribut `hidden`, jamais démontées) : le
   // formulaire se soumet toujours en entier, quelle que soit l'étape à l'écran.
   const [etape, setEtape] = useState(0);
+  /**
+   * LES ÉTAPES DÉJÀ VUES, ET NON CELLES D'AVANT.
+   *
+   * La coche de la barre d'étapes se posait sur tout ce qui portait un numéro
+   * inférieur à l'étape affichée. Elle mentait des deux côtés : sauter
+   * directement à « Financer » cochait les trois étapes sautées, et revenir en
+   * arrière décochait celles qu'on venait de remplir. Une coche qui ment est
+   * pire qu'une absence de coche, parce qu'on s'y fie pour valider.
+   *
+   * On retient donc ce qui a vraiment été affiché. La première étape l'est dès
+   * l'ouverture.
+   */
+  const [vues, setVues] = useState<ReadonlySet<number>>(() => new Set([0]));
+  /**
+   * CE QUE L'ÉQUIPE ENGAGE, RELU JUSTE AVANT DE VALIDER. Lu sur le formulaire
+   * lui-même à l'arrivée sur la dernière étape, puis à chaque frappe tant qu'on
+   * y est : un récapitulatif qui tiendrait ses propres valeurs finirait par
+   * mentir. `null` tant qu'on n'est pas arrivé au bout.
+   */
+  const [engagement, setEngagement] = useState<Engagement | null>(null);
+  const relireLEngagement = () => {
+    const f = formRef.current;
+    if (f) setEngagement(lireLEngagement(new FormData(f), gamme?.map((p) => p.code) ?? []));
+  };
+
+  /** Le seul chemin pour changer d'étape : il retient qu'on y est passé. */
+  const allerALEtape = (calcul: number | ((e: number) => number)) => {
+    const brut = typeof calcul === "function" ? calcul(etape) : calcul;
+    setEtape(brut);
+    setVues((v) => (v.has(brut) ? v : new Set(v).add(brut)));
+    if (brut === total - 1) relireLEngagement();
+  };
 
   // Un champ requis dans une famille repliée — OU sur une étape masquée — est
   // invisible : le navigateur ne peut pas y afficher sa bulle de validation et
@@ -1356,7 +1393,7 @@ export function DecisionForm({
     if (famille && !famille.open) famille.open = true;
     const section = cible.closest?.("[data-etape]") as HTMLElement | null;
     const i = Number(section?.dataset.etape);
-    if (!Number.isNaN(i)) setEtape(i);
+    if (!Number.isNaN(i)) allerALEtape(i);
   };
   const on = enabled ?? {
     quality: true,
@@ -1593,7 +1630,12 @@ export function DecisionForm({
       ref={formRef}
       action={formAction}
       onSubmit={verifierPivots}
-      onChange={sauverBrouillon}
+      onChange={() => {
+        sauverBrouillon();
+        // Le récapitulatif suit la saisie tant qu'on est sur la dernière étape.
+        // Ailleurs, il ne sert à rien : il n'est pas affiché.
+        if (etape === total - 1) relireLEngagement();
+      }}
       onInvalidCapture={revelerFamilleInvalide}
       className="space-y-3"
     >
@@ -1631,12 +1673,12 @@ export function DecisionForm({
       <ol className="flex flex-wrap gap-1.5" aria-label="Étapes de décision">
         {etapesVisibles.map((cle, i) => {
           const actif = i === courante;
-          const fait = i < courante;
+          const fait = !actif && vues.has(i);
           return (
             <li key={cle} className="min-w-0 flex-1">
               <button
                 type="button"
-                onClick={() => setEtape(i)}
+                onClick={() => allerALEtape(i)}
                 aria-current={actif ? "step" : undefined}
                 className={`flex w-full items-center justify-center gap-1.5 rounded-lg border px-2 py-2 text-xs font-medium transition ${
                   actif
@@ -2481,6 +2523,19 @@ export function DecisionForm({
         </p>
       ) : null}
       <GuardError message={guardError} />
+      {/*
+        LE RÉCAPITULATIF D'ENGAGEMENT, à la dernière étape seulement. Valider,
+        c'est l'acte du tour ; il ressemblait à l'envoi d'un formulaire. Une
+        équipe à quatre, qui a rempli les étapes chacune de son côté, validait
+        sans que personne n'ait vu l'ensemble.
+      */}
+      {derniere && engagement && !verrou ? (
+        <EngagementDuTour
+          engagement={engagement}
+          vocabulary={v}
+          gamme={Boolean(gamme && gamme.length > 0)}
+        />
+      ) : null}
       {pending && kind === "solo" ? (
         // Le tour se résout côté serveur puis redirige : entre les deux, on
         // rend l'attente tangible — la machine tourne, étape après étape —
@@ -2532,7 +2587,7 @@ export function DecisionForm({
           <div className="flex flex-wrap items-center gap-3">
             <button
               type="button"
-              onClick={() => setEtape((e) => Math.max(0, Math.min(e, total - 1) - 1))}
+              onClick={() => allerALEtape((e) => Math.max(0, Math.min(e, total - 1) - 1))}
               disabled={courante === 0}
               className="order-2 shrink-0 rounded-lg border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:text-slate-100 disabled:cursor-not-allowed disabled:opacity-30 sm:order-1"
             >
@@ -2565,7 +2620,7 @@ export function DecisionForm({
               <button
                 key="suivant"
                 type="button"
-                onClick={() => setEtape((e) => Math.min(total - 1, Math.min(e, total - 1) + 1))}
+                onClick={() => allerALEtape((e) => Math.min(total - 1, Math.min(e, total - 1) + 1))}
                 className={`${bouton({ taille: "l" })} order-1 ml-auto sm:order-3 sm:ml-0`}
               >
                 Suivant →

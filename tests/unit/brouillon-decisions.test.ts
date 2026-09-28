@@ -155,7 +155,12 @@ describe("le câblage dans le formulaire", () => {
   );
 
   it("le formulaire sauve à chaque changement", () => {
-    expect(source).toContain("onChange={sauverBrouillon}");
+    // Le `onChange` du formulaire porte aussi, depuis, la relecture de
+    // l'engagement : on garde l'INTENTION (le brouillon part à chaque
+    // changement du formulaire), et non la forme exacte du gestionnaire.
+    const ouverture = source.indexOf("<form");
+    const corps = source.slice(ouverture, source.indexOf("className=", ouverture));
+    expect(corps).toMatch(/onChange=\{[^}]*sauverBrouillon\(\)/s);
   });
 
   it("la restauration attend le montage, elle ne lit pas le stockage au rendu", () => {
