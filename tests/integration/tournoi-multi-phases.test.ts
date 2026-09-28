@@ -102,12 +102,23 @@ beforeAll(async () => {
   }
 });
 
+/**
+ * VINGT SECONDES POUR LES ESSAIS QUI JOUENT UNE PHASE.
+ *
+ * `jouerLaPhase` résout toutes les parties d'une phase, chacune sur tous ses
+ * tours, sur une base Postgres embarquée : quelques secondes sur une machine au
+ * repos, davantage dès qu'elle travaille ailleurs. Au délai par défaut de cinq
+ * secondes, l'essai passait seul et tombait dans la suite complète — le pire
+ * des cas, puisqu'un échec qui va et vient finit par être ignoré.
+ */
+const DELAI_PHASE = 20_000;
+
 describe("préliminaires, demi-finales, finale", () => {
   it("les préliminaires tirent quatre poules de deux", async () => {
     const { groups } = await startQualification({ competitionId, organizerId });
     expect(groups).toBe(4);
     await jouerLaPhase();
-  });
+  }), DELAI_PHASE;
 
   it("la phase intermédiaire retire au sort les quatre qualifiées", async () => {
     const avant = await getCompetitionView(competitionId);
@@ -139,7 +150,7 @@ describe("préliminaires, demi-finales, finale", () => {
     expect(demi.status).toBe("running");
     expect(demi.games).toHaveLength(2);
     await jouerLaPhase();
-  });
+  }), DELAI_PHASE;
 
   it("la finale n'oppose que les deux rescapées des demi-finales", async () => {
     const avant = await getCompetitionView(competitionId);
@@ -158,7 +169,7 @@ describe("préliminaires, demi-finales, finale", () => {
     expect(finale.index).toBe(3);
     expect(view!.stages[1]!.status).toBe("finished");
     await jouerLaPhase();
-  });
+  }), DELAI_PHASE;
 
   it("une quatrième phase est refusée : la finale ne se prolonge pas", async () => {
     await expect(

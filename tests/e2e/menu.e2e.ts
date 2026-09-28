@@ -43,10 +43,17 @@ describe("le menu du site", () => {
       expect(await bouton.isVisible(), `pas de bouton de menu sur ${largeur.nom}`).toBe(true);
       await bouton.click();
 
-      // Le plan est un accordéon : ses groupes s'ouvrent repliés. On les déplie
-      // tous, puis on vérifie que chaque page reste réellement joignable.
+      // Le plan est un accordéon, et UN de ses groupes s'ouvre déjà déplié —
+      // celui de l'orientation et du contact, par décision de `navigation.ts`.
+      // Cliquer sur tous les boutons le REFERMAIT donc, et ses deux entrées
+      // étaient comptées injoignables alors qu'elles s'affichaient à l'écran :
+      // c'est le test qui avait pris du retard sur le produit. On ne déplie
+      // que ce qui est replié.
       const groupes = page.locator('#plan-du-site button[aria-controls^="groupe-"]');
-      for (let i = 0; i < (await groupes.count()); i += 1) await groupes.nth(i).click();
+      for (let i = 0; i < (await groupes.count()); i += 1) {
+        const bouton = groupes.nth(i);
+        if ((await bouton.getAttribute("aria-expanded")) === "false") await bouton.click();
+      }
 
       const invisibles: string[] = [];
       for (const lien of tousLesLiens()) {

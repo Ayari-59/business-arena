@@ -184,9 +184,18 @@ if (!sansSemis) {
   console.log(
     monde.created ? "· monde de démonstration semé" : "· monde de démonstration déjà en place",
   );
-  console.log(`   enseignant    ${monde.teacherEmail} / ${monde.password}`);
-  console.log(`   code partie   ${monde.gameJoinCode}`);
-  console.log(`   code concours ${monde.competitionJoinCode}`);
+  // Sur un monde DÉJÀ en place, le service ne rend pas les codes de jonction :
+  // il ne les a pas créés ce coup-ci. On n'écrit donc pas « code partie null »,
+  // qui ferait chercher une panne là où il n'y en a pas.
+  const lignes: [string, string | null | undefined][] = [
+    ["enseignant   ", `${monde.teacherEmail} / ${monde.password}`],
+    ["code partie  ", monde.gameJoinCode],
+    ["code concours", monde.competitionJoinCode],
+  ];
+  for (const [quoi, valeur] of lignes) if (valeur) console.log(`   ${quoi} ${valeur}`);
+  if (!monde.gameJoinCode) {
+    console.log("   (les codes sont dans l'espace enseignant, avec le compte ci-dessus)");
+  }
 }
 
 console.log(`\nBase prête sur ${URL_BASE}\n`);

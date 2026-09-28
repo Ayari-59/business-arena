@@ -153,6 +153,14 @@ describe("parcours enseignant et élève", () => {
       if (!(await suivant.isVisible().catch(() => false))) break;
       await suivant.click();
     }
+    // LA NOTE D'AVANT EST EXIGÉE AU PREMIER TOUR (voir `config/justification`),
+    // et le test ne l'écrivait pas : la validation native du navigateur bloquait
+    // l'envoi en silence, et le garde-fou des pivots n'arrivait jamais. Un élève
+    // ne peut pas non plus sauter cette étape ; le test ne le doit pas davantage.
+    await eleve.fill(
+      'textarea[name="justification"]',
+      "On tient le tarif haut et on staffe au plus juste.",
+    );
     await eleve.getByRole("button", { name: /Valider les décisions de l'équipe/ }).click();
 
     // Le prix est touché mais le volume (« Jours à staffer ») reste à sa valeur
