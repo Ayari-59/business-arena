@@ -13,6 +13,10 @@ import { SaisonDuTour, ecartSaison } from "@/components/saison-du-tour";
  *
  * Ce test garde les deux moitiés de la correction : le coefficient est traduit,
  * et le sens de la saison se voit à la couleur.
+ *
+ * Depuis, l'encart est replié comme le reste de l'arène. Le test garde donc
+ * aussi ce que le repli ne doit PAS emporter : l'écart de demande et sa couleur
+ * restent dans le résumé du tiroir, visibles sans déplier.
  */
 
 const rendu = (notes: { name: string; coef: number }[]) =>
@@ -42,8 +46,28 @@ describe("SaisonDuTour", () => {
   });
 
   it("la couleur suit le vent : vert quand la demande gonfle, ambre quand elle se réduit", () => {
-    expect(rendu([{ name: "Marché", coef: 1.2 }])).toContain("border-l-emerald-400/70");
-    expect(rendu([{ name: "Marché", coef: 0.8 }])).toContain("border-l-amber-400/70");
+    const favorable = rendu([{ name: "Marché", coef: 1.2 }]);
+    expect(favorable).toContain("text-emerald-300");
+    expect(favorable).not.toContain("text-amber-300");
+    const contraire = rendu([{ name: "Marché", coef: 0.8 }]);
+    expect(contraire).toContain("text-amber-300");
+    expect(contraire).not.toContain("text-emerald-300");
+  });
+
+  it("replié, le résumé garde l'écart et sa couleur : c'est le défaut d'origine", () => {
+    // La saison multiplie la demande du tour. Rangée ENTIÈRE derrière un repli,
+    // elle redeviendrait ce qu'elle était avant sa correction : une donnée qui
+    // décide du volume, et que personne ne voit.
+    const html = rendu([
+      { name: "Marché", coef: 0.94 },
+      { name: "Comités d'entreprise", coef: 0.6 },
+    ]);
+    expect(html).toContain("<details");
+    expect(html).not.toContain("<details open");
+    expect(html).toContain("−6 % de demande");
+    expect(html).toContain("déplier");
+    // Et le compte dit qu'il y a matière derrière.
+    expect(html).toContain("1 précision");
   });
 
   it("le coefficient d'ensemble commande, les clientèles nuancent", () => {

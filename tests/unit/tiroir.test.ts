@@ -56,6 +56,20 @@ describe("Tiroir", () => {
     expect(html).toContain("whitespace-nowrap");
   });
 
+  it("`valeur` reste dans le résumé, avec sa couleur : un tiroir ne range pas ce qui décide", () => {
+    // La saison du tour multiplie la demande : repliée entière, elle
+    // redeviendrait la note de bas de page qu'elle était avant sa correction.
+    const html = rendu({
+      titre: "Saison du tour",
+      valeur: createElement("span", { className: "text-amber-300" }, "−6 % de demande"),
+      children: "…",
+    });
+    // Dans le RÉSUMÉ, donc avant le trait qui ouvre le contenu.
+    const resume = html.slice(0, html.indexOf("</summary>"));
+    expect(resume).toContain("−6 % de demande");
+    expect(resume).toContain("text-amber-300");
+  });
+
   it("`ouvert` déplie à l'affichage", () => {
     expect(rendu({ titre: "Bilan", ouvert: true, children: "…" })).toContain("<details open");
     expect(rendu({ titre: "Bilan", children: "…" })).not.toContain("<details open");
@@ -80,6 +94,7 @@ describe("tous les replis de l'arène se reconnaissent au même signe", () => {
     join("src", "components", "situation-panel.tsx"),
     join("src", "components", "sales-history.tsx"),
     join("src", "components", "financial-statements.tsx"),
+    join("src", "components", "saison-du-tour.tsx"),
   ];
 
   const lire = (p: string) => readFileSync(join(process.cwd(), p), "utf8");

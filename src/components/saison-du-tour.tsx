@@ -1,3 +1,6 @@
+import { Tiroir } from "@/components/tiroir";
+import { compter } from "@/lib/format";
+
 /**
  * LA SAISON DU TOUR — un coefficient qui change la décision, pas une note de
  * bas de page.
@@ -19,6 +22,12 @@
  * La couleur suit le sens : une saison qui gonfle la demande est un vent
  * favorable (vert), une saison qui la réduit est un vent contraire (ambre — une
  * difficulté du jeu, pas une erreur de l'élève).
+ *
+ * DANS UN TIROIR, MAIS LE CHIFFRE DEHORS. L'encart occupait un bloc entier de
+ * l'écran de décision pour dire, la plupart des tours, une seule chose. Il est
+ * donc replié comme le reste de l'arène — et la valeur reste dans le résumé,
+ * en couleur : replier l'écart de demande avec son explication recommencerait
+ * exactement le défaut n° 1. On range ce qu'on consulte, pas ce qui décide.
  */
 
 /** « +15 % », « −6 % » : le coefficient dit en langue de l'élève. */
@@ -38,32 +47,29 @@ export function SaisonDuTour({ notes }: { notes: { name: string; coef: number }[
   // sont des clientèles ou des références particulières.
   const [tete, ...detail] = notes;
   const haute = tete!.coef > 1;
+  const teinte = haute ? "text-emerald-300" : "text-amber-300";
 
   return (
-    <section
-      className={`rounded-lg border border-white/10 border-l-2 bg-slate-900 px-3 py-3 sm:px-4 ${
-        haute ? "border-l-emerald-400/70" : "border-l-amber-400/70"
-      }`}
+    <Tiroir
+      titre="Saison du tour"
+      valeur={
+        <span className={`whitespace-nowrap tabular-nums ${teinte}`}>
+          {ecartSaison(tete!.coef)} de demande
+        </span>
+      }
+      // Le compte annonce ce qui attend derrière. « Précision » plutôt que
+      // « clientèle » : selon le scénario, ces lignes sont des clientèles ou des
+      // références de la gamme, et le composant ne reçoit que des noms.
+      quoi={detail.length > 0 ? compter(detail.length, "précision") : undefined}
     >
-      <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-        <span aria-hidden className="text-base leading-none">
-          {haute ? "☀️" : "🌧️"}
-        </span>
-        Saison du tour
-        <span className={haute ? "text-emerald-300" : "text-amber-300"}>
-          {haute ? "haute saison" : "basse saison"}
-        </span>
-      </p>
-
-      <p className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-        <span
-          className={`text-2xl font-semibold tabular-nums ${
-            haute ? "text-emerald-300" : "text-amber-300"
-          }`}
-        >
+      <p className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+        <span className={`text-2xl font-semibold tabular-nums ${teinte}`}>
           {coefficient(tete!.coef)}
         </span>
         <span className="text-sm text-slate-300">{tete!.name}</span>
+        <span className={`text-xs font-semibold uppercase tracking-wide ${teinte}`}>
+          {haute ? "haute saison" : "basse saison"}
+        </span>
       </p>
       <p className="mt-0.5 text-sm leading-snug text-slate-400">
         {Math.abs(Math.round((tete!.coef - 1) * 100))} % de demande en{" "}
@@ -90,6 +96,6 @@ export function SaisonDuTour({ notes }: { notes: { name: string; coef: number }[
           ))}
         </ul>
       ) : null}
-    </section>
+    </Tiroir>
   );
 }
