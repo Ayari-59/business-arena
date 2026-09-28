@@ -106,7 +106,7 @@ function Chiffre({
   );
 }
 
-/** Les paramètres : ce que vaut l'entreprise, et le marché en face d'elle. */
+/** Les paramètres : ce que vaut l'entreprise, et le marché où elle vend. */
 export function ParametersPanels({
   intro,
   vocabulary,
@@ -188,8 +188,21 @@ export function ParametersPanels({
       </div>
 
       <div className="rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5">
+        {/*
+          « Le marché », et non « Le marché EN FACE DE VOUS ». Deux raisons.
+          L'image servait déjà deux lignes plus haut, pour les concurrents
+          (« Face à vous : … ») ; et elle rangeait le marché du mauvais côté. Ce
+          qui est en face, ce sont les concurrents ; le marché, lui, est ce à qui
+          l'on vend.
+
+          « VOTRE marché » serait faux, et pas seulement maladroit : ce panneau
+          montre « Marché total » et, juste à côté, « Votre part ». Le marché est
+          commun à toutes les équipes de la classe, et ce qui est à vous n'en est
+          qu'une part — c'est justement l'enjeu du tour. Le possessif de « Votre
+          entreprise », en vis-à-vis, suffit à dire lequel des deux est à vous.
+        */}
         <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-          Le marché en face de vous
+          Le marché
         </h3>
         <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
           <Chiffre

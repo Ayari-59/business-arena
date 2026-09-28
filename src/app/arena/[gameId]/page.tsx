@@ -159,7 +159,7 @@ export default async function ArenaPage({
     // Dès le 2ᵉ tour, on montre les panneaux directement : pas d'en-tête « Vos
     // paramètres et votre capacité » ni de carte englobante par-dessus, qui
     // faisaient doublon avec les titres propres des panneaux (« Votre
-    // entreprise », « Le marché en face de vous ») et rognaient la largeur sur
+    // entreprise », « Le marché ») et rognaient la largeur sur
     // téléphone (une carte dans une carte).
     <ParametersPanels
       intro={view.intro}
