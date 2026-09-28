@@ -27,7 +27,32 @@ import { SITE_URL } from "@/config/site";
  * une mesure, et les codes affichés ne sont pas de vraies parties.
  */
 
-/** Le cadre commun : une carte sombre, posée, avec son voile de lumière. */
+/**
+ * Le cadre commun : une carte sombre, posée, avec son voile de lumière.
+ *
+ * TROIS CADRES DE MÊME HAUTEUR, ET TROIS LÉGENDES SUR UNE MÊME LIGNE.
+ *
+ * Mesurés côte à côte, les trois aperçus faisaient 358, 202 et 222 pixels : un
+ * écart de 156 px, trois bas de carte en escalier et trois légendes à trois
+ * hauteurs différentes. Trois captures d'écran alignées disent « voici le
+ * produit » ; trois cartes en escalier disent « voici trois bouts de page ».
+ *
+ * L'astuce tient en trois gestes, et aucun ne touche au contenu :
+ *
+ * · LA FIGURE PREND TOUTE SA CASE (`h-full` dans une grille qui étire par
+ *   défaut), et son cadre prend tout ce que la légende laisse (`flex-1`). Les
+ *   trois cadres valent donc le plus grand des trois, qui est le téléphone.
+ * · LE CADRE EST UNE BOÎTE FLEXIBLE : son contenu s'étire avec lui, au lieu de
+ *   laisser un fond vide sous lui. Chaque aperçu décide ensuite où va l'espace
+ *   gagné — au centre pour un écran projeté, sous le tableau pour une console
+ *   de pilotage, là où un vrai écran l'aurait.
+ * · LA LÉGENDE A UNE BOÎTE DE HAUTEUR FIXE, deux lignes de 12 px. Sans elle,
+ *   une légende plus longue d'un mot reprendrait 16 px à SON cadre et
+ *   rouvrirait l'escalier sans qu'on voie pourquoi.
+ *
+ * Empilés (un seul par rang), les cadres retrouvent leur hauteur propre : il
+ * n'y a rien à aligner quand il n'y a qu'une carte par ligne.
+ */
 function Cadre({
   legende,
   children,
@@ -38,11 +63,13 @@ function Cadre({
   className?: string;
 }) {
   return (
-    <figure className={`m-0 ${className}`}>
-      <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl shadow-slate-950/40">
+    <figure className={`m-0 flex h-full flex-col ${className}`}>
+      <div className="flex flex-1 overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl shadow-slate-950/40">
         {children}
       </div>
-      <figcaption className="mt-2 text-center text-xs text-slate-400">{legende}</figcaption>
+      <figcaption className="mt-2 flex min-h-8 items-start justify-center text-center text-xs text-slate-400">
+        {legende}
+      </figcaption>
     </figure>
   );
 }
@@ -56,7 +83,7 @@ function Cadre({
 export function ApercuArene({ className = "" }: { className?: string }) {
   return (
     <Cadre legende="Ce que voit l'élève, sur son téléphone" className={className}>
-      <div className="mx-auto w-full max-w-[330px] p-3">
+      <div className="mx-auto flex w-full max-w-[330px] flex-col p-3">
         <div className="flex items-center justify-between rounded-lg bg-slate-950/60 px-2.5 py-2 text-[0.8rem]">
           <span className="font-semibold text-slate-100">Équipe 3 · NOVA</span>
           <span aria-hidden className="flex gap-0.5">
@@ -123,12 +150,19 @@ export function ApercuArene({ className = "" }: { className?: string }) {
 export function ApercuProjection({ className = "" }: { className?: string }) {
   return (
     <Cadre legende="Ce que vous projetez à la classe" className={className}>
-      <div className="flex aspect-[16/10] flex-col items-center justify-center gap-2 px-4 py-5">
+      <div className="flex aspect-[16/10] w-full flex-col items-center justify-center gap-2 px-4 py-5">
         <p className="text-[0.75rem] uppercase tracking-[0.3em] text-slate-400">
           Rejoindre la partie
         </p>
         <div className="flex items-center gap-4">
-          <p className="font-mono text-[clamp(1.5rem,7vw,2.75rem)] font-bold leading-none tracking-[0.1em] text-amber-300">
+          <p /*
+              LA TAILLE EST PLAFONNÉE PAR LE CADRE, PAS PAR L'ENVIE. Montée à
+              3,25 rem pour remplir la hauteur gagnée par l'alignement, la ligne
+              « code + QR » dépassait la largeur de la colonne et le `K` se
+              faisait couper. Un écran projeté qui déborde de son cadre prouve
+              l'inverse de ce qu'on veut montrer.
+            */
+            className="font-mono text-[clamp(1.5rem,7vw,2.75rem)] font-bold leading-none tracking-[0.1em] text-amber-300">
             K7M2PR
           </p>
           <CodeQr
@@ -153,16 +187,23 @@ export function ApercuProjection({ className = "" }: { className?: string }) {
  * endroit d'où l'on clôt un tour.
  */
 export function ApercuPilotage({ className = "" }: { className?: string }) {
+  // SIX ÉQUIPES, COMME L'ÉCRAN PROJETÉ EN ANNONCE SIX. Les trois aperçus sont
+  // côte à côte : une console qui suivait trois équipes à côté d'un écran qui
+  // en comptait six racontait deux séances différentes. Elles remplissent du
+  // même coup la hauteur que l'alignement des trois cadres lui donne.
   const equipes = [
     { nom: "Les Fourmis", etat: "validé", tresorerie: "22 445 €", bon: true },
     { nom: "Vega", etat: "en attente", tresorerie: "−27 709 €", bon: false },
     { nom: "Atelier 9", etat: "validé", tresorerie: "8 120 €", bon: true },
+    { nom: "Bréhat", etat: "validé", tresorerie: "14 902 €", bon: true },
+    { nom: "Kilowatt", etat: "en attente", tresorerie: "−3 480 €", bon: false },
+    { nom: "Nord-Sud", etat: "validé", tresorerie: "31 067 €", bon: true },
   ];
   return (
     <Cadre legende="Ce que vous suivez pendant la séance" className={className}>
-      <div className="p-3 sm:p-4">
+      <div className="flex w-full flex-col p-3 sm:p-4">
         <p className="text-[0.75rem] uppercase tracking-[0.18em] text-slate-400">
-          Ce tour · 2/3 équipes ont validé
+          Ce tour · 4/6 équipes ont validé
         </p>
         <table className="mt-2 w-full border-collapse text-left text-[0.8rem]">
           <thead>
@@ -198,9 +239,15 @@ export function ApercuPilotage({ className = "" }: { className?: string }) {
             ))}
           </tbody>
         </table>
-        <p className="mt-3 rounded-lg bg-amber-400 py-1.5 text-center text-[0.8rem] font-semibold text-slate-950">
-          Clore le tour et simuler
-        </p>
+        {/* `mt-auto` sur l'enveloppe, pas sur le bouton : la marge automatique
+            pousse le geste au bas du panneau quand le cadre est plus grand que
+            son contenu, et `pt-3` garde l'écart minimal au tableau quand il ne
+            l'est pas. */}
+        <div className="mt-auto pt-3">
+          <p className="rounded-lg bg-amber-400 py-1.5 text-center text-[0.8rem] font-semibold text-slate-950">
+            Clore le tour et simuler
+          </p>
+        </div>
       </div>
     </Cadre>
   );
