@@ -1,5 +1,8 @@
 node_modules/
 .next/
+# Base Postgres locale (npm run base:locale) : des données de démonstration,
+# recréées en une commande, qui n'ont rien à faire dans l'historique.
+.pglite/
 out/
 *.tsbuildinfo
 next-env.d.ts

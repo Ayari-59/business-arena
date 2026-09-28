@@ -16,6 +16,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "calibrate": "tsx scripts/calibrate.ts",
+    "base:locale": "tsx scripts/base-locale.mts",
     "seed:demo": "tsx --env-file=.env scripts/seed-demo.ts",
     "verify:migrations": "tsx --env-file=.env scripts/verifier-migrations.ts",
     "verify:qr": "tsx scripts/verifier-qr.ts",

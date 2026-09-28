@@ -60,10 +60,16 @@ Chaque brique de l'architecture sert un maillon de cette boucle :
 
 ```bash
 npm install
-cp .env.example .env    # renseigner DATABASE_URL (pooler) et DIRECT_URL (direct) Neon
-npm run db:migrate      # applique les migrations drizzle/ sur la base
+npm run base:locale     # une base Postgres locale, migrée et semée (voir plus bas)
+# dans un autre terminal :
+export DATABASE_URL=postgres://postgres@127.0.0.1:5434/postgres
+export DIRECT_URL=$DATABASE_URL AUTH_SECRET=de-quoi-signer-les-sessions
 npm run dev             # http://localhost:3030
 ```
+
+Pour travailler sur la base de production (Neon) plutôt que sur la base locale :
+`cp .env.example .env`, y renseigner `DATABASE_URL` (pooler) et `DIRECT_URL`
+(direct), puis `npm run db:migrate` avant `npm run dev`.
 
 Vérifications : `npm run typecheck` · `npm test` · `npm run build`. Les trois tournent
 en intégration continue (`.github/workflows/ci.yml`) sur chaque poussée et chaque
@@ -82,16 +88,42 @@ production, toute autre adresse Postgres prend le pilote standard, avec le même
 les mêmes migrations des deux côtés.
 
 ```bash
-createdb arena_e2e
-export DATABASE_URL=postgres://postgres@127.0.0.1:5432/arena_e2e
+npm run base:locale &       # base sur 127.0.0.1:5434, migrée et semée
+export DATABASE_URL=postgres://postgres@127.0.0.1:5434/postgres
 export DIRECT_URL=$DATABASE_URL AUTH_SECRET=de-quoi-signer-les-sessions
-npm run db:migrate && npm run build
-npm start &                 # ou : npx next start -p 3040
-E2E_BASE_URL=http://127.0.0.1:3030 npm run test:e2e
+npm run build && npx next start -p 3040 &
+E2E_BASE_URL=http://127.0.0.1:3040 npm run test:e2e
 ```
+
+`DATABASE_URL` est nécessaire au processus de test lui-même, et pas seulement à
+l'application : deux essais écrivent en base (une licence échue, un relevé
+d'usage) pour vérifier ce que l'écran en dit.
 
 `CHROMIUM_PATH` permet de désigner un binaire déjà présent ; sans elle, Playwright utilise
 celui qu'il a installé (`npx playwright-core install chromium`).
+
+### Une base Postgres sans rien installer
+
+`npm run base:locale` démarre un Postgres complet sur `127.0.0.1:5434`, applique les
+migrations de `drizzle/` et sème le monde de démonstration, puis affiche le code de
+partie à taper sur `/join`. Il n'y a ni paquet système à poser, ni rôle à créer, ni base
+à déclarer : c'est PGlite, le Postgres compilé en WebAssembly dont les tests
+d'intégration se servent déjà, que le script expose sur un port en une cinquantaine de
+lignes. Aucune dépendance n'est ajoutée pour cela — le paquet qui fait ce travail épingle
+ses pairs et aurait fait monter PGlite pour toute l'équipe. L'application ne fait donc
+aucune différence : même schéma, mêmes migrations, même pilote que devant un Postgres
+ordinaire.
+
+| | |
+|---|---|
+| `npm run base:locale` | démarre, migre, sème, et reste ouverte |
+| `npm run base:locale -- --neuve` | repart d'une base vide |
+| `npm run base:locale -- --sans-semis` | sans le monde de démonstration |
+| `PORT_BASE_LOCALE=5435 npm run base:locale` | sur un autre port |
+
+Les données vivent dans `.pglite/`, ignoré par git : la partie qu'on vient de jouer est
+encore là au redémarrage. Ce n'est pas la production, qui tourne sur Neon avec son pilote
+HTTP ; c'est de quoi voir l'application tourner et jouer le parcours.
 
 **Déploiement Vercel** : preset **Next.js**, racine du dépôt. Le script `vercel-build`
 (`drizzle-kit migrate && next build`) applique automatiquement les migrations au build —
