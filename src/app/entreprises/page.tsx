@@ -8,6 +8,7 @@ import {
   nomEntreprise as nomSeul,
   promesseEntreprise as promesse,
 } from "@/config/scenarios/presentation";
+import { bouton } from "@/components/bouton";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/entreprises" },
@@ -253,7 +254,7 @@ export default function EntreprisesPage() {
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Link
             href="/jouer"
-            className="rounded-lg bg-amber-500 px-6 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400"
+            className={bouton({ taille: "l" })}
           >
             Tester le simulateur
           </Link>

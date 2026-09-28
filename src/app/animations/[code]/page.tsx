@@ -7,6 +7,7 @@ import { DIFFICULTY_PRESETS } from "@/config/difficulty";
 import { formatDuTournoi, libelleFormatTournoi } from "@/config/concours";
 import { scenarioByCode, SECTOR_LABELS } from "@/config/scenarios/registry";
 import { PrintButton } from "@/components/print-button";
+import { bouton } from "@/components/bouton";
 
 /** Les ateliers sont une donnée figée : leurs pages se rendent à la construction. */
 export function generateStaticParams() {
@@ -291,7 +292,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
             </p>
             <Link
               href="/teacher"
-              className="mt-4 inline-block rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400 print:hidden"
+              className={`${bouton()} mt-4 print:hidden`}
             >
               {tournoi
                 ? "Organiser le concours dans mon espace enseignant"

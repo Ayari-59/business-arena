@@ -1,5 +1,6 @@
 "use client";
 
+import { bouton } from "@/components/bouton";
 import { reprendreSaPlaceAction, type RepriseDePlaceState } from "@/app/reprendre/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import { formaterCodeDeReprise, LONGUEUR_CODE_REPRISE } from "@/config/reprise";
@@ -62,7 +63,7 @@ export function FormulaireDeReprise({
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-lg bg-amber-400 px-4 py-3 text-sm font-semibold text-slate-950 hover:bg-amber-300 disabled:opacity-60"
+        className={`${bouton({ taille: "l" })} w-full`}
       >
         {pending ? "Reprise…" : "Reprendre ma place"}
       </button>

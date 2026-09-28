@@ -34,6 +34,7 @@ import { Tiroir } from "@/components/tiroir";
 import { PictoSecteur } from "@/components/picto-secteur";
 import { FriseDesTours } from "@/components/frise-des-tours";
 import { ATTENTES } from "@/config/cloture";
+import { bouton } from "@/components/bouton";
 
 export const dynamic = "force-dynamic";
 
@@ -448,7 +449,7 @@ export default async function TeacherDashboard({
           <FormPendingProgress label={ATTENTES.creationPartie} className="sm:col-span-3" />
           <SubmitButton
             pendingLabel="Création de la partie et des équipes…"
-            className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300 sm:col-span-3"
+            className={`${bouton()} sm:col-span-3`}
           >
             Créer la partie et obtenir le code d&apos;invitation
           </SubmitButton>

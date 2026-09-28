@@ -1,5 +1,6 @@
 "use client";
 
+import { bouton } from "@/components/bouton";
 import { joinGameAction, type JoinState } from "@/app/join/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
 
@@ -78,7 +79,7 @@ export function JoinForm({
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-lg bg-amber-400 px-4 py-3 text-sm font-semibold text-slate-950 hover:bg-amber-300 disabled:opacity-60"
+        className={`${bouton({ taille: "l" })} w-full`}
       >
         {pending ? "Connexion…" : "Rejoindre la partie"}
       </button>

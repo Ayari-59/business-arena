@@ -1,5 +1,6 @@
 "use client";
 
+import { bouton } from "@/components/bouton";
 import { useEffect, useState } from "react";
 import {
   retakeSituationAction,
@@ -282,7 +283,7 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
                 disabled={!complet || renduPending}
                 aria-disabled={!complet || renduPending}
                 title={complet ? undefined : messageIncomplet(manquants)}
-                className="rounded-lg bg-amber-400 px-5 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-50"
+                className={bouton()}
               >
                 {renduPending ? "Envoi…" : "Valider mon analyse"}
               </button>

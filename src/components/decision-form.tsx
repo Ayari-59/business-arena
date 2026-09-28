@@ -1,5 +1,6 @@
 "use client";
 
+import { bouton } from "@/components/bouton";
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { playRoundAction, type PlayRoundState } from "@/app/arena/[gameId]/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
@@ -2519,7 +2520,7 @@ export function DecisionForm({
                 key="valider"
                 type="submit"
                 disabled={pending || verrou != null || validationBloquee}
-                className="order-1 ml-auto rounded-lg bg-amber-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60 sm:order-3 sm:ml-0"
+                className={`${bouton({ taille: "l" })} order-1 ml-auto sm:order-3 sm:ml-0`}
               >
                 {pending
                   ? "Envoi en cours…"
@@ -2534,7 +2535,7 @@ export function DecisionForm({
                 key="suivant"
                 type="button"
                 onClick={() => setEtape((e) => Math.min(total - 1, Math.min(e, total - 1) + 1))}
-                className="order-1 ml-auto rounded-lg bg-amber-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 sm:order-3 sm:ml-0"
+                className={`${bouton({ taille: "l" })} order-1 ml-auto sm:order-3 sm:ml-0`}
               >
                 Suivant →
               </button>

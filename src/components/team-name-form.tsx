@@ -1,5 +1,6 @@
 "use client";
 
+import { bouton } from "@/components/bouton";
 import { nommerEquipeAction, type NomEquipeState } from "@/app/arena/[gameId]/actions";
 import { NOM_EQUIPE_MAX } from "@/config/nom-equipe";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
@@ -75,7 +76,7 @@ export function TeamNameForm({
           type="submit"
           disabled={pending}
           aria-busy={pending}
-          className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-400 disabled:cursor-progress disabled:opacity-70"
+          className={bouton()}
         >
           {pending ? (
             <span className="inline-flex items-center gap-2">

@@ -1,5 +1,6 @@
 "use client";
 
+import { bouton } from "@/components/bouton";
 import { joinCompetitionAction, type JoinCompetitionState } from "@/app/compete/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import { messageDejaInscrit } from "@/config/concours";
@@ -76,7 +77,7 @@ export function CompetitionJoinForm({
           <p>{messageDejaInscrit(state.dejaInscrit.teamLabel)}</p>
           <a
             href={`/compete/${state.dejaInscrit.competitionId}`}
-            className="inline-block rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300"
+            className={bouton()}
           >
             Ouvrir mon équipe →
           </a>
@@ -86,7 +87,7 @@ export function CompetitionJoinForm({
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-lg bg-amber-400 px-4 py-3 text-sm font-semibold text-slate-950 hover:bg-amber-300 disabled:opacity-60"
+        className={`${bouton({ taille: "l" })} w-full`}
       >
         {pending ? "Inscription…" : "S'inscrire au concours"}
       </button>

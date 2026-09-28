@@ -23,6 +23,7 @@ import { listerDemandesOrientation } from "@/services/orientation-request.servic
 import { listerRendezVous } from "@/services/rendez-vous.service";
 import { etatAgenda } from "@/services/agenda-google.service";
 import { SITE_URL } from "@/config/site";
+import { bouton } from "@/components/bouton";
 
 export const dynamic = "force-dynamic";
 
@@ -258,7 +259,7 @@ export default async function AdminPage({
 
           <SubmitButton
             pendingLabel="Enregistrement…"
-            className="rounded-lg bg-amber-400 px-5 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300"
+            className={bouton()}
           >
             Enregistrer les réglages
           </SubmitButton>
@@ -290,7 +291,7 @@ export default async function AdminPage({
           </div>
         ) : (
           <form action={seedDemoAction} className="mt-3">
-            <button className="rounded-lg bg-amber-400 px-5 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300">
+            <button className={bouton()}>
               Générer le monde démo
             </button>
           </form>
@@ -315,7 +316,7 @@ export default async function AdminPage({
           />
           <SubmitButton
             pendingLabel="Création…"
-            className="rounded-lg bg-amber-400 px-5 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300"
+            className={bouton()}
           >
             Créer + code admin
           </SubmitButton>
@@ -652,7 +653,7 @@ export default async function AdminPage({
                     <LicenceField name="maxTeachers" label="Enseignants" type="number" placeholder="vide = sans plafond" />
                     <LicenceField name="reference" label="Devis / bon de commande" placeholder="BC-2026-114" />
                     <LicenceField name="amount" label="Montant €" placeholder="900" />
-                    <button className="col-span-2 rounded-lg bg-amber-400 px-3 py-2 text-xs font-semibold text-slate-950 hover:bg-amber-300 sm:col-span-3">
+                    <button className={`${bouton({ taille: "s" })} col-span-2 sm:col-span-3`}>
                       Enregistrer la licence
                     </button>
                   </form>

@@ -1,5 +1,6 @@
 "use client";
 
+import { bouton } from "@/components/bouton";
 import { setCompetitionPublicPageAction, type CompetitionActionState } from "@/app/teacher/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import {
@@ -111,7 +112,7 @@ export function PublicPageForm({
           type="submit"
           disabled={pending}
           aria-busy={pending}
-          className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-400 disabled:cursor-progress disabled:opacity-70"
+          className={bouton()}
         >
           {pending ? "Enregistrement…" : "Enregistrer la page"}
         </button>

@@ -7,6 +7,7 @@ import { ApercuArene, ApercuPilotage, ApercuProjection } from "@/components/aper
 import { DemoDuTour } from "@/components/demo-du-tour";
 import { PreuvesDusageBande } from "@/components/preuves-dusage";
 import { preuvesDusage } from "@/services/preuves-dusage.service";
+import { bouton } from "@/components/bouton";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/enseignants" },
@@ -93,7 +94,7 @@ export default async function EnseignantsPage() {
         <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <Link
             href="/orientation"
-            className="rounded-lg bg-amber-500 px-6 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400"
+            className={bouton({ taille: "l" })}
           >
             Choisir ma simulation
           </Link>
@@ -314,7 +315,7 @@ export default async function EnseignantsPage() {
         <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <Link
             href="/orientation"
-            className="rounded-lg bg-amber-500 px-6 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400"
+            className={bouton({ taille: "l" })}
           >
             Choisir ma simulation
           </Link>

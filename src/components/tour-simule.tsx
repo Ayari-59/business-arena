@@ -2,6 +2,7 @@ import Link from "next/link";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { SECTOR_COLORS, type Sector } from "@/config/scenarios/registry";
 import { PictoSecteur } from "@/components/picto-secteur";
+import { bouton } from "@/components/bouton";
 
 /**
  * L'ÉCRAN « TOUR SIMULÉ » (solo, juste après une validation).
@@ -52,7 +53,7 @@ export function TourSimule({
       <div className="mt-8 flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
         <Link
           href={`/arena/${gameId}#dernier-resultat`}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-6 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400"
+          className={bouton({ taille: "l" })}
         >
           <span aria-hidden>📊</span> Voir les résultats
         </Link>

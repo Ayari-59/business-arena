@@ -1,5 +1,6 @@
 "use client";
 
+import { bouton } from "@/components/bouton";
 import { useState } from "react";
 import { libererLAppareilAction, type LibererState } from "@/app/join/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
@@ -73,7 +74,7 @@ export function IdentiteDeLAppareil({
             <button
               type="submit"
               disabled={pending}
-              className="rounded-lg bg-amber-400 px-3 py-2 text-xs font-semibold text-slate-950 transition hover:bg-amber-300 disabled:opacity-60"
+              className={bouton({ taille: "s" })}
             >
               {pending ? "Libération…" : "Libérer l'appareil"}
             </button>

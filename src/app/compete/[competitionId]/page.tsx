@@ -4,6 +4,7 @@ import { getGuestUserId } from "@/lib/guest";
 import { codeDeRepriseDe, getPlayerCompetition } from "@/services/competition.service";
 import { CompetitionBoard } from "@/components/competition-board";
 import { CarteDuCodeDeReprise } from "@/components/carte-du-code-de-reprise";
+import { bouton } from "@/components/bouton";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +36,7 @@ export default async function PlayerCompetitionPage({
         {myGameId ? (
           <Link
             href={`/arena/${myGameId}`}
-            className="rounded-lg bg-amber-400 px-5 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300"
+            className={bouton()}
           >
             Jouer ma partie →
           </Link>

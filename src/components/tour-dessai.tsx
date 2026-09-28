@@ -1,5 +1,6 @@
 "use client";
 
+import { bouton } from "@/components/bouton";
 import { useState } from "react";
 import Link from "next/link";
 import { jouerUnTourDessaiAction, type EssaiState } from "@/app/actions";
@@ -86,7 +87,7 @@ export function TourDessai() {
         type="submit"
         disabled={pending}
         aria-busy={pending}
-        className="mt-4 w-full rounded-lg bg-amber-500 px-6 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400 disabled:cursor-progress disabled:opacity-70"
+        className={`${bouton({ taille: "l" })} mt-4 w-full`}
       >
         {pending ? "Simulation en cours…" : t ? "Rejouer ce tour" : "Simuler ce tour"}
       </button>

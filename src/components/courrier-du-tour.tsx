@@ -1,5 +1,6 @@
 "use client";
 
+import { bouton } from "@/components/bouton";
 import { useSyncExternalStore } from "react";
 import { CourrierRecommande, Enveloppe, grilleDeCourriers } from "@/components/courrier";
 import { courrierParCode } from "@/config/courriers/registre";
@@ -137,7 +138,7 @@ export function CourrierDuTour({
           <button
             type="button"
             onClick={ouvrir}
-            className="rounded-lg bg-amber-500 px-5 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400"
+            className={bouton({ taille: "l" })}
           >
             Ouvrir le courrier
           </button>

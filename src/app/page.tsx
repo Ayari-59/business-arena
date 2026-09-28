@@ -8,6 +8,7 @@ import { DECISION_MODELS } from "@/config/pedagogy/models";
 import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
 import { LIENS_LEGAUX, NAVIGATION } from "@/config/navigation";
 import { DESCRIPTION_ACCUEIL, TITRE_ACCUEIL } from "@/config/seo";
+import { bouton } from "@/components/bouton";
 
 // La landing ne lit que la configuration de plateforme (rien par utilisateur) :
 // on la met en cache et on la régénère au plus toutes les 5 min (ISR) plutôt
@@ -134,7 +135,7 @@ export default async function Home() {
             */}
             <Link
               href="/jouer"
-              className="rounded-lg bg-amber-500 px-6 py-3 text-center text-sm font-semibold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400"
+              className={`${bouton({ taille: "l" })} text-center`}
             >
               Commencer une partie
             </Link>

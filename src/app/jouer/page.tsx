@@ -7,6 +7,7 @@ import { etendueDesDecisions, leviersDuNiveau } from "@/config/decisions";
 import { DEFAULT_SCENARIO_CODE, SCENARIO_CHOICES, SECTOR_LABELS, familyOf } from "@/config/scenarios/registry";
 import { SubmitButton } from "@/components/submit-button";
 import { QuickConfigFields } from "@/components/quick-config-form";
+import { bouton } from "@/components/bouton";
 
 export const dynamic = "force-dynamic";
 
@@ -142,7 +143,7 @@ export default async function JouerPage({
               />
               <SubmitButton
                 pendingLabel="Création de la partie…"
-                className="mt-5 w-full rounded-lg bg-amber-500 px-4 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400"
+                className={`${bouton({ taille: "l" })} mt-5 w-full`}
               >
                 Lancer la partie
               </SubmitButton>

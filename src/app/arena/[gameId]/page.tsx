@@ -46,6 +46,7 @@ import { statutDesSituations } from "@/config/situation-rendu";
 import { AiAssistant } from "@/components/ai-assistant";
 import { entitlementsForUser } from "@/services/entitlements.service";
 import { resolveAiSurface } from "@/services/ai.service";
+import { bouton } from "@/components/bouton";
 
 export const dynamic = "force-dynamic";
 
@@ -538,7 +539,7 @@ export default async function ArenaPage({
           <div className="mt-4 flex flex-wrap justify-center gap-3">
             <Link
               href={`/jouer?secteur=${encodeURIComponent(view.scenarioCode)}`}
-              className="inline-block rounded-lg bg-amber-400 px-6 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300"
+              className={bouton()}
             >
               Rejouer {view.intro.company}
             </Link>

@@ -1,5 +1,6 @@
 "use client";
 
+import { bouton } from "@/components/bouton";
 import { useEffect, useState } from "react";
 
 /**
@@ -148,7 +149,7 @@ export function InstallPrompt() {
             <button
               type="button"
               onClick={installer}
-              className="rounded-lg bg-amber-500 px-4 py-2 text-xs font-semibold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400"
+              className={bouton()}
             >
               Installer l&apos;app
             </button>

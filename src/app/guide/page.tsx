@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { bouton } from "@/components/bouton";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/guide" },
@@ -433,7 +434,7 @@ export default function GuidePage() {
           <div className="mt-5 flex flex-wrap justify-center gap-3">
             <Link
               href="/jouer"
-              className="rounded-lg bg-amber-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-300"
+              className={bouton({ taille: "l" })}
             >
               Jouer maintenant
             </Link>

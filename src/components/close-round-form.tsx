@@ -1,5 +1,6 @@
 "use client";
 
+import { bouton } from "@/components/bouton";
 import { useEffect, useState } from "react";
 import { closeRoundAction, type CloseRoundState } from "@/app/teacher/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
@@ -72,7 +73,7 @@ export function CloseRoundForm({
           <div className="flex flex-wrap gap-2">
             <button
               type="submit"
-              className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300"
+              className={bouton()}
             >
               {texte.confirmer}
             </button>
@@ -89,7 +90,7 @@ export function CloseRoundForm({
         <button
           type="button"
           onClick={() => setConfirmation(true)}
-          className="w-full rounded-lg bg-amber-400 px-4 py-3 text-sm font-semibold text-slate-950 hover:bg-amber-300"
+          className={`${bouton({ taille: "l" })} w-full`}
         >
           Clore le tour {tour} et simuler
         </button>

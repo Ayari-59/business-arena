@@ -1,5 +1,6 @@
 "use client";
 
+import { bouton } from "@/components/bouton";
 import { useState } from "react";
 import Link from "next/link";
 import type { JourDeCreneaux } from "@/lib/creneaux";
@@ -298,7 +299,7 @@ export function RendezVousForm({
           <button
             type="submit"
             disabled={pending || !creneau}
-            className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-400 disabled:opacity-60"
+            className={bouton()}
           >
             {pending ? "Réservation…" : "Réserver ce créneau"}
           </button>

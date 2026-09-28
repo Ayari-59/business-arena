@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { PARCOURS } from "@/config/parcours";
+import { bouton } from "@/components/bouton";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/parcours" },
@@ -127,7 +128,7 @@ export default function ParcoursPage() {
           <div className="mt-5 flex flex-wrap justify-center gap-3">
             <Link
               href="/teacher/login"
-              className="rounded-lg bg-amber-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-300"
+              className={bouton({ taille: "l" })}
             >
               Créer ma première partie
             </Link>

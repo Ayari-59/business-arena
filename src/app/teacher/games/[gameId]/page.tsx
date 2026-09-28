@@ -45,6 +45,7 @@ import { entitlementsForUser } from "@/services/entitlements.service";
 import { resolveAiSurface } from "@/services/ai.service";
 import { CodeQr } from "@/components/code-qr";
 import { urlDeJonction } from "@/lib/qr";
+import { bouton } from "@/components/bouton";
 
 /** Libellé court de l'état d'un tour, pour le tableau du planning fin. */
 const ROUND_STATUS_LABEL: Record<string, string> = {
@@ -827,7 +828,7 @@ export default async function TeacherGamePage({
                 />
               </label>
             </div>
-            <SubmitButton className="mt-3 rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-400">
+            <SubmitButton className={`${bouton()} mt-3`}>
               Enregistrer le planning
             </SubmitButton>
           </GuardedForm>
@@ -902,7 +903,7 @@ export default async function TeacherGamePage({
                 </tbody>
               </table>
             </div>
-            <SubmitButton className="mt-3 rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-400">
+            <SubmitButton className={`${bouton()} mt-3`}>
               Enregistrer le planning des tours
             </SubmitButton>
           </GuardedForm>

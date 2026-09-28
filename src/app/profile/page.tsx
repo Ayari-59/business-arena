@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getGuestUserId } from "@/lib/guest";
 import { getPlayerProfile } from "@/services/profile.service";
 import type { SkillAxis } from "@/config/pedagogy/concepts";
+import { bouton } from "@/components/bouton";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +31,7 @@ export default async function ProfilePage() {
           Votre profil se construit en jouant : lancez une première partie pour commencer
           à mesurer vos compétences de gestion.
         </p>
-        <Link href="/" className="rounded-lg bg-amber-400 px-6 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300">
+        <Link href="/" className={bouton()}>
           Jouer une partie
         </Link>
       </main>

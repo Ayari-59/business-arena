@@ -1,5 +1,6 @@
 "use client";
 
+import { bouton } from "@/components/bouton";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
@@ -307,7 +308,7 @@ export function OrientationForm({
             <button
               type="submit"
               disabled={pending || !complet}
-              className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-400 disabled:opacity-60"
+              className={bouton()}
             >
               {pending ? "Envoi…" : "Nous écrire avec ce profil"}
             </button>

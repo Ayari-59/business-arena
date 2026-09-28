@@ -1,5 +1,6 @@
 "use client";
 
+import { bouton } from "@/components/bouton";
 import { createCompetitionAction, type CreateCompetitionState } from "@/app/teacher/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import { LongActionProgress } from "@/components/long-action-progress";
@@ -111,7 +112,7 @@ export function CompetitionCreateForm({
       <button
         type="submit"
         disabled={pending}
-        className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300 disabled:opacity-60 sm:col-span-2"
+        className={`${bouton()} sm:col-span-2`}
       >
         {pending ? "Création du concours…" : "Créer le concours et ouvrir les inscriptions"}
       </button>

@@ -1,5 +1,6 @@
 "use client";
 
+import { bouton } from "@/components/bouton";
 import {
   Fragment,
   useEffect,
@@ -233,7 +234,7 @@ export function SegmentedTabs({
           <button
             type="button"
             onClick={() => allerA(currentIndex + 1)}
-            className="inline-flex items-center gap-2 rounded-lg bg-amber-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-300"
+            className={bouton({ taille: "l" })}
           >
             {visible[currentIndex + 1]!.label}
             <span aria-hidden>→</span>

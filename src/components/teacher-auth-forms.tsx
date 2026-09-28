@@ -1,5 +1,6 @@
 "use client";
 
+import { bouton } from "@/components/bouton";
 import { useActionState, useState } from "react";
 import { loginAction, registerAction, type FormState } from "@/app/teacher/actions";
 
@@ -73,7 +74,7 @@ export function TeacherAuthForms() {
           <button
             type="submit"
             disabled={loginPending}
-            className="w-full rounded-lg bg-amber-400 px-4 py-3 text-sm font-semibold text-slate-950 hover:bg-amber-300 disabled:opacity-60"
+            className={`${bouton({ taille: "l" })} w-full`}
           >
             {loginPending ? "Connexion…" : "Se connecter"}
           </button>
@@ -105,7 +106,7 @@ export function TeacherAuthForms() {
           <button
             type="submit"
             disabled={registerPending}
-            className="w-full rounded-lg bg-amber-400 px-4 py-3 text-sm font-semibold text-slate-950 hover:bg-amber-300 disabled:opacity-60"
+            className={`${bouton({ taille: "l" })} w-full`}
           >
             {registerPending ? "Création…" : "Créer mon compte enseignant"}
           </button>

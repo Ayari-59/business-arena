@@ -1,5 +1,6 @@
 "use client";
 
+import { bouton } from "@/components/bouton";
 import { useState } from "react";
 import {
   finishCompetitionAction,
@@ -81,7 +82,7 @@ export function CompetitionControl({
           <div className="flex flex-wrap gap-2">
             <button
               type="submit"
-              className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300"
+              className={bouton()}
             >
               Confirmer
             </button>
@@ -98,7 +99,7 @@ export function CompetitionControl({
         <button
           type="button"
           onClick={() => setConfirmation(true)}
-          className="w-full rounded-lg bg-amber-400 px-4 py-3 text-sm font-semibold text-slate-950 hover:bg-amber-300"
+          className={`${bouton({ taille: "l" })} w-full`}
         >
           {config.label}
         </button>
@@ -237,7 +238,7 @@ export function NouvellePhase({
           <div className="flex flex-wrap gap-2">
             <button
               type="submit"
-              className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-300"
+              className={bouton()}
             >
               Confirmer
             </button>
@@ -255,7 +256,7 @@ export function NouvellePhase({
           type="button"
           disabled={!apercu.possible}
           onClick={() => setConfirmation(true)}
-          className="w-full rounded-lg bg-amber-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-40"
+          className={`${bouton({ taille: "l" })} w-full disabled:opacity-40`}
         >
           Qualifier et lancer « {nom.trim() || "la phase suivante"} »
         </button>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { bouton } from "@/components/bouton";
 
 /**
  * La page introuvable (404).
@@ -32,7 +33,7 @@ export default function NotFound() {
       <div className="mt-8 flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
         <Link
           href="/"
-          className="inline-flex items-center justify-center rounded-lg bg-amber-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-300"
+          className={bouton({ taille: "l" })}
         >
           Retour à l&apos;accueil
         </Link>
