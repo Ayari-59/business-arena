@@ -85,12 +85,15 @@ describe("le record personnel", () => {
   });
 
   it("exclut la partie en cours : elle est le candidat, pas le tenant", async () => {
-    // Une seule partie jouée en dehors de celle qu'on exclut : si l'exclusion
-    // ne marchait pas, on lirait le maximum des deux.
-    const record = await recordPersonnel({ userId, scenarioCode, saufPartie: premiere.gameId });
-    expect(record!.bpi).toBeCloseTo(seconde.bpi, 2);
-    const desDeux = Math.max(premiere.bpi, seconde.bpi);
-    if (premiere.bpi !== seconde.bpi) expect(record!.bpi).not.toBeCloseTo(desDeux, 2);
+    // On exclut la MEILLEURE des deux : si l'exclusion ne marchait pas, c'est
+    // elle qu'on lirait. Prendre la meilleure plutôt qu'une des deux au hasard
+    // rend l'essai indépendant de l'IPG que le moteur donne ce jour-là — la
+    // première écriture affirmait « ce n'est pas le maximum des deux », ce qui
+    // est faux dès que la partie restante EST la meilleure.
+    const [meilleure, autre] =
+      premiere.bpi >= seconde.bpi ? [premiere, seconde] : [seconde, premiere];
+    const record = await recordPersonnel({ userId, scenarioCode, saufPartie: meilleure.gameId });
+    expect(record!.bpi).toBeCloseTo(autre.bpi, 2);
   });
 
   it("un autre métier n'a pas de record", async () => {
