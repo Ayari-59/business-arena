@@ -157,6 +157,18 @@ describe("parcours enseignant et élève", () => {
     // et le test ne l'écrivait pas : la validation native du navigateur bloquait
     // l'envoi en silence, et le garde-fou des pivots n'arrivait jamais. Un élève
     // ne peut pas non plus sauter cette étape ; le test ne le doit pas davantage.
+    //
+    // On en profite pour lire le refus : la bulle du navigateur parle SA langue,
+    // et affichait « Please fill out this field » au milieu d'un écran français.
+    // Le message est désormais le nôtre — c'est le seul endroit où on peut le
+    // vérifier, puisqu'il n'existe qu'au moment où le navigateur refuse.
+    await eleve.getByRole("button", { name: /Valider les décisions de l'équipe/ }).click();
+    const refus = await eleve
+      .locator('textarea[name="justification"]')
+      .evaluate((n: HTMLTextAreaElement) => n.validationMessage);
+    expect(refus, "le refus doit être écrit en français, et par nous").toContain("Écrivez une phrase");
+    expect(refus).not.toMatch(/fill out|required|please/i);
+
     await eleve.fill(
       'textarea[name="justification"]',
       "On tient le tarif haut et on staffe au plus juste.",

@@ -196,7 +196,7 @@ function Curseur({
           step={bornes.pas}
           value={valeur}
           onChange={(e) => surValeur(Number(e.target.value))}
-          className="mt-1.5 w-full accent-amber-400"
+          className="curseur mt-1.5 accent-amber-400"
         />
       </label>
       <p className="mt-1 text-sm leading-relaxed text-slate-400">{aide}</p>

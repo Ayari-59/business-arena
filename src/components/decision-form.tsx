@@ -22,6 +22,7 @@ import {
 import { scalarsOfGamme } from "@/engine/gamme";
 import type { RoundDecisions } from "@/engine/types";
 import { LONGUEUR_MINIMALE_JUSTIFICATION } from "@/config/justification";
+import { proprietesDeValidite } from "@/config/validation-native";
 import type { ScenarioVocabulary } from "@/config/scenarios/registry";
 import type { GameView } from "@/services/game-view.service";
 import { formatEuro, formatEuroCents, formatUnits } from "@/lib/format";
@@ -2425,6 +2426,14 @@ export function DecisionForm({
           rows={2}
           required={premierTour}
           minLength={premierTour ? LONGUEUR_MINIMALE_JUSTIFICATION : undefined}
+          // La bulle du navigateur parle SA langue : « Please fill out this
+          // field » au milieu d'un écran français, relevé en recette. On garde
+          // sa mécanique, qui est la bonne, et on lui donne nos mots.
+          {...proprietesDeValidite({
+            manquant:
+              "Écrivez une phrase avant de valider : elle vous reviendra au prochain tour, en face du résultat.",
+            tropCourt: `Encore quelques mots : ${LONGUEUR_MINIMALE_JUSTIFICATION} signes au moins, une phrase suffit.`,
+          })}
           aria-label="Justification de vos décisions"
           placeholder={
             premierTour

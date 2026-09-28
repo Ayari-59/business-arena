@@ -129,6 +129,27 @@
   }
 }
 
+/* ---------------------------------------------------------------------------
+ * LE CURSEUR, ASSEZ HAUT POUR ÊTRE ATTRAPÉ.
+ *
+ * Mesuré sur le tour d'essai de la page d'accueil : 16 px de haut, donc sous
+ * le plancher de 24 px de la règle WCAG 2.5.8. Sur un téléphone, un pouce
+ * n'attrape pas une cible de seize pixels du premier coup ; il la rate, la
+ * page défile, et on recommence.
+ *
+ * LA HAUTEUR SEULE SUFFIT, et c'est ce qui rend la règle courte. Le navigateur
+ * teste le clic sur toute la boîte du contrôle, mais ne dessine la piste qu'en
+ * son milieu : porter la boîte à 24 px agrandit la cible sans épaissir le
+ * trait. Redessiner piste et pouce à la main, comme je l'avais d'abord fait,
+ * coûtait en plus la part parcourue — seul Gecko sait la peindre sur une piste
+ * refaite, et `accent-color` la donne dans les deux moteurs.
+ * ------------------------------------------------------------------------- */
+.curseur {
+  height: 1.5rem; /* 24 px : la cible, pas le trait */
+  width: 100%;
+  cursor: pointer;
+}
+
 /*
  * LA RÉVÉLATION DU RÉSULTAT : trois temps, trois délais.
  *

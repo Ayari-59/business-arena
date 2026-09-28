@@ -94,6 +94,22 @@ describe("le tour d'essai", () => {
     expect(source).not.toMatch(/@\/db|drizzle|getOrCreateGuestUserId|createSoloGame/);
   });
 
+  it("donne aux curseurs une cible qu'un pouce attrape", () => {
+    // Mesurés à 16 px de haut lors de l'audit, sous le plancher de 24 px de la
+    // règle WCAG 2.5.8 : sur un téléphone, un pouce rate une cible de seize
+    // pixels, la page défile, et on recommence. La hauteur est portée par le
+    // CONTRÔLE et non par la piste — le navigateur teste le clic sur toute la
+    // boîte mais ne dessine le trait qu'en son milieu.
+    const composant = readFileSync(join(process.cwd(), "src/components/tour-dessai.tsx"), "utf8");
+    expect(composant).toMatch(/className="curseur/);
+    const css = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8");
+    const regle = css.slice(css.indexOf(".curseur {"), css.indexOf("}", css.indexOf(".curseur {")));
+    expect(regle).toMatch(/height:\s*1\.5rem/);
+    // `accent-color` reste : c'est lui qui peint la part parcourue, dans les
+    // deux moteurs. Redessiner la piste à la main la faisait disparaître.
+    expect(composant).toContain("accent-amber-400");
+  });
+
   it("a remplacé le cockpit dessiné de l'accueil", () => {
     const accueil = readFileSync(join(process.cwd(), "src/app/page.tsx"), "utf8");
     expect(accueil).toContain("<TourDessai />");
