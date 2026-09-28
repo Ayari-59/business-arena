@@ -34,6 +34,8 @@ import { FriseDesTours } from "@/components/frise-des-tours";
 import { IdentiteDeLAppareil } from "@/components/identite-de-lappareil";
 import { MaCarteDeReprise } from "@/components/ma-carte-de-reprise";
 import { TableauDeBord } from "@/components/tableau-de-bord";
+import { BilanDePartie } from "@/components/bilan-de-partie";
+import { bilanDeLaPartie } from "@/pedagogy/bilan-de-partie";
 import { VosReussites } from "@/components/vos-reussites";
 import { reussitesDeLaPartie, lireLeTour } from "@/scoring/reussites";
 import { codeDeRepriseDuJoueur } from "@/services/reprise.service";
@@ -523,35 +525,79 @@ export default async function ArenaPage({
       ) : null}
 
 
-      {/* ── Victory / End screen ── */}
-      {finished ? (
-        <section className="carte border-amber-400/30 p-6 text-center">
-          <h2 className="text-xl font-bold text-amber-300">
-            {view.ranking.find((row) => row.isPlayer)?.rank === 1
-              ? `🏆 Victoire ! ${view.playerTeamName} domine le marché.`
-              : view.classement.parLAnimateur && !view.classement.revele
-                ? "Partie terminée. Le classement final sera révélé par votre enseignant."
-                : "Partie terminée."}
-          </h2>
-          <p className="mt-2 text-sm text-slate-400">
-            Résultat cumulé : {formatEuro(view.ranking.find((row) => row.isPlayer)?.cumulativeNetIncome ?? 0)}
-          </p>
-          <div className="mt-4 flex flex-wrap justify-center gap-3">
-            <Link
-              href={`/jouer?secteur=${encodeURIComponent(view.scenarioCode)}`}
-              className={bouton()}
-            >
-              Rejouer {view.intro.company}
-            </Link>
-            <Link
-              href="/jouer"
-              className="inline-block rounded-lg border border-white/15 px-6 py-2 text-sm font-semibold text-slate-200 hover:border-white/30 hover:bg-white/5"
-            >
-              Un autre métier
-            </Link>
-          </div>
-        </section>
-      ) : null}
+      {/*
+        ── LE BILAN DE FIN DE PARTIE ──
+        Il tenait en trois lignes : un titre, le résultat cumulé, deux boutons.
+        Six tours de travail, souvent deux heures de classe, s'arrêtaient sans
+        rien à regarder ensemble. Tout était pourtant déjà calculé, mais
+        éparpillé — la trajectoire dans les tuiles, les tours dans l'accordéon,
+        les réussites dans le profil. Rien de neuf n'est mesuré ici : les tours
+        clos sont relus, comme partout ailleurs dans l'arène.
+      */}
+      {finished
+        ? (() => {
+            const bilan = bilanDeLaPartie(
+              periods.map((p) => ({
+                round: p.round,
+                libelle: periodLabel(view.roundDays, p.round),
+                ca: p.result.incomeStatement.revenue,
+                resultat: p.result.incomeStatement.netIncome,
+                tresorerie: p.result.functionalBalance.netTreasury,
+              })),
+            );
+            if (!bilan) return null;
+            const cases = reussitesDeLaPartie(
+              periods.map((p) => lireLeTour(p.round, p.result, p.forecastReview)),
+            );
+            const acquises = cases.filter((c) => c.round !== null);
+            // La dernière franchie : celle qu'on a envie de nommer, parce
+            // qu'elle est encore fraîche.
+            const derniere = acquises.reduce<(typeof acquises)[number] | null>(
+              (tard, c) => (!tard || c.round! > tard.round! ? c : tard),
+              null,
+            );
+            const moi = view.ranking.find((row) => row.isPlayer);
+            const classementOuvert = !view.classement.parLAnimateur || view.classement.revele;
+            return (
+              <BilanDePartie
+                titre={
+                  moi?.rank === 1
+                    ? `🏆 Victoire ! ${view.playerTeamName} domine le marché.`
+                    : "Partie terminée."
+                }
+                bilan={bilan}
+                reussites={{
+                  acquises: acquises.length,
+                  total: cases.length,
+                  derniere: derniere?.reussite.titre ?? null,
+                }}
+                place={
+                  classementOuvert && moi
+                    ? { rang: moi.rank, total: view.ranking.length }
+                    : null
+                }
+                motDeClassement={
+                  classementOuvert
+                    ? null
+                    : "Le classement final sera révélé par votre enseignant."
+                }
+              >
+                <Link
+                  href={`/jouer?secteur=${encodeURIComponent(view.scenarioCode)}`}
+                  className={bouton()}
+                >
+                  Rejouer {view.intro.company}
+                </Link>
+                <Link
+                  href="/jouer"
+                  className="inline-block rounded-lg border border-white/15 px-6 py-2 text-sm font-semibold text-slate-200 hover:border-white/30 hover:bg-white/5"
+                >
+                  Un autre métier
+                </Link>
+              </BilanDePartie>
+            );
+          })()
+        : null}
 
       {/* ══════════════════════════════════════════════════════════════════
           ACCORDÉON DE PÉRIODES
