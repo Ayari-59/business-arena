@@ -1,5 +1,5 @@
 /**
- * Les hauts faits : ce que l'équipe vient de réussir, nommé.
+ * Les réussites : ce que l'équipe vient de réussir, nommé.
  *
  * Pourquoi. Rien, dans l'arène, ne disait jamais à un élève qu'il venait de
  * faire quelque chose de difficile. Le classement dit où l'on est par rapport
@@ -16,14 +16,14 @@
  * pas au quatrième ni au cinquième.
  */
 
-export interface HautFait {
+export interface Reussite {
   code: string;
   titre: string;
   /** Ce qui vient de se passer, en une ligne. */
   detail: string;
   /**
-   * Ce qu'il reste à faire, dit tant qu'il n'est pas franchi. L'étagère montre
-   * AUSSI les cases vides : un haut fait qu'on ne connaît pas ne se vise pas,
+   * Ce qu'il reste à faire, dit tant qu'il n'est pas franchi. La liste montre
+   * AUSSI les cases vides : une réussite qu'on ne connaît pas ne se vise pas,
    * et la liste de ce qui est possible est ce qui donne envie du tour suivant.
    */
   viser: string;
@@ -41,7 +41,7 @@ const SERIE = 3;
 
 /**
  * LES QUATRE, ÉCRITS UNE SEULE FOIS. Les libellés vivaient dans les branches du
- * calcul : l'étagère en aurait tenu une deuxième copie, et les deux auraient
+ * calcul : la liste en aurait tenu une deuxième copie, et les deux auraient
  * divergé au premier mot changé. Le catalogue les porte, le calcul dit
  * lesquels sont franchis.
  */
@@ -70,27 +70,27 @@ export const CATALOGUE = [
     detail: "La trésorerie nette repasse au-dessus de zéro.",
     viser: "Ramener une trésorerie nette négative au-dessus de zéro.",
   },
-] as const satisfies readonly HautFait[];
+] as const satisfies readonly Reussite[];
 
-type CodeDeHautFait = (typeof CATALOGUE)[number]["code"];
+type CodeDeReussite = (typeof CATALOGUE)[number]["code"];
 
-const fait = (code: CodeDeHautFait): HautFait => CATALOGUE.find((d) => d.code === code)!;
+const fait = (code: CodeDeReussite): Reussite => CATALOGUE.find((d) => d.code === code)!;
 
 /**
- * Les hauts faits franchis AU tour donné — ceux qui n'étaient pas vrais au tour
+ * Les réussites franchis AU tour donné — ceux qui n'étaient pas vrais au tour
  * précédent et le sont devenus. `tours` doit contenir tous les tours joués
  * jusque-là, dans l'ordre ; les tours postérieurs sont ignorés.
  */
-export function hautsFaitsDuTour(tours: readonly TourJoue[], round: number): HautFait[] {
+export function reussitesFranchies(tours: readonly TourJoue[], round: number): Reussite[] {
   const jusquIci = tours.filter((t) => t.round <= round).sort((a, b) => a.round - b.round);
   const ce = jusquIci.at(-1);
   if (!ce || ce.round !== round) return [];
   const avant = jusquIci.slice(0, -1);
-  const faits: HautFait[] = [];
+  const franchies: Reussite[] = [];
 
   // ── Le premier bénéfice ────────────────────────────────────────────────
   if (ce.resultat > 0 && avant.every((t) => t.resultat <= 0)) {
-    faits.push(fait("premier_benefice"));
+    franchies.push(fait("premier_benefice"));
   }
 
   // ── Le retour au vert ──────────────────────────────────────────────────
@@ -102,7 +102,7 @@ export function hautsFaitsDuTour(tours: readonly TourJoue[], round: number): Hau
     const beneficeAvantLaPerte =
       derniereePerte > 0 && avant.slice(0, derniereePerte).some((t) => t.resultat > 0);
     if (beneficeAvantLaPerte) {
-      faits.push(fait("retour_au_vert"));
+      franchies.push(fait("retour_au_vert"));
     }
   }
 
@@ -116,7 +116,7 @@ export function hautsFaitsDuTour(tours: readonly TourJoue[], round: number): Hau
     queue.every((t) => t.resultat > 0) &&
     (!avantLaQueue || avantLaQueue.resultat <= 0)
   ) {
-    faits.push(fait("serie_verte"));
+    franchies.push(fait("serie_verte"));
   }
 
   // ── Trésorerie sauvée ──────────────────────────────────────────────────
@@ -124,24 +124,24 @@ export function hautsFaitsDuTour(tours: readonly TourJoue[], round: number): Hau
   // la trésorerie sont deux choses différentes — c'est précisément la leçon.
   const precedent = avant.at(-1);
   if (precedent && precedent.tresorerieNette < 0 && ce.tresorerieNette >= 0) {
-    faits.push(fait("tresorerie_sauvee"));
+    franchies.push(fait("tresorerie_sauvee"));
   }
 
-  return faits;
+  return franchies;
 }
 
-/** Une case de l'étagère : le haut fait, et le tour où il a été franchi. */
-export interface CaseDeLEtagere {
-  fait: HautFait;
+/** Une case de la liste : la réussite, et le tour où il a été franchi. */
+export interface CaseDeReussite {
+  reussite: Reussite;
   /** Le tour du franchissement, ou null tant qu'il ne l'est pas. */
   round: number | null;
 }
 
 /**
- * L'ÉTAGÈRE : les quatre hauts faits, franchis ou non, dans l'ordre du
+ * VOS RÉUSSITES : les quatre réussites, franchis ou non, dans l'ordre du
  * catalogue.
  *
- * Un haut fait se disait au tour où il arrivait, puis disparaissait avec lui :
+ * Une réussite se disait au tour où il arrivait, puis disparaissait avec lui :
  * une ligne verte lue une fois, dans un accordéon qu'on replie. Ce qu'une
  * équipe a réussi depuis le début de la partie n'était visible nulle part, et
  * ce qu'elle pouvait encore viser n'était écrit nulle part non plus.
@@ -150,12 +150,12 @@ export interface CaseDeLEtagere {
  * deux façons de décider « c'est arrivé » finissent toujours par se contredire,
  * et c'est la ligne verte du tour qui fait foi.
  */
-export function etagereDesHautsFaits(tours: readonly TourJoue[]): CaseDeLEtagere[] {
+export function reussitesDeLaPartie(tours: readonly TourJoue[]): CaseDeReussite[] {
   const premierTour = new Map<string, number>();
   for (const t of [...tours].sort((a, b) => a.round - b.round)) {
-    for (const f of hautsFaitsDuTour(tours, t.round)) {
+    for (const f of reussitesFranchies(tours, t.round)) {
       if (!premierTour.has(f.code)) premierTour.set(f.code, t.round);
     }
   }
-  return CATALOGUE.map((f) => ({ fait: f, round: premierTour.get(f.code) ?? null }));
+  return CATALOGUE.map((f) => ({ reussite: f, round: premierTour.get(f.code) ?? null }));
 }

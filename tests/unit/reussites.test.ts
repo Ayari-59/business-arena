@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hautsFaitsDuTour, type TourJoue } from "@/scoring/hauts-faits";
+import { reussitesFranchies, type TourJoue } from "@/scoring/reussites";
 
 /**
  * LES HAUTS FAITS SE DISENT UNE FOIS, AU TOUR OÙ ILS DEVIENNENT VRAIS.
@@ -12,7 +12,7 @@ import { hautsFaitsDuTour, type TourJoue } from "@/scoring/hauts-faits";
 const tours = (...lignes: [number, number, number][]): TourJoue[] =>
   lignes.map(([round, resultat, tresorerieNette]) => ({ round, resultat, tresorerieNette }));
 
-const codes = (t: TourJoue[], round: number) => hautsFaitsDuTour(t, round).map((f) => f.code);
+const codes = (t: TourJoue[], round: number) => reussitesFranchies(t, round).map((f) => f.code);
 
 describe("premier bénéfice", () => {
   it("au premier tour positif, jamais avant", () => {
@@ -90,11 +90,11 @@ describe("trésorerie sauvée", () => {
 
 describe("les garde-fous", () => {
   it("un tour absent ne rend rien", () => {
-    expect(hautsFaitsDuTour(tours([1, 100, 100]), 4)).toEqual([]);
+    expect(reussitesFranchies(tours([1, 100, 100]), 4)).toEqual([]);
   });
 
   it("aucun tour ne rend rien", () => {
-    expect(hautsFaitsDuTour([], 1)).toEqual([]);
+    expect(reussitesFranchies([], 1)).toEqual([]);
   });
 
   it("des tours désordonnés sont remis dans l'ordre", () => {
@@ -108,9 +108,9 @@ describe("les garde-fous", () => {
     expect(codes(t, 2)).toEqual(["premier_benefice"]);
   });
 
-  it("chaque haut fait porte un titre et un détail non vides", () => {
+  it("chaque réussite porte un titre et un détail non vides", () => {
     const t = tours([1, -900, -400], [2, 200, 150]);
-    for (const f of hautsFaitsDuTour(t, 2)) {
+    for (const f of reussitesFranchies(t, 2)) {
       expect(f.titre.length, f.code).toBeGreaterThan(0);
       expect(f.detail.length, f.code).toBeGreaterThan(0);
     }

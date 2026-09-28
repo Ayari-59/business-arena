@@ -34,8 +34,8 @@ import { FriseDesTours } from "@/components/frise-des-tours";
 import { IdentiteDeLAppareil } from "@/components/identite-de-lappareil";
 import { MaCarteDeReprise } from "@/components/ma-carte-de-reprise";
 import { TableauDeBord } from "@/components/tableau-de-bord";
-import { EtagereDesHautsFaits } from "@/components/etagere-des-hauts-faits";
-import { etagereDesHautsFaits } from "@/scoring/hauts-faits";
+import { VosReussites } from "@/components/vos-reussites";
+import { reussitesDeLaPartie } from "@/scoring/reussites";
 import { codeDeRepriseDuJoueur } from "@/services/reprise.service";
 import { EcheanceDuTour } from "@/components/echeance-du-tour";
 import { mentionDeValidation } from "@/config/validation-du-tour";
@@ -1076,15 +1076,15 @@ export default async function ArenaPage({
 
       <div id="mon-profil" className="scroll-mt-24 space-y-4">
         {/*
-          L'ÉTAGÈRE EN TÊTE DU PROFIL. Les hauts faits se disaient au tour où
+          LES RÉUSSITES EN TÊTE DU PROFIL. Les réussites se disaient au tour où
           ils arrivaient et disparaissaient avec lui : au sixième tour, plus
           rien ne rappelait qu'on avait sauvé la trésorerie au deuxième. Ils
           sont relus des résultats déjà calculés — rien de neuf n'est stocké — et
           les cases vides disent ce qu'il reste à viser.
         */}
         {periods.length > 0 ? (
-          <EtagereDesHautsFaits
-            cases={etagereDesHautsFaits(
+          <VosReussites
+            cases={reussitesDeLaPartie(
               periods.map((p) => ({
                 round: p.round,
                 resultat: p.result.incomeStatement.netIncome,

@@ -107,9 +107,9 @@ describe("la révélation du tour", () => {
       "utf8",
     );
     expect(dashboard).toContain("<RevelationDuTour");
-    // Avant les hauts faits, donc avant les cartes d'indicateurs.
+    // Avant les réussites, donc avant les cartes d'indicateurs.
     expect(dashboard.indexOf("<RevelationDuTour")).toBeLessThan(
-      dashboard.indexOf("<HautsFaits"),
+      dashboard.indexOf("<ReussitesDuTour"),
     );
   });
 });

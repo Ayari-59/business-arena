@@ -18,10 +18,10 @@ import { DashboardTabs } from "@/components/dashboard-tabs";
 import type { KpiFormat } from "@/config/scenarios/sector-kpis";
 import type { GameView } from "@/services/game-view.service";
 import type { RseIndex, RsePillar } from "@/scoring/rse";
-import { HautsFaits } from "@/components/hauts-faits";
+import { ReussitesDuTour } from "@/components/reussites-du-tour";
 import { RevelationDuTour } from "@/components/revelation-du-tour";
 import { periodLabel } from "@/config/scenarios/periodicity";
-import { hautsFaitsDuTour } from "@/scoring/hauts-faits";
+import { reussitesFranchies } from "@/scoring/reussites";
 
 type Period = GameView["periods"][number];
 
@@ -129,7 +129,7 @@ export function PeriodDashboard({
   // Ce que l'équipe a franchi À CE TOUR, lu dans les résultats déjà calculés :
   // rien n'est stocké, rien ne pèse sur le score. Les tours suivants sont
   // exclus, sinon le tableau de bord d'un tour ancien se nourrirait de l'avenir.
-  const faits = hautsFaitsDuTour(
+  const franchies = reussitesFranchies(
     view.periods.map((p) => ({
       round: p.round,
       resultat: p.result.incomeStatement.netIncome,
@@ -178,7 +178,7 @@ export function PeriodDashboard({
               nouveau={standing}
               rang={standing && moi ? { place: moi.rank, sur: view.ranking.length } : undefined}
             />
-            <HautsFaits faits={faits} />
+            <ReussitesDuTour reussites={franchies} />
             {/*
               LE COURRIER D'ABORD. Les lettres reçues par l'entreprise ce
               tour expliquent une part des chiffres qui suivent ; reléguées au

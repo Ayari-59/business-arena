@@ -1,4 +1,4 @@
-import type { HautFait } from "@/scoring/hauts-faits";
+import type { Reussite } from "@/scoring/reussites";
 
 /**
  * Ce que l'équipe vient de réussir, dit au tour où ça arrive.
@@ -7,11 +7,11 @@ import type { HautFait } from "@/scoring/hauts-faits";
  * une fanfare. Ce sont des constats lus dans les chiffres du tour — ils
  * n'ajoutent aucun point et ne pèsent sur rien.
  */
-export function HautsFaits({ faits }: { faits: readonly HautFait[] }) {
-  if (faits.length === 0) return null;
+export function ReussitesDuTour({ reussites }: { reussites: readonly Reussite[] }) {
+  if (reussites.length === 0) return null;
   return (
     <ul className="space-y-1.5" aria-label="Ce que vous avez réussi ce tour-ci">
-      {faits.map((f) => (
+      {reussites.map((f) => (
         <li
           key={f.code}
           className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 rounded-lg border border-emerald-400/25 bg-emerald-950/20 px-3 py-2"
