@@ -1,6 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { bouton } from "@/components/bouton";
+import { Embleme } from "@/components/embleme";
+import { EMBLEMES } from "@/config/emblemes";
 import { nommerEquipeAction, type NomEquipeState } from "@/app/arena/[gameId]/actions";
 import { NOM_EQUIPE_MAX } from "@/config/nom-equipe";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
@@ -24,12 +27,16 @@ export function TeamNameForm({
   gameId,
   nomActuel,
   dejaNommee,
+  emblemeActuel = null,
 }: {
   gameId: string;
   nomActuel: string;
   /** L'équipe a déjà adopté un nom : on propose de le corriger, pas d'en choisir un. */
   dejaNommee: boolean;
+  /** L'emblème déjà choisi, s'il y en a un. */
+  emblemeActuel?: string | null;
 }) {
+  const [choisi, setChoisi] = useState(emblemeActuel ?? "");
   const action = nommerEquipeAction.bind(null, gameId);
   const { state, formAction, pending, formRef, guardError } = useGuardedAction(action, initial, {
     label: "nom d'entreprise",
@@ -60,6 +67,65 @@ export function TeamNameForm({
           </>
         )}
       </p>
+      {/*
+        L'EMBLÈME, AVEC LE NOM ET DANS LA MÊME FENÊTRE. Une équipe avait un nom
+        et aucun signe : dans la composition, dans le classement, sur l'écran
+        projeté, six lignes grises se ressemblaient. Huit formes franches, parce
+        qu'à distance c'est la silhouette qu'on reconnaît, et parce qu'un choix
+        qui tient sur une ligne se fait en dix secondes — c'est le tour 1, tout
+        le monde attend.
+
+        Des boutons radio, dessinés : le clavier les parcourt, un lecteur
+        d'écran les annonce par le nom de la forme, et « aucun » en fait partie
+        plutôt que d'être une absence de choix.
+      */}
+      <fieldset className="mt-3">
+        <legend className="text-xs font-medium uppercase tracking-wide text-slate-400">
+          Votre emblème
+        </legend>
+        <div className="mt-1.5 flex flex-wrap gap-1.5">
+          <label
+            className={`flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border text-xs transition ${
+              choisi === ""
+                ? "border-amber-400/60 bg-amber-400/10 text-amber-200"
+                : "border-white/10 text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <input
+              type="radio"
+              name="embleme"
+              value=""
+              checked={choisi === ""}
+              onChange={() => setChoisi("")}
+              className="sr-only"
+            />
+            <span aria-hidden>—</span>
+            <span className="sr-only">Aucun emblème</span>
+          </label>
+          {EMBLEMES.map((e) => (
+            <label
+              key={e.code}
+              className={`flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border transition ${
+                choisi === e.code
+                  ? "border-amber-400/60 bg-amber-400/10 text-amber-300"
+                  : "border-white/10 text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <input
+                type="radio"
+                name="embleme"
+                value={e.code}
+                checked={choisi === e.code}
+                onChange={() => setChoisi(e.code)}
+                className="sr-only"
+              />
+              <Embleme code={e.code} className="h-5 w-5" />
+              <span className="sr-only">{e.nom}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
       <div className="mt-3 flex flex-wrap items-end gap-3">
         <label className="min-w-[220px] flex-1">
           <span className="sr-only">Nom de l&apos;entreprise</span>
@@ -87,7 +153,7 @@ export function TeamNameForm({
               Enregistrement
             </span>
           ) : (
-            <>{dejaNommee ? "Corriger le nom" : "Adopter ce nom"}</>
+            <>{dejaNommee ? "Enregistrer" : "Adopter ce nom"}</>
           )}
         </button>
       </div>

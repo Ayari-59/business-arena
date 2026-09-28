@@ -23,6 +23,7 @@ import {
 } from "@/config/difficulty";
 import { pseudoAffichable } from "@/config/invite";
 import { champsOuverts, signesDeCadrage, signesDeSituation } from "@/config/duree-du-tour";
+import { emblemeParCode } from "@/config/emblemes";
 import { validerNomEquipe } from "@/config/nom-equipe";
 import { PERSONALITY_LABELS, botPersonalityFromSeed } from "@/engine/bots";
 import {
@@ -282,7 +283,14 @@ export async function nommerEquipe(args: {
   gameId: string;
   userId: string;
   nom: string;
-}): Promise<{ nom: string }> {
+  /**
+   * L'emblème choisi dans le catalogue, ou null pour n'en porter aucun. Il suit
+   * la même fenêtre que le nom : le premier tour, et il se fige avec lui — un
+   * classement dont les signes changent en cours de partie ne se lit pas mieux
+   * qu'un classement dont les noms changent.
+   */
+  embleme?: string | null;
+}): Promise<{ nom: string; embleme: string | null }> {
   const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
   if (!game) throw new Error("Partie introuvable");
   // En solo, l'entreprise est celle du scénario : elle a son nom, son secteur
@@ -319,8 +327,13 @@ export async function nommerEquipe(args: {
   );
   if (prise) throw new Error("Une autre équipe porte déjà ce nom.");
 
-  await db.update(teams).set({ name: valide.nom }).where(eq(teams.id, team.id));
-  return { nom: valide.nom };
+  // Un code inconnu ne s'enregistre pas : la base ne connaît que du texte, et
+  // c'est ici que le catalogue fait foi.
+  const embleme =
+    args.embleme === undefined ? team.embleme : (emblemeParCode(args.embleme)?.code ?? null);
+
+  await db.update(teams).set({ name: valide.nom, embleme }).where(eq(teams.id, team.id));
+  return { nom: valide.nom, embleme };
 }
 
 /** Genre d'une partie (solo / classe). */

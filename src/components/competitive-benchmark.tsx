@@ -1,4 +1,5 @@
 import { formatEuro, formatPercent } from "@/lib/format";
+import { Embleme } from "@/components/embleme";
 import type { GameView } from "@/services/game-view.service";
 
 export function CompetitiveBenchmark({
@@ -61,6 +62,10 @@ export function CompetitiveBenchmark({
                 className={`border-t border-white/5 ${c.isPlayer ? "bg-amber-400/5 text-amber-100" : ""}`}
               >
                 <td className="py-2 pr-3">
+                  <Embleme
+                    code={c.embleme}
+                    className={`mr-1.5 h-3.5 w-3.5 ${c.isPlayer ? "text-amber-300" : "text-slate-400"}`}
+                  />
                   {c.name}
                   {c.isPlayer ? (
                     <span className="ml-1.5 text-xs text-amber-400/70">vous</span>

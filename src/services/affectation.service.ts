@@ -41,6 +41,8 @@ export interface MembreDEquipe {
 export interface EquipeEtSesMembres {
   teamId: string;
   nom: string;
+  /** L'emblème choisi par l'équipe (code du catalogue), null sans choix. */
+  embleme: string | null;
   membres: MembreDEquipe[];
 }
 
@@ -60,6 +62,7 @@ export async function compositionDesEquipes(gameId: string): Promise<EquipeEtSes
   return teamRows.map((t) => ({
     teamId: t.id,
     nom: teamDisplayName(t.name),
+    embleme: t.embleme ?? null,
     membres: memberships
       .filter((m) => m.teamId === t.id)
       .map((m) => ({ userId: m.userId, nom: m.nom }))

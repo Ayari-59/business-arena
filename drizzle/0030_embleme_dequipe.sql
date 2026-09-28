@@ -1,0 +1,12 @@
+-- L'EMBLÈME QUE L'ÉQUIPE SE CHOISIT.
+--
+-- Une équipe pouvait se donner un nom au premier tour ; elle n'avait aucun
+-- signe. Dans la composition des équipes, dans le classement, sur l'écran
+-- projeté de l'enseignant, six lignes de texte gris se ressemblaient toutes,
+-- et une classe reconnaît un dessin à distance, pas une ligne de tableau.
+--
+-- Facultatif : une équipe sans emblème n'affiche rien plutôt qu'une forme par
+-- défaut, qui ferait croire à un choix et les rendrait toutes semblables de
+-- nouveau. Le code est validé par le service contre le catalogue des huit
+-- tracés — la base ne connaît que du texte.
+ALTER TABLE "teams" ADD COLUMN IF NOT EXISTS "embleme" text;

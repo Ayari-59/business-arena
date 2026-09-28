@@ -218,6 +218,13 @@
       "when": 1789799757440,
       "tag": "0029_nom_de_partie",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1789886157440,
+      "tag": "0030_embleme_dequipe",
+      "breakpoints": true
     }
   ]
 }

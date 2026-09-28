@@ -138,6 +138,8 @@ export interface GameView {
    * dans la mauvaise. Vide en solo : il n'y a personne à rejoindre.
    */
   equipesDeLaClasse: EquipeEtSesMembres[];
+  /** L'emblème de l'équipe du joueur (code du catalogue), null sans choix. */
+  playerTeamEmbleme: string | null;
   /** L'élève peut encore changer d'équipe lui-même (partie de classe, tour 1). */
   peutChoisirSonEquipe: boolean;
   /**
@@ -716,6 +718,8 @@ export interface GameView {
        * technique plutôt qu'une observation.
        */
       style: { label: string; aide: string } | null;
+      /** L'emblème de l'équipe (code du catalogue), null sans choix ou pour un bot. */
+      embleme: string | null;
     }[];
     marketAvgPrice: number;
     competitivenessIndex: number;
@@ -926,7 +930,7 @@ function buildSectorKpis(
 /** Benchmark concurrentiel d'un tour (prix moyen, parts, indice de compétitivité). */
 function buildBenchmark(
   rows: PersistedResultRow[],
-  teamRows: { id: string; name: string; botProfile?: string | null }[],
+  teamRows: { id: string; name: string; botProfile?: string | null; embleme?: string | null }[],
   playerTeamId: string,
   toursClos: number,
 ): GameView["competitiveBenchmark"] {
@@ -945,6 +949,7 @@ function buildBenchmark(
         marketShare: Number(row.marketShare),
         revenue: Number(row.revenue),
         style: styleDuConcurrent(equipe?.botProfile, toursClos),
+        embleme: equipe?.embleme ?? null,
       };
     })
     .sort((a, b) => b.marketShare - a.marketShare);
@@ -1486,6 +1491,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     equipesDeLaClasse,
     peutChoisirSonEquipe: kindDeLaPartie !== "solo" && peutChoisirSonEquipe(game),
     estUnConcours: game.mode === "competition",
+    playerTeamEmbleme: playerTeam.embleme ?? null,
     pendingDecisions,
     soumissions,
     pendingDecisionsPar,

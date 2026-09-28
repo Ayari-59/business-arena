@@ -119,6 +119,34 @@ describe("l'équipe se donne un nom", () => {
     );
   });
 
+  it("l'équipe se choisit un emblème, et le catalogue fait foi", async () => {
+    // La base ne connaît que du texte : c'est le service qui refuse un code
+    // hors catalogue, sinon l'écran dessinerait n'importe quoi — ou rien, sans
+    // que personne comprenne pourquoi.
+    const avec = await nommerEquipe({
+      gameId,
+      userId: alice,
+      nom: "Fromagerie du Pont",
+      embleme: "eclair",
+    });
+    expect(avec.embleme).toBe("eclair");
+    expect((await getGameView(gameId, alice))!.playerTeamEmbleme).toBe("eclair");
+
+    const inconnu = await nommerEquipe({
+      gameId,
+      userId: alice,
+      nom: "Fromagerie du Pont",
+      embleme: "dragon",
+    });
+    expect(inconnu.embleme).toBeNull();
+
+    // Sans emblème passé (ancien écran, envoi partiel), celui de l'équipe ne
+    // bouge pas : renommer ne doit pas effacer le signe.
+    await nommerEquipe({ gameId, userId: alice, nom: "Fromagerie du Pont", embleme: "etoile" });
+    const renommee = await nommerEquipe({ gameId, userId: alice, nom: "La Fromagerie" });
+    expect(renommee.embleme).toBe("etoile");
+  });
+
   it("le nom se fige à la clôture du premier tour", async () => {
     await closeCurrentRound({ gameId, teacherId: prof });
     await expect(nommerEquipe({ gameId, userId: bob, nom: "Trop Tard" })).rejects.toThrow(

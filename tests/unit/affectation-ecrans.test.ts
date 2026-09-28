@@ -19,13 +19,14 @@ const EQUIPES = [
   {
     teamId: "t1",
     nom: "Équipe 1",
+    embleme: null,
     membres: [
       { userId: "u1", nom: "Léa" },
       { userId: "u2", nom: "Tom" },
     ],
   },
-  { teamId: "t2", nom: "Équipe 2", membres: [{ userId: "u3", nom: "Inès" }] },
-  { teamId: "t3", nom: "Équipe 3", membres: [] },
+  { teamId: "t2", nom: "Équipe 2", embleme: "eclair", membres: [{ userId: "u3", nom: "Inès" }] },
+  { teamId: "t3", nom: "Équipe 3", embleme: null, membres: [] },
 ];
 
 describe("l'élève et son équipe", () => {

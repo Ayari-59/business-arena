@@ -62,6 +62,7 @@ describe("le tableau des concurrents", () => {
               marketShare: 0.4,
               revenue: 120_000,
               style: styleDuPremier,
+              embleme: null,
             },
             {
               name: "Votre entreprise",
@@ -70,6 +71,7 @@ describe("le tableau des concurrents", () => {
               marketShare: 0.3,
               revenue: 100_000,
               style: null,
+              embleme: "etoile",
             },
           ],
           marketAvgPrice: 49,

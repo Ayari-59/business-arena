@@ -23,6 +23,7 @@ import { PeriodDecisionsRecap } from "@/components/period-decisions-recap";
 import { SegmentedTabs } from "@/components/segmented-tabs";
 import { RoundStatusPoller } from "@/components/round-status-poller";
 import { QuiARendu } from "@/components/qui-a-rendu";
+import { Embleme } from "@/components/embleme";
 import { AnnonceDuTour } from "@/components/annonce-du-tour";
 import { NoteDuTourPrecedent } from "@/components/note-du-tour-precedent";
 import { BandeauCourriers, courriersQuiMeConcernent } from "@/components/bandeau-courriers";
@@ -420,7 +421,15 @@ export default async function ArenaPage({
             <p className={`text-xs uppercase tracking-[0.3em] ${SECTOR_COLORS[view.sector].accent}`}>
               {surtitreDePartie(view.intro.title, view.playerTeamName)}
             </p>
-            <h1 className="text-2xl font-bold text-slate-50">{view.playerTeamName}</h1>
+            {/* L'emblème devant le nom de l'équipe : c'est son visage. */}
+            <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-50">
+              <Embleme
+                code={view.playerTeamEmbleme}
+                equipe={view.playerTeamName}
+                className="h-6 w-6 text-amber-300"
+              />
+              {view.playerTeamName}
+            </h1>
           </div>
         </div>
         {/* LE BANDEAU DE JEU. Il ne porte plus que l'état de la partie : qui
@@ -532,6 +541,7 @@ export default async function ArenaPage({
             gameId={gameId}
             nomActuel={view.playerTeamName}
             dejaNommee={!porteUnNomParDefaut(view.playerTeamName)}
+            emblemeActuel={view.playerTeamEmbleme}
           />
         </div>
       ) : null}

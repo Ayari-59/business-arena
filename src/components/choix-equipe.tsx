@@ -4,6 +4,7 @@ import {
   choisirMonEquipeAction,
   type ChoixEquipeState,
 } from "@/app/arena/[gameId]/actions";
+import { Embleme } from "@/components/embleme";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import type { GameView } from "@/services/game-view.service";
 
@@ -107,10 +108,12 @@ function LigneDEquipe({
     >
       <input type="hidden" name="teamId" value={equipe.teamId} />
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-slate-100">
+        <p className="flex flex-wrap items-center gap-x-2 text-sm font-semibold text-slate-100">
+          {/* L'emblème devant le nom : à distance, c'est lui qu'on reconnaît. */}
+          <Embleme code={equipe.embleme} equipe={equipe.nom} className="h-4 w-4 text-amber-300" />
           {equipe.nom}
           {mienne ? (
-            <span className="ml-2 rounded-full border border-amber-400/40 px-2 py-0.5 text-xs font-medium text-amber-300">
+            <span className="rounded-full border border-amber-400/40 px-2 py-0.5 text-xs font-medium text-amber-300">
               votre équipe
             </span>
           ) : null}

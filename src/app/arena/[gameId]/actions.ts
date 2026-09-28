@@ -348,7 +348,15 @@ export async function nommerEquipeAction(
   const userId = await getGuestUserId();
   if (!userId) return { error: "Session expirée : rejoignez la partie à nouveau." };
   try {
-    await nommerEquipe({ gameId, userId, nom: String(formData.get("nom") ?? "") });
+    // `embleme` absent du formulaire (ancien écran, envoi partiel) : on ne
+    // touche pas à celui de l'équipe. Chaîne vide : elle n'en veut aucun.
+    const brut = formData.get("embleme");
+    await nommerEquipe({
+      gameId,
+      userId,
+      nom: String(formData.get("nom") ?? ""),
+      ...(brut === null ? {} : { embleme: String(brut) || null }),
+    });
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Le nom n'a pas pu être enregistré." };
   }

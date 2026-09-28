@@ -132,6 +132,12 @@ export const teams = pgTable(
     name: text("name").notNull(),
     controller: teamController("controller").notNull().default("human"),
     botProfile: text("bot_profile"), // requis si controller = bot (garde applicative)
+    /**
+     * L'emblème choisi par l'équipe au premier tour (code du catalogue
+     * `config/emblemes`). Null : elle n'en a pas choisi, et n'affiche rien —
+     * une forme par défaut ferait croire à un choix.
+     */
+    embleme: text("embleme"),
     joinCode: text("join_code").unique(),
     ...timestamps,
   },
