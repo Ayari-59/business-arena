@@ -7,6 +7,16 @@ export function CompetitiveBenchmark({
   benchmark: NonNullable<GameView["competitiveBenchmark"]>;
 }) {
   const playerIdx = benchmark.competitivenessIndex;
+  // Les caractères présents dans ce tableau, une seule fois chacun : deux
+  // concurrents peuvent partager un profil, la légende n'a pas à le répéter.
+  const styles = [
+    ...new Map(
+      benchmark.competitors
+        .map((c) => c.style)
+        .filter((st): st is NonNullable<typeof st> => st !== null)
+        .map((st) => [st.label, st] as const),
+    ).values(),
+  ];
   const idxTone =
     playerIdx >= 1.05 ? "text-emerald-400" : playerIdx < 0.95 ? "text-red-400" : "text-slate-100";
 
@@ -55,6 +65,24 @@ export function CompetitiveBenchmark({
                   {c.isPlayer ? (
                     <span className="ml-1.5 text-xs text-amber-400/70">vous</span>
                   ) : null}
+                  {/*
+                    LE CARACTÈRE DU CONCURRENT, sous son nom. Le moteur donne à
+                    chaque entreprise simulée un profil qui décide vraiment de
+                    ses choix ; l'élève ne voyait qu'un nom et un prix, et ne
+                    pouvait donc pas apprendre à LIRE un adversaire. Il paraît
+                    après deux tours clos — avant, ce serait une fiche technique
+                    plutôt qu'une observation — et jamais pour une équipe de la
+                    classe, qui a des élèves et non un profil.
+                  */}
+                  {/*
+                    L'étiquette seule ici : l'explication vit dans la légende,
+                    sous le tableau. Une infobulle `title` ne s'ouvre pas sur un
+                    téléphone, et la répéter dans les deux endroits ferait lire
+                    deux fois la même phrase.
+                  */}
+                  {c.style ? (
+                    <span className="mt-0.5 block text-xs text-slate-400">{c.style.label}</span>
+                  ) : null}
                 </td>
                 <td className="py-2 pr-3 text-right tabular-nums">
                   {c.avgPrice !== null ? formatEuro(c.avgPrice) : "—"}
@@ -78,6 +106,22 @@ export function CompetitiveBenchmark({
           </tfoot>
         </table>
       </div>
+
+      {/*
+        CE QUE CHAQUE CARACTÈRE IMPLIQUE, une ligne par style présent. Le
+        tableau porte l'étiquette ; sans cette légende, elle ne dirait rien à
+        qui ne joue pas depuis dix ans, et une infobulle ne s'ouvre pas sur un
+        téléphone.
+      */}
+      {styles.length > 0 ? (
+        <ul className="mt-3 space-y-1 border-t border-white/5 pt-2">
+          {styles.map((st) => (
+            <li key={st.label} className="text-sm leading-snug text-slate-400">
+              <span className="font-semibold text-slate-300">{st.label}</span> · {st.aide}
+            </li>
+          ))}
+        </ul>
+      ) : null}
 
       <p className="mt-2 text-sm leading-relaxed text-slate-400">
         L&apos;indice de compétitivité-prix compare votre prix au marché : au-dessus de

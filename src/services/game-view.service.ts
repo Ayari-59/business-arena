@@ -30,6 +30,7 @@ import { computeRatios } from "@/engine/finance/ratios";
 import { conditionsBancaires, confianceServie } from "@/engine/finance/bank";
 import { irr, npv, paybackPeriod } from "@/engine/investment";
 import { roundBriefing, type RoundBriefing } from "@/pedagogy/round-briefing";
+import { styleDuConcurrent } from "@/config/styles-de-concurrent";
 import { computeRseIndex, type RseIndex } from "@/scoring/rse";
 import { RSE_CARD_CODES } from "@/engine/rse";
 import { computeRseReport, type RseReport } from "@/scoring/rse-report";
@@ -706,6 +707,15 @@ export interface GameView {
       avgPrice: number | null;
       marketShare: number;
       revenue: number;
+      /**
+       * Le caractère d'une entreprise SIMULÉE, une fois deux tours clos : elle
+       * casse les prix, monte en gamme, pousse le volume… Le moteur le décide
+       * vraiment ; l'élève ne le voyait pas et ne pouvait donc pas apprendre à
+       * lire un adversaire. Null pour une équipe de la classe — elle a des
+       * élèves, pas un profil — et avant deux tours, où ce serait une fiche
+       * technique plutôt qu'une observation.
+       */
+      style: { label: string; aide: string } | null;
     }[];
     marketAvgPrice: number;
     competitivenessIndex: number;
@@ -916,8 +926,9 @@ function buildSectorKpis(
 /** Benchmark concurrentiel d'un tour (prix moyen, parts, indice de compétitivité). */
 function buildBenchmark(
   rows: PersistedResultRow[],
-  teamRows: { id: string; name: string }[],
+  teamRows: { id: string; name: string; botProfile?: string | null }[],
   playerTeamId: string,
+  toursClos: number,
 ): GameView["competitiveBenchmark"] {
   if (rows.length === 0) return null;
   const competitors = rows
@@ -926,12 +937,14 @@ function buildBenchmark(
       const units = detail
         ? Object.values(detail).reduce((sum, d) => sum + (d.sold ?? 0), 0)
         : 0;
+      const equipe = teamRows.find((t) => t.id === row.teamId);
       return {
-        name: teamDisplayName(teamRows.find((t) => t.id === row.teamId)?.name ?? "?"),
+        name: teamDisplayName(equipe?.name ?? "?"),
         isPlayer: row.teamId === playerTeamId,
         avgPrice: units > 1 ? Number(row.revenue) / units : null,
         marketShare: Number(row.marketShare),
         revenue: Number(row.revenue),
+        style: styleDuConcurrent(equipe?.botProfile, toursClos),
       };
     })
     .sort((a, b) => b.marketShare - a.marketShare);
@@ -1050,7 +1063,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       justification: decisionRowOfRound?.justification ?? null,
       forecastReview: buildForecastReview(idx, result, dec?.forecast),
       sectorKpis: buildSectorKpis(result, prevSegments, snapshot, scenarioDef.kpis),
-      competitiveBenchmark: buildBenchmark(rowsOfRound, teamRows, playerTeam.id),
+      competitiveBenchmark: buildBenchmark(rowsOfRound, teamRows, playerTeam.id, resolved.length),
       rse: computeRseIndex(result),
       accounting: formatAccountingData(result.accounting),
     });
@@ -1320,37 +1333,17 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     return reports;
   })();
 
-  const competitiveBenchmark: GameView["competitiveBenchmark"] = (() => {
-    if (!lastRound) return null;
-    const lastRows = gameResults.filter((r) => r.roundId === lastRound.id);
-    if (lastRows.length === 0) return null;
-    const competitors = lastRows
-      .map((row) => {
-        const detail = row.marketDetail as Record<string, { sold?: number }> | null;
-        const units = detail
-          ? Object.values(detail).reduce((sum, d) => sum + (d.sold ?? 0), 0)
-          : 0;
-        return {
-          name: teamDisplayName(teamRows.find((t) => t.id === row.teamId)?.name ?? "?"),
-          isPlayer: row.teamId === playerTeam.id,
-          avgPrice: units > 1 ? Number(row.revenue) / units : null,
-          marketShare: Number(row.marketShare),
-          revenue: Number(row.revenue),
-        };
-      })
-      .sort((a, b) => b.marketShare - a.marketShare);
-    const withPrice = competitors.filter((c) => c.avgPrice !== null);
-    const marketAvgPrice =
-      withPrice.length > 0
-        ? withPrice.reduce((s, c) => s + c.avgPrice!, 0) / withPrice.length
-        : 0;
-    const player = competitors.find((c) => c.isPlayer);
-    const competitivenessIndex =
-      player && marketAvgPrice > 0 && player.avgPrice !== null
-        ? marketAvgPrice / player.avgPrice
-        : 1;
-    return { competitors, marketAvgPrice, competitivenessIndex };
-  })();
+  // Le benchmark du dernier tour : la MÊME construction que celle des périodes,
+  // appelée ici plutôt que recopiée. Les deux copies avaient déjà commencé à
+  // diverger — le caractère des concurrents n'aurait paru que dans l'une.
+  const competitiveBenchmark: GameView["competitiveBenchmark"] = lastRound
+    ? buildBenchmark(
+        gameResults.filter((r) => r.roundId === lastRound.id),
+        teamRows,
+        playerTeam.id,
+        resolved.length,
+      )
+    : null;
 
   const playWindow = await playWindowFor(
     { opensAt: game.opensAt, closesAt: game.closesAt, competitionStageId: game.competitionStageId },
