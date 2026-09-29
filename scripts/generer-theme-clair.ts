@@ -32,6 +32,21 @@
 import { readFileSync, writeFileSync } from "node:fs";
 
 export const SOURCE_TAILWIND = "node_modules/tailwindcss/theme.css";
+/**
+ * L'IDENTITÉ DE LA MAISON, QUI RECOUVRE L'ÉCHELLE DE TAILWIND.
+ *
+ * Le site ne se sert pas de l'amber de Tailwind : son `@theme` le remplace par
+ * un or patiné, et encre de bleu ses deux surfaces les plus sombres. Ces
+ * valeurs-là SONT l'échelle du site ; celle de Tailwind n'en est que le point
+ * de départ.
+ *
+ * Le bloc à contre-jour les a ignorées pendant une journée, et le défaut se
+ * voyait : une bande sombre posée sur une page claire y ramenait l'amber brut,
+ * #ffb900, un jaune d'autocar deux fois plus saturé que l'or du site, qu'on ne
+ * trouve nulle part ailleurs. Une bande censée montrer le thème sombre peignait
+ * une troisième palette.
+ */
+export const SOURCE_IDENTITE = "src/app/globals.css";
 export const FICHIER_GENERE = "src/app/theme-clair.css";
 
 /**
@@ -74,7 +89,20 @@ const SURCHARGES: Record<string, number> = {
   "amber-400": 900,
 };
 
-export function genererThemeClair(sourceTailwind: string): string {
+/** Les couleurs que le `@theme` du site pose par-dessus celles de Tailwind. */
+export function identiteDeLaMaison(sourceGlobals: string): Map<string, string> {
+  const debut = sourceGlobals.indexOf("@theme {");
+  if (debut < 0) throw new Error(`bloc @theme introuvable dans ${SOURCE_IDENTITE}`);
+  const bloc = sourceGlobals.slice(debut, sourceGlobals.indexOf("\n}", debut));
+  const surcouches = new Map<string, string>();
+  for (const [, teinte, palier, valeur] of bloc.matchAll(/--color-([a-z]+)-(\d+):\s*([^;]+);/g)) {
+    if (teinte && palier && valeur) surcouches.set(`${teinte}-${palier}`, valeur.trim());
+  }
+  if (surcouches.size === 0) throw new Error("le @theme du site ne pose aucune couleur");
+  return surcouches;
+}
+
+export function genererThemeClair(sourceTailwind: string, sourceGlobals: string): string {
   const palette = new Map<string, string>();
   for (const [, teinte, palier, valeur] of sourceTailwind.matchAll(
     /--color-([a-z]+)-(\d+):\s*([^;]+);/g,
@@ -84,6 +112,7 @@ export function genererThemeClair(sourceTailwind: string): string {
   if (palette.size < 100) {
     throw new Error(`échelle Tailwind introuvable dans ${SOURCE_TAILWIND}`);
   }
+  const identite = identiteDeLaMaison(sourceGlobals);
 
   // Deux listes jumelles : les valeurs RENVERSÉES, et les valeurs d'ORIGINE
   // des mêmes clés. La première fait une surface claire, la seconde ramène une
@@ -91,6 +120,7 @@ export function genererThemeClair(sourceTailwind: string): string {
   // au milieu d'une page claire, qui doit défaire ce que la page a posé.
   const renversees: string[] = [];
   const origines: string[] = [];
+  const rendues = new Set<string>();
   for (const [cle, valeur] of palette) {
     const separateur = cle.lastIndexOf("-");
     const teinte = cle.slice(0, separateur);
@@ -99,7 +129,18 @@ export function genererThemeClair(sourceTailwind: string): string {
     const jumelle = palette.get(`${teinte}-${palierCible}`);
     if (!jumelle || jumelle === valeur) continue;
     renversees.push(`  --color-${teinte}-${palier}: ${jumelle};`);
-    origines.push(`  --color-${teinte}-${palier}: ${valeur};`);
+    // L'ORIGINE, C'EST L'ÉCHELLE DU SITE, pas celle de Tailwind. Un bloc à
+    // contre-jour sur page claire doit retrouver l'or patiné et le bleu encré,
+    // pas l'amber d'autocar et le gris d'usine.
+    origines.push(`  --color-${teinte}-${palier}: ${identite.get(cle) ?? valeur};`);
+    rendues.add(cle);
+  }
+
+  // Une couleur de la maison que le miroir a sautée — son palier jumeau lui
+  // est égal — n'est jamais rendue au bloc à contre-jour, et la page claire
+  // pourrait pourtant l'avoir recouverte à la main. On les ajoute toutes.
+  for (const [cle, valeur] of identite) {
+    if (!rendues.has(cle)) origines.push(`  --color-${cle}: ${valeur};`);
   }
 
   const clair = (lignes: string[]) =>
@@ -159,7 +200,10 @@ ${decale(sombre(origines))}
 }
 
 if (process.argv[1]?.endsWith("generer-theme-clair.ts")) {
-  const css = genererThemeClair(readFileSync(SOURCE_TAILWIND, "utf-8"));
+  const css = genererThemeClair(
+    readFileSync(SOURCE_TAILWIND, "utf-8"),
+    readFileSync(SOURCE_IDENTITE, "utf-8"),
+  );
   writeFileSync(FICHIER_GENERE, css);
   console.log(`${FICHIER_GENERE} écrit (${css.split("\n").length} lignes)`);
 }

@@ -1,6 +1,12 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { genererThemeClair, FICHIER_GENERE, SOURCE_TAILWIND } from "../../scripts/generer-theme-clair";
+import {
+  genererThemeClair,
+  identiteDeLaMaison,
+  FICHIER_GENERE,
+  SOURCE_IDENTITE,
+  SOURCE_TAILWIND,
+} from "../../scripts/generer-theme-clair";
 import {
   CLE_THEME,
   estCodeTheme,
@@ -151,7 +157,10 @@ describe("le thème clair", () => {
   it("le fichier engendré est à jour", () => {
     // Il est versionné pour que la compilation n'ait pas besoin du script ;
     // versionner une sortie, c'est accepter qu'elle vieillisse en silence.
-    const attendu = genererThemeClair(readFileSync(SOURCE_TAILWIND, "utf-8"));
+    const attendu = genererThemeClair(
+      readFileSync(SOURCE_TAILWIND, "utf-8"),
+      readFileSync(SOURCE_IDENTITE, "utf-8"),
+    );
     expect(
       CLAIR,
       `${FICHIER_GENERE} n'est plus à jour : npx tsx scripts/generer-theme-clair.ts`,
@@ -166,6 +175,25 @@ describe("le thème clair", () => {
     expect(valeur("950")).toBe(
       readFileSync(SOURCE_TAILWIND, "utf-8").match(/--color-slate-50: ([^;]+);/)?.[1],
     );
+  });
+
+  it("le bloc à contre-jour rend l'échelle DU SITE, pas celle de Tailwind", () => {
+    // Le site ne se sert pas de l'amber de Tailwind : son `@theme` le remplace
+    // par un or patiné, et encre de bleu ses deux surfaces les plus sombres.
+    // Le bloc à contre-jour les a ignorées pendant une journée, et le défaut se
+    // voyait : une bande sombre posée sur une page claire y ramenait l'amber
+    // brut, un jaune d'autocar deux fois plus saturé que l'or de la maison,
+    // qu'on ne trouve nulle part ailleurs. Une bande censée montrer le thème
+    // sombre peignait une troisième palette.
+    const identite = identiteDeLaMaison(readFileSync(SOURCE_IDENTITE, "utf-8"));
+    const debut = CLAIR.indexOf('[data-theme="clair"] .contre-jour {');
+    const bloc = CLAIR.slice(debut, CLAIR.indexOf("\n}", debut));
+    expect(identite.size, "le @theme du site ne pose aucune couleur").toBeGreaterThan(3);
+    for (const [cle, valeur] of identite) {
+      expect(bloc, `${cle} n'est pas rendue au bloc à contre-jour`).toContain(
+        `--color-${cle}: ${valeur};`,
+      );
+    }
   });
 
   it("laisse le papier blanc à l'impression", () => {
