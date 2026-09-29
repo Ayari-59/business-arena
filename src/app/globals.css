@@ -387,6 +387,38 @@ h1 {
  * ------------------------------------------------------------------------- */
 
 /* ---------------------------------------------------------------------------
+ * LES CAPTURES D'ÉCRAN VONT À CONTRE-COURANT DE LA PAGE.
+ *
+ * L'accueil montre trois écrans de l'application. Tant que le site s'ouvrait
+ * en sombre, ces captures étaient sombres elles aussi : trois rectangles
+ * d'encre sur une page d'encre, qui se fondaient dedans. Servi en clair, le
+ * même fichier est devenu ce qu'il aurait toujours dû être — un ÉCRAN, un
+ * objet qui s'allume au milieu d'une page de papier.
+ *
+ * On tient donc la règle dans les deux sens : page claire, captures sombres ;
+ * page sombre, captures claires. Ce ne sont pas des retouches, ce sont deux
+ * jeux de fichiers, pris sur la même partie et au même cadrage.
+ *
+ * POURQUOI UN FOND ET NON DEUX IMAGES. Deux balises `img` dont on cacherait
+ * l'une chargeraient les deux : la page d'accueil paierait 270 Ko pour en
+ * montrer 130. Un fond ne télécharge que le fichier retenu — c'est déjà le
+ * procédé du logo, quelques lignes plus bas. Le prix à payer est qu'un fond
+ * n'a pas de texte de remplacement : le cadre porte donc `role="img"` et son
+ * `aria-label`, faute de quoi trois écrans disparaîtraient pour qui ne voit
+ * pas la page.
+ * ------------------------------------------------------------------------- */
+.capture-decran {
+  background-image: var(--ecran-sur-page-claire);
+  background-position: top center;
+  background-repeat: no-repeat;
+  background-size: 100% auto;
+}
+
+[data-theme="sombre"] .capture-decran {
+  background-image: var(--ecran-sur-page-sombre);
+}
+
+/* ---------------------------------------------------------------------------
  * Le logo est un fichier, pas du texte : aucune feuille de style ne peut en
  * changer l'encre. Sur fond clair, son nom écrit en gris pâle disparaîtrait,
  * d'où un second fichier et cette bascule. Le fond n'appelle QUE le fichier

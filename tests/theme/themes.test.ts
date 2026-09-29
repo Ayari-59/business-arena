@@ -23,8 +23,17 @@ const LAYOUT = readFileSync("src/app/layout.tsx", "utf-8");
 const SELECTEUR = readFileSync("src/components/theme-switcher.tsx", "utf-8");
 const HEADER = readFileSync("src/components/site-header.tsx", "utf-8");
 
-/** Les thèmes déclarés dans les feuilles, dans l'ordre où on les y trouve. */
-const declaresEnCss = [...(GLOBALS + CLAIR).matchAll(/\[data-theme="([a-z]+)"\]/g)].map(
+/**
+ * Les thèmes qui déclarent un JEU DE COULEURS, dans l'ordre où on les trouve.
+ *
+ * L'accolade est ce qui compte : `[data-theme="x"] {` ouvre une palette, là où
+ * `[data-theme="x"] .quelque-chose {` ne fait qu'habiller un élément sous ce
+ * thème — le logo change de fichier, les captures d'écran changent de prise.
+ * Sans cette distinction, un simple échange d'image ferait dire au relevé que
+ * le thème d'origine s'est écrit une palette, et la garde suivante se fâcherait
+ * pour une raison qui n'existe pas.
+ */
+const declaresEnCss = [...(GLOBALS + CLAIR).matchAll(/\[data-theme="([a-z]+)"\]\s*\{/g)].map(
   (m) => m[1]!,
 );
 

@@ -95,12 +95,28 @@ export const metadata: Metadata = {
  * Les trois écrans sont recadrés à la même taille, et c'est ce qui permet de
  * les poser en main de cartes : trois images de hauteurs différentes ne
  * forment pas un éventail, elles forment un escalier. Les dimensions sont
- * écrites dans la page — sans elles, le texte saute au chargement.
+ * écrites dans la page, sous forme de rapport — sans elles, la place n'est pas
+ * réservée et le texte saute quand les fichiers arrivent. Les six fichiers
+ * (trois écrans × deux thèmes) ont ce format.
  */
 const CARTE = { largeur: 800, hauteur: 1120 };
 
 /**
  * UNE CARTE DE LA MAIN : la capture, posée et tournée.
+ *
+ * ELLE EXISTE EN DEUX EXEMPLAIRES, ET C'EST LA PAGE QUI CHOISIT. Une capture
+ * sombre sur une page sombre est un rectangle d'encre dans de l'encre ; sur la
+ * page claire qu'on sert maintenant, la même image est devenue un ÉCRAN, un
+ * objet qui s'allume au milieu du papier. On a donc pris les trois écrans une
+ * seconde fois, dans l'autre thème, sur la même partie et au même cadrage : la
+ * page sombre montre les captures claires, et l'effet se retourne.
+ *
+ * Le fichier n'est pas une balise `img` mais un FOND (voir `.capture-decran`
+ * dans globals.css) : c'est ce qui permet d'en avoir deux sans les charger
+ * tous les deux. Le cadre annonce donc lui-même ce qu'il montre — `role="img"`
+ * et son texte — puisqu'un fond n'a pas de texte de remplacement. Et sa forme
+ * vient du rapport des deux dimensions, non d'une image qu'on attendrait :
+ * la place est réservée avant que le fichier arrive.
  *
  * PAS DE DÉGRADÉ EN BAS, contrairement au cadrage qu'ont longtemps porté ces
  * captures : une carte a un bord franc, et un bas qui s'éteint laisserait voir
@@ -111,12 +127,13 @@ const CARTE = { largeur: 800, hauteur: 1120 };
  * disputent l'œil.
  */
 function CarteEnMain({
-  src,
+  nom,
   alt,
   pose,
   fond = false,
 }: {
-  src: string;
+  /** Le nom de l'écran : `x.webp` est sa prise sombre, `x-clair.webp` sa claire. */
+  nom: string;
   alt: string;
   /** Position et angle dans le cadre de la main. */
   pose: string;
@@ -130,18 +147,17 @@ function CarteEnMain({
           : "border-white/15 shadow-slate-950/70"
       }`}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={src}
-        width={CARTE.largeur}
-        height={CARTE.hauteur}
-        // Les trois sont dans l'en-tête : les charger paresseusement ne
-        // gagnerait rien et montrerait trois cadres vides le temps d'un
-        // battement.
-        loading="eager"
-        decoding="async"
-        alt={alt}
-        className="block w-full"
+      <div
+        role="img"
+        aria-label={alt}
+        className="capture-decran w-full"
+        style={
+          {
+            aspectRatio: `${CARTE.largeur} / ${CARTE.hauteur}`,
+            "--ecran-sur-page-claire": `url(/apercus/${nom}.webp)`,
+            "--ecran-sur-page-sombre": `url(/apercus/${nom}-clair.webp)`,
+          } as React.CSSProperties
+        }
       />
     </div>
   );
@@ -180,19 +196,19 @@ function MainDeCartes() {
     <figure className="m-0">
       <div className="relative mx-auto aspect-[9/8] w-full max-w-[440px]">
         <CarteEnMain
-          src="/apercus/decider.webp"
+          nom="decider"
           fond
           pose="left-[2%] top-[11%] -rotate-[9deg]"
           alt="L'écran de décision : prix de vente 74 € par enceinte, plan de production 4 500 enceintes, capacité machine 7 000 et main-d'œuvre 7 200 par tour, goulot équilibré, puis le choix du fournisseur."
         />
         <CarteEnMain
-          src="/apercus/resultats.webp"
+          nom="resultats"
           fond
           pose="left-[46%] top-[11%] rotate-[9deg]"
           alt="Le verdict du tour 3 : 58 188 € de bénéfice, 39 241 € de plus qu'au tour précédent, 1re sur 3 équipes, et deux réussites obtenues."
         />
         <CarteEnMain
-          src="/apercus/arene.webp"
+          nom="arene"
           pose="left-[24%] top-[4%]"
           alt="L'arène d'une équipe au quatrième tour : chiffre d'affaires 399 919 €, résultat 58 188 €, trésorerie 89 653 €, et le tour en cours à jouer."
         />

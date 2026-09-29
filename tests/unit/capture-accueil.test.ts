@@ -30,10 +30,25 @@ import { describe, expect, it } from "vitest";
 
 const RACINE = process.cwd();
 const ACCUEIL = readFileSync(join(RACINE, "src", "app", "page.tsx"), "utf8");
-const CAPTURES = ["arene", "decider", "resultats"].map((nom) => ({
-  nom,
-  chemin: join(RACINE, "public", "apercus", `${nom}.webp`),
-}));
+const GLOBALS = readFileSync(join(RACINE, "src", "app", "globals.css"), "utf8");
+const ECRANS = ["arene", "decider", "resultats"];
+/**
+ * Six fichiers : trois écrans, deux thèmes. Le fichier nu est la prise SOMBRE
+ * — celle que montre la page claire — et le suffixe `-clair` la prise claire,
+ * que montre la page sombre. Les captures vont à contre-courant de la page :
+ * sur un fond de même teinte, un écran n'est qu'un rectangle qui s'y fond.
+ */
+const JEUX = [
+  { teinte: "sombre", suffixe: "" },
+  { teinte: "claire", suffixe: "-clair" },
+];
+const CAPTURES = JEUX.flatMap(({ teinte, suffixe }) =>
+  ECRANS.map((nom) => ({
+    nom: `${nom}${suffixe}`,
+    teinte,
+    chemin: join(RACINE, "public", "apercus", `${nom}${suffixe}.webp`),
+  })),
+);
 
 /**
  * La taille d'un WebP, lue dans l'image elle-même.
@@ -57,31 +72,48 @@ describe("les captures de la page d'accueil", () => {
       const ko = statSync(chemin).size / 1024;
       expect(ko, `${nom} : ${Math.round(ko)} Ko`).toBeLessThan(150);
     }
-    // Trois captures dans une page d'accueil, c'est un budget, pas une galerie.
-    const total = CAPTURES.reduce((s, c) => s + statSync(c.chemin).size, 0) / 1024;
-    expect(total, `${Math.round(total)} Ko en tout`).toBeLessThan(300);
+    // Le budget se compte PAR THÈME, parce qu'une visite n'en charge qu'un :
+    // le fond CSS ne télécharge que le fichier retenu. Compter les six
+    // reviendrait à facturer au visiteur des images qu'il ne reçoit pas — et
+    // à interdire le second jeu pour une dépense imaginaire.
+    for (const { teinte, suffixe } of JEUX) {
+      const total =
+        ECRANS.reduce(
+          (s, nom) => s + statSync(join(RACINE, "public", "apercus", `${nom}${suffixe}.webp`)).size,
+          0,
+        ) / 1024;
+      expect(total, `prises ${teinte} : ${Math.round(total)} Ko`).toBeLessThan(300);
+    }
   });
 
   it("sont posées avec leurs dimensions : sans elles, la page saute au chargement", () => {
-    for (const { nom } of CAPTURES) expect(ACCUEIL, nom).toContain(`/apercus/${nom}.webp`);
-    // Les dimensions sont écrites une fois, dans `CARTE`, et la carte de la
-    // main les lit là. Elles l'ont été à deux endroits, du temps où une
-    // section du corps de page reprenait les mêmes images — et elles y étaient
-    // fausses, 800 déclarés contre 1120 réels.
+    // La page ne nomme plus les fichiers un par un : elle nomme l'écran, et
+    // compose les deux chemins. On vérifie donc les deux gabarits.
+    for (const nom of ECRANS) expect(ACCUEIL, nom).toContain(`nom="${nom}"`);
+    expect(ACCUEIL).toContain("`url(/apercus/${nom}.webp)`");
+    expect(ACCUEIL).toContain("`url(/apercus/${nom}-clair.webp)`");
+    // Les dimensions sont écrites une fois, dans `CARTE`. Elles l'ont été à
+    // deux endroits, du temps où une section du corps de page reprenait les
+    // mêmes images — et elles y étaient fausses, 800 déclarés contre 1120
+    // réels.
     expect(ACCUEIL).toMatch(/const CARTE = \{ largeur: 800, hauteur: 1120 \}/);
-    expect(ACCUEIL).toMatch(/width=\{CARTE\.largeur\}/);
-    expect(ACCUEIL).toMatch(/height=\{CARTE\.hauteur\}/);
+    // Un fond n'a pas d'attributs de taille : c'est le rapport de forme qui
+    // réserve la place, et il se lit sur les mêmes deux nombres.
+    expect(ACCUEIL).toContain("aspectRatio: `${CARTE.largeur} / ${CARTE.hauteur}`");
   });
 
   it("ont toutes la même taille, sans quoi la main de cartes serait un escalier", () => {
     // L'en-tête pose les trois captures en éventail. Un recadrage qui
     // changerait la hauteur de l'une d'elles ferait dépasser une carte, et
-    // rien dans la page ne le dirait : c'est ici que ça se voit.
+    // rien dans la page ne le dirait : c'est ici que ça se voit. Les six
+    // fichiers sont tenus, pas trois : les deux prises d'un même écran se
+    // remplacent au changement de thème, et un cadrage qui aurait glissé se
+    // verrait sauter d'un clic à l'autre.
     for (const { nom, chemin } of CAPTURES) {
       expect(tailleWebp(chemin), nom).toEqual({ largeur: 800, hauteur: 1120 });
     }
-    // Et la page annonce bien la taille qu'elles ont vraiment : une image
-    // déclarée trop haute réserve une place que l'image ne remplit pas.
+    // Et la page annonce bien la taille qu'elles ont vraiment : un cadre
+    // déclaré trop haut réserve une place que l'image ne remplit pas.
     const { largeur, hauteur } = tailleWebp(CAPTURES[0]!.chemin);
     expect(ACCUEIL).toContain(`largeur: ${largeur}, hauteur: ${hauteur}`);
   });
@@ -124,6 +156,22 @@ describe("les captures de la page d'accueil", () => {
     for (const mot of ["arène", "décision", "verdict"]) {
       expect(ACCUEIL, mot).toContain(mot);
     }
+  });
+
+  it("la page choisit la prise qui s'oppose à son fond", () => {
+    // Une capture sombre sur une page sombre est un rectangle d'encre dans de
+    // l'encre. La règle tient dans les deux sens, et elle vit dans la feuille
+    // de style parce que c'est le seul endroit qui sait quel thème est posé.
+    expect(GLOBALS).toMatch(
+      /\.capture-decran\s*\{[^}]*background-image: var\(--ecran-sur-page-claire\)/,
+    );
+    expect(GLOBALS).toMatch(
+      /\[data-theme="sombre"\]\s*\.capture-decran\s*\{[^}]*background-image: var\(--ecran-sur-page-sombre\)/,
+    );
+    // Un fond n'a pas de texte de remplacement : sans ces deux attributs, les
+    // trois écrans disparaîtraient pour qui ne voit pas la page.
+    expect(ACCUEIL).toContain('role="img"');
+    expect(ACCUEIL).toContain("aria-label={alt}");
   });
 
   it("le mini-jeu n'est pas revenu par la bande", () => {
