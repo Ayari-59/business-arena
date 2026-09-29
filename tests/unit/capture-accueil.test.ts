@@ -8,14 +8,23 @@ import { describe, expect, it } from "vitest";
  * Elle a porté trois choses. Un cockpit DESSINÉ, aux chiffres inventés
  * (« 346 920 € ») : il promettait une simulation sans en faire tourner une.
  * Puis un tour jouable, qui tenait la promesse mais faisait de la page
- * d'accueil un mini-jeu. Maintenant une capture de l'écran réel.
+ * d'accueil un mini-jeu. Maintenant trois captures d'écrans réels, tenues en
+ * main de cartes.
+ *
+ * LES TROIS ÉCRANS NE SONT PLUS MONTRÉS QU'À CET ENDROIT. Une section les
+ * reprenait en grand plus bas, « Un tour, en deux temps » ; elle a été
+ * retirée, et avec elle le seul autre endroit où ces images étaient décrites.
+ * Ce qui se jouait là se joue maintenant dans l'en-tête, ou nulle part : d'où
+ * les gardes sur la légende et sur les trois textes de remplacement.
  *
  * Ce que cette garde tient :
- *  · la capture EXISTE et reste légère — une page d'accueil qui met trois
- *    secondes à se charger n'a plus rien à promettre ;
- *  · ses dimensions sont écrites dans la page, sinon le texte saute au
- *    chargement ;
- *  · elle porte un texte de remplacement qui dit ce qu'on y voit ;
+ *  · les captures EXISTENT et restent légères — une page d'accueil qui met
+ *    trois secondes à se charger n'a plus rien à promettre ;
+ *  · elles ont toutes la même taille, sans quoi la main serait un escalier ;
+ *  · cette taille est écrite dans la page, sinon le texte saute au
+ *    chargement, et c'est bien celle des fichiers ;
+ *  · chacune porte un texte de remplacement qui dit ce qu'on y voit ;
+ *  · l'éventail est arrêté, pas tiré au sort à chaque rendu ;
  *  · le mini-jeu n'est pas revenu par la bande.
  */
 
@@ -55,14 +64,11 @@ describe("les captures de la page d'accueil", () => {
 
   it("sont posées avec leurs dimensions : sans elles, la page saute au chargement", () => {
     for (const { nom } of CAPTURES) expect(ACCUEIL, nom).toContain(`/apercus/${nom}.webp`);
-    // Les dimensions sont écrites une fois, dans `CARTE`, et les deux façons
-    // de poser une capture — le cadre du corps de page et la carte de la main
-    // — les lisent toutes les deux là.
+    // Les dimensions sont écrites une fois, dans `CARTE`, et la carte de la
+    // main les lit là. Elles l'ont été à deux endroits, du temps où une
+    // section du corps de page reprenait les mêmes images — et elles y étaient
+    // fausses, 800 déclarés contre 1120 réels.
     expect(ACCUEIL).toMatch(/const CARTE = \{ largeur: 800, hauteur: 1120 \}/);
-    expect(ACCUEIL).toMatch(/width=\{largeur\}/);
-    expect(ACCUEIL).toMatch(/height=\{hauteur\}/);
-    expect(ACCUEIL).toMatch(/largeur = CARTE\.largeur/);
-    expect(ACCUEIL).toMatch(/hauteur = CARTE\.hauteur/);
     expect(ACCUEIL).toMatch(/width=\{CARTE\.largeur\}/);
     expect(ACCUEIL).toMatch(/height=\{CARTE\.hauteur\}/);
   });
@@ -95,9 +101,11 @@ describe("les captures de la page d'accueil", () => {
 
   it("disent ce qu'on y voit, pour qui ne les voit pas", () => {
     const alts = [...ACCUEIL.matchAll(/alt="([^"]+)"/g)].map((m) => m[1]!);
-    // Trois descriptions pour trois écrans. Les deux cartes du fond de la
-    // main sont les mêmes images, montrées en grand plus bas : elles portent
-    // un texte de remplacement vide, pour ne pas les faire lire deux fois.
+    // Trois descriptions pour trois écrans, et aucune carte muette. Les deux
+    // du fond ont un moment porté un texte de remplacement vide, parce qu'une
+    // section plus bas montrait les mêmes images avec leur description ; cette
+    // section a été retirée, et ces trois phrases sont désormais tout ce qu'a
+    // qui ne voit pas la page.
     expect(alts).toHaveLength(3);
     for (const alt of alts) expect(alt.length).toBeGreaterThan(40);
     // Les chiffres des textes de remplacement sont ceux des captures : une
@@ -107,18 +115,22 @@ describe("les captures de la page d'accueil", () => {
     expect(alts.join(" ")).toContain("4 500");
   });
 
-  it("racontent la même partie, et pas trois parties sans rapport", () => {
-    // Le verdict montré est celui du tour qu'on voit se décider à côté : c'est
-    // ce qui fait de trois images une démonstration plutôt qu'une galerie.
-    expect(ACCUEIL).toContain("Décider, puis comprendre");
-    // Le déroulé numérote les deux temps : c'est ce qui fait de trois écrans
-    // une séquence plutôt qu'une galerie.
-    expect(ACCUEIL).toContain('numero="01"');
-    expect(ACCUEIL).toContain('numero="02"');
-    expect(ACCUEIL).toContain("sur la même partie");
+  it("racontent le même tour, et la légende le dit", () => {
+    // Le verdict montré est celui du tour qu'on voit se décider sur la carte
+    // d'à côté : c'est ce qui fait de trois images une démonstration plutôt
+    // qu'une galerie. Rien dans l'image ne le dit — c'est la légende qui le
+    // dit, et elle est donc tenue.
+    expect(ACCUEIL).toContain("d&apos;un même tour");
+    for (const mot of ["arène", "décision", "verdict"]) {
+      expect(ACCUEIL, mot).toContain(mot);
+    }
   });
 
   it("le mini-jeu n'est pas revenu par la bande", () => {
+    // Ni la section retirée : elle reviendrait avec deux images déjà montrées
+    // en haut de page, ce qu'on vient précisément de lui reprocher.
+    expect(ACCUEIL).not.toContain("Décider, puis comprendre");
+    expect(ACCUEIL).not.toContain('numero="01"');
     expect(ACCUEIL).not.toContain("TourDessai");
     expect(ACCUEIL).not.toContain('type="range"');
     expect(existsSync(join(RACINE, "src", "components", "tour-dessai.tsx"))).toBe(false);

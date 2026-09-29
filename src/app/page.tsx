@@ -95,66 +95,16 @@ export const metadata: Metadata = {
  * Les trois écrans sont recadrés à la même taille, et c'est ce qui permet de
  * les poser en main de cartes : trois images de hauteurs différentes ne
  * forment pas un éventail, elles forment un escalier. Les dimensions sont
- * écrites dans la page (sinon le texte saute au chargement), donc elles sont
- * écrites UNE fois, ici.
+ * écrites dans la page — sans elles, le texte saute au chargement.
  */
 const CARTE = { largeur: 800, hauteur: 1120 };
 
 /**
- * UNE CAPTURE DE L'APPLICATION, ENCADRÉE.
- *
- * Trois écrans réels vivent sur cette page, et ils se posent de la même façon :
- * dimensions écrites, texte de remplacement qui dit ce qu'on y voit, et une
- * légende qui dit à quoi il sert. Les captures du bas se chargent
- * paresseusement — elles sont sous la ligne de flottaison.
- */
-function Capture({
-  src,
-  alt,
-  legende,
-  largeur = CARTE.largeur,
-  hauteur = CARTE.hauteur,
-}: {
-  src: string;
-  alt: string;
-  legende: string;
-  largeur?: number;
-  hauteur?: number;
-}) {
-  return (
-    <figure className="m-0">
-      {/*
-        LE BAS DE L'IMAGE S'ÉTEINT plutôt que de se couper net. Une capture est
-        un morceau d'écran : coupée à la règle, elle a l'air d'un bug — le
-        premier cadrage tranchait au milieu d'une ligne « Tour 2 ». Le dégradé
-        dit que l'écran continue, et il emporte la bordure avec lui, sinon un
-        trait flotterait sous du vide.
-      */}
-      <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl shadow-slate-950/40 [mask-image:linear-gradient(to_bottom,#000_86%,transparent_100%)]">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={src}
-          width={largeur}
-          height={hauteur}
-          loading="lazy"
-          decoding="async"
-          alt={alt}
-          className="block w-full"
-        />
-      </div>
-      <figcaption className="mt-3 text-center text-sm leading-relaxed text-slate-400">
-        {legende}
-      </figcaption>
-    </figure>
-  );
-}
-
-/**
  * UNE CARTE DE LA MAIN : la capture, posée et tournée.
  *
- * Ici pas de dégradé en bas — une carte a un bord. Le dégradé sert dans le
- * corps de la page, où l'image doit dire « l'écran continue » ; dans la main,
- * il laisserait voir la carte de derrière à travers celle de devant.
+ * PAS DE DÉGRADÉ EN BAS, contrairement au cadrage qu'ont longtemps porté ces
+ * captures : une carte a un bord franc, et un bas qui s'éteint laisserait voir
+ * la carte de derrière à travers celle de devant.
  *
  * Les deux cartes du fond sont assourdies (bordure plus pâle, opacité) : c'est
  * ce qui fait une profondeur, sans quoi trois images de même contraste se
@@ -214,19 +164,33 @@ function CarteEnMain({
  * tireraient deux mains différentes, et la page se repeindrait sous l'œil du
  * visiteur ; et le produit changerait de visage d'une visite à l'autre. La
  * main choisie dit d'ailleurs quelque chose — devant, l'écran où l'élève
- * passe son temps ; derrière, les deux moments du tour, dans l'ordre où la
- * page les raconte plus bas.
+ * passe son temps ; derrière, les deux moments d'un tour, dans l'ordre où on
+ * les joue : on décide, puis on lit le verdict.
  *
- * LES CARTES DU FOND NE SONT PAS DÉCRITES. Les mêmes écrans sont montrés en
- * grand, avec leur texte de remplacement, deux sections plus bas : les faire
- * lire deux fois à une synthèse vocale n'apprendrait rien à personne.
+ * LES TROIS CARTES SONT DÉCRITES. Elles ne l'étaient pas toutes : les deux du
+ * fond portaient un texte de remplacement vide, parce qu'une section plus bas
+ * montrait les mêmes écrans en grand avec leur description, et les faire lire
+ * deux fois n'apprenait rien. Cette section n'existe plus. Qui ne voit pas la
+ * page n'a donc plus que ces trois phrases pour savoir ce que montre
+ * l'application : elles disent les chiffres qu'on y lit, pas « capture
+ * d'écran ».
  */
 function MainDeCartes() {
   return (
     <figure className="m-0">
       <div className="relative mx-auto aspect-[9/8] w-full max-w-[440px]">
-        <CarteEnMain src="/apercus/decider.webp" alt="" fond pose="left-[2%] top-[11%] -rotate-[9deg]" />
-        <CarteEnMain src="/apercus/resultats.webp" alt="" fond pose="left-[46%] top-[11%] rotate-[9deg]" />
+        <CarteEnMain
+          src="/apercus/decider.webp"
+          fond
+          pose="left-[2%] top-[11%] -rotate-[9deg]"
+          alt="L'écran de décision : prix de vente 74 € par enceinte, plan de production 4 500 enceintes, capacité machine 7 000 et main-d'œuvre 7 200 par tour, goulot équilibré, puis le choix du fournisseur."
+        />
+        <CarteEnMain
+          src="/apercus/resultats.webp"
+          fond
+          pose="left-[46%] top-[11%] rotate-[9deg]"
+          alt="Le verdict du tour 3 : 58 188 € de bénéfice, 39 241 € de plus qu'au tour précédent, 1re sur 3 équipes, et deux réussites obtenues."
+        />
         <CarteEnMain
           src="/apercus/arene.webp"
           pose="left-[24%] top-[4%]"
@@ -234,43 +198,10 @@ function MainDeCartes() {
         />
       </div>
       <figcaption className="mt-5 text-center text-sm leading-relaxed text-slate-400">
-        Trois écrans d&apos;une même partie : l&apos;arène, la feuille de
-        décision, le verdict du tour.
+        Trois écrans d&apos;un même tour : l&apos;arène, la feuille de décision,
+        le verdict.
       </figcaption>
     </figure>
-  );
-}
-
-/**
- * UN TEMPS DU TOUR : son numéro, son titre, sa phrase, et l'écran qui va avec.
- *
- * L'alternance gauche/droite n'est pas un effet : elle dit qu'il y a une
- * SUITE. Deux images côte à côte sous un même titre ne disaient pas dans quel
- * ordre les regarder.
- */
-function Temps({
-  numero,
-  titre,
-  texte,
-  inverse = false,
-  children,
-}: {
-  numero: string;
-  titre: string;
-  texte: string;
-  /** Deuxième temps : l'écran passe à gauche, le texte à droite. */
-  inverse?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="grid items-center gap-8 sm:grid-cols-2 sm:gap-12">
-      <div className={inverse ? "sm:order-2" : undefined}>
-        <p className="font-display text-sm tracking-[0.3em] text-amber-400/70">{numero}</p>
-        <h3 className="mt-3 font-display text-2xl font-semibold text-slate-50">{titre}</h3>
-        <p className="mt-3 text-base leading-relaxed text-slate-300">{texte}</p>
-      </div>
-      <div className={inverse ? "sm:order-1" : undefined}>{children}</div>
-    </div>
   );
 }
 
@@ -417,8 +348,14 @@ export default async function Home() {
         voix des titres de la maison —, son libellé le précède en capitales
         fines, et un filet sépare les colonnes. L'ambre ne sert plus qu'à ce
         qu'on doit retenir.
+
+        LA RANGÉE NE RESPIRE PLUS QUE VERS LE HAUT. Elle était prise entre deux
+        bandes bordées, et ses deux marges se voyaient également ; celle du bas
+        est partie avec la section « Un tour, en deux temps », laissant cent
+        quarante pixels de nuit avant le sommaire. Elle reste donc décollée de
+        la bande des métiers, et se rapproche de ce qui la suit.
       */}
-      <section className="mx-auto max-w-6xl px-6 py-12 sm:py-16">
+      <section className="mx-auto max-w-6xl px-6 pb-6 pt-12 sm:pb-8 sm:pt-16">
         <dl className="grid grid-cols-2 gap-y-8 sm:grid-cols-4">
           {[
             ["par tour, selon le niveau", `${decisions.minimum} à ${decisions.maximum}`, "décisions"],
@@ -435,56 +372,6 @@ export default async function Home() {
             </div>
           ))}
         </dl>
-      </section>
-
-      {/* ---------- Un tour, en deux temps ---------- */}
-      {/*
-        L'EN-TÊTE MONTRE L'ARÈNE ; ICI, CE QU'ON Y FAIT. Un tour se joue en deux
-        temps — on engage des décisions, puis on lit ce qu'elles ont produit —
-        et c'est cette boucle que la page doit faire comprendre sans
-        l'expliquer. Les deux captures viennent de LA MÊME partie que celle de
-        l'en-tête : les 58 188 € du verdict sont le résultat du tour qu'on voit
-        se décider juste avant.
-
-        DEUX TEMPS NUMÉROTÉS, EN ALTERNANCE, plutôt que deux images côte à côte
-        sous un titre : la séquence se lit, là où la paire ne disait pas dans
-        quel ordre regarder.
-      */}
-      <section className="border-y border-white/5 bg-slate-900/30">
-        <div className="mx-auto max-w-5xl px-6 py-12 sm:py-16">
-          <h2 className="flex items-center gap-3 text-xs uppercase tracking-[0.28em] text-slate-400">
-            <span aria-hidden className="h-px w-8 bg-amber-400/40" />
-            Un tour, en deux temps
-          </h2>
-          <p className="mt-4 max-w-2xl font-display text-3xl leading-tight text-slate-50">
-            Décider, puis comprendre.
-          </p>
-          <div className="mt-10 space-y-12 sm:mt-12 sm:space-y-16">
-            <Temps
-              numero="01"
-              titre="On engage"
-              texte="Un prix, un volume, des budgets, un fournisseur. L'atelier a une capacité : le volume réel s'y heurte, et c'est là que la décision commence."
-            >
-              <Capture
-                src="/apercus/decider.webp"
-                alt="L'écran de décision : prix de vente 74 € par enceinte, plan de production 4 500 enceintes, capacité machine 7 000 et main-d'œuvre 7 200 par tour, goulot équilibré, puis le choix du fournisseur."
-                legende="L'écran de décision, tel que l'équipe le remplit."
-              />
-            </Temps>
-            <Temps
-              numero="02"
-              titre="On comprend"
-              inverse
-              texte="À la clôture, le verdict ne donne pas seulement le résultat : il dit ce qui l'a fait, de combien il bouge, et ce que l'équipe a réussi en chemin."
-            >
-              <Capture
-                src="/apercus/resultats.webp"
-                alt="Le verdict du tour 3 : 58 188 € de bénéfice, 39 241 € de plus qu'au tour précédent, 1re sur 3 équipes, et deux réussites obtenues."
-                legende="Le verdict du tour, sur la même partie."
-              />
-            </Temps>
-          </div>
-        </div>
       </section>
 
       {/* ---------- Explorer : renvois vers les pages dédiées ---------- */}
