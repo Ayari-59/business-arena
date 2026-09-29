@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { PARCOURS } from "@/config/parcours";
 import { bouton } from "@/components/bouton";
+import { BandeFinale } from "@/components/bande-finale";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/parcours" },
@@ -117,30 +118,24 @@ export default function ParcoursPage() {
           </section>
         ))}
 
-        <section className="rounded-2xl border border-amber-400/30 bg-slate-900 p-8 text-center">
-          <h2 className="text-xl font-bold text-slate-50">
-            Votre diplôme n&apos;est pas dans la liste ?
-          </h2>
-          <p className="mx-auto mt-2 max-w-md text-base text-slate-400">
-            BUT GEA, DCG, bachelors… les mêmes mécaniques servent d&apos;autres référentiels :
-            écrivez-nous, le parcours s&apos;ajoute en quelques jours.
-          </p>
-          <div className="mt-5 flex flex-wrap justify-center gap-3">
-            <Link
-              href="/teacher/login"
-              className={bouton({ taille: "l" })}
-            >
-              Créer ma première partie
-            </Link>
-            <Link
-              href="/guide"
-              className="rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-amber-400/40 hover:text-amber-300"
-            >
-              Guide de prise en main
-            </Link>
-          </div>
-        </section>
       </div>
+
+      {/* La bande sort de la colonne de lecture : une fin de page tient toute
+          la largeur, sinon elle reste une carte de plus dans la pile. */}
+      <BandeFinale
+        titre="Votre diplôme n'est pas dans la liste ?"
+        texte="BUT GEA, DCG, bachelors… les mêmes mécaniques servent d'autres référentiels : écrivez-nous, le parcours s'ajoute en quelques jours."
+      >
+        <Link href="/teacher/login" className={bouton({ taille: "l" })}>
+          Créer ma première partie
+        </Link>
+        <Link
+          href="/guide"
+          className="rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-amber-400/40 hover:text-amber-300"
+        >
+          Guide de prise en main
+        </Link>
+      </BandeFinale>
     </main>
   );
 }

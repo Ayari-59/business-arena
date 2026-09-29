@@ -24,12 +24,22 @@ import { THEMES, THEME_DORIGINE } from "../../src/config/themes";
  * décaler les paliers de texte d'un cran.
  */
 /**
- * `/enseignants` est là pour sa fin de page : c'est la première bande posée à
- * CONTRE-JOUR, un bloc dont l'échelle de couleurs est retournée pour lui seul.
- * Un bloc qui prend le thème à rebours est exactement ce qui peut devenir
- * illisible dans un seul des deux thèmes, sans que rien ne le signale.
+ * `/enseignants`, `/parcours` et `/guide` sont là pour leur fin de page : la
+ * bande posée à CONTRE-JOUR, un bloc dont l'échelle de couleurs est retournée
+ * pour lui seul. Un bloc qui prend le thème à rebours est exactement ce qui
+ * peut devenir illisible dans un seul des deux thèmes, sans que rien ne le
+ * signale — et `/entreprises`, déjà mesurée, en porte une aussi.
  */
-const PAGES = ["/", "/jouer", "/entreprises", "/concepts", "/animations", "/enseignants"];
+const PAGES = [
+  "/",
+  "/jouer",
+  "/entreprises",
+  "/concepts",
+  "/animations",
+  "/enseignants",
+  "/parcours",
+  "/guide",
+];
 
 let navigateur: Browser;
 let page: Page;

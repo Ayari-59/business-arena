@@ -9,6 +9,7 @@ import {
   promesseEntreprise as promesse,
 } from "@/config/scenarios/presentation";
 import { bouton } from "@/components/bouton";
+import { BandeFinale } from "@/components/bande-finale";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/entreprises" },
@@ -245,27 +246,20 @@ export default function EntreprisesPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-6 py-16 text-center">
-        <h2 className="text-2xl font-bold text-slate-50">Choisissez votre métier</h2>
-        <p className="mx-auto mt-3 max-w-xl text-base leading-relaxed text-slate-400">
-          Six tours, des concurrents qui ne vous feront aucun cadeau, et une situation à traiter
-          à chaque tour. Sans compte, sans installation.
-        </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-3">
-          <Link
-            href="/jouer"
-            className={bouton({ taille: "l" })}
-          >
-            Tester le simulateur
-          </Link>
-          <Link
-            href="/teacher/login"
-            className="rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-amber-400/50"
-          >
-            Créer une partie pour ma classe
-          </Link>
-        </div>
-      </section>
+      <BandeFinale
+        titre="Choisissez votre métier"
+        texte="Six tours, des concurrents qui ne vous feront aucun cadeau, et une situation à traiter à chaque tour. Sans compte, sans installation."
+      >
+        <Link href="/jouer" className={bouton({ taille: "l" })}>
+          Tester le simulateur
+        </Link>
+        <Link
+          href="/teacher/login"
+          className="rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-amber-400/50"
+        >
+          Créer une partie pour ma classe
+        </Link>
+      </BandeFinale>
     </main>
   );
 }

@@ -8,6 +8,7 @@ import { DemoDuTour } from "@/components/demo-du-tour";
 import { PreuvesDusageBande } from "@/components/preuves-dusage";
 import { preuvesDusage } from "@/services/preuves-dusage.service";
 import { bouton } from "@/components/bouton";
+import { BandeFinale } from "@/components/bande-finale";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/enseignants" },
@@ -306,50 +307,20 @@ export default async function EnseignantsPage() {
         </ul>
       </section>
 
-      {/*
-        LA FIN DE PAGE, À CONTRE-JOUR.
-
-        Elle flottait : un titre, une phrase et deux boutons centrés sur le
-        même fond que les huit sections précédentes. Une page qui déroule
-        trente écrans d'arguments doit finir sur quelque chose, et ce quelque
-        chose est l'endroit où l'on décide.
-
-        `contre-jour` retourne l'échelle des couleurs POUR CE BLOC : la bande
-        est sombre sur la page claire qu'on sert, et claire si le lecteur a
-        choisi le thème sombre. Aucune couleur n'est écrite ici — les mêmes
-        classes qu'ailleurs, `bg-slate-950` et `text-slate-50`, désignent
-        simplement l'autre bout de l'échelle une fois dedans. C'est le
-        contraste d'une capture d'écran au milieu d'un texte, appliqué à un
-        bloc.
-
-        UN SEUL PAR ÉCRAN. Le contraste attire l'œil parce qu'il est unique sur
-        la page, pas parce qu'il est joli : une deuxième bande à contre-jour
-        n'en ferait pas deux qui se voient, elle en ferait deux qui s'annulent.
-      */}
-      <section className="contre-jour border-t border-white/10 bg-slate-950">
-        <div className="mx-auto max-w-3xl px-6 py-16 text-center">
-          <h2 className="font-display text-3xl font-semibold text-slate-50">
-            Prêt à faire jouer votre classe ?
-          </h2>
-          <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-slate-300">
-            Commencez par le réglage qui vous convient, ou ouvrez directement votre espace.
-          </p>
-          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <Link
-              href="/orientation"
-              className={bouton({ taille: "l" })}
-            >
-              Choisir ma simulation
-            </Link>
-            <Link
-              href="/teacher/login"
-              className="rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-amber-400/50"
-            >
-              Ouvrir l&apos;espace enseignant
-            </Link>
-          </div>
-        </div>
-      </section>
+      <BandeFinale
+        titre="Prêt à faire jouer votre classe ?"
+        texte="Commencez par le réglage qui vous convient, ou ouvrez directement votre espace."
+      >
+        <Link href="/orientation" className={bouton({ taille: "l" })}>
+          Choisir ma simulation
+        </Link>
+        <Link
+          href="/teacher/login"
+          className="rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-amber-400/50"
+        >
+          Ouvrir l&apos;espace enseignant
+        </Link>
+      </BandeFinale>
     </main>
   );
 }

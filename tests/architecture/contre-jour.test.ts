@@ -45,9 +45,35 @@ const codeSeul = (source: string) =>
 
 const GENERE = readFileSync(join(SRC, "app", "theme-clair.css"), "utf8");
 const GLOBALS = readFileSync(join(SRC, "app", "globals.css"), "utf8");
-const PORTEURS = fichiers(SRC)
-  .map((chemin) => ({ chemin, code: codeSeul(readFileSync(chemin, "utf8")) }))
-  .filter(({ code }) => code.includes("contre-jour"));
+
+const SOURCES = fichiers(SRC).map((chemin) => ({
+  chemin,
+  code: codeSeul(readFileSync(chemin, "utf8")),
+}));
+
+/**
+ * Les composants qui POSENT la classe, par leur nom d'export.
+ *
+ * Sans cette indirection, la garde s'endormirait le jour où la bande à
+ * contre-jour devient un composant partagé — ce qui est arrivé dès la
+ * deuxième page : la classe n'apparaît alors plus qu'une fois dans le dépôt,
+ * et une page pourrait en poser deux sans que rien ne compte.
+ */
+const COMPOSANTS = SOURCES.filter(({ code }) => code.includes("contre-jour")).flatMap(
+  ({ code }) => [...code.matchAll(/export function ([A-Z][A-Za-z]*)/g)].map((m) => m[1]!),
+);
+
+/** Un bloc à contre-jour : la classe elle-même, ou un composant qui la pose. */
+function blocs(code: string): number {
+  const directs = code.match(/\bcontre-jour\b/g)?.length ?? 0;
+  const parComposant = COMPOSANTS.reduce(
+    (n, nom) => n + (code.match(new RegExp(`<${nom}\\b`, "g"))?.length ?? 0),
+    0,
+  );
+  return directs + parComposant;
+}
+
+const PORTEURS = SOURCES.filter(({ code }) => blocs(code) > 0);
 
 describe("le contre-jour", () => {
   it("existe dans les deux sens, et il est engendré", () => {
@@ -96,7 +122,7 @@ describe("le contre-jour", () => {
     // La règle qui se perdra la première, parce qu'elle ne casse rien : elle
     // fait juste que plus rien ne ressort.
     for (const { chemin, code } of PORTEURS) {
-      const compte = code.match(/\bcontre-jour\b/g)?.length ?? 0;
+      const compte = blocs(code);
       expect(compte, `${chemin.slice(SRC.length + 1)} : ${compte} blocs à contre-jour`).toBe(1);
     }
   });
@@ -108,6 +134,9 @@ describe("le contre-jour", () => {
     // des deux thèmes — sans erreur nulle part.
     for (const { chemin, code } of PORTEURS) {
       const debut = code.indexOf("contre-jour");
+      // Une page qui se contente d'APPELER le composant n'écrit pas de bloc :
+      // les couleurs qu'on cherche vivent là où la classe est posée.
+      if (debut < 0) continue;
       // La section qui porte la classe, jusqu'à sa fermeture : c'est là que
       // vivent les couleurs du bloc.
       const section = code.slice(debut, debut + 1500);
@@ -120,5 +149,6 @@ describe("le contre-jour", () => {
 
   it("est réellement employé quelque part, sinon la règle ne garde rien", () => {
     expect(PORTEURS.length, "aucun bloc à contre-jour dans le site").toBeGreaterThan(0);
+    expect(COMPOSANTS.length, "la classe n'est posée par aucun composant").toBeGreaterThan(0);
   });
 });

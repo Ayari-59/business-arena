@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { bouton } from "@/components/bouton";
+import { BandeFinale } from "@/components/bande-finale";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/guide" },
@@ -425,28 +426,24 @@ export default function GuidePage() {
           </dl>
         </Section>
 
-        <section className="rounded-2xl border border-amber-400/30 bg-slate-900 p-8 text-center">
-          <h2 className="text-xl font-bold text-slate-50">Prêt à entrer dans l&apos;arène ?</h2>
-          <p className="mx-auto mt-2 max-w-md text-base text-slate-400">
-            Lancez une partie solo pour vous faire la main, ou créez votre première partie de
-            classe. Six tours suffisent pour que le BFR devienne inoubliable.
-          </p>
-          <div className="mt-5 flex flex-wrap justify-center gap-3">
-            <Link
-              href="/jouer"
-              className={bouton({ taille: "l" })}
-            >
-              Jouer maintenant
-            </Link>
-            <Link
-              href="/teacher/login"
-              className="rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-amber-400/40 hover:text-amber-300"
-            >
-              Espace enseignant
-            </Link>
-          </div>
-        </section>
       </div>
+
+      {/* La bande sort de la colonne de lecture : une fin de page tient toute
+          la largeur, sinon elle reste une carte de plus dans la pile. */}
+      <BandeFinale
+        titre="Prêt à entrer dans l'arène ?"
+        texte="Lancez une partie solo pour vous faire la main, ou créez votre première partie de classe. Six tours suffisent pour que le BFR devienne inoubliable."
+      >
+        <Link href="/jouer" className={bouton({ taille: "l" })}>
+          Jouer maintenant
+        </Link>
+        <Link
+          href="/teacher/login"
+          className="rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-amber-400/40 hover:text-amber-300"
+        >
+          Espace enseignant
+        </Link>
+      </BandeFinale>
     </main>
   );
 }

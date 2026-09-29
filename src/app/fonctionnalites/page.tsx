@@ -3,6 +3,7 @@ import { ALL_SITUATIONS, SCENARIO_CHOICES, SECTOR_LABELS } from "@/config/scenar
 import { DECISION_MODELS } from "@/config/pedagogy/models";
 import { ApercuArene } from "@/components/apercus";
 import { bouton } from "@/components/bouton";
+import { BandeFinale } from "@/components/bande-finale";
 
 export const metadata = {
   alternates: { canonical: "/fonctionnalites" },
@@ -192,29 +193,20 @@ export default function FonctionnalitesPage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="mx-auto max-w-3xl px-6 pb-20 text-center">
-        <h2 className="text-2xl font-bold text-slate-50">
-          Prêt à tester ?
-        </h2>
-        <p className="mt-3 text-sm text-slate-400">
-          Lancez une partie en 30 secondes, sans compte ni installation.
-        </p>
-        <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-          <Link
-            href="/jouer"
-            className={bouton({ taille: "l" })}
-          >
-            Tester le simulateur
-          </Link>
-          <Link
-            href="/entreprises"
-            className="rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-amber-400/50"
-          >
-            Voir les entreprises
-          </Link>
-        </div>
-      </section>
+      <BandeFinale
+        titre="Prêt à tester ?"
+        texte="Lancez une partie en 30 secondes, sans compte ni installation."
+      >
+        <Link href="/jouer" className={bouton({ taille: "l" })}>
+          Tester le simulateur
+        </Link>
+        <Link
+          href="/entreprises"
+          className="rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-amber-400/50"
+        >
+          Voir les entreprises
+        </Link>
+      </BandeFinale>
     </main>
   );
 }
