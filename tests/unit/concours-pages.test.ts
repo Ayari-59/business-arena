@@ -23,6 +23,9 @@ vi.mock("next/navigation", () => ({
   redirect: (url: string) => {
     throw new Error(`__redirect__${url}`);
   },
+  // Le pied de page lit le chemin courant pour ne pas proposer la page où
+  // l'on se trouve : rendu hors navigateur, il lui faut une réponse.
+  usePathname: () => "/compete",
 }));
 vi.mock("@/lib/guest", () => ({
   getOrCreateGuestUserId: vi.fn(async () => "invite-1"),

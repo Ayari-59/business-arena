@@ -3,6 +3,7 @@ import Link from "next/link";
 import { OrientationForm } from "@/components/orientation-form";
 import { SCENARIOS } from "@/config/scenarios/registry";
 import { ATELIERS } from "@/config/ateliers";
+import { PiedDePage } from "@/components/pied-de-page";
 
 /**
  * La page ne lit rien par utilisateur (pas de searchParams, pas de session) :
@@ -21,41 +22,44 @@ export const metadata: Metadata = {
 
 export default function OrientationPage() {
   return (
-    <main id="main" className="mx-auto max-w-5xl px-6 py-12">
-      <p className="text-xs uppercase tracking-[0.3em] text-amber-400">
-        Business Arena · orientation
-      </p>
-      <h1 className="mt-2 text-3xl font-bold text-slate-50">Quelle simulation pour votre classe</h1>
-      <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-400">
-        {SCENARIOS.length} entreprises, six niveaux de difficulté, une durée réglable et{" "}
-        {ATELIERS.length} ateliers prêts à animer : cela fait beaucoup de combinaisons, et le
-        mauvais réglage ne se voit qu&apos;en séance trois. Répondez à quatre questions, la
-        recommandation s&apos;écrit à mesure, avec ses raisons. Vous pouvez la discuter :
-        elle n&apos;a rien d&apos;un oracle, c&apos;est le raisonnement que nous tiendrions à
-        votre place.
-      </p>
+    <>
+      <main id="main" className="mx-auto max-w-5xl px-6 py-12">
+        <p className="text-xs uppercase tracking-[0.3em] text-amber-400">
+          Business Arena · orientation
+        </p>
+        <h1 className="mt-2 text-3xl font-bold text-slate-50">Quelle simulation pour votre classe</h1>
+        <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-400">
+          {SCENARIOS.length} entreprises, six niveaux de difficulté, une durée réglable et{" "}
+          {ATELIERS.length} ateliers prêts à animer : cela fait beaucoup de combinaisons, et le
+          mauvais réglage ne se voit qu&apos;en séance trois. Répondez à quatre questions, la
+          recommandation s&apos;écrit à mesure, avec ses raisons. Vous pouvez la discuter :
+          elle n&apos;a rien d&apos;un oracle, c&apos;est le raisonnement que nous tiendrions à
+          votre place.
+        </p>
 
-      <div className="mt-10">
-        <OrientationForm />
-      </div>
+        <div className="mt-10">
+          <OrientationForm />
+        </div>
 
-      <p className="mt-10 text-sm leading-relaxed text-slate-400">
-        Vous préférez en parler de vive voix ?{" "}
-        <Link href="/rendez-vous" className="text-slate-400 underline-offset-4 hover:underline">
-          Prenez un rendez-vous téléphonique
-        </Link>
-        . Rien n&apos;est figé : le secteur, le niveau, la durée et la périodicité se changent à
-        la création de la partie, et une partie qui ne convient pas se relance en trente
-        secondes. Voir{" "}
-        <Link href="/entreprises" className="text-slate-400 underline-offset-4 hover:underline">
-          les fiches des entreprises
-        </Link>{" "}
-        ou{" "}
-        <Link href="/animations" className="text-slate-400 underline-offset-4 hover:underline">
-          les ateliers publiés
-        </Link>
-        .
-      </p>
-    </main>
+        <p className="mt-10 text-sm leading-relaxed text-slate-400">
+          Vous préférez en parler de vive voix ?{" "}
+          <Link href="/rendez-vous" className="text-slate-400 underline-offset-4 hover:underline">
+            Prenez un rendez-vous téléphonique
+          </Link>
+          . Rien n&apos;est figé : le secteur, le niveau, la durée et la périodicité se changent à
+          la création de la partie, et une partie qui ne convient pas se relance en trente
+          secondes. Voir{" "}
+          <Link href="/entreprises" className="text-slate-400 underline-offset-4 hover:underline">
+            les fiches des entreprises
+          </Link>{" "}
+          ou{" "}
+          <Link href="/animations" className="text-slate-400 underline-offset-4 hover:underline">
+            les ateliers publiés
+          </Link>
+          .
+        </p>
+      </main>
+      <PiedDePage />
+    </>
   );
 }

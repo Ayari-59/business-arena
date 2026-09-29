@@ -9,6 +9,7 @@ import { SubmitButton } from "@/components/submit-button";
 import { QuickConfigFields } from "@/components/quick-config-form";
 import { bouton } from "@/components/bouton";
 import { HaloDePage } from "@/components/halo-de-page";
+import { PiedDePage } from "@/components/pied-de-page";
 
 export const dynamic = "force-dynamic";
 
@@ -45,109 +46,112 @@ export default async function JouerPage({
     : DEFAULT_SCENARIO_CODE;
 
   return (
-    <main id="main" className="relative overflow-hidden">
-      <HaloDePage />
+    <>
+      <main id="main" className="relative overflow-hidden">
+        <HaloDePage />
 
-      <section className="mx-auto max-w-6xl px-6 py-8 sm:py-16">
-        {/*
-          Colonnes centrées l'une sur l'autre : le texte est bien plus court que
-          le formulaire, et les aligner par le haut laissait un vide sous lui.
-          La colonne de droite est large (540 px) : le formulaire y respire, ses
-          cartes de secteur s'étalent, sa hauteur se rapproche de celle du texte.
-          Le texte, lui, reste borné par son max-w-lg et ne s'étire pas.
-        */}
-        <div className="grid items-start gap-6 sm:gap-8 lg:grid-cols-[1fr_540px] lg:items-center">
-          <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Partie solo</p>
-            <h1 className="mt-3 text-3xl font-bold leading-tight tracking-tight text-slate-50 sm:text-4xl">
-              Lancez votre première partie
-            </h1>
-            <p className="mt-4 max-w-lg text-base leading-relaxed text-slate-400">
-              Choisissez l&apos;un des {SCENARIO_CHOICES.length} métiers, puis menez votre entreprise
-              face à des concurrents qui ne vous feront aucun cadeau. De {decisions.minimum} à{" "}
-              {decisions.maximum} décisions par tour selon le niveau : prix, volumes, marketing,
-              qualité, financement. Chacune compte, et la crise de trésorerie réserve une leçon
-              que peu voient venir.
-            </p>
-            <ul className="mt-5 space-y-2 text-sm text-slate-300">
-              <li>· Niveau Découverte : aucune connaissance préalable requise</li>
-              <li>· Débriefing corrigé à chaque tour, fiches notions intégrées</li>
-              <li>· Votre profil de compétences progresse à chaque situation traitée</li>
-            </ul>
-            <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm">
-              <Link href="/entreprises" className="text-amber-300 underline-offset-4 hover:underline">
-                Découvrir les {SCENARIO_CHOICES.length} entreprises
-              </Link>
-              <Link href="/join" className="text-amber-300 underline-offset-4 hover:underline">
-                J&apos;ai un code (élève)
-              </Link>
-              <Link href="/guide" className="text-slate-400 underline-offset-4 hover:underline">
-                Guide
-              </Link>
-              <Link href="/profile" className="text-slate-400 underline-offset-4 hover:underline">
-                Mon profil
-              </Link>
+        <section className="mx-auto max-w-6xl px-6 py-8 sm:py-16">
+          {/*
+            Colonnes centrées l'une sur l'autre : le texte est bien plus court que
+            le formulaire, et les aligner par le haut laissait un vide sous lui.
+            La colonne de droite est large (540 px) : le formulaire y respire, ses
+            cartes de secteur s'étalent, sa hauteur se rapproche de celle du texte.
+            Le texte, lui, reste borné par son max-w-lg et ne s'étire pas.
+          */}
+          <div className="grid items-start gap-6 sm:gap-8 lg:grid-cols-[1fr_540px] lg:items-center">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Partie solo</p>
+              <h1 className="mt-3 text-3xl font-bold leading-tight tracking-tight text-slate-50 sm:text-4xl">
+                Lancez votre première partie
+              </h1>
+              <p className="mt-4 max-w-lg text-base leading-relaxed text-slate-400">
+                Choisissez l&apos;un des {SCENARIO_CHOICES.length} métiers, puis menez votre entreprise
+                face à des concurrents qui ne vous feront aucun cadeau. De {decisions.minimum} à{" "}
+                {decisions.maximum} décisions par tour selon le niveau : prix, volumes, marketing,
+                qualité, financement. Chacune compte, et la crise de trésorerie réserve une leçon
+                que peu voient venir.
+              </p>
+              <ul className="mt-5 space-y-2 text-sm text-slate-300">
+                <li>· Niveau Découverte : aucune connaissance préalable requise</li>
+                <li>· Débriefing corrigé à chaque tour, fiches notions intégrées</li>
+                <li>· Votre profil de compétences progresse à chaque situation traitée</li>
+              </ul>
+              <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+                <Link href="/entreprises" className="text-amber-300 underline-offset-4 hover:underline">
+                  Découvrir les {SCENARIO_CHOICES.length} entreprises
+                </Link>
+                <Link href="/join" className="text-amber-300 underline-offset-4 hover:underline">
+                  J&apos;ai un code (élève)
+                </Link>
+                <Link href="/guide" className="text-slate-400 underline-offset-4 hover:underline">
+                  Guide
+                </Link>
+                <Link href="/profile" className="text-slate-400 underline-offset-4 hover:underline">
+                  Mon profil
+                </Link>
+              </div>
             </div>
-          </div>
 
-          {trop ? (
-            <p
-              role="status"
-              className="mb-4 rounded-2xl border border-amber-400/30 bg-amber-950/30 p-4 text-base text-amber-200"
-            >
-              Trop de parties lancées depuis cette connexion dans la dernière heure.
-              Réessayez tout à l&apos;heure. Si vous êtes en classe, les élèves n&apos;ont
-              pas besoin de passer par ici : donnez-leur le code de la partie, ils
-              entrent par <strong>/join</strong> et ne créent rien.
-            </p>
-          ) : null}
-          {!config.allowPublicPlay ? (
-            <div className="rounded-2xl border border-white/10 bg-slate-900 p-6 text-sm text-slate-400">
-              Les parties publiques sont momentanément désactivées. Élèves : utilisez le code
-              donné par votre enseignant sur{" "}
-              <Link href="/join" className="text-amber-300 underline-offset-4 hover:underline">
-                /join
-              </Link>
-              .
-            </div>
-          ) : (
-            <form
-              action={startGameAction}
-              className="rounded-2xl border border-white/10 bg-slate-900/80 p-4 shadow-xl shadow-black/30 ring-1 ring-white/5 sm:p-6"
-            >
-              <h2 className="text-sm font-semibold text-slate-100">Configurer la partie</h2>
-              <QuickConfigFields
-                scenarios={SCENARIO_CHOICES.map((s) => {
-                  const famille = familyOf(s.code);
-                  return {
-                    code: s.code,
-                    icon: s.icon,
-                    label: s.shortName,
-                    sector: SECTOR_LABELS[s.sector],
-                    tagline: s.tagline,
-                    ...(famille
-                      ? { variante: { gammeFromLevel: famille.gammeFromLevel, mono: famille.monoLabel, gamme: famille.gammeLabel } }
-                      : {}),
-                  };
-                })}
-                levels={DIFFICULTY_PRESETS.map((p) => ({
-                  level: p.level,
-                  name: p.name,
-                  tagline: p.tagline,
-                  decisions: leviersDuNiveau(p.level).length,
-                }))}
-                defaultScenario={scenarioChoisi}
-              />
-              <SubmitButton
-                pendingLabel="Création de la partie…"
-                className={`${bouton({ taille: "l" })} mt-5 w-full`}
+            {trop ? (
+              <p
+                role="status"
+                className="mb-4 rounded-2xl border border-amber-400/30 bg-amber-950/30 p-4 text-base text-amber-200"
               >
-                Lancer la partie
-              </SubmitButton>
-            </form>
-          )}
-        </div>
-      </section>
-    </main>
+                Trop de parties lancées depuis cette connexion dans la dernière heure.
+                Réessayez tout à l&apos;heure. Si vous êtes en classe, les élèves n&apos;ont
+                pas besoin de passer par ici : donnez-leur le code de la partie, ils
+                entrent par <strong>/join</strong> et ne créent rien.
+              </p>
+            ) : null}
+            {!config.allowPublicPlay ? (
+              <div className="rounded-2xl border border-white/10 bg-slate-900 p-6 text-sm text-slate-400">
+                Les parties publiques sont momentanément désactivées. Élèves : utilisez le code
+                donné par votre enseignant sur{" "}
+                <Link href="/join" className="text-amber-300 underline-offset-4 hover:underline">
+                  /join
+                </Link>
+                .
+              </div>
+            ) : (
+              <form
+                action={startGameAction}
+                className="rounded-2xl border border-white/10 bg-slate-900/80 p-4 shadow-xl shadow-black/30 ring-1 ring-white/5 sm:p-6"
+              >
+                <h2 className="text-sm font-semibold text-slate-100">Configurer la partie</h2>
+                <QuickConfigFields
+                  scenarios={SCENARIO_CHOICES.map((s) => {
+                    const famille = familyOf(s.code);
+                    return {
+                      code: s.code,
+                      icon: s.icon,
+                      label: s.shortName,
+                      sector: SECTOR_LABELS[s.sector],
+                      tagline: s.tagline,
+                      ...(famille
+                        ? { variante: { gammeFromLevel: famille.gammeFromLevel, mono: famille.monoLabel, gamme: famille.gammeLabel } }
+                        : {}),
+                    };
+                  })}
+                  levels={DIFFICULTY_PRESETS.map((p) => ({
+                    level: p.level,
+                    name: p.name,
+                    tagline: p.tagline,
+                    decisions: leviersDuNiveau(p.level).length,
+                  }))}
+                  defaultScenario={scenarioChoisi}
+                />
+                <SubmitButton
+                  pendingLabel="Création de la partie…"
+                  className={`${bouton({ taille: "l" })} mt-5 w-full`}
+                >
+                  Lancer la partie
+                </SubmitButton>
+              </form>
+            )}
+          </div>
+        </section>
+      </main>
+      <PiedDePage />
+    </>
   );
 }

@@ -11,6 +11,7 @@ import { PictoSecteur } from "@/components/picto-secteur";
 import { bouton } from "@/components/bouton";
 import { BandeFinale } from "@/components/bande-finale";
 import { HaloDePage } from "@/components/halo-de-page";
+import { PiedDePage } from "@/components/pied-de-page";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/entreprises" },
@@ -134,139 +135,142 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
 
 export default function EntreprisesPage() {
   return (
-    <main id="main" className="relative overflow-hidden">
-      <HaloDePage />
+    <>
+      <main id="main" className="relative overflow-hidden">
+        <HaloDePage />
 
-      <section className="mx-auto max-w-6xl px-6 py-14">
-        <p className="text-xs uppercase tracking-[0.3em] text-amber-400">
-          {SCENARIO_CHOICES.length} métiers · {SCENARIO_CHOICES.length} contraintes
-        </p>
-        <h1 className="mt-4 max-w-3xl text-4xl font-bold leading-tight tracking-tight text-slate-50 sm:text-5xl">
-          Toutes les entreprises gagnent de l&apos;argent de la même façon.
-          <br />
-          <span className="text-amber-400">Aucune ne le perd pareil.</span>
-        </h1>
-        <p className="mt-5 max-w-2xl text-lg leading-relaxed text-slate-400">
-          Une chambre vide ce soir est perdue pour toujours. Une enceinte invendue attend en
-          réserve, mais elle a déjà coûté sa trésorerie. Une journée de conseil facturée à
-          quatre-vingt-dix jours est un bénéfice qu&apos;on ne peut pas dépenser. Le compte de
-          résultat est le même partout ; ce qui change, c&apos;est ce qui vous tue.
-        </p>
-        {/*
-          LE MÊME PICTOGRAMME QUE LES FICHES. Cette rangée a gardé ses emblèmes
-          en emoji quand les fiches sont passées au pictogramme, et le défaut
-          se voyait deux fois : un emoji système au-dessus d'un dessin de la
-          maison, et deux représentations du même métier sur un seul écran.
-        */}
-        <div className="mt-8 flex flex-wrap gap-2">
-          {SCENARIO_CHOICES.map((d) => (
-            <a
-              key={d.code}
-              href={`#${d.code}`}
-              className={`flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-medium transition hover:brightness-125 ${accentsDe(d).puce}`}
-            >
-              <PictoSecteur secteur={d.sector} className="h-3.5 w-3.5" />
-              {nomSeul(d)}
-            </a>
-          ))}
-        </div>
-      </section>
-
-      {/*
-        LE TABLEAU QUI MET TOUS LES MÉTIERS CÔTE À CÔTE — EN TÊTE, PLUS EN
-        QUEUE.
-
-        Il fermait la page, après sept mille pixels de fiches : un lecteur
-        arrivé à la troisième entreprise n'avait aucun moyen de la situer, et
-        celui qui atteignait le tableau n'avait plus rien à comparer, il avait
-        déjà choisi. Une vue d'ensemble se lit AVANT le détail — c'est même
-        tout ce qui la distingue d'un récapitulatif.
-
-        Ce déplacement rend une place à la coupure de la page : le tableau
-        prend le sol ici, à six cents pixels du haut, quand il l'aurait pris à
-        six cents pixels de la bande finale s'il était resté en bas. Deux fonds
-        retournés qui se rencontrent ne font pas deux blocs qui se voient, ils
-        en font deux qui s'annulent.
-      */}
-      <section className="contre-jour bg-slate-950">
-        <div className="mx-auto max-w-6xl px-6 py-14">
-          <h2 className="text-2xl font-bold text-slate-50">Ce qui change d&apos;un métier à l&apos;autre</h2>
-          <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-400">
-            Même moteur, mêmes états financiers, mêmes six tours. Ce sont les quatre colonnes
-            ci-dessous qui font qu&apos;une décision juste dans un métier est une faute dans un
-            autre.
+        <section className="mx-auto max-w-6xl px-6 py-14">
+          <p className="text-xs uppercase tracking-[0.3em] text-amber-400">
+            {SCENARIO_CHOICES.length} métiers · {SCENARIO_CHOICES.length} contraintes
           </p>
-          <div className="mt-6 overflow-x-auto">
-            <table className="w-full min-w-[720px] text-sm">
-              <thead>
-                <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
-                  <th className="pb-2 pr-4 font-medium">Entreprise</th>
-                  <th className="pb-2 pr-4 font-medium">Ce qu&apos;elle vend</th>
-                  <th className="pb-2 pr-4 font-medium">L&apos;invendu devient</th>
-                  <th className="pb-2 pr-4 font-medium">Sa contrainte physique</th>
-                  <th className="pb-2 font-medium">Son indicateur roi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {SCENARIO_CHOICES.map((d) => (
-                  <tr key={d.code} className="border-t border-white/5">
-                    <td className="py-2.5 pr-4">
-                      <a
-                        href={`#${d.code}`}
-                        className={`font-medium ${accentsDe(d).texte} underline-offset-4 hover:underline`}
-                      >
-                        {nomSeul(d)}
-                      </a>
-                    </td>
-                    <td className="py-2.5 pr-4 text-slate-300">{d.vocabulary.units}</td>
-                    <td className="py-2.5 pr-4 text-slate-400">
-                      {d.scenario.perishable ? (
-                        <span className="text-rose-300/90">
-                          {d.vocabulary.leftoverLabel.toLowerCase()} · rien ne se stocke
-                        </span>
-                      ) : (
-                        <span>du {d.vocabulary.leftoverLabel.toLowerCase()}, déjà payé</span>
-                      )}
-                    </td>
-                    <td className="py-2.5 pr-4 text-slate-400">{d.vocabulary.capacityLabel}</td>
-                    <td className="py-2.5 text-slate-400">{d.kpis[0]?.label ?? "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <h1 className="mt-4 max-w-3xl text-4xl font-bold leading-tight tracking-tight text-slate-50 sm:text-5xl">
+            Toutes les entreprises gagnent de l&apos;argent de la même façon.
+            <br />
+            <span className="text-amber-400">Aucune ne le perd pareil.</span>
+          </h1>
+          <p className="mt-5 max-w-2xl text-lg leading-relaxed text-slate-400">
+            Une chambre vide ce soir est perdue pour toujours. Une enceinte invendue attend en
+            réserve, mais elle a déjà coûté sa trésorerie. Une journée de conseil facturée à
+            quatre-vingt-dix jours est un bénéfice qu&apos;on ne peut pas dépenser. Le compte de
+            résultat est le même partout ; ce qui change, c&apos;est ce qui vous tue.
+          </p>
+          {/*
+            LE MÊME PICTOGRAMME QUE LES FICHES. Cette rangée a gardé ses emblèmes
+            en emoji quand les fiches sont passées au pictogramme, et le défaut
+            se voyait deux fois : un emoji système au-dessus d'un dessin de la
+            maison, et deux représentations du même métier sur un seul écran.
+          */}
+          <div className="mt-8 flex flex-wrap gap-2">
+            {SCENARIO_CHOICES.map((d) => (
+              <a
+                key={d.code}
+                href={`#${d.code}`}
+                className={`flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-medium transition hover:brightness-125 ${accentsDe(d).puce}`}
+              >
+                <PictoSecteur secteur={d.sector} className="h-3.5 w-3.5" />
+                {nomSeul(d)}
+              </a>
+            ))}
           </div>
-          <p className="mt-4 text-base leading-relaxed text-slate-400">
-            Les activités périssables ne stockent rien : la capacité non vendue est perdue au
-            passage du tour. C&apos;est la différence qui sépare un hôtelier d&apos;un
-            industriel, et elle change tout le raisonnement sur le prix. Chaque nom mène à sa
-            fiche, plus bas.
-          </p>
-        </div>
-      </section>
+        </section>
+
+        {/*
+          LE TABLEAU QUI MET TOUS LES MÉTIERS CÔTE À CÔTE — EN TÊTE, PLUS EN
+          QUEUE.
+
+          Il fermait la page, après sept mille pixels de fiches : un lecteur
+          arrivé à la troisième entreprise n'avait aucun moyen de la situer, et
+          celui qui atteignait le tableau n'avait plus rien à comparer, il avait
+          déjà choisi. Une vue d'ensemble se lit AVANT le détail — c'est même
+          tout ce qui la distingue d'un récapitulatif.
+
+          Ce déplacement rend une place à la coupure de la page : le tableau
+          prend le sol ici, à six cents pixels du haut, quand il l'aurait pris à
+          six cents pixels de la bande finale s'il était resté en bas. Deux fonds
+          retournés qui se rencontrent ne font pas deux blocs qui se voient, ils
+          en font deux qui s'annulent.
+        */}
+        <section className="contre-jour bg-slate-950">
+          <div className="mx-auto max-w-6xl px-6 py-14">
+            <h2 className="text-2xl font-bold text-slate-50">Ce qui change d&apos;un métier à l&apos;autre</h2>
+            <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-400">
+              Même moteur, mêmes états financiers, mêmes six tours. Ce sont les quatre colonnes
+              ci-dessous qui font qu&apos;une décision juste dans un métier est une faute dans un
+              autre.
+            </p>
+            <div className="mt-6 overflow-x-auto">
+              <table className="w-full min-w-[720px] text-sm">
+                <thead>
+                  <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
+                    <th className="pb-2 pr-4 font-medium">Entreprise</th>
+                    <th className="pb-2 pr-4 font-medium">Ce qu&apos;elle vend</th>
+                    <th className="pb-2 pr-4 font-medium">L&apos;invendu devient</th>
+                    <th className="pb-2 pr-4 font-medium">Sa contrainte physique</th>
+                    <th className="pb-2 font-medium">Son indicateur roi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {SCENARIO_CHOICES.map((d) => (
+                    <tr key={d.code} className="border-t border-white/5">
+                      <td className="py-2.5 pr-4">
+                        <a
+                          href={`#${d.code}`}
+                          className={`font-medium ${accentsDe(d).texte} underline-offset-4 hover:underline`}
+                        >
+                          {nomSeul(d)}
+                        </a>
+                      </td>
+                      <td className="py-2.5 pr-4 text-slate-300">{d.vocabulary.units}</td>
+                      <td className="py-2.5 pr-4 text-slate-400">
+                        {d.scenario.perishable ? (
+                          <span className="text-rose-300/90">
+                            {d.vocabulary.leftoverLabel.toLowerCase()} · rien ne se stocke
+                          </span>
+                        ) : (
+                          <span>du {d.vocabulary.leftoverLabel.toLowerCase()}, déjà payé</span>
+                        )}
+                      </td>
+                      <td className="py-2.5 pr-4 text-slate-400">{d.vocabulary.capacityLabel}</td>
+                      <td className="py-2.5 text-slate-400">{d.kpis[0]?.label ?? "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-4 text-base leading-relaxed text-slate-400">
+              Les activités périssables ne stockent rien : la capacité non vendue est perdue au
+              passage du tour. C&apos;est la différence qui sépare un hôtelier d&apos;un
+              industriel, et elle change tout le raisonnement sur le prix. Chaque nom mène à sa
+              fiche, plus bas.
+            </p>
+          </div>
+        </section>
 
 
-      <section className="mx-auto max-w-6xl px-6 pb-16">
-        <div className="grid gap-6">
-          {SCENARIO_CHOICES.map((d) => (
-            <Fiche key={d.code} d={d} />
-          ))}
-        </div>
-      </section>
+        <section className="mx-auto max-w-6xl px-6 pb-16">
+          <div className="grid gap-6">
+            {SCENARIO_CHOICES.map((d) => (
+              <Fiche key={d.code} d={d} />
+            ))}
+          </div>
+        </section>
 
-      <BandeFinale
-        titre="Choisissez votre métier"
-        texte="Six tours, des concurrents qui ne vous feront aucun cadeau, et une situation à traiter à chaque tour. Sans compte, sans installation."
-      >
-        <Link href="/jouer" className={bouton({ taille: "l" })}>
-          Tester le simulateur
-        </Link>
-        <Link
-          href="/teacher/login"
-          className="rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-amber-400/50"
+        <BandeFinale
+          titre="Choisissez votre métier"
+          texte="Six tours, des concurrents qui ne vous feront aucun cadeau, et une situation à traiter à chaque tour. Sans compte, sans installation."
         >
-          Créer une partie pour ma classe
-        </Link>
-      </BandeFinale>
-    </main>
+          <Link href="/jouer" className={bouton({ taille: "l" })}>
+            Tester le simulateur
+          </Link>
+          <Link
+            href="/teacher/login"
+            className="rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-amber-400/50"
+          >
+            Créer une partie pour ma classe
+          </Link>
+        </BandeFinale>
+      </main>
+      <PiedDePage />
+    </>
   );
 }

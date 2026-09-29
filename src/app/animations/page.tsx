@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ATELIERS, dureeTotaleHeures } from "@/config/ateliers";
 import { scenarioByCode } from "@/config/scenarios/registry";
 import { HaloDePage } from "@/components/halo-de-page";
+import { PiedDePage } from "@/components/pied-de-page";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/animations" },
@@ -56,166 +57,169 @@ const IMMERSIONS = ATELIERS.filter((a) => a.reglages.concours);
 
 export default function AteliersPage() {
   return (
-    <main id="main" className="relative overflow-hidden">
-      <HaloDePage />
+    <>
+      <main id="main" className="relative overflow-hidden">
+        <HaloDePage />
 
-      <section className="mx-auto max-w-4xl px-6 py-14">
-        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-          <Link href="/" className="hover:text-slate-300">
-            Accueil
-          </Link>{" "}
-          / Ateliers
-        </p>
-        <h1 className="mt-4 text-4xl font-bold leading-tight tracking-tight text-slate-50 sm:text-5xl">
-          Des déroulés prêts à animer
-        </h1>
-        <p className="mt-5 text-lg italic leading-relaxed text-slate-400">
-          Des déroulés de plusieurs séances, écrits pour des enseignants qui veulent adosser un
-          jeu d&apos;entreprise à une progression. Chaque fiche donne le déroulé minuté séance
-          par séance, les réglages de la partie, ce que les équipes rendent, la trace écrite que
-          chaque séance laisse et les critères d&apos;évaluation. Chacune dit à quel niveau elle
-          s&apos;adresse, du lycée à l&apos;expertise comptable, et l&apos;une d&apos;elles les
-          réunit tous dans la même équipe.
-        </p>
+        <section className="mx-auto max-w-4xl px-6 py-14">
+          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+            <Link href="/" className="hover:text-slate-300">
+              Accueil
+            </Link>{" "}
+            / Ateliers
+          </p>
+          <h1 className="mt-4 text-4xl font-bold leading-tight tracking-tight text-slate-50 sm:text-5xl">
+            Des déroulés prêts à animer
+          </h1>
+          <p className="mt-5 text-lg italic leading-relaxed text-slate-400">
+            Des déroulés de plusieurs séances, écrits pour des enseignants qui veulent adosser un
+            jeu d&apos;entreprise à une progression. Chaque fiche donne le déroulé minuté séance
+            par séance, les réglages de la partie, ce que les équipes rendent, la trace écrite que
+            chaque séance laisse et les critères d&apos;évaluation. Chacune dit à quel niveau elle
+            s&apos;adresse, du lycée à l&apos;expertise comptable, et l&apos;une d&apos;elles les
+            réunit tous dans la même équipe.
+          </p>
 
-        <h2 className="mt-12 text-xl font-bold text-slate-100">À qui ils s&apos;adressent</h2>
-        <p className="mt-3 text-base leading-relaxed text-slate-400">
-          Aux enseignants qui cherchent un point de départ structuré plutôt qu&apos;un jeu à
-          apprivoiser seuls. Ils ne remplacent pas votre projet pédagogique : ils en proposent une
-          trame, que vous adapterez à votre volume horaire, à vos co-animateurs et à votre grille
-          d&apos;évaluation. Tout y est modifiable, à commencer par le secteur de
-          l&apos;entreprise et le niveau de difficulté.
-        </p>
+          <h2 className="mt-12 text-xl font-bold text-slate-100">À qui ils s&apos;adressent</h2>
+          <p className="mt-3 text-base leading-relaxed text-slate-400">
+            Aux enseignants qui cherchent un point de départ structuré plutôt qu&apos;un jeu à
+            apprivoiser seuls. Ils ne remplacent pas votre projet pédagogique : ils en proposent une
+            trame, que vous adapterez à votre volume horaire, à vos co-animateurs et à votre grille
+            d&apos;évaluation. Tout y est modifiable, à commencer par le secteur de
+            l&apos;entreprise et le niveau de difficulté.
+          </p>
 
-        {IMMERSIONS.map((a) => (
-          <div
-            key={a.code}
-            className="mt-6 rounded-2xl border border-amber-400/25 bg-amber-950/10 p-5"
-          >
-            <p className="text-xs font-semibold uppercase tracking-wide text-amber-300">
-              Une fiche à part · {a.nature}
-            </p>
-            <h3 className="mt-2 text-lg font-bold text-slate-50">{a.titre}</h3>
-            <p className="mt-2 text-base leading-relaxed text-slate-300">
-              Celle-ci ne se conduit pas dans une classe. Elle réunit {a.diplome} en équipes qui
-              mêlent les niveaux, un élève par filière et un poste de direction chacun, sur{" "}
-              {a.format} en mode concours. Les réglages n&apos;y sont pas les vôtres : un
-              championnat impose son entreprise, son niveau et sa durée, et la fiche est écrite
-              pour ces contraintes. Elle demande donc un organisateur et l&apos;accord des
-              équipes pédagogiques, pas un créneau.
-            </p>
-            <Link
-              href={`/animations/${a.code}`}
-              className="mt-3 inline-block text-sm font-semibold text-amber-300 underline-offset-4 hover:underline"
-            >
-              Voir le déroulé de l&apos;immersion →
-            </Link>
-          </div>
-        ))}
-
-        <h2 className="mt-12 text-xl font-bold text-slate-100">Les ateliers disponibles</h2>
-        <div className="mt-4 overflow-x-auto rounded-xl border border-white/10">
-          <table className="w-full min-w-[640px] text-sm">
-            <caption className="border-b border-white/5 bg-slate-900/60 px-4 py-2 text-left text-xs italic text-slate-400">
-              Tableau récapitulatif des ateliers publiés.
-            </caption>
-            <thead>
-              <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
-                <th className="px-4 py-2 font-medium">Diplôme</th>
-                <th className="px-4 py-2 font-medium">Atelier</th>
-                <th className="px-4 py-2 font-medium">Entreprise</th>
-                <th className="px-4 py-2 font-medium">Durée</th>
-                <th className="px-4 py-2 font-medium">Exigence</th>
-              </tr>
-            </thead>
-            <tbody>
-              {ATELIERS.map((a) => (
-                <tr key={a.code} className="border-t border-white/5">
-                  <td className="px-4 py-3 font-medium text-slate-200">
-                    {a.diplome}
-                    <span className="block text-xs text-slate-400">{a.annee}</span>
-                  </td>
-                  <td className="px-4 py-3 text-slate-300">{a.titre}</td>
-                  <td className="px-4 py-3 text-slate-400">
-                    {scenarioByCode(a.reglages.scenarioCode).playerTeamName}
-                  </td>
-                  <td className="px-4 py-3 text-slate-400">
-                    {a.format}
-                    <span className="block text-xs text-slate-400">
-                      {dureeTotaleHeures(a)} h au total
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <Etoiles n={a.difficulte} />
-                    <span className="block text-xs text-slate-400">{a.difficulteLabel}</span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="mt-8 grid gap-5 sm:grid-cols-2">
-          {ATELIERS.map((a) => (
-            <article
+          {IMMERSIONS.map((a) => (
+            <div
               key={a.code}
-              className="rounded-2xl border border-white/10 bg-slate-900 p-5 transition hover:border-amber-400/40"
+              className="mt-6 rounded-2xl border border-amber-400/25 bg-amber-950/10 p-5"
             >
-              <p className="text-xs font-semibold uppercase tracking-wider text-amber-400">
-                {a.nature} · {a.diplome}
+              <p className="text-xs font-semibold uppercase tracking-wide text-amber-300">
+                Une fiche à part · {a.nature}
               </p>
               <h3 className="mt-2 text-lg font-bold text-slate-50">{a.titre}</h3>
-              <p className="mt-2 text-base italic leading-relaxed text-slate-400">{a.resume}</p>
-              <dl className="mt-4 space-y-1 text-xs">
-                {[
-                  ["Entreprise", scenarioByCode(a.reglages.scenarioCode).playerTeamName],
-                  ["Durée", a.format],
-                  ["Séances", `${a.seances.length}`],
-                ].map(([k, v]) => (
-                  <div key={k} className="flex gap-4">
-                    <dt className="w-20 shrink-0 uppercase tracking-wide text-slate-400">{k}</dt>
-                    <dd className="text-slate-300">{v}</dd>
-                  </div>
-                ))}
-                <div className="flex gap-4">
-                  <dt className="w-20 shrink-0 uppercase tracking-wide text-slate-400">Exigence</dt>
-                  <dd>
-                    <Etoiles n={a.difficulte} />
-                  </dd>
-                </div>
-              </dl>
+              <p className="mt-2 text-base leading-relaxed text-slate-300">
+                Celle-ci ne se conduit pas dans une classe. Elle réunit {a.diplome} en équipes qui
+                mêlent les niveaux, un élève par filière et un poste de direction chacun, sur{" "}
+                {a.format} en mode concours. Les réglages n&apos;y sont pas les vôtres : un
+                championnat impose son entreprise, son niveau et sa durée, et la fiche est écrite
+                pour ces contraintes. Elle demande donc un organisateur et l&apos;accord des
+                équipes pédagogiques, pas un créneau.
+              </p>
               <Link
                 href={`/animations/${a.code}`}
-                className="mt-4 inline-block text-sm font-semibold text-amber-300 underline-offset-4 hover:underline"
+                className="mt-3 inline-block text-sm font-semibold text-amber-300 underline-offset-4 hover:underline"
               >
-                Voir le déroulé →
+                Voir le déroulé de l&apos;immersion →
               </Link>
-            </article>
+            </div>
           ))}
-        </div>
 
-        <h2 className="mt-14 text-xl font-bold text-slate-100">Comment ils sont écrits</h2>
-        <div className="mt-3 space-y-3 text-sm leading-relaxed text-slate-400">
-          <p>
-            Chaque atelier est construit à partir d&apos;une partie réellement jouable sur la
-            plateforme : les réglages annoncés sont ceux qui produisent le déroulé décrit, et les
-            documents demandés aux équipes sont ceux que le jeu leur met effectivement entre les
-            mains. Nous ne décrivons pas une séance que nous n&apos;aurions pas pu faire tourner.
-          </p>
-          <p>
-            Chaque diplôme découpe le métier avec ses propres mots, processus pour le BTS CG,
-            blocs de compétences pour les BTS MCO, NDRC et GPME, thèmes de programme au lycée,
-            unités d&apos;enseignement pour le DCG, et chaque fiche emploie ceux de son
-            référentiel. Le
-            rapprochement entre une séance et l&apos;un d&apos;eux est en revanche une
-            PROPOSITION, pas une lecture officielle du référentiel : à vous de l&apos;ajuster à
-            la progression de votre établissement et aux compétences que votre équipe a décidé
-            d&apos;évaluer. Si un rapprochement vous paraît discutable, écrivez-nous, c&apos;est
-            exactement le retour dont nous avons besoin.
-          </p>
-          <p>Ces ateliers évoluent avec la plateforme. Ils sont librement utilisables en classe.</p>
-        </div>
-      </section>
-    </main>
+          <h2 className="mt-12 text-xl font-bold text-slate-100">Les ateliers disponibles</h2>
+          <div className="mt-4 overflow-x-auto rounded-xl border border-white/10">
+            <table className="w-full min-w-[640px] text-sm">
+              <caption className="border-b border-white/5 bg-slate-900/60 px-4 py-2 text-left text-xs italic text-slate-400">
+                Tableau récapitulatif des ateliers publiés.
+              </caption>
+              <thead>
+                <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
+                  <th className="px-4 py-2 font-medium">Diplôme</th>
+                  <th className="px-4 py-2 font-medium">Atelier</th>
+                  <th className="px-4 py-2 font-medium">Entreprise</th>
+                  <th className="px-4 py-2 font-medium">Durée</th>
+                  <th className="px-4 py-2 font-medium">Exigence</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ATELIERS.map((a) => (
+                  <tr key={a.code} className="border-t border-white/5">
+                    <td className="px-4 py-3 font-medium text-slate-200">
+                      {a.diplome}
+                      <span className="block text-xs text-slate-400">{a.annee}</span>
+                    </td>
+                    <td className="px-4 py-3 text-slate-300">{a.titre}</td>
+                    <td className="px-4 py-3 text-slate-400">
+                      {scenarioByCode(a.reglages.scenarioCode).playerTeamName}
+                    </td>
+                    <td className="px-4 py-3 text-slate-400">
+                      {a.format}
+                      <span className="block text-xs text-slate-400">
+                        {dureeTotaleHeures(a)} h au total
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Etoiles n={a.difficulte} />
+                      <span className="block text-xs text-slate-400">{a.difficulteLabel}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mt-8 grid gap-5 sm:grid-cols-2">
+            {ATELIERS.map((a) => (
+              <article
+                key={a.code}
+                className="rounded-2xl border border-white/10 bg-slate-900 p-5 transition hover:border-amber-400/40"
+              >
+                <p className="text-xs font-semibold uppercase tracking-wider text-amber-400">
+                  {a.nature} · {a.diplome}
+                </p>
+                <h3 className="mt-2 text-lg font-bold text-slate-50">{a.titre}</h3>
+                <p className="mt-2 text-base italic leading-relaxed text-slate-400">{a.resume}</p>
+                <dl className="mt-4 space-y-1 text-xs">
+                  {[
+                    ["Entreprise", scenarioByCode(a.reglages.scenarioCode).playerTeamName],
+                    ["Durée", a.format],
+                    ["Séances", `${a.seances.length}`],
+                  ].map(([k, v]) => (
+                    <div key={k} className="flex gap-4">
+                      <dt className="w-20 shrink-0 uppercase tracking-wide text-slate-400">{k}</dt>
+                      <dd className="text-slate-300">{v}</dd>
+                    </div>
+                  ))}
+                  <div className="flex gap-4">
+                    <dt className="w-20 shrink-0 uppercase tracking-wide text-slate-400">Exigence</dt>
+                    <dd>
+                      <Etoiles n={a.difficulte} />
+                    </dd>
+                  </div>
+                </dl>
+                <Link
+                  href={`/animations/${a.code}`}
+                  className="mt-4 inline-block text-sm font-semibold text-amber-300 underline-offset-4 hover:underline"
+                >
+                  Voir le déroulé →
+                </Link>
+              </article>
+            ))}
+          </div>
+
+          <h2 className="mt-14 text-xl font-bold text-slate-100">Comment ils sont écrits</h2>
+          <div className="mt-3 space-y-3 text-sm leading-relaxed text-slate-400">
+            <p>
+              Chaque atelier est construit à partir d&apos;une partie réellement jouable sur la
+              plateforme : les réglages annoncés sont ceux qui produisent le déroulé décrit, et les
+              documents demandés aux équipes sont ceux que le jeu leur met effectivement entre les
+              mains. Nous ne décrivons pas une séance que nous n&apos;aurions pas pu faire tourner.
+            </p>
+            <p>
+              Chaque diplôme découpe le métier avec ses propres mots, processus pour le BTS CG,
+              blocs de compétences pour les BTS MCO, NDRC et GPME, thèmes de programme au lycée,
+              unités d&apos;enseignement pour le DCG, et chaque fiche emploie ceux de son
+              référentiel. Le
+              rapprochement entre une séance et l&apos;un d&apos;eux est en revanche une
+              PROPOSITION, pas une lecture officielle du référentiel : à vous de l&apos;ajuster à
+              la progression de votre établissement et aux compétences que votre équipe a décidé
+              d&apos;évaluer. Si un rapprochement vous paraît discutable, écrivez-nous, c&apos;est
+              exactement le retour dont nous avons besoin.
+            </p>
+            <p>Ces ateliers évoluent avec la plateforme. Ils sont librement utilisables en classe.</p>
+          </div>
+        </section>
+      </main>
+      <PiedDePage />
+    </>
   );
 }

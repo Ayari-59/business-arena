@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { bouton } from "@/components/bouton";
 import { BandeFinale } from "@/components/bande-finale";
+import { PiedDePage } from "@/components/pied-de-page";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/guide" },
@@ -82,368 +83,371 @@ function Section({
 
 export default function GuidePage() {
   return (
-    <main id="main" className="min-h-screen bg-slate-950 text-slate-100">
-      {/*
-        PAS DE DEUXIÈME BARRE DE NAVIGATION. Cette page portait la sienne, avec
-        son logo et ses liens, sous l'en-tête du site : sur un téléphone, les
-        deux logos se superposaient, « Parcours » se collait au second, et le
-        bouton « Jouer » sortait de l'écran (débord mesuré de 79 px à 390, 149 à
-        320). Les liens qu'elle portait sont tous dans le plan du site, que
-        l'en-tête ouvre déjà.
-      */}
-      <header className="mx-auto max-w-4xl px-6 pb-4 pt-10">
-        <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Guide de prise en main</p>
-        <h1 className="mt-3 text-3xl font-bold leading-tight text-slate-50 sm:text-4xl">
-          Tout ce qu&apos;il faut pour votre première partie
-        </h1>
-        <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-400">
-          Business Arena ne vous demande jamais « calculez le BFR » : vous vivez des situations,
-          vous décidez, la simulation répond, et les notions arrivent au moment où vous en avez
-          besoin. Ce guide couvre les trois façons d&apos;entrer dans l&apos;arène : en solo, en
-          classe, en établissement.
-        </p>
-        <div className="mt-6 flex flex-wrap gap-2">
-          {SECTIONS.map((s) => (
-            <a
-              key={s.id}
-              href={`#${s.id}`}
-              className="rounded-full border border-white/10 bg-slate-900 px-3.5 py-1.5 text-xs text-slate-300 transition hover:border-amber-400/40 hover:text-amber-300"
-            >
-              {s.label}
-            </a>
-          ))}
-        </div>
-      </header>
-
-      <div className="mx-auto max-w-4xl space-y-6 px-6 py-8">
-        <Section
-          ouvert
-          id="demarrer"
-          title="Démarrer en 2 minutes"
-          intro="Deux portes d'entrée selon qui vous êtes."
-        >
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="rounded-xl border border-white/10 bg-slate-950 p-5">
-              <p className="text-sm font-semibold text-amber-300">Je veux essayer, tout de suite</p>
-              <p className="mt-2 text-base leading-relaxed text-slate-400">
-                Depuis la page <Link href="/jouer" className="text-amber-300 underline-offset-4 hover:underline">Jouer</Link>,
-                choisissez votre secteur (atelier, boutique, hôtel, restaurant, cabinet de
-                conseil, boutique en ligne ou salle de sport), la périodicité et le nombre de
-                concurrents, puis{" "}
-                <strong className="text-slate-200">Lancer la partie</strong>. Aucun compte
-                requis : vous dirigez l&apos;entreprise immédiatement, en six tours, face à des
-                concurrents pilotés par l&apos;ordinateur.
-              </p>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-slate-950 p-5">
-              <p className="text-sm font-semibold text-amber-300">Je suis élève, j&apos;ai un code</p>
-              <p className="mt-2 text-base leading-relaxed text-slate-400">
-                Rendez-vous sur <Link href="/join" className="text-amber-300 underline-offset-4 hover:underline">/join</Link>,
-                saisissez le code à 6 caractères donné par votre enseignant et un pseudo :
-                vous rejoignez l&apos;équipe de votre classe. Pas de mot de passe à retenir.
-              </p>
-            </div>
-          </div>
-        </Section>
-
-        <Section
-          id="eleves"
-          title="Côté élèves : jouer un tour"
-          intro="Chaque tour suit la même boucle : une situation vous arrive, vous la diagnostiquez, vous mobilisez vos connaissances, vous décidez, puis la simulation rend son verdict."
-        >
-          <ol className="space-y-5">
-            <Step n={1} title="Lisez la situation">
-              Pas d&apos;énoncé d&apos;exercice : un problème d&apos;entreprise (« la trésorerie se
-              tend », « un concurrent casse les prix »). À vous de comprendre ce qui se joue.
-            </Step>
-            <Step n={2} title="Diagnostiquez, puis répondez au QCM">
-              Cochez les causes plausibles, puis 3 questions sous la même forme : deux
-              mobilisent les notions en jeu (seuil de rentabilité, BFR, élasticité-prix…),
-              la troisième vous demande <strong className="text-slate-200">quel modèle
-              d&apos;analyse mobiliser</strong>. Un modèle trompeur rapporte presque rien,
-              c&apos;est la compétence que le jeu mesure. Correction expliquée au débriefing.
-            </Step>
-            <Step n={3} title="Besoin d'aide ? Débloquez des indices">
-              Cinq niveaux, dans l&apos;ordre, du simple recadrage jusqu&apos;à la méthode
-              détaillée. Chaque indice coûte une part du score pédagogique de la situation
-              (jamais vos résultats économiques). Apprendre à demander juste ce qu&apos;il faut
-              fait partie du jeu.
-            </Step>
-            <Step n={4} title="Prenez vos décisions">
-              Prix, production, marketing, qualité, maintenance. Puis, selon le niveau :
-              financement (emprunt, augmentation de capital), trésorerie (escompte,
-              affacturage), assurance catastrophe, ressources humaines (embaucher, former,
-              rémunérer) et investissement en capacité (en service au tour suivant).
-              Besoin de données ? <strong className="text-slate-200">Achetez de
-              l&apos;information</strong> : étude de marché, analyse de prix, étude
-              financière, analyse de projet, livrées avec les résultats et facturées en
-              charges. Entre chaque tour, une <strong className="text-slate-200">commande
-              exceptionnelle</strong> vous est proposée : export à forte marge payé à 90 jours
-              (le BFR gonfle) ou vente comptant à marge mince (du cash tout de suite), à
-              prendre ou à laisser. Attention : les échéances d&apos;emprunt sont{" "}
-              <strong className="text-slate-200">prélevées automatiquement</strong>, que la
-              caisse soit pleine ou vide. Au-delà du découvert autorisé, la banque cède vos
-              créances d&apos;office. En mode classe, vos décisions restent modifiables
-              jusqu&apos;à la clôture du tour par l&apos;enseignant.
-            </Step>
-            <Step n={5} title="Lisez vos résultats comme un dirigeant">
-              Chiffre d&apos;affaires, résultat net, part de marché, mais surtout la ligne de
-              vie : <strong className="text-slate-200">Trésorerie nette = FRNG − BFR</strong>.
-              Vos comptes complets sont dépliables sous les indicateurs : compte de
-              résultat, bilan, analyse des coûts et budget de trésorerie. Ils sont gratuits,
-              ce sont les vôtres.
-              Le débriefing corrigé vous montre ce qu&apos;il fallait voir, et vos fiches
-              notions se déverrouillent au fil des situations vécues.
-            </Step>
-          </ol>
-        </Section>
-
-        <Section
-          id="enseignants"
-          title="Côté enseignants : animer une classe"
-          intro="De la création de la partie à la clôture des tours, tout se pilote depuis votre espace."
-        >
-          <ol className="space-y-5">
-            <Step n={1} title="Créez votre compte">
-              Sur <Link href="/teacher/login" className="text-amber-300 underline-offset-4 hover:underline">l&apos;espace enseignant</Link>,
-              inscrivez-vous avec votre e-mail, directement ou avec le code d&apos;invitation
-              fourni par votre établissement s&apos;il est déployé sur la plateforme.
-            </Step>
-            <Step n={2} title="Créez une partie de classe et réglez-la finement">
-              Choisissez la périodicité, le nombre d&apos;équipes (1 à 8), les concurrents
-              automatiques et le <strong className="text-slate-200">niveau de difficulté</strong> :
-              de Découverte (prix, production, marketing, tous les indices) à Executive
-              (affectation du résultat, aucun indice, événements doublés). Le panneau{" "}
-              <strong className="text-slate-200">Paramètres économiques</strong> permet en plus
-              d&apos;activer le <strong className="text-slate-200">monde variable</strong>
-              (chaque partie diffère : croissance, saisonnalité, événements et commandes
-              exceptionnelles changent. Décochez pour le scénario classique, identique à vos
-              supports imprimés), et de moduler l&apos;impôt, la TVA, les taux d&apos;emprunt et
-              de découvert, les délais clients et fournisseurs, le plafond de découvert, les
-              charges de structure et les coûts unitaires, afin de coller à votre progression. La plateforme génère un{" "}
-              <strong className="text-slate-200">code d&apos;invitation à 6 caractères</strong> :
-              affichez-le, vos élèves rejoignent sur /join.
-            </Step>
-            <Step n={3} title="Laissez les équipes jouer le tour">
-              Votre tableau de bord montre en temps réel qui a validé ses décisions. Une équipe
-              silencieuse n&apos;est jamais bloquante : à la clôture, ses dernières décisions
-              sont reconduites.
-            </Step>
-            <Step n={4} title="Distribuez le courrier (mode apprentissage)">
-              Prenez un pli au hasard ou choisissez-en un, pour tout le marché ou pour une seule
-              entreprise. Le courrier est annoncé à tous et s&apos;applique à la clôture. Voir la
-              section suivante pour la liasse à imprimer.
-            </Step>
-            <Step n={5} title="Clôturez le tour">
-              Un clic : la simulation calcule tous les résultats, le débriefing pédagogique se
-              génère, le classement IPG se met à jour, le tour suivant s&apos;ouvre. Votre vue
-              pédagogique agrège diagnostics, résultats des QCM, indices consommés et maîtrise
-              des notions par équipe.
-            </Step>
-            <Step n={6} title="Finissez l'année en championnat">
-              Créez un concours : inscriptions par code, groupes tirés au sort (tirage seedé,
-              auditable), parties en mode compétition : décisions verrouillées après validation,
-              indices limités au niveau 3, aucune distribution manuelle de courrier. Qualification à l&apos;IPG,
-              finale, podium. Le déroulé complet est{" "}
-              <a href="#concours" className="text-amber-300 underline-offset-4 hover:underline">
-                décrit ci-dessous
+    <>
+      <main id="main" className="min-h-screen bg-slate-950 text-slate-100">
+        {/*
+          PAS DE DEUXIÈME BARRE DE NAVIGATION. Cette page portait la sienne, avec
+          son logo et ses liens, sous l'en-tête du site : sur un téléphone, les
+          deux logos se superposaient, « Parcours » se collait au second, et le
+          bouton « Jouer » sortait de l'écran (débord mesuré de 79 px à 390, 149 à
+          320). Les liens qu'elle portait sont tous dans le plan du site, que
+          l'en-tête ouvre déjà.
+        */}
+        <header className="mx-auto max-w-4xl px-6 pb-4 pt-10">
+          <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Guide de prise en main</p>
+          <h1 className="mt-3 text-3xl font-bold leading-tight text-slate-50 sm:text-4xl">
+            Tout ce qu&apos;il faut pour votre première partie
+          </h1>
+          <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-400">
+            Business Arena ne vous demande jamais « calculez le BFR » : vous vivez des situations,
+            vous décidez, la simulation répond, et les notions arrivent au moment où vous en avez
+            besoin. Ce guide couvre les trois façons d&apos;entrer dans l&apos;arène : en solo, en
+            classe, en établissement.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-2">
+            {SECTIONS.map((s) => (
+              <a
+                key={s.id}
+                href={`#${s.id}`}
+                className="rounded-full border border-white/10 bg-slate-900 px-3.5 py-1.5 text-xs text-slate-300 transition hover:border-amber-400/40 hover:text-amber-300"
+              >
+                {s.label}
               </a>
-              .
-            </Step>
-          </ol>
-        </Section>
-
-        <Section
-          id="concours"
-          title="Les concours : un championnat entre équipes"
-          intro="Un concours enchaîne quatre étapes. L'enseignant l'organise depuis son espace ; les équipes s'inscrivent sur /compete avec le code qu'il leur donne."
-        >
-          <ol className="space-y-5">
-            <Step n={1} title="Inscriptions">
-              L&apos;enseignant crée le concours (périodicité, équipes par groupe, qualifiés par
-              groupe) et obtient un <strong className="text-slate-200">code à 6 caractères</strong>.
-              Chaque équipe s&apos;inscrit sur /compete avec ce code et le nom de son équipe ; les
-              coéquipiers rejoignent en saisissant exactement le même nom (2 à 6 joueurs par
-              équipe, 32 équipes au plus). Un joueur déjà inscrit qui ressaisit le code retrouve son
-              équipe.
-            </Step>
-            <Step n={2} title="Qualifications">
-              L&apos;enseignant clôt les inscriptions : les équipes sont tirées au sort dans des
-              groupes de la taille choisie (tirage seedé, rejouable pour audit). Chaque groupe
-              joue une partie complète en <strong className="text-slate-200">mode compétition</strong> :
-              décisions verrouillées après validation, indices limités aux niveaux 1 à 3, aucune
-              distribution manuelle de courrier. L&apos;enseignant clôt les tours de chaque partie
-              depuis son pilotage habituel.
-            </Step>
-            <Step n={3} title="Finale">
-              Quand toutes les parties de qualification sont terminées, les meilleures équipes de
-              chaque groupe au <Link href="#bpi" className="text-amber-300 underline-offset-4 hover:underline">score IPG</Link>{" "}
-              se qualifient. Elles jouent une seule partie, aux mêmes règles.
-            </Step>
-            <Step n={4} title="Podium">
-              À la fin de la finale, l&apos;enseignant proclame le podium : or, argent, bronze au
-              classement IPG. Les équipes le voient sur leur page du concours.
-            </Step>
-          </ol>
-        </Section>
-
-        <Section
-          id="courrier"
-          title="Le courrier de l'entreprise"
-          intro="L'habillage du moteur : chaque courrier est un événement économique réel de la simulation, avec l'expéditeur qui l'envoie."
-        >
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="rounded-xl border border-amber-400/20 bg-slate-950 p-5">
-              <p className="text-sm font-semibold text-amber-300">🌍 Courrier de marché</p>
-              <p className="mt-2 text-base leading-relaxed text-slate-400">
-                Adressé à toute la classe : revalorisation tarifaire du fournisseur, note de
-                conjoncture, révision des taux par la banque, arrêté de catastrophe naturelle…
-                Maximum 2 par tour.
-              </p>
-            </div>
-            <div className="rounded-xl border border-sky-400/20 bg-slate-950 p-5">
-              <p className="text-sm font-semibold text-sky-300">🎯 Pli adressé</p>
-              <p className="mt-2 text-base leading-relaxed text-slate-400">
-                Adressé à une seule entreprise : rapport de panne, incident de sécurité, commande
-                ferme, mise en demeure de la banque… Un pli par entreprise et par tour.
-              </p>
-            </div>
-          </div>
-          <p className="mt-4 text-base leading-relaxed text-slate-400">
-            Pour une vraie distribution en classe,{" "}
-            <Link
-              href="/teacher/courriers/print"
-              className="text-amber-300 underline-offset-4 hover:underline"
-            >
-              imprimez la liasse
-            </Link>{" "}
-            (A4, enveloppe et lettre à plier, sans recto-verso) : faites ouvrir l&apos;enveloppe
-            à l&apos;équipe, puis saisissez le courrier dans l&apos;application pour qu&apos;il
-            s&apos;applique à la simulation. Certains sinistres se couvrent par l&apos;assurance.
-            Vos élèves découvriront l&apos;arbitrage tout seuls.
-          </p>
-        </Section>
-
-        <Section
-          id="bpi"
-          title="L'Indice de performance globale"
-          intro="Le classement ne récompense pas que le profit : l'IPG (0-100) pondère 6 dimensions."
-        >
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
-                  <th className="pb-2 pr-3 font-medium">Dimension</th>
-                  <th className="pb-2 pr-3 text-right font-medium">Poids</th>
-                  <th className="pb-2 font-medium">Ce qu&apos;elle mesure</th>
-                </tr>
-              </thead>
-              <tbody className="text-slate-300">
-                {[
-                  ["Économique", "30 %", "résultat d'exploitation, chiffre d'affaires"],
-                  ["Financière", "20 %", "variation du résultat net (une perte plafonne à 20)"],
-                  ["Commerciale", "15 %", "part de marché, service de la demande"],
-                  ["Pilotage", "20 %", "exécution (capacités, ruptures) et cohérence des décisions prises"],
-                  ["Responsabilité sociétale", "10 %", "indice RSE du tour (environnement, social, gouvernance)"],
-                  ["Maîtrise décisionnelle", "5 %", "situations rendues : bon diagnostic et bon modèle"],
-                ].map(([d, w, m]) => (
-                  <tr key={d} className="border-t border-white/5">
-                    <td className="py-2 pr-3">{d}</td>
-                    <td className="py-2 pr-3 text-right tabular-nums text-amber-300">{w}</td>
-                    <td className="py-2 text-slate-400">{m}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <p className="mt-4 text-base leading-relaxed text-slate-400">
-            Les derniers tours pèsent plus lourd : un mauvais départ se rattrape. La décomposition
-            complète est visible par chaque équipe : le score explique, il ne sanctionne pas.
-          </p>
-        </Section>
-
-        <Section
-          id="etablissements"
-          title="Côté établissements"
-          intro="Déployez Business Arena à l'échelle d'un lycée, d'un campus ou d'un réseau."
-        >
-          <ol className="space-y-5">
-            <Step n={1} title="Un espace d'administration par établissement">
-              L&apos;admin d&apos;établissement voit ses enseignants, ses élèves, ses parties et
-              ses concours ; il génère des <strong className="text-slate-200">codes
-              d&apos;invitation enseignants</strong> pour rattacher son équipe.
-            </Step>
-            <Step n={2} title="Un monde de démonstration en un clic">
-              Depuis l&apos;administration générale, générez le monde démo : un établissement
-              complet, deux comptes (direction + enseignant), une partie jouée sur 3 tours et un
-              concours prêt à lancer, idéal pour une présentation en conseil pédagogique. Les
-              identifiants s&apos;affichent sur la page de connexion enseignant.
-            </Step>
-            <Step n={3} title="Des réglages de plateforme">
-              Parties publiques, auto-inscription des enseignants, annonce globale : tout se
-              règle depuis l&apos;espace d&apos;administration générale.
-            </Step>
-          </ol>
-        </Section>
-
-        <Section id="faq" title="Questions fréquentes">
-          <dl className="space-y-5">
-            {[
-              [
-                "Mes élèves ont-ils besoin d'un compte ?",
-                "Non. Un code de partie et un pseudo suffisent : la session est conservée sur leur navigateur. Aucune donnée personnelle n'est requise côté élève.",
-              ],
-              [
-                "Une équipe n'a pas validé ses décisions avant la clôture ?",
-                "Ses dernières décisions connues sont reconduites automatiquement : la partie n'est jamais bloquée, et l'équipe le voit dans son débriefing.",
-              ],
-              [
-                "Les indices pénalisent-ils les résultats de l'entreprise ?",
-                "Jamais. Ils ne coûtent que des points pédagogiques sur la situation concernée. L'économie de la simulation reste rigoureusement équitable.",
-              ],
-              [
-                "La distribution du courrier est-elle équitable en concours ?",
-                "En mode compétition, la distribution manuelle est désactivée : seuls les événements tirés par le générateur aléatoire seedé (auditable, identique pour un même scénario) font foi.",
-              ],
-              [
-                "Puis-je changer la durée d'un tour ?",
-                "Oui, à la création de chaque partie : un tour = un mois, un trimestre ou une année. Toute l'économie du scénario est redimensionnée en conséquence.",
-              ],
-              [
-                "Que règlent les niveaux de difficulté ?",
-                "Six niveaux, de Découverte à Executive : les décisions ouvertes (la finance et l'assurance arrivent au niveau Pilotage, le placement du surplus au niveau Stratégie, l'affectation du résultat au niveau Executive), le plafond d'indices (de 5 à zéro) et la fréquence des événements aléatoires. Et le panneau avancé permet de moduler impôt, TVA, taux, délais et coûts : rien n'est figé.",
-              ],
-              [
-                "Combien ça coûte ?",
-                "Business Arena est un projet d'enseignant, construit pour la classe. Contactez-nous pour un déploiement en établissement.",
-              ],
-            ].map(([q, a]) => (
-              <div key={q}>
-                <dt className="text-sm font-semibold text-slate-100">{q}</dt>
-                <dd className="mt-1 text-base leading-relaxed text-slate-400">{a}</dd>
-              </div>
             ))}
-          </dl>
-        </Section>
+          </div>
+        </header>
 
-      </div>
+        <div className="mx-auto max-w-4xl space-y-6 px-6 py-8">
+          <Section
+            ouvert
+            id="demarrer"
+            title="Démarrer en 2 minutes"
+            intro="Deux portes d'entrée selon qui vous êtes."
+          >
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="rounded-xl border border-white/10 bg-slate-950 p-5">
+                <p className="text-sm font-semibold text-amber-300">Je veux essayer, tout de suite</p>
+                <p className="mt-2 text-base leading-relaxed text-slate-400">
+                  Depuis la page <Link href="/jouer" className="text-amber-300 underline-offset-4 hover:underline">Jouer</Link>,
+                  choisissez votre secteur (atelier, boutique, hôtel, restaurant, cabinet de
+                  conseil, boutique en ligne ou salle de sport), la périodicité et le nombre de
+                  concurrents, puis{" "}
+                  <strong className="text-slate-200">Lancer la partie</strong>. Aucun compte
+                  requis : vous dirigez l&apos;entreprise immédiatement, en six tours, face à des
+                  concurrents pilotés par l&apos;ordinateur.
+                </p>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-slate-950 p-5">
+                <p className="text-sm font-semibold text-amber-300">Je suis élève, j&apos;ai un code</p>
+                <p className="mt-2 text-base leading-relaxed text-slate-400">
+                  Rendez-vous sur <Link href="/join" className="text-amber-300 underline-offset-4 hover:underline">/join</Link>,
+                  saisissez le code à 6 caractères donné par votre enseignant et un pseudo :
+                  vous rejoignez l&apos;équipe de votre classe. Pas de mot de passe à retenir.
+                </p>
+              </div>
+            </div>
+          </Section>
 
-      {/* La bande sort de la colonne de lecture : une fin de page tient toute
-          la largeur, sinon elle reste une carte de plus dans la pile. */}
-      <BandeFinale
-        titre="Prêt à entrer dans l'arène ?"
-        texte="Lancez une partie solo pour vous faire la main, ou créez votre première partie de classe. Six tours suffisent pour que le BFR devienne inoubliable."
-      >
-        <Link href="/jouer" className={bouton({ taille: "l" })}>
-          Jouer maintenant
-        </Link>
-        <Link
-          href="/teacher/login"
-          className="rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-amber-400/40 hover:text-amber-300"
+          <Section
+            id="eleves"
+            title="Côté élèves : jouer un tour"
+            intro="Chaque tour suit la même boucle : une situation vous arrive, vous la diagnostiquez, vous mobilisez vos connaissances, vous décidez, puis la simulation rend son verdict."
+          >
+            <ol className="space-y-5">
+              <Step n={1} title="Lisez la situation">
+                Pas d&apos;énoncé d&apos;exercice : un problème d&apos;entreprise (« la trésorerie se
+                tend », « un concurrent casse les prix »). À vous de comprendre ce qui se joue.
+              </Step>
+              <Step n={2} title="Diagnostiquez, puis répondez au QCM">
+                Cochez les causes plausibles, puis 3 questions sous la même forme : deux
+                mobilisent les notions en jeu (seuil de rentabilité, BFR, élasticité-prix…),
+                la troisième vous demande <strong className="text-slate-200">quel modèle
+                d&apos;analyse mobiliser</strong>. Un modèle trompeur rapporte presque rien,
+                c&apos;est la compétence que le jeu mesure. Correction expliquée au débriefing.
+              </Step>
+              <Step n={3} title="Besoin d'aide ? Débloquez des indices">
+                Cinq niveaux, dans l&apos;ordre, du simple recadrage jusqu&apos;à la méthode
+                détaillée. Chaque indice coûte une part du score pédagogique de la situation
+                (jamais vos résultats économiques). Apprendre à demander juste ce qu&apos;il faut
+                fait partie du jeu.
+              </Step>
+              <Step n={4} title="Prenez vos décisions">
+                Prix, production, marketing, qualité, maintenance. Puis, selon le niveau :
+                financement (emprunt, augmentation de capital), trésorerie (escompte,
+                affacturage), assurance catastrophe, ressources humaines (embaucher, former,
+                rémunérer) et investissement en capacité (en service au tour suivant).
+                Besoin de données ? <strong className="text-slate-200">Achetez de
+                l&apos;information</strong> : étude de marché, analyse de prix, étude
+                financière, analyse de projet, livrées avec les résultats et facturées en
+                charges. Entre chaque tour, une <strong className="text-slate-200">commande
+                exceptionnelle</strong> vous est proposée : export à forte marge payé à 90 jours
+                (le BFR gonfle) ou vente comptant à marge mince (du cash tout de suite), à
+                prendre ou à laisser. Attention : les échéances d&apos;emprunt sont{" "}
+                <strong className="text-slate-200">prélevées automatiquement</strong>, que la
+                caisse soit pleine ou vide. Au-delà du découvert autorisé, la banque cède vos
+                créances d&apos;office. En mode classe, vos décisions restent modifiables
+                jusqu&apos;à la clôture du tour par l&apos;enseignant.
+              </Step>
+              <Step n={5} title="Lisez vos résultats comme un dirigeant">
+                Chiffre d&apos;affaires, résultat net, part de marché, mais surtout la ligne de
+                vie : <strong className="text-slate-200">Trésorerie nette = FRNG − BFR</strong>.
+                Vos comptes complets sont dépliables sous les indicateurs : compte de
+                résultat, bilan, analyse des coûts et budget de trésorerie. Ils sont gratuits,
+                ce sont les vôtres.
+                Le débriefing corrigé vous montre ce qu&apos;il fallait voir, et vos fiches
+                notions se déverrouillent au fil des situations vécues.
+              </Step>
+            </ol>
+          </Section>
+
+          <Section
+            id="enseignants"
+            title="Côté enseignants : animer une classe"
+            intro="De la création de la partie à la clôture des tours, tout se pilote depuis votre espace."
+          >
+            <ol className="space-y-5">
+              <Step n={1} title="Créez votre compte">
+                Sur <Link href="/teacher/login" className="text-amber-300 underline-offset-4 hover:underline">l&apos;espace enseignant</Link>,
+                inscrivez-vous avec votre e-mail, directement ou avec le code d&apos;invitation
+                fourni par votre établissement s&apos;il est déployé sur la plateforme.
+              </Step>
+              <Step n={2} title="Créez une partie de classe et réglez-la finement">
+                Choisissez la périodicité, le nombre d&apos;équipes (1 à 8), les concurrents
+                automatiques et le <strong className="text-slate-200">niveau de difficulté</strong> :
+                de Découverte (prix, production, marketing, tous les indices) à Executive
+                (affectation du résultat, aucun indice, événements doublés). Le panneau{" "}
+                <strong className="text-slate-200">Paramètres économiques</strong> permet en plus
+                d&apos;activer le <strong className="text-slate-200">monde variable</strong>
+                (chaque partie diffère : croissance, saisonnalité, événements et commandes
+                exceptionnelles changent. Décochez pour le scénario classique, identique à vos
+                supports imprimés), et de moduler l&apos;impôt, la TVA, les taux d&apos;emprunt et
+                de découvert, les délais clients et fournisseurs, le plafond de découvert, les
+                charges de structure et les coûts unitaires, afin de coller à votre progression. La plateforme génère un{" "}
+                <strong className="text-slate-200">code d&apos;invitation à 6 caractères</strong> :
+                affichez-le, vos élèves rejoignent sur /join.
+              </Step>
+              <Step n={3} title="Laissez les équipes jouer le tour">
+                Votre tableau de bord montre en temps réel qui a validé ses décisions. Une équipe
+                silencieuse n&apos;est jamais bloquante : à la clôture, ses dernières décisions
+                sont reconduites.
+              </Step>
+              <Step n={4} title="Distribuez le courrier (mode apprentissage)">
+                Prenez un pli au hasard ou choisissez-en un, pour tout le marché ou pour une seule
+                entreprise. Le courrier est annoncé à tous et s&apos;applique à la clôture. Voir la
+                section suivante pour la liasse à imprimer.
+              </Step>
+              <Step n={5} title="Clôturez le tour">
+                Un clic : la simulation calcule tous les résultats, le débriefing pédagogique se
+                génère, le classement IPG se met à jour, le tour suivant s&apos;ouvre. Votre vue
+                pédagogique agrège diagnostics, résultats des QCM, indices consommés et maîtrise
+                des notions par équipe.
+              </Step>
+              <Step n={6} title="Finissez l'année en championnat">
+                Créez un concours : inscriptions par code, groupes tirés au sort (tirage seedé,
+                auditable), parties en mode compétition : décisions verrouillées après validation,
+                indices limités au niveau 3, aucune distribution manuelle de courrier. Qualification à l&apos;IPG,
+                finale, podium. Le déroulé complet est{" "}
+                <a href="#concours" className="text-amber-300 underline-offset-4 hover:underline">
+                  décrit ci-dessous
+                </a>
+                .
+              </Step>
+            </ol>
+          </Section>
+
+          <Section
+            id="concours"
+            title="Les concours : un championnat entre équipes"
+            intro="Un concours enchaîne quatre étapes. L'enseignant l'organise depuis son espace ; les équipes s'inscrivent sur /compete avec le code qu'il leur donne."
+          >
+            <ol className="space-y-5">
+              <Step n={1} title="Inscriptions">
+                L&apos;enseignant crée le concours (périodicité, équipes par groupe, qualifiés par
+                groupe) et obtient un <strong className="text-slate-200">code à 6 caractères</strong>.
+                Chaque équipe s&apos;inscrit sur /compete avec ce code et le nom de son équipe ; les
+                coéquipiers rejoignent en saisissant exactement le même nom (2 à 6 joueurs par
+                équipe, 32 équipes au plus). Un joueur déjà inscrit qui ressaisit le code retrouve son
+                équipe.
+              </Step>
+              <Step n={2} title="Qualifications">
+                L&apos;enseignant clôt les inscriptions : les équipes sont tirées au sort dans des
+                groupes de la taille choisie (tirage seedé, rejouable pour audit). Chaque groupe
+                joue une partie complète en <strong className="text-slate-200">mode compétition</strong> :
+                décisions verrouillées après validation, indices limités aux niveaux 1 à 3, aucune
+                distribution manuelle de courrier. L&apos;enseignant clôt les tours de chaque partie
+                depuis son pilotage habituel.
+              </Step>
+              <Step n={3} title="Finale">
+                Quand toutes les parties de qualification sont terminées, les meilleures équipes de
+                chaque groupe au <Link href="#bpi" className="text-amber-300 underline-offset-4 hover:underline">score IPG</Link>{" "}
+                se qualifient. Elles jouent une seule partie, aux mêmes règles.
+              </Step>
+              <Step n={4} title="Podium">
+                À la fin de la finale, l&apos;enseignant proclame le podium : or, argent, bronze au
+                classement IPG. Les équipes le voient sur leur page du concours.
+              </Step>
+            </ol>
+          </Section>
+
+          <Section
+            id="courrier"
+            title="Le courrier de l'entreprise"
+            intro="L'habillage du moteur : chaque courrier est un événement économique réel de la simulation, avec l'expéditeur qui l'envoie."
+          >
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="rounded-xl border border-amber-400/20 bg-slate-950 p-5">
+                <p className="text-sm font-semibold text-amber-300">🌍 Courrier de marché</p>
+                <p className="mt-2 text-base leading-relaxed text-slate-400">
+                  Adressé à toute la classe : revalorisation tarifaire du fournisseur, note de
+                  conjoncture, révision des taux par la banque, arrêté de catastrophe naturelle…
+                  Maximum 2 par tour.
+                </p>
+              </div>
+              <div className="rounded-xl border border-sky-400/20 bg-slate-950 p-5">
+                <p className="text-sm font-semibold text-sky-300">🎯 Pli adressé</p>
+                <p className="mt-2 text-base leading-relaxed text-slate-400">
+                  Adressé à une seule entreprise : rapport de panne, incident de sécurité, commande
+                  ferme, mise en demeure de la banque… Un pli par entreprise et par tour.
+                </p>
+              </div>
+            </div>
+            <p className="mt-4 text-base leading-relaxed text-slate-400">
+              Pour une vraie distribution en classe,{" "}
+              <Link
+                href="/teacher/courriers/print"
+                className="text-amber-300 underline-offset-4 hover:underline"
+              >
+                imprimez la liasse
+              </Link>{" "}
+              (A4, enveloppe et lettre à plier, sans recto-verso) : faites ouvrir l&apos;enveloppe
+              à l&apos;équipe, puis saisissez le courrier dans l&apos;application pour qu&apos;il
+              s&apos;applique à la simulation. Certains sinistres se couvrent par l&apos;assurance.
+              Vos élèves découvriront l&apos;arbitrage tout seuls.
+            </p>
+          </Section>
+
+          <Section
+            id="bpi"
+            title="L'Indice de performance globale"
+            intro="Le classement ne récompense pas que le profit : l'IPG (0-100) pondère 6 dimensions."
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
+                    <th className="pb-2 pr-3 font-medium">Dimension</th>
+                    <th className="pb-2 pr-3 text-right font-medium">Poids</th>
+                    <th className="pb-2 font-medium">Ce qu&apos;elle mesure</th>
+                  </tr>
+                </thead>
+                <tbody className="text-slate-300">
+                  {[
+                    ["Économique", "30 %", "résultat d'exploitation, chiffre d'affaires"],
+                    ["Financière", "20 %", "variation du résultat net (une perte plafonne à 20)"],
+                    ["Commerciale", "15 %", "part de marché, service de la demande"],
+                    ["Pilotage", "20 %", "exécution (capacités, ruptures) et cohérence des décisions prises"],
+                    ["Responsabilité sociétale", "10 %", "indice RSE du tour (environnement, social, gouvernance)"],
+                    ["Maîtrise décisionnelle", "5 %", "situations rendues : bon diagnostic et bon modèle"],
+                  ].map(([d, w, m]) => (
+                    <tr key={d} className="border-t border-white/5">
+                      <td className="py-2 pr-3">{d}</td>
+                      <td className="py-2 pr-3 text-right tabular-nums text-amber-300">{w}</td>
+                      <td className="py-2 text-slate-400">{m}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-4 text-base leading-relaxed text-slate-400">
+              Les derniers tours pèsent plus lourd : un mauvais départ se rattrape. La décomposition
+              complète est visible par chaque équipe : le score explique, il ne sanctionne pas.
+            </p>
+          </Section>
+
+          <Section
+            id="etablissements"
+            title="Côté établissements"
+            intro="Déployez Business Arena à l'échelle d'un lycée, d'un campus ou d'un réseau."
+          >
+            <ol className="space-y-5">
+              <Step n={1} title="Un espace d'administration par établissement">
+                L&apos;admin d&apos;établissement voit ses enseignants, ses élèves, ses parties et
+                ses concours ; il génère des <strong className="text-slate-200">codes
+                d&apos;invitation enseignants</strong> pour rattacher son équipe.
+              </Step>
+              <Step n={2} title="Un monde de démonstration en un clic">
+                Depuis l&apos;administration générale, générez le monde démo : un établissement
+                complet, deux comptes (direction + enseignant), une partie jouée sur 3 tours et un
+                concours prêt à lancer, idéal pour une présentation en conseil pédagogique. Les
+                identifiants s&apos;affichent sur la page de connexion enseignant.
+              </Step>
+              <Step n={3} title="Des réglages de plateforme">
+                Parties publiques, auto-inscription des enseignants, annonce globale : tout se
+                règle depuis l&apos;espace d&apos;administration générale.
+              </Step>
+            </ol>
+          </Section>
+
+          <Section id="faq" title="Questions fréquentes">
+            <dl className="space-y-5">
+              {[
+                [
+                  "Mes élèves ont-ils besoin d'un compte ?",
+                  "Non. Un code de partie et un pseudo suffisent : la session est conservée sur leur navigateur. Aucune donnée personnelle n'est requise côté élève.",
+                ],
+                [
+                  "Une équipe n'a pas validé ses décisions avant la clôture ?",
+                  "Ses dernières décisions connues sont reconduites automatiquement : la partie n'est jamais bloquée, et l'équipe le voit dans son débriefing.",
+                ],
+                [
+                  "Les indices pénalisent-ils les résultats de l'entreprise ?",
+                  "Jamais. Ils ne coûtent que des points pédagogiques sur la situation concernée. L'économie de la simulation reste rigoureusement équitable.",
+                ],
+                [
+                  "La distribution du courrier est-elle équitable en concours ?",
+                  "En mode compétition, la distribution manuelle est désactivée : seuls les événements tirés par le générateur aléatoire seedé (auditable, identique pour un même scénario) font foi.",
+                ],
+                [
+                  "Puis-je changer la durée d'un tour ?",
+                  "Oui, à la création de chaque partie : un tour = un mois, un trimestre ou une année. Toute l'économie du scénario est redimensionnée en conséquence.",
+                ],
+                [
+                  "Que règlent les niveaux de difficulté ?",
+                  "Six niveaux, de Découverte à Executive : les décisions ouvertes (la finance et l'assurance arrivent au niveau Pilotage, le placement du surplus au niveau Stratégie, l'affectation du résultat au niveau Executive), le plafond d'indices (de 5 à zéro) et la fréquence des événements aléatoires. Et le panneau avancé permet de moduler impôt, TVA, taux, délais et coûts : rien n'est figé.",
+                ],
+                [
+                  "Combien ça coûte ?",
+                  "Business Arena est un projet d'enseignant, construit pour la classe. Contactez-nous pour un déploiement en établissement.",
+                ],
+              ].map(([q, a]) => (
+                <div key={q}>
+                  <dt className="text-sm font-semibold text-slate-100">{q}</dt>
+                  <dd className="mt-1 text-base leading-relaxed text-slate-400">{a}</dd>
+                </div>
+              ))}
+            </dl>
+          </Section>
+
+        </div>
+
+        {/* La bande sort de la colonne de lecture : une fin de page tient toute
+            la largeur, sinon elle reste une carte de plus dans la pile. */}
+        <BandeFinale
+          titre="Prêt à entrer dans l'arène ?"
+          texte="Lancez une partie solo pour vous faire la main, ou créez votre première partie de classe. Six tours suffisent pour que le BFR devienne inoubliable."
         >
-          Espace enseignant
-        </Link>
-      </BandeFinale>
-    </main>
+          <Link href="/jouer" className={bouton({ taille: "l" })}>
+            Jouer maintenant
+          </Link>
+          <Link
+            href="/teacher/login"
+            className="rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-amber-400/40 hover:text-amber-300"
+          >
+            Espace enseignant
+          </Link>
+        </BandeFinale>
+      </main>
+      <PiedDePage />
+    </>
   );
 }

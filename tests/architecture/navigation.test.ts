@@ -72,22 +72,21 @@ describe("plan du site", () => {
   it("le menu et le pied de page lisent le registre au lieu de l'écrire", () => {
     // La garde qui empêche le défaut de revenir : tant que les adresses ne
     // sont pas écrites dans ces deux blocs, elles ne peuvent pas s'y
-    // désaccorder. La page d'accueil garde le droit de renvoyer vers une page
-    // depuis son CORPS, ce qui est un lien éditorial et non une copie du plan :
-    // on ne regarde donc que son pied.
+    // désaccorder.
+    //
+    // Le pied de page a quitté l'accueil pour un composant partagé, posé sur
+    // les onze pages publiques : c'est lui qu'on lit maintenant. Les pages
+    // gardent le droit de renvoyer vers une page depuis leur CORPS, ce qui est
+    // un lien éditorial et non une copie du plan.
     const menu = readFileSync("src/components/site-header.tsx", "utf-8");
-    const accueil = readFileSync("src/app/page.tsx", "utf-8");
-    const pied = accueil.slice(accueil.indexOf("<footer"), accueil.indexOf("</footer>"));
-    expect(pied.length, "pied de page d'accueil introuvable").toBeGreaterThan(100);
+    const pied = readFileSync("src/components/pied-de-page.tsx", "utf-8");
+    expect(pied.length, "pied de page introuvable").toBeGreaterThan(100);
 
     for (const [nom, bloc] of [
       ["le menu", menu],
-      ["le pied de page d'accueil", pied],
+      ["le pied de page", pied],
     ] as const) {
-      expect(
-        nom === "le menu" ? menu : accueil,
-        `${nom} n'importe pas le plan`,
-      ).toContain("@/config/navigation");
+      expect(bloc, `${nom} n'importe pas le plan`).toContain("@/config/navigation");
       for (const lien of tousLesLiens()) {
         expect(bloc, `${nom} recopie l'adresse « ${lien.href} »`).not.toContain(
           `href="${lien.href}"`,

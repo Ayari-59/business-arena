@@ -57,17 +57,27 @@ export const ACTION_PRINCIPALE: LienDeMenu = {
 /** Le groupe qui s'affiche déplié à l'ouverture du menu. */
 export const GROUPE_OUVERT = "orientation";
 
+/**
+ * De quoi joindre quelqu'un.
+ *
+ * C'est le seul lien du plan qui mette une personne au bout du fil, et le pied
+ * de page le cite sur toutes les pages publiques. Il est donc nommé ici, comme
+ * l'entrée principale : deux endroits qui l'écrivent sont deux endroits qui se
+ * désaccorderont le jour où le libellé change.
+ */
+export const LIEN_CONTACT: LienDeMenu = {
+  href: "/rendez-vous",
+  libelle: "Prendre rendez-vous",
+  aide: "Trente minutes au téléphone pour parler de votre classe : les créneaux proposés sont ceux que l'agenda laisse libres.",
+};
+
 export const NAVIGATION: readonly GroupeDeMenu[] = [
   {
     code: GROUPE_OUVERT,
     titre: "Orientation et contact",
     liens: [
       ACTION_PRINCIPALE,
-      {
-        href: "/rendez-vous",
-        libelle: "Prendre rendez-vous",
-        aide: "Trente minutes au téléphone pour parler de votre classe : les créneaux proposés sont ceux que l'agenda laisse libres.",
-      },
+      LIEN_CONTACT,
     ],
   },
   {
