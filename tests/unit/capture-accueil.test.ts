@@ -62,7 +62,11 @@ describe("les captures de la page d'accueil", () => {
     // Le verdict montré est celui du tour qu'on voit se décider à côté : c'est
     // ce qui fait de trois images une démonstration plutôt qu'une galerie.
     expect(ACCUEIL).toContain("Décider, puis comprendre");
-    expect(ACCUEIL).toContain("sur la partie de l&apos;écran précédent");
+    // Le déroulé numérote les deux temps : c'est ce qui fait de trois écrans
+    // une séquence plutôt qu'une galerie.
+    expect(ACCUEIL).toContain('numero="01"');
+    expect(ACCUEIL).toContain('numero="02"');
+    expect(ACCUEIL).toContain("sur la même partie");
   });
 
   it("le mini-jeu n'est pas revenu par la bande", () => {
