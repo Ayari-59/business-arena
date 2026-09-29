@@ -14,6 +14,17 @@
  * noir s'échangent, ce qui retourne du même coup les bordures « white/10 » en
  * bordures sombres discrètes.
  *
+ * LE MÊME RENVERSEMENT SERT DEUX FOIS : à la page entière, et à un BLOC posé
+ * à contre-jour au milieu d'elle. Une bande sombre sur une page claire, claire
+ * sur une page sombre, attire l'œil sans rien ajouter au vocabulaire du site —
+ * c'est le contraste d'une capture d'écran au milieu d'un texte. Le fichier
+ * porte donc trois blocs : la page claire, et les deux contre-jour.
+ *
+ * Ils sont engendrés plutôt qu'écrits, pour la raison qui a fait naître ce
+ * script : un renversement recopié à la main s'oublie quelque part, et l'oubli
+ * ne se voit pas — il donne un bloc bleu pâle sur fond bleu pâle, au fond
+ * d'une page que personne ne rouvre.
+ *
  * Usage : npx tsx scripts/generer-theme-clair.ts
  * Le fichier produit est versionné : la compilation n'a pas besoin du script.
  * Le test tests/theme/themes.test.ts vérifie qu'il est à jour.
@@ -74,7 +85,12 @@ export function genererThemeClair(sourceTailwind: string): string {
     throw new Error(`échelle Tailwind introuvable dans ${SOURCE_TAILWIND}`);
   }
 
-  const lignes: string[] = [];
+  // Deux listes jumelles : les valeurs RENVERSÉES, et les valeurs d'ORIGINE
+  // des mêmes clés. La première fait une surface claire, la seconde ramène une
+  // surface à l'échelle du site — c'est ce dont a besoin un bloc à contre-jour
+  // au milieu d'une page claire, qui doit défaire ce que la page a posé.
+  const renversees: string[] = [];
+  const origines: string[] = [];
   for (const [cle, valeur] of palette) {
     const separateur = cle.lastIndexOf("-");
     const teinte = cle.slice(0, separateur);
@@ -82,17 +98,53 @@ export function genererThemeClair(sourceTailwind: string): string {
     const palierCible = SURCHARGES[cle] ?? MIROIR[palier];
     const jumelle = palette.get(`${teinte}-${palierCible}`);
     if (!jumelle || jumelle === valeur) continue;
-    lignes.push(`  --color-${teinte}-${palier}: ${jumelle};`);
+    renversees.push(`  --color-${teinte}-${palier}: ${jumelle};`);
+    origines.push(`  --color-${teinte}-${palier}: ${valeur};`);
   }
+
+  const clair = (lignes: string[]) =>
+    ["  --color-white: #000;", "  --color-black: #fff;", ...lignes].join("\n");
+  const sombre = (lignes: string[]) =>
+    ["  --color-white: #fff;", "  --color-black: #000;", ...lignes].join("\n");
+
+  // Les blocs à contre-jour sont indentés d'un cran : leurs lignes vivent sous
+  // un sélecteur descendant, et la feuille se relit mieux ainsi.
+  const decale = (bloc: string) =>
+    bloc
+      .split("\n")
+      .map((l) => `  ${l}`)
+      .join("\n");
 
   return `/* ---------------------------------------------------------------------------
  * Thème clair — FICHIER GÉNÉRÉ, ne pas modifier à la main.
  * Régénérer avec : npx tsx scripts/generer-theme-clair.ts
  * ------------------------------------------------------------------------- */
 [data-theme="clair"] {
-  --color-white: #000;
-  --color-black: #fff;
-${lignes.join("\n")}
+${clair(renversees)}
+}
+
+/* ---------------------------------------------------------------------------
+ * LE CONTRE-JOUR : un bloc dont le fond va à l'inverse de la page.
+ *
+ * Il ne se règle pas sur le thème mais CONTRE lui, donc il lui faut les deux
+ * sens. Sur une page sombre, il pose l'échelle renversée — le bloc devient une
+ * surface claire. Sur une page claire, il ramène l'échelle d'origine, ce qui
+ * revient à DÉFAIRE, pour ce bloc seulement, ce que le thème de la page vient
+ * de poser : d'où la reprise des mêmes clés avec leurs valeurs de départ.
+ *
+ * Sa spécificité (deux sélecteurs) l'emporte sur celle du thème (un seul),
+ * quel que soit l'ordre des règles dans la feuille.
+ *
+ * Un seul bloc à contre-jour par écran : le contraste attire l'œil parce qu'il
+ * est unique sur la page, pas parce qu'il est joli. Deux, et aucun des deux ne
+ * fonctionne.
+ * ------------------------------------------------------------------------- */
+[data-theme="sombre"] .contre-jour {
+${decale(clair(renversees))}
+}
+
+[data-theme="clair"] .contre-jour {
+${decale(sombre(origines))}
 }
 
 /* L'impression reste sur du papier blanc quel que soit le thème : les classes

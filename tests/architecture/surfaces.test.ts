@@ -40,10 +40,17 @@ describe("la carte, définie une fois", () => {
     expect(bloc).toContain("border-radius");
   });
 
-  it("son ombre est propre à chaque thème", () => {
+  it("son ombre est propre à chaque thème, et à chaque bloc à contre-jour", () => {
     // Sur fond clair, l'ombre du thème sombre serait une salissure.
-    expect(css).toMatch(/:root\s*\{[^}]*--ombre-carte:/);
-    expect(css).toMatch(/\[data-theme="clair"\]\s*\{[^}]*--ombre-carte:/);
+    //
+    // Les deux valeurs s'écrivent sous une LISTE de sélecteurs plutôt qu'une
+    // fois par surface : une surface claire est une surface claire, que ce
+    // soit la page entière ou le seul bloc posé à contre-jour sur une page
+    // sombre. Recopier l'ombre pour ce bloc, c'est la laisser diverger.
+    expect(css).toMatch(/:root,\s*\[data-theme="clair"\] \.contre-jour\s*\{[^}]*--ombre-carte:/);
+    expect(css).toMatch(
+      /\[data-theme="clair"\],\s*\[data-theme="sombre"\] \.contre-jour\s*\{[^}]*--ombre-carte:/,
+    );
   });
 
   it("à l'impression elle redevient plate, hors de toute couche", () => {
@@ -93,9 +100,11 @@ describe("le champ, défini une fois", () => {
     expect(bloc).toContain("var(--creux-champ)");
   });
 
-  it("son creux est propre à chaque thème", () => {
-    expect(css).toMatch(/:root\s*\{[^}]*--creux-champ:/);
-    expect(css).toMatch(/\[data-theme="clair"\]\s*\{[^}]*--creux-champ:/);
+  it("son creux est propre à chaque thème, et à chaque bloc à contre-jour", () => {
+    expect(css).toMatch(/:root,\s*\[data-theme="clair"\] \.contre-jour\s*\{[^}]*--creux-champ:/);
+    expect(css).toMatch(
+      /\[data-theme="clair"\],\s*\[data-theme="sombre"\] \.contre-jour\s*\{[^}]*--creux-champ:/,
+    );
   });
 
   it("le laiton du focus passe par une variable, pour que l'exception se dise sur place", () => {

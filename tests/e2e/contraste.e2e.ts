@@ -23,7 +23,13 @@ import { THEMES, THEME_DORIGINE } from "../../src/config/themes";
  * fichier deviendrait une tautologie, et il est précisément celui qui a fait
  * décaler les paliers de texte d'un cran.
  */
-const PAGES = ["/", "/jouer", "/entreprises", "/concepts", "/animations"];
+/**
+ * `/enseignants` est là pour sa fin de page : c'est la première bande posée à
+ * CONTRE-JOUR, un bloc dont l'échelle de couleurs est retournée pour lui seul.
+ * Un bloc qui prend le thème à rebours est exactement ce qui peut devenir
+ * illisible dans un seul des deux thèmes, sans que rien ne le signale.
+ */
+const PAGES = ["/", "/jouer", "/entreprises", "/concepts", "/animations", "/enseignants"];
 
 let navigateur: Browser;
 let page: Page;

@@ -54,10 +54,24 @@ function clarte(valeur: string): number | null {
   return y > 0.008856 ? 116 * Math.cbrt(y) - 16 : 903.3 * y;
 }
 
+/** Le bloc ouvert par ce sélecteur, accolades comprises. */
+function bloc(css: string, selecteur: string): string {
+  const debut = css.indexOf(selecteur);
+  if (debut < 0) throw new Error(`sélecteur introuvable : ${selecteur}`);
+  return css.slice(debut, css.indexOf("}", debut));
+}
+
 /**
- * La palette telle que le thème clair la sert. Deux sources, dans cet ordre :
- * le fichier engendré, puis le laiton écrit à la main dans globals.css, qui
- * l'emporte — c'est lui qui rend les ambres sombres sur fond clair.
+ * La palette telle que le thème clair la sert À LA PAGE. Deux sources, dans
+ * cet ordre : le bloc engendré, puis le laiton écrit à la main dans
+ * globals.css, qui l'emporte — c'est lui qui rend les ambres sombres sur fond
+ * clair.
+ *
+ * ON NE LIT QU'UN BLOC PAR FICHIER, et c'est essentiel depuis qu'il y en a
+ * trois. Les deux autres habillent un bloc posé à CONTRE-JOUR : l'un d'eux
+ * rend justement à ce bloc l'échelle sombre d'origine. Lus à la suite, ils
+ * écrasaient la palette de la page et le relevé annonçait un thème clair aux
+ * fonds noirs — c'est-à-dire l'inverse de ce qu'il mesure.
  */
 function paletteClaire(): Map<string, number> {
   const palette = new Map<string, number>();
@@ -67,10 +81,11 @@ function paletteClaire(): Map<string, number> {
       if (c !== null) palette.set(`${m[1]}-${m[2]}`, c);
     }
   };
-  ajouter(readFileSync(join(SRC, "app", "theme-clair.css"), "utf8"));
-  const globals = readFileSync(join(SRC, "app", "globals.css"), "utf8");
-  const debut = globals.indexOf('[data-theme="clair"] {');
-  ajouter(globals.slice(debut, globals.indexOf("}", debut)));
+  ajouter(bloc(readFileSync(join(SRC, "app", "theme-clair.css"), "utf8"), '[data-theme="clair"] {'));
+  // Le laiton s'écrit sous une LISTE de sélecteurs — la page claire, et le
+  // bloc à contre-jour d'une page sombre —, parce que les deux sont des
+  // surfaces claires et qu'une valeur recopiée est une valeur qui diverge.
+  ajouter(bloc(readFileSync(join(SRC, "app", "globals.css"), "utf8"), '[data-theme="clair"],'));
   return palette;
 }
 

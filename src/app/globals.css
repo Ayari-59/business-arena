@@ -237,6 +237,14 @@
      Sans cette ligne il les dessinait en clair sur une page sombre : une
      barre de défilement blanche le long d'un site encre. */
   color-scheme: dark;
+}
+
+/* L'ombre et le creux de l'échelle d'origine. Le second sélecteur les rend à
+   un bloc posé à CONTRE-JOUR sur une page claire : il redevient une surface
+   sombre, il lui faut donc l'ombre d'une surface sombre. Une liste plutôt
+   qu'une copie — deux valeurs recopiées, c'est deux valeurs qui divergent. */
+:root,
+[data-theme="clair"] .contre-jour {
   --ombre-carte:
     0 1px 2px rgb(0 0 0 / 0.3),
     0 10px 28px -14px rgb(0 0 0 / 0.5);
@@ -358,6 +366,14 @@ h1 {
      site sert par défaut, et ses champs comme sa barre de défilement doivent
      être ceux d'une page claire. */
   color-scheme: light;
+}
+
+/* Le laiton et les ombres d'une surface CLAIRE — que ce soit la page entière,
+   ou le seul bloc posé à contre-jour sur une page sombre. Le renversement
+   mécanique ne suffit pas pour l'ambre : c'est la teinte la plus lumineuse de
+   l'échelle, et sur fond clair il lui faut des paliers choisis à la main. */
+[data-theme="clair"],
+[data-theme="sombre"] .contre-jour {
   /* Sur fond clair, l'ombre du thème sombre serait une salissure : moins
      d'opacité, et une teinte encrée plutôt que du noir pur. */
   --ombre-carte:
