@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { BrandMark } from "@/components/brand-mark";
 import { ACTION_PRINCIPALE, LIEN_CONTACT, LIENS_LEGAUX } from "@/config/navigation";
 
 /**
@@ -35,6 +36,23 @@ import { ACTION_PRINCIPALE, LIEN_CONTACT, LIENS_LEGAUX } from "@/config/navigati
  * fait rien. Le pied lit donc le chemin courant, comme la barre le fait pour
  * marquer la page ouverte, et retire l'entrée devenue inutile.
  *
+ * UN COLOPHON, PAS UNE LIGNE DE MENTIONS. Sa première version disait les
+ * trois bonnes choses et les disait toutes de la même façon : quatorze mots de
+ * gris pâle sur deux rangées, l'emblème absent, le nom de la marque noyé au
+ * milieu d'une phrase, et huit cents pixels de vide entre la gauche et la
+ * droite. Un pied de page est la signature d'une page, comme l'achevé
+ * d'imprimer ferme un livre : il lui faut une hiérarchie.
+ *
+ * Elle tient en quatre décisions. L'emblème ancre le bloc à gauche — c'est
+ * `BrandMark`, le dessin monochrome qui prend la couleur de son texte, donc
+ * l'or de la maison dans les deux thèmes, sans second fichier ni couleur
+ * écrite ici. Le nom quitte la phrase et se pose seul, au serif des titres :
+ * une marque se lit, elle ne se glisse pas dans une légende. Les deux liens
+ * passent en colonne alignée à droite, ce qui répond aux deux lignes de
+ * gauche au lieu de laisser le vide entre elles. Et le filet qui sépare la
+ * signature des mentions est de laiton qui s'éteint vers la droite, pas d'un
+ * gris de plus.
+ *
  * AUCUNE COULEUR ÉCRITE À LA MAIN. `slate-400`, `white/10` et l'accent du site
  * désignent des paliers d'une échelle que le thème clair renverse : le filet
  * est un gris pâle sur fond sombre et un gris d'encre sur papier, sans qu'on
@@ -53,18 +71,25 @@ export function PiedDePage() {
 
   return (
     <footer className="border-t border-white/10">
-      <div className="mx-auto max-w-6xl px-6 py-10">
-        <div className="flex flex-wrap items-start justify-between gap-x-10 gap-y-6">
-          <p className="max-w-sm text-sm leading-relaxed text-slate-400">
-            BUSINESS <span className="accent-arena">ARENA</span> · simulation
-            d&apos;entreprise, apprentissage de la décision.
-          </p>
+      <div className="mx-auto max-w-6xl px-6 py-14">
+        <div className="flex flex-wrap items-start justify-between gap-x-12 gap-y-10">
+          <div className="flex items-start gap-4">
+            <BrandMark className="mt-0.5 h-10 w-10 shrink-0 text-amber-400" />
+            <div>
+              <p className="font-display text-lg font-semibold tracking-[0.14em] text-slate-200">
+                BUSINESS <span className="accent-arena">ARENA</span>
+              </p>
+              <p className="mt-2 max-w-xs text-sm leading-relaxed text-slate-400">
+                Simulation d&apos;entreprise, apprentissage de la décision.
+              </p>
+            </div>
+          </div>
           {/* Deux liens : celui qui aide à décider, et celui qui met quelqu'un
               au bout du fil. Le premier porte l'accent, parce qu'un pied de
               page où tout se ressemble ne propose rien. */}
           <nav
             aria-label="Aller plus loin"
-            className="flex flex-wrap items-center gap-x-8 gap-y-2 text-sm"
+            className="flex flex-col gap-3 text-sm sm:items-end sm:text-right"
           >
             {ailleurs(ACTION_PRINCIPALE) ? (
               <Link
@@ -90,7 +115,13 @@ export function PiedDePage() {
             ) : null}
           </nav>
         </div>
-        <div className="mt-8 flex flex-wrap items-center justify-between gap-x-8 gap-y-2 border-t border-white/5 pt-5 text-xs text-slate-400">
+        {/* Le filet de laiton s'éteint vers la droite : il ferme la signature
+            sans poser une seconde barre en travers de la page. */}
+        <div
+          aria-hidden
+          className="mt-12 h-px bg-gradient-to-r from-amber-400/40 via-amber-400/15 to-transparent"
+        />
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-x-8 gap-y-2 text-xs text-slate-400">
           <p>© {annee} Business Arena</p>
           <div className="flex flex-wrap gap-x-8 gap-y-2">
             {LIENS_LEGAUX.filter(ailleurs).map((lien) => (
