@@ -83,6 +83,58 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
+/**
+ * UNE CAPTURE DE L'APPLICATION, ENCADRÉE.
+ *
+ * Trois écrans réels vivent sur cette page, et ils se posent de la même façon :
+ * dimensions écrites (sans elles, la page saute au chargement), texte de
+ * remplacement qui dit ce qu'on y voit, et une légende qui dit à quoi il sert.
+ * Les deux captures du bas se chargent paresseusement — elles sont sous la
+ * ligne de flottaison —, celle de l'en-tête non.
+ */
+function Capture({
+  src,
+  alt,
+  legende,
+  largeur = 800,
+  hauteur = 800,
+  immediate = false,
+  className = "",
+  classeCadre = "",
+}: {
+  src: string;
+  alt: string;
+  legende: string;
+  largeur?: number;
+  hauteur?: number;
+  immediate?: boolean;
+  className?: string;
+  /** Pour borner le CADRE sans rétrécir la légende avec lui. */
+  classeCadre?: string;
+}) {
+  return (
+    <figure className={`m-0 ${className}`}>
+      <div
+        className={`overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl shadow-slate-950/40 ${classeCadre}`}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          width={largeur}
+          height={hauteur}
+          loading={immediate ? "eager" : "lazy"}
+          decoding="async"
+          alt={alt}
+          className="block w-full"
+        />
+      </div>
+      <figcaption className="mt-3 text-center text-sm leading-relaxed text-slate-400">
+        {legende}
+      </figcaption>
+    </figure>
+  );
+}
+
 export default async function Home() {
   const config = await getPlatformConfig();
   // Le nombre de décisions se compte sur le registre des leviers : l'écrire
@@ -174,29 +226,14 @@ export default async function Home() {
           Le format sert aussi à dire quelque chose : c'est un téléphone, parce
           que c'est là que l'élève joue.
         */}
-        <figure className="m-0">
-          <div className="mx-auto max-w-[320px] overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl shadow-slate-950/40">
-            {/*
-              Dimensions écrites : sans elles, le texte sous l'image saute au
-              chargement. `eager` parce qu'elle est dans le premier écran — la
-              charger paresseusement la ferait arriver après le reste.
-            */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/apercus/arene.webp"
-              width={800}
-              height={1400}
-              loading="eager"
-              decoding="async"
-              alt="L'arène d'une équipe au quatrième tour : chiffre d'affaires 399 919 €, résultat 58 188 €, trésorerie 89 653 €, et le tour en cours à jouer."
-              className="block w-full"
-            />
-          </div>
-          <figcaption className="mt-3 text-center text-sm leading-relaxed text-slate-400">
-            L&apos;arène d&apos;une équipe, sur le téléphone d&apos;un élève. Capture de
-            l&apos;application, chiffres compris : ils viennent d&apos;une partie jouée.
-          </figcaption>
-        </figure>
+        <Capture
+          src="/apercus/arene.webp"
+          hauteur={1400}
+          immediate
+          classeCadre="mx-auto max-w-[320px]"
+          alt="L'arène d'une équipe au quatrième tour : chiffre d'affaires 399 919 €, résultat 58 188 €, trésorerie 89 653 €, et le tour en cours à jouer."
+          legende="L'arène d'une équipe, sur le téléphone d'un élève. Capture de l'application, chiffres compris : ils viennent d'une partie jouée."
+        />
       </section>
 
       {/* ---------- Bande chiffres ---------- */}
@@ -216,6 +253,37 @@ export default async function Home() {
               <p className="mt-1 text-xs text-slate-400">{small}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* ---------- Les deux moments d'un tour, en capture ---------- */}
+      {/*
+        L'EN-TÊTE MONTRE L'ARÈNE ; ICI, CE QU'ON Y FAIT. Un tour se joue en deux
+        temps — on engage des décisions, puis on lit ce qu'elles ont produit —
+        et c'est cette boucle que la page devait faire comprendre sans
+        l'expliquer. Les deux captures viennent de LA MÊME partie que celle de
+        l'en-tête : les 58 188 € du verdict sont le résultat du tour qu'on voit
+        se décider à côté. Une capture prise dans une autre partie aurait fait
+        trois écrans sans rapport.
+      */}
+      <section className="mx-auto max-w-6xl px-6 py-10 sm:py-16">
+        <h2 className="text-center text-2xl font-bold text-slate-50">
+          Décider, puis comprendre
+        </h2>
+        <p className="mx-auto mt-3 max-w-2xl text-center text-sm leading-relaxed text-slate-400">
+          Les deux moments d&apos;un tour, sur la partie de l&apos;écran précédent.
+        </p>
+        <div className="mx-auto mt-6 grid max-w-4xl gap-6 sm:grid-cols-2">
+          <Capture
+            src="/apercus/decider.webp"
+            alt="L'écran de décision : prix de vente 74 € par enceinte, plan de production 4 500 enceintes, capacité machine 7 000 et main-d'œuvre 7 200 par tour, goulot équilibré, puis le choix du fournisseur."
+            legende="Le tour se joue ici : un prix, un volume, et ce que l'atelier peut suivre."
+          />
+          <Capture
+            src="/apercus/resultats.webp"
+            alt="Le verdict du tour 3 : 58 188 € de bénéfice, 39 241 € de plus qu'au tour précédent, 1re sur 3 équipes, et deux réussites obtenues."
+            legende="À la clôture, le verdict dit ce qui a fait le résultat, et ce que l'équipe a réussi."
+          />
         </div>
       </section>
 
