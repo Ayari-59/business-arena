@@ -126,21 +126,23 @@ describe("le contre-jour", () => {
     );
   });
 
-  it("ne dépasse pas deux blocs par page — la distance, elle, se mesure au navigateur", () => {
-    // Deux, c'est la coupure du milieu et la bande finale : elles tiennent
-    // ensemble parce que trois mille pixels les séparent. Trois, aucune page
-    // n'est assez longue pour que la troisième ne rencontre personne — et
-    // c'est la limite au-delà de laquelle un accent devient des rayures.
+  it("ne dépasse pas trois blocs par page — la distance, elle, se mesure au navigateur", () => {
+    // Le plafond suit la page la plus longue du site. Enseignants fait quatre
+    // mille cinq cents pixels et en porte trois : une coupure en tête, les
+    // ateliers au milieu, la bande finale — chacune séparée des autres par
+    // plus d'une fenêtre. Une quatrième n'y tiendrait pas, et sur une page
+    // ordinaire la troisième ne tient déjà pas.
     //
     // Ce compte est un plafond, pas la règle : ce qu'un fichier ne sait pas
-    // dire, c'est si deux blocs tiennent dans la même fenêtre. Cela se mesure,
-    // et c'est mesuré (tests/e2e/contre-jour.e2e.ts).
+    // dire, c'est si deux blocs tiennent dans la même fenêtre — cela dépend du
+    // texte, de la largeur, des images chargées. Cela se mesure dans un vrai
+    // navigateur, et c'est mesuré (tests/e2e/contre-jour.e2e.ts).
     for (const { chemin, code } of PORTEURS) {
       const compte = blocs(code);
       expect(
         compte,
         `${chemin.slice(SRC.length + 1)} : ${compte} blocs à contre-jour`,
-      ).toBeLessThanOrEqual(2);
+      ).toBeLessThanOrEqual(3);
       expect(compte, `${chemin.slice(SRC.length + 1)}`).toBeGreaterThan(0);
     }
   });
