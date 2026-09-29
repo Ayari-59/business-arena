@@ -196,8 +196,9 @@ export function SiteHeader() {
           {/* LE THÈME SE CHOISIT DANS LA BARRE, PAS DANS LE MENU. Il y vivait
               sous « Réglages », c'est-à-dire derrière un panneau qui couvre la
               page : on changeait l'apparence sans voir ce qu'on changeait. Ici
-              la page bascule sous l'interrupteur. Sur téléphone il ne montre
-              que ses pastilles, pour tenir sur la rangée. */}
+              la page bascule sous l'interrupteur — deux pastilles, sans leur
+              nom : la barre porte déjà un logo, trois liens, deux boutons et un
+              menu. */}
           <ThemeSwitcher />
 
           <button

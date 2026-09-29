@@ -79,6 +79,15 @@ describe("les thèmes", () => {
     // retenue se dit à l'assistance comme à l'œil.
     expect(SELECTEUR, "aucune position n'est marquée comme retenue").toContain("aria-pressed");
     expect(SELECTEUR, "la rangée n'est pas nommée").toContain('aria-label="Thème du site"');
+    // LE NOM N'EST PLUS IMPRIMÉ, il est donc tenu ailleurs. Une pastille dit
+    // le thème à l'œil et rien du tout à une synthèse vocale : sans ces deux
+    // lignes, l'interrupteur annoncerait « bouton, bouton ».
+    expect(SELECTEUR, "les positions n'ont pas de nom accessible").toContain(
+      "aria-label={`Thème ${t.nom.toLowerCase()}`}",
+    );
+    expect(SELECTEUR, "l'infobulle ne nomme pas le thème").toContain(
+      "title={`${t.nom} — ${t.description}`}",
+    );
     expect(HEADER, "le sélecteur n'est pas dans la barre").toMatch(
       /<ThemeSwitcher \/>[\s\S]{0,800}aria-controls="plan-du-site"/,
     );
