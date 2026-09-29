@@ -406,11 +406,21 @@ h1 {
      Sur fond clair on prend donc le laiton CLAIR de l'échelle, et faiblement :
      le haut de page se réchauffe au lieu de se salir. */
   --halo-de-page: color-mix(in oklab, var(--color-amber-950) 30%, transparent);
-  --color-amber-200: #8a6a16;
-  --color-amber-300: #6b5312;
+  /* DEUX LAITONS, PAS QUATRE. Le relevé des couleurs réellement peintes a
+     compté quatre bruns d'encre sur une page claire — #8a6a16, #6b5312,
+     #5c470f et un quatrième à l'opacité — tenant dans seize points de clarté,
+     pour un travail que deux font. Quatre valeurs si proches ne hiérarchisent
+     rien : elles se lisent comme une seule couleur mal imprimée, et elles
+     encombrent la palette.
+     Ce qui reste est ce qui a un rôle : une ENCRE, pour les liens, les titres
+     accentués et les filets ; un REMPLISSAGE, pour le fond du bouton d'action,
+     choisi pour porter l'encre la plus sombre du site à plus de 4,5 ; et un
+     laiton CLAIR, qui n'est pas une encre mais un voile de fond. */
+  --color-amber-200: #5c470f;
+  --color-amber-300: #5c470f;
   --color-amber-400: #5c470f;
   --color-amber-500: #7a5f14;
-  --color-amber-600: #6b5312;
+  --color-amber-600: #5c470f;
   --color-amber-700: #5c470f;
   --color-amber-950: #f6efdb;
 }

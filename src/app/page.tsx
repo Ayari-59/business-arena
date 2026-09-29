@@ -264,7 +264,11 @@ export default async function Home() {
             Le filet qui le précède est la seule décoration de la page : il
             reparaît en tête de chaque section.
           */}
-          <p className="flex items-center gap-3 text-xs uppercase tracking-[0.28em] text-amber-400/90">
+          {/* Le laiton s'écrit plein. À 90 % il ne s'adoucissait pas, il
+              fabriquait une CINQUIÈME valeur de laiton sur une page qui vient
+              d'en ramener quatre à deux, pour une différence qu'on ne voit
+              pas. */}
+          <p className="flex items-center gap-3 text-xs uppercase tracking-[0.28em] text-amber-400">
             <span aria-hidden className="h-px w-8 bg-amber-400/40" />
             Simulation de gestion, pour la classe
           </p>

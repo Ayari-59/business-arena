@@ -4,7 +4,6 @@ import Link from "next/link";
 import { SCENARIO_CHOICES, SECTOR_LABELS, familyOf, type ScenarioDefinition } from "@/config/scenarios/registry";
 import {
   accentsDe,
-  emblemeDe,
   nomEntreprise as nomSeul,
   promesseEntreprise as promesse,
 } from "@/config/scenarios/presentation";
@@ -153,14 +152,21 @@ export default function EntreprisesPage() {
           quatre-vingt-dix jours est un bénéfice qu&apos;on ne peut pas dépenser. Le compte de
           résultat est le même partout ; ce qui change, c&apos;est ce qui vous tue.
         </p>
+        {/*
+          LE MÊME PICTOGRAMME QUE LES FICHES. Cette rangée a gardé ses emblèmes
+          en emoji quand les fiches sont passées au pictogramme, et le défaut
+          se voyait deux fois : un emoji système au-dessus d'un dessin de la
+          maison, et deux représentations du même métier sur un seul écran.
+        */}
         <div className="mt-8 flex flex-wrap gap-2">
           {SCENARIO_CHOICES.map((d) => (
             <a
               key={d.code}
               href={`#${d.code}`}
-              className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition hover:brightness-125 ${accentsDe(d).puce}`}
+              className={`flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-medium transition hover:brightness-125 ${accentsDe(d).puce}`}
             >
-              {emblemeDe(d)} {nomSeul(d)}
+              <PictoSecteur secteur={d.sector} className="h-3.5 w-3.5" />
+              {nomSeul(d)}
             </a>
           ))}
         </div>
