@@ -14,11 +14,19 @@ import { describe, expect, it } from "vitest";
  *
  * DEUX CHOSES PEUVENT LE DÉFAIRE EN SILENCE, et ce sont elles qu'on garde.
  *
- * La première est l'excès. Le contraste attire l'œil parce qu'il est UNIQUE
- * sur la page : deux bandes à contre-jour n'en font pas deux qui se voient,
- * elles en font deux qui s'annulent, et la page a simplement changé de rayures.
- * C'est la règle qui se perdra la première, parce qu'elle ne casse rien — elle
- * fait juste que plus rien ne ressort.
+ * La première est l'excès. Le contraste attire l'œil parce qu'il est unique
+ * sur l'ÉCRAN : deux bandes qui se rencontrent dans une même fenêtre n'en font
+ * pas deux qui se voient, elles en font deux qui s'annulent, et la page a
+ * simplement changé de rayures. C'est la règle qui se perdra la première,
+ * parce qu'elle ne casse rien — elle fait juste que plus rien ne ressort.
+ *
+ * Elle s'est longtemps écrite ici « un seul par fichier », faute de mieux : un
+ * fichier n'est pas un écran, mais c'est ce qu'un test de source sait compter.
+ * L'approximation a tenu tant qu'une page n'en portait qu'un ; elle interdit
+ * maintenant ce qui est juste — une coupure haut de page ET une bande finale,
+ * qui ne se rencontrent jamais sur trois mille pixels d'écart. Le compte reste
+ * donc ici comme un PLAFOND, et la vraie règle — la distance — se mesure dans
+ * un navigateur, par tests/e2e/contre-jour.e2e.ts.
  *
  * La seconde est la couleur écrite à la main. Le bloc ne marche que parce
  * qu'il n'énonce AUCUNE couleur : `bg-slate-950` et `text-slate-50` désignent
@@ -118,12 +126,22 @@ describe("le contre-jour", () => {
     );
   });
 
-  it("ne sert qu'une fois par écran", () => {
-    // La règle qui se perdra la première, parce qu'elle ne casse rien : elle
-    // fait juste que plus rien ne ressort.
+  it("ne dépasse pas deux blocs par page — la distance, elle, se mesure au navigateur", () => {
+    // Deux, c'est la coupure du milieu et la bande finale : elles tiennent
+    // ensemble parce que trois mille pixels les séparent. Trois, aucune page
+    // n'est assez longue pour que la troisième ne rencontre personne — et
+    // c'est la limite au-delà de laquelle un accent devient des rayures.
+    //
+    // Ce compte est un plafond, pas la règle : ce qu'un fichier ne sait pas
+    // dire, c'est si deux blocs tiennent dans la même fenêtre. Cela se mesure,
+    // et c'est mesuré (tests/e2e/contre-jour.e2e.ts).
     for (const { chemin, code } of PORTEURS) {
       const compte = blocs(code);
-      expect(compte, `${chemin.slice(SRC.length + 1)} : ${compte} blocs à contre-jour`).toBe(1);
+      expect(
+        compte,
+        `${chemin.slice(SRC.length + 1)} : ${compte} blocs à contre-jour`,
+      ).toBeLessThanOrEqual(2);
+      expect(compte, `${chemin.slice(SRC.length + 1)}`).toBeGreaterThan(0);
     }
   });
 

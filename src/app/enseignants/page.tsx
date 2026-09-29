@@ -9,6 +9,7 @@ import { PreuvesDusageBande } from "@/components/preuves-dusage";
 import { preuvesDusage } from "@/services/preuves-dusage.service";
 import { bouton } from "@/components/bouton";
 import { BandeFinale } from "@/components/bande-finale";
+import { BandeDeChiffres } from "@/components/bande-de-chiffres";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/enseignants" },
@@ -120,21 +121,14 @@ export default async function EnseignantsPage() {
         </p>
       </section>
 
-      {/* Hero numbers */}
-      <section className="mx-auto max-w-4xl px-6 pb-16">
-        <div className="grid gap-4 sm:grid-cols-3">
-          {HERO_STATS.map((s) => (
-            <div
-              key={s.label}
-              className="rounded-2xl border border-amber-400/20 bg-slate-900/80 px-6 py-8 text-center"
-            >
-              <p className="text-5xl font-bold tabular-nums text-amber-400">{s.value}</p>
-              <p className="mt-2 text-sm font-semibold text-slate-200">{s.label}</p>
-              <p className="mt-2 text-sm leading-relaxed text-slate-400">{s.detail}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      {/* La coupure de la page : voir components/bande-de-chiffres.tsx. */}
+      <BandeDeChiffres
+        chiffres={HERO_STATS.map((s) => ({
+          valeur: s.value,
+          libelle: s.label,
+          detail: s.detail,
+        }))}
+      />
 
       {/*
         MONTRER AVANT D'EXPLIQUER.
