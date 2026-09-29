@@ -365,29 +365,45 @@ export default async function Home() {
         fines, et un filet sépare les colonnes. L'ambre ne sert plus qu'à ce
         qu'on doit retenir.
 
-        LA RANGÉE NE RESPIRE PLUS QUE VERS LE HAUT. Elle était prise entre deux
-        bandes bordées, et ses deux marges se voyaient également ; celle du bas
-        est partie avec la section « Un tour, en deux temps », laissant cent
-        quarante pixels de nuit avant le sommaire. Elle reste donc décollée de
-        la bande des métiers, et se rapproche de ce qui la suit.
+        LA COUPURE DE LA PAGE, ET SON SEUL BLOC À CONTRE-JOUR. L'accueil est
+        clair du haut jusqu'au pied, avec une seule bande à peine teintée —
+        celle des métiers — pour toute respiration ; une page qui ne change
+        jamais de sol n'a pas de colonne vertébrale. La rangée était par
+        ailleurs la section la plus orpheline : prise entre deux voisines, sans
+        identité propre, elle a vu sa marge basse rognée pour qu'on ne voie pas
+        qu'elle flottait. Lui donner un sol, c'est lui donner la raison d'être
+        qu'elle n'avait pas — et ce sont les chiffres qu'on doit retenir de la
+        page.
+
+        POURQUOI ICI ET NON SOUS L'EN-TÊTE. Le haut de page porte déjà trois
+        écrans sombres, la main de cartes. Une coupure posée juste dessous
+        donnerait deux masses sombres à la même hauteur, et ni l'une ni l'autre
+        ne ressortirait : le contraste attire l'œil parce qu'il est unique sur
+        L'ÉCRAN, pas sur la page. À neuf cents pixels du haut, les captures ont
+        quitté la fenêtre quand la bande arrive.
+
+        Pas de filet sur ses arêtes : un changement de sol se voit tout seul, et
+        la bande des métiers en porte déjà un juste au-dessus.
       */}
-      <section className="mx-auto max-w-6xl px-6 pb-6 pt-12 sm:pb-8 sm:pt-16">
-        <dl className="grid grid-cols-2 gap-y-8 sm:grid-cols-4">
-          {[
-            ["par tour, selon le niveau", `${decisions.minimum} à ${decisions.maximum}`, "décisions"],
-            ["du CA au FRNG et au BFR", `${CONCEPTS.length}`, "fiches notions"],
-            ["d'aide à la décision", `${DECISION_MODELS.length}`, "modèles"],
-            ["de performance, l'indice IPG", "6", "dimensions"],
-          ].map(([libelle, nombre, quoi]) => (
-            <div key={quoi} className="px-4 sm:border-l sm:border-white/10 sm:first:border-l-0 sm:first:pl-0">
-              <dt className="text-xs uppercase tracking-[0.18em] text-slate-400">{libelle}</dt>
-              <dd className="mt-2">
-                <span className="font-display text-3xl font-semibold text-amber-400">{nombre}</span>{" "}
-                <span className="text-base text-slate-200">{quoi}</span>
-              </dd>
-            </div>
-          ))}
-        </dl>
+      <section className="contre-jour bg-slate-950">
+        <div className="mx-auto max-w-6xl px-6 py-12 sm:py-16">
+          <dl className="grid grid-cols-2 gap-y-8 sm:grid-cols-4">
+            {[
+              ["par tour, selon le niveau", `${decisions.minimum} à ${decisions.maximum}`, "décisions"],
+              ["du CA au FRNG et au BFR", `${CONCEPTS.length}`, "fiches notions"],
+              ["d'aide à la décision", `${DECISION_MODELS.length}`, "modèles"],
+              ["de performance, l'indice IPG", "6", "dimensions"],
+            ].map(([libelle, nombre, quoi]) => (
+              <div key={quoi} className="px-4 sm:border-l sm:border-white/10 sm:first:border-l-0 sm:first:pl-0">
+                <dt className="text-xs uppercase tracking-[0.18em] text-slate-400">{libelle}</dt>
+                <dd className="mt-2">
+                  <span className="font-display text-3xl font-semibold text-amber-400">{nombre}</span>{" "}
+                  <span className="text-base text-slate-200">{quoi}</span>
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
       </section>
 
       {/* ---------- Explorer : renvois vers les pages dédiées ---------- */}
