@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { ALL_SITUATIONS, SCENARIO_CHOICES, SECTOR_LABELS } from "@/config/scenarios/registry";
+import { ALL_SITUATIONS, SCENARIO_CHOICES } from "@/config/scenarios/registry";
 import { DECISION_MODELS } from "@/config/pedagogy/models";
 import { ApercuArene } from "@/components/apercus";
+import { PictoSecteur } from "@/components/picto-secteur";
 import { bouton } from "@/components/bouton";
 import { BandeFinale } from "@/components/bande-finale";
 import { BandeDeChiffres } from "@/components/bande-de-chiffres";
@@ -18,34 +19,34 @@ const HERO_STATS = [
   { value: String(DECISION_MODELS.length), label: "modèles d'analyse", detail: "Seuil de rentabilité, coûts pertinents, FRNG/BFR, VAN, TRI, arbre de décision…" },
 ];
 
+/**
+ * Les six arguments se lisent en sommaire : un filet, le titre, sa phrase. Ils
+ * ont porté un emoji chacun — ⚙️ 🎯 📊 💡 🏫 🏆 — que le dépôt a chassé partout
+ * ailleurs pour la même raison : le système les dessine à sa façon, ils
+ * changent d'un appareil à l'autre et se brouillent au vidéoprojecteur.
+ */
 const PILLARS = [
   {
-    icon: "⚙️",
     title: "Moteur économique déterministe",
     text: "Demande par segments, élasticité-prix, capacité, stocks, FRNG, BFR, trésorerie : chaque chiffre est calculé, aucun n'est inventé, et le moteur est tenu par sa suite de tests.",
   },
   {
-    icon: "🎯",
     title: "Apprentissage par la situation",
     text: "Chaque tour déclenche une situation tirée du contexte de l'entreprise : l'étudiant identifie le modèle pertinent avant de décider, et le débriefing relie le résultat au raisonnement.",
   },
   {
-    icon: "📊",
     title: "Tableau de bord en temps réel",
     text: "Tendances, évolution du CA, du résultat et de la trésorerie, parts de marché par segment, classement IPG. Trois onglets : Synthèse, Marché, Finance.",
   },
   {
-    icon: "💡",
     title: "Indices progressifs",
     text: "Cinq niveaux d'aide, d'une observation à une méthode. Chaque indice coûte des points : l'autonomie est récompensée, le blocage n'existe pas.",
   },
   {
-    icon: "🏫",
     title: "Conçu pour la classe",
     text: "Une partie en 30 secondes, les équipes rejoignent par code, vous clôturez les tours. La vue pédagogique montre qui maîtrise chaque notion et qui bluffe.",
   },
   {
-    icon: "🏆",
     title: "Business Arena Championship",
     text: "Groupes tirés au sort, décisions verrouillées, indices limités, qualification au score composite : le concours de gestion, prêt à l'emploi.",
   },
@@ -103,44 +104,49 @@ export default function FonctionnalitesPage() {
         }))}
       />
 
-      {/* Sectors grid */}
+      {/*
+        LES SECTEURS, EN UNE RANGÉE PLUTÔT QU'EN AUTANT DE CARTES.
+
+        Trois rangées de trois cartes, chacune avec son emoji, son nom et son
+        libellé de secteur : trois cent quarante pixels pour dire « les voici,
+        tous ». La page d'accueil dit la même chose en une seule rangée de
+        pictogrammes, dessinés d'un seul trait et lisibles au timbre-poste
+        comme au mur ; c'est le même geste, et il tient dans un tiers de la
+        place. Les emoji partent avec les cartes.
+      */}
       <section className="mx-auto max-w-5xl px-6 pb-16">
         <h2 className="mb-6 text-center text-sm font-semibold uppercase tracking-wide text-slate-400">
           {SCENARIO_CHOICES.length} secteurs, {SCENARIO_CHOICES.length} économies réelles
         </h2>
-        <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-3">
+        <ul className="grid grid-cols-3 gap-x-4 gap-y-6 sm:grid-cols-5 lg:grid-cols-9">
           {SCENARIO_CHOICES.map((s) => (
-            <div
-              key={s.code}
-              className="flex items-center gap-3 carte px-4 py-3"
-            >
-              <span className="text-2xl">{s.icon}</span>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-slate-200">{s.title}</p>
-                <p className="text-xs text-slate-400">{SECTOR_LABELS[s.sector]}</p>
-              </div>
-            </div>
+            <li key={s.code} className="flex flex-col items-center gap-2 text-center">
+              <PictoSecteur secteur={s.sector} className="h-7 w-7 text-amber-400/80" />
+              <span className="text-xs leading-tight text-slate-300">{s.shortName}</span>
+            </li>
           ))}
-        </div>
+        </ul>
       </section>
 
-      {/* Pillars */}
+      {/*
+        SIX ARGUMENTS, EN SOMMAIRE. Ils tenaient dans six cartes à emoji —
+        cinq cent quatre-vingts pixels pour six phrases, et six pastilles
+        bariolées sur une page laiton. Un filet, le fait en gras, sa précision
+        à la suite : c'est la forme qu'ont prise les mêmes listes sur l'accueil
+        et sur la page des enseignants.
+      */}
       <section className="mx-auto max-w-5xl px-6 pb-16">
         <h2 className="mb-8 text-center text-2xl font-bold text-slate-50">
           Ce qui rend la simulation possible
         </h2>
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <dl className="grid gap-x-10 gap-y-px sm:grid-cols-2">
           {PILLARS.map((p) => (
-            <div
-              key={p.title}
-              className="carte p-5"
-            >
-              <p className="text-2xl">{p.icon}</p>
-              <h3 className="mt-3 text-sm font-semibold text-slate-100">{p.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-400">{p.text}</p>
+            <div key={p.title} className="border-t border-white/10 py-4">
+              <dt className="text-sm font-semibold text-slate-100">{p.title}</dt>
+              <dd className="mt-1 text-base leading-relaxed text-slate-400">{p.text}</dd>
             </div>
           ))}
-        </div>
+        </dl>
       </section>
 
       {/* Models list */}
@@ -172,24 +178,16 @@ export default function FonctionnalitesPage() {
         </div>
       </section>
 
-      {/* Differentiators */}
-      <section className="mx-auto max-w-3xl px-6 pb-16">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {DIFFERENTIATORS.map((d) => (
-            <div
-              key={d.label}
-              className="rounded-xl border border-emerald-400/20 bg-emerald-950/20 px-4 py-4 text-center"
-            >
-              <p className="text-sm font-semibold text-emerald-400">{d.label}</p>
-              <p className="mt-1 text-xs text-slate-400">{d.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
+      {/*
+        LES QUATRE MENTIONS DESCENDENT SOUS LES BOUTONS. Elles tenaient une
+        section à elles, en cartes vertes — cent quatre-vingt-six pixels, et la
+        seule couleur verte d'une page laiton. Une objection se lève au moment
+        où l'on clique, pas un écran avant.
+      */}
       <BandeFinale
         titre="Prêt à tester ?"
         texte="Lancez une partie en 30 secondes, sans compte ni installation."
+        mentions={DIFFERENTIATORS}
       >
         <Link href="/jouer" className={bouton({ taille: "l" })}>
           Tester le simulateur

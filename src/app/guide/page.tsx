@@ -13,14 +13,14 @@ export const metadata: Metadata = {
 /** Guide de prise en main : statique, sans base de données — toujours disponible. */
 
 const SECTIONS = [
-  { id: "demarrer", label: "⚡ En 2 minutes" },
-  { id: "eleves", label: "🎮 Côté élèves" },
-  { id: "enseignants", label: "🧑‍🏫 Côté enseignants" },
-  { id: "concours", label: "🏆 Les concours" },
-  { id: "courrier", label: "📬 Le courrier" },
-  { id: "bpi", label: "📊 Le score IPG" },
-  { id: "etablissements", label: "🏛️ Établissements" },
-  { id: "faq", label: "❓ Questions fréquentes" },
+  { id: "demarrer", label: "En 2 minutes" },
+  { id: "eleves", label: "Côté élèves" },
+  { id: "enseignants", label: "Côté enseignants" },
+  { id: "concours", label: "Les concours" },
+  { id: "courrier", label: "Le courrier" },
+  { id: "bpi", label: "Le score IPG" },
+  { id: "etablissements", label: "Établissements" },
+  { id: "faq", label: "Questions fréquentes" },
 ];
 
 function Step({ n, title, children }: { n: number; title: string; children: React.ReactNode }) {
@@ -119,7 +119,7 @@ export default function GuidePage() {
         <Section
           ouvert
           id="demarrer"
-          title="⚡ Démarrer en 2 minutes"
+          title="Démarrer en 2 minutes"
           intro="Deux portes d'entrée selon qui vous êtes."
         >
           <div className="grid gap-4 sm:grid-cols-2">
@@ -148,7 +148,7 @@ export default function GuidePage() {
 
         <Section
           id="eleves"
-          title="🎮 Côté élèves : jouer un tour"
+          title="Côté élèves : jouer un tour"
           intro="Chaque tour suit la même boucle : une situation vous arrive, vous la diagnostiquez, vous mobilisez vos connaissances, vous décidez, puis la simulation rend son verdict."
         >
           <ol className="space-y-5">
@@ -200,7 +200,7 @@ export default function GuidePage() {
 
         <Section
           id="enseignants"
-          title="🧑‍🏫 Côté enseignants : animer une classe"
+          title="Côté enseignants : animer une classe"
           intro="De la création de la partie à la clôture des tours, tout se pilote depuis votre espace."
         >
           <ol className="space-y-5">
@@ -255,7 +255,7 @@ export default function GuidePage() {
 
         <Section
           id="concours"
-          title="🏆 Les concours : un championnat entre équipes"
+          title="Les concours : un championnat entre équipes"
           intro="Un concours enchaîne quatre étapes. L'enseignant l'organise depuis son espace ; les équipes s'inscrivent sur /compete avec le code qu'il leur donne."
         >
           <ol className="space-y-5">
@@ -289,7 +289,7 @@ export default function GuidePage() {
 
         <Section
           id="courrier"
-          title="📬 Le courrier de l'entreprise"
+          title="Le courrier de l'entreprise"
           intro="L'habillage du moteur : chaque courrier est un événement économique réel de la simulation, avec l'expéditeur qui l'envoie."
         >
           <div className="grid gap-4 sm:grid-cols-2">
@@ -326,7 +326,7 @@ export default function GuidePage() {
 
         <Section
           id="bpi"
-          title="📊 L'Indice de performance globale"
+          title="L'Indice de performance globale"
           intro="Le classement ne récompense pas que le profit : l'IPG (0-100) pondère 6 dimensions."
         >
           <div className="overflow-x-auto">
@@ -364,7 +364,7 @@ export default function GuidePage() {
 
         <Section
           id="etablissements"
-          title="🏛️ Côté établissements"
+          title="Côté établissements"
           intro="Déployez Business Arena à l'échelle d'un lycée, d'un campus ou d'un réseau."
         >
           <ol className="space-y-5">
@@ -386,7 +386,7 @@ export default function GuidePage() {
           </ol>
         </Section>
 
-        <Section id="faq" title="❓ Questions fréquentes">
+        <Section id="faq" title="Questions fréquentes">
           <dl className="space-y-5">
             {[
               [

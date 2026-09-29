@@ -8,6 +8,7 @@ import {
   nomEntreprise as nomSeul,
   promesseEntreprise as promesse,
 } from "@/config/scenarios/presentation";
+import { PictoSecteur } from "@/components/picto-secteur";
 import { bouton } from "@/components/bouton";
 import { BandeFinale } from "@/components/bande-finale";
 
@@ -34,7 +35,6 @@ export const metadata: Metadata = {
 function Fiche({ d }: { d: ScenarioDefinition }) {
   const famille = familyOf(d.code);
   const a = accentsDe(d);
-  const v = d.vocabulary;
   return (
     <article
       id={d.code}
@@ -47,9 +47,15 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
       <div className={`h-1 w-full ${a.barre}`} />
       <div className="relative p-6">
         <div className="flex flex-wrap items-center gap-3">
-          <span className="text-2xl" aria-hidden>
-            {emblemeDe(d)}
-          </span>
+          {/*
+            LE PICTOGRAMME PLUTÔT QUE L'EMOJI. Chaque fiche portait le sien,
+            que le système dessine à sa façon : différent d'un appareil à
+            l'autre, en couleurs étrangères à la maison, et brouillé au
+            vidéoprojecteur. `PictoSecteur` est dessiné d'un seul trait et prend
+            l'encre du thème — c'est déjà lui qui tient la bande des métiers sur
+            la page d'accueil.
+          */}
+          <PictoSecteur secteur={d.sector} className={`h-6 w-6 ${a.texte}`} />
           <span
             className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider ${a.puce}`}
           >
@@ -72,28 +78,23 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
           </p>
         ) : null}
 
-        {/* La carte d'identité du métier : ce qui change vraiment d'un secteur
-            à l'autre, et que le décor seul ne dit pas. */}
-        <dl className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {[
-            ["Vous vendez", v.units],
-            ["Vous fixez", v.priceLabel.toLowerCase()],
-            ["L'invendu devient", v.leftoverLabel.toLowerCase()],
-            ["Le goulot", `${v.capacityBottleneckLabel.toLowerCase()} ou équipe`],
-          ].map(([label, valeur]) => (
-            <div key={label} className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2">
-              <dt className="text-xs uppercase tracking-wide text-slate-400">{label}</dt>
-              <dd className="mt-0.5 text-sm text-slate-200">{valeur}</dd>
-            </div>
-          ))}
-        </dl>
+        {/*
+          LA CARTE D'IDENTITÉ DU MÉTIER A QUITTÉ LA FICHE. Elle disait, en
+          quatre cases — ce qu'on vend, ce qu'on fixe, ce que devient
+          l'invendu, où est le goulot —, exactement ce que le tableau dit
+          maintenant EN TÊTE de page, et mieux : côte à côte. Quatre cases
+          isolées ne se comparent à rien ; une ligne de tableau se compare aux
+          huit autres, et c'est bien la comparaison qui est le sujet.
 
-        <div className="mt-5 rounded-xl border border-white/5 bg-slate-950/60 p-4">
-          <p className="text-xs uppercase tracking-[0.25em] text-slate-400">
-            Ce que vous trouvez en arrivant
-          </p>
-          <p className="mt-2 text-base leading-relaxed text-slate-300">{d.context}</p>
-        </div>
+          Une carte d'identité par fiche, à cent dix pixels pièce : un mètre de
+          défilement rendu au lecteur.
+        */}
+        <p className="mt-5 text-base leading-relaxed text-slate-300">
+          <span className="text-xs uppercase tracking-[0.25em] text-slate-400">
+            En arrivant ·{" "}
+          </span>
+          {d.context}
+        </p>
 
         <div className="mt-4 rounded-xl border border-white/10 bg-slate-950 p-4">
           <p className="text-xs uppercase tracking-[0.25em] text-slate-400">
@@ -113,21 +114,6 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
               </div>
             ))}
           </div>
-        </div>
-
-        <div className="mt-4 flex flex-wrap items-center gap-1.5">
-          <span className="text-xs uppercase tracking-wide text-slate-400">
-            Ses indicateurs
-          </span>
-          {d.kpis.slice(0, 5).map((k) => (
-            <span
-              key={k.key}
-              title={k.hint}
-              className="rounded-full border border-white/10 px-2.5 py-1 text-xs text-slate-400"
-            >
-              {k.label}
-            </span>
-          ))}
         </div>
 
         <div className="mt-5 flex flex-wrap items-center gap-4">
@@ -182,16 +168,23 @@ export default function EntreprisesPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-6 pb-16">
-        <div className="grid gap-6">
-          {SCENARIO_CHOICES.map((d) => (
-            <Fiche key={d.code} d={d} />
-          ))}
-        </div>
-      </section>
+      {/*
+        LE TABLEAU QUI MET TOUS LES MÉTIERS CÔTE À CÔTE — EN TÊTE, PLUS EN
+        QUEUE.
 
-      {/* ---------- Le tableau qui met tous les métiers côte à côte ---------- */}
-      <section className="border-y border-white/5 bg-slate-900/40">
+        Il fermait la page, après sept mille pixels de fiches : un lecteur
+        arrivé à la troisième entreprise n'avait aucun moyen de la situer, et
+        celui qui atteignait le tableau n'avait plus rien à comparer, il avait
+        déjà choisi. Une vue d'ensemble se lit AVANT le détail — c'est même
+        tout ce qui la distingue d'un récapitulatif.
+
+        Ce déplacement rend une place à la coupure de la page : le tableau
+        prend le sol ici, à six cents pixels du haut, quand il l'aurait pris à
+        six cents pixels de la bande finale s'il était resté en bas. Deux fonds
+        retournés qui se rencontrent ne font pas deux blocs qui se voient, ils
+        en font deux qui s'annulent.
+      */}
+      <section className="contre-jour bg-slate-950">
         <div className="mx-auto max-w-6xl px-6 py-14">
           <h2 className="text-2xl font-bold text-slate-50">Ce qui change d&apos;un métier à l&apos;autre</h2>
           <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-400">
@@ -241,8 +234,18 @@ export default function EntreprisesPage() {
           <p className="mt-4 text-base leading-relaxed text-slate-400">
             Les activités périssables ne stockent rien : la capacité non vendue est perdue au
             passage du tour. C&apos;est la différence qui sépare un hôtelier d&apos;un
-            industriel, et elle change tout le raisonnement sur le prix.
+            industriel, et elle change tout le raisonnement sur le prix. Chaque nom mène à sa
+            fiche, plus bas.
           </p>
+        </div>
+      </section>
+
+
+      <section className="mx-auto max-w-6xl px-6 pb-16">
+        <div className="grid gap-6">
+          {SCENARIO_CHOICES.map((d) => (
+            <Fiche key={d.code} d={d} />
+          ))}
         </div>
       </section>
 

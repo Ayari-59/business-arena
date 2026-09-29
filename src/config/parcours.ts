@@ -20,7 +20,6 @@ export interface Parcours {
   code: string;
   name: string;
   fullName: string;
-  emoji: string;
   pitch: string;
   recommended: {
     level: number;
@@ -40,7 +39,6 @@ export const PARCOURS: readonly Parcours[] = [
     code: "stmg",
     name: "STMG",
     fullName: "Bac technologique STMG · Sciences de gestion et numérique · Management",
-    emoji: "🎓",
     pitch:
       "Découvrir la création de valeur en la vivant : une entreprise, des décisions simples, et les notions de première qui prennent corps tour après tour.",
     recommended: {
@@ -87,7 +85,6 @@ export const PARCOURS: readonly Parcours[] = [
     code: "mco",
     name: "BTS MCO",
     fullName: "BTS Management Commercial Opérationnel",
-    emoji: "🛍️",
     pitch:
       "La gestion opérationnelle d'une unité commerciale, en vrai : offre, prix, marges, trésorerie, et le management d'équipe au niveau Arbitrage.",
     recommended: {
@@ -134,7 +131,6 @@ export const PARCOURS: readonly Parcours[] = [
     code: "ndrc",
     name: "BTS NDRC",
     fullName: "BTS Négociation et Digitalisation de la Relation Client",
-    emoji: "🤝",
     pitch:
       "La culture gestion du négociateur : savoir jusqu'où descendre en prix, lire une marge, comprendre les délais de paiement, pour négocier en connaissant ses chiffres.",
     recommended: {
@@ -176,7 +172,6 @@ export const PARCOURS: readonly Parcours[] = [
     code: "cg",
     name: "BTS CG",
     fullName: "BTS Comptabilité et Gestion",
-    emoji: "🧮",
     pitch:
       "Les processus du référentiel, produits par une vraie entreprise : chaque tour génère un compte de résultat, un bilan équilibré au centime, une TVA à décaisser, à analyser et non à recopier.",
     recommended: {

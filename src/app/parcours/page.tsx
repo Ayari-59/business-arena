@@ -19,6 +19,14 @@ const FIT_BADGE: Record<string, { label: string; className: string }> = {
   partiel: { label: "partiel", className: "border-slate-400/40 text-slate-400" },
 };
 
+/**
+ * PLUS D'EMOJI SUR CETTE PAGE. Quatre diplômes en portaient un — 🎓 🛍️ 🤝 🧮 —
+ * et la limite assumée une balance. Le système les dessine à sa façon : ils
+ * changent d'un appareil à l'autre, en couleurs étrangères à la maison, et se
+ * brouillent au vidéoprojecteur, qui est justement l'écran de cette page. Le
+ * nom du diplôme se suffit ; il est d'ailleurs le seul repère qu'un enseignant
+ * cherche ici.
+ */
 export default function ParcoursPage() {
   return (
     <main id="main" className="min-h-screen bg-slate-950 text-slate-100">
@@ -48,7 +56,7 @@ export default function ParcoursPage() {
               href={`#${p.code}`}
               className="rounded-full border border-white/10 bg-slate-900 px-3.5 py-1.5 text-xs text-slate-300 transition hover:border-amber-400/40 hover:text-amber-300"
             >
-              {p.emoji} {p.name}
+              {p.name}
             </a>
           ))}
         </div>
@@ -62,9 +70,7 @@ export default function ParcoursPage() {
             className="scroll-mt-24 rounded-2xl border border-white/10 bg-slate-900 p-6 sm:p-8"
           >
             <p className="text-xs uppercase tracking-[0.2em] text-amber-400">{p.fullName}</p>
-            <h2 className="mt-2 text-2xl font-bold text-slate-50">
-              {p.emoji} {p.name}
-            </h2>
+            <h2 className="mt-2 text-2xl font-bold text-slate-50">{p.name}</h2>
             <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-400">{p.pitch}</p>
 
             <div className="mt-5 rounded-xl border border-amber-400/20 bg-slate-950 p-4">
@@ -112,7 +118,7 @@ export default function ParcoursPage() {
 
             {p.limite ? (
               <p className="mt-4 rounded-lg border border-white/5 bg-slate-950 px-4 py-3 text-sm leading-relaxed text-slate-400">
-                ⚖️ Limite assumée : {p.limite}
+                Limite assumée : {p.limite}
               </p>
             ) : null}
           </section>
