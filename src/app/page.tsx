@@ -90,36 +90,39 @@ export const metadata: Metadata = {
 };
 
 /**
+ * LE FORMAT DES TROIS CAPTURES — 800 × 1120, la forme d'une carte à jouer.
+ *
+ * Les trois écrans sont recadrés à la même taille, et c'est ce qui permet de
+ * les poser en main de cartes : trois images de hauteurs différentes ne
+ * forment pas un éventail, elles forment un escalier. Les dimensions sont
+ * écrites dans la page (sinon le texte saute au chargement), donc elles sont
+ * écrites UNE fois, ici.
+ */
+const CARTE = { largeur: 800, hauteur: 1120 };
+
+/**
  * UNE CAPTURE DE L'APPLICATION, ENCADRÉE.
  *
  * Trois écrans réels vivent sur cette page, et ils se posent de la même façon :
- * dimensions écrites (sans elles, la page saute au chargement), texte de
- * remplacement qui dit ce qu'on y voit, et une légende qui dit à quoi il sert.
- * Les deux captures du bas se chargent paresseusement — elles sont sous la
- * ligne de flottaison —, celle de l'en-tête non.
+ * dimensions écrites, texte de remplacement qui dit ce qu'on y voit, et une
+ * légende qui dit à quoi il sert. Les captures du bas se chargent
+ * paresseusement — elles sont sous la ligne de flottaison.
  */
 function Capture({
   src,
   alt,
   legende,
-  largeur = 800,
-  hauteur = 800,
-  immediate = false,
-  className = "",
-  classeCadre = "",
+  largeur = CARTE.largeur,
+  hauteur = CARTE.hauteur,
 }: {
   src: string;
   alt: string;
   legende: string;
   largeur?: number;
   hauteur?: number;
-  immediate?: boolean;
-  className?: string;
-  /** Pour borner le CADRE sans rétrécir la légende avec lui. */
-  classeCadre?: string;
 }) {
   return (
-    <figure className={`m-0 ${className}`}>
+    <figure className="m-0">
       {/*
         LE BAS DE L'IMAGE S'ÉTEINT plutôt que de se couper net. Une capture est
         un morceau d'écran : coupée à la règle, elle a l'air d'un bug — le
@@ -127,15 +130,13 @@ function Capture({
         dit que l'écran continue, et il emporte la bordure avec lui, sinon un
         trait flotterait sous du vide.
       */}
-      <div
-        className={`overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl shadow-slate-950/40 [mask-image:linear-gradient(to_bottom,#000_86%,transparent_100%)] ${classeCadre}`}
-      >
+      <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl shadow-slate-950/40 [mask-image:linear-gradient(to_bottom,#000_86%,transparent_100%)]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={src}
           width={largeur}
           height={hauteur}
-          loading={immediate ? "eager" : "lazy"}
+          loading="lazy"
           decoding="async"
           alt={alt}
           className="block w-full"
@@ -143,6 +144,98 @@ function Capture({
       </div>
       <figcaption className="mt-3 text-center text-sm leading-relaxed text-slate-400">
         {legende}
+      </figcaption>
+    </figure>
+  );
+}
+
+/**
+ * UNE CARTE DE LA MAIN : la capture, posée et tournée.
+ *
+ * Ici pas de dégradé en bas — une carte a un bord. Le dégradé sert dans le
+ * corps de la page, où l'image doit dire « l'écran continue » ; dans la main,
+ * il laisserait voir la carte de derrière à travers celle de devant.
+ *
+ * Les deux cartes du fond sont assourdies (bordure plus pâle, opacité) : c'est
+ * ce qui fait une profondeur, sans quoi trois images de même contraste se
+ * disputent l'œil.
+ */
+function CarteEnMain({
+  src,
+  alt,
+  pose,
+  fond = false,
+}: {
+  src: string;
+  alt: string;
+  /** Position et angle dans le cadre de la main. */
+  pose: string;
+  fond?: boolean;
+}) {
+  return (
+    <div
+      className={`absolute w-[52%] overflow-hidden rounded-2xl border bg-slate-900 shadow-2xl ${pose} ${
+        fond
+          ? "border-white/5 opacity-60 shadow-slate-950/60"
+          : "border-white/15 shadow-slate-950/70"
+      }`}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        width={CARTE.largeur}
+        height={CARTE.hauteur}
+        // Les trois sont dans l'en-tête : les charger paresseusement ne
+        // gagnerait rien et montrerait trois cadres vides le temps d'un
+        // battement.
+        loading="eager"
+        decoding="async"
+        alt={alt}
+        className="block w-full"
+      />
+    </div>
+  );
+}
+
+/**
+ * LES TROIS ÉCRANS, TENUS COMME UNE MAIN DE CARTES.
+ *
+ * L'en-tête ne montrait qu'un écran, et très haut : une colonne d'image de
+ * 560 pixels contre un bloc de texte de 380, le déséquilibre se voyait. Les
+ * trois captures, désormais au même format, se posent en éventail — et la
+ * hauteur de l'éventail se règle enfin sur le texte d'à côté.
+ *
+ * LE CADRE PORTE UN RAPPORT DE FORME (9/8) plutôt qu'une hauteur d'image : la
+ * main occupe donc une hauteur connue d'avance, celle qu'on lui donne, et non
+ * celle que voudrait la plus haute des trois images.
+ *
+ * L'ÉVENTAIL EST FIXE, PAS TIRÉ AU SORT. Un ordre aléatoire aurait deux
+ * défauts, l'un technique et l'autre de fond : le serveur et le navigateur
+ * tireraient deux mains différentes, et la page se repeindrait sous l'œil du
+ * visiteur ; et le produit changerait de visage d'une visite à l'autre. La
+ * main choisie dit d'ailleurs quelque chose — devant, l'écran où l'élève
+ * passe son temps ; derrière, les deux moments du tour, dans l'ordre où la
+ * page les raconte plus bas.
+ *
+ * LES CARTES DU FOND NE SONT PAS DÉCRITES. Les mêmes écrans sont montrés en
+ * grand, avec leur texte de remplacement, deux sections plus bas : les faire
+ * lire deux fois à une synthèse vocale n'apprendrait rien à personne.
+ */
+function MainDeCartes() {
+  return (
+    <figure className="m-0">
+      <div className="relative mx-auto aspect-[9/8] w-full max-w-[440px]">
+        <CarteEnMain src="/apercus/decider.webp" alt="" fond pose="left-[2%] top-[11%] -rotate-[9deg]" />
+        <CarteEnMain src="/apercus/resultats.webp" alt="" fond pose="left-[46%] top-[11%] rotate-[9deg]" />
+        <CarteEnMain
+          src="/apercus/arene.webp"
+          pose="left-[24%] top-[4%]"
+          alt="L'arène d'une équipe au quatrième tour : chiffre d'affaires 399 919 €, résultat 58 188 €, trésorerie 89 653 €, et le tour en cours à jouer."
+        />
+      </div>
+      <figcaption className="mt-5 text-center text-sm leading-relaxed text-slate-400">
+        Trois écrans d&apos;une même partie : l&apos;arène, la feuille de
+        décision, le verdict du tour.
       </figcaption>
     </figure>
   );
@@ -266,15 +359,15 @@ export default async function Home() {
         </div>
 
         {/*
-          UNE CAPTURE DE L'APPLICATION, ET NON UN ÉCRAN DESSINÉ.
+          DES CAPTURES DE L'APPLICATION, ET NON DES ÉCRANS DESSINÉS.
 
           Cette colonne a porté trois choses successives. D'abord un cockpit
           dessiné à la main, avec des chiffres inventés — « chiffre d'affaires
           346 920 € » — : il promettait une simulation sans en faire tourner
           une. Puis un tour jouable, qui tenait la promesse mais faisait de
-          l'accueil un mini-jeu. Maintenant l'écran réel.
+          l'accueil un mini-jeu. Maintenant les écrans réels.
 
-          ELLE EST PRISE SUR L'APPLICATION, pas redessinée : la partie a été
+          ILS SONT PRIS SUR L'APPLICATION, pas redessinés : la partie a été
           jouée, les chiffres sont ceux que le moteur a calculés. C'est la seule
           façon qu'une capture ne mente pas — et la raison pour laquelle on ne
           retouche pas les montants pour les rendre flatteurs.
@@ -282,14 +375,7 @@ export default async function Home() {
           Le format sert aussi à dire quelque chose : c'est un téléphone, parce
           que c'est là que l'élève joue.
         */}
-        <Capture
-          src="/apercus/arene.webp"
-          hauteur={1400}
-          immediate
-          classeCadre="mx-auto max-w-[320px]"
-          alt="L'arène d'une équipe au quatrième tour : chiffre d'affaires 399 919 €, résultat 58 188 €, trésorerie 89 653 €, et le tour en cours à jouer."
-          legende="L'arène d'une équipe, sur le téléphone d'un élève."
-        />
+        <MainDeCartes />
       </section>
 
       {/* ---------- Les métiers, montrés ---------- */}

@@ -26,6 +26,21 @@ const CAPTURES = ["arene", "decider", "resultats"].map((nom) => ({
   chemin: join(RACINE, "public", "apercus", `${nom}.webp`),
 }));
 
+/**
+ * La taille d'un WebP, lue dans l'image elle-même.
+ *
+ * Trois lignes plutôt qu'une dépendance : nos captures sont des WebP simples
+ * (un seul bloc VP8), et leur en-tête range la largeur et la hauteur sur
+ * quatorze bits, juste après le code de départ, à une place fixe.
+ */
+function tailleWebp(chemin: string): { largeur: number; hauteur: number } {
+  const b = readFileSync(chemin);
+  if (b.toString("ascii", 0, 4) !== "RIFF" || b.toString("ascii", 8, 12) !== "WEBP") {
+    throw new Error(`${chemin} n'est pas un WebP`);
+  }
+  return { largeur: b.readUInt16LE(26) & 0x3fff, hauteur: b.readUInt16LE(28) & 0x3fff };
+}
+
 describe("les captures de la page d'accueil", () => {
   it("existent, et pèsent le poids d'images, pas celui de photos", () => {
     for (const { nom, chemin } of CAPTURES) {
@@ -40,15 +55,49 @@ describe("les captures de la page d'accueil", () => {
 
   it("sont posées avec leurs dimensions : sans elles, la page saute au chargement", () => {
     for (const { nom } of CAPTURES) expect(ACCUEIL, nom).toContain(`/apercus/${nom}.webp`);
-    // Le composant `Capture` les porte pour les trois, d'un seul endroit.
+    // Les dimensions sont écrites une fois, dans `CARTE`, et les deux façons
+    // de poser une capture — le cadre du corps de page et la carte de la main
+    // — les lisent toutes les deux là.
+    expect(ACCUEIL).toMatch(/const CARTE = \{ largeur: 800, hauteur: 1120 \}/);
     expect(ACCUEIL).toMatch(/width=\{largeur\}/);
     expect(ACCUEIL).toMatch(/height=\{hauteur\}/);
-    expect(ACCUEIL).toMatch(/hauteur = 800/);
-    expect(ACCUEIL).toMatch(/hauteur=\{1400\}/);
+    expect(ACCUEIL).toMatch(/largeur = CARTE\.largeur/);
+    expect(ACCUEIL).toMatch(/hauteur = CARTE\.hauteur/);
+    expect(ACCUEIL).toMatch(/width=\{CARTE\.largeur\}/);
+    expect(ACCUEIL).toMatch(/height=\{CARTE\.hauteur\}/);
+  });
+
+  it("ont toutes la même taille, sans quoi la main de cartes serait un escalier", () => {
+    // L'en-tête pose les trois captures en éventail. Un recadrage qui
+    // changerait la hauteur de l'une d'elles ferait dépasser une carte, et
+    // rien dans la page ne le dirait : c'est ici que ça se voit.
+    for (const { nom, chemin } of CAPTURES) {
+      expect(tailleWebp(chemin), nom).toEqual({ largeur: 800, hauteur: 1120 });
+    }
+    // Et la page annonce bien la taille qu'elles ont vraiment : une image
+    // déclarée trop haute réserve une place que l'image ne remplit pas.
+    const { largeur, hauteur } = tailleWebp(CAPTURES[0]!.chemin);
+    expect(ACCUEIL).toContain(`largeur: ${largeur}, hauteur: ${hauteur}`);
+  });
+
+  it("l'éventail est arrêté, pas tiré au sort à chaque rendu", () => {
+    // Un ordre aléatoire se tirerait deux fois — une fois sur le serveur, une
+    // fois dans le navigateur — et la page se repeindrait sous l'oeil du
+    // visiteur. Les angles et les places sont donc écrits.
+    expect(ACCUEIL).not.toMatch(/Math\.random/);
+    expect(ACCUEIL).toMatch(/-rotate-\[9deg\]/);
+    expect(ACCUEIL).toMatch(/\brotate-\[9deg\]/);
+    // La hauteur de la main vient d'un rapport de forme, pas de l'image : sans
+    // lui, l'en-tête reprendrait la hauteur de la plus haute des captures et
+    // écraserait le bloc de texte d'à côté.
+    expect(ACCUEIL).toMatch(/aspect-\[9\/8\]/);
   });
 
   it("disent ce qu'on y voit, pour qui ne les voit pas", () => {
     const alts = [...ACCUEIL.matchAll(/alt="([^"]+)"/g)].map((m) => m[1]!);
+    // Trois descriptions pour trois écrans. Les deux cartes du fond de la
+    // main sont les mêmes images, montrées en grand plus bas : elles portent
+    // un texte de remplacement vide, pour ne pas les faire lire deux fois.
     expect(alts).toHaveLength(3);
     for (const alt of alts) expect(alt.length).toBeGreaterThan(40);
     // Les chiffres des textes de remplacement sont ceux des captures : une
