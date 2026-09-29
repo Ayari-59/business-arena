@@ -124,8 +124,9 @@ export function SiteHeader() {
 
         {/* Les liens de tête, à plat sur grand écran : un menu horizontal
             direct. Sous lg, ils se replient dans le panneau « Menu », qui reste
-            le plan COMPLET à toutes les largeurs (le thème et l'installation y
-            vivent aussi, pour ne pas empiler des contrôles hétéroclites). */}
+            le plan COMPLET à toutes les largeurs. L'installation y vit aussi ;
+            le thème, lui, est remonté dans la barre — on ne choisit pas une
+            apparence derrière un panneau qui cache la page. */}
         {/* EN PARTIE, LA VITRINE S'EFFACE.
             L'élève jouait avec « Pour les enseignants · Ateliers · Entreprises
             · Espace enseignant » au-dessus de la tête : quatre sorties qui ne
@@ -191,6 +192,13 @@ export function SiteHeader() {
             ))}
           </div>
           )}
+
+          {/* LE THÈME SE CHOISIT DANS LA BARRE, PAS DANS LE MENU. Il y vivait
+              sous « Réglages », c'est-à-dire derrière un panneau qui couvre la
+              page : on changeait l'apparence sans voir ce qu'on changeait. Ici
+              la page bascule sous l'interrupteur. Sur téléphone il ne montre
+              que ses pastilles, pour tenir sur la rangée. */}
+          <ThemeSwitcher />
 
           <button
             type="button"
@@ -315,22 +323,16 @@ export function SiteHeader() {
             })}
           </div>
 
-          {/* Réglages : ce qui était éparpillé dans la barre, réuni et nommé. */}
-          <div className="mt-3 border-t border-white/10 pt-3">
-            <p className="flex items-center gap-3 px-3">
-              <span className="shrink-0 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                Réglages
-              </span>
-              <span aria-hidden className="h-px flex-1 bg-white/10" />
-            </p>
-            <div className="mt-1.5 flex items-center justify-between gap-3 px-3">
-              <span className="text-sm text-slate-300">Apparence</span>
-              <ThemeSwitcher />
-            </div>
-            {/* N'apparaît que si l'installation est réellement possible. */}
-            <div className="mt-2 px-3 empty:hidden">
-              <InstallButton />
-            </div>
+          {/* L'installation, et rien d'autre : le réglage d'apparence est monté
+              dans la barre, et une rubrique « Réglages » qui n'aurait plus
+              qu'une ligne — absente la plupart du temps, puisque l'invite
+              d'installation ne se montre que sur certains appareils — était un
+              titre au-dessus du vide. Le bouton se nomme lui-même.
+
+              `empty:hidden` : le composant ne rend rien quand l'appareil ne
+              sait pas installer, et le filet disparaît alors avec lui. */}
+          <div className="mt-3 border-t border-white/10 px-3 pt-3 empty:hidden">
+            <InstallButton />
           </div>
 
           <div className="mt-3 flex flex-wrap gap-4 border-t border-white/10 pt-3 text-xs text-slate-400">

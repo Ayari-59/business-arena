@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Browser, Page } from "playwright-core";
 import { aller, ouvrirNavigateur } from "./helpers/browser";
 import { mesurerContraste } from "./helpers/contraste";
-import { THEMES, THEME_PAR_DEFAUT } from "../../src/config/themes";
+import { THEMES, THEME_DORIGINE } from "../../src/config/themes";
 
 /**
  * La lisibilité des thèmes, mesurée dans un vrai navigateur.
@@ -16,6 +16,12 @@ import { THEMES, THEME_PAR_DEFAUT } from "../../src/config/themes";
  * textes tertiaires en dessous de 4,5 pour 1 depuis toujours, et ce test n'a
  * pas pour objet de les corriger. Il garde une chose : qu'un thème ne dégrade
  * pas ce qui était lisible.
+ *
+ * L'ÉTALON N'EST PAS « LE THÈME PAR DÉFAUT ». Il l'a été, tant que les deux se
+ * confondaient. Depuis que le site s'ouvre en clair, s'étalonner sur le thème
+ * servi reviendrait à comparer le clair à lui-même : le dernier essai de ce
+ * fichier deviendrait une tautologie, et il est précisément celui qui a fait
+ * décaler les paliers de texte d'un cran.
  */
 const PAGES = ["/", "/jouer", "/entreprises", "/concepts", "/animations"];
 
@@ -70,8 +76,8 @@ describe("lisibilité des thèmes", () => {
   });
 
   it("aucun thème ne rend illisible un texte qui l'était sur le thème d'origine", () => {
-    const etalon = parTheme.get(THEME_PAR_DEFAUT)!;
-    for (const theme of THEMES.filter((t) => t.code !== THEME_PAR_DEFAUT)) {
+    const etalon = parTheme.get(THEME_DORIGINE)!;
+    for (const theme of THEMES.filter((t) => t.code !== THEME_DORIGINE)) {
       const releve = parTheme.get(theme.code)!;
       const aggraves: string[] = [];
       for (const [cle, ratio] of releve) {
@@ -91,8 +97,8 @@ describe("lisibilité des thèmes", () => {
   });
 
   it("aucun thème n'introduit de texte franchement illisible", () => {
-    const etalon = parTheme.get(THEME_PAR_DEFAUT)!;
-    for (const theme of THEMES.filter((t) => t.code !== THEME_PAR_DEFAUT)) {
+    const etalon = parTheme.get(THEME_DORIGINE)!;
+    for (const theme of THEMES.filter((t) => t.code !== THEME_DORIGINE)) {
       const nouveaux = [...parTheme.get(theme.code)!]
         .filter(([cle, ratio]) => ratio < 3 && (etalon.get(cle) ?? 0) >= 3)
         .map(([cle, ratio]) => `${cle} : ${ratio}`);
@@ -124,6 +130,6 @@ describe("lisibilité des thèmes", () => {
     // décompte est ce qui a fait décaler les paliers de texte d'un cran.
     const compte = (code: string) =>
       [...parTheme.get(code)!].filter(([, r]) => r < 4.5).length;
-    expect(compte("clair")).toBeLessThanOrEqual(compte(THEME_PAR_DEFAUT));
+    expect(compte("clair")).toBeLessThanOrEqual(compte(THEME_DORIGINE));
   });
 });

@@ -22,8 +22,31 @@ export interface Theme {
   apercu: { fond: string; accent: string };
 }
 
-/** Le thème appliqué tant que personne n'a choisi. Il n'a pas de feuille : c'est celle du site. */
-export const THEME_PAR_DEFAUT: CodeTheme = "sombre";
+/**
+ * LE THÈME D'ORIGINE : celui qui n'a pas de feuille, parce qu'il EST celle du
+ * site. Le sombre est l'échelle de Tailwind telle quelle ; le clair la
+ * renverse (voir theme-clair.css). Lui écrire un bloc reviendrait à recopier
+ * ce qui existe déjà, avec le risque que la copie diverge — et c'est aussi
+ * l'étalon des mesures de lisibilité : on vérifie qu'un thème ne dégrade pas
+ * ce qui était lisible, il faut donc un « ce qui était ».
+ */
+export const THEME_DORIGINE: CodeTheme = "sombre";
+
+/**
+ * LE THÈME APPLIQUÉ TANT QUE PERSONNE N'A CHOISI.
+ *
+ * Ce n'est plus celui d'origine. Le site s'ouvrait en sombre, ce qui allait
+ * bien à l'arène — on y joue en salle, projecteur éteint — et mal à tout le
+ * reste : un enseignant découvre le produit sur l'ordinateur de sa salle, en
+ * plein jour, souvent au vidéoprojecteur, et une page sombre y perd la moitié
+ * de son contraste. Elle s'imprime aussi mal, et c'est de ces pages-là qu'on
+ * tire des fiches.
+ *
+ * Les deux constantes étaient la même il y a peu, et les confondre coûterait
+ * une mesure : « le thème par défaut » et « le thème de référence » se lisent
+ * pareil et ne disent pas la même chose.
+ */
+export const THEME_PAR_DEFAUT: CodeTheme = "clair";
 
 /** La clé du navigateur. Le choix reste sur l'appareil, il ne part sur aucun serveur. */
 export const CLE_THEME = "arena-theme";
@@ -32,7 +55,7 @@ export const THEMES: Theme[] = [
   {
     code: "sombre",
     nom: "Sombre",
-    description: "Gris bleuté et ambre, l'habillage d'origine.",
+    description: "Gris bleuté et ambre, l'habillage d'origine. À l'aise dans une salle sombre.",
     apercu: { fond: "#020618", accent: "#f59e0b" },
   },
   {

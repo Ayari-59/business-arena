@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Browser, Page } from "playwright-core";
 import { aller, ouvrirNavigateur } from "./helpers/browser";
-import { CLE_THEME, THEMES, THEME_PAR_DEFAUT } from "../../src/config/themes";
+import { CLE_THEME, THEMES, THEME_DORIGINE, THEME_PAR_DEFAUT } from "../../src/config/themes";
 
 /**
  * La bascule de thème, dans un vrai navigateur.
@@ -14,6 +14,9 @@ import { CLE_THEME, THEMES, THEME_PAR_DEFAUT } from "../../src/config/themes";
  * la page suivante.
  */
 const AUTRE = THEMES.find((t) => t.code !== THEME_PAR_DEFAUT)!;
+const SERVI = THEMES.find((t) => t.code === THEME_PAR_DEFAUT)!;
+/** Le nom accessible d'une position de l'interrupteur. */
+const position = (nom: string) => `Thème ${nom.toLowerCase()}`;
 
 let navigateur: Browser;
 let page: Page;
@@ -35,23 +38,31 @@ describe("la bascule de thème", () => {
     );
   });
 
-  it("le bouton annonce le thème vers lequel il mène, pas celui qui est actif", async () => {
-    // Un bouton qui afficherait le thème COURANT se lirait comme un état, et on
-    // cliquerait dessus en croyant y aller alors qu'on y est déjà.
-    // Le sélecteur de thème vit désormais dans le menu (zone Réglages) ; on ouvre.
-    await page.getByRole("button", { name: "Menu" }).click();
-    const bouton = page.getByRole("button", { name: `Passer au thème ${AUTRE.nom.toLowerCase()}` });
-    await expect.poll(() => bouton.count()).toBe(1);
-    expect((await bouton.innerText()).trim().toLowerCase()).toBe(AUTRE.nom.toLowerCase());
+  it("l'interrupteur est dans la barre, montre les deux thèmes et dit lequel est retenu", async () => {
+    // Il a été un bouton unique, rangé dans le panneau « Menu » : on changeait
+    // l'apparence derrière une carte qui couvre la page, et un nom de thème
+    // seul ne disait pas s'il nommait l'état ou la destination. Les positions
+    // sont donc visibles SANS ouvrir le menu, et la retenue s'annonce.
+    for (const theme of THEMES) {
+      await expect
+        .poll(() => page.getByRole("button", { name: position(theme.nom) }).count())
+        .toBe(1);
+    }
+    const retenu = page.getByRole("button", { name: position(SERVI.nom) });
+    expect(await retenu.getAttribute("aria-pressed")).toBe("true");
+    const autre = page.getByRole("button", { name: position(AUTRE.nom) });
+    expect(await autre.getAttribute("aria-pressed")).toBe("false");
   });
 
-  it("un clic change le thème et le bouton propose alors le retour", async () => {
-    await page.getByRole("button", { name: `Passer au thème ${AUTRE.nom.toLowerCase()}` }).click();
+  it("un clic sur l'autre position change le thème, et la marque passe avec", async () => {
+    await page.getByRole("button", { name: position(AUTRE.nom) }).click();
     expect(await page.evaluate(() => document.documentElement.dataset.theme)).toBe(AUTRE.code);
-    const retour = page.getByRole("button", {
-      name: new RegExp(THEME_PAR_DEFAUT, "i"),
-    });
-    await expect.poll(() => retour.count()).toBe(1);
+    expect(
+      await page.getByRole("button", { name: position(AUTRE.nom) }).getAttribute("aria-pressed"),
+    ).toBe("true");
+    expect(
+      await page.getByRole("button", { name: position(SERVI.nom) }).getAttribute("aria-pressed"),
+    ).toBe("false");
   });
 
   it("le choix survit au rechargement et au changement de page", async () => {
@@ -65,8 +76,8 @@ describe("la bascule de thème", () => {
   });
 
   it("le thème est posé avant le premier affichage, pas après", async () => {
-    // Sans le script d'amorçage, la page arrive en sombre puis bascule sous les
-    // yeux du lecteur. On le vérifie sur le document brut, avant tout script de
+    // Sans le script d'amorçage, la page arrive sur le thème servi par défaut
+    // puis bascule sous les yeux du lecteur. On le vérifie sur le document brut, avant tout script de
     // l'application : l'attribut du serveur doit y être, et l'amorce juste après.
     const html = await page.evaluate(async () => (await fetch("/entreprises")).text());
     expect(html).toContain(`data-theme="${THEME_PAR_DEFAUT}"`);
@@ -91,7 +102,7 @@ describe("la bascule de thème", () => {
     expect(await fichier()).toBe("logo-light.svg");
     await page.evaluate((code) => {
       document.documentElement.dataset.theme = code;
-    }, THEME_PAR_DEFAUT);
+    }, THEME_DORIGINE);
     expect(await fichier()).toBe("logo.svg");
   });
 });

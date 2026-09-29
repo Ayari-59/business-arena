@@ -232,6 +232,11 @@
  * salissure — il lui faut moins d'opacité et une teinte encrée, pas du noir.
  * ------------------------------------------------------------------------- */
 :root {
+  /* Ce que le navigateur dessine lui-même — barres de défilement, cases à
+     cocher, sélecteurs de date, champs de saisie — ne lit pas nos variables.
+     Sans cette ligne il les dessinait en clair sur une page sombre : une
+     barre de défilement blanche le long d'un site encre. */
+  color-scheme: dark;
   --ombre-carte:
     0 1px 2px rgb(0 0 0 / 0.3),
     0 10px 28px -14px rgb(0 0 0 / 0.5);
@@ -349,6 +354,10 @@ h1 {
 /* Laiton du thème clair : pas sombres pour l'encre et les boutons, pas hauts
    pour les fonds teintés — dans le sens inversé du thème clair généré. */
 [data-theme="clair"] {
+  /* Même remarque qu'au :root, dans l'autre sens : ce thème est celui que le
+     site sert par défaut, et ses champs comme sa barre de défilement doivent
+     être ceux d'une page claire. */
+  color-scheme: light;
   /* Sur fond clair, l'ombre du thème sombre serait une salissure : moins
      d'opacité, et une teinte encrée plutôt que du noir pur. */
   --ombre-carte:

@@ -1,7 +1,13 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { genererThemeClair, FICHIER_GENERE, SOURCE_TAILWIND } from "../../scripts/generer-theme-clair";
-import { CLE_THEME, estCodeTheme, THEMES, THEME_PAR_DEFAUT } from "../../src/config/themes";
+import {
+  CLE_THEME,
+  estCodeTheme,
+  THEMES,
+  THEME_DORIGINE,
+  THEME_PAR_DEFAUT,
+} from "../../src/config/themes";
 
 /**
  * Les thèmes tiennent en deux moitiés qui ne se parlent pas : la liste, en
@@ -15,6 +21,7 @@ const GLOBALS = readFileSync("src/app/globals.css", "utf-8");
 const CLAIR = readFileSync(FICHIER_GENERE, "utf-8");
 const LAYOUT = readFileSync("src/app/layout.tsx", "utf-8");
 const SELECTEUR = readFileSync("src/components/theme-switcher.tsx", "utf-8");
+const HEADER = readFileSync("src/components/site-header.tsx", "utf-8");
 
 /** Les thèmes déclarés dans les feuilles, dans l'ordre où on les y trouve. */
 const declaresEnCss = [...(GLOBALS + CLAIR).matchAll(/\[data-theme="([a-z]+)"\]/g)].map(
@@ -25,7 +32,7 @@ describe("les thèmes", () => {
   it("chaque thème du registre a ses couleurs, sauf celui d'origine", () => {
     for (const theme of THEMES) {
       const present = declaresEnCss.includes(theme.code);
-      if (theme.code === THEME_PAR_DEFAUT) {
+      if (theme.code === THEME_DORIGINE) {
         // Le thème par défaut est l'échelle de Tailwind telle quelle : lui
         // écrire un bloc reviendrait à recopier ce qui existe déjà, avec le
         // risque que la copie diverge.
@@ -55,6 +62,23 @@ describe("les thèmes", () => {
     expect(new Set(noms).size, `noms en double : ${noms.join(", ")}`).toBe(noms.length);
   });
 
+  it("le sélecteur montre les positions plutôt qu'une bascule", () => {
+    // Il a été un bouton unique qui annonçait le thème d'ARRIVÉE, rangé dans le
+    // panneau « Menu ». Deux défauts : on ne savait pas si le mot nommait
+    // l'état ou la destination, et on changeait l'apparence derrière une carte
+    // qui couvre la page. Les deux positions sont maintenant visibles, et la
+    // retenue se dit à l'assistance comme à l'œil.
+    expect(SELECTEUR, "aucune position n'est marquée comme retenue").toContain("aria-pressed");
+    expect(SELECTEUR, "la rangée n'est pas nommée").toContain('aria-label="Thème du site"');
+    expect(HEADER, "le sélecteur n'est pas dans la barre").toMatch(
+      /<ThemeSwitcher \/>[\s\S]{0,800}aria-controls="plan-du-site"/,
+    );
+    const panneau = HEADER.slice(HEADER.indexOf('id="plan-du-site"'));
+    expect(panneau, "le sélecteur est aussi resté dans le panneau").not.toContain(
+      "<ThemeSwitcher",
+    );
+  });
+
   it("le script d'amorçage et le sélecteur écrivent au même endroit", () => {
     // S'ils divergeaient, le choix serait bien enregistré et jamais relu : le
     // thème reviendrait à l'ardoise à chaque page, sans erreur nulle part.
@@ -64,8 +88,9 @@ describe("les thèmes", () => {
   });
 
   it("le sélecteur se règle sur le registre, sans recopier les noms", () => {
-    // Le bouton annonce le thème d'arrivée : il doit le tenir du registre, sinon
-    // retirer un thème laisserait un bouton qui mène vers un thème disparu.
+    // Il montre une position par thème : il doit les tenir du registre, sinon
+    // un thème ajouté n'aurait pas de position et un thème retiré en garderait
+    // une, qui ne mènerait nulle part.
     expect(SELECTEUR, "le sélecteur n'ouvre pas le registre").toContain("THEMES");
     for (const theme of THEMES) {
       expect(SELECTEUR, `« ${theme.nom} » est écrit en dur dans le sélecteur`).not.toContain(
@@ -78,6 +103,29 @@ describe("les thèmes", () => {
     // Sans valeur initiale, la première image de la page n'aurait pas de thème
     // du tout et le sélecteur afficherait un choix qui n'est pas celui appliqué.
     expect(LAYOUT).toMatch(/<html[^>]*data-theme=\{THEME_PAR_DEFAUT\}/);
+  });
+
+  it("le thème servi par défaut a bien une feuille, ou bien il n'est pas servi", () => {
+    // Les deux constantes se lisent pareil et ne disent pas la même chose.
+    // Celle qui compte ici est le thème SERVI : s'il désigne un code sans
+    // couleurs et qui n'est pas celui d'origine, le site s'ouvre avec un
+    // attribut que rien ne lit, et le sélecteur montre un choix qui ne
+    // s'applique pas.
+    expect(estCodeTheme(THEME_PAR_DEFAUT)).toBe(true);
+    if (THEME_PAR_DEFAUT !== THEME_DORIGINE) {
+      expect(
+        declaresEnCss.includes(THEME_PAR_DEFAUT),
+        `${THEME_PAR_DEFAUT} est servi par défaut mais ne change aucune couleur`,
+      ).toBe(true);
+    }
+  });
+
+  it("le thème servi par défaut dit au navigateur ce qu'il est", () => {
+    // Les barres de défilement, les champs et les cases à cocher sont dessinés
+    // par le navigateur, qui ne lit pas nos variables : sans `color-scheme`,
+    // une page claire garde les commandes d'une page sombre, et l'inverse.
+    expect(GLOBALS).toMatch(/:root\s*\{[^}]*color-scheme: dark;/);
+    expect(GLOBALS).toMatch(/\[data-theme="clair"\]\s*\{[^}]*color-scheme: light;/);
   });
 });
 

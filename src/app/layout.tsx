@@ -40,7 +40,11 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    // « black-translucent » laisse la page passer sous la barre d'état et en
+    // écrit l'heure en BLANC : lisible sur l'encre du thème sombre, invisible
+    // depuis que le site s'ouvre en clair. « default » rend une barre opaque à
+    // texte foncé, qui va aux deux.
+    statusBarStyle: "default",
     title: "Arena",
   },
   icons: {
