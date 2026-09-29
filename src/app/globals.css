@@ -500,16 +500,20 @@ h1 {
 }
 
 /* ---------------------------------------------------------------------------
- * « ARENA » en pied de page : un ambre atténué à 70 % sur fond sombre, qui
- * lisait à 5,2 pour 1. Le même voile sur fond clair tombait à 3,9 : sous le
- * seuil AA, et le seul texte que le thème clair dégradait. Sur fond clair,
- * l'ambre du thème (déjà un laiton sombre) s'écrit plein.
+ * « ARENA » EN PIED DE PAGE : le nom de la marque, à l'or de la marque.
+ *
+ * Il s'est longtemps écrit en ambre BRUT de Tailwind, atténué à 70 %. Trois
+ * défauts dans une ligne. L'ambre brut n'est pas la couleur du site, qui
+ * remplace cet ambre par un or patiné. L'opacité fabriquait une valeur de
+ * laiton de plus, sur une page qui vient d'en ramener quatre à une. Et le
+ * résultat, #b28921 une fois peint, lisait à 6 pour 1 quand l'or de la maison
+ * en donne 9,85.
+ *
+ * Il ne reste donc rien à régler : le nom prend l'accent du site, qui est déjà
+ * propre à chaque thème. Une règle au lieu de deux, et zéro valeur écrite à la
+ * main.
  * ------------------------------------------------------------------------- */
 .accent-arena {
-  color: rgb(251 191 36 / 0.7);
-}
-
-[data-theme="clair"] .accent-arena {
   color: var(--color-amber-400);
 }
 

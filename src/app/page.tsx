@@ -457,7 +457,10 @@ export default async function Home() {
               aide à choisir sa simulation n'y figurait pas. */}
           <div className="flex flex-wrap gap-4">
             {[...NAVIGATION.flatMap((g) => g.liens), ...LIENS_LEGAUX].map((lien) => (
-              <Link key={lien.href} href={lien.href} className="hover:text-slate-400">
+              // Le survol menait à `slate-400`, c'est-à-dire à la couleur que
+              // le lien avait déjà : un survol qui ne fait rien apprend au
+              // lecteur que rien n'est cliquable ici.
+              <Link key={lien.href} href={lien.href} className="transition-colors hover:text-slate-200">
                 {lien.libelle}
               </Link>
             ))}
