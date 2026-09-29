@@ -18,7 +18,18 @@ export interface Theme {
   nom: string;
   /** Ce que le thème change, en une phrase, pour le sélecteur. */
   description: string;
-  /** Les deux couleurs de la pastille : le fond, puis l'accent. */
+  /**
+   * Les deux couleurs de la pastille : le fond, puis l'accent.
+   *
+   * ELLES S'ÉCRIVENT EN CLAIR, et c'est le seul endroit du site où une couleur
+   * doit échapper aux variables : la pastille représente l'AUTRE thème, donc
+   * elle ne peut pas lire la palette que le thème courant vient de poser.
+   *
+   * Le revers est qu'elles se recopient, et qu'une copie dérive : elles ont
+   * porté l'amber brut de Tailwind et le gris d'usine pendant que le site
+   * servait un or patiné sur une nuit encrée. La pastille censée MONTRER le
+   * thème sombre peignait des couleurs que le thème sombre n'a pas.
+   */
   apercu: { fond: string; accent: string };
 }
 
@@ -56,13 +67,13 @@ export const THEMES: Theme[] = [
     code: "sombre",
     nom: "Sombre",
     description: "Gris bleuté et ambre, l'habillage d'origine. À l'aise dans une salle sombre.",
-    apercu: { fond: "#020618", accent: "#f59e0b" },
+    apercu: { fond: "#070c1a", accent: "#d8b45c" },
   },
   {
     code: "clair",
     nom: "Clair",
     description: "Fond clair, lisible en salle éclairée et économe à l'impression.",
-    apercu: { fond: "#f8fafc", accent: "#b45309" },
+    apercu: { fond: "#f8fafc", accent: "#5c470f" },
   },
 ];
 

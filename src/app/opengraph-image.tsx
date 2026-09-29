@@ -15,9 +15,18 @@ export const alt = TITRE_ACCUEIL;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-const AMBRE = "#d97706";
-const FOND = "#020617";
-const CARTE = "#0f172a";
+/**
+ * LES COULEURS DE LA MAISON, PAS CELLES DE TAILWIND.
+ *
+ * Cette image portait l'amber brut (#d97706) et le gris d'usine (#020617) :
+ * un orange à 58° de teinte et un fond sans bleu, quand l'identité du site
+ * est un or patiné à 87° sur une nuit encrée. Une image de partage est
+ * pourtant le premier contact qu'un lien crée, souvent le seul, et elle était
+ * la seule surface du produit à ne pas ressembler au produit.
+ */
+const AMBRE = "#d8b45c";
+const FOND = "#070c1a";
+const CARTE = "#0e1526";
 const BORDURE = "rgba(255,255,255,0.10)";
 
 function Tuile({ label, value, color }: { label: string; value: string; color: string }) {

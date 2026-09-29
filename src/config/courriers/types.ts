@@ -113,8 +113,8 @@ export const NATURES: Record<
     label: "Vie interne",
     mention: "VIE DE L'ENTREPRISE",
     className: "border-amber-400/40 text-amber-300",
-    accent: "#fbbf24",
-    encre: "#b45309",
+    accent: "#d8b45c",
+    encre: "#5c470f",
   },
   macro: {
     label: "Macro-économie",
