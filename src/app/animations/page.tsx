@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ATELIERS, dureeTotaleHeures } from "@/config/ateliers";
 import { scenarioByCode } from "@/config/scenarios/registry";
+import { HaloDePage } from "@/components/halo-de-page";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/animations" },
@@ -19,11 +20,26 @@ export const metadata: Metadata = {
  * déroulé.
  */
 
+/**
+ * L'EXIGENCE D'UN ATELIER, EN QUATRE CRANS.
+ *
+ * Elle s'écrivait avec QUATRE FOIS LA MÊME ÉTOILE, les dernières simplement
+ * plus pâles. Deux défauts dans un seul dessin, et c'est une mesure qui les a
+ * trouvés, pas un œil : les étoiles éteintes tombaient à 1,36 pour 1 sur fond
+ * clair et 1,76 sur fond sombre, quand le seuil de lisibilité est à 4,5 —
+ * c'est-à-dire qu'elles n'étaient pas visibles du tout. Et le cran se lisait
+ * alors PAR LA COULEUR SEULE, ce qui ne marche ni pour un daltonien, ni à
+ * l'impression, ni au vidéoprojecteur, qui est l'écran de cette page.
+ *
+ * Deux glyphes plutôt qu'une, pleine et creuse, à la même encre : l'exigence
+ * se lit à la forme, et les quatre crans sont lisibles. C'est déjà ce que font
+ * les réussites de l'arène.
+ */
 function Etoiles({ n }: { n: number }) {
   return (
     <span className="text-amber-400" aria-label={`exigence ${n} sur 4`}>
       {"★".repeat(n)}
-      <span className="text-slate-700">{"★".repeat(4 - n)}</span>
+      {"☆".repeat(4 - n)}
     </span>
   );
 }
@@ -41,10 +57,7 @@ const IMMERSIONS = ATELIERS.filter((a) => a.reglages.concours);
 export default function AteliersPage() {
   return (
     <main id="main" className="relative overflow-hidden">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-40 left-1/2 h-[420px] w-[900px] -translate-x-1/2 rounded-full bg-amber-400/10 blur-3xl"
-      />
+      <HaloDePage />
 
       <section className="mx-auto max-w-4xl px-6 py-14">
         <p className="text-xs uppercase tracking-[0.3em] text-slate-400">

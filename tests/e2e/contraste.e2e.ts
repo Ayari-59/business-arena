@@ -140,6 +140,27 @@ describe("lisibilité des thèmes", () => {
     }
   });
 
+  it("aucun texte n'est invisible, dans aucun thème", () => {
+    // LA RÈGLE QUI MANQUAIT. Tout ce fichier compare un thème à l'autre : il
+    // attrape ce qu'un thème DÉGRADE, et laisse passer ce qui est illisible
+    // dans les DEUX. C'est arrivé, et il a fallu un audit à part pour le voir :
+    // l'exigence d'un atelier s'écrivait en quatre étoiles identiques dont les
+    // dernières étaient simplement plus pâles, à 1,36 pour 1 sur fond clair et
+    // 1,76 sur fond sombre. Deux thèmes d'accord sur l'illisible, et aucune
+    // règle pour le dire.
+    //
+    // Le plancher est à 3 et non à 4,5 : le site a des textes tertiaires sous
+    // le seuil WCAG depuis toujours, et ce fichier n'a pas pour objet de les
+    // corriger. Trois pour un, c'est la limite en dessous de laquelle un texte
+    // n'est plus difficile à lire, il est absent.
+    for (const theme of THEMES) {
+      const invisibles = [...parTheme.get(theme.code)!]
+        .filter(([, ratio]) => ratio < 3)
+        .map(([cle, ratio]) => `${cle} : ${ratio}`);
+      expect(invisibles, `${theme.code} : ${invisibles.length} textes sous 3 pour 1`).toEqual([]);
+    }
+  });
+
   it("le thème clair n'est pas moins lisible que le thème d'origine", () => {
     // Un fond blanc est plus lumineux que le fond sombre n'est sombre : le
     // renversement exact de l'échelle affaiblit les textes secondaires, et ce

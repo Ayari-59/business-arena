@@ -239,16 +239,30 @@
   color-scheme: dark;
 }
 
-/* L'ombre et le creux de l'échelle d'origine. Le second sélecteur les rend à
-   un bloc posé à CONTRE-JOUR sur une page claire : il redevient une surface
-   sombre, il lui faut donc l'ombre d'une surface sombre. Une liste plutôt
-   qu'une copie — deux valeurs recopiées, c'est deux valeurs qui divergent. */
+/* Les reliefs d'une surface SOMBRE : l'ombre, le creux d'un champ, la lumière
+   du haut d'une carte, le halo de la page. Le second sélecteur les rend à un
+   bloc posé à CONTRE-JOUR sur une page claire — il redevient une surface
+   sombre, il lui faut les reliefs qui vont avec. Une liste plutôt qu'une
+   copie : deux valeurs recopiées, ce sont deux valeurs qui divergent.
+
+   UNE OMBRE S'INVERSE, UN REFLET NON. C'est la limite du renversement
+   mécanique, et elle s'est vue à l'écran avant de se comprendre : la carte
+   posait un voile BLANC à 4 % sur son bord haut — la lumière vient d'en haut
+   —, et le thème clair, qui échange le blanc et le noir, en faisait un voile
+   noir. Une ombre en haut, c'est-à-dire une lumière venue d'en bas. Mesuré sur
+   une vraie carte : neuf crans d'écart haut/bas sur fond sombre, UN À L'ENVERS
+   sur fond clair, autant dire une carte plate. Le blanc de cette lumière
+   s'écrit donc en clair (#fff), hors du jeu des variables, et son opacité
+   change de thème : 4 % suffisent à éclairer une surface presque noire, il en
+   faut soixante pour éclairer une surface presque blanche. */
 :root,
 [data-theme="clair"] .contre-jour {
   --ombre-carte:
     0 1px 2px rgb(0 0 0 / 0.3),
     0 10px 28px -14px rgb(0 0 0 / 0.5);
   --creux-champ: inset 0 1px 2px rgb(0 0 0 / 0.25);
+  --lumiere-carte: color-mix(in oklab, #fff 4%, transparent);
+  --halo-de-page: color-mix(in oklab, var(--color-amber-500) 12%, transparent);
 }
 
 @utility carte {
@@ -257,7 +271,7 @@
   background-color: var(--color-slate-900);
   background-image: linear-gradient(
     to bottom,
-    color-mix(in oklab, white 4%, transparent),
+    var(--lumiere-carte),
     transparent 55%
   );
   box-shadow: var(--ombre-carte);
@@ -326,7 +340,7 @@ body {
   font-family: var(--font-sans);
   background-image: radial-gradient(
     60rem 40rem at 50% -12rem,
-    color-mix(in oklab, var(--color-amber-500) 12%, transparent),
+    var(--halo-de-page),
     transparent 70%
   );
   background-attachment: fixed;
@@ -380,6 +394,18 @@ h1 {
     0 1px 2px rgb(15 23 42 / 0.06),
     0 10px 28px -16px rgb(15 23 42 / 0.18);
   --creux-champ: inset 0 1px 2px rgb(15 23 42 / 0.05);
+  /* Voir le bloc des reliefs sombres : un reflet ne s'inverse pas. Il faut
+     beaucoup plus de blanc pour éclairer une surface presque blanche. */
+  --lumiere-carte: color-mix(in oklab, #fff 60%, transparent);
+  /* LE HALO A ÉTÉ DESSINÉ POUR LE FOND SOMBRE, où le laiton est une lueur
+     chaude. Sur le papier, le même laiton est un brun foncé : mesuré au pixel
+     en haut de l'accueil, le centre tombait à #e2e0da quand le reste de la
+     page est à #f8fafc — un tiers de page en gris chaud, vingt pour cent plus
+     sombre que le reste et de teinte opposée au fond, qui est bleuté. Une
+     lueur était devenue une tache.
+     Sur fond clair on prend donc le laiton CLAIR de l'échelle, et faiblement :
+     le haut de page se réchauffe au lieu de se salir. */
+  --halo-de-page: color-mix(in oklab, var(--color-amber-950) 30%, transparent);
   --color-amber-200: #8a6a16;
   --color-amber-300: #6b5312;
   --color-amber-400: #5c470f;
@@ -401,6 +427,20 @@ h1 {
  * Les utilitaires de Tailwind lisent des variables, donc aucune page n'a
  * besoin de connaître le thème courant. La liste est dans src/config/themes.ts.
  * ------------------------------------------------------------------------- */
+
+/* ---------------------------------------------------------------------------
+ * LE DISQUE DE LAITON DE L'EN-TÊTE.
+ *
+ * Six pages publiques le dessinaient à la main, à l'identique :
+ * `bg-amber-400/10 blur-3xl`. Six copies d'une décoration, c'est six
+ * décorations qui dérivent — et surtout six endroits où corriger le jour où
+ * l'on s'aperçoit que le laiton du thème clair est un brun foncé, donc que la
+ * lueur y est une tache. Il lit maintenant la même variable que le halo du
+ * corps de page, et change donc de teinte avec le thème.
+ * ------------------------------------------------------------------------- */
+.halo-de-page {
+  background-color: var(--halo-de-page);
+}
 
 /* ---------------------------------------------------------------------------
  * LES CAPTURES D'ÉCRAN VONT À CONTRE-COURANT DE LA PAGE.

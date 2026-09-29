@@ -10,6 +10,7 @@ import { preuvesDusage } from "@/services/preuves-dusage.service";
 import { bouton } from "@/components/bouton";
 import { BandeFinale } from "@/components/bande-finale";
 import { BandeDeChiffres } from "@/components/bande-de-chiffres";
+import { HaloDePage } from "@/components/halo-de-page";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/enseignants" },
@@ -73,10 +74,7 @@ export default async function EnseignantsPage() {
   const preuves = await preuvesDusage();
   return (
     <main id="main" className="relative overflow-hidden">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-40 left-1/2 h-[500px] w-[900px] -translate-x-1/2 rounded-full bg-amber-400/10 blur-3xl"
-      />
+      <HaloDePage />
 
       {/* Hero */}
       <section className="mx-auto max-w-5xl px-6 pb-12 pt-16 text-center">

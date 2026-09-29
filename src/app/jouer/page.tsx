@@ -8,6 +8,7 @@ import { DEFAULT_SCENARIO_CODE, SCENARIO_CHOICES, SECTOR_LABELS, familyOf } from
 import { SubmitButton } from "@/components/submit-button";
 import { QuickConfigFields } from "@/components/quick-config-form";
 import { bouton } from "@/components/bouton";
+import { HaloDePage } from "@/components/halo-de-page";
 
 export const dynamic = "force-dynamic";
 
@@ -45,11 +46,7 @@ export default async function JouerPage({
 
   return (
     <main id="main" className="relative overflow-hidden">
-      {/* halo décoratif */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-40 left-1/2 h-[500px] w-[900px] -translate-x-1/2 rounded-full bg-amber-400/10 blur-3xl"
-      />
+      <HaloDePage />
 
       <section className="mx-auto max-w-6xl px-6 py-8 sm:py-16">
         {/*

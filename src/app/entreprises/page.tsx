@@ -11,6 +11,7 @@ import {
 import { PictoSecteur } from "@/components/picto-secteur";
 import { bouton } from "@/components/bouton";
 import { BandeFinale } from "@/components/bande-finale";
+import { HaloDePage } from "@/components/halo-de-page";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/entreprises" },
@@ -135,10 +136,7 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
 export default function EntreprisesPage() {
   return (
     <main id="main" className="relative overflow-hidden">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-40 left-1/2 h-[420px] w-[900px] -translate-x-1/2 rounded-full bg-amber-400/10 blur-3xl"
-      />
+      <HaloDePage />
 
       <section className="mx-auto max-w-6xl px-6 py-14">
         <p className="text-xs uppercase tracking-[0.3em] text-amber-400">

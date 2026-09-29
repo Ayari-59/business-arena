@@ -36,8 +36,31 @@ describe("la carte, définie une fois", () => {
   it("porte ses trois traits : lumière du haut, ombre, rayon", () => {
     const bloc = css.slice(css.indexOf("@utility carte"), css.indexOf("}", css.indexOf("@utility carte")));
     expect(bloc).toContain("linear-gradient");
+    expect(bloc).toContain("var(--lumiere-carte)");
     expect(bloc).toContain("var(--ombre-carte)");
     expect(bloc).toContain("border-radius");
+  });
+
+  it("sa lumière du haut est propre à chaque thème, et s'écrit en blanc vrai", () => {
+    // UNE OMBRE S'INVERSE, UN REFLET NON. La lumière du haut s'est longtemps
+    // écrite « white 4% » dans l'utilitaire, et le thème clair, qui échange le
+    // blanc et le noir, en faisait un voile NOIR : une ombre en haut,
+    // c'est-à-dire une lumière venue d'en bas. Mesuré : neuf crans d'écart
+    // haut/bas sur fond sombre, un à l'envers sur fond clair.
+    //
+    // Deux choses se gardent donc. Que la valeur soit propre à chaque thème,
+    // comme l'ombre. Et que son blanc soit écrit EN CLAIR : `white` désigne
+    // ici la variable du thème, qui vaut noir sur fond clair — le défaut
+    // reviendrait par ce seul mot.
+    expect(css).toMatch(/:root,\s*\[data-theme="clair"\] \.contre-jour\s*\{[^}]*--lumiere-carte:[^;]*#fff/);
+    expect(css).toMatch(
+      /\[data-theme="clair"\],\s*\[data-theme="sombre"\] \.contre-jour\s*\{[^}]*--lumiere-carte:[^;]*#fff/,
+    );
+    for (const bloc of css.matchAll(/--lumiere-carte:([^;]+);/g)) {
+      expect(bloc[1], "le blanc du reflet passe par la variable du thème").not.toMatch(
+        /\bwhite\b/,
+      );
+    }
   });
 
   it("son ombre est propre à chaque thème, et à chaque bloc à contre-jour", () => {

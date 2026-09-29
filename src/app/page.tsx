@@ -9,6 +9,7 @@ import { PictoSecteur } from "@/components/picto-secteur";
 import { LIENS_LEGAUX, NAVIGATION } from "@/config/navigation";
 import { DESCRIPTION_ACCUEIL, TITRE_ACCUEIL } from "@/config/seo";
 import { bouton } from "@/components/bouton";
+import { HaloDePage } from "@/components/halo-de-page";
 
 // La landing ne lit que la configuration de plateforme (rien par utilisateur) :
 // on la met en cache et on la régénère au plus toutes les 5 min (ISR) plutôt
@@ -228,11 +229,7 @@ export default async function Home() {
   const decisions = etendueDesDecisions();
   return (
     <main id="main" className="relative overflow-hidden">
-      {/* halo décoratif */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-40 left-1/2 h-[500px] w-[900px] -translate-x-1/2 rounded-full bg-amber-400/10 blur-3xl"
-      />
+      <HaloDePage />
 
       {config.announcement ? (
         <div className="border-b border-amber-400/20 bg-amber-950/30 px-6 py-2 text-center text-sm text-amber-200">
