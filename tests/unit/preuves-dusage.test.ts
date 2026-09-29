@@ -92,8 +92,16 @@ describe("les preuves d'usage", () => {
   it("est posée avant les promesses de la page enseignants", () => {
     const page = readFileSync(join(process.cwd(), "src/app/enseignants/page.tsx"), "utf8");
     expect(page).toContain("<PreuvesDusageBande");
-    // Les pastilles de confiance disent ce que le produit FERA ; les totaux
-    // disent ce qu'il a déjà fait, et viennent donc d'abord.
-    expect(page.indexOf("<PreuvesDusageBande")).toBeLessThan(page.indexOf("{CONFIANCE.map"));
+    // Les quatre engagements disent ce que le produit FERA — sans compte
+    // élève, rien à installer ; les totaux disent ce qu'il a déjà fait, et
+    // viennent donc d'abord. C'est la seule chose de cette page qu'un lecteur
+    // n'a pas à croire sur parole : la faire passer après les promesses la
+    // rangerait avec elles.
+    //
+    // Les engagements tenaient une section à eux, et ce test cherchait leur
+    // boucle ; ils sont descendus sous les boutons de la bande finale, où une
+    // objection se lève vraiment. L'ordre, lui, ne change pas.
+    expect(page.indexOf("<PreuvesDusageBande")).toBeLessThan(page.indexOf("mentions={CONFIANCE}"));
+    expect(page).toContain("mentions={CONFIANCE}");
   });
 });

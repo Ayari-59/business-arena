@@ -26,15 +26,25 @@
  *
  * Les boutons restent à la page : ils ne mènent pas au même endroit selon
  * qu'on lit les métiers, le parcours d'une classe ou le guide de prise en
- * main, et c'est bien le seul contenu de cette bande.
+ * main.
+ *
+ * LES MENTIONS SE LISENT SOUS LES BOUTONS, et pas une section plus haut. Elles
+ * ont vécu sur la page des enseignants en pastilles vertes : quatre engagements
+ * — sans compte élève, rien à installer — dans une section à eux, cent
+ * soixante pixels de défilement, et la seule couleur verte d'une page laiton.
+ * Or une objection se lève au moment où l'on clique, pas deux écrans avant :
+ * c'est ici qu'elles servent, en une ligne.
  */
 export function BandeFinale({
   titre,
   texte,
+  mentions,
   children,
 }: {
   titre: string;
   texte: string;
+  /** Ce qui lève une objection au moment de cliquer : « sans compte élève ». */
+  mentions?: { label: string; desc: string }[];
   /** Les liens d'action, propres à chaque page. */
   children: React.ReactNode;
 }) {
@@ -46,6 +56,22 @@ export function BandeFinale({
         <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           {children}
         </div>
+        {mentions?.length ? (
+          <ul className="mt-7 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-slate-400">
+            {mentions.map((m) => (
+              // La phrase complète reste accessible : l'infobulle pour la
+              // souris, le texte caché pour une synthèse vocale. Un libellé de
+              // trois mots ne suffit pas à lever une objection à lui seul.
+              <li key={m.label} title={m.desc} className="flex items-center gap-1.5">
+                <span aria-hidden className="text-amber-400">
+                  ·
+                </span>
+                {m.label}
+                <span className="sr-only"> : {m.desc}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </div>
     </section>
   );

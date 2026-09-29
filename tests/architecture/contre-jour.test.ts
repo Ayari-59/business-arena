@@ -126,23 +126,26 @@ describe("le contre-jour", () => {
     );
   });
 
-  it("ne dépasse pas trois blocs par page — la distance, elle, se mesure au navigateur", () => {
-    // Le plafond suit la page la plus longue du site. Enseignants fait quatre
-    // mille cinq cents pixels et en porte trois : une coupure en tête, les
-    // ateliers au milieu, la bande finale — chacune séparée des autres par
-    // plus d'une fenêtre. Une quatrième n'y tiendrait pas, et sur une page
-    // ordinaire la troisième ne tient déjà pas.
+  it("ne dépasse pas deux blocs par page — la distance, elle, se mesure au navigateur", () => {
+    // LE PLAFOND SUIT LA PAGE LA PLUS LONGUE DU SITE, il ne la commande pas.
+    // Il est passé à trois le jour où enseignants faisait quatre mille six
+    // cents pixels et pouvait espacer trois coupures d'une fenêtre pleine ;
+    // il revient à deux maintenant qu'elle a été raccourcie et que la
+    // troisième se retrouvait à cinq cents pixels de la bande finale. Aucune
+    // page du site n'est aujourd'hui assez longue pour en porter trois.
     //
     // Ce compte est un plafond, pas la règle : ce qu'un fichier ne sait pas
     // dire, c'est si deux blocs tiennent dans la même fenêtre — cela dépend du
     // texte, de la largeur, des images chargées. Cela se mesure dans un vrai
-    // navigateur, et c'est mesuré (tests/e2e/contre-jour.e2e.ts).
+    // navigateur, et c'est mesuré (tests/e2e/contre-jour.e2e.ts). Le jour où
+    // une page redevient assez longue, c'est cette mesure qui autorisera le
+    // troisième, et ce nombre qu'il faudra relever.
     for (const { chemin, code } of PORTEURS) {
       const compte = blocs(code);
       expect(
         compte,
         `${chemin.slice(SRC.length + 1)} : ${compte} blocs à contre-jour`,
-      ).toBeLessThanOrEqual(3);
+      ).toBeLessThanOrEqual(2);
       expect(compte, `${chemin.slice(SRC.length + 1)}`).toBeGreaterThan(0);
     }
   });
