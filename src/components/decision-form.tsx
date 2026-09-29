@@ -478,7 +478,7 @@ function ChampPlafonne({
               const cran = cranDuCurseur(Number(e.currentTarget.value), maximum, pas);
               if (champ.current) poserValeur(champ.current, String(cran));
             }}
-            className="mt-2 h-5 w-full cursor-pointer accent-amber-400"
+            className="curseur mt-2 accent-amber-400"
           />
           <span className="flex justify-between gap-2 text-xs text-slate-400">
             <span>0 {suffix}</span>

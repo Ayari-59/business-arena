@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { TourDessai } from "@/components/tour-dessai";
 import Link from "next/link";
 import { getPlatformConfig } from "@/services/admin.service";
 import { etendueDesDecisions } from "@/config/decisions";
@@ -158,14 +157,46 @@ export default async function Home() {
         </div>
 
         {/*
-          UN TOUR JOUABLE, À LA PLACE D'UN COCKPIT DESSINÉ. Cette colonne
-          montrait une capture inventée — « chiffre d'affaires 346 920 € »,
-          « #2 NOVA 58,3 » —, c'est-à-dire qu'elle promettait une simulation
-          sans en faire tourner une. Le visiteur devait créer une partie pour
-          savoir de quoi il s'agissait. Deux curseurs et le vrai moteur le lui
-          disent en cinq secondes, sans compte et sans rien enregistrer.
+          UNE CAPTURE DE L'APPLICATION, ET NON UN ÉCRAN DESSINÉ.
+
+          Cette colonne a porté trois choses successives. D'abord un cockpit
+          dessiné à la main, avec des chiffres inventés — « chiffre d'affaires
+          346 920 € » — : il promettait une simulation sans en faire tourner
+          une. Puis un tour jouable, qui tenait la promesse mais faisait de
+          l'accueil un mini-jeu. Maintenant l'écran réel.
+
+          ELLE EST PRISE SUR L'APPLICATION, pas redessinée : la partie a été
+          jouée, les chiffres sont ceux que le moteur a calculés, et la barre du
+          site est celle du haut de cette page. C'est la seule façon qu'une
+          capture ne mente pas — et la raison pour laquelle on ne retouche pas
+          les montants pour les rendre flatteurs.
+
+          Le format sert aussi à dire quelque chose : c'est un téléphone, parce
+          que c'est là que l'élève joue.
         */}
-        <TourDessai />
+        <figure className="m-0">
+          <div className="mx-auto max-w-[320px] overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl shadow-slate-950/40">
+            {/*
+              Dimensions écrites : sans elles, le texte sous l'image saute au
+              chargement. `eager` parce qu'elle est dans le premier écran — la
+              charger paresseusement la ferait arriver après le reste.
+            */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/apercus/arene.webp"
+              width={800}
+              height={1400}
+              loading="eager"
+              decoding="async"
+              alt="L'arène d'une équipe au quatrième tour : chiffre d'affaires 399 919 €, résultat 58 188 €, trésorerie 89 653 €, et le tour en cours à jouer."
+              className="block w-full"
+            />
+          </div>
+          <figcaption className="mt-3 text-center text-sm leading-relaxed text-slate-400">
+            L&apos;arène d&apos;une équipe, sur le téléphone d&apos;un élève. Capture de
+            l&apos;application, chiffres compris : ils viennent d&apos;une partie jouée.
+          </figcaption>
+        </figure>
       </section>
 
       {/* ---------- Bande chiffres ---------- */}

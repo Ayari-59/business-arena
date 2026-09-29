@@ -146,7 +146,7 @@ export function QuickConfigFields({
         value={level}
         onChange={(e) => setLevel(Number(e.target.value))}
         aria-label="Niveau de difficulté"
-        className="mt-2 w-full accent-amber-500"
+        className="curseur mt-2 accent-amber-500"
       />
       <div className="flex justify-between">
         {levels.map((l) => (
