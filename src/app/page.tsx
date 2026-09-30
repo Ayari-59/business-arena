@@ -238,22 +238,17 @@ const CE_QUE_L_ELEVE_APPREND = [
 function MainDeCartes() {
   return (
     /*
-      LA MAIN DESCEND D'UN CRAN, pour que le haut des cartes tombe sur le haut
-      de « Dirigez une entreprise ».
+      LA MAIN N'EST PLUS DÉCALÉE. Elle l'a été de dix-neuf pixels, le temps
+      que le titre vive dans la colonne d'à côté : il fallait alors que le haut
+      des cartes tombe sur le haut de « Dirigez une entreprise » plutôt que sur
+      le surtitre. Le titre est passé en pleine largeur au-dessus des deux
+      colonnes, et il n'y a plus rien à aligner.
 
-      Les deux colonnes partent du même bord ; à gauche, le surtitre occupe
-      cette ligne-là, si bien que le titre commence dix-neuf pixels plus bas
-      que la carte la plus haute — assez pour que l'œil voie deux départs au
-      lieu d'un. Le décalage ne vaut QUE sur deux colonnes : en dessous, les
-      blocs s'empilent et il n'y a plus rien à aligner.
-
-      Le nombre est mesuré, pas choisi : c'est l'écart relevé dans le
-      navigateur entre le haut du titre et le haut de la carte de devant, que
-      ses quatre pour cent de décalage dans le cadre font déjà descendre.
-      tests/e2e/parcours.e2e.ts le vérifie à l'écran.
+      ELLE GRANDIT, EN REVANCHE. Figée à 440 px, elle occupait un quart d'un
+      écran de 1728 et le reste était de la marge.
     */
-    <figure className="m-0 lg:mt-[19px]">
-      <div className="relative mx-auto aspect-[9/8] w-full max-w-[440px]">
+    <figure className="m-0">
+      <div className="relative mx-auto aspect-[9/8] w-full max-w-[440px] lg:max-w-[540px] xl:max-w-[620px]">
         <CarteEnMain
           nom="decider"
           fond
@@ -273,81 +268,17 @@ function MainDeCartes() {
         />
       </div>
       {/*
-        LA MAIN EST LA BOUCLE, ET C'EST ELLE QUI LA NOMME.
+        LA LÉGENDE DIT CE QUE L'IMAGE NE PEUT PAS DIRE : que les trois écrans
+        sont ceux d'UN MÊME TOUR. Le verdict montré est celui du tour qu'on
+        voit se décider sur la carte d'à côté, et c'est ce qui fait de trois
+        images une démonstration plutôt qu'une galerie.
 
-        Les six temps ont vécu quelques heures dans une section à eux, « Un
-        tour, de bout en bout » : un titre, une phrase, une démonstration
-        animée de trois panneaux, six cents pixels de défilement pour dire ce
-        que la main de cartes montrait DÉJÀ trois écrans plus haut. Un produit
-        qui se montre deux fois se montre mal.
-
-        Les trois cartes sont exactement trois de ces six temps — l'arène où la
-        situation arrive, la feuille où l'on décide, le verdict qui tombe — et
-        ce sont de vraies captures, prises sur une partie jouée. Il ne manquait
-        que les mots. Les voici sous elles, et la légende dit lesquels des six
-        sont à l'écran plutôt que de laisser croire qu'ils y sont tous.
-
-        LA CHAÎNE NE PORTE PAS DE NUMÉROS, bien qu'elle soit ordonnée : les
-        cartes ne sont pas numérotées non plus, et deux comptes sur un même
-        écran se contrediraient.
-
-        ELLE CASSE EN TROIS ET TROIS, par une largeur maximale plutôt qu'au
-        hasard de la place disponible. Laissée libre, elle tombait en quatre
-        mots puis deux dans la colonne de l'accroche, et en trois lignes
-        inégales sur un téléphone. Deux lignes de même longueur se lisent
-        comme un dessin ; quatre plus deux se lisent comme un débordement.
+        Les six temps ont vécu ici quelques heures. Ils sont descendus juste
+        sous le premier écran : nommer la boucle est une chose, et le premier
+        écran en portait déjà quatre.
       */}
-      <figcaption className="mt-6">
-        <ol className="mx-auto flex max-w-[21rem] flex-wrap items-center justify-center gap-x-3 gap-y-2">
-          {TEMPS_DU_TOUR.map((t, i) => (
-            <li key={t.nom} className="flex items-center gap-3">
-              {/* La phrase complète reste accessible : l'infobulle pour la
-                  souris, le texte caché pour une synthèse vocale. Un mot seul
-                  ne dit pas ce qui se passe à ce moment-là. */}
-              <span
-                title={t.quoi}
-                className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300"
-              >
-                {t.nom}
-                <span className="sr-only"> : {t.quoi}</span>
-              </span>
-              {/* La flèche suit son temps au lieu de précéder le suivant : sur
-                  un téléphone la chaîne passe à la ligne, et une flèche posée
-                  avant se retrouvait seule en tête de deuxième ligne. Placée
-                  après, elle termine la ligne — ce qui est justement ce qu'une
-                  flèche veut dire. */}
-              {i < TEMPS_DU_TOUR.length - 1 ? (
-                <span aria-hidden className="text-sm text-amber-400/60">
-                  →
-                </span>
-              ) : null}
-            </li>
-          ))}
-        </ol>
-        <p className="mt-4 text-center text-sm leading-relaxed text-slate-400">
-          Les six temps d&apos;un tour. Les trois écrans ci-dessus en montrent trois, pris
-          d&apos;un même tour : l&apos;arène, la feuille de décision, le verdict.
-        </p>
-        {/* Le guide détaille chacun de ces temps, et l'ancre vise « Côté
-            élèves : jouer un tour » — la section qui déroule la boucle — et non
-            le haut d'un guide de cinq mètres. Le libellé nomme cette section :
-            ses sections sont des accordéons, l'ancre dépose sur le titre et son
-            chapeau, le détail s'ouvre d'un clic. Promettre « le détail » eût
-            été promettre l'écran suivant. */}
-        <p className="mt-3 text-center">
-          <Link
-            href="/guide#eleves"
-            className="group text-sm font-semibold text-amber-400 transition-colors hover:text-amber-300"
-          >
-            Comment se joue un tour
-            <span
-              aria-hidden
-              className="ml-1.5 inline-block transition-transform group-hover:translate-x-1"
-            >
-              →
-            </span>
-          </Link>
-        </p>
+      <figcaption className="mt-6 text-center text-sm leading-relaxed text-slate-400">
+        Trois écrans d&apos;un même tour : l&apos;arène, la feuille de décision, le verdict.
       </figcaption>
     </figure>
   );
@@ -365,8 +296,6 @@ export default async function Home() {
           déclare, une fois, pas une par page. */}
       <DonneesStructurees />
       <main id="main" className="relative overflow-hidden">
-        <HaloDePage />
-
         {config.announcement ? (
           <div className="border-b border-amber-400/20 bg-amber-950/30 px-6 py-2 text-center text-sm text-amber-200">
             📣 {config.announcement}
@@ -375,24 +304,36 @@ export default async function Home() {
 
         {/* ---------- Hero ---------- */}
         {/*
-          LE HAUT DE PAGE TENAIT SUR UN CENTRAGE VERTICAL, et c'est ce qui le
-          faisait flotter : la colonne de texte, plus courte que la capture,
-          descendait au milieu, laissant deux cents pixels de nuit au-dessus du
-          titre. Les deux colonnes partent maintenant de la même ligne.
+          LE PREMIER ÉCRAN PREND LA NUIT.
 
-          UNE SEULE ACTION. Trois boutons de même taille se disputaient l'œil, et
-          deux d'entre eux se coupaient en deux lignes. « Commencer une partie »
-          reste un bouton ; « Je suis enseignant » redevient ce qu'il est, un
-          lien ; et « voir les entreprises » descend dans la bande qui les
-          montre, juste dessous — un bouton qui promet des métiers vaut moins que
-          les métiers eux-mêmes.
+          Mesuré avant d'y toucher : le titre faisait 38,5 px à 1280 comme à
+          1728 — identique, parce qu'il se dimensionnait en unités de sa
+          COLONNE et devait tenir sur une ligne dans une demi-largeur ; les
+          captures étaient figées à 440 px ; et vingt blocs de texte se
+          partageaient les neuf cents premiers pixels. Une page dont la marque
+          s'appelle « Nuit & Laiton » ne montrait sa nuit qu'au tiers de sa
+          hauteur, à mille quatre cents pixels du haut.
+
+          TROIS CHANGEMENTS, ET UN SEUL PROCÉDÉ NOUVEAU — AUCUN.
+
+          · Le sol. `contre-jour` retourne l'échelle pour ce bloc seul : encre
+            sur une page de papier, papier sur une page de nuit. Le procédé
+            existe, il est engendré et gardé ; le hero est simplement le
+            premier endroit où il sert à ouvrir plutôt qu'à conclure.
+          · Le titre passe en pleine largeur et se dimensionne sur l'ÉCRAN, de
+            36 à 72 px. Il ne se replie qu'en dessous de 640 px, où aucune
+            largeur ne tiendrait ses deux phrases sur deux lignes.
+          · Les deux blocs qui encombraient — les six temps, ce que l'élève
+            apprend — descendent juste dessous, côte à côte. Rien n'est perdu,
+            tout descend d'un cran.
+
+          LE HALO ENTRE DANS LE BLOC. Posé sur le `main`, il lisait la teinte
+          de la PAGE et aurait éclairé la nuit d'une lueur de papier ; à
+          l'intérieur, il lit celle du contre-jour.
         */}
-        <section className="mx-auto grid max-w-6xl items-start gap-10 px-6 pb-12 pt-10 sm:pt-16 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14 lg:pb-20">
-          {/* La colonne est un conteneur de requête : le titre se dimensionne à SA
-              largeur (unités cqw), pas à celle de l'écran. Il tient donc sur une
-              seule ligne aussi bien en pleine largeur (mobile) qu'en demi-colonne
-              (desktop), sans jamais déborder. */}
-          <div style={{ containerType: "inline-size" }}>
+        <section className="contre-jour relative overflow-hidden bg-slate-950">
+          <HaloDePage />
+          <div className="relative mx-auto max-w-6xl px-6 pb-16 pt-12 sm:pt-20 lg:pb-24">
             {/*
               LE SURTITRE DISAIT QUATRE MOTS-CLÉS — « Simulation · Apprentissage ·
               Décision · Compétition » — qui pouvaient coiffer n'importe quel
@@ -400,52 +341,164 @@ export default async function Home() {
               Le filet qui le précède est la seule décoration de la page : il
               reparaît en tête de chaque section.
             */}
-            {/* Le laiton s'écrit plein. À 90 % il ne s'adoucissait pas, il
-                fabriquait une CINQUIÈME valeur de laiton sur une page qui vient
-                d'en ramener quatre à deux, pour une différence qu'on ne voit
-                pas. */}
             <p className="flex items-center gap-3 text-xs uppercase tracking-[0.28em] text-amber-400">
               <span aria-hidden className="h-px w-8 bg-amber-400/40" />
               Simulation de gestion, pour la classe
             </p>
-            {/* whitespace-nowrap + taille fluide en cqw : chaque phrase sur une
-                ligne, quel que soit le support ; le <br/> sépare les deux lignes. */}
-            <h1 className="mt-5 whitespace-nowrap text-[clamp(1rem,7cqw,3.25rem)] font-bold leading-[1.05] tracking-tight text-slate-50">
+            {/*
+              Le titre se dimensionne sur la largeur de l'ÉCRAN et non plus sur
+              celle de sa colonne : c'est ce qui le faisait plafonner à 38 px
+              sur un écran de 1728. Il ne passe à la ligne qu'en dessous de
+              640 px — au-dessus, la plus longue des deux phrases tient
+              largement, et le retour se décide au `<br/>`.
+            */}
+            <h1 className="mt-6 text-[clamp(2.25rem,6vw,4.5rem)] font-bold leading-[1.02] tracking-tight text-slate-50 sm:whitespace-nowrap">
               Dirigez une entreprise.
               <br />
               <span className="text-amber-400">Apprenez à décider.</span>
             </h1>
-            {/*
-              L'accroche faisait quatre lignes et énumérait tout : les secteurs,
-              les décisions, les modèles. On garde ce qui se retient — le nombre
-              de métiers, le fait que le marché répond, la durée d'une partie — et
-              le reste est montré plus bas plutôt que promis ici.
-            */}
-            <p className="mt-6 max-w-lg text-lg leading-relaxed text-slate-300">
-              {SCENARIO_CHOICES.length} métiers, un marché qui répond, six tours pour
-              comprendre. Vous fixez les prix, la production et les budgets ; les
-              résultats disent ce que ces choix valaient.
-            </p>
-            <div className="mt-8 flex flex-wrap items-center gap-x-7 gap-y-4">
-              <Link href="/jouer" className={bouton({ taille: "l" })}>
-                Commencer une partie
-              </Link>
-              <Link
-                href="/teacher/login"
-                className="text-sm font-semibold text-slate-200 underline decoration-amber-400/50 decoration-2 underline-offset-[6px] transition hover:text-amber-200 hover:decoration-amber-400"
-              >
-                Je suis enseignant
-              </Link>
-            </div>
-            <p className="mt-5 text-sm text-slate-400">
-              Sans compte, sans installation. Vos parties restent liées à ce navigateur.
-            </p>
 
-            {/* Le vide de la colonne gauche, occupé par ce qu'un enseignant
-                vient vérifier : ce que sa classe en retire. Le filet et les
-                capitales espacées sont ceux des autres intitulés de section —
-                le bloc ne s'annonce pas comme une nouveauté. */}
-            <section aria-labelledby="apprend" className="mt-12 border-t border-white/10 pt-6">
+            <div className="mt-10 grid items-start gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-14">
+              <div>
+                {/*
+                  L'accroche faisait quatre lignes et énumérait tout : les secteurs,
+                  les décisions, les modèles. On garde ce qui se retient — le nombre
+                  de métiers, le fait que le marché répond, la durée d'une partie — et
+                  le reste est montré plus bas plutôt que promis ici.
+                */}
+                <p className="max-w-lg text-xl leading-relaxed text-slate-300">
+                  {SCENARIO_CHOICES.length} métiers, un marché qui répond, six tours pour
+                  comprendre. Vous fixez les prix, la production et les budgets ; les
+                  résultats disent ce que ces choix valaient.
+                </p>
+                {/*
+                  UNE SEULE ACTION. Trois boutons de même taille se disputaient l'œil, et
+                  deux d'entre eux se coupaient en deux lignes. « Commencer une partie »
+                  reste un bouton ; « Je suis enseignant » redevient ce qu'il est, un
+                  lien ; et « voir les entreprises » descend dans la bande qui les
+                  montre, juste dessous — un bouton qui promet des métiers vaut moins que
+                  les métiers eux-mêmes.
+                */}
+                <div className="mt-8 flex flex-wrap items-center gap-x-7 gap-y-4">
+                  <Link href="/jouer" className={bouton({ taille: "l" })}>
+                    Commencer une partie
+                  </Link>
+                  <Link
+                    href="/teacher/login"
+                    className="text-sm font-semibold text-slate-200 underline decoration-amber-400/50 decoration-2 underline-offset-[6px] transition hover:text-amber-200 hover:decoration-amber-400"
+                  >
+                    Je suis enseignant
+                  </Link>
+                </div>
+                <p className="mt-5 text-sm text-slate-400">
+                  Sans compte, sans installation. Vos parties restent liées à ce navigateur.
+                </p>
+              </div>
+
+              {/*
+                DES CAPTURES DE L'APPLICATION, ET NON DES ÉCRANS DESSINÉS.
+
+                Cette colonne a porté trois choses successives. D'abord un cockpit
+                dessiné à la main, avec des chiffres inventés — « chiffre d'affaires
+                346 920 € » — : il promettait une simulation sans en faire tourner
+                une. Puis un tour jouable, qui tenait la promesse mais faisait de
+                l'accueil un mini-jeu. Maintenant les écrans réels.
+
+                ILS SONT PRIS SUR L'APPLICATION, pas redessinés : la partie a été
+                jouée, les chiffres sont ceux que le moteur a calculés. C'est la seule
+                façon qu'une capture ne mente pas — et la raison pour laquelle on ne
+                retouche pas les montants pour les rendre flatteurs.
+
+                Le format sert aussi à dire quelque chose : c'est un téléphone, parce
+                que c'est là que l'élève joue.
+              */}
+              <MainDeCartes />
+            </div>
+          </div>
+        </section>
+
+        {/* ---------- La boucle, et ce qu'on en retire ---------- */}
+        {/*
+          LES DEUX BLOCS QUI ENCOMBRAIENT LE PREMIER ÉCRAN, côte à côte juste
+          dessous. À gauche comment un tour FONCTIONNE, à droite ce que l'élève
+          en RETIRE : deux questions différentes, et c'est pour cela qu'elles
+          tiennent ensemble sans se répéter.
+        */}
+        {/* L'air de cette bande n'est pas qu'une question de goût : elle sépare
+            le premier écran à contre-jour de la bande des chiffres, qui l'est
+            aussi. Il faut une fenêtre PLEINE entre les deux, sans quoi il
+            existe une position de défilement où les deux se voient et
+            s'annulent — tests/e2e/contre-jour.e2e.ts la mesure. */}
+        <section
+          aria-labelledby="la-boucle"
+          className="mx-auto max-w-6xl px-6 py-16 lg:py-24"
+        >
+          <div className="grid gap-x-14 gap-y-12 lg:grid-cols-2">
+            <div>
+              <h2
+                id="la-boucle"
+                className="flex items-center gap-3 text-xs uppercase tracking-[0.28em] text-slate-400"
+              >
+                <span aria-hidden className="h-px w-8 bg-amber-400/40" />
+                Les six temps d&apos;un tour
+              </h2>
+              {/*
+                LA CHAÎNE NE PORTE PAS DE NUMÉROS, bien qu'elle soit ordonnée :
+                les cartes au-dessus n'en portent pas non plus, et deux comptes
+                sur un même écran se contrediraient. Elle casse en trois et
+                trois par une largeur maximale plutôt qu'au hasard de la place :
+                deux lignes de même longueur se lisent comme un dessin, quatre
+                plus deux se lisent comme un débordement.
+              */}
+              <ol className="mt-6 flex max-w-[21rem] flex-wrap items-center gap-x-3 gap-y-2">
+                {TEMPS_DU_TOUR.map((t, i) => (
+                  <li key={t.nom} className="flex items-center gap-3">
+                    {/* La phrase complète reste accessible : l'infobulle pour la
+                        souris, le texte caché pour une synthèse vocale. Un mot
+                        seul ne dit pas ce qui se passe à ce moment-là. */}
+                    <span
+                      title={t.quoi}
+                      className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300"
+                    >
+                      {t.nom}
+                      <span className="sr-only"> : {t.quoi}</span>
+                    </span>
+                    {/* La flèche suit son temps au lieu de précéder le suivant :
+                        sur un téléphone la chaîne passe à la ligne, et une
+                        flèche posée avant se retrouvait seule en tête de
+                        deuxième ligne. */}
+                    {i < TEMPS_DU_TOUR.length - 1 ? (
+                      <span aria-hidden className="text-sm text-amber-400/60">
+                        →
+                      </span>
+                    ) : null}
+                  </li>
+                ))}
+              </ol>
+              <p className="mt-6 max-w-lg text-base leading-relaxed text-slate-400">
+                Dans cet ordre, à chaque tour. Les trois écrans ci-dessus en déroulent trois,
+                sur un tour de NOVA.
+              </p>
+              {/* Le guide détaille chacun de ces temps, et l'ancre vise « Côté
+                  élèves : jouer un tour » — la section qui déroule la boucle —
+                  et non le haut d'un guide de cinq mètres. */}
+              <p className="mt-4">
+                <Link
+                  href="/guide#eleves"
+                  className="group text-sm font-semibold text-amber-400 transition-colors hover:text-amber-300"
+                >
+                  Comment se joue un tour
+                  <span
+                    aria-hidden
+                    className="ml-1.5 inline-block transition-transform group-hover:translate-x-1"
+                  >
+                    →
+                  </span>
+                </Link>
+              </p>
+            </div>
+
+            <div>
               <h2
                 id="apprend"
                 className="flex items-center gap-3 text-xs uppercase tracking-[0.28em] text-slate-400"
@@ -453,37 +506,18 @@ export default async function Home() {
                 <span aria-hidden className="h-px w-8 bg-amber-400/40" />
                 Ce que l&apos;élève apprend
               </h2>
-              <ul className="mt-5 space-y-4">
+              <ul className="mt-6 space-y-4">
                 {CE_QUE_L_ELEVE_APPREND.map((c) => (
                   <li key={c.verbe} className="flex gap-3">
                     <span aria-hidden className="mt-2 h-1 w-1 shrink-0 rounded-full bg-amber-400" />
-                    <p className="text-sm leading-relaxed text-slate-400">
+                    <p className="text-base leading-relaxed text-slate-400">
                       <span className="font-semibold text-slate-200">{c.verbe}.</span> {c.quoi}
                     </p>
                   </li>
                 ))}
               </ul>
-            </section>
+            </div>
           </div>
-
-          {/*
-            DES CAPTURES DE L'APPLICATION, ET NON DES ÉCRANS DESSINÉS.
-
-            Cette colonne a porté trois choses successives. D'abord un cockpit
-            dessiné à la main, avec des chiffres inventés — « chiffre d'affaires
-            346 920 € » — : il promettait une simulation sans en faire tourner
-            une. Puis un tour jouable, qui tenait la promesse mais faisait de
-            l'accueil un mini-jeu. Maintenant les écrans réels.
-
-            ILS SONT PRIS SUR L'APPLICATION, pas redessinés : la partie a été
-            jouée, les chiffres sont ceux que le moteur a calculés. C'est la seule
-            façon qu'une capture ne mente pas — et la raison pour laquelle on ne
-            retouche pas les montants pour les rendre flatteurs.
-
-            Le format sert aussi à dire quelque chose : c'est un téléphone, parce
-            que c'est là que l'élève joue.
-          */}
-          <MainDeCartes />
         </section>
 
         {/* ---------- Les métiers, montrés ---------- */}

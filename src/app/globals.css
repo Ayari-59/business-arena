@@ -484,6 +484,26 @@ h1 {
   background-image: var(--ecran-sur-page-sombre);
 }
 
+/*
+ * ET DANS UN BLOC À CONTRE-JOUR, LA PRISE SE RETOURNE AVEC LE SOL.
+ *
+ * Le bloc renverse l'échelle pour lui seul : une page claire y devient nuit,
+ * une page sombre y devient papier. La règle « la prise s'oppose au fond »
+ * vaut pour ce sol-là et non pour celui de la page, sans quoi le haut de
+ * l'accueil poserait trois captures sombres sur de l'encre — exactement le
+ * rectangle d'encre dans de l'encre que la règle existe pour empêcher.
+ *
+ * Deux sélecteurs valent mieux qu'un : la spécificité passe devant les deux
+ * règles ci-dessus, qui ne connaissent que le thème de la page.
+ */
+[data-theme="clair"] .contre-jour .capture-decran {
+  background-image: var(--ecran-sur-page-sombre);
+}
+
+[data-theme="sombre"] .contre-jour .capture-decran {
+  background-image: var(--ecran-sur-page-claire);
+}
+
 /* ---------------------------------------------------------------------------
  * Le logo est un fichier, pas du texte : aucune feuille de style ne peut en
  * changer l'encre. Sur fond clair, son nom écrit en gris pâle disparaîtrait,

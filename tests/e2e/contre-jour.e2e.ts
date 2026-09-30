@@ -86,12 +86,36 @@ describe("les blocs à contre-jour", () => {
     expect(fautes, fautes.join(" · ")).toEqual([]);
   });
 
-  it("la première coupure arrive après l'en-tête, pas dedans", () => {
-    // Une coupure posée dans le premier écran se bat avec le titre et le
-    // bouton d'action, qui sont ce que la page a de plus important à montrer.
+  it("aucune coupure ne traverse le premier écran", async () => {
+    // LA RÈGLE DISAIT « après 400 px », et sa raison était : une coupure posée
+    // dans le premier écran se bat avec le titre et le bouton d'action, qui
+    // sont ce que la page a de plus important à montrer.
+    //
+    // Elle ne vaut que pour une bande qui ARRIVE dans le premier écran. Le
+    // jour où le premier écran lui-même passe à contre-jour, il n'y a plus de
+    // bataille : la coupure ne se bat pas avec le titre, elle le PORTE. Ce
+    // qu'il faut interdire, c'est la bande qui coupe le haut de page en deux,
+    // pas le haut de page qui est une bande.
+    //
+    // D'où les deux cas admis, et un seul refusé : commencer tout en haut en
+    // portant le titre, ou commencer après le premier écran. Entre les deux,
+    // rien.
     for (const [chemin, blocs] of releves) {
       const premiere = [...blocs].sort((a, b) => a.haut - b.haut)[0]!;
-      expect(premiere.haut, `${chemin} : coupure à ${premiere.haut} px`).toBeGreaterThan(400);
+      if (premiere.haut <= 400) {
+        await aller(page, chemin);
+        const porteLeTitre = await page.evaluate(
+          () => document.querySelector(".contre-jour")?.querySelector("h1") != null,
+        );
+        expect(
+          porteLeTitre,
+          `${chemin} : une coupure à ${premiere.haut} px qui ne porte pas le titre`,
+        ).toBe(true);
+        // Et un haut de page à contre-jour couvre bien le premier écran, au
+        // lieu de s'arrêter au milieu : c'est la même exigence, dans l'autre
+        // sens.
+        expect(premiere.bas, `${chemin} : le haut de page s'arrête à ${premiere.bas} px`).toBeGreaterThan(400);
+      }
     }
   });
 

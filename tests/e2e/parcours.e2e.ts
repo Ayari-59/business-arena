@@ -420,30 +420,34 @@ describe("parcours enseignant et élève", () => {
     expect((fiche.match(/livrable de la séance/g) ?? []).length).toBe(cg1.seances.length);
   });
 
-  it("la main de cartes part du haut du titre, sur deux colonnes", async () => {
-    // Les deux colonnes de l'accroche partent du même bord, mais à gauche le
-    // surtitre occupe cette ligne-là : sans décalage, la carte de devant
-    // commençait dix-neuf pixels au-dessus de « Dirigez une entreprise », et
-    // l'œil voyait deux départs au lieu d'un. L'écart se mesure à l'écran ou
-    // pas du tout — aucune lecture de source ne le verrait.
-    await prof.setViewportSize({ width: 1280, height: 900 });
-    await aller(prof, "/");
-    const ecart = await prof.evaluate(() => {
-      const h1 = document.querySelector("h1")!.getBoundingClientRect();
-      const cartes = [...document.querySelectorAll('figure [role="img"]')].map(
-        (e) => e.getBoundingClientRect().top,
-      );
-      return Math.min(...cartes) - h1.top;
-    });
-    expect(Math.abs(ecart), `la main part ${Math.round(ecart)} px du titre`).toBeLessThanOrEqual(3);
+  it("le titre de l'accueil grandit avec l'écran, et le premier écran est à contre-jour", async () => {
+    // LE DÉFAUT MESURÉ : le titre faisait 38,5 px à 1280 comme à 1728. Il se
+    // dimensionnait en unités de sa COLONNE et devait tenir sur une ligne dans
+    // une demi-largeur, si bien qu'il rapetissait au lieu de grandir — et son
+    // plafond n'était jamais atteint. Une taille figée ne se voit pas en
+    // lisant la feuille de style : elle se mesure à deux largeurs.
+    const taille = async (largeur: number) => {
+      await prof.setViewportSize({ width: largeur, height: 900 });
+      await aller(prof, "/");
+      return prof.evaluate(() => parseFloat(getComputedStyle(document.querySelector("h1")!).fontSize));
+    };
+    const petit = await taille(1024);
+    const grand = await taille(1600);
+    expect(grand, `le titre reste à ${grand} px quand l'écran double`).toBeGreaterThan(petit + 8);
+    expect(grand).toBeGreaterThanOrEqual(64);
 
-    // Sous deux colonnes, les blocs s'empilent : il n'y a plus rien à aligner,
-    // et le décalage laisserait un trou au-dessus des cartes.
-    await prof.setViewportSize({ width: 390, height: 780 });
-    await aller(prof, "/");
-    expect(
-      await prof.evaluate(() => getComputedStyle(document.querySelector("figure")!).marginTop),
-    ).toBe("0px");
+    // Et le sol du premier écran est bien l'inverse de celui de la page : une
+    // marque qui s'appelle « Nuit & Laiton » ouvre sur sa nuit.
+    const sols = await prof.evaluate(() => {
+      const hero = document.querySelector("main section")!;
+      return {
+        hero: getComputedStyle(hero).backgroundColor,
+        contreJour: hero.classList.contains("contre-jour"),
+        page: getComputedStyle(document.body).backgroundColor,
+      };
+    });
+    expect(sols.contreJour, "le premier écran n'est pas à contre-jour").toBe(true);
+    expect(sols.hero).not.toBe(sols.page);
   });
 
   it("aucune page du parcours ne porte de tiret en milieu de phrase", async () => {
