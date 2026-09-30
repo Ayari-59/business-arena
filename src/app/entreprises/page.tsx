@@ -7,6 +7,8 @@ import {
   nomEntreprise as nomSeul,
   promesseEntreprise as promesse,
 } from "@/config/scenarios/presentation";
+import { CONCEPTS } from "@/config/pedagogy/concepts";
+import { LEVIERS } from "@/config/decisions";
 import { PictoSecteur } from "@/components/picto-secteur";
 import { bouton } from "@/components/bouton";
 import { BandeFinale } from "@/components/bande-finale";
@@ -32,6 +34,116 @@ export const metadata: Metadata = {
  * Tout y est LU du registre : titres, contraintes, arbitrages, indicateurs.
  * Rien n'est recopié, donc rien ne peut mentir quand un scénario change.
  */
+
+const NOM_DE_NOTION = new Map(CONCEPTS.map((c) => [c.code, c.name]));
+
+/** Combien de notions une fiche montre avant de dire « et N autres ». */
+const NOTIONS_MONTREES = 6;
+
+/**
+ * LES NOTIONS QU'UNE ENTREPRISE FAIT TRAVAILLER, LES PLUS MOBILISÉES D'ABORD.
+ *
+ * Elles ne sont écrites nulle part : chaque situation déclare les siennes, et
+ * une entreprise en mobilise de quinze à trente et une selon le métier. Les
+ * afficher toutes ferait un mur de trente et une pastilles où l'œil ne prend
+ * rien ; n'en afficher aucune, ce qui était le cas, laisse un enseignant
+ * deviner ce que la fiche fait travailler. On montre donc les plus
+ * fréquentes, et on dit combien il y en a.
+ *
+ * L'ordre se décide sur le nombre de situations qui mobilisent la notion,
+ * puis sur son code : deux notions à égalité sortent toujours dans le même
+ * ordre, d'une compilation à l'autre.
+ */
+function notionsDe(d: ScenarioDefinition) {
+  const compte = new Map<string, number>();
+  for (const s of d.situations) {
+    for (const code of s.conceptCodes ?? []) compte.set(code, (compte.get(code) ?? 0) + 1);
+  }
+  const triees = [...compte.entries()]
+    .filter(([code]) => NOM_DE_NOTION.has(code))
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  return {
+    total: triees.length,
+    tetes: triees.slice(0, NOTIONS_MONTREES).map(([code]) => ({
+      code,
+      nom: NOM_DE_NOTION.get(code)!,
+    })),
+  };
+}
+
+/**
+ * Les arbitrages qu'une entreprise demande, dans l'ordre du registre des
+ * leviers — le prix et le volume d'abord, les budgets ensuite. Trier sur le
+ * registre plutôt que sur l'ordre des situations donne la même liste pour
+ * tous les métiers, ce qui rend les fiches comparables entre elles.
+ */
+function arbitragesDe(d: ScenarioDefinition) {
+  const champs = new Set<string>();
+  for (const s of d.situations) {
+    for (const levier of s.decisionLevers ?? []) champs.add(levier.field);
+  }
+  return LEVIERS.filter((l) => champs.has(l.champ)).map((l) => l.nom);
+}
+
+/**
+ * CE QU'UN ENSEIGNANT VIENT CHERCHER SUR CETTE PAGE.
+ *
+ * La fiche disait le métier, sa contrainte et son premier arbitrage — ce qui
+ * répond à « de quoi ça parle » mais pas à « qu'est-ce que ma classe y
+ * travaille ». Les trois réponses existaient dans le registre sans qu'aucune
+ * soit affichée : les notions déclarées par les situations, les leviers
+ * qu'elles font manœuvrer, et les indicateurs propres au métier dont un seul,
+ * le premier, paraissait dans le tableau de fin de page.
+ *
+ * TOUT EST LU, RIEN N'EST RECOPIÉ. Une situation ajoutée à un scénario change
+ * ces trois lignes sans que personne y touche, et une notion renommée l'est
+ * partout à la fois.
+ */
+function CeQuOnYTravaille({ d }: { d: ScenarioDefinition }) {
+  const notions = notionsDe(d);
+  const arbitrages = arbitragesDe(d);
+  return (
+    <dl className="mt-4 grid gap-4 border-t border-white/10 pt-4 sm:grid-cols-[8.5rem_1fr] sm:gap-x-6 sm:gap-y-3">
+      <dt className="text-xs uppercase tracking-[0.18em] text-slate-400">Notions</dt>
+      <dd className="m-0 flex flex-wrap items-baseline gap-x-2 gap-y-1.5 text-sm text-slate-300">
+        {notions.tetes.map((n, i) => (
+          <span key={n.code}>
+            {/* Chaque notion a sa fiche : le lien y mène directement plutôt
+                que de laisser chercher dans une page de cinquante-deux. */}
+            <Link
+              href={`/notions#${n.code}`}
+              className="underline decoration-white/20 underline-offset-4 transition-colors hover:text-amber-200 hover:decoration-amber-400/60"
+            >
+              {n.nom}
+            </Link>
+            {i < notions.tetes.length - 1 ? <span aria-hidden> ·</span> : null}
+          </span>
+        ))}
+        {notions.total > notions.tetes.length ? (
+          <span className="text-slate-400">
+            et {notions.total - notions.tetes.length} autres
+          </span>
+        ) : null}
+      </dd>
+
+      <dt className="text-xs uppercase tracking-[0.18em] text-slate-400">Arbitrages</dt>
+      <dd className="m-0 text-sm text-slate-300">{arbitrages.join(" · ")}</dd>
+
+      <dt className="text-xs uppercase tracking-[0.18em] text-slate-400">Indicateurs</dt>
+      <dd className="m-0 flex flex-wrap items-baseline gap-x-2 gap-y-1.5 text-sm text-slate-300">
+        {d.kpis.map((k, i) => (
+          // Ce que mesure l'indicateur reste accessible : l'infobulle pour la
+          // souris, le texte caché pour une synthèse vocale.
+          <span key={k.key} title={k.hint}>
+            {k.label}
+            <span className="sr-only"> : {k.hint}</span>
+            {i < d.kpis.length - 1 ? <span aria-hidden> ·</span> : null}
+          </span>
+        ))}
+      </dd>
+    </dl>
+  );
+}
 
 function Fiche({ d }: { d: ScenarioDefinition }) {
   const famille = familyOf(d.code);
@@ -116,6 +228,8 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
             ))}
           </div>
         </div>
+
+        <CeQuOnYTravaille d={d} />
 
         <div className="mt-5 flex flex-wrap items-center gap-4">
           <Link
