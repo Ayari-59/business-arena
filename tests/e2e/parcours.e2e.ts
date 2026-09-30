@@ -420,21 +420,43 @@ describe("parcours enseignant et élève", () => {
     expect((fiche.match(/livrable de la séance/g) ?? []).length).toBe(cg1.seances.length);
   });
 
-  it("le titre de l'accueil grandit avec l'écran, et le premier écran est à contre-jour", async () => {
+  it("le titre de l'accueil grandit avec l'écran sans sortir de sa colonne", async () => {
     // LE DÉFAUT MESURÉ : le titre faisait 38,5 px à 1280 comme à 1728. Il se
     // dimensionnait en unités de sa COLONNE et devait tenir sur une ligne dans
     // une demi-largeur, si bien qu'il rapetissait au lieu de grandir — et son
     // plafond n'était jamais atteint. Une taille figée ne se voit pas en
     // lisant la feuille de style : elle se mesure à deux largeurs.
-    const taille = async (largeur: number) => {
-      await prof.setViewportSize({ width: largeur, height: 900 });
+    //
+    // ET LE REVERS DU REMÈDE : une taille calculée sur l'ÉCRAN ne sait rien de
+    // la place disponible. Le titre partage sa ligne avec la main de cartes ;
+    // écrit sans repli, il passerait sous l'image sans que rien ne déborde de
+    // la page, puisque le premier écran est rogné. On mesure donc la largeur
+    // RÉELLE de la plus longue ligne contre celle de sa colonne.
+    const mesurer = async (largeur: number) => {
+      await prof.setViewportSize({ width: largeur, height: 1000 });
       await aller(prof, "/");
-      return prof.evaluate(() => parseFloat(getComputedStyle(document.querySelector("h1")!).fontSize));
+      return prof.evaluate(() => {
+        const h1 = document.querySelector("h1")!;
+        const r = document.createRange();
+        r.selectNodeContents(h1.firstChild!);
+        return {
+          px: parseFloat(getComputedStyle(h1).fontSize),
+          texte: r.getBoundingClientRect().width,
+          colonne: h1.getBoundingClientRect().width,
+        };
+      });
     };
-    const petit = await taille(1024);
-    const grand = await taille(1600);
-    expect(grand, `le titre reste à ${grand} px quand l'écran double`).toBeGreaterThan(petit + 8);
-    expect(grand).toBeGreaterThanOrEqual(64);
+    const petit = await mesurer(1024);
+    const grand = await mesurer(1728);
+    expect(grand.px, `le titre reste à ${grand.px} px quand l'écran passe de 1024 à 1728`).toBeGreaterThan(
+      petit.px + 6,
+    );
+    for (const [nom, m] of [["1024", petit], ["1728", grand]] as const) {
+      expect(
+        Math.round(m.texte),
+        `à ${nom} px, le titre mesure ${Math.round(m.texte)} px dans une colonne de ${Math.round(m.colonne)}`,
+      ).toBeLessThanOrEqual(Math.round(m.colonne));
+    }
 
     // Et le sol du premier écran est bien l'inverse de celui de la page : une
     // marque qui s'appelle « Nuit & Laiton » ouvre sur sa nuit.

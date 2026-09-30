@@ -248,7 +248,7 @@ function MainDeCartes() {
       écran de 1728 et le reste était de la marge.
     */
     <figure className="m-0">
-      <div className="relative mx-auto aspect-[9/8] w-full max-w-[440px] lg:max-w-[540px] xl:max-w-[620px]">
+      <div className="relative mx-auto aspect-[9/8] w-full max-w-[440px] lg:max-w-none">
         <CarteEnMain
           nom="decider"
           fond
@@ -346,27 +346,39 @@ export default async function Home() {
               Simulation de gestion, pour la classe
             </p>
             {/*
-              Le titre se dimensionne sur la largeur de l'ÉCRAN et non plus sur
-              celle de sa colonne : c'est ce qui le faisait plafonner à 38 px
-              sur un écran de 1728. Il ne passe à la ligne qu'en dessous de
-              640 px — au-dessus, la plus longue des deux phrases tient
-              largement, et le retour se décide au `<br/>`.
-            */}
-            <h1 className="mt-6 text-[clamp(2.25rem,6vw,4.5rem)] font-bold leading-[1.02] tracking-tight text-slate-50 sm:whitespace-nowrap">
-              Dirigez une entreprise.
-              <br />
-              <span className="text-amber-400">Apprenez à décider.</span>
-            </h1>
+              LE TITRE ET LA MAIN PARTENT DE LA MÊME LIGNE.
 
-            <div className="mt-10 grid items-start gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-14">
+              Le titre a occupé toute la largeur, et la main tombait dessous :
+              une colonne de texte de deux cent cinquante pixels en face d'une
+              image de six cents, donc trois cent cinquante pixels de vide en
+              bas à gauche. Les deux partagent maintenant la ligne du haut et
+              se centrent l'un sur l'autre.
+
+              CE QUE CELA COÛTE, ET C'EST ASSUMÉ. Un titre de 72 px demande
+              860 px pour sa plus longue phrase : il ne tient pas dans une
+              demi-largeur. En partageant la ligne, il retombe à 48. C'est
+              encore vingt-cinq pour cent de plus que les 38,5 px figés d'avant,
+              et cette fois il GRANDIT avec l'écran.
+
+              Il se dimensionne sur l'écran mais son plafond est calculé pour
+              sa colonne : à 3 vw plafonnés à 48 px, la phrase la plus longue
+              tient dans la moitié gauche jusqu'à 1728 px de large, sans jamais
+              passer sous l'image. tests/e2e/parcours.e2e.ts le mesure.
+            */}
+            <div className="mt-8 grid items-center gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:gap-14">
               <div>
+                <h1 className="text-[clamp(2.25rem,3vw,3rem)] font-bold leading-[1.04] tracking-tight text-slate-50 sm:whitespace-nowrap">
+                  Dirigez une entreprise.
+                  <br />
+                  <span className="text-amber-400">Apprenez à décider.</span>
+                </h1>
                 {/*
                   L'accroche faisait quatre lignes et énumérait tout : les secteurs,
                   les décisions, les modèles. On garde ce qui se retient — le nombre
                   de métiers, le fait que le marché répond, la durée d'une partie — et
                   le reste est montré plus bas plutôt que promis ici.
                 */}
-                <p className="max-w-lg text-xl leading-relaxed text-slate-300">
+                <p className="mt-7 max-w-lg text-lg leading-relaxed text-slate-300">
                   {SCENARIO_CHOICES.length} métiers, un marché qui répond, six tours pour
                   comprendre. Vous fixez les prix, la production et les budgets ; les
                   résultats disent ce que ces choix valaient.
