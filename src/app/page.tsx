@@ -71,9 +71,9 @@ const RENVOIS: {
     aide: `Le moteur économique, les ${DECISION_MODELS.length} modèles d'analyse, les indices progressifs, le piège du tour 4.`,
   },
   {
-    title: "Le parcours d'une classe",
+    title: "Votre référentiel, bloc par bloc",
     href: "/parcours",
-    aide: "De la première décision au dernier bilan, avec les réglages conseillés par diplôme.",
+    aide: "Pour chaque diplôme servi : les blocs du programme que l'atelier met en jeu, la séance où chacun se travaille, et ce qui reste effleuré.",
   },
   {
     title: "Espace enseignant",
@@ -278,7 +278,8 @@ function MainDeCartes() {
         écran en portait déjà quatre.
       */}
       <figcaption className="mt-6 text-center text-sm leading-relaxed text-slate-400">
-        Trois écrans d&apos;un même tour : l&apos;arène, la feuille de décision, le verdict.
+        Trois écrans d&apos;un même tour : l&apos;arène, la feuille de décision,
+        le verdict.
       </figcaption>
     </figure>
   );
@@ -390,9 +391,9 @@ export default async function Home() {
                   le reste est montré plus bas plutôt que promis ici.
                 */}
                 <p className="mt-7 max-w-lg text-lg leading-relaxed text-slate-300">
-                  {SCENARIO_CHOICES.length} métiers, un marché qui répond, six tours pour
-                  comprendre. Vous fixez les prix, la production et les budgets ; les
-                  résultats disent ce que ces choix valaient.
+                  {SCENARIO_CHOICES.length} métiers, un marché qui répond, six
+                  tours pour comprendre. Vous fixez les prix, la production et
+                  les budgets ; les résultats disent ce que ces choix valaient.
                 </p>
                 {/*
                   UNE SEULE ACTION. Trois boutons de même taille se disputaient l'œil, et
@@ -414,7 +415,8 @@ export default async function Home() {
                   </Link>
                 </div>
                 <p className="mt-5 text-sm text-slate-400">
-                  Sans compte, sans installation. Vos parties restent liées à ce navigateur.
+                  Sans compte, sans installation. Vos parties restent liées à ce
+                  navigateur.
                 </p>
               </div>
 
@@ -499,8 +501,8 @@ export default async function Home() {
                 ))}
               </ol>
               <p className="mt-6 max-w-lg text-base leading-relaxed text-slate-400">
-                Dans cet ordre, à chaque tour. Les trois écrans ci-dessus en déroulent trois,
-                sur un tour de NOVA.
+                Dans cet ordre, à chaque tour. Les trois écrans ci-dessus en
+                déroulent trois, sur un tour de NOVA.
               </p>
               {/* Le guide détaille chacun de ces temps, et l'ancre vise « Côté
                   élèves : jouer un tour » — la section qui déroule la boucle —
@@ -532,9 +534,15 @@ export default async function Home() {
               <ul className="mt-6 space-y-4">
                 {CE_QUE_L_ELEVE_APPREND.map((c) => (
                   <li key={c.verbe} className="flex gap-3">
-                    <span aria-hidden className="mt-2 h-1 w-1 shrink-0 rounded-full bg-amber-400" />
+                    <span
+                      aria-hidden
+                      className="mt-2 h-1 w-1 shrink-0 rounded-full bg-amber-400"
+                    />
                     <p className="text-base leading-relaxed text-slate-400">
-                      <span className="font-semibold text-slate-200">{c.verbe}.</span> {c.quoi}
+                      <span className="font-semibold text-slate-200">
+                        {c.verbe}.
+                      </span>{" "}
+                      {c.quoi}
                     </p>
                   </li>
                 ))}
@@ -555,7 +563,8 @@ export default async function Home() {
             <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
               <h2 className="flex items-center gap-3 text-xs uppercase tracking-[0.28em] text-slate-400">
                 <span aria-hidden className="h-px w-8 bg-amber-400/40" />
-                {SCENARIO_CHOICES.length} métiers, {SCENARIO_CHOICES.length} économies
+                {SCENARIO_CHOICES.length} métiers, {SCENARIO_CHOICES.length}{" "}
+                économies
               </h2>
               <Link
                 href="/entreprises"
@@ -566,9 +575,17 @@ export default async function Home() {
             </div>
             <ul className="mt-6 grid grid-cols-3 gap-x-4 gap-y-6 sm:grid-cols-5 lg:grid-cols-9">
               {SCENARIO_CHOICES.map((s) => (
-                <li key={s.code} className="flex flex-col items-center gap-2 text-center">
-                  <PictoSecteur secteur={s.sector} className="h-7 w-7 text-amber-400/80" />
-                  <span className="text-xs leading-tight text-slate-300">{s.shortName}</span>
+                <li
+                  key={s.code}
+                  className="flex flex-col items-center gap-2 text-center"
+                >
+                  <PictoSecteur
+                    secteur={s.sector}
+                    className="h-7 w-7 text-amber-400/80"
+                  />
+                  <span className="text-xs leading-tight text-slate-300">
+                    {s.shortName}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -623,15 +640,38 @@ export default async function Home() {
           <div className="mx-auto max-w-6xl px-6 py-12 sm:py-16">
             <dl className="grid grid-cols-2 gap-y-8 sm:grid-cols-4">
               {[
-                ["par tour, selon le niveau", `${decisions.minimum} à ${decisions.maximum}`, "décisions"],
-                ["du CA au FRNG et au BFR", `${CONCEPTS.length}`, "fiches notions"],
-                ["d'aide à la décision", `${DECISION_MODELS.length}`, "modèles"],
-                ["de performance, l'indice IPG", `${BPI_V2_DIMENSIONS.length}`, "dimensions"],
+                [
+                  "par tour, selon le niveau",
+                  `${decisions.minimum} à ${decisions.maximum}`,
+                  "décisions",
+                ],
+                [
+                  "du CA au FRNG et au BFR",
+                  `${CONCEPTS.length}`,
+                  "fiches notions",
+                ],
+                [
+                  "d'aide à la décision",
+                  `${DECISION_MODELS.length}`,
+                  "modèles",
+                ],
+                [
+                  "de performance, l'indice IPG",
+                  `${BPI_V2_DIMENSIONS.length}`,
+                  "dimensions",
+                ],
               ].map(([libelle, nombre, quoi]) => (
-                <div key={quoi} className="px-4 sm:border-l sm:border-white/10 sm:first:border-l-0 sm:first:pl-0">
-                  <dt className="text-xs uppercase tracking-[0.18em] text-slate-400">{libelle}</dt>
+                <div
+                  key={quoi}
+                  className="px-4 sm:border-l sm:border-white/10 sm:first:border-l-0 sm:first:pl-0"
+                >
+                  <dt className="text-xs uppercase tracking-[0.18em] text-slate-400">
+                    {libelle}
+                  </dt>
                   <dd className="mt-2">
-                    <span className="font-display text-3xl font-semibold text-amber-400">{nombre}</span>{" "}
+                    <span className="font-display text-3xl font-semibold text-amber-400">
+                      {nombre}
+                    </span>{" "}
                     <span className="text-base text-slate-200">{quoi}</span>
                   </dd>
                 </div>
@@ -668,16 +708,20 @@ export default async function Home() {
               >
                 <h3 className="flex items-baseline gap-2 font-display text-lg font-semibold text-slate-100 transition-colors group-hover:text-amber-200">
                   {r.title}
-                  <span aria-hidden className="text-sm transition-transform group-hover:translate-x-1">
+                  <span
+                    aria-hidden
+                    className="text-sm transition-transform group-hover:translate-x-1"
+                  >
                     →
                   </span>
                 </h3>
-                <p className="mt-2 text-base leading-relaxed text-slate-400">{r.aide}</p>
+                <p className="mt-2 text-base leading-relaxed text-slate-400">
+                  {r.aide}
+                </p>
               </Link>
             ))}
           </div>
         </section>
-
       </main>
       <PiedDePage />
     </>

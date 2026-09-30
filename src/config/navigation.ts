@@ -75,10 +75,7 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
   {
     code: GROUPE_OUVERT,
     titre: "Orientation et contact",
-    liens: [
-      ACTION_PRINCIPALE,
-      LIEN_CONTACT,
-    ],
+    liens: [ACTION_PRINCIPALE, LIEN_CONTACT],
   },
   {
     code: "enseignants",
@@ -149,7 +146,7 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
       {
         href: "/parcours",
         libelle: "Parcours",
-        aide: "Ce que traverse une classe, de la première décision au dernier bilan.",
+        aide: "Votre référentiel bloc par bloc, pour chaque diplôme qui a un atelier : où chacun se travaille, et ce qui n'est qu'effleuré.",
       },
       {
         href: "/fonctionnalites",

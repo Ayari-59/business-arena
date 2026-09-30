@@ -3,6 +3,11 @@ import type { Metadata } from "next";
 import { PARCOURS } from "@/config/parcours";
 import { ATELIERS, dureeTotaleHeures } from "@/config/ateliers";
 import { REFERENTIELS_NON_VERIFIES } from "@/config/ateliers/referentiels";
+import {
+  AU_DELA_DE_L_ATELIER,
+  couvertureDeLAtelier,
+} from "@/config/couverture";
+import { sigleDuDiplome } from "@/config/diplomes";
 import { bouton } from "@/components/bouton";
 import { BandeFinale } from "@/components/bande-finale";
 import { PiedDePage } from "@/components/pied-de-page";
@@ -11,53 +16,85 @@ export const metadata: Metadata = {
   alternates: { canonical: "/parcours" },
   title: "Parcours par diplôme",
   description:
-    "La correspondance entre votre référentiel et ce que vos étudiants vivent dans l'arène : quatre parcours bloc par bloc, et un atelier prêt à animer pour les autres filières.",
+    "La correspondance entre votre référentiel et ce que vos étudiants vivent dans l'arène, bloc par bloc, pour chaque diplôme qui a un atelier publié.",
 };
 
 /**
- * LES FILIÈRES QUI ONT UN ATELIER SANS AVOIR ENCORE DE PARCOURS.
+ * UNE SECTION PAR DIPLÔME, ET PLUS PAR PARCOURS ÉCRIT À LA MAIN.
  *
- * La page citait quatre diplômes, et sa bande finale invitait « BUT GEA, DCG,
- * bachelors » à nous écrire — alors que BUT GEA et DCG ont chacun un atelier
- * publié, avec son déroulé, ses livrables et son évaluation. Un enseignant de
- * DCG lisait donc, sur la page faite pour lui répondre, que sa filière
- * n'existait pas ici.
+ * La page s'appelait « Parcours par diplôme » et en citait quatre. Les neuf
+ * autres filières n'apparaissaient qu'au pied de page, après cinq mille
+ * pixels, sous un titre qui les rangeait parmi les absents. Un enseignant de
+ * BTS GPME arrivait donc sur la page faite pour lui répondre, n'y trouvait pas
+ * son diplôme, et repartait.
  *
- * CE QUI MANQUE VRAIMENT, ET CE QU'ON NE FABRIQUE PAS. Un parcours est une
- * correspondance BLOC PAR BLOC avec un référentiel officiel, écrite à la main
- * et assumant ce que le jeu ne couvre pas. En écrire cinq de plus demande de
- * lire cinq arrêtés ; les inventer serait prêter à des diplômes des blocs
- * qu'ils ne portent pas, ce que ce dépôt a déjà payé une fois. La page dit
- * donc ce qui existe — l'atelier — et ce qui n'existe pas encore — le
- * parcours.
+ * CE QUI A CHANGÉ, C'EST LA SOURCE. La correspondance bloc par bloc n'avait
+ * pas à être écrite : chaque séance d'atelier nomme déjà les blocs du
+ * référentiel qu'elle mobilise, avec les mots du référentiel. Groupés par
+ * bloc, ils donnent la couverture de chaque diplôme sans que personne ne la
+ * recopie (src/config/couverture.ts). Le tableau écrit à la main en oubliait
+ * d'ailleurs deux, P2 et P7 du BTS CG, ce qu'aucune relecture n'avait vu.
  *
- * Les ateliers d'un parcours sont déclarés par lui : sans ce lien, aucune page
- * ne saurait dire quelle filière lui reste à citer.
+ * Les quatre parcours gardent ce que la donnée ne sait pas dire : des réglages
+ * de partie conseillés, un propos, une limite assumée.
  */
-const AUTRES_FILIERES = (() => {
-  const couverts = new Set(PARCOURS.flatMap((p) => p.ateliers));
-  return ATELIERS.filter((a) => !couverts.has(a.code)).map((a) => ({
-    code: a.code,
-    diplome: a.diplome,
-    annee: a.annee,
-    titre: a.titre,
-    seances: a.seances.length,
-    heures: Math.round(dureeTotaleHeures(a)),
-    // Ce que l'atelier cite de son référentiel, et d'où ça vient. Une liste
-    // lue dans l'arrêté et une liste reconstituée de mémoire ne se corrigent
-    // pas de la même façon : le lecteur doit savoir laquelle il a sous les yeux.
-    referentiel: `${a.referentielLabel} ${a.referentielAccord}`,
-    verifie: !(REFERENTIELS_NON_VERIFIES as readonly string[]).includes(a.code),
-  }));
+
+/** Une ancre lisible : accents dépliés, le reste en tirets. */
+function ancre(texte: string): string {
+  return texte
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+/** Les diplômes, dans l'ordre du registre des ateliers, avec leur parcours s'il existe. */
+const FILIERES = (() => {
+  const parDiplome = new Map<string, typeof ATELIERS>();
+  for (const a of ATELIERS) {
+    parDiplome.set(a.diplome, [
+      ...(parDiplome.get(a.diplome) ?? []),
+      a,
+    ] as typeof ATELIERS);
+  }
+  return [...parDiplome.entries()].map(([diplome, ateliers]) => {
+    const parcours = PARCOURS.find((p) =>
+      ateliers.some((a) => p.ateliers.includes(a.code)),
+    );
+    return {
+      // L'ancre d'un parcours ne bouge pas : elle est déjà liée ailleurs.
+      // Pour les autres, elle se tire du SIGLE et non du nom entier : « BTS
+      // Management en hôtellerie-restauration » donnait une ancre où chaque
+      // lettre accentuée laissait un trou (« h-tellerie »), parce qu'une
+      // minuscule accentuée ne tombe pas dans [a-z]. Les accents se déplient
+      // avant, et le sigle donne une adresse qu'on peut lire à voix haute.
+      id: parcours?.code ?? ancre(sigleDuDiplome(diplome)),
+      diplome,
+      sigle: sigleDuDiplome(diplome),
+      parcours,
+      ateliers,
+    };
+  });
 })();
 
-/** Parcours par diplôme : page statique, pilotée par src/config/parcours.ts. */
-
-const FIT_BADGE: Record<string, { label: string; className: string }> = {
-  coeur: { label: "cœur du jeu", className: "border-emerald-400/40 text-emerald-300" },
+const ADEQUATION: Record<string, { label: string; className: string }> = {
+  coeur: {
+    label: "cœur du jeu",
+    className: "border-emerald-400/40 text-emerald-300",
+  },
   couvert: { label: "couvert", className: "border-sky-400/40 text-sky-300" },
-  partiel: { label: "partiel", className: "border-slate-400/40 text-slate-400" },
+  partiel: {
+    label: "partiel",
+    className: "border-slate-400/40 text-slate-400",
+  },
 };
+
+/** « 1, 3 et 5 » : une énumération française se termine par « et ». */
+function enumere(nombres: number[]): string {
+  if (nombres.length === 1) return String(nombres[0]);
+  return `${nombres.slice(0, -1).join(", ")} et ${nombres[nombres.length - 1]}`;
+}
 
 /**
  * PLUS D'EMOJI SUR CETTE PAGE. Quatre diplômes en portaient un — 🎓 🛍️ 🤝 🧮 —
@@ -80,142 +117,165 @@ export default function ParcoursPage() {
           l'en-tête ouvre déjà.
         */}
         <header className="mx-auto max-w-4xl px-6 pb-4 pt-10">
-          <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Parcours par diplôme</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-amber-400">
+            Parcours par diplôme
+          </p>
           <h1 className="mt-3 text-3xl font-bold leading-tight text-slate-50 sm:text-4xl">
             Votre référentiel, vécu dans l&apos;arène
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-400">
-            Business Arena a été construit par un enseignant pour faire le pont entre les notions du
-            programme et la pratique. Chaque parcours ci-dessous donne les réglages de partie
-            conseillés et une correspondance bloc par bloc honnête, y compris sur ce que le jeu
-            ne couvre pas. Les filières qui n&apos;ont pas encore la leur ont un{" "}
-            <a href="#autres-filieres" className="text-amber-300 underline-offset-4 hover:underline">
-              atelier prêt à animer
-            </a>
-            .
+            Business Arena a été construit par un enseignant pour faire le pont
+            entre les notions du programme et la pratique. Pour chaque diplôme
+            ci-dessous : les blocs du référentiel que l&apos;atelier met en jeu,
+            la séance où chacun se travaille, et ce qui n&apos;est
+            qu&apos;effleuré. Les blocs sont nommés comme leur référentiel les
+            nomme, et la liste est tenue par le déroulé des séances, pas par une
+            promesse commerciale.
           </p>
-          <div className="mt-6 flex flex-wrap gap-2">
-            {PARCOURS.map((p) => (
+          <nav
+            aria-label="Les diplômes couverts"
+            className="mt-6 flex flex-wrap gap-2"
+          >
+            {FILIERES.map((f) => (
               <a
-                key={p.code}
-                href={`#${p.code}`}
+                key={f.id}
+                href={`#${f.id}`}
                 className="rounded-full border border-white/10 bg-slate-900 px-3.5 py-1.5 text-xs text-slate-300 transition hover:border-amber-400/40 hover:text-amber-300"
               >
-                {p.name}
+                {f.sigle}
               </a>
             ))}
-          </div>
+          </nav>
         </header>
 
         <div className="mx-auto max-w-4xl space-y-8 px-6 py-8">
-          {PARCOURS.map((p) => (
+          {FILIERES.map((f) => (
             <section
-              key={p.code}
-              id={p.code}
+              key={f.id}
+              id={f.id}
               className="scroll-mt-24 rounded-2xl border border-white/10 bg-slate-900 p-6 sm:p-8"
             >
-              <p className="text-xs uppercase tracking-[0.2em] text-amber-400">{p.fullName}</p>
-              <h2 className="mt-2 text-2xl font-bold text-slate-50">{p.name}</h2>
-              <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-400">{p.pitch}</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-amber-400">
+                {f.sigle}
+              </p>
+              <h2 className="mt-2 text-2xl font-bold leading-tight text-slate-50">
+                {f.diplome}
+              </h2>
 
-              <div className="mt-5 rounded-xl border border-amber-400/20 bg-slate-950 p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-amber-400">
-                  Réglages conseillés à la création
-                </p>
-                <p className="mt-2 text-sm text-slate-300">
-                  Niveau {p.recommended.level} · {p.recommended.levelName} ·{" "}
-                  {p.recommended.periodicityLabel} · TVA{" "}
-                  {p.recommended.vat ? "activée (20 %)" : "désactivée"}
-                </p>
-                <p className="mt-1 text-base leading-relaxed text-slate-400">{p.recommended.notes}</p>
-              </div>
+              {f.parcours ? (
+                <>
+                  <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-400">
+                    {f.parcours.pitch}
+                  </p>
+                  <div className="mt-5 rounded-xl border border-amber-400/20 bg-slate-950 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-amber-400">
+                      Réglages conseillés à la création
+                    </p>
+                    <p className="mt-2 text-sm text-slate-300">
+                      Niveau {f.parcours.recommended.level} ·{" "}
+                      {f.parcours.recommended.levelName} ·{" "}
+                      {f.parcours.recommended.periodicityLabel} · TVA{" "}
+                      {f.parcours.recommended.vat
+                        ? "activée (20 %)"
+                        : "désactivée"}
+                    </p>
+                    <p className="mt-1 text-base leading-relaxed text-slate-400">
+                      {f.parcours.recommended.notes}
+                    </p>
+                  </div>
+                </>
+              ) : null}
 
-              <div className="mt-5 overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
-                      <th className="pb-2 pr-3 font-medium">Référentiel</th>
-                      <th className="pb-2 pr-3 font-medium">Notions</th>
-                      <th className="pb-2 pr-3 font-medium">Dans l&apos;arène</th>
-                      <th className="pb-2 font-medium">Adéquation</th>
-                    </tr>
-                  </thead>
-                  <tbody className="align-top text-slate-300">
-                    {p.blocs.map((b) => (
-                      <tr key={b.referentiel} className="border-t border-white/5">
-                        <td className="py-3 pr-3 font-medium text-slate-200">{b.referentiel}</td>
-                        <td className="py-3 pr-3 text-xs leading-relaxed text-slate-400">
-                          {b.notions}
-                        </td>
-                        <td className="py-3 pr-3 text-xs leading-relaxed">{b.enJeu}</td>
-                        <td className="py-3">
-                          <span
-                            className={`whitespace-nowrap rounded-full border px-2 py-0.5 text-xs uppercase tracking-wide ${FIT_BADGE[b.fit]!.className}`}
-                          >
-                            {FIT_BADGE[b.fit]!.label}
-                          </span>
-                        </td>
-                      </tr>
+              {f.ateliers.map((a) => (
+                <div key={a.code} className="mt-8 first:mt-6">
+                  <Link href={`/animations/${a.code}`} className="group block">
+                    <p className="text-base font-semibold text-slate-100 transition-colors group-hover:text-amber-200">
+                      {a.titre}
+                      <span
+                        aria-hidden
+                        className="ml-1.5 inline-block transition-transform group-hover:translate-x-1"
+                      >
+                        →
+                      </span>
+                    </p>
+                  </Link>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-400">
+                    {a.annee} · {a.seances.length} séances,{" "}
+                    {Math.round(dureeTotaleHeures(a))} heures ·{" "}
+                    {a.referentielLabel} {a.referentielAccord}
+                    {(REFERENTIELS_NON_VERIFIES as readonly string[]).includes(
+                      a.code,
+                    )
+                      ? ", pas encore confrontés à leur texte officiel"
+                      : ""}
+                    .
+                  </p>
+
+                  <ul className="mt-4">
+                    {couvertureDeLAtelier(a.code).map((b) => (
+                      <li
+                        key={b.referentiel}
+                        className="grid grid-cols-[1fr_auto] items-start gap-x-3 gap-y-1.5 border-t border-white/5 py-4"
+                      >
+                        <p className="text-sm font-medium text-slate-200">
+                          {b.referentiel}
+                        </p>
+                        <span
+                          className={`whitespace-nowrap rounded-full border px-2 py-0.5 text-xs uppercase tracking-wide ${ADEQUATION[b.adequation]!.className}`}
+                        >
+                          {ADEQUATION[b.adequation]!.label}
+                        </span>
+                        <p className="col-span-2 text-sm text-slate-400">
+                          {b.seances.length} séance
+                          {b.seances.length > 1 ? "s" : ""} sur{" "}
+                          {b.seancesEnTout} · n&deg;{" "}
+                          {enumere(b.seances.map((s) => s.numero))}
+                          {/* SANS CETTE PHRASE, LA LIGNE SE CONTREDIT. « 1 séance sur 6 »
+                              sous une pastille « cœur du jeu » se lit comme une faute de
+                              frappe, et c'en serait une si le comptage disait toute la
+                              vérité : le moteur rejoue la TVA à chaque tour, que la
+                              séance la nomme ou non. L'écart entre le compte et la
+                              pastille est réel, donc il se dit là où il se voit. */}
+                          {b.declaree
+                            ? ", et rejoué à chaque tour par le moteur au-delà des séances qui le nomment"
+                            : ""}
+                        </p>
+                        {b.commentaire ? (
+                          <p className="col-span-2 text-sm leading-relaxed text-slate-400">
+                            {b.commentaire}
+                          </p>
+                        ) : null}
+                      </li>
                     ))}
-                  </tbody>
-                </table>
-              </div>
+                  </ul>
 
-              {p.limite ? (
-                <p className="mt-4 rounded-lg border border-white/5 bg-slate-950 px-4 py-3 text-sm leading-relaxed text-slate-400">
-                  Limite assumée : {p.limite}
+                  {(AU_DELA_DE_L_ATELIER[a.code] ?? []).map((note) => (
+                    <p
+                      key={note.referentiel}
+                      className="mt-4 rounded-lg border border-white/5 bg-slate-950 px-4 py-3 text-sm leading-relaxed text-slate-400"
+                    >
+                      <span className="font-medium text-slate-300">
+                        {note.referentiel}
+                      </span>
+                      , hors séance : {note.quoi}
+                    </p>
+                  ))}
+                </div>
+              ))}
+
+              {f.parcours?.limite ? (
+                <p className="mt-6 rounded-lg border border-white/5 bg-slate-950 px-4 py-3 text-sm leading-relaxed text-slate-400">
+                  Limite assumée : {f.parcours.limite}
                 </p>
               ) : null}
             </section>
           ))}
-
         </div>
-
-        <section
-          aria-labelledby="autres-filieres"
-          className="mx-auto max-w-4xl px-6 pb-12"
-        >
-          <h2 id="autres-filieres" className="text-2xl font-bold text-slate-50">
-            Les autres filières ont leur atelier
-          </h2>
-          <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-400">
-            La correspondance bloc par bloc ci-dessus demande de lire un arrêté, et elle n&apos;est
-            écrite que pour {PARCOURS.length} diplômes. Les suivants n&apos;ont pas encore la leur,
-            mais ils ont un déroulé prêt à animer, avec ses livrables et son évaluation.
-          </p>
-          <ul className="mt-8 space-y-px">
-            {AUTRES_FILIERES.map((f) => (
-              <li key={f.code} className="border-t border-white/10 py-4">
-                <Link href={`/animations/${f.code}`} className="group block">
-                  <p className="text-xs uppercase tracking-[0.2em] text-amber-400">
-                    {f.diplome} · {f.annee}
-                  </p>
-                  <p className="mt-1.5 text-base font-semibold text-slate-100 transition-colors group-hover:text-amber-200">
-                    {f.titre}
-                    <span
-                      aria-hidden
-                      className="ml-1.5 inline-block transition-transform group-hover:translate-x-1"
-                    >
-                      →
-                    </span>
-                  </p>
-                  <p className="mt-1 text-sm leading-relaxed text-slate-400">
-                    {f.seances} séances, {f.heures} heures · {f.referentiel}
-                    {f.verifie ? "" : ", pas encore confrontés à leur texte officiel"}.
-                  </p>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
 
         {/* La bande sort de la colonne de lecture : une fin de page tient toute
             la largeur, sinon elle reste une carte de plus dans la pile. */}
-        {/* Elle nommait « BUT GEA, DCG, bachelors » comme des diplômes absents.
-            Les deux premiers ont un atelier publié et figurent maintenant
-            au-dessus : il ne reste à inviter que ce qui manque vraiment. */}
         <BandeFinale
-          titre="Votre diplôme n'est ni dans les parcours ni dans les ateliers ?"
+          titre="Votre diplôme n'est pas dans cette liste ?"
           texte="Les mêmes mécaniques servent d'autres référentiels : écrivez-nous, et nous regardons ensemble ce que votre programme demande."
         >
           <Link href="/teacher/login" className={bouton({ taille: "l" })}>
