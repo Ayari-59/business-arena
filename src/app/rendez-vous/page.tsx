@@ -61,8 +61,23 @@ export default async function RendezVousPage() {
         ))}
       </ol>
 
+      {/* La base n'a pas répondu : le calendrier ne sait pas quels créneaux sont
+          déjà pris, et n'en propose donc aucun. Le dire ainsi plutôt que
+          « aucun créneau libre », qui serait une affirmation que la page n'est
+          pas en mesure de faire. */}
       <div className="mt-10">
-        <RendezVousForm jours={jours} periode={periode} />
+        {source === "indisponible" ? (
+          <p className="carte p-6 text-base leading-relaxed text-slate-400">
+            La prise de rendez-vous en ligne est momentanément indisponible. Écrivez-nous depuis
+            la{" "}
+            <Link href="/orientation" className="text-amber-300 underline-offset-4 hover:underline">
+              page d&apos;orientation
+            </Link>{" "}
+            : nous vous proposerons un moment par courriel.
+          </p>
+        ) : (
+          <RendezVousForm jours={jours} periode={periode} />
+        )}
       </div>
 
       <p className="mt-10 text-xs leading-relaxed text-slate-400">

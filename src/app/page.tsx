@@ -9,6 +9,7 @@ import { PictoSecteur } from "@/components/picto-secteur";
 import { DESCRIPTION_ACCUEIL, TITRE_ACCUEIL } from "@/config/seo";
 import { bouton } from "@/components/bouton";
 import { HaloDePage } from "@/components/halo-de-page";
+import { BPI_V2_DIMENSIONS } from "@/scoring/bpi";
 import { PiedDePage } from "@/components/pied-de-page";
 
 // La landing ne lit que la configuration de plateforme (rien par utilisateur) :
@@ -61,7 +62,10 @@ const RENVOIS: {
   {
     title: "Fonctionnalités",
     href: "/fonctionnalites",
-    aide: "Le moteur économique, les 18 modèles d'analyse, les indices progressifs, le piège du tour 4.",
+    // Écrit à la main, ce nombre disait 18 quand la bande de chiffres de la même
+    // page en affichait 20, lus dans le registre. Deux chiffres pour une seule
+    // chose, à huit cents pixels d'écart.
+    aide: `Le moteur économique, les ${DECISION_MODELS.length} modèles d'analyse, les indices progressifs, le piège du tour 4.`,
   },
   {
     title: "Le parcours d'une classe",
@@ -394,7 +398,7 @@ export default async function Home() {
                 ["par tour, selon le niveau", `${decisions.minimum} à ${decisions.maximum}`, "décisions"],
                 ["du CA au FRNG et au BFR", `${CONCEPTS.length}`, "fiches notions"],
                 ["d'aide à la décision", `${DECISION_MODELS.length}`, "modèles"],
-                ["de performance, l'indice IPG", "6", "dimensions"],
+                ["de performance, l'indice IPG", `${BPI_V2_DIMENSIONS.length}`, "dimensions"],
               ].map(([libelle, nombre, quoi]) => (
                 <div key={quoi} className="px-4 sm:border-l sm:border-white/10 sm:first:border-l-0 sm:first:pl-0">
                   <dt className="text-xs uppercase tracking-[0.18em] text-slate-400">{libelle}</dt>

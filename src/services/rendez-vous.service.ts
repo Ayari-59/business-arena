@@ -49,12 +49,36 @@ export interface CreneauxProposes {
   jours: JourDeCreneaux[];
   /** La période couverte, en dates civiles de Paris : le calendrier se dessine dessus. */
   periode: { debut: string; fin: string };
-  /** D'où vient l'occupation : l'agenda Google, ou seulement nos réservations. */
-  source: "google" | "local";
+  /**
+   * D'où vient l'occupation : l'agenda Google, nos seules réservations, ou
+   * rien du tout parce que la base n'a pas répondu. Dans ce dernier cas
+   * `jours` est VIDE par construction — on ne propose pas un créneau dont on
+   * ne sait pas s'il est déjà pris.
+   */
+  source: "google" | "local" | "indisponible";
   detail?: string;
 }
 
-async function reservationsAVenir(depuis: Date): Promise<Intervalle[]> {
+/**
+ * Nos réservations à venir, ou `null` si la base n'a pas répondu.
+ *
+ * Cette lecture était la seule du chemin public à ne pas être gardée : une
+ * base injoignable rendait 500 sur une page désormais liée depuis le pied de
+ * page des onze pages publiques, là où les autres lectures publiques (relevé
+ * d'usage, configuration de plateforme) se replient en silence. Et le replier
+ * ne peut PAS vouloir dire « aucune réservation » : on proposerait des
+ * créneaux déjà pris. Rendre `null`, c'est n'en proposer aucun.
+ */
+async function reservationsAVenir(depuis: Date): Promise<Intervalle[] | null> {
+  try {
+    return await lireReservations(depuis);
+  } catch (e) {
+    console.error("[rendez-vous] réservations illisibles, aucun créneau proposé", e);
+    return null;
+  }
+}
+
+async function lireReservations(depuis: Date): Promise<Intervalle[]> {
   const rows = await db
     .select({ debut: phoneAppointments.startsAt, fin: phoneAppointments.endsAt })
     .from(phoneAppointments)
@@ -65,13 +89,16 @@ async function reservationsAVenir(depuis: Date): Promise<Intervalle[]> {
 async function calculer(
   now: Date,
   deps: Dependances,
-): Promise<{ creneaux: Creneau[]; source: "google" | "local"; detail?: string }> {
+): Promise<{ creneaux: Creneau[]; source: CreneauxProposes["source"]; detail?: string }> {
   const { agenda, poster } = await dependances(deps);
   const fenetre = { debut: now, fin: new Date(now.getTime() + (HORIZON_JOURS + 1) * 86_400_000) };
   const [google, reserves] = await Promise.all([
     periodesOccupees(agenda, fenetre, poster),
     reservationsAVenir(now),
   ]);
+  if (reserves === null) {
+    return { creneaux: [], source: "indisponible", detail: "réservations illisibles" };
+  }
   const occupes = google.ok ? [...google.valeur, ...reserves] : reserves;
   const creneaux = creneauxDisponibles({
     now,
