@@ -21,6 +21,15 @@ export interface Parcours {
   name: string;
   fullName: string;
   pitch: string;
+  /**
+   * Les ateliers écrits pour ce diplôme.
+   *
+   * Sans ce lien, rien ne dit qu'un atelier est DÉJÀ servi par un parcours, et
+   * la page ne sait pas quelles filières lui restent à citer — elle se
+   * contentait d'en nommer quatre, et sa bande finale invitait BUT GEA et DCG
+   * à écrire alors que les deux ont un atelier publié.
+   */
+  ateliers: readonly string[];
   recommended: {
     level: number;
     levelName: string;
@@ -37,6 +46,7 @@ export interface Parcours {
 export const PARCOURS: readonly Parcours[] = [
   {
     code: "stmg",
+    ateliers: ["stmg"],
     name: "STMG",
     fullName: "Bac technologique STMG · Sciences de gestion et numérique · Management",
     pitch:
@@ -83,6 +93,7 @@ export const PARCOURS: readonly Parcours[] = [
   },
   {
     code: "mco",
+    ateliers: ["mco", "mco2"],
     name: "BTS MCO",
     fullName: "BTS Management Commercial Opérationnel",
     pitch:
@@ -129,6 +140,7 @@ export const PARCOURS: readonly Parcours[] = [
   },
   {
     code: "ndrc",
+    ateliers: ["ndrc", "fitness"],
     name: "BTS NDRC",
     fullName: "BTS Négociation et Digitalisation de la Relation Client",
     pitch:
@@ -170,6 +182,7 @@ export const PARCOURS: readonly Parcours[] = [
   },
   {
     code: "cg",
+    ateliers: ["cg1"],
     name: "BTS CG",
     fullName: "BTS Comptabilité et Gestion",
     pitch:
