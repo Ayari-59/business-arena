@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ATELIERS, dureeTotaleHeures } from "@/config/ateliers";
+import { DIFFICULTY_PRESETS } from "@/config/difficulty";
 import { REFERENTIELS_NON_VERIFIES } from "@/config/ateliers/referentiels";
 import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
 import { ApercuArene, ApercuPilotage, ApercuProjection } from "@/components/apercus";
@@ -56,11 +57,62 @@ const PEDAGOGIE = [
   },
 ];
 
-const CLASSE = [
-  { title: "Une partie en 30 secondes", text: "Un secteur, un niveau, un nombre d'équipes. Les élèves rejoignent par un code." },
-  { title: "La vue pédagogique", text: "Qui maîtrise chaque notion et qui valide au hasard, équipe par équipe, avant le débriefing." },
-  { title: "Six niveaux paramétrables", text: "De « Découverte » à « Executive » : les leviers s'ouvrent un à un, sans toucher au moteur." },
-  { title: "Le concours prêt à l'emploi", text: "Groupes tirés au sort, indices limités, classement composite : un inter-classes clé en main." },
+/**
+ * CE QUE FAIT UN ENSEIGNANT, DANS L'ORDRE OÙ IL LE FAIT.
+ *
+ * La rangée « En classe, concrètement » alignait quatre capacités sans ordre :
+ * la partie en trente secondes, la vue pédagogique, les six niveaux, le
+ * concours. Chacune est vraie, et prise ensemble la liste ne disait pas à
+ * quel MOMENT chaque chose sert — un enseignant qui découvre le produit se
+ * demande d'abord ce qu'il aura à faire avant la séance, pendant, et après.
+ *
+ * Les mêmes faits se rangent donc en trois temps, et les trous que la liste
+ * laissait se voient une fois la grille posée : la durée d'un tour et les
+ * scénarios personnels manquaient au premier, la composition des équipes et
+ * la clôture au deuxième, les fiches imprimables et le carnet d'usage au
+ * troisième.
+ *
+ * CE N'EST PAS LE DÉROULÉ D'UNE SÉANCE. Celui-là a vécu ici en quatre cartes
+ * numérotées, et il en a été retiré parce qu'il redisait le guide en moins
+ * bien ; le renvoi au guide reste sous la grille. Ici on dit ce que
+ * l'enseignant TIENT, pas comment il anime.
+ *
+ * Rien n'est promis qui ne soit dans l'espace enseignant : chacune de ces
+ * lignes correspond à un écran qui existe.
+ */
+const TROIS_TEMPS = [
+  {
+    temps: "Préparer",
+    resume: "Le métier, le niveau, la durée.",
+    faits: [
+      // Le compte et les deux bouts de l'échelle se lisent dans le registre :
+      // écrits à la main, ils survivraient à un niveau ajouté ou renommé.
+      `${DIFFICULTY_PRESETS.length} niveaux, de ${DIFFICULTY_PRESETS[0]!.name} à ${DIFFICULTY_PRESETS.at(-1)!.name} : les leviers s'ouvrent un à un, sans toucher au moteur.`,
+      "Un tour vaut un mois, un trimestre ou une année : toute l'économie du scénario suit.",
+      `${ATELIERS.length} ateliers clés en main, ou vos propres scénarios si vous préférez les écrire.`,
+    ],
+  },
+  {
+    temps: "Faire jouer",
+    resume: "Une partie créée en trente secondes.",
+    faits: [
+      "Les élèves rejoignent par un code, sans compte : le code répartit, vous déplacez qui vous voulez.",
+      "Les cartons d'équipe s'impriment, chacun avec son code en QR.",
+      "Vous ouvrez et clôturez les tours, et distribuez le courrier quand la séance le demande.",
+      // Le concours vivait dans l'ancienne rangée et n'avait pas à disparaître
+      // avec elle : c'est une façon de faire jouer, pas une quatrième chose.
+      "Ou le concours entre classes : groupes tirés au sort, indices limités, classement composite.",
+    ],
+  },
+  {
+    temps: "Évaluer",
+    resume: "Ce que chacun a compris.",
+    faits: [
+      "La vue pédagogique : qui maîtrise chaque notion, qui valide au hasard, équipe par équipe.",
+      "Le relevé de notes, une ligne par élève, et les fiches de séance à imprimer.",
+      "Le carnet d'usage : une situation ratée par une classe est un accident, ratée par cinq c'est l'énoncé.",
+    ],
+  },
 ];
 
 const CONFIANCE = [
@@ -240,16 +292,37 @@ export default async function EnseignantsPage() {
           Ce qui les remplace ne se dessine pas : un filet, le fait en gras, sa
           précision à la suite. Le même sommaire que la page d'accueil.
         */}
-        <section className="mx-auto max-w-5xl px-6 pb-16">
-          <h2 className="mb-8 text-center text-2xl font-bold text-slate-50">En classe, concrètement</h2>
-          <dl className="grid gap-x-10 gap-y-px sm:grid-cols-2">
-            {CLASSE.map((c) => (
-              <div key={c.title} className="border-t border-white/10 py-4">
-                <dt className="text-sm font-semibold text-slate-100">{c.title}</dt>
-                <dd className="mt-1 text-base leading-relaxed text-slate-400">{c.text}</dd>
+        <section aria-labelledby="trois-temps" className="mx-auto max-w-6xl px-6 pb-16">
+          <h2
+            id="trois-temps"
+            className="text-center text-2xl font-bold text-slate-50"
+          >
+            Préparer, faire jouer, évaluer
+          </h2>
+          {/* La phrase que toute la grille sert : le produit ouvre des leviers,
+              il ne décide pas à la place de qui enseigne. */}
+          <p className="mx-auto mt-3 max-w-2xl text-center text-base leading-relaxed text-slate-400">
+            L&apos;enseignant reste maître de la progression pédagogique.
+          </p>
+          <div className="mt-10 grid gap-x-10 gap-y-10 md:grid-cols-3">
+            {TROIS_TEMPS.map((t) => (
+              <div key={t.temps} className="border-t border-white/10 pt-5">
+                <h3 className="font-display text-xl font-semibold text-slate-100">{t.temps}</h3>
+                <p className="mt-1 text-base leading-relaxed text-slate-300">{t.resume}</p>
+                <ul className="mt-4 space-y-2.5">
+                  {t.faits.map((f) => (
+                    <li key={f} className="flex gap-2.5 text-sm leading-relaxed text-slate-400">
+                      <span
+                        aria-hidden
+                        className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-amber-400"
+                      />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
               </div>
             ))}
-          </dl>
+          </div>
           {/*
             Le déroulé d'une séance vivait ici, en quatre cartes numérotées —
             choisir, créer, faire jouer, débriefer. Il redisait ce que l'en-tête,
