@@ -4,7 +4,12 @@ import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createElement } from "react";
 import { PreuvesDusageBande } from "@/components/preuves-dusage";
-import { PLANCHER, assezPourEtreDit } from "@/config/preuves-dusage";
+import {
+  PLANCHER,
+  PREUVES_PUBLIEES_PAR_DEFAUT,
+  assezPourEtreDit,
+  type PreuvesPubliees,
+} from "@/config/preuves-dusage";
 
 /**
  * PROUVER L'USAGE SANS L'INVENTER.
@@ -17,10 +22,18 @@ import { PLANCHER, assezPourEtreDit } from "@/config/preuves-dusage";
  *   l'inverse de ce qu'on leur demande.
  * · AUCUN NOM : des totaux, et rien qui descende à la ligne près.
  * · LE RELEVÉ EST DATÉ : un compteur sans date ne se vérifie pas.
+ * · CE QUI SE PUBLIE EST UN RÉGLAGE : un compteur exact peut desservir la page
+ *   qui le porte (« classes créées : 0 »), et le remède est de ne pas le
+ *   publier, jamais de maquiller la valeur. La bande ne rend donc que les
+ *   compteurs demandés, et rien du tout s'il n'en reste aucun.
  */
 
-const rendu = (preuves: Parameters<typeof PreuvesDusageBande>[0]["preuves"]) =>
-  renderToStaticMarkup(createElement(PreuvesDusageBande, { preuves }));
+const TOUS: PreuvesPubliees = { parties: true, tours: true, decisions: true, classes: true };
+
+const rendu = (
+  preuves: Parameters<typeof PreuvesDusageBande>[0]["preuves"],
+  publiees: PreuvesPubliees = TOUS,
+) => renderToStaticMarkup(createElement(PreuvesDusageBande, { preuves, publiees }));
 
 const releve = (parties: number, tours: number) => ({
   parties,
@@ -48,11 +61,42 @@ describe("les preuves d'usage", () => {
     expect(html).toContain((1234).toLocaleString("fr-FR"));
     expect(html).toContain("parties jouées");
     expect(html).toContain("tours résolus");
-    expect(html).toContain("décisions validées");
+    expect(html).toContain("décisions prises");
     expect(html).toContain("classes créées");
     // L'attribut est rendu en `dateTime` par le rendu statique ; HTML ne
     // distingue pas la casse des attributs, on ne la teste donc pas non plus.
     expect(html.toLowerCase()).toContain('datetime="2026-09-27"');
+  });
+
+  it("ne publie que les compteurs demandés", () => {
+    // Le réglage par défaut tait « classes créées », qui vaut zéro sur une
+    // page destinée aux enseignants. La valeur n'est pas touchée : elle n'est
+    // pas publiée.
+    expect(PREUVES_PUBLIEES_PAR_DEFAUT.classes).toBe(false);
+    const parDefaut = rendu(releve(120, 640), PREUVES_PUBLIEES_PAR_DEFAUT);
+    expect(parDefaut).toContain("parties jouées");
+    expect(parDefaut).not.toContain("classes créées");
+    // Et si plus rien n'est demandé, la bande entière disparaît plutôt que de
+    // poser un titre au-dessus du vide.
+    expect(
+      rendu(releve(120, 640), { parties: false, tours: false, decisions: false, classes: false }),
+    ).toBe("");
+  });
+
+  it("compte les décisions que son libellé annonce", () => {
+    // Le compteur comptait le statut `validated`. Or une ligne validée passe à
+    // `locked` dès que son tour est résolu : il ne comptait donc que les
+    // décisions dont le tour n'est pas encore tombé — « 2 » à côté de « 317
+    // tours résolus ». Et à la résolution, les sept concurrents pilotés par
+    // l'ordinateur reçoivent une ligne eux aussi : les compter multiplierait
+    // le chiffre par huit.
+    const source = readFileSync(
+      join(process.cwd(), "src/services/preuves-dusage.service.ts"),
+      "utf8",
+    );
+    expect(source).toContain('inArray(decisions.status, ["validated", "locked"])');
+    expect(source).toContain('eq(teams.controller, "human")');
+    expect(source).not.toMatch(/\$\{decisions\.status\} = 'validated'/);
   });
 
   it("ne nomme personne, et le dit", () => {

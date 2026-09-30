@@ -10,6 +10,10 @@ import {
 import { DEFAULT_FREE_TIER, type FreeTier } from "@/config/entitlements";
 import { DEFAULT_AI_CONFIG, type AiConfig } from "@/config/ai";
 import {
+  PREUVES_PUBLIEES_PAR_DEFAUT,
+  type PreuvesPubliees,
+} from "@/config/preuves-dusage";
+import {
   competitions,
   games,
   orgInvites,
@@ -109,6 +113,18 @@ export interface PlatformConfig {
    */
   freeTier: FreeTier;
   /**
+   * Les compteurs d'usage publiés sur la page des enseignants.
+   *
+   * Un compteur exact peut desservir la page qui le porte : « classes créées »
+   * vaut zéro, et c'est le seul chiffre nul d'une page destinée aux
+   * enseignants. Le remède n'est pas de maquiller la valeur — ce serait
+   * mentir — mais de choisir ce qui se publie. Le choix est donc ici, pas dans
+   * le code de la page. Le plancher de publication continue de s'appliquer
+   * par-dessus : un réglage ne fait pas apparaître une bande qui n'a pas de
+   * quoi être dite.
+   */
+  preuvesPubliees: PreuvesPubliees;
+  /**
    * Assistant IA (facultatif) : quelles surfaces sont allumées et quel modèle.
    * Réglé ici, appliqué par ai.service. Éteint par défaut — aucun coût sans
    * réglage explicite, et une clé ANTHROPIC_API_KEY reste requise côté serveur.
@@ -122,6 +138,7 @@ const DEFAULT_CONFIG: PlatformConfig = {
   announcement: "",
   contactEmail: "contact@business-arena.fr",
   freeTier: DEFAULT_FREE_TIER,
+  preuvesPubliees: PREUVES_PUBLIEES_PAR_DEFAUT,
   ai: DEFAULT_AI_CONFIG,
 };
 

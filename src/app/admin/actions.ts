@@ -39,6 +39,15 @@ export async function updatePlatformConfigAction(formData: FormData): Promise<vo
     allowSelfServiceTeachers: formData.get("allowSelfServiceTeachers") === "on",
     announcement: String(formData.get("announcement") ?? "").trim(),
     contactEmail: String(formData.get("contactEmail") ?? "").trim(),
+    // Ce qui se publie du relevé d'usage sur /enseignants. Un compteur exact
+    // peut desservir la page qui le porte — « classes créées : 0 » — et le
+    // remède est de ne pas le publier, jamais de maquiller la valeur.
+    preuvesPubliees: {
+      parties: formData.get("preuveParties") === "on",
+      tours: formData.get("preuveTours") === "on",
+      decisions: formData.get("preuveDecisions") === "on",
+      classes: formData.get("preuveClasses") === "on",
+    },
     freeTier: {
       maxRounds,
       competitions: formData.get("freeCompetitions") === "on",
@@ -55,6 +64,7 @@ export async function updatePlatformConfigAction(formData: FormData): Promise<vo
   revalidatePath("/admin");
   revalidatePath("/");
   revalidatePath("/orientation");
+  revalidatePath("/enseignants");
 }
 
 export async function newAdminInviteAction(organizationId: string): Promise<void> {

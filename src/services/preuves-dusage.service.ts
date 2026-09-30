@@ -1,6 +1,6 @@
-import { sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { classes, decisions, rounds } from "@/db/schema";
+import { classes, decisions, rounds, teams } from "@/db/schema";
 import { assezPourEtreDit, type PreuvesDusage } from "@/config/preuves-dusage";
 
 /**
@@ -14,10 +14,25 @@ import { assezPourEtreDit, type PreuvesDusage } from "@/config/preuves-dusage";
  * qui s'est réellement passé, et de le dire tel quel.
  *
  * QUATRE COMPTES, AUCUN NOM. Des tours résolus, des parties menées à leur
- * premier résultat, des décisions validées, des classes créées : des entiers
+ * premier résultat, des décisions prises, des classes créées : des entiers
  * agrégés sur toute la plateforme. Aucun établissement n'est nommé, aucun
  * enseignant, aucun élève, et rien ici ne descend à la ligne près — il n'y a
  * pas de donnée personnelle dans un total.
+ *
+ * LE COMPTE DES DÉCISIONS MESURAIT AUTRE CHOSE QUE SON NOM. Il comptait les
+ * lignes en statut `validated`. Or une ligne validée par une équipe passe à
+ * `locked` DÈS QUE SON TOUR EST RÉSOLU : `validated` ne désigne donc que les
+ * décisions dont le tour n'est pas encore tombé, un état qui dure le temps
+ * d'un tour ouvert. La page publiait « 2 » à côté de « 317 tours résolus » et
+ * annonçait « prises par une équipe et envoyées au marché », c'est-à-dire
+ * exactement l'inverse de ce qu'elle comptait : celles envoyées au marché sont
+ * précisément celles devenues `locked`.
+ *
+ * Le compte retenu est donc `validated` + `locked`, et SEULEMENT pour les
+ * équipes humaines. À la résolution, chaque équipe reçoit une ligne, les sept
+ * concurrents pilotés par l'ordinateur compris : les compter multiplierait le
+ * chiffre par huit. `carried_over` reste dehors — c'est la marque qu'une
+ * équipe n'a rien décidé et que le tour précédent a été reconduit.
  *
  * ET UN PLANCHER. En dessous, la page n'affiche RIEN plutôt que trois parties :
  * un compteur famélique prouve l'inverse de ce qu'on lui demande, et le gonfler
@@ -64,7 +79,13 @@ export async function preuvesDusage(maintenant = Date.now()): Promise<PreuvesDus
       db
         .select({ n: sql<number>`count(*)::int` })
         .from(decisions)
-        .where(sql`${decisions.status} = 'validated'`),
+        .innerJoin(teams, eq(decisions.teamId, teams.id))
+        .where(
+          and(
+            inArray(decisions.status, ["validated", "locked"]),
+            eq(teams.controller, "human"),
+          ),
+        ),
       db.select({ n: sql<number>`count(*)::int` }).from(classes),
     ]);
 

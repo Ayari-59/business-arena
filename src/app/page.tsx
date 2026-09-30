@@ -8,6 +8,7 @@ import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
 import { PictoSecteur } from "@/components/picto-secteur";
 import { DESCRIPTION_ACCUEIL, TITRE_ACCUEIL } from "@/config/seo";
 import { bouton } from "@/components/bouton";
+import { DemoDuTour } from "@/components/demo-du-tour";
 import { HaloDePage } from "@/components/halo-de-page";
 import { BPI_V2_DIMENSIONS } from "@/scoring/bpi";
 import { PiedDePage } from "@/components/pied-de-page";
@@ -361,6 +362,34 @@ export default async function Home() {
               ))}
             </ul>
           </div>
+        </section>
+
+        {/* ---------- Un tour, de bout en bout ---------- */}
+        {/*
+          CE QUI MANQUAIT À CETTE PAGE, ET QUI EST LE PRODUIT.
+
+          Relevé avant de l'ajouter : l'accueil ne disait NULLE PART « diagnostic »,
+          « modèle d'analyse » ni « débriefing ». Un visiteur y lisait qu'on dirige
+          une entreprise, parmi tant de métiers, en six tours — la description de
+          n'importe quel jeu d'entreprise. Ce qui distingue celui-ci, la boucle où l'on
+          lit une situation, où l'on tranche et où le chiffre répond, n'existait
+          que sur la page des enseignants et dans le guide, c'est-à-dire deux
+          clics après la décision de rester.
+
+          Le composant est celui de la page des enseignants, sans une ligne de
+          plus : trois panneaux qui se relaient, pas de vidéo, pas de
+          JavaScript, et des chiffres donnés pour montrer la mécanique, jamais
+          comme une mesure.
+        */}
+        <section aria-labelledby="boucle" className="mx-auto max-w-3xl px-6 py-16">
+          <h2 id="boucle" className="mb-2 text-center font-display text-3xl font-semibold text-slate-50">
+            Un tour, de bout en bout
+          </h2>
+          <p className="mx-auto mb-8 max-w-2xl text-center text-base leading-relaxed text-slate-400">
+            Une situation à lire, une décision à prendre, un résultat qui tranche. C&apos;est
+            cette boucle qu&apos;on répète six fois.
+          </p>
+          <DemoDuTour />
         </section>
 
         {/* ---------- Les chiffres de la maison ---------- */}

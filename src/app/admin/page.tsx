@@ -5,6 +5,7 @@ import { getPlatformOverview, getStaffContext } from "@/services/admin.service";
 import { DEMO_ACCOUNTS, isDemoSeeded } from "@/services/demo.service";
 import { formatEuro } from "@/lib/format";
 import { AI_MODELS } from "@/config/ai";
+import type { PreuvesPubliees } from "@/config/preuves-dusage";
 import {
   createEstablishmentAction,
   deactivateAdminInviteAction,
@@ -144,6 +145,40 @@ export default async function AdminPage({
             />
             Autoriser l&apos;inscription enseignant sans code d&apos;invitation (auto-service)
           </label>
+          {/* Les compteurs d'usage de /enseignants. Ils sont comptés dans la
+              base et jamais rédigés : ce qui se règle ici, c'est ce qu'on en
+              publie, pas ce qu'ils valent. */}
+          <fieldset className="rounded-xl border border-white/10 p-4">
+            <legend className="px-2 text-xs font-medium uppercase tracking-wide text-slate-400">
+              Compteurs d&apos;usage publiés sur « Pour les enseignants »
+            </legend>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {[
+                { name: "preuveParties", cle: "parties", libelle: "Parties jouées" },
+                { name: "preuveTours", cle: "tours", libelle: "Tours résolus" },
+                { name: "preuveDecisions", cle: "decisions", libelle: "Décisions prises" },
+                { name: "preuveClasses", cle: "classes", libelle: "Classes créées" },
+              ].map((c) => (
+                <label key={c.name} className="flex items-center gap-3 text-sm text-slate-300">
+                  <input
+                    type="checkbox"
+                    name={c.name}
+                    defaultChecked={
+                      overview.config.preuvesPubliees[c.cle as keyof PreuvesPubliees]
+                    }
+                    className="h-4 w-4 accent-amber-400"
+                  />
+                  {c.libelle}
+                </label>
+              ))}
+            </div>
+            <p className="mt-3 text-sm leading-relaxed text-slate-400">
+              Aucune valeur n&apos;est modifiable ici : ces totaux sont comptés dans la base. Ce
+              qui se règle, c&apos;est ce qui en est publié. La bande disparaît entièrement si
+              aucun compteur n&apos;est retenu, et reste tue tant que le plancher de publication
+              n&apos;est pas atteint.
+            </p>
+          </fieldset>
           <label className="block">
             <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
               Annonce sur la landing (vide = aucune)

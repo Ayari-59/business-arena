@@ -7,6 +7,7 @@ import { ApercuArene, ApercuPilotage, ApercuProjection } from "@/components/aper
 import { DemoDuTour } from "@/components/demo-du-tour";
 import { PreuvesDusageBande } from "@/components/preuves-dusage";
 import { preuvesDusage } from "@/services/preuves-dusage.service";
+import { getPlatformConfig } from "@/services/admin.service";
 import { bouton } from "@/components/bouton";
 import { BandeFinale } from "@/components/bande-finale";
 import { BandeDeChiffres } from "@/components/bande-de-chiffres";
@@ -72,7 +73,7 @@ const CONFIANCE = [
 
 export default async function EnseignantsPage() {
   // Comptés dans la base, jamais rédigés — et tus tant qu'ils ne prouvent rien.
-  const preuves = await preuvesDusage();
+  const [preuves, config] = await Promise.all([preuvesDusage(), getPlatformConfig()]);
   return (
     <>
       <main id="main" className="relative overflow-hidden">
@@ -291,7 +292,7 @@ export default async function EnseignantsPage() {
           parole. Ils ne s'affichent qu'au-dessus d'un plancher : un compteur
           famélique prouverait l'inverse.
         */}
-        <PreuvesDusageBande preuves={preuves} />
+        <PreuvesDusageBande preuves={preuves} publiees={config.preuvesPubliees} />
 
         {/*
           LES QUATRE ENGAGEMENTS ONT DESCENDU D'UNE SECTION. Ils tenaient en

@@ -53,7 +53,7 @@ const PANNEAUX = [
     etape: "3 · Le résultat",
     titre: "La simulation répond",
     corps:
-      "Le marché a suivi le prix, l'atelier a tenu — et le stock a coûté sa trésorerie. Le tour suivant part de là.",
+      "Le marché a suivi le prix, l'atelier a tenu, et le stock a coûté sa trésorerie. Le tour suivant part de là.",
     lignes: [
       ["Chiffre d'affaires", "+ 31 %"],
       ["Résultat net", "+ 32 729 €"],
