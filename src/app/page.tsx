@@ -237,7 +237,22 @@ const CE_QUE_L_ELEVE_APPREND = [
 
 function MainDeCartes() {
   return (
-    <figure className="m-0">
+    /*
+      LA MAIN DESCEND D'UN CRAN, pour que le haut des cartes tombe sur le haut
+      de « Dirigez une entreprise ».
+
+      Les deux colonnes partent du même bord ; à gauche, le surtitre occupe
+      cette ligne-là, si bien que le titre commence dix-neuf pixels plus bas
+      que la carte la plus haute — assez pour que l'œil voie deux départs au
+      lieu d'un. Le décalage ne vaut QUE sur deux colonnes : en dessous, les
+      blocs s'empilent et il n'y a plus rien à aligner.
+
+      Le nombre est mesuré, pas choisi : c'est l'écart relevé dans le
+      navigateur entre le haut du titre et le haut de la carte de devant, que
+      ses quatre pour cent de décalage dans le cadre font déjà descendre.
+      tests/e2e/parcours.e2e.ts le vérifie à l'écran.
+    */
+    <figure className="m-0 lg:mt-[19px]">
       <div className="relative mx-auto aspect-[9/8] w-full max-w-[440px]">
         <CarteEnMain
           nom="decider"

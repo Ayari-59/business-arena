@@ -2,6 +2,8 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Browser, Page } from "playwright-core";
 import { aller, ouvrirNavigateur, texte, unique } from "./helpers/browser";
 import { ATELIERS, dureeTotaleHeures } from "../../src/config/ateliers";
+import { SCENARIO_CHOICES } from "../../src/config/scenarios/registry";
+import { nomEntreprise } from "../../src/config/scenarios/presentation";
 
 /**
  * Le parcours complet, dans un vrai navigateur, sur une vraie base.
@@ -357,22 +359,20 @@ describe("parcours enseignant et élève", () => {
     }
   });
 
-  it("la vitrine présente les sept entreprises, et son bouton choisit le métier", async () => {
+  it("la vitrine présente toutes les entreprises, et son bouton choisit le métier", async () => {
     // Une page vitrine se vérifie dans un navigateur ou pas du tout : elle
     // n'est faite que de rendu et de liens. Et son bouton doit VRAIMENT
     // amener sur le formulaire (/jouer) avec le bon secteur : c'est la
     // jointure, donc l'endroit où ça casse.
+    //
+    // LES NOMS SE LISENT DANS LE REGISTRE. Ils étaient écrits ici à la main,
+    // et ce test s'intitulait « les sept entreprises » alors que la vitrine
+    // en présente neuf : deux métiers ajoutés depuis n'étaient couverts par
+    // rien. Une liste recopiée ne se met pas à jour, et personne ne relit le
+    // titre d'un test qui passe.
     await aller(prof, "/entreprises");
     const vitrine = await texte(prof);
-    for (const nom of [
-      "NOVA",
-      "MAILLE & CO",
-      "L'ESCALE",
-      "LA TABLE D'AUGUSTIN",
-      "ATLAS CONSEIL",
-      "PIXEL & CO",
-      "VOLT FITNESS",
-    ]) {
+    for (const nom of SCENARIO_CHOICES.map(nomEntreprise)) {
       expect(vitrine, `${nom} absente de la vitrine`).toContain(nom);
     }
     // le tableau comparatif oppose bien le périssable au stockable
@@ -418,6 +418,32 @@ describe("parcours enseignant et élève", () => {
     }
     // toutes les séances de l'atelier, pas une de moins
     expect((fiche.match(/livrable de la séance/g) ?? []).length).toBe(cg1.seances.length);
+  });
+
+  it("la main de cartes part du haut du titre, sur deux colonnes", async () => {
+    // Les deux colonnes de l'accroche partent du même bord, mais à gauche le
+    // surtitre occupe cette ligne-là : sans décalage, la carte de devant
+    // commençait dix-neuf pixels au-dessus de « Dirigez une entreprise », et
+    // l'œil voyait deux départs au lieu d'un. L'écart se mesure à l'écran ou
+    // pas du tout — aucune lecture de source ne le verrait.
+    await prof.setViewportSize({ width: 1280, height: 900 });
+    await aller(prof, "/");
+    const ecart = await prof.evaluate(() => {
+      const h1 = document.querySelector("h1")!.getBoundingClientRect();
+      const cartes = [...document.querySelectorAll('figure [role="img"]')].map(
+        (e) => e.getBoundingClientRect().top,
+      );
+      return Math.min(...cartes) - h1.top;
+    });
+    expect(Math.abs(ecart), `la main part ${Math.round(ecart)} px du titre`).toBeLessThanOrEqual(3);
+
+    // Sous deux colonnes, les blocs s'empilent : il n'y a plus rien à aligner,
+    // et le décalage laisserait un trou au-dessus des cartes.
+    await prof.setViewportSize({ width: 390, height: 780 });
+    await aller(prof, "/");
+    expect(
+      await prof.evaluate(() => getComputedStyle(document.querySelector("figure")!).marginTop),
+    ).toBe("0px");
   });
 
   it("aucune page du parcours ne porte de tiret en milieu de phrase", async () => {
