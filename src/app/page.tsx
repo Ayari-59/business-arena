@@ -9,6 +9,7 @@ import { PictoSecteur } from "@/components/picto-secteur";
 import { DESCRIPTION_ACCUEIL, TITRE_ACCUEIL } from "@/config/seo";
 import { bouton } from "@/components/bouton";
 import { DemoDuTour } from "@/components/demo-du-tour";
+import { TEMPS_DU_TOUR } from "@/config/temps-du-tour";
 import { DonneesStructurees } from "@/components/donnees-structurees";
 import { HaloDePage } from "@/components/halo-de-page";
 import { QuiFaitQuoi } from "@/components/qui-fait-quoi";
@@ -388,12 +389,51 @@ export default async function Home() {
           comme une mesure.
         */}
         <section aria-labelledby="boucle" className="mx-auto max-w-3xl px-6 py-16">
-          <h2 id="boucle" className="mb-2 text-center font-display text-3xl font-semibold text-slate-50">
+          <h2 id="boucle" className="text-center font-display text-3xl font-semibold text-slate-50">
             Un tour, de bout en bout
           </h2>
-          <p className="mx-auto mb-8 max-w-2xl text-center text-base leading-relaxed text-slate-400">
-            Une situation à lire, une décision à prendre, un résultat qui tranche. C&apos;est
-            cette boucle qu&apos;on répète six fois.
+          {/*
+            LES SIX TEMPS, NOMMÉS.
+
+            C'est l'enchaînement qui distingue ce produit d'un jeu d'entreprise,
+            et il n'était écrit nulle part sur cette page : on ne décide pas
+            d'abord, on lit, on diagnostique, on choisit son modèle d'analyse,
+            et ENSUITE on décide.
+
+            La chaîne ne porte PAS de numéros, bien qu'elle soit ordonnée : les
+            panneaux de la démonstration en dessous sont numérotés 1, 2, 3 —
+            ce sont les trois qu'ils déroulent, pas les rangs de ces temps-là.
+            Deux numérotations sur un écran se contrediraient.
+          */}
+          <ol className="mx-auto mt-6 flex max-w-2xl flex-wrap items-center justify-center gap-x-3 gap-y-2">
+            {TEMPS_DU_TOUR.map((t, i) => (
+              <li key={t.nom} className="flex items-center gap-3">
+                {/* La phrase complète reste accessible : l'infobulle pour la
+                    souris, le texte caché pour une synthèse vocale. Un mot seul
+                    ne dit pas ce qui se passe à ce moment-là. */}
+                <span
+                  title={t.quoi}
+                  className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300"
+                >
+                  {t.nom}
+                  <span className="sr-only"> : {t.quoi}</span>
+                </span>
+                {/* La flèche suit son temps au lieu de précéder le suivant :
+                    sur un téléphone la chaîne passe à la ligne, et une flèche
+                    posée avant se retrouvait seule en tête de deuxième ligne.
+                    Placée après, elle termine la ligne — ce qui est justement
+                    ce qu'une flèche veut dire. */}
+                {i < TEMPS_DU_TOUR.length - 1 ? (
+                  <span aria-hidden className="text-sm text-amber-400/60">
+                    →
+                  </span>
+                ) : null}
+              </li>
+            ))}
+          </ol>
+          <p className="mx-auto mb-8 mt-6 max-w-2xl text-center text-base leading-relaxed text-slate-400">
+            Six temps, dans cet ordre, à chaque tour. Les panneaux ci-dessous en déroulent
+            trois, sur un tour de NOVA.
           </p>
           <DemoDuTour />
         </section>
