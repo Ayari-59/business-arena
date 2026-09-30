@@ -427,11 +427,19 @@ describe("parcours enseignant et élève", () => {
     // plafond n'était jamais atteint. Une taille figée ne se voit pas en
     // lisant la feuille de style : elle se mesure à deux largeurs.
     //
-    // ET LE REVERS DU REMÈDE : une taille calculée sur l'ÉCRAN ne sait rien de
-    // la place disponible. Le titre partage sa ligne avec la main de cartes ;
-    // écrit sans repli, il passerait sous l'image sans que rien ne déborde de
-    // la page, puisque le premier écran est rogné. On mesure donc la largeur
-    // RÉELLE de la plus longue ligne contre celle de sa colonne.
+    // ET LE REVERS DU REMÈDE : une taille qui ne sait rien de la place
+    // disponible. Le titre partage sa ligne avec la main de cartes ; trop
+    // grand, il passerait sous l'image sans que rien ne déborde de la page,
+    // puisque le premier écran est rogné ; trop grand sur un téléphone, il se
+    // replie et « Dirigez une entreprise. » tombe sur deux lignes. On mesure
+    // donc la largeur RÉELLE de la plus longue ligne contre celle de sa
+    // colonne.
+    //
+    // ET ON LA MESURE SUR UN TÉLÉPHONE AUSSI. Cette garde n'a d'abord regardé
+    // que 1024 et 1728, et c'est par 390 que le défaut est passé : le titre
+    // s'y repliait sur deux lignes, sans rien déborder et sans qu'aucun test
+    // ne le voie. Une règle de mise en page vérifiée sur un seul ordre de
+    // largeur ne vérifie rien.
     const mesurer = async (largeur: number) => {
       await prof.setViewportSize({ width: largeur, height: 1000 });
       await aller(prof, "/");
@@ -446,12 +454,17 @@ describe("parcours enseignant et élève", () => {
         };
       });
     };
+    const telephone = await mesurer(390);
     const petit = await mesurer(1024);
     const grand = await mesurer(1728);
     expect(grand.px, `le titre reste à ${grand.px} px quand l'écran passe de 1024 à 1728`).toBeGreaterThan(
-      petit.px + 6,
+      petit.px + 3,
     );
-    for (const [nom, m] of [["1024", petit], ["1728", grand]] as const) {
+    expect(
+      telephone.px,
+      `le titre fait ${telephone.px} px sur un téléphone comme ${grand.px} sur un grand écran`,
+    ).toBeLessThan(grand.px);
+    for (const [nom, m] of [["390", telephone], ["1024", petit], ["1728", grand]] as const) {
       expect(
         Math.round(m.texte),
         `à ${nom} px, le titre mesure ${Math.round(m.texte)} px dans une colonne de ${Math.round(m.colonne)}`,

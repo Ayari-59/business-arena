@@ -360,14 +360,25 @@ export default async function Home() {
               encore vingt-cinq pour cent de plus que les 38,5 px figés d'avant,
               et cette fois il GRANDIT avec l'écran.
 
-              Il se dimensionne sur l'écran mais son plafond est calculé pour
-              sa colonne : à 3 vw plafonnés à 48 px, la phrase la plus longue
-              tient dans la moitié gauche jusqu'à 1728 px de large, sans jamais
-              passer sous l'image. tests/e2e/parcours.e2e.ts le mesure.
+              IL SE DIMENSIONNE SUR SA COLONNE, ET NON SUR L'ÉCRAN. La nuance a
+              coûté un aller-retour. Sur l'écran, la taille ne sait rien de la
+              place disponible : à 390 px de large, la colonne fait 342 px et le
+              titre en demandait 36 — il se repliait, et « Dirigez une
+              entreprise. » tombait sur deux lignes. En unités de la colonne
+              (`cqw`), la taille suit la place : 30 px sur un téléphone, 48 sur
+              un grand écran, une ligne par phrase partout.
+
+              Le coefficient n'est pas choisi au jugé : la plus longue phrase
+              mesure 0,465 em par caractère dans cette graisse, soit 10,7 fois
+              la taille pour ses vingt-trois signes. 8,8 cqw laisse donc six pour
+              cent de marge. tests/e2e/parcours.e2e.ts mesure la largeur RÉELLE
+              du texte contre celle de sa colonne, à 390 px comme à 1728 —
+              c'est cette mesure à 390 qui manquait, et c'est par là que le
+              défaut est passé.
             */}
             <div className="mt-8 grid items-center gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:gap-14">
-              <div>
-                <h1 className="text-[clamp(2.25rem,3vw,3rem)] font-bold leading-[1.04] tracking-tight text-slate-50 sm:whitespace-nowrap">
+              <div style={{ containerType: "inline-size" }}>
+                <h1 className="whitespace-nowrap text-[clamp(1.5rem,8.8cqw,3rem)] font-bold leading-[1.04] tracking-tight text-slate-50">
                   Dirigez une entreprise.
                   <br />
                   <span className="text-amber-400">Apprenez à décider.</span>
