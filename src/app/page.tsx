@@ -11,6 +11,7 @@ import { bouton } from "@/components/bouton";
 import { DemoDuTour } from "@/components/demo-du-tour";
 import { DonneesStructurees } from "@/components/donnees-structurees";
 import { HaloDePage } from "@/components/halo-de-page";
+import { QuiFaitQuoi } from "@/components/qui-fait-quoi";
 import { BPI_V2_DIMENSIONS } from "@/scoring/bpi";
 import { PiedDePage } from "@/components/pied-de-page";
 
@@ -396,6 +397,22 @@ export default async function Home() {
           </p>
           <DemoDuTour />
         </section>
+
+        {/* ---------- Qui fait quoi ---------- */}
+        {/*
+          LE TROISIÈME NIVEAU N'EXISTAIT NULLE PART SUR CETTE PAGE.
+
+          Deux boutons dans l'accroche, « Commencer une partie » et « Je suis
+          enseignant » : l'élève et l'enseignant étaient là, l'établissement
+          manquait. Il fallait déplier une section du guide pour apprendre
+          qu'un lycée ou un campus a son espace d'administration, ses codes
+          d'invitation et ses concours.
+
+          La bande des chiffres sépare celle-ci de « Par où commencer » : l'une
+          répond « qui suis-je ici », l'autre « où vais-je », et deux listes de
+          liens qui se suivent n'en font plus qu'une.
+        */}
+        <QuiFaitQuoi />
 
         {/* ---------- Les chiffres de la maison ---------- */}
         {/*
