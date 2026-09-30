@@ -199,6 +199,42 @@ function CarteEnMain({
  * l'application : elles disent les chiffres qu'on y lit, pas « capture
  * d'écran ».
  */
+/**
+ * CE QUE L'ÉLÈVE APPREND, ET COMMENT ON LE SAIT.
+ *
+ * La colonne de l'accroche s'arrêtait à « Sans compte, sans installation »
+ * pendant que celle des captures continuait sur deux cents pixels : un vide
+ * en bas à gauche du premier écran, à l'endroit le plus lu de la page.
+ *
+ * CE N'EST PAS LA BOUCLE UNE SECONDE FOIS. Les six temps, en face, disent
+ * comment un tour FONCTIONNE ; ces trois lignes disent ce que l'élève en
+ * RETIRE, et chacune porte un fait que la chaîne ne dit pas — que le
+ * diagnostic vient avant la décision et non après, qu'un modèle trompeur est
+ * noté comme tel, que la note est écrite avant de connaître le résultat.
+ * Trois, et non cinq ou six : une seconde liste de même longueur, en face de
+ * la première, se lirait comme un doublon quelle que soit sa matière.
+ *
+ * RIEN N'EST PROMIS QUI NE SOIT DANS LE PRODUIT. Les causes plausibles se
+ * cochent avant la feuille de décision ; « quel modèle mobiliser » est l'une
+ * des trois questions du QCM et la maîtrise décisionnelle est l'une des six
+ * dimensions de l'indice ; la note d'avant est exigée au premier tour et
+ * revient à l'équipe au tour suivant, à côté du constat.
+ */
+const CE_QUE_L_ELEVE_APPREND = [
+  {
+    verbe: "Diagnostiquer avant d'agir",
+    quoi: "Les causes plausibles se cochent avant que la feuille de décision s'ouvre.",
+  },
+  {
+    verbe: "Mobiliser le bon modèle",
+    quoi: "Un modèle trompeur ne rapporte presque rien : c'est une des six dimensions de l'indice.",
+  },
+  {
+    verbe: "Justifier avant de savoir",
+    quoi: "L'équipe écrit ce qu'elle attend de ses choix, et le relit au tour suivant face au résultat.",
+  },
+];
+
 function MainDeCartes() {
   return (
     <figure className="m-0">
@@ -389,6 +425,30 @@ export default async function Home() {
             <p className="mt-5 text-sm text-slate-400">
               Sans compte, sans installation. Vos parties restent liées à ce navigateur.
             </p>
+
+            {/* Le vide de la colonne gauche, occupé par ce qu'un enseignant
+                vient vérifier : ce que sa classe en retire. Le filet et les
+                capitales espacées sont ceux des autres intitulés de section —
+                le bloc ne s'annonce pas comme une nouveauté. */}
+            <section aria-labelledby="apprend" className="mt-12 border-t border-white/10 pt-6">
+              <h2
+                id="apprend"
+                className="flex items-center gap-3 text-xs uppercase tracking-[0.28em] text-slate-400"
+              >
+                <span aria-hidden className="h-px w-8 bg-amber-400/40" />
+                Ce que l&apos;élève apprend
+              </h2>
+              <ul className="mt-5 space-y-4">
+                {CE_QUE_L_ELEVE_APPREND.map((c) => (
+                  <li key={c.verbe} className="flex gap-3">
+                    <span aria-hidden className="mt-2 h-1 w-1 shrink-0 rounded-full bg-amber-400" />
+                    <p className="text-sm leading-relaxed text-slate-400">
+                      <span className="font-semibold text-slate-200">{c.verbe}.</span> {c.quoi}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </section>
           </div>
 
           {/*
