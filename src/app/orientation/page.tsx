@@ -3,6 +3,10 @@ import Link from "next/link";
 import { OrientationForm } from "@/components/orientation-form";
 import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
 import { ATELIERS } from "@/config/ateliers";
+import { DIFFICULTY_PRESETS } from "@/config/difficulty";
+import { OBJECTIFS } from "@/config/orientation";
+import { familyOf, scenarioByCode } from "@/config/scenarios/registry";
+import { nomEntreprise } from "@/config/scenarios/presentation";
 import { PiedDePage } from "@/components/pied-de-page";
 
 /**
@@ -19,6 +23,53 @@ export const metadata: Metadata = {
   description:
     "Quatre questions pour trouver l'entreprise, le niveau et la durée qui conviennent à votre classe.",
 };
+
+/** Combien de diplômes une entrée nomme avant de dire « et N autres ». */
+const DIPLOMES_MONTRES = 3;
+
+/**
+ * PAR OBJECTIF PÉDAGOGIQUE : CE QUE LE FORMULAIRE NE MONTRE PAS.
+ *
+ * Le formulaire pose quatre questions et rend UNE recommandation, avec ses
+ * raisons. C'est ce qu'il faut à qui sait déjà ce qu'il veut travailler. Mais
+ * un enseignant qui découvre le produit se demande l'inverse : « je veux
+ * faire travailler la trésorerie et le BFR — qu'est-ce que ça donne ici ? »,
+ * et la réponse n'existait nulle part. Il fallait deviner l'objectif pour
+ * obtenir un résultat, sans jamais voir l'étendue des objectifs possibles.
+ *
+ * RIEN N'EST CALCULÉ ICI. Les neuf objectifs, le secteur que chacun sert, le
+ * niveau qu'il exige et la raison de ce choix vivent déjà dans
+ * `config/orientation.ts` — c'est le même registre que le formulaire
+ * interroge. Cette table ne fait que le DÉPLIER : elle montre les règles au
+ * lieu de les appliquer, et les deux ne peuvent pas diverger.
+ *
+ * LES ATELIERS SE DÉDUISENT, ils ne s'attribuent pas. Un atelier sert un
+ * objectif s'il se joue sur l'entreprise que cet objectif sert — la famille,
+ * pas la variante, parce que le niveau décide seul de la variante jouée. Là
+ * où aucun atelier n'existe, on le dit : c'est une information utile, elle
+ * signifie que la séance est à écrire.
+ */
+function parObjectif() {
+  const tete = (code: string) => familyOf(code)?.head ?? code;
+  return OBJECTIFS.filter((o) => o.secteur !== null).map((o) => {
+    const scenario = scenarioByCode(o.secteur!);
+    const niveau = DIFFICULTY_PRESETS.find((p) => p.level === o.niveauMinimum);
+    const ateliers = ATELIERS.filter((a) => tete(a.reglages.scenarioCode) === tete(o.secteur!));
+    // Deux ateliers d'un même diplôme ne font qu'une entrée : le lecteur
+    // cherche un public, pas un catalogue.
+    const parDiplome = new Map<string, string>();
+    for (const a of ateliers) if (!parDiplome.has(a.diplome)) parDiplome.set(a.diplome, a.code);
+    return {
+      code: o.code,
+      libelle: o.libelle,
+      raison: o.raison,
+      entreprise: nomEntreprise(scenario),
+      niveauNom: niveau?.name ?? "",
+      niveauRang: o.niveauMinimum,
+      diplomes: [...parDiplome.entries()].map(([diplome, atelier]) => ({ diplome, atelier })),
+    };
+  });
+}
 
 export default function OrientationPage() {
   return (
@@ -45,6 +96,72 @@ export default function OrientationPage() {
         <div className="mt-10">
           <OrientationForm />
         </div>
+
+        {/*
+          LA TABLE DES OBJECTIFS, SOUS LE FORMULAIRE ET NON AU-DESSUS.
+
+          Le chemin guidé reste le premier : quatre questions et un réglage
+          complet. Celui-ci est le chemin de celui qui veut d'abord VOIR — ce
+          qu'on peut faire travailler, avec quelle entreprise, à partir de quel
+          niveau, et pour quels publics une séance existe déjà.
+        */}
+        <section aria-labelledby="objectifs" className="mt-16 border-t border-white/10 pt-10">
+          <h2 id="objectifs" className="text-2xl font-bold text-slate-50">
+            Ou partez de ce que vous voulez faire travailler
+          </h2>
+          <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-400">
+            Chaque objectif a son métier : celui qui rend la notion visible sans qu&apos;il faille
+            la chercher. Le niveau indiqué est le minimum à partir duquel les leviers nécessaires
+            sont ouverts.
+          </p>
+          <div className="mt-8 grid gap-x-10 gap-y-8 sm:grid-cols-2">
+            {parObjectif().map((o) => (
+              <div key={o.code} className="border-t border-white/10 pt-4">
+                <h3 className="text-base font-semibold text-slate-100">{o.libelle}</h3>
+                <p className="mt-1.5 text-sm text-slate-300">
+                  <Link
+                    href="/entreprises"
+                    className="font-semibold text-amber-400 underline-offset-4 transition-colors hover:text-amber-300 hover:underline"
+                  >
+                    {o.entreprise}
+                  </Link>
+                  <span className="text-slate-400">
+                    {" "}
+                    · à partir du niveau {o.niveauNom}
+                  </span>
+                </p>
+                <p className="mt-2 text-sm leading-relaxed text-slate-400">{o.raison}</p>
+                <p className="mt-2 text-sm leading-relaxed text-slate-400">
+                  {o.diplomes.length === 0 ? (
+                    // Le dire plutôt que le taire : cela signifie que la séance
+                    // reste à écrire, et c'est ce qu'un enseignant a besoin de
+                    // savoir avant de choisir.
+                    <>Aucun atelier publié sur ce métier pour l&apos;instant.</>
+                  ) : (
+                    <>
+                      Atelier prêt à animer pour{" "}
+                      {o.diplomes.slice(0, DIPLOMES_MONTRES).map((d, i) => (
+                        <span key={d.atelier}>
+                          {i > 0 ? ", " : ""}
+                          <Link
+                            href={`/animations/${d.atelier}`}
+                            className="underline decoration-white/20 underline-offset-4 transition-colors hover:text-amber-200 hover:decoration-amber-400/60"
+                          >
+                            {d.diplome}
+                          </Link>
+                        </span>
+                      ))}
+                      {o.diplomes.length > DIPLOMES_MONTRES
+                        ? ` et ${o.diplomes.length - DIPLOMES_MONTRES} autres`
+                        : ""}
+                      .
+                    </>
+                  )}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
 
         <p className="mt-10 text-sm leading-relaxed text-slate-400">
           Vous préférez en parler de vive voix ?{" "}
