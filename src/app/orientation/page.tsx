@@ -85,17 +85,41 @@ export default function OrientationPage() {
               c'est ce nombre que disent l'accueil, les entreprises, les fonctionnalités
               et l'espace enseignant. Cette page annonçait donc quinze entreprises pour
               en proposer neuf. */}
-          {SCENARIO_CHOICES.length} entreprises, six niveaux de difficulté, une durée réglable et{" "}
-          {ATELIERS.length} ateliers prêts à animer : cela fait beaucoup de combinaisons, et le
-          mauvais réglage ne se voit qu&apos;en séance trois. Répondez à quatre questions, la
-          recommandation s&apos;écrit à mesure, avec ses raisons. Vous pouvez la discuter :
-          elle n&apos;a rien d&apos;un oracle, c&apos;est le raisonnement que nous tiendrions à
+          {/* L'accroche annonçait « répondez à quatre questions » juste au-dessus
+              du titre qui le dit maintenant. Elle garde ce qu'elle seule peut
+              dire : pourquoi le choix est difficile, et ce que vaut la réponse. */}
+          {SCENARIO_CHOICES.length} entreprises, {DIFFICULTY_PRESETS.length} niveaux de
+          difficulté, une durée réglable et {ATELIERS.length} ateliers prêts à animer : cela
+          fait beaucoup de combinaisons, et le mauvais réglage ne se voit qu&apos;en séance
+          trois. Deux chemins mènent au bon, et la recommandation se discute : elle
+          n&apos;a rien d&apos;un oracle, c&apos;est le raisonnement que nous tiendrions à
           votre place.
         </p>
 
-        <div className="mt-10">
-          <OrientationForm />
-        </div>
+        {/*
+          LE FORMULAIRE N'AVAIT PAS DE TITRE.
+
+          C'est l'outil principal de la page, et il était un bloc anonyme : la
+          page faisait un H1, puis un seul H2 — « OU partez de ce que vous
+          voulez faire travailler » — qui répondait à quelque chose qui n'avait
+          jamais été nommé. Le défaut est né en ajoutant la table des
+          objectifs sous un chemin qui, lui, n'a pas de nom.
+
+          Les deux chemins portent donc chacun le sien, et le « ou » retrouve
+          son antécédent.
+        */}
+        <section aria-labelledby="quatre-questions" className="mt-12">
+          <h2 id="quatre-questions" className="text-2xl font-bold text-slate-50">
+            Répondez à quatre questions
+          </h2>
+          <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-400">
+            Le diplôme, le moment de l&apos;année, ce que vous voulez faire travailler, et le
+            temps dont vous disposez. La recommandation s&apos;écrit à mesure.
+          </p>
+          <div className="mt-8">
+            <OrientationForm />
+          </div>
+        </section>
 
         {/*
           LA TABLE DES OBJECTIFS, SOUS LE FORMULAIRE ET NON AU-DESSUS.

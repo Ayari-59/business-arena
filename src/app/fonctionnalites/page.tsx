@@ -114,15 +114,45 @@ export default function FonctionnalitesPage() {
           comme au mur ; c'est le même geste, et il tient dans un tiers de la
           place. Les emoji partent avec les cartes.
         */}
+        {/*
+          LA PAGE NE MENAIT NULLE PART. Deux liens pour sept cent trente-cinq
+          mots et trois mille pixels, et ces deux-là étaient les boutons de la
+          bande finale : le corps de la page n'en portait aucun. Elle nommait
+          ses secteurs, ses situations et ses modèles d'analyse sans qu'aucun
+          ne soit cliquable, alors que les fiches existent.
+
+          Les pictogrammes mènent maintenant à la fiche de leur métier, comme
+          sur l'accueil — à ceci près que l'accueil, lui, met le renvoi à côté
+          du titre : ici chaque métier a son ancre, donc chaque pictogramme
+          peut viser la sienne.
+        */}
         <section className="mx-auto max-w-5xl px-6 pb-16">
-          <h2 className="mb-6 text-center text-sm font-semibold uppercase tracking-wide text-slate-400">
-            {SCENARIO_CHOICES.length} secteurs, {SCENARIO_CHOICES.length} économies réelles
-          </h2>
+          <div className="mb-6 flex flex-wrap items-baseline justify-center gap-x-6 gap-y-2">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+              {SCENARIO_CHOICES.length} secteurs, {SCENARIO_CHOICES.length} économies réelles
+            </h2>
+            <Link
+              href="/entreprises"
+              className="text-sm font-medium text-slate-300 underline decoration-white/20 underline-offset-4 transition hover:text-amber-200 hover:decoration-amber-400/60"
+            >
+              Voir les fiches
+            </Link>
+          </div>
           <ul className="grid grid-cols-3 gap-x-4 gap-y-6 sm:grid-cols-5 lg:grid-cols-9">
             {SCENARIO_CHOICES.map((s) => (
-              <li key={s.code} className="flex flex-col items-center gap-2 text-center">
-                <PictoSecteur secteur={s.sector} className="h-7 w-7 text-amber-400/80" />
-                <span className="text-xs leading-tight text-slate-300">{s.shortName}</span>
+              <li key={s.code}>
+                <Link
+                  href={`/entreprises#${s.code}`}
+                  className="group flex flex-col items-center gap-2 text-center"
+                >
+                  <PictoSecteur
+                    secteur={s.sector}
+                    className="h-7 w-7 text-amber-400/80 transition-colors group-hover:text-amber-300"
+                  />
+                  <span className="text-xs leading-tight text-slate-300 transition-colors group-hover:text-amber-200">
+                    {s.shortName}
+                  </span>
+                </Link>
               </li>
             ))}
           </ul>
@@ -156,7 +186,15 @@ export default function FonctionnalitesPage() {
           </h2>
           <p className="mx-auto mb-8 max-w-xl text-center text-base text-slate-400">
             Chaque situation mobilise un ou plusieurs de ces modèles. L&apos;étudiant
-            doit identifier le bon cadre avant de trancher.
+            doit identifier le bon cadre avant de trancher. Les notions qu&apos;ils
+            emploient ont chacune{" "}
+            <Link
+              href="/notions"
+              className="text-amber-300 underline-offset-4 hover:underline"
+            >
+              leur fiche
+            </Link>
+            .
           </p>
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {DECISION_MODELS.map((m) => (

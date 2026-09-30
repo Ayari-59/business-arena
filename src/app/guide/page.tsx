@@ -3,6 +3,42 @@ import type { Metadata } from "next";
 import { bouton } from "@/components/bouton";
 import { BandeFinale } from "@/components/bande-finale";
 import { PiedDePage } from "@/components/pied-de-page";
+import {
+  BPI_V2_DIMENSIONS,
+  INDICE,
+  V2_DIMENSION_LABELS,
+  scoringWeightsV2,
+  type BpiV2Dimension,
+} from "@/scoring/bpi";
+import { DEFAULT_SCENARIO_CODE, scenarioByCode } from "@/config/scenarios/registry";
+
+/**
+ * Ce que chaque dimension MESURE : de la prose pédagogique, que le moteur ne
+ * porte nulle part. Le nom et le poids, eux, s'y lisent.
+ */
+const MESURE: Record<BpiV2Dimension, string> = {
+  economic: "résultat d'exploitation, chiffre d'affaires",
+  financial: "variation du résultat net (une perte plafonne à 20)",
+  commercial: "part de marché, service de la demande",
+  pilotage: "exécution (capacités, ruptures) et cohérence des décisions prises",
+  rse: "indice RSE du tour (environnement, social, gouvernance)",
+  decision_mastery: "situations rendues : bon diagnostic et bon modèle",
+};
+
+/**
+ * L'indice, tel que le moteur le calcule : ses dimensions, leurs intitulés et
+ * leurs poids. Les poids appartiennent à un SCÉNARIO ; les quinze portent
+ * aujourd'hui les mêmes, ce qui autorise cette page à les annoncer comme la
+ * règle, et une garde refuse de laisser passer le jour où deux divergeraient.
+ */
+const POIDS = scoringWeightsV2(scenarioByCode(DEFAULT_SCENARIO_CODE).scenario.scoring);
+
+const DIMENSIONS_DE_L_INDICE = BPI_V2_DIMENSIONS.map((code) => ({
+  code,
+  nom: V2_DIMENSION_LABELS[code],
+  poids: Math.round(POIDS[code] * 100),
+  mesure: MESURE[code],
+}));
 
 export const metadata: Metadata = {
   alternates: { canonical: "/guide" },
@@ -326,10 +362,30 @@ export default function GuidePage() {
             </p>
           </Section>
 
+          {/*
+            LE TABLEAU DE L'INDICE SE LIT DANS LE MOTEUR.
+
+            Il a été écrit à la main : six intitulés, six pourcentages. Exacts
+            le jour où on les a tapés, et reliés à rien — une repondération
+            aurait fait mentir cette page en silence, ce qu'aucune erreur
+            n'aurait signalé. C'était la dernière occurrence d'un chiffre
+            recopié dans tout le dépôt.
+
+            LES POIDS SONT CEUX D'UN SCÉNARIO, ET C'EST POURQUOI LA GARDE
+            COMPTE. Chaque scénario porte les siens ; les quinze sont
+            aujourd'hui identiques, ce qui autorise cette page à les annoncer
+            comme LA règle. Le jour où deux scénarios divergeraient, la phrase
+            deviendrait fausse : tests/architecture/indice-du-guide.test.ts
+            refuse alors de laisser passer.
+
+            Ce que chaque dimension MESURE reste écrit ici : c'est de la prose
+            pédagogique, pas une donnée du moteur, et le moteur ne la porte
+            nulle part.
+          */}
           <Section
             id="bpi"
-            title="L'Indice de performance globale"
-            intro="Le classement ne récompense pas que le profit : l'IPG (0-100) pondère 6 dimensions."
+            title={`L'${INDICE.nom.charAt(0).toLowerCase()}${INDICE.nom.slice(1)}`}
+            intro={`Le classement ne récompense pas que le profit : l'${INDICE.sigle} (0-100) pondère ${DIMENSIONS_DE_L_INDICE.length} dimensions.`}
           >
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -341,18 +397,13 @@ export default function GuidePage() {
                   </tr>
                 </thead>
                 <tbody className="text-slate-300">
-                  {[
-                    ["Économique", "30 %", "résultat d'exploitation, chiffre d'affaires"],
-                    ["Financière", "20 %", "variation du résultat net (une perte plafonne à 20)"],
-                    ["Commerciale", "15 %", "part de marché, service de la demande"],
-                    ["Pilotage", "20 %", "exécution (capacités, ruptures) et cohérence des décisions prises"],
-                    ["Responsabilité sociétale", "10 %", "indice RSE du tour (environnement, social, gouvernance)"],
-                    ["Maîtrise décisionnelle", "5 %", "situations rendues : bon diagnostic et bon modèle"],
-                  ].map(([d, w, m]) => (
-                    <tr key={d} className="border-t border-white/5">
-                      <td className="py-2 pr-3">{d}</td>
-                      <td className="py-2 pr-3 text-right tabular-nums text-amber-300">{w}</td>
-                      <td className="py-2 text-slate-400">{m}</td>
+                  {DIMENSIONS_DE_L_INDICE.map((d) => (
+                    <tr key={d.code} className="border-t border-white/5">
+                      <td className="py-2 pr-3">{d.nom}</td>
+                      <td className="py-2 pr-3 text-right tabular-nums text-amber-300">
+                        {d.poids} %
+                      </td>
+                      <td className="py-2 text-slate-400">{d.mesure}</td>
                     </tr>
                   ))}
                 </tbody>
