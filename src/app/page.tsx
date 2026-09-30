@@ -9,6 +9,7 @@ import { PictoSecteur } from "@/components/picto-secteur";
 import { DESCRIPTION_ACCUEIL, TITRE_ACCUEIL } from "@/config/seo";
 import { bouton } from "@/components/bouton";
 import { DemoDuTour } from "@/components/demo-du-tour";
+import { DonneesStructurees } from "@/components/donnees-structurees";
 import { HaloDePage } from "@/components/halo-de-page";
 import { BPI_V2_DIMENSIONS } from "@/scoring/bpi";
 import { PiedDePage } from "@/components/pied-de-page";
@@ -234,6 +235,10 @@ export default async function Home() {
   const decisions = etendueDesDecisions();
   return (
     <>
+      {/* Ce que le site dit de lui-même à une machine. Posé sur la seule page
+          d'accueil : c'est l'entité « site » et l'entité « éditeur » qu'on
+          déclare, une fois, pas une par page. */}
+      <DonneesStructurees />
       <main id="main" className="relative overflow-hidden">
         <HaloDePage />
 
