@@ -8,7 +8,6 @@ import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
 import { PictoSecteur } from "@/components/picto-secteur";
 import { DESCRIPTION_ACCUEIL, TITRE_ACCUEIL } from "@/config/seo";
 import { bouton } from "@/components/bouton";
-import { DemoDuTour } from "@/components/demo-du-tour";
 import { TEMPS_DU_TOUR } from "@/config/temps-du-tour";
 import { DonneesStructurees } from "@/components/donnees-structurees";
 import { HaloDePage } from "@/components/halo-de-page";
@@ -222,9 +221,82 @@ function MainDeCartes() {
           alt="L'arène d'une équipe au quatrième tour : chiffre d'affaires 399 919 €, résultat 58 188 €, trésorerie 89 653 €, et le tour en cours à jouer."
         />
       </div>
-      <figcaption className="mt-5 text-center text-sm leading-relaxed text-slate-400">
-        Trois écrans d&apos;un même tour : l&apos;arène, la feuille de décision,
-        le verdict.
+      {/*
+        LA MAIN EST LA BOUCLE, ET C'EST ELLE QUI LA NOMME.
+
+        Les six temps ont vécu quelques heures dans une section à eux, « Un
+        tour, de bout en bout » : un titre, une phrase, une démonstration
+        animée de trois panneaux, six cents pixels de défilement pour dire ce
+        que la main de cartes montrait DÉJÀ trois écrans plus haut. Un produit
+        qui se montre deux fois se montre mal.
+
+        Les trois cartes sont exactement trois de ces six temps — l'arène où la
+        situation arrive, la feuille où l'on décide, le verdict qui tombe — et
+        ce sont de vraies captures, prises sur une partie jouée. Il ne manquait
+        que les mots. Les voici sous elles, et la légende dit lesquels des six
+        sont à l'écran plutôt que de laisser croire qu'ils y sont tous.
+
+        LA CHAÎNE NE PORTE PAS DE NUMÉROS, bien qu'elle soit ordonnée : les
+        cartes ne sont pas numérotées non plus, et deux comptes sur un même
+        écran se contrediraient.
+
+        ELLE CASSE EN TROIS ET TROIS, par une largeur maximale plutôt qu'au
+        hasard de la place disponible. Laissée libre, elle tombait en quatre
+        mots puis deux dans la colonne de l'accroche, et en trois lignes
+        inégales sur un téléphone. Deux lignes de même longueur se lisent
+        comme un dessin ; quatre plus deux se lisent comme un débordement.
+      */}
+      <figcaption className="mt-6">
+        <ol className="mx-auto flex max-w-[21rem] flex-wrap items-center justify-center gap-x-3 gap-y-2">
+          {TEMPS_DU_TOUR.map((t, i) => (
+            <li key={t.nom} className="flex items-center gap-3">
+              {/* La phrase complète reste accessible : l'infobulle pour la
+                  souris, le texte caché pour une synthèse vocale. Un mot seul
+                  ne dit pas ce qui se passe à ce moment-là. */}
+              <span
+                title={t.quoi}
+                className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300"
+              >
+                {t.nom}
+                <span className="sr-only"> : {t.quoi}</span>
+              </span>
+              {/* La flèche suit son temps au lieu de précéder le suivant : sur
+                  un téléphone la chaîne passe à la ligne, et une flèche posée
+                  avant se retrouvait seule en tête de deuxième ligne. Placée
+                  après, elle termine la ligne — ce qui est justement ce qu'une
+                  flèche veut dire. */}
+              {i < TEMPS_DU_TOUR.length - 1 ? (
+                <span aria-hidden className="text-sm text-amber-400/60">
+                  →
+                </span>
+              ) : null}
+            </li>
+          ))}
+        </ol>
+        <p className="mt-4 text-center text-sm leading-relaxed text-slate-400">
+          Les six temps d&apos;un tour. Les trois écrans ci-dessus en montrent trois, pris
+          d&apos;un même tour : l&apos;arène, la feuille de décision, le verdict.
+        </p>
+        {/* Le guide détaille chacun de ces temps, et l'ancre vise « Côté
+            élèves : jouer un tour » — la section qui déroule la boucle — et non
+            le haut d'un guide de cinq mètres. Le libellé nomme cette section :
+            ses sections sont des accordéons, l'ancre dépose sur le titre et son
+            chapeau, le détail s'ouvre d'un clic. Promettre « le détail » eût
+            été promettre l'écran suivant. */}
+        <p className="mt-3 text-center">
+          <Link
+            href="/guide#eleves"
+            className="group text-sm font-semibold text-amber-400 transition-colors hover:text-amber-300"
+          >
+            Comment se joue un tour
+            <span
+              aria-hidden
+              className="ml-1.5 inline-block transition-transform group-hover:translate-x-1"
+            >
+              →
+            </span>
+          </Link>
+        </p>
       </figcaption>
     </figure>
   );
@@ -369,73 +441,6 @@ export default async function Home() {
               ))}
             </ul>
           </div>
-        </section>
-
-        {/* ---------- Un tour, de bout en bout ---------- */}
-        {/*
-          CE QUI MANQUAIT À CETTE PAGE, ET QUI EST LE PRODUIT.
-
-          Relevé avant de l'ajouter : l'accueil ne disait NULLE PART « diagnostic »,
-          « modèle d'analyse » ni « débriefing ». Un visiteur y lisait qu'on dirige
-          une entreprise, parmi tant de métiers, en six tours — la description de
-          n'importe quel jeu d'entreprise. Ce qui distingue celui-ci, la boucle où l'on
-          lit une situation, où l'on tranche et où le chiffre répond, n'existait
-          que sur la page des enseignants et dans le guide, c'est-à-dire deux
-          clics après la décision de rester.
-
-          Le composant est celui de la page des enseignants, sans une ligne de
-          plus : trois panneaux qui se relaient, pas de vidéo, pas de
-          JavaScript, et des chiffres donnés pour montrer la mécanique, jamais
-          comme une mesure.
-        */}
-        <section aria-labelledby="boucle" className="mx-auto max-w-3xl px-6 py-16">
-          <h2 id="boucle" className="text-center font-display text-3xl font-semibold text-slate-50">
-            Un tour, de bout en bout
-          </h2>
-          {/*
-            LES SIX TEMPS, NOMMÉS.
-
-            C'est l'enchaînement qui distingue ce produit d'un jeu d'entreprise,
-            et il n'était écrit nulle part sur cette page : on ne décide pas
-            d'abord, on lit, on diagnostique, on choisit son modèle d'analyse,
-            et ENSUITE on décide.
-
-            La chaîne ne porte PAS de numéros, bien qu'elle soit ordonnée : les
-            panneaux de la démonstration en dessous sont numérotés 1, 2, 3 —
-            ce sont les trois qu'ils déroulent, pas les rangs de ces temps-là.
-            Deux numérotations sur un écran se contrediraient.
-          */}
-          <ol className="mx-auto mt-6 flex max-w-2xl flex-wrap items-center justify-center gap-x-3 gap-y-2">
-            {TEMPS_DU_TOUR.map((t, i) => (
-              <li key={t.nom} className="flex items-center gap-3">
-                {/* La phrase complète reste accessible : l'infobulle pour la
-                    souris, le texte caché pour une synthèse vocale. Un mot seul
-                    ne dit pas ce qui se passe à ce moment-là. */}
-                <span
-                  title={t.quoi}
-                  className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300"
-                >
-                  {t.nom}
-                  <span className="sr-only"> : {t.quoi}</span>
-                </span>
-                {/* La flèche suit son temps au lieu de précéder le suivant :
-                    sur un téléphone la chaîne passe à la ligne, et une flèche
-                    posée avant se retrouvait seule en tête de deuxième ligne.
-                    Placée après, elle termine la ligne — ce qui est justement
-                    ce qu'une flèche veut dire. */}
-                {i < TEMPS_DU_TOUR.length - 1 ? (
-                  <span aria-hidden className="text-sm text-amber-400/60">
-                    →
-                  </span>
-                ) : null}
-              </li>
-            ))}
-          </ol>
-          <p className="mx-auto mb-8 mt-6 max-w-2xl text-center text-base leading-relaxed text-slate-400">
-            Six temps, dans cet ordre, à chaque tour. Les panneaux ci-dessous en déroulent
-            trois, sur un tour de NOVA.
-          </p>
-          <DemoDuTour />
         </section>
 
         {/* ---------- Qui fait quoi ---------- */}

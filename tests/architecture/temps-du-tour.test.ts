@@ -12,6 +12,11 @@ import { TEMPS_DU_TOUR } from "@/config/temps-du-tour";
  * enchaînement pendant des mois. Personne ne relit une page qui n'a pas
  * changé.
  *
+ * Elle tient aussi le LIEN VERS LE GUIDE que la section porte : une ancre
+ * dans une section repliée en accordéon est exactement le genre d'adresse qui
+ * survit à la suppression de sa cible, et le lecteur atterrit alors en haut
+ * d'un guide de cinq mètres sans savoir ce qu'il y cherchait.
+ *
  * La garde tient donc trois choses. Que chacun des six mots soit du
  * VOCABULAIRE DU PRODUIT, retrouvé ailleurs que sur l'accueil — dans le guide
  * qui décrit le tour, ou dans le code qui le fait tourner. Que l'ORDRE soit
@@ -27,7 +32,7 @@ const ACCUEIL = lire("src/app/page.tsx");
 /** Là où le produit parle de son tour, hors de la vitrine. */
 const PRODUIT = [
   lire("src/app/guide/page.tsx"),
-  lire("src/components/demo-du-tour.tsx"),
+  lire("src/config/manuel.ts"),
   lire("src/config/pedagogy/models.ts"),
 ].join("\n");
 
@@ -69,6 +74,23 @@ describe("les six temps du tour", () => {
     for (const t of TEMPS_DU_TOUR) {
       expect(t.quoi.length, `« ${t.nom} » n'explique rien`).toBeGreaterThan(30);
       expect(t.quoi.endsWith("."), `« ${t.nom} » : la phrase n'est pas finie`).toBe(true);
+    }
+  });
+
+  it("renvoient au guide, à la section qui les détaille", () => {
+    const lien = ACCUEIL.match(/href="(\/guide#[a-z-]+)"/);
+    expect(lien?.[1], "l'accueil ne renvoie nulle part vers le guide").toBeTruthy();
+    const ancre = lien![1]!.split("#")[1]!;
+    const guide = lire("src/app/guide/page.tsx");
+    expect(guide, `l'ancre « #${ancre} » n'existe pas dans le guide`).toContain(`id="${ancre}"`);
+    // Et c'est bien la section qui déroule le tour, pas le haut de la page :
+    // son chapeau décrit la boucle que l'accueil vient de nommer.
+    const section = guide.slice(guide.indexOf(`id="${ancre}"`));
+    for (const temps of ["situation", "diagnostiq", "décid"]) {
+      expect(
+        section.slice(0, 900).toLowerCase(),
+        `la section « #${ancre} » ne parle pas de « ${temps} »`,
+      ).toContain(temps);
     }
   });
 

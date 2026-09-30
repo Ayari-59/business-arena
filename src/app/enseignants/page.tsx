@@ -4,7 +4,6 @@ import { ATELIERS, dureeTotaleHeures } from "@/config/ateliers";
 import { REFERENTIELS_NON_VERIFIES } from "@/config/ateliers/referentiels";
 import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
 import { ApercuArene, ApercuPilotage, ApercuProjection } from "@/components/apercus";
-import { DemoDuTour } from "@/components/demo-du-tour";
 import { PreuvesDusageBande } from "@/components/preuves-dusage";
 import { preuvesDusage } from "@/services/preuves-dusage.service";
 import { getPlatformConfig } from "@/services/admin.service";
@@ -143,25 +142,6 @@ export default async function EnseignantsPage() {
             <ApercuProjection />
             <ApercuPilotage className="sm:col-span-2 lg:col-span-1" />
           </div>
-        </section>
-
-        {/*
-          ET CE QUE LES TROIS ÉCRANS SE PASSENT.
-          Les aperçus montrent les écrans ; ils ne montrent pas la BOUCLE, qui
-          est ce qu'on vient chercher : lire une situation, trancher, subir le
-          chiffre, et recommencer avec ce qu'on vient d'apprendre. Douze
-          secondes en CSS, sans vidéo ni script — la politique de sécurité du
-          site n'autoriserait pas un hébergeur vidéo, et une boucle dessinée ne
-          pèse rien.
-        */}
-        <section aria-labelledby="boucle" className="mx-auto max-w-3xl px-6 pb-16">
-          <h2 id="boucle" className="mb-2 text-center text-2xl font-bold text-slate-50">
-            Un tour, de bout en bout
-          </h2>
-          <p className="mx-auto mb-8 max-w-2xl text-center text-base text-slate-400">
-            C&apos;est cette boucle que vos élèves répètent six fois dans une partie.
-          </p>
-          <DemoDuTour />
         </section>
 
         {/*
