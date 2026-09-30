@@ -485,6 +485,55 @@ describe("parcours enseignant et élève", () => {
     expect(sols.hero).not.toBe(sols.page);
   });
 
+  it("les diplômes sont repliés, et l'index ouvre celui qu'il désigne", async () => {
+    // LA PAGE FAISAIT SEIZE MILLE NEUF CENTS PIXELS sur un téléphone, parce
+    // qu'elle dépliait douze diplômes à la suite alors qu'on vient en chercher
+    // un. Repliés, ils en font quatre mille : la page redevient un index.
+    //
+    // CE QUE LE REPLI CASSE, ET QUI EST MESURÉ ICI. Un navigateur déplie un
+    // tiroir quand l'ancre vise DEDANS, pas quand elle vise le tiroir ; les
+    // pastilles de l'index amenaient donc devant un titre seul. Le défaut est
+    // invisible à la lecture du code et ne se voit qu'au clic.
+    const onglet = await navigateur.newPage();
+    await onglet.setViewportSize({ width: 390, height: 844 });
+    try {
+      await aller(onglet, "/parcours");
+      const hauteur = () => onglet.evaluate(() => document.documentElement.scrollHeight);
+      const replie = await hauteur();
+      expect(replie, `page repliée : ${replie} px`).toBeLessThan(6000);
+
+      const tiroirs = onglet.locator("details[data-diplome]");
+      const diplomes = new Set(ATELIERS.map((a) => a.diplome));
+      expect(await tiroirs.count(), "un tiroir par diplôme servi").toBe(diplomes.size);
+      expect(await onglet.locator("details[data-diplome][open]").count()).toBe(0);
+
+      // Le tiroir fermé dit encore ce qu'il cache : sans cela, l'index est une
+      // liste de noms devant laquelle personne ne sait quoi ouvrir.
+      const premier = await tiroirs.first().locator("summary").innerText();
+      expect(premier).toMatch(/blocs de référentiel/);
+      expect(premier).toMatch(/séances/);
+
+      // Chaque pastille vise un tiroir, et l'ouvre.
+      const pastilles = onglet.locator('nav[aria-label] a[href^="#"]');
+      expect(await pastilles.count()).toBe(diplomes.size);
+      const cible = await pastilles.nth(5).getAttribute("href");
+      await pastilles.nth(5).click();
+      await expect
+        .poll(() => onglet.locator(`details${cible}`).evaluate((e: Element) => (e as HTMLDetailsElement).open))
+        .toBe(true);
+
+      // Et tout se déplie d'un geste : les tiroirs fermés échappent au Ctrl+F
+      // du navigateur, donc il faut un moyen de tout rendre cherchable.
+      await onglet.getByRole("button", { name: "Tout déplier" }).click();
+      await expect
+        .poll(() => onglet.locator("details[data-diplome][open]").count())
+        .toBe(diplomes.size);
+      expect(await hauteur()).toBeGreaterThan(replie * 2);
+    } finally {
+      await onglet.close();
+    }
+  });
+
   it("aucune page du parcours ne porte de tiret en milieu de phrase", async () => {
     // Contrainte de style tenue depuis le début, et qu'aucun test ne gardait.
     // Le tiret SEUL dans une case de tableau reste permis : il vaut « rien à

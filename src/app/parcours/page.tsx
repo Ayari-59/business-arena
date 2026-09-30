@@ -11,6 +11,7 @@ import { sigleDuDiplome } from "@/config/diplomes";
 import { bouton } from "@/components/bouton";
 import { BandeFinale } from "@/components/bande-finale";
 import { PiedDePage } from "@/components/pied-de-page";
+import { TiroirsDesDiplomes } from "@/components/tiroirs-de-diplomes";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/parcours" },
@@ -74,6 +75,18 @@ const FILIERES = (() => {
       sigle: sigleDuDiplome(diplome),
       parcours,
       ateliers,
+      // CE QUE LE TIROIR FERMÉ DOIT ENCORE DIRE. Un repli qui ne laisse qu'un
+      // titre transforme la page en sommaire : on ne sait plus ce qu'il y a
+      // derrière, donc on n'ouvre pas. Compté depuis la donnée, jamais écrit.
+      blocs: new Set(
+        ateliers.flatMap((a) =>
+          couvertureDeLAtelier(a.code).map((b) => b.referentiel),
+        ),
+      ).size,
+      seances: ateliers.reduce((n, a) => n + a.seances.length, 0),
+      heures: Math.round(
+        ateliers.reduce((n, a) => n + dureeTotaleHeures(a), 0),
+      ),
     };
   });
 })();
@@ -132,143 +145,183 @@ export default function ParcoursPage() {
             nomme, et la liste est tenue par le déroulé des séances, pas par une
             promesse commerciale.
           </p>
-          <nav
-            aria-label="Les diplômes couverts"
-            className="mt-6 flex flex-wrap gap-2"
-          >
-            {FILIERES.map((f) => (
-              <a
-                key={f.id}
-                href={`#${f.id}`}
-                className="rounded-full border border-white/10 bg-slate-900 px-3.5 py-1.5 text-xs text-slate-300 transition hover:border-amber-400/40 hover:text-amber-300"
-              >
-                {f.sigle}
-              </a>
-            ))}
-          </nav>
+          {/* « Tout déplier » tient compagnie à l'index : c'est le même
+              geste — choisir où regarder — et le seul moyen de retrouver un
+              mot par Ctrl+F, que les tiroirs fermés soustraient au
+              navigateur. */}
+          <div className="mt-6 flex flex-wrap items-center gap-2">
+            <nav
+              aria-label="Les diplômes couverts"
+              className="flex flex-wrap gap-2"
+            >
+              {FILIERES.map((f) => (
+                <a
+                  key={f.id}
+                  href={`#${f.id}`}
+                  className="rounded-full border border-white/10 bg-slate-900 px-3.5 py-1.5 text-xs text-slate-300 transition hover:border-amber-400/40 hover:text-amber-300"
+                >
+                  {f.sigle}
+                </a>
+              ))}
+            </nav>
+            <TiroirsDesDiplomes />
+          </div>
         </header>
 
         <div className="mx-auto max-w-4xl space-y-8 px-6 py-8">
           {FILIERES.map((f) => (
-            <section
+            <details
               key={f.id}
               id={f.id}
-              className="scroll-mt-24 rounded-2xl border border-white/10 bg-slate-900 p-6 sm:p-8"
+              data-diplome={f.sigle}
+              className="group scroll-mt-24 rounded-2xl border border-dashed border-white/15 bg-slate-900 open:border-solid open:border-white/10"
             >
-              <p className="text-xs uppercase tracking-[0.2em] text-amber-400">
-                {f.sigle}
-              </p>
-              <h2 className="mt-2 text-2xl font-bold leading-tight text-slate-50">
-                {f.diplome}
-              </h2>
+              {/*
+                LES TROIS SIGNAUX DU TIROIR MAISON, repris tels quels : le
+                chevron ambre qui pivote, le trait pointillé qui devient plein,
+                et le compte de ce qui attend derrière. Le composant Tiroir
+                lui-même est taillé pour l'arène — titre en petites capitales,
+                marges serrées — et écraserait le nom du diplôme, qui est le
+                seul repère cherché ici ; ce sont donc ses signaux qu'on
+                reprend, pas son gabarit, pour ne pas ouvrir un deuxième
+                dialecte du repli.
 
-              {f.parcours ? (
-                <>
-                  <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-400">
-                    {f.parcours.pitch}
-                  </p>
-                  <div className="mt-5 rounded-xl border border-amber-400/20 bg-slate-950 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-amber-400">
-                      Réglages conseillés à la création
+                Le titre reste un vrai h2 DANS le résumé : le modèle de contenu
+                de summary admet un titre, et l'y laisser garde le plan de la
+                page — douze diplômes, douze entrées — au lieu de le réduire à
+                une page sans structure dès que tout est replié.
+              */}
+              <summary className="grid cursor-pointer list-none grid-cols-[1fr_auto] items-start gap-x-4 p-6 [&::-webkit-details-marker]:hidden sm:p-8">
+                <span className="text-xs uppercase tracking-[0.2em] text-amber-400">
+                  {f.sigle}
+                </span>
+                <span
+                  aria-hidden
+                  className="row-span-3 self-center text-base text-amber-400/80 transition-transform group-open:rotate-90"
+                >
+                  ▸
+                </span>
+                <h2 className="mt-2 text-2xl font-bold leading-tight text-slate-50">
+                  {f.diplome}
+                </h2>
+                <span className="mt-2 text-sm leading-relaxed text-slate-400">
+                  {f.blocs} blocs de référentiel · {f.seances} séances,{" "}
+                  {f.heures} heures
+                  {f.parcours ? " · réglages conseillés" : ""}
+                </span>
+              </summary>
+              <div className="border-t border-white/10 px-6 pb-6 pt-6 sm:px-8 sm:pb-8">
+                {f.parcours ? (
+                  <>
+                    <p className="max-w-2xl text-base leading-relaxed text-slate-400">
+                      {f.parcours.pitch}
                     </p>
-                    <p className="mt-2 text-sm text-slate-300">
-                      Niveau {f.parcours.recommended.level} ·{" "}
-                      {f.parcours.recommended.levelName} ·{" "}
-                      {f.parcours.recommended.periodicityLabel} · TVA{" "}
-                      {f.parcours.recommended.vat
-                        ? "activée (20 %)"
-                        : "désactivée"}
-                    </p>
-                    <p className="mt-1 text-base leading-relaxed text-slate-400">
-                      {f.parcours.recommended.notes}
-                    </p>
-                  </div>
-                </>
-              ) : null}
+                    <div className="mt-5 rounded-xl border border-amber-400/20 bg-slate-950 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-amber-400">
+                        Réglages conseillés à la création
+                      </p>
+                      <p className="mt-2 text-sm text-slate-300">
+                        Niveau {f.parcours.recommended.level} ·{" "}
+                        {f.parcours.recommended.levelName} ·{" "}
+                        {f.parcours.recommended.periodicityLabel} · TVA{" "}
+                        {f.parcours.recommended.vat
+                          ? "activée (20 %)"
+                          : "désactivée"}
+                      </p>
+                      <p className="mt-1 text-base leading-relaxed text-slate-400">
+                        {f.parcours.recommended.notes}
+                      </p>
+                    </div>
+                  </>
+                ) : null}
 
-              {f.ateliers.map((a) => (
-                <div key={a.code} className="mt-8 first:mt-6">
-                  <Link href={`/animations/${a.code}`} className="group block">
-                    <p className="text-base font-semibold text-slate-100 transition-colors group-hover:text-amber-200">
-                      {a.titre}
-                      <span
-                        aria-hidden
-                        className="ml-1.5 inline-block transition-transform group-hover:translate-x-1"
-                      >
-                        →
-                      </span>
-                    </p>
-                  </Link>
-                  <p className="mt-1 text-sm leading-relaxed text-slate-400">
-                    {a.annee} · {a.seances.length} séances,{" "}
-                    {Math.round(dureeTotaleHeures(a))} heures ·{" "}
-                    {a.referentielLabel} {a.referentielAccord}
-                    {(REFERENTIELS_NON_VERIFIES as readonly string[]).includes(
-                      a.code,
-                    )
-                      ? ", pas encore confrontés à leur texte officiel"
-                      : ""}
-                    .
-                  </p>
-
-                  <ul className="mt-4">
-                    {couvertureDeLAtelier(a.code).map((b) => (
-                      <li
-                        key={b.referentiel}
-                        className="grid grid-cols-[1fr_auto] items-start gap-x-3 gap-y-1.5 border-t border-white/5 py-4"
-                      >
-                        <p className="text-sm font-medium text-slate-200">
-                          {b.referentiel}
-                        </p>
+                {f.ateliers.map((a) => (
+                  <div key={a.code} className="mt-8 first:mt-0">
+                    <Link
+                      href={`/animations/${a.code}`}
+                      className="group block"
+                    >
+                      <p className="text-base font-semibold text-slate-100 transition-colors group-hover:text-amber-200">
+                        {a.titre}
                         <span
-                          className={`whitespace-nowrap rounded-full border px-2 py-0.5 text-xs uppercase tracking-wide ${ADEQUATION[b.adequation]!.className}`}
+                          aria-hidden
+                          className="ml-1.5 inline-block transition-transform group-hover:translate-x-1"
                         >
-                          {ADEQUATION[b.adequation]!.label}
+                          →
                         </span>
-                        <p className="col-span-2 text-sm text-slate-400">
-                          {b.seances.length} séance
-                          {b.seances.length > 1 ? "s" : ""} sur{" "}
-                          {b.seancesEnTout} · n&deg;{" "}
-                          {enumere(b.seances.map((s) => s.numero))}
-                          {/* SANS CETTE PHRASE, LA LIGNE SE CONTREDIT. « 1 séance sur 6 »
+                      </p>
+                    </Link>
+                    <p className="mt-1 text-sm leading-relaxed text-slate-400">
+                      {a.annee} · {a.seances.length} séances,{" "}
+                      {Math.round(dureeTotaleHeures(a))} heures ·{" "}
+                      {a.referentielLabel} {a.referentielAccord}
+                      {(
+                        REFERENTIELS_NON_VERIFIES as readonly string[]
+                      ).includes(a.code)
+                        ? ", pas encore confrontés à leur texte officiel"
+                        : ""}
+                      .
+                    </p>
+
+                    <ul className="mt-4">
+                      {couvertureDeLAtelier(a.code).map((b) => (
+                        <li
+                          key={b.referentiel}
+                          className="grid grid-cols-[1fr_auto] items-start gap-x-3 gap-y-1.5 border-t border-white/5 py-4"
+                        >
+                          <p className="text-sm font-medium text-slate-200">
+                            {b.referentiel}
+                          </p>
+                          <span
+                            className={`whitespace-nowrap rounded-full border px-2 py-0.5 text-xs uppercase tracking-wide ${ADEQUATION[b.adequation]!.className}`}
+                          >
+                            {ADEQUATION[b.adequation]!.label}
+                          </span>
+                          <p className="col-span-2 text-sm text-slate-400">
+                            {b.seances.length} séance
+                            {b.seances.length > 1 ? "s" : ""} sur{" "}
+                            {b.seancesEnTout} · n&deg;{" "}
+                            {enumere(b.seances.map((s) => s.numero))}
+                            {/* SANS CETTE PHRASE, LA LIGNE SE CONTREDIT. « 1 séance sur 6 »
                               sous une pastille « cœur du jeu » se lit comme une faute de
                               frappe, et c'en serait une si le comptage disait toute la
                               vérité : le moteur rejoue la TVA à chaque tour, que la
                               séance la nomme ou non. L'écart entre le compte et la
                               pastille est réel, donc il se dit là où il se voit. */}
-                          {b.declaree
-                            ? ", et rejoué à chaque tour par le moteur au-delà des séances qui le nomment"
-                            : ""}
-                        </p>
-                        {b.commentaire ? (
-                          <p className="col-span-2 text-sm leading-relaxed text-slate-400">
-                            {b.commentaire}
+                            {b.declaree
+                              ? ", et rejoué à chaque tour par le moteur au-delà des séances qui le nomment"
+                              : ""}
                           </p>
-                        ) : null}
-                      </li>
+                          {b.commentaire ? (
+                            <p className="col-span-2 text-sm leading-relaxed text-slate-400">
+                              {b.commentaire}
+                            </p>
+                          ) : null}
+                        </li>
+                      ))}
+                    </ul>
+
+                    {(AU_DELA_DE_L_ATELIER[a.code] ?? []).map((note) => (
+                      <p
+                        key={note.referentiel}
+                        className="mt-4 rounded-lg border border-white/5 bg-slate-950 px-4 py-3 text-sm leading-relaxed text-slate-400"
+                      >
+                        <span className="font-medium text-slate-300">
+                          {note.referentiel}
+                        </span>
+                        , hors séance : {note.quoi}
+                      </p>
                     ))}
-                  </ul>
+                  </div>
+                ))}
 
-                  {(AU_DELA_DE_L_ATELIER[a.code] ?? []).map((note) => (
-                    <p
-                      key={note.referentiel}
-                      className="mt-4 rounded-lg border border-white/5 bg-slate-950 px-4 py-3 text-sm leading-relaxed text-slate-400"
-                    >
-                      <span className="font-medium text-slate-300">
-                        {note.referentiel}
-                      </span>
-                      , hors séance : {note.quoi}
-                    </p>
-                  ))}
-                </div>
-              ))}
-
-              {f.parcours?.limite ? (
-                <p className="mt-6 rounded-lg border border-white/5 bg-slate-950 px-4 py-3 text-sm leading-relaxed text-slate-400">
-                  Limite assumée : {f.parcours.limite}
-                </p>
-              ) : null}
-            </section>
+                {f.parcours?.limite ? (
+                  <p className="mt-6 rounded-lg border border-white/5 bg-slate-950 px-4 py-3 text-sm leading-relaxed text-slate-400">
+                    Limite assumée : {f.parcours.limite}
+                  </p>
+                ) : null}
+              </div>
+            </details>
           ))}
         </div>
 

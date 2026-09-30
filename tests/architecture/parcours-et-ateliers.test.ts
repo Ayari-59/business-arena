@@ -93,6 +93,41 @@ describe("les parcours et les ateliers", () => {
     expect(PAGE).toContain("parcours?.code ??");
   });
 
+  it("chaque diplôme est un tiroir, et le tiroir fermé dit encore ce qu'il cache", () => {
+    // LA PAGE FAISAIT SEIZE MILLE NEUF CENTS PIXELS sur un téléphone. Douze
+    // diplômes dépliés à la suite quand on vient en chercher un : le prix de
+    // la complétude était que plus personne n'atteignait le sien.
+    expect(PAGE).toContain("data-diplome");
+    expect(PAGE).toContain("<details");
+    // Le titre reste DANS le résumé : sorti de là, il ne serait plus cliquable
+    // et le plan de la page disparaîtrait dès que tout est replié.
+    const resume = PAGE.slice(PAGE.indexOf("<summary"), PAGE.indexOf("</summary>"));
+    expect(resume, "le nom du diplôme doit rester dans le résumé du tiroir").toContain("<h2");
+    expect(resume).toContain("{f.diplome}");
+
+    // LES TROIS SIGNAUX DU TIROIR MAISON (voir src/components/tiroir.tsx).
+    // Un repli qu'on ne voit pas est un contenu perdu : personne ne cherche ce
+    // qu'il ne soupçonne pas. La page ne reprend pas le composant — son
+    // gabarit d'arène écraserait le nom du diplôme — donc elle doit au moins
+    // en reprendre les signaux, sinon le site parle deux langues du repli.
+    expect(resume, "le chevron qui pivote").toContain("group-open:rotate-90");
+    expect(PAGE, "le trait pointillé tant que c'est fermé").toContain("border-dashed");
+    expect(PAGE, "plein une fois ouvert").toContain("open:border-solid");
+
+    // Le compte est LU de la donnée. Écrit à la main, il mentirait dès qu'une
+    // séance est ajoutée, et c'est le seul contenu du tiroir fermé.
+    expect(resume).toContain("{f.blocs}");
+    expect(resume).toContain("{f.seances}");
+    expect(PAGE).toContain("ateliers.reduce((n, a) => n + a.seances.length, 0)");
+  });
+
+  it("aucun tiroir n'est ouvert d'avance, sinon la page repousse en silence", () => {
+    // Un seul `open` posé là « pour montrer un exemple » et la page reprend
+    // mille pixels par diplôme, sans qu'aucun test ne s'en aperçoive.
+    const tiroirs = PAGE.slice(PAGE.indexOf("<details"), PAGE.indexOf("</details>"));
+    expect(tiroirs, "un tiroir ouvert d'avance").not.toMatch(/\sopen(\s|=|>)/);
+  });
+
   it("chaque diplôme a un sigle, faute de quoi l'index redevient illisible", () => {
     // L'index en haut de page est une rangée de pastilles. « BTS Négociation
     // et digitalisation de la relation client » y tient sur trois lignes : la
