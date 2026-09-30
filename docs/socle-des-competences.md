@@ -6,41 +6,29 @@ Ne pas le corriger à la main : il se réécrit depuis `src/config/competences.t
 | | |
 | --- | --- |
 | familles | 15 |
-| gestes | 73 |
+| gestes | 82 |
 | phrases d'atelier | 251 dans 15 ateliers |
 | reprises par un geste | 251 |
 | laissées de côté | 0 |
 
-## Là où le regroupement demande un arbitrage (10)
+## Ce qui a été tranché, et pourquoi (2)
 
-Un indice de ressemblance lexicale a été essayé, puis retiré : il signalait quarante
-gestes sur soixante-treize, dont des regroupements manifestement justes — « rayon vide »
-et « surstock » ne partagent aucun mot et désignent le même acte. Il mesurait le
-vocabulaire, pas le sens. Restent les doutes écrits à la main, qui sont les seuls
-endroits où un arbitrage est demandé.
-
-### `lire-les-comptes`
-
-dcg:1:1 calcule des soldes intermédiaires : c'est un calcul, pas une lecture. Peut-être un geste à part, « établir les soldes intermédiaires de gestion ».
-
-- `debutant:1:2` Je lis un résultat de fin de trimestre et j'y retrouve ma marge.
-- `stmg:1:0` Je repère, dans la situation d'une entreprise, ce qu'elle vend, ce que cela lui coûte et ce qu'il lui reste.
-- `stmg:1:2` Je lis un compte de résultat simple et j'y retrouve la décision que mon équipe a prise.
-- `cg1:1:0` Je lis un bilan d'ouverture et j'en tire ce que l'entreprise possède, ce qu'elle doit et ce qui lui reste.
-- `gpme:1:0` Je lis les documents de synthèse d'une PME et j'en tire ce qu'elle possède et ce qu'on lui doit.
-- `dcg:1:1` Je calcule les soldes intermédiaires de gestion et je repère celui qui explique le résultat.
+Ces phrases auraient pu fonder un geste à elles seules. Elles sont restées dans un
+geste plus large, et le choix est écrit : sans trace, la question se reposera dans six
+mois et sera tranchée dans l'autre sens, sans que personne ne sache qu'elle avait déjà
+été examinée.
 
 ### `charge-ou-decaissement`
 
-fitness:4:2 porte en plus le besoin en fonds de roulement négatif, qui relève de besoin-en-fonds-de-roulement. La phrase fait deux choses.
+fitness:4:2 relie en plus le besoin en fonds de roulement négatif au financement du cycle, et aurait donc pu aller à besoin-en-fonds-de-roulement. Une phrase n'appartient qu'à un geste, sans quoi toute couverture de référentiel la compterait deux fois : elle reste où est son acte de tête, la distinction, et l'énoncé mentionne la suite.
 
 - `cg1:3:0` Je distingue une charge d'un décaissement, et un produit d'un encaissement.
 - `cg1:4:1` Je lis la production stockée au compte de résultat et je dis ce qu'elle est : un produit qui n'a rien encaissé.
 - `fitness:4:2` Je distingue un produit encaissé d'un produit acquis, et je relie le besoin en fonds de roulement négatif au financement du cycle.
 
-### `effet-d-une-remise`
+### `ce-qui-erode-la-marge`
 
-ndrc:3:0 parle d'un retour produit, pas d'une remise : la marge s'érode pour une autre raison. À scinder si la distinction compte pour vous.
+ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le même, ce qui part de la marge et le volume qu'il faut pour le rattraper, donc le geste ne se scinde pas : c'est son code qui promettait trop, et il a été renommé.
 
 - `debutant:3:0` Je décide d'une promotion et j'en attends un effet précis.
 - `debutant:3:1` Je comprends qu'une remise doit être compensée par davantage de ventes.
@@ -48,67 +36,6 @@ ndrc:3:0 parle d'un retour produit, pas d'une remise : la marge s'érode pour un
 - `ndrc:3:0` Je chiffre ce qu'un retour produit retire à la marge d'une commande.
 - `gpme:5:0` Je calcule ce qu'une remise retire à la marge et le volume qu'il faudrait pour la compenser.
 - `mhr:2:0` Je mesure l'effet d'une baisse de tarif sur le remplissage qu'il faut gagner pour la compenser.
-
-### `plan-de-tresorerie`
-
-cg1:3:2 présente un besoin de financement et mco2:5:0 suit un encaissement attendu : deux actes plus étroits que construire un plan.
-
-- `cg1:3:1` Je construis un budget de trésorerie à partir de décisions prévues et de délais de règlement.
-- `cg1:3:2` Je présente un besoin de financement chiffré et daté.
-- `mco2:5:0` Je suis un encaissement attendu et je constate son arrivée dans la caisse du mois.
-- `fitness:4:1` Je construis un plan de trésorerie de trimestre et j'y repère ce qu'un encaissement d'avance déplace.
-- `mhr:4:0` Je construis un plan de trésorerie de trimestre à partir de mes encaissements et de mes charges fixes.
-- `gea:2:1` Je construis un plan de trésorerie de trimestre à partir des encaissements et des décaissements.
-- `avance:4:1` Je construis un plan de trésorerie de trimestre de pointe et j'y repère le point de tension.
-- `campus:4:1` Je construis un plan de trésorerie de trimestre et j'y repère le point de tension.
-
-### `preparer-une-negociation`
-
-gpme:5:2 construit une réponse commerciale, ndrc:5:2 prépare l'échange. Préparer et répondre sont deux moments.
-
-- `ndrc:5:2` Je prépare une négociation en identifiant ce que j'apporte au partenaire.
-- `gpme:5:2` Je construis une réponse commerciale qui n'est ni l'acceptation ni le refus sec.
-
-### `chiffrer-un-risque`
-
-gpme:3:0 identifie les risques, gpme:3:1 chiffre leur impact. Repérer et mesurer ne s'évaluent pas de la même façon.
-
-- `gpme:3:0` J'identifie les risques propres à une petite structure, dont la dépendance à un donneur d'ordres.
-- `gpme:3:1` Je chiffre l'impact d'un risque plutôt que de le qualifier de fort ou faible.
-
-### `decider-avec-le-risque`
-
-campus:6:0 décide selon l'écart au classement visé : c'est un positionnement concurrentiel, pas un arbitrage de risque.
-
-- `dcg:2:2` Je relie le niveau du levier au risque que prend l'entreprise quand la demande baisse.
-- `dcg-rse:5:2` Je décide en dernier tour en tenant compte du risque autant que du rendement.
-- `campus:6:0` Je décide un dernier tour en fonction de l'écart qui me sépare de la place que je vise.
-
-### `budget-et-hypotheses`
-
-stmg:2:2 annonce l'effet attendu d'une décision, ce qui est bien plus léger que construire un budget : le niveau de première y perdrait sa marche.
-
-- `stmg:2:2` Je modifie une décision et j'annonce à l'avance l'effet que j'en attends sur le résultat.
-- `dcg:3:2` Je construis un plan de trésorerie et un budget de trimestre dont j'écris les hypothèses avant de connaître le réel.
-- `dcg:4:0` Je construis un budget de trimestre à partir des exercices écoulés et d'hypothèses que je nomme.
-- `dcg-rse:4:2` J'intègre ces retours différés dans un plan de financement et une politique d'effectif.
-
-### `tenir-un-poste`
-
-campus:6:2 rend compte de ce que son poste a apporté : cela relève de rendre-compte autant que de tenir un poste.
-
-- `campus:1:0` Je tiens un poste de direction nommé et j'en réponds devant mon équipe.
-- `campus:6:2` Je rends compte oralement de ce que mon poste a apporté à une décision collective.
-
-### `retours-differes`
-
-Cinq phrases pour un seul geste, alors qu'elles suivent trois objets distincts : capital d'image, taux de rebuts, engagement social.
-
-- `dcg-rse:2:1` Je lis l'effet différé d'un capital d'image sur la part de marché.
-- `dcg-rse:3:2` Je suis l'évolution du taux de rebuts et je l'impute aux décisions qui l'ont fait bouger.
-- `dcg-rse:4:0` Je relie un capital d'image à la confiance de la banque et à des conditions de découvert plus favorables.
-- `dcg-rse:4:1` Je relie un engagement social à un turnover réduit et aux coûts de recrutement évités.
-- `dcg-rse:6:1` Je commente une trajectoire ESG et une empreinte en distinguant la mesure de l'engagement qui l'a produite.
 
 ## Le socle, famille par famille
 
@@ -120,14 +47,13 @@ Cinq phrases pour un seul geste, alors qu'elles suivent trois objets distincts :
 
 > Je lis les documents de synthèse d'une entreprise et j'en tire ce qu'elle possède, ce qu'elle doit, et ce qui lui reste.
 
-6 phrases, 5 diplômes.
+5 phrases, 4 diplômes.
 
 - `debutant:1:2` Je lis un résultat de fin de trimestre et j'y retrouve ma marge.
 - `stmg:1:0` Je repère, dans la situation d'une entreprise, ce qu'elle vend, ce que cela lui coûte et ce qu'il lui reste.
 - `stmg:1:2` Je lis un compte de résultat simple et j'y retrouve la décision que mon équipe a prise.
 - `cg1:1:0` Je lis un bilan d'ouverture et j'en tire ce que l'entreprise possède, ce qu'elle doit et ce qui lui reste.
 - `gpme:1:0` Je lis les documents de synthèse d'une PME et j'en tire ce qu'elle possède et ce qu'on lui doit.
-- `dcg:1:1` Je calcule les soldes intermédiaires de gestion et je repère celui qui explique le résultat.
 
 #### `variable-ou-fixe`
 
@@ -162,7 +88,7 @@ Cinq phrases pour un seul geste, alors qu'elles suivent trois objets distincts :
 
 #### `charge-ou-decaissement`
 
-> Je distingue une charge d'un décaissement et un produit d'un encaissement, et j'en tire ce qu'un résultat ne dit pas de la caisse.
+> Je distingue une charge d'un décaissement et un produit d'un encaissement, et j'en tire ce qu'un résultat ne dit ni de la caisse ni du cycle qu'il faut financer.
 
 3 phrases, 2 diplômes.
 
@@ -197,6 +123,14 @@ Cinq phrases pour un seul geste, alors qu'elles suivent trois objets distincts :
 - `mhr:1:0` Je calcule un prix moyen par chambre et un taux d'occupation à partir des nuitées vendues et des chambres disponibles.
 - `bistrot:1:0` Je calcule le ratio matières de chaque offre et je le situe par rapport à ce que vise la profession.
 - `campus:1:1` Je calcule le coût variable d'une enceinte et la marge qu'un prix de vente en dégage.
+
+#### `soldes-intermediaires`
+
+> Je calcule les soldes intermédiaires de gestion et je repère celui qui explique le résultat.
+
+1 phrases, 1 diplômes.
+
+- `dcg:1:1` Je calcule les soldes intermédiaires de gestion et je repère celui qui explique le résultat.
 
 #### `cout-de-revient`
 
@@ -235,7 +169,7 @@ Cinq phrases pour un seul geste, alors qu'elles suivent trois objets distincts :
 - `gea:1:2` Je détermine le volume de production qui absorbe les charges fixes du trimestre, au mix que je prévois de vendre.
 - `dcg:2:1` Je calcule un seuil de rentabilité, une marge de sécurité et un levier opérationnel.
 
-#### `effet-d-une-remise`
+#### `ce-qui-erode-la-marge`
 
 > Je mesure ce qu'une remise, un retour ou une baisse de tarif retire à la marge, et le volume qu'il faudrait pour la compenser.
 
@@ -362,16 +296,22 @@ Cinq phrases pour un seul geste, alors qu'elles suivent trois objets distincts :
 
 > Je construis un plan de trésorerie de la période à partir de décisions prévues et de délais de règlement, et j'y repère le point de tension.
 
-8 phrases, 7 diplômes.
+6 phrases, 6 diplômes.
 
 - `cg1:3:1` Je construis un budget de trésorerie à partir de décisions prévues et de délais de règlement.
-- `cg1:3:2` Je présente un besoin de financement chiffré et daté.
-- `mco2:5:0` Je suis un encaissement attendu et je constate son arrivée dans la caisse du mois.
 - `fitness:4:1` Je construis un plan de trésorerie de trimestre et j'y repère ce qu'un encaissement d'avance déplace.
 - `mhr:4:0` Je construis un plan de trésorerie de trimestre à partir de mes encaissements et de mes charges fixes.
 - `gea:2:1` Je construis un plan de trésorerie de trimestre à partir des encaissements et des décaissements.
 - `avance:4:1` Je construis un plan de trésorerie de trimestre de pointe et j'y repère le point de tension.
 - `campus:4:1` Je construis un plan de trésorerie de trimestre et j'y repère le point de tension.
+
+#### `chiffrer-un-besoin-de-financement`
+
+> Je présente un besoin de financement chiffré et daté.
+
+1 phrases, 1 diplômes.
+
+- `cg1:3:2` Je présente un besoin de financement chiffré et daté.
 
 #### `resultat-contre-caisse`
 
@@ -387,7 +327,7 @@ Cinq phrases pour un seul geste, alors qu'elles suivent trois objets distincts :
 
 > Je mesure ce qu'un délai de règlement fait à la trésorerie, à résultat inchangé, et je le traduis en euros immobilisés.
 
-8 phrases, 5 diplômes.
+9 phrases, 5 diplômes.
 
 - `mco:2:1` Je mesure l'effet d'un délai de règlement fournisseur sur la trésorerie du magasin.
 - `mco2:2:1` Je mesure l'effet d'un délai de règlement sur la trésorerie d'un mois, à résultat inchangé.
@@ -397,6 +337,7 @@ Cinq phrases pour un seul geste, alors qu'elles suivent trois objets distincts :
 - `mhr:3:2` Je relie le mix de clientèles du trimestre à son encaissement : qui paie comptant, qui paie à trente ou quarante-cinq jours.
 - `bistrot:2:2` Je mesure ce qu'un paiement comptant fait à la trésorerie d'un établissement dont le résultat ne change pas.
 - `bistrot:4:2` Je relie le mix servi à la trésorerie du trimestre : les banquets se règlent à trente jours, le midi et le soir comptant.
+- `mco2:5:0` Je suis un encaissement attendu et je constate son arrivée dans la caisse du mois.
 
 #### `besoin-en-fonds-de-roulement`
 
@@ -611,11 +552,18 @@ Cinq phrases pour un seul geste, alors qu'elles suivent trois objets distincts :
 
 #### `preparer-une-negociation`
 
-> Je prépare une négociation en identifiant ce que j'apporte à l'autre, et je construis une réponse qui n'est ni l'acceptation ni le refus sec.
+> Je prépare une négociation en identifiant ce que j'apporte à l'autre.
 
-2 phrases, 2 diplômes.
+1 phrases, 1 diplômes.
 
 - `ndrc:5:2` Je prépare une négociation en identifiant ce que j'apporte au partenaire.
+
+#### `repondre-sans-rompre`
+
+> Je construis une réponse commerciale qui n'est ni l'acceptation ni le refus sec.
+
+1 phrases, 1 diplômes.
+
 - `gpme:5:2` Je construis une réponse commerciale qui n'est ni l'acceptation ni le refus sec.
 
 #### `ce-que-preleve-un-canal`
@@ -635,12 +583,19 @@ Cinq phrases pour un seul geste, alors qu'elles suivent trois objets distincts :
 
 #### `chiffrer-un-risque`
 
-> J'identifie les risques propres à ma structure et je chiffre leur impact plutôt que de les qualifier de forts ou faibles.
+> Je chiffre l'impact d'un risque plutôt que de le qualifier de fort ou faible.
 
-2 phrases, 1 diplômes.
+1 phrases, 1 diplômes.
+
+- `gpme:3:1` Je chiffre l'impact d'un risque plutôt que de le qualifier de fort ou faible.
+
+#### `identifier-les-risques`
+
+> J'identifie les risques propres à ma structure, dont la dépendance à un donneur d'ordres.
+
+1 phrases, 1 diplômes.
 
 - `gpme:3:0` J'identifie les risques propres à une petite structure, dont la dépendance à un donneur d'ordres.
-- `gpme:3:1` Je chiffre l'impact d'un risque plutôt que de le qualifier de fort ou faible.
 
 #### `supporter-reduire-transferer`
 
@@ -662,11 +617,10 @@ Cinq phrases pour un seul geste, alors qu'elles suivent trois objets distincts :
 
 > Je décide en tenant compte du risque autant que du rendement, et je relie mon exposition à ce qu'une baisse de demande me ferait.
 
-3 phrases, 2 diplômes.
+2 phrases, 1 diplômes.
 
 - `dcg:2:2` Je relie le niveau du levier au risque que prend l'entreprise quand la demande baisse.
 - `dcg-rse:5:2` Je décide en dernier tour en tenant compte du risque autant que du rendement.
-- `campus:6:0` Je décide un dernier tour en fonction de l'écart qui me sépare de la place que je vise.
 
 ### Prévoir, puis se confronter au réel
 
@@ -676,12 +630,19 @@ Cinq phrases pour un seul geste, alors qu'elles suivent trois objets distincts :
 
 > Je construis un budget de période dont j'écris les hypothèses avant de connaître le réel, et j'annonce l'effet que j'attends d'une décision.
 
-4 phrases, 2 diplômes.
+3 phrases, 1 diplômes.
 
-- `stmg:2:2` Je modifie une décision et j'annonce à l'avance l'effet que j'en attends sur le résultat.
 - `dcg:3:2` Je construis un plan de trésorerie et un budget de trimestre dont j'écris les hypothèses avant de connaître le réel.
 - `dcg:4:0` Je construis un budget de trimestre à partir des exercices écoulés et d'hypothèses que je nomme.
 - `dcg-rse:4:2` J'intègre ces retours différés dans un plan de financement et une politique d'effectif.
+
+#### `annoncer-l-effet-attendu`
+
+> Je modifie une décision et j'annonce à l'avance l'effet que j'en attends.
+
+1 phrases, 1 diplômes.
+
+- `stmg:2:2` Je modifie une décision et j'annonce à l'avance l'effet que j'en attends sur le résultat.
 
 #### `decomposer-un-ecart`
 
@@ -800,6 +761,14 @@ Cinq phrases pour un seul geste, alors qu'elles suivent trois objets distincts :
 
 - `gpme:6:1` Je relie les décisions prises et les résultats obtenus, sans en attribuer le mérite au hasard.
 
+#### `rendre-compte-de-sa-part`
+
+> Je rends compte de ce que mon poste a apporté à une décision collective.
+
+1 phrases, 1 diplômes.
+
+- `campus:6:2` Je rends compte oralement de ce que mon poste a apporté à une décision collective.
+
 #### `expliquer-a-un-profane`
 
 > J'explique une décision de gestion à quelqu'un qui n'a pas ma formation.
@@ -816,10 +785,9 @@ Cinq phrases pour un seul geste, alors qu'elles suivent trois objets distincts :
 
 > Je tiens un poste de direction nommé et j'en réponds devant mon équipe.
 
-2 phrases, 1 diplômes.
+1 phrases, 1 diplômes.
 
 - `campus:1:0` Je tiens un poste de direction nommé et j'en réponds devant mon équipe.
-- `campus:6:2` Je rends compte oralement de ce que mon poste a apporté à une décision collective.
 
 #### `defendre-un-choix`
 
@@ -877,16 +845,30 @@ Cinq phrases pour un seul geste, alors qu'elles suivent trois objets distincts :
 - `dcg-rse:2:0` Je distingue une dépense qui agit dans le trimestre d'un engagement qui se capitalise dans la durée.
 - `dcg-rse:2:2` Je décide de maintenir ou d'ajuster un engagement en raisonnant sur l'horizon de la partie.
 
-#### `retours-differes`
+#### `effets-differes-d-un-engagement`
 
-> Je suis un indicateur extra-financier, je l'impute aux décisions qui l'ont fait bouger, et je lis ce qu'il rapporte avec retard.
+> Je relie un engagement à l'effet mesurable qu'il produit plus tard, et je l'impute aux décisions qui l'ont fait bouger.
 
-5 phrases, 1 diplômes.
+2 phrases, 1 diplômes.
+
+- `dcg-rse:3:2` Je suis l'évolution du taux de rebuts et je l'impute aux décisions qui l'ont fait bouger.
+- `dcg-rse:4:1` Je relie un engagement social à un turnover réduit et aux coûts de recrutement évités.
+
+#### `capital-d-image`
+
+> Je lis l'effet différé d'un capital d'image sur la part de marché et sur les conditions que m'accorde la banque.
+
+2 phrases, 1 diplômes.
 
 - `dcg-rse:2:1` Je lis l'effet différé d'un capital d'image sur la part de marché.
-- `dcg-rse:3:2` Je suis l'évolution du taux de rebuts et je l'impute aux décisions qui l'ont fait bouger.
 - `dcg-rse:4:0` Je relie un capital d'image à la confiance de la banque et à des conditions de découvert plus favorables.
-- `dcg-rse:4:1` Je relie un engagement social à un turnover réduit et aux coûts de recrutement évités.
+
+#### `commenter-une-trajectoire-esg`
+
+> Je commente une trajectoire extra-financière en distinguant la mesure de l'engagement qui l'a produite.
+
+1 phrases, 1 diplômes.
+
 - `dcg-rse:6:1` Je commente une trajectoire ESG et une empreinte en distinguant la mesure de l'engagement qui l'a produite.
 
 #### `parties-prenantes`
@@ -925,6 +907,14 @@ Cinq phrases pour un seul geste, alors qu'elles suivent trois objets distincts :
 1 phrases, 1 diplômes.
 
 - `campus:6:1` Je lis un classement multicritère et je repère la dimension qui me coûte des points.
+
+#### `decider-selon-l-ecart-au-classement`
+
+> Je décide un dernier tour en fonction de l'écart qui me sépare de la place que je vise.
+
+1 phrases, 1 diplômes.
+
+- `campus:6:0` Je décide un dernier tour en fonction de l'écart qui me sépare de la place que je vise.
 
 #### `lire-un-indicateur`
 

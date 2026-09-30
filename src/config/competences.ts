@@ -49,6 +49,16 @@ export interface Geste {
    * Une poignée de lignes à trancher vaut mieux qu'une alerte partout.
    */
   doute?: string;
+  /**
+   * CE QUI A ÉTÉ TRANCHÉ, ET POURQUOI.
+   *
+   * Deux phrases sont restées dans un geste plus large alors qu'elles
+   * auraient pu en fonder un. Le choix se justifie ici plutôt que de
+   * disparaître : sans trace, la question se reposera dans six mois et sera
+   * tranchée dans l'autre sens, sans que personne ne sache qu'elle avait déjà
+   * été examinée.
+   */
+  arbitrage?: string;
 }
 
 export interface FamilleDeGestes {
@@ -76,10 +86,7 @@ export const SOCLE: readonly FamilleDeGestes[] = [
           "stmg:1:2",
           "cg1:1:0",
           "gpme:1:0",
-          "dcg:1:1",
         ],
-        doute:
-          "dcg:1:1 calcule des soldes intermédiaires : c'est un calcul, pas une lecture. Peut-être un geste à part, « établir les soldes intermédiaires de gestion ».",
       },
       {
         code: "variable-ou-fixe",
@@ -102,10 +109,10 @@ export const SOCLE: readonly FamilleDeGestes[] = [
       {
         code: "charge-ou-decaissement",
         enonce:
-          "Je distingue une charge d'un décaissement et un produit d'un encaissement, et j'en tire ce qu'un résultat ne dit pas de la caisse.",
+          "Je distingue une charge d'un décaissement et un produit d'un encaissement, et j'en tire ce qu'un résultat ne dit ni de la caisse ni du cycle qu'il faut financer.",
         origines: ["cg1:3:0", "cg1:4:1", "fitness:4:2"],
-        doute:
-          "fitness:4:2 porte en plus le besoin en fonds de roulement négatif, qui relève de besoin-en-fonds-de-roulement. La phrase fait deux choses.",
+        arbitrage:
+          "fitness:4:2 relie en plus le besoin en fonds de roulement négatif au financement du cycle, et aurait donc pu aller à besoin-en-fonds-de-roulement. Une phrase n'appartient qu'à un geste, sans quoi toute couverture de référentiel la compterait deux fois : elle reste où est son acte de tête, la distinction, et l'énoncé mentionne la suite.",
       },
       {
         code: "tenir-ensemble",
@@ -134,6 +141,12 @@ export const SOCLE: readonly FamilleDeGestes[] = [
           "bistrot:1:0",
           "campus:1:1",
         ],
+      },
+      {
+        code: "soldes-intermediaires",
+        enonce:
+          "Je calcule les soldes intermédiaires de gestion et je repère celui qui explique le résultat.",
+        origines: ["dcg:1:1"],
       },
       {
         code: "cout-de-revient",
@@ -166,7 +179,7 @@ export const SOCLE: readonly FamilleDeGestes[] = [
         ],
       },
       {
-        code: "effet-d-une-remise",
+        code: "ce-qui-erode-la-marge",
         enonce:
           "Je mesure ce qu'une remise, un retour ou une baisse de tarif retire à la marge, et le volume qu'il faudrait pour la compenser.",
         origines: [
@@ -177,8 +190,8 @@ export const SOCLE: readonly FamilleDeGestes[] = [
           "gpme:5:0",
           "mhr:2:0",
         ],
-        doute:
-          "ndrc:3:0 parle d'un retour produit, pas d'une remise : la marge s'érode pour une autre raison. À scinder si la distinction compte pour vous.",
+        arbitrage:
+          "ndrc:3:0 chiffre un retour produit, pas une remise. Le calcul est pourtant le même, ce qui part de la marge et le volume qu'il faut pour le rattraper, donc le geste ne se scinde pas : c'est son code qui promettait trop, et il a été renommé.",
       },
       {
         code: "resultat-ou-rentabilite",
@@ -295,16 +308,17 @@ export const SOCLE: readonly FamilleDeGestes[] = [
           "Je construis un plan de trésorerie de la période à partir de décisions prévues et de délais de règlement, et j'y repère le point de tension.",
         origines: [
           "cg1:3:1",
-          "cg1:3:2",
-          "mco2:5:0",
           "fitness:4:1",
           "mhr:4:0",
           "gea:2:1",
           "avance:4:1",
           "campus:4:1",
         ],
-        doute:
-          "cg1:3:2 présente un besoin de financement et mco2:5:0 suit un encaissement attendu : deux actes plus étroits que construire un plan.",
+      },
+      {
+        code: "chiffrer-un-besoin-de-financement",
+        enonce: "Je présente un besoin de financement chiffré et daté.",
+        origines: ["cg1:3:2"],
       },
       {
         code: "resultat-contre-caisse",
@@ -325,6 +339,7 @@ export const SOCLE: readonly FamilleDeGestes[] = [
           "mhr:3:2",
           "bistrot:2:2",
           "bistrot:4:2",
+          "mco2:5:0",
         ],
       },
       {
@@ -510,10 +525,14 @@ export const SOCLE: readonly FamilleDeGestes[] = [
       {
         code: "preparer-une-negociation",
         enonce:
-          "Je prépare une négociation en identifiant ce que j'apporte à l'autre, et je construis une réponse qui n'est ni l'acceptation ni le refus sec.",
-        origines: ["ndrc:5:2", "gpme:5:2"],
-        doute:
-          "gpme:5:2 construit une réponse commerciale, ndrc:5:2 prépare l'échange. Préparer et répondre sont deux moments.",
+          "Je prépare une négociation en identifiant ce que j'apporte à l'autre.",
+        origines: ["ndrc:5:2"],
+      },
+      {
+        code: "repondre-sans-rompre",
+        enonce:
+          "Je construis une réponse commerciale qui n'est ni l'acceptation ni le refus sec.",
+        origines: ["gpme:5:2"],
       },
       {
         code: "ce-que-preleve-un-canal",
@@ -531,10 +550,14 @@ export const SOCLE: readonly FamilleDeGestes[] = [
       {
         code: "chiffrer-un-risque",
         enonce:
-          "J'identifie les risques propres à ma structure et je chiffre leur impact plutôt que de les qualifier de forts ou faibles.",
-        origines: ["gpme:3:0", "gpme:3:1"],
-        doute:
-          "gpme:3:0 identifie les risques, gpme:3:1 chiffre leur impact. Repérer et mesurer ne s'évaluent pas de la même façon.",
+          "Je chiffre l'impact d'un risque plutôt que de le qualifier de fort ou faible.",
+        origines: ["gpme:3:1"],
+      },
+      {
+        code: "identifier-les-risques",
+        enonce:
+          "J'identifie les risques propres à ma structure, dont la dépendance à un donneur d'ordres.",
+        origines: ["gpme:3:0"],
       },
       {
         code: "supporter-reduire-transferer",
@@ -552,9 +575,7 @@ export const SOCLE: readonly FamilleDeGestes[] = [
         code: "decider-avec-le-risque",
         enonce:
           "Je décide en tenant compte du risque autant que du rendement, et je relie mon exposition à ce qu'une baisse de demande me ferait.",
-        origines: ["dcg:2:2", "dcg-rse:5:2", "campus:6:0"],
-        doute:
-          "campus:6:0 décide selon l'écart au classement visé : c'est un positionnement concurrentiel, pas un arbitrage de risque.",
+        origines: ["dcg:2:2", "dcg-rse:5:2"],
       },
     ],
   },
@@ -567,9 +588,13 @@ export const SOCLE: readonly FamilleDeGestes[] = [
         code: "budget-et-hypotheses",
         enonce:
           "Je construis un budget de période dont j'écris les hypothèses avant de connaître le réel, et j'annonce l'effet que j'attends d'une décision.",
-        origines: ["stmg:2:2", "dcg:3:2", "dcg:4:0", "dcg-rse:4:2"],
-        doute:
-          "stmg:2:2 annonce l'effet attendu d'une décision, ce qui est bien plus léger que construire un budget : le niveau de première y perdrait sa marche.",
+        origines: ["dcg:3:2", "dcg:4:0", "dcg-rse:4:2"],
+      },
+      {
+        code: "annoncer-l-effet-attendu",
+        enonce:
+          "Je modifie une décision et j'annonce à l'avance l'effet que j'en attends.",
+        origines: ["stmg:2:2"],
       },
       {
         code: "decomposer-un-ecart",
@@ -668,6 +693,12 @@ export const SOCLE: readonly FamilleDeGestes[] = [
         origines: ["gpme:6:1"],
       },
       {
+        code: "rendre-compte-de-sa-part",
+        enonce:
+          "Je rends compte de ce que mon poste a apporté à une décision collective.",
+        origines: ["campus:6:2"],
+      },
+      {
         code: "expliquer-a-un-profane",
         enonce:
           "J'explique une décision de gestion à quelqu'un qui n'a pas ma formation.",
@@ -685,9 +716,7 @@ export const SOCLE: readonly FamilleDeGestes[] = [
         code: "tenir-un-poste",
         enonce:
           "Je tiens un poste de direction nommé et j'en réponds devant mon équipe.",
-        origines: ["campus:1:0", "campus:6:2"],
-        doute:
-          "campus:6:2 rend compte de ce que son poste a apporté : cela relève de rendre-compte autant que de tenir un poste.",
+        origines: ["campus:1:0"],
       },
       {
         code: "defendre-un-choix",
@@ -733,18 +762,22 @@ export const SOCLE: readonly FamilleDeGestes[] = [
         origines: ["dcg-rse:1:2", "dcg-rse:2:0", "dcg-rse:2:2"],
       },
       {
-        code: "retours-differes",
+        code: "effets-differes-d-un-engagement",
         enonce:
-          "Je suis un indicateur extra-financier, je l'impute aux décisions qui l'ont fait bouger, et je lis ce qu'il rapporte avec retard.",
-        origines: [
-          "dcg-rse:2:1",
-          "dcg-rse:3:2",
-          "dcg-rse:4:0",
-          "dcg-rse:4:1",
-          "dcg-rse:6:1",
-        ],
-        doute:
-          "Cinq phrases pour un seul geste, alors qu'elles suivent trois objets distincts : capital d'image, taux de rebuts, engagement social.",
+          "Je relie un engagement à l'effet mesurable qu'il produit plus tard, et je l'impute aux décisions qui l'ont fait bouger.",
+        origines: ["dcg-rse:3:2", "dcg-rse:4:1"],
+      },
+      {
+        code: "capital-d-image",
+        enonce:
+          "Je lis l'effet différé d'un capital d'image sur la part de marché et sur les conditions que m'accorde la banque.",
+        origines: ["dcg-rse:2:1", "dcg-rse:4:0"],
+      },
+      {
+        code: "commenter-une-trajectoire-esg",
+        enonce:
+          "Je commente une trajectoire extra-financière en distinguant la mesure de l'engagement qui l'a produite.",
+        origines: ["dcg-rse:6:1"],
       },
       {
         code: "parties-prenantes",
@@ -777,6 +810,12 @@ export const SOCLE: readonly FamilleDeGestes[] = [
         enonce:
           "Je lis un classement multicritère et je repère la dimension qui me coûte des points.",
         origines: ["campus:6:1"],
+      },
+      {
+        code: "decider-selon-l-ecart-au-classement",
+        enonce:
+          "Je décide un dernier tour en fonction de l'écart qui me sépare de la place que je vise.",
+        origines: ["campus:6:0"],
       },
       {
         code: "lire-un-indicateur",

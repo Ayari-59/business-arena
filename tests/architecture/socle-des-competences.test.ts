@@ -3,7 +3,10 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { ATELIERS } from "@/config/ateliers";
 import { GESTES, SOCLE } from "@/config/competences";
-import { DESTINATION, rapportDuSocle } from "../../scripts/socle-des-competences";
+import {
+  DESTINATION,
+  rapportDuSocle,
+} from "../../scripts/socle-des-competences";
 
 /**
  * LE SOCLE NE PERD AUCUNE COMPÉTENCE EN ROUTE.
@@ -31,12 +34,15 @@ import { DESTINATION, rapportDuSocle } from "../../scripts/socle-des-competences
 const CORPUS = new Map<string, string>();
 for (const a of ATELIERS) {
   for (const s of a.seances) {
-    s.competences.forEach((texte, i) => CORPUS.set(`${a.code}:${s.numero}:${i}`, texte));
+    s.competences.forEach((texte, i) =>
+      CORPUS.set(`${a.code}:${s.numero}:${i}`, texte),
+    );
   }
 }
 
 const PRIS = new Map<string, string[]>();
-for (const g of GESTES) for (const o of g.origines) PRIS.set(o, [...(PRIS.get(o) ?? []), g.code]);
+for (const g of GESTES)
+  for (const o of g.origines) PRIS.set(o, [...(PRIS.get(o) ?? []), g.code]);
 
 describe("le socle de compétences", () => {
   it("garde toutes les compétences écrites dans les ateliers", () => {
@@ -50,35 +56,81 @@ describe("le socle de compétences", () => {
 
   it("ne cite aucune phrase qui n'existe pas", () => {
     const fantomes = [...PRIS.keys()].filter((c) => !CORPUS.has(c));
-    expect(fantomes, `coordonnées qui ne désignent rien :\n${fantomes.join("\n")}`).toEqual([]);
+    expect(
+      fantomes,
+      `coordonnées qui ne désignent rien :\n${fantomes.join("\n")}`,
+    ).toEqual([]);
   });
 
   it("ne reprend aucune phrase deux fois", () => {
     const doubles = [...PRIS.entries()]
       .filter(([, gestes]) => gestes.length > 1)
       .map(([cle, gestes]) => `${cle} → ${gestes.join(", ")}`);
-    expect(doubles, `phrases reprises deux fois :\n${doubles.join("\n")}`).toEqual([]);
+    expect(
+      doubles,
+      `phrases reprises deux fois :\n${doubles.join("\n")}`,
+    ).toEqual([]);
   });
 
   it("chaque geste a un code unique, un énoncé à la première personne, et une origine", () => {
     const codes = GESTES.map((g) => g.code);
     expect(codes.length, "socle vide").toBeGreaterThan(20);
-    expect(new Set(codes).size, "deux gestes portent le même code").toBe(codes.length);
+    expect(new Set(codes).size, "deux gestes portent le même code").toBe(
+      codes.length,
+    );
     for (const g of GESTES) {
-      expect(g.origines.length, `${g.code} ne vient d'aucune phrase`).toBeGreaterThan(0);
+      expect(
+        g.origines.length,
+        `${g.code} ne vient d'aucune phrase`,
+      ).toBeGreaterThan(0);
       // La première personne n'est pas un style : c'est la forme qu'attend un
       // passeport professionnel, et elle oblige à nommer un acte plutôt qu'un
       // chapitre. Les 251 phrases d'origine la respectent toutes.
       expect(g.enonce, `${g.code} : « ${g.enonce} »`).toMatch(/^(Je |J'|Je')/);
-      expect(g.code, `${g.code} n'est pas un code lisible`).toMatch(/^[a-z][a-z0-9-]*$/);
+      expect(g.code, `${g.code} n'est pas un code lisible`).toMatch(
+        /^[a-z][a-z0-9-]*$/,
+      );
     }
   });
 
   it("chaque famille a un propos et des gestes", () => {
     expect(SOCLE.length).toBeGreaterThan(5);
     for (const f of SOCLE) {
-      expect(f.gestes.length, `la famille ${f.code} est vide`).toBeGreaterThan(0);
-      expect(f.propos.length, `la famille ${f.code} ne dit pas ce qu'elle recouvre`).toBeGreaterThan(20);
+      expect(f.gestes.length, `la famille ${f.code} est vide`).toBeGreaterThan(
+        0,
+      );
+      expect(
+        f.propos.length,
+        `la famille ${f.code} ne dit pas ce qu'elle recouvre`,
+      ).toBeGreaterThan(20);
+    }
+  });
+
+  it("un geste ne peut pas être à la fois tranché et en suspens", () => {
+    // Les deux champs disent des choses contraires : « je ne sais pas encore »
+    // et « voici pourquoi j'ai choisi ». Les porter tous les deux, c'est
+    // laisser croire qu'une question est réglée alors qu'elle est ouverte,
+    // et le rapport afficherait la même ligne dans deux sections.
+    for (const g of GESTES) {
+      expect(
+        g.doute && g.arbitrage,
+        `${g.code} porte un doute ET un arbitrage`,
+      ).toBeFalsy();
+      for (const [nom, texte] of [
+        ["doute", g.doute],
+        ["arbitrage", g.arbitrage],
+      ] as const) {
+        if (texte === undefined) continue;
+        // Une note qui ne dit rien est pire qu'une note absente : elle occupe
+        // la place de celle qui manque.
+        expect(
+          texte.length,
+          `${g.code} : ${nom} trop court pour expliquer quoi que ce soit`,
+        ).toBeGreaterThan(60);
+        expect(texte, `${g.code} : ${nom} ne cite aucune phrase`).toMatch(
+          /[a-z0-9-]+:\d+:\d+/,
+        );
+      }
     }
   });
 
