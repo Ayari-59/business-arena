@@ -149,8 +149,15 @@ const CONFIANCE = [
     desc: "Prenez en main les secteurs, ateliers et concours sans engagement",
   },
   {
-    label: "Référentiels lus sur le texte",
-    desc: "Chaque atelier cite sa provenance ; ce qui n'a pas été vérifié le dit",
+    // LA PROMESSE SUIVAIT LA PHRASE QU'ON A RETIRÉE, et elle est devenue
+    // fausse avec elle : « ce qui n'a pas été vérifié le dit » annonçait un
+    // aveu que le site ne fait plus. Son titre promettait d'ailleurs plus que
+    // le dépôt ne tient — trois référentiels sur quinze n'ont pas été lus sur
+    // leur texte — et c'est ce qui rendait l'aveu nécessaire. Reste le fait
+    // vérifiable : chaque atelier nomme les blocs du référentiel de sa
+    // formation, avec les mots de ce référentiel.
+    label: "Adossés aux référentiels",
+    desc: "Chaque atelier nomme les blocs du programme de sa formation",
   },
 ];
 
