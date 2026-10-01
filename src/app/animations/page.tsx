@@ -151,8 +151,17 @@ export default function AteliersPage() {
               </caption>
               <thead>
                 <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
-                  <th className="px-4 py-2 font-medium">Diplôme</th>
+                  {/*
+                    L'ATELIER OUVRE LA LIGNE, PAS SA FORMATION. Le tableau
+                    commençait par une colonne « Diplôme », si bien qu'on
+                    lisait « BTS CG » puis, à côté, ce que c'était. L'atelier
+                    s'identifiait par le diplôme posé devant lui, ce qui
+                    n'avait plus de sens du jour où il peut en servir
+                    plusieurs : le tournoi inter-filières aurait ouvert sa
+                    ligne par quatre sigles.
+                  */}
                   <th className="px-4 py-2 font-medium">Atelier</th>
+                  <th className="px-4 py-2 font-medium">Formations</th>
                   <th className="px-4 py-2 font-medium">Entreprise</th>
                   <th className="px-4 py-2 font-medium">Durée</th>
                   <th className="px-4 py-2 font-medium">Exigence</th>
@@ -162,12 +171,17 @@ export default function AteliersPage() {
                 {ATELIERS.map((a) => (
                   <tr key={a.code} className="border-t border-white/5">
                     <td className="px-4 py-3 font-medium text-slate-200">
+                      {a.titre}
+                      <span className="block text-xs text-slate-400">
+                        {a.nature}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-slate-300">
                       {publicDeLAtelier(a)}
                       <span className="block text-xs text-slate-400">
                         {a.annee}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-slate-300">{a.titre}</td>
                     <td className="px-4 py-3 text-slate-400">
                       {scenarioByCode(a.reglages.scenarioCode).playerTeamName}
                     </td>
@@ -195,8 +209,16 @@ export default function AteliersPage() {
                 key={a.code}
                 className="rounded-2xl border border-white/10 bg-slate-900 p-5 transition hover:border-amber-400/40"
               >
+                {/*
+                  LE SURTITRE NE PORTE PLUS LA FORMATION. Il disait « ATELIER
+                  PROFESSIONNEL · BTS CG · PREMIÈRE ANNÉE » au-dessus du nom de
+                  l'atelier : on lisait son diplôme avant de savoir ce qu'il
+                  fait faire. Le rattachement descend parmi les autres faits,
+                  où il se lit comme ce qu'il est — une destination, pas une
+                  identité.
+                */}
                 <p className="text-xs font-semibold uppercase tracking-wider text-amber-400">
-                  {a.nature} · {publicDeLAtelier(a)} · {a.annee}
+                  {a.nature}
                 </p>
                 <h3 className="mt-2 text-lg font-bold text-slate-50">
                   {a.titre}
@@ -206,6 +228,10 @@ export default function AteliersPage() {
                 </p>
                 <dl className="mt-4 space-y-1 text-xs">
                   {[
+                    [
+                      "Formations",
+                      `${publicDeLAtelier(a)}, ${a.annee.toLowerCase()}`,
+                    ],
                     [
                       "Entreprise",
                       scenarioByCode(a.reglages.scenarioCode).playerTeamName,

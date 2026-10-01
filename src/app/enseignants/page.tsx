@@ -301,15 +301,24 @@ export default async function EnseignantsPage() {
                 href={`/animations/${a.code}`}
                 className="group flex flex-col carte p-4 transition hover:border-amber-400/40"
               >
-                <div className="flex items-baseline justify-between gap-3">
+                {/*
+                  LE NOM DE L'ATELIER PASSE DEVANT SON RATTACHEMENT. La carte
+                  s'ouvrait sur une pastille ambre portant le diplôme, et le
+                  titre venait dessous : on lisait « BTS CG » avant de savoir
+                  ce que l'atelier fait faire, et deux ateliers d'un même
+                  diplôme se présentaient par la même étiquette. Depuis qu'un
+                  atelier peut servir plusieurs formations, la pastille ne peut
+                  plus tenir lieu de nom.
+                */}
+                <h3 className="text-sm font-semibold text-slate-100 group-hover:text-amber-200">
+                  {a.titre}
+                </h3>
+                <div className="mt-2 flex items-baseline justify-between gap-3">
                   <span className="rounded-full border border-amber-400/20 bg-amber-400/5 px-2 py-0.5 text-xs font-semibold text-amber-300">
                     {publicDeLAtelier(a)}
                   </span>
                   <span className="text-xs text-slate-400">{a.format}</span>
                 </div>
-                <h3 className="mt-3 text-sm font-semibold text-slate-100 group-hover:text-amber-200">
-                  {a.titre}
-                </h3>
                 <p className="mt-1 text-base leading-relaxed text-slate-400">
                   {a.resume}
                 </p>

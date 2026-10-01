@@ -128,12 +128,12 @@ export default async function AtelierPage({
             de quoi parlait la page. Les noms entiers restent dans la fiche
             technique, où on vient les lire.
           */}
-          / {publicDeLAtelier(atelier)}
+          / {atelier.titre}
         </p>
 
         <header className="mt-4 border-b border-white/10 pb-6 print:border-black/20">
           <p className="text-xs font-semibold uppercase tracking-wider text-amber-400 print:text-black">
-            {atelier.nature} · {publicDeLAtelier(atelier)} · {atelier.annee}
+            {atelier.nature} · {atelier.annee}
           </p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-50 print:text-black">
             {atelier.titre}
@@ -246,7 +246,7 @@ export default async function AtelierPage({
                 {(
                   [
                     [
-                      "Diplôme",
+                      "Formations",
                       `${formationsEnToutesLettres(atelier)}, ${atelier.annee.toLowerCase()}`,
                     ],
                     ["Entreprise dirigée", scenario.title],
