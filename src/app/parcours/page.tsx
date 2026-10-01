@@ -148,12 +148,10 @@ export default function ParcoursPage() {
             Votre référentiel, vécu dans l&apos;arène
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-400">
-            Business Arena a été construit par un enseignant pour faire le pont
-            entre les notions du programme et la pratique. Pour chaque diplôme
-            ci-dessous : les blocs de son référentiel, ce qui se joue dans
-            chacun, et ce qui n&apos;est qu&apos;effleuré. Les blocs sont nommés
-            comme leur référentiel les nomme, et la liste est tenue par ce que
-            les séances mettent en jeu, pas par une promesse commerciale.
+            Business Arena a été construit par un enseignant. Pour chaque
+            diplôme : les blocs de son référentiel, ce qui s&apos;y joue, et ce
+            qui n&apos;est qu&apos;effleuré. Les blocs portent les mots de leur
+            référentiel.
           </p>
           {/* « Tout déplier » tient compagnie à l'index : c'est le même
               geste — choisir où regarder — et le seul moyen de retrouver un

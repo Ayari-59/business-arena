@@ -36,7 +36,7 @@ export const ATELIER_MCO2: AtelierDefinition = {
   pitch:
     "Six séances de deux heures, un mois par séance. Chaque équipe dirige le même bistrot de juin à novembre, lit son compte de résultat mensuel, traverse le creux d'août avec des charges qui ne partent pas en vacances, encaisse en octobre ce que septembre a vendu, et rend à chaque séance un document de pilotage mensuel.",
   resume:
-    "Six mois à la tête d'un bistrot, au rythme réel d'une unité commerciale : un tour par mois, des groupes réglés à trente jours, et un tableau de bord mensuel pour finir.",
+    "Six mois à la tête d'un bistrot, au rythme réel d'une unité commerciale. Un tour par mois, des groupes réglés à trente jours, un tableau de bord pour finir.",
   difficulte: 3,
   difficulteLabel: "Approfondissement",
   format: "6 séances de 2 h",

@@ -73,23 +73,18 @@ export default function AteliersPage() {
             Des déroulés prêts à animer
           </h1>
           <p className="mt-5 text-lg italic leading-relaxed text-slate-400">
-            Des déroulés de plusieurs séances, écrits pour des enseignants qui
-            veulent adosser un jeu d&apos;entreprise à une progression. Chaque
-            fiche donne le déroulé minuté séance par séance, les réglages de la
-            partie, ce que les équipes rendent, la trace écrite que chaque
-            séance laisse et les critères d&apos;évaluation. Chacune dit à quel
-            niveau elle s&apos;adresse, du lycée à l&apos;expertise comptable,
-            et l&apos;une d&apos;elles les réunit tous dans la même équipe.
+            Un jeu d&apos;entreprise adossé à votre progression. Chaque fiche
+            donne le minutage séance par séance, les réglages de la partie, ce
+            que les équipes rendent et sur quoi vous les évaluez. Du lycée à
+            l&apos;expertise comptable.
           </p>
 
           <h2 className="mt-12 text-xl font-bold text-slate-100">
             À qui ils s&apos;adressent
           </h2>
           <p className="mt-3 text-base leading-relaxed text-slate-400">
-            Aux enseignants qui cherchent un point de départ structuré plutôt
-            qu&apos;un jeu à apprivoiser seuls. Tout y est modifiable, à
-            commencer par le secteur de l&apos;entreprise et le niveau de
-            difficulté.
+            À qui veut un point de départ, pas un jeu à apprivoiser seul. Tout
+            se modifie : le secteur, le niveau, la durée.
           </p>
 
           {IMMERSIONS.map((a) => (
@@ -104,9 +99,8 @@ export default function AteliersPage() {
                 {a.titre}
               </h3>
               <p className="mt-2 text-base leading-relaxed text-slate-300">
-                {publicDeLAtelier(a)} en équipes qui mêlent les niveaux, un
-                élève par filière et un poste de direction chacun, sur{" "}
-                {a.format} en mode concours.
+                {publicDeLAtelier(a)} dans la même équipe. Un élève par filière,
+                un poste de direction chacun. {a.format}, en championnat.
               </p>
               <Link
                 href={`/animations/${a.code}`}
@@ -266,17 +260,15 @@ export default function AteliersPage() {
           </h2>
           <div className="mt-3 space-y-3 text-sm leading-relaxed text-slate-400">
             <p>
-              Chaque atelier est construit à partir d&apos;une partie réellement
-              jouable sur la plateforme : les réglages annoncés sont ceux qui
-              produisent le déroulé décrit, et les documents demandés aux
-              équipes sont ceux que le jeu leur met effectivement entre les
-              mains.
+              Chaque atelier sort d&apos;une partie réellement jouée. Les
+              réglages annoncés produisent le déroulé décrit. Les documents
+              demandés sont ceux que le jeu met entre les mains des équipes.
             </p>
             <p>
-              Chaque diplôme découpe le métier avec ses propres mots, processus
-              pour le BTS CG, blocs de compétences pour les BTS MCO, NDRC et
-              GPME, thèmes de programme au lycée, unités d&apos;enseignement
-              pour le DCG, et chaque fiche emploie ceux de son référentiel.
+              Chaque diplôme découpe le métier avec ses propres mots : processus
+              en BTS CG, blocs de compétences en MCO, NDRC et GPME, thèmes au
+              lycée, unités d&apos;enseignement en DCG. Chaque fiche emploie les
+              siens.
             </p>
             <p>
               Ces ateliers évoluent avec la plateforme. Ils sont librement

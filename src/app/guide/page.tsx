@@ -135,10 +135,9 @@ export default function GuidePage() {
             Tout ce qu&apos;il faut pour votre première partie
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-400">
-            Business Arena ne vous demande jamais « calculez le BFR » : vous vivez des situations,
-            vous décidez, la simulation répond, et les notions arrivent au moment où vous en avez
-            besoin. Ce guide couvre les trois façons d&apos;entrer dans l&apos;arène : en solo, en
-            classe, en établissement.
+            Business Arena ne vous demande jamais « calculez le BFR ». Vous vivez une situation,
+            vous décidez, la simulation répond. Les notions arrivent quand vous en avez besoin.
+            Trois façons d&apos;entrer dans l&apos;arène : en solo, en classe, en établissement.
           </p>
           <div className="mt-6 flex flex-wrap gap-2">
             {SECTIONS.map((s) => (
@@ -165,12 +164,11 @@ export default function GuidePage() {
                 <p className="text-sm font-semibold text-amber-300">Je veux essayer, tout de suite</p>
                 <p className="mt-2 text-base leading-relaxed text-slate-400">
                   Depuis la page <Link href="/jouer" className="text-amber-300 underline-offset-4 hover:underline">Jouer</Link>,
-                  choisissez votre secteur (atelier, boutique, hôtel, restaurant, cabinet de
-                  conseil, boutique en ligne ou salle de sport), la périodicité et le nombre de
-                  concurrents, puis{" "}
-                  <strong className="text-slate-200">Lancer la partie</strong>. Aucun compte
-                  requis : vous dirigez l&apos;entreprise immédiatement, en six tours, face à des
-                  concurrents pilotés par l&apos;ordinateur.
+                  choisissez votre secteur, la périodicité et le nombre de concurrents, puis{" "}
+                  <strong className="text-slate-200">Lancer la partie</strong>. Au choix :
+                  atelier, boutique, hôtel, restaurant, cabinet de conseil, boutique en ligne ou
+                  salle de sport. Aucun compte requis : vous dirigez l&apos;entreprise
+                  immédiatement, en six tours, face à des concurrents pilotés par l&apos;ordinateur.
                 </p>
               </div>
               <div className="rounded-xl border border-white/10 bg-slate-950 p-5">

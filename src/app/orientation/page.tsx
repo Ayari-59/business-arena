@@ -101,11 +101,9 @@ export default function OrientationPage() {
               dire : pourquoi le choix est difficile, et ce que vaut la réponse. */}
           {SCENARIO_CHOICES.length} entreprises, {DIFFICULTY_PRESETS.length}{" "}
           niveaux de difficulté, une durée réglable et {ATELIERS.length}{" "}
-          ateliers prêts à animer : cela fait beaucoup de combinaisons, et le
-          mauvais réglage ne se voit qu&apos;en séance trois. Deux chemins
-          mènent au bon, et la recommandation se discute : elle n&apos;a rien
-          d&apos;un oracle, c&apos;est le raisonnement que nous tiendrions à
-          votre place.
+          ateliers prêts à animer. Beaucoup de combinaisons, et le mauvais
+          réglage ne se voit qu&apos;en séance trois. Deux chemins mènent au
+          bon.
         </p>
 
         {/*
@@ -218,9 +216,9 @@ export default function OrientationPage() {
           >
             Prenez un rendez-vous téléphonique
           </Link>
-          . Rien n&apos;est figé : le secteur, le niveau, la durée et la
-          périodicité se changent à la création de la partie, et une partie qui
-          ne convient pas se relance en trente secondes. Voir{" "}
+          . Rien n&apos;est figé. Secteur, niveau, durée et périodicité se
+          changent à la création. Une partie qui ne convient pas se relance en
+          trente secondes. Voir{" "}
           <Link
             href="/entreprises"
             className="text-slate-400 underline-offset-4 hover:underline"

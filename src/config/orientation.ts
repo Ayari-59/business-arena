@@ -92,7 +92,7 @@ export const OBJECTIFS: readonly Objectif[] = [
     secteur: "batiment",
     niveauMinimum: 3,
     raison:
-      "Le bâtiment porte des chantiers en cours et des aléas de chantier : les risques y ont un montant, ce qui permet de les arbitrer plutôt que de les qualifier.",
+      "Le bâtiment porte des chantiers en cours et leurs aléas. Les risques y ont un montant : on les arbitre au lieu de les qualifier.",
   },
   {
     code: "immersion_campus",
@@ -100,7 +100,7 @@ export const OBJECTIFS: readonly Objectif[] = [
     secteur: "nova",
     niveauMinimum: 3,
     raison:
-      "NOVA porte assez de décisions pour occuper cinq postes de direction sans en noyer aucun, et c'est l'entreprise sur laquelle un championnat se joue : c'est le terrain d'une immersion qui mêle les niveaux.",
+      "NOVA occupe cinq postes de direction sans en noyer aucun. C'est l'entreprise des championnats, et le terrain d'une immersion qui mêle les niveaux.",
   },
   {
     code: "diagnostic_financier",
