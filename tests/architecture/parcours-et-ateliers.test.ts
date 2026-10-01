@@ -134,7 +134,7 @@ describe("les parcours et les ateliers", () => {
     );
   });
 
-  it("n'expose que des diplômes, et renvoie les autres déroulés ailleurs", () => {
+  it("n'expose que des diplômes", () => {
     // UN BLOC DE RÉFÉRENTIEL APPARTIENT À UN DIPLÔME. La page portait douze
     // sections dont trois n'en étaient pas : découverte, approfondissement,
     // tournoi inter-filières. Elles affichaient des « blocs de référentiel »
@@ -148,13 +148,15 @@ describe("les parcours et les ateliers", () => {
       "plus aucun déroulé hors référentiel : la règle ne garde rien",
     ).toBeGreaterThan(0);
     expect(PAGE).toContain("adosseAUnReferentiel");
-    expect(PAGE).toContain("HORS_REFERENTIEL");
-
-    // Les écarter n'est pas les cacher : qui a vu « Découverte » dans le menu
-    // des ateliers et ne la retrouve pas ici conclut qu'elle a disparu.
-    expect(PAGE).toContain('href="/animations"');
-    const renvoi = PAGE.slice(PAGE.indexOf('id="hors-referentiel"'));
-    expect(renvoi).toContain("HORS_REFERENTIEL.map((a) => a.titre)");
+    // Aucune trace d'eux sur cette page : leurs découpages ne doivent pas
+    // côtoyer des blocs tirés d'un arrêté, fût-ce pour dire qu'ils n'en sont
+    // pas. Ils vivent sur la page des ateliers, qui est faite pour eux.
+    for (const a of dehors) {
+      expect(
+        PAGE,
+        `« ${a.titre} » reparaît sur la page des parcours`,
+      ).not.toContain(a.titre);
+    }
   });
 
   it("la page parle du référentiel, et met le déroulé en preuve", () => {
