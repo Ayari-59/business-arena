@@ -428,7 +428,8 @@ export const ATELIER_BISTROT: AtelierDefinition = {
     },
     {
       nom: "Fil rouge du semestre",
-      quand: "Quand l'atelier accompagne le cours de gestion appliquée ou de management d'unité.",
+      quand:
+        "Quand l'atelier accompagne le cours de gestion appliquée ou de management d'unité.",
       comment:
         "Une séance toutes les trois semaines, chaque séance étant précédée du point de cours qu'elle mobilise. La partie reste ouverte entre deux séances, ce qui permet de faire préparer les décisions à la maison.",
     },
@@ -446,12 +447,14 @@ export const ATELIER_BISTROT: AtelierDefinition = {
   ],
   faq: [
     {
-      question: "Pourquoi jouer en quatre offres plutôt qu'avec un seul ticket moyen ?",
+      question:
+        "Pourquoi jouer en quatre offres plutôt qu'avec un seul ticket moyen ?",
       reponse:
         "Parce que c'est le métier. Un ticket moyen unique cache ce que la carte décide : la formule du midi ne prend pas le même temps de brigade que la carte du soir, ni la même marge, ni le même délai de règlement qu'un banquet. Le niveau retenu fait jouer la gamme ; un niveau en dessous ferait jouer le bistrot en un seul ticket, avec la trésorerie et l'assurance ouvertes mais sans la brigade ni la cuisine à décider. C'est le réglage de la première année, pas celui-ci.",
     },
     {
-      question: "Pourquoi arrêter à quatre trimestres alors que le secteur en compte six ?",
+      question:
+        "Pourquoi arrêter à quatre trimestres alors que le secteur en compte six ?",
       reponse:
         "Parce que la saison des banquets est le point culminant de ce secteur et que rien ne gagne à la dépasser dans un atelier de cinq séances. La partie est créée sur quatre tours et s'arrête là. Si votre progression le permet, créez-la sur six tours dès le départ et gardez les deux derniers pour deux séances de prolongement, la terrasse et la rentabilité des capitaux comme fils.",
     },
@@ -459,11 +462,6 @@ export const ATELIER_BISTROT: AtelierDefinition = {
       question: "Le traiteur est-il obligatoire ?",
       reponse:
         "Non, et c'est le point. L'activité traiteur demande 18 000 € de développement avant de vendre le moindre buffet, ne connaît ni la taille de la salle ni les congés de la clientèle, et se règle à quarante-cinq et soixante jours. Une équipe qui l'engage au deuxième trimestre en pleine tension de trésorerie apprend ce qu'est un investissement à horizon ; une équipe qui s'en passe apprend ce qu'elle a laissé aux autres. Les deux font une bonne séance de débriefing.",
-    },
-    {
-      question: "Le référentiel du BTS MHR est-il repris au mot dans les intitulés de blocs ?",
-      reponse:
-        "Pas encore. Les blocs cités sont ceux de l'atelier de l'hôtel, fidèles à l'activité de management mais non confrontés au texte de l'arrêté : le diplôme figure pour cette raison dans la liste des référentiels non vérifiés. Relisez-les avec votre référentiel sous les yeux, option B ou option C, et ajustez les intitulés avant un usage certificatif.",
     },
     {
       question: "Quel lien avec les épreuves du BTS ?",

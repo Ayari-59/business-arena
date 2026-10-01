@@ -464,12 +464,6 @@ export const ATELIER_MHR: AtelierDefinition = {
         "Oui. La direction opérationnelle d'un hôtel en première année se joue sur le tarif, le remplissage et la trésorerie. Ouvrir la structure ajouterait des décisions que les équipes prendraient au hasard, et qui brouilleraient la lecture de leurs résultats. En deuxième année, vous pouvez monter d'un niveau : l'hôtel passe alors en trois catégories de chambres, avec le recrutement et l'investissement ouverts.",
     },
     {
-      question:
-        "Le référentiel du BTS MHR est-il repris au mot dans les intitulés de blocs ?",
-      reponse:
-        "Pas encore. Les blocs cités décrivent l'activité de management de façon fidèle mais n'ont pas été confrontés au texte de l'arrêté : le diplôme figure pour cette raison dans la liste des référentiels non vérifiés. Relisez-les avec votre référentiel sous les yeux et ajustez les intitulés avant un usage certificatif.",
-    },
-    {
       question: "Peut-on conduire cet atelier avec des équipes de deux ?",
       reponse:
         "Oui, en fusionnant les rôles de la tarification et du remplissage. En dessous de trois élèves, le débat contradictoire de la deuxième séance perd de sa force, alors prévoyez d'y faire travailler deux équipes ensemble sur cette séance-là uniquement.",

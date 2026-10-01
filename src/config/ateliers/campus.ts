@@ -612,17 +612,20 @@ export const ATELIER_CAMPUS: AtelierDefinition = {
   ],
   faq: [
     {
-      question: "Comment éviter que les étudiants de deuxième année décident de tout ?",
+      question:
+        "Comment éviter que les étudiants de deuxième année décident de tout ?",
       reponse:
         "Par la règle qui porte l'immersion : rien n'est validé que le plus jeune ne puisse redire en une phrase, et la fiche de tour note qui l'a redit. Trois autres verrous s'y ajoutent : chaque poste est nommé et personne ne saisit à la place d'un autre, la séance de production est menée par la première technologique, et le compte rendu final se fait à cinq voix en deux minutes, ce qui interdit à un seul de tout dire. Passez dans les équipes en écoutant qui parle, c'est votre meilleur indicateur.",
     },
     {
-      question: "Une première technologique peut-elle vraiment suivre à côté d'un BTS ?",
+      question:
+        "Une première technologique peut-elle vraiment suivre à côté d'un BTS ?",
       reponse:
         "Oui, parce que le mode concours réduit le jeu à peu de décisions : prix, volume, communication, qualité, entretien, trésorerie, assurance. Ni recrutement, ni équipement, ni emploi des excédents. Le poste de la production, volume et qualité, demande du raisonnement sur la capacité et pas de technique comptable, et c'est un poste dont l'équipe dépend vraiment. Ce qu'un lycéen n'aura pas, c'est le vocabulaire du bilan : c'est précisément ce que son voisin de comptabilité doit lui apprendre en le disant autrement.",
     },
     {
-      question: "Peut-on choisir une autre entreprise que NOVA pour le tournoi ?",
+      question:
+        "Peut-on choisir une autre entreprise que NOVA pour le tournoi ?",
       reponse:
         "Non, pas encore. Un concours se joue sur NOVA, le fabricant d'enceintes portables, et le produit ne propose pas de choisir le secteur d'un championnat comme il le propose pour une partie de classe. C'est une contrainte technique, pas un choix pédagogique : si votre campus veut un autre secteur, faites-le jouer en parties de classe avec un classement que vous tenez vous-même.",
     },
@@ -632,7 +635,8 @@ export const ATELIER_CAMPUS: AtelierDefinition = {
         "Le niveau Pilotage, et il ne se règle pas à la création : prix, volume, communication, qualité, entretien, trésorerie et assurance sont ouverts ; le recrutement, l'équipement de l'atelier et l'emploi des excédents restent fermés. Les indices sont en outre ramenés au troisième palier, plus bas qu'en classe, et une décision validée ne se reprend plus. Cette sobriété est ce qui rend le mélange des niveaux jouable.",
     },
     {
-      question: "Combien d'équipes peut-on inscrire, et combien iront en finale ?",
+      question:
+        "Combien d'équipes peut-on inscrire, et combien iront en finale ?",
       reponse:
         "Le nombre d'équipes inscrites n'est pas borné, mais le tirage réserve une surprise : le nombre de groupes est le quotient entier du nombre d'équipes par la taille visée, et les équipes sont ensuite réparties à tour de rôle. Quinze équipes en groupes de quatre ne font donc pas quatre groupes mais trois, de cinq. La configuration retenue ici, quinze équipes en groupes de cinq avec deux qualifiés par groupe, donne trois groupes et une finale à six. La finale est plafonnée à huit équipes en toutes circonstances.",
     },

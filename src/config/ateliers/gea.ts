@@ -461,12 +461,6 @@ export const ATELIER_GEA: AtelierDefinition = {
     },
     {
       question:
-        "Le référentiel du BUT GEA est-il repris au mot dans les intitulés de blocs ?",
-      reponse:
-        "Pas encore. Les blocs cités décrivent l'activité de gestion de façon fidèle mais n'ont pas été confrontés au programme national : le diplôme figure pour cette raison dans la liste des référentiels non vérifiés. Relisez-les avec votre référentiel de compétences sous les yeux et ajustez les intitulés avant un usage certificatif.",
-    },
-    {
-      question:
         "Le niveau retenu ouvre l'investissement et le recrutement, est-ce trop pour une première année ?",
       reponse:
         "Non, à condition de tenir l'atelier sur le fil proposé. Le déroulé concentre chaque séance sur une décision structurante, et les autres leviers restent des réglages secondaires que les équipes ajustent sans qu'ils portent la note. C'est justement ce qui distingue la gestion généraliste du GEA d'un atelier centré sur un seul métier.",

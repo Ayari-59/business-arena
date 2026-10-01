@@ -536,7 +536,8 @@ export const ATELIER_MCO2: AtelierDefinition = {
         "Parce que c'est le rythme du métier, et parce que le trimestre efface ce que cet atelier veut montrer. Les groupes règlent à trente jours : au trimestre, ce délai se noie dans le tour et personne ne le voit ; au mois, il est un tour entier, et la classe constate qu'un mois record en ventes peut être un mois serré en caisse. C'est la seule fiche du registre qui demande « Un mois par tour », et ce réglage n'est pas un détail de création : il est le sujet.",
     },
     {
-      question: "Les chiffres du scénario changent-ils quand on passe au mois ?",
+      question:
+        "Les chiffres du scénario changent-ils quand on passe au mois ?",
       reponse:
         "Oui, et c'est voulu. La plateforme divise tous les flux par trois : 30 000 € de charges de structure au lieu de 90 000, 3 000 couverts de capacité, un seuil autour de 1 500 couverts. L'établissement est le même, sa journée type aussi, soixante-dix couverts. Ce qui ne change pas, ce sont les délais en jours et les taux annuels : c'est exactement ce qui fait le poids relatif d'un délai de trente jours sur un tour d'un mois.",
     },
@@ -546,7 +547,8 @@ export const ATELIER_MCO2: AtelierDefinition = {
         "La première année se joue au trimestre sur une boutique, avec le même niveau de décisions. Ce qui monte ici, ce n'est pas le nombre de leviers, c'est le rythme et le secteur : une unité de restauration qui jette ses invendus le soir même, un mois creux qui ne se rattrape pas dans le tour, et une trésorerie qui se pilote d'un mois sur l'autre. Un étudiant qui a fait les deux a vu le même métier à deux échelles de temps.",
     },
     {
-      question: "Le niveau retenu n'ouvre ni le recrutement ni l'équipement de la cuisine, est-ce voulu ?",
+      question:
+        "Le niveau retenu n'ouvre ni le recrutement ni l'équipement de la cuisine, est-ce voulu ?",
       reponse:
         "Oui. Le pilotage d'une unité en deuxième année se joue sur la carte, le remplissage, les achats et la caisse. Ouvrir la structure ajouterait des décisions que les équipes prendraient au hasard et qui brouilleraient la lecture du mois. L'atelier de management en hôtellerie-restauration, lui, ouvre la brigade et la cuisine : c'est un autre métier et un autre diplôme.",
     },

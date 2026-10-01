@@ -498,7 +498,8 @@ export const ATELIER_FITNESS: AtelierDefinition = {
     },
     {
       nom: "Fil rouge du semestre",
-      quand: "Quand l'atelier accompagne le cours de relation client et de fidélisation.",
+      quand:
+        "Quand l'atelier accompagne le cours de relation client et de fidélisation.",
       comment:
         "Une séance toutes les trois semaines, chaque séance étant précédée du point de cours qu'elle mobilise. La partie reste ouverte entre deux séances, ce qui permet de faire préparer les décisions à la maison.",
     },
@@ -516,17 +517,20 @@ export const ATELIER_FITNESS: AtelierDefinition = {
   ],
   faq: [
     {
-      question: "Cet atelier fait-il jouer un entretien de vente ou une relance d'adhérent ?",
+      question:
+        "Cet atelier fait-il jouer un entretien de vente ou une relance d'adhérent ?",
       reponse:
         "Non, et la fiche ne le promet pas. La simulation joue ce qui se décide autour de l'entretien : ce que coûte un adhérent à recruter, ce qu'il rapporte à rester, ce qui le fait partir. La relance de l'adhérent qui décroche se travaille en cours, par un jeu de rôle ; l'atelier lui donne ses chiffres, la valeur vie qu'on sauve en le retenant.",
     },
     {
-      question: "Pourquoi cinq trimestres, alors que le secteur en compte six ?",
+      question:
+        "Pourquoi cinq trimestres, alors que le secteur en compte six ?",
       reponse:
         "Parce que le second janvier, au cinquième trimestre, est l'épreuve du secteur : une salle pleine que la demande de janvier vient saturer. Le sixième trimestre pose la question d'une seconde salle, que le jeu n'ouvre pas et qui se décide sur l'énoncé, par un arbre de décision. Si votre progression le permet, créez la partie sur six tours et gardez le dernier pour une séance de prolongement.",
     },
     {
-      question: "Le niveau retenu n'ouvre ni le recrutement des coachs ni l'investissement, est-ce voulu ?",
+      question:
+        "Le niveau retenu n'ouvre ni le recrutement des coachs ni l'investissement, est-ce voulu ?",
       reponse:
         "Oui. La relation client en deuxième année se pilote par ce qu'on offre et ce qu'on facture : qualité de l'encadrement, entretien du parc, prix, places mises en vente, et la trésorerie qui va avec. Ouvrir la structure ferait de la saturation de janvier une affaire d'embauche, alors que la leçon est de ne pas vendre au-delà de ce qu'on encadre. Le niveau se fixe à la création et ne change plus en cours de partie.",
     },

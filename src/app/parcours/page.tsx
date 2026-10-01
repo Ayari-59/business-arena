@@ -2,7 +2,6 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { PARCOURS } from "@/config/parcours";
 import { ATELIERS, dureeTotaleHeures } from "@/config/ateliers";
-import { REFERENTIELS_NON_VERIFIES } from "@/config/ateliers/referentiels";
 import {
   AU_DELA_DES_SEANCES,
   couvertureDeLaFormation,
@@ -355,13 +354,7 @@ export default function ParcoursPage() {
                       </Link>{" "}
                       · {a.annee} · {a.seances.length} séances,{" "}
                       {Math.round(dureeTotaleHeures(a))} heures ·{" "}
-                      {a.referentielLabel} {a.referentielAccord}
-                      {(
-                        REFERENTIELS_NON_VERIFIES as readonly string[]
-                      ).includes(a.code)
-                        ? ", pas encore confrontés à leur texte officiel"
-                        : ""}
-                      .
+                      {a.referentielLabel} {a.referentielAccord}.
                     </p>
                   ))}
                 </div>

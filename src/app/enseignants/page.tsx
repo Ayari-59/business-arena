@@ -3,7 +3,6 @@ import { publicDeLAtelier } from "@/config/formations";
 import Link from "next/link";
 import { ATELIERS, dureeTotaleHeures } from "@/config/ateliers";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
-import { REFERENTIELS_NON_VERIFIES } from "@/config/ateliers/referentiels";
 import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
 import {
   ApercuArene,
@@ -335,12 +334,6 @@ export default async function EnseignantsPage() {
             >
               Voir les {ATELIERS.length} ateliers →
             </Link>
-          </p>
-          <p className="mx-auto mt-6 max-w-2xl text-center text-sm leading-relaxed text-slate-400">
-            Chaque atelier cite les unités ou blocs de son référentiel avec la
-            provenance de la liste. {REFERENTIELS_NON_VERIFIES.length}{" "}
-            d&apos;entre eux (BTS MHR et BUT GEA) restent à confronter à leur
-            texte officiel, et l&apos;indiquent plutôt que de le taire.
           </p>
         </section>
 

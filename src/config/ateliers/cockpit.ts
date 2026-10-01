@@ -1050,9 +1050,7 @@ export function sansAccents(texte: string): string {
  * C'est l'outil du test de non-mensonge ; il vit ici pour que le test ne
  * réinvente pas la grammaire des références.
  */
-export function referencesResolues(
-  classeur: ClasseurSpec,
-): {
+export function referencesResolues(classeur: ClasseurSpec): {
   feuille: string;
   ligne: number;
   intitule: string;
