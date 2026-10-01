@@ -69,6 +69,6 @@ describe("qui fait quoi", () => {
   });
 
   it("est posée sur l'accueil", () => {
-    expect(readFileSync(join(SRC, "app", "page.tsx"), "utf8")).toContain("<QuiFaitQuoi />");
+    expect(readFileSync(join(SRC, "app", "page.tsx"), "utf8")).toContain("<QuiFaitQuoi");
   });
 });

@@ -1,3 +1,5 @@
+import { Bande } from "@/components/bande";
+
 /**
  * LA BANDE QUI TERMINE UNE PAGE PUBLIQUE, À CONTRE-JOUR.
  *
@@ -36,11 +38,17 @@
  * c'est ici qu'elles servent, en une ligne.
  */
 export function BandeFinale({
+  id,
+  contraste,
   titre,
   texte,
   mentions,
   children,
 }: {
+  /** L'identifiant de la bande au registre (config/bandes.ts) : « enseignants.finale ». */
+  id: string;
+  /** Décidé par la page, d'après le thème. */
+  contraste: boolean;
   titre: string;
   texte: string;
   /** Ce qui lève une objection au moment de cliquer : « sans compte élève ». */
@@ -49,30 +57,33 @@ export function BandeFinale({
   children: React.ReactNode;
 }) {
   return (
-    <section className="contre-jour border-t border-white/10 bg-slate-950">
-      <div className="mx-auto max-w-3xl px-6 py-16 text-center">
-        <h2 className="font-display text-3xl font-semibold text-slate-50">{titre}</h2>
-        <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-slate-300">{texte}</p>
-        <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-          {children}
-        </div>
-        {mentions?.length ? (
-          <ul className="mt-7 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-slate-400">
-            {mentions.map((m) => (
-              // La phrase complète reste accessible : l'infobulle pour la
-              // souris, le texte caché pour une synthèse vocale. Un libellé de
-              // trois mots ne suffit pas à lever une objection à lui seul.
-              <li key={m.label} title={m.desc} className="flex items-center gap-1.5">
-                <span aria-hidden className="text-amber-400">
-                  ·
-                </span>
-                {m.label}
-                <span className="sr-only"> : {m.desc}</span>
-              </li>
-            ))}
-          </ul>
-        ) : null}
+    <Bande
+      id={id}
+      contraste={contraste}
+      exterieur="border-t border-white/10"
+      interieur="mx-auto max-w-3xl px-6 py-16 text-center"
+    >
+      <h2 className="font-display text-3xl font-semibold text-slate-50">{titre}</h2>
+      <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-slate-300">{texte}</p>
+      <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+        {children}
       </div>
-    </section>
+      {mentions?.length ? (
+        <ul className="mt-7 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-slate-400">
+          {mentions.map((m) => (
+            // La phrase complète reste accessible : l'infobulle pour la
+            // souris, le texte caché pour une synthèse vocale. Un libellé de
+            // trois mots ne suffit pas à lever une objection à lui seul.
+            <li key={m.label} title={m.desc} className="flex items-center gap-1.5">
+              <span aria-hidden className="text-amber-400">
+                ·
+              </span>
+              {m.label}
+              <span className="sr-only"> : {m.desc}</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </Bande>
   );
 }

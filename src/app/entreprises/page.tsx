@@ -14,6 +14,9 @@ import { bouton } from "@/components/bouton";
 import { BandeFinale } from "@/components/bande-finale";
 import { HaloDePage } from "@/components/halo-de-page";
 import { PiedDePage } from "@/components/pied-de-page";
+import { Bande } from "@/components/bande";
+import { contrasteDeLaBande } from "@/config/theme-du-site";
+import { getPlatformConfig } from "@/services/admin.service";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/entreprises" },
@@ -247,13 +250,20 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
   );
 }
 
-export default function EntreprisesPage() {
+export default async function EntreprisesPage() {
+  // Quelles bandes sont à contre-jour : le réglage de l'admin, ou l'état d'origine.
+  const { theme } = await getPlatformConfig();
+  const c = (id: string) => contrasteDeLaBande(theme, id);
   return (
     <>
       <main id="main" className="relative overflow-hidden">
         <HaloDePage />
 
-        <section className="mx-auto max-w-6xl px-6 py-14">
+        <Bande
+          id="entreprises.accroche"
+          contraste={c("entreprises.accroche")}
+          interieur="mx-auto max-w-6xl px-6 py-14"
+        >
           <p className="text-xs uppercase tracking-[0.3em] text-amber-400">
             {SCENARIO_CHOICES.length} métiers · {SCENARIO_CHOICES.length} contraintes
           </p>
@@ -286,7 +296,7 @@ export default function EntreprisesPage() {
               </a>
             ))}
           </div>
-        </section>
+        </Bande>
 
         {/*
           LE TABLEAU QUI MET TOUS LES MÉTIERS CÔTE À CÔTE — EN TÊTE, PLUS EN
@@ -304,72 +314,80 @@ export default function EntreprisesPage() {
           retournés qui se rencontrent ne font pas deux blocs qui se voient, ils
           en font deux qui s'annulent.
         */}
-        <section className="contre-jour bg-slate-950">
-          <div className="mx-auto max-w-6xl px-6 py-14">
-            <h2 className="text-2xl font-bold text-slate-50">Ce qui change d&apos;un métier à l&apos;autre</h2>
-            <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-400">
-              Même moteur, mêmes états financiers, mêmes six tours. Ce sont les quatre colonnes
-              ci-dessous qui font qu&apos;une décision juste dans un métier est une faute dans un
-              autre.
-            </p>
-            <div className="mt-6 overflow-x-auto">
-              <table className="w-full min-w-[720px] text-sm">
-                <thead>
-                  <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
-                    <th className="pb-2 pr-4 font-medium">Entreprise</th>
-                    <th className="pb-2 pr-4 font-medium">Ce qu&apos;elle vend</th>
-                    <th className="pb-2 pr-4 font-medium">L&apos;invendu devient</th>
-                    <th className="pb-2 pr-4 font-medium">Sa contrainte physique</th>
-                    <th className="pb-2 font-medium">Son indicateur roi</th>
+        <Bande
+          id="entreprises.differences"
+          contraste={c("entreprises.differences")}
+          interieur="mx-auto max-w-6xl px-6 py-14"
+        >
+          <h2 className="text-2xl font-bold text-slate-50">Ce qui change d&apos;un métier à l&apos;autre</h2>
+          <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-400">
+            Même moteur, mêmes états financiers, mêmes six tours. Ce sont les quatre colonnes
+            ci-dessous qui font qu&apos;une décision juste dans un métier est une faute dans un
+            autre.
+          </p>
+          <div className="mt-6 overflow-x-auto">
+            <table className="w-full min-w-[720px] text-sm">
+              <thead>
+                <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
+                  <th className="pb-2 pr-4 font-medium">Entreprise</th>
+                  <th className="pb-2 pr-4 font-medium">Ce qu&apos;elle vend</th>
+                  <th className="pb-2 pr-4 font-medium">L&apos;invendu devient</th>
+                  <th className="pb-2 pr-4 font-medium">Sa contrainte physique</th>
+                  <th className="pb-2 font-medium">Son indicateur roi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {SCENARIO_CHOICES.map((d) => (
+                  <tr key={d.code} className="border-t border-white/5">
+                    <td className="py-2.5 pr-4">
+                      <a
+                        href={`#${d.code}`}
+                        className={`font-medium ${accentsDe(d).texte} underline-offset-4 hover:underline`}
+                      >
+                        {nomSeul(d)}
+                      </a>
+                    </td>
+                    <td className="py-2.5 pr-4 text-slate-300">{d.vocabulary.units}</td>
+                    <td className="py-2.5 pr-4 text-slate-400">
+                      {d.scenario.perishable ? (
+                        <span className="text-rose-300/90">
+                          {d.vocabulary.leftoverLabel.toLowerCase()} · rien ne se stocke
+                        </span>
+                      ) : (
+                        <span>du {d.vocabulary.leftoverLabel.toLowerCase()}, déjà payé</span>
+                      )}
+                    </td>
+                    <td className="py-2.5 pr-4 text-slate-400">{d.vocabulary.capacityLabel}</td>
+                    <td className="py-2.5 text-slate-400">{d.kpis[0]?.label ?? "—"}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {SCENARIO_CHOICES.map((d) => (
-                    <tr key={d.code} className="border-t border-white/5">
-                      <td className="py-2.5 pr-4">
-                        <a
-                          href={`#${d.code}`}
-                          className={`font-medium ${accentsDe(d).texte} underline-offset-4 hover:underline`}
-                        >
-                          {nomSeul(d)}
-                        </a>
-                      </td>
-                      <td className="py-2.5 pr-4 text-slate-300">{d.vocabulary.units}</td>
-                      <td className="py-2.5 pr-4 text-slate-400">
-                        {d.scenario.perishable ? (
-                          <span className="text-rose-300/90">
-                            {d.vocabulary.leftoverLabel.toLowerCase()} · rien ne se stocke
-                          </span>
-                        ) : (
-                          <span>du {d.vocabulary.leftoverLabel.toLowerCase()}, déjà payé</span>
-                        )}
-                      </td>
-                      <td className="py-2.5 pr-4 text-slate-400">{d.vocabulary.capacityLabel}</td>
-                      <td className="py-2.5 text-slate-400">{d.kpis[0]?.label ?? "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <p className="mt-4 text-base leading-relaxed text-slate-400">
-              Les activités périssables ne stockent rien : la capacité non vendue est perdue au
-              passage du tour. C&apos;est la différence qui sépare un hôtelier d&apos;un
-              industriel, et elle change tout le raisonnement sur le prix. Chaque nom mène à sa
-              fiche, plus bas.
-            </p>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </section>
+          <p className="mt-4 text-base leading-relaxed text-slate-400">
+            Les activités périssables ne stockent rien : la capacité non vendue est perdue au
+            passage du tour. C&apos;est la différence qui sépare un hôtelier d&apos;un
+            industriel, et elle change tout le raisonnement sur le prix. Chaque nom mène à sa
+            fiche, plus bas.
+          </p>
+        </Bande>
 
 
-        <section className="mx-auto max-w-6xl px-6 pb-16">
+        <Bande
+          id="entreprises.fiches"
+          contraste={c("entreprises.fiches")}
+          interieur="mx-auto max-w-6xl px-6 pb-16"
+        >
           <div className="grid gap-6">
             {SCENARIO_CHOICES.map((d) => (
               <Fiche key={d.code} d={d} />
             ))}
           </div>
-        </section>
+        </Bande>
 
         <BandeFinale
+          id="entreprises.finale"
+          contraste={c("entreprises.finale")}
           titre="Choisissez votre métier"
           texte="Six tours, des concurrents qui ne vous feront aucun cadeau, et une situation à traiter à chaque tour. Sans compte, sans installation."
         >

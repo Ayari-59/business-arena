@@ -1,25 +1,16 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { getSession } from "@/lib/session";
+import { requireAdminSession } from "@/lib/session-admin";
 import {
   createEstablishment,
   createInvite,
   deactivateInvite,
-  requirePlatformAdmin,
   updatePlatformConfig,
 } from "@/services/admin.service";
 import { seedDemoWorld } from "@/services/demo.service";
 import { deleteOrgLicence, setOrgLicence } from "@/services/licence.service";
 import { DEFAULT_AI_CONFIG, isAiModelId } from "@/config/ai";
-
-async function requireAdminSession(): Promise<string> {
-  const session = await getSession();
-  if (!session) redirect("/teacher/login");
-  await requirePlatformAdmin(session.userId);
-  return session.userId;
-}
 
 export async function createEstablishmentAction(formData: FormData): Promise<void> {
   const adminId = await requireAdminSession();

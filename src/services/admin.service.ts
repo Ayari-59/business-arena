@@ -25,6 +25,7 @@ import {
   teams,
   users,
 } from "@/db/schema";
+import { normaliserTheme, THEME_DU_SITE_PAR_DEFAUT, type ThemeDuSite } from "@/config/theme-du-site";
 
 /**
  * Espace d'administration (hiérarchie ADR-08/ADR-09) :
@@ -130,6 +131,12 @@ export interface PlatformConfig {
    * réglage explicite, et une clé ANTHROPIC_API_KEY reste requise côté serveur.
    */
   ai: AiConfig;
+  /**
+   * Le thème graphique du site : ce que l'administrateur règle sans toucher au
+   * code. Pour l'instant, quelles bandes de page passent à contre-jour. Ne
+   * stocke que les ÉCARTS à l'état d'origine (voir config/theme-du-site.ts).
+   */
+  theme: ThemeDuSite;
 }
 
 const DEFAULT_CONFIG: PlatformConfig = {
@@ -140,6 +147,7 @@ const DEFAULT_CONFIG: PlatformConfig = {
   freeTier: DEFAULT_FREE_TIER,
   preuvesPubliees: PREUVES_PUBLIEES_PAR_DEFAUT,
   ai: DEFAULT_AI_CONFIG,
+  theme: THEME_DU_SITE_PAR_DEFAUT,
 };
 
 /**
@@ -153,7 +161,10 @@ const DEFAULT_CONFIG: PlatformConfig = {
 export const getPlatformConfig = cache(async (): Promise<PlatformConfig> => {
   try {
     const row = (await db.select().from(platformSettings).where(eq(platformSettings.id, 1)))[0];
-    return { ...DEFAULT_CONFIG, ...((row?.settings as Partial<PlatformConfig>) ?? {}) };
+    const lus = (row?.settings as Partial<PlatformConfig>) ?? {};
+    // Le thème se fusionne en profondeur : la colonne est du JSON libre, et un
+    // écart enregistré pour une bande supprimée depuis ne doit rien casser.
+    return { ...DEFAULT_CONFIG, ...lus, theme: normaliserTheme(lus.theme) };
   } catch (e) {
     // Panne base : on NE retombe PAS sur les défauts permissifs. Renvoyer
     // allowPublicPlay/allowSelfServiceTeachers à true en cas d'incident

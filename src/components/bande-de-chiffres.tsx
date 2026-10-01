@@ -1,3 +1,5 @@
+import { Bande } from "@/components/bande";
+
 /**
  * LA COUPURE DU MILIEU : trois chiffres, sur un sol retourné.
  *
@@ -26,30 +28,34 @@
  * l'échelle une fois dans le bloc.
  */
 export function BandeDeChiffres({
+  id,
+  contraste,
   chiffres,
 }: {
+  /** L'identifiant de la bande au registre (config/bandes.ts). */
+  id: string;
+  /** Décidé par la page, d'après le thème. */
+  contraste: boolean;
   chiffres: { valeur: string; libelle: string; detail: string }[];
 }) {
   return (
-    <section className="contre-jour bg-slate-950">
-      <div className="mx-auto max-w-4xl px-6 py-12 sm:py-14">
-        <dl className="grid gap-x-8 gap-y-10 sm:grid-cols-3">
-          {chiffres.map((c) => (
-            <div key={c.libelle} className="text-center">
-              {/* Le libellé se lit sous le nombre ; pour une synthèse vocale,
-                  un nombre seul ne veut rien dire, d'où le terme d'abord. */}
-              <dt className="sr-only">{c.libelle}</dt>
-              <dd className="m-0">
-                <p className="font-display text-4xl font-semibold tabular-nums text-amber-400">
-                  {c.valeur}
-                </p>
-                <p className="mt-2 text-sm font-semibold text-slate-100">{c.libelle}</p>
-                <p className="mt-2 text-sm leading-relaxed text-slate-400">{c.detail}</p>
-              </dd>
-            </div>
-          ))}
-        </dl>
-      </div>
-    </section>
+    <Bande id={id} contraste={contraste} interieur="mx-auto max-w-4xl px-6 py-12 sm:py-14">
+      <dl className="grid gap-x-8 gap-y-10 sm:grid-cols-3">
+        {chiffres.map((c) => (
+          <div key={c.libelle} className="text-center">
+            {/* Le libellé se lit sous le nombre ; pour une synthèse vocale,
+                un nombre seul ne veut rien dire, d'où le terme d'abord. */}
+            <dt className="sr-only">{c.libelle}</dt>
+            <dd className="m-0">
+              <p className="font-display text-4xl font-semibold tabular-nums text-amber-400">
+                {c.valeur}
+              </p>
+              <p className="mt-2 text-sm font-semibold text-slate-100">{c.libelle}</p>
+              <p className="mt-2 text-sm leading-relaxed text-slate-400">{c.detail}</p>
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </Bande>
   );
 }

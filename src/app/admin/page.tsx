@@ -101,6 +101,7 @@ export default async function AdminPage({
           <h1 className="text-2xl font-bold">Plateforme Business Arena</h1>
         </div>
         <nav className="flex flex-wrap gap-4 text-xs text-slate-400">
+          <Link href="/admin/theme" className="hover:text-slate-300">Thème graphique</Link>
           <Link href="/teacher" className="hover:text-slate-300">Espace enseignant</Link>
           <Link href="/" className="hover:text-slate-300">Landing</Link>
         </nav>

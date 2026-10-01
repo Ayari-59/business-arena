@@ -6,6 +6,8 @@ import { nomEntreprise } from "@/config/scenarios/presentation";
 import { bouton } from "@/components/bouton";
 import { BandeFinale } from "@/components/bande-finale";
 import { PiedDePage } from "@/components/pied-de-page";
+import { contrasteDeLaBande } from "@/config/theme-du-site";
+import { getPlatformConfig } from "@/services/admin.service";
 
 /** Combien de métiers une fiche nomme avant de dire « et N autres ». */
 const METIERS_MONTRES = 3;
@@ -57,7 +59,10 @@ export const metadata: Metadata = {
   alternates: { canonical: "/notions" },
 };
 
-export default function ConceptsPage() {
+export default async function ConceptsPage() {
+  // Quelles bandes sont à contre-jour : le réglage de l'admin, ou l'état d'origine.
+  const { theme } = await getPlatformConfig();
+  const c = (id: string) => contrasteDeLaBande(theme, id);
   const domains = [...new Set(CONCEPTS.map((c) => c.domain))];
   return (
     <>
@@ -132,6 +137,8 @@ export default function ConceptsPage() {
       {/* La page n'avait pas de bande finale, seule des six pages publiques
           longues à s'arrêter net sur sa dernière fiche. */}
       <BandeFinale
+          id="notions.finale"
+          contraste={c("notions.finale")}
         titre="Ces notions se rencontrent en jouant"
         texte="Une fiche se lit en deux minutes ; elle se retient quand une décision l'a coûté cher. Choisissez un métier et voyez lesquelles il fait travailler."
       >

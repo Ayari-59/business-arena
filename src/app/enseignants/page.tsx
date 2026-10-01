@@ -17,6 +17,8 @@ import { BandeFinale } from "@/components/bande-finale";
 import { BandeDeChiffres } from "@/components/bande-de-chiffres";
 import { HaloDePage } from "@/components/halo-de-page";
 import { PiedDePage } from "@/components/pied-de-page";
+import { Bande } from "@/components/bande";
+import { contrasteDeLaBande } from "@/config/theme-du-site";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/enseignants" },
@@ -162,6 +164,9 @@ const CONFIANCE = [
 ];
 
 export default async function EnseignantsPage() {
+  // Quelles bandes sont à contre-jour : le réglage de l'admin, ou l'état d'origine.
+  const { theme } = await getPlatformConfig();
+  const c = (id: string) => contrasteDeLaBande(theme, id);
   // Comptés dans la base, jamais rédigés — et tus tant qu'ils ne prouvent rien.
   const [preuves, config] = await Promise.all([
     preuvesDusage(),
@@ -173,7 +178,11 @@ export default async function EnseignantsPage() {
         <HaloDePage />
 
         {/* Hero */}
-        <section className="mx-auto max-w-5xl px-6 pb-12 pt-16 text-center">
+        <Bande
+          id="enseignants.accroche"
+          contraste={c("enseignants.accroche")}
+          interieur="mx-auto max-w-5xl px-6 pb-12 pt-16 text-center"
+        >
           <p className="text-xs uppercase tracking-[0.3em] text-amber-400">
             Pour les enseignants
           </p>
@@ -214,10 +223,12 @@ export default async function EnseignantsPage() {
             · sans compte : ce que mesure l&apos;indice IPG, les niveaux, les
             barèmes.
           </p>
-        </section>
+        </Bande>
 
         {/* La coupure de la page : voir components/bande-de-chiffres.tsx. */}
         <BandeDeChiffres
+          id="enseignants.chiffres"
+          contraste={c("enseignants.chiffres")}
           chiffres={HERO_STATS.map((s) => ({
             valeur: s.value,
             libelle: s.label,
@@ -232,9 +243,11 @@ export default async function EnseignantsPage() {
           image. L'enseignant qui hésite ne cherche pas une explication de plus,
           il cherche à voir les trois écrans qu'il aura sous les yeux.
         */}
-        <section
-          aria-labelledby="ecrans"
-          className="mx-auto max-w-5xl px-6 pb-16"
+        <Bande
+          id="enseignants.ecrans"
+          contraste={c("enseignants.ecrans")}
+          interieur="mx-auto max-w-5xl px-6 pb-16"
+          labelledby="ecrans"
         >
           <h2
             id="ecrans"
@@ -247,7 +260,7 @@ export default async function EnseignantsPage() {
             <ApercuProjection />
             <ApercuPilotage className="sm:col-span-2 lg:col-span-1" />
           </div>
-        </section>
+        </Bande>
 
         {/*
           MÊME TRAITEMENT QUE « EN CLASSE » : un sommaire, pas une grille de
@@ -257,7 +270,11 @@ export default async function EnseignantsPage() {
           la même façon — ce qui est aussi une façon de dire qu'elles sont de
           même nature.
         */}
-        <section className="mx-auto max-w-5xl px-6 pb-16">
+        <Bande
+          id="enseignants.pedagogie"
+          contraste={c("enseignants.pedagogie")}
+          interieur="mx-auto max-w-5xl px-6 pb-16"
+        >
           <h2 className="mb-8 text-center text-2xl font-bold text-slate-50">
             Pourquoi vos élèves apprennent vraiment
           </h2>
@@ -273,7 +290,7 @@ export default async function EnseignantsPage() {
               </div>
             ))}
           </dl>
-        </section>
+        </Bande>
 
         {/*
           LES ATELIERS ONT PORTÉ LA DEUXIÈME COUPURE DE CETTE PAGE, et l'ont
@@ -285,7 +302,11 @@ export default async function EnseignantsPage() {
           s'annulent. Ce n'est pas un goût qui a tranché, c'est une mesure
           (tests/e2e/contre-jour.e2e.ts).
         */}
-        <section className="mx-auto max-w-5xl px-6 pb-16">
+        <Bande
+          id="enseignants.ateliers"
+          contraste={c("enseignants.ateliers")}
+          interieur="mx-auto max-w-5xl px-6 pb-16"
+        >
           <h2 className="mb-2 text-center text-2xl font-bold text-slate-50">
             Des ateliers clés en main, par diplôme
           </h2>
@@ -342,7 +363,7 @@ export default async function EnseignantsPage() {
               Voir les {ATELIERS.length} ateliers →
             </Link>
           </p>
-        </section>
+        </Bande>
 
         {/*
           QUATRE CARTES POUR QUATRE PHRASES.
@@ -356,9 +377,11 @@ export default async function EnseignantsPage() {
           Ce qui les remplace ne se dessine pas : un filet, le fait en gras, sa
           précision à la suite. Le même sommaire que la page d'accueil.
         */}
-        <section
-          aria-labelledby="trois-temps"
-          className="mx-auto max-w-6xl px-6 pb-16"
+        <Bande
+          id="enseignants.trois-temps"
+          contraste={c("enseignants.trois-temps")}
+          interieur="mx-auto max-w-6xl px-6 pb-16"
+          labelledby="trois-temps"
         >
           <h2
             id="trois-temps"
@@ -415,7 +438,7 @@ export default async function EnseignantsPage() {
             </Link>
             .
           </p>
-        </section>
+        </Bande>
 
         {/*
           CE QU'ON A DÉJÀ SERVI. Les totaux disent ce que le produit a fait, et
@@ -436,6 +459,8 @@ export default async function EnseignantsPage() {
           boutons, en une ligne.
         */}
         <BandeFinale
+          id="enseignants.finale"
+          contraste={c("enseignants.finale")}
           titre="Prêt à faire jouer votre classe ?"
           texte="Commencez par le réglage qui vous convient, ou ouvrez directement votre espace."
           mentions={CONFIANCE}

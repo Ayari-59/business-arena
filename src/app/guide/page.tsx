@@ -11,6 +11,8 @@ import {
   type BpiV2Dimension,
 } from "@/scoring/bpi";
 import { DEFAULT_SCENARIO_CODE, scenarioByCode } from "@/config/scenarios/registry";
+import { contrasteDeLaBande } from "@/config/theme-du-site";
+import { getPlatformConfig } from "@/services/admin.service";
 
 /**
  * Ce que chaque dimension MESURE : de la prose pédagogique, que le moteur ne
@@ -117,7 +119,10 @@ function Section({
   );
 }
 
-export default function GuidePage() {
+export default async function GuidePage() {
+  // Quelles bandes sont à contre-jour : le réglage de l'admin, ou l'état d'origine.
+  const { theme } = await getPlatformConfig();
+  const c = (id: string) => contrasteDeLaBande(theme, id);
   return (
     <>
       <main id="main" className="min-h-screen bg-slate-950 text-slate-100">
@@ -482,6 +487,8 @@ export default function GuidePage() {
         {/* La bande sort de la colonne de lecture : une fin de page tient toute
             la largeur, sinon elle reste une carte de plus dans la pile. */}
         <BandeFinale
+          id="guide.finale"
+          contraste={c("guide.finale")}
           titre="Prêt à entrer dans l'arène ?"
           texte="Lancez une partie solo pour vous faire la main, ou créez votre première partie de classe. Six tours suffisent pour que le BFR devienne inoubliable."
         >

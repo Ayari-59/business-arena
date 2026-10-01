@@ -10,6 +10,8 @@ import { DESCRIPTION_ACCUEIL, TITRE_ACCUEIL } from "@/config/seo";
 import { bouton } from "@/components/bouton";
 import { TEMPS_DU_TOUR } from "@/config/temps-du-tour";
 import { DonneesStructurees } from "@/components/donnees-structurees";
+import { Bande } from "@/components/bande";
+import { contrasteDeLaBande } from "@/config/theme-du-site";
 import { HaloDePage } from "@/components/halo-de-page";
 import { QuiFaitQuoi } from "@/components/qui-fait-quoi";
 import { BPI_V2_DIMENSIONS } from "@/scoring/bpi";
@@ -287,6 +289,8 @@ function MainDeCartes() {
 
 export default async function Home() {
   const config = await getPlatformConfig();
+  // Quelles bandes sont à contre-jour : le réglage de l'admin, ou l'état d'origine.
+  const c = (id: string) => contrasteDeLaBande(config.theme, id);
   // Le nombre de décisions se compte sur le registre des leviers : l'écrire
   // ici le figerait, et il change dès qu'un niveau ouvre une décision de plus.
   const decisions = etendueDesDecisions();
@@ -332,21 +336,26 @@ export default async function Home() {
           de la PAGE et aurait éclairé la nuit d'une lueur de papier ; à
           l'intérieur, il lit celle du contre-jour.
         */}
-        <section className="contre-jour relative overflow-hidden bg-slate-950">
-          <HaloDePage />
-          <div className="relative mx-auto max-w-6xl px-6 pb-16 pt-12 sm:pt-20 lg:pb-24">
-            {/*
+        <Bande
+          id="accueil.hero"
+          contraste={c("accueil.hero")}
+          exterieur="relative overflow-hidden"
+          interieur="relative mx-auto max-w-6xl px-6 pb-16 pt-12 sm:pt-20 lg:pb-24"
+          interieurContraste="relative mx-auto max-w-6xl px-6 pb-16 pt-12 sm:pt-20 lg:pb-24"
+          avant={<HaloDePage />}
+        >
+          {/*
               LE SURTITRE DISAIT QUATRE MOTS-CLÉS — « Simulation · Apprentissage ·
               Décision · Compétition » — qui pouvaient coiffer n'importe quel
               produit. Il dit maintenant ce qu'est la chose et pour qui elle est.
               Le filet qui le précède est la seule décoration de la page : il
               reparaît en tête de chaque section.
             */}
-            <p className="flex items-center gap-3 text-xs uppercase tracking-[0.28em] text-amber-400">
-              <span aria-hidden className="h-px w-8 bg-amber-400/40" />
-              Simulation de gestion, pour la classe
-            </p>
-            {/*
+          <p className="flex items-center gap-3 text-xs uppercase tracking-[0.28em] text-amber-400">
+            <span aria-hidden className="h-px w-8 bg-amber-400/40" />
+            Simulation de gestion, pour la classe
+          </p>
+          {/*
               LE TITRE ET LA MAIN PARTENT DE LA MÊME LIGNE.
 
               Le titre a occupé toute la largeur, et la main tombait dessous :
@@ -377,25 +386,25 @@ export default async function Home() {
               c'est cette mesure à 390 qui manquait, et c'est par là que le
               défaut est passé.
             */}
-            <div className="mt-8 grid items-center gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:gap-14">
-              <div style={{ containerType: "inline-size" }}>
-                <h1 className="whitespace-nowrap text-[clamp(1.5rem,8.8cqw,3rem)] font-bold leading-[1.04] tracking-tight text-slate-50">
-                  Dirigez une entreprise.
-                  <br />
-                  <span className="text-amber-400">Apprenez à décider.</span>
-                </h1>
-                {/*
+          <div className="mt-8 grid items-center gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:gap-14">
+            <div style={{ containerType: "inline-size" }}>
+              <h1 className="whitespace-nowrap text-[clamp(1.5rem,8.8cqw,3rem)] font-bold leading-[1.04] tracking-tight text-slate-50">
+                Dirigez une entreprise.
+                <br />
+                <span className="text-amber-400">Apprenez à décider.</span>
+              </h1>
+              {/*
                   L'accroche faisait quatre lignes et énumérait tout : les secteurs,
                   les décisions, les modèles. On garde ce qui se retient — le nombre
                   de métiers, le fait que le marché répond, la durée d'une partie — et
                   le reste est montré plus bas plutôt que promis ici.
                 */}
-                <p className="mt-7 max-w-lg text-lg leading-relaxed text-slate-300">
-                  {SCENARIO_CHOICES.length} métiers, un marché qui répond, six
-                  tours pour comprendre. Vous fixez les prix, la production et
-                  les budgets ; les résultats disent ce que ces choix valaient.
-                </p>
-                {/*
+              <p className="mt-7 max-w-lg text-lg leading-relaxed text-slate-300">
+                {SCENARIO_CHOICES.length} métiers, un marché qui répond, six
+                tours pour comprendre. Vous fixez les prix, la production et les
+                budgets ; les résultats disent ce que ces choix valaient.
+              </p>
+              {/*
                   UNE SEULE ACTION. Trois boutons de même taille se disputaient l'œil, et
                   deux d'entre eux se coupaient en deux lignes. « Commencer une partie »
                   reste un bouton ; « Je suis enseignant » redevient ce qu'il est, un
@@ -403,24 +412,24 @@ export default async function Home() {
                   montre, juste dessous — un bouton qui promet des métiers vaut moins que
                   les métiers eux-mêmes.
                 */}
-                <div className="mt-8 flex flex-wrap items-center gap-x-7 gap-y-4">
-                  <Link href="/jouer" className={bouton({ taille: "l" })}>
-                    Commencer une partie
-                  </Link>
-                  <Link
-                    href="/teacher/login"
-                    className="text-sm font-semibold text-slate-200 underline decoration-amber-400/50 decoration-2 underline-offset-[6px] transition hover:text-amber-200 hover:decoration-amber-400"
-                  >
-                    Je suis enseignant
-                  </Link>
-                </div>
-                <p className="mt-5 text-sm text-slate-400">
-                  Sans compte, sans installation. Vos parties restent liées à ce
-                  navigateur.
-                </p>
+              <div className="mt-8 flex flex-wrap items-center gap-x-7 gap-y-4">
+                <Link href="/jouer" className={bouton({ taille: "l" })}>
+                  Commencer une partie
+                </Link>
+                <Link
+                  href="/teacher/login"
+                  className="text-sm font-semibold text-slate-200 underline decoration-amber-400/50 decoration-2 underline-offset-[6px] transition hover:text-amber-200 hover:decoration-amber-400"
+                >
+                  Je suis enseignant
+                </Link>
               </div>
+              <p className="mt-5 text-sm text-slate-400">
+                Sans compte, sans installation. Vos parties restent liées à ce
+                navigateur.
+              </p>
+            </div>
 
-              {/*
+            {/*
                 DES CAPTURES DE L'APPLICATION, ET NON DES ÉCRANS DESSINÉS.
 
                 Cette colonne a porté trois choses successives. D'abord un cockpit
@@ -437,10 +446,9 @@ export default async function Home() {
                 Le format sert aussi à dire quelque chose : c'est un téléphone, parce
                 que c'est là que l'élève joue.
               */}
-              <MainDeCartes />
-            </div>
+            <MainDeCartes />
           </div>
-        </section>
+        </Bande>
 
         {/* ---------- La boucle, et ce qu'on en retire ---------- */}
         {/*
@@ -454,9 +462,11 @@ export default async function Home() {
             aussi. Il faut une fenêtre PLEINE entre les deux, sans quoi il
             existe une position de défilement où les deux se voient et
             s'annulent — tests/e2e/contre-jour.e2e.ts la mesure. */}
-        <section
-          aria-labelledby="la-boucle"
-          className="mx-auto max-w-6xl px-6 py-16 lg:py-24"
+        <Bande
+          id="accueil.boucle"
+          contraste={c("accueil.boucle")}
+          interieur="mx-auto max-w-6xl px-6 py-16 lg:py-24"
+          labelledby="la-boucle"
         >
           <div className="grid gap-x-14 gap-y-12 lg:grid-cols-2">
             <div>
@@ -549,7 +559,7 @@ export default async function Home() {
               </ul>
             </div>
           </div>
-        </section>
+        </Bande>
 
         {/* ---------- Les métiers, montrés ---------- */}
         {/*
@@ -558,39 +568,43 @@ export default async function Home() {
           Les voici, avec les pictogrammes que l'arène emploie déjà — dessinés
           d'un seul trait, donc lisibles au timbre-poste comme au mur.
         */}
-        <section className="border-y border-white/5 bg-slate-900/40">
-          <div className="mx-auto max-w-6xl px-6 py-8">
-            <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-              <h2 className="flex items-center gap-3 text-xs uppercase tracking-[0.28em] text-slate-400">
-                <span aria-hidden className="h-px w-8 bg-amber-400/40" />
-                {SCENARIO_CHOICES.length} métiers, {SCENARIO_CHOICES.length}{" "}
-                économies
-              </h2>
-              <Link
-                href="/entreprises"
-                className="text-sm font-medium text-slate-300 underline decoration-white/20 underline-offset-4 transition hover:text-amber-200 hover:decoration-amber-400/60"
-              >
-                Voir les entreprises
-              </Link>
-            </div>
-            <ul className="mt-6 grid grid-cols-3 gap-x-4 gap-y-6 sm:grid-cols-5 lg:grid-cols-9">
-              {SCENARIO_CHOICES.map((s) => (
-                <li
-                  key={s.code}
-                  className="flex flex-col items-center gap-2 text-center"
-                >
-                  <PictoSecteur
-                    secteur={s.sector}
-                    className="h-7 w-7 text-amber-400/80"
-                  />
-                  <span className="text-xs leading-tight text-slate-300">
-                    {s.shortName}
-                  </span>
-                </li>
-              ))}
-            </ul>
+        <Bande
+          id="accueil.metiers"
+          contraste={c("accueil.metiers")}
+          exterieur="border-y border-white/5"
+          fond="bg-slate-900/40"
+          interieur="mx-auto max-w-6xl px-6 py-8"
+        >
+          <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+            <h2 className="flex items-center gap-3 text-xs uppercase tracking-[0.28em] text-slate-400">
+              <span aria-hidden className="h-px w-8 bg-amber-400/40" />
+              {SCENARIO_CHOICES.length} métiers, {SCENARIO_CHOICES.length}{" "}
+              économies
+            </h2>
+            <Link
+              href="/entreprises"
+              className="text-sm font-medium text-slate-300 underline decoration-white/20 underline-offset-4 transition hover:text-amber-200 hover:decoration-amber-400/60"
+            >
+              Voir les entreprises
+            </Link>
           </div>
-        </section>
+          <ul className="mt-6 grid grid-cols-3 gap-x-4 gap-y-6 sm:grid-cols-5 lg:grid-cols-9">
+            {SCENARIO_CHOICES.map((s) => (
+              <li
+                key={s.code}
+                className="flex flex-col items-center gap-2 text-center"
+              >
+                <PictoSecteur
+                  secteur={s.sector}
+                  className="h-7 w-7 text-amber-400/80"
+                />
+                <span className="text-xs leading-tight text-slate-300">
+                  {s.shortName}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Bande>
 
         {/* ---------- Qui fait quoi ---------- */}
         {/*
@@ -606,7 +620,7 @@ export default async function Home() {
           répond « qui suis-je ici », l'autre « où vais-je », et deux listes de
           liens qui se suivent n'en font plus qu'une.
         */}
-        <QuiFaitQuoi />
+        <QuiFaitQuoi contraste={c("accueil.roles")} />
 
         {/* ---------- Les chiffres de la maison ---------- */}
         {/*
@@ -636,52 +650,54 @@ export default async function Home() {
           Pas de filet sur ses arêtes : un changement de sol se voit tout seul, et
           la bande des métiers en porte déjà un juste au-dessus.
         */}
-        <section className="contre-jour bg-slate-950">
-          <div className="mx-auto max-w-6xl px-6 py-12 sm:py-16">
-            <dl className="grid grid-cols-2 gap-y-8 sm:grid-cols-4">
-              {[
-                [
-                  "par tour, selon le niveau",
-                  `${decisions.minimum} à ${decisions.maximum}`,
-                  "décisions",
-                ],
-                [
-                  "du CA au FRNG et au BFR",
-                  `${CONCEPTS.length}`,
-                  "fiches notions",
-                ],
-                [
-                  "d'aide à la décision",
-                  `${DECISION_MODELS.length}`,
-                  "modèles",
-                ],
-                [
-                  "de performance, l'indice IPG",
-                  `${BPI_V2_DIMENSIONS.length}`,
-                  "dimensions",
-                ],
-              ].map(([libelle, nombre, quoi]) => (
-                <div
-                  key={quoi}
-                  className="px-4 sm:border-l sm:border-white/10 sm:first:border-l-0 sm:first:pl-0"
-                >
-                  <dt className="text-xs uppercase tracking-[0.18em] text-slate-400">
-                    {libelle}
-                  </dt>
-                  <dd className="mt-2">
-                    <span className="font-display text-3xl font-semibold text-amber-400">
-                      {nombre}
-                    </span>{" "}
-                    <span className="text-base text-slate-200">{quoi}</span>
-                  </dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-        </section>
+        <Bande
+          id="accueil.chiffres"
+          contraste={c("accueil.chiffres")}
+          interieur="mx-auto max-w-6xl px-6 py-12 sm:py-16"
+        >
+          <dl className="grid grid-cols-2 gap-y-8 sm:grid-cols-4">
+            {[
+              [
+                "par tour, selon le niveau",
+                `${decisions.minimum} à ${decisions.maximum}`,
+                "décisions",
+              ],
+              [
+                "du CA au FRNG et au BFR",
+                `${CONCEPTS.length}`,
+                "fiches notions",
+              ],
+              ["d'aide à la décision", `${DECISION_MODELS.length}`, "modèles"],
+              [
+                "de performance, l'indice IPG",
+                `${BPI_V2_DIMENSIONS.length}`,
+                "dimensions",
+              ],
+            ].map(([libelle, nombre, quoi]) => (
+              <div
+                key={quoi}
+                className="px-4 sm:border-l sm:border-white/10 sm:first:border-l-0 sm:first:pl-0"
+              >
+                <dt className="text-xs uppercase tracking-[0.18em] text-slate-400">
+                  {libelle}
+                </dt>
+                <dd className="mt-2">
+                  <span className="font-display text-3xl font-semibold text-amber-400">
+                    {nombre}
+                  </span>{" "}
+                  <span className="text-base text-slate-200">{quoi}</span>
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </Bande>
 
         {/* ---------- Explorer : renvois vers les pages dédiées ---------- */}
-        <section className="mx-auto max-w-6xl px-6 py-12 sm:py-16">
+        <Bande
+          id="accueil.commencer"
+          contraste={c("accueil.commencer")}
+          interieur="mx-auto max-w-6xl px-6 py-12 sm:py-16"
+        >
           <h2 className="flex items-center gap-3 text-xs uppercase tracking-[0.28em] text-slate-400">
             <span aria-hidden className="h-px w-8 bg-amber-400/40" />
             Par où commencer
@@ -721,7 +737,7 @@ export default async function Home() {
               </Link>
             ))}
           </div>
-        </section>
+        </Bande>
       </main>
       <PiedDePage />
     </>

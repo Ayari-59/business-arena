@@ -11,6 +11,8 @@ import { bouton } from "@/components/bouton";
 import { BandeFinale } from "@/components/bande-finale";
 import { PiedDePage } from "@/components/pied-de-page";
 import { TiroirsDesDiplomes } from "@/components/tiroirs-de-diplomes";
+import { contrasteDeLaBande } from "@/config/theme-du-site";
+import { getPlatformConfig } from "@/services/admin.service";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/parcours" },
@@ -128,7 +130,10 @@ const ADEQUATION: Record<string, { label: string; className: string }> = {
  * nom du diplôme se suffit ; il est d'ailleurs le seul repère qu'un enseignant
  * cherche ici.
  */
-export default function ParcoursPage() {
+export default async function ParcoursPage() {
+  // Quelles bandes sont à contre-jour : le réglage de l'admin, ou l'état d'origine.
+  const { theme } = await getPlatformConfig();
+  const c = (id: string) => contrasteDeLaBande(theme, id);
   return (
     <>
       <main id="main" className="min-h-screen bg-slate-950 text-slate-100">
@@ -364,6 +369,8 @@ export default function ParcoursPage() {
         {/* La bande sort de la colonne de lecture : une fin de page tient toute
             la largeur, sinon elle reste une carte de plus dans la pile. */}
         <BandeFinale
+          id="parcours.finale"
+          contraste={c("parcours.finale")}
           titre="Votre diplôme n'est pas dans cette liste ?"
           texte="Les mêmes mécaniques servent d'autres référentiels : écrivez-nous, et nous regardons ensemble ce que votre programme demande."
         >

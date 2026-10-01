@@ -1,6 +1,12 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { PAGES_A_BANDES, bandesDeLaPage } from "../../src/config/bandes";
+import {
+  THEME_DU_SITE_PAR_DEFAUT,
+  etatDesContrastes,
+  validerContrastes,
+} from "../../src/config/theme-du-site";
 
 /**
  * LE CONTRE-JOUR : un bloc dont le fond va à l'inverse de la page.
@@ -67,8 +73,10 @@ const SOURCES = fichiers(SRC).map((chemin) => ({
  * deuxième page : la classe n'apparaît alors plus qu'une fois dans le dépôt,
  * et une page pourrait en poser deux sans que rien ne compte.
  */
-const COMPOSANTS = SOURCES.filter(({ code }) => code.includes("contre-jour")).flatMap(
-  ({ code }) => [...code.matchAll(/export function ([A-Z][A-Za-z]*)/g)].map((m) => m[1]!),
+const COMPOSANTS = SOURCES.filter(({ code }) =>
+  code.includes("contre-jour"),
+).flatMap(({ code }) =>
+  [...code.matchAll(/export function ([A-Z][A-Za-z]*)/g)].map((m) => m[1]!),
 );
 
 /** Un bloc à contre-jour : la classe elle-même, ou un composant qui la pose. */
@@ -108,7 +116,8 @@ describe("le contre-jour", () => {
     const surPageClaire = bloc('[data-theme="clair"] .contre-jour {');
     const surPageSombre = bloc('[data-theme="sombre"] .contre-jour {');
     const page = bloc('[data-theme="clair"] {');
-    const slate950 = (css: string) => css.match(/--color-slate-950: ([^;]+);/)?.[1];
+    const slate950 = (css: string) =>
+      css.match(/--color-slate-950: ([^;]+);/)?.[1];
     expect(slate950(surPageSombre), "sur page sombre").toBe(slate950(page));
     expect(slate950(surPageClaire), "sur page claire").not.toBe(slate950(page));
   });
@@ -127,27 +136,51 @@ describe("le contre-jour", () => {
   });
 
   it("ne dépasse pas deux blocs par page — la distance, elle, se mesure au navigateur", () => {
-    // LE PLAFOND SUIT LA PAGE LA PLUS LONGUE DU SITE, il ne la commande pas.
-    // Il est passé à trois le jour où enseignants faisait quatre mille six
-    // cents pixels et pouvait espacer trois coupures d'une fenêtre pleine ;
-    // il revient à deux maintenant qu'elle a été raccourcie et que la
-    // troisième se retrouvait à cinq cents pixels de la bande finale. Aucune
-    // page du site n'est aujourd'hui assez longue pour en porter trois.
+    // LE PLAFOND SE LIT DANS LE REGISTRE, PLUS DANS LES PAGES. La classe
+    // `contre-jour` était écrite en dur dans onze endroits, et cette garde
+    // comptait ses occurrences fichier par fichier. Elle n'est plus écrite
+    // qu'une fois, dans Bande, et c'est le thème qui décide quelle bande la
+    // porte : compter le source ne dit plus rien de ce qui s'affiche.
     //
-    // Ce compte est un plafond, pas la règle : ce qu'un fichier ne sait pas
-    // dire, c'est si deux blocs tiennent dans la même fenêtre — cela dépend du
-    // texte, de la largeur, des images chargées. Cela se mesure dans un vrai
-    // navigateur, et c'est mesuré (tests/e2e/contre-jour.e2e.ts). Le jour où
-    // une page redevient assez longue, c'est cette mesure qui autorisera le
-    // troisième, et ce nombre qu'il faudra relever.
-    for (const { chemin, code } of PORTEURS) {
-      const compte = blocs(code);
+    // La règle reste la même — deux blocs au plus par page, jamais côte à
+    // côte — et elle est vérifiée sur ce qui la porte désormais : l'état
+    // d'origine du registre, puis chaque réglage que l'administrateur
+    // enregistre (validerContrastes, qui refuse ce qui la viole).
+    const defaut = etatDesContrastes(THEME_DU_SITE_PAR_DEFAUT);
+    expect(
+      validerContrastes(defaut),
+      "l'état d'origine viole ses propres règles",
+    ).toEqual([]);
+    for (const { page } of PAGES_A_BANDES) {
+      const actives = bandesDeLaPage(page).filter((b) => defaut[b.id]);
+      expect(actives.length, `${page} : aucune coupure`).toBeGreaterThan(0);
       expect(
-        compte,
-        `${chemin.slice(SRC.length + 1)} : ${compte} blocs à contre-jour`,
+        actives.length,
+        `${page} : ${actives.length} blocs à contre-jour`,
       ).toBeLessThanOrEqual(2);
-      expect(compte, `${chemin.slice(SRC.length + 1)}`).toBeGreaterThan(0);
     }
+  });
+
+  it("la classe n'est posée que par le composant Bande", () => {
+    // Une page qui écrirait `contre-jour` en dur échapperait au réglage de
+    // l'administrateur : la bande resterait à contre-jour quoi qu'il décide,
+    // et rien ne le dirait.
+    // On cherche la classe ÉCRITE, pas les fichiers qui emploient le composant :
+    // `PORTEURS` compte aussi les pages qui posent `<Bande>`, et ce serait les
+    // accuser d'écrire ce qu'elles délèguent.
+    // La CLASSE, pas le mot : l'interface d'admin écrit « contre-jour » en
+    // toutes lettres pour en parler, et ce n'est pas une bande qui le porte. On
+    // cherche donc le jeton dans un attribut de classe.
+    const CLASSE_POSEE =
+      /className=(?:"[^"]*|\{`[^`]*|\{"[^"]*)\bcontre-jour\b/;
+    const fautifs = SOURCES.filter(
+      ({ chemin, code }) =>
+        CLASSE_POSEE.test(code) && !/components[\\/]bande\.tsx$/.test(chemin),
+    ).map(({ chemin }) => chemin.slice(SRC.length + 1));
+    expect(
+      fautifs,
+      `contre-jour écrit en dur hors de Bande :\n${fautifs.join("\n")}`,
+    ).toEqual([]);
   });
 
   it("n'écrit aucune couleur à la main dans le bloc qu'il retourne", () => {
@@ -166,12 +199,21 @@ describe("le contre-jour", () => {
       const litterales = [
         ...section.matchAll(/#[0-9a-fA-F]{3,8}\b|\brgba?\(|\boklch\(/g),
       ].map((m) => m[0]);
-      expect(litterales, `${chemin.slice(SRC.length + 1)} : couleur écrite en dur`).toEqual([]);
+      expect(
+        litterales,
+        `${chemin.slice(SRC.length + 1)} : couleur écrite en dur`,
+      ).toEqual([]);
     }
   });
 
   it("est réellement employé quelque part, sinon la règle ne garde rien", () => {
-    expect(PORTEURS.length, "aucun bloc à contre-jour dans le site").toBeGreaterThan(0);
-    expect(COMPOSANTS.length, "la classe n'est posée par aucun composant").toBeGreaterThan(0);
+    expect(
+      PORTEURS.length,
+      "aucun bloc à contre-jour dans le site",
+    ).toBeGreaterThan(0);
+    expect(
+      COMPOSANTS.length,
+      "la classe n'est posée par aucun composant",
+    ).toBeGreaterThan(0);
   });
 });

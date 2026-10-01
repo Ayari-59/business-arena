@@ -29,6 +29,13 @@ import {
   updatePlatformConfig,
 } from "@/services/admin.service";
 import { createClassGame, createSoloGame } from "@/services/game.service";
+import {
+  contrasteDeLaBande,
+  etatDesContrastes,
+  themeDepuisEtat,
+  validerContrastes,
+  THEME_DU_SITE_PAR_DEFAUT,
+} from "@/config/theme-du-site";
 
 let platformAdminId: string;
 let orgId: string;
@@ -203,5 +210,73 @@ describe("réglages globaux du jeu", () => {
   it("la connexion promeut aussi les e-mails bootstrap", async () => {
     const login = await loginTeacher({ email: "direction@business-arena.fr", password: "motdepasse!" });
     expect("userId" in login).toBe(true);
+  });
+});
+
+describe("thème graphique", () => {
+  // Le réglage vit dans la même ligne que les autres réglages globaux : il doit
+  // survivre à une relecture, ne rien casser chez ses voisins, et s'effacer
+  // d'un seul geste.
+  it("un réglage valide s'enregistre et se relit, sans toucher aux autres réglages", async () => {
+    await updatePlatformConfig(platformAdminId, {
+      announcement: "Maintenance ce soir",
+    });
+    const etat = {
+      ...etatDesContrastes(THEME_DU_SITE_PAR_DEFAUT),
+      "accueil.hero": false,
+      "accueil.boucle": true,
+    };
+    expect(validerContrastes(etat)).toEqual([]);
+    await updatePlatformConfig(platformAdminId, {
+      theme: themeDepuisEtat(etat),
+    });
+
+    const relu = await getPlatformConfig();
+    expect(contrasteDeLaBande(relu.theme, "accueil.hero")).toBe(false);
+    expect(contrasteDeLaBande(relu.theme, "accueil.boucle")).toBe(true);
+    // Une bande qu'on n'a pas touchée suit toujours son état d'origine.
+    expect(contrasteDeLaBande(relu.theme, "accueil.chiffres")).toBe(true);
+    // Les autres réglages ne bougent pas : le thème s'écrit à côté, pas par-dessus.
+    expect(relu.announcement).toBe("Maintenance ce soir");
+    expect(relu.allowPublicPlay).toBe(true);
+  });
+
+  it("ne stocke que les écarts à l'état d'origine", async () => {
+    const relu = await getPlatformConfig();
+    expect(Object.keys(relu.theme.contrastes).sort()).toEqual([
+      "accueil.boucle",
+      "accueil.hero",
+    ]);
+  });
+
+  it("un identifiant de bande disparu depuis est ignoré à la lecture, sans erreur", async () => {
+    await updatePlatformConfig(platformAdminId, {
+      theme: { contrastes: { "bande.supprimee": true, "accueil.hero": false } },
+    });
+    const relu = await getPlatformConfig();
+    expect(relu.theme.contrastes).toEqual({ "accueil.hero": false });
+  });
+
+  it("rétablir l'état d'origine efface tous les écarts", async () => {
+    await updatePlatformConfig(platformAdminId, {
+      theme: THEME_DU_SITE_PAR_DEFAUT,
+    });
+    const relu = await getPlatformConfig();
+    expect(relu.theme.contrastes).toEqual({});
+    expect(contrasteDeLaBande(relu.theme, "accueil.hero")).toBe(true);
+  });
+
+  it("est refusé à qui n'est pas administrateur de la plateforme", async () => {
+    const intrus = await db
+      .insert(users)
+      .values({ email: "intrus-theme@x.fr", displayName: "Intrus" })
+      .returning({ id: users.id });
+    await expect(
+      updatePlatformConfig(intrus[0]!.id, {
+        theme: { contrastes: { "accueil.hero": false } },
+      }),
+    ).rejects.toThrow();
+    const relu = await getPlatformConfig();
+    expect(relu.theme.contrastes).toEqual({});
   });
 });

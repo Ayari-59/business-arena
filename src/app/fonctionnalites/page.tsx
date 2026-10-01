@@ -8,6 +8,9 @@ import { BandeFinale } from "@/components/bande-finale";
 import { BandeDeChiffres } from "@/components/bande-de-chiffres";
 import { HaloDePage } from "@/components/halo-de-page";
 import { PiedDePage } from "@/components/pied-de-page";
+import { Bande } from "@/components/bande";
+import { contrasteDeLaBande } from "@/config/theme-du-site";
+import { getPlatformConfig } from "@/services/admin.service";
 
 export const metadata = {
   alternates: { canonical: "/fonctionnalites" },
@@ -61,7 +64,10 @@ const DIFFERENTIATORS = [
   { label: "Testé", desc: "Moteur déterministe, tenu par sa suite de tests" },
 ];
 
-export default function FonctionnalitesPage() {
+export default async function FonctionnalitesPage() {
+  // Quelles bandes sont à contre-jour : le réglage de l'admin, ou l'état d'origine.
+  const { theme } = await getPlatformConfig();
+  const c = (id: string) => contrasteDeLaBande(theme, id);
   return (
     <>
       <main id="main" className="relative overflow-hidden">
@@ -74,13 +80,21 @@ export default function FonctionnalitesPage() {
           promesses sans jamais voir l'outil. L'écran de l'élève passe devant la
           liste — un repère suffit, la galerie est sur « Pour les enseignants ».
         */}
-        <section className="mx-auto max-w-4xl px-6 pb-12">
+        <Bande
+          id="fonctionnalites.intro"
+          contraste={c("fonctionnalites.intro")}
+          interieur="mx-auto max-w-4xl px-6 pb-12"
+        >
           <div className="mx-auto max-w-sm">
             <ApercuArene />
           </div>
-        </section>
+        </Bande>
 
-        <section className="mx-auto max-w-5xl px-6 pb-12 pt-16 text-center">
+        <Bande
+          id="fonctionnalites.accroche"
+          contraste={c("fonctionnalites.accroche")}
+          interieur="mx-auto max-w-5xl px-6 pb-12 pt-16 text-center"
+        >
           <p className="text-xs uppercase tracking-[0.3em] text-amber-400">
             Plateforme de simulation de gestion
           </p>
@@ -93,10 +107,12 @@ export default function FonctionnalitesPage() {
             des modèles d&apos;analyse à mobiliser : Business Arena met la gestion
             d&apos;entreprise entre les mains de vos étudiants.
           </p>
-        </section>
+        </Bande>
 
         {/* La coupure de la page : voir components/bande-de-chiffres.tsx. */}
         <BandeDeChiffres
+          id="fonctionnalites.chiffres"
+          contraste={c("fonctionnalites.chiffres")}
           chiffres={HERO_STATS.map((s) => ({
             valeur: s.value,
             libelle: s.label,
@@ -126,7 +142,11 @@ export default function FonctionnalitesPage() {
           du titre : ici chaque métier a son ancre, donc chaque pictogramme
           peut viser la sienne.
         */}
-        <section className="mx-auto max-w-5xl px-6 pb-16">
+        <Bande
+          id="fonctionnalites.secteurs"
+          contraste={c("fonctionnalites.secteurs")}
+          interieur="mx-auto max-w-5xl px-6 pb-16"
+        >
           <div className="mb-6 flex flex-wrap items-baseline justify-center gap-x-6 gap-y-2">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
               {SCENARIO_CHOICES.length} secteurs, {SCENARIO_CHOICES.length} économies réelles
@@ -156,7 +176,7 @@ export default function FonctionnalitesPage() {
               </li>
             ))}
           </ul>
-        </section>
+        </Bande>
 
         {/*
           SIX ARGUMENTS, EN SOMMAIRE. Ils tenaient dans six cartes à emoji —
@@ -165,7 +185,11 @@ export default function FonctionnalitesPage() {
           à la suite : c'est la forme qu'ont prise les mêmes listes sur l'accueil
           et sur la page des enseignants.
         */}
-        <section className="mx-auto max-w-5xl px-6 pb-16">
+        <Bande
+          id="fonctionnalites.moteur"
+          contraste={c("fonctionnalites.moteur")}
+          interieur="mx-auto max-w-5xl px-6 pb-16"
+        >
           <h2 className="mb-8 text-center text-2xl font-bold text-slate-50">
             Ce qui rend la simulation possible
           </h2>
@@ -177,10 +201,14 @@ export default function FonctionnalitesPage() {
               </div>
             ))}
           </dl>
-        </section>
+        </Bande>
 
         {/* Models list */}
-        <section className="mx-auto max-w-5xl px-6 pb-16">
+        <Bande
+          id="fonctionnalites.modeles"
+          contraste={c("fonctionnalites.modeles")}
+          interieur="mx-auto max-w-5xl px-6 pb-16"
+        >
           <h2 className="mb-2 text-center text-2xl font-bold text-slate-50">
             {DECISION_MODELS.length} modèles d&apos;analyse
           </h2>
@@ -214,7 +242,7 @@ export default function FonctionnalitesPage() {
               </div>
             ))}
           </div>
-        </section>
+        </Bande>
 
         {/*
           LES QUATRE MENTIONS DESCENDENT SOUS LES BOUTONS. Elles tenaient une
@@ -223,6 +251,8 @@ export default function FonctionnalitesPage() {
           où l'on clique, pas un écran avant.
         */}
         <BandeFinale
+          id="fonctionnalites.finale"
+          contraste={c("fonctionnalites.finale")}
           titre="Prêt à tester ?"
           texte="Lancez une partie en 30 secondes, sans compte ni installation."
           mentions={DIFFERENTIATORS}
