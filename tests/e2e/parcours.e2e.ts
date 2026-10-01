@@ -646,7 +646,15 @@ describe("parcours enseignant et élève", () => {
       // liste de noms devant laquelle personne ne sait quoi ouvrir.
       const premier = await tiroirs.first().locator("summary").innerText();
       expect(premier).toMatch(/blocs de référentiel/);
-      expect(premier).toMatch(/séances/);
+      // LE VOLUME OU LE NOMBRE DE CHEMINS, selon ce que la formation a : les
+      // séances ne s'additionnent pas d'un chemin à l'autre, donc une
+      // formation qui en propose plusieurs annonce leur compte plutôt qu'un
+      // total que personne ne jouerait. Exiger « séances » figeait l'une des
+      // deux formes, et le test est devenu rouge le jour où le tournoi
+      // inter-filières a rejoint la première formation de la liste.
+      expect(premier, `résumé du premier tiroir : ${premier}`).toMatch(
+        /\d+ séances, \d+ heures|\d+ chemins proposés/,
+      );
 
       // Chaque pastille vise un tiroir, et l'ouvre.
       const pastilles = onglet.locator('nav[aria-label] a[href^="#"]');

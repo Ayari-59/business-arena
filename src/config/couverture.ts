@@ -1,4 +1,9 @@
 import { ATELIERS } from "./ateliers";
+import {
+  adosseAUnReferentiel,
+  blocOfficiel,
+  referentielDeCitation,
+} from "./ateliers/referentiels";
 
 /**
  * LA COUVERTURE D'UN RÉFÉRENTIEL, LUE DANS LES ATELIERS.
@@ -260,4 +265,121 @@ export function couvertureDuDiplome(codes: readonly string[]): BlocDuDiplome[] {
   const part = (b: BlocDuDiplome) =>
     Math.max(...b.presences.map((p) => p.seances.length / p.seancesEnTout));
   return [...parBloc.values()].sort((a, b) => part(b) - part(a));
+}
+
+/**
+ * LA COUVERTURE D'UNE FORMATION, TOUS SES ATELIERS CONFONDUS.
+ *
+ * `couvertureDuDiplome` prenait une liste d'ateliers et fusionnait leurs blocs
+ * sur le libellé exact. Cela suffisait tant qu'un atelier ne servait qu'une
+ * formation et que tous écrivaient leurs blocs pareil. Deux choses le
+ * cassaient dès qu'on voulait s'en servir vraiment.
+ *
+ * LA PREMIÈRE : un atelier qui sert plusieurs formations apporte des blocs qui
+ * ne sont pas tous de la même. Le tournoi inter-filières en mêle quatre, et
+ * ses blocs du BTS MCO n'ont rien à faire dans la couverture du BTS CG. Le
+ * préfixe qu'il leur donne dit de laquelle ils viennent, et c'est lui qui trie.
+ *
+ * LA SECONDE : deux ateliers d'une même formation ne nomment pas toujours un
+ * bloc de la même façon, et le tournoi les préfixe tous. Fusionnés sur le
+ * libellé, les mêmes blocs paraissaient deux fois. La fusion se fait donc sur
+ * l'entrée OFFICIELLE que chacun désigne (blocOfficiel), et le libellé affiché
+ * reste celui de l'atelier tant qu'il est seul à nommer ce bloc : les thèmes du
+ * lycée disent « Première, sciences de gestion et numérique » là où l'arrêté
+ * dit « Thème 3 », et cette précision vaut mieux que le numéro. Dès que deux
+ * libellés se rencontrent sur un même bloc, c'est le texte officiel qui
+ * tranche, puisque c'est lui qu'on oppose à une inspection.
+ */
+export function couvertureDeLaFormation(formation: string): BlocDuDiplome[] {
+  const siens = ATELIERS.filter((a) => a.formations.includes(formation));
+  // La clé du référentiel est celle d'un atelier : c'est ainsi que le registre
+  // est rangé. N'importe lequel des ateliers adossés de la formation la donne.
+  const cle = siens.find((a) => adosseAUnReferentiel(a.code))?.code;
+
+  /** La formation dont vient un bloc préfixé, pour un atelier qui en sert plusieurs. */
+  const formationDuBloc = (bloc: string): string | null => {
+    const cite = referentielDeCitation(bloc);
+    if (!cite) return null;
+    return ATELIERS.find((a) => a.code === cite.code)?.formations[0] ?? null;
+  };
+
+  const parBloc = new Map<
+    string,
+    {
+      libelles: Set<string>;
+      officiel: string | null;
+      presences: BlocDuDiplome["presences"];
+    }
+  >();
+
+  for (const atelier of siens) {
+    const seancesEnTout = atelier.seances.length;
+    const multiple = atelier.formations.length > 1;
+    const parCle = new Map<string, number[]>();
+    const libelleDe = new Map<string, string>();
+    for (const seance of atelier.seances) {
+      for (const bloc of seance.processus) {
+        if (multiple && formationDuBloc(bloc) !== formation) continue;
+        const officiel = cle ? blocOfficiel(bloc, cle) : null;
+        const k = officiel ?? bloc;
+        parCle.set(k, [...(parCle.get(k) ?? []), seance.numero]);
+        libelleDe.set(k, bloc);
+      }
+    }
+    for (const [k, numeros] of parCle) {
+      const vu = parBloc.get(k) ?? {
+        libelles: new Set<string>(),
+        officiel: cle ? blocOfficiel(libelleDe.get(k)!, cle) : null,
+        presences: [],
+      };
+      vu.libelles.add(libelleDe.get(k)!);
+      vu.presences.push({
+        code: atelier.code,
+        titre: atelier.titre,
+        seances: numeros,
+        seancesEnTout,
+      });
+      parBloc.set(k, vu);
+    }
+  }
+
+  const rang: Adequation[] = ["partiel", "couvert", "coeur"];
+  const lignes: BlocDuDiplome[] = [];
+  for (const [k, vu] of parBloc) {
+    // Le libellé : celui de l'atelier tant qu'il est seul, le texte officiel
+    // dès que deux ateliers le nomment différemment.
+    const referentiel =
+      vu.libelles.size === 1 ? [...vu.libelles][0]! : (vu.officiel ?? k);
+    let adequation: Adequation = "partiel";
+    let declaree = false;
+    for (const p of vu.presences) {
+      const brut = couvertureDeLAtelier(p.code).find(
+        (b) =>
+          (cle
+            ? (blocOfficiel(b.referentiel, cle) ?? b.referentiel)
+            : b.referentiel) === k,
+      );
+      if (!brut) continue;
+      if (rang.indexOf(brut.adequation) > rang.indexOf(adequation))
+        adequation = brut.adequation;
+      declaree = declaree || brut.declaree;
+    }
+    const commentaire = [...vu.libelles]
+      .map((l) =>
+        couvertureDeLAtelier(vu.presences[0]!.code).find(
+          (b) => b.referentiel === l,
+        ),
+      )
+      .find((b) => b?.commentaire)?.commentaire;
+    lignes.push({
+      referentiel,
+      presences: vu.presences,
+      adequation,
+      declaree,
+      commentaire,
+    });
+  }
+  const part = (b: BlocDuDiplome) =>
+    Math.max(...b.presences.map((p) => p.seances.length / p.seancesEnTout));
+  return lignes.sort((a, b) => part(b) - part(a));
 }

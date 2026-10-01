@@ -72,20 +72,20 @@ const REFERENTIEL_DCG: Referentiel = {
   source:
     "Annexe 1, programme des unités d'enseignement du diplôme de comptabilité et de gestion. Lu sur le texte. Il s'agit du programme réformé, celui qui porte la durabilité et l'intelligence artificielle dans plusieurs unités.",
   entrees: [
-      "UE1 · Fondamentaux du droit",
-      "UE2 · Droit des affaires",
-      "UE3 · Droit social",
-      "UE4 · Droit fiscal",
-      "UE5 · Économie contemporaine",
-      "UE6 · Finance d'entreprise",
-      "UE7 · Management des organisations",
-      "UE8 · Système d'information de gestion",
-      "UE9 · Comptabilité",
-      "UE10 · Comptabilité approfondie",
-      "UE11 · Contrôle de gestion",
-      "UE12 · Anglais des affaires",
-      "UE13 · Communication professionnelle",
-    ],
+    "UE1 · Fondamentaux du droit",
+    "UE2 · Droit des affaires",
+    "UE3 · Droit social",
+    "UE4 · Droit fiscal",
+    "UE5 · Économie contemporaine",
+    "UE6 · Finance d'entreprise",
+    "UE7 · Management des organisations",
+    "UE8 · Système d'information de gestion",
+    "UE9 · Comptabilité",
+    "UE10 · Comptabilité approfondie",
+    "UE11 · Contrôle de gestion",
+    "UE12 · Anglais des affaires",
+    "UE13 · Communication professionnelle",
+  ],
 };
 
 export const REFERENTIELS: Record<string, Referentiel> = {
@@ -218,5 +218,81 @@ export function referentielDeCitation(
  * diplôme entre donc tout seul, et un atelier maison reste dehors tout seul.
  */
 export function adosseAUnReferentiel(code: string): boolean {
-  return code in REFERENTIELS || (REFERENTIELS_NON_VERIFIES as readonly string[]).includes(code);
+  return (
+    code in REFERENTIELS ||
+    (REFERENTIELS_NON_VERIFIES as readonly string[]).includes(code)
+  );
+}
+
+/**
+ * LE BLOC OFFICIEL DERRIÈRE UN BLOC CITÉ.
+ *
+ * Deux ateliers d'un même diplôme ne nomment pas toujours un bloc de la même
+ * façon, et c'est permis : le mot qui découpe un métier est un choix
+ * d'affichage, et un intitulé raccourci pour tenir dans une fiche n'est pas
+ * une faute. Le tournoi inter-filières, lui, préfixe les siens du diplôme dont
+ * ils viennent — « BTS CG P5 · Analyse et prévision de l'activité » — parce
+ * qu'il en mêle quatre.
+ *
+ * TANT QUE RIEN NE LES RAPPROCHAIT, un atelier ne pouvait pas rejoindre les
+ * autres sous la même formation : ses blocs auraient fait doublon avec les
+ * leurs, sous deux libellés différents. Le tournoi était donc tenu à l'écart
+ * de la page des parcours, alors même qu'il sert quatre formations.
+ *
+ * LA RÉSOLUTION EXISTAIT DÉJÀ, mais dans un test : la garde qui vérifie
+ * qu'aucun bloc n'est inventé compare le FOND, segment par segment, sans
+ * accents, sans casse et sans le préfixe qui numérote. Elle vit ici désormais,
+ * puisque la page en a besoin autant que la garde.
+ *
+ * Mesuré sur le registre : les quarante blocs cités se résolvent chacun vers
+ * une entrée officielle et une seule, les douze du tournoi compris.
+ */
+
+/** Les segments comparables d'un intitulé : sans accents, sans casse, sans numéro. */
+function segmentsComparables(entree: string): string[] {
+  return entree
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .split("·")
+    .map((s) =>
+      s
+        .trim()
+        .replace(/^[a-z]{1,6}\s?\d+\s*/, "")
+        .trim(),
+    )
+    .filter(Boolean);
+}
+
+/**
+ * Deux intitulés parlent du même bloc si l'un de leurs segments se retrouve
+ * dans l'autre. Le seuil de six signes écarte les rencontres de hasard entre
+ * mots courts, qui rapprocheraient n'importe quoi.
+ */
+function memeBloc(cite: string, officiel: string): boolean {
+  const a = segmentsComparables(cite);
+  const b = segmentsComparables(officiel);
+  return a.some((x) =>
+    b.some(
+      (y) => x.length > 6 && y.length > 6 && (x.includes(y) || y.includes(x)),
+    ),
+  );
+}
+
+/**
+ * L'entrée officielle que désigne un bloc cité, pour le référentiel donné.
+ *
+ * Renvoie null si le texte n'a pas été lu (aucune entrée à confronter), ou si
+ * le bloc n'y correspond à rien — auquel cas le bloc cité reste ce qu'il est,
+ * et la garde des référentiels le signalera comme inventé.
+ */
+export function blocOfficiel(
+  bloc: string,
+  referentielCode: string,
+): string | null {
+  const referentiel = REFERENTIELS[referentielCode];
+  if (!referentiel) return null;
+  const trouves = referentiel.entrees.filter((e) => memeBloc(bloc, e));
+  // Deux correspondances ne valent pas mieux qu'aucune : on ne devine pas.
+  return trouves.length === 1 ? trouves[0]! : null;
 }

@@ -3,7 +3,6 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { PARCOURS } from "@/config/parcours";
 import { ATELIERS, atelierByCode } from "@/config/ateliers";
-import { adosseAUnReferentiel } from "@/config/ateliers/referentiels";
 import { FORMATIONS, publicDeLAtelier } from "@/config/formations";
 
 /**
@@ -137,9 +136,7 @@ describe("les parcours et les ateliers", () => {
     // séance est ajoutée, et c'est le seul contenu du tiroir fermé.
     expect(resume).toContain("{f.blocs}");
     expect(resume).toContain("{f.volume}");
-    expect(PAGE).toContain(
-      "couvertureDuDiplome(ateliers.map((a) => a.code)).length",
-    );
+    expect(PAGE).toContain("couvertureDeLaFormation(formation.code).length");
   });
 
   it("n'expose que des diplômes", () => {
@@ -150,12 +147,18 @@ describe("les parcours et les ateliers", () => {
     // fixer un prix » — et ne figurent dans aucun arrêté. Posés au milieu de
     // blocs tirés d'un texte, sur la page où un enseignant vérifie son
     // programme, ils ôtaient leur valeur à tous les autres.
-    const dehors = ATELIERS.filter((a) => !adosseAUnReferentiel(a.code));
+    // CE QUI TIENT UN DÉROULÉ DEHORS A CHANGÉ DE NATURE. La page écartait ce
+    // qui n'avait pas d'entrée au registre des référentiels, ce qui excluait
+    // aussi le tournoi inter-filières — il préfixe ses blocs et n'a donc pas
+    // d'entrée propre, alors qu'il sert quatre formations. C'est le
+    // RATTACHEMENT qui décide maintenant : un déroulé qui ne sert aucune
+    // formation n'a rien à faire sur une page de référentiels.
+    const dehors = ATELIERS.filter((a) => a.formations.length === 0);
     expect(
       dehors.length,
-      "plus aucun déroulé hors référentiel : la règle ne garde rien",
+      "plus aucun déroulé sans formation : la règle ne garde rien",
     ).toBeGreaterThan(0);
-    expect(PAGE).toContain("adosseAUnReferentiel");
+    expect(PAGE).toContain("a.formations.includes(formation.code)");
     // Aucune trace d'eux sur cette page : leurs découpages ne doivent pas
     // côtoyer des blocs tirés d'un arrêté, fût-ce pour dire qu'ils n'en sont
     // pas. Ils vivent sur la page des ateliers, qui est faite pour eux.
@@ -173,7 +176,7 @@ describe("les parcours et les ateliers", () => {
     // blocs sous lui. La page répondait « voici notre produit » à quelqu'un
     // venu demander « mon programme est-il couvert ». Le référentiel vient
     // donc en premier, et la mise en œuvre en pied de section.
-    expect(PAGE).toContain("couvertureDuDiplome");
+    expect(PAGE).toContain("couvertureDeLaFormation");
     expect(
       PAGE,
       "le référentiel ne doit plus se lister par déroulé",

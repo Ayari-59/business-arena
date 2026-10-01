@@ -2,11 +2,11 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { PARCOURS } from "@/config/parcours";
 import { ATELIERS, dureeTotaleHeures } from "@/config/ateliers";
+import { REFERENTIELS_NON_VERIFIES } from "@/config/ateliers/referentiels";
 import {
-  REFERENTIELS_NON_VERIFIES,
-  adosseAUnReferentiel,
-} from "@/config/ateliers/referentiels";
-import { AU_DELA_DES_SEANCES, couvertureDuDiplome } from "@/config/couverture";
+  AU_DELA_DES_SEANCES,
+  couvertureDeLaFormation,
+} from "@/config/couverture";
 import { FORMATIONS } from "@/config/formations";
 import { bouton } from "@/components/bouton";
 import { BandeFinale } from "@/components/bande-finale";
@@ -64,9 +64,15 @@ const FILIERES = (() => {
   // sous une formation : un nom n'a qu'une valeur. Il déclare maintenant
   // celles qu'il sert, et le tournoi inter-filières paraît sous les quatre.
   return FORMATIONS.map((formation) => {
-    const ateliers = ATELIERS.filter(
-      (a) =>
-        a.formations.includes(formation.code) && adosseAUnReferentiel(a.code),
+    // UN ATELIER ENTRE PAR SON RATTACHEMENT, PLUS PAR SON RÉFÉRENTIEL PROPRE.
+    // Le filtre exigeait aussi qu'il ait une entrée au registre des
+    // référentiels, ce qui écartait le tournoi inter-filières : il n'en a pas,
+    // puisqu'il préfixe ses blocs du diplôme dont ils viennent. Il servait
+    // pourtant quatre formations, et c'est à elles qu'il appartient. Ses blocs
+    // se résolvent vers l'entrée officielle de chacune (blocOfficiel), donc ils
+    // rejoignent ceux des autres ateliers au lieu de faire doublon.
+    const ateliers = ATELIERS.filter((a) =>
+      a.formations.includes(formation.code),
     );
     const parcours = PARCOURS.find((p) =>
       ateliers.some((a) => p.ateliers.includes(a.code)),
@@ -79,6 +85,9 @@ const FILIERES = (() => {
       // minuscule accentuée ne tombe pas dans [a-z]. Les accents se déplient
       // avant, et le sigle donne une adresse qu'on peut lire à voix haute.
       id: parcours?.code ?? ancre(formation.sigle),
+      // L'ancre peut être celle d'un parcours ; le code de la formation est ce
+      // qui interroge le registre, et les deux ne coïncident pas toujours.
+      code: formation.code,
       diplome: formation.nom,
       sigle: formation.sigle,
       parcours,
@@ -86,7 +95,7 @@ const FILIERES = (() => {
       // CE QUE LE TIROIR FERMÉ DOIT ENCORE DIRE. Un repli qui ne laisse qu'un
       // titre transforme la page en sommaire : on ne sait plus ce qu'il y a
       // derrière, donc on n'ouvre pas. Compté depuis la donnée, jamais écrit.
-      blocs: couvertureDuDiplome(ateliers.map((a) => a.code)).length,
+      blocs: couvertureDeLaFormation(formation.code).length,
       // LE VOLUME NE S'ADDITIONNE PAS QUAND IL Y A PLUSIEURS CHEMINS. Le BTS
       // MCO en a deux, de cinq et six séances : annoncer « 11 séances, 36
       // heures » promettrait un parcours que personne ne jouera. Un seul
@@ -247,27 +256,26 @@ export default function ParcoursPage() {
                   ensuite, comme une preuve et non comme un sujet.
                 */}
                 <ul className="mt-6">
-                  {couvertureDuDiplome(f.ateliers.map((a) => a.code)).map(
-                    (b) => (
-                      <li
-                        key={b.referentiel}
-                        className="grid grid-cols-[1fr_auto] items-start gap-x-3 gap-y-1.5 border-t border-white/5 py-4"
+                  {couvertureDeLaFormation(f.code).map((b) => (
+                    <li
+                      key={b.referentiel}
+                      className="grid grid-cols-[1fr_auto] items-start gap-x-3 gap-y-1.5 border-t border-white/5 py-4"
+                    >
+                      <p className="text-sm font-medium text-slate-200">
+                        {b.referentiel}
+                      </p>
+                      <span
+                        className={`whitespace-nowrap rounded-full border px-2 py-0.5 text-xs uppercase tracking-wide ${ADEQUATION[b.adequation]!.className}`}
                       >
-                        <p className="text-sm font-medium text-slate-200">
-                          {b.referentiel}
+                        {ADEQUATION[b.adequation]!.label}
+                      </span>
+                      {b.commentaire ? (
+                        <p className="col-span-2 text-sm leading-relaxed text-slate-300">
+                          {b.commentaire}
                         </p>
-                        <span
-                          className={`whitespace-nowrap rounded-full border px-2 py-0.5 text-xs uppercase tracking-wide ${ADEQUATION[b.adequation]!.className}`}
-                        >
-                          {ADEQUATION[b.adequation]!.label}
-                        </span>
-                        {b.commentaire ? (
-                          <p className="col-span-2 text-sm leading-relaxed text-slate-300">
-                            {b.commentaire}
-                          </p>
-                        ) : null}
-                        <p className="col-span-2 text-sm text-slate-400">
-                          {/*
+                      ) : null}
+                      <p className="col-span-2 text-sm text-slate-400">
+                        {/*
                           LES SÉANCES NE S'ADDITIONNENT PAS d'un déroulé à
                           l'autre : deux déroulés d'un même diplôme sont des
                           chemins alternatifs, pas un parcours de onze séances.
@@ -275,7 +283,7 @@ export default function ParcoursPage() {
                           déroulé n'apparaît que lorsqu'il y en a plusieurs à
                           distinguer.
                         */}
-                          {/*
+                        {/*
                             LE CHEMIN SE NOMME DÈS QUE LE DIPLÔME EN A
                             PLUSIEURS, et non dès que le bloc en occupe
                             plusieurs. « 1 séance sur 5 » sous un diplôme qui
@@ -283,25 +291,24 @@ export default function ParcoursPage() {
                             l'enseignant qui a choisi l'autre croyait le bloc
                             couvert chez lui.
                           */}
-                          {b.presences
-                            .map(
-                              (p) =>
-                                `${f.ateliers.length > 1 ? `${p.titre} : ` : ""}${p.seances.length} séance${p.seances.length > 1 ? "s" : ""} sur ${p.seancesEnTout}`,
-                            )
-                            .join(" · ")}
-                          {/* SANS CETTE PHRASE, LA LIGNE SE CONTREDIT. « 1 séance sur 6 »
+                        {b.presences
+                          .map(
+                            (p) =>
+                              `${f.ateliers.length > 1 ? `${p.titre} : ` : ""}${p.seances.length} séance${p.seances.length > 1 ? "s" : ""} sur ${p.seancesEnTout}`,
+                          )
+                          .join(" · ")}
+                        {/* SANS CETTE PHRASE, LA LIGNE SE CONTREDIT. « 1 séance sur 6 »
                             sous une pastille « cœur du jeu » se lit comme une faute de
                             frappe, et c'en serait une si le comptage disait toute la
                             vérité : le moteur rejoue la TVA à chaque tour, que la
                             séance la nomme ou non. L'écart entre le compte et la
                             pastille est réel, donc il se dit là où il se voit. */}
-                          {b.declaree
-                            ? ", et rejoué à chaque tour par le moteur au-delà des séances qui le nomment"
-                            : ""}
-                        </p>
-                      </li>
-                    ),
-                  )}
+                        {b.declaree
+                          ? ", et rejoué à chaque tour par le moteur au-delà des séances qui le nomment"
+                          : ""}
+                      </p>
+                    </li>
+                  ))}
                 </ul>
 
                 {f.ateliers
