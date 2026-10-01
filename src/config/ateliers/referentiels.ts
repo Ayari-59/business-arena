@@ -195,3 +195,28 @@ export function referentielDeCitation(
   const referentiel = REFERENTIELS[trouve[1]];
   return referentiel ? { code: trouve[1], referentiel } : null;
 }
+
+/**
+ * CE QUI S'ADOSSE AU RÉFÉRENTIEL D'UN DIPLÔME, ET CE QUI NE S'Y ADOSSE PAS.
+ *
+ * La page des parcours présentait douze sections dont trois n'étaient pas des
+ * formations : une découverte ouverte à toutes les filières, un
+ * approfondissement, et un tournoi inter-filières. Elles affichaient pourtant
+ * des « blocs de référentiel » comme les autres — « Étape 1 · Lire une
+ * situation et fixer un prix », « Volet 3 · Piloter la trésorerie » — qui sont
+ * nos propres découpages et ne figurent dans aucun arrêté.
+ *
+ * Un bloc de référentiel appartient à un diplôme. Mêler un découpage maison
+ * aux blocs d'un texte officiel, sur la page même où un enseignant vient
+ * vérifier son programme, enlève sa valeur à tout ce qui l'entoure : il ne
+ * sait plus lesquelles des listes il peut opposer à son inspection.
+ *
+ * LA LISTE NE S'ÉCRIT PAS, ELLE SE DÉDUIT. Un atelier adossé à un diplôme a
+ * forcément une entrée ici — soit confrontée à son texte, soit en attente de
+ * l'être. Les trois autres n'en ont aucune, et n'en auront jamais, puisqu'il
+ * n'existe pas de texte à confronter. Un atelier ajouté demain pour un vrai
+ * diplôme entre donc tout seul, et un atelier maison reste dehors tout seul.
+ */
+export function adosseAUnReferentiel(code: string): boolean {
+  return code in REFERENTIELS || (REFERENTIELS_NON_VERIFIES as readonly string[]).includes(code);
+}

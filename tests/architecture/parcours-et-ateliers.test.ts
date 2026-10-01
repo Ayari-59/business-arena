@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { PARCOURS } from "@/config/parcours";
 import { ATELIERS, atelierByCode } from "@/config/ateliers";
+import { adosseAUnReferentiel } from "@/config/ateliers/referentiels";
 import { SIGLE_PAR_DIPLOME, sigleDuDiplome } from "@/config/diplomes";
 
 /**
@@ -68,7 +69,9 @@ describe("les parcours et les ateliers", () => {
     // maintenant que chaque diplôme servi ait sa propre section, au même rang
     // que les quatre qui avaient un parcours écrit à la main.
     expect(PAGE).toContain("const FILIERES");
-    expect(PAGE).toContain("for (const a of ATELIERS)");
+    expect(PAGE).toContain(
+      "ATELIERS.filter((a) => adosseAUnReferentiel(a.code))",
+    );
     expect(PAGE).toContain("FILIERES.map");
     // La liste se DÉDUIT : aucun code ni aucun nom de diplôme n'est recopié.
     for (const a of ATELIERS) {
@@ -129,6 +132,29 @@ describe("les parcours et les ateliers", () => {
     expect(PAGE).toContain(
       "couvertureDuDiplome(ateliers.map((a) => a.code)).length",
     );
+  });
+
+  it("n'expose que des diplômes, et renvoie les autres déroulés ailleurs", () => {
+    // UN BLOC DE RÉFÉRENTIEL APPARTIENT À UN DIPLÔME. La page portait douze
+    // sections dont trois n'en étaient pas : découverte, approfondissement,
+    // tournoi inter-filières. Elles affichaient des « blocs de référentiel »
+    // qui sont nos propres découpages — « Étape 1 · Lire une situation et
+    // fixer un prix » — et ne figurent dans aucun arrêté. Posés au milieu de
+    // blocs tirés d'un texte, sur la page où un enseignant vérifie son
+    // programme, ils ôtaient leur valeur à tous les autres.
+    const dehors = ATELIERS.filter((a) => !adosseAUnReferentiel(a.code));
+    expect(
+      dehors.length,
+      "plus aucun déroulé hors référentiel : la règle ne garde rien",
+    ).toBeGreaterThan(0);
+    expect(PAGE).toContain("adosseAUnReferentiel");
+    expect(PAGE).toContain("HORS_REFERENTIEL");
+
+    // Les écarter n'est pas les cacher : qui a vu « Découverte » dans le menu
+    // des ateliers et ne la retrouve pas ici conclut qu'elle a disparu.
+    expect(PAGE).toContain('href="/animations"');
+    const renvoi = PAGE.slice(PAGE.indexOf('id="hors-referentiel"'));
+    expect(renvoi).toContain("HORS_REFERENTIEL.map((a) => a.titre)");
   });
 
   it("la page parle du référentiel, et met le déroulé en preuve", () => {

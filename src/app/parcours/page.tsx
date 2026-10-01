@@ -2,7 +2,10 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { PARCOURS } from "@/config/parcours";
 import { ATELIERS, dureeTotaleHeures } from "@/config/ateliers";
-import { REFERENTIELS_NON_VERIFIES } from "@/config/ateliers/referentiels";
+import {
+  REFERENTIELS_NON_VERIFIES,
+  adosseAUnReferentiel,
+} from "@/config/ateliers/referentiels";
 import { AU_DELA_DES_SEANCES, couvertureDuDiplome } from "@/config/couverture";
 import { sigleDuDiplome } from "@/config/diplomes";
 import { bouton } from "@/components/bouton";
@@ -50,7 +53,16 @@ function ancre(texte: string): string {
 /** Les diplômes, dans l'ordre du registre des ateliers, avec leur parcours s'il existe. */
 const FILIERES = (() => {
   const parDiplome = new Map<string, typeof ATELIERS>();
-  for (const a of ATELIERS) {
+  // UN BLOC DE RÉFÉRENTIEL APPARTIENT À UN DIPLÔME. La page portait douze
+  // sections dont trois n'étaient pas des formations : une découverte ouverte
+  // à toutes les filières, un approfondissement, un tournoi inter-filières.
+  // Elles affichaient pourtant des « blocs de référentiel » — « Étape 1 · Lire
+  // une situation et fixer un prix », « Volet 3 · Piloter la trésorerie » —
+  // qui sont nos propres découpages et ne figurent dans aucun arrêté. Mêlés
+  // aux blocs d'un texte officiel sur la page où un enseignant vient vérifier
+  // son programme, ils ôtaient leur valeur à tous les autres : on ne savait
+  // plus laquelle des listes s'oppose à une inspection.
+  for (const a of ATELIERS.filter((a) => adosseAUnReferentiel(a.code))) {
     parDiplome.set(a.diplome, [
       ...(parDiplome.get(a.diplome) ?? []),
       a,
@@ -88,6 +100,17 @@ const FILIERES = (() => {
     };
   });
 })();
+
+/**
+ * CE QUI NE S'ADOSSE À AUCUN RÉFÉRENTIEL DE DIPLÔME.
+ *
+ * Les écarter de la page ne veut pas dire les cacher : un enseignant qui a vu
+ * « Découverte » dans le menu des ateliers et ne la retrouve pas ici conclut
+ * qu'elle a disparu. Une phrase suffit à dire où elle est, et pourquoi elle
+ * n'est pas sur cette page-ci — c'est la distinction elle-même qu'elle
+ * enseigne, et elle vaut mieux qu'un silence.
+ */
+const HORS_REFERENTIEL = ATELIERS.filter((a) => !adosseAUnReferentiel(a.code));
 
 const ADEQUATION: Record<string, { label: string; className: string }> = {
   coeur: {
@@ -354,6 +377,33 @@ export default function ParcoursPage() {
 
         {/* La bande sort de la colonne de lecture : une fin de page tient toute
             la largeur, sinon elle reste une carte de plus dans la pile. */}
+        {HORS_REFERENTIEL.length ? (
+          <section
+            aria-labelledby="hors-referentiel"
+            className="mx-auto max-w-4xl px-6 pb-12"
+          >
+            <h2
+              id="hors-referentiel"
+              className="text-xs font-semibold uppercase tracking-wide text-slate-400"
+            >
+              Ce qui ne figure pas sur cette page
+            </h2>
+            <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-400">
+              {HORS_REFERENTIEL.length} déroulés ne s&apos;adossent au
+              référentiel d&apos;aucun diplôme : ils découpent la gestion à
+              notre façon, et ce découpage n&apos;a rien à faire au milieu de
+              blocs tirés d&apos;un arrêté. Vous les trouverez sur{" "}
+              <Link
+                href="/animations"
+                className="text-amber-300 underline-offset-4 hover:underline"
+              >
+                la page des ateliers
+              </Link>{" "}
+              : {HORS_REFERENTIEL.map((a) => a.titre).join(", ")}.
+            </p>
+          </section>
+        ) : null}
+
         <BandeFinale
           titre="Votre diplôme n'est pas dans cette liste ?"
           texte="Les mêmes mécaniques servent d'autres référentiels : écrivez-nous, et nous regardons ensemble ce que votre programme demande."

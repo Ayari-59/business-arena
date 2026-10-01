@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Browser, Page } from "playwright-core";
 import { aller, ouvrirNavigateur, texte, unique } from "./helpers/browser";
 import { ATELIERS, dureeTotaleHeures } from "../../src/config/ateliers";
+import { adosseAUnReferentiel } from "../../src/config/ateliers/referentiels";
 import { SCENARIO_CHOICES } from "../../src/config/scenarios/registry";
 import { nomEntreprise } from "../../src/config/scenarios/presentation";
 
@@ -50,11 +51,16 @@ async function ouvrirDecisions(page: Page): Promise<void> {
   if (await passer.isVisible().catch(() => false)) {
     await passer.click();
   }
-  const raccourci = page.getByRole("button", { name: /Prendre mes décisions/ }).first();
+  const raccourci = page
+    .getByRole("button", { name: /Prendre mes décisions/ })
+    .first();
   if (await raccourci.isVisible().catch(() => false)) {
     await raccourci.click();
   } else {
-    await page.getByRole("tab", { name: /Décider/ }).first().click();
+    await page
+      .getByRole("tab", { name: /Décider/ })
+      .first()
+      .click();
   }
 }
 
@@ -79,7 +85,9 @@ describe("parcours enseignant et élève", () => {
     await prof.fill('input[name="schoolName"]', "Lycée du Parcours");
     await prof.fill('input[name="email"]', EMAIL);
     await prof.fill('input[name="password"]', MOTDEPASSE);
-    await prof.getByRole("button", { name: "Créer mon compte enseignant" }).click();
+    await prof
+      .getByRole("button", { name: "Créer mon compte enseignant" })
+      .click();
 
     await prof.waitForURL(/\/teacher$/, { timeout: 30_000 });
     expect(await texte(prof)).toContain("Mes parties");
@@ -104,8 +112,12 @@ describe("parcours enseignant et élève", () => {
 
     // Le code se lit dans le DOM, pas au filtre sur le texte : l'alphabet des
     // codes est celui des majuscules, et « PARTIE » y ressemble à s'y méprendre.
-    codeInvitation = (await prof.locator("#code-invitation").innerText()).trim();
-    expect(codeInvitation, "code d'invitation illisible").toMatch(/^[A-Z2-9]{6}$/);
+    codeInvitation = (
+      await prof.locator("#code-invitation").innerText()
+    ).trim();
+    expect(codeInvitation, "code d'invitation illisible").toMatch(
+      /^[A-Z2-9]{6}$/,
+    );
   });
 
   it("un élève rejoint avec le code seul et voit son secteur, pas un autre", async () => {
@@ -137,7 +149,8 @@ describe("parcours enseignant et élève", () => {
     // (assurance…) vivent sur une étape masquée, exclue de `innerText`. On lit
     // donc tout le contenu du formulaire, visible ou non, pour que la garde
     // « français, pas de millièmes » couvre l'ensemble des leviers.
-    const vu = (await eleve.locator(`form:has(${PRIX_AUDIT})`).textContent()) ?? "";
+    const vu =
+      (await eleve.locator(`form:has(${PRIX_AUDIT})`).textContent()) ?? "";
     // les couvertures d'assurance sont en français (écart de la 1re recette)
     expect(vu).not.toMatch(/natural disaster|cold wave|machine breakdown/i);
     // aucun montant à trois décimales (écart de la 2e recette)
@@ -164,23 +177,32 @@ describe("parcours enseignant et élève", () => {
     // et affichait « Please fill out this field » au milieu d'un écran français.
     // Le message est désormais le nôtre — c'est le seul endroit où on peut le
     // vérifier, puisqu'il n'existe qu'au moment où le navigateur refuse.
-    await eleve.getByRole("button", { name: /Valider les décisions de l'équipe/ }).click();
+    await eleve
+      .getByRole("button", { name: /Valider les décisions de l'équipe/ })
+      .click();
     const refus = await eleve
       .locator('textarea[name="justification"]')
       .evaluate((n: HTMLTextAreaElement) => n.validationMessage);
-    expect(refus, "le refus doit être écrit en français, et par nous").toContain("Écrivez une phrase");
+    expect(
+      refus,
+      "le refus doit être écrit en français, et par nous",
+    ).toContain("Écrivez une phrase");
     expect(refus).not.toMatch(/fill out|required|please/i);
 
     await eleve.fill(
       'textarea[name="justification"]',
       "On tient le tarif haut et on staffe au plus juste.",
     );
-    await eleve.getByRole("button", { name: /Valider les décisions de l'équipe/ }).click();
+    await eleve
+      .getByRole("button", { name: /Valider les décisions de l'équipe/ })
+      .click();
 
     // Le prix est touché mais le volume (« Jours à staffer ») reste à sa valeur
     // proposée : le garde-fou des pivots (A1) demande de confirmer avant
     // d'envoyer. On confirme, comme le ferait un élève qui assume ce volume.
-    await eleve.getByRole("button", { name: /je garde ces valeurs/ }).click({ timeout: 10_000 });
+    await eleve
+      .getByRole("button", { name: /je garde ces valeurs/ })
+      .click({ timeout: 10_000 });
 
     // On relit la page : ce qui compte est que le serveur ait ENREGISTRÉ le
     // tour, pas que le bouton ait changé d'étiquette.
@@ -198,11 +220,17 @@ describe("parcours enseignant et élève", () => {
 
   it("l'enseignant clôture le tour et la partie avance", async () => {
     await aller(prof, urlPartie);
-    await prof.getByRole("button", { name: /Clore le tour 1 et simuler/ }).click();
+    await prof
+      .getByRole("button", { name: /Clore le tour 1 et simuler/ })
+      .click();
     // Le clic ouvre d'abord une confirmation (équipes validées + irréversibilité,
     // A2) : c'est « Clore et simuler » qui lance réellement la résolution.
-    await prof.getByRole("button", { name: "Clore et simuler", exact: true }).click();
-    await prof.waitForSelector("text=/Clore le tour 2 et simuler/", { timeout: 60_000 });
+    await prof
+      .getByRole("button", { name: "Clore et simuler", exact: true })
+      .click();
+    await prof.waitForSelector("text=/Clore le tour 2 et simuler/", {
+      timeout: 60_000,
+    });
     expect(await texte(prof)).toContain("Tour 2");
   });
 
@@ -214,15 +242,21 @@ describe("parcours enseignant et élève", () => {
     // Les résultats d'une période vivent dans sa carte, dépliée par défaut pour
     // le tour le plus récent ; les états financiers sont dans le sous-onglet
     // « Finance ». On y navigue, puis on ouvre les comptes dépliables.
-    await eleve.getByRole("tab", { name: /Finance/ }).click({ timeout: 30_000 });
+    await eleve
+      .getByRole("tab", { name: /Finance/ })
+      .click({ timeout: 30_000 });
     await eleve.evaluate(() => {
       // les comptes sont dépliables : leur contenu ne compte pas dans le texte
       // visible tant qu'ils sont fermés.
-      document.querySelectorAll("details").forEach((d) => d.setAttribute("open", ""));
+      document
+        .querySelectorAll("details")
+        .forEach((d) => d.setAttribute("open", ""));
     });
     const vu = (await texte(eleve)).toLowerCase();
     expect(vu).toContain("frais de mission");
-    expect(vu, "l'étiquette figée est revenue").not.toContain("matières premières");
+    expect(vu, "l'étiquette figée est revenue").not.toContain(
+      "matières premières",
+    );
   });
 
   it("le relevé de notes est là, et son tableur se télécharge vraiment", async () => {
@@ -285,7 +319,9 @@ describe("parcours enseignant et élève", () => {
     await aller(executive, "/join");
     await executive.fill('input[name="code"]', code);
     await executive.fill('input[name="pseudo"]', "Élève Executive");
-    await executive.getByRole("button", { name: "Rejoindre la partie" }).click();
+    await executive
+      .getByRole("button", { name: "Rejoindre la partie" })
+      .click();
     // Le tour ouvre sur « Situation » : on passe à « Décider » pour le
     // formulaire. Il range ses décisions par famille en accordéon : le champ
     // dividende vit dans « Financer », repliée par défaut. On attend le prix,
@@ -293,15 +329,25 @@ describe("parcours enseignant et élève", () => {
     await ouvrirDecisions(executive);
     // Au niveau 6, NOVA se joue en gamme : le prix est celui de chaque
     // référence (`product.<code>.price`), pas un champ unique.
-    await executive.waitForSelector('input[name="price"], input[name$=".price"]', { timeout: 30_000 });
+    await executive.waitForSelector(
+      'input[name="price"], input[name$=".price"]',
+      { timeout: 30_000 },
+    );
     // L'assistant est en étapes : le dividende vit sur « Trésorerie &
     // couverture », masquée tant qu'on ne l'affiche pas. On y va, puis on
     // déplie tout pour que le champ compte dans le texte rendu.
-    await executive.getByRole("button", { name: /Trésorerie & couverture/ }).first().click();
+    await executive
+      .getByRole("button", { name: /Trésorerie & couverture/ })
+      .first()
+      .click();
     await executive.evaluate(() =>
-      document.querySelectorAll("details").forEach((d) => d.setAttribute("open", "")),
+      document
+        .querySelectorAll("details")
+        .forEach((d) => d.setAttribute("open", "")),
     );
-    await executive.waitForSelector('input[name="dividend"]', { timeout: 30_000 });
+    await executive.waitForSelector('input[name="dividend"]', {
+      timeout: 30_000,
+    });
 
     const vu = await texte(executive);
     // sans tenir compte de la casse : les libellés de champ sont mis en
@@ -348,7 +394,9 @@ describe("parcours enseignant et élève", () => {
       // On attend le BANDEAU, pas l'URL : la page était déjà /teacher avant le
       // clic, si bien qu'attendre cette adresse revenait à ne rien attendre du
       // tout et à lire la page avant sa mise à jour.
-      await prof.waitForSelector("text=/La partie n'a pas été créée/", { timeout: 30_000 });
+      await prof.waitForSelector("text=/La partie n'a pas été créée/", {
+        timeout: 30_000,
+      });
 
       const vu = await texte(prof);
       expect(vu).toContain("La partie n'a pas été créée");
@@ -379,9 +427,13 @@ describe("parcours enseignant et élève", () => {
     expect(vitrine).toContain("rien ne se stocke");
     expect(vitrine).toContain("déjà payé");
 
-    await prof.getByRole("link", { name: "Diriger LA TABLE D'AUGUSTIN" }).click();
+    await prof
+      .getByRole("link", { name: "Diriger LA TABLE D'AUGUSTIN" })
+      .click();
     await prof.waitForURL(/secteur=bistrot/, { timeout: 30_000 });
-    expect(await prof.locator('input[name="scenarioCode"]').inputValue()).toBe("bistrot");
+    expect(await prof.locator('input[name="scenarioCode"]').inputValue()).toBe(
+      "bistrot",
+    );
   });
 
   it("l'atelier professionnel s'affiche en entier et tient ses comptes", async () => {
@@ -417,7 +469,9 @@ describe("parcours enseignant et élève", () => {
       expect(fiche, `« ${attendu} » absent de la fiche`).toContain(attendu);
     }
     // toutes les séances de l'atelier, pas une de moins
-    expect((fiche.match(/livrable de la séance/g) ?? []).length).toBe(cg1.seances.length);
+    expect((fiche.match(/livrable de la séance/g) ?? []).length).toBe(
+      cg1.seances.length,
+    );
   });
 
   it("le titre de l'accueil grandit avec l'écran sans sortir de sa colonne", async () => {
@@ -457,14 +511,19 @@ describe("parcours enseignant et élève", () => {
     const telephone = await mesurer(390);
     const petit = await mesurer(1024);
     const grand = await mesurer(1728);
-    expect(grand.px, `le titre reste à ${grand.px} px quand l'écran passe de 1024 à 1728`).toBeGreaterThan(
-      petit.px + 3,
-    );
+    expect(
+      grand.px,
+      `le titre reste à ${grand.px} px quand l'écran passe de 1024 à 1728`,
+    ).toBeGreaterThan(petit.px + 3);
     expect(
       telephone.px,
       `le titre fait ${telephone.px} px sur un téléphone comme ${grand.px} sur un grand écran`,
     ).toBeLessThan(grand.px);
-    for (const [nom, m] of [["390", telephone], ["1024", petit], ["1728", grand]] as const) {
+    for (const [nom, m] of [
+      ["390", telephone],
+      ["1024", petit],
+      ["1728", grand],
+    ] as const) {
       expect(
         Math.round(m.texte),
         `à ${nom} px, le titre mesure ${Math.round(m.texte)} px dans une colonne de ${Math.round(m.colonne)}`,
@@ -481,7 +540,9 @@ describe("parcours enseignant et élève", () => {
         page: getComputedStyle(document.body).backgroundColor,
       };
     });
-    expect(sols.contreJour, "le premier écran n'est pas à contre-jour").toBe(true);
+    expect(sols.contreJour, "le premier écran n'est pas à contre-jour").toBe(
+      true,
+    );
     expect(sols.hero).not.toBe(sols.page);
   });
 
@@ -498,14 +559,25 @@ describe("parcours enseignant et élève", () => {
     await onglet.setViewportSize({ width: 390, height: 844 });
     try {
       await aller(onglet, "/parcours");
-      const hauteur = () => onglet.evaluate(() => document.documentElement.scrollHeight);
+      const hauteur = () =>
+        onglet.evaluate(() => document.documentElement.scrollHeight);
       const replie = await hauteur();
       expect(replie, `page repliée : ${replie} px`).toBeLessThan(6000);
 
       const tiroirs = onglet.locator("details[data-diplome]");
-      const diplomes = new Set(ATELIERS.map((a) => a.diplome));
-      expect(await tiroirs.count(), "un tiroir par diplôme servi").toBe(diplomes.size);
-      expect(await onglet.locator("details[data-diplome][open]").count()).toBe(0);
+      // Seuls les diplômes : la découverte, l'approfondissement et le tournoi
+      // inter-filières n'ont pas de référentiel et ne sont pas sur cette page.
+      const diplomes = new Set(
+        ATELIERS.filter((a) => adosseAUnReferentiel(a.code)).map(
+          (a) => a.diplome,
+        ),
+      );
+      expect(await tiroirs.count(), "un tiroir par diplôme servi").toBe(
+        diplomes.size,
+      );
+      expect(await onglet.locator("details[data-diplome][open]").count()).toBe(
+        0,
+      );
 
       // Le tiroir fermé dit encore ce qu'il cache : sans cela, l'index est une
       // liste de noms devant laquelle personne ne sait quoi ouvrir.
@@ -519,7 +591,11 @@ describe("parcours enseignant et élève", () => {
       const cible = await pastilles.nth(5).getAttribute("href");
       await pastilles.nth(5).click();
       await expect
-        .poll(() => onglet.locator(`details${cible}`).evaluate((e: Element) => (e as HTMLDetailsElement).open))
+        .poll(() =>
+          onglet
+            .locator(`details${cible}`)
+            .evaluate((e: Element) => (e as HTMLDetailsElement).open),
+        )
         .toBe(true);
 
       // Et tout se déplie d'un geste : les tiroirs fermés échappent au Ctrl+F
@@ -553,7 +629,10 @@ describe("parcours enseignant et élève", () => {
       await aller(prof, chemin);
       const vu = await texte(prof);
       const faute = vu.match(new RegExp(`.{0,40}${inciseur.source}.{0,40}`));
-      expect(faute?.[0], `${chemin} coupe une phrase par un tiret`).toBeUndefined();
+      expect(
+        faute?.[0],
+        `${chemin} coupe une phrase par un tiret`,
+      ).toBeUndefined();
     }
   });
 });
