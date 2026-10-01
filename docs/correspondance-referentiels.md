@@ -90,9 +90,9 @@ COUVRIR : un bloc est atteint dès qu'un seul geste le touche, c'est un plancher
 
 | atelier | son diplôme | ce qu'il atteindrait ailleurs |
 | --- | --- | --- |
-| Découvrir la gestion en tenant une boutique | aucun | BTS NDRC 3/3 · BTS MCO 3/4 · BTS GPME 3/4 · BTS MHR 3/4 · DCG 3/4 · STMG 7/10 · BTS CG 4/6 · BTS MHR · B et C 2/4 · BUT GEA 2/4 |
-| Découvrir la gestion d'une entreprise en quatre séances | STMG | BTS NDRC 3/3 · BTS MHR 4/4 · BTS MHR · B et C 4/4 · BTS MCO 3/4 · BUT GEA 3/4 · DCG 3/4 · BTS CG 3/6 · BTS GPME 2/4 |
-| Piloter une entreprise pendant six trimestres | BTS CG | BTS MCO 4/4 · BTS NDRC 3/3 · BTS MHR 4/4 · BUT GEA 4/4 · STMG 9/10 · BTS GPME 3/4 · BTS MHR · B et C 3/4 · DCG 3/4 |
+| Tenir la boutique Maille & Co, premiers pas en gestion | aucun | BTS NDRC 3/3 · BTS MCO 3/4 · BTS GPME 3/4 · BTS MHR 3/4 · DCG 3/4 · STMG 7/10 · BTS CG 4/6 · BTS MHR · B et C 2/4 · BUT GEA 2/4 |
+| Prendre les commandes de Nova en quatre séances | STMG | BTS NDRC 3/3 · BTS MHR 4/4 · BTS MHR · B et C 4/4 · BTS MCO 3/4 · BUT GEA 3/4 · DCG 3/4 · BTS CG 3/6 · BTS GPME 2/4 |
+| Six trimestres chez Nova, du bilan d'ouverture au débriefing | BTS CG | BTS MCO 4/4 · BTS NDRC 3/3 · BTS MHR 4/4 · BUT GEA 4/4 · STMG 9/10 · BTS GPME 3/4 · BTS MHR · B et C 3/4 · DCG 3/4 |
 | Tenir un point de vente pendant quatre trimestres | BTS MCO | BTS NDRC 3/3 · BTS MHR 4/4 · BTS MHR · B et C 4/4 · BUT GEA 4/4 · BTS GPME 3/4 · DCG 3/4 · STMG 7/10 · BTS CG 2/6 |
 | Piloter une unité de restauration au mois | BTS MCO | BTS CG 6/6 · BTS NDRC 3/3 · BTS MHR 4/4 · BTS MHR · B et C 4/4 · BTS GPME 3/4 · BUT GEA 3/4 · DCG 3/4 · STMG 6/10 |
 | Rentabiliser une clientèle sur cinq trimestres | BTS NDRC | BTS MCO 4/4 · BTS MHR 4/4 · BTS MHR · B et C 4/4 · BUT GEA 4/4 · BTS GPME 3/4 · STMG 7/10 · BTS CG 3/6 · DCG 2/4 |
@@ -101,7 +101,7 @@ COUVRIR : un bloc est atteint dès qu'un seul geste le touche, c'est un plancher
 | Piloter un hôtel sur une année de saisons | BTS MHR | BTS CG 6/6 · BTS MCO 4/4 · BTS NDRC 3/3 · BTS MHR · B et C 4/4 · BUT GEA 4/4 · STMG 9/10 · BTS GPME 3/4 · DCG 2/4 |
 | Composer la carte et tenir le service | BTS MHR · B et C | BTS MCO 4/4 · BTS NDRC 3/3 · BTS GPME 4/4 · BTS MHR 4/4 · BUT GEA 3/4 · DCG 3/4 · STMG 7/10 · BTS CG 2/6 |
 | Analyser et piloter une entreprise industrielle | BUT GEA | BTS NDRC 3/3 · BTS MHR 4/4 · BTS MHR · B et C 4/4 · BTS MCO 3/4 · DCG 3/4 · BTS CG 4/6 · STMG 6/10 |
-| Piloter et rendre compte sur quatre exercices | DCG | BUT GEA 4/4 · BTS GPME 3/4 · BTS NDRC 2/3 · STMG 6/10 · BTS CG 3/6 · BTS MCO 2/4 · BTS MHR 2/4 · BTS MHR · B et C 2/4 |
+| Quatre exercices chez Nova : budget, écarts, rapport de gestion | DCG | BUT GEA 4/4 · BTS GPME 3/4 · BTS NDRC 2/3 · STMG 6/10 · BTS CG 3/6 · BTS MCO 2/4 · BTS MHR 2/4 · BTS MHR · B et C 2/4 |
 | RSE et performance : un engagement qui se pilote | DCG | BTS MCO 3/4 · BTS NDRC 2/3 · BTS GPME 2/4 · BTS MHR · B et C 2/4 · BUT GEA 2/4 · BTS CG 2/6 |
 | Piloter sous incertitude une entreprise de transport | aucun | BTS MCO 4/4 · BTS NDRC 3/3 · BTS GPME 4/4 · BTS MHR 4/4 · BUT GEA 4/4 · DCG 4/4 · BTS CG 5/6 · BTS MHR · B et C 3/4 · STMG 4/10 |
 | Diriger une entreprise en équipe inter-filières | aucun | BTS NDRC 3/3 · BUT GEA 4/4 · DCG 4/4 · BTS CG 5/6 · BTS MCO 3/4 · BTS MHR 3/4 · BTS MHR · B et C 3/4 · STMG 7/10 · BTS GPME 2/4 |

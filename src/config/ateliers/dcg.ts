@@ -17,7 +17,7 @@ import type { AtelierDefinition } from "./types";
  */
 export const ATELIER_DCG: AtelierDefinition = {
   code: "dcg",
-  titre: "Piloter et rendre compte sur quatre exercices",
+  titre: "Quatre exercices chez Nova : budget, écarts, rapport de gestion",
   diplome: "DCG",
   annee: "Deuxième ou troisième année",
   nature: "Atelier professionnel",

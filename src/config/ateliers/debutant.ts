@@ -17,7 +17,7 @@ import type { AtelierDefinition } from "./types";
  */
 export const ATELIER_DEBUTANT: AtelierDefinition = {
   code: "debutant",
-  titre: "Découvrir la gestion en tenant une boutique",
+  titre: "Tenir la boutique Maille & Co, premiers pas en gestion",
   diplome: "Découverte, toutes filières",
   annee: "Premiers pas",
   nature: "Animation de découverte",

@@ -84,7 +84,7 @@ export const THEMES_STMG = {
 
 export const ATELIER_STMG: AtelierDefinition = {
   code: "stmg",
-  titre: "Découvrir la gestion d'une entreprise en quatre séances",
+  titre: "Prendre les commandes de Nova en quatre séances",
   diplome: "Baccalauréat STMG",
   annee: "Première et terminale",
   nature: "Animation de découverte",
