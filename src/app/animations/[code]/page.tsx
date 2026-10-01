@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
-import { formationsEnToutesLettres } from "@/config/formations";
+import {
+  formationsEnToutesLettres,
+  publicDeLAtelier,
+} from "@/config/formations";
 import Link from "next/link";
 import { NotionsMobilisees } from "@/components/notions-mobilisees";
 import { notFound } from "next/navigation";
@@ -24,7 +27,7 @@ export async function generateMetadata({
   const a = atelierByCode.get(code);
   if (!a) return { title: "Atelier introuvable" };
   return {
-    title: `${a.titre} · ${formationsEnToutesLettres(a)}`,
+    title: `${a.titre} · ${publicDeLAtelier(a)}`,
     description: a.resume,
   };
 }
@@ -116,12 +119,21 @@ export default async function AtelierPage({
           <Link href="/animations" className="hover:text-slate-300">
             Ateliers
           </Link>{" "}
-          / {formationsEnToutesLettres(atelier)}
+          {/*
+            LE SIGLE DANS LE FIL D'ARIANE, PAS LE NOM ENTIER. Le tournoi
+            inter-filières sert quatre formations : « Baccalauréat STMG, BTS
+            Comptabilité et Gestion, BTS Management commercial opérationnel et
+            BTS Négociation et digitalisation de la relation client » occupait
+            six lignes au-dessus du titre, sur un téléphone, avant qu'on sache
+            de quoi parlait la page. Les noms entiers restent dans la fiche
+            technique, où on vient les lire.
+          */}
+          / {publicDeLAtelier(atelier)}
         </p>
 
         <header className="mt-4 border-b border-white/10 pb-6 print:border-black/20">
           <p className="text-xs font-semibold uppercase tracking-wider text-amber-400 print:text-black">
-            {atelier.nature} · {formationsEnToutesLettres(atelier)} · {atelier.annee}
+            {atelier.nature} · {publicDeLAtelier(atelier)} · {atelier.annee}
           </p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-50 print:text-black">
             {atelier.titre}
