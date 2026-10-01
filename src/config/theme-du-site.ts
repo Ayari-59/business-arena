@@ -1,4 +1,5 @@
 import { BANDES, PAGES_A_BANDES, bandeParId, bandesDeLaPage } from "./bandes";
+import { THEME_PAR_DEFAUT, estCodeTheme, type CodeTheme } from "./themes";
 
 /**
  * CE QUE L'ADMINISTRATEUR RÈGLE DU THÈME, ET CE QUI LUI EST REFUSÉ.
@@ -30,6 +31,11 @@ import { BANDES, PAGES_A_BANDES, bandeParId, bandesDeLaPage } from "./bandes";
 export interface ThemeDuSite {
   /** Les bandes dont le contre-jour DIFFÈRE de l'état d'origine : id → oui ou non. */
   contrastes: Record<string, boolean>;
+  /**
+   * Le thème d'ouverture, quand il DIFFÈRE de celui d'usine. Absent : c'est
+   * THEME_PAR_DEFAUT, et le jour où l'usine change, ce site la suit.
+   */
+  parDefaut?: CodeTheme;
 }
 
 export const THEME_DU_SITE_PAR_DEFAUT: ThemeDuSite = { contrastes: {} };
@@ -47,7 +53,11 @@ export const BANDES_MAX_PAR_PAGE = 2;
  */
 export function normaliserTheme(brut: unknown): ThemeDuSite {
   const contrastes: Record<string, boolean> = {};
-  const lus = (brut as { contrastes?: unknown } | null | undefined)?.contrastes;
+  const source = brut as
+    | { contrastes?: unknown; parDefaut?: unknown }
+    | null
+    | undefined;
+  const lus = source?.contrastes;
   if (lus && typeof lus === "object") {
     for (const [id, valeur] of Object.entries(lus as Record<string, unknown>)) {
       const bande = bandeParId(id);
@@ -60,7 +70,18 @@ export function normaliserTheme(brut: unknown): ThemeDuSite {
       }
     }
   }
-  return { contrastes };
+  const parDefaut = source?.parDefaut;
+  return estCodeTheme(parDefaut) && parDefaut !== THEME_PAR_DEFAUT
+    ? { contrastes, parDefaut }
+    : { contrastes };
+}
+
+/**
+ * Le thème que voit un visiteur qui n'a encore rien choisi. Celui qui a déjà
+ * choisi, lui, garde son choix : il est sur son appareil, et rien ici n'y touche.
+ */
+export function themeParDefaut(theme: ThemeDuSite | undefined): CodeTheme {
+  return theme?.parDefaut ?? THEME_PAR_DEFAUT;
 }
 
 /** Vrai si la bande est à contre-jour pour ce thème. Une bande inconnue ne l'est jamais. */
@@ -86,7 +107,10 @@ export function etatDesContrastes(
  * Passe d'un état complet (ce que le formulaire envoie) à l'écart qui se
  * stocke : on ne garde que ce qui diffère de l'état d'origine.
  */
-export function themeDepuisEtat(etat: Record<string, boolean>): ThemeDuSite {
+export function themeDepuisEtat(
+  etat: Record<string, boolean>,
+  parDefaut: CodeTheme = THEME_PAR_DEFAUT,
+): ThemeDuSite {
   const contrastes: Record<string, boolean> = {};
   for (const bande of BANDES) {
     const voulu = etat[bande.id];
@@ -94,7 +118,16 @@ export function themeDepuisEtat(etat: Record<string, boolean>): ThemeDuSite {
       contrastes[bande.id] = voulu;
     }
   }
-  return { contrastes };
+  return parDefaut !== THEME_PAR_DEFAUT
+    ? { contrastes, parDefaut }
+    : { contrastes };
+}
+
+/** Les raisons pour lesquelles un thème d'ouverture est refusé. Vide : il tient. */
+export function validerThemeParDefaut(code: unknown): string[] {
+  return estCodeTheme(code)
+    ? []
+    : ["Choisissez le thème d'ouverture parmi ceux du site."];
 }
 
 /**

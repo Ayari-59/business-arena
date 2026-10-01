@@ -33,9 +33,11 @@ import {
   contrasteDeLaBande,
   etatDesContrastes,
   themeDepuisEtat,
+  themeParDefaut,
   validerContrastes,
   THEME_DU_SITE_PAR_DEFAUT,
 } from "@/config/theme-du-site";
+import { THEMES, THEME_PAR_DEFAUT } from "@/config/themes";
 
 let platformAdminId: string;
 let orgId: string;
@@ -278,5 +280,18 @@ describe("thème graphique", () => {
     ).rejects.toThrow();
     const relu = await getPlatformConfig();
     expect(relu.theme.contrastes).toEqual({});
+  });
+
+  it("le thème d'ouverture s'enregistre à côté des bandes, et se rétablit avec elles", async () => {
+    const autre = THEMES.find((t) => t.code !== THEME_PAR_DEFAUT)!.code;
+    await updatePlatformConfig(platformAdminId, {
+      theme: themeDepuisEtat({ ...etatDesContrastes(THEME_DU_SITE_PAR_DEFAUT), "accueil.hero": false, "accueil.boucle": true }, autre),
+    });
+    const relu = await getPlatformConfig();
+    expect(themeParDefaut(relu.theme)).toBe(autre);
+    expect(contrasteDeLaBande(relu.theme, "accueil.boucle")).toBe(true);
+
+    await updatePlatformConfig(platformAdminId, { theme: THEME_DU_SITE_PAR_DEFAUT });
+    expect(themeParDefaut((await getPlatformConfig()).theme)).toBe(THEME_PAR_DEFAUT);
   });
 });

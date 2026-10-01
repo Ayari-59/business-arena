@@ -95,7 +95,7 @@ describe("les thèmes", () => {
       "title={`${t.nom} — ${t.description}`}",
     );
     expect(HEADER, "le sélecteur n'est pas dans la barre").toMatch(
-      /<ThemeSwitcher \/>[\s\S]{0,800}aria-controls="plan-du-site"/,
+      /<ThemeSwitcher parDefaut=\{themeParDefaut\} \/>[\s\S]{0,800}aria-controls="plan-du-site"/,
     );
     const panneau = HEADER.slice(HEADER.indexOf('id="plan-du-site"'));
     expect(panneau, "le sélecteur est aussi resté dans le panneau").not.toContain(
@@ -126,7 +126,12 @@ describe("les thèmes", () => {
   it("l'attribut de thème est posé dès le rendu du serveur", () => {
     // Sans valeur initiale, la première image de la page n'aurait pas de thème
     // du tout et le sélecteur afficherait un choix qui n'est pas celui appliqué.
-    expect(LAYOUT).toMatch(/<html[^>]*data-theme=\{THEME_PAR_DEFAUT\}/);
+    // Le thème posé vient du réglage de la plateforme, qui retombe sur
+    // THEME_PAR_DEFAUT quand rien n'est réglé (voir theme-du-site.test.ts).
+    expect(LAYOUT).toMatch(/<html[^>]*data-theme=\{parDefaut\}/);
+    expect(LAYOUT, "le thème d'ouverture ne vient pas du réglage").toMatch(
+      /parDefaut = themeParDefaut\(\(await getPlatformConfig\(\)\)\.theme\)/,
+    );
   });
 
   it("le thème servi par défaut a bien une feuille, ou bien il n'est pas servi", () => {

@@ -1,6 +1,10 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+// La mise en page lit la configuration de la plateforme pour le thème
+// d'ouverture. Ce test ne lit que `viewport` : il n'a pas besoin de la base.
+vi.mock("@/services/admin.service", () => ({ getPlatformConfig: vi.fn() }));
 
 /**
  * ACCESSIBILITÉ DE BASE : ZOOM LIBRE, TEXTES LISIBLES, LIEN D'ÉVITEMENT.

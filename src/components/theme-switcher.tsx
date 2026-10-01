@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CLE_THEME, estCodeTheme, THEMES, THEME_PAR_DEFAUT, type CodeTheme } from "@/config/themes";
+import { CLE_THEME, estCodeTheme, THEMES, type CodeTheme } from "@/config/themes";
 
 /**
  * Le choix du thème, montré plutôt que caché.
@@ -44,11 +44,12 @@ import { CLE_THEME, estCodeTheme, THEMES, THEME_PAR_DEFAUT, type CodeTheme } fro
  * par défaut puis basculerait sous les yeux du lecteur.
  *
  * Le rendu du serveur ne connaît pas le choix, qui est propre au navigateur.
- * Cette rangée part donc du thème par défaut et se corrige au montage, sinon
+ * Cette rangée part donc du thème d'ouverture, que la mise en page lit dans la
+ * configuration de la plateforme, et se corrige au montage, sinon
  * React signalerait un écart entre ce qu'il a produit et ce qu'il trouve.
  */
-export function ThemeSwitcher() {
-  const [theme, setTheme] = useState<CodeTheme>(THEME_PAR_DEFAUT);
+export function ThemeSwitcher({ parDefaut }: { parDefaut: CodeTheme }) {
+  const [theme, setTheme] = useState<CodeTheme>(parDefaut);
 
   useEffect(() => {
     const applique = document.documentElement.dataset.theme;

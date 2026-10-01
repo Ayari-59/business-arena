@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { InstallButton } from "@/components/install-button";
 import { ThemeSwitcher } from "@/components/theme-switcher";
+import type { CodeTheme } from "@/config/themes";
 import { SiteLogo } from "@/components/site-logo";
 import {
   ACTION_PRINCIPALE,
@@ -47,7 +48,7 @@ import {
  * enseignant et le code d'une partie, pour que ni l'un ni l'autre n'ait à
  * ouvrir le menu.
  */
-export function SiteHeader() {
+export function SiteHeader({ themeParDefaut }: { themeParDefaut: CodeTheme }) {
   const chemin = usePathname();
   const [ouvert, setOuvert] = useState(false);
   // Les groupes du plan sont repliés, sauf le premier, orientation et contact,
@@ -199,7 +200,7 @@ export function SiteHeader() {
               la page bascule sous l'interrupteur — deux pastilles, sans leur
               nom : la barre porte déjà un logo, trois liens, deux boutons et un
               menu. */}
-          <ThemeSwitcher />
+          <ThemeSwitcher parDefaut={themeParDefaut} />
 
           <button
             type="button"

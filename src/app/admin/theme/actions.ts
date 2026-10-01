@@ -5,10 +5,16 @@ import { requireAdminSession } from "@/lib/session-admin";
 import { updatePlatformConfig } from "@/services/admin.service";
 import { BANDES, PAGES_A_BANDES } from "@/config/bandes";
 import {
+  THEME_PAR_DEFAUT,
+  estCodeTheme,
+  type CodeTheme,
+} from "@/config/themes";
+import {
   THEME_DU_SITE_PAR_DEFAUT,
   etatDesContrastes,
   themeDepuisEtat,
   validerContrastes,
+  validerThemeParDefaut,
 } from "@/config/theme-du-site";
 
 /**
@@ -20,6 +26,7 @@ export interface EtatTheme {
   erreurs: string[];
   enregistre: boolean;
   etat: Record<string, boolean>;
+  parDefaut: CodeTheme;
 }
 
 /**
@@ -30,7 +37,9 @@ export interface EtatTheme {
  */
 function revalider() {
   for (const { page } of PAGES_A_BANDES) revalidatePath(page);
-  revalidatePath("/admin/theme");
+  // Le thème d'ouverture est posé par la mise en page, qui enveloppe TOUTES les
+  // pages : l'invalider une fois, à la racine, les invalide toutes.
+  revalidatePath("/", "layout");
 }
 
 export async function enregistrerThemeAction(
@@ -47,12 +56,20 @@ export async function enregistrerThemeAction(
 
   // La validation se refait ICI. Celle du navigateur sert à guider ; elle ne
   // protège rien, puisqu'un formulaire se forge.
-  const erreurs = validerContrastes(etat);
-  if (erreurs.length > 0) return { erreurs, enregistre: false, etat };
+  const choisi = formData.get("parDefaut");
+  const parDefaut: CodeTheme = estCodeTheme(choisi) ? choisi : THEME_PAR_DEFAUT;
+  const erreurs = [
+    ...validerThemeParDefaut(choisi),
+    ...validerContrastes(etat),
+  ];
+  if (erreurs.length > 0)
+    return { erreurs, enregistre: false, etat, parDefaut };
 
-  await updatePlatformConfig(adminId, { theme: themeDepuisEtat(etat) });
+  await updatePlatformConfig(adminId, {
+    theme: themeDepuisEtat(etat, parDefaut),
+  });
   revalider();
-  return { erreurs: [], enregistre: true, etat };
+  return { erreurs: [], enregistre: true, etat, parDefaut };
 }
 
 export async function retablirThemeAction(): Promise<EtatTheme> {
@@ -63,5 +80,6 @@ export async function retablirThemeAction(): Promise<EtatTheme> {
     erreurs: [],
     enregistre: true,
     etat: etatDesContrastes(THEME_DU_SITE_PAR_DEFAUT),
+    parDefaut: THEME_PAR_DEFAUT,
   };
 }

@@ -22,7 +22,9 @@ const policeTexte = Inter_Tight({
   variable: "--font-brand-sans",
   display: "swap",
 });
-import { CLE_THEME, THEMES, THEME_PAR_DEFAUT } from "@/config/themes";
+import { CLE_THEME, THEMES } from "@/config/themes";
+import { themeParDefaut } from "@/config/theme-du-site";
+import { getPlatformConfig } from "@/services/admin.service";
 import { SITE_URL } from "@/config/site";
 import { DESCRIPTION_ACCUEIL, GABARIT_DE_TITRE, NOM_DU_SITE, TITRE_ACCUEIL } from "@/config/seo";
 
@@ -76,6 +78,9 @@ export default async function RootLayout({
   // s'ouvrirait en sombre le temps d'un battement. Les codes viennent du
   // registre, pour qu'un thème ajouté n'ait pas à être répété ici.
   const codes = JSON.stringify(THEMES.map((t) => t.code));
+  // Le thème d'ouverture se règle depuis l'admin ; en cas de panne de la base,
+  // la lecture rend la configuration d'usine, donc le thème d'usine.
+  const parDefaut = themeParDefaut((await getPlatformConfig()).theme);
   const amorce =
     `try{var c=localStorage.getItem(${JSON.stringify(CLE_THEME)});` +
     `if(${codes}.indexOf(c)>-1)document.documentElement.dataset.theme=c}catch(e){}`;
@@ -83,7 +88,7 @@ export default async function RootLayout({
   return (
     <html
       lang="fr"
-      data-theme={THEME_PAR_DEFAUT}
+      data-theme={parDefaut}
       className={`${policeTitre.variable} ${policeTexte.variable}`}
     >
       <body className="min-h-screen bg-slate-950 text-slate-100 antialiased">
@@ -95,7 +100,7 @@ export default async function RootLayout({
         >
           Aller au contenu
         </a>
-        <SiteHeader />
+        <SiteHeader themeParDefaut={parDefaut} />
         {children}
         {/* Invite d'installation, sur mobile uniquement (fermable, mémorisée). */}
         <InstallPrompt />

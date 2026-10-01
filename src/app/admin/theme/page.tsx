@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { getPlatformConfig, getStaffContext } from "@/services/admin.service";
-import { etatDesContrastes } from "@/config/theme-du-site";
+import { etatDesContrastes, themeParDefaut } from "@/config/theme-du-site";
 import { FormulaireTheme } from "@/components/formulaire-theme";
 
 export const dynamic = "force-dynamic";
@@ -33,19 +33,10 @@ export default async function ThemeAdminPage() {
         </nav>
       </header>
 
-      <section aria-labelledby="contrastes">
-        <h2 id="contrastes" className="text-lg font-semibold text-slate-100">
-          Bandes à contre-jour
-        </h2>
-        <p className="mt-2 max-w-2xl text-base leading-relaxed text-slate-400">
-          Une bande à contre-jour prend le thème opposé à celui de la page :
-          sombre sur une page claire. Deux au plus par page, jamais côte à côte,
-          et au moins une.
-        </p>
-        <div className="mt-6">
-          <FormulaireTheme initial={etatDesContrastes(config.theme)} />
-        </div>
-      </section>
+      <FormulaireTheme
+        initial={etatDesContrastes(config.theme)}
+        parDefautInitial={themeParDefaut(config.theme)}
+      />
     </main>
   );
 }

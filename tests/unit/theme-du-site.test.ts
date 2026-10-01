@@ -9,8 +9,11 @@ import {
   etatDesContrastes,
   normaliserTheme,
   themeDepuisEtat,
+  themeParDefaut,
   validerContrastes,
+  validerThemeParDefaut,
 } from "../../src/config/theme-du-site";
+import { THEMES, THEME_DORIGINE, THEME_PAR_DEFAUT } from "../../src/config/themes";
 
 /**
  * CE QUE L'ADMINISTRATEUR PEUT RÉGLER, ET CE QU'ON LUI REFUSE.
@@ -192,5 +195,33 @@ describe("le composant Bande", () => {
   it("à contre-jour, une bande qui avait déjà une marge symétrique la garde", () => {
     const deja = "mx-auto max-w-6xl px-6 py-12 sm:py-16";
     expect(interieurADeContreJour(deja)).toBe(deja);
+  });
+});
+
+describe("le thème d'ouverture", () => {
+  const AUTRE = THEMES.find((t) => t.code !== THEME_PAR_DEFAUT)!.code;
+
+  it("tant que rien n'est réglé, c'est le thème d'usine", () => {
+    expect(themeParDefaut(THEME_DU_SITE_PAR_DEFAUT)).toBe(THEME_PAR_DEFAUT);
+    expect(themeParDefaut(undefined)).toBe(THEME_PAR_DEFAUT);
+  });
+
+  it("ne se stocke que s'il diffère de l'usine", () => {
+    expect(themeDepuisEtat(ORIGINE, THEME_PAR_DEFAUT)).toEqual({ contrastes: {} });
+    expect(themeDepuisEtat(ORIGINE, AUTRE)).toEqual({ contrastes: {}, parDefaut: AUTRE });
+  });
+
+  it("se relit, et un code inconnu retombe sur l'usine sans erreur", () => {
+    expect(themeParDefaut(normaliserTheme({ parDefaut: AUTRE }))).toBe(AUTRE);
+    expect(themeParDefaut(normaliserTheme({ parDefaut: "sepia" }))).toBe(THEME_PAR_DEFAUT);
+    expect(themeParDefaut(normaliserTheme({ parDefaut: 3 }))).toBe(THEME_PAR_DEFAUT);
+    expect(normaliserTheme({ parDefaut: THEME_PAR_DEFAUT })).toEqual({ contrastes: {} });
+  });
+
+  it("refuse un code qui n'est pas un thème du site", () => {
+    expect(validerThemeParDefaut(AUTRE)).toEqual([]);
+    expect(validerThemeParDefaut(THEME_DORIGINE)).toEqual([]);
+    expect(validerThemeParDefaut("sepia")).toHaveLength(1);
+    expect(validerThemeParDefaut(null)).toHaveLength(1);
   });
 });
