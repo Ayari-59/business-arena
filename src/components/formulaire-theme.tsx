@@ -5,6 +5,11 @@ import Link from "next/link";
 import { bouton } from "@/components/bouton";
 import { SubmitButton } from "@/components/submit-button";
 import { BANDES, PAGES_A_BANDES, bandesDeLaPage } from "@/config/bandes";
+import {
+  PALETTES,
+  PALETTE_PAR_DEFAUT,
+  type CodePalette,
+} from "@/config/palettes";
 import { THEMES, THEME_PAR_DEFAUT, type CodeTheme } from "@/config/themes";
 import { validerContrastes } from "@/config/theme-du-site";
 import {
@@ -50,9 +55,11 @@ function Apercu({
 export function FormulaireTheme({
   initial,
   parDefautInitial,
+  paletteInitiale,
 }: {
   initial: Record<string, boolean>;
   parDefautInitial: CodeTheme;
+  paletteInitiale: CodePalette;
 }) {
   const [serveur, enregistrer] = useActionState<EtatTheme, FormData>(
     enregistrerThemeAction,
@@ -61,10 +68,12 @@ export function FormulaireTheme({
       enregistre: false,
       etat: initial,
       parDefaut: parDefautInitial,
+      palette: paletteInitiale,
     },
   );
   const [etat, setEtat] = useState(initial);
   const [parDefaut, setParDefaut] = useState(parDefautInitial);
+  const [palette, setPalette] = useState(paletteInitiale);
   const [retablissement, lancer] = useTransition();
   const [retabli, setRetabli] = useState(false);
 
@@ -78,10 +87,12 @@ export function FormulaireTheme({
   const enregistreMaintenant =
     serveur.enregistre &&
     memeEtat(serveur.etat, etat) &&
-    serveur.parDefaut === parDefaut;
+    serveur.parDefaut === parDefaut &&
+    serveur.palette === palette;
   const ecarts =
     BANDES.filter((b) => etat[b.id] !== b.contrasteParDefaut).length +
-    (parDefaut !== THEME_PAR_DEFAUT ? 1 : 0);
+    (parDefaut !== THEME_PAR_DEFAUT ? 1 : 0) +
+    (palette !== PALETTE_PAR_DEFAUT ? 1 : 0);
 
   return (
     <form action={enregistrer} className="space-y-10">
@@ -132,6 +143,77 @@ export function FormulaireTheme({
                 </span>
                 <span className="mt-1 block text-slate-400">
                   {t.description}
+                </span>
+              </span>
+            </label>
+          ))}
+        </fieldset>
+      </section>
+
+      <section aria-labelledby="palette">
+        <h2 id="palette" className="text-lg font-semibold text-slate-100">
+          Palette d&apos;accent
+        </h2>
+        <p className="mt-2 max-w-2xl text-base leading-relaxed text-slate-400">
+          La couleur des boutons, des liens et des filets, sur tout le site.
+          Chaque palette a été mesurée : texte et fond restent lisibles dans les
+          deux thèmes.
+        </p>
+        <fieldset className="mt-5 grid gap-3 sm:grid-cols-2">
+          <legend className="sr-only">Palette d&apos;accent du site</legend>
+          {PALETTES.map((p) => (
+            <label
+              key={p.code}
+              className={`carte flex cursor-pointer items-start gap-3 p-4 ${
+                palette === p.code ? "ring-2 ring-amber-400" : ""
+              }`}
+            >
+              <input
+                type="radio"
+                name="palette"
+                value={p.code}
+                checked={palette === p.code}
+                onChange={() => {
+                  setRetabli(false);
+                  setPalette(p.code);
+                }}
+                className="mt-1 h-4 w-4 shrink-0 accent-amber-400"
+              />
+              {/*
+                L'aperçu montre l'accent sur CHAQUE fond, pas sur celui de la
+                page : une pastille qui lirait le thème courant montrerait la
+                palette en vigueur, jamais celle qu'on survole. Les couleurs
+                sont donc posées en ligne, comme celles des pastilles de thème.
+              */}
+              <span aria-hidden className="mt-0.5 flex shrink-0 gap-1">
+                <span
+                  className="flex h-6 w-9 items-center justify-center rounded-md border border-white/25 text-xs font-semibold"
+                  style={{ background: THEMES[0]!.apercu.fond, color: p.sombre[400] }}
+                >
+                  Aa
+                </span>
+                <span
+                  className="flex h-6 w-9 items-center justify-center rounded-md border border-white/25 text-xs font-semibold"
+                  style={{ background: THEMES[1]!.apercu.fond, color: p.clair.encre }}
+                >
+                  Aa
+                </span>
+                <span
+                  className="h-6 w-3 rounded-md"
+                  style={{ background: p.sombre[500] }}
+                />
+              </span>
+              <span className="min-w-0 text-sm">
+                <span className="font-semibold text-slate-100">
+                  {p.nom}
+                  {p.code === PALETTE_PAR_DEFAUT ? (
+                    <span className="ml-2 text-xs font-normal text-slate-400">
+                      d&apos;origine
+                    </span>
+                  ) : null}
+                </span>
+                <span className="mt-1 block text-slate-400">
+                  {p.description}
                 </span>
               </span>
             </label>
@@ -244,6 +326,7 @@ export function FormulaireTheme({
               const r = await retablirThemeAction();
               setEtat(r.etat);
               setParDefaut(r.parDefaut);
+              setPalette(r.palette);
               setRetabli(true);
             })
           }

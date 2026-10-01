@@ -33,6 +33,7 @@ import {
   contrasteDeLaBande,
   etatDesContrastes,
   themeDepuisEtat,
+  paletteDuSite,
   themeParDefaut,
   validerContrastes,
   THEME_DU_SITE_PAR_DEFAUT,
@@ -293,5 +294,17 @@ describe("thème graphique", () => {
 
     await updatePlatformConfig(platformAdminId, { theme: THEME_DU_SITE_PAR_DEFAUT });
     expect(themeParDefaut((await getPlatformConfig()).theme)).toBe(THEME_PAR_DEFAUT);
+  });
+
+  it("la palette s'enregistre à côté du reste, et se rétablit avec lui", async () => {
+    await updatePlatformConfig(platformAdminId, {
+      theme: themeDepuisEtat(etatDesContrastes(THEME_DU_SITE_PAR_DEFAUT), THEME_PAR_DEFAUT, "cobalt"),
+    });
+    const relu = await getPlatformConfig();
+    expect(paletteDuSite(relu.theme)).toBe("cobalt");
+    expect(contrasteDeLaBande(relu.theme, "accueil.hero")).toBe(true);
+
+    await updatePlatformConfig(platformAdminId, { theme: THEME_DU_SITE_PAR_DEFAUT });
+    expect(paletteDuSite((await getPlatformConfig()).theme)).toBe("laiton");
   });
 });

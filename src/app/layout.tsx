@@ -23,7 +23,8 @@ const policeTexte = Inter_Tight({
   display: "swap",
 });
 import { CLE_THEME, THEMES } from "@/config/themes";
-import { themeParDefaut } from "@/config/theme-du-site";
+import { paletteDuSite, themeParDefaut } from "@/config/theme-du-site";
+import { PALETTE_D_ORIGINE, accentsDeLaPalette, feuilleDePalette } from "@/config/palettes";
 import { getPlatformConfig } from "@/services/admin.service";
 import { SITE_URL } from "@/config/site";
 import { DESCRIPTION_ACCUEIL, GABARIT_DE_TITRE, NOM_DU_SITE, TITRE_ACCUEIL } from "@/config/seo";
@@ -80,7 +81,13 @@ export default async function RootLayout({
   const codes = JSON.stringify(THEMES.map((t) => t.code));
   // Le thème d'ouverture se règle depuis l'admin ; en cas de panne de la base,
   // la lecture rend la configuration d'usine, donc le thème d'usine.
-  const parDefaut = themeParDefaut((await getPlatformConfig()).theme);
+  const { theme } = await getPlatformConfig();
+  const parDefaut = themeParDefaut(theme);
+  // La palette d'accent se pose par une feuille de style, vide pour celle
+  // d'origine : le site d'usine ne reçoit alors pas un octet de plus.
+  const palette = paletteDuSite(theme);
+  const feuille = feuilleDePalette(palette);
+  const accents = palette === PALETTE_D_ORIGINE ? undefined : accentsDeLaPalette(palette);
   const amorce =
     `try{var c=localStorage.getItem(${JSON.stringify(CLE_THEME)});` +
     `if(${codes}.indexOf(c)>-1)document.documentElement.dataset.theme=c}catch(e){}`;
@@ -91,6 +98,11 @@ export default async function RootLayout({
       data-theme={parDefaut}
       className={`${policeTitre.variable} ${policeTexte.variable}`}
     >
+      {feuille ? (
+        <head>
+          <style id="palette-d-accent" dangerouslySetInnerHTML={{ __html: feuille }} />
+        </head>
+      ) : null}
       <body className="min-h-screen bg-slate-950 text-slate-100 antialiased">
         <script dangerouslySetInnerHTML={{ __html: amorce }} />
         {/* Premier élément focusable : au clavier, on saute la navigation. */}
@@ -100,7 +112,7 @@ export default async function RootLayout({
         >
           Aller au contenu
         </a>
-        <SiteHeader themeParDefaut={parDefaut} />
+        <SiteHeader themeParDefaut={parDefaut} accents={accents} />
         {children}
         {/* Invite d'installation, sur mobile uniquement (fermable, mémorisée). */}
         <InstallPrompt />

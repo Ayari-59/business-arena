@@ -1,4 +1,9 @@
 import { BANDES, PAGES_A_BANDES, bandeParId, bandesDeLaPage } from "./bandes";
+import {
+  PALETTE_PAR_DEFAUT,
+  estCodePalette,
+  type CodePalette,
+} from "./palettes";
 import { THEME_PAR_DEFAUT, estCodeTheme, type CodeTheme } from "./themes";
 
 /**
@@ -36,6 +41,8 @@ export interface ThemeDuSite {
    * THEME_PAR_DEFAUT, et le jour où l'usine change, ce site la suit.
    */
   parDefaut?: CodeTheme;
+  /** La palette d'accent, quand elle DIFFÈRE de celle d'origine. Même logique que `parDefaut`. */
+  palette?: CodePalette;
 }
 
 export const THEME_DU_SITE_PAR_DEFAUT: ThemeDuSite = { contrastes: {} };
@@ -54,7 +61,7 @@ export const BANDES_MAX_PAR_PAGE = 2;
 export function normaliserTheme(brut: unknown): ThemeDuSite {
   const contrastes: Record<string, boolean> = {};
   const source = brut as
-    | { contrastes?: unknown; parDefaut?: unknown }
+    | { contrastes?: unknown; parDefaut?: unknown; palette?: unknown }
     | null
     | undefined;
   const lus = source?.contrastes;
@@ -70,10 +77,19 @@ export function normaliserTheme(brut: unknown): ThemeDuSite {
       }
     }
   }
+  const theme: ThemeDuSite = { contrastes };
   const parDefaut = source?.parDefaut;
-  return estCodeTheme(parDefaut) && parDefaut !== THEME_PAR_DEFAUT
-    ? { contrastes, parDefaut }
-    : { contrastes };
+  if (estCodeTheme(parDefaut) && parDefaut !== THEME_PAR_DEFAUT)
+    theme.parDefaut = parDefaut;
+  const palette = source?.palette;
+  if (estCodePalette(palette) && palette !== PALETTE_PAR_DEFAUT)
+    theme.palette = palette;
+  return theme;
+}
+
+/** La palette d'accent que sert le site : celle réglée, sinon celle d'origine. */
+export function paletteDuSite(theme: ThemeDuSite | undefined): CodePalette {
+  return theme?.palette ?? PALETTE_PAR_DEFAUT;
 }
 
 /**
@@ -110,6 +126,7 @@ export function etatDesContrastes(
 export function themeDepuisEtat(
   etat: Record<string, boolean>,
   parDefaut: CodeTheme = THEME_PAR_DEFAUT,
+  palette: CodePalette = PALETTE_PAR_DEFAUT,
 ): ThemeDuSite {
   const contrastes: Record<string, boolean> = {};
   for (const bande of BANDES) {
@@ -118,9 +135,17 @@ export function themeDepuisEtat(
       contrastes[bande.id] = voulu;
     }
   }
-  return parDefaut !== THEME_PAR_DEFAUT
-    ? { contrastes, parDefaut }
-    : { contrastes };
+  const theme: ThemeDuSite = { contrastes };
+  if (parDefaut !== THEME_PAR_DEFAUT) theme.parDefaut = parDefaut;
+  if (palette !== PALETTE_PAR_DEFAUT) theme.palette = palette;
+  return theme;
+}
+
+/** Les raisons pour lesquelles une palette est refusée. Vide : elle tient. */
+export function validerPalette(code: unknown): string[] {
+  return estCodePalette(code)
+    ? []
+    : ["Choisissez la palette parmi celles proposées."];
 }
 
 /** Les raisons pour lesquelles un thème d'ouverture est refusé. Vide : il tient. */

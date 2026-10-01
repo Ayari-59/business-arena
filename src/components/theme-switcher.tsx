@@ -48,7 +48,14 @@ import { CLE_THEME, estCodeTheme, THEMES, type CodeTheme } from "@/config/themes
  * configuration de la plateforme, et se corrige au montage, sinon
  * React signalerait un écart entre ce qu'il a produit et ce qu'il trouve.
  */
-export function ThemeSwitcher({ parDefaut }: { parDefaut: CodeTheme }) {
+export function ThemeSwitcher({
+  parDefaut,
+  accents,
+}: {
+  parDefaut: CodeTheme;
+  /** L'accent de la palette en vigueur, par thème ; absent : celui du registre. */
+  accents?: Record<CodeTheme, string>;
+}) {
   const [theme, setTheme] = useState<CodeTheme>(parDefaut);
 
   useEffect(() => {
@@ -118,7 +125,7 @@ export function ThemeSwitcher({ parDefaut }: { parDefaut: CodeTheme }) {
               }`}
               style={{
                 background: t.apercu.fond,
-                boxShadow: `inset 0 -4px 0 ${t.apercu.accent}`,
+                boxShadow: `inset 0 -4px 0 ${accents?.[t.code] ?? t.apercu.accent}`,
               }}
             />
           </button>

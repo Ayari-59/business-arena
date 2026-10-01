@@ -48,7 +48,13 @@ import {
  * enseignant et le code d'une partie, pour que ni l'un ni l'autre n'ait à
  * ouvrir le menu.
  */
-export function SiteHeader({ themeParDefaut }: { themeParDefaut: CodeTheme }) {
+export function SiteHeader({
+  themeParDefaut,
+  accents,
+}: {
+  themeParDefaut: CodeTheme;
+  accents?: { sombre: string; clair: string };
+}) {
   const chemin = usePathname();
   const [ouvert, setOuvert] = useState(false);
   // Les groupes du plan sont repliés, sauf le premier, orientation et contact,
@@ -200,7 +206,7 @@ export function SiteHeader({ themeParDefaut }: { themeParDefaut: CodeTheme }) {
               la page bascule sous l'interrupteur — deux pastilles, sans leur
               nom : la barre porte déjà un logo, trois liens, deux boutons et un
               menu. */}
-          <ThemeSwitcher parDefaut={themeParDefaut} />
+          <ThemeSwitcher parDefaut={themeParDefaut} accents={accents} />
 
           <button
             type="button"

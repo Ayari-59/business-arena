@@ -5,6 +5,11 @@ import { requireAdminSession } from "@/lib/session-admin";
 import { updatePlatformConfig } from "@/services/admin.service";
 import { BANDES, PAGES_A_BANDES } from "@/config/bandes";
 import {
+  PALETTE_PAR_DEFAUT,
+  estCodePalette,
+  type CodePalette,
+} from "@/config/palettes";
+import {
   THEME_PAR_DEFAUT,
   estCodeTheme,
   type CodeTheme,
@@ -14,6 +19,7 @@ import {
   etatDesContrastes,
   themeDepuisEtat,
   validerContrastes,
+  validerPalette,
   validerThemeParDefaut,
 } from "@/config/theme-du-site";
 
@@ -27,6 +33,7 @@ export interface EtatTheme {
   enregistre: boolean;
   etat: Record<string, boolean>;
   parDefaut: CodeTheme;
+  palette: CodePalette;
 }
 
 /**
@@ -58,18 +65,23 @@ export async function enregistrerThemeAction(
   // protège rien, puisqu'un formulaire se forge.
   const choisi = formData.get("parDefaut");
   const parDefaut: CodeTheme = estCodeTheme(choisi) ? choisi : THEME_PAR_DEFAUT;
+  const brute = formData.get("palette");
+  const palette: CodePalette = estCodePalette(brute)
+    ? brute
+    : PALETTE_PAR_DEFAUT;
   const erreurs = [
     ...validerThemeParDefaut(choisi),
+    ...validerPalette(brute),
     ...validerContrastes(etat),
   ];
   if (erreurs.length > 0)
-    return { erreurs, enregistre: false, etat, parDefaut };
+    return { erreurs, enregistre: false, etat, parDefaut, palette };
 
   await updatePlatformConfig(adminId, {
-    theme: themeDepuisEtat(etat, parDefaut),
+    theme: themeDepuisEtat(etat, parDefaut, palette),
   });
   revalider();
-  return { erreurs: [], enregistre: true, etat, parDefaut };
+  return { erreurs: [], enregistre: true, etat, parDefaut, palette };
 }
 
 export async function retablirThemeAction(): Promise<EtatTheme> {
@@ -81,5 +93,6 @@ export async function retablirThemeAction(): Promise<EtatTheme> {
     enregistre: true,
     etat: etatDesContrastes(THEME_DU_SITE_PAR_DEFAUT),
     parDefaut: THEME_PAR_DEFAUT,
+    palette: PALETTE_PAR_DEFAUT,
   };
 }

@@ -8,11 +8,14 @@ import {
   contrasteDeLaBande,
   etatDesContrastes,
   normaliserTheme,
+  paletteDuSite,
   themeDepuisEtat,
   themeParDefaut,
   validerContrastes,
+  validerPalette,
   validerThemeParDefaut,
 } from "../../src/config/theme-du-site";
+import { PALETTE_PAR_DEFAUT } from "../../src/config/palettes";
 import { THEMES, THEME_DORIGINE, THEME_PAR_DEFAUT } from "../../src/config/themes";
 
 /**
@@ -223,5 +226,43 @@ describe("le thème d'ouverture", () => {
     expect(validerThemeParDefaut(THEME_DORIGINE)).toEqual([]);
     expect(validerThemeParDefaut("sepia")).toHaveLength(1);
     expect(validerThemeParDefaut(null)).toHaveLength(1);
+  });
+});
+
+describe("la palette d'accent", () => {
+  it("tant que rien n'est réglé, c'est la palette d'origine", () => {
+    expect(paletteDuSite(THEME_DU_SITE_PAR_DEFAUT)).toBe(PALETTE_PAR_DEFAUT);
+    expect(paletteDuSite(undefined)).toBe(PALETTE_PAR_DEFAUT);
+  });
+
+  it("ne se stocke que si elle diffère de l'origine", () => {
+    expect(themeDepuisEtat(ORIGINE, THEME_PAR_DEFAUT, PALETTE_PAR_DEFAUT)).toEqual({
+      contrastes: {},
+    });
+    expect(themeDepuisEtat(ORIGINE, THEME_PAR_DEFAUT, "cobalt")).toEqual({
+      contrastes: {},
+      palette: "cobalt",
+    });
+  });
+
+  it("se relit, et un code inconnu retombe sur l'origine sans erreur", () => {
+    expect(paletteDuSite(normaliserTheme({ palette: "prune" }))).toBe("prune");
+    expect(paletteDuSite(normaliserTheme({ palette: "fluo" }))).toBe(PALETTE_PAR_DEFAUT);
+    expect(paletteDuSite(normaliserTheme({ palette: 7 }))).toBe(PALETTE_PAR_DEFAUT);
+    expect(normaliserTheme({ palette: PALETTE_PAR_DEFAUT })).toEqual({ contrastes: {} });
+  });
+
+  it("se règle sans toucher au thème d'ouverture ni aux bandes", () => {
+    const theme = themeDepuisEtat(avec({ "accueil.hero": false, "accueil.boucle": true }), "sombre", "lagune");
+    expect(theme.parDefaut).toBe("sombre");
+    expect(theme.palette).toBe("lagune");
+    expect(theme.contrastes).toEqual({ "accueil.hero": false, "accueil.boucle": true });
+  });
+
+  it("refuse un code qui n'est pas une palette du site", () => {
+    expect(validerPalette("cobalt")).toEqual([]);
+    expect(validerPalette("fluo")).toHaveLength(1);
+    expect(validerPalette(undefined)).toHaveLength(1);
+    expect(validerPalette("#ff00aa")).toHaveLength(1);
   });
 });
