@@ -16,7 +16,7 @@ import type { AtelierDefinition } from "./types";
 export const ATELIER_GPME: AtelierDefinition = {
   code: "gpme",
   titre: "Assister le dirigeant d'une PME pendant cinq trimestres",
-  diplome: "BTS Gestion de la PME",
+  formations: ["bts-gpme"],
   annee: "Deuxième année",
   nature: "Atelier professionnel",
   traceLabel: "dossier professionnel",

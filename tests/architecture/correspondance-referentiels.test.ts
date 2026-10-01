@@ -7,9 +7,9 @@ import { GESTES } from "@/config/competences";
 import {
   ECARTES,
   blocsAtteints,
-  blocsDuDiplome,
-  correspondanceDuDiplome,
-  diplomesAdosses,
+  blocsDeLaFormation,
+  correspondanceDeLaFormation,
+  formationsAdossees,
   gestesDeLAtelier,
 } from "@/config/correspondance";
 import {
@@ -33,56 +33,56 @@ import {
  * autre nom.
  */
 
-const DIPLOMES = diplomesAdosses();
+const FORMATIONS_SERVIES = formationsAdossees();
 const CODES_DE_GESTE = new Set(GESTES.map((g) => g.code));
 const SEANCES = new Set(
   ATELIERS.flatMap((a) => a.seances.map((s) => `${a.code}:${s.numero}`)),
 );
 
 describe("la correspondance geste ↔ référentiel", () => {
-  it("couvre les diplômes adossés à un référentiel, et eux seuls", () => {
-    expect(DIPLOMES.size, "aucun diplôme adossé").toBeGreaterThan(5);
-    for (const [diplome, codes] of DIPLOMES) {
+  it("couvre les formations servies à un référentiel, et eux seuls", () => {
+    expect(FORMATIONS_SERVIES.size, "aucun diplôme adossé").toBeGreaterThan(5);
+    for (const [formation, codes] of FORMATIONS_SERVIES) {
       for (const code of codes) {
         expect(
           adosseAUnReferentiel(code),
-          `${diplome} : ${code} n'a pas de référentiel`,
+          `${formation} : ${code} n'a pas de référentiel`,
         ).toBe(true);
       }
       expect(
-        correspondanceDuDiplome(diplome).length,
-        `${diplome} : aucun lien`,
+        correspondanceDeLaFormation(formation).length,
+        `${formation} : aucun lien`,
       ).toBeGreaterThan(0);
     }
   });
 
   it("chaque lien désigne un geste réel, un bloc réel, et une séance réelle", () => {
-    for (const [diplome] of DIPLOMES) {
-      const blocs = new Set(blocsDuDiplome(diplome));
-      for (const lien of correspondanceDuDiplome(diplome)) {
+    for (const [formation] of FORMATIONS_SERVIES) {
+      const blocs = new Set(blocsDeLaFormation(formation));
+      for (const lien of correspondanceDeLaFormation(formation)) {
         expect(
           CODES_DE_GESTE,
-          `${diplome} : le geste « ${lien.geste} » n'existe pas`,
+          `${formation} : le geste « ${lien.geste} » n'existe pas`,
         ).toContain(lien.geste);
         expect(
           blocs,
-          `${diplome} : le bloc « ${lien.referentiel} » ne lui appartient pas`,
+          `${formation} : le bloc « ${lien.referentiel} » ne lui appartient pas`,
         ).toContain(lien.referentiel);
         expect(
           lien.temoins.length,
-          `${diplome} / ${lien.geste} : lien sans témoin`,
+          `${formation} / ${lien.geste} : lien sans témoin`,
         ).toBeGreaterThan(0);
         for (const t of lien.temoins) {
           expect(
             SEANCES,
-            `${diplome} : la séance témoin « ${t} » n'existe pas`,
+            `${formation} : la séance témoin « ${t} » n'existe pas`,
           ).toContain(t);
         }
         // L'ambiguïté d'un lien, c'est le nombre de blocs que nommait sa
         // meilleure séance : jamais nul, jamais plus que ce qu'elle nomme.
         expect(
           lien.blocsDeLaSeance,
-          `${diplome} / ${lien.geste}`,
+          `${formation} / ${lien.geste}`,
         ).toBeGreaterThan(0);
       }
     }
@@ -93,15 +93,15 @@ describe("la correspondance geste ↔ référentiel", () => {
     // lié serait une compétence que le référentiel ignore : c'est possible,
     // mais cela se saurait. Ici, toute séance nomme au moins un bloc, donc
     // tout geste qu'elle travaille en reçoit un.
-    for (const [diplome, codes] of DIPLOMES) {
+    for (const [formation, codes] of FORMATIONS_SERVIES) {
       const lies = new Set(
-        correspondanceDuDiplome(diplome).map((l) => l.geste),
+        correspondanceDeLaFormation(formation).map((l) => l.geste),
       );
       for (const code of codes) {
         for (const geste of gestesDeLAtelier(code)) {
           expect(
             lies,
-            `${diplome} : « ${geste} » n'est lié à aucun bloc`,
+            `${formation} : « ${geste} » n'est lié à aucun bloc`,
           ).toContain(geste);
         }
       }
@@ -111,16 +111,16 @@ describe("la correspondance geste ↔ référentiel", () => {
   it("toute exclusion écrite à la main porte sur un lien qui existerait", () => {
     for (const e of ECARTES) {
       expect(
-        DIPLOMES.has(e.diplome),
-        `exclusion pour le diplôme inconnu « ${e.diplome} »`,
+        FORMATIONS_SERVIES.has(e.formation),
+        `exclusion pour le diplôme inconnu « ${e.formation} »`,
       ).toBe(true);
       expect(
         CODES_DE_GESTE,
         `exclusion sur le geste inconnu « ${e.geste} »`,
       ).toContain(e.geste);
       expect(
-        new Set(blocsDuDiplome(e.diplome)),
-        `exclusion sur un bloc étranger à ${e.diplome}`,
+        new Set(blocsDeLaFormation(e.formation)),
+        `exclusion sur un bloc étranger à ${e.formation}`,
       ).toContain(e.referentiel);
       expect(
         e.raison.length,
@@ -130,17 +130,20 @@ describe("la correspondance geste ↔ référentiel", () => {
   });
 
   it("atteindre se mesure, et un atelier atteint au moins son propre diplôme", () => {
-    for (const [diplome, codes] of DIPLOMES) {
-      const total = blocsDuDiplome(diplome).length;
+    for (const [formation, codes] of FORMATIONS_SERVIES) {
+      const total = blocsDeLaFormation(formation).length;
       for (const code of codes) {
-        const atteints = blocsAtteints(gestesDeLAtelier(code), diplome).length;
+        const atteints = blocsAtteints(
+          gestesDeLAtelier(code),
+          formation,
+        ).length;
         expect(
           atteints,
           `${code} n'atteint rien de son propre diplôme`,
         ).toBeGreaterThan(0);
         expect(
           atteints,
-          `${code} atteint plus de blocs que ${diplome} n'en a`,
+          `${code} atteint plus de blocs que ${formation} n'en a`,
         ).toBeLessThanOrEqual(total);
       }
     }

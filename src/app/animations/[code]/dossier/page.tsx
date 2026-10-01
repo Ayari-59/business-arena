@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { formationsEnToutesLettres } from "@/config/formations";
 import Link from "next/link";
 import { Signe } from "@/components/signe";
 import { NotionsMobilisees } from "@/components/notions-mobilisees";
@@ -40,7 +41,7 @@ export async function generateMetadata({
   if (!atelier) return {};
   return {
     title: `Dossier élève · ${atelier.titre}`,
-    description: `Ce que vous allez diriger, ce que vous rendez et sur quoi vous serez évalué, pour ${atelier.diplome}.`,
+    description: `Ce que vous allez diriger, ce que vous rendez et sur quoi vous serez évalué, pour ${formationsEnToutesLettres(atelier)}.`,
   };
 }
 
@@ -54,12 +55,19 @@ export default async function DossierElevePage({
   if (!atelier) notFound();
   const dossier = dossierEleve(atelier);
   const { entreprise } = dossier;
-  const periodicite = PERIODICITY_LABELS[dossier.periodicite].singular.toLowerCase();
+  const periodicite =
+    PERIODICITY_LABELS[dossier.periodicite].singular.toLowerCase();
 
   return (
-    <main id="main" className="mx-auto max-w-3xl px-6 py-12 print:max-w-none print:px-0 print:py-0 print:text-black">
+    <main
+      id="main"
+      className="mx-auto max-w-3xl px-6 py-12 print:max-w-none print:px-0 print:py-0 print:text-black"
+    >
       <p className="text-xs uppercase tracking-[0.3em] text-slate-400 print:hidden">
-        <Link href={`/animations/${atelier.code}`} className="hover:text-slate-300">
+        <Link
+          href={`/animations/${atelier.code}`}
+          className="hover:text-slate-300"
+        >
           {atelier.titre}
         </Link>{" "}
         / Dossier élève
@@ -105,15 +113,20 @@ export default async function DossierElevePage({
         <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-300 print:text-black">
           L&apos;entreprise que vous dirigez
         </h2>
-        <p className="mt-2 text-lg font-bold text-slate-50 print:text-black">{entreprise.titre}</p>
-        <p className="mt-1 text-sm italic text-slate-300 print:text-black">{entreprise.promesse}</p>
+        <p className="mt-2 text-lg font-bold text-slate-50 print:text-black">
+          {entreprise.titre}
+        </p>
+        <p className="mt-1 text-sm italic text-slate-300 print:text-black">
+          {entreprise.promesse}
+        </p>
         <p className="mt-3 text-sm leading-relaxed text-slate-300 print:text-black">
           {entreprise.contexte}
         </p>
         <p className="mt-3 text-sm leading-relaxed text-slate-400 print:text-black">
-          Vous la dirigez pendant {dossier.tours} tours, un {periodicite} par tour. Vous n&apos;êtes
-          pas seul sur le marché : les autres équipes vendent aux mêmes clients que vous, et ce que
-          vous ne prenez pas, quelqu&apos;un le prend.
+          Vous la dirigez pendant {dossier.tours} tours, un {periodicite} par
+          tour. Vous n&apos;êtes pas seul sur le marché : les autres équipes
+          vendent aux mêmes clients que vous, et ce que vous ne prenez pas,
+          quelqu&apos;un le prend.
         </p>
       </section>
 
@@ -122,7 +135,9 @@ export default async function DossierElevePage({
           clientèle dominante, coûts, stock d'ouverture, saison par tour. */}
       <section className="mt-8 break-inside-avoid">
         <h2 className="text-xl font-bold text-slate-100 print:text-black">
-          {dossier.gamme.length > 1 ? "Ce que vous vendez : la gamme" : "Ce que vous vendez"}
+          {dossier.gamme.length > 1
+            ? "Ce que vous vendez : la gamme"
+            : "Ce que vous vendez"}
         </h2>
         <div className="mt-3 overflow-x-auto">
           <table className="w-full border-collapse text-xs">
@@ -131,12 +146,23 @@ export default async function DossierElevePage({
                 <th className="border-b border-white/10 py-1.5 pr-3 font-medium print:border-black/30">
                   {dossier.gamme.length > 1 ? "Référence" : "Produit"}
                 </th>
-                <th className="border-b border-white/10 py-1.5 pr-3 text-right font-medium print:border-black/30">Prix usuel</th>
-                <th className="border-b border-white/10 py-1.5 pr-3 text-right font-medium print:border-black/30">Coût variable</th>
-                <th className="border-b border-white/10 py-1.5 pr-3 text-right font-medium print:border-black/30">Marge usuelle</th>
-                <th className="border-b border-white/10 py-1.5 pr-3 text-right font-medium print:border-black/30">Stock à l&apos;ouverture</th>
+                <th className="border-b border-white/10 py-1.5 pr-3 text-right font-medium print:border-black/30">
+                  Prix usuel
+                </th>
+                <th className="border-b border-white/10 py-1.5 pr-3 text-right font-medium print:border-black/30">
+                  Coût variable
+                </th>
+                <th className="border-b border-white/10 py-1.5 pr-3 text-right font-medium print:border-black/30">
+                  Marge usuelle
+                </th>
+                <th className="border-b border-white/10 py-1.5 pr-3 text-right font-medium print:border-black/30">
+                  Stock à l&apos;ouverture
+                </th>
                 {dossier.tableauDeBord.tours.map((t) => (
-                  <th key={t} className="border-b border-white/10 py-1.5 pr-2 text-right font-medium print:border-black/30">
+                  <th
+                    key={t}
+                    className="border-b border-white/10 py-1.5 pr-2 text-right font-medium print:border-black/30"
+                  >
                     Saison T{t}
                   </th>
                 ))}
@@ -144,14 +170,30 @@ export default async function DossierElevePage({
             </thead>
             <tbody className="text-slate-300 print:text-black">
               {dossier.gamme.map((g) => (
-                <tr key={g.code} className="border-b border-white/5 print:border-black/20">
-                  <td className="py-1.5 pr-3 font-medium text-slate-100 print:text-black">{g.nom}</td>
-                  <td className="py-1.5 pr-3 text-right tabular-nums">{g.prixUsuel.toLocaleString("fr-FR")} €</td>
-                  <td className="py-1.5 pr-3 text-right tabular-nums">{g.coutVariable.toLocaleString("fr-FR")} €</td>
-                  <td className="py-1.5 pr-3 text-right tabular-nums">{g.margeUsuelle.toLocaleString("fr-FR")} €</td>
-                  <td className="py-1.5 pr-3 text-right tabular-nums">{g.stockOuverture.toLocaleString("fr-FR")}</td>
+                <tr
+                  key={g.code}
+                  className="border-b border-white/5 print:border-black/20"
+                >
+                  <td className="py-1.5 pr-3 font-medium text-slate-100 print:text-black">
+                    {g.nom}
+                  </td>
+                  <td className="py-1.5 pr-3 text-right tabular-nums">
+                    {g.prixUsuel.toLocaleString("fr-FR")} €
+                  </td>
+                  <td className="py-1.5 pr-3 text-right tabular-nums">
+                    {g.coutVariable.toLocaleString("fr-FR")} €
+                  </td>
+                  <td className="py-1.5 pr-3 text-right tabular-nums">
+                    {g.margeUsuelle.toLocaleString("fr-FR")} €
+                  </td>
+                  <td className="py-1.5 pr-3 text-right tabular-nums">
+                    {g.stockOuverture.toLocaleString("fr-FR")}
+                  </td>
                   {g.saison.map((c, i) => (
-                    <td key={i} className="py-1.5 pr-2 text-right tabular-nums text-slate-400 print:text-black">
+                    <td
+                      key={i}
+                      className="py-1.5 pr-2 text-right tabular-nums text-slate-400 print:text-black"
+                    >
                       ×{c.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}
                     </td>
                   ))}
@@ -161,9 +203,10 @@ export default async function DossierElevePage({
           </table>
         </div>
         <p className="mt-2 text-sm leading-relaxed text-slate-400 print:text-black">
-          Le prix usuel est celui que la clientèle principale a l&apos;habitude de payer, pas une
-          consigne. La marge usuelle est ce qu&apos;il reste, à ce prix, une fois payés le coût
-          d&apos;achat et les frais variables : c&apos;est elle qui couvre les charges de structure.
+          Le prix usuel est celui que la clientèle principale a l&apos;habitude
+          de payer, pas une consigne. La marge usuelle est ce qu&apos;il reste,
+          à ce prix, une fois payés le coût d&apos;achat et les frais variables
+          : c&apos;est elle qui couvre les charges de structure.
         </p>
       </section>
 
@@ -180,7 +223,9 @@ export default async function DossierElevePage({
               key={route.label}
               className="rounded-lg border border-white/10 px-4 py-3 text-sm print:border-black/20"
             >
-              <p className="font-medium text-slate-100 print:text-black">{route.label}</p>
+              <p className="font-medium text-slate-100 print:text-black">
+                {route.label}
+              </p>
               <p className="mt-1 text-slate-400 print:text-black">
                 <Signe sens="gain" /> {route.gain}
               </p>
@@ -204,9 +249,13 @@ export default async function DossierElevePage({
             >
               <p className="text-xs font-semibold uppercase tracking-wider text-amber-400 print:text-black">
                 Séance {s.numero}
-                {s.tourJoue !== null ? ` · vous jouez le tour ${s.tourJoue}` : " · aucun tour joué"}
+                {s.tourJoue !== null
+                  ? ` · vous jouez le tour ${s.tourJoue}`
+                  : " · aucun tour joué"}
               </p>
-              <h3 className="mt-1 text-lg font-bold text-slate-50 print:text-black">{s.titre}</h3>
+              <h3 className="mt-1 text-lg font-bold text-slate-50 print:text-black">
+                {s.titre}
+              </h3>
               <p className="mt-2 text-sm leading-relaxed text-slate-300 print:text-black">
                 {s.objectif}
               </p>
@@ -264,17 +313,17 @@ export default async function DossierElevePage({
           Vos dossiers de service
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-slate-400 print:text-black">
-          Une équipe se répartit les rôles. Chaque service a sa page : ce qu&apos;il décide, les
-          chiffres de son domaine, et les trois questions à avoir posées avant de valider le tour.
-          Le{" "}
+          Une équipe se répartit les rôles. Chaque service a sa page : ce
+          qu&apos;il décide, les chiffres de son domaine, et les trois questions
+          à avoir posées avant de valider le tour. Le{" "}
           <a
             href={`/animations/${atelier.code}/cockpit`}
             className="text-amber-300 underline-offset-4 hover:underline print:text-black print:no-underline"
           >
             cockpit de prévision
           </a>{" "}
-          reprend ces chiffres dans un classeur qui calcule la logistique, le résultat et la
-          trésorerie de chaque tour à partir de vos hypothèses.
+          reprend ces chiffres dans un classeur qui calcule la logistique, le
+          résultat et la trésorerie de chaque tour à partir de vos hypothèses.
         </p>
         <div className="mt-4 space-y-6">
           {dossier.services.map((service) => (
@@ -282,15 +331,24 @@ export default async function DossierElevePage({
               key={service.code}
               className="break-inside-avoid rounded-xl border border-white/10 p-5 print:border-black/20"
             >
-              <h3 className="text-lg font-bold text-slate-50 print:text-black">{service.titre}</h3>
+              <h3 className="text-lg font-bold text-slate-50 print:text-black">
+                {service.titre}
+              </h3>
               <p className="mt-2 text-sm leading-relaxed text-slate-300 print:text-black">
                 {service.mission}
               </p>
               <dl className="mt-4 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
                 {service.lignes.map((l) => (
-                  <div key={l.libelle} className="flex justify-between gap-3 border-b border-white/5 py-1 print:border-black/10">
-                    <dt className="text-slate-400 print:text-black">{l.libelle}</dt>
-                    <dd className="text-right tabular-nums text-slate-100 print:text-black">{l.valeur}</dd>
+                  <div
+                    key={l.libelle}
+                    className="flex justify-between gap-3 border-b border-white/5 py-1 print:border-black/10"
+                  >
+                    <dt className="text-slate-400 print:text-black">
+                      {l.libelle}
+                    </dt>
+                    <dd className="text-right tabular-nums text-slate-100 print:text-black">
+                      {l.valeur}
+                    </dd>
                   </div>
                 ))}
               </dl>
@@ -300,7 +358,10 @@ export default async function DossierElevePage({
                     <thead>
                       <tr className="text-left uppercase tracking-wide text-slate-400 print:text-black">
                         {service.tableau.entetes.map((e) => (
-                          <th key={e} className="border-b border-white/10 py-1.5 pr-3 font-medium print:border-black/30">
+                          <th
+                            key={e}
+                            className="border-b border-white/10 py-1.5 pr-3 font-medium print:border-black/30"
+                          >
                             {e}
                           </th>
                         ))}
@@ -308,9 +369,15 @@ export default async function DossierElevePage({
                     </thead>
                     <tbody className="text-slate-300 print:text-black">
                       {service.tableau.lignes.map((ligne, i) => (
-                        <tr key={i} className="border-b border-white/5 print:border-black/20">
+                        <tr
+                          key={i}
+                          className="border-b border-white/5 print:border-black/20"
+                        >
                           {ligne.map((c, j) => (
-                            <td key={j} className={`py-1.5 pr-3 ${j > 0 ? "tabular-nums" : "text-slate-100 print:text-black"}`}>
+                            <td
+                              key={j}
+                              className={`py-1.5 pr-3 ${j > 0 ? "tabular-nums" : "text-slate-100 print:text-black"}`}
+                            >
                               {c}
                             </td>
                           ))}
@@ -341,9 +408,9 @@ export default async function DossierElevePage({
           Votre tableau de bord
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-slate-400 print:text-black">
-          À remplir tour après tour. Notez ce que vous décidez avant la clôture, ce que vous
-          obtenez après : c&apos;est la confrontation des deux qui se relit en fin d&apos;atelier,
-          pas la dernière ligne.
+          À remplir tour après tour. Notez ce que vous décidez avant la clôture,
+          ce que vous obtenez après : c&apos;est la confrontation des deux qui
+          se relit en fin d&apos;atelier, pas la dernière ligne.
         </p>
         <p className="mt-2 text-sm leading-relaxed text-slate-400 print:hidden">
           <a
@@ -352,8 +419,9 @@ export default async function DossierElevePage({
           >
             La même chose en tableur
           </a>{" "}
-          si vous préférez le remplir à l&apos;écran : le chiffre d&apos;affaires, l&apos;écart de
-          prévision et le résultat cumulé s&apos;y calculent seuls.
+          si vous préférez le remplir à l&apos;écran : le chiffre
+          d&apos;affaires, l&apos;écart de prévision et le résultat cumulé
+          s&apos;y calculent seuls.
         </p>
         <div className="mt-4 overflow-x-auto">
           <table className="w-full border-collapse text-xs">
@@ -387,7 +455,10 @@ export default async function DossierElevePage({
                     {ligne}
                   </td>
                   {dossier.tableauDeBord.tours.map((t) => (
-                    <td key={t} className="h-7 border border-white/15 print:border-black/40" />
+                    <td
+                      key={t}
+                      className="h-7 border border-white/15 print:border-black/40"
+                    />
                   ))}
                 </tr>
               ))}
@@ -405,7 +476,10 @@ export default async function DossierElevePage({
                     {ligne}
                   </td>
                   {dossier.tableauDeBord.tours.map((t) => (
-                    <td key={t} className="h-7 border border-white/15 print:border-black/40" />
+                    <td
+                      key={t}
+                      className="h-7 border border-white/15 print:border-black/40"
+                    />
                   ))}
                 </tr>
               ))}
@@ -415,7 +489,9 @@ export default async function DossierElevePage({
       </section>
 
       <section className="mt-10 break-inside-avoid border-t border-white/10 pt-6 print:border-black/20">
-        <h2 className="text-xl font-bold text-slate-100 print:text-black">Comment vous êtes noté</h2>
+        <h2 className="text-xl font-bold text-slate-100 print:text-black">
+          Comment vous êtes noté
+        </h2>
         <ul className="mt-2 space-y-1 text-sm leading-relaxed text-slate-300 print:text-black">
           {dossier.evaluationFinale.map((c) => (
             <li key={c}>· {c}</li>

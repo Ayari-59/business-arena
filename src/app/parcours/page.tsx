@@ -7,7 +7,7 @@ import {
   adosseAUnReferentiel,
 } from "@/config/ateliers/referentiels";
 import { AU_DELA_DES_SEANCES, couvertureDuDiplome } from "@/config/couverture";
-import { sigleDuDiplome } from "@/config/diplomes";
+import { FORMATIONS } from "@/config/formations";
 import { bouton } from "@/components/bouton";
 import { BandeFinale } from "@/components/bande-finale";
 import { PiedDePage } from "@/components/pied-de-page";
@@ -50,25 +50,24 @@ function ancre(texte: string): string {
     .replace(/^-|-$/g, "");
 }
 
-/** Les diplômes, dans l'ordre du registre des ateliers, avec leur parcours s'il existe. */
+/** Les formations servies, dans l'ordre du registre, avec leur parcours s'il existe. */
 const FILIERES = (() => {
-  const parDiplome = new Map<string, typeof ATELIERS>();
-  // UN BLOC DE RÉFÉRENTIEL APPARTIENT À UN DIPLÔME. La page portait douze
-  // sections dont trois n'étaient pas des formations : une découverte ouverte
-  // à toutes les filières, un approfondissement, un tournoi inter-filières.
-  // Elles affichaient pourtant des « blocs de référentiel » — « Étape 1 · Lire
-  // une situation et fixer un prix », « Volet 3 · Piloter la trésorerie » —
-  // qui sont nos propres découpages et ne figurent dans aucun arrêté. Mêlés
-  // aux blocs d'un texte officiel sur la page où un enseignant vient vérifier
-  // son programme, ils ôtaient leur valeur à tous les autres : on ne savait
-  // plus laquelle des listes s'oppose à une inspection.
-  for (const a of ATELIERS.filter((a) => adosseAUnReferentiel(a.code))) {
-    parDiplome.set(a.diplome, [
-      ...(parDiplome.get(a.diplome) ?? []),
-      a,
-    ] as typeof ATELIERS);
-  }
-  return [...parDiplome.entries()].map(([diplome, ateliers]) => {
+  // UN BLOC DE RÉFÉRENTIEL APPARTIENT À UNE FORMATION. La page portait douze
+  // sections dont trois n'en étaient pas : une découverte ouverte à toutes les
+  // filières, un approfondissement, un tournoi inter-filières. Elles
+  // affichaient pourtant des « blocs de référentiel » — « Étape 1 · Lire une
+  // situation et fixer un prix », « Volet 3 · Piloter la trésorerie » — qui
+  // sont nos propres découpages et ne figurent dans aucun arrêté.
+  //
+  // LE REGROUPEMENT SE FAIT SUR LES RATTACHEMENTS, PLUS SUR UN NOM. L'atelier
+  // portait un champ `diplome` au singulier, donc il ne pouvait paraître que
+  // sous une formation : un nom n'a qu'une valeur. Il déclare maintenant
+  // celles qu'il sert, et le tournoi inter-filières paraît sous les quatre.
+  return FORMATIONS.map((formation) => {
+    const ateliers = ATELIERS.filter(
+      (a) =>
+        a.formations.includes(formation.code) && adosseAUnReferentiel(a.code),
+    );
     const parcours = PARCOURS.find((p) =>
       ateliers.some((a) => p.ateliers.includes(a.code)),
     );
@@ -79,9 +78,9 @@ const FILIERES = (() => {
       // lettre accentuée laissait un trou (« h-tellerie »), parce qu'une
       // minuscule accentuée ne tombe pas dans [a-z]. Les accents se déplient
       // avant, et le sigle donne une adresse qu'on peut lire à voix haute.
-      id: parcours?.code ?? ancre(sigleDuDiplome(diplome)),
-      diplome,
-      sigle: sigleDuDiplome(diplome),
+      id: parcours?.code ?? ancre(formation.sigle),
+      diplome: formation.nom,
+      sigle: formation.sigle,
       parcours,
       ateliers,
       // CE QUE LE TIROIR FERMÉ DOIT ENCORE DIRE. Un repli qui ne laisse qu'un
@@ -98,7 +97,7 @@ const FILIERES = (() => {
           ? `${ateliers[0]!.seances.length} séances, ${Math.round(dureeTotaleHeures(ateliers[0]!))} heures`
           : `${ateliers.length} chemins proposés`,
     };
-  });
+  }).filter((f) => f.ateliers.length > 0);
 })();
 
 const ADEQUATION: Record<string, { label: string; className: string }> = {

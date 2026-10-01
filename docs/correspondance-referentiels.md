@@ -10,7 +10,7 @@ parcours.
 
 | | |
 | --- | --- |
-| diplômes | 9 |
+| formations | 9 |
 | liens déduits | 337 |
 | liens écartés à la main | 0 |
 
@@ -88,9 +88,9 @@ blocs dans le vocabulaire de ce diplôme. Avec la table, un atelier atteint tout
 diplôme dont les blocs sont liés aux gestes qu'il travaille. ATTEINDRE N'EST PAS
 COUVRIR : un bloc est atteint dès qu'un seul geste le touche, c'est un plancher.
 
-| atelier | son diplôme | ce qu'il atteindrait ailleurs |
+| atelier | ses formations | ce qu'il atteindrait ailleurs |
 | --- | --- | --- |
-| Tenir la boutique Maille & Co, premiers pas en gestion | aucun | BTS NDRC 3/3 · BTS MCO 3/4 · BTS GPME 3/4 · BTS MHR 3/4 · DCG 3/4 · STMG 7/10 · BTS CG 4/6 · BTS MHR · B et C 2/4 · BUT GEA 2/4 |
+| Tenir la boutique Maille & Co, premiers pas en gestion | Toutes filières, en découverte | BTS NDRC 3/3 · BTS MCO 3/4 · BTS GPME 3/4 · BTS MHR 3/4 · DCG 3/4 · STMG 7/10 · BTS CG 4/6 · BTS MHR · B et C 2/4 · BUT GEA 2/4 |
 | Prendre les commandes de Nova en quatre séances | STMG | BTS NDRC 3/3 · BTS MHR 4/4 · BTS MHR · B et C 4/4 · BTS MCO 3/4 · BUT GEA 3/4 · DCG 3/4 · BTS CG 3/6 · BTS GPME 2/4 |
 | Six trimestres chez Nova, du bilan d'ouverture au débriefing | BTS CG | BTS MCO 4/4 · BTS NDRC 3/3 · BTS MHR 4/4 · BUT GEA 4/4 · STMG 9/10 · BTS GPME 3/4 · BTS MHR · B et C 3/4 · DCG 3/4 |
 | Tenir un point de vente pendant quatre trimestres | BTS MCO | BTS NDRC 3/3 · BTS MHR 4/4 · BTS MHR · B et C 4/4 · BUT GEA 4/4 · BTS GPME 3/4 · DCG 3/4 · STMG 7/10 · BTS CG 2/6 |
@@ -103,8 +103,8 @@ COUVRIR : un bloc est atteint dès qu'un seul geste le touche, c'est un plancher
 | Analyser et piloter une entreprise industrielle | BUT GEA | BTS NDRC 3/3 · BTS MHR 4/4 · BTS MHR · B et C 4/4 · BTS MCO 3/4 · DCG 3/4 · BTS CG 4/6 · STMG 6/10 |
 | Quatre exercices chez Nova : budget, écarts, rapport de gestion | DCG | BUT GEA 4/4 · BTS GPME 3/4 · BTS NDRC 2/3 · STMG 6/10 · BTS CG 3/6 · BTS MCO 2/4 · BTS MHR 2/4 · BTS MHR · B et C 2/4 |
 | RSE et performance : un engagement qui se pilote | DCG | BTS MCO 3/4 · BTS NDRC 2/3 · BTS GPME 2/4 · BTS MHR · B et C 2/4 · BUT GEA 2/4 · BTS CG 2/6 |
-| Piloter sous incertitude une entreprise de transport | aucun | BTS MCO 4/4 · BTS NDRC 3/3 · BTS GPME 4/4 · BTS MHR 4/4 · BUT GEA 4/4 · DCG 4/4 · BTS CG 5/6 · BTS MHR · B et C 3/4 · STMG 4/10 |
-| Diriger une entreprise en équipe inter-filières | aucun | BTS NDRC 3/3 · BUT GEA 4/4 · DCG 4/4 · BTS CG 5/6 · BTS MCO 3/4 · BTS MHR 3/4 · BTS MHR · B et C 3/4 · STMG 7/10 · BTS GPME 2/4 |
+| Piloter sous incertitude une entreprise de transport | Toutes filières, après un premier atelier | BTS MCO 4/4 · BTS NDRC 3/3 · BTS GPME 4/4 · BTS MHR 4/4 · BUT GEA 4/4 · DCG 4/4 · BTS CG 5/6 · BTS MHR · B et C 3/4 · STMG 4/10 |
+| Diriger une entreprise en équipe inter-filières | STMG, BTS CG, BTS MCO et BTS NDRC | BUT GEA 4/4 · DCG 4/4 · BTS MHR 3/4 · BTS MHR · B et C 3/4 · BTS GPME 2/4 |
 
 ## La table, diplôme par diplôme
 

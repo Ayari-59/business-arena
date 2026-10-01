@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
+import { publicDeLAtelier } from "@/config/formations";
 import Link from "next/link";
 import { ATELIERS, dureeTotaleHeures } from "@/config/ateliers";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
 import { REFERENTIELS_NON_VERIFIES } from "@/config/ateliers/referentiels";
 import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
-import { ApercuArene, ApercuPilotage, ApercuProjection } from "@/components/apercus";
+import {
+  ApercuArene,
+  ApercuPilotage,
+  ApercuProjection,
+} from "@/components/apercus";
 import { PreuvesDusageBande } from "@/components/preuves-dusage";
 import { preuvesDusage } from "@/services/preuves-dusage.service";
 import { getPlatformConfig } from "@/services/admin.service";
@@ -22,13 +27,29 @@ export const metadata: Metadata = {
 };
 
 /** Les diplômes couverts, dédupliqués depuis le registre des ateliers. */
-const DIPLOMES = [...new Set(ATELIERS.map((a) => a.diplome))];
-const HEURES_TOTALES = Math.round(ATELIERS.reduce((s, a) => s + dureeTotaleHeures(a), 0));
+const DIPLOMES = [...new Set(ATELIERS.map((a) => publicDeLAtelier(a)))];
+const HEURES_TOTALES = Math.round(
+  ATELIERS.reduce((s, a) => s + dureeTotaleHeures(a), 0),
+);
 
 const HERO_STATS = [
-  { value: `${SCENARIO_CHOICES.length}`, label: "secteurs jouables", detail: "Industrie, commerce, hôtellerie, e-commerce, conseil, BTP, transport…" },
-  { value: `${ATELIERS.length}`, label: "ateliers clés en main", detail: "Déroulés de séance minutés, livrables et grilles d'évaluation compris" },
-  { value: `${DIPLOMES.length}`, label: "diplômes visés", detail: "Du lycée à l'expertise comptable, chacun adossé à son référentiel" },
+  {
+    value: `${SCENARIO_CHOICES.length}`,
+    label: "secteurs jouables",
+    detail:
+      "Industrie, commerce, hôtellerie, e-commerce, conseil, BTP, transport…",
+  },
+  {
+    value: `${ATELIERS.length}`,
+    label: "ateliers clés en main",
+    detail:
+      "Déroulés de séance minutés, livrables et grilles d'évaluation compris",
+  },
+  {
+    value: `${DIPLOMES.length}`,
+    label: "diplômes visés",
+    detail: "Du lycée à l'expertise comptable, chacun adossé à son référentiel",
+  },
 ];
 
 /**
@@ -116,15 +137,30 @@ const TROIS_TEMPS = [
 ];
 
 const CONFIANCE = [
-  { label: "Sans compte élève", desc: "Les élèves rejoignent par un code, aucune donnée personnelle exigée" },
-  { label: "Dans le navigateur", desc: "Rien à installer, sur ordinateur comme sur téléphone" },
-  { label: "Essai gratuit", desc: "Prenez en main les secteurs, ateliers et concours sans engagement" },
-  { label: "Référentiels lus sur le texte", desc: "Chaque atelier cite sa provenance ; ce qui n'a pas été vérifié le dit" },
+  {
+    label: "Sans compte élève",
+    desc: "Les élèves rejoignent par un code, aucune donnée personnelle exigée",
+  },
+  {
+    label: "Dans le navigateur",
+    desc: "Rien à installer, sur ordinateur comme sur téléphone",
+  },
+  {
+    label: "Essai gratuit",
+    desc: "Prenez en main les secteurs, ateliers et concours sans engagement",
+  },
+  {
+    label: "Référentiels lus sur le texte",
+    desc: "Chaque atelier cite sa provenance ; ce qui n'a pas été vérifié le dit",
+  },
 ];
 
 export default async function EnseignantsPage() {
   // Comptés dans la base, jamais rédigés — et tus tant qu'ils ne prouvent rien.
-  const [preuves, config] = await Promise.all([preuvesDusage(), getPlatformConfig()]);
+  const [preuves, config] = await Promise.all([
+    preuvesDusage(),
+    getPlatformConfig(),
+  ]);
   return (
     <>
       <main id="main" className="relative overflow-hidden">
@@ -132,20 +168,21 @@ export default async function EnseignantsPage() {
 
         {/* Hero */}
         <section className="mx-auto max-w-5xl px-6 pb-12 pt-16 text-center">
-          <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Pour les enseignants</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-amber-400">
+            Pour les enseignants
+          </p>
           <h1 className="mt-4 text-4xl font-bold leading-tight tracking-tight text-slate-50 sm:text-5xl">
-            Vos élèves apprennent à <span className="text-amber-400">décider</span>, pas à cliquer
+            Vos élèves apprennent à{" "}
+            <span className="text-amber-400">décider</span>, pas à cliquer
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-slate-400">
-            Un business game qui mesure une vraie décision, fait identifier le bon modèle
-            d&apos;analyse avant de trancher, et rend compte au référentiel sans rien surpromettre.
-            Des ateliers clés en main, une partie créée en trente secondes.
+            Un business game qui mesure une vraie décision, fait identifier le
+            bon modèle d&apos;analyse avant de trancher, et rend compte au
+            référentiel sans rien surpromettre. Des ateliers clés en main, une
+            partie créée en trente secondes.
           </p>
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <Link
-              href="/orientation"
-              className={bouton({ taille: "l" })}
-            >
+            <Link href="/orientation" className={bouton({ taille: "l" })}>
               Choisir ma simulation
             </Link>
             <Link
@@ -162,10 +199,14 @@ export default async function EnseignantsPage() {
             d'inspection à qui on l'a présenté.
           */}
           <p className="mt-4 text-base text-slate-400">
-            <Link href="/manuel" className="text-amber-300 underline-offset-4 hover:underline">
+            <Link
+              href="/manuel"
+              className="text-amber-300 underline-offset-4 hover:underline"
+            >
               Lire le manuel de l&apos;enseignant
             </Link>{" "}
-            · sans compte : ce que mesure l&apos;indice IPG, les niveaux, les barèmes.
+            · sans compte : ce que mesure l&apos;indice IPG, les niveaux, les
+            barèmes.
           </p>
         </section>
 
@@ -185,8 +226,14 @@ export default async function EnseignantsPage() {
           image. L'enseignant qui hésite ne cherche pas une explication de plus,
           il cherche à voir les trois écrans qu'il aura sous les yeux.
         */}
-        <section aria-labelledby="ecrans" className="mx-auto max-w-5xl px-6 pb-16">
-          <h2 id="ecrans" className="mb-8 text-center text-2xl font-bold text-slate-50">
+        <section
+          aria-labelledby="ecrans"
+          className="mx-auto max-w-5xl px-6 pb-16"
+        >
+          <h2
+            id="ecrans"
+            className="mb-8 text-center text-2xl font-bold text-slate-50"
+          >
             Trois écrans, et c&apos;est tout
           </h2>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -211,8 +258,12 @@ export default async function EnseignantsPage() {
           <dl className="grid gap-x-10 gap-y-px sm:grid-cols-2">
             {PEDAGOGIE.map((p) => (
               <div key={p.title} className="border-t border-white/10 py-4">
-                <dt className="text-sm font-semibold text-slate-100">{p.title}</dt>
-                <dd className="mt-1 text-base leading-relaxed text-slate-400">{p.text}</dd>
+                <dt className="text-sm font-semibold text-slate-100">
+                  {p.title}
+                </dt>
+                <dd className="mt-1 text-base leading-relaxed text-slate-400">
+                  {p.text}
+                </dd>
               </div>
             ))}
           </dl>
@@ -233,8 +284,9 @@ export default async function EnseignantsPage() {
             Des ateliers clés en main, par diplôme
           </h2>
           <p className="mx-auto mb-8 max-w-2xl text-center text-base text-slate-400">
-            {ATELIERS.length} déroulés prêts à animer, {HEURES_TOTALES} heures de séance au total,
-            chacun adossé à son référentiel et livré avec ses livrables et sa grille d&apos;évaluation.
+            {ATELIERS.length} déroulés prêts à animer, {HEURES_TOTALES} heures
+            de séance au total, chacun adossé à son référentiel et livré avec
+            ses livrables et sa grille d&apos;évaluation.
           </p>
           {/*
             QUINZE ATELIERS DÉTAILLÉS SUR UNE PAGE DE PRÉSENTATION.
@@ -251,14 +303,16 @@ export default async function EnseignantsPage() {
               >
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="rounded-full border border-amber-400/20 bg-amber-400/5 px-2 py-0.5 text-xs font-semibold text-amber-300">
-                    {a.diplome}
+                    {publicDeLAtelier(a)}
                   </span>
                   <span className="text-xs text-slate-400">{a.format}</span>
                 </div>
                 <h3 className="mt-3 text-sm font-semibold text-slate-100 group-hover:text-amber-200">
                   {a.titre}
                 </h3>
-                <p className="mt-1 text-base leading-relaxed text-slate-400">{a.resume}</p>
+                <p className="mt-1 text-base leading-relaxed text-slate-400">
+                  {a.resume}
+                </p>
                 <p className="mt-3 text-xs text-slate-400">
                   {a.nature} · {a.difficulteLabel}
                 </p>
@@ -274,9 +328,10 @@ export default async function EnseignantsPage() {
             </Link>
           </p>
           <p className="mx-auto mt-6 max-w-2xl text-center text-sm leading-relaxed text-slate-400">
-            Chaque atelier cite les unités ou blocs de son référentiel avec la provenance de la
-            liste. {REFERENTIELS_NON_VERIFIES.length} d&apos;entre eux (BTS MHR et BUT GEA) restent à
-            confronter à leur texte officiel, et l&apos;indiquent plutôt que de le taire.
+            Chaque atelier cite les unités ou blocs de son référentiel avec la
+            provenance de la liste. {REFERENTIELS_NON_VERIFIES.length}{" "}
+            d&apos;entre eux (BTS MHR et BUT GEA) restent à confronter à leur
+            texte officiel, et l&apos;indiquent plutôt que de le taire.
           </p>
         </section>
 
@@ -292,7 +347,10 @@ export default async function EnseignantsPage() {
           Ce qui les remplace ne se dessine pas : un filet, le fait en gras, sa
           précision à la suite. Le même sommaire que la page d'accueil.
         */}
-        <section aria-labelledby="trois-temps" className="mx-auto max-w-6xl px-6 pb-16">
+        <section
+          aria-labelledby="trois-temps"
+          className="mx-auto max-w-6xl px-6 pb-16"
+        >
           <h2
             id="trois-temps"
             className="text-center text-2xl font-bold text-slate-50"
@@ -307,11 +365,18 @@ export default async function EnseignantsPage() {
           <div className="mt-10 grid gap-x-10 gap-y-10 md:grid-cols-3">
             {TROIS_TEMPS.map((t) => (
               <div key={t.temps} className="border-t border-white/10 pt-5">
-                <h3 className="font-display text-xl font-semibold text-slate-100">{t.temps}</h3>
-                <p className="mt-1 text-base leading-relaxed text-slate-300">{t.resume}</p>
+                <h3 className="font-display text-xl font-semibold text-slate-100">
+                  {t.temps}
+                </h3>
+                <p className="mt-1 text-base leading-relaxed text-slate-300">
+                  {t.resume}
+                </p>
                 <ul className="mt-4 space-y-2.5">
                   {t.faits.map((f) => (
-                    <li key={f} className="flex gap-2.5 text-sm leading-relaxed text-slate-400">
+                    <li
+                      key={f}
+                      className="flex gap-2.5 text-sm leading-relaxed text-slate-400"
+                    >
                       <span
                         aria-hidden
                         className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-amber-400"
@@ -331,8 +396,12 @@ export default async function EnseignantsPage() {
             page de présentation renvoie, elle ne recopie pas.
           */}
           <p className="mt-6 text-center text-base text-slate-400">
-            Le déroulé d&apos;une séance, de la création au débriefing, est dans le{" "}
-            <Link href="/guide" className="text-amber-300 underline-offset-4 hover:underline">
+            Le déroulé d&apos;une séance, de la création au débriefing, est dans
+            le{" "}
+            <Link
+              href="/guide"
+              className="text-amber-300 underline-offset-4 hover:underline"
+            >
               guide de prise en main
             </Link>
             .
@@ -345,7 +414,10 @@ export default async function EnseignantsPage() {
           parole. Ils ne s'affichent qu'au-dessus d'un plancher : un compteur
           famélique prouverait l'inverse.
         */}
-        <PreuvesDusageBande preuves={preuves} publiees={config.preuvesPubliees} />
+        <PreuvesDusageBande
+          preuves={preuves}
+          publiees={config.preuvesPubliees}
+        />
 
         {/*
           LES QUATRE ENGAGEMENTS ONT DESCENDU D'UNE SECTION. Ils tenaient en

@@ -21,7 +21,7 @@ import type { AtelierDefinition } from "./types";
 export const ATELIER_BISTROT: AtelierDefinition = {
   code: "bistrot",
   titre: "Composer la carte et tenir le service",
-  diplome: "BTS Management en hôtellerie-restauration, options B et C",
+  formations: ["bts-mhr-bc"],
   annee: "Deuxième année",
   nature: "Atelier professionnel",
   traceLabel: "dossier professionnel",

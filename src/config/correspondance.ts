@@ -1,6 +1,7 @@
 import { ATELIERS } from "./ateliers";
 import { adosseAUnReferentiel } from "./ateliers/referentiels";
 import { GESTES } from "./competences";
+import { FORMATIONS } from "./formations";
 
 /**
  * LA TABLE DE CORRESPONDANCE GESTE ↔ RÉFÉRENTIEL — DÉDUITE, PAS ÉCRITE.
@@ -69,14 +70,14 @@ export interface Lien {
  * qu'elle a été examinée.
  */
 export const ECARTES: readonly {
-  diplome: string;
+  formation: string;
   geste: string;
   referentiel: string;
   raison: string;
 }[] = [];
 
 const ECARTE = new Set(
-  ECARTES.map((e) => `${e.diplome}|${e.geste}|${e.referentiel}`),
+  ECARTES.map((e) => `${e.formation}|${e.geste}|${e.referentiel}`),
 );
 
 /** Les gestes qu'une séance fait travailler, lus des origines du socle. */
@@ -106,12 +107,21 @@ export function gestesDeLAtelier(atelier: string): string[] {
   return [...vus];
 }
 
-/** Les diplômes dont le référentiel est celui d'une formation, et leurs ateliers. */
-export function diplomesAdosses(): Map<string, string[]> {
+/**
+ * LES FORMATIONS SERVIES, ET LES ATELIERS QUI LES SERVENT.
+ *
+ * Le regroupement se faisait sur le NOM du diplôme porté par l'atelier, ce qui
+ * interdisait qu'un atelier en serve deux : un nom n'a qu'une valeur. Il se
+ * fait sur les rattachements déclarés, donc un atelier paraît sous chacune des
+ * formations qu'il sert, et le tournoi inter-filières sous les quatre.
+ */
+export function formationsAdossees(): Map<string, string[]> {
   const m = new Map<string, string[]>();
-  for (const a of ATELIERS) {
-    if (!adosseAUnReferentiel(a.code)) continue;
-    m.set(a.diplome, [...(m.get(a.diplome) ?? []), a.code]);
+  for (const f of FORMATIONS) {
+    const siens = ATELIERS.filter(
+      (a) => a.formations.includes(f.code) && adosseAUnReferentiel(a.code),
+    ).map((a) => a.code);
+    if (siens.length) m.set(f.code, siens);
   }
   return m;
 }
@@ -120,8 +130,8 @@ export function diplomesAdosses(): Map<string, string[]> {
  * LA CORRESPONDANCE D'UN DIPLÔME : ses liens geste ↔ bloc, les plus attestés
  * d'abord, puisque ce sont les derniers qu'on remettra en cause.
  */
-export function correspondanceDuDiplome(diplome: string): Lien[] {
-  const codes = diplomesAdosses().get(diplome) ?? [];
+export function correspondanceDeLaFormation(formation: string): Lien[] {
+  const codes = formationsAdossees().get(formation) ?? [];
   const liens = new Map<string, { temoins: string[]; blocs: number }>();
   for (const code of codes) {
     const atelier = ATELIERS.find((a) => a.code === code);
@@ -129,7 +139,7 @@ export function correspondanceDuDiplome(diplome: string): Lien[] {
     for (const seance of atelier.seances) {
       for (const geste of gestesDeLaSeance(code, seance.numero)) {
         for (const bloc of seance.processus) {
-          if (ECARTE.has(`${diplome}|${geste}|${bloc}`)) continue;
+          if (ECARTE.has(`${formation}|${geste}|${bloc}`)) continue;
           const cle = `${geste}|${bloc}`;
           const vu = liens.get(cle) ?? {
             temoins: [],
@@ -161,9 +171,9 @@ export function correspondanceDuDiplome(diplome: string): Lien[] {
 }
 
 /** Tous les blocs de référentiel d'un diplôme, quels que soient ses chemins. */
-export function blocsDuDiplome(diplome: string): string[] {
+export function blocsDeLaFormation(formation: string): string[] {
   const vus = new Set<string>();
-  for (const code of diplomesAdosses().get(diplome) ?? []) {
+  for (const code of formationsAdossees().get(formation) ?? []) {
     for (const s of ATELIERS.find((a) => a.code === code)?.seances ?? []) {
       s.processus.forEach((p) => vus.add(p));
     }
@@ -183,10 +193,10 @@ export function blocsDuDiplome(diplome: string): string[] {
  */
 export function blocsAtteints(
   gestes: readonly string[],
-  diplome: string,
+  formation: string,
 ): string[] {
   const parGeste = new Map<string, Set<string>>();
-  for (const lien of correspondanceDuDiplome(diplome)) {
+  for (const lien of correspondanceDeLaFormation(formation)) {
     if (!parGeste.has(lien.geste)) parGeste.set(lien.geste, new Set());
     parGeste.get(lien.geste)!.add(lien.referentiel);
   }

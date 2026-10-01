@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { formationsEnToutesLettres } from "@/config/formations";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { atelierByCode } from "@/config/ateliers";
@@ -42,13 +43,17 @@ export async function generateMetadata({
   if (!atelier) return {};
   return {
     title: `Formulaires des livrables · ${atelier.titre}`,
-    description: `Une feuille à remplir par séance, à imprimer et à distribuer, pour ${atelier.diplome}.`,
+    description: `Une feuille à remplir par séance, à imprimer et à distribuer, pour ${formationsEnToutesLettres(atelier)}.`,
   };
 }
 
 /** Une ligne à écrire dessus : c'est tout le formulaire, répété. */
 function LigneAEcrire({ hauteur }: { hauteur: string }) {
-  return <div className={`${hauteur} border-b border-dotted border-white/25 print:border-black/40`} />;
+  return (
+    <div
+      className={`${hauteur} border-b border-dotted border-white/25 print:border-black/40`}
+    />
+  );
 }
 
 export default async function FormulairesPage({
@@ -63,9 +68,15 @@ export default async function FormulairesPage({
   const formulaires = formulairesAtelier(atelier);
 
   return (
-    <main id="main" className="mx-auto max-w-3xl px-6 py-12 print:max-w-none print:px-0 print:py-0 print:text-black">
+    <main
+      id="main"
+      className="mx-auto max-w-3xl px-6 py-12 print:max-w-none print:px-0 print:py-0 print:text-black"
+    >
       <p className="text-xs uppercase tracking-[0.3em] text-slate-400 print:hidden">
-        <Link href={`/animations/${atelier.code}`} className="hover:text-slate-300">
+        <Link
+          href={`/animations/${atelier.code}`}
+          className="hover:text-slate-300"
+        >
           {atelier.titre}
         </Link>{" "}
         / Formulaires
@@ -73,15 +84,16 @@ export default async function FormulairesPage({
 
       <header className="mt-4 border-b border-white/10 pb-6 print:hidden">
         <p className="text-xs font-semibold uppercase tracking-wider text-amber-400">
-          {atelier.nature} · {atelier.diplome} · {atelier.annee}
+          {atelier.nature} · {formationsEnToutesLettres(atelier)} · {atelier.annee}
         </p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-50">
           Les formulaires des livrables
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-400">
-          Une feuille par séance, à imprimer et à distribuer. Chaque feuille reprend le document
-          demandé, ligne par ligne, et rappelle en bas ce qui sera regardé. Les équipes rendent
-          alors des documents comparables, et personne n&apos;oublie une rubrique.
+          Une feuille par séance, à imprimer et à distribuer. Chaque feuille
+          reprend le document demandé, ligne par ligne, et rappelle en bas ce
+          qui sera regardé. Les équipes rendent alors des documents comparables,
+          et personne n&apos;oublie une rubrique.
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
           <PrintButton label="Imprimer les formulaires" />
@@ -113,7 +125,9 @@ export default async function FormulairesPage({
                 Séance {f.seance} · {f.seanceTitre}
               </p>
               <p className="text-xs uppercase tracking-wider text-slate-400 print:text-black">
-                {f.tourJoue !== null ? `Tour joué : ${f.tourJoue}` : "Aucun tour joué"}
+                {f.tourJoue !== null
+                  ? `Tour joué : ${f.tourJoue}`
+                  : "Aucun tour joué"}
               </p>
             </div>
 

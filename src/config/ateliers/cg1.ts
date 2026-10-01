@@ -23,7 +23,7 @@ import type { AtelierDefinition } from "./types";
 export const ATELIER_CG1: AtelierDefinition = {
   code: "cg1",
   titre: "Six trimestres chez Nova, du bilan d'ouverture au débriefing",
-  diplome: "BTS Comptabilité et Gestion",
+  formations: ["bts-cg"],
   annee: "Première année",
   nature: "Atelier professionnel",
   traceLabel: "passeport professionnel",

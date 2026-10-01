@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ATELIERS } from "@/config/ateliers";
+import { FORMATIONS } from "@/config/formations";
 import {
   AU_DELA_DES_SEANCES,
   CLES_ECRITES,
@@ -110,8 +111,11 @@ describe("la couverture des référentiels", () => {
     // deux, donc « Bloc 3 · Assurer la gestion opérationnelle » s'affichait
     // deux fois et le lecteur recousait lui-même ce que son diplôme exige.
     const parDiplome = new Map<string, string[]>();
-    for (const a of ATELIERS) {
-      parDiplome.set(a.diplome, [...(parDiplome.get(a.diplome) ?? []), a.code]);
+    for (const f of FORMATIONS) {
+      const siens = ATELIERS.filter((a) => a.formations.includes(f.code)).map(
+        (a) => a.code,
+      );
+      if (siens.length) parDiplome.set(f.nom, siens);
     }
     const multiples = [...parDiplome.values()].filter((c) => c.length > 1);
     expect(
@@ -156,8 +160,11 @@ describe("la couverture des référentiels", () => {
     // découragerait un enseignant à tort.
     const rang = ["partiel", "couvert", "coeur"];
     const parDiplome = new Map<string, string[]>();
-    for (const a of ATELIERS) {
-      parDiplome.set(a.diplome, [...(parDiplome.get(a.diplome) ?? []), a.code]);
+    for (const f of FORMATIONS) {
+      const siens = ATELIERS.filter((a) => a.formations.includes(f.code)).map(
+        (a) => a.code,
+      );
+      if (siens.length) parDiplome.set(f.nom, siens);
     }
     for (const [diplome, codes] of parDiplome) {
       for (const b of couvertureDuDiplome(codes)) {

@@ -56,7 +56,32 @@ export interface AtelierSeance {
 export interface AtelierDefinition {
   code: string;
   titre: string;
-  diplome: string;
+  /**
+   * LES FORMATIONS QUE CET ATELIER SERT — zéro, une, ou plusieurs.
+   *
+   * C'était `diplome`, au singulier, et ce champ faisait l'identité de
+   * l'atelier : la fiche s'appelait « Découvrir la gestion d'une entreprise en
+   * quatre séances » et c'est le mot STMG posé à côté qui disait de quoi il
+   * s'agissait. Un atelier ne pouvait donc servir qu'une formation, non parce
+   * qu'un autre diplôme n'y aurait rien trouvé, mais parce que la forme des
+   * données l'interdisait. L'identité est maintenant l'intitulé, que
+   * tests/architecture/intitules-des-ateliers garde distinctif.
+   *
+   * Les codes viennent de src/config/formations.ts, et une garde vérifie
+   * qu'aucun ne désigne une formation qui n'existe pas.
+   */
+  formations: readonly string[];
+  /**
+   * À QUI IL S'ADRESSE QUAND IL NE SERT AUCUNE FORMATION EN PARTICULIER.
+   *
+   * Trois ateliers sont dans ce cas : une découverte, un approfondissement, un
+   * tournoi. Ils portaient un FAUX DIPLÔME — « Découverte, toutes filières » —
+   * qui se mêlait aux vrais partout où le site les listait, et jusque dans la
+   * page des parcours, où il affichait des « blocs de référentiel » tirés
+   * d'aucun arrêté. Un public est une autre sorte de chose qu'un diplôme, et
+   * se lit comme telle.
+   */
+  public?: string;
   annee: string;
   /**
    * Ce que cette offre EST, dans les mots du niveau visé. Un BTS conduit un

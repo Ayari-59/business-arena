@@ -1,6 +1,7 @@
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ATELIERS } from "../src/config/ateliers";
+import { publicDeLAtelier } from "../src/config/formations";
 import { GESTES, SOCLE } from "../src/config/competences";
 
 /**
@@ -47,7 +48,7 @@ export function rapportDuSocle(): string {
   const introuvables = [...pris.keys()].filter((c) => !PAR_CLE.has(c));
   const doubles = [...pris.entries()].filter(([, g]) => g.length > 1);
   const oubliees = [...PAR_CLE.values()].filter((p) => !pris.has(p.cle));
-  const diplomeDe = new Map(ATELIERS.map((a) => [a.code, a.diplome]));
+  const publicDe = new Map(ATELIERS.map((a) => [a.code, publicDeLAtelier(a)]));
 
   const l: string[] = [];
   l.push("# Socle de compétences — proposition à arbitrer");
@@ -129,7 +130,7 @@ export function rapportDuSocle(): string {
     l.push(`### ${f.nom}`, "", `*${f.propos}*`, "");
     for (const g of f.gestes) {
       const dips = new Set(
-        g.origines.map((o) => diplomeDe.get(o.split(":")[0]!)).filter(Boolean),
+        g.origines.map((o) => publicDe.get(o.split(":")[0]!)).filter(Boolean),
       );
       l.push(`#### \`${g.code}\``, "");
       l.push(`> ${g.enonce}`, "");

@@ -18,7 +18,7 @@ import type { AtelierDefinition } from "./types";
 export const ATELIER_MCO: AtelierDefinition = {
   code: "mco",
   titre: "Tenir un point de vente pendant quatre trimestres",
-  diplome: "BTS Management commercial opérationnel",
+  formations: ["bts-mco"],
   annee: "Première année",
   nature: "Atelier professionnel",
   traceLabel: "fiches d'activités professionnelles",

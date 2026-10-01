@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { formationsEnToutesLettres } from "@/config/formations";
 import Link from "next/link";
 import { NotionsMobilisees } from "@/components/notions-mobilisees";
 import { notFound } from "next/navigation";
@@ -22,7 +23,10 @@ export async function generateMetadata({
   const { code } = await params;
   const a = atelierByCode.get(code);
   if (!a) return { title: "Atelier introuvable" };
-  return { title: `${a.titre} · ${a.diplome}`, description: a.resume };
+  return {
+    title: `${a.titre} · ${formationsEnToutesLettres(a)}`,
+    description: a.resume,
+  };
 }
 
 /**
@@ -55,7 +59,9 @@ function Section({
 }) {
   return (
     <section id={id} className="mt-10 scroll-mt-24">
-      <h2 className="text-lg font-bold text-slate-100 print:text-black">{titre}</h2>
+      <h2 className="text-lg font-bold text-slate-100 print:text-black">
+        {titre}
+      </h2>
       {children}
     </section>
   );
@@ -73,13 +79,19 @@ const SOMMAIRE = [
   ["faq", "Questions d'enseignants"],
 ] as const;
 
-export default async function AtelierPage({ params }: { params: Promise<{ code: string }> }) {
+export default async function AtelierPage({
+  params,
+}: {
+  params: Promise<{ code: string }>;
+}) {
   const { code } = await params;
   const atelier = atelierByCode.get(code);
   if (!atelier) notFound();
 
   const scenario = scenarioByCode(atelier.reglages.scenarioCode);
-  const niveau = DIFFICULTY_PRESETS.find((p) => p.level === atelier.reglages.niveau);
+  const niveau = DIFFICULTY_PRESETS.find(
+    (p) => p.level === atelier.reglages.niveau,
+  );
   // Une fiche de concours annonce un TOURNOI, pas une partie de classe : ses
   // groupes et ses finalistes se calculent du tirage réel plutôt que de
   // s'écrire à la main.
@@ -90,10 +102,12 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
   // Le nombre de tours ne se déduit pas du nombre de séances : la dernière rend
   // compte sans rien jouer. Les confondre a fait annoncer cinq trimestres sur la
   // fiche du DCG là où l'atelier en joue quatre et la partie en durait six.
-  const seancesQuiJouent = atelier.seances.filter((s) => s.tourJoue !== null).length;
-  const processus = [...new Set(atelier.seances.flatMap((s) => s.processus))].sort((a, b) =>
-    a.localeCompare(b, "fr", { numeric: true }),
-  );
+  const seancesQuiJouent = atelier.seances.filter(
+    (s) => s.tourJoue !== null,
+  ).length;
+  const processus = [
+    ...new Set(atelier.seances.flatMap((s) => s.processus)),
+  ].sort((a, b) => a.localeCompare(b, "fr", { numeric: true }));
 
   return (
     <div className="mx-auto grid max-w-6xl gap-10 px-6 py-12 lg:grid-cols-[1fr_220px] print:block print:max-w-none print:px-0 print:py-0 print:text-black">
@@ -102,12 +116,12 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
           <Link href="/animations" className="hover:text-slate-300">
             Ateliers
           </Link>{" "}
-          / {atelier.diplome}
+          / {formationsEnToutesLettres(atelier)}
         </p>
 
         <header className="mt-4 border-b border-white/10 pb-6 print:border-black/20">
           <p className="text-xs font-semibold uppercase tracking-wider text-amber-400 print:text-black">
-            {atelier.nature} · {atelier.diplome} · {atelier.annee}
+            {atelier.nature} · {formationsEnToutesLettres(atelier)} · {atelier.annee}
           </p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-50 print:text-black">
             {atelier.titre}
@@ -161,8 +175,12 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
           </p>
           <ul className="mt-2 space-y-1.5 text-sm leading-relaxed text-slate-300 print:text-black">
             <li>
-              · <strong className="text-slate-100 print:text-black">{atelier.format}</strong>, soit{" "}
-              {dureeTotaleHeures(atelier)} heures, et une partie de {atelier.reglages.tours} tours.{" "}
+              ·{" "}
+              <strong className="text-slate-100 print:text-black">
+                {atelier.format}
+              </strong>
+              , soit {dureeTotaleHeures(atelier)} heures, et une partie de{" "}
+              {atelier.reglages.tours} tours.{" "}
               {seancesQuiJouent === atelier.seances.length
                 ? "Chaque séance joue un tour."
                 : `${seancesQuiJouent} séances jouent un tour, la dernière rend compte.`}
@@ -170,7 +188,9 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
             <li>
               · {atelier.referentielLabel} {atelier.referentielAccord} :{" "}
               <strong className="text-slate-100 print:text-black">
-                {[...new Set(processus.map((p) => p.split("·")[0]!.trim()))].join(", ")}
+                {[
+                  ...new Set(processus.map((p) => p.split("·")[0]!.trim())),
+                ].join(", ")}
               </strong>
               .
             </li>
@@ -179,17 +199,24 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
               <strong className="text-slate-100 print:text-black">
                 {atelier.seances.length} livrables
               </strong>{" "}
-              et verse {atelier.seances.length} traces à son {atelier.traceLabel}.
+              et verse {atelier.seances.length} traces à son{" "}
+              {atelier.traceLabel}.
             </li>
             <li>
               · Entreprise :{" "}
-              <strong className="text-slate-100 print:text-black">{scenario.playerTeamName}</strong>{" "}
-              ({SECTOR_LABELS[scenario.sector].toLowerCase()}), {atelier.reglages.equipes} équipes de{" "}
+              <strong className="text-slate-100 print:text-black">
+                {scenario.playerTeamName}
+              </strong>{" "}
+              ({SECTOR_LABELS[scenario.sector].toLowerCase()}),{" "}
+              {atelier.reglages.equipes} équipes de{" "}
               {atelier.reglages.effectifParEquipe}.
             </li>
             <li>
-              · Exigence : <strong className="text-slate-100 print:text-black">{atelier.difficulteLabel}</strong>,
-              aucun prérequis de jeu pour l&apos;enseignant.
+              · Exigence :{" "}
+              <strong className="text-slate-100 print:text-black">
+                {atelier.difficulteLabel}
+              </strong>
+              , aucun prérequis de jeu pour l&apos;enseignant.
             </li>
           </ul>
         </div>
@@ -206,7 +233,10 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
               <tbody>
                 {(
                   [
-                    ["Diplôme", `${atelier.diplome}, ${atelier.annee.toLowerCase()}`],
+                    [
+                      "Diplôme",
+                      `${formationsEnToutesLettres(atelier)}, ${atelier.annee.toLowerCase()}`,
+                    ],
                     ["Entreprise dirigée", scenario.title],
                     ["Secteur", SECTOR_LABELS[scenario.sector]],
                     ["Ce que l'entreprise vend", scenario.vocabulary.units],
@@ -217,19 +247,27 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
                     ],
                     ["Nombre de séances", `${atelier.seances.length}`],
                     ["Volume horaire", `${dureeTotaleHeures(atelier)} heures`],
-                    ["Effectif conseillé", `${atelier.reglages.equipes} équipes de ${atelier.reglages.effectifParEquipe}`],
+                    [
+                      "Effectif conseillé",
+                      `${atelier.reglages.equipes} équipes de ${atelier.reglages.effectifParEquipe}`,
+                    ],
                     ["Concurrents machine", `${atelier.reglages.bots}`],
                     ["Exigence", atelier.difficulteLabel],
                   ] as const
                 ).map(([k, v]) => (
-                  <tr key={k} className="border-t border-white/5 first:border-t-0 print:border-black/10">
+                  <tr
+                    key={k}
+                    className="border-t border-white/5 first:border-t-0 print:border-black/10"
+                  >
                     <th
                       scope="row"
                       className="w-56 px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-400"
                     >
                       {k}
                     </th>
-                    <td className="px-4 py-2 text-slate-200 print:text-black">{v}</td>
+                    <td className="px-4 py-2 text-slate-200 print:text-black">
+                      {v}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -257,7 +295,10 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
                   ],
                   ...(tournoi
                     ? ([
-                        ["Équipes inscrites", `${tournoi.equipes} sur l'ensemble du campus`],
+                        [
+                          "Équipes inscrites",
+                          `${tournoi.equipes} sur l'ensemble du campus`,
+                        ],
                         [
                           "Groupes",
                           `${tournoi.tailleGroupe} par groupe à la création, ${libelleFormatTournoi(tournoi).toLowerCase()}`,
@@ -267,15 +308,26 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
                           `${tournoi.qualifiesParGroupe} par groupe, soit ${format!.finalistes} en finale`,
                         ],
                       ] as const)
-                    : ([["Équipes", `${atelier.reglages.equipes} équipes d'élèves`]] as const)),
-                  ["Concurrents", `${atelier.reglages.bots} pilotés par la machine`],
+                    : ([
+                        [
+                          "Équipes",
+                          `${atelier.reglages.equipes} équipes d'élèves`,
+                        ],
+                      ] as const)),
+                  [
+                    "Concurrents",
+                    `${atelier.reglages.bots} pilotés par la machine`,
+                  ],
                   // Le taux se règle dans les paramètres économiques de la
                   // partie, et il n'est pas le même partout : vingt pour cent
                   // dans le commerce de détail, dix dans la restauration sur
                   // place. La page ne l'invente donc plus, les notes de chaque
                   // fiche le disent.
                   ["TVA", atelier.reglages.tva ? "activée" : "désactivée"],
-                  ["Monde variable", atelier.reglages.mondeVariable ? "activé" : "décoché"],
+                  [
+                    "Monde variable",
+                    atelier.reglages.mondeVariable ? "activé" : "décoché",
+                  ],
                   ["Questions", atelier.reglages.quizMode],
                 ] as const
               ).map(([k, v]) => (
@@ -290,10 +342,7 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
             <p className="mt-3 text-sm leading-relaxed text-slate-400 print:text-black">
               {atelier.reglages.notes}
             </p>
-            <Link
-              href="/teacher"
-              className={`${bouton()} mt-4 print:hidden`}
-            >
+            <Link href="/teacher" className={`${bouton()} mt-4 print:hidden`}>
               {tournoi
                 ? "Organiser le concours dans mon espace enseignant"
                 : "Créer la partie dans mon espace enseignant"}
@@ -303,8 +352,8 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
 
         <Section id="formats" titre="Trois façons de le placer dans l'année">
           <p className="mt-2 text-sm leading-relaxed text-slate-400 print:text-black">
-            Le contenu ne change pas, seul le découpage change. Prenez celui qui correspond à votre
-            emploi du temps.
+            Le contenu ne change pas, seul le découpage change. Prenez celui qui
+            correspond à votre emploi du temps.
           </p>
           <div className="mt-4 grid gap-4 sm:grid-cols-3">
             {atelier.formats.map((f) => (
@@ -312,8 +361,12 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
                 key={f.nom}
                 className="break-inside-avoid carte p-4 print:border-black/20 print:bg-transparent"
               >
-                <h3 className="text-sm font-semibold text-slate-100 print:text-black">{f.nom}</h3>
-                <p className="mt-1 text-xs text-amber-300/80 print:text-black">{f.quand}</p>
+                <h3 className="text-sm font-semibold text-slate-100 print:text-black">
+                  {f.nom}
+                </h3>
+                <p className="mt-1 text-xs text-amber-300/80 print:text-black">
+                  {f.quand}
+                </p>
                 <p className="mt-2 text-sm leading-relaxed text-slate-400 print:text-black">
                   {f.comment}
                 </p>
@@ -324,11 +377,12 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
 
         <Section id="deroule" titre="Déroulé séance par séance">
           <p className="mt-3 text-sm leading-relaxed text-slate-400 print:text-black">
-            Le minutage est une trame, pas une contrainte. Aucune séance ne dépasse trois heures,
-            de sorte qu&apos;elle entre dans un créneau ordinaire ; à vous de l&apos;étirer si
-            vous disposez de plus de temps, ou de la resserrer. Une seule règle si vous devez
-            couper : prenez sur la production plutôt que sur le débriefing, qui est ce qui
-            transforme une partie jouée en séance apprise.
+            Le minutage est une trame, pas une contrainte. Aucune séance ne
+            dépasse trois heures, de sorte qu&apos;elle entre dans un créneau
+            ordinaire ; à vous de l&apos;étirer si vous disposez de plus de
+            temps, ou de la resserrer. Une seule règle si vous devez couper :
+            prenez sur la production plutôt que sur le débriefing, qui est ce
+            qui transforme une partie jouée en séance apprise.
           </p>
           <ol className="mt-5 space-y-6 border-l border-white/10 pl-6 print:border-black/20">
             {atelier.seances.map((s) => (
@@ -341,15 +395,21 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
                 </span>
                 <article className="carte p-5 print:border-black/20 print:bg-transparent">
                   <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                    <h3 className="text-xl font-bold text-slate-50 print:text-black">{s.titre}</h3>
+                    <h3 className="text-xl font-bold text-slate-50 print:text-black">
+                      {s.titre}
+                    </h3>
                     <span className="text-xs text-slate-400">
                       {minutesEnTexte(s.dureeMinutes)}
-                      {s.tourJoue !== null ? ` · tour ${s.tourJoue} joué en séance` : ""}
+                      {s.tourJoue !== null
+                        ? ` · tour ${s.tourJoue} joué en séance`
+                        : ""}
                     </span>
                   </div>
 
                   <p className="mt-3 text-sm leading-relaxed text-slate-300 print:text-black">
-                    <strong className="text-slate-100 print:text-black">Objectif. </strong>
+                    <strong className="text-slate-100 print:text-black">
+                      Objectif.{" "}
+                    </strong>
                     {s.objectif}
                   </p>
 
@@ -450,13 +510,15 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
 
         <Section id="livrables" titre="Livrables attendus, dans l'ordre">
           <p className="mt-2 text-sm leading-relaxed text-slate-400 print:text-black">
-            De quoi construire votre grille : la liste est celle des séances, elle ne peut pas en
-            différer.
+            De quoi construire votre grille : la liste est celle des séances,
+            elle ne peut pas en différer.
           </p>
           <ol className="mt-3 list-decimal space-y-1.5 pl-5 text-sm leading-relaxed text-slate-300 print:text-black">
             {atelier.seances.map((s) => (
               <li key={s.numero}>
-                <strong className="text-slate-100 print:text-black">Séance {s.numero}. </strong>
+                <strong className="text-slate-100 print:text-black">
+                  Séance {s.numero}.{" "}
+                </strong>
                 {s.livrable}
               </li>
             ))}
@@ -500,20 +562,30 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
         </Section>
 
         <p className="mt-10 text-sm leading-relaxed text-slate-600 print:text-black">
-          {atelier.referentielLabel} {atelier.referentielAccord} sont nommés comme le
-          référentiel du diplôme les nomme. Le rapprochement entre une séance et l&apos;un
-          d&apos;eux est une proposition, à ajuster à la progression de votre établissement et
-          aux compétences que votre équipe évalue.
+          {atelier.referentielLabel} {atelier.referentielAccord} sont nommés
+          comme le référentiel du diplôme les nomme. Le rapprochement entre une
+          séance et l&apos;un d&apos;eux est une proposition, à ajuster à la
+          progression de votre établissement et aux compétences que votre équipe
+          évalue.
         </p>
 
         <div className="mt-8 flex flex-wrap gap-4 text-sm print:hidden">
-          <Link href="/animations" className="text-slate-400 underline-offset-4 hover:underline">
+          <Link
+            href="/animations"
+            className="text-slate-400 underline-offset-4 hover:underline"
+          >
             Tous les ateliers
           </Link>
-          <Link href="/entreprises" className="text-slate-400 underline-offset-4 hover:underline">
+          <Link
+            href="/entreprises"
+            className="text-slate-400 underline-offset-4 hover:underline"
+          >
             Les entreprises
           </Link>
-          <Link href="/parcours" className="text-slate-400 underline-offset-4 hover:underline">
+          <Link
+            href="/parcours"
+            className="text-slate-400 underline-offset-4 hover:underline"
+          >
             Alignement sur les référentiels
           </Link>
         </div>
@@ -527,7 +599,10 @@ export default async function AtelierPage({ params }: { params: Promise<{ code: 
           <ul className="mt-3 space-y-2 text-xs">
             {SOMMAIRE.map(([id, label]) => (
               <li key={id}>
-                <a href={`#${id}`} className="text-slate-400 transition hover:text-amber-300">
+                <a
+                  href={`#${id}`}
+                  className="text-slate-400 transition hover:text-amber-300"
+                >
                   {label}
                 </a>
               </li>

@@ -27,7 +27,7 @@ import type { AtelierDefinition } from "./types";
 export const ATELIER_MCO2: AtelierDefinition = {
   code: "mco2",
   titre: "Piloter une unité de restauration au mois",
-  diplome: "BTS Management commercial opérationnel",
+  formations: ["bts-mco"],
   annee: "Deuxième année",
   nature: "Atelier professionnel",
   traceLabel: "fiches d'activités professionnelles",

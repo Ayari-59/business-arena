@@ -18,7 +18,7 @@ import type { AtelierDefinition } from "./types";
 export const ATELIER_FITNESS: AtelierDefinition = {
   code: "fitness",
   titre: "Garder ses adhérents plutôt que les remplacer",
-  diplome: "BTS Négociation et digitalisation de la relation client",
+  formations: ["bts-ndrc"],
   annee: "Deuxième année",
   nature: "Atelier professionnel",
   traceLabel: "dossier de fiches descriptives d'activités",

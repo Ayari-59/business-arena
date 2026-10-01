@@ -20,7 +20,8 @@ import type { AtelierDefinition } from "./types";
 export const ATELIER_AVANCE: AtelierDefinition = {
   code: "avance",
   titre: "Piloter sous incertitude une entreprise de transport",
-  diplome: "Approfondissement, toutes filières",
+  formations: [],
+  public: "Toutes filières, après un premier atelier",
   annee: "Niveau avancé",
   nature: "Atelier d'approfondissement",
   traceLabel: "dossier de synthèse",

@@ -21,7 +21,7 @@ import type { AtelierDefinition } from "./types";
 export const ATELIER_GEA: AtelierDefinition = {
   code: "gea",
   titre: "Analyser et piloter une entreprise industrielle",
-  diplome: "BUT Gestion des entreprises et des administrations",
+  formations: ["but-gea"],
   annee: "Première année",
   nature: "Atelier professionnel",
   traceLabel: "dossier professionnel",

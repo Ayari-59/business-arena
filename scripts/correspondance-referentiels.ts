@@ -1,13 +1,13 @@
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ATELIERS } from "../src/config/ateliers";
-import { sigleDuDiplome } from "../src/config/diplomes";
+import { formationParCode, publicDeLAtelier } from "../src/config/formations";
 import {
   ECARTES,
   blocsAtteints,
-  blocsDuDiplome,
-  correspondanceDuDiplome,
-  diplomesAdosses,
+  blocsDeLaFormation,
+  correspondanceDeLaFormation,
+  formationsAdossees,
   gestesDeLAtelier,
 } from "../src/config/correspondance";
 
@@ -21,10 +21,13 @@ import {
 
 export const DESTINATION = join("docs", "correspondance-referentiels.md");
 
+/** Le sigle d'une formation, ou son code si le registre ne la connaît pas. */
+const sigle = (code: string) => formationParCode(code)?.sigle ?? code;
+
 export function rapportDeCorrespondance(): string {
-  const diplomes = diplomesAdosses();
+  const diplomes = formationsAdossees();
   const tous = [...diplomes.keys()].flatMap((d) =>
-    correspondanceDuDiplome(d).map((l) => ({ ...l, diplome: d })),
+    correspondanceDeLaFormation(d).map((l) => ({ ...l, diplome: d })),
   );
   const parAmbiguite = new Map<number, number>();
   for (const l of tous) {
@@ -52,7 +55,7 @@ export function rapportDeCorrespondance(): string {
     "",
   );
   l.push(`| | |`, `| --- | --- |`);
-  l.push(`| diplômes | ${diplomes.size} |`);
+  l.push(`| formations | ${diplomes.size} |`);
   l.push(`| liens déduits | ${tous.length} |`);
   l.push(`| liens écartés à la main | ${ECARTES.length} |`);
   l.push("");
@@ -89,7 +92,7 @@ export function rapportDeCorrespondance(): string {
   l.push(`### Les ${faibles.length} liens les plus douteux`, "");
   for (const x of faibles) {
     l.push(
-      `- **${sigleDuDiplome(x.diplome)}** · \`${x.geste}\` → ${x.referentiel} ` +
+      `- **${sigle(x.diplome)}** · \`${x.geste}\` → ${x.referentiel} ` +
         `*(séance ${x.temoins.join(", ")}, qui nommait ${x.blocsDeLaSeance} blocs)*`,
     );
   }
@@ -103,22 +106,22 @@ export function rapportDeCorrespondance(): string {
     "COUVRIR : un bloc est atteint dès qu'un seul geste le touche, c'est un plancher.",
     "",
   );
-  l.push("| atelier | son diplôme | ce qu'il atteindrait ailleurs |");
+  l.push("| atelier | ses formations | ce qu'il atteindrait ailleurs |");
   l.push("| --- | --- | --- |");
   for (const a of ATELIERS) {
     const mes = gestesDeLAtelier(a.code);
     const ailleurs = [...diplomes.keys()]
-      .filter((d) => d !== a.diplome)
+      .filter((d) => !a.formations.includes(d))
       .map((d) => ({
         d,
         n: blocsAtteints(mes, d).length,
-        t: blocsDuDiplome(d).length,
+        t: blocsDeLaFormation(d).length,
       }))
       .filter((x) => x.n > 0)
       .sort((x, y) => y.n / y.t - x.n / x.t)
-      .map((x) => `${sigleDuDiplome(x.d)} ${x.n}/${x.t}`);
+      .map((x) => `${sigle(x.d)} ${x.n}/${x.t}`);
     l.push(
-      `| ${a.titre} | ${diplomes.has(a.diplome) ? sigleDuDiplome(a.diplome) : "aucun"} | ${ailleurs.join(" · ") || "rien"} |`,
+      `| ${a.titre} | ${publicDeLAtelier(a) || "aucune"} | ${ailleurs.join(" · ") || "rien"} |`,
     );
   }
   l.push("");
@@ -127,7 +130,7 @@ export function rapportDeCorrespondance(): string {
     l.push(`## Liens écartés à la main (${ECARTES.length})`, "");
     for (const e of ECARTES) {
       l.push(
-        `- **${sigleDuDiplome(e.diplome)}** · \`${e.geste}\` → ${e.referentiel}`,
+        `- **${sigle(e.formation)}** · \`${e.geste}\` → ${e.referentiel}`,
         `  ${e.raison}`,
       );
     }
@@ -136,9 +139,9 @@ export function rapportDeCorrespondance(): string {
 
   l.push("## La table, diplôme par diplôme", "");
   for (const [diplome] of diplomes) {
-    l.push(`### ${diplome}`, "");
-    const liens = correspondanceDuDiplome(diplome);
-    for (const bloc of blocsDuDiplome(diplome)) {
+    l.push(`### ${formationParCode(diplome)?.nom ?? diplome}`, "");
+    const liens = correspondanceDeLaFormation(diplome);
+    for (const bloc of blocsDeLaFormation(diplome)) {
       const siens = liens.filter((x) => x.referentiel === bloc);
       l.push(`#### ${bloc}`, "", `${siens.length} gestes liés.`, "");
       for (const x of siens) {

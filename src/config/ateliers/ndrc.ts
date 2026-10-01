@@ -17,7 +17,7 @@ import type { AtelierDefinition } from "./types";
 export const ATELIER_NDRC: AtelierDefinition = {
   code: "ndrc",
   titre: "Rentabiliser une clientèle sur cinq trimestres",
-  diplome: "BTS Négociation et digitalisation de la relation client",
+  formations: ["bts-ndrc"],
   annee: "Première année",
   nature: "Atelier professionnel",
   traceLabel: "dossier de fiches descriptives d'activités",

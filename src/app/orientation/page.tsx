@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { publicDeLAtelier } from "@/config/formations";
 import Link from "next/link";
 import { OrientationForm } from "@/components/orientation-form";
 import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
@@ -54,11 +55,16 @@ function parObjectif() {
   return OBJECTIFS.filter((o) => o.secteur !== null).map((o) => {
     const scenario = scenarioByCode(o.secteur!);
     const niveau = DIFFICULTY_PRESETS.find((p) => p.level === o.niveauMinimum);
-    const ateliers = ATELIERS.filter((a) => tete(a.reglages.scenarioCode) === tete(o.secteur!));
+    const ateliers = ATELIERS.filter(
+      (a) => tete(a.reglages.scenarioCode) === tete(o.secteur!),
+    );
     // Deux ateliers d'un même diplôme ne font qu'une entrée : le lecteur
     // cherche un public, pas un catalogue.
-    const parDiplome = new Map<string, string>();
-    for (const a of ateliers) if (!parDiplome.has(a.diplome)) parDiplome.set(a.diplome, a.code);
+    const parPublic = new Map<string, string>();
+    for (const a of ateliers) {
+      const vise = publicDeLAtelier(a);
+      if (!parPublic.has(vise)) parPublic.set(vise, a.code);
+    }
     return {
       code: o.code,
       libelle: o.libelle,
@@ -66,7 +72,10 @@ function parObjectif() {
       entreprise: nomEntreprise(scenario),
       niveauNom: niveau?.name ?? "",
       niveauRang: o.niveauMinimum,
-      diplomes: [...parDiplome.entries()].map(([diplome, atelier]) => ({ diplome, atelier })),
+      diplomes: [...parPublic.entries()].map(([diplome, atelier]) => ({
+        diplome,
+        atelier,
+      })),
     };
   });
 }
@@ -78,7 +87,9 @@ export default function OrientationPage() {
         <p className="text-xs uppercase tracking-[0.3em] text-amber-400">
           Business Arena · orientation
         </p>
-        <h1 className="mt-2 text-3xl font-bold text-slate-50">Quelle simulation pour votre classe</h1>
+        <h1 className="mt-2 text-3xl font-bold text-slate-50">
+          Quelle simulation pour votre classe
+        </h1>
         <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-400">
           {/* SCENARIOS compte les DÉFINITIONS, variantes « gamme » comprises : quinze.
               Le visiteur, lui, choisit parmi les TUILES — une par famille, neuf — et
@@ -88,11 +99,12 @@ export default function OrientationPage() {
           {/* L'accroche annonçait « répondez à quatre questions » juste au-dessus
               du titre qui le dit maintenant. Elle garde ce qu'elle seule peut
               dire : pourquoi le choix est difficile, et ce que vaut la réponse. */}
-          {SCENARIO_CHOICES.length} entreprises, {DIFFICULTY_PRESETS.length} niveaux de
-          difficulté, une durée réglable et {ATELIERS.length} ateliers prêts à animer : cela
-          fait beaucoup de combinaisons, et le mauvais réglage ne se voit qu&apos;en séance
-          trois. Deux chemins mènent au bon, et la recommandation se discute : elle
-          n&apos;a rien d&apos;un oracle, c&apos;est le raisonnement que nous tiendrions à
+          {SCENARIO_CHOICES.length} entreprises, {DIFFICULTY_PRESETS.length}{" "}
+          niveaux de difficulté, une durée réglable et {ATELIERS.length}{" "}
+          ateliers prêts à animer : cela fait beaucoup de combinaisons, et le
+          mauvais réglage ne se voit qu&apos;en séance trois. Deux chemins
+          mènent au bon, et la recommandation se discute : elle n&apos;a rien
+          d&apos;un oracle, c&apos;est le raisonnement que nous tiendrions à
           votre place.
         </p>
 
@@ -109,12 +121,16 @@ export default function OrientationPage() {
           son antécédent.
         */}
         <section aria-labelledby="quatre-questions" className="mt-12">
-          <h2 id="quatre-questions" className="text-2xl font-bold text-slate-50">
+          <h2
+            id="quatre-questions"
+            className="text-2xl font-bold text-slate-50"
+          >
             Répondez à quatre questions
           </h2>
           <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-400">
-            Le diplôme, le moment de l&apos;année, ce que vous voulez faire travailler, et le
-            temps dont vous disposez. La recommandation s&apos;écrit à mesure.
+            Le diplôme, le moment de l&apos;année, ce que vous voulez faire
+            travailler, et le temps dont vous disposez. La recommandation
+            s&apos;écrit à mesure.
           </p>
           <div className="mt-8">
             <OrientationForm />
@@ -129,19 +145,24 @@ export default function OrientationPage() {
           qu'on peut faire travailler, avec quelle entreprise, à partir de quel
           niveau, et pour quels publics une séance existe déjà.
         */}
-        <section aria-labelledby="objectifs" className="mt-16 border-t border-white/10 pt-10">
+        <section
+          aria-labelledby="objectifs"
+          className="mt-16 border-t border-white/10 pt-10"
+        >
           <h2 id="objectifs" className="text-2xl font-bold text-slate-50">
             Ou partez de ce que vous voulez faire travailler
           </h2>
           <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-400">
-            Chaque objectif a son métier : celui qui rend la notion visible sans qu&apos;il faille
-            la chercher. Le niveau indiqué est le minimum à partir duquel les leviers nécessaires
-            sont ouverts.
+            Chaque objectif a son métier : celui qui rend la notion visible sans
+            qu&apos;il faille la chercher. Le niveau indiqué est le minimum à
+            partir duquel les leviers nécessaires sont ouverts.
           </p>
           <div className="mt-8 grid gap-x-10 gap-y-8 sm:grid-cols-2">
             {parObjectif().map((o) => (
               <div key={o.code} className="border-t border-white/10 pt-4">
-                <h3 className="text-base font-semibold text-slate-100">{o.libelle}</h3>
+                <h3 className="text-base font-semibold text-slate-100">
+                  {o.libelle}
+                </h3>
                 <p className="mt-1.5 text-sm text-slate-300">
                   <Link
                     href="/entreprises"
@@ -154,7 +175,9 @@ export default function OrientationPage() {
                     · à partir du niveau {o.niveauNom}
                   </span>
                 </p>
-                <p className="mt-2 text-sm leading-relaxed text-slate-400">{o.raison}</p>
+                <p className="mt-2 text-sm leading-relaxed text-slate-400">
+                  {o.raison}
+                </p>
                 <p className="mt-2 text-sm leading-relaxed text-slate-400">
                   {o.diplomes.length === 0 ? (
                     // Le dire plutôt que le taire : cela signifie que la séance
@@ -189,17 +212,26 @@ export default function OrientationPage() {
 
         <p className="mt-10 text-sm leading-relaxed text-slate-400">
           Vous préférez en parler de vive voix ?{" "}
-          <Link href="/rendez-vous" className="text-slate-400 underline-offset-4 hover:underline">
+          <Link
+            href="/rendez-vous"
+            className="text-slate-400 underline-offset-4 hover:underline"
+          >
             Prenez un rendez-vous téléphonique
           </Link>
-          . Rien n&apos;est figé : le secteur, le niveau, la durée et la périodicité se changent à
-          la création de la partie, et une partie qui ne convient pas se relance en trente
-          secondes. Voir{" "}
-          <Link href="/entreprises" className="text-slate-400 underline-offset-4 hover:underline">
+          . Rien n&apos;est figé : le secteur, le niveau, la durée et la
+          périodicité se changent à la création de la partie, et une partie qui
+          ne convient pas se relance en trente secondes. Voir{" "}
+          <Link
+            href="/entreprises"
+            className="text-slate-400 underline-offset-4 hover:underline"
+          >
             les fiches des entreprises
           </Link>{" "}
           ou{" "}
-          <Link href="/animations" className="text-slate-400 underline-offset-4 hover:underline">
+          <Link
+            href="/animations"
+            className="text-slate-400 underline-offset-4 hover:underline"
+          >
             les ateliers publiés
           </Link>
           .

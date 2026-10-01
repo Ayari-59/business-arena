@@ -1,6 +1,11 @@
 import { ATELIERS, type AtelierDefinition } from "./ateliers";
+import { formationsEnToutesLettres, publicDeLAtelier } from "./formations";
 import { DIFFICULTY_PRESETS } from "./difficulty";
-import { SCENARIOS, scenarioByCode, scenarioCodeForLevel } from "./scenarios/registry";
+import {
+  SCENARIOS,
+  scenarioByCode,
+  scenarioCodeForLevel,
+} from "./scenarios/registry";
 import { tourDuPic } from "./scenarios/rounds";
 import type { Periodicity } from "./scenarios/periodicity";
 
@@ -130,7 +135,10 @@ export interface Demande {
 /** Les diplômes proposés : ceux qui ont un atelier, plus une porte de sortie. */
 export function diplomesProposes(): { code: string; libelle: string }[] {
   return [
-    ...ATELIERS.map((a) => ({ code: a.code, libelle: `${a.diplome} · ${a.annee}` })),
+    ...ATELIERS.map((a) => ({
+      code: a.code,
+      libelle: `${formationsEnToutesLettres(a)} · ${a.annee}`,
+    })),
     { code: "autre", libelle: "Un autre diplôme ou une autre formation" },
   ];
 }
@@ -144,7 +152,9 @@ export function diplomesProposes(): { code: string; libelle: string }[] {
  */
 function reglageDeConcours(atelier: AtelierDefinition): Recommandation {
   const scenario = scenarioByCode(atelier.reglages.scenarioCode);
-  const preset = DIFFICULTY_PRESETS.find((p) => p.level === atelier.reglages.niveau)!;
+  const preset = DIFFICULTY_PRESETS.find(
+    (p) => p.level === atelier.reglages.niveau,
+  )!;
   return {
     scenarioCode: atelier.reglages.scenarioCode,
     scenarioTitre: scenario.title,
@@ -171,7 +181,8 @@ function reglageDeConcours(atelier: AtelierDefinition): Recommandation {
  */
 export function recommander(demande: Demande): Recommandation {
   const atelier = ATELIERS.find((a) => a.code === demande.diplome) ?? null;
-  const objectif = OBJECTIFS.find((o) => o.code === demande.objectif) ?? OBJECTIFS[0]!;
+  const objectif =
+    OBJECTIFS.find((o) => o.code === demande.objectif) ?? OBJECTIFS[0]!;
   // Un atelier de CONCOURS coupe court : rien de ce qui suit ne s'applique,
   // puisque le produit impose le secteur, le niveau et la durée d'un
   // championnat. Répondre autre chose enverrait l'organisateur régler ce qui ne
@@ -181,15 +192,21 @@ export function recommander(demande: Demande): Recommandation {
 
   // 1. Le secteur : celui de l'objectif, qui est le plus parlant, sauf si
   //    l'atelier du diplôme en impose un autre pour de bonnes raisons.
-  let scenarioCode = objectif.secteur ?? atelier?.reglages.scenarioCode ?? SCENARIOS[0]!.code;
-  if (atelier && objectif.secteur && atelier.reglages.scenarioCode !== objectif.secteur) {
+  let scenarioCode =
+    objectif.secteur ?? atelier?.reglages.scenarioCode ?? SCENARIOS[0]!.code;
+  if (
+    atelier &&
+    objectif.secteur &&
+    atelier.reglages.scenarioCode !== objectif.secteur
+  ) {
     pourquoi.push(
-      `L'atelier ${atelier.diplome} se joue d'ordinaire sur un autre secteur ; votre objectif déplace le choix. ${objectif.raison}`,
+      `L'atelier ${publicDeLAtelier(atelier)} se joue d'ordinaire sur un autre secteur ; votre objectif déplace le choix. ${objectif.raison}`,
     );
   } else {
     pourquoi.push(objectif.raison);
   }
-  if (!SCENARIOS.some((s) => s.code === scenarioCode)) scenarioCode = SCENARIOS[0]!.code;
+  if (!SCENARIOS.some((s) => s.code === scenarioCode))
+    scenarioCode = SCENARIOS[0]!.code;
 
   // 2. Le niveau : celui de l'atelier, jamais sous ce que l'objectif exige,
   //    et rabattu d'un cran au premier semestre.

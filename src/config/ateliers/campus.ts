@@ -39,7 +39,7 @@ import type { AtelierDefinition } from "./types";
 export const ATELIER_CAMPUS: AtelierDefinition = {
   code: "campus",
   titre: "Diriger une entreprise en équipe inter-filières",
-  diplome: "Campus tertiaire · BTS CG, MCO, NDRC et STMG",
+  formations: ["bts-cg", "bts-mco", "bts-ndrc", "stmg"],
   annee: "Toutes les années, mêlées",
   nature: "Immersion inter-filières en tournoi",
   traceLabel: "dossier de tournoi",

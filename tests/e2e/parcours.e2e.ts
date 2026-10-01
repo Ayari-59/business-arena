@@ -3,6 +3,7 @@ import type { Browser, Page } from "playwright-core";
 import { aller, ouvrirNavigateur, texte, unique } from "./helpers/browser";
 import { ATELIERS, dureeTotaleHeures } from "../../src/config/ateliers";
 import { adosseAUnReferentiel } from "../../src/config/ateliers/referentiels";
+import { FORMATIONS, publicDeLAtelier } from "../../src/config/formations";
 import { SCENARIO_CHOICES } from "../../src/config/scenarios/registry";
 import { nomEntreprise } from "../../src/config/scenarios/presentation";
 
@@ -441,7 +442,14 @@ describe("parcours enseignant et élève", () => {
     // calculés à partir du déroulé : ce test vérifie qu'ils arrivent bien
     // jusqu'à la page, et que les six séances y sont toutes.
     await aller(prof, "/animations");
-    expect(await texte(prof)).toContain("BTS Comptabilité et Gestion");
+    // CE QUE LA LISTE NOMME SE DÉDUIT. Elle montrait « BTS Comptabilité et
+    // Gestion », écrit ici en toutes lettres ; elle montre le sigle depuis
+    // qu'un atelier peut servir plusieurs formations et que quinze cartes
+    // doivent rester balayables. Figer la forme dans un test, c'est interdire
+    // de changer d'avis sans rougir : on vérifie que la formation est nommée,
+    // pas la façon dont elle l'est.
+    const cgListe = ATELIERS.find((a) => a.code === "cg1")!;
+    expect(await texte(prof)).toContain(publicDeLAtelier(cgListe));
 
     // On désigne la fiche par son adresse et non par le premier lien de la
     // page : ce test tenait pour acquis que l'atelier de comptabilité ouvrait
@@ -568,9 +576,12 @@ describe("parcours enseignant et élève", () => {
       // Seuls les diplômes : la découverte, l'approfondissement et le tournoi
       // inter-filières n'ont pas de référentiel et ne sont pas sur cette page.
       const diplomes = new Set(
-        ATELIERS.filter((a) => adosseAUnReferentiel(a.code)).map(
-          (a) => a.diplome,
-        ),
+        FORMATIONS.filter((f) =>
+          ATELIERS.some(
+            (a) =>
+              a.formations.includes(f.code) && adosseAUnReferentiel(a.code),
+          ),
+        ).map((f) => f.code),
       );
       expect(await tiroirs.count(), "un tiroir par diplôme servi").toBe(
         diplomes.size,

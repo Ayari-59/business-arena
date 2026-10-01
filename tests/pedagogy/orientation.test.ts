@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { publicDeLAtelier } from "@/config/formations";
 import { describe, expect, it } from "vitest";
 import {
   diplomesProposes,
@@ -24,7 +25,9 @@ import { SCENARIOS, scenarioByCode } from "../../src/config/scenarios/registry";
  */
 const SEMESTRES: Semestre[] = ["s1", "s2"];
 const COMBINAISONS = diplomesProposes().flatMap((d) =>
-  SEMESTRES.flatMap((s) => OBJECTIFS.map((o) => ({ diplome: d.code, semestre: s, objectif: o.code }))),
+  SEMESTRES.flatMap((s) =>
+    OBJECTIFS.map((o) => ({ diplome: d.code, semestre: s, objectif: o.code })),
+  ),
 );
 
 describe("orientation", () => {
@@ -38,14 +41,18 @@ describe("orientation", () => {
         `${contexte} : secteur inconnu « ${r.scenarioCode} »`,
       ).toBe(true);
       expect(
-        DIFFICULTY_PRESETS.some((p) => p.level === r.niveau && p.name === r.niveauNom),
+        DIFFICULTY_PRESETS.some(
+          (p) => p.level === r.niveau && p.name === r.niveauNom,
+        ),
         `${contexte} : niveau ${r.niveau} · ${r.niveauNom} inexistant`,
       ).toBe(true);
       expect(r.tours, `${contexte} : durée nulle`).toBeGreaterThan(0);
       expect(
         r.tours,
         `${contexte} : ${r.tours} tours pour un secteur qui n'en porte que ${scenarioByCode(r.scenarioCode).scenario.roundsCount}`,
-      ).toBeLessThanOrEqual(scenarioByCode(r.scenarioCode).scenario.roundsCount);
+      ).toBeLessThanOrEqual(
+        scenarioByCode(r.scenarioCode).scenario.roundsCount,
+      );
       expect(["month", "quarter", "year"], contexte).toContain(r.periodicite);
     }
   });
@@ -56,9 +63,15 @@ describe("orientation", () => {
     for (const demande of COMBINAISONS) {
       const r = recommander(demande);
       const contexte = `${demande.diplome}/${demande.semestre}/${demande.objectif}`;
-      expect(r.pourquoi.length, `${contexte} : aucune raison`).toBeGreaterThanOrEqual(2);
+      expect(
+        r.pourquoi.length,
+        `${contexte} : aucune raison`,
+      ).toBeGreaterThanOrEqual(2);
       for (const raison of r.pourquoi) {
-        expect(raison.length, `${contexte} : raison trop courte`).toBeGreaterThan(40);
+        expect(
+          raison.length,
+          `${contexte} : raison trop courte`,
+        ).toBeGreaterThan(40);
       }
     }
   });
@@ -68,24 +81,41 @@ describe("orientation", () => {
     // l'outil en même temps que la matière.
     for (const d of diplomesProposes()) {
       for (const o of OBJECTIFS) {
-        const s1 = recommander({ diplome: d.code, semestre: "s1", objectif: o.code });
-        const s2 = recommander({ diplome: d.code, semestre: "s2", objectif: o.code });
+        const s1 = recommander({
+          diplome: d.code,
+          semestre: "s1",
+          objectif: o.code,
+        });
+        const s2 = recommander({
+          diplome: d.code,
+          semestre: "s2",
+          objectif: o.code,
+        });
         const contexte = `${d.code}/${o.code}`;
-        expect(s1.niveau, `${contexte} : niveau plus élevé au premier semestre`).toBeLessThanOrEqual(
-          s2.niveau,
-        );
-        expect(s1.tours, `${contexte} : partie plus longue au premier semestre`).toBeLessThanOrEqual(
-          s2.tours,
-        );
+        expect(
+          s1.niveau,
+          `${contexte} : niveau plus élevé au premier semestre`,
+        ).toBeLessThanOrEqual(s2.niveau);
+        expect(
+          s1.tours,
+          `${contexte} : partie plus longue au premier semestre`,
+        ).toBeLessThanOrEqual(s2.tours);
       }
     }
   });
 
   it("l'atelier proposé est celui du diplôme, ou aucun", () => {
     for (const d of diplomesProposes()) {
-      const r = recommander({ diplome: d.code, semestre: "s2", objectif: OBJECTIFS[0]!.code });
+      const r = recommander({
+        diplome: d.code,
+        semestre: "s2",
+        objectif: OBJECTIFS[0]!.code,
+      });
       if (d.code === "autre") {
-        expect(r.atelierCode, "un atelier proposé à un diplôme inconnu").toBeNull();
+        expect(
+          r.atelierCode,
+          "un atelier proposé à un diplôme inconnu",
+        ).toBeNull();
       } else {
         expect(r.atelierCode, `${d.code} : atelier absent`).toBe(d.code);
         expect(ATELIERS.some((a) => a.code === r.atelierCode)).toBe(true);
@@ -106,11 +136,13 @@ describe("orientation", () => {
     for (const demande of COMBINAISONS) {
       const r = recommander(demande);
       const scenario = scenarioByCode(r.scenarioCode).scenario;
-      const parTour = Array.from({ length: scenario.roundsCount }, (_, i) =>
-        scenario.market.segments.reduce(
-          (t, seg) => t + seg.size * (seg.seasonality?.[i] ?? 1),
-          0,
-        ) * (scenario.market.seasonality?.[i] ?? 1),
+      const parTour = Array.from(
+        { length: scenario.roundsCount },
+        (_, i) =>
+          scenario.market.segments.reduce(
+            (t, seg) => t + seg.size * (seg.seasonality?.[i] ?? 1),
+            0,
+          ) * (scenario.market.seasonality?.[i] ?? 1),
       );
       const pic = parTour.indexOf(Math.max(...parTour)) + 1;
       expect(
@@ -135,15 +167,18 @@ describe("orientation", () => {
       // qu'elle ne pourrait pas tenir. Rien n'échappe pour autant au contrôle :
       // on vérifie ici que ce sont bien les valeurs imposées qui sortent.
       if (atelier?.reglages.concours) {
-        expect(r.scenarioCode, `${atelier.code} : secteur autre que celui du concours`).toBe(
-          atelier.reglages.scenarioCode,
-        );
-        expect(r.niveau, `${atelier.code} : niveau autre que celui du concours`).toBe(
-          atelier.reglages.niveau,
-        );
-        expect(r.tours, `${atelier.code} : durée autre que celle du concours`).toBe(
-          atelier.reglages.tours,
-        );
+        expect(
+          r.scenarioCode,
+          `${atelier.code} : secteur autre que celui du concours`,
+        ).toBe(atelier.reglages.scenarioCode);
+        expect(
+          r.niveau,
+          `${atelier.code} : niveau autre que celui du concours`,
+        ).toBe(atelier.reglages.niveau);
+        expect(
+          r.tours,
+          `${atelier.code} : durée autre que celle du concours`,
+        ).toBe(atelier.reglages.tours);
         continue;
       }
       expect(
@@ -157,7 +192,10 @@ describe("orientation", () => {
     // La garde qui compte vraiment : elle ne lit pas le minimum déclaré, qui
     // peut être baissé par erreur, mais ce que l'objectif PROMET à l'enseignant.
     const EXIGENCES = [
-      { mots: /trésorerie|financement|bfr|emprunt/i, levier: "finance" as const },
+      {
+        mots: /trésorerie|financement|bfr|emprunt/i,
+        levier: "finance" as const,
+      },
       { mots: /risque|assurance|couverture/i, levier: "insurance" as const },
     ];
     for (const demande of COMBINAISONS) {
@@ -180,7 +218,11 @@ describe("orientation", () => {
     expect(page).toContain("diplomesProposes()");
     expect(page).toContain("OBJECTIFS");
     for (const a of ATELIERS) {
-      expect(page, `« ${a.diplome} » est écrit en dur dans le formulaire`).not.toContain(a.diplome);
+      const vise = publicDeLAtelier(a);
+      expect(
+        page,
+        `« ${vise} » est écrit en dur dans le formulaire`,
+      ).not.toContain(vise);
     }
   });
 });

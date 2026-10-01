@@ -22,7 +22,7 @@ import type { AtelierDefinition } from "./types";
 export const ATELIER_DCG_RSE: AtelierDefinition = {
   code: "dcg-rse",
   titre: "RSE et performance : un engagement qui se pilote",
-  diplome: "DCG",
+  formations: ["dcg"],
   annee: "Deuxième ou troisième année",
   nature: "Atelier professionnel",
   traceLabel: "portfolio de compétences",

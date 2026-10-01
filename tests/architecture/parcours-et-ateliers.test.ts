@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { PARCOURS } from "@/config/parcours";
 import { ATELIERS, atelierByCode } from "@/config/ateliers";
 import { adosseAUnReferentiel } from "@/config/ateliers/referentiels";
-import { SIGLE_PAR_DIPLOME, sigleDuDiplome } from "@/config/diplomes";
+import { FORMATIONS, publicDeLAtelier } from "@/config/formations";
 
 /**
  * AUCUNE FILIÈRE SERVIE N'EST DITE ABSENTE.
@@ -25,9 +25,19 @@ import { SIGLE_PAR_DIPLOME, sigleDuDiplome } from "@/config/diplomes";
  * atelier oublié fait échouer ce test plutôt qu'une page.
  */
 
-const PAGE = readFileSync(
+const SOURCE = readFileSync(
   join(process.cwd(), "src/app/parcours/page.tsx"),
   "utf8",
+);
+/**
+ * LE CODE SEUL. La prose qui explique une règle cite forcément ce qu'elle
+ * interdit : le commentaire qui raconte pourquoi le tournoi inter-filières est
+ * rattaché à quatre formations les nomme, et une garde qui lit le fichier
+ * entier y verrait un sigle écrit en dur.
+ */
+const PAGE = SOURCE.replace(/\/\*[\s\S]*?\*\//g, " ").replace(
+  /^\s*\/\/.*$/gm,
+  " ",
 );
 
 describe("les parcours et les ateliers", () => {
@@ -69,9 +79,7 @@ describe("les parcours et les ateliers", () => {
     // maintenant que chaque diplôme servi ait sa propre section, au même rang
     // que les quatre qui avaient un parcours écrit à la main.
     expect(PAGE).toContain("const FILIERES");
-    expect(PAGE).toContain(
-      "ATELIERS.filter((a) => adosseAUnReferentiel(a.code))",
-    );
+    expect(PAGE).toContain("a.formations.includes(formation.code)");
     expect(PAGE).toContain("FILIERES.map");
     // La liste se DÉDUIT : aucun code ni aucun nom de diplôme n'est recopié.
     for (const a of ATELIERS) {
@@ -81,15 +89,15 @@ describe("les parcours et les ateliers", () => {
       ).not.toContain(`"${a.code}"`);
       expect(
         PAGE,
-        `le diplôme « ${a.diplome} » est recopié dans la page`,
-      ).not.toContain(a.diplome);
+        `le diplôme « ${publicDeLAtelier(a)} » est recopié dans la page`,
+      ).not.toContain(publicDeLAtelier(a));
     }
   });
 
   it("chaque diplôme servi a une ancre, et celles des parcours ne bougent pas", () => {
     // Les ancres des quatre parcours sont liées ailleurs (page d'accueil,
     // pages d'atelier) : une section renommée les casserait en silence.
-    const diplomes = new Set(ATELIERS.map((a) => a.diplome));
+    const diplomes = new Set(ATELIERS.map((a) => publicDeLAtelier(a)));
     expect(diplomes.size, "un seul diplôme au registre").toBeGreaterThan(
       PARCOURS.length,
     );
@@ -188,23 +196,34 @@ describe("les parcours et les ateliers", () => {
     expect(tiroirs, "un tiroir ouvert d'avance").not.toMatch(/\sopen(\s|=|>)/);
   });
 
-  it("chaque diplôme a un sigle, faute de quoi l'index redevient illisible", () => {
-    // L'index en haut de page est une rangée de pastilles. « BTS Négociation
-    // et digitalisation de la relation client » y tient sur trois lignes : la
-    // page n'indexait donc que les quatre diplômes dont le nom court était
-    // déjà écrit quelque part. Un diplôme ajouté demain sans sigle ferait
-    // réapparaître le défaut, une pastille à la fois.
-    const sansSigle = [...new Set(ATELIERS.map((a) => a.diplome))].filter(
-      (d) => !(d in SIGLE_PAR_DIPLOME),
-    );
-    expect(sansSigle, `diplômes sans sigle :\n${sansSigle.join("\n")}`).toEqual(
-      [],
-    );
-    for (const diplome of new Set(ATELIERS.map((a) => a.diplome))) {
+  it("chaque formation a un sigle, et chaque atelier dit à qui il s'adresse", () => {
+    // L'index en haut de la page des parcours est une rangée de pastilles.
+    // « BTS Négociation et digitalisation de la relation client » y tient sur
+    // trois lignes : la page n'indexait donc que les quatre diplômes dont le
+    // nom court était écrit quelque part. Une formation ajoutée demain sans
+    // sigle ferait réapparaître le défaut, une pastille à la fois.
+    for (const f of FORMATIONS) {
       expect(
-        sigleDuDiplome(diplome).length,
-        `le sigle de « ${diplome} » est trop long pour une pastille`,
+        f.sigle.length,
+        `le sigle de « ${f.nom} » est trop long`,
       ).toBeLessThanOrEqual(20);
+      expect(f.sigle.length, `${f.nom} n'a pas de sigle`).toBeGreaterThan(2);
+    }
+    // Tout rattachement désigne une formation du registre ; tout atelier qui
+    // n'en sert aucune dit à qui il s'adresse. Sans cela il s'afficherait sans
+    // public nulle part, et personne ne verrait qu'il manque.
+    const codes = new Set(FORMATIONS.map((f) => f.code));
+    for (const a of ATELIERS) {
+      for (const c of a.formations) {
+        expect(
+          codes,
+          `${a.code} se rattache à la formation inconnue « ${c} »`,
+        ).toContain(c);
+      }
+      expect(
+        publicDeLAtelier(a).length,
+        `${a.code} ne dit à qui il s'adresse`,
+      ).toBeGreaterThan(2);
     }
   });
 
@@ -212,8 +231,8 @@ describe("les parcours et les ateliers", () => {
     // Le texte nommait BUT GEA et DCG comme absents. Les nommer quelque part
     // n'est pas interdit — les citer comme non servis l'est.
     const couverts = new Set(PARCOURS.flatMap((p) => p.ateliers));
-    const servis = ATELIERS.filter((a) => !couverts.has(a.code)).map(
-      (a) => a.diplome,
+    const servis = ATELIERS.filter((a) => !couverts.has(a.code)).map((a) =>
+      publicDeLAtelier(a),
     );
     const bandeFinale = PAGE.slice(PAGE.indexOf("<BandeFinale"));
     for (const diplome of new Set(servis)) {

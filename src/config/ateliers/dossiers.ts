@@ -1,4 +1,5 @@
 import { ATELIERS, type AtelierDefinition } from "./index";
+import { formationsEnToutesLettres } from "../formations";
 import { scenarioByCode, type ScenarioDefinition } from "../scenarios/registry";
 import { leviersDuNiveau } from "../decisions";
 import { DIFFICULTY_PRESETS } from "../difficulty";
@@ -149,7 +150,7 @@ export function dossierEleve(atelier: AtelierDefinition): DossierEleve {
     entete: {
       titre: atelier.titre,
       pitch: atelier.pitch,
-      diplome: atelier.diplome,
+      diplome: formationsEnToutesLettres(atelier),
       annee: atelier.annee,
       format: atelier.format,
       traceLabel: atelier.traceLabel,

@@ -21,7 +21,7 @@ import type { AtelierDefinition } from "./types";
 export const ATELIER_MHR: AtelierDefinition = {
   code: "mhr",
   titre: "Piloter un hôtel sur une année de saisons",
-  diplome: "BTS Management en hôtellerie-restauration",
+  formations: ["bts-mhr"],
   annee: "Première année",
   nature: "Atelier professionnel",
   traceLabel: "dossier professionnel",
