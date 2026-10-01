@@ -87,11 +87,9 @@ export default function AteliersPage() {
           </h2>
           <p className="mt-3 text-base leading-relaxed text-slate-400">
             Aux enseignants qui cherchent un point de départ structuré plutôt
-            qu&apos;un jeu à apprivoiser seuls. Ils ne remplacent pas votre
-            projet pédagogique : ils en proposent une trame, que vous adapterez
-            à votre volume horaire, à vos co-animateurs et à votre grille
-            d&apos;évaluation. Tout y est modifiable, à commencer par le secteur
-            de l&apos;entreprise et le niveau de difficulté.
+            qu&apos;un jeu à apprivoiser seuls. Tout y est modifiable, à
+            commencer par le secteur de l&apos;entreprise et le niveau de
+            difficulté.
           </p>
 
           {IMMERSIONS.map((a) => (
@@ -106,14 +104,9 @@ export default function AteliersPage() {
                 {a.titre}
               </h3>
               <p className="mt-2 text-base leading-relaxed text-slate-300">
-                Celle-ci ne se conduit pas dans une classe. Elle réunit{" "}
                 {publicDeLAtelier(a)} en équipes qui mêlent les niveaux, un
                 élève par filière et un poste de direction chacun, sur{" "}
-                {a.format} en mode concours. Les réglages n&apos;y sont pas les
-                vôtres : un championnat impose son entreprise, son niveau et sa
-                durée, et la fiche est écrite pour ces contraintes. Elle demande
-                donc un organisateur et l&apos;accord des équipes pédagogiques,
-                pas un créneau.
+                {a.format} en mode concours.
               </p>
               <Link
                 href={`/animations/${a.code}`}
@@ -277,21 +270,13 @@ export default function AteliersPage() {
               jouable sur la plateforme : les réglages annoncés sont ceux qui
               produisent le déroulé décrit, et les documents demandés aux
               équipes sont ceux que le jeu leur met effectivement entre les
-              mains. Nous ne décrivons pas une séance que nous n&apos;aurions
-              pas pu faire tourner.
+              mains.
             </p>
             <p>
               Chaque diplôme découpe le métier avec ses propres mots, processus
               pour le BTS CG, blocs de compétences pour les BTS MCO, NDRC et
               GPME, thèmes de programme au lycée, unités d&apos;enseignement
-              pour le DCG, et chaque fiche emploie ceux de son référentiel. Le
-              rapprochement entre une séance et l&apos;un d&apos;eux est en
-              revanche une PROPOSITION, pas une lecture officielle du
-              référentiel : à vous de l&apos;ajuster à la progression de votre
-              établissement et aux compétences que votre équipe a décidé
-              d&apos;évaluer. Si un rapprochement vous paraît discutable,
-              écrivez-nous, c&apos;est exactement le retour dont nous avons
-              besoin.
+              pour le DCG, et chaque fiche emploie ceux de son référentiel.
             </p>
             <p>
               Ces ateliers évoluent avec la plateforme. Ils sont librement
