@@ -554,6 +554,58 @@ describe("parcours enseignant et élève", () => {
     expect(sols.hero).not.toBe(sols.page);
   });
 
+  it("la liste des ateliers ne déborde pas sur un téléphone", async () => {
+    // LE DÉFAUT MESURÉ : un tableau de cinq colonnes forcé à 640 px dans une
+    // fenêtre de 390. La colonne de l'entreprise sortait du cadre, coupée en
+    // « MAILL… », et la ligne se lisait au doigt.
+    //
+    // CE QU'IL NE FAUT PAS FAIRE POUR LE RÉPARER, et c'est pour cela que ce
+    // test mesure le débord plutôt que la présence du tableau : l'empiler
+    // aurait fait défiler deux fois la même chose, puisque les cartes qui le
+    // suivent portent déjà les quinze mêmes ateliers. Le tableau sert la
+    // comparaison, qui n'existe qu'à une largeur où les colonnes s'alignent ;
+    // sous 768 px les cartes suffisent.
+    const onglet = await navigateur.newPage();
+    await onglet.setViewportSize({ width: 390, height: 844 });
+    try {
+      await aller(onglet, "/animations");
+      const debord = await onglet.evaluate(() => {
+        const trop: string[] = [];
+        for (const el of document.querySelectorAll("main *")) {
+          const b = el.getBoundingClientRect();
+          // Le halo décoratif déborde volontairement : il ne porte rien à lire.
+          if (el.classList.contains("halo-de-page")) continue;
+          if (b.width > 0 && (b.right > 391 || b.left < -1)) {
+            trop.push(`${el.tagName}.${el.className.toString().slice(0, 40)}`);
+          }
+        }
+        return {
+          trop: trop.slice(0, 5),
+          scroll: document.documentElement.scrollWidth,
+        };
+      });
+      expect(
+        debord.trop,
+        `éléments hors cadre :\n${debord.trop.join("\n")}`,
+      ).toEqual([]);
+      expect(debord.scroll, "la page défile latéralement").toBeLessThanOrEqual(
+        391,
+      );
+
+      // Et les cartes disent tout ce que le tableau disait : sans cela, le
+      // replier reviendrait à cacher de l'information à qui lit sur téléphone.
+      // Comparaison insensible à la casse : l'entête d'une carte est mise en
+      // CAPITALES par le CSS, si bien que le texte visible ne correspond pas à
+      // celui du code. Le piège a déjà coûté un faux échec ailleurs ici.
+      const vu = (await texte(onglet)).toLowerCase();
+      const cg1 = ATELIERS.find((a) => a.code === "cg1")!;
+      expect(vu).toContain(`${dureeTotaleHeures(cg1)} h au total`);
+      expect(vu).toContain(cg1.annee.toLowerCase());
+    } finally {
+      await onglet.close();
+    }
+  });
+
   it("les diplômes sont repliés, et l'index ouvre celui qu'il désigne", async () => {
     // LA PAGE FAISAIT SEIZE MILLE NEUF CENTS PIXELS sur un téléphone, parce
     // qu'elle dépliait douze diplômes à la suite alors qu'on vient en chercher

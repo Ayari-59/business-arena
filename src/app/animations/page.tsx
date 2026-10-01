@@ -127,7 +127,24 @@ export default function AteliersPage() {
           <h2 className="mt-12 text-xl font-bold text-slate-100">
             Les ateliers disponibles
           </h2>
-          <div className="mt-4 overflow-x-auto rounded-xl border border-white/10">
+          {/*
+            LE TABLEAU NE PARAÎT QUE LÀ OÙ IL TIENT. Cinq colonnes forcées à
+            640 px dans une fenêtre de 390 : la colonne de l'entreprise sortait
+            du cadre, coupée en « MAILL… », et la ligne entière se lisait au
+            doigt, de gauche à droite.
+
+            IL N'A PAS ÉTÉ EMPILÉ POUR AUTANT, et c'est la découverte faite en
+            regardant la page plutôt que le code : les cartes qui le suivent
+            portent DÉJÀ les quinze mêmes ateliers, avec l'entreprise, la
+            durée, les séances, l'exigence, et en plus le résumé et le lien.
+            Empiler le tableau aurait fait défiler deux fois la même chose.
+
+            Ce que le tableau apporte, c'est la COMPARAISON — quinze durées et
+            quinze exigences sous le même œil — et cela n'existe qu'à une
+            largeur où les colonnes s'alignent. Sous 768 px, les cartes
+            suffisent et disent tout.
+          */}
+          <div className="mt-4 hidden overflow-x-auto rounded-xl border border-white/10 md:block">
             <table className="w-full min-w-[640px] text-sm">
               <caption className="border-b border-white/5 bg-slate-900/60 px-4 py-2 text-left text-xs italic text-slate-400">
                 Tableau récapitulatif des ateliers publiés.
@@ -179,7 +196,7 @@ export default function AteliersPage() {
                 className="rounded-2xl border border-white/10 bg-slate-900 p-5 transition hover:border-amber-400/40"
               >
                 <p className="text-xs font-semibold uppercase tracking-wider text-amber-400">
-                  {a.nature} · {publicDeLAtelier(a)}
+                  {a.nature} · {publicDeLAtelier(a)} · {a.annee}
                 </p>
                 <h3 className="mt-2 text-lg font-bold text-slate-50">
                   {a.titre}
@@ -193,7 +210,10 @@ export default function AteliersPage() {
                       "Entreprise",
                       scenarioByCode(a.reglages.scenarioCode).playerTeamName,
                     ],
-                    ["Durée", a.format],
+                    [
+                      "Durée",
+                      `${a.format}, ${dureeTotaleHeures(a)} h au total`,
+                    ],
                     ["Séances", `${a.seances.length}`],
                   ].map(([k, v]) => (
                     <div key={k} className="flex gap-4">
