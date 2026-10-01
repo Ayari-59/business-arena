@@ -2,7 +2,10 @@ node_modules/
 .next/
 # Base Postgres locale (npm run base:locale) : des données de démonstration,
 # recréées en une commande, qui n'ont rien à faire dans l'historique.
-.pglite*/
+.pglite/
+# Les copies de secours d'une base abîmée (.pglite.corrompu-…) : un dossier de
+# données de démonstration n'a rien à faire dans l'historique, sous aucun nom.
+.pglite.*/
 out/
 *.tsbuildinfo
 next-env.d.ts

@@ -214,8 +214,8 @@ function CarteEnMain({
  * Trois, et non cinq ou six : une seconde liste de même longueur, en face de
  * la première, se lirait comme un doublon quelle que soit sa matière.
  *
- * RIEN N'EST PROMIS QUI NE SOIT DANS LE PRODUIT. Les causes plausibles se
- * cochent avant la feuille de décision ; « quel modèle mobiliser » est l'une
+ * RIEN N'EST PROMIS QUI NE SOIT DANS LE PRODUIT. On coche les causes
+ * plausibles avant la feuille de décision ; « quel modèle mobiliser » est l'une
  * des trois questions du QCM et la maîtrise décisionnelle est l'une des six
  * dimensions de l'indice ; la note d'avant est exigée au premier tour et
  * revient à l'équipe au tour suivant, à côté du constat.
@@ -223,15 +223,15 @@ function CarteEnMain({
 const CE_QUE_L_ELEVE_APPREND = [
   {
     verbe: "Diagnostiquer avant d'agir",
-    quoi: "Les causes plausibles se cochent avant que la feuille de décision s'ouvre.",
+    quoi: "On coche les causes plausibles avant que la feuille de décision s'ouvre.",
   },
   {
     verbe: "Mobiliser le bon modèle",
     quoi: "Un modèle trompeur ne rapporte presque rien : c'est une des six dimensions de l'indice.",
   },
   {
-    verbe: "Justifier avant de savoir",
-    quoi: "L'équipe écrit ce qu'elle attend de ses choix, et le relit au tour suivant face au résultat.",
+    verbe: "Poser une hypothèse",
+    quoi: "L'équipe écrit ce qu'elle attend de ses choix. Au tour suivant, elle la relit face au résultat.",
   },
 ];
 
