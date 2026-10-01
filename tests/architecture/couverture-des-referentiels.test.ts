@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { ATELIERS } from "@/config/ateliers";
 import {
-  AU_DELA_DE_L_ATELIER,
+  AU_DELA_DES_SEANCES,
   CLES_ECRITES,
   couvertureDeLAtelier,
+  couvertureDuDiplome,
   tousLesBlocs,
 } from "@/config/couverture";
 
@@ -86,7 +87,7 @@ describe("la couverture des référentiels", () => {
 
   it("les notes hors séance portent sur un atelier réel et sur un bloc qu'il n'a pas", () => {
     const codes = new Set(ATELIERS.map((a) => a.code));
-    for (const [code, notes] of Object.entries(AU_DELA_DE_L_ATELIER)) {
+    for (const [code, notes] of Object.entries(AU_DELA_DES_SEANCES)) {
       expect(codes, `note écrite pour l'atelier inconnu « ${code} »`).toContain(
         code,
       );
@@ -100,6 +101,74 @@ describe("la couverture des référentiels", () => {
           dansLAtelier,
           `« ${note.referentiel} » est dit hors séance alors que ${code} le met en jeu`,
         ).not.toContain(note.referentiel);
+      }
+    }
+  });
+
+  it("un diplôme présente son référentiel une fois, quels que soient les chemins", () => {
+    // LE DÉFAUT : la page listait la couverture par déroulé. Le BTS MCO en a
+    // deux, donc « Bloc 3 · Assurer la gestion opérationnelle » s'affichait
+    // deux fois et le lecteur recousait lui-même ce que son diplôme exige.
+    const parDiplome = new Map<string, string[]>();
+    for (const a of ATELIERS) {
+      parDiplome.set(a.diplome, [...(parDiplome.get(a.diplome) ?? []), a.code]);
+    }
+    const multiples = [...parDiplome.values()].filter((c) => c.length > 1);
+    expect(
+      multiples.length,
+      "aucun diplôme à plusieurs chemins : la règle ne garde rien",
+    ).toBeGreaterThan(0);
+
+    for (const [diplome, codes] of parDiplome) {
+      const blocs = couvertureDuDiplome(codes);
+      const noms = blocs.map((b) => b.referentiel);
+      expect(new Set(noms).size, `${diplome} : un bloc listé deux fois`).toBe(
+        noms.length,
+      );
+      // Rien ne se perd au regroupement : l'union des blocs de chaque chemin.
+      const attendus = new Set(
+        codes.flatMap((c) => couvertureDeLAtelier(c).map((b) => b.referentiel)),
+      );
+      expect(
+        new Set(noms),
+        `${diplome} : un bloc a disparu au regroupement`,
+      ).toEqual(attendus);
+      for (const b of blocs) {
+        expect(
+          b.presences.length,
+          `${diplome} / ${b.referentiel} : aucun chemin`,
+        ).toBeGreaterThan(0);
+        for (const p of b.presences) {
+          expect(
+            codes,
+            `${diplome} : présence dans un chemin étranger`,
+          ).toContain(p.code);
+          expect(p.seances.length).toBeGreaterThan(0);
+          expect(p.seances.length).toBeLessThanOrEqual(p.seancesEnTout);
+        }
+      }
+    }
+  });
+
+  it("l'adéquation d'un bloc se prend au mieux des chemins, jamais à la moyenne", () => {
+    // Un bloc au cœur d'un chemin et effleuré par l'autre est au cœur du
+    // diplôme pour qui choisit le premier : l'annoncer comme partiel
+    // découragerait un enseignant à tort.
+    const rang = ["partiel", "couvert", "coeur"];
+    const parDiplome = new Map<string, string[]>();
+    for (const a of ATELIERS) {
+      parDiplome.set(a.diplome, [...(parDiplome.get(a.diplome) ?? []), a.code]);
+    }
+    for (const [diplome, codes] of parDiplome) {
+      for (const b of couvertureDuDiplome(codes)) {
+        const parChemin = codes
+          .flatMap((c) => couvertureDeLAtelier(c))
+          .filter((x) => x.referentiel === b.referentiel)
+          .map((x) => rang.indexOf(x.adequation));
+        expect(
+          rang.indexOf(b.adequation),
+          `${diplome} / ${b.referentiel} : l'adéquation n'est pas la meilleure des chemins`,
+        ).toBe(Math.max(...parChemin));
       }
     }
   });

@@ -101,8 +101,14 @@ describe("les parcours et les ateliers", () => {
     expect(PAGE).toContain("<details");
     // Le titre reste DANS le résumé : sorti de là, il ne serait plus cliquable
     // et le plan de la page disparaîtrait dès que tout est replié.
-    const resume = PAGE.slice(PAGE.indexOf("<summary"), PAGE.indexOf("</summary>"));
-    expect(resume, "le nom du diplôme doit rester dans le résumé du tiroir").toContain("<h2");
+    const resume = PAGE.slice(
+      PAGE.indexOf("<summary"),
+      PAGE.indexOf("</summary>"),
+    );
+    expect(
+      resume,
+      "le nom du diplôme doit rester dans le résumé du tiroir",
+    ).toContain("<h2");
     expect(resume).toContain("{f.diplome}");
 
     // LES TROIS SIGNAUX DU TIROIR MAISON (voir src/components/tiroir.tsx).
@@ -111,20 +117,46 @@ describe("les parcours et les ateliers", () => {
     // gabarit d'arène écraserait le nom du diplôme — donc elle doit au moins
     // en reprendre les signaux, sinon le site parle deux langues du repli.
     expect(resume, "le chevron qui pivote").toContain("group-open:rotate-90");
-    expect(PAGE, "le trait pointillé tant que c'est fermé").toContain("border-dashed");
+    expect(PAGE, "le trait pointillé tant que c'est fermé").toContain(
+      "border-dashed",
+    );
     expect(PAGE, "plein une fois ouvert").toContain("open:border-solid");
 
     // Le compte est LU de la donnée. Écrit à la main, il mentirait dès qu'une
     // séance est ajoutée, et c'est le seul contenu du tiroir fermé.
     expect(resume).toContain("{f.blocs}");
-    expect(resume).toContain("{f.seances}");
-    expect(PAGE).toContain("ateliers.reduce((n, a) => n + a.seances.length, 0)");
+    expect(resume).toContain("{f.volume}");
+    expect(PAGE).toContain(
+      "couvertureDuDiplome(ateliers.map((a) => a.code)).length",
+    );
+  });
+
+  it("la page parle du référentiel, et met le déroulé en preuve", () => {
+    // CE QU'ELLE DISAIT AVANT. Chaque diplôme s'ouvrait sur le titre d'un
+    // déroulé, son nombre de séances et son volume horaire, puis listait les
+    // blocs sous lui. La page répondait « voici notre produit » à quelqu'un
+    // venu demander « mon programme est-il couvert ». Le référentiel vient
+    // donc en premier, et la mise en œuvre en pied de section.
+    expect(PAGE).toContain("couvertureDuDiplome");
+    expect(
+      PAGE,
+      "le référentiel ne doit plus se lister par déroulé",
+    ).not.toContain("couvertureDeLAtelier");
+    expect(PAGE).toContain("Mise en œuvre");
+    const corps = PAGE.slice(PAGE.indexOf("<summary"));
+    expect(
+      corps.indexOf("couvertureDuDiplome"),
+      "le déroulé est cité avant le référentiel",
+    ).toBeLessThan(corps.indexOf("Mise en œuvre"));
   });
 
   it("aucun tiroir n'est ouvert d'avance, sinon la page repousse en silence", () => {
     // Un seul `open` posé là « pour montrer un exemple » et la page reprend
     // mille pixels par diplôme, sans qu'aucun test ne s'en aperçoive.
-    const tiroirs = PAGE.slice(PAGE.indexOf("<details"), PAGE.indexOf("</details>"));
+    const tiroirs = PAGE.slice(
+      PAGE.indexOf("<details"),
+      PAGE.indexOf("</details>"),
+    );
     expect(tiroirs, "un tiroir ouvert d'avance").not.toMatch(/\sopen(\s|=|>)/);
   });
 

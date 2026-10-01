@@ -167,7 +167,7 @@ export function tousLesBlocs(): string[] {
 }
 
 /**
- * CE QUE LE JEU COUVRE EN PLUS DE L'ATELIER.
+ * CE QUE LE JEU COUVRE EN PLUS DES SÉANCES.
  *
  * Le tableau dérivé ne connaît que les blocs qu'une séance nomme. Le moteur,
  * lui, en travaille d'autres sans qu'un atelier leur consacre une séance : le
@@ -176,7 +176,7 @@ export function tousLesBlocs(): string[] {
  * distinction que le lecteur doit faire : une ligne du tableau est une séance
  * qu'il animera, cette note est une possibilité du moteur.
  */
-export const AU_DELA_DE_L_ATELIER: Record<
+export const AU_DELA_DES_SEANCES: Record<
   string,
   { referentiel: string; quoi: string }[]
 > = {
@@ -187,3 +187,77 @@ export const AU_DELA_DE_L_ATELIER: Record<
     },
   ],
 };
+
+/** Un bloc de référentiel, vu depuis le diplôme et non depuis un déroulé. */
+export interface BlocDuDiplome {
+  referentiel: string;
+  /** Où il se travaille, déroulé par déroulé : « 4 séances sur 5 » n'a de sens que par déroulé. */
+  presences: {
+    code: string;
+    titre: string;
+    seances: number[];
+    seancesEnTout: number;
+  }[];
+  adequation: Adequation;
+  declaree: boolean;
+  commentaire?: string;
+}
+
+/**
+ * LA COUVERTURE D'UN DIPLÔME, ET NON D'UN DÉROULÉ.
+ *
+ * La page des parcours affichait une couverture par déroulé. Pour le BTS MCO,
+ * qui en a deux, elle montrait donc DEUX FOIS le même référentiel : « Bloc 3 ·
+ * Assurer la gestion opérationnelle » apparaissait dans les deux tableaux, et
+ * le lecteur devait recoudre lui-même ce que son diplôme exige. La page parlait
+ * de ce que nous proposons, pas de ce qu'il doit couvrir.
+ *
+ * Le référentiel est pourtant une liste par DIPLÔME, pas par déroulé : il se
+ * présente une fois, et chaque bloc dit ensuite où il se travaille. Un déroulé
+ * qui n'est pas le sien n'oblige pas un enseignant à relire sa liste.
+ *
+ * LES SÉANCES NE S'ADDITIONNENT PAS d'un déroulé à l'autre. Deux déroulés pour
+ * un même diplôme sont des chemins ALTERNATIFS, pas un parcours de onze
+ * séances : les sommer annoncerait un volume que personne ne jouera. Chaque
+ * présence garde donc son propre dénominateur.
+ *
+ * L'ADÉQUATION SE PREND AU MIEUX. Un bloc au cœur d'un déroulé et effleuré par
+ * l'autre est au cœur du diplôme pour qui choisit le premier ; l'annoncer
+ * comme partiel découragerait à tort.
+ */
+export function couvertureDuDiplome(codes: readonly string[]): BlocDuDiplome[] {
+  const rang: Adequation[] = ["partiel", "couvert", "coeur"];
+  const parBloc = new Map<string, BlocDuDiplome>();
+  for (const code of codes) {
+    const atelier = ATELIERS.find((a) => a.code === code);
+    if (!atelier) continue;
+    for (const bloc of couvertureDeLAtelier(code)) {
+      const vu = parBloc.get(bloc.referentiel);
+      const presence = {
+        code,
+        titre: atelier.titre,
+        seances: bloc.seances.map((s) => s.numero),
+        seancesEnTout: bloc.seancesEnTout,
+      };
+      if (!vu) {
+        parBloc.set(bloc.referentiel, {
+          referentiel: bloc.referentiel,
+          presences: [presence],
+          adequation: bloc.adequation,
+          declaree: bloc.declaree,
+          commentaire: bloc.commentaire,
+        });
+        continue;
+      }
+      vu.presences.push(presence);
+      if (rang.indexOf(bloc.adequation) > rang.indexOf(vu.adequation)) {
+        vu.adequation = bloc.adequation;
+      }
+      vu.declaree = vu.declaree || bloc.declaree;
+    }
+  }
+  // Du bloc le plus travaillé au moins travaillé, part la plus forte en tête.
+  const part = (b: BlocDuDiplome) =>
+    Math.max(...b.presences.map((p) => p.seances.length / p.seancesEnTout));
+  return [...parBloc.values()].sort((a, b) => part(b) - part(a));
+}

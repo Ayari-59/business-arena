@@ -3,10 +3,7 @@ import type { Metadata } from "next";
 import { PARCOURS } from "@/config/parcours";
 import { ATELIERS, dureeTotaleHeures } from "@/config/ateliers";
 import { REFERENTIELS_NON_VERIFIES } from "@/config/ateliers/referentiels";
-import {
-  AU_DELA_DE_L_ATELIER,
-  couvertureDeLAtelier,
-} from "@/config/couverture";
+import { AU_DELA_DES_SEANCES, couvertureDuDiplome } from "@/config/couverture";
 import { sigleDuDiplome } from "@/config/diplomes";
 import { bouton } from "@/components/bouton";
 import { BandeFinale } from "@/components/bande-finale";
@@ -17,7 +14,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/parcours" },
   title: "Parcours par diplôme",
   description:
-    "La correspondance entre votre référentiel et ce que vos étudiants vivent dans l'arène, bloc par bloc, pour chaque diplôme qui a un atelier publié.",
+    "La correspondance entre votre référentiel et ce que vos étudiants vivent dans l'arène, bloc par bloc, pour chaque diplôme servi.",
 };
 
 /**
@@ -78,15 +75,16 @@ const FILIERES = (() => {
       // CE QUE LE TIROIR FERMÉ DOIT ENCORE DIRE. Un repli qui ne laisse qu'un
       // titre transforme la page en sommaire : on ne sait plus ce qu'il y a
       // derrière, donc on n'ouvre pas. Compté depuis la donnée, jamais écrit.
-      blocs: new Set(
-        ateliers.flatMap((a) =>
-          couvertureDeLAtelier(a.code).map((b) => b.referentiel),
-        ),
-      ).size,
-      seances: ateliers.reduce((n, a) => n + a.seances.length, 0),
-      heures: Math.round(
-        ateliers.reduce((n, a) => n + dureeTotaleHeures(a), 0),
-      ),
+      blocs: couvertureDuDiplome(ateliers.map((a) => a.code)).length,
+      // LE VOLUME NE S'ADDITIONNE PAS QUAND IL Y A PLUSIEURS CHEMINS. Le BTS
+      // MCO en a deux, de cinq et six séances : annoncer « 11 séances, 36
+      // heures » promettrait un parcours que personne ne jouera. Un seul
+      // chemin donne son volume ; plusieurs se comptent, et le volume se lit
+      // dans la section.
+      volume:
+        ateliers.length === 1
+          ? `${ateliers[0]!.seances.length} séances, ${Math.round(dureeTotaleHeures(ateliers[0]!))} heures`
+          : `${ateliers.length} chemins proposés`,
     };
   });
 })();
@@ -102,12 +100,6 @@ const ADEQUATION: Record<string, { label: string; className: string }> = {
     className: "border-slate-400/40 text-slate-400",
   },
 };
-
-/** « 1, 3 et 5 » : une énumération française se termine par « et ». */
-function enumere(nombres: number[]): string {
-  if (nombres.length === 1) return String(nombres[0]);
-  return `${nombres.slice(0, -1).join(", ")} et ${nombres[nombres.length - 1]}`;
-}
 
 /**
  * PLUS D'EMOJI SUR CETTE PAGE. Quatre diplômes en portaient un — 🎓 🛍️ 🤝 🧮 —
@@ -139,11 +131,10 @@ export default function ParcoursPage() {
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-400">
             Business Arena a été construit par un enseignant pour faire le pont
             entre les notions du programme et la pratique. Pour chaque diplôme
-            ci-dessous : les blocs du référentiel que l&apos;atelier met en jeu,
-            la séance où chacun se travaille, et ce qui n&apos;est
-            qu&apos;effleuré. Les blocs sont nommés comme leur référentiel les
-            nomme, et la liste est tenue par le déroulé des séances, pas par une
-            promesse commerciale.
+            ci-dessous : les blocs de son référentiel, ce qui se joue dans
+            chacun, et ce qui n&apos;est qu&apos;effleuré. Les blocs sont nommés
+            comme leur référentiel les nomme, et la liste est tenue par ce que
+            les séances mettent en jeu, pas par une promesse commerciale.
           </p>
           {/* « Tout déplier » tient compagnie à l'index : c'est le même
               geste — choisir où regarder — et le seul moyen de retrouver un
@@ -205,8 +196,7 @@ export default function ParcoursPage() {
                   {f.diplome}
                 </h2>
                 <span className="mt-2 text-sm leading-relaxed text-slate-400">
-                  {f.blocs} blocs de référentiel · {f.seances} séances,{" "}
-                  {f.heures} heures
+                  {f.blocs} blocs de référentiel · {f.volume}
                   {f.parcours ? " · réglages conseillés" : ""}
                 </span>
               </summary>
@@ -235,24 +225,117 @@ export default function ParcoursPage() {
                   </>
                 ) : null}
 
-                {f.ateliers.map((a) => (
-                  <div key={a.code} className="mt-8 first:mt-0">
-                    <Link
-                      href={`/animations/${a.code}`}
-                      className="group block"
-                    >
-                      <p className="text-base font-semibold text-slate-100 transition-colors group-hover:text-amber-200">
-                        {a.titre}
+                {/*
+                  LE RÉFÉRENTIEL SE PRÉSENTE UNE FOIS, PAS UNE FOIS PAR DÉROULÉ.
+                  La page affichait une liste par déroulé : pour le BTS MCO, qui
+                  en a deux, le même « Bloc 3 · Assurer la gestion
+                  opérationnelle » apparaissait deux fois, et le lecteur
+                  recousait lui-même ce que son diplôme exige. Elle parlait de
+                  ce que nous proposons, quand il vient voir ce qu'il doit
+                  couvrir. Le bloc vient donc d'abord, et ce qui le met en jeu
+                  ensuite, comme une preuve et non comme un sujet.
+                */}
+                <ul className="mt-6">
+                  {couvertureDuDiplome(f.ateliers.map((a) => a.code)).map(
+                    (b) => (
+                      <li
+                        key={b.referentiel}
+                        className="grid grid-cols-[1fr_auto] items-start gap-x-3 gap-y-1.5 border-t border-white/5 py-4"
+                      >
+                        <p className="text-sm font-medium text-slate-200">
+                          {b.referentiel}
+                        </p>
                         <span
-                          aria-hidden
-                          className="ml-1.5 inline-block transition-transform group-hover:translate-x-1"
+                          className={`whitespace-nowrap rounded-full border px-2 py-0.5 text-xs uppercase tracking-wide ${ADEQUATION[b.adequation]!.className}`}
                         >
-                          →
+                          {ADEQUATION[b.adequation]!.label}
                         </span>
-                      </p>
-                    </Link>
-                    <p className="mt-1 text-sm leading-relaxed text-slate-400">
-                      {a.annee} · {a.seances.length} séances,{" "}
+                        {b.commentaire ? (
+                          <p className="col-span-2 text-sm leading-relaxed text-slate-300">
+                            {b.commentaire}
+                          </p>
+                        ) : null}
+                        <p className="col-span-2 text-sm text-slate-400">
+                          {/*
+                          LES SÉANCES NE S'ADDITIONNENT PAS d'un déroulé à
+                          l'autre : deux déroulés d'un même diplôme sont des
+                          chemins alternatifs, pas un parcours de onze séances.
+                          Chaque dénominateur reste donc le sien, et le titre du
+                          déroulé n'apparaît que lorsqu'il y en a plusieurs à
+                          distinguer.
+                        */}
+                          {/*
+                            LE CHEMIN SE NOMME DÈS QUE LE DIPLÔME EN A
+                            PLUSIEURS, et non dès que le bloc en occupe
+                            plusieurs. « 1 séance sur 5 » sous un diplôme qui
+                            propose deux chemins ne disait pas lequel, et
+                            l'enseignant qui a choisi l'autre croyait le bloc
+                            couvert chez lui.
+                          */}
+                          {b.presences
+                            .map(
+                              (p) =>
+                                `${f.ateliers.length > 1 ? `${p.titre} : ` : ""}${p.seances.length} séance${p.seances.length > 1 ? "s" : ""} sur ${p.seancesEnTout}`,
+                            )
+                            .join(" · ")}
+                          {/* SANS CETTE PHRASE, LA LIGNE SE CONTREDIT. « 1 séance sur 6 »
+                            sous une pastille « cœur du jeu » se lit comme une faute de
+                            frappe, et c'en serait une si le comptage disait toute la
+                            vérité : le moteur rejoue la TVA à chaque tour, que la
+                            séance la nomme ou non. L'écart entre le compte et la
+                            pastille est réel, donc il se dit là où il se voit. */}
+                          {b.declaree
+                            ? ", et rejoué à chaque tour par le moteur au-delà des séances qui le nomment"
+                            : ""}
+                        </p>
+                      </li>
+                    ),
+                  )}
+                </ul>
+
+                {f.ateliers
+                  .flatMap((a) => AU_DELA_DES_SEANCES[a.code] ?? [])
+                  .map((note) => (
+                    <p
+                      key={note.referentiel}
+                      className="mt-4 rounded-lg border border-white/5 bg-slate-950 px-4 py-3 text-sm leading-relaxed text-slate-400"
+                    >
+                      <span className="font-medium text-slate-300">
+                        {note.referentiel}
+                      </span>
+                      , hors séance : {note.quoi}
+                    </p>
+                  ))}
+
+                {f.parcours?.limite ? (
+                  <p className="mt-6 rounded-lg border border-white/5 bg-slate-950 px-4 py-3 text-sm leading-relaxed text-slate-400">
+                    Limite assumée : {f.parcours.limite}
+                  </p>
+                ) : null}
+
+                {/*
+                  LA MISE EN ŒUVRE EN PIED DE SECTION, ET PAS EN TÊTE. Elle
+                  ouvrait chaque diplôme — titre du déroulé, nombre de séances,
+                  volume horaire — si bien que la page répondait « voici notre
+                  produit » à quelqu'un venu demander « mon programme est-il
+                  couvert ». La réponse d'abord, le moyen ensuite.
+                */}
+                <div className="mt-6 border-t border-white/10 pt-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Mise en œuvre
+                  </p>
+                  {f.ateliers.map((a) => (
+                    <p
+                      key={a.code}
+                      className="mt-2 text-sm leading-relaxed text-slate-400"
+                    >
+                      <Link
+                        href={`/animations/${a.code}`}
+                        className="font-medium text-slate-200 underline-offset-4 transition-colors hover:text-amber-300 hover:underline"
+                      >
+                        {a.titre}
+                      </Link>{" "}
+                      · {a.annee} · {a.seances.length} séances,{" "}
                       {Math.round(dureeTotaleHeures(a))} heures ·{" "}
                       {a.referentielLabel} {a.referentielAccord}
                       {(
@@ -262,64 +345,8 @@ export default function ParcoursPage() {
                         : ""}
                       .
                     </p>
-
-                    <ul className="mt-4">
-                      {couvertureDeLAtelier(a.code).map((b) => (
-                        <li
-                          key={b.referentiel}
-                          className="grid grid-cols-[1fr_auto] items-start gap-x-3 gap-y-1.5 border-t border-white/5 py-4"
-                        >
-                          <p className="text-sm font-medium text-slate-200">
-                            {b.referentiel}
-                          </p>
-                          <span
-                            className={`whitespace-nowrap rounded-full border px-2 py-0.5 text-xs uppercase tracking-wide ${ADEQUATION[b.adequation]!.className}`}
-                          >
-                            {ADEQUATION[b.adequation]!.label}
-                          </span>
-                          <p className="col-span-2 text-sm text-slate-400">
-                            {b.seances.length} séance
-                            {b.seances.length > 1 ? "s" : ""} sur{" "}
-                            {b.seancesEnTout} · n&deg;{" "}
-                            {enumere(b.seances.map((s) => s.numero))}
-                            {/* SANS CETTE PHRASE, LA LIGNE SE CONTREDIT. « 1 séance sur 6 »
-                              sous une pastille « cœur du jeu » se lit comme une faute de
-                              frappe, et c'en serait une si le comptage disait toute la
-                              vérité : le moteur rejoue la TVA à chaque tour, que la
-                              séance la nomme ou non. L'écart entre le compte et la
-                              pastille est réel, donc il se dit là où il se voit. */}
-                            {b.declaree
-                              ? ", et rejoué à chaque tour par le moteur au-delà des séances qui le nomment"
-                              : ""}
-                          </p>
-                          {b.commentaire ? (
-                            <p className="col-span-2 text-sm leading-relaxed text-slate-400">
-                              {b.commentaire}
-                            </p>
-                          ) : null}
-                        </li>
-                      ))}
-                    </ul>
-
-                    {(AU_DELA_DE_L_ATELIER[a.code] ?? []).map((note) => (
-                      <p
-                        key={note.referentiel}
-                        className="mt-4 rounded-lg border border-white/5 bg-slate-950 px-4 py-3 text-sm leading-relaxed text-slate-400"
-                      >
-                        <span className="font-medium text-slate-300">
-                          {note.referentiel}
-                        </span>
-                        , hors séance : {note.quoi}
-                      </p>
-                    ))}
-                  </div>
-                ))}
-
-                {f.parcours?.limite ? (
-                  <p className="mt-6 rounded-lg border border-white/5 bg-slate-950 px-4 py-3 text-sm leading-relaxed text-slate-400">
-                    Limite assumée : {f.parcours.limite}
-                  </p>
-                ) : null}
+                  ))}
+                </div>
               </div>
             </details>
           ))}
