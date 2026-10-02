@@ -200,7 +200,7 @@ export const ANSWER_FORMATS: readonly { code: AnswerFormat; name: string; help: 
   {
     code: "open",
     name: "Questions ouvertes",
-    help: "L'élève écrit son diagnostic et le modèle qu'il mobilise, avec ses mots. Corrigé par mots-clés, donc approximativement : vous relisez les textes dans la partie.",
+    help: "L'élève écrit son diagnostic et le modèle qu'il mobilise, avec ses mots. Corrigé automatiquement par mots-clés, donc de façon approximative.",
   },
 ];
 

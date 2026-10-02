@@ -5,6 +5,7 @@ import { getPlatformOverview, getStaffContext } from "@/services/admin.service";
 import { DEMO_ACCOUNTS, isDemoSeeded } from "@/services/demo.service";
 import { formatEuro } from "@/lib/format";
 import { AI_MODELS } from "@/config/ai";
+import { ANSWER_FORMATS } from "@/config/difficulty";
 import type { PreuvesPubliees } from "@/config/preuves-dusage";
 import {
   createEstablishmentAction,
@@ -146,6 +147,32 @@ export default async function AdminPage({
             />
             Autoriser l&apos;inscription enseignant sans code d&apos;invitation (auto-service)
           </label>
+          <fieldset className="rounded-xl border border-white/10 p-4">
+            <legend className="px-2 text-xs font-medium uppercase tracking-wide text-slate-400">
+              ✍️ Format des réponses en partie solo
+            </legend>
+            <div className="space-y-2">
+              {ANSWER_FORMATS.map((f) => (
+                <label key={f.code} className="flex items-start gap-3">
+                  <input
+                    type="radio"
+                    name="soloAnswerFormat"
+                    value={f.code}
+                    defaultChecked={f.code === overview.config.soloAnswerFormat}
+                    className="mt-0.5 h-4 w-4 accent-amber-400"
+                  />
+                  <span>
+                    <span className="text-sm font-medium text-slate-200">{f.name}</span>
+                    <span className="mt-0.5 block text-xs text-slate-400">{f.help}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+            <p className="mt-3 text-sm leading-relaxed text-slate-400">
+              S&apos;applique aux parties solo lancées après l&apos;enregistrement ; celles en cours
+              gardent leur format. Les parties de classe se règlent chez l&apos;enseignant.
+            </p>
+          </fieldset>
           {/* Les compteurs d'usage de /enseignants. Ils sont comptés dans la
               base et jamais rédigés : ce qui se règle ici, c'est ce qu'on en
               publie, pas ce qu'ils valent. */}

@@ -11,6 +11,7 @@ import {
 import { seedDemoWorld } from "@/services/demo.service";
 import { deleteOrgLicence, setOrgLicence } from "@/services/licence.service";
 import { DEFAULT_AI_CONFIG, isAiModelId } from "@/config/ai";
+import { answerFormatFromProfile } from "@/config/difficulty";
 
 export async function createEstablishmentAction(formData: FormData): Promise<void> {
   const adminId = await requireAdminSession();
@@ -28,6 +29,7 @@ export async function updatePlatformConfigAction(formData: FormData): Promise<vo
   await updatePlatformConfig(adminId, {
     allowPublicPlay: formData.get("allowPublicPlay") === "on",
     allowSelfServiceTeachers: formData.get("allowSelfServiceTeachers") === "on",
+    soloAnswerFormat: answerFormatFromProfile({ answerFormat: formData.get("soloAnswerFormat") }),
     announcement: String(formData.get("announcement") ?? "").trim(),
     contactEmail: String(formData.get("contactEmail") ?? "").trim(),
     // Ce qui se publie du relevé d'usage sur /enseignants. Un compteur exact
@@ -56,6 +58,7 @@ export async function updatePlatformConfigAction(formData: FormData): Promise<vo
   revalidatePath("/");
   revalidatePath("/orientation");
   revalidatePath("/enseignants");
+  revalidatePath("/jouer");
 }
 
 export async function newAdminInviteAction(organizationId: string): Promise<void> {

@@ -15,7 +15,7 @@ vi.mock("@/db", async () => {
 });
 
 import { db } from "@/db";
-import { organizationMembers, organizations, users } from "@/db/schema";
+import { games, organizationMembers, organizations, users } from "@/db/schema";
 import { getTeacherOrgId, loginTeacher, registerTeacher } from "@/services/auth.service";
 import {
   createEstablishment,
@@ -29,6 +29,7 @@ import {
   updatePlatformConfig,
 } from "@/services/admin.service";
 import { createClassGame, createSoloGame } from "@/services/game.service";
+import { answerFormatFromProfile } from "@/config/difficulty";
 import {
   contrasteDeLaBande,
   etatDesContrastes,
@@ -197,6 +198,25 @@ describe("réglages globaux du jeu", () => {
     });
     expect("userId" in allowed).toBe(true);
     await updatePlatformConfig(platformAdminId, { allowSelfServiceTeachers: true });
+  });
+
+  it("le format des réponses en solo se règle ici : QCM par défaut, questions ouvertes sur demande", async () => {
+    expect((await getPlatformConfig()).soloAnswerFormat).toBe("qcm");
+    const formatDe = async (id: string) =>
+      answerFormatFromProfile(
+        (await db.select().from(games).where(eq(games.id, id)))[0]!.difficultyProfile,
+      );
+    expect(await formatDe(await createSoloGame(teacherId, "quarter", 2))).toBe("qcm");
+
+    await updatePlatformConfig(platformAdminId, { soloAnswerFormat: "open" });
+    expect((await getPlatformConfig()).soloAnswerFormat).toBe("open");
+    const ouverte = await createSoloGame(teacherId, "quarter", 2);
+    expect(await formatDe(ouverte)).toBe("open");
+
+    // Le réglage vaut pour les parties lancées ensuite : celle-ci garde le sien.
+    await updatePlatformConfig(platformAdminId, { soloAnswerFormat: "qcm" });
+    expect(await formatDe(ouverte)).toBe("open");
+    expect(await formatDe(await createSoloGame(teacherId, "quarter", 2))).toBe("qcm");
   });
 
   it("l'annonce est persistée et relue", async () => {

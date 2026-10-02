@@ -9,6 +9,7 @@ import {
 } from "@/services/licence.service";
 import { DEFAULT_FREE_TIER, type FreeTier } from "@/config/entitlements";
 import { DEFAULT_AI_CONFIG, type AiConfig } from "@/config/ai";
+import { DEFAULT_ANSWER_FORMAT, answerFormatFromProfile, type AnswerFormat } from "@/config/difficulty";
 import {
   PREUVES_PUBLIEES_PAR_DEFAUT,
   type PreuvesPubliees,
@@ -98,6 +99,13 @@ export interface PlatformConfig {
   allowPublicPlay: boolean;
   /** Autoriser l'inscription enseignant SANS code d'invitation (auto-service). */
   allowSelfServiceTeachers: boolean;
+  /**
+   * Format des réponses dans les parties solo publiques : QCM, ou questions
+   * ouvertes (corrigées par mots-clés). Les parties de classe se règlent, elles,
+   * par l'enseignant. Lu à la création de la partie : celles déjà lancées
+   * gardent le leur.
+   */
+  soloAnswerFormat: AnswerFormat;
   /** Message d'annonce affiché sur la landing (vide = aucun). */
   announcement: string;
   /**
@@ -142,6 +150,7 @@ export interface PlatformConfig {
 const DEFAULT_CONFIG: PlatformConfig = {
   allowPublicPlay: true,
   allowSelfServiceTeachers: true,
+  soloAnswerFormat: DEFAULT_ANSWER_FORMAT,
   announcement: "",
   contactEmail: "contact@business-arena.fr",
   freeTier: DEFAULT_FREE_TIER,
@@ -164,7 +173,13 @@ export const getPlatformConfig = cache(async (): Promise<PlatformConfig> => {
     const lus = (row?.settings as Partial<PlatformConfig>) ?? {};
     // Le thème se fusionne en profondeur : la colonne est du JSON libre, et un
     // écart enregistré pour une bande supprimée depuis ne doit rien casser.
-    return { ...DEFAULT_CONFIG, ...lus, theme: normaliserTheme(lus.theme) };
+    return {
+      ...DEFAULT_CONFIG,
+      ...lus,
+      // Colonne de JSON libre : une valeur inconnue retombe sur le QCM.
+      soloAnswerFormat: answerFormatFromProfile({ answerFormat: lus.soloAnswerFormat }),
+      theme: normaliserTheme(lus.theme),
+    };
   } catch (e) {
     // Panne base : on NE retombe PAS sur les défauts permissifs. Renvoyer
     // allowPublicPlay/allowSelfServiceTeachers à true en cas d'incident

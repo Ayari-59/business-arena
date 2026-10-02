@@ -547,6 +547,7 @@ export async function createSoloGame(
     scenarioCode,
     roundsCount,
     quizMode: "model",
+    answerFormat: config.soloAnswerFormat,
     creatorIp,
   });
   const humanTeam = (
