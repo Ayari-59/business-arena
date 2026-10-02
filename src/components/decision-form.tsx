@@ -1529,27 +1529,33 @@ export function DecisionForm({
   const budgetsVisible = !gamme || on.maintenance || !!communicationOffer;
   const equipeVisible = on.hr || on.rse;
   const financerVisible = on.finance || (on.investment && !!equipmentOffer);
-  const couvertureVisible =
-    on.dividend ||
-    (on.finance && !!treasuryOffer) ||
-    (on.insurance && (!!insuranceOffer || (insuranceFormulas?.length ?? 0) > 0));
+  // Le choix d'un fournisseur n'a son étape qu'en mono-produit : en gamme il se
+  // fait dans le tableau des ventes (voir « S'approvisionner » plus bas).
+  const approvisionnerVisible = !gamme && !!suppliersOffer && suppliersOffer.length > 0;
+  const tresorerieVisible = on.dividend || (on.finance && !!treasuryOffer);
+  const assuranceVisible =
+    on.insurance && (!!insuranceOffer || (insuranceFormulas?.length ?? 0) > 0);
   const etapesVisibles = [
     "vendre",
+    approvisionnerVisible ? "approvisionner" : null,
     budgetsVisible ? "budgets" : null,
     equipeVisible ? "equipe" : null,
     financerVisible ? "financer" : null,
-    couvertureVisible ? "couverture" : null,
+    tresorerieVisible ? "tresorerie" : null,
+    assuranceVisible ? "assurance" : null,
     "prevoir",
   ].filter((x): x is string => x !== null);
   const META: Record<string, { titre: string; icone: string }> = {
     // En gamme, la première étape ne se limite plus à vendre : elle porte TOUT
     // ce qui se décide sur une référence, budgets compris. L'appeler « Vendre »
     // ferait chercher ailleurs des champs qui sont là.
-    vendre: { titre: gamme ? "Vos références" : "Vendre & s'approvisionner", icone: "🎯" },
+    vendre: { titre: gamme ? "Vos références" : "Vendre", icone: "🎯" },
+    approvisionner: { titre: "S'approvisionner", icone: "🏭" },
     budgets: { titre: "Budgéter", icone: "💸" },
     equipe: { titre: "Équipe & RSE", icone: "👥" },
     financer: { titre: "Financer & investir", icone: "💶" },
-    couverture: { titre: "Trésorerie & couverture", icone: "🛡️" },
+    tresorerie: { titre: "Trésorerie", icone: "🏦" },
+    assurance: { titre: "Assurance", icone: "🛡️" },
     prevoir: { titre: "S'informer & prévoir", icone: "📊" },
   };
   const idx = (cle: string) => etapesVisibles.indexOf(cle);
@@ -1631,6 +1637,135 @@ export function DecisionForm({
     if (alreadySubmitted) effacerBrouillon(cle);
   }, [alreadySubmitted, cle]);
 
+  // Le panneau des fournisseurs, calculé ici pour pouvoir se loger dans l'étape
+  // « S'approvisionner » (mono-produit) ou sous « Vos références » (gamme).
+  const panneauFournisseurs = (() => {
+        // Mono-produit : les fournisseurs du scénario, à choisir ici (radio),
+        // leur coût lu par rapport au fournisseur de référence. Gamme : la
+        // fiche de chaque façonnier, avec les références qu'il fournit et le
+        // prix d'achat de chacune chez lui — le choix se fait dans le tableau.
+        type Fiche = {
+          code: string;
+          name: string;
+          narrative: string;
+          qualityBonus: number;
+          paymentDelayDays: number;
+          supplyRiskProbability: number;
+          prix: { reference: string; achat: number; ecart: string }[];
+        };
+        const fiches: Fiche[] = [];
+        if (gamme) {
+          for (const p of gamme) {
+            const reference = p.suppliers?.[0];
+            for (const s of p.suppliers ?? []) {
+              const cle = `${s.code}·${s.name}`;
+              let fiche = fiches.find((f) => `${f.code}·${f.name}` === cle);
+              if (!fiche) {
+                fiche = { ...s, prix: [] };
+                fiches.push(fiche);
+              }
+              fiche.prix.push({ reference: p.name, achat: s.materialCostPerUnit, ecart: ecartFournisseur(s, reference) });
+            }
+          }
+        } else if (suppliersOffer && suppliersOffer.length > 0) {
+          const reference = suppliersOffer[0];
+          for (const s of suppliersOffer) {
+            fiches.push({ ...s, prix: [{ reference: v.unit, achat: s.materialCostPerUnit, ecart: ecartFournisseur(s, reference) }] });
+          }
+        }
+        if (fiches.length === 0) return null;
+        return (
+          <Family
+            // EN GAMME, CE PANNEAU NE PORTE AUCUNE DÉCISION : le façonnier se
+            // choisit ligne par ligne dans le tableau des ventes, et ceci n'est
+            // qu'un catalogue — autant de fiches que de façonniers, dépliées
+            // au-dessus des champs qu'on vient remplir. Il s'ouvre à la demande.
+            // En mono-produit, au contraire, le choix EST ici (les boutons
+            // radio) : le replier cacherait une décision du tour.
+            defaultOpen={!gamme}
+            legend={
+              gamme
+                ? `🏭 ${v.supplierPanelLabel} · ${fiches.length} fiche${fiches.length > 1 ? "s" : ""}`
+                : `🏭 ${v.supplierPanelLabel}`
+            }
+            tone="border-emerald-400/25 bg-emerald-950/20"
+            legendClass="text-xs font-semibold uppercase tracking-wide text-emerald-300"
+          >
+            {gamme ? (
+              <p className="mb-2 text-sm leading-relaxed text-emerald-200/80">
+                Chaque référence a ses façonniers ; le choix se fait ligne par ligne dans le
+                tableau de vos ventes. Voici ce que chacun propose, et à quel prix d&apos;achat
+                pour chaque référence qu&apos;il fournit.
+              </p>
+            ) : null}
+            <div className="space-y-2">
+              {fiches.map((s) => (
+                <label
+                  key={`${s.code}·${s.name}`}
+                  className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-2.5 py-2"
+                >
+                  {gamme ? null : (
+                    <input
+                      type="radio"
+                      name="supplierChoice"
+                      value={s.code}
+                      defaultChecked={(defaults.supplierChoice ?? fiches[0]?.code) === s.code}
+                      className="mt-0.5 h-4 w-4 accent-emerald-400"
+                    />
+                  )}
+                  <span>
+                    <span className="text-sm font-medium text-slate-200">
+                      {s.name}
+                      {gamme
+                        ? ""
+                        : ` · ${v.materialLabel.toLowerCase()} à ${formatEuroCents(s.prix[0]!.achat)}/${v.unit} (${s.prix[0]!.ecart})`}
+                    </span>
+                    <span className="mt-0.5 block text-xs text-slate-400">{s.narrative}</span>
+                    {gamme ? (
+                      <span className="mt-1 block text-xs text-slate-300">
+                        {s.prix.map((x, i) => (
+                          <span key={x.reference}>
+                            {i > 0 ? " · " : ""}
+                            {x.reference} {formatEuroCents(x.achat)} ({x.ecart})
+                          </span>
+                        ))}
+                      </span>
+                    ) : null}
+                    <span className="mt-1 flex flex-wrap gap-3 text-xs">
+                      {s.qualityBonus !== 0 ? (
+                        <span className={s.qualityBonus > 0 ? "text-emerald-400" : "text-amber-400"}>
+                          Qualité {s.qualityBonus > 0 ? "+" : "−"}{Math.abs(Math.round(s.qualityBonus * 100))} %
+                        </span>
+                      ) : null}
+                      <span className="text-slate-400">
+                        Délai de règlement : {s.paymentDelayDays === 0 ? "comptant" : `${s.paymentDelayDays} j`}
+                      </span>
+                      {s.supplyRiskProbability > 0 ? (
+                        <span className="text-red-400">
+                          Risque de rupture : {Math.round(s.supplyRiskProbability * 100)} %/tour
+                        </span>
+                      ) : (
+                        <span className="text-emerald-400/60">Approvisionnement fiable</span>
+                      )}
+                    </span>
+                  </span>
+                </label>
+              ))}
+            </div>
+            <div className="mt-3">
+              <Aide>
+                <p className="text-sm leading-relaxed text-slate-400">
+                  Le prix d&apos;achat entre dans le coût variable : c&apos;est ce qui reste entre lui et
+                  votre prix de vente qui fait la marge. Le bonus de qualité joue sur la qualité
+                  perçue, le délai de règlement sur la trésorerie (BFR), le risque de rupture sur
+                  ce que vous recevez. L&apos;assurance étendue couvre le litige fournisseur.
+                </p>
+              </Aide>
+            </div>
+          </Family>
+        );
+      })();
+
   return (
     <TelephoneContexte.Provider value={telephone}>
     <form
@@ -1677,7 +1812,7 @@ export function DecisionForm({
       ) : null}
       {/* Barre d'étapes : où j'en suis, saut direct possible. Les libellés se
           replient en simples numéros sur petit écran. */}
-      <ol className="flex flex-wrap gap-1.5" aria-label="Étapes de décision">
+      <ol className="flex flex-wrap gap-1 sm:gap-1.5" aria-label="Étapes de décision">
         {etapesVisibles.map((cle, i) => {
           const actif = i === courante;
           const fait = !actif && vues.has(i);
@@ -1687,7 +1822,7 @@ export function DecisionForm({
                 type="button"
                 onClick={() => allerALEtape(i)}
                 aria-current={actif ? "step" : undefined}
-                className={`flex w-full items-center justify-center gap-1.5 rounded-lg border px-2 py-2 text-xs font-medium transition ${
+                className={`flex min-h-11 w-full items-center justify-center gap-1 rounded-lg border px-1 py-2 text-xs font-medium transition sm:gap-1.5 sm:px-2 ${
                   actif
                     ? "border-amber-400/60 bg-amber-400/10 text-amber-200"
                     : fait
@@ -1855,132 +1990,20 @@ export function DecisionForm({
           ) : null}
         </PanneauConsulte>
       ) : null}
-      {(() => {
-        // Mono-produit : les fournisseurs du scénario, à choisir ici (radio),
-        // leur coût lu par rapport au fournisseur de référence. Gamme : la
-        // fiche de chaque façonnier, avec les références qu'il fournit et le
-        // prix d'achat de chacune chez lui — le choix se fait dans le tableau.
-        type Fiche = {
-          code: string;
-          name: string;
-          narrative: string;
-          qualityBonus: number;
-          paymentDelayDays: number;
-          supplyRiskProbability: number;
-          prix: { reference: string; achat: number; ecart: string }[];
-        };
-        const fiches: Fiche[] = [];
-        if (gamme) {
-          for (const p of gamme) {
-            const reference = p.suppliers?.[0];
-            for (const s of p.suppliers ?? []) {
-              const cle = `${s.code}·${s.name}`;
-              let fiche = fiches.find((f) => `${f.code}·${f.name}` === cle);
-              if (!fiche) {
-                fiche = { ...s, prix: [] };
-                fiches.push(fiche);
-              }
-              fiche.prix.push({ reference: p.name, achat: s.materialCostPerUnit, ecart: ecartFournisseur(s, reference) });
-            }
-          }
-        } else if (suppliersOffer && suppliersOffer.length > 0) {
-          const reference = suppliersOffer[0];
-          for (const s of suppliersOffer) {
-            fiches.push({ ...s, prix: [{ reference: v.unit, achat: s.materialCostPerUnit, ecart: ecartFournisseur(s, reference) }] });
-          }
-        }
-        if (fiches.length === 0) return null;
-        return (
-          <Family
-            // EN GAMME, CE PANNEAU NE PORTE AUCUNE DÉCISION : le façonnier se
-            // choisit ligne par ligne dans le tableau des ventes, et ceci n'est
-            // qu'un catalogue — autant de fiches que de façonniers, dépliées
-            // au-dessus des champs qu'on vient remplir. Il s'ouvre à la demande.
-            // En mono-produit, au contraire, le choix EST ici (les boutons
-            // radio) : le replier cacherait une décision du tour.
-            defaultOpen={!gamme}
-            legend={
-              gamme
-                ? `🏭 ${v.supplierPanelLabel} · ${fiches.length} fiche${fiches.length > 1 ? "s" : ""}`
-                : `🏭 ${v.supplierPanelLabel}`
-            }
-            tone="border-emerald-400/25 bg-emerald-950/20"
-            legendClass="text-xs font-semibold uppercase tracking-wide text-emerald-300"
-          >
-            {gamme ? (
-              <p className="mb-2 text-sm leading-relaxed text-emerald-200/80">
-                Chaque référence a ses façonniers ; le choix se fait ligne par ligne dans le
-                tableau de vos ventes. Voici ce que chacun propose, et à quel prix d&apos;achat
-                pour chaque référence qu&apos;il fournit.
-              </p>
-            ) : null}
-            <div className="space-y-2">
-              {fiches.map((s) => (
-                <label
-                  key={`${s.code}·${s.name}`}
-                  className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-2.5 py-2"
-                >
-                  {gamme ? null : (
-                    <input
-                      type="radio"
-                      name="supplierChoice"
-                      value={s.code}
-                      defaultChecked={(defaults.supplierChoice ?? fiches[0]?.code) === s.code}
-                      className="mt-0.5 h-4 w-4 accent-emerald-400"
-                    />
-                  )}
-                  <span>
-                    <span className="text-sm font-medium text-slate-200">
-                      {s.name}
-                      {gamme
-                        ? ""
-                        : ` · ${v.materialLabel.toLowerCase()} à ${formatEuroCents(s.prix[0]!.achat)}/${v.unit} (${s.prix[0]!.ecart})`}
-                    </span>
-                    <span className="mt-0.5 block text-xs text-slate-400">{s.narrative}</span>
-                    {gamme ? (
-                      <span className="mt-1 block text-xs text-slate-300">
-                        {s.prix.map((x, i) => (
-                          <span key={x.reference}>
-                            {i > 0 ? " · " : ""}
-                            {x.reference} {formatEuroCents(x.achat)} ({x.ecart})
-                          </span>
-                        ))}
-                      </span>
-                    ) : null}
-                    <span className="mt-1 flex flex-wrap gap-3 text-xs">
-                      {s.qualityBonus !== 0 ? (
-                        <span className={s.qualityBonus > 0 ? "text-emerald-400" : "text-amber-400"}>
-                          Qualité {s.qualityBonus > 0 ? "+" : "−"}{Math.abs(Math.round(s.qualityBonus * 100))} %
-                        </span>
-                      ) : null}
-                      <span className="text-slate-400">
-                        Délai de règlement : {s.paymentDelayDays === 0 ? "comptant" : `${s.paymentDelayDays} j`}
-                      </span>
-                      {s.supplyRiskProbability > 0 ? (
-                        <span className="text-red-400">
-                          Risque de rupture : {Math.round(s.supplyRiskProbability * 100)} %/tour
-                        </span>
-                      ) : (
-                        <span className="text-emerald-400/60">Approvisionnement fiable</span>
-                      )}
-                    </span>
-                  </span>
-                </label>
-              ))}
-            </div>
-            <div className="mt-3">
-              <Aide>
-                <p className="text-sm leading-relaxed text-slate-400">
-                  Le prix d&apos;achat entre dans le coût variable : c&apos;est ce qui reste entre lui et
-                  votre prix de vente qui fait la marge. Le bonus de qualité joue sur la qualité
-                  perçue, le délai de règlement sur la trésorerie (BFR), le risque de rupture sur
-                  ce que vous recevez. L&apos;assurance étendue couvre le litige fournisseur.
-                </p>
-              </Aide>
-            </div>
-          </Family>
-        );
-      })()}
+      {gamme ? panneauFournisseurs : null}
+      </section>
+
+      {/* S'APPROVISIONNER, À PART. Le choix du fournisseur (les boutons radio) pesait
+          707 px dans une étape déjà longue de 1 329 px : il a la sienne. En gamme, le
+          façonnier se choisit ligne par ligne dans le tableau des ventes et ce panneau
+          n'est qu'un catalogue : il reste sous « Vos références », et l'étape ne
+          paraît pas. */}
+      <section
+        data-etape={idx("approvisionner")}
+        hidden={courante !== idx("approvisionner")}
+        className="space-y-3"
+      >
+      {gamme ? null : panneauFournisseurs}
       </section>
 
       {/* Budgéter : les quatre budgets du tour (marketing, qualité, entretien,
@@ -2266,8 +2289,8 @@ export function DecisionForm({
       </section>
 
       <section
-        data-etape={idx("couverture")}
-        hidden={courante !== idx("couverture")}
+        data-etape={idx("tresorerie")}
+        hidden={courante !== idx("tresorerie")}
         className="space-y-3"
       >
       {on.dividend ? (
@@ -2341,6 +2364,15 @@ export function DecisionForm({
           </p>
         </Family>
       ) : null}
+      </section>
+
+      {/* L'ASSURANCE, À PART. Elle faisait 844 px sous la trésorerie : une famille
+          de formules qu'on compare, et qui demande un écran à elle. */}
+      <section
+        data-etape={idx("assurance")}
+        hidden={courante !== idx("assurance")}
+        className="space-y-3"
+      >
       {on.insurance && insuranceFormulas && insuranceFormulas.length > 0 ? (
         <Family legend="🛡️ Assurance · choisissez votre couverture">
           <div className="space-y-2">

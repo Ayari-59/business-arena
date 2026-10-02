@@ -432,6 +432,114 @@ describe("pendant une partie", () => {
     }
   });
 
+  it("la décision se parcourt en sept étapes, sur une seule rangée de pastilles à 44 px", async () => {
+    await page.evaluate(() => window.scrollTo(0, 0));
+    const puces = page.locator(
+      'form ol[aria-label="Étapes de décision"] li button',
+    );
+    expect(await puces.count(), "nombre d'étapes de décision").toBe(7);
+    // Sept pastilles qui passent sur deux lignes seraient pires que cinq sur une.
+    const boites = await puces.evaluateAll((els) =>
+      els.map((e) => {
+        const r = e.getBoundingClientRect();
+        return {
+          y: Math.round(r.top + window.scrollY),
+          l: Math.round(r.width),
+          h: Math.round(r.height),
+        };
+      }),
+    );
+    expect(
+      new Set(boites.map((b) => b.y)).size,
+      `pastilles sur plusieurs lignes : ${JSON.stringify(boites)}`,
+    ).toBe(1);
+    for (const b of boites) {
+      expect(b.h, `pastille de ${b.h} px de haut`).toBeGreaterThanOrEqual(44);
+      expect(b.l, `pastille de ${b.l} px de large`).toBeGreaterThanOrEqual(36);
+    }
+  });
+
+  it("aucune étape de décision ne dépasse un écran et demi, et chacune garde ses champs", async () => {
+    const puces = page.locator(
+      'form ol[aria-label="Étapes de décision"] li button',
+    );
+    const ecran = page.viewportSize()!.height;
+    const mesures: { etape: number; h: number; champs: number }[] = [];
+    for (let i = 0; i < (await puces.count()); i += 1) {
+      await puces.nth(i).click();
+      await page.waitForTimeout(250);
+      mesures.push(
+        await page.evaluate((etape) => {
+          const s = [...document.querySelectorAll("form [data-etape]")].find(
+            (e) => !(e as HTMLElement).hidden,
+          )!;
+          const champs = [
+            ...s.querySelectorAll("input:not([type=hidden]), select, textarea"),
+          ].filter((e) => e.getBoundingClientRect().width > 0);
+          return {
+            etape,
+            h: Math.round(s.getBoundingClientRect().height),
+            champs: champs.length,
+          };
+        }, i + 1),
+      );
+    }
+    const trop = mesures.filter((m) => m.h > ecran * 1.5);
+    expect(
+      trop,
+      `étapes trop longues (écran de ${ecran} px) : ${JSON.stringify(mesures)}`,
+    ).toEqual([]);
+    for (const m of mesures)
+      expect(m.champs, `étape ${m.etape} sans champ`).toBeGreaterThan(0);
+  });
+
+  it("le choix du fournisseur a son étape, et ses boutons y sont visibles", async () => {
+    const radios = page.locator('input[name="supplierChoice"]');
+    if ((await radios.count()) === 0) return; // le scénario de ce test n'en propose pas
+    const section = radios.first().locator("xpath=ancestor::*[@data-etape][1]");
+    const numero = Number(await section.getAttribute("data-etape"));
+    await page
+      .locator('form ol[aria-label="Étapes de décision"] li button')
+      .nth(numero)
+      .click();
+    await page.waitForTimeout(250);
+    for (let i = 0; i < (await radios.count()); i += 1) {
+      expect(
+        await radios.nth(i).isVisible(),
+        "un choix de fournisseur est masqué",
+      ).toBe(true);
+    }
+    // Et l'étape de vente n'en porte plus aucun : le prix et le volume y restent.
+    await page
+      .locator('form ol[aria-label="Étapes de décision"] li button')
+      .first()
+      .click();
+    await page.waitForTimeout(250);
+    expect(await radios.first().isVisible()).toBe(false);
+    expect(await page.locator('input[name="price"]').first().isVisible()).toBe(
+      true,
+    );
+  });
+
+  it("la dernière étape propose de valider, et les précédentes de passer à la suite", async () => {
+    const puces = page.locator(
+      'form ol[aria-label="Étapes de décision"] li button',
+    );
+    const total = await puces.count();
+    await puces.nth(total - 1).click();
+    await page.waitForTimeout(250);
+    expect(
+      await page.getByRole("button", { name: /Valider et simuler/ }).count(),
+    ).toBe(1);
+    expect(await page.getByRole("button", { name: /Suivant/ }).count()).toBe(0);
+    await puces.first().click();
+    await page.waitForTimeout(250);
+    expect(await page.getByRole("button", { name: /Suivant/ }).count()).toBe(1);
+    expect(
+      await page.getByRole("button", { name: /Valider et simuler/ }).count(),
+    ).toBe(0);
+  });
+
   it("l'apparence se choisit depuis le menu de la partie", async () => {
     await page.getByRole("button", { name: "Menu de la partie" }).click();
     await page

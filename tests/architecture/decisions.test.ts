@@ -77,8 +77,14 @@ describe("leviers de décision", () => {
     // couvre, on s'informe, on prévoit. Le choix du fournisseur se trouvait
     // auparavant en dernier, après l'assurance, alors qu'il fixe le coût
     // d'achat de ce qu'on vend.
+    // Le panneau des fournisseurs est défini avant le `return` (il se loge dans une
+    // étape ou une autre selon le mode) : sa position est celle de l'endroit où
+    // il est RENDU, pas celle du texte de ses boutons.
+    const RENDU_DES_FOURNISSEURS = "{gamme ? null : panneauFournisseurs}";
     const position = (champ: string) =>
-      Math.max(FORMULAIRE.indexOf(`name="${champ}"`), FORMULAIRE.indexOf(`name: "${champ}"`));
+      champ === "supplierChoice"
+        ? FORMULAIRE.indexOf(RENDU_DES_FOURNISSEURS)
+        : Math.max(FORMULAIRE.indexOf(`name="${champ}"`), FORMULAIRE.indexOf(`name: "${champ}"`));
     const attendus = LEVIERS.filter((l) => position(l.champ) >= 0);
     const desordre: string[] = [];
     for (let i = 1; i < attendus.length; i += 1) {

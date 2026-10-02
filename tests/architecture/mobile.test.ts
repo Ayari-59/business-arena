@@ -178,3 +178,44 @@ describe("les tiroirs de téléphone ne cachent pas ce qui décide", () => {
     );
   });
 });
+
+describe("la décision se découpe en étapes courtes", () => {
+  const FORMULAIRE = lire("src/components/decision-form.tsx");
+
+  it("chaque étape a sa section, et le fournisseur comme l'assurance ont la leur", () => {
+    // « Vendre & s'approvisionner » pesait 1 329 px et « Trésorerie & couverture »
+    // 1 242 : deux écrans chacune sur téléphone. Elles sont coupées en deux.
+    for (const cle of [
+      "vendre",
+      "approvisionner",
+      "budgets",
+      "equipe",
+      "financer",
+      "tresorerie",
+      "assurance",
+      "prevoir",
+    ]) {
+      expect(FORMULAIRE, `section de l'étape « ${cle} »`).toContain(
+        `data-etape={idx("${cle}")}`,
+      );
+      expect(FORMULAIRE, `visibilité de l'étape « ${cle} »`).toContain(
+        `hidden={courante !== idx("${cle}")}`,
+      );
+    }
+    expect(FORMULAIRE).not.toContain('idx("couverture")');
+  });
+
+  it("le panneau des fournisseurs n'est rendu qu'à un seul endroit selon le mode", () => {
+    // En gamme, il reste un catalogue sous « Vos références » ; en mono-produit il
+    // porte le choix, dans l'étape « S'approvisionner ». Jamais les deux : deux
+    // groupes de boutons radio de même nom se disputeraient la valeur envoyée.
+    expect(FORMULAIRE).toContain("{gamme ? panneauFournisseurs : null}");
+    expect(FORMULAIRE).toContain("{gamme ? null : panneauFournisseurs}");
+  });
+
+  it("l'étape des fournisseurs n'existe qu'en mono-produit, avec des fournisseurs à choisir", () => {
+    expect(FORMULAIRE).toMatch(
+      /approvisionnerVisible = !gamme && !!suppliersOffer && suppliersOffer\.length > 0/,
+    );
+  });
+});
