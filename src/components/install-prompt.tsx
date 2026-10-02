@@ -1,7 +1,9 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { bouton } from "@/components/bouton";
 import { useEffect, useState } from "react";
+import { estEcranDeJeu } from "@/config/ecrans-de-jeu";
 
 /**
  * Pop-up d'installation, sur mobile uniquement.
@@ -16,6 +18,13 @@ import { useEffect, useState } from "react";
  * On ne harcèle pas : déjà installée (standalone) → rien ; fermée ou installée
  * → mémorisé dans localStorage et plus rien pendant DELAI_SILENCE. `sm:hidden`
  * la réserve au petit écran.
+ *
+ * UNE LIGNE, ET JAMAIS EN JEU. Elle prenait quarante pour cent de l'écran, par-dessus
+ * la partie, avec trois étapes de texte : la première chose qu'un
+ * téléphone montrait d'une « application » était une publicité pour elle. Elle
+ * tient maintenant sur une barre d'une ligne, et se tait sur les écrans de jeu
+ * (voir src/config/ecrans-de-jeu.ts), où l'élève décide et n'a pas à être
+ * sollicité.
  */
 
 type BeforeInstallPromptEvent = Event & {
@@ -39,11 +48,13 @@ export function InstallPrompt() {
   const [visible, setVisible] = useState(false);
   const [canPrompt, setCanPrompt] = useState(false);
   const [isIos, setIsIos] = useState(false);
+  const enJeu = estEcranDeJeu(usePathname());
 
   useEffect(() => {
     const standalone =
       window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+      (window.navigator as Navigator & { standalone?: boolean }).standalone ===
+        true;
     if (standalone || ferméRécemment()) return;
 
     const ua = navigator.userAgent;
@@ -101,60 +112,44 @@ export function InstallPrompt() {
     else fermer();
   };
 
-  if (!visible) return null;
+  if (!visible || enJeu) return null;
 
+  // Sur iOS il n'y a pas de bouton à offrir : l'installation passe par le menu
+  // Partager de Safari. On le dit en une ligne, on n'en fait pas un tutoriel.
   return (
     <div
       role="dialog"
       aria-label="Installer l'application"
-      className="fixed inset-x-0 bottom-0 z-50 px-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] sm:hidden"
+      className="fixed inset-x-0 bottom-0 z-50 px-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] sm:hidden"
     >
-      <div className="mx-auto max-w-md rounded-2xl border border-amber-400/25 bg-slate-900/95 p-4 shadow-2xl backdrop-blur">
-        <div className="flex items-start gap-3">
-          <span
-            aria-hidden
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-400/10 text-xl ring-1 ring-inset ring-amber-400/25"
-          >
-            📲
-          </span>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-slate-100">
-              Installer Business Arena
-            </p>
-            <p className="mt-0.5 text-sm leading-relaxed text-slate-400">
-              {isIos
-                ? "Ajoutez l'app à votre écran d'accueil : elle s'ouvre en plein écran, sans barre de navigateur."
-                : "Un accès direct depuis l'écran d'accueil, en plein écran, comme une vraie app."}
-            </p>
-          </div>
-        </div>
-
-        {isIos ? (
-          <ol className="mt-3 space-y-1 text-xs leading-relaxed text-slate-300">
-            <li>1. Touchez l&apos;icône Partager (carré avec une flèche ↑) dans Safari.</li>
-            <li>2. Choisissez «&nbsp;Sur l&apos;écran d&apos;accueil&nbsp;».</li>
-            <li>3. Confirmez avec «&nbsp;Ajouter&nbsp;».</li>
-          </ol>
-        ) : null}
-
-        <div className="mt-3 flex items-center justify-end gap-2">
+      <div className="mx-auto flex max-w-md items-center gap-2 rounded-2xl border border-amber-400/25 bg-slate-900/95 py-1.5 pl-3 pr-1.5 shadow-2xl backdrop-blur">
+        <span aria-hidden className="shrink-0 text-lg">
+          📲
+        </span>
+        <p className="min-w-0 flex-1 text-sm leading-snug text-slate-200">
+          {isIos ? (
+            <>Partager, puis «&nbsp;Sur l&apos;écran d&apos;accueil&nbsp;».</>
+          ) : (
+            <>Installer Business Arena</>
+          )}
+        </p>
+        {canPrompt ? (
           <button
             type="button"
-            onClick={fermer}
-            className="rounded-lg px-3 py-2 text-xs font-medium text-slate-400 transition hover:text-slate-200"
+            onClick={installer}
+            className={`${bouton({ taille: "m" })} min-h-11 shrink-0`}
           >
-            {isIos ? "Compris" : "Plus tard"}
+            Installer
           </button>
-          {canPrompt ? (
-            <button
-              type="button"
-              onClick={installer}
-              className={bouton()}
-            >
-              Installer l&apos;app
-            </button>
-          ) : null}
-        </div>
+        ) : null}
+        <button
+          type="button"
+          onClick={fermer}
+          aria-label="Fermer"
+          className="grid min-h-11 min-w-11 shrink-0 place-items-center rounded-xl text-lg text-slate-400 transition hover:text-slate-200"
+        >
+          <span aria-hidden>×</span>
+        </button>
       </div>
     </div>
   );

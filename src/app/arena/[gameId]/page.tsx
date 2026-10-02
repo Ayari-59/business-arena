@@ -404,7 +404,7 @@ export default async function ArenaPage({
     ) : null;
 
   return (
-    <main id="main" className="mx-auto max-w-[1400px] space-y-6 px-4 pt-6 pb-16 sm:space-y-8 sm:px-6">
+    <main id="main" className="mx-auto max-w-[1400px] space-y-6 px-4 pt-6 pb-16 sm:space-y-8 sm:px-6" data-ecran-de-jeu="">
       {/* ── Header ── */}
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -1192,11 +1192,11 @@ export default async function ArenaPage({
 
         {/* Les deux liens retirés du bandeau de jeu : ils restent à portée,
             là où l'élève regarde son profil. */}
-        <p className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">
-          <Link href="/profile" className="underline-offset-4 hover:text-slate-300 hover:underline">
+        <p className="flex flex-wrap gap-x-4 text-xs text-slate-400">
+          <Link href="/profile" className="underline-offset-4 hover:text-slate-300 hover:underline pointer-coarse:flex pointer-coarse:min-h-11 pointer-coarse:items-center">
             Mon profil et ma progression
           </Link>
-          <Link href="/notions" className="underline-offset-4 hover:text-slate-300 hover:underline">
+          <Link href="/notions" className="underline-offset-4 hover:text-slate-300 hover:underline pointer-coarse:flex pointer-coarse:min-h-11 pointer-coarse:items-center">
             Fiches notions
           </Link>
         </p>

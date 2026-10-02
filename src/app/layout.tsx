@@ -22,7 +22,7 @@ const policeTexte = Inter_Tight({
   variable: "--font-brand-sans",
   display: "swap",
 });
-import { CLE_THEME, THEMES } from "@/config/themes";
+import { CLE_THEME, THEMES, couleurDeBarre } from "@/config/themes";
 import { paletteDuSite, themeParDefaut } from "@/config/theme-du-site";
 import { PALETTE_D_ORIGINE, accentsDeLaPalette, feuilleDePalette } from "@/config/palettes";
 import { getPlatformConfig } from "@/services/admin.service";
@@ -40,7 +40,6 @@ export const metadata: Metadata = {
   description: DESCRIPTION_ACCUEIL,
   openGraph: { siteName: NOM_DU_SITE, locale: "fr_FR", type: "website", url: SITE_URL },
   twitter: { card: "summary_large_image" },
-  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     // « black-translucent » laisse la page passer sous la barre d'état et en
@@ -65,7 +64,11 @@ export const metadata: Metadata = {
  * service worker) ne dépend pas de cette ligne.
  */
 export const viewport: Viewport = {
-  themeColor: "#d97706",
+  // « cover » : la page va jusqu'aux bords du téléphone, encoche comprise. La
+  // réserve des bords est posée dans globals.css (safe-area-inset). La couleur
+  // de la barre d'état n'est pas ici : elle suit le thème, donc elle se pose
+  // dans l'en-tête de la mise en page (voir plus bas).
+  viewportFit: "cover",
   width: "device-width",
   initialScale: 1,
 };
@@ -88,9 +91,21 @@ export default async function RootLayout({
   const palette = paletteDuSite(theme);
   const feuille = feuilleDePalette(palette);
   const accents = palette === PALETTE_D_ORIGINE ? undefined : accentsDeLaPalette(palette);
+  // LA BARRE D'ÉTAT DU TÉLÉPHONE PREND LA COULEUR DU THÈME APPLIQUÉ, y compris
+  // celui que le visiteur a choisi. Elle est donc posée par l'amorce, avec le
+  // thème et avant la première image, et non rendue par React : une balise
+  // rendue côté serveur puis corrigée par le script ne correspondrait plus à ce
+  // que React attend à l'hydratation, qui en ajouterait une seconde à côté. Le
+  // serveur ne connaît pas le choix du visiteur ; il ne peut donc pas la poser.
+  const barres = JSON.stringify(
+    Object.fromEntries(THEMES.map((t) => [t.code, couleurDeBarre(t.code)])),
+  );
   const amorce =
+    `var t=${JSON.stringify(parDefaut)};` +
     `try{var c=localStorage.getItem(${JSON.stringify(CLE_THEME)});` +
-    `if(${codes}.indexOf(c)>-1)document.documentElement.dataset.theme=c}catch(e){}`;
+    `if(${codes}.indexOf(c)>-1){t=c;document.documentElement.dataset.theme=c}}catch(e){}` +
+    `var m=document.createElement("meta");m.name="theme-color";m.content=${barres}[t];` +
+    `document.head.appendChild(m);`;
 
   return (
     <html
@@ -98,11 +113,11 @@ export default async function RootLayout({
       data-theme={parDefaut}
       className={`${policeTitre.variable} ${policeTexte.variable}`}
     >
-      {feuille ? (
-        <head>
+      <head>
+        {feuille ? (
           <style id="palette-d-accent" dangerouslySetInnerHTML={{ __html: feuille }} />
-        </head>
-      ) : null}
+        ) : null}
+      </head>
       <body className="min-h-screen bg-slate-950 text-slate-100 antialiased">
         <script dangerouslySetInnerHTML={{ __html: amorce }} />
         {/* Premier élément focusable : au clavier, on saute la navigation. */}

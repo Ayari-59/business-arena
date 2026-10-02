@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CLE_THEME, estCodeTheme, THEMES, type CodeTheme } from "@/config/themes";
+import {
+  CLE_THEME,
+  couleurDeBarre,
+  estCodeTheme,
+  THEMES,
+  type CodeTheme,
+} from "@/config/themes";
 
 /**
  * Le choix du thème, montré plutôt que caché.
@@ -65,6 +71,10 @@ export function ThemeSwitcher({
 
   function choisir(code: CodeTheme) {
     document.documentElement.dataset.theme = code;
+    // La barre d'état du téléphone suit la page, sans attendre un rechargement.
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute("content", couleurDeBarre(code));
     try {
       localStorage.setItem(CLE_THEME, code);
     } catch {
@@ -96,7 +106,7 @@ export function ThemeSwitcher({
             title={`${t.nom} — ${t.description}`}
             // La cible fait bien plus que la pastille : on vise un contrôle
             // de barre au pouce, pas un disque de quatre millimètres.
-            className={`flex items-center rounded-[7px] px-2 py-1.5 transition ${
+            className={`flex items-center justify-center rounded-[7px] px-2 py-1.5 transition pointer-coarse:min-h-11 pointer-coarse:min-w-11 ${
               actif ? "bg-white/15 ring-1 ring-white/15" : "hover:bg-white/5"
             }`}
           >

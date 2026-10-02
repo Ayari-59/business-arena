@@ -133,7 +133,7 @@ export function SegmentedTabs({
                   tabIndex={estCourant ? 0 : -1}
                   onClick={() => setActive(tab.key)}
                   onKeyDown={(e) => auClavier(e, index)}
-                  className={`flex min-w-0 items-center gap-2 rounded-lg border px-2 py-2 text-left transition sm:flex-1 sm:gap-2.5 sm:px-3 ${
+                  className={`flex min-h-11 min-w-11 items-center gap-2 rounded-lg border px-2 py-2 text-left transition sm:flex-1 sm:gap-2.5 sm:px-3 ${
                     estCourant
                       ? "border-amber-400/50 bg-amber-400/10"
                       : estFait

@@ -73,7 +73,7 @@ export function Tiroir({
         sur la ligne du bas, à l'opposé du chevron qui dit la même chose. Ici il
         tient la droite du résumé, quel que soit le nombre de lignes.
       */}
-      <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 [&::-webkit-details-marker]:hidden">
+      <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 pointer-coarse:min-h-11 [&::-webkit-details-marker]:hidden">
         <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
           <span
             aria-hidden

@@ -77,6 +77,20 @@ export const THEMES: Theme[] = [
   },
 ];
 
+/**
+ * LA COULEUR QUE LE TÉLÉPHONE PEINT AUTOUR DE LA PAGE : la barre d'état en haut,
+ * et le fond de l'écran de démarrage quand l'application est installée.
+ *
+ * C'est le fond du thème, ni plus ni moins. Elle était un orange fixe, celui
+ * de l'amber brut de Tailwind, que le site n'emploie plus nulle part : sur un
+ * téléphone, une bande orange surmontait une page encre ou papier, et c'était
+ * la première chose qu'on voyait d'une « application ». Une barre qui prolonge
+ * le fond de la page disparaît, et c'est ce qu'on attend d'elle.
+ */
+export function couleurDeBarre(code: CodeTheme): string {
+  return THEMES.find((t) => t.code === code)!.apercu.fond;
+}
+
 export function estCodeTheme(valeur: unknown): valeur is CodeTheme {
   return typeof valeur === "string" && THEMES.some((t) => t.code === valeur);
 }

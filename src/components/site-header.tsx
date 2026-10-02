@@ -124,7 +124,7 @@ export function SiteHeader({
         className={`relative z-40 mx-auto flex ${largeur} flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-3.5 sm:px-6`}
       >
         <div className="flex items-center gap-2.5">
-          <Link href="/" aria-label="Accueil">
+          <Link href="/" aria-label="Accueil" className="pointer-coarse:flex pointer-coarse:min-h-11 pointer-coarse:items-center">
             <SiteLogo className="h-6 w-[7.5rem] sm:h-8 sm:w-40" />
           </Link>
         </div>
@@ -213,7 +213,7 @@ export function SiteHeader({
             onClick={() => setOuvert((v) => !v)}
             aria-expanded={ouvert}
             aria-controls="plan-du-site"
-            className={`flex items-center gap-2 rounded-lg border bg-slate-900 px-2.5 py-1.5 text-xs transition duration-200 motion-reduce:transition-none ${
+            className={`flex items-center gap-2 rounded-lg border bg-slate-900 px-2.5 py-1.5 text-xs transition duration-200 motion-reduce:transition-none pointer-coarse:min-h-11 pointer-coarse:px-3.5 pointer-coarse:text-sm ${
               ouvert
                 ? "border-amber-400/45 text-amber-200"
                 : "border-white/10 text-slate-300 hover:border-amber-400/35 hover:text-slate-100"
