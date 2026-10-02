@@ -109,14 +109,9 @@ export function BarreDeJeu({
             {termine ? (
               "Partie terminée"
             ) : progression ? (
-              <>
-                Tour {tour} sur {tours} ·{" "}
-                {/* Le temps du tour, dans sa teinte : c'est ce qui dit où l'on en est. */}
-                <span className={`font-semibold ${PHASES[progression.phase].texte}`}>
-                  {progression.libelle}
-                  {progression.rang ? ` ${progression.rang}` : ""}
-                </span>
-              </>
+              /* Le temps du tour se lit sous la barre, en titre de la carte, dans sa teinte :
+                 le redire ici le doublerait. */
+              `Tour ${tour} sur ${tours}`
             ) : (
               `Tour ${tour} sur ${tours} · en cours`
             )}

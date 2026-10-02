@@ -281,10 +281,13 @@ describe("on sait toujours à quel temps du tour on est", () => {
     expect(phases).not.toMatch(/`(text|bg)-\$\{/);
   });
 
-  it("la barre du haut est en segments, et le sous-titre prend la teinte du temps courant", () => {
+  it("la barre du haut est en segments teintés ; le temps du tour n'y est pas redit, le titre de la carte le porte", () => {
     const barre = lire("src/components/barre-de-jeu.tsx");
     expect(barre).toContain("progression.segments.map");
-    expect(barre).toContain("PHASES[progression.phase].texte");
+    expect(barre).toContain("PHASES[segment.phase].fond");
+    expect(barre, "le sous-titre ne doit pas doubler le titre coloré de la carte").not.toContain(
+      "PHASES[progression.phase].texte",
+    );
   });
 
   it("chaque carte du parcours porte l'amorce de son temps ; l'analyse et la décision, la leur, de même teinte", () => {

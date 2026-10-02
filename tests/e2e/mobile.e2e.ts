@@ -595,9 +595,10 @@ describe("pendant une partie", () => {
     }
     await page.getByText("Vos décisions du tour").waitFor({ state: "visible" });
     await page.getByRole("button", { name: /Valider et simuler/ }).waitFor();
-    // La barre du haut ne compte pas la relecture comme une décision de plus.
+    // La relecture n'est pas comptée comme une décision de plus : sa carte se dit
+    // « Dernière étape », et le titre en teinte est le seul à le dire.
     await page
-      .getByText(/Récapitulatif/)
+      .getByText("Dernière étape")
       .first()
       .waitFor({ state: "visible" });
     expect(await page.getByText(/Décision 13 sur 12/).count()).toBe(0);
