@@ -21,7 +21,7 @@ import { DecisionForm } from "@/components/decision-form";
 import { TeamNameForm } from "@/components/team-name-form";
 import { ChoixEquipe } from "@/components/choix-equipe";
 import { porteUnNomParDefaut } from "@/config/nom-equipe";
-import { DilemmaCard, ParametersPanels } from "@/components/decision-context";
+import { DetailParClientele, DilemmaCard, ParametersPanels } from "@/components/decision-context";
 import { PeriodDashboard } from "@/components/period-dashboard";
 import { PeriodDecisionsRecap } from "@/components/period-decisions-recap";
 import { SegmentedTabs } from "@/components/segmented-tabs";
@@ -170,10 +170,18 @@ export default async function ArenaPage({
           </div>
         ) : null}
       </div>
-      <div>
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">Situation</h3>
-        <p className="mt-1 text-sm leading-relaxed">{view.intro.briefing}</p>
-      </div>
+      {telephone ? (
+        // Sur téléphone, « Situation » et « Contexte » ont la même forme : deux tiroirs
+        // de même niveau, ouverts dans le parcours.
+        <Tiroir titre="Situation">
+          <p className="text-sm leading-relaxed">{view.intro.briefing}</p>
+        </Tiroir>
+      ) : (
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">Situation</h3>
+          <p className="mt-1 text-sm leading-relaxed">{view.intro.briefing}</p>
+        </div>
+      )}
       {/*
         Le contexte n'oriente pas la décision du tour, il l'éclaire : qui est
         parti, depuis quand la concurrence est installée. Replié, il reste à un
@@ -190,6 +198,15 @@ export default async function ArenaPage({
       vocabulary={view.vocabulary}
       capacityFacts={view.capacityFacts}
       gamme={view.gamme}
+    />
+  );
+  const chiffresSansDetail = (
+    <ParametersPanels
+      intro={view.intro}
+      vocabulary={view.vocabulary}
+      capacityFacts={view.capacityFacts}
+      gamme={view.gamme}
+      sansDetail
     />
   );
   const donneesSection = premierTour ? (
@@ -769,8 +786,10 @@ export default async function ArenaPage({
         cle: "chiffres",
         noeud: (
           <div className="space-y-4">
-            {chiffres}
-            {saisonNode}
+            {chiffresSansDetail}
+            {/* Même forme, même niveau, fermés, et ils se replient l'un l'autre. */}
+            <DetailParClientele intro={view.intro} gamme={view.gamme} groupe="precisions" ferme />
+            <SaisonDuTour notes={view.seasonNotes} groupe="precisions" ferme />
           </div>
         ),
       },

@@ -31,6 +31,8 @@ export function Tiroir({
   valeur,
   quoi,
   ouvert = false,
+  ferme = false,
+  groupe,
   children,
 }: {
   titre: string;
@@ -57,6 +59,16 @@ export function Tiroir({
   /** Ce qui attend derrière, en un mot compté : « 5 clientèles », « 3 tours ». */
   quoi?: string;
   ouvert?: boolean;
+  /**
+   * Fermé même dans le parcours du téléphone, où les tiroirs s'ouvrent d'office : pour un
+   * détail qu'on ne lit qu'à la demande (le détail par clientèle, la saison du tour).
+   */
+  ferme?: boolean;
+  /**
+   * Un groupe de tiroirs qui se referment l'un l'autre : en ouvrir un ferme les autres du
+   * même nom. Le navigateur s'en charge (`<details name>`), sans script.
+   */
+  groupe?: string;
   children: React.ReactNode;
 }) {
   // DANS LE PARCOURS DU TÉLÉPHONE, chaque carte a son écran à elle : replier ce qu'elle
@@ -65,7 +77,8 @@ export function Tiroir({
   const enParcours = useParcours() !== null;
   return (
     <details
-      open={ouvert || enParcours}
+      open={ferme ? false : ouvert || enParcours}
+      name={groupe}
       className="group rounded-lg border border-dashed border-white/15 bg-slate-950/60 open:border-solid open:bg-slate-950"
     >
       {/*

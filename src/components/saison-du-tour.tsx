@@ -39,7 +39,15 @@ export function ecartSaison(coef: number): string {
 const coefficient = (coef: number) =>
   `×${coef.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}`;
 
-export function SaisonDuTour({ notes }: { notes: { name: string; coef: number }[] }) {
+export function SaisonDuTour({
+  notes,
+  groupe,
+  ferme = false,
+}: {
+  notes: { name: string; coef: number }[];
+  groupe?: string;
+  ferme?: boolean;
+}) {
   if (notes.length === 0) return null;
 
   // La première note est la plus large — le marché du scénario, ou la première
@@ -52,6 +60,8 @@ export function SaisonDuTour({ notes }: { notes: { name: string; coef: number }[
   return (
     <Tiroir
       titre="Saison du tour"
+      groupe={groupe}
+      ferme={ferme}
       valeur={
         <span className={`whitespace-nowrap tabular-nums ${teinte}`}>
           {ecartSaison(tete!.coef)} de demande

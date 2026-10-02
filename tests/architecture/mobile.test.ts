@@ -219,3 +219,30 @@ describe("la décision se découpe en étapes courtes", () => {
     );
   });
 });
+
+describe("financer et investir sont deux décisions", () => {
+  const FORMULAIRE = lire("src/components/decision-form.tsx");
+
+  it("chacune a sa carte : l'emprunt et le capital d'un côté, le parc machines de l'autre", () => {
+    expect(FORMULAIRE).toContain('cle: "financement"');
+    expect(FORMULAIRE).toContain('cle: "investissement"');
+    expect(FORMULAIRE).toContain('carte="investissement"');
+    expect(FORMULAIRE).toContain('<Carte cle="investissement">');
+    // Le résumé du financement ne parle plus de machines.
+    const financement = FORMULAIRE.slice(
+      FORMULAIRE.indexOf('cle: "financement"'),
+      FORMULAIRE.indexOf('cle: "investissement"'),
+    );
+    expect(financement).not.toContain("equipmentBuyJson");
+  });
+});
+
+describe("le détail par clientèle et la saison du tour, côte à côte", () => {
+  const PAGE = lire("src/app/arena/[gameId]/page.tsx");
+
+  it("même forme, même groupe, fermés : ouvrir l'un referme l'autre", () => {
+    expect(PAGE).toMatch(/<DetailParClientele[^>]*groupe="precisions"[^>]*ferme/);
+    expect(PAGE).toMatch(/<SaisonDuTour[^>]*groupe="precisions"[^>]*ferme/);
+    expect(lire("src/components/tiroir.tsx")).toContain("name={groupe}");
+  });
+});

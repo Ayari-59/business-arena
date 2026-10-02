@@ -130,6 +130,140 @@ function Panneau({
   );
 }
 
+/**
+ * LE DÉTAIL PAR CLIENTÈLE, en tiroir. Sur téléphone il se pose au même niveau que la
+ * saison du tour, de même forme : fermés tous deux, ils se replient l'un l'autre
+ * (`groupe`) — on lit l'un OU l'autre, et la carte ne s'allonge pas de deux détails.
+ */
+export function DetailParClientele({
+  intro,
+  gamme = null,
+  groupe,
+  ferme = false,
+}: {
+  intro: GameView["intro"];
+  gamme?: GameView["gamme"];
+  groupe?: string;
+  ferme?: boolean;
+}) {
+  const showShare = intro.segments.some((s) => s.yourShare !== null);
+  // Le détail par clientèle est une donnée de travail, pas un élément de cadrage :
+  // replié, il n'encombre pas l'écran de décision, et reste à un clic pour qui ajuste
+  // son prix segment par segment.
+  return (
+        <Tiroir
+          titre="Détail par clientèle"
+          groupe={groupe}
+          ferme={ferme}
+          quoi={`${intro.segments.length} clientèle${intro.segments.length > 1 ? "s" : ""}`}
+        >
+          <div>
+            {/*
+              En portrait, un tableau à cinq colonnes force soit un défilement
+              horizontal, soit des noms de clientèle repliés sur trois lignes. Sur
+              petit écran on montre donc UNE CARTE PAR CLIENTÈLE (nom en tête, ses
+              chiffres en grille) ; le tableau reprend dès `sm`.
+            */}
+            <ul className="mt-2 space-y-2 sm:hidden">
+              {intro.segments.map((seg) => {
+                // Les noms portent souvent un qualificatif entre parenthèses
+                // (« Étudiants (sensibles au prix) »). Laissé d'un bloc, il s'enroule
+                // sur le petit écran, parenthèse ouverte en haut, fermée en bas. On
+                // le détache : nom en tête, qualificatif en sous-titre, sans
+                // parenthèses.
+                const m = seg.name.match(/^(.*?)\s*\(([^)]*)\)\s*$/);
+                const nom = m ? m[1] : seg.name;
+                const qualif = m ? m[2] : null;
+                return (
+                  <li
+                    key={seg.name}
+                    className="rounded-lg border border-white/5 bg-slate-900/60 p-3 sm:p-4"
+                  >
+                    <p className="text-sm font-semibold text-slate-100">{nom}</p>
+                    {qualif ? <p className="mt-0.5 text-xs text-slate-400">{qualif}</p> : null}
+                    <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-2">
+                      <div>
+                        <dt className="text-xs uppercase tracking-wide text-slate-400">Taille</dt>
+                        <dd className="tabular-nums text-slate-300">{formatUnits(seg.size)}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs uppercase tracking-wide text-slate-400">
+                          Prix usuel
+                        </dt>
+                        <dd className="tabular-nums text-slate-300">{formatEuro(seg.refPrice)}</dd>
+                      </div>
+                      {showShare ? (
+                        <div>
+                          <dt className="text-xs uppercase tracking-wide text-slate-400">
+                            Votre part
+                          </dt>
+                          <dd className="tabular-nums text-amber-300">
+                            {seg.yourShare === null ? "—" : formatPercent(seg.yourShare)}
+                          </dd>
+                        </div>
+                      ) : null}
+                      <div>
+                        <dt className="text-xs uppercase tracking-wide text-slate-400">
+                          Règlement
+                        </dt>
+                        <dd className="text-slate-400">
+                          {seg.paymentDelayDays > 0 ? `à ${seg.paymentDelayDays} j` : "comptant"}
+                        </dd>
+                      </div>
+                    </dl>
+                  </li>
+                );
+              })}
+            </ul>
+
+            <div className="mt-2 hidden overflow-x-auto sm:block">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
+                    <th className="pb-1 pr-3 font-medium">Clientèle</th>
+                    <th className="pb-1 pr-3 text-right font-medium">Taille</th>
+                    <th className="pb-1 pr-3 text-right font-medium">Prix usuel</th>
+                    {showShare ? (
+                      <th className="pb-1 pr-3 text-right font-medium">Votre part</th>
+                    ) : null}
+                    <th className="pb-1 font-medium">Règlement</th>
+                  </tr>
+                </thead>
+                <tbody className="text-slate-300">
+                  {intro.segments.map((seg) => (
+                    <tr key={seg.name} className="border-t border-white/5">
+                      <td className="py-1.5 pr-3">{seg.name}</td>
+                      <td className="py-1.5 pr-3 text-right tabular-nums">
+                        {formatUnits(seg.size)}
+                      </td>
+                      <td className="py-1.5 pr-3 text-right tabular-nums">
+                        {formatEuro(seg.refPrice)}
+                      </td>
+                      {showShare ? (
+                        <td className="py-1.5 pr-3 text-right tabular-nums text-amber-300">
+                          {seg.yourShare === null ? "—" : formatPercent(seg.yourShare)}
+                        </td>
+                      ) : null}
+                      <td className="py-1.5 text-slate-400">
+                        {seg.paymentDelayDays > 0 ? `à ${seg.paymentDelayDays} j` : "comptant"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-2 text-sm leading-relaxed text-slate-400">
+              Le prix usuel est celui auquel cette clientèle a l&apos;habitude d&apos;acheter, pas
+              une consigne.{" "}
+              {gamme
+                ? "Vous fixez UN prix par référence, pour toutes ses clientèles."
+                : "Vous fixez UN prix pour tout le monde."}
+            </p>
+          </div>
+        </Tiroir>
+  );
+}
+
 /** Les paramètres : ce que vaut l'entreprise, et le marché où elle vend. */
 export function ParametersPanels({
   intro,
@@ -137,6 +271,7 @@ export function ParametersPanels({
   capacityFacts,
   gamme = null,
   repliable = false,
+  sansDetail = false,
 }: {
   intro: GameView["intro"];
   vocabulary: GameView["vocabulary"];
@@ -150,6 +285,8 @@ export function ParametersPanels({
    * plus de la moitié de l'écran « Situation » (515 px sur 1 440).
    */
   repliable?: boolean;
+  /** Le détail par clientèle se range ailleurs (téléphone : à côté de la saison, même forme). */
+  sansDetail?: boolean;
 }) {
   const showShare = intro.segments.some((s) => s.yourShare !== null);
   // Le marché en un chiffre : ce qui s'achète en tout, et dans quelle fourchette
@@ -289,121 +426,7 @@ export function ParametersPanels({
           ) : null}
         </div>
 
-        {/*
-          Le détail par clientèle est une donnée de travail, pas un élément de
-          cadrage : replié, il n'encombre pas l'écran de décision, et reste à un
-          clic pour qui ajuste son prix segment par segment.
-        */}
-        <div className="mt-3">
-        <Tiroir
-          titre="Détail par clientèle"
-          quoi={`${intro.segments.length} clientèle${intro.segments.length > 1 ? "s" : ""}`}
-        >
-          <div>
-            {/*
-              En portrait, un tableau à cinq colonnes force soit un défilement
-              horizontal, soit des noms de clientèle repliés sur trois lignes. Sur
-              petit écran on montre donc UNE CARTE PAR CLIENTÈLE (nom en tête, ses
-              chiffres en grille) ; le tableau reprend dès `sm`.
-            */}
-            <ul className="mt-2 space-y-2 sm:hidden">
-              {intro.segments.map((seg) => {
-                // Les noms portent souvent un qualificatif entre parenthèses
-                // (« Étudiants (sensibles au prix) »). Laissé d'un bloc, il s'enroule
-                // sur le petit écran, parenthèse ouverte en haut, fermée en bas. On
-                // le détache : nom en tête, qualificatif en sous-titre, sans
-                // parenthèses.
-                const m = seg.name.match(/^(.*?)\s*\(([^)]*)\)\s*$/);
-                const nom = m ? m[1] : seg.name;
-                const qualif = m ? m[2] : null;
-                return (
-                  <li
-                    key={seg.name}
-                    className="rounded-lg border border-white/5 bg-slate-900/60 p-3 sm:p-4"
-                  >
-                    <p className="text-sm font-semibold text-slate-100">{nom}</p>
-                    {qualif ? <p className="mt-0.5 text-xs text-slate-400">{qualif}</p> : null}
-                    <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-2">
-                      <div>
-                        <dt className="text-xs uppercase tracking-wide text-slate-400">Taille</dt>
-                        <dd className="tabular-nums text-slate-300">{formatUnits(seg.size)}</dd>
-                      </div>
-                      <div>
-                        <dt className="text-xs uppercase tracking-wide text-slate-400">
-                          Prix usuel
-                        </dt>
-                        <dd className="tabular-nums text-slate-300">{formatEuro(seg.refPrice)}</dd>
-                      </div>
-                      {showShare ? (
-                        <div>
-                          <dt className="text-xs uppercase tracking-wide text-slate-400">
-                            Votre part
-                          </dt>
-                          <dd className="tabular-nums text-amber-300">
-                            {seg.yourShare === null ? "—" : formatPercent(seg.yourShare)}
-                          </dd>
-                        </div>
-                      ) : null}
-                      <div>
-                        <dt className="text-xs uppercase tracking-wide text-slate-400">
-                          Règlement
-                        </dt>
-                        <dd className="text-slate-400">
-                          {seg.paymentDelayDays > 0 ? `à ${seg.paymentDelayDays} j` : "comptant"}
-                        </dd>
-                      </div>
-                    </dl>
-                  </li>
-                );
-              })}
-            </ul>
-
-            <div className="mt-2 hidden overflow-x-auto sm:block">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
-                    <th className="pb-1 pr-3 font-medium">Clientèle</th>
-                    <th className="pb-1 pr-3 text-right font-medium">Taille</th>
-                    <th className="pb-1 pr-3 text-right font-medium">Prix usuel</th>
-                    {showShare ? (
-                      <th className="pb-1 pr-3 text-right font-medium">Votre part</th>
-                    ) : null}
-                    <th className="pb-1 font-medium">Règlement</th>
-                  </tr>
-                </thead>
-                <tbody className="text-slate-300">
-                  {intro.segments.map((seg) => (
-                    <tr key={seg.name} className="border-t border-white/5">
-                      <td className="py-1.5 pr-3">{seg.name}</td>
-                      <td className="py-1.5 pr-3 text-right tabular-nums">
-                        {formatUnits(seg.size)}
-                      </td>
-                      <td className="py-1.5 pr-3 text-right tabular-nums">
-                        {formatEuro(seg.refPrice)}
-                      </td>
-                      {showShare ? (
-                        <td className="py-1.5 pr-3 text-right tabular-nums text-amber-300">
-                          {seg.yourShare === null ? "—" : formatPercent(seg.yourShare)}
-                        </td>
-                      ) : null}
-                      <td className="py-1.5 text-slate-400">
-                        {seg.paymentDelayDays > 0 ? `à ${seg.paymentDelayDays} j` : "comptant"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <p className="mt-2 text-sm leading-relaxed text-slate-400">
-              Le prix usuel est celui auquel cette clientèle a l&apos;habitude d&apos;acheter, pas
-              une consigne.{" "}
-              {gamme
-                ? "Vous fixez UN prix par référence, pour toutes ses clientèles."
-                : "Vous fixez UN prix pour tout le monde."}
-            </p>
-          </div>
-        </Tiroir>
-        </div>
+        {sansDetail ? null : <DetailParClientele intro={intro} gamme={gamme} />}
       </Panneau>
     </div>
   );

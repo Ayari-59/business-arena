@@ -259,6 +259,9 @@ describe("pendant une partie", () => {
 
   /** Un parcours revient toujours au point de départ avant un test qui en dépend. */
   async function versLaPremiereCarte() {
+    // Un hash identique ne déclenche rien : on passe par un autre pour que le parcours
+    // revienne bien à sa première carte.
+    await page.evaluate(() => (window.location.hash = "retour"));
     await page.evaluate(() => (window.location.hash = "situation"));
     await page.waitForTimeout(300);
   }
@@ -340,6 +343,66 @@ describe("pendant une partie", () => {
     // Un écran à la fois : la barre de progression a avancé, et le pied reste en bas.
     const bas = (await valider.boundingBox())!;
     expect(bas.y + bas.height).toBeGreaterThan(page.viewportSize()!.height - 40);
+  });
+
+  it("« Situation » et « Contexte » ont la même forme : deux tiroirs ouverts, au même niveau", async () => {
+    await versLaPremiereCarte();
+    for (let k = 0; k < 8; k++) {
+      const situation = page.locator('details:has(> summary:has-text("Situation"))');
+      if (await situation.count()) {
+        const contexte = page.locator('details:has(> summary:has-text("Contexte"))');
+        expect(await situation.first().evaluate((d) => (d as HTMLDetailsElement).open)).toBe(true);
+        expect(await contexte.first().evaluate((d) => (d as HTMLDetailsElement).open)).toBe(true);
+        // Même niveau : ni l'un ni l'autre n'est dans l'autre.
+        expect(await situation.first().locator("details").count()).toBe(0);
+        return;
+      }
+      await suite().click();
+      await page.waitForTimeout(250);
+    }
+    throw new Error("aucune carte ne porte « Situation » et « Contexte »");
+  });
+
+  it("« Détail par clientèle » et « Saison du tour » : même forme, fermés, et l'un referme l'autre", async () => {
+    await versLaPremiereCarte();
+    for (let k = 0; k < 8; k++) {
+      const detail = page.locator('details:has(> summary:has-text("Détail par clientèle"))');
+      if (await detail.count()) {
+        const saison = page.locator('details:has(> summary:has-text("Saison du tour"))');
+        const ouvert = (l: typeof detail) => l.first().evaluate((d) => (d as HTMLDetailsElement).open);
+        expect(await ouvert(detail)).toBe(false);
+        expect(await ouvert(saison)).toBe(false);
+        // Même niveau : le détail n'est plus dans le panneau « Le marché ».
+        expect(await page.locator('details:has(> summary:has-text("Détail par clientèle")) >> xpath=ancestor::details').count()).toBe(0);
+        await detail.first().locator("> summary").click();
+        expect(await ouvert(detail)).toBe(true);
+        await saison.first().locator("> summary").click();
+        expect(await ouvert(saison)).toBe(true);
+        expect(await ouvert(detail), "ouvrir la saison doit refermer le détail").toBe(false);
+        return;
+      }
+      await suite().click();
+      await page.waitForTimeout(250);
+    }
+    throw new Error("aucune carte ne porte le détail par clientèle");
+  });
+
+  it("le financement ne porte que l'emprunt et le capital, le parc machines a sa propre carte", async () => {
+    await versLesDecisions();
+    await page.getByRole("button", { name: "Accepter", exact: true }).click();
+    for (let k = 0; k < 20; k++) {
+      await page.waitForTimeout(300);
+      if (/Faut-il financer/i.test(await titreDeLaCarte())) break;
+      await page.getByRole("button", { name: /^Continuer/ }).last().click();
+    }
+    // Le financement ne porte que l'emprunt et le capital : le parc machines a sa carte
+    // (« Investissement »), offerte aux niveaux qui ouvrent l'investissement.
+    expect(await page.locator('input[name="newLoan"]:visible').count()).toBe(1);
+    expect(await page.getByText(/Parc machines|Acheter/).count()).toBe(0);
+    await page.getByRole("button", { name: /^Continuer/ }).last().click();
+    await page.waitForTimeout(300);
+    expect(await titreDeLaCarte()).not.toMatch(/Faut-il financer/i);
+    expect(await page.locator('input[name="newLoan"]:visible').count()).toBe(0);
   });
 
   it("la première décision est la commande exceptionnelle, seule à l'écran", async () => {

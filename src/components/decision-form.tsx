@@ -145,7 +145,7 @@ function EquipmentPanel({
 
   return (
     <Family
-      carte="financement"
+      carte="investissement"
       legend="🏭 Parc machines · investir ou céder"
       tone="border-indigo-400/25 bg-indigo-950/20"
       legendClass="text-xs font-semibold uppercase tracking-wide text-indigo-300"
@@ -2041,7 +2041,9 @@ export function DecisionForm({
               },
             ]
           : []),
-        ...(financerVisible
+        // FINANCER ET INVESTIR sont deux questions : emprunter ou augmenter le capital
+        // (d'où vient l'argent), puis acheter ou céder des machines (où il va).
+        ...(on.finance
           ? [
               {
                 cle: "financement",
@@ -2053,6 +2055,21 @@ export function DecisionForm({
                     Number(d.get("newLoan")) > 0 ? `emprunt ${nb(d.get("newLoan"))} €` : null,
                     Number(d.get("loanRepayment")) > 0 ? `remboursement ${nb(d.get("loanRepayment"))} €` : null,
                     Number(d.get("capitalIncrease")) > 0 ? `capital ${nb(d.get("capitalIncrease"))} €` : null,
+                  ].filter(Boolean);
+                  return lignes.length > 0 ? lignes.join(", ") : "Aucun";
+                },
+              },
+            ]
+          : []),
+        ...(on.investment && equipmentOffer
+          ? [
+              {
+                cle: "investissement",
+                etape: "financer",
+                nom: "Investissement",
+                question: "Investissez-vous dans des machines ?",
+                resume: (d: FormData) => {
+                  const lignes = [
                     d.get("equipmentBuyJson") && d.get("equipmentBuyJson") !== "[]" ? "achat de machines" : null,
                     d.get("equipmentSellJson") && d.get("equipmentSellJson") !== "[]" ? "vente de machines" : null,
                   ].filter(Boolean);
@@ -2948,7 +2965,7 @@ export function DecisionForm({
       </Family>
       ) : null}
       {on.investment && equipmentOffer ? (
-        <Carte cle="financement">
+        <Carte cle="investissement">
           <EquipmentPanel
             offer={equipmentOffer}
             vocabulary={v}
