@@ -25,6 +25,7 @@ import { DilemmaCard, ParametersPanels } from "@/components/decision-context";
 import { PeriodDashboard } from "@/components/period-dashboard";
 import { PeriodDecisionsRecap } from "@/components/period-decisions-recap";
 import { SegmentedTabs } from "@/components/segmented-tabs";
+import { ParcoursMobile, type CarteDuParcours } from "@/components/parcours-mobile";
 import { RoundStatusPoller } from "@/components/round-status-poller";
 import { QuiARendu } from "@/components/qui-a-rendu";
 import { Embleme } from "@/components/embleme";
@@ -143,8 +144,11 @@ export default async function ArenaPage({
 
   // DONNÉES : ce avec quoi on entre dans le tour — l'entreprise (au 1er tour),
   // les paramètres du secteur et la capacité de production.
-  const donneesSection = premierTour ? (
-    <section className="space-y-4 carte p-3 sm:p-5 text-slate-300">
+  // La présentation de l'entreprise (au 1er tour seulement) : qui elle est, où elle
+  // en est, ce qu'on attend de vous. Sur téléphone elle fait une carte à elle ;
+  // sur grand écran elle ouvre la carte des données.
+  const presentation = premierTour ? (
+    <>
       <div>
         <h2 className="text-xl font-bold text-slate-100">{view.intro.company}</h2>
         <p className="text-sm text-slate-400">{view.intro.tagline}</p>
@@ -171,13 +175,20 @@ export default async function ArenaPage({
       <Tiroir titre="Contexte">
         <p className="text-sm leading-relaxed">{view.intro.context}</p>
       </Tiroir>
-      <ParametersPanels
-        intro={view.intro}
-        vocabulary={view.vocabulary}
-        capacityFacts={view.capacityFacts}
-        gamme={view.gamme}
-        repliable={telephone}
-      />
+    </>
+  ) : null;
+  const chiffres = (
+    <ParametersPanels
+      intro={view.intro}
+      vocabulary={view.vocabulary}
+      capacityFacts={view.capacityFacts}
+      gamme={view.gamme}
+    />
+  );
+  const donneesSection = premierTour ? (
+    <section className="space-y-4 carte p-3 sm:p-5 text-slate-300">
+      {presentation}
+      {chiffres}
     </section>
   ) : (
     // Dès le 2ᵉ tour, on montre les panneaux directement : pas d'en-tête « Vos
@@ -185,13 +196,7 @@ export default async function ArenaPage({
     // faisaient doublon avec les titres propres des panneaux (« Votre
     // entreprise », « Le marché ») et rognaient la largeur sur
     // téléphone (une carte dans une carte).
-    <ParametersPanels
-      intro={view.intro}
-      vocabulary={view.vocabulary}
-      capacityFacts={view.capacityFacts}
-      gamme={view.gamme}
-      repliable={telephone}
-    />
+    chiffres
   );
 
   // MARCHÉ & ALERTES : ce qui a bougé et ce qu'on vous signale — où vous en êtes
@@ -413,6 +418,218 @@ export default async function ArenaPage({
       </div>
     ) : null;
 
+  // Ce qu'on répond aux décisions du tour clos (voir plus haut) : servi aux onglets
+  // comme au parcours en cartes.
+  const reponsesSection =
+    reponses.length > 0 ? (
+                        <section className="carte p-3 sm:p-5">
+                          <p className="mb-2 text-sm font-semibold text-amber-400">
+                            ↩️ En retour de vos décisions
+                          </p>
+                          <p className="mb-3 text-xs text-slate-400">
+                            {reponses.length > 1 ? "Ces courriers répondent" : "Ce courrier répond"}{" "}
+                            à ce que vous avez décidé au{" "}
+                            {periodLabel(view.roundDays, latestRound ?? 1).toLowerCase()}.
+                          </p>
+                          <div className={grilleDeCourriers(reponses.length)}>
+                            {reponses.map((c, i) => (
+                              <CourrierRecommande
+                                key={c.code}
+                                code={c.code}
+                                delayMs={i * 450}
+                                destinataire={view.playerTeamName}
+                              />
+                            ))}
+                          </div>
+                        </section>
+    ) : null;
+
+  // LE BRIEFING, EN CARTES (téléphone). La Situation tenait trois écrans en une
+  // page ; elle devient une suite de cartes, une idée chacune : ce qu'on vous
+  // répond, votre mandat, qui est l'entreprise, ses chiffres, ce qui a bougé,
+  // l'arbitrage. Une carte vide n'existe pas.
+  const alertesPresentes =
+    !!view.roundBriefing ||
+    view.courriersAnnonces.length > 0 ||
+    courriersQuiMeConcernent(view.courriersEnCours).length > 0 ||
+    view.seasonNotes.length > 0;
+  const briefingCartes: CarteDuParcours[] = ([
+    reponsesSection ? { cle: "reponses", noeud: reponsesSection } : null,
+    view.currentRound === 1
+      ? {
+          cle: "mandat",
+          noeud: (
+            <MandatDeLEquipe
+              gameId={gameId}
+              niveau={view.difficulty.level}
+              equipe={view.playerTeamName}
+              ouvert
+            />
+          ),
+        }
+      : null,
+    presentation
+      ? {
+          cle: "presentation",
+          noeud: <section className="space-y-4 carte p-3 text-slate-300">{presentation}</section>,
+        }
+      : null,
+    { cle: "chiffres", noeud: chiffres },
+    alertesPresentes ? { cle: "alertes", noeud: alertesSection } : null,
+    dilemmeSection ? { cle: "arbitrage", noeud: dilemmeSection } : null,
+  ] as (CarteDuParcours | null)[]).filter((c): c is CarteDuParcours => c !== null);
+
+  // Sur téléphone, l'en-tête de la page ne garde que ce qui n'est pas dans la barre
+  // du haut : sous la forme d'un pseudo (classe), de l'IPG ou d'une échéance. Quand
+  // il n'a rien de tel à montrer, il se retire tout entier, titre compris — le h1
+  // reste lisible par une synthèse vocale — au lieu de laisser un vide de deux
+  // cartes de haut.
+  const bandeauVide =
+    !(view.kind !== "solo" && view.playerPseudo) &&
+    !(latestRound !== null && view.playerBpi !== null) &&
+    !(!finished && view.playLock.playable && view.playLock.closesAt);
+
+  // « Décider » : la piste, le courrier du tour, puis la saisie. Un seul nœud, servi
+  // tel quel aux onglets (grand écran) et au parcours en cartes (téléphone).
+  // Les trois pièces de « Décider », servies telles quelles à la page de grand écran
+  // (onglets) et, séparément, au parcours en cartes du téléphone.
+  const courrierBloc = view.kind === "solo" && !finished ? (
+                  <div className="mb-4">
+                    <CourrierDuTour
+                      gameId={gameId}
+                      round={view.currentRound}
+                      periodeLabel={periodLabel(view.roundDays, view.currentRound).toLowerCase()}
+                      plis={view.upcomingDraw}
+                    />
+                  </div>
+                ) : null;
+  const etatDesDecisions = view.pendingDecisionsPar ? (
+                    <p className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-emerald-300">
+                      <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 font-semibold">
+                        ✓{" "}
+                        {mentionDeValidation(
+                          view.pendingDecisionsPar.nom,
+                          new Date(view.pendingDecisionsPar.quand),
+                        )}
+                      </span>
+                      <span className="text-slate-400">
+                        Modifiable jusqu&apos;à la clôture : votre envoi remplacera le sien.
+                      </span>
+                    </p>
+                  ) : null;
+  const formulaireDeDecision = (
+                <DecisionForm
+                  telephone={telephone}
+                  reperes={
+                    telephone
+                      ? {
+                          prixUsuels: (() => {
+                            const prix = view.intro.segments.map((seg) => seg.refPrice);
+                            if (prix.length === 0) return null;
+                            const bas = Math.min(...prix);
+                            const haut = Math.max(...prix);
+                            return bas === haut ? formatEuro(bas) : `${formatEuro(bas)} – ${formatEuro(haut)}`;
+                          })(),
+                          coutVariable: view.gamme ? null : view.intro.variableCostPerUnit,
+                        }
+                      : null
+                  }
+                  gameId={view.gameId}
+                  roundIndex={view.currentRound}
+                  vocabulary={view.vocabulary}
+                  periodName={periodLabel(view.roundDays, view.currentRound).toLowerCase()}
+                  defaults={view.pendingDecisions ?? view.lastDecisions ?? view.startingDecisions}
+                  proposed={view.proposedDecisions}
+                  kind={view.kind}
+                  alreadySubmitted={view.pendingDecisions !== null}
+                  insuranceOffer={
+                    view.insuranceOffer
+                      ? {
+                          premium: view.insuranceOffer.premium,
+                          coveredLabels: view.insuranceOffer.coveredEventCodes.map(
+                            (c) => courrierParCode.get(c)?.objet ?? c,
+                          ),
+                        }
+                      : null
+                  }
+                  enabled={view.enabledDecisions}
+                  distributableReserves={view.distributableReserves}
+                  investmentOffer={view.investmentOffer}
+                  debtSchedule={view.debtSchedule}
+                  treasuryOffer={view.treasuryOffer}
+                  bankFile={view.bankFile}
+                  orderOffer={view.orderOffer}
+                  studiesOffer={view.studiesOffer}
+                  capitalAllowance={view.capitalAllowance}
+                  loanCapacity={view.loanCapacity}
+                  financeOffer={view.financeOffer}
+                  insuranceFormulas={view.insuranceFormulas}
+                  suppliersOffer={view.suppliersOffer}
+                  equipmentOffer={view.equipmentOffer}
+                  capacityFacts={view.capacityFacts}
+                  gamme={view.gamme}
+                  rdOffer={view.rdOffer}
+                  communicationOffer={view.communicationOffer}
+                  verrou={view.playLock.playable ? null : (view.playLock.message ?? "Ce tour n'est pas encore ouvert.")}
+                  echeance={view.playLock.closesAt}
+                  sauvetage={view.exigenceSauvetage}
+                />
+  );
+
+  const decisionsNode = (
+                    <section id="decisions">
+                {/*
+                  LE TIRAGE, VÉCU — entre l'analyse et la décision. En solo,
+                  personne ne joue de carte à la main : c'est le moteur qui
+                  tire, et le joueur ne le voyait qu'après coup. Le tirage
+                  étant déterministe, on le retourne ici, une fois la situation
+                  lue et analysée, juste avant de fixer le prix : la carte
+                  tombe sur une décision déjà réfléchie, et l'oblige à la
+                  reprendre. En classe, c'est l'enseignant qui tient la pioche.
+                */}
+                {courrierBloc}
+                {leviersIndice ? <div className="mb-4">{leviersIndice}</div> : null}
+                <div className="mb-4 border-b border-white/10 pb-3">
+                  <h2 className="text-sm font-semibold text-slate-200">
+                    Vos décisions · {periodLabel(view.roundDays, view.currentRound).toLowerCase()}
+                  </h2>
+                  {/* Une équipe, c'est trois ou quatre élèves sur autant
+                      d'écrans. Sans cette ligne, chacun croit être seul à
+                      décider et écrase la saisie d'un camarade sans le savoir :
+                      l'heure et le prénom étaient déjà en base, relus nulle
+                      part. */}
+                  {etatDesDecisions}
+                  <p className="mt-1 text-sm leading-relaxed text-slate-400">
+                    <a
+                      href={`/arena/${view.gameId}/cockpit`}
+                      className="text-amber-300 underline-offset-4 hover:underline"
+                    >
+                      Cockpit de prévision (Excel)
+                    </a>
+                    {" "}: testez vos hypothèses avant de valider.
+                  </p>
+                </div>
+                {formulaireDeDecision}
+              </section>
+  );
+
+  // Sur téléphone, « Décider » se découpe : le courrier du tour (avec la piste des
+  // leviers) est une carte à lui, puis le formulaire en cartes, une décision chacune.
+  const courrierCarte =
+    courrierBloc || leviersIndice ? (
+      <section id="courrier-du-tour" className="space-y-4">
+        {courrierBloc}
+        {leviersIndice}
+      </section>
+    ) : null;
+  const decisionsMobile = (
+    <section id="decisions" className="space-y-3">
+      {etatDesDecisions}
+      {formulaireDeDecision}
+    </section>
+  );
+
+
   return (
     <main id="main" className="mx-auto max-w-[1400px] space-y-6 px-4 pt-6 pb-16 sm:space-y-8 sm:px-6" data-ecran-de-jeu="">
       {/* LA BARRE D'APPLICATION, sur téléphone seulement : la barre du site s'efface
@@ -423,11 +640,14 @@ export default async function ArenaPage({
         tours={view.roundsCount}
         termine={finished}
         retour={view.kind === "solo" ? "/jouer" : "/"}
+        cockpit={`/arena/${view.gameId}/cockpit`}
         themeParDefaut={themeParDefaut(configDuSite.theme)}
         accents={accentsDuSite(configDuSite.theme)}
       />
       {/* ── Header ── */}
-      <header className="flex flex-wrap items-end justify-between gap-3">
+      <header
+        className={`flex flex-wrap items-end justify-between gap-3 ${bandeauVide ? "max-sm:sr-only" : ""}`}
+      >
         {/* Sur téléphone, le nom de l'équipe est déjà dans la barre du haut : le
             répéter en grand mangeait un tiers du premier écran. Il reste dans le
             document, lisible par une synthèse vocale, et c'est le seul h1. */}
@@ -475,13 +695,13 @@ export default async function ArenaPage({
             </a>
           ) : null}
           <p
-            className={`flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1 text-xs ${SECTOR_COLORS[view.sector].accent}`}
+            className={`flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1 text-xs max-sm:hidden ${SECTOR_COLORS[view.sector].accent}`}
           >
             <PictoSecteur secteur={view.sector} className="h-3.5 w-3.5" />
             {SECTOR_LABELS[view.sector]}
           </p>
           <p
-            className="rounded-full border border-amber-400/30 px-3 py-1 text-xs text-amber-300"
+            className="rounded-full border border-amber-400/30 px-3 py-1 text-xs text-amber-300 max-sm:hidden"
             title="Niveau de difficulté de la partie"
           >
             Niveau {view.difficulty.level} · {view.difficulty.name}
@@ -514,12 +734,14 @@ export default async function ArenaPage({
           {!finished && view.playLock.playable && view.playLock.closesAt ? (
             <EcheanceDuTour closesAt={view.playLock.closesAt} compact />
           ) : null}
-          <FriseDesTours
-            roundsCount={view.roundsCount}
-            currentRound={view.currentRound}
-            resultats={new Map(periods.map((p) => [p.round, p.result.incomeStatement.netIncome]))}
-            finished={finished}
-          />
+          <div className="max-sm:hidden">
+            <FriseDesTours
+              roundsCount={view.roundsCount}
+              currentRound={view.currentRound}
+              resultats={new Map(periods.map((p) => [p.round, p.result.incomeStatement.netIncome]))}
+              finished={finished}
+            />
+          </div>
         </div>
       </header>
 
@@ -698,14 +920,17 @@ export default async function ArenaPage({
         {hasActivePeriod ? (
           <section
             id="tour-en-cours"
-            className="scroll-mt-24 rounded-xl border border-amber-400/30 bg-slate-950/40"
+            className="scroll-mt-24 rounded-xl border border-amber-400/30 bg-slate-950/40 max-sm:rounded-none max-sm:border-0 max-sm:bg-transparent"
           >
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-400/20 px-3 py-2.5 sm:px-4">
+            {/* Sur téléphone, le tour est annoncé par la barre du haut et le parcours
+                en cartes : ni cadre, ni « Tour 1 / 6 », ni « en cours » ici. Ne reste
+                de cette ligne que l'état des décisions, en classe. */}
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-400/20 px-3 py-2.5 sm:px-4 max-sm:border-0 max-sm:p-0 max-sm:empty:hidden">
               {/* LE RANG SUR LE TOTAL. « Tour 2 » seul ne dit pas s'il en reste
                   six ou un : la frise le montre en segments, elle ne le chiffre
                   pas, et c'est le bandeau retiré qui portait ce « / N ». Il est
                   ici, sur le tour qu'il compte. */}
-              <span className="flex items-baseline gap-1.5 text-sm font-semibold text-amber-200">
+              <span className="flex items-baseline gap-1.5 text-sm font-semibold text-amber-200 max-sm:hidden">
                 <span aria-hidden>✏️</span>
                 {periodLabel(view.roundDays, view.currentRound)}
                 <span className="text-xs font-normal tabular-nums text-amber-200/70">
@@ -746,7 +971,7 @@ export default async function ArenaPage({
                     couleur de son contenant ne se voit pas. Le vert le détache,
                     et le point allumé dit « ça tourne » — c'est le seul endroit
                     de la ligne qui parle du présent. */}
-                <span className="flex items-center gap-1.5 rounded-full border border-emerald-400/50 bg-emerald-400/15 px-2.5 py-0.5 text-xs font-semibold text-emerald-200">
+                <span className="flex items-center gap-1.5 rounded-full border border-emerald-400/50 bg-emerald-400/15 px-2.5 py-0.5 text-xs font-semibold text-emerald-200 max-sm:hidden">
                   <span
                     aria-hidden
                     className="h-1.5 w-1.5 rounded-full bg-emerald-300 shadow-[0_0_6px_1px] shadow-emerald-400/70"
@@ -796,7 +1021,7 @@ export default async function ArenaPage({
               </a>
             ) : null}
 
-            <div className="px-2 py-2.5 sm:p-4">
+            <div className="px-2 py-2.5 sm:p-4 max-sm:px-0">
               {/*
                 UNE ÉTAPE ENTRE LES RÉSULTATS ET LA SAISIE SUIVANTE. Tant que
                 l'élève n'a pas dit qu'il passait au tour suivant, le formulaire
@@ -817,6 +1042,16 @@ export default async function ArenaPage({
                   le premier tour : Situation (à lire), Décisions (à rendre) et
                   Résultats — ce dernier vide tant que le tour n'est pas clos.
                   Défaut sur « Situation » : on lit l'énoncé avant de décider. */}
+              {telephone ? (
+                // SUR TÉLÉPHONE, UN PARCOURS ET NON DES ONGLETS : briefing en
+                // cartes, analyse, puis les décisions, avec un seul bouton en bas.
+                <ParcoursMobile
+                  briefing={briefingCartes}
+                  analyse={analyserContenu}
+                  courrier={courrierCarte}
+                  decisions={decisionsMobile}
+                />
+              ) : (
               <SegmentedTabs
                 defaultKey="situation"
                 // Un seul parcours, solo comme en classe : un fil d'étapes guidé
@@ -869,28 +1104,7 @@ export default async function ArenaPage({
                         disent qui la subit, ce qu'un tableau de résultats ne
                         dira jamais.
                       */}
-                      {reponses.length > 0 ? (
-                        <section className="carte p-3 sm:p-5">
-                          <p className="mb-2 text-sm font-semibold text-amber-400">
-                            ↩️ En retour de vos décisions
-                          </p>
-                          <p className="mb-3 text-xs text-slate-400">
-                            {reponses.length > 1 ? "Ces courriers répondent" : "Ce courrier répond"}{" "}
-                            à ce que vous avez décidé au{" "}
-                            {periodLabel(view.roundDays, latestRound ?? 1).toLowerCase()}.
-                          </p>
-                          <div className={grilleDeCourriers(reponses.length)}>
-                            {reponses.map((c, i) => (
-                              <CourrierRecommande
-                                key={c.code}
-                                code={c.code}
-                                delayMs={i * 450}
-                                destinataire={view.playerTeamName}
-                              />
-                            ))}
-                          </div>
-                        </section>
-                      ) : null}
+                      {reponsesSection}
                       {view.currentRound === 1 ? (
                         <MandatDeLEquipe
                           gameId={gameId}
@@ -913,107 +1127,10 @@ export default async function ArenaPage({
                   analyser: analyserContenu,
                   // « Décider » : la piste (leviers d'action) en indice repliable,
                   // au plus près des champs qu'elle désigne, puis la saisie.
-                  decisions: (
-                    <section id="decisions">
-                {/*
-                  LE TIRAGE, VÉCU — entre l'analyse et la décision. En solo,
-                  personne ne joue de carte à la main : c'est le moteur qui
-                  tire, et le joueur ne le voyait qu'après coup. Le tirage
-                  étant déterministe, on le retourne ici, une fois la situation
-                  lue et analysée, juste avant de fixer le prix : la carte
-                  tombe sur une décision déjà réfléchie, et l'oblige à la
-                  reprendre. En classe, c'est l'enseignant qui tient la pioche.
-                */}
-                {view.kind === "solo" && !finished ? (
-                  <div className="mb-4">
-                    <CourrierDuTour
-                      gameId={gameId}
-                      round={view.currentRound}
-                      periodeLabel={periodLabel(view.roundDays, view.currentRound).toLowerCase()}
-                      plis={view.upcomingDraw}
-                    />
-                  </div>
-                ) : null}
-                {leviersIndice ? <div className="mb-4">{leviersIndice}</div> : null}
-                <div className="mb-4 border-b border-white/10 pb-3">
-                  <h2 className="text-sm font-semibold text-slate-200">
-                    Vos décisions · {periodLabel(view.roundDays, view.currentRound).toLowerCase()}
-                  </h2>
-                  {/* Une équipe, c'est trois ou quatre élèves sur autant
-                      d'écrans. Sans cette ligne, chacun croit être seul à
-                      décider et écrase la saisie d'un camarade sans le savoir :
-                      l'heure et le prénom étaient déjà en base, relus nulle
-                      part. */}
-                  {view.pendingDecisionsPar ? (
-                    <p className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-emerald-300">
-                      <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 font-semibold">
-                        ✓{" "}
-                        {mentionDeValidation(
-                          view.pendingDecisionsPar.nom,
-                          new Date(view.pendingDecisionsPar.quand),
-                        )}
-                      </span>
-                      <span className="text-slate-400">
-                        Modifiable jusqu&apos;à la clôture : votre envoi remplacera le sien.
-                      </span>
-                    </p>
-                  ) : null}
-                  <p className="mt-1 text-sm leading-relaxed text-slate-400">
-                    <a
-                      href={`/arena/${view.gameId}/cockpit`}
-                      className="text-amber-300 underline-offset-4 hover:underline"
-                    >
-                      Cockpit de prévision (Excel)
-                    </a>
-                    {" "}: testez vos hypothèses avant de valider.
-                  </p>
-                </div>
-                <DecisionForm
-                  telephone={telephone}
-                  gameId={view.gameId}
-                  roundIndex={view.currentRound}
-                  vocabulary={view.vocabulary}
-                  periodName={periodLabel(view.roundDays, view.currentRound).toLowerCase()}
-                  defaults={view.pendingDecisions ?? view.lastDecisions ?? view.startingDecisions}
-                  proposed={view.proposedDecisions}
-                  kind={view.kind}
-                  alreadySubmitted={view.pendingDecisions !== null}
-                  insuranceOffer={
-                    view.insuranceOffer
-                      ? {
-                          premium: view.insuranceOffer.premium,
-                          coveredLabels: view.insuranceOffer.coveredEventCodes.map(
-                            (c) => courrierParCode.get(c)?.objet ?? c,
-                          ),
-                        }
-                      : null
-                  }
-                  enabled={view.enabledDecisions}
-                  distributableReserves={view.distributableReserves}
-                  investmentOffer={view.investmentOffer}
-                  debtSchedule={view.debtSchedule}
-                  treasuryOffer={view.treasuryOffer}
-                  bankFile={view.bankFile}
-                  orderOffer={view.orderOffer}
-                  studiesOffer={view.studiesOffer}
-                  capitalAllowance={view.capitalAllowance}
-                  loanCapacity={view.loanCapacity}
-                  financeOffer={view.financeOffer}
-                  insuranceFormulas={view.insuranceFormulas}
-                  suppliersOffer={view.suppliersOffer}
-                  equipmentOffer={view.equipmentOffer}
-                  capacityFacts={view.capacityFacts}
-                  gamme={view.gamme}
-                  rdOffer={view.rdOffer}
-                  communicationOffer={view.communicationOffer}
-                  verrou={view.playLock.playable ? null : (view.playLock.message ?? "Ce tour n'est pas encore ouvert.")}
-                  echeance={view.playLock.closesAt}
-                  sauvetage={view.exigenceSauvetage}
-                />
-              </section>
-                  ),
+                  decisions: decisionsNode,
                 }}
               </SegmentedTabs>
+              )}
               </PassageAuTour>
             </div>
           </section>
@@ -1217,7 +1334,7 @@ export default async function ArenaPage({
 
         {/* Les deux liens retirés du bandeau de jeu : ils restent à portée,
             là où l'élève regarde son profil. */}
-        <p className="flex flex-wrap gap-x-4 text-xs text-slate-400">
+        <p className="flex flex-wrap gap-x-4 text-xs text-slate-400 max-sm:hidden">
           <Link href="/profile" className="underline-offset-4 hover:text-slate-300 hover:underline pointer-coarse:flex pointer-coarse:min-h-11 pointer-coarse:items-center">
             Mon profil et ma progression
           </Link>

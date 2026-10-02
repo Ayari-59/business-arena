@@ -44,6 +44,15 @@ import { EcheanceDuTour } from "@/components/echeance-du-tour";
 import { SimulationProgress } from "@/components/simulation-progress";
 import { NomReference } from "@/components/nom-reference";
 import { Aide, PanneauConsulte, TelephoneContexte } from "@/components/aide-repliable";
+import { useParcours } from "@/components/parcours-mobile";
+import {
+  Carte,
+  CartesContexte,
+  RecapDesDecisions,
+  estMontre,
+  useModeCartes,
+  type DefCarte,
+} from "@/components/cartes-de-decision";
 import {
   cleBrouillon,
   ecrireBrouillon,
@@ -136,6 +145,7 @@ function EquipmentPanel({
 
   return (
     <Family
+      carte="financement"
       legend="🏭 Parc machines · investir ou céder"
       tone="border-indigo-400/25 bg-indigo-950/20"
       legendClass="text-xs font-semibold uppercase tracking-wide text-indigo-300"
@@ -349,6 +359,69 @@ function Field({
   /** Donne la main sur la saisie : le curseur écrit dedans, elle reste la source. */
   inputRef?: RefObject<HTMLInputElement | null>;
 }) {
+  const { actif: enCarte } = useModeCartes();
+  const interne = useRef<HTMLInputElement>(null);
+  const ref = inputRef ?? interne;
+  /**
+   * Un pas de bouton se lit à l'échelle du chiffre : un prix de 59 € bouge de 1, une
+   * production de 5 051 de 100. Le pas du champ (0,1 pour un prix) est celui de la
+   * saisie au clavier, trop fin pour un doigt.
+   */
+  const bouger = (sens: 1 | -1) => {
+    const champ = ref.current;
+    if (!champ) return;
+    const courant = Number(champ.value.replace(",", ".")) || 0;
+    const echelle = Math.pow(10, Math.max(0, Math.floor(Math.log10(Math.max(1, Math.abs(courant)))) - 1));
+    const suivant = Math.max(0, courant + sens * Math.max(step >= 1 ? step : 1, echelle));
+    const borne = max !== undefined ? Math.min(max, suivant) : suivant;
+    // Par le réglage natif, puis un évènement : c'est ce que React écoute, donc le
+    // brouillon, le récapitulatif et le suivi en direct voient le changement.
+    const ecrire = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+    ecrire?.call(champ, String(Math.round(borne * 100) / 100));
+    champ.dispatchEvent(new Event("input", { bubbles: true }));
+  };
+  if (enCarte) {
+    const bouton =
+      "grid h-14 w-14 shrink-0 place-items-center rounded-full border border-white/20 text-3xl text-slate-100 transition active:bg-white/10";
+    return (
+      <div className="block">
+        <div className="champ flex items-center justify-center gap-3 px-3 py-6">
+          <button type="button" aria-label={`Diminuer : ${label}`} onClick={() => bouger(-1)} className={bouton}>
+            −
+          </button>
+          <div className="min-w-0 flex-1 text-center">
+            <input
+              type="number"
+              onWheel={sansMolette}
+              inputMode="decimal"
+              aria-label={label}
+              {...(max !== undefined ? { max } : {})}
+              ref={ref}
+              name={name}
+              defaultValue={defaultValue}
+              step={step}
+              min={0}
+              required
+              onChange={
+                onValueChange
+                  ? (e) => {
+                      const v = Number(e.currentTarget.value.replace(",", "."));
+                      onValueChange(Number.isFinite(v) ? v : 0);
+                    }
+                  : undefined
+              }
+              className="w-full min-w-0 bg-transparent text-center text-5xl font-bold tabular-nums text-slate-50 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+            />
+            <span className="mt-1 block text-base text-slate-400">{suffix}</span>
+          </div>
+          <button type="button" aria-label={`Augmenter : ${label}`} onClick={() => bouger(1)} className={bouton}>
+            +
+          </button>
+        </div>
+        {hint ? <span className="mt-2 block text-[13px] text-slate-400 max-sm:text-base">{hint}</span> : null}
+      </div>
+    );
+  }
   return (
     <label className="block">
       <span className="block min-h-8 leading-4 text-xs font-medium uppercase tracking-wide text-slate-400">{label}</span>
@@ -357,7 +430,7 @@ function Field({
           type="number"
           onWheel={sansMolette}
           {...(max !== undefined ? { max } : {})}
-          ref={inputRef}
+          ref={ref}
           name={name}
           defaultValue={defaultValue}
           step={step}
@@ -1075,13 +1148,29 @@ function Family({
   defaultOpen = true,
   tone = "border-white/10 bg-slate-950",
   legendClass = "text-xs font-semibold uppercase tracking-wide text-slate-400",
+  carte,
 }: {
   legend: ReactNode;
   children: ReactNode;
   defaultOpen?: boolean;
   tone?: string;
   legendClass?: string;
+  /**
+   * La ou les cartes (parcours téléphone) sur lesquelles cette famille se montre.
+   * En parcours, une famille se présente À PLAT, sans titre ni repli : la carte a
+   * sa propre question. Sans cette indication, elle ne paraît sur aucune carte.
+   */
+  carte?: string | string[];
 }) {
+  const contexte = useModeCartes();
+  if (contexte.actif) {
+    const cles = carte === undefined ? [] : Array.isArray(carte) ? carte : [carte];
+    return (
+      <div data-carte={cles.join(" ")} hidden={!estMontre(contexte, cles)} className="space-y-3">
+        {children}
+      </div>
+    );
+  }
   return (
     <details open={defaultOpen} className={`group rounded-lg border [&:not([open])]:border-dashed ${tone}`}>
       <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 [&::-webkit-details-marker]:hidden">
@@ -1102,6 +1191,7 @@ export function DecisionForm({
   kind,
   alreadySubmitted,
   telephone = false,
+  reperes = null,
   insuranceOffer,
   enabled,
   distributableReserves,
@@ -1129,6 +1219,11 @@ export function DecisionForm({
   gameId: string;
   /** Sur téléphone, les textes d'aide se rangent dans un tiroir (voir aide-repliable.tsx). */
   telephone?: boolean;
+  /**
+   * Ce qui éclaire le prix sur sa carte : la fourchette de ce que paient les clients,
+   * et le coût d'une unité (absent en gamme, où chaque référence a le sien).
+   */
+  reperes?: { prixUsuels: string | null; coutVariable: number | null } | null;
   /** Levier communication du scénario (marque et axe) ; null sans levier. */
   communicationOffer?: GameView["communicationOffer"];
   /** Gamme du scénario joué (prix, volume et marketing par référence) ; null en mono-produit. */
@@ -1375,14 +1470,41 @@ export function DecisionForm({
    * mentir. `null` tant qu'on n'est pas arrivé au bout.
    */
   const [engagement, setEngagement] = useState<Engagement | null>(null);
+  /**
+   * EN PARCOURS (téléphone) : la carte affichée, ce que le joueur a répondu (relu
+   * sur le formulaire pour le récapitulatif), et sa réponse à la commande
+   * exceptionnelle — `null` tant qu'il n'a rien dit, pour qu'aucun des deux
+   * boutons ne paraisse déjà choisi.
+   */
+  const [carte, setCarte] = useState(0);
+  const [donneesRecap, setDonneesRecap] = useState<FormData | null>(null);
+  const [commandeAcceptee, setCommandeAcceptee] = useState<boolean | null>(null);
+  const [prixSaisi, setPrixSaisi] = useState<number | null>(null);
+  const [ouvertes, setOuvertes] = useState<ReadonlySet<string>>(() => new Set());
   const relireLEngagement = () => {
     const f = formRef.current;
-    if (f) setEngagement(lireLEngagement(new FormData(f), gamme?.map((p) => p.code) ?? []));
+    if (!f) return;
+    const donnees = new FormData(f);
+    setDonneesRecap(donnees);
+    setEngagement(lireLEngagement(donnees, gamme?.map((p) => p.code) ?? []));
+  };
+
+  /** Afficher une carte : on repart du haut de l'écran, et le récapitulatif se relit. */
+  const allerALaCarte = (i: number) => {
+    setCarte(i);
+    window.scrollTo({ top: 0 });
+    if (cartes[i]?.cle === "recap") relireLEngagement();
   };
 
   /** Le seul chemin pour changer d'étape : il retient qu'on y est passé. */
   const allerALEtape = (calcul: number | ((e: number) => number)) => {
     const brut = typeof calcul === "function" ? calcul(etape) : calcul;
+    if (modeCartes) {
+      // En parcours, une étape n'est qu'un groupe de cartes : on va à la première.
+      const premiere = cartes.findIndex((c) => c.etape === etapesVisibles[brut]);
+      if (premiere >= 0) allerALaCarte(premiere);
+      return;
+    }
     setEtape(brut);
     setVues((v) => (v.has(brut) ? v : new Set(v).add(brut)));
     if (brut === total - 1) relireLEngagement();
@@ -1395,6 +1517,14 @@ export function DecisionForm({
   // rouvre la famille du champ fautif ET on affiche son étape.
   const revelerFamilleInvalide = (e: React.FormEvent<HTMLFormElement>) => {
     const cible = e.target as HTMLElement;
+    if (modeCartes) {
+      // En parcours, le champ fautif se retrouve par sa carte.
+      const bloc = cible.closest?.("[data-carte]") as HTMLElement | null;
+      const cles = bloc?.dataset.carte?.split(" ") ?? [];
+      const i = cartes.findIndex((c) => cles.includes(c.cle));
+      if (i >= 0) allerALaCarte(i);
+      return;
+    }
     const famille = cible.closest?.("details") as HTMLDetailsElement | null;
     if (famille && !famille.open) famille.open = true;
     const section = cible.closest?.("[data-etape]") as HTMLElement | null;
@@ -1561,7 +1691,322 @@ export function DecisionForm({
   const idx = (cle: string) => etapesVisibles.indexOf(cle);
   const total = etapesVisibles.length;
   const courante = Math.min(etape, total - 1);
-  const derniere = courante === total - 1;
+
+  // ── LES CARTES (parcours téléphone) ──────────────────────────────────────
+  // Une décision par écran. Chaque carte désigne l'étape (la section) qui porte
+  // ses champs et sait résumer la réponse du joueur pour le récapitulatif. La
+  // liste suit EXACTEMENT les conditions des sections plus bas : une carte sans
+  // champ, ou un champ sans carte, serait un trou dans le parcours.
+  const parcours = useParcours();
+  const modeCartes = parcours !== null;
+  const nb = (x: FormDataEntryValue | null) => Number(x ?? 0).toLocaleString("fr-FR");
+  const euros = (champ: string) => (d: FormData) => `${nb(d.get(champ))} €`;
+  const cartes: DefCarte[] = modeCartes
+    ? [
+        ...(orderOffer
+          ? [
+              {
+                cle: "commande",
+                etape: "vendre",
+                nom: "Commande exceptionnelle",
+                question: "Une commande exceptionnelle",
+                resume: (d: FormData) => (d.get("acceptOrder") ? "Acceptée" : "Refusée"),
+              },
+            ]
+          : []),
+        ...(gamme
+          ? [
+              {
+                cle: "references",
+                etape: "vendre",
+                nom: "Vos références",
+                question: "Prix et volumes de vos références",
+                resume: () => "Voir le détail",
+              },
+            ]
+          : [
+              {
+                cle: "prix",
+                etape: "vendre",
+                nom: "Prix de vente",
+                question: "À quel prix vendez-vous ?",
+                resume: (d: FormData) => `${nb(d.get("price"))} €/${v.unit}`,
+              },
+              {
+                cle: "volume",
+                etape: "vendre",
+                nom: "Production",
+                question: "Combien produisez-vous ?",
+                resume: (d: FormData) => `${nb(d.get("productionPlan"))} ${v.units}`,
+              },
+            ]),
+        ...(approvisionnerVisible
+          ? [
+              {
+                cle: "fournisseur",
+                etape: "approvisionner",
+                nom: "Fournisseur",
+                question: "Chez qui vous approvisionnez-vous ?",
+                resume: (d: FormData) =>
+                  suppliersOffer?.find((s) => s.code === d.get("supplierChoice"))?.name ?? "—",
+              },
+            ]
+          : []),
+        ...(gamme
+          ? on.maintenance
+            ? [
+                {
+                  cle: "maintenance",
+                  etape: "budgets",
+                  nom: "Entretien",
+                  question: "Quel budget d'entretien ?",
+                  resume: euros("maintenanceBudget"),
+                },
+              ]
+            : []
+          : [
+              {
+                cle: "marketing",
+                etape: "budgets",
+                nom: "Marketing",
+                question: "Quel budget marketing ?",
+                resume: euros("marketingBudget"),
+              },
+              ...(on.quality
+                ? [
+                    {
+                      cle: "qualite",
+                      etape: "budgets",
+                      nom: "Qualité",
+                      question: "Quel budget qualité ?",
+                      resume: euros("qualityBudget"),
+                    },
+                  ]
+                : []),
+              ...(on.maintenance
+                ? [
+                    {
+                      cle: "maintenance",
+                      etape: "budgets",
+                      nom: "Maintenance",
+                      question: "Quel budget maintenance ?",
+                      resume: euros("maintenanceBudget"),
+                    },
+                  ]
+                : []),
+              ...(rdMono
+                ? [
+                    {
+                      cle: "rd",
+                      etape: "budgets",
+                      nom: "Recherche",
+                      question: "Quel budget de recherche ?",
+                      resume: euros("rdBudget"),
+                    },
+                  ]
+                : []),
+            ]),
+        ...(communicationOffer
+          ? [
+              {
+                cle: "communication",
+                etape: "budgets",
+                nom: "Communication",
+                question: gamme ? "Quelle marque, quel axe ?" : "Quel axe de communication ?",
+                resume: (d: FormData) =>
+                  COMMUNICATION_AXIS_LABELS[
+                    String(d.get("communicationAxis")) as keyof typeof COMMUNICATION_AXIS_LABELS
+                  ]?.label ?? "—",
+              },
+            ]
+          : []),
+        ...(on.hr
+          ? [
+              {
+                cle: "rh",
+                facultative: {
+                  passer: "Non, rien à changer",
+                  ouvrir: "Oui, je regarde",
+                  aide: "Embauches, départs, formation, salaires : vous pouvez laisser votre équipe telle qu'elle est ce tour.",
+                },
+                etape: "equipe",
+                nom: "Équipe",
+                question: "Que décidez-vous pour votre équipe ?",
+                resume: (d: FormData) =>
+                  `${nb(d.get("hire"))} arrivée${Number(d.get("hire")) > 1 ? "s" : ""}, ${nb(d.get("fire"))} départ${Number(d.get("fire")) > 1 ? "s" : ""}`,
+              },
+            ]
+          : []),
+        ...(on.rse
+          ? [
+              {
+                cle: "rse",
+                facultative: {
+                  passer: "Non, pas ce tour",
+                  ouvrir: "Oui, je regarde",
+                  aide: "Un budget RSE coûte maintenant et rapporte plus tard. Sans réponse, rien ne change ce tour.",
+                },
+                etape: "equipe",
+                nom: "RSE",
+                question: "Quel engagement RSE ?",
+                resume: euros("rseBudget"),
+              },
+            ]
+          : []),
+        ...(financerVisible
+          ? [
+              {
+                cle: "financement",
+                facultative: {
+                  passer: "Non, aucun besoin",
+                  ouvrir: "Oui, je regarde",
+                  aide: "Emprunter, augmenter le capital ou investir dans des machines. Sans réponse, rien ne change ce tour.",
+                },
+                etape: "financer",
+                nom: "Financement",
+                question: "Faut-il financer ce tour ?",
+                resume: (d: FormData) => {
+                  const lignes = [
+                    Number(d.get("newLoan")) > 0 ? `emprunt ${nb(d.get("newLoan"))} €` : null,
+                    Number(d.get("loanRepayment")) > 0 ? `remboursement ${nb(d.get("loanRepayment"))} €` : null,
+                    Number(d.get("capitalIncrease")) > 0 ? `capital ${nb(d.get("capitalIncrease"))} €` : null,
+                    d.get("equipmentBuyJson") && d.get("equipmentBuyJson") !== "[]" ? "achat de machines" : null,
+                    d.get("equipmentSellJson") && d.get("equipmentSellJson") !== "[]" ? "vente de machines" : null,
+                  ].filter(Boolean);
+                  return lignes.length > 0 ? lignes.join(", ") : "Aucun";
+                },
+              },
+            ]
+          : []),
+        ...(on.dividend
+          ? [
+              {
+                cle: "dividende",
+                facultative: {
+                  passer: "Non, aucun dividende",
+                  ouvrir: "Oui, je regarde",
+                  aide: "Verser une part des bénéfices aux associés. Sans réponse, rien n'est distribué.",
+                },
+                etape: "tresorerie",
+                nom: "Dividende",
+                question: "Quel dividende versez-vous ?",
+                resume: (d: FormData) => (Number(d.get("dividend")) > 0 ? `${nb(d.get("dividend"))} €` : "Aucun"),
+              },
+            ]
+          : []),
+        ...(on.finance && treasuryOffer
+          ? [
+              {
+                cle: "mobilisation",
+                facultative: {
+                  passer: "Non, pas de mobilisation",
+                  ouvrir: "Oui, je regarde",
+                  aide: "Avancer de l'argent sur vos créances clients, par escompte ou affacturage. Sans réponse, rien n'est mobilisé.",
+                },
+                etape: "tresorerie",
+                nom: "Trésorerie",
+                question: "Mobilisez-vous vos créances clients ?",
+                resume: (d: FormData) => {
+                  const lignes = [
+                    Number(d.get("discount")) > 0 ? `escompte ${nb(d.get("discount"))} €` : null,
+                    Number(d.get("factoring")) > 0 ? `affacturage ${nb(d.get("factoring"))} €` : null,
+                  ].filter(Boolean);
+                  return lignes.length > 0 ? lignes.join(", ") : "Aucune";
+                },
+              },
+            ]
+          : []),
+        ...(assuranceVisible
+          ? [
+              {
+                cle: "assurance",
+                etape: "assurance",
+                nom: "Assurance",
+                question: "Quelle couverture choisissez-vous ?",
+                resume: (d: FormData) => {
+                  const choix = d.get("insurance");
+                  if (!choix) return "Aucune";
+                  return insuranceFormulas?.find((f) => f.code === choix)?.name ?? "Souscrite";
+                },
+              },
+            ]
+          : []),
+        ...(studiesOffer
+          ? [
+              {
+                cle: "etudes",
+                facultative: {
+                  passer: "Non, aucune étude",
+                  ouvrir: "Oui, je regarde",
+                  aide: "Acheter de l'information livrée avec les résultats du tour. Sans réponse, vous décidez sans.",
+                },
+                etape: "prevoir",
+                nom: "Études",
+                question: "Achetez-vous des études ?",
+                resume: (d: FormData) => {
+                  const n = ["studyMarket", "studyPrice", "studyFinance", "studyProject"].filter((c) => d.get(c)).length;
+                  return n > 0 ? `${n} étude${n > 1 ? "s" : ""}` : "Aucune";
+                },
+              },
+            ]
+          : []),
+        {
+          cle: "justification",
+          etape: "prevoir",
+          nom: "Votre note",
+          question: "Qu'attendez-vous de ces choix ?",
+          resume: (d: FormData) => {
+            const t = String(d.get("justification") ?? "").trim();
+            return t ? (t.length > 28 ? `${t.slice(0, 28)}…` : t) : "—";
+          },
+        },
+        { cle: "recap", etape: "recap", nom: "", question: "Vos décisions du tour" },
+      ]
+    : [];
+  const carteIdx = Math.min(carte, Math.max(0, cartes.length - 1));
+  const carteCourante = modeCartes ? cartes[carteIdx] : undefined;
+  const derniere = modeCartes ? carteCourante?.cle === "recap" : courante === total - 1;
+  // Les cartes facultatives dont le joueur n'a pas encore dit « oui » : leurs champs
+  // restent masqués, et le pied propose de passer ou d'ouvrir.
+  const fermees = new Set(
+    cartes.filter((c) => c.facultative && !ouvertes.has(c.cle)).map((c) => c.cle),
+  );
+  const porte = carteCourante?.facultative && fermees.has(carteCourante.cle)
+    ? carteCourante.facultative
+    : null;
+  const masquee = (cle: string) =>
+    modeCartes ? carteCourante?.etape !== cle : courante !== idx(cle);
+
+  // En parcours, le formulaire dit où il en est à la barre de la partie (carte
+  // courante, nombre de cartes) ; reculer depuis la première ramène à l'analyse.
+  useEffect(() => {
+    if (modeCartes) parcours?.rapporterDecision(carteIdx, cartes.length);
+  }, [parcours, modeCartes, carteIdx, cartes.length]);
+
+  /** Avancer d'une carte, à condition que celle-ci soit remplie correctement. */
+  const carteSuivante = () => {
+    const f = formRef.current;
+    if (f) {
+      for (const champ of Array.from(f.elements) as HTMLInputElement[]) {
+        if (champ.type === "hidden" || champ.closest("[hidden]")) continue;
+        if (typeof champ.checkValidity === "function" && !champ.checkValidity()) {
+          champ.reportValidity();
+          return;
+        }
+      }
+    }
+    allerALaCarte(Math.min(cartes.length - 1, carteIdx + 1));
+  };
+  const cartePrecedente = () =>
+    carteIdx === 0 ? parcours?.reculerAvantLesDecisions() : allerALaCarte(carteIdx - 1);
+  const repondreALaCommande = (oui: boolean) => {
+    const champ = formRef.current?.elements.namedItem("acceptOrder") as HTMLInputElement | null;
+    // Un vrai clic, pas une affectation : c'est lui qui prévient le formulaire,
+    // donc le brouillon et le récapitulatif.
+    if (champ && champ.checked !== oui) champ.click();
+    setCommandeAcceptee(oui);
+    allerALaCarte(Math.min(cartes.length - 1, carteIdx + 1));
+  };
 
   // ── BROUILLON LOCAL ──────────────────────────────────────────────────────
   // Six étapes, des dizaines de champs, et rien n'était gardé tant qu'on
@@ -1683,6 +2128,7 @@ export function DecisionForm({
             // En mono-produit, au contraire, le choix EST ici (les boutons
             // radio) : le replier cacherait une décision du tour.
             defaultOpen={!gamme}
+            carte={gamme ? "references" : "fournisseur"}
             legend={
               gamme
                 ? `🏭 ${v.supplierPanelLabel} · ${fiches.length} fiche${fiches.length > 1 ? "s" : ""}`
@@ -1768,6 +2214,9 @@ export function DecisionForm({
 
   return (
     <TelephoneContexte.Provider value={telephone}>
+    <CartesContexte.Provider
+      value={{ actif: modeCartes, courante: carteCourante?.cle ?? "", fermees }}
+    >
     <form
       ref={formRef}
       action={formAction}
@@ -1776,7 +2225,7 @@ export function DecisionForm({
         sauverBrouillon();
         // Le récapitulatif suit la saisie tant qu'on est sur la dernière étape.
         // Ailleurs, il ne sert à rien : il n'est pas affiché.
-        if (etape === total - 1) relireLEngagement();
+        if (derniere) relireLEngagement();
       }}
       onInvalidCapture={revelerFamilleInvalide}
       className="space-y-3"
@@ -1812,7 +2261,27 @@ export function DecisionForm({
       ) : null}
       {/* Barre d'étapes : où j'en suis, saut direct possible. Les libellés se
           replient en simples numéros sur petit écran. */}
-      <ol className="flex flex-wrap gap-1 sm:gap-1.5" aria-label="Étapes de décision">
+      {modeCartes && carteCourante ? (
+        // UNE QUESTION EN TÊTE, comme un écran d'application : de quoi il s'agit, et
+        // ce qu'on vous demande. Le rang est dans la barre de la partie.
+        <header className="space-y-1.5 pb-2">
+          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-amber-300">
+            {carteCourante.cle === "recap"
+              ? "Dernière étape"
+              : `Décision ${carteIdx + 1} sur ${cartes.length - 1}`}
+          </p>
+          <h2 className="font-display text-[1.7rem] font-semibold leading-tight text-slate-50">
+            {carteCourante.question}
+          </h2>
+          {porte ? (
+            <p className="pt-1 text-base leading-relaxed text-slate-300">{porte.aide}</p>
+          ) : null}
+        </header>
+      ) : null}
+      <ol
+        className={`flex flex-wrap gap-1 sm:gap-1.5 ${modeCartes ? "hidden" : ""}`}
+        aria-label="Étapes de décision"
+      >
         {etapesVisibles.map((cle, i) => {
           const actif = i === courante;
           const fait = !actif && vues.has(i);
@@ -1841,11 +2310,12 @@ export function DecisionForm({
 
       <section
         data-etape={idx("vendre")}
-        hidden={courante !== idx("vendre")}
+        hidden={masquee("vendre")}
         className="space-y-3"
       >
       {orderOffer ? (
         <Family
+          carte="commande"
           legend={`📦 Commande exceptionnelle · ${orderOffer.title}`}
           tone="border-sky-400/25 bg-sky-950/20"
           legendClass="text-xs font-semibold uppercase tracking-wide text-sky-300"
@@ -1873,7 +2343,7 @@ export function DecisionForm({
               ? "Belle marge, mais encaissée plus tard : le BFR gonfle d'autant."
               : "Cash immédiat, marge mince : comparez le prix à votre coût variable."}
           </p>
-          <label className="mt-3 flex items-start gap-3">
+          <label className={`mt-3 flex items-start gap-3 ${modeCartes ? "sr-only" : ""}`}>
             <input
               type="checkbox"
               name="acceptOrder"
@@ -1891,7 +2361,11 @@ export function DecisionForm({
         // volume, façonnier, puis les budgets qui la soutiennent. Séparés, le
         // prix et le budget marketing d'une même référence se décidaient sur
         // deux étapes, alors que l'un commande l'autre.
-        <Family legend="🎯 Vos références · tout ce qui se décide pour chacune" defaultOpen>
+        <Family
+          carte="references"
+          legend="🎯 Vos références · tout ce qui se décide pour chacune"
+          defaultOpen
+        >
           <GammeReference
             gamme={gamme}
             defaults={defaults}
@@ -1905,18 +2379,49 @@ export function DecisionForm({
       {gamme ? (
         <></>
       ) : (
-        <Family legend="🎯 Vos ventes · le prix et le volume du tour" defaultOpen>
+        <Family
+          carte={["prix", "volume"]}
+          legend="🎯 Vos ventes · le prix et le volume du tour"
+          defaultOpen
+        >
           <div className="grid grid-cols-2 gap-3">
-            <Field name="price" label={v.priceLabel} defaultValue={defaults.price} step={0.1}
-              suffix={`€/${v.unit}`}
-              hint="Attention aux seuils psychologiques…" />
-            <Field name="productionPlan" label={v.productionPlanLabel}
-              defaultValue={Math.round(defaults.productionPlan)} suffix={v.units}
-              hint="Le volume réel sera borné par vos capacités." />
+            <Carte cle="prix">
+              {reperes ? (
+                <div className="mb-3 flex flex-wrap gap-2">
+                  {reperes.prixUsuels ? (
+                    <span className="rounded-full border border-white/15 px-3 py-1.5 text-sm text-slate-200">
+                      Prix usuels {reperes.prixUsuels}
+                    </span>
+                  ) : null}
+                  {reperes.coutVariable !== null ? (
+                    <span className="rounded-full border border-white/15 px-3 py-1.5 text-sm text-slate-200">
+                      Coût variable {formatEuro(reperes.coutVariable)}
+                    </span>
+                  ) : null}
+                </div>
+              ) : null}
+              <Field name="price" label={v.priceLabel} defaultValue={defaults.price} step={0.1}
+                suffix={`€/${v.unit}`} onValueChange={setPrixSaisi}
+                hint="Attention aux seuils psychologiques…" />
+              {modeCartes && reperes && reperes.coutVariable !== null ? (
+                <p className="mt-3 flex items-baseline justify-between border-t border-white/10 px-1 pt-3 text-base text-slate-300">
+                  <span>Marge par {v.unit}</span>
+                  <strong className="text-lg text-amber-300">
+                    {formatEuro((prixSaisi ?? defaults.price) - reperes.coutVariable)}
+                  </strong>
+                </p>
+              ) : null}
+            </Carte>
+            <Carte cle="volume">
+              <Field name="productionPlan" label={v.productionPlanLabel}
+                defaultValue={Math.round(defaults.productionPlan)} suffix={v.units}
+                hint="Le volume réel sera borné par vos capacités." />
+            </Carte>
           </div>
         </Family>
       )}
       {capacityFacts ? (
+        <Carte cle="volume">
         <PanneauConsulte
           titre={`⚙️ ${v.capacityPanelTitle}`}
           resume={`${Math.round(capacityFacts.availableMachineCapacity).toLocaleString("fr-FR")} ${v.perRoundLabel} · ${
@@ -1989,6 +2494,7 @@ export function DecisionForm({
             <p className="mt-2 text-xs text-sky-300/80">{v.capacityBottleneckHint}</p>
           ) : null}
         </PanneauConsulte>
+        </Carte>
       ) : null}
       {gamme ? panneauFournisseurs : null}
       </section>
@@ -2000,7 +2506,7 @@ export function DecisionForm({
           paraît pas. */}
       <section
         data-etape={idx("approvisionner")}
-        hidden={courante !== idx("approvisionner")}
+        hidden={masquee("approvisionner")}
         className="space-y-3"
       >
       {gamme ? null : panneauFournisseurs}
@@ -2012,7 +2518,7 @@ export function DecisionForm({
           à sa valeur proposée, pour que la lecture côté serveur reste complète. */}
       <section
         data-etape={idx("budgets")}
-        hidden={courante !== idx("budgets")}
+        hidden={masquee("budgets")}
         className="space-y-3"
       >
       <Aide>
@@ -2026,32 +2532,41 @@ export function DecisionForm({
         // Les budgets du tour, au même endroit : marketing, qualité, maintenance
         // et R&D.
         <Family
+          carte={["marketing", "qualite", "maintenance", "rd"]}
           legend={`💸 Les budgets du tour · ${["marketing", on.quality ? "qualité" : null, on.maintenance ? "maintenance" : null, rdMono ? "R&D" : null].filter(Boolean).join(", ")}`}
           defaultOpen
         >
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Field name="marketingBudget" label="Budget marketing" defaultValue={defaults.marketingBudget} suffix="€"
-              hint="Fait venir les clients ce tour-ci ; l'effet retombe vite si on cesse." />
+            <Carte cle="marketing">
+              <Field name="marketingBudget" label="Budget marketing" defaultValue={defaults.marketingBudget} suffix="€"
+                hint="Fait venir les clients ce tour-ci ; l'effet retombe vite si on cesse." />
+            </Carte>
             {on.quality ? (
-              <Field name="qualityBudget" label="Budget qualité" defaultValue={defaults.qualityBudget} suffix="€"
-                hint="Prévention : moins de rebuts et de retours, une qualité perçue qui monte." />
+              <Carte cle="qualite">
+                <Field name="qualityBudget" label="Budget qualité" defaultValue={defaults.qualityBudget} suffix="€"
+                  hint="Prévention : moins de rebuts et de retours, une qualité perçue qui monte." />
+              </Carte>
             ) : (
               <input type="hidden" name="qualityBudget" value={defaults.qualityBudget} />
             )}
             {on.maintenance ? (
-              <Field name="maintenanceBudget" label="Budget maintenance" defaultValue={defaults.maintenanceBudget} suffix="€"
-                hint={aideEntretien} />
+              <Carte cle="maintenance">
+                <Field name="maintenanceBudget" label="Budget maintenance" defaultValue={defaults.maintenanceBudget} suffix="€"
+                  hint={aideEntretien} />
+              </Carte>
             ) : (
               <input type="hidden" name="maintenanceBudget" value={defaults.maintenanceBudget} />
             )}
             {rdMono ? (
-              <Field
-                name="rdBudget"
-                label="Recherche et développement"
-                defaultValue={Math.round(defaults.rdBudget ?? 0)}
-                suffix="€"
-                hint="Élève le niveau technique, avec retard ; s'érode si la R&D cesse."
-              />
+              <Carte cle="rd">
+                <Field
+                  name="rdBudget"
+                  label="Recherche et développement"
+                  defaultValue={Math.round(defaults.rdBudget ?? 0)}
+                  suffix="€"
+                  hint="Élève le niveau technique, avec retard ; s'érode si la R&D cesse."
+                />
+              </Carte>
             ) : null}
           </div>
         </Family>
@@ -2064,6 +2579,7 @@ export function DecisionForm({
         // Les scalaires que le niveau n'ouvre pas partent cachés d'ici : le
         // serveur ne dérive rien des références pour eux.
         <Family
+          carte="maintenance"
           legend={`💸 Les budgets de l'entreprise · ${[on.maintenance ? "entretien" : null, communicationOffer ? "marque" : null].filter(Boolean).join(", ")}`}
           defaultOpen
         >
@@ -2092,7 +2608,11 @@ export function DecisionForm({
         // gamme seulement (les budgets par référence restent le marketing
         // spécifique), et l'AXE tenu ce tour. L'axe est un choix d'entreprise :
         // un seul, lisible, dont le formulaire dit à qui il parle.
-        <Family legend={gamme ? "📣 Communication · la marque et l'axe" : "📣 Communication · l'axe"} defaultOpen>
+        <Family
+          carte="communication"
+          legend={gamme ? "📣 Communication · la marque et l'axe" : "📣 Communication · l'axe"}
+          defaultOpen
+        >
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {gamme ? (
               <Field
@@ -2134,11 +2654,11 @@ export function DecisionForm({
 
       <section
         data-etape={idx("equipe")}
-        hidden={courante !== idx("equipe")}
+        hidden={masquee("equipe")}
         className="space-y-3"
       >
       {on.hr ? (
-        <Family legend="👥 Ressources humaines">
+        <Family carte="rh" legend="👥 Ressources humaines">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Field name="hire" label="Embauches" defaultValue={0} suffix="pers."
               hint="Arrivée au tour suivant, coût de recrutement immédiat." />
@@ -2152,7 +2672,7 @@ export function DecisionForm({
         </Family>
       ) : null}
       {on.rse ? (
-        <Family legend="🌱 Engagement RSE">
+        <Family carte="rse" legend="🌱 Engagement RSE">
           <p className="mb-2 text-xs text-slate-400">
             Ça coûte maintenant, ça rapporte plus tard : l&apos;effet met plusieurs tours
             à se construire, et à retomber si vous cessez.
@@ -2169,10 +2689,11 @@ export function DecisionForm({
 
       <section
         data-etape={idx("financer")}
-        hidden={courante !== idx("financer")}
+        hidden={masquee("financer")}
         className="space-y-3"
       >
       {on.finance && debtSchedule && debtSchedule.outstanding > 0.5 ? (
+        <Carte cle="financement" memeFermee>
         <p className="rounded-lg border border-amber-400/20 bg-amber-950/20 px-3 py-2 text-xs text-amber-200">
           🏦 Échéance d&apos;emprunt du tour :{" "}
           <strong>{Math.round(debtSchedule.nextMandatory).toLocaleString("fr-FR")} €</strong>{" "}
@@ -2180,9 +2701,10 @@ export function DecisionForm({
           {Math.round(debtSchedule.outstanding).toLocaleString("fr-FR")} €. Les échéances
           tombent, que la caisse soit pleine ou vide.
         </p>
+        </Carte>
       ) : null}
       {on.finance ? (
-      <Family legend="💶 Financer · emprunt, capital, investissement">
+      <Family carte="financement" legend="💶 Financer · emprunt, capital, investissement">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <>
               <div>
@@ -2265,7 +2787,7 @@ export function DecisionForm({
       </Family>
       ) : null}
       {on.investment && equipmentOffer ? (
-        <>
+        <Carte cle="financement">
           <EquipmentPanel
             offer={equipmentOffer}
             vocabulary={v}
@@ -2284,17 +2806,17 @@ export function DecisionForm({
               .filter((t) => (equipSellQty[t.code] ?? 0) > 0)
               .map((t) => ({ typeCode: t.code, quantity: equipSellQty[t.code] ?? 0 }))
           )} />
-        </>
+        </Carte>
       ) : null}
       </section>
 
       <section
         data-etape={idx("tresorerie")}
-        hidden={courante !== idx("tresorerie")}
+        hidden={masquee("tresorerie")}
         className="space-y-3"
       >
       {on.dividend ? (
-        <Family legend="💰 Affectation du résultat · dividende">
+        <Family carte="dividende" legend="💰 Affectation du résultat · dividende">
           <ChampPlafonne
             name="dividend"
             label="Dividende versé aux associés"
@@ -2312,7 +2834,7 @@ export function DecisionForm({
         </Family>
       ) : null}
       {on.finance && treasuryOffer ? (
-        <Family legend="💶 Trésorerie · mobiliser le poste clients">
+        <Family carte="mobilisation" legend="💶 Trésorerie · mobiliser le poste clients">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <Field
@@ -2370,11 +2892,11 @@ export function DecisionForm({
           de formules qu'on compare, et qui demande un écran à elle. */}
       <section
         data-etape={idx("assurance")}
-        hidden={courante !== idx("assurance")}
+        hidden={masquee("assurance")}
         className="space-y-3"
       >
       {on.insurance && insuranceFormulas && insuranceFormulas.length > 0 ? (
-        <Family legend="🛡️ Assurance · choisissez votre couverture">
+        <Family carte="assurance" legend="🛡️ Assurance · choisissez votre couverture">
           <div className="space-y-2">
             <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-2.5 py-2">
               <input
@@ -2415,6 +2937,7 @@ export function DecisionForm({
           </p>
         </Family>
       ) : on.insurance && insuranceOffer ? (
+        <Carte cle="assurance">
         <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-950 px-2.5 py-2">
           <input
             type="checkbox"
@@ -2432,16 +2955,20 @@ export function DecisionForm({
             </span>
           </span>
         </label>
+        </Carte>
       ) : null}
       </section>
 
       <section
         data-etape={idx("prevoir")}
-        hidden={courante !== idx("prevoir")}
+        hidden={masquee("prevoir")}
         className="space-y-3"
       >
       {studiesOffer ? (
-        <Family legend={"📊 Acheter de l'information · livrée avec les résultats du tour"}>
+        <Family
+          carte="etudes"
+          legend={"📊 Acheter de l'information · livrée avec les résultats du tour"}
+        >
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {(
               [
@@ -2532,6 +3059,7 @@ export function DecisionForm({
         une formalité qu'on expédie, et une formalité n'apprend rien.
       */}
       <Family
+        carte="justification"
         legend={premierTour ? "✍️ En quelques mots · demandé" : "✍️ En quelques mots"}
         tone="border-slate-700/60"
         legendClass="text-xs font-medium text-slate-400"
@@ -2564,6 +3092,17 @@ export function DecisionForm({
         </p>
       </Family>
       </section>
+      {modeCartes && carteCourante?.cle === "recap" && donneesRecap ? (
+        <RecapDesDecisions
+          lignes={cartes
+            .filter((c) => c.resume)
+            .map((c) => ({ cle: c.cle, nom: c.nom, valeur: c.resume!(donneesRecap) }))}
+          surModifier={(cle) => {
+            const i = cartes.findIndex((c) => c.cle === cle);
+            if (i >= 0) allerALaCarte(i);
+          }}
+        />
+      ) : null}
       {state.error ? (
         <p
           role="alert"
@@ -2631,18 +3170,32 @@ export function DecisionForm({
         // du formulaire le disent déjà, et il coûtait la largeur d'un bouton.
         // Sur grand écran, tout reste sur une rangée : Précédent · Étape · action
         // (poussée à droite par le `sm:mr-auto` du compteur).
-        <div className="space-y-3 border-t border-white/10 pt-3 max-sm:sticky max-sm:bottom-[var(--barre-bas,0px)] max-sm:z-30 max-sm:-mx-4 max-sm:bg-slate-950/95 max-sm:px-4 max-sm:pb-3 max-sm:backdrop-blur-md">
+        <div
+          className={`space-y-3 border-t border-white/10 pt-3 ${
+            modeCartes
+              ? // EN PARCOURS, LE PIED EST FIXÉ AU BAS DE L'ÉCRAN, quelle que soit la
+                // longueur de la carte : une carte courte ne laisse pas son bouton
+                // flotter au milieu, comme un site.
+                "fixed inset-x-0 bottom-0 z-40 border-white/12 bg-slate-950/95 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-md supports-[backdrop-filter]:bg-slate-950/90 print:hidden"
+              : "max-sm:sticky max-sm:bottom-[var(--barre-bas,0px)] max-sm:z-30 max-sm:-mx-4 max-sm:bg-slate-950/95 max-sm:px-4 max-sm:pb-[calc(0.75rem+env(safe-area-inset-bottom))] max-sm:backdrop-blur-md"
+          }`}
+        >
           {/* L'échéance se rappelle ici, contre le bouton : c'est le moment où
               savoir qu'il reste huit minutes change quelque chose. */}
           {echeance && !verrou ? <EcheanceDuTour closesAt={echeance} /> : null}
           <div className="flex items-center gap-3 sm:flex-wrap">
             <button
               type="button"
-              onClick={() => allerALEtape((e) => Math.max(0, Math.min(e, total - 1) - 1))}
-              disabled={courante === 0}
+              onClick={() =>
+                modeCartes
+                  ? cartePrecedente()
+                  : allerALEtape((e) => Math.max(0, Math.min(e, total - 1) - 1))
+              }
+              disabled={!modeCartes && courante === 0}
+              aria-label="Précédent"
               className="order-1 min-h-11 shrink-0 rounded-lg border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:text-slate-100 disabled:cursor-not-allowed disabled:opacity-30"
             >
-              ← Précédent
+              {porte ? "←" : "← Précédent"}
             </button>
             <span className="order-2 hidden shrink-0 text-xs tabular-nums text-slate-400 sm:mr-auto sm:block">
               Étape {courante + 1} / {total}
@@ -2667,20 +3220,67 @@ export function DecisionForm({
                       ? "Mettre à jour mes décisions validées"
                       : "Valider les décisions de l'équipe"}
               </button>
+            ) : porte ? (
+              // UN LEVIER DONT ON PEUT SE PASSER : on demande d'abord si on en a
+              // besoin. « Passer » garde les valeurs proposées et avance ; « Oui »
+              // ouvre les champs.
+              <div key="porte" className="order-3 flex flex-1 gap-2.5">
+                <button
+                  type="button"
+                  onClick={carteSuivante}
+                  className={`${bouton({ taille: "l" })} min-h-12 flex-1`}
+                >
+                  {porte.passer}
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setOuvertes((o) => new Set(o).add(carteCourante!.cle))
+                  }
+                  className={`${bouton({ variante: "secondaire", taille: "l" })} min-h-12 flex-1`}
+                >
+                  {porte.ouvrir}
+                </button>
+              </div>
+            ) : modeCartes && carteCourante?.cle === "commande" ? (
+              // UNE QUESTION, DEUX RÉPONSES : la réponse fait avancer. La case à
+              // cocher du formulaire reste, masquée, et c'est elle qui part.
+              <div key="commande" className="order-3 flex flex-1 gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => repondreALaCommande(false)}
+                  className={`${bouton({ variante: commandeAcceptee === false ? "principal" : "secondaire", taille: "l" })} min-h-12 flex-1`}
+                >
+                  Refuser
+                </button>
+                <button
+                  type="button"
+                  onClick={() => repondreALaCommande(true)}
+                  className={`${bouton({ variante: commandeAcceptee === false ? "secondaire" : "principal", taille: "l" })} min-h-12 flex-1`}
+                >
+                  Accepter
+                </button>
+              </div>
             ) : (
               <button
                 key="suivant"
                 type="button"
-                onClick={() => allerALEtape((e) => Math.min(total - 1, Math.min(e, total - 1) + 1))}
+                onClick={() =>
+                  modeCartes
+                    ? carteSuivante()
+                    : allerALEtape((e) => Math.min(total - 1, Math.min(e, total - 1) + 1))
+                }
                 className={`${bouton({ taille: "l" })} order-3 max-sm:flex-1`}
               >
-                Suivant →
+                {modeCartes ? "Continuer" : "Suivant"} →
               </button>
             )}
           </div>
         </div>
       )}
-      {!(pending && kind === "solo") ? (
+      {/* La place du pied fixe : sans elle, le bas de la carte passerait dessous. */}
+      {modeCartes ? <div aria-hidden className="h-36" /> : null}
+      {!(pending && kind === "solo") && !modeCartes ? (
         <p className="text-center text-xs text-slate-400">
           {kind === "solo"
             ? "Mode apprentissage : les résultats sont calculés immédiatement, à vous d'analyser."
@@ -2688,6 +3288,7 @@ export function DecisionForm({
         </p>
       ) : null}
     </form>
+    </CartesContexte.Provider>
     </TelephoneContexte.Provider>
   );
 }

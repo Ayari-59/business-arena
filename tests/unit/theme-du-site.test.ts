@@ -162,6 +162,7 @@ describe("la lecture d'un thème enregistré", () => {
 describe("le composant Bande", () => {
   const rendu = (contraste: boolean, interieur: string) =>
     renderToStaticMarkup(
+      // eslint-disable-next-line react/no-children-prop -- `children` est requis par le type
       createElement(Bande, {
         id: "accueil.boucle",
         contraste,

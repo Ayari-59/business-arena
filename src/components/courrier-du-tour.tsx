@@ -172,7 +172,7 @@ export function CourrierDuTour({
             <button
               type="button"
               onClick={prendreNote}
-              className="rounded-lg border border-white/15 px-5 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-white/30 hover:bg-white/5"
+              className="rounded-lg border border-white/15 px-5 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-white/30 hover:bg-white/5 pointer-coarse:min-h-11"
             >
               J&apos;ai pris note
             </button>

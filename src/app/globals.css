@@ -15,6 +15,7 @@
  * d'un thème à l'autre sans avoir à régénérer le fichier.
  * ------------------------------------------------------------------------- */
 @theme {
+  --animate-carte-entre: carte-entre 0.2s ease-out;
   --font-sans:
     var(--font-brand-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
     Roboto, sans-serif;
@@ -35,6 +36,20 @@
   /* Bleu nuit encré : les deux surfaces les plus sombres se teintent de bleu. */
   --color-slate-950: #070c1a;
   --color-slate-900: #0e1526;
+}
+
+/* L'entrée d'une carte du parcours : elle glisse de douze pixels en se révélant,
+   comme un écran d'application qui en remplace un autre. `motion-safe` dans le
+   composant : qui a demandé moins d'animation n'en reçoit aucune. */
+@keyframes carte-entre {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* ---------------------------------------------------------------------------

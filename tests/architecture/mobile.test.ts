@@ -167,7 +167,7 @@ describe("les tiroirs de téléphone ne cachent pas ce qui décide", () => {
   it("l'arène demande au serveur si l'on est sur téléphone, au lieu de le deviner au montage", () => {
     const page = lire("src/app/arena/[gameId]/page.tsx");
     expect(page).toContain("estUnTelephone");
-    expect(page).toMatch(/repliable=\{telephone\}/);
+    expect(page).toMatch(/<ParcoursMobile\b/);
     expect(page).toMatch(/telephone=\{telephone\}/);
   });
 
@@ -199,7 +199,7 @@ describe("la décision se découpe en étapes courtes", () => {
         `data-etape={idx("${cle}")}`,
       );
       expect(FORMULAIRE, `visibilité de l'étape « ${cle} »`).toContain(
-        `hidden={courante !== idx("${cle}")}`,
+        `hidden={masquee("${cle}")}`,
       );
     }
     expect(FORMULAIRE).not.toContain('idx("couverture")');

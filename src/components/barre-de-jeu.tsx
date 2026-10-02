@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { ThemeSwitcher } from "@/components/theme-switcher";
+import { useProgression } from "@/lib/progression-parcours";
 import type { CodeTheme } from "@/config/themes";
 
 /**
@@ -29,6 +30,7 @@ export function BarreDeJeu({
   tours,
   termine,
   retour,
+  cockpit,
   themeParDefaut,
   accents,
 }: {
@@ -38,11 +40,16 @@ export function BarreDeJeu({
   termine: boolean;
   /** Où mène la flèche : l'écran de lancement en solo, l'accueil en classe. */
   retour: string;
+  /** Le cockpit de prévision de la partie : testez vos hypothèses avant de valider. */
+  cockpit: string;
   themeParDefaut: CodeTheme;
   accents?: Record<CodeTheme, string>;
 }) {
   const [ouvert, setOuvert] = useState(false);
   const id = useId();
+  // Où en est le joueur dans son tour : le parcours en cartes le déclare, la barre
+  // le montre. Sans parcours (grand écran, partie terminée), il n'y a rien à dire.
+  const progression = useProgression();
   const cadre = useRef<HTMLDivElement>(null);
 
   // Le menu se referme sur Échap et au toucher hors de la barre, comme le plan
@@ -97,7 +104,9 @@ export function BarreDeJeu({
           <p className="truncate text-sm text-slate-400">
             {termine
               ? "Partie terminée"
-              : `Tour ${tour} sur ${tours} · en cours`}
+              : progression
+                ? `Tour ${tour} sur ${tours} · ${progression.phase}${progression.rang ? ` ${progression.rang}` : ""}`
+                : `Tour ${tour} sur ${tours} · en cours`}
           </p>
         </div>
         <button
@@ -124,11 +133,31 @@ export function BarreDeJeu({
         </button>
       </div>
 
+      {/* La barre de progression du tour : un trait de laiton qui avance. */}
+      {progression ? (
+        <div
+          role="progressbar"
+          aria-label="Avancement du tour"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(progression.fraction * 100)}
+          className="h-1 bg-white/12"
+        >
+          <div
+            className="h-1 rounded-r-full bg-amber-400 transition-[width] duration-300 motion-reduce:transition-none"
+            style={{ width: `${Math.round(progression.fraction * 100)}%` }}
+          />
+        </div>
+      ) : null}
+
       <div
         id={id}
         className={`absolute inset-x-2 top-full mt-1 ${ouvert ? "block" : "hidden"}`}
       >
         <div className="carte max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-2xl p-2">
+          <Link href={cockpit} className={lien}>
+            Cockpit de prévision
+          </Link>
           <Link href="/profile" className={lien}>
             Mon profil et ma progression
           </Link>

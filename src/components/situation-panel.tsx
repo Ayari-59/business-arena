@@ -65,17 +65,35 @@ interface BrouillonLocal {
  * (React le rétablit après la remise à zéro du formulaire) et, en plus, dans
  * le stockage local du navigateur pour survivre à un rechargement.
  */
-export function SituationCard({ gameId, situation }: { gameId: string; situation: SituationView }) {
-  const hint = useGuardedAction(unlockHintAction.bind(null, gameId, situation.instanceId), initial, {
-    label: "indice",
-  });
+export function SituationCard({
+  gameId,
+  situation,
+}: {
+  gameId: string;
+  situation: SituationView;
+}) {
+  const hint = useGuardedAction(
+    unlockHintAction.bind(null, gameId, situation.instanceId),
+    initial,
+    {
+      label: "indice",
+    },
+  );
   const rendu = useGuardedAction(
     submitSituationAction.bind(null, gameId, situation.instanceId),
     initial,
     { label: "rendu de situation" },
   );
-  const { state: hintState, formAction: hintAction, pending: hintPending } = hint;
-  const { state: renduState, formAction: renduAction, pending: renduPending } = rendu;
+  const {
+    state: hintState,
+    formAction: hintAction,
+    pending: hintPending,
+  } = hint;
+  const {
+    state: renduState,
+    formAction: renduAction,
+    pending: renduPending,
+  } = rendu;
 
   const diagnosisDone = situation.diagnosis !== null;
   const quizDone = situation.quizAnswers !== null;
@@ -84,19 +102,28 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
   // (rendu en deux temps d'une version antérieure) — on ne le redemande pas.
   const questionsARendre = quizDone ? [] : situation.quizQuestions;
 
-  const [options, setOptions] = useState<string[]>(situation.diagnosis?.selected ?? []);
+  const [options, setOptions] = useState<string[]>(
+    situation.diagnosis?.selected ?? [],
+  );
   const [freeText, setFreeText] = useState(situation.diagnosis?.freeText ?? "");
-  const [reponses, setReponses] = useState<Record<string, string>>(situation.quizAnswers ?? {});
+  const [reponses, setReponses] = useState<Record<string, string>>(
+    situation.quizAnswers ?? {},
+  );
 
   useEffect(() => {
     if (rendue) return;
     try {
-      const brut = window.localStorage.getItem(cleBrouillon(situation.instanceId));
+      const brut = window.localStorage.getItem(
+        cleBrouillon(situation.instanceId),
+      );
       if (!brut) return;
       const b = JSON.parse(brut) as Partial<BrouillonLocal>;
-      if (!diagnosisDone && Array.isArray(b.options)) setOptions(b.options.map(String));
-      if (!diagnosisDone && typeof b.freeText === "string") setFreeText(b.freeText);
-      if (!quizDone && b.reponses && typeof b.reponses === "object") setReponses(b.reponses);
+      if (!diagnosisDone && Array.isArray(b.options))
+        setOptions(b.options.map(String));
+      if (!diagnosisDone && typeof b.freeText === "string")
+        setFreeText(b.freeText);
+      if (!quizDone && b.reponses && typeof b.reponses === "object")
+        setReponses(b.reponses);
     } catch {
       // stockage indisponible : le brouillon reste en mémoire
     }
@@ -106,7 +133,10 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
     if (rendue) return;
     try {
       const b: BrouillonLocal = { options, freeText, reponses };
-      window.localStorage.setItem(cleBrouillon(situation.instanceId), JSON.stringify(b));
+      window.localStorage.setItem(
+        cleBrouillon(situation.instanceId),
+        JSON.stringify(b),
+      );
     } catch {
       // idem
     }
@@ -120,7 +150,9 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
   const complet = manquants.length === 0;
 
   const basculerOption = (id: string, coche: boolean) =>
-    setOptions((prec) => (coche ? [...new Set([...prec, id])] : prec.filter((o) => o !== id)));
+    setOptions((prec) =>
+      coche ? [...new Set([...prec, id])] : prec.filter((o) => o !== id),
+    );
 
   return (
     <article className="carte p-4 sm:p-6">
@@ -138,43 +170,52 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
             </span>
           ) : null}
         </div>
-        <h3 className="mt-1 text-lg font-semibold text-slate-100">{situation.title}</h3>
-        <p className="mt-2 text-sm leading-relaxed text-slate-300">{situation.narrative}</p>
-        <p className="mt-2 text-sm font-medium text-amber-200">{situation.problem}</p>
+        <h3 className="mt-1 text-lg font-semibold text-slate-100">
+          {situation.title}
+        </h3>
+        <p className="mt-2 text-sm leading-relaxed text-slate-300">
+          {situation.narrative}
+        </p>
+        <p className="mt-2 text-sm font-medium text-amber-200">
+          {situation.problem}
+        </p>
       </header>
 
       {situation.triggerFacts && situation.triggerFacts.length > 0 ? (
         <div className="mb-4">
-        {/*
+          {/*
           Ouvert d'office quand la situation a été DÉTECTÉE : les chiffres
           sont la raison même de la carte — la demande qui s'adressait à
           l'équipe et celle qui est repartie. Repliés, l'élève lisait « une
           part importante de la demande » sans jamais voir combien.
         */}
-        <Tiroir
-          titre="Pourquoi cette situation ?"
-          quoi={`${situation.triggerFacts.length} fait${situation.triggerFacts.length > 1 ? "s" : ""}`}
-          ouvert={situation.origin === "detected"}
-        >
-          <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
-            {situation.triggerFacts.map((fact, i) => (
-              <div key={i} className="col-span-2 flex items-baseline justify-between gap-3">
-                <dt className="text-xs text-slate-400">{fact.label}</dt>
-                <dd
-                  className={`text-sm font-medium ${
-                    fact.direction === "positive"
-                      ? "text-emerald-400"
-                      : fact.direction === "negative"
-                        ? "text-red-400"
-                        : "text-slate-300"
-                  }`}
+          <Tiroir
+            titre="Pourquoi cette situation ?"
+            quoi={`${situation.triggerFacts.length} fait${situation.triggerFacts.length > 1 ? "s" : ""}`}
+            ouvert={situation.origin === "detected"}
+          >
+            <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+              {situation.triggerFacts.map((fact, i) => (
+                <div
+                  key={i}
+                  className="col-span-2 flex items-baseline justify-between gap-3"
                 >
-                  {fact.value}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </Tiroir>
+                  <dt className="text-xs text-slate-400">{fact.label}</dt>
+                  <dd
+                    className={`text-sm font-medium ${
+                      fact.direction === "positive"
+                        ? "text-emerald-400"
+                        : fact.direction === "negative"
+                          ? "text-red-400"
+                          : "text-slate-300"
+                    }`}
+                  >
+                    {fact.value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </Tiroir>
         </div>
       ) : null}
 
@@ -190,7 +231,11 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
           </section>
         ) : (
           <form ref={rendu.formRef} action={renduAction} className="space-y-4">
-            <input type="hidden" name="questions" value={questionsARendre.map((q) => q.id).join(",")} />
+            <input
+              type="hidden"
+              name="questions"
+              value={questionsARendre.map((q) => q.id).join(",")}
+            />
 
             {/* 1. Diagnostic */}
             <section className="rounded-lg bg-slate-950 p-3 sm:p-5">
@@ -201,16 +246,23 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
                   lecteur d'écran, qui annonce alors « Quel est le problème
                   principal ? » avant d'égrener les options. */}
               <fieldset className="mt-1 min-w-0 border-0 p-0">
-                <legend className="text-xs text-slate-400">Quel est le problème principal ?</legend>
+                <legend className="text-xs text-slate-400">
+                  Quel est le problème principal ?
+                </legend>
                 <div className="mt-2 space-y-2">
                   {situation.diagnosticOptions.map((option) => (
-                    <label key={option.id} className="flex items-start gap-2 text-sm text-slate-200">
+                    <label
+                      key={option.id}
+                      className="flex items-start gap-2 text-sm text-slate-200"
+                    >
                       <input
                         type="checkbox"
                         name="options"
                         value={option.id}
                         checked={options.includes(option.id)}
-                        onChange={(e) => basculerOption(option.id, e.target.checked)}
+                        onChange={(e) =>
+                          basculerOption(option.id, e.target.checked)
+                        }
                         className="mt-1 accent-amber-400"
                       />
                       <span>{option.label}</span>
@@ -235,7 +287,9 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
                 <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                   {quizHeading(situation.quizQuestions)}
                 </h4>
-                <p className="mt-1 text-xs text-slate-400">Comment analyser ce problème ?</p>
+                <p className="mt-1 text-xs text-slate-400">
+                  Comment analyser ce problème ?
+                </p>
                 {quizDone ? (
                   <p className="mt-2 text-sm text-emerald-300">
                     ✓ Réponse validée — correction au débriefing.
@@ -259,7 +313,10 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
                                 value={option.id}
                                 checked={reponses[question.id] === option.id}
                                 onChange={() =>
-                                  setReponses((prec) => ({ ...prec, [question.id]: option.id }))
+                                  setReponses((prec) => ({
+                                    ...prec,
+                                    [question.id]: option.id,
+                                  }))
                                 }
                                 className="mt-1 accent-amber-400"
                               />
@@ -283,7 +340,7 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
                 disabled={!complet || renduPending}
                 aria-disabled={!complet || renduPending}
                 title={complet ? undefined : messageIncomplet(manquants)}
-                className={bouton()}
+                className={`${bouton()} pointer-coarse:min-h-11`}
               >
                 {renduPending ? "Envoi…" : "Valider mon analyse"}
               </button>
@@ -304,8 +361,13 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
           {situation.unlockedHints.length > 0 ? (
             <ol className="mt-2 space-y-1.5">
               {situation.unlockedHints.map((h) => (
-                <li key={h.level} className="rounded-lg border border-white/5 bg-slate-900 px-3 py-2 text-sm text-slate-300">
-                  <span className="mr-2 text-xs font-semibold text-amber-400">Indice {h.level}</span>
+                <li
+                  key={h.level}
+                  className="rounded-lg border border-white/5 bg-slate-900 px-3 py-2 text-sm text-slate-300"
+                >
+                  <span className="mr-2 text-xs font-semibold text-amber-400">
+                    Indice {h.level}
+                  </span>
                   {h.text}
                 </li>
               ))}
@@ -330,7 +392,9 @@ export function SituationCard({ gameId, situation }: { gameId: string; situation
               {situation.hintLimit}. À vous de trancher avec ce que vous avez.
             </p>
           ) : situation.unlockedHints.length === 5 ? (
-            <p className="mt-2 text-xs text-slate-400">Tous les indices sont débloqués.</p>
+            <p className="mt-2 text-xs text-slate-400">
+              Tous les indices sont débloqués.
+            </p>
           ) : null}
         </section>
       </div>
@@ -359,8 +423,12 @@ export function SituationDebrief({
     <article className="carte p-4 sm:p-6">
       <header className="mb-3 flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.25em] text-slate-400">Débriefing</p>
-          <h3 className="mt-1 text-base font-semibold text-slate-100">{situation.title}</h3>
+          <p className="text-xs uppercase tracking-[0.25em] text-slate-400">
+            Débriefing
+          </p>
+          <h3 className="mt-1 text-base font-semibold text-slate-100">
+            {situation.title}
+          </h3>
         </div>
         <span
           className={`rounded-full border px-3 py-1 text-xs ${
@@ -380,19 +448,33 @@ export function SituationDebrief({
       </header>
       {situation.missed ? (
         <p className="mb-3 rounded-lg border border-amber-400/20 bg-amber-950/10 px-3 py-2 text-sm text-slate-300">
-          <span className="font-medium text-amber-200">Situation non rendue.</span> {situation.narrative}{" "}
-          {situation.problem} Modèle et correction ci-dessous.
+          <span className="font-medium text-amber-200">
+            Situation non rendue.
+          </span>{" "}
+          {situation.narrative} {situation.problem} Modèle et correction
+          ci-dessous.
         </p>
       ) : null}
       <div className="space-y-3 text-sm">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Diagnostic</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            Diagnostic
+          </p>
           <ul className="mt-1 space-y-1">
             {situation.diagnosticOptions.map((option) => {
               const correct = debrief.correctOptionIds.includes(option.id);
               const chosen = selected.has(option.id);
               return (
-                <li key={option.id} className={correct ? "text-emerald-300" : chosen ? "text-red-400" : "text-slate-400"}>
+                <li
+                  key={option.id}
+                  className={
+                    correct
+                      ? "text-emerald-300"
+                      : chosen
+                        ? "text-red-400"
+                        : "text-slate-400"
+                  }
+                >
                   {correct ? "✓" : chosen ? "✗" : "·"} {option.label}
                   {chosen && !correct ? " (coché à tort)" : ""}
                   {correct && !chosen ? " (manqué)" : ""}
@@ -411,15 +493,22 @@ export function SituationDebrief({
             </p>
             <ul className="mt-1 space-y-2">
               {situation.quizQuestions.map((question) => {
-                const correction = debrief.quizCorrection.find((c) => c.id === question.id);
+                const correction = debrief.quizCorrection.find(
+                  (c) => c.id === question.id,
+                );
                 if (!correction) return null;
                 const answered = answers[question.id];
-                const credit = answered ? (correction.credits[answered] ?? 0) : 0;
+                const credit = answered
+                  ? (correction.credits[answered] ?? 0)
+                  : 0;
                 const correctLabel = question.options.find(
                   (o) => o.id === correction.correctOptionId,
                 )?.label;
                 return (
-                  <li key={question.id} className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2">
+                  <li
+                    key={question.id}
+                    className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2"
+                  >
                     <p className="text-slate-300">{question.prompt}</p>
                     <p
                       className={`mt-1 ${
@@ -438,10 +527,15 @@ export function SituationDebrief({
                             ? "✗ Mauvaise réponse"
                             : "· Sans réponse"}
                       {credit < 1 && correctLabel ? (
-                        <span className="text-emerald-300"> · le plus juste : {correctLabel}</span>
+                        <span className="text-emerald-300">
+                          {" "}
+                          · le plus juste : {correctLabel}
+                        </span>
                       ) : null}
                     </p>
-                    <p className="mt-1 text-sm leading-relaxed text-slate-400">{correction.explain}</p>
+                    <p className="mt-1 text-sm leading-relaxed text-slate-400">
+                      {correction.explain}
+                    </p>
                   </li>
                 );
               })}
@@ -455,8 +549,12 @@ export function SituationDebrief({
             </p>
             <div className="mt-1 rounded-lg border border-white/5 bg-slate-950 px-3 py-2">
               <p className="text-slate-300">{debrief.modelInsight.prompt}</p>
-              <p className="mt-1 text-emerald-300">{debrief.modelInsight.answer}</p>
-              <p className="mt-1 text-sm leading-relaxed text-slate-400">{debrief.modelInsight.explain}</p>
+              <p className="mt-1 text-emerald-300">
+                {debrief.modelInsight.answer}
+              </p>
+              <p className="mt-1 text-sm leading-relaxed text-slate-400">
+                {debrief.modelInsight.explain}
+              </p>
             </div>
           </div>
         ) : null}
@@ -499,9 +597,15 @@ export function SituationDebrief({
               Comment interpréter cette évolution ?
             </p>
             <div className="mt-1 space-y-2 rounded-lg border border-white/5 bg-slate-950 px-3 py-2">
-              <p className="text-sm font-medium text-slate-200">{debrief.interpretation.mechanism}</p>
-              <p className="text-sm text-slate-300">{debrief.interpretation.explanation}</p>
-              <p className="text-sm italic text-amber-200/80">{debrief.interpretation.takeaway}</p>
+              <p className="text-sm font-medium text-slate-200">
+                {debrief.interpretation.mechanism}
+              </p>
+              <p className="text-sm text-slate-300">
+                {debrief.interpretation.explanation}
+              </p>
+              <p className="text-sm italic text-amber-200/80">
+                {debrief.interpretation.takeaway}
+              </p>
             </div>
           </div>
         ) : null}
@@ -517,7 +621,9 @@ export function SituationDebrief({
                   href={`/notions#${c.code}`}
                   className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1 text-xs text-amber-200 hover:border-amber-400/40"
                 >
-                  <span className="text-xs uppercase tracking-wider text-slate-400">{c.domain}</span>
+                  <span className="text-xs uppercase tracking-wider text-slate-400">
+                    {c.domain}
+                  </span>
                   {c.name}
                 </a>
               ))}
@@ -536,7 +642,13 @@ export function SituationDebrief({
  * Rattrapage d'une situation manquée (V1-6, politique retake50) : un seul rendu,
  * noté à 50 %, avant la clôture suivante. Même forme que le rendu normal.
  */
-function SituationRetake({ gameId, situation }: { gameId: string; situation: SituationView }) {
+function SituationRetake({
+  gameId,
+  situation,
+}: {
+  gameId: string;
+  situation: SituationView;
+}) {
   const rendu = useGuardedAction(
     retakeSituationAction.bind(null, gameId, situation.instanceId),
     initial,
@@ -547,20 +659,35 @@ function SituationRetake({ gameId, situation }: { gameId: string; situation: Sit
   const [options, setOptions] = useState<string[]>([]);
   const [freeText, setFreeText] = useState("");
   const [reponses, setReponses] = useState<Record<string, string>>({});
-  const manquants = manques({ options, questions: questions.map((q) => q.id), reponses });
+  const manquants = manques({
+    options,
+    questions: questions.map((q) => q.id),
+    reponses,
+  });
   const complet = manquants.length === 0;
 
   return (
-    <form ref={rendu.formRef} action={formAction} className="mt-4 space-y-3 rounded-lg border border-sky-400/30 bg-sky-950/10 p-3 sm:p-5">
+    <form
+      ref={rendu.formRef}
+      action={formAction}
+      className="mt-4 space-y-3 rounded-lg border border-sky-400/30 bg-sky-950/10 p-3 sm:p-5"
+    >
       <p className="text-xs font-semibold uppercase tracking-wide text-sky-300">
         Rattrapage · score compté pour moitié
       </p>
-      <input type="hidden" name="questions" value={questions.map((q) => q.id).join(",")} />
+      <input
+        type="hidden"
+        name="questions"
+        value={questions.map((q) => q.id).join(",")}
+      />
       <div className="space-y-1.5">
         <fieldset className="min-w-0 space-y-1.5 border-0 p-0">
           <legend className="text-xs text-slate-400">Votre diagnostic</legend>
           {situation.diagnosticOptions.map((option) => (
-            <label key={option.id} className="flex items-start gap-2 text-sm text-slate-200">
+            <label
+              key={option.id}
+              className="flex items-start gap-2 text-sm text-slate-200"
+            >
               <input
                 type="checkbox"
                 name="options"
@@ -568,7 +695,9 @@ function SituationRetake({ gameId, situation }: { gameId: string; situation: Sit
                 checked={options.includes(option.id)}
                 onChange={(e) =>
                   setOptions((prec) =>
-                    e.target.checked ? [...new Set([...prec, option.id])] : prec.filter((o) => o !== option.id),
+                    e.target.checked
+                      ? [...new Set([...prec, option.id])]
+                      : prec.filter((o) => o !== option.id),
                   )
                 }
                 className="mt-1 accent-sky-400"
@@ -594,13 +723,21 @@ function SituationRetake({ gameId, situation }: { gameId: string; situation: Sit
           </legend>
           <div className="mt-1.5 space-y-1.5">
             {question.options.map((option) => (
-              <label key={option.id} className="flex items-start gap-2 text-sm text-slate-300">
+              <label
+                key={option.id}
+                className="flex items-start gap-2 text-sm text-slate-300"
+              >
                 <input
                   type="radio"
                   name={`quiz_${question.id}`}
                   value={option.id}
                   checked={reponses[question.id] === option.id}
-                  onChange={() => setReponses((prec) => ({ ...prec, [question.id]: option.id }))}
+                  onChange={() =>
+                    setReponses((prec) => ({
+                      ...prec,
+                      [question.id]: option.id,
+                    }))
+                  }
                   className="mt-1 accent-sky-400"
                 />
                 <span>{option.label}</span>

@@ -253,291 +253,229 @@ describe("pendant une partie", () => {
     );
   });
 
-  it("les panneaux de chiffres se rangent en tiroirs fermés, avec le chiffre utile dans le résumé", async () => {
-    // Ce sont des chiffres qu'on consulte : fermés, ils rendaient plus de la moitié
-    // de l'écran « Situation ». Le résumé garde ce qu'il faut pour décider.
-    for (const [titre, extrait] of [
-      ["Votre entreprise", /trésorerie/],
-      ["Le marché", /€/],
-    ] as const) {
-      const tiroir = page
-        .locator(`details:has(> summary:has-text("${titre}"))`)
-        .first();
-      await tiroir.waitFor({ state: "attached" });
-      expect(
-        await tiroir.evaluate((d) => (d as HTMLDetailsElement).open),
-        `${titre} devrait être fermé`,
-      ).toBe(false);
-      expect(await tiroir.locator("> summary").innerText()).toMatch(extrait);
-    }
-    // Un doigt l'ouvre, et le détail est là.
-    const entreprise = page
-      .locator('details:has(> summary:has-text("Votre entreprise"))')
-      .first();
-    await entreprise.locator("> summary").click();
-    await entreprise
-      .getByText("Charges de structure")
-      .waitFor({ state: "visible" });
-    await entreprise.locator("> summary").click();
-  });
+  /** Le bouton du pied de page qui fait avancer le parcours, hors décisions. */
+  const suite = () =>
+    page.getByRole("button", { name: /^(Continuer|Analyser|Décider)/ }).last();
 
-  it("l'étape « Situation » tient en moins de deux écrans et demi", async () => {
+  /** Un parcours revient toujours au point de départ avant un test qui en dépend. */
+  async function versLaPremiereCarte() {
+    await page.evaluate(() => (window.location.hash = "situation"));
+    await page.waitForTimeout(300);
+  }
+
+  /** Avance, un toucher à la fois, jusqu'à la première carte de décision. */
+  async function versLesDecisions() {
+    // Par le début : le formulaire se remonte, et repart de sa première carte.
+    await versLaPremiereCarte();
+    await page.evaluate(() => (window.location.hash = "decisions"));
+    await page.locator("form header").waitFor({ state: "visible" });
+  }
+
+  const titreDeLaCarte = async () =>
+    (await page.locator("form header").innerText()).replace(/\s+/g, " ").trim();
+
+  const avancement = async () =>
+    Number(
+      await page
+        .getByRole("progressbar", { name: "Avancement du tour" })
+        .getAttribute("aria-valuenow"),
+    );
+
+  it("le briefing se lit une carte à la fois, sans onglets", async () => {
+    await versLaPremiereCarte();
+    expect(
+      await page.locator('[role="tablist"]:visible').count(),
+      "plus d'onglets sur téléphone : un parcours linéaire",
+    ).toBe(0);
     const hauteur = await page.evaluate(
       () => document.documentElement.scrollHeight,
     );
     const ecran = page.viewportSize()!.height;
-    // Elle faisait 1 968 px, soit près de trois écrans.
+    // Le briefing d'un seul bloc faisait 1 968 px.
     expect(hauteur, `${hauteur} px pour un écran de ${ecran}`).toBeLessThan(
-      ecran * 2.5,
+      ecran * 1.6,
     );
+    await suite().waitFor({ state: "visible" });
   });
 
-  it("les trois étapes sont des onglets collés au bas de l'écran, et le restent au défilement", async () => {
-    const onglets = page.locator('[role="tablist"] button[role="tab"]:visible');
-    expect(await onglets.count()).toBe(3);
-    const hauteur = page.viewportSize()!.height;
-    const position = async () => {
-      const b = (await onglets.first().boundingBox())!;
-      return { bas: Math.round(b.y + b.height), haut: Math.round(b.y) };
-    };
-    const avant = await position();
-    // Le bas de la barre est le bas de l'écran (aux marges de sécurité près).
-    expect(
-      avant.bas,
-      `bas des onglets à ${avant.bas} px sur ${hauteur}`,
-    ).toBeGreaterThanOrEqual(hauteur - 2);
-    await page.mouse.wheel(0, 900);
-    await page.waitForTimeout(300);
-    expect(await position()).toEqual(avant);
-    await page.mouse.wheel(0, -2000);
+  it("un seul bouton fait avancer, et la barre du haut suit", async () => {
+    await versLaPremiereCarte();
+    const avant = await avancement();
+    await suite().click();
+    await page.waitForTimeout(400);
+    expect(await avancement()).toBeGreaterThan(avant);
+    await page.getByRole("button", { name: "Retour" }).click();
+    await page.waitForTimeout(400);
+    expect(await avancement()).toBe(avant);
   });
 
-  it("l'action qui mène à l'étape suivante est fixée au-dessus des onglets", async () => {
-    const suivant = page
-      .getByRole("button", { name: /^Analyser/ })
-      .filter({ hasNot: page.locator("[role=tab]") });
-    const bouton = suivant.last();
-    await bouton.waitFor({ state: "visible" });
-    const b = (await bouton.boundingBox())!;
-    const onglet = (await page
-      .locator('[role="tablist"] button[role="tab"]:visible')
-      .first()
-      .boundingBox())!;
-    expect(b.y + b.height, "l'action est sous les onglets").toBeLessThanOrEqual(
-      onglet.y + 1,
-    );
-    expect(b.height, `bouton de ${b.height} px`).toBeGreaterThanOrEqual(44);
+  it("ce qui est consulté se range en tiroirs fermés, qu'un doigt ouvre", async () => {
+    await versLaPremiereCarte();
+    // Parmi les cartes du briefing, l'une au moins porte un tiroir : fermé, il
+    // garde son titre et son résumé, et s'ouvre d'un toucher.
+    for (let k = 0; k < 6; k++) {
+      const resume = page.locator("details > summary:visible").first();
+      if (await resume.count()) {
+        const tiroir = resume.locator("..");
+        expect(
+          await tiroir.evaluate((d) => (d as HTMLDetailsElement).open),
+        ).toBe(false);
+        await resume.click();
+        expect(
+          await tiroir.evaluate((d) => (d as HTMLDetailsElement).open),
+        ).toBe(true);
+        return;
+      }
+      await suite().click();
+      await page.waitForTimeout(300);
+    }
+    throw new Error("aucune carte du briefing ne porte un tiroir");
   });
 
-  it("toucher une étape change d'étape et repart du haut de l'écran", async () => {
-    await page.mouse.wheel(0, 900);
+  it("la première décision est la commande exceptionnelle, seule à l'écran", async () => {
+    await versLesDecisions();
+    expect(await titreDeLaCarte()).toMatch(/Décision 1 sur \d+ Une commande/i);
+    await page.getByRole("button", { name: "Accepter", exact: true }).waitFor();
+    await page.getByRole("button", { name: "Refuser", exact: true }).waitFor();
+    // Le prix n'est pas encore là : il vient APRÈS la réponse.
+    expect(await page.locator('input[name="price"]:visible').count()).toBe(0);
+  });
+
+  it("répondre à la commande ouvre la décision suivante, et « Précédent » revient", async () => {
+    await versLesDecisions();
+    await page.getByRole("button", { name: "Accepter", exact: true }).click();
+    await page.waitForTimeout(400);
+    expect(await titreDeLaCarte()).toMatch(/Décision 2 sur \d+ À quel prix/i);
+    await page.locator('input[name="price"]:visible').waitFor();
+    await page.getByRole("button", { name: /Précédent/ }).click();
+    await page.waitForTimeout(400);
+    expect(await titreDeLaCarte()).toMatch(/Décision 1 sur/i);
+  });
+
+  it("le prix a ses repères, ses boutons − et +, et sa marge en direct", async () => {
+    await versLesDecisions();
+    await page.getByRole("button", { name: "Accepter", exact: true }).click();
+    await page.waitForTimeout(400);
+    await page.getByText(/Prix usuels/).waitFor({ state: "visible" });
+    await page.getByText(/Coût variable/).waitFor({ state: "visible" });
+    const champ = page.locator('input[name="price"]:visible');
+    const marge = page.getByText(/^Marge par/).locator("..");
+    const avant = Number(await champ.inputValue());
+    const margeAvant = await marge.innerText();
+    await page.getByRole("button", { name: /Augmenter/ }).click();
     await page.waitForTimeout(200);
-    await page
-      .locator('[role="tablist"] button[role="tab"]:visible', {
-        hasText: "Analyser",
-      })
-      .click();
-    await page.waitForTimeout(400);
-    expect(
-      await page.evaluate(() => Math.round(window.scrollY)),
-    ).toBeLessThanOrEqual(2);
-    const retenu = page.locator(
-      '[role="tablist"] button[role="tab"][aria-selected="true"]:visible',
+    expect(Number(await champ.inputValue())).toBeGreaterThan(avant);
+    expect(await marge.innerText(), "la marge ne suit pas le prix").not.toBe(
+      margeAvant,
     );
-    expect((await retenu.innerText()).trim()).toContain("Analyser");
+    await page.getByRole("button", { name: /Diminuer/ }).click();
+    expect(Number(await champ.inputValue())).toBe(avant);
   });
 
-  it("à la dernière étape, l'action du formulaire suit l'écran et reste au-dessus des onglets", async () => {
-    await page
-      .locator('[role="tablist"] button[role="tab"]:visible', {
-        hasText: "Décider",
-      })
-      .click();
-    await page.waitForTimeout(500);
-    const action = page
-      .getByRole("button", { name: /Suivant|Valider/ })
-      .first();
-    // Le pied du formulaire se colle quand le formulaire entre à l'écran : on y
-    // arrive comme un élève, en défilant jusqu'à lui.
-    await action.evaluate((el) => {
-      const form = el.closest("form")!;
-      window.scrollTo(
-        0,
-        form.getBoundingClientRect().top + window.scrollY - 120,
-      );
-    });
-    await page.waitForTimeout(400);
-    await action.waitFor({ state: "visible" });
-    const onglet = (await page
-      .locator('[role="tablist"] button[role="tab"]:visible')
-      .first()
-      .boundingBox())!;
-    const b = (await action.boundingBox())!;
-    expect(b.y, "l'action sort de l'écran par le haut").toBeGreaterThanOrEqual(
-      0,
-    );
-    expect(
-      b.y + b.height,
-      `action à ${Math.round(b.y + b.height)} px, onglets à ${Math.round(onglet.y)} px`,
-    ).toBeLessThanOrEqual(onglet.y + 1);
-    // « Précédent » est à sa gauche, et tous deux se touchent à 44 px au moins.
-    const precedent = (await page
-      .getByRole("button", { name: /Précédent/ })
-      .boundingBox())!;
-    expect(precedent.x, "« Précédent » doit précéder l'action").toBeLessThan(
-      b.x,
-    );
-    expect(precedent.height).toBeGreaterThanOrEqual(44);
-    expect(b.height).toBeGreaterThanOrEqual(44);
-    // Et elle y reste quand on descend plus bas dans le formulaire.
-    await page.mouse.wheel(0, 500);
-    await page.waitForTimeout(300);
-    const plusBas = (await action.boundingBox())!;
-    expect(plusBas.y + plusBas.height).toBeLessThanOrEqual(onglet.y + 1);
-    expect(plusBas.y).toBeGreaterThanOrEqual(0);
-  });
-
-  it("à la dernière étape, l'enveloppe décorative et les textes d'aide ne gardent pas la place des champs", async () => {
-    await page.evaluate(() => window.scrollTo(0, 0));
-    await page.waitForTimeout(300);
-    // L'enveloppe est un décor : elle n'est plus à l'écran, le bouton qui compte si.
-    const decor = page.locator("[aria-hidden='true'].relative.h-40.w-60");
-    if ((await decor.count()) > 0)
-      expect(await decor.first().isVisible()).toBe(false);
-    // L'aide est un tiroir « Comprendre » fermé : le texte est dans le document, pas à l'écran.
-    const aides = page.locator('details:has(> summary:has-text("Comprendre"))');
-    expect(await aides.count()).toBeGreaterThanOrEqual(1);
-    for (let i = 0; i < (await aides.count()); i += 1) {
-      expect(
-        await aides.nth(i).evaluate((d) => (d as HTMLDetailsElement).open),
-      ).toBe(false);
-    }
-  });
-
-  it("jamais une décision dans un tiroir fermé : le choix du fournisseur reste visible", async () => {
-    const radios = page.locator('input[name="supplierChoice"]');
-    if ((await radios.count()) === 0) return; // le scénario de ce test n'en propose pas
-    for (let i = 0; i < (await radios.count()); i += 1) {
-      const ferme = await radios.nth(i).evaluate((el) => {
-        for (let e = el.parentElement; e; e = e.parentElement) {
-          if (e.tagName === "DETAILS" && !(e as HTMLDetailsElement).open)
-            return true;
-        }
-        return false;
-      });
-      expect(
-        ferme,
-        "un choix de fournisseur est rangé dans un tiroir fermé",
-      ).toBe(false);
-    }
-  });
-
-  it("la décision se parcourt en sept étapes, sur une seule rangée de pastilles à 44 px", async () => {
-    await page.evaluate(() => window.scrollTo(0, 0));
-    const puces = page.locator(
-      'form ol[aria-label="Étapes de décision"] li button',
-    );
-    expect(await puces.count(), "nombre d'étapes de décision").toBe(7);
-    // Sept pastilles qui passent sur deux lignes seraient pires que cinq sur une.
-    const boites = await puces.evaluateAll((els) =>
-      els.map((e) => {
-        const r = e.getBoundingClientRect();
-        return {
-          y: Math.round(r.top + window.scrollY),
-          l: Math.round(r.width),
-          h: Math.round(r.height),
-        };
-      }),
-    );
-    expect(
-      new Set(boites.map((b) => b.y)).size,
-      `pastilles sur plusieurs lignes : ${JSON.stringify(boites)}`,
-    ).toBe(1);
-    for (const b of boites) {
-      expect(b.h, `pastille de ${b.h} px de haut`).toBeGreaterThanOrEqual(44);
-      expect(b.l, `pastille de ${b.l} px de large`).toBeGreaterThanOrEqual(36);
-    }
-  });
-
-  it("aucune étape de décision ne dépasse un écran et demi, et chacune garde ses champs", async () => {
-    const puces = page.locator(
-      'form ol[aria-label="Étapes de décision"] li button',
-    );
+  it("chaque carte de décision tient en deux écrans au plus, avec des commandes de 44 px", async () => {
+    await versLesDecisions();
+    await page.getByRole("button", { name: "Accepter", exact: true }).click();
     const ecran = page.viewportSize()!.height;
-    const mesures: { etape: number; h: number; champs: number }[] = [];
-    for (let i = 0; i < (await puces.count()); i += 1) {
-      await puces.nth(i).click();
-      await page.waitForTimeout(250);
-      mesures.push(
-        await page.evaluate((etape) => {
-          const s = [...document.querySelectorAll("form [data-etape]")].find(
-            (e) => !(e as HTMLElement).hidden,
-          )!;
-          const champs = [
-            ...s.querySelectorAll("input:not([type=hidden]), select, textarea"),
-          ].filter((e) => e.getBoundingClientRect().width > 0);
-          return {
-            etape,
-            h: Math.round(s.getBoundingClientRect().height),
-            champs: champs.length,
-          };
-        }, i + 1),
+    const trop: string[] = [];
+    const petites: string[] = [];
+    let vues = 0;
+    for (let k = 0; k < 30; k++) {
+      await page.waitForTimeout(350);
+      vues++;
+      const titre = await titreDeLaCarte();
+      const hauteur = await page.evaluate(
+        () => document.documentElement.scrollHeight,
       );
+      if (hauteur > ecran * 2)
+        trop.push(`${titre.slice(0, 40)} : ${hauteur} px`);
+      for (const c of await commandesTropPetites(page))
+        petites.push(`${titre.slice(0, 30)} → ${JSON.stringify(c)}`);
+      if (
+        await page.getByRole("button", { name: /Valider et simuler/ }).count()
+      )
+        break;
+      const passer = page.getByRole("button", { name: /^Non, / });
+      if (await passer.count()) {
+        await passer.first().click();
+        continue;
+      }
+      const texte = page.locator('textarea[name="justification"]');
+      if ((await texte.count()) && (await texte.isVisible()))
+        await texte.fill("Je vise le volume pour remplir l'atelier ce tour.");
+      await page
+        .getByRole("button", { name: /^Continuer/ })
+        .last()
+        .click();
     }
-    const trop = mesures.filter((m) => m.h > ecran * 1.5);
-    expect(
-      trop,
-      `étapes trop longues (écran de ${ecran} px) : ${JSON.stringify(mesures)}`,
-    ).toEqual([]);
-    for (const m of mesures)
-      expect(m.champs, `étape ${m.etape} sans champ`).toBeGreaterThan(0);
+    expect(vues, "le parcours n'atteint pas le récapitulatif").toBeGreaterThan(
+      8,
+    );
+    expect(trop, `cartes trop hautes : ${trop.join(" | ")}`).toEqual([]);
+    expect(petites, `commandes sous 44 px : ${petites.join(" | ")}`).toEqual(
+      [],
+    );
   });
 
-  it("le choix du fournisseur a son étape, et ses boutons y sont visibles", async () => {
-    const radios = page.locator('input[name="supplierChoice"]');
-    if ((await radios.count()) === 0) return; // le scénario de ce test n'en propose pas
-    const section = radios.first().locator("xpath=ancestor::*[@data-etape][1]");
-    const numero = Number(await section.getAttribute("data-etape"));
-    await page
-      .locator('form ol[aria-label="Étapes de décision"] li button')
-      .nth(numero)
-      .click();
-    await page.waitForTimeout(250);
-    for (let i = 0; i < (await radios.count()); i += 1) {
-      expect(
-        await radios.nth(i).isVisible(),
-        "un choix de fournisseur est masqué",
-      ).toBe(true);
+  it("une décision facultative se passe d'un toucher, ou s'ouvre", async () => {
+    await versLesDecisions();
+    await page.getByRole("button", { name: "Accepter", exact: true }).click();
+    for (let k = 0; k < 20; k++) {
+      await page.waitForTimeout(300);
+      if (/Faut-il financer/i.test(await titreDeLaCarte())) break;
+      const texte = page.locator('textarea[name="justification"]');
+      if ((await texte.count()) && (await texte.isVisible())) break;
+      const passer = page.getByRole("button", { name: /^Non, / });
+      if (await passer.count()) await passer.first().click();
+      else
+        await page
+          .getByRole("button", { name: /^Continuer/ })
+          .last()
+          .click();
     }
-    // Et l'étape de vente n'en porte plus aucun : le prix et le volume y restent.
+    expect(await titreDeLaCarte()).toMatch(/Faut-il financer/i);
+    // La porte dit ce qui se passe si l'on ne fait rien, et garde la dette sous les yeux.
     await page
-      .locator('form ol[aria-label="Étapes de décision"] li button')
+      .getByText(/rien ne change ce tour/)
+      .waitFor({ state: "visible" });
+    await page.getByRole("button", { name: /^Non, / }).waitFor();
+    await page.getByRole("button", { name: "Oui, je regarde" }).click();
+    await page.waitForTimeout(300);
+    // Ouverte, la carte montre ses champs : on les remplit ou on les laisse à zéro.
+    expect(
+      await page.locator("form input:visible, form select:visible").count(),
+    ).toBeGreaterThan(0);
+  });
+
+  it("le récapitulatif relit les choix, renvoie à la carte touchée, et propose de valider", async () => {
+    await versLesDecisions();
+    await page.getByRole("button", { name: "Accepter", exact: true }).click();
+    for (let k = 0; k < 30; k++) {
+      await page.waitForTimeout(300);
+      if (await page.getByText("Vos décisions du tour").count()) break;
+      const passer = page.getByRole("button", { name: /^Non, / });
+      if (await passer.count()) {
+        await passer.first().click();
+        continue;
+      }
+      const texte = page.locator('textarea[name="justification"]');
+      if ((await texte.count()) && (await texte.isVisible()))
+        await texte.fill("Je vise le volume pour remplir l'atelier ce tour.");
+      await page
+        .getByRole("button", { name: /^Continuer/ })
+        .last()
+        .click();
+    }
+    await page.getByText("Vos décisions du tour").waitFor({ state: "visible" });
+    await page.getByRole("button", { name: /Valider et simuler/ }).waitFor();
+    // La barre du haut ne compte pas la relecture comme une décision de plus.
+    await page
+      .getByText(/Récapitulatif/)
       .first()
-      .click();
-    await page.waitForTimeout(250);
-    expect(await radios.first().isVisible()).toBe(false);
-    expect(await page.locator('input[name="price"]').first().isVisible()).toBe(
-      true,
-    );
-  });
-
-  it("la dernière étape propose de valider, et les précédentes de passer à la suite", async () => {
-    const puces = page.locator(
-      'form ol[aria-label="Étapes de décision"] li button',
-    );
-    const total = await puces.count();
-    await puces.nth(total - 1).click();
-    await page.waitForTimeout(250);
-    expect(
-      await page.getByRole("button", { name: /Valider et simuler/ }).count(),
-    ).toBe(1);
-    expect(await page.getByRole("button", { name: /Suivant/ }).count()).toBe(0);
-    await puces.first().click();
-    await page.waitForTimeout(250);
-    expect(await page.getByRole("button", { name: /Suivant/ }).count()).toBe(1);
-    expect(
-      await page.getByRole("button", { name: /Valider et simuler/ }).count(),
-    ).toBe(0);
+      .waitFor({ state: "visible" });
+    expect(await page.getByText(/Décision 13 sur 12/).count()).toBe(0);
+    await page.getByRole("button", { name: /Prix de vente/ }).click();
+    await page.waitForTimeout(400);
+    expect(await titreDeLaCarte()).toMatch(/À quel prix/i);
   });
 
   it("l'apparence se choisit depuis le menu de la partie", async () => {
@@ -553,39 +491,6 @@ describe("pendant une partie", () => {
     expect(
       await page.getByRole("button", { name: "Thème sombre" }).isVisible(),
     ).toBe(false);
-  });
-
-  it("sur grand écran, la partie garde la barre du site et ni la barre du bas ni celle du haut", async () => {
-    const taille = page.viewportSize()!;
-    await page.setViewportSize({ width: 1280, height: 900 });
-    try {
-      await page.waitForTimeout(300);
-      expect(
-        await page
-          .getByRole("button", { name: "Menu de la partie" })
-          .isVisible(),
-      ).toBe(false);
-      expect(
-        await page
-          .locator('[role="tablist"] button[role="tab"]:visible')
-          .count(),
-      ).toBe(3);
-      const box = (await page
-        .locator('[role="tablist"] button[role="tab"]:visible')
-        .first()
-        .boundingBox())!;
-      expect(
-        box.y,
-        "les onglets du bas ne doivent pas s'afficher en bas sur grand écran",
-      ).toBeLessThan(450);
-      expect(
-        await page
-          .getByRole("navigation", { name: "Navigation principale" })
-          .isVisible(),
-      ).toBe(true);
-    } finally {
-      await page.setViewportSize(taille);
-    }
   });
 
   it("le texte de l'écran de jeu ne descend pas sous 14 px", async () => {
@@ -666,5 +571,24 @@ describe("sur ordinateur, ce qui est consulté reste à plat", () => {
     expect(await p.locator("summary", { hasText: "Comprendre" }).count()).toBe(
       0,
     );
+  });
+
+  it("la partie garde la barre du site, des onglets en haut, et aucune barre d'application", async () => {
+    expect(
+      await p.getByRole("button", { name: "Menu de la partie" }).isVisible(),
+    ).toBe(false);
+    expect(
+      await p
+        .getByRole("navigation", { name: "Navigation principale" })
+        .isVisible(),
+    ).toBe(true);
+    const onglets = p.locator('[role="tablist"] button[role="tab"]:visible');
+    expect(await onglets.count()).toBe(3);
+    const box = (await onglets.first().boundingBox())!;
+    expect(
+      box.y,
+      "les onglets ne se collent au bas qu'au téléphone",
+    ).toBeLessThan(450);
+    expect(await p.locator("form header").count()).toBe(0);
   });
 });
