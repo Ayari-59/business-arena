@@ -4,6 +4,7 @@ import { getGuestUserId } from "@/lib/guest";
 import { compter, formatEuro } from "@/lib/format";
 import { getGameView } from "@/services/game.service";
 import { getPlatformConfig } from "@/services/admin.service";
+import { estUnTelephone } from "@/lib/appareil";
 import { accentsDuSite, themeParDefaut } from "@/config/theme-du-site";
 import { BarreDeJeu } from "@/components/barre-de-jeu";
 import { getTeamSituations } from "@/services/pedagogy.service";
@@ -71,6 +72,9 @@ export default async function ArenaPage({
   const view = await getGameView(gameId, userId);
   if (!view) notFound();
   const configDuSite = await getPlatformConfig();
+  // Sur téléphone, ce qu'on consulte se range dans des tiroirs fermés (voir
+  // decision-context.tsx et aide-repliable.tsx) ; ce qui décide reste ouvert.
+  const telephone = await estUnTelephone();
   // Le code personnel, s'il en a un. En solo, personne à retrouver : la
   // partie n'appartient qu'à cet appareil et il n'y a pas d'équipe à rendre.
   const codeDeReprise = view.kind === "solo" ? null : await codeDeRepriseDuJoueur(gameId, userId);
@@ -172,6 +176,7 @@ export default async function ArenaPage({
         vocabulary={view.vocabulary}
         capacityFacts={view.capacityFacts}
         gamme={view.gamme}
+        repliable={telephone}
       />
     </section>
   ) : (
@@ -185,6 +190,7 @@ export default async function ArenaPage({
       vocabulary={view.vocabulary}
       capacityFacts={view.capacityFacts}
       gamme={view.gamme}
+      repliable={telephone}
     />
   );
 
@@ -963,6 +969,7 @@ export default async function ArenaPage({
                   </p>
                 </div>
                 <DecisionForm
+                  telephone={telephone}
                   gameId={view.gameId}
                   roundIndex={view.currentRound}
                   vocabulary={view.vocabulary}

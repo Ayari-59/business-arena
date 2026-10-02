@@ -132,3 +132,49 @@ describe("le geste d'une application", () => {
     }
   });
 });
+
+describe("les tiroirs de téléphone ne cachent pas ce qui décide", () => {
+  const FORMULAIRE = lire("src/components/decision-form.tsx");
+
+  it("une enveloppe « Aide » ne contient que du texte : aucun champ, choix ni case", () => {
+    // La règle du site pour tout repli : il range ce qu'on consulte, jamais ce qui
+    // décide. Un champ rangé dans un tiroir fermé serait une décision qu'on ne voit
+    // pas, et le tour partirait avec sa valeur proposée.
+    const blocs = [
+      ...FORMULAIRE.matchAll(/<Aide[^>]*>([\s\S]*?)<\/Aide>/g),
+    ].map((m) => m[1]!);
+    expect(
+      blocs.length,
+      "plus aucune aide repliable dans le formulaire",
+    ).toBeGreaterThanOrEqual(3);
+    for (const bloc of blocs) {
+      expect(bloc, bloc.slice(0, 80)).not.toMatch(
+        /<(input|select|textarea|button|Field|label)\b/,
+      );
+    }
+  });
+
+  it("le choix du fournisseur reste hors de toute enveloppe d'aide", () => {
+    // En mono-produit, ses boutons radio SONT la décision du tour.
+    const radios = FORMULAIRE.indexOf('name="supplierChoice"');
+    expect(radios).toBeGreaterThan(-1);
+    const avant = FORMULAIRE.slice(0, radios);
+    expect(avant.lastIndexOf("<Aide>")).toBeLessThanOrEqual(
+      avant.lastIndexOf("</Aide>"),
+    );
+  });
+
+  it("l'arène demande au serveur si l'on est sur téléphone, au lieu de le deviner au montage", () => {
+    const page = lire("src/app/arena/[gameId]/page.tsx");
+    expect(page).toContain("estUnTelephone");
+    expect(page).toMatch(/repliable=\{telephone\}/);
+    expect(page).toMatch(/telephone=\{telephone\}/);
+  });
+
+  it("les panneaux de chiffres se replient avec leur résumé, et l'enveloppe décorative disparaît", () => {
+    expect(lire("src/components/decision-context.tsx")).toContain("repliable");
+    expect(lire("src/components/courrier-du-tour.tsx")).toMatch(
+      /h-40 w-60 shrink-0 max-sm:hidden/,
+    );
+  });
+});

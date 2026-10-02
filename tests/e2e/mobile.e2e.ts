@@ -253,6 +253,45 @@ describe("pendant une partie", () => {
     );
   });
 
+  it("les panneaux de chiffres se rangent en tiroirs fermés, avec le chiffre utile dans le résumé", async () => {
+    // Ce sont des chiffres qu'on consulte : fermés, ils rendaient plus de la moitié
+    // de l'écran « Situation ». Le résumé garde ce qu'il faut pour décider.
+    for (const [titre, extrait] of [
+      ["Votre entreprise", /trésorerie/],
+      ["Le marché", /€/],
+    ] as const) {
+      const tiroir = page
+        .locator(`details:has(> summary:has-text("${titre}"))`)
+        .first();
+      await tiroir.waitFor({ state: "attached" });
+      expect(
+        await tiroir.evaluate((d) => (d as HTMLDetailsElement).open),
+        `${titre} devrait être fermé`,
+      ).toBe(false);
+      expect(await tiroir.locator("> summary").innerText()).toMatch(extrait);
+    }
+    // Un doigt l'ouvre, et le détail est là.
+    const entreprise = page
+      .locator('details:has(> summary:has-text("Votre entreprise"))')
+      .first();
+    await entreprise.locator("> summary").click();
+    await entreprise
+      .getByText("Charges de structure")
+      .waitFor({ state: "visible" });
+    await entreprise.locator("> summary").click();
+  });
+
+  it("l'étape « Situation » tient en moins de deux écrans et demi", async () => {
+    const hauteur = await page.evaluate(
+      () => document.documentElement.scrollHeight,
+    );
+    const ecran = page.viewportSize()!.height;
+    // Elle faisait 1 968 px, soit près de trois écrans.
+    expect(hauteur, `${hauteur} px pour un écran de ${ecran}`).toBeLessThan(
+      ecran * 2.5,
+    );
+  });
+
   it("les trois étapes sont des onglets collés au bas de l'écran, et le restent au défilement", async () => {
     const onglets = page.locator('[role="tablist"] button[role="tab"]:visible');
     expect(await onglets.count()).toBe(3);
@@ -358,6 +397,41 @@ describe("pendant une partie", () => {
     expect(plusBas.y).toBeGreaterThanOrEqual(0);
   });
 
+  it("à la dernière étape, l'enveloppe décorative et les textes d'aide ne gardent pas la place des champs", async () => {
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(300);
+    // L'enveloppe est un décor : elle n'est plus à l'écran, le bouton qui compte si.
+    const decor = page.locator("[aria-hidden='true'].relative.h-40.w-60");
+    if ((await decor.count()) > 0)
+      expect(await decor.first().isVisible()).toBe(false);
+    // L'aide est un tiroir « Comprendre » fermé : le texte est dans le document, pas à l'écran.
+    const aides = page.locator('details:has(> summary:has-text("Comprendre"))');
+    expect(await aides.count()).toBeGreaterThanOrEqual(1);
+    for (let i = 0; i < (await aides.count()); i += 1) {
+      expect(
+        await aides.nth(i).evaluate((d) => (d as HTMLDetailsElement).open),
+      ).toBe(false);
+    }
+  });
+
+  it("jamais une décision dans un tiroir fermé : le choix du fournisseur reste visible", async () => {
+    const radios = page.locator('input[name="supplierChoice"]');
+    if ((await radios.count()) === 0) return; // le scénario de ce test n'en propose pas
+    for (let i = 0; i < (await radios.count()); i += 1) {
+      const ferme = await radios.nth(i).evaluate((el) => {
+        for (let e = el.parentElement; e; e = e.parentElement) {
+          if (e.tagName === "DETAILS" && !(e as HTMLDetailsElement).open)
+            return true;
+        }
+        return false;
+      });
+      expect(
+        ferme,
+        "un choix de fournisseur est rangé dans un tiroir fermé",
+      ).toBe(false);
+    }
+  });
+
   it("l'apparence se choisit depuis le menu de la partie", async () => {
     await page.getByRole("button", { name: "Menu de la partie" }).click();
     await page
@@ -437,5 +511,52 @@ describe("pendant une partie", () => {
       fautifs,
       `textes sous 14 px (caractères par taille) : ${JSON.stringify(fautifs)}`,
     ).toEqual({});
+  });
+});
+
+describe("sur ordinateur, ce qui est consulté reste à plat", () => {
+  let ordi: BrowserContext;
+  let p: Page;
+  beforeAll(async () => {
+    ordi = await navigateur.newContext({
+      viewport: { width: 1280, height: 900 },
+      locale: "fr-FR",
+    });
+    p = await ordi.newPage();
+    await p.goto(`${BASE}/jouer`, { waitUntil: "domcontentloaded" });
+    await p.waitForLoadState("networkidle");
+    await p.getByRole("button", { name: /NOVA/ }).click();
+    await p.getByRole("button", { name: "Lancer la partie" }).click();
+    await p.waitForURL(/\/arena\/|trop=1/, { timeout: 60_000 });
+    if (p.url().includes("trop=1")) {
+      throw new Error(
+        "Plafond de parties par heure atteint sur cette base : attendre une heure, ou libérer le compteur (games.creator_ip).",
+      );
+    }
+    await p.waitForLoadState("networkidle");
+  }, 120_000);
+
+  it("les panneaux de chiffres sont des cartes ouvertes, pas des tiroirs", async () => {
+    await p
+      .getByRole("heading", { name: "Votre entreprise" })
+      .waitFor({ state: "visible" });
+    await p
+      .getByRole("heading", { name: "Le marché" })
+      .waitFor({ state: "visible" });
+    expect(await p.getByText("Charges de structure").first().isVisible()).toBe(
+      true,
+    );
+  });
+
+  it("aucun tiroir « Comprendre » : les textes d'aide restent en clair", async () => {
+    await p
+      .locator('[role="tablist"] button[role="tab"]:visible', {
+        hasText: "Décider",
+      })
+      .click();
+    await p.waitForTimeout(400);
+    expect(await p.locator("summary", { hasText: "Comprendre" }).count()).toBe(
+      0,
+    );
   });
 });

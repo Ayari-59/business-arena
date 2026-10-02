@@ -43,6 +43,7 @@ import { COMMUNICATION_AXIS_LABELS } from "@/engine/market/communication";
 import { EcheanceDuTour } from "@/components/echeance-du-tour";
 import { SimulationProgress } from "@/components/simulation-progress";
 import { NomReference } from "@/components/nom-reference";
+import { Aide, PanneauConsulte, TelephoneContexte } from "@/components/aide-repliable";
 import {
   cleBrouillon,
   ecrireBrouillon,
@@ -1043,19 +1044,21 @@ function GammeReference({
         );
       })}
 
-      <p className="text-sm leading-relaxed text-slate-400">
-        Capacité partagée : si la somme des volumes la dépasse, toutes les références sont
-        réduites dans la même proportion.
-        {avecFournisseurs
-          ? " Le façonnier choisi ne vaut que pour sa référence : son coût d'achat, sa qualité, son délai, son risque de rupture."
-          : ""}
-      </p>
-      <p className="text-sm leading-relaxed text-slate-400">
-        Chaque budget va à sa référence et se paie le tour même. Marketing : effet immédiat,
-        qui retombe si on cesse
-        {quality ? " ; qualité : la qualité perçue" : ""}
-        {avecRd ? " ; R&D : le niveau technique, avec retard" : ""}.
-      </p>
+      <Aide>
+        <p className="text-sm leading-relaxed text-slate-400">
+          Capacité partagée : si la somme des volumes la dépasse, toutes les références sont
+          réduites dans la même proportion.
+          {avecFournisseurs
+            ? " Le façonnier choisi ne vaut que pour sa référence : son coût d'achat, sa qualité, son délai, son risque de rupture."
+            : ""}
+        </p>
+        <p className="mt-2 text-sm leading-relaxed text-slate-400">
+          Chaque budget va à sa référence et se paie le tour même. Marketing : effet immédiat,
+          qui retombe si on cesse
+          {quality ? " ; qualité : la qualité perçue" : ""}
+          {avecRd ? " ; R&D : le niveau technique, avec retard" : ""}.
+        </p>
+      </Aide>
     </div>
   );
 }
@@ -1098,6 +1101,7 @@ export function DecisionForm({
   proposed,
   kind,
   alreadySubmitted,
+  telephone = false,
   insuranceOffer,
   enabled,
   distributableReserves,
@@ -1123,6 +1127,8 @@ export function DecisionForm({
   communicationOffer = null,
 }: {
   gameId: string;
+  /** Sur téléphone, les textes d'aide se rangent dans un tiroir (voir aide-repliable.tsx). */
+  telephone?: boolean;
   /** Levier communication du scénario (marque et axe) ; null sans levier. */
   communicationOffer?: GameView["communicationOffer"];
   /** Gamme du scénario joué (prix, volume et marketing par référence) ; null en mono-produit. */
@@ -1626,6 +1632,7 @@ export function DecisionForm({
   }, [alreadySubmitted, cle]);
 
   return (
+    <TelephoneContexte.Provider value={telephone}>
     <form
       ref={formRef}
       action={formAction}
@@ -1775,10 +1782,16 @@ export function DecisionForm({
         </Family>
       )}
       {capacityFacts ? (
-        <div className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2 sm:px-3.5 sm:py-2.5">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-            ⚙️ {v.capacityPanelTitle}
-          </p>
+        <PanneauConsulte
+          titre={`⚙️ ${v.capacityPanelTitle}`}
+          resume={`${Math.round(capacityFacts.availableMachineCapacity).toLocaleString("fr-FR")} ${v.perRoundLabel} · ${
+            capacityFacts.bottleneck === "labor"
+              ? v.laborLabel
+              : capacityFacts.bottleneck === "machine"
+                ? v.capacityBottleneckLabel
+                : "équilibré"
+          }`}
+        >
           {/*
             Deux colonnes à parts égales sur téléphone donnaient une grille
             illisible : « Jours-consultants disponibles » se coupait à gauche
@@ -1840,7 +1853,7 @@ export function DecisionForm({
           ) : capacityFacts.bottleneck === "machine" ? (
             <p className="mt-2 text-xs text-sky-300/80">{v.capacityBottleneckHint}</p>
           ) : null}
-        </div>
+        </PanneauConsulte>
       ) : null}
       {(() => {
         // Mono-produit : les fournisseurs du scénario, à choisir ici (radio),
@@ -1955,12 +1968,16 @@ export function DecisionForm({
                 </label>
               ))}
             </div>
-            <p className="mt-3 text-sm leading-relaxed text-slate-400">
-              Le prix d&apos;achat entre dans le coût variable : c&apos;est ce qui reste entre lui et
-              votre prix de vente qui fait la marge. Le bonus de qualité joue sur la qualité
-              perçue, le délai de règlement sur la trésorerie (BFR), le risque de rupture sur
-              ce que vous recevez. L&apos;assurance étendue couvre le litige fournisseur.
-            </p>
+            <div className="mt-3">
+              <Aide>
+                <p className="text-sm leading-relaxed text-slate-400">
+                  Le prix d&apos;achat entre dans le coût variable : c&apos;est ce qui reste entre lui et
+                  votre prix de vente qui fait la marge. Le bonus de qualité joue sur la qualité
+                  perçue, le délai de règlement sur la trésorerie (BFR), le risque de rupture sur
+                  ce que vous recevez. L&apos;assurance étendue couvre le litige fournisseur.
+                </p>
+              </Aide>
+            </div>
           </Family>
         );
       })()}
@@ -1975,11 +1992,13 @@ export function DecisionForm({
         hidden={courante !== idx("budgets")}
         className="space-y-3"
       >
-      <p className="text-sm leading-relaxed text-slate-400">
-        Faire venir les clients, tenir la qualité, entretenir votre
-        capacité{on.rd && rdOffer ? ", développer" : ""}
-        {communicationOffer ? ", bâtir votre marque" : ""}. Chaque budget se paie le tour même.
-      </p>
+      <Aide>
+        <p className="text-sm leading-relaxed text-slate-400">
+          Faire venir les clients, tenir la qualité, entretenir votre
+          capacité{on.rd && rdOffer ? ", développer" : ""}
+          {communicationOffer ? ", bâtir votre marque" : ""}. Chaque budget se paie le tour même.
+        </p>
+      </Aide>
       {gamme ? null : (
         // Les budgets du tour, au même endroit : marketing, qualité, maintenance
         // et R&D.
@@ -2637,5 +2656,6 @@ export function DecisionForm({
         </p>
       ) : null}
     </form>
+    </TelephoneContexte.Provider>
   );
 }

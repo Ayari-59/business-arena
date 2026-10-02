@@ -106,18 +106,50 @@ function Chiffre({
   );
 }
 
+/** Un panneau de paramètres : une carte à plat, ou un tiroir fermé sur téléphone. */
+function Panneau({
+  repliable,
+  titre,
+  resume,
+  children,
+}: {
+  repliable: boolean;
+  titre: string;
+  resume: string;
+  children: React.ReactNode;
+}) {
+  return repliable ? (
+    <Tiroir titre={titre} quoi={resume}>
+      {children}
+    </Tiroir>
+  ) : (
+    <div className="rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5">
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">{titre}</h3>
+      {children}
+    </div>
+  );
+}
+
 /** Les paramètres : ce que vaut l'entreprise, et le marché où elle vend. */
 export function ParametersPanels({
   intro,
   vocabulary,
   capacityFacts,
   gamme = null,
+  repliable = false,
 }: {
   intro: GameView["intro"];
   vocabulary: GameView["vocabulary"];
   capacityFacts: GameView["capacityFacts"];
   /** Gamme du scénario joué : les coûts se lisent alors référence par référence. */
   gamme?: GameView["gamme"];
+  /**
+   * Sur téléphone, chaque panneau se range dans un tiroir fermé dont le résumé
+   * garde le chiffre qui compte. Ce sont des chiffres qu'on CONSULTE, pas des
+   * champs qu'on remplit : les ranger ne cache aucune décision, et ils pesaient
+   * plus de la moitié de l'écran « Situation » (515 px sur 1 440).
+   */
+  repliable?: boolean;
 }) {
   const showShare = intro.segments.some((s) => s.yourShare !== null);
   // Le marché en un chiffre : ce qui s'achète en tout, et dans quelle fourchette
@@ -147,12 +179,17 @@ export function ParametersPanels({
   const disponibilite = capacityFacts?.availability ?? 1;
   const usee = disponibilite < 0.995;
 
+  // Le résumé d'un panneau replié : ce qu'il faut pour décider sans l'ouvrir.
+  const capaciteEnService = mainDoeuvreLimite && capacityFacts
+    ? capacityFacts.laborCapacity
+    : intro.capacity * disponibilite;
+  const resumeEntreprise = `${formatUnits(capaciteEnService)} ${vocabulary.perRoundLabel} · trésorerie ${formatEuro(intro.cash)}`;
+  const resumeMarche = `${formatUnits(marcheTotal)} · ${
+    prixMin === prixMax ? formatEuro(prixMin) : `${formatEuro(prixMin)} – ${formatEuro(prixMax)}`
+  }`;
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
-      <div className="rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-          Votre entreprise
-        </h3>
+    <div className={repliable ? "space-y-3" : "grid gap-4 lg:grid-cols-2"}>
+      <Panneau repliable={repliable} titre="Votre entreprise" resume={resumeEntreprise}>
         <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
           <Chiffre
             label={vocabulary.capacityLabel}
@@ -205,9 +242,9 @@ export function ParametersPanels({
             <span className="text-slate-300">{intro.competitors.join(", ")}</span>
           </p>
         ) : null}
-      </div>
+      </Panneau>
 
-      <div className="rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5">
+      <Panneau repliable={repliable} titre="Le marché" resume={resumeMarche}>
         {/*
           « Le marché », et non « Le marché EN FACE DE VOUS ». Deux raisons.
           L'image servait déjà deux lignes plus haut, pour les concurrents
@@ -221,9 +258,6 @@ export function ParametersPanels({
           qu'une part — c'est justement l'enjeu du tour. Le possessif de « Votre
           entreprise », en vis-à-vis, suffit à dire lequel des deux est à vous.
         */}
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-          Le marché
-        </h3>
         <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
           <Chiffre
             label="Marché total"
@@ -370,7 +404,7 @@ export function ParametersPanels({
           </div>
         </Tiroir>
         </div>
-      </div>
+      </Panneau>
     </div>
   );
 }

@@ -123,8 +123,10 @@ export function CourrierDuTour({
 
       {!ouvert ? (
         <div className="mt-4 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-          {/* la pile de plis, cachetés, posée en éventail */}
-          <div className="relative h-40 w-60 shrink-0" aria-hidden>
+          {/* la pile de plis, cachetés, posée en éventail. Décor pur : sur téléphone
+              elle prenait 176 px au-dessus du seul bouton qui compte, et elle
+              disparaît. */}
+          <div className="relative h-40 w-60 shrink-0 max-sm:hidden" aria-hidden>
             {[0, 1, 2].map((i) => (
               <span
                 key={i}
