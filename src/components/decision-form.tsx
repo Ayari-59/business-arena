@@ -4,6 +4,7 @@ import { bouton } from "@/components/bouton";
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { playRoundAction, type PlayRoundState } from "@/app/arena/[gameId]/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
+import { PHASES } from "@/config/phases-du-tour";
 import { sansMolette } from "@/components/sans-molette";
 import {
   coutDeLAffacturage,
@@ -2471,7 +2472,10 @@ export function DecisionForm({
         // UNE QUESTION EN TÊTE, comme un écran d'application : de quoi il s'agit, et
         // ce qu'on vous demande. Le rang est dans la barre de la partie.
         <header className="space-y-1.5 pb-2">
-          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-amber-300">
+          <p
+            className={`flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] ${PHASES.decision.texte}`}
+          >
+            <span aria-hidden className={`h-2.5 w-2.5 rounded-full ${PHASES.decision.fond}`} />
             {carteCourante.cle === "recap"
               ? "Dernière étape"
               : `Décision ${carteIdx + 1} sur ${cartes.length - 1}`}

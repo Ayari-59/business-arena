@@ -275,3 +275,26 @@ describe("les résultats d'un tour clos se lisent en cartes, le détail à la de
   });
 });
 
+describe("on sait toujours à quel temps du tour on est", () => {
+  it("cinq temps, chacun un nom et une teinte, écrits en toutes lettres", () => {
+    const phases = lire("src/config/phases-du-tour.ts");
+    for (const cle of ["resultats", "briefing", "analyse", "courrier", "decision"]) {
+      expect(phases, `phase « ${cle} »`).toContain(`${cle}: {`);
+    }
+    // Des classes entières : Tailwind ne lit pas une classe fabriquée par morceaux.
+    expect(phases).not.toMatch(/`(text|bg)-\$\{/);
+  });
+
+  it("la barre du haut est en segments, et le sous-titre prend la teinte du temps courant", () => {
+    const barre = lire("src/components/barre-de-jeu.tsx");
+    expect(barre).toContain("progression.segments.map");
+    expect(barre).toContain("PHASES[progression.phase].texte");
+  });
+
+  it("chaque carte du parcours porte l'amorce de son temps ; l'analyse et la décision, la leur, de même teinte", () => {
+    expect(lire("src/components/parcours-mobile.tsx")).toContain("PHASES[courante.phase].texte");
+    expect(lire("src/components/situation-panel.tsx")).toContain("PHASES.analyse.texte");
+    expect(lire("src/components/decision-form.tsx")).toContain("PHASES.decision.texte");
+  });
+});
+

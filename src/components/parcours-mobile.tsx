@@ -10,7 +10,8 @@ import {
   type ReactNode,
 } from "react";
 import { bouton } from "@/components/bouton";
-import { definirProgression } from "@/lib/progression-parcours";
+import { definirProgression, type SegmentDeProgression } from "@/lib/progression-parcours";
+import { PHASES, type PhaseDuTour } from "@/config/phases-du-tour";
 
 /**
  * LE TOUR, EN PARCOURS, SUR TÉLÉPHONE.
@@ -36,6 +37,10 @@ import { definirProgression } from "@/lib/progression-parcours";
 export interface CarteDuParcours {
   cle: string;
   noeud: ReactNode;
+  /** Le temps du tour auquel elle appartient : « briefing » par défaut. */
+  phase?: "resultats" | "briefing";
+  /** Un titre en tête de carte, sous l'amorce du temps du tour. */
+  titre?: string;
 }
 
 /** Les analyses du tour : leur contenu, et le poids qu'elles ont dans la barre de progression. */
@@ -71,20 +76,32 @@ export function ParcoursMobile({
 }) {
   const etapes = useMemo(() => {
     const liste: {
-      phase: "briefing" | "analyse" | "courrier" | "decision";
+      phase: PhaseDuTour;
       cle: string;
       noeud: ReactNode;
       rang: number;
       sur: number;
       poids: number;
-    }[] = briefing.map((c, i) => ({
-      phase: "briefing",
-      cle: c.cle,
-      noeud: c.noeud,
-      rang: i + 1,
-      sur: briefing.length,
-      poids: 1,
-    }));
+      titre?: string;
+    }[] = [];
+    // Le rang se compte DANS le temps du tour : « briefing 2 sur 5 », pas 2 sur les 8 cartes
+    // qui précèdent les décisions, résultats compris.
+    const sur: Record<string, number> = {};
+    for (const c of briefing) sur[c.phase ?? "briefing"] = (sur[c.phase ?? "briefing"] ?? 0) + 1;
+    const vues: Record<string, number> = {};
+    for (const c of briefing) {
+      const ph = c.phase ?? "briefing";
+      vues[ph] = (vues[ph] ?? 0) + 1;
+      liste.push({
+        phase: ph,
+        cle: c.cle,
+        noeud: c.noeud,
+        rang: vues[ph],
+        sur: sur[ph] ?? 1,
+        poids: 1,
+        ...(c.titre ? { titre: c.titre } : {}),
+      });
+    }
     for (const a of analyse)
       liste.push({
         phase: "analyse",
@@ -154,34 +171,51 @@ export function ParcoursMobile({
   const enRecapitulatif =
     courante.phase === "decision" && cartesDeDecision > 0 && decision.courante >= cartesDeDecision - 1;
   const decisionsTotal = Math.max(0, cartesDeDecision - 1);
-  const poids = etapes.map((e) =>
-    e.phase === "decision" ? Math.max(1, cartesDeDecision) : e.poids,
+  const poids = useMemo(
+    () => etapes.map((e) => (e.phase === "decision" ? Math.max(1, cartesDeDecision) : e.poids)),
+    [etapes, cartesDeDecision],
   );
   const total = poids.reduce((a, b) => a + b, 0);
   const avant = poids.slice(0, index).reduce((a, b) => a + b, 0);
   const dedans = courante.phase === "decision" ? decision.courante : 0;
   useEffect(() => {
-    const libelle = enRecapitulatif
-      ? "Récapitulatif"
-      : courante.phase === "briefing"
-        ? "Briefing"
-        : courante.phase === "analyse"
-          ? "Analyse"
-          : courante.phase === "courrier"
-            ? "Courrier"
-            : "Décision";
+    const libelle = enRecapitulatif ? "Récapitulatif" : PHASES[courante.phase].libelle;
     const rang =
-      courante.phase === "briefing"
-        ? `${courante.rang} sur ${courante.sur}`
+      courante.phase === "briefing" || courante.phase === "resultats"
+        ? courante.sur > 1
+          ? `${courante.rang} sur ${courante.sur}`
+          : ""
         : courante.phase === "decision" && decisionsTotal > 0 && !enRecapitulatif
           ? `${decision.courante + 1} sur ${decisionsTotal}`
           : "";
+    // La barre en segments : un par temps du tour, dans l'ordre, rempli jusqu'à où l'on en est.
+    const faites = avant + dedans + 1;
+    const segments: SegmentDeProgression[] = [];
+    let debut = 0;
+    etapes.forEach((e, i) => {
+      const p = poids[i] ?? 1;
+      const fait = Math.min(1, Math.max(0, (faites - debut) / p));
+      const dernier = segments[segments.length - 1];
+      if (dernier && dernier.phase === e.phase) {
+        // Même temps que la carte précédente : un seul segment, d'un poids cumulé.
+        const cumul = dernier.poids + p;
+        dernier.fait = (dernier.fait * dernier.poids + fait * p) / cumul;
+        dernier.poids = cumul;
+      } else {
+        segments.push({ phase: e.phase, poids: p, fait });
+      }
+      debut += p;
+    });
     definirProgression({
-      phase: libelle,
+      phase: courante.phase,
+      libelle,
       rang,
-      fraction: Math.min(1, (avant + dedans + 1) / total),
+      segments,
+      fraction: Math.min(1, faites / total),
     });
   }, [
+    etapes,
+    poids,
     courante.phase,
     courante.rang,
     courante.sur,
@@ -213,6 +247,29 @@ export function ParcoursMobile({
           key={courante.cle}
           className={courante.phase === "decision" ? "" : "motion-safe:animate-carte-entre"}
         >
+          {courante.phase === "resultats" ||
+          courante.phase === "briefing" ||
+          courante.phase === "courrier" ? (
+            <header className="space-y-2 pb-4">
+              {/* L'AMORCE DU TEMPS DU TOUR : son nom, sa teinte — la même que son segment de
+                  la barre du haut —, et sa place parmi ses cartes. C'est ce qui dit où l'on est. */}
+              <p
+                className={`flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] ${PHASES[courante.phase].texte}`}
+              >
+                <span
+                  aria-hidden
+                  className={`h-2.5 w-2.5 rounded-full ${PHASES[courante.phase].fond}`}
+                />
+                {PHASES[courante.phase].libelle}
+                {courante.sur > 1 ? ` · ${courante.rang} sur ${courante.sur}` : ""}
+              </p>
+              {courante.titre ? (
+                <h2 className="font-display text-[1.7rem] font-semibold leading-tight text-slate-50">
+                  {courante.titre}
+                </h2>
+              ) : null}
+            </header>
+          ) : null}
           {courante.noeud}
         </div>
       </div>

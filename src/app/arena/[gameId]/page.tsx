@@ -733,20 +733,17 @@ export default async function ArenaPage({
     ? [
         {
           cle: "resultats-verdict",
+          phase: "resultats",
+          titre: "Ce que ça a donné",
           noeud: (
             <section className="space-y-4">
-              <header className="space-y-2 pb-1">
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-amber-400">
-                  {periodLabel(view.roundDays, periodeRecente.round)}{" "}
-                  {view.kind === "solo" ? "simulé" : "clos"}
-                  {view.playerBpi !== null
-                    ? ` · ${moiAuClassement ? `#${moiAuClassement.rank}/${view.ranking.length} · ` : ""}IPG ${view.playerBpi.toFixed(0)}`
-                    : ""}
-                </p>
-                <h2 className="font-display text-[1.7rem] font-semibold leading-tight text-slate-50">
-                  Ce que ça a donné
-                </h2>
-              </header>
+              <p className="text-base text-slate-300">
+                {periodLabel(view.roundDays, periodeRecente.round)}{" "}
+                {view.kind === "solo" ? "simulé" : "clos"}
+                {view.playerBpi !== null
+                  ? ` · ${moiAuClassement ? `#${moiAuClassement.rank}/${view.ranking.length} · ` : ""}IPG ${view.playerBpi.toFixed(0)}`
+                  : ""}
+              </p>
               <PeriodDashboard
                 view={view}
                 period={periodeRecente}
@@ -759,10 +756,14 @@ export default async function ArenaPage({
         },
         {
           cle: "resultats-chiffres",
+          phase: "resultats",
+          titre: "Les chiffres du tour",
           noeud: <PeriodDashboard view={view} period={periodeRecente} standing partie="chiffres" />,
         },
         {
           cle: "resultats-evolution",
+          phase: "resultats",
+          titre: "L'évolution",
           noeud: (
             <div className="space-y-4">
               <PeriodDashboard view={view} period={periodeRecente} standing partie="evolution" />
@@ -820,6 +821,7 @@ export default async function ArenaPage({
         : null,
       {
         cle: "chiffres",
+        titre: "L'entreprise et son marché",
         noeud: (
           <div className="space-y-4">
             {chiffresSansDetail}
@@ -829,7 +831,9 @@ export default async function ArenaPage({
           </div>
         ),
       },
-      alertesPresentes ? { cle: "alertes", noeud: alertesSansSaison } : null,
+      alertesPresentes
+        ? { cle: "alertes", titre: "Ce qui a bougé", noeud: alertesSansSaison }
+        : null,
       dilemmeSection ? { cle: "arbitrage", noeud: dilemmeSection } : null,
     ] as (CarteDuParcours | null)[]
   ).filter((c): c is CarteDuParcours => c !== null);

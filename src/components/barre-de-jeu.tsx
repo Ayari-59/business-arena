@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { useProgression } from "@/lib/progression-parcours";
+import { PHASES } from "@/config/phases-du-tour";
 import type { CodeTheme } from "@/config/themes";
 
 /**
@@ -105,11 +106,20 @@ export function BarreDeJeu({
         <div className="min-w-0 flex-1 text-center leading-tight">
           <p className="truncate text-base font-bold text-slate-50">{nom}</p>
           <p className="truncate text-sm text-slate-400">
-            {termine
-              ? "Partie terminée"
-              : progression
-                ? `Tour ${tour} sur ${tours} · ${progression.phase}${progression.rang ? ` ${progression.rang}` : ""}`
-                : `Tour ${tour} sur ${tours} · en cours`}
+            {termine ? (
+              "Partie terminée"
+            ) : progression ? (
+              <>
+                Tour {tour} sur {tours} ·{" "}
+                {/* Le temps du tour, dans sa teinte : c'est ce qui dit où l'on en est. */}
+                <span className={`font-semibold ${PHASES[progression.phase].texte}`}>
+                  {progression.libelle}
+                  {progression.rang ? ` ${progression.rang}` : ""}
+                </span>
+              </>
+            ) : (
+              `Tour ${tour} sur ${tours} · en cours`
+            )}
           </p>
         </div>
         <button
@@ -136,7 +146,8 @@ export function BarreDeJeu({
         </button>
       </div>
 
-      {/* La barre de progression du tour : un trait de laiton qui avance. */}
+      {/* La barre du tour, en segments : un par temps (résultats, briefing, analyse, courrier,
+          décisions), chacun dans sa teinte, plus ou moins rempli. */}
       {progression ? (
         <div
           role="progressbar"
@@ -144,12 +155,20 @@ export function BarreDeJeu({
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={Math.round(progression.fraction * 100)}
-          className="h-1 bg-white/12"
+          className="flex h-1 gap-0.5"
         >
-          <div
-            className="h-1 rounded-r-full bg-amber-400 transition-[width] duration-300 motion-reduce:transition-none"
-            style={{ width: `${Math.round(progression.fraction * 100)}%` }}
-          />
+          {progression.segments.map((segment, i) => (
+            <div
+              key={i}
+              className="h-1 overflow-hidden rounded-full bg-white/12"
+              style={{ flexGrow: segment.poids, flexBasis: 0 }}
+            >
+              <div
+                className={`h-1 ${PHASES[segment.phase].fond} transition-[width] duration-300 motion-reduce:transition-none`}
+                style={{ width: `${Math.round(segment.fait * 100)}%` }}
+              />
+            </div>
+          ))}
         </div>
       ) : null}
 

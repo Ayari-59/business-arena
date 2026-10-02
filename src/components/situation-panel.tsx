@@ -13,6 +13,7 @@ import { estRendue, manques, messageIncomplet } from "@/config/situation-rendu";
 import type { SituationView } from "@/services/pedagogy.service";
 import type { SituationCategory } from "@/config/scenarios/situation-kit";
 import { Tiroir } from "@/components/tiroir";
+import { PHASES } from "@/config/phases-du-tour";
 
 const CATEGORY_LABELS: Record<SituationCategory, string> = {
   prise_de_poste: "Prise de poste",
@@ -446,7 +447,10 @@ export function AnalyseDuTour({
   return (
     <div className="space-y-4">
       <header className="space-y-2 pb-1">
-        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-amber-400">
+        <p
+          className={`flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] ${PHASES.analyse.texte}`}
+        >
+          <span aria-hidden className={`h-2.5 w-2.5 rounded-full ${PHASES.analyse.fond}`} />
           Analyse · {rendues} rendue{rendues > 1 ? "s" : ""} sur {situations.length}
         </p>
         <h2 className="font-display text-[1.7rem] font-semibold leading-tight text-slate-50">
