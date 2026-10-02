@@ -309,29 +309,6 @@ describe("pendant une partie", () => {
     expect(await avancement()).toBe(avant);
   });
 
-  it("ce qui est consulté se range en tiroirs fermés, qu'un doigt ouvre", async () => {
-    await versLaPremiereCarte();
-    // Parmi les cartes du briefing, l'une au moins porte un tiroir : fermé, il
-    // garde son titre et son résumé, et s'ouvre d'un toucher.
-    for (let k = 0; k < 6; k++) {
-      const resume = page.locator("details > summary:visible").first();
-      if (await resume.count()) {
-        const tiroir = resume.locator("..");
-        expect(
-          await tiroir.evaluate((d) => (d as HTMLDetailsElement).open),
-        ).toBe(false);
-        await resume.click();
-        expect(
-          await tiroir.evaluate((d) => (d as HTMLDetailsElement).open),
-        ).toBe(true);
-        return;
-      }
-      await suite().click();
-      await page.waitForTimeout(300);
-    }
-    throw new Error("aucune carte du briefing ne porte un tiroir");
-  });
-
   it("l'analyse se fait écran par écran : le contexte, le diagnostic, une question à la fois", async () => {
     await versLaPremiereCarte();
     for (let k = 0; k < 10; k++) {
@@ -385,24 +362,31 @@ describe("pendant une partie", () => {
     expect(await titreDeLaCarte()).toMatch(/Décision 1 sur/i);
   });
 
-  it("le prix a ses repères, ses boutons − et +, et sa marge en direct", async () => {
+  it("le prix a ses repères, un curseur, et sa marge en direct", async () => {
     await versLesDecisions();
     await page.getByRole("button", { name: "Accepter", exact: true }).click();
     await page.waitForTimeout(400);
     await page.getByText(/Prix usuels/).waitFor({ state: "visible" });
     await page.getByText(/Coût variable/).waitFor({ state: "visible" });
     const champ = page.locator('input[name="price"]:visible');
+    const curseur = page.locator('input[type="range"]:visible');
     const marge = page.getByText(/^Marge par/).locator("..");
     const avant = Number(await champ.inputValue());
     const margeAvant = await marge.innerText();
-    await page.getByRole("button", { name: /Augmenter/ }).click();
+    // Le curseur écrit dans la saisie, qui reste la source de la valeur envoyée.
+    const maxi = Number(await curseur.getAttribute("max"));
+    await curseur.fill(String(Math.round(maxi * 0.75)));
     await page.waitForTimeout(200);
     expect(Number(await champ.inputValue())).toBeGreaterThan(avant);
     expect(await marge.innerText(), "la marge ne suit pas le prix").not.toBe(
       margeAvant,
     );
-    await page.getByRole("button", { name: /Diminuer/ }).click();
-    expect(Number(await champ.inputValue())).toBe(avant);
+    // Et la saisie au clavier déplace le curseur.
+    await champ.fill("60");
+    await page.waitForTimeout(200);
+    expect(Number(await curseur.inputValue())).toBe(60);
+    // Plus de boutons − et +.
+    expect(await page.getByRole("button", { name: /Augmenter|Diminuer/ }).count()).toBe(0);
   });
 
   it("chaque carte de décision tient en deux écrans au plus, avec des commandes de 44 px", async () => {
@@ -427,11 +411,6 @@ describe("pendant une partie", () => {
         await page.getByRole("button", { name: /Valider et simuler/ }).count()
       )
         break;
-      const passer = page.getByRole("button", { name: /^Non, / });
-      if (await passer.count()) {
-        await passer.first().click();
-        continue;
-      }
       const texte = page.locator('textarea[name="justification"]');
       if ((await texte.count()) && (await texte.isVisible()))
         await texte.fill("Je vise le volume pour remplir l'atelier ce tour.");
@@ -449,7 +428,7 @@ describe("pendant une partie", () => {
     );
   });
 
-  it("une décision facultative se passe d'un toucher, ou s'ouvre", async () => {
+  it("les décisions dont on peut se passer montrent leurs champs d'emblée, sans question préalable", async () => {
     await versLesDecisions();
     await page.getByRole("button", { name: "Accepter", exact: true }).click();
     for (let k = 0; k < 20; k++) {
@@ -457,26 +436,33 @@ describe("pendant une partie", () => {
       if (/Faut-il financer/i.test(await titreDeLaCarte())) break;
       const texte = page.locator('textarea[name="justification"]');
       if ((await texte.count()) && (await texte.isVisible())) break;
-      const passer = page.getByRole("button", { name: /^Non, / });
-      if (await passer.count()) await passer.first().click();
-      else
-        await page
-          .getByRole("button", { name: /^Continuer/ })
-          .last()
-          .click();
+      await page.getByRole("button", { name: /^Continuer/ }).last().click();
     }
     expect(await titreDeLaCarte()).toMatch(/Faut-il financer/i);
-    // La porte dit ce qui se passe si l'on ne fait rien, et garde la dette sous les yeux.
-    await page
-      .getByText(/rien ne change ce tour/)
-      .waitFor({ state: "visible" });
-    await page.getByRole("button", { name: /^Non, / }).waitFor();
-    await page.getByRole("button", { name: "Oui, je regarde" }).click();
-    await page.waitForTimeout(300);
-    // Ouverte, la carte montre ses champs : on les remplit ou on les laisse à zéro.
+    // Pas de « regarder ou pas » : les champs sont là, à zéro, et Continuer avance.
+    expect(await page.getByRole("button", { name: /^Non, |Oui, je regarde/ }).count()).toBe(0);
     expect(
       await page.locator("form input:visible, form select:visible").count(),
     ).toBeGreaterThan(0);
+    await page.getByRole("button", { name: /^Continuer/ }).last().click();
+    await page.waitForTimeout(300);
+    expect(await titreDeLaCarte()).not.toMatch(/Faut-il financer/i);
+  });
+
+  it("dans le parcours, les tiroirs s'ouvrent : pas d'écran à moitié vide", async () => {
+    await versLaPremiereCarte();
+    for (let k = 0; k < 6; k++) {
+      const resume = page.locator("details > summary:visible").first();
+      if (await resume.count()) {
+        expect(
+          await resume.locator("..").evaluate((d) => (d as HTMLDetailsElement).open),
+        ).toBe(true);
+        return;
+      }
+      await suite().click();
+      await page.waitForTimeout(250);
+    }
+    throw new Error("aucune carte du briefing ne porte un tiroir");
   });
 
   it("le récapitulatif relit les choix, renvoie à la carte touchée, et propose de valider", async () => {
@@ -485,11 +471,6 @@ describe("pendant une partie", () => {
     for (let k = 0; k < 30; k++) {
       await page.waitForTimeout(300);
       if (await page.getByText("Vos décisions du tour").count()) break;
-      const passer = page.getByRole("button", { name: /^Non, / });
-      if (await passer.count()) {
-        await passer.first().click();
-        continue;
-      }
       const texte = page.locator('textarea[name="justification"]');
       if ((await texte.count()) && (await texte.isVisible()))
         await texte.fill("Je vise le volume pour remplir l'atelier ce tour.");

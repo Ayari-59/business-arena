@@ -345,6 +345,7 @@ function Field({
   hint,
   onValueChange,
   inputRef,
+  plage,
 }: {
   name: string;
   label: string;
@@ -358,66 +359,30 @@ function Field({
   onValueChange?: (valeur: number) => void;
   /** Donne la main sur la saisie : le curseur écrit dedans, elle reste la source. */
   inputRef?: RefObject<HTMLInputElement | null>;
+  /** La plage du curseur, sur téléphone ; à défaut, jusqu'au double de la valeur proposée. */
+  plage?: { min?: number; max: number };
 }) {
   const { actif: enCarte } = useModeCartes();
   const interne = useRef<HTMLInputElement>(null);
   const ref = inputRef ?? interne;
-  /**
-   * Un pas de bouton se lit à l'échelle du chiffre : un prix de 59 € bouge de 1, une
-   * production de 5 051 de 100. Le pas du champ (0,1 pour un prix) est celui de la
-   * saisie au clavier, trop fin pour un doigt.
-   */
-  const bouger = (sens: 1 | -1) => {
-    const champ = ref.current;
-    if (!champ) return;
-    const courant = Number(champ.value.replace(",", ".")) || 0;
-    const echelle = Math.pow(10, Math.max(0, Math.floor(Math.log10(Math.max(1, Math.abs(courant)))) - 1));
-    const suivant = Math.max(0, courant + sens * Math.max(step >= 1 ? step : 1, echelle));
-    const borne = max !== undefined ? Math.min(max, suivant) : suivant;
-    // Par le réglage natif, puis un évènement : c'est ce que React écoute, donc le
-    // brouillon, le récapitulatif et le suivi en direct voient le changement.
-    const ecrire = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
-    ecrire?.call(champ, String(Math.round(borne * 100) / 100));
-    champ.dispatchEvent(new Event("input", { bubbles: true }));
-  };
   if (enCarte) {
-    const bouton =
-      "grid h-14 w-14 shrink-0 place-items-center rounded-full border border-white/20 text-3xl text-slate-100 transition active:bg-white/10";
     return (
       <div className="block">
-        <div className="champ flex items-center justify-center gap-3 px-3 py-6">
-          <button type="button" aria-label={`Diminuer : ${label}`} onClick={() => bouger(-1)} className={bouton}>
-            −
-          </button>
-          <div className="min-w-0 flex-1 text-center">
-            <input
-              type="number"
-              onWheel={sansMolette}
-              inputMode="decimal"
-              aria-label={label}
-              {...(max !== undefined ? { max } : {})}
-              ref={ref}
-              name={name}
-              defaultValue={defaultValue}
-              step={step}
-              min={0}
-              required
-              onChange={
-                onValueChange
-                  ? (e) => {
-                      const v = Number(e.currentTarget.value.replace(",", "."));
-                      onValueChange(Number.isFinite(v) ? v : 0);
-                    }
-                  : undefined
-              }
-              className="w-full min-w-0 bg-transparent text-center text-5xl font-bold tabular-nums text-slate-50 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
-            />
-            <span className="mt-1 block text-base text-slate-400">{suffix}</span>
-          </div>
-          <button type="button" aria-label={`Augmenter : ${label}`} onClick={() => bouger(1)} className={bouton}>
-            +
-          </button>
-        </div>
+        <SaisieDeCarte
+          name={name}
+          label={label}
+          defaultValue={defaultValue}
+          step={step}
+          {...(max !== undefined ? { max } : {})}
+          suffixe={suffix}
+          {...(plage ? { plage } : {})}
+          // Un champ plafonné porte déjà son curseur (voir ChampPlafonne).
+          sansCurseur={inputRef !== undefined}
+          // Un champ seul sur sa carte se lit en grand ; plusieurs sur la même, plus serré.
+          grand={CHAMPS_SEULS_SUR_LEUR_CARTE.includes(name)}
+          inputRef={ref}
+          {...(onValueChange ? { onValueChange } : {})}
+        />
         {hint ? <span className="mt-2 block text-[13px] text-slate-400 max-sm:text-base">{hint}</span> : null}
       </div>
     );
@@ -479,6 +444,170 @@ export function cranDuCurseur(brut: number, maximum: number, pas: number): numbe
   if (!(maximum > 0)) return 0;
   if (brut >= maximum - pas / 2) return maximum;
   return Math.min(Math.max(0, Math.round(brut / pas) * pas), maximum);
+}
+
+/** Les champs qui ont leur carte à eux : le chiffre y est le seul sujet. */
+const CHAMPS_SEULS_SUR_LEUR_CARTE = [
+  "price",
+  "productionPlan",
+  "marketingBudget",
+  "qualityBudget",
+  "maintenanceBudget",
+];
+
+/**
+ * LA PLAGE D'UN CURSEUR QUAND PERSONNE NE LA DONNE : jusqu'au double de la valeur
+ * proposée, arrondi à un cran rond. Un champ à zéro (une embauche, un emprunt)
+ * n'a pas de point de départ à doubler : l'unité dit alors l'ordre de grandeur.
+ */
+export function plageAuto(valeur: number, suffixe: string): { min: number; max: number } {
+  if (valeur > 0) {
+    const brut = valeur * 2;
+    const pas = pasDuCurseur(brut);
+    return { min: 0, max: Math.ceil(brut / pas) * pas };
+  }
+  if (suffixe === "€") return { min: 0, max: 20000 };
+  return { min: 0, max: 10 };
+}
+
+/**
+ * LE CURSEUR D'UNE SAISIE, SUR TÉLÉPHONE. Un doigt règle un montant d'un geste, là
+ * où des boutons − et + l'auraient fait cran par cran. La saisie au clavier reste
+ * au-dessus : c'est elle qui porte la valeur et le `name`, le curseur ne fait que
+ * l'écrire — par le même chemin que le brouillon à la restauration — et la suit
+ * quand elle change (le brouillon, une frappe).
+ */
+function CurseurDeSaisie({
+  champ,
+  label,
+  min,
+  max,
+  suffixe,
+  valeurInitiale,
+}: {
+  champ: RefObject<HTMLInputElement | null>;
+  label: string;
+  min: number;
+  max: number;
+  suffixe: string;
+  valeurInitiale: number;
+}) {
+  const [valeur, setValeur] = useState(valeurInitiale);
+  useEffect(() => {
+    const el = champ.current;
+    if (!el) return;
+    const suivre = () => setValeur(Number(el.value.replace(",", ".")) || 0);
+    el.addEventListener("input", suivre);
+    return () => el.removeEventListener("input", suivre);
+  }, [champ]);
+  const etendue = Math.max(1, max - min);
+  const pas = pasDuCurseur(etendue);
+  return (
+    <div className="mt-4">
+      <input
+        type="range"
+        onWheel={sansMolette}
+        aria-label={`${label} : curseur`}
+        min={min}
+        max={max}
+        step="any"
+        value={Math.min(Math.max(valeur, min), max)}
+        onChange={(e) => {
+          const cran = min + cranDuCurseur(Number(e.currentTarget.value) - min, etendue, pas);
+          if (champ.current) poserValeur(champ.current, String(Math.round(cran * 100) / 100));
+        }}
+        className="curseur accent-amber-400"
+        // 44 px : sous le pouce, le trait de 24 px se manque. (Hors classe : la règle
+        // de `.curseur` n'est pas dans une couche et l'emporterait sur un utilitaire.)
+        style={{ height: "2.75rem" }}
+      />
+      <span className="mt-1 flex justify-between gap-2 text-base text-slate-400 tabular-nums">
+        <span>
+          {min.toLocaleString("fr-FR")} {suffixe}
+        </span>
+        <span>
+          {max.toLocaleString("fr-FR")} {suffixe}
+        </span>
+      </span>
+    </div>
+  );
+}
+
+/**
+ * Une saisie chiffrée en grand, avec son curseur : la forme d'un champ de décision
+ * sur une carte (téléphone). Utilisée par `Field` et par les cellules de la gamme.
+ */
+function SaisieDeCarte({
+  name,
+  label,
+  defaultValue,
+  step,
+  max,
+  suffixe,
+  plage,
+  sansCurseur = false,
+  obligatoire = true,
+  inputRef,
+  onValueChange,
+  grand = true,
+}: {
+  name: string;
+  label: string;
+  defaultValue: number;
+  step: number;
+  max?: number;
+  suffixe: string;
+  plage?: { min?: number; max: number };
+  sansCurseur?: boolean;
+  obligatoire?: boolean;
+  inputRef?: RefObject<HTMLInputElement | null>;
+  onValueChange?: (valeur: number) => void;
+  grand?: boolean;
+}) {
+  const interne = useRef<HTMLInputElement>(null);
+  const ref = inputRef ?? interne;
+  const auto = plageAuto(defaultValue, suffixe);
+  const borneMin = plage?.min ?? 0;
+  const borneMax = plage?.max ?? max ?? auto.max;
+  return (
+    <div className="block">
+      <div className={`champ px-4 text-center ${grand ? "py-5" : "py-3"}`}>
+        <input
+          type="number"
+          onWheel={sansMolette}
+          inputMode="decimal"
+          aria-label={label}
+          {...(max !== undefined ? { max } : {})}
+          ref={ref}
+          name={name}
+          defaultValue={defaultValue}
+          step={step}
+          min={0}
+          required={obligatoire}
+          onChange={
+            onValueChange
+              ? (e) => {
+                  const v = Number(e.currentTarget.value.replace(",", "."));
+                  onValueChange(Number.isFinite(v) ? v : 0);
+                }
+              : undefined
+          }
+          className={`w-full min-w-0 bg-transparent text-center font-bold tabular-nums text-slate-50 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none ${grand ? "text-5xl" : "text-3xl"}`}
+        />
+        <span className="mt-1 block text-base text-slate-400">{suffixe}</span>
+      </div>
+      {sansCurseur ? null : (
+        <CurseurDeSaisie
+          champ={ref}
+          label={label}
+          min={borneMin}
+          max={Math.max(borneMax, borneMin + 1)}
+          suffixe={suffixe}
+          valeurInitiale={defaultValue}
+        />
+      )}
+    </div>
+  );
 }
 
 /**
@@ -806,7 +935,21 @@ function GammeReference({
     suffixe: string,
     pas = 1,
     onChange?: (v: number) => void,
-  ) => (
+  ) =>
+    enCartes ? (
+      <SaisieDeCarte
+        name={productFieldName(p.code, nom)}
+        label={`${label} · ${p.name}`}
+        defaultValue={valeur}
+        step={pas}
+        suffixe={suffixe}
+        obligatoire={visible(p.code)}
+        grand={false}
+        // Le prix se règle autour de ce que paient les clients ; le reste, autour de la valeur proposée.
+        {...(nom === "price" ? { plage: { min: 0, max: Math.ceil((p.refPrice * 2.2) / 5) * 5 } } : {})}
+        {...(onChange ? { onValueChange: onChange } : {})}
+      />
+    ) : (
     <span className={`flex items-center gap-1.5 champ ${enCartes ? "px-4 py-3" : "px-2 py-1.5"}`}>
       <input
         type="number"
@@ -822,7 +965,7 @@ function GammeReference({
       />
       <span className={`shrink-0 text-slate-400 ${enCartes ? "text-base" : "text-xs"}`}>{suffixe}</span>
     </span>
-  );
+    );
 
   /**
    * Les lignes de la matrice, dans l'ordre du raisonnement. Une ligne absente
@@ -1273,7 +1416,12 @@ export function DecisionForm({
    * Ce qui éclaire le prix sur sa carte : la fourchette de ce que paient les clients,
    * et le coût d'une unité (absent en gamme, où chaque référence a le sien).
    */
-  reperes?: { prixUsuels: string | null; coutVariable: number | null } | null;
+  reperes?: {
+    prixUsuels: string | null;
+    coutVariable: number | null;
+    /** La plage du curseur de prix : de la moitié du plus bas prix usuel à près du double du plus haut. */
+    plagePrix?: { min: number; max: number };
+  } | null;
   /** Levier communication du scénario (marque et axe) ; null sans levier. */
   communicationOffer?: GameView["communicationOffer"];
   /** Gamme du scénario joué (prix, volume et marketing par référence) ; null en mono-produit. */
@@ -1530,7 +1678,6 @@ export function DecisionForm({
   const [donneesRecap, setDonneesRecap] = useState<FormData | null>(null);
   const [commandeAcceptee, setCommandeAcceptee] = useState<boolean | null>(null);
   const [prixSaisi, setPrixSaisi] = useState<number | null>(null);
-  const [ouvertes, setOuvertes] = useState<ReadonlySet<string>>(() => new Set());
   const relireLEngagement = () => {
     const f = formRef.current;
     if (!f) return;
@@ -1875,11 +2022,6 @@ export function DecisionForm({
           ? [
               {
                 cle: "rh",
-                facultative: {
-                  passer: "Non, rien à changer",
-                  ouvrir: "Oui, je regarde",
-                  aide: "Embauches, départs, formation, salaires : vous pouvez laisser votre équipe telle qu'elle est ce tour.",
-                },
                 etape: "equipe",
                 nom: "Équipe",
                 question: "Que décidez-vous pour votre équipe ?",
@@ -1892,11 +2034,6 @@ export function DecisionForm({
           ? [
               {
                 cle: "rse",
-                facultative: {
-                  passer: "Non, pas ce tour",
-                  ouvrir: "Oui, je regarde",
-                  aide: "Un budget RSE coûte maintenant et rapporte plus tard. Sans réponse, rien ne change ce tour.",
-                },
                 etape: "equipe",
                 nom: "RSE",
                 question: "Quel engagement RSE ?",
@@ -1908,11 +2045,6 @@ export function DecisionForm({
           ? [
               {
                 cle: "financement",
-                facultative: {
-                  passer: "Non, aucun besoin",
-                  ouvrir: "Oui, je regarde",
-                  aide: "Emprunter, augmenter le capital ou investir dans des machines. Sans réponse, rien ne change ce tour.",
-                },
                 etape: "financer",
                 nom: "Financement",
                 question: "Faut-il financer ce tour ?",
@@ -1933,11 +2065,6 @@ export function DecisionForm({
           ? [
               {
                 cle: "dividende",
-                facultative: {
-                  passer: "Non, aucun dividende",
-                  ouvrir: "Oui, je regarde",
-                  aide: "Verser une part des bénéfices aux associés. Sans réponse, rien n'est distribué.",
-                },
                 etape: "tresorerie",
                 nom: "Dividende",
                 question: "Quel dividende versez-vous ?",
@@ -1949,11 +2076,6 @@ export function DecisionForm({
           ? [
               {
                 cle: "mobilisation",
-                facultative: {
-                  passer: "Non, pas de mobilisation",
-                  ouvrir: "Oui, je regarde",
-                  aide: "Avancer de l'argent sur vos créances clients, par escompte ou affacturage. Sans réponse, rien n'est mobilisé.",
-                },
                 etape: "tresorerie",
                 nom: "Trésorerie",
                 question: "Mobilisez-vous vos créances clients ?",
@@ -1986,11 +2108,6 @@ export function DecisionForm({
           ? [
               {
                 cle: "etudes",
-                facultative: {
-                  passer: "Non, aucune étude",
-                  ouvrir: "Oui, je regarde",
-                  aide: "Acheter de l'information livrée avec les résultats du tour. Sans réponse, vous décidez sans.",
-                },
                 etape: "prevoir",
                 nom: "Études",
                 question: "Achetez-vous des études ?",
@@ -2017,14 +2134,6 @@ export function DecisionForm({
   const carteIdx = Math.min(carte, Math.max(0, cartes.length - 1));
   const carteCourante = modeCartes ? cartes[carteIdx] : undefined;
   const derniere = modeCartes ? carteCourante?.cle === "recap" : courante === total - 1;
-  // Les cartes facultatives dont le joueur n'a pas encore dit « oui » : leurs champs
-  // restent masqués, et le pied propose de passer ou d'ouvrir.
-  const fermees = new Set(
-    cartes.filter((c) => c.facultative && !ouvertes.has(c.cle)).map((c) => c.cle),
-  );
-  const porte = carteCourante?.facultative && fermees.has(carteCourante.cle)
-    ? carteCourante.facultative
-    : null;
   const masquee = (cle: string) =>
     modeCartes ? carteCourante?.etape !== cle : courante !== idx(cle);
 
@@ -2269,7 +2378,7 @@ export function DecisionForm({
   return (
     <TelephoneContexte.Provider value={telephone}>
     <CartesContexte.Provider
-      value={{ actif: modeCartes, courante: carteCourante?.cle ?? "", fermees }}
+      value={{ actif: modeCartes, courante: carteCourante?.cle ?? "" }}
     >
     <form
       ref={formRef}
@@ -2327,9 +2436,6 @@ export function DecisionForm({
           <h2 className="font-display text-[1.7rem] font-semibold leading-tight text-slate-50">
             {carteCourante.question}
           </h2>
-          {porte ? (
-            <p className="pt-1 text-base leading-relaxed text-slate-300">{porte.aide}</p>
-          ) : null}
         </header>
       ) : null}
       <ol
@@ -2456,6 +2562,7 @@ export function DecisionForm({
               ) : null}
               <Field name="price" label={v.priceLabel} defaultValue={defaults.price} step={0.1}
                 suffix={`€/${v.unit}`} onValueChange={setPrixSaisi}
+                {...(reperes?.plagePrix ? { plage: reperes.plagePrix } : {})}
                 hint="Attention aux seuils psychologiques…" />
               {modeCartes && reperes && reperes.coutVariable !== null ? (
                 <p className="mt-3 flex items-baseline justify-between border-t border-white/10 px-1 pt-3 text-base text-slate-300">
@@ -2747,7 +2854,7 @@ export function DecisionForm({
         className="space-y-3"
       >
       {on.finance && debtSchedule && debtSchedule.outstanding > 0.5 ? (
-        <Carte cle="financement" memeFermee>
+        <Carte cle="financement">
         <p className="rounded-lg border border-amber-400/20 bg-amber-950/20 px-3 py-2 text-xs text-amber-200">
           🏦 Échéance d&apos;emprunt du tour :{" "}
           <strong>{Math.round(debtSchedule.nextMandatory).toLocaleString("fr-FR")} €</strong>{" "}
@@ -3250,7 +3357,7 @@ export function DecisionForm({
               aria-label="Précédent"
               className="order-1 min-h-11 shrink-0 rounded-lg border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:text-slate-100 disabled:cursor-not-allowed disabled:opacity-30"
             >
-              {porte ? "←" : "← Précédent"}
+              ← Précédent
             </button>
             <span className="order-2 hidden shrink-0 text-xs tabular-nums text-slate-400 sm:mr-auto sm:block">
               Étape {courante + 1} / {total}
@@ -3275,28 +3382,6 @@ export function DecisionForm({
                       ? "Mettre à jour mes décisions validées"
                       : "Valider les décisions de l'équipe"}
               </button>
-            ) : porte ? (
-              // UN LEVIER DONT ON PEUT SE PASSER : on demande d'abord si on en a
-              // besoin. « Passer » garde les valeurs proposées et avance ; « Oui »
-              // ouvre les champs.
-              <div key="porte" className="order-3 flex flex-1 gap-2.5">
-                <button
-                  type="button"
-                  onClick={carteSuivante}
-                  className={`${bouton({ taille: "l" })} min-h-12 flex-1`}
-                >
-                  {porte.passer}
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setOuvertes((o) => new Set(o).add(carteCourante!.cle))
-                  }
-                  className={`${bouton({ variante: "secondaire", taille: "l" })} min-h-12 flex-1`}
-                >
-                  {porte.ouvrir}
-                </button>
-              </div>
             ) : modeCartes && carteCourante?.cle === "commande" ? (
               // UNE QUESTION, DEUX RÉPONSES : la réponse fait avancer. La case à
               // cocher du formulaire reste, masquée, et c'est elle qui part.

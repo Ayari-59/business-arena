@@ -819,6 +819,21 @@ export default async function ArenaPage({
                   : `${formatEuro(bas)} – ${formatEuro(haut)}`;
               })(),
               coutVariable: view.gamme ? null : view.intro.variableCostPerUnit,
+              // Le curseur de prix court de la moitié du plus bas prix usuel à
+              // près du double du plus haut : assez large pour essayer, pas au point
+              // de rendre un euro introuvable.
+              ...(view.intro.segments.length > 0
+                ? {
+                    plagePrix: {
+                      min: Math.floor(
+                        Math.min(...view.intro.segments.map((seg) => seg.refPrice)) / 2,
+                      ),
+                      max: Math.ceil(
+                        (Math.max(...view.intro.segments.map((seg) => seg.refPrice)) * 1.8) / 5,
+                      ) * 5,
+                    },
+                  }
+                : {}),
             }
           : null
       }

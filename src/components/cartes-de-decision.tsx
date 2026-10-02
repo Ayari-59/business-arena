@@ -25,36 +25,21 @@ export interface DefCarte {
   question: string;
   /** Ce que le joueur a répondu, lu sur le formulaire. Absent : pas de ligne au récapitulatif. */
   resume?: (donnees: FormData) => string;
-  /**
-   * Un levier dont on peut se passer : la carte pose d'abord la question (« en
-   * avez-vous besoin ? ») et n'ouvre ses champs que sur un « oui ». Sans cela, le
-   * parcours ferait traverser dix écrans de champs à zéro.
-   */
-  facultative?: { passer: string; ouvrir: string; aide: string };
 }
 
 export interface ContexteDesCartes {
   actif: boolean;
   courante: string;
-  /** Les cartes facultatives dont les champs ne sont pas encore ouverts. */
-  fermees: ReadonlySet<string>;
 }
 
-const AUCUNE: ReadonlySet<string> = new Set();
 export const CartesContexte = createContext<ContexteDesCartes>({
   actif: false,
   courante: "",
-  fermees: AUCUNE,
 });
 
-/** Un bloc se montre sur sa carte, sauf si cette carte attend encore le « oui ». */
-export function estMontre(
-  contexte: ContexteDesCartes,
-  cles: string[],
-  memeFermee = false,
-): boolean {
-  if (!cles.includes(contexte.courante)) return false;
-  return memeFermee || !contexte.fermees.has(contexte.courante);
+/** Un bloc se montre sur sa carte, et sur elle seule. */
+export function estMontre(contexte: ContexteDesCartes, cles: string[]): boolean {
+  return cles.includes(contexte.courante);
 }
 
 export function useModeCartes(): ContexteDesCartes {
@@ -66,25 +51,12 @@ export function useModeCartes(): ContexteDesCartes {
  * masqués : leurs champs partent avec le formulaire, et le navigateur peut les
  * valider.
  */
-export function Carte({
-  cle,
-  memeFermee = false,
-  children,
-}: {
-  cle: string | string[];
-  /** Reste visible quand la carte facultative n'est pas encore ouverte (le contexte qui éclaire la question). */
-  memeFermee?: boolean;
-  children: ReactNode;
-}) {
+export function Carte({ cle, children }: { cle: string | string[]; children: ReactNode }) {
   const contexte = useModeCartes();
   if (!contexte.actif) return <>{children}</>;
   const cles = Array.isArray(cle) ? cle : [cle];
   return (
-    <div
-      data-carte={cles.join(" ")}
-      hidden={!estMontre(contexte, cles, memeFermee)}
-      className="col-span-full"
-    >
+    <div data-carte={cles.join(" ")} hidden={!estMontre(contexte, cles)} className="col-span-full">
       {children}
     </div>
   );

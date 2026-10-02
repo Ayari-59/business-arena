@@ -1,4 +1,7 @@
+"use client";
+
 import { Icone, type NomDIcone } from "@/components/icone";
+import { useParcours } from "@/components/parcours-mobile";
 
 /**
  * Un tiroir : un titre, ce qu'il cache, et son contenu replié.
@@ -56,9 +59,13 @@ export function Tiroir({
   ouvert?: boolean;
   children: React.ReactNode;
 }) {
+  // DANS LE PARCOURS DU TÉLÉPHONE, chaque carte a son écran à elle : replier ce qu'elle
+  // contient laissait un écran à moitié vide et une information à deux touchers. Le
+  // tiroir s'y ouvre ; on peut toujours le refermer.
+  const enParcours = useParcours() !== null;
   return (
     <details
-      open={ouvert}
+      open={ouvert || enParcours}
       className="group rounded-lg border border-dashed border-white/15 bg-slate-950/60 open:border-solid open:bg-slate-950"
     >
       {/*
