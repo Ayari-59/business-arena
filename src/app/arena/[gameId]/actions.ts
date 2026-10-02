@@ -29,7 +29,11 @@ import {
   submitTeamDecisions,
 } from "@/services/game.service";
 import { submitDiagnosis, submitQuiz, unlockHint } from "@/services/pedagogy.service";
-import { retakeSituation } from "@/services/debrief.service";
+import {
+  answerFormatOfInstance,
+  resolveOpenAnswers,
+  retakeSituation,
+} from "@/services/debrief.service";
 import { manques, messageIncomplet } from "@/config/situation-rendu";
 
 export interface PlayRoundState {
@@ -259,6 +263,17 @@ export async function unlockHintAction(
   return { error: null };
 }
 
+/** Les réponses écrites d'un formulaire en questions ouvertes : `open_<question>` → texte. */
+function textesOuverts(formData: FormData): Record<string, string> {
+  const textes: Record<string, string> = {};
+  for (const [cle, valeur] of formData.entries()) {
+    if (cle.startsWith("open_") && typeof valeur === "string") {
+      textes[cle.slice("open_".length)] = valeur;
+    }
+  }
+  return textes;
+}
+
 /**
  * Rend la situation d'un coup : diagnostic ET modèle, ou rien (vague 1, P6).
  * Le formulaire grise son bouton tant qu'une moitié manque ; ici on refuse
@@ -288,9 +303,30 @@ export async function submitSituationAction(
       reponses[key.slice("quiz_".length)] = value;
     }
   }
-  const m = manques({ options, questions, reponses });
-  if (m.length > 0) return { error: messageIncomplet(m) };
   try {
+    // QUESTIONS OUVERTES : le format se lit sur la partie, pas sur le formulaire. Les textes
+    // sont ramenés aux options de la situation, puis tout suit le chemin du QCM.
+    if ((await answerFormatOfInstance(instanceId, userId)) === "open") {
+      const ouvert = await resolveOpenAnswers({
+        instanceId,
+        userId,
+        freeText,
+        texts: textesOuverts(formData),
+      });
+      if (ouvert.manques.length > 0) return { error: messageIncomplet(ouvert.manques) };
+      await submitDiagnosis({ instanceId, userId, selectedOptionIds: ouvert.options, freeText });
+      if (ouvert.questions.length > 0)
+        await submitQuiz({
+          instanceId,
+          userId,
+          answers: ouvert.answers,
+          texts: ouvert.texts,
+        });
+      revalidatePath(`/arena/${gameId}`);
+      return { error: null };
+    }
+    const m = manques({ options, questions, reponses });
+    if (m.length > 0) return { error: messageIncomplet(m) };
     await submitDiagnosis({ instanceId, userId, selectedOptionIds: options, freeText });
     if (questions.length > 0) await submitQuiz({ instanceId, userId, answers: reponses });
   } catch (error) {
@@ -324,9 +360,28 @@ export async function retakeSituationAction(
       reponses[key.slice("quiz_".length)] = value;
     }
   }
-  const m = manques({ options, questions, reponses });
-  if (m.length > 0) return { error: messageIncomplet(m) };
   try {
+    if ((await answerFormatOfInstance(instanceId, userId)) === "open") {
+      const ouvert = await resolveOpenAnswers({
+        instanceId,
+        userId,
+        freeText,
+        texts: textesOuverts(formData),
+      });
+      if (ouvert.manques.length > 0) return { error: messageIncomplet(ouvert.manques) };
+      await retakeSituation({
+        instanceId,
+        userId,
+        selectedOptionIds: ouvert.options,
+        freeText,
+        answers: ouvert.answers,
+        texts: ouvert.texts,
+      });
+      revalidatePath(`/arena/${gameId}`);
+      return { error: null };
+    }
+    const m = manques({ options, questions, reponses });
+    if (m.length > 0) return { error: messageIncomplet(m) };
     await retakeSituation({ instanceId, userId, selectedOptionIds: options, freeText, answers: reponses });
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Erreur." };

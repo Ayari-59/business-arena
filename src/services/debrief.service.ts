@@ -10,7 +10,15 @@ import {
   type DecisionLever,
   type QuizQuestionDef,
 } from "@/config/scenarios/situation-kit";
-import { presetFromProfile, quizModeFromProfile, type QuizMode } from "@/config/difficulty";
+import {
+  answerFormatFromProfile,
+  presetFromProfile,
+  quizModeFromProfile,
+  type AnswerFormat,
+  type QuizMode,
+} from "@/config/difficulty";
+import { estUneReponse, optionLaPlusProche, optionsReconnues } from "@/pedagogy/reponse-ouverte";
+import type { Manque } from "@/config/situation-rendu";
 import { evaluateDiagnosis, evaluateQuiz } from "@/pedagogy/evaluation";
 import { nextUnlockableLevel } from "@/pedagogy/hints";
 import type { ConsequenceFact, InterpretationFact, TriggerFact } from "@/pedagogy/detection";
@@ -50,6 +58,8 @@ export async function retakeSituation(args: {
   selectedOptionIds: string[];
   freeText?: string;
   answers: Record<string, string>;
+  /** Réponses ouvertes, quand la partie est en questions ouvertes : conservées telles quelles. */
+  texts?: Record<string, string>;
 }): Promise<{ finalScore: number }> {
   const { instance, def, game } = await loadInstanceForUser(args.instanceId, args.userId);
   const kind = (game?.difficultyProfile as { kind?: string } | null)?.kind;
@@ -90,10 +100,72 @@ export async function retakeSituation(args: {
         finalScore,
         retaken: true,
       },
-      quiz: hasQuizQuestions ? { answers: cleanAnswers, score: quizScore ?? 0 } : instance.quiz,
+      quiz: hasQuizQuestions
+        ? {
+            answers: cleanAnswers,
+            score: quizScore ?? 0,
+            ...(args.texts && Object.keys(args.texts).length > 0 ? { texts: args.texts } : {}),
+          }
+        : instance.quiz,
     })
     .where(eq(situationInstances.id, args.instanceId));
   return { finalScore };
+}
+
+/**
+ * LE FORMAT DANS LEQUEL CETTE SITUATION SE RÉPOND : lu sur la partie, jamais sur le formulaire
+ * (un formulaire forgé ne choisit pas son barème).
+ */
+export async function answerFormatOfInstance(
+  instanceId: string,
+  userId: string,
+): Promise<AnswerFormat> {
+  const { game } = await loadInstanceForUser(instanceId, userId);
+  return answerFormatFromProfile(game?.difficultyProfile);
+}
+
+/**
+ * RÉPONSES OUVERTES → OPTIONS NOTABLES.
+ *
+ * En questions ouvertes, l'élève écrit son diagnostic et, pour chaque question posée (le
+ * modèle d'analyse, les connaissances), sa réponse. Les textes sont ramenés aux options de la
+ * situation par leurs mots (voir `pedagogy/reponse-ouverte`) ; le reste du rendu — score,
+ * débriefing, maîtrise — suit alors le chemin du QCM. Ce qui manque se dit comme au QCM :
+ * « il manque le diagnostic et le modèle ».
+ */
+export async function resolveOpenAnswers(args: {
+  instanceId: string;
+  userId: string;
+  freeText: string;
+  texts: Record<string, string>;
+}): Promise<{
+  options: string[];
+  answers: Record<string, string>;
+  texts: Record<string, string>;
+  questions: string[];
+  manques: Manque[];
+}> {
+  const { def, game } = await loadInstanceForUser(args.instanceId, args.userId);
+  const asked = askedQuestions(def, quizModeFromProfile(game?.difficultyProfile), modelCtxOf(game));
+  const manques: Manque[] = [];
+  if (!estUneReponse(args.freeText)) manques.push("le diagnostic");
+  if (asked.some((q) => !estUneReponse(args.texts[q.id] ?? ""))) manques.push("le modèle");
+  const answers: Record<string, string> = {};
+  const texts: Record<string, string> = {};
+  for (const q of asked) {
+    const texte = (args.texts[q.id] ?? "").trim();
+    if (!texte) continue;
+    texts[q.id] = texte;
+    const option = optionLaPlusProche(texte, q.options);
+    if (option) answers[q.id] = option;
+  }
+  return {
+    options: optionsReconnues(args.freeText, def.diagnosticOptions),
+    answers,
+    texts,
+    questions: asked.map((q) => q.id),
+    manques,
+  };
 }
 
 /** Règle la politique des situations manquées d'une partie (V1-6, jsonb, sans migration). */
@@ -181,6 +253,10 @@ export interface SituationView {
   quizQuestions: { id: string; prompt: string; options: { id: string; label: string }[] }[];
   /** Réponses déjà validées par l'équipe (null tant que le QCM n'est pas soumis). */
   quizAnswers: Record<string, string> | null;
+  /** Comment cette situation se répond : en cochant (QCM) ou en écrivant (questions ouvertes). */
+  answerFormat: AnswerFormat;
+  /** En questions ouvertes : ce que l'équipe a écrit, question par question (null sinon). */
+  quizTexts: Record<string, string> | null;
   unlockedHints: { level: number; text: string; costRatio: number }[];
   nextHint: { level: number; costRatio: number } | null;
   /**
@@ -256,6 +332,7 @@ export function toView(
   quizMode: QuizMode = "full",
   hintCap: { cap: number; reason: string } = { cap: 5, reason: "" },
   modelCtx?: ModelCtx,
+  answerFormat: AnswerFormat = "qcm",
 ): SituationView {
   const asked = askedQuestions(def, quizMode, modelCtx);
   const modelAsked = asked.some((q) => q.id === MODEL_QUESTION_ID);
@@ -263,7 +340,11 @@ export function toView(
   const diagnosis = instance.diagnosis as
     | (SituationView["diagnosis"] & { retaken?: boolean })
     | null;
-  const quizStored = instance.quiz as { answers?: Record<string, string>; score?: number } | null;
+  const quizStored = instance.quiz as {
+    answers?: Record<string, string>;
+    score?: number;
+    texts?: Record<string, string>;
+  } | null;
   // Rendue = l'équipe a soumis son diagnostic. Une situation débriefée sans
   // diagnostic est « manquée » (V1-6) : consultable, score 0.
   const rendered = Array.isArray(diagnosis?.selected);
@@ -290,6 +371,8 @@ export function toView(
       options: q.options.map(({ id, label }) => ({ id, label })), // sans les crédits
     })),
     quizAnswers: quizStored?.answers ?? null,
+    answerFormat,
+    quizTexts: quizStored?.texts ?? null,
     unlockedHints: def.hints
       .filter((h) => levels.includes(h.level))
       .map((h) => ({ level: h.level, text: h.text, costRatio: h.costRatio })),

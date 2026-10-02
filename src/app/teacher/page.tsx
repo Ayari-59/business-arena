@@ -13,7 +13,13 @@ import {
 } from "./actions";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { compter, jourDeCreation } from "@/lib/format";
-import { DEFAULT_QUIZ_MODE, DIFFICULTY_PRESETS, QUIZ_MODES } from "@/config/difficulty";
+import {
+  ANSWER_FORMATS,
+  DEFAULT_ANSWER_FORMAT,
+  DEFAULT_QUIZ_MODE,
+  DIFFICULTY_PRESETS,
+  QUIZ_MODES,
+} from "@/config/difficulty";
 import {
   DEFAULT_SCENARIO_CODE,
   SCENARIO_CHOICES,
@@ -439,6 +445,28 @@ export default async function TeacherDashboard({
                   </span>
                 </label>
               ))}
+            </div>
+            <div className="mt-3 border-t border-white/5 pt-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                ✍️ Format des réponses
+              </p>
+              <div className="mt-1 space-y-2">
+                {ANSWER_FORMATS.map((f) => (
+                  <label key={f.code} className="flex items-start gap-3">
+                    <input
+                      type="radio"
+                      name="answerFormat"
+                      value={f.code}
+                      defaultChecked={f.code === DEFAULT_ANSWER_FORMAT}
+                      className="mt-0.5 h-4 w-4 accent-amber-400"
+                    />
+                    <span>
+                      <span className="text-sm font-medium text-slate-200">{f.name}</span>
+                      <span className="mt-0.5 block text-xs text-slate-400">{f.help}</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
             </div>
             <p className="mt-2 text-sm leading-relaxed text-slate-400">
               Le réglage se modifie ensuite à tout moment depuis la partie. Les situations déjà

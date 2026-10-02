@@ -10,6 +10,7 @@ import {
 } from "@/app/arena/[gameId]/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import { estRendue, manques, messageIncomplet } from "@/config/situation-rendu";
+import { estUneReponse } from "@/pedagogy/reponse-ouverte";
 import type { SituationView } from "@/services/pedagogy.service";
 import type { SituationCategory } from "@/config/scenarios/situation-kit";
 import { Tiroir } from "@/components/tiroir";
@@ -58,6 +59,8 @@ interface BrouillonLocal {
   options: string[];
   freeText: string;
   reponses: Record<string, string>;
+  /** Questions ouvertes : ce qu'on a déjà écrit, question par question. */
+  textes: Record<string, string>;
 }
 
 /**
@@ -113,6 +116,9 @@ export function SituationCard({
   const [reponses, setReponses] = useState<Record<string, string>>(
     situation.quizAnswers ?? {},
   );
+  // QUESTIONS OUVERTES : l'enseignant a choisi que l'élève écrive au lieu de cocher.
+  const ouvert = situation.answerFormat === "open";
+  const [textes, setTextes] = useState<Record<string, string>>(situation.quizTexts ?? {});
 
   useEffect(() => {
     if (rendue) return;
@@ -128,6 +134,7 @@ export function SituationCard({
         setFreeText(b.freeText);
       if (!quizDone && b.reponses && typeof b.reponses === "object")
         setReponses(b.reponses);
+      if (!quizDone && b.textes && typeof b.textes === "object") setTextes(b.textes);
     } catch {
       // stockage indisponible : le brouillon reste en mémoire
     }
@@ -136,7 +143,7 @@ export function SituationCard({
   useEffect(() => {
     if (rendue) return;
     try {
-      const b: BrouillonLocal = { options, freeText, reponses };
+      const b: BrouillonLocal = { options, freeText, reponses, textes };
       window.localStorage.setItem(
         cleBrouillon(situation.instanceId),
         JSON.stringify(b),
@@ -144,13 +151,23 @@ export function SituationCard({
     } catch {
       // idem
     }
-  }, [situation.instanceId, rendue, options, freeText, reponses]);
+  }, [situation.instanceId, rendue, options, freeText, reponses, textes]);
 
-  const manquants = manques({
-    options,
-    questions: questionsARendre.map((q) => q.id),
-    reponses,
-  });
+  // En questions ouvertes, « répondu » veut dire « a écrit une vraie phrase » : le serveur dit
+  // la même chose (voir `resolveOpenAnswers`), pour que le bouton grisé et le refus concordent.
+  const manquants = ouvert
+    ? manques({
+        options: estUneReponse(freeText) ? ["texte"] : [],
+        questions: questionsARendre.map((q) => q.id),
+        reponses: Object.fromEntries(
+          questionsARendre.map((q) => [q.id, estUneReponse(textes[q.id] ?? "") ? "texte" : ""]),
+        ),
+      })
+    : manques({
+        options,
+        questions: questionsARendre.map((q) => q.id),
+        reponses,
+      });
   const complet = manquants.length === 0;
 
   const basculerOption = (id: string, coche: boolean) =>
@@ -297,6 +314,24 @@ export function SituationCard({
               {/* Les cases forment un groupe : fieldset + legend le disent au
                   lecteur d'écran, qui annonce alors « Quel est le problème
                   principal ? » avant d'égrener les options. */}
+              {ouvert ? (
+                // QUESTION OUVERTE : un texte, à la place des cases. Le serveur le ramène aux
+                // options de la situation par ses mots ; l'enseignant le relit tel quel.
+                <label className="mt-1 block">
+                  <span className="block text-xs text-slate-400">
+                    Quel est le problème principal ? Écrivez-le avec vos mots.
+                  </span>
+                  <textarea
+                    name="freeText"
+                    rows={4}
+                    value={freeText}
+                    onChange={(e) => setFreeText(e.target.value)}
+                    placeholder="Le problème principal est…"
+                    className="mt-2 w-full champ px-3 py-2 text-sm text-slate-100 outline-none"
+                  />
+                </label>
+              ) : (
+                <>
               <fieldset className="mt-1 min-w-0 border-0 p-0">
                 <legend className="text-xs text-slate-400">
                   Quel est le problème principal ?
@@ -331,6 +366,8 @@ export function SituationCard({
                 placeholder="Votre analyse du problème en quelques mots…"
                 className="mt-2 w-full champ px-3 py-2 text-sm text-slate-100 outline-none"
               />
+                </>
+              )}
             </section>
 
             {/* 2. Questions : connaissances et/ou modèle d'analyse */}
@@ -348,36 +385,57 @@ export function SituationCard({
                   </p>
                 ) : (
                   <div className="mt-2 space-y-4">
-                    {situation.quizQuestions.map((question) => (
-                      <fieldset key={question.id}>
-                        <legend className="text-sm font-medium text-slate-200">
-                          {question.prompt}
-                        </legend>
-                        <div className="mt-1.5 space-y-1.5">
-                          {question.options.map((option) => (
-                            <label
-                              key={option.id}
-                              className="flex items-start gap-2 text-sm text-slate-300"
-                            >
-                              <input
-                                type="radio"
-                                name={`quiz_${question.id}`}
-                                value={option.id}
-                                checked={reponses[question.id] === option.id}
-                                onChange={() =>
-                                  setReponses((prec) => ({
-                                    ...prec,
-                                    [question.id]: option.id,
-                                  }))
-                                }
-                                className="mt-1 accent-amber-400"
-                              />
-                              <span>{option.label}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </fieldset>
-                    ))}
+                    {situation.quizQuestions.map((question) =>
+                      ouvert ? (
+                        // QUESTION OUVERTE : la même question, sans les propositions. Les
+                        // options servent au serveur à reconnaître ce qui est écrit, pas à
+                        // être montrées.
+                        <label key={question.id} className="block">
+                          <span className="text-sm font-medium text-slate-200">
+                            {question.prompt}
+                          </span>
+                          <textarea
+                            name={`open_${question.id}`}
+                            rows={3}
+                            value={textes[question.id] ?? ""}
+                            onChange={(e) =>
+                              setTextes((prec) => ({ ...prec, [question.id]: e.target.value }))
+                            }
+                            placeholder="Je mobilise…, parce que…"
+                            className="mt-1.5 w-full champ px-3 py-2 text-sm text-slate-100 outline-none"
+                          />
+                        </label>
+                      ) : (
+                        <fieldset key={question.id}>
+                          <legend className="text-sm font-medium text-slate-200">
+                            {question.prompt}
+                          </legend>
+                          <div className="mt-1.5 space-y-1.5">
+                            {question.options.map((option) => (
+                              <label
+                                key={option.id}
+                                className="flex items-start gap-2 text-sm text-slate-300"
+                              >
+                                <input
+                                  type="radio"
+                                  name={`quiz_${question.id}`}
+                                  value={option.id}
+                                  checked={reponses[question.id] === option.id}
+                                  onChange={() =>
+                                    setReponses((prec) => ({
+                                      ...prec,
+                                      [question.id]: option.id,
+                                    }))
+                                  }
+                                  className="mt-1 accent-amber-400"
+                                />
+                                <span>{option.label}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </fieldset>
+                      ),
+                    )}
                   </div>
                 )}
               </section>
@@ -552,6 +610,19 @@ export function SituationDebrief({
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
             Diagnostic
           </p>
+          {/* QUESTIONS OUVERTES : le texte de l'équipe, tel quel, avant la correction. Celle-ci
+              le ramène aux propositions par ses mots : approximative, et dite telle. */}
+          {situation.answerFormat === "open" && situation.diagnosis?.freeText ? (
+            <>
+              <p className="mt-1 whitespace-pre-wrap rounded-lg border border-white/5 bg-slate-950 px-3 py-2 text-slate-200">
+                {situation.diagnosis.freeText}
+              </p>
+              <p className="mt-1.5 text-sm leading-relaxed text-slate-400">
+                Correction automatique par mots-clés, donc approximative : ce que votre texte a dit
+                est marqué ci-dessous. Votre enseignant lit votre texte lui-même.
+              </p>
+            </>
+          ) : null}
           <ul className="mt-1 space-y-1">
             {situation.diagnosticOptions.map((option) => {
               const correct = debrief.correctOptionIds.includes(option.id);
@@ -602,6 +673,11 @@ export function SituationDebrief({
                     className="rounded-lg border border-white/5 bg-slate-950 px-3 py-2"
                   >
                     <p className="text-slate-300">{question.prompt}</p>
+                    {situation.answerFormat === "open" && situation.quizTexts?.[question.id] ? (
+                      <p className="mt-1 whitespace-pre-wrap text-slate-200">
+                        {situation.quizTexts[question.id]}
+                      </p>
+                    ) : null}
                     <p
                       className={`mt-1 ${
                         credit >= 1
@@ -751,11 +827,21 @@ function SituationRetake({
   const [options, setOptions] = useState<string[]>([]);
   const [freeText, setFreeText] = useState("");
   const [reponses, setReponses] = useState<Record<string, string>>({});
-  const manquants = manques({
-    options,
-    questions: questions.map((q) => q.id),
-    reponses,
-  });
+  const ouvert = situation.answerFormat === "open";
+  const [textes, setTextes] = useState<Record<string, string>>({});
+  const manquants = ouvert
+    ? manques({
+        options: estUneReponse(freeText) ? ["texte"] : [],
+        questions: questions.map((q) => q.id),
+        reponses: Object.fromEntries(
+          questions.map((q) => [q.id, estUneReponse(textes[q.id] ?? "") ? "texte" : ""]),
+        ),
+      })
+    : manques({
+        options,
+        questions: questions.map((q) => q.id),
+        reponses,
+      });
   const complet = manquants.length === 0;
 
   return (
@@ -772,6 +858,21 @@ function SituationRetake({
         name="questions"
         value={questions.map((q) => q.id).join(",")}
       />
+      {ouvert ? (
+        <label className="block">
+          <span className="block text-xs text-slate-400">
+            Votre diagnostic : quel est le problème principal ? Écrivez-le avec vos mots.
+          </span>
+          <textarea
+            name="freeText"
+            rows={4}
+            value={freeText}
+            onChange={(e) => setFreeText(e.target.value)}
+            placeholder="Le problème principal est…"
+            className="mt-1 w-full champ px-3 py-2 text-sm text-slate-100 outline-none [--focus-champ:var(--color-sky-400)]"
+          />
+        </label>
+      ) : (
       <div className="space-y-1.5">
         <fieldset className="min-w-0 space-y-1.5 border-0 p-0">
           <legend className="text-xs text-slate-400">Votre diagnostic</legend>
@@ -808,7 +909,23 @@ function SituationRetake({
           className="mt-1 w-full champ px-3 py-2 text-sm text-slate-100 outline-none [--focus-champ:var(--color-sky-400)]"
         />
       </div>
-      {questions.map((question) => (
+      )}
+      {questions.map((question) =>
+        ouvert ? (
+          <label key={question.id} className="block">
+            <span className="text-sm font-medium text-slate-200">{question.prompt}</span>
+            <textarea
+              name={`open_${question.id}`}
+              rows={3}
+              value={textes[question.id] ?? ""}
+              onChange={(e) =>
+                setTextes((prec) => ({ ...prec, [question.id]: e.target.value }))
+              }
+              placeholder="Je mobilise…, parce que…"
+              className="mt-1.5 w-full champ px-3 py-2 text-sm text-slate-100 outline-none [--focus-champ:var(--color-sky-400)]"
+            />
+          </label>
+        ) : (
         <fieldset key={question.id}>
           <legend className="text-sm font-medium text-slate-200">
             {question.prompt}
@@ -837,7 +954,8 @@ function SituationRetake({
             ))}
           </div>
         </fieldset>
-      ))}
+      ),
+      )}
       <ErrorBox error={state.error} />
       <GuardError message={rendu.guardError} />
       <button

@@ -175,6 +175,42 @@ export const QUIZ_MODES: readonly { code: QuizMode; name: string; help: string }
 ];
 
 /**
+ * LE FORMAT DES RÉPONSES : QCM, OU QUESTIONS OUVERTES.
+ *
+ * Le diagnostic et le modèle d'analyse se répondent d'ordinaire en cochant : des cases
+ * pour le diagnostic, un choix pour le modèle. Un enseignant peut vouloir une partie sans
+ * QCM, où l'élève écrit avec ses mots. Le texte est alors ramené aux options de la
+ * situation par les mots qu'il emploie (voir `pedagogy/reponse-ouverte`), de sorte que
+ * le score, le débriefing et la maîtrise suivent le chemin d'avant. Cette correction est
+ * approximative : l'enseignant relit les textes, conservés tels quels.
+ *
+ * Le réglage est indépendant du mode des questions (`QuizMode`) : il dit COMMENT on
+ * répond à ce qui est posé, pas CE QUI est posé.
+ */
+export type AnswerFormat = "qcm" | "open";
+
+export const DEFAULT_ANSWER_FORMAT: AnswerFormat = "qcm";
+
+export const ANSWER_FORMATS: readonly { code: AnswerFormat; name: string; help: string }[] = [
+  {
+    code: "qcm",
+    name: "QCM",
+    help: "Cases à cocher pour le diagnostic, un choix parmi des propositions pour le modèle d'analyse.",
+  },
+  {
+    code: "open",
+    name: "Questions ouvertes",
+    help: "L'élève écrit son diagnostic et le modèle qu'il mobilise, avec ses mots. Corrigé par mots-clés, donc approximativement : vous relisez les textes dans la partie.",
+  },
+];
+
+/** Réglage d'une partie ; absent (parties d'avant ce réglage) = QCM, comme à l'époque. */
+export function answerFormatFromProfile(profile: unknown): AnswerFormat {
+  const p = profile as { answerFormat?: unknown } | null;
+  return p?.answerFormat === "open" ? "open" : "qcm";
+}
+
+/**
  * Réglage d'une partie. Deux replis, dans cet ordre :
  * `quizMode` explicite, puis l'ancien drapeau booléen des parties créées avant
  * ce réglage (absent = tout servi, comme à l'époque).

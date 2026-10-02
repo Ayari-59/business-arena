@@ -200,6 +200,8 @@ export async function submitQuiz(args: {
   instanceId: string;
   userId: string;
   answers: Record<string, string>;
+  /** En questions ouvertes : les textes écrits, conservés tels quels à côté des options retenues. */
+  texts?: Record<string, string>;
 }): Promise<{ score: number }> {
   const { instance, def, game } = await loadInstanceForUser(args.instanceId, args.userId);
   if (instance.status === "debriefed") throw new Error("Cette situation est déjà débriefée");
@@ -219,7 +221,11 @@ export async function submitQuiz(args: {
   await db
     .update(situationInstances)
     .set({
-      quiz: { answers, score },
+      quiz: {
+        answers,
+        score,
+        ...(args.texts && Object.keys(args.texts).length > 0 ? { texts: args.texts } : {}),
+      },
       status: "answered",
       answeredAt: new Date(),
     })

@@ -20,6 +20,8 @@ import {
   presetFromProfile,
   quizModeFromProfile,
   type QuizMode,
+  type AnswerFormat,
+  answerFormatFromProfile,
 } from "@/config/difficulty";
 import { pseudoAffichable } from "@/config/invite";
 import { champsOuverts, signesDeCadrage, signesDeSituation } from "@/config/duree-du-tour";
@@ -538,6 +540,27 @@ export async function setQuizMode(args: {
 }
 
 /**
+ * Règle le format des réponses (QCM ou questions ouvertes). Même place que le mode des
+ * questions : le profil de difficulté (jsonb), sans migration. Les situations déjà
+ * rendues gardent ce qu'elles ont rendu ; les suivantes se répondent dans le nouveau format.
+ */
+export async function setAnswerFormat(args: {
+  gameId: string;
+  teacherId: string;
+  format: AnswerFormat;
+}): Promise<void> {
+  const game = (await db.select().from(games).where(eq(games.id, args.gameId)))[0];
+  if (!game || game.createdBy !== args.teacherId) {
+    throw new Error("Partie introuvable");
+  }
+  const profile = (game.difficultyProfile as Record<string, unknown> | null) ?? {};
+  await db
+    .update(games)
+    .set({ difficultyProfile: { ...profile, answerFormat: args.format } })
+    .where(eq(games.id, args.gameId));
+}
+
+/**
  * RANGER UNE PARTIE, ET LA RESSORTIR.
  *
  * En fin d'année, la liste d'un enseignant porte toutes les parties de
@@ -698,6 +721,8 @@ export interface TeacherGameView {
   scenarioEventCodes: string[];
   /** Questions posées dans les situations de cette partie. */
   quizMode: QuizMode;
+  /** Comment on y répond : en cochant, ou en écrivant. */
+  answerFormat: AnswerFormat;
   /** Politique des situations manquées (consultation seule / rattrapage 50 %). */
   missedPolicy: MissedSituationPolicy;
   /**
@@ -846,6 +871,7 @@ export async function getTeacherGameView(
       (game.scenarioSnapshot as { events?: { code: string }[] }).events ?? []
     ).map((e) => e.code),
     quizMode: quizModeFromProfile(game.difficultyProfile),
+    answerFormat: answerFormatFromProfile(game.difficultyProfile),
     missedPolicy: missedSituationPolicyFromProfile(
       game.difficultyProfile,
       (game.difficultyProfile as { kind?: string } | null)?.kind,

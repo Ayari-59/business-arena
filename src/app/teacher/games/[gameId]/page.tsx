@@ -10,8 +10,8 @@ import { compositionDesEquipes } from "@/services/affectation.service";
 import { getGameGradeSheet, getTeacherPedagogyView } from "@/services/pedagogy.service";
 import { compter, formatEuro } from "@/lib/format";
 import { periodLabel } from "@/config/scenarios/periodicity";
-import { setMissedPolicyAction, setQuizModeAction } from "../../actions";
-import { QUIZ_MODES } from "@/config/difficulty";
+import { setAnswerFormatAction, setMissedPolicyAction, setQuizModeAction } from "../../actions";
+import { ANSWER_FORMATS, QUIZ_MODES } from "@/config/difficulty";
 import { estParDefaut } from "@/config/decision-source";
 import { MISSED_POLICY_LABELS, MISSED_POLICY_HELP } from "@/config/missed-situation";
 import { CompositionEquipes } from "@/components/composition-equipes";
@@ -750,6 +750,42 @@ export default async function TeacherGamePage({
                       {m.name}
                     </span>
                     <span className="mt-1 block text-xs text-slate-400">{m.help}</span>
+                  </SubmitButton>
+                </GuardedForm>
+              );
+            })}
+          </div>
+          {/* Le format des réponses : cocher, ou écrire. Indépendant du mode ci-dessus. */}
+          <p className="mt-4 text-xs font-medium uppercase tracking-wide text-slate-400">
+            ✍️ Format des réponses
+          </p>
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            {ANSWER_FORMATS.map((f) => {
+              const active = f.code === view.answerFormat;
+              return (
+                <GuardedForm
+                  key={f.code}
+                  action={setAnswerFormatAction.bind(null, view.gameId)}
+                  label="format des réponses"
+                >
+                  <input type="hidden" name="format" value={f.code} />
+                  <SubmitButton
+                    disabled={active}
+                    className={`h-full w-full rounded-lg border px-3 py-3 text-left transition ${
+                      active
+                        ? "cursor-default border-amber-400/60 bg-amber-400/10"
+                        : "border-white/10 bg-slate-950 hover:border-amber-400/40"
+                    }`}
+                  >
+                    <span
+                      className={`text-sm font-medium ${
+                        active ? "text-amber-300" : "text-slate-200"
+                      }`}
+                    >
+                      {active ? "✓ " : ""}
+                      {f.name}
+                    </span>
+                    <span className="mt-1 block text-xs text-slate-400">{f.help}</span>
                   </SubmitButton>
                 </GuardedForm>
               );

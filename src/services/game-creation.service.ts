@@ -37,6 +37,7 @@ import {
   sanitizeScoringWeightOverrides,
   type EconomicOverrides,
   type QuizMode,
+  type AnswerFormat,
   type ScoringWeightOverrides,
 } from "@/config/difficulty";
 import {
@@ -180,6 +181,8 @@ export interface CreateGameArgs {
   scenarioCode?: string;
   /** Questions posées dans les situations : tout, le modèle seul, ou rien. */
   quizMode?: QuizMode;
+  /** Comment l'élève y répond : en cochant (QCM) ou en écrivant (questions ouvertes). */
+  answerFormat?: AnswerFormat;
   /**
    * GRAINE IMPOSÉE. Absente, elle est tirée au hasard — c'est le cas de toutes
    * les parties réelles, et il ne doit pas changer. Le monde de démonstration,
@@ -321,6 +324,7 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
         // Questions des situations. L'absence du champ vaut « full » pour les
         // parties d'avant le réglage : leur comportement ne change pas.
         ...(args.quizMode ? { quizMode: args.quizMode } : {}),
+        ...(args.answerFormat === "open" ? { answerFormat: "open" } : {}),
       },
       status: "running",
       currentRound: 1,
@@ -568,6 +572,7 @@ export async function createClassGame(args: {
   variableWorld?: boolean;
   scenarioCode?: string;
   quizMode?: QuizMode;
+  answerFormat?: AnswerFormat;
   /** Tours joués. Absent = tous ceux du scénario ; jamais plus. */
   roundsCount?: number;
   /** Graine imposée (monde de démonstration) ; absente = tirage au hasard. */
@@ -595,6 +600,7 @@ export async function createClassGame(args: {
     variableWorld: args.variableWorld,
     scenarioCode: args.scenarioCode,
     quizMode: args.quizMode,
+    answerFormat: args.answerFormat,
     roundsCount: args.roundsCount,
     seed: args.seed,
   });

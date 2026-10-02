@@ -349,6 +349,53 @@ describe("pendant une partie", () => {
     expect(bas.y + bas.height).toBeGreaterThan(page.viewportSize()!.height - 40);
   });
 
+  it("en questions ouvertes : des zones de texte à la place des QCM, et le rendu attend de vraies phrases", async () => {
+    // Le réglage est celui de l'enseignant ; on le pose en base comme le ferait
+    // son action, puis on regarde l'écran de l'élève.
+    const gameId = page.url().match(/\/arena\/([^/?#]+)/)![1]!;
+    const { Client } = await import("pg");
+    expect(process.env.DATABASE_URL, "DATABASE_URL manquante").toBeTruthy();
+    const base = new Client({ connectionString: process.env.DATABASE_URL });
+    await base.connect();
+    try {
+      await base.query(
+        `update games set difficulty_profile = coalesce(difficulty_profile, '{}'::jsonb) || '{"answerFormat":"open"}'::jsonb where id = $1`,
+        [gameId],
+      );
+    } finally {
+      await base.end();
+    }
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.waitForLoadState("networkidle");
+    await versLaPremiereCarte();
+    for (let k = 0; k < 10; k++) {
+      const analyser = page.getByRole("button", { name: /^Analyser/ });
+      if (await analyser.count()) {
+        await analyser.click();
+        break;
+      }
+      await suite().click();
+      await page.waitForTimeout(250);
+    }
+    await page.getByText(/rendue[s]? sur \d/).waitFor({ state: "visible" });
+    const ouvert = page.locator("details[open]:has(> summary:has-text('à analyser'))");
+    expect(await ouvert.locator("input[type=checkbox]").count(), "plus de cases à cocher").toBe(0);
+    expect(await ouvert.locator("input[type=radio]").count(), "plus de QCM").toBe(0);
+    const zones = ouvert.locator("textarea:visible");
+    expect(await zones.count()).toBeGreaterThanOrEqual(2);
+    const valider = page.getByRole("button", { name: "Valider mon analyse" }).first();
+    expect(await valider.isDisabled()).toBe(true);
+    // Un mot ne vaut pas une réponse.
+    await zones.first().fill("oui");
+    expect(await valider.isDisabled()).toBe(true);
+    for (let i = 0; i < (await zones.count()); i++) {
+      await zones
+        .nth(i)
+        .fill("La demande baisse alors que le prix, la qualité et la trésorerie de l'entreprise se dégradent.");
+    }
+    expect(await valider.isDisabled()).toBe(false);
+  });
+
   it("« Situation » et « Contexte » ont la même forme : deux tiroirs ouverts, au même niveau", async () => {
     await versLaPremiereCarte();
     for (let k = 0; k < 8; k++) {

@@ -22,6 +22,7 @@ import {
   reinitialiserPartie,
   setGameSchedule,
   setQuizMode,
+  setAnswerFormat,
   setRankingRevealed,
   setRoundWindows,
   supprimerPartie,
@@ -39,7 +40,7 @@ import {
 import { setMissedPolicy } from "@/services/debrief.service";
 import { DEFAULT_SCENARIO_CODE } from "@/config/scenarios/registry";
 import { canTeacherLaunchScenario } from "@/services/scenario-editor.service";
-import { DEFAULT_QUIZ_MODE } from "@/config/difficulty";
+import { DEFAULT_ANSWER_FORMAT, DEFAULT_QUIZ_MODE } from "@/config/difficulty";
 import {
   ACCENTS_CONCOURS,
   DESCRIPTION_MAX,
@@ -129,6 +130,8 @@ const createGameSchema = z.object({
   scenarioCode: z.string().min(1).catch(DEFAULT_SCENARIO_CODE),
   // Questions posées dans les situations (voir QUIZ_MODES).
   quizMode: z.enum(["full", "model", "off"]).catch(DEFAULT_QUIZ_MODE),
+  // Comment l'élève y répond : en cochant (QCM) ou en écrivant (questions ouvertes).
+  answerFormat: z.enum(["qcm", "open"]).catch(DEFAULT_ANSWER_FORMAT),
 });
 
 /** Champ numérique optionnel : vide = valeur du scénario (jamais de dur). */
@@ -167,6 +170,7 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
     roundsCount: formData.get("roundsCount") || undefined,
     scenarioCode: formData.get("scenarioCode"),
     quizMode: formData.get("quizMode"),
+    answerFormat: formData.get("answerFormat"),
   });
   const economicOverrides = {
     taxRate: optionalRate(formData.get("taxRate")),
@@ -227,12 +231,25 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
       variableWorld: formData.get("variableWorld") === "on",
       scenarioCode,
       quizMode: parsed.quizMode,
+      answerFormat: parsed.answerFormat,
       roundsCount: parsed.roundsCount,
     }));
   } catch (erreur) {
     echecCreation(erreur instanceof Error ? erreur.message : "La partie n'a pas pu être créée.");
   }
   redirect(`/teacher/games/${gameId}`);
+}
+
+/** Règle le format des réponses (QCM ou questions ouvertes) d'une partie en cours. */
+export async function setAnswerFormatAction(gameId: string, formData: FormData): Promise<void> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  const format = z
+    .enum(["qcm", "open"])
+    .catch(DEFAULT_ANSWER_FORMAT)
+    .parse(formData.get("format"));
+  await setAnswerFormat({ gameId, teacherId: session.userId, format });
+  revalidatePath(`/teacher/games/${gameId}`);
 }
 
 /** Règle les questions posées dans les situations d'une partie en cours. */

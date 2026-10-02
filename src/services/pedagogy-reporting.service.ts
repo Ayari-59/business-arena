@@ -17,7 +17,7 @@ import {
 } from "@/db/schema";
 import { SCENARIOS, DEFAULT_SCENARIO_CODE, situationByCode } from "@/config/scenarios/registry";
 import { resolveScenarioDefinition } from "@/services/scenario-source.service";
-import { quizModeFromProfile, type QuizMode } from "@/config/difficulty";
+import { answerFormatFromProfile, quizModeFromProfile, type QuizMode } from "@/config/difficulty";
 import { decrireSource, lireSource, type DecisionSourceMap } from "@/config/decision-source";
 import { playerStrength } from "@/pedagogy/adaptivity";
 import { computeRawSituationScore } from "@/pedagogy/scoring";
@@ -107,7 +107,15 @@ export async function getTeamSituations(
     const def = situationByCode.get(codeById.get(instance.situationId) ?? "");
     if (!def) continue;
     const levels = levelsByInstance.get(instance.id) ?? [];
-    const view = toView(instance, def, levels, quizMode, hintCap, modelCtxOf(game));
+    const view = toView(
+      instance,
+      def,
+      levels,
+      quizMode,
+      hintCap,
+      modelCtxOf(game),
+      answerFormatFromProfile(game.difficultyProfile),
+    );
     if (currentRound && instance.roundId === currentRound.id && instance.status !== "debriefed") {
       current.push(view);
     } else if (resolvedRoundIds.has(instance.roundId)) {

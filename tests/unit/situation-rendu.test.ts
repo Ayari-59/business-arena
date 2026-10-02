@@ -46,7 +46,11 @@ vi.mock("@/services/game.service", () => ({
 // `actions.ts` importe retakeSituation de debrief.service, qui charge `@/db` —
 // lequel jette à l'import sans DATABASE_URL. Le mock ferme la frontière de
 // service, pour que ce test reste unitaire sans base ni variable d'environnement.
-vi.mock("@/services/debrief.service", () => ({ retakeSituation: vi.fn() }));
+vi.mock("@/services/debrief.service", () => ({
+  retakeSituation: vi.fn(),
+  answerFormatOfInstance: vi.fn(async () => "qcm"),
+  resolveOpenAnswers: vi.fn(),
+}));
 vi.mock("@/services/pedagogy.service", () => ({
   submitDiagnosis: vi.fn(async () => ({ score: 1 })),
   submitQuiz: vi.fn(async () => ({ score: 1 })),
@@ -54,6 +58,7 @@ vi.mock("@/services/pedagogy.service", () => ({
 }));
 
 const { submitDiagnosis, submitQuiz } = await import("@/services/pedagogy.service");
+const { answerFormatOfInstance, resolveOpenAnswers } = await import("@/services/debrief.service");
 const { submitSituationAction } = await import("@/app/arena/[gameId]/actions");
 const { SituationCard } = await import("@/components/situation-panel");
 
@@ -77,6 +82,8 @@ function situation(partiel: Partial<SituationView> = {}): SituationView {
     problem: "D'où vient le recul ?",
     origin: "scripted",
     status: "open",
+    answerFormat: "qcm",
+    quizTexts: null,
     weight: 1,
     level: 1,
     aboveGameLevel: false,
@@ -380,3 +387,89 @@ describe("l'annonce du tour", () => {
     }
   });
 });
+
+describe("questions ouvertes : l'élève écrit, le serveur ramène le texte aux options", () => {
+  const TEXTE = "Le prix a baissé et la marge s'effondre sur chaque unité vendue.";
+  const OUVERT = {
+    options: ["a"],
+    answers: { model_choice: "m1" },
+    texts: { model_choice: "Je mobilise le seuil de rentabilité, parce que les charges pèsent." },
+    questions: ["model_choice"],
+    manques: [] as string[],
+  };
+
+  it("la carte montre des champs de texte, ni cases ni propositions", () => {
+    const html = renderToStaticMarkup(
+      createElement(SituationCard, { gameId: "g1", situation: situation({ answerFormat: "open" }) }),
+    );
+    expect(html).toContain('name="freeText"');
+    expect(html).toContain('name="open_model_choice"');
+    expect(html).not.toContain('type="checkbox"');
+    expect(html).not.toContain('type="radio"');
+    expect(html).toContain("Valider mon analyse");
+    // Grisé tant que rien n'est écrit : même message qu'au QCM.
+    expect(html).toContain("Situation incomplète : il manque le diagnostic et le modèle");
+  });
+
+  it("rendu complet : les options retenues partent au barème d'avant, les textes sont gardés", async () => {
+    vi.mocked(answerFormatOfInstance).mockResolvedValueOnce("open");
+    vi.mocked(resolveOpenAnswers).mockResolvedValueOnce(OUVERT as never);
+    const etat = await submitSituationAction(
+      "g1",
+      "inst-1",
+      ETAT,
+      formulaire({ freeText: TEXTE, open_model_choice: OUVERT.texts.model_choice, questions: "model_choice" }),
+    );
+    expect(etat.error).toBeNull();
+    expect(submitDiagnosis).toHaveBeenCalledWith({
+      instanceId: "inst-1",
+      userId: "invite-1",
+      selectedOptionIds: ["a"],
+      freeText: TEXTE,
+    });
+    expect(submitQuiz).toHaveBeenCalledWith({
+      instanceId: "inst-1",
+      userId: "invite-1",
+      answers: { model_choice: "m1" },
+      texts: OUVERT.texts,
+    });
+    // Les textes écrits sont ceux que le serveur a lus dans le formulaire.
+    expect(resolveOpenAnswers).toHaveBeenCalledWith(
+      expect.objectContaining({ freeText: TEXTE, texts: { model_choice: OUVERT.texts.model_choice } }),
+    );
+  });
+
+  it("un texte trop court est refusé comme une moitié absente, rien n'est enregistré", async () => {
+    vi.mocked(answerFormatOfInstance).mockResolvedValueOnce("open");
+    vi.mocked(resolveOpenAnswers).mockResolvedValueOnce({ ...OUVERT, manques: ["le modèle"] } as never);
+    const etat = await submitSituationAction(
+      "g1",
+      "inst-1",
+      ETAT,
+      formulaire({ freeText: TEXTE, open_model_choice: "oui", questions: "model_choice" }),
+    );
+    expect(etat.error).toBe("Situation incomplète : il manque le modèle");
+    expect(submitDiagnosis).not.toHaveBeenCalled();
+    expect(submitQuiz).not.toHaveBeenCalled();
+  });
+
+  it("le format se lit sur la partie : un formulaire de cases forgé sur une partie ouverte n'est pas cru", async () => {
+    vi.mocked(answerFormatOfInstance).mockResolvedValueOnce("open");
+    vi.mocked(resolveOpenAnswers).mockResolvedValueOnce({
+      options: [],
+      answers: {},
+      texts: {},
+      questions: ["model_choice"],
+      manques: ["le diagnostic", "le modèle"],
+    } as never);
+    const etat = await submitSituationAction(
+      "g1",
+      "inst-1",
+      ETAT,
+      formulaire({ options: ["a", "b"], quiz_model_choice: "m1", questions: "model_choice" }),
+    );
+    expect(etat.error).toBe("Situation incomplète : il manque le diagnostic et le modèle");
+    expect(submitDiagnosis).not.toHaveBeenCalled();
+  });
+});
+
