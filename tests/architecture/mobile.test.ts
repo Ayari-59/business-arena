@@ -246,3 +246,19 @@ describe("le détail par clientèle et la saison du tour, côte à côte", () =>
     expect(lire("src/components/tiroir.tsx")).toContain("name={groupe}");
   });
 });
+
+describe("les résultats ne refont pas lire le courrier en grand", () => {
+  it("sur téléphone, le courrier du tour clos tient en une ligne", () => {
+    expect(lire("src/app/arena/[gameId]/page.tsx")).toContain("courrierResume={telephone}");
+    const tableau = lire("src/components/period-dashboard.tsx");
+    expect(tableau).toContain("courrierResume = false");
+    expect(tableau).toMatch(/period\.events\.length > 0 && courrierResume/);
+  });
+
+  it("les tours passés ne sont posés qu'une fois sur téléphone : dans la carte des résultats", () => {
+    expect(lire("src/app/arena/[gameId]/page.tsx")).toContain(
+      "{telephone && !finished ? null : toursPasses}",
+    );
+  });
+});
+

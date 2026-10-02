@@ -115,10 +115,17 @@ export function PeriodDashboard({
   view,
   period,
   standing,
+  courrierResume = false,
 }: {
   view: GameView;
   period: Period;
   standing: boolean;
+  /**
+   * Le courrier du tour en une ligne, sans les lettres. Sur téléphone, le parcours a déjà fait
+   * lire ces lettres, en entier, au tour où elles sont tombées : les revoir en grand, au moment
+   * des résultats, repoussait les chiffres sous le pli.
+   */
+  courrierResume?: boolean;
 }) {
   const r = period.result;
   // Trajectoire arrêtée à ce tour : chaque période montre les graphiques tels
@@ -181,7 +188,18 @@ export function PeriodDashboard({
               fond de l'onglet Marché, elles n'étaient jamais lues en solo, où
               personne ne les annonce.
             */}
-            {period.events.length > 0 ? (
+            {period.events.length > 0 && courrierResume ? (
+              <p
+                aria-label="Courrier reçu ce tour"
+                className="text-sm leading-relaxed text-slate-400"
+              >
+                <span aria-hidden>📬</span> Courrier du{" "}
+                {periodLabel(view.roundDays, period.round).toLowerCase()} :{" "}
+                <span className="text-slate-300">
+                  {period.events.map((code) => courrierParCode.get(code)?.objet ?? code).join(" · ")}
+                </span>
+              </p>
+            ) : period.events.length > 0 ? (
               <section aria-label="Courrier reçu ce tour">
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-400">
                   📬 Le courrier de ce tour

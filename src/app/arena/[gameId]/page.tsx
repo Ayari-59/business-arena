@@ -646,6 +646,7 @@ export default async function ArenaPage({
                       view={view}
                       period={p}
                       standing={isLatest}
+                      courrierResume={telephone}
                     />
                   ),
                 }}
@@ -1455,7 +1456,7 @@ export default async function ArenaPage({
           </section>
         ) : null}
 
-        {toursPasses}
+        {telephone && !finished ? null : toursPasses}
       </div>
 
       {/*

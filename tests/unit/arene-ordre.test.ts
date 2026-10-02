@@ -27,7 +27,7 @@ describe("l'ordre de l'arène", () => {
     const actif = position('id="tour-en-cours"');
     // Les tours clos sont déclarés en constante (`toursPasses`) puis POSÉS dans la page :
     // c'est la pose, la dernière occurrence, qui fixe l'ordre à l'écran.
-    const passes = PAGE.lastIndexOf("{toursPasses}");
+    const passes = PAGE.lastIndexOf("toursPasses}");
     expect(actif).toBeGreaterThan(0);
     expect(passes).toBeGreaterThan(0);
     expect(actif, "les tours clos ont repris la tête de la page").toBeLessThan(passes);
