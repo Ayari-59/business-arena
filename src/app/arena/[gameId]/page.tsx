@@ -208,7 +208,7 @@ export default async function ArenaPage({
 
   // MARCHÉ & ALERTES : ce qui a bougé et ce qu'on vous signale — où vous en êtes
   // (dès le 2ᵉ tour), le courrier distribué, la saison.
-  const alertesSection = (
+  const alertesSansSaison = (
     <>
       {view.roundBriefing ? (
         <section className="space-y-2 carte p-3 sm:p-5 text-slate-300">
@@ -287,7 +287,15 @@ export default async function ArenaPage({
           </section>
         ) : null;
       })()}
-      <SaisonDuTour notes={view.seasonNotes} />
+    </>
+  );
+  // La saison commande la demande, donc le volume : sur téléphone elle se lit avec les
+  // chiffres du marché (une seule carte), pas avec les alertes.
+  const saisonNode = <SaisonDuTour notes={view.seasonNotes} />;
+  const alertesSection = (
+    <>
+      {alertesSansSaison}
+      {saisonNode}
     </>
   );
 
@@ -468,8 +476,7 @@ export default async function ArenaPage({
   const alertesPresentes =
     !!view.roundBriefing ||
     view.courriersAnnonces.length > 0 ||
-    courriersQuiMeConcernent(view.courriersEnCours).length > 0 ||
-    view.seasonNotes.length > 0;
+    courriersQuiMeConcernent(view.courriersEnCours).length > 0;
   const alerteTresorerieNode = view.alerteTresorerie ? (
     <div>
       <AlerteTresorerie
@@ -758,8 +765,16 @@ export default async function ArenaPage({
             ),
           }
         : null,
-      { cle: "chiffres", noeud: chiffres },
-      alertesPresentes ? { cle: "alertes", noeud: alertesSection } : null,
+      {
+        cle: "chiffres",
+        noeud: (
+          <div className="space-y-4">
+            {chiffres}
+            {saisonNode}
+          </div>
+        ),
+      },
+      alertesPresentes ? { cle: "alertes", noeud: alertesSansSaison } : null,
       dilemmeSection ? { cle: "arbitrage", noeud: dilemmeSection } : null,
     ] as (CarteDuParcours | null)[]
   ).filter((c): c is CarteDuParcours => c !== null);
