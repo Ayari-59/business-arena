@@ -3,6 +3,9 @@ import { notFound } from "next/navigation";
 import { getGuestUserId } from "@/lib/guest";
 import { compter, formatEuro } from "@/lib/format";
 import { getGameView } from "@/services/game.service";
+import { getPlatformConfig } from "@/services/admin.service";
+import { accentsDuSite, themeParDefaut } from "@/config/theme-du-site";
+import { BarreDeJeu } from "@/components/barre-de-jeu";
 import { getTeamSituations } from "@/services/pedagogy.service";
 import { SituationCard, SituationDebrief } from "@/components/situation-panel";
 import { SaisonDuTour } from "@/components/saison-du-tour";
@@ -67,6 +70,7 @@ export default async function ArenaPage({
   if (!userId) notFound();
   const view = await getGameView(gameId, userId);
   if (!view) notFound();
+  const configDuSite = await getPlatformConfig();
   // Le code personnel, s'il en a un. En solo, personne à retrouver : la
   // partie n'appartient qu'à cet appareil et il n'y a pas d'équipe à rendre.
   const codeDeReprise = view.kind === "solo" ? null : await codeDeRepriseDuJoueur(gameId, userId);
@@ -405,9 +409,23 @@ export default async function ArenaPage({
 
   return (
     <main id="main" className="mx-auto max-w-[1400px] space-y-6 px-4 pt-6 pb-16 sm:space-y-8 sm:px-6" data-ecran-de-jeu="">
+      {/* LA BARRE D'APPLICATION, sur téléphone seulement : la barre du site s'efface
+          dans l'arène (voir site-header.tsx) et celle-ci porte la partie et le tour. */}
+      <BarreDeJeu
+        nom={view.playerTeamName}
+        tour={view.currentRound}
+        tours={view.roundsCount}
+        termine={finished}
+        retour={view.kind === "solo" ? "/jouer" : "/"}
+        themeParDefaut={themeParDefaut(configDuSite.theme)}
+        accents={accentsDuSite(configDuSite.theme)}
+      />
       {/* ── Header ── */}
       <header className="flex flex-wrap items-end justify-between gap-3">
-        <div className="flex items-center gap-3">
+        {/* Sur téléphone, le nom de l'équipe est déjà dans la barre du haut : le
+            répéter en grand mangeait un tiers du premier écran. Il reste dans le
+            document, lisible par une synthèse vocale, et c'est le seul h1. */}
+        <div className="flex items-center gap-3 max-sm:sr-only">
           {/* LE VISAGE DU SECTEUR. L'emoji du système laissait la tuile
               différente sur chaque appareil et illisible au vidéoprojecteur.
               Le pictogramme prend l'accent de son secteur : neuf formes, neuf

@@ -1,6 +1,8 @@
 import { BANDES, PAGES_A_BANDES, bandeParId, bandesDeLaPage } from "./bandes";
 import {
+  PALETTE_D_ORIGINE,
   PALETTE_PAR_DEFAUT,
+  accentsDeLaPalette,
   estCodePalette,
   type CodePalette,
 } from "./palettes";
@@ -90,6 +92,17 @@ export function normaliserTheme(brut: unknown): ThemeDuSite {
 /** La palette d'accent que sert le site : celle réglée, sinon celle d'origine. */
 export function paletteDuSite(theme: ThemeDuSite | undefined): CodePalette {
   return theme?.palette ?? PALETTE_PAR_DEFAUT;
+}
+
+/**
+ * L'accent de la palette en vigueur pour les pastilles de thème, ou rien pour la
+ * palette d'origine (les pastilles gardent alors celles du registre des thèmes).
+ */
+export function accentsDuSite(
+  theme: ThemeDuSite | undefined,
+): { sombre: string; clair: string } | undefined {
+  const palette = paletteDuSite(theme);
+  return palette === PALETTE_D_ORIGINE ? undefined : accentsDeLaPalette(palette);
 }
 
 /**

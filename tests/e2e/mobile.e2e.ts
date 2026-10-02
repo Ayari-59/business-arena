@@ -210,6 +210,202 @@ describe("pendant une partie", () => {
     ).toEqual([]);
   });
 
+  it("la barre du site cède la place à la barre de la partie", async () => {
+    // Deux barres se doubleraient, et la première ne dit rien de la partie.
+    expect(
+      await page
+        .locator(
+          "body > header, header:has(nav[aria-label='Navigation principale'])",
+        )
+        .first()
+        .isVisible(),
+    ).toBe(false);
+    await page
+      .getByRole("button", { name: "Menu de la partie" })
+      .waitFor({ state: "visible" });
+    await page
+      .getByText(/Tour 1 sur 6/)
+      .first()
+      .waitFor({ state: "visible" });
+    await page
+      .getByRole("link", { name: "Quitter la partie" })
+      .waitFor({ state: "visible" });
+  });
+
+  it("le nom de l'équipe n'est pas répété en grand sous la barre", async () => {
+    // Il reste dans le document, pour une synthèse vocale, mais son conteneur est
+    // réduit à un point : il n'occupe rien à l'écran.
+    const h1 = page.locator("h1").first();
+    expect(await h1.count()).toBe(1);
+    const reduit = await h1.evaluate((el) => {
+      for (
+        let e: Element | null = el;
+        e && e !== document.body;
+        e = e.parentElement
+      ) {
+        const r = e.getBoundingClientRect();
+        if (r.width <= 1 && r.height <= 1) return true;
+      }
+      return false;
+    });
+    expect(reduit, "le titre de l'équipe est encore affiché en grand").toBe(
+      true,
+    );
+  });
+
+  it("les trois étapes sont des onglets collés au bas de l'écran, et le restent au défilement", async () => {
+    const onglets = page.locator('[role="tablist"] button[role="tab"]:visible');
+    expect(await onglets.count()).toBe(3);
+    const hauteur = page.viewportSize()!.height;
+    const position = async () => {
+      const b = (await onglets.first().boundingBox())!;
+      return { bas: Math.round(b.y + b.height), haut: Math.round(b.y) };
+    };
+    const avant = await position();
+    // Le bas de la barre est le bas de l'écran (aux marges de sécurité près).
+    expect(
+      avant.bas,
+      `bas des onglets à ${avant.bas} px sur ${hauteur}`,
+    ).toBeGreaterThanOrEqual(hauteur - 2);
+    await page.mouse.wheel(0, 900);
+    await page.waitForTimeout(300);
+    expect(await position()).toEqual(avant);
+    await page.mouse.wheel(0, -2000);
+  });
+
+  it("l'action qui mène à l'étape suivante est fixée au-dessus des onglets", async () => {
+    const suivant = page
+      .getByRole("button", { name: /^Analyser/ })
+      .filter({ hasNot: page.locator("[role=tab]") });
+    const bouton = suivant.last();
+    await bouton.waitFor({ state: "visible" });
+    const b = (await bouton.boundingBox())!;
+    const onglet = (await page
+      .locator('[role="tablist"] button[role="tab"]:visible')
+      .first()
+      .boundingBox())!;
+    expect(b.y + b.height, "l'action est sous les onglets").toBeLessThanOrEqual(
+      onglet.y + 1,
+    );
+    expect(b.height, `bouton de ${b.height} px`).toBeGreaterThanOrEqual(44);
+  });
+
+  it("toucher une étape change d'étape et repart du haut de l'écran", async () => {
+    await page.mouse.wheel(0, 900);
+    await page.waitForTimeout(200);
+    await page
+      .locator('[role="tablist"] button[role="tab"]:visible', {
+        hasText: "Analyser",
+      })
+      .click();
+    await page.waitForTimeout(400);
+    expect(
+      await page.evaluate(() => Math.round(window.scrollY)),
+    ).toBeLessThanOrEqual(2);
+    const retenu = page.locator(
+      '[role="tablist"] button[role="tab"][aria-selected="true"]:visible',
+    );
+    expect((await retenu.innerText()).trim()).toContain("Analyser");
+  });
+
+  it("à la dernière étape, l'action du formulaire suit l'écran et reste au-dessus des onglets", async () => {
+    await page
+      .locator('[role="tablist"] button[role="tab"]:visible', {
+        hasText: "Décider",
+      })
+      .click();
+    await page.waitForTimeout(500);
+    const action = page
+      .getByRole("button", { name: /Suivant|Valider/ })
+      .first();
+    // Le pied du formulaire se colle quand le formulaire entre à l'écran : on y
+    // arrive comme un élève, en défilant jusqu'à lui.
+    await action.evaluate((el) => {
+      const form = el.closest("form")!;
+      window.scrollTo(
+        0,
+        form.getBoundingClientRect().top + window.scrollY - 120,
+      );
+    });
+    await page.waitForTimeout(400);
+    await action.waitFor({ state: "visible" });
+    const onglet = (await page
+      .locator('[role="tablist"] button[role="tab"]:visible')
+      .first()
+      .boundingBox())!;
+    const b = (await action.boundingBox())!;
+    expect(b.y, "l'action sort de l'écran par le haut").toBeGreaterThanOrEqual(
+      0,
+    );
+    expect(
+      b.y + b.height,
+      `action à ${Math.round(b.y + b.height)} px, onglets à ${Math.round(onglet.y)} px`,
+    ).toBeLessThanOrEqual(onglet.y + 1);
+    // « Précédent » est à sa gauche, et tous deux se touchent à 44 px au moins.
+    const precedent = (await page
+      .getByRole("button", { name: /Précédent/ })
+      .boundingBox())!;
+    expect(precedent.x, "« Précédent » doit précéder l'action").toBeLessThan(
+      b.x,
+    );
+    expect(precedent.height).toBeGreaterThanOrEqual(44);
+    expect(b.height).toBeGreaterThanOrEqual(44);
+    // Et elle y reste quand on descend plus bas dans le formulaire.
+    await page.mouse.wheel(0, 500);
+    await page.waitForTimeout(300);
+    const plusBas = (await action.boundingBox())!;
+    expect(plusBas.y + plusBas.height).toBeLessThanOrEqual(onglet.y + 1);
+    expect(plusBas.y).toBeGreaterThanOrEqual(0);
+  });
+
+  it("l'apparence se choisit depuis le menu de la partie", async () => {
+    await page.getByRole("button", { name: "Menu de la partie" }).click();
+    await page
+      .getByRole("button", { name: "Thème sombre" })
+      .waitFor({ state: "visible" });
+    await page
+      .getByRole("link", { name: "Fiches notions" })
+      .first()
+      .waitFor({ state: "visible" });
+    await page.keyboard.press("Escape");
+    expect(
+      await page.getByRole("button", { name: "Thème sombre" }).isVisible(),
+    ).toBe(false);
+  });
+
+  it("sur grand écran, la partie garde la barre du site et ni la barre du bas ni celle du haut", async () => {
+    const taille = page.viewportSize()!;
+    await page.setViewportSize({ width: 1280, height: 900 });
+    try {
+      await page.waitForTimeout(300);
+      expect(
+        await page
+          .getByRole("button", { name: "Menu de la partie" })
+          .isVisible(),
+      ).toBe(false);
+      expect(
+        await page
+          .locator('[role="tablist"] button[role="tab"]:visible')
+          .count(),
+      ).toBe(3);
+      const box = (await page
+        .locator('[role="tablist"] button[role="tab"]:visible')
+        .first()
+        .boundingBox())!;
+      expect(
+        box.y,
+        "les onglets du bas ne doivent pas s'afficher en bas sur grand écran",
+      ).toBeLessThan(450);
+      expect(
+        await page
+          .getByRole("navigation", { name: "Navigation principale" })
+          .isVisible(),
+      ).toBe(true);
+    } finally {
+      await page.setViewportSize(taille);
+    }
+  });
+
   it("le texte de l'écran de jeu ne descend pas sous 14 px", async () => {
     const fautifs = await page.evaluate(() => {
       const racine = document.querySelector("[data-ecran-de-jeu]")!;

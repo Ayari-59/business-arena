@@ -7,6 +7,7 @@ import {
   useId,
   useRef,
   useState,
+  type CSSProperties,
   type KeyboardEvent,
   type ReactNode,
 } from "react";
@@ -33,6 +34,15 @@ export type SegmentedTab = { key: string; label: string; icon?: string };
  * restent cliquables). Sur la dernière étape, pas de bouton « suivant » : c'est
  * l'action propre du panneau (valider et simuler) qui conclut.
  *
+ * SUR TÉLÉPHONE, LES ÉTAPES DESCENDENT SOUS LE POUCE. Le fil d'étapes en haut de
+ * la carte et le bouton « suivant » en bas de la page deviennent une BARRE FIXE
+ * en bas de l'écran : trois onglets (icône et nom), et au-dessus l'action qui
+ * mène à l'étape suivante. Le tour faisait près de trois écrans de haut et son
+ * bouton d'avance se trouvait tout en bas : on faisait défiler jusqu'au bout
+ * pour apprendre qu'on pouvait continuer. La barre reste, on sait où l'on est et
+ * ce qui vient. Sur grand écran rien ne change : le fil et le bouton restent
+ * dans la page.
+ *
  * `syncAnchors` : les clés d'onglets qui portent une ancre de page (un panneau
  * dont le contenu a un `id` cible d'un lien `href="#id"`). Comme seul le panneau
  * actif est monté, un lien vers un onglet inactif ne trouverait pas sa cible ;
@@ -57,6 +67,7 @@ export function SegmentedTabs({
 }) {
   const baseId = useId();
   const boutons = useRef<Record<string, HTMLButtonElement | null>>({});
+  const boutonsBas = useRef<Record<string, HTMLButtonElement | null>>({});
   const visible = tabs.filter((t) => children[t.key] != null);
   const [active, setActive] = useState(
     defaultKey && visible.some((t) => t.key === defaultKey)
@@ -91,16 +102,23 @@ export function SegmentedTabs({
   const panelId = (key: string) => `${baseId}-panel-${key}`;
   const currentIndex = Math.max(0, visible.findIndex((t) => t.key === current));
 
-  const allerA = (index: number) => {
+  const allerA = (index: number, depuisLaBarre = false) => {
     const k = visible[index]?.key;
     if (!k) return;
     setActive(k);
-    boutons.current[k]?.focus();
+    if (depuisLaBarre) {
+      // Le contenu change sous les yeux : on repart du haut, sinon on arriverait
+      // au milieu de l'étape suivante, à la hauteur où l'on avait défilé.
+      window.scrollTo({ top: 0 });
+      boutonsBas.current[k]?.focus({ preventScroll: true });
+    } else {
+      boutons.current[k]?.focus();
+    }
   };
 
   // Flèches et Origine/Fin : on déplace le focus d'onglet en onglet et on active
   // au passage (activation « automatique », la plus simple à suivre au clavier).
-  const auClavier = (e: KeyboardEvent<HTMLButtonElement>, index: number) => {
+  const auClavier = (e: KeyboardEvent<HTMLButtonElement>, index: number, depuisLaBarre = false) => {
     const n = visible.length;
     let cible = index;
     if (e.key === "ArrowRight" || e.key === "ArrowDown") cible = (index + 1) % n;
@@ -109,13 +127,19 @@ export function SegmentedTabs({
     else if (e.key === "End") cible = n - 1;
     else return;
     e.preventDefault();
-    allerA(cible);
+    allerA(cible, depuisLaBarre);
   };
+  const suivant = guided && currentIndex < visible.length - 1 ? visible[currentIndex + 1]! : null;
 
   return (
-    <div className="space-y-4">
+    <div
+      className="space-y-4"
+      // La hauteur des onglets fixes : le pied du formulaire de décision s'y pose
+      // dessus au lieu de passer dessous (voir decision-form.tsx).
+      style={guided ? ({ "--barre-bas": "calc(3.5rem + env(safe-area-inset-bottom))" } as CSSProperties) : undefined}
+    >
       {guided ? (
-        <nav className="flex items-center gap-2" role="tablist" aria-label={label}>
+        <nav className="hidden items-center gap-2 sm:flex" role="tablist" aria-label={label}>
           {visible.map((tab, index) => {
             const estCourant = current === tab.key;
             const estFait = index < currentIndex;
@@ -219,7 +243,7 @@ export function SegmentedTabs({
       </div>
 
       {guided && currentIndex < visible.length - 1 ? (
-        <div className="flex items-center justify-between gap-3">
+        <div className="hidden items-center justify-between gap-3 sm:flex">
           {currentIndex > 0 ? (
             <button
               type="button"
@@ -240,6 +264,67 @@ export function SegmentedTabs({
             <span aria-hidden>→</span>
           </button>
         </div>
+      ) : null}
+
+      {guided ? (
+        <>
+          {/* La place de la barre : sans elle, la fin de l'étape passerait dessous. */}
+          <div aria-hidden className={suivant ? "h-36 sm:hidden" : "h-20 sm:hidden"} />
+          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/12 bg-slate-950/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md supports-[backdrop-filter]:bg-slate-950/90 sm:hidden print:hidden">
+            {suivant ? (
+              <div className="px-3.5 pb-2 pt-2.5">
+                <button
+                  type="button"
+                  onClick={() => allerA(currentIndex + 1, true)}
+                  className={`${bouton({ taille: "l" })} min-h-12 w-full`}
+                >
+                  {suivant.label}
+                  <span aria-hidden>→</span>
+                </button>
+              </div>
+            ) : null}
+            <div role="tablist" aria-label={label} className="flex">
+              {visible.map((tab, index) => {
+                const estCourant = current === tab.key;
+                const estFait = index < currentIndex;
+                return (
+                  <button
+                    key={tab.key}
+                    id={`${tabId(tab.key)}-bas`}
+                    ref={(el) => {
+                      boutonsBas.current[tab.key] = el;
+                    }}
+                    type="button"
+                    role="tab"
+                    aria-selected={estCourant}
+                    aria-controls={panelId(tab.key)}
+                    tabIndex={estCourant ? 0 : -1}
+                    onClick={() => allerA(index, true)}
+                    onKeyDown={(e) => auClavier(e, index, true)}
+                    className={`relative flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-sm transition-colors ${
+                      estCourant
+                        ? "font-bold text-amber-300"
+                        : estFait
+                          ? "font-medium text-emerald-300"
+                          : "font-medium text-slate-400"
+                    }`}
+                  >
+                    {estCourant ? (
+                      <span
+                        aria-hidden
+                        className="absolute inset-x-[24%] top-0 h-[3px] rounded-b-full bg-amber-400"
+                      />
+                    ) : null}
+                    <span aria-hidden className="text-xl leading-none">
+                      {estFait ? "✓" : (tab.icon ?? index + 1)}
+                    </span>
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </>
       ) : null}
     </div>
   );

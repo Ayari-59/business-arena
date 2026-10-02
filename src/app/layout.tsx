@@ -23,8 +23,8 @@ const policeTexte = Inter_Tight({
   display: "swap",
 });
 import { CLE_THEME, THEMES, couleurDeBarre } from "@/config/themes";
-import { paletteDuSite, themeParDefaut } from "@/config/theme-du-site";
-import { PALETTE_D_ORIGINE, accentsDeLaPalette, feuilleDePalette } from "@/config/palettes";
+import { accentsDuSite, paletteDuSite, themeParDefaut } from "@/config/theme-du-site";
+import { feuilleDePalette } from "@/config/palettes";
 import { getPlatformConfig } from "@/services/admin.service";
 import { SITE_URL } from "@/config/site";
 import { DESCRIPTION_ACCUEIL, GABARIT_DE_TITRE, NOM_DU_SITE, TITRE_ACCUEIL } from "@/config/seo";
@@ -90,7 +90,7 @@ export default async function RootLayout({
   // d'origine : le site d'usine ne reçoit alors pas un octet de plus.
   const palette = paletteDuSite(theme);
   const feuille = feuilleDePalette(palette);
-  const accents = palette === PALETTE_D_ORIGINE ? undefined : accentsDeLaPalette(palette);
+  const accents = accentsDuSite(theme);
   // LA BARRE D'ÉTAT DU TÉLÉPHONE PREND LA COULEUR DU THÈME APPLIQUÉ, y compris
   // celui que le visiteur a choisi. Elle est donc posée par l'amorce, avec le
   // thème et avant la première image, et non rendue par React : une balise

@@ -2573,27 +2573,27 @@ export function DecisionForm({
         // étape à l'autre, et « Valider » (envoi réel) à la dernière seulement.
         // Le bouton d'avance est de type `button` : changer d'étape ne soumet
         // rien, seul le « Valider » final déclenche la résolution du tour.
-        // Sur mobile, l'action principale se replie sur sa propre ligne (via
-        // `order` + `flex-wrap`), calée à droite par `ml-auto` : coincée entre
-        // « Précédent » et « Étape X/Y », elle rétrécissait et son libellé
-        // débordait. On garde un bouton à la TAILLE DE SON CONTENU plutôt qu'une
-        // barre pleine largeur, qui paraissait trop lourde sur téléphone. Sur
-        // grand écran, tout revient sur une seule rangée : Précédent · Étape ·
-        // action (poussée à droite par le `sm:mr-auto` du compteur).
-        <div className="space-y-3 border-t border-white/10 pt-3">
+        // SUR TÉLÉPHONE, CE PIED EST COLLÉ AU BAS DE L'ÉCRAN, juste au-dessus des
+        // onglets de l'arène (voir segmented-tabs.tsx) : « Précédent » à gauche,
+        // l'action principale qui prend toute la place restante. Le compteur
+        // « Étape X/Y » y disparaît : les pastilles numérotées juste au-dessus
+        // du formulaire le disent déjà, et il coûtait la largeur d'un bouton.
+        // Sur grand écran, tout reste sur une rangée : Précédent · Étape · action
+        // (poussée à droite par le `sm:mr-auto` du compteur).
+        <div className="space-y-3 border-t border-white/10 pt-3 max-sm:sticky max-sm:bottom-[var(--barre-bas,0px)] max-sm:z-30 max-sm:-mx-4 max-sm:bg-slate-950/95 max-sm:px-4 max-sm:pb-3 max-sm:backdrop-blur-md">
           {/* L'échéance se rappelle ici, contre le bouton : c'est le moment où
               savoir qu'il reste huit minutes change quelque chose. */}
           {echeance && !verrou ? <EcheanceDuTour closesAt={echeance} /> : null}
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-3 sm:flex-wrap">
             <button
               type="button"
               onClick={() => allerALEtape((e) => Math.max(0, Math.min(e, total - 1) - 1))}
               disabled={courante === 0}
-              className="order-2 shrink-0 rounded-lg border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:text-slate-100 disabled:cursor-not-allowed disabled:opacity-30 sm:order-1"
+              className="order-1 min-h-11 shrink-0 rounded-lg border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:text-slate-100 disabled:cursor-not-allowed disabled:opacity-30"
             >
               ← Précédent
             </button>
-            <span className="order-3 shrink-0 text-xs tabular-nums text-slate-400 sm:order-2 sm:mr-auto">
+            <span className="order-2 hidden shrink-0 text-xs tabular-nums text-slate-400 sm:mr-auto sm:block">
               Étape {courante + 1} / {total}
             </span>
             {/* Deux boutons DISTINCTS (clés) et non un seul nœud dont le type
@@ -2606,7 +2606,7 @@ export function DecisionForm({
                 key="valider"
                 type="submit"
                 disabled={pending || verrou != null || validationBloquee}
-                className={`${bouton({ taille: "l" })} order-1 ml-auto sm:order-3 sm:ml-0`}
+                className={`${bouton({ taille: "l" })} order-3 max-sm:flex-1`}
               >
                 {pending
                   ? "Envoi en cours…"
@@ -2621,7 +2621,7 @@ export function DecisionForm({
                 key="suivant"
                 type="button"
                 onClick={() => allerALEtape((e) => Math.min(total - 1, Math.min(e, total - 1) + 1))}
-                className={`${bouton({ taille: "l" })} order-1 ml-auto sm:order-3 sm:ml-0`}
+                className={`${bouton({ taille: "l" })} order-3 max-sm:flex-1`}
               >
                 Suivant →
               </button>

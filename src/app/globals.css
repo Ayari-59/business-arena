@@ -394,6 +394,14 @@ a[href].bouton {
   }
 }
 
+/* Une ancre atteinte (un lien « #situation », un champ qui prend le focus) ne doit
+   pas se loger sous la barre d'application collée en haut de l'écran de jeu. */
+@media (max-width: 639px) {
+  [data-ecran-de-jeu] [id] {
+    scroll-margin-top: 4.5rem;
+  }
+}
+
 /* Installée, l'application n'a plus la barre du navigateur pour porter un geste
    de rafraîchissement : le rebond de fin de page n'y ouvre rien, il ne fait que
    secouer l'écran. */
