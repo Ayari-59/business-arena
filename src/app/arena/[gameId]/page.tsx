@@ -25,7 +25,11 @@ import { DilemmaCard, ParametersPanels } from "@/components/decision-context";
 import { PeriodDashboard } from "@/components/period-dashboard";
 import { PeriodDecisionsRecap } from "@/components/period-decisions-recap";
 import { SegmentedTabs } from "@/components/segmented-tabs";
-import { ParcoursMobile, type CarteDuParcours } from "@/components/parcours-mobile";
+import {
+  ParcoursMobile,
+  type AnalyseDuParcours,
+  type CarteDuParcours,
+} from "@/components/parcours-mobile";
 import { RoundStatusPoller } from "@/components/round-status-poller";
 import { QuiARendu } from "@/components/qui-a-rendu";
 import { Embleme } from "@/components/embleme";
@@ -52,7 +56,10 @@ import { mentionDeValidation } from "@/config/validation-du-tour";
 import { surtitreDePartie } from "@/config/scenarios/presentation";
 import { SECTOR_COLORS, SECTOR_LABELS } from "@/config/scenarios/registry";
 import { PictoSecteur } from "@/components/picto-secteur";
-import { statutDesSituations } from "@/config/situation-rendu";
+import {
+  etapesDeLAnalyse,
+  statutDesSituations,
+} from "@/config/situation-rendu";
 import { AiAssistant } from "@/components/ai-assistant";
 import { entitlementsForUser } from "@/services/entitlements.service";
 import { resolveAiSurface } from "@/services/ai.service";
@@ -418,6 +425,16 @@ export default async function ArenaPage({
       </div>
     ) : null;
 
+  // L'analyse sur téléphone : une situation après l'autre, chacune en écrans
+  // (contexte, diagnostic, une question par écran). Plus d'accordéon.
+  const analyseCartes: AnalyseDuParcours[] = statutSituations
+    ? situations.current.map((s) => ({
+        cle: `analyse-${s.instanceId}`,
+        noeud: <SituationCard gameId={view.gameId} situation={s} />,
+        etapes: etapesDeLAnalyse(s),
+      }))
+    : [];
+
   // Ce qu'on répond aux décisions du tour clos (voir plus haut) : servi aux onglets
   // comme au parcours en cartes.
   const reponsesSection =
@@ -453,41 +470,299 @@ export default async function ArenaPage({
     view.courriersAnnonces.length > 0 ||
     courriersQuiMeConcernent(view.courriersEnCours).length > 0 ||
     view.seasonNotes.length > 0;
-  const briefingCartes: CarteDuParcours[] = ([
-    reponsesSection ? { cle: "reponses", noeud: reponsesSection } : null,
-    view.currentRound === 1
-      ? {
-          cle: "mandat",
-          noeud: (
-            <MandatDeLEquipe
-              gameId={gameId}
-              niveau={view.difficulty.level}
-              equipe={view.playerTeamName}
-              ouvert
-            />
-          ),
-        }
-      : null,
-    presentation
-      ? {
-          cle: "presentation",
-          noeud: <section className="space-y-4 carte p-3 text-slate-300">{presentation}</section>,
-        }
-      : null,
-    { cle: "chiffres", noeud: chiffres },
-    alertesPresentes ? { cle: "alertes", noeud: alertesSection } : null,
-    dilemmeSection ? { cle: "arbitrage", noeud: dilemmeSection } : null,
-  ] as (CarteDuParcours | null)[]).filter((c): c is CarteDuParcours => c !== null);
+  const alerteTresorerieNode = view.alerteTresorerie ? (
+    <div>
+      <AlerteTresorerie
+        gameId={view.gameId}
+        alerte={view.alerteTresorerie}
+        exigence={view.exigenceSauvetage}
+        demande={view.demandeSubvention}
+      />
+    </div>
+  ) : null;
+  const nomNode = view.peutSeNommer ? (
+    <div>
+      <TeamNameForm
+        gameId={gameId}
+        nomActuel={view.playerTeamName}
+        dejaNommee={!porteUnNomParDefaut(view.playerTeamName)}
+        emblemeActuel={view.playerTeamEmbleme}
+      />
+    </div>
+  ) : null;
+  const toursPasses = (
+    <>
+      {periods.length > 0 ? (
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+          {finished ? "Vos tours" : "Tours passés"}
+        </p>
+      ) : null}
+      {periods.map((p) => {
+        const isLatest = p.round === latestRound;
+        const dr = debriefByRound.get(p.round);
+        const netIncome = p.result.incomeStatement.netIncome;
+        const netTreasury = p.result.functionalBalance.netTreasury;
+        return (
+          <details
+            key={p.round}
+            // Cible du retour après une validation en solo : la période la plus
+            // récente, déjà ouverte sur son onglet Résultats. scroll-mt dégage
+            // la hauteur de l'en-tête collant pour que le titre reste visible.
+            id={isLatest ? "dernier-resultat" : undefined}
+            open={isLatest}
+            // bg-slate-900/60 et non slate-950/40 : sur le fond de page, une
+            // carte à 40 % de slate-950 n'était qu'un contour. Quatre contours
+            // à la file se lisaient comme une grille, pas comme quatre tours.
+            className={`group scroll-mt-24 rounded-xl border border-white/10 border-l-2 bg-slate-900/60 [&:not([open])]:border-dashed [&[open]]:border-white/20 ${
+              netIncome >= 0
+                ? "border-l-emerald-400/60"
+                : "border-l-rose-400/60"
+            }`}
+          >
+            {/*
+              LE NUMÉRO FAIT LA SÉPARATION. Il était noyé derrière un 📊
+              répété — l'œil tombait sur une icône identique d'un tour à
+              l'autre au lieu de trouver 1, 2, 3. En pastille à gauche, les
+              numéros font colonne et donnent une colonne vertébrale à la
+              liste ; leur couleur dit du même coup si le tour a été gagné ou
+              perdu, sans ajouter un signal de plus.
+            */}
+            <summary className="flex cursor-pointer list-none items-center gap-3 px-3 py-3 sm:px-4 [&::-webkit-details-marker]:hidden">
+              <span
+                aria-hidden
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold tabular-nums ${
+                  netIncome >= 0
+                    ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-300"
+                    : "border-rose-400/40 bg-rose-400/10 text-rose-300"
+                }`}
+              >
+                {p.round}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold text-slate-100">
+                  {periodLabel(view.roundDays, p.round)}
+                  {isLatest && !finished ? (
+                    <span className="ml-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-xs font-medium text-emerald-300">
+                      résultats livrés
+                    </span>
+                  ) : null}
+                </span>
+                {/* Les trois chiffres du tour, chacun insécable : la ligne se
+                    replie ENTRE deux chiffres, jamais au milieu d'un montant. */}
+                <span className="mt-0.5 flex flex-wrap gap-x-1.5 gap-y-0.5 text-xs tabular-nums text-slate-400">
+                  <span className="whitespace-nowrap">
+                    CA {formatEuro(p.result.incomeStatement.revenue)}
+                    <span aria-hidden className="text-slate-400">
+                      {" "}
+                      ·
+                    </span>
+                  </span>
+                  <span
+                    className={`whitespace-nowrap ${netIncome >= 0 ? "text-emerald-300" : "text-rose-300"}`}
+                  >
+                    {netIncome >= 0 ? "+" : ""}
+                    {formatEuro(netIncome)}
+                    <span aria-hidden className="text-slate-400">
+                      {" "}
+                      ·
+                    </span>
+                  </span>
+                  <span
+                    className={`whitespace-nowrap ${netTreasury >= 0 ? "text-slate-400" : "text-rose-300"}`}
+                  >
+                    tréso {formatEuro(netTreasury)}
+                  </span>
+                </span>
+              </span>
+              <span
+                aria-hidden
+                className="shrink-0 text-xs text-amber-400/80 transition-transform group-open:rotate-90"
+              >
+                ▸
+              </span>
+            </summary>
+            <div className="border-t border-white/10 px-2 py-2.5 sm:p-4">
+              {/* Les trois facettes d'une période close : ce qu'on a analysé
+                  (Situation + correction), ce qu'on a décidé, ce qui en est
+                  ressorti. Les onglets ne s'opposent pas à l'accordéon — il
+                  situe la période, ils en montrent une face à la fois. */}
+              <SegmentedTabs
+                defaultKey={isLatest ? "resultats" : "situation"}
+                tabs={[
+                  { key: "situation", label: "Situation", icon: "📋" },
+                  { key: "decisions", label: "Décisions", icon: "✏️" },
+                  { key: "resultats", label: "Résultats", icon: "📊" },
+                ]}
+              >
+                {{
+                  situation: dr ? (
+                    <section className="space-y-3">
+                      {dr.situations.map((s) => (
+                        <SituationDebrief
+                          key={s.instanceId}
+                          situation={s}
+                          gameId={view.gameId}
+                          retakeable={
+                            situations.missedPolicy === "retake50" &&
+                            p.round === mostRecentDebriefedRound
+                          }
+                        />
+                      ))}
+                    </section>
+                  ) : null,
+                  decisions: p.decisions ? (
+                    <PeriodDecisionsRecap
+                      decisions={p.decisions}
+                      vocabulary={view.vocabulary}
+                      gamme={view.gamme}
+                    />
+                  ) : null,
+                  resultats: (
+                    <PeriodDashboard
+                      view={view}
+                      period={p}
+                      standing={isLatest}
+                    />
+                  ),
+                }}
+              </SegmentedTabs>
+            </div>
+          </details>
+        );
+      })}
+    </>
+  );
 
-  // Sur téléphone, l'en-tête de la page ne garde que ce qui n'est pas dans la barre
-  // du haut : sous la forme d'un pseudo (classe), de l'IPG ou d'une échéance. Quand
-  // il n'a rien de tel à montrer, il se retire tout entier, titre compris — le h1
-  // reste lisible par une synthèse vocale — au lieu de laisser un vide de deux
-  // cartes de haut.
-  const bandeauVide =
-    !(view.kind !== "solo" && view.playerPseudo) &&
-    !(latestRound !== null && view.playerBpi !== null) &&
-    !(!finished && view.playLock.playable && view.playLock.closesAt);
+  const tableauNode = (
+    <TableauDeBord
+      tours={periods.map((p) => ({
+        round: p.round,
+        libelle: periodLabel(view.roundDays, p.round),
+        ca: p.result.incomeStatement.revenue,
+        resultat: p.result.incomeStatement.netIncome,
+        tresorerie: p.result.functionalBalance.netTreasury,
+      }))}
+    />
+  );
+  const soumissionsNode = view.soumissions ? (
+    <div className="border-b border-white/10 px-3 py-2 sm:px-4">
+      <QuiARendu
+        validees={view.soumissions.validees}
+        total={view.soumissions.total}
+      />
+    </div>
+  ) : null;
+  const compositionNode =
+    !finished && view.equipesDeLaClasse.length > 1 ? (
+      view.peutChoisirSonEquipe ? (
+        <ChoixEquipe
+          gameId={gameId}
+          equipes={view.equipesDeLaClasse}
+          monEquipeId={view.playerTeamId}
+          ouvert
+        />
+      ) : (
+        <Tiroir
+          icone="equipes"
+          titre="Composition des équipes"
+          quoi={compter(view.equipesDeLaClasse.length, "équipe")}
+        >
+          <ChoixEquipe
+            gameId={gameId}
+            equipes={view.equipesDeLaClasse}
+            monEquipeId={view.playerTeamId}
+            ouvert={false}
+            concours={view.estUnConcours}
+          />
+        </Tiroir>
+      )
+    ) : null;
+  const vosReussites =
+    periods.length > 0 ? (
+      <VosReussites
+        cases={reussitesDeLaPartie(
+          periods.map((p) => lireLeTour(p.round, p.result, p.forecastReview)),
+        )}
+        nommerLeTour={(round) => periodLabel(view.roundDays, round)}
+      />
+    ) : null;
+  const compteNode = (
+    <>
+      {view.kind !== "solo" && view.playerPseudo ? (
+        <IdentiteDeLAppareil
+          pseudo={view.playerPseudo}
+          equipe={view.playerTeamName}
+          variante="arene"
+        />
+      ) : null}
+      {codeDeReprise ? (
+        <MaCarteDeReprise gameId={gameId} code={codeDeReprise} />
+      ) : null}
+    </>
+  );
+  // LES RÉSULTATS, PREMIÈRE CARTE DU TOUR (téléphone). Ce qui était empilé sous le tour
+  // en cours — tuiles de tendance, IPG, tours passés, réussites — se lit ici d'un
+  // seul tenant, avant le briefing : c'est sur eux que se décide le tour.
+  const moiAuClassement = view.ranking.find((row) => row.isPlayer);
+  const resultatsCarte =
+    periods.length > 0 ? (
+      <section className="space-y-4">
+        <header className="space-y-2 pb-1">
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-amber-400">
+            {periodLabel(view.roundDays, latestRound ?? 1)}{" "}
+            {view.kind === "solo" ? "simulé" : "clos"}
+            {view.playerBpi !== null
+              ? ` · ${moiAuClassement ? `#${moiAuClassement.rank}/${view.ranking.length} · ` : ""}IPG ${view.playerBpi.toFixed(0)}`
+              : ""}
+          </p>
+          <h2 className="font-display text-[1.7rem] font-semibold leading-tight text-slate-50">
+            Ce que ça a donné
+          </h2>
+        </header>
+        {tableauNode}
+        {toursPasses}
+        {vosReussites}
+      </section>
+    ) : null;
+  const briefingCartes: CarteDuParcours[] = (
+    [
+      alerteTresorerieNode
+        ? { cle: "alerte-tresorerie", noeud: alerteTresorerieNode }
+        : null,
+      resultatsCarte ? { cle: "resultats", noeud: resultatsCarte } : null,
+      reponsesSection ? { cle: "reponses", noeud: reponsesSection } : null,
+      nomNode ? { cle: "nom", noeud: nomNode } : null,
+      view.peutChoisirSonEquipe && compositionNode
+        ? { cle: "equipe", noeud: compositionNode }
+        : null,
+      view.currentRound === 1
+        ? {
+            cle: "mandat",
+            noeud: (
+              <MandatDeLEquipe
+                gameId={gameId}
+                niveau={view.difficulty.level}
+                equipe={view.playerTeamName}
+                ouvert
+              />
+            ),
+          }
+        : null,
+      presentation
+        ? {
+            cle: "presentation",
+            noeud: (
+              <section className="space-y-4 carte p-3 text-slate-300">
+                {presentation}
+              </section>
+            ),
+          }
+        : null,
+      { cle: "chiffres", noeud: chiffres },
+      alertesPresentes ? { cle: "alertes", noeud: alertesSection } : null,
+      dilemmeSection ? { cle: "arbitrage", noeud: dilemmeSection } : null,
+    ] as (CarteDuParcours | null)[]
+  ).filter((c): c is CarteDuParcours => c !== null);
 
   // « Décider » : la piste, le courrier du tour, puis la saisie. Un seul nœud, servi
   // tel quel aux onglets (grand écran) et au parcours en cartes (téléphone).
@@ -518,62 +793,81 @@ export default async function ArenaPage({
                     </p>
                   ) : null;
   const formulaireDeDecision = (
-                <DecisionForm
-                  telephone={telephone}
-                  reperes={
-                    telephone
-                      ? {
-                          prixUsuels: (() => {
-                            const prix = view.intro.segments.map((seg) => seg.refPrice);
-                            if (prix.length === 0) return null;
-                            const bas = Math.min(...prix);
-                            const haut = Math.max(...prix);
-                            return bas === haut ? formatEuro(bas) : `${formatEuro(bas)} – ${formatEuro(haut)}`;
-                          })(),
-                          coutVariable: view.gamme ? null : view.intro.variableCostPerUnit,
-                        }
-                      : null
-                  }
-                  gameId={view.gameId}
-                  roundIndex={view.currentRound}
-                  vocabulary={view.vocabulary}
-                  periodName={periodLabel(view.roundDays, view.currentRound).toLowerCase()}
-                  defaults={view.pendingDecisions ?? view.lastDecisions ?? view.startingDecisions}
-                  proposed={view.proposedDecisions}
-                  kind={view.kind}
-                  alreadySubmitted={view.pendingDecisions !== null}
-                  insuranceOffer={
-                    view.insuranceOffer
-                      ? {
-                          premium: view.insuranceOffer.premium,
-                          coveredLabels: view.insuranceOffer.coveredEventCodes.map(
-                            (c) => courrierParCode.get(c)?.objet ?? c,
-                          ),
-                        }
-                      : null
-                  }
-                  enabled={view.enabledDecisions}
-                  distributableReserves={view.distributableReserves}
-                  investmentOffer={view.investmentOffer}
-                  debtSchedule={view.debtSchedule}
-                  treasuryOffer={view.treasuryOffer}
-                  bankFile={view.bankFile}
-                  orderOffer={view.orderOffer}
-                  studiesOffer={view.studiesOffer}
-                  capitalAllowance={view.capitalAllowance}
-                  loanCapacity={view.loanCapacity}
-                  financeOffer={view.financeOffer}
-                  insuranceFormulas={view.insuranceFormulas}
-                  suppliersOffer={view.suppliersOffer}
-                  equipmentOffer={view.equipmentOffer}
-                  capacityFacts={view.capacityFacts}
-                  gamme={view.gamme}
-                  rdOffer={view.rdOffer}
-                  communicationOffer={view.communicationOffer}
-                  verrou={view.playLock.playable ? null : (view.playLock.message ?? "Ce tour n'est pas encore ouvert.")}
-                  echeance={view.playLock.closesAt}
-                  sauvetage={view.exigenceSauvetage}
-                />
+    <DecisionForm
+      telephone={telephone}
+      enTeteDuRecapitulatif={
+        telephone ? (
+          <div className="space-y-2">
+            {etatDesDecisions}
+            {soumissionsNode}
+            {!finished && view.playLock.playable && view.playLock.closesAt ? (
+              <EcheanceDuTour closesAt={view.playLock.closesAt} compact />
+            ) : null}
+          </div>
+        ) : null
+      }
+      reperes={
+        telephone
+          ? {
+              prixUsuels: (() => {
+                const prix = view.intro.segments.map((seg) => seg.refPrice);
+                if (prix.length === 0) return null;
+                const bas = Math.min(...prix);
+                const haut = Math.max(...prix);
+                return bas === haut
+                  ? formatEuro(bas)
+                  : `${formatEuro(bas)} – ${formatEuro(haut)}`;
+              })(),
+              coutVariable: view.gamme ? null : view.intro.variableCostPerUnit,
+            }
+          : null
+      }
+      gameId={view.gameId}
+      roundIndex={view.currentRound}
+      vocabulary={view.vocabulary}
+      periodName={periodLabel(view.roundDays, view.currentRound).toLowerCase()}
+      defaults={
+        view.pendingDecisions ?? view.lastDecisions ?? view.startingDecisions
+      }
+      proposed={view.proposedDecisions}
+      kind={view.kind}
+      alreadySubmitted={view.pendingDecisions !== null}
+      insuranceOffer={
+        view.insuranceOffer
+          ? {
+              premium: view.insuranceOffer.premium,
+              coveredLabels: view.insuranceOffer.coveredEventCodes.map(
+                (c) => courrierParCode.get(c)?.objet ?? c,
+              ),
+            }
+          : null
+      }
+      enabled={view.enabledDecisions}
+      distributableReserves={view.distributableReserves}
+      investmentOffer={view.investmentOffer}
+      debtSchedule={view.debtSchedule}
+      treasuryOffer={view.treasuryOffer}
+      bankFile={view.bankFile}
+      orderOffer={view.orderOffer}
+      studiesOffer={view.studiesOffer}
+      capitalAllowance={view.capitalAllowance}
+      loanCapacity={view.loanCapacity}
+      financeOffer={view.financeOffer}
+      insuranceFormulas={view.insuranceFormulas}
+      suppliersOffer={view.suppliersOffer}
+      equipmentOffer={view.equipmentOffer}
+      capacityFacts={view.capacityFacts}
+      gamme={view.gamme}
+      rdOffer={view.rdOffer}
+      communicationOffer={view.communicationOffer}
+      verrou={
+        view.playLock.playable
+          ? null
+          : (view.playLock.message ?? "Ce tour n'est pas encore ouvert.")
+      }
+      echeance={view.playLock.closesAt}
+      sauvetage={view.exigenceSauvetage}
+    />
   );
 
   const decisionsNode = (
@@ -624,7 +918,6 @@ export default async function ArenaPage({
     ) : null;
   const decisionsMobile = (
     <section id="decisions" className="space-y-3">
-      {etatDesDecisions}
       {formulaireDeDecision}
     </section>
   );
@@ -643,11 +936,17 @@ export default async function ArenaPage({
         cockpit={`/arena/${view.gameId}/cockpit`}
         themeParDefaut={themeParDefaut(configDuSite.theme)}
         accents={accentsDuSite(configDuSite.theme)}
+        compte={
+          telephone ? (
+            <>
+              {compteNode}
+              {view.peutChoisirSonEquipe ? null : compositionNode}
+            </>
+          ) : null
+        }
       />
       {/* ── Header ── */}
-      <header
-        className={`flex flex-wrap items-end justify-between gap-3 ${bandeauVide ? "max-sm:sr-only" : ""}`}
-      >
+      <header className="flex flex-wrap items-end justify-between gap-3 max-sm:sr-only">
         {/* Sur téléphone, le nom de l'équipe est déjà dans la barre du haut : le
             répéter en grand mangeait un tiers du premier écran. Il reste dans le
             document, lisible par une synthèse vocale, et c'est le seul h1. */}
@@ -762,35 +1061,17 @@ export default async function ArenaPage({
       {/* ── Crise de trésorerie : avant tout le reste, et sans rideau ──
           Cet état appartient à l'équipe : il ne dépend pas de la révélation du
           classement, seul endroit où la défaillance se disait jusqu'ici. */}
-      {view.alerteTresorerie ? (
-        <div>
-          <AlerteTresorerie
-            gameId={view.gameId}
-            alerte={view.alerteTresorerie}
-            exigence={view.exigenceSauvetage}
-            demande={view.demandeSubvention}
-          />
-        </div>
-      ) : null}
+      {telephone ? null : alerteTresorerieNode}
 
       {/* ── Cartes annoncées : visibles quelle que soit la période dépliée ── */}
-      {!finished && view.courriersAnnonces.length > 0 ? (
+      {!telephone && !finished && view.courriersAnnonces.length > 0 ? (
         <div>
           <BandeauCourriers courriers={view.courriersAnnonces} />
         </div>
       ) : null}
 
       {/* ── Team naming ── */}
-      {view.peutSeNommer ? (
-        <div>
-          <TeamNameForm
-            gameId={gameId}
-            nomActuel={view.playerTeamName}
-            dejaNommee={!porteUnNomParDefaut(view.playerTeamName)}
-            emblemeActuel={view.playerTeamEmbleme}
-          />
-        </div>
-      ) : null}
+      {telephone ? null : nomNode}
 
 
       {/*
@@ -892,15 +1173,7 @@ export default async function ArenaPage({
         et il ne s'affiche qu'à partir du deuxième tour, quand il y a une
         courbe à montrer.
       */}
-      <TableauDeBord
-        tours={periods.map((p) => ({
-          round: p.round,
-          libelle: periodLabel(view.roundDays, p.round),
-          ca: p.result.incomeStatement.revenue,
-          resultat: p.result.incomeStatement.netIncome,
-          tresorerie: p.result.functionalBalance.netTreasury,
-        }))}
-      />
+      {telephone ? null : tableauNode}
 
       {/*
         LE TOUR À JOUER EN PREMIER.
@@ -937,7 +1210,7 @@ export default async function ArenaPage({
                   / {view.roundsCount}
                 </span>
               </span>
-              <span className="ml-auto flex flex-wrap items-center justify-end gap-2">
+              <span className="ml-auto flex flex-wrap items-center justify-end gap-2 max-sm:hidden">
                 {/* LA SEULE CHOSE QUE LE BANDEAU DISAIT SEUL. « Décisions
                     enregistrées » se lisait tout en haut de la page ; le reste
                     du bandeau étant redite, l'état revient ici, sur l'en-tête du
@@ -988,14 +1261,7 @@ export default async function ArenaPage({
               comparaison permanente entre équipes, que le dépôt refuse ailleurs
               en laissant l'enseignant maître du classement.
             */}
-            {view.soumissions ? (
-              <div className="border-b border-white/10 px-3 py-2 sm:px-4">
-                <QuiARendu
-                  validees={view.soumissions.validees}
-                  total={view.soumissions.total}
-                />
-              </div>
-            ) : null}
+            {telephone ? null : soumissionsNode}
 
             {/* Le tour précédent vient de livrer ses résultats (solo : la
                 simulation ; classe : la clôture par l'enseignant) : on met
@@ -1003,7 +1269,7 @@ export default async function ArenaPage({
                 enchaîner sur une nouvelle saisie sans être passé par ses
                 résultats. Le lien descend vers la période close, ouverte sur ses
                 résultats (#dernier-resultat). */}
-            {latestRound !== null ? (
+            {!telephone && latestRound !== null ? (
               <a
                 href="#dernier-resultat"
                 className="flex items-center justify-between gap-3 border-b border-emerald-400/20 bg-emerald-400/5 px-3 py-2.5 text-sm transition hover:bg-emerald-400/10 sm:px-4"
@@ -1035,47 +1301,51 @@ export default async function ArenaPage({
                 tour={view.currentRound}
                 labelTour={periodLabel(view.roundDays, view.currentRound)}
                 labelPrecedent={
-                  latestRound !== null ? periodLabel(view.roundDays, latestRound) : null
+                  // Sur téléphone, les résultats sont la première carte du parcours :
+                  // il n'y a pas d'étape à franchir avant la saisie.
+                  !telephone && latestRound !== null
+                    ? periodLabel(view.roundDays, latestRound)
+                    : null
                 }
               >
               {/* Le tour en cours porte les mêmes onglets que les tours clos, dès
                   le premier tour : Situation (à lire), Décisions (à rendre) et
                   Résultats — ce dernier vide tant que le tour n'est pas clos.
                   Défaut sur « Situation » : on lit l'énoncé avant de décider. */}
-              {telephone ? (
-                // SUR TÉLÉPHONE, UN PARCOURS ET NON DES ONGLETS : briefing en
-                // cartes, analyse, puis les décisions, avec un seul bouton en bas.
-                <ParcoursMobile
-                  briefing={briefingCartes}
-                  analyse={analyserContenu}
-                  courrier={courrierCarte}
-                  decisions={decisionsMobile}
-                />
-              ) : (
-              <SegmentedTabs
-                defaultKey="situation"
-                // Un seul parcours, solo comme en classe : un fil d'étapes guidé
-                // en trois temps — Situation (données, marché, alertes,
-                // arbitrage) → Analyser (aides d'analyse puis les QCM en
-                // accordéon) → Décider. En solo, « Décider » simule aussitôt ; en
-                // classe, il rend les décisions et les résultats arrivent à la
-                // clôture du tour, dans l'accordéon des tours passés (donc pas
-                // d'onglet Résultats vide ici).
-                guided
-                syncAnchors={["situation", "decisions"]}
-                tabs={[
-                  { key: "situation", label: "Situation", icon: "📋" },
-                  { key: "analyser", label: "Analyser", icon: "🔍" },
-                  { key: "decisions", label: "Décider", icon: "✏️" },
-                ]}
-              >
-                {{
-                  // « Situation » : le décor du tour (données, marché, alertes,
-                  // arbitrage). L'analyse (aides d'analyse + QCM) vit dans
-                  // « Analyser », et la saisie dans « Décider ».
-                  situation: (
-                    <div id="situation" className="space-y-6">
-                      {/*
+                {telephone ? (
+                  // SUR TÉLÉPHONE, UN PARCOURS ET NON DES ONGLETS : briefing en
+                  // cartes, analyse, puis les décisions, avec un seul bouton en bas.
+                  <ParcoursMobile
+                    briefing={briefingCartes}
+                    analyse={analyseCartes}
+                    courrier={courrierCarte}
+                    decisions={decisionsMobile}
+                  />
+                ) : (
+                  <SegmentedTabs
+                    defaultKey="situation"
+                    // Un seul parcours, solo comme en classe : un fil d'étapes guidé
+                    // en trois temps — Situation (données, marché, alertes,
+                    // arbitrage) → Analyser (aides d'analyse puis les QCM en
+                    // accordéon) → Décider. En solo, « Décider » simule aussitôt ; en
+                    // classe, il rend les décisions et les résultats arrivent à la
+                    // clôture du tour, dans l'accordéon des tours passés (donc pas
+                    // d'onglet Résultats vide ici).
+                    guided
+                    syncAnchors={["situation", "decisions"]}
+                    tabs={[
+                      { key: "situation", label: "Situation", icon: "📋" },
+                      { key: "analyser", label: "Analyser", icon: "🔍" },
+                      { key: "decisions", label: "Décider", icon: "✏️" },
+                    ]}
+                  >
+                    {{
+                      // « Situation » : le décor du tour (données, marché, alertes,
+                      // arbitrage). L'analyse (aides d'analyse + QCM) vit dans
+                      // « Analyser », et la saisie dans « Décider ».
+                      situation: (
+                        <div id="situation" className="space-y-6">
+                          {/*
                         LE MANDAT, AU PREMIER TOUR, AVANT TOUT LE RESTE.
 
                         Les leviers du niveau sont tous ouverts dès le premier
@@ -1136,126 +1406,7 @@ export default async function ArenaPage({
           </section>
         ) : null}
 
-        {periods.length > 0 ? (
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-            {finished ? "Vos tours" : "Tours passés"}
-          </p>
-        ) : null}
-        {periods.map((p) => {
-          const isLatest = p.round === latestRound;
-          const dr = debriefByRound.get(p.round);
-          const netIncome = p.result.incomeStatement.netIncome;
-          const netTreasury = p.result.functionalBalance.netTreasury;
-          return (
-            <details
-              key={p.round}
-              // Cible du retour après une validation en solo : la période la plus
-              // récente, déjà ouverte sur son onglet Résultats. scroll-mt dégage
-              // la hauteur de l'en-tête collant pour que le titre reste visible.
-              id={isLatest ? "dernier-resultat" : undefined}
-              open={isLatest}
-              // bg-slate-900/60 et non slate-950/40 : sur le fond de page, une
-              // carte à 40 % de slate-950 n'était qu'un contour. Quatre contours
-              // à la file se lisaient comme une grille, pas comme quatre tours.
-              className={`group scroll-mt-24 rounded-xl border border-white/10 border-l-2 bg-slate-900/60 [&:not([open])]:border-dashed [&[open]]:border-white/20 ${
-                netIncome >= 0 ? "border-l-emerald-400/60" : "border-l-rose-400/60"
-              }`}
-            >
-              {/*
-                LE NUMÉRO FAIT LA SÉPARATION. Il était noyé derrière un 📊
-                répété — l'œil tombait sur une icône identique d'un tour à
-                l'autre au lieu de trouver 1, 2, 3. En pastille à gauche, les
-                numéros font colonne et donnent une colonne vertébrale à la
-                liste ; leur couleur dit du même coup si le tour a été gagné ou
-                perdu, sans ajouter un signal de plus.
-              */}
-              <summary className="flex cursor-pointer list-none items-center gap-3 px-3 py-3 sm:px-4 [&::-webkit-details-marker]:hidden">
-                <span
-                  aria-hidden
-                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold tabular-nums ${
-                    netIncome >= 0
-                      ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-300"
-                      : "border-rose-400/40 bg-rose-400/10 text-rose-300"
-                  }`}
-                >
-                  {p.round}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-semibold text-slate-100">
-                    {periodLabel(view.roundDays, p.round)}
-                    {isLatest && !finished ? (
-                      <span className="ml-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-xs font-medium text-emerald-300">
-                        résultats livrés
-                      </span>
-                    ) : null}
-                  </span>
-                  {/* Les trois chiffres du tour, chacun insécable : la ligne se
-                      replie ENTRE deux chiffres, jamais au milieu d'un montant. */}
-                  <span className="mt-0.5 flex flex-wrap gap-x-1.5 gap-y-0.5 text-xs tabular-nums text-slate-400">
-                    <span className="whitespace-nowrap">
-                      CA {formatEuro(p.result.incomeStatement.revenue)}
-                      <span aria-hidden className="text-slate-400"> ·</span>
-                    </span>
-                    <span
-                      className={`whitespace-nowrap ${netIncome >= 0 ? "text-emerald-300" : "text-rose-300"}`}
-                    >
-                      {netIncome >= 0 ? "+" : ""}
-                      {formatEuro(netIncome)}
-                      <span aria-hidden className="text-slate-400"> ·</span>
-                    </span>
-                    <span
-                      className={`whitespace-nowrap ${netTreasury >= 0 ? "text-slate-400" : "text-rose-300"}`}
-                    >
-                      tréso {formatEuro(netTreasury)}
-                    </span>
-                  </span>
-                </span>
-                <span
-                  aria-hidden
-                  className="shrink-0 text-xs text-amber-400/80 transition-transform group-open:rotate-90"
-                >
-                  ▸
-                </span>
-              </summary>
-              <div className="border-t border-white/10 px-2 py-2.5 sm:p-4">
-                {/* Les trois facettes d'une période close : ce qu'on a analysé
-                    (Situation + correction), ce qu'on a décidé, ce qui en est
-                    ressorti. Les onglets ne s'opposent pas à l'accordéon — il
-                    situe la période, ils en montrent une face à la fois. */}
-                <SegmentedTabs
-                  defaultKey={isLatest ? "resultats" : "situation"}
-                  tabs={[
-                    { key: "situation", label: "Situation", icon: "📋" },
-                    { key: "decisions", label: "Décisions", icon: "✏️" },
-                    { key: "resultats", label: "Résultats", icon: "📊" },
-                  ]}
-                >
-                  {{
-                    situation: dr ? (
-                      <section className="space-y-3">
-                        {dr.situations.map((s) => (
-                          <SituationDebrief
-                            key={s.instanceId}
-                            situation={s}
-                            gameId={view.gameId}
-                            retakeable={
-                              situations.missedPolicy === "retake50" &&
-                              p.round === mostRecentDebriefedRound
-                            }
-                          />
-                        ))}
-                      </section>
-                    ) : null,
-                    decisions: p.decisions ? (
-                      <PeriodDecisionsRecap decisions={p.decisions} vocabulary={view.vocabulary} gamme={view.gamme} />
-                    ) : null,
-                    resultats: <PeriodDashboard view={view} period={p} standing={isLatest} />,
-                  }}
-                </SegmentedTabs>
-              </div>
-            </details>
-          );
-        })}
+        {toursPasses}
       </div>
 
       {/*
@@ -1280,30 +1431,7 @@ export default async function ArenaPage({
         ensuite : passé la clôture, il ne reste qu'à lire qui est où et à le
         signaler à l'enseignant.
       */}
-      {!finished && view.equipesDeLaClasse.length > 1 ? (
-        view.peutChoisirSonEquipe ? (
-          <ChoixEquipe
-            gameId={gameId}
-            equipes={view.equipesDeLaClasse}
-            monEquipeId={view.playerTeamId}
-            ouvert
-          />
-        ) : (
-          <Tiroir
-            icone="equipes"
-            titre="Composition des équipes"
-            quoi={compter(view.equipesDeLaClasse.length, "équipe")}
-          >
-            <ChoixEquipe
-              gameId={gameId}
-              equipes={view.equipesDeLaClasse}
-              monEquipeId={view.playerTeamId}
-              ouvert={false}
-              concours={view.estUnConcours}
-            />
-          </Tiroir>
-        )
-      ) : null}
+      {telephone ? null : compositionNode}
 
       <div id="mon-profil" className="scroll-mt-24 space-y-4">
         {/*
@@ -1313,24 +1441,9 @@ export default async function ArenaPage({
           sont relus des résultats déjà calculés — rien de neuf n'est stocké — et
           les cases vides disent ce qu'il reste à viser.
         */}
-        {periods.length > 0 ? (
-          <VosReussites
-            cases={reussitesDeLaPartie(
-              periods.map((p) => lireLeTour(p.round, p.result, p.forecastReview)),
-            )}
-            nommerLeTour={(round) => periodLabel(view.roundDays, round)}
-          />
-        ) : null}
+        {telephone && !finished ? null : vosReussites}
 
-        {view.kind !== "solo" && view.playerPseudo ? (
-          <IdentiteDeLAppareil
-            pseudo={view.playerPseudo}
-            equipe={view.playerTeamName}
-            variante="arene"
-          />
-        ) : null}
-
-        {codeDeReprise ? <MaCarteDeReprise gameId={gameId} code={codeDeReprise} /> : null}
+        {telephone ? null : compteNode}
 
         {/* Les deux liens retirés du bandeau de jeu : ils restent à portée,
             là où l'élève regarde son profil. */}

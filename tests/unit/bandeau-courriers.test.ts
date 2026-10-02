@@ -83,7 +83,7 @@ describe("place du bandeau dans l'arène", () => {
     const bandeau = source.indexOf("<BandeauCourriers");
     // On vise l'OUVERTURE de l'accordéon, pas n'importe quel parcours de
     // `periods` : l'en-tête en fait un aussi, pour la frise des tours.
-    const accordeon = source.indexOf("{periods.map((p) => {");
+    const accordeon = source.lastIndexOf("{toursPasses}");
     expect(bandeau).toBeGreaterThan(-1);
     expect(accordeon).toBeGreaterThan(-1);
     expect(bandeau).toBeLessThan(accordeon);

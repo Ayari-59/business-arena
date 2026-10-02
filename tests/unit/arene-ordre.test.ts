@@ -25,7 +25,9 @@ function position(repere: string): number {
 describe("l'ordre de l'arène", () => {
   it("le tour en cours vient avant les tours clos", () => {
     const actif = position('id="tour-en-cours"');
-    const passes = position("{periods.map((p) => {");
+    // Les tours clos sont déclarés en constante (`toursPasses`) puis POSÉS dans la page :
+    // c'est la pose, la dernière occurrence, qui fixe l'ordre à l'écran.
+    const passes = PAGE.lastIndexOf("{toursPasses}");
     expect(actif).toBeGreaterThan(0);
     expect(passes).toBeGreaterThan(0);
     expect(actif, "les tours clos ont repris la tête de la page").toBeLessThan(passes);
@@ -33,7 +35,8 @@ describe("l'ordre de l'arène", () => {
 
   it("l'identité, la clé et la composition viennent après le jeu", () => {
     const actif = position('id="tour-en-cours"');
-    for (const bloc of ['id="mon-profil"', "Composition des équipes"]) {
+    // La composition est une constante (`compositionNode`) posée dans la page.
+    for (const bloc of ['id="mon-profil"', "{telephone ? null : compositionNode}"]) {
       expect(position(bloc), bloc).toBeGreaterThan(actif);
     }
   });
@@ -51,7 +54,9 @@ describe("l'ordre de l'arène", () => {
   it("le nom du joueur reste visible dans le bandeau de jeu", () => {
     // C'était le seul rôle que l'encadré descendu remplissait mieux qu'une
     // ligne : prévenir qu'on joue sous l'identité du poste précédent.
-    const entete = PAGE.slice(position("<header"), position("</header>"));
+    // L'en-tête de la page est le dernier `<header` du fichier : les cartes du
+    // téléphone, déclarées plus haut, en ont chacune un.
+    const entete = PAGE.slice(PAGE.lastIndexOf("<header"), PAGE.lastIndexOf("</header>"));
     expect(entete).toContain("view.playerPseudo");
     expect(entete).toContain('href="#mon-profil"');
   });

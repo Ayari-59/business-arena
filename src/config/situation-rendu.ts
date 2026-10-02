@@ -89,3 +89,14 @@ export function statutDesSituations(situations: readonly EtatRendu[]): StatutSit
 export function libelleStatut(statut: StatutSituations): string {
   return statut.manques.length === 0 ? STATUT_RENDUE : messageIncomplet(statut.manques);
 }
+
+/**
+ * Les écrans de l'analyse sur téléphone : le contexte, le diagnostic, puis UNE
+ * question du modèle par écran. Une analyse déjà rendue n'en a plus qu'un, qui le
+ * dit. La page serveur compte ainsi, avant même que la situation s'affiche, pour
+ * que la barre de progression du tour garde sa mesure.
+ */
+export function etapesDeLAnalyse(s: EtatRendu): number {
+  if (estRendue(s)) return 1;
+  return 2 + (s.quizAnswers === null ? s.quizQuestions.length : 0);
+}

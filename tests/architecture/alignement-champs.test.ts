@@ -39,7 +39,11 @@ describe("les champs chiffrés restent dans leur cadre", () => {
     // coïncider : un suffixe en moins voudrait dire qu'un cadre a perdu son
     // unité, un en trop qu'il en a deux.
     const champs = form.match(/min-w-0 flex-1 bg-transparent/g) ?? [];
-    const suffixes = form.match(/<span className="shrink-0 text-xs text-slate-400">/g) ?? [];
+    // Le suffixe garde sa taille fixe ; en cartes (téléphone), la taille suit le mode.
+    const suffixes =
+      form.match(
+        /<span className=(?:"shrink-0 text-xs text-slate-400"|\{`shrink-0 text-slate-400 \$\{[^}]*\}`\})>/g,
+      ) ?? [];
     expect(champs.length).toBeGreaterThan(0);
     expect(suffixes.length).toBe(champs.length);
   });

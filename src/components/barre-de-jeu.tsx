@@ -33,6 +33,7 @@ export function BarreDeJeu({
   cockpit,
   themeParDefaut,
   accents,
+  compte = null,
 }: {
   nom: string;
   tour: number;
@@ -44,6 +45,8 @@ export function BarreDeJeu({
   cockpit: string;
   themeParDefaut: CodeTheme;
   accents?: Record<CodeTheme, string>;
+  /** Ce qui n'est pas le jeu, en classe : sous quel nom on joue, la clé de reprise, la composition des équipes. */
+  compte?: React.ReactNode;
 }) {
   const [ouvert, setOuvert] = useState(false);
   const id = useId();
@@ -170,6 +173,11 @@ export function BarreDeJeu({
           <Link href="/" className={lien}>
             Accueil du site
           </Link>
+          {compte ? (
+            <div className="mt-1 space-y-3 border-t border-white/10 p-2 pt-3">
+              {compte}
+            </div>
+          ) : null}
           <div className="mt-1 flex min-h-11 items-center justify-between gap-3 border-t border-white/10 px-3 pt-2">
             <span className="text-base text-slate-200">Apparence</span>
             <ThemeSwitcher parDefaut={themeParDefaut} accents={accents} />

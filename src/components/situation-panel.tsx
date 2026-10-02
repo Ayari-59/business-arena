@@ -13,6 +13,7 @@ import { estRendue, manques, messageIncomplet } from "@/config/situation-rendu";
 import type { SituationView } from "@/services/pedagogy.service";
 import type { SituationCategory } from "@/config/scenarios/situation-kit";
 import { Tiroir } from "@/components/tiroir";
+import { useParcours } from "@/components/parcours-mobile";
 
 const CATEGORY_LABELS: Record<SituationCategory, string> = {
   prise_de_poste: "Prise de poste",
@@ -142,6 +143,18 @@ export function SituationCard({
     }
   }, [situation.instanceId, rendue, options, freeText, reponses]);
 
+  // SUR TÉLÉPHONE, l'analyse se fait écran par écran (voir parcours-mobile.tsx) :
+  // le contexte, le diagnostic, puis une question du modèle à la fois. Tous les
+  // champs restent dans le formulaire (masqués, pas retirés) : il part entier.
+  const parcours = useParcours();
+  const parEtapes = parcours !== null;
+  const [etape, setEtape] = useState(0);
+  const totalEtapes = rendue ? 1 : 2 + questionsARendre.length;
+  const rapporterAnalyse = parcours?.rapporterAnalyse;
+  useEffect(() => {
+    rapporterAnalyse?.(rendue ? 0 : etape);
+  }, [rapporterAnalyse, rendue, etape]);
+
   const manquants = manques({
     options,
     questions: questionsARendre.map((q) => q.id),
@@ -153,6 +166,81 @@ export function SituationCard({
     setOptions((prec) =>
       coche ? [...new Set([...prec, id])] : prec.filter((o) => o !== id),
     );
+
+  const indices = (
+    <section className="rounded-lg bg-slate-950 p-3 sm:p-5">
+      <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+        Besoin d&apos;aide ? Indices progressifs
+      </h4>
+      {situation.unlockedHints.length > 0 ? (
+        <ol className="mt-2 space-y-1.5">
+          {situation.unlockedHints.map((h) => (
+            <li
+              key={h.level}
+              className="rounded-lg border border-white/5 bg-slate-900 px-3 py-2 text-sm text-slate-300"
+            >
+              <span className="mr-2 text-xs font-semibold text-amber-400">
+                Indice {h.level}
+              </span>
+              {h.text}
+            </li>
+          ))}
+        </ol>
+      ) : null}
+      {situation.nextHint ? (
+        <form ref={hint.formRef} action={hintAction} className="mt-2">
+          <ErrorBox error={hintState.error} />
+          <GuardError message={hint.guardError} />
+          <button
+            type="submit"
+            disabled={hintPending}
+            className="rounded-lg border border-amber-400/40 px-4 py-2 text-xs font-semibold text-amber-300 hover:bg-amber-400/10 disabled:opacity-60"
+          >
+            {hintPending
+              ? "Déblocage…"
+              : `Débloquer l'indice ${situation.nextHint.level} (−${Math.round(situation.nextHint.costRatio * 100)} % du score de la situation)`}
+          </button>
+        </form>
+      ) : situation.hintLimit ? (
+        <p className="mt-2 text-xs text-slate-400">
+          {situation.hintLimit}. À vous de trancher avec ce que vous avez.
+        </p>
+      ) : situation.unlockedHints.length === 5 ? (
+        <p className="mt-2 text-xs text-slate-400">
+          Tous les indices sont débloqués.
+        </p>
+      ) : null}
+    </section>
+  );
+
+  if (parEtapes) {
+    return (
+      <AnalyseParEtapes
+        situation={situation}
+        etape={etape}
+        setEtape={setEtape}
+        totalEtapes={totalEtapes}
+        rendue={rendue}
+        quizDone={quizDone}
+        questionsARendre={questionsARendre}
+        options={options}
+        basculerOption={basculerOption}
+        freeText={freeText}
+        setFreeText={setFreeText}
+        reponses={reponses}
+        setReponses={setReponses}
+        complet={complet}
+        manquants={manquants}
+        formRef={rendu.formRef}
+        guardError={rendu.guardError}
+        renduAction={renduAction}
+        renduState={renduState}
+        renduPending={renduPending}
+        indices={indices}
+        parcours={parcours}
+      />
+    );
+  }
 
   return (
     <article className="carte p-4 sm:p-6">
@@ -353,52 +441,320 @@ export function SituationCard({
           </form>
         )}
 
-        {/* 3. Indices */}
-        <section className="rounded-lg bg-slate-950 p-3 sm:p-5">
-          <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-            Besoin d&apos;aide ? Indices progressifs
-          </h4>
-          {situation.unlockedHints.length > 0 ? (
-            <ol className="mt-2 space-y-1.5">
-              {situation.unlockedHints.map((h) => (
-                <li
-                  key={h.level}
-                  className="rounded-lg border border-white/5 bg-slate-900 px-3 py-2 text-sm text-slate-300"
-                >
-                  <span className="mr-2 text-xs font-semibold text-amber-400">
-                    Indice {h.level}
-                  </span>
-                  {h.text}
-                </li>
-              ))}
-            </ol>
-          ) : null}
-          {situation.nextHint ? (
-            <form ref={hint.formRef} action={hintAction} className="mt-2">
-              <ErrorBox error={hintState.error} />
-              <GuardError message={hint.guardError} />
-              <button
-                type="submit"
-                disabled={hintPending}
-                className="rounded-lg border border-amber-400/40 px-4 py-2 text-xs font-semibold text-amber-300 hover:bg-amber-400/10 disabled:opacity-60"
-              >
-                {hintPending
-                  ? "Déblocage…"
-                  : `Débloquer l'indice ${situation.nextHint.level} (−${Math.round(situation.nextHint.costRatio * 100)} % du score de la situation)`}
-              </button>
-            </form>
-          ) : situation.hintLimit ? (
-            <p className="mt-2 text-xs text-slate-400">
-              {situation.hintLimit}. À vous de trancher avec ce que vous avez.
-            </p>
-          ) : situation.unlockedHints.length === 5 ? (
-            <p className="mt-2 text-xs text-slate-400">
-              Tous les indices sont débloqués.
-            </p>
-          ) : null}
-        </section>
+        {indices}
       </div>
     </article>
+  );
+}
+
+const LIGNE_DE_CHOIX =
+  "flex min-h-14 cursor-pointer items-start gap-3 rounded-xl border border-white/15 px-4 py-3 text-base text-slate-100 has-[:checked]:border-amber-400 has-[:checked]:bg-amber-400/10";
+
+/**
+ * L'analyse d'une situation, écran par écran (téléphone).
+ *
+ * Contexte, diagnostic, puis UNE question du modèle par écran, avec le pied du
+ * parcours : « Retour » et « Continuer », qui devient « Valider mon analyse »
+ * sur le dernier écran. Chaque écran n'avance que s'il est répondu : sinon le
+ * rendu, qui part complet ou pas du tout, se bloquerait au dernier pas sur une
+ * réponse qu'on n'a plus sous les yeux.
+ */
+function AnalyseParEtapes({
+  situation,
+  etape,
+  setEtape,
+  totalEtapes,
+  rendue,
+  quizDone,
+  questionsARendre,
+  options,
+  basculerOption,
+  freeText,
+  setFreeText,
+  reponses,
+  setReponses,
+  complet,
+  manquants,
+  formRef,
+  guardError,
+  renduAction,
+  renduState,
+  renduPending,
+  indices,
+  parcours,
+}: {
+  situation: SituationView;
+  etape: number;
+  setEtape: (e: number) => void;
+  totalEtapes: number;
+  rendue: boolean;
+  quizDone: boolean;
+  questionsARendre: SituationView["quizQuestions"];
+  options: string[];
+  basculerOption: (id: string, coche: boolean) => void;
+  freeText: string;
+  setFreeText: (t: string) => void;
+  reponses: Record<string, string>;
+  setReponses: (
+    f: (prec: Record<string, string>) => Record<string, string>,
+  ) => void;
+  complet: boolean;
+  manquants: ReturnType<typeof manques>;
+  formRef: React.RefObject<HTMLFormElement | null>;
+  guardError: string | null;
+  renduAction: (formData: FormData) => void;
+  renduState: PedagogyState;
+  renduPending: boolean;
+  indices: React.ReactNode;
+  parcours: NonNullable<ReturnType<typeof useParcours>>;
+}) {
+  const aller = (e: number) => {
+    setEtape(e);
+    window.scrollTo({ top: 0 });
+  };
+  const dernier = totalEtapes - 1;
+  const entete = (eyebrow: string, titre: string, ordinal: string) => (
+    <header className="space-y-2 pb-4">
+      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-amber-400">
+        {eyebrow}
+        {ordinal ? ` · ${ordinal}` : ""}
+      </p>
+      <h2 className="font-display text-[1.7rem] font-semibold leading-tight text-slate-50">
+        {titre}
+      </h2>
+    </header>
+  );
+  const pied = (contenu: React.ReactNode, message?: string | null) => (
+    <>
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/12 bg-slate-950/95 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur-md supports-[backdrop-filter]:bg-slate-950/90 print:hidden">
+        {message ? (
+          <p className="pb-2 text-sm text-slate-300">{message}</p>
+        ) : null}
+        <div className="flex gap-2.5">{contenu}</div>
+      </div>
+    </>
+  );
+  const retour = (surClic: () => void) => (
+    <button
+      type="button"
+      onClick={surClic}
+      className={`${bouton({ variante: "secondaire", taille: "l" })} min-h-12 shrink-0`}
+    >
+      Retour
+    </button>
+  );
+
+  if (rendue) {
+    return (
+      <div>
+        {entete(CATEGORY_LABELS[situation.category], situation.title, "")}
+        <p className="text-base leading-relaxed text-emerald-300">
+          ✓ Analyse rendue : correction au débriefing.
+        </p>
+        {pied(
+          <>
+            {retour(parcours.reculer)}
+            <button
+              type="button"
+              onClick={parcours.continuer}
+              className={`${bouton({ taille: "l" })} min-h-12 flex-1`}
+            >
+              Continuer
+              <span aria-hidden>→</span>
+            </button>
+          </>,
+        )}
+        <div aria-hidden className="h-36" />
+      </div>
+    );
+  }
+
+  const question = etape >= 2 ? questionsARendre[etape - 2] : undefined;
+  const bloque =
+    etape === 1
+      ? options.length === 0
+      : question
+        ? !reponses[question.id]
+        : false;
+  const message =
+    etape === dernier && !complet
+      ? messageIncomplet(manquants)
+      : bloque
+        ? etape === 1
+          ? "Cochez au moins une réponse pour continuer."
+          : "Choisissez une réponse pour continuer."
+        : null;
+
+  return (
+    <div>
+      <form ref={formRef} action={renduAction}>
+        <input
+          type="hidden"
+          name="questions"
+          value={questionsARendre.map((q) => q.id).join(",")}
+        />
+
+        <section hidden={etape !== 0} className="space-y-4">
+          {entete(CATEGORY_LABELS[situation.category], situation.title, "")}
+          {situation.aboveGameLevel ? (
+            <p className="text-base text-sky-300">
+              Cette situation dépasse le niveau choisi pour la partie.
+            </p>
+          ) : null}
+          <p className="text-base leading-relaxed text-slate-200">
+            {situation.narrative}
+          </p>
+          <p className="text-base font-medium leading-relaxed text-amber-200">
+            {situation.problem}
+          </p>
+          {situation.triggerFacts && situation.triggerFacts.length > 0 ? (
+            <Tiroir
+              titre="Pourquoi cette situation ?"
+              quoi={`${situation.triggerFacts.length} fait${situation.triggerFacts.length > 1 ? "s" : ""}`}
+              ouvert={situation.origin === "detected"}
+            >
+              <dl className="space-y-2">
+                {situation.triggerFacts.map((fact, i) => (
+                  <div
+                    key={i}
+                    className="flex items-baseline justify-between gap-3"
+                  >
+                    <dt className="text-sm text-slate-400">{fact.label}</dt>
+                    <dd
+                      className={`text-base font-medium ${
+                        fact.direction === "positive"
+                          ? "text-emerald-400"
+                          : fact.direction === "negative"
+                            ? "text-red-400"
+                            : "text-slate-300"
+                      }`}
+                    >
+                      {fact.value}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </Tiroir>
+          ) : null}
+        </section>
+
+        <section hidden={etape !== 1}>
+          {entete(
+            "Analyse",
+            "Quel est le problème principal ?",
+            `1 sur ${totalEtapes - 1}`,
+          )}
+          <fieldset className="min-w-0 space-y-2 border-0 p-0">
+            <legend className="sr-only">
+              Quel est le problème principal ?
+            </legend>
+            {situation.diagnosticOptions.map((option) => (
+              <label key={option.id} className={LIGNE_DE_CHOIX}>
+                <input
+                  type="checkbox"
+                  name="options"
+                  value={option.id}
+                  checked={options.includes(option.id)}
+                  onChange={(e) => basculerOption(option.id, e.target.checked)}
+                  className="mt-0.5 h-5 w-5 shrink-0 accent-amber-400"
+                />
+                <span>{option.label}</span>
+              </label>
+            ))}
+          </fieldset>
+          <textarea
+            name="freeText"
+            rows={3}
+            value={freeText}
+            onChange={(e) => setFreeText(e.target.value)}
+            aria-label="Votre analyse écrite du problème"
+            placeholder="En quelques mots, votre analyse (facultatif)…"
+            className="mt-3 w-full champ px-3 py-3 text-base text-slate-100 outline-none"
+          />
+        </section>
+
+        {situation.quizQuestions.map((q) => {
+          const rang = questionsARendre.findIndex((x) => x.id === q.id);
+          if (quizDone || rang < 0) return null;
+          return (
+            <section key={q.id} hidden={etape !== rang + 2}>
+              {entete(
+                "Analyse",
+                q.prompt,
+                `${rang + 2} sur ${totalEtapes - 1}`,
+              )}
+              <fieldset className="min-w-0 space-y-2 border-0 p-0">
+                <legend className="sr-only">{q.prompt}</legend>
+                {q.options.map((option) => (
+                  <label key={option.id} className={LIGNE_DE_CHOIX}>
+                    <input
+                      type="radio"
+                      name={`quiz_${q.id}`}
+                      value={option.id}
+                      checked={reponses[q.id] === option.id}
+                      onChange={() =>
+                        setReponses((prec) => ({ ...prec, [q.id]: option.id }))
+                      }
+                      className="mt-0.5 h-5 w-5 shrink-0 accent-amber-400"
+                    />
+                    <span>{option.label}</span>
+                  </label>
+                ))}
+              </fieldset>
+            </section>
+          );
+        })}
+
+        <div className="space-y-2 pt-3">
+          {etape === dernier ? <ErrorBox error={renduState.error} /> : null}
+          {etape === dernier ? <GuardError message={guardError} /> : null}
+        </div>
+
+        {pied(
+          <>
+            {retour(etape === 0 ? parcours.reculer : () => aller(etape - 1))}
+            {etape < dernier ? (
+              <button
+                type="button"
+                disabled={bloque}
+                onClick={() => aller(etape + 1)}
+                className={`${bouton({ taille: "l" })} min-h-12 flex-1`}
+              >
+                Continuer
+                <span aria-hidden>→</span>
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={!complet || renduPending}
+                aria-disabled={!complet || renduPending}
+                className={`${bouton({ taille: "l" })} min-h-12 flex-1`}
+              >
+                {renduPending ? "Envoi…" : "Valider mon analyse"}
+              </button>
+            )}
+          </>,
+          message,
+        )}
+      </form>
+
+      {/* Les indices, hors du formulaire (ils ont le leur) : un tiroir sur les
+          écrans où l'on répond, jamais sur le contexte. */}
+      <div hidden={etape === 0} className="pt-2">
+        <Tiroir
+          titre="Besoin d'un indice ?"
+          quoi={
+            situation.unlockedHints.length > 0
+              ? `${situation.unlockedHints.length} débloqué${situation.unlockedHints.length > 1 ? "s" : ""}`
+              : undefined
+          }
+        >
+          {indices}
+        </Tiroir>
+      </div>
+      {/* La place du pied fixe : sans elle, la fin de l'écran passerait dessous. */}
+      <div aria-hidden className="h-36" />
+    </div>
   );
 }
 

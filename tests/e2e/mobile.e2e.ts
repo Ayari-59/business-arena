@@ -332,6 +332,39 @@ describe("pendant une partie", () => {
     throw new Error("aucune carte du briefing ne porte un tiroir");
   });
 
+  it("l'analyse se fait écran par écran : le contexte, le diagnostic, une question à la fois", async () => {
+    await versLaPremiereCarte();
+    for (let k = 0; k < 10; k++) {
+      const analyser = page.getByRole("button", { name: /^Analyser/ });
+      if (await analyser.count()) {
+        await analyser.click();
+        break;
+      }
+      await suite().click();
+      await page.waitForTimeout(250);
+    }
+    // 1. le contexte de la situation, sans champ
+    await page.getByRole("button", { name: "Continuer", exact: false }).last().waitFor();
+    expect(await page.locator("form input[type=checkbox]:visible").count()).toBe(0);
+    await page.getByRole("button", { name: /^Continuer/ }).last().click();
+    await page.waitForTimeout(250);
+    // 2. le diagnostic : on n'avance pas sans réponse
+    const continuer = page.getByRole("button", { name: /^Continuer/ }).last();
+    expect(await continuer.isDisabled()).toBe(true);
+    await page.locator("form input[type=checkbox]:visible").first().check({ force: true });
+    expect(await continuer.isDisabled()).toBe(false);
+    await continuer.click();
+    await page.waitForTimeout(250);
+    // 3. une question du modèle : le rendu n'est possible qu'une fois répondue
+    const valider = page.getByRole("button", { name: "Valider mon analyse" });
+    expect(await valider.isDisabled()).toBe(true);
+    await page.locator("form input[type=radio]:visible").first().check({ force: true });
+    expect(await valider.isDisabled()).toBe(false);
+    // Un écran à la fois : la barre de progression a avancé, et le pied reste en bas.
+    const bas = (await valider.boundingBox())!;
+    expect(bas.y + bas.height).toBeGreaterThan(page.viewportSize()!.height - 40);
+  });
+
   it("la première décision est la commande exceptionnelle, seule à l'écran", async () => {
     await versLesDecisions();
     expect(await titreDeLaCarte()).toMatch(/Décision 1 sur \d+ Une commande/i);

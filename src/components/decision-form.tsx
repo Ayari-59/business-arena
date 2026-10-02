@@ -749,7 +749,13 @@ function GammeReference({
   const avecFournisseurs = gamme.some((p) => p.suppliers);
   const avecRd = rd && gamme.some((p) => p.rd);
   const avecSaison = gamme.some((p) => Math.abs(p.seasonCoef - 1) > 0.01);
-  const [activeProduct, setActiveProduct] = useState(gamme[0]?.code ?? "");
+  const [produitChoisi, setActiveProduct] = useState(gamme[0]?.code ?? "");
+  // EN CARTES (téléphone), la référence affichée est celle de la carte courante :
+  // une carte par référence, plus d'onglets pour passer de l'une à l'autre.
+  const { actif: enCartes, courante: carteCourante } = useModeCartes();
+  const activeProduct = enCartes
+    ? (gamme.find((p) => `ref-${p.code}` === carteCourante)?.code ?? gamme[0]?.code ?? "")
+    : produitChoisi;
   // Où sommes-nous ? La mise en page, elle, n'a pas besoin de le demander : le
   // CSS s'en charge. Seul le `required` doit le savoir — exiger un champ qu'on
   // ne voit pas bloque l'envoi sans rien afficher, et le point de départ est
@@ -763,7 +769,7 @@ function GammeReference({
     return () => mq.removeEventListener("change", suivre);
   }, []);
   /** Cette colonne est-elle sous les yeux ? Toutes le sont sur grand écran. */
-  const visible = (code: string) => surGrandEcran || code === activeProduct;
+  const visible = (code: string) => (surGrandEcran && !enCartes) || code === activeProduct;
   /** Masquée en CSS tant qu'on n'a pas la place — jamais démontée. */
   const colonne = (code: string) =>
     `${code === activeProduct ? "" : "hidden "}lg:table-cell overflow-hidden px-2 py-1.5 align-top`;
@@ -801,7 +807,7 @@ function GammeReference({
     pas = 1,
     onChange?: (v: number) => void,
   ) => (
-    <span className="flex items-center gap-1.5 champ px-2 py-1.5">
+    <span className={`flex items-center gap-1.5 champ ${enCartes ? "px-4 py-3" : "px-2 py-1.5"}`}>
       <input
         type="number"
         onWheel={sansMolette}
@@ -812,9 +818,9 @@ function GammeReference({
         step={pas}
         min={0}
         required={visible(p.code)}
-        className="min-w-0 flex-1 bg-transparent text-sm tabular-nums text-slate-100 outline-none"
+        className={`min-w-0 flex-1 bg-transparent tabular-nums text-slate-100 outline-none ${enCartes ? "text-xl" : "text-sm"}`}
       />
-      <span className="shrink-0 text-xs text-slate-400">{suffixe}</span>
+      <span className={`shrink-0 text-slate-400 ${enCartes ? "text-base" : "text-xs"}`}>{suffixe}</span>
     </span>
   );
 
@@ -873,7 +879,7 @@ function GammeReference({
                     onChange={(e) =>
                       setFaconniers((etat) => ({ ...etat, [p.code]: e.currentTarget.value }))
                     }
-                    className="w-full champ px-2 py-1.5 text-[13px] text-slate-100 outline-none"
+                    className={`w-full champ text-slate-100 outline-none ${enCartes ? "px-3 py-3 text-base" : "px-2 py-1.5 text-[13px]"}`}
                   >
                     {suppliers.map((s) => {
                       // Le nom seul pour le façonnier de référence, l'écart
@@ -1034,6 +1040,47 @@ function GammeReference({
     return dev && !dev.available ? [{ p, dev }] : [];
   });
 
+  if (enCartes) {
+    return (
+      <div>
+        {gamme.map((p) => (
+          <div key={p.code} hidden={p.code !== activeProduct} className="space-y-5">
+            <ul className="flex flex-wrap gap-2">
+              {lignes
+                .filter((l) => l.deduite)
+                .map((l) => (
+                  <li key={l.cle} className="rounded-full border border-white/15 px-3 py-1.5 text-sm text-slate-200">
+                    <span className="text-slate-400">{l.label}</span> {l.cellule(p)}
+                  </li>
+                ))}
+            </ul>
+            {enDeveloppement(p) ? <EnDeveloppement /> : null}
+            {lignes
+              .filter((l) => !l.deduite)
+              .map((l) => (
+                <div key={l.cle} className="space-y-1.5">
+                  <span className="block text-base text-slate-300">{l.label}</span>
+                  {l.cellule(p)}
+                </div>
+              ))}
+            {chantiers
+              .filter((c) => c.p.code === p.code)
+              .map(({ dev }) => {
+                const reste = Math.max(0, dev.cost - dev.invested);
+                return (
+                  <p key={p.code} className="text-base leading-relaxed text-amber-200/80">
+                    {reste <= 0
+                      ? `Financée (${formatEuro(dev.invested)} engagés) : vendable dès le tour ${Math.max(dev.availableFromRound, roundIndex + 1)}.`
+                      : `${formatEuro(dev.invested)} engagés sur ${formatEuro(dev.cost)} : il reste ${formatEuro(reste)} à financer, puis elle se vend dès le tour suivant (au plus tôt le tour ${dev.availableFromRound}).`}
+                  </p>
+                );
+              })}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-3">
       {/* Sur téléphone, une seule colonne tient : ces boutons choisissent
@@ -1191,6 +1238,7 @@ export function DecisionForm({
   kind,
   alreadySubmitted,
   telephone = false,
+  enTeteDuRecapitulatif = null,
   reperes = null,
   insuranceOffer,
   enabled,
@@ -1219,6 +1267,8 @@ export function DecisionForm({
   gameId: string;
   /** Sur téléphone, les textes d'aide se rangent dans un tiroir (voir aide-repliable.tsx). */
   telephone?: boolean;
+  /** Sur téléphone, l'état de l'équipe (décisions enregistrées, classe, échéance) se lit au récapitulatif. */
+  enTeteDuRecapitulatif?: ReactNode;
   /**
    * Ce qui éclaire le prix sur sa carte : la fourchette de ce que paient les clients,
    * et le coût d'une unité (absent en gamme, où chaque référence a le sien).
@@ -1715,15 +1765,16 @@ export function DecisionForm({
             ]
           : []),
         ...(gamme
-          ? [
-              {
-                cle: "references",
-                etape: "vendre",
-                nom: "Vos références",
-                question: "Prix et volumes de vos références",
-                resume: () => "Voir le détail",
-              },
-            ]
+          ? gamme.map((p) => ({
+              cle: `ref-${p.code}`,
+              etape: "vendre",
+              nom: p.name,
+              question: `Vos choix pour ${p.name}`,
+              resume: (d: FormData) =>
+                enDeveloppement(p)
+                  ? "À développer"
+                  : `${nb(d.get(productFieldName(p.code, "price")))} € · ${nb(d.get(productFieldName(p.code, "productionPlan")))} ${v.units}`,
+            }))
           : [
               {
                 cle: "prix",
@@ -2119,6 +2170,9 @@ export function DecisionForm({
           }
         }
         if (fiches.length === 0) return null;
+        // En cartes, le catalogue n'a pas de carte : le façonnier se choisit sur celle
+        // de sa référence, avec ses délais et son risque sous le choix.
+        if (gamme && modeCartes) return null;
         return (
           <Family
             // EN GAMME, CE PANNEAU NE PORTE AUCUNE DÉCISION : le façonnier se
@@ -2362,7 +2416,7 @@ export function DecisionForm({
         // prix et le budget marketing d'une même référence se décidaient sur
         // deux étapes, alors que l'un commande l'autre.
         <Family
-          carte="references"
+          carte={gamme.map((p) => `ref-${p.code}`)}
           legend="🎯 Vos références · tout ce qui se décide pour chacune"
           defaultOpen
         >
@@ -3092,6 +3146,7 @@ export function DecisionForm({
         </p>
       </Family>
       </section>
+      {modeCartes && carteCourante?.cle === "recap" ? enTeteDuRecapitulatif : null}
       {modeCartes && carteCourante?.cle === "recap" && donneesRecap ? (
         <RecapDesDecisions
           lignes={cartes

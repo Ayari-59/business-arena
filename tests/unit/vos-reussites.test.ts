@@ -134,10 +134,10 @@ describe("les réussites de la partie", () => {
       "utf8",
     );
     expect(arene).toContain("<VosReussites");
+    // Le nœud est déclaré en constante, puis posé : c'est la pose qui compte.
     const profil = arene.indexOf('id="mon-profil"');
-    expect(arene.indexOf("<VosReussites")).toBeGreaterThan(profil);
-    expect(arene.indexOf("<VosReussites")).toBeLessThan(
-      arene.indexOf("<IdentiteDeLAppareil"),
-    );
+    const pose = arene.indexOf("{telephone && !finished ? null : vosReussites}");
+    expect(pose).toBeGreaterThan(profil);
+    expect(pose).toBeLessThan(arene.indexOf("{telephone ? null : compteNode}"));
   });
 });

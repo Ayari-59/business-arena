@@ -7,6 +7,7 @@ import {
   STATUT_RENDUE,
   estComplet,
   estRendue,
+  etapesDeLAnalyse,
   libelleStatut,
   manques,
   manquesEnregistres,
@@ -378,5 +379,40 @@ describe("l'annonce du tour", () => {
     for (const etat of [{}, { pendingDecisions: true }, { finished: true }]) {
       expect(annonce(etat)).not.toContain('href="#decisions"');
     }
+  });
+});
+
+describe("les écrans de l'analyse sur téléphone", () => {
+  const q = (n: number) =>
+    Array.from({ length: n }, (_, i) => ({ id: `q${i}` }));
+  it("contexte, diagnostic, puis une question par écran", () => {
+    expect(
+      etapesDeLAnalyse({
+        diagnosis: null,
+        quizAnswers: null,
+        quizQuestions: q(2),
+      }),
+    ).toBe(4);
+    expect(
+      etapesDeLAnalyse({
+        diagnosis: null,
+        quizAnswers: null,
+        quizQuestions: q(0),
+      }),
+    ).toBe(2);
+  });
+  it("le modèle déjà validé ne se redemande pas", () => {
+    expect(
+      etapesDeLAnalyse({
+        diagnosis: null,
+        quizAnswers: {},
+        quizQuestions: q(2),
+      }),
+    ).toBe(2);
+  });
+  it("une analyse rendue tient en un écran", () => {
+    expect(
+      etapesDeLAnalyse({ diagnosis: {}, quizAnswers: {}, quizQuestions: q(2) }),
+    ).toBe(1);
   });
 });

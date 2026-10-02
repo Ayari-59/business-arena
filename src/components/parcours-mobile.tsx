@@ -38,11 +38,21 @@ export interface CarteDuParcours {
   noeud: ReactNode;
 }
 
+/** Une situation à analyser : son contenu, et le nombre d'écrans qu'elle compte. */
+export interface AnalyseDuParcours extends CarteDuParcours {
+  etapes: number;
+}
+
 interface ContexteDuParcours {
   /** Le formulaire de décision dit où il en est : carte courante, nombre de cartes. */
   rapporterDecision: (courante: number, total: number) => void;
   /** Reculer depuis la première carte de décision : retour à l'analyse. */
   reculerAvantLesDecisions: () => void;
+  /** L'analyse a son propre pied, comme les décisions : elle dit où elle en est. */
+  rapporterAnalyse: (courante: number) => void;
+  /** Passer à l'étape du parcours qui suit, ou revenir à celle d'avant. */
+  continuer: () => void;
+  reculer: () => void;
 }
 
 const ParcoursContexte = createContext<ContexteDuParcours | null>(null);
@@ -59,7 +69,7 @@ export function ParcoursMobile({
   decisions,
 }: {
   briefing: CarteDuParcours[];
-  analyse: ReactNode | null;
+  analyse: AnalyseDuParcours[];
   /** Le courrier du tour (solo) : une carte avant les décisions, qui en dépendent. */
   courrier: ReactNode | null;
   decisions: ReactNode;
@@ -71,21 +81,47 @@ export function ParcoursMobile({
       noeud: ReactNode;
       rang: number;
       sur: number;
+      poids: number;
     }[] = briefing.map((c, i) => ({
       phase: "briefing",
       cle: c.cle,
       noeud: c.noeud,
       rang: i + 1,
       sur: briefing.length,
+      poids: 1,
     }));
-    if (analyse) liste.push({ phase: "analyse", cle: "analyse", noeud: analyse, rang: 1, sur: 1 });
-    if (courrier) liste.push({ phase: "courrier", cle: "courrier", noeud: courrier, rang: 1, sur: 1 });
-    liste.push({ phase: "decision", cle: "decision", noeud: decisions, rang: 1, sur: 1 });
+    for (const a of analyse)
+      liste.push({
+        phase: "analyse",
+        cle: a.cle,
+        noeud: a.noeud,
+        rang: 1,
+        sur: 1,
+        poids: a.etapes,
+      });
+    if (courrier)
+      liste.push({
+        phase: "courrier",
+        cle: "courrier",
+        noeud: courrier,
+        rang: 1,
+        sur: 1,
+        poids: 1,
+      });
+    liste.push({
+      phase: "decision",
+      cle: "decision",
+      noeud: decisions,
+      rang: 1,
+      sur: 1,
+      poids: 1,
+    });
     return liste;
   }, [briefing, analyse, courrier, decisions]);
 
   const [index, setIndex] = useState(0);
   const [decision, setDecision] = useState({ courante: 0, total: 0 });
+  const [analyseCourante, setAnalyseCourante] = useState(0);
   const courante = etapes[Math.min(index, etapes.length - 1)]!;
   const derniere = etapes.length - 1;
 
@@ -110,22 +146,36 @@ export function ParcoursMobile({
   const rapporterDecision = useCallback((c: number, t: number) => {
     setDecision((d) => (d.courante === c && d.total === t ? d : { courante: c, total: t }));
   }, []);
-  const reculerAvantLesDecisions = useCallback(() => aller(Math.max(0, derniere - 1)), [aller, derniere]);
+  const rapporterAnalyse = useCallback(
+    (c: number) => setAnalyseCourante(c),
+    [],
+  );
+  const reculerAvantLesDecisions = useCallback(
+    () => aller(Math.max(0, derniere - 1)),
+    [aller, derniere],
+  );
 
-  // La progression du tour entier, pour la barre du haut : les cartes de briefing
-  // et d'analyse comptent chacune pour une, les décisions pour leur nombre. Tant
-  // que le formulaire n'a pas dit combien il en compte, on n'en suppose aucun.
-  // Le formulaire déclare TOUTES ses cartes, récapitulatif compris : la dernière
-  // n'est pas une décision de plus, c'est la relecture.
+  // La progression du tour entier, pour la barre du haut. Une carte de briefing ou
+  // de courrier compte pour une ; une analyse, pour ses écrans ; les décisions,
+  // pour les leurs. Tant que le formulaire n'a pas dit combien il en compte, on
+  // n'en suppose qu'une. Il déclare TOUTES ses cartes, récapitulatif compris : la
+  // dernière n'est pas une décision de plus, c'est la relecture.
   const cartesDeDecision = decision.total;
   const enRecapitulatif =
     courante.phase === "decision" && cartesDeDecision > 0 && decision.courante >= cartesDeDecision - 1;
   const decisionsTotal = Math.max(0, cartesDeDecision - 1);
-  const avantLesDecisions = derniere;
-  const unites = avantLesDecisions + Math.max(1, cartesDeDecision);
+  const poids = etapes.map((e) =>
+    e.phase === "decision" ? Math.max(1, cartesDeDecision) : e.poids,
+  );
+  const total = poids.reduce((a, b) => a + b, 0);
+  const avant = poids.slice(0, index).reduce((a, b) => a + b, 0);
+  const dedans =
+    courante.phase === "decision"
+      ? decision.courante
+      : courante.phase === "analyse"
+        ? analyseCourante
+        : 0;
   useEffect(() => {
-    const fait =
-      courante.phase === "decision" ? avantLesDecisions + decision.courante : index;
     const libelle = enRecapitulatif
       ? "Récapitulatif"
       : courante.phase === "briefing"
@@ -141,8 +191,22 @@ export function ParcoursMobile({
         : courante.phase === "decision" && decisionsTotal > 0 && !enRecapitulatif
           ? `${decision.courante + 1} sur ${decisionsTotal}`
           : "";
-    definirProgression({ phase: libelle, rang, fraction: Math.min(1, (fait + 1) / unites) });
-  }, [courante.phase, courante.rang, courante.sur, index, decision.courante, decisionsTotal, enRecapitulatif, avantLesDecisions, unites]);
+    definirProgression({
+      phase: libelle,
+      rang,
+      fraction: Math.min(1, (avant + dedans + 1) / total),
+    });
+  }, [
+    courante.phase,
+    courante.rang,
+    courante.sur,
+    decision.courante,
+    decisionsTotal,
+    enRecapitulatif,
+    avant,
+    dedans,
+    total,
+  ]);
   // Quitter la page efface la progression : la barre n'affiche plus rien.
   useEffect(() => () => definirProgression(null), []);
 
@@ -151,8 +215,21 @@ export function ParcoursMobile({
     prochaine === "decision" ? "Décider" : prochaine === "analyse" ? "Analyser" : "Continuer";
 
   const contexte = useMemo(
-    () => ({ rapporterDecision, reculerAvantLesDecisions }),
-    [rapporterDecision, reculerAvantLesDecisions],
+    () => ({
+      rapporterDecision,
+      reculerAvantLesDecisions,
+      rapporterAnalyse,
+      continuer: () => aller(Math.min(derniere, index + 1)),
+      reculer: () => aller(Math.max(0, index - 1)),
+    }),
+    [
+      rapporterDecision,
+      reculerAvantLesDecisions,
+      rapporterAnalyse,
+      aller,
+      derniere,
+      index,
+    ],
   );
 
   return (
@@ -168,7 +245,7 @@ export function ParcoursMobile({
         </div>
       </div>
 
-      {courante.phase !== "decision" ? (
+      {courante.phase !== "decision" && courante.phase !== "analyse" ? (
         <>
           {/* La place de la barre : sans elle, la fin de la carte passerait dessous. */}
           <div aria-hidden className="h-28" />
