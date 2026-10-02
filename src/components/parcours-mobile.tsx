@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { bouton } from "@/components/bouton";
+import { useGlisser, vibrer } from "@/lib/glisser";
 import { definirProgression, type SegmentDeProgression } from "@/lib/progression-parcours";
 import { PHASES, type PhaseDuTour } from "@/config/phases-du-tour";
 
@@ -140,6 +141,21 @@ export function ParcoursMobile({
     setIndex(i);
     window.scrollTo({ top: 0 });
   }, []);
+  // Un geste de l'utilisateur (bouton ou glissement) se sent dans la main ; un lien « #decisions »
+  // ne le doit pas, et le navigateur refuserait de vibrer sans toucher.
+  const allerAuToucher = useCallback(
+    (i: number) => {
+      aller(i);
+      vibrer(8);
+    },
+    [aller],
+  );
+  const glisser = useGlisser({
+    // Pas sur les décisions : leur formulaire a ses propres cartes, donc son propre geste.
+    actif: courante.phase !== "decision",
+    suivant: index < derniere ? () => allerAuToucher(index + 1) : undefined,
+    precedent: index > 0 ? () => allerAuToucher(index - 1) : undefined,
+  });
 
   // Un lien « #decisions » ou « #situation » ailleurs dans la page mène à la bonne
   // carte, comme il le faisait vers le bon onglet.
@@ -240,7 +256,7 @@ export function ParcoursMobile({
 
   return (
     <ParcoursContexte.Provider value={contexte}>
-      <div className="space-y-4">
+      <div className="min-h-[calc(100dvh-14rem)] space-y-4" {...glisser}>
         {/* Pas de glissement sur les décisions : une transformation, même d'un
             instant, ferait du bloc le repère du pied fixe du formulaire. */}
         <div
@@ -282,7 +298,7 @@ export function ParcoursMobile({
             {index > 0 ? (
               <button
                 type="button"
-                onClick={() => aller(index - 1)}
+                onClick={() => allerAuToucher(index - 1)}
                 className={`${bouton({ variante: "secondaire", taille: "l" })} min-h-12 shrink-0`}
               >
                 Retour
@@ -290,7 +306,7 @@ export function ParcoursMobile({
             ) : null}
             <button
               type="button"
-              onClick={() => aller(index + 1)}
+              onClick={() => allerAuToucher(index + 1)}
               className={`${bouton({ taille: "l" })} min-h-12 flex-1`}
             >
               {libelleSuivant}

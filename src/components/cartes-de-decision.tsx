@@ -56,7 +56,11 @@ export function Carte({ cle, children }: { cle: string | string[]; children: Rea
   if (!contexte.actif) return <>{children}</>;
   const cles = Array.isArray(cle) ? cle : [cle];
   return (
-    <div data-carte={cles.join(" ")} hidden={!estMontre(contexte, cles)} className="col-span-full">
+    <div
+      data-carte={cles.join(" ")}
+      hidden={!estMontre(contexte, cles)}
+      className="col-span-full motion-safe:animate-carte-fondu"
+    >
       {children}
     </div>
   );

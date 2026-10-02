@@ -299,15 +299,21 @@ export function PeriodDashboard({
   );
   const evolution = (
     <>
+            {/* Les courbes ne disent rien d'un seul point : elles arrivent au deuxième tour.
+                Les parts de marché, elles, se lisent dès le premier. */}
             {history.length > 0 ? (
-              <section className="grid gap-3 lg:grid-cols-3">
-                <div className="carte p-3 sm:p-5 lg:col-span-2">
-                  <RevenueChart history={history} roundsCount={view.roundsCount} />
-                </div>
-                <div className="space-y-3">
-                  <div className="carte p-3 sm:p-5">
-                    <TreasuryChart history={history} roundsCount={view.roundsCount} />
+              <section className={history.length > 1 ? "grid gap-3 lg:grid-cols-3" : "grid gap-3"}>
+                {history.length > 1 ? (
+                  <div className="carte p-3 sm:p-5 lg:col-span-2">
+                    <RevenueChart history={history} roundsCount={view.roundsCount} />
                   </div>
+                ) : null}
+                <div className="space-y-3">
+                  {history.length > 1 ? (
+                    <div className="carte p-3 sm:p-5">
+                      <TreasuryChart history={history} roundsCount={view.roundsCount} />
+                    </div>
+                  ) : null}
                   <div className="carte p-3 sm:p-5">
                     <MarketShareChart
                       segments={Object.entries(r.market.bySegment)

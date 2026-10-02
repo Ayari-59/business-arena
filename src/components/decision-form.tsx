@@ -2,6 +2,7 @@
 
 import { bouton } from "@/components/bouton";
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+import { useGlisser, vibrer, VIBRATION_DE_REUSSITE } from "@/lib/glisser";
 import { playRoundAction, type PlayRoundState } from "@/app/arena/[gameId]/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import { PHASES } from "@/config/phases-du-tour";
@@ -592,7 +593,9 @@ function SaisieDeCarte({
         : "text-xl";
   return (
     <div className="block">
-      <div
+      {/* Une étiquette, pas une boîte : toucher n'importe où dans le cadre met le curseur dans le
+          champ, qui n'a que la largeur de son contenu. */}
+      <label
         className={`champ flex flex-wrap items-baseline justify-center gap-x-2 px-4 ${grand ? "py-4" : "py-2.5"}`}
       >
         <input
@@ -622,7 +625,7 @@ function SaisieDeCarte({
           className={`max-w-full min-w-0 bg-transparent text-center font-bold tabular-nums text-slate-50 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none ${corps}`}
         />
         <span className="text-base text-slate-400">{suffixe}</span>
-      </div>
+      </label>
       {sansCurseur ? null : (
         <CurseurDeSaisie
           champ={ref}
@@ -709,8 +712,9 @@ function ChampPlafonne({
               if (champ.current) poserValeur(champ.current, String(cran));
             }}
             className="curseur mt-2 accent-amber-400"
+            style={{ height: "2.75rem" }}
           />
-          <span className="flex justify-between gap-2 text-xs text-slate-400">
+          <span className="flex justify-between gap-2 text-sm text-slate-400">
             <span>0 {suffix}</span>
             <span className="text-right tabular-nums">
               {maximum.toLocaleString("fr-FR")} {suffix} · {legendePlafond}
@@ -2203,6 +2207,26 @@ export function DecisionForm({
   };
   const cartePrecedente = () =>
     carteIdx === 0 ? parcours?.reculerAvantLesDecisions() : allerALaCarte(carteIdx - 1);
+  // Le glissement double les boutons. Il ne passe pas la commande (qui veut une réponse) ni la
+  // dernière carte (qui veut un envoi) : seul un geste franc, sur une carte ordinaire, avance.
+  const glisser = useGlisser({
+    actif: modeCartes && !verrou,
+    suivant:
+      !derniere && carteCourante?.cle !== "commande"
+        ? () => {
+            vibrer(8);
+            carteSuivante();
+          }
+        : undefined,
+    precedent: () => {
+      vibrer(8);
+      cartePrecedente();
+    },
+  });
+  // Valider se sent dans la main : le tour part.
+  useEffect(() => {
+    if (pending) vibrer(VIBRATION_DE_REUSSITE);
+  }, [pending]);
   const repondreALaCommande = (oui: boolean) => {
     const champ = formRef.current?.elements.namedItem("acceptOrder") as HTMLInputElement | null;
     // Un vrai clic, pas une affectation : c'est lui qui prévient le formulaire,
@@ -2355,7 +2379,7 @@ export function DecisionForm({
               {fiches.map((s) => (
                 <label
                   key={`${s.code}·${s.name}`}
-                  className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-2.5 py-2"
+                  className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-3 py-2.5 pointer-coarse:min-h-12"
                 >
                   {gamme ? null : (
                     <input
@@ -2363,7 +2387,7 @@ export function DecisionForm({
                       name="supplierChoice"
                       value={s.code}
                       defaultChecked={(defaults.supplierChoice ?? fiches[0]?.code) === s.code}
-                      className="mt-0.5 h-4 w-4 accent-emerald-400"
+                      className="mt-0.5 h-5 w-5 shrink-0 accent-emerald-400"
                     />
                   )}
                   <span>
@@ -2436,6 +2460,7 @@ export function DecisionForm({
       }}
       onInvalidCapture={revelerFamilleInvalide}
       className="space-y-3"
+      {...glisser}
     >
       {/* Verrou de planning : hors de la fenêtre, on l'annonce et « Valider »
           est grisé (le serveur refuse de toute façon). La page reste lisible. */}
@@ -2555,7 +2580,7 @@ export function DecisionForm({
               type="checkbox"
               name="acceptOrder"
               defaultChecked={defaults.acceptOrder ?? false}
-              className="mt-0.5 h-4 w-4 accent-sky-400"
+              className="mt-0.5 h-5 w-5 shrink-0 accent-sky-400"
             />
             <span className="text-sm font-medium text-slate-200">
               Accepter la commande, à prendre ou à laisser : elle ne repassera pas.
@@ -3106,27 +3131,27 @@ export function DecisionForm({
       {on.insurance && insuranceFormulas && insuranceFormulas.length > 0 ? (
         <Family carte="assurance" legend="🛡️ Assurance · choisissez votre couverture">
           <div className="space-y-2">
-            <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-2.5 py-2">
+            <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-3 py-2.5 pointer-coarse:min-h-12">
               <input
                 type="radio"
                 name="insurance"
                 value=""
                 defaultChecked={!defaults.insurance}
-                className="mt-0.5 h-4 w-4 accent-amber-400"
+                className="mt-0.5 h-5 w-5 shrink-0 accent-amber-400"
               />
               <span className="text-sm text-slate-400">Aucune : pas de prime, tous les risques pour vous.</span>
             </label>
             {insuranceFormulas.map((f) => (
               <label
                 key={f.code}
-                className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-2.5 py-2"
+                className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-3 py-2.5 pointer-coarse:min-h-12"
               >
                 <input
                   type="radio"
                   name="insurance"
                   value={f.code}
                   defaultChecked={defaults.insurance === f.code || (defaults.insurance === true && f.code === insuranceFormulas[0]?.code)}
-                  className="mt-0.5 h-4 w-4 accent-amber-400"
+                  className="mt-0.5 h-5 w-5 shrink-0 accent-amber-400"
                 />
                 <span>
                   <span className="text-sm font-medium text-slate-200">
@@ -3146,12 +3171,12 @@ export function DecisionForm({
         </Family>
       ) : on.insurance && insuranceOffer ? (
         <Carte cle="assurance">
-        <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-950 px-2.5 py-2">
+        <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-950 px-3 py-2.5 pointer-coarse:min-h-12">
           <input
             type="checkbox"
             name="insurance"
             defaultChecked={defaults.insurance === true}
-            className="mt-0.5 h-4 w-4 accent-amber-400"
+            className="mt-0.5 h-5 w-5 shrink-0 accent-amber-400"
           />
           <span>
             <span className="text-sm font-medium text-slate-200">
@@ -3208,7 +3233,7 @@ export function DecisionForm({
             ).map((study) => (
               <label
                 key={study.name}
-                className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-2.5 py-2"
+                className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-3 py-2.5 pointer-coarse:min-h-12"
               >
                 <input
                   type="checkbox"
@@ -3222,7 +3247,7 @@ export function DecisionForm({
                       return suite;
                     })
                   }
-                  className="mt-0.5 h-4 w-4 accent-amber-400"
+                  className="mt-0.5 h-5 w-5 shrink-0 accent-amber-400"
                 />
                 <span>
                   <span className="text-sm font-medium text-slate-200">
@@ -3414,11 +3439,12 @@ export function DecisionForm({
           <div className="flex items-center gap-3 sm:flex-wrap">
             <button
               type="button"
-              onClick={() =>
-                modeCartes
-                  ? cartePrecedente()
-                  : allerALEtape((e) => Math.max(0, Math.min(e, total - 1) - 1))
-              }
+              onClick={() => {
+                if (modeCartes) {
+                  vibrer(8);
+                  cartePrecedente();
+                } else allerALEtape((e) => Math.max(0, Math.min(e, total - 1) - 1));
+              }}
               disabled={!modeCartes && courante === 0}
               aria-label={modeCartes ? "Retour" : "Précédent"}
               className="order-1 min-h-11 shrink-0 rounded-lg border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:text-slate-100 disabled:cursor-not-allowed disabled:opacity-30"
@@ -3471,11 +3497,12 @@ export function DecisionForm({
               <button
                 key="suivant"
                 type="button"
-                onClick={() =>
-                  modeCartes
-                    ? carteSuivante()
-                    : allerALEtape((e) => Math.min(total - 1, Math.min(e, total - 1) + 1))
-                }
+                onClick={() => {
+                  if (modeCartes) {
+                    vibrer(8);
+                    carteSuivante();
+                  } else allerALEtape((e) => Math.min(total - 1, Math.min(e, total - 1) + 1));
+                }}
                 className={`${bouton({ taille: "l" })} order-3 max-sm:flex-1`}
               >
                 {modeCartes ? "Continuer" : "Suivant"} →

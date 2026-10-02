@@ -16,6 +16,7 @@
  * ------------------------------------------------------------------------- */
 @theme {
   --animate-carte-entre: carte-entre 0.2s ease-out;
+  --animate-carte-fondu: carte-fondu 0.18s ease-out;
   --font-sans:
     var(--font-brand-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
     Roboto, sans-serif;
@@ -49,6 +50,17 @@
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+/* L'entrée d'une carte de décision : un fondu, sans déplacement. Une transformation
+   sur un parent ferait de la carte le repère du pied fixe ; l'opacité, non. */
+@keyframes carte-fondu {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 

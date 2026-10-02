@@ -15,6 +15,7 @@ import type { SituationView } from "@/services/pedagogy.service";
 import type { SituationCategory } from "@/config/scenarios/situation-kit";
 import { Tiroir } from "@/components/tiroir";
 import { PHASES } from "@/config/phases-du-tour";
+import { vibrer, VIBRATION_DE_REUSSITE } from "@/lib/glisser";
 
 const CATEGORY_LABELS: Record<SituationCategory, string> = {
   prise_de_poste: "Prise de poste",
@@ -353,7 +354,7 @@ export function SituationCard({
                   {situation.diagnosticOptions.map((option) => (
                     <label
                       key={option.id}
-                      className="flex items-start gap-2 text-sm text-slate-200"
+                      className="flex items-start gap-3 py-1.5 text-sm text-slate-200 pointer-coarse:min-h-11"
                     >
                       <input
                         type="checkbox"
@@ -363,7 +364,7 @@ export function SituationCard({
                         onChange={(e) =>
                           basculerOption(option.id, e.target.checked)
                         }
-                        className="mt-1 accent-amber-400"
+                        className="mt-0.5 h-5 w-5 shrink-0 accent-amber-400"
                       />
                       <span>{option.label}</span>
                     </label>
@@ -427,7 +428,7 @@ export function SituationCard({
                             {question.options.map((option) => (
                               <label
                                 key={option.id}
-                                className="flex items-start gap-2 text-sm text-slate-300"
+                                className="flex items-start gap-3 py-1.5 text-sm text-slate-300 pointer-coarse:min-h-11"
                               >
                                 <input
                                   type="radio"
@@ -440,7 +441,7 @@ export function SituationCard({
                                       [question.id]: option.id,
                                     }))
                                   }
-                                  className="mt-1 accent-amber-400"
+                                  className="mt-0.5 h-5 w-5 shrink-0 accent-amber-400"
                                 />
                                 <span>{option.label}</span>
                               </label>
@@ -514,6 +515,8 @@ export function AnalyseDuTour({
     // la situation rendue reste ouverte : c'est sa confirmation qu'on vient chercher.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setOuverte(suivante ? suivante.instanceId : nouvelle.instanceId);
+    // Une analyse rendue se sent dans la main : c'est le geste du jeu qui compte.
+    vibrer(VIBRATION_DE_REUSSITE);
   }, [situations]);
 
   return (
@@ -893,7 +896,7 @@ function SituationRetake({
           {situation.diagnosticOptions.map((option) => (
             <label
               key={option.id}
-              className="flex items-start gap-2 text-sm text-slate-200"
+              className="flex items-start gap-3 py-1.5 text-sm text-slate-200 pointer-coarse:min-h-11"
             >
               <input
                 type="checkbox"
@@ -948,7 +951,7 @@ function SituationRetake({
             {question.options.map((option) => (
               <label
                 key={option.id}
-                className="flex items-start gap-2 text-sm text-slate-300"
+                className="flex items-start gap-3 py-1.5 text-sm text-slate-300 pointer-coarse:min-h-11"
               >
                 <input
                   type="radio"

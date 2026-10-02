@@ -406,6 +406,56 @@ describe("pendant une partie", () => {
     ).toBe(true);
   });
 
+  it("un glissement du doigt fait avancer ou reculer d'une carte, sauf s'il part d'un curseur", async () => {
+    await versLaPremiereCarte();
+    const cdp = await contexte.newCDPSession(page);
+    const glisser = async (x1: number, y1: number, x2: number, y2: number) => {
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: x1, y: y1 }] });
+      for (let i = 1; i <= 6; i++) {
+        await cdp.send("Input.dispatchTouchEvent", {
+          type: "touchMove",
+          touchPoints: [{ x: x1 + ((x2 - x1) * i) / 6, y: y1 + ((y2 - y1) * i) / 6 }],
+        });
+      }
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+      await page.waitForTimeout(450);
+    };
+    const l = page.viewportSize()!.width;
+    const avant = await avancement();
+    await glisser(l - 40, 300, 40, 305);
+    expect(await avancement(), "glisser vers la gauche avance").toBeGreaterThan(avant);
+    await glisser(40, 300, l - 40, 295);
+    expect(await avancement(), "glisser vers la droite revient").toBe(avant);
+    // Un trait vertical est un défilement : la carte ne bouge pas.
+    await glisser(200, 500, 190, 200);
+    expect(await avancement()).toBe(avant);
+  });
+
+  it("un geste parti d'un curseur règle le montant, il ne tourne pas la carte", async () => {
+    await versLesDecisions();
+    await page.getByRole("button", { name: "Accepter", exact: true }).click();
+    for (let k = 0; k < 6; k++) {
+      await page.waitForTimeout(350);
+      if (await page.locator('input[type="range"]:visible').count()) break;
+      await page.getByRole("button", { name: /^Continuer/ }).last().click();
+    }
+    const curseur = page.locator('input[type="range"]:visible').first();
+    await curseur.waitFor({ state: "visible" });
+    const titre = await titreDeLaCarte();
+    const boite = (await curseur.boundingBox())!;
+    const cdp = await contexte.newCDPSession(page);
+    const y = boite.y + boite.height / 2;
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: boite.x + 30, y }] });
+    for (let i = 1; i <= 6; i++)
+      await cdp.send("Input.dispatchTouchEvent", {
+        type: "touchMove",
+        touchPoints: [{ x: boite.x + 30 + (boite.width - 90) * (i / 6), y }],
+      });
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    await page.waitForTimeout(450);
+    expect(await titreDeLaCarte(), "la carte est restée en place").toBe(titre);
+  });
+
   it("« Situation » et « Contexte » ont la même forme : deux tiroirs ouverts, au même niveau", async () => {
     await versLaPremiereCarte();
     for (let k = 0; k < 8; k++) {
@@ -499,9 +549,10 @@ describe("pendant une partie", () => {
     const margeAvant = await marge.innerText();
     // Le curseur écrit dans la saisie, qui reste la source de la valeur envoyée.
     const maxi = Number(await curseur.getAttribute("max"));
-    await curseur.fill(String(Math.round(maxi * 0.75)));
+    // Du côté où il y a de la place : un test d'avant a pu déjà déplacer le curseur.
+    await curseur.fill(String(Math.round(maxi * (avant < maxi / 2 ? 0.75 : 0.25))));
     await page.waitForTimeout(200);
-    expect(Number(await champ.inputValue())).toBeGreaterThan(avant);
+    expect(Number(await champ.inputValue())).not.toBe(avant);
     expect(await marge.innerText(), "la marge ne suit pas le prix").not.toBe(
       margeAvant,
     );
@@ -793,4 +844,24 @@ describe("sur un petit téléphone (iPhone SE, 375 px)", () => {
     expect(await petit.getByText("Trésorerie").first().isVisible()).toBe(true);
     await petit.getByText(/Voir les résultats/).first().waitFor({ state: "visible" });
   }, 120_000);
+});
+
+describe("le lancement d'une partie, sur téléphone", () => {
+  it("le choix du métier est à l'écran dès l'ouverture, sans défiler", async () => {
+    const ctx = await navigateur.newContext({ ...devices["iPhone 13"], locale: "fr-FR" });
+    const p = await ctx.newPage();
+    try {
+      await p.goto(`${BASE}/jouer`, { waitUntil: "domcontentloaded" });
+      await p.waitForLoadState("networkidle");
+      const nova = p.getByRole("button", { name: /NOVA/ });
+      await nova.waitFor({ state: "visible" });
+      const boite = (await nova.boundingBox())!;
+      expect(
+        boite.y + boite.height,
+        `NOVA est à ${Math.round(boite.y)} px pour un écran de ${p.viewportSize()!.height}`,
+      ).toBeLessThanOrEqual(p.viewportSize()!.height);
+    } finally {
+      await ctx.close();
+    }
+  });
 });
