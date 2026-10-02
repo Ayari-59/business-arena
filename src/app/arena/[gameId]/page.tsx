@@ -512,16 +512,66 @@ export default async function ArenaPage({
       />
     </div>
   ) : null;
-  const toursPasses = (
+  // Les trois facettes d'une période close : ce qu'on a analysé (Situation + correction), ce
+  // qu'on a décidé, ce qui en est ressorti. Servies à l'accordéon des tours passés, et, sur
+  // téléphone, à la carte des résultats du dernier tour.
+  const ongletsDuTour = (p: (typeof periods)[number]) => {
+    const isLatest = p.round === latestRound;
+    const dr = debriefByRound.get(p.round);
+    return (
+        <SegmentedTabs
+          defaultKey={isLatest ? "resultats" : "situation"}
+          tabs={[
+            { key: "situation", label: "Situation", icon: "📋" },
+            { key: "decisions", label: "Décisions", icon: "✏️" },
+            { key: "resultats", label: "Résultats", icon: "📊" },
+          ]}
+        >
+          {{
+            situation: dr ? (
+              <section className="space-y-3">
+                {dr.situations.map((s) => (
+                  <SituationDebrief
+                    key={s.instanceId}
+                    situation={s}
+                    gameId={view.gameId}
+                    retakeable={
+                      situations.missedPolicy === "retake50" &&
+                      p.round === mostRecentDebriefedRound
+                    }
+                  />
+                ))}
+              </section>
+            ) : null,
+            decisions: p.decisions ? (
+              <PeriodDecisionsRecap
+                decisions={p.decisions}
+                vocabulary={view.vocabulary}
+                gamme={view.gamme}
+              />
+            ) : null,
+            resultats: (
+              <PeriodDashboard
+                view={view}
+                period={p}
+                standing={isLatest}
+                courrierResume={telephone}
+              />
+            ),
+          }}
+        </SegmentedTabs>
+    );
+  };
+
+  const toursPassesDe = (liste: typeof periods) => (
     <>
-      {periods.length > 0 ? (
+      {liste.length > 0 ? (
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
           {finished ? "Vos tours" : "Tours passés"}
         </p>
       ) : null}
-      {periods.map((p) => {
+      {liste.map((p) => {
         const isLatest = p.round === latestRound;
-        const dr = debriefByRound.get(p.round);
         const netIncome = p.result.incomeStatement.netIncome;
         const netTreasury = p.result.functionalBalance.netTreasury;
         return (
@@ -608,53 +658,14 @@ export default async function ArenaPage({
                   (Situation + correction), ce qu'on a décidé, ce qui en est
                   ressorti. Les onglets ne s'opposent pas à l'accordéon — il
                   situe la période, ils en montrent une face à la fois. */}
-              <SegmentedTabs
-                defaultKey={isLatest ? "resultats" : "situation"}
-                tabs={[
-                  { key: "situation", label: "Situation", icon: "📋" },
-                  { key: "decisions", label: "Décisions", icon: "✏️" },
-                  { key: "resultats", label: "Résultats", icon: "📊" },
-                ]}
-              >
-                {{
-                  situation: dr ? (
-                    <section className="space-y-3">
-                      {dr.situations.map((s) => (
-                        <SituationDebrief
-                          key={s.instanceId}
-                          situation={s}
-                          gameId={view.gameId}
-                          retakeable={
-                            situations.missedPolicy === "retake50" &&
-                            p.round === mostRecentDebriefedRound
-                          }
-                        />
-                      ))}
-                    </section>
-                  ) : null,
-                  decisions: p.decisions ? (
-                    <PeriodDecisionsRecap
-                      decisions={p.decisions}
-                      vocabulary={view.vocabulary}
-                      gamme={view.gamme}
-                    />
-                  ) : null,
-                  resultats: (
-                    <PeriodDashboard
-                      view={view}
-                      period={p}
-                      standing={isLatest}
-                      courrierResume={telephone}
-                    />
-                  ),
-                }}
-              </SegmentedTabs>
+              {ongletsDuTour(p)}
             </div>
           </details>
         );
       })}
     </>
   );
+  const toursPasses = toursPassesDe(periods);
 
   const tableauNode = (
     <TableauDeBord
@@ -732,7 +743,7 @@ export default async function ArenaPage({
   const resultatsCartes: CarteDuParcours[] = periodeRecente
     ? [
         {
-          cle: "resultats-verdict",
+          cle: "resultats",
           phase: "resultats",
           titre: "Ce que ça a donné",
           noeud: (
@@ -744,42 +755,19 @@ export default async function ArenaPage({
                   ? ` · ${moiAuClassement ? `#${moiAuClassement.rank}/${view.ranking.length} · ` : ""}IPG ${view.playerBpi.toFixed(0)}`
                   : ""}
               </p>
-              <PeriodDashboard
-                view={view}
-                period={periodeRecente}
-                standing
-                courrierResume
-                partie="verdict"
-              />
+              {/* Les onglets du tour clos : Situation, Décisions, Résultats (ouvert), avec,
+                  dans les résultats, Synthèse, Marché et Finance. */}
+              {ongletsDuTour(periodeRecente)}
+              {/* Les tours plus anciens et les réussites : à la demande, fermés. */}
+              {periods.length > 1 || vosReussites ? (
+                <Tiroir titre="Tours précédents et réussites" ferme>
+                  <div className="space-y-4">
+                    {toursPassesDe(periods.filter((x) => x.round !== latestRound))}
+                    {vosReussites}
+                  </div>
+                </Tiroir>
+              ) : null}
             </section>
-          ),
-        },
-        {
-          cle: "resultats-chiffres",
-          phase: "resultats",
-          titre: "Les chiffres du tour",
-          noeud: <PeriodDashboard view={view} period={periodeRecente} standing partie="chiffres" />,
-        },
-        {
-          cle: "resultats-evolution",
-          phase: "resultats",
-          titre: "L'évolution",
-          noeud: (
-            <div className="space-y-4">
-              <PeriodDashboard view={view} period={periodeRecente} standing partie="evolution" />
-              {/* Le reste — marché, finance, décisions, débriefing, tours plus anciens, réussites —
-                  est à la demande : fermé, il ne se traîne pas jusqu'au bout. */}
-              <Tiroir
-                titre={`Le détail · ${periodLabel(view.roundDays, periodeRecente.round).toLowerCase()}`}
-                quoi="marché, finance, décisions, tours passés"
-                ferme
-              >
-                <div className="space-y-4">
-                  {toursPasses}
-                  {vosReussites}
-                </div>
-              </Tiroir>
-            </div>
           ),
         },
       ]

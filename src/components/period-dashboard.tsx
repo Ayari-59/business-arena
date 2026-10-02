@@ -116,7 +116,6 @@ export function PeriodDashboard({
   period,
   standing,
   courrierResume = false,
-  partie,
 }: {
   view: GameView;
   period: Period;
@@ -127,12 +126,6 @@ export function PeriodDashboard({
    * des résultats, repoussait les chiffres sous le pli.
    */
   courrierResume?: boolean;
-  /**
-   * Une seule des trois parties de la synthèse, sans onglets : le téléphone les lit une
-   * carte à la fois (le verdict, les chiffres, l'évolution) au lieu d'un tableau de bord
-   * de trois mille pixels.
-   */
-  partie?: "verdict" | "chiffres" | "evolution";
 }) {
   const r = period.result;
   // Trajectoire arrêtée à ce tour : chaque période montre les graphiques tels
@@ -166,8 +159,7 @@ export function PeriodDashboard({
     view.periods.find((p) => p.round === period.round - 1)?.result.incomeStatement ?? null;
   const moi = view.ranking.find((row) => row.isPlayer);
 
-  // Les trois temps de la synthèse, déclarés à part : les onglets les posent à la suite, et le
-  // téléphone en fait trois cartes (`partie`).
+  // Les trois temps de la synthèse : le verdict, les chiffres, l'évolution.
   const verdict = (
     <>
             {/*
@@ -395,10 +387,6 @@ export function PeriodDashboard({
             )}
     </>
   );
-  if (partie) {
-    return <div className="space-y-3">{{ verdict, chiffres, evolution }[partie]}</div>;
-  }
-
   return (
     <DashboardTabs>
       {{
