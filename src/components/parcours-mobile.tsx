@@ -248,7 +248,7 @@ export function ParcoursMobile({
       {courante.phase !== "decision" && courante.phase !== "analyse" ? (
         <>
           {/* La place de la barre : sans elle, la fin de la carte passerait dessous. */}
-          <div aria-hidden className="h-28" />
+          <div aria-hidden className="h-[calc(5.5rem+env(safe-area-inset-bottom))]" />
           <div className="fixed inset-x-0 bottom-0 z-40 flex gap-2.5 border-t border-white/12 bg-slate-950/95 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur-md supports-[backdrop-filter]:bg-slate-950/90 print:hidden">
             {index > 0 ? (
               <button

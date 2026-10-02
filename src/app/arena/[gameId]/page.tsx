@@ -974,7 +974,7 @@ export default async function ArenaPage({
 
 
   return (
-    <main id="main" className="mx-auto max-w-[1400px] space-y-6 px-4 pt-6 pb-16 sm:space-y-8 sm:px-6" data-ecran-de-jeu="">
+    <main id="main" className="mx-auto max-w-[1400px] space-y-6 px-4 pt-6 pb-6 sm:space-y-8 sm:px-6 sm:pb-16" data-ecran-de-jeu="">
       {/* LA BARRE D'APPLICATION, sur téléphone seulement : la barre du site s'efface
           dans l'arène (voir site-header.tsx) et celle-ci porte la partie et le tour. */}
       <BarreDeJeu

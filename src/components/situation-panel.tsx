@@ -564,7 +564,7 @@ function AnalyseParEtapes({
             </button>
           </>,
         )}
-        <div aria-hidden className="h-36" />
+        <div aria-hidden className="h-[calc(5.5rem+env(safe-area-inset-bottom))]" />
       </div>
     );
   }
@@ -753,7 +753,7 @@ function AnalyseParEtapes({
         </Tiroir>
       </div>
       {/* La place du pied fixe : sans elle, la fin de l'écran passerait dessous. */}
-      <div aria-hidden className="h-36" />
+      <div aria-hidden className="h-[calc(7rem+env(safe-area-inset-bottom))]" />
     </div>
   );
 }

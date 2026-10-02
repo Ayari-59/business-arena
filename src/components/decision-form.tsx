@@ -3462,7 +3462,7 @@ export function DecisionForm({
         </div>
       )}
       {/* La place du pied fixe : sans elle, le bas de la carte passerait dessous. */}
-      {modeCartes ? <div aria-hidden className="h-36" /> : null}
+      {modeCartes ? <div aria-hidden className="h-[calc(5.5rem+env(safe-area-inset-bottom))]" /> : null}
       {!(pending && kind === "solo") && !modeCartes ? (
         <p className="text-center text-xs text-slate-400">
           {kind === "solo"
