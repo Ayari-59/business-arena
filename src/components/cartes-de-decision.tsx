@@ -79,9 +79,11 @@ export function RecapDesDecisions({
             onClick={() => surModifier(l.cle)}
             className="flex min-h-12 w-full items-center justify-between gap-3 px-4 py-2 text-left"
           >
-            <span className="min-w-0 text-base text-slate-300">{l.nom}</span>
-            <span className="flex min-w-0 items-center gap-2 text-base font-semibold text-slate-50">
-              <span className="truncate">{l.valeur}</span>
+            <span className="min-w-0 flex-1 text-base text-slate-300">{l.nom}</span>
+            <span className="flex max-w-[58%] shrink-0 items-center gap-2 text-base font-semibold text-slate-50">
+              {/* La valeur passe à la ligne plutôt que de se tronquer : « Acce… » ne dit pas
+                  si la commande est prise ou refusée. Deux lignes au plus, pour une note longue. */}
+              <span className="line-clamp-2 min-w-0 break-words text-right">{l.valeur}</span>
               <svg
                 aria-hidden
                 width="16"

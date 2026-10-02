@@ -85,9 +85,51 @@ describe("l'écran « Tour simulé »", () => {
     const enCours = renderToStaticMarkup(createElement(TourSimule, base));
     expect(enCours).toContain("Voir les résultats");
     expect(enCours).toContain("Passer au");
-    // aucun chiffre du tour : c'est le rôle des résultats
+    // sans bilan fourni, aucun chiffre : l'écran reste une simple étape
     expect(enCours).not.toMatch(/\d\s?€/);
     const fini = renderToStaticMarkup(createElement(TourSimule, { ...base, finished: true }));
     expect(fini).toContain("Bilan de la partie");
+  });
+
+  it("donne l'essentiel du tour en trois chiffres : résultat et son écart, trésorerie, rang", () => {
+    const html = renderToStaticMarkup(
+      createElement(TourSimule, {
+        ...base,
+        bilan: {
+          resultatNet: 12000,
+          resultatPrecedent: 8000,
+          chiffreDAffaires: 300000,
+          tresorerie: 45000,
+          rang: { place: 2, sur: 3 },
+          ipg: 61.4,
+        },
+      }),
+    );
+    expect(html).toContain("Résultat net du tour");
+    expect(html).toContain("+");
+    expect(html).toContain("de mieux");
+    expect(html).toContain("Trésorerie");
+    expect(html).toContain("2ᵉ sur 3");
+    expect(html).toContain("IPG 61");
+  });
+
+  it("une perte se dit comme une perte, et sans classement le chiffre d'affaires prend la place", () => {
+    const html = renderToStaticMarkup(
+      createElement(TourSimule, {
+        ...base,
+        bilan: {
+          resultatNet: -9486,
+          resultatPrecedent: null,
+          chiffreDAffaires: 296239,
+          tresorerie: 20000,
+          rang: null,
+          ipg: null,
+        },
+      }),
+    );
+    expect(html).toContain("text-red-300");
+    expect(html).not.toContain("de mieux");
+    expect(html).not.toContain("que le tour précédent");
+    expect(html).toContain("Chiffre d&#x27;affaires");
   });
 });

@@ -134,6 +134,18 @@ export default async function ArenaPage({
         roundDays={view.roundDays}
         finished={finished}
         sector={view.sector}
+        bilan={(() => {
+          const precedent = view.history.find((h) => h.round === tourJoue.round - 1);
+          const moi = view.ranking.find((row) => row.isPlayer);
+          return {
+            resultatNet: tourJoue.result.incomeStatement.netIncome,
+            resultatPrecedent: precedent?.netIncome ?? null,
+            chiffreDAffaires: tourJoue.result.incomeStatement.revenue,
+            tresorerie: tourJoue.result.functionalBalance.netTreasury,
+            rang: moi ? { place: moi.rank, sur: view.ranking.length } : null,
+            ipg: view.playerBpi,
+          };
+        })()}
       />
     );
   }
@@ -154,7 +166,7 @@ export default async function ArenaPage({
   const presentation = premierTour ? (
     <>
       <div>
-        <h2 className="text-xl font-bold text-slate-100">{view.intro.company}</h2>
+        <h3 className="text-xl font-bold text-slate-100">{view.intro.company}</h3>
         <p className="text-sm text-slate-400">{view.intro.tagline}</p>
         <FaitsCles
           capacityFacts={view.capacityFacts}
@@ -776,17 +788,18 @@ export default async function ArenaPage({
   const briefingCartes: CarteDuParcours[] = (
     [
       alerteTresorerieNode
-        ? { cle: "alerte-tresorerie", noeud: alerteTresorerieNode }
+        ? { cle: "alerte-tresorerie", titre: "Alerte de trésorerie", noeud: alerteTresorerieNode }
         : null,
       ...resultatsCartes,
-      reponsesSection ? { cle: "reponses", noeud: reponsesSection } : null,
-      nomNode ? { cle: "nom", noeud: nomNode } : null,
+      reponsesSection ? { cle: "reponses", titre: "Ce que vous aviez prévu", noeud: reponsesSection } : null,
+      nomNode ? { cle: "nom", titre: "Le nom de votre équipe", noeud: nomNode } : null,
       view.peutChoisirSonEquipe && compositionNode
-        ? { cle: "equipe", noeud: compositionNode }
+        ? { cle: "equipe", titre: "Composition de l'équipe", noeud: compositionNode }
         : null,
       view.currentRound === 1
         ? {
             cle: "mandat",
+            titre: "Votre prise de poste",
             noeud: (
               <MandatDeLEquipe
                 gameId={gameId}
@@ -800,6 +813,7 @@ export default async function ArenaPage({
       presentation
         ? {
             cle: "presentation",
+            titre: "Votre entreprise",
             noeud: (
               <section className="space-y-4 carte p-3 text-slate-300">
                 {presentation}
@@ -809,7 +823,7 @@ export default async function ArenaPage({
         : null,
       {
         cle: "chiffres",
-        titre: "L'entreprise et son marché",
+        titre: "Vos chiffres et votre marché",
         noeud: (
           <div className="space-y-4">
             {chiffresSansDetail}
@@ -822,7 +836,7 @@ export default async function ArenaPage({
       alertesPresentes
         ? { cle: "alertes", titre: "Ce qui a bougé", noeud: alertesSansSaison }
         : null,
-      dilemmeSection ? { cle: "arbitrage", noeud: dilemmeSection } : null,
+      dilemmeSection ? { cle: "arbitrage", titre: "Le dilemme du tour", noeud: dilemmeSection } : null,
     ] as (CarteDuParcours | null)[]
   ).filter((c): c is CarteDuParcours => c !== null);
 

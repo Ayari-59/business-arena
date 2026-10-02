@@ -3339,13 +3339,32 @@ export function DecisionForm({
         // Le tour se résout côté serveur puis redirige : entre les deux, on
         // rend l'attente tangible — la machine tourne, étape après étape —
         // plutôt qu'un bouton grisé « Envoi en cours… ».
-        <SimulationProgress periodName={periodName} />
+        modeCartes ? (
+          // EN PARCOURS, l'attente prend l'écran : posée sous la dernière carte, elle restait hors
+          // de vue, et le toucher sur « Valider et simuler » semblait ne rien faire.
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/95 p-6 backdrop-blur-sm">
+            <div className="w-full max-w-sm">
+              <SimulationProgress periodName={periodName} />
+            </div>
+          </div>
+        ) : (
+          <SimulationProgress periodName={periodName} />
+        )
       ) : nonTouches ? (
         // Pivots laissés aux valeurs proposées : la confirmation REMPLACE le
         // pied de navigation au lieu de s'y ajouter. Sans ça, « Oui/Non » et
         // « Valider » cohabitaient à l'écran (double boutonnage) ; ici une
         // seule action est offerte à la fois.
-        <div role="alert" className="border-t border-orange-400/30 pt-3">
+        <div
+          role="alert"
+          className={`border-t border-orange-400/30 pt-3 ${
+            modeCartes
+              ? // EN PARCOURS, la question prend la place du pied fixe : posée sous un long
+                // récapitulatif, elle restait hors de l'écran.
+                "fixed inset-x-0 bottom-0 z-40 bg-slate-950/95 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-md print:hidden"
+              : ""
+          }`}
+        >
           <p className="text-sm text-orange-100">
             Vous validez avec les valeurs proposées pour :{" "}
             <strong>{nonTouches.map((p) => p.label).join(", ")}</strong>. C&apos;est un choix ?
@@ -3354,14 +3373,14 @@ export function DecisionForm({
             <button
               type="button"
               onClick={garderLesValeurs}
-              className="rounded-lg bg-orange-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-orange-300"
+              className="min-h-11 rounded-lg bg-orange-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-orange-300"
             >
               Oui, je garde ces valeurs
             </button>
             <button
               type="button"
               onClick={lesModifier}
-              className="rounded-lg border border-orange-400/50 px-4 py-2.5 text-sm font-semibold text-orange-200 transition hover:bg-orange-400/10"
+              className="min-h-11 rounded-lg border border-orange-400/50 px-4 py-2.5 text-sm font-semibold text-orange-200 transition hover:bg-orange-400/10"
             >
               Non, je les modifie
             </button>
@@ -3401,10 +3420,10 @@ export function DecisionForm({
                   : allerALEtape((e) => Math.max(0, Math.min(e, total - 1) - 1))
               }
               disabled={!modeCartes && courante === 0}
-              aria-label="Précédent"
+              aria-label={modeCartes ? "Retour" : "Précédent"}
               className="order-1 min-h-11 shrink-0 rounded-lg border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:text-slate-100 disabled:cursor-not-allowed disabled:opacity-30"
             >
-              ← Précédent
+              {modeCartes ? "Retour" : "← Précédent"}
             </button>
             <span className="order-2 hidden shrink-0 text-xs tabular-nums text-slate-400 sm:mr-auto sm:block">
               Étape {courante + 1} / {total}
@@ -3432,18 +3451,18 @@ export function DecisionForm({
             ) : modeCartes && carteCourante?.cle === "commande" ? (
               // UNE QUESTION, DEUX RÉPONSES : la réponse fait avancer. La case à
               // cocher du formulaire reste, masquée, et c'est elle qui part.
-              <div key="commande" className="order-3 flex flex-1 gap-2.5">
+              <div key="commande" className="order-3 flex min-w-0 flex-1 gap-2.5">
                 <button
                   type="button"
                   onClick={() => repondreALaCommande(false)}
-                  className={`${bouton({ variante: commandeAcceptee === false ? "principal" : "secondaire", taille: "l" })} min-h-12 flex-1`}
+                  className={`${bouton({ variante: commandeAcceptee === false ? "principal" : "secondaire", taille: "l" })} min-h-12 min-w-0 flex-1 px-3`}
                 >
                   Refuser
                 </button>
                 <button
                   type="button"
                   onClick={() => repondreALaCommande(true)}
-                  className={`${bouton({ variante: commandeAcceptee === false ? "secondaire" : "principal", taille: "l" })} min-h-12 flex-1`}
+                  className={`${bouton({ variante: commandeAcceptee === false ? "secondaire" : "principal", taille: "l" })} min-h-12 min-w-0 flex-1 px-3`}
                 >
                   Accepter
                 </button>

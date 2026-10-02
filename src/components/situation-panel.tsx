@@ -221,6 +221,19 @@ export function SituationCard({
     </section>
   );
 
+  // DANS LE TIROIR, UNE FOIS RENDUE, la situation ne redonne pas son énoncé : on l'a lu, on a
+  // répondu. Elle confirme, et dit ce qui vient — le corrigé n'arrive qu'après la simulation.
+  if (rendue && dansTiroir) {
+    return (
+      <article className="rounded-lg border border-emerald-400/25 bg-emerald-950/20 p-4">
+        <p className="text-base font-semibold text-emerald-300">✓ Analyse rendue</p>
+        <p className="mt-1 text-sm text-slate-300">
+          Votre correction vous attend au débriefing, une fois le tour simulé.
+        </p>
+      </article>
+    );
+  }
+
   return (
     <article className={dansTiroir ? "" : "carte p-4 sm:p-6"}>
       <header className="mb-3">
@@ -490,16 +503,17 @@ export function AnalyseDuTour({
     (premiereARendre ?? situations[0])?.instanceId ?? null,
   );
   const rendues = situations.filter((x) => estRendue(x)).length;
-  // Une analyse qui vient d'être rendue referme son tiroir et ouvre la suivante à faire.
+  // Une analyse qui vient d'être rendue ouvre la suivante à faire ; la dernière reste ouverte, sur sa confirmation.
   const dejaRendues = useRef(new Set(situations.filter((x) => estRendue(x)).map((x) => x.instanceId)));
   useEffect(() => {
     const nouvelle = situations.find((x) => estRendue(x) && !dejaRendues.current.has(x.instanceId));
     if (!nouvelle) return;
     dejaRendues.current.add(nouvelle.instanceId);
     const suivante = situations.find((x) => !estRendue(x));
-    // Ouvrir la suivante est une réaction à l'arrivée du rendu côté serveur.
+    // Ouvrir la suivante est une réaction à l'arrivée du rendu côté serveur. Sans suivante,
+    // la situation rendue reste ouverte : c'est sa confirmation qu'on vient chercher.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setOuverte(suivante ? suivante.instanceId : null);
+    setOuverte(suivante ? suivante.instanceId : nouvelle.instanceId);
   }, [situations]);
 
   return (

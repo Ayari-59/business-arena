@@ -396,6 +396,16 @@ describe("pendant une partie", () => {
     expect(await valider.isDisabled()).toBe(false);
   });
 
+  it("rendre l'analyse la laisse ouverte sur sa confirmation, au lieu de la replier", async () => {
+    const valider = page.getByRole("button", { name: "Valider mon analyse" }).first();
+    await valider.click();
+    await page.getByText("✓ Analyse rendue").first().waitFor({ state: "visible", timeout: 15_000 });
+    expect(
+      await page.getByText(/Votre correction vous attend au débriefing/).first().isVisible(),
+      "la confirmation doit se voir sans déplier quoi que ce soit",
+    ).toBe(true);
+  });
+
   it("« Situation » et « Contexte » ont la même forme : deux tiroirs ouverts, au même niveau", async () => {
     await versLaPremiereCarte();
     for (let k = 0; k < 8; k++) {
@@ -465,13 +475,13 @@ describe("pendant une partie", () => {
     expect(await page.locator('input[name="price"]:visible').count()).toBe(0);
   });
 
-  it("répondre à la commande ouvre la décision suivante, et « Précédent » revient", async () => {
+  it("répondre à la commande ouvre la décision suivante, et « Retour » revient", async () => {
     await versLesDecisions();
     await page.getByRole("button", { name: "Accepter", exact: true }).click();
     await page.waitForTimeout(400);
     expect(await titreDeLaCarte()).toMatch(/Décision 2 sur \d+ À quel prix/i);
     await page.locator('input[name="price"]:visible').waitFor();
-    await page.getByRole("button", { name: /Précédent/ }).click();
+    await page.getByRole("button", { name: "Retour" }).click();
     await page.waitForTimeout(400);
     expect(await titreDeLaCarte()).toMatch(/Décision 1 sur/i);
   });
@@ -720,4 +730,67 @@ describe("sur ordinateur, ce qui est consulté reste à plat", () => {
     ).toBeLessThan(450);
     expect(await p.locator("form header").count()).toBe(0);
   });
+});
+
+describe("sur un petit téléphone (iPhone SE, 375 px)", () => {
+  let petit: Page;
+  let ctxPetit: BrowserContext;
+  beforeAll(async () => {
+    ctxPetit = await navigateur.newContext({ ...devices["iPhone SE"], locale: "fr-FR" });
+    petit = await ctxPetit.newPage();
+    await petit.addInitScript(() => localStorage.removeItem("install-prompt-ferme-le"));
+    await petit.goto(`${BASE}/jouer`, { waitUntil: "domcontentloaded" });
+    await petit.waitForLoadState("networkidle");
+    await petit.getByRole("button", { name: /NOVA/ }).click();
+    await petit.getByRole("button", { name: "Lancer la partie" }).click();
+    await petit.waitForURL(/\/arena\//, { timeout: 60_000 });
+    await petit.waitForLoadState("networkidle");
+    await petit.locator("[data-ecran-de-jeu]").waitFor({ state: "visible" });
+  }, 120_000);
+  afterAll(async () => {
+    await ctxPetit?.close();
+  });
+
+  const suite = () => petit.getByRole("button", { name: /^(Continuer|Analyser|Décider)/ }).last();
+
+  it("les boutons de chaque carte tiennent dans la largeur, « Accepter » compris", async () => {
+    await petit.evaluate(() => (window.location.hash = "decisions"));
+    await petit.locator("form header").waitFor({ state: "visible" });
+    await petit.getByRole("button", { name: "Accepter", exact: true }).waitFor({ state: "visible" });
+    const largeur = petit.viewportSize()!.width;
+    const dehors = await petit.evaluate((w) => {
+      return [...document.querySelectorAll("button")]
+        .filter((b) => {
+          const r = b.getBoundingClientRect();
+          return r.width > 1 && r.height > 1 && (r.right > w + 1 || r.left < -1);
+        })
+        .map((b) => b.textContent?.trim());
+    }, largeur);
+    expect(dehors, `boutons hors écran : ${dehors.join(", ")}`).toEqual([]);
+  });
+
+  it("valider rend la main tout de suite : l'attente prend l'écran, puis le bilan du tour s'affiche", async () => {
+    await petit.getByRole("button", { name: "Accepter", exact: true }).click();
+    for (let k = 0; k < 30; k++) {
+      await petit.waitForTimeout(300);
+      if (await petit.getByRole("button", { name: /Valider et simuler/ }).count()) break;
+      const texte = petit.locator('textarea[name="justification"]');
+      if ((await texte.count()) && (await texte.isVisible()))
+        await texte.fill("Je vise le volume pour remplir l'atelier ce tour.");
+      await suite().click();
+    }
+    await petit.getByRole("button", { name: /Valider et simuler/ }).click();
+    // Avec les valeurs proposées, une question demande de confirmer : elle est à l'écran.
+    const oui = petit.getByRole("button", { name: /Oui, je garde/ });
+    if (await oui.count()) {
+      const bas = (await oui.boundingBox())!;
+      expect(bas.y + bas.height, "la confirmation doit être dans l'écran").toBeLessThanOrEqual(
+        petit.viewportSize()!.height,
+      );
+      await oui.click();
+    }
+    await petit.getByText("Résultat net du tour").waitFor({ state: "visible", timeout: 60_000 });
+    expect(await petit.getByText("Trésorerie").first().isVisible()).toBe(true);
+    await petit.getByText(/Voir les résultats/).first().waitFor({ state: "visible" });
+  }, 120_000);
 });
