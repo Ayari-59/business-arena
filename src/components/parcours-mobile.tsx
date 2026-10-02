@@ -38,7 +38,7 @@ export interface CarteDuParcours {
   noeud: ReactNode;
 }
 
-/** Une situation à analyser : son contenu, et le nombre d'écrans qu'elle compte. */
+/** Les analyses du tour : leur contenu, et le poids qu'elles ont dans la barre de progression. */
 export interface AnalyseDuParcours extends CarteDuParcours {
   etapes: number;
 }
@@ -48,11 +48,6 @@ interface ContexteDuParcours {
   rapporterDecision: (courante: number, total: number) => void;
   /** Reculer depuis la première carte de décision : retour à l'analyse. */
   reculerAvantLesDecisions: () => void;
-  /** L'analyse a son propre pied, comme les décisions : elle dit où elle en est. */
-  rapporterAnalyse: (courante: number) => void;
-  /** Passer à l'étape du parcours qui suit, ou revenir à celle d'avant. */
-  continuer: () => void;
-  reculer: () => void;
 }
 
 const ParcoursContexte = createContext<ContexteDuParcours | null>(null);
@@ -121,7 +116,6 @@ export function ParcoursMobile({
 
   const [index, setIndex] = useState(0);
   const [decision, setDecision] = useState({ courante: 0, total: 0 });
-  const [analyseCourante, setAnalyseCourante] = useState(0);
   const courante = etapes[Math.min(index, etapes.length - 1)]!;
   const derniere = etapes.length - 1;
 
@@ -146,10 +140,6 @@ export function ParcoursMobile({
   const rapporterDecision = useCallback((c: number, t: number) => {
     setDecision((d) => (d.courante === c && d.total === t ? d : { courante: c, total: t }));
   }, []);
-  const rapporterAnalyse = useCallback(
-    (c: number) => setAnalyseCourante(c),
-    [],
-  );
   const reculerAvantLesDecisions = useCallback(
     () => aller(Math.max(0, derniere - 1)),
     [aller, derniere],
@@ -169,12 +159,7 @@ export function ParcoursMobile({
   );
   const total = poids.reduce((a, b) => a + b, 0);
   const avant = poids.slice(0, index).reduce((a, b) => a + b, 0);
-  const dedans =
-    courante.phase === "decision"
-      ? decision.courante
-      : courante.phase === "analyse"
-        ? analyseCourante
-        : 0;
+  const dedans = courante.phase === "decision" ? decision.courante : 0;
   useEffect(() => {
     const libelle = enRecapitulatif
       ? "Récapitulatif"
@@ -215,21 +200,8 @@ export function ParcoursMobile({
     prochaine === "decision" ? "Décider" : prochaine === "analyse" ? "Analyser" : "Continuer";
 
   const contexte = useMemo(
-    () => ({
-      rapporterDecision,
-      reculerAvantLesDecisions,
-      rapporterAnalyse,
-      continuer: () => aller(Math.min(derniere, index + 1)),
-      reculer: () => aller(Math.max(0, index - 1)),
-    }),
-    [
-      rapporterDecision,
-      reculerAvantLesDecisions,
-      rapporterAnalyse,
-      aller,
-      derniere,
-      index,
-    ],
+    () => ({ rapporterDecision, reculerAvantLesDecisions }),
+    [rapporterDecision, reculerAvantLesDecisions],
   );
 
   return (
@@ -245,7 +217,7 @@ export function ParcoursMobile({
         </div>
       </div>
 
-      {courante.phase !== "decision" && courante.phase !== "analyse" ? (
+      {courante.phase !== "decision" ? (
         <>
           {/* La place de la barre : sans elle, la fin de la carte passerait dessous. */}
           <div aria-hidden className="h-[calc(5.5rem+env(safe-area-inset-bottom))]" />

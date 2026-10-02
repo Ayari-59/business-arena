@@ -312,7 +312,7 @@ describe("pendant une partie", () => {
     expect(await avancement()).toBe(avant);
   });
 
-  it("l'analyse se fait écran par écran : le contexte, le diagnostic, une question à la fois", async () => {
+  it("les analyses du tour tiennent sur un écran, en accordéon : un tiroir ouvert à la fois", async () => {
     await versLaPremiereCarte();
     for (let k = 0; k < 10; k++) {
       const analyser = page.getByRole("button", { name: /^Analyser/ });
@@ -323,25 +323,29 @@ describe("pendant une partie", () => {
       await suite().click();
       await page.waitForTimeout(250);
     }
-    // 1. le contexte de la situation, sans champ
-    await page.getByRole("button", { name: "Continuer", exact: false }).last().waitFor();
-    expect(await page.locator("form input[type=checkbox]:visible").count()).toBe(0);
-    await page.getByRole("button", { name: /^Continuer/ }).last().click();
-    await page.waitForTimeout(250);
-    // 2. le diagnostic : on n'avance pas sans réponse
-    const continuer = page.getByRole("button", { name: /^Continuer/ }).last();
-    expect(await continuer.isDisabled()).toBe(true);
-    await page.locator("form input[type=checkbox]:visible").first().check({ force: true });
-    expect(await continuer.isDisabled()).toBe(false);
-    await continuer.click();
-    await page.waitForTimeout(250);
-    // 3. une question du modèle : le rendu n'est possible qu'une fois répondue
-    const valider = page.getByRole("button", { name: "Valider mon analyse" });
+    await page.getByText(/rendue[s]? sur \d/).waitFor({ state: "visible" });
+    // Une situation = un tiroir, dont le résumé dit où elle en est.
+    const tiroirs = page.locator("details:has(> summary:has-text('à analyser'))");
+    expect(await tiroirs.count()).toBeGreaterThan(0);
+    // Un seul est ouvert à la fois, et c'est le premier.
+    const ouverts = await page
+      .locator("details[open]:has(> summary:has-text('à analyser'))")
+      .count();
+    expect(ouverts).toBe(1);
+    // Le diagnostic et le modèle se remplissent dans le tiroir ouvert ; le rendu attend d'être complet.
+    const valider = page.getByRole("button", { name: "Valider mon analyse" }).first();
     expect(await valider.isDisabled()).toBe(true);
-    await page.locator("form input[type=radio]:visible").first().check({ force: true });
+    await page.locator("details[open] input[type=checkbox]:visible").first().check({ force: true });
+    const radios = page.locator("details[open] fieldset");
+    for (let i = 0; i < (await radios.count()); i++) {
+      const groupe = radios.nth(i);
+      if (await groupe.locator("input[type=radio]").count())
+        await groupe.locator("input[type=radio]").first().check({ force: true });
+    }
     expect(await valider.isDisabled()).toBe(false);
-    // Un écran à la fois : la barre de progression a avancé, et le pied reste en bas.
-    const bas = (await valider.boundingBox())!;
+    // Le pied du parcours reste en bas, avec « Retour » et « Continuer ».
+    const continuer = page.getByRole("button", { name: /^Continuer|^Décider/ }).last();
+    const bas = (await continuer.boundingBox())!;
     expect(bas.y + bas.height).toBeGreaterThan(page.viewportSize()!.height - 40);
   });
 

@@ -33,6 +33,8 @@ export function Tiroir({
   ouvert = false,
   ferme = false,
   groupe,
+  phrase = false,
+  onBasculer,
   children,
 }: {
   titre: string;
@@ -69,6 +71,10 @@ export function Tiroir({
    * même nom. Le navigateur s'en charge (`<details name>`), sans script.
    */
   groupe?: string;
+  /** Un titre qui est une phrase (une question) : en minuscules lisibles, pas en capitales de rubrique. */
+  phrase?: boolean;
+  /** Prévenu quand le tiroir s'ouvre ou se ferme, par un geste comme par un changement de `ouvert`. */
+  onBasculer?: (ouvert: boolean) => void;
   children: React.ReactNode;
 }) {
   // DANS LE PARCOURS DU TÉLÉPHONE, chaque carte a son écran à elle : replier ce qu'elle
@@ -79,6 +85,7 @@ export function Tiroir({
     <details
       open={ferme ? false : ouvert || enParcours}
       name={groupe}
+      onToggle={onBasculer ? (e) => onBasculer(e.currentTarget.open) : undefined}
       className="group rounded-lg border border-dashed border-white/15 bg-slate-950/60 open:border-solid open:bg-slate-950"
     >
       {/*
@@ -102,7 +109,13 @@ export function Tiroir({
             ▸
           </span>
           {icone ? <Icone nom={icone} className="h-4 w-4 shrink-0 text-amber-400/80" /> : null}
-          <span className="min-w-0 text-xs font-semibold uppercase tracking-wide text-slate-300">
+          <span
+            className={
+              phrase
+                ? "min-w-0 text-base font-medium text-slate-100"
+                : "min-w-0 text-xs font-semibold uppercase tracking-wide text-slate-300"
+            }
+          >
             {titre}
           </span>
           {valeur ? <span className="shrink-0 text-sm font-semibold">{valeur}</span> : null}

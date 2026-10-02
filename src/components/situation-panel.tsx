@@ -1,7 +1,7 @@
 "use client";
 
 import { bouton } from "@/components/bouton";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   retakeSituationAction,
   submitSituationAction,
@@ -13,7 +13,6 @@ import { estRendue, manques, messageIncomplet } from "@/config/situation-rendu";
 import type { SituationView } from "@/services/pedagogy.service";
 import type { SituationCategory } from "@/config/scenarios/situation-kit";
 import { Tiroir } from "@/components/tiroir";
-import { useParcours } from "@/components/parcours-mobile";
 
 const CATEGORY_LABELS: Record<SituationCategory, string> = {
   prise_de_poste: "Prise de poste",
@@ -69,9 +68,12 @@ interface BrouillonLocal {
 export function SituationCard({
   gameId,
   situation,
+  dansTiroir = false,
 }: {
   gameId: string;
   situation: SituationView;
+  /** Posée dans un tiroir de l'accordéon d'analyse (téléphone) : le tiroir porte déjà le titre et le cadre. */
+  dansTiroir?: boolean;
 }) {
   const hint = useGuardedAction(
     unlockHintAction.bind(null, gameId, situation.instanceId),
@@ -143,18 +145,6 @@ export function SituationCard({
     }
   }, [situation.instanceId, rendue, options, freeText, reponses]);
 
-  // SUR TÉLÉPHONE, l'analyse se fait écran par écran (voir parcours-mobile.tsx) :
-  // le contexte, le diagnostic, puis une question du modèle à la fois. Tous les
-  // champs restent dans le formulaire (masqués, pas retirés) : il part entier.
-  const parcours = useParcours();
-  const parEtapes = parcours !== null;
-  const [etape, setEtape] = useState(0);
-  const totalEtapes = rendue ? 1 : 2 + questionsARendre.length;
-  const rapporterAnalyse = parcours?.rapporterAnalyse;
-  useEffect(() => {
-    rapporterAnalyse?.(rendue ? 0 : etape);
-  }, [rapporterAnalyse, rendue, etape]);
-
   const manquants = manques({
     options,
     questions: questionsARendre.map((q) => q.id),
@@ -213,37 +203,8 @@ export function SituationCard({
     </section>
   );
 
-  if (parEtapes) {
-    return (
-      <AnalyseParEtapes
-        situation={situation}
-        etape={etape}
-        setEtape={setEtape}
-        totalEtapes={totalEtapes}
-        rendue={rendue}
-        quizDone={quizDone}
-        questionsARendre={questionsARendre}
-        options={options}
-        basculerOption={basculerOption}
-        freeText={freeText}
-        setFreeText={setFreeText}
-        reponses={reponses}
-        setReponses={setReponses}
-        complet={complet}
-        manquants={manquants}
-        formRef={rendu.formRef}
-        guardError={rendu.guardError}
-        renduAction={renduAction}
-        renduState={renduState}
-        renduPending={renduPending}
-        indices={indices}
-        parcours={parcours}
-      />
-    );
-  }
-
   return (
-    <article className="carte p-4 sm:p-6">
+    <article className={dansTiroir ? "" : "carte p-4 sm:p-6"}>
       <header className="mb-3">
         <div className="flex items-center gap-2">
           <p className="text-xs uppercase tracking-[0.25em] text-amber-400">
@@ -258,9 +219,11 @@ export function SituationCard({
             </span>
           ) : null}
         </div>
-        <h3 className="mt-1 text-lg font-semibold text-slate-100">
-          {situation.title}
-        </h3>
+        {dansTiroir ? null : (
+          <h3 className="mt-1 text-lg font-semibold text-slate-100">
+            {situation.title}
+          </h3>
+        )}
         <p className="mt-2 text-sm leading-relaxed text-slate-300">
           {situation.narrative}
         </p>
@@ -447,313 +410,82 @@ export function SituationCard({
   );
 }
 
-const LIGNE_DE_CHOIX =
-  "flex min-h-14 cursor-pointer items-start gap-3 rounded-xl border border-white/15 px-4 py-3 text-base text-slate-100 has-[:checked]:border-amber-400 has-[:checked]:bg-amber-400/10";
-
 /**
- * L'analyse d'une situation, écran par écran (téléphone).
+ * LES ANALYSES DU TOUR, EN ACCORDÉON (téléphone).
  *
- * Contexte, diagnostic, puis UNE question du modèle par écran, avec le pied du
- * parcours : « Retour » et « Continuer », qui devient « Valider mon analyse »
- * sur le dernier écran. Chaque écran n'avance que s'il est répondu : sinon le
- * rendu, qui part complet ou pas du tout, se bloquerait au dernier pas sur une
- * réponse qu'on n'a plus sous les yeux.
+ * Quand un tour pose deux ou trois situations, une file d'écrans par situation
+ * faisait une succession interminable de QCM. Elles tiennent ensemble sur UN écran :
+ * chacune est un tiroir dont le résumé dit son titre et où elle en est (« à analyser »,
+ * « rendue »), une seule est ouverte à la fois, et rendre l'une referme sur la suivante
+ * restée à faire. Toutes restent dans la page : un tiroir fermé est masqué, pas retiré.
  */
-function AnalyseParEtapes({
-  situation,
-  etape,
-  setEtape,
-  totalEtapes,
-  rendue,
-  quizDone,
-  questionsARendre,
-  options,
-  basculerOption,
-  freeText,
-  setFreeText,
-  reponses,
-  setReponses,
-  complet,
-  manquants,
-  formRef,
-  guardError,
-  renduAction,
-  renduState,
-  renduPending,
-  indices,
-  parcours,
+export function AnalyseDuTour({
+  gameId,
+  situations,
 }: {
-  situation: SituationView;
-  etape: number;
-  setEtape: (e: number) => void;
-  totalEtapes: number;
-  rendue: boolean;
-  quizDone: boolean;
-  questionsARendre: SituationView["quizQuestions"];
-  options: string[];
-  basculerOption: (id: string, coche: boolean) => void;
-  freeText: string;
-  setFreeText: (t: string) => void;
-  reponses: Record<string, string>;
-  setReponses: (
-    f: (prec: Record<string, string>) => Record<string, string>,
-  ) => void;
-  complet: boolean;
-  manquants: ReturnType<typeof manques>;
-  formRef: React.RefObject<HTMLFormElement | null>;
-  guardError: string | null;
-  renduAction: (formData: FormData) => void;
-  renduState: PedagogyState;
-  renduPending: boolean;
-  indices: React.ReactNode;
-  parcours: NonNullable<ReturnType<typeof useParcours>>;
+  gameId: string;
+  situations: SituationView[];
 }) {
-  const aller = (e: number) => {
-    setEtape(e);
-    window.scrollTo({ top: 0 });
-  };
-  const dernier = totalEtapes - 1;
-  const entete = (eyebrow: string, titre: string, ordinal: string) => (
-    <header className="space-y-2 pb-4">
-      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-amber-400">
-        {eyebrow}
-        {ordinal ? ` · ${ordinal}` : ""}
-      </p>
-      <h2 className="font-display text-[1.7rem] font-semibold leading-tight text-slate-50">
-        {titre}
-      </h2>
-    </header>
+  const premiereARendre = situations.find((x) => !estRendue(x));
+  const [ouverte, setOuverte] = useState<string | null>(
+    (premiereARendre ?? situations[0])?.instanceId ?? null,
   );
-  const pied = (contenu: React.ReactNode, message?: string | null) => (
-    <>
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/12 bg-slate-950/95 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur-md supports-[backdrop-filter]:bg-slate-950/90 print:hidden">
-        {message ? (
-          <p className="pb-2 text-sm text-slate-300">{message}</p>
-        ) : null}
-        <div className="flex gap-2.5">{contenu}</div>
-      </div>
-    </>
-  );
-  const retour = (surClic: () => void) => (
-    <button
-      type="button"
-      onClick={surClic}
-      className={`${bouton({ variante: "secondaire", taille: "l" })} min-h-12 shrink-0`}
-    >
-      Retour
-    </button>
-  );
-
-  if (rendue) {
-    return (
-      <div>
-        {entete(CATEGORY_LABELS[situation.category], situation.title, "")}
-        <p className="text-base leading-relaxed text-emerald-300">
-          ✓ Analyse rendue : correction au débriefing.
-        </p>
-        {pied(
-          <>
-            {retour(parcours.reculer)}
-            <button
-              type="button"
-              onClick={parcours.continuer}
-              className={`${bouton({ taille: "l" })} min-h-12 flex-1`}
-            >
-              Continuer
-              <span aria-hidden>→</span>
-            </button>
-          </>,
-        )}
-        <div aria-hidden className="h-[calc(5.5rem+env(safe-area-inset-bottom))]" />
-      </div>
-    );
-  }
-
-  const question = etape >= 2 ? questionsARendre[etape - 2] : undefined;
-  const bloque =
-    etape === 1
-      ? options.length === 0
-      : question
-        ? !reponses[question.id]
-        : false;
-  const message =
-    etape === dernier && !complet
-      ? messageIncomplet(manquants)
-      : bloque
-        ? etape === 1
-          ? "Cochez au moins une réponse pour continuer."
-          : "Choisissez une réponse pour continuer."
-        : null;
+  const rendues = situations.filter((x) => estRendue(x)).length;
+  // Une analyse qui vient d'être rendue referme son tiroir et ouvre la suivante à faire.
+  const dejaRendues = useRef(new Set(situations.filter((x) => estRendue(x)).map((x) => x.instanceId)));
+  useEffect(() => {
+    const nouvelle = situations.find((x) => estRendue(x) && !dejaRendues.current.has(x.instanceId));
+    if (!nouvelle) return;
+    dejaRendues.current.add(nouvelle.instanceId);
+    const suivante = situations.find((x) => !estRendue(x));
+    // Ouvrir la suivante est une réaction à l'arrivée du rendu côté serveur.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setOuverte(suivante ? suivante.instanceId : null);
+  }, [situations]);
 
   return (
-    <div>
-      <form ref={formRef} action={renduAction}>
-        <input
-          type="hidden"
-          name="questions"
-          value={questionsARendre.map((q) => q.id).join(",")}
-        />
-
-        <section hidden={etape !== 0} className="space-y-4">
-          {entete(CATEGORY_LABELS[situation.category], situation.title, "")}
-          {situation.aboveGameLevel ? (
-            <p className="text-base text-sky-300">
-              Cette situation dépasse le niveau choisi pour la partie.
-            </p>
-          ) : null}
-          <p className="text-base leading-relaxed text-slate-200">
-            {situation.narrative}
-          </p>
-          <p className="text-base font-medium leading-relaxed text-amber-200">
-            {situation.problem}
-          </p>
-          {situation.triggerFacts && situation.triggerFacts.length > 0 ? (
-            <Tiroir
-              titre="Pourquoi cette situation ?"
-              quoi={`${situation.triggerFacts.length} fait${situation.triggerFacts.length > 1 ? "s" : ""}`}
-              ouvert={situation.origin === "detected"}
-            >
-              <dl className="space-y-2">
-                {situation.triggerFacts.map((fact, i) => (
-                  <div
-                    key={i}
-                    className="flex items-baseline justify-between gap-3"
-                  >
-                    <dt className="text-sm text-slate-400">{fact.label}</dt>
-                    <dd
-                      className={`text-base font-medium ${
-                        fact.direction === "positive"
-                          ? "text-emerald-400"
-                          : fact.direction === "negative"
-                            ? "text-red-400"
-                            : "text-slate-300"
-                      }`}
-                    >
-                      {fact.value}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            </Tiroir>
-          ) : null}
-        </section>
-
-        <section hidden={etape !== 1}>
-          {entete(
-            "Analyse",
-            "Quel est le problème principal ?",
-            `1 sur ${totalEtapes - 1}`,
-          )}
-          <fieldset className="min-w-0 space-y-2 border-0 p-0">
-            <legend className="sr-only">
-              Quel est le problème principal ?
-            </legend>
-            {situation.diagnosticOptions.map((option) => (
-              <label key={option.id} className={LIGNE_DE_CHOIX}>
-                <input
-                  type="checkbox"
-                  name="options"
-                  value={option.id}
-                  checked={options.includes(option.id)}
-                  onChange={(e) => basculerOption(option.id, e.target.checked)}
-                  className="mt-0.5 h-5 w-5 shrink-0 accent-amber-400"
-                />
-                <span>{option.label}</span>
-              </label>
-            ))}
-          </fieldset>
-          <textarea
-            name="freeText"
-            rows={3}
-            value={freeText}
-            onChange={(e) => setFreeText(e.target.value)}
-            aria-label="Votre analyse écrite du problème"
-            placeholder="En quelques mots, votre analyse (facultatif)…"
-            className="mt-3 w-full champ px-3 py-3 text-base text-slate-100 outline-none"
-          />
-        </section>
-
-        {situation.quizQuestions.map((q) => {
-          const rang = questionsARendre.findIndex((x) => x.id === q.id);
-          if (quizDone || rang < 0) return null;
+    <div className="space-y-4">
+      <header className="space-y-2 pb-1">
+        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-amber-400">
+          Analyse · {rendues} rendue{rendues > 1 ? "s" : ""} sur {situations.length}
+        </p>
+        <h2 className="font-display text-[1.7rem] font-semibold leading-tight text-slate-50">
+          {situations.length > 1 ? "Vos situations à analyser" : "Votre situation à analyser"}
+        </h2>
+      </header>
+      <div className="space-y-2">
+        {situations.map((x) => {
+          const faite = estRendue(x);
+          const estOuverte = ouverte === x.instanceId;
           return (
-            <section key={q.id} hidden={etape !== rang + 2}>
-              {entete(
-                "Analyse",
-                q.prompt,
-                `${rang + 2} sur ${totalEtapes - 1}`,
-              )}
-              <fieldset className="min-w-0 space-y-2 border-0 p-0">
-                <legend className="sr-only">{q.prompt}</legend>
-                {q.options.map((option) => (
-                  <label key={option.id} className={LIGNE_DE_CHOIX}>
-                    <input
-                      type="radio"
-                      name={`quiz_${q.id}`}
-                      value={option.id}
-                      checked={reponses[q.id] === option.id}
-                      onChange={() =>
-                        setReponses((prec) => ({ ...prec, [q.id]: option.id }))
-                      }
-                      className="mt-0.5 h-5 w-5 shrink-0 accent-amber-400"
-                    />
-                    <span>{option.label}</span>
-                  </label>
-                ))}
-              </fieldset>
-            </section>
+            <Tiroir
+              key={x.instanceId}
+              titre={x.title}
+              phrase
+              groupe={`analyses-${gameId}`}
+              ouvert={estOuverte}
+              ferme={!estOuverte}
+              // Ouvrir l'un referme l'autre (même `groupe`) : les deux évènements arrivent dans
+              // un ordre quelconque, d'où la forme fonctionnelle — « fermé » ne retire que
+              // ce qui est encore ouvert, jamais l'ouverture qui vient d'arriver.
+              onBasculer={(ouvert) =>
+                setOuverte((courante) =>
+                  ouvert ? x.instanceId : courante === x.instanceId ? null : courante,
+                )
+              }
+              valeur={
+                <span
+                  className={`block text-sm font-normal ${faite ? "text-emerald-300" : "text-slate-400"}`}
+                >
+                  {faite ? "✓ rendue" : "à analyser"}
+                </span>
+              }
+            >
+              <SituationCard gameId={gameId} situation={x} dansTiroir />
+            </Tiroir>
           );
         })}
-
-        <div className="space-y-2 pt-3">
-          {etape === dernier ? <ErrorBox error={renduState.error} /> : null}
-          {etape === dernier ? <GuardError message={guardError} /> : null}
-        </div>
-
-        {pied(
-          <>
-            {retour(etape === 0 ? parcours.reculer : () => aller(etape - 1))}
-            {etape < dernier ? (
-              <button
-                type="button"
-                disabled={bloque}
-                onClick={() => aller(etape + 1)}
-                className={`${bouton({ taille: "l" })} min-h-12 flex-1`}
-              >
-                Continuer
-                <span aria-hidden>→</span>
-              </button>
-            ) : (
-              <button
-                type="submit"
-                disabled={!complet || renduPending}
-                aria-disabled={!complet || renduPending}
-                className={`${bouton({ taille: "l" })} min-h-12 flex-1`}
-              >
-                {renduPending ? "Envoi…" : "Valider mon analyse"}
-              </button>
-            )}
-          </>,
-          message,
-        )}
-      </form>
-
-      {/* Les indices, hors du formulaire (ils ont le leur) : un tiroir sur les
-          écrans où l'on répond, jamais sur le contexte. */}
-      <div hidden={etape === 0} className="pt-2">
-        <Tiroir
-          titre="Besoin d'un indice ?"
-          quoi={
-            situation.unlockedHints.length > 0
-              ? `${situation.unlockedHints.length} débloqué${situation.unlockedHints.length > 1 ? "s" : ""}`
-              : undefined
-          }
-        >
-          {indices}
-        </Tiroir>
       </div>
-      {/* La place du pied fixe : sans elle, la fin de l'écran passerait dessous. */}
-      <div aria-hidden className="h-[calc(7rem+env(safe-area-inset-bottom))]" />
     </div>
   );
 }

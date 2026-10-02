@@ -8,7 +8,7 @@ import { estUnTelephone } from "@/lib/appareil";
 import { accentsDuSite, themeParDefaut } from "@/config/theme-du-site";
 import { BarreDeJeu } from "@/components/barre-de-jeu";
 import { getTeamSituations } from "@/services/pedagogy.service";
-import { SituationCard, SituationDebrief } from "@/components/situation-panel";
+import { AnalyseDuTour, SituationCard, SituationDebrief } from "@/components/situation-panel";
 import { SaisonDuTour } from "@/components/saison-du-tour";
 import { AlerteTresorerie } from "@/components/alerte-tresorerie";
 import { PassageAuTour } from "@/components/passage-au-tour";
@@ -56,10 +56,7 @@ import { mentionDeValidation } from "@/config/validation-du-tour";
 import { surtitreDePartie } from "@/config/scenarios/presentation";
 import { SECTOR_COLORS, SECTOR_LABELS } from "@/config/scenarios/registry";
 import { PictoSecteur } from "@/components/picto-secteur";
-import {
-  etapesDeLAnalyse,
-  statutDesSituations,
-} from "@/config/situation-rendu";
+import { statutDesSituations } from "@/config/situation-rendu";
 import { AiAssistant } from "@/components/ai-assistant";
 import { entitlementsForUser } from "@/services/entitlements.service";
 import { resolveAiSurface } from "@/services/ai.service";
@@ -450,14 +447,15 @@ export default async function ArenaPage({
       </div>
     ) : null;
 
-  // L'analyse sur téléphone : une situation après l'autre, chacune en écrans
-  // (contexte, diagnostic, une question par écran). Plus d'accordéon.
+  // L'analyse sur téléphone : toutes les situations du tour sur UN écran, en accordéon.
   const analyseCartes: AnalyseDuParcours[] = statutSituations
-    ? situations.current.map((s) => ({
-        cle: `analyse-${s.instanceId}`,
-        noeud: <SituationCard gameId={view.gameId} situation={s} />,
-        etapes: etapesDeLAnalyse(s),
-      }))
+    ? [
+        {
+          cle: "analyse",
+          noeud: <AnalyseDuTour gameId={view.gameId} situations={situations.current} />,
+          etapes: situations.current.length,
+        },
+      ]
     : [];
 
   // Ce qu'on répond aux décisions du tour clos (voir plus haut) : servi aux onglets
