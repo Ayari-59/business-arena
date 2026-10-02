@@ -1,6 +1,7 @@
 "use client";
 
 import { bouton } from "@/components/bouton";
+import { useParcours } from "@/components/parcours-mobile";
 import { useSyncExternalStore } from "react";
 import { CourrierRecommande, Enveloppe, grilleDeCourriers } from "@/components/courrier";
 import { courrierParCode } from "@/config/courriers/registre";
@@ -72,6 +73,9 @@ export function CourrierDuTour({
     () => memoire.lire(cle),
     () => "" as const,
   );
+  // Dans le parcours du téléphone, la lettre a son titre : celui du tour, au-dessus, ne dit plus
+  // rien une fois le pli ouvert, et il repoussait la lettre sous le pli de l'écran.
+  const enParcours = useParcours() !== null;
   const classe = classeInitial || retenu === "2";
   const ouvert = ouvertInitial || classe || retenu === "1";
   const ouvrir = () => memoire.retenir(cle, "1");
@@ -110,6 +114,7 @@ export function CourrierDuTour({
 
   return (
     <section aria-label={`Le courrier du ${periodeLabel}`} className="carte p-3 sm:p-5">
+      {ouvert && enParcours ? null : (
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-sm font-semibold text-amber-400">📬 Le courrier du {periodeLabel}</h2>
         <p className="text-xs text-slate-400">
@@ -120,6 +125,7 @@ export function CourrierDuTour({
             : "Le facteur est passé. Ouvrez le courrier avant de décider."}
         </p>
       </div>
+      )}
 
       {!ouvert ? (
         <div className="mt-4 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
@@ -152,7 +158,7 @@ export function CourrierDuTour({
             qui compte, et il doit être le même que le trimestre soit calme
             ou non.
           */}
-          <div className={`mt-4 ${grilleDeCourriers(vide ? 1 : plis.length)}`}>
+          <div className={`${enParcours ? "" : "mt-4"} ${grilleDeCourriers(vide ? 1 : plis.length)}`}>
             {vide ? (
               <CourrierRecommande code={routine.code} destinataire="L'entreprise" />
             ) : (

@@ -368,6 +368,10 @@ function Field({
   if (enCarte) {
     return (
       <div className="block">
+        {/* Seul sur sa carte, le chiffre est celui de la question ; parmi d'autres, il se nomme. */}
+        {CHAMPS_SEULS_SUR_LEUR_CARTE.includes(name) ? null : (
+          <span className="mb-1.5 block text-base font-medium text-slate-200">{label}</span>
+        )}
         <SaisieDeCarte
           name={name}
           label={label}
@@ -569,9 +573,27 @@ function SaisieDeCarte({
   const auto = plageAuto(defaultValue, suffixe);
   const borneMin = plage?.min ?? 0;
   const borneMax = plage?.max ?? max ?? auto.max;
+  // LE BLOC SE CALE SUR LE MONTANT. Un chiffre de six caractères n'a pas besoin du corps ni
+  // de la hauteur d'un chiffre de deux : la taille suit le nombre de caractères, l'unité se
+  // pose à côté du chiffre plutôt qu'en dessous, et un champ parmi d'autres sur sa carte est
+  // plus bas que celui qui l'occupe seul.
+  const [longueur, setLongueur] = useState(String(defaultValue).length);
+  const corps = grand
+    ? longueur <= 5
+      ? "text-5xl"
+      : longueur <= 8
+        ? "text-4xl"
+        : "text-3xl"
+    : longueur <= 6
+      ? "text-3xl"
+      : longueur <= 9
+        ? "text-2xl"
+        : "text-xl";
   return (
     <div className="block">
-      <div className={`champ px-4 text-center ${grand ? "py-5" : "py-3"}`}>
+      <div
+        className={`champ flex flex-wrap items-baseline justify-center gap-x-2 px-4 ${grand ? "py-4" : "py-2.5"}`}
+      >
         <input
           type="number"
           onWheel={sansMolette}
@@ -584,6 +606,7 @@ function SaisieDeCarte({
           step={step}
           min={0}
           required={obligatoire}
+          onInput={(e) => setLongueur(Math.max(1, e.currentTarget.value.length))}
           onChange={
             onValueChange
               ? (e) => {
@@ -592,9 +615,12 @@ function SaisieDeCarte({
                 }
               : undefined
           }
-          className={`w-full min-w-0 bg-transparent text-center font-bold tabular-nums text-slate-50 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none ${grand ? "text-5xl" : "text-3xl"}`}
+          // Le champ épouse son contenu (en `ch`, chiffres tabulaires) : chiffre et unité
+          // restent côte à côte et centrés, quelle que soit la taille du nombre.
+          style={{ width: `${Math.max(2, longueur) + 0.5}ch` }}
+          className={`max-w-full min-w-0 bg-transparent text-center font-bold tabular-nums text-slate-50 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none ${corps}`}
         />
-        <span className="mt-1 block text-base text-slate-400">{suffixe}</span>
+        <span className="text-base text-slate-400">{suffixe}</span>
       </div>
       {sansCurseur ? null : (
         <CurseurDeSaisie
