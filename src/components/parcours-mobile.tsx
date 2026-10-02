@@ -256,9 +256,9 @@ export function ParcoursMobile({
 
   return (
     <ParcoursContexte.Provider value={contexte}>
-      {/* -mt-3 : le titre colle à la barre de progression au lieu de flotter à vingt-quatre pixels
-          dessous (le `space-y-6` de la page, que le parcours reprend à demi). */}
-      <div className="-mt-3 min-h-[calc(100dvh-14rem)] space-y-4" {...glisser}>
+      {/* -mt-6 : le titre colle à la barre de progression au lieu de flotter à quarante pixels
+          dessous (le `space-y-6` de la page, que le parcours reprend en entier). */}
+      <div className="-mt-6 min-h-[calc(100dvh-14rem)] space-y-4" {...glisser}>
         {/* Pas de glissement sur les décisions : une transformation, même d'un
             instant, ferait du bloc le repère du pied fixe du formulaire. */}
         <div
