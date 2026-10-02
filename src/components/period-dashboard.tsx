@@ -116,6 +116,7 @@ export function PeriodDashboard({
   period,
   standing,
   courrierResume = false,
+  partie,
 }: {
   view: GameView;
   period: Period;
@@ -126,6 +127,12 @@ export function PeriodDashboard({
    * des résultats, repoussait les chiffres sous le pli.
    */
   courrierResume?: boolean;
+  /**
+   * Une seule des trois parties de la synthèse, sans onglets : le téléphone les lit une
+   * carte à la fois (le verdict, les chiffres, l'évolution) au lieu d'un tableau de bord
+   * de trois mille pixels.
+   */
+  partie?: "verdict" | "chiffres" | "evolution";
 }) {
   const r = period.result;
   // Trajectoire arrêtée à ce tour : chaque période montre les graphiques tels
@@ -159,11 +166,10 @@ export function PeriodDashboard({
     view.periods.find((p) => p.round === period.round - 1)?.result.incomeStatement ?? null;
   const moi = view.ranking.find((row) => row.isPlayer);
 
-  return (
-    <DashboardTabs>
-      {{
-        synthese: (
-          <div className="space-y-3">
+  // Les trois temps de la synthèse, déclarés à part : les onglets les posent à la suite, et le
+  // téléphone en fait trois cartes (`partie`).
+  const verdict = (
+    <>
             {/*
               LE VERDICT D'ABORD, LES TABLEAUX ENSUITE. C'est l'onglet ouvert
               par défaut quand un tour se déplie : le premier écran doit
@@ -211,6 +217,10 @@ export function PeriodDashboard({
                 </div>
               </section>
             ) : null}
+    </>
+  );
+  const chiffres = (
+    <>
             <section aria-label="Indicateurs clés" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
               <KpiCard
                 label="Chiffre d'affaires"
@@ -293,7 +303,10 @@ export function PeriodDashboard({
             {standing && view.rseReport.available ? (
               <RseReportPanel report={view.rseReport} />
             ) : null}
-
+    </>
+  );
+  const evolution = (
+    <>
             {history.length > 0 ? (
               <section className="grid gap-3 lg:grid-cols-3">
                 <div className="carte p-3 sm:p-5 lg:col-span-2">
@@ -380,6 +393,20 @@ export function PeriodDashboard({
                 Le classement IPG se lit sur le tour le plus récent.
               </p>
             )}
+    </>
+  );
+  if (partie) {
+    return <div className="space-y-3">{{ verdict, chiffres, evolution }[partie]}</div>;
+  }
+
+  return (
+    <DashboardTabs>
+      {{
+        synthese: (
+          <div className="space-y-3">
+            {verdict}
+            {chiffres}
+            {evolution}
           </div>
         ),
 

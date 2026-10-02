@@ -725,36 +725,73 @@ export default async function ArenaPage({
       ) : null}
     </>
   );
-  // LES RÉSULTATS, PREMIÈRE CARTE DU TOUR (téléphone). Ce qui était empilé sous le tour
-  // en cours — tuiles de tendance, IPG, tours passés, réussites — se lit ici d'un
-  // seul tenant, avant le briefing : c'est sur eux que se décide le tour.
+  // LES RÉSULTATS, EN TÊTE DU TOUR (téléphone) : trois cartes — le verdict, les chiffres,
+  // l'évolution —, puis le détail à la demande, dans un tiroir fermé. Un tableau de bord
+  // de trois mille pixels ne se traîne pas jusqu'au bout : on lit ce qui compte, et on
+  // ouvre le reste si l'on veut.
   const moiAuClassement = view.ranking.find((row) => row.isPlayer);
-  const resultatsCarte =
-    periods.length > 0 ? (
-      <section className="space-y-4">
-        <header className="space-y-2 pb-1">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-amber-400">
-            {periodLabel(view.roundDays, latestRound ?? 1)}{" "}
-            {view.kind === "solo" ? "simulé" : "clos"}
-            {view.playerBpi !== null
-              ? ` · ${moiAuClassement ? `#${moiAuClassement.rank}/${view.ranking.length} · ` : ""}IPG ${view.playerBpi.toFixed(0)}`
-              : ""}
-          </p>
-          <h2 className="font-display text-[1.7rem] font-semibold leading-tight text-slate-50">
-            Ce que ça a donné
-          </h2>
-        </header>
-        {tableauNode}
-        {toursPasses}
-        {vosReussites}
-      </section>
-    ) : null;
+  const periodeRecente = periods.find((p) => p.round === latestRound);
+  const resultatsCartes: CarteDuParcours[] = periodeRecente
+    ? [
+        {
+          cle: "resultats-verdict",
+          noeud: (
+            <section className="space-y-4">
+              <header className="space-y-2 pb-1">
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-amber-400">
+                  {periodLabel(view.roundDays, periodeRecente.round)}{" "}
+                  {view.kind === "solo" ? "simulé" : "clos"}
+                  {view.playerBpi !== null
+                    ? ` · ${moiAuClassement ? `#${moiAuClassement.rank}/${view.ranking.length} · ` : ""}IPG ${view.playerBpi.toFixed(0)}`
+                    : ""}
+                </p>
+                <h2 className="font-display text-[1.7rem] font-semibold leading-tight text-slate-50">
+                  Ce que ça a donné
+                </h2>
+              </header>
+              <PeriodDashboard
+                view={view}
+                period={periodeRecente}
+                standing
+                courrierResume
+                partie="verdict"
+              />
+            </section>
+          ),
+        },
+        {
+          cle: "resultats-chiffres",
+          noeud: <PeriodDashboard view={view} period={periodeRecente} standing partie="chiffres" />,
+        },
+        {
+          cle: "resultats-evolution",
+          noeud: (
+            <div className="space-y-4">
+              <PeriodDashboard view={view} period={periodeRecente} standing partie="evolution" />
+              {/* Le reste — marché, finance, décisions, débriefing, tours plus anciens, réussites —
+                  est à la demande : fermé, il ne se traîne pas jusqu'au bout. */}
+              <Tiroir
+                titre={`Le détail · ${periodLabel(view.roundDays, periodeRecente.round).toLowerCase()}`}
+                quoi="marché, finance, décisions, tours passés"
+                ferme
+              >
+                <div className="space-y-4">
+                  {toursPasses}
+                  {vosReussites}
+                </div>
+              </Tiroir>
+            </div>
+          ),
+        },
+      ]
+    : [];
+
   const briefingCartes: CarteDuParcours[] = (
     [
       alerteTresorerieNode
         ? { cle: "alerte-tresorerie", noeud: alerteTresorerieNode }
         : null,
-      resultatsCarte ? { cle: "resultats", noeud: resultatsCarte } : null,
+      ...resultatsCartes,
       reponsesSection ? { cle: "reponses", noeud: reponsesSection } : null,
       nomNode ? { cle: "nom", noeud: nomNode } : null,
       view.peutChoisirSonEquipe && compositionNode

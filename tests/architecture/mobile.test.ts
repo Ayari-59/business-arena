@@ -262,3 +262,16 @@ describe("les résultats ne refont pas lire le courrier en grand", () => {
   });
 });
 
+describe("les résultats d'un tour clos se lisent en cartes, le détail à la demande", () => {
+  it("le verdict, les chiffres et l'évolution sont trois cartes ; le reste tient dans un tiroir fermé", () => {
+    const page = lire("src/app/arena/[gameId]/page.tsx");
+    for (const partie of ["verdict", "chiffres", "evolution"]) {
+      expect(page, `partie « ${partie} »`).toContain(`partie="${partie}"`);
+    }
+    expect(page).toMatch(/Le détail · [\s\S]{0,200}ferme/);
+    const tableau = lire("src/components/period-dashboard.tsx");
+    expect(tableau).toContain("partie?: ");
+    expect(tableau).toContain("{{ verdict, chiffres, evolution }[partie]}");
+  });
+});
+
