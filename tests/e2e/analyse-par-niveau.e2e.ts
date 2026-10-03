@@ -45,6 +45,18 @@ async function jusqueLAnalyse(niveau: number): Promise<{ page: Page; fermer: () 
   return { page, fermer: () => contexte.close() };
 }
 
+describe("le niveau de départ", () => {
+  it("sans toucher au curseur, une partie solo démarre au niveau 1 · Découverte", async () => {
+    const contexte = await navigateur.newContext({ ...devices["iPhone 13"], locale: "fr-FR" });
+    const page = await contexte.newPage();
+    await page.goto(`${BASE}/jouer`, { waitUntil: "domcontentloaded" });
+    await page.waitForLoadState("networkidle");
+    expect(await page.locator("input[name=level]").inputValue()).toBe("1");
+    await page.getByText(/Niveau\s*1\s*·\s*Découverte/).first().waitFor({ state: "visible" });
+    await contexte.close();
+  });
+});
+
 describe("l'analyse selon le niveau", () => {
   it("niveau 1 : trois causes, trois modèles expliqués", async () => {
     const { page, fermer } = await jusqueLAnalyse(1);

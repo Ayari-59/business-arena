@@ -63,6 +63,9 @@ const ROUNDS = [
   { value: "6", label: "6 tours" },
 ] as const;
 
+/** Le niveau où l'on commence : Découverte. */
+export const NIVEAU_PAR_DEFAUT = 1;
+
 export function QuickConfigFields({
   scenarios,
   levels,
@@ -73,7 +76,10 @@ export function QuickConfigFields({
   defaultScenario: string;
 }) {
   const [scenario, setScenario] = useState(defaultScenario);
-  const [level, setLevel] = useState(3);
+  // On commence par le niveau Découverte : des questions d'analyse plus courtes, tous les
+  // indices, aucune connaissance préalable — ce que la page /jouer promet. Le niveau 3,
+  // l'ancien défaut, est à un cran de curseur pour qui veut plus de défi.
+  const [level, setLevel] = useState(NIVEAU_PAR_DEFAUT);
   const [period, setPeriod] = useState<string>("quarter");
   const [companies, setCompanies] = useState<string>("3");
   const [rounds, setRounds] = useState<string>("");
