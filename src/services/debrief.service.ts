@@ -17,7 +17,12 @@ import {
   type AnswerFormat,
   type QuizMode,
 } from "@/config/difficulty";
-import { NIVEAU_STANDARD, optionsDuDiagnostic } from "@/config/analyse-par-niveau";
+import {
+  diagnosticAChoixUnique,
+  NIVEAU_STANDARD,
+  optionsDuDiagnostic,
+  questionDuLevier,
+} from "@/config/analyse-par-niveau";
 import { estUneReponse, optionLaPlusProche, optionsReconnues } from "@/pedagogy/reponse-ouverte";
 import type { Manque } from "@/config/situation-rendu";
 import { evaluateDiagnosis, evaluateQuiz } from "@/pedagogy/evaluation";
@@ -81,7 +86,7 @@ export async function retakeSituation(args: {
     throw new Error("Le rattrapage n'est ouvert que jusqu'à la clôture suivante");
   }
 
-  const asked = askedQuestions(def, quizModeFromProfile(game?.difficultyProfile));
+  const asked = askedQuestions(def, quizModeFromProfile(game?.difficultyProfile), modelCtxOf(game));
   const hasQuizQuestions = asked.length > 0;
   const validIds = new Set(asked.map((q) => q.id));
   const cleanAnswers: Record<string, string> = {};
@@ -222,9 +227,13 @@ export function askedQuestions(def: SituationDef, mode: QuizMode, ctx?: ModelCtx
   if (mode === "off") return [];
   const base = mode === "model" ? def.quiz.filter((q) => q.id === MODEL_QUESTION_ID) : def.quiz;
   if (!ctx) return base;
-  return base.map((q) =>
+  const adaptees = base.map((q) =>
     q.id === MODEL_QUESTION_ID ? modelQuestionFor(def, ctx.level, ctx.seed) : q,
   );
+  // Aux niveaux 1-2, une question de plus : « augmenter ou diminuer le prix ? »
+  // (config/analyse-par-niveau). Absente des situations sans levier à sens unique.
+  const levier = questionDuLevier(def, ctx.level);
+  return levier ? [...adaptees, levier] : adaptees;
 }
 
 /** Modèle attendu d'une situation, pour le débriefing quand la question n'est pas posée. */
@@ -257,6 +266,8 @@ export interface SituationView {
   status: string;
   weight: number;
   diagnosticOptions: { id: string; label: string }[];
+  /** Un choix entre deux, qui se coche d'un seul geste (niveaux 1-2) : des boutons radio, pas des cases. */
+  diagnosticUnique: boolean;
   /** QCM (connaissances + modèle d'analyse) : sans bonne réponse ni crédits (révélés au débriefing). */
   quizQuestions: {
     id: string;
@@ -381,6 +392,7 @@ export function toView(
     ),
     // Seules les questions réellement posées sont servies : en mode « model »
     // la question du modèle uniquement, en mode « off » aucune.
+    diagnosticUnique: diagnosticAChoixUnique(modelCtx?.level ?? NIVEAU_STANDARD),
     quizQuestions: asked.map((q) => ({
       id: q.id,
       prompt: q.prompt,

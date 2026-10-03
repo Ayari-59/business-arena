@@ -58,12 +58,30 @@ describe("le niveau de départ", () => {
 });
 
 describe("l'analyse selon le niveau", () => {
-  it("niveau 1 : trois causes, trois modèles expliqués", async () => {
+  it("niveau 1 : des choix entre deux, à cocher d'un seul geste", async () => {
     const { page, fermer } = await jusqueLAnalyse(1);
+    // Le diagnostic : deux causes, des boutons radio (une seule réponse).
+    expect(await page.locator("input[type=checkbox]").count()).toBe(0);
+    expect(await page.locator("input[type=radio][name=options]").count()).toBe(2);
+    // Le modèle : deux modèles, chacun avec sa phrase d'objectif ; puis, si la situation désigne un sens, « augmenter / diminuer ».
+    const modeles = page.locator("input[type=radio][name=quiz_model_choice]");
+    expect(await modeles.count()).toBe(2);
+    const etiquettes = await page.locator("label:has(input[name=quiz_model_choice])").allInnerTexts();
+    for (const e of etiquettes) expect(e.trim().split("\n").length, e).toBeGreaterThan(1);
+    const levier = page.locator("input[type=radio][name^=quiz_levier_]");
+    const n = await levier.count();
+    expect([0, 2]).toContain(n);
+    if (n === 2) {
+      const textes = await page.locator("label:has(input[name^=quiz_levier_])").allInnerTexts();
+      expect(textes.map((t) => t.trim().split(" ")[0]).sort()).toEqual(["Augmenter", "Diminuer"]);
+    }
+    await fermer();
+  });
+
+  it("niveau 3 : trois causes, trois modèles expliqués", async () => {
+    const { page, fermer } = await jusqueLAnalyse(3);
     expect(await page.locator("input[type=checkbox]").count()).toBe(3);
-    const modeles = page.locator("input[type=radio][name^=quiz_]");
-    expect(await modeles.count()).toBe(3);
-    // Chaque modèle porte sa phrase d'objectif : l'étiquette contient plus que le nom.
+    expect(await page.locator("input[type=radio][name^=quiz_]").count()).toBe(3);
     const etiquettes = await page.locator("label:has(input[type=radio][name^=quiz_])").allInnerTexts();
     for (const e of etiquettes) expect(e.trim().split("\n").length, e).toBeGreaterThan(1);
     await fermer();
@@ -71,7 +89,7 @@ describe("l'analyse selon le niveau", () => {
 
   it("niveau 4 : toutes les causes et quatre modèles, sans phrase d'aide", async () => {
     const { page, fermer } = await jusqueLAnalyse(4);
-    // La situation n'est pas la même qu'au niveau 1 (la gamme remplace le produit unique) :
+    // La situation n'est pas la même qu'au niveau 3 (la gamme remplace le produit unique) :
     // on ne compte pas ses causes, on vérifie qu'aucune n'est retirée — au moins quatre.
     expect(await page.locator("input[type=checkbox]").count()).toBeGreaterThanOrEqual(4);
     expect(await page.locator("input[type=radio][name^=quiz_]").count()).toBe(4);

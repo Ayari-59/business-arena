@@ -89,6 +89,7 @@ function situation(partiel: Partial<SituationView> = {}): SituationView {
     weight: 1,
     level: 1,
     aboveGameLevel: false,
+    diagnosticUnique: false,
     diagnosticOptions: [
       { id: "a", label: "Le prix a baissé" },
       { id: "b", label: "Les coûts ont monté" },

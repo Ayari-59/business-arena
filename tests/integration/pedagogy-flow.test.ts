@@ -191,7 +191,10 @@ describe("débriefing et progression", () => {
     const d = debriefedByRound[0]!.situations[0]!;
     expect(d.code).toBe("nova_t1_takeover");
     expect(d.debrief).not.toBeNull();
-    expect(d.debrief!.correctOptionIds.sort()).toEqual(["cover_fixed", "unit_margin"]);
+    // Les bonnes causes de CE niveau : à ce niveau de la partie, la situation ne propose
+    // qu'une des deux (config/analyse-par-niveau) ; elles sont toutes justes.
+    expect(d.debrief!.correctOptionIds).toContain("cover_fixed");
+    for (const id of d.debrief!.correctOptionIds) expect(["cover_fixed", "unit_margin"]).toContain(id);
     // la correction du QCM est révélée, avec explications
     expect(d.debrief!.quizScore).toBeCloseTo(2 / 3, 9);
     expect(d.debrief!.quizCorrection.length).toBe(d.quizQuestions.length);

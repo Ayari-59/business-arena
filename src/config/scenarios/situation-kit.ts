@@ -1,6 +1,11 @@
 import { modelByCode } from "../pedagogy/models";
 import { createRng } from "../../engine/random";
-import { distracteursDuModele, modeleAvecAide, profondeurDAnalyse } from "../analyse-par-niveau";
+import {
+  distracteursDuModele,
+  modeleAvecAide,
+  NIVEAU_STANDARD,
+  profondeurDAnalyse,
+} from "../analyse-par-niveau";
 
 /**
  * Machinerie commune aux situations pédagogiques, tous secteurs confondus
@@ -204,11 +209,14 @@ function shuffleSeeded<T>(items: readonly T[], seed: number): T[] {
  * autres modèles de sa matrice de pertinence) selon la profondeur d'analyse
  * du niveau (voir config/analyse-par-niveau) :
  *
- * - Découverte (niveaux 1-2) : DEUX distracteurs, les plus étrangers au
- *   problème d'abord — hors-sujet manifestes, puis voisins acceptables ; le
- *   piège plausible (misleading) passe en dernier, pour que l'optimal se
- *   détache nettement ;
- * - Standard (niveaux 3 à 6) : trois distracteurs, le voisin plausible
+ * - Intuition (niveaux 1-2) : UN distracteur, le plus étranger au problème —
+ *   un choix entre deux. Le voisin acceptable (qui vaut 0,6) passe en dernier :
+ *   dans un choix entre deux, une « mauvaise » réponse à moitié juste serait
+ *   une question piège ;
+ * - Découverte (niveau 3) : deux distracteurs, les plus étrangers d'abord —
+ *   hors-sujet manifestes, puis voisins acceptables ; le piège plausible
+ *   (misleading) en dernier, pour que l'optimal se détache nettement ;
+ * - Standard (niveaux 4 à 6) : trois distracteurs, le voisin plausible
  *   (misleading) en tête — le choix demande alors de vraiment distinguer les
  *   modèles.
  *
@@ -229,10 +237,13 @@ export function modelOptionCodes(
   // « optimal » reste en tête : une situation peut coter plusieurs modèles
   // comme optimaux (plusieurs bonnes réponses), et ils doivent figurer parmi
   // les options.
+  const profondeur = profondeurDAnalyse(level);
   const priority: ModelRelevance[] =
-    profondeurDAnalyse(level) === "decouverte"
-      ? ["optimal", "irrelevant", "acceptable", "misleading"]
-      : ["optimal", "misleading", "acceptable", "irrelevant"];
+    profondeur === "intuition"
+      ? ["optimal", "irrelevant", "misleading", "acceptable"]
+      : profondeur === "decouverte"
+        ? ["optimal", "irrelevant", "acceptable", "misleading"]
+        : ["optimal", "misleading", "acceptable", "irrelevant"];
   const distractors = priority
     .flatMap((r) => pool.filter((c) => rel(c) === r))
     .slice(0, distracteursDuModele(level));
@@ -324,9 +335,11 @@ export function attachModelQuestions(
     if (!Object.values(s.modelRelevance).includes("optimal")) {
       throw new Error(`Situation « ${s.code} » : aucun modèle marqué « optimal »`);
     }
-    // Question canonique (niveau 3, graine 0) : source stable de la correction
+    // Question canonique (palier Standard, graine 0 : toutes les options) : source stable de la correction
     // et des crédits ; la vue et le calcul du score la reconstruisent ensuite
     // par niveau et par graine de partie (modelQuestionFor).
-    s.quiz.push(modelQuestion(s.modelRelevance, explain, { level: 3, seed: 0, distractorPool: s.distractorPool }));
+    s.quiz.push(
+      modelQuestion(s.modelRelevance, explain, { level: NIVEAU_STANDARD, seed: 0, distractorPool: s.distractorPool }),
+    );
   }
 }

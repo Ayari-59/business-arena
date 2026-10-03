@@ -19,6 +19,7 @@ import {
 import { estUneReponse } from "@/pedagogy/reponse-ouverte";
 import type { SituationView } from "@/services/pedagogy.service";
 import type { SituationCategory } from "@/config/scenarios/situation-kit";
+import { PREFIXE_QUESTION_LEVIER } from "@/config/analyse-par-niveau";
 import { Tiroir } from "@/components/tiroir";
 import { useParcours } from "@/components/parcours-mobile";
 import { vibrer, VIBRATION_DE_REUSSITE } from "@/lib/glisser";
@@ -40,8 +41,12 @@ const initial: PedagogyState = { error: null };
  * « connaissances » serait faux. Le titre suit ce qui est réellement posé.
  */
 function quizHeading(questions: { id: string }[]): string {
-  const onlyModel = questions.every((q) => q.id === "model_choice");
-  return onlyModel ? "Modèle d'analyse" : "Connaissances et modèle d'analyse";
+  const sansLevier = questions.filter((q) => !q.id.startsWith(PREFIXE_QUESTION_LEVIER));
+  const onlyModel = sansLevier.every((q) => q.id === "model_choice");
+  const avecLevier = sansLevier.length < questions.length;
+  if (!onlyModel) return "Connaissances et modèle d'analyse";
+  // Niveaux 1-2 : le modèle ET le sens de la décision (« augmenter ou diminuer ? »).
+  return avecLevier ? "Modèle d'analyse et sens de la décision" : "Modèle d'analyse";
 }
 
 function ErrorBox({ error }: { error: string | null }) {
@@ -355,6 +360,7 @@ export function SituationCard({
               <fieldset className="mt-1 min-w-0 border-0 p-0">
                 <legend className="text-xs text-slate-400">
                   Quel est le problème principal ?
+                  {situation.diagnosticUnique ? " Choisissez-en un." : ""}
                 </legend>
                 <div className="mt-2 space-y-2">
                   {situation.diagnosticOptions.map((option) => (
@@ -362,13 +368,16 @@ export function SituationCard({
                       key={option.id}
                       className="flex items-start gap-3 py-1.5 text-sm text-slate-200 pointer-coarse:min-h-11"
                     >
+                      {/* Niveaux 1-2 : un choix entre deux, une seule réponse (bouton radio). */}
                       <input
-                        type="checkbox"
+                        type={situation.diagnosticUnique ? "radio" : "checkbox"}
                         name="options"
                         value={option.id}
                         checked={options.includes(option.id)}
                         onChange={(e) =>
-                          basculerOption(option.id, e.target.checked)
+                          situation.diagnosticUnique
+                            ? setOptions([option.id])
+                            : basculerOption(option.id, e.target.checked)
                         }
                         className="mt-0.5 h-5 w-5 shrink-0 accent-amber-400"
                       />
@@ -907,15 +916,17 @@ function SituationRetake({
               className="flex items-start gap-3 py-1.5 text-sm text-slate-200 pointer-coarse:min-h-11"
             >
               <input
-                type="checkbox"
+                type={situation.diagnosticUnique ? "radio" : "checkbox"}
                 name="options"
                 value={option.id}
                 checked={options.includes(option.id)}
                 onChange={(e) =>
                   setOptions((prec) =>
-                    e.target.checked
-                      ? [...new Set([...prec, option.id])]
-                      : prec.filter((o) => o !== option.id),
+                    situation.diagnosticUnique
+                      ? [option.id]
+                      : e.target.checked
+                        ? [...new Set([...prec, option.id])]
+                        : prec.filter((o) => o !== option.id),
                   )
                 }
                 className="mt-1 accent-sky-400"
@@ -974,7 +985,12 @@ function SituationRetake({
                   }
                   className="mt-1 accent-sky-400"
                 />
-                <span>{option.label}</span>
+                <span>
+                  {option.label}
+                  {option.aide ? (
+                    <span className="mt-0.5 block text-sm leading-snug text-slate-400">{option.aide}</span>
+                  ) : null}
+                </span>
               </label>
             ))}
           </div>

@@ -4,11 +4,11 @@ import { and, eq } from "drizzle-orm";
 /**
  * L'ANALYSE, DE BOUT EN BOUT, À DEUX NIVEAUX — et sa mesure.
  *
- * Un joueur de niveau 1 reçoit des questions plus courtes, dont le modèle
- * explique à quoi il sert ; un joueur de niveau 4 reçoit celles d'avant. Dans
- * les deux cas, rendre la bonne réponse vaut le maximum — y compris quand le
- * client envoie une cause juste que ce niveau ne proposait pas. Puis la
- * mesure de l'analyse retrouve ces situations, rangées par niveau.
+ * Un joueur de niveau 1 reçoit des choix entre deux (cause, modèle, sens du
+ * levier) ; au niveau 3, trois causes et trois modèles ; au niveau 4, celles
+ * d'avant. À chaque niveau, rendre la bonne réponse vaut le maximum — y compris
+ * quand le client envoie une cause juste que ce niveau ne proposait pas. Puis
+ * la mesure de l'analyse retrouve ces situations, rangées par niveau.
  */
 
 vi.mock("@/db", async () => {
@@ -19,7 +19,7 @@ vi.mock("@/db", async () => {
 import { db } from "@/db";
 import { rounds, situationInstances, teams, users } from "@/db/schema";
 import { createSoloGame, resolveCurrentRound } from "@/services/game.service";
-import { getTeamSituations, submitDiagnosis } from "@/services/pedagogy.service";
+import { getTeamSituations, submitDiagnosis, submitQuiz } from "@/services/pedagogy.service";
 import { situationByCode } from "@/config/scenarios/registry";
 import { mesurerLAnalyseSolo } from "@/services/mesure-analyse.service";
 import type { RoundDecisions } from "@/engine/types";
@@ -34,6 +34,7 @@ const DECISIONS: RoundDecisions = {
 
 let userId: string;
 let facile: string;
+let decouverte: string;
 let standard: string;
 
 beforeAll(async () => {
@@ -44,16 +45,35 @@ beforeAll(async () => {
       .returning({ id: users.id })
   )[0]!.id;
   facile = await createSoloGame(userId, "quarter", 3, 1);
+  decouverte = await createSoloGame(userId, "quarter", 3, 3);
   standard = await createSoloGame(userId, "quarter", 3, 4);
 });
 
 describe("ce que voit le joueur", () => {
-  it("niveau 1 : trois causes, trois modèles avec leur phrase d'objectif", async () => {
+  it("niveau 1 : des choix entre deux — une cause, un modèle expliqué, le sens du levier", async () => {
     const s = (await getTeamSituations(facile, userId)).current[0]!;
     const def = situationByCode.get(s.code)!;
+    expect(s.diagnosticUnique).toBe(true);
+    if (def.diagnosticOptions.filter((o) => !o.correct).length >= 1) {
+      expect(s.diagnosticOptions).toHaveLength(2);
+    }
+    const modele = s.quizQuestions.find((q) => q.id === "model_choice")!;
+    expect(modele.options).toHaveLength(2);
+    expect(modele.options.every((o) => typeof o.aide === "string" && o.aide.length > 0)).toBe(true);
+    const aUnSens = (def.decisionLevers ?? []).some((l) => l.direction !== "review");
+    const levier = s.quizQuestions.find((q) => q.id.startsWith("levier_"));
+    expect(levier !== undefined).toBe(aUnSens);
+    if (levier) expect(levier.options.map((o) => o.id)).toEqual(["up", "down"]);
+  });
+
+  it("niveau 3 : trois causes, trois modèles expliqués, pas de question de levier", async () => {
+    const s = (await getTeamSituations(decouverte, userId)).current[0]!;
+    const def = situationByCode.get(s.code)!;
+    expect(s.diagnosticUnique).toBe(false);
     if (def.diagnosticOptions.filter((o) => !o.correct).length >= 2) {
       expect(s.diagnosticOptions).toHaveLength(3);
     }
+    expect(s.quizQuestions).toHaveLength(1);
     const modele = s.quizQuestions[0]!;
     expect(modele.options).toHaveLength(3);
     expect(modele.options.every((o) => typeof o.aide === "string" && o.aide.length > 0)).toBe(true);
@@ -62,7 +82,9 @@ describe("ce que voit le joueur", () => {
   it("niveau 4 : les quatre causes et quatre modèles d'avant, sans phrase d'aide", async () => {
     const s = (await getTeamSituations(standard, userId)).current[0]!;
     const def = situationByCode.get(s.code)!;
+    expect(s.diagnosticUnique).toBe(false);
     expect(s.diagnosticOptions).toHaveLength(def.diagnosticOptions.length);
+    expect(s.quizQuestions).toHaveLength(1);
     const modele = s.quizQuestions[0]!;
     expect(modele.options.length).toBeGreaterThanOrEqual(3);
     expect(modele.options.some((o) => o.aide)).toBe(false);
@@ -92,6 +114,27 @@ describe("ce qui est noté", () => {
       selectedOptionIds: [mauvaise.id],
     });
     expect(score).toBe(0);
+  });
+});
+
+describe("la question du levier est notée comme les autres", () => {
+  it("le bon sens vaut tout le crédit, l'autre rien, et la réponse est acceptée par le serveur", async () => {
+    // Une situation de niveau 1 qui désigne un sens : on en crée une partie à part par secteur jusqu'à en trouver une.
+    const partie = await createSoloGame(userId, "quarter", 3, 2);
+    const s = (await getTeamSituations(partie, userId)).current[0]!;
+    const def = situationByCode.get(s.code)!;
+    const levier = s.quizQuestions.find((q) => q.id.startsWith("levier_"));
+    if (!levier) return; // cette situation n'a que des leviers « à revoir » : rien à noter
+    const sens = def.decisionLevers.find((l) => l.direction !== "review")!.direction;
+    const modele = s.quizQuestions.find((q) => q.id === "model_choice")!;
+    const optimal = Object.keys(def.modelRelevance).find((c) => def.modelRelevance[c] === "optimal")!;
+    expect(modele.options.some((o) => o.id === optimal)).toBe(true);
+    const { score } = await submitQuiz({
+      instanceId: s.instanceId,
+      userId,
+      answers: { model_choice: optimal, [levier.id]: sens },
+    });
+    expect(score).toBe(1);
   });
 });
 

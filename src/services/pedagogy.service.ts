@@ -16,18 +16,14 @@ import {
   teams,
 } from "@/db/schema";
 import { conceptByCode } from "@/config/pedagogy/concepts";
-import type { SituationDef } from "@/config/scenarios/nova/situations";
-import {
-  MODEL_QUESTION_ID,
-  type QuizQuestionDef,
-} from "@/config/scenarios/situation-kit";
 import {
   SCENARIOS,
   scenarioByCode,
   situationByCode,
 } from "@/config/scenarios/registry";
-import { presetFromProfile, quizModeFromProfile, type QuizMode } from "@/config/difficulty";
+import { presetFromProfile, quizModeFromProfile } from "@/config/difficulty";
 import { NIVEAU_STANDARD, optionsDuDiagnostic } from "@/config/analyse-par-niveau";
+import { askedQuestions, modelCtxOf } from "@/services/debrief.service";
 import { hintScoreMultiplier, nextUnlockableLevel } from "@/pedagogy/hints";
 import { evaluateDiagnosis, evaluateQuiz } from "@/pedagogy/evaluation";
 import { buildConsequenceContext, buildInterpretation } from "@/pedagogy/detection";
@@ -216,7 +212,8 @@ export async function submitQuiz(args: {
   if (instance.quiz) throw new Error("Le QCM de cette situation est déjà validé");
   // L'enseignant a retiré les QCM de cette partie : le formulaire n'est plus
   // servi, et une soumission forgée ne doit pas non plus être acceptée.
-  const asked = askedQuestions(def, quizModeFromProfile(game?.difficultyProfile));
+  // Les questions réellement POSÉES à ce niveau : celles que le joueur a vues, pas la version canonique.
+  const asked = askedQuestions(def, quizModeFromProfile(game?.difficultyProfile), modelCtxOf(game));
   if (asked.length === 0) {
     throw new Error("Les QCM sont désactivés pour cette partie");
   }
@@ -265,6 +262,7 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
   const conceptIdByCode = new Map(conceptRows.map((r) => [r.code, r.id]));
   const gameRow = (await db.select().from(games).where(eq(games.id, gameId)))[0];
   const quizMode = quizModeFromProfile(gameRow?.difficultyProfile);
+  const modelCtx = modelCtxOf(gameRow);
 
   const toDebrief = instances.filter((i) => i.status !== "debriefed");
   if (toDebrief.length === 0) return;
@@ -348,7 +346,7 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
     .filter((inst) => {
       const def = situationByCode.get(codeById.get(inst.situationId) ?? "");
       if (!def) return false;
-      const hasQuiz = askedQuestions(def, quizMode).length > 0;
+      const hasQuiz = askedQuestions(def, quizMode, modelCtx).length > 0;
       if (!hasQuiz) return false;
       return (inst.quiz as { score?: number } | null)?.score == null;
     })
@@ -409,7 +407,7 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
     const levels = levelsByInstance.get(instance.id) ?? [];
     const diagScore =
       ((instance.diagnosis as { score?: number } | null)?.score as number | undefined) ?? 0;
-    const hasQuizQuestions = askedQuestions(def, quizMode).length > 0;
+    const hasQuizQuestions = askedQuestions(def, quizMode, modelCtx).length > 0;
     let quizScore: number | null = null;
     if (hasQuizQuestions) {
       quizScore = (instance.quiz as { score?: number } | null)?.score ?? null;
@@ -568,17 +566,6 @@ export async function debriefRound(gameId: string, roundIndex: number): Promise<
 // ---------------------------------------------------------------------------
 // Lectures : vue joueur et vue pédagogique enseignant (§27)
 // ---------------------------------------------------------------------------
-
-/**
- * Questions réellement posées pour cette partie. Le mode « model » ne garde
- * que la question du modèle d'analyse : les questions de connaissances
- * redemandent hors contexte ce que le diagnostic teste déjà en situation.
- */
-function askedQuestions(def: SituationDef, mode: QuizMode): QuizQuestionDef[] {
-  if (mode === "off") return [];
-  if (mode === "model") return def.quiz.filter((q) => q.id === MODEL_QUESTION_ID);
-  return def.quiz;
-}
 
 export interface AnalyticalHint {
   code: string;

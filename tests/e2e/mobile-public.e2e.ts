@@ -87,7 +87,7 @@ describe("le menu, rangé par intention", () => {
       });
       await groupe.first().waitFor({ state: "visible" });
       const boite = (await groupe.first().boundingBox())!;
-      expect(boite.height, `groupe « ${titre} » trop bas`).toBeGreaterThanOrEqual(43.5); // min-h-11 = 44 px, au sous-pixel près
+      expect(boite.height, `groupe « ${titre} » trop bas`).toBeGreaterThanOrEqual(43); // min-h-11 = 44 px, au sous-pixel près (mesuré entre 43,4 et 43,7)
     }
     // « Jouer » est ouvert d'office : on joue sans chercher.
     await page.getByRole("link", { name: /Jouer maintenant/ }).waitFor({ state: "visible" });

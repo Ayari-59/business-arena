@@ -28,7 +28,8 @@ describe("la question du modèle, sur les neuf secteurs", () => {
         const ids = q.options.map((o) => o.id);
         expect(ids, `${sector}/${s.code}/n${level}`).toContain(optimal);
         expect(s.modelRelevance[q.correctOptionId], `${sector}/${s.code}`).toBe("optimal");
-        expect(q.options.length, `${sector}/${s.code}/n${level}`).toBeGreaterThanOrEqual(3);
+        // Un choix entre deux au niveau 1, trois au niveau 3, jusqu'à quatre ensuite.
+        expect(q.options.length, `${sector}/${s.code}/n${level}`).toBeGreaterThanOrEqual(2);
         expect(q.options.length).toBeLessThanOrEqual(4);
         // Chaque option porte le crédit de sa pertinence et le nom du modèle.
         for (const o of q.options) {
@@ -38,9 +39,9 @@ describe("la question du modèle, sur les neuf secteurs", () => {
     }
   });
 
-  it("le piège plausible n'est prioritaire qu'à partir du niveau 3", () => {
+  it("le piège plausible n'est prioritaire qu'à partir du niveau 4", () => {
     // Une situation qui distingue un « misleading » d'un « acceptable » : au
-    // niveau 1 l'acceptable est retenu avant le piège, au niveau 3 l'inverse.
+    // niveau 1 le piège est écarté au profit d'un choix net, au niveau 4 il passe devant.
     const distinguantes = ALL.filter(({ s }) => {
       const vals = Object.values(s.modelRelevance);
       return vals.includes("misleading") && vals.includes("acceptable");
@@ -49,7 +50,7 @@ describe("la question du modèle, sur les neuf secteurs", () => {
     let observe = false;
     for (const { s } of distinguantes) {
       const facile = new Set(modelOptionCodes(s.modelRelevance, s.distractorPool, 1, 0));
-      const dur = new Set(modelOptionCodes(s.modelRelevance, s.distractorPool, 3, 0));
+      const dur = new Set(modelOptionCodes(s.modelRelevance, s.distractorPool, 4, 0));
       const misleading = Object.keys(s.modelRelevance).filter((c) => s.modelRelevance[c] === "misleading");
       // S'il y a plus de distracteurs que de places, le niveau change le tri.
       if (misleading.some((m) => dur.has(m) && !facile.has(m))) observe = true;
