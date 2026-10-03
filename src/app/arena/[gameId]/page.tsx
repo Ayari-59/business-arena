@@ -527,9 +527,32 @@ export default async function ArenaPage({
   // Les trois facettes d'une période close : ce qu'on a analysé (Situation + correction), ce
   // qu'on a décidé, ce qui en est ressorti. Servies à l'accordéon des tours passés, et, sur
   // téléphone, à la carte des résultats du dernier tour.
+  /** Le débriefing des situations d'un tour clos (null s'il n'y en a pas). */
+  const situationsDuTour = (p: (typeof periods)[number]) => {
+    const dr = debriefByRound.get(p.round);
+    return dr ? (
+      <section className="space-y-3">
+        {dr.situations.map((s) => (
+          <SituationDebrief
+            key={s.instanceId}
+            situation={s}
+            gameId={view.gameId}
+            retakeable={
+              situations.missedPolicy === "retake50" && p.round === mostRecentDebriefedRound
+            }
+          />
+        ))}
+      </section>
+    ) : null;
+  };
+  /** Les décisions prises à un tour clos (null si elles ne sont pas conservées). */
+  const decisionsDuTour = (p: (typeof periods)[number]) =>
+    p.decisions ? (
+      <PeriodDecisionsRecap decisions={p.decisions} vocabulary={view.vocabulary} gamme={view.gamme} />
+    ) : null;
+
   const ongletsDuTour = (p: (typeof periods)[number]) => {
     const isLatest = p.round === latestRound;
-    const dr = debriefByRound.get(p.round);
     return (
         <SegmentedTabs
           defaultKey={isLatest ? "resultats" : "situation"}
@@ -540,28 +563,8 @@ export default async function ArenaPage({
           ]}
         >
           {{
-            situation: dr ? (
-              <section className="space-y-3">
-                {dr.situations.map((s) => (
-                  <SituationDebrief
-                    key={s.instanceId}
-                    situation={s}
-                    gameId={view.gameId}
-                    retakeable={
-                      situations.missedPolicy === "retake50" &&
-                      p.round === mostRecentDebriefedRound
-                    }
-                  />
-                ))}
-              </section>
-            ) : null,
-            decisions: p.decisions ? (
-              <PeriodDecisionsRecap
-                decisions={p.decisions}
-                vocabulary={view.vocabulary}
-                gamme={view.gamme}
-              />
-            ) : null,
+            situation: situationsDuTour(p),
+            decisions: decisionsDuTour(p),
             resultats: (
               <PeriodDashboard
                 view={view}
@@ -767,9 +770,23 @@ export default async function ArenaPage({
                   ? ` · ${moiAuClassement ? `#${moiAuClassement.rank}/${view.ranking.length} · ` : ""}IPG ${view.playerBpi.toFixed(0)}`
                   : ""}
               </p>
-              {/* Les onglets du tour clos : Situation, Décisions, Résultats (ouvert), avec,
-                  dans les résultats, Synthèse, Marché et Finance. */}
-              {ongletsDuTour(periodeRecente)}
+              {/* LES RÉSULTATS ET SEULEMENT EUX, avec leurs trois onglets de détail (Synthèse, Marché,
+                  Finance). Le menu Situation / Décisions / Résultats n'a pas sa place ici : le
+                  débriefing et les décisions du tour se lisent à la demande, dans un tiroir. */}
+              <PeriodDashboard
+                view={view}
+                period={periodeRecente}
+                standing
+                courrierResume={telephone}
+              />
+              {situationsDuTour(periodeRecente) || decisionsDuTour(periodeRecente) ? (
+                <Tiroir titre="Débriefing et décisions de ce tour" ferme>
+                  <div className="space-y-4">
+                    {situationsDuTour(periodeRecente)}
+                    {decisionsDuTour(periodeRecente)}
+                  </div>
+                </Tiroir>
+              ) : null}
               {/* Les tours plus anciens et les réussites : à la demande, fermés. */}
               {periods.length > 1 || vosReussites ? (
                 <Tiroir titre="Tours précédents et réussites" ferme>

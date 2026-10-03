@@ -262,10 +262,14 @@ describe("les résultats ne refont pas lire le courrier en grand", () => {
   });
 });
 
-describe("les résultats d'un tour clos gardent leurs onglets, le reste est à la demande", () => {
-  it("une carte « Résultats » avec les onglets du tour, et les tours plus anciens dans un tiroir fermé", () => {
+describe("les résultats d'un tour clos : leurs trois onglets de détail, le reste est à la demande", () => {
+  it("une carte « Résultats » qui n'a que le tableau de bord (Synthèse, Marché, Finance), sans le menu Situation / Décisions / Résultats", () => {
     const page = lire("src/app/arena/[gameId]/page.tsx");
-    expect(page).toContain("{ongletsDuTour(periodeRecente)}");
+    const carte = page.slice(page.indexOf("const resultatsCartes"), page.indexOf("const briefingCartes"));
+    expect(carte, "pas de menu de navigation dans la carte des résultats").not.toContain("ongletsDuTour(");
+    expect(carte).toContain("<PeriodDashboard");
+    // Le débriefing et les décisions du tour restent lisibles, dans un tiroir fermé.
+    expect(carte).toMatch(/Débriefing et décisions de ce tour[\s\S]{0,40}ferme/);
     expect(page).toMatch(/Tours précédents et réussites[\s\S]{0,80}ferme/);
     expect(page).toContain('cle: "resultats"');
   });

@@ -919,6 +919,21 @@ describe("sur un petit téléphone (iPhone SE, 375 px)", () => {
     expect(await petit.getByText("Trésorerie").first().isVisible()).toBe(true);
     await petit.getByText(/Voir les résultats/).first().waitFor({ state: "visible" });
   }, 120_000);
+
+  it("la carte des résultats n'a que ses trois onglets de détail, pas le menu de navigation du tour", async () => {
+    await petit.getByText(/Voir les résultats/).first().click();
+    await petit.getByRole("tab", { name: /Synthèse/ }).waitFor({ state: "visible", timeout: 30_000 });
+    const onglets = (await petit.locator('[role="tablist"] [role="tab"]:visible').allInnerTexts()).map((t) =>
+      t.replace(/\s+/g, " ").trim(),
+    );
+    expect(onglets, `onglets visibles : ${onglets.join(" | ")}`).toHaveLength(3);
+    expect(onglets.join(" ")).toMatch(/Synthèse/);
+    expect(onglets.join(" ")).toMatch(/Marché/);
+    expect(onglets.join(" ")).toMatch(/Finance/);
+    expect(onglets.join(" ")).not.toMatch(/Situation|Décisions/);
+    // Le débriefing et les décisions du tour restent à la demande, dans un tiroir.
+    expect(await petit.locator("summary", { hasText: "Débriefing et décisions de ce tour" }).count()).toBe(1);
+  }, 60_000);
 });
 
 describe("le lancement d'une partie, sur téléphone", () => {
