@@ -1,5 +1,6 @@
 import { modelByCode } from "../pedagogy/models";
 import { createRng } from "../../engine/random";
+import { distracteursDuModele, modeleAvecAide, profondeurDAnalyse } from "../analyse-par-niveau";
 
 /**
  * Machinerie commune aux situations pédagogiques, tous secteurs confondus
@@ -93,7 +94,8 @@ export interface SituationHintDef {
 export interface QuizQuestionDef {
   id: string;
   prompt: string;
-  options: { id: string; label: string; credit?: number }[];
+  /** `aide` : au niveau Découverte, ce à quoi sert le modèle proposé (voir analyse-par-niveau). */
+  options: { id: string; label: string; credit?: number; aide?: string }[];
   correctOptionId: string;
   explain: string;
 }
@@ -197,15 +199,18 @@ function shuffleSeeded<T>(items: readonly T[], seed: number): T[] {
 }
 
 /**
- * Distracteurs par niveau (P8). L'optimal est toujours présent ; les trois
- * distracteurs sont choisis dans le vivier (celui de la situation, sinon les
- * autres modèles de sa matrice de pertinence) selon le niveau :
+ * Distracteurs par niveau (P8). L'optimal est toujours présent ; les mauvaises
+ * réponses sont choisies dans le vivier (celui de la situation, sinon les
+ * autres modèles de sa matrice de pertinence) selon la profondeur d'analyse
+ * du niveau (voir config/analyse-par-niveau) :
  *
- * - niveaux 1-2 : la même famille d'abord — modèles acceptables (voisins
- *   raisonnables), puis hors-sujet manifestes ; le piège plausible (misleading)
- *   passe en dernier, pour que l'optimal se détache nettement ;
- * - niveaux 3+ : le voisin plausible (misleading) passe en tête — le choix
- *   demande alors de vraiment distinguer les modèles.
+ * - Découverte (niveaux 1-2) : DEUX distracteurs, les plus étrangers au
+ *   problème d'abord — hors-sujet manifestes, puis voisins acceptables ; le
+ *   piège plausible (misleading) passe en dernier, pour que l'optimal se
+ *   détache nettement ;
+ * - Standard (niveaux 3 à 6) : trois distracteurs, le voisin plausible
+ *   (misleading) en tête — le choix demande alors de vraiment distinguer les
+ *   modèles.
  *
  * L'ordre des options est ensuite mélangé par la graine (jamais figé).
  */
@@ -223,14 +228,14 @@ export function modelOptionCodes(
   ).filter((c) => c !== optimal);
   // « optimal » reste en tête : une situation peut coter plusieurs modèles
   // comme optimaux (plusieurs bonnes réponses), et ils doivent figurer parmi
-  // les options. L'ordre des deux distracteurs suivants porte le niveau :
-  // aux niveaux 1-2 l'acceptable (voisin de la même famille) précède le piège
-  // « misleading » ; à partir du niveau 3 le piège plausible passe devant.
+  // les options.
   const priority: ModelRelevance[] =
-    level <= 2
-      ? ["optimal", "acceptable", "irrelevant", "misleading"]
+    profondeurDAnalyse(level) === "decouverte"
+      ? ["optimal", "irrelevant", "acceptable", "misleading"]
       : ["optimal", "misleading", "acceptable", "irrelevant"];
-  const distractors = priority.flatMap((r) => pool.filter((c) => rel(c) === r)).slice(0, 3);
+  const distractors = priority
+    .flatMap((r) => pool.filter((c) => rel(c) === r))
+    .slice(0, distracteursDuModele(level));
   const codes = optimal ? [optimal, ...distractors] : distractors;
   return shuffleSeeded(codes, (seed ^ hashCode(optimal ?? "")) >>> 0);
 }
@@ -238,12 +243,18 @@ export function modelOptionCodes(
 function optionsFromCodes(
   relevance: Record<string, ModelRelevance>,
   codes: string[],
-): { id: string; label: string; credit: number }[] {
-  return codes.map((code) => ({
-    id: code,
-    label: modelByCode.get(code)?.name ?? code,
-    credit: RELEVANCE_CREDITS[relevance[code] ?? "irrelevant"],
-  }));
+  avecAide: boolean,
+): { id: string; label: string; credit: number; aide?: string }[] {
+  return codes.map((code) => {
+    const modele = modelByCode.get(code);
+    return {
+      id: code,
+      label: modele?.name ?? code,
+      credit: RELEVANCE_CREDITS[relevance[code] ?? "irrelevant"],
+      // Découverte : on reconnaît le modèle à ce qu'il sert, pas à son nom.
+      ...(avecAide && modele?.objective ? { aide: modele.objective } : {}),
+    };
+  });
 }
 
 /**
@@ -270,7 +281,7 @@ function modelQuestion(
   return {
     id: MODEL_QUESTION_ID,
     prompt: "Quel modèle d'analyse mobilisez-vous en priorité ici ?",
-    options: optionsFromCodes(relevance, codes),
+    options: optionsFromCodes(relevance, codes, modeleAvecAide(opts.level)),
     correctOptionId: optimal,
     explain,
   };

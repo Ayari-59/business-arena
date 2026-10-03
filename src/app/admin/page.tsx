@@ -26,6 +26,8 @@ import { listerRendezVous } from "@/services/rendez-vous.service";
 import { etatAgenda } from "@/services/agenda-google.service";
 import { SITE_URL } from "@/config/site";
 import { bouton } from "@/components/bouton";
+import { mesurerLAnalyseSolo } from "@/services/mesure-analyse.service";
+import { SEUIL_RENDU_TARDIF_MINUTES } from "@/pedagogy/mesure-analyse";
 
 export const dynamic = "force-dynamic";
 
@@ -93,6 +95,7 @@ export default async function AdminPage({
   const agenda = await etatAgenda();
   const messageAgenda = retourAgenda ? RETOURS_AGENDA[retourAgenda] : undefined;
   const aVenir = rendezVous.filter((r) => r.aVenir);
+  const mesureAnalyse = await mesurerLAnalyseSolo();
 
   return (
     <main id="main" className="mx-auto max-w-5xl space-y-8 p-6">
@@ -123,6 +126,54 @@ export default async function AdminPage({
             <p className="mt-1 text-2xl font-semibold text-slate-50">{value}</p>
           </div>
         ))}
+      </section>
+
+      {/* L'analyse (diagnostic + modèle) coûte-t-elle de la fluidité ? Par niveau, en solo. */}
+      <section className="carte p-6">
+        <h2 className="text-sm font-semibold text-slate-200">Analyse des situations, par niveau (solo)</h2>
+        <p className="mt-1 max-w-2xl text-sm leading-relaxed text-slate-400">
+          Situations déjà débriefées. « Rendues » : l&apos;équipe a répondu au diagnostic ; les autres ont été laissées
+          de côté. Le temps est l&apos;écart d&apos;horloge entre l&apos;ouverture et le rendu : il compte les pauses,
+          d&apos;où la médiane et la part des rendus de plus de {SEUIL_RENDU_TARDIF_MINUTES} minutes.
+        </p>
+        {mesureAnalyse.niveaux.length === 0 ? (
+          <p className="mt-3 text-sm text-slate-400">Aucune situation débriefée en solo pour le moment.</p>
+        ) : (
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full min-w-[640px] text-sm">
+              <thead>
+                <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
+                  <th className="pb-2 pr-4 font-medium">Niveau</th>
+                  <th className="pb-2 pr-4 font-medium">Situations</th>
+                  <th className="pb-2 pr-4 font-medium">Rendues</th>
+                  <th className="pb-2 pr-4 font-medium">Temps médian</th>
+                  <th className="pb-2 pr-4 font-medium">Rendus tardifs</th>
+                  <th className="pb-2 pr-4 font-medium">Indices / situation</th>
+                  <th className="pb-2 font-medium">Score moyen</th>
+                </tr>
+              </thead>
+              <tbody className="text-slate-300">
+                {mesureAnalyse.niveaux.map((n) => (
+                  <tr key={n.niveau} className="border-t border-white/5">
+                    <td className="py-2 pr-4 tabular-nums">{n.niveau}</td>
+                    <td className="py-2 pr-4 tabular-nums">{n.situations}</td>
+                    <td className="py-2 pr-4 tabular-nums">{Math.round(n.tauxDeRendu * 100)} %</td>
+                    <td className="py-2 pr-4 tabular-nums">
+                      {n.medianeMinutes === null ? "—" : `${n.medianeMinutes.toFixed(1)} min`}
+                    </td>
+                    <td className="py-2 pr-4 tabular-nums">
+                      {n.partDeRendusTardifs === null ? "—" : `${Math.round(n.partDeRendusTardifs * 100)} %`}
+                    </td>
+                    <td className="py-2 pr-4 tabular-nums">{n.indicesParSituation.toFixed(1)}</td>
+                    <td className="py-2 tabular-nums">
+                      {n.scoreMoyen === null ? "—" : `${Math.round(n.scoreMoyen * 100)} %`}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
 
       {/* Réglages du jeu */}

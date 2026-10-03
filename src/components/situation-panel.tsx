@@ -449,7 +449,15 @@ export function SituationCard({
                                   }
                                   className="mt-0.5 h-5 w-5 shrink-0 accent-amber-400"
                                 />
-                                <span>{option.label}</span>
+                                <span>
+                                  {option.label}
+                                  {/* Niveau Découverte : le modèle dit à quoi il sert. */}
+                                  {option.aide ? (
+                                    <span className="mt-0.5 block text-sm leading-snug text-slate-400">
+                                      {option.aide}
+                                    </span>
+                                  ) : null}
+                                </span>
                               </label>
                             ))}
                           </div>

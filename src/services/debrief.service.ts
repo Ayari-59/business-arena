@@ -17,6 +17,7 @@ import {
   type AnswerFormat,
   type QuizMode,
 } from "@/config/difficulty";
+import { NIVEAU_STANDARD, optionsDuDiagnostic } from "@/config/analyse-par-niveau";
 import { estUneReponse, optionLaPlusProche, optionsReconnues } from "@/pedagogy/reponse-ouverte";
 import type { Manque } from "@/config/situation-rendu";
 import { evaluateDiagnosis, evaluateQuiz } from "@/pedagogy/evaluation";
@@ -85,7 +86,10 @@ export async function retakeSituation(args: {
   const validIds = new Set(asked.map((q) => q.id));
   const cleanAnswers: Record<string, string> = {};
   for (const [q, o] of Object.entries(args.answers)) if (validIds.has(q)) cleanAnswers[q] = o;
-  const diagScore = evaluateDiagnosis(args.selectedOptionIds, def.diagnosticOptions);
+  const diagScore = evaluateDiagnosis(
+    args.selectedOptionIds,
+    optionsDuDiagnostic(def.diagnosticOptions, modelCtxOf(game)?.level ?? NIVEAU_STANDARD),
+  );
   const quizScore = hasQuizQuestions ? evaluateQuiz(cleanAnswers, asked) : null;
   const raw = computeRawSituationScore({ diagnosisScore: diagScore, quizScore, hasQuizQuestions });
   const finalScore = raw * RETAKE_MULTIPLIER;
@@ -146,7 +150,8 @@ export async function resolveOpenAnswers(args: {
   manques: Manque[];
 }> {
   const { def, game } = await loadInstanceForUser(args.instanceId, args.userId);
-  const asked = askedQuestions(def, quizModeFromProfile(game?.difficultyProfile), modelCtxOf(game));
+  const ctx = modelCtxOf(game);
+  const asked = askedQuestions(def, quizModeFromProfile(game?.difficultyProfile), ctx);
   const manques: Manque[] = [];
   if (!estUneReponse(args.freeText)) manques.push("le diagnostic");
   if (asked.some((q) => !estUneReponse(args.texts[q.id] ?? ""))) manques.push("le modèle");
@@ -160,7 +165,10 @@ export async function resolveOpenAnswers(args: {
     if (option) answers[q.id] = option;
   }
   return {
-    options: optionsReconnues(args.freeText, def.diagnosticOptions),
+    options: optionsReconnues(
+      args.freeText,
+      optionsDuDiagnostic(def.diagnosticOptions, ctx?.level ?? NIVEAU_STANDARD),
+    ),
     answers,
     texts,
     questions: asked.map((q) => q.id),
@@ -250,7 +258,11 @@ export interface SituationView {
   weight: number;
   diagnosticOptions: { id: string; label: string }[];
   /** QCM (connaissances + modèle d'analyse) : sans bonne réponse ni crédits (révélés au débriefing). */
-  quizQuestions: { id: string; prompt: string; options: { id: string; label: string }[] }[];
+  quizQuestions: {
+    id: string;
+    prompt: string;
+    options: { id: string; label: string; aide?: string }[];
+  }[];
   /** Réponses déjà validées par l'équipe (null tant que le QCM n'est pas soumis). */
   quizAnswers: Record<string, string> | null;
   /** Comment cette situation se répond : en cochant (QCM) ou en écrivant (questions ouvertes). */
@@ -362,13 +374,17 @@ export function toView(
     weight: def.weight,
     level: situationLevel(def.conceptCodes),
     aboveGameLevel: modelCtx ? situationLevel(def.conceptCodes) > modelCtx.level : false,
-    diagnosticOptions: def.diagnosticOptions.map(({ id, label }) => ({ id, label })),
+    // Les causes proposées suivent le niveau de la partie (config/analyse-par-niveau).
+    // Sans contexte de partie, le niveau Standard : toutes les options.
+    diagnosticOptions: optionsDuDiagnostic(def.diagnosticOptions, modelCtx?.level ?? NIVEAU_STANDARD).map(
+      ({ id, label }) => ({ id, label }),
+    ),
     // Seules les questions réellement posées sont servies : en mode « model »
     // la question du modèle uniquement, en mode « off » aucune.
     quizQuestions: asked.map((q) => ({
       id: q.id,
       prompt: q.prompt,
-      options: q.options.map(({ id, label }) => ({ id, label })), // sans les crédits
+      options: q.options.map(({ id, label, aide }) => ({ id, label, ...(aide ? { aide } : {}) })), // sans les crédits
     })),
     quizAnswers: quizStored?.answers ?? null,
     answerFormat,
@@ -413,7 +429,9 @@ export function toView(
     retaken,
     debrief: debriefed
       ? {
-          correctOptionIds: def.diagnosticOptions.filter((o) => o.correct).map((o) => o.id),
+          correctOptionIds: optionsDuDiagnostic(def.diagnosticOptions, modelCtx?.level ?? NIVEAU_STANDARD)
+            .filter((o) => o.correct)
+            .map((o) => o.id),
           quizCorrection: asked.map((q) => ({
             id: q.id,
             correctOptionId: q.correctOptionId,
