@@ -1052,6 +1052,9 @@ function GammeReference({
         grand={false}
         compact
         libelle={label}
+        // Le curseur sert au prix et au volume, qu'on tâtonne. Les budgets (marketing, qualité, R&D)
+        // se tapent : un curseur de plus par ligne ne tenait plus sur l'écran, et ne servait à rien.
+        sansCurseur={nom !== "price" && nom !== "productionPlan"}
         // Le prix se règle autour de ce que paient les clients ; le reste, autour de la valeur proposée.
         {...(nom === "price" ? { plage: { min: 0, max: Math.ceil((p.refPrice * 2.2) / 5) * 5 } } : {})}
         {...(onChange ? { onValueChange: onChange } : {})}
