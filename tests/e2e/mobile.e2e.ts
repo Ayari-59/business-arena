@@ -868,3 +868,42 @@ describe("le lancement d'une partie, sur téléphone", () => {
     }
   });
 });
+
+describe("une gamme (ATLAS CONSEIL, niveau 5), sur téléphone", () => {
+  it("chaque référence tient sur UNE carte, compacte : au plus une fois et demie l'écran", async () => {
+    const ctx = await navigateur.newContext({ ...devices["iPhone 13"], locale: "fr-FR" });
+    const p = await ctx.newPage();
+    try {
+      await p.goto(`${BASE}/jouer`, { waitUntil: "domcontentloaded" });
+      await p.waitForLoadState("networkidle");
+      await p.getByRole("button", { name: /ATLAS/ }).click();
+      await p.getByRole("button", { name: /^Niveau 5/ }).click();
+      await p.getByRole("button", { name: "Lancer la partie" }).click();
+      await p.waitForURL(/\/arena\//, { timeout: 60_000 });
+      await p.waitForLoadState("networkidle");
+      await p.evaluate(() => (window.location.hash = "decisions"));
+      await p.locator("[data-titre-etape]").waitFor({ state: "visible" });
+      const accepter = p.getByRole("button", { name: "Accepter", exact: true });
+      if (await accepter.count()) await accepter.click();
+      const ecran = p.viewportSize()!.height;
+      const cartes: string[] = [];
+      const hautes: string[] = [];
+      for (let k = 0; k < 8; k++) {
+        await p.waitForTimeout(350);
+        const titre = (await p.locator("[data-titre-etape]").innerText()).replace(/\s+/g, " ");
+        if (!/Vos choix pour/.test(titre)) break;
+        cartes.push(titre);
+        const h = await p.evaluate(() => document.documentElement.scrollHeight);
+        if (h > ecran * 1.5) hautes.push(`${titre} : ${h} px`);
+        await p.getByRole("button", { name: /^Continuer/ }).last().click();
+      }
+      // Une carte par référence : ni plus, ni moins.
+      expect(cartes.length, `cartes de référence : ${cartes.join(" | ")}`).toBeGreaterThanOrEqual(2);
+      expect(new Set(cartes).size, "chaque référence a sa carte, et une seule").toBe(cartes.length);
+      expect(hautes, `cartes trop hautes pour un écran de ${ecran} px : ${hautes.join(" | ")}`).toEqual([]);
+    } finally {
+      await ctx.close();
+    }
+  }, 120_000);
+});
+

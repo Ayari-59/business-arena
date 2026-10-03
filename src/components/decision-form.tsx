@@ -489,6 +489,7 @@ function CurseurDeSaisie({
   max,
   suffixe,
   valeurInitiale,
+  compact = false,
 }: {
   champ: RefObject<HTMLInputElement | null>;
   label: string;
@@ -496,6 +497,8 @@ function CurseurDeSaisie({
   max: number;
   suffixe: string;
   valeurInitiale: number;
+  /** Les bornes de part et d'autre du curseur, sur une seule ligne : la forme d'un champ parmi plusieurs. */
+  compact?: boolean;
 }) {
   const [valeur, setValeur] = useState(valeurInitiale);
   useEffect(() => {
@@ -507,25 +510,40 @@ function CurseurDeSaisie({
   }, [champ]);
   const etendue = Math.max(1, max - min);
   const pas = pasDuCurseur(etendue);
+  const curseur = (
+    <input
+      type="range"
+      onWheel={sansMolette}
+      aria-label={`${label} : curseur`}
+      min={min}
+      max={max}
+      step="any"
+      value={Math.min(Math.max(valeur, min), max)}
+      onChange={(e) => {
+        const cran = min + cranDuCurseur(Number(e.currentTarget.value) - min, etendue, pas);
+        if (champ.current) poserValeur(champ.current, String(Math.round(cran * 100) / 100));
+      }}
+      className="curseur min-w-0 accent-amber-400"
+      // 44 px : sous le pouce, le trait de 24 px se manque ; 40 px quand le champ n'est qu'un parmi
+      // plusieurs. (Hors classe : la règle de `.curseur` n'est pas dans une couche et l'emporterait
+      // sur un utilitaire.)
+      style={{ height: compact ? "2.5rem" : "2.75rem" }}
+    />
+  );
+  if (compact) {
+    return (
+      <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 text-sm text-slate-400 tabular-nums">
+        <span>{min.toLocaleString("fr-FR")}</span>
+        {curseur}
+        <span>
+          {max.toLocaleString("fr-FR")} {suffixe}
+        </span>
+      </div>
+    );
+  }
   return (
     <div className="mt-4">
-      <input
-        type="range"
-        onWheel={sansMolette}
-        aria-label={`${label} : curseur`}
-        min={min}
-        max={max}
-        step="any"
-        value={Math.min(Math.max(valeur, min), max)}
-        onChange={(e) => {
-          const cran = min + cranDuCurseur(Number(e.currentTarget.value) - min, etendue, pas);
-          if (champ.current) poserValeur(champ.current, String(Math.round(cran * 100) / 100));
-        }}
-        className="curseur accent-amber-400"
-        // 44 px : sous le pouce, le trait de 24 px se manque. (Hors classe : la règle
-        // de `.curseur` n'est pas dans une couche et l'emporterait sur un utilitaire.)
-        style={{ height: "2.75rem" }}
-      />
+      {curseur}
       <span className="mt-1 flex justify-between gap-2 text-base text-slate-400 tabular-nums">
         <span>
           {min.toLocaleString("fr-FR")} {suffixe}
@@ -555,6 +573,8 @@ function SaisieDeCarte({
   inputRef,
   onValueChange,
   grand = true,
+  compact = false,
+  libelle,
 }: {
   name: string;
   label: string;
@@ -568,6 +588,14 @@ function SaisieDeCarte({
   inputRef?: RefObject<HTMLInputElement | null>;
   onValueChange?: (valeur: number) => void;
   grand?: boolean;
+  /**
+   * Plusieurs champs sur une même carte (les références d'une gamme) : l'étiquette à gauche et le
+   * montant à droite sur UNE ligne, le curseur dessous. Le grand bloc est beau quand il tient sur un
+   * écran ; à cinq par carte, il n'y tient plus.
+   */
+  compact?: boolean;
+  /** L'étiquette visible de la ligne compacte (le `label` reste le nom accessible du champ). */
+  libelle?: string;
 }) {
   const interne = useRef<HTMLInputElement>(null);
   const ref = inputRef ?? interne;
@@ -590,6 +618,53 @@ function SaisieDeCarte({
       : longueur <= 9
         ? "text-2xl"
         : "text-xl";
+  if (compact) {
+    return (
+      <div className="block">
+        <label className="flex min-h-10 items-center justify-between gap-3">
+          <span className="min-w-0 flex-1 text-base text-slate-300">{libelle ?? label}</span>
+          <span className="champ flex min-h-10 shrink-0 items-baseline justify-end gap-1.5 px-3 py-1">
+            <input
+              type="number"
+              onWheel={sansMolette}
+              inputMode="decimal"
+              aria-label={label}
+              {...(max !== undefined ? { max } : {})}
+              ref={ref}
+              name={name}
+              defaultValue={defaultValue}
+              step={step}
+              min={0}
+              required={obligatoire}
+              onInput={(e) => setLongueur(Math.max(1, e.currentTarget.value.length))}
+              onChange={
+                onValueChange
+                  ? (e) => {
+                      const v = Number(e.currentTarget.value.replace(",", "."));
+                      onValueChange(Number.isFinite(v) ? v : 0);
+                    }
+                  : undefined
+              }
+              style={{ width: `${Math.max(2, longueur) + 0.5}ch` }}
+              className="max-w-[9rem] min-w-0 bg-transparent text-right text-xl font-bold tabular-nums text-slate-50 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+            />
+            <span className="text-base text-slate-400">{suffixe}</span>
+          </span>
+        </label>
+        {sansCurseur ? null : (
+          <CurseurDeSaisie
+            champ={ref}
+            label={label}
+            min={borneMin}
+            max={Math.max(borneMax, borneMin + 1)}
+            suffixe={suffixe}
+            valeurInitiale={defaultValue}
+            compact
+          />
+        )}
+      </div>
+    );
+  }
   return (
     <div className="block">
       {/* Une étiquette, pas une boîte : toucher n'importe où dans le cadre met le curseur dans le
@@ -975,6 +1050,8 @@ function GammeReference({
         suffixe={suffixe}
         obligatoire={visible(p.code)}
         grand={false}
+        compact
+        libelle={label}
         // Le prix se règle autour de ce que paient les clients ; le reste, autour de la valeur proposée.
         {...(nom === "price" ? { plage: { min: 0, max: Math.ceil((p.refPrice * 2.2) / 5) * 5 } } : {})}
         {...(onChange ? { onValueChange: onChange } : {})}
@@ -1052,7 +1129,7 @@ function GammeReference({
                     onChange={(e) =>
                       setFaconniers((etat) => ({ ...etat, [p.code]: e.currentTarget.value }))
                     }
-                    className={`w-full champ text-slate-100 outline-none ${enCartes ? "px-3 py-3 text-base" : "px-2 py-1.5 text-[13px]"}`}
+                    className={`w-full champ text-slate-100 outline-none ${enCartes ? "px-3 py-2.5 text-base" : "px-2 py-1.5 text-[13px]"}`}
                   >
                     {suppliers.map((s) => {
                       // Le nom seul pour le façonnier de référence, l'écart
@@ -1217,12 +1294,13 @@ function GammeReference({
     return (
       <div>
         {gamme.map((p) => (
-          <div key={p.code} hidden={p.code !== activeProduct} className="space-y-5">
-            <ul className="flex flex-wrap gap-2">
+          <div key={p.code} hidden={p.code !== activeProduct} className="space-y-2">
+            <ul className="flex flex-wrap gap-1.5">
               {lignes
-                .filter((l) => l.deduite)
+                // Une référence à bâtir n'a ni marge ni coefficient : pas de pastille « — ».
+                .filter((l) => l.deduite && !(enDeveloppement(p) && (l.cle === "marge" || l.cle === "coef")))
                 .map((l) => (
-                  <li key={l.cle} className="rounded-full border border-white/15 px-3 py-1.5 text-sm text-slate-200">
+                  <li key={l.cle} className="rounded-full border border-white/15 px-2.5 py-1 text-sm text-slate-200">
                     <span className="text-slate-400">{l.label}</span> {l.cellule(p)}
                   </li>
                 ))}
@@ -1230,12 +1308,29 @@ function GammeReference({
             {enDeveloppement(p) ? <EnDeveloppement /> : null}
             {lignes
               .filter((l) => !l.deduite)
-              .map((l) => (
-                <div key={l.cle} className="space-y-1.5">
-                  <span className="block text-base text-slate-300">{l.label}</span>
-                  {l.cellule(p)}
-                </div>
-              ))}
+              .map((l) => {
+                // Un champ chiffré porte son étiquette sur sa propre ligne (compacte) ; une cellule
+                // sans objet (référence à bâtir) ou le choix du fournisseur gardent la leur au-dessus.
+                const aVendre = ["price", "productionPlan", "marketingBudget", "qualityBudget"].includes(l.cle);
+                // Une référence à bâtir ne se vend ni ne se produit : ses champs restent dans le
+                // formulaire (leur valeur part à zéro), masqués, sans étiquette ni tiret.
+                if (aVendre && enDeveloppement(p)) {
+                  return (
+                    <div key={l.cle} hidden>
+                      {l.cellule(p)}
+                    </div>
+                  );
+                }
+                const etiquetteIntegree = aVendre || l.cle === "rdBudget";
+                return (
+                  <div key={l.cle} className="space-y-1">
+                    {etiquetteIntegree ? null : (
+                      <span className="block text-base text-slate-300">{l.label}</span>
+                    )}
+                    {l.cellule(p)}
+                  </div>
+                );
+              })}
             {chantiers
               .filter((c) => c.p.code === p.code)
               .map(({ dev }) => {
