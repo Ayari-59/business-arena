@@ -25,6 +25,10 @@ export interface Progression {
   segments: SegmentDeProgression[];
   /** « 2 sur 4 », vide quand il n'y a rien à compter. */
   rang: string;
+  /** L'amorce du temps, en toutes lettres : « Briefing · 2 sur 4 », « Analyse · 1 rendue sur 3 ». */
+  amorce: string;
+  /** Le titre de la carte où l'on est : c'est lui qui se lit en haut de l'écran. Vide : pas de titre. */
+  titre: string;
   /** Entre 0 et 1 : la part du tour déjà faite. */
   fraction: number;
 }

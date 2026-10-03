@@ -14,7 +14,7 @@ import { estUneReponse } from "@/pedagogy/reponse-ouverte";
 import type { SituationView } from "@/services/pedagogy.service";
 import type { SituationCategory } from "@/config/scenarios/situation-kit";
 import { Tiroir } from "@/components/tiroir";
-import { PHASES } from "@/config/phases-du-tour";
+import { useParcours } from "@/components/parcours-mobile";
 import { vibrer, VIBRATION_DE_REUSSITE } from "@/lib/glisser";
 
 const CATEGORY_LABELS: Record<SituationCategory, string> = {
@@ -519,19 +519,18 @@ export function AnalyseDuTour({
     vibrer(VIBRATION_DE_REUSSITE);
   }, [situations]);
 
+  // L'en-tête de l'écran est celui de la barre du haut : on lui dit où en sont les analyses.
+  const parcours = useParcours();
+  const definirEntete = parcours?.definirEntete;
+  const titreDeLEcran = situations.length > 1 ? "Vos situations à analyser" : "Votre situation à analyser";
+  const amorce = `Analyse · ${rendues} rendue${rendues > 1 ? "s" : ""} sur ${situations.length}`;
+  useEffect(() => {
+    definirEntete?.({ titre: titreDeLEcran, amorce });
+    return () => definirEntete?.(null);
+  }, [definirEntete, titreDeLEcran, amorce]);
+
   return (
     <div className="space-y-4">
-      <header className="space-y-2 pb-1">
-        <p
-          className={`flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] ${PHASES.analyse.texte}`}
-        >
-          <span aria-hidden className={`h-2.5 w-2.5 rounded-full ${PHASES.analyse.fond}`} />
-          Analyse · {rendues} rendue{rendues > 1 ? "s" : ""} sur {situations.length}
-        </p>
-        <h2 className="font-display text-[1.7rem] font-semibold leading-tight text-slate-50">
-          {situations.length > 1 ? "Vos situations à analyser" : "Votre situation à analyser"}
-        </h2>
-      </header>
       <div className="space-y-2">
         {situations.map((x) => {
           const faite = estRendue(x);

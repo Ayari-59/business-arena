@@ -141,6 +141,29 @@ export function BarreDeJeu({
         </button>
       </div>
 
+      {/* LE TITRE DE L'ÉTAPE, tout en haut, sous le nom de la partie : le temps du tour dans sa
+          teinte, puis la question ou le sujet de l'écran. C'est la seule fois qu'il se lit : les
+          cartes n'ont plus d'en-tête à elles. */}
+      {progression && progression.titre ? (
+        <div className="space-y-0.5 px-4 pb-2.5 pt-0.5">
+          <p
+            className={`flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] ${PHASES[progression.phase].texte}`}
+          >
+            <span
+              aria-hidden
+              className={`h-2.5 w-2.5 shrink-0 rounded-full ${PHASES[progression.phase].fond}`}
+            />
+            <span className="truncate">{progression.amorce}</span>
+          </p>
+          <h2
+            data-titre-etape=""
+            className="font-display text-xl font-semibold leading-tight text-slate-50"
+          >
+            {progression.titre}
+          </h2>
+        </div>
+      ) : null}
+
       {/* La barre du tour, en segments : un par temps (résultats, briefing, analyse, courrier,
           décisions), chacun dans sa teinte, plus ou moins rempli. */}
       {progression ? (

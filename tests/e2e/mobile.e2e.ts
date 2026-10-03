@@ -271,11 +271,12 @@ describe("pendant une partie", () => {
     // Par le début : le formulaire se remonte, et repart de sa première carte.
     await versLaPremiereCarte();
     await page.evaluate(() => (window.location.hash = "decisions"));
-    await page.locator("form header").waitFor({ state: "visible" });
+    await page.locator("[data-titre-etape]").waitFor({ state: "visible" });
   }
 
+  /** Le titre de l'étape, tel qu'il se lit en haut de l'écran : l'amorce du temps, puis le titre. */
   const titreDeLaCarte = async () =>
-    (await page.locator("form header").innerText()).replace(/\s+/g, " ").trim();
+    (await page.locator("[data-titre-etape]").locator("..").innerText()).replace(/\s+/g, " ").trim();
 
   const avancement = async () =>
     Number(
@@ -518,7 +519,7 @@ describe("pendant une partie", () => {
 
   it("la première décision est la commande exceptionnelle, seule à l'écran", async () => {
     await versLesDecisions();
-    expect(await titreDeLaCarte()).toMatch(/Décision 1 sur \d+ Une commande/i);
+    expect(await titreDeLaCarte()).toMatch(/Décision · 1 sur \d+ Une commande/i);
     await page.getByRole("button", { name: "Accepter", exact: true }).waitFor();
     await page.getByRole("button", { name: "Refuser", exact: true }).waitFor();
     // Le prix n'est pas encore là : il vient APRÈS la réponse.
@@ -529,11 +530,11 @@ describe("pendant une partie", () => {
     await versLesDecisions();
     await page.getByRole("button", { name: "Accepter", exact: true }).click();
     await page.waitForTimeout(400);
-    expect(await titreDeLaCarte()).toMatch(/Décision 2 sur \d+ À quel prix/i);
+    expect(await titreDeLaCarte()).toMatch(/Décision · 2 sur \d+ À quel prix/i);
     await page.locator('input[name="price"]:visible').waitFor();
     await page.getByRole("button", { name: "Retour" }).click();
     await page.waitForTimeout(400);
-    expect(await titreDeLaCarte()).toMatch(/Décision 1 sur/i);
+    expect(await titreDeLaCarte()).toMatch(/Décision · 1 sur/i);
   });
 
   it("le prix a ses repères, un curseur, et sa marge en direct", async () => {
@@ -657,12 +658,12 @@ describe("pendant une partie", () => {
     await page.getByText("Vos décisions du tour").waitFor({ state: "visible" });
     await page.getByRole("button", { name: /Valider et simuler/ }).waitFor();
     // La relecture n'est pas comptée comme une décision de plus : sa carte se dit
-    // « Dernière étape », et le titre en teinte est le seul à le dire.
+    // « Dernière étape », dit en haut de l'écran.
     await page
       .getByText("Dernière étape")
       .first()
       .waitFor({ state: "visible" });
-    expect(await page.getByText(/Décision 13 sur 12/).count()).toBe(0);
+    expect(await page.getByText(/Décision · 13 sur 12/).count()).toBe(0);
     await page.getByRole("button", { name: /Prix de vente/ }).click();
     await page.waitForTimeout(400);
     expect(await titreDeLaCarte()).toMatch(/À quel prix/i);
@@ -806,7 +807,7 @@ describe("sur un petit téléphone (iPhone SE, 375 px)", () => {
 
   it("les boutons de chaque carte tiennent dans la largeur, « Accepter » compris", async () => {
     await petit.evaluate(() => (window.location.hash = "decisions"));
-    await petit.locator("form header").waitFor({ state: "visible" });
+    await petit.locator("[data-titre-etape]").waitFor({ state: "visible" });
     await petit.getByRole("button", { name: "Accepter", exact: true }).waitFor({ state: "visible" });
     const largeur = petit.viewportSize()!.width;
     const dehors = await petit.evaluate((w) => {

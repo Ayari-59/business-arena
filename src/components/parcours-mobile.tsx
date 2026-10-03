@@ -49,7 +49,16 @@ export interface AnalyseDuParcours extends CarteDuParcours {
   etapes: number;
 }
 
+/** Ce qu'un écran du parcours dit de lui-même à la barre du haut. */
+export interface EnteteDeCarte {
+  titre: string;
+  /** Remplace « Temps · rang » quand l'écran sait mieux compter (les analyses rendues). */
+  amorce?: string;
+}
+
 interface ContexteDuParcours {
+  /** Une carte que le parcours ne connaît pas (les analyses, les décisions) donne son titre à la barre. */
+  definirEntete: (entete: EnteteDeCarte | null) => void;
   /** Le formulaire de décision dit où il en est : carte courante, nombre de cartes. */
   rapporterDecision: (courante: number, total: number) => void;
   /** Reculer depuis la première carte de décision : retour à l'analyse. */
@@ -170,6 +179,13 @@ export function ParcoursMobile({
     return () => window.removeEventListener("hashchange", depuisLeHash);
   }, [aller, derniere]);
 
+  const [enteteEnfant, setEnteteEnfant] = useState<EnteteDeCarte | null>(null);
+  const definirEntete = useCallback((e: EnteteDeCarte | null) => {
+    setEnteteEnfant((cur) =>
+      cur === e || (cur && e && cur.titre === e.titre && cur.amorce === e.amorce) ? cur : e,
+    );
+  }, []);
+
   const rapporterDecision = useCallback((c: number, t: number) => {
     setDecision((d) => (d.courante === c && d.total === t ? d : { courante: c, total: t }));
   }, []);
@@ -195,7 +211,7 @@ export function ParcoursMobile({
   const avant = poids.slice(0, index).reduce((a, b) => a + b, 0);
   const dedans = courante.phase === "decision" ? decision.courante : 0;
   useEffect(() => {
-    const libelle = enRecapitulatif ? "Récapitulatif" : PHASES[courante.phase].libelle;
+    const libelle = enRecapitulatif ? "Dernière étape" : PHASES[courante.phase].libelle;
     const rang =
       courante.phase === "briefing" || courante.phase === "resultats"
         ? courante.sur > 1
@@ -222,10 +238,20 @@ export function ParcoursMobile({
       }
       debut += p;
     });
+    // Le titre vient de la carte quand le parcours la connaît (briefing, résultats, courrier),
+    // sinon de l'écran lui-même (analyses, décisions) qui le déclare.
+    const propre = courante.phase === "analyse" || courante.phase === "decision";
+    const titre = propre
+      ? (enteteEnfant?.titre ?? "")
+      : courante.phase === "courrier"
+        ? "Le courrier du tour"
+        : (courante.titre ?? "");
     definirProgression({
       phase: courante.phase,
       libelle,
       rang,
+      amorce: enteteEnfant?.amorce ?? `${libelle}${rang ? ` · ${rang}` : ""}`,
+      titre,
       segments,
       fraction: Math.min(1, faites / total),
     });
@@ -233,8 +259,10 @@ export function ParcoursMobile({
     etapes,
     poids,
     courante.phase,
+    courante.titre,
     courante.rang,
     courante.sur,
+    enteteEnfant,
     decision.courante,
     decisionsTotal,
     enRecapitulatif,
@@ -250,44 +278,20 @@ export function ParcoursMobile({
     prochaine === "decision" ? "Décider" : prochaine === "analyse" ? "Analyser" : "Continuer";
 
   const contexte = useMemo(
-    () => ({ rapporterDecision, reculerAvantLesDecisions }),
-    [rapporterDecision, reculerAvantLesDecisions],
+    () => ({ rapporterDecision, reculerAvantLesDecisions, definirEntete }),
+    [rapporterDecision, reculerAvantLesDecisions, definirEntete],
   );
 
   return (
     <ParcoursContexte.Provider value={contexte}>
-      {/* -mt-6 : le titre colle à la barre de progression au lieu de flotter à quarante pixels
-          dessous (le `space-y-6` de la page, que le parcours reprend en entier). */}
-      <div className="-mt-6 min-h-[calc(100dvh-14rem)] space-y-4" {...glisser}>
+      {/* -mt-3 : la carte se rapproche de la barre, qui porte maintenant le titre de l'étape. */}
+      <div className="-mt-3 min-h-[calc(100dvh-14rem)] space-y-4" {...glisser}>
         {/* Pas de glissement sur les décisions : une transformation, même d'un
             instant, ferait du bloc le repère du pied fixe du formulaire. */}
         <div
           key={courante.cle}
           className={courante.phase === "decision" ? "" : "motion-safe:animate-carte-entre"}
         >
-          {courante.phase === "resultats" ||
-          courante.phase === "briefing" ||
-          courante.phase === "courrier" ? (
-            <header className="space-y-2 pb-4">
-              {/* L'AMORCE DU TEMPS DU TOUR : son nom, sa teinte — la même que son segment de
-                  la barre du haut —, et sa place parmi ses cartes. C'est ce qui dit où l'on est. */}
-              <p
-                className={`flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] ${PHASES[courante.phase].texte}`}
-              >
-                <span
-                  aria-hidden
-                  className={`h-2.5 w-2.5 rounded-full ${PHASES[courante.phase].fond}`}
-                />
-                {PHASES[courante.phase].libelle}
-                {courante.sur > 1 ? ` · ${courante.rang} sur ${courante.sur}` : ""}
-              </p>
-              {courante.titre ? (
-                <h2 className="font-display text-[1.7rem] font-semibold leading-tight text-slate-50">
-                  {courante.titre}
-                </h2>
-              ) : null}
-            </header>
-          ) : null}
           {courante.noeud}
         </div>
       </div>

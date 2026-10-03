@@ -281,19 +281,20 @@ describe("on sait toujours à quel temps du tour on est", () => {
     expect(phases).not.toMatch(/`(text|bg)-\$\{/);
   });
 
-  it("la barre du haut est en segments teintés ; le temps du tour n'y est pas redit, le titre de la carte le porte", () => {
+  it("la barre du haut porte le titre de l'étape, dans la teinte du temps ; les cartes n'ont plus d'en-tête à elles", () => {
     const barre = lire("src/components/barre-de-jeu.tsx");
     expect(barre).toContain("progression.segments.map");
     expect(barre).toContain("PHASES[segment.phase].fond");
-    expect(barre, "le sous-titre ne doit pas doubler le titre coloré de la carte").not.toContain(
-      "PHASES[progression.phase].texte",
-    );
+    expect(barre).toContain("PHASES[progression.phase].texte");
+    expect(barre).toContain("data-titre-etape");
+    // Un seul titre : ni le parcours, ni les analyses, ni les décisions ne le redisent en tête de carte.
+    expect(lire("src/components/parcours-mobile.tsx")).not.toContain("PHASES[courante.phase].texte");
+    expect(lire("src/components/situation-panel.tsx")).not.toContain("PHASES.analyse.texte");
+    expect(lire("src/components/decision-form.tsx")).not.toContain("PHASES.decision.texte");
   });
 
-  it("chaque carte du parcours porte l'amorce de son temps ; l'analyse et la décision, la leur, de même teinte", () => {
-    expect(lire("src/components/parcours-mobile.tsx")).toContain("PHASES[courante.phase].texte");
-    expect(lire("src/components/situation-panel.tsx")).toContain("PHASES.analyse.texte");
-    expect(lire("src/components/decision-form.tsx")).toContain("PHASES.decision.texte");
+  it("les écrans que le parcours ne connaît pas (analyses, décisions) donnent leur titre à la barre", () => {
+    expect(lire("src/components/situation-panel.tsx")).toContain("definirEntete");
+    expect(lire("src/components/decision-form.tsx")).toContain("definirEntete");
   });
 });
-

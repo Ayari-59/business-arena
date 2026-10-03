@@ -5,7 +5,6 @@ import { useEffect, useRef, useState, type ReactNode, type RefObject } from "rea
 import { useGlisser, vibrer, VIBRATION_DE_REUSSITE } from "@/lib/glisser";
 import { playRoundAction, type PlayRoundState } from "@/app/arena/[gameId]/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
-import { PHASES } from "@/config/phases-du-tour";
 import { sansMolette } from "@/components/sans-molette";
 import {
   coutDeLAffacturage,
@@ -2190,6 +2189,14 @@ export function DecisionForm({
   useEffect(() => {
     if (modeCartes) parcours?.rapporterDecision(carteIdx, cartes.length);
   }, [parcours, modeCartes, carteIdx, cartes.length]);
+  // Et la question de la carte se lit en haut de l'écran, dans la barre de la partie.
+  const questionDeLaCarte = modeCartes ? carteCourante?.question : undefined;
+  const definirEntete = parcours?.definirEntete;
+  useEffect(() => {
+    if (!questionDeLaCarte) return;
+    definirEntete?.({ titre: questionDeLaCarte });
+    return () => definirEntete?.(null);
+  }, [definirEntete, questionDeLaCarte]);
 
   /** Avancer d'une carte, à condition que celle-ci soit remplie correctement. */
   const carteSuivante = () => {
@@ -2493,23 +2500,6 @@ export function DecisionForm({
       ) : null}
       {/* Barre d'étapes : où j'en suis, saut direct possible. Les libellés se
           replient en simples numéros sur petit écran. */}
-      {modeCartes && carteCourante ? (
-        // UNE QUESTION EN TÊTE, comme un écran d'application : de quoi il s'agit, et
-        // ce qu'on vous demande. Le rang est dans la barre de la partie.
-        <header className="space-y-1.5 pb-2">
-          <p
-            className={`flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] ${PHASES.decision.texte}`}
-          >
-            <span aria-hidden className={`h-2.5 w-2.5 rounded-full ${PHASES.decision.fond}`} />
-            {carteCourante.cle === "recap"
-              ? "Dernière étape"
-              : `Décision ${carteIdx + 1} sur ${cartes.length - 1}`}
-          </p>
-          <h2 className="font-display text-[1.7rem] font-semibold leading-tight text-slate-50">
-            {carteCourante.question}
-          </h2>
-        </header>
-      ) : null}
       <ol
         className={`flex flex-wrap gap-1 sm:gap-1.5 ${modeCartes ? "hidden" : ""}`}
         aria-label="Étapes de décision"
