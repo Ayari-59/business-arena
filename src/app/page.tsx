@@ -389,9 +389,6 @@ export default async function Home() {
             */}
           <div className="mt-8 grid items-center gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:gap-14">
             <div style={{ containerType: "inline-size" }}>
-              {/* Celui qui revient retrouve sa partie avant tout : l'accueil reste statique,
-                  l'îlot lit le cookie de l'appareil et ne rend rien s'il n'y a rien à reprendre. */}
-              <ReprendreALAccueil />
               <h1 className="whitespace-nowrap text-[clamp(1.5rem,8.8cqw,3rem)] font-bold leading-[1.04] tracking-tight text-slate-50">
                 Dirigez une entreprise.
                 <br />
@@ -427,6 +424,10 @@ export default async function Home() {
                   Je suis enseignant
                 </Link>
               </div>
+              {/* Celui qui revient retrouve sa dernière partie, en une ligne sous les
+                  boutons : l'accueil reste statique et celui de tout le monde ; l'îlot
+                  lit le cookie de l'appareil et ne rend rien s'il n'y a rien à reprendre. */}
+              <ReprendreALAccueil />
               <p className="mt-5 text-sm text-slate-400">
                 Sans compte, sans installation. Vos parties restent liées à ce
                 navigateur.
