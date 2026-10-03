@@ -872,7 +872,11 @@ export default async function ArenaPage({
     <DecisionForm
       telephone={telephone}
       enTeteDuRecapitulatif={
-        telephone ? (
+        // Rien à dire : pas de conteneur vide, qui laisserait quand même son interligne.
+        telephone &&
+        (etatDesDecisions ||
+          soumissionsNode ||
+          (!finished && view.playLock.playable && view.playLock.closesAt)) ? (
           <div className="space-y-2">
             {etatDesDecisions}
             {soumissionsNode}

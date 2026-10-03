@@ -474,11 +474,6 @@ export function SituationCard({
               >
                 {renduPending ? "Envoi…" : "Valider mon analyse"}
               </button>
-              {!complet ? (
-                <p className="text-xs text-slate-400">
-                  Complet ou rien : diagnostic et modèle partent ensemble.
-                </p>
-              ) : null}
             </div>
           </form>
         )}

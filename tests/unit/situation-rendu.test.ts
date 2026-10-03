@@ -421,6 +421,8 @@ describe("questions ouvertes : l'élève écrit, le serveur ramène le texte aux
     expect(html).toContain(`placeholder="${CONSIGNE_DIAGNOSTIC_OUVERT.replace(/'/g, "&#x27;")}"`);
     expect(html).toContain(`placeholder="${CONSIGNE_MODELE_OUVERT.replace(/'/g, "&#x27;")}"`);
     expect(html).toContain("Situation incomplète");
+    // Le bouton grisé suffit : pas de phrase en plus sous lui.
+    expect(html).not.toContain("Complet ou rien");
     // Les consignes disent la forme, pas la solution.
     expect(CONSIGNE_DIAGNOSTIC_OUVERT).toMatch(/une ou deux phrases/);
     expect(CONSIGNE_MODELE_OUVERT).toMatch(/une phrase/);

@@ -45,6 +45,7 @@ import { EcheanceDuTour } from "@/components/echeance-du-tour";
 import { SimulationProgress } from "@/components/simulation-progress";
 import { NomReference } from "@/components/nom-reference";
 import { Aide, PanneauConsulte, TelephoneContexte } from "@/components/aide-repliable";
+import { Tiroir } from "@/components/tiroir";
 import { useParcours } from "@/components/parcours-mobile";
 import {
   Carte,
@@ -143,6 +144,7 @@ function EquipmentPanel({
     const avgBook = f.bookValue / f.count;
     return sum + (sellQty[t.code] ?? 0) * avgBook * t.resaleRatio;
   }, 0);
+  const { actif: enCarte } = useModeCartes();
 
   return (
     <Family
@@ -151,7 +153,7 @@ function EquipmentPanel({
       tone="border-indigo-400/25 bg-indigo-950/20"
       legendClass="text-xs font-semibold uppercase tracking-wide text-indigo-300"
     >
-      <div className="mb-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+      <div className="mb-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm max-sm:mb-2">
         <span className="text-slate-400">Capacité en service</span>
         <span className="text-right text-slate-200">
           {Math.round(totalCapacity).toLocaleString("fr-FR")} {vocabulary.perRoundLabel}
@@ -165,7 +167,7 @@ function EquipmentPanel({
           </>
         ) : null}
       </div>
-      <div className="space-y-3">
+      <div className="space-y-3 max-sm:space-y-2">
         {offer.types.map((t) => {
           const fl = offer.fleet.find((f) => f.typeCode === t.code);
           const pend = offer.pendingFleet.find((f) => f.typeCode === t.code);
@@ -175,7 +177,7 @@ function EquipmentPanel({
           const sell = sellQty[t.code] ?? 0;
           const avgBook = owned > 0 ? (fl?.bookValue ?? 0) / owned : 0;
           return (
-            <div key={t.code} className="rounded-lg border border-white/5 bg-slate-900 px-2.5 py-2">
+            <div key={t.code} className="rounded-lg border border-white/5 bg-slate-900 px-2.5 py-2 max-sm:py-1.5">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <span className="text-sm font-medium text-slate-200">{t.name}</span>
@@ -187,7 +189,7 @@ function EquipmentPanel({
                   {owned} en service{pendCount > 0 ? ` + ${pendCount} en attente` : ""}
                 </span>
               </div>
-              <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-400">
+              <div className="mt-2 flex flex-wrap gap-x-3 gap-y-0 text-xs text-slate-400 max-sm:mt-1">
                 <span>{t.costPerUnit.toLocaleString("fr-FR")} €/u</span>
                 <span>Amorti en {Math.round(t.depreciationRounds)} tours</span>
                 <span>Maintenance ×{t.maintenanceMultiplier.toLocaleString("fr-FR")}</span>
@@ -195,15 +197,19 @@ function EquipmentPanel({
                   <span>VNC moy. {Math.round(avgBook).toLocaleString("fr-FR")} €</span>
                 ) : null}
               </div>
-              <div className="mt-2 grid grid-cols-2 gap-3">
+              <div className="mt-2 grid grid-cols-2 gap-3 max-sm:mt-1">
                 <label className="block">
-                  <span className="text-xs font-medium uppercase tracking-wide text-emerald-400">
+                  <span className="text-xs font-medium uppercase tracking-wide text-emerald-400 max-sm:hidden">
                     Acheter
                   </span>
-                  <span className="mt-0.5 flex items-center gap-1.5 champ px-2 py-1 [--focus-champ:var(--color-emerald-400)]">
+                  <span className="mt-0.5 flex items-center gap-1.5 champ px-2 py-1 [--focus-champ:var(--color-emerald-400)] max-sm:mt-0">
+                    <span className="shrink-0 text-xs font-medium uppercase tracking-wide text-emerald-400 sm:hidden">
+                      Acheter
+                    </span>
                     <input
                       type="number"
                       onWheel={sansMolette}
+                      aria-label={`Acheter · ${t.name}`}
                       min={0}
                       max={t.maxPerRound}
                       value={buy}
@@ -224,13 +230,17 @@ function EquipmentPanel({
                   ) : null}
                 </label>
                 <label className="block">
-                  <span className="text-xs font-medium uppercase tracking-wide text-red-400">
+                  <span className="text-xs font-medium uppercase tracking-wide text-red-400 max-sm:hidden">
                     Vendre
                   </span>
-                  <span className="mt-0.5 flex items-center gap-1.5 champ px-2 py-1 [--focus-champ:var(--color-red-400)]">
+                  <span className="mt-0.5 flex items-center gap-1.5 champ px-2 py-1 [--focus-champ:var(--color-red-400)] max-sm:mt-0">
+                    <span className="shrink-0 text-xs font-medium uppercase tracking-wide text-red-400 sm:hidden">
+                      Vendre
+                    </span>
                     <input
                       type="number"
                       onWheel={sansMolette}
+                      aria-label={`Vendre · ${t.name}`}
                       min={0}
                       max={owned}
                       value={sell}
@@ -285,11 +295,23 @@ function EquipmentPanel({
           </div>
         </div>
       ) : null}
-      <p className="mt-3 text-sm leading-relaxed text-slate-400">
-        Les machines achetées entrent en service au tour suivant. La revente se fait à la
-        valeur de marché (VNC × ratio de revente) : vendre en dessous de la VNC génère une
-        perte de cession, un coût bien réel que le résultat encaisse.
-      </p>
+      {enCarte ? (
+        <div className="mt-2">
+          <Tiroir titre="Mise en service et revente" ferme>
+            <p className="text-sm leading-relaxed text-slate-400">
+              Les machines achetées entrent en service au tour suivant. La revente se fait à la
+              valeur de marché (VNC × ratio de revente) : vendre en dessous de la VNC génère une
+              perte de cession, un coût bien réel que le résultat encaisse.
+            </p>
+          </Tiroir>
+        </div>
+      ) : (
+        <p className="mt-3 text-sm leading-relaxed text-slate-400">
+          Les machines achetées entrent en service au tour suivant. La revente se fait à la
+          valeur de marché (VNC × ratio de revente) : vendre en dessous de la VNC génère une
+          perte de cession, un coût bien réel que le résultat encaisse.
+        </p>
+      )}
     </Family>
   );
 }
@@ -372,7 +394,10 @@ function Field({
   const { actif: enCarte } = useModeCartes();
   const interne = useRef<HTMLInputElement>(null);
   const ref = inputRef ?? interne;
-  if (enCarte && libelle) {
+  // PLUSIEURS CHAMPS SUR UNE CARTE : la ligne compacte. Le grand bloc est pour le champ qui est la
+  // question de sa carte ; une carte doit tenir sur un écran, et à trois champs il n'y tient plus.
+  const compact = enCarte && (libelle !== undefined || !CHAMPS_SEULS_SUR_LEUR_CARTE.includes(name));
+  if (compact) {
     return (
       <div className="block">
         <SaisieDeCarte
@@ -383,10 +408,12 @@ function Field({
           {...(max !== undefined ? { max } : {})}
           suffixe={suffix}
           {...(plage ? { plage } : {})}
-          sansCurseur={sansCurseur ?? inputRef !== undefined}
+          // Un curseur n'a de sens qu'avec une échelle : un plafond connu, une valeur proposée à
+          // doubler. Un champ à zéro, sans plafond, n'en a pas : « 0 à 20 000 € » n'était qu'un décor.
+          sansCurseur={sansCurseur ?? (inputRef !== undefined || (!plage && !(defaultValue > 0)))}
           grand={false}
           compact
-          libelle={libelle}
+          libelle={libelle ?? label}
           inputRef={ref}
           {...(onValueChange ? { onValueChange } : {})}
         />
@@ -780,8 +807,43 @@ function ChampPlafonne({
 }) {
   const champ = useRef<HTMLInputElement | null>(null);
   const [valeur, setValeur] = useState(defaultValue);
+  const { actif: enCarte } = useModeCartes();
   const maximum = Math.max(0, Math.floor(plafond));
   const pas = pasDuCurseur(maximum);
+
+  if (enCarte) {
+    // En parcours : la ligne compacte, son curseur borné au plafond, et le plafond dit sous le
+    // curseur ; l'explication (`hint`) se range dans l'aide de la carte, que le parent compose.
+    return (
+      <div>
+        <Field
+          name={name}
+          label={label}
+          libelle={label}
+          defaultValue={defaultValue}
+          max={maximum}
+          suffix={suffix}
+          inputRef={champ}
+          onValueChange={(v) => {
+            setValeur(v);
+            onValueChange?.(v);
+          }}
+        />
+        {maximum > 0 ? (
+          <CurseurDeSaisie
+            champ={champ}
+            label={label}
+            min={0}
+            max={maximum}
+            suffixe={suffix}
+            valeurInitiale={valeur}
+            compact
+          />
+        ) : null}
+        {hint ? <span className="mt-0.5 block text-[13px] text-slate-400 max-sm:text-sm">{hint}</span> : null}
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -1329,16 +1391,44 @@ function GammeReference({
       <div>
         {gamme.map((p) => (
           <div key={p.code} hidden={p.code !== activeProduct} className="space-y-2">
-            <ul className="flex flex-wrap gap-1.5">
-              {lignes
-                // Une référence à bâtir n'a ni marge ni coefficient : pas de pastille « — ».
-                .filter((l) => l.deduite && !(enDeveloppement(p) && (l.cle === "marge" || l.cle === "coef")))
-                .map((l) => (
-                  <li key={l.cle} className="rounded-full border border-white/15 px-2.5 py-1 text-sm text-slate-200">
-                    <span className="text-slate-400">{l.label}</span> {l.cellule(p)}
-                  </li>
-                ))}
-            </ul>
+            {(() => {
+              // Les trois repères qui font la décision (prix usuel, coût variable, marge) se lisent
+              // d'un coup d'œil ; stock, saison et coefficient se consultent, dans un tiroir fermé :
+              // une carte doit tenir sur un écran.
+              const reperes = lignes.filter(
+                (l) => l.deduite && !(enDeveloppement(p) && (l.cle === "marge" || l.cle === "coef")),
+              );
+              const principaux = reperes.filter((l) => ["refPrice", "cvu", "marge"].includes(l.cle));
+              const autres = reperes.filter((l) => !["refPrice", "cvu", "marge"].includes(l.cle));
+              // Libellés courts pour tenir sur une ligne : « Coût », « Marge ».
+              const courts: Record<string, string> = { cvu: "Coût", marge: "Marge" };
+              const repere = (l: (typeof lignes)[number]) => (
+                <span key={l.cle} className="whitespace-nowrap">
+                  <span className="text-slate-400">{courts[l.cle] ?? l.label}</span> {l.cellule(p)}
+                </span>
+              );
+              const pastille = (l: (typeof lignes)[number]) => (
+                <li
+                  key={l.cle}
+                  className="rounded-full border border-white/15 px-2.5 py-1 text-sm text-slate-200"
+                >
+                  <span className="text-slate-400">{l.label}</span> {l.cellule(p)}
+                </li>
+              );
+              return (
+                <>
+                  {/* Une ligne de texte, pas trois pastilles : elles passaient sur deux rangées. */}
+                  <p className="flex flex-wrap gap-x-4 gap-y-0.5 text-sm text-slate-200">
+                    {principaux.map(repere)}
+                  </p>
+                  {autres.length > 0 ? (
+                    <Tiroir titre="Autres repères" ferme>
+                      <ul className="flex flex-wrap gap-1.5">{autres.map(pastille)}</ul>
+                    </Tiroir>
+                  ) : null}
+                </>
+              );
+            })()}
             {enDeveloppement(p) ? <EnDeveloppement /> : null}
             {lignes
               .filter((l) => !l.deduite)
@@ -1352,6 +1442,15 @@ function GammeReference({
                   return (
                     <div key={l.cle} hidden>
                       {l.cellule(p)}
+                    </div>
+                  );
+                }
+                // Le fournisseur : l'étiquette à gauche du choix, sur la même ligne.
+                if (l.cle === "supplierChoice") {
+                  return (
+                    <div key={l.cle} className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3">
+                      <span className="text-base text-slate-300">{l.label}</span>
+                      <div className="min-w-0">{l.cellule(p)}</div>
                     </div>
                   );
                 }
@@ -2501,11 +2600,11 @@ export function DecisionForm({
                 pour chaque référence qu&apos;il fournit.
               </p>
             ) : null}
-            <div className="space-y-2">
+            <div className="space-y-2 max-sm:space-y-1.5">
               {fiches.map((s) => (
                 <label
                   key={`${s.code}·${s.name}`}
-                  className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-3 py-2.5 pointer-coarse:min-h-12"
+                  className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-3 py-2.5 pointer-coarse:min-h-12 max-sm:py-1.5"
                 >
                   {gamme ? null : (
                     <input
@@ -2523,7 +2622,7 @@ export function DecisionForm({
                         ? ""
                         : ` · ${v.materialLabel.toLowerCase()} à ${formatEuroCents(s.prix[0]!.achat)}/${v.unit} (${s.prix[0]!.ecart})`}
                     </span>
-                    <span className="mt-0.5 block text-xs text-slate-400">{s.narrative}</span>
+                    <span className="mt-0.5 block text-xs text-slate-400 max-sm:line-clamp-1">{s.narrative}</span>
                     {gamme ? (
                       <span className="mt-1 block text-xs text-slate-300">
                         {s.prix.map((x, i) => (
@@ -2534,7 +2633,7 @@ export function DecisionForm({
                         ))}
                       </span>
                     ) : null}
-                    <span className="mt-1 flex flex-wrap gap-3 text-xs">
+                    <span className="mt-1 flex flex-wrap gap-x-3 gap-y-0 text-xs max-sm:mt-0.5">
                       {s.qualityBonus !== 0 ? (
                         <span className={s.qualityBonus > 0 ? "text-emerald-400" : "text-amber-400"}>
                           Qualité {s.qualityBonus > 0 ? "+" : "−"}{Math.abs(Math.round(s.qualityBonus * 100))} %
@@ -3044,14 +3143,14 @@ export function DecisionForm({
           🏦 Échéance d&apos;emprunt du tour :{" "}
           <strong>{Math.round(debtSchedule.nextMandatory).toLocaleString("fr-FR")} €</strong>{" "}
           de capital, prélevée automatiquement (+ intérêts). Dette restante{" "}
-          {Math.round(debtSchedule.outstanding).toLocaleString("fr-FR")} €. Les échéances
-          tombent, que la caisse soit pleine ou vide.
+          {Math.round(debtSchedule.outstanding).toLocaleString("fr-FR")} €.
+          <span className="max-sm:hidden"> Les échéances tombent, que la caisse soit pleine ou vide.</span>
         </p>
         </Carte>
       ) : null}
       {on.finance ? (
       <Family carte="financement" legend="💶 Financer · emprunt, capital, investissement">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 max-sm:gap-1.5 sm:grid-cols-2">
             <>
               <div>
                 {/*
@@ -3117,6 +3216,19 @@ export function DecisionForm({
           décide d'emprunter.
         */}
         {bankFile ? (
+          modeCartes ? (
+            <div className="mt-2">
+              <Tiroir
+                titre="Découvert autorisé"
+                quoi={`${formatEuro(bankFile.overdraftLimit)} · ${(bankFile.overdraftAnnualRate * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %/an`}
+                ferme
+              >
+                <p className="text-sm leading-relaxed text-slate-400">
+                  Au-delà, la banque cède vos créances à votre place, et vous le paie cher.
+                </p>
+              </Tiroir>
+            </div>
+          ) : (
           <p className="mt-3 text-sm leading-relaxed text-slate-400">
             Découvert autorisé{" "}
             <strong className="text-slate-200">{formatEuro(bankFile.overdraftLimit)}</strong>, à{" "}
@@ -3129,6 +3241,7 @@ export function DecisionForm({
             l&apos;an. Au-delà, la banque cède vos créances à votre place, et
             vous le paie cher.
           </p>
+          )
         ) : null}
       </Family>
       ) : null}
@@ -3225,11 +3338,25 @@ export function DecisionForm({
               </p>
             </div>
           ) : null}
-          <p className="mt-3 text-sm leading-relaxed text-slate-400">
-            Découvert autorisé jusqu&apos;à{" "}
-            {Math.round(treasuryOffer.overdraftLimit).toLocaleString("fr-FR")} €. Au-delà, la
-            banque cède vos créances d&apos;office, au tarif fort.
-          </p>
+          {modeCartes ? (
+            <div className="mt-2">
+              <Tiroir
+                titre="Découvert autorisé"
+                quoi={`${Math.round(treasuryOffer.overdraftLimit).toLocaleString("fr-FR")} €`}
+                ferme
+              >
+                <p className="text-sm leading-relaxed text-slate-400">
+                  Au-delà, la banque cède vos créances d&apos;office, au tarif fort.
+                </p>
+              </Tiroir>
+            </div>
+          ) : (
+            <p className="mt-3 text-sm leading-relaxed text-slate-400">
+              Découvert autorisé jusqu&apos;à{" "}
+              {Math.round(treasuryOffer.overdraftLimit).toLocaleString("fr-FR")} €. Au-delà, la
+              banque cède vos créances d&apos;office, au tarif fort.
+            </p>
+          )}
         </Family>
       ) : null}
       </section>
@@ -3270,17 +3397,38 @@ export function DecisionForm({
                   <span className="text-sm font-medium text-slate-200">
                     {f.name} · {formatEuro(f.premium)}
                   </span>
+                  {/* En parcours, la liste complète des risques ne tient pas sur l'écran : la ligne dit
+                      combien, et le détail de chaque formule est dans le tiroir sous les choix. */}
                   <span className="mt-0.5 block text-xs text-slate-400">
-                    Couvre : {f.coveredLabels.join(", ")}.
+                    {modeCartes
+                      ? `${f.coveredLabels.length} risque${f.coveredLabels.length > 1 ? "s" : ""} couvert${f.coveredLabels.length > 1 ? "s" : ""}`
+                      : `Couvre : ${f.coveredLabels.join(", ")}.`}
                   </span>
                 </span>
               </label>
             ))}
           </div>
+          {modeCartes ? (
+            <div className="mt-2">
+              <Tiroir titre="Ce que couvre chaque formule" ferme>
+                <ul className="space-y-2 text-sm text-slate-300">
+                  {insuranceFormulas.map((f) => (
+                    <li key={f.code}>
+                      <strong className="text-slate-100">{f.name}</strong> : {f.coveredLabels.join(", ")}.
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-3 text-sm leading-relaxed text-slate-400">
+                  Un coût certain contre un risque incertain : plus la couverture est large, plus la prime pèse.
+                </p>
+              </Tiroir>
+            </div>
+          ) : (
           <p className="mt-3 text-sm leading-relaxed text-slate-400">
             Un coût certain contre un risque incertain : plus la couverture est large, plus
             la prime pèse.
           </p>
+          )}
         </Family>
       ) : on.insurance && insuranceOffer ? (
         <Carte cle="assurance">
@@ -3366,7 +3514,7 @@ export function DecisionForm({
                   <span className="text-sm font-medium text-slate-200">
                     {study.label} · {formatEuro(study.cost)}
                   </span>
-                  <span className="mt-0.5 block text-xs text-slate-400">{study.hint}</span>
+                  <span className="mt-0.5 block text-xs text-slate-400 max-sm:line-clamp-2">{study.hint}</span>
                 </span>
               </label>
             ))}
@@ -3390,10 +3538,21 @@ export function DecisionForm({
                 : []
             }
           />
-          <p className="mt-3 text-sm leading-relaxed text-slate-400">
-            L&apos;information a un prix, facturé en charges de structure : il se lit au seuil
-            de rentabilité. Décider sans données coûte souvent plus cher.
-          </p>
+          {modeCartes ? (
+            <div className="mt-2">
+              <Tiroir titre="Pourquoi payer l'information ?" ferme>
+                <p className="text-sm leading-relaxed text-slate-400">
+                  L&apos;information a un prix, facturé en charges de structure : il se lit au seuil
+                  de rentabilité. Décider sans données coûte souvent plus cher.
+                </p>
+              </Tiroir>
+            </div>
+          ) : (
+            <p className="mt-3 text-sm leading-relaxed text-slate-400">
+              L&apos;information a un prix, facturé en charges de structure : il se lit au seuil
+              de rentabilité. Décider sans données coûte souvent plus cher.
+            </p>
+          )}
         </Family>
       ) : null}
       {/*
@@ -3466,7 +3625,7 @@ export function DecisionForm({
         équipe à quatre, qui a rempli les étapes chacune de son côté, validait
         sans que personne n'ait vu l'ensemble.
       */}
-      {derniere && engagement && !verrou ? (
+      {derniere && engagement && !verrou && !modeCartes ? (
         <EngagementDuTour
           engagement={engagement}
           vocabulary={v}

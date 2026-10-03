@@ -31,7 +31,12 @@ export function Aide({
 }) {
   const telephone = useContext(TelephoneContexte);
   if (!telephone) return <>{children}</>;
-  return <Tiroir titre={titre}>{children}</Tiroir>;
+  // Fermé aussi en parcours : l'aide se consulte, elle ne prend pas l'écran d'une carte de décision.
+  return (
+    <Tiroir titre={titre} ferme>
+      {children}
+    </Tiroir>
+  );
 }
 
 /**
@@ -51,7 +56,7 @@ export function PanneauConsulte({
   const telephone = useContext(TelephoneContexte);
   if (telephone) {
     return (
-      <Tiroir titre={titre} quoi={resume}>
+      <Tiroir titre={titre} quoi={resume} ferme>
         {children}
       </Tiroir>
     );

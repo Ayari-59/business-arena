@@ -81,7 +81,7 @@ export function RecapDesDecisions({
           <button
             type="button"
             onClick={() => surModifier(l.cle)}
-            className="flex min-h-12 w-full items-center justify-between gap-3 px-4 py-2 text-left"
+            className="flex min-h-11 w-full items-center justify-between gap-3 px-4 py-1.5 text-left"
           >
             <span className="min-w-0 flex-1 text-base text-slate-300">{l.nom}</span>
             <span className="flex max-w-[58%] shrink-0 items-center gap-2 text-base font-semibold text-slate-50">

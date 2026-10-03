@@ -37,6 +37,40 @@ afterAll(async () => {
   await navigateur?.close();
 });
 
+
+/**
+ * LA HAUTEUR QU'IL FAUT À UNE CARTE : le bas de son contenu (hors barres fixes, hors tiroirs
+ * fermés), plus la place du pied de page. Une carte tient sur un écran quand elle est
+ * inférieure ou égale à la hauteur de l'écran. La règle est celle-là, et elle est mesurée.
+ */
+async function hauteurUtile(p: Page): Promise<number> {
+  return p.evaluate(() => {
+    const visible = (e: Element) => {
+      const r = e.getBoundingClientRect();
+      const st = getComputedStyle(e);
+      return r.width > 1 && r.height > 1 && st.visibility !== "hidden" && st.display !== "none";
+    };
+    const fixe = (e: Element) => {
+      for (let x: Element | null = e; x && x !== document.body; x = x.parentElement) {
+        const pos = getComputedStyle(x).position;
+        if (pos === "fixed" || pos === "sticky") return true;
+      }
+      return false;
+    };
+    let bas = 0;
+    for (const e of document.querySelectorAll("main *")) {
+      if (!visible(e) || fixe(e)) continue;
+      if (e.closest("details:not([open])") && !e.closest("summary")) continue;
+      const feuille =
+        (e.children.length === 0 && (e.textContent || "").trim().length > 0) ||
+        ["INPUT", "SELECT", "TEXTAREA", "svg"].includes(e.tagName);
+      if (feuille) bas = Math.max(bas, e.getBoundingClientRect().bottom + window.scrollY);
+    }
+    // Le pied fixe mesure environ 76 px (bouton de 48, marges) ; 8 px d'air en dessous du contenu.
+    return Math.round(bas + 84);
+  });
+}
+
 /** Les commandes visibles dont la taille tactile est sous le seuil. */
 async function commandesTropPetites(p: Page) {
   return p.evaluate(() => {
@@ -606,7 +640,7 @@ describe("pendant une partie", () => {
     expect(titres.some((t) => /Quel budget (marketing|qualité|maintenance)/i.test(t))).toBe(false);
   });
 
-  it("chaque carte de décision tient en deux écrans au plus, avec des commandes de 44 px", async () => {
+  it("chaque carte de décision tient sur UN écran, avec des commandes de 44 px", async () => {
     await versLesDecisions();
     await page.getByRole("button", { name: "Accepter", exact: true }).click();
     const ecran = page.viewportSize()!.height;
@@ -617,11 +651,10 @@ describe("pendant une partie", () => {
       await page.waitForTimeout(350);
       vues++;
       const titre = await titreDeLaCarte();
-      const hauteur = await page.evaluate(
-        () => document.documentElement.scrollHeight,
-      );
-      if (hauteur > ecran * 2)
-        trop.push(`${titre.slice(0, 40)} : ${hauteur} px`);
+      // LA RÈGLE : une carte de décision tient sur un écran.
+      const hauteur = await hauteurUtile(page);
+      if (hauteur > ecran + 4)
+        trop.push(`${titre.slice(0, 40)} : ${hauteur} px pour un écran de ${ecran}`);
       for (const c of await commandesTropPetites(page))
         petites.push(`${titre.slice(0, 30)} → ${JSON.stringify(c)}`);
       if (
@@ -639,7 +672,7 @@ describe("pendant une partie", () => {
     expect(vues, "le parcours n'atteint pas le récapitulatif").toBeGreaterThan(
       8,
     );
-    expect(trop, `cartes trop hautes : ${trop.join(" | ")}`).toEqual([]);
+    expect(trop, `cartes qui ne tiennent pas sur un écran : ${trop.join(" | ")}`).toEqual([]);
     expect(petites, `commandes sous 44 px : ${petites.join(" | ")}`).toEqual(
       [],
     );
@@ -909,7 +942,7 @@ describe("le lancement d'une partie, sur téléphone", () => {
 });
 
 describe("une gamme (ATLAS CONSEIL, niveau 5), sur téléphone", () => {
-  it("chaque référence tient sur UNE carte, compacte : au plus une fois et demie l'écran", async () => {
+  it("chaque référence tient sur UNE carte, compacte, qui tient (à peu près) sur un écran", async () => {
     const ctx = await navigateur.newContext({ ...devices["iPhone 13"], locale: "fr-FR" });
     const p = await ctx.newPage();
     try {
@@ -942,8 +975,9 @@ describe("une gamme (ATLAS CONSEIL, niveau 5), sur téléphone", () => {
           expect(largeurs.length, "des champs compacts sont affichés").toBeGreaterThanOrEqual(3);
           expect(new Set(largeurs).size, `largeurs des cadres : ${largeurs.join(", ")}`).toBe(1);
         }
-        const h = await p.evaluate(() => document.documentElement.scrollHeight);
-        if (h > ecran * 1.5) hautes.push(`${titre} : ${h} px`);
+        // Cinq champs chiffrés et un fournisseur par carte : on tolère une petite marge, pas un demi-écran.
+        const h = await hauteurUtile(p);
+        if (h > ecran + 30) hautes.push(`${titre} : ${h} px`);
         await p.getByRole("button", { name: /^Continuer/ }).last().click();
       }
       // Une carte par référence : ni plus, ni moins.
