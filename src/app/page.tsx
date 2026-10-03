@@ -702,9 +702,6 @@ export default async function Home() {
             <span aria-hidden className="h-px w-8 bg-amber-400/40" />
             Par où commencer
           </h2>
-          <p className="mt-4 max-w-2xl font-display text-3xl leading-tight text-slate-50">
-            Chaque page va droit au but.
-          </p>
           {/*
             UN SOMMAIRE, PAS UNE GRILLE D'ICÔNES. Les cartes portaient un emoji en
             tête ; elles portent maintenant un filet qui s'allume au survol, un
