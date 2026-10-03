@@ -585,6 +585,27 @@ describe("pendant une partie", () => {
     expect(plafond).toBeGreaterThanOrEqual(propose);
   });
 
+  it("marketing, qualité et maintenance sont sur UNE carte, pas trois", async () => {
+    await versLesDecisions();
+    await page.getByRole("button", { name: "Accepter", exact: true }).click();
+    const titres: string[] = [];
+    for (let k = 0; k < 14; k++) {
+      await page.waitForTimeout(300);
+      const titre = await titreDeLaCarte();
+      titres.push(titre);
+      if (/Vos budgets du tour/i.test(titre)) break;
+      if (await page.getByRole("button", { name: /Valider et simuler/ }).count()) break;
+      await page.getByRole("button", { name: /^Continuer/ }).last().click();
+    }
+    expect(titres.at(-1), `cartes vues : ${titres.join(" | ")}`).toMatch(/Vos budgets du tour/i);
+    // Les trois montants sont sur cet écran.
+    for (const nom of ["Marketing", "Qualité", "Maintenance"]) {
+      expect(await page.getByText(nom, { exact: true }).first().isVisible(), `${nom} est sur la carte`).toBe(true);
+    }
+    // Et aucune carte à part ne leur est consacrée.
+    expect(titres.some((t) => /Quel budget (marketing|qualité|maintenance)/i.test(t))).toBe(false);
+  });
+
   it("chaque carte de décision tient en deux écrans au plus, avec des commandes de 44 px", async () => {
     await versLesDecisions();
     await page.getByRole("button", { name: "Accepter", exact: true }).click();

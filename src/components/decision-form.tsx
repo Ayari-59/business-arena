@@ -347,7 +347,13 @@ function Field({
   onValueChange,
   inputRef,
   plage,
+  libelle,
+  sansCurseur,
 }: {
+  /** L'étiquette courte d'une ligne compacte (plusieurs champs sur la même carte). Absente : le champ est en grand. */
+  libelle?: string;
+  /** Pas de curseur : le montant se tape. */
+  sansCurseur?: boolean;
   name: string;
   label: string;
   defaultValue: number;
@@ -366,6 +372,28 @@ function Field({
   const { actif: enCarte } = useModeCartes();
   const interne = useRef<HTMLInputElement>(null);
   const ref = inputRef ?? interne;
+  if (enCarte && libelle) {
+    return (
+      <div className="block">
+        <SaisieDeCarte
+          name={name}
+          label={label}
+          defaultValue={defaultValue}
+          step={step}
+          {...(max !== undefined ? { max } : {})}
+          suffixe={suffix}
+          {...(plage ? { plage } : {})}
+          sansCurseur={sansCurseur ?? inputRef !== undefined}
+          grand={false}
+          compact
+          libelle={libelle}
+          inputRef={ref}
+          {...(onValueChange ? { onValueChange } : {})}
+        />
+        {hint ? <span className="mt-0.5 block text-[13px] text-slate-400 max-sm:text-sm">{hint}</span> : null}
+      </div>
+    );
+  }
   if (enCarte) {
     return (
       <div className="block">
@@ -2107,46 +2135,23 @@ export function DecisionForm({
               ]
             : []
           : [
+              // Marketing, qualité, maintenance (et R&D) : UNE carte. Séparés, trois écrans presque
+              // vides, chacun avec la même aide, pour des montants qui se règlent ensemble.
               {
-                cle: "marketing",
+                cle: "budgets",
                 etape: "budgets",
-                nom: "Marketing",
-                question: "Quel budget marketing ?",
-                resume: euros("marketingBudget"),
+                nom: "Budgets",
+                question: "Vos budgets du tour",
+                resume: (d: FormData) =>
+                  [
+                    "marketingBudget",
+                    ...(on.quality ? ["qualityBudget"] : []),
+                    ...(on.maintenance ? ["maintenanceBudget"] : []),
+                    ...(rdMono ? ["rdBudget"] : []),
+                  ]
+                    .map((k) => `${nb(d.get(k))} €`)
+                    .join(" · "),
               },
-              ...(on.quality
-                ? [
-                    {
-                      cle: "qualite",
-                      etape: "budgets",
-                      nom: "Qualité",
-                      question: "Quel budget qualité ?",
-                      resume: euros("qualityBudget"),
-                    },
-                  ]
-                : []),
-              ...(on.maintenance
-                ? [
-                    {
-                      cle: "maintenance",
-                      etape: "budgets",
-                      nom: "Maintenance",
-                      question: "Quel budget maintenance ?",
-                      resume: euros("maintenanceBudget"),
-                    },
-                  ]
-                : []),
-              ...(rdMono
-                ? [
-                    {
-                      cle: "rd",
-                      etape: "budgets",
-                      nom: "Recherche",
-                      question: "Quel budget de recherche ?",
-                      resume: euros("rdBudget"),
-                    },
-                  ]
-                : []),
             ]),
         ...(communicationOffer
           ? [
@@ -2862,6 +2867,9 @@ export function DecisionForm({
         hidden={masquee("budgets")}
         className="space-y-3"
       >
+      {/* En parcours, une partie mono n'a pas besoin de cette aide : chaque champ porte déjà la sienne,
+          juste dessous. Elle ne se répète pas sur un écran qui dit la même chose. */}
+      {modeCartes && !gamme ? null : (
       <Aide>
         <p className="text-sm leading-relaxed text-slate-400">
           Faire venir les clients, tenir la qualité, entretenir votre
@@ -2869,47 +2877,44 @@ export function DecisionForm({
           {communicationOffer ? ", bâtir votre marque" : ""}. Chaque budget se paie le tour même.
         </p>
       </Aide>
+      )}
       {gamme ? null : (
         // Les budgets du tour, au même endroit : marketing, qualité, maintenance
         // et R&D.
         <Family
-          carte={["marketing", "qualite", "maintenance", "rd"]}
+          carte="budgets"
           legend={`💸 Les budgets du tour · ${["marketing", on.quality ? "qualité" : null, on.maintenance ? "maintenance" : null, rdMono ? "R&D" : null].filter(Boolean).join(", ")}`}
           defaultOpen
         >
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Carte cle="marketing">
-              <Field name="marketingBudget" label="Budget marketing" defaultValue={defaults.marketingBudget} suffix="€"
+          <Carte cle="budgets">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <Field name="marketingBudget" label="Budget marketing" libelle="Marketing" defaultValue={defaults.marketingBudget} suffix="€"
                 hint="Fait venir les clients ce tour-ci ; l'effet retombe vite si on cesse." />
-            </Carte>
-            {on.quality ? (
-              <Carte cle="qualite">
-                <Field name="qualityBudget" label="Budget qualité" defaultValue={defaults.qualityBudget} suffix="€"
+              {on.quality ? (
+                <Field name="qualityBudget" label="Budget qualité" libelle="Qualité" defaultValue={defaults.qualityBudget} suffix="€"
                   hint="Prévention : moins de rebuts et de retours, une qualité perçue qui monte." />
-              </Carte>
-            ) : (
-              <input type="hidden" name="qualityBudget" value={defaults.qualityBudget} />
-            )}
-            {on.maintenance ? (
-              <Carte cle="maintenance">
-                <Field name="maintenanceBudget" label="Budget maintenance" defaultValue={defaults.maintenanceBudget} suffix="€"
+              ) : (
+                <input type="hidden" name="qualityBudget" value={defaults.qualityBudget} />
+              )}
+              {on.maintenance ? (
+                <Field name="maintenanceBudget" label="Budget maintenance" libelle="Maintenance" defaultValue={defaults.maintenanceBudget} suffix="€"
                   hint={aideEntretien} />
-              </Carte>
-            ) : (
-              <input type="hidden" name="maintenanceBudget" value={defaults.maintenanceBudget} />
-            )}
-            {rdMono ? (
-              <Carte cle="rd">
+              ) : (
+                <input type="hidden" name="maintenanceBudget" value={defaults.maintenanceBudget} />
+              )}
+              {rdMono ? (
                 <Field
                   name="rdBudget"
                   label="Recherche et développement"
+                  libelle="R&D"
+                  sansCurseur
                   defaultValue={Math.round(defaults.rdBudget ?? 0)}
                   suffix="€"
                   hint="Élève le niveau technique, avec retard ; s'érode si la R&D cesse."
                 />
-              </Carte>
-            ) : null}
-          </div>
+              ) : null}
+            </div>
+          </Carte>
         </Family>
       )}
       {gamme ? (
