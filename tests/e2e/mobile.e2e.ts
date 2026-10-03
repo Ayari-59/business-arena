@@ -567,6 +567,24 @@ describe("pendant une partie", () => {
     expect(await page.getByRole("button", { name: /Augmenter|Diminuer/ }).count()).toBe(0);
   });
 
+  it("le curseur de volume s'arrête à ce que l'atelier peut produire, pas au double de la proposition", async () => {
+    await versLesDecisions();
+    await page.getByRole("button", { name: "Accepter", exact: true }).click();
+    for (let k = 0; k < 8; k++) {
+      await page.waitForTimeout(350);
+      if (/Combien produisez-vous/i.test(await titreDeLaCarte())) break;
+      await page.getByRole("button", { name: /^Continuer/ }).last().click();
+    }
+    const champ = page.locator('input[name="productionPlan"]:visible');
+    const curseur = page.locator('input[type="range"]:visible').first();
+    await curseur.waitFor({ state: "visible" });
+    const plafond = Number(await curseur.getAttribute("max"));
+    const propose = Number(await champ.inputValue());
+    // NOVA : 7 000 à la machine, 7 200 à la main-d'œuvre. Le double de la proposition montait au-delà.
+    expect(plafond, "le haut du curseur est la capacité réelle").toBeLessThanOrEqual(7200);
+    expect(plafond).toBeGreaterThanOrEqual(propose);
+  });
+
   it("chaque carte de décision tient en deux écrans au plus, avec des commandes de 44 px", async () => {
     await versLesDecisions();
     await page.getByRole("button", { name: "Accepter", exact: true }).click();
@@ -893,6 +911,16 @@ describe("une gamme (ATLAS CONSEIL, niveau 5), sur téléphone", () => {
         const titre = (await p.locator("[data-titre-etape]").innerText()).replace(/\s+/g, " ");
         if (!/Vos choix pour/.test(titre)) break;
         cartes.push(titre);
+        // Les cadres de montant ont tous la même largeur : ils ne se calent plus sur le chiffre.
+        if (cartes.length === 1) {
+          const largeurs = await p.evaluate(() =>
+            [...document.querySelectorAll("label > span.champ")]
+              .filter((e) => e.getBoundingClientRect().width > 1)
+              .map((e) => Math.round(e.getBoundingClientRect().width)),
+          );
+          expect(largeurs.length, "des champs compacts sont affichés").toBeGreaterThanOrEqual(3);
+          expect(new Set(largeurs).size, `largeurs des cadres : ${largeurs.join(", ")}`).toBe(1);
+        }
         const h = await p.evaluate(() => document.documentElement.scrollHeight);
         if (h > ecran * 1.5) hautes.push(`${titre} : ${h} px`);
         await p.getByRole("button", { name: /^Continuer/ }).last().click();

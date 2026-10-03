@@ -42,7 +42,7 @@ describe("les champs chiffrés restent dans leur cadre", () => {
     // Le suffixe garde sa taille fixe ; en cartes (téléphone), la taille suit le mode.
     const suffixes =
       form.match(
-        /<span className=(?:"shrink-0 text-xs text-slate-400"|\{`shrink-0 text-slate-400 \$\{[^}]*\}`\})>/g,
+        /<span className=(?:"shrink-0 text-xs text-slate-400"|"shrink-0 text-base text-slate-400"|\{`shrink-0 text-slate-400 \$\{[^}]*\}`\})>/g,
       ) ?? [];
     expect(champs.length).toBeGreaterThan(0);
     expect(suffixes.length).toBe(champs.length);

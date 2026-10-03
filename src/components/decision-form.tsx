@@ -623,7 +623,7 @@ function SaisieDeCarte({
       <div className="block">
         <label className="flex min-h-10 items-center justify-between gap-3">
           <span className="min-w-0 flex-1 text-base text-slate-300">{libelle ?? label}</span>
-          <span className="champ flex min-h-10 shrink-0 items-baseline justify-end gap-1.5 px-3 py-1">
+          <span className="champ flex min-h-10 w-44 shrink-0 items-baseline justify-end gap-1.5 px-3 py-1">
             <input
               type="number"
               onWheel={sansMolette}
@@ -645,10 +645,9 @@ function SaisieDeCarte({
                     }
                   : undefined
               }
-              style={{ width: `${Math.max(2, longueur) + 0.5}ch` }}
-              className="max-w-[9rem] min-w-0 bg-transparent text-right text-xl font-bold tabular-nums text-slate-50 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+              className="min-w-0 flex-1 bg-transparent text-right text-xl font-bold tabular-nums text-slate-50 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
             />
-            <span className="text-base text-slate-400">{suffixe}</span>
+            <span className="shrink-0 text-base text-slate-400">{suffixe}</span>
           </span>
         </label>
         {sansCurseur ? null : (
@@ -969,7 +968,10 @@ function GammeReference({
   quality,
   rd,
   roundIndex,
+  capacite,
 }: {
+  /** Ce que l'atelier peut produire ce tour, toutes références confondues : le haut du curseur de volume. */
+  capacite?: number;
   gamme: NonNullable<GameView["gamme"]>;
   defaults: RoundDecisions;
   vocabulary: ScenarioVocabulary;
@@ -1057,6 +1059,7 @@ function GammeReference({
         sansCurseur={nom !== "price" && nom !== "productionPlan"}
         // Le prix se règle autour de ce que paient les clients ; le reste, autour de la valeur proposée.
         {...(nom === "price" ? { plage: { min: 0, max: Math.ceil((p.refPrice * 2.2) / 5) * 5 } } : {})}
+        {...(nom === "productionPlan" && capacite ? { plage: { min: 0, max: Math.max(capacite, valeur) } } : {})}
         {...(onChange ? { onValueChange: onChange } : {})}
       />
     ) : (
@@ -1712,6 +1715,19 @@ export function DecisionForm({
 }) {
   // L'aide du champ d'entretien : le seuil du métier, puis l'état de l'atelier.
   const aideEntretien = aideDuBudgetEntretien(capacityFacts);
+  // LE HAUT DU CURSEUR DE VOLUME est ce que l'atelier peut réellement produire ce tour : la plus
+  // basse de la capacité machine disponible et de la capacité de main-d'œuvre. Au-delà, le moteur
+  // borne de toute façon la production. Hors cas (abonnement, pas de capacité connue), le curseur
+  // retombe sur deux fois la valeur proposée.
+  const capaciteEffective =
+    capacityFacts && !capacityFacts.subscription
+      ? (() => {
+          const bornes = [capacityFacts.availableMachineCapacity, capacityFacts.laborCapacity].filter(
+            (c) => Number.isFinite(c) && c > 0,
+          );
+          return bornes.length > 0 ? Math.ceil(Math.min(...bornes)) : undefined;
+        })()
+      : undefined;
 
   const action = playRoundAction.bind(null, gameId);
   const { state, formAction, pending, formRef, guardError } = useGuardedAction(
@@ -2693,6 +2709,7 @@ export function DecisionForm({
             quality={on.quality}
             rd={on.rd && !!rdOffer}
             roundIndex={roundIndex}
+            {...(capaciteEffective ? { capacite: capaciteEffective } : {})}
           />
         </Family>
       ) : null}
@@ -2736,6 +2753,9 @@ export function DecisionForm({
             <Carte cle="volume">
               <Field name="productionPlan" label={v.productionPlanLabel}
                 defaultValue={Math.round(defaults.productionPlan)} suffix={v.units}
+                {...(capaciteEffective
+                  ? { plage: { min: 0, max: Math.max(capaciteEffective, Math.round(defaults.productionPlan)) } }
+                  : {})}
                 hint="Le volume réel sera borné par vos capacités." />
             </Carte>
           </div>
