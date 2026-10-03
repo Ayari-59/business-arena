@@ -210,7 +210,8 @@ export async function reprendreSaPlace(args: {
   ip?: string | null;
   now?: number;
 }): Promise<PlaceRetrouvee | { error: string }> {
-  const CODE_REFUSE = "Code de reprise inconnu. Vérifiez-le auprès de votre enseignant.";
+  const CODE_REFUSE =
+    "Code de reprise inconnu. Vérifiez chaque caractère ; en classe, votre enseignant peut vous le relire.";
   const garde = await garderLesTentatives({
     marqueur: MARQUEUR_REPRISE_PARTIE,
     ip: args.ip,

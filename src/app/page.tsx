@@ -16,6 +16,7 @@ import { HaloDePage } from "@/components/halo-de-page";
 import { QuiFaitQuoi } from "@/components/qui-fait-quoi";
 import { BPI_V2_DIMENSIONS } from "@/scoring/bpi";
 import { PiedDePage } from "@/components/pied-de-page";
+import { ReprendreALAccueil } from "@/components/reprendre-a-laccueil";
 
 // La landing ne lit que la configuration de plateforme (rien par utilisateur) :
 // on la met en cache et on la régénère au plus toutes les 5 min (ISR) plutôt
@@ -388,6 +389,9 @@ export default async function Home() {
             */}
           <div className="mt-8 grid items-center gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:gap-14">
             <div style={{ containerType: "inline-size" }}>
+              {/* Celui qui revient retrouve sa partie avant tout : l'accueil reste statique,
+                  l'îlot lit le cookie de l'appareil et ne rend rien s'il n'y a rien à reprendre. */}
+              <ReprendreALAccueil />
               <h1 className="whitespace-nowrap text-[clamp(1.5rem,8.8cqw,3rem)] font-bold leading-[1.04] tracking-tight text-slate-50">
                 Dirigez une entreprise.
                 <br />

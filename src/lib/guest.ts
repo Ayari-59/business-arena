@@ -5,6 +5,7 @@ import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { authSecret } from "@/lib/auth-secret";
 import { NOM_INVITE_PAR_DEFAUT, pseudoAffichable } from "@/config/invite";
+import { COOKIE_INVITE, optionsCookieInvite } from "@/lib/cookie-invite";
 
 /**
  * Identité invitée (v0.1, étape 6) : un visiteur reçoit un identifiant signé en
@@ -13,7 +14,7 @@ import { NOM_INVITE_PAR_DEFAUT, pseudoAffichable } from "@/config/invite";
  * complète (ADR-08) arrive à l'étape 7 avec l'interface enseignant.
  */
 
-const COOKIE = "ba_guest";
+const COOKIE = COOKIE_INVITE;
 
 function secret(): string {
   return authSecret();
@@ -47,13 +48,7 @@ export async function getOrCreateGuestUserId(): Promise<string> {
     email: `guest-${id}@guest.business-arena.local`,
     displayName: NOM_INVITE_PAR_DEFAUT,
   });
-  store.set(COOKIE, `${id}.${sign(id)}`, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    maxAge: 60 * 60 * 24 * 365,
-    path: "/",
-  });
+  store.set(COOKIE, `${id}.${sign(id)}`, optionsCookieInvite());
   return id;
 }
 
@@ -78,13 +73,7 @@ export async function getGuestUserId(): Promise<string | null> {
  */
 export async function setGuestCookie(userId: string): Promise<void> {
   const store = await cookies();
-  store.set(COOKIE, `${userId}.${sign(userId)}`, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    maxAge: 60 * 60 * 24 * 365,
-    path: "/",
-  });
+  store.set(COOKIE, `${userId}.${sign(userId)}`, optionsCookieInvite());
 }
 
 /**

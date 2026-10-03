@@ -65,7 +65,7 @@ export function FormulaireDeReprise({
         disabled={pending}
         className={`${bouton({ taille: "l" })} w-full`}
       >
-        {pending ? "Reprise…" : "Reprendre ma place"}
+        {pending ? "Reprise…" : "Reprendre ma partie"}
       </button>
     </form>
   );

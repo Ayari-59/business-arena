@@ -60,3 +60,14 @@ export const AIDE_CODE_DE_REPRISE =
 export const AIDE_CODE_DE_REPRISE_CLASSE =
   "Notez ce code : il vous rend votre équipe et tout ce que vous y avez fait, " +
   "depuis n'importe quel appareil. Votre enseignant peut vous le relire.";
+
+/**
+ * En solo, il n'y a pas d'enseignant pour relire un code perdu : le seul
+ * moment où l'on peut le noter, c'est maintenant. Le texte le dit, et dit à
+ * quoi il sert — retrouver SA partie au tour où on l'a laissée, après avoir
+ * vidé ses cookies ou en changeant d'appareil.
+ */
+export const AIDE_CODE_DE_REPRISE_SOLO =
+  "Notez ce code : il vous rend cette partie, au tour où vous l'avez laissée, " +
+  "sur n'importe quel appareil — après avoir vidé vos cookies, ou en passant du " +
+  "téléphone à l'ordinateur. Il se saisit sur la page « Reprendre ma partie ».";

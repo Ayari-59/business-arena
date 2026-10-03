@@ -10,6 +10,9 @@ import { QuickConfigFields } from "@/components/quick-config-form";
 import { bouton } from "@/components/bouton";
 import { HaloDePage } from "@/components/halo-de-page";
 import { PiedDePage } from "@/components/pied-de-page";
+import { ReprendreMaPartie } from "@/components/reprendre-ma-partie";
+import { getGuestUserId } from "@/lib/guest";
+import { partiesSoloEnCours } from "@/services/partie-en-cours.service";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +41,9 @@ export default async function JouerPage({
 }) {
   const config = await getPlatformConfig();
   const decisions = etendueDesDecisions();
+  // Celui qui revient retrouve sa partie AVANT d'en configurer une autre.
+  const userId = await getGuestUserId();
+  const enCours = userId ? await partiesSoloEnCours(userId) : [];
   // Les fiches d'entreprise renvoient ici avec leur métier en poche : le
   // sélecteur doit s'ouvrir dessus, sinon le clic n'a servi à rien.
   const { secteur, trop } = await searchParams;
@@ -59,6 +65,7 @@ export default async function JouerPage({
             Le texte, lui, reste borné par son max-w-lg et ne s'étire pas.
           */}
           <div className="grid items-start gap-6 sm:gap-8 lg:grid-cols-[1fr_540px] lg:items-center">
+            <ReprendreMaPartie parties={enCours} className="order-0 lg:col-span-2" />
             {/* SUR TÉLÉPHONE, le choix du métier vient tout de suite : un titre, puis le formulaire,
                 puis ce qui se lit à loisir. `contents` défait cette colonne en deux blocs que
                 `order` réarrange ; au-delà de `lg`, c'est la colonne de texte d'avant, à l'identique. */}
@@ -66,7 +73,7 @@ export default async function JouerPage({
             <div className="order-1">
               <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Partie solo</p>
               <h1 className="mt-3 text-3xl font-bold leading-tight tracking-tight text-slate-50 sm:text-4xl">
-                Lancez votre première partie
+                {enCours.length > 0 ? "Lancez une nouvelle partie" : "Lancez votre première partie"}
               </h1>
             </div>
             <div className="order-3">
@@ -88,6 +95,9 @@ export default async function JouerPage({
                 </Link>
                 <Link href="/join" className="text-amber-300 underline-offset-4 hover:underline">
                   J&apos;ai un code (élève)
+                </Link>
+                <Link href="/reprendre" className="text-amber-300 underline-offset-4 hover:underline">
+                  Reprendre avec mon code
                 </Link>
                 <Link href="/guide" className="text-slate-400 underline-offset-4 hover:underline">
                   Guide

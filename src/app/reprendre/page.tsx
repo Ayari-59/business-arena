@@ -6,7 +6,7 @@ import { getGuestDisplayName } from "@/lib/guest";
 import { codeDeReprisePlausible, normaliserCodeDeReprise } from "@/config/reprise";
 
 export const metadata: Metadata = {
-  title: "Reprendre ma place",
+  title: "Reprendre ma partie",
   robots: { index: false, follow: false },
 };
 
@@ -41,11 +41,11 @@ export default async function ReprendrePage({
     <main id="main" className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
       <div className="text-center">
         <p className="text-xs uppercase tracking-[0.3em] text-amber-400">Business Arena</p>
-        <h1 className="mt-2 text-3xl font-bold">Reprendre ma place</h1>
+        <h1 className="mt-2 text-3xl font-bold">Reprendre ma partie</h1>
         <p className="mt-2 max-w-md text-base text-slate-400">
           {codeInitial
-            ? "Votre code est déjà rempli : validez, et vous retrouvez votre équipe avec tout ce que vous y avez fait."
-            : "Entrez le code personnel noté au début de la partie. Il vous rend votre équipe et tout ce que vous y avez fait, depuis n'importe quel appareil."}
+            ? "Votre code est déjà rempli : validez, et vous retrouvez votre partie avec tout ce que vous y avez fait."
+            : "Entrez le code personnel noté pendant la partie (menu « Garder ma partie » en solo). Il vous rend votre partie, au tour où vous l'avez laissée, depuis n'importe quel appareil."}
         </p>
       </div>
       {/* Cet appareil porte déjà un prénom : le dire AVANT, parce qu'une
@@ -54,8 +54,9 @@ export default async function ReprendrePage({
       {occupant ? <IdentiteDeLAppareil pseudo={occupant} variante="entree" /> : null}
       <FormulaireDeReprise codeInitial={codeInitial} />
       <p className="max-w-sm text-center text-sm leading-relaxed text-slate-400">
-        Code perdu ? Votre enseignant peut vous le relire : il a la liste des codes de la
-        partie.
+        Code perdu ? En classe, votre enseignant peut vous le relire : il a la liste des
+        codes de la partie. En solo, il n&apos;y a pas de secours : il s&apos;affiche dans
+        le menu de la partie, sur l&apos;appareil où vous avez joué.
       </p>
       <Link
         href="/join"

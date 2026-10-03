@@ -1,4 +1,9 @@
-import { AIDE_CODE_DE_REPRISE_CLASSE, formaterCodeDeReprise } from "@/config/reprise";
+import {
+  AIDE_CODE_DE_REPRISE_CLASSE,
+  AIDE_CODE_DE_REPRISE_SOLO,
+  formaterCodeDeReprise,
+} from "@/config/reprise";
+import { BoutonCopierLeCode } from "@/components/bouton-copier-le-code";
 import { CodeQr } from "@/components/code-qr";
 import { urlDeReprise } from "@/lib/qr";
 import { Tiroir } from "@/components/tiroir";
@@ -24,20 +29,28 @@ import { renouvelerSonCodeAction } from "@/app/reprendre/actions";
 export function MaCarteDeReprise({
   gameId,
   code,
+  solo = false,
 }: {
   gameId: string;
   code: string;
+  /** En solo, personne ne peut relire le code : le texte l'assume. */
+  solo?: boolean;
 }) {
   return (
-    <Tiroir icone="cle" titre="Mon code de reprise" quoi="pour changer d'appareil">
-      <div className="flex flex-wrap items-start gap-4 px-3 pb-3">
+    <Tiroir
+      icone="cle"
+      titre={solo ? "Garder ma partie" : "Mon code de reprise"}
+      quoi={solo ? "pour la reprendre ailleurs" : "pour changer d'appareil"}
+    >
+      <div className="flex flex-col gap-4 px-3 pb-3 sm:flex-row sm:flex-wrap sm:items-start">
         <div className="min-w-0 flex-1">
-          <p className="font-mono text-2xl tracking-[0.2em] text-amber-200">
+          <p className="whitespace-nowrap font-mono text-2xl tracking-[0.15em] text-amber-200">
             {formaterCodeDeReprise(code)}
           </p>
           <p className="mt-1.5 max-w-prose text-sm leading-relaxed text-slate-300">
-            {AIDE_CODE_DE_REPRISE_CLASSE}
+            {solo ? AIDE_CODE_DE_REPRISE_SOLO : AIDE_CODE_DE_REPRISE_CLASSE}
           </p>
+          <BoutonCopierLeCode code={formaterCodeDeReprise(code)} />
           <p className="mt-1.5 max-w-prose text-sm leading-relaxed text-slate-400">
             Gardez-le pour vous : qui le lit peut jouer à votre place. Si quelqu&apos;un
             l&apos;a vu, prenez-en un autre — l&apos;ancien cesse aussitôt de fonctionner.
@@ -59,7 +72,7 @@ export function MaCarteDeReprise({
         {/* Le QR fait la même chose que le code, sans le recopier : l'élève le
             photographie avec son téléphone et le scanne le jour où il n'a plus
             son appareil habituel. */}
-        <div className="flex shrink-0 flex-col items-center gap-1">
+        <div className="flex shrink-0 flex-col items-center gap-1 self-center sm:self-auto">
           <CodeQr
             valeur={urlDeReprise(code)}
             description="QR code personnel : il vous rend votre place dans la partie"

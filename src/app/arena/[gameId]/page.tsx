@@ -7,6 +7,7 @@ import { getPlatformConfig } from "@/services/admin.service";
 import { estUnTelephone } from "@/lib/appareil";
 import { accentsDuSite, themeParDefaut } from "@/config/theme-du-site";
 import { BarreDeJeu } from "@/components/barre-de-jeu";
+import { StockageDurable } from "@/components/stockage-durable";
 import { getTeamSituations } from "@/services/pedagogy.service";
 import { AnalyseDuTour, SituationCard, SituationDebrief } from "@/components/situation-panel";
 import { SaisonDuTour } from "@/components/saison-du-tour";
@@ -50,7 +51,7 @@ import { bilanDeLaPartie } from "@/pedagogy/bilan-de-partie";
 import { VosReussites } from "@/components/vos-reussites";
 import { reussitesDeLaPartie, lireLeTour } from "@/scoring/reussites";
 import { recordPersonnel } from "@/services/profile.service";
-import { codeDeRepriseDuJoueur } from "@/services/reprise.service";
+import { attribuerCodeDeReprise, codeDeRepriseDuJoueur } from "@/services/reprise.service";
 import { EcheanceDuTour } from "@/components/echeance-du-tour";
 import { mentionDeValidation } from "@/config/validation-du-tour";
 import { surtitreDePartie } from "@/config/scenarios/presentation";
@@ -80,9 +81,14 @@ export default async function ArenaPage({
   // Sur téléphone, ce qu'on consulte se range dans des tiroirs fermés (voir
   // decision-context.tsx et aide-repliable.tsx) ; ce qui décide reste ouvert.
   const telephone = await estUnTelephone();
-  // Le code personnel, s'il en a un. En solo, personne à retrouver : la
-  // partie n'appartient qu'à cet appareil et il n'y a pas d'équipe à rendre.
-  const codeDeReprise = view.kind === "solo" ? null : await codeDeRepriseDuJoueur(gameId, userId);
+  // Le code personnel. En classe, il est donné à l'entrée (ou manque, pour les
+  // parties d'avant). En solo, il est créé ICI, à la première ouverture : les
+  // parties déjà commencées en ont un aussi, et personne ne peut relire un code
+  // perdu — c'est donc dans l'arène, tant que l'appareil est là, qu'on le note.
+  const codeDeReprise =
+    view.kind === "solo"
+      ? await attribuerCodeDeReprise(gameId, userId)
+      : await codeDeRepriseDuJoueur(gameId, userId);
   const situations = await getTeamSituations(gameId, userId);
   // Le record personnel : seulement à la fin d'une partie solo, où l'IPG est
   // déjà à l'écran. En classe, il appartient à l'enseignant de le révéler.
@@ -747,7 +753,7 @@ export default async function ArenaPage({
         />
       ) : null}
       {codeDeReprise ? (
-        <MaCarteDeReprise gameId={gameId} code={codeDeReprise} />
+        <MaCarteDeReprise gameId={gameId} code={codeDeReprise} solo={view.kind === "solo"} />
       ) : null}
     </>
   );
@@ -1041,6 +1047,7 @@ export default async function ArenaPage({
     <main id="main" className="mx-auto max-w-[1400px] space-y-6 px-4 pt-6 pb-6 sm:space-y-8 sm:px-6 sm:pb-16" data-ecran-de-jeu="">
       {/* LA BARRE D'APPLICATION, sur téléphone seulement : la barre du site s'efface
           dans l'arène (voir site-header.tsx) et celle-ci porte la partie et le tour. */}
+      <StockageDurable />
       <BarreDeJeu
         nom={view.playerTeamName}
         tour={view.currentRound}
