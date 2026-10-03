@@ -578,11 +578,16 @@ function CurseurDeSaisie({
         const cran = min + cranDuCurseur(Number(e.currentTarget.value) - min, etendue, pas);
         if (champ.current) poserValeur(champ.current, String(Math.round(cran * 100) / 100));
       }}
-      className="curseur min-w-0 accent-amber-400"
+      className="curseur curseur-jeu min-w-0 accent-amber-400"
       // 44 px : sous le pouce, le trait de 24 px se manque ; 40 px quand le champ n'est qu'un parmi
       // plusieurs. (Hors classe : la règle de `.curseur` n'est pas dans une couche et l'emporterait
-      // sur un utilitaire.)
-      style={{ height: compact ? "2.5rem" : "2.75rem" }}
+      // sur un utilitaire.) `--part` : la part parcourue, que la piste peint en laiton.
+      style={
+        {
+          height: compact ? "2.5rem" : "2.75rem",
+          "--part": `${Math.round(((Math.min(Math.max(valeur, min), max) - min) / Math.max(1, max - min)) * 100)}%`,
+        } as React.CSSProperties
+      }
     />
   );
   if (compact) {
@@ -2604,7 +2609,7 @@ export function DecisionForm({
               {fiches.map((s) => (
                 <label
                   key={`${s.code}·${s.name}`}
-                  className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-3 py-2.5 pointer-coarse:min-h-12 max-sm:py-1.5"
+                  className="flex items-start gap-3 bg-slate-900 rounded-xl border border-white/10 px-3 py-2.5 transition has-[:checked]:border-amber-400/70 has-[:checked]:bg-amber-400/10 active:scale-[0.99] pointer-coarse:min-h-12 max-sm:py-1.5"
                 >
                   {gamme ? null : (
                     <input
@@ -3104,7 +3109,7 @@ export function DecisionForm({
       >
       {on.hr ? (
         <Family carte="rh" legend="👥 Ressources humaines">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
             <Field name="hire" label="Embauches" defaultValue={0} suffix="pers."
               hint="Arrivée au tour suivant, coût de recrutement immédiat." />
             <Field name="fire" label="Licenciements" defaultValue={0} suffix="pers."
@@ -3371,7 +3376,7 @@ export function DecisionForm({
       {on.insurance && insuranceFormulas && insuranceFormulas.length > 0 ? (
         <Family carte="assurance" legend="🛡️ Assurance · choisissez votre couverture">
           <div className="space-y-2">
-            <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-3 py-2.5 pointer-coarse:min-h-12">
+            <label className="flex items-start gap-3 bg-slate-900 rounded-xl border border-white/10 px-3 py-2.5 transition has-[:checked]:border-amber-400/70 has-[:checked]:bg-amber-400/10 active:scale-[0.99] pointer-coarse:min-h-12">
               <input
                 type="radio"
                 name="insurance"
@@ -3384,7 +3389,7 @@ export function DecisionForm({
             {insuranceFormulas.map((f) => (
               <label
                 key={f.code}
-                className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-3 py-2.5 pointer-coarse:min-h-12"
+                className="flex items-start gap-3 bg-slate-900 rounded-xl border border-white/10 px-3 py-2.5 transition has-[:checked]:border-amber-400/70 has-[:checked]:bg-amber-400/10 active:scale-[0.99] pointer-coarse:min-h-12"
               >
                 <input
                   type="radio"
@@ -3432,7 +3437,7 @@ export function DecisionForm({
         </Family>
       ) : on.insurance && insuranceOffer ? (
         <Carte cle="assurance">
-        <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-950 px-3 py-2.5 pointer-coarse:min-h-12">
+        <label className="flex items-start gap-3 bg-slate-950 rounded-xl border border-white/10 px-3 py-2.5 transition has-[:checked]:border-amber-400/70 has-[:checked]:bg-amber-400/10 active:scale-[0.99] pointer-coarse:min-h-12">
           <input
             type="checkbox"
             name="insurance"
@@ -3494,7 +3499,7 @@ export function DecisionForm({
             ).map((study) => (
               <label
                 key={study.name}
-                className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-900 px-3 py-2.5 pointer-coarse:min-h-12"
+                className="flex items-start gap-3 bg-slate-900 rounded-xl border border-white/10 px-3 py-2.5 transition has-[:checked]:border-amber-400/70 has-[:checked]:bg-amber-400/10 active:scale-[0.99] pointer-coarse:min-h-12"
               >
                 <input
                   type="checkbox"
@@ -3719,7 +3724,7 @@ export function DecisionForm({
               }}
               disabled={!modeCartes && courante === 0}
               aria-label={modeCartes ? "Retour" : "Précédent"}
-              className="order-1 min-h-11 shrink-0 rounded-lg border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:text-slate-100 disabled:cursor-not-allowed disabled:opacity-30"
+              className="order-1 min-h-11 shrink-0 rounded-lg border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:text-slate-100 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-30"
             >
               {modeCartes ? "Retour" : "← Précédent"}
             </button>
@@ -3736,7 +3741,7 @@ export function DecisionForm({
                 key="valider"
                 type="submit"
                 disabled={pending || verrou != null || validationBloquee}
-                className={`${bouton({ taille: "l" })} order-3 max-sm:flex-1`}
+                className={`${bouton({ taille: "l" })} ${"bg-gradient-to-b from-amber-300 to-amber-400 shadow-lg shadow-amber-400/25 active:scale-[0.98]"} order-3 max-sm:flex-1`}
               >
                 {pending
                   ? "Envoi en cours…"
@@ -3775,7 +3780,7 @@ export function DecisionForm({
                     carteSuivante();
                   } else allerALEtape((e) => Math.min(total - 1, Math.min(e, total - 1) + 1));
                 }}
-                className={`${bouton({ taille: "l" })} order-3 max-sm:flex-1`}
+                className={`${bouton({ taille: "l" })} ${"bg-gradient-to-b from-amber-300 to-amber-400 shadow-lg shadow-amber-400/25 active:scale-[0.98]"} order-3 max-sm:flex-1`}
               >
                 {modeCartes ? "Continuer" : "Suivant"} →
               </button>

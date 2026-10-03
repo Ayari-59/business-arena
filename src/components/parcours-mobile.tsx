@@ -305,7 +305,7 @@ export function ParcoursMobile({
               <button
                 type="button"
                 onClick={() => allerAuToucher(index - 1)}
-                className={`${bouton({ variante: "secondaire", taille: "l" })} min-h-12 shrink-0`}
+                className={`${bouton({ variante: "secondaire", taille: "l" })} min-h-12 shrink-0 active:scale-[0.98]`}
               >
                 Retour
               </button>
@@ -313,7 +313,7 @@ export function ParcoursMobile({
             <button
               type="button"
               onClick={() => allerAuToucher(index + 1)}
-              className={`${bouton({ taille: "l" })} min-h-12 flex-1`}
+              className={`${bouton({ taille: "l" })} ${"bg-gradient-to-b from-amber-300 to-amber-400 shadow-lg shadow-amber-400/25 active:scale-[0.98]"} min-h-12 flex-1`}
             >
               {libelleSuivant}
               <span aria-hidden>→</span>

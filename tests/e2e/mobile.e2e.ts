@@ -1005,3 +1005,61 @@ describe("une gamme (ATLAS CONSEIL, niveau 5), sur téléphone", () => {
   }, 120_000);
 });
 
+describe("un niveau complet (NOVA niveau 6), sur téléphone", () => {
+  it("aucun cadre de montant ne recouvre son étiquette, et rien ne déborde, sur aucune carte", async () => {
+    const ctx = await navigateur.newContext({ ...devices["iPhone 13"], locale: "fr-FR" });
+    const p = await ctx.newPage();
+    try {
+      await p.goto(`${BASE}/jouer`, { waitUntil: "domcontentloaded" });
+      await p.waitForLoadState("networkidle");
+      await p.getByRole("button", { name: /NOVA/ }).click();
+      await p.getByRole("button", { name: /^Niveau 6/ }).click();
+      await p.getByRole("button", { name: "Lancer la partie" }).click();
+      await p.waitForURL(/\/arena\//, { timeout: 60_000 });
+      await p.waitForLoadState("networkidle");
+      await p.evaluate(() => (window.location.hash = "decisions"));
+      await p.locator("[data-titre-etape]").waitFor({ state: "visible" });
+      const accepter = p.getByRole("button", { name: "Accepter", exact: true });
+      if (await accepter.count()) await accepter.click();
+      const largeur = p.viewportSize()!.width;
+      const fautes: string[] = [];
+      for (let k = 0; k < 30; k++) {
+        await p.waitForTimeout(300);
+        const titre = (await p.locator("[data-titre-etape]").innerText()).replace(/\s+/g, " ");
+        const constat = await p.evaluate((w) => {
+          const visible = (e: Element) => {
+            const r = e.getBoundingClientRect();
+            const st = getComputedStyle(e);
+            return r.width > 1 && r.height > 1 && st.visibility !== "hidden" && st.display !== "none";
+          };
+          const chevauche = (a: DOMRect, b: DOMRect) =>
+            a.left < b.right - 1 && a.right > b.left + 1 && a.top < b.bottom - 1 && a.bottom > b.top + 1;
+          const lignes: string[] = [];
+          // Une ligne compacte : l'étiquette (premier enfant) et le cadre du montant.
+          for (const l of document.querySelectorAll("main label")) {
+            const cadre = l.querySelector(":scope > span.champ");
+            const etiquette = l.querySelector(":scope > span:not(.champ)");
+            if (!cadre || !etiquette || !visible(cadre) || !visible(etiquette)) continue;
+            if (chevauche(cadre.getBoundingClientRect(), etiquette.getBoundingClientRect()))
+              lignes.push(`recouvre : ${etiquette.textContent?.trim()}`);
+          }
+          for (const e of document.querySelectorAll("main label, main select, main input")) {
+            if (!visible(e)) continue;
+            const r = e.getBoundingClientRect();
+            if (r.right > w + 1 || r.left < -1) lignes.push(`déborde : ${(e.textContent || e.getAttribute("aria-label") || e.tagName).trim().slice(0, 30)}`);
+          }
+          return lignes;
+        }, largeur);
+        for (const c of constat) fautes.push(`${titre.slice(0, 35)} → ${c}`);
+        if (await p.getByRole("button", { name: /Valider et simuler/ }).count()) break;
+        const texte = p.locator('textarea[name="justification"]');
+        if ((await texte.count()) && (await texte.isVisible())) await texte.fill("Je vise le volume.");
+        await p.getByRole("button", { name: /^Continuer/ }).last().click();
+      }
+      expect(fautes, `défauts de mise en page : ${fautes.join(" | ")}`).toEqual([]);
+    } finally {
+      await ctx.close();
+    }
+  }, 180_000);
+});
+

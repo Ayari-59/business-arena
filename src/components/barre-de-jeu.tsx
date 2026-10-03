@@ -181,16 +181,16 @@ export function BarreDeJeu({
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={Math.round(progression.fraction * 100)}
-          className="flex h-1 gap-0.5"
+          className="flex h-1.5 gap-0.5"
         >
           {progression.segments.map((segment, i) => (
             <div
               key={i}
-              className="h-1 overflow-hidden rounded-full bg-white/12"
+              className="h-1.5 overflow-hidden rounded-full bg-white/12"
               style={{ flexGrow: segment.poids, flexBasis: 0 }}
             >
               <div
-                className={`h-1 ${PHASES[segment.phase].fond} transition-[width] duration-300 motion-reduce:transition-none`}
+                className={`h-1.5 ${PHASES[segment.phase].fond} transition-[width] duration-300 motion-reduce:transition-none`}
                 style={{ width: `${Math.round(segment.fait * 100)}%` }}
               />
             </div>
