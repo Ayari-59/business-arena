@@ -27,6 +27,12 @@ export interface BilanDuTour {
  * rang), et « voir les résultats » garde le détail. Le tirage, lui, se vit à
  * l'ouverture du tour suivant (voir `TirageDuTour`).
  */
+/** L'entrée d'un bloc, l'un après l'autre : le tour, le chiffre, la place, puis les boutons. */
+const entree = (rang: number) => ({
+  className: "motion-safe:animate-[revelation-entree_0.5s_cubic-bezier(0.2,0.7,0.2,1)_both]",
+  style: { animationDelay: `${rang * 110}ms` },
+});
+
 export function TourSimule({
   gameId,
   round,
@@ -49,43 +55,61 @@ export function TourSimule({
   return (
     <main
       id="main"
-      className="mx-auto flex min-h-[70vh] max-w-2xl flex-col items-center justify-center px-6 py-8 text-center sm:py-12"
+      className="relative mx-auto flex min-h-[70vh] max-w-2xl flex-col items-center justify-center overflow-hidden px-6 py-8 text-center sm:py-12"
     >
+      {/* Un halo laiton derrière le tour qui vient de se jouer : la fin d'un tour est un moment. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(60%_70%_at_50%_0%,color-mix(in_oklab,var(--color-amber-400)_24%,transparent),transparent)]"
+      />
       <span
-        className={`flex h-12 w-12 items-center justify-center rounded-2xl sm:h-16 sm:w-16 ${SECTOR_COLORS[sector].bg} ${SECTOR_COLORS[sector].accent}`}
+        {...entree(0)}
+        className={`relative flex h-14 w-14 items-center justify-center rounded-3xl shadow-lg ring-1 ring-white/10 sm:h-16 sm:w-16 ${SECTOR_COLORS[sector].bg} ${SECTOR_COLORS[sector].accent} ${entree(0).className}`}
       >
-        <PictoSecteur secteur={sector} className="h-7 w-7 sm:h-9 sm:w-9" />
+        <PictoSecteur secteur={sector} className="h-8 w-8 sm:h-9 sm:w-9" />
       </span>
-      <p className="mt-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.3em] text-amber-300 sm:mt-6">
+      <p
+        {...entree(1)}
+        className={`relative mt-4 flex items-center gap-2 rounded-full bg-emerald-400/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-emerald-300 sm:mt-6 ${entree(1).className}`}
+      >
         <span aria-hidden>✓</span> Tour simulé
       </p>
-      <h1 className="mt-3 text-3xl font-bold text-slate-50">
+      <h1
+        {...entree(2)}
+        className={`relative mt-3 font-display text-4xl font-semibold leading-tight text-slate-50 ${entree(2).className}`}
+      >
         {periodLabel(roundDays, round)} joué
       </h1>
-      <p className="mt-2 max-w-md text-sm leading-relaxed text-slate-400">
+      <p
+        {...entree(3)}
+        className={`relative mt-2 max-w-md text-sm leading-relaxed text-slate-400 ${entree(3).className}`}
+      >
         Vos décisions sont enregistrées.
       </p>
 
       {bilan ? <BilanEnTroisChiffres bilan={bilan} /> : null}
 
-      <div className="mt-5 flex w-full flex-col gap-3 sm:mt-8 sm:flex-row sm:justify-center">
+      <div
+        {...entree(7)}
+        className={`relative mt-5 flex w-full flex-col gap-3 sm:mt-8 sm:flex-row sm:justify-center ${entree(7).className}`}
+      >
         <Link
           href={`/arena/${gameId}#dernier-resultat`}
-          className={bouton({ taille: "l" })}
+          className={`${bouton({ taille: "l" })} bg-gradient-to-b from-amber-300 to-amber-400 shadow-lg shadow-amber-400/25 active:scale-[0.98]`}
         >
           <span aria-hidden>📊</span> Voir les résultats
         </Link>
         {finished ? (
           <Link
             href={`/arena/${gameId}`}
-            className="inline-flex items-center justify-center gap-2 rounded-lg border border-amber-400/40 px-6 py-3 text-sm font-semibold text-amber-300 transition hover:border-amber-400 hover:bg-amber-400/10"
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-amber-400/40 px-6 py-3 text-sm font-semibold text-amber-300 transition hover:border-amber-400 hover:bg-amber-400/10 active:scale-[0.98]"
           >
             <span aria-hidden>🏁</span> Bilan de la partie
           </Link>
         ) : (
           <Link
             href={`/arena/${gameId}#tour-en-cours`}
-            className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-white/30 hover:bg-white/5"
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-white/30 hover:bg-white/5 active:scale-[0.98]"
           >
             Passer au {periodLabel(roundDays, currentRound)}
             <span aria-hidden>→</span>
@@ -101,19 +125,20 @@ function BilanEnTroisChiffres({ bilan }: { bilan: BilanDuTour }) {
   const ecart =
     bilan.resultatPrecedent === null ? null : bilan.resultatNet - bilan.resultatPrecedent;
   return (
-    <dl className="mt-4 grid w-full max-w-md grid-cols-2 gap-3 text-left">
+    <dl className="relative mt-4 grid w-full max-w-md grid-cols-2 gap-3 text-left">
       <div
-        className={`col-span-2 rounded-2xl border p-4 ${
+        {...entree(4)}
+        className={`col-span-2 rounded-2xl border bg-gradient-to-b p-4 ${entree(4).className} ${
           gain
-            ? "border-emerald-400/30 bg-emerald-950/20"
-            : "border-red-400/30 bg-red-950/20"
+            ? "border-emerald-400/30 from-emerald-400/15 to-emerald-400/[0.03] shadow-[0_14px_34px_-20px_rgb(16_185_129/0.6)]"
+            : "border-red-400/30 from-red-400/15 to-red-400/[0.03] shadow-[0_14px_34px_-20px_rgb(239_68_68/0.55)]"
         }`}
       >
         <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
           Résultat net du tour
         </dt>
         <dd
-          className={`mt-1 font-display text-4xl font-semibold tabular-nums ${
+          className={`mt-1 font-display text-5xl font-semibold tabular-nums ${
             gain ? "text-emerald-300" : "text-red-300"
           }`}
         >
@@ -127,7 +152,7 @@ function BilanEnTroisChiffres({ bilan }: { bilan: BilanDuTour }) {
           </dd>
         ) : null}
       </div>
-      <div className="rounded-2xl border border-white/10 p-4">
+      <div {...entree(5)} className={`carte p-4 ${entree(5).className}`}>
         <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
           Trésorerie
         </dt>
@@ -139,11 +164,15 @@ function BilanEnTroisChiffres({ bilan }: { bilan: BilanDuTour }) {
           {formatEuro(bilan.tresorerie)}
         </dd>
       </div>
-      <div className="rounded-2xl border border-white/10 p-4">
+      <div {...entree(6)} className={`carte p-4 ${entree(6).className}`}>
         <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
           {bilan.rang ? "Classement" : "Chiffre d'affaires"}
         </dt>
-        <dd className="mt-1 text-xl font-semibold tabular-nums text-slate-50">
+        <dd
+          className={`mt-1 text-xl font-semibold tabular-nums ${
+            bilan.rang?.place === 1 ? "text-amber-300" : "text-slate-50"
+          }`}
+        >
           {bilan.rang ? `${bilan.rang.place}ᵉ sur ${bilan.rang.sur}` : formatEuro(bilan.chiffreDAffaires)}
         </dd>
         {bilan.rang && bilan.ipg !== null ? (

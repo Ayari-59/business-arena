@@ -83,7 +83,7 @@ export function BarreDeJeu({
   return (
     <div
       ref={cadre}
-      className="sticky top-0 z-40 -mx-4 -mt-6 border-b border-white/10 bg-slate-950/95 pt-[env(safe-area-inset-top)] backdrop-blur-md supports-[backdrop-filter]:bg-slate-950/90 sm:hidden print:hidden"
+      className="sticky top-0 z-40 -mx-4 -mt-6 border-b border-white/10 bg-slate-950/95 bg-gradient-to-b from-white/[0.04] to-transparent pt-[env(safe-area-inset-top)] shadow-[0_10px_24px_-16px_rgb(0_0_0/0.45)] backdrop-blur-md supports-[backdrop-filter]:bg-slate-950/90 sm:hidden print:hidden"
     >
       {/* UNE BARRE BASSE : la flèche, le titre de l'étape, le menu — et dessous, sur une ligne,
           le temps du tour dans sa teinte à gauche, la partie et le tour à droite. Quand il n'y a
@@ -94,7 +94,7 @@ export function BarreDeJeu({
         <Link
           href={retour}
           aria-label="Quitter la partie"
-          className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-slate-300 transition hover:bg-white/5 hover:text-slate-100"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/[0.06] text-slate-200 ring-1 ring-white/10 transition active:scale-95 hover:bg-white/10 hover:text-slate-50"
         >
           <svg
             aria-hidden
@@ -135,8 +135,10 @@ export function BarreDeJeu({
           aria-label="Menu de la partie"
           aria-expanded={ouvert}
           aria-controls={id}
-          className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl transition hover:bg-white/5 ${
-            ouvert ? "text-amber-300" : "text-slate-300 hover:text-slate-100"
+          className={`grid h-11 w-11 shrink-0 place-items-center rounded-full ring-1 transition active:scale-95 ${
+            ouvert
+              ? "bg-amber-400/15 text-amber-300 ring-amber-400/40"
+              : "bg-white/[0.06] text-slate-200 ring-white/10 hover:bg-white/10 hover:text-slate-50"
           }`}
         >
           <svg
@@ -156,18 +158,18 @@ export function BarreDeJeu({
       {enTete ? (
         <div className="flex items-center justify-between gap-3 px-4 pb-1.5 text-sm">
           <p
-            className={`flex shrink-0 items-center gap-2 font-semibold uppercase tracking-[0.14em] ${PHASES[enTete.phase].texte}`}
+            className={`flex shrink-0 items-center gap-2 rounded-full py-0.5 pl-2 pr-3 font-semibold uppercase tracking-[0.14em] ${PHASES[enTete.phase].texte} ${PHASES[enTete.phase].teinte}`}
           >
             <span
               aria-hidden
-              className={`h-2.5 w-2.5 shrink-0 rounded-full ${PHASES[enTete.phase].fond}`}
+              className={`h-2 w-2 shrink-0 rounded-full ${PHASES[enTete.phase].fond}`}
             />
             <span data-amorce-etape="">{enTete.amorce}</span>
           </p>
           {/* Le nom cède la place, jamais le temps du tour ni le rang. */}
           <p className="flex min-w-0 text-slate-400">
             <span className="truncate">{nom}</span>
-            <span className="shrink-0">&nbsp;· Tour {tour}/{tours}</span>
+            <span className="shrink-0 font-medium tabular-nums text-slate-300">&nbsp;· Tour {tour}/{tours}</span>
           </p>
         </div>
       ) : null}
@@ -190,7 +192,7 @@ export function BarreDeJeu({
               style={{ flexGrow: segment.poids, flexBasis: 0 }}
             >
               <div
-                className={`h-1.5 ${PHASES[segment.phase].fond} transition-[width] duration-300 motion-reduce:transition-none`}
+                className={`h-1.5 rounded-full ${PHASES[segment.phase].fond} ${PHASES[segment.phase].texte} shadow-[0_0_8px_0_currentColor] transition-[width] duration-300 motion-reduce:transition-none`}
                 style={{ width: `${Math.round(segment.fait * 100)}%` }}
               />
             </div>

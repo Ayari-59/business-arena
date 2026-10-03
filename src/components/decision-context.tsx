@@ -35,14 +35,14 @@ export function DilemmaCard({
       entière teintée en ambre criait plus fort que la question qu'elle porte, et
       passait devant les panneaux qui servent à y répondre.
     */
-    <div className="rounded-lg border border-white/10 border-l-2 border-l-amber-400/70 bg-slate-900 p-3 sm:p-5">
+    <div className="rounded-lg border border-white/10 border-l-2 border-l-amber-400/70 bg-slate-900 p-3 max-sm:rounded-2xl max-sm:border-l max-sm:border-l-white/10 max-sm:bg-gradient-to-b max-sm:from-amber-400/[0.08] max-sm:to-transparent max-sm:p-4 sm:p-5">
       <h3 className="text-xs font-semibold uppercase tracking-wide text-amber-400/90">{title}</h3>
       {/* La question est le point d'arrivée de l'écran : elle se lit avant tout
           le reste de la carte. */}
       <p className="mt-1.5 text-base font-semibold leading-snug text-slate-50">{question}</p>
       <div className={`mt-3 grid gap-2 ${routes.length > 2 ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
         {routes.map((route) => (
-          <div key={route.label} className="rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-4">
+          <div key={route.label} className="rounded-lg border border-white/5 bg-slate-950 p-3 max-sm:rounded-xl max-sm:border-white/10 sm:p-4">
             <p className="text-sm font-medium text-slate-100">{route.label}</p>
             {/*
               La COULEUR EST DANS LA FLÈCHE, pas dans la phrase. Deux blocs de
@@ -95,9 +95,11 @@ function Chiffre({
       {/* Deux lignes réservées, comme dans le formulaire : « Trésorerie
           d'ouverture » se replie là où « Prix usuels » tient sur une ligne, et
           sans cette réserve les chiffres de la rangée ne s'alignaient plus. */}
-      <p className="min-h-8 text-xs uppercase leading-4 tracking-wide text-slate-400">{label}</p>
+      <p className="min-h-8 text-xs uppercase leading-4 tracking-wide text-slate-400 max-sm:text-sm max-sm:tracking-[0.1em]">
+        {label}
+      </p>
       <p
-        className={`tabular-nums text-base font-semibold ${accent ? "text-amber-300" : "text-slate-100"}`}
+        className={`tabular-nums text-base font-semibold max-sm:font-display max-sm:text-2xl ${accent ? "text-amber-300" : "text-slate-100"}`}
       >
         {valeur}
       </p>
@@ -123,8 +125,10 @@ function Panneau({
       {children}
     </Tiroir>
   ) : (
-    <div className="rounded-lg border border-white/5 bg-slate-950 p-3 sm:p-5">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">{titre}</h3>
+    <div className="rounded-lg border border-white/5 bg-slate-950 p-3 max-sm:rounded-2xl max-sm:border-white/10 max-sm:p-4 sm:p-5">
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400 max-sm:text-sm max-sm:tracking-[0.16em]">
+        {titre}
+      </h3>
       {children}
     </div>
   );

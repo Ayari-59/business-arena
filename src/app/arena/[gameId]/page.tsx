@@ -166,8 +166,10 @@ export default async function ArenaPage({
   const presentation = premierTour ? (
     <>
       <div>
-        <h3 className="text-xl font-bold text-slate-100">{view.intro.company}</h3>
-        <p className="text-sm text-slate-400">{view.intro.tagline}</p>
+        <h3 className="text-xl font-bold text-slate-100 max-sm:font-display max-sm:text-3xl max-sm:font-semibold">
+          {view.intro.company}
+        </h3>
+        <p className="text-sm text-slate-400 max-sm:text-base">{view.intro.tagline}</p>
         <FaitsCles
           capacityFacts={view.capacityFacts}
           vocabulary={view.vocabulary}
