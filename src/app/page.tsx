@@ -416,7 +416,7 @@ export default async function Home() {
                   montre, juste dessous — un bouton qui promet des métiers vaut moins que
                   les métiers eux-mêmes.
                 */}
-              <div className="mt-8 flex flex-wrap items-center gap-x-7 gap-y-4">
+              <div data-cta-principal className="mt-8 flex flex-wrap items-center gap-x-7 gap-y-4">
                 <Link href="/jouer" className={bouton({ taille: "l" })}>
                   Commencer une partie
                 </Link>
@@ -489,7 +489,28 @@ export default async function Home() {
                 deux lignes de même longueur se lisent comme un dessin, quatre
                 plus deux se lisent comme un débordement.
               */}
-              <ol className="mt-6 flex max-w-[21rem] flex-wrap items-center gap-x-3 gap-y-2">
+              {/* SUR TÉLÉPHONE, la chaîne se lit comme une liste : un numéro, le
+                  temps, la phrase qui dit ce qui s'y passe. Les phrases sont celles
+                  du registre (config/temps-du-tour), pas des textes de plus. Les trois
+                  écrans d'aperçu sont, sur téléphone, trop loin pour se contredire
+                  avec ces numéros ; au-delà de `sm`, la chaîne est celle d'avant. */}
+              <ol className="mt-5 divide-y divide-white/10 border-y border-white/10 sm:hidden">
+                {TEMPS_DU_TOUR.map((t, i) => (
+                  <li key={t.nom} className="flex items-baseline gap-4 py-3">
+                    <span aria-hidden className="w-6 shrink-0 text-sm font-semibold tabular-nums text-amber-400">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span className="text-base leading-snug text-slate-400">
+                      <strong className="font-semibold uppercase tracking-[0.12em] text-slate-100">
+                        {t.nom}
+                      </strong>
+                      <span className="sr-only"> : </span>
+                      <span className="block">{t.quoi}</span>
+                    </span>
+                  </li>
+                ))}
+              </ol>
+              <ol className="mt-6 hidden max-w-[21rem] flex-wrap items-center gap-x-3 gap-y-2 sm:flex">
                 {TEMPS_DU_TOUR.map((t, i) => (
                   <li key={t.nom} className="flex items-center gap-3">
                     {/* La phrase complète reste accessible : l'infobulle pour la
@@ -547,13 +568,17 @@ export default async function Home() {
               </h2>
               <ul className="mt-6 space-y-4">
                 {CE_QUE_L_ELEVE_APPREND.map((c) => (
-                  <li key={c.verbe} className="flex gap-3">
+                  <li
+                    key={c.verbe}
+                    // Sur téléphone, chaque idée est une carte compacte : le verbe en tête, la phrase dessous.
+                    className="flex gap-3 max-sm:flex-col max-sm:gap-1 max-sm:rounded-xl max-sm:border max-sm:border-white/10 max-sm:bg-slate-900/50 max-sm:p-4"
+                  >
                     <span
                       aria-hidden
-                      className="mt-2 h-1 w-1 shrink-0 rounded-full bg-amber-400"
+                      className="mt-2 h-1 w-1 shrink-0 rounded-full bg-amber-400 max-sm:hidden"
                     />
                     <p className="text-base leading-relaxed text-slate-400">
-                      <span className="font-semibold text-slate-200">
+                      <span className="font-semibold text-slate-200 max-sm:block max-sm:text-lg">
                         {c.verbe}.
                       </span>{" "}
                       {c.quoi}
@@ -717,7 +742,7 @@ export default async function Home() {
               <Link
                 key={r.href}
                 href={r.href}
-                className={`group block border-t py-5 transition-colors ${
+                className={`group block border-t py-4 transition-colors sm:py-5 ${
                   r.accent
                     ? "border-amber-400/60"
                     : "border-white/10 hover:border-amber-400/40"

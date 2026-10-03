@@ -1,6 +1,7 @@
 import { Bande } from "@/components/bande";
 import Link from "next/link";
 import { ATELIERS } from "@/config/ateliers";
+import { RepliableSurTelephone } from "@/components/repliable-sur-telephone";
 
 /**
  * TROIS RÔLES, ET CE QUE CHACUN FAIT ICI.
@@ -83,7 +84,10 @@ export function QuiFaitQuoi({ contraste }: { contraste: boolean }) {
           <div key={r.role} className="border-t border-white/10 pt-5">
             <h3 className="font-display text-xl font-semibold text-slate-100">{r.role}</h3>
             <p className="mt-1 text-base leading-relaxed text-slate-300">{r.resume}</p>
-            <ul className="mt-4 space-y-2.5">
+            {/* Sur téléphone, chaque rôle tient en deux lignes et ses trois faits
+                s'ouvrent à la demande ; au-delà de `sm`, tout est affiché. */}
+            <RepliableSurTelephone resume="En savoir plus" className="mt-2 sm:mt-0">
+            <ul className="mt-2 sm:mt-4 space-y-2.5">
               {r.faits.map((f) => (
                 <li key={f} className="flex gap-2.5 text-sm leading-relaxed text-slate-400">
                   <span aria-hidden className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-amber-400" />
@@ -91,9 +95,10 @@ export function QuiFaitQuoi({ contraste }: { contraste: boolean }) {
                 </li>
               ))}
             </ul>
+            </RepliableSurTelephone>
             <Link
               href={r.lien.href}
-              className="group mt-5 inline-block text-sm font-semibold text-amber-400 transition-colors hover:text-amber-300"
+              className="group mt-3 inline-flex text-sm font-semibold text-amber-400 transition-colors hover:text-amber-300 pointer-coarse:min-h-11 pointer-coarse:items-center sm:mt-5"
             >
               {r.lien.libelle}
               <span

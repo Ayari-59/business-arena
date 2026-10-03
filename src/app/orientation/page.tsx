@@ -118,19 +118,21 @@ export default function OrientationPage() {
           Les deux chemins portent donc chacun le sien, et le « ou » retrouve
           son antécédent.
         */}
-        <section aria-labelledby="quatre-questions" className="mt-12">
+        <section aria-labelledby="quatre-questions" className="mt-8 sm:mt-12">
           <h2
             id="quatre-questions"
             className="text-2xl font-bold text-slate-50"
           >
             Répondez à quatre questions
           </h2>
-          <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-400">
+          {/* Sur téléphone, le parcours en étapes pose ces questions une à une : les
+              énumérer d'abord repousserait la première sous la ligne de flottaison. */}
+          <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-400 max-sm:hidden">
             Le diplôme, le moment de l&apos;année, ce que vous voulez faire
             travailler, et le temps dont vous disposez. La recommandation
             s&apos;écrit à mesure.
           </p>
-          <div className="mt-8">
+          <div className="mt-4 sm:mt-8">
             <OrientationForm />
           </div>
         </section>

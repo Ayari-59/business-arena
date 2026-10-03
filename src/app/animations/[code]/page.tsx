@@ -12,6 +12,7 @@ import { formatDuTournoi, libelleFormatTournoi } from "@/config/concours";
 import { scenarioByCode, SECTOR_LABELS } from "@/config/scenarios/registry";
 import { PrintButton } from "@/components/print-button";
 import { bouton } from "@/components/bouton";
+import { RepliableSurTelephone } from "@/components/repliable-sur-telephone";
 
 /** Les ateliers sont une donnée figée : leurs pages se rendent à la construction. */
 export function generateStaticParams() {
@@ -145,6 +146,7 @@ export default async function AtelierPage({
               distribuent ; les corrigés et la grille de correction sont
               derrière la session, parce que les mettre ici reviendrait à
               distribuer le corrigé avec le sujet. */}
+          <RepliableSurTelephone resume="Les documents de l'atelier" className="mt-3 print:hidden">
           <div className="mt-4 flex flex-wrap gap-3 print:hidden">
             <PrintButton label="Imprimer cette fiche" />
             <Link
@@ -178,6 +180,7 @@ export default async function AtelierPage({
               Grille de correction
             </a>
           </div>
+          </RepliableSurTelephone>
         </header>
 
         {/* À retenir : les faits que l'enseignant veut avant de lire le reste. */}
@@ -273,7 +276,7 @@ export default async function AtelierPage({
                   >
                     <th
                       scope="row"
-                      className="w-56 px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-400"
+                      className="w-36 px-4 py-2 text-left sm:w-56 text-xs font-medium uppercase tracking-wide text-slate-400"
                     >
                       {k}
                     </th>
@@ -436,6 +439,12 @@ export default async function AtelierPage({
                     ))}
                   </div>
 
+                  {/* SUR TÉLÉPHONE, la séance se lit en trois lignes — son titre, son
+                      objectif, ses processus — et s'ouvre pour le minutage, les
+                      livrables et l'évaluation. Quatre à sept séances dépliées
+                      faisaient plusieurs écrans chacune ; au-delà de `sm`, tout
+                      reste affiché, et à l'impression aussi. */}
+                  <RepliableSurTelephone resume="Voir le déroulé de la séance" className="mt-2 sm:mt-0">
                   <div className="mt-4 grid gap-4 sm:grid-cols-2">
                     <div>
                       <h4 className="text-xs uppercase tracking-[0.2em] text-slate-600">
@@ -514,6 +523,7 @@ export default async function AtelierPage({
                       <li key={c}>· {c}</li>
                     ))}
                   </ul>
+                  </RepliableSurTelephone>
                 </article>
               </li>
             ))}

@@ -112,6 +112,14 @@ export function InstallPrompt() {
     else fermer();
   };
 
+  // La barre d'action du bas (BarreDActionMobile) cède la place tant que cette
+  // invitation est affichée : elles occupent le même bord de l'écran.
+  const affichee = visible && !enJeu;
+  useEffect(() => {
+    document.documentElement.toggleAttribute("data-install-prompt", affichee);
+    return () => document.documentElement.removeAttribute("data-install-prompt");
+  }, [affichee]);
+
   if (!visible || enJeu) return null;
 
   // Sur iOS il n'y a pas de bouton à offrir : l'installation passe par le menu

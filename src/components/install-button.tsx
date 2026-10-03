@@ -22,7 +22,7 @@ declare global {
 }
 
 const BTN =
-  "rounded-lg border border-amber-400/40 px-3 py-1.5 text-xs font-semibold text-amber-300 transition hover:border-amber-400 hover:bg-amber-400/10";
+  "rounded-lg border border-amber-400/40 px-3 py-1.5 text-xs font-semibold text-amber-300 transition hover:border-amber-400 hover:bg-amber-400/10 pointer-coarse:min-h-11";
 
 export function InstallButton() {
   const [canPrompt, setCanPrompt] = useState(false);

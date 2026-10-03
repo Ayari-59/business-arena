@@ -11,6 +11,7 @@ import { PiedDePage } from "@/components/pied-de-page";
 import { Bande } from "@/components/bande";
 import { contrasteDeLaBande } from "@/config/theme-du-site";
 import { getPlatformConfig } from "@/services/admin.service";
+import { RepliableSurTelephone } from "@/components/repliable-sur-telephone";
 
 export const metadata = {
   alternates: { canonical: "/fonctionnalites" },
@@ -224,7 +225,10 @@ export default async function FonctionnalitesPage() {
             </Link>
             .
           </p>
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {/* Sur téléphone, vingt cartes empilées faisaient 2 500 px : la liste
+              s'ouvre à la demande ; au-delà de `sm`, elle est affichée comme avant. */}
+          <RepliableSurTelephone resume="Afficher les modèles d'analyse">
+          <div className="mt-3 grid gap-2 sm:mt-0 sm:grid-cols-2 lg:grid-cols-3">
             {DECISION_MODELS.map((m) => (
               <div
                 key={m.code}
@@ -242,6 +246,7 @@ export default async function FonctionnalitesPage() {
               </div>
             ))}
           </div>
+          </RepliableSurTelephone>
         </Bande>
 
         {/*

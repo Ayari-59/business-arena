@@ -55,7 +55,7 @@ export const ACTION_PRINCIPALE: LienDeMenu = {
 };
 
 /** Le groupe qui s'affiche déplié à l'ouverture du menu. */
-export const GROUPE_OUVERT = "orientation";
+export const GROUPE_OUVERT = "jouer";
 
 /**
  * De quoi joindre quelqu'un.
@@ -71,11 +71,37 @@ export const LIEN_CONTACT: LienDeMenu = {
   aide: "Trente minutes au téléphone pour parler de votre classe : les créneaux proposés sont ceux que l'agenda laisse libres.",
 };
 
+/**
+ * LES GROUPES DISENT CE QU'ON VEUT FAIRE, pas à qui la page s'adresse.
+ *
+ * Sur téléphone, le menu est la seule navigation : il est lu comme une
+ * question — je veux jouer, je veux animer une classe, je représente un
+ * établissement, je veux comprendre — et chaque groupe y répond par une à
+ * cinq entrées. Le premier est déplié à l'ouverture : celui qui vient jouer
+ * n'a rien à chercher.
+ *
+ * Les libellés des entrées « à plat » sur grand écran (enTete) ne changent
+ * pas : la barre du bureau n'avait pas à bouger pour que le menu du téléphone
+ * s'organise autrement.
+ */
 export const NAVIGATION: readonly GroupeDeMenu[] = [
   {
     code: GROUPE_OUVERT,
-    titre: "Orientation et contact",
-    liens: [ACTION_PRINCIPALE, LIEN_CONTACT],
+    titre: "Jouer",
+    liens: [
+      {
+        href: "/jouer",
+        libelle: "Jouer maintenant",
+        aide: "Lancez une partie tout de suite : choisissez un secteur et un niveau, et pilotez l'entreprise seul contre des concurrents simulés.",
+      },
+      ACTION_PRINCIPALE,
+      {
+        href: "/join",
+        libelle: "Rejoindre une partie",
+        aide: "Votre enseignant vous a donné un code : c'est ici qu'il s'utilise.",
+        acces: "eleve",
+      },
+    ],
   },
   {
     code: "enseignants",
@@ -84,7 +110,7 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
       {
         href: "/enseignants",
         libelle: "Pour les enseignants",
-        aide: "Pourquoi la plateforme apprend à décider et pas à cliquer, ses ateliers clés en main et sa prise en main en classe.",
+        aide: "Découvrir Business Arena : pourquoi la plateforme apprend à décider et pas à cliquer, ses ateliers clés en main et sa prise en main en classe.",
         enTete: true,
       },
       {
@@ -94,10 +120,14 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
         enTete: true,
       },
       {
-        href: "/entreprises",
-        libelle: "Entreprises",
-        aide: "Les fiches des entreprises jouables : leur marché, leurs contraintes, ce qu'on y apprend.",
-        enTete: true,
+        href: "/parcours",
+        libelle: "Référentiels par diplôme",
+        aide: "Votre référentiel bloc par bloc, pour chaque diplôme qui a un atelier : où chacun se travaille, et ce qui n'est qu'effleuré.",
+      },
+      {
+        href: "/guide",
+        libelle: "Guide",
+        aide: "Comment on joue et comment on anime, réunis au même endroit.",
       },
       {
         href: "/teacher/login",
@@ -108,52 +138,47 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
     ],
   },
   {
-    code: "eleves",
-    titre: "Élèves",
+    code: "etablissements",
+    titre: "Établissements",
     liens: [
       {
-        href: "/join",
-        libelle: "Rejoindre une partie",
-        aide: "Votre enseignant vous a donné un code : c'est ici qu'il s'utilise.",
-        acces: "eleve",
-      },
-      {
-        href: "/jouer",
-        libelle: "Jouer en solo",
-        aide: "Lancez une partie tout de suite : choisissez un secteur et un niveau, et pilotez l'entreprise seul contre des concurrents simulés.",
+        href: "/guide#etablissements",
+        libelle: "Déploiement",
+        aide: "Un espace d'administration par établissement : codes d'invitation pour les enseignants, suivi des parties et des concours.",
       },
       {
         href: "/compete",
-        libelle: "Concours",
+        libelle: "Championship",
         aide: "Les concours entre classes, leurs épreuves et leurs classements.",
       },
     ],
   },
   {
-    code: "ressources",
-    titre: "Ressources",
+    code: "decouvrir",
+    titre: "Découvrir",
     liens: [
       {
-        href: "/guide",
-        libelle: "Guide",
-        aide: "Comment on joue et comment on anime, réunis au même endroit.",
-      },
-      {
-        href: "/notions",
-        libelle: "Fiches notions",
-        aide: "Les notions mobilisées par le jeu, expliquées et reliées à ce que montre le tableau de bord.",
-      },
-      {
-        href: "/parcours",
-        libelle: "Parcours",
-        aide: "Votre référentiel bloc par bloc, pour chaque diplôme qui a un atelier : où chacun se travaille, et ce qui n'est qu'effleuré.",
+        href: "/entreprises",
+        libelle: "Entreprises",
+        aide: "Les fiches des entreprises jouables : leur marché, leurs contraintes, ce qu'on y apprend.",
+        enTete: true,
       },
       {
         href: "/fonctionnalites",
         libelle: "Fonctionnalités",
         aide: "Les scénarios, les situations, les modèles d'analyse : tout ce que la plateforme met entre les mains de vos étudiants.",
       },
+      {
+        href: "/notions",
+        libelle: "Fiches notions",
+        aide: "Les notions mobilisées par le jeu, expliquées et reliées à ce que montre le tableau de bord.",
+      },
     ],
+  },
+  {
+    code: "contact",
+    titre: "Nous joindre",
+    liens: [LIEN_CONTACT],
   },
 ];
 

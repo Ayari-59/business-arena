@@ -289,7 +289,7 @@ export function SiteHeader({
                     onClick={() => basculerGroupe(groupe.code)}
                     aria-expanded={ouvertGroupe}
                     aria-controls={`groupe-${groupe.code}`}
-                    className="group flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition hover:bg-white/5"
+                    className="group flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition hover:bg-white/5 pointer-coarse:min-h-11"
                   >
                     <span
                       className={`shrink-0 text-xs font-semibold uppercase tracking-[0.2em] transition-colors ${
@@ -349,7 +349,11 @@ export function SiteHeader({
 
           <div className="mt-3 flex flex-wrap gap-4 border-t border-white/10 pt-3 text-xs text-slate-400">
             {LIENS_LEGAUX.map((lien) => (
-              <Link key={lien.href} href={lien.href} className="hover:text-slate-300">
+              <Link
+                key={lien.href}
+                href={lien.href}
+                className="hover:text-slate-300 pointer-coarse:flex pointer-coarse:min-h-11 pointer-coarse:items-center"
+              >
                 {lien.libelle}
               </Link>
             ))}

@@ -19,6 +19,7 @@ import { HaloDePage } from "@/components/halo-de-page";
 import { PiedDePage } from "@/components/pied-de-page";
 import { Bande } from "@/components/bande";
 import { contrasteDeLaBande } from "@/config/theme-du-site";
+import { RepliableSurTelephone } from "@/components/repliable-sur-telephone";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/enseignants" },
@@ -196,7 +197,7 @@ export default async function EnseignantsPage() {
             référentiel sans rien surpromettre. Des ateliers clés en main, une
             partie créée en trente secondes.
           </p>
-          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <div data-cta-principal className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <Link href="/orientation" className={bouton({ taille: "l" })}>
               Choisir ma simulation
             </Link>
@@ -403,7 +404,11 @@ export default async function EnseignantsPage() {
                 <p className="mt-1 text-base leading-relaxed text-slate-300">
                   {t.resume}
                 </p>
-                <ul className="mt-4 space-y-2.5">
+                {/* Sur téléphone, le résumé de chaque temps se lit d'un coup d'œil et
+                    ses trois ou quatre faits s'ouvrent à la demande ; au-delà de `sm`,
+                    la grille est affichée comme avant. */}
+                <RepliableSurTelephone resume="En savoir plus" className="mt-2 sm:mt-0">
+                <ul className="mt-2 sm:mt-4 space-y-2.5">
                   {t.faits.map((f) => (
                     <li
                       key={f}
@@ -417,6 +422,7 @@ export default async function EnseignantsPage() {
                     </li>
                   ))}
                 </ul>
+                </RepliableSurTelephone>
               </div>
             ))}
           </div>

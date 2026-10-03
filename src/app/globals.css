@@ -1061,3 +1061,21 @@ h1 {
     transform: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   REPLIABLE SUR TÉLÉPHONE, À PLAT AILLEURS (components/repliable-sur-telephone).
+   Au-delà de `sm`, le contenu d'un tiroir « repliable-tel » est affiché dès le
+   premier rendu et son résumé disparaît : la page est celle d'avant. Réservé
+   aux navigateurs qui savent styler le contenu d'un <details> ; les autres
+   passent par le script du composant, qui ouvre le tiroir une fois la page
+   hydratée. */
+@supports selector(::details-content) {
+  @media (min-width: 640px) {
+    details.repliable-tel::details-content {
+      content-visibility: visible;
+    }
+    details.repliable-tel > summary {
+      display: none;
+    }
+  }
+}

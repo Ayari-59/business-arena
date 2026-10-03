@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { bouton } from "@/components/bouton";
 import { BandeFinale } from "@/components/bande-finale";
 import { PiedDePage } from "@/components/pied-de-page";
+import { OuvreLaSectionVisee } from "@/components/ouvre-la-section-visee";
 import {
   BPI_V2_DIMENSIONS,
   INDICE,
@@ -103,7 +104,7 @@ function Section({
         c'est ce qu'on vient chercher.
       */}
       <details open={ouvert} className="group mt-4">
-        <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium text-amber-300 [&::-webkit-details-marker]:hidden">
+        <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium text-amber-300 pointer-coarse:min-h-11 [&::-webkit-details-marker]:hidden">
           <span
             aria-hidden
             className="inline-block transition-transform group-open:rotate-90 motion-reduce:transition-none"
@@ -126,6 +127,7 @@ export default async function GuidePage() {
   return (
     <>
       <main id="main" className="min-h-screen bg-slate-950 text-slate-100">
+        <OuvreLaSectionVisee />
         {/*
           PAS DE DEUXIÈME BARRE DE NAVIGATION. Cette page portait la sienne, avec
           son logo et ses liens, sous l'en-tête du site : sur un téléphone, les

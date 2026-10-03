@@ -10,6 +10,7 @@ import {
 import { CONCEPTS } from "@/config/pedagogy/concepts";
 import { LEVIERS } from "@/config/decisions";
 import { PictoSecteur } from "@/components/picto-secteur";
+import { RepliableSurTelephone } from "@/components/repliable-sur-telephone";
 import { bouton } from "@/components/bouton";
 import { BandeFinale } from "@/components/bande-finale";
 import { HaloDePage } from "@/components/halo-de-page";
@@ -185,65 +186,92 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
         <h2 className="mt-3 text-2xl font-bold tracking-tight text-slate-50">{nomSeul(d)}</h2>
         <p className={`text-sm font-medium ${a.texte}`}>{promesse(d) ?? d.tagline}</p>
         <p className="mt-3 text-base leading-relaxed text-slate-400">{d.briefing}</p>
-        {famille ? (
-          // Le même métier en un produit ou en gamme : c'est le niveau de
-          // difficulté qui décide, et la fiche le dit avant qu'on ne choisisse.
-          <p className="mt-3 rounded-lg border border-white/5 bg-slate-950/60 px-3 py-2 text-base leading-relaxed text-slate-300">
-            Jusqu&apos;au niveau {famille.gammeFromLevel - 1}, {famille.monoLabel} ; à partir du niveau{" "}
-            {famille.gammeFromLevel}, {famille.gammeLabel}.
-          </p>
-        ) : null}
-
         {/*
-          LA CARTE D'IDENTITÉ DU MÉTIER A QUITTÉ LA FICHE. Elle disait, en
-          quatre cases — ce qu'on vend, ce qu'on fixe, ce que devient
-          l'invendu, où est le goulot —, exactement ce que le tableau dit
-          maintenant EN TÊTE de page, et mieux : côte à côte. Quatre cases
-          isolées ne se comparent à rien ; une ligne de tableau se compare aux
-          huit autres, et c'est bien la comparaison qui est le sujet.
-
-          Une carte d'identité par fiche, à cent dix pixels pièce : un mètre de
-          défilement rendu au lecteur.
+          SUR TÉLÉPHONE, LA FICHE EST UNE CARTE : le métier, sa promesse, ses
+          indicateurs, le nombre de situations, et le bouton pour jouer. Le
+          reste — le contexte d'arrivée, le premier arbitrage, ce que la classe
+          y travaille — s'ouvre à la demande. Toutes les fiches dépliées faisaient
+          seize mille pixels de défilement. Au-delà de `sm`, la fiche est celle
+          d'avant : tout est ouvert, rien ne se replie (voir RepliableSurTelephone).
         */}
-        <p className="mt-5 text-base leading-relaxed text-slate-300">
-          <span className="text-xs uppercase tracking-[0.25em] text-slate-400">
-            En arrivant ·{" "}
-          </span>
-          {d.context}
-        </p>
+        <ul aria-label="Indicateurs suivis" className="mt-3 flex flex-wrap gap-1.5 sm:hidden">
+          {d.kpis.slice(0, 3).map((k) => (
+            <li
+              key={k.key}
+              className="rounded-full border border-white/10 bg-slate-950/60 px-2.5 py-1 text-xs text-slate-300"
+            >
+              {k.label}
+            </li>
+          ))}
+        </ul>
 
-        <div className="mt-4 rounded-xl border border-white/10 bg-slate-950 p-4">
-          <p className="text-xs uppercase tracking-[0.25em] text-slate-400">
-            Le premier arbitrage
-          </p>
-          <p className="mt-2 text-sm font-medium text-slate-100">{d.dilemma.question}</p>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            {d.dilemma.routes.map((r) => (
-              <div key={r.label} className="rounded-lg border border-white/5 bg-slate-900/70 p-3">
-                <p className={`text-xs font-semibold ${a.texte}`}>{r.label}</p>
-                <p className="mt-1.5 text-sm leading-relaxed text-emerald-300/80">
-                  <Signe sens="gain" /> {r.gain}
-                </p>
-                <p className="mt-1.5 text-sm leading-relaxed text-rose-300/80">
-                  <Signe sens="cout" /> {r.risque}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <CeQuOnYTravaille d={d} />
-
-        <div className="mt-5 flex flex-wrap items-center gap-4">
-          <Link
-            href={`/jouer?secteur=${d.code}`}
-            className="rounded-lg bg-slate-100 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-white"
+        <div className="flex flex-col">
+          <RepliableSurTelephone
+            resume="Voir le détail de l'entreprise"
+            className="order-2 sm:order-none"
+            resumeClassName="mt-1"
           >
-            Diriger {nomSeul(d)}
-          </Link>
-          <span className="text-xs text-slate-400">
-            Vous jouez {d.playerTeamName}, face à {d.bots.length} concurrents
-          </span>
+            {famille ? (
+              // Le même métier en un produit ou en gamme : c'est le niveau de
+              // difficulté qui décide, et la fiche le dit avant qu'on ne choisisse.
+              <p className="mt-3 rounded-lg border border-white/5 bg-slate-950/60 px-3 py-2 text-base leading-relaxed text-slate-300">
+                Jusqu&apos;au niveau {famille.gammeFromLevel - 1}, {famille.monoLabel} ; à partir du niveau{" "}
+                {famille.gammeFromLevel}, {famille.gammeLabel}.
+              </p>
+            ) : null}
+
+            {/*
+              LA CARTE D'IDENTITÉ DU MÉTIER A QUITTÉ LA FICHE. Elle disait, en
+              quatre cases — ce qu'on vend, ce qu'on fixe, ce que devient
+              l'invendu, où est le goulot —, exactement ce que le tableau dit
+              maintenant EN TÊTE de page, et mieux : côte à côte. Quatre cases
+              isolées ne se comparent à rien ; une ligne de tableau se compare aux
+              huit autres, et c'est bien la comparaison qui est le sujet.
+
+              Une carte d'identité par fiche, à cent dix pixels pièce : un mètre de
+              défilement rendu au lecteur.
+            */}
+            <p className="mt-5 text-base leading-relaxed text-slate-300">
+              <span className="text-xs uppercase tracking-[0.25em] text-slate-400">
+                En arrivant ·{" "}
+              </span>
+              {d.context}
+            </p>
+
+            <div className="mt-4 rounded-xl border border-white/10 bg-slate-950 p-4">
+              <p className="text-xs uppercase tracking-[0.25em] text-slate-400">
+                Le premier arbitrage
+              </p>
+              <p className="mt-2 text-sm font-medium text-slate-100">{d.dilemma.question}</p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                {d.dilemma.routes.map((r) => (
+                  <div key={r.label} className="rounded-lg border border-white/5 bg-slate-900/70 p-3">
+                    <p className={`text-xs font-semibold ${a.texte}`}>{r.label}</p>
+                    <p className="mt-1.5 text-sm leading-relaxed text-emerald-300/80">
+                      <Signe sens="gain" /> {r.gain}
+                    </p>
+                    <p className="mt-1.5 text-sm leading-relaxed text-rose-300/80">
+                      <Signe sens="cout" /> {r.risque}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <CeQuOnYTravaille d={d} />
+          </RepliableSurTelephone>
+
+          <div className="order-1 mt-5 flex flex-wrap items-center gap-4 sm:order-none">
+            <Link
+              href={`/jouer?secteur=${d.code}`}
+              className="rounded-lg bg-slate-100 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-white pointer-coarse:min-h-11 pointer-coarse:py-3"
+            >
+              Diriger {nomSeul(d)}
+            </Link>
+            <span className="text-xs text-slate-400">
+              Vous jouez {d.playerTeamName}, face à {d.bots.length} concurrents
+            </span>
+          </div>
         </div>
       </div>
     </article>
@@ -325,7 +353,8 @@ export default async function EntreprisesPage() {
             ci-dessous qui font qu&apos;une décision juste dans un métier est une faute dans un
             autre.
           </p>
-          <div className="mt-6 overflow-x-auto">
+          <RepliableSurTelephone resume="Afficher le tableau comparatif" className="mt-6">
+          <div className="mt-3 overflow-x-auto sm:mt-0">
             <table className="w-full min-w-[720px] text-sm">
               <thead>
                 <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
@@ -364,6 +393,7 @@ export default async function EntreprisesPage() {
               </tbody>
             </table>
           </div>
+          </RepliableSurTelephone>
           <p className="mt-4 text-base leading-relaxed text-slate-400">
             Les activités périssables ne stockent rien : la capacité non vendue est perdue au
             passage du tour. C&apos;est la différence qui sépare un hôtelier d&apos;un

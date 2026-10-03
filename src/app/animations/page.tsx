@@ -5,6 +5,7 @@ import { ATELIERS, dureeTotaleHeures } from "@/config/ateliers";
 import { scenarioByCode } from "@/config/scenarios/registry";
 import { HaloDePage } from "@/components/halo-de-page";
 import { PiedDePage } from "@/components/pied-de-page";
+import { RepliableSurTelephone } from "@/components/repliable-sur-telephone";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/animations" },
@@ -213,6 +214,14 @@ export default function AteliersPage() {
                 <p className="mt-2 text-base italic leading-relaxed text-slate-400">
                   {a.resume}
                 </p>
+                {/* SUR TÉLÉPHONE, la carte dit l'essentiel : le diplôme, le nombre de
+                    séances, la durée. Les autres faits (entreprise, exigence, détail
+                    du format) s'ouvrent à la demande ; au-delà de `sm`, tout est affiché. */}
+                <p className="mt-3 text-sm font-medium text-slate-200 sm:hidden">
+                  {publicDeLAtelier(a)}, {a.annee.toLowerCase()} · {a.seances.length} séances ·{" "}
+                  {dureeTotaleHeures(a)} h au total
+                </p>
+                <RepliableSurTelephone resume="Tous les faits de l'atelier" className="mt-2 sm:mt-0">
                 <dl className="mt-4 space-y-1 text-xs">
                   {[
                     [
@@ -245,9 +254,10 @@ export default function AteliersPage() {
                     </dd>
                   </div>
                 </dl>
+                </RepliableSurTelephone>
                 <Link
                   href={`/animations/${a.code}`}
-                  className="mt-4 inline-block text-sm font-semibold text-amber-300 underline-offset-4 hover:underline"
+                  className="mt-4 inline-block text-sm font-semibold text-amber-300 underline-offset-4 hover:underline pointer-coarse:flex pointer-coarse:min-h-11 pointer-coarse:items-center"
                 >
                   Voir le déroulé →
                 </Link>

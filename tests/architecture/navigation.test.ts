@@ -23,7 +23,10 @@ import {
 
 /** L'adresse d'un lien, ramenée au fichier de route qui doit exister. */
 function routeDe(href: string): string {
-  return `src/app${href === "/" ? "" : href}/page.tsx`;
+  // Une ancre (/guide#etablissements) mène à la même page : le fichier de route
+  // est celui du chemin, sans le fragment.
+  const chemin = href.split("#")[0]!;
+  return `src/app${chemin === "/" ? "" : chemin}/page.tsx`;
 }
 
 describe("plan du site", () => {
