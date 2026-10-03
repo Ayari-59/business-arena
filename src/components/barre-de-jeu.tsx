@@ -55,6 +55,8 @@ export function BarreDeJeu({
   // le montre. Sans parcours (grand écran, partie terminée), il n'y a rien à dire.
   const progression = useProgression();
   const cadre = useRef<HTMLDivElement>(null);
+  const enTete = progression && progression.titre && !termine ? progression : null;
+  const avecTitre = enTete !== null;
 
   // Le menu se referme sur Échap et au toucher hors de la barre, comme le plan
   // du site : un panneau qu'on ne peut pas écarter couvre la partie.
@@ -83,7 +85,12 @@ export function BarreDeJeu({
       ref={cadre}
       className="sticky top-0 z-40 -mx-4 -mt-6 border-b border-white/10 bg-slate-950/95 pt-[env(safe-area-inset-top)] backdrop-blur-md supports-[backdrop-filter]:bg-slate-950/90 sm:hidden print:hidden"
     >
-      <div className="flex h-14 items-center gap-1 px-1.5">
+      {/* UNE BARRE BASSE : la flèche, le titre de l'étape, le menu — et dessous, sur une ligne,
+          le temps du tour dans sa teinte à gauche, la partie et le tour à droite. Quand il n'y a
+          pas de titre (partie terminée, rien à lire), l'ancienne forme : le nom, puis le tour. */}
+      <div
+        className={`flex items-center gap-1 px-1.5 ${avecTitre ? "min-h-11" : "h-14"}`}
+      >
         <Link
           href={retour}
           aria-label="Quitter la partie"
@@ -103,20 +110,25 @@ export function BarreDeJeu({
             <path d="M15 5l-7 7 7 7" />
           </svg>
         </Link>
-        <div className="min-w-0 flex-1 text-center leading-tight">
-          <p className="truncate text-base font-bold text-slate-50">{nom}</p>
-          <p className="truncate text-sm text-slate-400">
-            {termine ? (
-              "Partie terminée"
-            ) : progression ? (
-              /* Le temps du tour se lit sous la barre, en titre de la carte, dans sa teinte :
-                 le redire ici le doublerait. */
-              `Tour ${tour} sur ${tours}`
-            ) : (
-              `Tour ${tour} sur ${tours} · en cours`
-            )}
-          </p>
-        </div>
+        {avecTitre ? (
+          <h2
+            data-titre-etape=""
+            className="line-clamp-2 min-w-0 flex-1 font-display text-lg font-semibold leading-tight text-slate-50"
+          >
+            {enTete?.titre}
+          </h2>
+        ) : (
+          <div className="min-w-0 flex-1 text-center leading-tight">
+            <p className="truncate text-base font-bold text-slate-50">{nom}</p>
+            <p className="truncate text-sm text-slate-400">
+              {termine
+                ? "Partie terminée"
+                : progression
+                  ? `Tour ${tour} sur ${tours}`
+                  : `Tour ${tour} sur ${tours} · en cours`}
+            </p>
+          </div>
+        )}
         <button
           type="button"
           onClick={() => setOuvert((v) => !v)}
@@ -141,26 +153,22 @@ export function BarreDeJeu({
         </button>
       </div>
 
-      {/* LE TITRE DE L'ÉTAPE, tout en haut, sous le nom de la partie : le temps du tour dans sa
-          teinte, puis la question ou le sujet de l'écran. C'est la seule fois qu'il se lit : les
-          cartes n'ont plus d'en-tête à elles. */}
-      {progression && progression.titre ? (
-        <div className="space-y-0.5 px-4 pb-2.5 pt-0.5">
+      {enTete ? (
+        <div className="flex items-center justify-between gap-3 px-4 pb-1.5 text-sm">
           <p
-            className={`flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] ${PHASES[progression.phase].texte}`}
+            className={`flex shrink-0 items-center gap-2 font-semibold uppercase tracking-[0.14em] ${PHASES[enTete.phase].texte}`}
           >
             <span
               aria-hidden
-              className={`h-2.5 w-2.5 shrink-0 rounded-full ${PHASES[progression.phase].fond}`}
+              className={`h-2.5 w-2.5 shrink-0 rounded-full ${PHASES[enTete.phase].fond}`}
             />
-            <span className="truncate">{progression.amorce}</span>
+            <span data-amorce-etape="">{enTete.amorce}</span>
           </p>
-          <h2
-            data-titre-etape=""
-            className="font-display text-xl font-semibold leading-tight text-slate-50"
-          >
-            {progression.titre}
-          </h2>
+          {/* Le nom cède la place, jamais le temps du tour ni le rang. */}
+          <p className="flex min-w-0 text-slate-400">
+            <span className="truncate">{nom}</span>
+            <span className="shrink-0">&nbsp;· Tour {tour}/{tours}</span>
+          </p>
         </div>
       ) : null}
 

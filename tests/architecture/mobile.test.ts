@@ -285,7 +285,7 @@ describe("on sait toujours à quel temps du tour on est", () => {
     const barre = lire("src/components/barre-de-jeu.tsx");
     expect(barre).toContain("progression.segments.map");
     expect(barre).toContain("PHASES[segment.phase].fond");
-    expect(barre).toContain("PHASES[progression.phase].texte");
+    expect(barre).toContain("PHASES[enTete.phase].texte");
     expect(barre).toContain("data-titre-etape");
     // Un seul titre : ni le parcours, ni les analyses, ni les décisions ne le redisent en tête de carte.
     expect(lire("src/components/parcours-mobile.tsx")).not.toContain("PHASES[courante.phase].texte");

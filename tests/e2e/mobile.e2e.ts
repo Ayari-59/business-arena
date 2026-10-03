@@ -224,7 +224,7 @@ describe("pendant une partie", () => {
       .getByRole("button", { name: "Menu de la partie" })
       .waitFor({ state: "visible" });
     await page
-      .getByText(/Tour 1 sur 6/)
+      .getByText(/Tour 1(?:\/| sur )6/)
       .first()
       .waitFor({ state: "visible" });
     await page
@@ -276,7 +276,9 @@ describe("pendant une partie", () => {
 
   /** Le titre de l'étape, tel qu'il se lit en haut de l'écran : l'amorce du temps, puis le titre. */
   const titreDeLaCarte = async () =>
-    (await page.locator("[data-titre-etape]").locator("..").innerText()).replace(/\s+/g, " ").trim();
+    `${await page.locator("[data-amorce-etape]").innerText()} ${await page.locator("[data-titre-etape]").innerText()}`
+      .replace(/\s+/g, " ")
+      .trim();
 
   const avancement = async () =>
     Number(
@@ -324,7 +326,7 @@ describe("pendant une partie", () => {
       await suite().click();
       await page.waitForTimeout(250);
     }
-    await page.getByText(/rendue[s]? sur \d/).waitFor({ state: "visible" });
+    await page.getByText(/\d\/\d rendues?/).waitFor({ state: "visible" });
     // Une situation = un tiroir, dont le résumé dit où elle en est.
     const tiroirs = page.locator("details:has(> summary:has-text('à analyser'))");
     expect(await tiroirs.count()).toBeGreaterThan(0);
@@ -378,7 +380,7 @@ describe("pendant une partie", () => {
       await suite().click();
       await page.waitForTimeout(250);
     }
-    await page.getByText(/rendue[s]? sur \d/).waitFor({ state: "visible" });
+    await page.getByText(/\d\/\d rendues?/).waitFor({ state: "visible" });
     const ouvert = page.locator("details[open]:has(> summary:has-text('à analyser'))");
     expect(await ouvert.locator("input[type=checkbox]").count(), "plus de cases à cocher").toBe(0);
     expect(await ouvert.locator("input[type=radio]").count(), "plus de QCM").toBe(0);

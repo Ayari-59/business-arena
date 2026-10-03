@@ -529,7 +529,7 @@ export function AnalyseDuTour({
   const parcours = useParcours();
   const definirEntete = parcours?.definirEntete;
   const titreDeLEcran = situations.length > 1 ? "Vos situations à analyser" : "Votre situation à analyser";
-  const amorce = `Analyse · ${rendues} rendue${rendues > 1 ? "s" : ""} sur ${situations.length}`;
+  const amorce = `Analyse · ${rendues}/${situations.length} rendue${situations.length > 1 ? "s" : ""}`;
   useEffect(() => {
     definirEntete?.({ titre: titreDeLEcran, amorce });
     return () => definirEntete?.(null);
