@@ -900,9 +900,7 @@ describe("sur un petit téléphone (iPhone SE, 375 px)", () => {
     for (let k = 0; k < 30; k++) {
       await petit.waitForTimeout(300);
       if (await petit.getByRole("button", { name: /Valider et simuler/ }).count()) break;
-      const texte = petit.locator('textarea[name="justification"]');
-      if ((await texte.count()) && (await texte.isVisible()))
-        await texte.fill("Je vise le volume pour remplir l'atelier ce tour.");
+      // La note « Qu'attendez-vous de ces choix ? » reste vide : elle ne bloque pas.
       await suite().click();
     }
     await petit.getByRole("button", { name: /Valider et simuler/ }).click();

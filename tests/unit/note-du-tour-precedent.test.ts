@@ -4,11 +4,7 @@ import { join } from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createElement } from "react";
 import { NoteDuTourPrecedent } from "@/components/note-du-tour-precedent";
-import {
-  justificationManquante,
-  LONGUEUR_MINIMALE_JUSTIFICATION,
-  MESSAGE_JUSTIFICATION_MANQUANTE,
-} from "@/config/justification";
+import { INVITATION_NOTE } from "@/config/justification";
 
 /**
  * LA BOUCLE PRÉDICTION → RÉSULTAT.
@@ -53,49 +49,28 @@ describe("la note du tour précédent", () => {
   });
 });
 
-describe("la note est exigée au premier tour, et là seulement", () => {
-  it("manque quand elle est vide ou trop courte au tour 1", () => {
-    expect(justificationManquante("", 1)).toBe(true);
-    expect(justificationManquante("ok", 1)).toBe(true);
-    expect(justificationManquante("   ", 1)).toBe(true);
-    expect(justificationManquante(null, 1)).toBe(true);
-    expect(justificationManquante(undefined, 1)).toBe(true);
-  });
-
-  it("suffit dès qu'une phrase est écrite", () => {
-    const phrase = "On vise le volume, quitte à rogner la marge.";
-    expect(phrase.length).toBeGreaterThanOrEqual(LONGUEUR_MINIMALE_JUSTIFICATION);
-    expect(justificationManquante(phrase, 1)).toBe(false);
-  });
-
-  it("n'est jamais exigée aux tours suivants", () => {
-    for (const tour of [2, 3, 4, 5, 6]) {
-      expect(justificationManquante("", tour), `tour ${tour}`).toBe(false);
-    }
-  });
-
-  it("le message dit quoi faire, pas ce qui est interdit", () => {
-    expect(MESSAGE_JUSTIFICATION_MANQUANTE).toContain("une phrase");
-    expect(MESSAGE_JUSTIFICATION_MANQUANTE.toLowerCase()).not.toContain("obligatoire");
-    expect(MESSAGE_JUSTIFICATION_MANQUANTE.toLowerCase()).not.toContain("interdit");
+describe("la note est facultative, à tous les tours", () => {
+  it("l'invitation dit qu'une phrase suffit, ou rien", () => {
+    expect(INVITATION_NOTE).toContain("Une phrase suffit");
+    expect(INVITATION_NOTE.toLowerCase()).not.toContain("obligatoire");
   });
 });
 
-describe("la règle vit au même endroit des deux côtés", () => {
+describe("rien n'impose la note, ni l'écran ni le serveur", () => {
   const lire = (chemin: string) => readFileSync(join(process.cwd(), chemin), "utf8");
 
-  it("l'action serveur applique la règle partagée", () => {
+  it("l'action serveur ne refuse jamais un envoi sans note", () => {
     const action = lire("src/app/arena/[gameId]/actions.ts");
-    expect(action).toContain("justificationManquante");
-    expect(action).toContain("MESSAGE_JUSTIFICATION_MANQUANTE");
+    expect(action).not.toContain("justificationManquante");
+    expect(action).not.toContain("MESSAGE_JUSTIFICATION_MANQUANTE");
   });
 
-  it("le formulaire exige le champ au premier tour, avec le même seuil", () => {
+  it("le champ n'est ni requis ni borné en longueur : il ne bloque pas « Continuer »", () => {
     const form = lire("src/components/decision-form.tsx");
-    expect(form).toContain("required={premierTour}");
-    expect(form).toContain("LONGUEUR_MINIMALE_JUSTIFICATION");
-    // Aucun seuil recopié en dur : deux nombres divergent toujours un jour.
-    expect(form).not.toMatch(/minLength=\{\s*\d+\s*\}/);
+    const champ = form.slice(form.indexOf('name="justification"'), form.indexOf('name="justification"') + 600);
+    expect(champ).not.toContain("required");
+    expect(champ).not.toContain("minLength");
+    expect(form).toContain("En quelques mots · facultatif");
   });
 
   it("la vue expose la note de chaque tour, et l'arène la rend", () => {

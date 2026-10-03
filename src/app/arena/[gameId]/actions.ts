@@ -4,10 +4,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getGuestUserId } from "@/lib/guest";
 import { roundDecisionsSchema } from "@/services/decision-schema";
-import {
-  justificationManquante,
-  MESSAGE_JUSTIFICATION_MANQUANTE,
-} from "@/config/justification";
 import { readProductFields } from "@/config/decision-source";
 import { scalarsOfGamme } from "@/engine/gamme";
 import { formatEuro } from "@/lib/format";
@@ -207,13 +203,8 @@ export async function playRoundAction(
     }
   }
 
-  // LA NOTE D'AVANT, EXIGÉE AU PREMIER TOUR. Le formulaire marque déjà le
-  // champ requis, mais un envoi forgé ou une page ouverte avant ce changement
-  // passerait outre. La règle est la même des deux côtés (`justificationManquante`).
+  // LA NOTE D'AVANT EST FACULTATIVE : enregistrée quand elle est écrite, jamais exigée.
   const note = String(formData.get("justification") ?? "").trim();
-  if (vue && justificationManquante(note, vue.currentRound)) {
-    return { error: MESSAGE_JUSTIFICATION_MANQUANTE };
-  }
 
   let kind: Awaited<ReturnType<typeof getGameKind>>;
   try {
