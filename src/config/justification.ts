@@ -1,5 +1,5 @@
 /**
- * LA NOTE D'AVANT : FACULTATIVE, TOUJOURS.
+ * LA NOTE D'AVANT : RECOMMANDÉE, JAMAIS EXIGÉE.
  *
  * L'équipe peut écrire en quelques mots ce qu'elle attend de ses choix, avant de connaître
  * le résultat. Au tour suivant, la note lui revient à côté du constat : c'est la
@@ -13,4 +13,4 @@
  * Ce fichier ne garde que le texte d'invitation, pour que l'écran et les gardes parlent
  * du même sujet.
  */
-export const INVITATION_NOTE = "Qu'attendez-vous de ces choix ? Une phrase suffit, ou rien.";
+export const INVITATION_NOTE = "Qu'attendez-vous de ces choix ? Une phrase suffit.";

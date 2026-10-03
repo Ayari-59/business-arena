@@ -49,8 +49,8 @@ describe("la note du tour précédent", () => {
   });
 });
 
-describe("la note est facultative, à tous les tours", () => {
-  it("l'invitation dit qu'une phrase suffit, ou rien", () => {
+describe("la note est recommandée, jamais exigée, à tous les tours", () => {
+  it("l'invitation dit qu'une phrase suffit", () => {
     expect(INVITATION_NOTE).toContain("Une phrase suffit");
     expect(INVITATION_NOTE.toLowerCase()).not.toContain("obligatoire");
   });
@@ -70,7 +70,8 @@ describe("rien n'impose la note, ni l'écran ni le serveur", () => {
     const champ = form.slice(form.indexOf('name="justification"'), form.indexOf('name="justification"') + 600);
     expect(champ).not.toContain("required");
     expect(champ).not.toContain("minLength");
-    expect(form).toContain("En quelques mots · facultatif");
+    expect(form).toContain("Recommandé : une phrase");
+    expect(form).not.toContain("En quelques mots · facultatif");
   });
 
   it("la vue expose la note de chaque tour, et l'arène la rend", () => {

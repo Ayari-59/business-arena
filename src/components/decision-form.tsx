@@ -2469,7 +2469,7 @@ export function DecisionForm({
   // Six étapes, des dizaines de champs, et rien n'était gardé tant qu'on
   // n'avait pas validé : un onglet fermé ou un appel en plein cours, et le tour
   // entier était à ressaisir. On sauve à chaque frappe, dans le navigateur.
-  // La note d'avant est facultative (voir config/justification).
+  // La note d'avant est recommandée, jamais exigée (voir config/justification).
   const premierTour = roundIndex === 1;
   const cle = cleBrouillon(gameId, roundIndex);
   const brouillonRestaure = useRef(false);
@@ -3569,20 +3569,20 @@ export function DecisionForm({
       */}
       <Family
         carte="justification"
-        legend="✍️ En quelques mots · facultatif"
+        legend="✍️ En quelques mots"
         tone="border-slate-700/60"
         legendClass="text-xs font-medium text-slate-400"
       >
         <textarea
           name="justification"
           rows={2}
-          aria-label="Justification de vos décisions (facultative)"
+          aria-label="Justification de vos décisions"
           placeholder={premierTour ? INVITATION_NOTE : "Pourquoi ces choix ce tour-ci ?"}
           className="w-full resize-y champ px-3 py-2 text-sm text-slate-200 placeholder:text-slate-400 focus:outline-none"
         />
         <p className="mt-1 text-sm leading-relaxed text-slate-400">
           {premierTour
-            ? "Facultatif. Une phrase, avant de savoir : elle vous reviendra au prochain tour, en face du résultat."
+            ? "Recommandé : une phrase, avant de savoir. Elle vous reviendra au prochain tour, en face du résultat."
             : "Elle vous reviendra au prochain tour, en face du résultat. L'enseignant la lira au débriefing."}
         </p>
       </Family>
