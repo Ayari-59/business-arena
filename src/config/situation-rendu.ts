@@ -89,3 +89,19 @@ export function statutDesSituations(situations: readonly EtatRendu[]): StatutSit
 export function libelleStatut(statut: StatutSituations): string {
   return statut.manques.length === 0 ? STATUT_RENDUE : messageIncomplet(statut.manques);
 }
+
+/**
+ * CE QU'ON ATTEND, QUAND LA RÉPONSE S'ÉCRIT.
+ *
+ * Une zone de texte vide ne dit pas quoi y mettre : l'élève écrivait « je sais pas » ou
+ * recopiait l'énoncé. Ces consignes s'affichent EN GRIS dans la zone (placeholder) et
+ * disparaissent à la première frappe. Elles ne sont pas une réponse pré-remplie : un texte
+ * vrai dans la zone compterait comme rendu, et serait corrigé.
+ *
+ * Elles disent la forme (une ou deux phrases), pas le fond : rien n'y souffle la solution.
+ */
+export const CONSIGNE_DIAGNOSTIC_OUVERT =
+  "Écrivez en une ou deux phrases ce qui pose problème à l'entreprise, et pourquoi, en vous appuyant sur les chiffres et le contexte ci-dessus.";
+
+export const CONSIGNE_MODELE_OUVERT =
+  "Nommez le modèle ou l'outil d'analyse que vous utiliseriez, puis dites en une phrase pourquoi il convient à cette situation.";

@@ -2,6 +2,8 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  CONSIGNE_DIAGNOSTIC_OUVERT,
+  CONSIGNE_MODELE_OUVERT,
   DIAGNOSTIC,
   MODELE,
   STATUT_RENDUE,
@@ -409,6 +411,19 @@ describe("questions ouvertes : l'élève écrit, le serveur ramène le texte aux
     expect(html).toContain("Valider mon analyse");
     // Grisé tant que rien n'est écrit : même message qu'au QCM.
     expect(html).toContain("Situation incomplète : il manque le diagnostic et le modèle");
+  });
+
+  it("chaque zone dit ce qu'on attend, en gris, sans être une réponse pré-remplie", () => {
+    const html = renderToStaticMarkup(
+      createElement(SituationCard, { gameId: "g1", situation: situation({ answerFormat: "open" }) }),
+    );
+    // La consigne est un placeholder : elle disparaît à la frappe et ne compte pas comme rendu.
+    expect(html).toContain(`placeholder="${CONSIGNE_DIAGNOSTIC_OUVERT.replace(/'/g, "&#x27;")}"`);
+    expect(html).toContain(`placeholder="${CONSIGNE_MODELE_OUVERT.replace(/'/g, "&#x27;")}"`);
+    expect(html).toContain("Situation incomplète");
+    // Les consignes disent la forme, pas la solution.
+    expect(CONSIGNE_DIAGNOSTIC_OUVERT).toMatch(/une ou deux phrases/);
+    expect(CONSIGNE_MODELE_OUVERT).toMatch(/une phrase/);
   });
 
   it("rendu complet : les options retenues partent au barème d'avant, les textes sont gardés", async () => {

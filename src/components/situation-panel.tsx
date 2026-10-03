@@ -9,7 +9,13 @@ import {
   type PedagogyState,
 } from "@/app/arena/[gameId]/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
-import { estRendue, manques, messageIncomplet } from "@/config/situation-rendu";
+import {
+  CONSIGNE_DIAGNOSTIC_OUVERT,
+  CONSIGNE_MODELE_OUVERT,
+  estRendue,
+  manques,
+  messageIncomplet,
+} from "@/config/situation-rendu";
 import { estUneReponse } from "@/pedagogy/reponse-ouverte";
 import type { SituationView } from "@/services/pedagogy.service";
 import type { SituationCategory } from "@/config/scenarios/situation-kit";
@@ -340,7 +346,7 @@ export function SituationCard({
                     rows={4}
                     value={freeText}
                     onChange={(e) => setFreeText(e.target.value)}
-                    placeholder="Le problème principal est…"
+                    placeholder={CONSIGNE_DIAGNOSTIC_OUVERT}
                     className="mt-2 w-full champ px-3 py-2 text-sm text-slate-100 outline-none"
                   />
                 </label>
@@ -415,7 +421,7 @@ export function SituationCard({
                             onChange={(e) =>
                               setTextes((prec) => ({ ...prec, [question.id]: e.target.value }))
                             }
-                            placeholder="Je mobilise…, parce que…"
+                            placeholder={CONSIGNE_MODELE_OUVERT}
                             className="mt-1.5 w-full champ px-3 py-2 text-sm text-slate-100 outline-none"
                           />
                         </label>
@@ -884,7 +890,7 @@ function SituationRetake({
             rows={4}
             value={freeText}
             onChange={(e) => setFreeText(e.target.value)}
-            placeholder="Le problème principal est…"
+            placeholder={CONSIGNE_DIAGNOSTIC_OUVERT}
             className="mt-1 w-full champ px-3 py-2 text-sm text-slate-100 outline-none [--focus-champ:var(--color-sky-400)]"
           />
         </label>
@@ -937,7 +943,7 @@ function SituationRetake({
               onChange={(e) =>
                 setTextes((prec) => ({ ...prec, [question.id]: e.target.value }))
               }
-              placeholder="Je mobilise…, parce que…"
+              placeholder={CONSIGNE_MODELE_OUVERT}
               className="mt-1.5 w-full champ px-3 py-2 text-sm text-slate-100 outline-none [--focus-champ:var(--color-sky-400)]"
             />
           </label>
