@@ -119,7 +119,7 @@ export function comportements(p: PartieJouee, t: Trimestre): Constat[] {
         ? "Vous avez ensuite confié à Brévent une part qu'il pouvait tenir, et gardé Placova pour le reste."
         : p.chemin[D.repartition] === 1
           ? `Vous lui avez ensuite confié tout le volume, au-delà de ce qu'il pouvait livrer : ${taux(t.conformesMoyen, 0)} de livraisons conformes sur le trimestre.`
-          : "Vous êtes ensuite resté à un seul fournisseur, sans solution de repli pour la suite."
+          : "Vous êtes ensuite restée à un seul fournisseur, sans solution de repli pour la suite."
     }`,
   };
 

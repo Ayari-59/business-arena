@@ -1,7 +1,7 @@
 /**
  * LE POSTE QUI RESTE VIDE — le contenu de l'épisode.
  *
- * Claire Dubreuil dirige l'agence Arvel Distribution de Villefranche-sur-Saône.
+ * Marion Dubreuil dirige l'agence Arvel Distribution de Villefranche-sur-Saône.
  * Julien, l'un de ses cinq technico-commerciaux, est parti il y a trois
  * semaines ; ses 52 clients pèsent sur les quatre autres, l'annonce n'attire
  * personne, et un client lui recommande un candidat. Six décisions, chacune
@@ -70,7 +70,7 @@ export const ETAPES: readonly Etape[] = [
         ...GERALD,
         heure: "08:15",
         texte:
-          "Claire, le portefeuille de Julien, c'est plus de 120 k€ de marge par trimestre. Dis-moi vendredi comment tu le remplaces, et quand.",
+          "Marion, le portefeuille de Julien, c'est plus de 120 k€ de marge par trimestre. Dis-moi vendredi comment tu le remplaces, et quand.",
       },
       {
         ...BASTIEN,
@@ -178,13 +178,13 @@ export const ETAPES: readonly Etape[] = [
         heure: "11:30",
         alerte: true,
         texte:
-          "Claire, je n'ai vu aucun de mes clients cette semaine : je n'ai fait que les dépannages de ceux de Julien. Ça ne peut pas durer.",
+          "Marion, je n'ai vu aucun de mes clients cette semaine : je n'ai fait que les dépannages de ceux de Julien. Ça ne peut pas durer.",
       },
       {
         ...GILLES,
         heure: "14:10",
         texte:
-          "Bonjour Claire. Il paraît que vous cherchez quelqu'un. Le fils d'un ami, Jordan Ferrand, est vendeur dans une grande surface de bricolage : un garçon formidable, tout le monde l'adore. Il est libre tout de suite. Je vous l'envoie ?",
+          "Bonjour Marion. Il paraît que vous cherchez quelqu'un. Le fils d'un ami, Jordan Ferrand, est vendeur dans une grande surface de bricolage : un garçon formidable, tout le monde l'adore. Il est libre tout de suite. Je vous l'envoie ?",
       },
       {
         de: "Tableau de bord de l'agence",
@@ -333,7 +333,7 @@ export const ETAPES: readonly Etape[] = [
       [
         {
           ...GILLES,
-          texte: "Merci Claire, vous ne le regretterez pas. Jordan est ravi.",
+          texte: "Merci Marion, vous ne le regretterez pas. Jordan est ravi.",
         },
       ],
       [

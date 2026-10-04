@@ -178,14 +178,14 @@ describe("l'épisode « Le trimestre qui dérape »", () => {
     await contexte.close();
   }, 120_000);
 
-  it("la liste mène aux deux épisodes, et le second se joue jusqu'au bilan", async () => {
+  it("la liste mène aux quinze épisodes, et le deuxième se joue jusqu'au bilan", async () => {
     const contexte = await navigateur.newContext({ ...devices["iPhone 13"], locale: "fr-FR" });
     await contexte.addInitScript(() =>
       localStorage.setItem("install-prompt-ferme-le", String(Date.now())),
     );
     const page = await contexte.newPage();
     await page.goto(`${BASE}/entreprises/episode`);
-    expect(await page.getByRole("link", { name: /Jouer l'épisode/ }).count()).toBe(2);
+    expect(await page.getByRole("link", { name: /Jouer l'épisode/ }).count()).toBe(15);
     expect(await debordement(page)).toBeLessThanOrEqual(0);
 
     await page.goto(`${BASE}/entreprises/episode/equipe-qui-s-epuise?hasard=4242`);

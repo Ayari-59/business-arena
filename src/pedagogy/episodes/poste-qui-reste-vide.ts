@@ -2,7 +2,7 @@
  * ÉPISODE 7 — LE POSTE QUI RESTE VIDE, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
- * assemblés ici : ce que le tableau de bord de Claire montre, ce que la
+ * assemblés ici : ce que le tableau de bord de Marion montre, ce que la
  * courbe trace, ce sur quoi le bilan la juge, et ce que ses décisions
  * révèlent d'elle.
  */
@@ -212,7 +212,7 @@ export const EPISODE_RECRUTEMENT: Episode<Trimestre> = {
   resume:
     "Un technico-commercial à remplacer, une équipe qui porte son portefeuille, un candidat recommandé. Vérifier avant de choisir, décider vite, intégrer.",
   persona:
-    "Vous êtes Claire Dubreuil, responsable de l'agence Arvel Distribution de Villefranche-sur-Saône. Votre équipe : cinq technico-commerciaux qui visitent les artisans du Beaujolais et du Val de Saône, et un comptoir. Julien, l'un des cinq, est parti il y a trois semaines.",
+    "Vous êtes Marion Dubreuil, responsable de l'agence Arvel Distribution de Villefranche-sur-Saône. Votre équipe : cinq technico-commerciaux qui visitent les artisans du Beaujolais et du Val de Saône, et un comptoir. Julien, l'un des cinq, est parti il y a trois semaines.",
   mandat: [
     { fort: `${CLIENTS} clients`, texte: "dans le portefeuille de Julien, à garder" },
     { fort: kE(BUDGET), texte: "de contribution du portefeuille sur le trimestre" },
@@ -467,7 +467,7 @@ export const EPISODE_RECRUTEMENT: Episode<Trimestre> = {
         heure: sem(8),
         alerte: true,
         texte:
-          "Claire, je démissionne. Deux mois à porter deux portefeuilles, je n'en peux plus. Un concurrent m'a fait une offre.",
+          "Marion, je démissionne. Deux mois à porter deux portefeuilles, je n'en peux plus. Un concurrent m'a fait une offre.",
       });
     }
     if (arrive.recruePart) {

@@ -2,7 +2,7 @@
  * ÉPISODE 3 — LE DÉPÔT QUI DÉBORDE, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
- * assemblés ici : ce que le tableau de bord de Camille montre, ce que la
+ * assemblés ici : ce que le tableau de bord de Juliette montre, ce que la
  * courbe trace, ce sur quoi le bilan la juge, et ce que ses décisions
  * révèlent d'elle.
  */
@@ -190,7 +190,7 @@ export const EPISODE_DEPOT: Episode<Trimestre> = {
   resume:
     "Un dépôt en rupture sur ce qui se vend et plein de ce qui dort. Mettre le stock au bon endroit avant d'en ajouter.",
   persona:
-    "Vous êtes Camille Brunet, responsable du dépôt régional d'Arvel Distribution, à Saint-Priest. Votre équipe : une vingtaine de préparateurs et de caristes, et trois approvisionneurs, qui fournissent les agences de la région.",
+    "Vous êtes Juliette Brunet, responsable du dépôt régional d'Arvel Distribution, à Saint-Priest. Votre équipe : une vingtaine de préparateurs et de caristes, et trois approvisionneurs, qui fournissent les agences de la région.",
   mandat: [
     { fort: taux(OBJECTIF_SERVICE, 0), texte: "de taux de service aux agences, au moins" },
     { fort: kE(OBJECTIF_STOCK), texte: "de stock en fin de trimestre, au plus" },

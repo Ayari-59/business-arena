@@ -1,7 +1,7 @@
 /**
  * LE DÉPÔT QUI DÉBORDE — le contenu de l'épisode.
  *
- * Camille Brunet dirige le dépôt régional d'Arvel Distribution à
+ * Juliette Brunet dirige le dépôt régional d'Arvel Distribution à
  * Saint-Priest : des préparateurs, des caristes et trois approvisionneurs qui
  * fournissent les agences de la région. Le dépôt manque de ce qui se vend et
  * déborde de ce qui dort ; un fournisseur décroche, l'inventaire ne colle
@@ -50,7 +50,7 @@ export const ETAPES: readonly Etape[] = [
         role: "Directeur supply chain",
         heure: "08:15",
         texte:
-          "Camille, les agences se plaignent tous les jours, et la direction financière me demande pourquoi on porte 1,4 M€ de stock. Dis-moi vendredi ce que tu fais.",
+          "Juliette, les agences se plaignent tous les jours, et la direction financière me demande pourquoi on porte 1,4 M€ de stock. Dis-moi vendredi ce que tu fais.",
       },
       {
         de: "Olivier Jacquet",

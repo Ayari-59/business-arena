@@ -12,6 +12,14 @@ import { EPISODE_BUDGET } from "./budget-qui-ne-tient-pas";
 import { EPISODE_PROJET } from "./projet-qui-glisse";
 import { EPISODE_ACHATS } from "./fournisseur-qui-augmente";
 import { EPISODE_RECRUTEMENT } from "./poste-qui-reste-vide";
+import { EPISODE_QUALITE } from "./reclamation-qui-enfle";
+import { EPISODE_SECURITE } from "./quai-dangereux";
+import { EPISODE_CHANGEMENT } from "./reorganisation-qui-coince";
+import { EPISODE_TRESORERIE } from "./tresorerie-qui-fond";
+import { EPISODE_LANCEMENT } from "./agence-qui-demarre";
+import { EPISODE_CRISE } from "./panne-qui-paralyse";
+import { EPISODE_PERFORMANCE } from "./collaborateur-qui-decroche";
+import { EPISODE_INDICATEURS } from "./indicateur-qui-ment";
 
 export const EPISODES: readonly Episode[] = [
   EPISODE_TRIMESTRE,
@@ -21,6 +29,14 @@ export const EPISODES: readonly Episode[] = [
   EPISODE_PROJET,
   EPISODE_ACHATS,
   EPISODE_RECRUTEMENT,
+  EPISODE_QUALITE,
+  EPISODE_SECURITE,
+  EPISODE_CHANGEMENT,
+  EPISODE_TRESORERIE,
+  EPISODE_LANCEMENT,
+  EPISODE_CRISE,
+  EPISODE_PERFORMANCE,
+  EPISODE_INDICATEURS,
 ];
 
 export const episodeParCode = (code: string): Episode | undefined =>

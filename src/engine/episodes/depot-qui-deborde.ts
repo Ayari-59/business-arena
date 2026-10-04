@@ -597,7 +597,7 @@ const volumeDepart =
   DORMANT_DEPART * ENCOMBREMENT.c;
 const stockDepart = CLASSES.reduce((s, k) => s + STOCK_DEPART[k], 0) + DORMANT_DEPART;
 
-/** La situation que Camille trouve en arrivant, la semaine 1 au matin. */
+/** La situation que Juliette trouve en arrivant, la semaine 1 au matin. */
 export const DEPART = {
   service: 0.91,
   ruptures: 130,
@@ -615,7 +615,7 @@ export interface LectureDepot {
   occupation: number | null;
 }
 
-/** Ce que Camille lit à la fin d'une semaine ; les décisions à venir comptent comme « ne rien changer ». */
+/** Ce que Juliette lit à la fin d'une semaine ; les décisions à venir comptent comme « ne rien changer ». */
 export function tableauDeBord(
   decisions: readonly number[],
   graine: number,

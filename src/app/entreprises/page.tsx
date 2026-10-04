@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
 import { Signe } from "@/components/signe";
 import Link from "next/link";
-import { SCENARIO_CHOICES, SECTOR_LABELS, familyOf, type ScenarioDefinition } from "@/config/scenarios/registry";
+import {
+  SCENARIO_CHOICES,
+  SECTOR_LABELS,
+  familyOf,
+  type ScenarioDefinition,
+} from "@/config/scenarios/registry";
 import {
   accentsDe,
   nomEntreprise as nomSeul,
@@ -124,9 +129,7 @@ function CeQuOnYTravaille({ d }: { d: ScenarioDefinition }) {
           </span>
         ))}
         {notions.total > notions.tetes.length ? (
-          <span className="text-slate-400">
-            et {notions.total - notions.tetes.length} autres
-          </span>
+          <span className="text-slate-400">et {notions.total - notions.tetes.length} autres</span>
         ) : null}
       </dd>
 
@@ -215,8 +218,8 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
               // Le même métier en un produit ou en gamme : c'est le niveau de
               // difficulté qui décide, et la fiche le dit avant qu'on ne choisisse.
               <p className="mt-3 rounded-lg border border-white/5 bg-slate-950/60 px-3 py-2 text-base leading-relaxed text-slate-300">
-                Jusqu&apos;au niveau {famille.gammeFromLevel - 1}, {famille.monoLabel} ; à partir du niveau{" "}
-                {famille.gammeFromLevel}, {famille.gammeLabel}.
+                Jusqu&apos;au niveau {famille.gammeFromLevel - 1}, {famille.monoLabel} ; à partir du
+                niveau {famille.gammeFromLevel}, {famille.gammeLabel}.
               </p>
             ) : null}
 
@@ -245,7 +248,10 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
               <p className="mt-2 text-sm font-medium text-slate-100">{d.dilemma.question}</p>
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
                 {d.dilemma.routes.map((r) => (
-                  <div key={r.label} className="rounded-lg border border-white/5 bg-slate-900/70 p-3">
+                  <div
+                    key={r.label}
+                    className="rounded-lg border border-white/5 bg-slate-900/70 p-3"
+                  >
                     <p className={`text-xs font-semibold ${a.texte}`}>{r.label}</p>
                     <p className="mt-1.5 text-sm leading-relaxed text-emerald-300/80">
                       <Signe sens="gain" /> {r.gain}
@@ -335,8 +341,9 @@ export default async function EntreprisesPage() {
                 Nouveau · Pour les entreprises
               </p>
               <p className="mt-1.5 text-base leading-relaxed text-slate-200">
-                Un trimestre dans la peau d&apos;un manager : une agence commerciale qui dérape, un
-                service client qui s&apos;épuise. Jugé sur ses décisions plutôt que sur son résultat.
+                Quinze épisodes dans la peau d&apos;un manager : une agence qui dérape, une équipe
+                qui s&apos;épuise, un budget qui ne tient pas, une crise à traverser… Jugé sur ses
+                décisions plutôt que sur son résultat.
               </p>
             </div>
             <Link
@@ -369,61 +376,61 @@ export default async function EntreprisesPage() {
           contraste={c("entreprises.differences")}
           interieur="mx-auto max-w-6xl px-6 py-14"
         >
-          <h2 className="text-2xl font-bold text-slate-50">Ce qui change d&apos;un métier à l&apos;autre</h2>
+          <h2 className="text-2xl font-bold text-slate-50">
+            Ce qui change d&apos;un métier à l&apos;autre
+          </h2>
           <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-400">
             Même moteur, mêmes états financiers, mêmes six tours. Ce sont les quatre colonnes
             ci-dessous qui font qu&apos;une décision juste dans un métier est une faute dans un
             autre.
           </p>
           <RepliableSurTelephone resume="Afficher le tableau comparatif" className="mt-6">
-          <div className="mt-3 overflow-x-auto sm:mt-0">
-            <table className="w-full min-w-[720px] text-sm">
-              <thead>
-                <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
-                  <th className="pb-2 pr-4 font-medium">Entreprise</th>
-                  <th className="pb-2 pr-4 font-medium">Ce qu&apos;elle vend</th>
-                  <th className="pb-2 pr-4 font-medium">L&apos;invendu devient</th>
-                  <th className="pb-2 pr-4 font-medium">Sa contrainte physique</th>
-                  <th className="pb-2 font-medium">Son indicateur roi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {SCENARIO_CHOICES.map((d) => (
-                  <tr key={d.code} className="border-t border-white/5">
-                    <td className="py-2.5 pr-4">
-                      <a
-                        href={`#${d.code}`}
-                        className={`font-medium ${accentsDe(d).texte} underline-offset-4 hover:underline`}
-                      >
-                        {nomSeul(d)}
-                      </a>
-                    </td>
-                    <td className="py-2.5 pr-4 text-slate-300">{d.vocabulary.units}</td>
-                    <td className="py-2.5 pr-4 text-slate-400">
-                      {d.scenario.perishable ? (
-                        <span className="text-rose-300/90">
-                          {d.vocabulary.leftoverLabel.toLowerCase()} · rien ne se stocke
-                        </span>
-                      ) : (
-                        <span>du {d.vocabulary.leftoverLabel.toLowerCase()}, déjà payé</span>
-                      )}
-                    </td>
-                    <td className="py-2.5 pr-4 text-slate-400">{d.vocabulary.capacityLabel}</td>
-                    <td className="py-2.5 text-slate-400">{d.kpis[0]?.label ?? "—"}</td>
+            <div className="mt-3 overflow-x-auto sm:mt-0">
+              <table className="w-full min-w-[720px] text-sm">
+                <thead>
+                  <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
+                    <th className="pb-2 pr-4 font-medium">Entreprise</th>
+                    <th className="pb-2 pr-4 font-medium">Ce qu&apos;elle vend</th>
+                    <th className="pb-2 pr-4 font-medium">L&apos;invendu devient</th>
+                    <th className="pb-2 pr-4 font-medium">Sa contrainte physique</th>
+                    <th className="pb-2 font-medium">Son indicateur roi</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {SCENARIO_CHOICES.map((d) => (
+                    <tr key={d.code} className="border-t border-white/5">
+                      <td className="py-2.5 pr-4">
+                        <a
+                          href={`#${d.code}`}
+                          className={`font-medium ${accentsDe(d).texte} underline-offset-4 hover:underline`}
+                        >
+                          {nomSeul(d)}
+                        </a>
+                      </td>
+                      <td className="py-2.5 pr-4 text-slate-300">{d.vocabulary.units}</td>
+                      <td className="py-2.5 pr-4 text-slate-400">
+                        {d.scenario.perishable ? (
+                          <span className="text-rose-300/90">
+                            {d.vocabulary.leftoverLabel.toLowerCase()} · rien ne se stocke
+                          </span>
+                        ) : (
+                          <span>du {d.vocabulary.leftoverLabel.toLowerCase()}, déjà payé</span>
+                        )}
+                      </td>
+                      <td className="py-2.5 pr-4 text-slate-400">{d.vocabulary.capacityLabel}</td>
+                      <td className="py-2.5 text-slate-400">{d.kpis[0]?.label ?? "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </RepliableSurTelephone>
           <p className="mt-4 text-base leading-relaxed text-slate-400">
             Les activités périssables ne stockent rien : la capacité non vendue est perdue au
-            passage du tour. C&apos;est la différence qui sépare un hôtelier d&apos;un
-            industriel, et elle change tout le raisonnement sur le prix. Chaque nom mène à sa
-            fiche, plus bas.
+            passage du tour. C&apos;est la différence qui sépare un hôtelier d&apos;un industriel,
+            et elle change tout le raisonnement sur le prix. Chaque nom mène à sa fiche, plus bas.
           </p>
         </Bande>
-
 
         <Bande
           id="entreprises.fiches"

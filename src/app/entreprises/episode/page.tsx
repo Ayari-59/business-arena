@@ -24,7 +24,7 @@ export default function EpisodesPage() {
     <>
       <main id="main" className="relative overflow-x-clip">
         <HaloDePage />
-        <div className="mx-auto max-w-4xl px-4 pb-16 pt-10 sm:px-6 sm:pt-14">
+        <div className="mx-auto max-w-6xl px-4 pb-16 pt-10 sm:px-6 sm:pt-14">
           <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
             <Link href="/entreprises" className="hover:text-slate-300">
               Entreprises
@@ -35,12 +35,12 @@ export default function EpisodesPage() {
             Un trimestre dans la peau d&apos;un manager
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-slate-400">
-            Six décisions, une vingtaine de minutes. À la fin, le bilan rejoue chacune de vos
-            décisions sous trente tirages du même hasard, pour séparer ce qui relevait du choix de
-            ce qui relevait de la chance. Démonstration : données fictives, rien n&apos;est
-            enregistré.
+            {EPISODES.length} épisodes, chacun sur un domaine du métier. Six décisions, une
+            vingtaine de minutes. À la fin, le bilan rejoue chacune de vos décisions sous trente
+            tirages du même hasard, pour séparer ce qui relevait du choix de ce qui relevait de la
+            chance. Démonstration : données fictives, rien n&apos;est enregistré.
           </p>
-          <ul className="mt-10 grid gap-5 md:grid-cols-2">
+          <ul className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {EPISODES.map((ep) => (
               <li key={ep.code} className="carte flex flex-col gap-4 p-6">
                 <div>
