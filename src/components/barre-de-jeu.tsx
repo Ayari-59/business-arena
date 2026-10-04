@@ -83,7 +83,10 @@ export function BarreDeJeu({
   return (
     <div
       ref={cadre}
-      className="sticky top-0 z-40 -mx-4 -mt-6 border-b border-white/10 bg-slate-950/95 bg-gradient-to-b from-white/[0.04] to-transparent pt-[env(safe-area-inset-top)] shadow-[0_10px_24px_-16px_rgb(0_0_0/0.45)] backdrop-blur-md supports-[backdrop-filter]:bg-slate-950/90 sm:hidden print:hidden"
+      // `mb-3` : la barre ne laisse que 12 px sous elle. Le conteneur de la page espace ses enfants de
+      // 24 px, ce qui, avec le remplissage du parcours, faisait 22 px entre la barre et la première
+      // carte de chaque étape.
+      className="sticky top-0 z-40 -mx-4 -mt-6 mb-3 border-b border-white/10 bg-slate-950/95 bg-gradient-to-b from-white/[0.04] to-transparent pt-[env(safe-area-inset-top)] shadow-[0_10px_24px_-16px_rgb(0_0_0/0.45)] backdrop-blur-md supports-[backdrop-filter]:bg-slate-950/90 sm:hidden print:hidden"
     >
       {/* UNE BARRE BASSE : la flèche, le titre de l'étape, le menu — et dessous, sur une ligne,
           le temps du tour dans sa teinte à gauche, la partie et le tour à droite. Quand il n'y a
@@ -156,7 +159,7 @@ export function BarreDeJeu({
       </div>
 
       {enTete ? (
-        <div className="flex items-center justify-between gap-3 px-4 pb-1.5 text-sm">
+        <div className="flex items-center justify-between gap-3 px-4 pb-1 text-sm">
           <p
             className={`flex shrink-0 items-center gap-2 rounded-full py-0.5 pl-2 pr-3 font-semibold uppercase tracking-[0.14em] ${PHASES[enTete.phase].texte} ${PHASES[enTete.phase].teinte}`}
           >

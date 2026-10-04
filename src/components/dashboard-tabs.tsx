@@ -43,7 +43,9 @@ export function DashboardTabs({
   };
 
   return (
-    <div className="space-y-6">
+    // Sur téléphone, 12 px entre les onglets et le premier bloc : à 24 px, le verdict descendait
+    // d'un demi-écran sous une barre qui en prend déjà une bonne part.
+    <div className="space-y-3 sm:space-y-6">
       <nav
         className="flex gap-1 rounded-lg border border-white/10 bg-slate-900 p-1"
         role="tablist"
