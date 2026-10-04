@@ -16,6 +16,7 @@
  * Tout est pur : le même état de partie donne le même bilan.
  */
 import {
+  D,
   GRAINES_DU_BILAN,
   fenetre,
   moyenne,
@@ -55,7 +56,9 @@ const DECISIVES: readonly (readonly string[])[] = ETAPES.map((e) =>
 /** La fenêtre de semaines sur laquelle chaque décision agit d'abord, et si elle porte la pénalité de délai. */
 const FENETRES: readonly [number, number, boolean][] = [
   [2, 4, false],
-  [5, 7, false],
+  [5, 5, false],
+  // La décision d'équipe se joue sur l'arrêt possible de Julie, semaines 8 à 11.
+  [6, 11, false],
   [8, 9, true],
   [10, 11, false],
   [12, 13, false],
@@ -96,6 +99,9 @@ export interface Analyse {
  * Une décision est BONNE quand elle capte au moins 70 % de l'écart entre la
  * pire et la meilleure option, ou qu'elle est à moins de 1 000 € de la
  * meilleure : deux options presque à égalité sont toutes deux de bons choix.
+ * L'option la PLUS SÛRE l'est aussi tant qu'elle reste à moins de 3 000 € de
+ * la meilleure : payer un peu d'espérance pour se protéger d'un mauvais
+ * tirage est une décision défendable, pas une erreur.
  */
 export function analyser(p: PartieJouee): Analyse {
   const trimestre = simuler(p.chemin, p.graine, p.jours);
@@ -107,14 +113,17 @@ export function analyser(p: PartieJouee): Analyse {
     const meilleur = tri[0]!;
     const pire = tri.at(-1)!;
     const efficacite = (pris.attendu - pire.attendu) / Math.max(1, meilleur.attendu - pire.attendu);
-    const bonne = efficacite >= 0.7 || meilleur.attendu - pris.attendu < 1000;
+    const plusSur = options.reduce((x, o) => (o.p10 > x.p10 ? o : x));
+    const bonne =
+      efficacite >= 0.7 ||
+      meilleur.attendu - pris.attendu < 1000 ||
+      (pris === plusSur && meilleur.attendu - pris.attendu < 3000);
     const [de, a, dso] = FENETRES[d]!;
     const vecu = fenetre(trimestre, de, a, dso);
     const enMoyenne = moyenne(
       GRAINES_DU_BILAN.map((g) => fenetre(simuler(p.chemin, g, p.jours), de, a, dso)),
     );
     const favorable = vecu >= enMoyenne;
-    const plusSur = options.reduce((x, o) => (o.p10 > x.p10 ? o : x));
     return {
       d,
       e,
@@ -212,11 +221,37 @@ export function comportements(p: PartieJouee, t: Trimestre): Constat[] {
     }.`,
   };
 
-  return [information, diagnostic, remise, calibrage];
+  const reaffecte = p.chemin[D.karim] === 1;
+  const choixEquipe = p.chemin[D.equipe];
+  const arret = t.arret
+    ? " Julie s'est arrêtée quatre semaines, des semaines 8 à 11."
+    : " Julie a tenu jusqu'au bout du trimestre.";
+  const equipe: Constat =
+    choixEquipe === 0
+      ? {
+          score: 1,
+          texte: `Face à la surcharge de Julie, vous avez réduit sa charge : c'est ce qui diminuait le plus le risque qu'elle s'arrête, pour presque rien.${arret}`,
+        }
+      : choixEquipe === 1
+        ? {
+            score: 0.6,
+            texte: `Face à la surcharge de Julie, vous avez pris un intérimaire : le choix le plus sûr, mais 6 000 € de marge pour un risque qu'on pouvait réduire autrement.${arret}`,
+          }
+        : choixEquipe === 2
+          ? {
+              score: 0,
+              texte: `Face à la surcharge de Julie, vous avez accordé une prime : elle reconnaît l'effort, mais ne retire aucune heure de travail. Le risque d'arrêt restait entier.${arret}`,
+            }
+          : {
+              score: reaffecte ? 0 : 0.6,
+              texte: `Vous avez demandé à Julie de tenir${reaffecte ? ", alors qu'elle portait en plus une partie des comptes de Karim" : ""}.${arret}`,
+            };
+
+  return [information, diagnostic, remise, calibrage, equipe];
 }
 
 /** L'axe de travail : un seul, le premier qui manque dans l'ordre où un manager les apprend. */
-export function axeDeTravail([information, diagnostic, remise, calibrage]: Constat[]): {
+export function axeDeTravail([information, diagnostic, remise, calibrage, equipe]: Constat[]): {
   titre: string;
   texte: string;
 } {
@@ -232,6 +267,13 @@ export function axeDeTravail([information, diagnostic, remise, calibrage]: Const
       titre: "Questionner le réflexe remise",
       texte:
         "Avant chaque remise, chiffrez ce qu'elle coûte sur toutes les ventes, pas seulement ce qu'elle peut faire gagner.",
+    };
+  }
+  if (equipe!.score === 0) {
+    return {
+      titre: "Protéger la capacité de l'équipe",
+      texte:
+        "Quand une personne est surchargée, la question n'est pas de la motiver mais de lui retirer du travail. Une équipe qui s'arrête coûte plus cher que tout ce qu'on lui demandait.",
     };
   }
   if (diagnostic!.score < 1) {

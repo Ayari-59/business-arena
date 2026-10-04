@@ -26,7 +26,10 @@ const choisir = (page: Page, libelle: string) => page.getByLabel(libelle, { exac
 
 /** Le diagnostic propose les mêmes causes deux fois : la principale, puis la seconde. */
 const principal = (page: Page, libelle: string) =>
-  page.getByRole("group", { name: /problème principal/ }).getByLabel(libelle).check();
+  page
+    .getByRole("group", { name: /problème principal/ })
+    .getByLabel(libelle)
+    .check();
 
 async function decider(page: Page, option: string) {
   await choisir(page, option);
@@ -40,7 +43,10 @@ async function debordement(page: Page) {
 
 describe("l'épisode « Le trimestre qui dérape »", () => {
   it("sur un poste de bureau : enquêter, diagnostiquer, et le bilan le reconnaît", async () => {
-    const page = await navigateur.newPage({ viewport: { width: 1280, height: 900 }, locale: "fr-FR" });
+    const page = await navigateur.newPage({
+      viewport: { width: 1280, height: 900 },
+      locale: "fr-FR",
+    });
     await page.goto(`${BASE}/entreprises/episode?hasard=11`);
     await bouton(page, "Commencer l'épisode").click();
 
@@ -64,7 +70,13 @@ describe("l'épisode « Le trimestre qui dérape »", () => {
     await bouton(page, "Décider").click();
     await decider(page, "Garantir la livraison le lendemain");
 
-    // Décisions 3 à 5.
+    // Décision 3 : Julie, surchargée par les comptes de Karim.
+    await bouton(page, "Décider").click();
+    await bouton(page, /portefeuille et l'agenda de Julie/).click();
+    await expect.poll(() => page.getByText("Julie suit 52 comptes").count()).toBe(1);
+    await decider(page, "Confier six de ses comptes à Thomas");
+
+    // Décisions 4 à 6.
     await bouton(page, "Décider").click();
     await bouton(page, /Balance âgée/).click();
     await decider(page, "Proposer un escompte");
@@ -74,9 +86,9 @@ describe("l'épisode « Le trimestre qui dérape »", () => {
     await bouton(page, "Décider").click();
     await decider(page, "Relancer tous les devis");
 
-    await expect.poll(() => page.getByRole("heading", { level: 1 }).textContent()).toContain(
-      "de marge, pénalités déduites",
-    );
+    await expect
+      .poll(() => page.getByRole("heading", { level: 1 }).textContent())
+      .toContain("de marge, pénalités déduites");
     // Le joueur a joué exactement la stratégie de référence : même résultat, même hasard.
     const valeurs = await page
       .locator("li", { hasText: /^(Vous|Diagnostic d'abord)/ })
@@ -84,6 +96,10 @@ describe("l'épisode « Le trimestre qui dérape »", () => {
     expect(valeurs).toHaveLength(2);
     expect(valeurs[0]!.replace("Vous", "")).toBe(valeurs[1]!.replace("Diagnostic d'abord", ""));
     expect(await page.getByText("Votre diagnostic de la semaine 1 était juste").count()).toBe(1);
+    expect(
+      await page.getByRole("figure", { name: "Votre trimestre, semaine par semaine" }).count(),
+    ).toBe(1);
+    expect(await page.getByText("Ce que le hasard vous a réservé").count()).toBe(1);
     expect(await debordement(page)).toBeLessThanOrEqual(0);
     await page.close();
   }, 120_000);
@@ -115,6 +131,8 @@ describe("l'épisode « Le trimestre qui dérape »", () => {
     await bouton(page, "Décider").click();
     await decider(page, "S'aligner par une remise de 3 %");
     await bouton(page, "Décider").click();
+    await decider(page, "Lui accorder une prime exceptionnelle");
+    await bouton(page, "Décider").click();
     await decider(page, "Relancer les impayés");
     await bouton(page, "Décider").click();
     await decider(page, "Accepter les 8 %");
@@ -126,11 +144,37 @@ describe("l'épisode « Le trimestre qui dérape »", () => {
     expect(await page.getByText("vous avez choisi la remise 3 fois sur 3").count()).toBe(1);
     expect(await debordement(page)).toBeLessThanOrEqual(0);
 
-    // Rejouer avec le même hasard ramène à la première décision.
+    // Rejouer avec le même hasard ramène à la première décision…
     await bouton(page, "Recommencer avec le même hasard").click();
-    await expect.poll(() => page.getByRole("heading", { level: 1 }).textContent()).toBe(
-      "La transformation décroche",
-    );
+    await expect
+      .poll(() => page.getByRole("heading", { level: 1 }).textContent())
+      .toBe("La transformation décroche");
+
+    // … et le bilan suivant met les deux parties côte à côte.
+    await bouton(page, "Enquêter").click();
+    await bouton(page, "Poser mon diagnostic").click();
+    await principal(page, "Les clients de Karim ne sont plus suivis");
+    await bouton(page, "Décider").click();
+    await page.getByRole("spinbutton").fill("36");
+    await decider(page, "Réaffecter le portefeuille de Karim");
+    await bouton(page, "Continuer").click();
+    await choisir(page, "Je le maintiens");
+    await bouton(page, "Continuer").click();
+    await bouton(page, "Décider").click();
+    await decider(page, "Garantir la livraison le lendemain");
+    for (const option of [
+      "Confier six de ses comptes à Thomas",
+      "Proposer un escompte",
+      "Contre-proposer 4 %",
+      "Relancer tous les devis",
+    ]) {
+      await bouton(page, "Décider").click();
+      await decider(page, option);
+    }
+    await expect.poll(() => page.getByText("Votre partie précédente, et celle-ci").count()).toBe(1);
+    expect(await page.getByText("Même hasard pour les deux parties").count()).toBe(1);
+    expect(await page.getByText("changé", { exact: true }).count()).toBe(6);
+    expect(await debordement(page)).toBeLessThanOrEqual(0);
     await contexte.close();
   }, 120_000);
 });

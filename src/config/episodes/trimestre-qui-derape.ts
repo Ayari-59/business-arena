@@ -2,7 +2,7 @@
  * LE TRIMESTRE QUI DÉRAPE — le contenu de l'épisode.
  *
  * Claire Morel, cheffe de l'agence de Lyon d'Arvel Distribution, a un
- * trimestre pour redresser une transformation des devis qui décroche. Cinq
+ * trimestre pour redresser une transformation des devis qui décroche. Six
  * décisions, chacune précédée de ce qu'un manager reçoit vraiment : des
  * messages, des alertes, et des vérifications qui coûtent du temps.
  *
@@ -29,6 +29,8 @@ export interface Contexte {
   dso: string;
   ecart: number;
   ecartTxt: string;
+  /** Julie a-t-elle repris une partie des comptes de Karim en semaine 1 ? */
+  reaffecte: boolean;
 }
 
 export interface Message {
@@ -45,7 +47,8 @@ export interface Source {
   /** En jours ; seul le temps de la semaine 1 est compté. */
   cout: number;
   nature: "decisive" | "utile" | "bruit" | "aide";
-  resultat: string;
+  /** Ce que la vérification apprend ; certaines dépendent des décisions déjà prises. */
+  resultat: string | ((ctx: Contexte) => string);
 }
 
 export interface Option {
@@ -210,7 +213,7 @@ export const ETAPES: readonly Etape[] = [
   {
     moment: "Semaine 4 · vendredi",
     titre: "Les artisans veulent être livrés demain",
-    jusqua: 7,
+    jusqua: 5,
     messages: (ctx: Contexte) => [
       {
         de: "Tableau de bord commercial",
@@ -298,6 +301,104 @@ export const ETAPES: readonly Etape[] = [
           de: "Julie Roux",
           role: "Commerciale, secteur Est",
           texte: "Encore deux chantiers perdus pour un délai de livraison.",
+        },
+      ],
+    ],
+  },
+  {
+    moment: "Semaine 5 · vendredi",
+    titre: "Julie n'en peut plus",
+    jusqua: 7,
+    messages: (ctx) => [
+      {
+        de: "Julie Roux",
+        role: "Commerciale, secteur Est",
+        heure: "18:40",
+        alerte: true,
+        texte: ctx.reaffecte
+          ? "Claire, je peux te voir lundi ? Avec les comptes de Karim, je fais mes devis le soir et le week-end. Je ne sais pas combien de temps je vais tenir comme ça."
+          : "Claire, je peux te voir lundi ? Je cours après des devis que je n'ai plus le temps de relancer, et je vois mes artisans partir. Je ne sais pas combien de temps je vais tenir comme ça.",
+      },
+      {
+        de: "Ressources humaines",
+        role: "Siège",
+        heure: "09:10",
+        texte:
+          "Rappel : une enveloppe d'intérim commercial est disponible pour les agences, à 1 200 € par semaine imputés sur la marge de l'agence.",
+      },
+    ],
+    sources: [
+      {
+        id: "planning",
+        titre: "Regarder le portefeuille et l'agenda de Julie",
+        cout: 0.5,
+        nature: "decisive",
+        resultat: (ctx) =>
+          ctx.reaffecte
+            ? "Julie suit 52 comptes au lieu de 40 depuis la réaffectation, et n'a pas pris un jour depuis six semaines. Ses devis partent en moyenne deux jours plus tard qu'avant."
+            : "Julie suit ses 40 comptes, mais 23 devis attendent une relance depuis plus de dix jours. Elle n'a pas pris un jour depuis six semaines.",
+      },
+      {
+        id: "thomas",
+        titre: "Demander à Thomas ce qu'il peut reprendre",
+        cout: 0.5,
+        nature: "utile",
+        resultat:
+          "Thomas : « Je peux prendre six comptes de Julie. Ma prospection avancera un peu moins vite, c'est tout. »",
+      },
+    ],
+    question: "Que faites-vous pour Julie ?",
+    options: [
+      {
+        t: "Confier six de ses comptes à Thomas",
+        d: "Sa charge baisse tout de suite. Un peu de flottement le temps de la passation, et moins de prospection pour Thomas.",
+      },
+      {
+        t: "Prendre un commercial intérimaire",
+        d: "Jusqu'à la semaine 10, pour épauler Julie. 1 200 € par semaine, soit 6 000 € sur la marge.",
+      },
+      {
+        t: "Lui accorder une prime exceptionnelle",
+        d: "3 000 €, versés en fin de trimestre, pour reconnaître l'effort.",
+      },
+      {
+        t: "Lui demander de tenir jusqu'au retour de Karim",
+        d: "Plus que quatre semaines. Ne coûte rien.",
+      },
+    ],
+    reactions: [
+      [
+        {
+          de: "Julie Roux",
+          role: "Commerciale, secteur Est",
+          texte: "Merci. J'ai passé les six dossiers à Thomas ce matin, je respire.",
+        },
+        {
+          de: "Thomas Petit",
+          role: "Commercial, secteur Centre",
+          texte: "Passation faite. Deux clients m'ont posé des questions, rien de grave.",
+        },
+      ],
+      [
+        {
+          de: "Ressources humaines",
+          role: "Siège",
+          texte:
+            "Votre intérimaire, Hugo Lambert, commence lundi. Il a déjà travaillé dans le négoce.",
+        },
+      ],
+      [
+        {
+          de: "Julie Roux",
+          role: "Commerciale, secteur Est",
+          texte: "C'est gentil, merci. Mais ça ne me rend pas mes soirées.",
+        },
+      ],
+      [
+        {
+          de: "Julie Roux",
+          role: "Commerciale, secteur Est",
+          texte: "D'accord. Je vais essayer.",
         },
       ],
     ],
@@ -417,7 +518,7 @@ export const ETAPES: readonly Etape[] = [
       },
       {
         t: "Contre-proposer 4 %",
-        d: "Même commande, remise réduite. Delta accepte environ une fois sur deux.",
+        d: "Même commande, remise réduite. Delta accepte environ une fois sur deux, et pourrait le prendre mal.",
       },
       { t: "Refuser", d: "Delta pourrait réduire ses commandes : environ trois chances sur dix." },
     ],
@@ -500,16 +601,16 @@ export const ETAPES: readonly Etape[] = [
 
 /** Les trois manières de décider auxquelles le bilan compare le joueur, sous son hasard. */
 export const REFERENCES = [
-  { nom: "Diagnostic d'abord", chemin: [1, 0, 1, 1, 1] },
-  { nom: "Attentiste", chemin: [3, 3, 3, 2, 2] },
-  { nom: "Réflexe remise", chemin: [0, 2, 1, 0, 0] },
+  { nom: "Diagnostic d'abord", chemin: [1, 0, 0, 1, 1, 1] },
+  { nom: "Attentiste", chemin: [3, 3, 3, 3, 2, 2] },
+  { nom: "Réflexe remise", chemin: [0, 2, 2, 1, 0, 0] },
 ] as const;
 
 /** Les options qui répondent à une difficulté par une remise générale : [décision, option]. */
 export const REMISES_REFLEXES = [
   [0, 0],
   [1, 2],
-  [4, 0],
+  [5, 0],
 ] as const;
 
 /** Les réponses de Delta, qui dépendent du hasard du trimestre. */
@@ -518,5 +619,7 @@ export const REPONSES_DE_DELTA = {
   refuseContreProposition:
     "4 %, ce n'est pas assez. Nous gardons nos commandes habituelles, sans supplément.",
   reduit: "Nous réduisons de moitié nos commandes chez vous jusqu'à la fin du trimestre.",
+  vexee:
+    "Votre contre-proposition nous surprend, après tout ce que nous vous commandons. Nous réduisons de moitié nos commandes jusqu'à la fin du trimestre.",
   maintient: "Nous prenons acte et maintenons nos commandes habituelles.",
 } as const;

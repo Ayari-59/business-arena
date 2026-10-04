@@ -1,10 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
+  D,
   GRAINES_DU_BILAN,
+  IMPREVUS,
   NEUTRE,
   OBJECTIF_CA,
   cheminComplet,
+  evenements,
+  hasard,
   moyenne,
+  risqueDArret,
   rejouer,
   simuler,
   tableauDeBord,
@@ -20,13 +25,14 @@ import {
 
 /**
  * L'épisode « Le trimestre qui dérape » enseigne quelque chose de précis :
- * la remise réflexe coûte plus qu'elle ne rapporte, chercher la cause paie, et
- * une offre de grand compte oppose espérance et robustesse. Ces tests
+ * la remise réflexe coûte plus qu'elle ne rapporte, chercher la cause paie, une
+ * surcharge se réduit plutôt qu'elle ne se paie, et une offre de grand compte
+ * oppose espérance et robustesse. Ces tests
  * verrouillent ces classements : un réglage du modèle qui les renverserait
  * enseignerait le contraire de ce que l'épisode dit.
  */
 
-const MEILLEUR: Chemin = [1, 0, 1, 1, 1];
+const MEILLEUR: Chemin = [1, 0, 0, 1, 1, 1];
 const JOURS = 1.5;
 const classement = (d: number) =>
   rejouer(MEILLEUR, d, ETAPES[d]!.options.length, JOURS)
@@ -39,8 +45,8 @@ describe("le modèle de l'agence", () => {
   });
 
   it("le hasard ne dépend pas des décisions : les semaines avant toute décision sont identiques", () => {
-    const a = simuler([0, 0, 0, 0, 0], 12, 0).semaines[1]!;
-    const b = simuler([3, 3, 3, 2, 2], 12, 0).semaines[1]!;
+    const a = simuler([0, 0, 0, 0, 0, 0], 12, 0).semaines[1]!;
+    const b = simuler([3, 3, 3, 3, 2, 2], 12, 0).semaines[1]!;
     expect(a.ca).toBeCloseTo(b.ca, 6);
   });
 
@@ -51,6 +57,26 @@ describe("le modèle de l'agence", () => {
     expect(simuler(MEILLEUR, 3, 2).semaines[1]!.ca).toBeCloseTo(
       simuler(MEILLEUR, 3, 0).semaines[1]!.ca,
       6,
+    );
+  });
+
+  it("chaque trimestre a un ou deux imprévus, les mêmes quelles que soient les décisions", () => {
+    for (const g of GRAINES_DU_BILAN) {
+      const { imprevus } = hasard(g);
+      expect(imprevus.length).toBeGreaterThanOrEqual(1);
+      expect(imprevus.length).toBeLessThanOrEqual(2);
+      for (const i of imprevus) {
+        expect(i.semaine).toBeGreaterThanOrEqual(2);
+        expect(i.semaine).toBeLessThanOrEqual(11);
+      }
+    }
+    // Sur trente trimestres, chaque imprévu tombe au moins une fois.
+    const vus = new Set(
+      GRAINES_DU_BILAN.flatMap((g) => hasard(g).imprevus.map((i) => i.imprevu.id)),
+    );
+    expect([...vus].sort()).toEqual(IMPREVUS.map((i) => i.id).sort());
+    expect(evenements(MEILLEUR, 11, 1, 13).imprevus).toEqual(
+      evenements([0, 2, 2, 1, 0, 0], 11, 1, 13).imprevus,
     );
   });
 
@@ -74,21 +100,36 @@ describe("ce que l'épisode enseigne, décision par décision", () => {
     expect(c.indexOf(2)).toBeGreaterThan(c.indexOf(1));
   });
 
-  it("D3 : l'escompte est le meilleur choix, ne rien faire le pire", () => {
-    const c = classement(2);
+  it("D3 : réduire la charge de Julie est le meilleur choix, l'intérim le plus sûr, la prime le pire", () => {
+    const r = rejouer(MEILLEUR, D.equipe, 4, JOURS);
+    const c = classement(D.equipe);
+    expect(c[0]).toBe(0);
+    expect(c.at(-1)).toBe(2);
+    expect(Math.max(...r.map((x) => x.p10))).toBe(r[1]!.p10);
+  });
+
+  it("D3 : sans les comptes de Karim, Julie risque moins, et la prime ne réduit jamais ce risque", () => {
+    expect(risqueDArret([3, 0, 3, 1, 1, 1])).toBeLessThan(risqueDArret([1, 0, 3, 1, 1, 1]));
+    expect(risqueDArret([1, 0, 2, 1, 1, 1])).toBe(risqueDArret([1, 0, 3, 1, 1, 1]));
+    expect(risqueDArret([1, 0, 0, 1, 1, 1])).toBeLessThan(risqueDArret([1, 0, 3, 1, 1, 1]));
+    expect(risqueDArret([1, 0, 1, 1, 1, 1])).toBe(0);
+  });
+
+  it("D4 : l'escompte est le meilleur choix, ne rien faire le pire", () => {
+    const c = classement(D.paiement);
     expect(c[0]).toBe(1);
     expect(c.at(-1)).toBe(3);
   });
 
-  it("D4 : contre-proposer gagne en moyenne, accepter protège mieux, refuser est dernier", () => {
-    const r = rejouer(MEILLEUR, 3, 3, JOURS);
+  it("D5 : contre-proposer gagne en moyenne, accepter protège mieux, refuser est dernier", () => {
+    const r = rejouer(MEILLEUR, D.delta, 3, JOURS);
     expect(r[1]!.attendu).toBeGreaterThan(r[0]!.attendu);
     expect(r[0]!.p10).toBeGreaterThan(r[1]!.p10);
-    expect(classement(3).at(-1)).toBe(2);
+    expect(classement(D.delta).at(-1)).toBe(2);
   });
 
-  it("D5 : relancer les devis bat la remise de fin de trimestre", () => {
-    expect(classement(4)[0]).toBe(1);
+  it("D6 : relancer les devis bat la remise de fin de trimestre", () => {
+    expect(classement(D.fin)[0]).toBe(1);
   });
 
   it("diagnostiquer d'abord bat le réflexe remise et l'attentisme, en moyenne", () => {
@@ -122,7 +163,7 @@ describe("le bilan", () => {
   const partie = (chemin: Chemin, extra: Partial<PartieJouee> = {}): PartieJouee => ({
     graine: 11,
     chemin,
-    consultes: [["detail", "appel"], ["j1", "stock"], ["balance"], ["poids"], []],
+    consultes: [["detail", "appel"], ["j1", "stock"], ["planning"], ["balance"], ["poids"], []],
     jours: JOURS,
     diagnostic: "karim",
     reevaluation: { choix: "maintient", principal: null },
@@ -142,7 +183,7 @@ describe("le bilan", () => {
   });
 
   it("juge faible la remise de la semaine 1, même quand elle a payé", () => {
-    const a = analyser(partie([0, 2, 1, 0, 0]));
+    const a = analyser(partie([0, 2, 0, 1, 0, 0]));
     expect(a.decisions[0]!.bonne).toBe(false);
     expect(a.decisions[0]!.cas.startsWith("faible")).toBe(true);
   });
@@ -154,16 +195,29 @@ describe("le bilan", () => {
   });
 
   it("propose de questionner la remise à qui l'a choisie trois fois", () => {
-    const p = partie([0, 2, 1, 0, 0]);
+    const p = partie([0, 2, 0, 1, 0, 0]);
     const c = comportements(p, analyser(p).trimestre);
     expect(c[2]!.score).toBe(0);
     expect(axeDeTravail(c).titre).toBe("Questionner le réflexe remise");
   });
 
   it("propose de vérifier la cause à qui a décidé sans enquêter", () => {
-    const p = partie(MEILLEUR, { consultes: [[], [], [], [], []], jours: 0 });
+    const p = partie(MEILLEUR, { consultes: [[], [], [], [], [], []], jours: 0 });
     expect(axeDeTravail(comportements(p, analyser(p).trimestre)).titre).toBe(
       "Vérifier la cause avant d'agir",
     );
+  });
+
+  it("propose de protéger l'équipe à qui a payé une prime pour une surcharge", () => {
+    const p = partie([1, 0, 2, 1, 1, 1]);
+    const c = comportements(p, analyser(p).trimestre);
+    expect(c[4]!.score).toBe(0);
+    expect(axeDeTravail(c).titre).toBe("Protéger la capacité de l'équipe");
+  });
+
+  it("juge bonne l'option la plus sûre quand elle coûte peu d'espérance", () => {
+    const a = analyser(partie([1, 0, 1, 1, 1, 1]));
+    expect(a.decisions[D.equipe]!.pris.option).toBe(a.decisions[D.equipe]!.plusSur.option);
+    expect(a.decisions[D.equipe]!.bonne).toBe(true);
   });
 });

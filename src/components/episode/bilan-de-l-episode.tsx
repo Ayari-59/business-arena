@@ -4,8 +4,12 @@ import { useMemo } from "react";
 import {
   BUDGET_REMISES,
   DSO_SEUIL,
+  GRAINES_DU_BILAN,
   OBJECTIF_CA,
   OBJECTIF_MARGE,
+  hasard,
+  moyenne,
+  simuler,
 } from "@/engine/episodes/trimestre-qui-derape";
 import {
   CAS,
@@ -16,6 +20,8 @@ import {
   type PartieJouee,
 } from "@/pedagogy/episodes/bilan-du-trimestre";
 import { bouton } from "@/components/bouton";
+import { ETAPES } from "@/config/episodes/trimestre-qui-derape";
+import { CourbeDuTrimestre, reperesDesDecisions } from "./courbe-du-trimestre";
 import { kE, nombre, taux } from "./format-episode";
 
 /**
@@ -45,12 +51,100 @@ function Jeton({ d, titre }: { d: number; titre?: string }) {
   );
 }
 
+/**
+ * DEUX PARTIES CÔTE À CÔTE.
+ *
+ * Rejouer n'apprend quelque chose que si l'on voit ce qui a changé. Sous le
+ * même hasard, l'écart de résultat est entièrement celui des décisions ; sous
+ * un autre, seul l'écart de moyenne sur trente tirages se compare.
+ */
+function Comparaison({ avant, apres }: { avant: PartieJouee; apres: PartieJouee }) {
+  const [x, y] = useMemo(() => {
+    const lire = (p: PartieJouee) => ({
+      resultat: simuler(p.chemin, p.graine, p.jours).objectif,
+      attendu: moyenne(GRAINES_DU_BILAN.map((g) => simuler(p.chemin, g, p.jours).objectif)),
+    });
+    return [lire(avant), lire(apres)];
+  }, [avant, apres]);
+  const memeHasard = avant.graine === apres.graine;
+  const ecart = (v: number) => `${v >= 0 ? "+" : "−"}${kE(Math.abs(v))}`;
+  return (
+    <section className="carte grid gap-4 p-5">
+      <h2 className="text-lg font-bold text-slate-50">Votre partie précédente, et celle-ci</h2>
+      <p className="max-w-2xl text-sm leading-relaxed text-slate-300">
+        {memeHasard
+          ? "Même hasard pour les deux parties : l'écart de résultat vient entièrement de vos décisions."
+          : "Les deux parties n'ont pas eu le même hasard : comparez plutôt la moyenne sur trente tirages, qui ne dépend que de vos décisions."}
+      </p>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[560px] text-sm">
+          <thead>
+            <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
+              <th className="pb-2 pr-3 font-medium">Décision</th>
+              <th className="pb-2 pr-3 font-medium">Partie précédente</th>
+              <th className="pb-2 font-medium">Cette partie</th>
+            </tr>
+          </thead>
+          <tbody>
+            {ETAPES.map((e, d) => {
+              const change = avant.chemin[d] !== apres.chemin[d];
+              return (
+                <tr key={e.moment} className="border-t border-white/5 align-top">
+                  <td className="py-2.5 pr-3">
+                    <Jeton d={d} />
+                  </td>
+                  <td className="py-2.5 pr-3 text-slate-300">{e.options[avant.chemin[d]!]!.t}</td>
+                  <td
+                    className={`py-2.5 ${change ? "font-semibold text-slate-50" : "text-slate-300"}`}
+                  >
+                    {change && <span className="sr-only">Changé : </span>}
+                    {e.options[apres.chemin[d]!]!.t}
+                    {change && (
+                      <span
+                        aria-hidden="true"
+                        className="ml-2 text-xs font-semibold text-amber-300"
+                      >
+                        changé
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+            <tr className="border-t border-white/10">
+              <td className="py-2.5 pr-3 font-semibold text-slate-200">Résultat</td>
+              <td className="py-2.5 pr-3 tabular-nums text-slate-200">
+                {kE(x.resultat)} <span className="text-slate-400">· hasard n° {avant.graine}</span>
+              </td>
+              <td className="py-2.5 tabular-nums text-slate-50">
+                {kE(y.resultat)}{" "}
+                <span className="font-semibold">({ecart(y.resultat - x.resultat)})</span>
+              </td>
+            </tr>
+            <tr className="border-t border-white/5">
+              <td className="py-2.5 pr-3 font-semibold text-slate-200">Moyenne sur 30 tirages</td>
+              <td className="py-2.5 pr-3 tabular-nums text-slate-200">{kE(x.attendu)}</td>
+              <td className="py-2.5 tabular-nums text-slate-50">
+                {kE(y.attendu)}{" "}
+                <span className="font-semibold">({ecart(y.attendu - x.attendu)})</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
 export function BilanDeLEpisode({
   partie,
+  precedente,
   onAutreHasard,
   onMemeHasard,
 }: {
   partie: PartieJouee;
+  /** La partie jouée juste avant, pour les comparer. */
+  precedente: PartieJouee | null;
   onAutreHasard: () => void;
   onMemeHasard: () => void;
 }) {
@@ -60,6 +154,7 @@ export function BilanDeLEpisode({
   const axe = axeDeTravail(constats);
   const tauxDeMarge = t.marge / t.ca;
   const chance = t.objectif - a.attendu;
+  const imprevus = hasard(partie.graine).imprevus;
 
   const barres = [{ nom: "Vous", valeur: t.objectif, vous: true }, ...a.references];
   const max = Math.max(...barres.map((b) => b.valeur));
@@ -133,6 +228,40 @@ export function BilanDeLEpisode({
         ))}
       </ul>
 
+      {precedente && <Comparaison avant={precedente} apres={partie} />}
+
+      <CourbeDuTrimestre
+        titre="Votre trimestre, semaine par semaine"
+        semaines={t.semaines}
+        jouees={13}
+        reperes={reperesDesDecisions(ETAPES.length)}
+        imprevus={imprevus.map((x) => ({ semaine: x.semaine, titre: x.imprevu.titre }))}
+      />
+      <section aria-labelledby="hasard-titre" className="grid gap-2">
+        <h2
+          id="hasard-titre"
+          className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400"
+        >
+          Ce que le hasard vous a réservé
+        </h2>
+        <ul className="grid gap-1.5 text-sm text-slate-300">
+          {imprevus.map(({ imprevu, semaine }) => (
+            <li key={imprevu.id}>
+              <span className="font-semibold text-slate-100">
+                Semaine {semaine}, {imprevu.titre.toLowerCase()} :
+              </span>{" "}
+              {imprevu.texte}
+            </li>
+          ))}
+          <li>
+            <span className="font-semibold text-slate-100">Julie :</span>{" "}
+            {t.arret
+              ? "arrêtée quatre semaines, des semaines 8 à 11."
+              : "elle a tenu jusqu'au bout du trimestre."}
+          </li>
+        </ul>
+      </section>
+
       <section className="carte grid gap-4 p-5">
         <h2 className="text-lg font-bold text-slate-50">
           Le même trimestre, le même hasard, d&apos;autres manières de décider
@@ -168,7 +297,7 @@ export function BilanDeLEpisode({
 
       <section className="carte grid gap-4 p-5">
         <h2 className="text-lg font-bold text-slate-50">
-          Vos cinq décisions : ce qui relevait du choix, ce qui relevait du hasard
+          Vos six décisions : ce qui relevait du choix, ce qui relevait du hasard
         </h2>
         <div
           role="table"

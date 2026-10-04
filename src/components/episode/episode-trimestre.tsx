@@ -7,8 +7,12 @@ import {
   JOURS_SANS_PERTE,
   PERTE_PAR_JOUR,
   cheminComplet,
+  D,
   deltaAccepte,
   deltaReduit,
+  deltaVexee,
+  evenements,
+  hasard,
   simuler,
   tableauDeBord,
   type Semaine,
@@ -18,6 +22,7 @@ import {
   DIAGNOSTICS,
   ETAPES,
   REPONSES_DE_DELTA,
+  type Contexte,
   type Etape,
   type IdDiagnostic,
   type Message,
@@ -28,6 +33,7 @@ import { bouton } from "@/components/bouton";
 import { sansMolette } from "@/components/sans-molette";
 import { TableauDeLAgence } from "./tableau-de-l-agence";
 import { BilanDeLEpisode } from "./bilan-de-l-episode";
+import { CourbeDuTrimestre, reperesDesDecisions } from "./courbe-du-trimestre";
 import { euros, kE, nombre, taux } from "./format-episode";
 
 /**
@@ -141,11 +147,13 @@ function Boite({ messages }: { messages: readonly Message[] }) {
 
 function CarteSource({
   source,
+  ctx,
   vue,
   impossible,
   onConsulter,
 }: {
   source: Source;
+  ctx: Contexte;
   vue: boolean;
   impossible: boolean;
   onConsulter: () => void;
@@ -176,7 +184,7 @@ function CarteSource({
       </button>
       {vue && (
         <p className="max-w-2xl px-4 pb-4 text-base leading-relaxed text-slate-300">
-          {source.resultat}
+          {typeof source.resultat === "function" ? source.resultat(ctx) : source.resultat}
         </p>
       )}
     </li>
@@ -248,6 +256,8 @@ function Suite({
 
 export function EpisodeTrimestre() {
   const [s, setS] = useState<Etat>(() => nouvelEtat());
+  // La partie terminée juste avant : le bilan suivant la met en regard.
+  const [precedente, setPrecedente] = useState<PartieJouee | null>(null);
   const scene = useRef<HTMLDivElement>(null);
   const maj = (f: (e: Etat) => Partial<Etat>) => setS((e) => ({ ...e, ...f(e) }));
 
@@ -333,7 +343,7 @@ export function EpisodeTrimestre() {
         </span>
         <div className="ml-auto flex items-center gap-4">
           <span className="text-sm tabular-nums text-slate-400">{moment}</span>
-          <ol className="flex gap-1.5" aria-label="Avancement : cinq décisions">
+          <ol className="flex gap-1.5" aria-label={`Avancement : ${ETAPES.length} décisions`}>
             {ETAPES.map((e, i) => {
               const fait = i < s.decisions.length;
               const enCours = !fait && i === s.etape && s.ecran === "jeu";
@@ -398,8 +408,15 @@ export function EpisodeTrimestre() {
           {s.ecran === "bilan" && partieJouee && (
             <BilanDeLEpisode
               partie={partieJouee}
-              onAutreHasard={() => commencer(1 + Math.floor(Math.random() * 9000))}
-              onMemeHasard={() => commencer(graine)}
+              precedente={precedente}
+              onAutreHasard={() => {
+                setPrecedente(partieJouee);
+                commencer(1 + Math.floor(Math.random() * 9000));
+              }}
+              onMemeHasard={() => {
+                setPrecedente(partieJouee);
+                commencer(graine);
+              }}
             />
           )}
         </div>
@@ -482,7 +499,7 @@ function Intro({ onCommencer }: { onCommencer: () => void }) {
         </p>
       </div>
       <p className="max-w-2xl text-sm leading-relaxed text-slate-400">
-        Cinq décisions, une vingtaine de minutes. Les chiffres bougent avec vos choix ; à la fin, le
+        Six décisions, une vingtaine de minutes. Les chiffres bougent avec vos choix ; à la fin, le
         bilan rejoue chacune de vos décisions sous trente tirages du même hasard. Démonstration :
         rien de ce que vous saisissez n&apos;est enregistré.
       </p>
@@ -514,16 +531,17 @@ function Scene({
 }) {
   const graine = s.graine ?? 1;
   const i = s.etape;
+  const ecart = tableau.cible - tableau.ca;
+  const contexte: Contexte = {
+    transfo4: taux(tableau.transfo),
+    marge: tableau.marge == null ? "—" : taux(tableau.marge),
+    dso: nombre(tableau.dso, 0),
+    ecart,
+    ecartTxt: kE(ecart),
+    reaffecte: s.decisions[D.karim] === 1,
+  };
 
   if (s.phase === "signal") {
-    const ecart = tableau.cible - tableau.ca;
-    const contexte = {
-      transfo4: taux(tableau.transfo),
-      marge: tableau.marge == null ? "—" : taux(tableau.marge),
-      dso: nombre(tableau.dso, 0),
-      ecart,
-      ecartTxt: kE(ecart),
-    };
     const ensuite = phasesDe(i)[1];
     return (
       <>
@@ -577,6 +595,7 @@ function Scene({
               <CarteSource
                 key={src.id}
                 source={src}
+                ctx={contexte}
                 vue={vue}
                 impossible={compte && !vue && src.cout > reste + 1e-9}
                 onConsulter={() => consulter(src)}
@@ -713,6 +732,7 @@ function Scene({
                 <CarteSource
                   key={src.id}
                   source={src}
+                  ctx={contexte}
                   vue={s.consultes[i]!.includes(src.id)}
                   impossible={false}
                   onConsulter={() => consulter(src)}
@@ -812,18 +832,21 @@ function Scene({
   const marge = semaines.reduce((x, w) => x + w.marge, 0);
   const choix = s.decisions[i]!;
   let reactions = etape.reactions[choix] ?? [];
-  if (i === 3 && choix === 1) {
+  if (i === D.delta && choix === 1) {
     reactions = [
       {
         de: "Achats, Groupe Delta",
         role: "Grand compte",
+        alerte: deltaVexee(graine),
         texte: deltaAccepte(graine)
           ? REPONSES_DE_DELTA.accepte
-          : REPONSES_DE_DELTA.refuseContreProposition,
+          : deltaVexee(graine)
+            ? REPONSES_DE_DELTA.vexee
+            : REPONSES_DE_DELTA.refuseContreProposition,
       },
     ];
   }
-  if (i === 3 && choix === 2) {
+  if (i === D.delta && choix === 2) {
     reactions = [
       {
         de: "Achats, Groupe Delta",
@@ -832,6 +855,29 @@ function Scene({
       },
     ];
   }
+  // Ce qui est arrivé pendant ces semaines : l'arrêt de Julie, qui découle de
+  // décisions prises, et les imprévus, qui n'en découlent pas. Les seconds sont
+  // posés à part, sous un titre qui le dit.
+  const arrive = evenements(cheminComplet(s.decisions), graine, de, etape.jusqua);
+  if (arrive.arret) {
+    reactions = [
+      ...reactions,
+      {
+        de: "Ressources humaines",
+        role: "Siège",
+        heure: "sem. 8",
+        alerte: true,
+        texte:
+          "Julie Roux est en arrêt de travail pour quatre semaines. Ses clients n'ont plus d'interlocuteur jusqu'à la semaine 11.",
+      },
+    ];
+  }
+  const imprevus: Message[] = arrive.imprevus.map(({ imprevu, semaine }) => ({
+    de: imprevu.de,
+    role: imprevu.role,
+    heure: `sem. ${semaine}`,
+    texte: imprevu.texte,
+  }));
   const derniere = i === ETAPES.length - 1;
   return (
     <>
@@ -855,7 +901,28 @@ function Scene({
           </div>
         ))}
       </dl>
+      <CourbeDuTrimestre
+        semaines={t.semaines}
+        jouees={etape.jusqua}
+        surbrillance={[de, etape.jusqua]}
+        reperes={reperesDesDecisions(i + 1)}
+        imprevus={hasard(graine).imprevus.map((x) => ({
+          semaine: x.semaine,
+          titre: x.imprevu.titre,
+        }))}
+      />
       <Boite messages={reactions} />
+      {imprevus.length > 0 && (
+        <section aria-labelledby="imprevus-titre" className="grid gap-2">
+          <h2
+            id="imprevus-titre"
+            className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400"
+          >
+            Pendant ce temps, sans rapport avec vos décisions
+          </h2>
+          <Boite messages={imprevus} />
+        </section>
+      )}
       <Suite onClick={etapeSuivante}>{derniere ? "Voir le bilan" : "Continuer"}</Suite>
     </>
   );

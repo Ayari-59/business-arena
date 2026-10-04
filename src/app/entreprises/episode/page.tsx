@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/entreprises/episode" },
   title: "Le trimestre qui dérape",
   description:
-    "Démonstration de la version pour les entreprises : une cheffe d'agence, un trimestre, cinq décisions, et un bilan qui sépare la qualité des décisions du hasard.",
+    "Démonstration de la version pour les entreprises : une cheffe d'agence, un trimestre, six décisions, et un bilan qui sépare la qualité des décisions du hasard.",
   // Une démonstration dont le contenu attend d'être validé par des managers :
   // on la montre par un lien, on ne la fait pas trouver par un moteur.
   robots: { index: false, follow: false },
