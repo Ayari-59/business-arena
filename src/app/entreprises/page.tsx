@@ -324,6 +324,16 @@ export default async function EntreprisesPage() {
               </a>
             ))}
           </div>
+          <p className="mt-6 max-w-2xl text-sm text-slate-400">
+            Pour les entreprises : un trimestre dans la peau d&apos;une cheffe d&apos;agence
+            commerciale, jugé sur ses décisions plutôt que sur son résultat.{" "}
+            <Link
+              href="/entreprises/episode"
+              className="font-semibold text-amber-300 underline-offset-4 hover:underline"
+            >
+              Jouer la démonstration
+            </Link>
+          </p>
         </Bande>
 
         {/*
