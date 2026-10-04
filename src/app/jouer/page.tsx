@@ -85,7 +85,7 @@ export default async function JouerPage({
                 que peu voient venir.
               </p>
               <ul className="mt-5 space-y-2 text-sm text-slate-300">
-                <li>· Niveau Découverte : aucune connaissance préalable requise</li>
+                <li>· Premier contact ? Choisissez le niveau 1 · Découverte : des questions à deux réponses, tous les indices, aucune connaissance préalable requise</li>
                 <li>· Débriefing corrigé à chaque tour, fiches notions intégrées</li>
                 <li>· Votre profil de compétences progresse à chaque situation traitée</li>
               </ul>
