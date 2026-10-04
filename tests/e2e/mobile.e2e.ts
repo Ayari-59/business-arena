@@ -213,7 +213,7 @@ describe("pendant une partie", () => {
     await page.goto(`${BASE}/jouer`, { waitUntil: "domcontentloaded" });
     await page.waitForLoadState("networkidle");
     await page.getByRole("button", { name: /NOVA/ }).click();
-    // Ces parcours testent le niveau 3 (qualité, financement…) : le départ est au niveau 1.
+    // Ces parcours testent le niveau 3 (qualité, financement…) : on le choisit, sans dépendre du niveau de départ.
     await page.getByRole("button", { name: /^Niveau 3/ }).click();
     await page.getByRole("button", { name: "Lancer la partie" }).click();
     await page.waitForURL(/\/arena\/|trop=1/, { timeout: 60_000 });
@@ -806,7 +806,7 @@ describe("sur ordinateur, ce qui est consulté reste à plat", () => {
     await p.goto(`${BASE}/jouer`, { waitUntil: "domcontentloaded" });
     await p.waitForLoadState("networkidle");
     await p.getByRole("button", { name: /NOVA/ }).click();
-    // Ces parcours testent le niveau 3 (qualité, financement…) : le départ est au niveau 1.
+    // Ces parcours testent le niveau 3 (qualité, financement…) : on le choisit, sans dépendre du niveau de départ.
     await p.getByRole("button", { name: /^Niveau 3/ }).click();
     await p.getByRole("button", { name: "Lancer la partie" }).click();
     await p.waitForURL(/\/arena\/|trop=1/, { timeout: 60_000 });
@@ -872,7 +872,7 @@ describe("sur un petit téléphone (iPhone SE, 375 px)", () => {
     await petit.goto(`${BASE}/jouer`, { waitUntil: "domcontentloaded" });
     await petit.waitForLoadState("networkidle");
     await petit.getByRole("button", { name: /NOVA/ }).click();
-    // Ces parcours testent le niveau 3 (qualité, financement…) : le départ est au niveau 1.
+    // Ces parcours testent le niveau 3 (qualité, financement…) : on le choisit, sans dépendre du niveau de départ.
     await petit.getByRole("button", { name: /^Niveau 3/ }).click();
     await petit.getByRole("button", { name: "Lancer la partie" }).click();
     await petit.waitForURL(/\/arena\//, { timeout: 60_000 });
