@@ -2,42 +2,25 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  DSO_SEUIL,
-  JOURS_SANS_PERTE,
-  PERTE_PAR_JOUR,
-  cheminComplet,
-  D,
-  deltaAccepte,
-  deltaReduit,
-  deltaVexee,
-  evenements,
-  hasard,
-  simuler,
-  tableauDeBord,
-  type Semaine,
-  type TableauDeBord,
-} from "@/engine/episodes/trimestre-qui-derape";
-import {
-  DIAGNOSTICS,
-  ETAPES,
-  REPONSES_DE_DELTA,
-  type Contexte,
-  type Etape,
-  type IdDiagnostic,
-  type Message,
-  type Source,
-} from "@/config/episodes/trimestre-qui-derape";
-import type { PartieJouee } from "@/pedagogy/episodes/bilan-du-trimestre";
+import type {
+  Contexte,
+  Episode,
+  Etape,
+  Lecture,
+  Message,
+  PartieJouee,
+  Source,
+} from "@/config/episodes/types";
+import { episodeParCode } from "@/pedagogy/episodes/registre";
 import { bouton } from "@/components/bouton";
 import { sansMolette } from "@/components/sans-molette";
-import { TableauDeLAgence } from "./tableau-de-l-agence";
+import { TableauDeBord } from "./tableau-de-bord";
 import { BilanDeLEpisode } from "./bilan-de-l-episode";
-import { CourbeDuTrimestre, reperesDesDecisions } from "./courbe-du-trimestre";
-import { euros, kE, nombre, taux } from "./format-episode";
+import { CourbeDesSemaines, reperesDesDecisions } from "./courbe-des-semaines";
+import { nombre } from "@/config/episodes/format";
 
 /**
- * L'ÉPISODE « LE TRIMESTRE QUI DÉRAPE », JOUÉ DE BOUT EN BOUT.
+ * UN ÉPISODE MANAGER, JOUÉ DE BOUT EN BOUT.
  *
  * Une démonstration de la version pour les entreprises : rien n'est
  * enregistré, tout se calcule dans le navigateur. Chaque décision passe par
@@ -48,6 +31,9 @@ import { euros, kE, nombre, taux } from "./format-episode";
  * Le hasard se choisit dans l'adresse (`?hasard=12`) : deux personnes qui
  * jouent le même trimestre peuvent comparer leurs décisions, et les tests
  * jouent un trimestre connu.
+ *
+ * Le composant ne connaît aucun épisode : il lit celui qu'on lui nomme dans
+ * le registre, et tout ce qui est propre au métier vient de sa définition.
  */
 
 type Ecran = "intro" | "jeu" | "bilan";
@@ -62,24 +48,24 @@ interface Etat {
   consultes: string[][];
   /** Les jours d'enquête pris en semaine 1. */
   jours: number;
-  diagnostic: { principal: IdDiagnostic | null; second: IdDiagnostic | "aucun" | null };
-  reevaluation: { choix: "maintient" | "corrige" | null; principal: IdDiagnostic | null };
+  diagnostic: { principal: string | null; second: string | null };
+  reevaluation: { choix: "maintient" | "corrige" | null; principal: string | null };
   prevision: { valeur: string; confiance: number };
   justifications: string[];
   choix: number | null;
   /** La semaine dont le tableau de bord montre la fin. */
   semaine: number;
   /** La lecture du tableau de bord juste avant la dernière décision, pour en montrer l'effet. */
-  avant: TableauDeBord | null;
+  avant: Lecture | null;
 }
 
-const nouvelEtat = (graine: number | null = null): Etat => ({
+const nouvelEtat = (ep: Episode, graine: number | null = null): Etat => ({
   graine,
   ecran: "intro",
   etape: 0,
   phase: "signal",
   decisions: [],
-  consultes: ETAPES.map(() => []),
+  consultes: ep.etapes.map(() => []),
   jours: 0,
   diagnostic: { principal: null, second: null },
   reevaluation: { choix: null, principal: null },
@@ -116,9 +102,9 @@ const NOMS_DES_PHASES: Record<Phase, string> = {
 /** « Remise de 5 % » devient « remise de 5 % » ; « Karim », plus loin dans la phrase, reste Karim. */
 const enMinuscule = (t: string) => t.charAt(0).toLowerCase() + t.slice(1);
 
-const previsionValide = (v: string) => {
+const previsionValide = (ep: Episode, v: string) => {
   const n = Number(v.replace(",", "."));
-  return v.trim() !== "" && Number.isFinite(n) && n >= 0 && n <= 100;
+  return v.trim() !== "" && Number.isFinite(n) && n >= ep.prevision.min && n <= ep.prevision.max;
 };
 
 /* ------------------------------------------------------------------------- */
@@ -254,8 +240,9 @@ function Suite({
 
 /* ------------------------------------------------------------------------- */
 
-export function EpisodeTrimestre() {
-  const [s, setS] = useState<Etat>(() => nouvelEtat());
+export function EpisodeJoue({ code }: { code: string }) {
+  const ep = episodeParCode(code)!;
+  const [s, setS] = useState<Etat>(() => nouvelEtat(ep));
   // La partie terminée juste avant : le bilan suivant la met en regard.
   const [precedente, setPrecedente] = useState<PartieJouee | null>(null);
   const scene = useRef<HTMLDivElement>(null);
@@ -273,12 +260,12 @@ export function EpisodeTrimestre() {
 
   const graine = s.graine ?? 1;
   const tableau = useMemo(
-    () => tableauDeBord(s.decisions, graine, s.jours, s.semaine),
-    [s.decisions, graine, s.jours, s.semaine],
+    () => ep.lire(s.decisions, graine, s.jours, s.semaine),
+    [ep, s.decisions, graine, s.jours, s.semaine],
   );
 
   const commencer = (g: number | null) =>
-    setS({ ...nouvelEtat(g ?? tirerUnHasard()), ecran: "jeu" });
+    setS({ ...nouvelEtat(ep, g ?? tirerUnHasard()), ecran: "jeu" });
   const suivante = () =>
     maj((e) => {
       const ps = phasesDe(e.etape);
@@ -296,13 +283,13 @@ export function EpisodeTrimestre() {
     maj((e) => ({
       avant: tableau,
       decisions: [...e.decisions.slice(0, e.etape), e.choix!],
-      semaine: ETAPES[e.etape]!.jusqua,
+      semaine: ep.etapes[e.etape]!.jusqua,
       phase: "consequence",
     }));
 
   const etapeSuivante = () =>
     maj((e) =>
-      e.etape === ETAPES.length - 1
+      e.etape === ep.etapes.length - 1
         ? { ecran: "bilan", avant: null }
         : { etape: e.etape + 1, phase: "signal", choix: null, avant: null },
     );
@@ -311,7 +298,7 @@ export function EpisodeTrimestre() {
     if (s.ecran !== "bilan" || !s.diagnostic.principal || s.reevaluation.choix == null) return null;
     return {
       graine,
-      chemin: cheminComplet(s.decisions),
+      chemin: ep.neutre.map((n, i) => s.decisions[i] ?? n),
       consultes: s.consultes,
       jours: s.jours,
       diagnostic: s.diagnostic.principal,
@@ -319,9 +306,9 @@ export function EpisodeTrimestre() {
       prevision: Number(s.prevision.valeur.replace(",", ".")),
       confiance: s.prevision.confiance,
     };
-  }, [s, graine]);
+  }, [ep, s, graine]);
 
-  const etape = ETAPES[s.etape]!;
+  const etape = ep.etapes[s.etape]!;
   const moment =
     s.ecran === "intro"
       ? "Avant de commencer"
@@ -333,18 +320,18 @@ export function EpisodeTrimestre() {
     <div className="mx-auto max-w-6xl px-4 pb-16 pt-8 sm:px-6 sm:pt-12">
       <div className="mb-6 flex flex-wrap items-center gap-x-5 gap-y-3">
         <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-          <Link href="/entreprises" className="hover:text-slate-300">
-            Entreprises
+          <Link href="/entreprises/episode" className="hover:text-slate-300">
+            Épisodes manager
           </Link>{" "}
-          / Épisode manager
+          / {ep.numero}
         </p>
         <span className="rounded-full border border-white/15 px-2.5 py-0.5 text-xs text-slate-400">
           Démonstration · données fictives
         </span>
         <div className="ml-auto flex items-center gap-4">
           <span className="text-sm tabular-nums text-slate-400">{moment}</span>
-          <ol className="flex gap-1.5" aria-label={`Avancement : ${ETAPES.length} décisions`}>
-            {ETAPES.map((e, i) => {
+          <ol className="flex gap-1.5" aria-label={`Avancement : ${ep.etapes.length} décisions`}>
+            {ep.etapes.map((e, i) => {
               const fait = i < s.decisions.length;
               const enCours = !fait && i === s.etape && s.ecran === "jeu";
               return (
@@ -361,7 +348,7 @@ export function EpisodeTrimestre() {
           {s.ecran !== "intro" && (
             <button
               type="button"
-              onClick={() => setS(nouvelEtat())}
+              onClick={() => setS(nouvelEtat(ep))}
               className="min-h-11 text-sm text-slate-400 underline underline-offset-4 hover:text-slate-200"
             >
               Recommencer
@@ -373,19 +360,25 @@ export function EpisodeTrimestre() {
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <aside
           className="lg:sticky lg:top-24 lg:order-last"
-          aria-label="Tableau de bord de l'agence"
+          aria-label={`Tableau de bord : ${ep.nomDuTableau.toLowerCase()}`}
         >
-          <TableauDeLAgence semaine={s.semaine} t={tableau} avant={s.avant} />
+          <TableauDeBord
+            nom={ep.nomDuTableau}
+            indicateurs={ep.indicateurs}
+            semaine={s.semaine}
+            lecture={tableau}
+            avant={s.avant}
+          />
         </aside>
 
         <div ref={scene} className="grid min-w-0 scroll-mt-24 gap-5" aria-live="polite">
-          {s.ecran === "intro" && <Intro onCommencer={() => commencer(null)} />}
+          {s.ecran === "intro" && <Intro ep={ep} onCommencer={() => commencer(null)} />}
 
           {s.ecran === "jeu" && (
             <>
               <header>
                 <p className="text-sm font-semibold uppercase tracking-[0.12em] text-amber-300">
-                  Décision {s.etape + 1} sur {ETAPES.length} · {etape.moment}
+                  Décision {s.etape + 1} sur {ep.etapes.length} · {etape.moment}
                 </p>
                 <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight text-slate-50 sm:text-4xl">
                   {etape.titre}
@@ -393,6 +386,7 @@ export function EpisodeTrimestre() {
                 <Fil etape={s.etape} phase={s.phase} />
               </header>
               <Scene
+                ep={ep}
                 s={s}
                 etape={etape}
                 tableau={tableau}
@@ -407,6 +401,7 @@ export function EpisodeTrimestre() {
 
           {s.ecran === "bilan" && partieJouee && (
             <BilanDeLEpisode
+              ep={ep}
               partie={partieJouee}
               precedente={precedente}
               onAutreHasard={() => {
@@ -455,51 +450,33 @@ function Fil({ etape, phase }: { etape: number; phase: Phase }) {
   );
 }
 
-function Intro({ onCommencer }: { onCommencer: () => void }) {
+function Intro({ ep, onCommencer }: { ep: Episode; onCommencer: () => void }) {
   return (
     <section className="carte grid gap-5 p-5 sm:p-7">
       <div>
         <p className="text-sm font-semibold uppercase tracking-[0.12em] text-amber-300">
-          Épisode 1 · Pilotage commercial et marge
+          Épisode {ep.numero} · {ep.domaine}
         </p>
         <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight text-slate-50 sm:text-5xl">
-          Le trimestre qui dérape
+          {ep.titre}
         </h1>
-        <p className="mt-4 max-w-2xl text-lg leading-relaxed text-slate-300">
-          Vous êtes Claire Morel, cheffe de l&apos;agence de Lyon d&apos;Arvel Distribution,
-          fournisseur des artisans du bâtiment. Votre équipe : sept commerciaux, une assistante, une
-          administratrice des ventes.
-        </p>
+        <p className="mt-4 max-w-2xl text-lg leading-relaxed text-slate-300">{ep.persona}</p>
       </div>
       <div className="grid gap-3 border-y border-white/10 py-4">
         <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
           Votre mandat pour le trimestre
         </h2>
         <ul className="grid gap-x-6 gap-y-2 text-slate-200 sm:grid-cols-2">
-          <li>
-            <strong className="font-display text-lg text-slate-50">1 200 k€</strong> de chiffre
-            d&apos;affaires
-          </li>
-          <li>
-            <strong className="font-display text-lg text-slate-50">30 %</strong> de marge brute au
-            moins
-          </li>
-          <li>
-            <strong className="font-display text-lg text-slate-50">40 k€</strong> de budget de
-            remises
-          </li>
-          <li>
-            Un délai de paiement des clients sous{" "}
-            <strong className="font-display text-lg text-slate-50">{DSO_SEUIL} jours</strong>
-          </li>
+          {ep.mandat.map((m) => (
+            <li key={m.texte}>
+              <strong className="font-display text-lg text-slate-50">{m.fort}</strong> {m.texte}
+            </li>
+          ))}
         </ul>
-        <p className="max-w-2xl text-slate-300">
-          Votre direction juge le trimestre sur la marge brute dégagée, moins le coût d&apos;un
-          délai de paiement trop long.
-        </p>
+        <p className="max-w-2xl text-slate-300">{ep.jugement}</p>
       </div>
       <p className="max-w-2xl text-sm leading-relaxed text-slate-400">
-        Six décisions, une vingtaine de minutes. Les chiffres bougent avec vos choix ; à la fin, le
+        {ep.etapes.length} décisions, {ep.duree}. Les chiffres bougent avec vos choix ; à la fin, le
         bilan rejoue chacune de vos décisions sous trente tirages du même hasard. Démonstration :
         rien de ce que vous saisissez n&apos;est enregistré.
       </p>
@@ -511,6 +488,7 @@ function Intro({ onCommencer }: { onCommencer: () => void }) {
 /* ------------------------------------------------------------------------- */
 
 function Scene({
+  ep,
   s,
   etape,
   tableau,
@@ -520,9 +498,10 @@ function Scene({
   valider,
   etapeSuivante,
 }: {
+  ep: Episode;
   s: Etat;
   etape: Etape;
-  tableau: TableauDeBord;
+  tableau: Lecture;
   maj: (f: (e: Etat) => Partial<Etat>) => void;
   suivante: () => void;
   consulter: (src: Source) => void;
@@ -531,15 +510,7 @@ function Scene({
 }) {
   const graine = s.graine ?? 1;
   const i = s.etape;
-  const ecart = tableau.cible - tableau.ca;
-  const contexte: Contexte = {
-    transfo4: taux(tableau.transfo),
-    marge: tableau.marge == null ? "—" : taux(tableau.marge),
-    dso: nombre(tableau.dso, 0),
-    ecart,
-    ecartTxt: kE(ecart),
-    reaffecte: s.decisions[D.karim] === 1,
-  };
+  const contexte: Contexte = ep.contexte(tableau, s.decisions);
 
   if (s.phase === "signal") {
     const ensuite = phasesDe(i)[1];
@@ -556,7 +527,7 @@ function Scene({
   if (s.phase === "enquete") {
     const compte = i === 0 && etape.budget != null;
     const reste = compte ? etape.budget! - s.jours : 0;
-    const perdu = Math.max(0, s.jours - JOURS_SANS_PERTE) * PERTE_PAR_JOUR;
+    const perte = ep.enquete.perte(s.jours);
     return (
       <>
         {compte ? (
@@ -565,8 +536,7 @@ function Scene({
               <strong className="text-slate-50">
                 Il vous reste {nombre(reste)} jour{reste > 1 ? "s" : ""} avant le point de vendredi.
               </strong>{" "}
-              Chaque vérification prend du temps, et au-delà de deux jours d&apos;enquête, des
-              affaires se signent ailleurs.
+              {ep.enquete.consigne}
             </p>
             <div className="grid max-w-md grid-cols-10 gap-1" aria-hidden="true">
               {Array.from({ length: 10 }, (_, k) => (
@@ -574,7 +544,7 @@ function Scene({
                   key={k}
                   className={`h-2 rounded-sm border ${
                     k < s.jours * 2
-                      ? k >= JOURS_SANS_PERTE * 2
+                      ? k >= ep.enquete.joursSansPerte * 2
                         ? "border-rose-400 bg-rose-400"
                         : "border-amber-400 bg-amber-400"
                       : "border-white/10 bg-slate-800"
@@ -603,18 +573,7 @@ function Scene({
             );
           })}
         </ul>
-        {perdu > 0 && (
-          <Boite
-            messages={[
-              {
-                de: "Thomas Petit",
-                role: "Commercial, secteur Centre",
-                alerte: true,
-                texte: `Pendant ce temps, l'affaire Cozzi (${euros(perdu)}) s'est signée chez Brico-Pro Rhône.`,
-              },
-            ]}
-          />
-        )}
+        {perte && <Boite messages={[perte]} />}
         <Suite onClick={suivante}>{i === 0 ? "Poser mon diagnostic" : "Décider"}</Suite>
       </>
     );
@@ -631,11 +590,11 @@ function Scene({
           <Choix
             nom="principal"
             valeur={d.principal}
-            options={DIAGNOSTICS}
+            options={ep.diagnostics}
             onChoisir={(id) =>
               maj((e) => ({
                 diagnostic: {
-                  principal: id as IdDiagnostic,
+                  principal: id,
                   second: e.diagnostic.second === id ? null : e.diagnostic.second,
                 },
               }))
@@ -652,11 +611,11 @@ function Scene({
             valeur={d.second}
             options={[
               { id: "aucun", t: "Aucun autre" },
-              ...DIAGNOSTICS.filter((x) => x.id !== d.principal),
+              ...ep.diagnostics.filter((x) => x.id !== d.principal),
             ]}
             onChoisir={(id) =>
               maj((e) => ({
-                diagnostic: { ...e.diagnostic, second: id as IdDiagnostic | "aucun" },
+                diagnostic: { ...e.diagnostic, second: id },
               }))
             }
           />
@@ -669,7 +628,7 @@ function Scene({
   }
 
   if (s.phase === "reevaluation") {
-    const avant = DIAGNOSTICS.find((x) => x.id === s.diagnostic.principal);
+    const avant = ep.diagnostics.find((x) => x.id === s.diagnostic.principal);
     const r = s.reevaluation;
     return (
       <>
@@ -702,9 +661,9 @@ function Scene({
             <Choix
               nom="reprincipal"
               valeur={r.principal}
-              options={DIAGNOSTICS.filter((x) => x.id !== s.diagnostic.principal)}
+              options={ep.diagnostics.filter((x) => x.id !== s.diagnostic.principal)}
               onChoisir={(id) =>
-                maj((e) => ({ reevaluation: { ...e.reevaluation, principal: id as IdDiagnostic } }))
+                maj((e) => ({ reevaluation: { ...e.reevaluation, principal: id } }))
               }
             />
           </fieldset>
@@ -721,7 +680,7 @@ function Scene({
 
   if (s.phase === "decision") {
     const avecSources = i >= 2 && etape.sources.length > 0;
-    const previsionOk = !etape.prevision || previsionValide(s.prevision.valeur);
+    const previsionOk = !etape.prevision || previsionValide(ep, s.prevision.valeur);
     return (
       <>
         {avecSources && (
@@ -775,25 +734,25 @@ function Scene({
           <div className="carte grid gap-4 p-4 sm:grid-cols-2 sm:items-end">
             <label className="grid gap-1.5">
               <span className="font-semibold text-slate-50">
-                Votre prévision : la transformation des devis en semaine 4
+                Votre prévision : {ep.prevision.libelle}
               </span>
               <span className="flex max-w-40 items-center gap-2">
                 <input
                   type="number"
                   onWheel={sansMolette}
                   inputMode="decimal"
-                  min={0}
-                  max={100}
-                  step={0.5}
+                  min={ep.prevision.min}
+                  max={ep.prevision.max}
+                  step={ep.prevision.step}
                   value={s.prevision.valeur}
-                  placeholder="34"
+                  placeholder={ep.prevision.placeholder}
                   onChange={(ev) => {
                     const v = ev.target.value;
                     maj((e) => ({ prevision: { ...e.prevision, valeur: v } }));
                   }}
                   className="champ w-full px-3 py-2 text-base tabular-nums text-slate-100"
                 />
-                <span className="text-slate-300">%</span>
+                <span className="text-slate-300">{ep.prevision.unite}</span>
               </span>
             </label>
             <label className="grid gap-1.5">
@@ -825,60 +784,19 @@ function Scene({
   }
 
   // Conséquence
-  const de = i === 0 ? 1 : ETAPES[i - 1]!.jusqua + 1;
-  const t = simuler(cheminComplet(s.decisions), graine, s.jours);
-  const semaines = t.semaines.slice(de, etape.jusqua + 1) as Semaine[];
-  const ca = semaines.reduce((x, w) => x + w.ca, 0);
-  const marge = semaines.reduce((x, w) => x + w.marge, 0);
+  const de = i === 0 ? 1 : ep.etapes[i - 1]!.jusqua + 1;
+  const chemin = ep.neutre.map((n, k) => s.decisions[k] ?? n);
+  const t = ep.simuler(chemin, graine, s.jours);
   const choix = s.decisions[i]!;
-  let reactions = etape.reactions[choix] ?? [];
-  if (i === D.delta && choix === 1) {
-    reactions = [
-      {
-        de: "Achats, Groupe Delta",
-        role: "Grand compte",
-        alerte: deltaVexee(graine),
-        texte: deltaAccepte(graine)
-          ? REPONSES_DE_DELTA.accepte
-          : deltaVexee(graine)
-            ? REPONSES_DE_DELTA.vexee
-            : REPONSES_DE_DELTA.refuseContreProposition,
-      },
-    ];
-  }
-  if (i === D.delta && choix === 2) {
-    reactions = [
-      {
-        de: "Achats, Groupe Delta",
-        role: "Grand compte",
-        texte: deltaReduit(graine) ? REPONSES_DE_DELTA.reduit : REPONSES_DE_DELTA.maintient,
-      },
-    ];
-  }
-  // Ce qui est arrivé pendant ces semaines : l'arrêt de Julie, qui découle de
-  // décisions prises, et les imprévus, qui n'en découlent pas. Les seconds sont
-  // posés à part, sous un titre qui le dit.
-  const arrive = evenements(cheminComplet(s.decisions), graine, de, etape.jusqua);
-  if (arrive.arret) {
-    reactions = [
-      ...reactions,
-      {
-        de: "Ressources humaines",
-        role: "Siège",
-        heure: "sem. 8",
-        alerte: true,
-        texte:
-          "Julie Roux est en arrêt de travail pour quatre semaines. Ses clients n'ont plus d'interlocuteur jusqu'à la semaine 11.",
-      },
-    ];
-  }
-  const imprevus: Message[] = arrive.imprevus.map(({ imprevu, semaine }) => ({
-    de: imprevu.de,
-    role: imprevu.role,
-    heure: `sem. ${semaine}`,
-    texte: imprevu.texte,
-  }));
-  const derniere = i === ETAPES.length - 1;
+  // Ce qui est arrivé pendant ces semaines : les suites de décisions prises,
+  // et les imprévus, qui n'en découlent pas. Les seconds sont posés à part,
+  // sous un titre qui le dit.
+  const arrive = ep.evenements(chemin, graine, de, etape.jusqua);
+  const reactions: Message[] = [
+    ...(ep.reactions(i, choix, graine) ?? etape.reactions[choix] ?? []),
+    ...arrive.lies,
+  ];
+  const derniere = i === ep.etapes.length - 1;
   return (
     <>
       <p className="max-w-2xl text-base leading-relaxed text-slate-200">
@@ -888,11 +806,7 @@ function Scene({
         Vous avez choisi : {enMinuscule(etape.options[choix]!.t)}.
       </p>
       <dl className="grid grid-cols-3 gap-2 sm:gap-3">
-        {[
-          ["Chiffre d'affaires", kE(ca)],
-          ["Marge brute", taux(marge / ca)],
-          [`Transformation, sem. ${etape.jusqua}`, taux(t.semaines[etape.jusqua]!.transfo)],
-        ].map(([nom, valeur]) => (
+        {ep.recap(t, de, etape.jusqua).map(([nom, valeur]) => (
           <div key={nom} className="carte min-w-0 px-3 py-2.5 sm:px-4 sm:py-3">
             <dt className="text-sm text-slate-400">{nom}</dt>
             <dd className="font-display text-lg font-semibold tabular-nums text-slate-50 sm:text-xl">
@@ -901,18 +815,16 @@ function Scene({
           </div>
         ))}
       </dl>
-      <CourbeDuTrimestre
+      <CourbeDesSemaines
+        courbe={ep.courbe}
         semaines={t.semaines}
         jouees={etape.jusqua}
         surbrillance={[de, etape.jusqua]}
-        reperes={reperesDesDecisions(i + 1)}
-        imprevus={hasard(graine).imprevus.map((x) => ({
-          semaine: x.semaine,
-          titre: x.imprevu.titre,
-        }))}
+        reperes={reperesDesDecisions(ep, i + 1)}
+        imprevus={ep.imprevus(graine)}
       />
       <Boite messages={reactions} />
-      {imprevus.length > 0 && (
+      {arrive.imprevus.length > 0 && (
         <section aria-labelledby="imprevus-titre" className="grid gap-2">
           <h2
             id="imprevus-titre"
@@ -920,7 +832,7 @@ function Scene({
           >
             Pendant ce temps, sans rapport avec vos décisions
           </h2>
-          <Boite messages={imprevus} />
+          <Boite messages={arrive.imprevus} />
         </section>
       )}
       <Suite onClick={etapeSuivante}>{derniere ? "Voir le bilan" : "Continuer"}</Suite>

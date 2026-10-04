@@ -1,12 +1,10 @@
-import { OBJECTIF_CA, SEMAINES, type Semaine } from "@/engine/episodes/trimestre-qui-derape";
-import { ETAPES } from "@/config/episodes/trimestre-qui-derape";
-import { kE, taux } from "./format-episode";
+import type { Episode, Semaine } from "@/config/episodes/types";
 
 /**
- * LE CHIFFRE D'AFFAIRES, SEMAINE PAR SEMAINE.
+ * L'INDICATEUR PRINCIPAL, SEMAINE PAR SEMAINE.
  *
  * Une colonne par semaine, de zéro, et la cadence de l'objectif en trait
- * fin : c'est ce que Claire regarderait chaque lundi. Les semaines que la
+ * fin : c'est ce que le manager regarderait chaque lundi. Les semaines que la
  * dernière décision a jouées sont en laiton, les autres en gris ; celles qui
  * ne sont pas encore jouées restent vides. Sous l'axe, les repères des
  * décisions ; au-dessus d'une colonne, un point d'exclamation dit qu'un
@@ -17,8 +15,7 @@ import { kE, taux } from "./format-episode";
  * lecteurs d'écran.
  */
 
-const CADENCE = OBJECTIF_CA / SEMAINES;
-const GRADUATIONS = [50000, 100000];
+const SEMAINES = 13;
 
 export interface Repere {
   semaine: number;
@@ -26,21 +23,23 @@ export interface Repere {
 }
 
 /** Les repères des n premières décisions : chacune se prend à la fin de la fenêtre précédente. */
-export function reperesDesDecisions(n: number): Repere[] {
-  return ETAPES.slice(0, n).map((_, i) => ({
-    semaine: i === 0 ? 1 : ETAPES[i - 1]!.jusqua,
+export function reperesDesDecisions(ep: Pick<Episode, "etapes">, n: number): Repere[] {
+  return ep.etapes.slice(0, n).map((_, i) => ({
+    semaine: i === 0 ? 1 : ep.etapes[i - 1]!.jusqua,
     nom: `D${i + 1}`,
   }));
 }
 
-export function CourbeDuTrimestre({
+export function CourbeDesSemaines({
+  courbe,
   semaines,
   jouees,
   surbrillance,
   reperes = [],
   imprevus = [],
-  titre = "Chiffre d'affaires, semaine par semaine",
+  titre = courbe.titre,
 }: {
+  courbe: Episode["courbe"];
   /** Les semaines simulées, indexées de 1 à 13. */
   semaines: readonly (Semaine | null)[];
   /** Jusqu'à quelle semaine le trimestre a été joué. */
@@ -51,31 +50,36 @@ export function CourbeDuTrimestre({
   imprevus?: readonly { semaine: number; titre: string }[];
   titre?: string;
 }) {
+  const valeur = (s: Semaine) => s[courbe.cle] ?? 0;
   const jouee = (w: number) => w <= jouees;
   const max = Math.max(
-    CADENCE * 1.25,
-    ...Array.from({ length: jouees }, (_, i) => semaines[i + 1]?.ca ?? 0),
+    courbe.cible * 1.25,
+    ...Array.from({ length: jouees }, (_, i) => {
+      const s = semaines[i + 1];
+      return s ? valeur(s) : 0;
+    }),
   );
   const hauteur = (v: number) => `${(100 * v) / max}%`;
+  const graduations = courbe.graduations.filter((g) => g < max);
   const imprevuDe = (w: number) => imprevus.filter((i) => i.semaine === w && jouee(w));
 
   return (
     <figure className="carte grid gap-3 p-4 sm:p-5">
       <figcaption className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <span className="font-semibold text-slate-50">{titre}</span>
-        <span className="text-sm text-slate-400">objectif : {kE(CADENCE)} par semaine</span>
+        <span className="text-sm text-slate-400">{courbe.libelleCible}</span>
       </figcaption>
 
       <div className="grid grid-cols-[2.75rem_minmax(0,1fr)] gap-x-2">
         {/* L'axe des valeurs : deux graduations, en encre discrète. */}
         <div className="relative h-36 sm:h-44" aria-hidden="true">
-          {GRADUATIONS.filter((g) => g < max).map((g) => (
+          {graduations.map((g) => (
             <span
               key={g}
               className="absolute right-0 translate-y-1/2 text-xs tabular-nums text-slate-400"
               style={{ bottom: hauteur(g) }}
             >
-              {kE(g)}
+              {courbe.format(g)}
             </span>
           ))}
           <span className="absolute bottom-0 right-0 translate-y-1/2 text-xs text-slate-400">
@@ -84,7 +88,7 @@ export function CourbeDuTrimestre({
         </div>
 
         <div className="relative h-36 border-b border-slate-600 sm:h-44">
-          {GRADUATIONS.filter((g) => g < max).map((g) => (
+          {graduations.map((g) => (
             <span
               key={g}
               aria-hidden="true"
@@ -96,7 +100,7 @@ export function CourbeDuTrimestre({
           <span
             aria-hidden="true"
             className="absolute inset-x-0 z-10 border-t border-slate-400"
-            style={{ bottom: hauteur(CADENCE) }}
+            style={{ bottom: hauteur(courbe.cible) }}
           />
 
           <ol className="absolute inset-0 grid grid-cols-13 gap-0.5">
@@ -116,7 +120,7 @@ export function CourbeDuTrimestre({
                         className={`relative block w-full max-w-6 rounded-t outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
                           enAvant ? "bg-amber-400" : "bg-slate-500"
                         }`}
-                        style={{ height: hauteur(s.ca) }}
+                        style={{ height: hauteur(valeur(s)) }}
                       >
                         {ici.length > 0 && (
                           <span
@@ -129,15 +133,17 @@ export function CourbeDuTrimestre({
                       </span>
                       <span
                         role="tooltip"
-                        className={`pointer-events-none absolute bottom-full z-20 mb-2 hidden w-max max-w-56 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm shadow-lg group-hover:block group-focus-within:block ${bord}`}
+                        className={`pointer-events-none absolute bottom-full z-20 mb-2 hidden w-max max-w-56 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm shadow-lg group-focus-within:block group-hover:block ${bord}`}
                       >
                         <span className="block font-semibold text-slate-50">Semaine {w}</span>
-                        <span className="block tabular-nums text-slate-300">
-                          {kE(s.ca)} · marge {taux(s.marge / s.ca)}
-                        </span>
-                        <span className="block tabular-nums text-slate-400">
-                          transformation {taux(s.transfo)}
-                        </span>
+                        {courbe.details(s).map((ligne, k) => (
+                          <span
+                            key={ligne}
+                            className={`block tabular-nums ${k === 0 ? "text-slate-300" : "text-slate-400"}`}
+                          >
+                            {ligne}
+                          </span>
+                        ))}
                         {ici.map((x) => (
                           <span key={x.titre} className="mt-1 block text-slate-200">
                             Imprévu : {x.titre}
@@ -186,9 +192,7 @@ export function CourbeDuTrimestre({
         <thead>
           <tr>
             <th>Semaine</th>
-            <th>Chiffre d&apos;affaires</th>
-            <th>Taux de marge</th>
-            <th>Transformation</th>
+            <th>Valeurs</th>
           </tr>
         </thead>
         <tbody>
@@ -198,9 +202,7 @@ export function CourbeDuTrimestre({
             return (
               <tr key={i}>
                 <td>{i + 1}</td>
-                <td>{kE(s.ca)}</td>
-                <td>{taux(s.marge / s.ca)}</td>
-                <td>{taux(s.transfo)}</td>
+                <td>{courbe.details(s).join(" ; ")}</td>
               </tr>
             );
           })}

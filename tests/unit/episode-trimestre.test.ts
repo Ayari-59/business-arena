@@ -16,12 +16,15 @@ import {
   type Chemin,
 } from "../../src/engine/episodes/trimestre-qui-derape";
 import { ETAPES, REFERENCES } from "../../src/config/episodes/trimestre-qui-derape";
+import { analyser as analyserEpisode } from "../../src/pedagogy/episodes/bilan";
 import {
-  analyser,
+  EPISODE_TRIMESTRE,
   axeDeTravail,
   comportements,
-  type PartieJouee,
-} from "../../src/pedagogy/episodes/bilan-du-trimestre";
+} from "../../src/pedagogy/episodes/trimestre-qui-derape";
+import type { PartieJouee } from "../../src/config/episodes/types";
+
+const analyser = (p: PartieJouee) => analyserEpisode(EPISODE_TRIMESTRE, p);
 
 /**
  * L'épisode « Le trimestre qui dérape » enseigne quelque chose de précis :

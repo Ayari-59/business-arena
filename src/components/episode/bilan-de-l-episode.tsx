@@ -1,28 +1,11 @@
 "use client";
 
 import { useMemo } from "react";
-import {
-  BUDGET_REMISES,
-  DSO_SEUIL,
-  GRAINES_DU_BILAN,
-  OBJECTIF_CA,
-  OBJECTIF_MARGE,
-  hasard,
-  moyenne,
-  simuler,
-} from "@/engine/episodes/trimestre-qui-derape";
-import {
-  CAS,
-  analyser,
-  axeDeTravail,
-  comportements,
-  type Cas,
-  type PartieJouee,
-} from "@/pedagogy/episodes/bilan-du-trimestre";
+import { GRAINES_DU_BILAN, moyenne } from "@/engine/episodes/commun";
+import { CAS, analyser, type Cas } from "@/pedagogy/episodes/bilan";
+import type { Episode, PartieJouee } from "@/config/episodes/types";
 import { bouton } from "@/components/bouton";
-import { ETAPES } from "@/config/episodes/trimestre-qui-derape";
-import { CourbeDuTrimestre, reperesDesDecisions } from "./courbe-du-trimestre";
-import { kE, nombre, taux } from "./format-episode";
+import { CourbeDesSemaines, reperesDesDecisions } from "./courbe-des-semaines";
 
 /**
  * LE BILAN DE L'ÉPISODE.
@@ -58,14 +41,23 @@ function Jeton({ d, titre }: { d: number; titre?: string }) {
  * même hasard, l'écart de résultat est entièrement celui des décisions ; sous
  * un autre, seul l'écart de moyenne sur trente tirages se compare.
  */
-function Comparaison({ avant, apres }: { avant: PartieJouee; apres: PartieJouee }) {
+function Comparaison({
+  ep,
+  avant,
+  apres,
+}: {
+  ep: Episode;
+  avant: PartieJouee;
+  apres: PartieJouee;
+}) {
   const [x, y] = useMemo(() => {
     const lire = (p: PartieJouee) => ({
-      resultat: simuler(p.chemin, p.graine, p.jours).objectif,
-      attendu: moyenne(GRAINES_DU_BILAN.map((g) => simuler(p.chemin, g, p.jours).objectif)),
+      resultat: ep.simuler(p.chemin, p.graine, p.jours).objectif,
+      attendu: moyenne(GRAINES_DU_BILAN.map((g) => ep.simuler(p.chemin, g, p.jours).objectif)),
     });
     return [lire(avant), lire(apres)];
-  }, [avant, apres]);
+  }, [ep, avant, apres]);
+  const kE = ep.bilan.formatObjectif;
   const memeHasard = avant.graine === apres.graine;
   const ecart = (v: number) => `${v >= 0 ? "+" : "−"}${kE(Math.abs(v))}`;
   return (
@@ -86,7 +78,7 @@ function Comparaison({ avant, apres }: { avant: PartieJouee; apres: PartieJouee 
             </tr>
           </thead>
           <tbody>
-            {ETAPES.map((e, d) => {
+            {ep.etapes.map((e, d) => {
               const change = avant.chemin[d] !== apres.chemin[d];
               return (
                 <tr key={e.moment} className="border-t border-white/5 align-top">
@@ -136,57 +128,39 @@ function Comparaison({ avant, apres }: { avant: PartieJouee; apres: PartieJouee 
   );
 }
 
+/** Le nombre de décisions, en toutes lettres. */
+const EN_LETTRES = ["zéro", "une", "deux", "trois", "quatre", "cinq", "six", "sept", "huit"];
+
 export function BilanDeLEpisode({
+  ep,
   partie,
   precedente,
   onAutreHasard,
   onMemeHasard,
 }: {
+  ep: Episode;
   partie: PartieJouee;
   /** La partie jouée juste avant, pour les comparer. */
   precedente: PartieJouee | null;
   onAutreHasard: () => void;
   onMemeHasard: () => void;
 }) {
-  const a = useMemo(() => analyser(partie), [partie]);
+  const a = useMemo(() => analyser(ep, partie), [ep, partie]);
   const t = a.trimestre;
-  const constats = useMemo(() => comportements(partie, t), [partie, t]);
-  const axe = axeDeTravail(constats);
-  const tauxDeMarge = t.marge / t.ca;
+  const constats = useMemo(() => ep.comportements(partie, t), [ep, partie, t]);
+  const axe = ep.axe(constats);
+  const kE = ep.bilan.formatObjectif;
   const chance = t.objectif - a.attendu;
-  const imprevus = hasard(partie.graine).imprevus;
+  const hasard = ep.bilan.hasard(t, partie.graine);
 
   const barres = [{ nom: "Vous", valeur: t.objectif, vous: true }, ...a.references];
   const max = Math.max(...barres.map((b) => b.valeur));
   const min = Math.min(...barres.map((b) => b.valeur));
-  const largeur = (v: number) => 20 + (80 * (v - min * 0.97)) / Math.max(1, max - min * 0.97);
-
-  const tuiles = [
-    {
-      nom: "Chiffre d'affaires",
-      valeur: kE(t.ca),
-      aide: "objectif 1 200 k€",
-      tenu: t.ca >= OBJECTIF_CA,
-    },
-    {
-      nom: "Marge brute",
-      valeur: taux(tauxDeMarge),
-      aide: "mandat : 30 % au moins",
-      tenu: tauxDeMarge >= OBJECTIF_MARGE,
-    },
-    {
-      nom: "Délai de paiement",
-      valeur: `${nombre(t.dsoFin, 0)} j`,
-      aide: t.penalite > 0 ? `pénalité ${kE(t.penalite)}` : "sous les 55 jours",
-      tenu: t.dsoFin <= DSO_SEUIL,
-    },
-    {
-      nom: "Remises accordées",
-      valeur: kE(t.remises),
-      aide: "budget 40 k€",
-      tenu: t.remises <= BUDGET_REMISES,
-    },
-  ];
+  // L'échelle part un peu sous la plus petite valeur : les écarts se voient,
+  // et une barre reste visible même pour une valeur négative.
+  const plancher = min - 0.03 * Math.max(Math.abs(min), max - min, 1);
+  const largeur = (v: number) => 20 + (80 * (v - plancher)) / Math.max(1, max - plancher);
+  const tuiles = ep.bilan.tuiles(t);
 
   return (
     <div className="grid gap-5">
@@ -195,7 +169,7 @@ export function BilanDeLEpisode({
           Bilan de l&apos;épisode · hasard n° {partie.graine}
         </p>
         <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight text-slate-50 tabular-nums sm:text-4xl">
-          {kE(t.objectif)} de marge, pénalités déduites
+          {ep.bilan.titre(t)}
         </h1>
         <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-300">
           Avec vos choix, la moyenne sur trente tirages du hasard est de {kE(a.attendu)}. Ce
@@ -228,14 +202,15 @@ export function BilanDeLEpisode({
         ))}
       </ul>
 
-      {precedente && <Comparaison avant={precedente} apres={partie} />}
+      {precedente && <Comparaison ep={ep} avant={precedente} apres={partie} />}
 
-      <CourbeDuTrimestre
+      <CourbeDesSemaines
+        courbe={ep.courbe}
         titre="Votre trimestre, semaine par semaine"
         semaines={t.semaines}
         jouees={13}
-        reperes={reperesDesDecisions(ETAPES.length)}
-        imprevus={imprevus.map((x) => ({ semaine: x.semaine, titre: x.imprevu.titre }))}
+        reperes={reperesDesDecisions(ep, ep.etapes.length)}
+        imprevus={ep.imprevus(partie.graine)}
       />
       <section aria-labelledby="hasard-titre" className="grid gap-2">
         <h2
@@ -245,20 +220,11 @@ export function BilanDeLEpisode({
           Ce que le hasard vous a réservé
         </h2>
         <ul className="grid gap-1.5 text-sm text-slate-300">
-          {imprevus.map(({ imprevu, semaine }) => (
-            <li key={imprevu.id}>
-              <span className="font-semibold text-slate-100">
-                Semaine {semaine}, {imprevu.titre.toLowerCase()} :
-              </span>{" "}
-              {imprevu.texte}
+          {hasard.map((h) => (
+            <li key={h.titre}>
+              <span className="font-semibold text-slate-100">{h.titre} :</span> {h.texte}
             </li>
           ))}
-          <li>
-            <span className="font-semibold text-slate-100">Julie :</span>{" "}
-            {t.arret
-              ? "arrêtée quatre semaines, des semaines 8 à 11."
-              : "elle a tenu jusqu'au bout du trimestre."}
-          </li>
         </ul>
       </section>
 
@@ -289,15 +255,13 @@ export function BilanDeLEpisode({
             </li>
           ))}
         </ul>
-        <p className="max-w-2xl text-sm text-slate-400">
-          Marge brute du trimestre moins la pénalité de délai de paiement, sous le hasard que vous
-          avez joué. L&apos;échelle ne part pas de zéro.
-        </p>
+        <p className="max-w-2xl text-sm text-slate-400">{ep.bilan.noteDesBarres}</p>
       </section>
 
       <section className="carte grid gap-4 p-5">
         <h2 className="text-lg font-bold text-slate-50">
-          Vos six décisions : ce qui relevait du choix, ce qui relevait du hasard
+          Vos {EN_LETTRES[ep.etapes.length]} décisions : ce qui relevait du choix, ce qui relevait
+          du hasard
         </h2>
         <div
           role="table"

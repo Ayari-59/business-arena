@@ -22,57 +22,9 @@ export const DIAGNOSTICS: readonly { id: IdDiagnostic; t: string }[] = [
   { id: "motivation", t: "L'équipe commerciale est démotivée" },
 ];
 
-/** Ce que les messages d'une étape lisent du tableau de bord au moment où ils arrivent. */
-export interface Contexte {
-  transfo4: string;
-  marge: string;
-  dso: string;
-  ecart: number;
-  ecartTxt: string;
-  /** Julie a-t-elle repris une partie des comptes de Karim en semaine 1 ? */
-  reaffecte: boolean;
-}
+import type { Contexte, Etape, Message, Option, Source } from "./types";
 
-export interface Message {
-  de: string;
-  role: string;
-  heure?: string;
-  alerte?: boolean;
-  texte: string;
-}
-
-export interface Source {
-  id: string;
-  titre: string;
-  /** En jours ; seul le temps de la semaine 1 est compté. */
-  cout: number;
-  nature: "decisive" | "utile" | "bruit" | "aide";
-  /** Ce que la vérification apprend ; certaines dépendent des décisions déjà prises. */
-  resultat: string | ((ctx: Contexte) => string);
-}
-
-export interface Option {
-  t: string;
-  d: string;
-  remise?: boolean;
-}
-
-export interface Etape {
-  moment: string;
-  titre: string;
-  /** La dernière semaine que la décision couvre. */
-  jusqua: number;
-  messages: (ctx: Contexte) => Message[];
-  budget?: number;
-  sources: readonly Source[];
-  diagnostic?: boolean;
-  prevision?: boolean;
-  reevaluation?: boolean;
-  question: string;
-  options: readonly Option[];
-  /** Les réponses du terrain à chaque option ; `null` quand elles dépendent du hasard (Delta). */
-  reactions: readonly (Message[] | null)[];
-}
+export type { Contexte, Etape, Message, Option, Source };
 
 export const ETAPES: readonly Etape[] = [
   {
@@ -153,7 +105,6 @@ export const ETAPES: readonly Etape[] = [
       {
         t: "Remise de 5 % sur les grands comptes",
         d: "Pour regagner les affaires perdues. Coûte 5 points de marge sur ce segment.",
-        remise: true,
       },
       {
         t: "Réaffecter le portefeuille de Karim",
@@ -268,7 +219,6 @@ export const ETAPES: readonly Etape[] = [
       {
         t: "S'aligner par une remise de 3 %",
         d: "Sur les grands comptes et les artisans, pour compenser le délai.",
-        remise: true,
       },
       { t: "Ne rien changer", d: "Le dépôt finira par résorber son retard." },
     ],
@@ -546,7 +496,7 @@ export const ETAPES: readonly Etape[] = [
         heure: "08:30",
         alerte: true,
         texte:
-          ctx.ecart > 0
+          Number(ctx.ecart) > 0
             ? `Il te manque ${ctx.ecartTxt} par rapport à l'objectif de chiffre d'affaires à date. Deux semaines pour finir. Je compte sur toi.`
             : "Tu es au-dessus de l'objectif de chiffre d'affaires à date. Ne lâche rien sur la marge pour les deux dernières semaines.",
       },
@@ -564,7 +514,6 @@ export const ETAPES: readonly Etape[] = [
       {
         t: "Remise de 5 % sur tout pour finir",
         d: "Deux semaines, tous les clients. Fait du chiffre tout de suite.",
-        remise: true,
       },
       {
         t: "Relancer tous les devis en attente des artisans",

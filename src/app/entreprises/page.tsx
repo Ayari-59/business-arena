@@ -335,8 +335,8 @@ export default async function EntreprisesPage() {
                 Nouveau · Pour les entreprises
               </p>
               <p className="mt-1.5 text-base leading-relaxed text-slate-200">
-                Un trimestre dans la peau d&apos;une cheffe d&apos;agence commerciale, jugé sur ses
-                décisions plutôt que sur son résultat.
+                Un trimestre dans la peau d&apos;un manager : une agence commerciale qui dérape, un
+                service client qui s&apos;épuise. Jugé sur ses décisions plutôt que sur son résultat.
               </p>
             </div>
             <Link

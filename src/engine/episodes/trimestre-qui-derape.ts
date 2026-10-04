@@ -12,6 +12,18 @@
  * décrivent aucune entreprise réelle.
  */
 
+import {
+  GRAINES_DU_BILAN,
+  gauss,
+  moyenne,
+  mulberry32,
+  quantile,
+  rejouerAvec,
+  type Rejeu,
+} from "./commun";
+
+export { GRAINES_DU_BILAN, moyenne, quantile, type Rejeu };
+
 type Segment = "gc" | "fi" | "nc";
 
 const SEG: Record<Segment, { devis: number; conv: number; marge: number }> = {
@@ -132,14 +144,14 @@ export interface ImprevuTire {
   semaine: number;
 }
 
-export interface Semaine {
+export type Semaine = {
   ca: number;
   marge: number;
   transfo: number;
   /** Remises cumulées depuis le début du trimestre. */
   remises: number;
   dso: number;
-}
+};
 
 export interface Trimestre {
   /** Indexées de 1 à 13 ; l'indice 0 est vide. */
@@ -155,25 +167,6 @@ export interface Trimestre {
   arret: boolean;
   /** Intérimaire et prime : ce que la décision d'équipe a coûté. */
   couts: number;
-}
-
-function mulberry32(graine: number) {
-  let a = graine;
-  return function () {
-    a |= 0;
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-function gauss(r: () => number) {
-  let u = 0;
-  let v = 0;
-  while (u === 0) u = r();
-  while (v === 0) v = r();
-  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
 }
 
 const borne = (x: number) => Math.min(1.4, Math.max(0.6, x));
@@ -415,23 +408,6 @@ export function simuler(chemin: Chemin, graine: number, jours = 0): Trimestre {
   };
 }
 
-/** Les trente tirages sous lesquels le bilan rejoue chaque décision. */
-export const GRAINES_DU_BILAN = Array.from({ length: 30 }, (_, i) => i + 1);
-
-export const moyenne = (xs: readonly number[]) => xs.reduce((s, x) => s + x, 0) / xs.length;
-export const quantile = (xs: readonly number[], q: number) => {
-  const tries = [...xs].sort((a, b) => a - b);
-  return tries[Math.floor(q * (tries.length - 1))]!;
-};
-
-export interface Rejeu {
-  option: number;
-  /** Le résultat moyen sur les trente tirages. */
-  attendu: number;
-  /** Le résultat dans les 10 % de tirages les moins favorables. */
-  p10: number;
-}
-
 /** Rejoue chaque option d'une décision sous les trente mêmes tirages, les autres choix inchangés. */
 export function rejouer(
   chemin: Chemin,
@@ -439,12 +415,12 @@ export function rejouer(
   nbOptions: number,
   jours: number,
 ): Rejeu[] {
-  return Array.from({ length: nbOptions }, (_, option) => {
-    const autre = [...chemin] as [number, number, number, number, number, number];
-    autre[decision] = option;
-    const valeurs = GRAINES_DU_BILAN.map((g) => simuler(autre, g, jours).objectif);
-    return { option, attendu: moyenne(valeurs), p10: quantile(valeurs, 0.1) };
-  });
+  return rejouerAvec(
+    (c, g) => simuler(c as Chemin, g, jours).objectif,
+    chemin,
+    decision,
+    nbOptions,
+  );
 }
 
 /** Ce qui est arrivé pendant une fenêtre de semaines : les imprévus, et l'arrêt de Julie. */
