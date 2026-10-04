@@ -11,6 +11,7 @@ import {
 import { seedDemoWorld } from "@/services/demo.service";
 import { deleteOrgLicence, setOrgLicence } from "@/services/licence.service";
 import { DEFAULT_AI_CONFIG, isAiModelId } from "@/config/ai";
+import { normaliserVitrine } from "@/config/vitrine-solo";
 import { answerFormatFromProfile } from "@/config/difficulty";
 
 export async function createEstablishmentAction(formData: FormData): Promise<void> {
@@ -30,6 +31,11 @@ export async function updatePlatformConfigAction(formData: FormData): Promise<vo
     allowPublicPlay: formData.get("allowPublicPlay") === "on",
     allowSelfServiceTeachers: formData.get("allowSelfServiceTeachers") === "on",
     soloAnswerFormat: answerFormatFromProfile({ answerFormat: formData.get("soloAnswerFormat") }),
+    vitrineSolo: normaliserVitrine({
+      active: formData.get("vitrineActive") === "on",
+      entrepriseOuverte: formData.get("vitrineEntreprise"),
+      niveauMaxAutres: formData.get("vitrineNiveauMax"),
+    }),
     announcement: String(formData.get("announcement") ?? "").trim(),
     contactEmail: String(formData.get("contactEmail") ?? "").trim(),
     // Ce qui se publie du relevé d'usage sur /enseignants. Un compteur exact

@@ -6,6 +6,7 @@ import { DEMO_ACCOUNTS, isDemoSeeded } from "@/services/demo.service";
 import { formatEuro } from "@/lib/format";
 import { AI_MODELS } from "@/config/ai";
 import { ANSWER_FORMATS } from "@/config/difficulty";
+import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
 import type { PreuvesPubliees } from "@/config/preuves-dusage";
 import {
   createEstablishmentAction,
@@ -222,6 +223,56 @@ export default async function AdminPage({
             <p className="mt-3 text-sm leading-relaxed text-slate-400">
               S&apos;applique aux parties solo lancées après l&apos;enregistrement ; celles en cours
               gardent leur format. Les parties de classe se règlent chez l&apos;enseignant.
+            </p>
+          </fieldset>
+          {/* La vitrine du solo public : une entreprise complète, les autres jusqu'à un niveau. */}
+          <fieldset className="rounded-xl border border-white/10 p-4">
+            <legend className="px-2 text-xs font-medium uppercase tracking-wide text-slate-400">
+              🎯 Vitrine du solo public
+            </legend>
+            <label className="flex items-center gap-3 text-sm text-slate-300">
+              <input
+                type="checkbox"
+                name="vitrineActive"
+                defaultChecked={overview.config.vitrineSolo.active}
+                className="h-4 w-4 accent-amber-400"
+              />
+              Limiter les niveaux des entreprises autres que l&apos;entreprise vitrine
+            </label>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <label className="block text-sm text-slate-300">
+                Entreprise jouable à tous les niveaux
+                <select
+                  name="vitrineEntreprise"
+                  defaultValue={overview.config.vitrineSolo.entrepriseOuverte}
+                  className="mt-1 block w-full champ px-3 py-2 text-sm text-slate-100"
+                >
+                  {SCENARIO_CHOICES.map((s) => (
+                    <option key={s.code} value={s.code}>
+                      {s.shortName}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block text-sm text-slate-300">
+                Niveau maximum des autres entreprises
+                <select
+                  name="vitrineNiveauMax"
+                  defaultValue={String(overview.config.vitrineSolo.niveauMaxAutres)}
+                  className="mt-1 block w-full champ px-3 py-2 text-sm text-slate-100"
+                >
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <option key={n} value={n}>
+                      Niveau {n}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <p className="mt-3 text-sm leading-relaxed text-slate-400">
+              Éteinte, tout reste ouvert. Allumée, les niveaux au-delà du maximum s&apos;affichent
+              « réservés aux établissements » dans le solo public, avec le lien pour prendre
+              rendez-vous. Les parties de classe ne sont pas concernées.
             </p>
           </fieldset>
           {/* Les compteurs d'usage de /enseignants. Ils sont comptés dans la

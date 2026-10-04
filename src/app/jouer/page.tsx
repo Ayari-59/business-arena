@@ -13,6 +13,8 @@ import { PiedDePage } from "@/components/pied-de-page";
 import { ReprendreMaPartie } from "@/components/reprendre-ma-partie";
 import { getGuestUserId } from "@/lib/guest";
 import { partiesSoloEnCours } from "@/services/partie-en-cours.service";
+import { LIEN_CONTACT, liensDAcces } from "@/config/navigation";
+import { messageNiveauxReserves } from "@/config/vitrine-solo";
 
 export const dynamic = "force-dynamic";
 
@@ -37,7 +39,7 @@ export const metadata: Metadata = {
 export default async function JouerPage({
   searchParams,
 }: {
-  searchParams: Promise<{ secteur?: string; trop?: string }>;
+  searchParams: Promise<{ secteur?: string; trop?: string; reserve?: string }>;
 }) {
   const config = await getPlatformConfig();
   const decisions = etendueDesDecisions();
@@ -46,7 +48,7 @@ export default async function JouerPage({
   const enCours = userId ? await partiesSoloEnCours(userId) : [];
   // Les fiches d'entreprise renvoient ici avec leur métier en poche : le
   // sélecteur doit s'ouvrir dessus, sinon le clic n'a servi à rien.
-  const { secteur, trop } = await searchParams;
+  const { secteur, trop, reserve } = await searchParams;
   const scenarioChoisi = SCENARIO_CHOICES.some((s) => s.code === secteur)
     ? secteur!
     : DEFAULT_SCENARIO_CODE;
@@ -109,6 +111,15 @@ export default async function JouerPage({
             </div>
             </div>
 
+            {reserve ? (
+              <p
+                role="status"
+                className="order-2 mb-4 rounded-2xl border border-amber-400/30 bg-amber-950/30 p-4 text-base text-amber-200 lg:order-none"
+              >
+                {messageNiveauxReserves(config.vitrineSolo)} Choisissez un niveau plus bas, ou jouez
+                l&apos;entreprise vitrine à tous les niveaux.
+              </p>
+            ) : null}
             {trop ? (
               <p
                 role="status"
@@ -149,6 +160,14 @@ export default async function JouerPage({
                         : {}),
                     };
                   })}
+                  vitrine={config.vitrineSolo}
+                  liens={{
+                    contact: { href: LIEN_CONTACT.href, libelle: LIEN_CONTACT.libelle },
+                    enseignant: {
+                      href: liensDAcces().find((l) => l.acces === "enseignant")!.href,
+                      libelle: "Accéder à l'espace enseignant",
+                    },
+                  }}
                   levels={DIFFICULTY_PRESETS.map((p) => ({
                     level: p.level,
                     name: p.name,

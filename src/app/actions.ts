@@ -7,6 +7,8 @@ import { getOrCreateGuestUserId } from "@/lib/guest";
 import { createSoloGame } from "@/services/game.service";
 import { TropDePartiesError } from "@/services/game-creation.service";
 import { DEFAULT_SCENARIO_CODE, SCENARIOS } from "@/config/scenarios/registry";
+import { getPlatformConfig } from "@/services/admin.service";
+import { niveauReserve } from "@/config/vitrine-solo";
 
 const periodicitySchema = z.enum(["month", "quarter", "year"]).catch("quarter");
 const companiesSchema = z.coerce.number().int().min(2).max(8).catch(3);
@@ -23,6 +25,10 @@ export async function startGameAction(formData: FormData): Promise<void> {
   const level = levelSchema.parse(formData.get("level"));
   const scenarioCode = scenarioSchema.parse(formData.get("scenarioCode"));
   const roundsCount = roundsCountSchema.parse(formData.get("roundsCount") || undefined);
+  // LA VITRINE DU SOLO PUBLIC : le serveur applique la règle comme l'écran l'affiche. Un
+  // formulaire forgé ne passe pas outre ; la page redit pourquoi (config/vitrine-solo.ts).
+  const { vitrineSolo } = await getPlatformConfig();
+  if (niveauReserve(vitrineSolo, scenarioCode, level)) redirect("/jouer?reserve=1");
   // L'ADRESSE D'ORIGINE AVANT L'INVITÉ. Le plafond se compte dessus, et
   // `createSoloGame` refuse au-delà : autrement, une boucle sur ce formulaire
   // créerait autant de parties complètes qu'elle fait de requêtes.

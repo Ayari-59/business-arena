@@ -27,6 +27,7 @@ import {
   users,
 } from "@/db/schema";
 import { normaliserTheme, THEME_DU_SITE_PAR_DEFAUT, type ThemeDuSite } from "@/config/theme-du-site";
+import { normaliserVitrine, VITRINE_SOLO_PAR_DEFAUT, type VitrineSolo } from "@/config/vitrine-solo";
 
 /**
  * Espace d'administration (hiérarchie ADR-08/ADR-09) :
@@ -106,6 +107,12 @@ export interface PlatformConfig {
    * gardent le leur.
    */
   soloAnswerFormat: AnswerFormat;
+  /**
+   * La vitrine du solo public : une entreprise jouable à tous les niveaux, les autres
+   * jusqu'à un niveau maximum. Éteinte par défaut : tout est ouvert. Voir
+   * config/vitrine-solo.ts.
+   */
+  vitrineSolo: VitrineSolo;
   /** Message d'annonce affiché sur la landing (vide = aucun). */
   announcement: string;
   /**
@@ -151,6 +158,7 @@ const DEFAULT_CONFIG: PlatformConfig = {
   allowPublicPlay: true,
   allowSelfServiceTeachers: true,
   soloAnswerFormat: DEFAULT_ANSWER_FORMAT,
+  vitrineSolo: VITRINE_SOLO_PAR_DEFAUT,
   announcement: "",
   contactEmail: "contact@business-arena.fr",
   freeTier: DEFAULT_FREE_TIER,
@@ -178,6 +186,7 @@ export const getPlatformConfig = cache(async (): Promise<PlatformConfig> => {
       ...lus,
       // Colonne de JSON libre : une valeur inconnue retombe sur le QCM.
       soloAnswerFormat: answerFormatFromProfile({ answerFormat: lus.soloAnswerFormat }),
+      vitrineSolo: normaliserVitrine(lus.vitrineSolo),
       theme: normaliserTheme(lus.theme),
     };
   } catch (e) {

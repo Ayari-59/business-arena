@@ -2,6 +2,12 @@
 
 import { useState } from "react";
 import { sansMolette } from "@/components/sans-molette";
+import {
+  messageNiveauxReserves,
+  niveauMaxPour,
+  VITRINE_SOLO_PAR_DEFAUT,
+  type VitrineSolo,
+} from "@/config/vitrine-solo";
 
 /**
  * Les champs de la configuration rapide, en version tactile : cartes de secteur,
@@ -70,10 +76,19 @@ export function QuickConfigFields({
   scenarios,
   levels,
   defaultScenario,
+  vitrine,
+  liens,
 }: {
   scenarios: QuickScenario[];
   levels: QuickLevel[];
   defaultScenario: string;
+  /**
+   * La vitrine du solo public (config/vitrine-solo) : une entreprise jouable à tous les
+   * niveaux, les autres jusqu'à un niveau maximum. Absente ou éteinte : tout est ouvert.
+   */
+  vitrine?: VitrineSolo;
+  /** Où s'adresser pour les niveaux réservés : prendre rendez-vous, ou entrer côté enseignant. */
+  liens?: { contact: { href: string; libelle: string }; enseignant: { href: string; libelle: string } };
 }) {
   const [scenario, setScenario] = useState(defaultScenario);
   // On commence au niveau 3 · Pilotage ; les niveaux 1-2 (questions d'analyse entre deux
@@ -84,6 +99,9 @@ export function QuickConfigFields({
   const [rounds, setRounds] = useState<string>("");
   const [optionsOuvertes, setOptionsOuvertes] = useState(false);
 
+  const regle: VitrineSolo = vitrine ?? VITRINE_SOLO_PAR_DEFAUT;
+  // Le niveau le plus haut jouable avec l'entreprise choisie (6 quand la vitrine est éteinte).
+  const niveauMax = niveauMaxPour(regle, scenario);
   const minLevel = levels[0]?.level ?? 1;
   const maxLevel = levels[levels.length - 1]?.level ?? 6;
   const cur = levels.find((l) => l.level === level) ?? levels[0];
@@ -115,7 +133,11 @@ export function QuickConfigFields({
             <button
               key={s.code}
               type="button"
-              onClick={() => setScenario(s.code)}
+              onClick={() => {
+                setScenario(s.code);
+                // Passer à une entreprise dont le niveau choisi est réservé : on retombe au plus haut permis.
+                setLevel((n) => Math.min(n, niveauMaxPour(regle, s.code)));
+              }}
               aria-pressed={on}
               className={`flex flex-col items-center gap-1 rounded-xl border px-2 py-3 text-center transition ${
                 on
@@ -126,6 +148,18 @@ export function QuickConfigFields({
               <span className="text-2xl leading-none">{s.icon}</span>
               <span className="text-xs font-semibold leading-tight text-slate-100">{s.label}</span>
               <span className="text-xs leading-tight text-slate-400">{s.sector}</span>
+              {regle.active ? (
+                // Vitrine allumée : chaque tuile dit jusqu'où elle se joue.
+                <span
+                  className={`rounded-full px-1.5 py-0.5 text-xs leading-none ${
+                    s.code === regle.entrepriseOuverte
+                      ? "bg-amber-400/15 text-amber-200"
+                      : "bg-white/5 text-slate-400"
+                  }`}
+                >
+                  {s.code === regle.entrepriseOuverte ? "Tous niveaux" : `Niveaux 1-${niveauMaxPour(regle, s.code)}`}
+                </span>
+              ) : null}
             </button>
           );
         })}
@@ -149,25 +183,58 @@ export function QuickConfigFields({
         max={maxLevel}
         step={1}
         value={level}
-        onChange={(e) => setLevel(Number(e.target.value))}
+        onChange={(e) => setLevel(Math.min(Number(e.target.value), niveauMax))}
         aria-label="Niveau de difficulté"
         className="curseur mt-2 accent-amber-500"
       />
       <div className="flex justify-between">
-        {levels.map((l) => (
-          <button
-            key={l.level}
-            type="button"
-            onClick={() => setLevel(l.level)}
-            aria-label={`Niveau ${l.level} · ${l.name}`}
-            className={`px-1 text-xs tabular-nums ${
-              l.level === level ? "font-bold text-amber-300" : "text-slate-400 hover:text-slate-300"
-            }`}
-          >
-            {l.level}
-          </button>
-        ))}
+        {levels.map((l) => {
+          const reserve = l.level > niveauMax;
+          return (
+            <button
+              key={l.level}
+              type="button"
+              onClick={() => setLevel(Math.min(l.level, niveauMax))}
+              aria-label={`Niveau ${l.level} · ${l.name}${reserve ? " · réservé aux établissements" : ""}`}
+              className={`px-1 text-xs tabular-nums ${
+                l.level === level
+                  ? "font-bold text-amber-300"
+                  : reserve
+                    ? "text-slate-400 opacity-80 hover:opacity-100"
+                    : "text-slate-400 hover:text-slate-300"
+              }`}
+            >
+              {l.level}
+              {reserve ? <span aria-hidden> 🔒</span> : null}
+            </button>
+          );
+        })}
       </div>
+      {niveauMax < maxLevel ? (
+        // Les niveaux fermés ne sont pas un bouton muet : on dit pourquoi, ce que l'autre
+        // entreprise offre, et où s'adresser.
+        <div
+          data-niveaux-reserves
+          className="mt-2 rounded-lg border border-amber-400/25 bg-amber-950/20 px-3 py-2.5 text-[13px] leading-snug text-amber-100/90"
+        >
+          <p>
+            <span aria-hidden>🔒 </span>
+            <strong className="font-semibold text-amber-100">{messageNiveauxReserves(regle)}</strong>{" "}
+            {scenarios.find((s) => s.code === regle.entrepriseOuverte)?.label ?? "L'entreprise vitrine"} se
+            joue à tous les niveaux.
+          </p>
+          {liens ? (
+            <p className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
+              <a href={liens.contact.href} className="font-semibold text-amber-300 underline-offset-4 hover:underline">
+                {liens.contact.libelle} →
+              </a>
+              <a href={liens.enseignant.href} className="font-semibold text-amber-300 underline-offset-4 hover:underline">
+                {liens.enseignant.libelle} →
+              </a>
+            </p>
+          ) : null}
+        </div>
+      ) : null}
       <p className="mt-2 min-h-[2.5em] text-[13px] leading-snug text-slate-300">{cur?.tagline}</p>
       {sec?.variante ? (
         // Le niveau décide de la variante jouée : on le dit à côté du curseur,
