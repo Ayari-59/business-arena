@@ -3,7 +3,7 @@ import Link from "next/link";
 import { startGameAction } from "../actions";
 import { getPlatformConfig } from "@/services/admin.service";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
-import { etendueDesDecisions, leviersDuNiveau } from "@/config/decisions";
+import { leviersDuNiveau } from "@/config/decisions";
 import { DEFAULT_SCENARIO_CODE, SCENARIO_CHOICES, SECTOR_LABELS, familyOf } from "@/config/scenarios/registry";
 import { SubmitButton } from "@/components/submit-button";
 import { QuickConfigFields } from "@/components/quick-config-form";
@@ -42,7 +42,6 @@ export default async function JouerPage({
   searchParams: Promise<{ secteur?: string; trop?: string; reserve?: string }>;
 }) {
   const config = await getPlatformConfig();
-  const decisions = etendueDesDecisions();
   // Celui qui revient retrouve sa partie AVANT d'en configurer une autre.
   const userId = await getGuestUserId();
   const enCours = userId ? await partiesSoloEnCours(userId) : [];
@@ -79,30 +78,18 @@ export default async function JouerPage({
               </h1>
             </div>
             <div className="order-3">
+              {/* UNE LIGNE, PAS UN DISCOURS. Le paragraphe, les trois puces et les cinq liens
+                  qui entouraient le formulaire disaient ce que la page d'accueil et le menu disent
+                  déjà : celui qui est ici veut jouer, il choisit son métier et son niveau. */}
               <p className="mt-4 max-w-lg text-base leading-relaxed text-slate-400">
-                Choisissez l&apos;un des {SCENARIO_CHOICES.length} métiers, puis menez votre entreprise
-                face à des concurrents qui ne vous feront aucun cadeau. De {decisions.minimum} à{" "}
-                {decisions.maximum} décisions par tour selon le niveau : prix, volumes, marketing,
-                qualité, financement. Chacune compte, et la crise de trésorerie réserve une leçon
-                que peu voient venir.
+                Choisissez un métier et un niveau. Premier contact ? Commencez au niveau 1.
               </p>
-              <ul className="mt-5 space-y-2 text-sm text-slate-300">
-                <li>· Premier contact ? Choisissez le niveau 1 · Découverte : des questions à deux réponses, tous les indices, aucune connaissance préalable requise</li>
-                <li>· Débriefing corrigé à chaque tour, fiches notions intégrées</li>
-                <li>· Votre profil de compétences progresse à chaque situation traitée</li>
-              </ul>
-              <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm">
-                <Link href="/entreprises" className="text-amber-300 underline-offset-4 hover:underline">
-                  Découvrir les {SCENARIO_CHOICES.length} entreprises
-                </Link>
+              <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm">
                 <Link href="/join" className="text-amber-300 underline-offset-4 hover:underline">
                   J&apos;ai un code (élève)
                 </Link>
                 <Link href="/reprendre" className="text-amber-300 underline-offset-4 hover:underline">
                   Reprendre avec mon code
-                </Link>
-                <Link href="/guide" className="text-slate-400 underline-offset-4 hover:underline">
-                  Guide
                 </Link>
                 <Link href="/profile" className="text-slate-400 underline-offset-4 hover:underline">
                   Mon profil
