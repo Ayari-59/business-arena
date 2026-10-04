@@ -46,7 +46,7 @@ export const ATELIER_NDRC: AtelierDefinition = {
     tours: 5,
     effectifParEquipe: "trois élèves",
     notes:
-      "PIXEL & CO oppose trois clientèles qui ne se pilotent pas de la même façon : le trafic payant, qu'il faut acheter à chaque fois, la base installée, qui revient si on la soigne, et les marketplaces, qui apportent du volume contre une commission. Le niveau retenu laisse les décisions commerciales ouvertes et ferme les décisions de structure : un atelier de première année n'a pas à faire arbitrer un emprunt. Le monde variable est décoché : toutes vos classes jouent le même marché. Les aléas restent possibles, atténués au niveau retenu, et se lisent dans le journal du tour.",
+      "PIXEL & CO oppose trois clientèles qui ne se pilotent pas de la même façon : le trafic payant, qu'il faut acheter à chaque fois, la base installée, qui revient si on la soigne, et les marketplaces, qui apportent du volume contre une commission. L'atelier travaille les décisions commerciales et laisse à zéro les décisions de structure, que le niveau met à l'écran : un atelier de première année n'a pas à faire arbitrer un emprunt. Décochez « Histoires d'investissement » à la création pour que le déroulé reste celui de l'atelier. Le monde variable est décoché : toutes vos classes jouent le même marché. Les aléas restent possibles, atténués au niveau retenu, et se lisent dans le journal du tour.",
   },
   seances: [
     {
@@ -528,9 +528,9 @@ export const ATELIER_NDRC: AtelierDefinition = {
     },
     {
       question:
-        "Le niveau retenu ferme les décisions de structure, est-ce un manque ?",
+        "L'atelier laisse à zéro les décisions de structure, est-ce un manque ?",
       reponse:
-        "C'est un choix. Un atelier de première année en NDRC porte sur la clientèle, pas sur le haut de bilan, et ouvrir des décisions que les équipes prendraient au hasard brouillerait la lecture de leurs marges. Si vous conduisez l'atelier en deuxième année, montez d'un niveau : les décisions de financement s'ajoutent sans rien changer au déroulé.",
+        "C'est un choix. Un atelier de première année en NDRC porte sur la clientèle, pas sur le haut de bilan, et ouvrir des décisions que les équipes prendraient au hasard brouillerait la lecture de leurs marges. Si vous conduisez l'atelier en deuxième année, travaillez aussi les décisions de financement et d'investissement, déjà à l'écran : elles s'ajoutent sans rien changer au déroulé.",
     },
     {
       question: "Comment évaluer le bloc de négociation avec cet atelier ?",

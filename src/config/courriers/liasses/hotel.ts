@@ -328,4 +328,78 @@ export const HOTEL_COURRIERS: CourrierDef[] = [
     emoji: "🧪",
     scope: "team",
   },
+  {
+    code: "hotel_inv_signal",
+    expediteur: "Office de tourisme · Service de la promotion",
+    objet: "Visite de repérage d'un voyagiste le mois prochain",
+    corps:
+      "Le voyagiste Sillage Voyages nous a fait savoir qu'il envisage d'ajouter notre ville à ses circuits d'automne. Ses équipes viendront visiter les hôtels du centre le mois prochain. Aucun engagement n'a été pris à ce stade, mais ses groupes pourraient représenter plusieurs centaines de nuitées dès le trimestre prochain.",
+    signataire: "La chargée de promotion",
+    effet: "Demande globale +8 % ce tour",
+    enJeu: "Un signe n'est pas une commande : anticiper coûte, attendre peut coûter plus.",
+    nature: "market",
+    pli: "email",
+    emoji: "🔭",
+    scope: "market",
+  },
+  {
+    code: "hotel_inv_grand_compte",
+    expediteur: "Sillage Voyages · Direction commerciale",
+    objet: "Contingent de chambres pour notre programmation de l'année",
+    corps:
+      "À l'issue de notre visite de repérage, notre comité retient votre ville pour ses séminaires d'entreprise et ses délégations. Des groupes de vingt à quarante personnes arriveront chaque semaine pendant les trois trimestres à venir. Nous répartissons ces réservations entre les hôtels du centre, pour environ trente pour cent de nuitées en plus sur l'agglomération.",
+    signataire: "Le directeur commercial",
+    effet: "Demande globale +30 % pendant 3 tours",
+    enJeu:
+      "Pouvez-vous loger ce volume ? Rouvrir des chambres, adresser le surplus à un confrère ou investir : lequel coûte le moins sur trois tours ?",
+    nature: "market",
+    pli: "simple",
+    emoji: "🧳",
+    scope: "market",
+  },
+  {
+    code: "hotel_inv_taux",
+    expediteur: "Crédit Hôtelier · Direction du développement",
+    objet: "Campagne temporaire sur les crédits d'équipement",
+    corps:
+      "Pour accompagner la rénovation du parc hôtelier de la région, notre banque ouvre une campagne sur les crédits d'équipement : literie, mise aux normes, création de chambres. Les taux sont abaissés de quarante pour cent sur les dossiers acceptés pendant les deux prochains trimestres. La grille habituelle s'appliquera de nouveau ensuite.",
+    signataire: "Le directeur du développement",
+    effet: "Taux d'intérêt ×0,6 pendant 2 tours",
+    enJeu:
+      "Emprunter pour investir coûte moins tant que la fenêtre est ouverte : le financement fait partie de la décision d'investir.",
+    nature: "macro",
+    pli: "simple",
+    emoji: "💶",
+    scope: "market",
+  },
+  {
+    code: "hotel_inv_concurrent",
+    expediteur: "Gazette de l'hôtellerie régionale · Rédaction",
+    objet: "Un hôtel de la place de la gare rouvre et affiche ses prix",
+    corps:
+      "La maison Larrivet, trois étoiles de la place de la gare, rouvre après une rénovation complète et l'ajout de deux salles de séminaire. Sa direction annonce des tarifs inférieurs d'environ dix pour cent à ceux du quartier jusqu'à la fin de l'année. Les professionnels s'attendent à un partage de la clientèle d'affaires entre les établissements du centre.",
+    signataire: "Le rédacteur en chef",
+    effet: "Demande globale −8 % pendant 2 tours",
+    enJeu:
+      "Un concurrent qui investit déplace le marché : suivre, se différencier ou se replier ?",
+    nature: "competition",
+    pli: "simple",
+    emoji: "🏗️",
+    scope: "market",
+  },
+  {
+    code: "hotel_inv_retournement",
+    expediteur: "Sillage Voyages · Direction des opérations",
+    objet: "Révision des volumes de notre programmation d'automne",
+    corps:
+      "La saison de séminaires s'achève plus tôt que prévu et deux délégations ont reporté leur venue. Nos départs vers votre ville passent d'un groupe par semaine à un groupe toutes les deux semaines. Le contingent de chambres initialement convenu est donc ramené à environ la moitié pour les deux prochains trimestres.",
+    signataire: "Le directeur des opérations",
+    effet: "Demande globale −12 % pendant 2 tours",
+    enJeu:
+      "Une capacité achetée pour une demande qui retombe reste à payer : l'amortissement ne s'arrête pas avec les réservations.",
+    nature: "market",
+    pli: "simple",
+    emoji: "📉",
+    scope: "market",
+  },
 ];

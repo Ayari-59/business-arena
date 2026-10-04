@@ -1,6 +1,7 @@
 import type { CompanyState, EngineScenarioConfig } from "../../../engine/types";
 import type { BotProfile } from "../../../engine/bots";
 import { parseScenarioConfig } from "../schema";
+import { evenementsDInvestissement } from "../../investissement-par-niveau";
 
 /**
  * Scénario ABONNEMENT — « VOLT FITNESS », salle de sport de 1 200 m²,
@@ -516,6 +517,8 @@ const rawFitness = {
       duration: 1,
       modifiers: [{ target: "demand", op: "mul", value: 1.12 }],
     },
+    // Investissement par niveau : jamais tirés (probabilité nulle), posés par le calendrier du niveau.
+    ...evenementsDInvestissement("fitness"),
   ],
   // L'énergie flambe au tour 3, en plein creux d'été : les charges montent
   // quand la salle est vide. Le pire moment, comme toujours.

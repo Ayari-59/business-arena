@@ -1,6 +1,7 @@
 import type { CompanyState, EngineScenarioConfig } from "../../../engine/types";
 import type { BotProfile } from "../../../engine/bots";
 import { parseScenarioConfig } from "../schema";
+import { evenementsDInvestissement } from "../../investissement-par-niveau";
 
 /**
  * Scénario HÔTEL — « L'ESCALE », hôtel 3 étoiles de 60 chambres en ville
@@ -501,6 +502,8 @@ const rawHotel = {
       duration: 1,
       modifiers: [{ target: "availability", op: "mul", value: 0.6 }],
     },
+    // Investissement par niveau : jamais tirés (probabilité nulle), posés par le calendrier du niveau.
+    ...evenementsDInvestissement("hotel"),
   ],
   // L'énergie flambe au tour 4 : la facture explose juste après la saison
   // haute, quand on croyait l'exercice sauvé.

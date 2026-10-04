@@ -8,7 +8,7 @@ vi.mock("@/db", () => ({ db: {} }));
 vi.mock("next/headers", () => ({ headers: vi.fn(), cookies: vi.fn() }));
 
 import { Courriel, Enveloppe, Lettre, Message, grilleDeCourriers } from "@/components/courrier";
-import { courrierParCode } from "@/config/courriers/registre";
+import { courrierParCode, referenceDuCourrier } from "@/config/courriers/registre";
 
 /**
  * L'ENVELOPPE ET SA LETTRE SONT LE MÊME PAPIER.
@@ -31,7 +31,7 @@ describe("l'harmonie du pli", () => {
     for (const html of [enveloppe(code), lettre(code)]) {
       expect(html).toContain("papier");
       expect(html).toContain(expediteur);
-      expect(html).toContain("NOVA-16/30");
+      expect(html).toContain(referenceDuCourrier(code)!);
     }
   });
 
@@ -168,7 +168,7 @@ describe("le courriel, autre matière", () => {
     const expediteur = courrierParCode.get(code)!.expediteur;
     for (const html of [courriel(code), message(code)]) {
       expect(html).toContain(expediteur);
-      expect(html).toContain("PIXELCO-21/22");
+      expect(html).toContain(referenceDuCourrier(code)!);
     }
   });
 

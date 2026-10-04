@@ -229,6 +229,7 @@ export async function createClassGameAction(formData: FormData): Promise<void> {
       economicOverrides,
       scoringWeightOverrides,
       variableWorld: formData.get("variableWorld") === "on",
+      investmentStories: formData.get("investmentStories") === "on",
       scenarioCode,
       quizMode: parsed.quizMode,
       answerFormat: parsed.answerFormat,

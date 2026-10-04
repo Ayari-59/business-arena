@@ -7,6 +7,7 @@ import type {
 } from "../../../engine/types";
 import type { BotProfile } from "../../../engine/bots";
 import { parseScenarioConfig } from "../schema";
+import { evenementsDInvestissement } from "../../investissement-par-niveau";
 
 /**
  * Scénario BOUTIQUE — « MAILLE & CO », marque de vêtements en maille,
@@ -806,6 +807,8 @@ const rawBoutique = {
       duration: 1,
       modifiers: [{ target: "demand", op: "mul", value: 1.2 }],
     },
+    // Investissement par niveau : jamais tirés (probabilité nulle), posés par le calendrier du niveau.
+    ...evenementsDInvestissement("boutique"),
   ],
   // La laine flambe au tour 5 : la marge d'achat se comprime juste après Noël,
   // quand la trésorerie a déjà tout donné dans le réassort.

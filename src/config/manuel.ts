@@ -121,7 +121,7 @@ export function manuel(f: FaitsDuManuel): Chapitre[] {
           type: "encadre",
           titre: "Si vous hésitez",
           texte:
-            "Niveau 3 pour une première séance : le prix, le volume, la qualité, l'entretien et la finance, sans les ressources humaines ni l'investissement. Trois entreprises sur le marché, rythme trimestriel. Vous monterez d'un niveau à la partie suivante, quand la classe demandera plus de leviers.",
+            "Niveau 3 pour une première séance : le prix, le volume, la qualité, l'entretien, la finance et l'investissement, sans les ressources humaines ni la R&D. Trois entreprises sur le marché, rythme trimestriel. Vous monterez d'un niveau à la partie suivante, quand la classe demandera plus de leviers.",
         },
       ],
     },

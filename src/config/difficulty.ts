@@ -24,11 +24,29 @@ export interface DifficultyPreset {
   decisions: {
     quality: boolean;
     maintenance: boolean;
+    /**
+     * Financer : emprunter, rembourser, augmenter le capital. Ouvert dès le
+     * premier niveau, avec l'investissement : on ne peut pas décider d'acheter
+     * une machine sans savoir d'où vient l'argent, ni traverser une crise de
+     * trésorerie sans pouvoir y répondre.
+     */
     finance: boolean;
+    /**
+     * Mobiliser le poste clients (escompte, affacturage). Un outil de
+     * trésorerie à part : il suppose de savoir lire un délai de paiement,
+     * ce que les deux premiers niveaux n'ont pas encore à faire.
+     */
+    creances: boolean;
     insurance: boolean;
     /** RH (embauches, formation, salaires) — doc 08 : dès ARBITRAGE. */
     hr: boolean;
-    /** Investissement capacitaire — doc 08 : dès ARBITRAGE. */
+    /**
+     * Investissement capacitaire : acheter de la capacité, ou des machines.
+     * Ouvert dès le premier niveau, comme le financement : c'est la décision
+     * qui donne un sens à l'emprunt, et elle se joue à tous les niveaux avec
+     * des événements à sa mesure (voir `config/investissement-par-niveau`).
+     * Le niveau Arbitrage garde la R&D, la RSE et les ressources humaines.
+     */
     investment: boolean;
     /**
      * Engagement RSE (Lot 2) — le levier « payer maintenant, gagner plus tard ».
@@ -54,8 +72,7 @@ export interface DifficultyPreset {
     /**
      * Recherche et développement : lancer une référence à développer, élever
      * le niveau technique. Un investissement immatériel qui coûte maintenant
-     * et rapporte plus tard : ouvert avec l'investissement, au niveau
-     * Arbitrage. Fermé, les références à développer sont livrées prêtes.
+     * et rapporte plus tard : ouvert au niveau Arbitrage, avec la RSE. Fermé, les références à développer sont livrées prêtes.
      */
     rd: boolean;
   };
@@ -68,27 +85,27 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     level: 1,
     code: "decouverte",
     name: "Découverte",
-    tagline: "Prix, production, marketing : l'essentiel, avec tous les indices.",
+    tagline: "Prix, production, marketing, emprunt et investissement : l'essentiel, avec tous les indices.",
     hintMaxLevel: 5,
-    decisions: { quality: false, maintenance: false, finance: false, insurance: false, hr: false, investment: false, rse: false, placement: false, dividend: false, rd: false },
+    decisions: { quality: false, maintenance: false, finance: true, creances: false, insurance: false, hr: false, investment: true, rse: false, placement: false, dividend: false, rd: false },
     eventProbabilityMultiplier: 0.5,
   },
   {
     level: 2,
     code: "gestion",
     name: "Gestion",
-    tagline: "Qualité et maintenance entrent en jeu.",
+    tagline: "Qualité et maintenance entrent en jeu, avec le financement et l'investissement.",
     hintMaxLevel: 5,
-    decisions: { quality: true, maintenance: true, finance: false, insurance: false, hr: false, investment: false, rse: false, placement: false, dividend: false, rd: false },
+    decisions: { quality: true, maintenance: true, finance: true, creances: false, insurance: false, hr: false, investment: true, rse: false, placement: false, dividend: false, rd: false },
     eventProbabilityMultiplier: 0.75,
   },
   {
     level: 3,
     code: "pilotage",
     name: "Pilotage",
-    tagline: "Financement et assurance : la trésorerie se pilote. Indices limités.",
+    tagline: "Assurance et créances clients : la trésorerie se pilote. Indices limités.",
     hintMaxLevel: 3,
-    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: false, investment: false, rse: false, placement: false, dividend: false, rd: false },
+    decisions: { quality: true, maintenance: true, finance: true, creances: true, insurance: true, hr: false, investment: true, rse: false, placement: false, dividend: false, rd: false },
     eventProbabilityMultiplier: 1,
   },
   {
@@ -97,7 +114,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     name: "Arbitrage",
     tagline: "Les aléas frappent plus souvent : anticipez.",
     hintMaxLevel: 3,
-    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: true, investment: true, rse: true, placement: false, dividend: false, rd: true },
+    decisions: { quality: true, maintenance: true, finance: true, creances: true, insurance: true, hr: true, investment: true, rse: true, placement: false, dividend: false, rd: true },
     eventProbabilityMultiplier: 1.25,
   },
   {
@@ -106,7 +123,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     name: "Stratégie",
     tagline: "Deux indices, pas un de plus, et un marché nerveux.",
     hintMaxLevel: 2,
-    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: true, investment: true, rse: true, placement: true, dividend: false, rd: true },
+    decisions: { quality: true, maintenance: true, finance: true, creances: true, insurance: true, hr: true, investment: true, rse: true, placement: true, dividend: false, rd: true },
     eventProbabilityMultiplier: 1.5,
   },
   {
@@ -116,7 +133,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
     tagline:
       "Affectation du résultat, aucun indice, événements doublés : vous répondez aussi aux associés.",
     hintMaxLevel: 0,
-    decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: true, investment: true, rse: true, placement: true, dividend: true, rd: true },
+    decisions: { quality: true, maintenance: true, finance: true, creances: true, insurance: true, hr: true, investment: true, rse: true, placement: true, dividend: true, rd: true },
     eventProbabilityMultiplier: 2,
   },
 ];
@@ -130,7 +147,7 @@ export const LEGACY_PRESET: DifficultyPreset = {
   name: "Pilotage",
   tagline: "",
   hintMaxLevel: 5,
-  decisions: { quality: true, maintenance: true, finance: true, insurance: true, hr: false, investment: false, rse: false, placement: false, dividend: false, rd: false },
+  decisions: { quality: true, maintenance: true, finance: true, creances: true, insurance: true, hr: false, investment: false, rse: false, placement: false, dividend: false, rd: false },
   eventProbabilityMultiplier: 1,
 };
 

@@ -1,6 +1,7 @@
 import type { CompanyState, EngineScenarioConfig } from "../../../engine/types";
 import type { BotProfile } from "../../../engine/bots";
 import { parseScenarioConfig } from "../schema";
+import { evenementsDInvestissement } from "../../investissement-par-niveau";
 
 /**
  * Scénario E-COMMERCE — « PIXEL & CO », pure player de décoration et
@@ -522,6 +523,8 @@ const rawEcommerce = {
       duration: 2,
       modifiers: [{ target: "material_cost", op: "mul", value: 1.08 }],
     },
+    // Investissement par niveau : jamais tirés (probabilité nulle), posés par le calendrier du niveau.
+    ...evenementsDInvestissement("ecom"),
   ],
   // Les frais de port explosent au dernier tour. Ils tombaient au tour 5, où
   // le BTS NDRC place sa séance de négociation avec les places de marché :

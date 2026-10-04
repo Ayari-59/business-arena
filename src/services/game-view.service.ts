@@ -529,6 +529,7 @@ export interface GameView {
     quality: boolean;
     maintenance: boolean;
     finance: boolean;
+    creances: boolean;
     insurance: boolean;
     hr: boolean;
     investment: boolean;
@@ -650,14 +651,6 @@ export interface GameView {
    * réglé l'exigence à zéro.
    */
   exigenceSauvetage: ExigenceSauvetage | null;
-  /**
-   * LE NIVEAU N'OUVRE PAS LE FINANCEMENT (1-2) : ni emprunt ni augmentation de capital
-   * à saisir. L'exigence de sauvetage ne s'applique donc pas — la réclamer bloquait la
-   * partie —, et les associés recapitalisent d'office en fin de tour
-   * (`recapitalisationAutomatique`). Ce drapeau sert au bandeau de crise : quand la
-   * crise persiste malgré tout, c'est que leur enveloppe est épuisée.
-   */
-  financeFermee: boolean;
   /**
    * L'ÉTAT DE TRÉSORERIE DE L'ÉQUIPE, HORS CLASSEMENT.
    *
@@ -1452,7 +1445,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
   const demandeSubvention = alerteView?.crise
     ? await demandeDuTour(playerTeam.id, game.currentRound)
     : null;
-  const exigenceBrute =
+  const exigenceSauvetage =
     alerteView?.crise && alerteView.financementObligatoire
       ? {
           manque: alerteView.manque,
@@ -1468,10 +1461,6 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
           avecAnimateur: kindDeLaPartie !== "solo",
         }
       : null;
-  // Sans décision de financement à ce niveau, le joueur ne peut pas satisfaire l'exigence :
-  // les associés recapitalisent d'office en fin de tour, et rien ne bloque la validation.
-  const financeFermee = !presetFromProfile(game.difficultyProfile).decisions.finance;
-  const exigenceSauvetage = financeFermee ? null : exigenceBrute;
 
   return {
     gameId,
@@ -1669,6 +1658,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         vocabulary: definition.vocabulary,
         enabled: {
           finance: preset.decisions.finance,
+          creances: preset.decisions.creances,
           investment: preset.decisions.investment,
           hr: preset.decisions.hr,
         },
@@ -2057,7 +2047,6 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     capitalAllowance: capitalAllowanceView,
     demandeSubvention,
     exigenceSauvetage,
-    financeFermee,
     costFacts: (() => {
       const product = (game.scenarioSnapshot as EngineScenarioConfig).product;
       return {

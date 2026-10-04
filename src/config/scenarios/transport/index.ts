@@ -1,6 +1,7 @@
 import type { CompanyState, EngineScenarioConfig } from "../../../engine/types";
 import type { BotProfile } from "../../../engine/bots";
 import { parseScenarioConfig } from "../schema";
+import { evenementsDInvestissement } from "../../investissement-par-niveau";
 
 /**
  * Scénario TRANSPORT — « ROUTE & CIE », transporteur routier régional de dix
@@ -528,6 +529,8 @@ const rawTransport = {
       duration: 2,
       modifiers: [{ target: "material_cost", op: "mul", value: 1.06 }],
     },
+    // Investissement par niveau : jamais tirés (probabilité nulle), posés par le calendrier du niveau.
+    ...evenementsDInvestissement("transport"),
   ],
   // Le gazole prend dix-huit pour cent au tour 3, en plein creux d'été : les
   // charges montent quand les camions roulent le moins.

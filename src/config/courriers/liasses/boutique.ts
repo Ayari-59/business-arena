@@ -312,4 +312,79 @@ export const BOUTIQUE_COURRIERS: CourrierDef[] = [
     emoji: "🎄",
     scope: "market",
   },
+  {
+    code: "boutique_inv_signal",
+    expediteur: "Agence Trame · Veille commerciale",
+    objet: "Une acheteuse des Galeries Montclair dans votre boutique",
+    corps:
+      "Une acheteuse des Galeries Montclair a passé une heure dans votre boutique samedi, puis a demandé à notre agence qui vous représentait. Elle prépare le rayon maille de la saison prochaine et évoquerait un espace dédié à votre collection. Rien n'est arrêté, aucune quantité n'a été avancée, et la décision se prendrait avec le comité d'achats.",
+    signataire: "Votre chargée de compte",
+    effet: "Demande globale +8 % ce tour",
+    enJeu:
+      "Un signe n'est pas une commande : anticiper coûte, attendre peut coûter plus.",
+    nature: "market",
+    pli: "email",
+    emoji: "👀",
+    scope: "market",
+  },
+  {
+    code: "boutique_inv_grand_compte",
+    expediteur: "Galeries Montclair · Direction des achats mode",
+    objet: "Référencement de votre collection pour la saison à venir",
+    corps:
+      "Notre comité d'achats retient votre collection de maille pour un espace dédié dans tous nos magasins de la région. Les quantités convenues dépassent d'environ un tiers vos ventes actuelles et couvrent les trois prochains trimestres. Les livraisons s'échelonneront par vagues, magasin par magasin, à partir du réassort de la semaine prochaine.",
+    signataire: "La directrice des achats mode",
+    effet: "Demande globale +30 % pendant 3 tours",
+    enJeu:
+      "Pouvez-vous servir ce volume ? Acheter plus, sous-traiter ou investir : lequel coûte le moins sur trois tours ?",
+    nature: "market",
+    pli: "simple",
+    emoji: "🛍️",
+    scope: "market",
+  },
+  {
+    code: "boutique_inv_taux",
+    expediteur: "Crédit du Commerce · Agence de quartier",
+    objet: "Campagne sur les crédits d'équipement du commerce de détail",
+    corps:
+      "Notre établissement ouvre une campagne temporaire sur les crédits d'équipement destinés aux commerces de détail : agencement, mobilier, matériel de caisse, extension de la réserve. Le taux de ces financements est réduit de quarante pour cent pendant deux trimestres, puis les conditions habituelles de la place reprennent.",
+    signataire: "Le directeur d'agence",
+    effet: "Taux d'intérêt ×0,6 pendant 2 tours",
+    enJeu:
+      "Emprunter pour investir coûte moins tant que la fenêtre est ouverte : le financement fait partie de la décision d'investir.",
+    nature: "macro",
+    pli: "simple",
+    emoji: "💶",
+    scope: "market",
+  },
+  {
+    code: "boutique_inv_concurrent",
+    expediteur: "Chambre de commerce et d'industrie · Observatoire du commerce",
+    objet: "Les Tricots Valmont annoncent trois ouvertures dans l'agglomération",
+    corps:
+      "L'enseigne Les Tricots Valmont ouvrira trois boutiques dans l'agglomération d'ici la fin de l'automne et renouvelle l'ensemble de sa ligne de maille. Elle annonce des prix d'appel inférieurs d'environ un cinquième à ceux pratiqués dans les rues commerçantes. Notre observatoire s'attend à un déplacement d'une partie de la clientèle.",
+    signataire: "Le responsable de l'observatoire",
+    effet: "Demande globale −8 % pendant 2 tours",
+    enJeu:
+      "Un concurrent qui investit déplace le marché : suivre, se différencier ou se replier ?",
+    nature: "competition",
+    pli: "simple",
+    emoji: "🧶",
+    scope: "market",
+  },
+  {
+    code: "boutique_inv_retournement",
+    expediteur: "Galeries Montclair · Direction du merchandising",
+    objet: "Ajustement des quantités convenues pour votre collection",
+    corps:
+      "La saison est plus douce que prévu et nos ventes de maille restent en deçà des hypothèses retenues au référencement. Nous ajustons donc à la baisse les quantités convenues pour les deux trimestres restants. Les pièces déjà livrées demeurent au rayon et votre collection garde sa place dans nos espaces.",
+    signataire: "La responsable du merchandising",
+    effet: "Demande globale −12 % pendant 2 tours",
+    enJeu:
+      "Une capacité achetée pour une demande qui retombe reste à payer : l'amortissement ne s'arrête pas avec les commandes.",
+    nature: "market",
+    pli: "simple",
+    emoji: "🌤️",
+    scope: "market",
+  },
 ];

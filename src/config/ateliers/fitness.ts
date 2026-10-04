@@ -530,9 +530,9 @@ export const ATELIER_FITNESS: AtelierDefinition = {
     },
     {
       question:
-        "Le niveau retenu n'ouvre ni le recrutement des coachs ni l'investissement, est-ce voulu ?",
+        "Le niveau retenu n'ouvre pas le recrutement des coachs et l'atelier ne travaille pas l'investissement, est-ce voulu ?",
       reponse:
-        "Oui. La relation client en deuxième année se pilote par ce qu'on offre et ce qu'on facture : qualité de l'encadrement, entretien du parc, prix, places mises en vente, et la trésorerie qui va avec. Ouvrir la structure ferait de la saturation de janvier une affaire d'embauche, alors que la leçon est de ne pas vendre au-delà de ce qu'on encadre. Le niveau se fixe à la création et ne change plus en cours de partie.",
+        "Oui. La relation client en deuxième année se pilote par ce qu'on offre et ce qu'on facture : qualité de l'encadrement, entretien du parc, prix, places mises en vente, et la trésorerie qui va avec. Ouvrir la structure ferait de la saturation de janvier une affaire d'embauche, alors que la leçon est de ne pas vendre au-delà de ce qu'on encadre. L'investissement est à l'écran, à zéro : décochez « Histoires d'investissement » à la création pour que le déroulé reste celui de l'atelier. Le niveau se fixe à la création et ne change plus en cours de partie.",
     },
     {
       question: "Le marketing ne retient vraiment aucun adhérent ?",

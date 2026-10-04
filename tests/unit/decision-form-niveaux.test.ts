@@ -55,14 +55,28 @@ const TITRE_AFFECTATION = "Affectation du résultat";
 const OUVERTURE_T2 = "à partir du tour 2";
 
 describe("encadrés du formulaire de décisions selon le niveau", () => {
-  it("niveau 1 : aucun encadré Financer, même vide", () => {
+  it("niveau 1 : l'emprunt et l'apport sont à l'écran, l'escompte et l'affacturage non", () => {
     const html = rendu(1, 1);
-    expect(html).not.toContain(TITRE_FINANCER);
-    expect(html).not.toContain('name="newLoan"');
+    expect(html).toContain(TITRE_FINANCER);
+    expect(html).toContain('name="newLoan"');
+    expect(html).toContain('name="capitalIncrease"');
+    expect(html).not.toContain('name="discount"');
+    expect(html).not.toContain('name="factoring"');
   });
 
-  it("niveau 2 : aucun encadré Financer non plus", () => {
-    expect(rendu(2, 1)).not.toContain(TITRE_FINANCER);
+  it("niveau 2 : même socle de financement qu'au niveau 1", () => {
+    const html = rendu(2, 1);
+    expect(html).toContain(TITRE_FINANCER);
+    expect(html).toContain('name="newLoan"');
+  });
+
+  it("un niveau qui ne ferait ni financer ni investir ne rend aucun encadré vide", () => {
+    // Plus aucun niveau livré n'est dans ce cas : la règle reste, pour un préréglage futur.
+    const html = rendu(1, 1, {
+      enabled: { ...presetByLevel.get(1)!.decisions, finance: false, investment: false },
+    });
+    expect(html).not.toContain(TITRE_FINANCER);
+    expect(html).not.toContain('name="newLoan"');
   });
 
   it("niveau 3 : l'encadré Financer est là, avec ses champs", () => {

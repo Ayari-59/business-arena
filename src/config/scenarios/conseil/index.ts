@@ -1,6 +1,7 @@
 import type { CompanyState, EngineScenarioConfig } from "../../../engine/types";
 import type { BotProfile } from "../../../engine/bots";
 import { parseScenarioConfig } from "../schema";
+import { evenementsDInvestissement } from "../../investissement-par-niveau";
 
 /**
  * Scénario SERVICES — « ATLAS CONSEIL », cabinet de conseil et bureau
@@ -508,6 +509,8 @@ const rawConseil = {
       duration: 2,
       modifiers: [{ target: "demand:pme", op: "mul", value: 1.3 }],
     },
+    // Investissement par niveau : jamais tirés (probabilité nulle), posés par le calendrier du niveau.
+    ...evenementsDInvestissement("conseil"),
   ],
   // Une réglementation nouvelle au tour 4 ouvre un marché : encore faut-il
   // avoir les consultants disponibles pour le prendre.

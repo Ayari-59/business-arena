@@ -1,6 +1,7 @@
 import type { CompanyState, EngineScenarioConfig } from "../../../engine/types";
 import type { BotProfile } from "../../../engine/bots";
 import { parseScenarioConfig } from "../schema";
+import { evenementsDInvestissement } from "../../investissement-par-niveau";
 
 /**
  * Scénario NOVA (doc 07) — enceinte portable « NOVA One », 6 tours
@@ -362,6 +363,8 @@ const rawNova = {
       duration: 2,
       modifiers: [{ target: "demand", op: "mul", value: 1.1 }],
     },
+    // Investissement par niveau : jamais tirés (probabilité nulle), posés par le calendrier du niveau.
+    ...evenementsDInvestissement("nova"),
   ],
   // Fournisseurs (doc 02 §5bis) : 3 fournisseurs avec des profils distincts.
   // Le standard est le référent (coût = 22 €, délai = 22 j, pas de risque).

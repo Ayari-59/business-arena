@@ -1,6 +1,7 @@
 import type { CompanyState, EngineScenarioConfig } from "../../../engine/types";
 import type { BotProfile } from "../../../engine/bots";
 import { parseScenarioConfig } from "../schema";
+import { evenementsDInvestissement } from "../../investissement-par-niveau";
 
 /**
  * Scénario BOUTIQUE MONO-PRODUIT — « MAILLE & CO », concept store de
@@ -492,6 +493,8 @@ const rawBoutique = {
       duration: 1,
       modifiers: [{ target: "demand", op: "mul", value: 1.2 }],
     },
+    // Investissement par niveau : jamais tirés (probabilité nulle), posés par le calendrier du niveau.
+    ...evenementsDInvestissement("boutique"),
   ],
   // Le coton flambe au tour 5 : la marge d'achat se comprime juste après Noël,
   // quand la trésorerie a déjà tout donné dans le réassort.

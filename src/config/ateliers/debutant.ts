@@ -7,7 +7,7 @@ import type { AtelierDefinition } from "./types";
  * on achète, on revend, et la marge se lit d'un coup d'œil. C'est l'animation
  * d'entrée, pensée pour une classe qui n'a jamais joué et qui n'a pas encore
  * les mots de la gestion. Une seule décision structurante par séance, un seul
- * calcul à la fois, et un niveau de jeu qui n'ouvre ni trésorerie, ni structure,
+ * calcul à la fois, et un niveau de jeu où l'on ne travaille qu'un levier à la fois,
  * pour que rien ne se décide au hasard.
  *
  * Ce n'est pas un atelier de section de technicien : il ne s'adosse à aucun
@@ -48,7 +48,7 @@ export const ATELIER_DEBUTANT: AtelierDefinition = {
     tours: 4,
     effectifParEquipe: "deux élèves",
     notes:
-      "La boutique achète pour revendre un seul article de mode : la marge s'y lit sans détour, et rien n'y brouille la découverte. La gamme de cinq références attend les niveaux suivants. Le niveau retenu n'ouvre que le prix et le volume : ni trésorerie, ni recrutement, ni investissement, pour qu'un débutant ne prenne aucune décision qu'il ne comprend pas. La taxe et les questions de connaissances sont désactivées, le monde variable aussi, pour que toutes vos classes vivent le même parcours et que l'erreur vienne des choix, pas du hasard.",
+      "La boutique achète pour revendre un seul article de mode : la marge s'y lit sans détour, et rien n'y brouille la découverte. La gamme de cinq références attend les niveaux suivants. Le niveau Découverte met aussi l'emprunt et l'investissement à l'écran ; l'atelier n'y touche pas : chaque séance n'annonce qu'un levier, et les autres restent à zéro, pour qu'un débutant ne prenne aucune décision qu'il ne comprend pas. Décochez « Histoires d'investissement » à la création, sans quoi des courriers de marché feraient bouger la demande entre vos séances. La taxe et les questions de connaissances sont désactivées, le monde variable aussi, pour que toutes vos classes vivent le même parcours et que l'erreur vienne des choix, pas du hasard.",
   },
   seances: [
     {
@@ -323,9 +323,9 @@ export const ATELIER_DEBUTANT: AtelierDefinition = {
         "Non, c'est même l'inverse. L'animation est faite pour venir avant le cours : elle donne aux élèves l'expérience d'une marge, d'un stock et d'une saison, sur laquelle le cours viendra ensuite poser des mots. Une classe qui a joué comprend un chapitre de gestion bien plus vite qu'une classe qui le découvre à froid.",
     },
     {
-      question: "Le niveau retenu est très fermé, est-ce un défaut ?",
+      question: "Le niveau retenu laisse beaucoup de leviers à zéro, est-ce un défaut ?",
       reponse:
-        "Non, c'est le point. Un débutant qui aurait accès à la trésorerie, au recrutement et à l'investissement prendrait dix décisions qu'il ne comprend pas, et n'apprendrait rien d'aucune. En n'ouvrant que le prix et la quantité, l'animation garantit que chaque décision est comprise. Les autres leviers viendront, un atelier plus tard.",
+        "Non, c'est le point. Un débutant qui toucherait à la trésorerie, au recrutement et à l'investissement prendrait dix décisions qu'il ne comprend pas, et n'apprendrait rien d'aucune. En ne travaillant que le prix et la quantité, l'animation garantit que chaque décision est comprise : les autres cases restent à zéro, et vous le dites en début de séance. Les autres leviers viendront, un atelier plus tard.",
     },
     {
       question: "Pourquoi des binômes plutôt que des équipes de trois ?",

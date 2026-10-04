@@ -50,6 +50,7 @@ import {
   Carte,
   CartesContexte,
   RecapDesDecisions,
+  fusionnerFinancerEtInvestir,
   estMontre,
   useModeCartes,
   type DefCarte,
@@ -118,7 +119,14 @@ function EquipmentPanel({
   setBuyQty,
   sellQty,
   setSellQty,
+  simple = false,
 }: {
+  /**
+   * Aux deux premiers niveaux, le parc se lit sans le vocabulaire du bilan : le prix, la
+   * capacité, et le tour où la machine sert. L'amortissement, le coefficient d'entretien et la
+   * valeur nette comptable viennent avec le niveau qui sait les lire.
+   */
+  simple?: boolean;
   offer: NonNullable<Parameters<typeof DecisionForm>[0]["equipmentOffer"]>;
   vocabulary: ScenarioVocabulary;
   buyQty: Record<string, number>;
@@ -190,11 +198,17 @@ function EquipmentPanel({
               </div>
               <div className="mt-2 flex flex-wrap gap-x-3 gap-y-0 text-xs text-slate-400 max-sm:mt-1">
                 <span>{t.costPerUnit.toLocaleString("fr-FR")} €/u</span>
-                <span>Amorti en {Math.round(t.depreciationRounds)} tours</span>
-                <span>Maintenance ×{t.maintenanceMultiplier.toLocaleString("fr-FR")}</span>
-                {owned > 0 ? (
-                  <span>VNC moy. {Math.round(avgBook).toLocaleString("fr-FR")} €</span>
-                ) : null}
+                {simple ? (
+                  <span>en service au tour suivant</span>
+                ) : (
+                  <>
+                    <span>Amorti en {Math.round(t.depreciationRounds)} tours</span>
+                    <span>Maintenance ×{t.maintenanceMultiplier.toLocaleString("fr-FR")}</span>
+                    {owned > 0 ? (
+                      <span>VNC moy. {Math.round(avgBook).toLocaleString("fr-FR")} €</span>
+                    ) : null}
+                  </>
+                )}
               </div>
               <div className="mt-2 grid grid-cols-2 gap-3 max-sm:mt-1">
                 <label className="block">
@@ -1726,6 +1740,7 @@ export function DecisionForm({
     quality: boolean;
     maintenance: boolean;
     finance: boolean;
+    creances: boolean;
     insurance: boolean;
     hr: boolean;
     investment: boolean;
@@ -2007,6 +2022,7 @@ export function DecisionForm({
     quality: true,
     maintenance: true,
     finance: true,
+    creances: true,
     insurance: true,
     hr: false,
     investment: false,
@@ -2134,7 +2150,7 @@ export function DecisionForm({
   // Le choix d'un fournisseur n'a son étape qu'en mono-produit : en gamme il se
   // fait dans le tableau des ventes (voir « S'approvisionner » plus bas).
   const approvisionnerVisible = !gamme && !!suppliersOffer && suppliersOffer.length > 0;
-  const tresorerieVisible = on.dividend || (on.finance && !!treasuryOffer);
+  const tresorerieVisible = on.dividend || (on.creances && !!treasuryOffer);
   const assuranceVisible =
     on.insurance && (!!insuranceOffer || (insuranceFormulas?.length ?? 0) > 0);
   const etapesVisibles = [
@@ -2341,7 +2357,7 @@ export function DecisionForm({
               },
             ]
           : []),
-        ...(on.finance && treasuryOffer
+        ...(on.creances && treasuryOffer
           ? [
               {
                 cle: "mobilisation",
@@ -3258,6 +3274,8 @@ export function DecisionForm({
             setBuyQty={setEquipBuyQty}
             sellQty={equipSellQty}
             setSellQty={setEquipSellQty}
+            // Les niveaux qui n'ouvrent pas encore les créances sont ceux qui débutent.
+            simple={!on.creances}
           />
           <input type="hidden" name="equipmentBuyJson" value={JSON.stringify(
             equipmentOffer.types
@@ -3296,7 +3314,7 @@ export function DecisionForm({
           />
         </Family>
       ) : null}
-      {on.finance && treasuryOffer ? (
+      {on.creances && treasuryOffer ? (
         <Family carte="mobilisation" legend="💶 Trésorerie · mobiliser le poste clients">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
@@ -3590,9 +3608,11 @@ export function DecisionForm({
       {modeCartes && carteCourante?.cle === "recap" ? enTeteDuRecapitulatif : null}
       {modeCartes && carteCourante?.cle === "recap" && donneesRecap ? (
         <RecapDesDecisions
-          lignes={cartes
-            .filter((c) => c.resume)
-            .map((c) => ({ cle: c.cle, nom: c.nom, valeur: c.resume!(donneesRecap) }))}
+          lignes={fusionnerFinancerEtInvestir(
+            cartes
+              .filter((c) => c.resume)
+              .map((c) => ({ cle: c.cle, nom: c.nom, valeur: c.resume!(donneesRecap) })),
+          )}
           surModifier={(cle) => {
             const i = cartes.findIndex((c) => c.cle === cle);
             if (i >= 0) allerALaCarte(i);

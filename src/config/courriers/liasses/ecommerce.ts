@@ -324,4 +324,79 @@ export const ECOMMERCE_COURRIERS: CourrierDef[] = [
     emoji: "🛃",
     scope: "market",
   },
+  {
+    code: "ecom_inv_signal",
+    expediteur: "Régie publicitaire Audiences · Note de marché",
+    objet: "Test de mise en avant décoration sur la place de marché Alcôve",
+    corps:
+      "Nos données montrent que la place de marché Alcôve prépare un test de mise en avant de la décoration d'intérieur, en tête de rayon, avec quelques vendeurs sélectionnés. Le test durerait trois semaines et pourrait être élargi le trimestre prochain, sans qu'aucun calendrier ni aucun volume ne soit annoncé à ce jour.",
+    signataire: "L'équipe Partenaires",
+    effet: "Demande globale +8 % ce tour",
+    enJeu:
+      "Un signe n'est pas une commande : anticiper coûte, attendre peut coûter plus.",
+    nature: "market",
+    pli: "email",
+    emoji: "👀",
+    scope: "market",
+  },
+  {
+    code: "ecom_inv_grand_compte",
+    expediteur: "Place de marché Alcôve · Direction des partenariats vendeurs",
+    objet: "Référencement en tête de rayon Décoration pour trois trimestres",
+    corps:
+      "À l'issue du test, la place de marché Alcôve référence les boutiques de décoration retenues en tête de rayon, avec bandeau saisonnier et mise en avant dans sa lettre d'information. Nos prévisions tablent sur plus de trente pour cent de commandes supplémentaires sur la catégorie, pour les trois trimestres à venir, avec un délai d'expédition de quarante-huit heures.",
+    signataire: "Le directeur des partenariats vendeurs",
+    effet: "Demande globale +30 % pendant 3 tours",
+    enJeu:
+      "Pouvez-vous servir ce volume ? Produire plus, sous-traiter ou investir : lequel coûte le moins sur trois tours ?",
+    nature: "market",
+    pli: "simple",
+    emoji: "🛍️",
+    scope: "market",
+  },
+  {
+    code: "ecom_inv_taux",
+    expediteur: "Banque des Professions · Direction des entreprises",
+    objet: "Campagne temporaire sur les crédits d'équipement logistique",
+    corps:
+      "Pour deux trimestres, la banque ouvre une campagne sur les crédits d'équipement : le taux appliqué est réduit de quarante pour cent par rapport à notre barème habituel. Elle s'adresse aux entreprises de vente à distance et couvre rayonnages, entrepôts et matériel de préparation de commandes. Les dossiers complets déposés avant la fin du second trimestre sont concernés.",
+    signataire: "Le directeur des entreprises",
+    effet: "Taux d'intérêt ×0,6 pendant 2 tours",
+    enJeu:
+      "Emprunter pour investir coûte moins tant que la fenêtre est ouverte : le financement fait partie de la décision d'investir.",
+    nature: "macro",
+    pli: "simple",
+    emoji: "🏦",
+    scope: "market",
+  },
+  {
+    code: "ecom_inv_concurrent",
+    expediteur: "Fédération du commerce en ligne · Note aux adhérents",
+    objet: "Ouverture d'un second entrepôt par la boutique Maison Vélane",
+    corps:
+      "La boutique Maison Vélane annonce l'ouverture d'un second entrepôt de douze mille mètres carrés près de Lyon, équipé d'une ligne de préparation automatisée. Elle l'accompagne d'une politique de prix agressive, avec quinze pour cent de remise permanente sur ses références d'entrée de gamme. Nos adhérents anticipent un partage du marché sur deux trimestres.",
+    signataire: "Le délégué général",
+    effet: "Demande globale −8 % pendant 2 tours",
+    enJeu:
+      "Un concurrent qui investit déplace le marché : suivre, se différencier ou se replier ?",
+    nature: "competition",
+    pli: "simple",
+    emoji: "🏭",
+    scope: "market",
+  },
+  {
+    code: "ecom_inv_retournement",
+    expediteur: "Place de marché Alcôve · Direction des catégories",
+    objet: "Révision du programme de mise en avant Décoration",
+    corps:
+      "Au terme de l'examen trimestriel, la place de marché Alcôve redéploie son espace de tête de rayon vers la rentrée scolaire et réduit le programme de mise en avant de la décoration. Les boutiques référencées conservent leur fiche, mais le trafic issu de la catégorie sera nettement moindre pendant les deux trimestres suivants.",
+    signataire: "La directrice des catégories",
+    effet: "Demande globale −12 % pendant 2 tours",
+    enJeu:
+      "Une capacité achetée pour une demande qui retombe reste à payer : l'amortissement ne s'arrête pas avec les commandes.",
+    nature: "market",
+    pli: "simple",
+    emoji: "📉",
+    scope: "market",
+  },
 ];

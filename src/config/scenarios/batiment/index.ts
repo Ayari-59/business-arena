@@ -1,6 +1,7 @@
 import type { CompanyState, EngineScenarioConfig } from "../../../engine/types";
 import type { BotProfile } from "../../../engine/bots";
 import { parseScenarioConfig } from "../schema";
+import { evenementsDInvestissement } from "../../investissement-par-niveau";
 
 /**
  * Scénario BÂTIMENT — « MARTEL & FILS », entreprise de rénovation de quatorze
@@ -502,6 +503,8 @@ const rawBatiment = {
       duration: 2,
       modifiers: [{ target: "material_cost", op: "mul", value: 1.1 }],
     },
+    // Investissement par niveau : jamais tirés (probabilité nulle), posés par le calendrier du niveau.
+    ...evenementsDInvestissement("batiment"),
   ],
   // Le crédit immobilier se resserre au tour 4 : les particuliers reportent
   // leurs travaux au moment même où la saison devrait repartir.

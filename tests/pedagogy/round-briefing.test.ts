@@ -98,7 +98,7 @@ function input(over: Partial<BriefingInput> = {}): BriefingInput {
   return {
     result: result(),
     vocabulary: VOCABULARY,
-    enabled: { finance: true, investment: true, hr: true },
+    enabled: { finance: true, creances: true, investment: true, hr: true },
     hasTreasuryTools: true,
     hasInvestmentOffer: true,
     perishable: false,
@@ -175,7 +175,7 @@ describe("contexte des tours suivants", () => {
     const b = roundBriefing(
       input({
         result: result(saturee),
-        enabled: { finance: false, investment: false, hr: false },
+        enabled: { finance: false, creances: false, investment: false, hr: false },
       }),
     );
     expect(b.code).toBe("demand_refused");
@@ -281,5 +281,73 @@ describe("contexte des tours suivants", () => {
     );
     expect(b.headline).toContain("nuitées");
     expect(JSON.stringify(b)).not.toContain("unités");
+  });
+});
+
+describe("investir se décide avant de manquer de place", () => {
+  const production = (utilizationRate: number) => ({
+    planned: 4_000,
+    produced: 4_000,
+    machineCapacity: 4_200,
+    laborCapacity: 6_500,
+    utilizationRate,
+    producedQuality: 1,
+  });
+
+  it("un outil à 90 % sans client refusé annonce le plafond, avant qu'il ne coûte", () => {
+    const b = roundBriefing(input({ result: result({ production: production(0.9) }) }));
+    expect(b.code).toBe("capacity_tension");
+    expect(plain(b.headline)).toContain("90 %");
+    expect(b.routes.map((r) => r.label)).toContain("Investir avant le pic");
+    // Chaque route dit ce qu'elle rapporte ET ce qu'elle coûte.
+    for (const route of b.routes) {
+      expect(route.gain.length).toBeGreaterThan(20);
+      expect(route.risque.length).toBeGreaterThan(20);
+    }
+  });
+
+  it("un client refusé passe d'abord : c'est la règle de la demande perdue qui parle", () => {
+    const refus = result({
+      production: production(1),
+      market: {
+        bySegment: {
+          a: { potential: 9_000, attraction: 1, share: 0.4, demandForCompany: 3_600, sold: 3_000, lost: 900, revenue: 0, commission: 0 },
+        },
+        totalShare: 0.3,
+      },
+    });
+    expect(roundBriefing(input({ result: refus })).code).toBe("demand_refused");
+  });
+
+  it("le niveau qui n'ouvre pas l'investissement n'est pas invité à investir", () => {
+    const b = roundBriefing(
+      input({
+        result: result({ production: production(0.95) }),
+        enabled: { finance: true, creances: false, investment: false, hr: false },
+      }),
+    );
+    expect(b.code).toBe("steady");
+  });
+
+  it("un secteur qui n'offre aucune capacité à acheter n'est pas invité non plus", () => {
+    const b = roundBriefing(input({ result: result({ production: production(0.95) }), hasInvestmentOffer: false }));
+    expect(b.code).toBe("steady");
+  });
+
+  it("une caisse qui dépasse une fois et demie les charges de structure dort", () => {
+    const b = roundBriefing(
+      input({ result: result({ balanceSheet: { ...result().balanceSheet, cash: 200_000 } }) }),
+    );
+    expect(b.code).toBe("idle_cash");
+    expect(plain(b.headline)).toContain("200 000 €");
+  });
+
+  it("une caisse juste suffisante ne dort pas, et un découvert l'interdit", () => {
+    expect(roundBriefing(input()).code).toBe("steady");
+    const decouvert = result({
+      balanceSheet: { ...result().balanceSheet, cash: 200_000, overdraft: 5_000 },
+      functionalBalance: { frng: 100_000, bfr: 70_000, netTreasury: 195_000 },
+    });
+    expect(roundBriefing(input({ result: decouvert })).code).not.toBe("idle_cash");
   });
 });

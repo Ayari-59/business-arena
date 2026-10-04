@@ -69,9 +69,10 @@ describe("les champs comptés sont ceux du formulaire", () => {
     decisions: Record<string, boolean>;
   }[];
 
-  it("le niveau 1 n'ouvre que le socle, le niveau 6 tout le reste", () => {
+  it("le niveau 1 ouvre le socle et le financement, le niveau 6 tout le reste", () => {
     const parNiveau = new Map(presets.map((p) => [p.level, champsOuverts(p.decisions)]));
-    expect(parNiveau.get(1)).toBe(4); // prix, volume, communication, note
+    // prix, volume, communication, note + emprunt, remboursement, capital + capacité, parc
+    expect(parNiveau.get(1)).toBe(9);
     expect(parNiveau.get(6)).toBe(23);
   });
 

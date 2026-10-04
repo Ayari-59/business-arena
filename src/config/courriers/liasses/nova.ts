@@ -438,4 +438,79 @@ export const NOVA_COURRIERS: CourrierDef[] = [
     emoji: "🏆",
     scope: "team",
   },
+  {
+    code: "nova_inv_signal",
+    expediteur: "Agence Berthaud · Veille et relations presse",
+    objet: "Un essai en rayon signalé chez le réseau Altimax",
+    corps:
+      "Le réseau Altimax, qui compte quatre-vingts magasins d'électronique dans le nord, met vos enceintes en tête de gondole dans douze de ses points de vente depuis lundi. Son responsable du rayon audio a confié à un confrère que l'essai pourrait s'élargir le trimestre prochain si les ventes tiennent. Aucun volume n'a été avancé.",
+    signataire: "Votre chargée de compte",
+    effet: "Demande globale +8 % ce tour",
+    enJeu:
+      "Un signe n'est pas une commande : anticiper coûte, attendre peut coûter plus.",
+    nature: "market",
+    pli: "email",
+    emoji: "👀",
+    scope: "market",
+  },
+  {
+    code: "nova_inv_grand_compte",
+    expediteur: "Altimax Distribution · Direction des achats",
+    objet: "Référencement de vos enceintes sur trois trimestres",
+    corps:
+      "À l'issue de l'essai conduit dans douze magasins, notre comité confirme le référencement de vos enceintes dans l'ensemble de nos quatre-vingts points de vente. Le volume convenu dépasse d'environ un tiers vos ventes actuelles et court sur les trois prochains trimestres. Les livraisons se feront par palettes, magasin par magasin.",
+    signataire: "Le directeur des achats",
+    effet: "Demande globale +30 % pendant 3 tours",
+    enJeu:
+      "Pouvez-vous servir ce volume ? Produire plus, sous-traiter ou investir : lequel coûte le moins sur trois tours ?",
+    nature: "market",
+    pli: "simple",
+    emoji: "🏬",
+    scope: "market",
+  },
+  {
+    code: "nova_inv_taux",
+    expediteur: "Banque Régionale du Nord · Agence entreprises",
+    objet: "Campagne sur les crédits d'équipement industriels",
+    corps:
+      "Notre établissement ouvre une campagne temporaire sur les crédits d'équipement destinés aux entreprises industrielles de la région : machines, lignes d'assemblage, outillage. Le taux de ces financements est réduit de quarante pour cent pendant deux trimestres, puis les conditions habituelles de la banque reprennent.",
+    signataire: "Le directeur d'agence",
+    effet: "Charges d'intérêts ×0,6 pendant 2 tours",
+    enJeu:
+      "Emprunter pour investir coûte moins tant que la fenêtre est ouverte : le financement fait partie de la décision d'investir.",
+    nature: "macro",
+    pli: "simple",
+    emoji: "💶",
+    scope: "market",
+  },
+  {
+    code: "nova_inv_concurrent",
+    expediteur: "Fédération de l'électronique grand public",
+    objet: "Kelvox Acoustique annonce une seconde ligne d'assemblage",
+    corps:
+      "Notre adhérent Kelvox Acoustique inaugurera cet automne une seconde ligne d'assemblage et doublera ainsi sa capacité d'enceintes nomades. Pour l'écouler, il propose à ses revendeurs des prix de lancement inférieurs d'environ douze pour cent à ceux du marché. Plusieurs enseignes réexaminent déjà leurs linéaires.",
+    signataire: "Le délégué général",
+    effet: "Demande globale −8 % pendant 2 tours",
+    enJeu:
+      "Un concurrent qui investit déplace le marché : suivre, se différencier ou se replier ?",
+    nature: "competition",
+    pli: "simple",
+    emoji: "📣",
+    scope: "market",
+  },
+  {
+    code: "nova_inv_retournement",
+    expediteur: "Altimax Distribution · Direction des approvisionnements",
+    objet: "Révision des quantités convenues pour votre référencement",
+    corps:
+      "Les ventes en magasin restent en deçà des prévisions retenues lors du référencement, et nos stocks de rayon audio sont élevés à l'approche de la fin d'année. Nous révisons donc à la baisse le volume convenu pour les deux trimestres restants. Les palettes déjà expédiées sont conservées et le référencement lui-même est maintenu.",
+    signataire: "La responsable des approvisionnements",
+    effet: "Demande globale −12 % pendant 2 tours",
+    enJeu:
+      "Une capacité achetée pour une demande qui retombe reste à payer : l'amortissement ne s'arrête pas avec les commandes.",
+    nature: "market",
+    pli: "simple",
+    emoji: "📉",
+    scope: "market",
+  },
 ];

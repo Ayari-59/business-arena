@@ -325,4 +325,78 @@ export const BISTROT_COURRIERS: CourrierDef[] = [
     emoji: "📝",
     scope: "team",
   },
+  {
+    code: "bistrot_inv_signal",
+    expediteur: "Association des commerçants du quartier d'affaires",
+    objet: "Installation prochaine d'un bureau d'études dans la rue",
+    corps:
+      "Le groupe Montclar Ingénierie emménagera à la rentrée dans l'immeuble voisin de la place. Son secrétariat général consulte déjà les restaurateurs du quartier pour ses déjeuners d'affaires et ses réceptions. Aucune décision n'est prise, mais le volume pourrait se chiffrer en dizaines de couverts par semaine dès le trimestre prochain.",
+    signataire: "Le président de l'association",
+    effet: "Demande globale +8 % ce tour",
+    enJeu: "Un signe n'est pas une commande : anticiper coûte, attendre peut coûter plus.",
+    nature: "market",
+    pli: "email",
+    emoji: "🔔",
+    scope: "market",
+  },
+  {
+    code: "bistrot_inv_grand_compte",
+    expediteur: "Montclar Ingénierie · Direction des services généraux",
+    objet: "Déjeuners d'affaires et banquets pour l'année à venir",
+    corps:
+      "Notre installation est achevée et nous arrêtons notre organisation : un déjeuner d'affaires de vingt-cinq couverts chaque midi de semaine et un banquet de quatre-vingts couverts par mois, pendant les trois trimestres à venir. Nous répartissons ces réservations entre les tables du quartier, soit environ trente pour cent de couverts en plus pour l'ensemble des maisons.",
+    signataire: "Le directeur des services généraux",
+    effet: "Demande globale +30 % pendant 3 tours",
+    enJeu:
+      "Pouvez-vous servir ce volume ? Étendre la capacité, confier une partie à un confrère ou investir : lequel coûte le moins sur trois tours ?",
+    nature: "market",
+    pli: "simple",
+    emoji: "🍽️",
+    scope: "market",
+  },
+  {
+    code: "bistrot_inv_taux",
+    expediteur: "Crédit du Commerce · Direction des professionnels",
+    objet: "Campagne temporaire sur les crédits d'équipement",
+    corps:
+      "Notre banque ouvre une campagne en faveur de l'équipement des restaurateurs : cuisine, chambre froide, mobilier de salle. Les taux des crédits d'équipement sont abaissés de quarante pour cent sur les dossiers acceptés pendant les deux prochains trimestres. La grille habituelle s'appliquera de nouveau ensuite.",
+    signataire: "Le directeur des professionnels",
+    effet: "Taux d'intérêt ×0,6 pendant 2 tours",
+    enJeu:
+      "Emprunter pour investir coûte moins tant que la fenêtre est ouverte : le financement fait partie de la décision d'investir.",
+    nature: "macro",
+    pli: "simple",
+    emoji: "💶",
+    scope: "market",
+  },
+  {
+    code: "bistrot_inv_concurrent",
+    expediteur: "Syndicat des restaurateurs de l'agglomération",
+    objet: "Réouverture de la brasserie Verchère avec une seconde salle",
+    corps:
+      "La brasserie Verchère, au bout de l'avenue, rouvre avec une seconde salle de cent vingt couverts et une cuisine entièrement rééquipée. Sa direction annonce une formule du midi inférieure d'environ un cinquième à celles du quartier jusqu'à la fin de l'année. La clientèle d'affaires devrait se répartir autrement entre les maisons du secteur.",
+    signataire: "Le président du syndicat",
+    effet: "Demande globale −8 % pendant 2 tours",
+    enJeu:
+      "Un concurrent qui investit déplace le marché : suivre, se différencier ou se replier ?",
+    nature: "competition",
+    pli: "simple",
+    emoji: "🏪",
+    scope: "market",
+  },
+  {
+    code: "bistrot_inv_retournement",
+    expediteur: "Montclar Ingénierie · Direction financière",
+    objet: "Révision de nos commandes de restauration",
+    corps:
+      "Dans le cadre d'un plan de maîtrise des dépenses, nos banquets passent d'un par mois à un tous les deux mois. Nos déjeuners d'affaires sont ramenés de vingt-cinq à une douzaine de couverts par midi, et une partie de nos équipes déjeune désormais sur place. Cette révision s'applique pour les deux prochains trimestres.",
+    signataire: "Le directeur financier",
+    effet: "Demande globale −12 % pendant 2 tours",
+    enJeu:
+      "Une capacité achetée pour une demande qui retombe reste à payer : l'amortissement ne s'arrête pas avec les commandes.",
+    nature: "market",
+    pli: "simple",
+    emoji: "📉",
+    scope: "market",
+  },
 ];

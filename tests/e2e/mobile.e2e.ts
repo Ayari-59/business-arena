@@ -546,9 +546,9 @@ describe("pendant une partie", () => {
       await page.getByRole("button", { name: /^Continuer/ }).last().click();
     }
     // Le financement ne porte que l'emprunt et le capital : le parc machines a sa carte
-    // (« Investissement »), offerte aux niveaux qui ouvrent l'investissement.
+    // (« Investissement »), la suivante, ouverte dès le premier niveau.
     expect(await page.locator('input[name="newLoan"]:visible').count()).toBe(1);
-    expect(await page.getByText(/Parc machines|Acheter/).count()).toBe(0);
+    expect(await page.getByText(/Parc machines|Acheter/).filter({ visible: true }).count()).toBe(0);
     await page.getByRole("button", { name: /^Continuer/ }).last().click();
     await page.waitForTimeout(300);
     expect(await titreDeLaCarte()).not.toMatch(/Faut-il financer/i);

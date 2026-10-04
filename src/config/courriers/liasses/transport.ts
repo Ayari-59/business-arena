@@ -309,4 +309,78 @@ export const TRANSPORT_COURRIERS: CourrierDef[] = [
     emoji: "🛣️",
     scope: "market",
   },
+  {
+    code: "transport_inv_signal",
+    expediteur: "Mérien Logistique · Service exploitation",
+    objet: "Pilote de flux entre la plateforme de Valmont et le littoral",
+    corps:
+      "Nous testons dès la semaine prochaine un nouveau flux entre notre plateforme de Valmont et nos magasins du littoral, à raison de trois ou quatre départs par semaine. Si le pilote est concluant, le volume pourrait dépasser quatre-vingts palettes par jour dès le trimestre prochain. Rien n'est arrêté à ce stade : nous consultons plusieurs transporteurs de la région.",
+    signataire: "Le responsable d'exploitation",
+    effet: "Demande globale +8 % ce tour",
+    enJeu: "Un signe n'est pas une commande : anticiper coûte, attendre peut coûter plus.",
+    nature: "market",
+    pli: "email",
+    emoji: "👀",
+    scope: "market",
+  },
+  {
+    code: "transport_inv_grand_compte",
+    expediteur: "Mérien Logistique · Direction des transports",
+    objet: "Confirmation du flux régulier Valmont – littoral",
+    corps:
+      "Le pilote est concluant et notre direction valide le flux régulier au départ de Valmont : environ quatre-vingts palettes par jour ouvré, du lundi au samedi, pour les trois trimestres à venir. Les enlèvements se font à quai entre quatre et six heures du matin. Le volume est confirmé par écrit et le cahier des charges détaillé suit sous huitaine.",
+    signataire: "Le directeur des transports",
+    effet: "Demande globale +30 % pendant 3 tours",
+    enJeu:
+      "Pouvez-vous servir ce volume ? Produire plus, sous-traiter ou investir : lequel coûte le moins sur trois tours ?",
+    nature: "market",
+    pli: "simple",
+    emoji: "📦",
+    scope: "market",
+  },
+  {
+    code: "transport_inv_taux",
+    expediteur: "Banque des Professions · Agence entreprises",
+    objet: "Campagne temporaire sur les crédits d'équipement professionnels",
+    corps:
+      "Notre agence ouvre une campagne sur les crédits d'équipement destinés aux véhicules industriels, aux remorques et aux matériels de quai. Les taux appliqués aux dossiers acceptés sont réduits de quarante pour cent pendant deux trimestres. Les demandes sont instruites dans l'ordre d'arrivée, après l'examen habituel de vos comptes.",
+    signataire: "Votre chargée d'affaires",
+    effet: "Taux d'intérêt ×0,6 pendant 2 tours",
+    enJeu:
+      "Emprunter pour investir coûte moins tant que la fenêtre est ouverte : le financement fait partie de la décision d'investir.",
+    nature: "macro",
+    pli: "simple",
+    emoji: "🏦",
+    scope: "market",
+  },
+  {
+    code: "transport_inv_concurrent",
+    expediteur: "Union professionnelle du transport routier · Lettre d'information",
+    objet: "Arrivée d'un opérateur doté d'une flotte neuve sur la région",
+    corps:
+      "Le groupe Havrin Express annonce l'acquisition de vingt ensembles routiers neufs et l'ouverture d'un quai de messagerie à Valmont. Il affiche, pour ses premiers contrats, des tarifs inférieurs d'environ dix pour cent à ceux du marché régional. Plusieurs chargeurs ont déjà reçu son offre, et le partage des lots s'annonce plus serré.",
+    signataire: "Le délégué régional",
+    effet: "Demande globale −8 % pendant 2 tours",
+    enJeu:
+      "Un concurrent qui investit déplace le marché : suivre, se différencier ou se replier ?",
+    nature: "competition",
+    pli: "simple",
+    emoji: "📣",
+    scope: "market",
+  },
+  {
+    code: "transport_inv_retournement",
+    expediteur: "Mérien Logistique · Direction des achats",
+    objet: "Révision du programme de transport du prochain trimestre",
+    corps:
+      "À la suite de la réorganisation de nos approvisionnements, le flux au départ de Valmont est ramené d'environ quatre-vingts à une cinquantaine de palettes par jour. Une partie du volume est désormais servie depuis notre stock tampon, ce qui réduit les expéditions sans modifier les destinations. Le contrat est révisé en conséquence par avenant, à compter du trimestre prochain.",
+    signataire: "Le directeur des achats",
+    effet: "Demande globale −12 % pendant 2 tours",
+    enJeu:
+      "Une capacité achetée pour une demande qui retombe reste à payer : l'amortissement ne s'arrête pas avec les commandes.",
+    nature: "market",
+    pli: "simple",
+    emoji: "📊",
+    scope: "market",
+  },
 ];

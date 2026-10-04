@@ -105,13 +105,14 @@ describe("niveaux de difficulté et paramètres économiques", () => {
       quality: true,
       maintenance: true,
       finance: true,
+      creances: true,
       insurance: true,
-      hr: true, // Stratégie : RH et investissement ouverts dès Arbitrage
+      hr: true, // Stratégie : les ressources humaines s'ouvrent à Arbitrage
       investment: true,
       rse: true, // engagement RSE ouvert dès Arbitrage
       placement: true, // et le placement du surplus, propre aux niveaux hauts
       dividend: false, // l'affectation du résultat n'appartient qu'au niveau 6
-      rd: true, // la R&D s'ouvre avec l'investissement, dès Arbitrage
+      rd: true, // la R&D s'ouvre à Arbitrage, avec la RSE
     });
   });
 
@@ -185,7 +186,7 @@ describe("niveaux de difficulté et paramètres économiques", () => {
     );
   });
 
-  it("au niveau 1 (Découverte), seules les décisions essentielles sont exposées", async () => {
+  it("au niveau 1 (Découverte), on peut emprunter et investir, mais rien de plus", async () => {
     const orgId = (await getTeacherOrgId(teacherId))!;
     const easy = await createClassGame({
       teacherId,
@@ -205,10 +206,11 @@ describe("niveaux de difficulté et paramètres économiques", () => {
     expect(view!.enabledDecisions).toEqual({
       quality: false,
       maintenance: false,
-      finance: false,
+      finance: true,
+      creances: false,
       insurance: false,
       hr: false,
-      investment: false,
+      investment: true,
       rse: false,
       placement: false,
       dividend: false,

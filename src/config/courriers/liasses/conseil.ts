@@ -327,4 +327,79 @@ export const CONSEIL_COURRIERS: CourrierDef[] = [
     emoji: "🏗️",
     scope: "market",
   },
+  {
+    code: "conseil_inv_signal",
+    expediteur: "Chambre de commerce · Club des grands comptes",
+    objet: "Consultation préalable des cabinets de la région",
+    corps:
+      "Le groupe Delorme, dont le siège est à Saint-Aubin, nous a demandé la liste des cabinets régionaux capables d'intervenir sur des audits de processus. Des entretiens exploratoires sont prévus dans les semaines qui viennent. Rien n'est arrêté, ni le périmètre ni le volume : un accord-cadre pourrait suivre le trimestre prochain.",
+    signataire: "Le chargé des grands comptes",
+    effet: "Demande globale +8 % ce tour",
+    enJeu:
+      "Un signe n'est pas une commande : recruter ou s'équiper à l'avance coûte, mais attendre peut coûter plus.",
+    nature: "market",
+    pli: "email",
+    emoji: "🔭",
+    scope: "market",
+  },
+  {
+    code: "conseil_inv_grand_compte",
+    expediteur: "Groupe Delorme · Direction des achats",
+    objet: "Ouverture d'un accord-cadre de missions d'audit et d'accompagnement",
+    corps:
+      "Le groupe ouvre un accord-cadre pour les trois trimestres à venir, réservé aux cabinets référencés de la région : environ deux cents jours d'audit et d'accompagnement par trimestre, répartis entre nos sites de Saint-Aubin et de Valbonne. Les ordres de mission seront émis au fil de nos calendriers, dès le mois prochain.",
+    signataire: "Le directeur des achats",
+    effet: "Demande globale +30 % pendant 3 tours",
+    enJeu:
+      "Pouvez-vous servir ce volume ? Recruter, sous-traiter ou vous équiper : lequel coûte le moins sur trois tours ?",
+    nature: "market",
+    pli: "simple",
+    emoji: "🏢",
+    scope: "market",
+  },
+  {
+    code: "conseil_inv_taux",
+    expediteur: "Banque des Professions · Direction des entreprises",
+    objet: "Campagne temporaire sur les crédits d'équipement professionnels",
+    corps:
+      "Pour deux trimestres, la banque ouvre une campagne sur les crédits d'équipement : le taux appliqué est réduit de quarante pour cent par rapport à notre barème habituel. Elle couvre le matériel informatique, l'aménagement de locaux et les outils de travail à distance. Les dossiers complets déposés avant la fin du second trimestre sont concernés.",
+    signataire: "Le directeur des entreprises",
+    effet: "Taux d'intérêt ×0,6 pendant 2 tours",
+    enJeu:
+      "Emprunter pour investir coûte moins tant que la fenêtre est ouverte : le financement fait partie de la décision d'investir.",
+    nature: "macro",
+    pli: "simple",
+    emoji: "🏦",
+    scope: "market",
+  },
+  {
+    code: "conseil_inv_concurrent",
+    expediteur: "Revue Management Régional · Rubrique économie",
+    objet: "Vexilis Conseil annonce une antenne de vingt consultants en ville",
+    corps:
+      "Le cabinet Vexilis Conseil ouvre une antenne de vingt consultants dans le quartier d'affaires et recrute une quinzaine de profils seniors. Pour son lancement, il affiche des tarifs journaliers inférieurs d'un cinquième à ceux du marché. Plusieurs directions d'achat auraient déjà demandé des propositions.",
+    signataire: "Le journaliste économique",
+    effet: "Demande globale −8 % pendant 2 tours",
+    enJeu:
+      "Un concurrent qui investit déplace le marché : suivre, se différencier ou se replier ?",
+    nature: "competition",
+    pli: "simple",
+    emoji: "📣",
+    scope: "market",
+  },
+  {
+    code: "conseil_inv_retournement",
+    expediteur: "Groupe Delorme · Direction financière",
+    objet: "Révision du volume de l'accord-cadre de missions",
+    corps:
+      "À la suite de l'arrêté budgétaire du groupe, le volume de l'accord-cadre est revu à la baisse : les ordres de mission des deux prochains trimestres sont ramenés à un peu plus de la moitié des prévisions initiales. Les missions déjà engagées à Saint-Aubin et à Valbonne se poursuivent selon leur calendrier.",
+    signataire: "Le directeur financier",
+    effet: "Demande globale −12 % pendant 2 tours",
+    enJeu:
+      "Une capacité achetée pour une demande qui retombe reste à payer : l'amortissement ne s'arrête pas avec les commandes.",
+    nature: "market",
+    pli: "simple",
+    emoji: "📉",
+    scope: "market",
+  },
 ];

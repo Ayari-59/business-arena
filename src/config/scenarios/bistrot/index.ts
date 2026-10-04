@@ -1,6 +1,7 @@
 import type { CompanyState, EngineScenarioConfig } from "../../../engine/types";
 import type { BotProfile } from "../../../engine/bots";
 import { parseScenarioConfig } from "../schema";
+import { evenementsDInvestissement } from "../../investissement-par-niveau";
 
 /**
  * Scénario RESTAURANT — « LA TABLE D'AUGUSTIN », bistrot de 70 couverts,
@@ -519,6 +520,8 @@ const rawBistrot = {
       duration: 2,
       modifiers: [{ target: "demand", op: "mul", value: 1.1 }],
     },
+    // Investissement par niveau : jamais tirés (probabilité nulle), posés par le calendrier du niveau.
+    ...evenementsDInvestissement("bistrot"),
   ],
   // Le beurre, la viande et l'énergie flambent au tour 3 : le ratio matières
   // dérape en plein creux d'août, quand la salle est déjà vide.

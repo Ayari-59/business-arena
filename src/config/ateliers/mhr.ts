@@ -459,9 +459,9 @@ export const ATELIER_MHR: AtelierDefinition = {
     },
     {
       question:
-        "Le niveau retenu n'ouvre ni le recrutement ni l'investissement, est-ce voulu ?",
+        "Le niveau retenu n'ouvre pas le recrutement et l'atelier ne travaille pas l'investissement, est-ce voulu ?",
       reponse:
-        "Oui. La direction opérationnelle d'un hôtel en première année se joue sur le tarif, le remplissage et la trésorerie. Ouvrir la structure ajouterait des décisions que les équipes prendraient au hasard, et qui brouilleraient la lecture de leurs résultats. En deuxième année, vous pouvez monter d'un niveau : l'hôtel passe alors en trois catégories de chambres, avec le recrutement et l'investissement ouverts.",
+        "Oui. La direction opérationnelle d'un hôtel en première année se joue sur le tarif, le remplissage et la trésorerie. Ouvrir la structure ajouterait des décisions que les équipes prendraient au hasard, et qui brouilleraient la lecture de leurs résultats. L'investissement est à l'écran, à zéro : décochez « Histoires d'investissement » à la création pour que le déroulé reste celui de l'atelier. En deuxième année, vous pouvez monter d'un niveau : l'hôtel passe alors en trois catégories de chambres, avec le recrutement ouvert et l'investissement mis au travail.",
     },
     {
       question: "Peut-on conduire cet atelier avec des équipes de deux ?",

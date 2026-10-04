@@ -324,4 +324,79 @@ export const FITNESS_COURRIERS: CourrierDef[] = [
     emoji: "🎟️",
     scope: "team",
   },
+  {
+    code: "fitness_inv_signal",
+    expediteur: "Association des entreprises de la zone des Trois Ponts · Commission vie au travail",
+    objet: "Réflexion sur des abonnements sportifs collectifs",
+    corps:
+      "Plusieurs de nos adhérents envisagent d'aider leurs salariés à s'inscrire dans une salle de sport du bassin. Un groupe de travail se réunit jeudi et trois clubs seront consultés. Rien n'est arrêté, mais le projet pourrait se concrétiser dès le trimestre prochain, pour quelques centaines de salariés de la zone.",
+    signataire: "La chargée de mission",
+    effet: "Demande globale +8 % ce tour",
+    enJeu:
+      "Un signe n'est pas une commande : anticiper coûte, attendre peut coûter plus.",
+    nature: "market",
+    pli: "email",
+    emoji: "👀",
+    scope: "market",
+  },
+  {
+    code: "fitness_inv_grand_compte",
+    expediteur: "Association des entreprises de la zone des Trois Ponts · Présidence",
+    objet: "Convention d'abonnements collectifs pour nos salariés",
+    corps:
+      "L'assemblée de nos adhérents a voté la convention : près de quatre cents salariés de la zone bénéficieront d'une participation de leur employeur à leur abonnement sportif, pour les trois trimestres à venir. Les clubs du bassin sont référencés. Les inscriptions s'ouvrent la semaine prochaine, avec une fréquentation attendue à la pause de midi et après dix-huit heures.",
+    signataire: "Le président de l'association",
+    effet: "Demande globale +30 % pendant 3 tours",
+    enJeu:
+      "Pouvez-vous accueillir ce volume aux heures de pointe ? Étendre les horaires, s'appuyer sur un partenaire ou investir dans des places : lequel coûte le moins sur trois trimestres ?",
+    nature: "market",
+    pli: "simple",
+    emoji: "📑",
+    scope: "market",
+  },
+  {
+    code: "fitness_inv_taux",
+    expediteur: "Banque des Professions · Agence entreprises",
+    objet: "Campagne temporaire sur les crédits d'équipement",
+    corps:
+      "Notre établissement ouvre une campagne sur les crédits d'équipement destinés aux professionnels du département : les taux sont abaissés de quarante pour cent pendant deux trimestres. Appareils de cardio, machines de musculation et aménagement de studios entrent dans le champ de l'offre. Au-delà de cette période, les dossiers seront étudiés au tarif en vigueur.",
+    signataire: "Votre chargé d'affaires",
+    effet: "Taux d'intérêt ×0,6 pendant 2 tours",
+    enJeu:
+      "Emprunter pour investir coûte moins tant que la fenêtre est ouverte : le financement fait partie de la décision d'investir.",
+    nature: "macro",
+    pli: "simple",
+    emoji: "💶",
+    scope: "market",
+  },
+  {
+    code: "fitness_inv_concurrent",
+    expediteur: "Syndicat des exploitants de salles de sport",
+    objet: "Annonce d'investissement d'un opérateur voisin",
+    corps:
+      "Le groupe Vauquelin Sport annonce l'ouverture, à six kilomètres de votre club, d'un plateau de musculation de huit cents mètres carrés et de deux studios de cours collectifs. Son tarif de lancement, inférieur de près d'un quart aux prix du bassin, vise les mêmes salariés et les mêmes familles. Nos adhérents s'attendent à un partage de la clientèle sur plusieurs trimestres.",
+    signataire: "Le secrétaire du syndicat",
+    effet: "Demande globale −8 % pendant 2 tours",
+    enJeu:
+      "Un concurrent qui investit déplace le marché : suivre, se différencier ou se replier ?",
+    nature: "competition",
+    pli: "simple",
+    emoji: "🥊",
+    scope: "market",
+  },
+  {
+    code: "fitness_inv_retournement",
+    expediteur: "Association des entreprises de la zone des Trois Ponts · Secrétariat général",
+    objet: "Révision du volume de la convention d'abonnements",
+    corps:
+      "Deux de nos plus importants adhérents ont suspendu leurs recrutements et une troisième entreprise quitte la zone. La participation des employeurs est ramenée à un peu plus de la moitié du volume voté, et les nouvelles inscriptions sont suspendues. Les salariés déjà inscrits conservent leur abonnement jusqu'à la fin du trimestre en cours.",
+    signataire: "Le secrétaire général",
+    effet: "Demande globale −12 % pendant 2 tours",
+    enJeu:
+      "Une capacité achetée pour une demande qui retombe reste à payer : l'amortissement ne s'arrête pas avec les abonnements.",
+    nature: "market",
+    pli: "simple",
+    emoji: "📉",
+    scope: "market",
+  },
 ];

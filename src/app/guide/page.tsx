@@ -469,7 +469,7 @@ export default async function GuidePage() {
                 ],
                 [
                   "Que règlent les niveaux de difficulté ?",
-                  "Six niveaux, de Découverte à Executive : les décisions ouvertes (la finance et l'assurance arrivent au niveau Pilotage, le placement du surplus au niveau Stratégie, l'affectation du résultat au niveau Executive), le plafond d'indices (de 5 à zéro) et la fréquence des événements aléatoires. Et le panneau avancé permet de moduler impôt, TVA, taux, délais et coûts : rien n'est figé.",
+                  "Six niveaux, de Découverte à Executive : les décisions ouvertes (l'emprunt et l'investissement sont ouverts dès le niveau Découverte, l'assurance et la mobilisation des créances au niveau Pilotage, les ressources humaines, la R&D et la RSE au niveau Arbitrage, le placement du surplus au niveau Stratégie, l'affectation du résultat au niveau Executive), le plafond d'indices (de 5 à zéro) et la fréquence des événements aléatoires. Et le panneau avancé permet de moduler impôt, TVA, taux, délais et coûts : rien n'est figé.",
                 ],
                 [
                   "Combien ça coûte ?",

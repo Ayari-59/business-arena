@@ -25,6 +25,7 @@ import {
   scenarioCodeForLevel,
   type ScenarioDefinition,
 } from "@/config/scenarios/registry";
+import { avecInvestissementParNiveau } from "@/config/investissement-par-niveau";
 import {
   resolveScenarioDefinition,
 } from "@/services/scenario-source.service";
@@ -166,6 +167,13 @@ export interface CreateGameArgs {
   /** Monde variable (doc 02 §9bis) : variante du scénario dérivée de la graine. */
   variableWorld?: boolean;
   /**
+   * Les histoires qui appellent l'investissement (voir `investissement-par-niveau`) :
+   * des courriers scriptés qui font monter ou retomber la demande, selon le niveau.
+   * Absent = éteint : une partie de concours, de démonstration ou d'atelier calibré
+   * garde son déroulé. La partie solo et la classe (case cochée par défaut) les allument.
+   */
+  investmentStories?: boolean;
+  /**
    * Nombre de tours joués. Absent = tous ceux du scénario. Une partie se
    * raccourcit, jamais ne s'allonge : au delà, les équipes joueraient des tours
    * sans situation ni événement écrits pour eux.
@@ -298,10 +306,16 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
     ),
     preset?.eventProbabilityMultiplier ?? 1,
   );
+  // Les histoires qui appellent l'investissement, posées selon le niveau. Une partie sans
+  // niveau (aucun préréglage) garde le calendrier de son scénario, comme avant.
+  const scenarioAvecHistoires =
+    preset && args.investmentStories
+      ? avecInvestissementParNiveau(scenarioSnapshot, preset.level)
+      : scenarioSnapshot;
   // R&D : un niveau qui ne l'ouvre pas ne doit pas laisser une référence à
   // développer hors de portée pour toute la partie. Le levier est retiré du
   // snapshot et les références à développer sont livrées prêtes.
-  const scenarioJoue = preset && !preset.decisions.rd ? withoutRd(scenarioSnapshot) : scenarioSnapshot;
+  const scenarioJoue = preset && !preset.decisions.rd ? withoutRd(scenarioAvecHistoires) : scenarioAvecHistoires;
 
   const [game] = await db
     .insert(games)
@@ -321,6 +335,7 @@ export async function createGameCore(args: CreateGameArgs): Promise<CreatedGame>
         ...(overrides ? { economicOverrides: overrides } : {}),
         ...(scoringOverrides ? { scoringWeightOverrides: scoringOverrides } : {}),
         ...(args.variableWorld ? { variableWorld: true } : {}),
+        ...(args.investmentStories ? { investmentStories: true } : {}),
         // Questions des situations. L'absence du champ vaut « full » pour les
         // parties d'avant le réglage : leur comportement ne change pas.
         ...(args.quizMode ? { quizMode: args.quizMode } : {}),
@@ -544,6 +559,7 @@ export async function createSoloGame(
     botCount,
     level,
     variableWorld,
+    investmentStories: true,
     scenarioCode,
     roundsCount,
     quizMode: "model",
@@ -571,6 +587,7 @@ export async function createClassGame(args: {
   economicOverrides?: EconomicOverrides;
   scoringWeightOverrides?: ScoringWeightOverrides;
   variableWorld?: boolean;
+  investmentStories?: boolean;
   scenarioCode?: string;
   quizMode?: QuizMode;
   answerFormat?: AnswerFormat;
@@ -599,6 +616,7 @@ export async function createClassGame(args: {
     economicOverrides: args.economicOverrides,
     scoringWeightOverrides: args.scoringWeightOverrides,
     variableWorld: args.variableWorld,
+    investmentStories: args.investmentStories,
     scenarioCode: args.scenarioCode,
     quizMode: args.quizMode,
     answerFormat: args.answerFormat,

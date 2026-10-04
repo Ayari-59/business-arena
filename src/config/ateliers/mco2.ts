@@ -548,9 +548,9 @@ export const ATELIER_MCO2: AtelierDefinition = {
     },
     {
       question:
-        "Le niveau retenu n'ouvre ni le recrutement ni l'équipement de la cuisine, est-ce voulu ?",
+        "Le niveau retenu n'ouvre pas le recrutement et l'atelier ne travaille pas l'équipement de la cuisine, est-ce voulu ?",
       reponse:
-        "Oui. Le pilotage d'une unité en deuxième année se joue sur la carte, le remplissage, les achats et la caisse. Ouvrir la structure ajouterait des décisions que les équipes prendraient au hasard et qui brouilleraient la lecture du mois. L'atelier de management en hôtellerie-restauration, lui, ouvre la brigade et la cuisine : c'est un autre métier et un autre diplôme.",
+        "Oui. Le pilotage d'une unité en deuxième année se joue sur la carte, le remplissage, les achats et la caisse. Ouvrir la structure ajouterait des décisions que les équipes prendraient au hasard et qui brouilleraient la lecture du mois. L'investissement est à l'écran, à zéro : décochez « Histoires d'investissement » à la création pour que le déroulé reste celui de l'atelier. L'atelier de management en hôtellerie-restauration, lui, ouvre la brigade et la cuisine : c'est un autre métier et un autre diplôme.",
     },
     {
       question: "Quel taux de TVA faut-il régler ?",

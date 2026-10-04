@@ -311,4 +311,79 @@ export const BATIMENT_COURRIERS: CourrierDef[] = [
     emoji: "📐",
     scope: "market",
   },
+  {
+    code: "batiment_inv_signal",
+    expediteur: "Atelier Delcourt Architectes · Études de faisabilité",
+    objet: "Étude préalable à un programme de rénovation de résidences",
+    corps:
+      "Nous achevons pour l'Office public de l'habitat de la Haute-Lys l'étude de plusieurs résidences. Des lots de second œuvre, isolation, menuiseries et plâtrerie, y seraient concernés. Rien n'est arrêté : le conseil d'administration doit se prononcer, et une consultation pourrait être lancée le trimestre prochain pour plusieurs centaines de logements.",
+    signataire: "L'architecte associé",
+    effet: "Demande globale +8 % ce tour",
+    enJeu:
+      "Un signe n'est pas une commande : anticiper coûte, attendre peut coûter plus.",
+    nature: "market",
+    pli: "email",
+    emoji: "🔭",
+    scope: "market",
+  },
+  {
+    code: "batiment_inv_grand_compte",
+    expediteur: "Office public de l'habitat de la Haute-Lys · Direction du patrimoine",
+    objet: "Approbation du programme de rénovation des résidences",
+    corps:
+      "Le conseil d'administration a approuvé la rénovation de quatre résidences, soit près de trois cents logements, à engager sur les trois trimestres à venir. Les lots de second œuvre seront confiés par bons de commande à des entreprises du département, dont la vôtre. Les ordres de service seront échelonnés, les premiers chantiers démarrant dès le mois prochain.",
+    signataire: "Le directeur du patrimoine",
+    effet: "Demande globale +30 % pendant 3 tours",
+    enJeu:
+      "Pouvez-vous tenir ce volume ? Mobiliser plus d'équipes, sous-traiter ou investir dans du matériel : lequel coûte le moins sur trois trimestres ?",
+    nature: "market",
+    pli: "simple",
+    emoji: "🏘️",
+    scope: "market",
+  },
+  {
+    code: "batiment_inv_taux",
+    expediteur: "Banque des Professions · Agence entreprises",
+    objet: "Campagne temporaire sur les crédits d'équipement",
+    corps:
+      "Notre établissement abaisse de quarante pour cent le taux des crédits d'équipement consentis aux entreprises du bâtiment, pour une période de deux trimestres. Nacelles, engins, véhicules utilitaires et outillage lourd entrent dans le champ de l'offre. Les garanties et les durées d'amortissement restent celles de nos conditions habituelles, et les dossiers ultérieurs seront étudiés au tarif courant.",
+    signataire: "Votre chargé d'affaires",
+    effet: "Taux d'intérêt ×0,6 pendant 2 tours",
+    enJeu:
+      "Emprunter pour investir coûte moins tant que la fenêtre est ouverte : le financement fait partie de la décision d'investir.",
+    nature: "macro",
+    pli: "simple",
+    emoji: "💶",
+    scope: "market",
+  },
+  {
+    code: "batiment_inv_concurrent",
+    expediteur: "Fédération du bâtiment · Service économique",
+    objet: "Investissement d'une entreprise concurrente sur le département",
+    corps:
+      "La société Verdier-Lanoë annonce l'acquisition de deux nacelles, l'ouverture d'un second atelier de préfabrication et le recrutement de huit compagnons. Elle affiche des tarifs inférieurs de dix à quinze pour cent sur l'isolation et la plâtrerie, afin d'occuper vite ses nouvelles équipes. Nos adhérents anticipent un partage des consultations sur les deux prochains trimestres.",
+    signataire: "Le délégué économique",
+    effet: "Demande globale −8 % pendant 2 tours",
+    enJeu:
+      "Un concurrent qui investit déplace le marché : suivre, se différencier ou se replier ?",
+    nature: "competition",
+    pli: "simple",
+    emoji: "🏗️",
+    scope: "market",
+  },
+  {
+    code: "batiment_inv_retournement",
+    expediteur: "Office public de l'habitat de la Haute-Lys · Service des marchés",
+    objet: "Révision du plan pluriannuel de rénovation",
+    corps:
+      "Après la baisse de ses ressources, le conseil d'administration a révisé son plan de patrimoine. Deux des quatre résidences prévues sont reportées, et les bons de commande en cours sont ramenés à un peu plus de la moitié des quantités initialement notifiées. Les ordres de service déjà émis restent exécutés.",
+    signataire: "La responsable des marchés",
+    effet: "Demande globale −12 % pendant 2 tours",
+    enJeu:
+      "Une capacité achetée pour une demande qui retombe reste à payer : l'amortissement ne s'arrête pas avec les commandes.",
+    nature: "market",
+    pli: "simple",
+    emoji: "🔻",
+    scope: "market",
+  },
 ];

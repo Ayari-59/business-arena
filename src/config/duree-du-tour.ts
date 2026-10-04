@@ -83,7 +83,8 @@ export const CHAMPS_PAR_LEVIER: Record<string, number> = {
   finance: 3, // emprunt, remboursement, augmentation de capital
   investment: 2, // capacité machine, parc (achats et cessions)
   insurance: 1, // formule d'assurance
-  placement: 3, // escompte, affacturage, placement
+  creances: 2, // escompte, affacturage
+  placement: 1, // placement du surplus
   dividend: 1, // dividende
 };
 

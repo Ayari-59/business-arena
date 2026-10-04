@@ -425,6 +425,25 @@ export default async function TeacherDashboard({
             </span>
           </label>
 
+          <label className="flex items-start gap-3 rounded-lg border border-white/5 bg-slate-950 px-3 py-3 sm:col-span-3">
+            <input
+              type="checkbox"
+              name="investmentStories"
+              defaultChecked
+              className="mt-0.5 h-4 w-4 accent-amber-400"
+            />
+            <span>
+              <span className="text-sm font-medium text-slate-200">
+                🏗️ Histoires d&apos;investissement · des courriers qui appellent la décision
+              </span>
+              <span className="mt-0.5 block text-xs text-slate-400">
+                Selon le niveau : un client qui annonce du volume, une banque qui baisse ses taux, un
+                concurrent qui investit, puis une demande qui retombe. Décochez pour un atelier au
+                déroulé calibré, où chaque séance n&apos;ouvre qu&apos;un levier.
+              </span>
+            </span>
+          </label>
+
           <fieldset className="rounded-lg border border-white/5 bg-slate-950 px-3 py-3 sm:col-span-3">
             <legend className="px-1 text-xs font-medium uppercase tracking-wide text-slate-400">
               📝 Questions posées dans les situations

@@ -456,9 +456,9 @@ export const ATELIER_MCO: AtelierDefinition = {
     },
     {
       question:
-        "Le niveau de jeu retenu n'ouvre ni le recrutement ni l'investissement, est-ce voulu ?",
+        "Le niveau de jeu retenu n'ouvre pas le recrutement et l'atelier ne travaille pas l'investissement, est-ce voulu ?",
       reponse:
-        "Oui. La gestion opérationnelle d'un point de vente en première année se joue sur l'offre, le prix et le stock. Ouvrir la structure ajouterait des décisions que les équipes prendraient au hasard, et qui brouilleraient la lecture de leurs marges. Vous pouvez monter d'un niveau en deuxième année.",
+        "Oui. La gestion opérationnelle d'un point de vente en première année se joue sur l'offre, le prix et le stock. Ouvrir la structure ajouterait des décisions que les équipes prendraient au hasard, et qui brouilleraient la lecture de leurs marges. L'investissement est à l'écran, à zéro : décochez « Histoires d'investissement » à la création pour que le déroulé reste celui de l'atelier. Vous pouvez monter d'un niveau en deuxième année.",
     },
     {
       question: "Peut-on conduire cet atelier avec des équipes de deux ?",

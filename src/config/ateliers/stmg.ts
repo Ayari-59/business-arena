@@ -24,10 +24,11 @@ import type { AtelierDefinition } from "./types";
  *
  * D'où trois choix qui la distinguent des ateliers de section de technicien.
  *
- * Le niveau de jeu retenu n'ouvre que le prix, le volume produit et la
- * communication. Un élève de première qui découvrirait au premier tour un
- * panneau de dix décisions les prendrait au hasard, et le tour suivant ne lui
- * apprendrait rien puisqu'il ne saurait pas laquelle a agi.
+ * L'atelier ne fait travailler que le prix, le volume produit et la
+ * communication ; le niveau met d'autres leviers à l'écran, à zéro. Un élève de
+ * première qui prendrait au premier tour dix décisions les prendrait au hasard,
+ * et le tour suivant ne lui apprendrait rien puisqu'il ne saurait pas laquelle
+ * a agi.
  *
  * Le monde variable est décoché : toutes les parties jouent le même marché.
  * Les aléas du niveau Découverte restent possibles, deux fois moins fréquents
@@ -114,7 +115,7 @@ export const ATELIER_STMG: AtelierDefinition = {
     tours: 4,
     effectifParEquipe: "trois ou quatre élèves",
     notes:
-      "NOVA fabrique et vend des enceintes : on y achète de la matière, on produit, on stocke ce qui ne part pas, et on encaisse plus tard qu'on ne paie. C'est le cycle le plus court à comprendre et le seul où les trois notions du début, le coût, la marge et le stock, se voient dans la même page. Le niveau retenu n'ouvre que le prix, le volume et la communication : trois décisions se relisent, dix se subissent. La taxe sur la valeur ajoutée est laissée de côté en découverte, elle ferait porter la lecture du résultat sur une mécanique fiscale avant que le résultat lui-même ne soit lu. Toutes les équipes affrontent le même marché, et les aléas du niveau Découverte sont deux fois moins fréquents qu'ailleurs : ce qui distingue deux résultats est presque toujours une décision, et un événement, quand il tombe, se lit dans le journal du tour.",
+      "NOVA fabrique et vend des enceintes : on y achète de la matière, on produit, on stocke ce qui ne part pas, et on encaisse plus tard qu'on ne paie. C'est le cycle le plus court à comprendre et le seul où les trois notions du début, le coût, la marge et le stock, se voient dans la même page. L'atelier ne fait travailler que le prix, le volume et la communication : trois décisions se relisent, dix se subissent. L'emprunt et l'investissement sont à l'écran et restent à zéro, et il faut décocher « Histoires d'investissement » à la création pour que le déroulé reste celui de l'atelier. La taxe sur la valeur ajoutée est laissée de côté en découverte, elle ferait porter la lecture du résultat sur une mécanique fiscale avant que le résultat lui-même ne soit lu. Toutes les équipes affrontent le même marché, et les aléas du niveau Découverte sont deux fois moins fréquents qu'ailleurs : ce qui distingue deux résultats est presque toujours une décision, et un événement, quand il tombe, se lit dans le journal du tour.",
   },
   seances: [
     {

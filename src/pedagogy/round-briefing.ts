@@ -32,10 +32,11 @@ export interface RoundBriefing {
   /** Le code de la règle qui a parlé, pour les tests et le débogage. */
   code:
     | "treasury_crisis"
-    | "partners_rescue"
     | "demand_refused"
     | "stock_piling"
     | "operating_loss"
+    | "capacity_tension"
+    | "idle_cash"
     | "steady";
   /** Le constat : un fait du tour écoulé, avec son chiffre. */
   headline: string;
@@ -55,7 +56,7 @@ export interface BriefingInput {
     leftoverLabel: string;
   };
   /** Décisions ouvertes au niveau joué : une route fermée n'est pas proposée. */
-  enabled: { finance: boolean; investment: boolean; hr: boolean };
+  enabled: { finance: boolean; creances: boolean; investment: boolean; hr: boolean };
   /** Le scénario ouvre-t-il la mobilisation du poste clients ? */
   hasTreasuryTools: boolean;
   /** Le scénario propose-t-il d'acheter de la capacité ? */
@@ -89,6 +90,12 @@ function volumes(result: CompanyRoundResult): { sold: number; lost: number } {
   };
 }
 
+/** Au-delà de ce taux d'utilisation, l'outil n'a plus de marge pour un pic de demande. */
+const SEUIL_DE_TENSION = 0.85;
+
+/** Une caisse qui dépasse ce multiple des charges de structure du tour dort. */
+const SEUIL_DE_CAISSE_QUI_DORT = 1.5;
+
 export function roundBriefing(input: BriefingInput): RoundBriefing {
   const { result, vocabulary: v, enabled, perishable } = input;
   const { sold, lost } = volumes(result);
@@ -96,36 +103,11 @@ export function roundBriefing(input: BriefingInput): RoundBriefing {
   const { operatingIncome, netIncome } = result.incomeStatement;
   const unsold = Math.max(0, result.production.produced - sold);
 
-  // 0. Aux niveaux sans financement (1-2), les associés ont recapitalisé d'office : le joueur
-  //    ne l'a pas décidé, il faut donc le lui dire avant tout — et lui dire d'où ça vient.
-  //    (Seul chemin par lequel un apport existe à ces niveaux : voir recapitalisation-automatique.)
-  if (!enabled.finance && (result.capital?.applied ?? 0) > 0.5) {
-    return {
-      code: "partners_rescue",
-      headline: `Votre trésorerie était sous le découvert autorisé : vos associés ont apporté ${euro(result.capital!.applied)} pour que l'entreprise reste en activité.`,
-      question: "Comment éviter d'en arriver là au prochain tour ?",
-      routes: [
-        {
-          label: "Réduire la voilure",
-          gain: perishable
-            ? `Moins de ${v.units} ${accord(v, "lancé")}, c'est moins d'argent sorti d'avance.`
-            : `Moins de ${v.units} ${accord(v, "lancé")}, et la réserve déjà payée qui s'écoule.`,
-          risque: "Les charges de structure ne baissent pas, elles : le trou peut se creuser.",
-        },
-        {
-          label: "Vendre plus cher ou mieux",
-          gain: "Chaque vente rapporte davantage, et la caisse se remplit plus vite.",
-          risque: "Un prix trop haut fait fuir les clients : la caisse ne se remplit pas pour autant.",
-        },
-      ],
-    };
-  }
-
   // 1. La trésorerie d'abord : une entreprise ne meurt pas d'une perte, elle
   //    meurt de ne plus pouvoir payer. Tout le reste attend.
   if (result.balanceSheet.overdraft > 0.5 || netTreasury < 0) {
     const routes: BriefingRoute[] = [];
-    if (enabled.finance && input.hasTreasuryTools) {
+    if (enabled.creances && input.hasTreasuryTools) {
       routes.push({
         label: "Mobiliser le poste clients",
         gain: "Les créances rentrent tout de suite, sans rien vendre de plus.",
@@ -250,7 +232,65 @@ export function roundBriefing(input: BriefingInput): RoundBriefing {
     };
   }
 
-  // 5. Rien ne brûle : le vrai arbitrage devient celui qu'on ne fait pas quand
+  // 5. Rien ne brûle, mais l'outil approche de son plafond. La capacité achetée
+  //    ce tour ne sert qu'au tour suivant : investir se décide AVANT de manquer
+  //    de place, pas après avoir refusé des clients (c'est la règle 2, qui
+  //    arrive toujours un tour trop tard).
+  if (
+    enabled.investment &&
+    input.hasInvestmentOffer &&
+    result.production.utilizationRate >= SEUIL_DE_TENSION &&
+    sold > 0
+  ) {
+    return {
+      code: "capacity_tension",
+      headline: `Votre outil a tourné à ${pct(result.production.utilizationRate)} de sa capacité : il ne reste presque aucune marge si la demande monte.`,
+      question: "Une capacité achetée ce tour ne sert qu'au tour suivant. Vous anticipez ou vous attendez ?",
+      routes: [
+        {
+          label: "Investir avant le pic",
+          gain: "Quand la demande monte, vous êtes prêt à la servir au lieu de la refuser.",
+          risque: "Payé tout de suite, amorti ensuite : si la demande ne vient pas, la capacité pèse sur vos marges.",
+        },
+        {
+          label: "Attendre un signe de la demande",
+          gain: "Vous ne payez que pour une demande qui existe.",
+          risque: "Le jour où elle vient, il faudra un tour de plus avant de pouvoir la servir.",
+        },
+      ],
+    };
+  }
+
+  // 6. Une caisse qui dort. Pas de découvert, rien d'urgent : le solde dépasse
+  //    une fois et demie les charges de structure. C'est un coût d'opportunité,
+  //    et il ne se lit dans aucun compte.
+  if (
+    enabled.investment &&
+    input.hasInvestmentOffer &&
+    result.balanceSheet.overdraft < 0.5 &&
+    result.incomeStatement.fixedCosts > 0 &&
+    result.balanceSheet.cash > SEUIL_DE_CAISSE_QUI_DORT * result.incomeStatement.fixedCosts
+  ) {
+    return {
+      code: "idle_cash",
+      headline: `Vous avez ${euro(result.balanceSheet.cash)} en caisse, de quoi tenir plus d'un tour et demi de charges de structure sans rien vendre.`,
+      question: "Cet argent ne rapporte rien en caisse. Vous le gardez ou vous le mettez au travail ?",
+      routes: [
+        {
+          label: "Le mettre au travail",
+          gain: "Une capacité en plus, ou un emprunt en moins : l'argent rapporte au lieu de dormir.",
+          risque: "Il ne sera plus là pour absorber un coup dur, et une machine ne se revend pas au prix payé.",
+        },
+        {
+          label: "Le garder",
+          gain: "Une caisse pleine encaisse un mauvais trimestre sans emprunter.",
+          risque: "Vos concurrents investissent pendant que vous attendez.",
+        },
+      ],
+    };
+  }
+
+  // 7. Rien ne brûle : le vrai arbitrage devient celui qu'on ne fait pas quand
   //    tout va bien, et qui décide pourtant des tours suivants.
   return {
     code: "steady",
