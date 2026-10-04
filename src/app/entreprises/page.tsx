@@ -324,16 +324,28 @@ export default async function EntreprisesPage() {
               </a>
             ))}
           </div>
-          <p className="mt-6 max-w-2xl text-sm text-slate-400">
-            Pour les entreprises : un trimestre dans la peau d&apos;une cheffe d&apos;agence
-            commerciale, jugé sur ses décisions plutôt que sur son résultat.{" "}
+          {/*
+            LA DÉMONSTRATION POUR LES ENTREPRISES. Une phrase grise sous les
+            pastilles passait inaperçue : c'est un autre public, il lui faut un
+            bloc à lui et un bouton, dans le premier écran.
+          */}
+          <div className="mt-8 flex max-w-3xl flex-col gap-4 rounded-lg border border-amber-400/30 bg-amber-400/5 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-300">
+                Nouveau · Pour les entreprises
+              </p>
+              <p className="mt-1.5 text-base leading-relaxed text-slate-200">
+                Un trimestre dans la peau d&apos;une cheffe d&apos;agence commerciale, jugé sur ses
+                décisions plutôt que sur son résultat.
+              </p>
+            </div>
             <Link
               href="/entreprises/episode"
-              className="font-semibold text-amber-300 underline-offset-4 hover:underline"
+              className={`${bouton({ variante: "laiton", taille: "l" })} shrink-0`}
             >
               Jouer la démonstration
             </Link>
-          </p>
+          </div>
         </Bande>
 
         {/*
