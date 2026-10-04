@@ -36,16 +36,23 @@ export function AlerteTresorerie({
   alerte,
   exigence,
   demande,
+  sansFinancement,
 }: {
   gameId: string;
   alerte: NonNullable<GameView["alerteTresorerie"]>;
+  /**
+   * Niveaux 1-2 : pas de financement à saisir ; les associés recapitalisent d'office en fin
+   * de tour. Si la crise est encore là, c'est que leur enveloppe est épuisée : le bandeau
+   * le dit, au lieu de réclamer un emprunt ou un apport que l'écran n'offre pas.
+   */
+  sansFinancement?: boolean;
   /** Ce qu'il faut réunir pour valider le tour ; `null` si rien n'est exigé. */
   exigence?: GameView["exigenceSauvetage"];
   /** La demande de subvention déjà déposée pour ce tour, s'il y en a une. */
   demande?: GameView["demandeSubvention"];
 }) {
   const restants = Math.max(0, alerte.toursAvantDefaillance - alerte.toursConsecutifs);
-  const recours = (
+  const recours = sansFinancement ? null : (
     <Recours gameId={gameId} exigence={exigence ?? null} demande={demande ?? null} />
   );
 
@@ -66,9 +73,15 @@ export function AlerteTresorerie({
           découvert sans plus une créance à céder.
         </p>
         <p className="mt-1.5 text-sm leading-relaxed text-red-100/90">
-          Une seule chose la relève : un apport qui ramène la trésorerie au-dessus de{" "}
-          <strong className="tabular-nums">{formatEuro(-alerte.plafondDecouvert)}</strong>.
-          Il manque <strong className="tabular-nums">{formatEuro(alerte.manque)}</strong>.
+          {sansFinancement
+            ? "À ce niveau, les associés recapitalisent d'office, et leur enveloppe est épuisée : plus aucun apport n'est possible."
+            : (
+              <>
+                Une seule chose la relève : un apport qui ramène la trésorerie au-dessus de{" "}
+                <strong className="tabular-nums">{formatEuro(-alerte.plafondDecouvert)}</strong>.
+                Il manque <strong className="tabular-nums">{formatEuro(alerte.manque)}</strong>.
+              </>
+            )}
         </p>
         {recours}
       </section>
@@ -97,7 +110,9 @@ export function AlerteTresorerie({
         {restants <= 1
           ? "Encore un tour dans cet état et votre entreprise sera à l'arrêt."
           : `Encore ${restants} tours dans cet état et votre entreprise sera à l'arrêt.`}{" "}
-        Emprunt, apport des associés, cession d&apos;un actif : il faut décider ce tour-ci.
+        {sansFinancement
+          ? "À ce niveau, vos associés recapitalisent d'office l'entreprise — et ils ont déjà apporté toute leur enveloppe : il ne reste qu'à faire remonter la caisse en vendant davantage et en dépensant moins."
+          : "Emprunt, apport des associés, cession d'un actif : il faut décider ce tour-ci."}
       </p>
       {recours}
     </section>

@@ -32,6 +32,7 @@ export interface RoundBriefing {
   /** Le code de la règle qui a parlé, pour les tests et le débogage. */
   code:
     | "treasury_crisis"
+    | "partners_rescue"
     | "demand_refused"
     | "stock_piling"
     | "operating_loss"
@@ -94,6 +95,31 @@ export function roundBriefing(input: BriefingInput): RoundBriefing {
   const { netTreasury } = result.functionalBalance;
   const { operatingIncome, netIncome } = result.incomeStatement;
   const unsold = Math.max(0, result.production.produced - sold);
+
+  // 0. Aux niveaux sans financement (1-2), les associés ont recapitalisé d'office : le joueur
+  //    ne l'a pas décidé, il faut donc le lui dire avant tout — et lui dire d'où ça vient.
+  //    (Seul chemin par lequel un apport existe à ces niveaux : voir recapitalisation-automatique.)
+  if (!enabled.finance && (result.capital?.applied ?? 0) > 0.5) {
+    return {
+      code: "partners_rescue",
+      headline: `Votre trésorerie était sous le découvert autorisé : vos associés ont apporté ${euro(result.capital!.applied)} pour que l'entreprise reste en activité.`,
+      question: "Comment éviter d'en arriver là au prochain tour ?",
+      routes: [
+        {
+          label: "Réduire la voilure",
+          gain: perishable
+            ? `Moins de ${v.units} ${accord(v, "lancé")}, c'est moins d'argent sorti d'avance.`
+            : `Moins de ${v.units} ${accord(v, "lancé")}, et la réserve déjà payée qui s'écoule.`,
+          risque: "Les charges de structure ne baissent pas, elles : le trou peut se creuser.",
+        },
+        {
+          label: "Vendre plus cher ou mieux",
+          gain: "Chaque vente rapporte davantage, et la caisse se remplit plus vite.",
+          risque: "Un prix trop haut fait fuir les clients : la caisse ne se remplit pas pour autant.",
+        },
+      ],
+    };
+  }
 
   // 1. La trésorerie d'abord : une entreprise ne meurt pas d'une perte, elle
   //    meurt de ne plus pouvoir payer. Tout le reste attend.

@@ -519,6 +519,7 @@ export default async function ArenaPage({
         alerte={view.alerteTresorerie}
         exigence={view.exigenceSauvetage}
         demande={view.demandeSubvention}
+        sansFinancement={view.financeFermee}
       />
     </div>
   ) : null;

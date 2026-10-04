@@ -32,6 +32,8 @@ import {
   updateRankings,
 } from "@/services/scoring.service";
 import { simulateRound } from "@/engine/simulation";
+import { recapitaliserSiBesoin } from "@/services/recapitalisation-automatique";
+import { presetFromProfile } from "@/config/difficulty";
 import { subventionsAccordees } from "@/services/subvention.service";
 import { estArchivee, PARTIE_ARCHIVEE } from "@/services/archivage";
 import {
@@ -427,15 +429,30 @@ async function resolveGameRound(
       statesCount: states.length,
       decisionsCount: Object.keys(allDecisions).length,
     });
-    const output = simulateRound({
-      scenario,
-      roundIndex,
-      companies: states,
-      decisions: allDecisions,
-      activeEvents: [...activeEvents, ...injected],
-      seed: game.seed,
-      ...(Object.keys(subventions).length > 0 ? { rescueSubsidies: subventions } : {}),
-    });
+    const simuler = (decisionsDuTour: Record<string, RoundDecisions>) =>
+      simulateRound({
+        scenario,
+        roundIndex,
+        companies: states,
+        decisions: decisionsDuTour,
+        activeEvents: [...activeEvents, ...injected],
+        seed: game.seed,
+        ...(Object.keys(subventions).length > 0 ? { rescueSubsidies: subventions } : {}),
+      });
+    // AUX NIVEAUX SANS FINANCEMENT (1-2), une crise de trésorerie ne peut pas être réglée
+    // par le joueur : les associés recapitalisent d'office, le tour est rejoué avec leur
+    // apport (voir recapitalisation-automatique). Aux autres niveaux, un seul passage.
+    const sansFinancement = !presetFromProfile(game.difficultyProfile).decisions.finance;
+    const recap = sansFinancement
+      ? recapitaliserSiBesoin({
+          equipes: teamRows.filter((t) => t.controller === "human").map((t) => t.id),
+          decisions: allDecisions,
+          simuler,
+        })
+      : null;
+    const output = recap ? recap.sortie : simuler(allDecisions);
+    // Ce qui a réellement été joué, apports compris : c'est ce que le tour enregistre.
+    if (recap) Object.assign(allDecisions, recap.decisions);
 
     // Validation défensive : résultats cohérents post-simulation
     for (const teamId of Object.keys(output.results)) {
