@@ -761,7 +761,6 @@ export default async function ArenaPage({
   // l'évolution —, puis le détail à la demande, dans un tiroir fermé. Un tableau de bord
   // de trois mille pixels ne se traîne pas jusqu'au bout : on lit ce qui compte, et on
   // ouvre le reste si l'on veut.
-  const moiAuClassement = view.ranking.find((row) => row.isPlayer);
   const periodeRecente = periods.find((p) => p.round === latestRound);
   const resultatsCartes: CarteDuParcours[] = periodeRecente
     ? [
@@ -771,13 +770,6 @@ export default async function ArenaPage({
           titre: "Ce que ça a donné",
           noeud: (
             <section className="space-y-4">
-              <p className="text-base text-slate-300">
-                {periodLabel(view.roundDays, periodeRecente.round)}{" "}
-                {view.kind === "solo" ? "simulé" : "clos"}
-                {view.playerBpi !== null
-                  ? ` · ${moiAuClassement ? `#${moiAuClassement.rank}/${view.ranking.length} · ` : ""}IPG ${view.playerBpi.toFixed(0)}`
-                  : ""}
-              </p>
               {/* LES RÉSULTATS ET SEULEMENT EUX, avec leurs trois onglets de détail (Synthèse, Marché,
                   Finance). Le menu Situation / Décisions / Résultats n'a pas sa place ici : le
                   débriefing et les décisions du tour se lisent à la demande, dans un tiroir. */}

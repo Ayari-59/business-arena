@@ -34,6 +34,7 @@ export function RevelationDuTour({
   precedent,
   nouveau,
   rang,
+  ipg,
 }: {
   /** Le tour révélé, nommé dans la langue du scénario (« Trimestre 3 »). */
   periode: string;
@@ -44,6 +45,12 @@ export function RevelationDuTour({
   nouveau: boolean;
   /** La place de l'équipe, quand le classement est révélé. */
   rang?: { place: number; sur: number };
+  /**
+   * L'indice de performance globale, quand il est montré. Il vivait seul sur une ligne au-dessus
+   * des onglets (« Tour 1 simulé · #1/3 · IPG 65 ») : une ligne de plus avant le premier chiffre,
+   * qui redisait le classement d'ici. Il se lit maintenant avec lui.
+   */
+  ipg?: number | null;
 }) {
   const v = verdictDuTour(tour, precedent);
   const positif = v.resultat >= 0;
@@ -53,7 +60,7 @@ export function RevelationDuTour({
       // « Le verdict de trimestre 3 » ne se dit pas : la virgule fait la liaison
       // à la voix mieux qu'un article qu'il faudrait accorder au scénario.
       aria-label={`Verdict, ${periode.toLowerCase()}`}
-      className={`carte overflow-hidden px-4 py-4 sm:px-5 ${
+      className={`carte overflow-hidden px-4 py-3 sm:px-5 sm:py-4 ${
         positif ? "border-emerald-400/25" : "border-rose-400/25"
       } ${nouveau ? "revelation" : ""}`}
     >
@@ -94,14 +101,21 @@ export function RevelationDuTour({
         ) : null}
       </div>
 
-      <p className="mt-3 max-w-prose text-sm leading-relaxed text-slate-200">
+      <p className="mt-2 max-w-prose text-sm leading-relaxed text-slate-200 sm:mt-3">
         {v.phrase}
       </p>
 
-      {rang ? (
-        <p className="mt-2 text-xs text-slate-400">
-          Au classement révélé : {rang.place}
-          <sup>{rang.place === 1 ? "re" : "e"}</sup> sur {rang.sur} équipes.
+      {rang || (ipg !== null && ipg !== undefined) ? (
+        <p className="mt-1.5 text-xs text-slate-400">
+          {rang ? (
+            <>
+              Au classement révélé : {rang.place}
+              <sup>{rang.place === 1 ? "re" : "e"}</sup> sur {rang.sur} équipes
+            </>
+          ) : null}
+          {rang && ipg !== null && ipg !== undefined ? " · " : null}
+          {ipg !== null && ipg !== undefined ? <>IPG {ipg.toFixed(0)}</> : null}
+          .
         </p>
       ) : null}
     </section>

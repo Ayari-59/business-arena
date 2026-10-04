@@ -113,3 +113,24 @@ describe("la révélation du tour", () => {
     );
   });
 });
+
+describe("le classement et l'IPG se lisent sur une seule ligne de la carte", () => {
+  const plat = (html: string) => html.replace(/<[^>]+>/g, "").replace(/[  ]/g, " ");
+
+  it("la place et l'IPG vont ensemble, sans ligne d'introduction au-dessus des onglets", () => {
+    const html = plat(rendu({ rang: { place: 1, sur: 3 }, ipg: 65.4 }));
+    expect(html).toContain("Au classement révélé : 1re sur 3 équipes · IPG 65.");
+  });
+
+  it("l'IPG seul, quand le classement n'est pas révélé", () => {
+    const html = plat(rendu({ ipg: 54 }));
+    expect(html).toContain("IPG 54.");
+    expect(html).not.toContain("classement");
+  });
+
+  it("ni l'un ni l'autre : aucune ligne, rien ne fuit", () => {
+    const html = plat(rendu({ ipg: null }));
+    expect(html).not.toContain("IPG");
+    expect(html).not.toContain("classement");
+  });
+});

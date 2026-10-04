@@ -178,6 +178,7 @@ export function PeriodDashboard({
               precedent={precedent}
               nouveau={standing}
               rang={standing && moi ? { place: moi.rank, sur: view.ranking.length } : undefined}
+              ipg={standing ? view.playerBpi : null}
             />
             <ReussitesDuTour reussites={franchies} />
             {/*
