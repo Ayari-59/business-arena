@@ -195,6 +195,11 @@ describe("débriefing et progression", () => {
     // qu'une des deux (config/analyse-par-niveau) ; elles sont toutes justes.
     expect(d.debrief!.correctOptionIds).toContain("cover_fixed");
     for (const id of d.debrief!.correctOptionIds) expect(["cover_fixed", "unit_margin"]).toContain(id);
+    // Rien ne se perd : ce que le niveau n'a pas proposé est dit à part au débriefing
+    // (« à retenir aussi »), de sorte que les deux listes recomposent toutes les bonnes causes.
+    const toutes = [...d.debrief!.correctOptionIds, ...d.debrief!.autresCauses.map((c) => c.id)].sort();
+    expect(toutes).toEqual(["cover_fixed", "unit_margin"]);
+    for (const c of d.debrief!.autresCauses) expect(c.label.length).toBeGreaterThan(0);
     // la correction du QCM est révélée, avec explications
     expect(d.debrief!.quizScore).toBeCloseTo(2 / 3, 9);
     expect(d.debrief!.quizCorrection.length).toBe(d.quizQuestions.length);

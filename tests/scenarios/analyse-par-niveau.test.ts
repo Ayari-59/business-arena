@@ -102,6 +102,20 @@ describe("le diagnostic", () => {
   });
 });
 
+describe("rien ne se perd au débriefing", () => {
+  it("les causes proposées et celles qu'on dit à part recomposent toutes les bonnes causes", () => {
+    for (const { sector, s } of ALL) {
+      for (const niveau of [1, 3, 5]) {
+        const proposees = new Set(optionsDuDiagnostic(s.diagnosticOptions, niveau).map((o) => o.id));
+        const aPart = s.diagnosticOptions.filter((o) => o.correct && !proposees.has(o.id)).map((o) => o.id);
+        const vues = s.diagnosticOptions.filter((o) => o.correct && proposees.has(o.id)).map((o) => o.id);
+        const toutes = s.diagnosticOptions.filter((o) => o.correct).map((o) => o.id);
+        expect([...vues, ...aPart].sort(), `${sector}/${s.code}/n${niveau}`).toEqual([...toutes].sort());
+      }
+    }
+  });
+});
+
 describe("le choix du modèle", () => {
   it("niveaux 1-2 : deux modèles, chacun avec sa phrase d'objectif ; l'optimal est là", () => {
     for (const { sector, s } of ALL) {

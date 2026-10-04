@@ -16,6 +16,7 @@ import {
   statutDesSituations,
 } from "@/config/situation-rendu";
 import { AnnonceDuTour } from "@/components/annonce-du-tour";
+import { SituationDebrief } from "@/components/situation-panel";
 import type { SituationView } from "@/services/pedagogy.service";
 
 /**
@@ -491,3 +492,50 @@ describe("questions ouvertes : l'élève écrit, le serveur ramène le texte aux
   });
 });
 
+
+
+describe("le débriefing dit les bonnes causes que le niveau n'a pas proposées", () => {
+  const debrief = (autresCauses: { id: string; label: string }[]) =>
+    situation({
+      status: "debriefed",
+      rendered: true,
+      diagnosis: { selected: ["a"], freeText: "", score: 1 },
+      debrief: {
+        correctOptionIds: ["a"],
+        autresCauses,
+        quizCorrection: [],
+        quizScore: null,
+        modelInsight: null,
+        consequenceFacts: null,
+        interpretation: null,
+        concepts: [],
+        finalScore: 1,
+      },
+    });
+
+  it("l'affiche à part, comme une chose à retenir et non comme une erreur", () => {
+    const html = renderToStaticMarkup(
+      createElement(SituationDebrief, {
+        situation: debrief([{ id: "z", label: "Que chaque unité vendue rapporte plus que son coût" }]),
+      }),
+    );
+    expect(html).toContain("une autre bonne cause, non proposée à votre niveau");
+    expect(html).toContain("Que chaque unité vendue rapporte plus que son coût");
+    // Jamais comptée « manquée » : le joueur ne pouvait pas la cocher.
+    expect(html).not.toContain("(manqué)");
+  });
+
+  it("au pluriel quand il y en a plusieurs, et se tait quand il n'y en a pas", () => {
+    const deux = renderToStaticMarkup(
+      createElement(SituationDebrief, {
+        situation: debrief([
+          { id: "y", label: "Cause Y" },
+          { id: "z", label: "Cause Z" },
+        ]),
+      }),
+    );
+    expect(deux).toContain("d&#x27;autres bonnes causes, non proposées à votre niveau");
+    const aucune = renderToStaticMarkup(createElement(SituationDebrief, { situation: debrief([]) }));
+    expect(aucune).not.toContain("À retenir aussi");
+  });
+});

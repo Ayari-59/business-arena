@@ -314,6 +314,12 @@ export interface SituationView {
   /** Rempli uniquement après débriefing. */
   debrief: {
     correctOptionIds: string[];
+    /**
+     * Les bonnes causes que ce niveau n'a PAS proposées (config/analyse-par-niveau) : le
+     * joueur ne pouvait pas les cocher, mais la leçon de la situation les contient.
+     * Dites au débriefing, jamais comptées comme « manquées ».
+     */
+    autresCauses: { id: string; label: string }[];
     /** Correction du QCM, question par question : crédit par option + explication. */
     quizCorrection: {
       id: string;
@@ -444,6 +450,14 @@ export function toView(
           correctOptionIds: optionsDuDiagnostic(def.diagnosticOptions, modelCtx?.level ?? NIVEAU_STANDARD)
             .filter((o) => o.correct)
             .map((o) => o.id),
+          autresCauses: (() => {
+            const proposees = new Set(
+              optionsDuDiagnostic(def.diagnosticOptions, modelCtx?.level ?? NIVEAU_STANDARD).map((o) => o.id),
+            );
+            return def.diagnosticOptions
+              .filter((o) => o.correct && !proposees.has(o.id))
+              .map(({ id, label }) => ({ id, label }));
+          })(),
           quizCorrection: asked.map((q) => ({
             id: q.id,
             correctOptionId: q.correctOptionId,
