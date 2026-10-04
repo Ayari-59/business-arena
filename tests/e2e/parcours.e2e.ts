@@ -230,13 +230,11 @@ describe("parcours enseignant et élève", () => {
     await eleve
       .getByRole("tab", { name: /Finance/ })
       .click({ timeout: 30_000 });
-    await eleve.evaluate(() => {
-      // les comptes sont dépliables : leur contenu ne compte pas dans le texte
-      // visible tant qu'ils sont fermés.
-      document
-        .querySelectorAll("details")
-        .forEach((d) => d.setAttribute("open", ""));
-    });
+    // Les comptes forment un accordéon : en ouvrir un ferme les autres, donc on ouvre CELUI de
+    // l'analyse des coûts, comme le ferait l'élève, plutôt que de tout forcer ouvert.
+    await eleve
+      .locator("summary", { hasText: /Analyse des coûts/i })
+      .click({ timeout: 30_000 });
     const vu = (await texte(eleve)).toLowerCase();
     expect(vu).toContain("frais de mission");
     expect(vu, "l'étiquette figée est revenue").not.toContain(

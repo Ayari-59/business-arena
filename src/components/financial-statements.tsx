@@ -60,14 +60,21 @@ const CASH_LABELS: Record<string, string> = {
 function Panel({
   title,
   defaultOpen,
+  resume,
   children,
 }: {
   title: string;
   defaultOpen?: boolean;
+  /**
+   * Le chiffre qui dit l'état sans l'ouvrir, lu dans l'en-tête fermé. Quatre états ouverts
+   * ensemble faisaient 3 000 px sur un téléphone : ils forment maintenant un accordéon (en
+   * ouvrir un ferme les autres), et chacun annonce sa conclusion.
+   */
+  resume?: string;
   children: React.ReactNode;
 }) {
   return (
-    <Tiroir titre={title} ouvert={defaultOpen}>
+    <Tiroir titre={title} quoi={resume} ouvert={defaultOpen} ferme={!defaultOpen} groupe="comptes-du-tour">
       {children}
     </Tiroir>
   );
@@ -173,7 +180,7 @@ export function FinancialStatements({
         🧾 Vos comptes du tour · lisez-les comme un dirigeant
       </p>
 
-      <Panel title="Compte de résultat" defaultOpen>
+      <Panel title="Compte de résultat" defaultOpen resume={`résultat net ${euro(cr.netIncome)}`}>
         <LigneDeLecture lecture={lectureDuResultat(cr)} />
         <Row label="Chiffre d'affaires" value={euro(cr.revenue)} />
         {Math.abs(cr.productionStocked) > 0.5 ? (
@@ -242,7 +249,7 @@ export function FinancialStatements({
         />
       </Panel>
 
-      <Panel title="Bilan">
+      <Panel title="Bilan" resume={`total actif ${euro(totalAssets)}`}>
         <LigneDeLecture lecture={lectureDuBilan(b, result.functionalBalance)} />
         <div className="grid gap-2 sm:grid-cols-2">
           <div>
@@ -288,7 +295,10 @@ export function FinancialStatements({
         </p>
       </Panel>
 
-      <Panel title="Analyse des coûts">
+      <Panel
+        title="Analyse des coûts"
+        resume={result.breakeven.breakEvenUnits != null ? `seuil ${Math.round(result.breakeven.breakEvenUnits).toLocaleString("fr-FR")} ${vocabulary.units}` : "seuil jamais atteint"}
+      >
         <div className="grid gap-2 sm:grid-cols-2">
           <div>
             <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
@@ -353,7 +363,7 @@ export function FinancialStatements({
         </p>
       </Panel>
 
-      <Panel title="Budget de trésorerie">
+      <Panel title="Budget de trésorerie" resume={`clôture ${euro(result.cashFlow.closing)}`}>
         <LigneDeLecture lecture={lectureDeLaTresorerie(result.cashFlow, CASH_LABELS)} />
         <Row label="Trésorerie d'ouverture" value={euro(result.cashFlow.opening)} strong />
         {result.cashFlow.items.map((item) => (

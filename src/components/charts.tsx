@@ -171,44 +171,42 @@ export function TreasuryChart({
   );
 }
 
+/**
+ * LES PARTS DE MARCHÉ, EN BARRES DE TEXTE. Le dessin était un SVG de 570 unités de large : réduit
+ * à un téléphone, ses libellés tombaient à 6 px et « Étudiants (sensibles au prix) » se coupait
+ * en « nts (sensibles au prix) ». Chaque ligne dit maintenant son nom en clair, sa part à droite,
+ * et la barre dessous : lisible à toute largeur, et le lecteur d'écran lit une liste.
+ */
 export function MarketShareChart({
   segments,
 }: {
   segments: { name: string; share: number }[];
 }) {
   if (segments.length === 0) return null;
-  const barH = 28;
-  const gap = 6;
-  const labelW = 110;
-  const chartW = 400;
-  const totalH = segments.length * (barH + gap) - gap + 8;
-
   return (
     <figure>
-      <figcaption className="mb-2 text-xs text-slate-400">
-        Parts de marché par segment
-      </figcaption>
-      <svg viewBox={`0 0 ${labelW + chartW + 60} ${totalH}`} className="w-full" role="img" aria-label="Parts de marché par segment">
+      <figcaption className="mb-2 text-xs text-slate-400">Parts de marché par segment</figcaption>
+      <ul className="space-y-2" aria-label="Parts de marché par segment">
         {segments.map((seg, i) => {
-          const y = i * (barH + gap);
-          const w = Math.max(2, seg.share * chartW);
           const color = SEGMENT_COLORS[i % SEGMENT_COLORS.length]!;
           return (
-            <g key={seg.name}>
-              <text x={labelW - 8} y={y + barH / 2 + 4} textAnchor="end" fontSize="11" fill="#c3c2b7">
-                {seg.name}
-              </text>
-              <rect x={labelW} y={y} width={chartW} height={barH} rx="4" fill="#1e293b" />
-              <rect x={labelW} y={y} width={w} height={barH} rx="4" fill={color} opacity="0.85">
-                <title>{`${seg.name} : ${formatPercent(seg.share)}`}</title>
-              </rect>
-              <text x={labelW + w + 6} y={y + barH / 2 + 4} fontSize="11" fill={color} fontWeight="600">
-                {formatPercent(seg.share)}
-              </text>
-            </g>
+            <li key={seg.name} className="text-sm">
+              <div className="flex items-baseline justify-between gap-3 text-slate-300">
+                <span className="min-w-0">{seg.name}</span>
+                <span className="shrink-0 font-semibold tabular-nums" style={{ color }}>
+                  {formatPercent(seg.share)}
+                </span>
+              </div>
+              <div className="mt-0.5 h-2 rounded-full bg-slate-800">
+                <div
+                  className="h-2 rounded-full opacity-85"
+                  style={{ width: `${Math.max(2, Math.min(100, seg.share * 100))}%`, backgroundColor: color }}
+                />
+              </div>
+            </li>
           );
         })}
-      </svg>
+      </ul>
     </figure>
   );
 }

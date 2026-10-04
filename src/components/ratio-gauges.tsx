@@ -1,3 +1,5 @@
+import { Tiroir } from "@/components/tiroir";
+
 const pct = (v: number) => `${(v * 100).toFixed(1).replace(".", ",")} %`;
 
 interface RatioDef {
@@ -33,7 +35,7 @@ function GaugeBar({ ratio }: { ratio: RatioDef }) {
     <div className="space-y-1">
       <div className="flex items-baseline justify-between gap-2">
         <span className="text-xs text-slate-300">{ratio.label}</span>
-        <span className={`text-sm font-semibold tabular-nums ${textTone}`}>
+        <span className={`shrink-0 whitespace-nowrap text-sm font-semibold tabular-nums ${textTone}`}>
           {isNegative ? "−" : ""}
           {pct(Math.abs(ratio.value))}
         </span>
@@ -109,11 +111,12 @@ export function RatioGauges({
   ];
 
   return (
-    <section>
-      <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-amber-300">
-        📐 Ratios financiers
-      </h3>
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+    // À LA DEMANDE : six jauges avec leur explication faisaient 800 px sous les états, que l'on
+    // lit d'abord. Le tiroir s'ouvre comme les états (un seul à la fois) et annonce son contenu.
+    <Tiroir titre="Ratios financiers" quoi={`${ratios.length} ratios`} ferme groupe="comptes-du-tour">
+      {/* Une colonne sur téléphone : le libellé, le chiffre, la jauge, puis l'explication, sans
+          que « 0,3 % » ne se casse en deux lignes dans une colonne de 150 px. */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {ratios.map((r) => (
           <GaugeBar key={r.label} ratio={r} />
         ))}
@@ -123,6 +126,6 @@ export function RatioGauges({
         financière. L&apos;effet de levier montre si la dette sert la rentabilité ou la
         fragilise.
       </p>
-    </section>
+    </Tiroir>
   );
 }

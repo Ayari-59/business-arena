@@ -8,8 +8,8 @@ export function BpiPanel({
 }) {
   return (
     <div className="carte p-3 sm:p-5">
-      <h2 className="mb-3 text-sm font-semibold text-slate-200">Votre profil de performance</h2>
-      <ul className="space-y-2">
+      <h2 className="mb-2 text-sm font-semibold text-slate-200 sm:mb-3">Votre profil de performance</h2>
+      <ul className="space-y-1.5 sm:space-y-2">
         {DIMENSION_DISPLAY_ORDER.map((dimension) => {
           const value = dimensions[dimension];
           if (value === undefined) return null;

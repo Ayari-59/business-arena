@@ -19,6 +19,7 @@ import type { KpiFormat } from "@/config/scenarios/sector-kpis";
 import type { GameView } from "@/services/game-view.service";
 import type { RseIndex, RsePillar } from "@/scoring/rse";
 import { ReussitesDuTour } from "@/components/reussites-du-tour";
+import { Tiroir } from "@/components/tiroir";
 import { RevelationDuTour } from "@/components/revelation-du-tour";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { reussitesFranchies, lireLeTour } from "@/scoring/reussites";
@@ -62,19 +63,19 @@ function RseCard({ rse }: { rse: RseIndex }) {
           <span className="text-xs text-slate-400"> / 100</span>
         </span>
       </div>
-      <div className="mt-3 space-y-2">
+      <div className="mt-2 space-y-1.5 sm:mt-3 sm:space-y-2">
         {RSE_PILLARS.map(({ key, label, bar }) => {
           const p = rse[key] as RsePillar;
           return (
             <div key={key} className="flex items-center gap-3 text-xs">
-              <span className="w-24 shrink-0 text-slate-400">{label}</span>
+              <span className="w-24 shrink-0 text-slate-400 max-sm:w-[6.5rem]">{label}</span>
               <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-800">
                 <span
                   className={`block h-full rounded-full ${p.evaluated ? bar : "bg-slate-600"}`}
                   style={{ width: `${p.score}%` }}
                 />
               </span>
-              <span className="w-16 shrink-0 text-right tabular-nums text-slate-300">
+              <span className="w-[4.5rem] shrink-0 whitespace-nowrap text-right tabular-nums text-slate-300">
                 {p.evaluated ? p.score : <span className="text-slate-400">non évalué</span>}
               </span>
             </div>
@@ -93,7 +94,7 @@ function RseCard({ rse }: { rse: RseIndex }) {
           ))}
         </div>
       ) : null}
-      <p className="mt-3 text-sm leading-snug text-slate-400">
+      <p className="mt-2 text-sm leading-snug text-slate-400 sm:mt-3">
         Elle pèse dans l&apos;IPG (10 % par défaut) ; elle ne joue pas sur le marché.
       </p>
     </section>
@@ -379,11 +380,15 @@ export function PeriodDashboard({
                       </li>
                     ))}
                   </ol>
-                  <p className="mt-3 text-xs text-slate-400">
-                    IPG sur 100 : économique 30 %, financière 20 %, pilotage 20 %,
-                    commerciale 15 %, responsabilité sociétale 10 %, maîtrise décisionnelle
-                    5 %. Les derniers tours pèsent plus lourd.
-                  </p>
+                  <div className="mt-3">
+                    <Tiroir titre="Comment l'IPG se calcule" ferme>
+                      <p className="text-sm leading-relaxed text-slate-400">
+                        IPG sur 100 : économique 30 %, financière 20 %, pilotage 20 %,
+                        commerciale 15 %, responsabilité sociétale 10 %, maîtrise décisionnelle
+                        5 %. Les derniers tours pèsent plus lourd.
+                      </p>
+                    </Tiroir>
+                  </div>
                 </div>
                 {view.playerDimensions ? <BpiPanel dimensions={view.playerDimensions} /> : null}
               </section>
@@ -412,17 +417,25 @@ export function PeriodDashboard({
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-sky-300">
                   📐 Indicateurs du métier
                 </h3>
-                <div className="mt-2 grid grid-cols-2 gap-3 lg:grid-cols-3">
+                {/*
+                  SUR TÉLÉPHONE, UNE LIGNE PAR INDICATEUR : le nom à gauche, la valeur à droite, et
+                  l'explication en dessous, sur une ligne. En deux colonnes, chaque carte portait
+                  quatre lignes d'explication dans une colonne de 150 px : trois indicateurs
+                  tenaient plus d'un écran.
+                */}
+                <div className="mt-2 grid gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3">
                   {period.sectorKpis.map((k) => (
                     <div
                       key={k.key}
                       className="rounded-lg border border-white/5 bg-slate-950 px-2.5 py-2"
                     >
-                      <p className="text-xs uppercase tracking-wide text-slate-400">{k.label}</p>
-                      <p className="mt-0.5 text-lg font-semibold tabular-nums text-slate-100">
-                        {formatKpi(k.value, k.format)}
-                      </p>
-                      <p className="mt-1 text-sm leading-snug text-slate-400">{k.hint}</p>
+                      <div className="flex items-baseline justify-between gap-3 sm:block">
+                        <p className="text-xs uppercase tracking-wide text-slate-400">{k.label}</p>
+                        <p className="text-lg font-semibold tabular-nums text-slate-100 sm:mt-0.5">
+                          {formatKpi(k.value, k.format)}
+                        </p>
+                      </div>
+                      <p className="mt-0.5 text-sm leading-snug text-slate-400 sm:mt-1">{k.hint}</p>
                     </div>
                   ))}
                 </div>

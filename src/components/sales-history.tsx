@@ -31,6 +31,8 @@ export function SalesHistory({
     <Tiroir
       titre="📈 Historique de vos ventes"
       quoi={`${history.rounds.length} tour${history.rounds.length > 1 ? "s" : ""}`}
+      ferme
+      groupe="comptes-du-tour"
     >
       <div className="overflow-x-auto">
         <table className="w-full text-sm">

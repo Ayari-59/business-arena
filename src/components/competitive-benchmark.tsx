@@ -1,5 +1,6 @@
 import { formatEuro, formatPercent } from "@/lib/format";
 import { Embleme } from "@/components/embleme";
+import { Tiroir } from "@/components/tiroir";
 import type { GameView } from "@/services/game-view.service";
 
 export function CompetitiveBenchmark({
@@ -23,12 +24,16 @@ export function CompetitiveBenchmark({
 
   return (
     <section>
-      <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-fuchsia-300">
+      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-fuchsia-300 sm:mb-3">
         📊 Benchmark concurrentiel
       </h3>
 
-      <div className="mb-4 flex items-baseline gap-3 rounded-lg border border-fuchsia-400/20 bg-fuchsia-950/20 px-3 py-2.5 sm:px-4 sm:py-3">
-        <div>
+      {/*
+        SUR TÉLÉPHONE, LE NOM ET LE CHIFFRE SUR UNE LIGNE, la phrase dessous. Côte à côte, le libellé
+        tenait en trois lignes dans une colonne étroite, et le chiffre tombait sous lui.
+      */}
+      <div className="mb-3 rounded-lg border border-fuchsia-400/20 bg-fuchsia-950/20 px-3 py-2.5 sm:mb-4 sm:flex sm:items-baseline sm:gap-3 sm:px-4 sm:py-3">
+        <div className="flex items-baseline justify-between gap-3 sm:block">
           <p className="text-xs uppercase tracking-wide text-slate-400">
             Indice de compétitivité-prix
           </p>
@@ -36,7 +41,7 @@ export function CompetitiveBenchmark({
             {(playerIdx * 100).toFixed(0)}
           </p>
         </div>
-        <p className="text-sm leading-snug text-slate-400">
+        <p className="mt-0.5 text-sm leading-snug text-slate-400 sm:mt-0">
           {playerIdx >= 1.05
             ? "Votre prix est inférieur au marché : vous captez de la demande, mais marquez-vous assez ?"
             : playerIdx < 0.95
@@ -118,21 +123,29 @@ export function CompetitiveBenchmark({
         qui ne joue pas depuis dix ans, et une infobulle ne s'ouvre pas sur un
         téléphone.
       */}
-      {styles.length > 0 ? (
-        <ul className="mt-3 space-y-1 border-t border-white/5 pt-2">
-          {styles.map((st) => (
-            <li key={st.label} className="text-sm leading-snug text-slate-400">
-              <span className="font-semibold text-slate-300">{st.label}</span> · {st.aide}
-            </li>
-          ))}
-        </ul>
-      ) : null}
-
-      <p className="mt-2 text-sm leading-relaxed text-slate-400">
-        L&apos;indice de compétitivité-prix compare votre prix au marché : au-dessus de
-        100, vous êtes moins cher ; en dessous, plus cher. Le prix n&apos;est qu&apos;un levier
-        parmi d&apos;autres : marketing, qualité et stock font le reste.
-      </p>
+      {/*
+        LA LÉGENDE ET LA RÈGLE DE LECTURE, À LA DEMANDE. Elles faisaient sept lignes sous le
+        tableau, lues une fois puis traînées à chaque tour : on les range dans un tiroir fermé,
+        et le tableau, lui, reste à l'écran.
+      */}
+      <div className="mt-2">
+        <Tiroir titre="Comment lire ce tableau" ferme>
+          {styles.length > 0 ? (
+            <ul className="mb-2 space-y-1">
+              {styles.map((st) => (
+                <li key={st.label} className="text-sm leading-snug text-slate-400">
+                  <span className="font-semibold text-slate-300">{st.label}</span> · {st.aide}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          <p className="text-sm leading-relaxed text-slate-400">
+            L&apos;indice de compétitivité-prix compare votre prix au marché : au-dessus de
+            100, vous êtes moins cher ; en dessous, plus cher. Le prix n&apos;est qu&apos;un levier
+            parmi d&apos;autres : marketing, qualité et stock font le reste.
+          </p>
+        </Tiroir>
+      </div>
     </section>
   );
 }
