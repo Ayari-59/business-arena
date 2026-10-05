@@ -1,5 +1,5 @@
 import { randomBytes, randomInt } from "node:crypto";
-import { eq } from "drizzle-orm";
+import { count, desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { episodeCohortes, episodeMembres, episodeReprises } from "@/db/schema";
 import {
@@ -168,4 +168,37 @@ export async function vueDeLAnimateur(
     code: c.code,
     vue: agregerCohorte(membres.map((m) => parties.get(m.userId) ?? [])),
   };
+}
+
+/** Toutes les cohortes, la plus récente d'abord, avec leur nombre de membres : pour l'administration. */
+export async function listerCohortes(): Promise<
+  { id: string; code: string; nom: string; cleAnimateur: string; creeeLe: Date; membres: number }[]
+> {
+  const lignes = await db
+    .select({
+      id: episodeCohortes.id,
+      code: episodeCohortes.code,
+      nom: episodeCohortes.nom,
+      cleAnimateur: episodeCohortes.cleAnimateur,
+      creeeLe: episodeCohortes.createdAt,
+      membres: count(episodeMembres.userId),
+    })
+    .from(episodeCohortes)
+    .leftJoin(episodeMembres, eq(episodeMembres.cohorteId, episodeCohortes.id))
+    .groupBy(episodeCohortes.id)
+    .orderBy(desc(episodeCohortes.createdAt));
+  return lignes.map((l) => ({ ...l, membres: Number(l.membres) }));
+}
+
+/**
+ * Remplacer la clé de l'animateur, quand son lien a circulé. L'ancien lien
+ * cesse aussitôt d'ouvrir quoi que ce soit ; les membres ne sont pas touchés.
+ */
+export async function renouvelerCleAnimateur(cohorteId: string): Promise<string | null> {
+  const [maj] = await db
+    .update(episodeCohortes)
+    .set({ cleAnimateur: randomBytes(18).toString("base64url") })
+    .where(eq(episodeCohortes.id, cohorteId))
+    .returning({ cle: episodeCohortes.cleAnimateur });
+  return maj?.cle ?? null;
 }

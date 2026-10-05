@@ -194,8 +194,9 @@ pédagogiques alimentées et un concours prêt à lancer. Les identifiants s'aff
 
 ## Cohortes d'épisodes manager
 
-Une entreprise déploie les épisodes manager par cohorte. `npm run cohorte:creer -- "Nom" https://adresse-du-site`
-crée la cohorte et affiche deux liens : l'invitation, à envoyer aux managers, et le lien de
+Une entreprise déploie les épisodes manager par cohorte. L'administrateur général la crée
+depuis `/admin/cohortes` (ou, en local, `npm run cohorte:creer -- "Nom" https://adresse-du-site`), qui
+affiche deux liens : l'invitation, à envoyer aux managers, et le lien de
 l'animateur, qui ouvre les agrégats de la cohorte (aucun nom, rien sous cinq personnes) et se
 transmet à l'animateur seul.
 

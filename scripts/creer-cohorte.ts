@@ -14,7 +14,8 @@ if (!nom) {
   console.error('Usage : npm run cohorte:creer -- "Nom de la cohorte" [https://adresse-du-site]');
   process.exit(1);
 }
-async function main() {
+
+async function main(nom: string) {
   const base = site.replace(/\/$/, "");
   const c = await creerCohorte(nom);
   console.log(`Cohorte « ${c.nom} » créée, code ${c.code}.`);
@@ -26,7 +27,7 @@ async function main() {
   );
 }
 
-main().then(
+main(nom).then(
   () => process.exit(0),
   (e) => {
     console.error(e);

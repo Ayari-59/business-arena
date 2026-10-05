@@ -15,7 +15,9 @@ import {
   codeDeRepriseDuProfil,
   cohorteDe,
   creerCohorte,
+  listerCohortes,
   quitterCohorte,
+  renouvelerCleAnimateur,
   rejoindreCohorte,
   reprendreProfil,
   vueDeLAnimateur,
@@ -130,5 +132,24 @@ describe("le code de reprise du profil", () => {
     for (let i = 0; i < 10; i++) await reprendreProfil({ code: "ZZZZ-ZZZZ", ip: "10.0.0.3" });
     const bloque = await reprendreProfil({ code: "ZZZZ-ZZZZ", ip: "10.0.0.3" });
     expect(bloque.ok === false && bloque.erreur).toMatch(/Trop de tentatives/);
+  });
+});
+
+describe("l'administration des cohortes", () => {
+  it("liste les cohortes, la plus récente d'abord, avec leur nombre de membres", async () => {
+    const vide = await creerCohorte("Cohorte vide");
+    const liste = await listerCohortes();
+    expect(liste[0]).toMatchObject({ code: vide.code, membres: 0 });
+    const acme = liste.find((c) => c.nom === "Acmé · managers de proximité")!;
+    expect(acme.membres).toBe(4);
+  });
+
+  it("remplace la clé de l'animateur : l'ancienne n'ouvre plus rien, les membres restent", async () => {
+    const acme = (await listerCohortes()).find((c) => c.nom === "Acmé · managers de proximité")!;
+    const nouvelle = await renouvelerCleAnimateur(acme.id);
+    expect(nouvelle).not.toBe(acme.cleAnimateur);
+    expect(await vueDeLAnimateur(acme.cleAnimateur)).toBeNull();
+    expect((await vueDeLAnimateur(nouvelle!))!.vue.membres).toBe(4);
+    expect(await renouvelerCleAnimateur("00000000-0000-4000-8000-000000000000")).toBeNull();
   });
 });
