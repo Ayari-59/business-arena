@@ -1,7 +1,7 @@
 /**
  * LES FAMILLES D'ÉPISODES, pour la page de choix.
  *
- * Quarante épisodes côte à côte ne se lisent plus : on les range par grand pan
+ * Quarante-huit épisodes côte à côte ne se lisent plus : on les range par grand pan
  * du métier de manager. Chaque épisode est dans une famille et une seule ; un
  * test le vérifie sur le registre.
  */
@@ -108,6 +108,22 @@ export const FAMILLES: readonly Famille[] = [
       "croissance-a-financer",
       "louer-ou-acheter",
       "client-a-risque",
+    ],
+  },
+  {
+    code: "strategie",
+    titre: "Choisir sa stratégie",
+    texte:
+      "Concurrents, rachats, nouveaux marchés, réseau, grands comptes : les paris qui engagent l'entreprise.",
+    episodes: [
+      "discounter-qui-arrive",
+      "concurrent-a-racheter",
+      "marche-qui-s-ouvre",
+      "fabricant-en-direct",
+      "projet-a-arreter",
+      "reseau-a-redessiner",
+      "pari-du-reemploi",
+      "grand-compte-exclusif",
     ],
   },
 ];

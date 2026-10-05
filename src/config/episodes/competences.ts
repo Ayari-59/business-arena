@@ -748,4 +748,124 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     // D6 · La direction veut serrer la vis
     { principale: "R4", secondaires: ["R10", "R2"] },
   ],
+  // 41. Le discounter qui arrive
+  "discounter-qui-arrive": [
+    // D1 · Tarval ouvre dans quinze jours
+    { principale: "R4", secondaires: ["R2", "R5"] },
+    // D2 · Ce que Tarval ne sait pas faire
+    { principale: "R1", secondaires: ["R5"] },
+    // D3 · Le fabricant qui livre aussi Tarval
+    { principale: "R4", secondaires: ["R6"] },
+    // D4 · Les premiers chiffres
+    { principale: "R3", secondaires: ["R10"] },
+    // D5 · L'opération d'hiver de Tarval
+    { principale: "R5", secondaires: ["R4"] },
+    // D6 · Le cap de l'an prochain
+    { principale: "R6", secondaires: ["R10"] },
+  ],
+  // 42. Le concurrent à racheter
+  "concurrent-a-racheter": [
+    // D1 · Mourgue est à vendre
+    { principale: "R2", secondaires: ["R4", "R5"] },
+    // D2 · Auditer, ou prendre l'exclusivité
+    { principale: "R1", secondaires: ["R4", "R6"] },
+    // D3 · L'offre ferme
+    { principale: "R3", secondaires: ["R4", "R1"] },
+    // D4 · Le dernier tour
+    { principale: "R5", secondaires: ["R4"] },
+    // D5 · La garantie de passif
+    { principale: "R5", secondaires: ["R6"] },
+    // D6 · Le directeur commercial
+    { principale: "R6", secondaires: ["R9", "R5"] },
+  ],
+  // 43. Le marché qui s'ouvre
+  "marche-qui-s-ouvre": [
+    // D1 · Un marché de 650 millions ?
+    { principale: "R1", secondaires: ["R5", "R4"] },
+    // D2 · Ce que le test doit dire
+    { principale: "R10", secondaires: ["R1"] },
+    // D3 · Les artisans
+    { principale: "R5", secondaires: ["R6"] },
+    // D4 · Le fabricant
+    { principale: "R5", secondaires: ["R6"] },
+    // D5 · Les chiffres du test
+    { principale: "R3", secondaires: ["R10"] },
+    // D6 · Solvéane
+    { principale: "R4", secondaires: ["R5"] },
+  ],
+  // 44. Le fabricant qui vend en direct
+  "fabricant-en-direct": [
+    // D1 · Mérindal vend en direct
+    { principale: "R4", secondaires: ["R2", "R1"] },
+    // D2 · Les grands comptes demandent un geste
+    { principale: "R2", secondaires: ["R4"] },
+    // D3 · Une seconde marque de menuiseries
+    { principale: "R1", secondaires: ["R5"] },
+    // D4 · Une marque propre ?
+    { principale: "R5", secondaires: ["R6"] },
+    // D5 · Les premiers chiffres
+    { principale: "R3", secondaires: ["R4"] },
+    // D6 · Mérindal à la table
+    { principale: "R5", secondaires: ["R4", "R6"] },
+  ],
+  // 45. Le projet qu'on n'ose pas arrêter
+  "projet-a-arreter": [
+    // D1 · Arvel Maison, dix-huit mois après
+    { principale: "R4", secondaires: ["R10", "R2"] },
+    // D2 · Les visites montent
+    { principale: "R1", secondaires: ["R3"] },
+    // D3 · Brémond s'intéresse à Rillieux
+    { principale: "R5", secondaires: ["R3", "R4"] },
+    // D4 · Saint-Priest : tenir le cap ?
+    { principale: "R3", secondaires: ["R4", "R1"] },
+    // D5 · Le comité de mardi
+    { principale: "R10", secondaires: ["R9", "R4"] },
+    // D6 · Écully, la vitrine
+    { principale: "R5", secondaires: ["R3", "R6"] },
+  ],
+  // 46. Le réseau d'agences à redessiner
+  "reseau-a-redessiner": [
+    // D1 · Talvère cherche un terrain à Mions
+    { principale: "R5", secondaires: ["R2", "R4"] },
+    // D2 · Bron, dernière du classement
+    { principale: "R1", secondaires: ["R4", "R5"] },
+    // D3 · Talvère annonce Mions
+    { principale: "R5", secondaires: ["R4"] },
+    // D4 · Villeurbanne-Nord : les premiers chiffres
+    { principale: "R3", secondaires: ["R10", "R4"] },
+    // D5 · Le terrain du boulevard
+    { principale: "R5", secondaires: ["R6", "R4"] },
+    // D6 · Les primes des directeurs d'agence
+    { principale: "R10", secondaires: ["R9", "R4"] },
+  ],
+  // 47. Le pari du réemploi
+  "pari-du-reemploi": [
+    // D1 · Premier ou suiveur ?
+    { principale: "R5", secondaires: ["R6", "R4"] },
+    // D2 · Sartel et Grollier veulent une réponse
+    { principale: "R6", secondaires: ["R5"] },
+    // D3 · L'accord-cadre de la Métropole
+    { principale: "R1", secondaires: ["R5"] },
+    // D4 · Le premier bilan
+    { principale: "R3", secondaires: ["R10"] },
+    // D5 · L'offre d'Orréa
+    { principale: "R6", secondaires: ["R4"] },
+    // D6 · La plateforme, maintenant ?
+    { principale: "R5", secondaires: ["R4"] },
+  ],
+  // 48. Le grand compte qui veut l'exclusivité
+  "grand-compte-exclusif": [
+    // D1 · Un quart de la région sur un seul client
+    { principale: "R2", secondaires: ["R4", "R5"] },
+    // D2 · Le stock dédié
+    { principale: "R5", secondaires: ["R6"] },
+    // D3 · Moulinier et Batival
+    { principale: "R6", secondaires: ["R9"] },
+    // D4 · Sarlève veut étendre le contrat à l'Isère
+    { principale: "R1", secondaires: ["R5"] },
+    // D5 · Le chantier des Vergnes est suspendu
+    { principale: "R3", secondaires: ["R4"] },
+    // D6 · La revue annuelle des prix
+    { principale: "R4", secondaires: ["R5"] },
+  ],
 };

@@ -60,7 +60,9 @@ export function CourbeDesSemaines({
     }),
   );
   const hauteur = (v: number) => `${(100 * v) / max}%`;
-  const graduations = courbe.graduations.filter((g) => g < max);
+  // Les colonnes partent de zéro : une graduation négative tomberait sous l'axe,
+  // hors du graphique, sur ce qui le suit. Le zéro a déjà son repère.
+  const graduations = courbe.graduations.filter((g) => g > 0 && g < max);
   const imprevuDe = (w: number) => imprevus.filter((i) => i.semaine === w && jouee(w));
 
   return (

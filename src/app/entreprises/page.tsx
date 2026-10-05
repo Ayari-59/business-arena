@@ -341,9 +341,10 @@ export default async function EntreprisesPage() {
                 Nouveau · Pour les entreprises
               </p>
               <p className="mt-1.5 text-base leading-relaxed text-slate-200">
-                Quarante épisodes dans la peau d&apos;un manager : une agence qui dérape, une équipe
-                qui s&apos;épuise, une commande à prix cassé, un investissement à choisir, une crise
-                à traverser… Jugé sur ses décisions plutôt que sur son résultat.
+                Quarante-huit épisodes dans la peau d&apos;un manager : une agence qui dérape, une
+                équipe qui s&apos;épuise, une commande à prix cassé, un concurrent à racheter, un
+                projet qu&apos;on n&apos;ose pas arrêter… Jugé sur ses décisions plutôt que sur son
+                résultat.
               </p>
             </div>
             <Link

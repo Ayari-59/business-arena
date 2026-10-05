@@ -59,6 +59,14 @@ export const VERSIONS_DES_MODELES: Readonly<Record<string, VersionDuModele>> = {
   "croissance-a-financer": { version: 1, empreinte: [35366, -81635, -90590] },
   "louer-ou-acheter": { version: 1, empreinte: [6715, -45906, -21155] },
   "client-a-risque": { version: 1, empreinte: [8905, -79142, -91304] },
+  "discounter-qui-arrive": { version: 1, empreinte: [-494458, -1896341, -838969] },
+  "concurrent-a-racheter": { version: 1, empreinte: [187277, -1079182, -228333] },
+  "marche-qui-s-ouvre": { version: 1, empreinte: [258676, 3267, -38267] },
+  "fabricant-en-direct": { version: 1, empreinte: [-93145, -1671394, -1028736] },
+  "projet-a-arreter": { version: 1, empreinte: [19659, -462014, -265421] },
+  "reseau-a-redessiner": { version: 1, empreinte: [360039, -190698, -51721] },
+  "pari-du-reemploi": { version: 1, empreinte: [187237, -568746, -25919] },
+  "grand-compte-exclusif": { version: 1, empreinte: [277116, -17165, -84313] },
 };
 
 export const versionDuModele = (code: string): number => VERSIONS_DES_MODELES[code]?.version ?? 1;

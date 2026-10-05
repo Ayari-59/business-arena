@@ -45,6 +45,14 @@ import { EPISODE_INVESTISSEMENT } from "./investissement-a-choisir";
 import { EPISODE_CROISSANCE } from "./croissance-a-financer";
 import { EPISODE_LOUER_ACHETER } from "./louer-ou-acheter";
 import { EPISODE_CLIENT_A_RISQUE } from "./client-a-risque";
+import { EPISODE_DISCOUNTER } from "./discounter-qui-arrive";
+import { EPISODE_RACHAT } from "./concurrent-a-racheter";
+import { EPISODE_NOUVEAU_MARCHE } from "./marche-qui-s-ouvre";
+import { EPISODE_DESINTERMEDIATION } from "./fabricant-en-direct";
+import { EPISODE_ESCALADE } from "./projet-a-arreter";
+import { EPISODE_RESEAU } from "./reseau-a-redessiner";
+import { EPISODE_REEMPLOI } from "./pari-du-reemploi";
+import { EPISODE_EXCLUSIVITE } from "./grand-compte-exclusif";
 
 export const EPISODES: readonly Episode[] = [
   EPISODE_TRIMESTRE,
@@ -87,6 +95,14 @@ export const EPISODES: readonly Episode[] = [
   EPISODE_CROISSANCE,
   EPISODE_LOUER_ACHETER,
   EPISODE_CLIENT_A_RISQUE,
+  EPISODE_DISCOUNTER,
+  EPISODE_RACHAT,
+  EPISODE_NOUVEAU_MARCHE,
+  EPISODE_DESINTERMEDIATION,
+  EPISODE_ESCALADE,
+  EPISODE_RESEAU,
+  EPISODE_REEMPLOI,
+  EPISODE_EXCLUSIVITE,
 ];
 
 export const episodeParCode = (code: string): Episode | undefined =>

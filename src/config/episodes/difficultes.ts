@@ -61,6 +61,14 @@ export const DIFFICULTES: Readonly<Record<string, Difficulte>> = {
   "croissance-a-financer": "moyen", // 38 (3 points)
   "louer-ou-acheter": "difficile", // 39 (8 points)
   "client-a-risque": "moyen", // 40 (3 points)
+  "discounter-qui-arrive": "moyen", // 41 (2 points)
+  "concurrent-a-racheter": "moyen", // 42 (2 points)
+  "marche-qui-s-ouvre": "moyen", // 43 (2 points)
+  "fabricant-en-direct": "moyen", // 44 (2 points)
+  "projet-a-arreter": "facile", // 45 (1 points)
+  "reseau-a-redessiner": "facile", // 46 (1 points)
+  "pari-du-reemploi": "facile", // 47 (0 points)
+  "grand-compte-exclusif": "moyen", // 48 (2 points)
 };
 
 export const PEU_DISCRIMINANTS: readonly string[] = [

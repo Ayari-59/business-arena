@@ -162,7 +162,7 @@ describe("les mesures d'une partie", () => {
         expect(mesures.tirage.obtenu).toBeCloseTo(bilan.trimestre.objectif, 6);
       }
     }
-  });
+  }, 60_000);
 
   it("ne dépendent du tirage joué que par sa place", () => {
     const ep = EPISODES[0]!;

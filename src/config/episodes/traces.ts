@@ -53,6 +53,14 @@ import * as investissementAChoisir from "./investissement-a-choisir";
 import * as croissanceAFinancer from "./croissance-a-financer";
 import * as louerOuAcheter from "./louer-ou-acheter";
 import * as clientARisque from "./client-a-risque";
+import * as discounterQuiArrive from "./discounter-qui-arrive";
+import * as concurrentARacheter from "./concurrent-a-racheter";
+import * as marcheQuiSOuvre from "./marche-qui-s-ouvre";
+import * as fabricantEnDirect from "./fabricant-en-direct";
+import * as projetAArreter from "./projet-a-arreter";
+import * as reseauARedessiner from "./reseau-a-redessiner";
+import * as pariDuReemploi from "./pari-du-reemploi";
+import * as grandCompteExclusif from "./grand-compte-exclusif";
 
 export interface TracesDeLEpisode {
   diagnostic: { juste: string; proche: string };
@@ -260,5 +268,45 @@ export const TRACES: Readonly<Record<string, TracesDeLEpisode>> = {
     diagnostic: { juste: "perteAttendue", proche: "fragilite" },
     reflexes: [...clientARisque.REFLEXES],
     prevision: { juste: 2, proche: 8 },
+  },
+  "discounter-qui-arrive": {
+    diagnostic: { juste: "exposition", proche: "service" },
+    reflexes: [...discounterQuiArrive.REFLEXES],
+    prevision: { juste: 10, proche: 40 },
+  },
+  "concurrent-a-racheter": {
+    diagnostic: { juste: "prix", proche: "synergies" },
+    reflexes: [...concurrentARacheter.REFLEXES],
+    prevision: { juste: 100, proche: 400 },
+  },
+  "marche-qui-s-ouvre": {
+    diagnostic: { juste: "option", proche: "artisans" },
+    reflexes: [...marcheQuiSOuvre.REFLEXES],
+    prevision: { juste: 4, proche: 12 },
+  },
+  "fabricant-en-direct": {
+    diagnostic: { juste: "exposition", proche: "services" },
+    reflexes: [...fabricantEnDirect.REFLEXES],
+    prevision: { juste: 15, proche: 60 },
+  },
+  "projet-a-arreter": {
+    diagnostic: { juste: "avenir", proche: "sites" },
+    reflexes: [...projetAArreter.REFLEXES],
+    prevision: { juste: 5, proche: 15 },
+  },
+  "reseau-a-redessiner": {
+    diagnostic: { juste: "reseau", proche: "incertitude" },
+    reflexes: [...reseauARedessiner.REFLEXES],
+    prevision: { juste: 8, proche: 25 },
+  },
+  "pari-du-reemploi": {
+    diagnostic: { juste: "gisements", proche: "premier" },
+    reflexes: [...pariDuReemploi.REFLEXES],
+    prevision: { juste: 300, proche: 1000 },
+  },
+  "grand-compte-exclusif": {
+    diagnostic: { juste: "dependance", proche: "marge" },
+    reflexes: [...grandCompteExclusif.REFLEXES],
+    prevision: { juste: 5, proche: 15 },
   },
 };
