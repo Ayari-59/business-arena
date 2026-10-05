@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/enseignants/episodes" },
   title: "Épisodes en classe",
   description:
-    "Des épisodes de contrôle de gestion et de finance à jouer en une séance : la notion du cours est le piège de la décision, et le calcul de la semaine 1 se corrige comme un exercice.",
+    "Des épisodes de contrôle de gestion, de finance et de stratégie à jouer en une séance : la notion du cours est le piège de la décision, et le calcul de la semaine 1 se corrige comme un exercice.",
   robots: { index: false, follow: false },
 };
 

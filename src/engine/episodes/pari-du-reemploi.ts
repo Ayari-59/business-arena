@@ -50,7 +50,7 @@
  *     Lyon que si les grands gisements sont libres, et d'autant plus vite
  *     qu'une annonce bruyante lui dit que le marché vaut la peine. Une fois
  *     entré, il tire les prix vers le bas et dispute les marchés publics.
- *   · LE PLAN SE RÉVISE SUR LES PREMIERS CHIFFRES. Le plan validé suppose 60 %
+ *   · LE PLAN SE RÉVISE SUR LES PREMIERS CHIFFRES. Le plan validé suppose 55 %
  *     de matériaux écoulés et des ventes réparties sur six agences ; le
  *     premier bilan en mesure 40 à 50 %, et deux agences font l'essentiel des
  *     ventes. Tenir le plan coûte ; les comptoirs se dimensionnent sur ce qui
@@ -227,7 +227,7 @@ export const ACCORD = {
 } as const;
 /** L'accord-cadre agrandi, si l'imprévu tombe. */
 export const VOLUME_RELEVE = 1200;
-/** Le taux de réemploi des bâtiments de la Métropole : 60 % au plan ; mesuré, entre 30 et 60 %. */
+/** Le taux de réemploi des bâtiments de la Métropole : 55 % au plan ; mesuré, entre 30 et 60 %. */
 export const REEMPLOI_METROPOLE = {
   plan: 0.55,
   moyen: 0.45,
@@ -239,7 +239,7 @@ export const REEMPLOI_METROPOLE = {
 /** Le coût net d'une tonne de l'accord-cadre, selon la part qui se réemploie. */
 export const coutAccord = (reemploi: number, indice = 1) =>
   ACCORD.depose - reemploi * FILIERE.prix * indice + (1 - reemploi) * FILIERE.recyclage;
-/** Le prix du plan : son coût à 60 %, plus sa marge. */
+/** Le prix du plan : son coût à 55 % de réemploi, plus sa marge. */
 export const PRIX_DU_PLAN = Math.round(coutAccord(REEMPLOI_METROPOLE.plan) + ACCORD.marge);
 export const PRIX_PRUDENT = PRIX_DU_PLAN + ACCORD.securite;
 

@@ -372,8 +372,8 @@ export default async function EnseignantsPage() {
             >
               épisodes en classe
             </Link>{" "}
-            font jouer un coût marginal, un budget flexible ou une VAN comme une décision, avec leur
-            fiche enseignant.
+            font jouer un coût marginal, une VAN ou un rachat comme une décision, avec leur fiche
+            enseignant.
           </p>
         </Bande>
 

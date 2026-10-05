@@ -10,10 +10,10 @@ import { episodeParCode } from "../../src/pedagogy/episodes/registre";
  * tableau un chiffre que le bilan contredit.
  */
 describe("les fiches enseignant", () => {
-  it("couvrent les épisodes 31 à 40, une fois chacun, dans l'ordre", () => {
-    expect(FICHES.map((f) => episodeParCode(f.code)?.numero)).toEqual([
-      31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
-    ]);
+  it("couvrent les épisodes 31 à 48, une fois chacun, dans l'ordre", () => {
+    expect(FICHES.map((f) => episodeParCode(f.code)?.numero)).toEqual(
+      Array.from({ length: 18 }, (_, i) => 31 + i),
+    );
   });
 
   it("donnent à la classe le lien du hasard commun", () => {
