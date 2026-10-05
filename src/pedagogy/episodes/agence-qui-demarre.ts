@@ -197,16 +197,6 @@ export function axe([information, diagnostic, prix, calibrage, domaine]: readonl
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce que l'agence y a dégagé. */
-const FENETRES: readonly [number, number][] = [
-  [2, 5],
-  [4, 7],
-  [6, 9],
-  [8, 12],
-  [10, 13],
-  [12, 13],
-];
-
 const KEVIN = { de: "Kevin Lopes", role: "Vendeur comptoir" } as const;
 const MOREL = { de: "Didier Morel", role: "Gérant, Morel Bâtiment" } as const;
 const CREDIT = { de: "Service crédit", role: "Siège" } as const;
@@ -497,12 +487,6 @@ export const EPISODE_LANCEMENT: Episode<Trimestre> = {
           }${t.filleuls >= 1 ? ` ; ${nombre(t.filleuls, 0)} sont venus par parrainage` : ""}.`,
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      let c = 0;
-      for (let w = de; w <= a; w += 1) c += t.semaines[w]!.contribution;
-      return c;
     },
   },
   comportements,

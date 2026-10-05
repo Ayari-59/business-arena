@@ -229,16 +229,6 @@ export function axe([information, diagnostic, reflexe, calibrage, domaine]: read
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce qu'elle a changé à la valeur estimée. */
-const FENETRES: readonly [number, number][] = [
-  [2, 4],
-  [3, 6],
-  [5, 8],
-  [7, 10],
-  [9, 13],
-  [12, 13],
-];
-
 const valeurA = (t: Trimestre, w: number) => (w <= 0 ? 0 : t.semaines[w]!.valeur);
 
 const DECRET: Record<string, string> = {
@@ -571,10 +561,6 @@ export const EPISODE_REEMPLOI: Episode<Trimestre> = {
                 : `a retenu un concurrent ; votre offre à ${n0(t.prixRemis!)} € avait ${pct(t.chanceAccord!)} de chances.`,
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      return valeurA(t, a) - valeurA(t, de - 1);
     },
   },
   comportements,

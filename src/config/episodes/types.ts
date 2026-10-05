@@ -193,8 +193,6 @@ export interface Episode<R extends Resultat = Resultat> {
     noteDesBarres: string;
     tuiles(t: R): Tuile[];
     hasard(t: R, graine: number): { titre: string; texte: string }[];
-    /** La fenêtre de chaque décision, pour mesurer la chance qu'elle a eue. */
-    fenetre(t: R, decision: number): number;
   };
   comportements(p: PartieJouee, t: R): Constat[];
   axe(constats: readonly Constat[]): { titre: string; texte: string };

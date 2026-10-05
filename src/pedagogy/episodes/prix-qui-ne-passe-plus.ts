@@ -174,16 +174,6 @@ export function axe([information, diagnostic, reflexe, calibrage, politique]: re
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce qu'elle a rapporté là. */
-const FENETRES: readonly [number, number][] = [
-  [2, 3],
-  [4, 7],
-  [6, 9],
-  [8, 11],
-  [10, 13],
-  [12, 13],
-];
-
 const FLORIAN = { de: "Florian Duchêne", role: "Commercial grands comptes" } as const;
 const GARON = {
   de: "Benjamin Albertini",
@@ -462,12 +452,6 @@ export const EPISODE_PRIX: Episode<Trimestre> = {
           : []),
         { titre: "Garon Bâtiment", texte: garon[t.garon] },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      let c = 0;
-      for (let w = de; w <= a; w += 1) c += t.semaines[w]!.marge;
-      return c;
     },
   },
   comportements,

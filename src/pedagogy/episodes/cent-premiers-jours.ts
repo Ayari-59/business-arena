@@ -199,16 +199,6 @@ export function axe([information, diagnostic, reflexe, calibrage, adjoint]: read
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce qu'elle a rapporté là, au-delà du budget. */
-const FENETRES: readonly [number, number][] = [
-  [1, 3],
-  [4, 6],
-  [6, 9],
-  [8, 10],
-  [10, 13],
-  [12, 13],
-];
-
 const CHRISTOPHE = { de: "Christophe Rambaud", role: "Adjoint, ventes chantier" } as const;
 const VINCENT = { de: "Gérard Rabier", role: "Directeur régional des agences" } as const;
 const AICHA = { de: "Amina Ouarab", role: "Vendeuse comptoir" } as const;
@@ -495,15 +485,6 @@ export const EPISODE_PRISE_DE_POSTE: Episode<Trimestre> = {
                 : "est resté, sans autre rôle que celui de l'intérim.",
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      let c = 0;
-      for (let w = de; w <= a; w += 1) {
-        const s = t.semaines[w]!;
-        c += s.marge - s.cout - BUDGET / SEMAINES;
-      }
-      return c;
     },
   },
   comportements,

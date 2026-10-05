@@ -219,16 +219,6 @@ export function axe([information, diagnostic, reflexe, calibrage, relation]: rea
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce qu'elle a changé à la valeur estimée. */
-const FENETRES: readonly [number, number][] = [
-  [1, 4],
-  [3, 6],
-  [5, 9],
-  [7, 10],
-  [10, 13],
-  [12, 13],
-];
-
 const valeurA = (t: Trimestre, w: number) => (w <= 0 ? 0 : t.semaines[w]!.valeur);
 
 const NOMS_ACCORD: Record<Trimestre["accord"], string> = {
@@ -577,10 +567,6 @@ export const EPISODE_DESINTERMEDIATION: Episode<Trimestre> = {
                 : "est parti en semaine 5, avec son réassort.",
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      return valeurA(t, a) - valeurA(t, de - 1);
     },
   },
   comportements,

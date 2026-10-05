@@ -206,16 +206,6 @@ export function axe([information, diagnostic, reflexe, calibrage, domaine]: read
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce que le service y a dégagé. */
-const FENETRES: readonly [number, number][] = [
-  [2, 6],
-  [3, 8],
-  [5, 8],
-  [7, 10],
-  [9, 12],
-  [11, 13],
-];
-
 const DIRECTION = { de: "Rodolphe Laborde", role: "Directeur commercial" } as const;
 const FERLANE = { de: "Armand Fauvel", role: "Directeur régional, Ferlane Location" } as const;
 const SUIVI = { de: "Tableau de suivi du service", role: "Siège" } as const;
@@ -528,12 +518,6 @@ export const EPISODE_INNOVATION: Episode<Trimestre> = {
             : "Aucun accident ce trimestre.",
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      let c = 0;
-      for (let w = de; w <= a; w += 1) c += t.semaines[w]!.contribution;
-      return c;
     },
   },
   comportements,

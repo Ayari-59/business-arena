@@ -27,7 +27,6 @@ import {
   interimTrouve,
   simuler,
   tableauDeBord,
-  type Semaine,
   type Trimestre,
 } from "@/engine/episodes/preavis-de-greve";
 import {
@@ -225,16 +224,6 @@ export function axe([
       "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
-
-/** La fenêtre de semaines où chaque décision agit d'abord : ce qu'elle a coûté là. */
-const FENETRES: readonly [number, number][] = [
-  [1, 4],
-  [3, 5],
-  [6, 9],
-  [8, 11],
-  [10, 13],
-  [12, 13],
-];
 
 const MEDIATEUR = { de: "Le médiateur", role: "Médiation sociale" } as const;
 const INTERIM = { de: "Agence d'intérim", role: "Lyon Est" } as const;
@@ -564,12 +553,6 @@ export const EPISODE_DIALOGUE_SOCIAL: Episode<Trimestre> = {
             .concat("."),
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      let c = 0;
-      for (let w = de; w <= a; w += 1) c -= (t.semaines[w] as Semaine).cout;
-      return c;
     },
   },
   comportements,

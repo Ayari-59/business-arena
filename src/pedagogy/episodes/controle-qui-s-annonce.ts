@@ -184,16 +184,6 @@ export function axe([
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce qu'elle a coûté là. */
-const FENETRES: readonly [number, number][] = [
-  [2, 4],
-  [4, 8],
-  [6, 9],
-  [8, 12],
-  [10, 12],
-  [12, 13],
-];
-
 const CONTROLEUR = { de: "Pascal Ménard", role: "Inspecteur, DGCCRF" } as const;
 const PRESTATAIRE = { de: "Cyril Boissonnet", role: "Chef de projet chez le prestataire" } as const;
 
@@ -527,12 +517,6 @@ export const EPISODE_CONFORMITE: Episode<Trimestre> = {
             .concat("."),
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      let c = 0;
-      for (let w = de; w <= a; w += 1) c -= t.semaines[w]!.cout;
-      return c;
     },
   },
   comportements,

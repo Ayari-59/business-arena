@@ -251,16 +251,6 @@ export function axe([information, diagnostic, reflexe, calibrage, revision]: rea
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce qu'elle a changé à la valeur estimée. */
-const FENETRES: readonly [number, number][] = [
-  [2, 4],
-  [3, 6],
-  [5, 7],
-  [7, 9],
-  [9, 13],
-  [11, 13],
-];
-
 const valeurA = (t: Trimestre, w: number) => (w <= 0 ? 0 : t.semaines[w]!.valeur);
 
 /** Les agences ouvertes au trimestre, dites par le directeur du réseau. */
@@ -630,10 +620,6 @@ export const EPISODE_NOUVEAU_MARCHE: Episode<Trimestre> = {
         });
       }
       return lignes;
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      return valeurA(t, a) - valeurA(t, de - 1);
     },
   },
   comportements,

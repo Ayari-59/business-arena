@@ -436,13 +436,6 @@ export function evenements(
   };
 }
 
-/** La marge d'une fenêtre de semaines, et la pénalité de délai quand la fenêtre la porte. */
-export function fenetre(t: Trimestre, de: number, a: number, avecDso: boolean): number {
-  let m = 0;
-  for (let w = de; w <= a; w += 1) m += t.semaines[w]!.marge;
-  return avecDso ? m - t.penalite : m;
-}
-
 export interface TableauDeBord {
   ca: number;
   /** L'objectif de chiffre d'affaires à date, au prorata des semaines écoulées. */

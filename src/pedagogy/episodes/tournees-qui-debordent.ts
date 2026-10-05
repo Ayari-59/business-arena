@@ -174,16 +174,6 @@ export function axe([information, diagnostic, reflexe, calibrage, tournees]: rea
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce qu'elle a coûté là. */
-const FENETRES: readonly [number, number][] = [
-  [2, 4],
-  [5, 8],
-  [6, 9],
-  [7, 10],
-  [10, 12],
-  [12, 13],
-];
-
 const AWA = { de: "Awa Kouyaté", role: "Planificatrice transport" } as const;
 const DUMONTEL = {
   de: "Yohann Mercadier",
@@ -461,12 +451,6 @@ export const EPISODE_TRANSPORT: Episode<Trimestre> = {
             .concat("."),
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      let c = 0;
-      for (let w = de; w <= a; w += 1) c -= t.semaines[w]!.cout;
-      return c;
     },
   },
   comportements,

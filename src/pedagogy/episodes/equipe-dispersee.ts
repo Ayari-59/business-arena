@@ -175,16 +175,6 @@ export function axe([information, diagnostic, reflexe, calibrage, lien]: readonl
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce que la marge nette y a gagné. */
-const FENETRES: readonly [number, number][] = [
-  [1, 4],
-  [4, 8],
-  [6, 10],
-  [8, 12],
-  [10, 13],
-  [12, 13],
-];
-
 const RAPHAEL = { de: "Marius Montagnon", role: "Directeur commercial régional" } as const;
 const ALASSANE = { de: "Alassane Koné", role: "Technico-commercial, Rhône est" } as const;
 const ELODIE = { de: "Ambre Vasquez", role: "Technico-commerciale, Isère nord" } as const;
@@ -490,12 +480,6 @@ export const EPISODE_DISTANCE: Episode<Trimestre> = {
               : "Personne n'est parti : Killian s'est accroché, et Ambre a décliné l'offre.",
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      let c = 0;
-      for (let w = de; w <= a; w += 1) c += t.semaines[w]!.contribution;
-      return c;
     },
   },
   comportements,

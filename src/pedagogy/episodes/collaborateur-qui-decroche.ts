@@ -170,16 +170,6 @@ export function axe([information, diagnostic, reflexe, calibrage, equipe]: reado
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce que la marge y a gagné. */
-const FENETRES: readonly [number, number][] = [
-  [1, 4],
-  [3, 6],
-  [5, 9],
-  [7, 10],
-  [9, 13],
-  [11, 13],
-];
-
 const DIDIER = { de: "Didier Fontaine", role: "Vendeur comptoir" } as const;
 const RH = { de: "Corinne Lemaire", role: "Ressources humaines" } as const;
 
@@ -494,12 +484,6 @@ export const EPISODE_PERFORMANCE: Episode<Trimestre> = {
             .concat("."),
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      let c = 0;
-      for (let w = de; w <= a; w += 1) c += t.semaines[w]!.contribution;
-      return c;
     },
   },
   comportements,

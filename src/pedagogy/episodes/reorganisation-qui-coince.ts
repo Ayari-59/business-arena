@@ -190,16 +190,6 @@ export function axe([information, diagnostic, reflexe, calibrage, adoption]: rea
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce qu'elle a rapporté là, au-delà du budget. */
-const FENETRES: readonly [number, number][] = [
-  [1, 3],
-  [4, 8],
-  [6, 9],
-  [8, 11],
-  [10, 13],
-  [12, 13],
-];
-
 const PATRICK = { de: "Patrick Vial", role: "Commercial, Villefranche" } as const;
 const SYLVIE = { de: "Sylvie Charrier", role: "Commerciale, Gerland" } as const;
 const YANIS = { de: "Yanis Belkacem", role: "Commercial, Villeurbanne" } as const;
@@ -484,15 +474,6 @@ export const EPISODE_CHANGEMENT: Episode<Trimestre> = {
             .concat("."),
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      let c = 0;
-      for (let w = de; w <= a; w += 1) {
-        const s = t.semaines[w]!;
-        c += s.marge - s.cout - BUDGET / SEMAINES;
-      }
-      return c;
     },
   },
   comportements,

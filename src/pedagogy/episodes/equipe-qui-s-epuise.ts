@@ -163,16 +163,6 @@ export function axe([information, diagnostic, pression, calibrage, equipe]: read
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce qu'elle a coûté là. */
-const FENETRES: readonly [number, number][] = [
-  [2, 3],
-  [4, 7],
-  [6, 10],
-  [9, 11],
-  [10, 13],
-  [12, 13],
-];
-
 const MATHIEU = { de: "Mathieu Roche", role: "Conseiller" } as const;
 
 export const EPISODE_EQUIPE: Episode<Trimestre> = {
@@ -422,12 +412,6 @@ export const EPISODE_EQUIPE: Episode<Trimestre> = {
             .concat("."),
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      let c = 0;
-      for (let w = de; w <= a; w += 1) c -= t.semaines[w]!.cout;
-      return c;
     },
   },
   comportements,

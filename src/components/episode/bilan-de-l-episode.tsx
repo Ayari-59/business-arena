@@ -311,10 +311,10 @@ export function BilanDeLEpisode({
           <div role="row" className="contents">
             <div role="presentation" />
             <div role="columnheader" className="self-end text-sm font-semibold text-slate-400">
-              Résultat favorable
+              Le trimestre lui donne raison
             </div>
             <div role="columnheader" className="self-end text-sm font-semibold text-slate-400">
-              Résultat défavorable
+              Le trimestre lui donne tort
             </div>
           </div>
           {(["bonne", "faible"] as const).map((q) => (

@@ -190,16 +190,6 @@ export function axe([information, diagnostic, reflexe, calibrage, prix]: readonl
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : la marge de l'atelier sur ces semaines. */
-const FENETRES: readonly [number, number][] = [
-  [3, 7],
-  [3, 10],
-  [5, 9],
-  [9, 13],
-  [9, 11],
-  [11, 13],
-];
-
 export const EPISODE_COMMANDE_SPECIALE: Episode<Trimestre> = {
   code: "commande-a-prix-casse",
   numero: 31,
@@ -472,12 +462,6 @@ export const EPISODE_COMMANDE_SPECIALE: Episode<Trimestre> = {
             .concat("."),
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      let c = 0;
-      for (let w = de; w <= a; w += 1) c += t.semaines[w]!.marge;
-      return c;
     },
   },
   comportements,

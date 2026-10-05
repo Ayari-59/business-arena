@@ -176,16 +176,6 @@ export function axe([information, diagnostic, reflexe, calibrage, preuve]: reado
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce qu'elle a coûté là. */
-const FENETRES: readonly [number, number][] = [
-  [2, 4],
-  [5, 8],
-  [5, 8],
-  [9, 11],
-  [9, 12],
-  [11, 13],
-];
-
 export const EPISODE_ENERGIE: Episode<Trimestre> = {
   code: "facture-qui-flambe",
   numero: 25,
@@ -480,12 +470,6 @@ export const EPISODE_ENERGIE: Episode<Trimestre> = {
             .concat("."),
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      let c = 0;
-      for (let w = de; w <= a; w += 1) c -= t.semaines[w]!.cout + t.semaines[w]!.ostral;
-      return c;
     },
   },
   comportements,

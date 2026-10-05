@@ -14,7 +14,6 @@ import {
   OBJECTIF_CLIENTS,
   PERTE_PAR_JOUR,
   PLAN_MARGE,
-  SEMAINES,
   doublonsDuPlan,
   evenements,
   hasard,
@@ -186,16 +185,6 @@ export function axe([information, diagnostic, reflexe, calibrage, meilleur]: rea
       "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
-
-/** La fenêtre de semaines où chaque décision agit d'abord : ce qu'elle a apporté là. */
-const FENETRES: readonly [number, number][] = [
-  [2, 3],
-  [4, 7],
-  [6, 9],
-  [8, 11],
-  [10, 13],
-  [12, 13],
-];
 
 export const EPISODE_FUSION: Episode<Trimestre> = {
   code: "fusion-des-agences",
@@ -490,12 +479,6 @@ export const EPISODE_FUSION: Episode<Trimestre> = {
             ]
           : []),
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      let c = 0;
-      for (let w = de; w <= Math.min(a, SEMAINES); w += 1) c += t.semaines[w]!.contribution;
-      return c;
     },
   },
   comportements,

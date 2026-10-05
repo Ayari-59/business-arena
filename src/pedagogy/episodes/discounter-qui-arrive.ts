@@ -269,16 +269,6 @@ export function axe([information, diagnostic, reflexe, calibrage, segment]: read
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce qu'elle a changé à la valeur estimée. */
-const FENETRES: readonly [number, number][] = [
-  [3, 5],
-  [5, 8],
-  [6, 8],
-  [8, 11],
-  [9, 13],
-  [12, 13],
-];
-
 const valeurA = (t: Trimestre, w: number) => (w <= 0 ? t.depart : t.semaines[w]!.valeur);
 
 export const EPISODE_DISCOUNTER: Episode<Trimestre> = {
@@ -649,10 +639,6 @@ export const EPISODE_DISCOUNTER: Episode<Trimestre> = {
               : `${taux(h.adhesion, 0)} auraient signé un contrat d'un an s'il leur avait été proposé.`,
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      return valeurA(t, a) - valeurA(t, de - 1);
     },
   },
   comportements,

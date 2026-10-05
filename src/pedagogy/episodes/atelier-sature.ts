@@ -188,16 +188,6 @@ export function axe([
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce qu'elle a apporté là. */
-const FENETRES: readonly [number, number][] = [
-  [1, 3],
-  [4, 7],
-  [6, 9],
-  [8, 11],
-  [10, 13],
-  [12, 13],
-];
-
 export const EPISODE_ATELIER_SATURE: Episode<Trimestre> = {
   code: "atelier-sature",
   numero: 36,
@@ -467,12 +457,6 @@ export const EPISODE_ATELIER_SATURE: Episode<Trimestre> = {
             .concat("."),
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      let c = 0;
-      for (let w = de; w <= a; w += 1) c += t.semaines[w]!.contribution;
-      return c;
     },
   },
   comportements,

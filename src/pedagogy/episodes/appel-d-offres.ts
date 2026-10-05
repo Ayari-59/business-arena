@@ -171,16 +171,6 @@ export function axe([information, diagnostic, reflexe, calibrage, grille]: reado
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce qu'elle a rapporté là. */
-const FENETRES: readonly [number, number][] = [
-  [2, 8],
-  [3, 10],
-  [4, 10],
-  [5, 10],
-  [8, 10],
-  [11, 13],
-];
-
 const SOLENE = { de: "Margot Kerguelen", role: "Responsable des marchés, Balmes Habitat" } as const;
 const FREDERIC = { de: "Frédéric Vautrin", role: "Acheteur, Groupe Vauclair" } as const;
 const LINH = { de: "Linh Pham", role: "Chargée d'études de prix" } as const;
@@ -492,12 +482,6 @@ export const EPISODE_APPEL_OFFRES: Episode<Trimestre> = {
             .concat("."),
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      let c = 0;
-      for (let w = de; w <= a; w += 1) c += t.semaines[w]!.contribution;
-      return c;
     },
   },
   comportements,

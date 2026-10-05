@@ -175,16 +175,6 @@ export function axe([information, diagnostic, reflexe, calibrage, regles]: reado
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce qu'elle a rapporté là. */
-const FENETRES: readonly [number, number][] = [
-  [2, 3],
-  [4, 7],
-  [6, 9],
-  [9, 11],
-  [10, 12],
-  [12, 13],
-];
-
 const SIEGE = {
   de: "Marc-Antoine Leroy",
   role: "Directeur de la relation client, siège",
@@ -440,12 +430,6 @@ export const EPISODE_INDICATEURS: Episode<Trimestre> = {
             .concat("."),
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      let c = 0;
-      for (let w = de; w <= a; w += 1) c += t.semaines[w]!.contribution;
-      return c;
     },
   },
   comportements,

@@ -278,16 +278,6 @@ export function axe([information, diagnostic, reflexe, calibrage, revision]: rea
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce qu'elle a changé à la valeur estimée. */
-const FENETRES: readonly [number, number][] = [
-  [2, 4],
-  [3, 6],
-  [5, 11],
-  [7, 10],
-  [10, 13],
-  [12, 13],
-];
-
 const valeurA = (t: Trimestre, w: number) => (w <= 0 ? t.depart : t.semaines[w]!.valeur);
 
 /** Ce que chaque site est devenu, en quelques mots. */
@@ -679,10 +669,6 @@ export const EPISODE_ESCALADE: Episode<Trimestre> = {
                 : `a gelé le recentrage ; présenté ainsi, il ne l'acceptait que ${taux(t.chanceAccord, 0)} du temps.`,
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      return valeurA(t, a) - valeurA(t, de - 1);
     },
   },
   comportements,

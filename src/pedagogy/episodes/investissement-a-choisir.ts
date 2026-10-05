@@ -253,16 +253,6 @@ export function axe([information, diagnostic, reflexe, calibrage, option]: reado
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce qu'elle a changé à la valeur estimée. */
-const FENETRES: readonly [number, number][] = [
-  [2, 4],
-  [3, 6],
-  [5, 8],
-  [7, 10],
-  [9, 13],
-  [12, 13],
-];
-
 const valeurA = (t: Trimestre, w: number) => (w <= 0 ? 0 : t.semaines[w]!.valeur);
 
 export const EPISODE_INVESTISSEMENT: Episode<Trimestre> = {
@@ -605,10 +595,6 @@ export const EPISODE_INVESTISSEMENT: Episode<Trimestre> = {
                 : "Le chantier n'a pas repris : ni renfort, ni revente ce trimestre.",
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      return valeurA(t, a) - valeurA(t, de - 1);
     },
   },
   comportements,

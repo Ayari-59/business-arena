@@ -179,16 +179,6 @@ export function axe([information, diagnostic, reflexe, calibrage, nature]: reado
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce qu'elle a rapporté là. */
-const FENETRES: readonly [number, number][] = [
-  [2, 6],
-  [5, 9],
-  [6, 13],
-  [9, 13],
-  [10, 13],
-  [12, 13],
-];
-
 export const EPISODE_CROISSANCE: Episode<Trimestre> = {
   code: "croissance-a-financer",
   numero: 38,
@@ -523,12 +513,6 @@ export const EPISODE_CROISSANCE: Episode<Trimestre> = {
             ]
           : []),
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      let c = 0;
-      for (let w = de; w <= a; w += 1) c += t.semaines[w]!.resultatSemaine;
-      return c;
     },
   },
   comportements,

@@ -174,16 +174,6 @@ export function axe([information, diagnostic, coupes, calibrage, domaine]: reado
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce qu'elle a coûté là, rapporté au budget. */
-const FENETRES: readonly [number, number][] = [
-  [2, 6],
-  [4, 6],
-  [6, 9],
-  [8, 12],
-  [10, 13],
-  [12, 13],
-];
-
 export const EPISODE_BUDGET: Episode<Trimestre> = {
   code: "budget-qui-ne-tient-pas",
   numero: 4,
@@ -459,12 +449,6 @@ export const EPISODE_BUDGET: Episode<Trimestre> = {
           }. À la clôture, ${kE(t.nonFacture)} de dépenses réalisées n'avaient pas encore de facture.`,
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      let c = 0;
-      for (let w = de; w <= a; w += 1) c += BUDGET / SEMAINES - t.semaines[w]!.depense;
-      return c;
     },
   },
   comportements,

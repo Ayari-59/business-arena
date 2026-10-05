@@ -176,16 +176,6 @@ export function axe([information, diagnostic, reflexe, calibrage, relation]: rea
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce qu'elle a coûté là. */
-const FENETRES: readonly [number, number][] = [
-  [2, 4],
-  [4, 7],
-  [6, 10],
-  [8, 11],
-  [10, 13],
-  [12, 13],
-];
-
 export const EPISODE_TRESORERIE: Episode<Trimestre> = {
   code: "tresorerie-qui-fond",
   numero: 11,
@@ -481,12 +471,6 @@ export const EPISODE_TRESORERIE: Episode<Trimestre> = {
             ]
           : []),
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      let c = 0;
-      for (let w = de; w <= a; w += 1) c -= t.semaines[w]!.cout;
-      return c;
     },
   },
   comportements,

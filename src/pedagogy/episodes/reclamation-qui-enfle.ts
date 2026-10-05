@@ -172,16 +172,6 @@ export function axe([information, diagnostic, reflexe, calibrage, domaine]: read
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce qu'elle a coûté là. */
-const FENETRES: readonly [number, number][] = [
-  [2, 4],
-  [3, 6],
-  [5, 8],
-  [7, 10],
-  [9, 13],
-  [11, 13],
-];
-
 const PELISSIER = { de: "Serge Pélissier", role: "Gérant, Pélissier Construction" } as const;
 const VANTREL = { de: "Hervé Lacombe", role: "Responsable grands comptes, Vantrel" } as const;
 const ATELIER = { de: "Thibault Rousset", role: "Chef d'atelier SAV" } as const;
@@ -435,12 +425,6 @@ export const EPISODE_QUALITE: Episode<Trimestre> = {
             .concat("."),
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      let c = 0;
-      for (let w = de; w <= a; w += 1) c -= t.semaines[w]!.net;
-      return c;
     },
   },
   comportements,

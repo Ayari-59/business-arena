@@ -6,16 +6,22 @@
  * tirages du même hasard, les autres choix inchangés :
  *
  *   · la QUALITÉ d'une décision se lit sur la moyenne des trente tirages ;
- *   · la CHANCE, sur l'écart entre ce que le joueur a vécu dans la fenêtre de
- *     semaines que la décision couvre et ce qu'il aurait vécu en moyenne.
+ *   · la CHANCE, sur ce que le tirage joué a fait de ce choix : le trimestre
+ *     lui donne-t-il raison ? Une décision faible a eu de la chance quand,
+ *     sous ce tirage, elle a fait au moins aussi bien que la meilleure option ;
+ *     une bonne décision a eu de la malchance quand une autre option, sous ce
+ *     même tirage, aurait fait mieux.
  *
  * Les deux se croisent en quatre cas — mérité, malchance, chance, leçon — qui
  * sont la seule chose que le joueur doit emporter : la case « chance » est
- * celle d'une décision à ne pas refaire, même si elle a payé.
+ * celle d'une décision qui a payé cette fois, et qu'il ne faut pas refaire.
+ * Le résultat est celui du trimestre entier, celui que le joueur voit : une
+ * décision qui rapporte dans ses premières semaines et coûte ensuite n'a pas
+ * eu de chance.
  *
  * L'analyse est la même pour tous les épisodes : elle ne connaît que la
- * simulation, les fenêtres et les références que chacun déclare. Tout est
- * pur : le même état de partie donne le même bilan.
+ * simulation et les références que chacun déclare. Tout est pur : le même
+ * état de partie donne le même bilan.
  */
 import {
   GRAINES_DU_BILAN,
@@ -30,10 +36,13 @@ import { SEUIL_QUALITE, egalite, prixDeLaSecurite } from "@/pedagogy/episodes/me
 export type Cas = "bonne-fav" | "bonne-defav" | "faible-fav" | "faible-defav";
 
 export const CAS: Record<Cas, { nom: string; aide: string }> = {
-  "bonne-fav": { nom: "Mérité", aide: "bonne décision, bon résultat" },
-  "bonne-defav": { nom: "Malchance", aide: "bonne décision, à refaire quand même" },
-  "faible-fav": { nom: "Chance", aide: "décision faible, à ne pas refaire" },
-  "faible-defav": { nom: "Leçon", aide: "décision faible, résultat faible" },
+  "bonne-fav": { nom: "Mérité", aide: "bonne décision, et ce trimestre lui donne raison" },
+  "bonne-defav": {
+    nom: "Malchance",
+    aide: "bonne décision qu'un autre choix aurait battue cette fois : à refaire quand même",
+  },
+  "faible-fav": { nom: "Chance", aide: "décision faible qui a payé cette fois : à ne pas refaire" },
+  "faible-defav": { nom: "Leçon", aide: "décision faible, et ce trimestre le montre" },
 };
 
 export interface DecisionAnalysee {
@@ -46,6 +55,7 @@ export interface DecisionAnalysee {
   rang: number;
   n: number;
   bonne: boolean;
+  /** Le tirage joué donne raison au choix : il a fait au moins aussi bien que l'option de référence. */
   favorable: boolean;
   cas: Cas;
 }
@@ -138,11 +148,17 @@ export function analyser<R extends Resultat>(ep: Episode<R>, p: PartieJouee): An
       (pris === plusSur &&
         pris.p10 > meilleur.p10 + 1e-9 &&
         meilleur.attendu - pris.attendu < prixDeLaSecurite(meilleur.p10, meilleur.p90));
-    const vecu = ep.bilan.fenetre(trimestre, d);
-    const enMoyenne = moyenne(
-      GRAINES_DU_BILAN.map((g) => ep.bilan.fenetre(ep.simuler(p.chemin, g, p.jours), d)),
-    );
-    const favorable = vecu >= enMoyenne;
+    // Sous le tirage joué, ce choix contre l'option de référence : la meilleure pour une
+    // décision faible, chacune des autres pour une bonne.
+    const sousCeTirage = (k: number) => {
+      const autre = [...p.chemin];
+      autre[d] = k;
+      return objectif(autre, p.graine);
+    };
+    const rivales = bonne
+      ? options.filter((o) => o !== pris).map((o) => o.option)
+      : [meilleur.option];
+    const favorable = rivales.every((k) => trimestre.objectif >= sousCeTirage(k) - 1e-9);
     return {
       d,
       e,

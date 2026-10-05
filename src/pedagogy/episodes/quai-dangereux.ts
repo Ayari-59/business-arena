@@ -178,16 +178,6 @@ export function axe([
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce qu'elle a rapporté là. */
-const FENETRES: readonly [number, number][] = [
-  [1, 4],
-  [3, 6],
-  [5, 8],
-  [7, 11],
-  [9, 12],
-  [11, 13],
-];
-
 const THIERRY = { de: "Thierry Gomez", role: "Chef d'équipe quais" } as const;
 
 export const EPISODE_SECURITE: Episode<Trimestre> = {
@@ -471,12 +461,6 @@ export const EPISODE_SECURITE: Episode<Trimestre> = {
             .concat("."),
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      let c = 0;
-      for (let w = de; w <= a; w += 1) c += t.semaines[w]!.contribution;
-      return c;
     },
   },
   comportements,

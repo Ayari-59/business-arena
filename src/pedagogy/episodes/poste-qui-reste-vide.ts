@@ -190,16 +190,6 @@ export function axe([
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce qu'elle a rapporté là. */
-const FENETRES: readonly [number, number][] = [
-  [2, 5],
-  [3, 7],
-  [5, 10],
-  [6, 10],
-  [8, 13],
-  [11, 13],
-];
-
 /** Le nom de la recrue de ce trimestre. */
 const recrueDe = (t: Trimestre) =>
   nomDuCandidat(codeCandidat(t.recrutement.candidat, t.recrutement.bon));
@@ -586,12 +576,6 @@ export const EPISODE_RECRUTEMENT: Episode<Trimestre> = {
             : "Personne n'est parti, malgré la charge.",
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      let c = 0;
-      for (let w = de; w <= a; w += 1) c += t.semaines[w]!.contribution;
-      return c;
     },
   },
   comportements,

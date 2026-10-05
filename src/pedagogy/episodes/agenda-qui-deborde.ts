@@ -178,16 +178,6 @@ export function axe([information, diagnostic, reflexe, calibrage, important]: re
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce que la marge y a gagné. */
-const FENETRES: readonly [number, number][] = [
-  [1, 4],
-  [3, 6],
-  [5, 10],
-  [7, 11],
-  [9, 12],
-  [11, 13],
-];
-
 const GWENAELLE = {
   de: "Gwenaëlle Kerjean",
   role: "Adjointe, responsable des ventes",
@@ -532,12 +522,6 @@ export const EPISODE_AGENDA: Episode<Trimestre> = {
             .concat("."),
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      let c = 0;
-      for (let w = de; w <= a; w += 1) c += t.semaines[w]!.contribution;
-      return c;
     },
   },
   comportements,

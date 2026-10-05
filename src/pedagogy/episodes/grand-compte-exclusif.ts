@@ -232,16 +232,6 @@ export function axe([
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce qu'elle a changé à la valeur estimée. */
-const FENETRES: readonly [number, number][] = [
-  [2, 4],
-  [3, 6],
-  [5, 7],
-  [7, 10],
-  [8, 13],
-  [11, 13],
-];
-
 const valeurA = (t: Trimestre, w: number) => (w <= 0 ? 0 : t.semaines[w]!.valeur);
 
 export const EPISODE_EXCLUSIVITE: Episode<Trimestre> = {
@@ -602,10 +592,6 @@ export const EPISODE_EXCLUSIVITE: Episode<Trimestre> = {
             ]
           : []),
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      return valeurA(t, a) - valeurA(t, de - 1);
     },
   },
   comportements,

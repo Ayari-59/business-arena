@@ -170,16 +170,6 @@ export function axe([information, diagnostic, reflexe, calibrage, stockReel]: re
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce qu'elle a coûté là. */
-const FENETRES: readonly [number, number][] = [
-  [2, 5],
-  [4, 7],
-  [6, 10],
-  [8, 11],
-  [9, 13],
-  [12, 13],
-];
-
 const MARC = { de: "Marc Perrin", role: "Directeur commercial, Visseries du Dauphiné" } as const;
 
 export const EPISODE_DEPOT: Episode<Trimestre> = {
@@ -434,12 +424,6 @@ export const EPISODE_DEPOT: Episode<Trimestre> = {
             : "Delorme Construction, le plus gros client artisan, est resté.",
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      let c = 0;
-      for (let w = de; w <= a; w += 1) c -= t.semaines[w]!.cout;
-      return c;
     },
   },
   comportements,

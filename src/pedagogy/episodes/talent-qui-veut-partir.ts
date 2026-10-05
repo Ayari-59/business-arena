@@ -178,16 +178,6 @@ export function axe([information, diagnostic, reflexe, calibrage, parole]: reado
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce que la région y a dégagé. */
-const FENETRES: readonly [number, number][] = [
-  [1, 3],
-  [3, 8],
-  [5, 10],
-  [7, 11],
-  [9, 13],
-  [12, 13],
-];
-
 const HELOISE = { de: "Héloïse Kervella", role: "Cheffe de l'agence de Vénissieux" } as const;
 const HABIB = { de: "Habib Amrani", role: "Chef de l'agence de Givors" } as const;
 const MATHILDE = { de: "Mathilde Guérin", role: "Cheffe de l'agence de Tassin" } as const;
@@ -519,12 +509,6 @@ export const EPISODE_TALENTS: Episode<Trimestre> = {
           texte: (partis.length ? partis.join(", ") : "Personne n'est parti").concat("."),
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      let c = 0;
-      for (let w = de; w <= a; w += 1) c += t.semaines[w]!.contribution;
-      return c;
     },
   },
   comportements,

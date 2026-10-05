@@ -247,16 +247,6 @@ export function axe([information, diagnostic, reflexe, calibrage, carte]: readon
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce qu'elle a changé à la valeur estimée. */
-const FENETRES: readonly [number, number][] = [
-  [2, 12],
-  [3, 10],
-  [5, 10],
-  [7, 8],
-  [9, 12],
-  [11, 13],
-];
-
 const valeurA = (t: Trimestre, w: number) => (w <= 0 ? 0 : t.semaines[w]!.valeur);
 
 export const EPISODE_RESEAU: Episode<Trimestre> = {
@@ -573,10 +563,6 @@ export const EPISODE_RESEAU: Episode<Trimestre> = {
           texte: `${taux(t.partNouvelle, 0)} de son chiffre venait de clients nouveaux ; le reste, de clients déjà acquis à Villeurbanne et à Vaulx.`,
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      return valeurA(t, a) - valeurA(t, de - 1);
     },
   },
   comportements,

@@ -189,16 +189,6 @@ export function axe([information, diagnostic, reflexe, calibrage, domaine]: read
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce qu'elle a coûté là. */
-const FENETRES: readonly [number, number][] = [
-  [2, 3],
-  [4, 6],
-  [7, 9],
-  [8, 11],
-  [11, 13],
-  [12, 13],
-];
-
 export const EPISODE_ECARTS: Episode<Trimestre> = {
   code: "ecarts-du-budget",
   numero: 35,
@@ -501,12 +491,6 @@ export const EPISODE_ECARTS: Episode<Trimestre> = {
             .concat("."),
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      let c = 0;
-      for (let w = de; w <= a; w += 1) c -= t.semaines[w]!.ecart;
-      return c;
     },
   },
   comportements,

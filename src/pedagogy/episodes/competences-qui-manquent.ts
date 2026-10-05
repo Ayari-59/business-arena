@@ -181,16 +181,6 @@ export function axe([
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce que la marge y a gagné. */
-const FENETRES: readonly [number, number][] = [
-  [2, 10],
-  [3, 10],
-  [5, 13],
-  [8, 13],
-  [9, 13],
-  [11, 13],
-];
-
 const RENE = { de: "René Vuillermoz", role: "Régleur-programmeur, machine numérique" } as const;
 const CABINET = { de: "Clarisse Perret", role: "Cabinet de recrutement" } as const;
 const RH = { de: "Edwige Quéméner", role: "Ressources humaines" } as const;
@@ -503,12 +493,6 @@ export const EPISODE_COMPETENCES: Episode<Trimestre> = {
           texte: `Hamza apprenait ${rythme(h.aptitudes[0])}, Océane ${rythme(h.aptitudes[1])}, Abdou ${rythme(h.aptitudes[2])}.`,
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      let c = 0;
-      for (let w = de; w <= a; w += 1) c += t.semaines[w]!.contribution;
-      return c;
     },
   },
   comportements,

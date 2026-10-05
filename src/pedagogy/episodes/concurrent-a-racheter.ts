@@ -252,16 +252,6 @@ export function axe([information, diagnostic, reflexe, calibrage, prix]: readonl
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce qu'elle a changé à la valeur estimée. */
-const FENETRES: readonly [number, number][] = [
-  [2, 4],
-  [3, 6],
-  [6, 8],
-  [8, 10],
-  [10, 12],
-  [12, 13],
-];
-
 const valeurA = (t: Trimestre, w: number) => (w <= 0 ? 0 : t.semaines[w]!.valeur);
 
 /** Ce que les messages et les sources lisent de la situation. */
@@ -719,10 +709,6 @@ export const EPISODE_RACHAT: Episode<Trimestre> = {
             : "a suivi la vente depuis Mourgue.",
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      return valeurA(t, a) - valeurA(t, de - 1);
     },
   },
   comportements,

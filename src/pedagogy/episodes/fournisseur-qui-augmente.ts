@@ -178,16 +178,6 @@ export function axe([
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : la marge qu'elle y a faite. */
-const FENETRES: readonly [number, number][] = [
-  [2, 4],
-  [3, 6],
-  [5, 8],
-  [7, 9],
-  [ARRET.de, ARRET.a],
-  [12, 13],
-];
-
 const PLACOVA = { de: "Bertrand Lemoine", role: "Directeur commercial, Placova" } as const;
 const AGENCE = { de: "Julien Morel", role: "Chef d'agence, Vénissieux" } as const;
 
@@ -466,12 +456,6 @@ export const EPISODE_ACHATS: Episode<Trimestre> = {
             .concat("."),
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      let c = 0;
-      for (let w = de; w <= a; w += 1) c += t.semaines[w]!.margeSemaine;
-      return c;
     },
   },
   comportements,

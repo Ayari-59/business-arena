@@ -173,16 +173,6 @@ export function axe([information, diagnostic, reflexe, calibrage, arbitrage]: re
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : le résultat qu'elle y a fait. */
-const FENETRES: readonly [number, number][] = [
-  [2, 5],
-  [3, 6],
-  [5, 8],
-  [7, 10],
-  [9, 12],
-  [12, 13],
-];
-
 export const EPISODE_PRODUIT_DEFICITAIRE: Episode<Trimestre> = {
   code: "produit-deficitaire",
   numero: 32,
@@ -458,12 +448,6 @@ export const EPISODE_PRODUIT_DEFICITAIRE: Episode<Trimestre> = {
             ]
           : []),
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      let c = 0;
-      for (let w = de; w <= a; w += 1) c += t.semaines[w]!.resultat;
-      return c;
     },
   },
   comportements,

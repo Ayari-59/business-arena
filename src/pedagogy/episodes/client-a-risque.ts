@@ -184,16 +184,6 @@ export function axe([information, diagnostic, reflexe, calibrage, couvrir]: read
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce qu'elle a rapporté là. */
-const FENETRES: readonly [number, number][] = [
-  [2, 9],
-  [3, 6],
-  [5, 13],
-  [7, 13],
-  [9, 13],
-  [11, 13],
-];
-
 const ASSUREUR_REPONSE = (graine: number) => {
   const a = agrementAccorde(graine);
   return a >= 500000
@@ -553,12 +543,6 @@ export const EPISODE_CLIENT_A_RISQUE: Episode<Trimestre> = {
             .concat("."),
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      let c = 0;
-      for (let w = de; w <= a; w += 1) c += t.semaines[w]!.contribution;
-      return c;
     },
   },
   comportements,

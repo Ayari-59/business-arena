@@ -202,16 +202,6 @@ export function axe([information, diagnostic, reflexe, calibrage, marge]: readon
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce qu'elle a rapporté là. */
-const FENETRES: readonly [number, number][] = [
-  [3, 6],
-  [5, 8],
-  [6, 9],
-  [8, 11],
-  [10, 13],
-  [12, 13],
-];
-
 const TRAJECTOIRE: Record<Trimestre["regime"], string> = {
   haut: "La demande est montée vers le plan : deux lotissements ont démarré à Ruy et à Nivolas.",
   plateau:
@@ -468,12 +458,6 @@ export const EPISODE_SEUIL: Episode<Trimestre> = {
             .concat("."),
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      let c = 0;
-      for (let w = de; w <= a; w += 1) c += t.semaines[w]!.resultat;
-      return c;
     },
   },
   comportements,

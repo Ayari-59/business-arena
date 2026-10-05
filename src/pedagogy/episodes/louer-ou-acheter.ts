@@ -178,16 +178,6 @@ export function axe([information, diagnostic, reflexe, calibrage, souplesse]: re
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce qu'elle a rapporté là. */
-const FENETRES: readonly [number, number][] = [
-  [3, 10],
-  [4, 10],
-  [6, 13],
-  [9, 13],
-  [9, 13],
-  [11, 13],
-];
-
 export const EPISODE_LOUER_ACHETER: Episode<Trimestre> = {
   code: "louer-ou-acheter",
   numero: 39,
@@ -476,12 +466,6 @@ export const EPISODE_LOUER_ACHETER: Episode<Trimestre> = {
             .concat("."),
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      let c = 0;
-      for (let w = de; w <= a; w += 1) c += t.semaines[w]!.marge;
-      return a === 13 ? c - t.valeurDuParc : c;
     },
   },
   comportements,

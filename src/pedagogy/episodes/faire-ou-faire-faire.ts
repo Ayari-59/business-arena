@@ -184,16 +184,6 @@ export function axe([information, diagnostic, reflexe, calibrage, domaine]: read
   };
 }
 
-/** La fenêtre de semaines où chaque décision agit d'abord : ce qu'elle a coûté là. */
-const FENETRES: readonly [number, number][] = [
-  [3, 6],
-  [6, 9],
-  [7, 9],
-  [8, 10],
-  [10, 13],
-  [11, 13],
-];
-
 export const EPISODE_FAIRE_FAIRE: Episode<Trimestre> = {
   code: "faire-ou-faire-faire",
   numero: 33,
@@ -446,12 +436,6 @@ export const EPISODE_FAIRE_FAIRE: Episode<Trimestre> = {
             .concat("."),
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a] = FENETRES[d]!;
-      let c = 0;
-      for (let w = de; w <= a; w += 1) c -= t.semaines[w]!.cout;
-      return c;
     },
   },
   comportements,

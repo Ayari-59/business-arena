@@ -21,7 +21,6 @@ import {
   deltaReduit,
   deltaVexee,
   evenements,
-  fenetre,
   hasard,
   simuler,
   tableauDeBord,
@@ -182,17 +181,6 @@ export function axeDeTravail([
       "Rejouez l'épisode sous un autre hasard avec les mêmes décisions. Si le résultat tient, votre méthode tient.",
   };
 }
-
-/** La fenêtre de semaines sur laquelle chaque décision agit d'abord, et si elle porte la pénalité de délai. */
-const FENETRES: readonly [number, number, boolean][] = [
-  [2, 4, false],
-  [5, 5, false],
-  // La décision d'équipe se joue sur l'arrêt possible de Julie, semaines 8 à 11.
-  [6, 11, false],
-  [8, 9, true],
-  [10, 11, false],
-  [12, 13, false],
-];
 
 const DELTA = { de: "Achats, Groupe Delta", role: "Grand compte" } as const;
 
@@ -427,10 +415,6 @@ export const EPISODE_TRIMESTRE: Episode<Trimestre> = {
             : "elle a tenu jusqu'au bout du trimestre.",
         },
       ];
-    },
-    fenetre(t, d) {
-      const [de, a, dso] = FENETRES[d]!;
-      return fenetre(t, de, a, dso);
     },
   },
   comportements,
