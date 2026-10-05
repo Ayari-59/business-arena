@@ -2,7 +2,7 @@
  * LES CINQ RÈGLES DE TRACES : ce qu'une partie mesure directement.
  *
  * Les décisions disent si un choix était bon ; les traces disent comment la
- * personne y est arrivée. Cinq règles, les mêmes pour les trente épisodes :
+ * personne y est arrivée. Cinq règles, les mêmes pour tous les épisodes :
  *
  *   · S'INFORMER (R1) : la part des informations décisives consultées avant
  *     de décider, parmi celles que le niveau joué laissait atteindre ;

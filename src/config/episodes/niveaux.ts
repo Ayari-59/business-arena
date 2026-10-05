@@ -7,7 +7,7 @@
  * scores restent comparables d'un niveau à l'autre ; on note seulement le
  * niveau joué.
  *
- * Les leviers sont communs aux trente épisodes :
+ * Les leviers sont communs à tous les épisodes :
  *   · le temps d'enquête de la première décision ;
  *   · le conseil d'un proche (les sources de nature « aide ») ;
  *   · le nombre de vérifications aux décisions suivantes ;

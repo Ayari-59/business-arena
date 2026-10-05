@@ -13,7 +13,7 @@ import { EPISODES } from "../../src/pedagogy/episodes/registre";
 
 /**
  * Les mesures prolongent le bilan sans le contredire : même jugement des
- * décisions, et les chiffres que le rapport en a tirés sur les trente épisodes.
+ * décisions, et les chiffres que le rapport en a tirés sur les trente premiers épisodes.
  */
 function partie(ep: Episode, chemin: readonly number[], graine = 1): PartieJouee {
   return {
@@ -34,21 +34,25 @@ function cheminAuHasard(ep: Episode, graine: number): number[] {
   return ep.etapes.map((e) => Math.floor(r() * e.options.length));
 }
 
-describe("les mesures des 180 décisions, sur le meilleur chemin", () => {
+describe("les mesures de toutes les décisions, sur le meilleur chemin", () => {
   // Le calcul du rapport : chaque décision rejouée autour de la première référence, 1,5 jour d'enquête.
   const toutes: DecisionMesuree[] = EPISODES.flatMap((ep) =>
     ep.etapes.map((_, d) => mesurerDecision(ep, ep.references[0]!.chemin, d, 1.5)),
   );
   const options = toutes.flatMap((d) => d.options);
 
-  it("retrouvent les chiffres du rapport", () => {
-    expect(toutes).toHaveLength(180);
-    expect(options).toHaveLength(701);
-    expect(toutes.filter((d) => d.dominee)).toHaveLength(95);
-    expect(options.filter((o) => o.trompeuse)).toHaveLength(59);
-    expect(toutes.filter((d) => d.options.some((o) => o.trompeuse))).toHaveLength(43);
-    expect(toutes.filter((d) => d.options.some((o) => o.victoires >= 0.5))).toHaveLength(19);
-    const plusSures = toutes.flatMap((d) => d.options.filter((o) => o.p10 > d.meilleure.p10));
+  it("retrouvent les chiffres du rapport, sur les trente premiers épisodes", () => {
+    const premieres = EPISODES.flatMap((ep, i) =>
+      ep.numero <= 30 ? toutes.slice(i * 6, i * 6 + 6) : [],
+    );
+    const leurs = premieres.flatMap((d) => d.options);
+    expect(premieres).toHaveLength(180);
+    expect(leurs).toHaveLength(701);
+    expect(premieres.filter((d) => d.dominee)).toHaveLength(95);
+    expect(leurs.filter((o) => o.trompeuse)).toHaveLength(59);
+    expect(premieres.filter((d) => d.options.some((o) => o.trompeuse))).toHaveLength(43);
+    expect(premieres.filter((d) => d.options.some((o) => o.victoires >= 0.5))).toHaveLength(19);
+    const plusSures = premieres.flatMap((d) => d.options.filter((o) => o.p10 > d.meilleure.p10));
     expect(plusSures).toHaveLength(53);
   });
 
@@ -79,7 +83,7 @@ describe("les mesures des 180 décisions, sur le meilleur chemin", () => {
         bonne ? (tient ? "robuste" : "fragile") : tient ? "prudente" : "faible",
       );
     }
-    // Les quatre familles existent dans les trente épisodes.
+    // Les quatre familles existent parmi les épisodes.
     expect(new Set(options.map((o) => o.famille)).size).toBe(4);
   });
 

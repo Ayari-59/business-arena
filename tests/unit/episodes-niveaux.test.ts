@@ -13,7 +13,7 @@ import type { PartieJouee } from "../../src/config/episodes/types";
 
 /**
  * Les niveaux changent ce que le manager sait et voit, jamais le trimestre ni
- * le jugement du bilan. Ces tests le vérifient sur les trente épisodes.
+ * le jugement du bilan. Ces tests le vérifient sur tous les épisodes.
  */
 const [decouverte, standard, expert] = ["decouverte", "standard", "expert"].map(niveauParCode);
 

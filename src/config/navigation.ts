@@ -160,7 +160,7 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
       {
         href: "/entreprises/episode",
         libelle: "Épisodes manager",
-        aide: "Trente trimestres dans la peau d'un manager, un par domaine du métier : six décisions, et un bilan qui sépare la qualité des décisions du hasard.",
+        aide: "Quarante trimestres dans la peau d'un manager, du terrain au contrôle de gestion : six décisions, et un bilan qui sépare la qualité des décisions du hasard.",
       },
     ],
   },

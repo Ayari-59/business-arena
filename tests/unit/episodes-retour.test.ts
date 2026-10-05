@@ -41,7 +41,7 @@ describe("la place du tirage", () => {
   });
 });
 
-describe("les blocs du retour, sur des parties variées des trente épisodes", () => {
+describe("les blocs du retour, sur des parties variées de tous les épisodes", () => {
   const interdits =
     /vous êtes|personnalit|potentiel|talent|impulsi|analytique|aversion|note globale/i;
 

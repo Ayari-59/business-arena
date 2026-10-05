@@ -279,7 +279,7 @@ describe("la recommandation", () => {
 });
 
 describe("les données de la recommandation", () => {
-  it("donnent une difficulté à chacun des trente épisodes", () => {
+  it("donnent une difficulté à chacun des épisodes", () => {
     expect(Object.keys(DIFFICULTES).sort()).toEqual(EPISODES.map((e) => e.code).sort());
   });
 

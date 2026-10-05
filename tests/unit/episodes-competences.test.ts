@@ -18,7 +18,7 @@ import {
 } from "../../src/pedagogy/episodes/traces";
 
 /**
- * Le référentiel n'a de sens que s'il colle aux trente épisodes : chaque
+ * Le référentiel n'a de sens que s'il colle aux épisodes : chaque
  * décision étiquetée une fois, chaque compétence observée assez souvent, et
  * des traces qui disent la même chose que le bilan de chaque épisode.
  */
@@ -27,6 +27,9 @@ const toutes = Object.entries(ETIQUETTES).flatMap(([code, liste]) =>
   liste.map((e) => ({ code, ...e })),
 );
 const familleDe = (code: string) => FAMILLES.find((f) => f.episodes.includes(code))!.code;
+/** Les trente premiers épisodes, ceux dont le rapport a donné les décomptes. */
+const PREMIERS = new Set(EPISODES.filter((e) => e.numero <= 30).map((e) => e.code));
+const premieres = toutes.filter((e) => PREMIERS.has(e.code));
 
 /** Une partie qui suit la première référence, avec un diagnostic, une prévision et une confiance donnés. */
 function partie(ep: Episode, change: Partial<PartieJouee> = {}): PartieJouee {
@@ -74,11 +77,12 @@ describe("le référentiel des compétences", () => {
   });
 });
 
-describe("l'étiquetage des 180 décisions", () => {
-  it("couvre les trente épisodes du registre, décision par décision", () => {
+describe("l'étiquetage des décisions", () => {
+  it("couvre tous les épisodes du registre, décision par décision", () => {
     expect(Object.keys(ETIQUETTES).sort()).toEqual(EPISODES.map((e) => e.code).sort());
     for (const ep of EPISODES) expect(ETIQUETTES[ep.code], ep.code).toHaveLength(ep.etapes.length);
-    expect(toutes).toHaveLength(180);
+    expect(premieres).toHaveLength(180);
+    expect(toutes).toHaveLength(EPISODES.length * 6);
   });
 
   it("donne à chaque décision une compétence principale, et des secondaires distinctes d'elle", () => {
@@ -90,8 +94,8 @@ describe("l'étiquetage des 180 décisions", () => {
     }
   });
 
-  it("retrouve les décomptes du rapport", () => {
-    const n = (c: CodeCompetence) => toutes.filter((e) => e.principale === c).length;
+  it("retrouve les décomptes du rapport, sur les trente premiers épisodes", () => {
+    const n = (c: CodeCompetence) => premieres.filter((e) => e.principale === c).length;
     expect(Object.fromEntries(CODES.map((c) => [c, n(c)]))).toEqual({
       R1: 9,
       R2: 36,
@@ -121,7 +125,7 @@ describe("l'étiquetage des 180 décisions", () => {
   it("couvre les six familles du métier pour R2, R5, R6, R9 et R10", () => {
     for (const c of ["R2", "R5", "R6", "R9", "R10"] as const) {
       const familles = new Set(
-        toutes.filter((e) => e.principale === c).map((e) => familleDe(e.code)),
+        premieres.filter((e) => e.principale === c).map((e) => familleDe(e.code)),
       );
       expect(familles.size, c).toBe(6);
     }
@@ -129,7 +133,7 @@ describe("l'étiquetage des 180 décisions", () => {
 });
 
 describe("les données de traces", () => {
-  it("couvrent les trente épisodes, avec des diagnostics et des options qui existent", () => {
+  it("couvrent tous les épisodes, avec des diagnostics et des options qui existent", () => {
     expect(Object.keys(TRACES).sort()).toEqual(EPISODES.map((e) => e.code).sort());
     for (const ep of EPISODES) {
       const t = TRACES[ep.code]!;
@@ -256,7 +260,7 @@ describe("les règles de traces", () => {
     }
   });
 
-  it("donnent cinq traces entre 0 et 1 sur les trente épisodes, sans regarder le résultat", () => {
+  it("donnent cinq traces entre 0 et 1 sur tous les épisodes, sans regarder le résultat", () => {
     for (const ep of EPISODES) {
       for (const graine of [1, 7]) {
         const traces = tracesDeLaPartie(ep, partie(ep, { graine }));

@@ -43,6 +43,16 @@ import * as fusionDesAgences from "./fusion-des-agences";
 import * as nouveauService from "./nouveau-service";
 import * as equipeDispersee from "./equipe-dispersee";
 import * as centPremiersJours from "./cent-premiers-jours";
+import * as commandeAPrixCasse from "./commande-a-prix-casse";
+import * as produitDeficitaire from "./produit-deficitaire";
+import * as faireOuFaireFaire from "./faire-ou-faire-faire";
+import * as seuilQuiBouge from "./seuil-qui-bouge";
+import * as ecartsDuBudget from "./ecarts-du-budget";
+import * as atelierSature from "./atelier-sature";
+import * as investissementAChoisir from "./investissement-a-choisir";
+import * as croissanceAFinancer from "./croissance-a-financer";
+import * as louerOuAcheter from "./louer-ou-acheter";
+import * as clientARisque from "./client-a-risque";
 
 export interface TracesDeLEpisode {
   diagnostic: { juste: string; proche: string };
@@ -200,5 +210,55 @@ export const TRACES: Readonly<Record<string, TracesDeLEpisode>> = {
     diagnostic: { juste: "irritants", proche: "comptoir" },
     reflexes: [...centPremiersJours.IMPOSITIONS, ...centPremiersJours.MENAGEMENTS],
     prevision: { juste: 4, proche: 10 },
+  },
+  "commande-a-prix-casse": {
+    diagnostic: { juste: "marginal", proche: "saison" },
+    reflexes: [...commandeAPrixCasse.REFLEXES],
+    prevision: { juste: 0.5, proche: 3 },
+  },
+  "produit-deficitaire": {
+    diagnostic: { juste: "repartition", proche: "liees" },
+    reflexes: [...produitDeficitaire.REFLEXES],
+    prevision: { juste: 2, proche: 8 },
+  },
+  "faire-ou-faire-faire": {
+    diagnostic: { juste: "evitables", proche: "lointaines" },
+    reflexes: [...faireOuFaireFaire.REFLEXES],
+    prevision: { juste: 2, proche: 7 },
+  },
+  "seuil-qui-bouge": {
+    diagnostic: { juste: "structure", proche: "volume" },
+    reflexes: [...seuilQuiBouge.REFLEXES],
+    prevision: { juste: 5, proche: 15 },
+  },
+  "ecarts-du-budget": {
+    diagnostic: { juste: "presse", proche: "moules" },
+    reflexes: [...ecartsDuBudget.REFLEXES],
+    prevision: { juste: 0.05, proche: 0.5 },
+  },
+  "atelier-sature": {
+    diagnostic: { juste: "facteurRare", proche: "capacite" },
+    reflexes: [...atelierSature.REFLEXES],
+    prevision: { juste: 10, proche: 40 },
+  },
+  "investissement-a-choisir": {
+    diagnostic: { juste: "van", proche: "enveloppe" },
+    reflexes: [...investissementAChoisir.REFLEXES],
+    prevision: { juste: 5, proche: 15 },
+  },
+  "croissance-a-financer": {
+    diagnostic: { juste: "structurel", proche: "decalage" },
+    reflexes: [...croissanceAFinancer.REFLEXES],
+    prevision: { juste: 20, proche: 75 },
+  },
+  "louer-ou-acheter": {
+    diagnostic: { juste: "utilisation", proche: "pannes" },
+    reflexes: [...louerOuAcheter.REFLEXES],
+    prevision: { juste: 1, proche: 3.5 },
+  },
+  "client-a-risque": {
+    diagnostic: { juste: "perteAttendue", proche: "fragilite" },
+    reflexes: [...clientARisque.REFLEXES],
+    prevision: { juste: 2, proche: 8 },
   },
 };

@@ -9,7 +9,7 @@ import { EPISODES } from "../../src/pedagogy/episodes/registre";
  * version du modèle de l'épisode, et recopier la nouvelle empreinte.
  */
 describe("les versions des modèles d'épisodes", () => {
-  it("couvrent les trente épisodes du registre", () => {
+  it("couvrent tous les épisodes du registre", () => {
     expect(Object.keys(VERSIONS_DES_MODELES).sort()).toEqual(EPISODES.map((e) => e.code).sort());
   });
 

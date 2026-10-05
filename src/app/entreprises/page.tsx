@@ -341,9 +341,9 @@ export default async function EntreprisesPage() {
                 Nouveau · Pour les entreprises
               </p>
               <p className="mt-1.5 text-base leading-relaxed text-slate-200">
-                Trente épisodes dans la peau d&apos;un manager : une agence qui dérape, une équipe
-                qui s&apos;épuise, une grève qui menace, une fusion à réussir, une crise à
-                traverser… Jugé sur ses décisions plutôt que sur son résultat.
+                Quarante épisodes dans la peau d&apos;un manager : une agence qui dérape, une équipe
+                qui s&apos;épuise, une commande à prix cassé, un investissement à choisir, une crise
+                à traverser… Jugé sur ses décisions plutôt que sur son résultat.
               </p>
             </div>
             <Link

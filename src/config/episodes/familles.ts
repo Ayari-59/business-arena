@@ -1,7 +1,7 @@
 /**
  * LES FAMILLES D'ÉPISODES, pour la page de choix.
  *
- * Trente épisodes côte à côte ne se lisent plus : on les range par grand pan
+ * Quarante épisodes côte à côte ne se lisent plus : on les range par grand pan
  * du métier de manager. Chaque épisode est dans une famille et une seule ; un
  * test le vérifie sur le registre.
  */
@@ -84,6 +84,30 @@ export const FAMILLES: readonly Famille[] = [
       "reorganisation-qui-coince",
       "fusion-des-agences",
       "nouveau-service",
+    ],
+  },
+  {
+    code: "controle",
+    titre: "Calculer ses coûts",
+    texte: "Coût marginal, coûts partiels, seuil, écarts, goulot : décider sur le bon coût.",
+    episodes: [
+      "commande-a-prix-casse",
+      "produit-deficitaire",
+      "faire-ou-faire-faire",
+      "seuil-qui-bouge",
+      "ecarts-du-budget",
+      "atelier-sature",
+    ],
+  },
+  {
+    code: "finance",
+    titre: "Financer et investir",
+    texte: "Investissement, croissance, location, crédit client : l'argent qui engage l'avenir.",
+    episodes: [
+      "investissement-a-choisir",
+      "croissance-a-financer",
+      "louer-ou-acheter",
+      "client-a-risque",
     ],
   },
 ];

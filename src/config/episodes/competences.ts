@@ -1,12 +1,12 @@
 /**
  * LE RÉFÉRENTIEL : dix compétences de décision, et ce que chaque décision observe.
  *
- * Une compétence n'est gardée que si les trente épisodes peuvent l'observer :
+ * Une compétence n'est gardée que si les épisodes peuvent l'observer :
  * soit une trace de la partie la mesure directement (les sources consultées,
  * le diagnostic, sa réévaluation, les réflexes, la prévision), soit elle est
  * la compétence principale d'au moins cinq décisions, dans plusieurs épisodes.
  *
- * Chaque décision des trente épisodes a UNE compétence principale, celle que
+ * Chaque décision des épisodes a UNE compétence principale, celle que
  * la décision départage le mieux, et des compétences secondaires qu'elle
  * touche aussi. On observe des décisions, jamais une personne : aucune
  * compétence ne parle de personnalité, de style ou de potentiel.
@@ -597,5 +597,155 @@ export const ETIQUETTES: Readonly<Record<string, readonly Etiquette[]>> = {
     { principale: "R5", secondaires: ["R8"] },
     // D6 · Le bilan des cent jours
     { principale: "R10", secondaires: ["R7"] },
+  ],
+  // 31. La commande à prix cassé
+  "commande-a-prix-casse": [
+    // D1 · Un promoteur à 39 € le panneau
+    { principale: "R2", secondaires: ["R4", "R1"] },
+    // D2 · Préparer la pleine saison
+    { principale: "R6", secondaires: ["R5", "R8"] },
+    // D3 · Rioult veut le même prix
+    { principale: "R5", secondaires: ["R4", "R9"] },
+    // D4 · Cévral en redemande
+    { principale: "R4", secondaires: ["R6", "R2"] },
+    // D5 · La scie doit être révisée
+    { principale: "R5", secondaires: ["R6"] },
+    // D6 · Le coût complet a bougé
+    { principale: "R10", secondaires: ["R2", "R4"] },
+  ],
+  // 32. Le produit qui perd de l'argent
+  "produit-deficitaire": [
+    // D1 · La plomberie-chauffage dans le rouge
+    { principale: "R2", secondaires: ["R4", "R1"] },
+    // D2 · Le corner peinture
+    { principale: "R2", secondaires: ["R5", "R4"] },
+    // D3 · Calorive casse les prix
+    { principale: "R4", secondaires: ["R2", "R6"] },
+    // D4 · Le compromis de la direction
+    { principale: "R6", secondaires: ["R8"] },
+    // D5 · L'opération de décembre
+    { principale: "R5", secondaires: ["R4", "R1"] },
+    // D6 · Finir le trimestre
+    { principale: "R4", secondaires: ["R10"] },
+  ],
+  // 33. Faire ou faire faire
+  "faire-ou-faire-faire": [
+    // D1 · L'offre de Ventajol
+    { principale: "R2", secondaires: ["R4", "R1"] },
+    // D2 · Le contrat de Ventajol
+    { principale: "R5", secondaires: ["R6"] },
+    // D3 · La location des porteurs arrive à échéance
+    { principale: "R4", secondaires: ["R2", "R6"] },
+    // D4 · La pointe de printemps
+    { principale: "R8", secondaires: ["R5", "R4"] },
+    // D5 · Le coût complet monte
+    { principale: "R10", secondaires: ["R4", "R2"] },
+    // D6 · Le transporteur dérape
+    { principale: "R5", secondaires: ["R6"] },
+  ],
+  // 34. Le seuil qui bouge
+  "seuil-qui-bouge": [
+    // D1 · Un mois après l'ouverture
+    { principale: "R5", secondaires: ["R4", "R2"] },
+    // D2 · Le bail définitif
+    { principale: "R5", secondaires: ["R4"] },
+    // D3 · Brenaz ouvre son drive
+    { principale: "R4", secondaires: ["R2", "R1"] },
+    // D4 · Les matins de pointe
+    { principale: "R5", secondaires: ["R4"] },
+    // D5 · Bâtir Nord-Isère veut un prix
+    { principale: "R4", secondaires: ["R5"] },
+    // D6 · La semaine de Noël
+    { principale: "R4", secondaires: ["R6"] },
+  ],
+  // 35. Les écarts du budget
+  "ecarts-du-budget": [
+    // D1 · Dix-huit mille euros de dépassement
+    { principale: "R2", secondaires: ["R4", "R1"] },
+    // D2 · Le demi-sac de trop
+    { principale: "R10", secondaires: ["R4", "R2"] },
+    // D3 · La cimenterie augmente encore
+    { principale: "R4", secondaires: ["R5", "R1"] },
+    // D4 · La commande de la ZAC
+    { principale: "R5", secondaires: ["R4", "R10"] },
+    // D5 · Armel part en retraite
+    { principale: "R6", secondaires: ["R8", "R5"] },
+    // D6 · La revue trimestrielle
+    { principale: "R10", secondaires: ["R4", "R6"] },
+  ],
+  // 36. L'atelier saturé
+  "atelier-sature": [
+    // D1 · Le carnet déborde
+    { principale: "R2", secondaires: ["R4", "R1"] },
+    // D2 · La commande du bailleur
+    { principale: "R4", secondaires: ["R5"] },
+    // D3 · Desserrer le goulot
+    { principale: "R2", secondaires: ["R4", "R6"] },
+    // D4 · La broche vibre
+    { principale: "R5", secondaires: ["R6", "R4"] },
+    // D5 · Le pic d'avant les fêtes
+    { principale: "R4", secondaires: ["R6"] },
+    // D6 · Finir le trimestre
+    { principale: "R10", secondaires: ["R4"] },
+  ],
+  // 37. L'investissement à choisir
+  "investissement-a-choisir": [
+    // D1 · Trois dossiers, une enveloppe
+    { principale: "R2", secondaires: ["R4", "R1"] },
+    // D2 · Le fournisseur pousse la version étendue
+    { principale: "R5", secondaires: ["R4"] },
+    // D3 · La mezzanine inachevée
+    { principale: "R4", secondaires: ["R2"] },
+    // D4 · Plomb ou lithium
+    { principale: "R6", secondaires: ["R4"] },
+    // D5 · Commander l'extension ?
+    { principale: "R5", secondaires: ["R6", "R1"] },
+    // D6 · Le contrat de maintenance
+    { principale: "R6", secondaires: ["R5"] },
+  ],
+  // 38. La croissance à financer
+  "croissance-a-financer": [
+    // D1 · Le marché Altaïr démarre
+    { principale: "R2", secondaires: ["R4", "R6"] },
+    // D2 · Le groupe attend son dividende
+    { principale: "R6", secondaires: ["R10", "R4"] },
+    // D3 · Le salon de l'habitat
+    { principale: "R5", secondaires: ["R4", "R6"] },
+    // D4 · Un second marché se présente
+    { principale: "R5", secondaires: ["R4", "R6"] },
+    // D5 · Valcourt atteint son plafond
+    { principale: "R6", secondaires: ["R4", "R5"] },
+    // D6 · La semaine des primes
+    { principale: "R5", secondaires: ["R2"] },
+  ],
+  // 39. Louer ou acheter
+  "louer-ou-acheter": [
+    // D1 · Renouveler les mini-pelles
+    { principale: "R5", secondaires: ["R4", "R2"] },
+    // D2 · Trois nacelles pour Elvatec
+    { principale: "R4", secondaires: ["R5"] },
+    // D3 · Le chantier de Ganivet
+    { principale: "R5", secondaires: ["R6"] },
+    // D4 · Sillon passe aux tarifs de saison
+    { principale: "R4", secondaires: ["R5"] },
+    // D5 · La vieille nacelle lâche
+    { principale: "R4", secondaires: ["R6"] },
+    // D6 · La saison va-t-elle tenir ?
+    { principale: "R5", secondaires: ["R6"] },
+  ],
+  // 40. Le client à risque
+  "client-a-risque": [
+    // D1 · Corvelle veut 500 k€
+    { principale: "R5", secondaires: ["R4", "R2"] },
+    // D2 · Une traite de Guénard revient impayée
+    { principale: "R4", secondaires: ["R2", "R9"] },
+    // D3 · Un nouveau client veut un compte
+    { principale: "R5", secondaires: ["R4"] },
+    // D4 · Corvelle paie en retard et demande plus
+    { principale: "R10", secondaires: ["R5", "R4"] },
+    // D5 · Brondel Couverture en redressement judiciaire
+    { principale: "R5", secondaires: ["R10"] },
+    // D6 · La direction veut serrer la vis
+    { principale: "R4", secondaires: ["R10", "R2"] },
   ],
 };

@@ -8,6 +8,12 @@
  * (document Parcours). Elle sert à recommander le prochain épisode : on ne
  * propose pas un épisode difficile à qui commence une compétence.
  *
+ * Les épisodes 31 à 40 sont classés par le même décompte, refait en points
+ * (un par critère rempli) sur le modèle actuel : 0 ou 1 point, facile ; de 2
+ * à 5, moyen ; 6 et plus, difficile. Refait ainsi, le décompte classe plus
+ * bas que le document plusieurs des trente premiers ; on ne les a pas
+ * reclassés pour ne pas changer les recommandations déjà faites.
+ *
  * Trois épisodes départagent mal : leurs décisions sont si serrées qu'un bon
  * et un moins bon manager y obtiennent des qualités proches. On ne les
  * recommande qu'en dernier.
@@ -45,6 +51,16 @@ export const DIFFICULTES: Readonly<Record<string, Difficulte>> = {
   "nouveau-service": "moyen", // 28
   "equipe-dispersee": "facile", // 29
   "cent-premiers-jours": "facile", // 30
+  "commande-a-prix-casse": "difficile", // 31 (6 points)
+  "produit-deficitaire": "moyen", // 32 (2 points)
+  "faire-ou-faire-faire": "moyen", // 33 (5 points)
+  "seuil-qui-bouge": "difficile", // 34 (10 points)
+  "ecarts-du-budget": "moyen", // 35 (5 points)
+  "atelier-sature": "moyen", // 36 (3 points)
+  "investissement-a-choisir": "moyen", // 37 (4 points)
+  "croissance-a-financer": "moyen", // 38 (3 points)
+  "louer-ou-acheter": "difficile", // 39 (8 points)
+  "client-a-risque": "moyen", // 40 (3 points)
 };
 
 export const PEU_DISCRIMINANTS: readonly string[] = [

@@ -35,6 +35,16 @@ import { EPISODE_FUSION } from "./fusion-des-agences";
 import { EPISODE_INNOVATION } from "./nouveau-service";
 import { EPISODE_DISTANCE } from "./equipe-dispersee";
 import { EPISODE_PRISE_DE_POSTE } from "./cent-premiers-jours";
+import { EPISODE_COMMANDE_SPECIALE } from "./commande-a-prix-casse";
+import { EPISODE_PRODUIT_DEFICITAIRE } from "./produit-deficitaire";
+import { EPISODE_FAIRE_FAIRE } from "./faire-ou-faire-faire";
+import { EPISODE_SEUIL } from "./seuil-qui-bouge";
+import { EPISODE_ECARTS } from "./ecarts-du-budget";
+import { EPISODE_ATELIER_SATURE } from "./atelier-sature";
+import { EPISODE_INVESTISSEMENT } from "./investissement-a-choisir";
+import { EPISODE_CROISSANCE } from "./croissance-a-financer";
+import { EPISODE_LOUER_ACHETER } from "./louer-ou-acheter";
+import { EPISODE_CLIENT_A_RISQUE } from "./client-a-risque";
 
 export const EPISODES: readonly Episode[] = [
   EPISODE_TRIMESTRE,
@@ -67,6 +77,16 @@ export const EPISODES: readonly Episode[] = [
   EPISODE_INNOVATION,
   EPISODE_DISTANCE,
   EPISODE_PRISE_DE_POSTE,
+  EPISODE_COMMANDE_SPECIALE,
+  EPISODE_PRODUIT_DEFICITAIRE,
+  EPISODE_FAIRE_FAIRE,
+  EPISODE_SEUIL,
+  EPISODE_ECARTS,
+  EPISODE_ATELIER_SATURE,
+  EPISODE_INVESTISSEMENT,
+  EPISODE_CROISSANCE,
+  EPISODE_LOUER_ACHETER,
+  EPISODE_CLIENT_A_RISQUE,
 ];
 
 export const episodeParCode = (code: string): Episode | undefined =>
