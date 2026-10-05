@@ -25,7 +25,7 @@ PARTIE          games, teams, players, game_recoveries, rounds, decisions, aid_r
 RÉSULTATS       round_results, kpis, event_occurrences
 PÉDAGOGIE       situation_instances, model_choices, hint_usages,
                 learning_progress, player_skills
-ÉPISODES        episode_parties
+ÉPISODES        episode_parties, episode_cohortes, episode_membres, episode_reprises
 SCORING         scores, game_rankings
 COMPÉTITION     competitions, competition_stages, competition_entries, competition_members
 ```
@@ -110,6 +110,9 @@ résolution de chaque tour (transaction unique).
 | `learning_progress` | user_id FK, concept_id FK, mastery numeric 0..100, evidence_count int, last_event_at — PK (user_id, concept_id) |
 | `player_skills` | user_id FK, axis enum(`finance`,`marketing`,`production`,`analysis`,`strategy`,`decision`,`risk`), value numeric 0..100 — PK (user_id, axis) |
 | `episode_parties` | id, user_id FK (cascade), cle uuid, episode_code text, version_modele int, niveau text, graine int, chemin jsonb, consultes jsonb, jours double, diagnostic text, reevaluation jsonb, prevision double, confiance int, premiere bool, created_at — **unique (user_id, cle)**. Les faits bruts d'une partie d'épisode manager, sans score ni texte libre : la qualité de décision et le profil se recalculent à partir d'eux (`src/pedagogy/profil/`) |
+| `episode_cohortes` | id, code text UNIQUE, nom text, cle_animateur text UNIQUE, created_at. Un groupe de managers ; l'animateur la suit par sa clé, sans compte, et ne voit que des agrégats (à partir de cinq personnes) |
+| `episode_membres` | user_id PK FK (cascade), cohorte_id FK (cascade), depuis. Une cohorte à la fois par personne |
+| `episode_reprises` | user_id PK FK (cascade), code text UNIQUE, created_at. Le code qui rend son profil à une personne depuis un autre appareil |
 
 ## 8. Scoring et compétition
 

@@ -56,3 +56,42 @@ export const episodeParties = pgTable(
     index("episode_parties_user_idx").on(t.userId, t.createdAt),
   ],
 );
+
+/**
+ * UNE COHORTE : un groupe de managers d'une même entreprise qui suivent le
+ * programme ensemble. Elle se rejoint par son code ; l'animateur la suit par
+ * une clé secrète, sans compte, et ne voit que des agrégats.
+ */
+export const episodeCohortes = pgTable("episode_cohortes", {
+  id: id(),
+  /** Le code à donner aux managers, dans le lien d'invitation. */
+  code: text("code").notNull().unique(),
+  nom: text("nom").notNull(),
+  /** La clé du lien de l'animateur : elle ouvre la vue agrégée, rien d'autre. */
+  cleAnimateur: text("cle_animateur").notNull().unique(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/** L'appartenance d'une personne à une cohorte : une seule à la fois. */
+export const episodeMembres = pgTable(
+  "episode_membres",
+  {
+    userId: uuid("user_id")
+      .primaryKey()
+      .references(() => users.id, { onDelete: "cascade" }),
+    cohorteId: uuid("cohorte_id")
+      .notNull()
+      .references(() => episodeCohortes.id, { onDelete: "cascade" }),
+    depuis: timestamp("depuis", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("episode_membres_cohorte_idx").on(t.cohorteId)],
+);
+
+/** Le code qui rend son profil à une personne, depuis n'importe quel appareil. */
+export const episodeReprises = pgTable("episode_reprises", {
+  userId: uuid("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  code: text("code").notNull().unique(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});

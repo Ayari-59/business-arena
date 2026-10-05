@@ -17,7 +17,13 @@ import {
 } from "@/pedagogy/profil/profil";
 import type { Observation } from "@/pedagogy/profil/observations";
 import { partiesDe } from "@/services/episode-parties.service";
-import { effacerMesPartiesAction } from "../actions";
+import { formaterCodeDeReprise } from "@/config/reprise";
+import { codeDeRepriseDuProfil, cohorteDe } from "@/services/cohortes.service";
+import {
+  effacerMesPartiesAction,
+  obtenirCodeDeRepriseAction,
+  quitterCohorteAction,
+} from "../actions";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/entreprises/episode/profil" },
@@ -172,10 +178,13 @@ function phraseDeComparaison(quoi: string, c: Comparaison, n: number): string {
 export default async function ProfilPage({
   searchParams,
 }: {
-  searchParams: Promise<{ efface?: string }>;
+  searchParams: Promise<{ efface?: string; bienvenue?: string; repris?: string }>;
 }) {
-  const { efface } = await searchParams;
+  const { efface, bienvenue, repris } = await searchParams;
   const userId = await getGuestUserId();
+  const [cohorte, codeDeReprise] = userId
+    ? await Promise.all([cohorteDe(userId), codeDeRepriseDuProfil(userId)])
+    : [null, null];
   const parties = userId ? await partiesDe(userId) : [];
   const profil = construireProfil(parties);
   const n = profil.comptees.length;
@@ -209,6 +218,17 @@ export default async function ProfilPage({
                 : `Établi sur ${n} épisode${n > 1 ? "s" : ""} joué${n > 1 ? "s" : ""} en Standard ou en Expert, ${profil.competences.reduce((s, l) => s + l.observations.length, 0)} observations au total.`}
             </p>
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-400">{MENTION}</p>
+            {bienvenue != null && cohorte && (
+              <p role="status" className="mt-4 text-sm text-amber-200">
+                Vous avez rejoint la cohorte « {cohorte.nom} ». Notez votre code de reprise, plus
+                bas : il vous rend ce profil depuis un autre appareil.
+              </p>
+            )}
+            {repris != null && (
+              <p role="status" className="mt-4 text-sm text-amber-200">
+                Votre profil est de retour sur cet appareil.
+              </p>
+            )}
             {efface != null && (
               <p role="status" className="mt-4 text-sm text-amber-200">
                 {Number(efface) > 0
@@ -376,6 +396,67 @@ export default async function ProfilPage({
               </ul>
             </section>
           )}
+
+          <section aria-labelledby="reprise-titre" id="reprise" className="grid gap-3">
+            <h2
+              id="reprise-titre"
+              className="font-display text-2xl font-semibold tracking-tight text-slate-50"
+            >
+              Cohorte et code de reprise
+            </h2>
+            {cohorte ? (
+              <div className="grid gap-2 text-sm leading-relaxed text-slate-300">
+                <p>
+                  Vous suivez la cohorte{" "}
+                  <span className="font-semibold text-slate-100">« {cohorte.nom} »</span>. Son
+                  animateur voit des totaux et des moyennes du groupe, jamais votre profil.
+                </p>
+                <GuardedForm action={quitterCohorteAction} label="sortie de la cohorte">
+                  <SubmitButton
+                    pendingLabel="Sortie…"
+                    className="text-sm text-slate-400 underline hover:text-slate-200"
+                  >
+                    Quitter la cohorte
+                  </SubmitButton>
+                </GuardedForm>
+              </div>
+            ) : (
+              <p className="max-w-3xl text-sm leading-relaxed text-slate-400">
+                Vous ne suivez aucune cohorte. On en rejoint une par le lien d&apos;invitation reçu
+                de son animateur.
+              </p>
+            )}
+            {codeDeReprise ? (
+              <p className="max-w-3xl text-sm leading-relaxed text-slate-300">
+                Votre code de reprise :{" "}
+                <span className="font-mono text-lg tracking-[0.2em] text-amber-300">
+                  {formaterCodeDeReprise(codeDeReprise)}
+                </span>
+                . Notez-le : il vous rend ce profil sur{" "}
+                <Link href="/entreprises/episode/reprendre" className="text-amber-300 underline">
+                  un autre appareil
+                </Link>
+                . Ne le confiez à personne.
+              </p>
+            ) : (
+              parties.length > 0 && (
+                <GuardedForm action={obtenirCodeDeRepriseAction} label="code de reprise du profil">
+                  <SubmitButton
+                    pendingLabel="Création…"
+                    className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 hover:border-amber-400/50 hover:text-slate-50"
+                  >
+                    Obtenir mon code de reprise
+                  </SubmitButton>
+                </GuardedForm>
+              )
+            )}
+            <p className="text-sm text-slate-400">
+              Vous avez déjà un code ?{" "}
+              <Link href="/entreprises/episode/reprendre" className="text-amber-300 underline">
+                Reprendre mon profil sur cet appareil
+              </Link>
+            </p>
+          </section>
 
           <section aria-labelledby="donnees-titre" className="grid gap-3">
             <h2

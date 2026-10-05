@@ -192,4 +192,11 @@ pédagogiques alimentées et un concours prêt à lancer. Les identifiants s'aff
 `/teacher/login`. En local : `npm run seed:demo`. L'admin général n'a pas de compte démo
 (rôle sensible : réservé aux e-mails d'`ADMIN_EMAILS`).
 
+## Cohortes d'épisodes manager
+
+Une entreprise déploie les épisodes manager par cohorte. `npm run cohorte:creer -- "Nom" https://adresse-du-site`
+crée la cohorte et affiche deux liens : l'invitation, à envoyer aux managers, et le lien de
+l'animateur, qui ouvre les agrégats de la cohorte (aucun nom, rien sous cinq personnes) et se
+transmet à l'animateur seul.
+
 **Aucune modification du moteur économique ne sera acceptée sans tests** (§32).

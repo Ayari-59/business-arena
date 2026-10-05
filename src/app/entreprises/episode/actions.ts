@@ -1,9 +1,16 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { getGuestUserId, getOrCreateGuestUserId } from "@/lib/guest";
+import { getGuestUserId, getOrCreateGuestUserId, setGuestCookie } from "@/lib/guest";
 import { construireProfil } from "@/pedagogy/profil/profil";
+import {
+  codeDeRepriseDuProfil,
+  quitterCohorte,
+  rejoindreCohorte,
+  reprendreProfil,
+} from "@/services/cohortes.service";
 import { effacerParties, enregistrerPartie, partiesDe } from "@/services/episode-parties.service";
 
 export interface SuiteDeLaPartie {
@@ -70,4 +77,47 @@ export async function effacerMesPartiesAction(): Promise<void> {
   const effacees = userId ? await effacerParties(userId) : 0;
   revalidatePath("/entreprises/episode/profil");
   redirect(`/entreprises/episode/profil?efface=${effacees}`);
+}
+
+/** Rejoindre la cohorte du lien d'invitation ; le code de reprise est attribué au passage. */
+export async function rejoindreCohorteAction(code: string): Promise<void> {
+  const userId = await getOrCreateGuestUserId();
+  const r = await rejoindreCohorte(userId, code);
+  if (!r.ok) redirect(`/entreprises/episode/rejoindre?code=${encodeURIComponent(code)}&inconnu=1`);
+  await codeDeRepriseDuProfil(userId, true);
+  revalidatePath("/entreprises/episode/profil");
+  redirect("/entreprises/episode/profil?bienvenue=1");
+}
+
+export async function quitterCohorteAction(): Promise<void> {
+  const userId = await getGuestUserId();
+  if (userId) await quitterCohorte(userId);
+  revalidatePath("/entreprises/episode/profil");
+  redirect("/entreprises/episode/profil");
+}
+
+/** Afficher son code de reprise, en le créant au premier appel. */
+export async function obtenirCodeDeRepriseAction(): Promise<void> {
+  const userId = await getOrCreateGuestUserId();
+  await codeDeRepriseDuProfil(userId, true);
+  revalidatePath("/entreprises/episode/profil");
+  redirect("/entreprises/episode/profil#reprise");
+}
+
+export interface RepriseDeProfilState {
+  error: string | null;
+}
+
+/** Reprendre son profil sur cet appareil avec son code personnel. */
+export async function reprendreProfilAction(
+  _prev: RepriseDeProfilState,
+  formData: FormData,
+): Promise<RepriseDeProfilState> {
+  const h = await headers();
+  const ip = h.get("x-real-ip") || h.get("x-forwarded-for")?.split(",").pop()?.trim() || null;
+  const r = await reprendreProfil({ code: String(formData.get("code") ?? ""), ip });
+  if (!r.ok) return { error: r.erreur };
+  await setGuestCookie(r.userId);
+  revalidatePath("/entreprises/episode/profil");
+  redirect("/entreprises/episode/profil?repris=1");
 }

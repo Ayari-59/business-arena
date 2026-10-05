@@ -1,4 +1,4 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { episodeParties } from "@/db/schema";
@@ -112,6 +112,27 @@ export async function enregistrerPartie(
   return { ok: true, ...gagnante[0]!, dejaGardee: true };
 }
 
+type Ligne = typeof episodeParties.$inferSelect;
+
+const enPartie = (l: Ligne): PartieEnregistree => ({
+  id: l.id,
+  code: l.episodeCode,
+  versionModele: l.versionModele,
+  date: l.createdAt.toISOString(),
+  premiere: l.premiere,
+  partie: {
+    graine: l.graine,
+    chemin: l.chemin,
+    consultes: l.consultes,
+    jours: l.jours,
+    diagnostic: l.diagnostic,
+    reevaluation: l.reevaluation,
+    prevision: l.prevision,
+    confiance: l.confiance,
+    niveau: l.niveau as "decouverte" | "standard" | "expert",
+  },
+});
+
 /** Les parties d'une personne, de la plus ancienne à la plus récente. */
 export async function partiesDe(userId: string): Promise<PartieEnregistree[]> {
   const lignes = await db
@@ -119,24 +140,23 @@ export async function partiesDe(userId: string): Promise<PartieEnregistree[]> {
     .from(episodeParties)
     .where(eq(episodeParties.userId, userId))
     .orderBy(asc(episodeParties.createdAt), asc(episodeParties.id));
-  return lignes.map((l) => ({
-    id: l.id,
-    code: l.episodeCode,
-    versionModele: l.versionModele,
-    date: l.createdAt.toISOString(),
-    premiere: l.premiere,
-    partie: {
-      graine: l.graine,
-      chemin: l.chemin,
-      consultes: l.consultes,
-      jours: l.jours,
-      diagnostic: l.diagnostic,
-      reevaluation: l.reevaluation,
-      prevision: l.prevision,
-      confiance: l.confiance,
-      niveau: l.niveau as "decouverte" | "standard" | "expert",
-    },
-  }));
+  return lignes.map(enPartie);
+}
+
+/** Les parties de plusieurs personnes, rangées par personne, pour les agrégats d'une cohorte. */
+export async function partiesDeTous(
+  userIds: readonly string[],
+): Promise<Map<string, PartieEnregistree[]>> {
+  const parPersonne = new Map<string, PartieEnregistree[]>();
+  if (userIds.length === 0) return parPersonne;
+  const lignes = await db
+    .select()
+    .from(episodeParties)
+    .where(inArray(episodeParties.userId, [...userIds]))
+    .orderBy(asc(episodeParties.createdAt), asc(episodeParties.id));
+  for (const l of lignes)
+    parPersonne.set(l.userId, [...(parPersonne.get(l.userId) ?? []), enPartie(l)]);
+  return parPersonne;
 }
 
 /** Effacer toutes les parties d'une personne, à sa demande. Renvoie le nombre effacé. */
