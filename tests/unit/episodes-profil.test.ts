@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DIFFICULTES } from "../../src/config/episodes/difficultes";
+import { FAMILLES } from "../../src/config/episodes/familles";
 import { TRACES } from "../../src/config/episodes/traces";
 import type { Episode, PartieJouee } from "../../src/config/episodes/types";
 import type { CodeNiveau } from "../../src/config/episodes/niveaux";
@@ -265,6 +266,25 @@ describe("la recommandation", () => {
       expect(ceQuObserve(episodeParCode(r.code)!, r.competence).poids).toBeGreaterThan(0);
       expect(r.raison).toMatch(/Famille « .+ », (jamais jouée|déjà jouée \d+ fois)\. Difficulté/);
     }
+  });
+
+  it("ne propose les épisodes de direction qu'à qui en a déjà joué un", () => {
+    const direction = FAMILLES.find((f) => f.direction)!.episodes;
+    expect(direction.length).toBeGreaterThan(0);
+    // R3 est observé au premier plan par chacun d'eux : sans la règle, ils seraient proposés.
+    const manager = construireProfil(
+      QUATRE.map((c) => bienJouee(c)),
+      undefined,
+      { objectif: "R3" },
+    );
+    expect(manager.recommandations.length).toBeGreaterThan(0);
+    for (const r of manager.recommandations) expect(direction).not.toContain(r.code);
+    const directeur = construireProfil(
+      [...QUATRE, direction[0]!].map((c) => bienJouee(c)),
+      undefined,
+      { objectif: "R3" },
+    );
+    expect(directeur.recommandations.some((r) => direction.includes(r.code))).toBe(true);
   });
 
   it("ne repropose jamais un épisode déjà joué, même en Découverte", () => {

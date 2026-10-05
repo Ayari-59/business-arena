@@ -26,7 +26,7 @@ import {
   type Competence,
 } from "@/config/episodes/competences";
 import { DIFFICULTES, PEU_DISCRIMINANTS, type Difficulte } from "@/config/episodes/difficultes";
-import { FAMILLES } from "@/config/episodes/familles";
+import { FAMILLES, estUnEpisodeDeDirection } from "@/config/episodes/familles";
 import { TRACES } from "@/config/episodes/traces";
 import type { Episode } from "@/config/episodes/types";
 import type { CodeNiveau } from "@/config/episodes/niveaux";
@@ -509,8 +509,12 @@ function recommander(
       : score > 80
         ? d === "difficile"
         : d === "moyen";
+  // Les épisodes de direction ne s'imposent pas à un manager de proximité :
+  // on ne les propose qu'à qui en a déjà joué un, et donc choisi ce terrain.
+  const direction = [...dejaJoues].some(estUnEpisodeDeDirection);
   return episodes
     .filter((ep) => !dejaJoues.has(ep.code))
+    .filter((ep) => direction || !estUnEpisodeDeDirection(ep.code))
     .map((ep) => {
       const vu = ceQuObserve(ep, cible);
       const famille = FAMILLES.find((f) => f.episodes.includes(ep.code))!;

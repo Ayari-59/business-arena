@@ -11,6 +11,11 @@ export interface Famille {
   texte: string;
   /** Les codes des épisodes, dans l'ordre où on les propose. */
   episodes: readonly string[];
+  /**
+   * Des épisodes de direction : on y décide pour l'entreprise, pas pour une
+   * équipe. La recommandation ne les propose qu'à qui en a déjà joué un.
+   */
+  direction?: true;
 }
 
 export const FAMILLES: readonly Famille[] = [
@@ -114,7 +119,8 @@ export const FAMILLES: readonly Famille[] = [
     code: "strategie",
     titre: "Choisir sa stratégie",
     texte:
-      "Concurrents, rachats, nouveaux marchés, réseau, grands comptes : les paris qui engagent l'entreprise.",
+      "Pour les directeurs : concurrents, rachats, nouveaux marchés, réseau, grands comptes, les paris qui engagent l'entreprise.",
+    direction: true,
     episodes: [
       "discounter-qui-arrive",
       "concurrent-a-racheter",
@@ -127,3 +133,7 @@ export const FAMILLES: readonly Famille[] = [
     ],
   },
 ];
+
+/** Les épisodes de direction, que la recommandation garde pour qui en a déjà joué un. */
+export const estUnEpisodeDeDirection = (code: string): boolean =>
+  FAMILLES.some((f) => f.direction && f.episodes.includes(code));
