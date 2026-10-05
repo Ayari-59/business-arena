@@ -34,8 +34,9 @@ import { effetDuChoix } from "@/pedagogy/episodes/retour-immediat";
 /**
  * UN ÉPISODE MANAGER, JOUÉ DE BOUT EN BOUT.
  *
- * Une démonstration de la version pour les entreprises : rien n'est
- * enregistré, tout se calcule dans le navigateur. Chaque décision passe par
+ * Une démonstration de la version pour les entreprises : tout se calcule dans
+ * le navigateur, et seuls les faits de la partie terminée sont gardés, pour
+ * le profil décisionnel (aucun texte saisi). Chaque décision passe par
  * les mêmes temps qu'au bureau — le signal qui arrive, l'enquête qui coûte du
  * temps, le diagnostic, la décision, puis ses conséquences sur le tableau de
  * bord — et le bilan rejoue le trimestre pour séparer le choix du hasard.
@@ -54,6 +55,8 @@ type Phase = "signal" | "enquete" | "diagnostic" | "reevaluation" | "decision" |
 
 interface Etat {
   graine: number | null;
+  /** Tirée au début de la partie : le serveur ne la garde qu'une fois, même si le bilan se recharge. */
+  cle: string | null;
   /** Le niveau choisi ; `null` tant que la personne n'a rien choisi. */
   niveau: CodeNiveau | null;
   ecran: Ecran;
@@ -78,8 +81,10 @@ const nouvelEtat = (
   ep: Episode,
   graine: number | null = null,
   niveau: CodeNiveau | null = null,
+  cle: string | null = null,
 ): Etat => ({
   graine,
+  cle,
   niveau,
   ecran: "intro",
   etape: 0,
@@ -101,6 +106,16 @@ function tirerUnHasard(): number {
   const demande = Number(new URLSearchParams(window.location.search).get("hasard"));
   if (Number.isInteger(demande) && demande > 0) return demande;
   return 1 + Math.floor(Math.random() * 9000);
+}
+
+/** Une clé de partie : un identifiant aléatoire, même hors d'un contexte sécurisé. */
+function nouvelleCle(): string {
+  if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  const o = crypto.getRandomValues(new Uint8Array(16));
+  o[6] = (o[6]! & 0x0f) | 0x40;
+  o[8] = (o[8]! & 0x3f) | 0x80;
+  const h = [...o].map((x) => x.toString(16).padStart(2, "0")).join("");
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 }
 
 /** Le niveau demandé dans l'adresse, s'il existe. */
@@ -313,7 +328,7 @@ export function EpisodeJoue({ code }: { code: string }) {
 
   const commencer = (g: number | null) =>
     setS((e) => ({
-      ...nouvelEtat(ep, g ?? tirerUnHasard(), e.niveau ?? choisi),
+      ...nouvelEtat(ep, g ?? tirerUnHasard(), e.niveau ?? choisi, nouvelleCle()),
       ecran: "jeu",
     }));
   const suivante = () =>
@@ -469,6 +484,7 @@ export function EpisodeJoue({ code }: { code: string }) {
             <BilanDeLEpisode
               ep={ep}
               partie={partieJouee}
+              cle={s.cle}
               precedente={precedente}
               onAutreHasard={() => {
                 setPrecedente(partieJouee);
@@ -553,8 +569,9 @@ function Intro({
       </div>
       <p className="max-w-2xl text-sm leading-relaxed text-slate-400">
         {ep.etapes.length} décisions, {ep.duree}. Les chiffres bougent avec vos choix ; à la fin, le
-        bilan rejoue chacune de vos décisions sous trente tirages du même hasard. Démonstration :
-        rien de ce que vous saisissez n&apos;est enregistré.
+        bilan rejoue chacune de vos décisions sous trente tirages du même hasard. À la fin, vos
+        choix sont gardés sur cet appareil pour votre profil décisionnel, sans votre nom ni aucun
+        texte saisi ; vous pouvez les effacer depuis le profil.
       </p>
       <fieldset className="grid gap-2">
         <legend className="mb-1 font-semibold text-slate-50">Niveau</legend>

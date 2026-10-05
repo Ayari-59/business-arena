@@ -33,7 +33,8 @@ export async function generateMetadata({
  *
  * Un manager, pas une entreprise simulée : on pilote un trimestre, et le
  * bilan juge les décisions plutôt que le résultat. Tout se joue dans le
- * navigateur ; rien n'est enregistré.
+ * navigateur ; seuls les faits de la partie terminée sont gardés, pour le
+ * profil décisionnel de la personne.
  */
 export default async function EpisodePage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;

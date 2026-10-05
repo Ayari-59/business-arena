@@ -7,6 +7,7 @@ import type { Episode, PartieJouee } from "@/config/episodes/types";
 import { bouton } from "@/components/bouton";
 import { niveauParCode } from "@/config/episodes/niveaux";
 import { CourbeDesSemaines, reperesDesDecisions } from "./courbe-des-semaines";
+import { RetourDeLEpisode } from "./retour-de-l-episode";
 
 /**
  * LE BILAN DE L'ÉPISODE.
@@ -137,12 +138,15 @@ const EN_LETTRES = ["zéro", "une", "deux", "trois", "quatre", "cinq", "six", "s
 export function BilanDeLEpisode({
   ep,
   partie,
+  cle,
   precedente,
   onAutreHasard,
   onMemeHasard,
 }: {
   ep: Episode;
   partie: PartieJouee;
+  /** La clé de la partie, pour la garder une seule fois ; `null` : on ne la garde pas. */
+  cle: string | null;
   /** La partie jouée juste avant, pour les comparer. */
   precedente: PartieJouee | null;
   onAutreHasard: () => void;
@@ -385,6 +389,8 @@ export function BilanDeLEpisode({
           <p className="mt-1 text-sm leading-relaxed text-slate-300">{axe.texte}</p>
         </div>
       </section>
+
+      <RetourDeLEpisode ep={ep} partie={partie} cle={cle} />
 
       <p className="max-w-2xl text-sm text-slate-400">
         Dans la version pour les entreprises, ce bilan n&apos;est visible que par la personne qui
