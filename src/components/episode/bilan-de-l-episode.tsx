@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { GRAINES_DU_BILAN, moyenne } from "@/engine/episodes/commun";
-import { CAS, analyser, type Cas } from "@/pedagogy/episodes/bilan";
+import { CAS, analyser, type Cas, type Enchainement } from "@/pedagogy/episodes/bilan";
 import type { Episode, PartieJouee } from "@/config/episodes/types";
 import { bouton } from "@/components/bouton";
 import { niveauParCode } from "@/config/episodes/niveaux";
@@ -133,6 +133,38 @@ function Comparaison({
 }
 
 /** Le nombre de décisions, en toutes lettres. */
+/**
+ * Quand les décisions, jugées une à une, cachent l'écart à la méthode : on
+ * montre ce que reprendre la méthode à chaque étape aurait rapporté.
+ */
+function LEnchainement({ e, kE }: { e: Enchainement; kE: (v: number) => string }) {
+  const signe = (v: number) => `${v >= 0 ? "+" : "−"}${kE(Math.abs(v))}`;
+  return (
+    <div className="rounded-lg border border-amber-400/30 bg-amber-400/5 p-4">
+      <h3 className="font-semibold text-slate-50">Vos décisions s&apos;enchaînent</h3>
+      <p className="mt-1 max-w-2xl text-sm leading-relaxed text-slate-300">
+        Chaque décision est jugée dans la situation que les précédentes ont créée, et plusieurs des
+        vôtres y répondaient bien. Mais la méthode « {e.methode} » fait {kE(e.ecart)} de plus en
+        moyenne
+        {e.explique < e.ecart
+          ? `, et le détail décision par décision n'en explique que ${kE(e.explique)}`
+          : ""}
+        . Le reste tient à l&apos;enchaînement : c&apos;est en amont qu&apos;il fallait choisir
+        autrement.
+      </p>
+      <ul className="mt-3 grid gap-1 text-sm text-slate-300">
+        {e.reprises.map((r) => (
+          <li key={r.d}>
+            Reprendre la méthode à partir de la décision {r.d + 1} :{" "}
+            <span className="font-semibold tabular-nums text-slate-100">{signe(r.gain)}</span> en
+            moyenne
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 const EN_LETTRES = ["zéro", "une", "deux", "trois", "quatre", "cinq", "six", "sept", "huit"];
 
 export function BilanDeLEpisode({
@@ -312,6 +344,7 @@ export function BilanDeLEpisode({
             </div>
           ))}
         </div>
+        {a.enchainement && <LEnchainement e={a.enchainement} kE={kE} />}
         <div className="overflow-x-auto">
           <table className="w-full min-w-[680px] text-sm">
             <thead>

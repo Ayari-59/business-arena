@@ -53,7 +53,4 @@ export const ficheParCode = (code: string): FicheEnseignant | undefined =>
   FICHES.find((f) => f.code === code);
 
 /** Le hasard que toute la classe joue : le même que celui du débrief des entreprises. */
-export const HASARD_DE_LA_CLASSE = 12;
-
-export const lienDeLaClasse = (code: string) =>
-  `/entreprises/episode/${code}?hasard=${HASARD_DE_LA_CLASSE}`;
+export { hasardDuDebrief as hasardDeLaClasse, lienDuDebrief as lienDeLaClasse } from "../debrief";

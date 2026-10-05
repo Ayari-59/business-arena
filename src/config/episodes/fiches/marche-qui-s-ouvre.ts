@@ -7,7 +7,7 @@ import type { FicheEnseignant } from "./types";
  * qui décide et étendre sur ses chiffres. Les chiffres du corrigé, des
  * réflexes et du débrief se recalculent depuis le modèle de l'épisode
  * (src/engine/episodes/marche-qui-s-ouvre.ts) ; ceux du hasard de la classe
- * sont ceux de la graine 12, les moyennes celles des 30 tirages du bilan,
+ * sont ceux de la graine 1, les moyennes celles des 30 tirages du bilan,
  * les autres décisions restant celles de la meilleure méthode.
  */
 export const FICHE: FicheEnseignant = {
@@ -34,7 +34,7 @@ export const FICHE: FicheEnseignant = {
       minutes: 10,
       titre: "Lancement",
       detail:
-        "Vous envoyez le lien /entreprises/episode/marche-qui-s-ouvre?hasard=12 : toute la classe joue le même trimestre, sous le même hasard. Les élèves jouent seuls ou en binôme, au niveau Standard. Vous ne dites rien du test ni des options réelles : vous demandez seulement de noter, à chaque décision, le chiffre qui l'a emportée.",
+        "Vous envoyez le lien /entreprises/episode/marche-qui-s-ouvre?hasard=1 : toute la classe joue le même trimestre, sous le même hasard. Les élèves jouent seuls ou en binôme, au niveau Standard. Vous ne dites rien du test ni des options réelles : vous demandez seulement de noter, à chaque décision, le chiffre qui l'a emportée.",
     },
     {
       minutes: 40,
@@ -58,7 +58,7 @@ export const FICHE: FicheEnseignant = {
       minutes: 15,
       titre: "Le bilan des 30 tirages",
       detail:
-        "Vous prévenez la classe : le hasard pèse lourd dans cet épisode, et le hasard n° 12 est favorable aux audacieux. Le marché y suit le scénario porteur et Solvéane ne vient pas ; « être les premiers partout » y fait 915 k€ contre 801 k€ pour la méthode, alors que sur les 30 tirages il fait 3 k€ contre 259 k€ et perd de l'argent 22 fois. Vous faites ouvrir le bilan et comparer, décision par décision, le résultat obtenu au résultat moyen.",
+        "Vous prévenez la classe : le hasard pèse lourd dans cet épisode, mais le hasard n° 1 est un tirage ordinaire, où aucun réflexe pris seul ne bat la méthode. Le marché y suit le scénario moyen et Solvéane ne vient pas ; la méthode y fait 153 k€, au milieu de ses 30 tirages, et « être les premiers partout » perd 149 k€, quand sur les 30 tirages il fait 3 k€ contre 259 k€ et perd de l'argent 22 fois. Vous faites ouvrir le bilan et comparer, décision par décision, le résultat obtenu au résultat moyen ; chez qui a lancé partout puis tout signé, le bloc « Vos décisions s'enchaînent » montre ce que ce détail ne dit pas.",
     },
     {
       minutes: 15,
@@ -157,16 +157,16 @@ export const FICHE: FicheEnseignant = {
       pourquoi:
         "Si Solvéane voit qu'Arvel casse ses prix, il ne viendra pas : une baisse de commission dissuade avant qu'il soit trop tard.",
       ceQuiLeDejoue:
-        "« Chiffrer les deux ripostes » : la baisse coûte 150 € sur chaque bouquet de la première année, que Solvéane vienne ou non, plus 5 k€ de campagne, soit 86,8 k€ avec le plan de trente agences du hasard n° 12, pour une chance sur dix de moins qu'il vienne. La riposte ciblée ne coûte 5 k€ que s'il arrive ; la baisse préventive fait 30 k€ de moins en moyenne.",
+        "« Chiffrer les deux ripostes » : la baisse coûte 150 € sur chaque bouquet de la première année, que Solvéane vienne ou non, plus 5 k€ de campagne, soit 29,8 k€ avec le plan de dix grandes agences du hasard n° 1, pour une chance sur dix de moins qu'il vienne. La riposte ciblée ne coûte 5 k€ que s'il arrive ; la baisse préventive fait 30 k€ de moins en moyenne.",
     },
   ],
   debrief: [
     "En semaine 1, qu'est-ce qui sépare les 72 M€ du marché accessible des 97,5 M€ du cabinet ? Faites nommer les trois différences (périmètre, scénario, part postulée), puis demandez pourquoi aucun de ces deux chiffres ne suffisait à décider l'entrée : à 20, 13 ou 7 bouquets par agence et par an, le réseau prend 12,5 %, 8,1 % ou 4,4 % du marché.",
     "Le test coûtait 18 k€ d'ouvertures, 8 k€ de protocole et l'avance du premier entrant : qu'achetait-il ? Posez au tableau la valeur moyenne de chaque entrée par scénario : face aux dix grandes agences d'emblée, le test perd 19 k€ dans le porteur, gagne 19 k€ dans le moyen et 166 k€ dans le difficile, soit 43 k€ de plus sur les 30 tirages, et 244 k€ de plus que les trente agences. Pourquoi dit-on que l'information a changé la réponse, et pas seulement le résultat ?",
     "Ceux qui ont testé dans les trois plus grosses agences ont-ils mesuré le marché ? Le test en vitrine bat le test représentatif 15 fois sur 30, de 10 à 15 k€, et perd les 15 autres de 171 à 199 k€ : retrouvez lesquelles (le scénario moyen, où la moyenne passe le seuil et les petites agences non). Qu'aurait-il fallu fixer avant de voir les chiffres ?",
-    "En semaine 8, le président voulait tenir le plan, le cabinet accélérer : qu'est-ce qui justifiait de réviser ? Sous le hasard n° 12, les chiffres du test donnent 28 bouquets par an à la grande agence et 17 aux autres, au-dessus du seuil de 12,6 : la révision se fait à la hausse, trente agences au lieu des dix du plan. Sur les 30 tirages, aucune autre option ne fait jamais mieux qu'elle ; mais derrière un test en vitrine, suivre ses chiffres fait moins bien que tenir le plan (174 k€ contre 200 k€). Que vaut un signal qui ne mesure pas la bonne chose ?",
+    "En semaine 8, le président voulait tenir le plan, le cabinet accélérer : qu'est-ce qui justifiait de réviser ? Sous le hasard n° 1, les chiffres du test donnent 17,7 bouquets par an à la grande agence et 10,2 aux autres : seule la grande passe le seuil de 12,6, et la révision retombe sur le plan validé, les dix grandes agences ; tenir le plan fait cette fois exactement autant. Sur les 30 tirages, aucune autre option ne fait jamais mieux que la révision, et tenir le plan fait 90 k€ de moins en moyenne ; mais derrière un test en vitrine, suivre ses chiffres fait moins bien que tenir le plan (174 k€ contre 200 k€). Que vaut un signal qui ne mesure pas la bonne chose ?",
     "« Ne rien signer pour l'instant : on recrutera les artisans au moment d'étendre » bat la charte 17 fois sur 30, et sous le hasard de la classe elle fait 20 k€ de mieux, les 20 k€ exacts de la charte. Les 13 autres fois, quand Solvéane s'implante, elle perd de 25 à 452 k€, si bien qu'elle fait 67 k€ de moins en moyenne. Ceux qui l'ont choisie ont-ils bien décidé, ou eu de la chance ? Qu'achète-t-on en payant une assurance qui ne sert pas, la plupart du temps ?",
-    "Sous le hasard n° 12, le marché a suivi le scénario porteur et Solvéane n'est pas venu : « être les premiers partout » fait 915 k€, l'exclusivité de Nordhalm ajoute 155 k€ à la méthode, et la méthode fait 801 k€. Sur les 30 tirages, les premiers partout font 3 k€ en moyenne et perdent de l'argent 22 fois, la méthode fait 259 k€. Un binôme qui a fini premier de la classe a-t-il pris les meilleures décisions ? Sur quoi juge-t-on une décision stratégique dont le résultat d'un trimestre dépend autant du hasard ?",
+    "Sous le hasard n° 1, le marché a suivi le scénario moyen et Solvéane n'est pas venu : la méthode fait 153 k€, sa 16e place sur les 30 tirages, et « être les premiers partout » perd 149 k€. Le meilleur résultat possible, 205 k€, revient à qui a testé dans les trois plus grosses agences, n'a rien signé avec les artisans et a tenu le plan : deux réflexes qui se compensent sous ce hasard, pour 156 k€ en moyenne sur les 30 tirages, contre 259 k€ pour la méthode. Un binôme qui a fini premier de la classe a-t-il pris les meilleures décisions ? Sur quoi juge-t-on une décision stratégique dont le résultat d'un trimestre dépend autant du hasard ?",
   ],
   prolongement: {
     enonce:
@@ -179,7 +179,7 @@ export const FICHE: FicheEnseignant = {
     "Le choix de l'entrée est justifié par une comparaison scénario par scénario et par ce que le test permet de décider ensuite, non par la taille du marché ni par la vitesse.",
     "Le test est conçu avant d'en voir les chiffres : agences représentatives, bouquets signés par agence, seuil de rentabilité de 11 bouquets par an (12,6 avec l'ouverture) comme critère.",
     "Le plan de janvier suit les chiffres du test, à la hausse comme à la baisse, et les engagements de volume (artisans, fabricant) sont rapportés aux bouquets que chaque scénario permet.",
-    "L'élève distingue la qualité de ses décisions de leur résultat sous le hasard n° 12, à l'aide du bilan des 30 tirages, et identifie au moins une décision où il a eu de la chance.",
+    "L'élève distingue la qualité de ses décisions de leur résultat sous le hasard n° 1, à l'aide du bilan des 30 tirages, et identifie au moins une décision où il a eu de la chance.",
   ],
   vigilance:
     "L'épisode donne les probabilités des trois scénarios et de l'arrivée de Solvéane, et un test bien conduit y révèle le scénario sans erreur, alors que ces probabilités sont des jugements et qu'un test de six semaines sur trois agences est bruité. La valeur est calculée sur trois ans au taux de 10 %, sans valeur terminale, et l'attente ne vaut que zéro moins ce que Solvéane coûte au négoce, l'entrée plus tardive n'étant pas comptée : un enseignant de stratégie pourra faire remarquer que l'option d'attendre a aussi une valeur, que le modèle ne donne pas, et que l'avantage du premier entrant s'y réduit à 3 % de bouquets en plus.",

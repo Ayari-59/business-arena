@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FICHES, HASARD_DE_LA_CLASSE, lienDeLaClasse } from "../../src/config/episodes/fiches";
+import { FICHES, hasardDeLaClasse, lienDeLaClasse } from "../../src/config/episodes/fiches";
 import { formationParCode } from "../../src/config/formations";
 import { TRACES } from "../../src/config/episodes/traces";
 import { episodeParCode } from "../../src/pedagogy/episodes/registre";
@@ -18,7 +18,7 @@ describe("les fiches enseignant", () => {
 
   it("donnent à la classe le lien du hasard commun", () => {
     expect(lienDeLaClasse("atelier-sature")).toBe(
-      `/entreprises/episode/atelier-sature?hasard=${HASARD_DE_LA_CLASSE}`,
+      `/entreprises/episode/atelier-sature?hasard=${hasardDeLaClasse("atelier-sature")}`,
     );
   });
 
@@ -40,7 +40,7 @@ describe("les fiches enseignant", () => {
       it("corrige le calcul de la semaine 1 avec le chiffre du modèle", () => {
         const t = ep.simuler(
           ep.references[0]!.chemin,
-          HASARD_DE_LA_CLASSE,
+          hasardDeLaClasse(ep.code),
           ep.enquete.joursSansPerte,
         );
         const juste = TRACES[ep.code]!.prevision.juste;

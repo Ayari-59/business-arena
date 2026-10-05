@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { DIFFICULTES } from "../../src/config/episodes/difficultes";
+import { DIFFICULTES, PEU_DISCRIMINANTS } from "../../src/config/episodes/difficultes";
+import {
+  decompterLaDifficulte,
+  departageMal,
+  difficulteDesPoints,
+} from "../../src/pedagogy/episodes/difficulte";
 import { FAMILLES } from "../../src/config/episodes/familles";
 import { TRACES } from "../../src/config/episodes/traces";
 import type { Episode, PartieJouee } from "../../src/config/episodes/types";
@@ -370,5 +375,24 @@ describe("la personnalisation du parcours", () => {
     expect(bon.conseil.niveau).toBe("expert");
     expect(reflexes.conseil.niveau).not.toBe("expert");
     expect(reflexes.conseil.pourquoi).toMatch(/Vos deux derniers épisodes : \d+ % de qualité/);
+  });
+});
+
+describe("la difficulté des épisodes", () => {
+  const decomptes = EPISODES.map((ep) => ({ ep, d: decompterLaDifficulte(ep) }));
+
+  it("suit une seule règle pour les quarante-huit épisodes", () => {
+    for (const { ep, d } of decomptes) {
+      expect(DIFFICULTES[ep.code], ep.code).toBe(difficulteDesPoints(d.points));
+    }
+  });
+
+  it("garde en dernier les épisodes qui départagent mal, et seulement eux", () => {
+    expect([...PEU_DISCRIMINANTS].sort()).toEqual(
+      decomptes
+        .filter(({ d }) => departageMal(d))
+        .map(({ ep }) => ep.code)
+        .sort(),
+    );
   });
 });

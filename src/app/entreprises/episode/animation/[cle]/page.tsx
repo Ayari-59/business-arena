@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { HaloDePage } from "@/components/halo-de-page";
+import { lienDuDebrief } from "@/config/episodes/debrief";
 import { PiedDePage } from "@/components/pied-de-page";
 import { SEUIL_D_ANONYMAT } from "@/pedagogy/profil/cohorte";
 import { vueDeLAnimateur } from "@/services/cohortes.service";
@@ -12,9 +13,6 @@ export const metadata: Metadata = {
 };
 
 export const dynamic = "force-dynamic";
-
-/** Le hasard commun proposé pour un débrief : tout le groupe joue le même trimestre. */
-const HASARD_DU_DEBRIEF = 12;
 
 const pct = (v: number) => `${Math.round(v * 100)} %`;
 
@@ -176,9 +174,7 @@ export default async function AnimationPage({ params }: { params: Promise<{ cle:
                         </summary>
                         <p className="mt-2 break-all text-sm text-slate-400">
                           Lien de débrief :{" "}
-                          <span className="font-mono text-amber-300">
-                            /entreprises/episode/{e.code}?hasard={HASARD_DU_DEBRIEF}
-                          </span>
+                          <span className="font-mono text-amber-300">{lienDuDebrief(e.code)}</span>
                         </p>
                         {e.decisions == null ? (
                           <p className="mt-2 text-sm text-slate-300">

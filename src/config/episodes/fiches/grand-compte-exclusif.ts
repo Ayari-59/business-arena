@@ -5,7 +5,7 @@ import type { FicheEnseignant } from "./types";
  *
  * Les chiffres du corrigé, des réflexes et du débrief se recalculent depuis le
  * modèle de l'épisode (src/engine/episodes/grand-compte-exclusif.ts) ; ceux
- * du hasard de la classe sont ceux de la graine 12.
+ * du hasard de la classe sont ceux de la graine 2.
  */
 export const FICHE: FicheEnseignant = {
   code: "grand-compte-exclusif",
@@ -31,7 +31,7 @@ export const FICHE: FicheEnseignant = {
       minutes: 10,
       titre: "Lancement",
       detail:
-        "Vous envoyez le lien /entreprises/episode/grand-compte-exclusif?hasard=12 : toute la classe joue le même trimestre, sous le même hasard. Les élèves jouent seuls ou en binôme, au niveau Standard, dans le rôle du directeur commercial grands comptes qui porte la réponse au comité de direction. Vous demandez de noter, à chaque décision, le chiffre qui l'a emportée, et rien de plus.",
+        "Vous envoyez le lien /entreprises/episode/grand-compte-exclusif?hasard=2 : toute la classe joue le même trimestre, sous le même hasard. Les élèves jouent seuls ou en binôme, au niveau Standard, dans le rôle du directeur commercial grands comptes qui porte la réponse au comité de direction. Vous demandez de noter, à chaque décision, le chiffre qui l'a emportée, et rien de plus.",
     },
     {
       minutes: 40,
@@ -55,7 +55,7 @@ export const FICHE: FicheEnseignant = {
       minutes: 15,
       titre: "Le bilan des 30 tirages",
       detail:
-        "Vous prévenez la classe que le hasard pèse lourd ici : la valeur d'un contrat de trois ans dépend du carnet de commandes du client, de sa réponse, d'une analyse qui peut se tromper et d'une résiliation possible. Le hasard 12 est favorable (carnet solide, analyse favorable, campagne de conquête réussie, pas de résiliation) : la bonne méthode y fait 383 k€ pour 277 k€ en moyenne sur 30 tirages, et « prendre le volume » 186 k€ pour −17 k€ en moyenne. Vous faites lire, décision par décision, ce que chaque choix valait en moyenne plutôt que ce qu'il a rapporté sous ce hasard.",
+        "Vous prévenez la classe que le hasard pèse lourd ici : la valeur d'un contrat de trois ans dépend du carnet de commandes du client, de sa réponse, d'une analyse qui peut se tromper et d'une résiliation possible. Le hasard 2 est ordinaire (clauses acceptées, activité en tassement, analyse défavorable, pas de résiliation) : la bonne méthode y fait 266 k€, 15e tirage sur 30, pour 277 k€ en moyenne, et « prendre le volume » −113 k€ pour −17 k€ en moyenne. Vous faites lire, décision par décision, ce que chaque choix valait en moyenne plutôt que ce qu'il a rapporté sous ce hasard.",
     },
     {
       minutes: 15,
@@ -150,12 +150,12 @@ export const FICHE: FicheEnseignant = {
   ],
   debrief: [
     "Le contrat apporte 400 k€ de marge sur coût variable et la projection commerciale parle de 1,2 M€ : pourquoi n'en reste-t-il que 145 k€ par an ? Lequel des coûts déduits ne figure dans aucune ligne du contrat, et pourquoi est-ce celui qu'on oublie ?",
-    "Ni signer tel quel, ni décliner : dites, pour chacune des quatre clauses de la contre-proposition, le risque qu'elle borne (clients exclus, revue des prix, baisse d'activité, actifs spécifiques). Pourquoi décliner n'est-il pas « ne rien risquer » ? Sous le hasard 12, Sarlève a accepté les clauses et serait parti chez Lestrade sans exclusivité : qu'est-ce que la source sur Sarlève permettait d'anticiper ?",
-    "L'option qui trompe. « Accepter l'extension : plus de volume, plus de remises » bat « faire analyser le carnet » sur 19 tirages sur 30, pour 18 k€ de moins en moyenne ; sous le hasard 12, elle fait mieux de 6 k€, le prix de l'analyse, parce que le carnet était solide et l'analyse favorable. Ceux qui ont accepté sans analyse ont-ils bien décidé, ou ont-ils eu de la chance ? Montrez que l'analyse ne fait que coûter 6 k€ dans 17 tirages, évite une perte de 45 à 98 k€ dans 11 autres, et fait renoncer à tort à un groupe solide dans les 2 derniers.",
+    "Ni signer tel quel, ni décliner : dites, pour chacune des quatre clauses de la contre-proposition, le risque qu'elle borne (clients exclus, revue des prix, baisse d'activité, actifs spécifiques). Pourquoi décliner n'est-il pas « ne rien risquer » ? Sous le hasard 2, Sarlève a accepté les clauses ; sans exclusivité, il aurait signé aussi, mais, faute d'indexation, résilié à la revue des prix : qu'est-ce que la source sur Sarlève permettait d'anticiper ?",
+    "L'option qui trompe. « Accepter l'extension : plus de volume, plus de remises » bat « faire analyser le carnet » sur 19 tirages sur 30, pour 18 k€ de moins en moyenne ; sous le hasard 2, elle fait 45 k€ de moins, parce que l'activité s'est tassée et que l'analyse, défavorable, a fait renoncer. Ceux qui ont accepté sans analyse ont-ils mal décidé parce qu'ils ont perdu ? Montrez que l'analyse ne fait que coûter 6 k€ dans 17 tirages, évite une perte de 45 à 98 k€ dans 11 autres, et fait renoncer à tort à un groupe solide dans les 2 derniers.",
     "Que valait l'analyse à 6 k€ ? Une conclusion favorable porte la chance d'un carnet solide de 50 % à 83 %, une conclusion défavorable la ramène à 15 %. Comparez accepter (+13 k€ en espérance), refuser (0) et n'accepter qu'après une conclusion favorable (+29 k€) : à quelle condition une information vaut-elle son prix ?",
-    "Le chantier suspendu et la note dégradée devaient-ils changer l'engagement ? Sous le hasard 12, le carnet a tenu et tenir le cap a fait 7 k€ de mieux que réviser ; sur les 30 tirages, il fait 32 k€ de moins en moyenne. Qu'est-ce qu'un signal change, une certitude ou des chances ? Pourquoi est-il moins coûteux de réviser une cellule dédiée qu'on peut regonfler que de la garder au complet ?",
-    "À la revue des prix, la rupture coûterait à Arvel 374 k€ de valeur sur le chemin de la bonne méthode, sous le hasard 12. D'où vient ce pouvoir de Sarlève ? Avec l'indexation, l'échange est la meilleure réponse ; sans elle, accorder le point redevient le moins mauvais choix (150 k€ en moyenne contre 130 k€ pour l'échange et 30 k€ pour tenir les prix) : que dit cet écart de la dépendance ?",
-    "Sous le hasard 12, le meilleur trimestre possible (475 k€) combine la campagne de conquête, l'extension sans analyse, le seul gel du stock et des prix tenus : quatre choix qui perdent en moyenne. « Prendre le volume » y fait 186 k€, presque l'objectif, pour −17 k€ en moyenne. Que conclure d'un directeur jugé sur ce trimestre ? Une décision stratégique se juge-t-elle à son résultat d'un trimestre ?",
+    "Le chantier suspendu et la note dégradée devaient-ils changer l'engagement ? Sous le hasard 2, l'activité s'est tassée et tenir le cap a fait 61 k€ de moins que réviser ; sur les 30 tirages, il fait 32 k€ de moins en moyenne. Qu'est-ce qu'un signal change, une certitude ou des chances ? Pourquoi est-il moins coûteux de réviser une cellule dédiée qu'on peut regonfler que de la garder au complet ?",
+    "À la revue des prix, la rupture coûterait à Arvel 300 k€ de valeur sur le chemin de la bonne méthode, sous le hasard 2. D'où vient ce pouvoir de Sarlève ? Avec l'indexation, l'échange est la meilleure réponse ; sans elle, accorder le point redevient le moins mauvais choix (150 k€ en moyenne contre 130 k€ pour l'échange et 30 k€ pour tenir les prix) : que dit cet écart de la dépendance ?",
+    "Sous le hasard 2, le meilleur trimestre possible (272 k€) est celui de la bonne méthode à un choix près : refuser l'extension sans analyse, qui épargne 6 k€, mais perd 20 k€ en moyenne ; le bilan le classe en « Chance ». « Prendre le volume » y détruit 113 k€, pour −17 k€ en moyenne. Que conclure d'un directeur jugé sur ce trimestre ? Une décision stratégique se juge-t-elle à son résultat d'un trimestre ?",
   ],
   prolongement: {
     enonce:

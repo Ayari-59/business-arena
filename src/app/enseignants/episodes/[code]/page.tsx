@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { HaloDePage } from "@/components/halo-de-page";
 import { PiedDePage } from "@/components/pied-de-page";
-import { FICHES, ficheParCode, lienDeLaClasse } from "@/config/episodes/fiches";
+import { FICHES, ficheParCode, hasardDeLaClasse, lienDeLaClasse } from "@/config/episodes/fiches";
 import { formationParCode } from "@/config/formations";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
 
@@ -78,8 +78,9 @@ export default async function FichePage({ params }: { params: Promise<{ code: st
             <p className="text-sm font-semibold text-slate-200">Le lien à donner à la classe</p>
             <p className="mt-2 break-all font-mono text-base text-amber-200">{lien}</p>
             <p className="mt-2 text-sm text-slate-400">
-              Tout le groupe joue le même trimestre, sous le même hasard (n° 12). Les élèves jouent
-              sans compte ; jouez l&apos;épisode une fois avant la séance.{" "}
+              Tout le groupe joue le même trimestre, sous le même hasard (n°{" "}
+              {hasardDeLaClasse(code)}). Les élèves jouent sans compte ; jouez l&apos;épisode une
+              fois avant la séance.{" "}
               <Link href={lien} className="text-amber-300 underline-offset-2 hover:underline">
                 Ouvrir l&apos;épisode
               </Link>

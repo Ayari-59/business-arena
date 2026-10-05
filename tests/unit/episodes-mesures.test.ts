@@ -5,8 +5,10 @@ import { GRAINES_DU_BILAN, mulberry32 } from "../../src/engine/episodes/commun";
 import { analyser } from "../../src/pedagogy/episodes/bilan";
 import {
   SEUIL_QUALITE,
+  egalite,
   mesurer,
   mesurerDecision,
+  prixDeLaSecurite,
   type DecisionMesuree,
 } from "../../src/pedagogy/episodes/mesures";
 import { EPISODES } from "../../src/pedagogy/episodes/registre";
@@ -71,7 +73,8 @@ describe("les mesures de toutes les décisions, sur le meilleur chemin", () => {
       expect(d.meilleure.victoires).toBe(0);
       expect(d.plusSure.robustesse).toBe(1);
       const pire = d.options.reduce((a, o) => (o.moyenne < a.moyenne ? o : a));
-      if (d.meilleure.moyenne - pire.moyenne >= 1000) expect(pire.qualite).toBe(0);
+      if (d.meilleure.moyenne - pire.moyenne >= egalite(d.meilleure.p10, d.meilleure.p90))
+        expect(pire.qualite).toBe(0);
     }
   });
 
@@ -101,7 +104,10 @@ describe("les mesures de toutes les décisions, sur le meilleur chemin", () => {
         const option = decision.options[o]!;
         const bonne =
           option.qualite >= SEUIL_QUALITE ||
-          (option === decision.plusSure && decision.meilleure.moyenne - option.moyenne < 3000);
+          (option === decision.plusSure &&
+            option.p10 > decision.meilleure.p10 &&
+            decision.meilleure.moyenne - option.moyenne <
+              prixDeLaSecurite(decision.meilleure.p10, decision.meilleure.p90));
         if (bonne) bonnes.push(`${ep.code} D${d + 1} option ${o}`);
       }
     });

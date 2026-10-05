@@ -9,8 +9,8 @@
  * options, tirage par tirage, tient tout entière à la décision.
  *
  *   · la QUALITÉ place l'espérance du choix entre la pire et la meilleure
- *     option, de 0 à 1 ; deux options à moins de 1 000 € l'une de l'autre
- *     sont toutes deux de bons choix ;
+ *     option, de 0 à 1 ; deux options presque à égalité au regard de l'enjeu
+ *     (1 000 € au moins) sont toutes deux de bons choix ;
  *   · la ROBUSTESSE place de même son pire cas (le 10e centile, la 3e plus
  *     mauvaise valeur sur 30) entre le pire et le meilleur des pires cas ;
  *   · le REGRET, tirage par tirage, est ce que la meilleure option de ce
@@ -32,10 +32,27 @@ import type { Episode, PartieJouee, Resultat } from "@/config/episodes/types";
 /** Le seuil du bilan : au-delà, une décision est bonne. Il vaut aussi pour la robustesse. */
 export const SEUIL_QUALITE = 0.7;
 export const SEUIL_ROBUSTESSE = 0.7;
-/** En deçà de cet écart à la meilleure option, en euros, deux options sont à égalité. */
+/**
+ * Les deux seuils en euros suivent l'ENJEU de la décision : l'écart entre les bons et les
+ * mauvais tirages de la meilleure option (son 90e moins son 10e centile), c'est-à-dire ce que
+ * le hasard peut faire au trimestre. Un écart de 2 000 € compte quand le hasard en déplace
+ * 30 000 ; il ne compte plus quand il en déplace 800 000, et payer 20 000 € pour se protéger
+ * d'un tel hasard reste une prudence défendable. Les planchers gardent les petits épisodes
+ * jugés comme avant.
+ */
+/** En deçà de cet écart à la meilleure option, deux options sont à égalité : 1 000 € au moins. */
 export const EGALITE = 1000;
-/** L'option la plus sûre reste un bon choix tant qu'elle coûte moins que cela en espérance. */
+export const PART_D_EGALITE = 0.015;
+/** L'option la plus sûre reste un bon choix tant qu'elle coûte moins que cela : 3 000 € au moins. */
 export const PRIX_DE_LA_SECURITE = 3000;
+export const PART_DE_LA_SECURITE = 0.05;
+
+/** Le seuil d'égalité d'une décision dont la meilleure option va de p10 à p90. */
+export const egalite = (p10: number, p90: number) =>
+  Math.max(EGALITE, PART_D_EGALITE * (p90 - p10));
+/** Ce que l'option la plus sûre peut coûter en espérance et rester un bon choix. */
+export const prixDeLaSecurite = (p10: number, p90: number) =>
+  Math.max(PRIX_DE_LA_SECURITE, PART_DE_LA_SECURITE * (p90 - p10));
 /** Une option est trompeuse quand elle bat la meilleure sur au moins 30 % des tirages (9 sur 30). */
 export const SEUIL_TROMPEUSE = 0.3;
 
@@ -60,7 +77,7 @@ export interface OptionMesuree {
   p10: number;
   /** Le meilleur cas : le 90e centile. */
   p90: number;
-  /** De 0 (la pire option) à 1 (la meilleure, ou à moins de 1 000 € d'elle). */
+  /** De 0 (la pire option) à 1 (la meilleure, ou à égalité avec elle). */
   qualite: number;
   /** De 0 (le pire des pires cas) à 1 (le meilleur). */
   robustesse: number;
@@ -81,7 +98,7 @@ export interface DecisionMesuree {
   /** L'option au meilleur pire cas. */
   plusSure: OptionMesuree;
   options: readonly OptionMesuree[];
-  /** Payer un peu d'espérance pour se protéger : le choix est l'option la plus sûre, à moins de 3 000 €. */
+  /** Payer un peu d'espérance pour se protéger : le choix est l'option la plus sûre, son pire cas est meilleur que celui de la meilleure, et elle coûte moins que le prix de la sécurité. */
   prudenceDefendable: boolean;
   /** Le jugement du bilan : une bonne décision. */
   bonne: boolean;
@@ -128,10 +145,12 @@ export function mesurerDecision<R extends Resultat>(
   const kPlusSure = p10s.indexOf(Math.max(...p10s));
   const [pire, mieux] = [Math.min(...moyennes), moyennes[kMeilleure]!];
   const [p10Bas, p10Haut] = [Math.min(...p10s), Math.max(...p10s)];
+  const enjeu = [quantile(valeurs[kMeilleure]!, 0.1), quantile(valeurs[kMeilleure]!, 0.9)] as const;
+  const [seuilEgalite, prixSecurite] = [egalite(...enjeu), prixDeLaSecurite(...enjeu)];
   const meilleurDuTirage = GRAINES_DU_BILAN.map((_, t) => Math.max(...valeurs.map((v) => v[t]!)));
 
   const options = valeurs.map((v, k): OptionMesuree => {
-    const qualite = mieux - moyennes[k]! < EGALITE ? 1 : position(moyennes[k]!, pire, mieux);
+    const qualite = mieux - moyennes[k]! < seuilEgalite ? 1 : position(moyennes[k]!, pire, mieux);
     const robustesse = position(p10s[k]!, p10Bas, p10Haut);
     const victoires = v.filter((x, t) => x > valeurs[kMeilleure]![t]! + EPS).length / v.length;
     const bonneMoyenne = qualite >= SEUIL_QUALITE;
@@ -155,7 +174,9 @@ export function mesurerDecision<R extends Resultat>(
   const meilleure = options[kMeilleure]!;
   const plusSure = options[kPlusSure]!;
   const prudenceDefendable =
-    choisie === plusSure && meilleure.moyenne - choisie.moyenne < PRIX_DE_LA_SECURITE;
+    choisie === plusSure &&
+    choisie.p10 > meilleure.p10 + EPS &&
+    meilleure.moyenne - choisie.moyenne < prixSecurite;
   return {
     d,
     choisie,

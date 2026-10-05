@@ -16,10 +16,15 @@
  *   · CALIBRER, la prévision : 1 juste, 0,6 proche, 0 loin, poids 1.
  *
  * Deux règles évitent de punir une bonne décision. L'option la plus sûre,
- * prise à moins de 3 000 € de la meilleure, compte comme bonne : choisir la
- * sécurité est une préférence, pas une erreur. Et un réflexe que le bilan de
+ * prise à moins du prix de la sécurité (3 000 €, ou 5 % de ce que le hasard
+ * fait varier la meilleure option si c'est plus), compte comme bonne : choisir
+ * la sécurité est une préférence, pas une erreur. Et un réflexe que le bilan de
  * l'épisode juge bon n'est pas compté comme réflexe pris : sur le meilleur
- * chemin, un test interdit ce cas ; ailleurs, c'est au bilan qu'on se fie.
+ * chemin, un test interdit ce cas ; ailleurs, c'est au bilan qu'on se fie,
+ * pourvu que ce réflexe soit le seul de la partie. Des réflexes pris ensemble se
+ * justifient les uns les autres : dans la situation que l'un a créée, l'autre
+ * devient la réponse la plus raisonnable, et c'est cet enchaînement que
+ * l'observation relève.
  *
  * Le résultat obtenu n'entre dans aucune observation.
  */
@@ -170,14 +175,16 @@ export function observer(ep: Episode, p: PartieJouee): PartieObservee {
 
   // Éviter le réflexe, décision par décision.
   const { reflexes } = tracesDe(ep);
-  for (const d of new Set(reflexes.map(([dd]) => dd))) {
-    const pris = reflexes.some(([dd, o]) => dd === d && p.chemin[d] === o);
-    if (pris && mesures.decisions[d]!.bonne) continue;
+  const offerts = [...new Set(reflexes.map(([dd]) => dd))];
+  const pris = (d: number) => reflexes.some(([dd, o]) => dd === d && p.chemin[d] === o);
+  const isole = offerts.filter(pris).length === 1;
+  for (const d of offerts) {
+    if (pris(d) && mesures.decisions[d]!.bonne && isole) continue;
     obs.push({
       ...base,
       competence: "R4",
       source: "reflexe",
-      valeur: pris ? 0 : 1,
+      valeur: pris(d) ? 0 : 1,
       poids: POIDS.reflexe,
       decision: d,
       choix: {

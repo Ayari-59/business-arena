@@ -43,6 +43,8 @@ export interface Rejeu {
   attendu: number;
   /** Le résultat dans les 10 % de tirages les moins favorables. */
   p10: number;
+  /** Le résultat dans les 10 % de tirages les plus favorables. */
+  p90: number;
 }
 
 /** Rejoue chaque option d'une décision sous les trente mêmes tirages, les autres choix inchangés. */
@@ -56,6 +58,11 @@ export function rejouerAvec(
     const autre = [...chemin];
     autre[decision] = option;
     const valeurs = GRAINES_DU_BILAN.map((g) => objectif(autre, g));
-    return { option, attendu: moyenne(valeurs), p10: quantile(valeurs, 0.1) };
+    return {
+      option,
+      attendu: moyenne(valeurs),
+      p10: quantile(valeurs, 0.1),
+      p90: quantile(valeurs, 0.9),
+    };
   });
 }

@@ -17,8 +17,15 @@
  * simulation, les fenêtres et les références que chacun déclare. Tout est
  * pur : le même état de partie donne le même bilan.
  */
-import { GRAINES_DU_BILAN, moyenne, rejouerAvec, type Rejeu } from "@/engine/episodes/commun";
+import {
+  GRAINES_DU_BILAN,
+  moyenne,
+  quantile,
+  rejouerAvec,
+  type Rejeu,
+} from "@/engine/episodes/commun";
 import type { Constat, Episode, Etape, PartieJouee, Resultat } from "@/config/episodes/types";
+import { SEUIL_QUALITE, egalite, prixDeLaSecurite } from "@/pedagogy/episodes/mesures";
 
 export type Cas = "bonne-fav" | "bonne-defav" | "faible-fav" | "faible-defav";
 
@@ -43,21 +50,75 @@ export interface DecisionAnalysee {
   cas: Cas;
 }
 
+/**
+ * L'ENCHAÎNEMENT : quand les décisions, jugées une à une, semblent bonnes alors
+ * que la partie finit loin de la méthode.
+ *
+ * Chaque décision est jugée dans la situation que les précédentes ont créée.
+ * Après un premier réflexe, le suivant devient souvent la réponse la plus
+ * raisonnable : lancer partout appelle des artisans partout, et l'exclusivité
+ * du fabricant. Le détail décision par décision juge alors bonnes des décisions
+ * qui n'en sont pas, ou n'explique qu'une petite part de l'écart à la méthode ;
+ * le reste tient à l'enchaînement. On le montre
+ * en reprenant la méthode à partir de chaque décision où la partie s'en écarte.
+ */
+export interface Enchainement {
+  methode: string;
+  /** Ce que la méthode fait de plus que les choix du joueur, en moyenne sur trente tirages. */
+  ecart: number;
+  /** La part que le détail décision par décision explique : la somme des écarts à la meilleure option. */
+  explique: number;
+  /** Ce que reprendre la méthode à partir de cette décision aurait rapporté de plus, en moyenne. */
+  reprises: { d: number; gain: number }[];
+}
+
 export interface Analyse<R extends Resultat = Resultat> {
   trimestre: R;
   /** Le résultat moyen des choix du joueur sur les trente tirages. */
   attendu: number;
   decisions: DecisionAnalysee[];
   references: { nom: string; valeur: number }[];
+  /**
+   * Présent quand la partie finit loin de la méthode alors que le détail des décisions
+   * en explique moins de la moitié, ou juge bonnes la moitié des décisions qui s'en écartent.
+   */
+  enchainement: Enchainement | null;
+}
+
+/** L'enchaînement d'une partie, ou `null` si le détail des décisions suffit à l'expliquer. */
+export function enchainement(
+  ep: Pick<Episode, "references" | "simuler">,
+  p: Pick<PartieJouee, "chemin" | "jours">,
+  attendu: number,
+  decisions: readonly Pick<DecisionAnalysee, "d" | "bonne" | "meilleur" | "pris">[],
+): Enchainement | null {
+  const methode = ep.references[0]!;
+  const enMoyenne = (c: readonly number[]) =>
+    moyenne(GRAINES_DU_BILAN.map((g) => ep.simuler(c, g, p.jours).objectif));
+  const tirages = GRAINES_DU_BILAN.map((g) => ep.simuler(methode.chemin, g, p.jours).objectif);
+  const ecart = moyenne(tirages) - attendu;
+  const seuil = prixDeLaSecurite(quantile(tirages, 0.1), quantile(tirages, 0.9));
+  const explique = decisions.reduce((t, x) => t + x.meilleur.attendu - x.pris.attendu, 0);
+  const ecartees = decisions.filter((x) => p.chemin[x.d] !== methode.chemin[x.d]);
+  const jugeesBonnes = ecartees.filter((x) => x.bonne).length;
+  if (ecart < seuil || (explique >= ecart / 2 && jugeesBonnes * 2 < ecartees.length)) return null;
+  const reprises = p.chemin.flatMap((choix, d) =>
+    choix === methode.chemin[d]
+      ? []
+      : [{ d, gain: enMoyenne([...p.chemin.slice(0, d), ...methode.chemin.slice(d)]) - attendu }],
+  );
+  return { methode: methode.nom, ecart, explique, reprises };
 }
 
 /**
  * Une décision est BONNE quand elle capte au moins 70 % de l'écart entre la
- * pire et la meilleure option, ou qu'elle est à moins de 1 000 € de la
- * meilleure : deux options presque à égalité sont toutes deux de bons choix.
- * L'option la PLUS SÛRE l'est aussi tant qu'elle reste à moins de 3 000 € de
- * la meilleure : payer un peu d'espérance pour se protéger d'un mauvais
- * tirage est une décision défendable, pas une erreur.
+ * pire et la meilleure option, ou qu'elle est presque à égalité avec la
+ * meilleure : deux options proches sont toutes deux de bons choix. L'option la
+ * PLUS SÛRE l'est aussi tant qu'elle coûte peu en espérance : payer un peu pour
+ * se protéger d'un mauvais tirage est une décision défendable, pas une erreur,
+ * pourvu qu'elle protège vraiment : un pire cas meilleur que celui de la meilleure.
+ * « Proche » et « peu » se mesurent à l'enjeu de la décision, ce que le hasard
+ * fait varier la meilleure option (voir `egalite` et `prixDeLaSecurite`).
  */
 export function analyser<R extends Resultat>(ep: Episode<R>, p: PartieJouee): Analyse<R> {
   const objectif = (c: readonly number[], g: number) => ep.simuler(c, g, p.jours).objectif;
@@ -72,9 +133,11 @@ export function analyser<R extends Resultat>(ep: Episode<R>, p: PartieJouee): An
     const efficacite = (pris.attendu - pire.attendu) / Math.max(1, meilleur.attendu - pire.attendu);
     const plusSur = options.reduce((x, o) => (o.p10 > x.p10 ? o : x));
     const bonne =
-      efficacite >= 0.7 ||
-      meilleur.attendu - pris.attendu < 1000 ||
-      (pris === plusSur && meilleur.attendu - pris.attendu < 3000);
+      efficacite >= SEUIL_QUALITE ||
+      meilleur.attendu - pris.attendu < egalite(meilleur.p10, meilleur.p90) ||
+      (pris === plusSur &&
+        pris.p10 > meilleur.p10 + 1e-9 &&
+        meilleur.attendu - pris.attendu < prixDeLaSecurite(meilleur.p10, meilleur.p90));
     const vecu = ep.bilan.fenetre(trimestre, d);
     const enMoyenne = moyenne(
       GRAINES_DU_BILAN.map((g) => ep.bilan.fenetre(ep.simuler(p.chemin, g, p.jours), d)),
@@ -97,7 +160,13 @@ export function analyser<R extends Resultat>(ep: Episode<R>, p: PartieJouee): An
     nom: r.nom,
     valeur: objectif(r.chemin, p.graine),
   }));
-  return { trimestre, attendu, decisions, references };
+  return {
+    trimestre,
+    attendu,
+    decisions,
+    references,
+    enchainement: enchainement(ep, p, attendu, decisions),
+  };
 }
 
 /* ---------------------------------------------------------------------------

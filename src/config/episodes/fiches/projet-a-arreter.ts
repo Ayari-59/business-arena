@@ -5,7 +5,7 @@ import type { FicheEnseignant } from "./types";
  *
  * Les chiffres du corrigé, des réflexes et du débrief se recalculent depuis le
  * modèle de l'épisode (src/engine/episodes/projet-a-arreter.ts) ; ceux du
- * hasard de la classe sont ceux de la graine 12, et les moyennes portent sur
+ * hasard de la classe sont ceux de la graine 18, et les moyennes portent sur
  * les trente tirages du bilan, les autres décisions étant celles de la bonne
  * méthode.
  */
@@ -33,7 +33,7 @@ export const FICHE: FicheEnseignant = {
       minutes: 10,
       titre: "Lancement",
       detail:
-        "Vous envoyez le lien /entreprises/episode/projet-a-arreter?hasard=12 : toute la classe joue le même trimestre, sous le même hasard. Les élèves jouent seuls ou en binôme, au niveau Standard. Vous posez une seule consigne : chaque décision s'écrit avec le chiffre qui la justifie, et avec ce qui ferait changer d'avis.",
+        "Vous envoyez le lien /entreprises/episode/projet-a-arreter?hasard=18 : toute la classe joue le même trimestre, sous le même hasard. Les élèves jouent seuls ou en binôme, au niveau Standard. Vous posez une seule consigne : chaque décision s'écrit avec le chiffre qui la justifie, et avec ce qui ferait changer d'avis.",
     },
     {
       minutes: 40,
@@ -57,7 +57,7 @@ export const FICHE: FicheEnseignant = {
       minutes: 15,
       titre: "Le bilan des 30 tirages",
       detail:
-        "Vous prévenez la classe que le résultat de cet épisode est très bruité : sous le hasard 12, le marché des particuliers recule et Brémond n'offre que 30 k€, si bien que la bonne méthode détruit 148 k€, alors qu'elle en crée 20 k€ en moyenne sur les 30 tirages. Le réflexe de sauver le projet détruit 920 k€ sous ce hasard et 462 k€ en moyenne, l'attentisme 598 et 265 k€. Vous projetez le bilan d'un élève et faites distinguer ce que la classe a obtenu de ce que ses décisions valaient.",
+        "Vous prévenez la classe que le résultat de cet épisode est très bruité : sous le hasard 18, le marché des particuliers plafonne et Brémond n'offre que 30 k€, si bien que la bonne méthode détruit 8,6 k€, au milieu de ses 30 tirages, alors qu'elle en crée 20 k€ en moyenne. Le réflexe de sauver le projet détruit 513 k€ sous ce hasard et 462 k€ en moyenne, l'attentisme 297 et 265 k€. Vous projetez le bilan d'un élève et faites distinguer ce que la classe a obtenu de ce que ses décisions valaient.",
     },
     {
       minutes: 15,
@@ -147,9 +147,9 @@ export const FICHE: FicheEnseignant = {
     "Le compte analytique dit −391 k€, le calcul de la semaine 1 −85,4 k€ : que contiennent les 306 k€ d'écart, et que deviendrait chacune de ces lignes si l'on fermait les trois showrooms ? Lequel des deux chiffres pousse à sauver le projet, lequel à le liquider, et pourquoi aucun des deux ne dit quoi faire d'un site ?",
     "En semaine 2, l'analyse client par client coûtait 18 k€, l'étude de marché 45 k€, l'enquête de satisfaction 8 k€. Qu'est-ce que chacune pouvait vous apprendre, et à temps pour quelle décision ? Montrez sur les chiffres des sources comment l'analyse a changé la réponse pour Saint-Priest et pour Écully, alors que l'étude, plus chère, arrivait après le comité.",
     "En semaine 6, à Saint-Priest, qui a attendu le salon, qui a renforcé, qui a changé de cap, qui a fermé ? Quel signal permettait de réviser le pari, et pourquoi le salon n'en était pas un ? Fermer et transformer arrêtent tous deux le format particuliers : pourquoi la fermeture vaut-elle 88 k€ de moins en moyenne ?",
-    "Au comité de la semaine 10, sous le hasard 12, le président valide le recentrage présenté sur les critères signés en semaine 2 ; il gèle le même recentrage présenté comme la correction des erreurs du plan, et il l'aurait gelé aussi chez qui avait proposé l'arrêt des trois showrooms en semaine 1. Que dit cette différence sur l'escalade d'engagement d'un dirigeant, et sur la façon d'écrire des critères d'arrêt ?",
-    "En semaine 11, transformer Écully tout de suite bat l'essai sous critère sur 22 tirages sur 30, et sous le hasard 12 il fait 22 k€ de mieux ; pourtant il rapporte 12 k€ de moins en moyenne. Quand le marché plafonne ou recule, il gagne une vingtaine de milliers d'euros en avançant le changement d'un semestre ; quand il décolle, il en perd une centaine. Ceux qui l'ont choisi ont-ils mieux décidé, ou ont-ils eu de la chance ? Que détruit-on en arrêtant trop tôt ?",
-    "Sous le hasard 12, la bonne méthode a détruit 148 k€ ; sur les 30 tirages, elle crée 20 k€ en moyenne et reste négative 18 fois. Le réflexe de sauver le projet détruit 920 k€ sous ce hasard, 462 k€ en moyenne. Un comité qui jugerait sa directrice sur ce trimestre la féliciterait-il ? Sur quoi juger une décision stratégique dont le résultat se lit en années ?",
+    "Au comité de la semaine 10, sous le hasard 18, le président valide le recentrage quelle que soit sa présentation : sur les critères signés en semaine 2, comme la correction des erreurs du plan, et même chez qui avait proposé l'arrêt des trois showrooms en semaine 1. Présenté comme une correction, il ne l'accepte pourtant que quatre fois sur dix, contre plus de neuf sur dix sur des critères qu'il a signés : sur les 30 tirages, cette présentation fait 53 k€ de moins en moyenne. Que dit cette différence sur l'escalade d'engagement d'un dirigeant, et sur la façon d'écrire des critères d'arrêt ?",
+    "En semaine 11, transformer Écully tout de suite bat l'essai sous critère sur 22 tirages sur 30, et sous le hasard 18 il fait 20 k€ de mieux ; pourtant il rapporte 12 k€ de moins en moyenne. Quand le marché plafonne ou recule, il gagne une vingtaine de milliers d'euros en avançant le changement d'un semestre ; quand il décolle, il en perd une centaine. Ceux qui l'ont choisi ont-ils mieux décidé, ou ont-ils eu de la chance ? Que détruit-on en arrêtant trop tôt ?",
+    "Sous le hasard 18, la bonne méthode a détruit 8,6 k€, sa 16e place sur les 30 tirages ; elle crée 20 k€ en moyenne et reste négative 18 fois. Le réflexe de sauver le projet détruit 513 k€ sous ce hasard, 462 k€ en moyenne. Un comité qui jugerait sa directrice sur ce trimestre la féliciterait-il ? Sur quoi juger une décision stratégique dont le résultat se lit en années ?",
   ],
   prolongement: {
     enonce:
