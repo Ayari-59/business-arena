@@ -152,7 +152,7 @@ export const FORMULES: readonly (Formule | null)[] = [
 /* ---------------------------------------------------------------------------
  * LES FINANCEMENTS.
  * ------------------------------------------------------------------------- */
-/** La trésorerie nette au 1er janvier : le compte est à découvert de 40 k€. */
+/** La trésorerie nette au 1er janvier : le compte est à découvert de 100 k€. */
 export const SOLDE_DEPART = -100000;
 export const AUTORISATION = 300000;
 export const TAUX_DECOUVERT = 0.07;

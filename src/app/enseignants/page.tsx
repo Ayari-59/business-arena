@@ -364,6 +364,17 @@ export default async function EnseignantsPage() {
               Voir les {ATELIERS.length} ateliers →
             </Link>
           </p>
+          <p className="mx-auto mt-6 max-w-2xl text-center text-sm text-slate-400">
+            Une séance de deux heures plutôt qu&apos;un atelier ? Les{" "}
+            <Link
+              href="/enseignants/episodes"
+              className="font-semibold text-amber-300 underline-offset-2 hover:underline"
+            >
+              épisodes en classe
+            </Link>{" "}
+            font jouer un coût marginal, un budget flexible ou une VAN comme une décision, avec leur
+            fiche enseignant.
+          </p>
         </Bande>
 
         {/*
