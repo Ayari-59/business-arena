@@ -20,6 +20,7 @@ const EXPECTED_TABLES = [
   "learning_progress", "player_skills", "completed_learning_steps", "learning_path_progression",
   "scores", "game_rankings",
   "competitions", "competition_stages", "competition_entries", "competition_members",
+  "episode_parties",
 ];
 
 describe("schéma de base de données", () => {

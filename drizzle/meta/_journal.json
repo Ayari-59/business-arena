@@ -225,6 +225,13 @@
       "when": 1789886157440,
       "tag": "0030_embleme_dequipe",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1789972557440,
+      "tag": "0031_parties_d_episode",
+      "breakpoints": true
     }
   ]
 }

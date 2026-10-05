@@ -25,6 +25,7 @@ PARTIE          games, teams, players, game_recoveries, rounds, decisions, aid_r
 RÉSULTATS       round_results, kpis, event_occurrences
 PÉDAGOGIE       situation_instances, model_choices, hint_usages,
                 learning_progress, player_skills
+ÉPISODES        episode_parties
 SCORING         scores, game_rankings
 COMPÉTITION     competitions, competition_stages, competition_entries, competition_members
 ```
@@ -108,6 +109,7 @@ résolution de chaque tour (transaction unique).
 | `hint_usages` | id, situation_instance_id FK, hint_id FK, level int, user_id FK, used_at — **unique (situation_instance_id, level)** (séquentialité garantie par le service + check level croissant) |
 | `learning_progress` | user_id FK, concept_id FK, mastery numeric 0..100, evidence_count int, last_event_at — PK (user_id, concept_id) |
 | `player_skills` | user_id FK, axis enum(`finance`,`marketing`,`production`,`analysis`,`strategy`,`decision`,`risk`), value numeric 0..100 — PK (user_id, axis) |
+| `episode_parties` | id, user_id FK (cascade), cle uuid, episode_code text, version_modele int, niveau text, graine int, chemin jsonb, consultes jsonb, jours double, diagnostic text, reevaluation jsonb, prevision double, confiance int, premiere bool, created_at — **unique (user_id, cle)**. Les faits bruts d'une partie d'épisode manager, sans score ni texte libre : la qualité de décision et le profil se recalculent à partir d'eux (`src/pedagogy/profil/`) |
 
 ## 8. Scoring et compétition
 
