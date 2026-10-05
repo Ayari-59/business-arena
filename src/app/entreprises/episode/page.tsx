@@ -41,8 +41,16 @@ export default function EpisodesPage() {
             {EPISODES.length} épisodes, chacun sur un domaine du métier. Six décisions, une
             vingtaine de minutes, trois niveaux de difficulté. À la fin, le bilan rejoue chacune de
             vos décisions sous trente tirages du même hasard, pour séparer ce qui relevait du choix
-            de ce qui relevait de la chance. Démonstration : données fictives, rien n&apos;est
-            enregistré.
+            de ce qui relevait de la chance. Démonstration : données fictives ; vos choix sont
+            gardés sur cet appareil pour construire votre profil décisionnel.
+          </p>
+          <p className="mt-4">
+            <Link
+              href="/entreprises/episode/profil"
+              className="text-sm font-semibold text-amber-300 underline-offset-2 hover:underline"
+            >
+              Mon profil décisionnel
+            </Link>
           </p>
           <nav aria-label="Familles d'épisodes" className="mt-8">
             <ul className="flex flex-wrap gap-2">
