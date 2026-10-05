@@ -5,6 +5,7 @@ import { GRAINES_DU_BILAN, moyenne } from "@/engine/episodes/commun";
 import { CAS, analyser, type Cas } from "@/pedagogy/episodes/bilan";
 import type { Episode, PartieJouee } from "@/config/episodes/types";
 import { bouton } from "@/components/bouton";
+import { niveauParCode } from "@/config/episodes/niveaux";
 import { CourbeDesSemaines, reperesDesDecisions } from "./courbe-des-semaines";
 
 /**
@@ -67,6 +68,8 @@ function Comparaison({
         {memeHasard
           ? "Même hasard pour les deux parties : l'écart de résultat vient entièrement de vos décisions."
           : "Les deux parties n'ont pas eu le même hasard : comparez plutôt la moyenne sur trente tirages, qui ne dépend que de vos décisions."}
+        {(avant.niveau ?? "standard") !== (apres.niveau ?? "standard") &&
+          ` Niveau ${niveauParCode(avant.niveau).nom} pour la précédente, ${niveauParCode(apres.niveau).nom} pour celle-ci : le niveau change ce que vous saviez, pas le jugement des décisions.`}
       </p>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[560px] text-sm">
@@ -166,7 +169,8 @@ export function BilanDeLEpisode({
     <div className="grid gap-5">
       <header>
         <p className="text-sm font-semibold uppercase tracking-[0.12em] text-amber-300">
-          Bilan de l&apos;épisode · hasard n° {partie.graine}
+          Bilan de l&apos;épisode · niveau {niveauParCode(partie.niveau).nom} · hasard n°{" "}
+          {partie.graine}
         </p>
         <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight text-slate-50 tabular-nums sm:text-4xl">
           {ep.bilan.titre(t)}

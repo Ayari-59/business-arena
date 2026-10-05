@@ -39,9 +39,10 @@ export default function EpisodesPage() {
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-slate-400">
             {EPISODES.length} épisodes, chacun sur un domaine du métier. Six décisions, une
-            vingtaine de minutes. À la fin, le bilan rejoue chacune de vos décisions sous trente
-            tirages du même hasard, pour séparer ce qui relevait du choix de ce qui relevait de la
-            chance. Démonstration : données fictives, rien n&apos;est enregistré.
+            vingtaine de minutes, trois niveaux de difficulté. À la fin, le bilan rejoue chacune de
+            vos décisions sous trente tirages du même hasard, pour séparer ce qui relevait du choix
+            de ce qui relevait de la chance. Démonstration : données fictives, rien n&apos;est
+            enregistré.
           </p>
           <nav aria-label="Familles d'épisodes" className="mt-8">
             <ul className="flex flex-wrap gap-2">

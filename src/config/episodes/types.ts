@@ -16,6 +16,7 @@
  * MÉTHODES : chaque épisode a son propre type de résultat, et c'est ce qui
  * permet de les ranger tous dans un même registre.
  */
+import type { CodeNiveau } from "./niveaux";
 
 /** Ce que les messages et les sources d'une étape lisent de la situation au moment où ils arrivent. */
 export type Contexte = Readonly<Record<string, string | number | boolean>>;
@@ -84,6 +85,8 @@ export interface PartieJouee {
   /** La prévision chiffrée de la première décision. */
   prevision: number;
   confiance: number;
+  /** Le niveau joué ; Standard s'il n'est pas dit. Il ne change pas le jugement du bilan. */
+  niveau?: CodeNiveau;
 }
 
 export interface Indicateur {

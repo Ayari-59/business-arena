@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import type {
   Contexte,
   Episode,
@@ -18,6 +18,18 @@ import { TableauDeBord } from "./tableau-de-bord";
 import { BilanDeLEpisode } from "./bilan-de-l-episode";
 import { CourbeDesSemaines, reperesDesDecisions } from "./courbe-des-semaines";
 import { nombre } from "@/config/episodes/format";
+import {
+  NIVEAUX,
+  NIVEAU_PAR_DEFAUT,
+  REPERES,
+  budgetDEnquete,
+  niveauParCode,
+  sourcesProposees,
+  verificationPossible,
+  type CodeNiveau,
+  type TempsDeDecision,
+} from "@/config/episodes/niveaux";
+import { effetDuChoix } from "@/pedagogy/episodes/retour-immediat";
 
 /**
  * UN ÉPISODE MANAGER, JOUÉ DE BOUT EN BOUT.
@@ -30,7 +42,8 @@ import { nombre } from "@/config/episodes/format";
  *
  * Le hasard se choisit dans l'adresse (`?hasard=12`) : deux personnes qui
  * jouent le même trimestre peuvent comparer leurs décisions, et les tests
- * jouent un trimestre connu.
+ * jouent un trimestre connu. Le niveau aussi (`?niveau=expert`) : il change ce
+ * que le manager sait et voit, jamais le trimestre ni le jugement du bilan.
  *
  * Le composant ne connaît aucun épisode : il lit celui qu'on lui nomme dans
  * le registre, et tout ce qui est propre au métier vient de sa définition.
@@ -41,6 +54,8 @@ type Phase = "signal" | "enquete" | "diagnostic" | "reevaluation" | "decision" |
 
 interface Etat {
   graine: number | null;
+  /** Le niveau choisi ; `null` tant que la personne n'a rien choisi. */
+  niveau: CodeNiveau | null;
   ecran: Ecran;
   etape: number;
   phase: Phase;
@@ -59,8 +74,13 @@ interface Etat {
   avant: Lecture | null;
 }
 
-const nouvelEtat = (ep: Episode, graine: number | null = null): Etat => ({
+const nouvelEtat = (
+  ep: Episode,
+  graine: number | null = null,
+  niveau: CodeNiveau | null = null,
+): Etat => ({
   graine,
+  niveau,
   ecran: "intro",
   etape: 0,
   phase: "signal",
@@ -82,6 +102,15 @@ function tirerUnHasard(): number {
   if (Number.isInteger(demande) && demande > 0) return demande;
   return 1 + Math.floor(Math.random() * 9000);
 }
+
+/** Le niveau demandé dans l'adresse, s'il existe. */
+function niveauDeLAdresse(): CodeNiveau | null {
+  const demande = new URLSearchParams(window.location.search).get("niveau");
+  return NIVEAUX.some((n) => n.code === demande) ? (demande as CodeNiveau) : null;
+}
+
+/** L'adresse ne change pas pendant la partie : rien à écouter. */
+const sansAbonnement = () => () => {};
 
 const phasesDe = (etape: number): Phase[] =>
   etape === 0
@@ -131,17 +160,30 @@ function Boite({ messages }: { messages: readonly Message[] }) {
   );
 }
 
+/** Un repère de méthode, au niveau Découverte. */
+function Repere({ temps }: { temps: TempsDeDecision }) {
+  return (
+    <p className="max-w-2xl rounded-lg border border-sky-400/25 bg-sky-400/5 px-4 py-3 text-sm leading-relaxed text-slate-200">
+      <strong className="font-semibold text-sky-200">Repère · </strong>
+      {REPERES[temps]}
+    </p>
+  );
+}
+
 function CarteSource({
   source,
   ctx,
   vue,
   impossible,
+  pourquoi = "plus le temps",
   onConsulter,
 }: {
   source: Source;
   ctx: Contexte;
   vue: boolean;
   impossible: boolean;
+  /** Ce qu'on affiche quand la vérification n'est plus possible. */
+  pourquoi?: string;
   onConsulter: () => void;
 }) {
   return (
@@ -164,7 +206,7 @@ function CarteSource({
           {vue
             ? "consulté"
             : impossible
-              ? "plus le temps"
+              ? pourquoi
               : `${nombre(source.cout)} jour${source.cout > 1 ? "s" : ""}`}
         </span>
       </button>
@@ -243,6 +285,11 @@ function Suite({
 export function EpisodeJoue({ code }: { code: string }) {
   const ep = episodeParCode(code)!;
   const [s, setS] = useState<Etat>(() => nouvelEtat(ep));
+  // Le niveau de l'adresse ne se lit que dans le navigateur ; au rendu serveur,
+  // c'est le niveau par défaut.
+  const demande = useSyncExternalStore(sansAbonnement, niveauDeLAdresse, () => null);
+  const choisi: CodeNiveau = s.niveau ?? demande ?? NIVEAU_PAR_DEFAUT;
+  const niveau = niveauParCode(choisi);
   // La partie terminée juste avant : le bilan suivant la met en regard.
   const [precedente, setPrecedente] = useState<PartieJouee | null>(null);
   const scene = useRef<HTMLDivElement>(null);
@@ -265,7 +312,10 @@ export function EpisodeJoue({ code }: { code: string }) {
   );
 
   const commencer = (g: number | null) =>
-    setS({ ...nouvelEtat(ep, g ?? tirerUnHasard()), ecran: "jeu" });
+    setS((e) => ({
+      ...nouvelEtat(ep, g ?? tirerUnHasard(), e.niveau ?? choisi),
+      ecran: "jeu",
+    }));
   const suivante = () =>
     maj((e) => {
       const ps = phasesDe(e.etape);
@@ -275,6 +325,9 @@ export function EpisodeJoue({ code }: { code: string }) {
   const consulter = (src: Source) =>
     maj((e) => {
       if (e.consultes[e.etape]!.includes(src.id)) return {};
+      if (!verificationPossible(niveauParCode(e.niveau), e.etape, e.consultes[e.etape]!.length)) {
+        return {};
+      }
       const consultes = e.consultes.map((c, i) => (i === e.etape ? [...c, src.id] : c));
       return { consultes, jours: e.etape === 0 ? e.jours + src.cout : e.jours };
     });
@@ -305,8 +358,9 @@ export function EpisodeJoue({ code }: { code: string }) {
       reevaluation: { choix: s.reevaluation.choix, principal: s.reevaluation.principal },
       prevision: Number(s.prevision.valeur.replace(",", ".")),
       confiance: s.prevision.confiance,
+      niveau: choisi,
     };
-  }, [ep, s, graine]);
+  }, [ep, s, graine, choisi]);
 
   const etape = ep.etapes[s.etape]!;
   const moment =
@@ -328,6 +382,11 @@ export function EpisodeJoue({ code }: { code: string }) {
         <span className="rounded-full border border-white/15 px-2.5 py-0.5 text-xs text-slate-400">
           Démonstration · données fictives
         </span>
+        {s.ecran !== "intro" && (
+          <span className="rounded-full border border-amber-400/30 px-2.5 py-0.5 text-xs text-amber-200">
+            Niveau {niveau.nom}
+          </span>
+        )}
         <div className="ml-auto flex items-center gap-4">
           <span className="text-sm tabular-nums text-slate-400">{moment}</span>
           <ol className="flex gap-1.5" aria-label={`Avancement : ${ep.etapes.length} décisions`}>
@@ -348,7 +407,7 @@ export function EpisodeJoue({ code }: { code: string }) {
           {s.ecran !== "intro" && (
             <button
               type="button"
-              onClick={() => setS(nouvelEtat(ep))}
+              onClick={() => setS((e) => nouvelEtat(ep, null, e.niveau))}
               className="min-h-11 text-sm text-slate-400 underline underline-offset-4 hover:text-slate-200"
             >
               Recommencer
@@ -372,7 +431,14 @@ export function EpisodeJoue({ code }: { code: string }) {
         </aside>
 
         <div ref={scene} className="grid min-w-0 scroll-mt-24 gap-5" aria-live="polite">
-          {s.ecran === "intro" && <Intro ep={ep} onCommencer={() => commencer(null)} />}
+          {s.ecran === "intro" && (
+            <Intro
+              ep={ep}
+              niveau={choisi}
+              onNiveau={(n) => maj(() => ({ niveau: n }))}
+              onCommencer={() => commencer(null)}
+            />
+          )}
 
           {s.ecran === "jeu" && (
             <>
@@ -450,7 +516,17 @@ function Fil({ etape, phase }: { etape: number; phase: Phase }) {
   );
 }
 
-function Intro({ ep, onCommencer }: { ep: Episode; onCommencer: () => void }) {
+function Intro({
+  ep,
+  niveau,
+  onNiveau,
+  onCommencer,
+}: {
+  ep: Episode;
+  niveau: CodeNiveau;
+  onNiveau: (n: CodeNiveau) => void;
+  onCommencer: () => void;
+}) {
   return (
     <section className="carte grid gap-5 p-5 sm:p-7">
       <div>
@@ -480,6 +556,19 @@ function Intro({ ep, onCommencer }: { ep: Episode; onCommencer: () => void }) {
         bilan rejoue chacune de vos décisions sous trente tirages du même hasard. Démonstration :
         rien de ce que vous saisissez n&apos;est enregistré.
       </p>
+      <fieldset className="grid gap-2">
+        <legend className="mb-1 font-semibold text-slate-50">Niveau</legend>
+        <p className="mb-2 max-w-2xl text-sm leading-relaxed text-slate-400">
+          Le niveau change ce que vous savez et voyez, pas le trimestre : le bilan juge vos
+          décisions de la même façon à tous les niveaux.
+        </p>
+        <Choix
+          nom="niveau"
+          valeur={niveau}
+          options={NIVEAUX.map((n) => ({ id: n.code, t: n.nom, d: n.resume }))}
+          onChoisir={(id) => onNiveau(id as CodeNiveau)}
+        />
+      </fieldset>
       <Suite onClick={onCommencer}>Commencer l&apos;épisode</Suite>
     </section>
   );
@@ -511,11 +600,17 @@ function Scene({
   const graine = s.graine ?? 1;
   const i = s.etape;
   const contexte: Contexte = ep.contexte(tableau, s.decisions);
+  const niveau = niveauParCode(s.niveau);
+  const sources = sourcesProposees(niveau, etape);
+  const vues = s.consultes[i]!;
+  const encore = verificationPossible(niveau, i, vues.length);
+  const repere = (temps: TempsDeDecision) => niveau.reperes && <Repere temps={temps} />;
 
   if (s.phase === "signal") {
     const ensuite = phasesDe(i)[1];
     return (
       <>
+        {repere("signal")}
         <Boite messages={etape.messages(contexte)} />
         <Suite onClick={suivante}>
           {ensuite === "decision" ? "Décider" : ensuite === "enquete" ? "Enquêter" : "Continuer"}
@@ -525,11 +620,13 @@ function Scene({
   }
 
   if (s.phase === "enquete") {
-    const compte = i === 0 && etape.budget != null;
-    const reste = compte ? etape.budget! - s.jours : 0;
+    const budget = budgetDEnquete(niveau, ep, etape);
+    const compte = i === 0 && budget != null;
+    const reste = compte ? budget! - s.jours : 0;
     const perte = ep.enquete.perte(s.jours);
     return (
       <>
+        {repere("enquete")}
         {compte ? (
           <div className="grid gap-2.5">
             <p className="max-w-2xl text-base leading-relaxed text-slate-200">
@@ -538,8 +635,12 @@ function Scene({
               </strong>{" "}
               {ep.enquete.consigne}
             </p>
-            <div className="grid max-w-md grid-cols-10 gap-1" aria-hidden="true">
-              {Array.from({ length: 10 }, (_, k) => (
+            <div
+              className="grid max-w-md gap-1"
+              style={{ gridTemplateColumns: `repeat(${Math.round(budget! * 2)}, minmax(0, 1fr))` }}
+              aria-hidden="true"
+            >
+              {Array.from({ length: Math.round(budget! * 2) }, (_, k) => (
                 <span
                   key={k}
                   className={`h-2 rounded-sm border ${
@@ -556,18 +657,21 @@ function Scene({
         ) : (
           <p className="text-base text-slate-200">
             Que vérifiez-vous avant de décider ? Rien n&apos;est obligatoire.
+            {niveau.verificationsParDecision === 1 &&
+              " Vous n'avez le temps que d'une vérification."}
           </p>
         )}
         <ul className="grid gap-2">
-          {etape.sources.map((src) => {
-            const vue = s.consultes[i]!.includes(src.id);
+          {sources.map((src) => {
+            const vue = vues.includes(src.id);
             return (
               <CarteSource
                 key={src.id}
                 source={src}
                 ctx={contexte}
                 vue={vue}
-                impossible={compte && !vue && src.cout > reste + 1e-9}
+                impossible={!vue && ((compte && src.cout > reste + 1e-9) || !encore)}
+                pourquoi={compte ? "plus le temps" : "une seule vérification"}
                 onConsulter={() => consulter(src)}
               />
             );
@@ -583,6 +687,7 @@ function Scene({
     const d = s.diagnostic;
     return (
       <>
+        {repere("diagnostic")}
         <fieldset className="grid gap-2">
           <legend className="mb-2 font-semibold text-slate-50">
             Quel est le problème principal ?
@@ -632,6 +737,7 @@ function Scene({
     const r = s.reevaluation;
     return (
       <>
+        {repere("reevaluation")}
         <p className="max-w-2xl text-base leading-relaxed text-slate-200">
           En semaine 1, vous avez retenu comme problème principal :{" "}
           <strong className="text-slate-50">« {avant?.t} »</strong>. Avec ce que vous savez
@@ -679,24 +785,32 @@ function Scene({
   }
 
   if (s.phase === "decision") {
-    const avecSources = i >= 2 && etape.sources.length > 0;
+    const avecSources = i >= 2 && sources.length > 0;
     const previsionOk = !etape.prevision || previsionValide(ep, s.prevision.valeur);
     return (
       <>
+        {repere("decision")}
         {avecSources && (
           <>
-            <p className="text-base text-slate-200">Avant de décider, vous pouvez vérifier :</p>
+            <p className="text-base text-slate-200">
+              Avant de décider, vous pouvez vérifier
+              {niveau.verificationsParDecision === 1 ? " une chose :" : " :"}
+            </p>
             <ul className="grid gap-2">
-              {etape.sources.map((src) => (
-                <CarteSource
-                  key={src.id}
-                  source={src}
-                  ctx={contexte}
-                  vue={s.consultes[i]!.includes(src.id)}
-                  impossible={false}
-                  onConsulter={() => consulter(src)}
-                />
-              ))}
+              {sources.map((src) => {
+                const vue = vues.includes(src.id);
+                return (
+                  <CarteSource
+                    key={src.id}
+                    source={src}
+                    ctx={contexte}
+                    vue={vue}
+                    impossible={!vue && !encore}
+                    pourquoi="une seule vérification"
+                    onConsulter={() => consulter(src)}
+                  />
+                );
+              })}
             </ul>
           </>
         )}
@@ -792,10 +906,15 @@ function Scene({
   // et les imprévus, qui n'en découlent pas. Les seconds sont posés à part,
   // sous un titre qui le dit.
   const arrive = ep.evenements(chemin, graine, de, etape.jusqua);
+  // En Expert, les imprévus arrivent avec le reste : à chacun de faire la part
+  // de la chance et de ses choix.
   const reactions: Message[] = [
     ...(ep.reactions(i, choix, graine) ?? etape.reactions[choix] ?? []),
     ...arrive.lies,
+    ...(niveau.imprevusSignales ? [] : arrive.imprevus),
   ];
+  const effet = niveau.retourImmediat ? effetDuChoix(ep, s.decisions, i, graine, s.jours) : null;
+  const kE = ep.bilan.formatObjectif;
   const derniere = i === ep.etapes.length - 1;
   return (
     <>
@@ -805,6 +924,16 @@ function Scene({
         </strong>{" "}
         Vous avez choisi : {enMinuscule(etape.options[choix]!.t)}.
       </p>
+      {niveau.retourImmediat && (
+        <p className="max-w-2xl rounded-lg border border-sky-400/25 bg-sky-400/5 px-4 py-3 text-sm leading-relaxed text-slate-200">
+          <strong className="font-semibold text-sky-200">Retour immédiat · </strong>
+          {effet
+            ? `Sur ce trimestre-ci, ce choix ${effet.ecart >= 0 ? "rapporte" : "coûte"} ${kE(
+                Math.abs(effet.ecart),
+              )} par rapport à « ${enMinuscule(etape.options[effet.reference]!.t)} ». C'est un seul tirage du hasard : le bilan dira ce que ce choix vaut en moyenne.`
+            : "Vous avez choisi de ne rien changer : le trimestre suit son cours. Le bilan dira si c'était le bon choix."}
+        </p>
+      )}
       <dl className="grid grid-cols-3 gap-2 sm:gap-3">
         {ep.recap(t, de, etape.jusqua).map(([nom, valeur]) => (
           <div key={nom} className="carte min-w-0 px-3 py-2.5 sm:px-4 sm:py-3">
@@ -821,10 +950,10 @@ function Scene({
         jouees={etape.jusqua}
         surbrillance={[de, etape.jusqua]}
         reperes={reperesDesDecisions(ep, i + 1)}
-        imprevus={ep.imprevus(graine)}
+        imprevus={niveau.imprevusSignales ? ep.imprevus(graine) : []}
       />
       <Boite messages={reactions} />
-      {arrive.imprevus.length > 0 && (
+      {niveau.imprevusSignales && arrive.imprevus.length > 0 && (
         <section aria-labelledby="imprevus-titre" className="grid gap-2">
           <h2
             id="imprevus-titre"

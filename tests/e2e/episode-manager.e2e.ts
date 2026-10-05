@@ -233,3 +233,69 @@ describe("l'épisode « Le trimestre qui dérape »", () => {
     await contexte.close();
   }, 120_000);
 });
+
+describe("les niveaux de difficulté", () => {
+  it("en Expert : enquête courte, pas de conseil, une seule vérification, et le bilan le dit", async () => {
+    const page = await navigateur.newPage({ viewport: { width: 1280, height: 900 } });
+    await page.goto(`${BASE}/entreprises/episode/trimestre-qui-derape?hasard=11&niveau=expert`);
+    await expect.poll(() => page.getByLabel("Expert", { exact: false }).isChecked()).toBe(true);
+    await bouton(page, "Commencer l'épisode").click();
+    expect(await page.getByText("Niveau Expert", { exact: true }).count()).toBe(1);
+
+    await bouton(page, "Enquêter").click();
+    await expect.poll(() => page.getByText("Il vous reste 2,5 jours").count()).toBe(1);
+    expect(await bouton(page, /Demander conseil/).count()).toBe(0);
+    await bouton(page, /Détail par commercial/).click();
+    await bouton(page, /Appeler un client perdu/).click();
+    await bouton(page, "Poser mon diagnostic").click();
+    await principal(page, "Les clients de Karim ne sont plus suivis");
+    await bouton(page, "Décider").click();
+    await page.getByRole("spinbutton").fill("34");
+    await decider(page, "Réaffecter le portefeuille de Karim");
+
+    // Décision 2 : une vérification, pas deux.
+    await bouton(page, "Continuer").click();
+    await choisir(page, "Je le maintiens");
+    await bouton(page, "Continuer").click();
+    await bouton(page, /Coût du créneau/).click();
+    await expect.poll(() => bouton(page, /Stock disponible/).isDisabled()).toBe(true);
+    expect(await page.getByText("une seule vérification").count()).toBe(1);
+    await bouton(page, "Décider").click();
+    await decider(page, "Garantir la livraison le lendemain");
+    for (const option of [
+      "Confier six de ses comptes à Thomas",
+      "Proposer un escompte",
+      "Contre-proposer 4 %",
+      "Relancer tous les devis",
+    ]) {
+      await bouton(page, "Décider").click();
+      await decider(page, option);
+    }
+    await expect.poll(() => page.getByText(/niveau Expert · hasard n°/).count()).toBe(1);
+    await page.close();
+  }, 120_000);
+
+  it("en Découverte : des repères, et l'effet de chaque choix tout de suite", async () => {
+    const page = await navigateur.newPage({ viewport: { width: 1280, height: 900 } });
+    await page.goto(`${BASE}/entreprises/episode/trimestre-qui-derape?hasard=11`);
+    await choisir(page, "Découverte");
+    await bouton(page, "Commencer l'épisode").click();
+    expect(await page.getByText("Niveau Découverte", { exact: true }).count()).toBe(1);
+    expect(await page.getByText("Repère ·").count()).toBe(1);
+    await bouton(page, "Enquêter").click();
+    expect(await bouton(page, /Demander conseil/).count()).toBe(1);
+    await bouton(page, "Poser mon diagnostic").click();
+    await principal(page, "Les clients de Karim ne sont plus suivis");
+    await bouton(page, "Décider").click();
+    await page.getByRole("spinbutton").fill("34");
+    await choisir(page, "Réaffecter le portefeuille de Karim");
+    await bouton(page, "Valider la décision").click();
+    await expect
+      .poll(() =>
+        page.getByText(/Retour immédiat · Sur ce trimestre-ci, ce choix (rapporte|coûte)/).count(),
+      )
+      .toBe(1);
+    expect(await page.locator("main").innerText()).not.toMatch(/undefined|NaN/);
+    await page.close();
+  }, 120_000);
+});
