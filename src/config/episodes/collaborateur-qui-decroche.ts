@@ -617,6 +617,9 @@ export const REFERENCES = [
  * Les réflexes du métier face à un collaborateur qui décroche : sanctionner
  * sans avoir compris, ou éviter le conflit et laisser l'équipe absorber.
  * [décision, option].
+ * « Ne rien changer » au rush (D6) n'y figure pas : la décision ne couvre que les
+ * trois dernières semaines, son coût tombe après le trimestre, et le bilan la juge
+ * défendable sur le meilleur chemin. Le laisser-filer est observé plus tôt (D1, D2, D4).
  */
 export const REFLEXES = [
   [0, 0],
@@ -627,7 +630,6 @@ export const REFLEXES = [
   [3, 0],
   [3, 3],
   [5, 1],
-  [5, 3],
 ] as const;
 
 export const REPONSES = {

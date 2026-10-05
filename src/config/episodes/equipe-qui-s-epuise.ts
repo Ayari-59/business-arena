@@ -537,13 +537,16 @@ export const REFERENCES = [
   { nom: "Attentiste", chemin: [3, 2, 3, 3, 3, 2] },
 ] as const;
 
-/** Les options qui répondent à une surcharge en demandant plus à l'équipe : [décision, option]. */
+/**
+ * Les options qui répondent à une surcharge en demandant plus à l'équipe : [décision, option].
+ * Refuser le télétravail (D5) n'y figure pas : il ne demande pas plus de travail, et le bilan
+ * le juge défendable sur le meilleur chemin (moins de 1 000 € sous la meilleure option).
+ */
 export const PRESSIONS = [
   [0, 0],
   [0, 2],
   [1, 2],
   [3, 1],
-  [4, 2],
   [5, 0],
 ] as const;
 

@@ -549,11 +549,14 @@ export const REFERENCES = [
   { nom: "Accepter et attendre", chemin: [3, 3, 2, 2, 2, 2] },
 ] as const;
 
-/** Les options qui cèdent pour ne pas fâcher, ou qui basculent tout d'un coup : [décision, option]. */
+/**
+ * Les options qui cèdent pour ne pas fâcher, ou qui basculent tout d'un coup : [décision, option].
+ * L'ultimatum (D2) n'y figure pas : c'est un pari, bon en moyenne mais très exposé dans les
+ * mauvais tirages. Le bilan le juge défendable ; c'est sa robustesse qui le dit faible.
+ */
 export const REFLEXES = [
   [0, 0],
   [0, 2],
-  [1, 2],
   [1, 3],
   [2, 2],
   [3, 1],

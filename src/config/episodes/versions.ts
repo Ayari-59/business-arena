@@ -27,7 +27,7 @@ export const VERSIONS_DES_MODELES: Readonly<Record<string, VersionDuModele>> = {
   "fournisseur-qui-augmente": { version: 1, empreinte: [227006, 150738, 171680] },
   "poste-qui-reste-vide": { version: 1, empreinte: [2599, -53400, -37548] },
   "reclamation-qui-enfle": { version: 1, empreinte: [23775, -38375, -76290] },
-  "quai-dangereux": { version: 1, empreinte: [13284, -103677, -121721] },
+  "quai-dangereux": { version: 2, empreinte: [13284, -103953, -121721] },
   "reorganisation-qui-coince": { version: 1, empreinte: [27733, -73019, -14220] },
   "tresorerie-qui-fond": { version: 1, empreinte: [17882, -100612, -108642] },
   "agence-qui-demarre": { version: 1, empreinte: [3849, -39453, -28896] },

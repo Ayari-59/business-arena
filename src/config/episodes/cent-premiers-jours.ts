@@ -648,13 +648,17 @@ export const IMPOSITIONS = [
   [5, 1],
 ] as const;
 
-/** Les options qui ne changent rien pour ne froisser personne : [décision, option]. */
+/**
+ * Les options qui ne changent rien pour ne froisser personne : [décision, option].
+ * « Continuer sur la lancée » au bilan des cent jours (D6) n'y figure pas : après des
+ * décisions qui ont déjà changé l'agence, ne pas en promettre davantage est défendable,
+ * et le bilan le juge ainsi sur le meilleur chemin.
+ */
 export const MENAGEMENTS = [
   [0, 3],
   [1, 3],
   [2, 2],
   [3, 3],
-  [5, 3],
 ] as const;
 
 /** Les promesses faites avant d'en tenir les moyens : [décision, option]. */

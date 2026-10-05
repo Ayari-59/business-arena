@@ -14,7 +14,8 @@
  *   · SANCTIONNER CELUI QUI DÉCLARE FAIT TAIRE LES SIGNAUX. La part des
  *     presque-accidents déclarés dépend de ce qui arrive à ceux qui
  *     déclarent. Une sanction ou une prime « zéro accident » font baisser les
- *     déclarations — le tableau de bord s'améliore — sans rien changer au
+ *     déclarations, une prime au rendement aussi (on ne s'arrête plus pour une
+ *     fiche quand chaque palette compte) — le tableau de bord s'améliore — sans rien changer au
  *     danger, qu'on ne voit simplement plus. L'analyse ne vaut que ce que
  *     valent les déclarations qui la nourrissent.
  *   · LE DANGER SE TRAITE À LA SOURCE, ET LA CADENCE LE FAIT MONTER. Une
@@ -261,7 +262,7 @@ const PART_DE_DYLAN = 0.4;
  * analyse sans recherche de coupable, suivie d'effets visibles, la double.
  */
 export function tauxDeDeclaration(chemin: readonly number[], w: number): number {
-  const [d1, , , , d5] = chemin;
+  const [d1, , , d4, d5] = chemin;
   let taux = TAUX_DECLARATION_DEPART;
   if (w >= 2) {
     if (d1 === 0) taux = 0.1;
@@ -269,6 +270,10 @@ export function tauxDeDeclaration(chemin: readonly number[], w: number): number 
     if (d1 === 2) taux = 0.5;
     if (d1 === 3) taux = 0.22;
   }
+  // Une prime au rendement en pleine saison : celui qui s'arrête pour remplir
+  // une fiche perd sa prime. Les presque-accidents remontent moins, et
+  // l'analyse de la semaine 8 a moins de quoi travailler.
+  if (d4 === 0 && w >= 7 && w <= 11) taux *= 0.6;
   if (w >= 9) {
     if (d5 === 0) taux *= 0.4;
     if (d5 === 1) taux = Math.min(0.8, taux + 0.2);

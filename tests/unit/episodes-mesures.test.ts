@@ -49,7 +49,7 @@ describe("les mesures des 180 décisions, sur le meilleur chemin", () => {
     expect(toutes.filter((d) => d.options.some((o) => o.trompeuse))).toHaveLength(43);
     expect(toutes.filter((d) => d.options.some((o) => o.victoires >= 0.5))).toHaveLength(19);
     const plusSures = toutes.flatMap((d) => d.options.filter((o) => o.p10 > d.meilleure.p10));
-    expect(plusSures).toHaveLength(54);
+    expect(plusSures).toHaveLength(53);
   });
 
   it("restent entre 0 et 1, et donnent 1 et 0 aux extrêmes", () => {
@@ -87,17 +87,9 @@ describe("les mesures des 180 décisions, sur le meilleur chemin", () => {
     for (const d of toutes) if (d.dominee) expect(d.options.some((o) => o.trompeuse)).toBe(false);
   });
 
-  it("ne jugent bonne aucune option réflexe sur le meilleur chemin, hors cinq cas connus", () => {
-    // Des options que l'épisode compte comme réflexes, mais que son propre bilan juge bonnes sur le
-    // meilleur chemin : le bilan et le constat des réflexes s'y contredisent. À trancher dans les
-    // épisodes ; d'ici là, la liste est fermée, et un nouveau cas fait échouer ce test.
-    const CONNUS = [
-      "equipe-qui-s-epuise D5 option 2",
-      "fournisseur-qui-augmente D2 option 2",
-      "quai-dangereux D4 option 0",
-      "collaborateur-qui-decroche D6 option 3",
-      "cent-premiers-jours D6 option 3",
-    ];
+  it("ne jugent bonne aucune option réflexe sur le meilleur chemin", () => {
+    // Une option que le bilan juge défendable sur le meilleur chemin ne peut pas être comptée
+    // comme un réflexe : le bilan et le constat des réflexes se contrediraient.
     const bonnes: string[] = [];
     EPISODES.forEach((ep, i) => {
       for (const [d, o] of TRACES[ep.code]!.reflexes) {
@@ -109,7 +101,7 @@ describe("les mesures des 180 décisions, sur le meilleur chemin", () => {
         if (bonne) bonnes.push(`${ep.code} D${d + 1} option ${o}`);
       }
     });
-    expect(bonnes).toEqual(CONNUS);
+    expect(bonnes).toEqual([]);
   });
 });
 

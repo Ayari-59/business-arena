@@ -18,8 +18,8 @@
  * Deux règles évitent de punir une bonne décision. L'option la plus sûre,
  * prise à moins de 3 000 € de la meilleure, compte comme bonne : choisir la
  * sécurité est une préférence, pas une erreur. Et un réflexe que le bilan de
- * l'épisode juge bon n'est pas compté comme réflexe pris : le bilan et le
- * constat des réflexes s'y contredisent, et c'est au bilan qu'on se fie.
+ * l'épisode juge bon n'est pas compté comme réflexe pris : sur le meilleur
+ * chemin, un test interdit ce cas ; ailleurs, c'est au bilan qu'on se fie.
  *
  * Le résultat obtenu n'entre dans aucune observation.
  */
