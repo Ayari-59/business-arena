@@ -50,7 +50,7 @@ async function jouer(page: Page, placeholder: string) {
   throw new Error("le bilan n'a pas été atteint");
 }
 
-describe("les quinze épisodes", () => {
+describe("tous les épisodes", () => {
   for (const ep of EPISODES) {
     it(`${ep.numero} · ${ep.titre}`, async () => {
       const page = await navigateur.newPage({ viewport: { width: 1280, height: 900 } });

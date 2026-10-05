@@ -3,7 +3,9 @@ import Link from "next/link";
 import { HaloDePage } from "@/components/halo-de-page";
 import { PiedDePage } from "@/components/pied-de-page";
 import { bouton } from "@/components/bouton";
-import { EPISODES } from "@/pedagogy/episodes/registre";
+import { FAMILLES } from "@/config/episodes/familles";
+import type { Episode } from "@/config/episodes/types";
+import { EPISODES, episodeParCode } from "@/pedagogy/episodes/registre";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/entreprises/episode" },
@@ -16,8 +18,9 @@ export const metadata: Metadata = {
 /**
  * LES ÉPISODES MANAGER.
  *
- * Chaque épisode est un domaine du métier de manager. La page les présente
- * côte à côte, par ce qu'ils font travailler, et mène à chacun.
+ * Chaque épisode est un domaine du métier de manager. La page les range par
+ * famille (vendre, piloter les chiffres, les opérations, l'équipe, les
+ * talents, le changement), avec en tête de quoi sauter à l'une d'elles.
  */
 export default function EpisodesPage() {
   return (
@@ -40,33 +43,71 @@ export default function EpisodesPage() {
             tirages du même hasard, pour séparer ce qui relevait du choix de ce qui relevait de la
             chance. Démonstration : données fictives, rien n&apos;est enregistré.
           </p>
-          <ul className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {EPISODES.map((ep) => (
-              <li key={ep.code} className="carte flex flex-col gap-4 p-6">
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.12em] text-amber-300">
-                    Épisode {ep.numero} · {ep.domaine}
-                  </p>
-                  <h2 className="mt-2 font-display text-2xl font-semibold text-slate-50">
-                    {ep.titre}
-                  </h2>
-                  <p className="mt-2 text-base leading-relaxed text-slate-300">{ep.resume}</p>
-                </div>
-                <p className="text-sm text-slate-400">
-                  {ep.etapes.length} décisions · {ep.duree}
-                </p>
-                <Link
-                  href={`/entreprises/episode/${ep.code}`}
-                  className={`${bouton({ taille: "l" })} mt-auto self-start`}
-                >
-                  Jouer l&apos;épisode {ep.numero}
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <nav aria-label="Familles d'épisodes" className="mt-8">
+            <ul className="flex flex-wrap gap-2">
+              {FAMILLES.map((f) => (
+                <li key={f.code}>
+                  <a
+                    href={`#${f.code}`}
+                    className="inline-flex items-center gap-2 rounded-full border border-slate-700 px-3.5 py-1.5 text-sm text-slate-200 hover:border-amber-400/60 hover:text-slate-50"
+                  >
+                    {f.titre}
+                    <span className="tabular-nums text-slate-400">{f.episodes.length}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          {FAMILLES.map((f) => (
+            <section
+              key={f.code}
+              id={f.code}
+              aria-labelledby={`titre-${f.code}`}
+              className="mt-14 scroll-mt-6"
+            >
+              <h2
+                id={`titre-${f.code}`}
+                className="font-display text-3xl font-semibold tracking-tight text-slate-50"
+              >
+                {f.titre}
+              </h2>
+              <p className="mt-2 max-w-2xl text-base leading-relaxed text-slate-400">{f.texte}</p>
+              <ul className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                {f.episodes
+                  .map((code) => episodeParCode(code))
+                  .filter((ep): ep is Episode => ep !== undefined)
+                  .map((ep) => (
+                    <CarteEpisode key={ep.code} ep={ep} />
+                  ))}
+              </ul>
+            </section>
+          ))}
         </div>
       </main>
       <PiedDePage />
     </>
+  );
+}
+
+function CarteEpisode({ ep }: { ep: Episode }) {
+  return (
+    <li className="carte flex flex-col gap-4 p-6">
+      <div>
+        <p className="text-sm font-semibold uppercase tracking-[0.12em] text-amber-300">
+          Épisode {ep.numero} · {ep.domaine}
+        </p>
+        <h3 className="mt-2 font-display text-2xl font-semibold text-slate-50">{ep.titre}</h3>
+        <p className="mt-2 text-base leading-relaxed text-slate-300">{ep.resume}</p>
+      </div>
+      <p className="text-sm text-slate-400">
+        {ep.etapes.length} décisions · {ep.duree}
+      </p>
+      <Link
+        href={`/entreprises/episode/${ep.code}`}
+        className={`${bouton({ taille: "l" })} mt-auto self-start`}
+      >
+        Jouer l&apos;épisode {ep.numero}
+      </Link>
+    </li>
   );
 }

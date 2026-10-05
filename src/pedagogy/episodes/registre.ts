@@ -20,6 +20,21 @@ import { EPISODE_LANCEMENT } from "./agence-qui-demarre";
 import { EPISODE_CRISE } from "./panne-qui-paralyse";
 import { EPISODE_PERFORMANCE } from "./collaborateur-qui-decroche";
 import { EPISODE_INDICATEURS } from "./indicateur-qui-ment";
+import { EPISODE_APPEL_OFFRES } from "./appel-d-offres";
+import { EPISODE_PRIX } from "./prix-qui-ne-passe-plus";
+import { EPISODE_AGENDA } from "./agenda-qui-deborde";
+import { EPISODE_DIALOGUE_SOCIAL } from "./preavis-de-greve";
+import { EPISODE_FIDELISATION } from "./client-qui-s-en-va";
+import { EPISODE_TRANSPORT } from "./tournees-qui-debordent";
+import { EPISODE_NUMERIQUE } from "./site-qui-ne-vend-pas";
+import { EPISODE_TALENTS } from "./talent-qui-veut-partir";
+import { EPISODE_COMPETENCES } from "./competences-qui-manquent";
+import { EPISODE_ENERGIE } from "./facture-qui-flambe";
+import { EPISODE_CONFORMITE } from "./controle-qui-s-annonce";
+import { EPISODE_FUSION } from "./fusion-des-agences";
+import { EPISODE_INNOVATION } from "./nouveau-service";
+import { EPISODE_DISTANCE } from "./equipe-dispersee";
+import { EPISODE_PRISE_DE_POSTE } from "./cent-premiers-jours";
 
 export const EPISODES: readonly Episode[] = [
   EPISODE_TRIMESTRE,
@@ -37,6 +52,21 @@ export const EPISODES: readonly Episode[] = [
   EPISODE_CRISE,
   EPISODE_PERFORMANCE,
   EPISODE_INDICATEURS,
+  EPISODE_APPEL_OFFRES,
+  EPISODE_PRIX,
+  EPISODE_AGENDA,
+  EPISODE_DIALOGUE_SOCIAL,
+  EPISODE_FIDELISATION,
+  EPISODE_TRANSPORT,
+  EPISODE_NUMERIQUE,
+  EPISODE_TALENTS,
+  EPISODE_COMPETENCES,
+  EPISODE_ENERGIE,
+  EPISODE_CONFORMITE,
+  EPISODE_FUSION,
+  EPISODE_INNOVATION,
+  EPISODE_DISTANCE,
+  EPISODE_PRISE_DE_POSTE,
 ];
 
 export const episodeParCode = (code: string): Episode | undefined =>
