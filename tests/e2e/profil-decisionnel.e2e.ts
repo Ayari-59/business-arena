@@ -132,9 +132,35 @@ describe("le profil décisionnel", () => {
     expect(await page.getByText(/ne mesure ni la personnalité, ni le potentiel/).count()).toBe(1);
     expect(await page.locator("main").innerText()).not.toMatch(/undefined|NaN/);
 
+    // Choisir soi-même la compétence à travailler : les épisodes proposés la suivent.
+    expect(await page.getByText(/Niveau conseillé : (Standard|Expert|Découverte)\./).count()).toBe(
+      1,
+    );
+    await page
+      .getByLabel("La compétence que je travaille")
+      .selectOption({ label: "Engager les personnes" });
+    await page.getByRole("button", { name: "Choisir", exact: true }).click();
+    await expect
+      .poll(() =>
+        page.getByText("C'est noté : les épisodes proposés travaillent maintenant").count(),
+      )
+      .toBe(1);
+    const suite = section(page, "Prochain épisode");
+    expect(await suite.innerText()).toContain(
+      "Vous avez choisi de travailler « Engager les personnes »",
+    );
+    const raisons = await suite.locator("li p").allTextContents();
+    expect(raisons.length).toBeGreaterThan(0);
+    for (const r of raisons) expect(r).toContain("« Engager les personnes »");
+    const lien = await suite.locator("li a").first().getAttribute("href");
+    expect(lien).toMatch(/\?niveau=(standard|expert|decouverte)$/);
+
     await page.getByRole("button", { name: "Effacer mes 3 parties" }).click();
     await expect.poll(() => page.getByText("3 parties effacées").count()).toBe(1);
     expect(await page.getByText("Aucun épisode ne compte encore").count()).toBe(1);
+    // Effacer son profil efface aussi son objectif.
+    expect(await page.getByLabel("La compétence que je travaille").inputValue()).toBe("");
+    expect(await page.getByText("Vous avez choisi de travailler").count()).toBe(0);
     await page.close();
   }, 120_000);
 });

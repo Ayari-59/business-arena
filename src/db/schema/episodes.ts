@@ -95,3 +95,12 @@ export const episodeReprises = pgTable("episode_reprises", {
   code: text("code").notNull().unique(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+/** La compétence qu'une personne a choisi de travailler ; la recommandation la suit. */
+export const episodeObjectifs = pgTable("episode_objectifs", {
+  userId: uuid("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  competence: text("competence").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});

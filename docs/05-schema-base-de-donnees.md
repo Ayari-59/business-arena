@@ -25,7 +25,8 @@ PARTIE          games, teams, players, game_recoveries, rounds, decisions, aid_r
 RÉSULTATS       round_results, kpis, event_occurrences
 PÉDAGOGIE       situation_instances, model_choices, hint_usages,
                 learning_progress, player_skills
-ÉPISODES        episode_parties, episode_cohortes, episode_membres, episode_reprises
+ÉPISODES        episode_parties, episode_cohortes, episode_membres, episode_reprises,
+                episode_objectifs
 SCORING         scores, game_rankings
 COMPÉTITION     competitions, competition_stages, competition_entries, competition_members
 ```
@@ -113,6 +114,7 @@ résolution de chaque tour (transaction unique).
 | `episode_cohortes` | id, code text UNIQUE, nom text, cle_animateur text UNIQUE, created_at. Un groupe de managers ; l'animateur la suit par sa clé, sans compte, et ne voit que des agrégats (à partir de cinq personnes) |
 | `episode_membres` | user_id PK FK (cascade), cohorte_id FK (cascade), depuis. Une cohorte à la fois par personne |
 | `episode_reprises` | user_id PK FK (cascade), code text UNIQUE, created_at. Le code qui rend son profil à une personne depuis un autre appareil |
+| `episode_objectifs` | user_id PK FK (cascade), competence text, updated_at. La compétence qu'une personne choisit de travailler ; la recommandation du prochain épisode la suit |
 
 ## 8. Scoring et compétition
 

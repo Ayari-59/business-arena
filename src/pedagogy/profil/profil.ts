@@ -29,6 +29,7 @@ import { DIFFICULTES, PEU_DISCRIMINANTS, type Difficulte } from "@/config/episod
 import { FAMILLES } from "@/config/episodes/familles";
 import { TRACES } from "@/config/episodes/traces";
 import type { Episode } from "@/config/episodes/types";
+import type { CodeNiveau } from "@/config/episodes/niveaux";
 import { versionDuModele } from "@/config/episodes/versions";
 import { moyenne, mulberry32 } from "@/engine/episodes/commun";
 import { decisives } from "@/pedagogy/episodes/bilan";
@@ -134,9 +135,69 @@ export interface Profil {
     qualite: Comparaison;
     competences: readonly { code: CodeCompetence; comparaison: Comparaison }[];
   };
-  /** La compétence que la recommandation vise, et pourquoi. */
-  cible: { competence: CodeCompetence; pourquoi: string } | null;
+  /** La compétence que la recommandation vise, et pourquoi ; `choisie` : c'est la personne qui l'a choisie. */
+  cible: { competence: CodeCompetence; pourquoi: string; choisie: boolean } | null;
   recommandations: readonly Recommandation[];
+  /** Le niveau conseillé pour le prochain épisode, et pourquoi. */
+  conseil: ConseilDeNiveau;
+}
+
+export interface ConseilDeNiveau {
+  niveau: CodeNiveau;
+  pourquoi: string;
+}
+
+/** Les compétences qu'on peut choisir de travailler : celles qui ont un score. */
+export const OBJECTIFS_POSSIBLES: readonly CodeCompetence[] = COMPETENCES.filter(
+  (c) => c.score,
+).map((c) => c.code);
+
+export const estUnObjectif = (code: string | null | undefined): code is CodeCompetence =>
+  OBJECTIFS_POSSIBLES.includes(code as CodeCompetence);
+
+/**
+ * Au-delà de cette qualité moyenne sur les deux derniers épisodes, on propose
+ * l'Expert ; en deçà de la seconde, la Découverte. Des conventions de départ,
+ * comme les autres seuils du profil.
+ */
+export const SEUILS_DU_CONSEIL = { expert: 0.8, decouverte: 0.4 } as const;
+
+/**
+ * LE NIVEAU CONSEILLÉ : la difficulté suit ce que la personne réussit.
+ *
+ * On regarde la qualité moyenne des décisions des deux derniers épisodes qui
+ * comptent. Haute, l'Expert met à l'épreuve ce qui est acquis ; basse, la
+ * Découverte donne des repères de méthode et l'effet immédiat de chaque
+ * choix — au prix de ne pas compter dans le profil, ce que la phrase dit.
+ * Le conseil n'oblige à rien : la personne garde le choix du niveau.
+ */
+export function conseillerUnNiveau(points: readonly PointDeProgression[]): ConseilDeNiveau {
+  if (points.length < 2) {
+    return {
+      niveau: "standard",
+      pourquoi:
+        "Jouez en Standard : c'est le niveau de référence, et vos premières parties y comptent dans votre profil.",
+    };
+  }
+  const recents = points.slice(-2);
+  const q = moyenne(recents.map((p) => p.qualite));
+  const lu = `Vos deux derniers épisodes : ${Math.round(q * 100)} % de qualité de décision en moyenne.`;
+  if (q >= SEUILS_DU_CONSEIL.expert) {
+    return {
+      niveau: "expert",
+      pourquoi: `${lu} Passez en Expert : moins de temps pour enquêter, pas de conseil, des imprévus mêlés au reste. C'est là que se confirme ce qui est acquis.`,
+    };
+  }
+  if (q <= SEUILS_DU_CONSEIL.decouverte) {
+    return {
+      niveau: "decouverte",
+      pourquoi: `${lu} Un épisode en Découverte, avec des repères de méthode et l'effet immédiat de chaque choix, aide à reprendre pied. C'est un entraînement : ni cette partie ni les suivantes de cet épisode ne compteront dans votre profil.`,
+    };
+  }
+  return {
+    niveau: "standard",
+    pourquoi: `${lu} Restez en Standard : l'Expert se propose à partir de ${Math.round(SEUILS_DU_CONSEIL.expert * 100)} %.`,
+  };
 }
 
 /* ---------------------------------------------------------------------------
@@ -396,7 +457,7 @@ export const BILAN_D_ENTREE = ["cent-premiers-jours", "client-qui-s-en-va"] as c
 function choisirLaCible(
   lignes: readonly LigneDeCompetence[],
   episodesComptes: number,
-): { competence: CodeCompetence; pourquoi: string } | null {
+): { competence: CodeCompetence; pourquoi: string; choisie: false } | null {
   const notees = lignes.filter((l) => l.competence.score);
   if (episodesComptes === 0 || notees.length === 0) return null;
   const moinsObservee = () =>
@@ -406,6 +467,7 @@ function choisirLaCible(
   if (episodesComptes < 6) {
     const l = moinsObservee();
     return {
+      choisie: false,
       competence: l.competence.code,
       pourquoi: `« ${l.competence.nom} » est la compétence la moins observée de votre profil : il faut d'abord la voir à l'œuvre.`,
     };
@@ -414,12 +476,14 @@ function choisirLaCible(
   if (etablies.length === 0) {
     const l = moinsObservee();
     return {
+      choisie: false,
       competence: l.competence.code,
       pourquoi: `« ${l.competence.nom} » est encore la compétence la moins observée de votre profil.`,
     };
   }
   const l = [...etablies].sort((a, b) => a.score! - b.score!)[0]!;
   return {
+    choisie: false,
     competence: l.competence.code,
     pourquoi: `« ${l.competence.nom} » est votre compétence établie au score le plus bas (${l.score}) : c'est là que l'entraînement rapporte le plus.`,
   };
@@ -523,6 +587,8 @@ function bilanDEntree(
 export function construireProfil(
   parties: readonly PartieEnregistree[],
   episodes: readonly Episode[] = EPISODES,
+  /** La compétence que la personne a choisi de travailler ; elle prime sur celle du profil. */
+  options: { objectif?: CodeCompetence | null } = {},
 ): Profil {
   const { comptees, ignorees } = trierLesParties(parties, episodes);
   const toutes = comptees.flatMap((p) => p.observations);
@@ -614,7 +680,18 @@ export function construireProfil(
     const f = FAMILLES.find((x) => x.episodes.includes(code))?.code;
     if (f) famillesJouees.set(f, (famillesJouees.get(f) ?? 0) + 1);
   }
-  const cible = choisirLaCible(lignes, comptees.length);
+  const choisie = estUnObjectif(options.objectif)
+    ? lignes.find((l) => l.competence.code === options.objectif)!
+    : null;
+  const cible = choisie
+    ? {
+        competence: choisie.competence.code,
+        pourquoi: `Vous avez choisi de travailler « ${choisie.competence.nom} »${
+          choisie.score != null ? `, à ${choisie.score}/100 aujourd'hui` : ""
+        }.`,
+        choisie: true,
+      }
+    : choisirLaCible(lignes, comptees.length);
   const recommandations = cible
     ? recommander(
         cible.competence,
@@ -643,5 +720,6 @@ export function construireProfil(
     },
     cible,
     recommandations: suite,
+    conseil: conseillerUnNiveau(points),
   };
 }

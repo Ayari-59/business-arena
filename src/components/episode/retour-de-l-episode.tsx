@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { niveauParCode } from "@/config/episodes/niveaux";
 import type { Episode, PartieJouee } from "@/config/episodes/types";
 import { observer } from "@/pedagogy/profil/observations";
 import { competencesObservees, phrasesDeRobustesse } from "@/pedagogy/profil/retour";
@@ -24,7 +25,9 @@ const SANS_SUITE: SuiteDeLaPartie = {
   compte: true,
   episodesComptes: 0,
   pourquoi: null,
+  objectifChoisi: false,
   recommandations: [],
+  conseil: null,
 };
 
 export function RetourDeLEpisode({
@@ -115,7 +118,25 @@ export function RetourDeLEpisode({
         ) : (
           <>
             {suite.pourquoi && (
-              <p className="max-w-3xl text-sm leading-relaxed text-slate-300">{suite.pourquoi}</p>
+              <p className="max-w-3xl text-sm leading-relaxed text-slate-300">
+                {suite.pourquoi}{" "}
+                <Link
+                  href="/entreprises/episode/profil#suite"
+                  className="whitespace-nowrap text-amber-300 underline"
+                >
+                  {suite.objectifChoisi
+                    ? "Changer de compétence"
+                    : "Choisir moi-même la compétence à travailler"}
+                </Link>
+              </p>
+            )}
+            {suite.conseil && (
+              <p className="max-w-3xl text-sm leading-relaxed text-slate-300">
+                <span className="font-semibold text-slate-100">
+                  Niveau conseillé : {niveauParCode(suite.conseil.niveau).nom}.
+                </span>{" "}
+                {suite.conseil.pourquoi}
+              </p>
             )}
             <ul className="grid gap-2.5">
               {suite.recommandations.map((r) => (
@@ -124,7 +145,9 @@ export function RetourDeLEpisode({
                   className="max-w-3xl rounded-lg border border-white/5 bg-slate-950 p-3.5"
                 >
                   <Link
-                    href={`/entreprises/episode/${r.code}`}
+                    href={`/entreprises/episode/${r.code}${
+                      suite.conseil ? `?niveau=${suite.conseil.niveau}` : ""
+                    }`}
                     className="font-semibold text-amber-300 underline-offset-2 hover:underline"
                   >
                     {r.numero} · {r.titre}

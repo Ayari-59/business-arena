@@ -7,6 +7,8 @@ import { EPISODES, episodeParCode } from "../../src/pedagogy/episodes/registre";
 import {
   BILAN_D_ENTREE,
   MENTION,
+  OBJECTIFS_POSSIBLES,
+  conseillerUnNiveau,
   ceQuObserve,
   comparer,
   construireProfil,
@@ -287,5 +289,66 @@ describe("les données de la recommandation", () => {
         expect(ceQuObserve(ep, c).poids, `${ep.code} ${c}`).toBeGreaterThanOrEqual(1);
       }
     }
+  });
+});
+
+describe("la personnalisation du parcours", () => {
+  it("suit la compétence que la personne a choisie, même si le profil en visait une autre", () => {
+    const parties = QUATRE.map((c) => bienJouee(c));
+    const parDefaut = construireProfil(parties);
+    const autre = OBJECTIFS_POSSIBLES.find((c) => c !== parDefaut.cible!.competence)!;
+    const choisi = construireProfil(parties, undefined, { objectif: autre });
+    expect(choisi.cible).toMatchObject({ competence: autre, choisie: true });
+    expect(choisi.cible!.pourquoi).toMatch(/^Vous avez choisi de travailler « .+ »/);
+    expect(choisi.recommandations.length).toBeGreaterThan(0);
+    for (const r of choisi.recommandations) {
+      expect(r.competence).toBe(autre);
+      expect(ceQuObserve(episodeParCode(r.code)!, autre).poids).toBeGreaterThan(0);
+    }
+    expect(parDefaut.cible!.choisie).toBe(false);
+  });
+
+  it("vaut dès la première partie, avant même le bilan d'entrée", () => {
+    const profil = construireProfil([], undefined, { objectif: "R9" });
+    expect(profil.cible).toMatchObject({ competence: "R9", choisie: true });
+    expect(profil.recommandations.map((r) => r.code)).not.toEqual([...BILAN_D_ENTREE]);
+  });
+
+  it("ignore un objectif qu'on ne peut pas choisir : le calibrage, ou un code inconnu", () => {
+    expect(OBJECTIFS_POSSIBLES).not.toContain("R7");
+    for (const objectif of ["R7", "R42"] as const) {
+      const p = construireProfil([], undefined, { objectif: objectif as "R7" });
+      expect(p.cible).toBeNull();
+    }
+  });
+
+  it("conseille un niveau d'après les deux derniers épisodes, et dit pourquoi", () => {
+    const point = (qualite: number) => ({
+      code: "x",
+      numero: 1,
+      date: "",
+      niveau: "standard",
+      qualite,
+      robustesse: 0.5,
+      reflexes: null,
+    });
+    expect(conseillerUnNiveau([]).niveau).toBe("standard");
+    expect(conseillerUnNiveau([point(0.95)]).niveau).toBe("standard");
+    expect(conseillerUnNiveau([point(0.2), point(0.85), point(0.9)])).toMatchObject({
+      niveau: "expert",
+    });
+    expect(conseillerUnNiveau([point(0.9), point(0.3), point(0.4)]).niveau).toBe("decouverte");
+    expect(conseillerUnNiveau([point(0.6), point(0.7)]).niveau).toBe("standard");
+    expect(conseillerUnNiveau([point(0.3), point(0.4)]).pourquoi).toMatch(
+      /35 % de qualité.*ne compteront dans votre profil/,
+    );
+  });
+
+  it("propose l'Expert à qui suit la meilleure référence, pas à qui prend les réflexes", () => {
+    const bon = construireProfil(QUATRE.map((c) => bienJouee(c)));
+    const reflexes = construireProfil(QUATRE.map((c) => reflexe(c)));
+    expect(bon.conseil.niveau).toBe("expert");
+    expect(reflexes.conseil.niveau).not.toBe("expert");
+    expect(reflexes.conseil.pourquoi).toMatch(/Vos deux derniers épisodes : \d+ % de qualité/);
   });
 });

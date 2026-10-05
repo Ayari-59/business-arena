@@ -10,6 +10,7 @@ import { episodeParCode } from "@/pedagogy/episodes/registre";
 import {
   CONFIANCES,
   MENTION,
+  OBJECTIFS_POSSIBLES,
   construireProfil,
   type Comparaison,
   type LigneDeCompetence,
@@ -19,7 +20,11 @@ import type { Observation } from "@/pedagogy/profil/observations";
 import { partiesDe } from "@/services/episode-parties.service";
 import { formaterCodeDeReprise } from "@/config/reprise";
 import { codeDeRepriseDuProfil, cohorteDe } from "@/services/cohortes.service";
+import { objectifDe } from "@/services/episode-objectifs.service";
+import { competenceParCode } from "@/config/episodes/competences";
+import { bouton } from "@/components/bouton";
 import {
+  choisirObjectifAction,
   effacerMesPartiesAction,
   obtenirCodeDeRepriseAction,
   quitterCohorteAction,
@@ -178,15 +183,20 @@ function phraseDeComparaison(quoi: string, c: Comparaison, n: number): string {
 export default async function ProfilPage({
   searchParams,
 }: {
-  searchParams: Promise<{ efface?: string; bienvenue?: string; repris?: string }>;
+  searchParams: Promise<{
+    efface?: string;
+    bienvenue?: string;
+    repris?: string;
+    objectif?: string;
+  }>;
 }) {
-  const { efface, bienvenue, repris } = await searchParams;
+  const { efface, bienvenue, repris, objectif: objectifModifie } = await searchParams;
   const userId = await getGuestUserId();
-  const [cohorte, codeDeReprise] = userId
-    ? await Promise.all([cohorteDe(userId), codeDeRepriseDuProfil(userId)])
-    : [null, null];
+  const [cohorte, codeDeReprise, objectif] = userId
+    ? await Promise.all([cohorteDe(userId), codeDeRepriseDuProfil(userId), objectifDe(userId)])
+    : [null, null, null];
   const parties = userId ? await partiesDe(userId) : [];
-  const profil = construireProfil(parties);
+  const profil = construireProfil(parties, undefined, { objectif });
   const n = profil.comptees.length;
   const nomDe = (code: string) => {
     const ep = episodeParCode(code);
@@ -339,23 +349,63 @@ export default async function ProfilPage({
             )}
           </section>
 
-          <section aria-labelledby="suite-titre" className="grid gap-3">
+          <section aria-labelledby="suite-titre" id="suite" className="grid scroll-mt-6 gap-3">
             <h2
               id="suite-titre"
               className="font-display text-2xl font-semibold tracking-tight text-slate-50"
             >
               Prochain épisode
             </h2>
+            <GuardedForm action={choisirObjectifAction} label="choix de la compétence à travailler">
+              <div className="flex flex-wrap items-end gap-3">
+                <label className="grid min-w-64 flex-1 gap-1">
+                  <span className="text-xs uppercase tracking-wide text-slate-400">
+                    La compétence que je travaille
+                  </span>
+                  <select
+                    // La page revient sur elle-même après un choix ou un effacement :
+                    // la clé recrée le champ, sans quoi il garderait l'ancienne valeur.
+                    key={objectif ?? "aucun"}
+                    name="objectif"
+                    defaultValue={objectif ?? ""}
+                    className="champ px-3 py-2"
+                  >
+                    <option value="">Laisser mon profil choisir</option>
+                    {OBJECTIFS_POSSIBLES.map((c) => (
+                      <option key={c} value={c}>
+                        {competenceParCode(c).nom}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <SubmitButton pendingLabel="Enregistrement…" className={bouton({})}>
+                  Choisir
+                </SubmitButton>
+              </div>
+            </GuardedForm>
+            {objectifModifie != null && (
+              <p role="status" className="text-sm text-amber-200">
+                {objectif
+                  ? `C'est noté : les épisodes proposés travaillent maintenant « ${competenceParCode(objectif).nom} ».`
+                  : "C'est noté : votre profil choisit de nouveau la compétence à travailler."}
+              </p>
+            )}
             {profil.cible && (
               <p className="max-w-3xl text-sm leading-relaxed text-slate-300">
                 {profil.cible.pourquoi}
               </p>
             )}
+            <p className="max-w-3xl text-sm leading-relaxed text-slate-300">
+              <span className="font-semibold text-slate-100">
+                Niveau conseillé : {niveauParCode(profil.conseil.niveau).nom}.
+              </span>{" "}
+              {profil.conseil.pourquoi}
+            </p>
             <ul className="grid gap-2.5">
               {profil.recommandations.map((r) => (
                 <li key={r.code} className="carte max-w-3xl p-4">
                   <Link
-                    href={`/entreprises/episode/${r.code}`}
+                    href={`/entreprises/episode/${r.code}?niveau=${profil.conseil.niveau}`}
                     className="font-semibold text-amber-300 underline-offset-2 hover:underline"
                   >
                     {r.numero} · {r.titre}

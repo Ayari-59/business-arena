@@ -11,7 +11,9 @@ import {
   rejoindreCohorte,
   reprendreProfil,
 } from "@/services/cohortes.service";
+import { choisirObjectif, objectifDe } from "@/services/episode-objectifs.service";
 import { effacerParties, enregistrerPartie, partiesDe } from "@/services/episode-parties.service";
+import type { CodeNiveau } from "@/config/episodes/niveaux";
 
 export interface SuiteDeLaPartie {
   ok: boolean;
@@ -21,7 +23,11 @@ export interface SuiteDeLaPartie {
   episodesComptes: number;
   /** La compétence visée par la recommandation, et pourquoi. */
   pourquoi: string | null;
+  /** La personne a-t-elle choisi elle-même la compétence visée ? */
+  objectifChoisi: boolean;
   recommandations: { code: string; numero: number; titre: string; raison: string }[];
+  /** Le niveau conseillé pour le prochain épisode, et pourquoi. */
+  conseil: { niveau: CodeNiveau; pourquoi: string } | null;
 }
 
 const ECHEC: SuiteDeLaPartie = {
@@ -29,7 +35,9 @@ const ECHEC: SuiteDeLaPartie = {
   compte: true,
   episodesComptes: 0,
   pourquoi: null,
+  objectifChoisi: false,
   recommandations: [],
+  conseil: null,
 };
 
 /**
@@ -45,7 +53,8 @@ export async function enregistrerPartieAction(entree: unknown): Promise<SuiteDeL
     const userId = await getOrCreateGuestUserId();
     const r = await enregistrerPartie(userId, entree);
     if (!r.ok) return ECHEC;
-    const profil = construireProfil(await partiesDe(userId));
+    const [parties, objectif] = await Promise.all([partiesDe(userId), objectifDe(userId)]);
+    const profil = construireProfil(parties, undefined, { objectif });
     const ignoree = profil.ignorees.find((p) => p.enregistree.id === r.id);
     revalidatePath("/entreprises/episode/profil");
     return {
@@ -58,6 +67,8 @@ export async function enregistrerPartieAction(entree: unknown): Promise<SuiteDeL
             : true,
       episodesComptes: profil.comptees.length,
       pourquoi: profil.cible?.pourquoi ?? null,
+      objectifChoisi: profil.cible?.choisie ?? false,
+      conseil: profil.conseil,
       recommandations: profil.recommandations.map((x) => ({
         code: x.code,
         numero: x.numero,
@@ -75,6 +86,7 @@ export async function enregistrerPartieAction(entree: unknown): Promise<SuiteDeL
 export async function effacerMesPartiesAction(): Promise<void> {
   const userId = await getGuestUserId();
   const effacees = userId ? await effacerParties(userId) : 0;
+  if (userId) await choisirObjectif(userId, null);
   revalidatePath("/entreprises/episode/profil");
   redirect(`/entreprises/episode/profil?efface=${effacees}`);
 }
@@ -120,4 +132,12 @@ export async function reprendreProfilAction(
   await setGuestCookie(r.userId);
   revalidatePath("/entreprises/episode/profil");
   redirect("/entreprises/episode/profil?repris=1");
+}
+
+/** Choisir la compétence à travailler ; « laisser le profil choisir » efface le choix. */
+export async function choisirObjectifAction(formData: FormData): Promise<void> {
+  const userId = await getOrCreateGuestUserId();
+  await choisirObjectif(userId, String(formData.get("objectif") ?? "") || null);
+  revalidatePath("/entreprises/episode/profil");
+  redirect("/entreprises/episode/profil?objectif=1#suite");
 }
