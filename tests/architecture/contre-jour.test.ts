@@ -132,17 +132,19 @@ describe("le contre-jour", () => {
     );
   });
 
-  it("ne dépasse pas deux blocs par page — la distance, elle, se mesure au navigateur", () => {
+  it("chaque page en porte au moins un, sans plafond — la distance, elle, se mesure au navigateur", () => {
     // LE PLAFOND SE LIT DANS LE REGISTRE, PLUS DANS LES PAGES. La classe
     // `contre-jour` était écrite en dur dans onze endroits, et cette garde
     // comptait ses occurrences fichier par fichier. Elle n'est plus écrite
     // qu'une fois, dans Bande, et c'est le thème qui décide quelle bande la
     // porte : compter le source ne dit plus rien de ce qui s'affiche.
     //
-    // La règle reste la même — deux blocs au plus par page, jamais côte à
-    // côte — et elle est vérifiée sur ce qui la porte désormais : l'état
-    // d'origine du registre, puis chaque réglage que l'administrateur
-    // enregistre (validerContrastes, qui refuse ce qui la viole).
+    // La règle — jamais côte à côte, au moins un par page — est vérifiée sur
+    // ce qui la porte désormais : l'état d'origine du registre, puis chaque
+    // réglage que l'administrateur enregistre (validerContrastes, qui refuse
+    // ce qui la viole). Le nombre de blocs par page n'est plus plafonné : il
+    // l'était à deux tant que le contre-jour était un éclat de nuit ; devenu
+    // le tableau, il rythme la page autant qu'on le veut.
     const defaut = etatDesContrastes(THEME_DU_SITE_PAR_DEFAUT);
     expect(
       validerContrastes(defaut),
@@ -151,10 +153,6 @@ describe("le contre-jour", () => {
     for (const { page } of PAGES_A_BANDES) {
       const actives = bandesDeLaPage(page).filter((b) => defaut[b.id]);
       expect(actives.length, `${page} : aucune coupure`).toBeGreaterThan(0);
-      expect(
-        actives.length,
-        `${page} : ${actives.length} blocs à contre-jour`,
-      ).toBeLessThanOrEqual(2);
     }
   });
 

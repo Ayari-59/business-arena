@@ -17,9 +17,12 @@ import {
  * CE QUI SE REFUSE. Le site se donne déjà des règles sur le contre-jour, et
  * elles ne doivent pas dépendre de qui règle :
  *
- *   · un bloc à contre-jour attire l'œil parce qu'il est unique sur l'écran ;
- *     deux bandes visibles ensemble s'annulent. Deux au plus par page, et
- *     jamais côte à côte ;
+ *   · deux bandes à contre-jour ne se touchent jamais : côte à côte, elles
+ *     fusionnent en une seule ardoise et la coupure disparaît. Leur nombre
+ *     par page, lui, n'est pas plafonné : il y en eut deux au plus, tant que
+ *     le contre-jour était un éclat de nuit au milieu du papier ; devenu le
+ *     tableau, une matière à part entière, il rythme la page autant qu'on
+ *     le veut ;
  *   · une page sans aucune coupure déroule d'un seul tenant du haut au pied :
  *     il en reste au moins une ;
  *   · en tête de page, la bande à contre-jour doit porter le titre, sans quoi
@@ -47,9 +50,6 @@ export interface ThemeDuSite {
 }
 
 export const THEME_DU_SITE_PAR_DEFAUT: ThemeDuSite = { contrastes: {} };
-
-/** Le plafond de bandes à contre-jour sur une même page. */
-export const BANDES_MAX_PAR_PAGE = 2;
 
 /**
  * Un thème lu de la base, rendu sûr.
@@ -156,11 +156,6 @@ export function validerContrastes(etat: Record<string, boolean>): string[] {
     if (actives.length === 0) {
       fautes.push(
         `${nom} : aucune bande à contre-jour. Une page sans coupure déroule d'un seul tenant du haut au pied ; gardez-en au moins une.`,
-      );
-    }
-    if (actives.length > BANDES_MAX_PAR_PAGE) {
-      fautes.push(
-        `${nom} : ${actives.length} bandes à contre-jour, ${BANDES_MAX_PAR_PAGE} au plus. Au-delà, le contraste cesse d'en être un : les bandes s'annulent.`,
       );
     }
     // Une page listée en partie ne dit rien de ce qui précède ou suit ses bandes :

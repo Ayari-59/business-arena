@@ -21,7 +21,7 @@ import {
 /**
  * LE RÉGLAGE DES BANDES, AVEC SES RÈGLES SOUS LES YEUX.
  *
- * Les règles du contre-jour (deux bandes au plus, jamais côte à côte, au moins
+ * Les règles du contre-jour (jamais deux bandes côte à côte, au moins
  * une coupure) sont les mêmes ici et à l'enregistrement : c'est le même module
  * qui les vérifie des deux côtés. Ici elles GUIDENT — l'administrateur voit le
  * refus au moment où il coche, avant d'avoir cliqué — et là-bas elles PROTÈGENT,
@@ -167,9 +167,9 @@ export function FormulaireTheme({
             Bandes à contre-jour
           </h2>
           <p className="mt-2 max-w-2xl text-base leading-relaxed text-slate-400">
-            Une bande à contre-jour prend le thème opposé à celui de la page :
-            sombre sur une page claire, claire sur une page sombre. Deux au plus
-            par page, jamais côte à côte, et au moins une.
+            Une bande à contre-jour devient un tableau : une ardoise au milieu
+            du papier. Autant que vous voulez par page, jamais deux côte à côte,
+            et au moins une.
           </p>
         </div>
         <div className="grid gap-5 lg:grid-cols-2">

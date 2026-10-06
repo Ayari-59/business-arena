@@ -44,13 +44,14 @@ describe("les refus", () => {
     expect(fautes.join("\n")).toMatch(/Guide : aucune bande à contre-jour/);
   });
 
-  it("trois bandes à contre-jour sur une page sont refusées", () => {
-    const fautes = validerContrastes(
-      avec({ "accueil.hero": true, "accueil.boucle": true, "accueil.commencer": true }),
-    );
-    expect(fautes.join("\n")).toMatch(
-      /Accueil : 4 bandes à contre-jour, 2 au plus/,
-    );
+  it("le nombre de bandes à contre-jour par page n'est pas plafonné", () => {
+    // Trois bandes sur l'accueil, qui ne se touchent pas : le titre, les
+    // métiers et les chiffres. Il y eut un plafond à deux, tant que le
+    // contre-jour était un éclat de nuit ; le tableau rythme la page autant
+    // qu'on le veut, pourvu que deux bandes ne fusionnent pas.
+    expect(
+      validerContrastes(avec({ "accueil.hero": true, "accueil.metiers": true })),
+    ).toEqual([]);
   });
 
   it("deux bandes qui se suivent sont refusées, nommées dans les mots de l'admin", () => {
