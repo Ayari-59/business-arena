@@ -736,8 +736,9 @@ h1 {
  *
  *   · le GRAIN du papier, un bruit fractal très léger sur tout le fond ;
  *   · les BANDES DE PAPIER : une section publique sur deux passe sur une
- *     crème plus soutenue, bordée de filets de laiton — la page se lit en
- *     chapitres plutôt qu'en un seul aplat ;
+ *     crème plus soutenue, bordée d'un double filet de laiton, celui qu'un
+ *     registre tire sous un total — la page se lit en chapitres plutôt qu'en
+ *     un seul aplat ;
  *   · le TABLEAU ENCASTRÉ : une ombre intérieure en haut et en bas, une lueur
  *     venue d'en haut, la poussière de craie, et pour les bandes un cadre de
  *     bois, plus épais en bas comme le rebord où l'on pose la craie ; les
@@ -757,9 +758,10 @@ h1 {
   /* Le bois du cadre du tableau : le haut, puis le rebord de la craie. */
   --bois: oklch(42% 0.05 65);
   --bois-rebord: oklch(38% 0.05 65);
-  /* La crème des bandes de papier, et leur filet de laiton. */
+  /* La crème des bandes de papier, et leur filet de laiton : un double trait,
+     comme celui qu'un registre comptable tire sous un total. */
   --creme: oklch(95.8% 0.018 82);
-  --filet-laiton: oklch(80% 0.05 80 / 0.55);
+  --filet-laiton: oklch(62% 0.08 78);
 }
 
 [data-theme="clair"] body {
@@ -776,7 +778,7 @@ h1 {
   background-image: var(--grain);
   background-size: 220px;
   background-repeat: repeat;
-  border-block: 1px solid var(--filet-laiton);
+  border-block: 4px double var(--filet-laiton);
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6);
 }
 
