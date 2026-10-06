@@ -82,7 +82,7 @@ export const BANDES: readonly BandeDef[] = [
     id: "accueil.boucle",
     page: "/",
     nom: "La boucle d'un tour",
-    contrasteParDefaut: false,
+    contrasteParDefaut: true,
   },
   {
     id: "accueil.metiers",
@@ -138,7 +138,7 @@ export const BANDES: readonly BandeDef[] = [
     id: "enseignants.ateliers",
     page: "/enseignants",
     nom: "Les ateliers clés en main",
-    contrasteParDefaut: false,
+    contrasteParDefaut: true,
   },
   {
     id: "enseignants.trois-temps",
@@ -208,7 +208,7 @@ export const BANDES: readonly BandeDef[] = [
     id: "fonctionnalites.moteur",
     page: "/fonctionnalites",
     nom: "Ce qui rend la simulation possible",
-    contrasteParDefaut: false,
+    contrasteParDefaut: true,
   },
   {
     id: "fonctionnalites.modeles",

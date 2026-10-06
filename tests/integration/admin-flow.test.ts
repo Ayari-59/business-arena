@@ -245,7 +245,7 @@ describe("thème graphique", () => {
     const etat = {
       ...etatDesContrastes(THEME_DU_SITE_PAR_DEFAUT),
       "accueil.chiffres": false,
-      "accueil.boucle": true,
+      "accueil.roles": true,
     };
     expect(validerContrastes(etat)).toEqual([]);
     await updatePlatformConfig(platformAdminId, {
@@ -254,7 +254,7 @@ describe("thème graphique", () => {
 
     const relu = await getPlatformConfig();
     expect(contrasteDeLaBande(relu.theme, "accueil.chiffres")).toBe(false);
-    expect(contrasteDeLaBande(relu.theme, "accueil.boucle")).toBe(true);
+    expect(contrasteDeLaBande(relu.theme, "accueil.roles")).toBe(true);
     // Une bande qu'on n'a pas touchée suit toujours son état d'origine.
     expect(contrasteDeLaBande(relu.theme, "enseignants.chiffres")).toBe(true);
     // Les autres réglages ne bougent pas : le thème s'écrit à côté, pas par-dessus.
@@ -265,8 +265,8 @@ describe("thème graphique", () => {
   it("ne stocke que les écarts à l'état d'origine", async () => {
     const relu = await getPlatformConfig();
     expect(Object.keys(relu.theme.contrastes).sort()).toEqual([
-      "accueil.boucle",
       "accueil.chiffres",
+      "accueil.roles",
     ]);
   });
 

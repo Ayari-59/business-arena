@@ -3,24 +3,21 @@ import type { Browser, Page } from "playwright-core";
 import { aller, BASE, ouvrirNavigateur } from "./helpers/browser";
 
 /**
- * DEUX BLOCS À CONTRE-JOUR NE SE RENCONTRENT JAMAIS DANS UNE MÊME FENÊTRE.
+ * ENTRE DEUX TABLEAUX, IL Y A TOUJOURS DU PAPIER.
  *
- * Le contraste attire l'œil parce qu'il est unique sur l'ÉCRAN. Deux bandes
- * visibles ensemble n'en font pas deux qui se voient : elles en font deux qui
- * s'annulent, et la page a changé de rayures. C'est la règle qui se perdra la
- * première, parce qu'elle ne casse rien — elle fait juste que plus rien ne
- * ressort, et aucune erreur ne le dit.
+ * Cette garde exigeait une fenêtre entière de papier entre deux blocs à
+ * contre-jour : tant que le contre-jour était un éclat de nuit au milieu de la
+ * page, deux éclats visibles ensemble s'annulaient. Devenu le tableau, une
+ * matière à part entière, encastrée et encadrée de bois, il peut rythmer la
+ * page — le plafond de deux par page est tombé avec lui.
  *
- * ELLE NE SE LIT PAS DANS LE CODE. Un fichier de page ne sait pas à quelle
- * hauteur ses sections tombent : cela dépend du texte, de la largeur, des
- * images chargées. La garde d'architecture compte donc les blocs et pose un
- * plafond ; la distance, elle, se mesure ici, dans un navigateur, sur la page
- * réellement rendue.
- *
- * La fenêtre d'essai est haute (1 000 px) exprès : c'est la plus défavorable
- * des fenêtres courantes, et une règle vérifiée sur un écran de portable ne
- * dit rien de l'écran de bureau où les deux bandes se retrouveraient.
+ * Ce qui reste vrai se mesure ici, sur la page réellement rendue : deux
+ * tableaux ne se touchent jamais. Côte à côte, ils fusionneraient en une seule
+ * ardoise et la coupure disparaîtrait. Le registre le refuse déjà sur l'ordre
+ * des bandes ; le navigateur vérifie qu'une vraie section de papier les sépare,
+ * pas un filet.
  */
+const ENTRE_DEUX = 160;
 const PAGES = ["/", "/entreprises", "/fonctionnalites", "/parcours", "/guide", "/enseignants"];
 const HAUTEUR = 1000;
 
@@ -69,17 +66,14 @@ describe("les blocs à contre-jour", () => {
     }
   });
 
-  it("ne se rencontrent jamais dans une même fenêtre", () => {
+  it("ne se touchent jamais : une section de papier les sépare", () => {
     const fautes: string[] = [];
     for (const [chemin, blocs] of releves) {
       const ordonnes = [...blocs].sort((a, b) => a.haut - b.haut);
       for (let i = 1; i < ordonnes.length; i += 1) {
         const ecart = ordonnes[i]!.haut - ordonnes[i - 1]!.bas;
-        // Il faut une fenêtre PLEINE entre le bas de l'un et le haut de
-        // l'autre : à moins que cela, il existe une position de défilement où
-        // les deux se voient.
-        if (ecart < HAUTEUR) {
-          fautes.push(`${chemin} : ${ecart} px entre deux coupures, il en faut ${HAUTEUR}`);
+        if (ecart < ENTRE_DEUX) {
+          fautes.push(`${chemin} : ${ecart} px de papier entre deux tableaux, il en faut ${ENTRE_DEUX}`);
         }
       }
     }

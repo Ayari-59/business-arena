@@ -50,7 +50,9 @@ describe("les refus", () => {
     // contre-jour était un éclat de nuit ; le tableau rythme la page autant
     // qu'on le veut, pourvu que deux bandes ne fusionnent pas.
     expect(
-      validerContrastes(avec({ "accueil.hero": true, "accueil.metiers": true })),
+      validerContrastes(
+        avec({ "accueil.hero": true, "accueil.boucle": false, "accueil.metiers": true }),
+      ),
     ).toEqual([]);
   });
 
