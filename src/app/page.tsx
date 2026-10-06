@@ -605,8 +605,7 @@ export default async function Home() {
         <Bande
           id="accueil.metiers"
           contraste={c("accueil.metiers")}
-          exterieur="border-y border-white/5"
-          fond="bg-slate-900/40"
+          fond="bande-registre"
           interieur="mx-auto max-w-6xl px-6 py-8"
         >
           <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">

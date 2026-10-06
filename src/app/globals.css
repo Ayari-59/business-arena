@@ -736,9 +736,8 @@ h1 {
  *
  *   · le GRAIN du papier, un bruit fractal très léger sur tout le fond ;
  *   · les BANDES DE PAPIER : une section publique sur deux passe sur le
- *     vert pâle des livres de comptes, bordée d'un double filet de laiton, celui qu'un
- *     registre tire sous un total — la page se lit en chapitres plutôt qu'en
- *     un seul aplat ;
+ *     vert pâle des livres de comptes, sans filet : le changement de papier
+ *     suffit, et la page se lit en chapitres plutôt qu'en un seul aplat ;
  *   · le TABLEAU ENCASTRÉ : une ombre intérieure en haut et en bas, une lueur
  *     venue d'en haut, la poussière de craie, et pour les bandes un cadre de
  *     bois, plus épais en bas comme le rebord où l'on pose la craie ; les
@@ -759,10 +758,8 @@ h1 {
   --bois: oklch(42% 0.05 65);
   --bois-rebord: oklch(38% 0.05 65);
   /* Le vert des bandes de papier, celui des livres de comptes : il répond au
-     tableau sans l'imiter. Et leur filet de laiton : un double trait, comme
-     celui qu'un registre comptable tire sous un total. */
+     tableau sans l'imiter. */
   --vert-registre: oklch(95.6% 0.018 155);
-  --filet-laiton: oklch(62% 0.08 78);
 }
 
 [data-theme="clair"] body {
@@ -773,13 +770,14 @@ h1 {
 
 /* Une bande de papier sur deux, parmi les sections d'une page publique. Une
    bande qui pose déjà son propre fond le garde : la règle ne vise que celles
-   qui n'en ont pas. */
-[data-theme="clair"] main > section[data-bande]:not(.contre-jour):not([class*="bg-"]):nth-of-type(even) {
+   qui n'en ont pas. Une bande peut aussi le demander par son nom,
+   `bande-registre`, quand le rang pair ne tombe pas sur elle. */
+[data-theme="clair"] main > section[data-bande]:not(.contre-jour):not([class*="bg-"]):nth-of-type(even),
+[data-theme="clair"] main > section.bande-registre {
   background-color: var(--vert-registre);
   background-image: var(--grain);
   background-size: 220px;
   background-repeat: repeat;
-  border-block: 4px double var(--filet-laiton);
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6);
 }
 

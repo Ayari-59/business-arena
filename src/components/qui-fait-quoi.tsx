@@ -67,8 +67,7 @@ export function QuiFaitQuoi({ contraste }: { contraste: boolean }) {
     <Bande
       id="accueil.roles"
       contraste={contraste}
-      exterieur="border-y border-white/5"
-      fond="bg-slate-900/40"
+      fond="bande-registre"
       interieur="mx-auto max-w-6xl px-6 py-14"
       labelledby="roles"
     >
