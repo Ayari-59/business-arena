@@ -735,8 +735,8 @@ h1 {
  * classe. Quatre gestes, tirés de cette salle :
  *
  *   · le GRAIN du papier, un bruit fractal très léger sur tout le fond ;
- *   · les BANDES DE PAPIER : une section publique sur deux passe sur une
- *     crème plus soutenue, bordée d'un double filet de laiton, celui qu'un
+ *   · les BANDES DE PAPIER : une section publique sur deux passe sur le
+ *     vert pâle des livres de comptes, bordée d'un double filet de laiton, celui qu'un
  *     registre tire sous un total — la page se lit en chapitres plutôt qu'en
  *     un seul aplat ;
  *   · le TABLEAU ENCASTRÉ : une ombre intérieure en haut et en bas, une lueur
@@ -758,9 +758,10 @@ h1 {
   /* Le bois du cadre du tableau : le haut, puis le rebord de la craie. */
   --bois: oklch(42% 0.05 65);
   --bois-rebord: oklch(38% 0.05 65);
-  /* La crème des bandes de papier, et leur filet de laiton : un double trait,
-     comme celui qu'un registre comptable tire sous un total. */
-  --creme: oklch(95.8% 0.018 82);
+  /* Le vert des bandes de papier, celui des livres de comptes : il répond au
+     tableau sans l'imiter. Et leur filet de laiton : un double trait, comme
+     celui qu'un registre comptable tire sous un total. */
+  --vert-registre: oklch(95.6% 0.018 155);
   --filet-laiton: oklch(62% 0.08 78);
 }
 
@@ -774,7 +775,7 @@ h1 {
    bande qui pose déjà son propre fond le garde : la règle ne vise que celles
    qui n'en ont pas. */
 [data-theme="clair"] main > section[data-bande]:not(.contre-jour):not([class*="bg-"]):nth-of-type(even) {
-  background-color: var(--creme);
+  background-color: var(--vert-registre);
   background-image: var(--grain);
   background-size: 220px;
   background-repeat: repeat;
