@@ -4,7 +4,6 @@ import { describe, expect, it } from "vitest";
 import {
   PALETTES,
   PALETTE_D_ORIGINE,
-  accentsDeLaPalette,
   echelleClaire,
   estCodePalette,
   feuilleDePalette,
@@ -17,23 +16,25 @@ import { identiteDeLaMaison } from "../../scripts/generer-theme-clair";
  * « VALIDÉ », ICI, SE MESURE.
  *
  * Une palette n'entre dans la liste que si elle tient la lisibilité du site
- * dans les DEUX thèmes. On calcule le contraste WCAG de chaque rôle de
+ * sur le papier ET sur le tableau. On calcule le contraste WCAG de chaque rôle de
  * l'accent sur les fonds que le site pose réellement, et on refuse en dessous
  * de 4,5 pour 1. Ce test est ce qui rend l'admin sûr : il ne laisse choisir
  * qu'entre des jeux qui ont passé ces mesures.
  *
  * Les fonds sont ceux du site, pas des valeurs de convenance : les deux
- * surfaces sombres viennent de globals.css, les deux claires du thème clair
- * généré (le miroir du 950 et du 900 de l'échelle ardoise).
+ * surfaces du tableau et les deux du papier sont les paliers 950 et 900 des
+ * échelles TABLEAU et PAPIER de scripts/generer-theme-clair.ts, convertis
+ * d'oklch en hexadécimal. Un test plus bas vérifie qu'ils n'ont pas bougé.
  */
 
 const ROOT = join(__dirname, "..", "..");
 const GLOBALS = readFileSync(join(ROOT, "src/app/globals.css"), "utf8");
 
-const SOMBRES = ["#070c1a", "#0e1526"];
-// slate-950 et slate-900 du thème clair, et le blanc : les fonds sur lesquels
-// l'encre se pose (page, carte, champ).
-const CLAIRS = ["#f8fafc", "#f1f5f9", "#ffffff"];
+// L'ardoise du tableau (950, 900) : là où l'échelle « sombre » d'une palette se pose.
+const SOMBRES = ["#161f1b", "#1d2823"];
+// Le papier (950, 900), et le blanc : les fonds sur lesquels l'encre se pose
+// (page, carte, champ).
+const CLAIRS = ["#fcf9f3", "#f7f3e9", "#ffffff"];
 
 const lineaire = (c: number) =>
   c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
@@ -115,9 +116,9 @@ describe("le registre des palettes", () => {
 });
 
 describe.each(PALETTES.filter((p) => p.code !== PALETTE_D_ORIGINE))(
-  "la palette $nom, sur le thème sombre",
+  "la palette $nom, sur le tableau",
   (p: Palette) => {
-    it("les paliers de texte (200 à 400) se lisent sur les deux surfaces sombres", () => {
+    it("les paliers de texte (200 à 400) se lisent sur les deux surfaces de l'ardoise", () => {
       for (const palier of [200, 300, 400] as const) {
         for (const fond of SOMBRES) {
           const ratio = contraste(p.sombre[palier]!, fond);
@@ -152,7 +153,7 @@ describe.each(PALETTES.filter((p) => p.code !== PALETTE_D_ORIGINE))(
 );
 
 describe.each(PALETTES.filter((p) => p.code !== PALETTE_D_ORIGINE))(
-  "la palette $nom, sur le thème clair",
+  "la palette $nom, sur le papier",
   (p: Palette) => {
     it("l'encre se lit sur la page, la carte et le champ", () => {
       for (const fond of CLAIRS) {
@@ -187,29 +188,28 @@ describe("la feuille d'une palette", () => {
     expect(feuilleDePalette(PALETTE_D_ORIGINE)).toBe("");
   });
 
-  it("une autre palette recolore les quatre contextes, contre-jour compris", () => {
-    // Sans les deux dernières règles, chaque bande à contre-jour resterait
-    // dans le laiton : une troisième palette au milieu des deux autres.
+  it("une autre palette recolore le papier et le tableau", () => {
+    // Sans la seconde règle, chaque tableau resterait dans le laiton : une
+    // seconde palette au milieu de la première.
     const f = feuilleDePalette("cobalt");
     for (const sel of [
-      'html[data-theme="sombre"]{',
       'html[data-theme="clair"]{',
-      'html[data-theme="sombre"] .contre-jour{',
-      'html[data-theme="clair"] .contre-jour{',
+      'html[data-theme="clair"] .contre-jour,html[data-theme="clair"] .ardoise{',
     ]) {
       expect(f, sel).toContain(sel);
     }
+    expect(f, "le thème sombre n'existe plus").not.toContain("sombre");
   });
 
-  it("un bloc à contre-jour prend l'échelle de l'AUTRE thème", () => {
+  it("le tableau prend l'échelle « sombre » de la palette, le papier son encre", () => {
     const p = paletteParCode("cobalt");
     const f = feuilleDePalette("cobalt");
     const bloc = (sel: string) => f.slice(f.indexOf(sel)).split("}")[0]!;
-    expect(bloc('html[data-theme="sombre"] .contre-jour{')).toContain(
-      `--color-amber-400:${echelleClaire(p)[400]};`,
-    );
-    expect(bloc('html[data-theme="clair"] .contre-jour{')).toContain(
+    expect(bloc('html[data-theme="clair"] .contre-jour,')).toContain(
       `--color-amber-400:${p.sombre[400]};`,
+    );
+    expect(bloc('html[data-theme="clair"]{')).toContain(
+      `--color-amber-400:${echelleClaire(p)[400]};`,
     );
   });
 
@@ -234,11 +234,5 @@ describe("la feuille d'une palette", () => {
       expect(f).not.toMatch(/[<>]/);
       expect(f.match(/\{/g)?.length ?? 0).toBe(f.match(/\}/g)?.length ?? 0);
     }
-  });
-
-  it("la pastille d'un thème prend l'accent de la palette", () => {
-    const a = accentsDeLaPalette("lagune");
-    expect(a.sombre).toBe(paletteParCode("lagune").sombre[400]);
-    expect(a.clair).toBe(paletteParCode("lagune").clair.encre);
   });
 });

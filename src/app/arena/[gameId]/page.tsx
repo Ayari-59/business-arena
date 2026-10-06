@@ -3,9 +3,7 @@ import { notFound } from "next/navigation";
 import { getGuestUserId } from "@/lib/guest";
 import { compter, formatEuro } from "@/lib/format";
 import { getGameView } from "@/services/game.service";
-import { getPlatformConfig } from "@/services/admin.service";
 import { estUnTelephone } from "@/lib/appareil";
-import { accentsDuSite, themeParDefaut } from "@/config/theme-du-site";
 import { BarreDeJeu } from "@/components/barre-de-jeu";
 import { StockageDurable } from "@/components/stockage-durable";
 import { getTeamSituations } from "@/services/pedagogy.service";
@@ -78,7 +76,6 @@ export default async function ArenaPage({
   if (!userId) notFound();
   const view = await getGameView(gameId, userId);
   if (!view) notFound();
-  const configDuSite = await getPlatformConfig();
   // Sur téléphone, ce qu'on consulte se range dans des tiroirs fermés (voir
   // decision-context.tsx et aide-repliable.tsx) ; ce qui décide reste ouvert.
   const telephone = await estUnTelephone();
@@ -1061,8 +1058,6 @@ export default async function ArenaPage({
         termine={finished}
         retour={view.kind === "solo" ? "/jouer" : "/"}
         cockpit={`/arena/${view.gameId}/cockpit`}
-        themeParDefaut={themeParDefaut(configDuSite.theme)}
-        accents={accentsDuSite(configDuSite.theme)}
         compte={
           telephone ? (
             <>

@@ -1,12 +1,9 @@
 import { BANDES, PAGES_A_BANDES, bandeParId, bandesDeLaPage } from "./bandes";
 import {
-  PALETTE_D_ORIGINE,
   PALETTE_PAR_DEFAUT,
-  accentsDeLaPalette,
   estCodePalette,
   type CodePalette,
 } from "./palettes";
-import { THEME_PAR_DEFAUT, estCodeTheme, type CodeTheme } from "./themes";
 
 /**
  * CE QUE L'ADMINISTRATEUR RÈGLE DU THÈME, ET CE QUI LUI EST REFUSÉ.
@@ -39,11 +36,13 @@ export interface ThemeDuSite {
   /** Les bandes dont le contre-jour DIFFÈRE de l'état d'origine : id → oui ou non. */
   contrastes: Record<string, boolean>;
   /**
-   * Le thème d'ouverture, quand il DIFFÈRE de celui d'usine. Absent : c'est
-   * THEME_PAR_DEFAUT, et le jour où l'usine change, ce site la suit.
+   * La palette d'accent, quand elle DIFFÈRE de celle d'origine. Absente : c'est
+   * PALETTE_PAR_DEFAUT, et le jour où l'usine change, ce site la suit.
+   *
+   * Un ancien champ `parDefaut` (le thème d'ouverture, sombre ou clair) peut
+   * encore traîner en base : le site n'a plus qu'un habillage, la lecture
+   * l'ignore.
    */
-  parDefaut?: CodeTheme;
-  /** La palette d'accent, quand elle DIFFÈRE de celle d'origine. Même logique que `parDefaut`. */
   palette?: CodePalette;
 }
 
@@ -63,7 +62,7 @@ export const BANDES_MAX_PAR_PAGE = 2;
 export function normaliserTheme(brut: unknown): ThemeDuSite {
   const contrastes: Record<string, boolean> = {};
   const source = brut as
-    | { contrastes?: unknown; parDefaut?: unknown; palette?: unknown }
+    | { contrastes?: unknown; palette?: unknown }
     | null
     | undefined;
   const lus = source?.contrastes;
@@ -80,9 +79,6 @@ export function normaliserTheme(brut: unknown): ThemeDuSite {
     }
   }
   const theme: ThemeDuSite = { contrastes };
-  const parDefaut = source?.parDefaut;
-  if (estCodeTheme(parDefaut) && parDefaut !== THEME_PAR_DEFAUT)
-    theme.parDefaut = parDefaut;
   const palette = source?.palette;
   if (estCodePalette(palette) && palette !== PALETTE_PAR_DEFAUT)
     theme.palette = palette;
@@ -92,25 +88,6 @@ export function normaliserTheme(brut: unknown): ThemeDuSite {
 /** La palette d'accent que sert le site : celle réglée, sinon celle d'origine. */
 export function paletteDuSite(theme: ThemeDuSite | undefined): CodePalette {
   return theme?.palette ?? PALETTE_PAR_DEFAUT;
-}
-
-/**
- * L'accent de la palette en vigueur pour les pastilles de thème, ou rien pour la
- * palette d'origine (les pastilles gardent alors celles du registre des thèmes).
- */
-export function accentsDuSite(
-  theme: ThemeDuSite | undefined,
-): { sombre: string; clair: string } | undefined {
-  const palette = paletteDuSite(theme);
-  return palette === PALETTE_D_ORIGINE ? undefined : accentsDeLaPalette(palette);
-}
-
-/**
- * Le thème que voit un visiteur qui n'a encore rien choisi. Celui qui a déjà
- * choisi, lui, garde son choix : il est sur son appareil, et rien ici n'y touche.
- */
-export function themeParDefaut(theme: ThemeDuSite | undefined): CodeTheme {
-  return theme?.parDefaut ?? THEME_PAR_DEFAUT;
 }
 
 /** Vrai si la bande est à contre-jour pour ce thème. Une bande inconnue ne l'est jamais. */
@@ -138,7 +115,6 @@ export function etatDesContrastes(
  */
 export function themeDepuisEtat(
   etat: Record<string, boolean>,
-  parDefaut: CodeTheme = THEME_PAR_DEFAUT,
   palette: CodePalette = PALETTE_PAR_DEFAUT,
 ): ThemeDuSite {
   const contrastes: Record<string, boolean> = {};
@@ -149,7 +125,6 @@ export function themeDepuisEtat(
     }
   }
   const theme: ThemeDuSite = { contrastes };
-  if (parDefaut !== THEME_PAR_DEFAUT) theme.parDefaut = parDefaut;
   if (palette !== PALETTE_PAR_DEFAUT) theme.palette = palette;
   return theme;
 }
@@ -159,13 +134,6 @@ export function validerPalette(code: unknown): string[] {
   return estCodePalette(code)
     ? []
     : ["Choisissez la palette parmi celles proposées."];
-}
-
-/** Les raisons pour lesquelles un thème d'ouverture est refusé. Vide : il tient. */
-export function validerThemeParDefaut(code: unknown): string[] {
-  return estCodeTheme(code)
-    ? []
-    : ["Choisissez le thème d'ouverture parmi ceux du site."];
 }
 
 /**

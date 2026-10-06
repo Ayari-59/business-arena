@@ -2,10 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
-import { ThemeSwitcher } from "@/components/theme-switcher";
 import { useProgression } from "@/lib/progression-parcours";
 import { PHASES } from "@/config/phases-du-tour";
-import type { CodeTheme } from "@/config/themes";
 
 /**
  * LA BARRE D'UNE APPLICATION, À LA PLACE DE CELLE D'UN SITE, DANS L'ARÈNE.
@@ -19,11 +17,7 @@ import type { CodeTheme } from "@/config/themes";
  * Elle ne remplace la barre du site QUE sur petit écran (le site la masque, voir
  * site-header.tsx) : sur grand écran, la vitrine garde sa barre et celle-ci
  * disparaît. Le reste de ce que portait la barre du site — profil, fiches,
- * guide, apparence — vit dans son menu « ⋯ », au bout d'un doigt.
- *
- * L'APPARENCE EST DANS LE MENU, PAS SUPPRIMÉE. Une salle éclairée au
- * vidéoprojecteur et un élève dans le train ne veulent pas le même thème : le
- * choix reste à portée, il cesse seulement d'occuper la barre.
+ * guide — vit dans son menu « ⋯ », au bout d'un doigt.
  */
 export function BarreDeJeu({
   nom,
@@ -32,8 +26,6 @@ export function BarreDeJeu({
   termine,
   retour,
   cockpit,
-  themeParDefaut,
-  accents,
   compte = null,
 }: {
   nom: string;
@@ -44,8 +36,6 @@ export function BarreDeJeu({
   retour: string;
   /** Le cockpit de prévision de la partie : testez vos hypothèses avant de valider. */
   cockpit: string;
-  themeParDefaut: CodeTheme;
-  accents?: Record<CodeTheme, string>;
   /** Ce qui n'est pas le jeu, en classe : sous quel nom on joue, la clé de reprise, la composition des équipes. */
   compte?: React.ReactNode;
 }) {
@@ -228,10 +218,6 @@ export function BarreDeJeu({
               {compte}
             </div>
           ) : null}
-          <div className="mt-1 flex min-h-11 items-center justify-between gap-3 border-t border-white/10 px-3 pt-2">
-            <span className="text-base text-slate-200">Apparence</span>
-            <ThemeSwitcher parDefaut={themeParDefaut} accents={accents} />
-          </div>
         </div>
       </div>
     </div>

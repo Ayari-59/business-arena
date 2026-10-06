@@ -4,7 +4,7 @@ import {
   PREFIXES_DES_ECRANS_DE_JEU,
   estEcranDeJeu,
 } from "../../src/config/ecrans-de-jeu";
-import { THEMES, couleurDeBarre } from "../../src/config/themes";
+import { COULEUR_DU_PAPIER } from "../../src/config/themes";
 
 /**
  * L'APPLICATION SUR UN TÉLÉPHONE : CE QUI SE GARDE DANS LA SOURCE.
@@ -73,15 +73,14 @@ describe("l'invitation à installer", () => {
 });
 
 describe("les réglages d'installation", () => {
-  it("le manifeste vient de la configuration, plus d'un fichier figé", () => {
+  it("le manifeste est engendré, plus un fichier figé", () => {
     expect(existsSync("src/app/manifest.ts")).toBe(true);
     expect(
       existsSync("public/manifest.json"),
-      "un fichier statique masquerait le manifeste lu de la configuration",
+      "un fichier statique masquerait le manifeste engendré",
     ).toBe(false);
     const manifeste = lire("src/app/manifest.ts");
-    expect(manifeste).toContain("couleurDeBarre");
-    expect(manifeste).toContain("themeParDefaut");
+    expect(manifeste).toContain("COULEUR_DU_PAPIER");
   });
 
   it("aucune couleur d'avant la charte ne traîne dans l'installation", () => {
@@ -93,17 +92,13 @@ describe("les réglages d'installation", () => {
     }
   });
 
-  it("la couleur de la barre est le fond du thème, pour chaque thème", () => {
-    for (const t of THEMES) expect(couleurDeBarre(t.code)).toBe(t.apercu.fond);
-  });
-
-  it("la mise en page pose la couleur de barre, et la corrige avec le thème choisi", () => {
-    // La balise est posée par l'amorce, pas rendue par React : rendue puis
-    // corrigée, elle se doublerait à l'hydratation (deux balises, deux couleurs).
-    expect(LAYOUT).not.toContain('<meta name="theme-color"');
-    expect(LAYOUT).toMatch(/createElement\("meta"\);m\.name="theme-color"/);
-    expect(lire("src/components/theme-switcher.tsx")).toContain("theme-color");
-    expect(LAYOUT).not.toMatch(/themeColor:/);
+  it("la barre du téléphone prolonge le papier", () => {
+    // Le site n'a plus qu'un habillage : la couleur de barre ne dépend plus d'un
+    // choix du visiteur, elle se déclare donc au viewport, une fois, côté
+    // serveur, et ne s'écrit plus par une amorce.
+    expect(COULEUR_DU_PAPIER).toMatch(/^#[0-9a-f]{6}$/);
+    expect(LAYOUT).toMatch(/themeColor: COULEUR_DU_PAPIER/);
+    expect(LAYOUT).not.toContain('m.name="theme-color"');
   });
 
   it("la page va jusqu'aux bords, et réserve la place de l'encoche", () => {
@@ -123,7 +118,6 @@ describe("le geste d'une application", () => {
   it("les commandes de la barre se grossissent sur les appareils tactiles", () => {
     for (const [fichier, attendu] of [
       ["src/components/site-header.tsx", "pointer-coarse:min-h-11"],
-      ["src/components/theme-switcher.tsx", "pointer-coarse:min-w-11"],
       ["src/components/tiroir.tsx", "pointer-coarse:min-h-11"],
       ["src/components/mandat-de-lequipe.tsx", "pointer-coarse:min-h-11"],
       ["src/components/segmented-tabs.tsx", "min-h-11"],

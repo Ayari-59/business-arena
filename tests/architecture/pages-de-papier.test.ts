@@ -99,7 +99,12 @@ function codeSeul(source: string): string {
 }
 
 const PALETTE = paletteClaire();
-const PAGES = fichiers(SRC).filter((f) => readFileSync(f, "utf8").includes('data-theme="clair"'));
+// La mise en page racine pose aussi `data-theme="clair"` — le site n'a plus
+// qu'un habillage, le papier — mais elle n'est pas une page d'imprimante : son
+// lien d'évitement au clavier est un bouton de laiton, pas du texte sur papier.
+const PAGES = fichiers(SRC).filter(
+  (f) => !f.endsWith(join("app", "layout.tsx")) && readFileSync(f, "utf8").includes('data-theme="clair"'),
+);
 
 /** L'encre doit rester lisible sur le papier ; le papier, rester du papier. */
 const ENCRE_MAX = 60;

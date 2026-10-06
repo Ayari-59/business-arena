@@ -23,8 +23,8 @@ const policeTexte = Inter_Tight({
   variable: "--font-brand-sans",
   display: "swap",
 });
-import { CLE_THEME, THEMES, couleurDeBarre } from "@/config/themes";
-import { accentsDuSite, paletteDuSite, themeParDefaut } from "@/config/theme-du-site";
+import { COULEUR_DU_PAPIER } from "@/config/themes";
+import { paletteDuSite } from "@/config/theme-du-site";
 import { feuilleDePalette } from "@/config/palettes";
 import { getPlatformConfig } from "@/services/admin.service";
 import { SITE_URL } from "@/config/site";
@@ -67,9 +67,10 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   // « cover » : la page va jusqu'aux bords du téléphone, encoche comprise. La
   // réserve des bords est posée dans globals.css (safe-area-inset). La couleur
-  // de la barre d'état n'est pas ici : elle suit le thème, donc elle se pose
-  // dans l'en-tête de la mise en page (voir plus bas).
+  // de la barre d'état prolonge le papier : une barre qui continue le fond de
+  // la page disparaît, et c'est ce qu'on attend d'elle.
   viewportFit: "cover",
+  themeColor: COULEUR_DU_PAPIER,
   width: "device-width",
   initialScale: 1,
 };
@@ -77,41 +78,15 @@ export const viewport: Viewport = {
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  // Le thème est relu et posé avant le premier affichage. Placé ici, en tête du
-  // corps, ce script s'exécute pendant l'analyse du document, donc avant que
-  // quoi que ce soit soit peint : sans lui, une page choisie en clair
-  // s'ouvrirait en sombre le temps d'un battement. Les codes viennent du
-  // registre, pour qu'un thème ajouté n'ait pas à être répété ici.
-  const codes = JSON.stringify(THEMES.map((t) => t.code));
-  // Le thème d'ouverture se règle depuis l'admin ; en cas de panne de la base,
-  // la lecture rend la configuration d'usine, donc le thème d'usine.
   const { theme } = await getPlatformConfig();
-  const parDefaut = themeParDefaut(theme);
   // La palette d'accent se pose par une feuille de style, vide pour celle
   // d'origine : le site d'usine ne reçoit alors pas un octet de plus.
-  const palette = paletteDuSite(theme);
-  const feuille = feuilleDePalette(palette);
-  const accents = accentsDuSite(theme);
-  // LA BARRE D'ÉTAT DU TÉLÉPHONE PREND LA COULEUR DU THÈME APPLIQUÉ, y compris
-  // celui que le visiteur a choisi. Elle est donc posée par l'amorce, avec le
-  // thème et avant la première image, et non rendue par React : une balise
-  // rendue côté serveur puis corrigée par le script ne correspondrait plus à ce
-  // que React attend à l'hydratation, qui en ajouterait une seconde à côté. Le
-  // serveur ne connaît pas le choix du visiteur ; il ne peut donc pas la poser.
-  const barres = JSON.stringify(
-    Object.fromEntries(THEMES.map((t) => [t.code, couleurDeBarre(t.code)])),
-  );
-  const amorce =
-    `var t=${JSON.stringify(parDefaut)};` +
-    `try{var c=localStorage.getItem(${JSON.stringify(CLE_THEME)});` +
-    `if(${codes}.indexOf(c)>-1){t=c;document.documentElement.dataset.theme=c}}catch(e){}` +
-    `var m=document.createElement("meta");m.name="theme-color";m.content=${barres}[t];` +
-    `document.head.appendChild(m);`;
+  const feuille = feuilleDePalette(paletteDuSite(theme));
 
   return (
     <html
       lang="fr"
-      data-theme={parDefaut}
+      data-theme="clair"
       className={`${policeTitre.variable} ${policeTexte.variable}`}
     >
       <head>
@@ -120,7 +95,6 @@ export default async function RootLayout({
         ) : null}
       </head>
       <body className="min-h-screen bg-slate-950 text-slate-100 antialiased">
-        <script dangerouslySetInnerHTML={{ __html: amorce }} />
         {/* Premier élément focusable : au clavier, on saute la navigation. */}
         <a
           href="#main"
@@ -128,7 +102,7 @@ export default async function RootLayout({
         >
           Aller au contenu
         </a>
-        <SiteHeader themeParDefaut={parDefaut} accents={accents} />
+        <SiteHeader />
         {children}
         {/* Invite d'installation, sur mobile uniquement (fermable, mémorisée). */}
         <InstallPrompt />

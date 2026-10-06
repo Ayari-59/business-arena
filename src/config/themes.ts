@@ -1,96 +1,26 @@
 /**
- * Les thèmes du site : un sombre, un clair.
+ * L'HABILLAGE DU SITE : LE PAPIER ET LE TABLEAU.
  *
- * Un thème ne redéfinit que deux choses : la teinte neutre, qui fait les fonds
- * et les textes, et la teinte d'accent, qui fait les boutons d'action. Les
- * couleurs de secteur et celles qui portent un sens (le rouge d'une perte, le
- * vert d'un bénéfice) ne bougent pas d'un thème à l'autre : les faire varier
- * demanderait à l'élève de réapprendre à lire ses écrans.
+ * Le site a longtemps proposé deux thèmes, un sombre et un clair qui le
+ * renversait, et un bouton pour basculer de l'un à l'autre. Il n'en a plus
+ * qu'un, qui ne se choisit pas :
  *
- * Les valeurs vivent dans les feuilles de style, parce que Tailwind ne lit pas
- * le TypeScript. Ce fichier tient la liste, les libellés, et les pastilles du
- * sélecteur ; un test vérifie que les deux ne divergent pas.
+ *   · le PAPIER, un ivoire à l'encre brune, pour lire et pour jouer ;
+ *   · le TABLEAU, une ardoise vert-noir et sa craie, là où la classe regarde
+ *     ensemble — les bandes à contre-jour, les écrans de chiffres de l'arène,
+ *     la projection.
+ *
+ * Le sombre n'a pas disparu : il est devenu une matière que le site pose à
+ * dessein, au lieu d'un mode qu'on bascule. Les échelles complètes vivent dans
+ * scripts/generer-theme-clair.ts (PAPIER, TABLEAU), qui engendre la feuille.
+ *
+ * Ce fichier garde les deux couleurs de fond en clair, pour ce qui ne lit pas
+ * les feuilles de style : la barre d'état du téléphone, l'écran de démarrage
+ * de l'application installée, les pastilles d'aperçu des palettes.
  */
-export type CodeTheme = "sombre" | "clair";
 
-export interface Theme {
-  code: CodeTheme;
-  nom: string;
-  /** Ce que le thème change, en une phrase, pour le sélecteur. */
-  description: string;
-  /**
-   * Les deux couleurs de la pastille : le fond, puis l'accent.
-   *
-   * ELLES S'ÉCRIVENT EN CLAIR, et c'est le seul endroit du site où une couleur
-   * doit échapper aux variables : la pastille représente l'AUTRE thème, donc
-   * elle ne peut pas lire la palette que le thème courant vient de poser.
-   *
-   * Le revers est qu'elles se recopient, et qu'une copie dérive : elles ont
-   * porté l'amber brut de Tailwind et le gris d'usine pendant que le site
-   * servait un or patiné sur une nuit encrée. La pastille censée MONTRER le
-   * thème sombre peignait des couleurs que le thème sombre n'a pas.
-   */
-  apercu: { fond: string; accent: string };
-}
+/** Le fond de la page : l'ivoire du papier (oklch 98,3 % 0,009 88). */
+export const COULEUR_DU_PAPIER = "#fcf9f3";
 
-/**
- * LE THÈME D'ORIGINE : celui qui n'a pas de feuille, parce qu'il EST celle du
- * site. Le sombre est l'échelle de Tailwind telle quelle ; le clair la
- * renverse (voir theme-clair.css). Lui écrire un bloc reviendrait à recopier
- * ce qui existe déjà, avec le risque que la copie diverge — et c'est aussi
- * l'étalon des mesures de lisibilité : on vérifie qu'un thème ne dégrade pas
- * ce qui était lisible, il faut donc un « ce qui était ».
- */
-export const THEME_DORIGINE: CodeTheme = "sombre";
-
-/**
- * LE THÈME APPLIQUÉ TANT QUE PERSONNE N'A CHOISI.
- *
- * Ce n'est plus celui d'origine. Le site s'ouvrait en sombre, ce qui allait
- * bien à l'arène — on y joue en salle, projecteur éteint — et mal à tout le
- * reste : un enseignant découvre le produit sur l'ordinateur de sa salle, en
- * plein jour, souvent au vidéoprojecteur, et une page sombre y perd la moitié
- * de son contraste. Elle s'imprime aussi mal, et c'est de ces pages-là qu'on
- * tire des fiches.
- *
- * Les deux constantes étaient la même il y a peu, et les confondre coûterait
- * une mesure : « le thème par défaut » et « le thème de référence » se lisent
- * pareil et ne disent pas la même chose.
- */
-export const THEME_PAR_DEFAUT: CodeTheme = "clair";
-
-/** La clé du navigateur. Le choix reste sur l'appareil, il ne part sur aucun serveur. */
-export const CLE_THEME = "arena-theme";
-
-export const THEMES: Theme[] = [
-  {
-    code: "sombre",
-    nom: "Sombre",
-    description: "Gris bleuté et ambre, l'habillage d'origine. À l'aise dans une salle sombre.",
-    apercu: { fond: "#070c1a", accent: "#d8b45c" },
-  },
-  {
-    code: "clair",
-    nom: "Clair",
-    description: "Fond clair, lisible en salle éclairée et économe à l'impression.",
-    apercu: { fond: "#f8fafc", accent: "#5c470f" },
-  },
-];
-
-/**
- * LA COULEUR QUE LE TÉLÉPHONE PEINT AUTOUR DE LA PAGE : la barre d'état en haut,
- * et le fond de l'écran de démarrage quand l'application est installée.
- *
- * C'est le fond du thème, ni plus ni moins. Elle était un orange fixe, celui
- * de l'amber brut de Tailwind, que le site n'emploie plus nulle part : sur un
- * téléphone, une bande orange surmontait une page encre ou papier, et c'était
- * la première chose qu'on voyait d'une « application ». Une barre qui prolonge
- * le fond de la page disparaît, et c'est ce qu'on attend d'elle.
- */
-export function couleurDeBarre(code: CodeTheme): string {
-  return THEMES.find((t) => t.code === code)!.apercu.fond;
-}
-
-export function estCodeTheme(valeur: unknown): valeur is CodeTheme {
-  return typeof valeur === "string" && THEMES.some((t) => t.code === valeur);
-}
+/** Le fond du tableau : l'ardoise vert-noir (oklch 23 % 0,016 162). */
+export const COULEUR_DU_TABLEAU = "#161f1b";

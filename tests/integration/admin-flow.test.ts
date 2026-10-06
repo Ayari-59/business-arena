@@ -35,11 +35,9 @@ import {
   etatDesContrastes,
   themeDepuisEtat,
   paletteDuSite,
-  themeParDefaut,
   validerContrastes,
   THEME_DU_SITE_PAR_DEFAUT,
 } from "@/config/theme-du-site";
-import { THEMES, THEME_PAR_DEFAUT } from "@/config/themes";
 
 let platformAdminId: string;
 let orgId: string;
@@ -304,22 +302,20 @@ describe("thème graphique", () => {
     expect(relu.theme.contrastes).toEqual({});
   });
 
-  it("le thème d'ouverture s'enregistre à côté des bandes, et se rétablit avec elles", async () => {
-    const autre = THEMES.find((t) => t.code !== THEME_PAR_DEFAUT)!.code;
+  it("un ancien thème d'ouverture resté en base est ignoré à la lecture", async () => {
+    // Le site n'a plus qu'un habillage. Un réglage enregistré du temps des deux
+    // thèmes ne doit ni casser la lecture, ni survivre à la relecture.
     await updatePlatformConfig(platformAdminId, {
-      theme: themeDepuisEtat({ ...etatDesContrastes(THEME_DU_SITE_PAR_DEFAUT), "accueil.chiffres": false, "accueil.boucle": true }, autre),
+      theme: { contrastes: {}, parDefaut: "sombre" } as never,
     });
     const relu = await getPlatformConfig();
-    expect(themeParDefaut(relu.theme)).toBe(autre);
-    expect(contrasteDeLaBande(relu.theme, "accueil.boucle")).toBe(true);
-
+    expect(relu.theme).toEqual({ contrastes: {} });
     await updatePlatformConfig(platformAdminId, { theme: THEME_DU_SITE_PAR_DEFAUT });
-    expect(themeParDefaut((await getPlatformConfig()).theme)).toBe(THEME_PAR_DEFAUT);
   });
 
   it("la palette s'enregistre à côté du reste, et se rétablit avec lui", async () => {
     await updatePlatformConfig(platformAdminId, {
-      theme: themeDepuisEtat(etatDesContrastes(THEME_DU_SITE_PAR_DEFAUT), THEME_PAR_DEFAUT, "cobalt"),
+      theme: themeDepuisEtat(etatDesContrastes(THEME_DU_SITE_PAR_DEFAUT), "cobalt"),
     });
     const relu = await getPlatformConfig();
     expect(paletteDuSite(relu.theme)).toBe("cobalt");

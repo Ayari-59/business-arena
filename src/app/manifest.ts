@@ -1,23 +1,17 @@
 import type { MetadataRoute } from "next";
-import { couleurDeBarre } from "@/config/themes";
-import { themeParDefaut } from "@/config/theme-du-site";
-import { getPlatformConfig } from "@/services/admin.service";
+import { COULEUR_DU_PAPIER } from "@/config/themes";
 
 /**
  * Le manifeste de l'application installée.
  *
  * Il était un fichier statique, dont le fond d'écran de démarrage et la couleur
  * de barre datent d'avant la charte : ils ne ressemblaient plus au site. Il est
- * maintenant lu de la configuration : l'écran de démarrage s'ouvre sur le fond
- * du thème d'ouverture, que l'administrateur règle dans /admin/theme. Un
- * manifeste ne se lit qu'à l'installation et au démarrage : le rendre à la
- * demande ne coûte rien, et évite d'avoir à l'invalider à chaque réglage.
+ * maintenant engendré : l'écran de démarrage et la barre d'état prennent
+ * l'ivoire du papier, le seul fond du site depuis qu'il n'a plus qu'un
+ * habillage.
  */
-export const dynamic = "force-dynamic";
-
-export default async function manifest(): Promise<MetadataRoute.Manifest> {
-  const { theme } = await getPlatformConfig();
-  const fond = couleurDeBarre(themeParDefaut(theme));
+export default function manifest(): MetadataRoute.Manifest {
+  const fond = COULEUR_DU_PAPIER;
   return {
     id: "/",
     name: "Business Arena",

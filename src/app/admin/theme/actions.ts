@@ -10,17 +10,11 @@ import {
   type CodePalette,
 } from "@/config/palettes";
 import {
-  THEME_PAR_DEFAUT,
-  estCodeTheme,
-  type CodeTheme,
-} from "@/config/themes";
-import {
   THEME_DU_SITE_PAR_DEFAUT,
   etatDesContrastes,
   themeDepuisEtat,
   validerContrastes,
   validerPalette,
-  validerThemeParDefaut,
 } from "@/config/theme-du-site";
 
 /**
@@ -32,7 +26,6 @@ export interface EtatTheme {
   erreurs: string[];
   enregistre: boolean;
   etat: Record<string, boolean>;
-  parDefaut: CodeTheme;
   palette: CodePalette;
 }
 
@@ -44,8 +37,8 @@ export interface EtatTheme {
  */
 function revalider() {
   for (const { page } of PAGES_A_BANDES) revalidatePath(page);
-  // Le thème d'ouverture est posé par la mise en page, qui enveloppe TOUTES les
-  // pages : l'invalider une fois, à la racine, les invalide toutes.
+  // La palette est posée par la mise en page, qui enveloppe TOUTES les pages :
+  // l'invalider une fois, à la racine, les invalide toutes.
   revalidatePath("/", "layout");
 }
 
@@ -63,25 +56,22 @@ export async function enregistrerThemeAction(
 
   // La validation se refait ICI. Celle du navigateur sert à guider ; elle ne
   // protège rien, puisqu'un formulaire se forge.
-  const choisi = formData.get("parDefaut");
-  const parDefaut: CodeTheme = estCodeTheme(choisi) ? choisi : THEME_PAR_DEFAUT;
   const brute = formData.get("palette");
   const palette: CodePalette = estCodePalette(brute)
     ? brute
     : PALETTE_PAR_DEFAUT;
   const erreurs = [
-    ...validerThemeParDefaut(choisi),
     ...validerPalette(brute),
     ...validerContrastes(etat),
   ];
   if (erreurs.length > 0)
-    return { erreurs, enregistre: false, etat, parDefaut, palette };
+    return { erreurs, enregistre: false, etat, palette };
 
   await updatePlatformConfig(adminId, {
-    theme: themeDepuisEtat(etat, parDefaut, palette),
+    theme: themeDepuisEtat(etat, palette),
   });
   revalider();
-  return { erreurs: [], enregistre: true, etat, parDefaut, palette };
+  return { erreurs: [], enregistre: true, etat, palette };
 }
 
 export async function retablirThemeAction(): Promise<EtatTheme> {
@@ -92,7 +82,6 @@ export async function retablirThemeAction(): Promise<EtatTheme> {
     erreurs: [],
     enregistre: true,
     etat: etatDesContrastes(THEME_DU_SITE_PAR_DEFAUT),
-    parDefaut: THEME_PAR_DEFAUT,
     palette: PALETTE_PAR_DEFAUT,
   };
 }

@@ -4,8 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { InstallButton } from "@/components/install-button";
-import { ThemeSwitcher } from "@/components/theme-switcher";
-import type { CodeTheme } from "@/config/themes";
 import { SiteLogo } from "@/components/site-logo";
 import {
   ACTION_PRINCIPALE,
@@ -48,13 +46,7 @@ import {
  * enseignant et le code d'une partie, pour que ni l'un ni l'autre n'ait à
  * ouvrir le menu.
  */
-export function SiteHeader({
-  themeParDefaut,
-  accents,
-}: {
-  themeParDefaut: CodeTheme;
-  accents?: { sombre: string; clair: string };
-}) {
+export function SiteHeader() {
   const chemin = usePathname();
   const [ouvert, setOuvert] = useState(false);
   // Les groupes du plan sont repliés, sauf le premier, orientation et contact,
@@ -203,14 +195,6 @@ export function SiteHeader({
             ))}
           </div>
           )}
-
-          {/* LE THÈME SE CHOISIT DANS LA BARRE, PAS DANS LE MENU. Il y vivait
-              sous « Réglages », c'est-à-dire derrière un panneau qui couvre la
-              page : on changeait l'apparence sans voir ce qu'on changeait. Ici
-              la page bascule sous l'interrupteur — deux pastilles, sans leur
-              nom : la barre porte déjà un logo, trois liens, deux boutons et un
-              menu. */}
-          <ThemeSwitcher parDefaut={themeParDefaut} accents={accents} />
 
           <button
             type="button"

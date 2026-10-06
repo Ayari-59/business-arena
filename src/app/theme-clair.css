@@ -1,5 +1,5 @@
 /* ---------------------------------------------------------------------------
- * Thème clair — FICHIER GÉNÉRÉ, ne pas modifier à la main.
+ * Le papier et le tableau — FICHIER GÉNÉRÉ, ne pas modifier à la main.
  * Régénérer avec : npx tsx scripts/generer-theme-clair.ts
  * ------------------------------------------------------------------------- */
 [data-theme="clair"] {
@@ -192,17 +192,17 @@
   --color-rose-800: oklch(89.2% 0.058 10.001);
   --color-rose-900: oklch(94.1% 0.03 12.58);
   --color-rose-950: oklch(96.9% 0.015 12.422);
-  --color-slate-50: oklch(12.9% 0.042 264.695);
-  --color-slate-100: oklch(20.8% 0.042 265.755);
-  --color-slate-200: oklch(20.8% 0.042 265.755);
-  --color-slate-300: oklch(20.8% 0.042 265.755);
-  --color-slate-400: oklch(37.2% 0.044 257.287);
-  --color-slate-500: oklch(44.6% 0.043 257.281);
-  --color-slate-600: oklch(55.4% 0.046 257.417);
-  --color-slate-700: oklch(86.9% 0.022 252.894);
-  --color-slate-800: oklch(92.9% 0.013 255.508);
-  --color-slate-900: oklch(96.8% 0.007 247.896);
-  --color-slate-950: oklch(98.4% 0.003 247.858);
+  --color-slate-50: oklch(12.9% 0.02 60);
+  --color-slate-100: oklch(20.8% 0.022 60);
+  --color-slate-200: oklch(20.8% 0.022 60);
+  --color-slate-300: oklch(20.8% 0.022 60);
+  --color-slate-400: oklch(37.2% 0.03 65);
+  --color-slate-500: oklch(44.6% 0.032 68);
+  --color-slate-600: oklch(55.4% 0.034 70);
+  --color-slate-700: oklch(86.9% 0.028 82);
+  --color-slate-800: oklch(92.9% 0.022 84);
+  --color-slate-900: oklch(96.4% 0.014 85);
+  --color-slate-950: oklch(98.3% 0.009 88);
   --color-gray-50: oklch(13% 0.028 261.692);
   --color-gray-100: oklch(21% 0.034 264.665);
   --color-gray-200: oklch(21% 0.034 264.665);
@@ -294,21 +294,23 @@
 }
 
 /* ---------------------------------------------------------------------------
- * LE CONTRE-JOUR : un bloc de nuit au milieu d'une page claire.
+ * LE TABLEAU : une ardoise au milieu du papier — une bande à contre-jour, un
+ * écran de chiffres, la projection.
  *
- * Sur une page claire, il ramène l'échelle d'origine, ce qui revient à
- * DÉFAIRE, pour ce bloc seulement, ce que le thème de la page vient de poser :
- * d'où la reprise des mêmes clés avec leurs valeurs de départ. Sur une page
- * sombre, il ne renverse rien : il reste nuit (voir globals.css).
+ * Il ramène l'échelle d'origine, celle pour laquelle les classes ont été
+ * écrites, ce qui revient à DÉFAIRE, pour ce bloc seulement, ce que le papier
+ * vient de poser : d'où la reprise des mêmes clés avec leurs valeurs de
+ * départ. Seul le neutre diffère, qui devient l'ardoise et sa craie.
  *
  * Sa spécificité (deux sélecteurs) l'emporte sur celle du thème (un seul),
  * quel que soit l'ordre des règles dans la feuille.
  *
- * Un seul bloc à contre-jour par écran : le contraste attire l'œil parce qu'il
- * est unique sur la page, pas parce qu'il est joli. Deux, et aucun des deux ne
- * fonctionne.
+ * Une seule bande à contre-jour par écran : le contraste attire l'œil parce
+ * qu'il est unique sur la page, pas parce qu'il est joli. Deux, et aucune des
+ * deux ne fonctionne.
  * ------------------------------------------------------------------------- */
-[data-theme="clair"] .contre-jour {
+[data-theme="clair"] .contre-jour,
+[data-theme="clair"] .ardoise {
     --color-white: #fff;
     --color-black: #000;
     --color-red-50: oklch(97.1% 0.013 17.38);
@@ -498,17 +500,17 @@
     --color-rose-800: oklch(45.5% 0.188 13.697);
     --color-rose-900: oklch(41% 0.159 10.272);
     --color-rose-950: oklch(27.1% 0.105 12.094);
-    --color-slate-50: oklch(98.4% 0.003 247.858);
-    --color-slate-100: oklch(96.8% 0.007 247.896);
-    --color-slate-200: oklch(92.9% 0.013 255.508);
-    --color-slate-300: oklch(86.9% 0.022 252.894);
-    --color-slate-400: oklch(70.4% 0.04 256.788);
-    --color-slate-500: oklch(55.4% 0.046 257.417);
-    --color-slate-600: oklch(44.6% 0.043 257.281);
-    --color-slate-700: oklch(37.2% 0.044 257.287);
-    --color-slate-800: oklch(27.9% 0.041 260.031);
-    --color-slate-900: #0e1526;
-    --color-slate-950: #070c1a;
+    --color-slate-50: oklch(98.4% 0.006 150);
+    --color-slate-100: oklch(96.8% 0.008 150);
+    --color-slate-200: oklch(92.9% 0.012 152);
+    --color-slate-300: oklch(86.9% 0.016 152);
+    --color-slate-400: oklch(70.4% 0.022 155);
+    --color-slate-500: oklch(55.4% 0.024 158);
+    --color-slate-600: oklch(44.6% 0.024 160);
+    --color-slate-700: oklch(37.2% 0.022 160);
+    --color-slate-800: oklch(31% 0.02 160);
+    --color-slate-900: oklch(26.5% 0.018 162);
+    --color-slate-950: oklch(23% 0.016 162);
     --color-gray-50: oklch(98.5% 0.002 247.839);
     --color-gray-100: oklch(96.7% 0.003 264.542);
     --color-gray-200: oklch(92.8% 0.006 264.531);
@@ -599,7 +601,7 @@
     --color-taupe-950: oklch(14.7% 0.004 49.3);
 }
 
-/* L'impression reste sur du papier blanc quel que soit le thème : les classes
+/* L'impression reste sur du papier blanc : les classes
  * print:bg-white et print:text-black des fiches d'atelier s'appuient dessus. */
 @media print {
   [data-theme="clair"] {

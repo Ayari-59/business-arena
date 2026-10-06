@@ -1,35 +1,25 @@
 /**
- * Génère le thème clair par inversion de l'échelle de Tailwind.
+ * Engendre l'habillage du site : le PAPIER, et le TABLEAU.
  *
- * Un thème clair n'est pas un choix de couleurs, c'est un renversement : ce
- * qui était un fond sombre devient un fond clair, ce qui était un texte clair
- * devient un texte sombre. Écrire ce renversement à la main teinte par teinte
- * garantit d'en oublier, et un oubli ne se voit pas : il donne un bloc bleu
- * pâle sur fond bleu pâle, illisible, quelque part au fond d'une page que
- * personne ne rouvre.
+ * Le site n'a plus qu'un habillage (voir src/config/themes.ts). Il reste
+ * engendré, et pour la raison qui a fait naître ce script : un renversement
+ * recopié à la main teinte par teinte s'oublie quelque part, et l'oubli ne se
+ * voit pas — il donne un bloc bleu pâle sur fond bleu pâle, au fond d'une page
+ * que personne ne rouvre.
  *
- * On lit donc l'échelle complète de Tailwind et on l'inverse mécaniquement :
- * le palier 950 prend la valeur du 50, le 900 celle du 100, et ainsi de suite.
- * Le 500 se garde lui-même, c'est le pivot de chaque teinte. Le blanc et le
- * noir s'échangent, ce qui retourne du même coup les bordures « white/10 » en
- * bordures sombres discrètes.
+ * LE PAPIER. Les classes du site ont été écrites pour un fond sombre
+ * (`bg-slate-950` est le fond, `text-slate-100` le texte). On lit donc
+ * l'échelle complète de Tailwind et on la renverse : le palier 950 prend la
+ * valeur du 50, le 900 celle du 100, et ainsi de suite ; le blanc et le noir
+ * s'échangent. Les couleurs de sens (rouge, vert) et de secteur suivent ce
+ * renversement. L'échelle neutre, elle, ne se renverse plus : elle est écrite
+ * (PAPIER, plus bas), un ivoire et une encre brune.
  *
- * LE MÊME RENVERSEMENT SERT AUSSI À UN BLOC posé à contre-jour au milieu
- * d'une page claire : il y retrouve l'échelle d'origine, la nuit, et attire
- * l'œil sans rien ajouter au vocabulaire du site — c'est le contraste d'une
- * capture d'écran au milieu d'un texte. Le fichier porte donc deux blocs : la
- * page claire, et son contre-jour.
- *
- * SUR UNE PAGE SOMBRE, LE CONTRE-JOUR NE SE RENVERSE PLUS. Il devenait une
- * surface de papier : le visiteur qui avait choisi le sombre ouvrait l'accueil
- * sur un grand aplat clair, et les captures désaturées de l'en-tête y
- * prenaient un gris sale. Il reste désormais nuit, une nuit relevée d'un cran
- * (voir globals.css) : le thème choisi est respecté sur toute la page.
- *
- * Ils sont engendrés plutôt qu'écrits, pour la raison qui a fait naître ce
- * script : un renversement recopié à la main s'oublie quelque part, et l'oubli
- * ne se voit pas — il donne un bloc bleu pâle sur fond bleu pâle, au fond
- * d'une page que personne ne rouvre.
+ * LE TABLEAU. Un bloc à contre-jour, ou une `ardoise` (les écrans de chiffres
+ * de l'arène, la projection), retrouve l'échelle d'origine — celle pour
+ * laquelle les classes ont été écrites —, sauf son neutre, qui devient une
+ * ardoise vert-noir et sa craie (TABLEAU, plus bas). Le fichier porte donc
+ * deux blocs : le papier, et le tableau.
  *
  * Usage : npx tsx scripts/generer-theme-clair.ts
  * Le fichier produit est versionné : la compilation n'a pas besoin du script.
@@ -95,6 +85,54 @@ const SURCHARGES: Record<string, number> = {
   "amber-400": 900,
 };
 
+/**
+ * LE PAPIER : l'échelle neutre de la page, écrite et non plus renversée.
+ *
+ * Le renversement de l'ardoise de Tailwind donnait un blanc bleuté et un gris
+ * d'usine : le site ne choisissait pas son papier, il le subissait, et le
+ * laiton se posait sur un blanc froid. Chaque palier garde ici la CLARTÉ
+ * (le L d'oklch) que le renversement lui donnait, et ne change que de teinte,
+ * vers un ivoire et une encre brune : les contrastes mesurés tiennent donc
+ * tels quels. Seules les surfaces (700 à 950) prennent un peu plus de chaleur.
+ *
+ * Les clés sont celles des classes (`bg-slate-950` est le fond de la page).
+ */
+export const PAPIER: Record<number, string> = {
+  50: "oklch(12.9% 0.02 60)",
+  100: "oklch(20.8% 0.022 60)",
+  200: "oklch(20.8% 0.022 60)",
+  300: "oklch(20.8% 0.022 60)",
+  400: "oklch(37.2% 0.03 65)",
+  500: "oklch(44.6% 0.032 68)",
+  600: "oklch(55.4% 0.034 70)",
+  700: "oklch(86.9% 0.028 82)",
+  800: "oklch(92.9% 0.022 84)",
+  900: "oklch(96.4% 0.014 85)",
+  950: "oklch(98.3% 0.009 88)",
+};
+
+/**
+ * LE TABLEAU : une ardoise vert-noir et sa craie, là où la classe regarde
+ * ensemble — les bandes à contre-jour, les écrans de chiffres de l'arène, la
+ * projection. Il remplace la nuit bleue, qui n'était que le thème sombre posé
+ * au milieu d'une page claire. Les paliers de texte (50 à 600) gardent la
+ * clarté de l'échelle d'origine ; les fonds (700 à 950) sont relevés d'un cran
+ * pour qu'on y reconnaisse une ardoise et non un écran éteint.
+ */
+export const TABLEAU: Record<number, string> = {
+  50: "oklch(98.4% 0.006 150)",
+  100: "oklch(96.8% 0.008 150)",
+  200: "oklch(92.9% 0.012 152)",
+  300: "oklch(86.9% 0.016 152)",
+  400: "oklch(70.4% 0.022 155)",
+  500: "oklch(55.4% 0.024 158)",
+  600: "oklch(44.6% 0.024 160)",
+  700: "oklch(37.2% 0.022 160)",
+  800: "oklch(31% 0.02 160)",
+  900: "oklch(26.5% 0.018 162)",
+  950: "oklch(23% 0.016 162)",
+};
+
 /** Les couleurs que le `@theme` du site pose par-dessus celles de Tailwind. */
 export function identiteDeLaMaison(sourceGlobals: string): Map<string, string> {
   const debut = sourceGlobals.indexOf("@theme {");
@@ -134,11 +172,15 @@ export function genererThemeClair(sourceTailwind: string, sourceGlobals: string)
     const palierCible = SURCHARGES[cle] ?? MIROIR[palier];
     const jumelle = palette.get(`${teinte}-${palierCible}`);
     if (!jumelle || jumelle === valeur) continue;
-    renversees.push(`  --color-${teinte}-${palier}: ${jumelle};`);
+    renversees.push(
+      `  --color-${teinte}-${palier}: ${teinte === "slate" ? PAPIER[palier] : jumelle};`,
+    );
     // L'ORIGINE, C'EST L'ÉCHELLE DU SITE, pas celle de Tailwind. Un bloc à
     // contre-jour sur page claire doit retrouver l'or patiné et le bleu encré,
     // pas l'amber d'autocar et le gris d'usine.
-    origines.push(`  --color-${teinte}-${palier}: ${identite.get(cle) ?? valeur};`);
+    origines.push(
+      `  --color-${teinte}-${palier}: ${teinte === "slate" ? TABLEAU[palier] : (identite.get(cle) ?? valeur)};`,
+    );
     rendues.add(cle);
   }
 
@@ -163,7 +205,7 @@ export function genererThemeClair(sourceTailwind: string, sourceGlobals: string)
       .join("\n");
 
   return `/* ---------------------------------------------------------------------------
- * Thème clair — FICHIER GÉNÉRÉ, ne pas modifier à la main.
+ * Le papier et le tableau — FICHIER GÉNÉRÉ, ne pas modifier à la main.
  * Régénérer avec : npx tsx scripts/generer-theme-clair.ts
  * ------------------------------------------------------------------------- */
 [data-theme="clair"] {
@@ -171,25 +213,27 @@ ${clair(renversees)}
 }
 
 /* ---------------------------------------------------------------------------
- * LE CONTRE-JOUR : un bloc de nuit au milieu d'une page claire.
+ * LE TABLEAU : une ardoise au milieu du papier — une bande à contre-jour, un
+ * écran de chiffres, la projection.
  *
- * Sur une page claire, il ramène l'échelle d'origine, ce qui revient à
- * DÉFAIRE, pour ce bloc seulement, ce que le thème de la page vient de poser :
- * d'où la reprise des mêmes clés avec leurs valeurs de départ. Sur une page
- * sombre, il ne renverse rien : il reste nuit (voir globals.css).
+ * Il ramène l'échelle d'origine, celle pour laquelle les classes ont été
+ * écrites, ce qui revient à DÉFAIRE, pour ce bloc seulement, ce que le papier
+ * vient de poser : d'où la reprise des mêmes clés avec leurs valeurs de
+ * départ. Seul le neutre diffère, qui devient l'ardoise et sa craie.
  *
  * Sa spécificité (deux sélecteurs) l'emporte sur celle du thème (un seul),
  * quel que soit l'ordre des règles dans la feuille.
  *
- * Un seul bloc à contre-jour par écran : le contraste attire l'œil parce qu'il
- * est unique sur la page, pas parce qu'il est joli. Deux, et aucun des deux ne
- * fonctionne.
+ * Une seule bande à contre-jour par écran : le contraste attire l'œil parce
+ * qu'il est unique sur la page, pas parce qu'il est joli. Deux, et aucune des
+ * deux ne fonctionne.
  * ------------------------------------------------------------------------- */
-[data-theme="clair"] .contre-jour {
+[data-theme="clair"] .contre-jour,
+[data-theme="clair"] .ardoise {
 ${decale(sombre(origines))}
 }
 
-/* L'impression reste sur du papier blanc quel que soit le thème : les classes
+/* L'impression reste sur du papier blanc : les classes
  * print:bg-white et print:text-black des fiches d'atelier s'appuient dessus. */
 @media print {
   [data-theme="clair"] {

@@ -165,8 +165,11 @@ describe("les captures de la page d'accueil", () => {
     expect(GLOBALS).toMatch(
       /\.capture-decran\s*\{[^}]*background-image: var\(--ecran-sur-page-claire\)/,
     );
+    // Sur le tableau (l'en-tête remis à contre-jour depuis l'admin), la prise
+    // claire : c'est le même renversement, porté par la bande et non plus par
+    // un thème de page.
     expect(GLOBALS).toMatch(
-      /\[data-theme="sombre"\]\s*\.capture-decran\s*\{[^}]*background-image: var\(--ecran-sur-page-sombre\)/,
+      /\[data-theme="clair"\] \.contre-jour \.capture-decran\s*\{[^}]*background-image: var\(--ecran-sur-page-sombre\)/,
     );
     // Un fond n'a pas de texte de remplacement : sans ces deux attributs, les
     // trois écrans disparaîtraient pour qui ne voit pas la page.

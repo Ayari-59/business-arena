@@ -64,7 +64,9 @@ async function encreDuTitre(page: Page, theme: string): Promise<number> {
 }
 
 describe("le halo des en-têtes", () => {
-  for (const theme of ["clair", "sombre"]) {
+  // Le site n'a plus qu'un habillage, le papier : le thème sombre, où l'encre
+  // était la plus claire de l'image, n'existe plus.
+  for (const theme of ["clair"]) {
     for (const chemin of PAGES) {
       it(`laisse son encre au titre de ${chemin}, thème ${theme}`, async () => {
         const contexte = await navigateur.newContext({ viewport: { width: 1280, height: 800 } });

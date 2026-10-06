@@ -78,8 +78,11 @@ export default async function ProjectionPage({
         ? "classement"
         : "tour";
 
+  // LA PROJECTION EST LE TABLEAU DE LA CLASSE. C'est l'écran qu'on montre à
+  // vingt-cinq élèves à la fois, et un vidéoprojecteur délave le clair quand
+  // il porte le sombre : la page entière prend l'ardoise.
   return (
-    <main id="main">
+    <main id="main" className="ardoise min-h-screen bg-slate-950 text-slate-100">
       {/* Le sondeur : une équipe qui valide doit apparaître au mur sans que
           personne touche au clavier. Il s'arrête de lui-même quand toutes ont
           rendu, et repart au retour sur l'onglet. */}

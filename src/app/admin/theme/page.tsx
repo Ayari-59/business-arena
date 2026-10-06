@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { getPlatformConfig, getStaffContext } from "@/services/admin.service";
-import { etatDesContrastes, paletteDuSite, themeParDefaut } from "@/config/theme-du-site";
+import { etatDesContrastes, paletteDuSite } from "@/config/theme-du-site";
 import { FormulaireTheme } from "@/components/formulaire-theme";
 
 export const dynamic = "force-dynamic";
@@ -35,7 +35,6 @@ export default async function ThemeAdminPage() {
 
       <FormulaireTheme
         initial={etatDesContrastes(config.theme)}
-        parDefautInitial={themeParDefaut(config.theme)}
         paletteInitiale={paletteDuSite(config.theme)}
       />
     </main>

@@ -75,7 +75,10 @@ function Tuile({
   const bout = points.at(-1)!;
 
   return (
-    <div className="min-w-0 rounded-lg border border-white/5 bg-slate-950 px-2.5 py-2.5 sm:px-3">
+    // UN ÉCRAN, POSÉ SUR LE PAPIER. Les trois chiffres qui disent où en est
+    // l'entreprise sont des instruments, pas de la lecture : ils prennent
+    // l'ardoise du tableau, et le reste de l'arène reste sur le papier.
+    <div className="ardoise min-w-0 rounded-lg border border-white/5 bg-slate-950 px-2.5 py-2.5 sm:px-3">
       {/* Les intitulés sont ceux des lignes de résumé de l'application —
           « CA · résultat · tréso » — et non leur forme longue : à trois
           colonnes sur un téléphone, « CHIFFRE D'AFFAIRES » se coupait.

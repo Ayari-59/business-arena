@@ -6,7 +6,7 @@ import {
   type Page,
 } from "playwright-core";
 import { BASE, ouvrirNavigateur } from "./helpers/browser";
-import { THEMES, couleurDeBarre } from "../../src/config/themes";
+import { COULEUR_DU_PAPIER } from "../../src/config/themes";
 
 /**
  * L'APPLICATION, À LA MAIN D'UN TÉLÉPHONE.
@@ -156,31 +156,14 @@ describe("sur la vitrine, au toucher", () => {
 });
 
 describe("la couleur autour de la page", () => {
-  it("la barre d'état prend le fond du thème, et le suit quand on change de thème", async () => {
-    await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
-    await page.waitForLoadState("networkidle");
-    for (const t of THEMES) {
-      await page
-        .getByRole("button", { name: `Thème ${t.nom.toLowerCase()}` })
-        .click();
-      const couleur = await page
-        .locator('meta[name="theme-color"]')
-        .getAttribute("content");
-      expect(couleur, `thème ${t.code}`).toBe(couleurDeBarre(t.code));
-    }
-  });
-
-  it("un visiteur qui a choisi un thème retrouve sa couleur de barre dès l'ouverture", async () => {
-    const autre = THEMES[0]!;
-    await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
-    await page
-      .getByRole("button", { name: `Thème ${autre.nom.toLowerCase()}` })
-      .click();
+  it("la barre d'état prolonge le papier", async () => {
     await page.goto(`${BASE}/guide`, { waitUntil: "domcontentloaded" });
-    const couleur = await page
+    const couleurs = await page
       .locator('meta[name="theme-color"]')
-      .getAttribute("content");
-    expect(couleur).toBe(couleurDeBarre(autre.code));
+      .evaluateAll((ms) => ms.map((m) => m.getAttribute("content")));
+    // Une seule balise : posée par le serveur, elle ne se double plus d'une
+    // seconde écrite par une amorce.
+    expect(couleurs).toEqual([COULEUR_DU_PAPIER]);
   });
 
   it("le manifeste prend les mêmes couleurs, et plus celles d'avant la charte", async () => {
@@ -188,7 +171,7 @@ describe("la couleur autour de la page", () => {
     expect(reponse.status()).toBe(200);
     const m = await reponse.json();
     expect(m.theme_color).toBe(m.background_color);
-    expect(THEMES.map((t) => t.apercu.fond)).toContain(m.theme_color);
+    expect(m.theme_color).toBe(COULEUR_DU_PAPIER);
     expect(m.display).toBe("standalone");
     expect(
       m.icons.some((i: { purpose?: string }) => i.purpose === "maskable"),
@@ -745,19 +728,15 @@ describe("pendant une partie", () => {
     expect(await titreDeLaCarte()).toMatch(/À quel prix/i);
   });
 
-  it("l'apparence se choisit depuis le menu de la partie", async () => {
+  it("le menu de la partie ne propose plus d'apparence : le site n'en a qu'une", async () => {
     await page.getByRole("button", { name: "Menu de la partie" }).click();
-    await page
-      .getByRole("button", { name: "Thème sombre" })
-      .waitFor({ state: "visible" });
     await page
       .getByRole("link", { name: "Fiches notions" })
       .first()
       .waitFor({ state: "visible" });
+    expect(await page.getByRole("button", { name: /^Thème / }).count()).toBe(0);
+    expect(await page.getByText("Apparence").count()).toBe(0);
     await page.keyboard.press("Escape");
-    expect(
-      await page.getByRole("button", { name: "Thème sombre" }).isVisible(),
-    ).toBe(false);
   });
 
   it("le texte de l'écran de jeu ne descend pas sous 14 px", async () => {

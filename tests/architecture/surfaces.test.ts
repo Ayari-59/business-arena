@@ -52,7 +52,7 @@ describe("la carte, définie une fois", () => {
     // comme l'ombre. Et que son blanc soit écrit EN CLAIR : `white` désigne
     // ici la variable du thème, qui vaut noir sur fond clair — le défaut
     // reviendrait par ce seul mot.
-    expect(css).toMatch(/:root,\s*\[data-theme="clair"\] \.contre-jour\s*\{[^}]*--lumiere-carte:[^;]*#fff/);
+    expect(css).toMatch(/:root,\s*\[data-theme="clair"\] \.contre-jour,\s*\[data-theme="clair"\] \.ardoise\s*\{[^}]*--lumiere-carte:[^;]*#fff/);
     expect(css).toMatch(
       /\[data-theme="clair"\]\s*\{[^}]*--lumiere-carte:[^;]*#fff/,
     );
@@ -68,7 +68,7 @@ describe("la carte, définie une fois", () => {
     //
     // Chaque sélecteur porte la sienne : la nuit (la page sombre, et le bloc à
     // contre-jour d'une page claire, qui en reprend l'échelle) et le papier.
-    expect(css).toMatch(/:root,\s*\[data-theme="clair"\] \.contre-jour\s*\{[^}]*--ombre-carte:/);
+    expect(css).toMatch(/:root,\s*\[data-theme="clair"\] \.contre-jour,\s*\[data-theme="clair"\] \.ardoise\s*\{[^}]*--ombre-carte:/);
     expect(css).toMatch(
       /\[data-theme="clair"\]\s*\{[^}]*--ombre-carte:/,
     );
@@ -122,7 +122,7 @@ describe("le champ, défini une fois", () => {
   });
 
   it("son creux est propre à chaque thème, et au bloc à contre-jour", () => {
-    expect(css).toMatch(/:root,\s*\[data-theme="clair"\] \.contre-jour\s*\{[^}]*--creux-champ:/);
+    expect(css).toMatch(/:root,\s*\[data-theme="clair"\] \.contre-jour,\s*\[data-theme="clair"\] \.ardoise\s*\{[^}]*--creux-champ:/);
     expect(css).toMatch(
       /\[data-theme="clair"\]\s*\{[^}]*--creux-champ:/,
     );

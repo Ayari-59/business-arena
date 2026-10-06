@@ -9,7 +9,7 @@
  * UNE PALETTE DIT DEUX CHOSES, parce que l'accent ne s'écrit pas pareil sur un
  * fond sombre et sur un fond clair :
  *
- *   · `sombre` : l'échelle posée sur les surfaces sombres, du pâle (50) au
+ *   · `sombre` : l'échelle posée sur le tableau (l'ardoise), du pâle (50) au
  *     profond (950). Les paliers 200 à 400 servent de texte, le 500 de fond de
  *     bouton, le 950 de voile ;
  *   · `clair` : sur le papier, l'accent n'est plus une lueur mais une ENCRE.
@@ -105,7 +105,7 @@ export const PALETTES: Palette[] = [
       300: "#e6bef8",
       400: "#d5a2eb",
       500: "#be87d6",
-      600: "#a06fb5",
+      600: "#a676bb",
       700: "#7f5891",
       800: "#6e4c7c",
       900: "#5a3f66",
@@ -166,10 +166,11 @@ const lignes = (echelle: Partial<Record<Palier, string>>) =>
 /**
  * La feuille qui pose une palette, ou rien si c'est celle d'origine.
  *
- * QUATRE CONTEXTES, parce qu'un bloc à contre-jour prend le thème opposé : sur
- * une page sombre il porte l'échelle claire, sur une page claire l'échelle
- * sombre. Recolorer les seules pages laisserait chaque bande à contre-jour dans
- * le laiton, une troisième palette peinte au milieu des deux autres.
+ * DEUX CONTEXTES : le papier, qui prend l'encre de la palette, et le tableau
+ * (une bande à contre-jour, ou une `ardoise`), qui prend son échelle « sombre » — la craie d'une
+ * ardoise se lit comme une lueur sur fond sombre, pas comme une encre. Recolorer
+ * le seul papier laisserait chaque tableau dans le laiton, une seconde palette
+ * peinte au milieu de la première.
  *
  * La spécificité est celle du thème PLUS l'élément (`html[...]`) : la règle
  * l'emporte sur celles de theme-clair.css quel que soit l'ordre des feuilles.
@@ -177,25 +178,8 @@ const lignes = (echelle: Partial<Record<Palier, string>>) =>
 export function feuilleDePalette(code: CodePalette): string {
   if (code === PALETTE_D_ORIGINE) return "";
   const palette = paletteParCode(code);
-  const sombre = lignes(palette.sombre);
-  const clair = lignes(echelleClaire(palette));
   return (
-    `html[data-theme="sombre"]{${sombre}}` +
-    `html[data-theme="clair"]{${clair}}` +
-    `html[data-theme="sombre"] .contre-jour{${clair}}` +
-    `html[data-theme="clair"] .contre-jour{${sombre}}`
+    `html[data-theme="clair"]{${lignes(echelleClaire(palette))}}` +
+    `html[data-theme="clair"] .contre-jour,html[data-theme="clair"] .ardoise{${lignes(palette.sombre)}}`
   );
-}
-
-/**
- * Les deux couleurs qui représentent la palette dans les pastilles de thème :
- * le premier accent du sombre, l'encre du clair. Celles du laiton sont dans
- * themes.ts ; une autre palette les remplace.
- */
-export function accentsDeLaPalette(code: CodePalette): {
-  sombre: string;
-  clair: string;
-} {
-  const p = paletteParCode(code);
-  return { sombre: p.sombre[400]!, clair: p.clair.encre };
 }

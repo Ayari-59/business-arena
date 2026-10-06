@@ -1,22 +1,37 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Browser, Page } from "playwright-core";
 import { aller, ouvrirNavigateur } from "./helpers/browser";
-import { CLE_THEME, THEMES, THEME_DORIGINE, THEME_PAR_DEFAUT } from "../../src/config/themes";
+import { COULEUR_DU_PAPIER, COULEUR_DU_TABLEAU } from "../../src/config/themes";
 
 /**
- * La bascule de thème, dans un vrai navigateur.
+ * L'habillage unique, dans un vrai navigateur : le papier, et le tableau.
  *
- * Tout ce qui fait ce réglage se passe hors de React : un attribut posé sur
- * l'élément racine, une valeur rangée dans le navigateur, un script qui la
- * relit avant le premier affichage. Aucun test unitaire ne voit cet
- * enchaînement, et chacune de ses trois pièces peut marcher seule pendant que
- * l'ensemble ne fait rien : le choix serait alors bien enregistré, et oublié à
- * la page suivante.
+ * Le site a eu deux thèmes et un interrupteur. Il n'en a plus qu'un, qui ne
+ * se choisit pas. Ce qui se vérifie ici est ce que ce retrait pourrait laisser
+ * derrière lui : un ancien choix « sombre » resté dans un navigateur qui
+ * rallumerait la nuit, un interrupteur oublié dans une barre, un tableau qui
+ * aurait perdu son ardoise.
  */
-const AUTRE = THEMES.find((t) => t.code !== THEME_PAR_DEFAUT)!;
-const SERVI = THEMES.find((t) => t.code === THEME_PAR_DEFAUT)!;
-/** Le nom accessible d'une position de l'interrupteur. */
-const position = (nom: string) => `Thème ${nom.toLowerCase()}`;
+
+/** `#rrggbb` en trois canaux. */
+const rgb = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+
+/** Deux couleurs à un cran près : oklch passe par un arrondi en sRGB. */
+function proches(a: number[], b: number[]): boolean {
+  return a.every((v, i) => Math.abs(v - b[i]!) <= 2);
+}
+
+/**
+ * La couleur peinte, en canaux sRGB. getComputedStyle rend une couleur oklch
+ * sous la forme `lab(…)` : on la fait peindre par un canevas, qui la rend en
+ * octets.
+ */
+const PEINTE = `(couleur) => {
+  const c = document.createElement("canvas").getContext("2d");
+  c.fillStyle = couleur;
+  c.fillRect(0, 0, 1, 1);
+  return [...c.getImageData(0, 0, 1, 1).data.slice(0, 3)];
+}`;
 
 let navigateur: Browser;
 let page: Page;
@@ -30,79 +45,63 @@ afterAll(async () => {
   await navigateur?.close();
 });
 
-describe("la bascule de thème", () => {
-  it("ouvre le site sur le thème par défaut", async () => {
+describe("le papier et le tableau", () => {
+  it("le site s'ouvre sur le papier", async () => {
     await aller(page, "/");
-    expect(await page.evaluate(() => document.documentElement.dataset.theme)).toBe(
-      THEME_PAR_DEFAUT,
+    expect(await page.evaluate(() => document.documentElement.dataset.theme)).toBe("clair");
+    const fond: number[] = await page.evaluate(
+      `(${PEINTE})(getComputedStyle(document.body).backgroundColor)`,
     );
+    expect(proches(fond, rgb(COULEUR_DU_PAPIER)), `fond de page ${fond}`).toBe(true);
   });
 
-  it("l'interrupteur est dans la barre, montre les deux thèmes et dit lequel est retenu", async () => {
-    // Il a été un bouton unique, rangé dans le panneau « Menu » : on changeait
-    // l'apparence derrière une carte qui couvre la page, et un nom de thème
-    // seul ne disait pas s'il nommait l'état ou la destination. Les positions
-    // sont donc visibles SANS ouvrir le menu, et la retenue s'annonce.
-    for (const theme of THEMES) {
-      await expect
-        .poll(() => page.getByRole("button", { name: position(theme.nom) }).count())
-        .toBe(1);
-    }
-    const retenu = page.getByRole("button", { name: position(SERVI.nom) });
-    expect(await retenu.getAttribute("aria-pressed")).toBe("true");
-    const autre = page.getByRole("button", { name: position(AUTRE.nom) });
-    expect(await autre.getAttribute("aria-pressed")).toBe("false");
+  it("aucun interrupteur de thème ne reste dans la barre", async () => {
+    expect(await page.getByRole("button", { name: /^Thème / }).count()).toBe(0);
+    expect(await page.locator('[aria-label="Thème du site"]').count()).toBe(0);
   });
 
-  it("un clic sur l'autre position change le thème, et la marque passe avec", async () => {
-    await page.getByRole("button", { name: position(AUTRE.nom) }).click();
-    expect(await page.evaluate(() => document.documentElement.dataset.theme)).toBe(AUTRE.code);
-    expect(
-      await page.getByRole("button", { name: position(AUTRE.nom) }).getAttribute("aria-pressed"),
-    ).toBe("true");
-    expect(
-      await page.getByRole("button", { name: position(SERVI.nom) }).getAttribute("aria-pressed"),
-    ).toBe("false");
-  });
-
-  it("le choix survit au rechargement et au changement de page", async () => {
-    // C'est ici que vivait le risque : le script d'amorçage lit une clé, le
-    // bouton en écrit une autre, et personne ne voit rien avant de naviguer.
+  it("un ancien choix « sombre » resté dans le navigateur ne rallume pas la nuit", async () => {
+    await page.evaluate(() => localStorage.setItem("arena-theme", "sombre"));
     await page.reload({ waitUntil: "networkidle" });
-    expect(await page.evaluate(() => document.documentElement.dataset.theme)).toBe(AUTRE.code);
-    await aller(page, "/entreprises");
-    expect(await page.evaluate(() => document.documentElement.dataset.theme)).toBe(AUTRE.code);
-    expect(await page.evaluate((cle) => localStorage.getItem(cle), CLE_THEME)).toBe(AUTRE.code);
+    expect(await page.evaluate(() => document.documentElement.dataset.theme)).toBe("clair");
+    await page.evaluate(() => localStorage.removeItem("arena-theme"));
   });
 
-  it("le thème est posé avant le premier affichage, pas après", async () => {
-    // Sans le script d'amorçage, la page arrive sur le thème servi par défaut
-    // puis bascule sous les yeux du lecteur. On le vérifie sur le document brut, avant tout script de
-    // l'application : l'attribut du serveur doit y être, et l'amorce juste après.
+  it("une bande à contre-jour est un tableau : l'ardoise, et sa craie", async () => {
+    await aller(page, "/enseignants");
+    const bande: { fond: number[]; texte: number[] } = await page.evaluate(`(() => {
+      const peinte = ${PEINTE};
+      const b = document.querySelector("main .contre-jour");
+      return {
+        fond: peinte(getComputedStyle(b).backgroundColor),
+        texte: peinte(getComputedStyle(b.querySelector("p, h2, li") ?? b).color),
+      };
+    })()`);
+    expect(proches(bande.fond, rgb(COULEUR_DU_TABLEAU)), `fond du tableau ${bande.fond}`).toBe(
+      true,
+    );
+    // La craie, ou le laiton clair : un texte lumineux sur l'ardoise, pas
+    // l'encre brune du papier.
+    const [r, g, b] = bande.texte.map((v) => v / 255);
+    const lumiere = 0.2126 * r! + 0.7152 * g! + 0.0722 * b!;
+    expect(lumiere, `texte du tableau ${bande.texte}`).toBeGreaterThan(0.4);
+  });
+
+  it("le logo prend l'encre sur le papier", async () => {
+    // Le logo est une image : son nom, écrit en craie, disparaîtrait sur le
+    // papier. Seule la feuille de style peut choisir le bon fichier.
+    const fichier = await page.evaluate(
+      () =>
+        getComputedStyle(document.querySelector(".logo-arena")!).backgroundImage.match(
+          /logo[-a-z]*\.svg/,
+        )?.[0] ?? "aucun",
+    );
+    expect(fichier).toBe("logo-light.svg");
+  });
+
+  it("aucune amorce ne relit un thème avant l'affichage : il n'y a plus rien à relire", async () => {
     const html = await page.evaluate(async () => (await fetch("/entreprises")).text());
-    expect(html).toContain(`data-theme="${THEME_PAR_DEFAUT}"`);
-    const amorce = html.indexOf("localStorage.getItem");
-    expect(amorce, "le script d'amorçage est absent de la page servie").toBeGreaterThan(0);
-    expect(amorce, "l'amorce arrive après le contenu").toBeLessThan(html.indexOf("</body>"));
-  });
-
-  it("le logo change de fichier avec le thème", async () => {
-    // Le logo est une image : son nom, écrit en gris pâle, disparaîtrait sur
-    // fond clair. Seule la feuille de style peut choisir le bon fichier.
-    const fichier = () =>
-      page.evaluate(
-        () =>
-          getComputedStyle(document.querySelector(".logo-arena")!).backgroundImage.match(
-            /logo[-a-z]*\.svg/,
-          )?.[0] ?? "aucun",
-      );
-    await page.evaluate(() => {
-      document.documentElement.dataset.theme = "clair";
-    });
-    expect(await fichier()).toBe("logo-light.svg");
-    await page.evaluate((code) => {
-      document.documentElement.dataset.theme = code;
-    }, THEME_DORIGINE);
-    expect(await fichier()).toBe("logo.svg");
+    expect(html).toContain('data-theme="clair"');
+    expect(html).not.toContain("localStorage.getItem");
   });
 });

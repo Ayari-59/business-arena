@@ -378,7 +378,8 @@
    change de thème : 4 % suffisent à éclairer une surface presque noire, il en
    faut soixante pour éclairer une surface presque blanche. */
 :root,
-[data-theme="clair"] .contre-jour {
+[data-theme="clair"] .contre-jour,
+[data-theme="clair"] .ardoise {
   --ombre-carte:
     0 1px 2px rgb(0 0 0 / 0.3),
     0 10px 28px -14px rgb(0 0 0 / 0.5);
@@ -587,12 +588,12 @@ h1 {
      site sert par défaut, et ses champs comme sa barre de défilement doivent
      être ceux d'une page claire. */
   color-scheme: light;
-  /* Sur fond clair, l'ombre du thème sombre serait une salissure : moins
-     d'opacité, et une teinte encrée plutôt que du noir pur. */
+  /* Sur le papier, une ombre noire serait une salissure : moins d'opacité,
+     et la teinte de l'encre brune plutôt que du noir pur. */
   --ombre-carte:
-    0 1px 2px rgb(15 23 42 / 0.06),
-    0 10px 28px -16px rgb(15 23 42 / 0.18);
-  --creux-champ: inset 0 1px 2px rgb(15 23 42 / 0.05);
+    0 1px 2px rgb(40 30 18 / 0.06),
+    0 10px 28px -16px rgb(40 30 18 / 0.18);
+  --creux-champ: inset 0 1px 2px rgb(40 30 18 / 0.05);
   /* Voir le bloc des reliefs sombres : un reflet ne s'inverse pas. Il faut
      beaucoup plus de blanc pour éclairer une surface presque blanche. */
   --lumiere-carte: color-mix(in oklab, #fff 60%, transparent);
@@ -625,16 +626,19 @@ h1 {
 }
 
 /* ---------------------------------------------------------------------------
- * Les thèmes.
+ * UN SEUL HABILLAGE : LE PAPIER, ET LE TABLEAU.
  *
- * Le site en propose deux, un sombre et un clair. Le sombre n'a pas de bloc :
- * c'est l'échelle d'origine de Tailwind, donc l'absence de thème et le thème
- * par défaut donnent exactement la même page, et il n'y a pas deux écritures
- * de la même chose qui puissent diverger. Le clair, lui, est engendré, parce
- * qu'il renverse l'échelle entière (voir theme-clair.css).
+ * Le site proposait deux thèmes, un sombre et un clair qui le renversait. Il
+ * n'en a plus qu'un, qui ne se choisit pas : un papier ivoire à l'encre brune
+ * pour lire et jouer, et une ardoise vert-noir — le tableau — là où la classe
+ * regarde ensemble (bandes à contre-jour, écrans de chiffres, projection).
+ * Le sombre ne disparaît pas, il devient une matière posée à dessein au lieu
+ * d'un mode qu'on bascule.
  *
- * Les utilitaires de Tailwind lisent des variables, donc aucune page n'a
- * besoin de connaître le thème courant. La liste est dans src/config/themes.ts.
+ * L'attribut `data-theme="clair"` reste posé sur la racine : toutes les
+ * règles du papier s'y accrochent, et le nom du fichier engendré aussi
+ * (theme-clair.css). L'échelle d'origine de Tailwind, sous le `@theme`, ne
+ * s'affiche plus nulle part telle quelle.
  * ------------------------------------------------------------------------- */
 
 /* ---------------------------------------------------------------------------
@@ -691,9 +695,6 @@ h1 {
   background-size: 100% auto;
 }
 
-[data-theme="sombre"] .capture-decran {
-  background-image: var(--ecran-sur-page-sombre);
-}
 
 /*
  * ET DANS UN BLOC À CONTRE-JOUR, LA PRISE SE RETOURNE AVEC LE SOL.
@@ -731,16 +732,14 @@ h1 {
 }
 
 /*
- * SUR UNE PAGE SOMBRE, LE CONTRE-JOUR RESTE NUIT. Il renversait l'échelle et
- * devenait une surface de papier : qui avait choisi le sombre ouvrait l'accueil
- * sur un grand aplat clair, et les captures désaturées de l'en-tête y prenaient
- * un gris sale. Il garde désormais l'échelle de la page et se distingue d'un
- * cran de surface, comme une carte se distingue du fond : le thème choisi vaut
- * pour toute la page. Ses captures sont donc celles de la page sombre (règle
- * plus haut), sans exception.
+ * LE TABLEAU ATTEND LES CHAMPS ET LES BARRES D'UNE SURFACE SOMBRE. Ce que le
+ * navigateur dessine lui-même (cases, sélecteurs, défilement) ne lit pas nos
+ * variables : sans cette ligne, il peindrait des champs de papier sur
+ * l'ardoise.
  */
-[data-theme="sombre"] .contre-jour {
-  background-color: var(--color-slate-900);
+[data-theme="clair"] .contre-jour,
+[data-theme="clair"] .ardoise {
+  color-scheme: dark;
 }
 
 /* ---------------------------------------------------------------------------
@@ -756,6 +755,12 @@ h1 {
 
 [data-theme="clair"] .logo-arena {
   background-image: url("/brand/logo-light.svg");
+}
+
+/* Sur le tableau, le logo reprend sa craie : l'encre brune y disparaîtrait. */
+[data-theme="clair"] .contre-jour .logo-arena,
+[data-theme="clair"] .ardoise .logo-arena {
+  background-image: url("/brand/logo.svg");
 }
 
 /* ---------------------------------------------------------------------------

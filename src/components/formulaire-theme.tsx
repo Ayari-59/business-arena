@@ -10,7 +10,7 @@ import {
   PALETTE_PAR_DEFAUT,
   type CodePalette,
 } from "@/config/palettes";
-import { THEMES, THEME_PAR_DEFAUT, type CodeTheme } from "@/config/themes";
+import { COULEUR_DU_PAPIER, COULEUR_DU_TABLEAU } from "@/config/themes";
 import { validerContrastes } from "@/config/theme-du-site";
 import {
   enregistrerThemeAction,
@@ -54,11 +54,9 @@ function Apercu({
 
 export function FormulaireTheme({
   initial,
-  parDefautInitial,
   paletteInitiale,
 }: {
   initial: Record<string, boolean>;
-  parDefautInitial: CodeTheme;
   paletteInitiale: CodePalette;
 }) {
   const [serveur, enregistrer] = useActionState<EtatTheme, FormData>(
@@ -67,12 +65,10 @@ export function FormulaireTheme({
       erreurs: [],
       enregistre: false,
       etat: initial,
-      parDefaut: parDefautInitial,
       palette: paletteInitiale,
     },
   );
   const [etat, setEtat] = useState(initial);
-  const [parDefaut, setParDefaut] = useState(parDefautInitial);
   const [palette, setPalette] = useState(paletteInitiale);
   const [retablissement, lancer] = useTransition();
   const [retabli, setRetabli] = useState(false);
@@ -87,69 +83,13 @@ export function FormulaireTheme({
   const enregistreMaintenant =
     serveur.enregistre &&
     memeEtat(serveur.etat, etat) &&
-    serveur.parDefaut === parDefaut &&
     serveur.palette === palette;
   const ecarts =
     BANDES.filter((b) => etat[b.id] !== b.contrasteParDefaut).length +
-    (parDefaut !== THEME_PAR_DEFAUT ? 1 : 0) +
     (palette !== PALETTE_PAR_DEFAUT ? 1 : 0);
 
   return (
     <form action={enregistrer} className="space-y-10">
-      <section aria-labelledby="ouverture">
-        <h2 id="ouverture" className="text-lg font-semibold text-slate-100">
-          Thème d&apos;ouverture
-        </h2>
-        <p className="mt-2 max-w-2xl text-base leading-relaxed text-slate-400">
-          Ce que voit un visiteur qui n&apos;a rien choisi. Celui qui a choisi
-          garde son choix.
-        </p>
-        <fieldset className="mt-5 grid gap-3 sm:grid-cols-2">
-          <legend className="sr-only">Thème d&apos;ouverture du site</legend>
-          {THEMES.map((t) => (
-            <label
-              key={t.code}
-              className={`carte flex cursor-pointer items-start gap-3 p-4 ${
-                parDefaut === t.code ? "ring-2 ring-amber-400" : ""
-              }`}
-            >
-              <input
-                type="radio"
-                name="parDefaut"
-                value={t.code}
-                checked={parDefaut === t.code}
-                onChange={() => {
-                  setRetabli(false);
-                  setParDefaut(t.code);
-                }}
-                className="mt-1 h-4 w-4 shrink-0 accent-amber-400"
-              />
-              <span
-                aria-hidden
-                className="mt-0.5 h-5 w-5 shrink-0 rounded-full border border-white/30"
-                style={{
-                  background: t.apercu.fond,
-                  boxShadow: `inset 0 -5px 0 ${t.apercu.accent}`,
-                }}
-              />
-              <span className="min-w-0 text-sm">
-                <span className="font-semibold text-slate-100">
-                  {t.nom}
-                  {t.code === THEME_PAR_DEFAUT ? (
-                    <span className="ml-2 text-xs font-normal text-slate-400">
-                      d&apos;origine
-                    </span>
-                  ) : null}
-                </span>
-                <span className="mt-1 block text-slate-400">
-                  {t.description}
-                </span>
-              </span>
-            </label>
-          ))}
-        </fieldset>
-      </section>
-
       <section aria-labelledby="palette">
         <h2 id="palette" className="text-lg font-semibold text-slate-100">
           Palette d&apos;accent
@@ -180,21 +120,21 @@ export function FormulaireTheme({
                 className="mt-1 h-4 w-4 shrink-0 accent-amber-400"
               />
               {/*
-                L'aperçu montre l'accent sur CHAQUE fond, pas sur celui de la
-                page : une pastille qui lirait le thème courant montrerait la
-                palette en vigueur, jamais celle qu'on survole. Les couleurs
-                sont donc posées en ligne, comme celles des pastilles de thème.
+                L'aperçu montre l'accent sur CHAQUE fond, le tableau puis le
+                papier : une pastille qui lirait la page montrerait la palette
+                en vigueur, jamais celle qu'on survole. Les couleurs sont donc
+                posées en ligne.
               */}
               <span aria-hidden className="mt-0.5 flex shrink-0 gap-1">
                 <span
                   className="flex h-6 w-9 items-center justify-center rounded-md border border-white/25 text-xs font-semibold"
-                  style={{ background: THEMES[0]!.apercu.fond, color: p.sombre[400] }}
+                  style={{ background: COULEUR_DU_TABLEAU, color: p.sombre[400] }}
                 >
                   Aa
                 </span>
                 <span
                   className="flex h-6 w-9 items-center justify-center rounded-md border border-white/25 text-xs font-semibold"
-                  style={{ background: THEMES[1]!.apercu.fond, color: p.clair.encre }}
+                  style={{ background: COULEUR_DU_PAPIER, color: p.clair.encre }}
                 >
                   Aa
                 </span>
@@ -325,7 +265,6 @@ export function FormulaireTheme({
             lancer(async () => {
               const r = await retablirThemeAction();
               setEtat(r.etat);
-              setParDefaut(r.parDefaut);
               setPalette(r.palette);
               setRetabli(true);
             })
