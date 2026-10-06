@@ -55,6 +55,14 @@ describe("le papier et le tableau", () => {
     expect(proches(fond, rgb(COULEUR_DU_PAPIER)), `fond de page ${fond}`).toBe(true);
   });
 
+  it("le grain du papier se pose sur le halo, sans l'effacer", async () => {
+    // Le relief a un temps remplacé le halo laiton du fond par le grain : les
+    // deux images se disputaient la même propriété, et rien ne l'a signalé.
+    const fond: string = await page.evaluate(() => getComputedStyle(document.body).backgroundImage);
+    expect(fond, "grain").toMatch(/^url\(/);
+    expect(fond, "halo").toContain("radial-gradient");
+  });
+
   it("aucun interrupteur de thème ne reste dans la barre", async () => {
     expect(await page.getByRole("button", { name: /^Thème / }).count()).toBe(0);
     expect(await page.locator('[aria-label="Thème du site"]').count()).toBe(0);

@@ -468,14 +468,13 @@
 }
 
 /* Les grands titres parlent avec le serif ; le corps reste en grotesque, et
-   un halo laiton fixe pose une profondeur discrète sous toute la page. */
+   un halo laiton fixe pose une profondeur discrète sous toute la page. Le
+   halo est nommé : le grain du papier (plus bas) se pose par-dessus sans
+   l'effacer. */
 body {
+  --fond-halo: radial-gradient(60rem 40rem at 50% -12rem, var(--halo-de-page), transparent 70%);
   font-family: var(--font-sans);
-  background-image: radial-gradient(
-    60rem 40rem at 50% -12rem,
-    var(--halo-de-page),
-    transparent 70%
-  );
+  background-image: var(--fond-halo);
   background-attachment: fixed;
   background-repeat: no-repeat;
 }
@@ -763,10 +762,13 @@ h1 {
   --papier-soutenu: oklch(95% 0.014 86);
 }
 
+/* Le grain par-dessus le halo, pas à sa place. Le grain défile avec la page
+   comme une feuille ; le halo reste fixe sous l'en-tête. */
 [data-theme="clair"] body {
-  background-image: var(--grain);
-  background-size: 220px;
-  background-repeat: repeat;
+  background-image: var(--grain), var(--fond-halo);
+  background-size: 220px, auto;
+  background-repeat: repeat, no-repeat;
+  background-attachment: scroll, fixed;
 }
 
 /* Une bande de papier sur deux, parmi les sections d'une page publique. Une
