@@ -59,6 +59,11 @@ export function SiteHeader() {
   // Dans l'arène, la page est plus large (1 400 px) : la barre s'aligne sur
   // ses bords, sinon le logo et le menu flottent en retrait sur grand écran.
   const enJeu = chemin?.startsWith("/arena/") ?? false;
+  // LA PROJECTION N'A PAS DE BARRE DU SITE. C'est l'écran qu'on montre à la
+  // classe : « Pour les enseignants », « Ateliers » ou « Espace enseignant »
+  // n'y disent rien aux élèves et prennent le haut de l'image. La page porte
+  // sa propre navigation, dont le retour au pilotage.
+  const enProjection = /^\/teacher\/games\/[^/]+\/projection(\/|$)/.test(chemin ?? "");
   const largeur = enJeu ? "max-w-[1400px]" : "max-w-6xl";
 
   const basculerGroupe = (code: string) =>
@@ -102,7 +107,7 @@ export function SiteHeader() {
         // Dans l'arène, sur téléphone, la barre d'application de la partie prend
         // sa place (voir barre-de-jeu.tsx) : deux barres se doubleraient.
         enJeu ? "max-sm:hidden" : ""
-      }`}
+      } ${enProjection ? "hidden" : ""}`}
     >
       {/* Un filet de laiton posé sur le bord bas de la barre, éteint aux deux
           extrémités. C'est le même geste que le liseré d'une carte : ce qui
