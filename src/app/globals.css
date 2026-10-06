@@ -635,6 +635,18 @@ h1 {
  * ------------------------------------------------------------------------- */
 .halo-de-page {
   background-color: var(--halo-de-page);
+  z-index: -1;
+}
+
+/* LE HALO PASSE DERRIÈRE LE TEXTE. Posé en position absolue sans profondeur,
+   il se peignait AU-DESSUS de tout ce qui le suit sans être positionné : les
+   titres et les chapeaux de quatorze pages. Le voile tombait sur l'encre, si
+   bien qu'un titre à 19,3:1 de contraste s'affichait à 8,1:1, et plus foncé au
+   bord du disque qu'en son centre. Une profondeur négative le met sous le
+   texte ; son parent devient un contexte d'empilement à part, sans quoi la
+   lueur passerait aussi sous le fond de la page et disparaîtrait. */
+:has(> .halo-de-page) {
+  isolation: isolate;
 }
 
 /* ---------------------------------------------------------------------------

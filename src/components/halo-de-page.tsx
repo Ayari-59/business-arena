@@ -9,7 +9,8 @@
  * dans globals.css, qui porte la mesure).
  *
  * Purement décoratif, donc retiré de l'arbre d'accessibilité, et sans prise
- * aux clics : il couvre le haut de la page, y compris les boutons.
+ * aux clics. Il se peint SOUS le contenu (voir `.halo-de-page` dans
+ * globals.css) : posé par-dessus, il voilait les titres qu'il devait éclairer.
  */
 export function HaloDePage() {
   return (
